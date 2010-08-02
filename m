@@ -1,209 +1,65 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: sw raid array completely hungs during verify in 2.6.32
-Date: Mon, 2 Aug 2010 13:01:54 +1000
-Message-ID: <20100802130154.217b5cc5@notabene>
-References: <4C555334.5080202@msgid.tls.msk.ru>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/2 block#for-linus] bio, fs: update READA and SWRITE to match
+ the corresponding BIO_RW_* bits
+Date: Mon, 02 Aug 2010 16:12:41 +0200
+Message-ID: <4C56D259.8000504@kernel.org>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org> <20100802104227.79340b49@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C555334.5080202@msgid.tls.msk.ru>
+In-Reply-To: <20100802104227.79340b49@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>, stable@kernel.org
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Sun, 01 Aug 2010 14:57:56 +0400
-Michael Tokarev <mjt@tls.msk.ru> wrote:
+Commit a82afdf (block: use the same failfast bits for bio and request)
+moved BIO_RW_* bits around such that they match up with REQ_* bits.
+Unfortunately, fs.h hard coded READ, WRITE, READA and SWRITE as 0, 1,
+2 and 3, and expected them to match with BIO_RW_* bits.  READ/WRITE
+didn't change but BIO_RW_AHEAD was moved to bit 4 instead of bit 1,
+breaking READA and SWRITE.
 
-> Hello.
-> 
-> It is the second time we come across this issue
-> after switching from 2.6.27 to 2.6.32 about 3
-> months ago.
-> 
-> At some point, an md-raid10 array hungs - that
-> is, all the processes that tries to access it,
-> either read or write, hungs forever.
+This patch updates READA and SWRITE such that they match the BIO_RW_*
+bits again.  A follow up patch will update the definitions to directly
+use BIO_RW_* bits so that this kind of breakage won't happen again.
 
-Thanks for the report.
-This is the same problem that has been reported recently in a thread with
-subject "Raid10 device hangs during resync and heavy I/O."
+Stable: The offending commit a82afdf was released with v2.6.32, so
+this patch should be applied to all kernels since then but it must
+_NOT_ be applied to kernels earlier than that.
 
-I have just posted a patch which should address it - I will include it here
-was well.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-and-bisected-by: Vladislav Bolkhovitin <vst@vlnb.net>
+Root-caused-by: Neil Brown <neilb@suse.de>
+Cc: Jens Axobe <axboe@kernel.dk>
+Cc: stable@kernel.org
+---
+Aieee... thanks for root causing it Neil.  That was a stupid bug.  I
+knew that READ/WRITE were hardcoded but forgot about READA.  :-(
+Moving BIO_RW_AHEAD back to bit 1 might be a better solution but I'm
+afraid that would cause more confusions downstream.  This patch
+updates READA and SWRITE to match BIO_RW_AHEAD and should also appear
+in -stable releases.  The next patch will create bio_types.h and
+define all constants in terms of BIO_RW_*.
 
-Note that you need to be careful when reading the stack traces.  A "?" means
-that the function named make not be in the actual call trace - it may just be
-an old address that happens to still be on the stack.
-In this case, the "mempool_alloc" was stray - nothing was actually blocking
-on that.
+Thanks.
 
-This is the patch that I have proposed.
+ include/linux/fs.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
-NeilBrown
-
-
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 42e64e4..d1d6891 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -825,11 +825,29 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 		 */
- 		bp = bio_split(bio,
- 			       chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
-+
-+		/* Each of these 'make_request' calls will call 'wait_barrier'.
-+		 * If the first succeeds but the second blocks due to the resync
-+		 * thread raising the barrier, we will deadlock because the
-+		 * IO to the underlying device will be queued in generic_make_request
-+		 * and will never complete, so will never reduce nr_pending.
-+		 * So increment nr_waiting here so no new raise_barriers will
-+		 * succeed, and so the second wait_barrier cannot block.
-+		 */
-+		spin_lock_irq(&conf->resync_lock);
-+		conf->nr_waiting++;
-+		spin_unlock_irq(&conf->resync_lock);
-+
- 		if (make_request(mddev, &bp->bio1))
- 			generic_make_request(&bp->bio1);
- 		if (make_request(mddev, &bp->bio2))
- 			generic_make_request(&bp->bio2);
- 
-+		spin_lock_irq(&conf->resync_lock);
-+		conf->nr_waiting--;
-+		wake_up(&conf->wait_barrier);
-+		spin_unlock_irq(&conf->resync_lock);
-+
- 		bio_pair_release(bp);
- 		return 0;
- 	bad_map:
-
-
-> 
-> Here's a typical set of messages found in kern.log:
-> 
->  INFO: task oracle:7602 blocked for more than 120 seconds.
->  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->  oracle        D ffff8801a8837148     0  7602      1 0x00000000
->   ffffffff813bc480 0000000000000082 0000000000000000 0000000000000001
->   ffff8801a8b7fdd8 000000000000e1c8 ffff88003b397fd8 ffff88003f47d840
->   ffff88003f47dbe0 000000012416219a ffff88002820e1c8 ffff88003f47dbe0
->  Call Trace:
->   [<ffffffffa018e8ae>] ? wait_barrier+0xee/0x130 [raid10]
->   [<ffffffff8104f570>] ? default_wake_function+0x0/0x10
->   [<ffffffffa0191852>] ? make_request+0x82/0x5f0 [raid10]
->   [<ffffffffa007cb2c>] ? md_make_request+0xbc/0x130 [md_mod]
->   [<ffffffff810c4722>] ? mempool_alloc+0x62/0x140
->   [<ffffffff8117d26f>] ? generic_make_request+0x30f/0x410
->   [<ffffffff8112eee4>] ? bio_alloc_bioset+0x54/0xf0
->   [<ffffffff8112e28b>] ? __bio_add_page+0x12b/0x240
->   [<ffffffff8117d3cc>] ? submit_bio+0x5c/0xe0
->   [<ffffffff811313da>] ? dio_bio_submit+0x5a/0x90
->   [<ffffffff81131d63>] ? __blockdev_direct_IO+0x5a3/0xcd0
->   [<ffffffffa01f66ed>] ? xfs_vm_direct_IO+0x11d/0x140 [xfs]
->   [<ffffffffa01f6af0>] ? xfs_get_blocks_direct+0x0/0x20 [xfs]
->   [<ffffffffa01f6470>] ? xfs_end_io_direct+0x0/0x70 [xfs]
->   [<ffffffff810c3738>] ? generic_file_direct_write+0xc8/0x1b0
->   [<ffffffffa01fef18>] ? xfs_write+0x458/0x950 [xfs]
->   [<ffffffff8106317b>] ? try_to_del_timer_sync+0x9b/0xd0
->   [<ffffffff810f9251>] ? cache_alloc_refill+0x221/0x5e0
->   [<ffffffffa01fafe0>] ? xfs_file_aio_write+0x0/0x60 [xfs]
->   [<ffffffff8113a6ac>] ? aio_rw_vect_retry+0x7c/0x210
->   [<ffffffff8113be02>] ? aio_run_iocb+0x82/0x150
->   [<ffffffff8113c747>] ? sys_io_submit+0x2b7/0x6b0
->   [<ffffffff8100b542>] ? system_call_fastpath+0x16/0x1b
-> 
->  INFO: task oracle:7654 blocked for more than 120 seconds.
->  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->  oracle        D ffff8801a8837148     0  7654      1 0x00000000
->   ffff8800614ac7c0 0000000000000086 0000000000000000 0000000000000206
->   0000000000000000 000000000000e1c8 ffff88018c175fd8 ffff88005c9ba040
->   ffff88005c9ba3e0 ffffffff810c4722 000000038c175810 ffff88005c9ba3e0
->  Call Trace:
->   [<ffffffff810c4722>] ? mempool_alloc+0x62/0x140
->   [<ffffffffa018e8ae>] ? wait_barrier+0xee/0x130 [raid10]
->   [<ffffffff8104f570>] ? default_wake_function+0x0/0x10
->   [<ffffffff8112ddd1>] ? __bio_clone+0x21/0x70
->   [<ffffffffa0191852>] ? make_request+0x82/0x5f0 [raid10]
->   [<ffffffff8112d765>] ? bio_split+0x25/0x2a0
->   [<ffffffffa0191ce1>] ? make_request+0x511/0x5f0 [raid10]
->   [<ffffffffa007cb2c>] ? md_make_request+0xbc/0x130 [md_mod]
->   [<ffffffff8117d26f>] ? generic_make_request+0x30f/0x410
->   [<ffffffff8112da4a>] ? bvec_alloc_bs+0x6a/0x120
->   [<ffffffff8117d3cc>] ? submit_bio+0x5c/0xe0
->   [<ffffffff811313da>] ? dio_bio_submit+0x5a/0x90
->   [<ffffffff81131480>] ? dio_send_cur_page+0x70/0xc0
->   [<ffffffff8113151e>] ? submit_page_section+0x4e/0x140
->   [<ffffffff8113215a>] ? __blockdev_direct_IO+0x99a/0xcd0
->   [<ffffffffa01f666e>] ? xfs_vm_direct_IO+0x9e/0x140 [xfs]
->   [<ffffffffa01f6af0>] ? xfs_get_blocks_direct+0x0/0x20 [xfs]
->   [<ffffffffa01f6470>] ? xfs_end_io_direct+0x0/0x70 [xfs]
->   [<ffffffff810c4357>] ? generic_file_aio_read+0x607/0x620
->   [<ffffffffa023fae8>] ? rpc_run_task+0x38/0x80 [sunrpc]
->   [<ffffffffa01ff83b>] ? xfs_read+0x11b/0x270 [xfs]
->   [<ffffffff81103453>] ? do_sync_read+0xe3/0x130
->   [<ffffffff8113c32c>] ? sys_io_getevents+0x39c/0x420
->   [<ffffffff810706b0>] ? autoremove_wake_function+0x0/0x30
->   [<ffffffff8113adc0>] ? timeout_func+0x0/0x10
->   [<ffffffff81104138>] ? vfs_read+0xc8/0x180
->   [<ffffffff81104291>] ? sys_pread64+0xa1/0xb0
->   [<ffffffff8100c2db>] ? device_not_available+0x1b/0x20
->   [<ffffffff8100b542>] ? system_call_fastpath+0x16/0x1b
-> 
->  INFO: task md11_resync:11976 blocked for more than 120 seconds.
->  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
->  md11_resync   D ffff88017964d140     0 11976      2 0x00000000
->   ffff8801af879880 0000000000000046 0000000000000000 0000000000000001
->   ffff8801a8b7fdd8 000000000000e1c8 ffff8800577d1fd8 ffff88017964d140
->   ffff88017964d4e0 000000012416219a ffff88002828e1c8 ffff88017964d4e0
->  Call Trace:
->   [<ffffffffa018e696>] ? raise_barrier+0xb6/0x1e0 [raid10]
->   [<ffffffff8104f570>] ? default_wake_function+0x0/0x10
->   [<ffffffff8103b263>] ? enqueue_task+0x53/0x60
->   [<ffffffffa018f525>] ? sync_request+0x715/0xae0 [raid10]
->   [<ffffffffa007dc76>] ? md_do_sync+0x606/0xc70 [md_mod]
->   [<ffffffff8104ca4a>] ? finish_task_switch+0x3a/0xc0
->   [<ffffffffa007ec47>] ? md_thread+0x67/0x140 [md_mod]
->   [<ffffffffa007ebe0>] ? md_thread+0x0/0x140 [md_mod]
->   [<ffffffff81070376>] ? kthread+0x96/0xb0
->   [<ffffffff8100c52a>] ? child_rip+0xa/0x20
->   [<ffffffff810702e0>] ? kthread+0x0/0xb0
->   [<ffffffff8100c520>] ? child_rip+0x0/0x20
-> 
-> (All 3 processes shown are reported at the same time).
-> A few more processes are waiting in wait_barrier like the
-> first mentioned above does.  Note the 3 different places
-> it is waiting:
-> 
->  o raise_barrier
->  o wait_barrier
->  o mempool_alloc called from wait_barrier
-> 
-> the whole thing look suspicious - smells like a deadlock
-> somewhere.
-> 
-> >From this point on, the array is completely dead, with many
-> processes (like the above) blocked, with no way to umount the
-> filesystem in question.  Only forced reboot of the system
-> helps.
-> 
-> This is 2.6.32.15.  I see there were a few patches for md
-> after that, but it looks like they aren't relevant for this
-> issue.
-> 
-> Note that this is not a trivially-triggerable problem.  The
-> array survived several verify rounds (even during current
-> uptime) without problems.  But today the array had quite some
-> load during verify.
-> 
-> Thanks!
-> 
-> /mjt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Index: work/include/linux/fs.h
+===================================================================
+--- work.orig/include/linux/fs.h
++++ work/include/linux/fs.h
+@@ -148,8 +148,8 @@ struct inodes_stat_t {
+ #define RWA_MASK	2
+ #define READ 0
+ #define WRITE 1
+-#define READA 2		/* read-ahead  - don't block if no resources */
+-#define SWRITE 3	/* for ll_rw_block() - wait for buffer lock */
++#define READA 16	/* read-ahead  - don't block if no resources */
++#define SWRITE 17	/* for ll_rw_block() - wait for buffer lock */
+ #define READ_SYNC	(READ | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG))
+ #define READ_META	(READ | (1 << BIO_RW_META))
+ #define WRITE_SYNC_PLUG	(WRITE | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_NOIDLE))
