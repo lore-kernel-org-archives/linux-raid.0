@@ -1,81 +1,30 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: mdadm 3.1.x and bitmap chunk
-Date: Mon, 02 Aug 2010 14:41:14 -0400
-Message-ID: <4C57114A.4000100@redhat.com>
-References: <20100609210541.GA12153@lazy.lzy>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and
+ SWRITE  to match the corresponding BIO_RW_* bits
+Date: Mon, 02 Aug 2010 22:04:56 +0200
+Message-ID: <4C5724E8.9010204@kernel.dk>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org> <20100802104227.79340b49@notabene> <4C56D397.8010305@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig264BC023978AF1F1AE9E3D16"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100609210541.GA12153@lazy.lzy>
-Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C56D397.8010305@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig264BC023978AF1F1AE9E3D16
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 08/02/2010 04:17 PM, Tejun Heo wrote:
+> Aieee... thanks for root causing it Neil.  That was a stupid bug.  I
+> knew that READ/WRITE were hardcoded but forgot about READA.  :-(
+> Moving BIO_RW_AHEAD back to bit 1 might be a better solution but I'm
+> afraid that would cause more confusions downstream.  This patch
+> updates READA and SWRITE to match BIO_RW_AHEAD and should also appear
+> in -stable releases.  The next patch will create bio_types.h and
+> define all constants in terms of BIO_RW_*.
 
-On 06/09/2010 05:05 PM, Piergiorgio Sartor wrote:
-> Hi folks,
->=20
-> I just noticed that mdadm 3.1.x sets the default
-> bitmap chunk to 64MB.
->=20
-> Searching around, I found the reason should be
-> related with write performances, which seem to
-> be less compromised with large bitmap chunks.
->=20
-> I've no problem with that, but is it possible
-> to set the bitmap chunk to the minimum size,
-> without trying all the possible dimensions?
->=20
-> Thanks a lot in advance,
->=20
-> bye,
->=20
+Tejun, care to resend these against for-2.6.36? We can reference
+these for the stable backport (at least the first one should go in).
 
-This depends somewhat on what you mean by "minimum size" to the bitmap
-chunk.  The bitmap chunk size can never be smaller than the minimum size
-on the device, so 512bytes for most drives, 4k for newer drives.  But
-such a chunk size would be horrible for performance as it would make
-every single write synchronous on the bitmap update.  However, the
-minimum size can also be limited by the available space for the bitmap
-when using an internal bitmap.  So, you can only make the size as small
-as it will go and the bitmap still fit between the end of the
-{array,superblock} and the start of the {superblock,array}.
-
-However, in general, a bitmap that's small enough that you can sync the
-dirty section in a second or two should be good enough.  With modern
-disks, they can sync 32MB or 64MB in only a second or two, hence the
-default size.  Anything less than that is really a case of diminishing
-returns.  You are sacrificing write speed on each and every write to the
-array in exchange for a *possible* speed up in the event of a crash.
-Not a very good trade off IMO.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig264BC023978AF1F1AE9E3D16
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAkxXEUoACgkQg6WylM+/8ZR1EwCggtCOwcKFCTsuyj2wVKByat9A
-UTAAnRkS/NKR8SjZHpjDhpLWPbwsP+U+
-=ymtI
------END PGP SIGNATURE-----
-
---------------enig264BC023978AF1F1AE9E3D16--
+-- 
+Jens Axboe
