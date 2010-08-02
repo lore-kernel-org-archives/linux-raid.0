@@ -1,87 +1,29 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and
- SWRITE to match the corresponding BIO_RW_* bits
-Date: Tue, 3 Aug 2010 07:52:10 +1000
-Message-ID: <20100803075210.22c7bd30@notabene>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>
-	<4C28EFD6.2070203@vlnb.net>
-	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>
-	<4C3EF3AD.5070509@vlnb.net>
-	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>
-	<4C4D7DF5.9060909@vlnb.net>
-	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>
-	<4C5073F3.1060406@vlnb.net>
-	<4C52A98A.7060507@kernel.org>
-	<20100802104227.79340b49@notabene>
-	<4C56D30A.3000403@kernel.org>
+From: Ben Nemec <lists@nemebean.com>
+Subject: Replacing a drive in RAID 0
+Date: Mon, 02 Aug 2010 17:18:11 -0500
+Message-ID: <1c7fae50481e2f053798107bf2ad2737@localhost>
+Reply-To: lists@nemebean.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C56D30A.3000403@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <jens.axboe@kernel.dk>, stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 02 Aug 2010 16:15:38 +0200
-Tejun Heo <tj@kernel.org> wrote:
 
-> Commit a82afdf (block: use the same failfast bits for bio and request)
-> moved BIO_RW_* bits around such that they match up with REQ_* bits.
-> Unfortunately, fs.h hard coded READ, WRITE, READA and SWRITE as 0, 1,
-> 2 and 3, and expected them to match with BIO_RW_* bits.  READ/WRITE
-> didn't change but BIO_RW_AHEAD was moved to bit 4 instead of bit 1,
-> breaking READA and SWRITE.
-> 
-> This patch updates READA and SWRITE such that they match the BIO_RW_*
-> bits again.  A follow up patch will update the definitions to directly
-> use BIO_RW_* bits so that this kind of breakage won't happen again.
-> 
-> Stable: The offending commit a82afdf was released with v2.6.32, so
-> this patch should be applied to all kernels since then but it must
-> _NOT_ be applied to kernels earlier than that.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-and-bisected-by: Vladislav Bolkhovitin <vst@vlnb.net>
-> Root-caused-by: Neil Brown <neilb@suse.de>
-> Cc: Jens Axobe <axboe@kernel.dk>
-> Cc: stable@kernel.org
-> ---
-> Aieee... thanks for root causing it Neil.  That was a stupid bug.  I
-> knew that READ/WRITE were hardcoded but forgot about READA.  :-(
-> Moving BIO_RW_AHEAD back to bit 1 might be a better solution but I'm
-> afraid that would cause more confusions downstream.  This patch
-> updates READA and SWRITE to match BIO_RW_AHEAD and should also appear
-> in -stable releases.  The next patch will create bio_types.h and
-> define all constants in terms of BIO_RW_*.
-> 
-> Thanks.
-> 
-> (resending w/ Jens' new address)
-> 
->  include/linux/fs.h |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: work/include/linux/fs.h
-> ===================================================================
-> --- work.orig/include/linux/fs.h
-> +++ work/include/linux/fs.h
-> @@ -148,8 +148,8 @@ struct inodes_stat_t {
->  #define RWA_MASK	2
+Hi,
 
-Close, but not quite there - RWA_MASK must be 16 too !!
+I have a disk in a RAID 0 array that SMART tells me is dying, but hasn't
+died yet.  I have a warranty replacement on the way, and I'm wondering if
+there's any way to copy the data off the dying drive to the new drive and
+swap the RAID array to use the new one (assuming the old one lasts long
+enough to do that, of course).  Can I just dd the entire drive over and
+replace the bad drive?  Can the md tools do it somehow?  Maybe it's
+impossible?  Obviously nothing on this array is irreplaceable, but it would
+save me some hassle reinstalling things if I could save it.
 
-Thanks,
-NeilBrown
+Thanks.
 
-
->  #define READ 0
->  #define WRITE 1
-> -#define READA 2		/* read-ahead  - don't block if no resources */
-> -#define SWRITE 3	/* for ll_rw_block() - wait for buffer lock */
-> +#define READA 16	/* read-ahead  - don't block if no resources */
-> +#define SWRITE 17	/* for ll_rw_block() - wait for buffer lock */
->  #define READ_SYNC	(READ | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG))
->  #define READ_META	(READ | (1 << BIO_RW_META))
->  #define WRITE_SYNC_PLUG	(WRITE | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_NOIDLE))
+-Ben
