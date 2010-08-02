@@ -1,114 +1,87 @@
-From: Justin Bronder <jsbronder@gentoo.org>
-Subject: Re: Raid10 device hangs during resync and heavy I/O.
-Date: Mon, 2 Aug 2010 16:37:54 -0400
-Message-ID: <20100802203754.GA10647@gmail.com>
-References: <20100716184618.GA25890@gmail.com>
- <20100722184933.GA22647@gmail.com>
- <20100723131925.4b2bd54e@notabene>
- <20100723154701.GA2090@gmail.com>
- <20100802122949.7bea3e7c@notabene>
- <20100802125805.1e902fe9@notabene>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and
+ SWRITE to match the corresponding BIO_RW_* bits
+Date: Tue, 3 Aug 2010 07:52:10 +1000
+Message-ID: <20100803075210.22c7bd30@notabene>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>
+	<4C28EFD6.2070203@vlnb.net>
+	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>
+	<4C3EF3AD.5070509@vlnb.net>
+	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>
+	<4C4D7DF5.9060909@vlnb.net>
+	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>
+	<4C5073F3.1060406@vlnb.net>
+	<4C52A98A.7060507@kernel.org>
+	<20100802104227.79340b49@notabene>
+	<4C56D30A.3000403@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100802125805.1e902fe9@notabene>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C56D30A.3000403@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@kernel.dk>, stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
+On Mon, 02 Aug 2010 16:15:38 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
---ew6BAiZeqk4r7MaW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On 02/08/10 12:58 +1000, Neil Brown wrote:
-> On Mon, 2 Aug 2010 12:29:49 +1000
-> Neil Brown <neilb@suse.de> wrote:
->=20
->=20
-> > Ahhhh.... I see the problem.  Because a 'generic_make_request' is alrea=
-dy
-> > active, the once called by raid10::make_request just queues the request=
- until
-> > the top level one completes.   This results in a deadlock.
-> >=20
-> > I'll have to ponder a bit to figure out the best way to fix this.
-> >=20
->=20
-> So, one good strong cup of tea later I think I have a good solution.
->=20
-> Would you be able to test with this patch and confirm that you cannot
-> reproduce the hang?
-
-I've been running with this patch on 2.6.34.1 all day and have yet to cause
-the hang.  Given it took under 5 minutes earlier, feel free to add:
-
-Tested-by:  Justin Bronder <jsbronder@gentoo.org>
-
-I really appreciate you taking care of this.  Thanks.
-
+> Commit a82afdf (block: use the same failfast bits for bio and request)
+> moved BIO_RW_* bits around such that they match up with REQ_* bits.
+> Unfortunately, fs.h hard coded READ, WRITE, READA and SWRITE as 0, 1,
+> 2 and 3, and expected them to match with BIO_RW_* bits.  READ/WRITE
+> didn't change but BIO_RW_AHEAD was moved to bit 4 instead of bit 1,
+> breaking READA and SWRITE.
+> 
+> This patch updates READA and SWRITE such that they match the BIO_RW_*
+> bits again.  A follow up patch will update the definitions to directly
+> use BIO_RW_* bits so that this kind of breakage won't happen again.
+> 
+> Stable: The offending commit a82afdf was released with v2.6.32, so
+> this patch should be applied to all kernels since then but it must
+> _NOT_ be applied to kernels earlier than that.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-and-bisected-by: Vladislav Bolkhovitin <vst@vlnb.net>
+> Root-caused-by: Neil Brown <neilb@suse.de>
+> Cc: Jens Axobe <axboe@kernel.dk>
+> Cc: stable@kernel.org
+> ---
+> Aieee... thanks for root causing it Neil.  That was a stupid bug.  I
+> knew that READ/WRITE were hardcoded but forgot about READA.  :-(
+> Moving BIO_RW_AHEAD back to bit 1 might be a better solution but I'm
+> afraid that would cause more confusions downstream.  This patch
+> updates READA and SWRITE to match BIO_RW_AHEAD and should also appear
+> in -stable releases.  The next patch will create bio_types.h and
+> define all constants in terms of BIO_RW_*.
+> 
 > Thanks.
->=20
-> NeilBrown
->=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 42e64e4..d1d6891 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -825,11 +825,29 @@ static int make_request(mddev_t *mddev, struct bio =
-* bio)
->  		 */
->  		bp =3D bio_split(bio,
->  			       chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
-> +
-> +		/* Each of these 'make_request' calls will call 'wait_barrier'.
-> +		 * If the first succeeds but the second blocks due to the resync
-> +		 * thread raising the barrier, we will deadlock because the
-> +		 * IO to the underlying device will be queued in generic_make_request
-> +		 * and will never complete, so will never reduce nr_pending.
-> +		 * So increment nr_waiting here so no new raise_barriers will
-> +		 * succeed, and so the second wait_barrier cannot block.
-> +		 */
-> +		spin_lock_irq(&conf->resync_lock);
-> +		conf->nr_waiting++;
-> +		spin_unlock_irq(&conf->resync_lock);
-> +
->  		if (make_request(mddev, &bp->bio1))
->  			generic_make_request(&bp->bio1);
->  		if (make_request(mddev, &bp->bio2))
->  			generic_make_request(&bp->bio2);
-> =20
-> +		spin_lock_irq(&conf->resync_lock);
-> +		conf->nr_waiting--;
-> +		wake_up(&conf->wait_barrier);
-> +		spin_unlock_irq(&conf->resync_lock);
-> +
->  		bio_pair_release(bp);
->  		return 0;
->  	bad_map:
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+> 
+> (resending w/ Jens' new address)
+> 
+>  include/linux/fs.h |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: work/include/linux/fs.h
+> ===================================================================
+> --- work.orig/include/linux/fs.h
+> +++ work/include/linux/fs.h
+> @@ -148,8 +148,8 @@ struct inodes_stat_t {
+>  #define RWA_MASK	2
 
---=20
-Justin Bronder
+Close, but not quite there - RWA_MASK must be 16 too !!
 
---ew6BAiZeqk4r7MaW
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Thanks,
+NeilBrown
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
 
-iEYEARECAAYFAkxXLKIACgkQ4MrvBE1wQ8lgtACeL2x41RNdKkdIwKnzS4618NUM
-laQAoIXz91ypb06IN0/T+rw4hXhf17Uo
-=SFTA
------END PGP SIGNATURE-----
-
---ew6BAiZeqk4r7MaW--
+>  #define READ 0
+>  #define WRITE 1
+> -#define READA 2		/* read-ahead  - don't block if no resources */
+> -#define SWRITE 3	/* for ll_rw_block() - wait for buffer lock */
+> +#define READA 16	/* read-ahead  - don't block if no resources */
+> +#define SWRITE 17	/* for ll_rw_block() - wait for buffer lock */
+>  #define READ_SYNC	(READ | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG))
+>  #define READ_META	(READ | (1 << BIO_RW_META))
+>  #define WRITE_SYNC_PLUG	(WRITE | (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_NOIDLE))
