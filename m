@@ -1,30 +1,61 @@
-From: =?GB2312?B?197TwrKo?= <zou.yongbo@eisoo.com>
-Subject: when does a raid rebuild failed
-Date: Tue, 03 Aug 2010 23:32:50 +0800
-Message-ID: <4C5836A2.3000809@eisoo.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2 block#for-2.6.36] bio, fs: update RWA_MASK, READA
+ and  SWRITE to match the corresponding BIO_RW_* bits
+Date: Tue, 03 Aug 2010 17:52:27 +0200
+Message-ID: <4C583B3B.3060301@kernel.org>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org> <20100802104227.79340b49@notabene> <4C56D397.8010305@kernel.org> <4C5724E8.9010204@kernel.dk> <4C57E722.5060809@kernel.org> <4C57FA57.2000601@kernel.dk> <4C57FBAD.1080809@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C57FBAD.1080809@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>, Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu
+Cc: stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
- hi, all!
-I am using mdadm to create raid on a jbod. Sometimes the rebuild proces=
-s
-of the raid failed, and some of the active disks became faulty.
-Does someone konwns when a disk will become faulty? How does a raid tha=
-t
-is created by mdadm failed? What is the process of the raid that is
-rebuilding.
-Very appreciate for any advice.
+(cc'ing CODA people)
+Hello,
 
---=20
-=CE=F0=D4=DA=B8=A1=C9=B3=D6=FE=B8=DF=CC=A8
+On 08/03/2010 01:21 PM, Jens Axboe wrote:
+>>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>>> Reported-and-bisected-by: Vladislav Bolkhovitin <vst@vlnb.net>
+>>> Root-caused-by: Neil Brown <neilb@suse.de>
+>>> Cc: Jens Axobe <axboe@kernel.dk>
+>>            ^^^^^
+>>
+>> (Too) common typo :-)
+>>
+>> Anyway, applied to for-2.6.36, thanks a lot.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oops, I'm sorry.  Heh, it reminds me of misspelling Linus's last name
+as Tolvards in a number of patches.  :-)
+
+> Irk, we have an issue:
+> 
+> In file included from fs/coda/psdev.c:48:
+> include/linux/coda_psdev.h:91:1: warning: "REQ_WRITE" redefined
+> In file included from include/linux/fs.h:11,
+>                  from include/linux/proc_fs.h:5,
+>                  from fs/coda/psdev.c:31:
+> include/linux/blk_types.h:154:1: warning: this is the location of the previous definition
+> 
+> And from include/linux/coda_psdev.h:
+> 
+> #define REQ_ASYNC  0x1
+> #define REQ_READ   0x2
+> #define REQ_WRITE  0x4
+> #define REQ_ABORT  0x8
+> 
+> which unfortunately seem to not be under __KERNEL__ protection, but
+> there are things like wait_queue_head_t structs there as well so should
+> be safe to change.
+
+Yeah, I hate it when symbols in non-core code doesn't have proper
+prefix.  Prefixing CODA_ in front of those macros should do it.  Jan
+Harkes, would that work for CODA?
+
+Thanks.
+
+-- 
+tejun
