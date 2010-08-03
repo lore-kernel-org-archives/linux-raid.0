@@ -1,45 +1,25 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Replacing a drive in RAID 0
-Date: Tue, 3 Aug 2010 18:29:50 +1000
-Message-ID: <20100803182950.01e13de0@notabene>
-References: <1c7fae50481e2f053798107bf2ad2737@localhost>
-	<alpine.DEB.1.10.1008030720540.19930@uplift.swm.pp.se>
-	<20100803161456.31d0f69b@notabene>
-	<20100803134658.4e48c97c@natsu>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and
+ SWRITE to match the corresponding BIO_RW_* bits
+Date: Tue, 03 Aug 2010 11:27:42 +0200
+Message-ID: <4C57E10E.7000401@kernel.org>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org>	<20100802104227.79340b49@notabene>	<4C56D30A.3000403@kernel.org> <20100803075210.22c7bd30@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100803134658.4e48c97c@natsu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Ben Nemec <lists@nemebean.com>, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100803075210.22c7bd30@notabene>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Tue, 3 Aug 2010 13:46:58 +0600
-Roman Mamedov <roman@rm.pp.ru> wrote:
+On 08/02/2010 11:52 PM, Neil Brown wrote:
+> Close, but not quite there - RWA_MASK must be 16 too !!
 
-> On Tue, 3 Aug 2010 16:14:56 +1000
-> Neil Brown <neilb@suse.de> wrote:
-> 
-> > > Yes, you can binary copy the drive like that, that's what I usually do.
-> > 
-> > Of course you need to be sure that the old and new devices are exactly the
-> > same size.  Normally they will but it is worth double checking that the
-> > number of sectors (blockdev --getsize) is exactly the same.
-> 
-> Isn't it okay for the new drive to be larger? At least if the RAID0 was
-> created from partitions, not whole block devices.
-> And if it was created from devices, there is a way to make the new larger
-> drive to be of exactly the same size as the old one, by setting a HPA on it
-> (see hdparm -N).
-> 
+Indeed.  Updated.
 
-The thing that you include into the RAID0 must be the same size.  If that is
-a partition, it is easy to make it the same size, but it is also easy to make
-it a different size - so care must be taken.
-If it is the whole device ... I wouldn't recommend using HPA - it would
-probably confused you later.  Just create a partition of exactly the right
-size and use that.
+Thanks.
 
-NeilBrown
+-- 
+tejun
