@@ -1,29 +1,26 @@
-From: Ben Nemec <lists@nemebean.com>
-Subject: Replacing a drive in RAID 0
-Date: Mon, 02 Aug 2010 17:18:11 -0500
-Message-ID: <1c7fae50481e2f053798107bf2ad2737@localhost>
-Reply-To: lists@nemebean.com
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Replacing a drive in RAID 0
+Date: Tue, 3 Aug 2010 07:22:01 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1008030720540.19930@uplift.swm.pp.se>
+References: <1c7fae50481e2f053798107bf2ad2737@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1c7fae50481e2f053798107bf2ad2737@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ben Nemec <lists@nemebean.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 2 Aug 2010, Ben Nemec wrote:
 
-Hi,
+> enough to do that, of course).  Can I just dd the entire drive over and
+> replace the bad drive?  Can the md tools do it somehow?  Maybe it's
 
-I have a disk in a RAID 0 array that SMART tells me is dying, but hasn't
-died yet.  I have a warranty replacement on the way, and I'm wondering if
-there's any way to copy the data off the dying drive to the new drive and
-swap the RAID array to use the new one (assuming the old one lasts long
-enough to do that, of course).  Can I just dd the entire drive over and
-replace the bad drive?  Can the md tools do it somehow?  Maybe it's
-impossible?  Obviously nothing on this array is irreplaceable, but it would
-save me some hassle reinstalling things if I could save it.
+Yes, you can binary copy the drive like that, that's what I usually do.
 
-Thanks.
+Use dd_rescue (or ddrescue, they are two different utils) instead of dd in 
+case you have any bad blocks.
 
--Ben
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
