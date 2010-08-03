@@ -1,71 +1,65 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 1/2 block#for-2.6.36] bio, fs: update RWA_MASK, READA
- and  SWRITE to match the corresponding BIO_RW_* bits
-Date: Tue, 3 Aug 2010 13:21:17 +0200
-Message-ID: <4C57FBAD.1080809@fusionio.com>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org> <20100802104227.79340b49@notabene> <4C56D397.8010305@kernel.org> <4C5724E8.9010204@kernel.dk> <4C57E722.5060809@kernel.org> <4C57FA57.2000601@kernel.dk>
+From: Ben Nemec <lists@nemebean.com>
+Subject: Re: Replacing a drive in RAID 0
+Date: Tue, 03 Aug 2010 10:28:25 -0500
+Message-ID: <b066b9fc99d1b8e559ccbe58d8145d8d@localhost>
+References: <1c7fae50481e2f053798107bf2ad2737@localhost> <alpine.DEB.1.10.1008030720540.19930@uplift.swm.pp.se> <20100803161456.31d0f69b@notabene> <20100803134658.4e48c97c@natsu> <20100803182950.01e13de0@notabene>
+Reply-To: lists@nemebean.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C57FA57.2000601@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100803182950.01e13de0@notabene>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Roman Mamedov <roman@rm.pp.ru>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-08-03 13:15, Jens Axboe wrote:
-> On 2010-08-03 11:53, Tejun Heo wrote:
->> Commit a82afdf (block: use the same failfast bits for bio and request)
->> moved BIO_RW_* bits around such that they match up with REQ_* bits.
->> Unfortunately, fs.h hard coded RW_MASK, RWA_MASK, READ, WRITE, READA
->> and SWRITE as 0, 1, 2 and 3, and expected them to match with BIO_RW_*
->> bits.  READ/WRITE didn't change but BIO_RW_AHEAD was moved to bit 4
->> instead of bit 1, breaking RWA_MASK, READA and SWRITE.
->>
->> This patch updates RWA_MASK, READA and SWRITE such that they match the
->> BIO_RW_* bits again.  A follow up patch will update the definitions to
->> directly use BIO_RW_* bits so that this kind of breakage won't happen
->> again.
->>
->> Neil also spotted missing RWA_MASK conversion.
->>
->> Stable: The offending commit a82afdf was released with v2.6.32, so
->> this patch should be applied to all kernels since then but it must
->> _NOT_ be applied to kernels earlier than that.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
->> Reported-and-bisected-by: Vladislav Bolkhovitin <vst@vlnb.net>
->> Root-caused-by: Neil Brown <neilb@suse.de>
->> Cc: Jens Axobe <axboe@kernel.dk>
->            ^^^^^
+
+On Tue, 3 Aug 2010 18:29:50 +1000, Neil Brown <neilb@suse.de> wrote:
+> On Tue, 3 Aug 2010 13:46:58 +0600
+> Roman Mamedov <roman@rm.pp.ru> wrote:
 > 
-> (Too) common typo :-)
+>> On Tue, 3 Aug 2010 16:14:56 +1000
+>> Neil Brown <neilb@suse.de> wrote:
+>> 
+>> > > Yes, you can binary copy the drive like that, that's what I usually
+>> > > do.
+>> > 
+>> > Of course you need to be sure that the old and new devices are
+exactly
+>> > the
+>> > same size.  Normally they will but it is worth double checking that
+the
+>> > number of sectors (blockdev --getsize) is exactly the same.
+>> 
+>> Isn't it okay for the new drive to be larger? At least if the RAID0 was
+>> created from partitions, not whole block devices.
+>> And if it was created from devices, there is a way to make the new
+larger
+>> drive to be of exactly the same size as the old one, by setting a HPA
+on
+>> it
+>> (see hdparm -N).
+>> 
 > 
-> Anyway, applied to for-2.6.36, thanks a lot.
+> The thing that you include into the RAID0 must be the same size.  If
+that
+> is
+> a partition, it is easy to make it the same size, but it is also easy to
+> make
+> it a different size - so care must be taken.
+> If it is the whole device ... I wouldn't recommend using HPA - it would
+> probably confused you later.  Just create a partition of exactly the
+right
+> size and use that.
 
-Irk, we have an issue:
+Fortunately the arrays are built from partitions and not block devices,
+and the one at the end of the disk is just /tmp so even if the new disk is
+slightly smaller for some reason it won't be a big deal to lose that
+particular array.  Now I just have to hope that the failing one lasts long
+enough to pull the data off...
 
-In file included from fs/coda/psdev.c:48:
-include/linux/coda_psdev.h:91:1: warning: "REQ_WRITE" redefined
-In file included from include/linux/fs.h:11,
-                 from include/linux/proc_fs.h:5,
-                 from fs/coda/psdev.c:31:
-include/linux/blk_types.h:154:1: warning: this is the location of the previous definition
+Thanks for all your help.
 
-And from include/linux/coda_psdev.h:
-
-#define REQ_ASYNC  0x1
-#define REQ_READ   0x2
-#define REQ_WRITE  0x4
-#define REQ_ABORT  0x8
-
-which unfortunately seem to not be under __KERNEL__ protection, but
-there are things like wait_queue_head_t structs there as well so should
-be safe to change.
-
--- 
-Jens Axboe
-
-
-Confidentiality Notice: This e-mail message, its contents and any attachments to it are confidential to the intended recipient, and may contain information that is privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient, please immediately notify the sender and destroy the original e-mail message and any attachments (and any copies that may have been made) from your system or otherwise. Any unauthorized use, copying, disclosure or distribution of this information is strictly prohibited.
+-Ben
