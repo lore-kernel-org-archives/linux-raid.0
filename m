@@ -1,31 +1,65 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH] coda: rename REQ_* to CODA_REQ_*
-Date: Tue, 3 Aug 2010 19:31:51 +0200
-Message-ID: <4C585287.80806@fusionio.com>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net>	<4C52A98A.7060507@kernel.org> <20100802104227.79340b49@notabene> <4C56D397.8010305@kernel.org> <4C5724E8.9010204@kernel.dk> <4C57E722.5060809@kernel.org> <4C57FA57.2000601@kernel.dk> <4C57FBAD.1080809@fusionio.com> <4C583B3B.3060301@kernel.org> <4C583DAD.4080507@kernel.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: mdadm 3.1.x and bitmap chunk
+Date: Tue, 3 Aug 2010 20:36:32 +0200
+Message-ID: <20100803183632.GB2474@lazy.lzy>
+References: <20100609210541.GA12153@lazy.lzy>
+ <4C57114A.4000100@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C583DAD.4080507@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Harkes <jaharkes@cs.cmu.edu>, "coda@cs.cmu.edu" <coda@cs.cmu.edu>, "stable@kernel.org" <stable@kernel.org>, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, "scst-devel@lists.sourceforge.net" <scst-devel@lists.sourceforge.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C57114A.4000100@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-08-03 18:02, Tejun Heo wrote:
-> REQ_* constants are used for block layer requests causing inconsistent
-> duplicate definitions of REQ_WRITE.  Rename REQ_* used by coda to
-> CODA_REQ_*.
+Hi,
 
-Should have been clear, I committed the fixup already:
+> This depends somewhat on what you mean by "minimum size" to the bitmap
+> chunk.  The bitmap chunk size can never be smaller than the minimum size
+> on the device, so 512bytes for most drives, 4k for newer drives.  But
 
-http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=ceb1fde0d5c7611fdb9004176ac34140d27e745a
+as far as I know, there is a limited space for
+the bitmap, hence if the chunk is too small,
+the bitmap will not fit in that space.
 
-Looks byte-for-byte identical :-)
+> such a chunk size would be horrible for performance as it would make
+> every single write synchronous on the bitmap update.  However, the
+> minimum size can also be limited by the available space for the bitmap
+> when using an internal bitmap.  So, you can only make the size as small
+> as it will go and the bitmap still fit between the end of the
+> {array,superblock} and the start of the {superblock,array}.
+> 
+> However, in general, a bitmap that's small enough that you can sync the
+> dirty section in a second or two should be good enough.  With modern
+> disks, they can sync 32MB or 64MB in only a second or two, hence the
+> default size.  Anything less than that is really a case of diminishing
+> returns.  You are sacrificing write speed on each and every write to the
+> array in exchange for a *possible* speed up in the event of a crash.
+> Not a very good trade off IMO.
+
+Those are my usual USB HDDs in RAID-6 configuration.
+
+Since the setup might be quite fragile, since the
+write performances are anyway limited by the USB
+and not by the seek time and writinig is anywau slow,
+I would like to keep the bitmap resync fast.
+
+That is, if a USB cable fails, I can just replace it
+and resync using bitmap, this will be quite fast, if
+the bitmap chunk is not too big.
+
+64MB is quite a huge amount of data for USB, so it
+will not help to keep the bitmap resync fast.
+Which means the chunk should be small, one target
+could be the smallest possible, given the available
+space in the superblock.
+
+Thanks,
+
+bye,
 
 -- 
-Jens Axboe
 
-
-Confidentiality Notice: This e-mail message, its contents and any attachments to it are confidential to the intended recipient, and may contain information that is privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient, please immediately notify the sender and destroy the original e-mail message and any attachments (and any copies that may have been made) from your system or otherwise. Any unauthorized use, copying, disclosure or distribution of this information is strictly prohibited.
+piergiorgio
