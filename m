@@ -1,65 +1,39 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: mdadm 3.1.x and bitmap chunk
-Date: Tue, 3 Aug 2010 20:36:32 +0200
-Message-ID: <20100803183632.GB2474@lazy.lzy>
-References: <20100609210541.GA12153@lazy.lzy>
- <4C57114A.4000100@redhat.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: when does a raid rebuild failed
+Date: Tue, 3 Aug 2010 12:13:36 -0700
+Message-ID: <AANLkTinEjRoa37rNO-dTSVpVDz+aZHC_FYQ8-Sb7TvGz@mail.gmail.com>
+References: <4C5836A2.3000809@eisoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C57114A.4000100@redhat.com>
+In-Reply-To: <4C5836A2.3000809@eisoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+> I am using mdadm to create raid on a jbod. Sometimes the rebuild process
+> of the raid failed, and some of the active disks became faulty.
+> Does someone konwns when a disk will become faulty?
 
-> This depends somewhat on what you mean by "minimum size" to the bitmap
-> chunk.  The bitmap chunk size can never be smaller than the minimum size
-> on the device, so 512bytes for most drives, 4k for newer drives.  But
+Running 'smart' on a disk in the jobd will tell you if the disk itself
+is showing signs of becoming faulty. There are also other possible
+causes, including controller failure and bad cables. I'd need more
+information about what exactly is failing, and how, before I can give
+you a better answer.
 
-as far as I know, there is a limited space for
-the bitmap, hence if the chunk is too small,
-the bitmap will not fit in that space.
+> How does a raid that is created by mdadm failed?
 
-> such a chunk size would be horrible for performance as it would make
-> every single write synchronous on the bitmap update.  However, the
-> minimum size can also be limited by the available space for the bitmap
-> when using an internal bitmap.  So, you can only make the size as small
-> as it will go and the bitmap still fit between the end of the
-> {array,superblock} and the start of the {superblock,array}.
-> 
-> However, in general, a bitmap that's small enough that you can sync the
-> dirty section in a second or two should be good enough.  With modern
-> disks, they can sync 32MB or 64MB in only a second or two, hence the
-> default size.  Anything less than that is really a case of diminishing
-> returns.  You are sacrificing write speed on each and every write to the
-> array in exchange for a *possible* speed up in the event of a crash.
-> Not a very good trade off IMO.
+Usually because a drive failed. See my previous answer for why.
 
-Those are my usual USB HDDs in RAID-6 configuration.
+> What is the process of the raid that is rebuilding.
 
-Since the setup might be quite fragile, since the
-write performances are anyway limited by the USB
-and not by the seek time and writinig is anywau slow,
-I would like to keep the bitmap resync fast.
+Not sure what you mean. We need a bunch more information about what is
+failing, logs showing what is happening, etc before we can really
+begin to offer any answers.
 
-That is, if a USB cable fails, I can just replace it
-and resync using bitmap, this will be quite fast, if
-the bitmap chunk is not too big.
-
-64MB is quite a huge amount of data for USB, so it
-will not help to keep the bitmap resync fast.
-Which means the chunk should be small, one target
-could be the smallest possible, given the available
-space in the superblock.
-
-Thanks,
-
-bye,
 
 -- 
+Drew
 
-piergiorgio
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
