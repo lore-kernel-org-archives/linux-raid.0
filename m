@@ -1,65 +1,30 @@
-From: Ben Nemec <lists@nemebean.com>
-Subject: Re: Replacing a drive in RAID 0
-Date: Tue, 03 Aug 2010 10:28:25 -0500
-Message-ID: <b066b9fc99d1b8e559ccbe58d8145d8d@localhost>
-References: <1c7fae50481e2f053798107bf2ad2737@localhost> <alpine.DEB.1.10.1008030720540.19930@uplift.swm.pp.se> <20100803161456.31d0f69b@notabene> <20100803134658.4e48c97c@natsu> <20100803182950.01e13de0@notabene>
-Reply-To: lists@nemebean.com
+From: =?GB2312?B?197TwrKo?= <zou.yongbo@eisoo.com>
+Subject: when does a raid rebuild failed
+Date: Tue, 03 Aug 2010 23:32:50 +0800
+Message-ID: <4C5836A2.3000809@eisoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100803182950.01e13de0@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Roman Mamedov <roman@rm.pp.ru>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+ hi, all!
+I am using mdadm to create raid on a jbod. Sometimes the rebuild proces=
+s
+of the raid failed, and some of the active disks became faulty.
+Does someone konwns when a disk will become faulty? How does a raid tha=
+t
+is created by mdadm failed? What is the process of the raid that is
+rebuilding.
+Very appreciate for any advice.
 
-On Tue, 3 Aug 2010 18:29:50 +1000, Neil Brown <neilb@suse.de> wrote:
-> On Tue, 3 Aug 2010 13:46:58 +0600
-> Roman Mamedov <roman@rm.pp.ru> wrote:
-> 
->> On Tue, 3 Aug 2010 16:14:56 +1000
->> Neil Brown <neilb@suse.de> wrote:
->> 
->> > > Yes, you can binary copy the drive like that, that's what I usually
->> > > do.
->> > 
->> > Of course you need to be sure that the old and new devices are
-exactly
->> > the
->> > same size.  Normally they will but it is worth double checking that
-the
->> > number of sectors (blockdev --getsize) is exactly the same.
->> 
->> Isn't it okay for the new drive to be larger? At least if the RAID0 was
->> created from partitions, not whole block devices.
->> And if it was created from devices, there is a way to make the new
-larger
->> drive to be of exactly the same size as the old one, by setting a HPA
-on
->> it
->> (see hdparm -N).
->> 
-> 
-> The thing that you include into the RAID0 must be the same size.  If
-that
-> is
-> a partition, it is easy to make it the same size, but it is also easy to
-> make
-> it a different size - so care must be taken.
-> If it is the whole device ... I wouldn't recommend using HPA - it would
-> probably confused you later.  Just create a partition of exactly the
-right
-> size and use that.
+--=20
+=CE=F0=D4=DA=B8=A1=C9=B3=D6=FE=B8=DF=CC=A8
 
-Fortunately the arrays are built from partitions and not block devices,
-and the one at the end of the disk is just /tmp so even if the new disk is
-slightly smaller for some reason it won't be a big deal to lose that
-particular array.  Now I just have to hope that the failing one lasts long
-enough to pull the data off...
-
-Thanks for all your help.
-
--Ben
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
