@@ -1,42 +1,31 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: How to track down abysmal performance ata - raid1 - crypto -
-	vg/lv - xfs
-Date: Wed, 4 Aug 2010 11:13:17 +0200
-Message-ID: <20100804091317.GA27779@isilmar-3.linta.de>
-References: <20100804073546.GA7494@comet.dominikbrodowski.net> <20100804085039.GA11671@infradead.org>
+ vg/lv - xfs
+Date: Wed, 4 Aug 2010 05:21:22 -0400
+Message-ID: <20100804092122.GA2998@infradead.org>
+References: <20100804073546.GA7494@comet.dominikbrodowski.net>
+ <20100804085039.GA11671@infradead.org>
+ <20100804091317.GA27779@isilmar-3.linta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100804085039.GA11671@infradead.org>
+In-Reply-To: <20100804091317.GA27779@isilmar-3.linta.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christoph,
-
-On Wed, Aug 04, 2010 at 04:50:39AM -0400, Christoph Hellwig wrote:
-> On Wed, Aug 04, 2010 at 09:35:46AM +0200, Dominik Brodowski wrote:
-> > How can I best track down the cause of the performance problem, 
-> > a) without rebooting too often, and
-> > b) without breaking up the setup specified above (production system)?
+On Wed, Aug 04, 2010 at 11:13:17AM +0200, Dominik Brodowski wrote:
+> > show these problems?
 > 
-> So did you just upgrade the system from an earlier kernel that did not
-> show these problems?
+> No, 2.6.31 to 2.6.34 show similar behaviour.
 
-No, 2.6.31 to 2.6.34 show similar behaviour.
+Ok, so it's been around for a while.  Can you test the write speed of
+each individual device layer by doing a large read from it, using:
 
->  Or did no one notice them before?
+	dd if=<device> of=/dev/null bs=8k iflag=direct
 
-Well, there are some reports relating to XFS on MD or RAID, though I couldn't
-find a resolution to the issues reported, e.g.
+where device starts with the /dev/sda* device, and goes up to the MD
+device, the dm-crypt device and the LV.  And yes, it's safe to read
+from the device while it's otherwise mounted/used.
 
-- http://kerneltrap.org/mailarchive/linux-raid/2009/10/12/6490333
-- http://lkml.indiana.edu/hypermail/linux/kernel/1006.1/00099.html
-
-However, I think we can rule out barriers, as XFS is mounted "nobarrier"
-here.
-
-Best,
-	Dominik
