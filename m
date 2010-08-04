@@ -1,101 +1,95 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: mdadm 3.1.x and bitmap chunk
-Date: Wed, 4 Aug 2010 21:53:02 +0200
-Message-ID: <20100804195302.GA3288@lazy.lzy>
-References: <20100609210541.GA12153@lazy.lzy>
- <4C57114A.4000100@redhat.com>
- <20100803183632.GB2474@lazy.lzy>
- <4C58BC53.1070304@redhat.com>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: How to track down abysmal performance ata - raid1 -
+	crypto - vg/lv - xfs
+Date: Wed, 04 Aug 2010 16:33:06 -0400
+Message-ID: <15446.1280953986@localhost>
+References: <20100804073546.GA7494@comet.dominikbrodowski.net>
+	<20100804085039.GA11671@infradead.org>
+	<20100804091317.GA27779@isilmar-3.linta.de>
+	<20100804092122.GA2998@infradead.org>
+	<20100804073546.GA7494@comet.dominikbrodowski.net>
+	<201008041116.09822@zmi.at>
+	<20100804102526.GB13766@isilmar-3.linta.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C58BC53.1070304@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============1967100432796027674=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: Your message of "Wed, 04 Aug 2010 12:25:26 +0200."
+	<20100804102526.GB13766@isilmar-3.linta.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Hi,
+--===============1967100432796027674==
+Content-Type: multipart/signed; boundary="==_Exmh_1280953986_3909P";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
 
-> > Since the setup might be quite fragile, since the
-> > write performances are anyway limited by the USB
-> > and not by the seek time and writing is anyway slow,
+--==_Exmh_1280953986_3909P
+Content-Type: text/plain; charset="us-ascii"
+Content-Id: <15440.1280953986.1@localhost>
+
+On Wed, 04 Aug 2010 12:25:26 +0200, Dominik Brodowski said:
+
+> The "good" news: it also happens on my notebook, even though it has a
+> different setup (no raid, disk -> lv/vg -> crypt). On my notebook, I'm
+> more than happy to test out different kernel versions, patches etc.
 > 
-> Seeks will *always* limit array speed, even when the link is slow.
-> Especially on bitmaps where the seek is synchronous to the pending write.
+> /dev/sd*                17.7 MB/s       (100 %)
+> /dev/mapper/vg1-*       16.2 MB/s       ( 92 %)
+> /dev/mapper/*_crypt      3.1 MB/s       ( 18 %)
 
-not really, in this case.
-HDDs have cache and prefetch, being the link slow
-these work quite at an optimal point.
+Unfortunately, on my laptop with a similar config, I'm seeing this:
 
-Actually, there is a huge difference in case of fast
-SATA HDDs (having bitmap or not), but as soon as the
-link speed goes down it gets even.
-In the end it is a RAID-6, so writes are not easy anyhow...
+# dd if=/dev/sda bs=8k count=1000000 of=/dev/null
+1000000+0 records in
+1000000+0 records out
+8192000000 bytes (8.2 GB) copied, 108.352 s, 75.6 MB/s
+# dd if=/dev/sda2 bs=8k count=1000000 of=/dev/null
+1000000+0 records in
+1000000+0 records out
+8192000000 bytes (8.2 GB) copied, 105.105 s, 77.9 MB/s
+# dd if=/dev/mapper/vg_blackice-root bs=8k count=100000 of=/dev/null
+100000+0 records in
+100000+0 records out
+819200000 bytes (819 MB) copied, 11.6469 s, 70.3 MB/s
 
-As a side condition, this USB array is mainly a read
-device, it's a storage system.
-This means that writes will be almost exclusively
-filesystem metadata update (access time), so not
-really a big deal.
+The raw disk, the LUKS-encrypted partition that's got a LVM on it, and a
+crypted LVM partition. The last run spikes both CPUs up to about 50%CPU each.
+So whatever it is, it's somehow more subtle than that.  Maybe the fact that
+in my case, it's disk, crypto, and LVM on the crypted partition, rather than
+crypted filesystems on an LVM volume?
 
-> > 64MB is quite a huge amount of data for USB, so it
-> > will not help to keep the bitmap resync fast.
-> 
-> It will help, without a doubt.  Any bitmap is better than no bitmap for
-> resync.  However, any bitmap is a hurt on performance.  How much of a
-> help versus a hurt just depends on the chunk size.
 
-I meant, 64MB will help less than 64KB.
+--==_Exmh_1280953986_3909P
+Content-Type: application/pgp-signature
 
-Chunk size is 64KB, that's because it was the default
-at the time the arrays were created.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-Since the max transfer data chunk for the USB storage
-protocol should be 128KB, I wonder if that chunk size
-would have been better.
-I might try to reshape it.
- 
-> I don't have an easy answer for the smallest chunk size based upon the
-[...]
+iD8DBQFMWc6CcC3lWbTT17ARAiAuAKCfL5NTEQUgaL9kVy6x0SN/ryDfbgCg9vhS
+WfKyIOBnRrmDh2eZQDebem0=
+=iHTW
+-----END PGP SIGNATURE-----
 
-Thanks for the suggestion, I'll try to see if I can
-manage to get the "smaller chunk size".
+--==_Exmh_1280953986_3909P--
 
-> In any case though, I would just try reducing the bitmap chunk to the
-> old default of 8mb.  At 8mb you are already suffering a 5% or so
-> performance penalty on write, but 8mb is not too much to resync, even
-> over USB, so it might be a good compromise in your case.
 
-I'll try also this, even if I hope I'll have not
-to benchmark... :-)
+--===============1967100432796027674==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-BTW, a single USB device can transfer up to 30MB/s, with
-one HDD limited to 15MB/s (old HDD).
 
-The arrays can achieve around 43MB/s (read, of course),
-which seems to be the limit of the USB chipset of the
-motherboard (probably todays MBs can do 50~55MB/s).
-
-This 43MB/s seem to be the limit, since this speed is
-achieved with 10 HDDs as well as with 4 (a bit less).
-
-Is this data any good to calculate the "optimal" bitmap
-chunk size?
-
-Note that with SATA HDDs the read speed I got (4 HDDs in
-RAID-5) was almost precisely (n-1)*slowest_disk, i.e.
-3*110MB/s.
-In case of the USB system it is not (due to the USB
-bottleneck) (n-2)*slowest_disk, so the concept of having
-a bitmap chunk about around the 1 second transfer is a
-bit difficult, for me, to understand.
-
-Thanks again,
-
-bye,
-
--- 
-
-piergiorgio
+--===============1967100432796027674==--
