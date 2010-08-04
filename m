@@ -1,53 +1,101 @@
-From: Michael Guntsche <mike@it-loops.com>
-Subject: Strange initramfs+udev+raid interaction creating /dev/md/*
-Date: Wed, 4 Aug 2010 21:42:16 +0200
-Message-ID: <20100804194216.GA4481@gibson.comsick.at>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: mdadm 3.1.x and bitmap chunk
+Date: Wed, 4 Aug 2010 21:53:02 +0200
+Message-ID: <20100804195302.GA3288@lazy.lzy>
+References: <20100609210541.GA12153@lazy.lzy>
+ <4C57114A.4000100@redhat.com>
+ <20100803183632.GB2474@lazy.lzy>
+ <4C58BC53.1070304@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <4C58BC53.1070304@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi list,
+Hi,
 
-I am facing a strange behaviour between udev and the raid code here and
-to be honest I do not know where the problem is.
+> > Since the setup might be quite fragile, since the
+> > write performances are anyway limited by the USB
+> > and not by the seek time and writing is anyway slow,
+> 
+> Seeks will *always* limit array speed, even when the link is slow.
+> Especially on bitmaps where the seek is synchronous to the pending write.
 
-The problem is the following. I have two md devices
+not really, in this case.
+HDDs have cache and prefetch, being the link slow
+these work quite at an optimal point.
 
-ARRAY /dev/md0 metadata=0.90 UUID=3b9e371a:f651d170:2a42ebe3:f331026f
-ARRAY /dev/md/1 metadata=1.00 name=gibson:1
-UUID=2f18e1fe:867d891e:501f93be:ea635188
+Actually, there is a huge difference in case of fast
+SATA HDDs (having bitmap or not), but as soon as the
+link speed goes down it gets even.
+In the end it is a RAID-6, so writes are not easy anyhow...
 
-/dev/md/1 is giving me troubles. 
-I am booting using an initramfs. Looking through the initramfs 
-scripts I see that /dev/md/1 gets created by it. The syslog on the 
-other hand shows me this during the boot process.
+As a side condition, this USB array is mainly a read
+device, it's a storage system.
+This means that writes will be almost exclusively
+filesystem metadata update (access time), so not
+really a big deal.
 
-Aug  4 21:23:12 gibson mdadm[3606]: DeviceDisappeared event detected on
-md device /dev/md/1
-Aug  4 21:23:12 gibson mdadm[3606]: NewArray event detected on md device
-/dev/md1
+> > 64MB is quite a huge amount of data for USB, so it
+> > will not help to keep the bitmap resync fast.
+> 
+> It will help, without a doubt.  Any bitmap is better than no bitmap for
+> resync.  However, any bitmap is a hurt on performance.  How much of a
+> help versus a hurt just depends on the chunk size.
 
-Apparently the device gets removed and then added as /dev/md1 as a
-result /dev/md/1 disappears.
-If I then run mdadm -Ds I see this
+I meant, 64MB will help less than 64KB.
 
-KERNEL[1280949869.791242] change   /devices/virtual/block/md1 (block)
-KERNEL[1280949869.792353] change   /devices/virtual/block/md0 (block)
-UDEV  [1280949869.850176] change   /devices/virtual/block/md1 (block)
-UDEV  [1280949870.044863] change   /devices/virtual/block/md0 (block)
+Chunk size is 64KB, that's because it was the default
+at the time the arrays were created.
 
-and /dev/md/1 is re-created. 
+Since the max transfer data chunk for the USB storage
+protocol should be 128KB, I wonder if that chunk size
+would have been better.
+I might try to reshape it.
+ 
+> I don't have an easy answer for the smallest chunk size based upon the
+[...]
 
-Now my question. Why does /dev/md/1 disappear and /dev/md1 gets created?
-And even if /dev/md1 gets created shouldn't this trigger udev
-automatically resulting in the creation of /dev/md/1 like running mdadm
--Ds does?
+Thanks for the suggestion, I'll try to see if I can
+manage to get the "smaller chunk size".
 
-Kind regards,
-Michael Guntsche
+> In any case though, I would just try reducing the bitmap chunk to the
+> old default of 8mb.  At 8mb you are already suffering a 5% or so
+> performance penalty on write, but 8mb is not too much to resync, even
+> over USB, so it might be a good compromise in your case.
 
+I'll try also this, even if I hope I'll have not
+to benchmark... :-)
 
+BTW, a single USB device can transfer up to 30MB/s, with
+one HDD limited to 15MB/s (old HDD).
+
+The arrays can achieve around 43MB/s (read, of course),
+which seems to be the limit of the USB chipset of the
+motherboard (probably todays MBs can do 50~55MB/s).
+
+This 43MB/s seem to be the limit, since this speed is
+achieved with 10 HDDs as well as with 4 (a bit less).
+
+Is this data any good to calculate the "optimal" bitmap
+chunk size?
+
+Note that with SATA HDDs the read speed I got (4 HDDs in
+RAID-5) was almost precisely (n-1)*slowest_disk, i.e.
+3*110MB/s.
+In case of the USB system it is not (due to the USB
+bottleneck) (n-2)*slowest_disk, so the concept of having
+a bitmap chunk about around the 1 second transfer is a
+bit difficult, for me, to understand.
+
+Thanks again,
+
+bye,
+
+-- 
+
+piergiorgio
