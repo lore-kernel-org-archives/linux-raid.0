@@ -1,60 +1,53 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: How to track down abysmal performance ata - raid1 - crypto - vg/lv - xfs
-Date: Wed, 04 Aug 2010 19:43:34 +0200
-Message-ID: <87zkx2clyx.fsf@basil.nowhere.org>
-References: <20100804073546.GA7494@comet.dominikbrodowski.net>
-	<20100804085039.GA11671@infradead.org>
-	<20100804091317.GA27779@isilmar-3.linta.de>
-	<20100804092122.GA2998@infradead.org>
-	<20100804073546.GA7494@comet.dominikbrodowski.net>
-	<201008041116.09822@zmi.at>
-	<20100804102526.GB13766@isilmar-3.linta.de>
-	<20100804111803.GA32643__39273.3621680692$1280923964$gmane$org@infradead.org>
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Strange initramfs+udev+raid interaction creating /dev/md/*
+Date: Wed, 4 Aug 2010 21:42:16 +0200
+Message-ID: <20100804194216.GA4481@gibson.comsick.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100804111803.GA32643__39273.3621680692$1280923964$gmane$org@infradead.org>
-	(Christoph Hellwig's message of "Wed, 4 Aug 2010 07:18:03 -0400")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, Michael Monnerie <michael.monnerie@is.it-management.at>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christoph Hellwig <hch@infradead.org> writes:
+Hi list,
 
-> On Wed, Aug 04, 2010 at 12:25:26PM +0200, Dominik Brodowski wrote:
->> Hey,
->> 
->> many thanks for your feedback. It seems the crypto step is the culprit:
->> 
->> Reading 1.1 GB with dd, iflag=direct, bs=8k:
->> 
->> /dev/sd*                35.3 MB/s       ( 90 %)
->> /dev/md*                39.1 MB/s       (100 %)
->> /dev/mapper/md*_crypt    3.9 MB/s       ( 10 %)
->> /dev/mapper/vg1-*        3.9 MB/s       ( 10 %)
->> 
->> The "good" news: it also happens on my notebook, even though it has a
->> different setup (no raid, disk -> lv/vg -> crypt). On my notebook, I'm
->> more than happy to test out different kernel versions, patches etc.
->> 
->> /dev/sd*                17.7 MB/s       (100 %)
->> /dev/mapper/vg1-*       16.2 MB/s       ( 92 %)
->> /dev/mapper/*_crypt      3.1 MB/s       ( 18 %)
->
-> The good news is that you have it tracked down, the bad news is that
-> I know very little about dm-crypt.  Maybe the issue is the single
-> threaded decryption in dm-crypt?  Can you check how much CPU time
-> the dm crypt kernel thread uses?
+I am facing a strange behaviour between udev and the raid code here and
+to be honest I do not know where the problem is.
 
-I fixed this some time ago with
+The problem is the following. I have two md devices
 
-http://linux.derkeiler.com/Mailing-Lists/Kernel/2010-06/msg00181.html
+ARRAY /dev/md0 metadata=0.90 UUID=3b9e371a:f651d170:2a42ebe3:f331026f
+ARRAY /dev/md/1 metadata=1.00 name=gibson:1
+UUID=2f18e1fe:867d891e:501f93be:ea635188
 
-The patch is still somewhere in the DeviceMapper meat-grinder,
-that is usually taking longer. 
+/dev/md/1 is giving me troubles. 
+I am booting using an initramfs. Looking through the initramfs 
+scripts I see that /dev/md/1 gets created by it. The syslog on the 
+other hand shows me this during the boot process.
 
--Andi
+Aug  4 21:23:12 gibson mdadm[3606]: DeviceDisappeared event detected on
+md device /dev/md/1
+Aug  4 21:23:12 gibson mdadm[3606]: NewArray event detected on md device
+/dev/md1
 
--- 
-ak@linux.intel.com -- Speaking for myself only.
+Apparently the device gets removed and then added as /dev/md1 as a
+result /dev/md/1 disappears.
+If I then run mdadm -Ds I see this
+
+KERNEL[1280949869.791242] change   /devices/virtual/block/md1 (block)
+KERNEL[1280949869.792353] change   /devices/virtual/block/md0 (block)
+UDEV  [1280949869.850176] change   /devices/virtual/block/md1 (block)
+UDEV  [1280949870.044863] change   /devices/virtual/block/md0 (block)
+
+and /dev/md/1 is re-created. 
+
+Now my question. Why does /dev/md/1 disappear and /dev/md1 gets created?
+And even if /dev/md1 gets created shouldn't this trigger udev
+automatically resulting in the creation of /dev/md/1 like running mdadm
+-Ds does?
+
+Kind regards,
+Michael Guntsche
+
+
