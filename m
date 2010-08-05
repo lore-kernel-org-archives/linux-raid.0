@@ -1,42 +1,46 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: direct-io regression [Was: How to track down abysmal
- performance ata - raid1 - crypto - vg/lv - xfs]
-Date: Thu, 5 Aug 2010 18:35:19 +0200
-Message-ID: <20100805163519.GA6604@comet.dominikbrodowski.net>
-References: <20100805123649.GA18672@dhcp231-156.rdu.redhat.com>
- <20100805113240.GA29846@think>
- <20100805153519.GA7242@comet.dominikbrodowski.net>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and SWRITE to match the corresponding BIO_RW_* bits
+Date: Thu, 05 Aug 2010 14:45:33 -0400
+Message-ID: <x49y6ckc302.fsf@segfault.boston.devel.redhat.com>
+References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>
+	<4C28EFD6.2070203@vlnb.net>
+	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>
+	<4C3EF3AD.5070509@vlnb.net>
+	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>
+	<4C4D7DF5.9060909@vlnb.net>
+	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>
+	<4C5073F3.1060406@vlnb.net> <4C52A98A.7060507@kernel.org>
+	<20100802104227.79340b49@notabene> <4C56D30A.3000403@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100805153519.GA7242@comet.dominikbrodowski.net>
+In-Reply-To: <4C56D30A.3000403@kernel.org> (Tejun Heo's message of "Mon, 02
+	Aug 2010 16:15:38 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>, josef@redhat.com, Valdis.Kletnieks@vt.edu, Michael Monnerie <michael.monnerie@is.it-management.at>, Christoph Hellwig <hch@infradead.org>, linux
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <jens.axboe@kernel.dk>, stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Small correction:
+Tejun Heo <tj@kernel.org> writes:
 
-On Thu, Aug 05, 2010 at 05:35:19PM +0200, Dominik Brodowski wrote:
-> With this fix, I get proper speeds when doing dio reads from
-> /dev/mapper/vg0-*_crypt; see the 17.3 MB/s above. Most strangely,
-> also accesing /dev/mapper/vg0-* (un-encrypted) and the raw
-> device at /dev/sda* speeds up (to up to 28 MB/s). Was only seeing around
-> 16 to 18 MB/s without this patch for unencrypted access.
+> Commit a82afdf (block: use the same failfast bits for bio and request)
+> moved BIO_RW_* bits around such that they match up with REQ_* bits.
+> Unfortunately, fs.h hard coded READ, WRITE, READA and SWRITE as 0, 1,
+> 2 and 3, and expected them to match with BIO_RW_* bits.  READ/WRITE
+> didn't change but BIO_RW_AHEAD was moved to bit 4 instead of bit 1,
+> breaking READA and SWRITE.
+>
+> This patch updates READA and SWRITE such that they match the BIO_RW_*
+> bits again.  A follow up patch will update the definitions to directly
+> use BIO_RW_* bits so that this kind of breakage won't happen again.
+>
+> Stable: The offending commit a82afdf was released with v2.6.32, so
+> this patch should be applied to all kernels since then but it must
+> _NOT_ be applied to kernels earlier than that.
 
-The speed-up of the unencrypted access (18 -> 28 MB/s) is caused by using a
-different configuration for kernel 2.6.35; and seems to be unrelated to your
-patch. Will try to track down which config option is the culprit.
+Would someone be so kind as to remind me how this problem manifests
+itself?  I know I read this recently, but my memory and googling skills
+are both failing me.  :(
 
-
-kernel, dmcrypt?	| good config | bad config
--------------------------------------------------
-patched 2.6.35, dmcrypt	  ~ 18 MB/s	~ 13 MB/s
-patched 2.6.35		  ~ 28 MB/s	~ 18 MB/s
--------------------------------------------------
-plain 2.6.35, dmcrypt	  ~  3 MB/s	~  3 MB/s
-plain 2.6.35		  <not tested>	~ 16 MB/s	
-
-
-Best,
-	Dominik
+Cheers,
+Jeff
