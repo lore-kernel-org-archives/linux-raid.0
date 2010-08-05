@@ -1,45 +1,43 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [PATCH, RFC 2/2] dm: support REQ_FLUSH directly
-Date: Thu, 05 Aug 2010 11:16:37 +0900
-Message-ID: <4C5A1F05.40308@ce.jp.nec.com>
-References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <20100803185148.GA12258@lst.de> <4C58F341.9060605@ct.jp.nec.com> <20100804085423.GA15687@lst.de>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Replacing a drive in RAID 0
+Date: Thu, 5 Aug 2010 01:59:02 -0500
+Message-ID: <9A.1C.11447.9316A5C4@cdptpa-omtalb.mail.rr.com>
+References: <1c7fae50481e2f053798107bf2ad2737@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100804085423.GA15687@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, tj@kernel.org, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1c7fae50481e2f053798107bf2ad2737@localhost>
+Sender: linux-raid-owner@vger.kernel.org
+To: lists@nemebean.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Christoph,
-
-(08/04/10 17:54), Christoph Hellwig wrote:
-> On Wed, Aug 04, 2010 at 01:57:37PM +0900, Kiyoshi Ueda wrote:
->>> -		if (unlikely(dm_rq_is_flush_request(rq))) {
->>> +		if (rq->cmd_flags & REQ_FLUSH) {
->>>  			BUG_ON(md->flush_request);
->>>  			md->flush_request = rq;
->>>  			blk_start_request(rq);
->>
->> Current request-based device-mapper's flush code depends on
->> the block-layer's barrier behavior which dispatches only one request
->> at a time when flush is needed.
->> In other words, current request-based device-mapper can't handle
->> other requests while a flush request is in progress.
->>
->> I'll take a look how I can fix the request-based device-mapper to
->> cope with it.  I think it'll take time for carefull investigation.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Ben Nemec
+> Sent: Monday, August 02, 2010 5:18 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Replacing a drive in RAID 0
 > 
-> Given that request based device mapper doesn't even look at the
-> block numbers from what I can see just removing any special casing
-> for REQ_FLUSH should probably do it.
+> 
+> Hi,
+> 
+> I have a disk in a RAID 0 array that SMART tells me is dying, but hasn't
+> died yet.  I have a warranty replacement on the way, and I'm wondering if
+> there's any way to copy the data off the dying drive to the new drive and
+> swap the RAID array to use the new one (assuming the old one lasts long
+> enough to do that, of course).  Can I just dd the entire drive over and
+> replace the bad drive?  Can the md tools do it somehow?  Maybe it's
+> impossible?  Obviously nothing on this array is irreplaceable, but it
+> would
+> save me some hassle reinstalling things if I could save it.
 
-Special casing is necessary because device-mapper may have to
-send multiple copies of REQ_FLUSH request to multiple
-targets, while normal request is just sent to single target.
+	Well, yes, although one cannot guarantee there won't be any data
+loss.  Of course you will need to take the array offline, and indeed I
+recommend you take it down now - or at least remount it as read-only, and
+don't do any writes to it until after you have the new drive in place.
+Install the new drive, and then use ddrescue to copy the contents of the old
+drive to the new.  Read the man page for ddrescue carefully, and take care
+not to accidentally copy the new drive to the old.
 
-Thanks,
--- 
-Jun'ichi Nomura, NEC Corporation
