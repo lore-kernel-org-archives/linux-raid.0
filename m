@@ -1,43 +1,53 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Replacing a drive in RAID 0
-Date: Thu, 5 Aug 2010 01:59:02 -0500
-Message-ID: <9A.1C.11447.9316A5C4@cdptpa-omtalb.mail.rr.com>
-References: <1c7fae50481e2f053798107bf2ad2737@localhost>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: direct-io regression [Was: How to track down abysmal performance
+ ata - raid1 - crypto - vg/lv - xfs]
+Date: Thu, 5 Aug 2010 11:31:00 +0200
+Message-ID: <20100805093100.GA3001@comet.dominikbrodowski.net>
+References: <20100804073546.GA7494@comet.dominikbrodowski.net>
+ <20100804085039.GA11671@infradead.org>
+ <20100804091317.GA27779@isilmar-3.linta.de>
+ <20100804092122.GA2998@infradead.org>
+ <20100804073546.GA7494@comet.dominikbrodowski.net>
+ <201008041116.09822@zmi.at>
+ <20100804102526.GB13766@isilmar-3.linta.de>
+ <15446.1280953986@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1c7fae50481e2f053798107bf2ad2737@localhost>
-Sender: linux-raid-owner@vger.kernel.org
-To: lists@nemebean.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <15446.1280953986@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Valdis.Kletnieks@vt.edu, josef@redhat.com, chris.mason@oracle.com
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Ben Nemec
-> Sent: Monday, August 02, 2010 5:18 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Replacing a drive in RAID 0
-> 
-> 
-> Hi,
-> 
-> I have a disk in a RAID 0 array that SMART tells me is dying, but hasn't
-> died yet.  I have a warranty replacement on the way, and I'm wondering if
-> there's any way to copy the data off the dying drive to the new drive and
-> swap the RAID array to use the new one (assuming the old one lasts long
-> enough to do that, of course).  Can I just dd the entire drive over and
-> replace the bad drive?  Can the md tools do it somehow?  Maybe it's
-> impossible?  Obviously nothing on this array is irreplaceable, but it
-> would
-> save me some hassle reinstalling things if I could save it.
+Hey,
 
-	Well, yes, although one cannot guarantee there won't be any data
-loss.  Of course you will need to take the array offline, and indeed I
-recommend you take it down now - or at least remount it as read-only, and
-don't do any writes to it until after you have the new drive in place.
-Install the new drive, and then use ddrescue to copy the contents of the old
-drive to the new.  Read the man page for ddrescue carefully, and take care
-not to accidentally copy the new drive to the old.
+when attempting to track down insufficient I/O performance, I found the
+following reression relating to direct-io on my notebook, where an
+ata device, which consists of several partitions, is combined to a lvm
+volume, and one logical volume is then encrypted using dm-crypt. Test case
+was the following command:
 
+$ dd if=/dev/mapper/vg0-root_crypt of=/dev/zero iflag=direct bs=8k count=131072
+
+2.6.34 results in ~16 MB/s,
+2.6.35 results in ~ 3.1 MB/s
+
+The regression was bisected down to the follwoing commit:
+
+commit c2c6ca417e2db7a519e6e92c82f4a933d940d076
+Author: Josef Bacik <josef@redhat.com>
+Date:   Sun May 23 11:00:55 2010 -0400
+
+    direct-io: do not merge logically non-contiguous requests
+    
+...
+
+How to fix this? I do not use btrfs, but ext3 (and the access was down on
+the block level, not on the fs level, so this btrs-related commit should not
+cause such a regression).
+
+Best,
+
+	Dominik
