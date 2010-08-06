@@ -1,31 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND 1/2 block#for-linus] bio, fs: update READA and
- SWRITE to match the corresponding BIO_RW_* bits
-Date: Fri, 06 Aug 2010 08:29:39 +0200
-Message-ID: <4C5BABD3.6010303@kernel.org>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net>	<20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>	<4C5073F3.1060406@vlnb.net> <4C52A98A.7060507@kernel.org>	<20100802104227.79340b49@notabene> <4C56D30A.3000403@kernel.org> <x49y6ckc302.fsf@segfault.boston.devel.redhat.com> <4C5B89DB.5050106@oracle.com>
+From: Neil Brown <neilb@suse.de>
+Subject: ANNOUNCE: mdadm 3.1.3 - A tool for managing Soft RAID under Linux
+Date: Fri, 6 Aug 2010 16:59:01 +1000
+Message-ID: <19547.45749.153826.476559@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C5B89DB.5050106@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tao Ma <tao.ma@oracle.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>, Jens Axboe <jens.axboe@kernel.dk>, stable@kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>, Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Neil Brown <neilb@suse.de>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
 
-On 08/06/2010 06:04 AM, Tao Ma wrote:
-> If only this patch goes into stable, do we need to change RWA_MASK in this patch also(I have seen you change it the 2/2)?
-> 
-> -#define RWA_MASK        2
-> +#define RWA_MASK        16
+I am pleased to announce the availability of
+   mdadm version 3.1.3
 
-Yeah, Neil already pointed it out and updated patch has been posted
-and merged.
+It is available at the usual places:
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
 
-Thanks.
+This is a bugfix/stability release over 3.1.2
 
--- 
-tejun
+Significant changes are:
+   -    mapfile now lives in a fixed location which default to
+        /dev/.mdadm/map but can be changed at compile time.  This
+	location is choses and most distros provide it during early
+	boot and preserve it through.  As long a /dev exists and is
+	writable, /dev/.mdadm will be created.
+	Other files file communication with mdmon live here too.
+	This fixes a bug reported by Debian and Gentoo users where
+	udev would spin in early-boot.
+   -    IMSM and DDF metadata will not be recognised on partitions
+        as they should only be used on whole-disks.
+   -    Various overflows causes by 2G drives have been addressed.
+   -    A subarray of an IMSM contain can now be killed with
+        --kill-subarray.  Also subarrays can be renamed with
+	--update-subarray
+   -    -If (or --incremental --fail) can be used  from udev to
+        fail and remove from all arrays a device which has been
+	unplugged from the system.  i.e. hot-unplug-support.
+   -    "mdadm /dev/mdX --re-add missing" will look for any device
+        that looks like it should be a member of /dev/mdX but isn't
+	and will automatically --re-add it
+   -    Now compile with -Wextra to get extra warnings.
+   -    Lots of minor bug fixes, documentation improvements, etcc
+
+This release is believed to be stable and you should feel free to
+upgrade to 3.1.3
+
+It is expected that the next release will be 3.2 with a number of new
+features.  3.1.4 will only happen if important bugs show up before 3.2
+is stable.
+
+NeilBrown 6th August 2010
