@@ -1,57 +1,48 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 3.1.3 - A tool for managing Soft RAID under Linux
-Date: Fri, 6 Aug 2010 16:59:01 +1000
-Message-ID: <19547.45749.153826.476559@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: ANNOUNCE: mdadm 3.1.3 - A tool for managing Soft RAID under
+ Linux
+Date: Fri, 6 Aug 2010 09:08:03 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1008060906060.19930@uplift.swm.pp.se>
+References: <19547.45749.153826.476559@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1714676185-1281078483=:19930"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19547.45749.153826.476559@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-I am pleased to announce the availability of
-   mdadm version 3.1.3
+---137064504-1714676185-1281078483=:19930
+Content-Type: TEXT/PLAIN; charset=ISO-8859-7; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-It is available at the usual places:
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+On Fri, 6 Aug 2010, Neil Brown wrote:
 
-This is a bugfix/stability release over 3.1.2
+>
+> I am pleased to announce the availability of
+>   mdadm version 3.1.3
 
-Significant changes are:
-   -    mapfile now lives in a fixed location which default to
-        /dev/.mdadm/map but can be changed at compile time.  This
-	location is choses and most distros provide it during early
-	boot and preserve it through.  As long a /dev exists and is
-	writable, /dev/.mdadm will be created.
-	Other files file communication with mdmon live here too.
-	This fixes a bug reported by Debian and Gentoo users where
-	udev would spin in early-boot.
-   -    IMSM and DDF metadata will not be recognised on partitions
-        as they should only be used on whole-disks.
-   -    Various overflows causes by 2G drives have been addressed.
-   -    A subarray of an IMSM contain can now be killed with
-        --kill-subarray.  Also subarrays can be renamed with
-	--update-subarray
-   -    -If (or --incremental --fail) can be used  from udev to
-        fail and remove from all arrays a device which has been
-	unplugged from the system.  i.e. hot-unplug-support.
-   -    "mdadm /dev/mdX --re-add missing" will look for any device
-        that looks like it should be a member of /dev/mdX but isn't
-	and will automatically --re-add it
-   -    Now compile with -Wextra to get extra warnings.
-   -    Lots of minor bug fixes, documentation improvements, etcc
+I get the following compile error:
 
-This release is believed to be stable and you should feel free to
-upgrade to 3.1.3
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -ggdb 
+-DSendmail=\""/usr/sbin/sendmail -t"\" -DCONFFILE=\"/etc/mdadm.conf\" 
+-DCONFFILE2=\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=\"/dev/.mdadm\" 
+-DMAP_FILE=\"map\" -DMDMON_DIR=\"/dev/.mdadm\" -DUSE_PTHREADS   -c -o 
+super-intel.o super-intel.c
+cc1: warnings being treated as errors
+super-intel.c: In function ¡imsm_process_update¢:
+super-intel.c:5393: error: format not a string literal and no format arguments
+super-intel.c:5393: error: format not a string literal and no format arguments
+make: *** [super-intel.o] Error 1
 
-It is expected that the next release will be 3.2 with a number of new
-features.  3.1.4 will only happen if important bugs show up before 3.2
-is stable.
+This is on a ubuntu 10.04 system with their 2.6.32 kernel.
 
-NeilBrown 6th August 2010
+mdadm-3.1.2 compiles fine on the same system.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+---137064504-1714676185-1281078483=:19930--
