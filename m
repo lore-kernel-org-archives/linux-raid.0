@@ -1,76 +1,79 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 3.1.3 - A tool for managing Soft RAID under
- Linux
-Date: Fri, 6 Aug 2010 20:02:34 +1000
-Message-ID: <20100806200234.79818035@notabene>
-References: <19547.45749.153826.476559@notabene.brown>
-	<alpine.DEB.1.10.1008060906060.19930@uplift.swm.pp.se>
+Subject: Re: Problem regarding RAID10 on kernel 2.6.31
+Date: Fri, 6 Aug 2010 20:14:35 +1000
+Message-ID: <20100806201435.5a3cb1f9@notabene>
+References: <1281087718.14259.5.camel@venkata-pc.in.caveonetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1008060906060.19930@uplift.swm.pp.se>
+In-Reply-To: <1281087718.14259.5.camel@venkata-pc.in.caveonetworks.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: ravichandra <vmynidi@caviumnetworks.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 6 Aug 2010 09:08:03 +0200 (CEST)
-Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+On Fri, 06 Aug 2010 15:11:58 +0530
+ravichandra <vmynidi@caviumnetworks.com> wrote:
 
-> On Fri, 6 Aug 2010, Neil Brown wrote:
->=20
-> >
-> > I am pleased to announce the availability of
-> >   mdadm version 3.1.3
->=20
-> I get the following compile error:
->=20
-> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter -=
-ggdb=20
-> -DSendmail=3D\""/usr/sbin/sendmail -t"\" -DCONFFILE=3D\"/etc/mdadm.co=
-nf\"=20
-> -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\" -DMAP_DIR=3D\"/dev/.mdadm\"=20
-> -DMAP_FILE=3D\"map\" -DMDMON_DIR=3D\"/dev/.mdadm\" -DUSE_PTHREADS   -=
-c -o=20
-> super-intel.o super-intel.c
-> cc1: warnings being treated as errors
-> super-intel.c: In function =E2=80=98imsm_process_update=E2=80=99:
-> super-intel.c:5393: error: format not a string literal and no format =
-arguments
-> super-intel.c:5393: error: format not a string literal and no format =
-arguments
-> make: *** [super-intel.o] Error 1
->=20
-> This is on a ubuntu 10.04 system with their 2.6.32 kernel.
->=20
-> mdadm-3.1.2 compiles fine on the same system.
->=20
+> Hi everyone,
+>                  I  used 2 (1 TB disks) disks each with 3
+> partitions(sda[1-3] and sdb[1-3]).Using sda[1-2] and sdb[1-2] i have
+> created a RAID10 array say md2. Then  i was reading and writing to the
+> array and simultaneously removing a disk and adding it to the same
+> array. In the process i got a hang causing recovery process to halt. The
+> array was not operational after.These were done on kernel 2.6.31.
+> 
+>            I am working on the RAID10 for the first time. Can someone
+> help in this so that i can proceed further?? 
+> 
+> Thanks in advance.
 
-Thanks for the report - I guess you have a newer compiler than me.
-
-Below patch should fix it, or just
-    make CWFLAGS=3D
-as the code will still do the right thing.
-
+Known problem.  I'll be submitting the fix upstream shortly.  I include it
+below.
+Thanks for the report
 NeilBrown
 
-diff --git a/super-intel.c b/super-intel.c
-index 4cebc8d..b880a74 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5390,7 +5390,7 @@ static void imsm_process_update(struct supertype =
-*st,
- 			break;
- 		}
-=20
--		snprintf((char *) dev->volume, MAX_RAID_SERIAL_LEN, name);
-+		snprintf((char *) dev->volume, MAX_RAID_SERIAL_LEN, "%s", name);
- 		super->updates_pending++;
- 		break;
- 	}
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 42e64e4..d1d6891 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -825,11 +825,29 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 		 */
+ 		bp = bio_split(bio,
+ 			       chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
++
++		/* Each of these 'make_request' calls will call 'wait_barrier'.
++		 * If the first succeeds but the second blocks due to the resync
++		 * thread raising the barrier, we will deadlock because the
++		 * IO to the underlying device will be queued in generic_make_request
++		 * and will never complete, so will never reduce nr_pending.
++		 * So increment nr_waiting here so no new raise_barriers will
++		 * succeed, and so the second wait_barrier cannot block.
++		 */
++		spin_lock_irq(&conf->resync_lock);
++		conf->nr_waiting++;
++		spin_unlock_irq(&conf->resync_lock);
++
+ 		if (make_request(mddev, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+ 		if (make_request(mddev, &bp->bio2))
+ 			generic_make_request(&bp->bio2);
+ 
++		spin_lock_irq(&conf->resync_lock);
++		conf->nr_waiting--;
++		wake_up(&conf->wait_barrier);
++		spin_unlock_irq(&conf->resync_lock);
++
+ 		bio_pair_release(bp);
+ 		return 0;
+ 	bad_map:
