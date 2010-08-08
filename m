@@ -1,97 +1,335 @@
-From: <brian.foster@emc.com>
-Subject: RE: --assume-clean on raid5/6
-Date: Sun, 8 Aug 2010 10:17:01 -0400
-Message-ID: <D27CA15508148C428A25104ADEFAAC810661CFC1@CORPUSMX50C.corp.emc.com>
-References: <D27CA15508148C428A25104ADEFAAC810661CD00@CORPUSMX50C.corp.emc.com><4C5D5187.7080109@stud.tu-ilmenau.de> <20100808185602.0e96efa2@notabene>
+From: "fibreraid@gmail.com" <fibreraid@gmail.com>
+Subject: Re: md's fail to assemble correctly consistently at system startup -
+ mdadm 3.1.2 and Ubuntu 10.04
+Date: Sun, 8 Aug 2010 07:26:59 -0700
+Message-ID: <AANLkTi=j5WddChbtjBRCJFc=6XvOmEGL3bZdqJ3NfNeK@mail.gmail.com>
+References: <AANLkTinQgx1t0eaXuFKLnf+5PBw1AqJpyYfxo-AvZXQf@mail.gmail.com>
+	<20100808185806.69085415@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20100808185602.0e96efa2@notabene>
+In-Reply-To: <20100808185806.69085415@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, st0ff@npl.de
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBOZWlsIEJyb3duIFttYWlsdG86
-bmVpbGJAc3VzZS5kZV0NCj4gU2VudDogU3VuZGF5LCBBdWd1c3QgMDgsIDIwMTAgNDo1NiBBTQ0K
-PiBUbzogc3QwZmZAbnBsLmRlDQo+IENjOiBzdGVmYW4uaHVlYm5lckBzdHVkLnR1LWlsbWVuYXUu
-ZGU7IEZvc3RlciwgQnJpYW47IGxpbnV4LQ0KPiByYWlkQHZnZXIua2VybmVsLm9yZw0KPiBTdWJq
-ZWN0OiBSZTogLS1hc3N1bWUtY2xlYW4gb24gcmFpZDUvNg0KPiANCj4gT24gU2F0LCAwNyBBdWcg
-MjAxMCAxNDoyODo1NSArMDIwMA0KPiBTdGVmYW4gLypTdDBmRiovIEjDvGJuZXIgPHN0ZWZhbi5o
-dWVibmVyQHN0dWQudHUtaWxtZW5hdS5kZT4gd3JvdGU6DQo+IA0KPiA+IEhpIEJyaWFuLA0KPiA+
-DQo+ID4gLS1hc3N1bWUtY2xlYW4gc2tpcHMgb3ZlciB0aGUgaW5pdGlhbCByZXN5bmMuICBXaGlj
-aCAtIGlmIHlvdSB3aWxsDQo+ID4gY3JlYXRlIGEgZmlsZXN5c3RlbSBhZnRlciBjcmVhdGluZyB0
-aGUgYXJyYXkgLSBpcyBhIHRpbWUtc2F2aW5nIGlkZWEuDQo+ID4gQnV0IGtlZXAgaW4gbWluZDog
-ZXZlbiBpZiB0aGUgZGlza3MgYXJlIGJyYW5kIG5ldyBhbmQgY29udGFpbiBvbmx5DQo+ID4gemVy
-b3MsIHRoZSBwYXJpdHkgd291bGQgcHJvYmFibHkgbG9vayBub3QgYWxsIHplcm9zLiAgU28gcmVh
-ZGluZyBmcm9tDQo+ID4gc3VjaCBhbiBhcnJheSB3b3VsZCBiZSBhIGJhZCBpZGVhLg0KPiA+IEJ1
-dCBpZiB0aGUgbmV4dCB0aGluZyB5b3UgZG8gaXMgY3JlYXRlIExWTS9maWxlc3lzdGVtIGV0Yy4s
-IHRoZW4gYWxsDQo+IGJpdA0KPiA+IHJlYWQgZnJvbSB0aGUgYXJyYXkgd2lsbCBoYXZlIGJlZW4g
-d3JpdHRlbiB0byBiZWZvcmUgKGFuZCBieSB0aGF0IGFyZQ0KPiBpbg0KPiA+IHN5bmMpLg0KPiAN
-Cj4gVGhlcmUgaXMgYW4gaW1wb3J0YW50IHBvaW50IHRoYXQgdGhpcyBtaXNzZXMuDQo+IA0KPiBX
-aGVuIG1kIHVwZGF0ZXMgYSBibG9jayBvbiBhIFJBSUQ1IGl0IHdpbGwgc29tZXRpbWVzIHVzZSBh
-IHJlYWQtbW9kaWZ5LQ0KPiB3cml0ZQ0KPiBjeWNsZSB3aGljaCByZWFkcyB0aGUgb2xkIGJsb2Nr
-IGFuZCBvbGQgcGFyaXR5LCBzdWJ0cmFjdHMgdGhlIG9sZCBibG9jaw0KPiBmcm9tDQo+IHRoZSBw
-YXJpdHkgYmxvY2sgYW5kIHRoZW4gYWRkZWQgdGhlIG5ldyBibG9jayB0byB0aGUgcGFyaXR5IGJs
-b2NrLg0KPiBUaGVuIGl0DQo+IHdyaXRlcyB0aGUgbmV3IGRhdGEgYmxvY2sgYW5kIHRoZSBuZXcg
-cGFyaXR5IGJsb2NrLg0KPiANCj4gSWYgdGhlIG9sZCBwYXJpdHkgd2FzIGNvcnJlY3QgZm9yIHRo
-ZSBvbGQgc3RyaXBlLCB0aGVuIHRoZSBuZXcgcGFyaXR5DQo+IHdpbGwgYmUNCj4gY29ycmVjdCBm
-b3IgdGhlIG5ldyBzdHJpcGUuICBCdXQgaWYgdGhlIG9sZCB3YXMgd3JvbmcgdGhlbiB0aGUgbmV3
-IHdpbGwNCj4gYmUNCj4gd3JvbmcuDQo+IA0KPiBTbyBpZiB5b3UgdXNlIGFzc3VtZS1jbGVhbiB0
-aGVuIHRoZSBwYXJpdHkgbWF5IHdlbGwgYmUgd3JvbmcgYW5kIGNvdWxkDQo+IHJlbWFpbg0KPiB3
-cm9uZyBldmVuIHdoZW4geW91IHdyaXRlIG5ldyBkYXRhLiAgSWYgeW91IHRoZW4gbG9zZSBhIGRl
-dmljZSwgdGhlDQo+IGRhdGEgZm9yDQo+IHRoYXQgZGV2aWNlIHdpbGwgYmUgY29tcHV0ZWQgdXNp
-bmcgd3JvbmcgcGFyaXR5IGFuZCB5b3Ugd2lsbCBnZXQgd3JvbmcNCj4gZGF0YSAtDQo+IGhlbmNl
-IGRhdGEgY29ycnVwdGlvbi4NCj4gDQo+IFNvIHlvdSBzaG91bGQgb25seSB1c2UgLS1hc3N1bWUt
-Y2xlYW4gaWYgeW91IGtub3cgdGhlIGFycmF5IHJlYWxseSBpcw0KPiAnY2xlYW4nLg0KPiANCg0K
-VGhhbmtzIGZvciB0aGUgaW5mb3JtYXRpb24gZ3V5cy4gSSB3YXMgYWN0dWFsbHkgYXR0ZW1wdGlu
-ZyB0byB0ZXN0IHdoZXRoZXIgdGhpcyBjb3VsZCBvY2N1ciB3aXRoIGEgaGlnaC1sZXZlbCBzZXF1
-ZW5jZSBzaW1pbGFyIHRvIHRoZSBmb2xsb3dpbmc6DQoNCi0gZGQgL2Rldi91cmFuZG9tIGRhdGEg
-dG8gNCBzbWFsbCBwYXJ0aXRpb25zICh+MTBNQiBlYWNoKS4NCi0gQ3JlYXRlIGEgcmFpZDUgd2l0
-aCAtLWFzc3VtZS1jbGVhbiBvbiBzYWlkIHBhcnRpdGlvbnMuDQotIFdyaXRlIGEgc21hbGwgYml0
-IG9mIGRhdGEgKDMyIGJ5dGVzKSB0byB0aGUgYmVnaW5uaW5nIG9mIHRoZSBtZCwgY2FwdHVyZSBh
-biBpbWFnZSBvZiB0aGUgbWQgdG8gYSBmaWxlLg0KLSBGYWlsL3JlbW92ZSBhIGRyaXZlIGZyb20g
-dGhlIG1kLCBjYXB0dXJlIGEgc2Vjb25kIG1kIGZpbGUgaW1hZ2UuDQotIGNtcCB0aGUgZmlsZSBp
-bWFnZXMgdG8gc2VlIHdoYXQgY2hhbmdlZCwgYW5kIHJlYWQgYmFjayB0aGUgZmlyc3QgMzIgYnl0
-ZXMgb2YgZGF0YS4NCg0KSW4gdGhpcyBzY2VuYXJpbyBJIGRvIG9ic2VydmUgZGlmZmVyZW5jZXMg
-aW4gdGhlIGZpbGUgaW1hZ2UsIGJ1dCBteSBkYXRhIHJlbWFpbnMgaW50YWN0LiBJIHJhbiB0aGlz
-IHNlcXVlbmNlIG11bHRpcGxlIHRpbWVzLCBlYWNoIHRpbWUgZmFpbGluZyBhIGRpZmZlcmVudCBk
-cml2ZSBpbiB0aGUgYXJyYXkgYW5kIGFsc28gdHJpZWQgdG8gc3RvcC9yZXN0YXJ0IHRoZSBhcnJh
-eSAod2l0aCBhIGRyb3BfY2FjaGVzIGluIGJldHdlZW4pIGJlZm9yZSB0aGUgZHJpdmUgZmFpbHVy
-ZSBzdGVwLiBUaGlzIGxlYWRzIHRvIG15IHF1ZXN0aW9uOiBpcyB0aGVyZSBhIHdyaXRlIHRlc3Qg
-dGhhdCBjYW4gcmVwcm9kdWNlIGRhdGEgY29ycnVwdGlvbiB1bmRlciB0aGlzIHNjZW5hcmlvLCBv
-ciBpcyB0aGUgcm13IGN5Y2xlIHNvbWUga2luZCBvZiBvcHRpbWl6YXRpb24gdGhhdCBpcyBub3Qg
-c28gZGV0ZXJtaW5pc3RpYz8NCg0KQWxzbyBvdXQgb2YgY3VyaW91c2l0eSwgd291bGQgLS1hc3N1
-bWUtY2xlYW4gYmUgc2FmZSBvbiBhIHJhaWQ1IGlmIHRoZSBkcml2ZXMgd2VyZSBleHBsaWNpdGx5
-IHplcm9lZCBiZWZvcmVoYW5kPyBUaGFua3MgYWdhaW4uDQoNCkJyaWFuDQoNCj4gUkFJRDEvUkFJ
-RDEwIGNhbm5vdCBzdWZmZXIgZnJvbSB0aGlzIHNvIC0tYXNzdW1lLWNsZWFuIGlzIHF1aXRlIHNh
-ZmUNCj4gd2l0aA0KPiB0aG9zZSBhcnJheSB0eXBlcy4NCj4gVGhlIGN1cnJlbnQgaW1wbGVtZW50
-YXRpb24gb2YgUkFJRDYgbmV2ZXIgZG9lcyByZWFkLW1vZGlmeS13cml0ZSBzbw0KPiAtLWFzc3Vt
-ZS1jbGVhbiBpcyBjdXJyZW50bHkgc2FmZSB3aXRoIFJBSUQ2IHRvby4gIEhvd2V2ZXIgSSBkbyBu
-b3QNCj4gcHJvbWlzZQ0KPiB0aGF0IFJBSUQ2IG1pZ2h0IG5vdCBjaGFuZ2UgdG8gdXNlIHJlYWQt
-bW9kaWZ5LXdyaXRlIGN5Y2xlcyBpbiBzb21lDQo+IGZ1dHVyZQ0KPiBpbXBsZW1lbnRhdGlvbi4g
-IFNvIEkgd291bGQgbm90IHJlY29tbWVuZCB1c2luZyAtLWFzc3VtZS1jbGVhbiBvbiBSQUlENg0K
-PiBqdXN0DQo+IHRvIGF2b2lkIHRoZSByZXN5bmMgY29zdC4NCj4gDQo+IE5laWxCcm93bg0KPiAN
-Cj4gPg0KPiA+IFN0ZWZhbg0KPiA+DQo+ID4gQW0gMDYuMDguMjAxMCAwMzoxOSwgc2NocmllYiBi
-cmlhbi5mb3N0ZXJAZW1jLmNvbToNCj4gPiA+IEhpIGFsbCwNCj4gPiA+DQo+ID4gPiBJJ3ZlIHJl
-YWQgaW4gdGhlIGxpc3QgYXJjaGl2ZXMgdGhhdCB1c2Ugb2YgLS1hc3N1bWUtY2xlYW4gb24gcmFp
-ZDUNCj4gPiA+IChyYWlkNj8pIGlzIG5vdCBzYWZlIGFzc3VtaW5nIHRoZSBtZW1iZXIgZHJpdmVz
-IGFyZSBub3Qgc3luYywgYnV0DQo+IGl0J3MNCj4gPiA+IG5vdCBjbGVhciB0byBtZSBhcyB0byB3
-aHkuIEkgY2FuIHNlZSB0aGUgY29udGVudCBvZiBhbiB3cml0dGVuDQo+IHJhaWQ1DQo+ID4gPiBh
-cnJheSBjaGFuZ2UgaWYgSSBmYWlsIGEgZHJpdmUgb3V0IG9mIHRoZSBhcnJheSAoY3JlYXRlZCB3
-Lw0KPiA+ID4gLS1hc3N1bWUtY2xlYW4pLCBidXQgZGF0YSB0aGF0IEkgd3JpdGUgcHJpb3IgdG8g
-ZmFpbGluZyBhIGRyaXZlDQo+IHJlbWFpbnMNCj4gPiA+IGludGFjdC4gUGVyaGFwcyBJJ20gbWlz
-c2luZyBzb21ldGhpbmcuIENvdWxkIHNvbWVib2R5IGVsYWJvcmF0ZSBvbg0KPiB0aGUNCj4gPiA+
-IGRhbmdlci9yaXNrIG9mIHVzaW5nIC0tYXNzdW1lLWNsZWFuPyBUaGFua3MgaW4gYWR2YW5jZS4N
-Cj4gPiA+DQo+ID4gPiBCcmlhbg0KPiA+ID4gLS0NCj4gPiA+IFRvIHVuc3Vic2NyaWJlIGZyb20g
-dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC0NCj4gcmFpZCIgaW4N
-Cj4gPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3Jn
-DQo+ID4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
-am9yZG9tby1pbmZvLmh0bWwNCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
-aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiDQo+IGluDQo+
-ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4g
-PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
-by1pbmZvLmh0bWwNCj4gDQoNCg==
+Thank you Neil for the reply and heads-up on 3.1.3. I will test that
+immediately and report back my findings.
+
+One potential issue I noticed is that Ubuntu Lucid's default kernel
+configuration has CONFIG_MD_AUTODETECT enabled. I thought this feature
+might conflict with udev, so I've attempted to disable this by adding
+a parameter to my grub2 bootup: raid=3Dnoautodetect. But I am not sure
+if this is effective. Do you think this kernel setting could also be a
+problem source?
+
+Another method I was contemplating to avoid a potential locking issue
+is to have udev's mdadm -i command run with watershed, which should in
+theory serialize it. What do you think?
+
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add|change", ENV{ID_FS_TYPE}=3D=3D=
+"linux_raid*", \
+   RUN+=3D"watershed -i mdadm /sbin/mdadm --incremental $env{DEVNAME}"
+
+=46inally, in your view, is it essential that the underlying partitions
+used in the md's be the "Linux raid autodetect" type? My partitions at
+the moment are just plain "Linux".
+
+Anyway, I will test mdadm 3.1.3 right now but I wanted to ask for your
+insight/comments on the above. Thanks!
+
+Best,
+Tommy
+
+
+
+On Sun, Aug 8, 2010 at 1:58 AM, Neil Brown <neilb@suse.de> wrote:
+> On Sat, 7 Aug 2010 18:27:58 -0700
+> "fibreraid@gmail.com" <fibreraid@gmail.com> wrote:
+>
+>> Hi all,
+>>
+>> I am facing a serious issue with md's on my Ubuntu 10.04 64-bit
+>> server. I am using mdadm 3.1.2. The system has 40 drives in it, and
+>> there are 10 md devices, which are a combination of RAID 0, 1, 5, 6,
+>> and 10 levels. The drives are connected via LSI SAS adapters in
+>> external SAS JBODs.
+>>
+>> When I boot the system, about 50% of the time, the md's will not com=
+e
+>> up correctly. Instead of md0-md9 being active, some or all will be
+>> inactive and there will be new md's like md127, md126, md125, etc.
+>
+> Sounds like a locking problem - udev is calling "mdadm -I" on each de=
+vice and
+> might call some in parallel. =A0mdadm needs to serialise things to en=
+sure this
+> sort of confusion doesn't happen.
+>
+> It is possible that this is fixed in the just-released mdadm-3.1.3. =A0=
+If you
+> could test and and see if it makes a difference that would help a lot=
+=2E
+>
+> Thanks,
+> NeilBrown
+>
+>>
+>> Here is the output of /proc/mdstat when all md's come up correctly:
+>>
+>>
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md0 : active raid6 sdj1[6] sdk1[7] sdf1[2] sdb1[10] sdg1[3] sdl1[8](=
+S)
+>> sdh1[4] sdm1[9] sde1[1] sdi1[12](S) sdc1[11] sdd1[0]
+>> =A0 =A0 =A0 1146967040 blocks super 1.2 level 6, 128k chunk, algorit=
+hm 2
+>> [10/10] [UUUUUUUUUU]
+>>
+>> md9 : active raid0 sdao1[1] sdan1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md8 : active raid0 sdam1[1] sdal1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md7 : active raid0 sdak1[1] sdaj1[0]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 4k chunks
+>>
+>> md6 : active raid0 sdai1[1] sdah1[0]
+>> =A0 =A0 =A0 976765696 blocks super 1.2 128k chunks
+>>
+>> md5 : active raid0 sdag1[1] sdaf1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md4 : active raid0 sdae1[1] sdad1[0]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 32k chunks
+>>
+>> md3 : active raid1 sdac1[1] sdab1[0]
+>> =A0 =A0 =A0 195357272 blocks super 1.2 [2/2] [UU]
+>>
+>> md2 : active raid0 sdaa1[0] sdz1[1]
+>> =A0 =A0 =A0 62490672 blocks super 1.2 4k chunks
+>>
+>> md1 : active raid5 sdy1[10] sdx1[9] sdw1[8] sdv1[7] sdu1[6] sdt1[5]
+>> sds1[4] sdr1[3] sdq1[2] sdp1[11](S) sdo1[1] sdn1[0]
+>> =A0 =A0 =A0 2929601120 blocks super 1.2 level 5, 16k chunk, algorith=
+m 2
+>> [11/11] [UUUUUUUUUUU]
+>>
+>> unused devices: <none>
+>>
+>>
+>> --------------------------------------------------------------------=
+------------------------------------------------------
+>>
+>>
+>> Here are several examples of when they do not come up correctly.
+>> Again, I am not making any configuration changes; I just reboot the
+>> system and check /proc/mdstat several minutes after it is fully
+>> booted.
+>>
+>>
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md124 : inactive sdam1[1](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md125 : inactive sdag1[1](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md7 : active raid0 sdaj1[0] sdak1[1]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 4k chunks
+>>
+>> md126 : inactive sdw1[8](S) sdn1[0](S) sdo1[1](S) sdu1[6](S)
+>> sdq1[2](S) sdx1[9](S)
+>> =A0 =A0 =A0 1757761512 blocks super 1.2
+>>
+>> md9 : active raid0 sdan1[0] sdao1[1]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md6 : inactive sdah1[0](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md4 : inactive sdae1[1](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md8 : inactive sdal1[0](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md127 : inactive sdg1[3](S) sdl1[8](S) sdc1[11](S) sdi1[12](S)
+>> sdf1[2](S) sdb1[10](S)
+>> =A0 =A0 =A0 860226027 blocks super 1.2
+>>
+>> md5 : inactive sdaf1[0](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md1 : inactive sdr1[3](S) sdp1[11](S) sdt1[5](S) sds1[4](S)
+>> sdy1[10](S) sdv1[7](S)
+>> =A0 =A0 =A0 1757761512 blocks super 1.2
+>>
+>> md0 : inactive sde1[1](S) sdh1[4](S) sdm1[9](S) sdj1[6](S) sdd1[0](S=
+) sdk1[7](S)
+>> =A0 =A0 =A0 860226027 blocks super 1.2
+>>
+>> md3 : inactive sdab1[0](S)
+>> =A0 =A0 =A0 195357344 blocks super 1.2
+>>
+>> md2 : active raid0 sdaa1[0] sdz1[1]
+>> =A0 =A0 =A0 62490672 blocks super 1.2 4k chunks
+>>
+>> unused devices: <none>
+>>
+>>
+>> --------------------------------------------------------------------=
+-------------------------------------------------------
+>>
+>>
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md126 : inactive sdaf1[0](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md127 : inactive sdae1[1](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md9 : active raid0 sdan1[0] sdao1[1]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md7 : active raid0 sdaj1[0] sdak1[1]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 4k chunks
+>>
+>> md4 : inactive sdad1[0](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md6 : active raid0 sdah1[0] sdai1[1]
+>> =A0 =A0 =A0 976765696 blocks super 1.2 128k chunks
+>>
+>> md8 : active raid0 sdam1[1] sdal1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md5 : inactive sdag1[1](S)
+>> =A0 =A0 =A0 488382944 blocks super 1.2
+>>
+>> md0 : active raid6 sdc1[11] sdd1[0] sdh1[4] sdf1[2] sdm1[9] sde1[1]
+>> sdb1[10] sdg1[3] sdl1[8](S) sdj1[6] sdk1[7] sdi1[12](S)
+>> =A0 =A0 =A0 1146967040 blocks super 1.2 level 6, 128k chunk, algorit=
+hm 2
+>> [10/10] [UUUUUUUUUU]
+>>
+>> md1 : active raid5 sdq1[2] sdy1[10] sdv1[7] sdn1[0] sdt1[5] sdw1[8]
+>> sdp1[11](S) sdr1[3] sdu1[6] sdx1[9] sdo1[1] sds1[4]
+>> =A0 =A0 =A0 2929601120 blocks super 1.2 level 5, 16k chunk, algorith=
+m 2
+>> [11/11] [UUUUUUUUUUU]
+>>
+>> md3 : active raid1 sdac1[1] sdab1[0]
+>> =A0 =A0 =A0 195357272 blocks super 1.2 [2/2] [UU]
+>>
+>> md2 : active raid0 sdz1[1] sdaa1[0]
+>> =A0 =A0 =A0 62490672 blocks super 1.2 4k chunks
+>>
+>> unused devices: <none>
+>>
+>>
+>> --------------------------------------------------------------------=
+------------------------------------------------------
+>>
+>>
+>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>> [raid4] [raid10]
+>> md127 : inactive sdab1[0](S)
+>> =A0 =A0 =A0 195357344 blocks super 1.2
+>>
+>> md4 : active raid0 sdad1[0] sdae1[1]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 32k chunks
+>>
+>> md7 : active raid0 sdak1[1] sdaj1[0]
+>> =A0 =A0 =A0 976765888 blocks super 1.2 4k chunks
+>>
+>> md8 : active raid0 sdam1[1] sdal1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md6 : active raid0 sdah1[0] sdai1[1]
+>> =A0 =A0 =A0 976765696 blocks super 1.2 128k chunks
+>>
+>> md9 : active raid0 sdao1[1] sdan1[0]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md5 : active raid0 sdaf1[0] sdag1[1]
+>> =A0 =A0 =A0 976765440 blocks super 1.2 256k chunks
+>>
+>> md1 : active raid5 sdy1[10] sdv1[7] sdu1[6] sds1[4] sdq1[2]
+>> sdp1[11](S) sdt1[5] sdo1[1] sdx1[9] sdr1[3] sdw1[8] sdn1[0]
+>> =A0 =A0 =A0 2929601120 blocks super 1.2 level 5, 16k chunk, algorith=
+m 2
+>> [11/11] [UUUUUUUUUUU]
+>>
+>> md0 : active raid6 sdl1[8](S) sdd1[0] sdc1[11] sdg1[3] sdk1[7] sde1[=
+1]
+>> sdm1[9] sdb1[10] sdi1[12](S) sdh1[4] sdf1[2] sdj1[6]
+>> =A0 =A0 =A0 1146967040 blocks super 1.2 level 6, 128k chunk, algorit=
+hm 2
+>> [10/10] [UUUUUUUUUU]
+>>
+>> md3 : inactive sdac1[1](S)
+>> =A0 =A0 =A0 195357344 blocks super 1.2
+>>
+>> md2 : active raid0 sdz1[1] sdaa1[0]
+>> =A0 =A0 =A0 62490672 blocks super 1.2 4k chunks
+>>
+>> unused devices: <none>
+>>
+>>
+>>
+>> My mdadm.conf file is as follows:
+>>
+>>
+>> # mdadm.conf
+>> #
+>> # Please refer to mdadm.conf(5) for information about this file.
+>> #
+>>
+>> # by default, scan all partitions (/proc/partitions) for MD superblo=
+cks.
+>> # alternatively, specify devices to scan, using wildcards if desired=
+=2E
+>> DEVICE partitions
+>>
+>> # auto-create devices with Debian standard permissions
+>> CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
+>>
+>> # automatically tag new arrays as belonging to the local system
+>> HOMEHOST <system>
+>>
+>> # instruct the monitoring daemon where to send mail alerts
+>> MAILADDR root
+>>
+>> # definitions of existing MD arrays
+>>
+>> # This file was auto-generated on Sun, 13 Jul 2008 20:42:57 -0500
+>> # by mkconf $Id$
+>>
+>>
+>>
+>>
+>> Any insight would be greatly appreciated. This is a big problem as i=
+t
+>> is now. Thank you very much in advance!
+>>
+>> Best,
+>> -Tommy
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
