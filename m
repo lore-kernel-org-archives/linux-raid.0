@@ -1,70 +1,97 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.36
-Date: Sun, 8 Aug 2010 21:44:15 +1000
-Message-ID: <19550.39055.227259.954794@notabene.brown>
+From: <brian.foster@emc.com>
+Subject: RE: --assume-clean on raid5/6
+Date: Sun, 8 Aug 2010 10:17:01 -0400
+Message-ID: <D27CA15508148C428A25104ADEFAAC810661CFC1@CORPUSMX50C.corp.emc.com>
+References: <D27CA15508148C428A25104ADEFAAC810661CD00@CORPUSMX50C.corp.emc.com><4C5D5187.7080109@stud.tu-ilmenau.de> <20100808185602.0e96efa2@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20100808185602.0e96efa2@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com
+To: neilb@suse.de, st0ff@npl.de
+Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Hi Linus,
- here is my merge-window pull request for md.
- The bulk of this update is changes to allow md/raid5 to be plugged
- into dm as a dm target.  The changes to dm to make this happen are
- with the dm maintainer who has given in-principle agreement - they
- just need to be carefully reviewed.
-
- The remainder are some deadlock fixes which are tagged for -stable,
- one of which should have been around for quite some time, but have
- only manifested recently for some strange reason.
-
-Thanks,
-NeilBrown
-
-
-The following changes since commit 9fe6206f400646a2322096b56c59891d530e8d51:
-
-  Linux 2.6.35 (2010-08-01 15:11:14 -0700)
-
-are available in the git repository at:
-  git://neil.brown.name/md/ for-linus
-
-Dan Williams (1):
-      md: move revalidate_disk() back outside open_mutex
-
-NeilBrown (21):
-      md: reduce dependence on sysfs.
-      md/raid5: factor out code for changing size of stripe cache.
-      md/raid5: ensure we create a unique name for kmem_cache when mddev has no gendisk
-      md: be more careful setting MD_CHANGE_CLEAN
-      md: split out md_rdev_init
-      md: export various start/stop interfaces
-      md: add support for raising dm events.
-      raid5: Don't set read-ahead when there is no queue
-      md/raid5: export is_congested test
-      md/raid5: add simple plugging infrastructure.
-      md/plug: optionally use plugger to unplug an array during resync/recovery.
-      md/raid5: export raid5 unplugging interface.
-      md/bitmap: white space clean up and similar.
-      md/bitmap: reduce dependence on sysfs.
-      md/bitmap: clean up plugging calls.
-      md/bitmap: optimise scanning of empty bitmaps.
-      md/bitmap: prepare for storing write-intent-bitmap via dm-dirty-log.
-      md/bitmap:  separate out loading a bitmap from initialising the structures.
-      md/raid10: fix deadlock with unaligned read during resync
-      md: fix another deadlock with removing sysfs attributes.
-      md: clean up do_md_stop
-
- drivers/md/bitmap.c |  508 ++++++++++++++++++++++++++++-----------------------
- drivers/md/bitmap.h |    6 +
- drivers/md/md.c     |  286 ++++++++++++++++++-----------
- drivers/md/md.h     |   55 ++++++-
- drivers/md/raid10.c |   18 ++
- drivers/md/raid5.c  |  168 ++++++++++-------
- drivers/md/raid5.h  |    9 +-
- 7 files changed, 643 insertions(+), 407 deletions(-)
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBOZWlsIEJyb3duIFttYWlsdG86
+bmVpbGJAc3VzZS5kZV0NCj4gU2VudDogU3VuZGF5LCBBdWd1c3QgMDgsIDIwMTAgNDo1NiBBTQ0K
+PiBUbzogc3QwZmZAbnBsLmRlDQo+IENjOiBzdGVmYW4uaHVlYm5lckBzdHVkLnR1LWlsbWVuYXUu
+ZGU7IEZvc3RlciwgQnJpYW47IGxpbnV4LQ0KPiByYWlkQHZnZXIua2VybmVsLm9yZw0KPiBTdWJq
+ZWN0OiBSZTogLS1hc3N1bWUtY2xlYW4gb24gcmFpZDUvNg0KPiANCj4gT24gU2F0LCAwNyBBdWcg
+MjAxMCAxNDoyODo1NSArMDIwMA0KPiBTdGVmYW4gLypTdDBmRiovIEjDvGJuZXIgPHN0ZWZhbi5o
+dWVibmVyQHN0dWQudHUtaWxtZW5hdS5kZT4gd3JvdGU6DQo+IA0KPiA+IEhpIEJyaWFuLA0KPiA+
+DQo+ID4gLS1hc3N1bWUtY2xlYW4gc2tpcHMgb3ZlciB0aGUgaW5pdGlhbCByZXN5bmMuICBXaGlj
+aCAtIGlmIHlvdSB3aWxsDQo+ID4gY3JlYXRlIGEgZmlsZXN5c3RlbSBhZnRlciBjcmVhdGluZyB0
+aGUgYXJyYXkgLSBpcyBhIHRpbWUtc2F2aW5nIGlkZWEuDQo+ID4gQnV0IGtlZXAgaW4gbWluZDog
+ZXZlbiBpZiB0aGUgZGlza3MgYXJlIGJyYW5kIG5ldyBhbmQgY29udGFpbiBvbmx5DQo+ID4gemVy
+b3MsIHRoZSBwYXJpdHkgd291bGQgcHJvYmFibHkgbG9vayBub3QgYWxsIHplcm9zLiAgU28gcmVh
+ZGluZyBmcm9tDQo+ID4gc3VjaCBhbiBhcnJheSB3b3VsZCBiZSBhIGJhZCBpZGVhLg0KPiA+IEJ1
+dCBpZiB0aGUgbmV4dCB0aGluZyB5b3UgZG8gaXMgY3JlYXRlIExWTS9maWxlc3lzdGVtIGV0Yy4s
+IHRoZW4gYWxsDQo+IGJpdA0KPiA+IHJlYWQgZnJvbSB0aGUgYXJyYXkgd2lsbCBoYXZlIGJlZW4g
+d3JpdHRlbiB0byBiZWZvcmUgKGFuZCBieSB0aGF0IGFyZQ0KPiBpbg0KPiA+IHN5bmMpLg0KPiAN
+Cj4gVGhlcmUgaXMgYW4gaW1wb3J0YW50IHBvaW50IHRoYXQgdGhpcyBtaXNzZXMuDQo+IA0KPiBX
+aGVuIG1kIHVwZGF0ZXMgYSBibG9jayBvbiBhIFJBSUQ1IGl0IHdpbGwgc29tZXRpbWVzIHVzZSBh
+IHJlYWQtbW9kaWZ5LQ0KPiB3cml0ZQ0KPiBjeWNsZSB3aGljaCByZWFkcyB0aGUgb2xkIGJsb2Nr
+IGFuZCBvbGQgcGFyaXR5LCBzdWJ0cmFjdHMgdGhlIG9sZCBibG9jaw0KPiBmcm9tDQo+IHRoZSBw
+YXJpdHkgYmxvY2sgYW5kIHRoZW4gYWRkZWQgdGhlIG5ldyBibG9jayB0byB0aGUgcGFyaXR5IGJs
+b2NrLg0KPiBUaGVuIGl0DQo+IHdyaXRlcyB0aGUgbmV3IGRhdGEgYmxvY2sgYW5kIHRoZSBuZXcg
+cGFyaXR5IGJsb2NrLg0KPiANCj4gSWYgdGhlIG9sZCBwYXJpdHkgd2FzIGNvcnJlY3QgZm9yIHRo
+ZSBvbGQgc3RyaXBlLCB0aGVuIHRoZSBuZXcgcGFyaXR5DQo+IHdpbGwgYmUNCj4gY29ycmVjdCBm
+b3IgdGhlIG5ldyBzdHJpcGUuICBCdXQgaWYgdGhlIG9sZCB3YXMgd3JvbmcgdGhlbiB0aGUgbmV3
+IHdpbGwNCj4gYmUNCj4gd3JvbmcuDQo+IA0KPiBTbyBpZiB5b3UgdXNlIGFzc3VtZS1jbGVhbiB0
+aGVuIHRoZSBwYXJpdHkgbWF5IHdlbGwgYmUgd3JvbmcgYW5kIGNvdWxkDQo+IHJlbWFpbg0KPiB3
+cm9uZyBldmVuIHdoZW4geW91IHdyaXRlIG5ldyBkYXRhLiAgSWYgeW91IHRoZW4gbG9zZSBhIGRl
+dmljZSwgdGhlDQo+IGRhdGEgZm9yDQo+IHRoYXQgZGV2aWNlIHdpbGwgYmUgY29tcHV0ZWQgdXNp
+bmcgd3JvbmcgcGFyaXR5IGFuZCB5b3Ugd2lsbCBnZXQgd3JvbmcNCj4gZGF0YSAtDQo+IGhlbmNl
+IGRhdGEgY29ycnVwdGlvbi4NCj4gDQo+IFNvIHlvdSBzaG91bGQgb25seSB1c2UgLS1hc3N1bWUt
+Y2xlYW4gaWYgeW91IGtub3cgdGhlIGFycmF5IHJlYWxseSBpcw0KPiAnY2xlYW4nLg0KPiANCg0K
+VGhhbmtzIGZvciB0aGUgaW5mb3JtYXRpb24gZ3V5cy4gSSB3YXMgYWN0dWFsbHkgYXR0ZW1wdGlu
+ZyB0byB0ZXN0IHdoZXRoZXIgdGhpcyBjb3VsZCBvY2N1ciB3aXRoIGEgaGlnaC1sZXZlbCBzZXF1
+ZW5jZSBzaW1pbGFyIHRvIHRoZSBmb2xsb3dpbmc6DQoNCi0gZGQgL2Rldi91cmFuZG9tIGRhdGEg
+dG8gNCBzbWFsbCBwYXJ0aXRpb25zICh+MTBNQiBlYWNoKS4NCi0gQ3JlYXRlIGEgcmFpZDUgd2l0
+aCAtLWFzc3VtZS1jbGVhbiBvbiBzYWlkIHBhcnRpdGlvbnMuDQotIFdyaXRlIGEgc21hbGwgYml0
+IG9mIGRhdGEgKDMyIGJ5dGVzKSB0byB0aGUgYmVnaW5uaW5nIG9mIHRoZSBtZCwgY2FwdHVyZSBh
+biBpbWFnZSBvZiB0aGUgbWQgdG8gYSBmaWxlLg0KLSBGYWlsL3JlbW92ZSBhIGRyaXZlIGZyb20g
+dGhlIG1kLCBjYXB0dXJlIGEgc2Vjb25kIG1kIGZpbGUgaW1hZ2UuDQotIGNtcCB0aGUgZmlsZSBp
+bWFnZXMgdG8gc2VlIHdoYXQgY2hhbmdlZCwgYW5kIHJlYWQgYmFjayB0aGUgZmlyc3QgMzIgYnl0
+ZXMgb2YgZGF0YS4NCg0KSW4gdGhpcyBzY2VuYXJpbyBJIGRvIG9ic2VydmUgZGlmZmVyZW5jZXMg
+aW4gdGhlIGZpbGUgaW1hZ2UsIGJ1dCBteSBkYXRhIHJlbWFpbnMgaW50YWN0LiBJIHJhbiB0aGlz
+IHNlcXVlbmNlIG11bHRpcGxlIHRpbWVzLCBlYWNoIHRpbWUgZmFpbGluZyBhIGRpZmZlcmVudCBk
+cml2ZSBpbiB0aGUgYXJyYXkgYW5kIGFsc28gdHJpZWQgdG8gc3RvcC9yZXN0YXJ0IHRoZSBhcnJh
+eSAod2l0aCBhIGRyb3BfY2FjaGVzIGluIGJldHdlZW4pIGJlZm9yZSB0aGUgZHJpdmUgZmFpbHVy
+ZSBzdGVwLiBUaGlzIGxlYWRzIHRvIG15IHF1ZXN0aW9uOiBpcyB0aGVyZSBhIHdyaXRlIHRlc3Qg
+dGhhdCBjYW4gcmVwcm9kdWNlIGRhdGEgY29ycnVwdGlvbiB1bmRlciB0aGlzIHNjZW5hcmlvLCBv
+ciBpcyB0aGUgcm13IGN5Y2xlIHNvbWUga2luZCBvZiBvcHRpbWl6YXRpb24gdGhhdCBpcyBub3Qg
+c28gZGV0ZXJtaW5pc3RpYz8NCg0KQWxzbyBvdXQgb2YgY3VyaW91c2l0eSwgd291bGQgLS1hc3N1
+bWUtY2xlYW4gYmUgc2FmZSBvbiBhIHJhaWQ1IGlmIHRoZSBkcml2ZXMgd2VyZSBleHBsaWNpdGx5
+IHplcm9lZCBiZWZvcmVoYW5kPyBUaGFua3MgYWdhaW4uDQoNCkJyaWFuDQoNCj4gUkFJRDEvUkFJ
+RDEwIGNhbm5vdCBzdWZmZXIgZnJvbSB0aGlzIHNvIC0tYXNzdW1lLWNsZWFuIGlzIHF1aXRlIHNh
+ZmUNCj4gd2l0aA0KPiB0aG9zZSBhcnJheSB0eXBlcy4NCj4gVGhlIGN1cnJlbnQgaW1wbGVtZW50
+YXRpb24gb2YgUkFJRDYgbmV2ZXIgZG9lcyByZWFkLW1vZGlmeS13cml0ZSBzbw0KPiAtLWFzc3Vt
+ZS1jbGVhbiBpcyBjdXJyZW50bHkgc2FmZSB3aXRoIFJBSUQ2IHRvby4gIEhvd2V2ZXIgSSBkbyBu
+b3QNCj4gcHJvbWlzZQ0KPiB0aGF0IFJBSUQ2IG1pZ2h0IG5vdCBjaGFuZ2UgdG8gdXNlIHJlYWQt
+bW9kaWZ5LXdyaXRlIGN5Y2xlcyBpbiBzb21lDQo+IGZ1dHVyZQ0KPiBpbXBsZW1lbnRhdGlvbi4g
+IFNvIEkgd291bGQgbm90IHJlY29tbWVuZCB1c2luZyAtLWFzc3VtZS1jbGVhbiBvbiBSQUlENg0K
+PiBqdXN0DQo+IHRvIGF2b2lkIHRoZSByZXN5bmMgY29zdC4NCj4gDQo+IE5laWxCcm93bg0KPiAN
+Cj4gPg0KPiA+IFN0ZWZhbg0KPiA+DQo+ID4gQW0gMDYuMDguMjAxMCAwMzoxOSwgc2NocmllYiBi
+cmlhbi5mb3N0ZXJAZW1jLmNvbToNCj4gPiA+IEhpIGFsbCwNCj4gPiA+DQo+ID4gPiBJJ3ZlIHJl
+YWQgaW4gdGhlIGxpc3QgYXJjaGl2ZXMgdGhhdCB1c2Ugb2YgLS1hc3N1bWUtY2xlYW4gb24gcmFp
+ZDUNCj4gPiA+IChyYWlkNj8pIGlzIG5vdCBzYWZlIGFzc3VtaW5nIHRoZSBtZW1iZXIgZHJpdmVz
+IGFyZSBub3Qgc3luYywgYnV0DQo+IGl0J3MNCj4gPiA+IG5vdCBjbGVhciB0byBtZSBhcyB0byB3
+aHkuIEkgY2FuIHNlZSB0aGUgY29udGVudCBvZiBhbiB3cml0dGVuDQo+IHJhaWQ1DQo+ID4gPiBh
+cnJheSBjaGFuZ2UgaWYgSSBmYWlsIGEgZHJpdmUgb3V0IG9mIHRoZSBhcnJheSAoY3JlYXRlZCB3
+Lw0KPiA+ID4gLS1hc3N1bWUtY2xlYW4pLCBidXQgZGF0YSB0aGF0IEkgd3JpdGUgcHJpb3IgdG8g
+ZmFpbGluZyBhIGRyaXZlDQo+IHJlbWFpbnMNCj4gPiA+IGludGFjdC4gUGVyaGFwcyBJJ20gbWlz
+c2luZyBzb21ldGhpbmcuIENvdWxkIHNvbWVib2R5IGVsYWJvcmF0ZSBvbg0KPiB0aGUNCj4gPiA+
+IGRhbmdlci9yaXNrIG9mIHVzaW5nIC0tYXNzdW1lLWNsZWFuPyBUaGFua3MgaW4gYWR2YW5jZS4N
+Cj4gPiA+DQo+ID4gPiBCcmlhbg0KPiA+ID4gLS0NCj4gPiA+IFRvIHVuc3Vic2NyaWJlIGZyb20g
+dGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC0NCj4gcmFpZCIgaW4N
+Cj4gPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3Jn
+DQo+ID4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
+am9yZG9tby1pbmZvLmh0bWwNCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
+aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiDQo+IGluDQo+
+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4g
+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
+by1pbmZvLmh0bWwNCj4gDQoNCg==
