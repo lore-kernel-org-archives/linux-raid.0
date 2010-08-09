@@ -1,87 +1,90 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: move revalidate_disk() back outside open_mutex
-Date: Mon, 9 Aug 2010 09:56:07 +1000
-Message-ID: <20100809095607.25ccb3e9@notabene>
-References: <20100807010159.2745.75952.stgit@localhost.localdomain>
+From: ravichandra <vmynidi@caviumnetworks.com>
+Subject: Re: Problem regarding RAID10 on kernel 2.6.31
+Date: Mon, 09 Aug 2010 13:09:56 +0530
+Message-ID: <1281339596.18581.34.camel@venkata-pc.in.caveonetworks.com>
+References: <1281087718.14259.5.camel@venkata-pc.in.caveonetworks.com>
+	 <20100806201435.5a3cb1f9@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100807010159.2745.75952.stgit@localhost.localdomain>
+In-Reply-To: <20100806201435.5a3cb1f9@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, stable@kernel.org, Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 06 Aug 2010 18:01:59 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+Hi,
+   Thanks.The patch you have sent is working.There is no hanging up
+after the patch is applied.can you elaborate on the problem which was
+there earlier??
 
-> Commit b821eaa5 "md: remove ->changed and related code" moved
-> revalidate_disk() under open_mutex, and lockdep noticed.
+Thanks and Regards. 
+
+On Fri, 2010-08-06 at 20:14 +1000, Neil Brown wrote:
+> On Fri, 06 Aug 2010 15:11:58 +0530
+> ravichandra <vmynidi@caviumnetworks.com> wrote:
 > 
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.32-mdadm-locking #1
-> -------------------------------------------------------
-> mdadm/3640 is trying to acquire lock:
->  (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff811acecb>] revalidate_disk+0x5b/0x90
+> > Hi everyone,
+> >                  I  used 2 (1 TB disks) disks each with 3
+> > partitions(sda[1-3] and sdb[1-3]).Using sda[1-2] and sdb[1-2] i have
+> > created a RAID10 array say md2. Then  i was reading and writing to the
+> > array and simultaneously removing a disk and adding it to the same
+> > array. In the process i got a hang causing recovery process to halt. The
+> > array was not operational after.These were done on kernel 2.6.31.
+> > 
+> >            I am working on the RAID10 for the first time. Can someone
+> > help in this so that i can proceed further?? 
+> > 
+> > Thanks in advance.
 > 
-> but task is already holding lock:
->  (&mddev->open_mutex){+.+...}, at: [<ffffffffa055e07a>] do_md_stop+0x4a/0x4d0 [md_mod]
+> Known problem.  I'll be submitting the fix upstream shortly.  I include it
+> below.
+> Thanks for the report
+> NeilBrown
 > 
-> which lock already depends on the new lock.
-
-Thanks!  applied and sent to Linus - as you might have noticed.
-
-I didn't really like the 'revalidate' variable, and realised that the 'err'
-variable wasn't really needed either so added a patch to restructure the
-function a little bit.
-
-Thanks,
-NeilBrown
-
-
 > 
-> Cc: <stable@kernel.org>
-> Reported-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/md/md.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index cb20d0b..9743554 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -4711,7 +4711,7 @@ out:
->   */
->  static int do_md_stop(mddev_t * mddev, int mode, int is_open)
->  {
-> -	int err = 0;
-> +	int err = 0, revalidate = 0;
->  	struct gendisk *disk = mddev->gendisk;
->  	mdk_rdev_t *rdev;
+> 
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index 42e64e4..d1d6891 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -825,11 +825,29 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+>  		 */
+>  		bp = bio_split(bio,
+>  			       chunk_sects - (bio->bi_sector & (chunk_sects - 1)) );
+> +
+> +		/* Each of these 'make_request' calls will call 'wait_barrier'.
+> +		 * If the first succeeds but the second blocks due to the resync
+> +		 * thread raising the barrier, we will deadlock because the
+> +		 * IO to the underlying device will be queued in generic_make_request
+> +		 * and will never complete, so will never reduce nr_pending.
+> +		 * So increment nr_waiting here so no new raise_barriers will
+> +		 * succeed, and so the second wait_barrier cannot block.
+> +		 */
+> +		spin_lock_irq(&conf->resync_lock);
+> +		conf->nr_waiting++;
+> +		spin_unlock_irq(&conf->resync_lock);
+> +
+>  		if (make_request(mddev, &bp->bio1))
+>  			generic_make_request(&bp->bio1);
+>  		if (make_request(mddev, &bp->bio2))
+>  			generic_make_request(&bp->bio2);
 >  
-> @@ -4740,7 +4740,7 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
->  			}
->  
->  		set_capacity(disk, 0);
-> -		revalidate_disk(disk);
-> +		revalidate = 1;
->  
->  		if (mddev->ro)
->  			mddev->ro = 0;
-> @@ -4748,6 +4748,8 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
->  		err = 0;
->  	}
->  	mutex_unlock(&mddev->open_mutex);
-> +	if (revalidate)
-> +		revalidate_disk(disk);
->  	if (err)
->  		return err;
->  	/*
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +		spin_lock_irq(&conf->resync_lock);
+> +		conf->nr_waiting--;
+> +		wake_up(&conf->wait_barrier);
+> +		spin_unlock_irq(&conf->resync_lock);
+> +
+>  		bio_pair_release(bp);
+>  		return 0;
+>  	bad_map:
+
 
