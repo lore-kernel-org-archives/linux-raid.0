@@ -1,46 +1,41 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [REVISED PULL REQUEST] md updates for 2.6.36
-Date: Wed, 11 Aug 2010 00:23:31 +0100
-Message-ID: <1281482611.5887.38.camel@localhost>
-References: <19552.39399.490494.51990@notabene.brown>
-	 <AANLkTinbCHAB3tPos1sp078maWaHAQbRM8oWMOiF1U8D@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [mdadm PATCH 0/2] two 3.1.3 regression fixes (incremental assembly)
+Date: Tue, 10 Aug 2010 16:40:46 -0700
+Message-ID: <4C61E37E.4060403@intel.com>
+References: <20100810164551.26691.17944.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinbCHAB3tPos1sp078maWaHAQbRM8oWMOiF1U8D@mail.gmail.com>
+In-Reply-To: <20100810164551.26691.17944.stgit@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, Ignacy Kasperowicz <ignacy.kasperowicz@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 2010-08-10 at 15:47 -0700, Linus Torvalds wrote:
->=20
-> Hmm. Why "lib/raid6/raid6sse2.c" and friends? Why "raid6" twice? You
-> don't mean "raid6+1" (mirrored raid6 ;), so why not just remove the
-> second "raid6", and call it "lib/raid6/sse2.c"
->=20
-> But I pulled. Just in case there was some logic to the duplication.=20
+On 8/10/2010 9:46 AM, Williams, Dan J wrote:
+> Hi Neil,
+>
+> The mdadm -I --no-degraded option needs to be acceptable for some time
+> to come, do you have a policy for when deprecated options can be scheduled for
+> removal?  The error code for -I shall be zero in the 'not enough' case to
+> restore the correct and established pre-3.1.3 behavior.
+>
+> Also available via git:
+>
+>     git://github.com/djbw/mdadm.git master
+>
+> ---
+>
+> Dan Williams (2):
+>        Incremental: return success in 'container not enough' case
+>        Incremental: accept '--no-degraded' as a deprecated option
 
-No particular reason -- I just wanted the initial move to be as simple
-as possible. Since it all gets built into raid6_pq.ko and we never see
-these filenames even in module names, it does make sense to rename them=
-=2E
+Note, both of these should have been tagged:
 
-If Neil approves, git://git.infradead.org/~dwmw2/libraid-2.6.git
+Reported-by: Ignacy Kasperowicz <ignacy.kasperowicz@intel.com>
 
-The userspace test/ (ne=C3=A9 raid6test/) directory doesn't build, but =
-it
-didn't before. At least I fixed the awk incantations.
+If you take the patches directly.
 
---=20
-David Woodhouse                            Open Source Technology Centr=
-e
-David.Woodhouse@intel.com                              Intel Corporatio=
-n
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Dan
