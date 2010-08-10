@@ -1,40 +1,111 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: [PATCH REPOST RFC] relaxed barriers
-Date: Mon, 09 Aug 2010 16:50:37 +0200
-Message-ID: <4C6015BD.6090304@suse.de>
-References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <4C5C3287.1010404@kernel.org> <4C5D31B2.9080509@suse.de> <20100808143126.GA15531@lst.de>
+From: Neil Brown <neilb@suse.de>
+Subject: [REVISED PULL REQUEST] md updates for 2.6.36
+Date: Tue, 10 Aug 2010 10:14:31 +1000
+Message-ID: <19552.39399.490494.51990@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100808143126.GA15531@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, David Woodhouse <dwmw2@infradead.org>
 List-Id: linux-raid.ids
 
-On 08/08/2010 04:31 PM, Christoph Hellwig wrote:
-> On Sat, Aug 07, 2010 at 12:13:06PM +0200, Tejun Heo wrote:
->> The patch was on top of v2.6.35 but was generated against dirty tree
->> and wouldn't apply cleanly.  Here's the proper one.
-> 
-> Here's an updated version:
-> 
->  (a) ported to Jens' current block tree
->  (b) optimize barriers on devices not requiring flushes to be no-ops
->  (b) redo the blk_queue_ordered interface to just set QUEUE_HAS_FLUSH
->      and QUEUE_HAS_FUA flags.
 
-Nice.  I'm working on a properly split patchset implementing
-REQ_FLUSH/FUA based interface, which replaces REQ_HARDBARRIER.  Empty
-request w/ REQ_FLUSH just flushes cache but has no other ordering
-restrictions.  REQ_FLUSH + data means preflush + data write.  REQ_FUA
-+ data means data would be committed to NV media on completion.
-REQ_FLUSH + FUA + data means preflush + NV data write.  All FLUSH/FUA
-requests w/ data are ordered only against each other.  I think I'll be
-able to post in several days.
+Hi Linus,
+ here is a revised pull request for md updates for 2.6.36.
 
-Thanks.
+ To the previous patches (which are unchanged) it adds some work by
+ David Woodhouse which moves the RAID6 computations out of drivers/md/
+ and places them in /lib so they can be used by other code -
+ e.g. btrfs.
+ The RAID6 code is completely unchanged (it was already accessed under
+ the async-crypto interface so not changes are need to the API).  Only
+ it's location and the fact that it can be a stand alone module
+ (rather than being in the same module as the rest of md/raid6) has
+ changed.
 
--- 
-tejun
+Thanks,
+NeilBrown
+
+
+
+The following changes since commit 45d7f32c7a43cbb9592886d38190e379e2eb2226:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/cmetcalf/linux-tile (2010-08-08 10:10:11 -0700)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md for-linus
+
+Dan Williams (1):
+      md: move revalidate_disk() back outside open_mutex
+
+David Woodhouse (3):
+      md: Factor out RAID6 algorithms into lib/
+      async_tx: Move ASYNC_RAID6_TEST option to crypto/async_tx/, fix dependencies
+      Merge branch 'async' of macbook:git/btrfs-unstable
+
+NeilBrown (22):
+      md: reduce dependence on sysfs.
+      md/raid5: factor out code for changing size of stripe cache.
+      md/raid5: ensure we create a unique name for kmem_cache when mddev has no gendisk
+      md: be more careful setting MD_CHANGE_CLEAN
+      md: split out md_rdev_init
+      md: export various start/stop interfaces
+      md: add support for raising dm events.
+      raid5: Don't set read-ahead when there is no queue
+      md/raid5: export is_congested test
+      md/raid5: add simple plugging infrastructure.
+      md/plug: optionally use plugger to unplug an array during resync/recovery.
+      md/raid5: export raid5 unplugging interface.
+      md/bitmap: white space clean up and similar.
+      md/bitmap: reduce dependence on sysfs.
+      md/bitmap: clean up plugging calls.
+      md/bitmap: optimise scanning of empty bitmaps.
+      md/bitmap: prepare for storing write-intent-bitmap via dm-dirty-log.
+      md/bitmap:  separate out loading a bitmap from initialising the structures.
+      md/raid10: fix deadlock with unaligned read during resync
+      md: fix another deadlock with removing sysfs attributes.
+      md: clean up do_md_stop
+      Merge git://git.infradead.org/users/dwmw2/libraid-2.6 into for-linus
+
+ crypto/async_tx/Kconfig                      |   14 +
+ drivers/md/Kconfig                           |   18 +-
+ drivers/md/Makefile                          |   77 ----
+ drivers/md/bitmap.c                          |  508 ++++++++++++++------------
+ drivers/md/bitmap.h                          |    6 +
+ drivers/md/md.c                              |  286 +++++++++------
+ drivers/md/md.h                              |   55 +++-
+ drivers/md/raid10.c                          |   18 +
+ drivers/md/raid5.c                           |  168 +++++----
+ drivers/md/raid5.h                           |    9 +-
+ lib/Kconfig                                  |    3 +
+ lib/Makefile                                 |    1 +
+ lib/raid6/Makefile                           |   78 ++++
+ {drivers/md => lib/raid6}/mktables.c         |    0
+ {drivers/md => lib/raid6}/raid6algos.c       |    0
+ {drivers/md => lib/raid6}/raid6altivec.uc    |    0
+ {drivers/md => lib/raid6}/raid6int.uc        |    0
+ {drivers/md => lib/raid6}/raid6mmx.c         |    0
+ {drivers/md => lib/raid6}/raid6recov.c       |    0
+ {drivers/md => lib/raid6}/raid6sse1.c        |    0
+ {drivers/md => lib/raid6}/raid6sse2.c        |    0
+ {drivers/md => lib/raid6}/raid6test/Makefile |    0
+ {drivers/md => lib/raid6}/raid6test/test.c   |    0
+ {drivers/md => lib/raid6}/raid6x86.h         |    0
+ {drivers/md => lib/raid6}/unroll.awk         |    0
+ 25 files changed, 740 insertions(+), 501 deletions(-)
+ create mode 100644 lib/raid6/Makefile
+ rename {drivers/md => lib/raid6}/mktables.c (100%)
+ rename {drivers/md => lib/raid6}/raid6algos.c (100%)
+ rename {drivers/md => lib/raid6}/raid6altivec.uc (100%)
+ rename {drivers/md => lib/raid6}/raid6int.uc (100%)
+ rename {drivers/md => lib/raid6}/raid6mmx.c (100%)
+ rename {drivers/md => lib/raid6}/raid6recov.c (100%)
+ rename {drivers/md => lib/raid6}/raid6sse1.c (100%)
+ rename {drivers/md => lib/raid6}/raid6sse2.c (100%)
+ rename {drivers/md => lib/raid6}/raid6test/Makefile (100%)
+ rename {drivers/md => lib/raid6}/raid6test/test.c (100%)
+ rename {drivers/md => lib/raid6}/raid6x86.h (100%)
+ rename {drivers/md => lib/raid6}/unroll.awk (100%)
