@@ -1,52 +1,36 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: weird SparesMissing event
-Date: Wed, 11 Aug 2010 17:57:11 +1000
-Message-ID: <20100811175711.40cb75c9@notabene>
-References: <4C624B80.9030304@qumido.de>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: debian dist-upgrade etch -> squeeze broke my mdadm RAID1
+Date: Wed, 11 Aug 2010 09:16:20 +0100
+Message-ID: <4C625C54.5060000@seoss.co.uk>
+References: <201008111527.37009.Doug.duBoulay@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C624B80.9030304@qumido.de>
+In-Reply-To: <201008111527.37009.Doug.duBoulay@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tobias Gunkel <tobias.gunkel@qumido.de>
+To: Doug <doug.duboulay@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 11 Aug 2010 09:04:32 +0200
-Tobias Gunkel <tobias.gunkel@qumido.de> wrote:
+On 11/08/10 06:27, Doug wrote:
+> After the upgrade and installation of a new 2.6.32 kernel, the kernel
+>    
 
-> Hello everyone,
-> 
-> I've got a strange SparesMissing event on one of my raid1 arrays.
-> mdadm --detail /dev/md2 says all ok, but I get this message by mdadm
-> monitor every day:
-> 
-> A SparesMissing event had been detected on md device /dev/md2.
+I believe Debian only supports upgrading between major versions, so you 
+should have gone 4.0.x (etch) -> 5.0.x (lenny) -> 6.0-pre (squeeze).  If 
+you didn't then that'll explain the problem you're seeing which is 
+really Debian-specific, and relates (I believe) to the change in device 
+naming with the switch to udev which occured between etch and lenny (and 
+is presumably taken into account when upgrading between those two).
 
-This means that /etc/mdadm/mdadm.conf says /dev/md2 has more spare devices
-than it currently has.  What is in /etc/mdadm/mdadm.conf
+HTH,
 
+Tim.
 
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
-> This makes me wonder, too:
-> 
-> root@MCI03:~# mdadm --examine --scan
-> ARRAY /dev/md0 UUID=304f5f2a:fbc8082b:54307b3d:1949437b
->    spares=1
-> ARRAY /dev/md1 UUID=b263f9c1:5c680152:54307b3d:1949437b
->    spares=1
-> ARRAY /dev/md2 UUID=7aa24776:9d6e8d24:54307b3d:1949437b
->    spares=2
-> 
-> Why spares=2 for md2? It was created during Debian system install with
-> spares=1.
-
-What do you get if you run
-
- mdadm --examine --scan --verbose
-
-it should add a 'devices=' line which will show you which devices it is
-counting.
-
-NeilBrown
