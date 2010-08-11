@@ -1,131 +1,123 @@
-From: Doug <doug.duboulay@gmail.com>
-Subject: debian dist-upgrade etch -> squeeze broke my mdadm RAID1
-Date: Wed, 11 Aug 2010 15:27:36 +1000
-Message-ID: <201008111527.37009.Doug.duBoulay@gmail.com>
+From: Tobias Gunkel <tobias.gunkel@qumido.de>
+Subject: weird SparesMissing event
+Date: Wed, 11 Aug 2010 09:04:32 +0200
+Message-ID: <4C624B80.9030304@qumido.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello everyone,
 
-I had a PC running a XEN 2.6.18 kernel with two 350Gb disks 
-configured as RAID1 with ext3 root dom0 on /dev/md0  (5Gb) and 
-the remainder allocated to /dev/md1 managed with lvm for my 
-XEN domU client OS's.
+I've got a strange SparesMissing event on one of my raid1 arrays.
+mdadm --detail /dev/md2 says all ok, but I get this message by mdadm
+monitor every day:
 
-I needed a recent kernel/drivers to access some new hardware in Dom0 so 
-ran apt-get dist-upgrade (after some initial trouble with 
-incompatible dpkg versions but thats irrelevant).
-After the upgrade and installation of a new 2.6.32 kernel, the kernel
-wouldn't boot because it couldn't find the root partition - it 
-dropped into the BusyBox/initramfs prompt.
+A SparesMissing event had been detected on md device /dev/md2.
 
-The md devices were /dev/md/imsm0 sym linked to /dev/md127
+=46aithfully yours, etc.
 
-Fortunately I was able to reboot my original 2.6.18 kernel from GRUB
+P.S. The /proc/mdstat file currently contains the following:
 
+Personalities : [raid1]
+md2 : active raid1 sda3[0] sdc3[2](S) sdb3[1]
+      474714048 blocks [2/2] [UU]
+[...]
 
-$ dpkg-reconfigure mdadm
+root@MCI03:~# mdadm --detail /dev/md2
+/dev/md2:
+        Version : 0.90
+  Creation Time : Fri May 28 14:54:26 2010
+     Raid Level : raid1
+     Array Size : 474714048 (452.72 GiB 486.11 GB)
+  Used Dev Size : 474714048 (452.72 GiB 486.11 GB)
+   Raid Devices : 2
+  Total Devices : 3
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-Generating array device nodes... done.
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-xen-686
-W: mdadm: unchecked configuration file: /etc/mdadm/mdadm.conf
-W: mdadm: please read /usr/share/doc/mdadm/README.upgrading-2.5.3.gz .
-I: mdadm: auto-generated temporary mdadm.conf configuration file.
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=low mdadm` to change this.
+    Update Time : Wed Aug 11 08:52:13 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 1
 
-basically, this runs the script: /usr/share/mdadm/mkconf
-which evaluates the expression
+           UUID : 7aa24776:9d6e8d24:54307b3d:1949437b (local to host MC=
+I03)
+         Events : 0.985979
 
-  if ! $MDADM --examine --scan --config=partitions; then
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
 
-and adds the result to the file /etc/mdadm/mdadm.conf
-
-$ mdadm --examine --scan
-ARRAY metadata=imsm UUID=9a1dfb7e:5783ddc7:a614552a:eb9c1135
-ARRAY /dev/md/Volume0 container=9a1dfb7e:5783ddc7:a614552a:eb9c1135 member=0 
-UUID=42f9906a:f4c0a788:5a5a74eb:154a22ef
-ARRAY /dev/md0 UUID=74553564:5d83fae3:8520d040:09f92738
-ARRAY /dev/md1 UUID=f5971c98:57f6fca7:5a7f0c3a:4f19787a
-
-I am guessing that at boot, the initramfs(?) 2.6.32  kernel 
-doesn't understand the /dev/md/Volume0 line and its builtin 
-mdadm aborts before assembling the /dev/md0 and /dev/md1 partitions.
-
-If I replace --examine with --detail in /usr/share/mdadm/mkconf, i.e.
-
-  if ! $MDADM --detail --scan --config=partitions; then
-
-$ mdadm --detail --scan
-ARRAY /dev/md0 metadata=0.90 UUID=74553564:5d83fae3:8520d040:09f92738
-ARRAY /dev/md1 metadata=0.90 UUID=f5971c98:57f6fca7:5a7f0c3a:4f19787a
-
-and rerun 
-$ dpkg-reconfigure mdadm
-
-Now /dev/md0 is assembled and mounted as root and my 2.6.32
-kernel boots. Problem sussed. But what was really going wrong and why?
-I read that devices with superblock (metadata=?) version 0.9 are 
-automatically assembled by the kernel at boot time, but apparently that
-didn't happen.
+       2       8       35        -      spare   /dev/sdc3
 
 
-Thanks
-Doug
+This makes me wonder, too:
 
-P.S.
+root@MCI03:~# mdadm --examine --scan
+ARRAY /dev/md0 UUID=3D304f5f2a:fbc8082b:54307b3d:1949437b
+   spares=3D1
+ARRAY /dev/md1 UUID=3Db263f9c1:5c680152:54307b3d:1949437b
+   spares=3D1
+ARRAY /dev/md2 UUID=3D7aa24776:9d6e8d24:54307b3d:1949437b
+   spares=3D2
 
-ii  linux-image-2.6.18-6-xen-686             2.6.18.dfsg.1-26etch2 
-ii  linux-image-2.6.32-5-xen-686             2.6.32-18 
-ii  mdadm                                    3.0.3-2
-ii  initramfs-tools                          0.97.2
-ii  lvm2                                     2.02.66-2
+Why spares=3D2 for md2? It was created during Debian system install wit=
+h
+spares=3D1.
 
+root@MCI03:~# mdadm -V
+mdadm - v3.0.3 - 22nd October 2009
 
-mdadm --examine /dev/sda 
-/dev/sda:                                 
-          Magic : Intel Raid ISM Cfg Sig. 
-        Version : 1.1.00                  
-    Orig Family : 00000000                
-         Family : 828006a6                
-     Generation : 00000d7f                
-           UUID : 9a1dfb7e:5783ddc7:a614552a:eb9c1135
-       Checksum : 4b2aa46c correct                   
-    MPB Sectors : 2                                  
-          Disks : 2                                  
-   RAID Devices : 1                                  
-
-  Disk00 Serial : 9SZ0EQJ2
-          State : active  
-             Id : 00000000
-    Usable Size : 625137934 (298.09 GiB 320.07 GB)
-
-[Volume0]:
-           UUID : 42f9906a:f4c0a788:5a5a74eb:154a22ef
-     RAID Level : 1
-        Members : 2
-      This Slot : 0
-     Array Size : 625137664 (298.09 GiB 320.07 GB)
-   Per Dev Size : 625137664 (298.09 GiB 320.07 GB)
-  Sector Offset : 0
-    Num Stripes : 2441944
-     Chunk Size : 64 KiB
-       Reserved : 0
-  Migrate State : migrating: repair
-      Map State : normal <-- normal
-    Dirty State : dirty
-
-  Disk01 Serial : 9SZ0EH35
-          State : active
-             Id : 00000100
-    Usable Size : 625137934 (298.09 GiB 320.07 GB)
+root@MCI03:~# uname -r
+2.6.32preemptive
 
 
+What's wrong here?
+Thanks for any comments!
+
+Best regards, Tobi
+
+--=20
+qumido GmbH | Altplauen 19 | 01187 Dresden
+Telefon: +49 1805 355 7555 | Telefax: +49 7472 2820 26
+E-Mail:  it@qumido.de      | Web: http://www.qumido.de
+
+Gesch=E4ftsf=FChrung: Lothar Hartinger, Jan Aurel Rohde
+Sitz der Gesellschaft: Rottenburg am Neckar | Amtsgericht Stuttgart: HR=
+B
+723793
 
 
+Diese E-Mail enth=E4lt vertrauliche und/oder rechtlich gesch=FCtzte
+Informationen. Wenn Sie nicht der richtige Adressat sind oder diese
+E-Mail irrt=FCmlich erhalten haben, informieren Sie bitte sofort den
+Absender und vernichten Sie diese E-Mail. Das unerlaubte Kopieren sowie
+die unbefugte Weitergabe dieser E-Mail ist nicht gestattet.
+Internetkommunikationen sind nicht sicher. Daher =FCbernimmt die qumido
+GmbH keinerlei Haftung f=FCr den Inhalt dieser Nachricht. Jegliche
+Ansichten oder dargestellte Meinungen sind ausschlie=DFlich solche des
+Autors und repr=E4sentieren nicht notwendigerweise die der qumido GmbH.
+
+This e-mail may contain confidential and/or privileged information. If
+you are not the intended recipient (or have received this e-mail in
+error) please notify the sender immediately and destroy this e-mail. An=
+y
+unauthorized copying, disclosure or distribution of the material in thi=
+s
+e-mail is strictly forbidden. Internet communications are not secure an=
+d
+therefore qumido GmbH does not accept legal responsibility for the
+contents of this message. Any views or opinions presented are solely
+those of the author and do not necessarily represent those of qumido
+GmbH.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
