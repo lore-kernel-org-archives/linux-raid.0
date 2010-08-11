@@ -1,36 +1,51 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: debian dist-upgrade etch -> squeeze broke my mdadm RAID1
-Date: Wed, 11 Aug 2010 09:16:20 +0100
-Message-ID: <4C625C54.5060000@seoss.co.uk>
-References: <201008111527.37009.Doug.duBoulay@gmail.com>
+From: Tobias Gunkel <tobias.gunkel@qumido.de>
+Subject: Re: weird SparesMissing event
+Date: Wed, 11 Aug 2010 11:46:22 +0200
+Message-ID: <4C62716E.1090902@qumido.de>
+References: <4C624B80.9030304@qumido.de> <20100811175711.40cb75c9@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201008111527.37009.Doug.duBoulay@gmail.com>
+In-Reply-To: <20100811175711.40cb75c9@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug <doug.duboulay@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/08/10 06:27, Doug wrote:
-> After the upgrade and installation of a new 2.6.32 kernel, the kernel
->    
+Am 11.08.2010 09:57, schrieb Neil Brown:
+> This means that /etc/mdadm/mdadm.conf says /dev/md2 has more spare devices
+> than it currently has.  What is in /etc/mdadm/mdadm.conf
 
-I believe Debian only supports upgrading between major versions, so you 
-should have gone 4.0.x (etch) -> 5.0.x (lenny) -> 6.0-pre (squeeze).  If 
-you didn't then that'll explain the problem you're seeing which is 
-really Debian-specific, and relates (I believe) to the change in device 
-naming with the switch to udev which occured between etch and lenny (and 
-is presumably taken into account when upgrading between those two).
+root@MCI03:~# egrep -v '^#|^$' /etc/mdadm/mdadm.conf
+DEVICE partitions
+CREATE owner=root group=disk mode=0660 auto=yes
+HOMEHOST <system>
+ARRAY /dev/md0 UUID=304f5f2a:fbc8082b:54307b3d:1949437b
+   spares=1
+ARRAY /dev/md1 UUID=b263f9c1:5c680152:54307b3d:1949437b
+   spares=1
+ARRAY /dev/md2 UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+   spares=2
+MAILADDR foo@bar.com
 
-HTH,
 
-Tim.
+> What do you get if you run
+> 
+>  mdadm --examine --scan --verbose
 
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+root@MCI03:~# mdadm --examine --scan --verbose
+ARRAY /dev/md0 level=raid1 num-devices=2
+UUID=304f5f2a:fbc8082b:54307b3d:1949437b
+   spares=1   devices=/dev/sdc1,/dev/sdb1,/dev/sda1
+ARRAY /dev/md1 level=raid1 num-devices=2
+UUID=b263f9c1:5c680152:54307b3d:1949437b
+   spares=1   devices=/dev/sdc2,/dev/sdb2,/dev/sda2
+ARRAY /dev/md2 level=raid1 num-devices=2
+UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+   spares=2
+devices=/dev/sdc3,/dev/sdc,/dev/sdb3,/dev/sdb,/dev/sda3,/dev/sda
 
+
+Hm, md2 contains devices. How is that?
+
+Tobi
