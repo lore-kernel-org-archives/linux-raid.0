@@ -1,7 +1,7 @@
 From: Jon Hardcastle <jd_hardcastle@yahoo.com>
 Subject: Re:  sdc1 does not have a valid v0.90 superblock, not importing!
-Date: Wed, 11 Aug 2010 05:29:59 -0700 (PDT)
-Message-ID: <691155.4941.qm@web51301.mail.re2.yahoo.com>
+Date: Wed, 11 Aug 2010 08:30:31 -0700 (PDT)
+Message-ID: <282617.15518.qm@web51308.mail.re2.yahoo.com>
 References: <20100811213405.09a0b709@notabene>
 Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
@@ -181,26 +181,24 @@ ing!
 > >=20
 > > >=20
 > > > NeilBrown
+> > > --
+> > > To unsubscribe from this list: send the line
+> "unsubscribe
+> > > linux-raid" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at=A0 http://vger.kernel.org/majordomo-info.h=
+tml
+> > >=20
+> >=20
+> >=20
+> >=A0 =A0 =A0=A0=A0
 
-Hmmm ok. It isn't worth the risk. I can thrash the drive after I have r=
-eplaced it.
+=46or the benefit of those that follow! I assemble the array by specify=
+ing exactly the drives I wanted in it.. once assembled i could confiden=
+tly zero-block the troublesome drive... without it rearing its ugly hea=
+d again!
 
-OK so now I want to mark the drive as 'removed' but it is proving probl=
-ematic as the array is not active?
-
-# mdadm /dev/md4 --fail /dev/sdc1
-mdadm: cannot get array info for /dev/md4
-
-
-# mdadm --detail /dev/md4
-mdadm: md device /dev/md4 does not appear to be active.
-
-# mdadm --assemble /dev/md4
-mdadm: failed to add /dev/sdc1 to /dev/md4: Invalid argument
-mdadm: /dev/md4 assembled from 6 drives - not enough to start the array=
- while not clean - consider --force.
-
-I really wanted to fail it before trying to assemble the rest?
+I now have a 1 drive down - degraded raid 6 array.
 
 
      =20
