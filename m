@@ -1,66 +1,81 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re:  sdc1 does not have a valid v0.90 superblock, not importing!
-Date: Wed, 11 Aug 2010 21:06:03 +1000
-Message-ID: <20100811210603.065284c8@notabene>
-References: <835034.72836.qm@web51302.mail.re2.yahoo.com>
+Subject: Re: weird SparesMissing event
+Date: Wed, 11 Aug 2010 21:09:28 +1000
+Message-ID: <20100811210928.2785f92b@notabene>
+References: <4C624B80.9030304@qumido.de>
+	<20100811175711.40cb75c9@notabene>
+	<4C62716E.1090902@qumido.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <835034.72836.qm@web51302.mail.re2.yahoo.com>
+In-Reply-To: <4C62716E.1090902@qumido.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: jd_hardcastle@yahoo.com, linux-raid@vger.kernel.org
+To: Tobias Gunkel <tobias.gunkel@qumido.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 11 Aug 2010 02:55:44 -0700 (PDT)
-Jon Hardcastle <jd_hardcastle@yahoo.com> wrote:
+On Wed, 11 Aug 2010 11:46:22 +0200
+Tobias Gunkel <tobias.gunkel@qumido.de> wrote:
 
-> (my first attempt appears to have been bounced as the spam checker thought it had HTML in it?!)
+> Am 11.08.2010 09:57, schrieb Neil Brown:
+> > This means that /etc/mdadm/mdadm.conf says /dev/md2 has more spare devices
+> > than it currently has.  What is in /etc/mdadm/mdadm.conf
+> 
+> root@MCI03:~# egrep -v '^#|^$' /etc/mdadm/mdadm.conf
+> DEVICE partitions
+> CREATE owner=root group=disk mode=0660 auto=yes
+> HOMEHOST <system>
+> ARRAY /dev/md0 UUID=304f5f2a:fbc8082b:54307b3d:1949437b
+>    spares=1
+> ARRAY /dev/md1 UUID=b263f9c1:5c680152:54307b3d:1949437b
+>    spares=1
+> ARRAY /dev/md2 UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+>    spares=2
+> MAILADDR foo@bar.com
 
-odd... came through ok for me the first time.
+As I thought, mdadm.conf says to expect 2 spares, but there is really only
+one.  Just edit the file and the message will stop.
 
 > 
-> Help!
 > 
-> Long story short - I was watching a movie off my RAID6 array. Got a smart error warning
-
-> Aug 10 22:00:07 mangalore kernel: raid5: cannot start dirty degraded array for md4
-
-This is the current problem.  The array is dirty and degraded so there could
-theoretically be undetectable corruption.  Chance is quite low but it is
-there so md won't start with out you acknowledging the risk by giving the
---force flag to mdadm --assemble.
-Only do that if you are confident that your hardware is working correctly.
-
-> It appears sdc has an invalid superblock?
+> > What do you get if you run
+> > 
+> >  mdadm --examine --scan --verbose
 > 
-> This is the 'examine' from sdc1 (note the checksum)
+> root@MCI03:~# mdadm --examine --scan --verbose
+> ARRAY /dev/md0 level=raid1 num-devices=2
+> UUID=304f5f2a:fbc8082b:54307b3d:1949437b
+>    spares=1   devices=/dev/sdc1,/dev/sdb1,/dev/sda1
+> ARRAY /dev/md1 level=raid1 num-devices=2
+> UUID=b263f9c1:5c680152:54307b3d:1949437b
+>    spares=1   devices=/dev/sdc2,/dev/sdb2,/dev/sda2
+> ARRAY /dev/md2 level=raid1 num-devices=2
+> UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+>    spares=2
+> devices=/dev/sdc3,/dev/sdc,/dev/sdb3,/dev/sdb,/dev/sda3,/dev/sda
 > 
-> /dev/sdc1:
-.....
->       Checksum : b335b4e3 - expected b735b4e3
-
-Single bit error.  That isn't good as it means some bit of memory or some bit
-on some bus somewhere cannot be trusted.
-It could be a transient thing and will never happen again.  Or maybe not.
-Given the smart errors and the fact that you have had problems with the drive
-before it seem very likely that the problem is in that drive.  I suggest
-unplugging it and leaving it unplugged.  Some memory buffer in the drive is
-probably marginal.  I don't think they use ECC memory.
-
 > 
-> Anyways... I am ASSUMING mdadm has not assembled the array to be on the safe side? i have not done anything.. no force... no assume clean.. I wanted to be sure?
+> Hm, md2 contains devices. How is that?
 
-You assume correctly.
+Partition3 on each device must start at a multiple of 64K and extend to then
+end of the device.  In this case both the partition and the whole device
+appear to have the same metadata, and mdadm cannot tell which is correct.
+This is a short-coming of v0.90 metadata and is fixed in v1.x.
+You can avoid this by changing the 'device' line in mdadm.conf to
 
-> 
-> Should i remove sdc1 from the array? It should then assemble? I have 2 spare drives that I am getting around to using to replace this drive and the other 500GB.. so should I remove sdc1... and try and re-add or just put the new drive in?
-> 
-> atm I have 'stop'ped the array and got badblocks running....
-> 
+   DEVICE /dev/sd*[0-9]
 
-Remove sdc and assemble the array with --force, and get a new device to
-replace /dev/sdc as soon as possible.
+which essentially means "only partitions of sd devices should be considered
+for membership in md arrays".
 
 NeilBrown
+
+
+> 
+> Tobi
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
