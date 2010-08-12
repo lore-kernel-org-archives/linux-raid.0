@@ -1,38 +1,43 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH] MD: raid1, fix BUG caused by flags handling
-Date: Thu, 12 Aug 2010 14:06:41 +0200
-Message-ID: <4C63E3D1.1010800@gmail.com>
-References: <1281614465-2816-1-git-send-email-jslaby@suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH v2] SCSI: fix bio.bi_rw handling
+Date: Thu, 12 Aug 2010 14:31:05 +0200
+Message-ID: <1281616266-4709-2-git-send-email-jslaby@suse.cz>
+References: <1281616266-4709-1-git-send-email-jslaby@suse.cz>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1281614465-2816-1-git-send-email-jslaby@suse.cz>
+In-Reply-To: <1281616266-4709-1-git-send-email-jslaby@suse.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: neilb@suse.de, akpm@linux-foundation.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: akpm@linux-foundation.org
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, jirislaby@gmail.com, linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-raid.ids
 
-On 08/12/2010 02:01 PM, Jiri Slaby wrote:
-> Commit 74450be1 (block: unify flags for struct bio and struct request)
+Return of the bi_rw tests is no longer bool after commit 74450be1. So
+testing against constants doesn't make sense anymore. Fix this bug in
+osd_req_read by removing "== 1" in test.
 
-Actually there are more than the two below introduced by the commit.
-Hold on, I will post v2.
+This is not a problem now, where REQ_WRITE is 1, but this can change
+in the future and we don't want to rely on that.
 
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -787,8 +787,8 @@ static int make_request(mddev_t *mddev, struct bio * bio)
->  	struct bio_list bl;
->  	struct page **behind_pages = NULL;
->  	const int rw = bio_data_dir(bio);
-> -	const bool do_sync = (bio->bi_rw & REQ_SYNC);
-> -	bool do_barriers;
-> +	const unsigned long do_sync = (bio->bi_rw & REQ_SYNC);
-> +	unsigned long do_barriers;
->  	mdk_rdev_t *blocked_rdev;
->  
->  	/*
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/osd/osd_initiator.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index fda4de3..e88bbdd 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -865,7 +865,7 @@ void osd_req_read(struct osd_request *or,
+ {
+ 	_osd_req_encode_common(or, OSD_ACT_READ, obj, offset, len);
+ 	WARN_ON(or->in.bio || or->in.total_bytes);
+-	WARN_ON(1 == (bio->bi_rw & REQ_WRITE));
++	WARN_ON(bio->bi_rw & REQ_WRITE);
+ 	or->in.bio = bio;
+ 	or->in.total_bytes = len;
+ }
 -- 
-js
+1.7.2.1
+
+
