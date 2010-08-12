@@ -1,57 +1,61 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH v2] BLOCK: fix bio.bi_rw handling
-Date: Thu, 12 Aug 2010 18:24:39 +0200
-Message-ID: <4C642047.6030108@gmail.com>
-References: <1281616266-4709-1-git-send-email-jslaby@suse.cz> <1281616266-4709-3-git-send-email-jslaby@suse.cz> <20100812160809.GC28689@lst.de>
+From: Phil Turmel <philip@turmel.org>
+Subject: Boot md/udev event storm
+Date: Thu, 12 Aug 2010 15:33:28 -0400
+Message-ID: <4C644C88.9020103@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100812160809.GC28689@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jiri Slaby <jslaby@suse.cz>, akpm@linux-foundation.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/12/2010 06:08 PM, Christoph Hellwig wrote:
-> On Thu, Aug 12, 2010 at 02:31:06PM +0200, Jiri Slaby wrote:
->> Return of the bi_rw tests is no longer bool after commit 74450be1. B=
-ut
->> results of such tests are stored in bools. This doesn't fit in there
->> for some compilers (gcc 4.5 here), so either use !! magic to get rea=
-l
->> bools or use ulong where the result is assigned somewhere.
->=20
-> I'd have to look at my copy of the C standard if it's guaranteed,
+Hi all,
 
-=A76.5.3.3 of ANSI C99, par 5:
-The result of the logical negation operator ! is 0 if the value of its
-operand compares unequal to 0, 1 if the value of its operand compares
-equal to 0. The result has type int. The expression !E is equivalent to
-(0=3D=3DE).
+I've been trying to track down an infinite loop of device "change" events
+during boot on my personal server, and I think I've identified the
+cause:  Line #24 of 64-md-raid.rules runs "mdadm --detail --export" on each
+new or changed md device in order to create a variety of symlinks.
+Executing this one line (sometimes?) creates another change event.  There is
+some kind of timing quirk, as the system does successfully complete an
+occasional reboot.
 
-On =3D=3D (=A76.5.9 par 3):
-The =3D=3D (equal to) and !=3D (not equal to) operators are analogous t=
-o the
-relational operators except for their lower precedence. Each of the
-operators yields 1 if the specified relation is true and 0 if it is
-false. The result has type int. For any pair of operands, exactly one o=
-f
-the relations is true.
+The symptoms:
+After dracut finds and mounts my raid5 root partition, init gets to
+"Waiting for uevents to be processed", which times out in 60 seconds.  A list
+of unprocessed events shows on the console, usually several thousand.  They all
+reference an md device.  Init then proceeds to "Setting up the Logical Volume
+Manager", which hangs forever.
 
-On bool =3D> _Bool (=A76.2.5 par 2)
-An object declared as type _Bool is large enough to store the values 0
-and 1.
+This system is Gentoo Unstable, x86-32, although I've seen this on my x86-64
+laptop in the past.  Relevant packages:
 
-So it should be safe :).
+mdadm-3.1.2
+udev-160
+lvm2-2.02.72
+Kernel config: http://www.turmel.org/other/config.gz
 
-BTW just of curiosity, sizeof(bool) is 1 here (8 bits).
+When the problem occurs, I can get my system working by requesting interactive
+startup, then skipping the udev service.  It gets started later in that case,
+but it is after LVM is started, and the race doesn't re-appear.
 
-regards,
---=20
-js
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When I first encountered this problem, I thought it was an LVM issue, like
+gentoo bug #306491, or ubuntu bug #332270.  I tried all of the recommendations
+in those bug reports, to no avail.  I even forward-ported the LVM2
+"open-readonly" patch to lvm2-2.02.72, also to no effect.  (Upstream LVM
+never incorporated that patch, so my system didn't have it by default.  I
+suspect it remains an issue for many people, but it doesn't appear to affect
+me.)  For anyone who's interested, that patch is here:
+	http://www.turmel.org/other/lvm2-2.02.72-open-readonly.patch
+
+In any case, when I comment out lines 24 through 31 of 64-md-raid.rules, no
+event storm occurs.  If I uncomment just line 24, the event storm re-occurs.
+
+I poked a little in the mdadm source, and noted that Detail.c opens the
+requested md device read-only.  I don't know enough about mdadm's code to
+go further.
+
+Any ideas?
+
+Phil
+
