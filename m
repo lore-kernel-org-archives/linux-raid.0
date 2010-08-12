@@ -1,34 +1,36 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm PATCH 0/2] two 3.1.3 regression fixes (incremental
- assembly)
-Date: Thu, 12 Aug 2010 11:47:12 +1000
-Message-ID: <20100812114712.359a5033@notabene>
-References: <20100810164551.26691.17944.stgit@localhost.localdomain>
+From: Tobias Gunkel <tobias.gunkel@qumido.de>
+Subject: Re: weird SparesMissing event
+Date: Thu, 12 Aug 2010 09:57:51 +0200
+Message-ID: <4C63A97F.3040706@qumido.de>
+References: <4C624B80.9030304@qumido.de>	<20100811175711.40cb75c9@notabene>	<4C62716E.1090902@qumido.de> <20100811210928.2785f92b@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100810164551.26691.17944.stgit@localhost.localdomain>
+In-Reply-To: <20100811210928.2785f92b@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 10 Aug 2010 09:46:38 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+Am 11.08.2010 13:09, schrieb Neil Brown:
 
-> Hi Neil,
-> 
-> The mdadm -I --no-degraded option needs to be acceptable for some time
-> to come, do you have a policy for when deprecated options can be scheduled for
-> removal?  The error code for -I shall be zero in the 'not enough' case to
-> restore the correct and established pre-3.1.3 behavior.
+> As I thought, mdadm.conf says to expect 2 spares, but there is really only
+> one.  Just edit the file and the message will stop.
 
-No, I don't have a policy.  Given that this was introduced fairly recently I
-don't feel a need to keep it around for very long.  I'd probably be happy to
-see in go in 12 months, or with mdadm-v4.0, whichever is first.
+Yes, now it's all fine, thanks!
 
-Thanks,
-NeilBrown
+But mdadm --examine --scan --verbose still shows spares=2:
+
+ARRAY /dev/md2 level=raid1 num-devices=2
+UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+   spares=2
+devices=/dev/sdc3,/dev/sdc,/dev/sdb3,/dev/sdb,/dev/sda3,/dev/sda
+
+...although mdadm.conf was updated:
+
+grep -A1 md2 /etc/mdadm/mdadm.conf
+ARRAY /dev/md2 UUID=7aa24776:9d6e8d24:54307b3d:1949437b
+   spares=1
 
 
+Tobi
