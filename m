@@ -1,218 +1,78 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with sequenced flush
-Date: Sat, 14 Aug 2010 12:36:54 +0200
-Message-ID: <20100814103654.GA13292@lst.de>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org>
+From: =?ISO-8859-2?Q?Pavel_Piln=FD?= <pavel@pjp.cz>
+Subject: Problem with raid in QNAP TS-639Pro
+Date: Sat, 14 Aug 2010 15:39:31 +0200
+Message-ID: <4C669C93.5000509@pjp.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C655BE5.4070809@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Aug 13, 2010 at 04:51:17PM +0200, Tejun Heo wrote:
-> Do you want to change the whole thing in a single commit?  That would
-> be a pretty big invasive patch touching multiple subsystems.
+Dear,
+ I have an problem with mdadm based NAS, Unfortunately producer support
+don't have any interest to solve anything (Unfortunately as usually).
+ What's happens - I created 6 HDD array RAID 5 by standard web
+interface, because I had an problem with HDD, array was created in order
+HDD 2,3,4,5,1,6. After appr. 1.5 year one hdd have problem, some chaos
+to understand which hdd had problem (web interface), when I replaced
+hdd, array was restore, but in different order of hdd - 2,3,4,5,6,1, hdd
+6 and 1 are switch and result - inaccessible array ... unfortunately ...
+ What I have there - better say no comment.
+ My small question is simple - exist some solution for this situation
+and restore standard work (of course - with (any) data there) ?
+ 
+mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Sat Jun 20 20:14:35 2009
+     Raid Level : raid5
+     Array Size : 7317848000 (6978.84 GiB 7493.48 GB)
+  Used Dev Size : 1463569600 (1395.77 GiB 1498.70 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-We can just stop draining in the block layer in the first patch, then
-stop doing the stuff in md/dm/etc in the following and then do the
-final renaming patches.  It would still be less patches then now, but
-keep things working through the whole transition, which would really
-help biseting any problems.
+    Update Time : Sat Aug 14 14:00:22 2010
+          State : clean
+ Active Devices : 6
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 0
 
-> +			if (req->cmd_flags & REQ_FUA)
-> +				vbr->out_hdr.type |= VIRTIO_BLK_T_FUA;
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-I'd suggest not adding FUA support to virtio yet.  Just using the flush
-feature gives you a fully working barrier implementation.
+           UUID : bcb3df8c:c65faf60:784485de:5b9c58ae
+         Events : 0.1040290
 
-Eventually we might want to add a flag in the block queue to send
-REQ_FLUSH|REQ_FUA request through to virtio directly so that we can
-avoid separate pre- and post flushes, but I really want to benchmark if
-it makes an impact on real life setups first.
+    Number   Major   Minor   RaidDevice State
+       0       8       19        0      active sync   /dev/sdb3
+       1       8       35        1      active sync   /dev/sdc3
+       2       8       51        2      active sync   /dev/sdd3
+       3       8       67        3      active sync   /dev/sde3
+       4       8       83        4      active sync   /dev/sdf3
+       5       8        3        5      active sync   /dev/sda3
 
-> Index: block/drivers/md/linear.c
-> ===================================================================
-> --- block.orig/drivers/md/linear.c
-> +++ block/drivers/md/linear.c
-> @@ -294,8 +294,8 @@ static int linear_make_request (mddev_t
->  	dev_info_t *tmp_dev;
->  	sector_t start_sector;
-> 
-> -	if (unlikely(bio->bi_rw & REQ_HARDBARRIER)) {
-> -		md_barrier_request(mddev, bio);
-> +	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
-> +		md_flush_request(mddev, bio);
+ Original report I don't have, only mdadm.conf - ARRAY /dev/md0
+devices=/dev/sdb3,/dev/sdc3,/dev/sdd3,/dev/sde3,/dev/sda3,/dev/sdf3
 
-We only need the special md_flush_request handling for
-empty REQ_FLUSH requests.  REQ_WRITE | REQ_FLUSH just need the
-flag propagated to the underlying devices.
+ mdadm  --examine /dev/md0
+mdadm: No md superblock detected on /dev/md0.
 
-> +static void md_end_flush(struct bio *bio, int err)
->  {
->  	mdk_rdev_t *rdev = bio->bi_private;
->  	mddev_t *mddev = rdev->mddev;
-> 
->  	rdev_dec_pending(rdev, mddev);
-> 
->  	if (atomic_dec_and_test(&mddev->flush_pending)) {
-> +		/* The pre-request flush has finished */
-> +		schedule_work(&mddev->flush_work);
+ mdadm --examine-bitmap /dev/md0
+        Filename : /dev/md0
+           Magic : 6461646d
+mdadm: invalid bitmap magic 0x6461646d, the bitmap file appears to be
+corrupted
+         Version : 1310734957
+mdadm: unknown bitmap version 1310734957, either the bitmap file is
+corrupted or you need to upgrade your tools
 
-Once we only handle empty barriers here we can directly call bio_endio
-instead of first scheduling a work queue.Once we only handle empty
-barriers here we can directly call bio_endio and the super wakeup
-instead of first scheduling a work queue.
+ I'll happy for any help.
 
->  	while ((bio = bio_list_pop(writes))) {
-> -		if (unlikely(bio_empty_barrier(bio))) {
-> +		if ((bio->bi_rw & REQ_FLUSH) && !bio_has_data(bio)) {
+ Best regards, Pavel
 
-I kept bio_empty_barrier as bio_empty_flush, which actually is a quite
-useful macro for the bio based drivers.
-
-> @@ -621,7 +621,7 @@ static void dec_pending(struct dm_io *io
->  			 */
->  			spin_lock_irqsave(&md->deferred_lock, flags);
->  			if (__noflush_suspending(md)) {
-> -				if (!(io->bio->bi_rw & REQ_HARDBARRIER))
-> +				if (!(io->bio->bi_rw & REQ_FLUSH))
-
-I suspect we don't actually need to special case flushes here anymore.
-
-
-> @@ -633,14 +633,14 @@ static void dec_pending(struct dm_io *io
->  		io_error = io->error;
->  		bio = io->bio;
-> 
-> -		if (bio->bi_rw & REQ_HARDBARRIER) {
-> +		if (bio->bi_rw & REQ_FLUSH) {
->  			/*
-> -			 * There can be just one barrier request so we use
-> +			 * There can be just one flush request so we use
->  			 * a per-device variable for error reporting.
->  			 * Note that you can't touch the bio after end_io_acct
->  			 */
-> -			if (!md->barrier_error && io_error != -EOPNOTSUPP)
-> -				md->barrier_error = io_error;
-> +			if (!md->flush_error)
-> +				md->flush_error = io_error;
-
-And we certainly do not need any special casing here.  See my patch.
-
->  {
->  	int rw = rq_data_dir(clone);
->  	int run_queue = 1;
-> -	bool is_barrier = clone->cmd_flags & REQ_HARDBARRIER;
-> +	bool is_flush = clone->cmd_flags & REQ_FLUSH;
->  	struct dm_rq_target_io *tio = clone->end_io_data;
->  	struct mapped_device *md = tio->md;
->  	struct request *rq = tio->orig;
-> 
-> -	if (rq->cmd_type == REQ_TYPE_BLOCK_PC && !is_barrier) {
-> +	if (rq->cmd_type == REQ_TYPE_BLOCK_PC && !is_flush) {
-
-We never send flush requests as REQ_TYPE_BLOCK_PC anymore, so no need
-for the second half of this conditional.
-
-> +	if (!is_flush)
-> +		blk_end_request_all(rq, error);
-> +	else {
->  		if (unlikely(error))
-> -			store_barrier_error(md, error);
-> +			store_flush_error(md, error);
->  		run_queue = 0;
-> -	} else
-> -		blk_end_request_all(rq, error);
-> +	}
-
-Flush requests can now be completed normally.
-
-> @@ -1308,11 +1302,11 @@ static void __split_and_process_bio(stru
-> 
->  	ci.map = dm_get_live_table(md);
->  	if (unlikely(!ci.map)) {
-> -		if (!(bio->bi_rw & REQ_HARDBARRIER))
-> +		if (!(bio->bi_rw & REQ_FLUSH))
->  			bio_io_error(bio);
->  		else
-> -			if (!md->barrier_error)
-> -				md->barrier_error = -EIO;
-> +			if (!md->flush_error)
-> +				md->flush_error = -EIO;
-
-No need for the special error handling here, flush requests can now
-be completed normally.
-
-> @@ -1417,11 +1419,11 @@ static int _dm_request(struct request_qu
->  	part_stat_unlock();
-> 
->  	/*
-> -	 * If we're suspended or the thread is processing barriers
-> +	 * If we're suspended or the thread is processing flushes
->  	 * we have to queue this io for later.
->  	 */
->  	if (unlikely(test_bit(DMF_QUEUE_IO_TO_THREAD, &md->flags)) ||
-> -	    unlikely(bio->bi_rw & REQ_HARDBARRIER)) {
-> +	    (bio->bi_rw & REQ_FLUSH)) {
->  		up_read(&md->io_lock);
-
-AFAICS this is only needed for the old barrier code, no need for this
-for pure flushes.
-
-> @@ -1464,10 +1466,7 @@ static int dm_request(struct request_que
-> 
->  static bool dm_rq_is_flush_request(struct request *rq)
->  {
-> -	if (rq->cmd_flags & REQ_FLUSH)
-> -		return true;
-> -	else
-> -		return false;
-> +	return rq->cmd_flags & REQ_FLUSH;
->  }
-
-It's probably worth just killing this wrapper.
-
-
->  void dm_dispatch_request(struct request *rq)
-> @@ -1520,7 +1519,7 @@ static int setup_clone(struct request *c
->  	if (dm_rq_is_flush_request(rq)) {
->  		blk_rq_init(NULL, clone);
->  		clone->cmd_type = REQ_TYPE_FS;
-> -		clone->cmd_flags |= (REQ_HARDBARRIER | WRITE);
-> +		clone->cmd_flags |= (REQ_FLUSH | WRITE);
->  	} else {
->  		r = blk_rq_prep_clone(clone, rq, tio->md->bs, GFP_ATOMIC,
->  				      dm_rq_bio_constructor, tio);
-
-My suspicion is that we can get rif of all that special casing here
-and just use blk_rq_prep_clone once it's been updated to propagate
-REQ_FLUSH, similar to the DISCARD flag.
-
-I also suspect that there is absolutely no need to the barrier work
-queue once we stop waiting for outstanding request.  But then again
-the request based dm code still somewhat confuses me.
-
-> +static void process_flush(struct mapped_device *md, struct bio *bio)
->  {
-> +	md->flush_error = 0;
-> +
-> +	/* handle REQ_FLUSH */
->  	dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
-> 
-> -	bio_init(&md->barrier_bio);
-> -	md->barrier_bio.bi_bdev = md->bdev;
-> -	md->barrier_bio.bi_rw = WRITE_BARRIER;
-> -	__split_and_process_bio(md, &md->barrier_bio);
-> +	bio_init(&md->flush_bio);
-> +	md->flush_bio.bi_bdev = md->bdev;
-> +	md->flush_bio.bi_rw = WRITE_FLUSH;
-> +	__split_and_process_bio(md, &md->flush_bio);
-
-There's not need to use a separate flush_bio here.
-__split_and_process_bio does the right thing for empty REQ_FLUSH
-requests.  See my patch for how to do this differenty.  And yeah,
-my version has been tested.
+ 
