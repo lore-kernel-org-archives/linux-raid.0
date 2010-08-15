@@ -1,144 +1,73 @@
-From: "fibreraid@gmail.com" <fibreraid@gmail.com>
-Subject: Re: md's fail to assemble correctly consistently at system startup -
- mdadm 3.1.2 and Ubuntu 10.04
-Date: Sat, 14 Aug 2010 09:57:01 -0700
-Message-ID: <AANLkTi=uckUyaKwQ6NhMApsgK2P_pDJkzLhV3Zerb68P@mail.gmail.com>
-References: <AANLkTinQgx1t0eaXuFKLnf+5PBw1AqJpyYfxo-AvZXQf@mail.gmail.com>
-	<20100808185806.69085415@notabene>
-	<AANLkTi=j5WddChbtjBRCJFc=6XvOmEGL3bZdqJ3NfNeK@mail.gmail.com>
-	<20100809210019.3cc064ab@notabene>
-	<AANLkTi=_LKK7t1zPfcBwdTaSj6xDcBX9XAWbuN7mnPZD@mail.gmail.com>
-	<AANLkTikiC+YF8ZtND2ub6mY_9o0zLQT+4jW1zzhA-98x@mail.gmail.com>
-	<20100812114321.6d4462b5@notabene>
+From: =?UTF-8?Q?Tor_Arne_Vestb=C3=B8?= <torarnv@gmail.com>
+Subject: RAID5 disk failure during rebuild of spare, any chance of recovery
+ when one of the failed devices is suspected to be intact?
+Date: Sun, 15 Aug 2010 20:52:45 +0200
+Message-ID: <AANLkTimiGhkzSBgt73fLZmoOcGf5Yyui-1WjkPLVVR6v@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100812114321.6d4462b5@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil and Dan,
+Hey,
 
-This patch does seem to have fixed the issue for me.
+Hoping for some crisis help here :)
+
+Array consists of /dev/sd[bcdef]1 where b-e were active devices and
+sdf1 was a spare.
+
+After installing Ubunuty 10.04 and trying to reassemble the array it
+got reassembled without sdb1, so mdadm started reconstructing the
+array onto the spare sdf1. While this was going on, sdd failed, and
+was pulled out as faulty. Now things look like this:
+
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90
+  Creation Time : Sun Mar  2 22:52:53 2008
+     Raid Level : raid5
+     Array Size : 2197715712 (2095.91 GiB 2250.46 GB)
+  Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
+   Raid Devices : 4
+  Total Devices : 5
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Aug 15 20:32:59 2010
+          State : clean, degraded
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 2
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : a0186556:4ffb5a2a:822f8875:94ae7d2c
+         Events : 0.24708
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8       33        1      active sync   /dev/sdc1
+       2       0        0        2      removed
+       3       8       65        3      active sync   /dev/sde1
+
+       4       8       17        -      spare   /dev/sdb1
+       5       8       81        -      spare   /dev/sdf1
+       6       8       49        -      faulty spare   /dev/sdd1
+
+
+Mounting the array does not work :/
+
+Normally a RAID5 with two lost devices is unrecoverable, as far as
+I've understood it, but in this case i suspect that sdb1 is fully
+intact, and that it was just for some reason picked up when the array
+was first assembled.
+
+If that's the case, is there any way i can "promote" sdb1 from spare
+to active without rebuilding it (which would not work since the array
+is messed up)? Basically reassembling the array as if sdb1, sdc1 and
+sde1 were okey? and then rebuild the sdf1 spare?
 
 Thanks!
--Tommy
-
-On Wed, Aug 11, 2010 at 6:43 PM, Neil Brown <neilb@suse.de> wrote:
-> On Tue, 10 Aug 2010 22:17:19 -0700
-> Dan Williams <dan.j.williams@intel.com> wrote:
->
->> On Mon, Aug 9, 2010 at 4:58 AM, fibreraid@gmail.com <fibreraid@gmail=
-=2Ecom> wrote:
->> > Hi Neil,
->> >
->> > I may have spoken a bit too soon. It seems that while the md's are
->> > coming up successfully, on occasion, hot-spares are not coming up
->> > associated with their proper md's. As a result, what was a RAID 5 =
-md
->> > with one hot-spare will on occasion come up as a RAID 5 md with no
->> > hot-spare.
->> >
->> > Any ideas on this one?
->> >
->>
->> Is this new behavior only seen with 3.1.3, i.e when it worked with
->> 3.1.2 did the hot spares always arrive correctly? =A0I suspect this =
-is a
->> result of the new behavior of -I to not add devices to a running arr=
-ay
->> without the -R parameter, but you don't want to make this the defaul=
-t
->> for udev otherwise your arrays will always come up degraded.
->>
->> We could allow disks to be added to active non-degraded arrays, but
->> that still has the possibility of letting a stale device take the
->> place of a fresh hot spare (the whole point of changing the behavior
->> in the first place). =A0So as far as I can see we need to query the
->> other disks in the active array and permit the disk to be re-added t=
-o
->> an active array when it is demonstrably a hot spare (or -R is
->> specified).
->>
->> --
->> Dan
->
->
-> Arg... another regression.
->
-> Thanks for the report and the analysis.
->
-> Here is the fix.
->
-> NeilBrown
->
-> From ef83fe7cba7355d3da330325e416747b0696baef Mon Sep 17 00:00:00 200=
-1
-> From: NeilBrown <neilb@suse.de>
-> Date: Thu, 12 Aug 2010 11:41:41 +1000
-> Subject: [PATCH] Allow --incremental to add spares to an array.
->
-> Commit 3a6ec29ad56 stopped us from adding apparently-working devices
-> to an active array with --incremental as there is a good chance that =
-they
-> are actually old/failed devices.
->
-> Unfortunately it also stopped spares from being added to an active
-> array, which is wrong. =A0This patch refines the test to be more
-> careful.
->
-> Reported-by: <fibreraid@gmail.com>
-> Analysed-by: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
->
-> diff --git a/Incremental.c b/Incremental.c
-> index e4b6196..4d3d181 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -370,14 +370,15 @@ int Incremental(char *devname, int verbose, int=
- runstop,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0else
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0strcpy(chosen_name, de=
-vnum2devname(mp->devnum));
->
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* It is generally not OK to add drives=
- to a running array
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* as they are probably missing becau=
-se they failed.
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* However if runstop is 1, then the =
-array was possibly
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* started early and our best be is t=
-o add this anyway.
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* It would probably be good to allow=
- explicit policy
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* statement about this.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* It is generally not OK to add non-sp=
-are drives to a
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* running array as they are probably=
- missing because
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* they failed. =A0However if runstop=
- is 1, then the
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* array was possibly started early a=
-nd our best be is
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* to add this anyway. =A0It would pr=
-obably be good to
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* allow explicit policy statement ab=
-out this.
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (runstop < 1) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if ((info.disk.state & (1<<MD_DISK_SYNC=
-)) !=3D 0
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 && runstop < 1) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0int active =3D 0;
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (st->ss->external) =
-{
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
