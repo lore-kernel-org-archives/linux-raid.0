@@ -1,125 +1,108 @@
-From: Nicolas Jungers <nicolas@jungers.net>
-Subject: Re: RAID5 disk failure during rebuild of spare, any chance of recovery
- when one of the failed devices is suspected to be intact?
-Date: Mon, 16 Aug 2010 18:37:56 +0200
-Message-ID: <4C696964.7030205@jungers.net>
-References: <AANLkTimiGhkzSBgt73fLZmoOcGf5Yyui-1WjkPLVVR6v@mail.gmail.com>	<AANLkTi=ryOfsBO0cVJbTT++P-Rh_jnEx+h5gSm_wXP5d@mail.gmail.com>	<AANLkTimEOFMh=TvQ2VqbPME+S2hNuiR3RNEbOGepBoH4@mail.gmail.com>	<4C68CCC9.2050604@jungers.net>	<AANLkTim9gUa95AR1KZcyBp7qM8_PeO1O7Bh99R2P8ON9@mail.gmail.com>	<4C68D6D3.6070906@jungers.net>	<4C68FA1D.7040105@seoss.co.uk> <AANLkTinaGGH6H2cj3tXR8m0yef9YE65R4cHrQGoxwJfY@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH UPDATED 10/11] fs, block: propagate REQ_FLUSH/FUA interface
+ to upper layers
+Date: Mon, 16 Aug 2010 18:33:22 +0200
+Message-ID: <4C696852.1080709@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-11-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinaGGH6H2cj3tXR8m0yef9YE65R4cHrQGoxwJfY@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?VG9yIEFybmUgVmVzdGLDuA==?= <torarnv@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1281616891-5691-11-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On 08/16/2010 06:27 PM, Tor Arne Vestb=C3=B8 wrote:
-> On Mon, Aug 16, 2010 at 10:43 AM, Tim Small<tim@seoss.co.uk>  wrote:
->> On 16/08/10 07:12, Nicolas Jungers wrote:
->>>
->>> On 08/16/2010 07:54 AM, Tor Arne Vestb=C3=B8 wrote:
->>>>
->>>> You mean you sdc and sde plus either sdb or sdd, depending on whic=
-h
->>>> one I think is more sane a this point?
->>>
->>> I'd try both.  Do a ddrescue of the failing one and try that (with =
-copy of
->>> the others) and check what's coming out.
->>
->> As an alternative to using ddrescue, you could quickly prototype var=
-ious
->> arrangements (without writing anything to the drives) using a device=
--mapper
->> copy-on-write mapping - I posted some details to the list a while ba=
-ck when
->> I was trying to use this to reconstruct a hw raid array...  Check th=
-e list
->> archives for details.
->
-> Cool, here's what I tried:
->
-> Created spares files for each of the devices
->
->    dd if=3D/dev/zero of=3Dsdb_cow bs=3D1 count=3D0 seek=3D2GB
->
-> Mapped that to a loop device
->
->    losetup /dev/loop1 sdb_cow
->
-> Then ran the following for each device:
->
->    cow_size=3D`blockdev --getsize /dev/sdb1`
->    chunk_size=3D64
->    echo "0 $cow_size snapshot /dev/sdb1 /dev/loop1 p $chunk_size" |
-> dmsetup create sdb1_cow
->
-> After these were created I tried the following:
->
-> # mdadm -v -C /dev/md0 -l5 -n4 /dev/mapper/sdb1_cow
-> /dev/mapper/sdc1_cow missing /dev/mapper/sde1_cow
-> mdadm: layout defaults to left-symmetric
-> mdadm: chunk size defaults to 64K
-> mdadm: /dev/mapper/sdb1_cow appears to be part of a raid array:
->      level=3Draid5 devices=3D4 ctime=3DSun Mar  2 22:52:53 2008
-> mdadm: /dev/mapper/sdc1_cow appears to be part of a raid array:
->      level=3Draid5 devices=3D4 ctime=3DSun Mar  2 22:52:53 2008
-> mdadm: /dev/mapper/sde1_cow appears to be part of a raid array:
->      level=3Draid5 devices=3D4 ctime=3DSun Mar  2 22:52:53 2008
-> mdadm: size set to 732571904K
-> Continue creating array? Y
-> mdadm: array /dev/md0 started.
->
-> # mdadm --detail /dev/md0
-> /dev/md0:
->          Version : 00.90
->    Creation Time : Mon Aug 16 18:20:06 2010
->       Raid Level : raid5
->       Array Size : 2197715712 (2095.91 GiB 2250.46 GB)
->    Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->     Raid Devices : 4
->    Total Devices : 3
-> Preferred Minor : 0
->      Persistence : Superblock is persistent
->
->      Update Time : Mon Aug 16 18:20:06 2010
->            State : clean, degraded
->   Active Devices : 3
-> Working Devices : 3
->   Failed Devices : 0
->    Spare Devices : 0
->
->           Layout : left-symmetric
->       Chunk Size : 64K
->
->             UUID : 916ceaa2:b877a3cc:3973abef:31f2d600 (local to host=
- monstre)
->           Events : 0.1
->
->      Number   Major   Minor   RaidDevice State
->         0     251        9        0      active sync   /dev/block/251=
-:9
->         1     251       10        1      active sync   /dev/block/251=
-:10
->         2       0        0        2      removed
->         3     251       12        3      active sync   /dev/block/251=
-:12
->
-> And I can now mount /dev/mapper/raid-home !
->
-> The question now is, what next? Should I start copying things off to =
-a
-> backup, or run fsck first or something else to try to repair errors?
-> Or perhaps are the 2GB sparse files to small for anything like that?
+Propagate deprecation of REQ_HARDBARRIER and new REQ_FLUSH/FUA
+interface to upper layers.
 
-=46or me: first, copy everything.  You have an unreliable disk in the=20
-middle of your data.
+* WRITE_BARRIER is marked deprecated and WRITE_FLUSH, WRITE_FUA and
+  WRITE_FLUSH_FUA are added.
 
-N.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* REQ_COMMON_MASK now includes REQ_FLUSH | REQ_FUA so that they are
+  copied from bio to request.
+
+* BH_Ordered and BH_Eopnotsupp are marked deprecated.  BH_Flush/FUA
+  are _NOT_ added as they can and should be specified when calling
+  submit_bh() as @rw parameter as suggested by Jan Kara.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>
+---
+Dropped BH_Flush/FUA as suggested.
+
+Thanks.
+
+ include/linux/blk_types.h   |    2 +-
+ include/linux/buffer_head.h |    4 ++--
+ include/linux/fs.h          |   20 +++++++++++++-------
+ 3 files changed, 16 insertions(+), 10 deletions(-)
+
+Index: block/include/linux/fs.h
+===================================================================
+--- block.orig/include/linux/fs.h
++++ block/include/linux/fs.h
+@@ -138,13 +138,13 @@ struct inodes_stat_t {
+  * SWRITE_SYNC
+  * SWRITE_SYNC_PLUG	Like WRITE_SYNC/WRITE_SYNC_PLUG, but locks the buffer.
+  *			See SWRITE.
+- * WRITE_BARRIER	Like WRITE_SYNC, but tells the block layer that all
+- *			previously submitted writes must be safely on storage
+- *			before this one is started. Also guarantees that when
+- *			this write is complete, it itself is also safely on
+- *			storage. Prevents reordering of writes on both sides
+- *			of this IO.
+- *
++ * WRITE_BARRIER	DEPRECATED. Always fails. Use FLUSH/FUA instead.
++ * WRITE_FLUSH		Like WRITE_SYNC but with preceding cache flush.
++ * WRITE_FUA		Like WRITE_SYNC but data is guaranteed to be on
++ *			non-volatile media on completion.
++ * WRITE_FLUSH_FUA	Combination of WRITE_FLUSH and FUA.  The IO is preceded
++ *			by a cache flush and data is guaranteed to be on
++ *			non-volatile media on completion.
+  */
+ #define RW_MASK			REQ_WRITE
+ #define RWA_MASK		REQ_RAHEAD
+@@ -162,6 +162,12 @@ struct inodes_stat_t {
+ #define WRITE_META		(WRITE | REQ_META)
+ #define WRITE_BARRIER		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
+ 				 REQ_HARDBARRIER)
++#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FLUSH)
++#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FUA)
++#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FLUSH | REQ_FUA)
+ #define SWRITE_SYNC_PLUG	(SWRITE | REQ_SYNC | REQ_NOIDLE)
+ #define SWRITE_SYNC		(SWRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG)
+
+Index: block/include/linux/blk_types.h
+===================================================================
+--- block.orig/include/linux/blk_types.h
++++ block/include/linux/blk_types.h
+@@ -164,7 +164,7 @@ enum rq_flag_bits {
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ #define REQ_COMMON_MASK \
+ 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_HARDBARRIER | REQ_SYNC | \
+-	 REQ_META| REQ_DISCARD | REQ_NOIDLE)
++	 REQ_META | REQ_DISCARD | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
+
+ #define REQ_UNPLUG		(1 << __REQ_UNPLUG)
+ #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
+Index: block/include/linux/buffer_head.h
+===================================================================
+--- block.orig/include/linux/buffer_head.h
++++ block/include/linux/buffer_head.h
+@@ -32,8 +32,8 @@ enum bh_state_bits {
+ 	BH_Delay,	/* Buffer is not yet allocated on disk */
+ 	BH_Boundary,	/* Block is followed by a discontiguity */
+ 	BH_Write_EIO,	/* I/O error on write */
+-	BH_Ordered,	/* ordered write */
+-	BH_Eopnotsupp,	/* operation not supported (barrier) */
++	BH_Ordered,	/* DEPRECATED: ordered write */
++	BH_Eopnotsupp,	/* DEPRECATED: operation not supported (barrier) */
+ 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
+ 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
+
