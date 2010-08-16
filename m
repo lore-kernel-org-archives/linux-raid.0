@@ -1,8 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 35/35] Fix problem in mdmon monitor of using removed disk
- from in imsm container.
-Date: Mon, 16 Aug 2010 11:05:00 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA27@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 34/35] Incremental for bare disks, checking routine +
+ integration
+Date: Mon, 16 Aug 2010 11:04:33 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA25@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,378 +13,502 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 8fe12778b2d8d8f30d9d8914cb71e0d296557cda Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Fri, 2 Jul 2010 17:35:57 +0200
-Subject: [PATCH 35/35] Fix problem in mdmon monitor of using removed disk from in imsm container.
+From b418084ae2f1eaaa509ec4584c56395653a45a91 Mon Sep 17 00:00:00 2001
+From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Date: Wed, 14 Jul 2010 16:50:09 +0200
+Subject: [PATCH 34/35] Incremental for bare disks, checking routine + integration
 
-Manager thread shall pass the information to monitor thread (mdmon)
-that some devices are removed from container. Otherwise, monitor (mdmon)
-migth use such devices (spares) to rebuild the array that has gone degraded.
-
-This problem happens for imsm containers, since a list of the container disks
-is maintained in intel_super structure. When array goes degraded, the list is
-searched to find eligable spare disks to start rebuild.
-Without this fix the rebuild could be stared on the spare device that was
-a member of the contaiter, but has been removed from it.
-
-New super type function handler has been introduced to prepare metadata
-format specific information about removed devices.
-int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
-                         int fd);
-The message prepared in remove_from_super is later procecessed
-by proceess_update handler in monitor thread.
-
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+The idea of this patch is to allow adding of bare device to the container
+if device is plugged into the same port as recently removed device.
+Function 'bare_disk_match_array' has been added to look for special 'cookie'
+file (named after udev's path-id of device) containing the
+uuid of valid array. If it is found, container device name is returned.
+This container is used with Manage_subdevs() add, to add device.
+As in udev add rule /dev/by-path/... links are not yet available, use
+command line parameter --path to provide path-id in udev rule.
 ---
- managemon.c   |   38 ++++++++++++++++
- mdadm.h       |    7 +++-
- super-intel.c |  138 ++++++++++++++++++++++++++++++++++++++++++++++-----------
- 3 files changed, 156 insertions(+), 27 deletions(-)
+ Incremental.c       |  205 ++++++++++++++++++++++++++++++++++++++++----------
+ Manage.c            |   53 +++++++------
+ config.c            |   22 ++++--
+ mdadm.c             |    4 +-
+ mdadm.h             |    9 ++-
+ udev-early-md.rules |    2 +-
+ 6 files changed, 217 insertions(+), 78 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index 454c39d..d1de78e 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -297,6 +297,43 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
- 	st->update_tail = NULL;
- }
- 
-+/*
-+ * Create and queue update structure about the removed disks.
-+ * The update is prepared by super type handler and passed to the monitor
-+ * thread.
+diff --git a/Incremental.c b/Incremental.c
+index 9d63a86..6737642 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -29,16 +29,91 @@
+  */
+
+ #include       "mdadm.h"
++#include       <sys/types.h>
++#include       <dirent.h>
+
+ static int count_active(struct supertype *st, int mdfd, char **availp,
+                        struct mdinfo *info);
+ static void find_reject(int mdfd, struct supertype *st, struct mdinfo *sra,
+                        int number, __u64 events, int verbose,
+                        char *array_name);
+-static int IncrementalNewPart(char *devname, int verbose, int export,
+-                             struct domain_ent *domain);
+-static int IncrementalNewDisk(char *devname, int verbose, int export,
+-                             struct domain_ent *domain);
++static int IncrementalNewPart(char *devname, char *devpath, int verbose,
++                             int export, struct domain_ent *domain);
++static int IncrementalNewDisk(char *devname, char *devpath, int verbose,
++                             int export, struct domain_ent *domain);
++
++
++
++/* finds cookie file with matching path. If found, returns device name
++ * either for this array (native) or its parent container (external)
 + */
-+static void remove_disk_from_container(struct supertype *st, struct mdinfo *sd)
++char *bare_disk_match_array(char *devname, char *devpath, int fd,
++                           struct supertype **st)
 +{
-+	int dfd;
-+	char nm[20];
-+	struct metadata_update *update = NULL;
-+	mdu_disk_info_t dk = {
-+		.number = -1,
-+		.major = sd->disk.major,
-+		.minor = sd->disk.minor,
-+		.raid_disk = -1,
-+		.state = 0,
-+	};
-+	/* nothing to do if super type handler does not support
-+	 * remove disk primitive
-+	 */
-+	if (!st->ss->remove_from_super)
-+		return;
-+	dprintf("%s: remove %d:%d to container\n",
-+		__func__, sd->disk.major, sd->disk.minor);
++       char cookie_path[PATH_MAX];
++       FILE *cookie;
++       char *mdname = NULL;
++       struct map_ent *map, *ment;
 +
-+	sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-+	dfd = dev_open(nm, O_RDWR);
-+	if (dfd < 0)
-+		return;
++       if (!devname || !devpath)
++               return NULL;
 +
-+	st->update_tail = &update;
-+	st->ss->remove_from_super(st, &dk, dfd);
-+	st->ss->write_init_super(st);
-+	queue_metadata_update(update);
-+	st->update_tail = NULL;
++       map_read(&map);
++       if (!map)
++               return NULL;
++
++       snprintf(cookie_path, PATH_MAX, FAILED_SLOTS "/%s", devpath);
++       if ((cookie = fopen(cookie_path, "r")) == NULL) {
++               fprintf(stderr, Name " : Cannot open %s cookie. "
++                                    "Bare disk spare action disabled\n.",
++                       cookie_path);
++               return NULL;
++       }
++
++       /*
++        * find first active array using list instde 'cookie' file
++        */
++       while(fgets(cookie_path, PATH_MAX, cookie)) {
++               int uuid[4];
++               if (sscanf(cookie_path, "%08x:%08x:%08x:%08x", &uuid[0], &uuid[1],
++                          &uuid[2], &uuid[3]) != 4)
++                       continue;
++               ment = map_by_uuid(&map, uuid);
++               if (ment) /* found active array */
++                       break;
++       }
++       if (ment) {
++               struct map_ent *parent = NULL;
++               char *md_path;
++               int mdfd;
++               if (is_subarray(ment->metadata)) {
++                       parent = map_get_parent(ment);
++                       if (!parent) {
++                               fprintf(stderr, Name " : Cannot find parent "
++                                               "container for array %s\n.",
++                                       ment->path);
++                               goto cleanup;
++                       }
++                       md_path = strdup(parent->path);
++                       map_free(parent);
++               } else {
++                       md_path = strdup(parent->path);
++               }
++               mdfd = open_mddev(md_path, 0);
++               if (mdfd < 0)
++                       goto cleanup;
++               *st = guess_super(mdfd);
++               close(mdfd);
++               if (!*st)
++                       goto cleanup;
++               mdname = md_path;
++       }
++
++cleanup:
++       fclose(cookie);
++       map_free(map);
++       return mdname;
 +}
-+
- static void manage_container(struct mdstat_ent *mdstat,
- 			     struct supertype *container)
+
+ int Incremental(char *devname, int verbose, int runstop,
+                struct supertype *st, char *homehost, int require_homehost,
+@@ -1056,23 +1131,36 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+  * have a domain that says not to partition the device, so we will either
+  * use the whole disk or the partition directly.
+  */
+-static int IncrementalNewPart(char *devname, int verbose, int export,
+-                             struct domain_ent *domain)
++static int IncrementalNewPart(char *devname, char *devpath, int verbose,
++                             int export, struct domain_ent *domain)
  {
-@@ -334,6 +371,7 @@ static void manage_container(struct mdstat_ent *mdstat,
- 			if (!found) {
- 				cd = *cdp;
- 				*cdp = (*cdp)->next;
-+				remove_disk_from_container(container, cd);
- 				free(cd);
- 			} else
- 				cdp = &(*cdp)->next;
+        struct mdstat_ent *mdstat, *md;
+        struct stat stb;
+        int dfd;
++       struct supertype *st = NULL;
++       char *mdname;
++       int mdfd;
++       int rv = 0;
++       struct mddev_dev_s devlist;
+
+-       mdstat = arrays_in_domain(devname, domain);
++       mdstat = arrays_in_domain(devname, devpath, domain);
+        for (md = mdstat; md; md = md->next)
+                printf(Name ": %s\n", md->dev);
++
++       /* any arrays for this domain? */
++       if (!mdstat) {
++               fprintf(stderr, Name " : no arrays in this domain.\n");
++               return 1;
++       }
+        /* We've finished with the easy tests that allow us to kick drives
+         * out without touching actual physical media, now we need to start
+         * the slower checks.
+         */
+        dfd = dev_open_check(devname, O_RDONLY|O_EXCL, &stb);
+-       if (dfd < 0)
++       if (dfd < 0) {
++               fprintf(stderr, Name ": cannot open %s exclusively.\n", devname);
+                return 1;
++       }
+        if (guess_super(dfd) != NULL) {
+                /* This won't happen with our udev rules, but someone might
+                 * try this by hand, make them use normal incremental mode
+@@ -1090,7 +1178,37 @@ static int IncrementalNewPart(char *devname, int verbose, int export,
+         * or 0xff.
+         */
+
+-       return 0;
++       /* for bare action, check if 'cookie' exists for this device,
++        * temporarily get metadata from matching array and invoke standard
++        * Incremental with bare=1
++        */
++       if (conf_get_domain_action(domain) == same_port_bare &&
++           !strstr(devname, "part") && printf("%s\n", devpath)>0 &&
++           (mdname = bare_disk_match_array(devname, devpath, dfd, &st)) &&
++           !strcmp(st->ss->name, domain->platform)) {
++               free(st);
++               mdfd = open_mddev(mdname, 0);
++               if (!mdfd) {
++                       fprintf(stderr, Name ": cannot open array device %s.\n", mdname);
++                       close(dfd);
++                       return 1;
++               }
++               close(dfd);
++               memset(&devlist, 0, sizeof(devlist));
++               devlist.devname = devname;
++               devlist.disposition = 'a';
++               devlist.skip_domain = 1;
++               rv = Manage_subdevs(mdname, mdfd, &devlist, 0);
++               if (!rv && export)
++                       printf("MD_OWNED=1");
++               free(mdname);
++               mdname = NULL;
++               close(mdfd);
++               return rv;
++       }
++       free(mdname);
++       close(dfd);
++       return 1;
+ }
+
+ /*
+@@ -1101,8 +1219,8 @@ static int IncrementalNewPart(char *devname, int verbose, int export,
+  * repartition devs with stuff already on them only if the force option
+  * is present on our domain.
+  */
+-static int IncrementalNewDisk(char *devname, int verbose, int export,
+-                             struct domain_ent *domain)
++static int IncrementalNewDisk(char *devname, char *devpath, int verbose,
++                             int export, struct domain_ent *domain)
+ {
+        struct stat stb;
+        int dfd, rv;
+@@ -1121,7 +1239,7 @@ static int IncrementalNewDisk(char *devname, int verbose, int export,
+
+        if (domain->handler->check_table(dfd, verbose, export, domain) == 0) {
+                close(dfd);
+-               return 0;
++               return 1;
+        }
+        /*
+         * OK, at this point we have a valid block device without a
+@@ -1152,37 +1270,42 @@ static int IncrementalNewDisk(char *devname, int verbose, int export,
+  * device we may need to partition it and set it up for the partitions to
+  * be added to various arrays later on in the hot plug process.
+  */
+-int IncrementalNew(char *devname, int verbose, int export)
++int IncrementalNew(char *devname, char *path, int verbose, int export)
+ {
+        struct domain_ent *domain;
+-       char *devpath;
+-       int rv;
+-
+-       domain = conf_get_domain(devname, NULL);
+-       if (!domain)
+-               return 0;
+-       if (action(domain) <= incremental)
+-               /* Nothing to do.  We only get called in the case that there
+-                * is no current superblock on the device in question, and
+-                * since our matching domain says we should either ignore or
+-                * use devices incrementally, they have to already have a
+-                * superblock.  Since we don't, we're done.
+-                */
+-               return 0;
+-       devpath = get_devpath_from_devname(devname);
+-       if (strstr(devpath, "part") || action(domain) != partition)
+-               /* We are on a partition, not a whole disk, or we are on a
+-                * whole disk but we want to use the whole disk instead
+-                * of partitioning it */
+-               rv = IncrementalNewPart(devname, verbose, export, domain);
+-       else
+-               /* Only use this if we are dealing with a disk that would
+-                * need partitioned.  This will get called even when our
+-                * disk actually already belongs to all the right arrays
+-                * and there is nothing to be done, so only do work here
+-                * if we really need to */
+-               rv = IncrementalNewDisk(devname, verbose, export, domain);
+-       free(devpath);
++       int rv = 1;
++       int i;
++
++       for (i = 0; superlist[i]; i++) {
++               domain = get_domain_from_devpath(path, (char *)superlist[i]->name);
++               /* domain = conf_get_domain(devname, (char *)superlist[i]->name);*/
++               if (!domain) {
++                       fprintf(stderr, Name ": cannot obtain domain for %s\n", devname);
++                       return 1;
++               }
++               if (action(domain) <= incremental)
++                       /* Nothing to do.  We only get called in the case that there
++                       * is no current superblock on the device in question, and
++                       * since our matching domain says we should either ignore or
++                       * use devices incrementally, they have to already have a
++                       * superblock.  Since we don't, we're done.
++                       */
++                       continue;
++               if (strstr(path, "part") || action(domain) != partition)
++                       /* We are on a partition, not a whole disk, or we are on a
++                       * whole disk but we want to use the whole disk instead
++                       * of partitioning it */
++                       rv = IncrementalNewPart(devname, path, verbose, export, domain);
++               else
++                       /* Only use this if we are dealing with a disk that would
++                       * need partitioned.  This will get called even when our
++                       * disk actually already belongs to all the right arrays
++                       * and there is nothing to be done, so only do work here
++                       * if we really need to */
++                       rv = IncrementalNewDisk(devname, path, verbose, export, domain);
++               if (!rv)
++                       break;
++       }
+        return rv;
+ }
+
+diff --git a/Manage.c b/Manage.c
+index e733c2d..714fea4 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -539,31 +539,36 @@ int Manage_subdevs(char *devname, int fd,
+
+                        st = dup_super(tst);
+
+-                       devdomain = conf_get_domain(dv->devname,
+-                                                   (char *)st->ss->name);
+-                       if (!devdomain) {
+-                               fprintf(stderr, Name " : Cannot determine domain "
+-                                                    " of device: %s\n", dv->devname);
+-                               close(tfd);
+-                               free(st);
+-                               return 1;
+-                       }
+-                       devsubset = conf_get_subset(dv->devname, st, devdomain);
+-                       if (!devsubset) {
+-                               fprintf(stderr, Name " : Cannot determine subset "
+-                                                    " of device: %s\n", dv->devname);
+-                               close(tfd);
+-                               free(st);
+-                               return 1;
+-                       }
+-                       if (arrdomain != devdomain ||
+-                           arrsubset != devsubset) {
+-                               fprintf(stderr, Name " : Domain/subdomain of "
+-                                                    "disk differs of arrays'.");
+-                               close(tfd);
+-                               free(st);
+-                               return 1;
++                       /* domain links are not available before udev finishes
++                        * especially for temporary devices */
++                       if (!devlist->skip_domain) {
++                               devdomain = conf_get_domain(dv->devname,
++                                                       (char *)st->ss->name);
++                               if (!devdomain) {
++                                       fprintf(stderr, Name " : Cannot determine domain "
++                                                       " of device: %s\n", dv->devname);
++                                       close(tfd);
++                                       free(st);
++                                       return 1;
++                               }
++                               devsubset = conf_get_subset(dv->devname, st, devdomain);
++                               if (!devsubset) {
++                                       fprintf(stderr, Name " : Cannot determine subset "
++                                                       " of device: %s\n", dv->devname);
++                                       close(tfd);
++                                       free(st);
++                                       return 1;
++                               }
++                               if (arrdomain != devdomain ||
++                               arrsubset != devsubset) {
++                                       fprintf(stderr, Name " : Domain/subdomain of "
++                                                       "disk differs of arrays'.");
++                                       close(tfd);
++                                       free(st);
++                                       return 1;
++                               }
+                        }
++
+                        if (array.not_persistent==0)
+                                st->ss->load_super(st, tfd, NULL);
+
+diff --git a/config.c b/config.c
+index 5829182..26e9910 100644
+--- a/config.c
++++ b/config.c
+@@ -827,6 +827,9 @@ void domainline(char *line)
+                                de->action = grow;
+                        else if (strncasecmp("par", w+offset, 3) == 0)
+                                de->action = partition;
++                       else if (strncasecmp("bar", w+offset, 3) == 0 ||
++                                strncasecmp("sam", w+offset, 3) == 0)
++                               de->action = same_port_bare;
+                        if (offset == 13)
+                                de->action |= force;
+                } else if (strncasecmp("metadata=", w, 9) == 0) {
+@@ -1046,7 +1049,7 @@ struct domain_ent *get_domain_from_devpath(char *devpath, char *platform)
+                                st = get_supertype_by_name(de->platform);
+                                if (!st)
+                                        continue;
+-
++
+                                if (match_platform(st, platform)) {
+                                        st->ss->free_super(st);
+                                        free(st);
+@@ -1902,15 +1905,20 @@ exit:
+  * this information to determine what array we might add our new device
+  * to either as a replacement drive or as a hot spare.
+  */
+-struct mdstat_ent *arrays_in_domain(char *devname, struct domain_ent *domain)
++struct mdstat_ent *arrays_in_domain(char *devname, char *devpath,
++                                   struct domain_ent *domain)
+ {
+        struct mdstat_ent *me, *mdstat, *array_list = NULL;
+        struct dev_member *m;
+        struct domain_ent *de;
+-       char *devpath, *mempath, *devpart, *mempart;
++       char *mempath, *devpart, *mempart;
+        struct supertype *st;
++       int freepath = devpath ? 0 : 1;
+
+-       devpath = get_devpath_from_devname(devname);
++       fprintf(stderr, "%s entry\n", __FUNCTION__);
++
++       if (!devpath)
++               devpath = get_devpath_from_devname(devname);
+        devpart = strrchr(devpath, ':');
+        mdstat = mdstat_read(0, 0);
+        while (mdstat) {
+@@ -1943,13 +1951,13 @@ struct mdstat_ent *arrays_in_domain(char *devname, struct domain_ent *domain)
+                        free_mdstat(me);
+                }
+        }
+-       free(devpath);
++       if (freepath)
++               free(devpath);
+        return array_list;
+ }
+
+-int conf_get_domain_action(char *devname)
++int conf_get_domain_action(struct domain_ent *domain)
+ {
+-       struct domain_ent *domain = conf_get_domain(devname, NULL);
+        if (!domain)
+                return incremental;
+        return domain->action;
+diff --git a/mdadm.c b/mdadm.c
+index 8d7e901..078a342 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1575,8 +1575,8 @@ int main(int argc, char *argv[])
+                        rv = IncrementalRemove(devlist->devname, remove_path, verbose-quiet);
+                        free(remove_path);
+                } else if (new_disk > 0)
+-                       rv = IncrementalNew(devlist->devname, verbose-quiet,
+-                                           export);
++                       rv = IncrementalNew(devlist->devname, remove_path,
++                                           verbose - quiet, export);
+                else
+                        rv = Incremental(devlist->devname, verbose-quiet,
+                                         runstop, ss, homehost,
 diff --git a/mdadm.h b/mdadm.h
-index 468f9c1..7d3a67c 100644
+index 316dec2..468f9c1 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -653,7 +653,12 @@ extern struct superswitch {
- 	 * when hot-adding a spare.
- 	 */
- 	int (*add_to_super)(struct supertype *st, mdu_disk_info_t *dinfo,
--			     int fd, char *devname);
-+			    int fd, char *devname);
-+	/* update the metadata to delete a device,
-+	 * when hot-removing a spare.
-+	 */
-+	int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
-+				 int fd);
- 
- 	/* Write metadata to one device when fixing problems or adding
- 	 * a new device.
-diff --git a/super-intel.c b/super-intel.c
-index a31ed57..051578c 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -233,6 +233,10 @@ struct intel_dev {
- 	int index;
- };
- 
-+enum action {
-+  DISK_REMOVE=0,
-+  DISK_ADD
-+};
- /* internal representation of IMSM metadata */
- struct intel_super {
- 	union {
-@@ -258,8 +262,9 @@ struct intel_super {
- 		int extent_cnt;
- 		struct extent *e; /* for determining freespace @ create */
- 		int raiddisk; /* slot to fill in autolayout */
-+		enum action action;
- 	} *disks;
--	struct dl *add; /* list of disks to add while mdmon active */
-+	struct dl *disk_mgmt_list; /* list of disks to add/remove while mdmon active */
- 	struct dl *missing; /* disks removed while we weren't looking */
- 	struct bbm_log *bbm_log;
- 	const char *hba; /* device path of the raid controller for this metadata */
-@@ -282,7 +287,7 @@ struct extent {
- enum imsm_update_type {
- 	update_activate_spare,
- 	update_create_array,
--	update_add_disk,
-+	update_add_remove_disk,
- };
- 
- struct imsm_update_activate_spare {
-@@ -303,7 +308,7 @@ struct imsm_update_create_array {
- 	struct imsm_dev dev;
- };
- 
--struct imsm_update_add_disk {
-+struct imsm_update_add_remove_disk {
- 	enum imsm_update_type type;
- };
- 
-@@ -2311,6 +2316,7 @@ static void __free_imsm_disk(struct dl *d)
- 	free(d);
- 
- }
-+
- static void free_imsm_disks(struct intel_super *super)
- {
- 	struct dl *d;
-@@ -3286,6 +3292,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	dd->devname = devname ? strdup(devname) : NULL;
- 	dd->fd = fd;
- 	dd->e = NULL;
-+	dd->action = DISK_ADD;
- 	rv = imsm_read_serial(fd, devname, dd->serial);
- 	if (rv) {
- 		fprintf(stderr,
-@@ -3305,8 +3312,8 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 		dd->disk.scsi_id = __cpu_to_le32(0);
- 
- 	if (st->update_tail) {
--		dd->next = super->add;
--		super->add = dd;
-+		dd->next = super->disk_mgmt_list;
-+		super->disk_mgmt_list = dd;
- 	} else {
- 		dd->next = super->disks;
- 		super->disks = dd;
-@@ -3315,6 +3322,44 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	return 0;
- }
- 
-+
-+static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
-+				  int fd)
-+{
-+	struct intel_super *super = st->sb;
-+	struct dl *dd;
-+
-+	/* remove from super works only in mdmon - for communication
-+	 * manager - monitor. Check if communication memory buffer
-+	 * is prepared.
-+	 */
-+	if (!st->update_tail) {
-+		fprintf(stderr,
-+			Name ": %s shall be used in mdmon context only (line %d).\n", __func__, __LINE__);
-+		return 1;
-+	}
-+	dd = malloc(sizeof(*dd));
-+	if (!dd) {
-+		fprintf(stderr,
-+			Name ": malloc failed %s:%d.\n", __func__, __LINE__);
-+		return 1;
-+	}
-+	memset(dd, 0, sizeof(*dd));
-+	dd->major = dk->major;
-+	dd->minor = dk->minor;
-+	dd->index = -1;
-+	dd->fd = fd;
-+	dd->disk.status = SPARE_DISK;
-+	dd->action = DISK_REMOVE;
-+
-+	if (st->update_tail) {
-+		dd->next = super->disk_mgmt_list;
-+		super->disk_mgmt_list = dd;
-+	}
-+
-+	return 0;
-+}
-+
- static int store_imsm_mpb(int fd, struct imsm_super *mpb);
- 
- static union {
-@@ -3467,13 +3512,13 @@ static int create_array(struct supertype *st, int dev_idx)
- 	return 0;
- }
- 
--static int _add_disk(struct supertype *st)
-+static int mgmt_disk(struct supertype *st)
- {
- 	struct intel_super *super = st->sb;
- 	size_t len;
--	struct imsm_update_add_disk *u;
-+	struct imsm_update_add_remove_disk *u;
- 
--	if (!super->add)
-+	if (!super->disk_mgmt_list)
- 		return 0;
- 
- 	len = sizeof(*u);
-@@ -3484,7 +3529,7 @@ static int _add_disk(struct supertype *st)
- 		return 1;
- 	}
- 
--	u->type = update_add_disk;
-+	u->type = update_add_remove_disk;
- 	append_metadata_update(st, u, len);
- 
- 	return 0;
-@@ -3506,10 +3551,10 @@ static int write_init_super_imsm(struct supertype *st)
- 
- 		/* determine if we are creating a volume or adding a disk */
- 		if (current_vol < 0) {
--			/* in the add disk case we are running in mdmon
-+			/* in the mgmt (add/remove) disk case we are running in mdmon
- 			 * context, so don't close fd's
- 			 */
--			return _add_disk(st);
-+			return mgmt_disk(st);
- 		} else
- 			rv = create_array(st, current_vol);
- 
-@@ -4602,10 +4647,9 @@ static int store_imsm_mpb(int fd, struct imsm_super *mpb)
- static void imsm_sync_metadata(struct supertype *container)
- {
- 	struct intel_super *super = container->sb;
--
-+	dprintf("sync metadata: %d\n", super->updates_pending);
- 	if (!super->updates_pending)
- 		return;
--
- 	write_super_imsm(super, 0);
- 
- 	super->updates_pending = 0;
-@@ -4894,6 +4938,31 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
- 	return 0;
- }
- 
-+static int remove_disk_super(struct intel_super *super,  int major, int minor)
-+{
-+	struct dl *prev = NULL;
-+	struct dl *dl;
-+
-+	prev = NULL;
-+	for (dl = super->disks; dl; dl = dl->next) {
-+		if ((dl->major == major) &&
-+		    (dl->minor == minor)) {
-+			/* remove */
-+			if (prev)
-+				prev->next = dl->next;
-+			else
-+				super->disks = dl->next;
-+			dl->next = NULL;
-+			__free_imsm_disk(dl);
-+			dprintf("%s: removed %x:%x\n",
-+				__func__, major, minor);
-+			break;
-+		}
-+		prev = dl;
-+	}
-+	return 0;
-+}
-+
- static void imsm_delete(struct intel_super *super, struct dl **dlp, int index);
- 
- static void imsm_process_update(struct supertype *st,
-@@ -5141,31 +5210,47 @@ static void imsm_process_update(struct supertype *st,
- 		}
- 		break;
- 	}
--	case update_add_disk:
-+	case update_add_remove_disk: {
- 
- 		/* we may be able to repair some arrays if disks are
- 		 * being added */
--		if (super->add) {
-+
-+		/* add/remove some spares to/from the metadata/contrainer */
-+		int check_degraded = 0;
-+		while (super->disk_mgmt_list) {
-+			struct dl *disk_cfg;
-+
-+			disk_cfg = super->disk_mgmt_list;
-+			super->disk_mgmt_list = disk_cfg->next;
-+			disk_cfg->next = NULL;
-+
-+			if (disk_cfg->action == DISK_ADD) {
-+				disk_cfg->next = super->disks;
-+				super->disks = disk_cfg;
-+				check_degraded = 1;
-+				dprintf("%s: added %x:%x\n",
-+					__func__, disk_cfg->major, disk_cfg->minor);
-+			} else if (disk_cfg->action == DISK_REMOVE) {
-+				dprintf("Disk remove action processed: %x.%x\n",
-+					disk_cfg->major, disk_cfg->minor);
-+				remove_disk_super(super,  disk_cfg->major, disk_cfg->minor);
-+				__free_imsm_disk(disk_cfg);
-+			}
-+		}
-+		if (check_degraded) {
- 			struct active_array *a;
- 
- 			super->updates_pending++;
-  			for (a = st->arrays; a; a = a->next)
- 				a->check_degraded = 1;
- 		}
--		/* add some spares to the metadata */
--		while (super->add) {
--			struct dl *al;
--
--			al = super->add;
--			super->add = al->next;
--			al->next = super->disks;
--			super->disks = al;
--			dprintf("%s: added %x:%x\n",
--				__func__, al->major, al->minor);
--		}
- 
- 		break;
- 	}
-+	default:
-+		fprintf(stderr, "error: unsuported process update type: (type: %d)\n",
-+			type);
-+	}
- }
- 
- static void imsm_prepare_update(struct supertype *st,
-@@ -5366,6 +5451,7 @@ struct superswitch super_imsm = {
- 	.write_init_super = write_init_super_imsm,
- 	.validate_geometry = validate_geometry_imsm,
- 	.add_to_super	= add_to_super_imsm,
-+	.remove_from_super	= remove_from_super_imsm,
- 	.detail_platform = detail_platform_imsm,
- #endif
- 	.match_home	= match_home_imsm,
--- 
+@@ -296,6 +296,7 @@ enum domain_actions {
+                      appropriate things with the partitions */
+        spare,
+        grow,
++       same_port_bare,
+        action_mask=511,
+        force=512, /* so we can bitwise & this with actions to signify we
+                      should forcibly take over drives even if they have
+@@ -405,6 +406,7 @@ typedef struct mddev_dev_s {
+        char writemostly;       /* 1 for 'set writemostly', 2 for 'clear writemostly' */
+        char re_add;
+        char used;              /* set when used */
++       char skip_domain;       /* do not check domains, effective for add */
+        struct mdinfo *content; /* If devname is a container, this might list
+                                 * the remaining member arrays. */
+        struct mddev_dev_s *next;
+@@ -909,7 +911,7 @@ extern int Incremental_container(struct supertype *st, char *devname,
+ extern void RebuildMap(void);
+ extern int IncrementalScan(int verbose);
+ extern int IncrementalRemove(char *devname, char *path, int verbose);
+-extern int IncrementalNew(char *devname, int verbose, int export);
++extern int IncrementalNew(char *devname, char *path, int verbose, int export);
+ extern int CreateBitmap(char *filename, int force, char uuid[16],
+                        unsigned long chunksize, unsigned long daemon_sleep,
+                        unsigned long write_behind,
+@@ -942,11 +944,12 @@ extern int same_dev(char *one, char *two);
+ extern int parse_auto(char *str, char *msg, int config);
+ extern mddev_ident_t conf_get_ident(char *dev);
+ extern mddev_dev_t conf_get_devs(void);
++extern struct domain_ent *get_domain_from_devpath(char *devpath, char *platform);
+ extern struct domain_ent *conf_get_domain(char *devname, char *platform);
+ extern struct subset *conf_get_subset(char *devname, struct supertype *st,
+                                      struct domain_ent *domain);
+-extern int conf_get_domain_action(char *devname);
+-extern struct mdstat_ent *arrays_in_domain(char *devname,
++extern int conf_get_domain_action(struct domain_ent *domain);
++extern struct mdstat_ent *arrays_in_domain(char *devname, char *devpath,
+                                           struct domain_ent *domain);
+ extern struct subset *conf_get_any_subset(void);
+ extern int conf_test_dev(char *devname);
+diff --git a/udev-early-md.rules b/udev-early-md.rules
+index 176ad61..4de2128 100644
+--- a/udev-early-md.rules
++++ b/udev-early-md.rules
+@@ -16,7 +16,7 @@ ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="md_end"
+ # do something with this device if it determines that it should own it.
+ # That allows us to program in whatever smarts are needed into mdadm,
+ # but at the expense of running mdadm on every blk device add|change event :-(
+-IMPORT{program}="/sbin/mdadm -I --new-device $tempnode"
++IMPORT{program}="/sbin/mdadm -IYg $tempnode --path $env{ID_PATH}"
+ ENV{MD_OWNED}!="?*", GOTO="md_end"
+ # We owned the device, so have udev reset the database info in case we
+ # changed it
+--
 1.6.4.2
 
 ---------------------------------------------------------------------
