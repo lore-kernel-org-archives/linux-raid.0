@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 27/35] Monitor: added function move_spare
-Date: Mon, 16 Aug 2010 11:00:01 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA0C@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 29/35] Monitor: autorebuild funcionality added
+Date: Mon, 16 Aug 2010 11:01:23 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA16@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,86 +12,232 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 662b22b7f7309e7dc71c17bf5ec20d11a290d96c Mon Sep 17 00:00:00 2001
+From 7bfafc9646157c0f98ddc49e77474f1c92e1104e Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 23 Jul 2010 19:30:52 +0100
-Subject: [PATCH 27/35] Monitor: added function move_spare
+Date: Fri, 23 Jul 2010 23:49:46 +0200
+Subject: [PATCH 29/35] Monitor: autorebuild funcionality added
 
-For spare sharing. We try to remove spare from one array/container and
-add to another. If add fails we add back to original container.
+We use previously defined functions to repair any degraded arrays found
+by monitoring process. For each volume we check state, report any changes,
+note minimum size of disks and link with parent container.
+After all information is updated we call spare_sharing that searches
+for suitable spares in other arrays and moves them to the arrays that
+need them.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Monitor.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 56 insertions(+), 0 deletions(-)
+ Monitor.c |   91 +++++++++++++++++++++++++++++++++++++++---------------------
+ 1 files changed, 59 insertions(+), 32 deletions(-)
 
 diff --git a/Monitor.c b/Monitor.c
-index a66a9ee..6a203c3 100644
+index 4c13095..c7e0798 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -595,6 +595,62 @@ fail:
+@@ -55,7 +55,8 @@ struct state {
+ 	struct state *next;
+ };
+ 
+-
++static void spare_sharing(struct state *statelist, char *mailaddr,
++			  char *mailfrom, char *alert_cmd, int dosyslog);
+ 
+ static void add_to_cont(struct state *cont, struct state *vol)
+ {
+@@ -106,6 +107,10 @@ int Monitor(mddev_dev_t devlist,
+ 	 *    DeviceDisappeared
+ 	 *      Couldn't access a device which was previously visible
+ 	 *
++	 * If we detect an array with active<raid and spare==0
++	 * we look at other arrays that have a spare
++	 * and are in the same domain and subset
++	 * Then we hot-remove and hot-add to the other array
+ 	 *
+ 	 * If devlist is NULL, then we can monitor everything because --scan
+ 	 * was given.  We get an initial list from config file and add anything
+@@ -113,6 +118,7 @@ int Monitor(mddev_dev_t devlist,
+ 	 */
+ 
+ 	int finished = 0;
++	int anydegraded;
+ 	struct mdstat_ent *mdstat = NULL;
+ 	char *mailfrom = NULL;
+ 	struct state *statelist = NULL;
+@@ -222,6 +228,9 @@ int Monitor(mddev_dev_t devlist,
+ 			st->parent = NULL;
+ 			st->volumes = NULL;
+ 			st->total = 0;
++			st->min_size = 0;
++			memset(st->devid, 0, MaxDisks*sizeof(int));
++			memset(st->devstate, 0, MaxDisks*sizeof(int));
+ 			statelist = st;
+ 		}
+ 	} else {
+@@ -242,6 +251,9 @@ int Monitor(mddev_dev_t devlist,
+ 			st->parent = NULL;
+ 			st->volumes = NULL;
+ 			st->total = 0;
++			st->min_size = 0;
++			memset(st->devid, 0, MaxDisks*sizeof(int));
++			memset(st->devstate, 0, MaxDisks*sizeof(int));
+ 			if (mdlist) {
+ 				st->expected_spares = mdlist->spare_disks;
+ 			}
+@@ -254,6 +266,7 @@ int Monitor(mddev_dev_t devlist,
+ 		int new_found = 0;
+ 		struct state *st;
+ 
++		anydegraded = 0;
+ 		if (mdstat)
+ 			free_mdstat(mdstat);
+ 		mdstat = mdstat_read(oneshot?0:1, 0);
+@@ -334,18 +347,17 @@ int Monitor(mddev_dev_t devlist,
+ 			 * metadata, so treat utime for external
+ 			 * metadata as different
+ 			 */
+-			if ((st->utime == array.utime &&
+-			   ((st->metadata_version == NULL) ||
+-			     !is_external(st->metadata_version))) &&
++			if  (st->utime == array.utime &&
++			    (st->metadata_version &&
++			     !is_external(st->metadata_version)) &&
+ 			     st->failed == array.failed_disks &&
+ 			     st->working == array.working_disks &&
+ 			     st->spare == array.spare_disks &&
+-			    (mse == NULL  || (mse->percent == st->percent))) {
+-				close(fd);
++			    (mse->percent == st->percent)) {
+ 				st->err = 0;
++				close(fd);
+ 				continue;
+ 			}
+-
+ 			if (st->utime == 0 && /* new array */
+ 			    mse->pattern && strchr(mse->pattern, '_') /* degraded */
+ 				)
+@@ -409,6 +421,7 @@ int Monitor(mddev_dev_t devlist,
+ 				int newstate=0;
+ 				int change;
+ 				char *dv = NULL;
++				unsigned long long dsize;
+ 				disc.number = i;
+ 				if (i > array.raid_disks + array.nr_disks) {
+ 					newstate = 0;
+@@ -453,6 +466,19 @@ int Monitor(mddev_dev_t devlist,
+ 				}
+ 				st->devstate[i] = newstate;
+ 				st->devid[i] = makedev(disc.major, disc.minor);
++
++				if (!share)
++					continue;
++				/* for volumes only we get minimum disk size
++				 * (only active disks) */
++				fd = open(dv, O_RDONLY);
++				if (dv && newstate & (1<<MD_DISK_ACTIVE) &&
++				    array.raid_disks && fd >= 0 &&
++				    get_dev_size(fd, dv, &dsize) &&
++				    (st->min_size == 0 || dsize < st->min_size))
++					st->min_size = dsize;
++				if (fd >= 0)
++					close(fd);
+ 			}
+ 			st->active = array.active_disks;
+ 			st->working = array.working_disks;
+@@ -462,6 +488,8 @@ int Monitor(mddev_dev_t devlist,
+ 			st->raid = array.raid_disks;
+ 			st->total = array.raid_disks + array.nr_disks;
+ 			st->err = 0;
++			if ((st->active < st->raid) && st->spare == 0)
++				anydegraded = 1;
+ 			if (mse->metadata_version) {
+ 				if (!st->metadata_version)
+ 					st->metadata_version = strdup(mse->metadata_version);
+@@ -515,27 +543,26 @@ int Monitor(mddev_dev_t devlist,
+ 					new_found = 1;
+ 				}
+ 		}
+-
+-		/* search the statelist to connect external
+-		 * metadata volumes with their containers
+-		 */
+-		for (st = statelist; st; st = st->next) {
+-			if (st->metadata_version &&
+-			    is_external(st->metadata_version) &&
+-			    is_subarray(st->metadata_version+9)) {
+-				struct state *cont = NULL;
+-
+-				for (cont = statelist; cont; cont = cont->next) {
+-					if (!cont->err &&
+-					    cont->parent == NULL &&
+-					    cont->metadata_version &&
+-					    devname2devnum(st->metadata_version+10)
+-					    == cont->devnum) {
+-						add_to_cont(cont, st);
+-						break;
++		if (share && anydegraded) {
++			/* parent-volume linking only needed when sharing spares */
++			for (st = statelist; st; st = st->next) {
++				if (!st->err &&
++				    st->metadata_version &&
++				    is_external(st->metadata_version) &&
++				    is_subarray(st->metadata_version+9)) {
++					struct state *cont = NULL;
++					for (cont = statelist; cont; cont = cont->next) {
++						if (!cont->err &&
++						cont->parent == NULL &&
++						cont->metadata_version &&
++						devname2devnum(st->metadata_version+10)	== cont->devnum) {
++							add_to_cont(cont, st);
++							break;
++						}
+ 					}
+ 				}
+ 			}
++			spare_sharing(statelist, mailaddr, mailfrom, alert_cmd, dosyslog);
+ 		}
+ 		if (!new_found) {
+ 			if (oneshot)
+@@ -597,9 +624,8 @@ fail:
+ }
+ 
+ int move_spare(struct state *st2, struct state *st1, int i,
+-		      char *mailaddr, char *mailfrom, char *alert_cmd, 
+-		      int dosyslog)
+-
++	       char *mailaddr, char *mailfrom, char *alert_cmd,
++	       int dosyslog)
+ {
+ 	struct mddev_dev_s devlist;
+ 	char devname[20];
+@@ -652,7 +678,8 @@ int move_spare(struct state *st2, struct state *st1, int i,
  	return 0;
  }
  
-+int move_spare(struct state *st2, struct state *st1, int i,
-+		      char *mailaddr, char *mailfrom, char *alert_cmd, 
-+		      int dosyslog)
+-int dev_suitable(int i, struct state *st, unsigned long long size)
 +
-+{
-+	struct mddev_dev_s devlist;
-+	char devname[20];
-+	int from_fd, to_fd;
-+	if (!st1 || !st2 || st2->devid[i] == 0)
-+		return 0;
-+	from_fd = open(st2->devname, O_RDONLY);
-+	if (from_fd < 0)
-+		return 0;
-+	to_fd = open(st1->devname, O_RDONLY);
-+	if (to_fd < 0) {
-+		close(from_fd);
-+		return 0;
-+	}
-+	devlist.next = NULL;
-+	devlist.used = 0;
-+	devlist.re_add = 0;
-+	devlist.writemostly = 0;
-+	devlist.devname = devname;
-+	char *dv = map_dev(major(st2->devid[i]), minor(st2->devid[i]), 1);
-+	if (!dv) {
-+		close(from_fd);
-+		close(to_fd);
-+		return 0;
-+	}
-+	snprintf(devname, 20, "%s", dv);
-+	devlist.disposition = 'r';
-+	if (Manage_subdevs(st2->devname, from_fd, &devlist, -1) == 0) {
-+		devlist.disposition = 'a';
-+		if (Manage_subdevs(st1->devname, to_fd, &devlist,
-+				   -1) == 0) {
-+			st2->devid[i] = 0;
-+			ping_manager(st2->devname);
-+			ping_manager(st1->devname);
-+			alert("MoveSpare", st1->devname, st2->devname,
-+			      mailaddr, mailfrom, alert_cmd, dosyslog);
-+			close(from_fd);
-+			close(to_fd);
-+			return 1;
-+		} else if (Manage_subdevs(st2->devname, from_fd,
-+					  &devlist, -1) != 0)
-+			fprintf(stderr,
-+				"Error: Adding back spare device"
-+				"%s to container %s failed!\n",
-+				st2->devname, dv);
-+	}
-+	/* Failed to add spare to new container */
-+	close(from_fd);
-+	close(to_fd);
-+	return 0;
-+}
-+
- /* get states of all disks in each container from metadata*/
- int getinfo_containers(struct state *statelist)
++static int dev_suitable(int i, struct state *st, unsigned long long size)
  {
+ 	unsigned long long ssize;
+ 	/* check if device not used in volumes, not failed, and big enough */
+@@ -663,7 +690,7 @@ int dev_suitable(int i, struct state *st, unsigned long long size)
+ }
+ 
+ /* get states of all disks in each container from metadata*/
+-int getinfo_containers(struct state *statelist)
++static int getinfo_containers(struct state *statelist)
+ {
+ 	struct state *st;
+ 	struct supertype *sty;
+@@ -721,8 +748,8 @@ cleanup:
+  * and the same domain and subset
+  * if found, hotremove/hotadd the spare (to parent container in external)
+  */
+-void spare_sharing(struct state *statelist, char *mailaddr,
+-			   char *mailfrom, char *alert_cmd, int dosyslog)
++static void spare_sharing(struct state *statelist, char *mailaddr,
++			  char *mailfrom, char *alert_cmd, int dosyslog)
+ {
+ 	struct state *st, *stp, *vol, *st2 = NULL;
+ 	struct domain_ent *domain, *spare_domain;
 -- 
 1.6.4.2
 
