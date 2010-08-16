@@ -1,8 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 10/35] update domain search to new structures, added subset
- search
-Date: Mon, 16 Aug 2010 10:43:28 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9C4@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 06/35] Updates to udev rules and ReadMe.c for incremental
+ --grab support
+Date: Mon, 16 Aug 2010 10:42:43 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9BE@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,180 +13,119 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 8b07c27ee59665fc0ab874e5ad807b0cef8fef24 Mon Sep 17 00:00:00 2001
-From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Date: Mon, 28 Jun 2010 15:52:55 +0100
-Subject: [PATCH 10/35] update domain search to new structures, added subset search
+From d31e6ce7660254652e83df3b51c912495fa05d26 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Fri, 28 May 2010 14:42:21 +0200
+Subject: [PATCH 06/35] Updates to udev rules and ReadMe.c for incremental --grab support
 
-new domain/subset model needs some changes in the interface of
-existing domain solution. Finding domain for device needs additionally
-the type of metadata we are looking for.
-For subsets we need supertype with loaded superblock as argument, in
-order to get internal spare group identifier of device (if available).
-Patch contains also utility stuff to make use of conf_get_domain/subset
-easier (e.g. get_active_array_domain allows to get domain/subset pair
-for running array giving its name)
+Update Makefile to install new udev early rules,
+update ReadMe.c for new options to pass to incremental mode,
+update udev rules file for new options.
 
-Conflicts:
-
-	mapfile.c
+    Signed-off-by: Doug Ledford <dledford@redhat.com>
 ---
- config.c |   29 ++++++++++++++++++++++++++---
- mdadm.h  |    4 +++-
- util.c   |   39 ++++++++++++++++++++++++++++++---------
- 3 files changed, 59 insertions(+), 13 deletions(-)
+ Makefile            |    3 ++-
+ ReadMe.c            |   14 ++++++++------
+ udev-early-md.rules |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+), 7 deletions(-)
+ create mode 100644 udev-early-md.rules
 
-diff --git a/config.c b/config.c
-index 6c90d26..5829182 100644
---- a/config.c
-+++ b/config.c
-@@ -1003,6 +1003,28 @@ static struct supertype *get_supertype_by_name(char *platform)
- 	return NULL;
- }
+diff --git a/Makefile b/Makefile
+index 3af1665..354554c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -232,7 +232,8 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
+ 	$(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
+ 	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
  
-+int match_platform(struct supertype *supertype, char *type)
-+{
-+	char *platform;
-+	struct supertype *st;
-+	int rv;
-+
-+	/* fix 1.x stored in super1.name */
-+	platform = strdup(type);
-+	if (!platform)
-+		return 0;
-+
-+	if (!strcmp(platform, "1.x")) {
-+		platform[2] = '0';
-+	}
-+	st = supertype->ss->match_metadata_desc(platform);
-+	rv = (st != NULL);
-+
-+	free(st);
-+	free(platform);
-+
-+	return rv;
-+}
- /* returns domain basing on path matching and superblock type (in that order).
-  * If st==NULL, just match paths.
+-install-udev: udev-md-raid.rules
++install-udev: udev-md-raid.rules udev-early-md.rules
++	$(INSTALL) -D -m 644 udev-early-md.rules $(DESTDIR)/lib/udev/rules.d/05-md-early.rules
+ 	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)/lib/udev/rules.d/64-md-raid.rules
+ 
+ uninstall:
+diff --git a/ReadMe.c b/ReadMe.c
+index 355aa64..5b59369 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -87,11 +87,11 @@ char Version[] = Name " - v3.1.2 - 10th March 2010\n";
   */
-@@ -1024,7 +1046,8 @@ struct domain_ent *get_domain_from_devpath(char *devpath, char *platform)
- 				st = get_supertype_by_name(de->platform);
- 				if (!st)
- 					continue;
--				if (st->ss->match_metadata_desc(platform)) {
-+				
-+				if (match_platform(st, platform)) {
- 					st->ss->free_super(st);
- 					free(st);
- 					return de;
-@@ -1241,8 +1264,8 @@ static void domain_make_platforms(struct domain_ent *de)
- 				free_domain_list(&domain_list);
- 				return;
- 			}
--			free(de->platform);
--			de->platform = strdup(name);
-+			free(de_new->platform);
-+			de->platform = name;
- 			de = de_new;
- 		} else {
- 			de->platform = name;
-diff --git a/mdadm.h b/mdadm.h
-index 0a84abd..8548a91 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1016,8 +1016,10 @@ extern int stat2devnum(struct stat *st);
- extern int fd2devnum(int fd);
- extern char *get_devpath_from_devname(char *devname);
- extern char *get_array_devname(char *array);
-+extern char *get_array_devname_by_uuid(int (*uuid)[4]);
- extern struct supertype *dev_load_supertype(char *devname);
--extern int get_active_array_domain(char *array_name, struct domain_ent **domain,
-+extern int get_active_array_domain(char *array_name, int fd,
-+				   struct domain_ent **domain,
- 				   struct subset **subset);
- extern int is_external(char *metadata_verison);
  
-diff --git a/util.c b/util.c
-index cf08add..62544fd 100644
---- a/util.c
-+++ b/util.c
-@@ -1820,17 +1820,19 @@ struct supertype *dev_load_supertype(char *devname)
- 	strcpy(devpath, "/dev/");
- 	strcat(devpath, devname);
- 	fd = open(devpath, O_RDONLY);
--	if (!fd) {
-+	if (fd < 0) {
- 		free(devpath);
- 		return NULL;
- 	}
- 	st = guess_super(fd);
- 	if (!st) {
- 		free(devpath);
-+		close(fd);
- 		return NULL;
- 	}
- 	if (st->ss->load_super(st, fd, devpath)) {
- 		free(devpath);
-+		close(fd);
- 		return NULL;
- 	}
+ char short_options[]=
+-	"-ABCDEFGIQhVXWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
++	"-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
+ char short_bitmap_options[]=
+-	"-ABCDEFGIQhVXWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
++	"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
+ char short_bitmap_auto_options[]=
+-	"-ABCDEFGIQhVXWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tyge:";
++	"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tyge:";
  
-@@ -1842,20 +1844,39 @@ struct supertype *dev_load_supertype(char *devname)
- /* Sets domain and subset appropriately to the domain/subset of first
-  * accessible array member. Returns !0 for failure.
-  */
--int get_active_array_domain(char *array_name, struct domain_ent **domain,
--			  struct subset **subset)
-+int get_active_array_domain(char *array_name, int fd, struct domain_ent **domain,
-+			    struct subset **subset)
- {
- 	struct mdstat_ent *mds, *me;
- 	struct supertype *st;
- 	struct dev_member *dm;
--	char *name;
-+	mdu_array_info_t array;
-+	int md_opened = fd >= 0;
+ struct option long_options[] = {
+     {"manage",    0, 0, '@'},
+@@ -169,7 +169,7 @@ struct option long_options[] = {
+ 
+     /* For Detail/Examine */
+     {"brief",	  0, 0, 'b'},
+-    {"export",	  0, 0, 'Y'},
++    {"export",	  0, 0, 'Y'}, /* used for Incremental now too */
+     {"sparc2.2",  0, 0, Sparc22},
+     {"test",      0, 0, 't'},
+ 
+@@ -246,8 +246,8 @@ char OptionHelp[] =
+ "  --verbose     -v   : Be more verbose about what is happening\n"
+ "  --quiet       -q   : Don't print un-necessary messages\n"
+ "  --brief       -b   : Be less verbose, more brief\n"
+-"  --export      -Y   : With --detail, use key=value format for easy\n"
+-"                       import into environment\n"
++"  --export      -Y   : With --detail, --examine, and --incremental use\n"
++"                       key=value format for easy import into environment\n"
+ "  --force       -f   : Override normal checks and be more forceful\n"
+ "\n"
+ "  --assemble    -A   : Assemble an array\n"
+@@ -560,6 +560,8 @@ char Help_incr[] =
+ "                  : take it for the purpose listed in said DOMAIN line.\n"
+ "  --fail      -f  : First fail (if needed) and then remove device from\n"
+ "                  : any array that it is a member of.\n"
++"  --export      -Y  : Output the results in a format that is consumable as\n"
++"                    : environment variables by udev.  Only used with --grab.\n"
+ ;
+ 
+ char Help_config[] =
+diff --git a/udev-early-md.rules b/udev-early-md.rules
+new file mode 100644
+index 0000000..176ad61
+--- /dev/null
++++ b/udev-early-md.rules
+@@ -0,0 +1,28 @@
++# do not edit this file, it will be overwritten on update
 +
-+	memset(&array, 0, sizeof(mdu_array_info_t));
- 
--	if (!domain || !subset)
-+	if (!domain || !subset || !array_name)
- 		return 1;
- 
--	name = strrchr(array_name, '/');
--	if (!name++)
--		name = array_name;
-+	if (fd < 0) {
-+		fd = open(array_name, O_RDONLY);
-+		if (fd < 0) {
-+			fprintf(stderr, Name ": error opening %s: %s\n",
-+				array_name, strerror(errno));
-+			return 1;
-+		}
-+	}
++SUBSYSTEM!="block", GOTO="md_end"
++ACTION!="add|change", GOTO="md_end"
++# We only care about constituent devices, md arrays are handled in the later
++# rules file
++KERNEL=="md*", GOTO="md_end"
++# If this is already labeled as an md device, we will get it later in the
++# incremental rules assembly section
++ENV{ID_FS_TYPE}=="isw_raid_member", ENV{rd_NO_MDIMSM}!="?*", GOTO="md_end"
++ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="md_end"
++# Does this device belong to a path which we are configured to "own"?
++# For now, we don't have a good way to differentiate that inside of a
++# udev rule, so we are using a really big hammer and just calling mdadm
++# in incremental mode with the flag that indicates that mdadm should only
++# do something with this device if it determines that it should own it.
++# That allows us to program in whatever smarts are needed into mdadm,
++# but at the expense of running mdadm on every blk device add|change event :-(
++IMPORT{program}="/sbin/mdadm -I --new-device $tempnode"
++ENV{MD_OWNED}!="?*", GOTO="md_end"
++# We owned the device, so have udev reset the database info in case we
++# changed it
++IMPORT{program}="/sbin/blkid -o udev -p $tempnode"
++OPTIONS+="link_priority=100"
++ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
++ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
 +
-+	if (ioctl(fd, GET_ARRAY_INFO, &array)) {
-+		fprintf(stderr, Name ": cannot get array info for %s\n",
-+			array_name);
-+		if (!md_opened)
-+			close(fd);
-+		return 1;
-+	}
-+
-+	if (!md_opened)
-+		close(fd);
- 
- 	mds = mdstat_read(0, 0);
- 	if (!mds) {
-@@ -1864,7 +1885,7 @@ int get_active_array_domain(char *array_name, struct domain_ent **domain,
- 	}
- 
- 	for (me = mds; me; me = me->next) {
--		if (!strstr(me->dev, name))
-+		if (array.md_minor != me->devnum)
- 			continue;
- 
- 		/* try to obtain domain/subset for first available member */
++LABEL="md_end"
 -- 
 1.6.4.2
 
