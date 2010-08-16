@@ -1,8 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 24/35] imsm: create mdinfo list of disks in a container from
+Subject: [PATCH 25/35] Monitor: fill devstate of containers based on
  supertype
-Date: Mon, 16 Aug 2010 10:58:26 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA02@irsmsx504.ger.corp.intel.com>
+Date: Mon, 16 Aug 2010 10:58:49 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA07@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,96 +13,86 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 815729fe80f1046a5ec8762cd4cb2507ab5526e7 Mon Sep 17 00:00:00 2001
+From 4921d3d110d1bf4b70eabedf7aaabca06ef767e8 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Tue, 20 Jul 2010 16:56:44 +0200
-Subject: [PATCH 24/35] imsm: create mdinfo list of disks in a container from supertype
+Date: Tue, 20 Jul 2010 16:16:29 +0100
+Subject: [PATCH 25/35] Monitor: fill devstate of containers based on supertype
 
-If getinfo_super is called on a container supertype we only get information
-on first disk. As a parameter it uses reference to preallocated
-mdinfo structure. Amending getinfo_super to return full list of disks
-would require ammending all previous calls and subsequently freeing memory
-allocated for mdinfo list. As an alternative a new function
-getinfo_super_disks is created to obtain information about all disks
-in container. Existing function sysfs_free is used to free memory
-allocated by getinfo_super_disks.
+Normally containers have no information in devstate. Volumes have states
+of their members. To get state of all disks in container we use
+load_super on container and create mdinfo list with all disk states.
+We will use it later to find spares.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- mdadm.h       |    2 +-
- super-intel.c |   39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 1 deletions(-)
+ Monitor.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 54 insertions(+), 0 deletions(-)
 
-diff --git a/mdadm.h b/mdadm.h
-index ffb4634..a6a8fc0 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -597,7 +597,7 @@ extern struct superswitch {
- 	 *   The device the metadata was loaded from by load_super
- 	 */
- 	void (*getinfo_super)(struct supertype *st, struct mdinfo *info);
--
-+	struct mdinfo *(*getinfo_super_disks)(struct supertype *st);
- 	/* Check if the given metadata is flagged as belonging to "this"
- 	 * host.  0 for 'no', 1 for 'yes', -1 for "Don't record homehost"
- 	 */
-diff --git a/super-intel.c b/super-intel.c
-index 4dcc654..a31ed57 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1615,6 +1615,44 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
- 	}
+diff --git a/Monitor.c b/Monitor.c
+index 91a8b69..776cf54 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -549,6 +549,60 @@ int Monitor(mddev_dev_t devlist,
+ 	return 0;
  }
  
-+/* allocates memory and fills disk in mdinfo structure
-+ * for each disk in container
-+ * returns number of created elements of mdinfo list
-+ * this memory must be later freed by sysfs_free */
-+struct mdinfo *getinfo_super_disks_imsm(struct supertype *st)
++/* get states of all disks in each container from metadata*/
++int getinfo_containers(struct state *statelist)
 +{
-+	struct mdinfo *info = NULL;
-+	struct intel_super *super = st->sb;
-+	struct imsm_disk *disk;
-+	int count = 0;
-+	struct dl *dl;
-+	if (!st->loaded_container || !(dl = super->disks))
-+		return NULL;
-+	while (dl) {
-+		struct mdinfo *tmp;
-+		disk = &dl->disk;
-+		tmp = malloc(sizeof(*tmp));
-+		if (!tmp) {
-+			fprintf(stderr, Name ": Failed to allocate memory.\n");
-+			if (info)
-+				sysfs_free(info);
-+			return NULL;
++	struct state *st;
++	struct supertype *sty;
++	int fd, id, i, rv = 1;
++	struct mdinfo *infolist = NULL, *info;
++	for (st = statelist; st; st = st->next) {
++		if (st->err || !is_external(st->metadata_version) ||
++		    is_subarray(st->metadata_version+9))
++			continue;
++		fd = open(st->devname, O_RDONLY);
++		if (fd < 0)
++			return 0;
++		sty = guess_super(fd);
++		if (!sty) {
++			close(fd);
++			return 0;
 +		}
-+		tmp->devs = NULL;
-+		tmp->disk.number = count++;
-+		tmp->disk.major = dl->major;
-+		tmp->disk.minor = dl->minor;
-+		tmp->disk.state = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
-+		tmp->disk.state |= is_failed(disk) ? (1 << MD_DISK_FAULTY) : 0;
-+		tmp->disk.state |= is_spare(disk) ? 0 : (1 << MD_DISK_SYNC);
-+		tmp->disk.raid_disk = -1;
-+		tmp->next = info;
-+		info = tmp;
-+		dl = dl->next;
++		if (sty->ss->load_super(sty, fd, st->devname)) {
++			rv = 0;
++			goto cleanup;
++		}
++		infolist = sty->ss->getinfo_super_disks(sty);
++		if (!infolist) {
++			rv = 0;
++			goto cleanup;
++		}
++		for (i = 0; i<st->total; i++) {
++			if (st->devid[i] == 0)
++				continue;
++			for (info = infolist; info; info = info->next) {
++				id = makedev(info->disk.major, info->disk.minor);
++				if (st->devid[i] == id) {
++					st->devstate[i] = info->disk.state;
++					break;
++				}
++			}
++			if (!info)
++				st->devstate[i] = 1<<MD_DISK_FAULTY;
++		}
++cleanup:
++		close(fd);
++		sty->ss->free_super(sty);
++		free(sty);
++		if (infolist)
++			sysfs_free(infolist);
++		infolist = NULL;
++		if (!rv)
++			return 0;
 +	}
-+	return info;
++	return 1;
 +}
 +
- static int update_super_imsm(struct supertype *st, struct mdinfo *info,
- 			     char *update, char *devname, int verbose,
- 			     int uuid_set, char *homehost)
-@@ -5333,6 +5371,7 @@ struct superswitch super_imsm = {
- 	.match_home	= match_home_imsm,
- 	.uuid_from_super= uuid_from_super_imsm,
- 	.getinfo_super  = getinfo_super_imsm,
-+	.getinfo_super_disks = getinfo_super_disks_imsm,
- 	.update_super	= update_super_imsm,
- 
- 	.avail_size	= avail_size_imsm,
+ static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mailfrom, char *cmd,
+ 		  int dosyslog)
+ {
 -- 
 1.6.4.2
 
