@@ -1,7 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 17/35] Removed uuid setting for imsm spares
-Date: Mon, 16 Aug 2010 10:50:39 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9E4@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 18/35] Assemble: assembly with domains - two runs for imsm
+ spares
+Date: Mon, 16 Aug 2010 10:51:17 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9E6@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,70 +13,113 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 26f00c6c0b78edb782256d510c5b37bc1a12e05b Mon Sep 17 00:00:00 2001
+From 3c7f90ada7b70a9f5f2822b13c78ee6689ab01d1 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
 Date: Wed, 23 Jun 2010 12:10:15 +0100
-Subject: [PATCH 17/35] Removed uuid setting for imsm spares
+Subject: [PATCH 18/35] Assemble: assembly with domains - two runs for imsm spares
 
-Setting UUID of a spare based on first array from config
-that may belong to different domain can prevent assembly of that array.
+UUID of an imsm spare matches any array but
+we are not able to decide if the spare can be assembled with the array
+until we know this array's domain. Spares found before determining
+array's domain are marked and matched in second run.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- super-intel.c |   34 +---------------------------------
- 1 files changed, 1 insertions(+), 33 deletions(-)
+ Assemble.c |   46 ++++++++++++++++++++++++++++++++++++----------
+ 1 files changed, 36 insertions(+), 10 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 9551ad1..4dcc654 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1495,38 +1495,6 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 	uuid_from_super_imsm(st, info->uuid);
- }
+diff --git a/Assemble.c b/Assemble.c
+index cc51428..a1ec8cb 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -168,6 +168,8 @@ int Assemble(struct supertype *st, char *mddev,
+ 	char *name = NULL;
+ 	int trustworthy;
+ 	char chosen_name[1024];
++	int run = 0;
++	int spare;
  
--/* check the config file to see if we can return a real uuid for this spare */
--static void fixup_container_spare_uuid(struct mdinfo *inf)
--{
--	struct mddev_ident_s *array_list;
+ 	struct domain_ent *domain = NULL, *de;
+ 	struct subset *subset = NULL, *ss;
+@@ -221,7 +223,9 @@ int Assemble(struct supertype *st, char *mddev,
+ 	if (verbose>0)
+ 	    fprintf(stderr, Name ": looking for devices for %s\n",
+ 		    mddev ? mddev : "further assembly");
 -
--	if (inf->array.level != LEVEL_CONTAINER ||
--	    memcmp(inf->uuid, uuid_match_any, sizeof(int[4])) != 0)
--		return;
--
--	array_list = conf_get_ident(NULL);
--
--	for (; array_list; array_list = array_list->next) {
--		if (array_list->uuid_set) {
--			struct supertype *_sst; /* spare supertype */
--			struct supertype *_cst; /* container supertype */
--
--			_cst = array_list->st;
--			if (_cst)
--				_sst = _cst->ss->match_metadata_desc(inf->text_version);
--			else
--				_sst = NULL;
--
--			if (_sst) {
--				memcpy(inf->uuid, array_list->uuid, sizeof(int[4]));
--				free(_sst);
--				break;
--			}
--		}
--	}
--}
--
--
- static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev, int failed);
- static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev);
++	run = 0;
++	spare = 0;
++second_run:
+ 	/* first walk the list of devices to find a consistent set
+ 	 * that match the criterea, if that is possible.
+ 	 * We flag the ones we like with 'used'.
+@@ -234,8 +238,14 @@ int Assemble(struct supertype *st, char *mddev,
+ 		struct stat stb;
+ 		struct supertype *tst = dup_super(st);
  
-@@ -1643,7 +1611,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
- 		uuid_from_super_imsm(st, info->uuid);
- 	else {
- 		memcpy(info->uuid, uuid_match_any, sizeof(int[4]));
--		fixup_container_spare_uuid(info);
-+		/* must be uuid_match_any for spares to assemble */
+-		if (tmpdev->used > 1) continue;
+-
++		if (tmpdev->used == 2)
++			continue;
++		if (run == 1) {
++			if (tmpdev->used != 3)
++				continue;
++			else
++				tmpdev->used = 0;
++		}
+ 		if (ident->devices &&
+ 		    !match_oneof(ident->devices, devname)) {
+ 			if (report_missmatch)
+@@ -399,13 +409,22 @@ int Assemble(struct supertype *st, char *mddev,
+ 			}
+ 			ss = conf_get_subset(devname, st, de);
+ 			if (!domain) {
+-				if (report_missmatch) {
+-					fprintf(stderr, Name ": Base domain set for "
+-							     "device: %s\n",
+-							devname);
++				if (memcmp(content->uuid, uuid_match_any,
++					   sizeof(int[4])) != 0) {
++					if (report_missmatch) {
++						fprintf(stderr, Name ": Base domain set for "
++							"device: %s\n", devname);
++					}
++					domain = de;
++					subset = ss;
++				} else{
++					/* imsm spares only
++					 * we don't know if this spare can
++					 * be used until we know domain
++					 * so mark it for second run */
++					tmpdev->used = 3;
++					spare = 1; /* set flag */
+ 				}
+-				domain = de;
+-				subset = ss;
+ 			} else {
+ 				if (domain != de || subset != ss) {
+ 					if (report_missmatch)
+@@ -524,7 +543,8 @@ int Assemble(struct supertype *st, char *mddev,
+ 			return 1;
+ 		}
+ 
+-		tmpdev->used = 1;
++		if (tmpdev->used != 3)
++			tmpdev->used = 1;
+ 
+ 	loop:
+ 		if (tmpdev->content)
+@@ -533,6 +553,12 @@ int Assemble(struct supertype *st, char *mddev,
+ 			tst->ss->free_super(tst);
  	}
- }
+ 
++	/* We may have missed some spares before domain was determined */
++	if (run == 0 && spare && domain) {
++		run = 1;
++		goto second_run;
++	}
++
+ 	if (!st || !st->sb || !content)
+ 		return 2;
  
 -- 
 1.6.4.2
