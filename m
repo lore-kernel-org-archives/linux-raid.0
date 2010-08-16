@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 03/35] Config option parsing for new DOMAIN line support
-Date: Mon, 16 Aug 2010 10:41:28 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9B6@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 04/35] Support for new disk hot plug actions with DOMAINs.
+Date: Mon, 16 Aug 2010 10:41:39 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9B7@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,425 +12,332 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 0c917450be3e25db19fe7ab093d559ef5dbf5d0c Mon Sep 17 00:00:00 2001
+From f99e1fb333d3a95dc1e50c076aefe1928b746d29 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 28 May 2010 12:43:50 +0200
-Subject: [PATCH 03/35] Config option parsing for new DOMAIN line support
+Date: Fri, 28 May 2010 14:19:38 +0200
+Subject: [PATCH 04/35] Support for new disk hot plug actions with DOMAINs.
+
+  Nowhere near complete, just the initial stages.
+  Added support for the call to mdadm.c, some
+  sanity checks, helper functions, etc.
 
 Signed-off-by: Doug Ledford <dledford@redhat.com>
 ---
- config.c |  260 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- mdadm.h  |   35 +++++++++
- util.c   |   43 ++++++++++
- 3 files changed, 337 insertions(+), 1 deletions(-)
+ Incremental.c |  131 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ config.c      |    5 +-
+ mdadm.c       |   32 ++++++++++++--
+ mdadm.h       |    5 ++
+ util.c        |   24 ++++++++++
+ 5 files changed, 189 insertions(+), 8 deletions(-)
 
+diff --git a/Incremental.c b/Incremental.c
+index a99811d..d1d9ee1 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -35,6 +35,10 @@ static int count_active(struct supertype *st, int mdfd, char **availp,
+ static void find_reject(int mdfd, struct supertype *st, struct mdinfo *sra,
+ 			int number, __u64 events, int verbose,
+ 			char *array_name);
++static int IncrementalNewPart(char *devname, int verbose, int export,
++			      struct domain_ent *domain);
++static int IncrementalNewDisk(char *devname, int verbose, int export,
++			      struct domain_ent *domain);
+ 
+ int Incremental(char *devname, int verbose, int runstop,
+ 		struct supertype *st, char *homehost, int require_homehost,
+@@ -888,3 +892,130 @@ int IncrementalRemove(char *devname, int verbose)
+ 	devlist.disposition = 'r';
+ 	return Manage_subdevs(ent->dev, mdfd, &devlist, verbose);
+ }
++
++/*
++ * IncrementalNewPart - We have a partition or a whole disk device, and we
++ * have a domain that says not to partition the device, so we will either
++ * use the whole disk or the partition directly.
++ */
++static int IncrementalNewPart(char *devname, int verbose, int export,
++			      struct domain_ent *domain)
++{
++	struct mdstat_ent *mdstat, *md;
++	struct stat stb;
++	int dfd;
++
++	mdstat = arrays_in_domain(devname, domain);
++	for (md = mdstat; md; md = md->next)
++		printf(Name ": %s\n", md->dev);
++	/* We've finished with the easy tests that allow us to kick drives
++	 * out without touching actual physical media, now we need to start
++	 * the slower checks.
++	 */
++	dfd = dev_open_check(devname, O_RDONLY|O_EXCL, &stb);
++	if (dfd < 0) 
++		return 1;
++	if (guess_super(dfd) != NULL) {
++		/* This won't happen with our udev rules, but someone might
++		 * try this by hand, make them use normal incremental mode
++		 * instead if the device has a superblock already */
++		fprintf(stderr, Name ": superblock present on %s.\n", devname);
++		close(dfd);
++		return 1;
++	}
++	/*
++	 * OK, at this point we have a valid block device without a
++	 * superblock.  If we aren't in force mode, then don't use the
++	 * device unless it's "clean", meaning no filesystems, no lvm,
++	 * no anything.  The requirement here is that both the first and
++	 * last 4k of the device must be one of three patterns: 0x00, 0x5a,
++	 * or 0xff.
++	 */
++
++	return 0;
++}
++
++/*
++ * IncrementalNewDisk - We have a whole disk device, and we have a domain
++ * that says to partition the disk.  However, we will get called whether
++ * the partition is the correct partition or not, so we need to skip devs
++ * that already have the right partition and partition bare devs or 
++ * repartition devs with stuff already on them only if the force option
++ * is present on our domain.
++ */
++static int IncrementalNewDisk(char *devname, int verbose, int export,
++			      struct domain_ent *domain)
++{
++	struct stat stb;
++	int dfd;
++
++	dfd = dev_open_check(devname, O_RDONLY|O_EXCL, &stb);
++	if (dfd < 0) 
++		return 1;
++	if (guess_super(dfd) != NULL) {
++		/* This won't happen with our udev rules, but someone might
++		 * try this by hand, make them use normal incremental mode
++		 * instead if the device has a superblock already */
++		fprintf(stderr, Name ": superblock present on %s.\n", devname);
++		close(dfd);
++		return 1;
++	}
++	/*
++	 * OK, at this point we have a valid block device without a
++	 * superblock.  If we aren't in force mode, then don't use the
++	 * device unless it's "clean", meaning no filesystems, no lvm,
++	 * no anything.  The requirement here is that both the first and
++	 * last 4k of the device must be one of three patterns: 0x00, 0x5a,
++	 * or 0xff.
++	 */
++
++	return 0;
++}
++
++/*
++ * IncrementalNew - We've got a device that doesn't appear to have any
++ * current existing raid superblock on it, check to see if we should be
++ * claiming it based on DOMAIN entries in the config file.
++ *
++ * @devname - The device to investigate
++ *
++ * Special note: if we have partitioned devices, the whole disk device is
++ * going to get called into this code, we need to detect that the device
++ * is already in use and leave it be, where as if we get a truly new
++ * device we may need to partition it and set it up for the partitions to
++ * be added to various arrays later on in the hot plug process.
++ */
++int IncrementalNew(char *devname, int verbose, int export)
++{
++	struct domain_ent *domain;
++	char *devpath;
++	int rv;
++
++	domain = conf_get_domain(devname);
++	if (!domain)
++		return 0;
++	if (action(domain) <= incremental)
++		/* Nothing to do.  We only get called in the case that there
++		 * is no current superblock on the device in question, and
++		 * since our matching domain says we should either ignore or
++		 * use devices incrementally, they have to already have a
++		 * superblock.  Since we don't, we're done.
++		 */
++		return 0;
++	devpath = get_devpath_from_devname(devname);
++	if (strstr(devpath, "part") || action(domain) != partition)
++		/* We are on a partition, not a whole disk, or we are on a
++		 * whole disk but we want to use the whole disk instead
++		 * of partitioning it */
++		rv = IncrementalNewPart(devname, verbose, export, domain);
++	else
++		/* Only use this if we are dealing with a disk that would
++		 * need partitioned.  This will get called even when our
++		 * disk actually already belongs to all the right arrays
++		 * and there is nothing to be done, so only do work here
++		 * if we really need to */
++		rv = IncrementalNewDisk(devname, verbose, export, domain);
++	free(devpath);
++	return rv;
++}
++
 diff --git a/config.c b/config.c
-index 20c46e9..10c10e2 100644
+index 10c10e2..bd80cd6 100644
 --- a/config.c
 +++ b/config.c
-@@ -75,7 +75,7 @@ char DefaultConfFile[] = CONFFILE;
- char DefaultAltConfFile[] = CONFFILE2;
- 
- enum linetype { Devices, Array, Mailaddr, Mailfrom, Program, CreateDev,
--		Homehost, AutoMode, LTEnd };
-+		Homehost, AutoMode, Domain, LTEnd };
- char *keywords[] = {
- 	[Devices]  = "devices",
- 	[Array]    = "array",
-@@ -85,6 +85,7 @@ char *keywords[] = {
- 	[CreateDev]= "create",
- 	[Homehost] = "homehost",
- 	[AutoMode] = "auto",
-+	[Domain]   = "domain",
- 	[LTEnd]    = NULL
- };
- 
-@@ -694,6 +695,182 @@ void autoline(char *line)
- 	}
- }
- 
-+static struct domain_ent *domain_list = NULL;
-+
-+void free_domain(struct domain_ent *de)
-+{
-+	struct domain_path *dp;
-+
-+	while (de->paths) {
-+		dp = de->paths;
-+		de->paths = dp->next;
-+		free(dp->path);
-+		free(dp);
-+	}
-+	free(de);
-+}
-+
-+void domainline(char *line)
-+{
-+	char *w;
-+	struct domain_ent *de;
-+	struct domain_path *path, *prev_path;
-+	int offset, a_seen=0, m_seen=0, sg_seen=0;
-+
-+	de = malloc(sizeof(struct domain_ent));
-+	if (!de) {
-+		fprintf(stderr, Name ": unable to allocate memory for domain "
-+			"entry\n");
-+		return;
-+	}
-+	de->paths = NULL;
-+	de->spare_group = NULL;
-+	de->action = incremental;
-+	de->st = NULL;
-+	de->next = NULL;
-+	
-+	for (w=dl_next(line); w!=line; w=dl_next(w)) {
-+		if (strncasecmp("path=", w, 5) == 0) {
-+			path = malloc(sizeof(struct domain_path));
-+			if (!path) {
-+				fprintf(stderr, Name ": unable to allocate "
-+					"memory for domain path\n");
-+				free_domain(de);
-+				return;
-+			}
-+			path->path = strdup(w+5);
-+			if (!path->path) {
-+				fprintf(stderr, Name ": unable to allocate "
-+					"memory for domain path\n");
-+				free_domain(de);
-+				return;
-+			}
-+			path->next = de->paths;
-+			de->paths = path;
-+		} else if (strncasecmp("action=", w, 7) == 0) {
-+			if (!a_seen)
-+				a_seen = 1;
-+			else {
-+				fprintf(stderr, Name ": only one action= entry "
-+					"allowed per domain line, ignoring\n");
-+				continue;
-+			}
-+			offset = 7;
-+			if (strncasecmp("force-", w+offset, 6) == 0)
-+				offset = 13;
-+			if (strncasecmp("ign", w+offset, 3) == 0)
-+				de->action = ignore;
-+			else if (strncasecmp("inc", w+offset, 3) == 0)
-+				de->action = incremental;
-+			else if (strncasecmp("spa", w+offset, 3) == 0)
-+				de->action = spare;
-+			else if (strncasecmp("gro", w+offset, 3) == 0)
-+				de->action = grow;
-+			else if (strncasecmp("par", w+offset, 3) == 0)
-+				de->action = partition;
-+			if (offset == 13)
-+				de->action |= force;
-+		} else if (strncasecmp("metadata=", w, 9) == 0) {
-+			int i;
-+			if (!m_seen)
-+				m_seen = 1;
-+			else {
-+				fprintf(stderr, Name ": only one metadata= "
-+					"entry allowed per domain line, "
-+					"ignoring\n");
-+				continue;
-+			}
-+			/* style of metadata on the devices. */
-+
-+			for(i=0; superlist[i] && !de->st; i++)
-+				de->st = superlist[i]->match_metadata_desc(w+9);
-+
-+			if (!de->st)
-+				fprintf(stderr, Name ": metadata format %s "
-+					"unknown, ignored.\n", w+9);
-+		} else if (strncasecmp("spare-group=", w, 12) == 0) {
-+			if (!sg_seen)
-+				sg_seen = 1;
-+			else {
-+				fprintf(stderr, Name ": only one spare-group= "
-+					"entry allowed per domain line, "
-+					"ignoring\n");
-+				continue;
-+			}
-+			de->spare_group = strdup(w+12);
-+			if (!de->spare_group) {
-+				fprintf(stderr, Name ": failed to allocate "
-+					"memory for spare_group\n");
-+				free_domain(de);
-+				return;
-+			}
-+		} else {
-+			fprintf(stderr, Name ": unrecognized option %s on "
-+				"domain line\n", w);
-+		}
-+	}
-+	/* Some sanity checks now that all the options are parsed */
-+	if ((de->action & force) &&
-+	    ((de->action & action_mask) <= incremental)) {
-+		fprintf(stderr, Name ": force makes no sense with ignore or "
-+			"incremental, removing.\n");
-+		de->action &= action_mask;
-+	}
-+	if (de->spare_group && de->action <= incremental) {
-+		fprintf(stderr, Name ": defined a spare group when we aren't "
-+			"allowed to add any spares, removing spare group.\n");
-+		free(de->spare_group);
-+		de->spare_group = NULL;
-+	}
-+	if ((de->action & action_mask) == partition) {
-+		for (prev_path = NULL, path = de->paths; path; )
-+			if ((strstr(path->path, "part") != NULL) ||
-+			    (path->path[strlen(path->path) - 1] == '*')) {
-+				fprintf(stderr, Name ": partition method only "
-+					"allowed on whole disks, not on "
-+					"partitions\n");
-+				fprintf(stderr, Name ": bad path=%s\n",
-+					path->path);
-+				if (prev_path) {
-+					prev_path->next = path->next;
-+					free(path->path);
-+					free(path);
-+					path = prev_path->next;
-+				} else {
-+					de->paths = path->next;
-+					free(path->path);
-+					free(path);
-+					path = de->paths;
-+				}
-+			} else {
-+				prev_path = path;
-+				path = path->next;
-+			}
-+		if (de->paths == NULL) {
-+			/* We freed all the paths, kill this domain */
-+			fprintf(stderr, Name ": no valid paths in domain, "
-+				"freeing.\n");
-+			free_domain(de);
-+			return;
-+		}
-+	}
-+	de->next = domain_list;
-+	domain_list = de;
-+}
-+
-+struct domain_ent *get_domain_from_devpath(char *devpath)
-+{
-+	struct domain_ent *de;
-+	struct domain_path *path;
-+
-+	for (de = domain_list; de; de = de->next)
-+		for (path = de->paths; path; path = path->next)
-+			if (fnmatch(path->path, devpath, 0) == 0)
-+				return de;
-+	return NULL;
-+}
-+
-+
- int loaded = 0;
- 
- static char *conffile = NULL;
-@@ -766,6 +943,9 @@ void load_conffile(void)
- 		case AutoMode:
- 			autoline(line);
- 			break;
-+		case Domain:
-+			domainline(line);
-+			break;
- 		default:
- 			fprintf(stderr, Name ": Unknown keyword %s\n", line);
+@@ -810,8 +810,7 @@ void domainline(char *line)
  		}
-@@ -1101,3 +1281,81 @@ struct mddev_ident_s *conf_match(struct mdinfo *info, struct supertype *st)
  	}
- 	return match;
- }
-+
-+struct domain_ent *conf_get_domain(char *devname)
-+{
-+	char *name = strrchr(devname, '/');
-+	char *path;
-+	struct domain_ent *domain;
-+
-+	load_conffile();
-+	if (!domain_list)
-+		return NULL;
-+	if (!name++)
-+		name = devname;
-+	path = get_devpath_from_devname(name);
-+	if (!path)
-+		return NULL;
-+	domain = get_domain_from_devpath(path);
-+	free(path);
-+	return domain;
-+}
-+
-+/*
-+ * Return a linked list of arrays that are in the same domain as the
-+ * constituent device devname.  So, if we have a domain that lists ports 2
-+ * through 6 on the main SATA controller in a machine, and we plug in a
-+ * new drive on port 6, we want to know what actual up and running arrays,
-+ * as listed via /proc/mdstat, are also in the same domain.  We will use
-+ * this information to determine what array we might add our new device
-+ * to either as a replacement drive or as a hot spare.
-+ */
-+struct mdstat_ent *arrays_in_domain(char *devname, struct domain_ent *domain)
-+{
-+	struct mdstat_ent *me, *mdstat, *array_list = NULL;
-+	struct dev_member *m;
-+	struct domain_ent *de;
-+	char *devpath, *mempath, *devpart, *mempart;
-+
-+	devpath = get_devpath_from_devname(devname);
-+	devpart = strrchr(devpath, ':');
-+	mdstat = mdstat_read(0, 0);
-+	while (mdstat) {
-+		if (mdstat->metadata_version &&
-+		    strncmp(mdstat->metadata_version, "external:", 9) == 0 &&
-+		    is_subarray(mdstat->metadata_version+9))
-+			/* don't return subarrays, only containers */
-+			m = NULL;
-+		else for (m = mdstat->members; m; m = m->next) {
-+			mempath = get_devpath_from_devname(m->name);
-+			mempart = strrchr(mempath, ':');
-+			de = conf_get_domain(m->name);
-+			if (de == domain && strcmp(mempart, devpart) == 0)
-+				/* array has at least one member in our domain*/
+ 	/* Some sanity checks now that all the options are parsed */
+-	if ((de->action & force) &&
+-	    ((de->action & action_mask) <= incremental)) {
++	if (force(de) && (action(de) <= incremental)) {
+ 		fprintf(stderr, Name ": force makes no sense with ignore or "
+ 			"incremental, removing.\n");
+ 		de->action &= action_mask;
+@@ -822,7 +821,7 @@ void domainline(char *line)
+ 		free(de->spare_group);
+ 		de->spare_group = NULL;
+ 	}
+-	if ((de->action & action_mask) == partition) {
++	if (action(de) == partition) {
+ 		for (prev_path = NULL, path = de->paths; path; )
+ 			if ((strstr(path->path, "part") != NULL) ||
+ 			    (path->path[strlen(path->path) - 1] == '*')) {
+diff --git a/mdadm.c b/mdadm.c
+index 770fdfd..a111b47 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
+ 	int test = 0;
+ 	int export = 0;
+ 	int assume_clean = 0;
++	int new_disk = 0;
+ 	char *symlinks = NULL;
+ 	/* autof indicates whether and how to create device node.
+ 	 * bottom 3 bits are style.  Rest (when shifted) are number of parts
+@@ -909,6 +910,9 @@ int main(int argc, char *argv[])
+ 		case O(INCREMENTAL, 'r'):
+ 			rebuild_map = 1;
+ 			continue;
++		case O(INCREMENTAL, 'g'):
++			new_disk = 1;
++			continue;
+ 		}
+ 		/* We have now processed all the valid options. Anything else is
+ 		 * an error
+@@ -1513,6 +1517,11 @@ int main(int argc, char *argv[])
+ 		if (rebuild_map) {
+ 			RebuildMap();
+ 		}
++		if (export && !new_disk) {
++			fprintf(stderr, Name
++		 ": --incremental --export only supported with --grab.\n");
++			break;
++		}
+ 		if (scan) {
+ 			if (runstop <= 0) {
+ 				fprintf(stderr, Name
+@@ -1524,8 +1533,18 @@ int main(int argc, char *argv[])
+ 			 ": --incremental --scan --fail not supported.\n");
+ 				break;
+ 			}
++			if (new_disk > 0) {
++				fprintf(stderr, Name
++			 ": --incremental --scan --grab not supported.\n");
 +				break;
-+			free(mempath);
++			}
+ 			rv = IncrementalScan(verbose);
+ 		}
++		if (devmode == 'f' && new_disk) {
++			fprintf(stderr, Name
++		 ": --incremental --fail --grab makes no sense.\n");
++			break;
 +		}
-+		if (m) {
-+			free(mempath);
-+			me = mdstat;
-+			mdstat = mdstat->next;
-+			me->next = array_list;
-+			array_list = me;
-+		} else {
-+			me = mdstat;
-+			mdstat = mdstat->next;
-+			me->next = NULL;
-+			free_mdstat(me);
-+		}
-+	}
-+	free(devpath);
-+	return array_list;
-+}
-+
-+int conf_get_domain_action(char *devname)
-+{
-+	struct domain_ent *domain = conf_get_domain(devname);
-+	if (!domain)
-+		return incremental;
-+	return domain->action;
-+}
+ 		if (!devlist) {
+ 			if (!rebuild_map && !scan) {
+ 				fprintf(stderr, Name
+@@ -1540,12 +1559,15 @@ int main(int argc, char *argv[])
+ 			rv = 1;
+ 			break;
+ 		}
+-		if (devmode == 'f') {
++		if (devmode == 'f')
+ 			rv = IncrementalRemove(devlist->devname, verbose-quiet);
+-			break;
+-		}
+-		rv = Incremental(devlist->devname, verbose-quiet, runstop,
+-				 ss, homehost, require_homehost, autof);
++		else if (new_disk > 0)
++			rv = IncrementalNew(devlist->devname, verbose-quiet,
++					    export);
++		else
++			rv = Incremental(devlist->devname, verbose-quiet,
++					 runstop, ss, homehost,
++					 require_homehost, autof);
+ 		break;
+ 	case AUTODETECT:
+ 		autodetect();
 diff --git a/mdadm.h b/mdadm.h
-index d15e73e..4d5a630 100644
+index 4d5a630..3862853 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -277,6 +277,36 @@ enum special_options {
- 	DetailPlatform,
+@@ -292,6 +292,9 @@ enum domain_actions {
+ 		      other metadata on them */
  };
  
-+enum domain_actions {
-+	ignore,
-+	incremental,
-+	partition, /* only use on whole devices in order to put a standard
-+		      partition table on them, which will invoke new udev
-+		      calls for the partitions, and then we will do other
-+		      appropriate things with the partitions */
-+	spare,
-+	grow,
-+	action_mask=511,
-+	force=512, /* so we can bitwise & this with actions to signify we
-+		      should forcibly take over drives even if they have
-+		      other metadata on them */
-+};
++#define action(domain) ((domain)->action & action_mask)
++#define force(domain) ((domain)->action & force)
 +
-+struct domain_ent {
-+	char			*spare_group; /* only set this in monitor mode
-+						 when we know what arrays we
-+						 are watching and can reconcile
-+						 them to domains by checking
-+						 constituent device paths */
-+	struct domain_path {
-+		char			*path;
-+		struct domain_path	*next;
-+	}			*paths;
-+	int			action;
-+	struct supertype	*st;
-+	struct domain_ent	*next;
-+};
-+
- /* structures read from config file */
- /* List of mddevice names and identifiers
-  * Identifiers can be:
-@@ -854,6 +884,10 @@ extern int same_dev(char *one, char *two);
- extern int parse_auto(char *str, char *msg, int config);
- extern mddev_ident_t conf_get_ident(char *dev);
- extern mddev_dev_t conf_get_devs(void);
-+extern struct domain_ent *conf_get_domain(char *devname);
-+extern int conf_get_domain_action(char *devname);
-+extern struct mdstat_ent *arrays_in_domain(char *devname,
-+					   struct domain_ent *domain);
- extern int conf_test_dev(char *devname);
- extern int conf_test_metadata(const char *version, int is_homehost);
- extern struct createinfo *conf_get_create_info(void);
-@@ -930,6 +964,7 @@ extern char *devnum2devname(int num);
- extern int devname2devnum(char *name);
- extern int stat2devnum(struct stat *st);
- extern int fd2devnum(int fd);
-+extern char *get_devpath_from_devname(char *devname);
+ struct domain_ent {
+ 	char			*spare_group; /* only set this in monitor mode
+ 						 when we know what arrays we
+@@ -854,6 +857,7 @@ extern int Incremental_container(struct supertype *st, char *devname,
+ extern void RebuildMap(void);
+ extern int IncrementalScan(int verbose);
+ extern int IncrementalRemove(char *devname, int verbose);
++extern int IncrementalNew(char *devname, int verbose, int export);
+ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			unsigned long chunksize, unsigned long daemon_sleep,
+ 			unsigned long write_behind,
+@@ -876,6 +880,7 @@ extern int check_partitions(int fd, char *dname, unsigned long long freesize);
  
- static inline int dev2major(int d)
- {
+ extern int get_mdp_major(void);
+ extern int dev_open(char *dev, int flags);
++extern int dev_open_check(char *dev, int flags, struct stat *stb);
+ extern int open_dev(int devnum);
+ extern int open_dev_excl(int devnum);
+ extern int is_standard(char *dev, int *nump);
 diff --git a/util.c b/util.c
-index 8315200..1793b68 100644
+index 1793b68..b93e21d 100644
 --- a/util.c
 +++ b/util.c
-@@ -1679,3 +1679,46 @@ void append_metadata_update(struct supertype *st, void *buf, int len)
- unsigned int __invalid_size_argument_for_IOC = 0;
- #endif
+@@ -975,6 +975,30 @@ int dev_open(char *dev, int flags)
+ 	return fd;
+ }
  
-+/*
-+ * Resolve from a device name, such as /dev/sdb2, to a device path, such
-+ * as pci-0000:00:1f.2-scsi-1:0:0:0-part2 which can then be used to match
-+ * against paths in DOMAIN lines from the config file
-+ */
-+char *get_devpath_from_devname(char *devname)
++int dev_open_check(char *devname, int flags, struct stat *stb)
 +{
-+	char *name = strrchr(devname, '/'), *link;
-+	DIR *by_path;
-+	struct dirent *ent;
-+	char symlink[PATH_MAX] = "/dev/disk/by-path/";
-+	char *symlinkp, target[PATH_MAX];
-+	int read;
++	int dfd;
 +
-+	if (!name++)
-+		name = devname;
-+	if ((by_path = opendir("/dev/disk/by-path")) == NULL) {
-+		fprintf(stderr, Name ": unable to open /dev/disk/by-path, "
-+			"domain lookups not possible\n");
-+		return NULL;
++	dfd = dev_open(devname, flags);
++	if (dfd < 0) {
++		fprintf(stderr, Name ": cannot open %s: %s.\n",
++			devname, strerror(errno));
++		return -1;
 +	}
-+	symlinkp = &symlink[0] + strlen(symlink);
-+	while ((ent = readdir(by_path)) != NULL) {
-+		if (ent->d_type != DT_LNK)
-+			continue;
-+		strncpy(symlinkp, ent->d_name,
-+			sizeof(symlink) - (symlinkp - &symlink[0]));
-+		read = readlink(symlink, target, sizeof(target));
-+		if (read < 0)
-+			continue;
-+		/* Have to null terminate the return */
-+		target[read] = 0;
-+		link = strrchr(target, '/');
-+		if (!link++)
-+			link = target;
-+		if (strcmp(name, link) == 0) {
-+			closedir(by_path);
-+			return strdup(ent->d_name);
-+		}
++	if (fstat(dfd, stb) < 0) {
++		fprintf(stderr, Name ": fstat failed on %s: %s.\n",
++			devname, strerror(errno));
++		close(dfd);
++		return -1;
 +	}
-+	closedir(by_path);
-+	return NULL;
++	if ((stb->st_mode & S_IFMT) != S_IFBLK) {
++		fprintf(stderr, Name ": %s is not a block device.\n", devname);
++		close(dfd);
++		return -1;
++	}
++	return dfd;
 +}
++
+ int open_dev(int devnum)
+ {
+ 	char buf[20];
 -- 
 1.6.4.2
 
