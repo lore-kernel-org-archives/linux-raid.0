@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 26/35] Monitor: get array domain and subset function added
-Date: Mon, 16 Aug 2010 10:59:38 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA0B@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 27/35] Monitor: added function move_spare
+Date: Mon, 16 Aug 2010 11:00:01 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA0C@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,71 +12,80 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From c4eef57173368acd3bcb8196b92804b764f0a505 Mon Sep 17 00:00:00 2001
+From 662b22b7f7309e7dc71c17bf5ec20d11a290d96c Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 23 Jul 2010 21:16:39 +0100
-Subject: [PATCH 26/35] Monitor: get array domain and subset function added
+Date: Fri, 23 Jul 2010 19:30:52 +0100
+Subject: [PATCH 27/35] Monitor: added function move_spare
 
-Domain of all devices in an array is the same.
-We can get array domain from any of it's devices.
-Used for spare sharing.
+For spare sharing. We try to remove spare from one array/container and
+add to another. If add fails we add back to original container.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Monitor.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 46 insertions(+), 0 deletions(-)
+ Monitor.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 56 insertions(+), 0 deletions(-)
 
 diff --git a/Monitor.c b/Monitor.c
-index 776cf54..a66a9ee 100644
+index a66a9ee..6a203c3 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -549,6 +549,52 @@ int Monitor(mddev_dev_t devlist,
+@@ -595,6 +595,62 @@ fail:
  	return 0;
  }
  
-+/* domain of an array is the domain of any of its members */
-+int get_array_domain_and_subset(struct state *st,
-+				struct domain_ent **domain,
-+				struct subset **subset)
-+{
-+	struct supertype *sty;
-+	char *devname;
-+	int fd, i;
++int move_spare(struct state *st2, struct state *st1, int i,
++		      char *mailaddr, char *mailfrom, char *alert_cmd, 
++		      int dosyslog)
 +
-+	if (!st)
++{
++	struct mddev_dev_s devlist;
++	char devname[20];
++	int from_fd, to_fd;
++	if (!st1 || !st2 || st2->devid[i] == 0)
 +		return 0;
-+	for (i = 0; i < st->total && st->devid[i] == 0 ; i++);
-+	if (i == st->total)
++	from_fd = open(st2->devname, O_RDONLY);
++	if (from_fd < 0)
 +		return 0;
-+	devname = map_dev(major(st->devid[i]), minor(st->devid[i]), 1);
-+	if (!devname)
-+		return 0;
-+	fd = open(devname, O_RDONLY);
-+	if (fd < 0)
-+		return 0;
-+	sty = guess_super(fd);
-+	if (!sty) {
-+		close(fd);
++	to_fd = open(st1->devname, O_RDONLY);
++	if (to_fd < 0) {
++		close(from_fd);
 +		return 0;
 +	}
-+	if (sty->ss->load_super(sty, fd, devname))
-+		goto fail;
-+	*domain = conf_get_domain(strrchr(devname, '/'), st->metadata_version);
-+	if (*domain == NULL) {
-+		*subset = NULL;
-+		goto fail;
++	devlist.next = NULL;
++	devlist.used = 0;
++	devlist.re_add = 0;
++	devlist.writemostly = 0;
++	devlist.devname = devname;
++	char *dv = map_dev(major(st2->devid[i]), minor(st2->devid[i]), 1);
++	if (!dv) {
++		close(from_fd);
++		close(to_fd);
++		return 0;
 +	}
-+	*subset = conf_get_subset(strrchr(devname, '/'), sty, *domain);
-+	if (*subset == NULL)
-+		goto fail;
-+	sty->ss->free_super(sty);
-+	free(sty);
-+	return 1;
-+fail:
-+	if (fd >= 0)
-+		close(fd);
-+	sty->ss->free_super(sty);
-+	free(sty);
++	snprintf(devname, 20, "%s", dv);
++	devlist.disposition = 'r';
++	if (Manage_subdevs(st2->devname, from_fd, &devlist, -1) == 0) {
++		devlist.disposition = 'a';
++		if (Manage_subdevs(st1->devname, to_fd, &devlist,
++				   -1) == 0) {
++			st2->devid[i] = 0;
++			ping_manager(st2->devname);
++			ping_manager(st1->devname);
++			alert("MoveSpare", st1->devname, st2->devname,
++			      mailaddr, mailfrom, alert_cmd, dosyslog);
++			close(from_fd);
++			close(to_fd);
++			return 1;
++		} else if (Manage_subdevs(st2->devname, from_fd,
++					  &devlist, -1) != 0)
++			fprintf(stderr,
++				"Error: Adding back spare device"
++				"%s to container %s failed!\n",
++				st2->devname, dv);
++	}
++	/* Failed to add spare to new container */
++	close(from_fd);
++	close(to_fd);
 +	return 0;
 +}
 +
