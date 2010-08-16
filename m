@@ -1,7 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 30/35] Man pages update with DOMAIN line description.
-Date: Mon, 16 Aug 2010 11:01:58 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA18@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 31/35] added --path <path_id> to give the information on the
+ 'path-id' of removed device
+Date: Mon, 16 Aug 2010 11:02:38 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA1B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,249 +13,121 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 9a769282fc4de770a877452242ac853dd2a6e051 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Thu, 10 Jun 2010 17:48:31 +0200
-Subject: [PATCH 30/35] Man pages update with DOMAIN line description.
+From febd3f45d8bc4165f574d0d9abe679e3c06da3b8 Mon Sep 17 00:00:00 2001
+From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Date: Wed, 14 Jul 2010 15:11:02 +0100
+Subject: [PATCH 31/35] added --path <path_id> to give the information on the 'path-id' of removed device
 
-Old spare-groups replaced by domains.
-
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+<path-id> allows to identify the port to which given device is plugged in. In case
+of hot-removal, udev can pass this information for future use (eg. write this
+name as 'cookie' allowing to detect the fact of reinserting device to the same port).
+--path <path-id> parameter has been added to device removal handle (and char *path
+has been added to IncrementalRemove() to pass this value) in order to pass path-id
+to this handler.
 ---
- mdadm.8.in   |   23 +++++----
- mdadm.conf.5 |  146 ++++++++++++++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 135 insertions(+), 34 deletions(-)
+ Incremental.c |    7 ++++++-
+ ReadMe.c      |    2 ++
+ mdadm.c       |   15 ++++++++++++---
+ mdadm.h       |    3 ++-
+ 4 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index b2c90dc..a724e6e 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -1850,7 +1850,9 @@ As well as reporting events,
- .I mdadm
- may move a spare drive from one array to another if they are in the
- same
--.B spare-group
-+.B domain
-+and
-+.B subset
- and if the destination array has a failed drive but no spares.
+diff --git a/Incremental.c b/Incremental.c
+index 6c30f51..c0a28a4 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -941,12 +941,17 @@ int Incremental_container(struct supertype *st, char *devname, int verbose,
+  * Note: the device name must be a kernel name like "sda", so
+  * that we can find it in /proc/mdstat
+  */
+-int IncrementalRemove(char *devname, int verbose)
++int IncrementalRemove(char *devname, char *path, int verbose)
+ {
+ 	int mdfd;
+ 	struct mdstat_ent *ent;
+ 	struct mddev_dev_s devlist;
  
- If any devices are listed on the command line,
-@@ -1956,7 +1958,7 @@ notices that an array is degraded when it first sees the array.
- .TP
- .B MoveSpare
- A spare drive has been moved from one array in a
--.B spare-group
-+.B domain
- to another to allow a failed drive to be replaced.
- (syslog priority: Info)
++	if (!path) {
++		fprintf(stderr, Name ": incremental removal without --path <path_id> lacks "
++			"the possibility to re-add new device in this port\n");
++	}
++
+ 	if (strchr(devname, '/')) {
+ 		fprintf(stderr, Name ": incremental removal requires a "
+ 			"kernel device name, not a file: %s\n", devname);
+diff --git a/ReadMe.c b/ReadMe.c
+index 3f36e70..6219e76 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -193,6 +193,8 @@ struct option long_options[] = {
+     /* For Incremental */
+     {"rebuild-map", 0, 0, 'r'},
+     {"grab", 0, 0, 'g'}, /* grab devices for hot spare use */
++    {"path", 1, 0, IncrementalPath},
++
+     {0, 0, 0, 0}
+ };
  
-@@ -2007,18 +2009,19 @@ the second device is the array that the spare was moved from.
- For
- .I mdadm
- to move spares from one array to another, the different arrays need to
--be labeled with the same
--.B spare-group
--in the configuration file.  The
--.B spare-group
--name can be any string; it is only necessary that different spare
--groups use different names.
-+belong to the same
-+.B domain
-+and
-+.B subset.
-+If there are no domains defined in configuration file, then spares can be
-+shared between arrays with the same metadata type. Subsets reflect
-+metadata specific constraints ex. hardware controllers. 
+diff --git a/mdadm.c b/mdadm.c
+index bab0ad3..8d7e901 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
+ 	int dosyslog = 0;
+ 	int rebuild_map = 0;
+ 	int auto_update_home = 0;
++	char *remove_path = NULL;
  
- When
- .I mdadm
--detects that an array in a spare group has fewer active
-+detects that an array in a domain has fewer active
- devices than necessary for the complete array, and has no spare
--devices, it will look for another array in the same spare group that
-+devices, it will look for another array in the same domain and subset that
- has a full complement of working drive and a spare.  It will then
- attempt to remove the spare from the second drive and add it to the
- first.
-diff --git a/mdadm.conf.5 b/mdadm.conf.5
-index e677ba9..0b320c4 100644
---- a/mdadm.conf.5
-+++ b/mdadm.conf.5
-@@ -169,18 +169,6 @@ starts or when
- is used.
+ 	int print_help = 0;
+ 	FILE *outf;
+@@ -917,6 +918,13 @@ int main(int argc, char *argv[])
+ 		case O(INCREMENTAL, 'g'):
+ 			new_disk = 1;
+ 			continue;
++		case O(INCREMENTAL, IncrementalPath):
++			if (!optarg) {
++				fprintf(stderr, Name ":option --path needs obligatory argument\n");
++				exit(2);
++			}
++			remove_path = strdup(optarg);
++			continue;
+ 		}
+ 		/* We have now processed all the valid options. Anything else is
+ 		 * an error
+@@ -1563,9 +1571,10 @@ int main(int argc, char *argv[])
+ 			rv = 1;
+ 			break;
+ 		}
+-		if (devmode == 'f')
+-			rv = IncrementalRemove(devlist->devname, verbose-quiet);
+-		else if (new_disk > 0)
++		if (devmode == 'f') {
++			rv = IncrementalRemove(devlist->devname, remove_path, verbose-quiet);
++			free(remove_path);
++		} else if (new_disk > 0)
+ 			rv = IncrementalNew(devlist->devname, verbose-quiet,
+ 					    export);
+ 		else
+diff --git a/mdadm.h b/mdadm.h
+index a6a8fc0..320c293 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -276,6 +276,7 @@ enum special_options {
+ 	Waitclean,
+ 	DetailPlatform,
+ 	NoSharing,
++	IncrementalPath
+ };
  
- .TP
--.B spare\-group=
--The value is a textual name for a group of arrays.  All arrays with
--the same
--.B spare\-group
--name are considered to be part of the same group.  The significance of
--a group of arrays is that
--.I mdadm
--will, when monitoring the arrays, move a spare drive from one array in
--a group to another array in that group if the first array had a failed
--or missing drive but no spare.
--
--.TP
- .B auto=
- This option is rarely needed with mdadm-3.0, particularly if use with
- the Linux kernel v2.6.28 or later.
-@@ -234,6 +222,122 @@ container the array is.  It will usually accompany a "container=" word.
- .RE
- 
- .TP
-+.B DOMAIN
-+The
-+.B domain
-+line defines a set of devices determined by path and platform.
-+The purpose of a domain is to guide:
-+
-+.B - Incremental
-+mode - by specifying actions for hot-plug devices other than the default.
-+
-+.B - Create
-+and
-+.B Manage
-+modes - by identifying configurations that breach policy. Eg. to create
-+an array with devices from two different
-+.BR domains,
-+or to add a device from a given
-+.B domain
-+to an array which doesn't
-+contain any devices from the
-+.BR domain,
-+.B force-
-+prefix in action item is required.
-+
-+.B - Monitor
-+mode
-+- by allowing spare sharing within the same
-+.B domain
-+and
-+.B subset.
-+This makes spare-groups in
-+.B ARRAY
-+line obsolete.
-+
-+.B Subsets
-+are parts of
-+.B domain
-+specific for hardware controllers and metadata spare groups.
-+Spare migration happens only within a subset, and adding a device in one subset
-+to an array that does not have a member in that subset also requires
-+.BR --force.
-+
-+The available options in
-+.B domain
-+line are:
-+.RS 4
-+
-+.TP
-+.B path=
-+Each
-+.B domain
-+line must have at least one valid
-+.B path=
-+entry.
-+.B path=
-+entries are file patterns and are matched against devices in /dev/disk/by-path.
-+Each
-+.B domain
-+line can have more than one
-+.BR path.
-+The list of
-+.B paths
-+and the
-+.B platform
-+determine whether a device belongs to given
-+.BR domain.
-+
-+.TP
-+.B platform=
-+This is metadata type for all devices in
-+.BR domain.
-+If
-+.B platform=
-+item is missing then the line describes four
-+.B domains
-+using the same
-+.BR paths,
-+one for each metadata type: 0.90, 1.x, ddf, imsm.
-+
-+.TP
-+.B action=
-+The
-+.B action
-+line indicates what kind of behaviour is allowed on hot-plug.
-+Each
-+.B domain
-+line must have one and only one
-+.B action=
-+entry. In addition, each
-+.B action
-+may be prefixed with
-+.B force-
-+to indicate that we should skip certain safety checks.
-+
-+Valid action items are:
-+.RS 8
-+
-+.TP
-+.B ignore
-+Means that any hotplugged device should be ignored.
-+
-+.TP
-+.B incremental
-+Means normal incremental assembly (the default).  If the device has
-+metadata that matches an array then it is added to the array.
-+
-+.TP
-+.B spare
-+As incremental, additionally a spare record is written if it is a 'bare' device.
-+
-+.TP
-+.B same_port_bare
-+If a bare device is connected to the same port as previously removed device
-+it is added as a spare to the array that the other device belonged to.
-+.RE
-+
-+.TP
- .B MAILADDR
- The
- .B mailaddr
-@@ -423,6 +527,12 @@ DEVICE /dev/sd[bcdjkl]1
- .br
- DEVICE /dev/hda1 /dev/hdb1
- 
-+# two imsm domains are defined 
-+.br
-+DOMAIN path=pci-0000:00:1f.2-scsi-[0-2]* platform=imsm action=incremental
-+.br
-+DOMAIN path=pci-0000:00:1f.2-scsi-[3-5]* platform=imsm action=spare
-+
- # /dev/md0 is known by its UUID.
- .br
- ARRAY /dev/md0 UUID=3aaa0122:29827cfa:5331ad66:ca767371
-@@ -437,18 +547,6 @@ ARRAY /dev/md1 superminor=1
- .br
- ARRAY /dev/md2 devices=/dev/hda1,/dev/hdb1
- 
--# /dev/md4 and /dev/md5 are a spare-group and spares
--.br
--#  can be moved between them
--.br
--ARRAY /dev/md4 uuid=b23f3c6d:aec43a9f:fd65db85:369432df
--.br
--           spare\-group=group1
--.br
--ARRAY /dev/md5 uuid=19464854:03f71b1b:e0df2edd:246cc977
--.br
--           spare\-group=group1
--.br
- # /dev/md/home is created if need to be a partitionable md array
- .br
- # any spare device number is allocated.
+ enum domain_actions {
+@@ -899,7 +900,7 @@ extern int Incremental_container(struct supertype *st, char *devname,
+ 				 int trustworthy);
+ extern void RebuildMap(void);
+ extern int IncrementalScan(int verbose);
+-extern int IncrementalRemove(char *devname, int verbose);
++extern int IncrementalRemove(char *devname, char *path, int verbose);
+ extern int IncrementalNew(char *devname, int verbose, int export);
+ extern int CreateBitmap(char *filename, int force, char uuid[16],
+ 			unsigned long chunksize, unsigned long daemon_sleep,
 -- 
 1.6.4.2
 
