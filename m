@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 12/35] create: respect domains/subsets during create process
-Date: Mon, 16 Aug 2010 10:47:26 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9D6@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 13/35] manage: domains support in Manage_subdev
+Date: Mon, 16 Aug 2010 10:47:53 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9D8@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,69 +12,102 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 669de81946d0c69ec6892a3b8ae9ce89cffe6e8d Mon Sep 17 00:00:00 2001
+From 11c805b9d7d7b875d15fc4bcf5ff42e3aef56553 Mon Sep 17 00:00:00 2001
 From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Date: Thu, 10 Jun 2010 11:56:59 +0200
-Subject: [PATCH 12/35] create: respect domains/subsets during create process
+Date: Thu, 17 Jun 2010 14:00:27 +0200
+Subject: [PATCH 13/35] manage: domains support in Manage_subdev
 
+if disk is added to array, it must belong the same domain as
+current members of this array.
 ---
- Create.c |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+ Manage.c |   33 +++++++++++++++++++++++++++++++++
+ util.c   |   15 ++++++++++++++-
+ 2 files changed, 47 insertions(+), 1 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index b04388f..2ea4205 100644
---- a/Create.c
-+++ b/Create.c
-@@ -116,6 +116,8 @@ int Create(struct supertype *st, char *mddev,
- 	char chosen_name[1024];
- 	struct map_ent *map = NULL;
- 	unsigned long long newsize;
-+	struct domain_ent *base_de = NULL;
-+	struct subset *base_ss;
+diff --git a/Manage.c b/Manage.c
+index 67bef11..e733c2d 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -354,6 +354,8 @@ int Manage_subdevs(char *devname, int fd,
+ 	int ouuid[4];
+ 	int lfd = -1;
+ 	int sysfd = -1;
++	struct domain_ent *arrdomain, *devdomain;
++	struct subset *arrsubset, *devsubset;
  
- 	int major_num = BITMAP_MAJOR_HI;
+ 	if (ioctl(fd, GET_ARRAY_INFO, &array)) {
+ 		fprintf(stderr, Name ": cannot get array info for %s\n",
+@@ -361,6 +363,12 @@ int Manage_subdevs(char *devname, int fd,
+ 		return 1;
+ 	}
  
-@@ -281,6 +283,8 @@ int Create(struct supertype *st, char *mddev,
- 	info.array.working_disks = 0;
- 	dnum = 0;
- 	for (dv=devlist; dv && !have_container; dv=dv->next, dnum++) {
-+		struct domain_ent *de;
-+		struct subset *ss;
- 		char *dname = dv->devname;
- 		unsigned long long freesize;
- 		if (strcasecmp(dname, "missing")==0) {
-@@ -343,6 +347,31 @@ int Create(struct supertype *st, char *mddev,
- 			}
- 		}
- 
-+		de = conf_get_domain(dname, (char *)st->ss->name);
-+		if (!de) {
-+			fprintf(stderr, Name ": Can't determine domain of %s.",
-+				dname);
-+			if (st)
-+				st->ss->free_super(st);
-+			return 1;
-+		}
-+		ss = conf_get_subset(dname, st, de);
-+		if (!base_de) {
-+			base_de = de;
-+			base_ss = ss;
-+			if (verbose > 0)
-+				fprintf(stderr, Name ": Base domain set for "
-+						"device: %s\n", dname);
-+		} else {
-+			if (base_de != de || base_ss != ss) {
-+				if (verbose > 0)
-+					fprintf(stderr, Name ": %s does not belong to the same "
-+							"domain/subset.\n",
-+						dname);
-+					return 1;
-+			}
-+		}
++	if (get_active_array_domain(devname, fd, &arrdomain, &arrsubset)) {
++		fprintf(stderr, Name " : Cannot determine domain for %s!\n",
++				     devname);
++		return 1;
++	}
 +
- 		freesize /= 2; /* convert to K */
- 		if (chunk) {
- 			/* round to chunk size */
+ 	/* array.size is only 32 bit and may be truncated.
+ 	 * So read from sysfs if possible, and record number of sectors
+ 	 */
+@@ -531,6 +539,31 @@ int Manage_subdevs(char *devname, int fd,
+ 
+ 			st = dup_super(tst);
+ 
++			devdomain = conf_get_domain(dv->devname,
++						    (char *)st->ss->name);
++			if (!devdomain) {
++				fprintf(stderr, Name " : Cannot determine domain "
++						     " of device: %s\n", dv->devname);
++				close(tfd);
++				free(st);
++				return 1;
++			}
++			devsubset = conf_get_subset(dv->devname, st, devdomain);
++			if (!devsubset) {
++				fprintf(stderr, Name " : Cannot determine subset "
++						     " of device: %s\n", dv->devname);
++				close(tfd);
++				free(st);
++				return 1;
++			}
++			if (arrdomain != devdomain ||
++			    arrsubset != devsubset) {
++				fprintf(stderr, Name " : Domain/subdomain of "
++						     "disk differs of arrays'.");
++				close(tfd);
++				free(st);
++				return 1;
++			}
+ 			if (array.not_persistent==0)
+ 				st->ss->load_super(st, tfd, NULL);
+ 
+diff --git a/util.c b/util.c
+index 62544fd..a746b83 100644
+--- a/util.c
++++ b/util.c
+@@ -1893,7 +1893,20 @@ int get_active_array_domain(char *array_name, int fd, struct domain_ent **domain
+ 			st = dev_load_supertype(dm->name);
+ 			if (!st)
+ 				continue;
+-			*domain = conf_get_domain(dm->name, me->metadata_version);
++			if (!strncmp(me->metadata_version, "external:", 9) &&
++			    is_subarray(me->metadata_version+9)) {
++				struct mdstat_ent *m;
++				for (m = mds; m; m = m->next)
++					if (devname2devnum(me->metadata_version+10) == m->devnum)
++						break;
++				if (!m)
++					continue;
++				*domain = conf_get_domain(dm->name,
++							  m->metadata_version);
++			} else {
++				*domain = conf_get_domain(dm->name,
++							  me->metadata_version);
++			}
+ 			if (!*domain) {
+ 				st->ss->free_super(st);
+ 				free(st);
 -- 
 1.6.4.2
 
