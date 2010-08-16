@@ -1,8 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 25/35] Monitor: fill devstate of containers based on
- supertype
-Date: Mon, 16 Aug 2010 10:58:49 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA07@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 26/35] Monitor: get array domain and subset function added
+Date: Mon, 16 Aug 2010 10:59:38 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8FA0B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,85 +12,76 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 4921d3d110d1bf4b70eabedf7aaabca06ef767e8 Mon Sep 17 00:00:00 2001
+From c4eef57173368acd3bcb8196b92804b764f0a505 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Tue, 20 Jul 2010 16:16:29 +0100
-Subject: [PATCH 25/35] Monitor: fill devstate of containers based on supertype
+Date: Fri, 23 Jul 2010 21:16:39 +0100
+Subject: [PATCH 26/35] Monitor: get array domain and subset function added
 
-Normally containers have no information in devstate. Volumes have states
-of their members. To get state of all disks in container we use
-load_super on container and create mdinfo list with all disk states.
-We will use it later to find spares.
+Domain of all devices in an array is the same.
+We can get array domain from any of it's devices.
+Used for spare sharing.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Monitor.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+ Monitor.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 46 insertions(+), 0 deletions(-)
 
 diff --git a/Monitor.c b/Monitor.c
-index 91a8b69..776cf54 100644
+index 776cf54..a66a9ee 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -549,6 +549,60 @@ int Monitor(mddev_dev_t devlist,
+@@ -549,6 +549,52 @@ int Monitor(mddev_dev_t devlist,
  	return 0;
  }
  
-+/* get states of all disks in each container from metadata*/
-+int getinfo_containers(struct state *statelist)
++/* domain of an array is the domain of any of its members */
++int get_array_domain_and_subset(struct state *st,
++				struct domain_ent **domain,
++				struct subset **subset)
 +{
-+	struct state *st;
 +	struct supertype *sty;
-+	int fd, id, i, rv = 1;
-+	struct mdinfo *infolist = NULL, *info;
-+	for (st = statelist; st; st = st->next) {
-+		if (st->err || !is_external(st->metadata_version) ||
-+		    is_subarray(st->metadata_version+9))
-+			continue;
-+		fd = open(st->devname, O_RDONLY);
-+		if (fd < 0)
-+			return 0;
-+		sty = guess_super(fd);
-+		if (!sty) {
-+			close(fd);
-+			return 0;
-+		}
-+		if (sty->ss->load_super(sty, fd, st->devname)) {
-+			rv = 0;
-+			goto cleanup;
-+		}
-+		infolist = sty->ss->getinfo_super_disks(sty);
-+		if (!infolist) {
-+			rv = 0;
-+			goto cleanup;
-+		}
-+		for (i = 0; i<st->total; i++) {
-+			if (st->devid[i] == 0)
-+				continue;
-+			for (info = infolist; info; info = info->next) {
-+				id = makedev(info->disk.major, info->disk.minor);
-+				if (st->devid[i] == id) {
-+					st->devstate[i] = info->disk.state;
-+					break;
-+				}
-+			}
-+			if (!info)
-+				st->devstate[i] = 1<<MD_DISK_FAULTY;
-+		}
-+cleanup:
++	char *devname;
++	int fd, i;
++
++	if (!st)
++		return 0;
++	for (i = 0; i < st->total && st->devid[i] == 0 ; i++);
++	if (i == st->total)
++		return 0;
++	devname = map_dev(major(st->devid[i]), minor(st->devid[i]), 1);
++	if (!devname)
++		return 0;
++	fd = open(devname, O_RDONLY);
++	if (fd < 0)
++		return 0;
++	sty = guess_super(fd);
++	if (!sty) {
 +		close(fd);
-+		sty->ss->free_super(sty);
-+		free(sty);
-+		if (infolist)
-+			sysfs_free(infolist);
-+		infolist = NULL;
-+		if (!rv)
-+			return 0;
++		return 0;
 +	}
++	if (sty->ss->load_super(sty, fd, devname))
++		goto fail;
++	*domain = conf_get_domain(strrchr(devname, '/'), st->metadata_version);
++	if (*domain == NULL) {
++		*subset = NULL;
++		goto fail;
++	}
++	*subset = conf_get_subset(strrchr(devname, '/'), sty, *domain);
++	if (*subset == NULL)
++		goto fail;
++	sty->ss->free_super(sty);
++	free(sty);
 +	return 1;
++fail:
++	if (fd >= 0)
++		close(fd);
++	sty->ss->free_super(sty);
++	free(sty);
++	return 0;
 +}
 +
- static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mailfrom, char *cmd,
- 		  int dosyslog)
+ /* get states of all disks in each container from metadata*/
+ int getinfo_containers(struct state *statelist)
  {
 -- 
 1.6.4.2
