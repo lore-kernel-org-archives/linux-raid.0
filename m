@@ -1,8 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 06/35] Updates to udev rules and ReadMe.c for incremental
- --grab support
-Date: Mon, 16 Aug 2010 10:42:43 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9BE@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 08/35] imsm: platform dependent domain boundaries
+Date: Mon, 16 Aug 2010 10:43:03 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0101E8F9C1@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,119 +12,89 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From d31e6ce7660254652e83df3b51c912495fa05d26 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 28 May 2010 14:42:21 +0200
-Subject: [PATCH 06/35] Updates to udev rules and ReadMe.c for incremental --grab support
+From 50652bbdeb278be4bef56d740f2ec4262d3f5484 Mon Sep 17 00:00:00 2001
+From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Date: Mon, 28 Jun 2010 16:17:07 +0200
+Subject: [PATCH 08/35] imsm: platform dependent domain boundaries
 
-Update Makefile to install new udev early rules,
-update ReadMe.c for new options to pass to incremental mode,
-update udev rules file for new options.
-
-    Signed-off-by: Doug Ledford <dledford@redhat.com>
+two supertype primitives:
+	struct subset *platform_domain(struct supertype *)
+	char *get_spare_group(struct supertype *)
+has been added in order to allow future support of implicit platform
+boundaries.
+For imsm metadata platform_domain() provides list of subsets created in
+accordance with capabilities of this platform.
+The second will provide metadata dependent spare group identifier.
 ---
- Makefile            |    3 ++-
- ReadMe.c            |   14 ++++++++------
- udev-early-md.rules |   28 ++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+), 7 deletions(-)
- create mode 100644 udev-early-md.rules
+ mdadm.h       |   10 ++++++++++
+ super-intel.c |   26 ++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 3af1665..354554c 100644
---- a/Makefile
-+++ b/Makefile
-@@ -232,7 +232,8 @@ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
- 	$(INSTALL) -D -m 644 md.4 $(DESTDIR)$(MAN4DIR)/md.4
- 	$(INSTALL) -D -m 644 mdadm.conf.5 $(DESTDIR)$(MAN5DIR)/mdadm.conf.5
+diff --git a/mdadm.h b/mdadm.h
+index 7b950f8..a0b1ab9 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -680,6 +680,16 @@ extern struct superswitch {
+ 	/* Allow a metadata handler to override mdadm's default layouts */
+ 	int (*default_layout)(int level); /* optional */
  
--install-udev: udev-md-raid.rules
-+install-udev: udev-md-raid.rules udev-early-md.rules
-+	$(INSTALL) -D -m 644 udev-early-md.rules $(DESTDIR)/lib/udev/rules.d/05-md-early.rules
- 	$(INSTALL) -D -m 644 udev-md-raid.rules $(DESTDIR)/lib/udev/rules.d/64-md-raid.rules
- 
- uninstall:
-diff --git a/ReadMe.c b/ReadMe.c
-index 355aa64..5b59369 100644
---- a/ReadMe.c
-+++ b/ReadMe.c
-@@ -87,11 +87,11 @@ char Version[] = Name " - v3.1.2 - 10th March 2010\n";
-  */
- 
- char short_options[]=
--	"-ABCDEFGIQhVXWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
-+	"-ABCDEFGIQhVXYWZ:vqbc:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
- char short_bitmap_options[]=
--	"-ABCDEFGIQhVXWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
-+	"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sarfRSow1tyge:";
- char short_bitmap_auto_options[]=
--	"-ABCDEFGIQhVXWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tyge:";
-+	"-ABCDEFGIQhVXYWZ:vqb:c:i:l:p:m:n:x:u:c:d:z:U:N:sa:rfRSow1tyge:";
- 
- struct option long_options[] = {
-     {"manage",    0, 0, '@'},
-@@ -169,7 +169,7 @@ struct option long_options[] = {
- 
-     /* For Detail/Examine */
-     {"brief",	  0, 0, 'b'},
--    {"export",	  0, 0, 'Y'},
-+    {"export",	  0, 0, 'Y'}, /* used for Incremental now too */
-     {"sparc2.2",  0, 0, Sparc22},
-     {"test",      0, 0, 't'},
- 
-@@ -246,8 +246,8 @@ char OptionHelp[] =
- "  --verbose     -v   : Be more verbose about what is happening\n"
- "  --quiet       -q   : Don't print un-necessary messages\n"
- "  --brief       -b   : Be less verbose, more brief\n"
--"  --export      -Y   : With --detail, use key=value format for easy\n"
--"                       import into environment\n"
-+"  --export      -Y   : With --detail, --examine, and --incremental use\n"
-+"                       key=value format for easy import into environment\n"
- "  --force       -f   : Override normal checks and be more forceful\n"
- "\n"
- "  --assemble    -A   : Assemble an array\n"
-@@ -560,6 +560,8 @@ char Help_incr[] =
- "                  : take it for the purpose listed in said DOMAIN line.\n"
- "  --fail      -f  : First fail (if needed) and then remove device from\n"
- "                  : any array that it is a member of.\n"
-+"  --export      -Y  : Output the results in a format that is consumable as\n"
-+"                    : environment variables by udev.  Only used with --grab.\n"
- ;
- 
- char Help_config[] =
-diff --git a/udev-early-md.rules b/udev-early-md.rules
-new file mode 100644
-index 0000000..176ad61
---- /dev/null
-+++ b/udev-early-md.rules
-@@ -0,0 +1,28 @@
-+# do not edit this file, it will be overwritten on update
++	/* returns subsets of domain_ent structure according to implicit
++	 * boundaries related to the capabilities of hardware or platform
++	 */
++	struct subset *(*platform_domain)(struct supertype *st);
 +
-+SUBSYSTEM!="block", GOTO="md_end"
-+ACTION!="add|change", GOTO="md_end"
-+# We only care about constituent devices, md arrays are handled in the later
-+# rules file
-+KERNEL=="md*", GOTO="md_end"
-+# If this is already labeled as an md device, we will get it later in the
-+# incremental rules assembly section
-+ENV{ID_FS_TYPE}=="isw_raid_member", ENV{rd_NO_MDIMSM}!="?*", GOTO="md_end"
-+ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="md_end"
-+# Does this device belong to a path which we are configured to "own"?
-+# For now, we don't have a good way to differentiate that inside of a
-+# udev rule, so we are using a really big hammer and just calling mdadm
-+# in incremental mode with the flag that indicates that mdadm should only
-+# do something with this device if it determines that it should own it.
-+# That allows us to program in whatever smarts are needed into mdadm,
-+# but at the expense of running mdadm on every blk device add|change event :-(
-+IMPORT{program}="/sbin/mdadm -I --new-device $tempnode"
-+ENV{MD_OWNED}!="?*", GOTO="md_end"
-+# We owned the device, so have udev reset the database info in case we
-+# changed it
-+IMPORT{program}="/sbin/blkid -o udev -p $tempnode"
-+OPTIONS+="link_priority=100"
-+ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
-+ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
++	/* returns sparegroup string representing internal identifier
++	 * used for device grouping by high level management tools (like CIM)
++	 */
++	char *(*get_spare_group)(struct supertype *st);
 +
-+LABEL="md_end"
+ /* for mdmon */
+ 	int (*open_new)(struct supertype *c, struct active_array *a,
+ 			char *inst);
+diff --git a/super-intel.c b/super-intel.c
+index d6d8b09..f704c43 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5296,6 +5296,31 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, int index)
+ 		__free_imsm_disk(dl);
+ 	}
+ }
++
++/* leaving supertype for future use */
++static struct subset *platform_domain_imsm(struct supertype *st)
++{
++	struct subset *s = malloc(sizeof(*s));
++
++	if (!s) {
++		fprintf(stderr, Name ": unable to allocate memory for domain "
++				     "subset entry\n");
++		return NULL;
++	}
++	s->paths = malloc(sizeof(*s->paths));
++	if (!s->paths) {
++		free(s);
++		return NULL;
++	}
++	/* this is the only type of controller we know of */
++	s->paths->path = strdup("pci-0000:00:1f.2-*");
++	s->paths->next = NULL;
++	s->spare_group = NULL;
++	s->next = NULL;
++
++	return s;
++}
++
+ #endif /* MDASSEMBLE */
+ 
+ struct superswitch super_imsm = {
+@@ -5327,6 +5352,7 @@ struct superswitch super_imsm = {
+ 	.match_metadata_desc = match_metadata_desc_imsm,
+ 	.container_content = container_content_imsm,
+ 	.default_layout = imsm_level_to_layout,
++	.platform_domain = platform_domain_imsm,
+ 
+ 	.external	= 1,
+ 	.name = "imsm",
 -- 
 1.6.4.2
 
