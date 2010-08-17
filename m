@@ -1,48 +1,39 @@
-From: William Heaton <acroporas@gmail.com>
-Subject: mdadm: too-old timestamp on backup-metadata
-Date: Tue, 17 Aug 2010 16:00:01 -0400
-Message-ID: <4C6AEA41.8030802@gmail.com>
+From: Joris <joris@v5.be>
+Subject: reboot during reshape: superblock incorrect, cannot assemble
+Date: Tue, 17 Aug 2010 22:10:26 +0200
+Message-ID: <AANLkTikX5+MCicoYShS_=MqpuCr0CMgS1S2n97-k_Aoy@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-*I am not on the mailing list.  Please include acroporas@gmail.com in 
-any replies.*
-
-I had a 4-disk RAID5.  I added a 5th disk and at the same time converted 
-it to RAID6.
-
-Things started out looking good, but after about a day, the reshape 
-appeared to have stalled.  After waiting more than 24 hours without 
-seeing any progress I rebooted the computer.  Immediately before the 
-rebooting the array was running and all data was accessible.  But after 
-reboot, the array would not start.  Can anyone help me get the array 
-restarted?  Thanks
-
-~$ uname -a
-Linux pholidochromis 2.6.32-24-generic #39-Ubuntu SMP Wed Jul 28 
-05:14:15 UTC 2010 x86_64 GNU/Linux
-
-~$ mdadm --version
-mdadm - v3.1.2 - 10th March 2010
+Hello,
 
 
-~$ sudo mdadm --assemble /dev/md0 /dev/sd[bcdel]1  -vv -f --backup-file 
-/media/Backup/rb
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 4.
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdl1 is identified as a member of /dev/md0, slot 3.
-mdadm:/dev/md0 has an active reshape - checking if critical section 
-needs to be restored
-mdadm: too-old timestamp on backup-metadata on /media/Backup/rb
-mdadm: Failed to find backup of critical section
-mdadm: Failed to restore critical section for reshape, sorry.
+While expanding a raid6 array from 4 to 5 drives, I rebooted (got
+impatient) at arround 9% done.
+After this reboot I cannot re-assemble the array: "mdadm: superblock
+on /dev/sde2 doesn't match others - assembly aborted".
+It always complains about the superblock of the first member
+specified, re-ordering or excluding members offers no avail.
+
+According to mdadm's examine, everything except checksum appears
+identical (magic, version, uuid, reshape pos, events).
+
+Various people suggest wiping the superblocks and re-creating the
+array. Is this the best option?
+Will this work with an array that is being rebuild/reshaped? Anything
+else I could od?
 
 
+
+Somewhat related: my raid version on that array is now somehow
+00.91.00, grub2 (at least the last release) verifies for 90 and will
+refuse to install (even if grub does not use the array, it seems). I'm
+just going to remove the check on the code and recompile.
+
+
+Thanks in advance,
+Joris
