@@ -1,32 +1,40 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Tue, 17 Aug 2010 10:46:51 +0930
-Message-ID: <201008171046.53220.rusty@rustcorp.com.au>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch 1/6] md: remove dependency on __GFP_NOFAIL
+Date: Mon, 16 Aug 2010 19:57:51 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1008161954310.17924@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1008161953430.17924@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com, Tejun Heo <tj@kernle.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.1008161953430.17924@chino.kir.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 17 Aug 2010 02:22:00 am Tejun Heo wrote:
-> From: Tejun Heo <tj@kernle.org>
-> 
-> Remove now unused REQ_HARDBARRIER support and implement REQ_FLUSH/FUA
-> support instead.  A new feature flag VIRTIO_BLK_F_FUA is added to
-> indicate the support for FUA.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
+Removes the dependency on __GFP_NOFAIL by looping indefinitely in the
+caller.
 
-Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ drivers/md/dm-region-hash.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-And also for the lguest-specific patch.
-
-Thanks!
-Rusty.
+diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+--- a/drivers/md/dm-region-hash.c
++++ b/drivers/md/dm-region-hash.c
+@@ -289,8 +289,12 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
+ 	struct dm_region *reg, *nreg;
+ 
+ 	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
+-	if (unlikely(!nreg))
+-		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
++	if (unlikely(!nreg)) {
++		/* FIXME: this may potentially loop forever */
++		do {
++			nreg = kmalloc(sizeof(*nreg), GFP_NOIO);
++		} while (!nreg);
++	}
+ 
+ 	nreg->state = rh->log->type->in_sync(rh->log, region, 1) ?
+ 		      DM_RH_CLEAN : DM_RH_NOSYNC;
