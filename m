@@ -1,64 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Wed, 18 Aug 2010 08:35:54 +0200
-Message-ID: <4C6B7F4A.2040807@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: the true behavior of mdadm's raid-1 with regard to vertical parity
+ and silent error detection/scrubbing- confirmation or feature request
+Date: Wed, 18 Aug 2010 11:45:33 +0400
+Message-ID: <4C6B8F9D.50105@msgid.tls.msk.ru>
+References: <4C6B59F6.5020001@silcon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100817165929.GB13800@lst.de>
+In-Reply-To: <4C6B59F6.5020001@silcon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+To: "Brett L. Trotter" <brett@silcon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+18.08.2010 07:56, Brett L. Trotter wrote:
+[]
+> So- is there any built in parity that helps mdadm decide which copy to
+> use when the copies disagree on a raid 1 mirror during a resync?
 
-On 08/17/2010 06:59 PM, Christoph Hellwig wrote:
-> I think we really need all the conversions in one tree, block layer,
-> remapping drivers and filesystems.
+There's no.
 
-I don't know.  If filesystem changes are really trivial maybe, but
-md/dm changes seem a bit too invasive to go through the block tree.
+> If not- is there a reason why not beyond the extra space overhead and
+> read compute write overhead?
 
-> Btw, I've done the conversion for all filesystems and I'm running tests
-> over them now.  Expect the series late today or tomorrow.
+Well.  This sounds pretty much like old discussion about bad
+blocks marking in md or filesystems or any other layer like this.
+But nowadays - hopefully anyway - all drives are capable of doing
+this internally, -- remapping bad blocks.  If a drive is not able
+to remap a new bad block anymore, it's time to throw it away or
+to RMA it, instead of trying to "cure" it in upper layers.
 
-Cool. :-)
+The same thing is with parity.  All modern drives, at least in
+theory, has ways to ensure they either return whatever has been
+written, or indicate error.  This is ECC codes, checksums, parity,
+whatnot - things supposed to detect errors and sometimes correct
+simple ones like bit flips.
 
->> I might just resequence it to finish this part of discussion but what
->> does that really buy us?  It's not really gonna help bisection.
->> Bisection won't be able to tell anything in higher resolution than
->> "the new implementation doesn't work".  If you show me how it would
->> actually help, I'll happily reshuffle the patches.
-> 
-> It's not bisecting to find bugs in the barrier conversion.  We can't
-> easily bisect it down anyway.  The problem is when we try to bisect
-> other problems and get into the middle of the series barriers suddenly
-> are gone.  Which is not very helpful for things like data integrity
-> problems in filesystems.
+I understand you've got real cases where such detection does not
+works for some reason.  Well, bad block remapping didn't work in
+the past too... ;)
 
-Ah, okay, hmmm.... alright, I'll resequence the patches.  If the
-filesystem changes can be put into a single tree somehow, we can keep
-things mostly working at least for direct devices.
+It shouldn't be very difficult to implement checsumming and/or
+simple ECC codes in md (storing the parity information within
+extra blocks either at the end of underlying device or every,
+say, 64th block or so - in order to not reduce sector size into
+something like 511 bytes :).  The overhead shouldn't be large
+either.  Together with implementing bad block remapping..  But
+to me, the question is if there's a real reason/demand of doing
+so.
 
->> IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
->> core layer to retry the whole bio later), it trumps all other failures
->> and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
->> prioritized over other error codes, which actually is sort of
->> incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
->> layers as FLUSH failure implies data already lost.  So,
->> DM_ENDIO_REQUEUE actually should have lower priority than other
->> failures.  But, then again, the error codes still need to be
->> prioritized.
-> 
-> I think that's something we better leave to the DM team.
+From the other hand, following this theme one may say that whole
+md subsystem is obsolete by hardware raid controllers...  :)
 
-Sure, but we shouldn't be ripping out the code to do that.
+> This issue interests me more as I look into SSDs and having flash blocks
+> wear out.
 
-Thanks.
+And it is even more important for SSDs to have such feature, and
+as far as I understand, ths is what they actually have.  I might
+be wrong, but...
 
--- 
-tejun
+/mjt
