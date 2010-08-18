@@ -1,43 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] a few fixes for md.
-Date: Wed, 18 Aug 2010 16:21:13 +1000
-Message-ID: <19563.31705.46643.32601@notabene.brown>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 08/11] block: rename barrier/ordered to flush
+Date: Wed, 18 Aug 2010 08:23:43 +0200
+Message-ID: <4C6B7C6F.1020809@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-9-git-send-email-tj@kernel.org> <20100817132646.GA3577@lst.de> <4C6AB79B.2040303@kernel.org> <20100817170857.GA15297@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>, Christoph Hellwig <hch@lst.de>, Adrian Drzewiecki <adriand@vmware.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100817170857.GA15297@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
+Hello,
 
-hi Linus,
- here are a few fixes for md.
- One is a regression that came in through the block tree, others are
- assorted minor bugs that we have had for a while.
+On 08/17/2010 07:08 PM, Christoph Hellwig wrote:
+> On Tue, Aug 17, 2010 at 06:23:55PM +0200, Tejun Heo wrote:
+>> Yeap, agreed.  I couldn't really understand why the the sequence
+>> needed to be atomic for ide in the first place so just left it alone.
+>> Do you understand why it tried to be atomic?
+> 
+> I think initial drafs of the barrier specification talked about atomic
+> sequences.  Except for that I can't think of any reason.
 
-Thanks,
-NeilBrown
+Hmm... alright, I'll rip it out.
 
+Thanks.
 
-The following changes since commit da5cabf80e2433131bf0ed8993abc0f7ea618c73:
-
-  Linux 2.6.36-rc1 (2010-08-15 17:41:37 -0700)
-
-are available in the git repository at:
-  git://neil.brown.name/md for-linus
-
-Adrian Drzewiecki (1):
-      md: Notify sysfs when RAID1/5/10 disk is In_sync.
-
-NeilBrown (3):
-      Update recovery_offset even when external metadata is used.
-      md: provide appropriate return value for spare_active functions.
-      md raid-1/10 Fix bio_rw bit manipulations again
-
- drivers/md/md.c     |   44 ++++++++++++++++++--------------------------
- drivers/md/raid1.c  |   21 ++++++++++++---------
- drivers/md/raid10.c |   17 ++++++++++-------
- drivers/md/raid5.c  |   13 ++++++++-----
- 4 files changed, 48 insertions(+), 47 deletions(-)
+-- 
+tejun
