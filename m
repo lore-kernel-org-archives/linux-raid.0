@@ -1,106 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: question on how to update the super-minor
-Date: Fri, 20 Aug 2010 07:40:57 +1000
-Message-ID: <20100820074057.519332b7@notabene>
-References: <4C6D9B5D.8080705@scalableinformatics.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: getting a linux boot loader (preferably grub) installed on an
+ intel imsm raid
+Date: Thu, 19 Aug 2010 14:40:51 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D504666ADCD3@azsmsx504.amr.corp.intel.com>
+References: <4C6CB965.7000905@gmail.com>
+ <D010E79907AF0D4E90B603DE907837D504666ADB3D@azsmsx504.amr.corp.intel.com>
+ <4C6D78BF.1060603@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C6D9B5D.8080705@scalableinformatics.com>
+In-Reply-To: <4C6D78BF.1060603@gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: landman@scalableinformatics.com
-Cc: linux-raid@vger.kernel.org
+To: "K. Posern" <quickhelp@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 19 Aug 2010 17:00:13 -0400
-Joe Landman <landman@scalableinformatics.com> wrote:
+> -----Original Message-----
+> From: K. Posern [mailto:quickhelp@gmail.com]
+> Sent: Thursday, August 19, 2010 11:33 AM
+> To: Jiang, Dave
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: getting a linux boot loader (preferably grub) installed on
+> an intel imsm raid
+> I personally use Gentoo --> no fancy GUI/install-scripts, but
+> everything
+> manual :)
+> 
+> As I said: Ubuntu has a device-mapper based binary package of grub2
+> that
+> seems to install itsself in a way that allows to boot from an Intel
+> OROM
+> RAID (fakeraid). But that doesn't help me with Gentoo.
+> 
+> But I am really stuck alone, so I am willing to throw a Fedora on my
+> machine if in exchange I would get the grub commands to make grub boot
+> my intel RAID-0 :)
 
-> Hi folks
-> 
->    Moved an array to a new machine.  For a number or reasons, the arrays 
-> which were md0 and md1, are now md1 and md2.
-> 
->    I can force the assembly of the arrays, but can't force them to 
-> autoassemble, and it looks like the minors are wrong.
-> 
->   ~ # mdadm --assemble /dev/md2 --update=super-minor  /dev/sdc2 /dev/sde2
-> mdadm: /dev/md2 has been started with 2 drives.
-> 
->   ~ # mdadm --assemble --update=super-minor /dev/md1 /dev/sdd2 /dev/sdf2
-> mdadm: /dev/md1 has been started with 2 drives.
-> 
->   ~ # mdadm --examine --scan
-> ARRAY /dev/md/0 metadata=1.0 UUID=6ddbf291:a7344bb6:375a9f38:89b409e9 
-> name=jr5.scalableinformatics.com:0
-> ARRAY /dev/md/0 metadata=1.2 UUID=2e8b8744:16f038fa:9c4ba1b1:d4a7ee79 name=0
-> ARRAY /dev/md/1 metadata=1.2 UUID=04251ae2:ef750917:f71c67b8:152b985b name=1
+Well theoretically the OROM would present the RAID volume to the bootloader as a disk that it can read from. So if you mark your RAID volume for booting in BIOS, it should be able to pick up the bootloader from there right? Are you not able to install to /dev/md127 or whatever device node your RAID volume is on?
 
-1.x metadata doesn't store a 'minor number', it stores a name.
-So you want
-   mdadm --assemble --update=name --name=1 /dev/md1 /dev/sdd2 /dev/sdf2
+Also technically the imsm RAID is not fakeraid because it uses MDRAID instead of special driver to "fake" RAID in Linux. It's just Linux software RAID with OROM support. 
+ 
+>  > Just FYI Intel is moving forward with MDRAID.
+> Nice :)
+> 
+> Do you happen to know if mdadm just integrated (parts of) the dmraid
+> code?
+> Because that's one of the many /rumors/ I picked up ;)
+> (and that I would like to put to an end ;)
 
-(assuming you like the name '1' and don't want to use - say - ImportantStuff..
-
-I've made a note to see if I can get '--update=super-minor' to complain when
-used on v1.x metadata
-
-NeilBrown
-
-> 
-> ~ # cat /proc/mdstat
-> Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-> md1 : active raid0 sdf2[0] sdd2[1]
->        14352793600 blocks super 1.2 2048k chunks
-> 
-> md2 : active raid0 sde2[0] sdc2[1]
->        1923825664 blocks super 1.2 1024k chunks
-> 
-> md0 : active raid1 sda1[0] sdb1[1]
->        26217400 blocks super 1.0 [2/2] [UU]
->        bitmap: 0/201 pages [0KB], 64KB chunk
-> 
-> unused devices: <none>
-> 
-> How do I force the md1 and md2 to accept the new minors?  The 
-> --update=super-minor isn't working on assembly.
-> 
-> Also, for completeness
-> 
-> ~ # cat /etc/mdadm.conf
-> DEVICE containers partitions
-> ARRAY /dev/md0 UUID=6ddbf291:a7344bb6:375a9f38:89b409e9
-> name=jr5.scalableinformatics.com:0
-> ARRAY /dev/md1 metadata=1.2 UUID=2e8b8744:16f038fa:9c4ba1b1:d4a7ee79 name=1
-> ARRAY /dev/md2 metadata=1.2 UUID=04251ae2:ef750917:f71c67b8:152b985b name=2
-> 
-> ~ # mdadm --examine /dev/sdf2
-> /dev/sdf2:
->            Magic : a92b4efc
->          Version : 1.2
->      Feature Map : 0x0
->       Array UUID : 04251ae2:ef750917:f71c67b8:152b985b
->             Name : 1
->    Creation Time : Sun Feb 15 06:21:14 2009
->       Raid Level : raid0
->     Raid Devices : 2
-> 
->   Avail Dev Size : 14352796387 (6843.95 GiB 7348.63 GB)
->    Used Dev Size : 0
->      Data Offset : 16 sectors
->     Super Offset : 8 sectors
->            State : active
->      Device UUID : 80406a02:959d30ee:9d090fd5:c570c9f7
-> 
->      Update Time : Sun Feb 15 06:21:14 2009
->         Checksum : 5e70dc7e - correct
->           Events : 0
-> 
->       Chunk Size : 2048K
-> 
->     Device Role : Active device 0
->     Array State : AA ('A' == active, '.' == missing)
-> 
-> 
-> 
-
+I have seen some patches posted on this mailing list in regards to putting in DMRAID support so MDRAID can handle DMRAID arrays. I believe it's still work in progress. Neil can probably tell you more about that. 
