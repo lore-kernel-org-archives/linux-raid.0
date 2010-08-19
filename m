@@ -1,61 +1,70 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
-Date: Thu, 19 Aug 2010 19:32:04 +0900
-Message-ID: <4C6D0824.3070908@ct.jp.nec.com>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com> <4C6ABE12.40705@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
+Date: Thu, 19 Aug 2010 09:52:52 -0500
+Message-ID: <1282229572.8139.16.camel@mulgrave.site>
+References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
+	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
+	 <1282141930.3035.9.camel@mulgrave.site>  <4C6BEFD1.8010200@gmail.com>
+	 <1282142498.3035.17.camel@mulgrave.site>  <4C6C5561.5040302@fusionio.com>
+	 <1282171834.13811.51.camel@mulgrave.site>  <4C6C9E10.9030202@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C6ABE12.40705@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C6C9E10.9030202@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Tejun, Mike,
-
-On 08/18/2010 01:51 AM +0900, Tejun Heo wrote:
-> On 08/17/2010 04:07 PM, Mike Snitzer wrote:
->> NOTE: NEC has already given some preliminary feedback to hch in the
->> "[PATCH, RFC 2/2] dm: support REQ_FLUSH directly" thread:
->> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html
->> https://www.redhat.com/archives/dm-devel/2010-August/msg00033.html
+On Wed, 2010-08-18 at 22:59 -0400, Jens Axboe wrote:
+> On 08/18/2010 06:50 PM, James Bottomley wrote:
+> > On Wed, 2010-08-18 at 17:49 -0400, Jens Axboe wrote:
+> >> On 08/18/2010 10:41 AM, James Bottomley wrote:
+> >>> On Wed, 2010-08-18 at 16:36 +0200, Jiri Slaby wrote:
+> >>>> On 08/18/2010 04:32 PM, James Bottomley wrote:
+> >>>>>> James and Jens, could you take the two remaining (SCSI and BLOCK)?
+> >>>>>
+> >>>>> Sure ... could you identify the email by subject, please? lkml.org seems
+> >>>>> to be down this morning.
+> >>>>
+> >>>> Sure:
+> >>>> [PATCH v2] BLOCK: fix bio.bi_rw handling
+> >>>> and
+> >>>> [PATCH v2] SCSI: fix bio.bi_rw handling
+> >>>>
+> >>>> You should have received one copy to your suse.de inbox, if everything
+> >>>> worked.
+> >>>
+> >>> Got it.  One of life's little ironies is that I couldn't immediately
+> >>> locate it in the SCSI list because it was already queued for inclusion.
+> >>
+> >> Please add my acked-by to both of them.
+> > 
+> > OK.
+> > 
+> >>  I'm away on vacation, so if
+> >> you James could queue them up, I would appreciate it. Thanks!
+> > 
+> > Certainly sir ... and would you like your patches served to your table
+> > or by the pool?
 > 
-> Hmmm... I think both issues don't exist in this incarnation of
-> conversion although I'm fairly sure there will be other issues.  :-)
+> Pool, please. With that first name and the British accent, it's hard
+> not to boss you around.
 
-The same issue is still there for request-based dm.  See below.
+Well, sir, the wait staff and I thought we'd just write to ask how your
+convalescence was going.  Sorry about spilling the patch down your
+front, sir, but the glass was slippery.  Who could have foreseen that
+you'd step backwards, fall over the pool boy and upset a flaming bananas
+foster on to the front of your shorts.  I did get a commendation for my
+quick action with a high pressure hose to the affected area (thank you,
+sir, for your shocked but grateful expression).  I must say I didn't
+foresee the force of the blast catapulting you against the pool steps,
+but a concussion is a small price to pay for avoiding fried nuts with
+the bananas, eh, sir? It's funny how things turn out, and I bet if you
+could do it over again, you'd have got off your arse to fetch your own
+damn patch now, wouldn't you, sir?
 
+Yours sincerely,
 
->>>     A related question: Is dm_wait_for_completion() used in
->>>     process_flush() safe against starvation under continuous influx of
->>>     other commands?
->> As for your specific dm_wait_for_completion() concern -- I'll defer to
->> Mikulas.  But I'll add: we haven't had any reported starvation issues
->> with DM's existing barrier support.  DM uses a mempool for its clones,
->> so it should naturally throttle (without starvation) when memory gets
->> low.
-> 
-> I see but single pending flush and steady write streams w/o saturating
-> the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
-> well, it's a separate issue, I guess.
-
-Your understanding is correct, dm_wait_for_completion() for flush
-will stall in such cases for request-based dm.
-That's why I mentioned below in
-https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html.
-
-    In other words, current request-based device-mapper can't handle
-    other requests while a flush request is in progress.
-
-In flush request handling, request-based dm uses dm_wait_for_completion()
-to wait for the completion of cloned flush requests, depending on
-the fact that there should be only flush requests in flight owning
-to the block layer sequencing.
-
-It's not a separate issue and we need to resolve it at least.
-I'm still considering how I can fix the request-based dm.
-
-Thanks,
-Kiyoshi Ueda
+James
