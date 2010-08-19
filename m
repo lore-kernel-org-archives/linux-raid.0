@@ -1,57 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
-Date: Thu, 19 Aug 2010 17:45:51 +0200
-Message-ID: <4C6D51AF.3050008@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com> <4C6ABE12.40705@kernel.org> <4C6D0824.3070908@ct.jp.nec.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: getting a linux boot loader (preferably grub) installed on an
+ intel imsm raid
+Date: Thu, 19 Aug 2010 10:49:08 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D504666ADB3D@azsmsx504.amr.corp.intel.com>
+References: <4C6CB965.7000905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4C6D0824.3070908@ct.jp.nec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C6CB965.7000905@gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "K. Posern" <quickhelp@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
-
-On 08/19/2010 12:32 PM, Kiyoshi Ueda wrote:
->> I see but single pending flush and steady write streams w/o saturating
->> the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
->> well, it's a separate issue, I guess.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of K. Posern
+> Sent: Wednesday, August 18, 2010 9:56 PM
+> To: linux-raid@vger.kernel.org
+> Subject: getting a linux boot loader (preferably grub) installed on an
+> intel imsm raid
 > 
-> Your understanding is correct, dm_wait_for_completion() for flush
-> will stall in such cases for request-based dm.
-> That's why I mentioned below in
-> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html.
-> 
->     In other words, current request-based device-mapper can't handle
->     other requests while a flush request is in progress.
->
-> In flush request handling, request-based dm uses dm_wait_for_completion()
-> to wait for the completion of cloned flush requests, depending on
-> the fact that there should be only flush requests in flight owning
-> to the block layer sequencing.
+> 	b) based on mdadm-imsm. Just there seems really /no/
+> documentation out
+> there on how to do it (or I successfully managed to google around it
+> since days now ;).
 
-I see.  bio based implementation also uses dm_wait_for_completion()
-but it also has DMF_QUEUE_IO_TO_THREAD to plug all the follow up bio's
-while flush is in progress, which sucks for throughput but
-successfully avoids starvation.
+There is a section in regards to external metadata
+https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
 
-> It's not a separate issue and we need to resolve it at least.
-> I'm still considering how I can fix the request-based dm.
+But I guess I need to update with additional information on how to install to it. 
 
-Right, I thought you were talking about REQ_FLUSHes not sycnhronized
-against barrier write.  Anyways, yeah, it's a problem.  I don't think
-not being able to handle multiple flushes concurrently would be a
-major issue.  The problem is not being able to process other
-bios/requests while a flush is in progress.  All that's necessary is
-making the completion detection a bit more fine grained so that it
-counts the number of in flight flush bios/requests and completes when
-it reaches zero instead of waiting for all outstanding commands.
-Shouldn't be too hard.
+Do you have Intel MSM Option ROM on your system? If so, then you create a RAID volume in the RAID optionROM and then when you do a install say for example Fedora 12, you specifiy you have "advanced storage device" (I think?) and you will see the RAID volume available for installation. I had issues with Fedora 13. There is a bug that causes crash when you attempt to install to an IMSM volume. And yes you install to the volume. The container can have 2 different RAID volumes. 
+ 
+> P.S.: I would be still interested to hear how the two solutions that
+> support an intel BIOS-supported (mdadm-imsm >=v3 and dmraid >=v1) raid
+> compare to each other in terms of: speed (throughput), load/overhead
+> (cpu/ram), stability, features.
 
-Thanks.
-
--- 
-tejun
+Just FYI Intel is moving forward with MDRAID. 
