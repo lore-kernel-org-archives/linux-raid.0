@@ -1,39 +1,38 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Fri, 20 Aug 2010 12:02:49 -0400
-Message-ID: <4C6EA729.7030308__30940.5289161534$1282320196$gmane$org@redhat.com>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <20100820160009.GI5854@think>
+From: Juan Aristizabal <jaristizabal@datagardens.com>
+Subject: mdadm create problem with existing bitmap file
+Date: Fri, 20 Aug 2010 11:16:39 -0600
+Message-ID: <4C6EB877.1050602@datagardens.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100820160009.GI5854@think>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.orglinux-
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/20/2010 12:00 PM, Chris Mason wrote:
-> On Fri, Aug 20, 2010 at 11:18:07AM -0400, Ric Wheeler wrote:
->> On 08/20/2010 09:22 AM, Christoph Hellwig wrote:
->>> FYI: here's a little writeup to document the new cache flushing scheme,
->>> intended to replace Documentation/block/barriers.txt.  Any good
->>> suggestion for a filename in the kernel tree?
->>>
->>> ---
->>
->> I was thinking that we might be better off using the "durable
->> writes" term more since it is well documented (at least in the
->> database world, where it is the "D" in ACID properties).  Maybe
->> "durable_writes_support.txt" ?
->
-> sata_lies.txt?
->
-> Ok, maybe writeback_cache.txt?
->
-> -chris
+Hello,
 
-writeback_cache.txt is certainly the least confusing :)
+I am using mdadm 2.6.3 on Ubuntu 8.04.3 32 bits. Sometimes I hit this 
+error when I try to create a RAID1:
 
-ric
+mdadm --create --force --assume-clean /dev/md73 --level=1 
+--bitmap=/root/bitmaps/md73bm.tmp --raid-devices=2 /dev/vg1/vol1 
+--write-mostly /dev/sdj
+
+Continue creating array? mdadm: failed to open bitmap file 
+/root/bitmaps/md73bm.tmp: Text file busy
+
+The bitmap file exists, but lsof doesn't show that it is in use by any 
+other process.
+
+If I copy the bitmap file and try the create again everything works fine.
+
+Any idea what might be happening here?
+
+
+Thanks,
+
+ 
+Juan Aristizabal
+
 
