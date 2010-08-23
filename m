@@ -1,81 +1,83 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Mon, 23 Aug 2010 20:45:22 +0400
-Message-ID: <20100823164522.GA9528@atlas.home>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-	<20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com>
-	<4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de>
-	<4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com>
-	<4C729171.3030605@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
+Date: Mon, 23 Aug 2010 12:08:52 -0500
+Message-ID: <1282583332.11194.22.camel@mulgrave.site>
+References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
+	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
+	 <1282141930.3035.9.camel@mulgrave.site>  <4C6BEFD1.8010200@gmail.com>
+	 <1282142498.3035.17.camel@mulgrave.site>  <4C6C5561.5040302@fusionio.com>
+	 <1282171834.13811.51.camel@mulgrave.site>  <4C6C9E10.9030202@fusionio.com>
+	 <1282229572.8139.16.camel@mulgrave.site>  <4C7238CD.5070700@fusionio.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5913051511334986110=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C729171.3030605@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: "jack@suse.cz" <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4C7238CD.5070700@fusionio.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Mon, 2010-08-23 at 11:01 +0200, Jens Axboe wrote:
+> On 2010-08-19 16:52, James Bottomley wrote:
+> > On Wed, 2010-08-18 at 22:59 -0400, Jens Axboe wrote:
+> >> On 08/18/2010 06:50 PM, James Bottomley wrote:
+> >>> On Wed, 2010-08-18 at 17:49 -0400, Jens Axboe wrote:
+> >>>> On 08/18/2010 10:41 AM, James Bottomley wrote:
+> >>>>> On Wed, 2010-08-18 at 16:36 +0200, Jiri Slaby wrote:
+> >>>>>> On 08/18/2010 04:32 PM, James Bottomley wrote:
+> >>>>>>>> James and Jens, could you take the two remaining (SCSI and BLOCK)?
+> >>>>>>>
+> >>>>>>> Sure ... could you identify the email by subject, please? lkml.org seems
+> >>>>>>> to be down this morning.
+> >>>>>>
+> >>>>>> Sure:
+> >>>>>> [PATCH v2] BLOCK: fix bio.bi_rw handling
+> >>>>>> and
+> >>>>>> [PATCH v2] SCSI: fix bio.bi_rw handling
+> >>>>>>
+> >>>>>> You should have received one copy to your suse.de inbox, if everything
+> >>>>>> worked.
+> >>>>>
+> >>>>> Got it.  One of life's little ironies is that I couldn't immediately
+> >>>>> locate it in the SCSI list because it was already queued for inclusion.
+> >>>>
+> >>>> Please add my acked-by to both of them.
+> >>>
+> >>> OK.
+> >>>
+> >>>>  I'm away on vacation, so if
+> >>>> you James could queue them up, I would appreciate it. Thanks!
+> >>>
+> >>> Certainly sir ... and would you like your patches served to your table
+> >>> or by the pool?
+> >>
+> >> Pool, please. With that first name and the British accent, it's hard
+> >> not to boss you around.
+> > 
+> > Well, sir, the wait staff and I thought we'd just write to ask how your
+> > convalescence was going.  Sorry about spilling the patch down your
+> > front, sir, but the glass was slippery.  Who could have foreseen that
+> > you'd step backwards, fall over the pool boy and upset a flaming bananas
+> > foster on to the front of your shorts.  I did get a commendation for my
+> > quick action with a high pressure hose to the affected area (thank you,
+> > sir, for your shocked but grateful expression).  I must say I didn't
+> > foresee the force of the blast catapulting you against the pool steps,
+> > but a concussion is a small price to pay for avoiding fried nuts with
+> > the bananas, eh, sir? It's funny how things turn out, and I bet if you
+> > could do it over again, you'd have got off your arse to fetch your own
+> > damn patch now, wouldn't you, sir?
+> 
+> It's so hard to find decent staff these days, the things I have to
+> put up with...
+> 
+> I'm back now. Have you queued it up, or should I get off my hiney
+> and add it to the mix?
 
---===============5913051511334986110==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-Content-Disposition: inline
+It's in my email queue, but not in a git tree, yet ... you can take it
+back if you want ...
+
+James
 
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Aug 23, 2010 at 11:19:13AM -0400, Ric Wheeler wrote:
-[...]
-> (2) hardware raid cards with internal buffer memory and on-card battery b=
-ackup=20
-> (they sit in your server, disks sit in jbod like expansion shelves). Thes=
-e are=20
-> fine if the drives in those shelves have write cache disabled.
-
-Actually some of such cards keep write cache on the drives enabled and
-issue FLUSH CACHE commands to the drives.  E.g., 3ware 9690SA behaves
-like this at least with SATA drives (the FLUSH CACHE commands can be
-seen after enabling performance monitoring - they often end up in the
-"10 commands having the largest latency" table).  This can actually be
-safe if the card waits for the FLUSH CACHE completion before making
-the write cache data in its battery-backed memory available for reuse
-(and the drive implements the FLUSH CACHE command correctly).
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkxypaIACgkQW82GfkQfsqI94QCeLiRSclQhAVlFnmFnK49Fh41s
-55EAn1CXk2dhHSW/+tvscDZYwHy5ZG37
-=v7Fn
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
-
-
---===============5913051511334986110==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---===============5913051511334986110==--
