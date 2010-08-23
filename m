@@ -1,60 +1,75 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: David Rientjes <rientjes@google.com>
 Subject: Re: [patch 1/6] md: remove dependency on __GFP_NOFAIL
-Date: Mon, 23 Aug 2010 12:26:06 -0700
-Message-ID: <20100823122606.47524cef.akpm@linux-foundation.org>
-References: <alpine.DEB.2.00.1008161953430.17924@chino.kir.corp.google.com>
-	<alpine.DEB.2.00.1008161954310.17924@chino.kir.corp.google.com>
+Date: Mon, 23 Aug 2010 12:35:22 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1008231229410.14622@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1008161953430.17924@chino.kir.corp.google.com> <alpine.DEB.2.00.1008161954310.17924@chino.kir.corp.google.com> <20100823122606.47524cef.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1008161954310.17924@chino.kir.corp.google.com>
+In-Reply-To: <20100823122606.47524cef.akpm@linux-foundation.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rientjes <rientjes@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 16 Aug 2010 19:57:51 -0700 (PDT)
-David Rientjes <rientjes@google.com> wrote:
+On Mon, 23 Aug 2010, Andrew Morton wrote:
 
-> Removes the dependency on __GFP_NOFAIL by looping indefinitely in the
-> caller.
+> > diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+> > --- a/drivers/md/dm-region-hash.c
+> > +++ b/drivers/md/dm-region-hash.c
+> > @@ -289,8 +289,12 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
+> >  	struct dm_region *reg, *nreg;
+> >  
+> >  	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
+> > -	if (unlikely(!nreg))
+> > -		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
+> > +	if (unlikely(!nreg)) {
+> > +		/* FIXME: this may potentially loop forever */
+> > +		do {
+> > +			nreg = kmalloc(sizeof(*nreg), GFP_NOIO);
+> > +		} while (!nreg);
+> > +	}
+> >  
+> >  	nreg->state = rh->log->type->in_sync(rh->log, region, 1) ?
+> >  		      DM_RH_CLEAN : DM_RH_NOSYNC;
 > 
-> Signed-off-by: David Rientjes <rientjes@google.com>
-> ---
->  drivers/md/dm-region-hash.c |    8 ++++++--
->  1 files changed, 6 insertions(+), 2 deletions(-)
+> erm.
 > 
-> diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
-> --- a/drivers/md/dm-region-hash.c
-> +++ b/drivers/md/dm-region-hash.c
-> @@ -289,8 +289,12 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
->  	struct dm_region *reg, *nreg;
->  
->  	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
-> -	if (unlikely(!nreg))
-> -		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
-> +	if (unlikely(!nreg)) {
-> +		/* FIXME: this may potentially loop forever */
-> +		do {
-> +			nreg = kmalloc(sizeof(*nreg), GFP_NOIO);
-> +		} while (!nreg);
-> +	}
->  
->  	nreg->state = rh->log->type->in_sync(rh->log, region, 1) ?
->  		      DM_RH_CLEAN : DM_RH_NOSYNC;
+> The reason for adding GFP_NOFAIL in the first place was my observation
+> that the kernel contained lots of open-coded retry-for-ever loops.
+> 
+> All of these are wrong, bad, buggy and mustfix.  So we consolidated the
+> wrongbadbuggymustfix concept into the core MM so that miscreants could
+> be easily identified and hopefully fixed.
+> 
 
-erm.
+That consolidation would have been unnecessary, then, since all 
+allocations with order < PAGE_ALLOC_COSTLY_ORDER automatically loop 
+indefinitely in the page allocator.  struct dm_region allocations would 
+already do that.
 
-The reason for adding GFP_NOFAIL in the first place was my observation
-that the kernel contained lots of open-coded retry-for-ever loops.
+So this retry loop doesn't actually do anything that the page allocator 
+already doesn't, with or without __GFP_NOFAIL.  The difference here is 
+that
 
-All of these are wrong, bad, buggy and mustfix.  So we consolidated the
-wrongbadbuggymustfix concept into the core MM so that miscreants could
-be easily identified and hopefully fixed.
+ - it doesn't depend on the page allocator's implementation, which may
+   change over time, and
 
-I think that simply undoing that change is a bad idea - it allows the
-wrongbadbuggymustfix code to hide from view.
+ - it adds documentation so that the subsystems doing these loops can
+   (hopefully) fix these problems later, although their appear to be
+   geniune cases where little other options are available.
 
-The correct way to remove __GFP_NOFAIL is to fix the
-wrongbadbuggymustfix code properly.
+> I think that simply undoing that change is a bad idea - it allows the
+> wrongbadbuggymustfix code to hide from view.
+> 
+
+It removes several branches from the page allocator.
+
+> The correct way to remove __GFP_NOFAIL is to fix the
+> wrongbadbuggymustfix code properly.
+> 
+
+If the prerequisite for removing __GFP_NOFAIL is that nobody must ever 
+loop indefinitely looking for memory or smaller order allocations don't 
+implicitly retry, then there's little chance it'll ever get removed since 
+they've existed for years without anybody cleaning them up.
