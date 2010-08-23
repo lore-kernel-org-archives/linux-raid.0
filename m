@@ -1,28 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCHSET block#for-2.6.36-post] block: convert to REQ_FLUSH/FUA
-Date: Mon, 23 Aug 2010 18:47:09 +0200
-Message-ID: <20100823164709.GA31221@lst.de>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [dm-devel] [PATCHSET block#for-2.6.36-post] block: replace barrier
+ with sequenced flush
+Date: Mon, 23 Aug 2010 12:49:54 -0400
+Message-ID: <4C72A6B2.4070900__45315.1508038447$1282582207$gmane$org@redhat.com>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de> <4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com> <4C729171.3030605@redhat.com> <20100823164522.GA9528@atlas.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1281977523-19335-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: philipp.reisner@linbit.com, lars.ellenberg@linbit.com
-Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100823164522.GA9528@atlas.home>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>, "tytso@mit.edu" <tytso@mit.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phillipp and Lars,
+On 08/23/2010 12:45 PM, Sergey Vlasov wrote:
+> On Mon, Aug 23, 2010 at 11:19:13AM -0400, Ric Wheeler wrote:
+> [...]
+>> (2) hardware raid cards with internal buffer memory and on-card battery backup
+>> (they sit in your server, disks sit in jbod like expansion shelves). These are
+>> fine if the drives in those shelves have write cache disabled.
+>
+> Actually some of such cards keep write cache on the drives enabled and
+> issue FLUSH CACHE commands to the drives.  E.g., 3ware 9690SA behaves
+> like this at least with SATA drives (the FLUSH CACHE commands can be
+> seen after enabling performance monitoring - they often end up in the
+> "10 commands having the largest latency" table).  This can actually be
+> safe if the card waits for the FLUSH CACHE completion before making
+> the write cache data in its battery-backed memory available for reuse
+> (and the drive implements the FLUSH CACHE command correctly).
 
-can you look at the changes in
+Yes - this is certainly one way to do it. Note that this will not work if the 
+card advertises itself as a write through cache (and we end up not sending down 
+the SYNC_CACHE commands).
 
-	http://www.spinics.net/lists/linux-fsdevel/msg35884.html
+At least one hardware RAID card (I unfortunately cannot mention the brand) did 
+not do this command forwarding.
 
-and
+ric
 
-	http://www.spinics.net/lists/linux-fsdevel/msg36001.html
-
-and see how drbd can be adapted to it?  It's one of two drivers still
-missing, and because it's not quite intuitive what it's doing it's
-very hard for Tejun and me to help.
