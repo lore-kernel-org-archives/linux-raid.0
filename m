@@ -1,26 +1,95 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch 1/6] md: remove dependency on __GFP_NOFAIL
-Date: Mon, 23 Aug 2010 13:40:11 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1008231339300.20535@chino.kir.corp.google.com>
-References: <alpine.DEB.2.00.1008161953430.17924@chino.kir.corp.google.com> <alpine.DEB.2.00.1008161954310.17924@chino.kir.corp.google.com> <20100823122606.47524cef.akpm@linux-foundation.org> <alpine.DEB.2.00.1008231229410.14622@chino.kir.corp.google.com>
- <20100823130109.6da43a58.akpm@linux-foundation.org> <AANLkTikpTZfUE-XFCXJV6FdZy0ZTWeoPLF_qErvvjGOy@mail.gmail.com> <alpine.DEB.2.00.1008231310100.17716@chino.kir.corp.google.com> <AANLkTi=HxY6w2iJme3qW_J_sbXedu7JSSECBEFPM1d_c@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: A policy frame work for mdadm (incorporating domains and
+ hotplug and such)
+Date: Tue, 24 Aug 2010 14:44:44 +1000
+Message-ID: <20100824144444.34e2292e@notabene>
+References: <66C59AD0932712458090B447266D638CD69A3E95@irsmsx504.ger.corp.intel.com>
+	<20100512070231.17342f29@notabene.brown>
+	<4BE9D7DC.6000306@intel.com>
+	<20100512132624.7a189995@notabene.brown>
+	<4BEAF416.5050509@intel.com>
+	<66C59AD0932712458090B447266D638CD6A81248@irsmsx504.ger.corp.intel.com>
+	<4BEC941A.8070508@intel.com>
+	<905EDD02F158D948B186911EB64DB3D11E33E9DE@irsmsx503.ger.corp.intel.com>
+	<66C59AD0932712458090B447266D638CD6D80FFF@irsmsx504.ger.corp.intel.com>
+	<A9DE54D0CD747C4CB06DCE5B6FA2246FDA55FA48@irsmsx504.ger.corp.intel.com>
+	<20100629113727.197a2002@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D11F5235D9@irsmsx503.ger.corp.intel.com>
+	<4C2B97E3.2080309@intel.com>
+	<20100701165007.4d0d51f7@notabene.brown>
+	<20100708175839.4b3b349e@notabene.brown>
+	<66C59AD0932712458090B447266D638CFF927ADD@irsmsx504.ger.corp.intel.com>
+	<20100728081805.62d55a67@notabene>
+	<905EDD02F158D948B186911EB64DB3D16C253F33@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=HxY6w2iJme3qW_J_sbXedu7JSSECBEFPM1d_c@mail.gmail.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D16C253F33@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pekka Enberg <penberg@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Healey, Douglas D" <douglas.d.healey@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 23 Aug 2010, Pekka Enberg wrote:
+On Thu, 12 Aug 2010 14:53:36 +0100
+"Labun, Marcin" <Marcin.Labun@intel.com> wrote:
 
-> My point is that I don't think Andrew's helper will change all that
-> much. Fixing the actual callers is the hard part and I don't see your
-> patches helping that either. Hiding the looping in filesystem code is
-> only going to make problematic callers harder to find (e.g
-> kmem_alloc() in XFS code).
+> Hi Neil,
+> We have made most changes in the auto-rebuild and hot-(un)plug code as you suggested.
+> And we are eager to port our code to your new policy framework.
+> What is the actual plan about policy framework release? 
+> Thanks,
+> Marcin
 > 
 
-Nothing is getting hidden in the callers here, all of the patches in this 
-series are using __GFP_NOFAIL unnecessarily.
+Sorry I have been so slow in responding to this - always too many calls on my
+time :-(
+
+I have just pushed out a devel-3.2 branch which should give a pretty good
+idea of where I am going.
+
+http://neil.brown.name/git?p=mdadm;a=shortlog;h=refs/heads/devel-3.2
+
+I haven't actually tested anything yet so their might be some crazy stuff in
+there but it shouldn't be too crazy.
+
+I need to work out exactly how the "copy a partition table to a bare disk"
+thing should work, then I want to start writing some test scripts and
+actually test it.  Unfortunately loop devices don't appear
+in /dev/disk/by-part/, so I might need to figure out something else
+clever ... or just create some symlinks by hand.
+
+NeilBrown
+
+
+> 
+> 
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Neil Brown
+> > Sent: Wednesday, July 28, 2010 12:18 AM
+> > To: Hawrylewicz Czarnowski, Przemyslaw
+> > Cc: linux-raid@vger.kernel.org; Labun, Marcin; Czarnowska, Anna;
+> > Ciechanowski, Ed; Healey, Douglas D; Neubauer, Wojciech
+> > Subject: Re: A policy frame work for mdadm (incorporating domains and
+> > hotplug and such)
+> > 
+> > On Tue, 27 Jul 2010 17:17:46 +0100
+> > "Hawrylewicz Czarnowski, Przemyslaw"
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+> > 
+> > > Hi Neil,
+> > >
+> > > I was wondering if there is anything new in this area?
+> > > Please share your ideas and/or a new code :)
+> > 
+> > No, other things have taken priority.  I might get back to it next
+> > week.
+> > 
+> > NeilBrown
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
