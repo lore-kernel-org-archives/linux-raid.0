@@ -1,66 +1,224 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Tue, 24 Aug 2010 19:24:41 +0900
-Message-ID: <4C739DE9.5070803@ct.jp.nec.com>
-References: <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com>
+From: David Rientjes <rientjes@google.com>
+Subject: [patch 1/5] mm: add nofail variants of kmalloc kcalloc and kzalloc
+Date: Tue, 24 Aug 2010 03:50:19 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100823141733.GA21158@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Tejun,
+Add kmalloc_nofail(), kcalloc_nofail(), and kzalloc_nofail().  These
+functions are equivalent to kmalloc(), kcalloc(), and kzalloc(),
+respectively, except that they will never return NULL and instead loop
+forever trying to allocate memory.
 
-On 08/23/2010 11:17 PM +0900, Mike Snitzer wrote:
-> On Mon, Aug 23 2010 at  8:14am -0400, Tejun Heo <tj@kernel.org> wrote:
->> On 08/20/2010 10:26 AM, Kiyoshi Ueda wrote:
->>> By the way, if these patch-set with the change above are included,
->>> even one path failure for REQ_FLUSH on multipath configuration will
->>> be reported to upper layer as error, although it's retried using
->>> other paths currently.
->>> Then, if an upper layer won't take correct recovery action for the error,
->>> it would be seen as a regression for users. (e.g. Frequent EXT3-error
->>> resulting in read-only mount on multipath configuration.)
->>>
->>> Although I think the explicit error is fine rather than implicit data
->>> corruption, please check upper layers carefully so that users won't see
->>> such errors as much as possible.
->> 
->> Argh... then it will have to discern why FLUSH failed.  It can retry
->> for transport errors but if it got aborted by the device it should
->> report upwards.
-> 
-> Yes, we discussed this issue of needing to train dm-multipath to know if
-> there was a transport failure or not (at LSF).  But I'm not sure when
-> Hannes intends to repost his work in this area (updated to account for
-> feedback from LSF).
+If the first allocation attempt fails, a warning will be emitted,
+including a call trace.  Subsequent failures will suppress this warning.
 
-Yes, checking whether it's a transport error in lower layer is
-the right solution.
-(Since I know it's not available yet, I just hoped if upper layers
- had some other options.)
+These were added as helper functions for documentation and auditability.
+No future callers should be added.
 
-Anyway, only reporting errors for REQ_FLUSH to upper layer without
-such a solution would make dm-multipath almost unusable in real world,
-although it's better than implicit data loss.
+Signed-off-by: David Rientjes <rientjes@google.com>
+---
+ drivers/md/dm-region-hash.c |    2 +-
+ fs/btrfs/inode.c            |    2 +-
+ fs/gfs2/log.c               |    2 +-
+ fs/gfs2/rgrp.c              |   18 ++++---------
+ fs/jbd/transaction.c        |   11 ++------
+ fs/reiserfs/journal.c       |    3 +-
+ include/linux/slab.h        |   55 +++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 68 insertions(+), 25 deletions(-)
 
-
->> Maybe just turn off barrier support in mpath for now?
-
-If it's possible, it could be a workaround for a short term.
-But how can you do that?
-
-I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
-Underlying devices of a mpath device may have write-back cache and
-it may be enabled.
-So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
-becomes a device which has write-back cache but doesn't support flush.
-Then, upper layer can do nothing to ensure cache flush?
-
-Thanks,
-Kiyoshi Ueda
+diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+--- a/drivers/md/dm-region-hash.c
++++ b/drivers/md/dm-region-hash.c
+@@ -290,7 +290,7 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
+ 
+ 	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
+ 	if (unlikely(!nreg))
+-		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
++		nreg = kmalloc_nofail(sizeof(*nreg), GFP_NOIO);
+ 
+ 	nreg->state = rh->log->type->in_sync(rh->log, region, 1) ?
+ 		      DM_RH_CLEAN : DM_RH_NOSYNC;
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -1967,7 +1967,7 @@ void btrfs_add_delayed_iput(struct inode *inode)
+ 	if (atomic_add_unless(&inode->i_count, -1, 1))
+ 		return;
+ 
+-	delayed = kmalloc(sizeof(*delayed), GFP_NOFS | __GFP_NOFAIL);
++	delayed = kmalloc_nofail(sizeof(*delayed), GFP_NOFS);
+ 	delayed->inode = inode;
+ 
+ 	spin_lock(&fs_info->delayed_iput_lock);
+diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
+--- a/fs/gfs2/log.c
++++ b/fs/gfs2/log.c
+@@ -709,7 +709,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl)
+ 	}
+ 	trace_gfs2_log_flush(sdp, 1);
+ 
+-	ai = kzalloc(sizeof(struct gfs2_ail), GFP_NOFS | __GFP_NOFAIL);
++	ai = kzalloc_nofail(sizeof(struct gfs2_ail), GFP_NOFS);
+ 	INIT_LIST_HEAD(&ai->ai_ail1_list);
+ 	INIT_LIST_HEAD(&ai->ai_ail2_list);
+ 
+diff --git a/fs/gfs2/rgrp.c b/fs/gfs2/rgrp.c
+--- a/fs/gfs2/rgrp.c
++++ b/fs/gfs2/rgrp.c
+@@ -1440,8 +1440,8 @@ static struct gfs2_rgrpd *rgblk_free(struct gfs2_sbd *sdp, u64 bstart,
+ 		rgrp_blk++;
+ 
+ 		if (!bi->bi_clone) {
+-			bi->bi_clone = kmalloc(bi->bi_bh->b_size,
+-					       GFP_NOFS | __GFP_NOFAIL);
++			bi->bi_clone = kmalloc_nofail(bi->bi_bh->b_size,
++					       GFP_NOFS);
+ 			memcpy(bi->bi_clone + bi->bi_offset,
+ 			       bi->bi_bh->b_data + bi->bi_offset,
+ 			       bi->bi_len);
+@@ -1759,9 +1759,6 @@ fail:
+  * @block: the block
+  *
+  * Figure out what RG a block belongs to and add that RG to the list
+- *
+- * FIXME: Don't use NOFAIL
+- *
+  */
+ 
+ void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
+@@ -1789,8 +1786,8 @@ void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
+ 	if (rlist->rl_rgrps == rlist->rl_space) {
+ 		new_space = rlist->rl_space + 10;
+ 
+-		tmp = kcalloc(new_space, sizeof(struct gfs2_rgrpd *),
+-			      GFP_NOFS | __GFP_NOFAIL);
++		tmp = kcalloc_nofail(new_space, sizeof(struct gfs2_rgrpd *),
++			      GFP_NOFS);
+ 
+ 		if (rlist->rl_rgd) {
+ 			memcpy(tmp, rlist->rl_rgd,
+@@ -1811,17 +1808,14 @@ void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
+  * @rlist: the list of resource groups
+  * @state: the lock state to acquire the RG lock in
+  * @flags: the modifier flags for the holder structures
+- *
+- * FIXME: Don't use NOFAIL
+- *
+  */
+ 
+ void gfs2_rlist_alloc(struct gfs2_rgrp_list *rlist, unsigned int state)
+ {
+ 	unsigned int x;
+ 
+-	rlist->rl_ghs = kcalloc(rlist->rl_rgrps, sizeof(struct gfs2_holder),
+-				GFP_NOFS | __GFP_NOFAIL);
++	rlist->rl_ghs = kcalloc_nofail(rlist->rl_rgrps,
++				sizeof(struct gfs2_holder), GFP_NOFS);
+ 	for (x = 0; x < rlist->rl_rgrps; x++)
+ 		gfs2_holder_init(rlist->rl_rgd[x]->rd_gl,
+ 				state, 0,
+diff --git a/fs/jbd/transaction.c b/fs/jbd/transaction.c
+--- a/fs/jbd/transaction.c
++++ b/fs/jbd/transaction.c
+@@ -98,14 +98,9 @@ static int start_this_handle(journal_t *journal, handle_t *handle)
+ 	}
+ 
+ alloc_transaction:
+-	if (!journal->j_running_transaction) {
+-		new_transaction = kzalloc(sizeof(*new_transaction),
+-						GFP_NOFS|__GFP_NOFAIL);
+-		if (!new_transaction) {
+-			ret = -ENOMEM;
+-			goto out;
+-		}
+-	}
++	if (!journal->j_running_transaction)
++		new_transaction = kzalloc_nofail(sizeof(*new_transaction),
++						GFP_NOFS);
+ 
+ 	jbd_debug(3, "New handle %p going live.\n", handle);
+ 
+diff --git a/fs/reiserfs/journal.c b/fs/reiserfs/journal.c
+--- a/fs/reiserfs/journal.c
++++ b/fs/reiserfs/journal.c
+@@ -2593,8 +2593,7 @@ static int journal_read(struct super_block *sb)
+ static struct reiserfs_journal_list *alloc_journal_list(struct super_block *s)
+ {
+ 	struct reiserfs_journal_list *jl;
+-	jl = kzalloc(sizeof(struct reiserfs_journal_list),
+-		     GFP_NOFS | __GFP_NOFAIL);
++	jl = kzalloc_nofail(sizeof(struct reiserfs_journal_list), GFP_NOFS);
+ 	INIT_LIST_HEAD(&jl->j_list);
+ 	INIT_LIST_HEAD(&jl->j_working_list);
+ 	INIT_LIST_HEAD(&jl->j_tail_bh_list);
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -334,6 +334,61 @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
+ 	return kmalloc_node(size, flags | __GFP_ZERO, node);
+ }
+ 
++/**
++ * kmalloc_nofail - infinitely loop until kmalloc() succeeds.
++ * @size: how many bytes of memory are required.
++ * @flags: the type of memory to allocate (see kmalloc).
++ *
++ * NOTE: no new callers of this function should be implemented!
++ * All memory allocations should be failable whenever possible.
++ */
++static inline void *kmalloc_nofail(size_t size, gfp_t flags)
++{
++	void *ret;
++
++	for (;;) {
++		ret = kmalloc(size, flags);
++		if (ret)
++			return ret;
++		WARN_ONCE(1, "Out of memory, no fallback implemented "
++				"(size=%lu flags=0x%x)\n",
++				size, flags);
++	}
++}
++
++/**
++ * kcalloc_nofail - infinitely loop until kcalloc() succeeds.
++ * @n: number of elements.
++ * @size: element size.
++ * @flags: the type of memory to allocate (see kcalloc).
++ *
++ * NOTE: no new callers of this function should be implemented!
++ * All memory allocations should be failable whenever possible.
++ */
++static inline void *kcalloc_nofail(size_t n, size_t size, gfp_t flags)
++{
++	void *ret;
++
++	for (;;) {
++		ret = kcalloc(n, size, flags);
++		if (ret)
++			return ret;
++		WARN_ONCE(1, "Out of memory, no fallback implemented "
++				"(n=%lu size=%lu flags=0x%x)\n",
++				n, size, flags);
++	}
++}
++
++/**
++ * kzalloc_nofail - infinitely loop until kzalloc() succeeds.
++ * @size: how many bytes of memory are required.
++ * @flags: the type of memory to allocate (see kzalloc).
++ */
++static inline void *kzalloc_nofail(size_t size, gfp_t flags)
++{
++	return kmalloc_nofail(size, flags | __GFP_ZERO);
++}
++
+ void __init kmem_cache_init_late(void);
+ 
+ #endif	/* _LINUX_SLAB_H */
