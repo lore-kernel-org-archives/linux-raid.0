@@ -1,23 +1,54 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [patch 1/5] mm: add nofail variants of kmalloc kcalloc and
- kzalloc
-Date: Tue, 24 Aug 2010 16:03:31 +0200
-Message-ID: <1282658611.2605.2781.camel@laptop>
-References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
-	 <1282656558.2605.2742.camel@laptop>  <20100824135522.GK31488@dastard>
+From: Philipp Reisner <philipp.reisner@linbit.com>
+Subject: Re: [RFC PATCHSET block#for-2.6.36-post] block: convert to REQ_FLUSH/FUA
+Date: Tue, 24 Aug 2010 17:45:34 +0200
+Message-ID: <201008241745.35242.philipp.reisner@linbit.com>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <20100823164709.GA31221@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20100824135522.GK31488@dastard>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100823164709.GA31221@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: lars.ellenberg@linbit.com, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2010-08-24 at 23:55 +1000, Dave Chinner wrote:
-> no one has noticed
-> that XFS has been doing these "allocations can't fail" loop in
-> kmem_alloc() and kmem_zone_alloc(), well, forever 
+Am Montag, 23. August 2010, um 18:47:09 schrieb Christoph Hellwig:
+> Phillipp and Lars,
+> 
+> can you look at the changes in
+> 
+> 	http://www.spinics.net/lists/linux-fsdevel/msg35884.html
+> 
+> and
+> 
+> 	http://www.spinics.net/lists/linux-fsdevel/msg36001.html
+> 
+> and see how drbd can be adapted to it?  It's one of two drivers still
+> missing, and because it's not quite intuitive what it's doing it's
+> very hard for Tejun and me to help.
 
-I occasionally check if its still there and cry a little ;-)
+Hi Christoph,
+
+I was able to finish the greater part of the necessary work today.
+You can find it there:
+
+git://git.drbd.org/linux-2.6-drbd.git flush-fua
+
+Of course that is based on
+
+git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
+
+REQ_HARDBARRIER is not yet completely eliminated from drbd, but I
+am very confident that I will be able to finish that by tomorrow.
+
+Best,
+ Phil
+-- 
+: Dipl-Ing Philipp Reisner
+: LINBIT | Your Way to High Availability
+: Tel: +43-1-8178292-50, Fax: +43-1-8178292-82
+: http://www.linbit.com
+
+DRBD(R) and LINBIT(R) are registered trademarks of LINBIT, Austria.
