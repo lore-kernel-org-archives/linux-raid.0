@@ -1,95 +1,83 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: A policy frame work for mdadm (incorporating domains and
- hotplug and such)
-Date: Tue, 24 Aug 2010 14:44:44 +1000
-Message-ID: <20100824144444.34e2292e@notabene>
-References: <66C59AD0932712458090B447266D638CD69A3E95@irsmsx504.ger.corp.intel.com>
-	<20100512070231.17342f29@notabene.brown>
-	<4BE9D7DC.6000306@intel.com>
-	<20100512132624.7a189995@notabene.brown>
-	<4BEAF416.5050509@intel.com>
-	<66C59AD0932712458090B447266D638CD6A81248@irsmsx504.ger.corp.intel.com>
-	<4BEC941A.8070508@intel.com>
-	<905EDD02F158D948B186911EB64DB3D11E33E9DE@irsmsx503.ger.corp.intel.com>
-	<66C59AD0932712458090B447266D638CD6D80FFF@irsmsx504.ger.corp.intel.com>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246FDA55FA48@irsmsx504.ger.corp.intel.com>
-	<20100629113727.197a2002@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D11F5235D9@irsmsx503.ger.corp.intel.com>
-	<4C2B97E3.2080309@intel.com>
-	<20100701165007.4d0d51f7@notabene.brown>
-	<20100708175839.4b3b349e@notabene.brown>
-	<66C59AD0932712458090B447266D638CFF927ADD@irsmsx504.ger.corp.intel.com>
-	<20100728081805.62d55a67@notabene>
-	<905EDD02F158D948B186911EB64DB3D16C253F33@irsmsx503.ger.corp.intel.com>
+Subject: Re: [PATCH 4/5] md: implment REQ_FLUSH/FUA support
+Date: Tue, 24 Aug 2010 15:41:02 +1000
+Message-ID: <20100824154102.7b68818b@notabene>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+	<1281977523-19335-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D16C253F33@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <1281977523-19335-5-git-send-email-tj@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Healey, Douglas D" <douglas.d.healey@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-raid.ids
 
-On Thu, 12 Aug 2010 14:53:36 +0100
-"Labun, Marcin" <Marcin.Labun@intel.com> wrote:
+On Mon, 16 Aug 2010 18:52:02 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
-> Hi Neil,
-> We have made most changes in the auto-rebuild and hot-(un)plug code as you suggested.
-> And we are eager to port our code to your new policy framework.
-> What is the actual plan about policy framework release? 
-> Thanks,
-> Marcin
-> 
 
-Sorry I have been so slow in responding to this - always too many calls on my
-time :-(
+Hi Tejun,
+ thanks for doing this.
+ It mostly looks good, especially ...
 
-I have just pushed out a devel-3.2 branch which should give a pretty good
-idea of where I am going.
 
-http://neil.brown.name/git?p=mdadm;a=shortlog;h=refs/heads/devel-3.2
+> * REQ_FLUSH/FUA failures are final and its users don't need retry
+>   logic.  Retry logic is removed.
 
-I haven't actually tested anything yet so their might be some crazy stuff in
-there but it shouldn't be too crazy.
+This bit - all that retry logic felt so clumsy :-)
 
-I need to work out exactly how the "copy a partition table to a bare disk"
-thing should work, then I want to start writing some test scripts and
-actually test it.  Unfortunately loop devices don't appear
-in /dev/disk/by-part/, so I might need to figure out something else
-clever ... or just create some symlinks by hand.
+Only change I would make is:
 
+>  
+> @@ -4083,7 +4089,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  			finish_wait(&conf->wait_for_overlap, &w);
+>  			set_bit(STRIPE_HANDLE, &sh->state);
+>  			clear_bit(STRIPE_DELAYED, &sh->state);
+> -			if (mddev->barrier && 
+> +			if (mddev->flush_bio &&
+>  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  				atomic_inc(&conf->preread_active_stripes);
+>  			release_stripe(sh);
+> @@ -4106,7 +4112,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  		bio_endio(bi, 0);
+>  	}
+>  
+> -	if (mddev->barrier) {
+> +	if (mddev->flush_bio) {
+>  		/* We need to wait for the stripes to all be handled.
+>  		 * So: wait for preread_active_stripes to drop to 0.
+>  		 */
+
+These two in raid5.c aren't quite right.
+The first should be changed to test
+   bi->bi_rw & REQ_SYNC
+rather than
+   mddev->flush_bio.
+(Assuming the REQ_SYNC means "don't bother waiting for more requests that
+might combine with this one to make it all go faster" which I think it does.)
+
+For the second we can just drop the whole if statement.
+It was needed so that the all the writes would go done to the underlying
+devices so that the null-barrier which would subsequently be passed to all
+those devices would go *after* the writes for the barrier request.
+As there is no longer a post-flush, that code can go.
+
+Thanks a lot, and sorry for the delay in reviewing it.
 NeilBrown
 
 
-> 
-> 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Neil Brown
-> > Sent: Wednesday, July 28, 2010 12:18 AM
-> > To: Hawrylewicz Czarnowski, Przemyslaw
-> > Cc: linux-raid@vger.kernel.org; Labun, Marcin; Czarnowska, Anna;
-> > Ciechanowski, Ed; Healey, Douglas D; Neubauer, Wojciech
-> > Subject: Re: A policy frame work for mdadm (incorporating domains and
-> > hotplug and such)
-> > 
-> > On Tue, 27 Jul 2010 17:17:46 +0100
-> > "Hawrylewicz Czarnowski, Przemyslaw"
-> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> > 
-> > > Hi Neil,
-> > >
-> > > I was wondering if there is anything new in this area?
-> > > Please share your ideas and/or a new code :)
-> > 
-> > No, other things have taken priority.  I might get back to it next
-> > week.
-> > 
-> > NeilBrown
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 0f86f5e..ff9cad2 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -275,6 +275,7 @@ struct r6_state {
+>  				    * filling
+>  				    */
+>  #define R5_Wantdrain	13 /* dev->towrite needs to be drained */
+> +#define R5_WantFUA	14	/* Write should be FUA */
+>  /*
+>   * Write method
+>   */
 
