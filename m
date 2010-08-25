@@ -1,43 +1,40 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Wed, 25 Aug 2010 22:02:24 +0200
-Message-ID: <20100825200223.GE2738@quack.suse.cz>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org>
- <1282751267-3530-27-git-send-email-tj@kernel.org>
- <20100825155842.GA3229@lst.de>
- <20100825160032.GC3229@lst.de>
- <4C753D75.2010305@kernel.org>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [patch 1/5] mm: add nofail variants of kmalloc kcalloc and
+ kzalloc
+Date: Wed, 25 Aug 2010 13:43:34 -0700 (PDT)
+Message-ID: <alpine.DEB.2.00.1008251340420.16484@chino.kir.corp.google.com>
+References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com> <1282656558.2605.2742.camel@laptop> <4C73CA24.3060707@fusionio.com> <alpine.DEB.2.00.1008241309170.21242@chino.kir.corp.google.com> <20100825112433.GB4453@thunk.org>
+ <1282736132.2605.3563.camel@laptop> <20100825115709.GD4453@thunk.org>  <1282740516.2605.3644.camel@laptop> <1282740778.2605.3652.camel@laptop> <E25A6DCB-3188-4CF9-9DC4-631192B2F0E2@mit.edu> <1282743090.2605.3696.camel@laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C753D75.2010305@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, jack@suse.cz, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <1282743090.2605.3696.camel@laptop>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Theodore Tso <tytso@mit.edu>, Jens Axboe <jaxboe@fusionio.com>, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "cluster-devel@redhat.com" <cluster-devel@redhat.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "reiserfs-devel@vger.kernel.org" <reiserfs-devel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed 25-08-10 17:57:41, Tejun Heo wrote:
-> On 08/25/2010 06:00 PM, Christoph Hellwig wrote:
-> > On Wed, Aug 25, 2010 at 05:58:42PM +0200, Christoph Hellwig wrote:
-> >> On Wed, Aug 25, 2010 at 05:47:43PM +0200, Tejun Heo wrote:
-> >>> From: Christoph Hellwig <hch@infradead.org>
-> >>>
-> >>> ext4 already uses synchronous discards, no need to add I/O barriers.
-> >>
-> >> This needs the patch that Jan sent in reply to my initial version merged
-> >> into it.
-> > 
-> > Actually the jbd2 patch needs it merged, but the point still stands.
-> 
-> Yeah, wasn't sure about that one.  Has anyone tested it?  I'll be
-> happy to merge it but I have no idea whether it's correct or not and
-> Jan didn't seem to have tested it so...  Jan, shall I merge the patch?
-  I'm quite confident the patch is correct so you can merge it I think but
-tomorrow I'll give it some crash testing together with the rest of your
-patch set in KVM to be sure.
+On Wed, 25 Aug 2010, Peter Zijlstra wrote:
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> I'm not sure, but I think the cgroup thing doesn't account kernel
+> allocations, in which case the above problem doesn't exist.
+> 
+
+Right, the only cgroup that does is cpusets because it binds the memory 
+allocations to a set of nodes.
+
+> For the cpuset case we punch through the cpuset constraints for kernel
+> allocations (unless __GFP_HARDWALL).
+> 
+
+__GFP_HARDWALL doesn't mean that the allocation won't be constrained, this 
+is a common misconception.  __GFP_HARDWALL only prevents us from looking 
+at our cpuset.mem_exclusive flag and checking our nearest common ancestor 
+cpuset if we can block.
+
+The cpusets case is actually the easiest to fix: use GFP_ATOMIC.  
+GFP_ATOMIC allocations aren't bound by any cpuset and, in the general 
+case, can allocate below the min watermark because of 
+ALLOC_HARD | ALLOC_HARDER in the page allocator which creates the notion 
+of "memory reserves" available to these tasks.  Then, success really 
+depends on the setting of the watermarks instead.
