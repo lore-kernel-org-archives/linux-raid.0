@@ -1,66 +1,87 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Wed, 25 Aug 2010 17:00:21 +0900
-Message-ID: <4C74CD95.1000208@ct.jp.nec.com>
-References: <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org>
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Re: [patch 1/5] mm: add nofail variants of kmalloc kcalloc and
+ kzalloc
+Date: Wed, 25 Aug 2010 07:24:33 -0400
+Message-ID: <20100825112433.GB4453@thunk.org>
+References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
+ <1282656558.2605.2742.camel@laptop>
+ <4C73CA24.3060707@fusionio.com>
+ <alpine.DEB.2.00.1008241309170.21242@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C73FA8F.5080800@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <reiserfs-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1008241309170.21242@chino.kir.corp.google.com>
+Sender: reiserfs-devel-owner@vger.kernel.org
+To: David Rientjes <rientjes@google.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "cluster-devel@redhat.com" <cluster-devel@redhat.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "reiserfs-devel@vger.kernel.org" <reiserfs-devel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Tejun,
-
-On 08/25/2010 01:59 AM +0900, Tejun Heo wrote:
-> On 08/24/2010 12:24 PM, Kiyoshi Ueda wrote:
->> Anyway, only reporting errors for REQ_FLUSH to upper layer without
->> such a solution would make dm-multipath almost unusable in real world,
->> although it's better than implicit data loss.
+On Tue, Aug 24, 2010 at 01:11:26PM -0700, David Rientjes wrote:
+> On Tue, 24 Aug 2010, Jens Axboe wrote:
 > 
-> I see.
+> > Should be possible to warn at build time for anyone using __GFP_NOFAIL
+> > without wrapping it in a function.
+> > 
 > 
->>> Maybe just turn off barrier support in mpath for now?
->> 
->> If it's possible, it could be a workaround for a short term.
->> But how can you do that?
->>
->> I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
->> Underlying devices of a mpath device may have write-back cache and
->> it may be enabled.
->> So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
->> becomes a device which has write-back cache but doesn't support flush.
->> Then, upper layer can do nothing to ensure cache flush?
-> 
-> Yeah, I was basically suggesting to forget about cache flush w/ mpath
-> until it can be fixed.  You're saying that if mpath just passes
-> REQ_FLUSH upwards without retrying, it will be almost unuseable,
-> right?
+> We could make this __deprecated functions as Peter suggested if you think 
+> build time warnings for existing users would be helpful.
 
-Right.
-If the error is safe/needed to retry using other paths, mpath should
-retry even if REQ_FLUSH.  Otherwise, only one path failure may result
-in system down.
-Just passing any REQ_FLUSH error upwards regardless the error type
-will make such situations, and users will feel the behavior as
-unstable/unusable.
+Let me take a few steps backwards and look at the problem from a
+somewhat higher level.
 
+Part of the problem is that we have a few places in the kernel where
+failure is really not an option --- or rather, if we're going to fail
+while we're in the middle of doing a commit, our choices really are
+(a) retry the loop in the jbd layer (which Andrew really doesn't
+like), (b) keep our own private cache of free memory so we don't fail
+and/or loop, (c) fail the file system and mark it read-only, or (d)
+panic.
 
-> I'm not sure how to proceed here.  How much work would
-> discerning between transport and IO errors take?  If it can't be done
-> quickly enough the retry logic can be kept around to keep the old
-> behavior but that already was a broken behavior, so...  :-(
+There are other places where we can fail safely (for example, in jbd's
+start_this_handle, although that just pushes the layer up the stack,
+and ultimately, to userspace where most userspace programs don't
+really expect ENOMEM to get returned by a random disk write --- how
+much do _you_ trust a random GNOME or KDE developer to do correct
+error checking and do something sane at the application?)
 
-I'm not sure how long will it take.
-Anyway, as you said, the flush error handling of dm-mpath is already
-broken if data loss really happens on any storage used by dm-mpath.
-Although it's a serious issue and quick fix is required, I think
-you may leave the old behavior in your patch-set, since it's
-a separate issue.
+So we can mark the retry loop helper function as deprecated, and that
+will make some of these cases go away, but ultimately if we're going
+to fail the memory allocation, something bad is going to happen, and
+the only question is whether we want to have something bad happen by
+looping in the memory allocator, or to force the file system to
+panic/oops the system, or have random application die and/or lose user
+data because they don't expect write() to return ENOMEM.
 
-Thanks,
-Kiyoshi Ueda
+So at some level it would be nice if we had a few different levels of
+"we *really* need this memory".  Level 0 might be, "if we can't get
+it, no biggie, we'll figure out some other way around it.  I doubt
+there is much at level 0, but in theory, we could have some good
+citizens that fall in that camp and who simply will bypass some
+optimization if they can't get the memory.  Level 1 might be, if you
+can't get the memory, we will propagate a failure up to userspace, but
+it's probably a relatively "safe" place to fail (i.e., when the user
+is opening a file).  Level 2 might be, "if you can't get the memory,
+we will propgate a failure up to userspace, but it's at a space where
+most applications are lazy f*ckers, and this may lead to serious
+application errors" (example: close(2), and this is a file system that
+only pushes the file to the server at close time, e.g. AFS).  Level 3
+might be, "if you can't get the memory, I'm going to fail the file
+system, or some other global subsystem, that will probably result in
+the system crashing or needing to be rebooted".
+
+We can ignore this problem and pretend it doesn't exist at the memory
+allocator level, but that means the callers are going to be doing
+their own thing to try to avoid having really bad things happening at
+really-low-memory occasions.  And this may mean looping, whether we
+mark the function as deprecated or not.
+
+This is becoming even more of an issue now given that with
+containerization, we have jokers who are forcing tasks to run in very
+small memory containers, which means that failures can happen far more
+frequently --- and in some cases, just because the process running the
+task happens to be in an extremely constrained memory cgroup, doesn't
+mean that failing the entire system is really such a great idea.  Or
+maybe that means memory cgroups are kinda busted.  :-)
+
+      	   	 		    	  	   - Ted
