@@ -1,34 +1,57 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 1/4] block: make __blk_rq_prep_clone() copy most command
- flags
-Date: Fri, 27 Aug 2010 13:57:11 -0400
-Message-ID: <20100827175711.GB23680@redhat.com>
+Subject: Re: [PATCH 2/4] dm: implement REQ_FLUSH/FUA support
+Date: Fri, 27 Aug 2010 16:24:04 -0400
+Message-ID: <20100827202403.GD23680@redhat.com>
 References: <1282929060-23663-1-git-send-email-tj@kernel.org>
- <1282929060-23663-2-git-send-email-tj@kernel.org>
+ <1282929060-23663-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1282929060-23663-2-git-send-email-tj@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+In-Reply-To: <1282929060-23663-3-git-send-email-tj@kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
+Cc: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
 On Fri, Aug 27 2010 at  1:10pm -0400,
 Tejun Heo <tj@kernel.org> wrote:
 
-> Currently __blk_rq_prep_clone() copies only REQ_WRITE and REQ_DISCARD.
-> There's no reason to omit other command flags and REQ_FUA needs to be
-> copied to implement FUA support in request-based dm.
-> 
-> REQ_COMMON_MASK which specifies flags to be copied from bio to request
-> already identifies all the command flags.  Define REQ_CLONE_MASK to be
-> the same as REQ_COMMON_MASK for clarity and make __blk_rq_prep_clone()
-> copy all flags in the mask.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+> This patch converts dm to support REQ_FLUSH/FUA instead of now
+> deprecated REQ_HARDBARRIER.
 
-Looks great.
+Thanks for your continued work on this!
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+> * As __blk_rq_prep_clone() copies REQ_FUA, just advertising FUA
+>   support is enough to pass through REQ_FUA to targets.
+
+You're doing blk_queue_flush(md->queue, REQ_FLUSH | REQ_FUA); in 2
+places:
+1) generic dm_init_md_queue -- used for bio-based and request-based
+2) request-based specific dm_init_request_based_queue.
+
+Interestingly, we never used the old blk_queue_ordered() method for
+bio-based DM yet it is now using blk_queue_flush().
+
+But how can we blindly assume/advertise REQ_FUA?
+
+Should we be taking more care to check each block device that DM
+consumes to see if FUA is supported and only then advertise REQ_FUA?
+DM already does this for discard support (see:
+dm_table_supports_discards).
+
+> Lightly tested linear, stripe, raid1, snap and crypt targets.
+
+I tested the bio-based code with the LVM2 test suite and all tests
+passed.
+
+> Please proceed with caution as I'm not familiar with the code base.
+
+As I shared in an earlier (private) mail, I'm unfortunately having
+problems with request-based DM (when all patches in this series are
+applied).  I'll be working on that more.
+
+BTW, we can eliminate the dm_rq_is_flush_request() wrapper right?  I
+think hch mentioned this at some point in one of the various threads.
+
+Mike
