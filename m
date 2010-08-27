@@ -1,83 +1,46 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH, RFC 2/2] dm: support REQ_FLUSH directly
-Date: Fri, 27 Aug 2010 10:13:14 -0400
-Message-ID: <20100827141314.GB22504@redhat.com>
-References: <20100727175418.GF6820@quack.suse.cz>
- <20100803184939.GA12198@lst.de>
- <20100803185148.GA12258@lst.de>
- <4C58F341.9060605@ct.jp.nec.com>
- <20100804085423.GA15687@lst.de>
- <4C5A1F05.40308@ce.jp.nec.com>
- <20100826225024.GB17832@redhat.com>
- <4C771852.3050500@ce.jp.nec.com>
- <20100827040808.GA19488@redhat.com>
- <4C7752B5.3020905@ce.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 4/4] block: remove the WRITE_BARRIER flag
+Date: Fri, 27 Aug 2010 19:11:00 +0200
+Message-ID: <1282929060-23663-5-git-send-email-tj__25698.3416075402$1282929449$gmane$org@kernel.org>
+References: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C7752B5.3020905@ce.jp.nec.com>
+In-Reply-To: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Christoph Hellwig <hch@lst.de>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, tj@kernel.org, tytso@mit.edu, swhiteho@redhat.com, chris.mason@oracle.com, dm-devel@redhat.com
+To: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, snitzer@redhat.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vge
+Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Aug 27 2010 at  1:52am -0400,
-Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
+From: Christoph Hellwig <hch@infradead.org>
 
-> Hi Mike,
-> 
-> (08/27/10 13:08), Mike Snitzer wrote:
-> > But do you agree that the request-based barrier code (added in commit
-> > d0bcb8786) could be reverted given the new FLUSH work?
-> 
-> No, it's a separate thing.
-> If we don't need to care about the case where multiple clones
-> of flush request are necessary, the special casing of flush
-> request can be removed regardless of the new FLUSH work.
+It's unused now.
 
-Ah, yes thanks for clarifying.  But we've never cared about multiple
-clone of a flush so it's odd that such elaborate infrastructure was
-introduced without a need.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/fs.h |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-> > We no longer need waiting now that ordering isn't a concern.  Especially
-> 
-> The waiting is not for ordering, but for multiple clones.
-> 
-> > so given rq-based doesn't support multiple targets.  As you know, from
-> > dm_table_set_type:
-> > 
-> >         /*
-> >          * Request-based dm supports only tables that have a single target now.
-> >          * To support multiple targets, request splitting support is needed,
-> >          * and that needs lots of changes in the block-layer.
-> >          * (e.g. request completion process for partial completion.)
-> >          */
-> 
-> This comment is about multiple targets.
-> The special code for barrier is for single target whose
-> num_flush_requests > 1. Different thing.
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 32703a9..6b0f6e9 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -135,7 +135,6 @@ struct inodes_stat_t {
+  *			immediately after submission. The write equivalent
+  *			of READ_SYNC.
+  * WRITE_ODIRECT_PLUG	Special case write for O_DIRECT only.
+- * WRITE_BARRIER	DEPRECATED. Always fails. Use FLUSH/FUA instead.
+  * WRITE_FLUSH		Like WRITE_SYNC but with preceding cache flush.
+  * WRITE_FUA		Like WRITE_SYNC but data is guaranteed to be on
+  *			non-volatile media on completion.
+@@ -157,8 +156,6 @@ struct inodes_stat_t {
+ #define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG)
+ #define WRITE_ODIRECT_PLUG	(WRITE | REQ_SYNC)
+ #define WRITE_META		(WRITE | REQ_META)
+-#define WRITE_BARRIER		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
+-				 REQ_HARDBARRIER)
+ #define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
+ 				 REQ_FLUSH)
+ #define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
+-- 
+1.7.1
 
-Yes, I need to not send mail just before going to bed..
- 
-> > I think we need to at least benchmark the performance of dm-mpath
-> > without any of this extra, soon to be unnecessary, code.
-> 
-> If there will be no need for supporting a request-based target
-> with num_flush_requests > 1, the special handling of flush
-> can be removed.
-> 
-> And since there is no such target in the current tree,
-> I don't object if you remove that part of code for good reason.
-
-OK, certainly something to keep in mind.  But _really_ knowing the
-multipath FLUSH+FUA performance difference (extra special-case code vs
-none) requires a full FLUSH conversion of request-based DM anyway.
-
-In general, request-based DM's barrier/flush code does carry a certain
-maintenance overhead.  It is quite a bit of distracting code in the core
-DM which isn't buying us anything.. so we _could_ just remove it and
-never look back (until we have some specific need for num_flush_requests
-> 1 in rq-based DM).
-
-Mike
