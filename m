@@ -1,46 +1,76 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/4] block: remove the WRITE_BARRIER flag
-Date: Fri, 27 Aug 2010 19:11:00 +0200
-Message-ID: <1282929060-23663-5-git-send-email-tj__25698.3416075402$1282929449$gmane$org@kernel.org>
-References: <1282929060-23663-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET 2.6.36-rc2] block, dm: finish REQ_FLUSH/FUA conversion
+Date: Fri, 27 Aug 2010 19:10:56 +0200
+Message-ID: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, snitzer@redhat.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vge
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-From: Christoph Hellwig <hch@infradead.org>
+Hello,
 
-It's unused now.
+This patchset converts dm to REQ_FLUSH/FUA, which was the last
+remaining one.  I've put patches on top of the previous patches for
+easier review.  The series can be trivially reordered so that the
+order is more logical.  Jens, please let me know if you want it to be
+reordered.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- include/linux/fs.h |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+The dm conversion is _lightly_ tested.  Please proceed with caution.
+In particular, I haven't tested dm implementation at all.  So, it
+probably is best to hold off merging these bits until dm people can
+verify the conversion is correct.
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 32703a9..6b0f6e9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -135,7 +135,6 @@ struct inodes_stat_t {
-  *			immediately after submission. The write equivalent
-  *			of READ_SYNC.
-  * WRITE_ODIRECT_PLUG	Special case write for O_DIRECT only.
-- * WRITE_BARRIER	DEPRECATED. Always fails. Use FLUSH/FUA instead.
-  * WRITE_FLUSH		Like WRITE_SYNC but with preceding cache flush.
-  * WRITE_FUA		Like WRITE_SYNC but data is guaranteed to be on
-  *			non-volatile media on completion.
-@@ -157,8 +156,6 @@ struct inodes_stat_t {
- #define WRITE_SYNC		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG)
- #define WRITE_ODIRECT_PLUG	(WRITE | REQ_SYNC)
- #define WRITE_META		(WRITE | REQ_META)
--#define WRITE_BARRIER		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
--				 REQ_HARDBARRIER)
- #define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
- 				 REQ_FLUSH)
- #define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
--- 
-1.7.1
+ 0001-block-make-__blk_rq_prep_clone-copy-most-command-fla.patch
+ 0002-dm-implement-REQ_FLUSH-FUA-support.patch
+ 0003-dm-relax-ordering-of-bio-based-flush-implementation.patch
+ 0004-block-remove-the-WRITE_BARRIER-flag.patch
 
+Differences from the previous attempt[1] are,
+
+* I was wrong when I wrote that flush retry logic was dropped.  What
+  got dropped was -EOPNOTSUPP handling.  The retry behavior used by
+  multipath remains the same.  As blindly retrying flushes could be
+  dangerous, a FIXME comment is added.
+
+* bio-based dm now also advertises REQ_FLUSH | REQ_FUA capability as
+  block layer now filters out REQ_FLUSH if not supported by the queue.
+
+* 0002-dm-implement-REQ_FLUSH-FUA-support.patch added to update
+  __blk_rq_prep_clone() to copy most REQ_* flags including FLUSH and
+  FUA and request-based dm now advertises REQ_FLUSH | REQ_FUA support.
+
+* dm_request_fn() now explicitly plugs other requests while a flush
+  request is in progress.  This is to avoid starving flush sequence
+  which uses device draining to check whether each step is complete.
+
+* 0003-block-remove-the-WRITE_BARRIER-flag.patch added to drop
+  needless ordering around flush handling.
+
+This patchset is on top of "block, fs: replace HARDBARRIER with
+FLUSH/FUA" patchset[2] and available in the following git tree
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
+
+and contains the following changes.
+
+ block/blk-core.c                |    4 
+ drivers/md/dm-crypt.c           |    2 
+ drivers/md/dm-io.c              |   20 --
+ drivers/md/dm-log.c             |    2 
+ drivers/md/dm-raid1.c           |    8 -
+ drivers/md/dm-region-hash.c     |   16 +-
+ drivers/md/dm-snap-persistent.c |    2 
+ drivers/md/dm-snap.c            |    6 
+ drivers/md/dm-stripe.c          |    2 
+ drivers/md/dm.c                 |  277 +++++++++++++++-------------------------
+ include/linux/blk_types.h       |    1 
+ include/linux/fs.h              |    3 
+ 12 files changed, 131 insertions(+), 212 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.raid/29100/focus=29104
+[2] http://thread.gmane.org/gmane.linux.kernel/1022363
