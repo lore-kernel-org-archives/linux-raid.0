@@ -1,76 +1,57 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET 2.6.36-rc2] block, dm: finish REQ_FLUSH/FUA conversion
-Date: Fri, 27 Aug 2010 19:10:56 +0200
-Message-ID: <1282929060-23663-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 1/4] block: make __blk_rq_prep_clone() copy most command flags
+Date: Fri, 27 Aug 2010 19:10:57 +0200
+Message-ID: <1282929060-23663-2-git-send-email-tj@kernel.org>
+References: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1282929060-23663-1-git-send-email-tj@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, snitzer@redhat.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vge
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Currently __blk_rq_prep_clone() copies only REQ_WRITE and REQ_DISCARD.
+There's no reason to omit other command flags and REQ_FUA needs to be
+copied to implement FUA support in request-based dm.
 
-This patchset converts dm to REQ_FLUSH/FUA, which was the last
-remaining one.  I've put patches on top of the previous patches for
-easier review.  The series can be trivially reordered so that the
-order is more logical.  Jens, please let me know if you want it to be
-reordered.
+REQ_COMMON_MASK which specifies flags to be copied from bio to request
+already identifies all the command flags.  Define REQ_CLONE_MASK to be
+the same as REQ_COMMON_MASK for clarity and make __blk_rq_prep_clone()
+copy all flags in the mask.
 
-The dm conversion is _lightly_ tested.  Please proceed with caution.
-In particular, I haven't tested dm implementation at all.  So, it
-probably is best to hold off merging these bits until dm people can
-verify the conversion is correct.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-core.c          |    4 +---
+ include/linux/blk_types.h |    1 +
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
- 0001-block-make-__blk_rq_prep_clone-copy-most-command-fla.patch
- 0002-dm-implement-REQ_FLUSH-FUA-support.patch
- 0003-dm-relax-ordering-of-bio-based-flush-implementation.patch
- 0004-block-remove-the-WRITE_BARRIER-flag.patch
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 495bdc4..2a5b192 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2505,9 +2505,7 @@ EXPORT_SYMBOL_GPL(blk_rq_unprep_clone);
+ static void __blk_rq_prep_clone(struct request *dst, struct request *src)
+ {
+ 	dst->cpu = src->cpu;
+-	dst->cmd_flags = (rq_data_dir(src) | REQ_NOMERGE);
+-	if (src->cmd_flags & REQ_DISCARD)
+-		dst->cmd_flags |= REQ_DISCARD;
++	dst->cmd_flags = (src->cmd_flags & REQ_CLONE_MASK) | REQ_NOMERGE;
+ 	dst->cmd_type = src->cmd_type;
+ 	dst->__sector = blk_rq_pos(src);
+ 	dst->__data_len = blk_rq_bytes(src);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 1797994..36edadf 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -168,6 +168,7 @@ enum rq_flag_bits {
+ #define REQ_COMMON_MASK \
+ 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_HARDBARRIER | REQ_SYNC | \
+ 	 REQ_META | REQ_DISCARD | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
++#define REQ_CLONE_MASK		REQ_COMMON_MASK
+ 
+ #define REQ_UNPLUG		(1 << __REQ_UNPLUG)
+ #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
+-- 
+1.7.1
 
-Differences from the previous attempt[1] are,
-
-* I was wrong when I wrote that flush retry logic was dropped.  What
-  got dropped was -EOPNOTSUPP handling.  The retry behavior used by
-  multipath remains the same.  As blindly retrying flushes could be
-  dangerous, a FIXME comment is added.
-
-* bio-based dm now also advertises REQ_FLUSH | REQ_FUA capability as
-  block layer now filters out REQ_FLUSH if not supported by the queue.
-
-* 0002-dm-implement-REQ_FLUSH-FUA-support.patch added to update
-  __blk_rq_prep_clone() to copy most REQ_* flags including FLUSH and
-  FUA and request-based dm now advertises REQ_FLUSH | REQ_FUA support.
-
-* dm_request_fn() now explicitly plugs other requests while a flush
-  request is in progress.  This is to avoid starving flush sequence
-  which uses device draining to check whether each step is complete.
-
-* 0003-block-remove-the-WRITE_BARRIER-flag.patch added to drop
-  needless ordering around flush handling.
-
-This patchset is on top of "block, fs: replace HARDBARRIER with
-FLUSH/FUA" patchset[2] and available in the following git tree
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
-
-and contains the following changes.
-
- block/blk-core.c                |    4 
- drivers/md/dm-crypt.c           |    2 
- drivers/md/dm-io.c              |   20 --
- drivers/md/dm-log.c             |    2 
- drivers/md/dm-raid1.c           |    8 -
- drivers/md/dm-region-hash.c     |   16 +-
- drivers/md/dm-snap-persistent.c |    2 
- drivers/md/dm-snap.c            |    6 
- drivers/md/dm-stripe.c          |    2 
- drivers/md/dm.c                 |  277 +++++++++++++++-------------------------
- include/linux/blk_types.h       |    1 
- include/linux/fs.h              |    3 
- 12 files changed, 131 insertions(+), 212 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[1] http://thread.gmane.org/gmane.linux.raid/29100/focus=29104
-[2] http://thread.gmane.org/gmane.linux.kernel/1022363
