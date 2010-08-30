@@ -1,78 +1,46 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] lib/raid6: ignore generated files
-Date: Mon, 30 Aug 2010 18:09:34 +1000
-Message-ID: <20100830180934.2dd88033@notabene>
-References: <m2d3t9z1f9.fsf@igel.home>
+Subject: [PULL REQUEST] minor md updates.
+Date: Mon, 30 Aug 2010 18:32:28 +1000
+Message-ID: <20100830183228.22cec1a6@notabene>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <m2d3t9z1f9.fsf@igel.home>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andreas Schwab <schwab@linux-m68k.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 23 Aug 2010 19:25:30 +0200
-Andreas Schwab <schwab@linux-m68k.org> wrote:
 
-> Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
-> ---
->  lib/raid6/.gitignore |   12 ++++++++++++
->  1 files changed, 12 insertions(+), 0 deletions(-)
->  create mode 100644 lib/raid6/.gitignore
-> 
-> diff --git a/lib/raid6/.gitignore b/lib/raid6/.gitignore
-> new file mode 100644
-> index 0000000..730e5ec
-> --- /dev/null
-> +++ b/lib/raid6/.gitignore
-> @@ -0,0 +1,12 @@
-> +int1.c
-> +int2.c
-> +int4.c
-> +int8.c
-> +int16.c
-> +int32.c
-> +altivec1.c
-> +altivec2.c
-> +altivec4.c
-> +altivec8.c
-> +tables.c
-> +mktables
+My earlier pull request broke MD_CHANGE_CLEAN handling because it is confused.
+So Dan fixed it, and then I made it all less confusing.
 
-Thanks.  I've queued a slightly different patch for Linus.
+And when we moved raid6 from drivers/md to lib, we missed  the .gitignore
+file.
 
+Thanks,
 NeilBrown
 
-commit 7c44ece988a3419e51c833cf14be186a22224dd1
-Author: NeilBrown <neilb@suse.de>
-Date:   Mon Aug 30 17:35:52 2010 +1000
 
-    Move .gitignore from drivers/md to lib/raid6
-    
-    Another missing bit of the raid6 -> /lib move.
-    
-    Reported-by: Andreas Schwab <schwab@linux-m68k.org>
-    Signed-off-by: NeilBrown <neilb@suse.de>
+The following changes since commit 2bfc96a127bc1cc94d26bfaa40159966064f9c8c:
 
-diff --git a/drivers/md/.gitignore b/drivers/md/.gitignore
-deleted file mode 100644
-index a7afec6..0000000
---- a/drivers/md/.gitignore
-+++ /dev/null
-@@ -1,4 +0,0 @@
--mktables
--raid6altivec*.c
--raid6int*.c
--raid6tables.c
-diff --git a/lib/raid6/.gitignore b/lib/raid6/.gitignore
-new file mode 100644
-index 0000000..162beca
---- /dev/null
-+++ b/lib/raid6/.gitignore
-@@ -0,0 +1,4 @@
-+mktables
-+altivec*.c
-+int*.c
-+tables.c
+  Linux 2.6.36-rc3 (2010-08-29 08:36:04 -0700)
+
+are available in the git repository at:
+  git://neil.brown.name/md/ for-linus
+
+Dan Williams (1):
+      md: don't clear MD_CHANGE_CLEAN in md_update_sb() for external arrays
+
+NeilBrown (2):
+      Move .gitignore from drivers/md to lib/raid6
+      md: resolve confusion of MD_CHANGE_CLEAN
+
+ drivers/md/.gitignore |    4 ----
+ drivers/md/bitmap.c   |    3 +--
+ drivers/md/md.c       |   25 ++++++++++---------------
+ drivers/md/md.h       |    2 +-
+ lib/raid6/.gitignore  |    4 ++++
+ 5 files changed, 16 insertions(+), 22 deletions(-)
+ delete mode 100644 drivers/md/.gitignore
+ create mode 100644 lib/raid6/.gitignore
