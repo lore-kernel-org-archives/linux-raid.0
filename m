@@ -1,57 +1,64 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/5] block: make __blk_rq_prep_clone() copy most command flags
-Date: Mon, 30 Aug 2010 11:58:12 +0200
-Message-ID: <1283162296-13650-2-git-send-email-tj__17930.2214448855$1283162796$gmane$org@kernel.org>
-References: <1283162296-13650-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET 2.6.36-rc2] block, dm: finish REQ_FLUSH/FUA conversion, take#2
+Date: Mon, 30 Aug 2010 11:58:11 +0200
+Message-ID: <1283162296-13650-1-git-send-email-tj__29747.3224033185$1283162797$gmane$org@kernel.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1283162296-13650-1-git-send-email-tj@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, snitzer@redhat.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vge
-Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-Currently __blk_rq_prep_clone() copies only REQ_WRITE and REQ_DISCARD.
-There's no reason to omit other command flags and REQ_FUA needs to be
-copied to implement FUA support in request-based dm.
+Hello,
 
-REQ_COMMON_MASK which specifies flags to be copied from bio to request
-already identifies all the command flags.  Define REQ_CLONE_MASK to be
-the same as REQ_COMMON_MASK for clarity and make __blk_rq_prep_clone()
-copy all flags in the mask.
+This is the second take of block-dm-finish-REQ_FLUSH-FUA-conversion.
+I've put patches on top of the previous patches for easier review.
+The series can be trivially reordered so that the order is more
+logical.  Jens, please let me know if you want it to be reordered.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/blk-core.c          |    4 +---
- include/linux/blk_types.h |    1 +
- 2 files changed, 2 insertions(+), 3 deletions(-)
+The dm conversion is _lightly_ tested.  Please proceed with caution.
+Let's hold off merging these bits until dm people can verify the
+conversion is correct.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 495bdc4..2a5b192 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2505,9 +2505,7 @@ EXPORT_SYMBOL_GPL(blk_rq_unprep_clone);
- static void __blk_rq_prep_clone(struct request *dst, struct request *src)
- {
- 	dst->cpu = src->cpu;
--	dst->cmd_flags = (rq_data_dir(src) | REQ_NOMERGE);
--	if (src->cmd_flags & REQ_DISCARD)
--		dst->cmd_flags |= REQ_DISCARD;
-+	dst->cmd_flags = (src->cmd_flags & REQ_CLONE_MASK) | REQ_NOMERGE;
- 	dst->cmd_type = src->cmd_type;
- 	dst->__sector = blk_rq_pos(src);
- 	dst->__data_len = blk_rq_bytes(src);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 1797994..36edadf 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -168,6 +168,7 @@ enum rq_flag_bits {
- #define REQ_COMMON_MASK \
- 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_HARDBARRIER | REQ_SYNC | \
- 	 REQ_META | REQ_DISCARD | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
-+#define REQ_CLONE_MASK		REQ_COMMON_MASK
- 
- #define REQ_UNPLUG		(1 << __REQ_UNPLUG)
- #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
--- 
-1.7.1
+  0001-block-make-__blk_rq_prep_clone-copy-most-command-fla.patch
+  0002-dm-implement-REQ_FLUSH-FUA-support-for-bio-based-dm.patch
+  0003-dm-relax-ordering-of-bio-based-flush-implementation.patch
+  0004-dm-implement-REQ_FLUSH-FUA-support-for-request-based.patch
+  0005-block-remove-the-WRITE_BARRIER-flag.patch
 
+Differences from the previous attempt[1] are,
+
+* bio-based dm and requested-based dm patches are split.  0002-0003
+  convert bio-based dm and 0004 converts requested-based dm.
+
+* The previous requested based dm conversion was broken in the way
+  requests are sequenced.  This patch rips out special multi-target
+  handling for flushes and handles flushes the same way other requests
+  are handled.
+
+This patchset is on top of "block, fs: replace HARDBARRIER with
+FLUSH/FUA" patchset[2] and available in the following git tree
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
+
+and contains the following changes.
+
+ block/blk-core.c                |    4 
+ drivers/md/dm-crypt.c           |    2 
+ drivers/md/dm-io.c              |   20 --
+ drivers/md/dm-log.c             |    2 
+ drivers/md/dm-raid1.c           |    8 
+ drivers/md/dm-region-hash.c     |   16 -
+ drivers/md/dm-snap-persistent.c |    2 
+ drivers/md/dm-snap.c            |    6 
+ drivers/md/dm-stripe.c          |    2 
+ drivers/md/dm.c                 |  394 ++++++++--------------------------------
+ include/linux/blk_types.h       |    1 
+ include/linux/fs.h              |    3 
+ 12 files changed, 104 insertions(+), 356 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[1] http://thread.gmane.org/gmane.linux.raid/29344
+[2] http://thread.gmane.org/gmane.linux.kernel/1022363
