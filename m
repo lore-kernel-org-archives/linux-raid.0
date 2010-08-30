@@ -1,99 +1,41 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 2/4] dm: implement REQ_FLUSH/FUA support
-Date: Fri, 27 Aug 2010 20:35:32 -0400
-Message-ID: <20100828003532.GA26796@redhat.com>
-References: <1282929060-23663-1-git-send-email-tj@kernel.org>
- <1282929060-23663-3-git-send-email-tj@kernel.org>
- <20100827202403.GD23680@redhat.com>
- <4C784A1C.8030602@kernel.org>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH, RFC 2/2] dm: support REQ_FLUSH directly
+Date: Mon, 30 Aug 2010 13:45:20 +0900
+Message-ID: <4C7B3760.2070201@ce.jp.nec.com>
+References: <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <20100803185148.GA12258@lst.de> <4C58F341.9060605@ct.jp.nec.com> <20100804085423.GA15687@lst.de> <4C5A1F05.40308@ce.jp.nec.com> <20100826225024.GB17832@redhat.com> <4C771852.3050500@ce.jp.nec.com> <20100827040808.GA19488@redhat.com> <4C7752B5.3020905@ce.jp.nec.com> <20100827141314.GB22504@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C784A1C.8030602@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100827141314.GB22504@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, tj@kernel.org, tytso@mit.edu, swhiteho@redhat.com, chris.mason@oracle.com, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Fri, Aug 27 2010 at  7:28pm -0400,
-Tejun Heo <tj@kernel.org> wrote:
+Hi Mike,
 
-> Hello,
+(08/27/10 23:13), Mike Snitzer wrote:
+>> If there will be no need for supporting a request-based target
+>> with num_flush_requests > 1, the special handling of flush
+>> can be removed.
+>>
+>> And since there is no such target in the current tree,
+>> I don't object if you remove that part of code for good reason.
 > 
-> On 08/27/2010 10:24 PM, Mike Snitzer wrote:
-> >> * As __blk_rq_prep_clone() copies REQ_FUA, just advertising FUA
-> >>   support is enough to pass through REQ_FUA to targets.
-> > 
-> > You're doing blk_queue_flush(md->queue, REQ_FLUSH | REQ_FUA); in 2
-> > places:
-> > 1) generic dm_init_md_queue -- used for bio-based and request-based
-> > 2) request-based specific dm_init_request_based_queue.
+> OK, certainly something to keep in mind.  But _really_ knowing the
+> multipath FLUSH+FUA performance difference (extra special-case code vs
+> none) requires a full FLUSH conversion of request-based DM anyway.
 > 
-> Well, there are two places creating queues.
+> In general, request-based DM's barrier/flush code does carry a certain
+> maintenance overhead.  It is quite a bit of distracting code in the core
+> DM which isn't buying us anything.. so we _could_ just remove it and
+> never look back (until we have some specific need for num_flush_requests
+>> 1 in rq-based DM).
 
-Actually only alloc_dev() allocates the queue.  It'll then initialize it
-for bio-based use via dm_init_md_queue() -- this initialization is
-subset of that done for a request-based DM device's queue.  The
-remaining queue initialization for rq-based is done in
-dm_init_request_based_queue -- with the call to
-blk_init_allocated_queue().
+So, I'm not objecting to your idea.
+Could you please create a patch to remove that?
 
-So the request-based queue is initialized in two stages.
-
-dm_init_md_queue() is common to both both bio-based and request-based.
-So we probably only need the one blk_queue_flush in dm_init_md_queue().
-
-> > But how can we blindly assume/advertise REQ_FUA?
-> >
-> > Should we be taking more care to check each block device that DM
-> > consumes to see if FUA is supported and only then advertise REQ_FUA?
-> > DM already does this for discard support (see:
-> > dm_table_supports_discards).
-> 
-> Nope, REQ_FUA will be interpreted by queues lower in the stack.
-> Drivers in the middle just need to pass them through.
-
-I thought that was likely the case, thanks for clarifying.
-
-> >> Lightly tested linear, stripe, raid1, snap and crypt targets.
-> > 
-> > I tested the bio-based code with the LVM2 test suite and all tests
-> > passed.
-> > 
-> >> Please proceed with caution as I'm not familiar with the code base.
-> > 
-> > As I shared in an earlier (private) mail, I'm unfortunately having
-> > problems with request-based DM (when all patches in this series are
-> > applied).  I'll be working on that more.
-> 
-> Heh... I probably should set up a simple dm-mpath and test it.  I'll
-> do it this weekend.
-
-OK, like I mentioned earlier in one of these threads; its easy enough to
-use multipath with a single scsi-debug device.  That way you can also
-create a discard capable multipath device without physical hardware,
-e.g.:
-
-# modprobe scsi_debug dev_size_mb=100 unmap_max_desc=16 unmap_granularity=2048 sector_size=4096
-<edit multipath.conf to not blacklist all devices, also enable
- 'user_friendly_names yes' in defaults section>
-# /etc/init.d/multipathd restart
-# multipath -ll
-
-From here you can just format the mpath device with ext4 or whatever.
-
-But if you want to use LVM ontop of the multipath device you'll need to
-allow LVM to treat DM devices as physical volumes, see FAQ #3 here:
-http://christophe.varoqui.free.fr/faq.html
-
-It also helps to tweak your 'preferred_names' and 'filter' in lvm.conf,
-e.g.:
-preferred_names = [ "^/dev/mpath/", "^/dev/mapper/mpath", "^/dev/[hs]d" ]
-filter = [ "a|/dev/mapper/mpatha|", "a|/dev/vd.*|", "a|/dev/sdd|", "a|/dev/sde|", "r|.*|" ]
-
-The 'lvmdiskscan' command should show the mpath device.
-
-Now you can use that test script I provided in my earlier mail.
-
-Mike
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
