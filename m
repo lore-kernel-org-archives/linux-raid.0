@@ -1,47 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 3.1.4 - A tool for managing Soft RAID under Linux
-Date: Tue, 31 Aug 2010 15:46:40 +1000
-Message-ID: <19580.38720.309122.572004@notabene.brown>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Tue, 31 Aug 2010 10:11:34 +0200
+Message-ID: <4C7CB936.8010509@kernel.org>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100830202034.GB12226@quack.quadriga.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
+On 08/30/2010 10:20 PM, Jan Kara wrote:
+>   My setup is that I have a dedicated partition / drive for a filesystem
+> which is written to from a guest kernel running under KVM. I have set it up
+> using virtio driver with cache=writeback so that the host caches the writes
+> in a similar way disk caches them. At some point I just kill the qemu-kvm
+> process and at that point I'd like to also throw away data cached by the
+> host...
 
-I am pleased to announce the availability of
-   mdadm version 3.1.4
+$ echo 1 > /sys/block/sdX/device/delete
+$ echo - - - > /sys/class/scsi_host/hostX/scan
 
-It is available at the usual places:
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+should do the trick.
 
-This is a bugfix/stability release over 3.1.3.
-3.1.3 had a couple of embarrasing regressions and a couple of other
-issues surfaces which had easy fixes so I decided to make a 3.1.4
-release after all.
+Thanks.
 
-Two fixes related to configs that aren't using udev:
-   - Don't remove md devices which 'standard' names on --stop
-   - Allow dev_open to work on read-only /dev
-And fixed regressions:
-   - Allow --incremental to add spares to an array
-   - Accept --no-degraded as a deprecated option rather than
-            throwing an error
-   - Return correct success status when --incrmental assembling 
-     a container which does not yet have enough devices.
-   - Don't link mdadm with pthreads, only mdmon needs it.
-   - Fix compiler warning due to bad use of snprintf
-
-This release is believed to be stable and you should feel free to
-upgrade to 3.1.4
-
-It is expected that the next release will be 3.2 with a number of new
-features.
-
-NeilBrown 31st August 2010
+-- 
+tejun
