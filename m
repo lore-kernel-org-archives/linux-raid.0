@@ -1,44 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/5] dm: relax ordering of bio-based flush
-	implementation
-Date: Wed, 01 Sep 2010 15:56:57 +0200
-Message-ID: <4C7E5BA9.7020509@kernel.org>
-References: <1283162296-13650-1-git-send-email-tj@kernel.org>
-	<1283162296-13650-4-git-send-email-tj@kernel.org>
-	<20100901135120.GA25251@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/5] block: make __blk_rq_prep_clone() copy most command flags
+Date: Wed, 1 Sep 2010 17:30:27 +0200
+Message-ID: <20100901153027.GA2744@lst.de>
+References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20100901135120.GA25251@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: k-ueda@ct.jp.nec.com, jaxboe@fusionio.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, hch@lst.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1283162296-13650-2-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, k-ueda@ct.jp.nec.com, snitzer@redhat.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-On 09/01/2010 03:51 PM, Mike Snitzer wrote:
-> Could you please document why it is OK to remove 'flush_error' in the
-> patch header?  The -EOPNOTSUPP handling removal (done in patch 2)
-> obviously helps enable this but it is not clear how the
-> 'num_flush_requests' flushes that __clone_and_map_flush() generates do
-> not need explicit DM error handling.
+On Mon, Aug 30, 2010 at 11:58:12AM +0200, Tejun Heo wrote:
+> Currently __blk_rq_prep_clone() copies only REQ_WRITE and REQ_DISCARD.
+> There's no reason to omit other command flags and REQ_FUA needs to be
+> copied to implement FUA support in request-based dm.
+> 
+> REQ_COMMON_MASK which specifies flags to be copied from bio to request
+> already identifies all the command flags.  Define REQ_CLONE_MASK to be
+> the same as REQ_COMMON_MASK for clarity and make __blk_rq_prep_clone()
+> copy all flags in the mask.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
 
-Sure, I'll.  It's because it now uses the same error handling path in
-dec_pending() all other bio's use.  The flush_error thing was there
-because flushes got executed/completed in a separate code path to
-begin with.  With the special path gone, there's no need for
-flush_error path either.
+Looks good,
 
-Thanks.
 
--- 
-tejun
+Reviewed-by: Christoph Hellwig <hch@lst.de>
