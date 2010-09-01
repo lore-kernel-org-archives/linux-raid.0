@@ -1,128 +1,178 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH UPDATED 4/5] dm: implement REQ_FLUSH/FUA support for request-based
- dm
-Date: Wed, 01 Sep 2010 16:15:27 +0900
-Message-ID: <4C7DFD8F.6070200@ct.jp.nec.com>
-References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: safety of retrying SYNCHRONIZE CACHE [was: Re: [PATCHSET block#for-2.6.36-post]
+ block: replace barrier with sequenced flush]
+Date: Wed, 01 Sep 2010 09:32:20 +0200
+Message-ID: <4C7E0184.9030502@suse.de>
+References: <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org> <4C74CD95.1000208@ct.jp.nec.com> <20100825152831.GA8509@redhat.com> <4C7789BE.1060609@ct.jp.nec.com> <20100827134940.GA22504@redhat.com> <4C7B4C23.8020100@ct.jp.nec.com> <20100901005537.GA21466@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C7BD202.4040700@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100901005537.GA21466@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Tejun Heo <tj@kernel.org>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com, Frederick.Knight@netapp.com
 List-Id: linux-raid.ids
 
-Hi Tejun,
+Mike Snitzer wrote:
+> Hi Kiyoshi,
+>=20
+> On Mon, Aug 30 2010 at  2:13am -0400,
+> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+>=20
+>>> That does seem like a valid concern.  But I'm not seeing why its un=
+ique
+>>> to SYNCHRONIZE CACHE.  Any IO that fails on the target side should =
+be
+>>> passed up once the error gets to DM.
+>> See the Tejun's explanation again:
+>>     http://marc.info/?l=3Dlinux-kernel&m=3D128267361813859&w=3D2
+>> What I'm concerning is whether the same thing as Tejun explained
+>> for ATA can happen on other types of devices.
+>>
+>>
+>> Normal write command has data and no data loss happens on error.
+>> So it can be retried cleanly, and if the result of the retry is
+>> success, it's really success, no implicit data loss.
+>>
+>> Normal read command has a sector to read.  If the sector is broken,
+>> all retries will fail and the error will be reported upwards.
+>> So it can be retried cleanly as well.
+>=20
+> I reached out to Fred Knight on this, to get a more insight from a pu=
+re
+> SCSI SBC perspective, and he shared the following:
+>=20
+> ----- Forwarded message from "Knight, Frederick" <Frederick.Knight@ne=
+tapp.com> -----
+>=20
+>> Date: Tue, 31 Aug 2010 13:24:15 -0400
+>> From: "Knight, Frederick" <Frederick.Knight@netapp.com>
+>> To: Mike Snitzer <snitzer@redhat.com>
+>> Subject: RE: safety of retrying SYNCHRONIZE CACHE?
+>>
+>> There are requirements in SBC to maintain data integrity.  If you WR=
+ITE
+>> a block and READ that block, you must get the data you sent in the
+>> WRITE.  This will be synchronized around the completion of the WRITE=
+=2E
+>> Before the WRITE completes, who knows what a READ will return.  Mayb=
+e
+>> all the old data, maybe all the new data, maybe some mix of old and =
+new
+>> data.  Once the WRITE ends successful, all READs of those LBAs (from=
+ any
+>> port) will always get the same data.
+>>
+>> As for errors, SBC describes how the deferred errors are reported (l=
+ike
+>> when a CACHE tries to flush but fails).  So if a write from cache to
+>> media does have problems, the device would tell you via a CHECK
+>> CONDITION (with the first byte of the sense data set to 71h or 73h. =
+ SBC
+>> clause 4.12 and 4.13 cover a lot of this information.  It is these e=
+rror
+>> codes that prevent silent loss of data.  And, in this case, when the
+>> CHECK CONDITION is delivered, it will have nothing to do with the
+>> command that was issued (the victim command).  If you look into the
+>> sense data, you will see the deferred error flag, and all the additi=
+onal
+>> information fields will relate to the original I/O
+>>
+>> SYNCHRONIZE CACHE is not substantially different than a WRITE (it pu=
+ts
+>> data on the media).  So issuing it multiple times wouldn't be any
+>> different than issuing multiple WRITES (it might put a temporary den=
+t in
+>> performance as everything flushes out to media).  If it or any other
+>> commands fail with 71h/73h, then you have to dig down into the sense
+>> data buffer to find out what happened.  For example, if you issue a
+>> WRITE command, and it completes into write back cache but later (bef=
+ore
+>> being written to the media), some of the cache breaks and looses dat=
+a,
+>> then the device must signal a deferred error to tell the host, and c=
+ause
+>> a forced error on the LBA in question.
+>>
+>> Does that help?
+>>
+>>       Fred
+> ----- End forwarded message -----
+>=20
+> Seems like verifying/improving the handling of CHECK CONDITION is a m=
+ore
+> pressing concern than silent data loss purely due to SYNCHRONIZE CACH=
+E
+> retries.  Without proper handling we could completely miss these
+> deferred errors.
+>=20
+Yes.
 
-On 08/31/2010 12:45 AM +0900, Tejun Heo wrote:
-> This patch converts request-based dm to support the new REQ_FLUSH/FUA.
-> 
-> The original request-based flush implementation depended on
-> request_queue blocking other requests while a barrier sequence is in
-> progress, which is no longer true for the new REQ_FLUSH/FUA.
-> 
-> In general, request-based dm doesn't have infrastructure for cloning
-> one source request to multiple targets, but the original flush
-> implementation had a special mostly independent path which can issue
-> flushes to multiple targets and sequence them.  However, the
-> capability isn't currently in use and adds a lot of complexity.
-> Moreoever, it's unlikely to be useful in its current form as it
-> doesn't make sense to be able to send out flushes to multiple targets
-> when write requests can't be.
-> 
-> This patch rips out special flush code path and deals handles
-> REQ_FLUSH/FUA requests the same way as other requests.  The only
-> special treatment is that REQ_FLUSH requests use the block address 0
-> when finding target, which is enough for now.
-> 
-> * added BUG_ON(!dm_target_is_valid(ti)) in dm_request_fn() as
->   suggested by Mike Snitzer
+> But how to effectively report such errors to upper layers is unclear =
+to
+> me given that a particular SCSI command can carry error information f=
+or
+> IO that was already acknowledged successful (e.g. to the FS).
+>=20
+> drivers/scsi/scsi_error.c's various calls to scsi_check_sense()
+> illustrate Linux's current CHECK CONDITION handling.  I need to look
+> closer at how deferred errors propagate to upper layers.  After an
+> initial look it seems scsi_error.c does handle retrying commands wher=
+e
+> appropriate.
+>=20
+> I believe Hannes has concerns/insight here.
+>=20
 
-Thank you for your work.
+Quite. We _should_ be handling deferred errors correctly;
+if you check drivers/scsi/scsi_lib.c:scsi_io_completion()
+you'll find this:
 
-I don't see any obvious problem on this patch.
-However, I hit a NULL pointer dereference below when I use a mpath
-device with barrier option of ext3.  I'm investigating the cause now.
-(Also I'm not sure the cause of the hang which Mike is hitting yet.)
+	if (host_byte(result) =3D=3D DID_RESET) {
+		/* Third party bus reset or reset for error recovery
+		 * reasons.  Just retry the command and see what
+		 * happens.
+		 */
+		action =3D ACTION_RETRY;
+	} else if (sense_valid && !sense_deferred) {
+                ...
+	} else {
+		description =3D "Unhandled error code";
+		action =3D ACTION_FAIL;
+	}
 
-I tried on the commit 28dd53b26d362c16234249bad61db8cbd9222d0b of
-git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua.
+ie for deferred errors we're already aborting the command. Not sure
+if I agree with this bit in drivers/scsi/scsi_lib.c:
 
-    # mke2fs -j /dev/mapper/mpatha
-    # mount -o barrier=1 /dev/mapper/mpatha /mnt/0
-    # dd if=/dev/zero of=/mnt/0/a bs=512 count=1
-    # sync
+static int scsi_check_sense(struct scsi_cmnd *scmd)
+{
+	struct scsi_device *sdev =3D scmd->device;
+	struct scsi_sense_hdr sshdr;
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
-IP: [<ffffffffa0070ec3>] scsi_finish_command+0xa3/0x120 [scsi_mod]
-PGD 29fd9a067 PUD 2a21ff067 PMD 0 
-Oops: 0000 [#1] SMP 
-last sysfs file: /sys/devices/system/cpu/cpu3/cache/index2/shared_cpu_map
-CPU 1 
-Modules linked in: ext4 jbd2 crc16 ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables autofs4 lockd sunrpc cpufreq_ondemand acpi_cpufreq bridge stp llc iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi dm_mirror dm_region_hash dm_log dm_service_time dm_multipath scsi_dh dm_mod video output sbs sbshc battery ac kvm_intel kvm e1000e sg sr_mod cdrom lpfc scsi_transport_fc piix rtc_cmos rtc_core ioatdma ata_piix button serio_raw rtc_lib libata dca megaraid_sas sd_mod scsi_mod crc_t10dif ext3 jbd uhci_hcd ohci_hcd ehci_hcd [last unloaded: microcode]
+	if (! scsi_command_normalize_sense(scmd, &sshdr))
+		return FAILED;	/* no valid sense data */
 
-Pid: 0, comm: kworker/0:0 Not tainted 2.6.36-rc2+ #1 MS-9196/Express5800/120Lj [N8100-1417]
-RIP: 0010:[<ffffffffa0070ec3>]  [<ffffffffa0070ec3>] scsi_finish_command+0xa3/0x120 [scsi_mod]
-RSP: 0018:ffff880002c83e50  EFLAGS: 00010297
-RAX: 0000000000000000 RBX: 0000000000001000 RCX: 0000000000000000
-RDX: 0000000000007d7c RSI: ffffffff81389c55 RDI: 0000000000000286
-RBP: ffff880002c83e70 R08: 0000000000000002 R09: 0000000000000001
-R10: 0000000000000001 R11: 0000000000000000 R12: ffff8802a2acf750
-R13: ffff8802a25686c8 R14: ffff8802791f7eb8 R15: 0000000000000100
-FS:  0000000000000000(0000) GS:ffff880002c80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000078 CR3: 00000002a2ab6000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process kworker/0:0 (pid: 0, threadinfo ffff8802a4576000, task ffff8802a4574050)
-Stack:
- ffff8802791f7eb8 0000000000002002 000000000000ea60 0000000000000005
-<0> ffff880002c83ea0 ffffffffa0079ec8 ffff880002c83eb0 0000000000000020
-<0> ffffffff815220a0 0000000000000004 ffff880002c83ed0 ffffffff811c6636
-Call Trace:
- <IRQ> 
- [<ffffffffa0079ec8>] scsi_softirq_done+0x138/0x170 [scsi_mod]
- [<ffffffff811c6636>] blk_done_softirq+0x86/0xa0
- [<ffffffff81053036>] __do_softirq+0xd6/0x210
- [<ffffffff81003d9c>] call_softirq+0x1c/0x50
- [<ffffffff81005705>] do_softirq+0x95/0xd0
- [<ffffffff81052f4d>] irq_exit+0x4d/0x60
- [<ffffffff81391668>] do_IRQ+0x78/0xf0
- [<ffffffff8138a053>] ret_from_intr+0x0/0x16
- <EOI> 
- [<ffffffff8100b630>] ? mwait_idle+0x70/0xe0
- [<ffffffff8107cc8d>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffff8100b639>] ? mwait_idle+0x79/0xe0
- [<ffffffff8100b630>] ? mwait_idle+0x70/0xe0
- [<ffffffff81001c36>] cpu_idle+0x66/0xe0
- [<ffffffff81380e81>] ? start_secondary+0x181/0x1f0
- [<ffffffff81380e8f>] start_secondary+0x18f/0x1f0
-Code: 0c 83 e0 07 83 f8 04 77 6c 49 8b 86 80 00 00 00 41 8b 5e 68 83 78 44 02 74 27 48 8b 80 b0 00 00 00 48 8b 80 70 02 00 00 48 8b 00 <48> 8b 50 78 89 d8 48 85 d2 74 05 4c 89 f7 ff d2 39 c3 74 21 89 
-RIP  [<ffffffffa0070ec3>] scsi_finish_command+0xa3/0x120 [scsi_mod]
- RSP <ffff880002c83e50>
-CR2: 0000000000000078
+	if (scsi_sense_is_deferred(&sshdr))
+		return NEEDS_RETRY;
 
+I doubt we can resolve the situation by retrying the command, which
+will be the wrong command to retry anyway. I would rather
+have those retry 'SUCCESS' and add another case in scsi_io_completion()
+to notify us about the deferred error.
 
+I'll be sending a patch.
 
-Also, I have one comment below on this patch.
+Cheers,
 
-> @@ -2619,9 +2458,8 @@ int dm_suspend(struct mapped_device *md,
->  	up_write(&md->io_lock);
-> 
->  	/*
-> -	 * Request-based dm uses md->wq for barrier (dm_rq_barrier_work) which
-> -	 * can be kicked until md->queue is stopped.  So stop md->queue before
-> -	 * flushing md->wq.
-> +	 * Stop md->queue before flushing md->wq in case request-based
-> +	 * dm defers requests to md->wq from md->queue.
->  	 */
->  	if (dm_request_based(md))
->  		stop_queue(md->queue);
-
-Request-based dm doesn't use md->wq now, so you can just remove
-the comment above.
-
-Thanks,
-Kiyoshi Ueda
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
