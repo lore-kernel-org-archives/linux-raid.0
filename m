@@ -1,49 +1,52 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [patch v2 1/5] mm: add nofail variants of kmalloc kcalloc and
- kzalloc
-Date: Thu, 2 Sep 2010 16:51:41 +0200
-Message-ID: <20100902145141.GA3273@quack.suse.cz>
-References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
- <alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
- <4C7F5951.6040809@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] block: make sure FSEQ_DATA request has the same rq_disk as
+ the original
+Date: Thu, 02 Sep 2010 19:43:45 +0200
+Message-ID: <4C7FE251.2020003@kernel.org>
+References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org> <4C7DFD8F.6070200@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C7F5951.6040809@gmail.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C7DFD8F.6070200@ct.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-On Thu 02-09-10 09:59:13, Jiri Slaby wrote:
-> On 09/02/2010 03:02 AM, David Rientjes wrote:
-> > --- a/include/linux/slab.h +++ b/include/linux/slab.h @@ -334,6 +334,57
-> > @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
-> > return kmalloc_node(size, flags | __GFP_ZERO, node); }
-> >  
-> > +/** + * kmalloc_nofail - infinitely loop until kmalloc() succeeds.  +
-> > * @size: how many bytes of memory are required.  + * @flags: the type
-> > of memory to allocate (see kmalloc).  + * + * NOTE: no new callers of
-> > this function should be implemented!  + * All memory allocations should
-> > be failable whenever possible.  + */ +static inline void
-> > *kmalloc_nofail(size_t size, gfp_t flags) +{ +	void *ret; + +	for
-> > (;;) { +		ret = kmalloc(size, flags); +		if (ret) +
-> > return ret; +		WARN_ON_ONCE(get_order(size) >
-> > PAGE_ALLOC_COSTLY_ORDER);
-> 
-> This doesn't work as you expect. kmalloc will warn every time it fails.
-> __GFP_NOFAIL used to disable the warning. Actually what's wrong with
-> __GFP_NOFAIL? I cannot find a reason in the changelogs why the patches
-> are needed.
-  David should probably add the reasoning to the changelogs so that he
-doesn't have to explain again and again ;). But if I understood it
-correctly, the concern is that the looping checks slightly impact fast path
-of the callers which do not need it. Generally, also looping for a long
-time inside allocator isn't a nice thing but some callers aren't able to do
-better for now to the patch is imperfect in this sence...
+rq->rq_disk and bio->bi_bdev->bd_disk may differ if a request has
+passed through remapping drivers.  FSEQ_DATA request incorrectly
+followed bio->bi_bdev->bd_disk ending up being issued w/ mismatching
+rq_disk.  Make it follow orig_rq->rq_disk.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+---
+Kiyoshi, can you please apply this patch on top and verify that the
+problem goes away?  The reason I and Mike didn't see the problem was
+because we were using REQ_FUA capable underlying device, which makes
+block layer bypass sequencing for FSEQ_DATA request.
+
+Thanks.
+
+ block/blk-flush.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+Index: block/block/blk-flush.c
+===================================================================
+--- block.orig/block/blk-flush.c
++++ block/block/blk-flush.c
+@@ -111,6 +111,13 @@ static struct request *queue_next_fseq(s
+ 		break;
+ 	case QUEUE_FSEQ_DATA:
+ 		init_request_from_bio(rq, orig_rq->bio);
++		/*
++		 * orig_rq->rq_disk may be different from
++		 * bio->bi_bdev->bd_disk if orig_rq got here through
++		 * remapping drivers.  Make sure rq->rq_disk points
++		 * to the same one as orig_rq.
++		 */
++		rq->rq_disk = orig_rq->rq_disk;
+ 		rq->cmd_flags &= ~(REQ_FLUSH | REQ_FUA);
+ 		rq->cmd_flags |= orig_rq->cmd_flags & (REQ_FLUSH | REQ_FUA);
+ 		rq->end_io = flush_data_end_io;
