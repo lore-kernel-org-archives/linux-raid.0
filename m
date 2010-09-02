@@ -1,47 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH UPDATED 4/5] dm: implement REQ_FLUSH/FUA support for request-based
- dm
-Date: Thu, 02 Sep 2010 15:32:32 +0200
-Message-ID: <4C7FA770.7070004@kernel.org>
-References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org> <4C7DFD8F.6070200@ct.jp.nec.com> <4C7FA531.7060300@kernel.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [patch v2 1/5] mm: add nofail variants of kmalloc kcalloc and
+ kzalloc
+Date: Thu, 2 Sep 2010 16:51:41 +0200
+Message-ID: <20100902145141.GA3273@quack.suse.cz>
+References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
+ <alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
+ <4C7F5951.6040809@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C7FA531.7060300@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C7F5951.6040809@gmail.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/02/2010 03:22 PM, Tejun Heo wrote:
-> Hello,
+On Thu 02-09-10 09:59:13, Jiri Slaby wrote:
+> On 09/02/2010 03:02 AM, David Rientjes wrote:
+> > --- a/include/linux/slab.h +++ b/include/linux/slab.h @@ -334,6 +334,57
+> > @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
+> > return kmalloc_node(size, flags | __GFP_ZERO, node); }
+> >  
+> > +/** + * kmalloc_nofail - infinitely loop until kmalloc() succeeds.  +
+> > * @size: how many bytes of memory are required.  + * @flags: the type
+> > of memory to allocate (see kmalloc).  + * + * NOTE: no new callers of
+> > this function should be implemented!  + * All memory allocations should
+> > be failable whenever possible.  + */ +static inline void
+> > *kmalloc_nofail(size_t size, gfp_t flags) +{ +	void *ret; + +	for
+> > (;;) { +		ret = kmalloc(size, flags); +		if (ret) +
+> > return ret; +		WARN_ON_ONCE(get_order(size) >
+> > PAGE_ALLOC_COSTLY_ORDER);
 > 
-> On 09/01/2010 09:15 AM, Kiyoshi Ueda wrote:
->> I don't see any obvious problem on this patch.
->> However, I hit a NULL pointer dereference below when I use a mpath
->> device with barrier option of ext3.  I'm investigating the cause now.
->> (Also I'm not sure the cause of the hang which Mike is hitting yet.)
->>
->> I tried on the commit 28dd53b26d362c16234249bad61db8cbd9222d0b of
->> git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua.
->>
->>     # mke2fs -j /dev/mapper/mpatha
->>     # mount -o barrier=1 /dev/mapper/mpatha /mnt/0
->>     # dd if=/dev/zero of=/mnt/0/a bs=512 count=1
->>     # sync
-> 
-> Hmm... I'm trying to reproduce this problem but hasn't been successful
-> yet.
-> 
->> BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
->> IP: [<ffffffffa0070ec3>] scsi_finish_command+0xa3/0x120 [scsi_mod]
-> 
-> Can you please ask gdb which source line this is?
+> This doesn't work as you expect. kmalloc will warn every time it fails.
+> __GFP_NOFAIL used to disable the warning. Actually what's wrong with
+> __GFP_NOFAIL? I cannot find a reason in the changelogs why the patches
+> are needed.
+  David should probably add the reasoning to the changelogs so that he
+doesn't have to explain again and again ;). But if I understood it
+correctly, the concern is that the looping checks slightly impact fast path
+of the callers which do not need it. Generally, also looping for a long
+time inside allocator isn't a nice thing but some callers aren't able to do
+better for now to the patch is imperfect in this sence...
 
-Ooh, never mind.  Reproduced it.
-
-Thanks.
-
+								Honza
 -- 
-tejun
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
