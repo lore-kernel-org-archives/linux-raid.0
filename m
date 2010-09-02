@@ -1,38 +1,66 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Thu, 02 Sep 2010 22:46:35 +0400
-Message-ID: <4C7FF10B.2040102@vlnb.net>
-References: <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com> <4C7C170D.9090409@vlnb.net> <20100830210205.GD12226@quack.quadriga.com> <4C7CD18B.2060608@panasas.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [patch v2 1/5] mm: add nofail variants of
+ kmalloc kcalloc and kzalloc
+Date: Fri, 3 Sep 2010 07:15:06 +1000
+Message-ID: <20100903071506.6e6b4d63@notabene>
+References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
+	<alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
+	<4C7F5951.6040809@gmail.com> <20100902145141.GA3273@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C7CD18B.2060608@panasas.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+Return-path: <cluster-devel-bounces@redhat.com>
+In-Reply-To: <20100902145141.GA3273@quack.suse.cz>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/cluster-devel>
+List-Post: <mailto:cluster-devel@redhat.com>
+List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
+Sender: cluster-devel-bounces@redhat.com
+Errors-To: cluster-devel-bounces@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, Jens Axboe <jaxboe@fusionio.com>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-btrfs@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-raid.ids
 
-Boaz Harrosh, on 08/31/2010 01:55 PM wrote:
->>>>>> An update: I've set up an ext4 barrier testing in KVM - run fsstress,
->>>>>> kill KVM at some random moment and check that the filesystem is consistent
->>>>>> (kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
->>>>>
->>>>> But doesn't your "disk cache" survive the "power cycle" of your guest?
->>>> Yes, you're right. Thinking about it now the test setup was wrong because
->>>> it didn't refuse writes to the VM's data partition after the moment I
->>>> killed KVM. Thanks for catching this. I will probably have to use the fault
->>>> injection on the host to disallow writing the device at a certain moment.
->>>> Or does somebody have a better option?
->>>
->>> Have you considered to setup a second box as an iSCSI target (e.g.
->>> with iSCSI-SCST)? With it killing the connectivity is just a matter
->>> of a single iptables command + a lot more options.
+On Thu, 2 Sep 2010 16:51:41 +0200
+Jan Kara <jack@suse.cz> wrote:
+
+> On Thu 02-09-10 09:59:13, Jiri Slaby wrote:
+> > On 09/02/2010 03:02 AM, David Rientjes wrote:
+> > > --- a/include/linux/slab.h +++ b/include/linux/slab.h @@ -334,6 +334,57
+> > > @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
+> > > return kmalloc_node(size, flags | __GFP_ZERO, node); }
+> > >  
+> > > +/** + * kmalloc_nofail - infinitely loop until kmalloc() succeeds.  +
+> > > * @size: how many bytes of memory are required.  + * @flags: the type
+> > > of memory to allocate (see kmalloc).  + * + * NOTE: no new callers of
+> > > this function should be implemented!  + * All memory allocations should
+> > > be failable whenever possible.  + */ +static inline void
+> > > *kmalloc_nofail(size_t size, gfp_t flags) +{ +	void *ret; + +	for
+> > > (;;) { +		ret = kmalloc(size, flags); +		if (ret) +
+> > > return ret; +		WARN_ON_ONCE(get_order(size) >
+> > > PAGE_ALLOC_COSTLY_ORDER);
+> > 
+> > This doesn't work as you expect. kmalloc will warn every time it fails.
+> > __GFP_NOFAIL used to disable the warning. Actually what's wrong with
+> > __GFP_NOFAIL? I cannot find a reason in the changelogs why the patches
+> > are needed.
+>   David should probably add the reasoning to the changelogs so that he
+> doesn't have to explain again and again ;). But if I understood it
+> correctly, the concern is that the looping checks slightly impact fast path
+> of the callers which do not need it. Generally, also looping for a long
+> time inside allocator isn't a nice thing but some callers aren't able to do
+> better for now to the patch is imperfect in this sence...
 >
-> Still same problem no? the data is still cached on the backing store device
-> how do you trash the cached data?
 
-If you need to kill the device's cache you can crash/panic/power off the 
-target. That also can be well scriptable.
+I'm actually a bit confused about this too.
+I thought David said he was removing a branch on the *slow* path - which make
+sense as you wouldn't even test NOFAIL until you had a failure.
+Why are branches on the slow-path an issue??
+This is an important question to me because I still hope to see the
+swap-over-nfs patches merged eventually and they add a branch on the slow
+path (if I remember correctly).
 
-Vlad
+NeilBrown
