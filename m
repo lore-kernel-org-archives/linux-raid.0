@@ -1,224 +1,91 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch v2 1/5] mm: add nofail variants of kmalloc kcalloc and
- kzalloc
-Date: Wed, 1 Sep 2010 18:02:25 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
-References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
+From: "Martin Lui" <linuxdevel@martian111.net>
+Subject: Setting /sys/block/mdX/md/rdY/size caps to half the true value of
+ the component device size
+Date: Wed, 1 Sep 2010 23:59:47 -0700
+Message-ID: <5a6e17cae4572bddfdb55865a43b2c7b.squirrel@webmail.martian111.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Chris Webb <chris@arachsys.com>
+Cc: linux-raid@vger.kernel.org, linuxdevel@martian111.net
 List-Id: linux-raid.ids
 
-Add kmalloc_nofail(), kcalloc_nofail(), and kzalloc_nofail().  These
-functions are equivalent to kmalloc(), kcalloc(), and kzalloc(),
-respectively, except that they will never return NULL and instead loop
-forever trying to allocate memory.
+Hi Neil/Chris,
 
-If the first allocation attempt fails because the page allocator doesn't 
-implicitly loop, a warning will be emitted, including a call trace.
-Subsequent failures will suppress this warning.
+I ran into a similar situation as described in your thread (ack in Jun 2008):
+http://marc.info/?l=linux-raid&m=121381509915920&w=2
 
-These were added as helper functions for documentation and auditability.
-No future callers should be added.
+First off, thank you both for your time to make this feature work.  Since
+I've increased the partition size of my RAID partition, I too needed to
+grow my array and component devices.  To do that, I attempted to use the
+feature implemented in this patch:
+http://marc.info/?l=linux-raid&m=121434960912711&w=2
 
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- drivers/md/dm-region-hash.c |    2 +-
- fs/btrfs/inode.c            |    2 +-
- fs/gfs2/log.c               |    2 +-
- fs/gfs2/rgrp.c              |   18 +++++----------
- fs/jbd/transaction.c        |   11 ++------
- fs/reiserfs/journal.c       |    3 +-
- include/linux/slab.h        |   51 +++++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 64 insertions(+), 25 deletions(-)
+However, it seems that the value applied by this method is half the
+actual/correct value.  For example:
 
-diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
---- a/drivers/md/dm-region-hash.c
-+++ b/drivers/md/dm-region-hash.c
-@@ -290,7 +290,7 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
- 
- 	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
- 	if (unlikely(!nreg))
--		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
-+		nreg = kmalloc_nofail(sizeof(*nreg), GFP_NOIO);
- 
- 	nreg->state = rh->log->type->in_sync(rh->log, region, 1) ?
- 		      DM_RH_CLEAN : DM_RH_NOSYNC;
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -1967,7 +1967,7 @@ void btrfs_add_delayed_iput(struct inode *inode)
- 	if (atomic_add_unless(&inode->i_count, -1, 1))
- 		return;
- 
--	delayed = kmalloc(sizeof(*delayed), GFP_NOFS | __GFP_NOFAIL);
-+	delayed = kmalloc_nofail(sizeof(*delayed), GFP_NOFS);
- 	delayed->inode = inode;
- 
- 	spin_lock(&fs_info->delayed_iput_lock);
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -709,7 +709,7 @@ void gfs2_log_flush(struct gfs2_sbd *sdp, struct gfs2_glock *gl)
- 	}
- 	trace_gfs2_log_flush(sdp, 1);
- 
--	ai = kzalloc(sizeof(struct gfs2_ail), GFP_NOFS | __GFP_NOFAIL);
-+	ai = kzalloc_nofail(sizeof(struct gfs2_ail), GFP_NOFS);
- 	INIT_LIST_HEAD(&ai->ai_ail1_list);
- 	INIT_LIST_HEAD(&ai->ai_ail2_list);
- 
-diff --git a/fs/gfs2/rgrp.c b/fs/gfs2/rgrp.c
---- a/fs/gfs2/rgrp.c
-+++ b/fs/gfs2/rgrp.c
-@@ -1440,8 +1440,8 @@ static struct gfs2_rgrpd *rgblk_free(struct gfs2_sbd *sdp, u64 bstart,
- 		rgrp_blk++;
- 
- 		if (!bi->bi_clone) {
--			bi->bi_clone = kmalloc(bi->bi_bh->b_size,
--					       GFP_NOFS | __GFP_NOFAIL);
-+			bi->bi_clone = kmalloc_nofail(bi->bi_bh->b_size,
-+					       GFP_NOFS);
- 			memcpy(bi->bi_clone + bi->bi_offset,
- 			       bi->bi_bh->b_data + bi->bi_offset,
- 			       bi->bi_len);
-@@ -1759,9 +1759,6 @@ fail:
-  * @block: the block
-  *
-  * Figure out what RG a block belongs to and add that RG to the list
-- *
-- * FIXME: Don't use NOFAIL
-- *
-  */
- 
- void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
-@@ -1789,8 +1786,8 @@ void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
- 	if (rlist->rl_rgrps == rlist->rl_space) {
- 		new_space = rlist->rl_space + 10;
- 
--		tmp = kcalloc(new_space, sizeof(struct gfs2_rgrpd *),
--			      GFP_NOFS | __GFP_NOFAIL);
-+		tmp = kcalloc_nofail(new_space, sizeof(struct gfs2_rgrpd *),
-+			      GFP_NOFS);
- 
- 		if (rlist->rl_rgd) {
- 			memcpy(tmp, rlist->rl_rgd,
-@@ -1811,17 +1808,14 @@ void gfs2_rlist_add(struct gfs2_sbd *sdp, struct gfs2_rgrp_list *rlist,
-  * @rlist: the list of resource groups
-  * @state: the lock state to acquire the RG lock in
-  * @flags: the modifier flags for the holder structures
-- *
-- * FIXME: Don't use NOFAIL
-- *
-  */
- 
- void gfs2_rlist_alloc(struct gfs2_rgrp_list *rlist, unsigned int state)
- {
- 	unsigned int x;
- 
--	rlist->rl_ghs = kcalloc(rlist->rl_rgrps, sizeof(struct gfs2_holder),
--				GFP_NOFS | __GFP_NOFAIL);
-+	rlist->rl_ghs = kcalloc_nofail(rlist->rl_rgrps,
-+				sizeof(struct gfs2_holder), GFP_NOFS);
- 	for (x = 0; x < rlist->rl_rgrps; x++)
- 		gfs2_holder_init(rlist->rl_rgd[x]->rd_gl,
- 				state, 0,
-diff --git a/fs/jbd/transaction.c b/fs/jbd/transaction.c
---- a/fs/jbd/transaction.c
-+++ b/fs/jbd/transaction.c
-@@ -98,14 +98,9 @@ static int start_this_handle(journal_t *journal, handle_t *handle)
- 	}
- 
- alloc_transaction:
--	if (!journal->j_running_transaction) {
--		new_transaction = kzalloc(sizeof(*new_transaction),
--						GFP_NOFS|__GFP_NOFAIL);
--		if (!new_transaction) {
--			ret = -ENOMEM;
--			goto out;
--		}
--	}
-+	if (!journal->j_running_transaction)
-+		new_transaction = kzalloc_nofail(sizeof(*new_transaction),
-+						GFP_NOFS);
- 
- 	jbd_debug(3, "New handle %p going live.\n", handle);
- 
-diff --git a/fs/reiserfs/journal.c b/fs/reiserfs/journal.c
---- a/fs/reiserfs/journal.c
-+++ b/fs/reiserfs/journal.c
-@@ -2593,8 +2593,7 @@ static int journal_read(struct super_block *sb)
- static struct reiserfs_journal_list *alloc_journal_list(struct super_block *s)
- {
- 	struct reiserfs_journal_list *jl;
--	jl = kzalloc(sizeof(struct reiserfs_journal_list),
--		     GFP_NOFS | __GFP_NOFAIL);
-+	jl = kzalloc_nofail(sizeof(struct reiserfs_journal_list), GFP_NOFS);
- 	INIT_LIST_HEAD(&jl->j_list);
- 	INIT_LIST_HEAD(&jl->j_working_list);
- 	INIT_LIST_HEAD(&jl->j_tail_bh_list);
-diff --git a/include/linux/slab.h b/include/linux/slab.h
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -334,6 +334,57 @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
- 	return kmalloc_node(size, flags | __GFP_ZERO, node);
- }
- 
-+/**
-+ * kmalloc_nofail - infinitely loop until kmalloc() succeeds.
-+ * @size: how many bytes of memory are required.
-+ * @flags: the type of memory to allocate (see kmalloc).
-+ *
-+ * NOTE: no new callers of this function should be implemented!
-+ * All memory allocations should be failable whenever possible.
-+ */
-+static inline void *kmalloc_nofail(size_t size, gfp_t flags)
-+{
-+	void *ret;
-+
-+	for (;;) {
-+		ret = kmalloc(size, flags);
-+		if (ret)
-+			return ret;
-+		WARN_ON_ONCE(get_order(size) > PAGE_ALLOC_COSTLY_ORDER);
-+	}
-+}
-+
-+/**
-+ * kcalloc_nofail - infinitely loop until kcalloc() succeeds.
-+ * @n: number of elements.
-+ * @size: element size.
-+ * @flags: the type of memory to allocate (see kcalloc).
-+ *
-+ * NOTE: no new callers of this function should be implemented!
-+ * All memory allocations should be failable whenever possible.
-+ */
-+static inline void *kcalloc_nofail(size_t n, size_t size, gfp_t flags)
-+{
-+	void *ret;
-+
-+	for (;;) {
-+		ret = kcalloc(n, size, flags);
-+		if (ret)
-+			return ret;
-+		WARN_ON_ONCE(get_order(size) > PAGE_ALLOC_COSTLY_ORDER);
-+	}
-+}
-+
-+/**
-+ * kzalloc_nofail - infinitely loop until kzalloc() succeeds.
-+ * @size: how many bytes of memory are required.
-+ * @flags: the type of memory to allocate (see kzalloc).
-+ */
-+static inline void *kzalloc_nofail(size_t size, gfp_t flags)
-+{
-+	return kmalloc_nofail(size, flags | __GFP_ZERO);
-+}
-+
- void __init kmem_cache_init_late(void);
- 
- #endif	/* _LINUX_SLAB_H */
+Before Change:
+# mdadm --examine /dev/sda2
+<snip>
+ Avail Dev Size : 41495751 (19.79 GiB 21.25 GB)
+     Array Size : 41495751 (19.79 GiB 21.25 GB)
+
+# cat /sys/block/md127/md/dev-sda2/size
+20747875
+
+The size here is in 1K blocks (also consistent with the documentation in
+md.txt).
+
+After Change:
+# echo "0" > /sys/block/md127/md/dev-sda2/size
+# cat /sys/block/md127/md/dev-sda2/size
+121889135
+
+# mdadm --examine /dev/sda2
+<snip>
+ Avail Dev Size : 487556541 (232.49 GiB 249.63 GB)
+     Array Size : 41495751 (19.79 GiB 21.25 GB)
+  Used Dev Size : 41495751 (19.79 GiB 21.25 GB)
+
+When attempting to grow the array, it's capped to the value stored in the
+component device's size:
+# mdadm --grow /dev/md127 --size=max
+mdadm: component size of /dev/md127 has been set to 121889135K
+
+# mdadm --examine /dev/sda2
+<snip>
+ Avail Dev Size : 487556541 (232.49 GiB 249.63 GB)
+     Array Size : 243778270 (116.24 GiB 124.81 GB)
+  Used Dev Size : 243778270 (116.24 GiB 124.81 GB)
+
+Here is the partition table:
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1          33      265041   fd  Linux raid autodetect
+/dev/sda2              34       30382   243778342+  fd  Linux raid autodetect
+
+
+The bright side is that a reboot fixes the problem.  After reboot, all the
+values show up correctly:
+# cat /sys/block/md127/md/dev-sda2/size
+243778270
+# mdadm --grow /dev/md127 --size=max
+mdadm: component size of /dev/md127 has been set to 243778270K
+
+
+With that in place, it seems that this is a very minor bug.  However, it
+does prevent one from doing everything online (I assume that was the
+original intent of this feature/patch).  Skimming at the code, it seems
+that the correct value is written to the superblock, but the value
+returned is divided 2.  Per the comments, it seems that is what gets set
+to in sysfs.  If on boot it reads the superblock, that may explain why it
+self-corrects.  (Didn't dig too much into the code, so this is a
+hypothesis).
+
+Anyways, my problem is resolved by a reboot.  Just want to pass this along
+so others don't spend time figuring this out.
+
+Thanks,
+Martin
+
