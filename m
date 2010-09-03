@@ -1,44 +1,55 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: Setting /sys/block/mdX/md/rdY/size caps to half the true value
- of the component device size
-Date: Fri, 3 Sep 2010 09:25:30 +0100
-Message-ID: <20100903082527.GR26121@arachsys.com>
-References: <5a6e17cae4572bddfdb55865a43b2c7b.squirrel@webmail.martian111.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] block: make sure FSEQ_DATA request has the same rq_disk
+ as the original
+Date: Fri, 03 Sep 2010 11:33:10 +0200
+Message-ID: <4C80C0D6.4030405@kernel.org>
+References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org> <4C7DFD8F.6070200@ct.jp.nec.com> <4C7FE251.2020003@kernel.org> <4C808BF8.7060402@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5a6e17cae4572bddfdb55865a43b2c7b.squirrel@webmail.martian111.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Martin Lui <linuxdevel@martian111.net>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <4C808BF8.7060402@ct.jp.nec.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-Martin Lui <linuxdevel@martian111.net> writes:
+Hello,
 
-> I ran into a similar situation as described in your thread (ack in Jun 2008):
-> http://marc.info/?l=linux-raid&m=121381509915920&w=2
+On 09/03/2010 07:47 AM, Kiyoshi Ueda wrote:
+> Ah, I see, thank you for the quick fix!
+> I confirmed no panic occurs with this patch.
 > 
-> First off, thank you both for your time to make this feature work.  Since
-> I've increased the partition size of my RAID partition, I too needed to
-> grow my array and component devices.  To do that, I attempted to use the
-> feature implemented in this patch:
-> http://marc.info/?l=linux-raid&m=121434960912711&w=2
-[...]
-> However, it seems that the value applied by this method is half the
-> actual/correct value.
+> Tested-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 
-Hi Martin. I'm afraid I haven't used this feature with recent kernels
-because the structure of our storage system changed so as not to require it.
+Great, thanks for testing.
 
-At the time, it definitely worked correctly, updating the component size at
-runtime, but I think there has been some work to unify the units (512 byte
-sectors vs 1kb blocks) of the various internals of the md driver since then.
-Perhaps this code wasn't updated to match the units change elsewhere? It's
-quite rarely used I think.
+> By the way, I had been considering a block-layer interface which remaps
+> struct request and its bios to a block device such as:
+> void blk_remap_request(struct request *rq, struct block_device *bdev)
+> {
+> 	rq->rq_disk = bdev->bd_disk;
+> 
+> 	__rq_for_each_bio(bio, rq) {
+> 		bio->bi_bdev = bdev->bd_disk;
+> 	}
+> }
+> 
+> If there is such an interface and remapping drivers use it, then these
+> kind of issues may be avoided in the future.
 
-Do you see this behaviour for both metadata formats 0.90 and 1.x?
+I think the problem is more with request initialization.  After all,
+once bios are packed into a request, they are (or at least should be)
+just data containers.  We now have multiple request init paths in
+block layer and different ones initialize different subsets and it's
+not very clear which fields are supposed to be initialized to what by
+whom.
 
-Best wishes,
+But yeah I agree removing discrepancy between request and bio would be
+nice to have too.  It's not really remapping tho.  Maybe just
+blk_set_rq_q() or something like that (it should also set rq->q)?
 
-Chris.
+Thanks.
+
+-- 
+tejun
