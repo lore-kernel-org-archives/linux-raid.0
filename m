@@ -1,100 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 12/41] block: simplify queue_next_fseq
-Date: Fri,  3 Sep 2010 12:29:27 +0200
-Message-ID: <1283509796-1510-13-git-send-email-tj@kernel.org>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH] block: make sure FSEQ_DATA request has the same rq_disk
+ as the original
+Date: Fri, 03 Sep 2010 19:28:22 +0900
+Message-ID: <4C80CDC6.8060100@ct.jp.nec.com>
+References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org> <4C7DFD8F.6070200@ct.jp.nec.com> <4C7FE251.2020003@kernel.org> <4C808BF8.7060402@ct.jp.nec.com> <4C80C0D6.4030405@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C80C0D6.4030405@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-From: Christoph Hellwig <hch@lst.de>
+Hi Tejun,
 
-We need to call blk_rq_init and elv_insert for all cases in queue_next_fseq,
-so take these calls into common code.  Also move the end_io initialization
-from queue_flush into queue_next_fseq and rename queue_flush to
-init_flush_request now that it's old name doesn't apply anymore.
+On 09/03/2010 06:33 PM +0900, Tejun Heo wrote:
+> On 09/03/2010 07:47 AM, Kiyoshi Ueda wrote:
+>> By the way, I had been considering a block-layer interface which remaps
+>> struct request and its bios to a block device such as:
+>> void blk_remap_request(struct request *rq, struct block_device *bdev)
+>> {
+>> 	rq->rq_disk = bdev->bd_disk;
+>>
+>> 	__rq_for_each_bio(bio, rq) {
+>> 		bio->bi_bdev = bdev->bd_disk;
+>> 	}
+>> }
+>>
+>> If there is such an interface and remapping drivers use it, then these
+>> kind of issues may be avoided in the future.
+> 
+> I think the problem is more with request initialization.  After all,
+> once bios are packed into a request, they are (or at least should be)
+> just data containers.  We now have multiple request init paths in
+> block layer and different ones initialize different subsets and it's
+> not very clear which fields are supposed to be initialized to what by
+> whom.
+> 
+> But yeah I agree removing discrepancy between request and bio would be
+> nice to have too.  It's not really remapping tho.  Maybe just
+> blk_set_rq_q() or something like that (it should also set rq->q)?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/blk-flush.c |   26 ++++++++++----------------
- 1 files changed, 10 insertions(+), 16 deletions(-)
+Thank you for pointing it.
+Yes, the interface should also set rq->q.
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 452c552..72905f8 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -74,16 +74,11 @@ static void post_flush_end_io(struct request *rq, int error)
- 	blk_flush_complete_seq(rq->q, QUEUE_FSEQ_POSTFLUSH, error);
- }
- 
--static void queue_flush(struct request_queue *q, struct request *rq,
--			rq_end_io_fn *end_io)
-+static void init_flush_request(struct request *rq, struct gendisk *disk)
- {
--	blk_rq_init(q, rq);
- 	rq->cmd_type = REQ_TYPE_FS;
- 	rq->cmd_flags = REQ_FLUSH;
--	rq->rq_disk = q->orig_flush_rq->rq_disk;
--	rq->end_io = end_io;
--
--	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
-+	rq->rq_disk = disk;
- }
- 
- static struct request *queue_next_fseq(struct request_queue *q)
-@@ -91,29 +86,28 @@ static struct request *queue_next_fseq(struct request_queue *q)
- 	struct request *orig_rq = q->orig_flush_rq;
- 	struct request *rq = &q->flush_rq;
- 
-+	blk_rq_init(q, rq);
-+
- 	switch (blk_flush_cur_seq(q)) {
- 	case QUEUE_FSEQ_PREFLUSH:
--		queue_flush(q, rq, pre_flush_end_io);
-+		init_flush_request(rq, orig_rq->rq_disk);
-+		rq->end_io = pre_flush_end_io;
- 		break;
--
- 	case QUEUE_FSEQ_DATA:
--		/* initialize proxy request, inherit FLUSH/FUA and queue it */
--		blk_rq_init(q, rq);
- 		init_request_from_bio(rq, orig_rq->bio);
- 		rq->cmd_flags &= ~(REQ_FLUSH | REQ_FUA);
- 		rq->cmd_flags |= orig_rq->cmd_flags & (REQ_FLUSH | REQ_FUA);
- 		rq->end_io = flush_data_end_io;
--
--		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
- 		break;
--
- 	case QUEUE_FSEQ_POSTFLUSH:
--		queue_flush(q, rq, post_flush_end_io);
-+		init_flush_request(rq, orig_rq->rq_disk);
-+		rq->end_io = post_flush_end_io;
- 		break;
--
- 	default:
- 		BUG();
- 	}
-+
-+	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
- 	return rq;
- }
- 
--- 
-1.7.1
+About the naming of the interface, blk_set_<something> sounds
+reasonable to me.
+But does blk_set_rq_q() take request and queue as arguments?
+Then, I'm afraid we can't find bdev for bio from given queue.
+
+Thanks,
+Kiyoshi Ueda
