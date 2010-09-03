@@ -1,66 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [patch v2 1/5] mm: add nofail variants of
- kmalloc kcalloc and kzalloc
-Date: Fri, 3 Sep 2010 07:15:06 +1000
-Message-ID: <20100903071506.6e6b4d63@notabene>
-References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com>
-	<alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
-	<4C7F5951.6040809@gmail.com> <20100902145141.GA3273@quack.suse.cz>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH UPDATED 4/5] dm: implement REQ_FLUSH/FUA support for request-based
+ dm
+Date: Fri, 03 Sep 2010 14:46:32 +0900
+Message-ID: <4C808BB8.6040005@ct.jp.nec.com>
+References: <1283162296-13650-1-git-send-email-tj@kernel.org> <1283162296-13650-5-git-send-email-tj@kernel.org> <20100830132836.GB5283@redhat.com> <4C7BB932.1070405@kernel.org> <4C7BD202.4040700@kernel.org> <4C7DFD8F.6070200@ct.jp.nec.com> <4C7FA531.7060300@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <cluster-devel-bounces@redhat.com>
-In-Reply-To: <20100902145141.GA3273@quack.suse.cz>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/cluster-devel>
-List-Post: <mailto:cluster-devel@redhat.com>
-List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
-	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
-Sender: cluster-devel-bounces@redhat.com
-Errors-To: cluster-devel-bounces@redhat.com
-To: Jan Kara <jack@suse.cz>
-Cc: cluster-devel@redhat.com, linux-ext4@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, Jens Axboe <jaxboe@fusionio.com>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, David Rientjes <rientjes@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-btrfs@vger.kernel.org, Frederic Weisbecker <fweisbec@gmail.com>, Chris Mason <chris.mason@oracle.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C7FA531.7060300@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, j-nomura@ce.jp.nec.com, jamie@shareable.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de
 List-Id: linux-raid.ids
 
-On Thu, 2 Sep 2010 16:51:41 +0200
-Jan Kara <jack@suse.cz> wrote:
+Hi Tejun,
 
-> On Thu 02-09-10 09:59:13, Jiri Slaby wrote:
-> > On 09/02/2010 03:02 AM, David Rientjes wrote:
-> > > --- a/include/linux/slab.h +++ b/include/linux/slab.h @@ -334,6 +334,57
-> > > @@ static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
-> > > return kmalloc_node(size, flags | __GFP_ZERO, node); }
-> > >  
-> > > +/** + * kmalloc_nofail - infinitely loop until kmalloc() succeeds.  +
-> > > * @size: how many bytes of memory are required.  + * @flags: the type
-> > > of memory to allocate (see kmalloc).  + * + * NOTE: no new callers of
-> > > this function should be implemented!  + * All memory allocations should
-> > > be failable whenever possible.  + */ +static inline void
-> > > *kmalloc_nofail(size_t size, gfp_t flags) +{ +	void *ret; + +	for
-> > > (;;) { +		ret = kmalloc(size, flags); +		if (ret) +
-> > > return ret; +		WARN_ON_ONCE(get_order(size) >
-> > > PAGE_ALLOC_COSTLY_ORDER);
-> > 
-> > This doesn't work as you expect. kmalloc will warn every time it fails.
-> > __GFP_NOFAIL used to disable the warning. Actually what's wrong with
-> > __GFP_NOFAIL? I cannot find a reason in the changelogs why the patches
-> > are needed.
->   David should probably add the reasoning to the changelogs so that he
-> doesn't have to explain again and again ;). But if I understood it
-> correctly, the concern is that the looping checks slightly impact fast path
-> of the callers which do not need it. Generally, also looping for a long
-> time inside allocator isn't a nice thing but some callers aren't able to do
-> better for now to the patch is imperfect in this sence...
->
+On 09/02/2010 10:22 PM +0900, Tejun Heo wrote:
+> On 09/01/2010 09:15 AM, Kiyoshi Ueda wrote:
+>>> @@ -2619,9 +2458,8 @@ int dm_suspend(struct mapped_device *md,
+>>>  	up_write(&md->io_lock);
+>>>
+>>>  	/*
+>>> -	 * Request-based dm uses md->wq for barrier (dm_rq_barrier_work) which
+>>> -	 * can be kicked until md->queue is stopped.  So stop md->queue before
+>>> -	 * flushing md->wq.
+>>> +	 * Stop md->queue before flushing md->wq in case request-based
+>>> +	 * dm defers requests to md->wq from md->queue.
+>>>  	 */
+>>>  	if (dm_request_based(md))
+>>>  		stop_queue(md->queue);
+>> 
+>> Request-based dm doesn't use md->wq now, so you can just remove
+>> the comment above.
+> 
+> I sure can remove it but md->wq already has most stuff necessary to
+> process deferred requests and when someone starts using it, having the
+> comment there about the rather delicate ordering would definitely be
+> helpful, so I suggest keeping the comment.
 
-I'm actually a bit confused about this too.
-I thought David said he was removing a branch on the *slow* path - which make
-sense as you wouldn't even test NOFAIL until you had a failure.
-Why are branches on the slow-path an issue??
-This is an important question to me because I still hope to see the
-swap-over-nfs patches merged eventually and they add a branch on the slow
-path (if I remember correctly).
+OK, makes sense.
 
-NeilBrown
+Thanks,
+Kiyoshi Ueda
