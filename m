@@ -1,74 +1,67 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCHSET #upstream] block,
- fs: replace HARDBARRIER with FLUSH/FUA, take#2
-Date: Fri, 03 Sep 2010 20:53:34 +0200
-Message-ID: <4C81442E.5040301@fusionio.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: the true behavior of mdadm's raid-1 with regard to vertical parity
+ and silent error detection/scrubbing- confirmation or feature request
+Date: Sat, 04 Sep 2010 14:38:56 -0400
+Message-ID: <4C829240.1080600@tmr.com>
+References: <4C6B59F6.5020001@silcon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Tejun Heo <tj@kernel.org>
-Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C6B59F6.5020001@silcon.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Brett L. Trotter" <brett@silcon.com>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 09/03/2010 12:29 PM, Tejun Heo wrote:
-> Hello,
-> 
-> This patchset is combination of the following two patchsets.
-> 
->  [1] block, fs: replace HARDBARRIER with FLUSH/FUA
->  [2] block, dm: finish REQ_FLUSH/FUA conversion, take#2
-> 
-> Changes from the previous postings are
-> 
-> * Rebased on top of v2.6.36-rc3.
-> 
-> * 0010-block-implement-REQ_FLUSH-FUA-based-interface-for-FL.patch
->   description updated to include why special -EOPNOTSUPP handling is
->   no longer necessary as suggested by Mike Snitzer.
-> 
-> * 0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
->   description updated to include why flush_error and special error
->   handling logic are no longer necessary as suggested by Mike
->   Snitzer.
-> 
-> * 0013-block-initialize-flush-request-with-WRITE_FLUSH-inst.patch and
->   0014-block-kick-queue-after-sequencing-REQ_FLUSH-FUA.patch added.
->   These fixes aren't strictly required by the current users but remove
->   fishy corner cases.
-> 
-> * 0015-block-make-sure-FSEQ_DATA-request-has-the-same-rq_di.patch
->   added.  This is needed to make requested based dm work.
-> 
-> * 0026-dm-fix-locking-context-in-queue_io.patch added.  This fixes
->   locking context problem introduced by
->   0025-dm-relax-ordering-of-bio-based-flush-implementation.patch.
-> 
-> * Tested/Reviewed-by's added and patches reordered such that block
->   layer conversion comes first followed by block driver conversions,
->   filesystem conversions and then finally removal of deprecate stuff.
-> 
-> I think the patchset is mostly ready now although I would love to have
-> acked/reviewd-by's on bio-based dm conversion patches.  Jens,
-> Christoph, how do you guys wanna steer these patches?  I think it
-> would be best to go through the block tree but splitting parts and
-> doing cross tree pull/merges should be doable too.
+Brett L. Trotter wrote:
+> I've googled endlessly about the internal nature of a md Raid-1.
+>
+> Over the years, I've found several single bit flips on traditional
+> platter disks on files that were previously on a linux raid-1 that had
+> split and while doing a verification of the two copies. This seems to
+> imply that what I'm looking for doesn't exist- and that is simply a
+> vertical parity within each disk at the md level- even a single crc32
+> every once in a while so that if a bit flips on drive 1 of a mirror,
+> drive 2's copy replaces it instead of 1's bit flipped copy replacing
+> drive 2's good copy. From what I can gather, it seems to be a 50/50 shot
+> whether your good copy gets mangled in the event of a silent bit flippage.
+>
+> So- is there any built in parity that helps mdadm decide which copy to
+> use when the copies disagree on a raid 1 mirror during a resync?
+>
+> If not- is there a reason why not beyond the extra space overhead and
+> read compute write overhead?
+>
+> This issue interests me more as I look into SSDs and having flash blocks
+> wear out.
+>
+>
+> I'd choose a higher raid level if i could, but this is only a very small
+> atom 330 box with only mildly important data. I think I'm ultimately
+> looking for something like ZFS has, but ZFS under RHEL/CentOS will
+> probably never happen in any meaningful production worthy way due
+> licensing and the ultimate demise of sun and tainting of things that is
+> Oracle.
+>
+> I'd love any information anyone has on the subject.
+>   
 
-Since the core changes are block churn, it would probably be
-sanest to pull everything in there. Core into for-2.6.37/core,
-then have for-2.6.37/fs and 2.6.37/drivers on top of that.
+I don't think you are going to love this, as far as I can tell there is 
+no better recovery done for higher level raid, either, if the failure is 
+silent rather than a drive failing. When a 'check' is run and error 
+found, Neil seems to believe that it is not worth the overhead of 
+identifying the most likely wrong data, so it is simply rewritten to 
+make the mismatch go away, rather than to make an attempt to identify 
+the most likely correct data for the most likely bad sector and to fix that.
+
+On N>2 copy raid-1, no check is made (unless the change is very recent) 
+to see if N-1 copies agree on a value, and with raid-6 the obvious check 
+to find the most likely to be wrong data isn't done. This has been 
+discussed to death, I don't see any changes coming.
 
 -- 
-Jens Axboe
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
