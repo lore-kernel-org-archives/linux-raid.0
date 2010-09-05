@@ -1,54 +1,53 @@
 From: Kulikov Vasiliy <segooon@gmail.com>
-Subject: [PATCH 03/14] md: check return code of read_sb_page
-Date: Sun,  5 Sep 2010 22:32:25 +0400
-Message-ID: <1283711546-7205-1-git-send-email-segooon@gmail.com>
+Subject: [PATCH] md: do not use ++ in rcu_dereference() argument
+Date: Sun,  5 Sep 2010 22:32:18 +0400
+Message-ID: <1283711539-7123-1-git-send-email-segooon@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: kernel-janitors@vger.kernel.org
-Cc: Vasiliy Kulikov <segooon@gmail.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Vasiliy Kulikov <segooon@gmail.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Vasiliy Kulikov <segooon@gmail.com>
+=46rom: Vasiliy Kulikov <segooon@gmail.com>
 
-Function read_sb_page may return ERR_PTR(...). Check for it.
+rcu_dereference() is macro, so it might use its argument twice.
+Argument must not has side effects.
+
+It was found by compiler warning:
+drivers/md/raid1.c: In function =E2=80=98read_balance=E2=80=99:
+drivers/md/raid1.c:445: warning: operation on =E2=80=98new_disk=E2=80=99=
+ may be undefined
 
 Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
 ---
- Compile tested.
+ drivers/md/raid1.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- drivers/md/bitmap.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index ed4900a..33531da 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -936,6 +936,7 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 	int outofdate;
- 	int ret = -ENOSPC;
- 	void *paddr;
-+	struct page *p;
- 
- 	chunks = bitmap->chunks;
- 	file = bitmap->file;
-@@ -999,11 +1000,16 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 				 */
- 				page = bitmap->sb_page;
- 				offset = sizeof(bitmap_super_t);
--				if (!file)
--					read_sb_page(bitmap->mddev,
-+				if (!file) {
-+					p = read_sb_page(bitmap->mddev,
- 						     bitmap->mddev->bitmap_info.offset,
- 						     page,
- 						     index, count);
-+					if (IS_ERR(p)) {
-+						ret = PTR_ERR(p);
-+						goto err;
-+					}
-+				}
- 			} else if (file) {
- 				page = read_page(file, index, bitmap, count);
- 				offset = 0;
--- 
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index ad83a4d..12194df 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -442,7 +442,7 @@ static int read_balance(conf_t *conf, r1bio_t *r1_b=
+io)
+ 		     r1_bio->bios[new_disk] =3D=3D IO_BLOCKED ||
+ 		     !rdev || !test_bit(In_sync, &rdev->flags)
+ 			     || test_bit(WriteMostly, &rdev->flags);
+-		     rdev =3D rcu_dereference(conf->mirrors[++new_disk].rdev)) {
++		     rdev =3D rcu_dereference(conf->mirrors[new_disk].rdev)) {
+=20
+ 			if (rdev && test_bit(In_sync, &rdev->flags) &&
+ 				r1_bio->bios[new_disk] !=3D IO_BLOCKED)
+@@ -452,6 +452,7 @@ static int read_balance(conf_t *conf, r1bio_t *r1_b=
+io)
+ 				new_disk =3D wonly_disk;
+ 				break;
+ 			}
++			new_disk++;
+ 		}
+ 		goto rb_out;
+ 	}
+--=20
 1.7.0.4
