@@ -1,30 +1,54 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: the true behavior of mdadm's raid-1 with regard to vertical
- parity and silent error detection/scrubbing- confirmation or feature
- request
-Date: Sat, 4 Sep 2010 20:56:21 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1009042054110.13746@uplift.swm.pp.se>
-References: <4C6B59F6.5020001@silcon.com> <4C829240.1080600@tmr.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C829240.1080600@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: "Brett L. Trotter" <brett@silcon.com>, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+From: Kulikov Vasiliy <segooon@gmail.com>
+Subject: [PATCH 03/14] md: check return code of read_sb_page
+Date: Sun,  5 Sep 2010 22:32:25 +0400
+Message-ID: <1283711546-7205-1-git-send-email-segooon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kernel-janitors@vger.kernel.org
+Cc: Vasiliy Kulikov <segooon@gmail.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 4 Sep 2010, Bill Davidsen wrote:
+From: Vasiliy Kulikov <segooon@gmail.com>
 
-> This has been discussed to death, I don't see any changes coming.
+Function read_sb_page may return ERR_PTR(...). Check for it.
 
-True. If someone really wants this (for instance 64k on drive using 4k ECC 
-data for a total of 68k per stripe) and are willing to put either money on 
-the table for someone to write it, or someone is volunteering, I don't see 
-this coming either.
+Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+---
+ Compile tested.
 
-If someone is willing to actually code (or have it coded) then a 
-discussion should first happen if such a change would be accepted.
+ drivers/md/bitmap.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index ed4900a..33531da 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -936,6 +936,7 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 	int outofdate;
+ 	int ret = -ENOSPC;
+ 	void *paddr;
++	struct page *p;
+ 
+ 	chunks = bitmap->chunks;
+ 	file = bitmap->file;
+@@ -999,11 +1000,16 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 				 */
+ 				page = bitmap->sb_page;
+ 				offset = sizeof(bitmap_super_t);
+-				if (!file)
+-					read_sb_page(bitmap->mddev,
++				if (!file) {
++					p = read_sb_page(bitmap->mddev,
+ 						     bitmap->mddev->bitmap_info.offset,
+ 						     page,
+ 						     index, count);
++					if (IS_ERR(p)) {
++						ret = PTR_ERR(p);
++						goto err;
++					}
++				}
+ 			} else if (file) {
+ 				page = read_page(file, index, bitmap, count);
+ 				offset = 0;
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+1.7.0.4
