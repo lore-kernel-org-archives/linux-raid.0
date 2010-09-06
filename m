@@ -1,131 +1,29 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 24.5/30] jbd2: Modify ASYNC_COMMIT code to not rely on
- queue draining on barrier
-Date: Mon, 6 Sep 2010 13:40:26 +0200
-Message-ID: <20100906114026.GA4243@quack.suse.cz>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org>
- <4C762476.2020802@suse.de>
- <08ADE50E-9B33-4834-B08A-AD342D63D1F9@dilger.ca>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: some non critical problems... (1. mdadm segfault ->
+ write-mostly, 2. smart?)
+Date: Mon, 6 Sep 2010 14:17:14 +0200
+Message-ID: <20100906141714.32a5dba4@atak.bl.pg.gda.pl>
+References: <20100906141324.1a19fa4d@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <08ADE50E-9B33-4834-B08A-AD342D63D1F9@dilger.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Tejun Heo <teheo@suse.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100906141324.1a19fa4d@atak.bl.pg.gda.pl>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon 06-09-10 13:15:52, Andreas Dilger wrote:
-> On 2010-08-26, at 10:23, Tejun Heo wrote:
-> > From 49f4cef00a1bd3c79fb2fe1f982c5157f0792867 Mon Sep 17 00:00:00 2001
-> > From: Jan Kara <jack@suse.cz>
-> > 
-> > Currently JBD2 relies blkdev_issue_flush() draining the queue when ASYNC_COMMIT
-> > feature is set. This property is going away so make JBD2 wait for buffers it
-> > needs on its own before submitting the cache flush.
-> 
-> I finally had a chance to look at this patch more closely, and I think it
-> may be breaking the ASYNC_COMMIT functionality, by forcing a wait for all
-> of the data blocks _before_ the journal commit block is even submitted,
-> even though ASYNC_COMMIT is enabled.
-  Yes, we do wait for *data* blocks before submitting commit block. We have
-to do it even while checksumming because data blocks aren't part of the
-checksum. Only metadata is checksummed and thus only metadata blocks
-are safe to be waited for after the commit block is submitted.
+Janek Kozicki said:     (by the date of Mon, 6 Sep 2010 14:13:24 +0200)
 
-									Honza
+> Sep  1 18:23:33 atak kernel: [   19.506889] mdadm[3703]: segfault at 134 ip 00007f903caefd9a sp 00007fff45025010 error 4 in libc.so.6[7f903caaa000+158000]
+> Sep  1 18:23:33 atak kernel: [   19.507677] mdadm[3706]: segfault at 134 ip 00007f5779212d9a sp 00007fff81748740 error 4 in libc.so.6[7f57791cd000+158000]
+> Sep  1 18:23:33 atak kernel: [   19.527658] mdadm[3705]: segfault at 134 ip 00007f5779212d9a sp 00007fff81748740 error 4 in libc.so.6[7f57791cd000+158000]
 
-> When ASYNC_COMMIT is enabled, it means that the journal transaction
-> coherency is handled by the commit block checksum of the transaction data
-> blocks, so the commit block can be submitted to the journal at the same
-> time as the transaction data blocks.  The flush on the journal device
-> (and the filesystem device, if they are separate) should happen after
-> both are submitted.
-> 
-> However, if ASYNC_COMMIT is NOT enabled, then the transaction data blocks
-> should be submitted and flushed before the journal commit block is
-> submitted, and then there should be a second cache flush afterward.
-> 
-> ---
-> > This patch is necessary before enabling flush/fua support in jbd2.
-> > The flush-fua git tree has been udpated to included this between patch
-> > 24 and 25.
-> > 
-> > Thanks.
-> > 
-> > fs/jbd2/commit.c |   29 ++++++++++++++++-------------
-> > 1 files changed, 16 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
-> > index 7c068c1..8797fd1 100644
-> > --- a/fs/jbd2/commit.c
-> > +++ b/fs/jbd2/commit.c
-> > @@ -701,6 +701,16 @@ start_journal_io:
-> > 		}
-> > 	}
-> > 
-> > +	err = journal_finish_inode_data_buffers(journal, commit_transaction);
-> > +	if (err) {
-> > +		printk(KERN_WARNING
-> > +			"JBD2: Detected IO errors while flushing file data "
-> > +		       "on %s\n", journal->j_devname);
-> > +		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
-> > +			jbd2_journal_abort(journal, err);
-> > +		err = 0;
-> > +	}
-> > +
-> > 	/*
-> > 	 * If the journal is not located on the file system device,
-> > 	 * then we must flush the file system device before we issue
-> > @@ -719,19 +729,6 @@ start_journal_io:
-> > 						 &cbh, crc32_sum);
-> > 		if (err)
-> > 			__jbd2_journal_abort_hard(journal);
-> > -		if (journal->j_flags & JBD2_BARRIER)
-> > -			blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
-> > -				BLKDEV_IFL_WAIT);
-> > -	}
-> > -
-> > -	err = journal_finish_inode_data_buffers(journal, commit_transaction);
-> > -	if (err) {
-> > -		printk(KERN_WARNING
-> > -			"JBD2: Detected IO errors while flushing file data "
-> > -		       "on %s\n", journal->j_devname);
-> > -		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
-> > -			jbd2_journal_abort(journal, err);
-> > -		err = 0;
-> > 	}
-> > 
-> > 	/* Lo and behold: we have just managed to send a transaction to
-> > @@ -845,6 +842,12 @@ wait_for_iobuf:
-> > 	}
-> > 	if (!err && !is_journal_aborted(journal))
-> > 		err = journal_wait_on_commit_record(journal, cbh);
-> > +	if (JBD2_HAS_INCOMPAT_FEATURE(journal,
-> > +				      JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT) &&
-> > +	    journal->j_flags & JBD2_BARRIER) {
-> > +			blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
-> > +				BLKDEV_IFL_WAIT);
-> > +	}
-> > 
-> > 	if (err)
-> > 		jbd2_journal_abort(journal, err);
-> > -- 
-> > 1.7.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> Cheers, Andreas
-> 
-> 
-> 
-> 
-> 
+I should have all the debug information installed and System.map file
+too. So if you need some file to identify what is 00007f903caefd9a,
+please tell. Personally I don't know how to find what is
+00007f903caefd9a. Just tell me what to do, if you feel like
+investigating this further.
+
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Janek Kozicki                               http://janek.kozicki.pl/  |
