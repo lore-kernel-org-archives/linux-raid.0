@@ -1,36 +1,147 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [patch v2 1/5] mm: add nofail variants of kmalloc kcalloc and
- kzalloc
-Date: Mon, 6 Sep 2010 02:05:27 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1009060204001.10552@chino.kir.corp.google.com>
-References: <alpine.DEB.2.00.1008240340010.18908@chino.kir.corp.google.com> <alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
+Date: Mon, 6 Sep 2010 21:05:43 +1000
+Message-ID: <20100906210543.34c2dbad@notabene>
+References: <1283711539-7123-1-git-send-email-segooon@gmail.com>
+	<20100905190139.GA3163@merkur.ravnborg.org>
+	<20100905192335.GA8140@albatros>
+	<20100905203908.GA3228@merkur.ravnborg.org>
+	<20100906152931.1d4a1d07@notabene>
+	<4C849BA4.1080106@bfs.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1009011757360.24694@chino.kir.corp.google.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Chris Mason <chris.mason@oracle.com>, Steven Whitehouse <swhiteho@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, Jan Kara <jack@suse.cz>, Frederic Weisbecker <fweisbec@gmail.com>, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C849BA4.1080106@bfs.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: wharms@bfs.de
+Cc: Sam Ravnborg <sam@ravnborg.org>, Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 1 Sep 2010, David Rientjes wrote:
+On Mon, 06 Sep 2010 09:43:32 +0200
+walter harms <wharms@bfs.de> wrote:
 
-> Add kmalloc_nofail(), kcalloc_nofail(), and kzalloc_nofail().  These
-> functions are equivalent to kmalloc(), kcalloc(), and kzalloc(),
-> respectively, except that they will never return NULL and instead loop
-> forever trying to allocate memory.
 > 
-> If the first allocation attempt fails because the page allocator doesn't 
-> implicitly loop, a warning will be emitted, including a call trace.
-> Subsequent failures will suppress this warning.
 > 
-> These were added as helper functions for documentation and auditability.
-> No future callers should be added.
+> Neil Brown schrieb: 
+> > I've taken the opportunity to substantially re-write that code.
+> > 
+> > Comments?
+> > 
+> > Thanks,
+> > NeilBrown
+> > 
+> > commit e4062735c8f7233923df5858ed20f1278f3ee669
+> > Author: NeilBrown <neilb@suse.de>
+> > Date:   Mon Sep 6 14:10:08 2010 +1000
+> > 
+> >     md: tidy up device searches in read_balance.
+> >     
+> >     We have a pre-increment side-effect in the arg to a macro:
+> >       rcu_dereference
+> >     
+> >     This is poor form and triggers a warning.  Rather than just fix that,
+> >     take the opportunity to re-write the code it make it more readable.
+> >     
+> >     Reported-by: Kulikov Vasiliy <segooon@gmail.com>
+> >     Signed-off-by: NeilBrown <neilb@suse.de>
+> > 
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index ad83a4d..e29e13f 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -420,11 +420,13 @@ static void raid1_end_write_request(struct bio *bio, int error)
+> >  static int read_balance(conf_t *conf, r1bio_t *r1_bio)
+> >  {
+> >  	const sector_t this_sector = r1_bio->sector;
+> > -	int new_disk = conf->last_used, disk = new_disk;
+> > -	int wonly_disk = -1;
+> > +	int new_disk = -1;
+> > +	int start_disk;
+> > +	int i;
+> >  	const int sectors = r1_bio->sectors;
+> >  	sector_t new_distance, current_distance;
+> >  	mdk_rdev_t *rdev;
+> > +	int choose_first;
+> >  
+> >  	rcu_read_lock();
+> >  	/*
+> > @@ -435,54 +437,35 @@ static int read_balance(conf_t *conf, r1bio_t *r1_bio)
+> >   retry:
+> >  	if (conf->mddev->recovery_cp < MaxSector &&
+> >  	    (this_sector + sectors >= conf->next_resync)) {
+> > -		/* Choose the first operational device, for consistancy */
+> > -		new_disk = 0;
+> > -
+> > -		for (rdev = rcu_dereference(conf->mirrors[new_disk].rdev);
+> > -		     r1_bio->bios[new_disk] == IO_BLOCKED ||
+> > -		     !rdev || !test_bit(In_sync, &rdev->flags)
+> > -			     || test_bit(WriteMostly, &rdev->flags);
+> > -		     rdev = rcu_dereference(conf->mirrors[++new_disk].rdev)) {
+> > -
+> > -			if (rdev && test_bit(In_sync, &rdev->flags) &&
+> > -				r1_bio->bios[new_disk] != IO_BLOCKED)
+> > -				wonly_disk = new_disk;
+> > -
+> > -			if (new_disk == conf->raid_disks - 1) {
+> > -				new_disk = wonly_disk;
+> > -				break;
+> > -			}
+> > -		}
+> > -		goto rb_out;
+> > +		choose_first = 1;
+> > +		start_disk = 0;
+> > +	} else {
+> > +		choose_first = 0;
+> > +		start_disk = conf->last_used;
+> >  	}
+> >  
+> 
+> 
+> perhaps you can drop the else when you init with
+> choose_first = 0;
+> start_disk = conf->last_used;
+
+Perhaps.  Though given the 'retry' loop it isn't obvious that would do the
+right thing.
+I think I'll keep this bit as-is.  I think it helps see to two cases more
+clearly.
+
+
+
+> > +		if (r1_bio->bios[disk] == IO_BLOCKED
+> > +		    || !(rdev = rcu_dereference(conf->mirrors[disk].rdev))
+> > +		    || !test_bit(In_sync, &rdev->flags))
+> > +			continue;
+> 
+> i think it is more readable to use:
+> 
+>   rdev = rcu_dereference(conf->mirrors[disk].rdev);
+>   if ()
 > 
 
-Are there any objections to merging this series through -mm with the 
-exception of the fifth patch for ntfs?  That particular patch needs to 
-have its WARN_ON_ONCE() condition rewritten since it fallbacks to 
-vmalloc for high order allocs.
+I think assignments inside 'if' statements have their place, but it seems
+that this is far from universal.  I've made this change, thanks.
 
-Thanks.
+> 
+> 
+> > +		if (test_bit(WriteMostly, &rdev->flags)) {
+> > +			new_disk = disk;
+> > +			continue;
+> >  		}
+> > +		new_disk = disk;
+> > +		break;
+> >  	}
+> 
+> to improve readability:
+> 
+> 	new_disk = disk;
+> 	if ( ! test_bit(WriteMostly, &rdev->flags) )
+> 		break;
+
+Yes, that is a distinct improvement.  I've made that change too.
+
+Thanks a lot for your review!!
+
+NeilBrown
+
