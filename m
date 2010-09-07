@@ -1,74 +1,68 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
-Date: Tue, 7 Sep 2010 13:50:15 -0700
-Message-ID: <20100907205015.GJ2448@linux.vnet.ibm.com>
-References: <1283711539-7123-1-git-send-email-segooon@gmail.com>
- <201009062210.56824.arnd@arndb.de>
- <20100907192154.GA14214@albatros>
- <201009072200.59509.arnd@arndb.de>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Tue, 7 Sep 2010 17:17:24 -0400
+Message-ID: <20100907211724.GA22525@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <4C84CD18.6060906@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201009072200.59509.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <4C84CD18.6060906@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Milan Broz <mbroz@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com, mpatocka@redhat.com
 List-Id: linux-raid.ids
 
-On Tue, Sep 07, 2010 at 10:00:58PM +0200, Arnd Bergmann wrote:
-> On Tuesday 07 September 2010 21:21:55 Kulikov Vasiliy wrote:
-> > #define __rcu_dereference_check(p, c, space) \
-> >         ({ \
-> >                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> >                                                                    ^
-> >                 rcu_lockdep_assert(c); \
-> >                 (void) (((typeof (*p) space *)p) == p); \
-> >                                       ^     ^
-> >                 smp_read_barrier_depends(); \
-> >                 ((typeof(*p) __force __kernel *)(_________p1)); \
-> >         })
-> > 
-> > If I understand this, it is evaluated three times, right?
-> 
-> Yes, that looks like my own fault, I added that :(
-> 
-> This patch seems to fix it, but I need to think about it some more
-> to make sure it still does everything we need.
+On Mon, Sep 06 2010 at  7:14am -0400,
+Milan Broz <mbroz@redhat.com> wrote:
 
-Let me know when you are satisfied with it, and then I will pick it up.
-
-							Thanx, Paul
-
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> On 09/03/2010 12:29 PM, Tejun Heo wrote:
 > 
-> diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
-> index 89414d6..743bc3f 100644
-> --- a/include/linux/rcupdate.h
-> +++ b/include/linux/rcupdate.h
-> @@ -313,21 +313,21 @@ extern int rcu_my_thread_group_empty(void);
->  #define __rcu_access_pointer(p, space) \
->  	({ \
->  		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> -		(void) (((typeof (*p) space *)p) == p); \
-> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
->  		((typeof(*p) __force __kernel *)(_________p1)); \
->  	})
->  #define __rcu_dereference_check(p, c, space) \
->  	({ \
->  		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
->  		rcu_lockdep_assert(c); \
-> -		(void) (((typeof (*p) space *)p) == p); \
-> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
->  		smp_read_barrier_depends(); \
->  		((typeof(*p) __force __kernel *)(_________p1)); \
->  	})
->  #define __rcu_dereference_protected(p, c, space) \
->  	({ \
->  		rcu_lockdep_assert(c); \
-> -		(void) (((typeof (*p) space *)p) == p); \
-> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
->  		((typeof(*p) __force __kernel *)(p)); \
->  	})
+> > +++ b/drivers/md/dm-crypt.c
+> > @@ -1278,7 +1278,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio,
+> >  	struct dm_crypt_io *io;
+> >  	struct crypt_config *cc;
+> >  
+> > -	if (unlikely(bio_empty_barrier(bio))) {
+> > +	if (bio->bi_rw & REQ_FLUSH) {
+> >  		cc = ti->private;
+> >  		bio->bi_bdev = cc->dev->bdev;
+> >  		return DM_MAPIO_REMAPPED;
 > 
+> ...
+> 
+> > +++ b/drivers/md/dm.c
+> > @@ -1400,14 +1391,22 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+> >  	ci.io->md = md;
+> >  	spin_lock_init(&ci.io->endio_lock);
+> >  	ci.sector = bio->bi_sector;
+> > -	ci.sector_count = bio_sectors(bio);
+> > -	if (unlikely(bio_empty_barrier(bio)))
+> > +	if (!(bio->bi_rw & REQ_FLUSH))
+> > +		ci.sector_count = bio_sectors(bio);
+> > +	else {
+> > +		/* all FLUSH bio's reaching here should be empty */
+> > +		WARN_ON_ONCE(bio_has_data(bio));
+> >  		ci.sector_count = 1;
+> > +	}
+> 
+> 
+> I would add BUG_ON(bio_has_data(bio)) either to dm-crypt target or directly to DM core
+> in this path.
+
+I agree, that WARN_ON_ONCE should be changed to BUG_ON.  This is a
+guarantee that the block layer now provides so it seems correct to have
+the DM core bug if that guarantee isn't actually provided.
+ 
+> Note that empty barrier request bypass encryption layer now in dm-crypt, so if some bio
+> with data payload reach it after the change, it causes data corruption
+> (moreover plain data reach the disk directly).
+
+Given the consequences, it wouldn't hurt to BUG_ON() in dm-crypt too.
+It's redundant if the DM core will also BUG_ON() but it serves as a
+dm-crypt safety-net/documentation.
+
+Mike
