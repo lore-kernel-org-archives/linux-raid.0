@@ -1,68 +1,107 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Tue, 7 Sep 2010 17:17:24 -0400
-Message-ID: <20100907211724.GA22525@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <4C84CD18.6060906@redhat.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 3-way mirrors
+Date: Wed, 8 Sep 2010 08:01:55 +1000
+Message-ID: <20100908080155.2ed9300e@notabene>
+References: <20100907141904.3696.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C84CD18.6060906@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Milan Broz <mbroz@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com, mpatocka@redhat.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100907141904.3696.qmail@science.horizon.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: George Spelvin <linux@horizon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 06 2010 at  7:14am -0400,
-Milan Broz <mbroz@redhat.com> wrote:
+On 7 Sep 2010 10:19:04 -0400
+"George Spelvin" <linux@horizon.com> wrote:
 
-> On 09/03/2010 12:29 PM, Tejun Heo wrote:
+> After some frustration with RAID-5 finding mismatches and not being
+> able to figure out which drive has the problem, I'm setting up a rather
+> intricate 5-way mirrored (x 2-way striped) system.
 > 
-> > +++ b/drivers/md/dm-crypt.c
-> > @@ -1278,7 +1278,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio,
-> >  	struct dm_crypt_io *io;
-> >  	struct crypt_config *cc;
-> >  
-> > -	if (unlikely(bio_empty_barrier(bio))) {
-> > +	if (bio->bi_rw & REQ_FLUSH) {
-> >  		cc = ti->private;
-> >  		bio->bi_bdev = cc->dev->bdev;
-> >  		return DM_MAPIO_REMAPPED;
+> The intention is that 3 copies will be on line at any time (dropping to
+> 2 in case of disk failure), while copies 4 and 5 will be kept off-site.
+> Occasionally one will come in, be re-synced, and then removed again.
+> (The file system can be quiesced briefly to permit a clean split.)
 > 
-> ...
+> Anyway, one nice property of a 2-drive redundancy (3+-way mirror or
+> RAID-6) is error detection: in case of a mismatch, it's possible to
+> finger the offending drive.
 > 
-> > +++ b/drivers/md/dm.c
-> > @@ -1400,14 +1391,22 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
-> >  	ci.io->md = md;
-> >  	spin_lock_init(&ci.io->endio_lock);
-> >  	ci.sector = bio->bi_sector;
-> > -	ci.sector_count = bio_sectors(bio);
-> > -	if (unlikely(bio_empty_barrier(bio)))
-> > +	if (!(bio->bi_rw & REQ_FLUSH))
-> > +		ci.sector_count = bio_sectors(bio);
-> > +	else {
-> > +		/* all FLUSH bio's reaching here should be empty */
-> > +		WARN_ON_ONCE(bio_has_data(bio));
-> >  		ci.sector_count = 1;
-> > +	}
+> My understanding of the current code is that it just copies one mirror
+> (the first readable?) to the others.  Does someone have a patch to vote
+> on the data?  If not, can someone point me at the relevant bit of code
+> and orient me enough that I can create it?
 > 
-> 
-> I would add BUG_ON(bio_has_data(bio)) either to dm-crypt target or directly to DM core
-> in this path.
 
-I agree, that WARN_ON_ONCE should be changed to BUG_ON.  This is a
-guarantee that the block layer now provides so it seems correct to have
-the DM core bug if that guarantee isn't actually provided.
- 
-> Note that empty barrier request bypass encryption layer now in dm-crypt, so if some bio
-> with data payload reach it after the change, it causes data corruption
-> (moreover plain data reach the disk directly).
+The relevant bit of code is in the MD_RECOVERY_REQUESTED branch of
+sync_request_write() in drivers/md/raid1.c
+Look for "memcmp".
 
-Given the consequences, it wouldn't hurt to BUG_ON() in dm-crypt too.
-It's redundant if the DM core will also BUG_ON() but it serves as a
-dm-crypt safety-net/documentation.
+This code runs when you "echo repair > /sys/block/mdXXX/md/sync_action
 
-Mike
+It has already read all blocks and now compares them to see if they are the
+same.  If not it copies the first to any that are different.
+
+You possibly want to factor out that code into a separate function before
+tryin to add any 'voting' code.
+
+
+> (The other thing I'd love is a more advanced sync_action that can accept a
+> block number found by "check" as a parameter to "repair" so I don't have
+> to wait while the array is re-scanned.  Um... I suppose this depends on
+> a local patch I have that logs the sector numbers of mismatches.)
+
+This is already possible via the sync_min and sync_max sysfs files.
+Write a number of sectors to sync_max and a lower number to sync_min.
+Then write 'repair' to 'sync_action'.
+When sync_completed reaches sync_max, the repair will pause.
+You can then let it continue by writing a larger number to sync_max, or tell
+it to finish by writing 'idle' to 'sync_action'.
+
+If you have patches that you think are generally useful, feel free to submit
+them to me for consideration for upstream inclusion.
+
+
+> 
+> 
+> Another thing I'm a bit worried about is the kernel's tendency to
+> add drives in the lowest-numbered open slot in a RAID.  When used in
+> multiply-mirrored RAID-10, this tends to fill up the first stripe hallf
+> before starting on the second.
+
+This is controlled by raid10_add_disk in drivers/md/raid10.c.  I would
+happily accept a patch which made a more balanced choice about where to add
+the new disk.
+
+> 
+> I'm worried that someone not paying attention will --add rather than
+> --re-add the off-site backup drives and create mirrors 4 and 5 of
+> the first stripe half, thus producing an incomplete backup.
+
+It is already on my to-do list for mdadm-3.2 to reject a --add that looks
+like it should be a --re-add.  You will need --force to make it a spare, or
+--zero it first.
+
+
+> 
+> Any suggestions on how to mitigate this risk?  And if it happens,
+> how do I recover?  Is there a way to force a drive to be added
+> as 9/10, even if 5/10 is currently empty?
+
+1/ hack at mdadm or wait for mdadm-3.2, or feed people more coffee:-)
+2/ You probably cannot recover with any amount of certainty.
+3/ That is entirely a kernel decision - 'fix' the kernel.
+
+NeilBrown
+
+
+> 
+> 
+> Thank you very much!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
