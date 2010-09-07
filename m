@@ -1,49 +1,63 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: 3-way mirrors
-Date: 7 Sep 2010 15:02:55 -0400
-Message-ID: <20100907190255.15094.qmail@science.horizon.com>
-References: <AANLkTikUt3wrpqxOX+j+3-KRKLhk4YGLvCrKxo3MAeRM@mail.gmail.com>
+From: Kulikov Vasiliy <segooon@gmail.com>
+Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
+Date: Tue, 7 Sep 2010 23:21:55 +0400
+Message-ID: <20100907192154.GA14214@albatros>
+References: <1283711539-7123-1-git-send-email-segooon@gmail.com>
+ <201009062210.56824.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikUt3wrpqxOX+j+3-KRKLhk4YGLvCrKxo3MAeRM@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <201009062210.56824.arnd@arndb.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux@horizon.com, Simetrical+list@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> This might be useful reading:
-> 
-> http://neil.brown.name/blog/20100211050355
+On Mon, Sep 06, 2010 at 22:10 +0200, Arnd Bergmann wrote:
+> On Sunday 05 September 2010 20:32:18 Kulikov Vasiliy wrote:
+> > From: Vasiliy Kulikov <segooon@gmail.com>
+> >=20
+> > rcu_dereference() is macro, so it might use its argument twice.
+> > Argument must not has side effects.
+> >=20
+> > It was found by compiler warning:
+> > drivers/md/raid1.c: In function =E2=80=98read_balance=E2=80=99:
+> > drivers/md/raid1.c:445: warning: operation on =E2=80=98new_disk=E2=80=
+=99 may be undefined
+>=20
+> I think the rcu_dereference macro should really not evaluate its argu=
+ment
+> twice, and I don't see where it does.
+> As a general rule, we try to write macros in Linux such that they beh=
+ave
+> like functions and don't have surprising side-effects.
+>=20
+> Which kernel and gcc version do you see the warning with?
+>=20
+> 	Arnd
 
-An interesting point of view, BUT...
+gcc version 4.4.3 (Ubuntu 4.4.3-4ubuntu5), linux-next.
 
-If I am seeing repeated unexplained mismatches (despite being on a good
-UPS and having no unclean shutdowns), then some part of my hardware is
-failing, and I'd like to know *what part*.
+#define __rcu_dereference_check(p, c, space) \
+	({ \
+		typeof(*p) *_________p1 =3D (typeof(*p)*__force )ACCESS_ONCE(p); \
+                                                                   ^
+		rcu_lockdep_assert(c); \
+		(void) (((typeof (*p) space *)p) =3D=3D p); \
+                                      ^     ^
+		smp_read_barrier_depends(); \
+		((typeof(*p) __force __kernel *)(_________p1)); \
+	})
 
-Even if it doesn't halp me get the current data sector back, if I see
-that drive #2 keeps having one opinion on the contents of a block while
-drives #1 and #3 have a different opinion, then it's a useful piece of
-diagnostic information.
-
-It certainly is true that, if my file system doesn't change too fast, I
-can pull the mismatching sector out of the logs and do a manual compare
-using dd.  But it's a lot nicer to avoid race conditions by placing the
-code inside md.
-
-As for an option to read the whole stripe and check it, actually you
-only need to read 2 copies.  If they agree, all is well.  If they don't,
-recovery is required.
+If I understand this, it is evaluated three times, right?
 
 
-The arguments about blocks magically changing under the file system
-don't really hold water as long as RAID-1 distributes reads across the
-component drives.  As long as that is the case, a mismatch can result in
-a silent change.  A true fix (in the absence of a higher-level checksum
-to validate the data) requires multiple reads.
-
-
-As for unclean shutdowns, I expect that the RAID code holds off barriers
-until all copies are written, so I still expect that a majority vote
-will produce a consistent file system.
-
-Thank you for the pointer!
+--=20
+Vasiliy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
