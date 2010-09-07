@@ -1,30 +1,74 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: 3-way mirrors
-Date: Tue, 7 Sep 2010 21:55:05 +0200
-Message-ID: <20100907195504.GB27145@www2.open-std.org>
-References: <4C866354.3050904@cdf.toronto.edu> <20100907184917.8181.qmail@science.horizon.com>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
+Date: Tue, 7 Sep 2010 13:50:15 -0700
+Message-ID: <20100907205015.GJ2448@linux.vnet.ibm.com>
+References: <1283711539-7123-1-git-send-email-segooon@gmail.com>
+ <201009062210.56824.arnd@arndb.de>
+ <20100907192154.GA14214@albatros>
+ <201009072200.59509.arnd@arndb.de>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100907184917.8181.qmail@science.horizon.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: iordan@cdf.toronto.edu, linux-raid@vger.kernel.org
+In-Reply-To: <201009072200.59509.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 07, 2010 at 02:49:17PM -0400, George Spelvin wrote:
-> George Spelvin wrote:
+On Tue, Sep 07, 2010 at 10:00:58PM +0200, Arnd Bergmann wrote:
+> On Tuesday 07 September 2010 21:21:55 Kulikov Vasiliy wrote:
+> > #define __rcu_dereference_check(p, c, space) \
+> >         ({ \
+> >                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
+> >                                                                    ^
+> >                 rcu_lockdep_assert(c); \
+> >                 (void) (((typeof (*p) space *)p) == p); \
+> >                                       ^     ^
+> >                 smp_read_barrier_depends(); \
+> >                 ((typeof(*p) __force __kernel *)(_________p1)); \
+> >         })
+> > 
+> > If I understand this, it is evaluated three times, right?
 > 
-> But in the meantime, I'd like check/repair passes to tell me if 2 of the 3
-> mirrors agree, so I can blame the third.
+> Yes, that looks like my own fault, I added that :(
+> 
+> This patch seems to fix it, but I need to think about it some more
+> to make sure it still does everything we need.
 
-I would like to check the error logs of the disks to see if one of the
-disagreeing blocks has had an anormaly. This would also work when you
-only have 2 copies.
+Let me know when you are satisfied with it, and then I will pick it up.
 
-Or some reporting to higher up levels, and the ability to then check out
-manually which copy to keep.
+							Thanx, Paul
 
-Best regards
-keld
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
+> index 89414d6..743bc3f 100644
+> --- a/include/linux/rcupdate.h
+> +++ b/include/linux/rcupdate.h
+> @@ -313,21 +313,21 @@ extern int rcu_my_thread_group_empty(void);
+>  #define __rcu_access_pointer(p, space) \
+>  	({ \
+>  		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
+> -		(void) (((typeof (*p) space *)p) == p); \
+> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
+>  		((typeof(*p) __force __kernel *)(_________p1)); \
+>  	})
+>  #define __rcu_dereference_check(p, c, space) \
+>  	({ \
+>  		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
+>  		rcu_lockdep_assert(c); \
+> -		(void) (((typeof (*p) space *)p) == p); \
+> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
+>  		smp_read_barrier_depends(); \
+>  		((typeof(*p) __force __kernel *)(_________p1)); \
+>  	})
+>  #define __rcu_dereference_protected(p, c, space) \
+>  	({ \
+>  		rcu_lockdep_assert(c); \
+> -		(void) (((typeof (*p) space *)p) == p); \
+> +		(void) (((typeof (*p) space *)NULL) == (typeof(p))NULL); \
+>  		((typeof(*p) __force __kernel *)(p)); \
+>  	})
+> 
