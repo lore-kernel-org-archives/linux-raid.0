@@ -1,32 +1,49 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: [PATCH] Add optional round-robbin read balancing to RAID1
-Date: Tue, 07 Sep 2010 11:31:30 +0200
-Message-ID: <4C860672.40409@computer.org>
-References: <Pine.LNX.4.64.1009061609170.11139@claw.oc9.org> <20100907084347.50e705df@natsu> <Pine.LNX.4.64.1009062201530.11139@claw.oc9.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "George Spelvin" <linux@horizon.com>
+Subject: 3-way mirrors
+Date: 7 Sep 2010 10:19:04 -0400
+Message-ID: <20100907141904.3696.qmail@science.horizon.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1009062201530.11139@claw.oc9.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Keene <linux-raid@rkeene.org>
-Cc: Roman Mamedov <roman@rm.pp.ru>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux@horizon.com
 List-Id: linux-raid.ids
 
-Roy,
+After some frustration with RAID-5 finding mismatches and not being
+able to figure out which drive has the problem, I'm setting up a rather
+intricate 5-way mirrored (x 2-way striped) system.
 
-On 07/09/10 05:03, Roy Keene wrote:
-> Also, the link you sent me wasn't too helpful, and neither is the
-> "computers" link:
-> http://en.wikipedia.org/wiki/Round_robin_(computers)
->
-> Perhaps the term is wrong altogether and should be changed to something
-> else.
+The intention is that 3 copies will be on line at any time (dropping to
+2 in case of disk failure), while copies 4 and 5 will be kept off-site.
+Occasionally one will come in, be re-synced, and then removed again.
+(The file system can be quiesced briefly to permit a clean split.)
 
-Please don't top-post.
+Anyway, one nice property of a 2-drive redundancy (3+-way mirror or
+RAID-6) is error detection: in case of a mismatch, it's possible to
+finger the offending drive.
 
-The relevant Wikipedia link is
+My understanding of the current code is that it just copies one mirror
+(the first readable?) to the others.  Does someone have a patch to vote
+on the data?  If not, can someone point me at the relevant bit of code
+and orient me enough that I can create it?
 
-http://en.wikipedia.org/wiki/Round-robin_scheduling
+(The other thing I'd love is a more advanced sync_action that can accept a
+block number found by "check" as a parameter to "repair" so I don't have
+to wait while the array is re-scanned.  Um... I suppose this depends on
+a local patch I have that logs the sector numbers of mismatches.)
 
-Jan
+
+Another thing I'm a bit worried about is the kernel's tendency to
+add drives in the lowest-numbered open slot in a RAID.  When used in
+multiply-mirrored RAID-10, this tends to fill up the first stripe hallf
+before starting on the second.
+
+I'm worried that someone not paying attention will --add rather than
+--re-add the off-site backup drives and create mirrors 4 and 5 of
+the first stripe half, thus producing an incomplete backup.
+
+Any suggestions on how to mitigate this risk?  And if it happens,
+how do I recover?  Is there a way to force a drive to be added
+as 9/10, even if 5/10 is currently empty?
+
+
+Thank you very much!
