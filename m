@@ -1,33 +1,33 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: 5 drives lost in an inactive  15 drive raid 6 system due to cable
- problem - how to recover?
-Date: Wed, 08 Sep 2010 13:47:19 -0500
-Message-ID: <4C87DA37.5000608@hardwarefreak.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 5 drives lost in an inactive  15 drive raid 6 system due to
+ cable problem - how to recover?
+Date: Wed, 8 Sep 2010 22:22:16 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1009082218280.13746@uplift.swm.pp.se>
 References: <4C87C656.2030405@stern.nyu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4C87C656.2030405@stern.nyu.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Norman White <nwhite@stern.nyu.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Norman White put forth on 9/8/2010 12:22 PM:
-> We have a 15 drive addonics array with 3 5 port sata multiplexors, one
-> of the sas cables was knocked out to one of the port multiplexors...
+On Wed, 8 Sep 2010, Norman White wrote:
 
-Exactly how/why was the SAS cable "knocked out".  Is this racked gear?
-Fix that problem before worrying about the array state, as you may find
-yourself here again in the future.
+> Any pointers on how to proceed would be helpful. Restoring 30TB takes 
+> along time.
 
-Bringing the array back up with guess work vs starting a restore now, if
-you blow the array trying to fix it with mdadm hacks, you can always
-still run the restore later.  Just make sure you do a lot of
-verification after you bring the arrays back up and they _seem_ fine.
-Don't trust surface appearances, esp when talking about 30TB of data.
+Look into the archives of this list, this has happened to numerous people 
+and most have gotten out of it ok.
 
-Just my $0.02.
+Make sure you have a recent kernel and the latest mdadm.
+
+At this point I've several times successfully done --assemble --force in 
+your situation with good result.
+
+--create --assume-clean is the absolute last resort when everything else 
+fails, is my recommendation.
 
 -- 
-Stan
+Mikael Abrahamsson    email: swmike@swm.pp.se
