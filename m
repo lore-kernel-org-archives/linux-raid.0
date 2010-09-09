@@ -1,44 +1,46 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
-Date: Thu, 9 Sep 2010 17:14:43 +0200
-Message-ID: <201009091714.44013.arnd@arndb.de>
-References: <1283711539-7123-1-git-send-email-segooon@gmail.com> <201009072200.59509.arnd@arndb.de> <20100907205015.GJ2448@linux.vnet.ibm.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Fri, 10 Sep 2010 00:53:13 +0200
+Message-ID: <20100909225313.GB29405@quack.suse.cz>
+References: <1282751267-3530-27-git-send-email-tj@kernel.org>
+ <20100825155842.GA3229@lst.de>
+ <20100825160032.GC3229@lst.de>
+ <4C753D75.2010305@kernel.org>
+ <20100825200223.GE2738@quack.suse.cz>
+ <4C76250B.6060800@kernel.org>
+ <20100827173147.GA12374@quack.suse.cz>
+ <x4939tv98n8.fsf@segfault.boston.devel.redhat.com>
+ <20100830202034.GB12226@quack.quadriga.com>
+ <4C7CB936.8010509@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100907205015.GJ2448@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C7CB936.8010509@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-On Tuesday 07 September 2010, Paul E. McKenney wrote:
-> On Tue, Sep 07, 2010 at 10:00:58PM +0200, Arnd Bergmann wrote:
-> > On Tuesday 07 September 2010 21:21:55 Kulikov Vasiliy wrote:
-> > > #define __rcu_dereference_check(p, c, space) \
-> > >         ({ \
-> > >                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> > >                                                                    ^
-> > >                 rcu_lockdep_assert(c); \
-> > >                 (void) (((typeof (*p) space *)p) == p); \
-> > >                                       ^     ^
-> > >                 smp_read_barrier_depends(); \
-> > >                 ((typeof(*p) __force __kernel *)(_________p1)); \
-> > >         })
-> > > 
-> > > If I understand this, it is evaluated three times, right?
-> > 
-> > Yes, that looks like my own fault, I added that :(
-> > 
-> > This patch seems to fix it, but I need to think about it some more
-> > to make sure it still does everything we need.
+On Tue 31-08-10 10:11:34, Tejun Heo wrote:
+> On 08/30/2010 10:20 PM, Jan Kara wrote:
+> >   My setup is that I have a dedicated partition / drive for a filesystem
+> > which is written to from a guest kernel running under KVM. I have set it up
+> > using virtio driver with cache=writeback so that the host caches the writes
+> > in a similar way disk caches them. At some point I just kill the qemu-kvm
+> > process and at that point I'd like to also throw away data cached by the
+> > host...
 > 
-> Let me know when you are satisfied with it, and then I will pick it up.
+> $ echo 1 > /sys/block/sdX/device/delete
+> $ echo - - - > /sys/class/scsi_host/hostX/scan
+> 
+> should do the trick.
+  I've tested that when mounting with barrier=0 option inside KVM, this indeed
+does destroy the filesystem rather badly. With the barrier option, ext4 has
+already survived several crash cycles while running fsstress with
+journal_async_commit option. So the patch seems to work as expected.
 
-I guess it would be good to put it in now. I haven't had the time
-to try out all cases, but the current code in -next is definitely
-broken, so please put the fix in now.
-
-	Arnd
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
