@@ -1,46 +1,36 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Fri, 10 Sep 2010 00:53:13 +0200
-Message-ID: <20100909225313.GB29405@quack.suse.cz>
-References: <1282751267-3530-27-git-send-email-tj@kernel.org>
- <20100825155842.GA3229@lst.de>
- <20100825160032.GC3229@lst.de>
- <4C753D75.2010305@kernel.org>
- <20100825200223.GE2738@quack.suse.cz>
- <4C76250B.6060800@kernel.org>
- <20100827173147.GA12374@quack.suse.cz>
- <x4939tv98n8.fsf@segfault.boston.devel.redhat.com>
- <20100830202034.GB12226@quack.quadriga.com>
- <4C7CB936.8010509@kernel.org>
+From: Drew <drew.kay@gmail.com>
+Subject: cpu_relax() usage in raid6algos.c
+Date: Thu, 9 Sep 2010 18:55:12 -0700
+Message-ID: <AANLkTim6qQyhh4S0mOYoh5XPp8Zu1dj5gm2BU4zi2UpE@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C7CB936.8010509@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue 31-08-10 10:11:34, Tejun Heo wrote:
-> On 08/30/2010 10:20 PM, Jan Kara wrote:
-> >   My setup is that I have a dedicated partition / drive for a filesystem
-> > which is written to from a guest kernel running under KVM. I have set it up
-> > using virtio driver with cache=writeback so that the host caches the writes
-> > in a similar way disk caches them. At some point I just kill the qemu-kvm
-> > process and at that point I'd like to also throw away data cached by the
-> > host...
-> 
-> $ echo 1 > /sys/block/sdX/device/delete
-> $ echo - - - > /sys/class/scsi_host/hostX/scan
-> 
-> should do the trick.
-  I've tested that when mounting with barrier=0 option inside KVM, this indeed
-does destroy the filesystem rather badly. With the barrier option, ext4 has
-already survived several crash cycles while running fsstress with
-journal_async_commit option. So the patch seems to work as expected.
+Hi,
 
-									Honza
+I was going through the raid6 code in 2.6.35 and I came across an
+empty function definition for cpu_relax() in include/linux/raid/pq.h
+(line 135) that appears to be called in drivers/md/raid6algos.c (line
+113). My C code skills are a bit rusty but I'm assuming the
+cpu_relax() call in raid6algos.c uses the definition in pq.h.
+
+If so, why is cpu_relax() in pq.h an empty function when there's
+already a definition for cpu_relax() in
+arch/x86/include/asm/processor.h?
+
+Conversely, if the cpu_relax() function call in raid6algos.c uses the
+definition in processor.h, why do we have a second definition in pq.h?
+
+It strikes me that if the purpose of cpu_relax() is to signal the
+kernel that we're not doing anything, why create our own empty
+function when there's already one that is correct across all supported
+architectures?
+
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
