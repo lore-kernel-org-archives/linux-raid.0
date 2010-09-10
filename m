@@ -1,113 +1,98 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: 5 drives lost in an inactive 15 drive raid 6 system due to cable
- problem - how to recover?
-Date: Fri, 10 Sep 2010 23:39:08 +0400
-Message-ID: <AANLkTiknvajTtJuCBO927tGcNLB+4R+pXev68snrU4kr@mail.gmail.com>
-References: <4C87C656.2030405@stern.nyu.edu>
-	<20100909073530.1e5da34d@notabene>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Fri, 10 Sep 2010 16:06:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100909073530.1e5da34d@notabene>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Norman White <nwhite@stern.nyu.edu>, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100910192403.GA24582@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-raid.ids
 
-Neil can you share that decision making algorithm ?
-We have servers with "lucky" aic9410 & LSI 1068E controllers which
-hang system sometimes, then drive(s) are dropped.
-In simple cases, when one drive has different Events count it's enough
-to force assemble, but in other cases when, say 8 drives are dropped
-like in Kyler's case (
-http://marc.info/?l=3Dlinux-raid&m=3D127534131202696&w=3D2 ) and examin=
-e
-shows different info for drives from the same array, ie
-http://lairds.us/temp/ucmeng_md/20100526/examine_sdj1 ,
-http://lairds.us/temp/ucmeng_md/20100526/examine_sda1 . Keeping in
-mind that drives can be exported in different order on every boot,
-it's not so straightforward to detect "right" options.
-
-I promise to put that knowledge on wiki.
-
-On Thu, Sep 9, 2010 at 1:35 AM, Neil Brown <neilb@suse.de> wrote:
-> On Wed, 08 Sep 2010 13:22:30 -0400
-> Norman White <nwhite@stern.nyu.edu> wrote:
->
->> We have a 15 drive addonics array with 3 5 port sata multiplexors, o=
-ne
->> of the sas cables was knocked out to one of the port multiplexors an=
-d now
->> mdadm sees 9 drives , a spare, and 5 failed, removed drives (after
->> fixing the cabling problem).
->>
->> A mdadm -E on each of the drives, see 5 drives (the ones that were
->> uncabled) as seeing the original =A0configuration with 14 drives and=
- a
->> spare, while the other 10 drives report
->> 9 drives, a spare and 5 failed , removed drives.
->>
->> We are very confident that there was no io going on at the time, but=
- are
->> not sure how to proceed.
->>
->> One obvious thing to do is to just do a:
->>
->> mdadm --assemble --force --assume-clean /dev/md0 sd[b,c, ... , p]
->> but we are getting different advice about what force will do in this
->> situation. The last thing we want to do is wipe the array.
->
-> What sort of different advice? =A0From whom?
->
-> This should either do exactly what you want, or nothing at all. =A0I =
-suspect
-> the former. =A0To be more confident I would need to see the output of
-> =A0 mdadm -E /dev/sd[b-p]
->
-> NeilBrown
->
->
->>
->> Another option would be to fiddle with the super blocks with mddump,=
- so
->> that they all see the same 15 drives in the same configuration, and =
-then
->> assemble it.
->>
->> Yet another suggestion was to recreate the array configuration and h=
-ope
->> that the data wouldn't be touched.
->>
->> And even another suggestion is to create the array with one drive
->> missing (so it is degraded and won't rebuild)
->>
->> Any pointers on how to proceed would be helpful. Restoring 30TB take=
-s
->> along time.
->>
->> Best,
->> Norman White
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
 
 
+On Fri, 10 Sep 2010, Mike Snitzer wrote:
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On Fri, Sep 10 2010 at  3:05pm -0400,
+> Mikulas Patocka <mpatocka@redhat.com> wrote:
+> 
+> > 
+> > 
+> > On Fri, 10 Sep 2010, Mike Snitzer wrote:
+> > > And in fact, this first patch basically is as minimal as it gets
+> > > relative to bio-based DM's conversion to FLUSH+FUA.
+> > > 
+> > > Please direct your energy and talent in a positive way rather than
+> > > starting a potential flame.
+> > > 
+> > > Thanks,
+> > > Mike
+> > 
+> > I don't want to flame. I mean this:
+> > 
+> > * person X writes a patch P.
+> > * person Y reads P, sees that the condition C is true and writes patch Q 
+> > that dependes on condition C.
+> > * person X changes a patch P, so that the patch is correct but condition C 
+> > is no longer true.
+> > 
+> > Now, there is a bug in the patch Q and NEITHER X NOR Y can find out about 
+> > that bug.
+> > 
+> > That's why parallel development doesn't work.
+> > 
+> > If you develop on things in the kernel, it is different.
+> > * person X writes a patch P and puts it in the kernel.
+> > * person Y reads the kernel code, sees that the condition C is true and 
+> > writes a patch Q that assumes that the condition C is true. He puts this 
+> > patch to the kernel too.
+> > * person X wants to change his code so that the condition C isn't true, 
+> > but it is now his responsibility to search the rest of the kernel to see 
+> > if it depends on the condition C. He searches the code and finds Q.
+> > 
+> > This is not a flamewar, just a technical explanation, why I don't want to 
+> > develop on interfaces that are not in the kernel.
+> 
+> We're reasonable people and can certainly prevent a flamewar but what
+> you're doing is an elaborate distraction.  The energy it took you to
+> write and reason through your logic above could've been used to just
+> review the DM FLUSH+FUA patches.
+
+No. If I reviewed 40 patches perfectly, I would take long long time (the 
+previous 2-line patch that I reviewed took me a week to review --- but I 
+found a flaw that the other people who reviewed it quickly didn't find). 
+
+So I reviewed only "dm" patch and found out that it is too big.
+
+Make a smaller patch with barrier -> FLUSH logic only. And then you can 
+make additional patches with function/variable renames or logic changes.
+
+> The various interfaces are hardened now and staged for inclussion in
+> 2.6.37.  Jens has already pulled the entire 40+ patchset into his
+> for-next branch for wider linux-next testing.
+> 
+> Tejun, Christoph and others have done an amazing job with this
+> conversion.  The fact that Tejun tackled the heavy lifting of DM's
+> conversion was unexpected but 100% appreciated (by me and I assume
+> others).  Please don't dismiss, or misrepresent the status of, this
+> FLUSH+FUA work.
+
+I am not dismissing anything. I agree with barrier -> flush change. It 
+simplifies things a lot.
+
+But I have my work rules that I learned: I use no git kernels and no 
+external patches (except Alasdair's patchset that I want to test). I only 
+use -rc or final kernels. I need a stable computer --- I don't want to 
+solve problems like "does it crash because I pulled something or does it 
+crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+I'll optimize flushes in dm for -rc2 or -rc3.
+
+Mikulas
