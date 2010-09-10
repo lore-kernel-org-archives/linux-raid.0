@@ -1,69 +1,46 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Fri, 10 Sep 2010 14:46:52 -0400
-Message-ID: <20100910184652.GA24470@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+From: Norman White <nwhite@stern.nyu.edu>
+Subject: Re: 5 drives lost in an inactive  15 drive raid 6 system due to cable
+ problem - how to recover?
+Date: Fri, 10 Sep 2010 14:51:29 -0400
+Message-ID: <4C8A7E31.7000503@stern.nyu.edu>
+References: <4C87C656.2030405@stern.nyu.edu> <20100909073530.1e5da34d@notabene> <4C8A4C3F.4050109@stern.nyu.edu> <alpine.LNX.2.01.1009100944150.14729@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.01.1009100944150.14729@filesrv1.baby-dragons.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Sep 10 2010 at  2:25pm -0400,
-Mikulas Patocka <mpatocka@redhat.com> wrote:
+  On 9/10/2010 1:47 PM, Mr. James W. Laferriere wrote:
+>     Hello Norman ,
+>
+> On Fri, 10 Sep 2010, Norman White wrote:
+>> On 9/8/2010 5:35 PM, Neil Brown wrote:
+>>> On Wed, 08 Sep 2010 13:22:30 -0400
+>>> Norman White<nwhite@stern.nyu.edu>  wrote:
+>>>
+> ...snip...
+>>
+>> On the other hand, we have a 30TB raid 6 array (about 21 TB formatted 
+>> with a hot spare) that is extremely fast and inexpensive. (~ $4k ).
+>> We are considering buying another and having a dedicated server  with 
+>> several arrays connected to it and put in a protected environment.
+>>
+>     Would you please elaborate on the construction of this array ?  Or 
+> if purchased it's manufacturer & product number ?
+>     I find such a device very interesting .  Maybe many others will as 
+> well .
+>         Tia ,  JimL
+You can find more detail on the construction of the array, costs, 
+components, performance, issues etc on my blog at
 
-> I quite disagree with the patch. It changes too many things.
-> 
-> What I said and what I want to see:
-> 
-> Take dm code as is. Treat FLUSH requests as empty barriers.
-> 
-> 
-> So I want to see a patch that only changes:
-> 
-> bio_empty_barrier(bio)  ->  bio->bi_rw & REQ_FLUSH
-> WRITE_BARRIER -> WRITE_FLUSH
-> etc.
-> 
-> so that the code compiles and works.
-> 
-> DON'T CHANGE ANYTHING ELSE.
-> 
-> Requirements of flushes are subset of requirements of barriers, so if you 
-> send flush and it is treated as a barrier inside DM, there's no problem. 
-> DM code that I wrote only sends out zero-data barriers and already treats 
-> them as flushes (it doesn't rely on ordering), so there's no problem with 
-> sent requests too.
-> 
-> Once fluges get into kernel, I'll clean it up to allow parallel flushes 
-> and requests, etc. But not before. I don't want to work on an interface 
-> that is under development and may be changed.
+http://researchcomputing.blogspot.com/
 
-Mikulas,
+Best,
+Norman White
 
-I agree that it is unfortunate that we're having to explore this level
-of change to DM's flush support.  Especially given how recently your
-barrier code was added.
 
-But the work has already been done.  Rather than putting up artificial
-barriers (no pun intended) it'd be great if you took the time to just
-review the changes.
 
-The patch header enumerates and describes the various changes quite
-clearly.
-
-And in fact, this first patch basically is as minimal as it gets
-relative to bio-based DM's conversion to FLUSH+FUA.
-
-Please direct your energy and talent in a positive way rather than
-starting a potential flame.
-
-Thanks,
-Mike
