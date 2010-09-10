@@ -1,126 +1,37 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: How to initialize "composite" RAID
-Date: Fri, 10 Sep 2010 19:36:18 -0400
-Message-ID: <AANLkTi=rA-z6qEO6os+sYQYUh=pJd4vabtaaUpQ5JevN@mail.gmail.com>
-References: <AANLkTim9TnyTGMWnRr65SrmJDrLN=Maua_QnVLLDerwS@mail.gmail.com>
-	<20100910222814.CB50615242D@gemini.denx.de>
-	<20100911083748.14843721@notabene>
-	<AANLkTi=kKKYWY9rLG57i-kqV02Lnf2QPhe5cqaBKEVyW@mail.gmail.com>
-	<20100911090709.580f3539@notabene>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Sat, 11 Sep 2010 01:36:21 +0200
+Message-ID: <4C8AC0F5.5080206@kernel.org>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org> <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com> <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com> <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100911090709.580f3539@notabene>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-raid.ids
 
->On Fri, Sep 10, 2010 at 7:07 PM, Neil Brown <neilb@suse.de> wrote:
-> On Fri, 10 Sep 2010 18:45:54 -0400
-> Mike Hartman <mike@hartmanipulation.com> wrote:
->
->> On Fri, Sep 10, 2010 at 6:37 PM, Neil Brown <neilb@suse.de> wrote:
->> > On Sat, 11 Sep 2010 00:28:14 +0200
->> > Wolfgang Denk <wd@denx.de> wrote:
->> >
->> >> Dear Mike Hartman,
->> >>
->> >> In message <AANLkTim9TnyTGMWnRr65SrmJDrLN=3DMaua_QnVLLDerwS@mail.=
-gmail.com> you wrote:
->> >> > This is unrelated to my other RAID thread, but I discovered thi=
-s issue
->> >> > when I was forced to hard restart due to the other one.
->> >> >
->> >> > My main raid (md0) is a RAID 5 composite that looks like this:
->> >> >
->> >> > - partition on hard drive A (1.5TB)
->> >> > - partition on hard drive B (1.5TB)
->> >> > - partition on hard drive C (1.5TB)
->> >> > - partition on RAID 1 (md1) (1.5TB)
->> >>
->> >> I guess this is a typo and you mean RAID 0 ?
->> >>
->> >> > md1 is a RAID 0 used to combine two 750GB drives I already had =
-so that
->> >>
->> >> ...as used here?
->> >>
->> >> > Detecting md0. Can't start md0 because it's missing a component=
- (md1)
->> >> > and thus wouldn't be in a clean state.
->> >> > Detecting md1. md1 started.
->> >> > Then I use mdadm to stop md0 and restart it (mdadm --assemble m=
-d0),
->> >> > which works fine at that point because md1 is up.
->> >>
->> >> Did you try changing your configurations uch that md0 is the RAID=
- 0
->> >> and md1 is the RAID 5 array?
->> >>
->> >
->> > Or just swap the order of the two lines in /etc/mdadm.conf.
->> >
->> > NeilBrown
->> >
->>
->> I thought about trying that, but I was under the impression that the
->> autodetect process didn't refer to that file at all. I take it I was
->> mistaken? If so that sounds like the simplest fix.
->
-> Depends what you mean by the "auto detect" process.
->
-> If you are referring to in-kernel auto-detect triggered by the 0xFD p=
-artition
-> type, then just don't use that. =A0You cannot control the order in wh=
-ich arrays
-> are assembled. =A0You could swap the name md1 and md0 (Which isn't to=
-o hard
-> using --assemble --update=3Dsuper-minor) but it probably wouldn't mak=
-e any
-> change to behaviour.
+On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+> But I have my work rules that I learned: I use no git kernels and no 
+> external patches (except Alasdair's patchset that I want to test). I only 
+> use -rc or final kernels. I need a stable computer --- I don't want to 
+> solve problems like "does it crash because I pulled something or does it 
+> crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+> I'll optimize flushes in dm for -rc2 or -rc3.
 
-I'm not using the 0xFD partition type - the partitions my RAIDs are
-composed of are all 0xDA, as suggested in the linux raid wiki. (I'd
-provide the link but the site seems to be down at the moment.) I
-believe that type is suggested specifically to avoid triggering the
-kernel auto-detect.
+Alright, I'm sorry but this is as far as I would go for dm conversion
+patches.  If you wanna split it further or do it your way, please feel
+free to.  I think it would be beneficial to do things now but, hey,
+you guys are maintaining dm part of the kernel, so it's up to you
+guys.  But, I think it would be silly for everyone else to wait for
+the rather special requirement for dm, so if we have to go forward
+without dm updates, I suppose we will have to.  Jens, please feel free
+to drop dm conversion patches.
 
-I followed the directions on the wiki for creating the arrays,
-creating the file system, etc (including keeping my /etc/mdadm.conf
-updated) and nothing ever really called out what to do to get it all
-mounted automatically at boot. I was going to worry about getting them
-built now and getting them automated later, but when a bug (mentioned
-in another thread) forced me to reboot I was surprised to see that
-they were autodetected (more or less) anyway. So I'm not sure if it's
-the kernel doing it or mdadm or what. I don't see any kind of entry
-for mdadm when I run "rc-update show", so if it's mdadm doing the
-detecting and not the kernel I have no idea what's kicking it off.
+Thanks.
 
-Is there something I could look for in the logs that would indicate
-how the RAIDs are actually getting assembled?
-
->
-> Get disable in-kernel autodetect and let mdadm assemble the arrays fo=
-r you.
-> It has a much better chance of getting it right.
-
-Assuming it's the kernel doing the assembling now, what are the
-specific settings in the config I need to turn off? How would I get
-mdadm to do the assembling? Just put the same commands I use when
-doing it manually into a script run during the boot process? Or is
-there already some kind of mechanism in place for this?
-
->
-> NeilBrown
->
-
-Sorry for all the questions. When the wiki addresses a topic it does a
-good job, but if it's not mentioned it's pretty hard to find good info
-on it anywhere.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
