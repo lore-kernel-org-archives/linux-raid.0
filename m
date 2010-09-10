@@ -1,43 +1,102 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCHSET #upstream] block,
- fs: replace HARDBARRIER with  FLUSH/FUA, take#2
-Date: Fri, 10 Sep 2010 12:19:15 +0200
-Message-ID: <4C8A0623.7060404@fusionio.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-	<4C87B5E2.6070207@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Norman White <nwhite@stern.nyu.edu>
+Subject: Re: 5 drives lost in an inactive  15 drive raid 6 system due to cable
+ problem - how to recover?
+Date: Fri, 10 Sep 2010 11:18:23 -0400
+Message-ID: <4C8A4C3F.4050109@stern.nyu.edu>
+References: <4C87C656.2030405@stern.nyu.edu> <20100909073530.1e5da34d@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C87B5E2.6070207@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Tejun Heo <teheo@suse.de>
-Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100909073530.1e5da34d@notabene>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-09-08 18:12, Tejun Heo wrote:
-> Hello, Jens.
-> 
-> I added Mike's cleanup patch and Kiyoshi's Tested-by and updated
-> flush-fua branch accordingly.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
-> 
-> I guess it's about ready.  Please consider pulling it into the block
-> tree so that it can get linux-next exposure.  If you want the whole
-> patch series resent, please let me know.
+  On 9/8/2010 5:35 PM, Neil Brown wrote:
+> On Wed, 08 Sep 2010 13:22:30 -0400
+> Norman White<nwhite@stern.nyu.edu>  wrote:
+>
+>> We have a 15 drive addonics array with 3 5 port sata multiplexors, one
+>> of the sas cables was knocked out to one of the port multiplexors and now
+>> mdadm sees 9 drives , a spare, and 5 failed, removed drives (after
+>> fixing the cabling problem).
+>>
+>> A mdadm -E on each of the drives, see 5 drives (the ones that were
+>> uncabled) as seeing the original  configuration with 14 drives and a
+>> spare, while the other 10 drives report
+>> 9 drives, a spare and 5 failed , removed drives.
+>>
+>> We are very confident that there was no io going on at the time, but are
+>> not sure how to proceed.
+>>
+>> One obvious thing to do is to just do a:
+>>
+>> mdadm --assemble --force --assume-clean /dev/md0 sd[b,c, ... , p]
+>> but we are getting different advice about what force will do in this
+>> situation. The last thing we want to do is wipe the array.
+> What sort of different advice?  From whom?
+>
+> This should either do exactly what you want, or nothing at all.  I suspect
+> the former.  To be more confident I would need to see the output of
+>     mdadm -E /dev/sd[b-p]
+>
+> NeilBrown
+>
+>
 
-Thanks Tejun, I'm pulling it in now.
 
+Just to close this out, I sent Neil Brown the output of mdadm -E 
+/dev/sd[b-p]
+and he agreed it looked clean.
 
--- 
-Jens Axboe
+I then did an
+mdadm --assemble --force /dev/md0 sd[b-p]
+
+and got the message /dev/sdb was busy, no super block.
+
+Rebooted the system, and reissued the mdadm --assemble --force.
+
+Voila,
+/dev/md0 was back.. Initial tests indicate no data loss.
+
+We have, of course, (as suggested by some on this list), more securely 
+attached the sas
+cables to the back of the addonics array so this can't happen again. The 
+siIicon image
+port multiplers only seem to have  push in connections that don't lock 
+at all. Just a pressure fit. We
+have to be very careful working around the box.
+
+On the other hand, we have a 30TB raid 6 array (about 21 TB formatted 
+with a hot spare) that is extremely fast and inexpensive. (~ $4k ).
+We are considering buying another and having a dedicated server  with 
+several  arrays connected to it and put in a protected environment.
+
+Thank you very much Neil.
+
+We owe you.
+
+Best,
+Norman White
+>> Another option would be to fiddle with the super blocks with mddump, so
+>> that they all see the same 15 drives in the same configuration, and then
+>> assemble it.
+>>
+>> Yet another suggestion was to recreate the array configuration and hope
+>> that the data wouldn't be touched.
+>>
+>> And even another suggestion is to create the array with one drive
+>> missing (so it is degraded and won't rebuild)
+>>
+>> Any pointers on how to proceed would be helpful. Restoring 30TB takes
+>> along time.
+>>
+>> Best,
+>> Norman White
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
