@@ -1,7 +1,7 @@
 From: Mike Hartman <mike@hartmanipulation.com>
 Subject: New RAID causing system lockups
-Date: Sat, 11 Sep 2010 14:12:21 -0400
-Message-ID: <AANLkTimbYOYj7_f+FKjemsjmjpV0FsdG_wyQZrvu4Vnx@mail.gmail.com>
+Date: Sat, 11 Sep 2010 14:13:00 -0400
+Message-ID: <AANLkTiksA-BhShTwPzRvjJPPfg04HGrdvnZymnW+zQ2G@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,56 +9,49 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've tried sending this twice now (it was my first post to the list)
-but it never seems to make it through. Resending in multiple parts to
-see if it's just too long.
+PART 2:
 
-PART 1:
+Eventually I realized that while I couldn't do anything with bash, I
+could run (some) commands directly via ssh (ssh odin <command>) and
+they would work ok. I was able to run dmesg, cat some files. Was able
+to ls some directories for a while, but eventually couldn't anymore.
+Was NOT able to cat /proc/mdstat. It would just hang. Attached
+(dmesg_1.txt) is the dmesg output I got, which seems to include
+everything from the start of the reshaping up to the lockup. The RAID
+system definitely seems to be involved.
 
-First let me outline where I am and how I got to this point.
+After waiting a day or so with no change and nothing else working I
+gritted my teeth and did a hard reboot, hoping my array wasn't totally
+hosed. Fortunately, I was able to reassemble the array using the
+backup file specified as part of my conversion command and the
+reshaping picked back up where it left off. It completed without
+further incident (took about 4 days).
 
-About a week ago I created a RAID array on my Gentoo server. I already
-had a handful of full, independent drives on that server, and 3 new
-empty ones. The three new 1.5TB SATA drives are in an external e-SATA
-enclosure, along with 2 of the existing drives (750GB each). The
-e-SATA enclosure is connected to the server with a Syba SD-SA2PEX-2E
-card (SIL3132 chipset) since it supports port multiplying. The other 4
-drives (2 1.5TB, 2 750GB) are still mounted in the server itself.
+Once the reshaping was complete I ran fsck on its filesystem (came
+back clean even when forced), mounted it, and everything looked ok. No
+files appeared to be lost. Chalking the freeze up to a one-time
+problem related to the reshaping, I started copying all the data from
+one of the other 1.5TB drives into the md0. (The idea is to keep
+copying each drive's contents into the array, wiping it, adding it as
+a hot spare, and then growing the RAID and its filesystem
+accordingly.)
 
-My goal was to end up with all the drives (9) in a single RAID 6 array
-to use as a storage partition (not for any system files). I only had 3
-clean ones, so I wanted to start with RAID 5, use that new space to
-clear off some of the other drives, and bootstrap up to a RAID 6.
+When I'm almost done (the 1.5TB only has 55GB left on it) the system
+hangs again. Same symptoms as before. I was able to run dmesg again
+(dmesg_2.txt) and the call trace looks pretty similar. It still
+mentions the RAID system a good bit, even though no high level RAID
+operations were going on and I was just writing to the array. This
+time I only waited an hour or two before giving up and opting for the
+hard reboot. Once again the array seemed to be ok once it was brought
+back up.
 
-My first step was to update to the newest stable gentoo kernel
-(2.6.35-gentoo-r4) to be sure I had reasonably current mdadm support.
-No problems during that upgrade.
+Seems to be a fairly fundamental problem, whatever it is, and anything
+that causes a lockup like this is a pretty big bug in a stable kernel.
+The individual drives test out fine with everything I've tried.
+Everything looks completely healthy until these lockups occur. I've
+attached my lspci and kernel config in case there's something useful
+in there.
 
-Then I created 1.5 TB partitions (type 0xDA) on each of the 3 new
-(empty) drives and assembled them into a RAID 5 array (md0). Once that
-was finished resyncing I created an ext4 filesystem and started
-copying over everything that was on the 2 750GB drives in the same
-enclosure.
+Any ideas?
 
-Once that was done (no problems) and the 750s were empty I created a
-RAID 0 (md1) from them. I created a 1.5TB partition on md1 just like I
-had on a bare drives, and then added that partition to md0 as a hot
-spare. I've seen that approach in several RAID tutorials - it seems
-like the only way to get these undersized drives into the same RAID 6.
-
-Then I switched md0 over to a RAID 6, using that hot spare. The
-reshaping was SLOW (4MB/s) but that seems to be par for the course in
-a RAID5->RAID6 transition.
-
-It was during this reshaping that I saw my first lockup. I was
-monitoring things via SSH, and the reshaping was about 13% complete.
-The filesystem was mounted but wasn't being written to (or even read
-much). I noticed my SSH session had stopped responding, so I tried
-creating a new one in a fresh terminal. I was able to enter my
-password, see the MOTD, and get a prompt, but couldn't type anything
-into it. Tried this several times with no luck. Physically sat down at
-the computer (no X running) and couldn't even get the screen to wake
-up. The monitor's LED made it seem awake, but I only got a black
-screen and couldn't even Ctrl-Alt-F2 to get a fresh terminal.
-
-CONTINUED IN PART 2
+Mike
