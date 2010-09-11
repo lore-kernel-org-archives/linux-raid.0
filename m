@@ -1,82 +1,44 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: How to initialize "composite" RAID
-Date: Sat, 11 Sep 2010 01:15:19 -0400
-Message-ID: <AANLkTin1+9UcCbY2DZyTffZW4A2fHzZh-DVCsTxdUq=1@mail.gmail.com>
-References: <AANLkTim9TnyTGMWnRr65SrmJDrLN=Maua_QnVLLDerwS@mail.gmail.com>
-	<20100910222814.CB50615242D@gemini.denx.de>
-	<20100911083748.14843721@notabene>
-	<AANLkTi=kKKYWY9rLG57i-kqV02Lnf2QPhe5cqaBKEVyW@mail.gmail.com>
-	<20100911090709.580f3539@notabene>
-	<AANLkTi=rA-z6qEO6os+sYQYUh=pJd4vabtaaUpQ5JevN@mail.gmail.com>
-	<20100911102319.2435d878@notabene>
-	<AANLkTi=Ze-TPiWJNzoxma9Q3h6nHqsNAS2Osu0n+VUP=@mail.gmail.com>
-	<20100911144226.59ebc03d@notabene>
-	<AANLkTin7T8rsF=XhWYTZyEwUkb5BUzK6dswVoTB-Sbbs@mail.gmail.com>
-	<20100911150923.41043519@notabene>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Sat, 11 Sep 2010 08:19:33 -0400
+Message-ID: <4C8B73D5.8000600@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org> <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com> <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com> <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com> <4C8AC0F5.5080206@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100911150923.41043519@notabene>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Wolfgang Denk <wd@denx.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C8AC0F5.5080206@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-raid.ids
 
-On Sat, Sep 11, 2010 at 1:09 AM, Neil Brown <neilb@suse.de> wrote:
-> On Sat, 11 Sep 2010 00:58:21 -0400
-> Mike Hartman <mike@hartmanipulation.com> wrote:
+  On 09/10/2010 07:36 PM, Tejun Heo wrote:
+> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+>> But I have my work rules that I learned: I use no git kernels and no
+>> external patches (except Alasdair's patchset that I want to test). I only
+>> use -rc or final kernels. I need a stable computer --- I don't want to
+>> solve problems like "does it crash because I pulled something or does it
+>> crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and
+>> I'll optimize flushes in dm for -rc2 or -rc3.
+> Alright, I'm sorry but this is as far as I would go for dm conversion
+> patches.  If you wanna split it further or do it your way, please feel
+> free to.  I think it would be beneficial to do things now but, hey,
+> you guys are maintaining dm part of the kernel, so it's up to you
+> guys.  But, I think it would be silly for everyone else to wait for
+> the rather special requirement for dm, so if we have to go forward
+> without dm updates, I suppose we will have to.  Jens, please feel free
+> to drop dm conversion patches.
 >
->> > If you add a bitmap (mdadm --grow /dev/md0 --bitmap=3Dinternal) af=
-ter the
->> > current resync finished, then any subsequent resync due to an uncl=
-ean
->> > shutdown will be much faster.
->>
->> I read somewhere (I think in the wiki) that an intent bitmap only
->> works properly on ext2 and ext3 and can cause trouble on other file
->> systems. Can I use one on ext4 (what I'm using)? I'm hoping/assuming
->> what I read just predates the common use of ext4.
+> Thanks.
 >
-> That is completely wrong. =A0An intent bitmap works properly no matte=
-r what
-> filesystem is on top.
-> It does impose a small performance penalty for writes which is very
-> work-load-dependant, and it is not impossible that different filesyst=
-ems
-> would suffer more or less from this, but I doubt you would notice.
->
-> If you can find it again let me know and I'll try to get it fixed.
 
-I found it. Looks like I misremembered what it said though - it's
-referring to external bitmaps only.
+I think that we certainly want to continue to fix the whole path - including dm 
+- so we do not end up with the fragmented set of works here/doesn't work there 
+situation we had for several years. If Mikulas has better patches, he should 
+post them for review.
 
-In the man page: "Note: external bitmaps are only known to work on
-ext2 and ext3.  Storing bitmap files on other filesystems may result
-in serious problems."
+Thanks!
 
-Thanks again!
-
->
->>
->> Will I need to remove the bitmap before adding another disk and
->> growing the array to use it? If I don't, will it speed up that
->> operation any?
->
-> You, you will need to remove the bitmap before growing the array. =A0=
-I really
-> should fix that but it doesn't seem to rise to the top of my to-do li=
-st...
->
-> And no, a bitmap would have no effect on a reshape operation even if =
-it were
-> allowed to be present.
->
-> NeilBrown
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ric
