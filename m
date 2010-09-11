@@ -1,7 +1,7 @@
 From: Mike Hartman <mike@hartmanipulation.com>
 Subject: New RAID causing system lockups
-Date: Sat, 11 Sep 2010 14:13:00 -0400
-Message-ID: <AANLkTiksA-BhShTwPzRvjJPPfg04HGrdvnZymnW+zQ2G@mail.gmail.com>
+Date: Sat, 11 Sep 2010 14:20:40 -0400
+Message-ID: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,49 +9,42 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PART 2:
+PART 3:
 
-Eventually I realized that while I couldn't do anything with bash, I
-could run (some) commands directly via ssh (ssh odin <command>) and
-they would work ok. I was able to run dmesg, cat some files. Was able
-to ls some directories for a while, but eventually couldn't anymore.
-Was NOT able to cat /proc/mdstat. It would just hang. Attached
-(dmesg_1.txt) is the dmesg output I got, which seems to include
-everything from the start of the reshaping up to the lockup. The RAID
-system definitely seems to be involved.
+Update:
 
-After waiting a day or so with no change and nothing else working I
-gritted my teeth and did a hard reboot, hoping my array wasn't totally
-hosed. Fortunately, I was able to reassemble the array using the
-backup file specified as part of my conversion command and the
-reshaping picked back up where it left off. It completed without
-further incident (took about 4 days).
+I'm even more concerned about this now, because I just started the
+newest reshaping to add a new drive with:
 
-Once the reshaping was complete I ran fsck on its filesystem (came
-back clean even when forced), mounted it, and everything looked ok. No
-files appeared to be lost. Chalking the freeze up to a one-time
-problem related to the reshaping, I started copying all the data from
-one of the other 1.5TB drives into the md0. (The idea is to keep
-copying each drive's contents into the array, wiping it, adding it as
-a hot spare, and then growing the RAID and its filesystem
-accordingly.)
+mdadm --grow -c 256 --raid-devices=5 --backup-file=/grow_md0.bak /dev/md0
 
-When I'm almost done (the 1.5TB only has 55GB left on it) the system
-hangs again. Same symptoms as before. I was able to run dmesg again
-(dmesg_2.txt) and the call trace looks pretty similar. It still
-mentions the RAID system a good bit, even though no high level RAID
-operations were going on and I was just writing to the array. This
-time I only waited an hour or two before giving up and opting for the
-hard reboot. Once again the array seemed to be ok once it was brought
-back up.
+And the system output:
 
-Seems to be a fairly fundamental problem, whatever it is, and anything
-that causes a lockup like this is a pretty big bug in a stable kernel.
-The individual drives test out fine with everything I've tried.
-Everything looks completely healthy until these lockups occur. I've
-attached my lspci and kernel config in case there's something useful
-in there.
+mdadm: Need to backup 768K of critical section..
 
-Any ideas?
+cat /proc/mdstat shows the reshaping is proceeding,
+
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdi1[0] sdf1[5] md1p1[4] sdj1[3] sdh1[1]
+      2929691136 blocks super 1.2 level 6, 128k chunk, algorithm 2 [5/5] [UUUUU]
+      [>....................]  reshape =  0.0% (56576/1464845568)
+finish=2156.9min speed=11315K/sec
+
+md1 : active raid0 sdg1[0] sdk1[1]
+      1465141760 blocks super 1.2 128k chunks
+
+unused devices: <none>
+
+but I've checked for /grow_md0.bak and it's not there. So it looks
+like for some reason it ignored my backup file option.
+
+This scares me, because if I experience the lockup again and am forced
+to reboot, without a backup file I'm afraid my array will be hosed.
+I'm also afraid to stop it cleanly right now for the same reason.
+
+So in addition to fixing the lockup itself, does anyone know if
+there's a way to either cancel this reshaping or belatedly add the
+backup file in a different way so it will be recoverable? It's only at
+1% and says it will take another 2193 minutes.
 
 Mike
