@@ -1,50 +1,37 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: New RAID causing system lockups
-Date: Mon, 13 Sep 2010 02:28:13 -0400
-Message-ID: <AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
-References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
-	<20100912064308.46d96742@notabene>
-	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
+From: maurice <mhilarius@gmail.com>
+Subject: Q: mdadm as implemented in Openfiler
+Date: Mon, 13 Sep 2010 09:36:50 -0600
+Message-ID: <4C8E4512.9000709@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> I don't know yet what is causing the lock-up. =A0A quick look at you=
-r logs
->> suggest that it could be related to the barrier handling. =A0Maybe t=
-rying to
->> handle a barrier during a reshape is prone to races of some sort - I=
- wouldn't
->> be very surprised by that.
->
-> Just note that during the second lockup no reshape or resync was goin=
-g
-> on. The array state was stable, I was just writing to it.
->
->>
->> I'll have a look at the code and see what I can find.
->
-> Thanks a lot. If it was only a risk when I was growing/reshaping the
-> array, and covered by the backup file, it would just be an
-> inconvenience. But since it can seemingly happen at any time it's a
-> problem.
->
+  I am doing some maintenance on a machine that is running Openfiler.
+It has a degraded RAID on it with a member that has gone "missing"
 
-The lockup just happened again. I wasn't doing any
-growing/reshaping/anything like that. Just copying some data into the
-partition that lives on md0. dmesg_3.txt has been uploaded alongside
-the other files at http://www.hartmanipulation.com/raid/. The trace
-looks pretty similar to me.
+Having replaced the drive, I tried to do a "raidhotadd" but that command 
+is not available.
 
-Mike
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kernel is:
+[root@somebox tmp]# uname -a
+Linux somebox.mystuff.net 2.6.29.6-0.24.smp.gcc3.4.x86.i686 #1 SMP Tue 
+Mar 9 05:01:39 GMT 2010 i686 i686 i386 GNU/Linux
+
+Instead I was able to use the more cumbersome:
+mdadm --manage /dev/md0 --add /dev/sda1
+
+Which is working.
+
+I am curious about this, does anyone think further action is advisable?
+
+
+
+
+-- 
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
