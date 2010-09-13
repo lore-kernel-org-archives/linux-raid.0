@@ -1,26 +1,50 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: How to initialize "composite" RAID
-Date: Sat, 11 Sep 2010 23:13:33 +0100
-Message-ID: <4C8BFF0D.6020405@anonymous.org.uk>
-References: <AANLkTim9TnyTGMWnRr65SrmJDrLN=Maua_QnVLLDerwS@mail.gmail.com>	<20100910222814.CB50615242D@gemini.denx.de>	<20100911083748.14843721@notabene>	<AANLkTi=kKKYWY9rLG57i-kqV02Lnf2QPhe5cqaBKEVyW@mail.gmail.com>	<20100911090709.580f3539@notabene>	<AANLkTi=rA-z6qEO6os+sYQYUh=pJd4vabtaaUpQ5JevN@mail.gmail.com>	<20100911102319.2435d878@notabene>	<AANLkTi=Ze-TPiWJNzoxma9Q3h6nHqsNAS2Osu0n+VUP=@mail.gmail.com>	<20100911144226.59ebc03d@notabene> <AANLkTin7T8rsF=XhWYTZyEwUkb5BUzK6dswVoTB-Sbbs@mail.gmail.com>
+From: Mike Hartman <mike@hartmanipulation.com>
+Subject: Re: New RAID causing system lockups
+Date: Mon, 13 Sep 2010 02:28:13 -0400
+Message-ID: <AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
+References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
+	<20100912064308.46d96742@notabene>
+	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin7T8rsF=XhWYTZyEwUkb5BUzK6dswVoTB-Sbbs@mail.gmail.com>
+In-Reply-To: <AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hartman <mike@hartmanipulation.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/09/2010 05:58, Mike Hartman wrote:
-[...]
-> I'm using mdadm 3.1.3 but I went ahead and swapped the lines in
-> mdadm.conf anyway.
+>> I don't know yet what is causing the lock-up. =A0A quick look at you=
+r logs
+>> suggest that it could be related to the barrier handling. =A0Maybe t=
+rying to
+>> handle a barrier during a reshape is prone to races of some sort - I=
+ wouldn't
+>> be very surprised by that.
+>
+> Just note that during the second lockup no reshape or resync was goin=
+g
+> on. The array state was stable, I was just writing to it.
+>
+>>
+>> I'll have a look at the code and see what I can find.
+>
+> Thanks a lot. If it was only a risk when I was growing/reshaping the
+> array, and covered by the backup file, it would just be an
+> inconvenience. But since it can seemingly happen at any time it's a
+> problem.
+>
 
-Having done that you probably ought to refresh your initrd so it 
-contains your updated mdadm.conf.
+The lockup just happened again. I wasn't doing any
+growing/reshaping/anything like that. Just copying some data into the
+partition that lives on md0. dmesg_3.txt has been uploaded alongside
+the other files at http://www.hartmanipulation.com/raid/. The trace
+looks pretty similar to me.
 
-Cheers,
-
-John.
+Mike
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
