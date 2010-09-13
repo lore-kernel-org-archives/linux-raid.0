@@ -1,60 +1,50 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: New RAID causing system lockups
-Date: Mon, 13 Sep 2010 11:57:03 -0400
-Message-ID: <AANLkTiknrUVCToYg8NM0dUX9kXVE_kTAwtuAqo09X-qj@mail.gmail.com>
-References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
-	<20100912064308.46d96742@notabene>
-	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
-	<AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Mon, 13 Sep 2010 15:01:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1009131456100.14720@hs20-bc2-1.build.redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+ <4C8AC0F5.5080206@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C8AC0F5.5080206@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-raid.ids
 
->>> I don't know yet what is causing the lock-up. =A0A quick look at yo=
-ur logs
->>> suggest that it could be related to the barrier handling. =A0Maybe =
-trying to
->>> handle a barrier during a reshape is prone to races of some sort - =
-I wouldn't
->>> be very surprised by that.
->>
->> Just note that during the second lockup no reshape or resync was goi=
-ng
->> on. The array state was stable, I was just writing to it.
->>
->>>
->>> I'll have a look at the code and see what I can find.
->>
->> Thanks a lot. If it was only a risk when I was growing/reshaping the
->> array, and covered by the backup file, it would just be an
->> inconvenience. But since it can seemingly happen at any time it's a
->> problem.
->>
->
-> The lockup just happened again. I wasn't doing any
-> growing/reshaping/anything like that. Just copying some data into the
-> partition that lives on md0. dmesg_3.txt has been uploaded alongside
-> the other files at http://www.hartmanipulation.com/raid/. The trace
-> looks pretty similar to me.
->
 
-The lockup just happened for the fourth time, less than an hour after
-I rebooted to clear the previous lockup from last night. All I did was
-boot the system, start the RAID, and start copying some files onto it.
-The problem seems to be getting worse - up until now I got at least a
-full day of fairly heavy usage out of the system before it happened.
-dmesg_4.txt has been uploaded alongside the other files. Let me know
-if there's any other system information that would be useful.
 
-Mike
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, 11 Sep 2010, Tejun Heo wrote:
+
+> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+> > But I have my work rules that I learned: I use no git kernels and no 
+> > external patches (except Alasdair's patchset that I want to test). I only 
+> > use -rc or final kernels. I need a stable computer --- I don't want to 
+> > solve problems like "does it crash because I pulled something or does it 
+> > crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+> > I'll optimize flushes in dm for -rc2 or -rc3.
+> 
+> Alright, I'm sorry but this is as far as I would go for dm conversion
+> patches.  If you wanna split it further or do it your way, please feel
+> free to.  I think it would be beneficial to do things now but, hey,
+> you guys are maintaining dm part of the kernel, so it's up to you
+> guys.  But, I think it would be silly for everyone else to wait for
+> the rather special requirement for dm, so if we have to go forward
+> without dm updates, I suppose we will have to.  Jens, please feel free
+> to drop dm conversion patches.
+> 
+> Thanks.
+> -- 
+> tejun
+
+I think: take the first patch and submit it on your own, and send the rest 
+of patches to Alasdair to his tree. If I get such big patches I am unable 
+to immediatelly say if they are correct or not.
+
+Mikulas
