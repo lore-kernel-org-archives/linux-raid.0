@@ -1,39 +1,30 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: some non critical problems... (1. mdadm segfault ->
- write-mostly, 2. smart?)
-Date: Tue, 14 Sep 2010 15:13:47 +0200
-Message-ID: <20100914151347.3c387cbd@atak.bl.pg.gda.pl>
-References: <20100906143308.2e1a9291@atak.bl.pg.gda.pl>
-	<20100908114415.6ac8bcb9@atak.bl.pg.gda.pl>
+From: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
+Subject: =?iso-8859-1?B?cmFpZDYgYW5kIHBhcml0eSBjYWxjdWxhdGlvbnM=?=
+Date: Tue, 14 Sep 2010 14:45:40 +0000
+Message-ID: <20100914144540.25913.qmail@s217.sureserver.com>
+Reply-To: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100908114415.6ac8bcb9@atak.bl.pg.gda.pl>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Janek Kozicki said:     (by the date of Wed, 8 Sep 2010 11:44:15 +0200)
+Hi,
 
-> Umm... to reiterate one of my questions in above email:
-> 
-> 
-> > md1 : active raid1 sdc1[3](W) sdb1[5](W)
-> >       9767416 blocks super 1.0 [2/2] [UU]
-> >       bitmap: 6/150 pages [24KB], 32KB chunk
-> 
-> Is it possible to disable that (W) --write-mostly flag? Does it
-> decrease performance or something, if both devices in the array are
-> set to (W) ?
+I've been looking through the drivers/md code, and I've got a few questions about the RAID6 parity calculations that have me stumped.
 
-this seems to have fixed it:
+I can see that when recovering 1 or 2 data sections, it calls functions based on the content that we're recovering (eg. async_gen_syndrome, async_xor, async_raid6_datap_recov, etc.) However, the length parameter is always given as STRIPE_SIZE, which from what I can tell is the same as PAGE_SIZE, which for vanilla systems like the one I'm playing with is 4096 bytes.
 
- mdadm --fail /dev/md1 /dev/sdb1
- mdadm --remove /dev/md1 /dev/sdb1
- mdadm --zero-superblock /dev/sdb1
- mdadm --add --readwrite /dev/md1 /dev/sdb1
+The thing that I can't figure out is how this interacts with the RAID6 chunk size; the array I'm playing with has a default chunk size (64kb), which I understand means that there's 64kb of data striped across each disk (bar two), then 64kb of P, then 64kb of Q for the first stripe, correct? If so, I can't figure out where the whole parity calculation is done for all 64kb. There's no loops, no recursion, or anything that would process it that I can find. I'm obviously missing something here, can anyone enlighten me?
+
+Thanks for any advice or pointers!
+
+Cheers,
+Michael
 
 
--- 
-Janek Kozicki                               http://janek.kozicki.pl/  |
+(as a side note: I'm playing with all this as I've managed to royally screw up an array which had 2 dropped drives, by readding them back in (in what appears to be the wrong order). That would have been fine if thr rebuild finished completely, however the rebuild failed a few percent in, so now I have 2 drives with "swapped" data. That is, drive A contains the data for raid member 4 for the first x%, and raid member 5 for the rest, and drive B contains the data for raid member 5 for the first x% and raid member 4 for the rest. So I'm trying to write a userspace program to manually go through the array members, inspecting each stripe, and manually doing parity calculations for a range of drive permutations to try and see what looks sensible, hence I'm trying to understand what's ON the driv
+ e to reverse engineer it.)
+
