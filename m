@@ -1,278 +1,314 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: New RAID causing system lockups
-Date: Mon, 13 Sep 2010 23:35:50 -0400
-Message-ID: <AANLkTi=uO6a1e_eGKcg6T2rD_ZpqNg_-X1u6qq=zA5J6@mail.gmail.com>
-References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
-	<20100912064308.46d96742@notabene>
-	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
-	<AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
-	<AANLkTiknrUVCToYg8NM0dUX9kXVE_kTAwtuAqo09X-qj@mail.gmail.com>
-	<20100914095111.6e3045c7@notabene>
-	<AANLkTin=jy=xJTtN5mQ6U=rYw3p+_4-nmkhO7zqR0KLP@mail.gmail.com>
-	<AANLkTimyEr9LnS2BOR+rXhwfU0rCE-MmYcjttaTyqAWT@mail.gmail.com>
-	<20100914113516.63c883c4@notabene>
-	<AANLkTimeeecqZX1Bn23=_41sBYO+P8h_b5Z6Gf_ACuA1@mail.gmail.com>
+From: "fibreraid@gmail.com" <fibreraid@gmail.com>
+Subject: mdadm 3.1.3 call trace crash on Ubuntu 10.04 64-bit
+Date: Mon, 13 Sep 2010 20:44:59 -0700
+Message-ID: <AANLkTik5-MuAjvgEJR959UB+ZhHmBo+Xi_BsUh-jXt4P@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimeeecqZX1Bn23=_41sBYO+P8h_b5Z6Gf_ACuA1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>
->>> > Hi Mike,
->>> > =A0thanks for the updates.
->>> >
->>> > I'm not entirely clear what is happening (in fact, due to a cold =
-that I am
->>> > still fighting off, nothing is entirely clear at the moment), but=
- it looks
->>> > very likely that the problem is due to an interplay between barri=
-er handling,
->>> > and the multi-level structure of your array (a raid0 being a memb=
-er of a
->>> > raid5).
->>> >
->>> > When a barrier request is processed, both arrays will schedule 'w=
-ork' to be
->>> > done by the 'event' thread and I'm guess that you can get into a =
-situation
->>> > where one work time is wait for the other, but the other is behin=
-d the one on
->>> > the single queue (I wonder if that make sense...)
->>> >
->>> > Anyway, this patch might make a difference, =A0It reduced the num=
-ber of work
->>> > items schedule in a way that could conceivably fix the problem.
->>> >
->>> > If you can test this, please report the results. =A0I cannot easi=
-ly reproduce
->>> > the problem so there is limited testing that I can do.
->>> >
->>> > Thanks,
->>> > NeilBrown
->>> >
->>> >
->>> > diff --git a/drivers/md/md.c b/drivers/md/md.c
->>> > index f20d13e..7f2785c 100644
->>> > --- a/drivers/md/md.c
->>> > +++ b/drivers/md/md.c
->>> > @@ -294,6 +294,23 @@ EXPORT_SYMBOL(mddev_congested);
->>> >
->>> > =A0#define POST_REQUEST_BARRIER ((void*)1)
->>> >
->>> > +static void md_barrier_done(mddev_t *mddev)
->>> > +{
->>> > + =A0 =A0 =A0 struct bio *bio =3D mddev->barrier;
->>> > +
->>> > + =A0 =A0 =A0 if (test_bit(BIO_EOPNOTSUPP, &bio->bi_flags))
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, -EOPNOTSUPP);
->>> > + =A0 =A0 =A0 else if (bio->bi_size =3D=3D 0)
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, 0);
->>> > + =A0 =A0 =A0 else {
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* other options need to be handled=
- from process context */
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mddev->barrier_work)=
-;
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
->>> > + =A0 =A0 =A0 }
->>> > + =A0 =A0 =A0 mddev->barrier =3D NULL;
->>> > + =A0 =A0 =A0 wake_up(&mddev->sb_wait);
->>> > +}
->>> > +
->>> > =A0static void md_end_barrier(struct bio *bio, int err)
->>> > =A0{
->>> > =A0 =A0 =A0 =A0mdk_rdev_t *rdev =3D bio->bi_private;
->>> > @@ -310,7 +327,7 @@ static void md_end_barrier(struct bio *bio, i=
-nt err)
->>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0wake_up(&mddev->sb=
-_wait);
->>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
->>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* The pre-request=
- barrier has finished */
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mdde=
-v->barrier_work);
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 md_barrier_done(mdd=
-ev);
->>> > =A0 =A0 =A0 =A0}
->>> > =A0 =A0 =A0 =A0bio_put(bio);
->>> > =A0}
->>> > @@ -350,18 +367,12 @@ static void md_submit_barrier(struct work_s=
-truct *ws)
->>> >
->>> > =A0 =A0 =A0 =A0atomic_set(&mddev->flush_pending, 1);
->>> >
->>> > - =A0 =A0 =A0 if (test_bit(BIO_EOPNOTSUPP, &bio->bi_flags))
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, -EOPNOTSUPP);
->>> > - =A0 =A0 =A0 else if (bio->bi_size =3D=3D 0)
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* an empty barrier - all done */
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, 0);
->>> > - =A0 =A0 =A0 else {
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio->bi_rw &=3D ~REQ_HARDBARRIER;
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (mddev->pers->make_request(mddev=
-, bio))
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 generic_make_reques=
-t(bio);
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 mddev->barrier =3D POST_REQUEST_BAR=
-RIER;
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 submit_barriers(mddev);
->>> > - =A0 =A0 =A0 }
->>> > + =A0 =A0 =A0 bio->bi_rw &=3D ~REQ_HARDBARRIER;
->>> > + =A0 =A0 =A0 if (mddev->pers->make_request(mddev, bio))
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 generic_make_request(bio);
->>> > + =A0 =A0 =A0 mddev->barrier =3D POST_REQUEST_BARRIER;
->>> > + =A0 =A0 =A0 submit_barriers(mddev);
->>> > +
->>> > =A0 =A0 =A0 =A0if (atomic_dec_and_test(&mddev->flush_pending)) {
->>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mddev->barrier =3D NULL;
->>> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0wake_up(&mddev->sb_wait);
->>> > @@ -383,7 +394,7 @@ void md_barrier_request(mddev_t *mddev, struc=
-t bio *bio)
->>> > =A0 =A0 =A0 =A0submit_barriers(mddev);
->>> >
->>> > =A0 =A0 =A0 =A0if (atomic_dec_and_test(&mddev->flush_pending))
->>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mddev->barrier_work)=
-;
->>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 md_barrier_done(mddev);
->>> > =A0}
->>> > =A0EXPORT_SYMBOL(md_barrier_request);
->>> >
->>> >
->>> >
->>>
->>> Neil, thanks for the patch. I experienced the lockup for the 5th ti=
-me
->>> an hour ago (about 3 hours after the last hard reboot) so I thought=
- it
->>> would be a good time to try your patch. Unfortunately I'm getting a=
-n
->>> error:
->>>
->>> patching file drivers/md/md.c
->>> Hunk #1 succeeded at 291 with fuzz 1 (offset -3 lines).
->>> Hunk #2 FAILED at 324.
->>> Hunk #3 FAILED at 364.
->>> Hunk #4 FAILED at 391.
->>> 3 out of 4 hunks FAILED -- saving rejects to file drivers/md/md.c.r=
-ej
->>
->> That is odd.
->> I took the md.c that you posted on the web site, use "patch" to appl=
-y my
->> patch to it, and only Hunk #3 failed.
->>
->> I used 'wiggle' to apply the patch and it applied perfectly, properl=
-y
->> replacing (1<<BIO_RW_BARRIER) with REQ_HARDBARRIER (or the other way=
- around).
->>
->> Try this version. =A0You will need to be in drivers/md/, or use
->>
->> =A0patch drivers/md/md.c < this-patch
->>
->>
->> NeilBrown
->>
->> --- md.c.orig =A0 2010-09-14 11:29:15.000000000 +1000
->> +++ md.c =A0 =A0 =A0 =A02010-09-14 11:29:50.000000000 +1000
->> @@ -291,6 +291,23 @@
->>
->> =A0#define POST_REQUEST_BARRIER ((void*)1)
->>
->> +static void md_barrier_done(mddev_t *mddev)
->> +{
->> + =A0 =A0 =A0 struct bio *bio =3D mddev->barrier;
->> +
->> + =A0 =A0 =A0 if (test_bit(BIO_EOPNOTSUPP, &bio->bi_flags))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, -EOPNOTSUPP);
->> + =A0 =A0 =A0 else if (bio->bi_size =3D=3D 0)
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, 0);
->> + =A0 =A0 =A0 else {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* other options need to be handled fr=
-om process context */
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mddev->barrier_work);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
->> + =A0 =A0 =A0 }
->> + =A0 =A0 =A0 mddev->barrier =3D NULL;
->> + =A0 =A0 =A0 wake_up(&mddev->sb_wait);
->> +}
->> +
->> =A0static void md_end_barrier(struct bio *bio, int err)
->> =A0{
->> =A0 =A0 =A0 =A0mdk_rdev_t *rdev =3D bio->bi_private;
->> @@ -307,7 +324,7 @@
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0wake_up(&mddev->sb_wa=
-it);
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0} else
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* The pre-request ba=
-rrier has finished */
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mddev->=
-barrier_work);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 md_barrier_done(mddev)=
-;
->> =A0 =A0 =A0 =A0}
->> =A0 =A0 =A0 =A0bio_put(bio);
->> =A0}
->> @@ -347,18 +364,12 @@
->>
->> =A0 =A0 =A0 =A0atomic_set(&mddev->flush_pending, 1);
->>
->> - =A0 =A0 =A0 if (test_bit(BIO_EOPNOTSUPP, &bio->bi_flags))
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, -EOPNOTSUPP);
->> - =A0 =A0 =A0 else if (bio->bi_size =3D=3D 0)
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* an empty barrier - all done */
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio_endio(bio, 0);
->> - =A0 =A0 =A0 else {
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 bio->bi_rw &=3D ~(1<<BIO_RW_BARRIER);
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (mddev->pers->make_request(mddev, b=
-io))
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 generic_make_request(b=
-io);
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 mddev->barrier =3D POST_REQUEST_BARRIE=
-R;
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 submit_barriers(mddev);
->> - =A0 =A0 =A0 }
->> + =A0 =A0 =A0 bio->bi_rw &=3D ~(1<<BIO_RW_BARRIER);
->> + =A0 =A0 =A0 if (mddev->pers->make_request(mddev, bio))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 generic_make_request(bio);
->> + =A0 =A0 =A0 mddev->barrier =3D POST_REQUEST_BARRIER;
->> + =A0 =A0 =A0 submit_barriers(mddev);
->> +
->> =A0 =A0 =A0 =A0if (atomic_dec_and_test(&mddev->flush_pending)) {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mddev->barrier =3D NULL;
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0wake_up(&mddev->sb_wait);
->> @@ -380,7 +391,7 @@
->> =A0 =A0 =A0 =A0submit_barriers(mddev);
->>
->> =A0 =A0 =A0 =A0if (atomic_dec_and_test(&mddev->flush_pending))
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule_work(&mddev->barrier_work);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 md_barrier_done(mddev);
->> =A0}
->> =A0EXPORT_SYMBOL(md_barrier_request);
->>
->>
->
-> Sorry about that Neil, it was my fault. I copied your patch out of th=
-e
-> email and I think it picked up some unintended characters. I tried
-> copying it from the mailing list archive website instead and it
-> patched in fine. The kernel compiled with no trouble and I'm booted
-> into it now. No unexpected side-effects yet. I'll continue with my
-> copying and we'll see if it locks up again. Thanks for all your help!
->
-> Mike
->
+Hi,
 
-Sorry Neil, locked up again in less than an hour. I've uploaded
-dmesg_5.txt in case the trace shows something different/useful in
-light of your patch.
+I built a basic RAID 5 array with 24 SATA SSD drives on my Ubuntu
+10.04 64-bit system with mdadm 3.1.3 installed, along with the patch
+that fixes the incremental assembly regression bug.
 
-Mike
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I tried to delete my RAID 5 array and the Ubuntu system hung: not even
+cat /proc/mdstat would return anything. Finally, a few minutes later,
+the following call trace appearing in /var/log/messages. Any insight
+would be recommended. Thanks!
+
+-Tommy
+
+
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354081] md: bind<sdb1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354253] md: bind<sdc1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354458] md: bind<sdd1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354565] md: bind<sde1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354655] md: bind<sdf1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354741] md: bind<sdg1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354822] md: bind<sdh1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354904] md: bind<sdi1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.354987] md: bind<sdj1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355073] md: bind<sdk1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355154] md: bind<sdl1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355239] md: bind<sdm1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355331] md: bind<sdn1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355411] md: bind<sdo1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355493] md: bind<sdp1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355575] md: bind<sdq1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355657] md: bind<sdr1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355743] md: bind<sds1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355826] md: bind<sdt1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355906] md: bind<sdu1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.355987] md: bind<sdv1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.356067] md: bind<sdw1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.356149] md: bind<sdx1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.356234] md: bind<sdy1>
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358782] raid5: md0 is not
+clean -- starting background reconstruction
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358803] raid5: device sdy1
+operational as raid disk 23
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358806] raid5: device sdx1
+operational as raid disk 22
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358808] raid5: device sdw1
+operational as raid disk 21
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358810] raid5: device sdv1
+operational as raid disk 20
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358812] raid5: device sdu1
+operational as raid disk 19
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358814] raid5: device sdt1
+operational as raid disk 18
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358816] raid5: device sds1
+operational as raid disk 17
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358819] raid5: device sdr1
+operational as raid disk 16
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358821] raid5: device sdq1
+operational as raid disk 15
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358823] raid5: device sdp1
+operational as raid disk 14
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358825] raid5: device sdo1
+operational as raid disk 13
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358827] raid5: device sdn1
+operational as raid disk 12
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358829] raid5: device sdm1
+operational as raid disk 11
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358831] raid5: device sdl1
+operational as raid disk 10
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358833] raid5: device sdk1
+operational as raid disk 9
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358835] raid5: device sdj1
+operational as raid disk 8
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358837] raid5: device sdi1
+operational as raid disk 7
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358840] raid5: device sdh1
+operational as raid disk 6
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358842] raid5: device sdg1
+operational as raid disk 5
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358844] raid5: device sdf1
+operational as raid disk 4
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358846] raid5: device sde1
+operational as raid disk 3
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358848] raid5: device sdd1
+operational as raid disk 2
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358850] raid5: device sdc1
+operational as raid disk 1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.358852] raid5: device sdb1
+operational as raid disk 0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360534] raid5: allocated
+25322kB for md0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360573] 23: w=1 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360576] 22: w=2 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360579] 21: w=3 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360582] 20: w=4 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360585] 19: w=5 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360588] 18: w=6 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360591] 17: w=7 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360594] 16: w=8 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360597] 15: w=9 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360600] 14: w=10 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360603] 13: w=11 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360606] 12: w=12 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360609] 11: w=13 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360612] 10: w=14 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360615] 9: w=15 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360618] 8: w=16 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360621] 7: w=17 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360624] 6: w=18 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360627] 5: w=19 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360630] 4: w=20 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360632] 3: w=21 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360635] 2: w=22 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360638] 1: w=23 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360641] 0: w=24 pa=0 pr=24
+m=1 a=2 r=24 op1=0 op2=0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360644] raid5: raid level 5
+set md0 active with 24 out of 24 devices, algorithm 2
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360646] RAID5 conf printout:
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360648]  --- rd:24 wd:24
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360650]  disk 0, o:1, dev:sdb1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360652]  disk 1, o:1, dev:sdc1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360654]  disk 2, o:1, dev:sdd1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360656]  disk 3, o:1, dev:sde1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360658]  disk 4, o:1, dev:sdf1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360660]  disk 5, o:1, dev:sdg1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360662]  disk 6, o:1, dev:sdh1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360664]  disk 7, o:1, dev:sdi1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360666]  disk 8, o:1, dev:sdj1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360668]  disk 9, o:1, dev:sdk1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360670]  disk 10, o:1, dev:sdl1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360672]  disk 11, o:1, dev:sdm1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360674]  disk 12, o:1, dev:sdn1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360675]  disk 13, o:1, dev:sdo1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360677]  disk 14, o:1, dev:sdp1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360679]  disk 15, o:1, dev:sdq1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360681]  disk 16, o:1, dev:sdr1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360683]  disk 17, o:1, dev:sds1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360685]  disk 18, o:1, dev:sdt1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360687]  disk 19, o:1, dev:sdu1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360689]  disk 20, o:1, dev:sdv1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360691]  disk 21, o:1, dev:sdw1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360693]  disk 22, o:1, dev:sdx1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360695]  disk 23, o:1, dev:sdy1
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360768] md0: detected
+capacity change from 0 to 2300607594496
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.360998] md: resync of RAID array md0
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361002] md: minimum
+_guaranteed_  speed: 10 KB/sec/disk.
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361004] md: using maximum
+available idle IO bandwidth (but not more than 100 KB/sec) for resync.
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361046] md: using 128k
+window, over a total of 97682048 blocks.
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361278] md: md_import_device
+returned -16
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361299] md: md_import_device
+returned -16
+Sep 13 20:34:02 NIMBUS7D46 kernel: [ 1109.361771]  md0: unknown partition table
+Sep 13 20:34:40 NIMBUS7D46 kernel: [ 1147.264539] md: md_do_sync() got
+signal ... exiting
+Sep 13 20:34:40 NIMBUS7D46 kernel: [ 1147.264547] md: checkpointing
+resync of md0.
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052573] mdadm         D
+0000000000000000     0 21840  21586 0x00000000
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052578]  ffff880627e31a68
+0000000000000086 0000000000015bc0 0000000000015bc0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052584]  ffff880631bfdf80
+ffff880627e31fd8 0000000000015bc0 ffff880631bfdbc0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052588]  0000000000015bc0
+ffff880627e31fd8 0000000000015bc0 ffff880631bfdf80
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052593] Call Trace:
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052607]
+[<ffffffff81558efd>] schedule_timeout+0x22d/0x300
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052612]
+[<ffffffff815581a6>] wait_for_common+0xd6/0x180
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052618]
+[<ffffffff8115cdf8>] ? ifind_fast+0x58/0xb0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052626]
+[<ffffffff8105b210>] ? default_wake_function+0x0/0x20
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052633]
+[<ffffffff811af5f9>] ? sysfs_drop_dentry+0x139/0x160
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052637]
+[<ffffffff8155830d>] wait_for_completion+0x1d/0x20
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052641]
+[<ffffffff811b0118>] sysfs_addrm_finish+0x118/0x150
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052657]
+[<ffffffff811ada1b>] sysfs_hash_and_remove+0x5b/0x80
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052663]
+[<ffffffff811b19ef>] sysfs_remove_group+0x5f/0x100
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052670]
+[<ffffffffa00dfc11>] stop+0x61/0x80 [raid456]
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052676]
+[<ffffffff8142d39d>] do_md_stop+0xdd/0x560
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052682]
+[<ffffffff812bba10>] ? string+0x40/0x100
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052688]
+[<ffffffff812857b1>] ? apparmor_capable+0x31/0xa0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052692]
+[<ffffffff8143011b>] md_ioctl+0x6bb/0x790
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052698]
+[<ffffffff810f417e>] ? find_get_page+0x1e/0xa0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052702]
+[<ffffffff810f5b8b>] ? filemap_fault+0x8b/0x450
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052706]
+[<ffffffff8113d5dd>] ? mem_cgroup_update_mapped_file_stat+0x2d/0x90
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052714]
+[<ffffffff812a6307>] __blkdev_driver_ioctl+0x27/0x80
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052717]
+[<ffffffff812a67dd>] blkdev_ioctl+0x1ed/0x6f0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052722]
+[<ffffffff81173adc>] block_ioctl+0x3c/0x40
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052728]
+[<ffffffff81154772>] vfs_ioctl+0x22/0xa0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052732]
+[<ffffffff81154911>] do_vfs_ioctl+0x81/0x410
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052736]
+[<ffffffff8155d6b3>] ? do_page_fault+0x153/0x3b0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052740]
+[<ffffffff81154d21>] sys_ioctl+0x81/0xa0
+Sep 13 20:37:34 NIMBUS7D46 kernel: [ 1321.052748]
+[<ffffffff810131b2>] system_call_fastpath+0x16/0x1b
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857782] mdadm         D
+0000000000000000     0 21840  21586 0x00000000
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857788]  ffff880627e31a68
+0000000000000086 0000000000015bc0 0000000000015bc0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857793]  ffff880631bfdf80
+ffff880627e31fd8 0000000000015bc0 ffff880631bfdbc0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857797]  0000000000015bc0
+ffff880627e31fd8 0000000000015bc0 ffff880631bfdf80
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857801] Call Trace:
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857815]
+[<ffffffff81558efd>] schedule_timeout+0x22d/0x300
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857820]
+[<ffffffff815581a6>] wait_for_common+0xd6/0x180
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857827]
+[<ffffffff8115cdf8>] ? ifind_fast+0x58/0xb0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857835]
+[<ffffffff8105b210>] ? default_wake_function+0x0/0x20
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857842]
+[<ffffffff811af5f9>] ? sysfs_drop_dentry+0x139/0x160
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857846]
+[<ffffffff8155830d>] wait_for_completion+0x1d/0x20
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857850]
+[<ffffffff811b0118>] sysfs_addrm_finish+0x118/0x150
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857865]
+[<ffffffff811ada1b>] sysfs_hash_and_remove+0x5b/0x80
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857870]
+[<ffffffff811b19ef>] sysfs_remove_group+0x5f/0x100
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857878]
+[<ffffffffa00dfc11>] stop+0x61/0x80 [raid456]
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857884]
+[<ffffffff8142d39d>] do_md_stop+0xdd/0x560
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857889]
+[<ffffffff812bba10>] ? string+0x40/0x100
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857896]
+[<ffffffff812857b1>] ? apparmor_capable+0x31/0xa0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857899]
+[<ffffffff8143011b>] md_ioctl+0x6bb/0x790
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857905]
+[<ffffffff810f417e>] ? find_get_page+0x1e/0xa0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857909]
+[<ffffffff810f5b8b>] ? filemap_fault+0x8b/0x450
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857913]
+[<ffffffff8113d5dd>] ? mem_cgroup_update_mapped_file_stat+0x2d/0x90
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857921]
+[<ffffffff812a6307>] __blkdev_driver_ioctl+0x27/0x80
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857924]
+[<ffffffff812a67dd>] blkdev_ioctl+0x1ed/0x6f0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857929]
+[<ffffffff81173adc>] block_ioctl+0x3c/0x40
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857934]
+[<ffffffff81154772>] vfs_ioctl+0x22/0xa0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857938]
+[<ffffffff81154911>] do_vfs_ioctl+0x81/0x410
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857942]
+[<ffffffff8155d6b3>] ? do_page_fault+0x153/0x3b0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857946]
+[<ffffffff81154d21>] sys_ioctl+0x81/0xa0
+Sep 13 20:39:34 NIMBUS7D46 kernel: [ 1440.857954]
+[<ffffffff810131b2>] system_call_fastpath+0x16/0x1b
+root@NIMBUS7D46:/dev/shm#
