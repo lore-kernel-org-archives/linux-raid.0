@@ -1,43 +1,39 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: New RAID causing system lockups
-Date: Tue, 14 Sep 2010 13:48:37 +1000
-Message-ID: <20100914134837.2e740a3e@notabene>
-References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
-	<20100912064308.46d96742@notabene>
-	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
-	<AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
-	<AANLkTiknrUVCToYg8NM0dUX9kXVE_kTAwtuAqo09X-qj@mail.gmail.com>
-	<20100914095111.6e3045c7@notabene>
-	<AANLkTin=jy=xJTtN5mQ6U=rYw3p+_4-nmkhO7zqR0KLP@mail.gmail.com>
-	<AANLkTimyEr9LnS2BOR+rXhwfU0rCE-MmYcjttaTyqAWT@mail.gmail.com>
-	<20100914113516.63c883c4@notabene>
-	<AANLkTimeeecqZX1Bn23=_41sBYO+P8h_b5Z6Gf_ACuA1@mail.gmail.com>
-	<AANLkTi=uO6a1e_eGKcg6T2rD_ZpqNg_-X1u6qq=zA5J6@mail.gmail.com>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: some non critical problems... (1. mdadm segfault ->
+ write-mostly, 2. smart?)
+Date: Tue, 14 Sep 2010 15:13:47 +0200
+Message-ID: <20100914151347.3c387cbd@atak.bl.pg.gda.pl>
+References: <20100906143308.2e1a9291@atak.bl.pg.gda.pl>
+	<20100908114415.6ac8bcb9@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=uO6a1e_eGKcg6T2rD_ZpqNg_-X1u6qq=zA5J6@mail.gmail.com>
+In-Reply-To: <20100908114415.6ac8bcb9@atak.bl.pg.gda.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Hartman <mike@hartmanipulation.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 13 Sep 2010 23:35:50 -0400
-Mike Hartman <mike@hartmanipulation.com> wrote:
+Janek Kozicki said:     (by the date of Wed, 8 Sep 2010 11:44:15 +0200)
 
-> Sorry Neil, locked up again in less than an hour. I've uploaded
-> dmesg_5.txt in case the trace shows something different/useful in
-> light of your patch.
+> Umm... to reiterate one of my questions in above email:
 > 
-> Mike
+> 
+> > md1 : active raid1 sdc1[3](W) sdb1[5](W)
+> >       9767416 blocks super 1.0 [2/2] [UU]
+> >       bitmap: 6/150 pages [24KB], 32KB chunk
+> 
+> Is it possible to disable that (W) --write-mostly flag? Does it
+> decrease performance or something, if both devices in the array are
+> set to (W) ?
+
+this seems to have fixed it:
+
+ mdadm --fail /dev/md1 /dev/sdb1
+ mdadm --remove /dev/md1 /dev/sdb1
+ mdadm --zero-superblock /dev/sdb1
+ mdadm --add --readwrite /dev/md1 /dev/sdb1
 
 
-Hmmm..
- Can you try mounting with 
-    -o barrier=0
-
-just to see if my theory is at all correct?
-
-Thanks,
-NeilBrown
+-- 
+Janek Kozicki                               http://janek.kozicki.pl/  |
