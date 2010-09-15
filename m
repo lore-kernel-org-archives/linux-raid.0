@@ -1,72 +1,66 @@
-From: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
-Subject: =?iso-8859-1?B?UmU6IHJhaWQ2IGFuZCBwYXJpdHkgY2FsY3VsYXRpb25z?=
-Date: Wed, 15 Sep 2010 15:55:24 +0000
-Message-ID: <20100915155524.31380.qmail@s217.sureserver.com>
-Reply-To: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: raid6 and parity calculations
+Date: Wed, 15 Sep 2010 18:07:14 +0200
+Message-ID: <20100915160714.GD7644@skl-net.de>
+References: <20100915155524.31380.qmail@s217.sureserver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Il7n/DHsA0sMLmDu"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100915155524.31380.qmail@s217.sureserver.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Michael Sallaway <michael@sallaway.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
->  -------Original Message-------
->  From: Neil Brown <neilb@suse.de>
->  To: Michael Sallaway <michael@sallaway.com>
->  Cc: linux-raid@vger.kernel.org
->  Subject: Re: raid6 and parity calculations
->  Sent: 15 Sep '10 10:26
+--Il7n/DHsA0sMLmDu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  It is best not to think to think to much about chunks.=A0=A0Think ab=
-out strips
->  (not stripes).
->  A strip is a set of blocks, one per device each at the same offset.
->  Think of page sizes blocks/strips.
->  Each strip has a P block and a Q block and a bunch of data blocks.=A0=
-=A0Which
->  is P and which is Q and which each data block is a function of the o=
-ffset,
->  the layout and the chunk size.=A0=A0Once you have used the chunksize=
- to perform
->  that calculation, don't think about chunks any more - just blocks an=
-d strips.
-> =20
+On Wed, Sep 15, 15:55, Michael Sallaway wrote:
+> As a sort-of follow up question, would anyone know if the data size of
+> a Q calculation affects the result at all? eg. if I do a 64kb Q
+> calculation on 10 drives of data, would that be the same as doing 16x
+> 4kb Q calculations on sequential blocks of the same data, then
+> concatenating it together? (I can't remember what that operation
+> property is called....?)
 
-Aah, perfect -- that makes sense, thanks for that.
+Yes, the result would be the same. In fact, byte n of Q depends only
+on byte n of the 10/16 data drives.
 
-As a sort-of follow up question, would anyone know if the data size of =
-a Q calculation affects the result at all? eg. if I do a 64kb Q calcula=
-tion on 10 drives of data, would that be the same as doing 16x 4kb Q ca=
-lculations on sequential blocks of the same data, then concatenating it=
- together? (I can't remember what that operation property is called....=
-?)
+> I've been reading the maths of RAID6 PDF
+> (http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf), but I'm a
+> bit too rusty to understand Galois fields, and if the data size
+> matters. I presume the data ordering is also critical for a Q
+> calculation, correct? (eg. drives have to be d0 -> d10 in order, not
+> just random).
 
-I've been reading the maths of RAID6 PDF (http://kernel.org/pub/linux/k=
-ernel/people/hpa/raid6.pdf), but I'm a bit too rusty to understand Galo=
-is fields, and if the data size matters. I presume the data ordering is=
- also critical for a Q calculation, correct? (eg. drives have to be d0 =
--> d10 in order, not just random).
+Right, order matters.
 
-And, in contrast, for the P calculations, data size and input order mak=
-es no difference, correct? (since it's just a simple bitwise XOR of all=
- the inputs).
+> And, in contrast, for the P calculations, data size and input order
+> makes no difference, correct? (since it's just a simple bitwise XOR of
+> all the inputs).
 
-> =20
->  Ouch... good luck.
+Also correct.
 
-Thanks! I'm the only one to blame, though -- it happened in the month b=
-etween "getting the new system set up" and "setting up backups for the =
-new system". So it's the only copy of the data.... whoops. :-)
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-Thanks for the help/advice!
+--Il7n/DHsA0sMLmDu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Cheers,
-Michael
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFMkO8yWto1QDEAkw8RAs2+AJ0RIXPjfpqWyWoyoUOzy+//0yZ7FgCgh7eX
+4TerRbwaRmvlnrqJvILGS6E=
+=ko8I
+-----END PGP SIGNATURE-----
+
+--Il7n/DHsA0sMLmDu--
