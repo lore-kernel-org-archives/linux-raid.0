@@ -1,27 +1,33 @@
 From: "Pol Hallen" <polhallen@fuckaround.org>
-Subject: Re: [raid5] 3 disks, after tests 2 spares disks
-Date: Wed, 15 Sep 2010 19:09:10 +0200 (CEST)
-Message-ID: <e66c0e614ffd197c55a198d04579c31c.squirrel@fuckaround.org>
-References: <1d42070e419e0e6b80b9f40f85d0946b.squirrel@fuckaround.org>
-    <20100915085201.4d832aa5@notabene>
+Subject: advice to low cost hardware raid (with mdadm)
+Date: Wed, 15 Sep 2010 22:07:27 +0200 (CEST)
+Message-ID: <00c6ed0254381567aff38d7a95d200c5.squirrel@fuckaround.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100915085201.4d832aa5@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Pol Hallen <raid1@fuckaround.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->  please provide full "mdamd --examine" output of the devices at the
-> various
+Hello all :-)
 
-Hi and thanks for your reply
+I think about a low cost raid 6 hardware (6 disks):
 
-mdadm --detail
-mdadm: metadata format 00.90 unknown, ignored.
-mdadm: No devices given.
+On the motherboard 3 pci controllers (sil3114
+http://www.siliconimage.com/products/product.aspx?pid=28) cost for each
+about 10/15euro
+
+and 2 disks by controllers
+
+So I've 6 disks (raid 6 with mdadm) and if a controller breaks raid 6
+should be clean.
+
+Is it a acceptable situation or I don't consider other unexpected?
+
+PS: my lan doesn't need a high performance.
+
+thanks
 
 Pol
 
