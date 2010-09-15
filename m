@@ -1,98 +1,72 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
-Date: Wed, 15 Sep 2010 14:28:32 +0200
-Message-ID: <201009151428.32348.arnd@arndb.de>
-References: <1283711539-7123-1-git-send-email-segooon@gmail.com> <20100910034603.GA2612@linux.vnet.ibm.com> <20100914003351.GA8300@linux.vnet.ibm.com>
+From: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
+Subject: =?iso-8859-1?B?UmU6IHJhaWQ2IGFuZCBwYXJpdHkgY2FsY3VsYXRpb25z?=
+Date: Wed, 15 Sep 2010 15:55:24 +0000
+Message-ID: <20100915155524.31380.qmail@s217.sureserver.com>
+Reply-To: "=?iso-8859-1?Q?Michael=20Sallaway?=" <michael@sallaway.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100914003351.GA8300@linux.vnet.ibm.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 14 September 2010, Paul E. McKenney wrote:
->    The current version of the __rcu_access_pointer(),
-> __rcu_dereference_check(), and __rcu_dereference_protected() macros
-> evaluate their "p" argument three times, not counting typeof()s.  This is
-> bad news if that argument contains a side effect.  This commit therefore
-> evaluates this argument only once in normal kernel builds.  However, the
-> straightforward approach defeats sparse's RCU-pointer checking, so this
-> commit also adds a KBUILD_CHECKSRC symbol defined when running a checker. 
-> Therefore, when this new KBUILD_CHECKSRC symbol is defined, the additional
-> pair of evaluations of the "p" argument are performed in order to permit
-> sparse to detect misuse of RCU-protected pointers.
 
-In general, I don't like the idea much because that means we're passing
-semantically different code into sparse and gcc. Of course if my other
-patch doesn't work, we might need to do it after all.
+>  -------Original Message-------
+>  From: Neil Brown <neilb@suse.de>
+>  To: Michael Sallaway <michael@sallaway.com>
+>  Cc: linux-raid@vger.kernel.org
+>  Subject: Re: raid6 and parity calculations
+>  Sent: 15 Sep '10 10:26
 
-> diff --git a/Makefile b/Makefile
-> index f3bdff8..1c4984d 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -330,7 +330,7 @@ PERL                = perl
->  CHECK          = sparse
->  
->  CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-> -                 -Wbitwise -Wno-return-void $(CF)
-> +                 -Wbitwise -Wno-return-void -DKBUILD_CHECKSRC $(CF)
->  CFLAGS_MODULE   =
->  AFLAGS_MODULE   =
->  LDFLAGS_MODULE  =
+>  It is best not to think to think to much about chunks.=A0=A0Think ab=
+out strips
+>  (not stripes).
+>  A strip is a set of blocks, one per device each at the same offset.
+>  Think of page sizes blocks/strips.
+>  Each strip has a P block and a Q block and a bunch of data blocks.=A0=
+=A0Which
+>  is P and which is Q and which each data block is a function of the o=
+ffset,
+>  the layout and the chunk size.=A0=A0Once you have used the chunksize=
+ to perform
+>  that calculation, don't think about chunks any more - just blocks an=
+d strips.
+> =20
 
-sparse already define __CHECKER__ itself, no need to define another symbol.
+Aah, perfect -- that makes sense, thanks for that.
 
-> +#ifdef KBUILD_CHECKSRC
-> +#define rcu_dereference_sparse(p, space) \
-> +       ((void)(((typeof(*p) space *)p) == p))
-> +#else /* #ifdef KBUILD_CHECKSRC */
-> +#define rcu_dereference_sparse(p, space)
-> +#endif /* #else #ifdef KBUILD_CHECKSRC */
+As a sort-of follow up question, would anyone know if the data size of =
+a Q calculation affects the result at all? eg. if I do a 64kb Q calcula=
+tion on 10 drives of data, would that be the same as doing 16x 4kb Q ca=
+lculations on sequential blocks of the same data, then concatenating it=
+ together? (I can't remember what that operation property is called....=
+?)
 
-Did you see a problem with my macro?
+I've been reading the maths of RAID6 PDF (http://kernel.org/pub/linux/k=
+ernel/people/hpa/raid6.pdf), but I'm a bit too rusty to understand Galo=
+is fields, and if the data size matters. I presume the data ordering is=
+ also critical for a Q calculation, correct? (eg. drives have to be d0 =
+-> d10 in order, not just random).
 
-#define rcu_dereference_sparse(p, space) \
-       ((void)(((typeof(*p) space *)NULL) == ((typeof(p))NULL)))
+And, in contrast, for the P calculations, data size and input order mak=
+es no difference, correct? (since it's just a simple bitwise XOR of all=
+ the inputs).
 
-I think this should warn in all the cases we want it to, but have no side-effects.
+> =20
+>  Ouch... good luck.
 
->  #define __rcu_access_pointer(p, space) \
->         ({ \
->                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> -               (void) (((typeof (*p) space *)p) == p); \
-> +               rcu_dereference_sparse(p, space); \
->                 ((typeof(*p) __force __kernel *)(_________p1)); \
->         })
->  #define __rcu_dereference_check(p, c, space) \
->         ({ \
->                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
->                 rcu_lockdep_assert(c); \
-> -               (void) (((typeof (*p) space *)p) == p); \
-> +               rcu_dereference_sparse(p, space); \
->                 smp_read_barrier_depends(); \
->                 ((typeof(*p) __force __kernel *)(_________p1)); \
->         })
->  #define __rcu_dereference_protected(p, c, space) \
->         ({ \
->                 rcu_lockdep_assert(c); \
-> -               (void) (((typeof (*p) space *)p) == p); \
-> +               rcu_dereference_sparse(p, space); \
->                 ((typeof(*p) __force __kernel *)(p)); \
->         })
->  
+Thanks! I'm the only one to blame, though -- it happened in the month b=
+etween "getting the new system set up" and "setting up backups for the =
+new system". So it's the only copy of the data.... whoops. :-)
 
-This part might be useful in any case, to better document what the cast and
-compare does, and to prevent the three users from diverging.
+Thanks for the help/advice!
 
->diff --git a/kernel/rcutorture.c b/kernel/rcutorture.c
->index 439ddab..adb09cb 100644
->--- a/kernel/rcutorture.c
->+++ b/kernel/rcutorture.c
-
-This didn't seem to belong here.
-
-	Arnd
+Cheers,
+Michael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
