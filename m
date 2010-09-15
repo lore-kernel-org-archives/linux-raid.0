@@ -1,37 +1,70 @@
-From: "Pol Hallen" <polhallen@fuckaround.org>
-Subject: Re: advice to low cost hardware raid (with mdadm)
-Date: Thu, 16 Sep 2010 00:03:11 +0200 (CEST)
-Message-ID: <b6947b76728ca8c5d78d4d05fbd7894c.squirrel@fuckaround.org>
-References: <00c6ed0254381567aff38d7a95d200c5.squirrel@fuckaround.org>
-    <4C912F5D.5040305@hardwarefreak.com>
+From: Doug Nazar <nazard.michi@gmail.com>
+Subject: Fwd: Endian issue assembling arrays
+Date: Wed, 15 Sep 2010 18:20:18 -0400
+Message-ID: <4C9146A2.2020305@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------060108010201090709040807"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C912F5D.5040305@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First all: sorry for my english :-P
+This is a multi-part message in MIME format.
+--------------060108010201090709040807
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
->With four SATA drives on a new mobo
-> with an AHCI chip you'd see over 400 MB/s, about 4 times that of the PCI
-> 6 drive solution.  You'd have one drive less worth of capacity.
 
-400Mb/s is because the integrated controller of mobo reach that speed?
-So is it a raid hardware (no need mdadm)? What happen if the controller
-goes break?
 
->additionally, in the event
-> of a disk failure, rebuilding a 6x1TB RAID5/6 array will take forever
-> and a day.
+Has anyone had a chance to look at this?
 
-a nightmare...
+Thanks,
+Doug
 
-very thanks for your reasoning.. I don't have enought experience about
-raid and friends!
+-------- Original Message --------
+Subject: 	Endian issue assembling arrays
+Date: 	Wed, 28 Jul 2010 16:53:47 -0400
+From: 	Doug Nazar <nazard.michi@gmail.com>
+To: 	linux-raid@vger.kernel.org
 
-Pol
 
+   Came across this while testing some updates to GRUB's RAID support.
+
+Assembling a RAID1 array on a PPC box results in the following warning:
+
+mdadm: device 1 in /dev/md/0 has wrong state in superblock, but
+/dev/sdb2 seems ok
+mdadm: /dev/md/0 has been started with 2
+
+
+Doug
+
+
+
+
+--------------060108010201090709040807
+Content-Type: text/plain;
+ name="mdadm-assemble-roles-endian-fix.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="mdadm-assemble-roles-endian-fix.diff"
+
+--- mdadm-3.1.2/super1.c	2010-03-09 18:26:44.000000000 -0500
++++ mdadm-3.1.2.dev/super1.c	2010-07-28 16:41:41.000000000 -0400
+@@ -673,10 +673,10 @@
+ 		int d = info->disk.number;
+ 		int want;
+ 		if (info->disk.state == 6)
+-			want = __cpu_to_le32(info->disk.raid_disk);
++			want = info->disk.raid_disk;
+ 		else
+ 			want = 0xFFFF;
+-		if (sb->dev_roles[d] != want) {
++		if (__le16_to_cpu(sb->dev_roles[d]) != want) {
+ 			sb->dev_roles[d] = want;
+ 			rv = 1;
+ 		}
+
+
+--------------060108010201090709040807--
