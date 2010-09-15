@@ -1,44 +1,41 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: advice to low cost hardware raid (with mdadm)
-Date: Wed, 15 Sep 2010 17:25:02 -0500
-Message-ID: <4C9147BE.60200@hardwarefreak.com>
-References: <00c6ed0254381567aff38d7a95d200c5.squirrel@fuckaround.org> <4C912F5D.5040305@hardwarefreak.com> <20100915214013.GA19900@www2.open-std.org>
+Subject: Re: RAID 5+1 with mdadm
+Date: Wed, 15 Sep 2010 17:52:57 -0500
+Message-ID: <4C914E49.6030201@hardwarefreak.com>
+References: <S1754030Ab0IOUpu/20100915204550Z+730@vger.kernel.org> <4C913973.60007@saocarlos.sp.gov.br>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100915214013.GA19900@www2.open-std.org>
+In-Reply-To: <4C913973.60007@saocarlos.sp.gov.br>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen put forth on 9/15/2010 4:40 PM:
-> These ports are connected to the
-> south bridge often with 20 Tbit/s or more, while a controller on an
-> 32 bit PCI only delivers 1 TBit.=20
+Peter Krauss put forth on 9/15/2010 4:24 PM:
+> Hello,
+> 
+> I am looking for a "step by step" webpage (or replied attach) for setup
+> RAID 5+1
 
-Tbit/s for 32/33 PCI?  I think you're a little high.. by a factor of
-1000, Keld. :)
+You probably won't find one, unless someone writes one just for you.
+RAID 5+1 is very non-standard.  In fact I've never heard of anyone using
+it, only as a theoretical possibility.  RAID 50, or 5+0, is far more
+common, and it itself is not very common overall.
 
-The chipset to processor interface on modern systems is typically aroun=
-d
-8-16 GB/s, or 64-128 Gb/s.  That's still a factor of 10x lower than 1
-Tbit/s, so you're high by a factor of 20x.
+Your goal will require nesting of RAID groups--nesting of md devices.
+You're going to need to create two RAID5 md devices and then make a
+RAID1 device from the two RAID5 devices.  If you already know how to
+create a RAID5 md device and a RAID1 md device, this should be a piece
+of cake.
 
-Why, may I ask, are you quoting serial data rates for parallel buses?
-I've only seen inter-chip bandwidth quoted in serial rates on
-communications gear.  Everyone else quotes parallel data rates for boar=
-d
-level communication paths-- Bytes/s not bits/sec.  You must work for
-Ericsson. ;)
+Keep the mdadm man page open while you do it just in case.  The only
+thing you really need to be concerned with are the chunk and stripe
+sizes, which can get complicated when creating nested arrays.  I have no
+idea what those parms should be for a 6 disk nested RAID5/1.  Maybe
+someone here can help.
 
-Regardless of bit rate values, we agree on the important part, for the
-most part. :)
+Good luck.
 
---=20
+-- 
 Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
