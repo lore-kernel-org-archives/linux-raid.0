@@ -1,119 +1,91 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH] md: do not use ++ in rcu_dereference() argument
-Date: Wed, 15 Sep 2010 23:15:14 -0700
-Message-ID: <20100916061514.GD2463@linux.vnet.ibm.com>
-References: <1283711539-7123-1-git-send-email-segooon@gmail.com>
- <20100910034603.GA2612@linux.vnet.ibm.com>
- <20100914003351.GA8300@linux.vnet.ibm.com>
- <201009151428.32348.arnd@arndb.de>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Endian issue assembling arrays
+Date: Thu, 16 Sep 2010 21:03:08 +1000
+Message-ID: <20100916210308.7314c6fb@notabene>
+References: <4C5098DB.7040905@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201009151428.32348.arnd@arndb.de>
+In-Reply-To: <4C5098DB.7040905@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kulikov Vasiliy <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Neil Brown <neilb@suse.de>, Jens Axboe <jaxboe@fusionio.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Doug Nazar <nazard.michi@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 15, 2010 at 02:28:32PM +0200, Arnd Bergmann wrote:
-> On Tuesday 14 September 2010, Paul E. McKenney wrote:
-> >    The current version of the __rcu_access_pointer(),
-> > __rcu_dereference_check(), and __rcu_dereference_protected() macros
-> > evaluate their "p" argument three times, not counting typeof()s.  This is
-> > bad news if that argument contains a side effect.  This commit therefore
-> > evaluates this argument only once in normal kernel builds.  However, the
-> > straightforward approach defeats sparse's RCU-pointer checking, so this
-> > commit also adds a KBUILD_CHECKSRC symbol defined when running a checker. 
-> > Therefore, when this new KBUILD_CHECKSRC symbol is defined, the additional
-> > pair of evaluations of the "p" argument are performed in order to permit
-> > sparse to detect misuse of RCU-protected pointers.
+On Wed, 28 Jul 2010 16:53:47 -0400
+Doug Nazar <nazard.michi@gmail.com> wrote:
+
+>   Came across this while testing some updates to GRUB's RAID support.
 > 
-> In general, I don't like the idea much because that means we're passing
-> semantically different code into sparse and gcc. Of course if my other
-> patch doesn't work, we might need to do it after all.
-
-Agreed in principle, but please see below.
-
-> > diff --git a/Makefile b/Makefile
-> > index f3bdff8..1c4984d 100644
-> > --- a/Makefile
-> > +++ b/Makefile
-> > @@ -330,7 +330,7 @@ PERL                = perl
-> >  CHECK          = sparse
-> >  
-> >  CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-> > -                 -Wbitwise -Wno-return-void $(CF)
-> > +                 -Wbitwise -Wno-return-void -DKBUILD_CHECKSRC $(CF)
-> >  CFLAGS_MODULE   =
-> >  AFLAGS_MODULE   =
-> >  LDFLAGS_MODULE  =
+> Assembling a RAID1 array on a PPC box results in the following warning:
 > 
-> sparse already define __CHECKER__ itself, no need to define another symbol.
-
-Good point, will fix if we are in fact sticking with this solution.
-
-> > +#ifdef KBUILD_CHECKSRC
-> > +#define rcu_dereference_sparse(p, space) \
-> > +       ((void)(((typeof(*p) space *)p) == p))
-> > +#else /* #ifdef KBUILD_CHECKSRC */
-> > +#define rcu_dereference_sparse(p, space)
-> > +#endif /* #else #ifdef KBUILD_CHECKSRC */
+> mdadm: device 1 in /dev/md/0 has wrong state in superblock, but 
+> /dev/sdb2 seems ok
+> mdadm: /dev/md/0 has been started with 2
 > 
-> Did you see a problem with my macro?
 > 
-> #define rcu_dereference_sparse(p, space) \
->        ((void)(((typeof(*p) space *)NULL) == ((typeof(p))NULL)))
-
-I don't see a specific problem with it.  However, I am not sure that
-it really does what we want, and you indicated some doubts when you
-posted it.  So I opted for something that very obviously will work.
-If you can assure me that sparse will interpret the typeof()s and
-space casts properly, I have no problem going with your version.
-
-> I think this should warn in all the cases we want it to, but have no side-effects.
-
-I still note a tone of uncertainty in the above sentence.  ;-)
-
-> >  #define __rcu_access_pointer(p, space) \
-> >         ({ \
-> >                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> > -               (void) (((typeof (*p) space *)p) == p); \
-> > +               rcu_dereference_sparse(p, space); \
-> >                 ((typeof(*p) __force __kernel *)(_________p1)); \
-> >         })
-> >  #define __rcu_dereference_check(p, c, space) \
-> >         ({ \
-> >                 typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
-> >                 rcu_lockdep_assert(c); \
-> > -               (void) (((typeof (*p) space *)p) == p); \
-> > +               rcu_dereference_sparse(p, space); \
-> >                 smp_read_barrier_depends(); \
-> >                 ((typeof(*p) __force __kernel *)(_________p1)); \
-> >         })
-> >  #define __rcu_dereference_protected(p, c, space) \
-> >         ({ \
-> >                 rcu_lockdep_assert(c); \
-> > -               (void) (((typeof (*p) space *)p) == p); \
-> > +               rcu_dereference_sparse(p, space); \
-> >                 ((typeof(*p) __force __kernel *)(p)); \
-> >         })
-> >  
+> Doug
 > 
-> This part might be useful in any case, to better document what the cast and
-> compare does, and to prevent the three users from diverging.
 
-And it would probably make sense to pull the rcu_dereference_sparse()
-into the macro, for that matter.
+Thanks for the report and the more recent reminder.
 
-> >diff --git a/kernel/rcutorture.c b/kernel/rcutorture.c
-> >index 439ddab..adb09cb 100644
-> >--- a/kernel/rcutorture.c
-> >+++ b/kernel/rcutorture.c
-> 
-> This didn't seem to belong here.
+Your patch :
 
-Yep, I really should put this in a separate commit.
+--- mdadm-3.1.2/super1.c	2010-03-09 18:26:44.000000000 -0500
++++ mdadm-3.1.2.dev/super1.c	2010-07-28 16:41:41.000000000 -0400
+@@ -673,10 +673,10 @@
+ 		int d = info->disk.number;
+ 		int want;
+ 		if (info->disk.state == 6)
+-			want = __cpu_to_le32(info->disk.raid_disk);
++			want = info->disk.raid_disk;
+ 		else
+ 			want = 0xFFFF;
+-		if (sb->dev_roles[d] != want) {
++		if (__le16_to_cpu(sb->dev_roles[d]) != want) {
+ 			sb->dev_roles[d] = want;
+ 			rv = 1;
+ 		}
 
-							Thanx, Paul
+
+isn't quite right.  The assignment needs a conversion too.
+
+I have committed the following to
+  http://neil.brown.name/git/mdadm/
+
+Thanks a lot,
+NeilBrown
+
+commit a2ce5a1af19e5dcfd59cad117c0e9fccabce7322
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Sep 16 20:58:31 2010 +1000
+
+    Fix byte-order conversion in update_super1("assemble")
+    
+    This code is wrong is several ways, and failed on big-endian machines.
+    Put in correct endian coversions: 'want' is cpu-order, dev_roles[] is little-endian,
+    16 bit.
+    
+    Reported-by: Doug Nazar <nazard.michi@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/super1.c b/super1.c
+index 01473d1..0eb0323 100644
+--- a/super1.c
++++ b/super1.c
+@@ -673,11 +673,11 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		int d = info->disk.number;
+ 		int want;
+ 		if (info->disk.state == 6)
+-			want = __cpu_to_le32(info->disk.raid_disk);
++			want = info->disk.raid_disk;
+ 		else
+ 			want = 0xFFFF;
+-		if (sb->dev_roles[d] != want) {
+-			sb->dev_roles[d] = want;
++		if (sb->dev_roles[d] != __cpu_to_le16(want)) {
++			sb->dev_roles[d] = __cpu_to_le16(want);
+ 			rv = 1;
+ 		}
+ 	}
