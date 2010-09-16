@@ -1,91 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Endian issue assembling arrays
-Date: Thu, 16 Sep 2010 21:03:08 +1000
-Message-ID: <20100916210308.7314c6fb@notabene>
-References: <4C5098DB.7040905@gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: advice to low cost hardware raid (with mdadm)
+Date: Thu, 16 Sep 2010 14:05:14 +0200
+Message-ID: <20100916120514.GA28175@www2.open-std.org>
+References: <00c6ed0254381567aff38d7a95d200c5.squirrel@fuckaround.org> <4C912F5D.5040305@hardwarefreak.com> <20100915214013.GA19900@www2.open-std.org> <4C9147BE.60200@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C5098DB.7040905@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4C9147BE.60200@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Nazar <nazard.michi@gmail.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 28 Jul 2010 16:53:47 -0400
-Doug Nazar <nazard.michi@gmail.com> wrote:
+On Wed, Sep 15, 2010 at 05:25:02PM -0500, Stan Hoeppner wrote:
+> Keld J=F8rn Simonsen put forth on 9/15/2010 4:40 PM:
+> > These ports are connected to the
+> > south bridge often with 20 Tbit/s or more, while a controller on an
+> > 32 bit PCI only delivers 1 TBit.=20
+>=20
+> Tbit/s for 32/33 PCI?  I think you're a little high.. by a factor of
+> 1000, Keld. :)
 
->   Came across this while testing some updates to GRUB's RAID support.
-> 
-> Assembling a RAID1 array on a PPC box results in the following warning:
-> 
-> mdadm: device 1 in /dev/md/0 has wrong state in superblock, but 
-> /dev/sdb2 seems ok
-> mdadm: /dev/md/0 has been started with 2
-> 
-> 
-> Doug
-> 
+yes, you are right. I meant Gbit/s
 
-Thanks for the report and the more recent reminder.
+> Why, may I ask, are you quoting serial data rates for parallel buses?
+> I've only seen inter-chip bandwidth quoted in serial rates on
+> communications gear.  Everyone else quotes parallel data rates for bo=
+ard
+> level communication paths-- Bytes/s not bits/sec.  You must work for
+> Ericsson. ;)
 
-Your patch :
+because I have seen specs given in bit/s. Eg southbridge speeds, and=20
+speeds of PCIe (2,5 Gbit/s per lane).  I agree that people probably wan=
+t
+speeds in MB/s.
 
---- mdadm-3.1.2/super1.c	2010-03-09 18:26:44.000000000 -0500
-+++ mdadm-3.1.2.dev/super1.c	2010-07-28 16:41:41.000000000 -0400
-@@ -673,10 +673,10 @@
- 		int d = info->disk.number;
- 		int want;
- 		if (info->disk.state == 6)
--			want = __cpu_to_le32(info->disk.raid_disk);
-+			want = info->disk.raid_disk;
- 		else
- 			want = 0xFFFF;
--		if (sb->dev_roles[d] != want) {
-+		if (__le16_to_cpu(sb->dev_roles[d]) != want) {
- 			sb->dev_roles[d] = want;
- 			rv = 1;
- 		}
+> Regardless of bit rate values, we agree on the important part, for th=
+e
+> most part. :)
 
+I think so, too.
 
-isn't quite right.  The assignment needs a conversion too.
-
-I have committed the following to
-  http://neil.brown.name/git/mdadm/
-
-Thanks a lot,
-NeilBrown
-
-commit a2ce5a1af19e5dcfd59cad117c0e9fccabce7322
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Sep 16 20:58:31 2010 +1000
-
-    Fix byte-order conversion in update_super1("assemble")
-    
-    This code is wrong is several ways, and failed on big-endian machines.
-    Put in correct endian coversions: 'want' is cpu-order, dev_roles[] is little-endian,
-    16 bit.
-    
-    Reported-by: Doug Nazar <nazard.michi@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/super1.c b/super1.c
-index 01473d1..0eb0323 100644
---- a/super1.c
-+++ b/super1.c
-@@ -673,11 +673,11 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
- 		int d = info->disk.number;
- 		int want;
- 		if (info->disk.state == 6)
--			want = __cpu_to_le32(info->disk.raid_disk);
-+			want = info->disk.raid_disk;
- 		else
- 			want = 0xFFFF;
--		if (sb->dev_roles[d] != want) {
--			sb->dev_roles[d] = want;
-+		if (sb->dev_roles[d] != __cpu_to_le16(want)) {
-+			sb->dev_roles[d] = __cpu_to_le16(want);
- 			rv = 1;
- 		}
- 	}
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
