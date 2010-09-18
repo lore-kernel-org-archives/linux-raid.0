@@ -1,40 +1,102 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: [dm-devel] [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for
- bio-based dm
-Date: Sat, 18 Sep 2010 16:42:25 -0400
-Message-ID: <AANLkTikQv+NmcwXeWebcCzxjR69YN0qY-en1mLeXS4-n@mail.gmail.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
- <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
- <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
- <4C8AC0F5.5080206@kernel.org> <20100911014612.GA26517@redhat.com> <4C94FDB4.7020206@tmr.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: [PATCH 1/2] PPC4xx: Generelizing drivers/dma/ppc4xx/adma.c
+Date: Sat, 18 Sep 2010 23:09:20 +0200
+Message-ID: <20100918210920.E05AE157D71@gemini.denx.de>
+References: <1284774145-14543-1-git-send-email-tmarri@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C94FDB4.7020206@tmr.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, agk@redhat.com, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-reply-to: <1284774145-14543-1-git-send-email-tmarri@apm.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: tmarri@apm.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, yur@emcraft.com, herbert@gondor.hengli.com.au, linux-crypto@vger.kernel.org, dan.j.williams@intel.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-raid.ids
 
-On Sat, Sep 18, 2010 at 1:58 PM, Bill Davidsen <davidsen@tmr.com> wrote:
->
-> He is commenting on the process rather than the code, since he tells you
-> that he lacks time to review your complex changes to his work, so your
-> saying that he hasn't found errors in it is muddy thinking as best.
->
-> He provided a patch and would like it tested properly before you drop a
-> bunch of stuff on top of it, to be sure it gets proper exposure and wider
-> testing. That sounds like sound software development to me. It sounds as
-> though you feel that the inclusion of your additional work is critical and
-> can't possibly wait until the next -rc or release, and I have missed the
-> reason why your stuff can't wait until it can drop on mainline code..
+Dear tmarri@apm.com,
 
-Well that was just completely incoherent yet clearly antagonistic drivel.
+In message <1284774145-14543-1-git-send-email-tmarri@apm.com> you wrote:
+> 
+> This patch generalizes the existing drver/dma/ppc4xx/adma.c, so that
+> common code can be shared between different similar DMA engine
+> drivers in other SoCs.
+...
+>   * This driver supports the asynchrounous DMA copy and RAID engines available
+> - * on the AMCC PPC440SPe Processors.
+> + * on the AMCC PPC4XX Processors.
 
-Seems you're joining multiple peoples' response to this issue and
-attributing that completely misinformed combination to "he".
+Will this driver ever include any 40x processors? If not, you probably
+should use "44x" instead (here and everywhere in the rest of the
+code).
 
-Thanks but we have this completely under control.
 
-Mike
+> diff --git a/drivers/dma/ppc4xx/ppc4xx-adma.h b/drivers/dma/ppc4xx/ppc4xx-adma.h
+> new file mode 100644
+> index 0000000..7457237
+> --- /dev/null
+> +++ b/drivers/dma/ppc4xx/ppc4xx-adma.h
+...
+> +#include <linux/of.h>
+> +#include <linux/of_platform.h>
+> +#include <asm/dcr.h>
+> +#include <asm/dcr-regs.h>
+> +#include "adma.h"
+> +#include "ppc440spe-dma.h"
+> +
+> +/* Default polynomial (for 440SP is only available) */
+> +#define PPC4XX_DEFAULT_POLY	0x4d
+
+Should this go into "ppc440spe-dma.h"?
+
+> +/* The list of channels exported by ppc440spe ADMA */
+> +struct list_head
+> + ppc4xx_adma_chan_list = LIST_HEAD_INIT(ppc4xx_adma_chan_list);
+> +
+> +/* This flag is set when want to refetch the xor chain in the interrupt
+> + * handler
+> + */
+> +static u32 do_xor_refetch;
+> +
+> +/* Pointer to DMA0, DMA1 CP/CS FIFO */
+> +static void *ppc440spe_dma_fifo_buf;
+
+Seems this should go into "ppc440spe-dma.h"?
+
+
+> +/* This array is used in data-check operations for storing a pattern */
+> +static char ppc440spe_qword[16];
+> +
+> +static atomic_t ppc4xx_adma_err_irq_ref;
+> +static dcr_host_t ppc440spe_mq_dcr_host;
+> +static unsigned int ppc440spe_mq_dcr_len;
+
+Ditto?
+
+> +static unsigned long ppc440spe_rxor_state;
+> +
+> +static struct page *ppc440spe_rxor_srcs[32];
+
+And here again - please check globally!
+
+
+> +/**
+> + * ppc440spe_can_rxor - check if the operands may be processed with RXOR
+> + */
+> +static int ppc440spe_can_rxor(struct page **srcs, int src_cnt, size_t len)
+
+Again, should this then not be in ppc440spe specific files?
+
+
+It seems the split / generalization is highly incomplete yet.
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+What can it profit a man to gain the whole world and to come  to  his
+property with a gastric ulcer, a blown prostate, and bifocals?
+                                     -- John Steinbeck, _Cannery Row_
