@@ -1,61 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid10f2. mismatch_cnt=128. 'repair' does nothing.
-Date: Sat, 18 Sep 2010 15:37:17 +1000
-Message-ID: <20100918153717.75821cb6@notabene>
-References: <AANLkTik5y-83xR=wR3=weXxLOegOeub3=jCuMMV5umjw@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: some non critical problems... (1. mdadm segfault -> write-mostly,
+ 2. smart?)
+Date: Sat, 18 Sep 2010 14:01:31 -0400
+Message-ID: <4C94FE7B.1050009@tmr.com>
+References: <20100906143308.2e1a9291@atak.bl.pg.gda.pl>	<20100908114415.6ac8bcb9@atak.bl.pg.gda.pl> <20100914151347.3c387cbd@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTik5y-83xR=wR3=weXxLOegOeub3=jCuMMV5umjw@mail.gmail.com>
+In-Reply-To: <20100914151347.3c387cbd@atak.bl.pg.gda.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 17 Sep 2010 22:40:54 -0500
-Jon Nelson <jnelson-linux-raid@jamponi.net> wrote:
-
-> I have a raid10f2 across 2 drives.
-> I happened to note (only by chance!) that mismatch_cnt was 128, after
-> a periodic 'check' (/sys/block/md0/md/sync_action).
-> A quick google seemed to suggest that a 'repair' was in order.
-> mismatch_cnt reset to 0, and I waited 2 hours.
-> mismatch_cnt is now 128 again, but *no* kernel messages about the
-> repair were output, except:
-> 
-> [463639.341245] md: requested-resync of RAID array md0
-> [463639.341252] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [463639.341257] md: using maximum available idle IO bandwidth (but not
-> more than 200000 KB/sec) for requested-resync.
-> [463639.341266] md: using 128k window, over a total of 483401728 blocks.
-> [470612.805202] md: md0: requested-resync done.
-> 
-> This does not seem to be right.
-> 
-> Kernel: 2.6.34.4-0 from openSUSE 11.3 x86_64.
-> 
-
-Depends on what you mean by "right".
-
-mismatch count is increased by both 'check' and 'repair'.  So 'repair'
-confirms that it found the same things that 'check' found (or the same number
-of them).
-raid10 does not report any mismatches found or corrected in the kernel logs,
-though it would report if it failed to correct something.
-So the conclusion we can draw is that  raid10 attempted to correct all the
-inconsistencies it found, and no error was reported during that correction.
-
-So it is fairly likely that the inconsistency is actually corrected.
-
-The best way to be sure is to run another 'check'.
+Janek Kozicki wrote:
+> Janek Kozicki said:     (by the date of Wed, 8 Sep 2010 11:44:15 +0200)
+>
+>    
+>> Umm... to reiterate one of my questions in above email:
+>>
+>>
+>>      
+>>> md1 : active raid1 sdc1[3](W) sdb1[5](W)
+>>>        9767416 blocks super 1.0 [2/2] [UU]
+>>>        bitmap: 6/150 pages [24KB], 32KB chunk
+>>>        
+>> Is it possible to disable that (W) --write-mostly flag? Does it
+>> decrease performance or something, if both devices in the array are
+>> set to (W) ?
+>>      
+> this seems to have fixed it:
+>
+>   mdadm --fail /dev/md1 /dev/sdb1
+>   mdadm --remove /dev/md1 /dev/sdb1
+>   mdadm --zero-superblock /dev/sdb1
+>   mdadm --add --readwrite /dev/md1 /dev/sdb1
+>
+>
+>    
+Sorry for a late question, but in adding this to my notes, I realized I 
+wasn't clear on why this flag moved to the other partitions. Are you, 
+and if so can you clarify?
 
 
-Maybe raid10 (and other levels) should report inconsistencies when they are
-found - I'm not sure.  Certainly they shouldn't during an initial sync, but
-that is fairly easy to detect.  Equally any reports should be carefully
-rate-limited so as not to produce too much noise, but that is fairly easy
-too.  All that is required (assuming this is actually a good idea) is for
-someone to do the work. :-)
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   "We can't solve today's problems by using the same thinking we
+    used in creating them." - Einstein
 
-NeilBrown
