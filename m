@@ -1,47 +1,32 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: [PATCH 2/2] PPC4xx: Merge xor.h and dma.h into onefile ppc440spe-dma.h
-Date: Sat, 18 Sep 2010 23:12:01 +0200
-Message-ID: <20100918211201.EE714157D71@gemini.denx.de>
-References: <1284774162-14652-1-git-send-email-tmarri@apm.com>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: some non critical problems... (1. mdadm segfault ->
+ write-mostly, 2. smart?)
+Date: Mon, 20 Sep 2010 13:49:38 +0200
+Message-ID: <20100920134938.64382cec@atak.bl.pg.gda.pl>
+References: <20100906143308.2e1a9291@atak.bl.pg.gda.pl>
+	<20100908114415.6ac8bcb9@atak.bl.pg.gda.pl>
+	<20100914151347.3c387cbd@atak.bl.pg.gda.pl>
+	<4C94FE7B.1050009@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <1284774162-14652-1-git-send-email-tmarri@apm.com>
+In-Reply-To: <4C94FE7B.1050009@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: tmarri@apm.com
-Cc: linux-raid@vger.kernel.org, herbert@gondor.apana.org.au, neilb@suse.de, yur@emcraft.com, linux-crypto@vger.kernel.org, dan.j.williams@intel.com, linuxppc-dev@lists.ozlabs.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear tmarri@apm.com,
+Bill Davidsen said:     (by the date of Sat, 18 Sep 2010 14:01:31 -0400)
 
-In message <1284774162-14652-1-git-send-email-tmarri@apm.com> you wrote:
-> From: Tirumala Marri <tmarri@apm.com>
-> 
-> This patch combines drivers/dma/ppc4xx/xor.h and driver/dma/dma/ppc4xx/dma.h
-> into drivers/dma/ppc4xx/ppx440spe-dma.h .
-> 
-> Signed-off-by: Tirumala R Marri <tmarri@apm.com>
-> ---
->  drivers/dma/ppc4xx/dma.h           |  223 -------------------------
->  drivers/dma/ppc4xx/ppc440spe-dma.h |  318 ++++++++++++++++++++++++++++++++++++
->  drivers/dma/ppc4xx/xor.h           |  110 -------------
->  3 files changed, 318 insertions(+), 333 deletions(-)
+> Sorry for a late question, but in adding this to my notes, I realized I 
+> wasn't clear on why this flag moved to the other partitions. Are you, 
+> and if so can you clarify?
 
-Please use -M with "git format-patch" so it detects renames (here we
-should probably see a rename from dma.h into ppc440spe-dma.h [plus
-some changes]) instead of a remove plus add file.
-
-That would make it much easier to review your changes.
-
-Thanks.
-
-Best regards,
-
-Wolfgang Denk
+If you read my first email in this thread, you will see an excerpt
+from syslog saying that mdadm segfaulted during system bootup.
+I think that this is the reason, because I cannot think of any other
+possible reason.
 
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-It's a small world, but I wouldn't want to paint it.
+Janek Kozicki                               http://janek.kozicki.pl/  |
