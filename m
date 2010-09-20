@@ -1,63 +1,50 @@
-From: Tirumala Marri <tmarri@apm.com>
-Subject: RE: [PATCH 1/2] PPC4xx: Generelizing drivers/dma/ppc4xx/adma.c
-Date: Mon, 20 Sep 2010 11:00:03 -0700
-Message-ID: <7707889dee57e97ad50b4ce5c7697466@mail.gmail.com>
-References: <1284774145-14543-1-git-send-email-tmarri@apm.com> <20100918210920.E05AE157D71@gemini.denx.de>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: idr_get_new_exact ?
+Date: Mon, 20 Sep 2010 12:31:40 -0700
+Message-ID: <20100920123140.f524de79.akpm@linux-foundation.org>
+References: <AANLkTi=ZLupVyFR0e2v-TLpeNWdw1bVMZUAhgyxLJ7OV@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20100918210920.E05AE157D71@gemini.denx.de>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, yur@emcraft.com, herbert@gondor.hengli.com.au, linux-crypto@vger.kernel.org, dan.j.williams@intel.com, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <AANLkTi=ZLupVyFR0e2v-TLpeNWdw1bVMZUAhgyxLJ7OV-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jean Delvare (PC drivers, core)" <khali-PUYAD+kWke1g9hUCZPvPmw@public.gmane.org>, "Ben Dooks (embedded platforms)" <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org>, Roland Dreier <rolandd-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Steve Wise <swise-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ppp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-Mr. Wolfgang
->
-> Will this driver ever include any 40x processors? If not, you probably
-> should use "44x" instead (here and everywhere in the rest of the
-> code).
-[Marri] Yes there is 40x based DMA engine we planned to include in the
-future.
+On Mon, 20 Sep 2010 16:11:31 +0200
+Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org> wrote:
 
-> > +/* Pointer to DMA0, DMA1 CP/CS FIFO */
-> > +static void *ppc440spe_dma_fifo_buf;
->
-> Seems this should go into "ppc440spe-dma.h"?
->
->
-> > +/* This array is used in data-check operations for storing a pattern
-> */
-> > +static char ppc440spe_qword[16];
-> > +
-> > +static atomic_t ppc4xx_adma_err_irq_ref;
-> > +static dcr_host_t ppc440spe_mq_dcr_host;
-> > +static unsigned int ppc440spe_mq_dcr_len;
->
-> Ditto?
->
-> > +static unsigned long ppc440spe_rxor_state;
-> > +
-> > +static struct page *ppc440spe_rxor_srcs[32];
->
-> And here again - please check globally!
->
->
-> > +/**
-> > + * ppc440spe_can_rxor - check if the operands may be processed with
-> RXOR
-> > + */
-> > +static int ppc440spe_can_rxor(struct page **srcs, int src_cnt,
-> size_t len)
->
-> Again, should this then not be in ppc440spe specific files?
->
->
-> It seems the split / generalization is highly incomplete yet.
+> Occasionally, drivers care about the value that idr associates with
+> their pointers.
+> 
+> Today we have idr_get_new_above() which allocates a new idr entry
+> above or equal to a given starting id, but sometimes drivers need to
+> force an exact value.
+> 
+> To overcome this small API gap, drivers are wrapping idr_get_new_above
+> and then either BUG_ON() or just call idr_remove() and returns -EBUSY
+> when idr allocates them an id which is different than their requested
+> value.
+> 
+> There are only a handful of users who need this (see below. especially
+> note the i2c comment :), but it might be nice to have such an API (a
+> bit less of code, and a bit less error prone).
+> 
+> Would something like the below be desirable/acceptable ?
 
-[Marri] Some of the stuff can go into ppc440spe-dma.h. This is just
-Beginning to add more new DMA engines support. I expect more changes to
-come in.
+It seems OK to me - it's an improvement over what we have now.
 
-Regards,
-Marri
+> (untested. and i just picked the simplest and straight-forward way to
+> implement this; obviously it's not optimal since there's no reason to
+> even allocate an id if we know it's not the id we're looking for. but
+> it's enough to get the idea, it's not a hot path, and it's what
+> drivers are doing today)
+
+Sure, we can speed it up later if that appears to be necessary.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
