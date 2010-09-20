@@ -1,29 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: idr_get_new_exact ?
-Date: Mon, 20 Sep 2010 23:26:47 +0200
-Message-ID: <4C97D197.9070703@gmail.com>
-References: <AANLkTi=ZLupVyFR0e2v-TLpeNWdw1bVMZUAhgyxLJ7OV@mail.gmail.com> <adaiq20f90h.fsf@cisco.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: [PATCH 1/2] PPC4xx: Generelizing drivers/dma/ppc4xx/adma.c
+Date: Mon, 20 Sep 2010 23:31:26 +0200
+Message-ID: <20100920213126.0A1B1157D71@gemini.denx.de>
+References: <1284774145-14543-1-git-send-email-tmarri@apm.com> <20100918210920.E05AE157D71@gemini.denx.de> <7707889dee57e97ad50b4ce5c7697466@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ppp-owner@vger.kernel.org>
-In-Reply-To: <adaiq20f90h.fsf@cisco.com>
-Sender: linux-ppp-owner@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>, linux-kernel@vger.kernel.org, "Jean Delvare (PC drivers, core)" <khali@linux-fr.org>, "Ben Dooks (embedded platforms)" <ben-linux@fluff.org>, Roland Dreier <rolandd@cisco.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Steve Wise <swise@chelsio.com>, Neil Brown <neilb@suse.de>, Paul Mackerras <paulus@samba.org>, linux-i2c@vger.kernel.org, linux-rdma@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-ppp@vger.kernel.org, netdev@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <7707889dee57e97ad50b4ce5c7697466@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tirumala Marri <tmarri@apm.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de, yur@emcraft.com, herbert@gondor.hengli.com.au, linux-crypto@vger.kernel.org, dan.j.williams@intel.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-raid.ids
 
-Hello,
+Dear Tirumala Marri,
 
-On 09/20/2010 10:35 PM, Roland Dreier wrote:
-> Looks fine to me as an improvement over the status quo, but I wonder how
-> many of these places could use the radix_tree stuff instead?  If you're
-> not using the ability of the idr code to assign an id for you, then it
-> seems the radix_tree API is a better fit.
+In message <7707889dee57e97ad50b4ce5c7697466@mail.gmail.com> you wrote:
+>
+> > > +/**
+> > > + * ppc440spe_can_rxor - check if the operands may be processed with RXOR
+> > > + */
+> > > +static int ppc440spe_can_rxor(struct page **srcs, int src_cnt,
+> > size_t len)
+> >
+> > Again, should this then not be in ppc440spe specific files?
+> >
+> >
+> > It seems the split / generalization is highly incomplete yet.
+> 
+> [Marri] Some of the stuff can go into ppc440spe-dma.h. This is just
+> Beginning to add more new DMA engines support. I expect more changes to
+> come in.
 
-I agree.  Wouldn't those users better off simply using radix tree?
+Why would that go into a header file? This is source code, not header
+stuff. It should stay in a .c file!  [Note that Ilya asked the same
+question.]
 
-Thanks.
+Best regards,
+
+Wolfgang Denk
 
 -- 
-tejun
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Intel's new motto: United we stand. Divided we fall!
