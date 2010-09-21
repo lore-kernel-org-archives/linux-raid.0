@@ -1,129 +1,106 @@
-From: Mike Hartman <mike@hartmanipulation.com>
-Subject: Re: New RAID causing system lockups
-Date: Tue, 21 Sep 2010 07:28:39 -0400
-Message-ID: <AANLkTikZ_gpTyef1aCxQ=GcFp_ZBS=B3_Peff7duooe4@mail.gmail.com>
-References: <AANLkTimTvPupaPuFbfpcCGC=0Ys9fQWihAgaADsrowqq@mail.gmail.com>
-	<20100912064308.46d96742@notabene>
-	<AANLkTikWY1QE_2HBADkVV1u1OSCktVT=ShQrCdNWBF8n@mail.gmail.com>
-	<AANLkTimzmoyq_KHA1Q3JgEJSj2iuwYwiHRNR=_ZuLQCZ@mail.gmail.com>
-	<AANLkTiknrUVCToYg8NM0dUX9kXVE_kTAwtuAqo09X-qj@mail.gmail.com>
-	<20100914095111.6e3045c7@notabene>
-	<AANLkTin=jy=xJTtN5mQ6U=rYw3p+_4-nmkhO7zqR0KLP@mail.gmail.com>
-	<AANLkTimyEr9LnS2BOR+rXhwfU0rCE-MmYcjttaTyqAWT@mail.gmail.com>
-	<20100914113516.63c883c4@notabene>
-	<AANLkTimeeecqZX1Bn23=_41sBYO+P8h_b5Z6Gf_ACuA1@mail.gmail.com>
-	<AANLkTi=uO6a1e_eGKcg6T2rD_ZpqNg_-X1u6qq=zA5J6@mail.gmail.com>
-	<20100914134837.2e740a3e@notabene>
-	<AANLkTimXabL-TyjqJ81syrx-Oxn50qexbA8q9p22sxJt@mail.gmail.com>
-	<AANLkTinYaE07MzZ7LSPY18jtrsSdvj5sf7rnDqGEQP=z@mail.gmail.com>
-	<20100921122644.517fcab0@notabene>
+From: Jim Schatzman <james.schatzman@futurelabusa.com>
+Subject: Re: Why does MD overwrite the superblock upon temporary
+  disconnect?
+Date: Tue, 21 Sep 2010 07:16:23 -0600
+Message-ID: <20100921131656.73CD2E3096C@mail.futurelabusa.com>
+References: <20100921025058.79B24E3096C@mail.futurelabusa.com>
+ <20100921140914.6a92e794@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100921122644.517fcab0@notabene>
+In-Reply-To: <20100921140914.6a92e794@notabene>
+References: <20100921025058.79B24E3096C@mail.futurelabusa.com>
+ <20100921140914.6a92e794@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, richard@sauce.co.nz
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 20, 2010 at 10:26 PM, Neil Brown <neilb@suse.de> wrote:
-> On Wed, 15 Sep 2010 17:49:44 -0400
-> Mike Hartman <mike@hartmanipulation.com> wrote:
->
->> >> Hmmm..
->> >> =A0Can you try mounting with
->> >> =A0 =A0-o barrier=3D0
->> >>
->> >> just to see if my theory is at all correct?
->> >>
->> >> Thanks,
->> >> NeilBrown
->> >>
->> >
->>
->> Progress report:
->>
->> I made the barrier change shortly after sending my last message (abo=
-ut
->> 40 hours ago). With that in place, I was able to finish emptying one
->> of the non-assimilated drives onto the array, after which I added th=
-at
->> drive as a hot spare and started the process to grow the array onto =
-it
->> - the same procedure I've been applying since I created the RAID the
->> other week. No problems so far, and the reshape is at 46%.
->>
->> It's hard to be positive that the barrier deactivation is responsibl=
-e
->> yet though - while the last few lockups have only been 1-16 hours
->> apart, I believe the first two had at least 2 or 3 days between them=
-=2E
->> I'll keep the array busy to enhance the chances of a lockup though -
->> each one so far has been during a reshape or a large batch of writin=
-g
->> to the array's partition. If I make it another couple days (meaning
->> time for this reshape to complete, another drive to be emptied onto
->> the array, and another reshape at least started) I'll be pretty
->> confident the problem has been identified.
->
-> Thanks for the update.
->
->>
->> Assuming the barrier is the culprit (and I'm pretty sure you're righ=
-t)
->> what are the consequences of just leaving it off? I gather the idea =
-of
->> the barrier is to prevent journal corruption in the event of a power
->> failure or other sudden shutdown, which seems pretty important, but =
-it
->> also doesn't seem like it was enabled by default in ext3/4 until 200=
-8,
->> which makes it seem less critical.
->
-> Correct. =A0Without the barriers the chance of corruption during powe=
-rfail is
-> higher. =A0I don't really know how much higher, it depends a lot on t=
-he
-> filesystem design and the particular implementation. =A0I think ext4 =
-tends to
-> be fairly safe - after all some devices don't support barriers and it=
- has to
-> do best-effort on those too.
->
->>
->> Even if the ultimate solution for me is to just leave it disabled I'=
-m
->> happy to keep trying patches if you want to get it properly fixed in
->> md. We may have to come up with an alternate way to work the array
->> hard enough to trigger the lockups though - my last 1.5TB drive is
->> what's being merged in now. After that completes I only have one mor=
-e
->> pair of 750GBs (that will have to be shoehorned in using RAID0 again=
-).
->> I do have a single 750GB left over, so I'll probably find a mate for
->> it and get it added to. After that we're maxed out on hardware for a
->> while.
->>
->> Mike
->
-> I'll stare at the code a bit more and see if anything jumps out at me=
-=2E
->
-> Thanks,
-> NeilBrown
->
->
+Neil and Richard-
 
-I've just finished my last grow-and-copy with no problems. The only
-drive that's not part of the array now is the leftover 750GB, which is
-now empty. I haven't experienced any further lockups so your barrier
-diagnosis seems to be spot on. I'm planning to just leave that option
-turned off, but as I said, I'm happy to test any patches you come up
-with. Thanks for all your help.
+Thanks for your responses.  My environment.
 
-Mike
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+OS:  Linux l1.fu-lab.com 2.6.34.6-47.fc13.i686.PAE #1 SMP Fri Aug 27 09:29:49 UTC 2010 i686 i686 i386 GNU/Linux
+
+MDADM: mdadm - v3.1.2 - 10th March 2010
+
+SATA controller:   SiI 3124 PCI-X Serial ATA Controller
+
+Drive cages: 8 drive chassis with 4x port multipliers.
+
+More details:  I tried reassembling the array with mdadm -A --force /dev/mdX
+ and also by specifying all the devices explicitly. I tried this multiple times. This did not work. A couple of things happened
+
+a) mdadm always reported that there weren't enough drives to start the array
+
+b) about 75% of the time, it would complain that one of the drives was busy, so that the result was 4 active; 3 spare
+
+c) there was no reason that I could see why it would report one busy drive - the drive wasn't part of another array, mounted separately, bad, or marked anything other than "spare".
+ I had no trouble copying data from the "busy" drive with dd.
+
+As I originally reported, I could not get "assemble" to work, with the above symptoms.
+
+
+Also, I noticed that the "events" counter was messed up on the "spare" drives. The 4 "active" drives had values of 90, the spare drives had varying events values - most were 0 but as I recall one had a value around 30 or so.
+
+
+I didn't note the counter values and the "spare" state until after I rebooted. The exact process was this
+
+1) Jogged the mouse cable which jogged the eSATA cable.
+
+2) I noticed that the array was inactive and immediate shut the system down.
+
+3) Fixed the cables and rebooted.
+
+4) At this point, had 4 "active" disks and 4 "spares".  Tried reassembling many different ways. Sometimes, mdadm would reduce this to 4 "active" and 3 "spares".
+
+5) No progress with the above at all until I recreated ("mdadm -C") the array with 6 drives, checked the data, added the 2 additional drives, at which point resyncing occurred.
+
+Re: "It marks the devices as having failed
+but otherwise doesn't change the metadata.
+I've occasionally thought about
+leaving the metadata alone once enough devices have failed that the array
+cannot work, but I'm not sure it would really gain anything."
+
+
+My response: The problem with what MD does now (overwriting the metadata) is that it loses track of the slot numbers, and also apparently will not allow you to reassemble the drive (maybe based on the events counter??). If it kept the slot numbers around, and allowed you to force "spare" drives to be considered "active", that would be easier to deal with. I think you are saying that this occured when I rebooted - is that correct? 
+
+
+Re: "The 'destruction' of the metadata happens later, not at the time of device
+failure."
+
+My response:  So... maybe if I had prevented initrd from trying to start the array when I rebooted, I could have diagnosed the situation and fixed it more easily than by recreating the array.  How?
+
+
+Re: "How is 'check the parity' different from 'resync two disks from scratch' ??
+Both require reading every block on every disk."
+
+My response: With RAID6, it appears that MD reads all the data twice - once for each set of parity data. I added the 7th and 8th drives simultaneously, but the resyncing was done one drive at a time (according to mdadm --detail /dev/mdX).
+
+O.k., so this wasn't catastrophic. I was just afraid to stress anything by using the array until the syncing was complete.
+
+
+Re: "So here is the crux of the matter - what is over-writing the metadata and
+converting the devices to spares?  So far: I don't know.
+I have tried to reproduce this and cannot. "
+
+My response: If I am able to, I will create another, similar array (with no valuable data!) and try this again. Here would be my procedure
+a) Create an 8-drive RAID 6 array.
+
+b) With the array running, unplug half of the array. Observe that the array goes inactive.
+
+c) Reboot the system
+
+If the same behavior repeats itself, I will end up with 4 active drives and 4 spares.  It is also possible that connectivity with the 2nd half of the array went on and off several times over the several seconds while I was pulling on the mouse cable - eSata connectors don't seem to be 100% reliable.
+
+
+Another question
+
+Do I understand correctly, that if I had added the last 2 drives with "--assume-clean", would the resync have been skipped?
+
+
+Thanks!
+
+Jim
+
+
