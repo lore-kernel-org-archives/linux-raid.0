@@ -1,54 +1,52 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
- / Debian 5.0 - lenny 2.6.26 kernel
-Date: Tue, 21 Sep 2010 22:02:25 +0100
-Message-ID: <4C991D61.1040400@seoss.co.uk>
-References: <4C938103.1010304@seoss.co.uk> <20100918085925.5fee83ee@notabene> <4C97BD21.1040405@seoss.co.uk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Is this likely to cause me problems?
+Date: Tue, 21 Sep 2010 22:15:17 +0100
+Message-ID: <4C992065.9000107@anonymous.org.uk>
+References: <965992.31969.qm@web51304.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C97BD21.1040405@seoss.co.uk>
+In-Reply-To: <965992.31969.qm@web51304.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tim Small wrote:
-> http://buttersideup.com/files/md-raid1-lockup-lvm-snapshot/iodeadlock-sysrq-t.txt
+On 21/09/2010 21:33, Jon Hardcastle wrote:
+> I am finally replacing an old and now failed drive with a new one.
 >
-> ... this was soon after the io to md2 stopped - md0 seems fine...
+> I normally create a partition the size of the entire disk and add that but whilst checking the sizes marry up i noticed that is an odity...
 >
-> oldshoreham:~# cat /proc/mdstat
-> Personalities : [raid1]
-> md2 : active raid1 sda6[0] sdb6[1]
->       404600128 blocks [2/2] [UU]
->       [>....................]  resync =  0.1% (437056/404600128)
-> finish=343321.2min speed=19K/sec
+> Below is an fdisk dump of all the drives in my RAID6 array
 >
+> sdc---
+> /dev/sdc1            2048  1953525167   976761560   fd  Linux raid autodetect
+> ---
+> Seems to be different to sda say which is also '1TB'
 >
-> ... I also tried an older Debian 5.0.x kernel from Mar 2009, which is a
-> less-patched 2.6.26, and got the same results.  2.6.32 hasn't deadlocked
-> after 10 minutes (2.6.26 usually does within a minute of boot-up), so
-> I'll leave it re-syncing overnight...
->   
+> sda---
+> /dev/sda1              63  1953520064   976760001   fd  Linux raid autodetect
+> ---
+>
+> Now i read somewhere that the sizes flucuate but as some core value remains the same can anyone confirm if this is the case?
+>
+> I am reluctant to add to my array until i know for sure...
 
-2.6.32 resynced to completion, but if possible I'd really like to get
-2.6.26 running on this box, as it uses openvz, and the 2.6.32 openvz
-patches are still pretty green, I think.  Is their anything in the
-sysrq-t output in that link of any use?  Are there any patches I should
-try, or would it be better to start bisecting between 2.6.26 and 2.6.32
-(assuming I can reproduce the problem without the load pattern which
-openvz is producing - which I probably can).
+Looks like you've used a different partition tool on the new disc than 
+you used on the old ones - old ones started the first partition at the 
+beginning of cylinder 1, new ones like to start partitions at 1MB so 
+they're aligned on 4K sector boundaries and SSDs' erase group boundaries 
+etc. You could duplicate the original partition table like this:
+
+sfdisk -d /dev/older-disc | sfdisk /dev/new-disc
+
+But it wouldn't cause you any problems, because the new partition is 
+bigger than the old one, despite starting a couple of thousand sectors 
+later. This in itself is odd - how did you come to not use the last 
+chunk of your original discs?
 
 Cheers,
 
-Tim.
-
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+John.
 
