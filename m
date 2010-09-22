@@ -1,167 +1,97 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 3.1.4 - A tool for managing Soft RAID under
- Linux
-Date: Wed, 22 Sep 2010 09:50:00 +1000
-Message-ID: <20100922095000.03b3fd10@notabene>
-References: <19580.38720.309122.572004@notabene.brown>
-	<AANLkTimcC=h47qjkztW3cJ3Lh294Sbj6X=o3Zwfbh+E8@mail.gmail.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: Is this likely to cause me problems?
+Date: Tue, 21 Sep 2010 23:42:24 -0700 (PDT)
+Message-ID: <672252.64237.qm@web51306.mail.re2.yahoo.com>
+References: <4C992065.9000107@anonymous.org.uk>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimcC=h47qjkztW3cJ3Lh294Sbj6X=o3Zwfbh+E8@mail.gmail.com>
+In-Reply-To: <4C992065.9000107@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "fibreraid@gmail.com" <fibreraid@gmail.com>
+To: Jon@eHardcastle.com, John Robinson <john.robinson@anonymous.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 16 Sep 2010 23:33:36 -0400
-"fibreraid@gmail.com" <fibreraid@gmail.com> wrote:
+--- On Tue, 21/9/10, John Robinson <john.robinson@anonymous.org.uk> wro=
+te:
 
-> Hi Neil,
+> From: John Robinson <john.robinson@anonymous.org.uk>
+> Subject: Re: Is this likely to cause me problems?
+> To: Jon@eHardcastle.com
+> Cc: linux-raid@vger.kernel.org
+> Date: Tuesday, 21 September, 2010, 22:15
+> On 21/09/2010 21:33, Jon Hardcastle
+> wrote:
+> > I am finally replacing an old and now failed drive
+> with a new one.
+> >=20
+> > I normally create a partition the size of the entire
+> disk and add that but whilst checking the sizes marry up i
+> noticed that is an odity...
+> >=20
+> > Below is an fdisk dump of all the drives in my RAID6
+> array
+> >=20
+> > sdc---
+> > /dev/sdc1=A0 =A0 =A0 =A0 =A0 =A0
+> 2048=A0
+> 1953525167=A0=A0=A0976761560=A0=A0=A0fd=A0
+> Linux raid autodetect
+> > ---
+> > Seems to be different to sda say which is also '1TB'
+> >=20
+> > sda---
+> > /dev/sda1=A0 =A0 =A0 =A0 =A0 =A0
+> =A0 63=A0
+> 1953520064=A0=A0=A0976760001=A0=A0=A0fd=A0
+> Linux raid autodetect
+> > ---
+> >=20
+> > Now i read somewhere that the sizes flucuate but as
+> some core value remains the same can anyone confirm if this
+> is the case?
+> >=20
+> > I am reluctant to add to my array until i know for
+> sure...
 >=20
-> Thank you for the 3.1.4 mdadm release, but I am seeing three immediat=
-e
-> issues with it. I upgraded to 3.1.4 from 3.1.3 plus the patch to deal
-> with incremental assembly of spares at system reboot. Now, new md's
-> are coming back with strange device #'s and coming back online as
-> "auto-read-only". I have duplicated these issues on multiple systems
-> as well as on a virtual machine.
+> Looks like you've used a different partition tool on the
+> new disc than you used on the old ones - old ones started
+> the first partition at the beginning of cylinder 1, new ones
+> like to start partitions at 1MB so they're aligned on 4K
+> sector boundaries and SSDs' erase group boundaries etc. You
+> could duplicate the original partition table like this:
 >=20
-> My machine configuration is as follows:
+> sfdisk -d /dev/older-disc | sfdisk /dev/new-disc
 >=20
-> Ubuntu 10.04 Lucid 64-bit up to date
-> 8GB RAM
-> Dual quad-core CPUs
-> 12 x Seagate Cheetah 15K.7 hard drives
-> Drives connected with LSI 3Gbps SAS HBA
+> But it wouldn't cause you any problems, because the new
+> partition is bigger than the old one, despite starting a
+> couple of thousand sectors later. This in itself is odd -
+> how did you come to not use the last chunk of your original
+> discs?
 >=20
+> Cheers,
 >=20
-> To reproduce the issues:
->=20
-> 1. Create /dev/md0 with RAID level 6, 11 active drives, 1 hot-spare,
-> 64K chunk size, v1.2 superblock, run immediately
-> 2. After a few minutes of syncing, reboot the system.
-> 3. When Ubuntu comes back up, /proc/mdstat will report:
->=20
-> Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0]
-> [raid1] [raid10]
-> md127 : active (auto-read-only) raid6 sdd1[2] sdl1[10] sdk1[9] sdb1[0=
-]
-> sdj1[8] sdf1[4] sde1[3] sdg1[5] sdc1[1] sdh1[6] sdi1[7] sdm1[11](S)
->       943695936 blocks super 1.2 level 6, 64k chunk, algorithm 2
-> [11/11] [UUUUUUUUUUU]
->        resync=3DPENDING
->=20
-> Please note the three issues:
-> A) md marked as "auto-read-only". This never happened with 3.1.3.
-> B) md comes back up as md127 eventhough it is the only md in the
-> system. I've never seen ever with mdadm.
-> C) md comes back with "resync=3DPENDING" instead of automatically
-> resyncing. mdadm 3.1.3 would auto resync.
->=20
-> Please note that issues A and B also occur even if the system is
-> rebooted AFTER RAID synchronization is fully completed. Running mdadm
-> -R /dev/md0 produces an error about the device being busy but does
-> appear to clear the auto-read-only designation. I also tested with
-> this three md's. Surprisingly, md0 came back as md127, md1 as md126,
-> and md2 as md125, and of course, all auto-read-only.
->=20
-> I am happy to run any tests you like as these issues are very quick
-> and easy to reproduce. They seem like serious regressions or perhaps
-> some incompatibility of mdadm 3.1.4 with Ubuntu. I await your
-> guidance. Thank you Neil!
->=20
->=20
-> Best
-> -Tommy
+> John.
 >=20
 
+Ok, Thank you.
 
-Hi Tommy,
- the issues you are seeing here are almost certainly not related to any
-change between 3.1.3 and 3.1.4.
+So do you have any recommendations? I would like to 'trust' the new ver=
+sion of fdisk but I can not risk torpedoing myself. I have 2 more drive=
+s I need to 'phase out' at some point; but they will liklely be with 1.=
+5TB drives.
 
-The symptoms you describe suggest that mdadm doesn't recognise these ar=
-rays
-as belonging to 'this' host.
-Each array has the hostname of the owning host encoding the metadata.  =
-If
-that doesn't match the current hostname it is assumed to be foreign and=
- mdadm
-is more cautious about assembling it or giving it a name that some othe=
-r
-local array might want.
+My gut tells me that i should whilst I have other drives the same size =
+use the same paratermeters... then when i have a bigger drive that is d=
+efinately not going to cause any size issues let fdisk do its magic.
 
-I suspect something is happening in the Ubuntu initramfs to confuse thi=
-ngs.
-
-What does=20
-  mdadm -E /dev/sd?1 | grep Name
-
-show?  and what is your hostname?
-
-Maybe just running
-   mkintramfs
-will fix the problem.
-
-NeilBrown
+So following that premsis is there any down side to copy the partition =
+table off another drive?
 
 
-
-
-
->=20
->=20
->=20
->=20
->=20
-> On Tue, Aug 31, 2010 at 1:46 AM, Neil Brown <neilb@suse.de> wrote:
-> >
-> > I am pleased to announce the availability of
-> > =C2=A0 mdadm version 3.1.4
-> >
-> > It is available at the usual places:
-> > =C2=A0 countrycode=3Dxx.
-> > =C2=A0 http://www.${countrycode}kernel.org/pub/linux/utils/raid/mda=
-dm/
-> > and via git at
-> > =C2=A0 git://neil.brown.name/mdadm
-> > =C2=A0 http://neil.brown.name/git?p=3Dmdadm
-> >
-> > This is a bugfix/stability release over 3.1.3.
-> > 3.1.3 had a couple of embarrasing regressions and a couple of other
-> > issues surfaces which had easy fixes so I decided to make a 3.1.4
-> > release after all.
-> >
-> > Two fixes related to configs that aren't using udev:
-> > =C2=A0 - Don't remove md devices which 'standard' names on --stop
-> > =C2=A0 - Allow dev_open to work on read-only /dev
-> > And fixed regressions:
-> > =C2=A0 - Allow --incremental to add spares to an array
-> > =C2=A0 - Accept --no-degraded as a deprecated option rather than
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0throwing an error
-> > =C2=A0 - Return correct success status when --incrmental assembling
-> > =C2=A0 =C2=A0 a container which does not yet have enough devices.
-> > =C2=A0 - Don't link mdadm with pthreads, only mdmon needs it.
-> > =C2=A0 - Fix compiler warning due to bad use of snprintf
-> >
-> > This release is believed to be stable and you should feel free to
-> > upgrade to 3.1.4
-> >
-> > It is expected that the next release will be 3.2 with a number of n=
-ew
-> > features.
-> >
-> > NeilBrown 31st August 2010
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
-html
-> >
-
+     =20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
