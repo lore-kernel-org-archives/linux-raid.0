@@ -1,7 +1,7 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: How to remove non-existant device
-Date: Thu, 23 Sep 2010 14:16:19 +0100
-Message-ID: <4C9B5323.3020201@anonymous.org.uk>
+Date: Thu, 23 Sep 2010 13:23:19 -0400
+Message-ID: <4C9B8D07.4000502@tmr.com>
 References: <20100923073029.GD19538@scavenger.homeip.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -13,7 +13,7 @@ To: Benjamin Schieder <blindcoder@scavenger.homeip.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23/09/2010 08:30, Benjamin Schieder wrote:
+Benjamin Schieder wrote:
 > Hi all.
 >
 > On a SLES 10 SP 3 x86_64 version I'm encountering the following problem:
@@ -45,12 +45,12 @@ On 23/09/2010 08:30, Benjamin Schieder wrote:
 > mdadm: cannot find sda5: No such file or directory
 >
 > What am I doing wrong here?
-> kblhbe101:~ # mdadm --version
-> mdadm - v2.6 - 21 December 2006
+>    
 
-Try `mdadm /dev/md0 -r missing`.
+You want /dev/sda5
 
-Cheers,
-
-John.
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   "We can't solve today's problems by using the same thinking we
+    used in creating them." - Einstein
 
