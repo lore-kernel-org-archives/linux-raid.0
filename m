@@ -1,52 +1,52 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/2] PPC4xx: Generelizing drivers/dma/ppc4xx/adma.c
-Date: Thu, 23 Sep 2010 13:22:03 -0700
-Message-ID: <4C9BB6EB.7020802@intel.com>
-References: <1284774145-14543-1-git-send-email-tmarri@apm.com>
+From: Robin Doherty <rdoherty@gmail.com>
+Subject: Re: mdadm raid5 array - 0 space available but usage is less than capacity
+Date: Thu, 23 Sep 2010 21:22:10 +0100
+Message-ID: <AANLkTi=8tEoYkiEsyz5ws=0PPBWoUzyL-CiozQR-joKJ@mail.gmail.com>
+References: <AANLkTi=XoxYmj8G5+GadCCTxQGJqpMttmU3NMH_vtKYM@mail.gmail.com> <20100924021845.2c7ee01b@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <1284774145-14543-1-git-send-email-tmarri@apm.com>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "tmarri@apm.com" <tmarri@apm.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "yur@emcraft.com" <yur@emcraft.com>, "herbert@gondor.hengli.com.au" <herbert@gondor.hengli.com.au>, "neilb@suse.de" <neilb@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100924021845.2c7ee01b@natsu>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roman Mamedov <roman@rm.pp.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/17/2010 6:42 PM, tmarri@apm.com wrote:
-> From: Tirumala Marri<tmarri@apm.com>
+My apologies. Thanks for the responses.
+
+Rob
+
+On 23 September 2010 21:18, Roman Mamedov <roman@rm.pp.ru> wrote:
+> On Thu, 23 Sep 2010 20:43:44 +0100
+> Robin Doherty <rdoherty@gmail.com> wrote:
 >
-> This patch generalizes the existing drver/dma/ppc4xx/adma.c, so that
-> common code can be shared between different similar DMA engine
-> drivers in other SoCs.
+>> So maybe this is a file system problem rather than an mdadm problem?
 >
-> Signed-off-by: Tirumala R Marri<tmarri@apm.com>
-> ---
->   drivers/dma/ppc4xx/adma.c        | 4370 +++-----------------------------------
->   drivers/dma/ppc4xx/adma.h        |  116 +-
->   drivers/dma/ppc4xx/ppc4xx-adma.h | 4020 +++++++++++++++++++++++++++++++++++
->   3 files changed, 4357 insertions(+), 4149 deletions(-)
->   create mode 100644 drivers/dma/ppc4xx/ppc4xx-adma.h
+> mkfs.ext3 says:
 >
-
-Will both versions of this driver exist in the same kernel build?  For 
-example the iop-adma driver supports iop13xx and iop3xx, but we select 
-the archtitecture at build time?  Or, as I assume in this case, will the 
-two (maybe more?) ppc4xx adma drivers all be built in the same image, 
-more like ioatdma?
-
-In the latter case I would recommend a file structure like:
-
-drivers/dma/ppc4xx/adma.c
-drivers/dma/ppc4xx/adma_440spe.c
-drivers/dma/ppc4xx/adma_460ex.c
-
-With patches to move the chipset specific pieces to their own file. 
-Minimizing the code churn in adma.c, or at least showing a progression 
-of what is unique and needs to be moved.
-
-This would be similar to how ioatdma is structured and compiles a single 
-driver to cover the three major hardware revisions.
-
+> =A0 =A0 =A0 -m reserved-blocks-percentage
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0Specify the percentage of the filesystem b=
+locks reserved for the
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0super-user. =A0 This =A0avoids =A0fragment=
+ation, and allows root-owned
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0daemons, such as syslogd(8), to continue t=
+o =A0function =A0correctly
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0after non-privileged processes are prevent=
+ed from writing to the
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0filesystem. =A0The default percentage is 5=
+%.
+>
+> this can be changed on an existing FS using tune2fs.
+>
+> Also, this is not related to mdadm at all.
+>
+> --
+> With respect,
+> Roman
+>
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
