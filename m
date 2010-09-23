@@ -1,73 +1,31 @@
-From: Benjamin Schieder <blindcoder@scavenger.homeip.net>
-Subject: How to remove non-existant device
-Date: Thu, 23 Sep 2010 09:30:29 +0200
-Message-ID: <20100923073029.GD19538@scavenger.homeip.net>
+From: Paul Mundt <lethal-M7jkjyW5wf5g9hUCZPvPmw@public.gmane.org>
+Subject: Re: idr_get_new_exact ?
+Date: Thu, 23 Sep 2010 20:42:55 +0900
+Message-ID: <20100923114255.GB27960@linux-sh.org>
+References: <AANLkTi=ZLupVyFR0e2v-TLpeNWdw1bVMZUAhgyxLJ7OV@mail.gmail.com> <adaiq20f90h.fsf@cisco.com> <4C97D197.9070703@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+In-Reply-To: <4C97D197.9070703-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Roland Dreier <rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jean Delvare (PC drivers, core)" <khali-PUYAD+kWke1g9hUCZPvPmw@public.gmane.org>, "Ben Dooks (embedded platforms)" <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org>, Roland Dreier <rolandd-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Steve Wise <swise-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ppp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 List-Id: linux-raid.ids
 
-
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi all.
-
-On a SLES 10 SP 3 x86_64 version I'm encountering the following problem:
-
-Two disks sda and sdb are in a RAID 1 configuration. When pulling one
-disk and replacing it it becomes sdc instead of sda. The RAID is now
-degraded:
-
-kblhbe101:~ # cat /proc/mdstat
-Personalities : [raid1] [raid0] [raid5] [raid4] [linear]
-md2 : active raid1 sda8[2](F) sdb8[1]
-      286125568 blocks [2/1] [_U]
-
-md0 : active raid1 sda5[2](F) sdb5[1]
-      529984 blocks [2/1] [_U]
-
-md3 : active raid1 sda7[2](F) sdb7[1]
-      4200896 blocks [2/1] [_U]
-
-md1 : active raid1 sda6[2](F) sdb6[1]
-      2104384 blocks [2/1] [_U]
-
-unused devices: <none>
-
-But now I can't remove the sda partitions from the RAID:
-kblhbe101:~ # mdadm /dev/md0 -r /dev/sda5
-mdadm: cannot find /dev/sda5: No such file or directory
-kblhbe101:~ # mdadm /dev/md0 -r sda5
-mdadm: cannot find sda5: No such file or directory
-
-What am I doing wrong here?
-kblhbe101:~ # mdadm --version
-mdadm - v2.6 - 21 December 2006
-
-
-Trying mdadm -Iq /dev/md0 results in a segfault...
-
-
-Kind regards,
-     Benjamin
-
---qDbXVdCdHGoSgWSk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFMmwIUvGeX+A6y9KwRAkGWAJ9+rfE5LvVP6on5WEfEMB/CAzNNOACgl/6b
-WCOKr/tCmsjMoE6aABzH8VU=
-=QU+K
------END PGP SIGNATURE-----
-
---qDbXVdCdHGoSgWSk--
+On Mon, Sep 20, 2010 at 11:26:47PM +0200, Tejun Heo wrote:
+> Hello,
+> 
+> On 09/20/2010 10:35 PM, Roland Dreier wrote:
+> > Looks fine to me as an improvement over the status quo, but I wonder how
+> > many of these places could use the radix_tree stuff instead?  If you're
+> > not using the ability of the idr code to assign an id for you, then it
+> > seems the radix_tree API is a better fit.
+> 
+> I agree.  Wouldn't those users better off simply using radix tree?
+> 
+It could go either way. I was about to write the same function when
+playing with it for IRQ mapping, the idea being to propagate the initial
+tree with sparse static vectors and then switch over to dynamic IDs for
+virtual IRQ creation. I ended up going with a radix tree for other
+reasons, though.
