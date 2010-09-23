@@ -1,44 +1,56 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Is this likely to cause me problems?
-Date: Thu, 23 Sep 2010 14:14:35 +0100
-Message-ID: <4C9B52BB.1060204@anonymous.org.uk>
-References: <965225.13513.qm@web51302.mail.re2.yahoo.com>
+Subject: Re: How to remove non-existant device
+Date: Thu, 23 Sep 2010 14:16:19 +0100
+Message-ID: <4C9B5323.3020201@anonymous.org.uk>
+References: <20100923073029.GD19538@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <965225.13513.qm@web51302.mail.re2.yahoo.com>
+In-Reply-To: <20100923073029.GD19538@scavenger.homeip.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
+To: Benjamin Schieder <blindcoder@scavenger.homeip.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/09/2010 15:38, Jon Hardcastle wrote:
-[...]
-> Thanks for your help. I have been doing some background reading and am concinving myself to leave the boundaries as they are as it appears there is performance gains to be had? Assuming this is true as long as the parition size is LARGER than the other 1TB paritions I should be ok, right?
+On 23/09/2010 08:30, Benjamin Schieder wrote:
+> Hi all.
 >
-> Device Boot         Start  End          Blocks
-> /dev/sda1              63  1953520064   976760001
-> /dev/sdc1            2048  1953525167   976761560
+> On a SLES 10 SP 3 x86_64 version I'm encountering the following problem:
 >
-> If i subtract Start from End
-> sda = 1953520064 - 63   = 1953520001
-> sdc = 1953525167 - 2048 = 1953523119 (3118 larger than sda)
+> Two disks sda and sdb are in a RAID 1 configuration. When pulling one
+> disk and replacing it it becomes sdc instead of sda. The RAID is now
+> degraded:
 >
-> as long as sdc is larger which it is by 3118 I should be ok right?
+> kblhbe101:~ # cat /proc/mdstat
+> Personalities : [raid1] [raid0] [raid5] [raid4] [linear]
+> md2 : active raid1 sda8[2](F) sdb8[1]
+>        286125568 blocks [2/1] [_U]
 >
-> I am even thinking about individually removeing my drives from the array and letting fdisk use its new calculations for the existing drives. I could do with better performance!
+> md0 : active raid1 sda5[2](F) sdb5[1]
+>        529984 blocks [2/1] [_U]
+>
+> md3 : active raid1 sda7[2](F) sdb7[1]
+>        4200896 blocks [2/1] [_U]
+>
+> md1 : active raid1 sda6[2](F) sdb6[1]
+>        2104384 blocks [2/1] [_U]
+>
+> unused devices:<none>
+>
+> But now I can't remove the sda partitions from the RAID:
+> kblhbe101:~ # mdadm /dev/md0 -r /dev/sda5
+> mdadm: cannot find /dev/sda5: No such file or directory
+> kblhbe101:~ # mdadm /dev/md0 -r sda5
+> mdadm: cannot find sda5: No such file or directory
+>
+> What am I doing wrong here?
+> kblhbe101:~ # mdadm --version
+> mdadm - v2.6 - 21 December 2006
 
-Don't do that. There is no performance benefit from aligning your 
-partitions. There would be a performance benefit to making LVM align 
-itself correctly over md RAID stripes, and the filesystem over LVM or md 
-RAID, but there is no performance benefit from aligning md RAID over 
-partitions, *unless* you have 4K sector drives or SSD.
-
-Honestly you are better off duplicating your original partition table 
-onto your new drive so all your partitions are the same, mostly so there 
-can't be any more confusion later on.
+Try `mdadm /dev/md0 -r missing`.
 
 Cheers,
 
 John.
+
