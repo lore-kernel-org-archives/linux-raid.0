@@ -1,48 +1,73 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: How to prevent auto assembly?
-Date: Thu, 23 Sep 2010 14:07:44 +1000
-Message-ID: <20100923140744.286ccd6d@notabene>
-References: <20100923033822.E7819E30965@mail.futurelabusa.com>
+From: Benjamin Schieder <blindcoder@scavenger.homeip.net>
+Subject: How to remove non-existant device
+Date: Thu, 23 Sep 2010 09:30:29 +0200
+Message-ID: <20100923073029.GD19538@scavenger.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100923033822.E7819E30965@mail.futurelabusa.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Schatzman <james.schatzman@futurelabusa.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 22 Sep 2010 21:37:22 -0600
-Jim Schatzman <james.schatzman@futurelabusa.com> wrote:
 
-> I put "AUTO -1.X" in my /etc/mdadm.conf file, to try to prevent my version 1.2 arrays from being automatically assembled. Nevertheless, the arrays were auto-assembled at boot time.
-> 
-> How do I prevent this from happening?
+--qDbXVdCdHGoSgWSk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
- - use "1.x" rather than "1.X" - that test isn't case-insensitive.
- - make sure the arrays aren't mention in /etc/mdadm.conf, or if they are,
-   replace the "/dev/mdXX" part with "ignore".
- - run mkinitramfs if you haven't already - the arrays might be assembled in
-   early boot.
+Hi all.
 
-NeilBrown
+On a SLES 10 SP 3 x86_64 version I'm encountering the following problem:
+
+Two disks sda and sdb are in a RAID 1 configuration. When pulling one
+disk and replacing it it becomes sdc instead of sda. The RAID is now
+degraded:
+
+kblhbe101:~ # cat /proc/mdstat
+Personalities : [raid1] [raid0] [raid5] [raid4] [linear]
+md2 : active raid1 sda8[2](F) sdb8[1]
+      286125568 blocks [2/1] [_U]
+
+md0 : active raid1 sda5[2](F) sdb5[1]
+      529984 blocks [2/1] [_U]
+
+md3 : active raid1 sda7[2](F) sdb7[1]
+      4200896 blocks [2/1] [_U]
+
+md1 : active raid1 sda6[2](F) sdb6[1]
+      2104384 blocks [2/1] [_U]
+
+unused devices: <none>
+
+But now I can't remove the sda partitions from the RAID:
+kblhbe101:~ # mdadm /dev/md0 -r /dev/sda5
+mdadm: cannot find /dev/sda5: No such file or directory
+kblhbe101:~ # mdadm /dev/md0 -r sda5
+mdadm: cannot find sda5: No such file or directory
+
+What am I doing wrong here?
+kblhbe101:~ # mdadm --version
+mdadm - v2.6 - 21 December 2006
 
 
-> 
-> OS:  Linux l1.fu-lab.com 2.6.34.6-47.fc13.i686.PAE #1 SMP Fri Aug 27 09:29:49 UTC 2010 i686 i686 i386 GNU/Linux
-> 
-> MDADM: mdadm - v3.1.2 - 10th March 2010
-> 
-> Arrays are version 1.2.
-> 
-> Thanks!
-> 
-> Jim
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Trying mdadm -Iq /dev/md0 results in a segfault...
 
+
+Kind regards,
+     Benjamin
+
+--qDbXVdCdHGoSgWSk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFMmwIUvGeX+A6y9KwRAkGWAJ9+rfE5LvVP6on5WEfEMB/CAzNNOACgl/6b
+WCOKr/tCmsjMoE6aABzH8VU=
+=QU+K
+-----END PGP SIGNATURE-----
+
+--qDbXVdCdHGoSgWSk--
