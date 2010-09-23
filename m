@@ -1,42 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: idr_get_new_exact ?
-Date: Thu, 23 Sep 2010 13:46:29 +0200
-Message-ID: <4C9B3E15.5080002@gmail.com>
-References: <AANLkTi=ZLupVyFR0e2v-TLpeNWdw1bVMZUAhgyxLJ7OV@mail.gmail.com> <adaiq20f90h.fsf@cisco.com> <4C97D197.9070703@gmail.com> <20100923114255.GB27960@linux-sh.org>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Is this likely to cause me problems?
+Date: Thu, 23 Sep 2010 14:14:35 +0100
+Message-ID: <4C9B52BB.1060204@anonymous.org.uk>
+References: <965225.13513.qm@web51302.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ppp-owner@vger.kernel.org>
-In-Reply-To: <20100923114255.GB27960@linux-sh.org>
-Sender: linux-ppp-owner@vger.kernel.org
-To: Paul Mundt <lethal@linux-sh.org>
-Cc: Roland Dreier <rdreier@cisco.com>, Ohad Ben-Cohen <ohad@wizery.com>, linux-kernel@vger.kernel.org, "Jean Delvare (PC drivers, core)" <khali@linux-fr.org>, "Ben Dooks (embedded platforms)" <ben-linux@fluff.org>, Roland Dreier <rolandd@cisco.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Steve Wise <swise@chelsio.com>, Neil Brown <neilb@suse.de>, Paul Mackerras <paulus@samba.org>, linux-i2c@vger.kernel.org, linux-rdma@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-ppp@vger.kernel.org, netdev@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <965225.13513.qm@web51302.mail.re2.yahoo.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On 22/09/2010 15:38, Jon Hardcastle wrote:
+[...]
+> Thanks for your help. I have been doing some background reading and am concinving myself to leave the boundaries as they are as it appears there is performance gains to be had? Assuming this is true as long as the parition size is LARGER than the other 1TB paritions I should be ok, right?
+>
+> Device Boot         Start  End          Blocks
+> /dev/sda1              63  1953520064   976760001
+> /dev/sdc1            2048  1953525167   976761560
+>
+> If i subtract Start from End
+> sda = 1953520064 - 63   = 1953520001
+> sdc = 1953525167 - 2048 = 1953523119 (3118 larger than sda)
+>
+> as long as sdc is larger which it is by 3118 I should be ok right?
+>
+> I am even thinking about individually removeing my drives from the array and letting fdisk use its new calculations for the existing drives. I could do with better performance!
 
-On 09/23/2010 01:42 PM, Paul Mundt wrote:
-> On Mon, Sep 20, 2010 at 11:26:47PM +0200, Tejun Heo wrote:
->> Hello,
->>
->> On 09/20/2010 10:35 PM, Roland Dreier wrote:
->>> Looks fine to me as an improvement over the status quo, but I wonder how
->>> many of these places could use the radix_tree stuff instead?  If you're
->>> not using the ability of the idr code to assign an id for you, then it
->>> seems the radix_tree API is a better fit.
->>
->> I agree.  Wouldn't those users better off simply using radix tree?
->>
-> It could go either way. I was about to write the same function when
-> playing with it for IRQ mapping, the idea being to propagate the initial
-> tree with sparse static vectors and then switch over to dynamic IDs for
-> virtual IRQ creation. I ended up going with a radix tree for other
-> reasons, though.
+Don't do that. There is no performance benefit from aligning your 
+partitions. There would be a performance benefit to making LVM align 
+itself correctly over md RAID stripes, and the filesystem over LVM or md 
+RAID, but there is no performance benefit from aligning md RAID over 
+partitions, *unless* you have 4K sector drives or SSD.
 
-I see.  If there are use cases where fixed and dynamic IDs need to be
-mixed, no objection from me.
+Honestly you are better off duplicating your original partition table 
+onto your new drive so all your partitions are the same, mostly so there 
+can't be any more confusion later on.
 
-Thanks.
+Cheers,
 
--- 
-tejun
+John.
