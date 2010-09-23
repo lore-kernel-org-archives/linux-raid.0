@@ -1,59 +1,37 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: mdadm raid5 array - 0 space available but usage is less than
- capacity
-Date: Fri, 24 Sep 2010 02:18:45 +0600
-Message-ID: <20100924021845.2c7ee01b@natsu>
-References: <AANLkTi=XoxYmj8G5+GadCCTxQGJqpMttmU3NMH_vtKYM@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/2] PPC4xx: Merge xor.h and dma.h into onefile
+	ppc440spe-dma.h
+Date: Thu, 23 Sep 2010 13:29:47 -0700
+Message-ID: <AANLkTin2pyo0Ua952poK8E+-bdeKMfYd9nyd-5tx7RD9@mail.gmail.com>
+References: <1284774162-14652-1-git-send-email-tmarri@apm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/cDYCY450sbKhnhtNoNOlteE"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=XoxYmj8G5+GadCCTxQGJqpMttmU3NMH_vtKYM@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robin Doherty <rdoherty@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1284774162-14652-1-git-send-email-tmarri@apm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: tmarri@apm.com
+Cc: neilb@suse.de, yur@emcraft.com, linux-raid@vger.kernel.org, herbert@gondor.hengli.com.au, linux-crypto@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-raid.ids
 
---Sig_/cDYCY450sbKhnhtNoNOlteE
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Sep 17, 2010 at 6:42 PM,  <tmarri@apm.com> wrote:
+> From: Tirumala Marri <tmarri@apm.com>
+> This patch combines drivers/dma/ppc4xx/xor.h and driver/dma/dma/ppc4xx/dma.h
+> into drivers/dma/ppc4xx/ppx440spe-dma.h .
+>
 
-On Thu, 23 Sep 2010 20:43:44 +0100
-Robin Doherty <rdoherty@gmail.com> wrote:
+Is this just code churn, or do we gain anything by combining these
+header files?  Don't add "ppc440spe-" back to the prefix, we're
+already in the ppc4xx directory, unless the file will only contain
+definitions that are relevant to ppc440spe.
 
-> So maybe this is a file system problem rather than an mdadm problem?
-
-mkfs.ext3 says:
-
-       -m reserved-blocks-percentage
-              Specify the percentage of the filesystem blocks reserved for =
-the
-              super-user.   This  avoids  fragmentation, and allows root-ow=
-ned
-              daemons, such as syslogd(8), to continue to  function  correc=
-tly
-              after non-privileged processes are prevented from writing to =
-the
-              filesystem.  The default percentage is 5%.
-
-this can be changed on an existing FS using tune2fs.
-
-Also, this is not related to mdadm at all.
-
---=20
-With respect,
-Roman
-
---Sig_/cDYCY450sbKhnhtNoNOlteE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkybtiUACgkQTLKSvz+PZwiFyACggGo68zHdH1tiokiYwKUQVs02
-CjQAn1hlCK2VXPEbVJdIfuNPuwW8b2XX
-=IikG
------END PGP SIGNATURE-----
-
---Sig_/cDYCY450sbKhnhtNoNOlteE--
+--
+Dan
