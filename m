@@ -1,35 +1,27 @@
-From: Jools Wills <jools@oxfordinspire.co.uk>
-Subject: Re: ANNOUNCE: mdadm 3.1.4 - A tool for managing Soft RAID under Linux
-Date: Fri, 24 Sep 2010 15:26:44 +0100
-Message-ID: <4C9CB524.6090901@oxfordinspire.co.uk>
-References: <19580.38720.309122.572004@notabene.brown>	<AANLkTimcC=h47qjkztW3cJ3Lh294Sbj6X=o3Zwfbh+E8@mail.gmail.com>	<20100922095000.03b3fd10@notabene> <AANLkTinmyrEdPgVvZUSb9Anc0w8_R5qGpqcQHeRQetAh@mail.gmail.com>
+From: Tirumala Marri <tmarri@apm.com>
+Subject: RE: [PATCH 1/2] PPC4xx: Generelizing drivers/dma/ppc4xx/adma.c
+Date: Fri, 24 Sep 2010 11:52:49 -0700
+Message-ID: <ba171a39721d9cfd3e7c8ca8d287f485@mail.gmail.com>
+References: <1284774145-14543-1-git-send-email-tmarri@apm.com>
+ <4C9BB6EB.7020802@intel.com> <d2d7c3068b5582bde7529ccc65d71e52@mail.gmail.com>
+ <201009240858.05018.sr@denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinmyrEdPgVvZUSb9Anc0w8_R5qGpqcQHeRQetAh@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "fibreraid@gmail.com" <fibreraid@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <201009240858.05018.sr@denx.de>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Stefan Roese <sr@denx.de>, linuxppc-dev@lists.ozlabs.org
+Cc: Dan Williams <dan.j.williams@intel.com>, neilb@suse.de, yur@emcraft.com, linux-raid@vger.kernel.org, herbert@gondor.hengli.com.au, linux-crypto@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/09/10 15:19, fibreraid@gmail.com wrote:
-> Thank you Neil! That absolutely solved the issue. Please take note
-> Ubuntu users of this excellent recommendation.
+>
+> It would be really preferable to support all those platforms in a
+> single Linux
+> image. If technically possible, please try to move this direction.
+It is do-able for couple of SoCs. Other SoC DMA engines are quite a bit
+different.
+Let me first do small steps first and slowly achieve some run time
+Differentiation.
 
-Are you running your own ubuntu packages or someone elses btw ? since 
-ubuntu doesn't even have 3.1.3 afaik.
-
-i had the same behaviour as you on a new array until i did a 
-update-initramfs "update-initramfs -k all -u" and then all was well - as 
-it adds the mdadm.conf with to the initramfs (as has already been said). 
-I wasn't 100% sure of the details why so thanks to Neil for clarifying this.
-
-Best Regards
-
-Jools Wills
--- 
-IT Consultant
-Oxford Inspire - http://www.oxfordinspire.co.uk - be inspired
-t: 01235 519446 m: 07966 577498 f: 08715046117
-jools@oxfordinspire.co.uk
+Thanks,
+Marri
