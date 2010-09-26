@@ -1,84 +1,103 @@
-From: "Carl-=?ISO-8859-1?Q?Johan_W=E4gner?=" <carl-johan.wagner@agusta.se>
-Subject: Re: RAID 5 with bad blocks
-Date: Sat, 25 Sep 2010 20:47:07 +0200
-Message-ID: <20100925000351.M29572@agusta.se>
+From: Mike Hartman <mike@hartmanipulation.com>
+Subject: Accidental grow before add
+Date: Sun, 26 Sep 2010 03:27:16 -0400
+Message-ID: <AANLkTi=PydpqTR1x=KTfW16en3U3+KxoLV85iWpWtRC9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: fafler@gmail.com
 List-Id: linux-raid.ids
 
-Similar to Lasse's RAID 5 array, I have 3 1TB drives. And the same problem as
-Lasse with an array stopped working for one reason and can't recover for
-another reason. And what about badblocks?
+I think I may have mucked up my array, but I'm hoping somebody can
+give me a tip to retrieve the situation.
 
-After an upgrade to Ubuntu 10.04 I had at first NO (visible) raid array at
-all. After a short investigation it turned out that /dev/sdd was
-"busy"-something, which I now have figured out must have been an attempt to
-recover.
+I had just added a new disk to my system and partitioned it in
+preparation for adding it to my RAID 6 array, growing it from 7
+devices to 8. However, I jumped the gun (guess I'm more tired than I
+thought) and ran the grow command before I added the new disk to the
+array as a spare.
 
-Unfortunately I hadn't understood all sides of running a RAID when I started
-to act on the problem, so I may accidentally have destroyed my chances to
-recover this in the end, but lets see...
+In other words, I should have run:
 
-mdadm /dev/md0 --detail (as well as with --examine) shows
-0 ... active sync /dev/sdb1
-1 ... active sync /dev/sdc1
-2 ... faulty removed (shows only with --examine)
-3 ... spare /dev/sdd1
+mdadm --add /dev/md0 /dev/md3p1
+mdadm --grow /dev/md0 --raid-devices=8 --backup-file=/grow_md0.bak
 
-I can't tell when /dev/sdd1 went from number 2 to 3. It's never been outside
-the computer. So I began to consider the /dev/sdd1 as actually faulty. And as
-so, I started to think of ways to recover. First, a complete backup, and after
-that I also tried
+but instead I just ran
 
-mdadm -a /dev/md0 /dev/sdd1
+mdadm --grow /dev/md0 --raid-devices=8 --backup-file=/grow_md0.bak
 
-and as a result the number 3 disk started to rebuild.
+I immediately checked /proc/mdstat and got the following output:
 
-Here comes the interesting part; after 35% the recovering halted/exited due to
-sector fault on /dev/sdb1 and consequently disabling /dev/sdb1. This leaves
-the RAID5 with only one disk and very unhappy to recover the 3rd /dev/sdd1.
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdk1[0] md2p1[7] sde1[6] sdf1[5] md1p1[4] sdl1[3] sdj1[1]
+      7324227840 blocks super 1.2 level 6, 256k chunk, algorithm 2
+[8/7] [UUUUUUU_]
+      [>....................]  reshape =  0.0% (79600/1464845568)
+finish=3066.3min speed=7960K/sec
 
-Now, here is the strange(?) thing. Checking the array while having it run with
-only two disks (sdb1 and sdc1) I could (and still can) access all files
-without any (as seen so far) errors. I haven't written anything to the disk,
-except for that the timestamps may have changed. (so I took the chance and
-have now made a complete backup)
+md3 : active raid0 sdb1[0] sdh1[1]
+      1465141760 blocks super 1.2 128k chunks
 
-My guess is that the stored information (so far 12% of disk capacity) has been
-away from the bad sectors and therefor also contains correct info.
+md2 : active raid0 sdc1[0] sdd1[1]
+      1465141760 blocks super 1.2 128k chunks
 
-When recovering the sdd1 and coming up to the faulty sectors (for what ever
-reason it wants to access those at recover) it can no longer hold the array as
-clean and therefor stops with "Disk failure on sdb1, disabling the device."
+md1 : active raid0 sdi1[0] sdm1[1]
+      1465141760 blocks super 1.2 128k chunks
 
-This leads to a problem. I have 3 disks, where one (the first event) (disk
-sdd1) fell out of sync (reason unknown). And therefor needs to (at least
-claims to need) rebuild of sdd1. But it can't, since sdb1 is faulty. Even
-though no data is placed on the bad sectors.
+unused devices: <none>
 
-So, I have two disks that together holds enough information to rebuild the
-third, but do not complete the task due to errors on sectors not in use...
+At this point I figured I was probably ok. It looked like it was
+restructuring the array to expect 8 disks, and with only 7 it would
+just end up being in a degraded state. So I figured I'd just cost
+myself some time - one reshape to get to the degraded 8 disk state,
+and another reshape to activate the new disk instead of just the one
+reshape onto the new disk. I went ahead and added the new disk as a
+spare, figuring the current reshape operation would ignore it until it
+completed, and then the system would notice it was degraded with a
+spare available and rebuild it.
 
-...
-hm...
+However, things have slowed to a crawl (relative to the time it
+normally takes to regrow this array) so I'm afraid something has gone
+wrong. As you can see in the initial mdstat above, it started at
+7960K/sec - quite fast for a reshape on this array. But just a couple
+minutes after that it had dropped down to only 667K. It worked its way
+back up through 1801K to 10277K, which is about average for a reshape
+on this array. Not sure how long it stayed at that level, but now
+(still only 10 or 15 minutes after the original mistake) it's plunged
+all the way down to 40K/s. It's been down at this level for several
+minutes and still dropping slowly. This doesn't strike me as a good
+sign for the health of the unusual regrow operation.
 
-Would it be possible to copy (with 'dd') the device (/dev/sdb) with sector
-errors to a fourth disk (/dev/sde) and then remove the faulty sdb-drive and
-reposition the newly copied sde to sdb's position to have this act as the
-first sdb-drive, now working without any physical faults, even if the data is
-incomplete in sectors; and now being possible to recover the third drive
-(/dev/sdd1)?
+Anybody have a theory on what could be causing the slowness? Does it
+seem like a reasonable consequence to growing an array without a spare
+attached? I'm hoping that this particular growing mistake isn't
+automatically fatal or mdadm would have warned me or asked for a
+confirmation or something. Worst case scenario I'm hoping the array
+survives even if I just have to live with this speed and wait for it
+to finish - although at the current rate that would take over a
+year... Dare I mount the array's partition to check on the contents,
+or would that risk messing it up worse?
 
-Lasse:
-> ... How do i proceed from here? On which device should i run badblocks?
-Is this at all possible on a md-device? Isn't this what Neil is working on?
-Or is it by any chance any meaning to run badblocks on an empty drive just to
-catch bad sectors? Would mdadm by any chance use them when creation is done?
+Here's the latest /proc/mdstat:
 
-/Carl Wagner
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 md3p1[8](S) sdk1[0] md2p1[7] sde1[6] sdf1[5]
+md1p1[4] sdl1[3] sdj1[1]
+      7324227840 blocks super 1.2 level 6, 256k chunk, algorithm 2
+[8/7] [UUUUUUU_]
+      [>....................]  reshape =  0.1% (1862640/1464845568)
+finish=628568.8min speed=38K/sec
 
+md3 : active raid0 sdb1[0] sdh1[1]
+      1465141760 blocks super 1.2 128k chunks
+
+md2 : active raid0 sdc1[0] sdd1[1]
+      1465141760 blocks super 1.2 128k chunks
+
+md1 : active raid0 sdi1[0] sdm1[1]
+      1465141760 blocks super 1.2 128k chunks
+
+unused devices: <none>
+
+Mike
