@@ -1,27 +1,47 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: Re: RAID 5 with bad blocks
-Date: Tue, 28 Sep 2010 09:26:18 +1300
-Message-ID: <1285619178.22938.8.camel@localhost.localdomain>
-References: <20100925000351.M29572@agusta.se>
-	 <20100926232102.M67000@agusta.se>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Debian kernel stanza after aptitude kernel upgrade
+Date: Tue, 28 Sep 2010 12:11:35 +0100
+Message-ID: <4CA1CD67.4040700@seoss.co.uk>
+References: <30D96C04B1444C569D53B7790707D718@DesktopManie>	<4C98CCCD.80101@seoss.co.uk> <20100922062946.7e56d1d1@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100926232102.M67000@agusta.se>
+In-Reply-To: <20100922062946.7e56d1d1@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carl-Johan =?ISO-8859-1?Q?W=E4gner?= <carl-johan.wagner@agusta.se>
-Cc: linux-raid@vger.kernel.org, fafler@gmail.com
+To: Neil Brown <neilb@suse.de>
+Cc: "A. Krijgsman" <a.krijgsman@draftsman.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 21/09/10 21:29, Neil Brown wrote:
+>> I think you need to stick the output of
+>>
+>> mdadm --examine --scan
+>>
+>> into /etc/mdadm/mdadm.conf
+>>      
+> It is generally better to use
+>      mdadm --detail --scan
+>
+> for generating mdadm.conf as it is more likely to get the device names
+> right.  And when doing this by hand, always review the output to make sure it
+> looks right.
+>    
 
-> 'dd' is NOT the program one would want to use for this task.
-> "ddrescue" is the one!
-> NB: dd_rescue is not the same program, and may or may not work. Just note that
-> "apt-get install ddrescue" installs dd_rescue, not ddrescue...
-> ddrescue is downloaded (with e g curl) from:
-> # curl ftp.gnu.org/gnu/ddrescue/ddrescue-1.13.tar.gz >ddrescue-1.13.tar.gz
-> 
-or apt-get install gddrescue 
 
+Thanks for that Neil - Debian (and thus Ubuntu) currently uses the 
+output of "mdadm --examine --scan --config=partitions" when 
+autogenerating the mdadm.conf output.  Should this be considered a bug?  
+If so, could you give a bit of detail, and I'll open a bug for the 
+script....
+
+Thanks,
+
+Tim.
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
