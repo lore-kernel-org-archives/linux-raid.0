@@ -1,46 +1,64 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: 3-way mirrors
-Date: Tue, 28 Sep 2010 17:42:28 +0100
-Message-ID: <4CA21AF4.8060308@seoss.co.uk>
-References: <20100907141904.3696.qmail@science.horizon.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: raid5+hotspare: request for recommended procedure
+Date: Wed, 29 Sep 2010 11:03:39 +0200
+Message-ID: <4CA300EB.1070909@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100907141904.3696.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/09/10 15:19, George Spelvin wrote:
-> After some frustration with RAID-5 finding mismatches and not being
-> able to figure out which drive has the problem, I'm setting up a rather
-> intricate 5-way mirrored (x 2-way striped) system.
->    
 
-I know that this doesn't solve your current problem, but I wondered if 
-the fact that mismatch_cnt is not a reliable indication of corruption on 
-RAID1 and RAID10 is a problem with your proposed solution?  I don't know 
-how difficult it would be to fix that whilst you are at it (add a data 
-copy in the write path).
+Greets, raid-users,
 
-Whilst I think about it, perhaps mismatch_cnt should be dropped from 
-RAID1 / RAID10 entirely, as it doesn't seem to be particularly useful 
-as-is....
+I would like to ask for hints on how to proceed.
 
-Perhaps the data-copy mode could be a runtime option, and mismatch_cnt 
-would only appear when it was switched on (and a repair forced when 
-making the transition from no-copy mode to copy mode?).
+I have a customers server ~500kms away ... running 2 raid5-arrays w/
+hotspare:
 
-Cheers,
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+md1 : active raid1 sdb1[1] sda1[0]
+      104320 blocks [2/2] [UU]
 
-Tim.
+md3 : active raid5 sdd3[3](S) sdc3[2] sdb3[1] sda3[0]
+      15647104 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+md4 : active raid5 sdd4[3](S) sdc4[2] sdb4[1] sda4[0]
+      471941376 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+unused devices: <none>
 
 
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+sdb shows errors:
 
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always
+      -       13
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
+Offline      -       13
+
+--
+
+The customer would now take the server with him and bring it to a fellow
+technician who could take out sdb, clone it to a new hdd and re-insert it.
+
+This would be plan A.
+
+Plan B would be that I mark sdb failed now and let the raids rebuild. I
+fear that a second hdd might fail when doing this.
+
+All Seagate-drives:
+
+sda, sdb: ST3250310NS
+sdc, sdd: ST3250621NS
+
+I also ran a "echo check > /sys/block/mdX/md/sync_action" because this
+had helped to remove those errors at another server, unfortunately it
+did not help here.
+
+Could you please advise what the better and safer alternative would be?
+
+Thanks a lot, Stefan
