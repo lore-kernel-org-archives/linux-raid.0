@@ -1,7 +1,7 @@
 From: "Stefan G. Weichinger" <lists@xunil.at>
 Subject: Re: raid5+hotspare: request for recommended procedure
-Date: Wed, 29 Sep 2010 14:42:45 +0200
-Message-ID: <4CA33445.7030408@xunil.at>
+Date: Wed, 29 Sep 2010 16:25:50 +0200
+Message-ID: <4CA34C6E.7050804@xunil.at>
 References: <4CA300EB.1070909@xunil.at> <4CA30EF5.8020702@seoss.co.uk>
 Reply-To: lists@xunil.at
 Mime-Version: 1.0
@@ -19,12 +19,7 @@ Am 2010-09-29 12:03, schrieb Tim Small:
 > -a when finished, and look at the error log) - it may be that it is
 > outside of the used space (e.g. right at the end of the drive - I've
 > seen this in the past) if this is the case, you can just dd over it.
-
-I will do that maybe after the repair-action is through ...
-
-Could you tell me in detail what you mean by "dd over it" ? Write zeros
-there or what ...?
-
+> 
 > If the test completes without error then the unreadable sector is either
 > not user-addressable, or doesn't really exist, in which case I'd ignore
 > it (or perhaps a security-erase will get the drive back into a sensible
@@ -32,8 +27,10 @@ there or what ...?
 > buggy in my experience, so you might want to look at upgrading it
 > (latest Seagate non-OEM firmware is SN06), which can be done with hdparm.
 
-You know I really hesitate with such low-level-stuff as the server is
-far away and I won't be able to just boot from a live-cd or something
-... so I am very cautious with my steps.
+Yep, it finished without error!
 
-Thanks so far, Stefan
+Does that mean I could ignore that safely?
+
+Or should I rebuild the raids onto the spare-disk and then swap drive?
+
+S
