@@ -1,34 +1,68 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: raid5+hotspare: request for recommended procedure
-Date: Fri, 01 Oct 2010 11:59:43 +0200
-Message-ID: <4CA5B10F.2010109@xunil.at>
-References: <356617.98037.qm@web51306.mail.re2.yahoo.com> <4CA45D53.3030801@xunil.at> <4CA5A31D.2030306@xunil.at>
-Reply-To: lists@xunil.at
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user defined
+ policy
+Date: Fri, 1 Oct 2010 13:36:48 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CA5A31D.2030306@xunil.at>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-Am 01.10.2010 11:00, schrieb Stefan G. Weichinger:
+From f423b226f10cfe3b416c5e0580dde45cd8ca887d Mon Sep 17 00:00:00 2001
+From: Marcin Labun <marcin.labun@intel.com>
+Date: Wed, 29 Sep 2010 06:12:38 +0200
+Subject: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user defined policy
 
-> update: the transported server simply booted ... hmm.
-> All the raids valid, nothing suspicious.
-> 
-> I took the opportunity and upgraded the kernel now. Before I decide how
-> to proceed with that hdd I pull some backup to tape. They didn't swap
-> tapes for 3 weeks ... oh my.
+This is updated series of patches forming autorebuild functionality in mdadm 
+monitor based on new policy code.
 
-The current plan is to wait for the backup to finish, after that I will
-mark the suspicious sdb-partitions as failed and let the raid rebuild
-onto the spare.
+Autorebuild Monitoring application:
+Autorebuild monitor is part of monitor application (mdadm -F). In the current
+code of mdadm monitor autorebuild feature was based on spare group assignment in
+mdadm.conf file and worked only for native metadata. 
+The new autorebuild implementation works for all metadata types. It uses 
+the concept of domains in mdadm.conf introduced by Neil Brown. 
+Monitoring application shall periodically check the state of MD active arrays
+and trigger a rebuild if there are eligible spare disks in other containers.
+Degraded arrays are checked one by one. For each array a potential spare disk
+is searched. If the spare disk matches the domain of the degraded array and
+the domain action allows for spare sharing the spare is moved using existing
+Manage_subdevs function. If the addition fails, the spare device is moved back
+to the original container and next potential spare is tried. The process is 
+repeated until all arrays are checked and the process is put into a sleep state
+for a configured period.
 
-After having run the sync_action repair stuff I think I can trust all
-the hdds. I issue a "smartctl -t long" now in advance ...
+The design of mdadm monitor requires that there is only one autorebuild process running.
+Therefore a new option -no-sharing has been added to Monitor mode, and spare sharing is
+allowed in only one instance of Monitor. User is still able to start Monitoring functions
+in multiple instances.
 
-pls correct me if needed ...
+The autorebuild build-in assumptions are:
+1\spares are shared between the arrays of the same metadata
+2\spares are moved only from containers/volumes that are not degraded
+3\spares are moved to containers/volumes lacking a *good* spare (size)
 
-Stefan
+
+0001-Monitor-set-err-on-arrays-not-in-mdstat.patch
+0002-Monitor-removed-spare-group-based-spare-sharing-code.patch
+0003-mdadm-added-no-sharing-parameter-for-Monitor-mode.patch
+0004-Monitor-link-container-volumes-in-statelist.patch
+0005-imsm-create-mdinfo-list-of-disks-in-a-container-from.patch
+0006-Monitor-autorebuild-funcionality-added.patch
+0007-Monitor-Respect-policy-in-auto-rebuild-in-mdadm-moni.patch
+0008-Monitor-Helper-functions-added-for-spare_sharing-in-.patch
+
+
+ Monitor.c     |  605 +++++++++++++++++++++++++++++++++++++++++++++++----------
+ ReadMe.c      |    2 +
+ mdadm.c       |    8 +-
+ mdadm.h       |    8 +-
+ super-intel.c |   53 +++++
+ 5 files changed, 565 insertions(+), 111 deletions(-)
+
+
