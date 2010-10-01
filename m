@@ -1,7 +1,8 @@
 From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [AUTOREBUILD 4/8] Monitor: link container-volumes in statelist
-Date: Fri, 1 Oct 2010 13:37:37 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D171D09956@irsmsx503.ger.corp.intel.com>
+Subject: [AUTOREBUILD 3/8] mdadm: added --no-sharing parameter for Monitor
+ mode
+Date: Fri, 1 Oct 2010 13:37:28 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D171D09955@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,225 +13,153 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-From 41468ed8a496f48a2cf88f193436ed0c472e0c1b Mon Sep 17 00:00:00 2001
+From ff3b37c3b4c188334a5f65d279bd6da504567274 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Tue, 28 Sep 2010 05:49:38 +0200
-Subject: [AUTOREBUILD 4/8] Monitor: link container-volumes in statelist
- To avoid repeated retrieving parent container when looking for spares.
+Date: Tue, 28 Sep 2010 05:47:29 +0200
+Subject: [AUTOREBUILD 3/8] mdadm: added --no-sharing parameter for Monitor mode
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+To avoid races we only allow one Monitoring process that will move spares.
+By default Monitor will have spare sharing on.
+If we just want to monitor --no-sharing parameter must be added to usual
+parameters.
+
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 ---
- Monitor.c |  119 ++++++++++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 95 insertions(+), 24 deletions(-)
+ Monitor.c |   33 ++++++++++++++++++++++++++++++++-
+ ReadMe.c  |    2 ++
+ mdadm.c   |    8 ++++++--
+ mdadm.h   |    6 ++++--
+ 4 files changed, 44 insertions(+), 5 deletions(-)
 
 diff --git a/Monitor.c b/Monitor.c
-index 2adea36..93dd15d 100644
+index 82ccfb2..2adea36 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -38,6 +38,37 @@ static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mail
-  * At least it isn't MD_SB_DISKS.
-  */
- #define MaxDisks 384
-+struct state {
-+	char *devname;
-+	int devnum;	/* to sync with mdstat info */
-+	long utime;
-+	int err;
-+	int active, working, failed, spare, raid, total;
-+	int expected_spares;
-+	int devstate[MaxDisks];
-+	unsigned devid[MaxDisks];
-+	int percent;
-+	char *metadata_version;
-+	struct state *volumes;/* for a container it is a link its all volumes */
-+	struct state *parent;  /* for volumes it is a link to its container */
-+	struct state *next;
-+};
-+
-+
-+
-+static void add_to_cont(struct state *cont, struct state *vol)
-+{
-+	struct state *last = NULL, *iter = NULL;
-+
-+	vol->parent = cont;
-+	iter = last = cont;
-+	while (iter != vol && (iter = iter->volumes) != NULL)
-+		last = iter;
-+	/* don't duplicate volume entries on the list */
-+	if (iter != vol)
-+		last->volumes = vol;
-+}
-+
+@@ -41,7 +41,8 @@ static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mail
  int Monitor(mddev_dev_t devlist,
  	    char *mailaddr, char *alert_cmd,
  	    int period, int daemonise, int scan, int oneshot,
-@@ -81,21 +112,10 @@ int Monitor(mddev_dev_t devlist,
- 	 * that appears in /proc/mdstat
- 	 */
- 
--	struct state {
--		char *devname;
--		int devnum;	/* to sync with mdstat info */
--		long utime;
--		int err;
--		int active, working, failed, spare, raid;
--		int expected_spares;
--		int devstate[MaxDisks];
--		unsigned devid[MaxDisks];
--		int percent;
--		struct state *next;
--	} *statelist = NULL;
- 	int finished = 0;
- 	struct mdstat_ent *mdstat = NULL;
- 	char *mailfrom = NULL;
-+	struct state *statelist = NULL;
- 
- 	if (!mailaddr) {
- 		mailaddr = conf_get_mailaddr();
-@@ -198,6 +218,10 @@ int Monitor(mddev_dev_t devlist,
- 			st->devnum = INT_MAX;
- 			st->percent = -2;
- 			st->expected_spares = mdlist->spare_disks;
-+			st->metadata_version = NULL;
-+			st->parent = NULL;
-+			st->volumes = NULL;
-+			st->total = 0;
- 			statelist = st;
- 		}
- 	} else {
-@@ -214,6 +238,10 @@ int Monitor(mddev_dev_t devlist,
- 			st->devnum = INT_MAX;
- 			st->percent = -2;
- 			st->expected_spares = -1;
-+			st->metadata_version = NULL;
-+			st->parent = NULL;
-+			st->volumes = NULL;
-+			st->total = 0;
- 			if (mdlist) {
- 				st->expected_spares = mdlist->spare_disks;
- 			}
-@@ -238,6 +266,8 @@ int Monitor(mddev_dev_t devlist,
- 			int fd;
- 			int i;
- 
-+			st->parent = NULL;
-+			st->volumes = NULL;
- 			if (test)
- 				alert("TestMessage", dev, NULL, mailaddr, mailfrom, alert_cmd, dosyslog);
- 			fd = open(dev, O_RDONLY);
-@@ -300,17 +330,22 @@ int Monitor(mddev_dev_t devlist,
- 				/* external arrays don't update utime */
- 				array.utime = time(0);
- 
--			if (st->utime == array.utime &&
--			    st->failed == array.failed_disks &&
--			    st->working == array.working_disks &&
--			    st->spare == array.spare_disks &&
--			    (mse == NULL  || (
--				    mse->percent == st->percent
--				    ))) {
-+			/* utime cannot  be trusted for external
-+			 * metadata, so treat utime for external
-+			 * metadata as different
-+			 */
-+			if ((st->utime == array.utime &&
-+			   ((st->metadata_version == NULL) ||
-+			     !is_external(st->metadata_version))) &&
-+			     st->failed == array.failed_disks &&
-+			     st->working == array.working_disks &&
-+			     st->spare == array.spare_disks &&
-+			    (mse == NULL  || (mse->percent == st->percent))) {
- 				close(fd);
- 				st->err = 0;
- 				continue;
- 			}
-+
- 			if (st->utime == 0 && /* new array */
- 			    mse->pattern && strchr(mse->pattern, '_') /* degraded */
- 				)
-@@ -425,17 +460,28 @@ int Monitor(mddev_dev_t devlist,
- 			st->failed = array.failed_disks;
- 			st->utime = array.utime;
- 			st->raid = array.raid_disks;
-+			st->total = array.raid_disks + array.nr_disks;
- 			st->err = 0;
-+			if (mse->metadata_version) {
-+				if (!st->metadata_version)
-+					st->metadata_version = strdup(mse->metadata_version);
-+				else if (strcmp(st->metadata_version,
-+						mse->metadata_version) != 0) {
-+					free(st->metadata_version);
-+					st->metadata_version = strdup(mse->metadata_version);
-+				}
-+			}
-+
- 		}
-+
- 		/* now check if there are any new devices found in mdstat */
- 		if (scan) {
- 			struct mdstat_ent *mse;
- 			for (mse=mdstat; mse; mse=mse->next)
- 				if (mse->devnum != INT_MAX &&
--				    mse->level &&
--				    (strcmp(mse->level, "raid0")!=0 &&
--				     strcmp(mse->level, "linear")!=0)
--					) {
-+				   (!mse->level  || /* retrieve containers */
-+				    (strcmp(mse->level, "raid0") != 0 &&
-+				     strcmp(mse->level, "linear") != 0))) {
- 					struct state *st = malloc(sizeof *st);
- 					mdu_array_info_t array;
- 					int fd;
-@@ -457,6 +503,10 @@ int Monitor(mddev_dev_t devlist,
- 					st->err = 1;
- 					st->devnum = mse->devnum;
- 					st->percent = -2;
-+					st->metadata_version = NULL;
-+					st->parent = NULL;
-+					st->volumes = NULL;
-+					st->total = 0;
- 					st->expected_spares = -1;
- 					statelist = st;
- 					if (test)
-@@ -465,6 +515,28 @@ int Monitor(mddev_dev_t devlist,
- 					new_found = 1;
- 				}
- 		}
-+
-+		/* search the statelist to connect external
-+		 * metadata volumes with their containers
-+		 */
-+		for (st = statelist; st; st = st->next) {
-+			if (st->metadata_version &&
-+			    is_external(st->metadata_version) &&
-+			    is_subarray(st->metadata_version+9)) {
-+				struct state *cont = NULL;
-+
-+				for (cont = statelist; cont; cont = cont->next) {
-+					if (!cont->err &&
-+					    cont->parent == NULL &&
-+					    cont->metadata_version &&
-+					    devname2devnum(st->metadata_version+10)
-+					    == cont->devnum) {
-+						add_to_cont(cont, st);
-+						break;
-+					}
-+				}
-+			}
-+		}
- 		if (!new_found) {
- 			if (oneshot)
- 				break;
-@@ -478,7 +550,6 @@ int Monitor(mddev_dev_t devlist,
- 	return 0;
- }
- 
--
- static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mailfrom, char *cmd,
- 		  int dosyslog)
+-	    int dosyslog, int test, char* pidfile, int increments)
++	    int dosyslog, int test, char *pidfile, int increments,
++	    int share)
  {
+ 	/*
+ 	 * Every few seconds, scan every md device looking for changes
+@@ -143,6 +144,36 @@ int Monitor(mddev_dev_t devlist,
+ 		setsid();
+ 	}
+ 
++	if (share) {
++		int pid, rv;
++		FILE *fp;
++		char dir[20];
++		struct stat buf;
++		fp = fopen("/var/run/mdadm/autorebuild.pid", "r");
++		if (fp) {
++			fscanf(fp, "%d", &pid);
++			sprintf(dir, "/proc/%d", pid);
++			rv = stat(dir, &buf);
++			if (rv != -1) {
++				fprintf(stderr, Name ": Only one autorebuild "
++						     "process allowed, "
++						     "aborting\n");
++				fclose(fp);
++				return 1;
++			}
++			fclose(fp);
++		}
++		fp = fopen("/var/run/mdadm/autorebuild.pid", "w");
++		if (!fp) {
++			fprintf(stderr, Name ": Cannot create autorebuild.pid "
++					     "file, aborting\n");
++			return 1;
++		}
++		pid = getpid();
++		fprintf(fp, "%d\n", pid);
++		fclose(fp);
++	}
++
+ 	if (devlist == NULL) {
+ 		mddev_ident_t mdlist = conf_get_ident(NULL);
+ 		for (; mdlist; mdlist=mdlist->next) {
+diff --git a/ReadMe.c b/ReadMe.c
+index 07abdb7..54a1998 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -185,6 +185,8 @@ struct option long_options[] = {
+     {"oneshot",   0, 0, '1'},
+     {"pid-file",  1, 0, 'i'},
+     {"syslog",    0, 0, 'y'},
++    {"no-sharing", 0, 0, NoSharing},
++
+     /* For Grow */
+     {"backup-file", 1,0, BackupFile},
+     {"array-size", 1, 0, 'Z'},
+diff --git a/mdadm.c b/mdadm.c
+index cb9921e..c9a172a 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
+ 	int daemonise = 0;
+ 	char *pidfile = NULL;
+ 	int oneshot = 0;
++	int spare_sharing = 1;
+ 	struct supertype *ss = NULL;
+ 	int writemostly = 0;
+ 	int re_add = 0;
+@@ -228,6 +229,7 @@ int main(int argc, char *argv[])
+ 				subarray = optarg;
+ 			}
+ 		case 'K': if (!mode) newmode = MISC; break;
++		case NoSharing: newmode = MONITOR; break;
+ 		}
+ 		if (mode && newmode == mode) {
+ 			/* everybody happy ! */
+@@ -779,7 +781,9 @@ int main(int argc, char *argv[])
+ 			openlog("mdadm", LOG_PID, SYSLOG_FACILITY);
+ 			dosyslog = 1;
+ 			continue;
+-
++		case O(MONITOR, NoSharing):
++			spare_sharing = 0;
++			continue;
+ 			/* now the general management options.  Some are applicable
+ 			 * to other modes. None have arguments.
+ 			 */
+@@ -1500,7 +1504,7 @@ int main(int argc, char *argv[])
+ 		}
+ 		rv= Monitor(devlist, mailaddr, program,
+ 			    delay?delay:60, daemonise, scan, oneshot,
+-			    dosyslog, test, pidfile, increments);
++			    dosyslog, test, pidfile, increments, spare_sharing);
+ 		break;
+ 
+ 	case GROW:
+diff --git a/mdadm.h b/mdadm.h
+index 0e514ee..56452bb 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -288,7 +288,8 @@ enum special_options {
+ 	DetailPlatform,
+ 	KillSubarray,
+ 	UpdateSubarray, /* 16 */
+-	IncrementalPath
++	IncrementalPath,
++	NoSharing
+ };
+ 
+ /* structures read from config file */
+@@ -924,7 +925,8 @@ extern int Examine(mddev_dev_t devlist, int brief, int export, int scan,
+ extern int Monitor(mddev_dev_t devlist,
+ 		   char *mailaddr, char *alert_cmd,
+ 		   int period, int daemonise, int scan, int oneshot,
+-		   int dosyslog, int test, char *pidfile, int increments);
++		   int dosyslog, int test, char *pidfile, int increments,
++		   int share);
+ 
+ extern int Kill(char *dev, struct supertype *st, int force, int quiet, int noexcl);
+ extern int Kill_subarray(char *dev, char *subarray, int quiet);
 -- 
 1.6.4.2
 
