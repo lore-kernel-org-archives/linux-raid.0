@@ -1,30 +1,40 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: raid5+hotspare: request for recommended procedure
-Date: Fri, 01 Oct 2010 23:20:28 +0200
-Message-ID: <4CA6509C.5090903@xunil.at>
-References: <356617.98037.qm@web51306.mail.re2.yahoo.com> <4CA45D53.3030801@xunil.at> <4CA5A31D.2030306@xunil.at> <4CA5B10F.2010109@xunil.at>
-Reply-To: lists@xunil.at
+From: Tirumala Marri <tmarri@apm.com>
+Subject: RE: [PATCH] PPC4xx: ADMA separating SoC specific functions
+Date: Fri, 1 Oct 2010 17:54:20 -0700
+Message-ID: <7a4fda4dcac9cc030907f3e5ed8a8967@mail.gmail.com>
+References: <1285865736-32074-1-git-send-email-tmarri@apm.com>
+	<20100930190814.52268D2B48C@gemini.denx.de>	<AANLkTi=CJOsayM1YnwE3a22D2S35aM+BTV6_YfXjcjiO@mail.gmail.com>
+	<dc9b5d064d80ac2af2ccf932e94b2bb9@mail.gmail.com> <AANLkTi=JqTU898DfW1=4qcb2WbwHvroY6LqiAX_oBb5L@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CA5B10F.2010109@xunil.at>
+In-Reply-To: <AANLkTi=JqTU898DfW1=4qcb2WbwHvroY6LqiAX_oBb5L@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Wolfgang Denk <wd@denx.de>, linuxppc-dev@lists.ozlabs.org, yur@emcraft.com, linux-raid@vger.kernel.org, linux-crypto@vger.kernel.org, Greg KH <greg@kroah.com>
 List-Id: linux-raid.ids
 
-Am 2010-10-01 11:59, schrieb Stefan G. Weichinger:
+> You definitely need to be able to resolve "used but not defined" and
+> "defined but not used" warnings before tackling a driver conversion
+> like this.  In light of this comment I wonder if it would be
+> appropriate to submit your original driver, that just duplicated
+> routines from the ppc440spe driver, to the -staging tree.  Then it
+> would be available for someone familiar with driver conversions to
+> take a shot at unifying.
+>
+> Greg, is this an appropriate use of -staging?
+The other option is to define non static functions in ppc440spe-adma.c
+which are used in common
+File adma.c . This way there will not be any warnings. Is this something
+acceptable ?
 
-> The current plan is to wait for the backup to finish, after that I will
-> mark the suspicious sdb-partitions as failed and let the raid rebuild
-> onto the spare.
-> 
-> After having run the sync_action repair stuff I think I can trust all
-> the hdds. I issue a "smartctl -t long" now in advance ...
-> 
-> pls correct me if needed ...
+Here is the break down
 
-Let me add this:
-I also like some "yep, go for it, you are doing the right thing" ;-)
+ppc440spe-adma.c: It will have all the 440spe SoC specific functions.
+ppc4xx_adma.h will have the declarations from 440spe-adma.c as non static.
+adma.c will have common functions which are independent of SoC.
 
-Greets, Stefan
+Please suggest.
+Regards,
+
+-Marri
