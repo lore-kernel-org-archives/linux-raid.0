@@ -1,28 +1,28 @@
-From: Pavel Shevaev <pacha.shevaev@gmail.com>
-Subject: Restoring data from linear raid
-Date: Tue, 5 Oct 2010 12:25:58 +0400
-Message-ID: <AANLkTik6gET5PXskntGGNC4xfrga8UHxU7pcJXwArYgS@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Restoring data from linear raid
+Date: Tue, 5 Oct 2010 10:33:23 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1010051026530.29868@uplift.swm.pp.se>
+References: <AANLkTik6gET5PXskntGGNC4xfrga8UHxU7pcJXwArYgS@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTik6gET5PXskntGGNC4xfrga8UHxU7pcJXwArYgS@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pavel Shevaev <pacha.shevaev@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks!
+On Tue, 5 Oct 2010, Pavel Shevaev wrote:
 
-Two years ago I bought a WDC MyBookWorld II NAS which is using Linux
-software raid internally. I thought it used raid1 but it turned out
-that in my case it used linear mode. Oh, stupid me, I didn't bother to
-check. One of the drives is dead now(it works very unstable, may work
-for a while and then just go down for no reason).
+> I really want to restore _anything_ from the linear raid partition of
+> the working drive, is it possible at all?
 
-I really want to restore _anything_ from the linear raid partition of
-the working drive, is it possible at all?
+It depends on the filesystem. You now have a huge gap in the block data 
+and I have successfully extracted some files from an ext2 fs in this case, 
+but don't know much about the others.
 
-P.S. I googled around and only found the thread with the similar topic
-but, I believe, the original author was talking about raid0 actually
-and not linear mode.
+I'd recommend to ddrescue the defective drive to a new drive and get as 
+much data off of it as possible.
 
 -- 
-Best regards, Pavel
+Mikael Abrahamsson    email: swmike@swm.pp.se
