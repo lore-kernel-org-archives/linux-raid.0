@@ -1,17 +1,35 @@
-From: Phil Turmel <philip@turmel.org>
+From: Lemur Kryptering <gottail@lemurdude.com>
 Subject: Re: Raid 6 - TLER/CCTL/ERC
-Date: Wed, 06 Oct 2010 07:57:58 -0400
-Message-ID: <4CAC6446.3080204@turmel.org>
-References: <556404795.674.1286344296358.JavaMail.root@mail.networkmayhem.com>
+Date: Wed, 6 Oct 2010 09:12:12 -0500 (CDT)
+Message-ID: <24774572.41286374326875.JavaMail.SYSTEM@ninja>
+References: <30914146.21286374217265.JavaMail.SYSTEM@ninja>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <556404795.674.1286344296358.JavaMail.root@mail.networkmayhem.com>
+In-Reply-To: <30914146.21286374217265.JavaMail.SYSTEM@ninja>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Zieba <pzieba@networkmayhem.com>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+I'll definitely give that a shot when I rebuild this thing.
+
+In the meantime, is there anything that I can do to convince md not to kick the last disk (running on 6 out of 8 disks) when reading a bad spot? I've tried setting the array to read-only, but this didn't seem to help.
+
+All I'm really trying to do is dd data off of it using "conv=sync,noerror". When it hits the unreadable spot, it simply kicks the drive from the array, leaving 4/8 disks active, taking down the array.
+
+Again, I don't understand why md would take this action. It would make a lot more sense if it simply reported an IO error to whatever made the request.
+
+Peter Zieba
+312-285-3794
+
+----- Original Message -----
+From: "Phil Turmel" <philip@turmel.org>
+To: "Peter Zieba" <pzieba@networkmayhem.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Wednesday, October 6, 2010 6:57:58 AM GMT -06:00 US/Canada Central
+Subject: Re: Raid 6 - TLER/CCTL/ERC
 
 On 10/06/2010 01:51 AM, Peter Zieba wrote:
 > Hey all,
