@@ -1,71 +1,55 @@
-From: Lemur Kryptering <gottail@lemurdude.com>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Raid 6 - TLER/CCTL/ERC
-Date: Wed, 6 Oct 2010 09:12:12 -0500 (CDT)
-Message-ID: <24774572.41286374326875.JavaMail.SYSTEM@ninja>
-References: <30914146.21286374217265.JavaMail.SYSTEM@ninja>
+Date: Thu, 07 Oct 2010 09:14:50 +1300
+Message-ID: <4CACD8BA.2020106@sauce.co.nz>
+References: <556404795.674.1286344296358.JavaMail.root@mail.networkmayhem.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <30914146.21286374217265.JavaMail.SYSTEM@ninja>
+In-Reply-To: <556404795.674.1286344296358.JavaMail.root@mail.networkmayhem.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I'll definitely give that a shot when I rebuild this thing.
+Peter Zieba wrote:
 
-In the meantime, is there anything that I can do to convince md not to kick the last disk (running on 6 out of 8 disks) when reading a bad spot? I've tried setting the array to read-only, but this didn't seem to help.
+>   - AOC-USAS-L8i Controller
 
-All I'm really trying to do is dd data off of it using "conv=sync,noerror". When it hits the unreadable spot, it simply kicks the drive from the array, leaving 4/8 disks active, taking down the array.
+> I could not pass them through the controller I was using, but was able to connect the drives to the controller on the motherboard, set the erc values, and still have drives dropping out.
 
-Again, I don't understand why md would take this action. It would make a lot more sense if it simply reported an IO error to whatever made the request.
+This controller uses the LSI 1068 controller chip and up until kernel 
+2.6.36, is likely to offline attached drives if smartctl or smartd is used.
 
-Peter Zieba
-312-285-3794
+If you update to this kernel or later , or apply the one line patch to 
+the LSI driver in earlier ones, you will be able to safely use these 
+monitoring utilities.
 
------ Original Message -----
-From: "Phil Turmel" <philip@turmel.org>
-To: "Peter Zieba" <pzieba@networkmayhem.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Wednesday, October 6, 2010 6:57:58 AM GMT -06:00 US/Canada Central
-Subject: Re: Raid 6 - TLER/CCTL/ERC
-
-On 10/06/2010 01:51 AM, Peter Zieba wrote:
-> Hey all,
-> 
-> I have a question regarding Linux raid and degraded arrays.
-> 
-> My configuration involves:
->  - 8x Samsung HD103UJ 1TB drives (terrible consumer-grade)
->  - AOC-USAS-L8i Controller
->  - CentOS 5.5 2.6.18-194.11.1.el5xen (64-bit)
->  - Each drive has one maximum-sized partition.
->  - 8-drives are configured in a raid 6.
-> 
-> My understanding is that with a raid 6, if a disk cannot return a given sector, it should still be possible to get what should have been returned from the first disk, from two other disks. My understanding is also that if this is successful, this should be written back to the disk that originally failed to read the given sector. I'm assuming that's what a message such as this indicates:
-> Sep 17 04:01:12 doorstop kernel: raid5:md0: read error corrected (8 sectors at 1647989048 on sde1)
-> 
-> I was hoping to confirm my suspicion on the meaning of that message.
-> 
-> On occasion, I'll also see this:
-> Oct  1 01:50:53 doorstop kernel: raid5:md0: read error not correctable (sector 1647369400 on sdh1).
-> 
-> This seems to involved the drive being kicked from the array, even though the drive is still readable for the most part (save for a few sectors).
-
-[snip /]
-
-Hi Peter,
-
-For read errors that aren't permanent (gone after writing to the affected sectors), a "repair" action is your friend.  I used to deal with occasional kicked-out drives in my arrays until I started running the following script in a weekly cron job:
-
-#!/bin/bash
-#
-for x in /sys/block/md*/md/sync_action ; do
-        echo repair >$x
-done
+Patch as outined by the author on  the bug list and subsequently 
+accepted by LSI:
 
 
-HTH,
+"It seems the mptsas driver could use blk_queue_dma_alignment() to advertise
+a stricter alignment requirement.  If it does, sd does the right thing and
+bounces misaligned buffers (see block/blk-map.c line 57).  The following
+patch to 2.6.34-rc5 makes my symptoms go away.  I'm sure this is the wrong
+place for this code, but it gets my idea across."
 
-Phil
+diff --git a/drivers/message/fusion/mptscsih.c 
+b/drivers/message/fusion/mptscsih.c
+index 6796597..1e034ad 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -2450,6 +2450,8 @@ mptscsih_slave_configure(struct scsi_device *sdev)
+                 ioc->name,sdev->tagged_supported, sdev->simple_tags,
+                 sdev->ordered_tags));
+
++       blk_queue_dma_alignment (sdev->request_queue, 512 - 1);
++
+         return 0;
+  }
+
+
+Regards,
+
+Richard
