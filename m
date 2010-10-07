@@ -1,43 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: [PULL request]  md fixes for 2.6.36
-Date: Thu, 7 Oct 2010 12:57:56 +1100
-Message-ID: <20101007125756.15d5d5c8@notabene>
+Subject: Re: Debian kernel stanza after aptitude kernel upgrade
+Date: Thu, 7 Oct 2010 15:16:13 +1100
+Message-ID: <20101007151613.05b0a873@notabene>
+References: <30D96C04B1444C569D53B7790707D718@DesktopManie>
+	<4C98CCCD.80101@seoss.co.uk>
+	<20100922062946.7e56d1d1@notabene>
+	<4CA1CD67.4040700@seoss.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4CA1CD67.4040700@seoss.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, Vasiliy Kulikov <segooon@gmail.com>, George Spelvin <linux@horizon.com>, maciej.rutecki@gmail.com
+To: Tim Small <tim@seoss.co.uk>
+Cc: "A. Krijgsman" <a.krijgsman@draftsman.nl>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 28 Sep 2010 12:11:35 +0100
+Tim Small <tim@seoss.co.uk> wrote:
 
-Hi Linus,
- It turns out there is a regression:
-     https://bugzilla.kernel.org/show_bug.cgi?id=19642
+> On 21/09/10 21:29, Neil Brown wrote:
+> >> I think you need to stick the output of
+> >>
+> >> mdadm --examine --scan
+> >>
+> >> into /etc/mdadm/mdadm.conf
+> >>      
+> > It is generally better to use
+> >      mdadm --detail --scan
+> >
+> > for generating mdadm.conf as it is more likely to get the device names
+> > right.  And when doing this by hand, always review the output to make sure it
+> > looks right.
+> >    
+> 
+> 
+> Thanks for that Neil - Debian (and thus Ubuntu) currently uses the 
+> output of "mdadm --examine --scan --config=partitions" when 
+> autogenerating the mdadm.conf output.  Should this be considered a bug?  
+> If so, could you give a bit of detail, and I'll open a bug for the 
+> script....
+> 
+> Thanks,
+> 
+> Tim.
+> 
 
-that was my fault.
-The first of these three patches (avoid overflow...) fixes it.
-The other two are very small fixes that seem suitable to include at this time.
+It all depends on what you want to do.
 
-Thanks,
+If you want a config file which described the current configuration, then
+"--detail --scan" is definitely the thing to use.
+If you want a config file that records what is on the devices currently
+attached to the machine, then "--examine --scan" is what you want.
+
+Any use of "--examine --scan" is probably better left to the auto-assembly
+stuff in mdadm (mdadm -As).  So Debian should probably be using --detail
+--scan.  However without a statement of the exactly purpose and context, one
+cannot be certain.
+
 NeilBrown
-
-
-The following changes since commit 7c6d45e665d5322401e4439060bbf758b08422d4:
-
-  powerpc: remove unused variable (2010-10-05 17:27:54 -0700)
-
-are available in the git repository at:
-  git://neil.brown.name/md for-linus
-
-NeilBrown (2):
-      md/raid1:  avoid overflow in raid1 resync when bitmap is in use.
-      md/raid1: minor bio initialisation improvements.
-
-Vasiliy Kulikov (1):
-      md: check return code of read_sb_page
-
- drivers/md/bitmap.c |    9 +++++----
- drivers/md/raid1.c  |    4 +++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
