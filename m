@@ -1,49 +1,70 @@
-From: Joe Landman <landman@scalableinformatics.com>
-Subject: Re: Ok, dumb question time ...
-Date: Fri, 08 Oct 2010 14:07:55 -0400
-Message-ID: <4CAF5DFB.2050200@scalableinformatics.com>
-References: <4CAE9C13.3060002@scalableinformatics.com> <AANLkTinw+4N63KqLGadYeHiiCg_LjYWSHKBfdsMRPBGJ@mail.gmail.com>
-Reply-To: landman@scalableinformatics.com
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: RAID0 size bug (?)
+Date: Sat, 9 Oct 2010 00:56:38 +0200
+Message-ID: <0a7401cb673c$12820280$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-2";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinw+4N63KqLGadYeHiiCg_LjYWSHKBfdsMRPBGJ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/08/2010 02:01 PM, CoolCold wrote:
+Hello list,
 
->> It doesn't.  The array is marked as being in the "clean, degraded" state.
->>   Which, as it is the root file system array, has the unfortunate side effect
->> of not allowing the RAID1 to properly assemble at boot (that degraded
->> state).
-> Am I understanding right, you can't boot because that md array isn't
-> assembled at all or just assembled but degraded?
-> If first, are you happy Ubuntu user?
+Maybe a known old bug, but i don't know.
 
-Its not assembling due to the "degraded" state.  This is on Centos 5.5 
-using our kernel bits (never had a problem with this before).  We've 
-gotten past that issue and are now onto the next one for them (many 
-thanks to Neil for the solution)
+The size is wrong of the md8:
 
-The customer in question may have modified their configs, and we are 
-trying to walk their changes back to the point where it stopped working.
+[root@UNISTORE ~]# fdisk -l /dev/sdh
 
-Thanks
+Disk /dev/sdh: 750.1 GB, 750156374016 bytes
+255 heads, 63 sectors/track, 91201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
-Joe
+Disk /dev/sdh doesn't contain a valid partition table
+[root@UNISTORE ~]# fdisk -l /dev/sdf
+
+Disk /dev/sdf: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+Disk /dev/sdf doesn't contain a valid partition table
+[root@UNISTORE ~]# mdadm --detail /dev/md8
+/dev/md8:
+        Version : 00.90.03
+  Creation Time : Sat Oct  9 06:36:36 2010
+     Raid Level : raid0
+     Array Size : 1220961088 (1164.40 GiB 1250.26 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 8
+    Persistence : Superblock is not persistent
+
+    Update Time : Sat Oct  9 06:36:36 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 64K
+
+    Number   Major   Minor   RaidDevice State
+       0       8      112        0      active sync   /dev/sdh
+       1       8       80        1      active sync   /dev/sdf
+[root@UNISTORE ~]#
+[root@UNISTORE ~]# uname -a
+Linux UNISTORE 2.6.28.10 #5 SMP Fri Jan 29 07:40:35 CET 2010 x86_64 x86_64 
+x86_64 GNU/Linux
+[root@UNISTORE ~]# mdadm -V
+mdadm - v2.5.4 - 13 October 2006
+[root@UNISTORE ~]#
 
 
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/jackrabbit
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+Cheers,
+Janos 
+
