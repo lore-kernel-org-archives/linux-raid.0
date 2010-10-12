@@ -1,52 +1,59 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
- / Debian 5.0 - lenny 2.6.26 kernel
-Date: Tue, 12 Oct 2010 15:06:45 +0100
-Message-ID: <4CB46B75.8050205@seoss.co.uk>
-References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk> <20100922083039.283ccdfd@notabene>
+From: Simon S <simon@sehier.fr>
+Subject: reboot before reshape from raid 5 to raid 6 (was in state
+	resync=DELAYED). Doesn't assemble anymore.
+Date: Tue, 12 Oct 2010 16:27:53 +0200
+Message-ID: <20101012142752.GA16007@leontine.pompomgali.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100922083039.283ccdfd@notabene>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, hit send too soon...
+Hi all,
+
+I had a config with 5 disks and 3 raid 5 arrays:
+
+md2 : system root
+md3 : swap
+md4 : data
+
+I added a 6th disk with the intention of growing my raid5 into raid6.
+
+The step I used were :
+
+# mdadm /dev/mdX -a  /dev/newdiskX
+# mdadm -G --level 6 -n 6 /dev/mdX --backup-file /mdXbackup
+ (yes, with backup file on root partition md2...)
+
+The md3 array reshaped without any problem.
+md2 seemed to reshape well until it reaches 50.4%, then the rebuild speed stalled at 14Kb/s.
+md4 was still in the state "resync=DELAYED" then.
+
+As the rebuild process seemed hung, I restart the machine ... bad idea.
+
+Now mdadm refuses to assemble md2 and md4, and displays this message :
+
+  mdadm: Failed to restore critical section for reshape, sorry.
+    Possibly you needed to specify the --backup-file
+
+md2 is my linux installation, not very bad if I lose this one.
+
+md4 however contains valuable data.
+
+While md4 was still in the state resync=DELAYED before the shutdown, I expect
+it should not has been (to much) modified and can be recovered.
+
+Any idea on how I could safely do it ?
+
+Should I give a try to the hack "Get 'Grow_restart' to always return 0."
+mentionned by Neil Brown on 22 april 2010 in this mailing list ?
 
 
-On 21/09/10 23:30, Neil Brown wrote:
-> It is odd that 2.6.32 works and 2.6.26 doesn't as I cannot find any change
-> between the two that could be related.
-> There were some deadlock issues if a read-error was detected during resync
-> but I don't think you are getting read errors are you?
->    
+Thank for any advices,
 
-Nope, no read errors.
-
-> A bisect would of course be easier for me, though not particularly easy for
-> you....
->    
-
-I haven't as-yet been able to reproduce the issue without running OpenVZ 
-on the box - I suppose the two possibilities are:
-
-1. The bug is in the OpenVZ patches (seems unlikely given the nature of 
-the hang, but possible I suppose).
-2. The bug is only triggered by the workload which the VZ container is 
-producing
-
-... so without this, a bisect is a non-starter.
-
-Grrr.
-
-Tim.
+Cheers,
 
 -- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+Simon S
