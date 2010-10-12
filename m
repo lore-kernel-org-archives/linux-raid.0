@@ -1,45 +1,92 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: raid0 and discard/trim - current state?
-Date: Tue, 12 Oct 2010 16:57:39 -0400
-Message-ID: <AANLkTinB+uM2oiW496U4Cu51pHPiW=ATvnG099GWf=-K@mail.gmail.com>
-References: <4CB0A4B5.4010009@bakke.com> <4CB0B5B9.8070409@bakke.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: reboot before reshape from raid 5 to raid 6 (was in state
+ resync=DELAYED). Doesn't assemble anymore.
+Date: Wed, 13 Oct 2010 07:46:12 +1100
+Message-ID: <20101013074612.6abbb698@notabene>
+References: <20101012142752.GA16007@leontine.pompomgali.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4CB0B5B9.8070409@bakke.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: DagB <dag@bakke.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-lvm@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101012142752.GA16007@leontine.pompomgali.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Simon S <simon@sehier.fr>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 9, 2010 at 2:34 PM, DagB <dag@bakke.com> wrote:
-> On 10/09/2010 07:21 PM, DagB wrote:
->> Hi.
->>
->> I wonder about the current state of affairs regarding striping over
->> multiple SSDs.
->>
->> Found this thread:
->> http://marc.info/?t=126787186000002&r=1&w=2
->>
->> but nothing after that. Was this problem to hard to handle?
->>
->
-> Bad form to reply to self.
->
-> More googling finally turned up this commit:
->
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8357422d4bf33bc2c35884d4016c3fc9efbbc1d2
+On Tue, 12 Oct 2010 16:27:53 +0200
+Simon S <simon@sehier.fr> wrote:
 
-To be clear: DM's striped target does support discards.  MD's raid0
-(or any MD raid level) does not.
+> Hi all,
+> 
+> I had a config with 5 disks and 3 raid 5 arrays:
+> 
+> md2 : system root
+> md3 : swap
+> md4 : data
+> 
+> I added a 6th disk with the intention of growing my raid5 into raid6.
+> 
+> The step I used were :
+> 
+> # mdadm /dev/mdX -a  /dev/newdiskX
+> # mdadm -G --level 6 -n 6 /dev/mdX --backup-file /mdXbackup
+>  (yes, with backup file on root partition md2...)
+
+Bad idea..  Very bad idea.
+
+> 
+> The md3 array reshaped without any problem.
+> md2 seemed to reshape well until it reaches 50.4%, then the rebuild speed stalled at 14Kb/s.
+
+This is the expected consequence of that bad idea.  Unfortunately it would be
+hard to reliably get mdadm to complain about that, though I guess the common
+cases are easy to protect against ... added to 'todo' list
+
+> md4 was still in the state "resync=DELAYED" then.
+> 
+> As the rebuild process seemed hung, I restart the machine ... bad idea.
+
+Not really, nothing else would have worked.
+
+> 
+> Now mdadm refuses to assemble md2 and md4, and displays this message :
+> 
+>   mdadm: Failed to restore critical section for reshape, sorry.
+>     Possibly you needed to specify the --backup-file
+> 
+> md2 is my linux installation, not very bad if I lose this one.
+> 
+> md4 however contains valuable data.
+> 
+> While md4 was still in the state resync=DELAYED before the shutdown, I expect
+> it should not has been (to much) modified and can be recovered.
+
+Very true.
+
+> 
+> Any idea on how I could safely do it ?
+> 
+> Should I give a try to the hack "Get 'Grow_restart' to always return 0."
+> mentionned by Neil Brown on 22 april 2010 in this mailing list ?
+
+That is your best bet.  I plan to make that easier to do in mdadm-3.2 (no
+recompile necessary).
+
+Before you do, check "mdadm -E /dev/newdiskX" and make sure the "Reshape
+position" is 0.  If it is you should be fine.  I
+
+It won't be for md2 of course.  So md will quite possible have some
+corruption.  Run fsck on it an it will probably be mostly OK, but there is a
+reasonable chance that some files will be corrupted.  Whether and when you
+will notice is impossible to guess.
+
+NeilBrown
+
+> 
+> 
+> Thank for any advices,
+> 
+> Cheers,
+> 
+
