@@ -1,49 +1,44 @@
 From: Tim Small <tim@seoss.co.uk>
-Subject: Re: can mdadm use /dev/sgX as devices?
-Date: Tue, 12 Oct 2010 14:50:54 +0100
-Message-ID: <4CB467BE.3050003@seoss.co.uk>
-References: <201010091822.33148.harry.mangalam@uci.edu>
+Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
+ / Debian 5.0 - lenny 2.6.26 kernel
+Date: Tue, 12 Oct 2010 14:59:56 +0100
+Message-ID: <4CB469DC.5040100@seoss.co.uk>
+References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk> <20100922083039.283ccdfd@notabene>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201010091822.33148.harry.mangalam@uci.edu>
+In-Reply-To: <20100922083039.283ccdfd@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Harry Mangalam <harry.mangalam@uci.edu>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/10/10 02:22, Harry Mangalam wrote:
-> the short version:
->    Can mdadm use /dev/sgX as devices?
->    (and if so, how?)
+On 21/09/10 23:30, Neil Brown wrote:
 >
-> the longer version is:
->
-> I inherited a 6-bay IBM x3655  with a ServeRAID-8k RAID controller
-> (from docs, it seems to be an 8-port Adaptec 9580W SAS/SATA
-> controller). I'd like to run Ubuntu 10.04.
->
-> I can use the controller BIOS on boot to config and set up a RAID5
-> (which presents to the OS as '/dev/sda' - the 'very large device'.
+> Maybe if you can get me a full sysrq-T list that might help.
 >    
 
+Just thought I'd follow up on this - it's being a right bastard...
 
-You could try:
+sysrq-T and a 1M buffer works fine when the box isn't in the IO-hung 
+state, but makes it crash immediately when it is.  sysrq-T without the 
+1M buffer works fine.
 
-. Looking for someone who's made a script or utility to check the array 
-status of the controller (I know there were opensource tools for earlier 
-adaptec controllers, so this might not be too difficult).
-. Configuring  each individual device as a JBOD (single device RAID0 
-etc.), and running md on top of that.
+I tried getting the console output using a serial console (+IPMI over 
+LAN), but the box doesn't seem to work correctly with serial console 
+(output is fine til part-way through the boot process, thereafter is 
+stops, and anything to /dev/console doesn't appear on the serial port, 
+although I/O to /dev/ttyS1 works fine).
 
-Although I'm guessing it'd probably be possible to get the sd driver to 
-attach to he drives some way, you'd probably end up with the controller 
-BIOS, or the RAID controller driver fighting with md over the device 
-metadata.
+OK, so I'll use netconsole - nope, netconsole doesn't work on this box 
+either - all I see on the remote machine is a perfectly fine UDP header, 
+but the body of the packet is all 0x0s.
 
-If you wipe the adaptec metadata from the drives, do you just end up 
-with 5 individual disks in Linux?
+I'll try and see what it's doing when I'm physically in front of a VGA 
+console at some point.
+
+Thanks,
 
 Tim.
 
