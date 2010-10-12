@@ -1,107 +1,145 @@
-From: Simon =?iso-8859-1?q?S=C9HIER?= <simon@sehier.fr>
+From: Simon SEHIER <simon@sehier.fr>
 Subject: Re: reboot before reshape from raid 5 to raid 6 (was in state resync=DELAYED). Doesn't assemble anymore.
-Date: Wed, 13 Oct 2010 00:59:52 +0200
-Message-ID: <201010130059.52624.simon@sehier.fr>
-References: <20101012142752.GA16007@leontine.pompomgali.com> <20101013074612.6abbb698@notabene>
+Date: Wed, 13 Oct 2010 01:06:19 +0200
+Message-ID: <201010130106.19993.simon@sehier.fr>
+References: <20101012142752.GA16007@leontine.pompomgali.com> <20101013074612.6abbb698@notabene> <201010130059.52624.simon@sehier.fr>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101013074612.6abbb698@notabene>
+In-Reply-To: <201010130059.52624.simon@sehier.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12 oct. 2010 22:46:12, Neil Brown wrote :
-> On Tue, 12 Oct 2010 16:27:53 +0200
-> 
-> Simon S <simon@sehier.fr> wrote:
-> > Hi all,
-> > 
-> > I had a config with 5 disks and 3 raid 5 arrays:
-> > 
-> > md2 : system root
-> > md3 : swap
-> > md4 : data
-> > 
-> > I added a 6th disk with the intention of growing my raid5 into raid6.
-> > 
-> > The step I used were :
-> > 
-> > # mdadm /dev/mdX -a  /dev/newdiskX
-> > # mdadm -G --level 6 -n 6 /dev/mdX --backup-file /mdXbackup
-> > 
-> >  (yes, with backup file on root partition md2...)
-> 
-> Bad idea..  Very bad idea.
-> 
-> > The md3 array reshaped without any problem.
-> > md2 seemed to reshape well until it reaches 50.4%, then the rebuild speed
-> > stalled at 14Kb/s.
-> 
-> This is the expected consequence of that bad idea.  Unfortunately it would
-> be hard to reliably get mdadm to complain about that, though I guess the
-> common cases are easy to protect against ... added to 'todo' list
-> 
-> > md4 was still in the state "resync=DELAYED" then.
-> > 
-> > As the rebuild process seemed hung, I restart the machine ... bad idea.
-> 
-> Not really, nothing else would have worked.
-> 
-> > Now mdadm refuses to assemble md2 and md4, and displays this message :
-> >   mdadm: Failed to restore critical section for reshape, sorry.
-> >   
-> >     Possibly you needed to specify the --backup-file
-> > 
-> > md2 is my linux installation, not very bad if I lose this one.
-> > 
-> > md4 however contains valuable data.
-> > 
-> > While md4 was still in the state resync=DELAYED before the shutdown, I
-> > expect it should not has been (to much) modified and can be recovered.
-> 
-> Very true.
-> 
-> > Any idea on how I could safely do it ?
-> > 
-> > Should I give a try to the hack "Get 'Grow_restart' to always return 0."
-> > mentionned by Neil Brown on 22 april 2010 in this mailing list ?
-> 
-> That is your best bet.  I plan to make that easier to do in mdadm-3.2 (no
-> recompile necessary).
-> 
-> Before you do, check "mdadm -E /dev/newdiskX" and make sure the "Reshape
-> position" is 0.  If it is you should be fine.  I
-> 
-> It won't be for md2 of course.  So md will quite possible have some
-> corruption.  Run fsck on it an it will probably be mostly OK, but there is
-> a reasonable chance that some files will be corrupted.  Whether and when
-> you will notice is impossible to guess.
+Le mercredi 13 octobre 2010 00:59:52, Simon S=C9HIER a =E9crit :
+> On 12 oct. 2010 22:46:12, Neil Brown wrote :
+> > On Tue, 12 Oct 2010 16:27:53 +0200
+> >=20
+> > Simon S <simon@sehier.fr> wrote:
+> > > Hi all,
+> > >=20
+> > > I had a config with 5 disks and 3 raid 5 arrays:
+> > >=20
+> > > md2 : system root
+> > > md3 : swap
+> > > md4 : data
+> > >=20
+> > > I added a 6th disk with the intention of growing my raid5 into ra=
+id6.
+> > >=20
+> > > The step I used were :
+> > >=20
+> > > # mdadm /dev/mdX -a  /dev/newdiskX
+> > > # mdadm -G --level 6 -n 6 /dev/mdX --backup-file /mdXbackup
+> > >=20
+> > >  (yes, with backup file on root partition md2...)
+> >=20
+> > Bad idea..  Very bad idea.
+> >=20
+> > > The md3 array reshaped without any problem.
+> > > md2 seemed to reshape well until it reaches 50.4%, then the rebui=
+ld
+> > > speed stalled at 14Kb/s.
+> >=20
+> > This is the expected consequence of that bad idea.  Unfortunately i=
+t
+> > would be hard to reliably get mdadm to complain about that, though =
+I
+> > guess the common cases are easy to protect against ... added to 'to=
+do'
+> > list
+> >=20
+> > > md4 was still in the state "resync=3DDELAYED" then.
+> > >=20
+> > > As the rebuild process seemed hung, I restart the machine ... bad=
+ idea.
+> >=20
+> > Not really, nothing else would have worked.
+> >=20
+> > > Now mdadm refuses to assemble md2 and md4, and displays this mess=
+age :
+> > >   mdadm: Failed to restore critical section for reshape, sorry.
+> > >  =20
+> > >     Possibly you needed to specify the --backup-file
+> > >=20
+> > > md2 is my linux installation, not very bad if I lose this one.
+> > >=20
+> > > md4 however contains valuable data.
+> > >=20
+> > > While md4 was still in the state resync=3DDELAYED before the shut=
+down, I
+> > > expect it should not has been (to much) modified and can be recov=
+ered.
+> >=20
+> > Very true.
+> >=20
+> > > Any idea on how I could safely do it ?
+> > >=20
+> > > Should I give a try to the hack "Get 'Grow_restart' to always ret=
+urn
+> > > 0." mentionned by Neil Brown on 22 april 2010 in this mailing lis=
+t ?
+> >=20
+> > That is your best bet.  I plan to make that easier to do in mdadm-3=
+=2E2 (no
+> > recompile necessary).
+> >=20
+> > Before you do, check "mdadm -E /dev/newdiskX" and make sure the "Re=
+shape
+> > position" is 0.  If it is you should be fine. =20
 
-Thanks for your answer Neil, 
+I forgot to mention it : mdadm -E /dev/newdiskX and on every disk inclu=
+ded in=20
+array md4  have "Reshape pos'n : 0"
 
-I recompiled mdadm 3.1.4 with return 0 in the beginning of the function 
-Grow_restart (mistake was made with 3.1.2). I have one more question :
-
-I first tried assembling the least valued array, md2. It starts reshaping from 
-where it stops, in the first seconds around 1300 K/s, and rapidly above 10K/s.
-
-While my backup file for md4 (the array I care about) was also on md2. Do I 
-have to expect a problem assembling md4 with the modified version of mdadm, or 
-can I go without worying md2 (rootfs)  isn't assembled ?
-
-
-> 
-> NeilBrown
-> 
-> > Thank for any advices,
-> > 
-> > Cheers,
-> 
+> >=20
+> > It won't be for md2 of course.  So md will quite possible have some
+> > corruption.  Run fsck on it an it will probably be mostly OK, but t=
+here
+> > is a reasonable chance that some files will be corrupted.  Whether =
+and
+> > when you will notice is impossible to guess.
+>=20
+> Thanks for your answer Neil,
+>=20
+> I recompiled mdadm 3.1.4 with return 0 in the beginning of the functi=
+on
+> Grow_restart (mistake was made with 3.1.2). I have one more question =
+:
+>=20
+> I first tried assembling the least valued array, md2. It starts resha=
+ping
+> from where it stops, in the first seconds around 1300 K/s, and rapidl=
+y
+> above 10K/s.
+>=20
+> While my backup file for md4 (the array I care about) was also on md2=
+=2E Do I
+> have to expect a problem assembling md4 with the modified version of =
+mdadm,
+> or can I go without worying md2 (rootfs)  isn't assembled ?
+>=20
+> > NeilBrown
+> >=20
+> > > Thank for any advices,
+> > >=20
+> > > Cheers,
+> >=20
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
