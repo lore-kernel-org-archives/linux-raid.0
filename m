@@ -1,19 +1,24 @@
-From: Simon SEHIER <simon@sehier.fr>
-Subject: Re: reboot before reshape from raid 5 to raid 6 (was in state resync=DELAYED). Doesn't assemble anymore.
-Date: Wed, 13 Oct 2010 01:06:19 +0200
-Message-ID: <201010130106.19993.simon@sehier.fr>
-References: <20101012142752.GA16007@leontine.pompomgali.com> <20101013074612.6abbb698@notabene> <201010130059.52624.simon@sehier.fr>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: reboot before reshape from raid 5 to raid 6 (was in state
+ resync=DELAYED). Doesn't assemble anymore.
+Date: Wed, 13 Oct 2010 11:08:23 +1100
+Message-ID: <20101013110823.54d41db2@notabene>
+References: <20101012142752.GA16007@leontine.pompomgali.com>
+	<20101013074612.6abbb698@notabene>
+	<201010130059.52624.simon@sehier.fr>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <201010130059.52624.simon@sehier.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Simon =?UTF-8?B?U8OJSElFUg==?= <simon@sehier.fr>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Le mercredi 13 octobre 2010 00:59:52, Simon S=C9HIER a =E9crit :
+On Wed, 13 Oct 2010 00:59:52 +0200
+Simon S=C3=89HIER <simon@sehier.fr> wrote:
+
 > On 12 oct. 2010 22:46:12, Neil Brown wrote :
 > > On Tue, 12 Oct 2010 16:27:53 +0200
 > >=20
@@ -40,16 +45,14 @@ id6.
 > >=20
 > > > The md3 array reshaped without any problem.
 > > > md2 seemed to reshape well until it reaches 50.4%, then the rebui=
-ld
-> > > speed stalled at 14Kb/s.
+ld speed
+> > > stalled at 14Kb/s.
 > >=20
 > > This is the expected consequence of that bad idea.  Unfortunately i=
-t
-> > would be hard to reliably get mdadm to complain about that, though =
-I
-> > guess the common cases are easy to protect against ... added to 'to=
-do'
-> > list
+t would
+> > be hard to reliably get mdadm to complain about that, though I gues=
+s the
+> > common cases are easy to protect against ... added to 'todo' list
 > >=20
 > > > md4 was still in the state "resync=3DDELAYED" then.
 > > >=20
@@ -78,9 +81,8 @@ ered.
 > > > Any idea on how I could safely do it ?
 > > >=20
 > > > Should I give a try to the hack "Get 'Grow_restart' to always ret=
-urn
-> > > 0." mentionned by Neil Brown on 22 april 2010 in this mailing lis=
-t ?
+urn 0."
+> > > mentionned by Neil Brown on 22 april 2010 in this mailing list ?
 > >=20
 > > That is your best bet.  I plan to make that easier to do in mdadm-3=
 =2E2 (no
@@ -88,39 +90,48 @@ t ?
 > >=20
 > > Before you do, check "mdadm -E /dev/newdiskX" and make sure the "Re=
 shape
-> > position" is 0.  If it is you should be fine. =20
-
-I forgot to mention it : mdadm -E /dev/newdiskX and on every disk inclu=
-ded in=20
-array md4  have "Reshape pos'n : 0"
-
+> > position" is 0.  If it is you should be fine.  I
 > >=20
 > > It won't be for md2 of course.  So md will quite possible have some
 > > corruption.  Run fsck on it an it will probably be mostly OK, but t=
-here
-> > is a reasonable chance that some files will be corrupted.  Whether =
-and
-> > when you will notice is impossible to guess.
+here is
+> > a reasonable chance that some files will be corrupted.  Whether and=
+ when
+> > you will notice is impossible to guess.
 >=20
-> Thanks for your answer Neil,
+> Thanks for your answer Neil,=20
 >=20
 > I recompiled mdadm 3.1.4 with return 0 in the beginning of the functi=
-on
+on=20
 > Grow_restart (mistake was made with 3.1.2). I have one more question =
 :
 >=20
 > I first tried assembling the least valued array, md2. It starts resha=
-ping
-> from where it stops, in the first seconds around 1300 K/s, and rapidl=
-y
-> above 10K/s.
+ping from=20
+> where it stops, in the first seconds around 1300 K/s, and rapidly abo=
+ve 10K/s.
 >=20
 > While my backup file for md4 (the array I care about) was also on md2=
-=2E Do I
+=2E Do I=20
 > have to expect a problem assembling md4 with the modified version of =
-mdadm,
-> or can I go without worying md2 (rootfs)  isn't assembled ?
+mdadm, or=20
+> can I go without worying md2 (rootfs)  isn't assembled ?
+
+The backup file for md4 would have been essentially empty.  It can be c=
+reated
+anew elsewhere.  I probably wouldn't rick using the original backup fil=
+e
+even if you can access it, as it could be corrupted.
+So when you assemble md4, give it a fresh backup file in some stable lo=
+cation,
+and use the hacked mdadm.
+
+NeilBrown
+
+
 >=20
+>=20
+> >=20
 > > NeilBrown
 > >=20
 > > > Thank for any advices,
@@ -132,12 +143,7 @@ mdadm,
 d" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
