@@ -1,48 +1,51 @@
-From: Torsten Kaiser <just.for.lkml@googlemail.com>
-Subject: Swap over RAID1 hangs kernel
-Date: Wed, 13 Oct 2010 20:20:05 +0200
-Message-ID: <AANLkTi=V7CRseXu1LmAYG24ajpvo+e374rzSV=OqoTVe@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+From: greg@enjellic.com
+Subject: Complexity of toggling write-behind.
+Date: Wed, 13 Oct 2010 13:48:50 -0500
+Message-ID: <201010131848.o9DImoXe007448@wind.enjellic.com>
+Reply-To: greg@enjellic.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi Neil/linux-raid, hope the week is going well for everyone.
 
-trying to find out, why my system hung after what should only have
-been a short swap storm, I was able to reduce the testcase to only
-involve the md raid1 code.
+We implement a lot of geographically mirrored storage using Linux
+RAID1 on the 'front-side' to access Linux servers running SCST for
+storage backends.  One of the issues we are addressing are methods to
+reduce I/O latency from the initiator's perspective when various
+housekeeping operations are being done on the Linux backends, ie. RAID
+check operations/re-synchronizations.
 
-My testcase:
-3 SATA drives: 1 with an XFS filesystem as /, 2 each with a 10 GB
-partition that get assembled into a RAID1 as /dev/md2
-Hardware is a NUMA system with 2 nodes, each node as 2GB RAM and 2 CPU cores.
-After booting, I do a "swapon /dev/md2" and mount a tmpfs with size=6g
+Write-mostly support is very helpful for reducing any read latencies.
+To fully complete the loop it would be useful to leverage asynchronous
+write-behind to eliminate write latency effects.  We use write-intent
+bitmaps on the initiators so we are already preparted for that.
 
-After executing the following command, the system stalls.
-for ((i=0; $i<16; i=$i+1)) do (dd if=/dev/zero of=tmpfs-path/zero$i
-bs=4k &) ; done
+It is straight forward to toggle writemostly via the
+/sys/mdN/md/rN/state pseudofiles but a review of the MD driver code in
+at least 2.6.32.16 would suggest that write-behind is not readily
+togglable.  That may have changed in most recent kernels but I don't
+remember seeing any changelogs with your 'git pull' requests which
+would suggest that.
 
+Is this a function of support being a can of worms or just lack of
+cycles?  If it is the latter I would be willing to take some
+directional suggestions and see if we could get a prototype
+implementation up and running.
 
-Because I was trying to find the cause of my earlier hangs, I have
-instrumented mm/mempool.c to yell, if an allocation dips into the pool
-and also, when an allocation gets stalled because of __GFP_WAIT
-(repeat_alloc-loop in mempool_alloc()).
-This instrumentation tells me, that the exhausted pool is the
-fs_bio_set from fs/bio.c
+Thanks much for any insight you may have.
 
-As written in http://marc.info/?l=linux-kernel&m=128671179817823&w=2 I
-believe the cause is, that the code in make_request() from
-drivers/md/raid1.c calls bio_clone() once for each drive, and only
-after allocation bios for all drives, the bios get submitted. This
-allocation pattern was introduced in commit
-191ea9b2c7cc3ebbe0678834ab710d7d95ad3f9a when adding the intent bitmap
-code, before that change to loop over all the drives included a direct
-call to generic_make_request().
+Best wishes for a productive remainder of the week.
 
-I'm not sure, what the correct fix is. Should r1bio_pool be used, or
-should each bio submitted immediately?
-
-Torsten
+As always,
+Dr. G.W. Wettstein, Ph.D.   IDfusion.org
+4206 N. 19th Ave.           Unified health identity architecture.
+Fargo, ND  58102
+PH: 701-281-1686
+FAX: 701-281-3949           EMAIL: greg@idfusion.org
+------------------------------------------------------------------------------
+"We don't know the OS that God uses, but the Vatican uses Linux."
+                                -- Sister Judith Zoebelein
+                                   Vatican Webmaster
