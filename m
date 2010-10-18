@@ -1,36 +1,44 @@
 From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
- / Debian 5.0 - lenny 2.6.26 kernel
-Date: Mon, 18 Oct 2010 19:52:36 +0100
-Message-ID: <4CBC9774.6020500@seoss.co.uk>
-References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk> <20100922083039.283ccdfd@notabene>
+Subject: Re: booting into /dev/md0 after an upgrade to squeeze
+Date: Mon, 18 Oct 2010 20:49:02 +0100
+Message-ID: <4CBCA4AE.5020504@seoss.co.uk>
+References: <20101018201448.62a76ba6@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100922083039.283ccdfd@notabene>
+In-Reply-To: <20101018201448.62a76ba6@atak.bl.pg.gda.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> Maybe if you can get me a full sysrq-T list that might help.
+On 18/10/10 19:14, Janek Kozicki wrote:
+> But, maybe do you have some experience with booting into raid1 /dev/md0
+> after upgrading to squeeze?
 >    
 
-At last, yes, courtesy of Ben Hutchings...
+You can stop grub doing the root=uuid= thing by changing /etc/default/grub
 
-http://buttersideup.com/files/md-raid1-lockup-lvm-snapshot/deadlock-openvz-2.6.26-Debian5.txt
+If you can get someone to the keyboard, then you can probably get them 
+to edit what grub is using as a one-off - i.e. change the root=uuid=xxx 
+entry to root=/dev/md0 (or even just one half of the mirror if you need 
+to get it working, then you can fix it later)...
 
-... any use?
+It's also worth checking the contents of /etc/mdadm/mdadm.conf is 
+sensible - maybe if you duplicated the partition (with dd maybe, if you 
+said you duplicated the UUID), then it contains an incorrect uuid= line?
 
-Cheers,
+If it's incorrect, you may need to regenerate the initramfs having 
+corrected it (a copy is placed in the initramfs files) with 
+"update-initramfs -k all -u"
+
+In a similar situations, where I have no remote console (IPMI SoL, Intel 
+AMT etc.), I like to use "qemu -snapshot ..." to verify that a system 
+will boot up correctly by pointing it at the real hard disks (see recent 
+post to this list).
+
+HTH,
 
 Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
