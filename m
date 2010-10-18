@@ -1,68 +1,61 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 18/22] md: use little endian bit operations
-Date: Mon, 18 Oct 2010 13:41:27 +1100
-Message-ID: <20101018134127.5d1264fb@notabene>
-References: <1287135981-17604-1-git-send-email-akinobu.mita@gmail.com>
-	<1287135981-17604-19-git-send-email-akinobu.mita@gmail.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Mon, 18 Oct 2010 17:09:23 +0900
+Message-ID: <4CBC00B3.7090603@ce.jp.nec.com>
+References: <20100825155918.GB8509@redhat.com>	<4C7B984E.4070802@suse.de>	<4C7B9F14.9080900@mvista.com>	<4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <1287135981-17604-19-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C7BC5B4.3010707@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, jack@suse.cz, vst@vlnb.net, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, chris.mason@oracle.com, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, Sergei Shtylyov <sshtylyov@mvista.com>
 List-Id: linux-raid.ids
 
-On Fri, 15 Oct 2010 18:46:17 +0900
-Akinobu Mita <akinobu.mita@gmail.com> wrote:
+Hi Hannes,
 
-> As a preparation for removing ext2 non-atomic bit operations from
-> asm/bitops.h. This converts ext2 non-atomic bit operations to
-> little endian bit operations.
+Thank you for working on this issue and sorry for very late reply...
 
-Looks good, thanks.
-
-Acked-by: NeilBrown <neilb@suse.de>
-
-NeilBrown
-
+(08/30/10 23:52), Hannes Reinecke wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> Date: Mon, 30 Aug 2010 16:21:10 +0200
+> Subject: [RFC][PATCH] scsi: Detailed I/O errors
 > 
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Neil Brown <neilb@suse.de>
-> Cc: linux-raid@vger.kernel.org
-> ---
->  drivers/md/bitmap.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
+> Instead of just passing 'EIO' for any I/O errors we should be
+> notifying the upper layers with some more details about the cause
+> of this error.
+> This patch updates the possible I/O errors to:
 > 
-> diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-> index e4fb58d..2a37051 100644
-> --- a/drivers/md/bitmap.c
-> +++ b/drivers/md/bitmap.c
-> @@ -850,7 +850,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
->  		if (bitmap->flags & BITMAP_HOSTENDIAN)
->  			set_bit(bit, kaddr);
->  		else
-> -			ext2_set_bit(bit, kaddr);
-> +			__test_and_set_le_bit(bit, kaddr);
->  		kunmap_atomic(kaddr, KM_USER0);
->  		PRINTK("set file bit %lu page %lu\n", bit, page->index);
->  	}
-> @@ -1046,7 +1046,7 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
->  		if (bitmap->flags & BITMAP_HOSTENDIAN)
->  			b = test_bit(bit, paddr);
->  		else
-> -			b = ext2_test_bit(bit, paddr);
-> +			b = test_le_bit(bit, paddr);
->  		kunmap_atomic(paddr, KM_USER0);
->  		if (b) {
->  			/* if the disk bit is set, set the memory bit */
-> @@ -1222,7 +1222,7 @@ void bitmap_daemon_work(mddev_t *mddev)
->  						clear_bit(file_page_offset(bitmap, j),
->  							  paddr);
->  					else
-> -						ext2_clear_bit(file_page_offset(bitmap, j),
-> +						__test_and_clear_le_bit(file_page_offset(bitmap, j),
->  							       paddr);
->  					kunmap_atomic(paddr, KM_USER0);
->  				} else
+> - ENOLINK: Link failure between host and target
+> - EIO: Retryable I/O error
+> - EREMOTEIO: Non-retryable I/O error
+> 
+> 'Retryable' in this context means that an I/O error _might_ be
+> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+> nexus / path might succeed.
+
+Does 'retryable' of EIO mean retryable in multipath layer?
+If so, what is the difference between EIO and ENOLINK?
+
+I've heard of a case where just retrying within path-group is
+preferred to (relatively costly) switching group.
+So, if EIO (or other error code) can be used to indicate such type
+of errors, it's nice.
+
+
+Also (although this might be a bit off topic from your patch),
+can we expand such a distinction to what should be logged?
+Currently, it's difficult to distinguish important SCSI/block errors
+and less important ones in kernel log.
+For example, when I get a link failure on sda, kernel prints something
+like below, regardless of whether the I/O is recovered by multipathing or not:
+  end_request: I/O error, dev sda, sector XXXXX
+
+Setting REQ_QUIET in dm-multipath could mask the message
+but also other important ones in SCSI.
+
+
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
