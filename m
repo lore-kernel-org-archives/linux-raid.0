@@ -1,45 +1,36 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: booting into /dev/md0 after an upgrade to squeeze
-Date: Mon, 18 Oct 2010 20:14:48 +0200
-Message-ID: <20101018201448.62a76ba6@atak.bl.pg.gda.pl>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
+ / Debian 5.0 - lenny 2.6.26 kernel
+Date: Mon, 18 Oct 2010 19:52:36 +0100
+Message-ID: <4CBC9774.6020500@seoss.co.uk>
+References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk> <20100922083039.283ccdfd@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100922083039.283ccdfd@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Neil Brown wrote:
+> Maybe if you can get me a full sysrq-T list that might help.
+>    
 
-I just upgraded my backup server to debian squeeze. It was
-etch->lenny->squeeze upgrade.
+At last, yes, courtesy of Ben Hutchings...
 
-And now I'm unable to boot into /dev/md0. It seems that grub is
-identifying root by uuid of an ext3 filesystem which was on /dev/md0.
+http://buttersideup.com/files/md-raid1-lockup-lvm-snapshot/deadlock-openvz-2.6.26-Debian5.txt
 
-Before upgrading (etch to squeeze) I made a backup copy of /dev/md0
-into another partition, which resulted in duplicating its uuid.
+... any use?
 
-I had reboots in meantime after I finished lenny upgrade, and those
-reboots worked.
+Cheers,
 
-But after finishing squeeze upgrade I could not boot into /dev/md0,
-but instead I kept landing on the backup copy of /dev/md0 (which was
-done before upgrade, and was containing etch). I verified with dmesg,
-by looking at kernel command line that root=uuid=(uuid of ext3 filesystem).
+Tim.
 
-And so, I changed uuid of that backup copy partition, so that the
-original one /dev/md0 would be only one with such uuid. In the end -
-I am unable to boot into it.
-
-This server is remote, so it simply stopped starting up. I'll go
-there and see myself, maybe selecting with keyboard another entry in
-grub2 will be just enough.
-
-But, maybe do you have some experience with booting into raid1 /dev/md0
-after upgrading to squeeze?
-
-best regards
 -- 
-Janek Kozicki                               http://janek.kozicki.pl/  |
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
