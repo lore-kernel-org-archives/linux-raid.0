@@ -1,45 +1,45 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: Re: Preventing a RAID device from starting until all disks are ready
-Date: Mon, 18 Oct 2010 14:00:03 -0400
-Message-ID: <4CBC8B23.1050408@cdf.toronto.edu>
-References: <505206.15544.qm@web65407.mail.ac4.yahoo.com>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: booting into /dev/md0 after an upgrade to squeeze
+Date: Mon, 18 Oct 2010 20:14:48 +0200
+Message-ID: <20101018201448.62a76ba6@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <505206.15544.qm@web65407.mail.ac4.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Klaassen <clawsoon@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Andrew,
+Hello,
 
-My apologies for the late reply, but I've been over-busy at work.
+I just upgraded my backup server to debian squeeze. It was
+etch->lenny->squeeze upgrade.
 
-> I've never heard of that - sounds fantastic.  Does it have any performance penalties during heavy writes?
+And now I'm unable to boot into /dev/md0. It seems that grub is
+identifying root by uuid of an ext3 filesystem which was on /dev/md0.
 
-There has to be some performance penalty, since for every write on the 
-array, there is an additional write in the write-intent bitmap. However, 
-it can be imposed on a device other than your RAID array by keeping the 
-write-intent bitmap as a file on a separate file-system. In the mdadm 
-manpage, it is specified that the write-intent bitmap can either be 
-"internal" - in the MD superblock, or external - in a file. We have kept 
-it internal for now, since we experience significantly less writes than 
-reads. However, we are keeping in mind the option to move it off to 
-another file-system if this changes, or we see our write performance 
-impacting our users.
+Before upgrading (etch to squeeze) I made a backup copy of /dev/md0
+into another partition, which resulted in duplicating its uuid.
 
-> Are you doing the mdadm startup in rc.local, or in the initrd, or...?
+I had reboots in meantime after I finished lenny upgrade, and those
+reboots worked.
 
-We have disabled all of the system startup-scripts, and we have cooked 
-our own startup script which does each stage of the startup. In our 
-case, we need the following order of operations:
+But after finishing squeeze upgrade I could not boot into /dev/md0,
+but instead I kept landing on the backup copy of /dev/md0 (which was
+done before upgrade, and was containing etch). I verified with dmesg,
+by looking at kernel command line that root=uuid=(uuid of ext3 filesystem).
 
-1) Start networking, and bring up a set of bonded interfaces.
-2) Login over iscsi to 30 iscsi target drives.
-3) Start mdadm
-etc.
+And so, I changed uuid of that backup copy partition, so that the
+original one /dev/md0 would be only one with such uuid. In the end -
+I am unable to boot into it.
 
-Cheers,
-Iordan
+This server is remote, so it simply stopped starting up. I'll go
+there and see myself, maybe selecting with keyboard another entry in
+grub2 will be just enough.
+
+But, maybe do you have some experience with booting into raid1 /dev/md0
+after upgrading to squeeze?
+
+best regards
+-- 
+Janek Kozicki                               http://janek.kozicki.pl/  |
