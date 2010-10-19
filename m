@@ -1,88 +1,96 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Problem regarding RAID10 on kernel 2.6.31
-Date: Tue, 19 Oct 2010 09:38:44 +1100
-Message-ID: <20101019093844.1a76eaee@notabene>
-References: <1281087718.14259.5.camel@venkata-pc.in.caveonetworks.com>
-	<20100806201435.5a3cb1f9@notabene>
-	<1281339596.18581.34.camel@venkata-pc.in.caveonetworks.com>
-	<20100809181042.2dd7f7ca@notabene>
-	<10FC03A59E498D4A90A45E4A105AD3ED02DA411354@EXCH-MBX-2.vmware.com>
+Subject: Re: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user
+ defined policy
+Date: Tue, 19 Oct 2010 11:40:27 +1100
+Message-ID: <20101019114027.37d65a8c@notabene>
+References: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <10FC03A59E498D4A90A45E4A105AD3ED02DA411354@EXCH-MBX-2.vmware.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hari Subramanian <hari@vmware.com>
-Cc: ravichandra <vmynidi@caviumnetworks.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, 18 Oct 2010 14:23:51 -0700
-Hari Subramanian <hari@vmware.com> wrote:
+On Fri, 1 Oct 2010 13:36:48 +0100
+"Labun, Marcin" <Marcin.Labun@intel.com> wrote:
 
-> Is this bug found in the raid1 personality driver as well?
+> >From f423b226f10cfe3b416c5e0580dde45cd8ca887d Mon Sep 17 00:00:00 2001
+> From: Marcin Labun <marcin.labun@intel.com>
+> Date: Wed, 29 Sep 2010 06:12:38 +0200
+> Subject: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user defined policy
+> 
+> This is updated series of patches forming autorebuild functionality in mdadm 
+> monitor based on new policy code.
 
-No.
-It is possible there are other problems in raid1 which I am investigating at
-the moment.  But this bug isn't in raid1.
+Hi Marcin,
+ thanks for this, and apologies for not replying sooner.
+ I've had a bit of a look and some of it seems good.
+ I haven't had a thorough look yet as I am in the middle of doing some fairly
+ serious refactoring of mdadm (the supertype, and mdinfo structures are going
+ to be heavily changed and largely merged - some super_switch methods will
+ disappear (e.g. getinfo_super) and others will appear (load_container)).
+ Once I have finished that I will review your code more thoroughly and merge
+ it into the new code base.
 
+ One concern I do have is patch 0002 which removes the spare-group based
+ spare migration.  That functionality needs to stay, though obviously the
+ implementation can change.  I imagine the 'spare-group' information would be
+ added to each member device as a 'domain' name.
+
+ Also it is best not to remove functionality and then re-add it a different
+ way, but rather to make sure the functionality works after every change, but
+ just gets extended at various points.
+
+Thanks,
 NeilBrown
 
 
 > 
-> Thanks
-> ~ Hari
+> Autorebuild Monitoring application:
+> Autorebuild monitor is part of monitor application (mdadm -F). In the current
+> code of mdadm monitor autorebuild feature was based on spare group assignment in
+> mdadm.conf file and worked only for native metadata. 
+> The new autorebuild implementation works for all metadata types. It uses 
+> the concept of domains in mdadm.conf introduced by Neil Brown. 
+> Monitoring application shall periodically check the state of MD active arrays
+> and trigger a rebuild if there are eligible spare disks in other containers.
+> Degraded arrays are checked one by one. For each array a potential spare disk
+> is searched. If the spare disk matches the domain of the degraded array and
+> the domain action allows for spare sharing the spare is moved using existing
+> Manage_subdevs function. If the addition fails, the spare device is moved back
+> to the original container and next potential spare is tried. The process is 
+> repeated until all arrays are checked and the process is put into a sleep state
+> for a configured period.
+> 
+> The design of mdadm monitor requires that there is only one autorebuild process running.
+> Therefore a new option -no-sharing has been added to Monitor mode, and spare sharing is
+> allowed in only one instance of Monitor. User is still able to start Monitoring functions
+> in multiple instances.
+> 
+> The autorebuild build-in assumptions are:
+> 1\spares are shared between the arrays of the same metadata
+> 2\spares are moved only from containers/volumes that are not degraded
+> 3\spares are moved to containers/volumes lacking a *good* spare (size)
 > 
 > 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Neil Brown
-> Sent: Monday, August 09, 2010 4:11 AM
-> To: ravichandra
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Problem regarding RAID10 on kernel 2.6.31
+> 0001-Monitor-set-err-on-arrays-not-in-mdstat.patch
+> 0002-Monitor-removed-spare-group-based-spare-sharing-code.patch
+> 0003-mdadm-added-no-sharing-parameter-for-Monitor-mode.patch
+> 0004-Monitor-link-container-volumes-in-statelist.patch
+> 0005-imsm-create-mdinfo-list-of-disks-in-a-container-from.patch
+> 0006-Monitor-autorebuild-funcionality-added.patch
+> 0007-Monitor-Respect-policy-in-auto-rebuild-in-mdadm-moni.patch
+> 0008-Monitor-Helper-functions-added-for-spare_sharing-in-.patch
 > 
-> On Mon, 09 Aug 2010 13:09:56 +0530
-> ravichandra <vmynidi@caviumnetworks.com> wrote:
 > 
-> > Hi,
-> >    Thanks.The patch you have sent is working.There is no hanging up
-> > after the patch is applied.can you elaborate on the problem which was
-> > there earlier??
-> > 
+>  Monitor.c     |  605 +++++++++++++++++++++++++++++++++++++++++++++++----------
+>  ReadMe.c      |    2 +
+>  mdadm.c       |    8 +-
+>  mdadm.h       |    8 +-
+>  super-intel.c |   53 +++++
+>  5 files changed, 565 insertions(+), 111 deletions(-)
 > 
-> It's .... complicated.
-> 
-> An important fact is that generic_make_request queues recursive requests
-> rather than issuing them immediately.  This avoids excessive stack usage with
-> stacked block devices.
-> 
-> So in the case where a read crosses a chunk boundary, raid10:make_request
-> issues two separate generic_make_request calls to two different devices, each
-> preceded by a wait_barrier call (Which is cancelled with allow_barrer() when
-> the request completes).
-> The first is queued and will not be issued until the second is also queued and
-> the raid10:make_request call completes.
-> 
-> The wait_barrier call increments nr_pending.
-> If the resync/recovery thread tries to 'raise_barrier' between these calls,
-> it will find nr_pending set and will wait with ->barrier incremented so when
-> the next wait_barrier is attempted, is will block - forever.
-> 
-> If generic_make_request didn't queue things, the first request would
-> complete, nr_pending would decrement, resync would proceed with a single
-> request, then the second wait_barrier would complete and the second request
-> could be submitted.
-> 
-> The fix was to elevate conf->nr_waiting for the duration of both submissions
-> so raise_barrier holds off setting ->barrier until both submissions are
-> complete.
-> 
-> Hope that makes sense.
-> 
-> NeilBrown
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
