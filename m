@@ -1,96 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user
- defined policy
-Date: Tue, 19 Oct 2010 11:40:27 +1100
-Message-ID: <20101019114027.37d65a8c@notabene>
-References: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "MailScanner" <postmaster@vger.kernel.org>
+Subject: Warning: E-mail viruses detected
+Date: Tue, 19 Oct 2010 09:23:30 +0700 (ICT)
+Message-ID: <20101019022331.5B2DB2C7D6E@spamwall.dyndns.info>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 1 Oct 2010 13:36:48 +0100
-"Labun, Marcin" <Marcin.Labun@intel.com> wrote:
+Our e-mail content detector has just been triggered by a message you sent:
+  To: dtkhuyen@myduc.com
+  Subject: Returned mail: see transcript for details
+  Date: Tue Oct 19 09:23:20 2010
 
-> >From f423b226f10cfe3b416c5e0580dde45cd8ca887d Mon Sep 17 00:00:00 2001
-> From: Marcin Labun <marcin.labun@intel.com>
-> Date: Wed, 29 Sep 2010 06:12:38 +0200
-> Subject: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user defined policy
-> 
-> This is updated series of patches forming autorebuild functionality in mdadm 
-> monitor based on new policy code.
+One or more of the attachments (dtkhuyenmyduc.com.html.scr, dtkhuyen@myduc.com.zip) are on
+the list of unacceptable attachments for this site and will not have
+been delivered.
 
-Hi Marcin,
- thanks for this, and apologies for not replying sooner.
- I've had a bit of a look and some of it seems good.
- I haven't had a thorough look yet as I am in the middle of doing some fairly
- serious refactoring of mdadm (the supertype, and mdinfo structures are going
- to be heavily changed and largely merged - some super_switch methods will
- disappear (e.g. getinfo_super) and others will appear (load_container)).
- Once I have finished that I will review your code more thoroughly and merge
- it into the new code base.
+Consider renaming the files to avoid this constraint.
 
- One concern I do have is patch 0002 which removes the spare-group based
- spare migration.  That functionality needs to stay, though obviously the
- implementation can change.  I imagine the 'spare-group' information would be
- added to each member device as a 'domain' name.
-
- Also it is best not to remove functionality and then re-add it a different
- way, but rather to make sure the functionality works after every change, but
- just gets extended at various points.
-
-Thanks,
-NeilBrown
+The virus detector said this about the message:
+Report: Report: MailScanner: Very long filenames are good signs of attacks against Microsoft e-mail packages (dtkhuyenmyduc.com.html.scr)
+Report: No programs allowed (dtkhuyenmyduc.com.html.scr)
 
 
-> 
-> Autorebuild Monitoring application:
-> Autorebuild monitor is part of monitor application (mdadm -F). In the current
-> code of mdadm monitor autorebuild feature was based on spare group assignment in
-> mdadm.conf file and worked only for native metadata. 
-> The new autorebuild implementation works for all metadata types. It uses 
-> the concept of domains in mdadm.conf introduced by Neil Brown. 
-> Monitoring application shall periodically check the state of MD active arrays
-> and trigger a rebuild if there are eligible spare disks in other containers.
-> Degraded arrays are checked one by one. For each array a potential spare disk
-> is searched. If the spare disk matches the domain of the degraded array and
-> the domain action allows for spare sharing the spare is moved using existing
-> Manage_subdevs function. If the addition fails, the spare device is moved back
-> to the original container and next potential spare is tried. The process is 
-> repeated until all arrays are checked and the process is put into a sleep state
-> for a configured period.
-> 
-> The design of mdadm monitor requires that there is only one autorebuild process running.
-> Therefore a new option -no-sharing has been added to Monitor mode, and spare sharing is
-> allowed in only one instance of Monitor. User is still able to start Monitoring functions
-> in multiple instances.
-> 
-> The autorebuild build-in assumptions are:
-> 1\spares are shared between the arrays of the same metadata
-> 2\spares are moved only from containers/volumes that are not degraded
-> 3\spares are moved to containers/volumes lacking a *good* spare (size)
-> 
-> 
-> 0001-Monitor-set-err-on-arrays-not-in-mdstat.patch
-> 0002-Monitor-removed-spare-group-based-spare-sharing-code.patch
-> 0003-mdadm-added-no-sharing-parameter-for-Monitor-mode.patch
-> 0004-Monitor-link-container-volumes-in-statelist.patch
-> 0005-imsm-create-mdinfo-list-of-disks-in-a-container-from.patch
-> 0006-Monitor-autorebuild-funcionality-added.patch
-> 0007-Monitor-Respect-policy-in-auto-rebuild-in-mdadm-moni.patch
-> 0008-Monitor-Helper-functions-added-for-spare_sharing-in-.patch
-> 
-> 
->  Monitor.c     |  605 +++++++++++++++++++++++++++++++++++++++++++++++----------
->  ReadMe.c      |    2 +
->  mdadm.c       |    8 +-
->  mdadm.h       |    8 +-
->  super-intel.c |   53 +++++
->  5 files changed, 565 insertions(+), 111 deletions(-)
-> 
+-- 
+MailScanner
+Email Virus Scanner
+MyDuc-Ceramics
+www.myduc.com
 
+For all your IT requirements visit: http://www.transtec.co.uk
