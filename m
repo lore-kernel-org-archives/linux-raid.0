@@ -1,86 +1,61 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [RFC] training mpath to discern between SCSI errors
-Date: Tue, 19 Oct 2010 13:03:44 +0900
-Message-ID: <4CBD18A0.5070206@ce.jp.nec.com>
-References: <20100825155918.GB8509@redhat.com>	<4C7B984E.4070802@suse.de>	<4C7B9F14.9080900@mvista.com>	<4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com> <4CBC35AE.9050002@suse.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
+ / Debian 5.0 - lenny 2.6.26 kernel
+Date: Tue, 19 Oct 2010 17:16:50 +1100
+Message-ID: <20101019171650.20c83e7e@notabene>
+References: <4C938103.1010304@seoss.co.uk>
+	<20100918085925.5fee83ee@notabene>
+	<4C97BD21.1040405@seoss.co.uk>
+	<4C991D61.1040400@seoss.co.uk>
+	<20100922083039.283ccdfd@notabene>
+	<4CBC9774.6020500@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CBC35AE.9050002@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, jack@suse.cz, vst@vlnb.net, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, chris.mason@oracle.com, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, Sergei Shtylyov <sshtylyov@mvista.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4CBC9774.6020500@seoss.co.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Hannes,
+On Mon, 18 Oct 2010 19:52:36 +0100
+Tim Small <tim@seoss.co.uk> wrote:
 
-(10/18/10 20:55), Hannes Reinecke wrote:
->> Does 'retryable' of EIO mean retryable in multipath layer?
->> If so, what is the difference between EIO and ENOLINK?
->>
-> Yes, EIO is intended for errors which should be retried at the
-> multipath layer. This does _not_ include transport errors, which are
-> signalled by ENOLINK.
+> Neil Brown wrote:
+> > Maybe if you can get me a full sysrq-T list that might help.
+> >    
 > 
-> Basically, ENOLINK is a transport error, and EIO just means
-> something is wrong and we weren't able to classify it properly.
-> If we were, it'd be either ENOLINK or EREMOTEIO.
+> At last, yes, courtesy of Ben Hutchings...
 > 
->> I've heard of a case where just retrying within path-group is
->> preferred to (relatively costly) switching group.
->> So, if EIO (or other error code) can be used to indicate such type
->> of errors, it's nice.
->>
-> Yes, that was one of the intention.
+> http://buttersideup.com/files/md-raid1-lockup-lvm-snapshot/deadlock-openvz-2.6.26-Debian5.txt
 
-Great to hear that.
+Thanks!
 
-And when it comes to retrying, the next problem is who controls it.
-I don't think it's good to duplicate retry logic in multipath and
-underlying device like SCSI (i.e. sd retries 5 times).
-So perhaps we need a way to disable (or limit) retries in underlying
-device at least.
-
->> Also (although this might be a bit off topic from your patch),
->> can we expand such a distinction to what should be logged?
->> Currently, it's difficult to distinguish important SCSI/block errors
->> and less important ones in kernel log.
->> For example, when I get a link failure on sda, kernel prints something
->> like below, regardless of whether the I/O is recovered by multipathing or not:
->>   end_request: I/O error, dev sda, sector XXXXX
->>
-> Indeed, when using the above we could be modifying the above
-> message, eg by
 > 
-> end_request: transport error, dev sda, sector XXXXX
+> ... any use?
+
+Only in as much as that it excludes some possible avenues of investigation,
+which has some value.
+
+But I'm out of ideas.  I cannot think of anything that could keep
+->nr_pending or ->barrier elevated such that raise_barrier would
+block for a long time.
+
+Maybe you could try adding printks to print
+  conf->{barrier,nr_pending,nr_waiting,nr_queued}
+just before and after the second wait_event_lock_irq in raise_barrier().
+
+That might help...
+
+NeilBrown
+
+
+
+
 > 
-> or
+> Cheers,
 > 
-> end_request: target error, dev sda, sector XXXXX
+> Tim.
 > 
-> which would improve the output noticeable.
 
-It improves but still they look like critical errors
-even if multipath saves them.
-
-When I see this:
-
-  end_request: target error, dev sda, sector XXXXX
-
-I can't tell whether it's a real error visible to user space
-or it's just recoverred by multipath retry/failover afterwards.
-
-
->> Setting REQ_QUIET in dm-multipath could mask the message
->> but also other important ones in SCSI.
->>
-> Hmm. Not sure about that, but I think the above modifications will
-> be useful already.
-> 
-> I'll be sending an updated patch.
-
-Thank you. I'm looking for that.
-
--- 
-Jun'ichi Nomura, NEC Corporation
