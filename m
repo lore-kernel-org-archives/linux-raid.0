@@ -1,59 +1,43 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: RE: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user
- defined policy
-Date: Wed, 20 Oct 2010 16:41:15 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D174710277@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D171D09950@irsmsx503.ger.corp.intel.com>
- <20101019114027.37d65a8c@notabene>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
+ / Debian 5.0 - lenny 2.6.26 kernel
+Date: Wed, 20 Oct 2010 21:34:47 +0100
+Message-ID: <4CBF5267.7080304@seoss.co.uk>
+References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk>	<20100922083039.283ccdfd@notabene>	<4CBC9774.6020500@seoss.co.uk> <20101019171650.20c83e7e@notabene> <4CBDC641.9090009@seoss.co.uk> <4CBDC756.7010606@seoss.co.uk> <4CBDF190.2000007@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101019114027.37d65a8c@notabene>
-Content-Language: en-US
+In-Reply-To: <4CBDF190.2000007@seoss.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> 
-> On Fri, 1 Oct 2010 13:36:48 +0100
-> "Labun, Marcin" <Marcin.Labun@intel.com> wrote:
-> 
-> > >From f423b226f10cfe3b416c5e0580dde45cd8ca887d Mon Sep 17 00:00:00
-> 2001
-> > From: Marcin Labun <marcin.labun@intel.com>
-> > Date: Wed, 29 Sep 2010 06:12:38 +0200
-> > Subject: [AUTOREBUILD 0/8] Autorebuild monitor patches based on user
-> defined policy
-> >
-> > This is updated series of patches forming autorebuild functionality
-> in mdadm
-> > monitor based on new policy code.
-> 
-> Hi Marcin,
->  thanks for this, and apologies for not replying sooner.
->  I've had a bit of a look and some of it seems good.
->  I haven't had a thorough look yet as I am in the middle of doing some fairly
->  serious refactoring of mdadm (the supertype, and mdinfo structures are going
->  to be heavily changed and largely merged - some super_switch methods> will
->  disappear (e.g. getinfo_super) and others will appear (load_container)).
->  Once I have finished that I will review your code more thoroughly and merge
->  it into the new code base.
-> 
->  One concern I do have is patch 0002 which removes the spare-group based
->  spare migration.  That functionality needs to stay, though obviously the
->  implementation can change.  I imagine the 'spare-group' information would be
->  added to each member device as a 'domain' name.
-> 
->  Also it is best not to remove functionality and then re-add it a different
->  way, but rather to make sure the functionality works after every change, but
->  just gets extended at various points.
-> 
-Hi Neil,
-Next week we are planning to make another drop that includes spare-groups and a number of code rework changes.
-Thanks,
-Marcin
+On 19/10/10 20:29, Tim Small wrote:
+> Sprinkled a few more printks....
+>
+> http://buttersideup.com/files/md-raid1-lockup-lvm-snapshot/dmesg-deadlock-instrumented.txt
+>
+
+It seems that when the system is hung, conf->nr_pending gets stuck with
+a value of 2.  The resync task ends up stuck in the second
+wait_event_lock_irq within raise barrier, and everything else gets stuck
+in the first wait_event_lock_irq when waiting for that to complete..
+
+So my assumption is that some IOs either get stuck incomplete, or take a
+path through the code such that they complete without calling allow_barrier.
+
+Does that make any sense?
+
+Cheers,
+
+Tim.
+
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
