@@ -1,75 +1,58 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: Re: problems with "LSISAS2008 6Gb/s SAS" kernel mpt2sas driver
-Date: Thu, 21 Oct 2010 14:50:25 +0200
-Message-ID: <20101021125024.GB10933@apartia.fr>
-References: <20101021073159.GA30734@apartia.fr>
- <4CC01F43.8010003@seoss.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4CC01F43.8010003@seoss.co.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v2 18/22] md: use little-endian bit operations
+Date: Thu, 21 Oct 2010 23:41:13 +0900
+Message-ID: <1287672077-5797-19-git-send-email-akinobu.mita@gmail.com>
+References: <1287672077-5797-1-git-send-email-akinobu.mita@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1287672077-5797-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 21, 2010 at 12:08:51PM +0100, Tim Small wrote:
-> 
-> >Any suggestion on fixing that problem would be welcome. I can send more
-> >complete logs.
-> 
-> Looks like a firmware bug - do you have the latest firmware?  Drive
-> firmwares?  Anything in the drive error logs (using smartctl)?
-> 
-> If not, then try opening a bug on the kernel bugzilla - LSI
-> engineers read that (and sometimes even fix things).
-> 
-> Otherwise, you could try replacing with a straight SATA contoller,
-> if that box doesn't have a SAS backplane - I've not been to
-> impressed by the quality of engineering for LSI contollers, and
-> SATA-on-SAS in general hasn't been very reliable IMO.  Just go for a
-> well supported SATA controller (e.g. Sil 3132 etc.).
+As a preparation for removing ext2 non-atomic bit operations from
+asm/bitops.h. This converts ext2 non-atomic bit operations to
+little-endian bit operations.
 
-Hi Tim and thanks for your feedback.
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Acked-by: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
+---
+No change from previous submission
 
-I was eventually able to "fix" the problem. After very carefully running
-lilo on each disk with "raid-extra-boot=/dev/sdX" (instead of "mbr") I
-rebooted into my live system with a freshly compliled 2.6.36 and the
-problem vanished. lilo now runs fine even my "raid-extra-boot=mbr" and
-several reboots have not triggered any further issue.
+ drivers/md/bitmap.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-The firmwares are all to their latest so I guess the mpt2sas kernel
-driver must have been improved between 2.6.35 and 2.6.36.
-
-For info here is part of the 2.6.36 boot log with a few ominous "!!" and
-one "failure" but with no apparent consequence.
-
-Cheers,
-
-Oct 21 14:25:47 zenon kernel: mpt2sas version 06.100.00.00 loaded
-Oct 21 14:25:47 zenon kernel: scsi0 : Fusion MPT SAS Host
-Oct 21 14:25:47 zenon kernel: mpt2sas 0000:02:00.0: PCI INT A -> GSI 41 (level, 
-low) -> IRQ 41
-Oct 21 14:25:47 zenon kernel: mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (16426776 kB)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: IO-APIC enabled: IRQ 41
-Oct 21 14:25:47 zenon kernel: mpt2sas0: iomem(0x00000000df2b0000), mapped(0xffffc90000060000), size(65536)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: ioport(0x000000000000fc00), size(256)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: sending diag reset !!
-Oct 21 14:25:47 zenon kernel: mpt2sas0: diag reset: SUCCESS
-Oct 21 14:25:47 zenon kernel: mpt2sas0: Allocated physical memory: size(1091 kB)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: Current Controller Queue Depth(467), Max Controller Queue Depth(3439)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: Scatter Gather Elements per IO(128)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: LSISAS2008: FWVersion(02.15.63.00), ChipRevision(0x02), BiosVersion(07.01.09.00)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: Dell PERC H200 Integrated: Vendor(0x1000), Device(0x0072), SSVID(0x1028), SSDID(0x1F1E)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: Protocol=(Initiator,Target), Capabilities=(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set Full,NCQ)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: sending port enable !!
-Oct 21 14:25:47 zenon kernel: mpt2sas0: host_add: handle(0x0001), sas_addr(0x5842b2b05020c600), phys(8)
-Oct 21 14:25:47 zenon kernel: mpt2sas0: failure at drivers/scsi/mpt2sas/mpt2sas_scsih.c:4546/_scsih_add_device()!
-Oct 21 14:25:47 zenon kernel: mpt2sas0: port enable: SUCCESS
-Oct 21 14:25:47 zenon kernel: scsi 0:0:0:0: Direct-Access     ATA      WDC WD1002FAEX-0 1D05 PQ: 0 ANSI: 5
-Oct 21 14:25:47 zenon kernel: scsi 0:0:0:0: SATA: handle(0x0011), sas_addr(0x4433221107000000), phy(7), device_name(0x4ee25001c38204eb)
-Oct 21 14:25:47 zenon kernel: scsi 0:0:0:0: SATA: enclosure_logical_id(0x5842b2b05020c600), slot(0)
-Oct 21 14:25:47 zenon kernel: scsi 0:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
-Oct 21 14:25:47 zenon kernel: scsi 0:0:0:0: qdepth(32), tagged(1), simple(1), ordered(0), scsi_level(6), cmd_que(1)
-
-	etc..
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index e4fb58d..2a37051 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -850,7 +850,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 			set_bit(bit, kaddr);
+ 		else
+-			ext2_set_bit(bit, kaddr);
++			__test_and_set_le_bit(bit, kaddr);
+ 		kunmap_atomic(kaddr, KM_USER0);
+ 		PRINTK("set file bit %lu page %lu\n", bit, page->index);
+ 	}
+@@ -1046,7 +1046,7 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 			b = test_bit(bit, paddr);
+ 		else
+-			b = ext2_test_bit(bit, paddr);
++			b = test_le_bit(bit, paddr);
+ 		kunmap_atomic(paddr, KM_USER0);
+ 		if (b) {
+ 			/* if the disk bit is set, set the memory bit */
+@@ -1222,7 +1222,7 @@ void bitmap_daemon_work(mddev_t *mddev)
+ 						clear_bit(file_page_offset(bitmap, j),
+ 							  paddr);
+ 					else
+-						ext2_clear_bit(file_page_offset(bitmap, j),
++						__test_and_clear_le_bit(file_page_offset(bitmap, j),
+ 							       paddr);
+ 					kunmap_atomic(paddr, KM_USER0);
+ 				} else
+-- 
+1.7.1.231.gd0b16
