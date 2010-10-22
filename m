@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/2] md/raid5: initialize ->recovery_offset when growing
-	raid_disks
-Date: Fri, 22 Oct 2010 11:03:59 -0700
-Message-ID: <20101022180359.6563.11717.stgit@localhost6.localdomain6>
+Subject: [PATCH 1/2] md/raid5: skip wait for MD_CHANGE_DEVS acknowledgement in
+	the external case
+Date: Fri, 22 Oct 2010 11:03:54 -0700
+Message-ID: <20101022180354.6563.52476.stgit@localhost6.localdomain6>
 References: <20101022180311.6563.6666.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,28 +14,37 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-We mark the disk in-sync, and also need to init ->recovery_offset lest
-we confuse older versions of mdadm that don't consider this case at
-assembly (i.e. that when growing we assume the disk is insync).
+mdmon is orchestrating the reshape progress and we rely on it to manage the
+reshape position and metadata updates.
 
-mdadm: /dev/md0 assembled from 3 drives and  1 rebuilding - not enough to start the array.
-
-Cc: <stable@kernel.org>
+Reported-by: Adam Kwolek <adam.kwolek@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/md/raid5.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/md/raid5.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9e8ecd5..f8a27d4 100644
+index 69b0a16..9e8ecd5 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -5580,6 +5580,7 @@ static int raid5_start_reshape(mddev_t *mddev)
- 			if (raid5_add_disk(mddev, rdev) == 0) {
- 				char nm[20];
- 				if (rdev->raid_disk >= conf->previous_raid_disks) {
-+					rdev->recovery_offset = MaxSector;
- 					set_bit(In_sync, &rdev->flags);
- 					added_devices++;
- 				} else
+@@ -4243,7 +4243,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		md_wakeup_thread(mddev->thread);
+ 		wait_event(mddev->sb_wait, mddev->flags == 0 ||
+-			   kthread_should_stop());
++			   !mddev->persistent || kthread_should_stop());
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->reshape_safe = mddev->reshape_position;
+ 		spin_unlock_irq(&conf->device_lock);
+@@ -4344,8 +4344,8 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 		md_wakeup_thread(mddev->thread);
+ 		wait_event(mddev->sb_wait,
+-			   !test_bit(MD_CHANGE_DEVS, &mddev->flags)
+-			   || kthread_should_stop());
++			   !test_bit(MD_CHANGE_DEVS, &mddev->flags) ||
++			   !mddev->persistent || kthread_should_stop());
+ 		spin_lock_irq(&conf->device_lock);
+ 		conf->reshape_safe = mddev->reshape_position;
+ 		spin_unlock_irq(&conf->device_lock);
 
