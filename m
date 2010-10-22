@@ -1,29 +1,41 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 0/2] reshape fixlets for 2.6.37
-Date: Fri, 22 Oct 2010 11:03:49 -0700
-Message-ID: <20101022180311.6563.6666.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/2] md/raid5: initialize ->recovery_offset when growing
+	raid_disks
+Date: Fri, 22 Oct 2010 11:03:59 -0700
+Message-ID: <20101022180359.6563.11717.stgit@localhost6.localdomain6>
+References: <20101022180311.6563.6666.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101022180311.6563.6666.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil,
+We mark the disk in-sync, and also need to init ->recovery_offset lest
+we confuse older versions of mdadm that don't consider this case at
+assembly (i.e. that when growing we assume the disk is insync).
 
-Here are two fixes that we discovered while implementing the external
-reshape code.  The second one is tagged for -stable as current versions
-of mdadm may not assemble a native array that is being expanded by more
-than 1 disk.  Incremental assembly, however, does work in this case.
+mdadm: /dev/md0 assembled from 3 drives and  1 rebuilding - not enough to start the array.
 
+Cc: <stable@kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/md/raid5.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Dan Williams (2):
-      md/raid5: skip wait for MD_CHANGE_DEVS acknowledgement in the external case
-      md/raid5: initialize ->recovery_offset when growing raid_disks
-
- drivers/md/raid5.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 9e8ecd5..f8a27d4 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5580,6 +5580,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 			if (raid5_add_disk(mddev, rdev) == 0) {
+ 				char nm[20];
+ 				if (rdev->raid_disk >= conf->previous_raid_disks) {
++					rdev->recovery_offset = MaxSector;
+ 					set_bit(In_sync, &rdev->flags);
+ 					added_devices++;
+ 				} else
 
