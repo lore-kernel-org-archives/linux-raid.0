@@ -1,58 +1,74 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v2 18/22] md: use little-endian bit operations
-Date: Thu, 21 Oct 2010 23:41:13 +0900
-Message-ID: <1287672077-5797-19-git-send-email-akinobu.mita@gmail.com>
-References: <1287672077-5797-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1287672077-5797-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, linux-raid@vger.kernel.org
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: problems with "LSISAS2008 6Gb/s SAS" kernel mpt2sas driver
+Date: Fri, 22 Oct 2010 07:25:13 +0200
+Message-ID: <4CC12039.4010503@stud.tu-ilmenau.de>
+References: <20101021073159.GA30734@apartia.fr> <4CC01F43.8010003@seoss.co.uk>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4CC01F43.8010003@seoss.co.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-poweredge@dell.com" <linux-poweredge@dell.com>
 List-Id: linux-raid.ids
 
-As a preparation for removing ext2 non-atomic bit operations from
-asm/bitops.h. This converts ext2 non-atomic bit operations to
-little-endian bit operations.
+Am 21.10.2010 13:08, schrieb Tim Small:
+> On 21/10/10 08:31, Louis-David Mitterrand wrote:
+>> Hi,
+>>
+>> I am setting up a new Dell T610 server with 8 WD Black Caviar sata3 1TB
+>> disks on a LSISAS2008 controller:
+>>
+>>     Oct 21 09:12:37 grml kernel: [   83.377388] mpt2sas0: LSISAS2008:
+>> FWVersion(02.1
+>> 5.63.00), ChipRevision(0x02), BiosVersion(07.01.09.00)
+>>
+>> My layout is as follows:
+>>
+>> - small un-encrypted raid1 boot partition on /dev/md0
+>>
+>> - dm-crypt main partition on /dev/md1 (actuallly /dev/mapper/cmd1)
+>>
+>> A recent grml64 is used to create the partitions, install the system and
+>> run lilo.
+>>
+>> When running lilo I get these errors from the controller:
+>>
+>>     Oct 21 08:57:11 grml kernel: [40832.015207] mpt2sas0:
+>> fault_state(0x265d)!
+>>     Oct 21 08:57:11 grml kernel: [40832.015210] mpt2sas0: sending diag
+>> reset !!
+>>    
+> 
+> 
+>> Any suggestion on fixing that problem would be welcome. I can send more
+>> complete logs.
+>>    
+> 
+> Looks like a firmware bug - do you have the latest firmware?  Drive
+> firmwares?  Anything in the drive error logs (using smartctl)?
+> 
+> If not, then try opening a bug on the kernel bugzilla - LSI engineers
+> read that (and sometimes even fix things).
+> 
+> Otherwise, you could try replacing with a straight SATA contoller, if
+> that box doesn't have a SAS backplane - I've not been to impressed by
+> the quality of engineering for LSI contollers, and SATA-on-SAS in
+> general hasn't been very reliable IMO.  Just go for a well supported
+> SATA controller (e.g. Sil 3132 etc.).
+> 
+> Tim.
+> 
+> 
+I'll have to object on the matter of SATA-drives on SAS-controllers.  We
+use 3ware/LSI 9650,9690 and 9750 controllers a lot and have rarely had
+any problems.  The problems we encountered came with hardware failures.
+On the LSISAS2008 it's good to hear that most problems got fixed with
+later kernels.  As we are trying to get our lower-cost storage systems
+running on this controller (onboard a supermicro MB), this shows which
+way to go... Thank you for this information!
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Acked-by: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
----
-No change from previous submission
-
- drivers/md/bitmap.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index e4fb58d..2a37051 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -850,7 +850,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
- 		if (bitmap->flags & BITMAP_HOSTENDIAN)
- 			set_bit(bit, kaddr);
- 		else
--			ext2_set_bit(bit, kaddr);
-+			__test_and_set_le_bit(bit, kaddr);
- 		kunmap_atomic(kaddr, KM_USER0);
- 		PRINTK("set file bit %lu page %lu\n", bit, page->index);
- 	}
-@@ -1046,7 +1046,7 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 		if (bitmap->flags & BITMAP_HOSTENDIAN)
- 			b = test_bit(bit, paddr);
- 		else
--			b = ext2_test_bit(bit, paddr);
-+			b = test_le_bit(bit, paddr);
- 		kunmap_atomic(paddr, KM_USER0);
- 		if (b) {
- 			/* if the disk bit is set, set the memory bit */
-@@ -1222,7 +1222,7 @@ void bitmap_daemon_work(mddev_t *mddev)
- 						clear_bit(file_page_offset(bitmap, j),
- 							  paddr);
- 					else
--						ext2_clear_bit(file_page_offset(bitmap, j),
-+						__test_and_clear_le_bit(file_page_offset(bitmap, j),
- 							       paddr);
- 					kunmap_atomic(paddr, KM_USER0);
- 				} else
--- 
-1.7.1.231.gd0b16
+Stefan
