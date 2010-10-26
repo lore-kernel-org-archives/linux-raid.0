@@ -1,130 +1,316 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/2] md/raid5: initialize ->recovery_offset when growing
- raid_disks
-Date: Tue, 26 Oct 2010 01:43:10 -0700
-Message-ID: <4CC6949E.8050605@intel.com>
-References: <20101022180311.6563.6666.stgit@localhost6.localdomain6>	<20101022180359.6563.11717.stgit@localhost6.localdomain6>	<20101026163524.09b9e812@notabene>	<4CC682A9.2080507@intel.com> <20101026185424.6d13f43b@notabene>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Re: Help!
+Date: Tue, 26 Oct 2010 21:45:12 +0200
+Message-ID: <20101026214512.74d34a0c@atak.bl.pg.gda.pl>
+References: <1494909.124.1287759012019.JavaMail.root@asterisk>
+	<17967393.126.1287759080545.JavaMail.root@asterisk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101026185424.6d13f43b@notabene>
+In-Reply-To: <17967393.126.1287759080545.JavaMail.root@asterisk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/26/2010 12:54 AM, Neil Brown wrote:
-> On Tue, 26 Oct 2010 00:26:33 -0700
-> Dan Williams<dan.j.williams@intel.com>  wrote:
->
->> On 10/25/2010 10:35 PM, Neil Brown wrote:
->>> On Fri, 22 Oct 2010 11:03:59 -0700
->>> Dan Williams<dan.j.williams@intel.com>   wrote:
->>>
->>>> We mark the disk in-sync, and also need to init ->recovery_offset lest
->>>> we confuse older versions of mdadm that don't consider this case at
->>>> assembly (i.e. that when growing we assume the disk is insync).
->>>>
->>>> mdadm: /dev/md0 assembled from 3 drives and  1 rebuilding - not enough to start the array.
->>>>
->>>> Cc:<stable@kernel.org>
->>>> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
->>>> ---
->>>>    drivers/md/raid5.c |    1 +
->>>>    1 files changed, 1 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->>>> index 9e8ecd5..f8a27d4 100644
->>>> --- a/drivers/md/raid5.c
->>>> +++ b/drivers/md/raid5.c
->>>> @@ -5580,6 +5580,7 @@ static int raid5_start_reshape(mddev_t *mddev)
->>>>    			if (raid5_add_disk(mddev, rdev) == 0) {
->>>>    				char nm[20];
->>>>    				if (rdev->raid_disk>= conf->previous_raid_disks) {
->>>> +					rdev->recovery_offset = MaxSector;
->>>>    					set_bit(In_sync,&rdev->flags);
->>>>    					added_devices++;
->>>>    				} else
->>>
->>>
->>> Sorry, but I'm not getting this one....
->>>
->>> rdev->recovery_offset is only ever used when In_sync is clear.  So it makes
->>> no sense to give it a value when In_sync is set.
->>>
->>> Maybe there are some places where we clear In_sync that need to have
->>> recovery_offset set to zero, but it isn't obvious to me that that would
->>> explain your symptom.
->>>
->>> Can you give a bit more detail of the problem you are seeing please?
->>
->> mdadm -A an array growing raid disks by more than max_degraded.
->>
->> Here is the related mdadm fix, but I figured it was worhtwhile to also
->> address this in the kernel for the corner case of new kernel + old mdadm.
->>
->>> commit 156a33719d956fe90cbb1625b13beb52a0d6fd87
->>> Author: Dan Williams<dan.j.williams@intel.com>
->>> Date:   Mon Jul 12 12:03:13 2010 -0700
->>>
->>>      Assemble: fix assembly in the delta_disks>  max_degraded case
->>>
->>>      Incremental assembly works on such an array because the kernel sees the
->>>      disk as in-sync and that the array is reshaping.  Teach Assemble() the
->>>      same assumptions.
->>>
->>>      This is only needed on kernels that do not initialize ->recovery_offset
->>>      when activating spares for reshape.
->>>
->>>      Signed-off-by: Dan Williams<dan.j.williams@intel.com>
->>>
->>> diff --git a/Assemble.c b/Assemble.c
->>> index afd4e60..409f0d7 100644
->>> --- a/Assemble.c
->>> +++ b/Assemble.c
->>> @@ -804,7 +804,9 @@ int Assemble(struct supertype *st, char *mddev,
->>>                      devices[most_recent].i.events) {
->>>                          devices[j].uptodate = 1;
->>>                          if (i<  content->array.raid_disks) {
->>> -                               if (devices[j].i.recovery_start == MaxSector) {
->>> +                               if (devices[j].i.recovery_start == MaxSector ||
->>> +                                   (content->reshape_active&&
->>> +                                    j>= content->array.raid_disks - content->delta_disks)) {
->>>                                          okcnt++;
->>>                                          avail[i]=1;
->>>                                  } else
->>
->> --
->> Dan
->
->
-> I think the issue here is probably that the metadata handler isn't setting
-> recovery_start "properly" for devices that are in-sync just as far as the
-> the current reshape has progressed.
->
-> I really don't think the kernel has anything to do with it as it doesn't
-> report any recovery_start value at all when the device is 'in_sync'.
+what kernel version and mdadm version?
 
-This was a few months back, but it looks like I looked at the mdadm fix 
-and thought I could derive a kernel fix, but yes, the real problem is in 
-the mdadm metadata handler.
 
-> So I think this patch is wrong
 
-The kernel patch, not the mdadm patch.
 
-> and you need to fix the getinfo_super method
-> to set recovery_start to MaxSector when the device is a new device in an
-> array being reshaped.
->
-> Could that make sense?
+Jes=FAs Berm=FAdez said:     (by the date of Fri, 22 Oct 2010 16:51:20 =
++0200 (CEST))
 
-Yes, I can push this fix down to super1.c to avoid:
+> Hello all,
+>=20
+> if you could help us, for we are completely desperated...
+>=20
+> We have a raid5 with 3 disks that got out of sync due to a power fail=
+ure. After tried to assemble (with mdadm --assemble --force /dev/md0) i=
+t says:
+>=20
+> md: md0 stopped mdbind sdb2 bind sda2 bind sdc2
+>=20
+> md: md0: array is not clean starting background reconstruction
+>=20
+> raid 5  device sdc2 operational as raid disk 0
+>     device sda2 operational as raid disk 2
+>     device sdb2 operational as raid disk 1
+>=20
+> allocated 32kb for md0
+>=20
+> raid level 5 set md0 active with 3 out 3 devices algorithm 0
+>=20
+> raid 5 conf printout
+>=20
+> rd:3 wd:3
+>=20
+> disk 0,0:1 /dev/sdc2
+> disk 1,0:1 /dev/sdb2
+> disk 2,0:1 /dev/sda2
+>=20
+> md0: bitmap file is out of date 892893
+> forcing full recovery
+>=20
+> md0: bitmap file is out of date doing full recovery
+>=20
+> md0: bitmap initialisation failed: -5
+>=20
+> md0: failed to create bitmap (-5)
+>=20
+> md: pers->run() failed
+>=20
+> mdadm: failed to run _array /dev/md0: input / output error
+>=20
+> Tried to stop the array and reassemble it with:
+>=20
+> mdadm --assemble --force --scan
+> mdadm --assemble --force --scan /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc=
+2
+> mdadm --assemble --force --run /dev/md0 /dev/sda2 /dev/sdb2
+> mdadm --assemble --force --run /dev/md0 /dev/sda2 /dev/sdc2
+> mdadm --assemble --force --run /dev/md0 /dev/sdb2 /dev/sdc2
+>=20
+> Tried to solve the bitmap problem with:
+>=20
+> mdadm --grow /dev/md0 --bitmap=3Dnone
+> mdadm --grow /dev/md0 --bitmap=3Dinternal
+> mdadm --grow /dev/md0 --bitmap=3Dnone --force
+> mdadm --grow /dev/md0 --bitmap=3Dinternal --force
+>=20
+> Tried to fake the 'clean' status of the array with:
+>=20
+> echo "clean" > /sys/block/md0/md/array_state
+>=20
+> Tried to boot the array from grub with:
+>=20
+>     md-mod.start_dirty_degraded=3D1
+>=20
+> None of these commands have worked. Here are the details of the array=
+ and everyone of the disks:
+>=20
+> ---------------------------------------------------------------------=
+--------------------------------------------------------------
+> mdadm -D /dev/md0
+>=20
+> dev/md0
+> version: 01.00.03
+> creation time: august 28 18:58:39 2009
+> raid level: raid5
+> used dev size 83891328 (80:01 hid 85:90 gdb)
+> raid devices: 3
+> total drives: 3
+> preferred minor: 0
+> persistent: superblock is persistent
+> update time: tue oct 19 15:09 2010
+> Status: active, not started
+> Active devices: 3
+> Working devices: 3
+> Failed devices: 0
+> Spare device: 0
+> layout: left assimetric
+> chunk size: 128k
+> name: 0
+>=20
+> UUID: ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> events: 893
+>=20
+>     Number   Major   Minor   RaidDevice State
+>     0    8    34    0    active sync /dev/sdc2
+>     1    8    18    1    active sync /dev/sdb2
+>     3    8    2    2    active sync /dev/sda2
+>=20
+> ---------------------------------------------------------------------=
+--------------------------------------------------------------
+> mdadm --examine /dev/sd[abc]2
+>=20
+>=20
+> /dev/sda2:
+>=20
+> Magic:a92b4efc
+> Version:1,0
+> Featura Map:0x1
+> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> Name:0
+> Creation Time:Fri Aug 28 18:58:39 2009
+> Raid Level:Raid5
+> Raid Devices:3:Avail Dev Size:167782712 (80,01GIB 85,90 GB)
+> Array Size:335565312 (160,01 GIB 171,81 GB)
+> Used Dev Size:167782656 (80,01 GIB 85,90GB)
+> Super Offset:167782840 Sectors
+> State:Active
+> Device UUID:bbc156a7:6f3af82d:94714923:e212967a
+> Internal Bitmap:-81 sectors from superblock
+> Update Time:re Oct 19 15:49:08 2010
+> Checksum:54a35562 - correct
+> Events:893
+> Layout:left-asymmetric
+> Chunk Size:128K
+> Array Slot:3 (0. 1, failed, 2)
+> Array State:uuU 1 failed
+>=20
+>=20
+>=20
+> /dev/sdb2:
+> =09
+>=20
+> Magic:a92b4efc
+> Version:1,0
+> Feature Map:0x1
+> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> Name:0
+> Creation Time:Fri Aug 28 18:58:39 2009
+> Raid Level:raid5
+> Raid Devices:3
+> Avail Dev Size:167782712 (80,01 GIB 85,90 GB)
+> Array Size:335565312 (160,01 GIB 171,81 GB)
+> Used Dev Size:167782656 (80,01 GIB 85,90 GB)
+> Super Offset:167782840 sectors
+> State:Active
+> Device UUID:d067101e:19056fdd:6b6e58fc:92128788
+> Internal Bimap:-81 sectors from superblock
+> Update Time:Tue Oct 19 15:49:08 2010
+> Checksum:61d3c2bf
+> Events:893
+> Layout:left-asymmetric
+> Chunk Size:128k
+> Array Slot:1 (0,  1, failed, 2)
+> Array State:uUu 1 failed
+>=20
+> /dev/sdc2:
+> =09
+> Magic:a92b4efc
+> Version:1,0
+> Featura Map:0x1
+> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> Name:0
+> Creation Time:Fri Aug 28 18:58:39 2009
+> Raid Level:raid5
+> Raid Devices:3
+> Avail Dev Size:167782712 (80,01 GIB 85,90 GB)
+> Array Size:335565312 (160,01 GIB 171,81 GB)
+> Used Dev Size:167782656 (80,01 GIB 85,90 GB)
+> Super Offset:167782840 sectors
+> State:active
+> Device UUID:0a1c2c74:04b9187f:6ab6b5cb:894d8b38
+> Internal Bimap:-81 sectos from superblock
+> Update Time:Tue Oct 19 15:49:08 2010
+> Checksum:d8faadc0 - correct
+> Events:893
+> Layout:left-asymmetric
+> Chunk Size:128K
+> Array Slot:0 (0, 1, failed, 2)
+> Array State:Uuu 1 failed
+>=20
+> ---------------------------------------------------------------------=
+--------------------------------------------------------------
+>=20
+> mdadm --examine-bitmap /dev/sd[abc]2
+> =09
+> Filename /dev/sda2
+>=20
+> Magic 6d746962
+> Version 4
+> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> Events 892
+> Events Cleared 892
+> State Out of date
+> Chunksize 256KB
+> Daemon 5s flush period
+> Write Mode Normal
+> Sync Size 83891328 (80,01 GIB 85,90 GB)
+> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
+>=20
+> Filename /dev/sdb2
+>=20
+> Magic 6d746962
+> Version 4
+> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> Events 892
+> Events Cleared 892
+> State Out of date
+> Chunksize 256KB
+> Daemon 5s flush period
+> Write Mode Normal
+> Sync Size 83891328 (80,01 GIB 85,90 GB)
+> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
+>=20
+> Filename /dev/sdc2
+> Magic 6d746962
+> Version 4
+> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
+> events 892
+> Events Cleared 892
+>=20
+> State Out of date
+> Chunksize 256 KB
+> Daemon 5s flush period
+> Write Mode Normal
+> Sync Size 83891328 (80,01 GIB 85,90 GB)
+> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
+>=20
+> ---------------------------------------------------------------------=
+--------------------------------------------------------------
+>=20
+> cat /sys/bplock/md0/md/array_state
+>=20
+> inactive
+>=20
+>=20
+> cat /sys/block/md0/md/degraded
+>=20
+> cat /sys/block/md0/md/degraded: No such file or directory
+>=20
+>=20
+> cat /sys/block/md0/md/dev-sda2/errors
+>=20
+> 0
+>=20
+> cat /sys/block/md0/md/dev-sda2/state
+>=20
+> in_sync
+>=20
+>=20
+> cat /sys/block/md0/md/dev-sdb2/errors
+>=20
+> 24
+>=20
+>=20
+> cat /sys/block/md0/md/dev-sdb2/state
+>=20
+> in_sync
+>=20
+>=20
+> cat /sys/block/md0/md/dev-sdc2/errors
+>=20
+> 0
+>=20
+>=20
+> cat /sys/block/md0/md/dev-sdc2/state
+>=20
+> in_sync
+> ---------------------------------------------------------------------=
+--------------------------------------------------------------
+>=20
+> Thanks in advance.
+>=20
+> --=20
+> Jesus Bermudez Riquelme=20
+>=20
+>=20
+> Iten, S.L.=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 
-# mdadm -A /dev/md1 /dev/loop[0-3]
-mdadm: /dev/md1 assembled from 3 drives and  1 rebuilding - not enough 
-to start the array.
 
+--=20
+Janek Kozicki                               http://janek.kozicki.pl/  |
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
