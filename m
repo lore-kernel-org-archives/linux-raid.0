@@ -1,58 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: MD RAID1 deadlock on failed disk
-Date: Wed, 27 Oct 2010 10:56:15 +1100
-Message-ID: <20101027105615.13ca3cd8@notabene>
-References: <0AFDQ6P11@briare1.fullpliant.org>
+From: Martin Hamrle <martin.hamrle@nangu.tv>
+Subject: sw raid5 hungs on resync and high IO load, 2.6.32.23
+Date: Wed, 27 Oct 2010 09:35:17 +0200
+Message-ID: <4CC7D635.6050000@nangu.tv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0AFDQ6P11@briare1.fullpliant.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hubert Tonneau <hubert.tonneau@fullpliant.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 27 Oct 2010 00:18:25 GMT
-Hubert Tonneau <hubert.tonneau@fullpliant.org> wrote:
+Hi,
 
-> 2.6.32.24 kernel worked fine.
+I'm having this issue on several boxes with several configuration.
+One of them is a box with 8 drives attached to ARC-1160 in pass through
+mode and build sw raid5 from these drives. There is also one drive to OS.
 
-Is this repeatable.
-i.e. every time you pull a device on a 2.6.35.7 kernel it hangs?
+During resync or check and heavy IO load, process tscpd (tscpd is IO
+load maker) hungs, the machine is still alive but there are many blocked
+processes.
+After tscpd hungs, IO load is generated only by resync. In traceback you
+can see blocked processes (ps, htop cat) accessing tscpd cmdline in
+proc. Some tscpd threads is blocked during writing files into fs on
+raid5. Reading these files is also blocking, reading other files in
+filesystem is fast as usual.  This state takes 110 minutes. After that
+all blocked processes continue their work.
 
-If you can reproduce it, could you
-   echo t > /proc/sysrq-trigger
+I am not sure what is the reason of the end of the weird state. I think
+the end was caused by starting copying kernel source into array.
 
-and post the output that is written to the kernel log.
+Note that this is first time when hung processes wake up I never wait so
+long.
 
-Thanks,
-NeilBrown
+I think that it is related to sw raid because I do not see this issue on
+hw raid or on sw raid without resync.
 
-> 
-> Hubert Tonneau wrote:
-> >
-> > Hi,
-> > 
-> > The configuration is:
-> > Perc H200 controler configured with no RAID (mpt2sas driver),
-> > 2 SATA disks (sda and sdb),
-> > Linux MD Sofware RAID1 (md0),
-> > stock Linux 2.6.35.7 kernel.
-> > 
-> > I hotunplug the second (sdb) disk, and the result is:
-> > . as expected, I can read sda device,
-> > . as expected, any read to sdb device fails,
-> > . unexpectedly, and read to md0 never returns.
-> > 
-> > No oops or thing like that in the kernel log.
-> > I did not try the same with other kernel releases.
-> > 
-> > Regards,
-> > Hubert Tonneau
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kern.log contains initial "INFO: task collectd:2577 blocked for more
+than 120 seconds"
+   and two dumps
+echo w > /proc/sysrq-trigger
+
+log is located http://files.nangu.tv/kernel/kern.log
+Let me know if you need more info.
+
+Martin
+
+
 
