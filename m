@@ -1,16 +1,14 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: (unknown)
-Date: Wed, 27 Oct 2010 08:52:40 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BA78298@irsmsx504.ger.corp.intel.com>
+Subject: Autorebuild - many instances of Monitor?
+Date: Wed, 27 Oct 2010 08:55:05 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BA7829D@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
 Hi Neil,
