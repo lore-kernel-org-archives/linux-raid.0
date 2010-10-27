@@ -1,50 +1,50 @@
-From: Martin Hamrle <martin.hamrle@nangu.tv>
-Subject: sw raid5 hungs on resync and high IO load, 2.6.32.23
-Date: Wed, 27 Oct 2010 09:35:17 +0200
-Message-ID: <4CC7D635.6050000@nangu.tv>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: (unknown)
+Date: Wed, 27 Oct 2010 08:52:40 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BA78298@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Subject: 
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Hi,
+Hi Neil,
+As a result of our internal discussion on autorebuild we decided to introduce new parameter for mdadm -F to be able to run monitoring without moving spares.
+It doesn't seem reasonable to have two processes juggling disks at the same time so we also think we should allow only one spare sharing process.
+Our current version only allows one Monitor to move spares.
 
-I'm having this issue on several boxes with several configuration.
-One of them is a box with 8 drives attached to ARC-1160 in pass through
-mode and build sw raid5 from these drives. There is also one drive to OS.
+When introducing parameter that indicates there will be no spare sharing, I think it would be confusing to have spare-group based code still move spares.
+So I think the option should also disable old style spare migration. With the option there is no problem having several Monitors on the same devices. 
+Without the option Monitor will move spares as before and also based on new config domains.
 
-During resync or check and heavy IO load, process tscpd (tscpd is IO
-load maker) hungs, the machine is still alive but there are many blocked
-processes.
-After tscpd hungs, IO load is generated only by resync. In traceback you
-can see blocked processes (ps, htop cat) accessing tscpd cmdline in
-proc. Some tscpd threads is blocked during writing files into fs on
-raid5. Reading these files is also blocking, reading other files in
-filesystem is fast as usual.  This state takes 110 minutes. After that
-all blocked processes continue their work.
+However there is one issue we would like to get your opinion on. 
+Allowing only one instance of Monitor moving spares would not be fully backward compatible i.e. with spare-group based spare migration it was possible to run multiple instances of Monitor. 
+If run on different sets of devices there is no conflict between many instances, but if the sets of monitored devices overlap, then for example two or more monitors could add spares to the same array that just needs one.
+Do you think we should allow user to run multiple instances of Monitor that does spare sharing, possibly introducing a conflict between instances?
 
-I am not sure what is the reason of the end of the weird state. I think
-the end was caused by starting copying kernel source into array.
+Regards
+Anna Czarnowska
 
-Note that this is first time when hung processes wake up I never wait so
-long.
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
 
-I think that it is related to sw raid because I do not see this issue on
-hw raid or on sw raid without resync.
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
 
-kern.log contains initial "INFO: task collectd:2577 blocked for more
-than 120 seconds"
-   and two dumps
-echo w > /proc/sysrq-trigger
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
 
-log is located http://files.nangu.tv/kernel/kern.log
-Let me know if you need more info.
-
-Martin
-
-
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
