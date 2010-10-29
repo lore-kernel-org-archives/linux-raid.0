@@ -1,8 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed
- disk from in imsm container.
-Date: Fri, 29 Oct 2010 15:27:08 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD7@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 17/17] Policy is aware of metadata disk's controller domains.
+Date: Fri, 29 Oct 2010 15:28:26 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FDA@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -10,398 +9,361 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-From 30aa06f20497fadf58990685ecc0554ffce21f25 Mon Sep 17 00:00:00 2001
+From 4c66bae1c8ee1e7cf1af0bba786ab25fda0680d4 Mon Sep 17 00:00:00 2001
 From: Marcin Labun <marcin.labun@intel.com>
-Date: Thu, 30 Sep 2010 05:00:57 +0200
-Subject: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed disk from in imsm container.
+Date: Mon, 8 Nov 2010 01:48:45 +0100
+Subject: [PATCH 17/17] Policy is aware of metadata disk's controller domains.
 
-Manager thread shall pass the information to monitor thread (mdmon)
-that some devices are removed from container. Otherwise, monitor (mdmon)
-might use such devices (spares) to rebuild the array that has gone degraded.
+Platform (metadata) domain let the metadata handlers differentiate
+disk domains based on controllers that the disk belongs to.
+Platform domain is sub-domain inside user specified domain
+in mdadm.conf configuration files inheriting all parameters from it.
+The metadata domain name is used disk domain matching functions.
+The disk with the same metadata domain name belong to the same metadata
+domain.
 
-This problem happens for imsm containers, since a list of the container disks
-is maintained in intel_super structure. When array goes degraded, the list is
-searched to find a spare disks to start rebuild.
-Without this fix the rebuild could be stared on the spare device that was
-a member of the container, but has been removed from it.
-
-New super type function handler has been introduced to prepare metadata
-format specific information about removed devices.
-int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
-                         int fd);
-The message prepared in remove_from_super is later processed
-by proceess_update handler in monitor thread.
+New metadata handler is added that retrieves platform domain string based
+on disk path:
+const char *(*get_disk_controller_domain)(const char *path);
 
 Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 ---
- managemon.c   |   38 ++++++++++++++
- mdadm.h       |    7 ++-
- super-intel.c |  159 ++++++++++++++++++++++++++++++++++++++++++++++-----------
- 3 files changed, 173 insertions(+), 31 deletions(-)
+ mdadm.h       |   18 ++++++++-
+ policy.c      |  128 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ super-intel.c |   37 ++++++++++++++++-
+ 3 files changed, 170 insertions(+), 13 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index bab0397..8ab2746 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -297,6 +297,43 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
- 	st->update_tail = NULL;
+diff --git a/mdadm.h b/mdadm.h
+index b540cba..20ce1be 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -683,6 +683,21 @@ extern struct superswitch {
+ 	 */
+ 	struct mdinfo *(*activate_spare)(struct active_array *a,
+ 					 struct metadata_update **updates);
++	/*
++	 * Return statically allocated string that represents metadata specific
++	 * controller domain of the disk. The domain is used in disk domain
++	 * matching functions. Disks belong to the same domain if the they have
++	 * the same domain from mdadm.conf and belong the same metadata domain.
++	 * Returning NULL or not providing this handler means that metadata
++	 * does not distinguish the differences between disks that belong to
++	 * different controllers. They are in the domain specified by
++	 * configuration file (mdadm.conf).
++	 * In case when the metadata has the notion of domains based on disk
++	 * it shall return NULL for disks that do not belong to the controller
++	 * the supported domains. Such disks will form another domain and won't
++	 * be mixed with supported ones.
++	 */
++	const char *(*get_disk_controller_domain)(const char *path);
+ 
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */
+ 	int external;
+@@ -774,7 +789,7 @@ struct dev_policy {
+ 	char *value;
+ };
+ 
+-extern char pol_act[], pol_domain[], pol_metadata[], pol_auto[];
++extern char pol_act[], pol_domain[], pol_metadata[], pol_auto[], pol_path[];
+ 
+ /* iterate over the sublist starting at list, having the same
+  * 'name' as 'list', and matching the given metadata (Where
+@@ -836,6 +851,7 @@ extern int disk_action_allows(struct mdinfo *disk, const char *metadata,
+ struct domainlist {
+ 	struct domainlist *next;
+ 	char *dom;
++	char *internal;
+ };
+ 
+ extern int domain_test(struct domainlist *dom, struct dev_policy *pol,
+diff --git a/policy.c b/policy.c
+index dae8e44..daee52a 100644
+--- a/policy.c
++++ b/policy.c
+@@ -27,6 +27,13 @@
+ #include <fnmatch.h>
+ #include <ctype.h>
+ #include "dlink.h"
++
++static const char *get_platform_domain(const char *metadata, const char *path);
++static int dom_less(struct domainlist *dom, char *dom_name,
++		    const char *internal);
++static int dom_equal(struct domainlist *dom, char *domain,
++		     const char *internal);
++static void dev_policy_entry_free(struct dev_policy *p);
+ /*
+  * Policy module for mdadm.
+  * A policy statement about a device lists a set of values for each
+@@ -165,7 +172,7 @@ static void pol_dedup(struct dev_policy *pol)
+ 		if (pol_lesseq(pol->next, pol)) {
+ 			struct dev_policy *tmp = pol->next;
+ 			pol->next = tmp->next;
+-			free(tmp);
++			dev_policy_entry_free(tmp);
+ 		} else
+ 			pol = pol->next;
+ 	}
+@@ -258,7 +265,7 @@ static int pol_match(struct rule *rule, char *path, char *type)
+ 	return pathok >= 0 && typeok >= 0;
+ }
+ 
+-static void pol_merge(struct dev_policy **pol, struct rule *rule)
++ static void pol_merge(struct dev_policy **pol, struct rule *rule)
+ {
+ 	/* copy any name assignments from rule into pol */
+ 	struct rule *r;
+@@ -360,6 +367,16 @@ struct dev_policy *path_policy(char *path, char *type)
+ 			}
+ 		rules = rules->next;
+ 	}
++	/* add path information */
++	if (path && pol) {
++		char *disk_path;
++		disk_path = strdup(path);
++		if (disk_path == NULL) {
++			dev_policy_entry_free(pol);
++			return NULL;
++		}
++		pol_new(&pol, pol_path, disk_path, NULL);
++	}
+ 	pol_sort(&pol);
+ 	pol_dedup(pol);
+ 	return pol;
+@@ -407,10 +424,12 @@ char rule_type[] = "type";
+ char rule_policy[] = "policy";
+ char rule_part[] = "part-policy";
+ 
++
+ char pol_metadata[] = "metadata";
+ char pol_act[] = "action";
+ char pol_domain[] = "domain";
+ char pol_auto[] = "auto";
++char pol_path[] = "path";
+ 
+ static int try_rule(char *w, char *name, struct rule **rp)
+ {
+@@ -502,13 +521,20 @@ void policy_free(void)
+ 	config_rules_has_path = 0;
+ }
+ 
++static void dev_policy_entry_free(struct dev_policy *p)
++{
++	if (p->name == pol_path)
++		free(p->value);
++	free(p);
++}
++
+ void dev_policy_free(struct dev_policy *p)
+ {
+ 	struct dev_policy *t;
+ 	while (p) {
+ 		t = p;
+ 		p = p->next;
+-		free(t);
++		dev_policy_entry_free(t);
+ 	}
+ }
+ 
+@@ -571,39 +597,114 @@ int disk_action_allows(struct mdinfo *disk, const char *metadata, enum policy_ac
+  * We keep the list of domains in a sorted linked list
+  * As dev policies are already sorted, this is fairly easy to manage.
+  */
+-
+-static struct domainlist **domain_merge_one(struct domainlist **domp, char *domain)
++static struct domainlist **domain_merge_one(struct domainlist **domp,
++					    char *domain, const char *internal)
+ {
+ 	/* merge a domain name into a sorted list and return the
+ 	 * location of the insertion or match
+ 	 */
+ 	struct domainlist *dom = *domp;
+ 
+-	while (dom && strcmp(dom->dom, domain) < 0) {
++	while (dom && dom_less(dom, domain, internal)) {
+ 		domp = &dom->next;
+ 		dom = *domp;
+ 	}
+-	if (dom == NULL || strcmp(dom->dom, domain) != 0) {
++	if (dom == NULL ||
++	    (!dom_equal(dom, domain, internal))) {
+ 		dom = malloc(sizeof(*dom));
+ 		dom->next = *domp;
+ 		dom->dom = domain;
++		dom->internal = (char *) internal;
+ 		*domp = dom;
+ 	}
+ 	return domp;
  }
  
 +/*
-+ * Create and queue update structure about the removed disks.
-+ * The update is prepared by super type handler and passed to the monitor
-+ * thread.
++ * Get platform internal domain string based on disk path.
++ * Platform domain let the metadata handlers differenciate
++ * disk domains based on controllers that the disk belongs to.
++ * Platform domain is sub-domain inside user specified
++ * domain in config files inherinting all parameters from it.
++ * The platform domain strings are not released by policy code.
++ * NULL handler means that the metadata does not supprt internal
++ * domains (disk's controller is irrelevant for it)
 + */
-+static void remove_disk_from_container(struct supertype *st, struct mdinfo *sd)
++static const char *get_platform_domain(const char *metadata, const char *path)
 +{
-+	int dfd;
-+	char nm[20];
-+	struct metadata_update *update = NULL;
-+	mdu_disk_info_t dk = {
-+		.number = -1,
-+		.major = sd->disk.major,
-+		.minor = sd->disk.minor,
-+		.raid_disk = -1,
-+		.state = 0,
-+	};
-+	/* nothing to do if super type handler does not support
-+	 * remove disk primitive
-+	 */
-+	if (!st->ss->remove_from_super)
-+		return;
-+	dprintf("%s: remove %d:%d to container\n",
-+		__func__, sd->disk.major, sd->disk.minor);
-+
-+	sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-+	dfd = dev_open(nm, O_RDWR);
-+	if (dfd < 0)
-+		return;
-+
-+	st->update_tail = &update;
-+	st->ss->remove_from_super(st, &dk, dfd);
-+	st->ss->write_init_super(st);
-+	queue_metadata_update(update);
-+	st->update_tail = NULL;
++	struct superswitch *super;
++	super = version_to_superswitch((char *)metadata);
++	if (!super ||
++	    (super->get_disk_controller_domain == NULL) ||
++	    !path)
++		return NULL;
++	return super->get_disk_controller_domain(path);
 +}
 +
- static void manage_container(struct mdstat_ent *mdstat,
- 			     struct supertype *container)
++#if (DEBUG)
++void dump_policy(struct dev_policy *policy)
++{
++	while (policy) {
++		dprintf("policy: %p name: %s value: %s metadata: %s\n",
++			policy,
++			policy->name,
++			policy->value,
++			policy->metadata);
++		policy = policy->next;
++	}
++}
++#endif
++
+ void domain_merge(struct domainlist **domp, struct dev_policy *pollist,
+-			 const char *metadata)
++		  const char *metadata)
  {
-@@ -334,6 +371,7 @@ static void manage_container(struct mdstat_ent *mdstat,
- 			if (!found) {
- 				cd = *cdp;
- 				*cdp = (*cdp)->next;
-+				remove_disk_from_container(container, cd);
- 				free(cd);
- 			} else
- 				cdp = &(*cdp)->next;
-diff --git a/mdadm.h b/mdadm.h
-index 7047fdf..b540cba 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -591,7 +591,12 @@ extern struct superswitch {
- 	 * when hot-adding a spare.
+ 	/* Add to 'domp' all the domains in pol that apply to 'metadata'
+ 	 * which are not already in domp
  	 */
- 	int (*add_to_super)(struct supertype *st, mdu_disk_info_t *dinfo,
--			     int fd, char *devname);
-+			    int fd, char *devname);
-+	/* update the metadata to delete a device,
-+	 * when hot-removing a spare.
-+	 */
-+	int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
-+				 int fd);
++	const char *internal = NULL;
+ 	struct dev_policy *pol;
++	struct dev_policy *pathpol = NULL;
++
++	pathpol = pol_find(pollist, pol_path);
++	if (pathpol && pathpol->value)
++		internal = get_platform_domain(metadata, pathpol->value);
++#if (DEBUG)
++	if (pathpol)
++		dump_policy(pathpol);
++#endif
+ 	pollist = pol_find(pollist, pol_domain);
+ 	pol_for_each(pol, pollist, metadata)
+-		domp = domain_merge_one(domp, pol->value);
++		domp = domain_merge_one(domp, pol->value, internal);
+ }
  
- 	/* Write metadata to one device when fixing problems or adding
- 	 * a new device.
++/*
++ * Domain comparition function:
++ * Order: a = (dom->dom, dom->internal),  b = (dom_name, internal)
++ * a < b if (dom->dom < dom_name) or
++ *          (dom->dom == domian) and (dom->internal < internal)
++ * NULL string is less then any string.
++ */
++static int dom_less(struct domainlist *dom, char *dom_name,
++		    const char *internal)
++{
++	int domtest;
++
++	domtest = strcmp(dom->dom, dom_name);
++	return ((domtest < 0) ||
++		((domtest == 0) &&
++		 (((dom->internal == NULL) && (internal != NULL)) ||
++		  ((internal != NULL) &&
++		   (strcmp(dom->internal, internal) < 0)))));
++}
++
++static int dom_equal(struct domainlist *dom, char *domain, const char* internal)
++{
++	return ((strcmp(dom->dom, domain) == 0) &&
++		(((dom->internal == NULL) && (internal == NULL)) ||
++		 (dom->internal && internal &&
++		  (strcmp(dom->internal, internal) == 0))));
++ }
++
+ int domain_test(struct domainlist *dom, struct dev_policy *pol,
+ 		const char *metadata)
+ {
+@@ -614,13 +715,18 @@ int domain_test(struct domainlist *dom, struct dev_policy *pol,
+ 	 */
+ 	int found_any = 0;
+ 	struct dev_policy *p;
++	struct dev_policy *pathpol = NULL;
++	const char *internal = NULL;
+ 
++	pathpol = pol_find(pol, pol_path);
++	if (pathpol)
++		internal = get_platform_domain(metadata, pathpol->value);
+ 	pol = pol_find(pol, pol_domain);
+ 	pol_for_each(p, pol, metadata) {
+ 		found_any = 1;
+-		while (dom && strcmp(dom->dom, p->value) < 0)
++		while (dom && dom_less(dom, p->value, internal))
+ 			dom = dom->next;
+-		if (!dom || strcmp(dom->dom, p->value) != 0)
++		if (!dom || !dom_equal(dom, p->value, internal))
+ 			return 0;
+ 	}
+ 	return found_any;
 diff --git a/super-intel.c b/super-intel.c
-index 77c9d7f..4062872 100644
+index 4062872..38c9c59 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -233,6 +233,10 @@ struct intel_dev {
- 	unsigned index;
- };
- 
-+enum action {
-+  DISK_REMOVE = 0,
-+  DISK_ADD
-+};
- /* internal representation of IMSM metadata */
- struct intel_super {
- 	union {
-@@ -258,8 +262,10 @@ struct intel_super {
- 		int extent_cnt;
- 		struct extent *e; /* for determining freespace @ create */
- 		int raiddisk; /* slot to fill in autolayout */
-+		enum action action;
- 	} *disks;
--	struct dl *add; /* list of disks to add while mdmon active */
-+	struct dl *disk_mgmt_list; /* list of disks to add/remove while mdmon
-+				      active */
- 	struct dl *missing; /* disks removed while we weren't looking */
- 	struct bbm_log *bbm_log;
- 	const char *hba; /* device path of the raid controller for this metadata */
-@@ -285,6 +291,7 @@ enum imsm_update_type {
- 	update_kill_array,
- 	update_rename_array,
- 	update_add_disk,
-+	update_add_remove_disk
- };
- 
- struct imsm_update_activate_spare {
-@@ -316,7 +323,7 @@ struct imsm_update_rename_array {
- 	int dev_idx;
- };
- 
--struct imsm_update_add_disk {
-+struct imsm_update_add_remove_disk {
- 	enum imsm_update_type type;
- };
- 
-@@ -2404,6 +2411,7 @@ static void __free_imsm_disk(struct dl *d)
- 	free(d);
- 
+@@ -5735,6 +5735,41 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
  }
-+
- static void free_imsm_disks(struct intel_super *super)
- {
- 	struct dl *d;
-@@ -3408,6 +3416,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	dd->devname = devname ? strdup(devname) : NULL;
- 	dd->fd = fd;
- 	dd->e = NULL;
-+	dd->action = DISK_ADD;
- 	rv = imsm_read_serial(fd, devname, dd->serial);
- 	if (rv) {
- 		fprintf(stderr,
-@@ -3427,8 +3436,8 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 		dd->disk.scsi_id = __cpu_to_le32(0);
+ #endif /* MDASSEMBLE */
  
- 	if (st->update_tail) {
--		dd->next = super->add;
--		super->add = dd;
-+		dd->next = super->disk_mgmt_list;
-+		super->disk_mgmt_list = dd;
- 	} else {
- 		dd->next = super->disks;
- 		super->disks = dd;
-@@ -3437,6 +3446,45 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	return 0;
- }
- 
++static char disk_by_path[] = "/dev/disk/by-path/";
 +
-+static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
-+				  int fd)
++static const char *imsm_get_disk_controller_domain(const char *path)
 +{
-+	struct intel_super *super = st->sb;
-+	struct dl *dd;
++	struct sys_dev *list, *hba = NULL;
++	char disk_path[PATH_MAX];
++	int ahci = 0;
++	char *dpath = NULL;
 +
-+	/* remove from super works only in mdmon - for communication
-+	 * manager - monitor. Check if communication memory buffer
-+	 * is prepared.
-+	 */
-+	if (!st->update_tail) {
-+		fprintf(stderr,
-+			Name ": %s shall be used in mdmon context only"
-+			"(line %d).\n", __func__, __LINE__);
-+		return 1;
-+	}
-+	dd = malloc(sizeof(*dd));
-+	if (!dd) {
-+		fprintf(stderr,
-+			Name ": malloc failed %s:%d.\n", __func__, __LINE__);
-+		return 1;
-+	}
-+	memset(dd, 0, sizeof(*dd));
-+	dd->major = dk->major;
-+	dd->minor = dk->minor;
-+	dd->index = -1;
-+	dd->fd = fd;
-+	dd->disk.status = SPARE_DISK;
-+	dd->action = DISK_REMOVE;
-+
-+	if (st->update_tail) {
-+		dd->next = super->disk_mgmt_list;
-+		super->disk_mgmt_list = dd;
-+	}
-+
-+	return 0;
-+}
-+
- static int store_imsm_mpb(int fd, struct imsm_super *mpb);
- 
- static union {
-@@ -3589,13 +3637,13 @@ static int create_array(struct supertype *st, int dev_idx)
- 	return 0;
- }
- 
--static int _add_disk(struct supertype *st)
-+static int mgmt_disk(struct supertype *st)
- {
- 	struct intel_super *super = st->sb;
- 	size_t len;
--	struct imsm_update_add_disk *u;
-+	struct imsm_update_add_remove_disk *u;
- 
--	if (!super->add)
-+	if (!super->disk_mgmt_list)
- 		return 0;
- 
- 	len = sizeof(*u);
-@@ -3606,7 +3654,7 @@ static int _add_disk(struct supertype *st)
- 		return 1;
- 	}
- 
--	u->type = update_add_disk;
-+	u->type = update_add_remove_disk;
- 	append_metadata_update(st, u, len);
- 
- 	return 0;
-@@ -3628,10 +3676,10 @@ static int write_init_super_imsm(struct supertype *st)
- 
- 		/* determine if we are creating a volume or adding a disk */
- 		if (current_vol < 0) {
--			/* in the add disk case we are running in mdmon
--			 * context, so don't close fd's
-+			/* in the mgmt (add/remove) disk case we are running
-+			 * in mdmon context, so don't close fd's
- 			 */
--			return _add_disk(st);
-+			return mgmt_disk(st);
- 		} else
- 			rv = create_array(st, current_vol);
- 
-@@ -4871,10 +4919,9 @@ static int store_imsm_mpb(int fd, struct imsm_super *mpb)
- static void imsm_sync_metadata(struct supertype *container)
- {
- 	struct intel_super *super = container->sb;
--
-+	dprintf("sync metadata: %d\n", super->updates_pending);
- 	if (!super->updates_pending)
- 		return;
--
- 	write_super_imsm(super, 0);
- 
- 	super->updates_pending = 0;
-@@ -5163,8 +5210,66 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
- 	return 0;
- }
- 
-+
-+
-+
-+static int remove_disk_super(struct intel_super *super,  int major, int minor)
-+{
-+	struct dl *prev = NULL;
-+	struct dl *dl;
-+
-+	prev = NULL;
-+	for (dl = super->disks; dl; dl = dl->next) {
-+		if ((dl->major == major) &&
-+		    (dl->minor == minor)) {
-+			/* remove */
-+			if (prev)
-+				prev->next = dl->next;
-+			else
-+				super->disks = dl->next;
-+			dl->next = NULL;
-+			__free_imsm_disk(dl);
-+			dprintf("%s: removed %x:%x\n",
-+				__func__, major, minor);
++	list = find_driver_devices("pci", "ahci");
++	for (hba = list; hba; hba = hba->next)
++		if (devpath_to_vendor(hba->path) == 0x8086)
 +			break;
-+		}
-+		prev = dl;
-+	}
-+	return 0;
-+}
 +
- static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned index);
- 
-+static int add_remove_disk_update(struct intel_super *super)
-+{
-+	int check_degraded = 0;
++	if (hba) {
++		struct stat st;
 +
-+	/* add/remove some spares to/from the metadata/contrainer */
-+	while (super->disk_mgmt_list) {
-+		struct dl *disk_cfg;
-+
-+		disk_cfg = super->disk_mgmt_list;
-+		super->disk_mgmt_list = disk_cfg->next;
-+		disk_cfg->next = NULL;
-+
-+		if (disk_cfg->action == DISK_ADD) {
-+			disk_cfg->next = super->disks;
-+			super->disks = disk_cfg;
-+			check_degraded = 1;
-+			dprintf("%s: added %x:%x\n",
-+				__func__, disk_cfg->major,
-+				disk_cfg->minor);
-+		} else if (disk_cfg->action == DISK_REMOVE) {
-+			dprintf("Disk remove action processed: %x.%x\n",
-+				disk_cfg->major, disk_cfg->minor);
-+			remove_disk_super(super,  disk_cfg->major,
-+					  disk_cfg->minor);
-+			__free_imsm_disk(disk_cfg);
++		strncpy(disk_path, disk_by_path, PATH_MAX - 1);
++		strncat(disk_path, path, PATH_MAX - strlen(disk_path) - 1);
++		if (stat(disk_path, &st) == 0) {
++			dpath = devt_to_devpath(st.st_rdev);
++			if (dpath)
++				ahci = path_attached_to_hba(dpath, hba->path);
 +		}
 +	}
-+	return check_degraded;
++	dprintf("path: %s(%s) hba: %s attached: %d\n",
++		path, dpath, (hba) ? hba->path : "NULL", ahci);
++	free_sys_dev(&list);
++	if (ahci)
++		return "ahci";
++	else
++		return NULL;
 +}
 +
- static void imsm_process_update(struct supertype *st,
- 			        struct metadata_update *update)
- {
-@@ -5474,31 +5579,24 @@ static void imsm_process_update(struct supertype *st,
- 		super->updates_pending++;
- 		break;
- 	}
--	case update_add_disk:
++
+ struct superswitch super_imsm = {
+ #ifndef	MDASSEMBLE
+ 	.examine_super	= examine_super_imsm,
+@@ -5770,7 +5805,7 @@ struct superswitch super_imsm = {
+ 	.match_metadata_desc = match_metadata_desc_imsm,
+ 	.container_content = container_content_imsm,
+ 	.default_layout = imsm_level_to_layout,
 -
-+	case update_add_remove_disk: {
- 		/* we may be able to repair some arrays if disks are
--		 * being added */
--		if (super->add) {
-+		 * being added, check teh status of add_remove_disk
-+		 * if discs has been added.
-+		 */
-+		if (add_remove_disk_update(super)) {
- 			struct active_array *a;
++	.get_disk_controller_domain = imsm_get_disk_controller_domain,
+ 	.external	= 1,
+ 	.name = "imsm",
  
- 			super->updates_pending++;
-- 			for (a = st->arrays; a; a = a->next)
-+			for (a = st->arrays; a; a = a->next)
- 				a->check_degraded = 1;
- 		}
--		/* add some spares to the metadata */
--		while (super->add) {
--			struct dl *al;
--
--			al = super->add;
--			super->add = al->next;
--			al->next = super->disks;
--			super->disks = al;
--			dprintf("%s: added %x:%x\n",
--				__func__, al->major, al->minor);
--		}
--
- 		break;
- 	}
-+	default:
-+		fprintf(stderr, "error: unsuported process update type:"
-+			"(type: %d)\n",	type);
-+	}
- }
- 
- static void imsm_prepare_update(struct supertype *st,
-@@ -5649,6 +5747,7 @@ struct superswitch super_imsm = {
- 	.validate_geometry = validate_geometry_imsm,
- 	.default_chunk	= default_chunk_imsm,
- 	.add_to_super	= add_to_super_imsm,
-+	.remove_from_super	= remove_from_super_imsm,
- 	.detail_platform = detail_platform_imsm,
- 	.kill_subarray = kill_subarray_imsm,
- 	.update_subarray = update_subarray_imsm,
 -- 
 1.6.4.2
 
