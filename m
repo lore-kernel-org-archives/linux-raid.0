@@ -1,55 +1,81 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
-Date: Thu, 28 Oct 2010 16:50:06 -0700
-Message-ID: <AANLkTinYC5c+EiA_8sQUJBuQTS55z-G+08pUqQopdevK@mail.gmail.com>
-References: <AANLkTi=CL-EH1HjJ3eTvVL51hT7nF7GA62rxvPqBFGD8@mail.gmail.com>
-	<4CCA0948.3060600@anonymous.org.uk>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: Autorebuild - many instances of Monitor?
+Date: Fri, 29 Oct 2010 08:50:53 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0BCA@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CCA0948.3060600@anonymous.org.uk>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 28, 2010 at 4:37 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 29/10/2010 00:17, Mark Knecht wrote:
->>
->> I saw in Fry's San Jose ad today they were selling these
->> Serial-ATA/300 drives for $67. They didn't give a model number but
->> scouting around a bit on the web I'm guessing they are a discontinued
->> model.
->>
->> Any inputs on whether these are drives that work well with mdadm RAID?
->> Do they support TLER and otherwise work well?
->>
->> This would just be a home server of some type, nothing industrial.
->> Probably a 3 drive RAID-1 or something like that.
->>
->> Comments?
->
-> Well, they're perhaps not great. I bought three and after only about a
-> thousand hours one of them was giving SMART errors, then after about 7,500
-> hours a second one started doing it too. At that point I replaced both with
-> other makes, copying over with ddrescue (or maybe it was dd_rescue), which
-> worked without any failed sectors, then ran badblocks -w on the Samsungs and
-> the SMART errors went away. The third one of mine is still fine, and the
-> other two are now in a ReadyNAS giving good service.
->
-> Somebody else on this list recently reported problems with them, though that
-> may have been more controller-related than a real problem with the drives.
->
-> But yes you can set TLER on them (with a custom-built smartmontools from SVN
-> or the recently-released 5.40).
->
-> Cheers,
->
-> John.
->
->
-Thanks John - I think I'll skip them.
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, October 28, 2010 2:14 AM
+To: Czarnowska, Anna
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Autorebuild - many instances of Monitor?
 
-Cheers,
-Mark
+On Wed, 27 Oct 2010 08:55:05 +0100
+"Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
+
+> Hi Neil,
+> As a result of our internal discussion on autorebuild we decided to introduce new parameter for mdadm -F to be able to run monitoring without moving spares.
+> It doesn't seem reasonable to have two processes juggling disks at the same time so we also think we should allow only one spare sharing process.
+> Our current version only allows one Monitor to move spares.
+> 
+> When introducing parameter that indicates there will be no spare sharing, I think it would be confusing to have spare-group based code still move spares.
+> So I think the option should also disable old style spare migration. With the option there is no problem having several Monitors on the same devices. 
+> Without the option Monitor will move spares as before and also based on new config domains.
+> 
+> However there is one issue we would like to get your opinion on. 
+> Allowing only one instance of Monitor moving spares would not be fully backward compatible i.e. with spare-group based spare migration it was possible to run multiple instances of Monitor. 
+> If run on different sets of devices there is no conflict between many instances, but if the sets of monitored devices overlap, then for example two or more monitors could add spares to the same array that just needs one.
+> Do you think we should allow user to run multiple instances of Monitor that does spare sharing, possibly introducing a conflict between instances?
+> 
+
+The possibility of confusion clearly isn't a new issue.  It has always been
+possible to run multiple monitor processes that could confuse each other.
+But it doesn't seem to be a problem in practice - people just don't do that.
+
+So it isn't clear to me why you now want to prevent people from doing
+something that they didn't do anyway.
+
+
+It would be reasonable to ensure that only one instance of 
+    "mdadm --monitor --scan" 
+was running, as '--scan' gives mdadm permission to monitor anything that it
+finds.  Maybe that is where you should put the locking if you really think
+some is needed.
+i.e. if Monitor is run with 'scan' set, then fail if you cannot claim a lock
+file.
+
+NeilBrown
+
+-----------------------
+
+Ok then. I left locking for scan mode only and issue a warning in other cases if one process with --scan is already running.
+Updated code for autorebuild is coming later today.
+Thanks
+Anna
+
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
