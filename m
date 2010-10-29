@@ -1,7 +1,8 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 11/17] Monitor: link containers with subarrays in statelist
-Date: Fri, 29 Oct 2010 15:24:16 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FCD@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 12/17] imsm: create mdinfo list of disks in a container from
+ supertype
+Date: Fri, 29 Oct 2010 15:24:39 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FCF@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,153 +13,108 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-From dca12f05c3fcbdd68c6063f4f55c60ee0ac70daf Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Mon, 8 Nov 2010 19:15:09 +0100
-Subject: [PATCH 11/17] Monitor: link containers with subarrays in statelist
+From 882ad1e86e09304ce244d063e64fa1cc65fcc799 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Wed, 27 Oct 2010 12:00:28 +0200
+Subject: [PATCH 12/17] imsm: create mdinfo list of disks in a container from supertype
 
-Each containers has list of its subarrays. Each subarray
-has back link to its parent container.
+If getinfo_super is called on a container supertype we only get information
+on first disk. As a parameter it uses reference to preallocated
+mdinfo structure. Amending getinfo_super to return full list of disks
+would require ammending all previous calls and subsequently freeing memory
+allocated for mdinfo list.
+Function container_content that returns a mdinfo list is written
+specifically for assembly, performing actions not needed to just fill
+mdinfo. It also does not include spares so is unsuitable.
+As an alternative a new function getinfo_super_disks is created
+to obtain information about all disks states in array.
+Existing function sysfs_free is used to free memory
+allocated by getinfo_super_disks.
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 ---
- Monitor.c |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 60 insertions(+), 2 deletions(-)
+ mdadm.h       |    2 +-
+ super-intel.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+), 1 deletions(-)
 
-diff --git a/Monitor.c b/Monitor.c
-index 0f8a6b9..80cc553 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -45,17 +45,23 @@ struct state {
- 	long utime;
- 	int err;
- 	char *spare_group;
--	int active, working, failed, spare, raid;
-+	int active, working, failed, spare, raid, total;
- 	int expected_spares;
- 	int devstate[MaxDisks];
- 	unsigned devid[MaxDisks];
- 	int percent;
- 	char *metadata_version;
-+	struct state *subarray;/* for a container it is a link to first subarray
-+				* for a subarray it is a link to next subarray
-+				* in the same container */
-+	struct state *parent;  /* for a subarray it is a link to its container
-+				*/
- 	struct state *next;
- };
- 
- static void spare_sharing_in_spare_groups(struct state *statelist, char *mailaddr,
- 				   char *mailfrom, char *alert_cmd, int dosyslog);
-+static void link_containers_with_subarrays(struct state *list);
- 
- int Monitor(mddev_dev_t devlist,
- 	    char *mailaddr, char *alert_cmd,
-@@ -225,6 +231,9 @@ int Monitor(mddev_dev_t devlist,
- 			else
- 				st->spare_group = NULL;
- 			st->metadata_version = NULL;
-+			st->parent = NULL;
-+			st->subarray = NULL;
-+			st->total = 0;
- 			statelist = st;
- 		}
- 	} else {
-@@ -243,6 +252,9 @@ int Monitor(mddev_dev_t devlist,
- 			st->expected_spares = -1;
- 			st->spare_group = NULL;
- 			st->metadata_version = NULL;
-+			st->parent = NULL;
-+			st->subarray = NULL;
-+			st->total = 0;
- 			if (mdlist) {
- 				st->expected_spares = mdlist->spare_disks;
- 				if (mdlist->spare_group)
-@@ -269,6 +281,8 @@ int Monitor(mddev_dev_t devlist,
- 			int fd;
- 			int i;
- 
-+			st->parent = NULL;
-+			st->subarray = NULL;
- 			if (test)
- 				alert("TestMessage", dev, NULL, mailaddr, mailfrom, alert_cmd, dosyslog);
- 			fd = open(dev, O_RDONLY);
-@@ -461,6 +475,7 @@ int Monitor(mddev_dev_t devlist,
- 			st->failed = array.failed_disks;
- 			st->utime = array.utime;
- 			st->raid = array.raid_disks;
-+			st->total = array.raid_disks + array.nr_disks;
- 			st->err = 0;
- 			if (mse->metadata_version) {
- 				if (!st->metadata_version)
-@@ -505,6 +520,9 @@ int Monitor(mddev_dev_t devlist,
- 					st->percent = -2;
- 					st->spare_group = NULL;
- 					st->metadata_version = NULL;
-+					st->parent = NULL;
-+					st->subarray = NULL;
-+					st->total = 0;
- 					st->expected_spares = -1;
- 					statelist = st;
- 					if (test)
-@@ -513,8 +531,10 @@ int Monitor(mddev_dev_t devlist,
- 					new_found = 1;
- 				}
- 		}
--		if (share)
-+		if (share) {
- 			spare_sharing_in_spare_groups(statelist, mailaddr, mailfrom, alert_cmd, dosyslog);
-+			link_containers_with_subarrays(statelist);
-+		}
- 		if (!new_found) {
- 			if (oneshot)
- 				break;
-@@ -593,6 +613,44 @@ static void spare_sharing_in_spare_groups(struct state *statelist, char *mailadd
- 		}
+diff --git a/mdadm.h b/mdadm.h
+index 19194b9..4ef3ee5 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -546,7 +546,7 @@ extern struct superswitch {
+ 	 *   The device the metadata was loaded from by load_super
+ 	 */
+ 	void (*getinfo_super)(struct supertype *st, struct mdinfo *info);
+-
++	struct mdinfo *(*getinfo_super_disks)(struct supertype *st);
+ 	/* Check if the given metadata is flagged as belonging to "this"
+ 	 * host.  0 for 'no', 1 for 'yes', -1 for "Don't record homehost"
+ 	 */
+diff --git a/super-intel.c b/super-intel.c
+index 38d0ae3..bcc202e 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1666,6 +1666,51 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 	}
  }
  
-+static void add_to_cont(struct state *cont, struct state *sub)
++/* allocates memory and fills disk in mdinfo structure
++ * for each disk in array */
++struct mdinfo *getinfo_super_disks_imsm(struct supertype *st)
 +{
-+	struct state *last = NULL, *iter = NULL;
-+
-+	sub->parent = cont;
-+	iter = last = cont;
-+	while (iter != sub && (iter = iter->subarray) != NULL)
-+		last = iter;
-+	/* don't duplicate subarray entries on the list */
-+	if (iter != sub)
-+		last->subarray = sub;
-+}
-+
-+/* search the statelist to connect external
-+ * metadata subarrays with their containers
-+ */
-+static void link_containers_with_subarrays(struct state *list)
-+{
-+	struct state *st;
-+	for (st = list; st; st = st->next) {
-+		if (st->metadata_version &&
-+		    is_external(st->metadata_version) &&
-+		    is_subarray(st->metadata_version+9)) {
-+			struct state *cont = NULL;
-+			for (cont = list; cont; cont = cont->next) {
-+				if (!cont->err &&
-+				    cont->parent == NULL &&
-+				    cont->metadata_version &&
-+				    devname2devnum(st->metadata_version+10)
-+				    == cont->devnum) {
-+					add_to_cont(cont, st);
-+					break;
-+				}
-+			}
-+		}
++	struct mdinfo *mddev = NULL;
++	struct intel_super *super = st->sb;
++	struct imsm_disk *disk;
++	int count = 0;
++	struct dl *dl;
++	if (!super || !super->disks)
++		return NULL;
++	dl = super->disks;
++	mddev = malloc(sizeof(*mddev));
++	if (!mddev) {
++		fprintf(stderr, Name ": Failed to allocate memory.\n");
++		return NULL;
 +	}
++	memset(mddev, 0, sizeof(*mddev));
++	while (dl) {
++		struct mdinfo *tmp;
++		disk = &dl->disk;
++		tmp = malloc(sizeof(*tmp));
++		if (!tmp) {
++			fprintf(stderr, Name ": Failed to allocate memory.\n");
++			if (mddev)
++				sysfs_free(mddev);
++			return NULL;
++		}
++		memset(tmp, 0, sizeof(*tmp));
++		if (mddev->devs)
++			tmp->next = mddev->devs;
++		mddev->devs = tmp;
++		tmp->disk.number = count++;
++		tmp->disk.major = dl->major;
++		tmp->disk.minor = dl->minor;
++		tmp->disk.state = is_configured(disk) ?
++				  (1 << MD_DISK_ACTIVE) : 0;
++		tmp->disk.state |= is_failed(disk) ? (1 << MD_DISK_FAULTY) : 0;
++		tmp->disk.state |= is_spare(disk) ? 0 : (1 << MD_DISK_SYNC);
++		tmp->disk.raid_disk = -1;
++		dl = dl->next;
++	}
++	return mddev;
 +}
 +
- static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mailfrom, char *cmd,
- 		  int dosyslog)
- {
+ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
+ 			     char *update, char *devname, int verbose,
+ 			     int uuid_set, char *homehost)
+@@ -5580,6 +5625,7 @@ struct superswitch super_imsm = {
+ 	.match_home	= match_home_imsm,
+ 	.uuid_from_super= uuid_from_super_imsm,
+ 	.getinfo_super  = getinfo_super_imsm,
++	.getinfo_super_disks = getinfo_super_disks_imsm,
+ 	.update_super	= update_super_imsm,
+ 
+ 	.avail_size	= avail_size_imsm,
 -- 
 1.6.4.2
 
