@@ -1,8 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 07/17] Monitor: spare-group based spare sharing moved to
- separate function
-Date: Fri, 29 Oct 2010 15:20:47 +0100
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FC2@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 08/17] mdadm: added --no-sharing option for Monitor mode
+Date: Fri, 29 Oct 2010 15:21:23 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FC4@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,205 +12,175 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-From 9ce79a49188faef21c4b1ea24154a670ae3516c2 Mon Sep 17 00:00:00 2001
+From 1e93c6e87b7d4a88ab5e9d7238fc1900771cf403 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 22 Oct 2010 15:05:51 +0200
-Subject: [PATCH 07/17] Monitor: spare-group based spare sharing moved to separate function
+Date: Thu, 28 Oct 2010 12:33:43 +0200
+Subject: [PATCH 08/17] mdadm: added --no-sharing option for Monitor mode
+
+--no-sharing option disables moving spares between arrays/containers.
+Without the option spares are moved if needed according to config rules.
+We only allow one process moving spares started with --scan option.
+If there is such process running and another instance of Monitor
+is starting without --scan, then we issue a warning but allow it
+to continue.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Monitor.c |  155 +++++++++++++++++++++++++++++++++---------------------------
- 1 files changed, 85 insertions(+), 70 deletions(-)
+ Monitor.c |   47 +++++++++++++++++++++++++++++++++++++++++++----
+ ReadMe.c  |    2 ++
+ mdadm.c   |    8 ++++++--
+ mdadm.h   |    6 ++++--
+ 4 files changed, 55 insertions(+), 8 deletions(-)
 
 diff --git a/Monitor.c b/Monitor.c
-index 51df8fb..f898b2e 100644
+index f898b2e..a4bfedd 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -38,6 +38,24 @@ static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mail
-  * At least it isn't MD_SB_DISKS.
-  */
- #define MaxDisks 384
-+
-+struct state {
-+	char *devname;
-+	int devnum;	/* to sync with mdstat info */
-+	long utime;
-+	int err;
-+	char *spare_group;
-+	int active, working, failed, spare, raid;
-+	int expected_spares;
-+	int devstate[MaxDisks];
-+	unsigned devid[MaxDisks];
-+	int percent;
-+	struct state *next;
-+};
-+
-+static void spare_sharing_in_spare_groups(struct state *statelist, char *mailaddr,
-+				   char *mailfrom, char *alert_cmd, int dosyslog);
-+
+@@ -59,7 +59,8 @@ static void spare_sharing_in_spare_groups(struct state *statelist, char *mailadd
  int Monitor(mddev_dev_t devlist,
  	    char *mailaddr, char *alert_cmd,
  	    int period, int daemonise, int scan, int oneshot,
-@@ -85,19 +103,7 @@ int Monitor(mddev_dev_t devlist,
- 	 * that appears in /proc/mdstat
- 	 */
+-	    int dosyslog, int test, char* pidfile, int increments)
++	    int dosyslog, int test, char *pidfile, int increments,
++	    int share)
+ {
+ 	/*
+ 	 * Every few seconds, scan every md device looking for changes
+@@ -155,6 +156,45 @@ int Monitor(mddev_dev_t devlist,
+ 		setsid();
+ 	}
  
--	struct state {
--		char *devname;
--		int devnum;	/* to sync with mdstat info */
--		long utime;
--		int err;
--		char *spare_group;
--		int active, working, failed, spare, raid;
--		int expected_spares;
--		int devstate[MaxDisks];
--		unsigned devid[MaxDisks];
--		int percent;
--		struct state *next;
--	} *statelist = NULL;
-+	struct state *statelist = NULL;
- 	int finished = 0;
- 	struct mdstat_ent *mdstat = NULL;
- 	char *mailfrom = NULL;
-@@ -448,64 +454,9 @@ int Monitor(mddev_dev_t devlist,
++	if (share) {
++		int pid, rv;
++		FILE *fp;
++		char dir[20];
++		struct stat buf;
++		fp = fopen("/var/run/mdadm/autorebuild.pid", "r");
++		if (fp) {
++			fscanf(fp, "%d", &pid);
++			sprintf(dir, "/proc/%d", pid);
++			rv = stat(dir, &buf);
++			if (rv != -1) {
++				if (scan) {
++					fprintf(stderr, Name ": Only one "
++						"autorebuild process allowed"
++						" in scan mode, aborting\n");
++					fclose(fp);
++					return 1;
++				} else {
++					fprintf(stderr, Name ": Warning: One"
++						" autorebuild process already"
++						" running.");
++				}
++			}
++			fclose(fp);
++		}
++		if (scan) {
++			fp = fopen("/var/run/mdadm/autorebuild.pid", "w");
++			if (!fp)
++				fprintf(stderr, Name ": Cannot create"
++					" autorebuild.pid "
++					"file\n");
++			else {
++				pid = getpid();
++				fprintf(fp, "%d\n", pid);
++				fclose(fp);
++			}
++		}
++	}
++
+ 	if (devlist == NULL) {
+ 		mddev_ident_t mdlist = conf_get_ident(NULL);
+ 		for (; mdlist; mdlist=mdlist->next) {
+@@ -454,9 +494,8 @@ int Monitor(mddev_dev_t devlist,
  					new_found = 1;
  				}
  		}
--		/* If an array has active < raid && spare == 0 && spare_group != NULL
--		 * Look for another array with spare > 0 and active == raid and same spare_group
--		 *  if found, choose a device and hotremove/hotadd
--		 */
--		for (st = statelist; st; st=st->next)
--			if (st->active < st->raid &&
--			    st->spare == 0 &&
--			    st->spare_group != NULL) {
--				struct state *st2;
--				for (st2=statelist ; st2 ; st2=st2->next)
--					if (st2 != st &&
--					    st2->spare > 0 &&
--					    st2->active == st2->raid &&
--					    st2->spare_group != NULL &&
--					    strcmp(st->spare_group, st2->spare_group) == 0) {
--						/* try to remove and add */
--						int fd1 = open(st->devname, O_RDONLY);
--						int fd2 = open(st2->devname, O_RDONLY);
--						int dev = -1;
--						int d;
--						if (fd1 < 0 || fd2 < 0) {
--							if (fd1>=0) close(fd1);
--							if (fd2>=0) close(fd2);
--							continue;
--						}
--						for (d=st2->raid; d < MaxDisks; d++) {
--							if (st2->devid[d] > 0 &&
--							    st2->devstate[d] == 0) {
--								dev = st2->devid[d];
--								break;
--							}
--						}
--						if (dev > 0) {
--							struct mddev_dev_s devlist;
--							char devname[20];
--							devlist.next = NULL;
--							devlist.used = 0;
--							devlist.re_add = 0;
--							devlist.writemostly = 0;
--							devlist.devname = devname;
--							sprintf(devname, "%d:%d", major(dev), minor(dev));
 -
--							devlist.disposition = 'r';
--							if (Manage_subdevs(st2->devname, fd2, &devlist, -1, 0) == 0) {
--								devlist.disposition = 'a';
--								if (Manage_subdevs(st->devname, fd1, &devlist, -1, 0) == 0) {
--									alert("MoveSpare", st->devname, st2->devname, mailaddr, mailfrom, alert_cmd, dosyslog);
--									close(fd1);
--									close(fd2);
--									break;
--								}
--								else Manage_subdevs(st2->devname, fd2, &devlist, -1, 0);
--							}
--						}
--						close(fd1);
--						close(fd2);
--					}
--			}
-+
-+		spare_sharing_in_spare_groups(statelist, mailaddr, mailfrom, alert_cmd, dosyslog);
-+
+-		spare_sharing_in_spare_groups(statelist, mailaddr, mailfrom, alert_cmd, dosyslog);
+-
++		if (share)
++			spare_sharing_in_spare_groups(statelist, mailaddr, mailfrom, alert_cmd, dosyslog);
  		if (!new_found) {
  			if (oneshot)
  				break;
-@@ -519,6 +470,70 @@ int Monitor(mddev_dev_t devlist,
- 	return 0;
- }
- 
-+/* If an array has active < raid && spare == 0 && spare_group != NULL
-+ * Look for another array with spare > 0 and active == raid and same spare_group
-+ *  if found, choose a device and hotremove/hotadd
-+ */
-+static void spare_sharing_in_spare_groups(struct state *statelist, char *mailaddr,
-+					  char *mailfrom, char *alert_cmd, int dosyslog)
-+{
-+	struct state *st;
+diff --git a/ReadMe.c b/ReadMe.c
+index 07abdb7..54a1998 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -185,6 +185,8 @@ struct option long_options[] = {
+     {"oneshot",   0, 0, '1'},
+     {"pid-file",  1, 0, 'i'},
+     {"syslog",    0, 0, 'y'},
++    {"no-sharing", 0, 0, NoSharing},
 +
-+	for (st = statelist; st; st=st->next)
-+		if (st->active < st->raid &&
-+		    st->spare == 0 &&
-+		    st->spare_group != NULL) {
-+			struct state *st2;
-+			for (st2=statelist ; st2 ; st2=st2->next)
-+				if (st2 != st &&
-+				    st2->spare > 0 &&
-+				    st2->active == st2->raid &&
-+				    st2->spare_group != NULL &&
-+				    strcmp(st->spare_group, st2->spare_group) == 0) {
-+					/* try to remove and add */
-+					int fd1 = open(st->devname, O_RDONLY);
-+					int fd2 = open(st2->devname, O_RDONLY);
-+					int dev = -1;
-+					int d;
-+					if (fd1 < 0 || fd2 < 0) {
-+						if (fd1>=0) close(fd1);
-+						if (fd2>=0) close(fd2);
-+						continue;
-+					}
-+					for (d=st2->raid; d < MaxDisks; d++) {
-+						if (st2->devid[d] > 0 &&
-+						    st2->devstate[d] == 0) {
-+							dev = st2->devid[d];
-+							break;
-+						    }
-+					}
-+					if (dev > 0) {
-+						struct mddev_dev_s devlist;
-+						char devname[20];
-+						devlist.next = NULL;
-+						devlist.used = 0;
-+						devlist.re_add = 0;
-+						devlist.writemostly = 0;
-+						devlist.devname = devname;
-+						sprintf(devname, "%d:%d", major(dev), minor(dev));
-+						devlist.disposition = 'r';
-+						if (Manage_subdevs(st2->devname, fd2, &devlist, -1, 0) == 0) {
-+							devlist.disposition = 'a';
-+							if (Manage_subdevs(st->devname, fd1, &devlist, -1, 0) == 0) {
-+								alert("MoveSpare", st->devname, st2->devname, mailaddr,
-+								      mailfrom, alert_cmd, dosyslog);
-+								close(fd1);
-+								close(fd2);
-+								break;
-+							}
-+							else Manage_subdevs(st2->devname, fd2, &devlist, -1, 0);
-+						}
-+					}
-+					close(fd1);
-+					close(fd2);
-+				}
-+		}
-+}
+     /* For Grow */
+     {"backup-file", 1,0, BackupFile},
+     {"array-size", 1, 0, 'Z'},
+diff --git a/mdadm.c b/mdadm.c
+index 758632c..34df28c 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
+ 	int daemonise = 0;
+ 	char *pidfile = NULL;
+ 	int oneshot = 0;
++	int spare_sharing = 1;
+ 	struct supertype *ss = NULL;
+ 	int writemostly = 0;
+ 	int re_add = 0;
+@@ -228,6 +229,7 @@ int main(int argc, char *argv[])
+ 				subarray = optarg;
+ 			}
+ 		case 'K': if (!mode) newmode = MISC; break;
++		case NoSharing: newmode = MONITOR; break;
+ 		}
+ 		if (mode && newmode == mode) {
+ 			/* everybody happy ! */
+@@ -779,7 +781,9 @@ int main(int argc, char *argv[])
+ 			openlog("mdadm", LOG_PID, SYSLOG_FACILITY);
+ 			dosyslog = 1;
+ 			continue;
+-
++		case O(MONITOR, NoSharing):
++			spare_sharing = 0;
++			continue;
+ 			/* now the general management options.  Some are applicable
+ 			 * to other modes. None have arguments.
+ 			 */
+@@ -1501,7 +1505,7 @@ int main(int argc, char *argv[])
+ 		}
+ 		rv= Monitor(devlist, mailaddr, program,
+ 			    delay?delay:60, daemonise, scan, oneshot,
+-			    dosyslog, test, pidfile, increments);
++			    dosyslog, test, pidfile, increments, spare_sharing);
+ 		break;
  
- static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mailfrom, char *cmd,
- 		  int dosyslog)
+ 	case GROW:
+diff --git a/mdadm.h b/mdadm.h
+index 66363fb..19194b9 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -288,7 +288,8 @@ enum special_options {
+ 	DetailPlatform,
+ 	KillSubarray,
+ 	UpdateSubarray, /* 16 */
+-	IncrementalPath
++	IncrementalPath,
++	NoSharing
+ };
+ 
+ /* structures read from config file */
+@@ -924,7 +925,8 @@ extern int Examine(mddev_dev_t devlist, int brief, int export, int scan,
+ extern int Monitor(mddev_dev_t devlist,
+ 		   char *mailaddr, char *alert_cmd,
+ 		   int period, int daemonise, int scan, int oneshot,
+-		   int dosyslog, int test, char *pidfile, int increments);
++		   int dosyslog, int test, char *pidfile, int increments,
++		   int share);
+ 
+ extern int Kill(char *dev, struct supertype *st, int force, int quiet, int noexcl);
+ extern int Kill_subarray(char *dev, char *subarray, int quiet);
 -- 
 1.6.4.2
 
