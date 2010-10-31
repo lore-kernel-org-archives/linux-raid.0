@@ -1,37 +1,83 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: 3T drives and RAID
-Date: Sun, 31 Oct 2010 11:30:29 -0400
-Message-ID: <20101031113029.226d9e65@notabene>
-References: <20101030103312.7b5a2107@zealot>
-	<B8.A4.13137.093EBCC4@cdptpa-omtalb.mail.rr.com>
+Subject: Re: reshape success story
+Date: Sun, 31 Oct 2010 11:46:55 -0400
+Message-ID: <20101031114655.36e627e3@notabene>
+References: <AANLkTinnaRECf9grA6-VEAg7YNvN6M4cHWKBYsfj4v6B@mail.gmail.com>
+	<4CCD7AE1.8000705@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B8.A4.13137.093EBCC4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <4CCD7AE1.8000705@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'Johannes Truschnigg' <johannes@truschnigg.info>, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Florian Dazinger <flockmock@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 30 Oct 2010 04:21:16 -0500
-"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
+On Sun, 31 Oct 2010 14:19:13 +0000
+John Robinson <john.robinson@anonymous.org.uk> wrote:
 
-> 	Md will automatically treat the oddball drive as if it had .5K
-> sectors, or does one need to tell ma (or the kernel) to do so?
->
+> On 31/10/2010 13:41, Florian Dazinger wrote:
+> [...]
+> > Unlike what I excpected from the man-page,
+> > I had network traffic during the *whole* reshape-process, not just at
+> > the beginning.
+> 
+> Perhaps the man page needs updating then. The backup file is only used 
+> at the beginning for grows, or at the end for shrinks, but a same-size 
+> reshape (as yours was, going from 4-disc RAID-6 to 3-disc RAID-5) needs 
+> to back up everything because there's no spare space.
+> 
+> Of course when the man page section on reshaping and the use of the 
+> backup file was originally written, changing RAID level wasn't 
+> supported, and nor were shrinks, so the backup file was only used for 
+> grows, so it was only used at the beginning.
+> 
+> If I've got the above right (someone please correct me if I'm not) 
+> perhaps I could make a modest contribution (for a change) by updating/ 
+> patching the man page...
 
-You don't need to tell the kernel to do anything special - it should just
-work.
+That would certainly be appreciated.   Your understanding appear to be
+correct!
 
-md/raid5 (and raid6) do all writes as 4K blocks, 4K aligned (as the
-stripe-cache is made of pages which are 4K).  So that fits perfectly with the
-new drives.
-If your filesystem issued a non-aligned read, then it could get down to the
-device as a non-aligned read, but there is little performance penalty for
-reads, only writes.
-And XFS almost certainly does all IO in 4K multiples, so you should be fine.
+> 
+> Actually that makes me wonder: the man page says spare devices can be 
+> used for the backup if there are any. Is that still true with all the 
+> grows, shrinks and level-changing reshape options we have now? I'd 
+> expect that method of backup to be (slightly) faster than putting the 
+> backup on a filesystem (even on a local disc).
 
-In short: I can see no reason why it shouldn't work smoothly.
+I think mdadm insists on a backup file for shrinks and same-size
+transformations.  It probably could use a spare, but I think there is
+generally less likely to be one - when you are growing an array there is
+almost certainly an array to grow to.
+
+Write to a file on a local disk should be just as fast as writing to a raw
+device .... I guess there could be a little bit of filesystem overhead, but I
+doubt you would be able to measure it.
+
+
+> 
+> > thank you very much for all the good work and user support on this list!!
+> 
+> It is nice to hear positive feedback, but at the same time I tend to 
+> think that since there must be millions of users of md/mdadm, it's 
+> pretty encouraging that there are only one or two "arghs" per day...
+
+:-)
+
+Certainly - positive feedback is always welcome!
 
 NeilBrown
+
+
+
+> 
+> Cheers,
+> 
+> John.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
