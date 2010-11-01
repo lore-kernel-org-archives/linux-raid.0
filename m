@@ -1,55 +1,28 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
-Date: Mon, 1 Nov 2010 14:26:03 -0700
-Message-ID: <AANLkTikZxyUzUmSZuHX5Pr9ynVohDozSo8xoB=9wTTqv@mail.gmail.com>
-References: <AANLkTi=CL-EH1HjJ3eTvVL51hT7nF7GA62rxvPqBFGD8@mail.gmail.com> <4CCA0948.3060600@anonymous.org.uk>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: argh!
+Date: Mon, 1 Nov 2010 16:39:43 -0500
+Message-ID: <78.FE.13137.6A33FCC4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTimEbwohTEzaPA3VpL0mBwyQisgP99L1870k9q0d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CCA0948.3060600@anonymous.org.uk>
+In-Reply-To: <AANLkTimEbwohTEzaPA3VpL0mBwyQisgP99L1870k9q0d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Jon@eHardcastle.com
+Cc: 'Phil Turmel' <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 28, 2010 at 4:37 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 29/10/2010 00:17, Mark Knecht wrote:
->> I saw in Fry's San Jose ad today they were selling these
->> Serial-ATA/300 drives for $67. They didn't give a model number but
->> scouting around a bit on the web I'm guessing they are a discontinued
->> model.
->>
->> Any inputs on whether these are drives that work well with mdadm RAID?
->> Do they support TLER and otherwise work well?
->>
->> This would just be a home server of some type, nothing industrial.
->> Probably a 3 drive RAID-1 or something like that.
->
-> Well, they're perhaps not great. I bought three and after only about a
-> thousand hours one of them was giving SMART errors, then after about 7,500
-> hours a second one started doing it too. At that point I replaced both with
-> other makes, copying over with ddrescue (or maybe it was dd_rescue), which
-> worked without any failed sectors, then ran badblocks -w on the Samsungs and
-> the SMART errors went away. The third one of mine is still fine, and the
-> other two are now in a ReadyNAS giving good service.
+> I don't have backups as this is 4TB's of data and have never beeen
+> able to afford having a whole second machine, but the price of drives
+> has come down alot now so think I may build a noddy machine for weekly
+> backups.
 
-I think that using two different brand drives in general is a good idea.
+	4T worth of backup space can be had for $200.  If the data is not
+worth $200 to you, then by all means you are free to ignore the need for
+backup, but eventually you will lose at least some, if not all, of the data.
+Although an on-line backup system is very handy, it is not absolutely
+essential.  You could employ dar or some similar utility to backup the data
+to individual off-line disks, for example.
 
-We recently had 2 500 GB WD5000AAKS drives die at the same time over a
-weekend.  Both of them suffered from the same death and would no
-longer spin up - just making a clicking/whirring sound when you
-powered it on.
-
-Luckily we had backups for most of the data on there, but some
-non-critical (but time consuming to manually restore) data had to be
-reconstructed.
-
-I understand that drives from the same batch will often die around the
-same period of time - from now on we plan on trying to use dissimilar
-drives when possible.
-
-First time we've seen 2 drives in one array die that close together
-and that catastrophically, though.
-
--Dave
