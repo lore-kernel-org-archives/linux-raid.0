@@ -1,48 +1,33 @@
-From: Michael Sallaway <michael@sallaway.com>
-Subject: Re: status of sas1068 ata-passthrough bug?
-Date: Wed, 03 Nov 2010 16:33:22 +1000
-Message-ID: <4CD10232.1040907@sallaway.com>
-References: <AANLkTimXicMBtagN0a98eK1DD9rGj4QOqsxiZN32o59Y@mail.gmail.com>	<20101102220517.41416adb.ctpm@ist.utl.pt>	<AANLkTi=m0QSBq=W0KoZiSo_5hdbi31z9ipV2z6s5C2=T@mail.gmail.com>	<20101103032049.3a731d19.ctpm@ist.utl.pt>	<4CD0D98D.3010503@sallaway.com> <20101103062914.dac21685.ctpm@ist.utl.pt>
+From: Nat Makarevitch <Shelso@makarevitch.org>
+Subject: Determining which spindle is out of order
+Date: Wed, 3 Nov 2010 14:13:25 +0000 (UTC)
+Message-ID: <loom.20101103T115828-494@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101103062914.dac21685.ctpm@ist.utl.pt>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?Q2zDoXVkaW8gTWFydGlucw==?= <ctpm@ist.utl.pt>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
+After a spindle (physical hard disk, a "drive") failure in a "md" RAID array,
+how can we know which spindle must be replaced?
 
-On 3/11/2010 4:29 PM, Cl=C3=A1udio Martins wrote:
-> What I do is follow Linus' git repository history periodically. I did
-> a "git clone" of his repo and now do a "git pull" from time to time.
->
->   If you don't have done it already, taking a little time to get to k=
-now
-> the git basic commands is really useful for this kind of stuff. You
-> don't even need to know all the details of commiting, etc, but just
-> knowing how to use git-log and git-diff is already useful.
->
->   <snip>
+We want to avoid extracting a working spindle by mistakenly thinking it is the
+faulty one...
 
-Hey, that's fantastic -- thanks for those tips. I've been meaning to di=
-g=20
-around with git for a while, this will probably give me the=20
-encouragement needed to figure out what I'm doing for once. :-)
+To solve this problem we put on each spindle a physical label (a tag, not a
+partition/disk label) showing its device name (sda, sdb...).
 
-Thanks for the pointers!
+To do so: on an otherwise unused system and sane RAID array we ran "dd" for each
+each spindle (individual device) in order to read on it, lighting up its LED.
 
-Cheers,
-Michael
+Then we simulated a crash by physically removing two spindles. Upon reboot the
+devices names changed (?!) and our labels weren't right anymore albeit we are
+pretty sure they were.
 
+Context: raid10, 10 spindles (8 active + 2 spare), layout : near=1, offset=3. On
+the integrated controller + a LSI MPT on-board controller.
 
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
