@@ -1,54 +1,62 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: reshape success story
-Date: Tue, 2 Nov 2010 23:11:14 -0400
-Message-ID: <20101102231114.42538e98@notabene>
-References: <AANLkTinnaRECf9grA6-VEAg7YNvN6M4cHWKBYsfj4v6B@mail.gmail.com>
-	<4CCD7AE1.8000705@anonymous.org.uk>
-	<20101031114655.36e627e3@notabene>
-	<4CCF65F3.3040307@anonymous.org.uk>
+From: =?UTF-8?B?Q2zDoXVkaW8=?= Martins <ctpm@ist.utl.pt>
+Subject: Re: status of sas1068 ata-passthrough bug?
+Date: Wed, 3 Nov 2010 03:20:49 +0000
+Message-ID: <20101103032049.3a731d19.ctpm@ist.utl.pt>
+References: <AANLkTimXicMBtagN0a98eK1DD9rGj4QOqsxiZN32o59Y@mail.gmail.com>
+	<20101102220517.41416adb.ctpm@ist.utl.pt>
+	<AANLkTi=m0QSBq=W0KoZiSo_5hdbi31z9ipV2z6s5C2=T@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CCF65F3.3040307@anonymous.org.uk>
+In-Reply-To: <AANLkTi=m0QSBq=W0KoZiSo_5hdbi31z9ipV2z6s5C2=T@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 02 Nov 2010 01:14:27 +0000
-John Robinson <john.robinson@anonymous.org.uk> wrote:
 
-> On 31/10/2010 15:46, Neil Brown wrote:
-> > On Sun, 31 Oct 2010 14:19:13 +0000
-> > John Robinson<john.robinson@anonymous.org.uk>  wrote:
-> [...]
-> >> Perhaps the man page needs updating then.
-> [...]
-> >> If I've got the above right (someone please correct me if I'm not)
-> >> perhaps I could make a modest contribution (for a change) by updating/
-> >> patching the man page...
+On Tue, 2 Nov 2010 22:00:43 -0500 Matt Garman <matthew.garman@gmail.com=
+> wrote:
 > >
-> > That would certainly be appreciated.   Your understanding appear to be
-> > correct!
-> 
-> Is the attached of any use? I started with 3.1.4. I've fixed a couple of 
-> typos as well as hopefully improving the explanations about backup files 
-> and reshapes, and added a couple of your remarks about metadata types 
-> from another thread. Some of the text was cribbed from your blog about 
-> reshaping.
-> 
-> Cheers,
-> 
-> John.
+> > =C2=A0This is indeed fixed in v2.6.36, by commit 2a1b7e5
+> >
+> > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;=
+a=3Dcommit;h=3D2a1b7e5
+> >
+> > =C2=A0I've been running a 16-disk RAID6 MD array since 2.6.36 and I=
+ can use
+> > smartmontools with no issues.
+>=20
+> Thank you, that is very helpful!
+>=20
+> Do you, or the list in general, happen to know if this fix has made i=
+t
+> into any distribution-specific kernels?  E.g., ubuntu server, centos,
+> etc?
+>=20
 
-Great!  Thanks.
+ Hi,
 
-I made a couple of very minor changes - one of which was a nearby typo that I
-spotted.
+ Sadly I don't know if it has made any distro kernels. I tend to stick
+to vanilla so I can get the latest features and fixes, especially the
+ones related to storage hardware and filesystems (though, you might
+sometimes also get the latest bugs ;-) ).
 
-http://neil.brown.name/git?p=mdadm;a=commitdiff;h=cd19c0cf1c52ce765bf27791b5ef0ee4cdc4c8db
+ I would guess that Ubuntu might have some 2.6.35 kernel with this fix
+backported, but I'm just speculating.
 
-Thanks,
-NeilBrown
+ Also, as a last resort, you could try to apply the patch and rebuild
+using the sources of your favorite distro kernel. The patch is quite
+simple, but be warned that the MPTSAS module also got some other
+potentially interesting fixes on the 2.6.36 cycle.
 
+ Best regards
+
+Cl=C3=A1udio
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
