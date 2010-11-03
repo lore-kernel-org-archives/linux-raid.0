@@ -1,54 +1,54 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: status of sas1068 ata-passthrough bug?
-Date: Tue, 2 Nov 2010 22:00:43 -0500
-Message-ID: <AANLkTi=m0QSBq=W0KoZiSo_5hdbi31z9ipV2z6s5C2=T@mail.gmail.com>
-References: <AANLkTimXicMBtagN0a98eK1DD9rGj4QOqsxiZN32o59Y@mail.gmail.com>
-	<20101102220517.41416adb.ctpm@ist.utl.pt>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: reshape success story
+Date: Tue, 2 Nov 2010 23:11:14 -0400
+Message-ID: <20101102231114.42538e98@notabene>
+References: <AANLkTinnaRECf9grA6-VEAg7YNvN6M4cHWKBYsfj4v6B@mail.gmail.com>
+	<4CCD7AE1.8000705@anonymous.org.uk>
+	<20101031114655.36e627e3@notabene>
+	<4CCF65F3.3040307@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101102220517.41416adb.ctpm@ist.utl.pt>
+In-Reply-To: <4CCF65F3.3040307@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Cl=E1udio_Martins?= <ctpm@ist.utl.pt>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2010/11/2 Cl=E1udio Martins <ctpm@ist.utl.pt>:
-> On Mon, 1 Nov 2010 17:08:38 -0500 Matt Garman <matthew.garman@gmail.c=
-om> wrote:
->> I've seen a few mentions on this list of kernel bug 14831 / 13594,
->> where drives on an LSI SAS1068 controller are dropped when smartd is
->> run:
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D14831
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D13594
->>
->> I was just wondering if this bug is "officially" fixed, and if so, i=
-n
->> what kernel version? =A0The Bugzilla entries above don't show it as
->> fixed, but I saw on this list someone mentioned that it's fixed in
->> 2.6.36 (I think---I can't find that post now).
->>
->
-> =A0Hi,
->
-> =A0This is indeed fixed in v2.6.36, by commit 2a1b7e5
->
-> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
-commit;h=3D2a1b7e5
->
-> =A0I've been running a 16-disk RAID6 MD array since 2.6.36 and I can =
-use
-> smartmontools with no issues.
+On Tue, 02 Nov 2010 01:14:27 +0000
+John Robinson <john.robinson@anonymous.org.uk> wrote:
 
-Thank you, that is very helpful!
+> On 31/10/2010 15:46, Neil Brown wrote:
+> > On Sun, 31 Oct 2010 14:19:13 +0000
+> > John Robinson<john.robinson@anonymous.org.uk>  wrote:
+> [...]
+> >> Perhaps the man page needs updating then.
+> [...]
+> >> If I've got the above right (someone please correct me if I'm not)
+> >> perhaps I could make a modest contribution (for a change) by updating/
+> >> patching the man page...
+> >
+> > That would certainly be appreciated.   Your understanding appear to be
+> > correct!
+> 
+> Is the attached of any use? I started with 3.1.4. I've fixed a couple of 
+> typos as well as hopefully improving the explanations about backup files 
+> and reshapes, and added a couple of your remarks about metadata types 
+> from another thread. Some of the text was cribbed from your blog about 
+> reshaping.
+> 
+> Cheers,
+> 
+> John.
 
-Do you, or the list in general, happen to know if this fix has made it
-into any distribution-specific kernels?  E.g., ubuntu server, centos,
-etc?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Great!  Thanks.
+
+I made a couple of very minor changes - one of which was a nearby typo that I
+spotted.
+
+http://neil.brown.name/git?p=mdadm;a=commitdiff;h=cd19c0cf1c52ce765bf27791b5ef0ee4cdc4c8db
+
+Thanks,
+NeilBrown
+
