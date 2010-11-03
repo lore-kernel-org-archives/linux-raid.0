@@ -1,71 +1,110 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: Determining which spindle is out of order
-Date: Wed, 3 Nov 2010 21:05:16 +0500
-Message-ID: <20101103210516.66c5deb8@natsu>
-References: <loom.20101103T115828-494@post.gmane.org>
-	<20101103193841.57e5cb41@natsu>
-	<001301cb7b6a$38d7fce0$aa87f6a0$@woodlea.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
+Date: Wed, 03 Nov 2010 13:04:03 -0400
+Message-ID: <4CD19603.4060308@tmr.com>
+References: <61.E7.19545.3D73FCC4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3hX4N4X.oSL.0p7I/Y/WEyh"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001301cb7b6a$38d7fce0$aa87f6a0$@woodlea.com>
+In-Reply-To: <61.E7.19545.3D73FCC4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Graham Mitchell <gmitch@woodlea.com>
-Cc: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: 'John Robinson' <john.robinson@anonymous.org.uk>, 'Linux-RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/3hX4N4X.oSL.0p7I/Y/WEyh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Leslie Rhorer wrote:
+>> -----Original Message-----
+>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+>> owner@vger.kernel.org] On Behalf Of David Rees
+>> Sent: Monday, November 01, 2010 4:26 PM
+>> To: John Robinson
+>> Cc: Mark Knecht; Linux-RAID
+>> Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
+>>
+>> On Thu, Oct 28, 2010 at 4:37 PM, John Robinson
+>> <john.robinson@anonymous.org.uk>  wrote:
+>>      
+>>> On 29/10/2010 00:17, Mark Knecht wrote:
+>>>        
+>>>> I saw in Fry's San Jose ad today they were selling these
+>>>> Serial-ATA/300 drives for $67. They didn't give a model number but
+>>>> scouting around a bit on the web I'm guessing they are a discontinued
+>>>> model.
+>>>>
+>>>> Any inputs on whether these are drives that work well with mdadm RAID?
+>>>> Do they support TLER and otherwise work well?
+>>>>
+>>>> This would just be a home server of some type, nothing industrial.
+>>>> Probably a 3 drive RAID-1 or something like that.
+>>>>          
+>>> Well, they're perhaps not great. I bought three and after only about a
+>>> thousand hours one of them was giving SMART errors, then after about
+>>>        
+>> 7,500
+>>      
+>>> hours a second one started doing it too. At that point I replaced both
+>>>        
+>> with
+>>      
+>>> other makes, copying over with ddrescue (or maybe it was dd_rescue),
+>>>        
+>> which
+>>      
+>>> worked without any failed sectors, then ran badblocks -w on the Samsungs
+>>>        
+>> and
+>>      
+>>> the SMART errors went away. The third one of mine is still fine, and the
+>>> other two are now in a ReadyNAS giving good service.
+>>>        
+>> I think that using two different brand drives in general is a good idea.
+>>
+>> We recently had 2 500 GB WD5000AAKS drives die at the same time over a
+>> weekend.  Both of them suffered from the same death and would no
+>> longer spin up - just making a clicking/whirring sound when you
+>> powered it on.
+>>
+>> Luckily we had backups for most of the data on there, but some
+>> non-critical (but time consuming to manually restore) data had to be
+>> reconstructed.
+>>
+>> I understand that drives from the same batch will often die around the
+>> same period of time - from now on we plan on trying to use dissimilar
+>> drives when possible.
+>>
+>> First time we've seen 2 drives in one array die that close together
+>> and that catastrophically, though.
+>>      
+> 	I had 4 Seagate drives go bad all at once on a 10 drive array.
+> Fortunately, the drives did not die entirely.  Indeed, I'm still not sure
+> what is wrong with them.  They seem to read and write just fine, but if they
+> are added back to the array and the array is asked to access data with a
+> high seek rate (read or write), the drives get kicked from the array.
+> Relatively low seek rates allow the drives to continue to be array members,
+> and when the drives get kicked, they can always be added back.  I was able
+> to use ddrescue to read the data 100% without any failures.  Had the array
+> been unrecoverable, I had backups, of course, but I did not have to resort
+> to them.  I'm not entirely sure when the drives all went bad, but it was
+> within a week or two of each other.
+>    
 
-On Wed, 3 Nov 2010 11:17:24 -0400
-"Graham Mitchell" <gmitch@woodlea.com> wrote:
+One possible cause for this is a marginal power supply which "can't keep 
+up" when supporting lots of seeks and transfers on multiple drives. In 
+every group of drives there will be some variance for low voltage (or 
+noise, more likely) and the drive(s) which are sensitive appear to fail. 
+I say this from experience, it does happen, and going to a better power 
+supply will cure it. This might not be the problem, of course, but it's 
+worth investigating before blaming the drives.
 
-> >=20
-> > That's totally stupid <snip>
-> >=20
-> > --
-> > With respect,
-> > Roman
->=20
-> Err....
+The sad truth is that if you have this problem and replace the weakest 
+drives, it's likely that some other drive will become the weak sister 
+and fail, leading to people saying "oh, those {vendor} drives are crap, 
+I had {number} fail on me, one after the other." Have you heard that? 
+Me, too! Check before replacing or scrapping drives!
 
-Yeah, sorry about that -- and to make my reply a bit less useless, I should
-elaborate that my suggestion is to not base anything on the sdX or their or=
-der
-at all. For example even though I want to have a specific list of looked-at
-devices in mdadm.conf, I point it directly to specific drives -- not
-to /dev/sdX, but to udev symlinks in /dev/disk/by-id/ instead:
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   "We can't solve today's problems by using the same thinking we
+    used in creating them." - Einstein
 
-# 2TBs
-DEVICE /dev/disk/by-id/ata-WDC_WD20EADS-00S2B0_WD-xxxxxxxxxxxx-part*
-DEVICE /dev/disk/by-id/ata-WDC_WD20EADS-00S2B0_WD-xxxxxxxxxxxx-part*
-DEVICE /dev/disk/by-id/ata-Hitachi_HDS722020ALA330_xxxxxxxxxxxxxx-part*
-# 1.5 TBs
-DEVICE /dev/disk/by-id/ata-WDC_WD15EADS-00S2B0_WD-xxxxxxxxxxxx-part*
-# 1TBs
-DEVICE /dev/disk/by-id/ata-Hitachi_HDT721010SLA360_xxxxxxxxxxxxxx-part*
-DEVICE /dev/disk/by-id/ata-ST31000333AS_xxxxxxxx-part*
-
-Listed like this it will also make mdadm not consider whole block devices f=
-or
-addition into RAIDs, only the partitions (which is exactly what I want).
-
---=20
-With respect,
-Roman
-
---Sig_/3hX4N4X.oSL.0p7I/Y/WEyh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkzRiDwACgkQTLKSvz+PZwjKfQCghlbcO5WJHPZ36DxvKSktCLKe
-vyQAn3errzNPpASJXzrnxg6Yw20ncZ2I
-=+bfw
------END PGP SIGNATURE-----
-
---Sig_/3hX4N4X.oSL.0p7I/Y/WEyh--
