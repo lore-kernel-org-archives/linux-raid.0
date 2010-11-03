@@ -1,47 +1,44 @@
-From: Tim Small <tim@seoss.co.uk>
+From: Roman Mamedov <roman@rm.pp.ru>
 Subject: Re: Determining which spindle is out of order
-Date: Wed, 03 Nov 2010 14:45:23 +0000
-Message-ID: <4CD17583.6070909@seoss.co.uk>
+Date: Wed, 3 Nov 2010 19:38:41 +0500
+Message-ID: <20101103193841.57e5cb41@natsu>
 References: <loom.20101103T115828-494@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Reghrmp+rFuXbwJcVI/+Mve"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <loom.20101103T115828-494@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nat Makarevitch <Shelso@makarevitch.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/11/10 14:13, Nat Makarevitch wrote:
+--Sig_/Reghrmp+rFuXbwJcVI/+Mve
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> To solve this problem we put on each spindle a physical label (a tag, not a
-> partition/disk label) showing its device name (sda, sdb...).
->   
+On Wed, 3 Nov 2010 14:13:25 +0000 (UTC)
+Nat Makarevitch <Shelso@makarevitch.org> wrote:
 
-As you discovered - that's not a good idea, the device names are
-dynamically assigned.
+> To solve this problem we put on each spindle a physical label (a tag, not=
+ a
+> partition/disk label) showing its device name (sda, sdb...). =20
 
-> Then we simulated a crash by physically removing two spindles. Upon reboot the
-> devices names changed (?!) and our labels weren't right anymore albeit we are
-> pretty sure they were.
->   
+That's totally stupid, use disk serial numbers for labels instead.
 
-Best to use the drive serial number maybe (hdparm -I or smartctl -a, or
-the links under /dev/devices/by-id, and also printed on the top of the
-drive etc.)?
+--=20
+With respect,
+Roman
 
-You can also use the physical slot if that info is available and static
-(this varies from controller to controller) and is available under
-/dev/disk/by-path/
+--Sig_/Reghrmp+rFuXbwJcVI/+Mve
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Cheers,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-Tim.
+iEYEARECAAYFAkzRc/EACgkQTLKSvz+PZwiAdgCglh/esTUiaAx70ZqWp1MX4+28
+GDQAoJJz/sBu7VsYl2mPkl2ciZUm/Ibr
+=JIXu
+-----END PGP SIGNATURE-----
 
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+--Sig_/Reghrmp+rFuXbwJcVI/+Mve--
