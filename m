@@ -1,37 +1,65 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
-Date: Thu, 04 Nov 2010 11:30:48 +0000
-Message-ID: <4CD29968.9010305@anonymous.org.uk>
-References: <61.E7.19545.3D73FCC4@cdptpa-omtalb.mail.rr.com> <4CD19603.4060308@tmr.com> <4CD21261.8090701@anonymous.org.uk> <4CD28C2F.8010104@seoss.co.uk>
+From: Vincent Schut <schut@sarvision.nl>
+Subject: Re: status of sas1068 ata-passthrough bug?
+Date: Thu, 04 Nov 2010 13:50:44 +0100
+Message-ID: <iaua74$fq0$1@dough.gmane.org>
+References: <AANLkTimXicMBtagN0a98eK1DD9rGj4QOqsxiZN32o59Y@mail.gmail.com>	<20101102220517.41416adb.ctpm@ist.utl.pt>	<AANLkTi=m0QSBq=W0KoZiSo_5hdbi31z9ipV2z6s5C2=T@mail.gmail.com>	<20101103032049.3a731d19.ctpm@ist.utl.pt>	<4CD0D98D.3010503@sallaway.com> <20101103062914.dac21685.ctpm@ist.utl.pt> <4CD10232.1040907@sallaway.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CD28C2F.8010104@seoss.co.uk>
+In-Reply-To: <4CD10232.1040907@sallaway.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Small <tim@seoss.co.uk>
-Cc: Bill Davidsen <davidsen@tmr.com>, 'Linux-RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/11/2010 10:34, Tim Small wrote:
-> On 04/11/10 01:54, John Robinson wrote:
->> operating power is 7W, the maximum transition power (whatever that is)
->> is 40W - yes, 40W
+On 11/03/2010 07:33 AM, Michael Sallaway wrote:
 >
-> I'd guess this is either during spin-up, (or spin speed change if
-> enabled), or possibly even the "inrush" current when power is first
-> applied to the device (i.e. only for a few milliseconds when the machine
-> is turned on), and so probably wouldn't cause much of a problem unless.
+>
+> On 3/11/2010 4:29 PM, Cl=C3=A1udio Martins wrote:
+>> What I do is follow Linus' git repository history periodically. I di=
+d
+>> a "git clone" of his repo and now do a "git pull" from time to time.
+>>
+>> If you don't have done it already, taking a little time to get to kn=
+ow
+>> the git basic commands is really useful for this kind of stuff. You
+>> don't even need to know all the details of commiting, etc, but just
+>> knowing how to use git-log and git-diff is already useful.
+>>
+>> <snip>
+>
+> Hey, that's fantastic -- thanks for those tips. I've been meaning to =
+dig
+> around with git for a while, this will probably give me the
+> encouragement needed to figure out what I'm doing for once. :-)
+>
+> Thanks for the pointers!
+>
+> Cheers,
+> Michael
 
-Yes, reading the spec more closely indicates that this transition power 
-is the drive waking up from its lowest power-saving mode, so it's 
-spinning up the discs, so that's not going to be happening much.
+Just want to chime in with a thank-you-all... I've been waiting for thi=
+s=20
+info, but hesitated to ask on this list and didn't know where to look=20
+else. I'll just wait till kernel 2.6.36 pops up in my distro, and=20
+re-enable smartd then.
 
-In second place after spin-up events, from the same spec, we have peak 
-power during random reads of 24W, and 26W for writes, still more than 3 
-times the average operating power. I take "random reads" to mean lots of 
-seeks, so as Bill said, heavy seeking could be rather rough on a PSU.
+Vincent.
 
-Cheers,
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
-John.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
