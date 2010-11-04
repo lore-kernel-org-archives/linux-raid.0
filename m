@@ -1,60 +1,50 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: Determining which spindle is out of order
-Date: Thu, 4 Nov 2010 03:26:27 +0500
-Message-ID: <20101104032627.056cb83b@natsu>
-References: <loom.20101103T115828-494@post.gmane.org>
-	<4CD1DA2E.5060205@turmel.org>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Samsung F1 RAID Class SATA/300 1TB drives
+Date: Thu, 04 Nov 2010 01:54:41 +0000
+Message-ID: <4CD21261.8090701@anonymous.org.uk>
+References: <61.E7.19545.3D73FCC4@cdptpa-omtalb.mail.rr.com> <4CD19603.4060308@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.Y9QBQuz=ran3CeqIks9LGt"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CD1DA2E.5060205@turmel.org>
+In-Reply-To: <4CD19603.4060308@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Nat Makarevitch <Shelso@makarevitch.org>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: 'Linux-RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/.Y9QBQuz=ran3CeqIks9LGt
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 03/11/2010 17:04, Bill Davidsen wrote:
+> Leslie Rhorer wrote:
+[...]
+>>  I'm not entirely sure when the drives all went bad, but it was
+>> within a week or two of each other.
+>
+> One possible cause for this is a marginal power supply which "can't keep
+> up" when supporting lots of seeks and transfers on multiple drives. In
+> every group of drives there will be some variance for low voltage (or
+> noise, more likely) and the drive(s) which are sensitive appear to fail.
+> I say this from experience, it does happen, and going to a better power
+> supply will cure it. This might not be the problem, of course, but it's
+> worth investigating before blaming the drives.
 
-On Wed, 03 Nov 2010 21:54:54 +0000
-Phil Turmel <philip@turmel.org> wrote:
+Yes, marginal PSUs can be, well, marginal, but it seems even half decent 
+PSUs can exhibit this behaviour as well, to some extent. So having read 
+the above I thought I'd look up some data sheets to see why this might 
+happen.
 
-> I wrote a little script that would tell me device name and serial number =
-for
-> each host port on my motherboard, along with anything else that lists a s=
-csi
-> host in sysfs.
+The spec for Seagate Constellation ES 1GB drives - 
+http://www.seagate.com/staticfiles/support/disc/manuals/enterprise/Constellation%203_5%20in/100516232f.pdf 
+- does say that while the average idle power is 5W[1], and the typical 
+peak operating power is 7W, the maximum transition power (whatever that 
+is) is 40W - yes, 40W - so I can well see a bundle of relatively 
+low-power drives placing some heavy stresses on an average or even 
+average-to-good PSU.
 
-Thanks for the great script. However it was partially failing for me at fir=
-st,
-with error messages like "Corporation: command not found" or "Technology:
-command not found", failing to get most of the data properly. Turns out my
-"udevadm info" output for my controllers contains non-quoted values with
-spaces, which do not "eval" correctly:
+My rule of thumb of late is to expect 7.2k drives to draw ~7W, 10k ~10W 
+and 15k ~15W, then add a margin for safety and power-up, but having read 
+the above noted I might double it and make the margin bigger...
 
-E: ID_VENDOR_FROM_DATABASE=3DnVidia Corporation
-E: ID_VENDOR_FROM_DATABASE=3DJMicron Technology Corp.
+Cheers,
 
-As you do not use any of those further in the function anyway, I just added=
- |
-'grep -v " "' after "cut", and it worked fine afterwards.
-
---=20
-With respect,
-Roman
-
---Sig_/.Y9QBQuz=ran3CeqIks9LGt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkzR4ZMACgkQTLKSvz+PZwhDrQCfZb/8e4ysx9/QLxZtXPoW7qu4
-UKYAn1Oz9EidkBU1+hlchN/s16lVJM3Z
-=BjKo
------END PGP SIGNATURE-----
-
---Sig_/.Y9QBQuz=ran3CeqIks9LGt--
+John.
+[1] Rounded up to the nearest W.
