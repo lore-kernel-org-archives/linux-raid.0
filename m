@@ -1,87 +1,149 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 14/49] drivers/md: Use vzalloc
-Date: Thu,  4 Nov 2010 20:07:38 -0700
-Message-ID: <fb14aa0a6cfe2754ecc9c8e7cd5be07a5431e33f.1288925424.git.joe@perches.com>
-References: <alpine.DEB.2.00.1011031108260.11625@router.home>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 03/17] extension of IncrementalRemove to store location
+ (path-id) of removed device
+Date: Thu, 04 Nov 2010 22:39:48 -0700
+Message-ID: <4CD398A4.5070304@intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FB9@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <alpine.DEB.2.00.1011031108260.11625@router.home>
-In-Reply-To: <cover.1288925424.git.joe@perches.com>
-References: <cover.1288925424.git.joe@perches.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jiri Kosina <trivial@kernel.org>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FB9@irsmsx504.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: Neil Brown <neilb@suse.de>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/md/dm-log.c             |    3 +--
- drivers/md/dm-snap-persistent.c |    3 +--
- drivers/md/dm-table.c           |    4 +---
- 3 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/dm-log.c b/drivers/md/dm-log.c
-index 33420e6..8f00e38 100644
---- a/drivers/md/dm-log.c
-+++ b/drivers/md/dm-log.c
-@@ -487,7 +487,7 @@ static int create_log_context(struct dm_dirty_log *log, struct dm_target *ti,
- 	memset(lc->sync_bits, (sync == NOSYNC) ? -1 : 0, bitset_size);
- 	lc->sync_count = (sync == NOSYNC) ? region_count : 0;
- 
--	lc->recovering_bits = vmalloc(bitset_size);
-+	lc->recovering_bits = vzalloc(bitset_size);
- 	if (!lc->recovering_bits) {
- 		DMWARN("couldn't allocate sync bitset");
- 		vfree(lc->sync_bits);
-@@ -499,7 +499,6 @@ static int create_log_context(struct dm_dirty_log *log, struct dm_target *ti,
- 		kfree(lc);
- 		return -ENOMEM;
- 	}
--	memset(lc->recovering_bits, 0, bitset_size);
- 	lc->sync_search = 0;
- 	log->context = lc;
- 
-diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
-index 2129cdb..8eb943f 100644
---- a/drivers/md/dm-snap-persistent.c
-+++ b/drivers/md/dm-snap-persistent.c
-@@ -174,10 +174,9 @@ static int alloc_area(struct pstore *ps)
- 	if (!ps->area)
- 		goto err_area;
- 
--	ps->zero_area = vmalloc(len);
-+	ps->zero_area = vzalloc(len);
- 	if (!ps->zero_area)
- 		goto err_zero_area;
--	memset(ps->zero_area, 0, len);
- 
- 	ps->header_area = vmalloc(len);
- 	if (!ps->header_area)
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 90267f8..d6a91f7 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -151,9 +151,7 @@ void *dm_vcalloc(unsigned long nmemb, unsigned long elem_size)
- 		return NULL;
- 
- 	size = nmemb * elem_size;
--	addr = vmalloc(size);
--	if (addr)
--		memset(addr, 0, size);
-+	addr = vzalloc(size);
- 
- 	return addr;
- }
--- 
-1.7.3.1.g432b3.dirty
+On 10/29/2010 7:15 AM, Czarnowska, Anna wrote:
+>  From 39e3e87204d4381007f5d798545a220e5c532516 Mon Sep 17 00:00:00 2001
+> From: Przemyslaw Czarnowski<przemyslaw.hawrylewicz.czarnowski@intel.com>
+> Date: Wed, 27 Oct 2010 16:35:48 +0200
+> Subject: [PATCH 03/17] extension of IncrementalRemove to store location (path-id) of removed device
+>
+> If the disk is taken out from its port this port information is lost. Only
+> udev rule can provide us with this information, and then we have to store
+> it somehow. This patch adds writing 'cookie' file in
+> /dev/.mdadm/failed-slots directory in form of file named with value
+> of<path-id>  containing the UUID's of arrays holding this device before
+> it was removed. FAILED_SLOTS_DIR constant has been added to hold the
+> location of cookie files.
+>
+> Signed-off-by: Przemyslaw Czarnowski<przemyslaw.hawrylewicz.czarnowski@intel.com>
+> ---
+>   Incremental.c |   83 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>   Makefile      |    3 ++
+>   mdadm.h       |    9 ++++++
+>   util.c        |    5 +++
+>   4 files changed, 99 insertions(+), 1 deletions(-)
+>
+> diff --git a/Incremental.c b/Incremental.c
+> index de1003e..bda90bc 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1297,7 +1297,11 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+>   	int mdfd;
+>   	int rv;
+>   	struct mdstat_ent *ent;
+> +	struct map_ent *map, *me;
+>   	struct mddev_dev_s devlist;
+> +	char path[PATH_MAX];
+> +	FILE *id_fd;
+> +
+>   	if (!id_path) {
+>   		dprintf(Name ": incremental removal without --path<id_path>  "
+>   			"lacks the possibility to re-add new device in this "
+> @@ -1315,15 +1319,92 @@ int IncrementalRemove(char *devname, char *id_path, int verbose)
+>   			"of any array\n", devname);
+>   		return 1;
+>   	}
+> +
+> +	if (id_path) {
+> +		if (mkdir(FAILED_SLOTS_DIR, S_IRWXU)<  0&&  errno != EEXIST) {
+> +			fprintf(stderr, Name ": can't create file to save path "
+> +				"to old disk\n");
+> +			id_path = NULL;
+> +		} else {
+> +			snprintf(path, PATH_MAX, FAILED_SLOTS_DIR "/%s", id_path);
+> +
+> +			id_fd = fopen(path, "w");
+> +			if (!id_fd) {
+> +				fprintf(stderr, Name ": can't create file to"
+> +						     " save path to old disk\n");
+> +				id_path = NULL;
+> +			}
+> +		}
+> +	}
+> +
+>   	mdfd = open_dev(ent->devnum);
+>   	if (mdfd<  0) {
+>   		fprintf(stderr, Name ": Cannot open array %s!!\n", ent->dev);
+>   		return 1;
+>   	}
+> +
+>   	memset(&devlist, 0, sizeof(devlist));
+>   	devlist.devname = devname;
+>   	devlist.disposition = 'f';
+> -	Manage_subdevs(ent->dev, mdfd,&devlist, verbose, 0);
+> +
+> +	map_read(&map);
+> +	if (!map) {
+> +		fprintf(stderr, Name ": Cannot open/read map file\n");
+> +		return 1;
+> +	}
+> +
+> +	/* slightly different behavior for native and external */
+> +	if (!is_external(ent->metadata_version)) {
+> +		me = map_by_devnum(&map, ent->devnum);
+> +		/* just write array device */
+> +		if (id_path&&  fprintf(id_fd, "%08x:%08x:%08x:%08x\n",
+> +				       me->uuid[0],
+> +				       me->uuid[1],
+> +				       me->uuid[2],
+> +				       me->uuid[3])<  0) {
+> +			fprintf(stderr, Name ": Failed to write to<id_path>  "
+> +				"cookie\n");
+> +			fclose(id_fd);
+> +			unlink(path);
+> +		}
+> +		Manage_subdevs(ent->dev, mdfd,&devlist, verbose, 0);
+> +	} else {
+> +		int subfd;
+> +		/* write device for all array members */
+> +		for (me = map; me; me = me->next) {
+> +			if (!is_subarray(me->metadata) ||
+> +			    devname2devnum(me->metadata + 1) != ent->devnum)
+> +				continue;
+> +			/* found member, so */
+> +			/* create file with names of arrays containing old disk */
+> +			if (id_path&&  fprintf(id_fd, "%08x:%08x:%08x:%08x\n",
+> +						me->uuid[0],
+> +						me->uuid[1],
+> +						me->uuid[2],
+> +						me->uuid[3])<  0) {
+> +				fprintf(stderr,	Name ": Failed to write to "
+> +					"<id_path>  cookie\n");
+> +				fclose(id_fd);
+> +				unlink(path);
+> +			}
+
+Two comments from our review at LPC:
+
+1/ General cleanup: these "if (id_path && fprintf(...))" blocks are 
+duplicated and should probably be a helper function, but comment two 
+makes this moot...
+
+2/ We don't really need to record all the subarray ids at removal.  imsm 
+can get by with just the container uuid.  Marcin I seem to recall you 
+said this was added in case ddf might need it.  If that turns out to be 
+true we can always add that functionality.  For now just do the simple 
+thing and record the container uuid.  This also allow these paths to be 
+unified between external / !external...
+
+...actually Neil mentioned we should kill the idea that "external" 
+always implies a container with subarray.  Consider if we added a new 
+native-md metadata type handled externally, but still had the same 
+1-array per set of disks constraint as 0.90 and 1.[012] metadata.
+
+--
+Dan
