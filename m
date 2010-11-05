@@ -1,133 +1,98 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 15/17] Monitor: more accurate size check when looking
- for spares
-Date: Thu, 04 Nov 2010 23:01:11 -0700
-Message-ID: <4CD39DA7.609@intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD3@irsmsx504.ger.corp.intel.com>
+Subject: Re: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed
+ disk from in imsm container.
+Date: Thu, 04 Nov 2010 23:17:22 -0700
+Message-ID: <4CD3A172.5090905@intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD7@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD3@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD7@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
 Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 10/29/2010 7:26 AM, Czarnowska, Anna wrote:
->  From 1e6de2b744115224be88da674e633c33934e5cb6 Mon Sep 17 00:00:00 2001
-> From: Anna Czarnowska<anna.czarnowska@intel.com>
-> Date: Wed, 27 Oct 2010 12:06:42 +0100
-> Subject: [PATCH 15/17] Monitor: more accurate size check when looking for spares
+On 10/29/2010 7:27 AM, Czarnowska, Anna wrote:
+>  From 30aa06f20497fadf58990685ecc0554ffce21f25 Mon Sep 17 00:00:00 2001
+> From: Marcin Labun<marcin.labun@intel.com>
+> Date: Thu, 30 Sep 2010 05:00:57 +0200
+> Subject: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed disk from in imsm container.
 >
-> Signed-off-by: Anna Czarnowska<anna.czarnowska@intel.com>
-> ---
->   Monitor.c     |   23 ++++++++++++++++++++++-
->   mdadm.h       |    1 +
->   super-intel.c |   32 ++++++++++++++++++++++++++++++++
->   3 files changed, 55 insertions(+), 1 deletions(-)
+> Manager thread shall pass the information to monitor thread (mdmon)
+> that some devices are removed from container. Otherwise, monitor (mdmon)
+> might use such devices (spares) to rebuild the array that has gone degraded.
 >
-> diff --git a/Monitor.c b/Monitor.c
-> index aa2856e..efe36eb 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -766,6 +766,27 @@ unsigned long long min_active_disk_size_in_array(struct state *st)
->   	return min;
->   }
->
-> +unsigned long long min_spare_size_required(struct state *st,
-> +					   struct supertype *sty)
-> +{
-> +	int fd;
-> +	unsigned long long rv = 0;
-> +
-> +	if (!sty)
-> +		return rv;
-> +	if (sty->ss->min_acceptable_spare_size) {
-> +		fd = open(st->devname, O_RDONLY);
-> +		if (fd<  0)
-> +			return 0;
-> +		sty->ss->load_super(sty, fd, st->devname);
-> +		close(fd);
-> +		rv = sty->ss->min_acceptable_spare_size(sty);
-> +		sty->ss->free_super(sty);
-> +	} else
-> +		rv = min_active_disk_size_in_array(st);
-> +	return rv;
-> +}
-> +
->   struct state *get_parent(struct state *st)
->   {
->   	if (is_external(st->metadata_version))
-> @@ -892,7 +913,7 @@ static void spare_sharing(struct state *statelist, char *mailaddr,
->   			dprintf("no sra for device: %s\n", stp->devname);
->   			continue;
->   		}
-> -		min_size = min_active_disk_size_in_array(st);
-> +		min_size = min_spare_size_required(stp, super);
->   		if (min_size == 0)
->   			continue;
->   		for (i = 0; i<  stp->total; i++)
-> diff --git a/mdadm.h b/mdadm.h
-> index 4ef3ee5..7047fdf 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -605,6 +605,7 @@ extern struct superswitch {
->   	int (*load_super)(struct supertype *st, int fd, char *devname);
->   	struct supertype * (*match_metadata_desc)(char *arg);
->   	__u64 (*avail_size)(struct supertype *st, __u64 size);
-> +	unsigned long long (*min_acceptable_spare_size)(struct supertype *st);
->   	int (*add_internal_bitmap)(struct supertype *st, int *chunkp,
->   				   int delay, int write_behind,
->   				   unsigned long long size, int may_change, int major);
-> diff --git a/super-intel.c b/super-intel.c
-> index bcc202e..77c9d7f 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -646,6 +646,37 @@ static int is_failed(struct imsm_disk *disk)
->   	return (disk->status&  FAILED_DISK) == FAILED_DISK;
->   }
->
-> +/* Return minimum size of a spare that can be used in this array*/
-> +static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
-> +{
-> +	struct intel_super *super = st->sb;
-> +	struct dl *dl;
-> +	struct extent *e;
-> +	int i;
-> +	unsigned long long rv = 0;
-> +
-> +	if (!super)
-> +		return rv;
-> +	/* find first active disk in array */
-> +	dl = super->disks;
-> +	while (dl&&  (is_failed(&dl->disk) || dl->index == -1))
-> +		dl = dl->next;
-> +	if (!dl)
-> +		return rv;
-> +	/* find last lba used by subarrays */
-> +	e = get_extents(super, dl);
-> +	if (!e)
-> +		return rv;
-> +	for (i = 0; e[i].size; i++)
-> +		continue;
-> +	if (i>  0)
-> +		rv = e[i-1].start + e[i-1].size;
-> +	free(e);
-> +	/* add the amount of space needed for metadata */
-> +	rv = rv + MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
-> +	return rv * 512;
-> +}
-> +
->   #ifndef MDASSEMBLE
->   static __u64 blocks_per_migr_unit(struct imsm_dev *dev);
->
-> @@ -5629,6 +5660,7 @@ struct superswitch super_imsm = {
->   	.update_super	= update_super_imsm,
->
->   	.avail_size	= avail_size_imsm,
-> +	.min_acceptable_spare_size = min_acceptable_spare_size_imsm,
+> This problem happens for imsm containers, since a list of the container disks
+> is maintained in intel_super structure. When array goes degraded, the list is
+> searched to find a spare disks to start rebuild.
+> Without this fix the rebuild could be stared on the spare device that was
+> a member of the container, but has been removed from it.
 
-Neil wondered if we can repurpose validate_geometry for this case?  It 
-is already charged with checking if a disk is suitable to be added to an 
-array.
+Yes, definitely a bug.
+
+>
+> New super type function handler has been introduced to prepare metadata
+> format specific information about removed devices.
+> int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
+>                           int fd);
+> The message prepared in remove_from_super is later processed
+> by proceess_update handler in monitor thread.
+>
+> Signed-off-by: Marcin Labun<marcin.labun@intel.com>
+> ---
+>   managemon.c   |   38 ++++++++++++++
+>   mdadm.h       |    7 ++-
+>   super-intel.c |  159 ++++++++++++++++++++++++++++++++++++++++++++++-----------
+>   3 files changed, 173 insertions(+), 31 deletions(-)
+>
+> diff --git a/managemon.c b/managemon.c
+> index bab0397..8ab2746 100644
+> --- a/managemon.c
+> +++ b/managemon.c
+> @@ -297,6 +297,43 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
+>   	st->update_tail = NULL;
+>   }
+>
+> +/*
+> + * Create and queue update structure about the removed disks.
+> + * The update is prepared by super type handler and passed to the monitor
+> + * thread.
+> + */
+> +static void remove_disk_from_container(struct supertype *st, struct mdinfo *sd)
+> +{
+> +	int dfd;
+> +	char nm[20];
+> +	struct metadata_update *update = NULL;
+> +	mdu_disk_info_t dk = {
+> +		.number = -1,
+> +		.major = sd->disk.major,
+> +		.minor = sd->disk.minor,
+> +		.raid_disk = -1,
+> +		.state = 0,
+> +	};
+> +	/* nothing to do if super type handler does not support
+> +	 * remove disk primitive
+> +	 */
+> +	if (!st->ss->remove_from_super)
+> +		return;
+> +	dprintf("%s: remove %d:%d to container\n",
+> +		__func__, sd->disk.major, sd->disk.minor);
+> +
+> +	sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+> +	dfd = dev_open(nm, O_RDWR);
+> +	if (dfd<  0)
+> +		return;
+> +
+> +	st->update_tail =&update;
+> +	st->ss->remove_from_super(st,&dk, dfd);
+> +	st->ss->write_init_super(st);
+> +	queue_metadata_update(update);
+
+Since we do not update the metadata can we just lazily queue an modified 
+imsm_delete() update the next time we call activate_spare() and find the 
+spare removed?  That way it is just garbage collection without this new 
+infrastructure that gives the appearance we are writing metadata when 
+removing a spare.
+
