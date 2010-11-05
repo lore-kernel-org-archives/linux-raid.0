@@ -1,98 +1,77 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed
- disk from in imsm container.
-Date: Thu, 04 Nov 2010 23:17:22 -0700
-Message-ID: <4CD3A172.5090905@intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD7@irsmsx504.ger.corp.intel.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: [PATCH 09/17] Monitor: avoid skipping checks on external arays
+Date: Fri, 5 Nov 2010 14:56:11 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BC6D48D@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FC9@irsmsx504.ger.corp.intel.com>
+ <4CD39A5F.2050703@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD7@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <4CD39A5F.2050703@intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+To: "Williams, Dan J" <dan.j.williams@intel.com>
 Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 10/29/2010 7:27 AM, Czarnowska, Anna wrote:
->  From 30aa06f20497fadf58990685ecc0554ffce21f25 Mon Sep 17 00:00:00 2001
-> From: Marcin Labun<marcin.labun@intel.com>
-> Date: Thu, 30 Sep 2010 05:00:57 +0200
-> Subject: [PATCH 16/17] IMSM: Fix problem in mdmon monitor of using removed disk from in imsm container.
->
-> Manager thread shall pass the information to monitor thread (mdmon)
-> that some devices are removed from container. Otherwise, monitor (mdmon)
-> might use such devices (spares) to rebuild the array that has gone degraded.
->
-> This problem happens for imsm containers, since a list of the container disks
-> is maintained in intel_super structure. When array goes degraded, the list is
-> searched to find a spare disks to start rebuild.
-> Without this fix the rebuild could be stared on the spare device that was
-> a member of the container, but has been removed from it.
+Metadata_version is needed for: 
+	Deciding if metadata type is container-based - more than just the utime check depends on it
+	Getting parent container number from subarrays - for linking subarrays with containers
+	Obtaining superswitch - to avoid calling guess_super when we already know the kind of metadata
 
-Yes, definitely a bug.
+Introducing utime_valid flag would just duplicate part of information included in metadata_version.
+Regards
+Anna
 
+-----Original Message-----
+From: Williams, Dan J 
+Sent: Friday, November 05, 2010 6:47 AM
+To: Czarnowska, Anna
+Cc: Neil Brown; linux-raid@vger.kernel.org; Neubauer, Wojciech; Ciechanowski, Ed; Labun, Marcin; Hawrylewicz Czarnowski, Przemyslaw
+Subject: Re: [PATCH 09/17] Monitor: avoid skipping checks on external arays
+
+On 10/29/2010 7:23 AM, Czarnowska, Anna wrote:
+>  From bb9ca6dbe0a92e00b21cd8985533b561b40ed6b9 Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska<anna.czarnowska@intel.com>
+> Date: Mon, 25 Oct 2010 11:30:43 +0200
+> Subject: [PATCH 09/17] Monitor: avoid skipping checks on external arays
 >
-> New super type function handler has been introduced to prepare metadata
-> format specific information about removed devices.
-> int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
->                           int fd);
-> The message prepared in remove_from_super is later processed
-> by proceess_update handler in monitor thread.
+> utime is not correct for external metadata so we can only
+> skip further checks for native metadata
 >
-> Signed-off-by: Marcin Labun<marcin.labun@intel.com>
+> Signed-off-by: Anna Czarnowska<anna.czarnowska@intel.com>
 > ---
->   managemon.c   |   38 ++++++++++++++
->   mdadm.h       |    7 ++-
->   super-intel.c |  159 ++++++++++++++++++++++++++++++++++++++++++++++-----------
->   3 files changed, 173 insertions(+), 31 deletions(-)
+>   Monitor.c |   33 ++++++++++++++++++++++++++-------
+>   1 files changed, 26 insertions(+), 7 deletions(-)
 >
-> diff --git a/managemon.c b/managemon.c
-> index bab0397..8ab2746 100644
-> --- a/managemon.c
-> +++ b/managemon.c
-> @@ -297,6 +297,43 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
->   	st->update_tail = NULL;
->   }
->
-> +/*
-> + * Create and queue update structure about the removed disks.
-> + * The update is prepared by super type handler and passed to the monitor
-> + * thread.
-> + */
-> +static void remove_disk_from_container(struct supertype *st, struct mdinfo *sd)
-> +{
-> +	int dfd;
-> +	char nm[20];
-> +	struct metadata_update *update = NULL;
-> +	mdu_disk_info_t dk = {
-> +		.number = -1,
-> +		.major = sd->disk.major,
-> +		.minor = sd->disk.minor,
-> +		.raid_disk = -1,
-> +		.state = 0,
-> +	};
-> +	/* nothing to do if super type handler does not support
-> +	 * remove disk primitive
-> +	 */
-> +	if (!st->ss->remove_from_super)
-> +		return;
-> +	dprintf("%s: remove %d:%d to container\n",
-> +		__func__, sd->disk.major, sd->disk.minor);
-> +
-> +	sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-> +	dfd = dev_open(nm, O_RDWR);
-> +	if (dfd<  0)
-> +		return;
-> +
-> +	st->update_tail =&update;
-> +	st->ss->remove_from_super(st,&dk, dfd);
-> +	st->ss->write_init_super(st);
-> +	queue_metadata_update(update);
+> diff --git a/Monitor.c b/Monitor.c
+> index a4bfedd..d915d7d 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -50,6 +50,7 @@ struct state {
+>   	int devstate[MaxDisks];
+>   	unsigned devid[MaxDisks];
+>   	int percent;
+> +	char *metadata_version;
 
-Since we do not update the metadata can we just lazily queue an modified 
-imsm_delete() update the next time we call activate_spare() and find the 
-spare removed?  That way it is just garbage collection without this new 
-infrastructure that gives the appearance we are writing metadata when 
-removing a spare.
+Another small nit... this is really just a "int utime_valid" flag, 
+calling it "char *metadata_version" is a slightly confusing shortcut.
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
