@@ -1,28 +1,69 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 09/17] Monitor: avoid skipping checks on external arays
-Date: Fri, 05 Nov 2010 09:17:17 -0700
-Message-ID: <4CD42E0D.7020700@intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FC9@irsmsx504.ger.corp.intel.com> <4CD39A5F.2050703@intel.com> <A9DE54D0CD747C4CB06DCE5B6FA2246F010BC6D48D@irsmsx504.ger.corp.intel.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Determining which spindle is out of order
+Date: Sat, 6 Nov 2010 05:22:28 -0500
+Message-ID: <30.2B.19545.E5C25DC4@cdptpa-omtalb.mail.rr.com>
+References: <4CD1DA2E.5060205@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BC6D48D@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <4CD1DA2E.5060205@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: 'Phil Turmel' <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/05/2010 07:56 AM, Czarnowska, Anna wrote:
-> Metadata_version is needed for:
-> 	Deciding if metadata type is container-based - more than just the utime check depends on it
-> 	Getting parent container number from subarrays - for linking subarrays with containers
-> 	Obtaining superswitch - to avoid calling guess_super when we already know the kind of metadata
->
-> Introducing utime_valid flag would just duplicate part of information included in metadata_version.
-> Regards
-> Anna
 
-Ah, ok reading this patch in isolation does not convey these future 
-usages.  We could put this text in the changelog.
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Phil Turmel
+> Sent: Wednesday, November 03, 2010 4:55 PM
+> To: Nat Makarevitch
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Determining which spindle is out of order
+> 
+> On 11/3/2010 2:13 PM, Nat Makarevitch wrote:
+> > Hi,
+> >
+> > After a spindle (physical hard disk, a "drive") failure in a "md" RAID
+> array,
+> > how can we know which spindle must be replaced?
+> >
+> > We want to avoid extracting a working spindle by mistakenly thinking it
+> is the
+> > faulty one...
+> 
+> I wrote a little script that would tell me device name and serial number
+> for each host port on my motherboard, along with anything else that lists
+> a scsi host in sysfs.  Output like so:
+> 
+> Controller device @ pci0000:00/0000:00:1c.1/0000:06:00.0 [ahci]
+>   RAID bus controller: Marvell Technology Group Ltd. 88SE6145 SATA II PCI-
+> E controller (rev a1)
+>     host4: [Empty]
+>     host5: /dev/sdd ATA WDC WD5000AAKS-7 {SN: WD-WMAWF1370668}
+>     host6: [Empty]
+>     host7: [Empty]
+>     host8: [Empty]
+> Controller device @ pci0000:00/0000:00:1f.1 [ata_piix]
+>   IDE interface: Intel Corporation 82801G (ICH7 Family) IDE Controller
+> (rev 01)
+>     host9: [Empty]
+>     host10: [Empty]
+> Controller device @ pci0000:00/0000:00:1f.2 [ahci]
+>   SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) SATA AHCI
+> Controller (rev 01)
+>     host0: /dev/sda ATA ST31000333AS {SN: 9TE1LTW0}
+>     host1: /dev/sdb ATA ST31000333AS {SN: 9TE1MAJT}
+>     host2: /dev/sdc ATA ST31000333AS {SN: 9TE1MV1R}
+>     host3: /dev/sr0 HL-DT-ST BD-RE GBW-H20L
+> 
+> Shows me my empty ports, too.  As long as I keep my cables straight to my
+> hot-swap bays, getting the right drive is a snap.
+
+	I haven't had a chance to dig into the script, but it doesn't
+produce any output when I run it on one of my servers, and on the other one
+it produces errors on line 7, but otherwise seems to work.
 
