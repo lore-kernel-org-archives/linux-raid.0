@@ -1,57 +1,54 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Determining which spindle is out of order
-Date: Sun, 7 Nov 2010 14:46:22 -0600
-Message-ID: <B9.A1.19545.A1017DC4@cdptpa-omtalb.mail.rr.com>
-References: <4CD6F259.6080408@turmel.org>
+From: Roman Mamedov <roman@rm.pp.ru>
+Subject: Re: Determining which spindle is out of order
+Date: Mon, 8 Nov 2010 01:52:02 +0500
+Message-ID: <20101108015202.188bc390@natsu>
+References: <30.2B.19545.E5C25DC4@cdptpa-omtalb.mail.rr.com>
+	<4CD57048.4020107@turmel.org>
+	<4CD57867.4010207@anonymous.org.uk>
+	<4CD57C17.8020303@turmel.org>
+	<4CD6A141.5090601@anonymous.org.uk>
+	<4CD6A7F0.7030300@turmel.org>
+	<4CD6ACED.9030808@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/dzdfy5HJrAq13TpsXT4Dram"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CD6F259.6080408@turmel.org>
+In-Reply-To: <4CD6ACED.9030808@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Phil Turmel' <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/dzdfy5HJrAq13TpsXT4Dram
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 07 Nov 2010 13:43:09 +0000
+John Robinson <john.robinson@anonymous.org.uk> wrote:
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Phil Turmel
-> Sent: Sunday, November 07, 2010 12:39 PM
-> To: John Robinson
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Determining which spindle is out of order
-> 
-> On 11/07/2010 10:19 AM, John Robinson wrote:
-> > On 07/11/2010 14:43, Phil Turmel wrote:
-> >> On 11/07/2010 08:43 AM, John Robinson wrote:
-> > [...]
-> >>> Please don't feel you have to turn this into a project, though.
-> >>
-> >> Too late.  Here's a version that doesn't use udevadm at all...
-> >
-> > OK, it's an improvement because after I've changed the find command to
-> find '*scsi_host*', it lists my controllers, but finds them all empty. I
-> noted that the script was looking for subdirectories called block but mine
-> have names like block:sda so I changed the script again to refer to
-> 'block*' both in the loop in check_host and in the substitution at the top
-> of describe_device. There's still something not quite right with trying to
-> read CentOS/RHEL 5 / kernel 2.6.18 sysfs, because this was the output I
-> got:
-> 
-> I think I understand the older sysfs directory format now.
-> 
-> > Hope this helps. I've also attached my edited version of the script.
-> 
-> I did another version, with regular expressions to accommodate the
-> variations.  Please give it a shot.
+> Please don't feel you have to turn this into a project, though.
 
-	The regular expression doesn't work, here, but the rest of the
-script now works on the older server.  I replaced the find statement with
+Well, on the contrary, why not? There is clearly a lack of such a tool in
+GNU/Linux, so having a designated name for the script, and a small website
+with version history and a download link would be very nice, rather than
+trying to fish the out latest version from the mailing list...
 
-find /sys/devices/  -name "scsi_host*" |check_host
+So I suggest that you *do* turn this into a project. :)
 
-	and it works.
+--=20
+With respect,
+Roman
 
+--Sig_/dzdfy5HJrAq13TpsXT4Dram
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkzXEXIACgkQTLKSvz+PZwjQ8ACfWaTgFhgMYF/nVz+a5i74zmgP
+8dsAnjDOYCTscKD+6kg1udCxm64XkgSZ
+=67sl
+-----END PGP SIGNATURE-----
+
+--Sig_/dzdfy5HJrAq13TpsXT4Dram--
