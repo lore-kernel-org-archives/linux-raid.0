@@ -1,54 +1,60 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: Determining which spindle is out of order
-Date: Mon, 8 Nov 2010 01:52:02 +0500
-Message-ID: <20101108015202.188bc390@natsu>
-References: <30.2B.19545.E5C25DC4@cdptpa-omtalb.mail.rr.com>
-	<4CD57048.4020107@turmel.org>
-	<4CD57867.4010207@anonymous.org.uk>
-	<4CD57C17.8020303@turmel.org>
-	<4CD6A141.5090601@anonymous.org.uk>
-	<4CD6A7F0.7030300@turmel.org>
-	<4CD6ACED.9030808@anonymous.org.uk>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Superblock V 1.2
+Date: Sun, 7 Nov 2010 15:03:39 -0600
+Message-ID: <E9.7C.19545.72417DC4@cdptpa-omtalb.mail.rr.com>
+References: <20101107191507.GA31052@cons.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/dzdfy5HJrAq13TpsXT4Dram"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CD6ACED.9030808@anonymous.org.uk>
+In-Reply-To: <20101107191507.GA31052@cons.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: 'Martin Cracauer' <cracauer@cons.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/dzdfy5HJrAq13TpsXT4Dram
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Martin Cracauer
+> Sent: Sunday, November 07, 2010 1:15 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Superblock V 1.2
+> 
+> I created a new array after upgrading kernel and OS
+> (2.6.32.25-cracauer and Debian/squeeze, respectively, resulting in
+> mdadm - v3.1.4 - 31st August 2010)
+> 
+> The new array reads
+> md0 : active raid5 sdc2[4] sda2[2] sdb2[1] sdd2[0]
+>       292998144 blocks super 1.2 level 5, 256k chunk, algorithm 2 [4/4]
+> [UUUU]
+> 
+> I figure the "super 1.2" means the new version of the superblock.
 
-On Sun, 07 Nov 2010 13:43:09 +0000
-John Robinson <john.robinson@anonymous.org.uk> wrote:
+	It's one of the new versions, yes.  Your statement suggests there is
+only 1 new version.
 
-> Please don't feel you have to turn this into a project, though.
+> Can I read that array if I ever connect the machine to an older
+> kernel/mdadm?
 
-Well, on the contrary, why not? There is clearly a lack of such a tool in
-GNU/Linux, so having a designated name for the script, and a small website
-with version history and a download link would be very nice, rather than
-trying to fish the out latest version from the mailing list...
+	That depends on just how old.  The new superblocks have been
+supported for quite some time.  Worst case you will need to upgrade the old
+kernel to a newer one.
 
-So I suggest that you *do* turn this into a project. :)
+> I see that I can control which version to use in
+> mdadm(8), but I don't get what the advantage of the new format is if I
+> don't run out of # of components or total capacity.
 
---=20
-With respect,
-Roman
+	The older 0.90 superblock is still quite serviceable for many uses,
+but unless the array is to be booted, I would recommend a 1.x superblock.
 
---Sig_/dzdfy5HJrAq13TpsXT4Dram
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> I can see how
+> storing the superblock at 4 KB makes it more robust against accidents
+> that wipe out of the first 512 bytes or similar fun.  I think storing
+> it at the end will be a pain if you ever have to hexdump recover the
+> thing, no?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+	Each one has its strong points and it drawbacks.  You've got to
+decide which one will likely serve you best given your approach to managing
+your system.
 
-iEYEARECAAYFAkzXEXIACgkQTLKSvz+PZwjQ8ACfWaTgFhgMYF/nVz+a5i74zmgP
-8dsAnjDOYCTscKD+6kg1udCxm64XkgSZ
-=67sl
------END PGP SIGNATURE-----
-
---Sig_/dzdfy5HJrAq13TpsXT4Dram--
