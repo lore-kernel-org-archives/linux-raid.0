@@ -1,217 +1,320 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Determining which spindle is out of order
-Date: Sun, 7 Nov 2010 15:04:32 +0000
-Message-ID: <AANLkTikqQw+FR+RG6SL6DHmhO4UdgLnW6gahAJ80pvB5@mail.gmail.com>
-References: <30.2B.19545.E5C25DC4@cdptpa-omtalb.mail.rr.com>
-	<4CD57048.4020107@turmel.org>
-	<4CD57867.4010207@anonymous.org.uk>
-	<4CD57C17.8020303@turmel.org>
-	<4CD6A141.5090601@anonymous.org.uk>
-	<4CD6A7F0.7030300@turmel.org>
-	<4CD6ACED.9030808@anonymous.org.uk>
-	<4CD6BB2D.5020202@turmel.org>
+Date: Sun, 07 Nov 2010 15:19:08 +0000
+Message-ID: <4CD6C36C.1080200@anonymous.org.uk>
+References: <30.2B.19545.E5C25DC4@cdptpa-omtalb.mail.rr.com> <4CD57048.4020107@turmel.org> <4CD57867.4010207@anonymous.org.uk> <4CD57C17.8020303@turmel.org> <4CD6A141.5090601@anonymous.org.uk> <4CD6A7F0.7030300@turmel.org> <4CD6ACED.9030808@anonymous.org.uk> <4CD6BB2D.5020202@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------080005020505010300020101"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4CD6BB2D.5020202@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7 November 2010 14:43, Phil Turmel <philip@turmel.org> wrote:
+This is a multi-part message in MIME format.
+--------------080005020505010300020101
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 07/11/2010 14:43, Phil Turmel wrote:
 > On 11/07/2010 08:43 AM, John Robinson wrote:
->> On 07/11/2010 13:21, Phil Turmel wrote:
->>> On 11/07/2010 07:53 AM, John Robinson wrote:
->>>> On 06/11/2010 16:02, Phil Turmel wrote:
->>>>> On 11/06/2010 11:46 AM, John Robinson wrote:
->>>> [...]
->>>>>> Now I need to find udevadm I guess. It must have been introduced=
- since the udev version that comes with RHEL/CentOS 5, which is udev-09=
-5-14.21.el5_5.1. rpmfind.net suggests it's only been in since version 1=
-18 or so. Never mind :-)
->>>>>
->>>>> Heh. =C2=A0Anyone know the equivalent command in earlier versions=
- of udev?
->>>>
->>>> I think it's `udevinfo` instead of `udevadm info` - the comment in=
- the ChangeLog for udev-117 is "udevadm: merge all udev tools into a si=
-ngle binary". But it doesn't work terribly well:
->>>>
->>>> [root@beast describe_scsi]# udevinfo -q all -p /devices/pci0000\:0=
-0/0000\:00\:1f.2/
->>>> no record for '/devices/pci0000:00/0000:00:1f.2/' in database
->>>>
->>>> That's unfortunate. But it does know about that device if asked di=
-fferently:
->>>>
->>>> [root@beast describe_scsi]# udevinfo -a -p /devices/pci0000\:00/00=
-00\:00\:1f.2/
->>>
->>> Hmmm. =C2=A0Can you try both of the above without the trailing slas=
-h?
->>
->> Just the same output, however I ask the question:
->>
->> [root@beast ~]# udevinfo -q all -p /devices/pci0000\:00/0000\:00\:1f=
-=2E2
->> no record for '/devices/pci0000:00/0000:00:1f.2' in database
->> [root@beast ~]# udevinfo -q all -p /devices/pci0000:00/0000:00:1f.2
->> no record for '/devices/pci0000:00/0000:00:1f.2' in database
->> [root@beast ~]# udevinfo -q all -p /sys/devices/pci0000:00/0000:00:1=
-f.2
->> no record for '/devices/pci0000:00/0000:00:1f.2' in database
->> [root@beast ~]#
->>
->> And all with "-a" instead of "-q all" produce the output I posted be=
-fore.
->
-> The modern udevadm gives me that with --attribute-walk. =C2=A0It's pu=
-rpose is to report
-> the conditions one might want to use in an udev rule. =C2=A0It doesn'=
-t provide the human
-> descriptions I'm looking for.
->
+[...]
 >> Please don't feel you have to turn this into a project, though.
 >
-> Too late. =C2=A0Here's a version that doesn't use udevadm at all...
->
-> #! /bin/bash
-> #
-> # Examine specific system host devices to identify the drives attache=
-d
-> #
->
-> function describe_controller () {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0local device driver modprefix serial slotn=
-ame
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0driver=3D"`readlink -f \"$1/driver\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0driver=3D"`basename $driver`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0modprefix=3D"`cut -d: -f1 <\"$1/modalias\"=
-`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0echo "Controller device @ ${1##/sys/device=
-s/} [$driver]"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ "$modprefix" =3D=3D "pci" ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0slotname=3D"`b=
-asename \"$1\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0echo -n " =C2=A0=
-`lspci -s $slotname |cut -d\ =C2=A0-f2-`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ "$modprefix" =3D=3D "usb" ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ -f "$1/b=
-usnum" ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0device=3D"`cat \"$1/busnum\"`:`cat \"$1/devnum\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0serial=3D"`cat \"$1/serial\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0else
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0device=3D"`cat \"$1/../busnum\"`:`cat \"$1/../devnum\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0serial=3D"`cat \"$1/../serial\"`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0echo " =C2=A0`=
-lsusb -s $device` {SN: $serial}"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0echo -e " =C2=A0`cat \"$1/modalias\"`"
-> }
->
-> function describe_device () {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0targ=3D${1%/block/*}
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0vnd=3D"`cat $targ/vendor`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0mdl=3D`cat $targ/model`
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0rdev=3D`readlink -f "$1"`
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ -d $rdev ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bdev=3D"`basen=
-ame $rdev`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sn=3D"`sginfo =
--s /dev/$bdev | \
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0sed -rn -e \"/Serial Number/{s%^.+' *(.+) *'.*\\\$%\\\\1%=
-;p;q}\"`" &>/dev/null
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ -n "$sn"=
- ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0echo -e " =C2=A0 =C2=A0$bhost: `echo /dev/$bdev $vnd $mdl=
- {SN: $sn}`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0else
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0echo -e " =C2=A0 =C2=A0$bhost: `echo /dev/$bdev $vnd $mdl=
-`"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0else
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0echo -e " =C2=A0=
- =C2=A0$bhost: Unknown $rdev"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> }
->
-> function check_host () {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0local found=3D0
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0local pController=3D
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0while read shost ; do
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0host=3D`dirnam=
-e "$shost"`
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0controller=3D`=
-dirname "$host"`
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bhost=3D`basen=
-ame "$host"`
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if [[ "$contro=
-ller" !=3D "$pController" ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0pController=3D"$controller"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0describe_controller "$controller"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0for dev in $ho=
-st/target*/*/block/* ; do
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0if [[ "${dev: -1}" =3D=3D '*' ]] ; then
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0echo -e " =C2=A0 =C2=A0$bhost=
-: [Empty]"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0else
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0describe_device "$dev"
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0fi
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0done
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0done
-> }
->
-> find /sys/devices/ -name scsi_host |check_host
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+> Too late.  Here's a version that doesn't use udevadm at all...
 
-Nice, now it shows the S/N of the devices in my system:
+OK, it's an improvement because after I've changed the find command to 
+find '*scsi_host*', it lists my controllers, but finds them all empty. I 
+noted that the script was looking for subdirectories called block but 
+mine have names like block:sda so I changed the script again to refer to 
+'block*' both in the loop in check_host and in the substitution at the 
+top of describe_device. There's still something not quite right with 
+trying to read CentOS/RHEL 5 / kernel 2.6.18 sysfs, because this was the 
+output I got:
+
+[root@beast ~]# ~john/projects/describe_scsi/describe_scsi_2
+Controller device @ pci0000:00/0000:00:1f.2 [ahci]
+   SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI 
+Controller    host7: [Empty]
+     host6: [Empty]
+     host5: [Empty]
+     host4: Unknown /sys/block/sdc/dev
+sginfo(open): No such file or directory
+file=/dev/4:0:0:0, or no corresponding sg device found
+Is sg driver loaded?
+     host4: /dev/4:0:0:0 ATA ST31000528AS
+sginfo(open): No such file or directory
+file=/dev/holders, or no corresponding sg device found
+Is sg driver loaded?
+     host4: /dev/holders ATA ST31000528AS
+sginfo(open): No such file or directory
+file=/dev/queue, or no corresponding sg device found
+Is sg driver loaded?
+     host4: /dev/queue ATA ST31000528AS
+     host4: Unknown /sys/block/sdc/range
+     host4: Unknown /sys/block/sdc/removable
+     host4: /dev/sdc1 ATA ST31000528AS {SN: 9VP4XCQP}
+     host4: /dev/sdc2 ATA ST31000528AS {SN: 9VP4XCQP}
+     host4: Unknown /sys/block/sdc/size
+sginfo(open): No such file or directory
+file=/dev/slaves, or no corresponding sg device found
+Is sg driver loaded?
+     host4: /dev/slaves ATA ST31000528AS
+     host4: Unknown /sys/block/sdc/stat
+sginfo(open): No such file or directory
+file=/dev/block, or no corresponding sg device found
+Is sg driver loaded?
+     host4: /dev/block ATA ST31000528AS
+     host4: Unknown /sys/block/sdc/uevent
+     host3: Unknown /sys/block/sdb/dev
+sginfo(open): No such file or directory
+file=/dev/3:0:0:0, or no corresponding sg device found
+Is sg driver loaded?
+     host3: /dev/3:0:0:0 ATA SAMSUNG HD103UJ
+sginfo(open): No such file or directory
+file=/dev/holders, or no corresponding sg device found
+Is sg driver loaded?
+     host3: /dev/holders ATA SAMSUNG HD103UJ
+sginfo(open): No such file or directory
+file=/dev/queue, or no corresponding sg device found
+Is sg driver loaded?
+     host3: /dev/queue ATA SAMSUNG HD103UJ
+     host3: Unknown /sys/block/sdb/range
+     host3: Unknown /sys/block/sdb/removable
+     host3: /dev/sdb1 ATA SAMSUNG HD103UJ {SN: S1PVJ1CQ602162 }
+     host3: /dev/sdb2 ATA SAMSUNG HD103UJ {SN: S1PVJ1CQ602162 }
+     host3: Unknown /sys/block/sdb/size
+sginfo(open): No such file or directory
+file=/dev/slaves, or no corresponding sg device found
+Is sg driver loaded?
+     host3: /dev/slaves ATA SAMSUNG HD103UJ
+     host3: Unknown /sys/block/sdb/stat
+sginfo(open): No such file or directory
+file=/dev/block, or no corresponding sg device found
+Is sg driver loaded?
+     host3: /dev/block ATA SAMSUNG HD103UJ
+     host3: Unknown /sys/block/sdb/uevent
+     host2: Unknown /sys/block/sda/dev
+sginfo(open): No such file or directory
+file=/dev/2:0:0:0, or no corresponding sg device found
+Is sg driver loaded?
+     host2: /dev/2:0:0:0 ATA Hitachi HDS72101
+sginfo(open): No such file or directory
+file=/dev/holders, or no corresponding sg device found
+Is sg driver loaded?
+     host2: /dev/holders ATA Hitachi HDS72101
+sginfo(open): No such file or directory
+file=/dev/queue, or no corresponding sg device found
+Is sg driver loaded?
+     host2: /dev/queue ATA Hitachi HDS72101
+     host2: Unknown /sys/block/sda/range
+     host2: Unknown /sys/block/sda/removable
+     host2: /dev/sda1 ATA Hitachi HDS72101 {SN: JP2921HQ0J0PZA}
+     host2: /dev/sda2 ATA Hitachi HDS72101 {SN: JP2921HQ0J0PZA}
+     host2: Unknown /sys/block/sda/size
+sginfo(open): No such file or directory
+file=/dev/slaves, or no corresponding sg device found
+Is sg driver loaded?
+     host2: /dev/slaves ATA Hitachi HDS72101
+     host2: Unknown /sys/block/sda/stat
+sginfo(open): No such file or directory
+file=/dev/block, or no corresponding sg device found
+Is sg driver loaded?
+     host2: /dev/block ATA Hitachi HDS72101
+     host2: Unknown /sys/block/sda/uevent
+Controller device @ pci0000:00/0000:00:1e.0/0000:05:01.1 [aic7xxx]
+   SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 
+01)    host9: [Empty]
+Controller device @ pci0000:00/0000:00:1e.0/0000:05:01.0 [aic7xxx]
+   SCSI storage controller: Adaptec AHA-3960D / AIC-7899A U160/m (rev 
+01)    host8: [Empty]
+Controller device @ pci0000:00/0000:00:1c.4/0000:03:00.0 [pata_marvell]
+   IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II 
+Controller (rev b2)    host1: [Empty]
+     host0: Unknown /sys/block/sr0/dev
+sginfo(open): No such file or directory
+file=/dev/0:0:0:0, or no corresponding sg device found
+Is sg driver loaded?
+     host0: /dev/0:0:0:0 HL-DT-ST DVD-RAM GH22NP20
+sginfo(open): No such file or directory
+file=/dev/holders, or no corresponding sg device found
+Is sg driver loaded?
+     host0: /dev/holders HL-DT-ST DVD-RAM GH22NP20
+sginfo(open): No such file or directory
+file=/dev/queue, or no corresponding sg device found
+Is sg driver loaded?
+     host0: /dev/queue HL-DT-ST DVD-RAM GH22NP20
+     host0: Unknown /sys/block/sr0/range
+     host0: Unknown /sys/block/sr0/removable
+     host0: Unknown /sys/block/sr0/size
+sginfo(open): No such file or directory
+file=/dev/slaves, or no corresponding sg device found
+Is sg driver loaded?
+     host0: /dev/slaves HL-DT-ST DVD-RAM GH22NP20
+     host0: Unknown /sys/block/sr0/stat
+sginfo(open): No such file or directory
+file=/dev/block, or no corresponding sg device found
+Is sg driver loaded?
+     host0: /dev/block HL-DT-ST DVD-RAM GH22NP20
+     host0: Unknown /sys/block/sr0/uevent
+[root@beast ~]#
+
+So it's finding my drives but also trying to describe_device lots of 
+wrong things - maybe need a different expansion for the loop in check_host?
+
+Hopefully the below will give you a better idea of what the sysfs layout 
+is like on CentOS/RHEL 5:
+
+[root@beast 0000:00:1f.2]# pwd
+/sys/devices/pci0000:00/0000:00:1f.2
+[root@beast 0000:00:1f.2]# ls -F
+broken_parity_status  enable  host7/      resource0  subsystem@
+bus@                  host2/  irq         resource1  subsystem_device
+class                 host3/  local_cpus  resource2  subsystem_vendor
+config                host4/  modalias    resource3  uevent
+device                host5/  power/      resource4  vendor
+driver@               host6/  resource    resource5
+[root@beast 0000:00:1f.2]# ls -FR host2
+host2:
+power/  scsi_host:host2@  target2:0:0/  uevent
+
+host2/power:
+state  wakeup
+
+host2/target2:0:0:
+2:0:0:0/  power/  uevent
+
+host2/target2:0:0/2:0:0:0:
+block:sda@      iocounterbits  queue_type            state
+bus@            iodone_cnt     rescan                subsystem@
+delete          ioerr_cnt      rev                   sw_activity
+device_blocked  iorequest_cnt  scsi_device:2:0:0:0@  timeout
+dh_state        model          scsi_disk:2:0:0:0@    type
+driver@         power/         scsi_generic:sg1@     uevent
+generic@        queue_depth    scsi_level            vendor
+
+host2/target2:0:0/2:0:0:0/power:
+state  wakeup
+
+host2/target2:0:0/power:
+state  wakeup
+[root@beast 0000:00:1f.2]# ls -FR host2/target2\:0\:0/2\:0\:0\:0/block\:sda/
+host2/target2:0:0/2:0:0:0/block:sda/:
+dev      holders/  range      sda1/  size     stat        uevent
+device@  queue/    removable  sda2/  slaves/  subsystem@
+
+host2/target2:0:0/2:0:0:0/block:sda/holders:
+
+host2/target2:0:0/2:0:0:0/block:sda/queue:
+iosched/  max_hw_sectors_kb  nr_requests    scheduler
+iostats   max_sectors_kb     read_ahead_kb
+
+host2/target2:0:0/2:0:0:0/block:sda/queue/iosched:
+back_seek_max      fifo_expire_sync  slice_async     slice_sync
+back_seek_penalty  quantum           slice_async_rq
+fifo_expire_async  queued            slice_idle
+
+host2/target2:0:0/2:0:0:0/block:sda/sda1:
+dev  holders/  size  start  stat  subsystem@  uevent
+
+host2/target2:0:0/2:0:0:0/block:sda/sda1/holders:
+md0@
+
+host2/target2:0:0/2:0:0:0/block:sda/sda2:
+dev  holders/  size  start  stat  subsystem@  uevent
+
+host2/target2:0:0/2:0:0:0/block:sda/sda2/holders:
+md1@
+
+host2/target2:0:0/2:0:0:0/block:sda/slaves:
+[root@beast 0000:00:1f.2]#
 
 
-Controller device @ pci0000:00/0000:00:0b.0 [ahci]
-  SATA controller: nVidia Corporation MCP79 AHCI Controller (rev b1)
- host0: /dev/sda ATA Corsair CSSD-F60 {SN: 10326505580009990027}
-    host1: /dev/sdb ATA WDC WD20EARS-00M {SN: WD-WCAZA1022443}
-    host2: /dev/sdc ATA WDC WD20EARS-00M {SN: WD-WMAZ20152590}
-    host3: /dev/sdd ATA WDC WD20EARS-00M {SN: WD-WMAZ20188479}
-    host4: [Empty]
-    host5: [Empty]
-Controller device @ pci0000:00/0000:00:16.0/0000:05:00.0 [sata_mv]
-  SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
-230x 4 Port SATA-II Controller (rev 02)    host6: [Empty]
-    host7: /dev/sde ATA SAMSUNG HD204UI {SN: S2HGJ1RZ800964 }
-    host8: /dev/sdf ATA WDC WD20EARS-00M {SN: WD-WCAZA1000331}
-    host9: /dev/sdg ATA SAMSUNG HD204UI {SN: S2HGJ1RZ800850 }
+Hope this helps. I've also attached my edited version of the script.
 
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Many thanks,
+
+John.
+
+--------------080005020505010300020101
+Content-Type: text/plain;
+ name="describe_scsi_2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="describe_scsi_2"
+
+#! /bin/bash
+#
+# Examine specific system host devices to identify the drives attached
+#
+
+function describe_controller () {
+	local device driver modprefix serial slotname
+	driver="`readlink -f \"$1/driver\"`"
+	driver="`basename $driver`"
+	modprefix="`cut -d: -f1 <\"$1/modalias\"`"
+	echo "Controller device @ ${1##/sys/devices/} [$driver]"
+	if [[ "$modprefix" == "pci" ]] ; then
+		slotname="`basename \"$1\"`"
+		echo -n "  `lspci -s $slotname |cut -d\  -f2-`"
+		return
+	fi
+	if [[ "$modprefix" == "usb" ]] ; then
+		if [[ -f "$1/busnum" ]] ; then
+			device="`cat \"$1/busnum\"`:`cat \"$1/devnum\"`"
+			serial="`cat \"$1/serial\"`"
+		else
+			device="`cat \"$1/../busnum\"`:`cat \"$1/../devnum\"`"
+			serial="`cat \"$1/../serial\"`"
+		fi
+		echo "  `lsusb -s $device` {SN: $serial}"
+		return
+	fi
+	echo -e "  `cat \"$1/modalias\"`"
+}
+
+function describe_device () {
+	targ=${1%/block*/*}
+	vnd="`cat $targ/vendor`"
+	mdl=`cat $targ/model`
+	rdev=`readlink -f "$1"`
+	if [[ -d $rdev ]] ; then
+		bdev="`basename $rdev`"
+		sn="`sginfo -s /dev/$bdev | \
+			sed -rn -e \"/Serial Number/{s%^.+' *(.+) *'.*\\\$%\\\\1%;p;q}\"`" &>/dev/null
+		if [[ -n "$sn" ]] ; then
+			echo -e "    $bhost: `echo /dev/$bdev $vnd $mdl {SN: $sn}`"
+		else
+			echo -e "    $bhost: `echo /dev/$bdev $vnd $mdl`"
+		fi
+	else
+		echo -e "    $bhost: Unknown $rdev"
+	fi
+}
+
+function check_host () {
+	local found=0
+	local pController=
+	while read shost ; do
+		host=`dirname "$shost"`
+		controller=`dirname "$host"`
+		bhost=`basename "$host"`
+		if [[ "$controller" != "$pController" ]] ; then
+			pController="$controller"
+			describe_controller "$controller"
+		fi
+		for dev in $host/target*/*/block*/* ; do
+			if [[ "${dev: -1}" == '*' ]] ; then
+				echo -e "    $bhost: [Empty]"
+			else
+				describe_device "$dev"
+			fi
+		done
+	done
+}
+
+find /sys/devices/ -name *scsi_host* |check_host
+
+--------------080005020505010300020101--
