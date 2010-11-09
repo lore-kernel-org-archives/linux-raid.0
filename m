@@ -1,55 +1,60 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Superblock V 1.2
-Date: Tue, 09 Nov 2010 17:08:49 +0000
-Message-ID: <4CD98021.2060501@anonymous.org.uk>
-References: <20101107191507.GA31052@cons.org> <E9.7C.19545.72417DC4@cdptpa-omtalb.mail.rr.com> <20101107210852.GA77472@cons.org> <4CD71C77.4030400@anonymous.org.uk> <20101109163512.GA15649@cons.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 15/17] Monitor: more accurate size check when looking for spares
+Date: Tue, 9 Nov 2010 09:23:49 -0800
+Message-ID: <AANLkTikWs2Mb5qmY_4tMQhnr4P===W1KJvjgW9xJYVrb@mail.gmail.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD3@irsmsx504.ger.corp.intel.com>
+	<4CD39DA7.609@intel.com>
+	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BCF917A@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101109163512.GA15649@cons.org>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BCF917A@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Cracauer <cracauer@cons.org>
-Cc: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 09/11/2010 16:35, Martin Cracauer wrote:
-> John Robinson wrote on Sun, Nov 07, 2010 at 09:39:03PM +0000:
-[...]
->> That's the other difference between 0.90 and 1.x metadata. In-kernel
->> auto-assembly is only available for 0.90, and Neil Brown has made it
->> clear that there will never be in-kernel auto-assembly for 1.x, and
->> explained at length why. You need mdadm to start 1.x arrays, in your
->> initrd if your root filesystem is on such an array. All modern distros
->> create suitable initrds automatically. We are moving towards having
->> array assembly handled by udev invoking mdadm as devices are discovered.
+On Tue, Nov 9, 2010 at 7:43 AM, Czarnowska, Anna
+<anna.czarnowska@intel.com> wrote:
+>>
+>> Neil wondered if we can repurpose validate_geometry for this case? =A0=
+It
+>> is already charged with checking if a disk is suitable to be added t=
+o
+>> an
+>> array.
 >
-> That's good it know.  I still think that udev is a plot to destroy
-> Linux as we know it so I guess I'm gonna recreate this particular
->   array :-)
->
-> What do you do if you plug in a couple harddrives that have arrays on
-> them that you do not want assembled? Right now you just set them to a
-> partition type other than autodetect and you are good.
+> I had a look at validate_geometry and I don't think it makes sense to=
+ modify it for Monitor.
+> Validate_geometry is made for Create. When creating container validat=
+e_geometry doesn't check much for imsm. When adding to a volume all dis=
+ks must be already in the same container and have some common free regi=
+on. We want the check before we move a spare. And the whole spare is fr=
+ee (is not used by any arrays in that container). I think it is better =
+to have smaller functions and use them as building blocks, than make a =
+big function even more complicated for every special case.
 
-You can still do that, but the "right" way to do it (I think) is to use 
-the AUTO keyword and only to include the arrays you want assembled at 
-boot time in the mdadm.conf that goes into the initrd.
+Yes, and no :-). There is a line to be drawn between refactoring and
+adding complexity, and you are right that all things being equal
+validate_geometry() as it stands today is an awkward fit.  However,
+the architecture rework Neil is doing is coming precisely from the
+realization that we are generating lots of these special case routines
+that are doing not much more than representing the same data to
+slightly different contexts.  The conclusion to be drawn is that our
+interface from generic mdadm to the metadata handler is perhaps too
+fine grained.   Hence the refactoring and why in this case it is
+worthwhile to at least ask the question: can a routine tasked with
+validating disks are proper candidates to be added to an array /
+container be trivially re-purposed to handle the case of validating
+that a spare is suitable for an existing container?  I agree with your
+conclusion, but wanted to share why I think Neil asked the question,
+hopefully I am not putting words in his mouth.
 
-> What do you do when udev maintainers in distributions screw up and
-> replace good udev entires with bad ones? That happened to me
-> repeatedly and is the major reason for the attitude above.
-
-Oh dear, you've had a bad experience there then. I like udev. I disliked 
-the old huge /dev with gazillions of entries for devices you don't have, 
-and you still ended up using MAKEDEV or mknod whenever you added 
-something new. I did say "moving towards" because udev-based assembly 
-isn't 100% there yet, and I don't think any distros are trying to use 
-it. But the other great thing we will get with udev is hotplugging, 
-including the option to configure in advance auto-rebuilding of arrays, 
-something that hardware RAID adapters have always had but we still don't 
-for software RAID.
-
-Cheers,
-
-John.
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
