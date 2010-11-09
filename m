@@ -1,56 +1,55 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [PATCH] md: raid5: update suspend_hi during the reshape
-Date: Tue, 9 Nov 2010 17:02:23 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174A1CAB3@irsmsx503.ger.corp.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Superblock V 1.2
+Date: Tue, 09 Nov 2010 17:08:49 +0000
+Message-ID: <4CD98021.2060501@anonymous.org.uk>
+References: <20101107191507.GA31052@cons.org> <E9.7C.19545.72417DC4@cdptpa-omtalb.mail.rr.com> <20101107210852.GA77472@cons.org> <4CD71C77.4030400@anonymous.org.uk> <20101109163512.GA15649@cons.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20101109163512.GA15649@cons.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Martin Cracauer <cracauer@cons.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch is required by checkpointing for external metadata functionality.
+On 09/11/2010 16:35, Martin Cracauer wrote:
+> John Robinson wrote on Sun, Nov 07, 2010 at 09:39:03PM +0000:
+[...]
+>> That's the other difference between 0.90 and 1.x metadata. In-kernel
+>> auto-assembly is only available for 0.90, and Neil Brown has made it
+>> clear that there will never be in-kernel auto-assembly for 1.x, and
+>> explained at length why. You need mdadm to start 1.x arrays, in your
+>> initrd if your root filesystem is on such an array. All modern distros
+>> create suitable initrds automatically. We are moving towards having
+>> array assembly handled by udev invoking mdadm as devices are discovered.
+>
+> That's good it know.  I still think that udev is a plot to destroy
+> Linux as we know it so I guess I'm gonna recreate this particular
+>   array :-)
+>
+> What do you do if you plug in a couple harddrives that have arrays on
+> them that you do not want assembled? Right now you just set them to a
+> partition type other than autodetect and you are good.
 
-When performing external reshape it is needed to move suspend_hi forward to keep up with the current reshape_position.
+You can still do that, but the "right" way to do it (I think) is to use 
+the AUTO keyword and only to include the arrays you want assembled at 
+boot time in the mdadm.conf that goes into the initrd.
 
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
----
+> What do you do when udev maintainers in distributions screw up and
+> replace good udev entires with bad ones? That happened to me
+> repeatedly and is the major reason for the attitude above.
 
- drivers/md/raid5.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+Oh dear, you've had a bad experience there then. I like udev. I disliked 
+the old huge /dev with gazillions of entries for devices you don't have, 
+and you still ended up using MAKEDEV or mknod whenever you added 
+something new. I did say "moving towards" because udev-based assembly 
+isn't 100% there yet, and I don't think any distros are trying to use 
+it. But the other great thing we will get with udev is hotplugging, 
+including the option to configure in advance auto-rebuilding of arrays, 
+something that hardware RAID adapters have always had but we still don't 
+for software RAID.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index 53d7579..353c7c6 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4353,6 +4353,14 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		wake_up(&conf->wait_for_overlap);
- 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 	}
-+	if (mddev->external && mddev->reshape_position > mddev->suspend_hi) {
-+		if (mddev->reshape_position == MaxSector)
-+			mddev->suspend_hi = 0;
-+		else
-+			mddev->suspend_hi = mddev->reshape_position;
-+		mddev->pers->quiesce(mddev, 1);
-+		mddev->pers->quiesce(mddev, 0);
-+	}
- 	return reshape_sectors;
- }
- 
-@@ -5691,6 +5699,12 @@ static void raid5_finish_reshape(mddev_t *mddev)
- 		mddev->chunk_sectors = conf->chunk_sectors;
- 		mddev->reshape_position = MaxSector;
- 		mddev->delta_disks = 0;
-+
-+		if (mddev->external) {
-+			mddev->suspend_hi = 0;
-+			mddev->pers->quiesce(mddev, 1);
-+			mddev->pers->quiesce(mddev, 0);
-+		}
- 	}
- }
- 
+Cheers,
 
+John.
