@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [PATCH 27/31] mdadm: support restore_stripes() from the given buffer
-Date: Tue, 9 Nov 2010 17:01:26 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174A1CAAB@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 23/31] mdadm: second_map enhancement for imsm_get_map()
+Date: Tue, 9 Nov 2010 17:01:22 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D174A1CAA7@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,123 +12,221 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Currently restore_stripes() function is able to restore data only from the given backup file handles and it is used only for assembling partially reshaped arrays.
-As this function will be very helpful for external metadata backup mechanism, add the support for restoring data from the given source buffer.
+Allow map related operations for the given map: first of second.
+For reshape specific functionality it is required to have an access
+
+Until now, the active map was chosen according to the current volume status.
 
 Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- mdadm/mdadm/Grow.c     |    4 ++--
- mdadm/mdadm/mdadm.h    |    3 ++-
- mdadm/mdadm/restripe.c |   44 ++++++++++++++++++++++++++------------------
- 3 files changed, 30 insertions(+), 21 deletions(-)
+ mdadm/mdadm/super-intel.c |   64 ++++++++++++++++++++++++++-------------------
+ 1 files changed, 37 insertions(+), 27 deletions(-)
 
-diff --git a/mdadm/mdadm/Grow.c b/mdadm/mdadm/Grow.c index a0d91e1..e4bdc95 100644
---- a/mdadm/mdadm/Grow.c
-+++ b/mdadm/mdadm/Grow.c
-@@ -2403,7 +2403,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 				    info->new_layout,
- 				    fd, __le64_to_cpu(bsb.devstart)*512,
- 				    __le64_to_cpu(bsb.arraystart)*512,
--				    __le64_to_cpu(bsb.length)*512)) {
-+				    __le64_to_cpu(bsb.length)*512, NULL)) {
- 			/* didn't succeed, so giveup */
- 			if (verbose)
- 				fprintf(stderr, Name ": Error restoring backup from %s\n", @@ -2420,7 +2420,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 				    fd, __le64_to_cpu(bsb.devstart)*512 +
- 				    __le64_to_cpu(bsb.devstart2)*512,
- 				    __le64_to_cpu(bsb.arraystart2)*512,
--				    __le64_to_cpu(bsb.length2)*512)) {
-+				    __le64_to_cpu(bsb.length2)*512, NULL)) {
- 			/* didn't succeed, so giveup */
- 			if (verbose)
- 				fprintf(stderr, Name ": Error restoring second backup from %s\n", diff --git a/mdadm/mdadm/mdadm.h b/mdadm/mdadm/mdadm.h index b46b90e..4eed084 100644
---- a/mdadm/mdadm/mdadm.h
-+++ b/mdadm/mdadm/mdadm.h
-@@ -479,7 +479,8 @@ extern int save_stripes(int *source, unsigned long long *offsets,  extern int restore_stripes(int *dest, unsigned long long *offsets,
- 			   int raid_disks, int chunk_size, int level, int layout,
- 			   int source, unsigned long long read_offset,
--			   unsigned long long start, unsigned long long length);
-+			   unsigned long long start, unsigned long long length,
-+			   char *src_buf);
+diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c index 98799a5..549f252 100644
+--- a/mdadm/mdadm/super-intel.c
++++ b/mdadm/mdadm/super-intel.c
+@@ -519,23 +519,33 @@ static struct imsm_dev *get_imsm_dev(struct intel_super *super, __u8 index)
+ 	return NULL;
+ }
  
- 
- #ifndef Sendmail
-diff --git a/mdadm/mdadm/restripe.c b/mdadm/mdadm/restripe.c index c2fbe5b..7add7ce 100644
---- a/mdadm/mdadm/restripe.c
-+++ b/mdadm/mdadm/restripe.c
-@@ -533,11 +533,10 @@ int save_stripes(int *source, unsigned long long *offsets,
- 						  fdisk[0], fdisk[1], bufs);
- 			}
- 		}
--
--		for (i=0; i<nwrites; i++)
--			if (write(dest[i], buf, len) != len)
--				return -1;
--
-+		if (dest)
-+			for (i = 0; i < nwrites; i++)
-+				if (write(dest[i], buf, len) != len)
-+					return -1;
- 		length -= len;
- 		start += len;
- 	}
-@@ -558,7 +557,8 @@ int save_stripes(int *source, unsigned long long *offsets,  int restore_stripes(int *dest, unsigned long long *offsets,
- 		    int raid_disks, int chunk_size, int level, int layout,
- 		    int source, unsigned long long read_offset,
--		    unsigned long long start, unsigned long long length)
-+		    unsigned long long start, unsigned long long length,
-+		    char *src_buf)
+-static __u32 get_imsm_ord_tbl_ent(struct imsm_dev *dev, int slot)
++/*
++ * for second_map:
++ *  == 0 get first map
++ *  == 1 get second map
++ *  == -1 than get map according to the current migr_state  */ static 
++__u32 get_imsm_ord_tbl_ent(struct imsm_dev *dev, int slot, int 
++second_map)
  {
- 	char *stripe_buf;
- 	char **stripes = malloc(raid_disks * sizeof(char*)); @@ -576,13 +576,17 @@ int restore_stripes(int *dest, unsigned long long *offsets,
+ 	struct imsm_map *map;
+ 
+-	if (dev->vol.migr_state)
+-		map = get_imsm_map(dev, 1);
+-	else
+-		map = get_imsm_map(dev, 0);
++	if (second_map == -1) {
++		if (dev->vol.migr_state)
++			map = get_imsm_map(dev, 1);
++		else
++			map = get_imsm_map(dev, 0);
++	} else {
++		map = get_imsm_map(dev, second_map);
++	}
+ 
+ 	/* top byte identifies disk under rebuild */
+ 	return __le32_to_cpu(map->disk_ord_tbl[slot]);
+ }
+ 
+ #define ord_to_idx(ord) (((ord) << 8) >> 8) -static __u32 get_imsm_disk_idx(struct imsm_dev *dev, int slot)
++static __u32 get_imsm_disk_idx(struct imsm_dev *dev, int slot, int 
++second_map)
+ {
+-	__u32 ord = get_imsm_ord_tbl_ent(dev, slot);
++	__u32 ord = get_imsm_ord_tbl_ent(dev, slot, second_map);
+ 
+ 	return ord_to_idx(ord);
+ }
+@@ -712,13 +722,13 @@ static void print_imsm_dev(struct imsm_dev *dev, char *uuid, int disk_idx)
+ 	printf("        Members : %d\n", map->num_members);
+ 	printf("          Slots : [");
+ 	for (i = 0; i < map->num_members; i++) {
+-		ord = get_imsm_ord_tbl_ent(dev, i);
++		ord = get_imsm_ord_tbl_ent(dev, i, -1);
+ 		printf("%s", ord & IMSM_ORD_REBUILD ? "_" : "U");
  	}
- 	if (stripe_buf == NULL || stripes == NULL || blocks == NULL
- 	    || zero == NULL) {
--		free(stripe_buf);
--		free(stripes);
--		free(blocks);
--		free(zero);
-+		if (stripe_buf != NULL)
-+			free(stripe_buf);
-+		if (stripes != NULL)
-+			free(stripes);
-+		if (blocks != NULL)
-+			free(blocks);
-+		if (zero != NULL)
-+			free(zero);
- 		return -2;
- 	}
--	for (i=0; i<raid_disks; i++)
-+	for (i = 0; i < raid_disks; i++)
- 		stripes[i] = stripe_buf + i * chunk_size;
- 	while (length > 0) {
- 		unsigned int len = data_disks * chunk_size; @@ -591,15 +595,19 @@ int restore_stripes(int *dest, unsigned long long *offsets,
- 		int syndrome_disks;
- 		if (length < len)
- 			return -3;
--		for (i=0; i < data_disks; i++) {
-+		for (i = 0; i < data_disks; i++) {
- 			int disk = geo_map(i, start/chunk_size/data_disks,
- 					   raid_disks, level, layout);
--			if ((unsigned long long)lseek64(source, read_offset, 0)
--			    != read_offset)
--				return -1;
--			if (read(source, stripes[disk],
--						     chunk_size) != chunk_size)
--				return -1;
-+			if (src_buf == NULL) {
-+				/* read from file */
-+				if (lseek64(source, read_offset, 0) != (off64_t)read_offset)
-+					return -1;
-+				if (read(source, stripes[disk], chunk_size) != chunk_size)
-+					return -1;
-+			} else {
-+				/* read from input buffer */
-+				memcpy(stripes[disk], src_buf + read_offset, chunk_size);
-+			}
- 			read_offset += chunk_size;
+ 	printf("]\n");
+ 	slot = get_imsm_disk_slot(map, disk_idx);
+ 	if (slot >= 0) {
+-		ord = get_imsm_ord_tbl_ent(dev, slot);
++		ord = get_imsm_ord_tbl_ent(dev, slot, -1);
+ 		printf("      This Slot : %d%s\n", slot,
+ 		       ord & IMSM_ORD_REBUILD ? " (out-of-sync)" : "");
+ 	} else
+@@ -1356,12 +1366,12 @@ static __u32 num_stripes_per_unit_rebuild(struct imsm_dev *dev)
+ 		return num_stripes_per_unit_resync(dev);  }
+ 
+-static __u8 imsm_num_data_members(struct imsm_dev *dev)
++static __u8 imsm_num_data_members(struct imsm_dev *dev, int second_map)
+ {
+ 	/* named 'imsm_' because raid0, raid1 and raid10
+ 	 * counter-intuitively have the same number of data disks
+ 	 */
+-	struct imsm_map *map = get_imsm_map(dev, 0);
++	struct imsm_map *map = get_imsm_map(dev, second_map);
+ 
+ 	switch (get_imsm_raid_level(map)) {
+ 	case 0:
+@@ -1444,7 +1454,7 @@ static __u64 blocks_per_migr_unit(struct imsm_dev *dev)
+ 		 */
+ 		stripes_per_unit = num_stripes_per_unit_resync(dev);
+ 		migr_chunk = migr_strip_blocks_resync(dev);
+-		disks = imsm_num_data_members(dev);
++		disks = imsm_num_data_members(dev, 0);
+ 		blocks_per_unit = stripes_per_unit * migr_chunk * disks;
+ 		stripe = __le32_to_cpu(map->blocks_per_strip) * disks;
+ 		segment = blocks_per_unit / stripe;
+@@ -1675,7 +1685,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 			 * (catches single-degraded vs double-degraded)
+ 			 */
+ 			for (j = 0; j < map->num_members; j++) {
+-				__u32 ord = get_imsm_ord_tbl_ent(dev, i);
++				__u32 ord = get_imsm_ord_tbl_ent(dev, i, -1);
+ 				__u32 idx = ord_to_idx(ord);
+ 
+ 				if (!(ord & IMSM_ORD_REBUILD) &&
+@@ -3383,7 +3393,7 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 	/* Check the device has not already been added */
+ 	slot = get_imsm_disk_slot(map, dl->index);
+ 	if (slot >= 0 &&
+-	    (get_imsm_ord_tbl_ent(dev, slot) & IMSM_ORD_REBUILD) == 0) {
++	    (get_imsm_ord_tbl_ent(dev, slot, -1) & IMSM_ORD_REBUILD) == 0) {
+ 		fprintf(stderr, Name ": %s has been included in this array twice\n",
+ 			devname);
+ 		return 1;
+@@ -3629,7 +3639,7 @@ static int create_array(struct supertype *st, int dev_idx)
+ 	imsm_copy_dev(&u->dev, dev);
+ 	inf = get_disk_info(u);
+ 	for (i = 0; i < map->num_members; i++) {
+-		int idx = get_imsm_disk_idx(dev, i);
++		int idx = get_imsm_disk_idx(dev, i, -1);
+ 
+ 		disk = get_imsm_disk(super, idx);
+ 		serialcpy(inf[i].serial, disk->serial); @@ -4503,8 +4513,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st)
+ 			__u32 ord;
+ 
+ 			skip = 0;
+-			idx = get_imsm_disk_idx(dev, slot);
+-			ord = get_imsm_ord_tbl_ent(dev, slot); 
++			idx = get_imsm_disk_idx(dev, slot, 0);
++			ord = get_imsm_ord_tbl_ent(dev, slot, 0);
+ 			for (d = super->disks; d ; d = d->next)
+ 				if (d->index == idx)
+ 					break;
+@@ -4599,7 +4609,7 @@ static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
+ 		int insync = insync;
+ 
+ 		for (i = 0; i < map->num_members; i++) {
+-			__u32 ord = get_imsm_ord_tbl_ent(dev, i);
++			__u32 ord = get_imsm_ord_tbl_ent(dev, i, -1);
+ 			int idx = ord_to_idx(ord);
+ 			struct imsm_disk *disk;
+ 
+@@ -4885,7 +4895,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 
+ 	dprintf("imsm: set_disk %d:%x\n", n, state);
+ 
+-	ord = get_imsm_ord_tbl_ent(dev, n);
++	ord = get_imsm_ord_tbl_ent(dev, n, -1);
+ 	disk = get_imsm_disk(super, ord_to_idx(ord));
+ 
+ 	/* check for new failures */
+@@ -4992,7 +5002,7 @@ static void imsm_sync_metadata(struct supertype *container)  static struct dl *imsm_readd(struct intel_super *super, int idx, struct active_array *a)  {
+ 	struct imsm_dev *dev = get_imsm_dev(super, a->info.container_member);
+-	int i = get_imsm_disk_idx(dev, idx);
++	int i = get_imsm_disk_idx(dev, idx, -1);
+ 	struct dl *dl;
+ 
+ 	for (dl = super->disks; dl; dl = dl->next) @@ -5013,7 +5023,7 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
+ 				 struct mdinfo *additional_test_list)  {
+ 	struct imsm_dev *dev = get_imsm_dev(super, a->info.container_member);
+-	int idx = get_imsm_disk_idx(dev, slot);
++	int idx = get_imsm_disk_idx(dev, slot, -1);
+ 	struct imsm_super *mpb = super->anchor;
+ 	struct imsm_map *map;
+ 	unsigned long long pos;
+@@ -5278,7 +5288,7 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
+ 	int j;
+ 
+ 	for (i = 0; i < map->num_members; i++) {
+-		disk = get_imsm_disk(super, get_imsm_disk_idx(dev, i));
++		disk = get_imsm_disk(super, get_imsm_disk_idx(dev, i, -1));
+ 		for (j = 0; j < new_map->num_members; j++)
+ 			if (serialcmp(disk->serial, inf[j].serial) == 0)
+ 				return 1;
+@@ -5571,7 +5581,7 @@ update_reshape_exit:
+ 		struct dl *dl;
+ 		unsigned int found;
+ 		int failed;
+-		int victim = get_imsm_disk_idx(dev, u->slot);
++		int victim = get_imsm_disk_idx(dev, u->slot, -1);
+ 		int i;
+ 
+ 		for (dl = super->disks; dl; dl = dl->next) @@ -5594,7 +5604,7 @@ update_reshape_exit:
+ 		for (i = 0; i < map->num_members; i++) {
+ 			if (i == u->slot)
+ 				continue;
+-			disk = get_imsm_disk(super, get_imsm_disk_idx(dev, i));
++			disk = get_imsm_disk(super, get_imsm_disk_idx(dev, i, -1));
+ 			if (!disk || is_failed(disk))
+ 				failed++;
  		}
- 		/* We have the data, now do the parity */
+@@ -6059,7 +6069,7 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+ 			/* update ord entries being careful not to propagate
+ 			 * ord-flags to the first map
+ 			 */
+-			ord = get_imsm_ord_tbl_ent(dev, j);
++			ord = get_imsm_ord_tbl_ent(dev, j, -1);
+ 
+ 			if (ord_to_idx(ord) <= index)
+ 				continue;
+@@ -6150,7 +6160,7 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
+ 			    (dl->minor != newdi->disk.minor))
+ 				continue;
+ 			slot = get_imsm_disk_slot(map, dl->index);
+-			idx = get_imsm_ord_tbl_ent(dev_new, slot);
++			idx = get_imsm_ord_tbl_ent(dev_new, slot, 0);
+ 			tmp_ord_tbl[newdi->disk.raid_disk] = idx;
+ 			break;
+ 		}
+@@ -6554,7 +6564,7 @@ calculate_size_only:
+ 	/* calculate new size
+ 	 */
+ 	if (new_map != NULL) {
+-		used_disks = imsm_num_data_members(upd_devs);
++		used_disks = imsm_num_data_members(upd_devs, 0);
+ 		array_blocks = new_map->blocks_per_member * used_disks;
+ 		/* round array size down to closest MB
+ 		 */
 
