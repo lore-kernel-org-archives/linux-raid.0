@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [PATCH 25/31] mdadm: Add IMSM migration record to intel_super
-Date: Tue, 9 Nov 2010 17:01:24 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174A1CAA9@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 30/31] Add mdadm->mdmon sync_max command message
+Date: Tue, 9 Nov 2010 17:01:42 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D174A1CAAF@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,260 +12,250 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Add support for IMSM migration record structure.
-IMSM migration record is stored on the first two disks of IMSM volume during the migration.
+Currently only metadata_update messages can be send from mdadm do mdmon using a socket.
+For the external metadata reshape implementation a support for sending sync_max command will be also needed.
 
-Add function for reading/writing migration record - they will be used by the next checkpointing patches.
-Clear migration record every time MIGR_GEN_MIGR is started.
+A new type of message "cmd_message" was defined.
+cmd_message is a generic structure that enables to define different types of commands to be send from mdadm to mdmon.
+
+cmd_message's and update_message's are recognized by different start magic numbers sent through the socket.
+
+In this patch only one type of cmd_message was defined:
+'SET_SYNC_MAX'
 
 Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- mdadm/mdadm/super-intel.c |  166 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 161 insertions(+), 5 deletions(-)
+ mdadm/mdadm/managemon.c |   39 +++++++++++++++++++++++++++++++++++++--
+ mdadm/mdadm/mdadm.h     |   18 ++++++++++++++++++
+ mdadm/mdadm/mdmon.h     |    3 +++
+ mdadm/mdadm/msg.c       |   33 +++++++++++++++++++++++++++++++--
+ mdadm/mdadm/msg.h       |    2 ++
+ mdadm/mdadm/util.c      |   25 +++++++++++++++++++++++++
+ 6 files changed, 116 insertions(+), 4 deletions(-)
 
-diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c index 549f252..3a34a4a 100644
---- a/mdadm/mdadm/super-intel.c
-+++ b/mdadm/mdadm/super-intel.c
-@@ -205,6 +205,31 @@ static inline int experimental(void)  #endif  }
- 
-+#define UNIT_SRC_NORMAL     0   /* Source data for curr_migr_unit must
-+				 *  be recovered using srcMap */
-+#define UNIT_SRC_IN_CP_AREA 1   /* Source data for curr_migr_unit has
-+				 *  already been migrated and must
-+				 *  be recovered from checkpoint area */ struct migr_record {
-+	__u32 rec_status;           /* Status used to determine how to restart
-+				     * migration in case it aborts in some fashion */
-+	__u32 curr_migr_unit;       /* 0..numMigrUnits-1 */
-+	__u32 family_num;           /* Family number of MPB containing the RaidDev
-+				     * that is migrating */
-+	__u32 ascending_migr;       /* True if migrating in increasing order of lbas */
-+	__u32 blocks_per_unit;      /* Num disk blocks per unit of operation */
-+	__u32 dest_depth_per_unit;  /* Num member blocks each destMap member disk
-+				     * advances per unit-of-operation */
-+	__u32 ckpt_area_pba;        /* Pba of first block of ckpt copy area */
-+	__u32 dest_1st_member_lba;  /* First member lba on first stripe of destination */
-+	__u32 num_migr_units;       /* Total num migration units-of-op */
-+	__u32 post_migr_vol_cap;    /* Size of volume after migration completes */
-+	__u32 post_migr_vol_cap_hi; /* Expansion space for LBA64 */
-+	__u32 ckpt_read_disk_num;   /* Which member disk in destSubMap[0] the
-+				     * migration ckpt record was read from
-+				     * (for recovered migrations) */ } __attribute__ 
-+((__packed__));
-+
- static __u8 migr_type(struct imsm_dev *dev)  {
- 	if (dev->vol.migr_type == MIGR_VERIFY && @@ -250,6 +275,10 @@ struct intel_super {
- 		void *buf; /* O_DIRECT buffer for reading/writing metadata */
- 		struct imsm_super *anchor; /* immovable parameters */
- 	};
-+	union {
-+		void *migr_rec_buf; /* buffer for I/O operations */
-+		struct migr_record *migr_rec; /* migration record */
-+	};
- 	size_t len; /* size of the 'buf' allocation */
- 	void *next_buf; /* for realloc'ing buf from the manager */
- 	size_t next_len;
-@@ -1493,6 +1522,104 @@ static int imsm_level_to_layout(int level)
- 	return UnSet;
+diff --git a/mdadm/mdadm/managemon.c b/mdadm/mdadm/managemon.c index 608ab4d..34ddc4c 100644
+--- a/mdadm/mdadm/managemon.c
++++ b/mdadm/mdadm/managemon.c
+@@ -727,13 +727,36 @@ static void handle_message(struct supertype *container, struct metadata_update *
+ 	}
  }
  
-+/*
-+ * load_imsm_migr_rec - read imsm migration record  */
-+__attribute__((unused))
-+static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo
-+*info) {
-+	unsigned long long dsize;
-+	struct mdinfo *sd;
-+	struct dl *dl;
-+	char nm[30];
-+	int retval = -1;
-+	int fd = -1;
++static void handle_command(struct supertype *container, struct 
++cmd_message *msg) {
++	struct active_array *a;
 +
-+	for (sd = info->devs ; sd ; sd = sd->next) {
-+		/* read only from one of the first two slots */
-+		if (sd->disk.raid_disk > 1)
-+			continue;
-+		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-+		fd = dev_open(nm, O_RDONLY);
-+		if (fd >= 0)
++	/* Search for a member of this container */
++	for (a = container->arrays; a; a = a->next)
++		if (msg->devnum == a->devnum)
 +			break;
++
++	if (!a)
++		return;
++
++	/* check command msg type */
++	switch (msg->type) {
++	case SET_SYNC_MAX:
++		/* Add SET_SYNC_MAX handler here */
++		break;
 +	}
-+	if (fd < 0) {
-+		for (dl = super->disks; dl; dl = dl->next) {
-+			/* read only from one of the first two slots */
-+			if (dl->index > 1)
-+				continue;
-+			sprintf(nm, "%d:%d", dl->major, dl->minor);
-+			fd = dev_open(nm, O_RDONLY);
-+			if (fd >= 0)
-+				break;
++}
++
+ void read_sock(struct supertype *container)  {
+ 	int fd;
+ 	struct metadata_update msg;
++	struct mdmon_update *update;
++	struct cmd_message *cmd_msg;
+ 	int terminate = 0;
+ 	long fl;
+ 	int tmo = 3; /* 3 second timeout before hanging up the socket */
++	int rv;
+ 
+ 	fd = accept(container->sock, NULL, NULL);
+ 	if (fd < 0)
+@@ -747,7 +770,9 @@ void read_sock(struct supertype *container)
+ 		msg.buf = NULL;
+ 
+ 		/* read and validate the message */
+-		if (receive_message(fd, &msg, tmo) == 0) {
++		rv = receive_message(fd, &msg, tmo);
++		if (rv == 0) {
++			/* metadata update */
+ 			handle_message(container, &msg);
+ 			if (msg.len == 0) {
+ 				/* ping reply with version */
+@@ -757,8 +782,18 @@ void read_sock(struct supertype *container)
+ 					terminate = 1;
+ 			} else if (ack(fd, tmo) < 0)
+ 				terminate = 1;
+-		} else
++		} else if (rv == 1) {
++			/* mdmon_update received */
++			update = (struct mdmon_update *)&msg;
++			cmd_msg = (struct cmd_message *)(update->buf);
++			handle_command(container, cmd_msg);
++
++			free(msg.buf);
++			if (ack(fd, tmo) < 0)
++				terminate = 1;
++		} else {
+ 			terminate = 1;
 +		}
-+	}
-+	if (fd < 0)
-+		goto out;
-+	get_dev_size(fd, NULL, &dsize);
-+	if (lseek64(fd, dsize - 512, SEEK_SET) < 0) {
-+		fprintf(stderr,
-+			Name ": Cannot seek to anchor block: %s\n",
-+			strerror(errno));
-+		goto out;
-+	}
-+	if (read(fd, super->migr_rec_buf, 512) != 512) {
-+		fprintf(stderr,
-+			Name ": Cannot read migr record block: %s\n",
-+			strerror(errno));
-+		goto out;
-+	}
-+	retval = 0;
-+ out:
-+	if (fd >= 0)
-+		close(fd);
-+	return retval;
+ 
+ 	} while (!terminate);
+ 
+diff --git a/mdadm/mdadm/mdadm.h b/mdadm/mdadm/mdadm.h index 4eed084..c19a4f6 100644
+--- a/mdadm/mdadm/mdadm.h
++++ b/mdadm/mdadm/mdadm.h
+@@ -751,6 +751,23 @@ struct metadata_update {
+ 	struct metadata_update *next;
+ };
+ 
++struct mdmon_update {
++	int len;
++	char *buf;
++};
++
++enum cmd_type {
++	SET_SYNC_MAX,
++};
++
++struct cmd_message {
++	enum cmd_type type;
++	int devnum;
++	union {
++		unsigned long long new_sync_max;
++	} msg_buf;
++};
++
+ /* A supertype holds a particular collection of metadata.
+  * It identifies the metadata type by the superswitch, and the particular
+  * sub-version of that metadata type.
+@@ -981,6 +998,7 @@ extern int assemble_container_content(struct supertype *st, int mdfd,  extern int add_disk(int mdfd, struct supertype *st,
+ 		    struct mdinfo *sra, struct mdinfo *info);  extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
++extern int send_mdmon_cmd(struct supertype *st, struct mdmon_update 
++*update);
+ unsigned long long min_recovery_start(struct mdinfo *array);
+ 
+ extern char *human_size(long long bytes); diff --git a/mdadm/mdadm/mdmon.h b/mdadm/mdadm/mdmon.h index 9cab788..1bc4ee2 100644
+--- a/mdadm/mdadm/mdmon.h
++++ b/mdadm/mdadm/mdmon.h
+@@ -58,6 +58,9 @@ struct active_array {
+ #define RESHAPE_CANCEL_REQUEST	(RESHAPE_IN_PROGRESS-1)
+ 
+ 	int reshape_delta_disks;
++	int waiting_resync_max; /* wait for resync_max cmd from mdadm */
++	long long unsigned resync_max;
++	long long unsigned sync_completed;
+ 
+ 	int check_degraded; /* flag set by mon, read by manage */
+ 
+diff --git a/mdadm/mdadm/msg.c b/mdadm/mdadm/msg.c index a809c13..a452aef 100644
+--- a/mdadm/mdadm/msg.c
++++ b/mdadm/mdadm/msg.c
+@@ -32,6 +32,7 @@
+ #include "mdmon.h"
+ 
+ static const __u32 start_magic = 0x5a5aa5a5;
++static const __u32 start_magic_cmd = 0x6b6bb6b6;
+ static const __u32 end_magic = 0xa5a55a5a;
+ 
+ static int send_buf(int fd, const void* buf, int len, int tmo) @@ -93,14 +94,42 @@ int send_message(int fd, struct metadata_update *msg, int tmo)
+ 	return rv;
+ }
+ 
++int send_message_cmd(int fd, struct mdmon_update *update, int tmo) {
++	__s32 len = update->len;
++	int rv;
++
++	rv = send_buf(fd, &start_magic_cmd, 4, tmo);
++	rv = rv ?: send_buf(fd, &len, 4, tmo);
++	if (len > 0)
++		rv = rv ?: send_buf(fd, update->buf, update->len, tmo);
++	rv = send_buf(fd, &end_magic, 4, tmo);
++
++	return rv;
 +}
 +
 +/*
-+ * write_imsm_migr_rec - write imsm migration record  */
-+__attribute__((unused))
-+static int write_imsm_migr_rec(struct intel_super *super, struct mdinfo
-+*info) {
-+	unsigned long long dsize;
-+	struct mdinfo *sd;
-+	char nm[30];
-+	int fd = -1;
-+	int retval = -1;
-+
-+	for (sd = info->devs ; sd ; sd = sd->next) {
-+		/* read only from one of the first two slots */
-+		if (sd->disk.raid_disk > 1)
-+			continue;
-+		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
-+		fd = dev_open(nm, O_RDWR);
-+		if (fd < 0)
-+			continue;
-+		get_dev_size(fd, NULL, &dsize);
-+		if (lseek64(fd, dsize - 512, SEEK_SET) < 0) {
-+			fprintf(stderr,
-+				Name ": Cannot seek to anchor block: %s\n",
-+				strerror(errno));
-+			goto out;
-+		}
-+		if (write(fd, super->migr_rec_buf, 512) != 512) {
-+			fprintf(stderr,
-+				Name ": Cannot write migr record block: %s\n",
-+				strerror(errno));
-+			goto out;
-+		}
-+		close(fd);
-+		fd = -1;
-+	}
-+	retval = 0;
-+ out:
-+	if (fd >= 0)
-+		close(fd);
-+	return retval;
-+}
-+
- static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)  {
- 	struct intel_super *super = st->sb;
-@@ -2195,8 +2322,11 @@ load_imsm_disk(int fd, struct intel_super *super, char *devname, int keep_fd)
-  *    map1state=normal)
-  * 4/ Rebuild (migr_state=1 migr_type=MIGR_REBUILD map0state=normal
-  *    map1state=degraded)
-+ * 5/ Migration (mig_state=1 migr_type=MIGR_GEN_MIGR map0state=normal
-+ *    map1state=normal)
-  */
--static void migrate(struct imsm_dev *dev, __u8 to_state, int migr_type)
-+static void migrate(struct imsm_dev *dev, struct intel_super *super,
-+		    __u8 to_state, int migr_type)
- {
- 	struct imsm_map *dest;
- 	struct imsm_map *src = get_imsm_map(dev, 0); @@ -2219,6 +2349,10 @@ static void migrate(struct imsm_dev *dev, __u8 to_state, int migr_type)
- 		}
- 	}
++ * return:
++ *  0 - metadata_update received
++ *  1 - mdmon_update received
++ * -1 - error case
++ */
+ int receive_message(int fd, struct metadata_update *msg, int tmo)  {
+ 	__u32 magic;
+ 	__s32 len;
+ 	int rv;
++	int msg_type;
  
-+	if (migr_type == MIGR_GEN_MIGR)
-+		/* Clear migration record */
-+		memset(super->migr_rec, 0, sizeof(struct migr_record));
+ 	rv = recv_buf(fd, &magic, 4, tmo);
+-	if (rv < 0 || magic != start_magic)
++	if (rv < 0)
++		return -1;
 +
- 	src->map_state = to_state;
++	if (magic == start_magic)
++		msg_type = 0;
++	else if (magic == start_magic_cmd)
++		msg_type = 1;
++	else
+ 		return -1;
+ 	rv = recv_buf(fd, &len, 4, tmo);
+ 	if (rv < 0 || len > MSG_MAX_LEN)
+@@ -122,7 +151,7 @@ int receive_message(int fd, struct metadata_update *msg, int tmo)
+ 		return -1;
+ 	}
+ 	msg->len = len;
+-	return 0;
++	return msg_type;
  }
  
-@@ -2377,6 +2511,14 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
+ int ack(int fd, int tmo)
+diff --git a/mdadm/mdadm/msg.h b/mdadm/mdadm/msg.h index 1f916de..046f7c4 100644
+--- a/mdadm/mdadm/msg.h
++++ b/mdadm/mdadm/msg.h
+@@ -20,9 +20,11 @@
  
- 	sectors = mpb_sectors(anchor) - 1;
- 	free(anchor);
+ struct mdinfo;
+ struct metadata_update;
++struct mdmon_update;
+ 
+ extern int receive_message(int fd, struct metadata_update *msg, int tmo);  extern int send_message(int fd, struct metadata_update *msg, int tmo);
++extern int send_message_cmd(int fd, struct mdmon_update *update, int 
++tmo);
+ extern int ack(int fd, int tmo);
+ extern int wait_reply(int fd, int tmo);  extern int connect_monitor(char *devname); diff --git a/mdadm/mdadm/util.c b/mdadm/mdadm/util.c index 412c382..398babb 100644
+--- a/mdadm/mdadm/util.c
++++ b/mdadm/mdadm/util.c
+@@ -1838,6 +1838,31 @@ int flush_metadata_updates(struct supertype *st)
+ 	return 0;
+ }
+ 
++int send_mdmon_cmd(struct supertype *st, struct mdmon_update *update) {
++	int sfd;
++	char *devname;
 +
-+	if (posix_memalign(&super->migr_rec_buf, 512, 512) != 0) {
-+		fprintf(stderr, Name
-+			": %s could not allocate migr_rec buffer\n", __func__);
-+		free(super->buf);
-+		return 2;
++	devname = devnum2devname(st->container_dev);
++	if (devname == NULL)
++		return -1;
++	sfd = connect_monitor(devname);
++	if (sfd < 0) {
++		free(devname);
++		return -1;
 +	}
 +
- 	if (!sectors) {
- 		check_sum = __gen_imsm_checksum(super->anchor);
- 		if (check_sum != __le32_to_cpu(super->anchor->check_sum)) { @@ -2479,6 +2621,10 @@ static void __free_imsm(struct intel_super *super, int free_disks)
- 		free(super->buf);
- 		super->buf = NULL;
- 	}
-+	if (super->migr_rec_buf) {
-+		free(super->migr_rec_buf);
-+		super->migr_rec_buf = NULL;
-+	}
- 	if (free_disks)
- 		free_imsm_disks(super);
- 	free_devlist(super);
-@@ -3326,6 +3472,13 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
- 			": %s could not allocate superblock\n", __func__);
- 		return 0;
- 	}
-+	if (posix_memalign(&super->migr_rec_buf, 512, 512) != 0) {
-+		fprintf(stderr, Name
-+			": %s could not allocate migr_rec buffer\n", __func__);
-+		free(super->buf);
-+		free(super);
-+		return 0;
-+	}
- 	memset(super->buf, 0, mpb_size);
- 	mpb = super->buf;
- 	mpb->mpb_size = __cpu_to_le32(mpb_size); @@ -4827,9 +4980,9 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 		/* mark the start of the init process if nothing is failed */
- 		dprintf("imsm: mark resync start\n");
- 		if (map->map_state == IMSM_T_STATE_UNINITIALIZED)
--			migrate(dev, IMSM_T_STATE_NORMAL, MIGR_INIT);
-+			migrate(dev, super, IMSM_T_STATE_NORMAL, MIGR_INIT);
- 		else
--			migrate(dev, IMSM_T_STATE_NORMAL, MIGR_REPAIR);
-+			migrate(dev, super, IMSM_T_STATE_NORMAL, MIGR_REPAIR);
- 		super->updates_pending++;
- 	}
- 
-@@ -5425,6 +5578,9 @@ static void imsm_process_update(struct supertype *st,
- 		a->reshape_delta_disks = u->reshape_delta_disks;
- 
- 
-+		/* Clear migration record */
-+		memset(super->migr_rec, 0, sizeof(struct migr_record));
++	send_message_cmd(sfd, update, 0);
++	wait_reply(sfd, 0);
 +
- 		super->updates_pending++;
- update_reshape_exit:
- 		if (u->devs_mem.dev)
-@@ -5621,7 +5777,7 @@ update_reshape_exit:
- 		/* mark rebuild */
- 		to_state = imsm_check_degraded(super, dev, failed);
- 		map->map_state = IMSM_T_STATE_DEGRADED;
--		migrate(dev, to_state, MIGR_REBUILD);
-+		migrate(dev, super, to_state, MIGR_REBUILD);
- 		migr_map = get_imsm_map(dev, 1);
- 		set_imsm_ord_tbl_ent(map, u->slot, dl->index);
- 		set_imsm_ord_tbl_ent(migr_map, u->slot, dl->index | IMSM_ORD_REBUILD); @@ -6471,7 +6627,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 			 */
++	ack(sfd, 0);
++	wait_reply(sfd, 0);
++	close(sfd);
++	st->update_tail = NULL;
++	free(devname);
++	return 0;
++}
++
+ void append_metadata_update(struct supertype *st, void *buf, int len)  {
  
- 			to_state = imsm_check_degraded(super, old_dev, 0);
--			migrate(upd_devs, to_state, MIGR_GEN_MIGR);
-+			migrate(upd_devs, super, to_state, MIGR_GEN_MIGR);
- 			/* second map length is equal to first map
- 			* correct second map length to old value
- 			*/
 
