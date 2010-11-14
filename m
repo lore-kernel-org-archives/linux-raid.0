@@ -1,359 +1,212 @@
-From: Mike Viau <viaum@sheridanc.on.ca>
-Subject: How to recreate a dmraid RAID array with mdadm (was: no subject)
-Date: Sun, 14 Nov 2010 01:50:42 -0500
-Message-ID: <BAY148-w337E193E7493BB69F27B31EF350@phx.gbl>
+From: Zoltan Szecsei <zoltans@geograph.co.za>
+Subject: Confusion with setting up new RAID6 with mdadm
+Date: Sun, 14 Nov 2010 17:36:38 +0200
+Message-ID: <4CE00206.4000301@geograph.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, debian-user@lists.debian.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+I hope this is the correct list to address this on - I've done a lot of=
+=20
+typing for nothing, if not :-)
 
-> On Sun, 14 Nov 2010 06:36:00 +1100 <neilb@suse.de> wrote:
->> cat /proc/mdstat (showing what mdadm shows/discovers)
->>
->> Personalities :
->> md127 : inactive sda[1](S) sdb[0](S)
->> 4514 blocks super external:imsm
->>
->> unused devices:
->
-> As imsm can have several arrays described by one set of metadata, mda=
-dm
-> creates an inactive arrive just like this which just holds the set of
-> devices, and then should create other arrays made of from different r=
-egions
-> of those devices.
-> It looks like mdadm hasn't done that you. You can ask it to with:
->
-> mdadm -I /dev/md/imsm0
->
-> That should created the real raid1 array in /dev/md/something.
->
-> NeilBrown
->
+I have done days of research, including reading=20
+https://raid.wiki.kernel.org/index.php/Linux_Raid, but all I am doing i=
+s=20
+getting confused in the detail.
 
-Thanks for this information, I feel like I am getting closer to getting=
- this working properly. After running the command above (mdadm -I /dev/=
-md/imsm0), the real raid 1 array did appear as /dev/md/*
+My goal is to set up an 8*2TB SiI3132 based RAID6 on Ubuntu 10.04LTS,=20
+with LVM and ext4.
+The setup will mostly hold thousands of 400MB image files, and they wil=
+l=20
+not be accessed regularly - they mostly just need to be online. The=20
+entire space on all 8 drives can be used, and I want 1 massive=20
+filesystem, when I finally mount this RAID device. No boot, root or swa=
+p.
 
-ls -al /dev/md
+I have gone quite far with the help of the local linux group, but after=
+=20
+I had completed the 27 hour mdadm --create run, further tidbits were=20
+thrown at me, and I am trying to get an opinion on if it is worth=20
+scrapping this effort, and starting again.
+
+
+
+Please can someone provide clarity on:
+
+*If I have to reformat the drives and redo mdadm --create, other than=20
+mdadm stop, how can I get rid of all the /dev/md* etc etc so that when =
+I=20
+restart this exercise, the original bad RAID does not interfere with=20
+this new attempt?
+
+
+
+*Partition alignment?
+Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drives)
+None of the mdadm helps I've googled or received speak about how to=20
+correctly format the drives before running mdadm --create.
+All the benchmarks & performance tests I've found, do not bother to say=
+=20
+whether they have aligned the partitions on the HD
+
+*What is the correct fdisk or parted method get rid of the DOS & GPT=20
+flags, and create a correctly aligned partition, and should this be a=20
+0xda partiton (& then I use metatdata 1.2 for mdadm)?
+
+
+*Chunk size:
+After reading MANY different opinions, I'm guessing staying at the=20
+default chunk size is optimal? Anyone want to add to this argument?
+
+
+*After partitioning the 8 drives, is this the correct sequence?
+mdadm --create /dev/md0 --metadata=3D1.2 --auto=3Dmd --chunk=3D64=20
+--level=3Draid6 --raid devices=3D8 /dev/sd[abcdefgh]1
+mdadm --detail --scan >> /etc/mdadm.conf
+mdadm --assemble /dev/md0 /dev/sd[abcdefg]1
+
+
+*After this, do I mkfs ext4 first, or LVM first?
+
+*What stride and stripe values should I use?
+
+
+If you've read this far: Wow! - big thanks.
+If you're going to venture some help or affirmation - BIGGER thanks! :=3D=
+)
+
+Kind regards to all,
+Zoltan
+
+
+
+This is where I am, but I'd like to get it right, so am happy to delete=
+=20
+& restart, if the current state is not fixable.:
+
+**************************************************
+
+root@gs0:/home/geograph# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
+[raid4] [raid10]
+md_d0 : active raid6 sde1[4] sdg1[6] sdh1[7] sdc1[2] sda1[0] sdb1[1]=20
+sdd1[3] sdf1[5]
+       11721071616 blocks level 6, 64k chunk, algorithm 2 [8/8] [UUUUUU=
+UU]
+
+unused devices: <none>
+root@gs0:/home/geograph#
+**************************************************
+
+root@gs0:/home/geograph# mdadm -E /dev/md_d0
+mdadm: No md superblock detected on /dev/md_d0.
+
+**************************************************
+root@gs0:/dev# ls -la /dev/md*
+brw-rw---- 1 root disk 254, 0 2010-11-13 16:41 /dev/md_d0
+lrwxrwxrwx 1 root root      7 2010-11-13 16:41 /dev/md_d0p1 -> md/d0p1
+lrwxrwxrwx 1 root root      7 2010-11-13 16:41 /dev/md_d0p2 -> md/d0p2
+lrwxrwxrwx 1 root root      7 2010-11-13 16:41 /dev/md_d0p3 -> md/d0p3
+lrwxrwxrwx 1 root root      7 2010-11-13 16:41 /dev/md_d0p4 -> md/d0p4
+
+/dev/md:
 total 0
-drwxr-xr-x=A0 2 root root=A0=A0 80 Nov 14 00:53 .
-drwxr-xr-x 21 root root 3480 Nov 14 00:53 ..
-lrwxrwxrwx=A0 1 root root=A0=A0=A0 8 Nov 14 00:50 imsm0 -> ../md127
-lrwxrwxrwx=A0 1 root root=A0=A0=A0 8 Nov 14 00:53 OneTB-RAID1-PV -> ../=
-md126
+drwxrwx---  2 root disk    140 2010-11-13 16:41 .
+drwxr-xr-x 18 root root   4520 2010-11-14 11:42 ..
+brw-------  1 root root 254, 0 2010-11-13 16:41 d0
+brw-------  1 root root 254, 1 2010-11-13 16:41 d0p1
+brw-------  1 root root 254, 2 2010-11-13 16:41 d0p2
+brw-------  1 root root 254, 3 2010-11-13 16:41 d0p3
+brw-------  1 root root 254, 4 2010-11-13 16:41 d0p4
+root@gs0:/dev#
 
----------------
+***********************************************
+root@gs0:/home/geograph# fdisk -lu
 
-And the kernel messages:
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util=20
+fdisk doesn't support GPT. Use GNU Parted.
 
-[ 4652.315650] md: bind<sdb>
-[ 4652.315866] md: bind<sda>
-[ 4652.341862] raid1: md126 is not clean -- starting background reconst=
-ruction
-[ 4652.341958] raid1: raid set md126 active with 2 out of 2 mirrors
-[ 4652.342025] md126: detected capacity change from 0 to 1000202043392
-[ 4652.342400]=A0 md126: p1
-[ 4652.528448] md: md126 switched to read-write mode.
-[ 4652.529387] md: resync of RAID array md126
-[ 4652.529424] md: minimum _guaranteed_=A0 speed: 1000 KB/sec/disk.
-[ 4652.529464] md: using maximum available idle IO bandwidth (but not m=
-ore than 200000 KB/sec) for resync.
-[ 4652.529525] md: using 128k window, over a total of 976759940 blocks.
-=A0
----------------
-
-fdisk -ul /dev/md/OneTB-RAID1-PV=20
-
-Disk /dev/md/OneTB-RAID1-PV: 1000.2 GB, 1000202043392 bytes
-255 heads, 63 sectors/track, 121600 cylinders, total 1953519616 sectors
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+256 heads, 63 sectors/track, 242251 cylinders, total 3907029168 sectors
 Units =3D sectors of 1 * 512 =3D 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
 I/O size (minimum/optimal): 512 bytes / 512 bytes
 Disk identifier: 0x00000000
 
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Device Boot=A0=A0=A0=A0=
-=A0 Start=A0=A0=A0=A0=A0=A0=A0=A0 End=A0=A0=A0=A0=A0 Blocks=A0=A0 Id=A0=
- System
-/dev/md/OneTB-RAID1-PV1=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 63=A0 19=
-53503999=A0=A0 976751968+=A0 8e=A0 Linux LVM
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1              63  3907024127  1953512032+  fd  Linux raid=20
+autodetect
 
----------------
+(All 8 disks are as above)
+************************************************
 
-pvscan=20
+root@gs0:/home/geograph# parted /dev/sde
+GNU Parted 2.2
+Using /dev/sde
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) p
+Warning: /dev/sde contains GPT signatures, indicating that it has a GPT=
+=20
+table.  However, it does not have a valid fake msdos partition table, a=
+s=20
+it should.  Perhaps it was
+corrupted -- possibly by a program that doesn't understand GPT partitio=
+n=20
+tables.  Or perhaps you deleted the GPT table, and are now using an=20
+msdos partition table.  Is this a
+GPT partition table?
+Yes/No? yes
+Model: ATA ST32000542AS (scsi)
+Disk /dev/sde: 2000GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
 
-=A0 PV /dev/sdc7=A0=A0=A0=A0=A0 VG XENSTORE-VG=A0=A0=A0=A0=A0 lvm2 [46.=
-56 GiB / 0=A0=A0=A0 free]
-=A0 PV /dev/md126p1=A0=A0 VG OneTB-RAID1-VG=A0=A0 lvm2 [931.50 GiB / 0=A0=
-=A0=A0 free]
-=A0 Total: 2 [978.06 GiB] / in use: 2 [978.06 GiB] / in no VG: 0 [0=A0=A0=
- ]
+Number  Start   End    Size   File system  Name                        =
+ =20
+=46lags
+  1      17.4kB  134MB  134MB               Microsoft reserved=20
+partition  msftres
 
----------------
+(parted)
 
-pvdisplay=20
-
-=A0--- Physical volume ---
-=A0 PV Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 /dev/md126p1
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 OneTB-RAID1-VG
-=A0 PV Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 931.50 GiB / not =
-usable 3.34 MiB
-=A0 Allocatable=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 yes (but full)
-=A0 PE Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 4.00 MiB
-=A0 Total PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 238464
-=A0 Free PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Allocated PE=A0=A0=A0=A0=A0=A0=A0=A0=A0 238464
-=A0 PV UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hvxXR3-tV9B-CMBW-=
-nZn2-N2zH-N1l6-sC9m9i
-
-----------------
-
-vgscan=20
-
-=A0 Reading all physical volumes.=A0 This may take a while...
-=A0 Found volume group "XENSTORE-VG" using metadata type lvm2
-=A0 Found volume group "OneTB-RAID1-VG" using metadata type lvm2
-
--------------
-
-vgdisplay
-
---- Volume group ---
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 OneTB-RAID1-VG
-=A0 System ID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0 Format=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 lvm2
-=A0 Metadata Areas=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Metadata Sequence No=A0 2
-=A0 VG Access=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 read/write
-=A0 VG Status=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 resizable
-=A0 MAX LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Cur LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Open LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Max PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Cur PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Act PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 VG Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 931.50 GiB
-=A0 PE Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 4.00 MiB
-=A0 Total PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 238464
-=A0 Alloc PE / Size=A0=A0=A0=A0=A0=A0 238464 / 931.50 GiB
-=A0 Free=A0 PE / Size=A0=A0=A0=A0=A0=A0 0 / 0=A0=A0=20
-=A0 VG UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 nCBsU2-VpgR-EcZj-=
-lA15-oJGL-rYOw-YxXiC8
-
---------------------
-
-vgchange -a y OneTB-RAID1-VG
-
-=A0 1 logical volume(s) in volume group "OneTB-RAID1-VG" now active
-
---------------------
-
-lvdisplay=20
-
---- Logical volume ---
-=A0 LV Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 /dev/OneTB-RAI=
-D1-VG/OneTB-RAID1-LV
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 OneTB-RAID1-VG
-=A0 LV UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 R3TYWb-PJo1-Xz=
-bm-vJwu-YpgP-ohZW-Vf1kHJ
-=A0 LV Write Access=A0=A0=A0=A0=A0=A0=A0 read/write
-=A0 LV Status=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 available
-=A0 # open=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 LV Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 931.50 GiB
-=A0 Current LE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 238464
-=A0 Segments=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Allocation=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 inherit
-=A0 Read ahead sectors=A0=A0=A0=A0 auto
-=A0 - currently set to=A0=A0=A0=A0 256
-=A0 Block device=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 253:4
-
-------------------------
-
-fdisk -ul /dev/OneTB-RAID1-VG/OneTB-RAID1-LV=20
-
-Disk /dev/OneTB-RAID1-VG/OneTB-RAID1-LV: 1000.2 GB, 1000190509056 bytes
-255 heads, 63 sectors/track, 121599 cylinders, total 1953497088 sectors
-Units =3D sectors of 1 * 512 =3D 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0xbda8e40b
-
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0 Device Boot=A0=A0=A0=A0=A0 Start=A0=A0=A0=A0=A0=A0=A0=A0 E=
-nd=A0=A0=A0=A0=A0 Blocks=A0=A0 Id=A0 System
-/dev/OneTB-RAID1-VG/OneTB-RAID1-LV1=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0 63=A0 1953487934=A0=A0 976743936=A0=A0 83=A0 Linux
-
------------------------
-
-mount -t ext4 /dev/OneTB-RAID1-VG/OneTB-RAID1-LV /mnt
-mount
-/dev/sdc5 on / type ext4 (rw,errors=3Dremount-ro)
-tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=3D0755)
-proc on /proc type proc (rw,noexec,nosuid,nodev)
-sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
-udev on /dev type tmpfs (rw,mode=3D0755)
-tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
-devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=3D5,mode=3D620)
-/dev/sdc1 on /boot type ext2 (rw)
-xenfs on /proc/xen type xenfs (rw)
-/dev/mapper/OneTB--RAID1--VG-OneTB--RAID1--LV on /mnt type ext4 (rw)
-
------------------
-
-ls /mnt (and files are visible)
-
--------------------
-
-And also when the array is running after manually running the command a=
-bove, the error when updating the init ramdisk for kernels is gone....
-
-update-initramfs -u -k all
-update-initramfs: Generating /boot/initrd.img-2.6.34.7-xen
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-xen-amd64
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-amd64
-
-
------------------
-
-But the issue remain now is that the mdadm is not running the real raid=
-1 array on reboots, the init ramdisk errors come right back unfortunate=
-ly (enabled verbosity)....
-
-1) update-initramfs -u -k all
-
-update-initramfs: Generating /boot/initrd.img-2.6.34.7-xen
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-xen-amd64
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-amd64
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-
-
-2) dpkg-reconfigure --priority=3Dlow mdadm [leaving all defaults]
-
-Stopping MD monitoring service: mdadm --monitor.
-Generating array device nodes... done.
-update-initramfs: Generating /boot/initrd.img-2.6.34.7-xen
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-Starting MD monitoring service: mdadm --monitor.
-Generating udev events for MD arrays...done.
-
-
-3) update-initramfs -u -k all [again]
-
-update-initramfs: Generating /boot/initrd.img-2.6.34.7-xen
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-xen-amd64
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
-update-initramfs: Generating /boot/initrd.img-2.6.32-5-amd64
-I: mdadm: using configuration file: /etc/mdadm/mdadm.conf
-mdadm: cannot open /dev/md/OneTB-RAID1-PV: No such file or directory
-I: mdadm: will start all available MD arrays from the initial ramdisk.
-I: mdadm: use `dpkg-reconfigure --priority=3Dlow mdadm` to change this.
------------------
-
-ls -al /dev/md/
-total 0
-drwxr-xr-x=A0 2 root root=A0=A0 60 Nov 14 01:22 .
-drwxr-xr-x 21 root root 3440 Nov 14 01:23 ..
-lrwxrwxrwx=A0 1 root root=A0=A0=A0 8 Nov 14 01:23 imsm0 -> ../md127
-
------------------
-
-
-How does one fix the problem of not having the array not starting at bo=
-ot?
-
-The files/configuration I have now:
-
-find /etc -type f | grep mdadm
-=2E/logcheck/ignore.d.server/mdadm
-=2E/logcheck/violations.d/mdadm
-=2E/default/mdadm
-=2E/init.d/mdadm
-=2E/init.d/mdadm-raid
-=2E/cron.daily/mdadm
-=2E/cron.d/mdadm
-=2E/mdadm/mdadm.conf
-
-find /etc/rc?.d/ | grep mdadm
-/etc/rc0.d/K01mdadm
-/etc/rc0.d/K10mdadm-raid
-/etc/rc1.d/K01mdadm
-/etc/rc2.d/S02mdadm
-/etc/rc3.d/S02mdadm
-/etc/rc4.d/S02mdadm
-/etc/rc5.d/S02mdadm
-/etc/rc6.d/K01mdadm
-/etc/rc6.d/K10mdadm-raid
-/etc/rcS.d/S03mdadm-raid
-
-
-cat /etc/mdadm/mdadm.conf=20
-# mdadm.conf
-#
-# Please refer to mdadm.conf(5) for information about this file.
-#
-
-# by default, scan all partitions (/proc/partitions) for MD superblocks=
-=2E
-# alternatively, specify devices to scan, using wildcards if desired.
-DEVICE partitions
-
-# auto-create devices with Debian standard permissions
-CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
-
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
-
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR root
-
-# definitions of existing MD arrays
-ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
-ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:626=
-59383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
-
-# This file was auto-generated on Fri, 05 Nov 2010 16:29:48 -0400
-# by mkconf 3.1.4-1+8efb9d1
-
---------------------
-
-
-Again, How does one fix the problem of not having the array not startin=
-g at boot?
+****************************************************
 
 
 
-Thanks.
-=A0
 
--M
- 		 	   		  --
+--=20
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Zoltan Szecsei PrGISc [PGP0031]
+Geograph (Pty) Ltd.
+P.O. Box 7, Muizenberg 7950, South Africa.
+
+65 Main Road, Muizenberg 7945
+Western Cape, South Africa.
+
+34=B0 6'16.35"S 18=B028'5.62"E
+
+Tel: +27-21-7884897  Mobile: +27-83-6004028
+=46ax: +27-86-6115323     www.geograph.co.za
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+
+-----
+No virus found in this message.
+Checked by AVG - www.avg.com
+Version: 10.0.1153 / Virus Database: 424/3255 - Release Date: 11/13/10
+
+--
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
