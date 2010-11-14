@@ -1,65 +1,85 @@
-From: Luca Berra <bluca@comedia.it>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Confusion with setting up new RAID6 with mdadm
-Date: Sun, 14 Nov 2010 20:50:36 +0100
-Message-ID: <20101114195036.GA23982@maude.comedia.it>
+Date: Mon, 15 Nov 2010 09:13:26 +1100
+Message-ID: <20101115091326.42b38b84@notabene.brown>
 References: <4CE00206.4000301@geograph.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <4CE00206.4000301@geograph.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Zoltan Szecsei <zoltans@geograph.co.za>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Nov 14, 2010 at 05:36:38PM +0200, Zoltan Szecsei wrote:
-> *If I have to reformat the drives and redo mdadm --create, other than mdadm 
-> stop, how can I get rid of all the /dev/md* etc etc so that when I restart 
-> this exercise, the original bad RAID does not interfere with this new 
-> attempt?
+On Sun, 14 Nov 2010 17:36:38 +0200
+Zoltan Szecsei <zoltans@geograph.co.za> wrote:
 
-mdadm -Ss
-mdadm --zero-superblock on each partition
->
->
+> Hi,
+> I hope this is the correct list to address this on - I've done a lot of 
+> typing for nothing, if not :-)
+> 
+> I have done days of research, including reading 
+> https://raid.wiki.kernel.org/index.php/Linux_Raid, but all I am doing is 
+> getting confused in the detail.
+> 
+> My goal is to set up an 8*2TB SiI3132 based RAID6 on Ubuntu 10.04LTS, 
+> with LVM and ext4.
+> The setup will mostly hold thousands of 400MB image files, and they will 
+> not be accessed regularly - they mostly just need to be online. The 
+> entire space on all 8 drives can be used, and I want 1 massive 
+> filesystem, when I finally mount this RAID device. No boot, root or swap.
+> 
+> I have gone quite far with the help of the local linux group, but after 
+> I had completed the 27 hour mdadm --create run, further tidbits were 
+> thrown at me, and I am trying to get an opinion on if it is worth 
+> scrapping this effort, and starting again.
+> 
+> 
+> 
+> Please can someone provide clarity on:
+> 
+> *If I have to reformat the drives and redo mdadm --create, other than 
+> mdadm stop, how can I get rid of all the /dev/md* etc etc so that when I 
+> restart this exercise, the original bad RAID does not interfere with 
+> this new attempt?
+> 
+> 
+> 
 > *Partition alignment?
 > Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drives)
-for modern hdds with 4k sectors it is
-new fdisk and/or parted should already know how to align
-in any case, since you want to use the whole space for raid, why create
-partitions at all, md works nicely without
-
+> None of the mdadm helps I've googled or received speak about how to 
+> correctly format the drives before running mdadm --create.
+> All the benchmarks & performance tests I've found, do not bother to say 
+> whether they have aligned the partitions on the HD
+> 
+> *What is the correct fdisk or parted method get rid of the DOS & GPT 
+> flags, and create a correctly aligned partition, and should this be a 
+> 0xda partiton (& then I use metatdata 1.2 for mdadm)?
+> 
+> 
 > *Chunk size:
-> After reading MANY different opinions, I'm guessing staying at the default 
-> chunk size is optimal? Anyone want to add to this argument?
-i believe the default in newer mdadm is fine
+> After reading MANY different opinions, I'm guessing staying at the 
+> default chunk size is optimal? Anyone want to add to this argument?
 
->
-> *After partitioning the 8 drives, is this the correct sequence?
-> mdadm --create /dev/md0 --metadata=1.2 --auto=md --chunk=64 --level=raid6 
-why you state the chunk size here, i tought you wanted to stay with the
-defauklt
-> --raid devices=8 /dev/sd[abcdefgh]1
-> mdadm --detail --scan >> /etc/mdadm.conf
-> mdadm --assemble /dev/md0 /dev/sd[abcdefg]1
-it should be already assembled after create, and after you appended the
-info to mdadm.conf you just need mdadm --assemble /dev/md0 or mdadm
---assemble --scan.
+Depending on which version of mdadm you are using, the default chunk size
+will be 64K or 512K.  I would recommend using 512K even if you have an older
+mdadm.  64K appears to be too small for modern hardware, particularly if you
+are storing large files.
 
-> *After this, do I mkfs ext4 first, or LVM first?
-if you want to use lvm it would be lvm first, but... do you want to?
-there is no point if the aim is allocating the whole space to a single
-filesystem.
+For raid6 with the current implementation it is safe to use "--assume-clean"
+to avoid the long recovery time.  It is certainly safe to use that if you
+want to build a test array, do some performance measurement, and then scrap
+it and try again.  If some time later you want to be sure that the array is
+entirely in sync you can
+  echo repair > /sys/block/md0/md/sync_action
+and wait a while.
 
-> *What stride and stripe values should I use?
-new toolstack should already find the correct stripe/stride for you
+I agree with what Mikael and Luca suggested - particularly the suggested for
+"--bitmap internal".  You really want that.
 
-one more note:
-for such a big array i would suggest to create a bitmap, so in case of
-an unclean shutdown you do not have to wait for 27 hours for it to
-rebuild. an internal bitmap will do.
 
-L.
+NeilBrown
 
--- 
-Luca Berra -- bluca@comedia.it
+
