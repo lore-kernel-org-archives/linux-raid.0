@@ -1,314 +1,197 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Help!
-Date: Mon, 15 Nov 2010 13:01:12 +1100
-Message-ID: <20101115130112.41c3f70a@notabene.brown>
-References: <1494909.124.1287759012019.JavaMail.root@asterisk>
-	<17967393.126.1287759080545.JavaMail.root@asterisk>
+Subject: Re: When does the raid bitmap actually work.
+Date: Mon, 15 Nov 2010 15:04:22 +1100
+Message-ID: <20101115150422.468ecde1@notabene.brown>
+References: <1288389039.5147.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <17967393.126.1287759080545.JavaMail.root@asterisk>
+In-Reply-To: <1288389039.5147.35.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?B?SmVz+nMgQmVybfpkZXo=?= <jbermudez@iten.es>
-Cc: linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 22 Oct 2010 16:51:20 +0200 (CEST)
-Jes=FAs Berm=FAdez <jbermudez@iten.es> wrote:
+On Sat, 30 Oct 2010 10:50:39 +1300
+Daniel Reurich <daniel@centurion.net.nz> wrote:
 
-> Hello all,
->=20
-> if you could help us, for we are completely desperated...
->=20
-> We have a raid5 with 3 disks that got out of sync due to a power fail=
-ure. After tried to assemble (with mdadm --assemble --force /dev/md0) i=
-t says:
->=20
-> md: md0 stopped mdbind sdb2 bind sda2 bind sdc2
->=20
-> md: md0: array is not clean starting background reconstruction
->=20
-> raid 5  device sdc2 operational as raid disk 0
->     device sda2 operational as raid disk 2
->     device sdb2 operational as raid disk 1
->=20
-> allocated 32kb for md0
->=20
-> raid level 5 set md0 active with 3 out 3 devices algorithm 0
->=20
-> raid 5 conf printout
->=20
-> rd:3 wd:3
->=20
-> disk 0,0:1 /dev/sdc2
-> disk 1,0:1 /dev/sdb2
-> disk 2,0:1 /dev/sda2
->=20
-> md0: bitmap file is out of date 892893
-> forcing full recovery
->=20
-> md0: bitmap file is out of date doing full recovery
->=20
-> md0: bitmap initialisation failed: -5
+> Hi,
+> 
+> I'm wondering why if I fail and remove a drive from an array and then
+> re-add it a couple of minutes later that this forces a full resync even
+> though there is a bitmap setup.  I was lead to believe that when using a
+> bitmap that it would only resync the areas of the array that have been
+> written too in the meantime.  Am I mistaken in how the bitmap works?  Or
+> is simply that I'm running either a too old kernel or version of mdadm?
+> 
+> The particular scenario I'm dealing with is having to drop members out
+> of the array to alter the partition table of each host disk one at a
+> time, and when I re-add the disks I'm having to wait for a full re-sync
+> taking 3 - 4 hours before doing the next members disk.  As a result of
+> the partitioning changes, the device name changes from /dev/sd(X)2
+> to /dev/sd(X)3 but the partition itself remains untouched and in the
+> same location on disk.
 
-This (the "-5") strongly suggests that we got an error when trying to w=
-rite to
-the bitmap.  But such errors normally appear in the kernel logs, yet yo=
-u
-don't report any.
+This should work.  I have just performed a simple test myself and it did work.
+I used a slightly newer kernel and mdadm, but I don't recall any recent
+changes which would affect this functionality.
 
-Is this still a problem for you or have you found a solution?
+However I must have used a different mechanism to change the partitioning
+that you did, as sdb2 remained as sdb2 (i used cfdisk).
 
-You probably need to assemble the array without the device which is suf=
-fering
-the write errors.
+The mostly likely explanation is that the partition was changed somehow even
+though you think it wasn't.  The easiest way to confirm or deny this is to
+check the output of 
+  mdadm -E /dev/whatever
+  mdadm -X /dev/whatever
+
+bother before and after the partitioning and see if they are the same.
+
+If you can reproduce the bad behaviour, it would help a lot if you could show
+the output of "-E" and "-X" on all devices before adding the removed device
+back in, and then the same once the recovery is well underway.
+
+Sorry I cannot be more helpful at this point.
 
 NeilBrown
 
 
->=20
-> md0: failed to create bitmap (-5)
->=20
-> md: pers->run() failed
->=20
-> mdadm: failed to run _array /dev/md0: input / output error
->=20
-> Tried to stop the array and reassemble it with:
->=20
-> mdadm --assemble --force --scan
-> mdadm --assemble --force --scan /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc=
-2
-> mdadm --assemble --force --run /dev/md0 /dev/sda2 /dev/sdb2
-> mdadm --assemble --force --run /dev/md0 /dev/sda2 /dev/sdc2
-> mdadm --assemble --force --run /dev/md0 /dev/sdb2 /dev/sdc2
->=20
-> Tried to solve the bitmap problem with:
->=20
-> mdadm --grow /dev/md0 --bitmap=3Dnone
-> mdadm --grow /dev/md0 --bitmap=3Dinternal
-> mdadm --grow /dev/md0 --bitmap=3Dnone --force
-> mdadm --grow /dev/md0 --bitmap=3Dinternal --force
->=20
-> Tried to fake the 'clean' status of the array with:
->=20
-> echo "clean" > /sys/block/md0/md/array_state
->=20
-> Tried to boot the array from grub with:
->=20
->     md-mod.start_dirty_degraded=3D1
->=20
-> None of these commands have worked. Here are the details of the array=
- and everyone of the disks:
->=20
-> ---------------------------------------------------------------------=
---------------------------------------------------------------
-> mdadm -D /dev/md0
->=20
-> dev/md0
-> version: 01.00.03
-> creation time: august 28 18:58:39 2009
-> raid level: raid5
-> used dev size 83891328 (80:01 hid 85:90 gdb)
-> raid devices: 3
-> total drives: 3
-> preferred minor: 0
-> persistent: superblock is persistent
-> update time: tue oct 19 15:09 2010
-> Status: active, not started
-> Active devices: 3
-> Working devices: 3
-> Failed devices: 0
-> Spare device: 0
-> layout: left assimetric
-> chunk size: 128k
-> name: 0
->=20
-> UUID: ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> events: 893
->=20
->     Number   Major   Minor   RaidDevice State
->     0    8    34    0    active sync /dev/sdc2
->     1    8    18    1    active sync /dev/sdb2
->     3    8    2    2    active sync /dev/sda2
->=20
-> ---------------------------------------------------------------------=
---------------------------------------------------------------
-> mdadm --examine /dev/sd[abc]2
->=20
->=20
-> /dev/sda2:
->=20
-> Magic:a92b4efc
-> Version:1,0
-> Featura Map:0x1
-> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> Name:0
-> Creation Time:Fri Aug 28 18:58:39 2009
-> Raid Level:Raid5
-> Raid Devices:3:Avail Dev Size:167782712 (80,01GIB 85,90 GB)
-> Array Size:335565312 (160,01 GIB 171,81 GB)
-> Used Dev Size:167782656 (80,01 GIB 85,90GB)
-> Super Offset:167782840 Sectors
-> State:Active
-> Device UUID:bbc156a7:6f3af82d:94714923:e212967a
-> Internal Bitmap:-81 sectors from superblock
-> Update Time:re Oct 19 15:49:08 2010
-> Checksum:54a35562 - correct
-> Events:893
-> Layout:left-asymmetric
-> Chunk Size:128K
-> Array Slot:3 (0. 1, failed, 2)
-> Array State:uuU 1 failed
->=20
->=20
->=20
-> /dev/sdb2:
-> =09
->=20
-> Magic:a92b4efc
-> Version:1,0
-> Feature Map:0x1
-> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> Name:0
-> Creation Time:Fri Aug 28 18:58:39 2009
-> Raid Level:raid5
-> Raid Devices:3
-> Avail Dev Size:167782712 (80,01 GIB 85,90 GB)
-> Array Size:335565312 (160,01 GIB 171,81 GB)
-> Used Dev Size:167782656 (80,01 GIB 85,90 GB)
-> Super Offset:167782840 sectors
-> State:Active
-> Device UUID:d067101e:19056fdd:6b6e58fc:92128788
-> Internal Bimap:-81 sectors from superblock
-> Update Time:Tue Oct 19 15:49:08 2010
-> Checksum:61d3c2bf
-> Events:893
-> Layout:left-asymmetric
-> Chunk Size:128k
-> Array Slot:1 (0,  1, failed, 2)
-> Array State:uUu 1 failed
->=20
-> /dev/sdc2:
-> =09
-> Magic:a92b4efc
-> Version:1,0
-> Featura Map:0x1
-> Array UUID:ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> Name:0
-> Creation Time:Fri Aug 28 18:58:39 2009
-> Raid Level:raid5
-> Raid Devices:3
-> Avail Dev Size:167782712 (80,01 GIB 85,90 GB)
-> Array Size:335565312 (160,01 GIB 171,81 GB)
-> Used Dev Size:167782656 (80,01 GIB 85,90 GB)
-> Super Offset:167782840 sectors
-> State:active
-> Device UUID:0a1c2c74:04b9187f:6ab6b5cb:894d8b38
-> Internal Bimap:-81 sectos from superblock
-> Update Time:Tue Oct 19 15:49:08 2010
-> Checksum:d8faadc0 - correct
-> Events:893
-> Layout:left-asymmetric
-> Chunk Size:128K
-> Array Slot:0 (0, 1, failed, 2)
-> Array State:Uuu 1 failed
->=20
-> ---------------------------------------------------------------------=
---------------------------------------------------------------
->=20
-> mdadm --examine-bitmap /dev/sd[abc]2
-> =09
-> Filename /dev/sda2
->=20
-> Magic 6d746962
-> Version 4
-> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> Events 892
-> Events Cleared 892
-> State Out of date
-> Chunksize 256KB
-> Daemon 5s flush period
-> Write Mode Normal
-> Sync Size 83891328 (80,01 GIB 85,90 GB)
-> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
->=20
-> Filename /dev/sdb2
->=20
-> Magic 6d746962
-> Version 4
-> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> Events 892
-> Events Cleared 892
-> State Out of date
-> Chunksize 256KB
-> Daemon 5s flush period
-> Write Mode Normal
-> Sync Size 83891328 (80,01 GIB 85,90 GB)
-> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
->=20
-> Filename /dev/sdc2
-> Magic 6d746962
-> Version 4
-> UUID ae9bd4fe:994ce882:4fa035e6:8094fc1a
-> events 892
-> Events Cleared 892
->=20
-> State Out of date
-> Chunksize 256 KB
-> Daemon 5s flush period
-> Write Mode Normal
-> Sync Size 83891328 (80,01 GIB 85,90 GB)
-> Bitmap 327701 BITS (CHUNKS), 325633 DIRTY (99,4%)
->=20
-> ---------------------------------------------------------------------=
---------------------------------------------------------------
->=20
-> cat /sys/bplock/md0/md/array_state
->=20
-> inactive
->=20
->=20
-> cat /sys/block/md0/md/degraded
->=20
-> cat /sys/block/md0/md/degraded: No such file or directory
->=20
->=20
-> cat /sys/block/md0/md/dev-sda2/errors
->=20
-> 0
->=20
-> cat /sys/block/md0/md/dev-sda2/state
->=20
-> in_sync
->=20
->=20
-> cat /sys/block/md0/md/dev-sdb2/errors
->=20
-> 24
->=20
->=20
-> cat /sys/block/md0/md/dev-sdb2/state
->=20
-> in_sync
->=20
->=20
-> cat /sys/block/md0/md/dev-sdc2/errors
->=20
-> 0
->=20
->=20
-> cat /sys/block/md0/md/dev-sdc2/state
->=20
-> in_sync
-> ---------------------------------------------------------------------=
---------------------------------------------------------------
->=20
-> Thanks in advance.
->=20
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Details: Debian Lenny Server
+> Mdadm version: 2.6.7.2
+> Kernel version: 2.6.29-2-amd64
+> 
+> :~# cat /proc/mdstat
+> Personalities : [raid1] [raid6] [raid5] [raid4] 
+> md0 : active raid1 sdc2[4](S) sdg2[3] sdf2[2] sda1[0] sdb1[1]
+>       308200 blocks [4/4] [UUUU]
+>       
+> md1 : active raid5 sdc3[4] sdg3[2] sda2[0] sdb2[1]
+>       1463633664 blocks level 5, 256k chunk, algorithm 2 [4/3] [UUU_]
+>       [============>........]  recovery = 63.4% (309610996/487877888)
+> finish=154.6min speed=19215K/sec
+>       bitmap: 1/2 pages [4KB], 131072KB chunk
+> :~# mdadm -D /dev/md1
+> /dev/md1:
+>         Version : 00.90
+>   Creation Time : Tue May  5 19:23:30 2009
+>      Raid Level : raid5
+>      Array Size : 1463633664 (1395.83 GiB 1498.76 GB)
+>   Used Dev Size : 487877888 (465.28 GiB 499.59 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
+> 
+>   Intent Bitmap : Internal
+> 
+>     Update Time : Sat Oct 30 10:40:32 2010
+>           State : active, degraded, recovering
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>  Rebuild Status : 65% complete
+> 
+>            UUID : 5e64e0da:a5a68f88:03de972c:1e3eb3c3
+>          Events : 0.24500
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        2        0      active sync   /dev/sda2
+>        1       8       18        1      active sync   /dev/sdb2
+>        2       8       99        2      active sync   /dev/sdg3
+>        4       8       35        3      spare rebuilding   /dev/sdc3
+> 
+> The Removed and re-added partition:
+> 
+> :~# mdadm -E /dev/sdc3
+> /dev/sdc3:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 5e64e0da:a5a68f88:03de972c:1e3eb3c3
+>   Creation Time : Tue May  5 19:23:30 2009
+>      Raid Level : raid5
+>   Used Dev Size : 487877888 (465.28 GiB 499.59 GB)
+>      Array Size : 1463633664 (1395.83 GiB 1498.76 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 1
+> 
+>     Update Time : Sat Oct 30 10:47:08 2010
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 1
+>   Spare Devices : 1
+>        Checksum : 8338653d - correct
+>          Events : 24712
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     4       8       35        4      spare   /dev/sdc3
+> 
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       99        2      active sync   /dev/sdg3
+>    3     3       0        0        3      faulty removed
+>    4     4       8       35        4      spare   /dev/sdc3
+> 
+> 
+> 
+> 
+> One of the remaining member partitions:
+> 
+> :~# mdadm -E /dev/sda2
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 5e64e0da:a5a68f88:03de972c:1e3eb3c3
+>   Creation Time : Tue May  5 19:23:30 2009
+>      Raid Level : raid5
+>   Used Dev Size : 487877888 (465.28 GiB 499.59 GB)
+>      Array Size : 1463633664 (1395.83 GiB 1498.76 GB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 1
+> 
+>     Update Time : Sat Oct 30 10:44:23 2010
+>           State : active
+> Internal Bitmap : present
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 1
+>   Spare Devices : 1
+>        Checksum : 83380399 - correct
+>          Events : 24629
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        2        0      active sync   /dev/sda2
+> 
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       99        2      active sync   /dev/sdg3
+>    3     3       0        0        3      faulty removed
+>    4     4       8       35        4      spare   /dev/sdc3
+> 
+> 
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
