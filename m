@@ -1,85 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Confusion with setting up new RAID6 with mdadm
-Date: Mon, 15 Nov 2010 09:13:26 +1100
-Message-ID: <20101115091326.42b38b84@notabene.brown>
-References: <4CE00206.4000301@geograph.co.za>
+Subject: Re: [PATCH] md: fix return value of rdev_size_change()
+Date: Mon, 15 Nov 2010 12:00:57 +1100
+Message-ID: <20101115120057.4879d7dc@notabene.brown>
+References: <4cdc55d1.4800e70a.1ffa.6729@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CE00206.4000301@geograph.co.za>
+In-Reply-To: <4cdc55d1.4800e70a.1ffa.6729@mx.google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zoltan Szecsei <zoltans@geograph.co.za>
+To: Justin Maggard <jmaggard10@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 14 Nov 2010 17:36:38 +0200
-Zoltan Szecsei <zoltans@geograph.co.za> wrote:
+On Thu, 11 Nov 2010 20:25:17 +0000
+Justin Maggard <jmaggard10@gmail.com> wrote:
 
-> Hi,
-> I hope this is the correct list to address this on - I've done a lot of 
-> typing for nothing, if not :-)
-> 
-> I have done days of research, including reading 
-> https://raid.wiki.kernel.org/index.php/Linux_Raid, but all I am doing is 
-> getting confused in the detail.
-> 
-> My goal is to set up an 8*2TB SiI3132 based RAID6 on Ubuntu 10.04LTS, 
-> with LVM and ext4.
-> The setup will mostly hold thousands of 400MB image files, and they will 
-> not be accessed regularly - they mostly just need to be online. The 
-> entire space on all 8 drives can be used, and I want 1 massive 
-> filesystem, when I finally mount this RAID device. No boot, root or swap.
-> 
-> I have gone quite far with the help of the local linux group, but after 
-> I had completed the 27 hour mdadm --create run, further tidbits were 
-> thrown at me, and I am trying to get an opinion on if it is worth 
-> scrapping this effort, and starting again.
-> 
-> 
-> 
-> Please can someone provide clarity on:
-> 
-> *If I have to reformat the drives and redo mdadm --create, other than 
-> mdadm stop, how can I get rid of all the /dev/md* etc etc so that when I 
-> restart this exercise, the original bad RAID does not interfere with 
-> this new attempt?
-> 
-> 
-> 
-> *Partition alignment?
-> Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drives)
-> None of the mdadm helps I've googled or received speak about how to 
-> correctly format the drives before running mdadm --create.
-> All the benchmarks & performance tests I've found, do not bother to say 
-> whether they have aligned the partitions on the HD
-> 
-> *What is the correct fdisk or parted method get rid of the DOS & GPT 
-> flags, and create a correctly aligned partition, and should this be a 
-> 0xda partiton (& then I use metatdata 1.2 for mdadm)?
-> 
-> 
-> *Chunk size:
-> After reading MANY different opinions, I'm guessing staying at the 
-> default chunk size is optimal? Anyone want to add to this argument?
+> When trying to grow an array by enlarging component devices, rdev_size_store()
+> expects the return value of rdev_size_change() to be in sectors, but the actual
+> value is returned in KBs.
 
-Depending on which version of mdadm you are using, the default chunk size
-will be 64K or 512K.  I would recommend using 512K even if you have an older
-mdadm.  64K appears to be too small for modern hardware, particularly if you
-are storing large files.
+Thanks.
+This was broken by commit dd8ac336c13fd8afdb082ebacb1cddd5cf727889
+so is broken in all kernels since 2.6.30.
+I've queued of the patch for my next pull request to Linus.
 
-For raid6 with the current implementation it is safe to use "--assume-clean"
-to avoid the long recovery time.  It is certainly safe to use that if you
-want to build a test array, do some performance measurement, and then scrap
-it and try again.  If some time later you want to be sure that the array is
-entirely in sync you can
-  echo repair > /sys/block/md0/md/sync_action
-and wait a while.
-
-I agree with what Mikael and Luca suggested - particularly the suggested for
-"--bitmap internal".  You really want that.
-
+Thanks for the report and the patch.
 
 NeilBrown
 
+
+> 
+> Signed-off-by: Justin Maggard <jmaggard10@gmail.com>
+> ---
+>  drivers/md/md.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 4e957f3..a0615af 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -1337,7 +1337,7 @@ super_90_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+>  	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
+>  		       rdev->sb_page);
+>  	md_super_wait(rdev->mddev);
+> -	return num_sectors / 2; /* kB for sysfs */
+> +	return num_sectors;
+>  }
+>  
+>  
+> @@ -1704,7 +1704,7 @@ super_1_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+>  	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
+>  		       rdev->sb_page);
+>  	md_super_wait(rdev->mddev);
+> -	return num_sectors / 2; /* kB for sysfs */
+> +	return num_sectors;
+>  }
+>  
+>  static struct super_type super_types[] = {
 
