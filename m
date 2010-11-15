@@ -1,91 +1,93 @@
-From: Zoltan Szecsei <zoltans@geograph.co.za>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: Confusion with setting up new RAID6 with mdadm
-Date: Mon, 15 Nov 2010 08:58:12 +0200
-Message-ID: <4CE0DA04.1010308@geograph.co.za>
-References: <4CE00206.4000301@geograph.co.za> <20101115091326.42b38b84@notabene.brown>
+Date: Mon, 15 Nov 2010 08:41:25 +0100
+Message-ID: <20101115074125.GB5490@maude.comedia.it>
+References: <4CE00206.4000301@geograph.co.za> <20101114195036.GA23982@maude.comedia.it> <4CE0D8B0.4050603@geograph.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101115091326.42b38b84@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <4CE0D8B0.4050603@geograph.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-11-15 00:13, Neil Brown wrote:
->
-> Depending on which version of mdadm you are using, the default chunk =
-size
-> will be 64K or 512K.  I would recommend using 512K even if you have a=
-n older
-> mdadm.  64K appears to be too small for modern hardware, particularly=
- if you
-> are storing large files.
->   =20
-root@gs0:/home/geograph# mdadm -V
-mdadm - v2.6.7.1 - 15th October 2008
-root@gs0:/home/geograph#
+On Mon, Nov 15, 2010 at 08:52:32AM +0200, Zoltan Szecsei wrote:
+> On 2010-11-14 21:50, Luca Berra wrote:
+>> On Sun, Nov 14, 2010 at 05:36:38PM +0200, Zoltan Szecsei wrote:
+>>>
+>>> *Partition alignment?
+>>> Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drives)
+>> for modern hdds with 4k sectors it is
+>> new fdisk and/or parted should already know how to align
+> fdisk reports 512b sectors:
+> root@gs0:/home/geograph# fdisk -lu
 
-This was what apt-get install got for me, from Ubuntu 10.04 64bit Deskt=
-op.
-Should I download & compile a newer one?
-(Where from? - haven't found the mdadm developer page yet))
+i believe your fdisk does not support getting geometry from blkid, but i
+am not an ubuntu user
+you could try checking with something like 'strings /sbin/fdisk | grep io_size',
+but since we are going without partitions you can ignore all this.
 
+btw to check sector size on a disk, on a fairly recent kernel you can
+check the files under /sys/block/*/queue,
+hw_sector_size
+minimum_io_size
+optimal_io_size
 
-> For raid6 with the current implementation it is safe to use "--assume=
--clean"
->   =20
-Is my above version "current" enough?
-> to avoid the long recovery time.  It is certainly safe to use that if=
- you
-> want to build a test array, do some performance measurement, and then=
- scrap
-> it and try again.  If some time later you want to be sure that the ar=
-ray is
-> entirely in sync you can
->    echo repair>  /sys/block/md0/md/sync_action
-> and wait a while.
->
-> I agree with what Mikael and Luca suggested - particularly the sugges=
-ted for
-> "--bitmap internal".  You really want that.
->
->
-> N
->   =20
+except for disks that lie about their sector size, but this is a
+different story.
 
-Regards & thanks,
-Zoltan
+>>> *After partitioning the 8 drives, is this the correct sequence?
+>>> mdadm --create /dev/md0 --metadata=1.2 --auto=md --chunk=64 --level=raid6
+>> why you state the chunk size here, i tought you wanted to stay with the
+>> defauklt
+> because on my mdadm, 64 is the default - and I was just re-enforcing that 
+> for the reader.
+> root@gs0:/home/geograph# mdadm -V
+> mdadm - v2.6.7.1 - 15th October 2008
+this mdadm release is a tad old (about two years), it will work, but
+some things may be different than current 3.1.x
 
+> root@gs0:/home/geograph#
+>>> *After this, do I mkfs ext4 first, or LVM first?
+>> if you want to use lvm it would be lvm first, but... do you want to?
+>> there is no point if the aim is allocating the whole space to a single
+>> filesystem.
+> Because I might want to join this array to another one at a later stage - I 
+> would then have 2 boxes each with 8 drives, and each with a SiI3132 card on 
+> the same motherboard.
+> I might use the second box to mirror the first, or to extend it - not sure 
+> of my needs yet.
+ok, then you need to align lvm as well
+check if you have these parameters in /etc/lvm/lvm.conf
+md_chunk_alignment = 1
+data_alignment_detection = 1
 
---=20
+if you don't have those at all, check if lvm supports them
+strings /sbin/lvm|grep io_size
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Zoltan Szecsei PrGISc [PGP0031]
-Geograph (Pty) Ltd.
-P.O. Box 7, Muizenberg 7950, South Africa.
-
-65 Main Road, Muizenberg 7945
-Western Cape, South Africa.
-
-34=B0 6'16.35"S 18=B028'5.62"E
-
-Tel: +27-21-7884897  Mobile: +27-83-6004028
-=46ax: +27-86-6115323     www.geograph.co.za
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+if not, you have to align manually, using the --dataalignment option to
+pvcreate, align to a full stripe (chunk_size * 6, see below)
 
 
+>>> *What stride and stripe values should I use?
+stride=chunk_size/fs block size
+stripe-width=stride * num_data_disks
+num_data disks in your case is 6, 8 total disks - 2 parity disks
 
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 10.0.1153 / Virus Database: 424/3256 - Release Date: 11/14/10
+on a fairly recent kernel:
+/sys/block/md?/queue/minimum_io_size would be the chunk_size of the array
+/sys/block/md?/queue/optimal_io_size would be the stripe size
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+this should be exported on lvm devices also
+/sys/block/dm-*/queue/...
+
+so you can check with data in /sys/block at each step which is the value
+to feed into tools.
+
+>> new toolstack should already find the correct stripe/stride for you
+> How would I check ?
+strings /sbin/lvm|grep io_size
+
+-- 
+Luca Berra -- bluca@comedia.it
