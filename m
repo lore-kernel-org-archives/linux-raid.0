@@ -1,108 +1,154 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Superblock V 1.2
-Date: Mon, 15 Nov 2010 12:11:58 +1100
-Message-ID: <20101115121158.20e2e53e@notabene.brown>
-References: <20101107191507.GA31052@cons.org>
-	<E9.7C.19545.72417DC4@cdptpa-omtalb.mail.rr.com>
-	<20101107210852.GA77472@cons.org>
-	<4CD71C77.4030400@anonymous.org.uk>
-	<20101109163512.GA15649@cons.org>
-	<4CD98021.2060501@anonymous.org.uk>
+Subject: Re: md raid1 rebuild bug? (2.6.32.25)
+Date: Mon, 15 Nov 2010 12:33:42 +1100
+Message-ID: <20101115123342.4432308c@notabene.brown>
+References: <AANLkTikbbcXH7Q1KqcOsS0n05TWYpgBev-wR9NVBdKxa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CD98021.2060501@anonymous.org.uk>
+In-Reply-To: <AANLkTikbbcXH7Q1KqcOsS0n05TWYpgBev-wR9NVBdKxa@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Martin Cracauer <cracauer@cons.org>, linux-raid@vger.kernel.org
+To: Sebastian =?ISO-8859-1?B?RuRyYmVy?= <faerber@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 09 Nov 2010 17:08:49 +0000
-John Robinson <john.robinson@anonymous.org.uk> wrote:
+On Tue, 9 Nov 2010 13:41:11 +0100
+Sebastian F=E4rber <faerber@gmail.com> wrote:
 
-> On 09/11/2010 16:35, Martin Cracauer wrote:
-> > John Robinson wrote on Sun, Nov 07, 2010 at 09:39:03PM +0000:
-> [...]
-> >> That's the other difference between 0.90 and 1.x metadata. In-kernel
-> >> auto-assembly is only available for 0.90, and Neil Brown has made it
-> >> clear that there will never be in-kernel auto-assembly for 1.x, and
-> >> explained at length why. You need mdadm to start 1.x arrays, in your
-> >> initrd if your root filesystem is on such an array. All modern distros
-> >> create suitable initrds automatically. We are moving towards having
-> >> array assembly handled by udev invoking mdadm as devices are discovered.
-> >
-> > That's good it know.  I still think that udev is a plot to destroy
-> > Linux as we know it so I guess I'm gonna recreate this particular
-> >   array :-)
-> >
-> > What do you do if you plug in a couple harddrives that have arrays on
-> > them that you do not want assembled? Right now you just set them to a
-> > partition type other than autodetect and you are good.
-> 
-> You can still do that, but the "right" way to do it (I think) is to use 
-> the AUTO keyword and only to include the arrays you want assembled at 
-> boot time in the mdadm.conf that goes into the initrd.
+> Hi,
+>=20
+> i just stumbled across a problem while rebuilding a MD RAID1 on 2.6.3=
+2.25.
+> The server has 2 disks, /dev/hda and /dev/sda. The RAID1 is degraded,=
+ so sda
+> was replaced and i tried rebuilding from /dev/hda to /dev/sdb.
+> While rebuilding i noticed that /dev/hda has some problems/bad sector=
+s
+> but the kernel
+> seems to be stuck in some endless loop:
+>=20
+> --
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391471=
+98,
+> sector=3D239147057
+> hda: possibly failed opcode: 0xc8
+> end_request: I/O error, dev hda, sector 239147057
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391481=
+74,
+> sector=3D239148081
+> hda: possibly failed opcode: 0xc8
+> end_request: I/O error, dev hda, sector 239148081
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391472=
+13,
+> sector=3D239147209
+> hda: possibly failed opcode: 0xc8
+> end_request: I/O error, dev hda, sector 239147209
+> raid1: hda: unrecoverable I/O read error for block 237892224
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391481=
+74,
+> sector=3D239148169
+> hda: possibly failed opcode: 0xc8
+> end_request: I/O error, dev hda, sector 239148169
+> raid1: hda: unrecoverable I/O read error for block 237893120
+> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
+> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391482=
+25,
+> sector=3D239148225
+> hda: possibly failed opcode: 0xc8
+> end_request: I/O error, dev hda, sector 239148225
+> raid1: hda: unrecoverable I/O read error for block 237893248
+> md: md1: recovery done.
+> RAID1 conf printout:
+>  --- wd:1 rd:2
+>  disk 0, wo:0, o:1, dev:hda6
+>  disk 1, wo:1, o:1, dev:sda6
+> RAID1 conf printout:
+>  --- wd:1 rd:2
+>  disk 0, wo:0, o:1, dev:hda6
+>  disk 1, wo:1, o:1, dev:sda6
+> RAID1 conf printout:
+>  --- wd:1 rd:2
+>  disk 0, wo:0, o:1, dev:hda6
+>  disk 1, wo:1, o:1, dev:sda6
+> --
+>=20
+> I get a new "conf printout" message every few seconds until i used
+> mdadm to set /dev/sda6 to
+> "faulty". I know /dev/hda is bad and i probably won't be able to
+> rebuild the raid device, but this
+> endless loop seems fishy?
 
-Yes, "auto" is the way to make this do what you want.  The problem is that
-different people want different behaviours and it is impossible to please
-everyone.
-md arrays will normally be tagged with the name of the host they were created
-on.  So if you have
+=46ishy indeed!!
 
-  AUTO homehost -all
+This was supposed to have been fixed by commit
+     4044ba58dd15cb01797c4fd034f39ef4a75f7cc3
+in 2.6.29.  But it seems not.
 
-in mdadm.conf, then it should auto-assemble arrays that were created on
-'this' host, and ignore the rest, which might be what you want.
+The following patch should fix it properly.
+Are you able to apply this patch to your kernel, rebuild, and see if it=
+ makes
+the required difference?
+Thanks.
 
-When mdadm does auto-assemble an array that doesn't obviously belong to this
-host, it tries to be careful and assembles it 'read-auto', which means that
-it is completely read-only until you try to write to the array.  So no
-recovery or resync happens.
-Once you write to the array, md assumes that you are happy to have the array
-assembled on this device, and allows any resync etc to start.
+I'm working on making md cope with this situation better and actually f=
+inish
+the recovery - recording where the bad blocks are so when you read from=
+ the
+new device, you can still get read errors, but when you over-write, the=
+ error
+goes away.  But there are so many other things to do....
 
-I would be nice if read-auto didn't claim the device, so you would still be
-able to access the device 'normally' if you wanted to. But that is hard.
-So if you plug some devices in and mdadm thinks like look like they might
-belong to it, then it will claim them and you want be able to e.g. mkfs on
-them.  But you can be sure they won't be been written to at all, and you can
-"mdadm -S /dev/md/whatever" to get full access to your devices back.
-
-
-
-> 
-> > What do you do when udev maintainers in distributions screw up and
-> > replace good udev entires with bad ones? That happened to me
-> > repeatedly and is the major reason for the attitude above.
-> 
-> Oh dear, you've had a bad experience there then. I like udev. I disliked 
-> the old huge /dev with gazillions of entries for devices you don't have, 
-> and you still ended up using MAKEDEV or mknod whenever you added 
-> something new. I did say "moving towards" because udev-based assembly 
-> isn't 100% there yet, and I don't think any distros are trying to use 
-> it. But the other great thing we will get with udev is hotplugging, 
-> including the option to configure in advance auto-rebuilding of arrays, 
-> something that hardware RAID adapters have always had but we still don't 
-> for software RAID.
-
-Yes, udev has its problems (doesn't everything?) but I think that in general
-it is heading in the right direction.
-
-And we are getting close to configurable auto-rebuilding on hot-plug.
-mdadm-3.2 will have most of the code in place so some things will work, but
-you can probably expect bugs in that release.
+=46or now, your best bet might be to use dd-rescue (or is that ddrescue=
+) to
+copy from hda6 to sda6, then stop using hda6.
 
 NeilBrown
 
 
+=46rom c074e12fe437827908bc31247a05aec4815e1a1b Mon Sep 17 00:00:00 200=
+1
+=46rom: NeilBrown <neilb@suse.de>
+Date: Mon, 15 Nov 2010 12:32:47 +1100
+Subject: [PATCH] md/raid1: really fix recovery looping when single good=
+ device fails.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=3DUTF-8
+Content-Transfer-Encoding: 8bit
 
-> 
-> Cheers,
-> 
-> John.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Commit 4044ba58dd15cb01797c4fd034f39ef4a75f7cc3 supposedly fixed a
+problem where if a raid1 with just one good device gets a read-error
+during recovery, the recovery would abort and immediately restart in
+an infinite loop.
 
+However it depended on raid1_remove_disk removing the spare device
+from the array.  But that does not happen in this case.
+So add a test so that in the 'recovery_disabled', then device will be
+removed.
+
+Reported-by: Sebastian F=E4rber <faerber@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 45f8324..845cf95 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1161,6 +1161,7 @@ static int raid1_remove_disk(mddev_t *mddev, int =
+number)
+ 		 * is not possible.
+ 		 */
+ 		if (!test_bit(Faulty, &rdev->flags) &&
++		    !mddev->recovery_disabled &&
+ 		    mddev->degraded < conf->raid_disks) {
+ 			err =3D -EBUSY;
+ 			goto abort;
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
