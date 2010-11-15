@@ -1,80 +1,128 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 15/17] Monitor: more accurate size check when looking
- for spares
-Date: Mon, 15 Nov 2010 16:32:38 +1100
-Message-ID: <20101115163238.0f3dd61d@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FD3@irsmsx504.ger.corp.intel.com>
-	<4CD39DA7.609@intel.com>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BCF917A@irsmsx504.ger.corp.intel.com>
-	<AANLkTikWs2Mb5qmY_4tMQhnr4P===W1KJvjgW9xJYVrb@mail.gmail.com>
+From: Zoltan Szecsei <zoltans@geograph.co.za>
+Subject: Re: Confusion with setting up new RAID6 with mdadm
+Date: Mon, 15 Nov 2010 08:52:32 +0200
+Message-ID: <4CE0D8B0.4050603@geograph.co.za>
+References: <4CE00206.4000301@geograph.co.za> <20101114195036.GA23982@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikWs2Mb5qmY_4tMQhnr4P===W1KJvjgW9xJYVrb@mail.gmail.com>
+In-Reply-To: <20101114195036.GA23982@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Czarnowska, Anna" <anna.czarnowska@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 9 Nov 2010 09:23:49 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
+On 2010-11-14 21:50, Luca Berra wrote:
+> On Sun, Nov 14, 2010 at 05:36:38PM +0200, Zoltan Szecsei wrote:
+>>
+>> *Partition alignment?
+>> Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drive=
+s)
+> for modern hdds with 4k sectors it is
+> new fdisk and/or parted should already know how to align
+fdisk reports 512b sectors:
+root@gs0:/home/geograph# fdisk -lu
 
-> On Tue, Nov 9, 2010 at 7:43 AM, Czarnowska, Anna
-> <anna.czarnowska@intel.com> wrote:
-> >>
-> >> Neil wondered if we can repurpose validate_geometry for this case?=
- =A0It
-> >> is already charged with checking if a disk is suitable to be added=
- to
-> >> an
-> >> array.
-> >
-> > I had a look at validate_geometry and I don't think it makes sense =
-to modify it for Monitor.
-> > Validate_geometry is made for Create. When creating container valid=
-ate_geometry doesn't check much for imsm. When adding to a volume all d=
-isks must be already in the same container and have some common free re=
-gion. We want the check before we move a spare. And the whole spare is =
-free (is not used by any arrays in that container). I think it is bette=
-r to have smaller functions and use them as building blocks, than make =
-a big function even more complicated for every special case.
->=20
-> Yes, and no :-). There is a line to be drawn between refactoring and
-> adding complexity, and you are right that all things being equal
-> validate_geometry() as it stands today is an awkward fit.  However,
-> the architecture rework Neil is doing is coming precisely from the
-> realization that we are generating lots of these special case routine=
-s
-> that are doing not much more than representing the same data to
-> slightly different contexts.  The conclusion to be drawn is that our
-> interface from generic mdadm to the metadata handler is perhaps too
-> fine grained.   Hence the refactoring and why in this case it is
-> worthwhile to at least ask the question: can a routine tasked with
-> validating disks are proper candidates to be added to an array /
-> container be trivially re-purposed to handle the case of validating
-> that a spare is suitable for an existing container?  I agree with you=
-r
-> conclusion, but wanted to share why I think Neil asked the question,
-> hopefully I am not putting words in his mouth.
->=20
-> --
-> Dan
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util=20
+fdisk doesn't support GPT. Use GNU Parted.
+
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+256 heads, 63 sectors/track, 242251 cylinders, total 3907029168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1              63  3907024127  1953512032+  fd  Linux raid=20
+autodetect
+
+(All 8 disks are as above)
 
 
-I had a proper look at the code and I think that when I said
-"validate_geometry", I should have said "avail_size".
+> in any case, since you want to use the whole space for raid, why crea=
+te
+> partitions at all, md works nicely without
+OK
 
-We can probably just use the one method for both 'avail_size' and
-'min_acceptable_spare_size' though I'm not sure currently what it would=
- look
-like.
+>
+>> *Chunk size:
+>> After reading MANY different opinions, I'm guessing staying at the=20
+>> default chunk size is optimal? Anyone want to add to this argument?
+> i believe the default in newer mdadm is fine
+>
+>>
+>> *After partitioning the 8 drives, is this the correct sequence?
+>> mdadm --create /dev/md0 --metadata=3D1.2 --auto=3Dmd --chunk=3D64=20
+>> --level=3Draid6=20
+> why you state the chunk size here, i tought you wanted to stay with t=
+he
+> defauklt
+because on my mdadm, 64 is the default - and I was just re-enforcing=20
+that for the reader.
+root@gs0:/home/geograph# mdadm -V
+mdadm - v2.6.7.1 - 15th October 2008
+root@gs0:/home/geograph#
+>> *After this, do I mkfs ext4 first, or LVM first?
+> if you want to use lvm it would be lvm first, but... do you want to?
+> there is no point if the aim is allocating the whole space to a singl=
+e
+> filesystem.
+Because I might want to join this array to another one at a later stage=
+=20
+- I would then have 2 boxes each with 8 drives, and each with a SiI3132=
+=20
+card on the same motherboard.
+I might use the second box to mirror the first, or to extend it - not=20
+sure of my needs yet.
 
-So I'm happy to take that patch with min_acceptable_spare_size, and I w=
-ill
-quite possibly revise it later.
 
-NeilBrown
+>
+>> *What stride and stripe values should I use?
+> new toolstack should already find the correct stripe/stride for you
+How would I check ?
+
+root@gs0:/home/geograph# mkfs.ext4 -V
+mke2fs 1.41.11 (14-Mar-2010)
+         Using EXT2FS Library version 1.41.11
+root@gs0:/home/geograph#
+>
+> one more note:
+> for such a big array i would suggest to create a bitmap, so in case o=
+f
+> an unclean shutdown you do not have to wait for 27 hours for it to
+> rebuild. an internal bitmap will do.
+>
+Nice tip - I'll look into it - Thanks,
+Zoltan
+
+
+--=20
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Zoltan Szecsei PrGISc [PGP0031]
+Geograph (Pty) Ltd.
+P.O. Box 7, Muizenberg 7950, South Africa.
+
+65 Main Road, Muizenberg 7945
+Western Cape, South Africa.
+
+34=B0 6'16.35"S 18=B028'5.62"E
+
+Tel: +27-21-7884897  Mobile: +27-83-6004028
+=46ax: +27-86-6115323     www.geograph.co.za
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+
+-----
+No virus found in this message.
+Checked by AVG - www.avg.com
+Version: 10.0.1153 / Virus Database: 424/3256 - Release Date: 11/14/10
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
