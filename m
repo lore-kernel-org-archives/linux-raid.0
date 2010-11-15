@@ -1,154 +1,98 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: md raid1 rebuild bug? (2.6.32.25)
-Date: Mon, 15 Nov 2010 12:33:42 +1100
-Message-ID: <20101115123342.4432308c@notabene.brown>
-References: <AANLkTikbbcXH7Q1KqcOsS0n05TWYpgBev-wR9NVBdKxa@mail.gmail.com>
+Subject: Re: sw raid5 hungs on resync and high IO load, 2.6.32.23
+Date: Mon, 15 Nov 2010 12:51:40 +1100
+Message-ID: <20101115125140.0677c469@notabene.brown>
+References: <4CC7D635.6050000@nangu.tv>
+	<20101027190117.5118fe0c@notabene>
+	<4CC8036D.5090605@nangu.tv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikbbcXH7Q1KqcOsS0n05TWYpgBev-wR9NVBdKxa@mail.gmail.com>
+In-Reply-To: <4CC8036D.5090605@nangu.tv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian =?ISO-8859-1?B?RuRyYmVy?= <faerber@gmail.com>
+To: Martin Hamrle <martin.hamrle@nangu.tv>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 9 Nov 2010 13:41:11 +0100
-Sebastian F=E4rber <faerber@gmail.com> wrote:
+On Wed, 27 Oct 2010 12:48:13 +0200
+Martin Hamrle <martin.hamrle@nangu.tv> wrote:
 
-> Hi,
->=20
-> i just stumbled across a problem while rebuilding a MD RAID1 on 2.6.3=
-2.25.
-> The server has 2 disks, /dev/hda and /dev/sda. The RAID1 is degraded,=
- so sda
-> was replaced and i tried rebuilding from /dev/hda to /dev/sdb.
-> While rebuilding i noticed that /dev/hda has some problems/bad sector=
-s
-> but the kernel
-> seems to be stuck in some endless loop:
->=20
-> --
-> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
-> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391471=
-98,
-> sector=3D239147057
-> hda: possibly failed opcode: 0xc8
-> end_request: I/O error, dev hda, sector 239147057
-> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
-> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391481=
-74,
-> sector=3D239148081
-> hda: possibly failed opcode: 0xc8
-> end_request: I/O error, dev hda, sector 239148081
-> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
-> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391472=
-13,
-> sector=3D239147209
-> hda: possibly failed opcode: 0xc8
-> end_request: I/O error, dev hda, sector 239147209
-> raid1: hda: unrecoverable I/O read error for block 237892224
-> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
-> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391481=
-74,
-> sector=3D239148169
-> hda: possibly failed opcode: 0xc8
-> end_request: I/O error, dev hda, sector 239148169
-> raid1: hda: unrecoverable I/O read error for block 237893120
-> hda: dma_intr: status=3D0x51 { DriveReady SeekComplete Error }
-> hda: dma_intr: error=3D0x40 { UncorrectableError }, LBAsect=3D2391482=
-25,
-> sector=3D239148225
-> hda: possibly failed opcode: 0xc8
-> end_request: I/O error, dev hda, sector 239148225
-> raid1: hda: unrecoverable I/O read error for block 237893248
-> md: md1: recovery done.
-> RAID1 conf printout:
->  --- wd:1 rd:2
->  disk 0, wo:0, o:1, dev:hda6
->  disk 1, wo:1, o:1, dev:sda6
-> RAID1 conf printout:
->  --- wd:1 rd:2
->  disk 0, wo:0, o:1, dev:hda6
->  disk 1, wo:1, o:1, dev:sda6
-> RAID1 conf printout:
->  --- wd:1 rd:2
->  disk 0, wo:0, o:1, dev:hda6
->  disk 1, wo:1, o:1, dev:sda6
-> --
->=20
-> I get a new "conf printout" message every few seconds until i used
-> mdadm to set /dev/sda6 to
-> "faulty". I know /dev/hda is bad and i probably won't be able to
-> rebuild the raid device, but this
-> endless loop seems fishy?
+> 
+> On 27.10.2010 10:01, Neil Brown wrote:
+> > On Wed, 27 Oct 2010 09:35:17 +0200
+> > Martin Hamrle<martin.hamrle@nangu.tv>  wrote:
+> >
+> >> Hi,
+> >>
+> >> I'm having this issue on several boxes with several configuration.
+> >> One of them is a box with 8 drives attached to ARC-1160 in pass through
+> >> mode and build sw raid5 from these drives. There is also one drive to OS.
+> >>
+> >> During resync or check and heavy IO load, process tscpd (tscpd is IO
+> >> load maker) hungs, the machine is still alive but there are many blocked
+> >> processes.
+> >> After tscpd hungs, IO load is generated only by resync. In traceback you
+> >> can see blocked processes (ps, htop cat) accessing tscpd cmdline in
+> >> proc. Some tscpd threads is blocked during writing files into fs on
+> >> raid5. Reading these files is also blocking, reading other files in
+> >> filesystem is fast as usual.  This state takes 110 minutes. After that
+> >> all blocked processes continue their work.
+> >>
+> >> I am not sure what is the reason of the end of the weird state. I think
+> >> the end was caused by starting copying kernel source into array.
+> >>
+> >> Note that this is first time when hung processes wake up I never wait so
+> >> long.
+> >>
+> >> I think that it is related to sw raid because I do not see this issue on
+> >> hw raid or on sw raid without resync.
+> >>
+> >> kern.log contains initial "INFO: task collectd:2577 blocked for more
+> >> than 120 seconds"
+> >>     and two dumps
+> >> echo w>  /proc/sysrq-trigger
+> >>
+> >> log is located http://files.nangu.tv/kernel/kern.log
+> >> Let me know if you need more info.
+> >>
+> > When I try to access your kern.log I get
+> >
+> > 403 - Forbidden
+> Sorry about that, it is fixed now
 
-=46ishy indeed!!
-
-This was supposed to have been fixed by commit
-     4044ba58dd15cb01797c4fd034f39ef4a75f7cc3
-in 2.6.29.  But it seems not.
-
-The following patch should fix it properly.
-Are you able to apply this patch to your kernel, rebuild, and see if it=
- makes
-the required difference?
 Thanks.
 
-I'm working on making md cope with this situation better and actually f=
-inish
-the recovery - recording where the bad blocks are so when you read from=
- the
-new device, you can still get read errors, but when you over-write, the=
- error
-goes away.  But there are so many other things to do....
+Unfortunately it doesn't really show anything interesting.  Just lots of
+threads waiting on locks and such, nothing that even points to a problem with
+md.
 
-=46or now, your best bet might be to use dd-rescue (or is that ddrescue=
-) to
-copy from hda6 to sda6, then stop using hda6.
+However some of the back traces are missing.  Notice the lines:
+
+Oct 19 13:15:01 osn02 kernel: [72048.851702] md: using 128k window, over a total of 244198464 blocks.
+Oct 19 13:38:54 osn02 kernel: 009]  [<ffffffff810c7c32>] ? congestion_wait+0x66/0x80
+
+Between those there should be quite a lot of other stack trace info, but the
+kernel log buffer wasn't big enough to hold everything so some got lost.
+If you boot with
+   log-buf-len=1M
+
+it will make the log buffer larger so you want lose anything.  That *might*
+be more helpful, but I cannot promise anything.
 
 NeilBrown
 
 
-=46rom c074e12fe437827908bc31247a05aec4815e1a1b Mon Sep 17 00:00:00 200=
-1
-=46rom: NeilBrown <neilb@suse.de>
-Date: Mon, 15 Nov 2010 12:32:47 +1100
-Subject: [PATCH] md/raid1: really fix recovery looping when single good=
- device fails.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=3DUTF-8
-Content-Transfer-Encoding: 8bit
 
-Commit 4044ba58dd15cb01797c4fd034f39ef4a75f7cc3 supposedly fixed a
-problem where if a raid1 with just one good device gets a read-error
-during recovery, the recovery would abort and immediately restart in
-an infinite loop.
+> 
+> > Just include it in-line in the email.
+> >
+> > NeilBrown
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-However it depended on raid1_remove_disk removing the spare device
-from the array.  But that does not happen in this case.
-So add a test so that in the 'recovery_disabled', then device will be
-removed.
-
-Reported-by: Sebastian F=E4rber <faerber@gmail.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 45f8324..845cf95 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1161,6 +1161,7 @@ static int raid1_remove_disk(mddev_t *mddev, int =
-number)
- 		 * is not possible.
- 		 */
- 		if (!test_bit(Faulty, &rdev->flags) &&
-+		    !mddev->recovery_disabled &&
- 		    mddev->degraded < conf->raid_disks) {
- 			err =3D -EBUSY;
- 			goto abort;
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
