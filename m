@@ -1,69 +1,41 @@
-From: Zoltan Szecsei <zoltans@geograph.co.za>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: mdadm raid6->LVM->ext4 setup
-Date: Tue, 16 Nov 2010 20:23:41 +0200
-Message-ID: <4CE2CC2D.6040109@geograph.co.za>
-References: <4CE2C8AC.7010103@geograph.co.za> <20101116231657.011c6886@natsu>
+Date: Tue, 16 Nov 2010 23:17:22 +0100
+Message-ID: <20101116221722.GC8943@maude.comedia.it>
+References: <4CE2C8AC.7010103@geograph.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101116231657.011c6886@natsu>
+Content-Disposition: inline
+In-Reply-To: <4CE2C8AC.7010103@geograph.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-11-16 20:16, Roman Mamedov wrote:
-> On Tue, 16 Nov 2010 20:08:44 +0200
-> Zoltan Szecsei<zoltans@geograph.co.za>  wrote:
+On Tue, Nov 16, 2010 at 08:08:44PM +0200, Zoltan Szecsei wrote:
+> ***  Setup:
+> 8 * 5900RPM Seagte 2TB drives on SiI3132 PCIx x1 card.
+> Linux gs0 2.6.32-25-generic #45-Ubuntu SMP Sat Oct 16 19:52:42 UTC 2010 
+> x86_64 GNU/Linux
+> mdadm - v3.1.4 - 31st August 2010
+>   LVM version:     2.02.54(1) (2009-10-26)
+>   Library version: 1.02.39 (2009-10-26)
+>   Driver version:  4.15.0
+> mke2fs 1.41.11 (14-Mar-2010)
 >
->   =20
->> 8 * 5900RPM Seagte 2TB drives on SiI3132 PCIx x1 card.
->>     =20
-> Excuse me, but how is that? This is a 2-port controller, so do you us=
-e port
-> multipliers, or 4 cards? (The latter would work an order of magnitude=
- faster.)
->
->   =20
-
-The chassis has 2 * 4 port multipliers
-
-http://www.chyangfun.com/pro01_2_3.asp
-
-Regards,
-Zoltan
-
-
-
---=20
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Zoltan Szecsei PrGISc [PGP0031]
-Geograph (Pty) Ltd.
-P.O. Box 7, Muizenberg 7950, South Africa.
-
-65 Main Road, Muizenberg 7945
-Western Cape, South Africa.
-
-34=B0 6'16.35"S 18=B028'5.62"E
-
-Tel: +27-21-7884897  Mobile: +27-83-6004028
-=46ax: +27-86-6115323     www.geograph.co.za
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-
-
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 10.0.1153 / Virus Database: 424/3260 - Release Date: 11/16/10
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ***  Commands used:
+> mdadm --create /dev/md0 --metadata=1.2 --auto=md --assume-clean 
+> --bitmap=internal --bitmap-chunk=131072 --chunk=512 --level=6 
+> --raid-devices=8 /dev/sd[abcdefgh]
+> mdadm --detail --scan >> /etc/mdadm.conf
+> mdadm --assemble /dev/md0
+as i said this is not useful
+> pvcreate --metadatasize 512 /dev/md0
+you should use --dataalignment, not --metadatasize, also you should
+align to a full stripe
+> vgcreate geo_vg0 /dev/md0
+> lvcreate -n geo_lvm0 -l 100%FREE geo_vg0
+> mkfs -t ext4  -m 1-b 4096 -E stride=128,stripe-width=768 
+> /dev/geo_vg0/geo_lvm0
+-- 
+Luca Berra -- bluca@comedia.it
