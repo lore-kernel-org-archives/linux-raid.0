@@ -1,260 +1,267 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [RFC][PATCH] md: force full sync when adding the wrong device
- to a mirror
-Date: Tue, 16 Nov 2010 10:30:22 +1100
-Message-ID: <20101116103022.79236c47@notabene.brown>
-References: <1289853590.25762.1405436033@webmail.messagingengine.com>
+From: Aussie <aussie_1968@yahoo.com>
+Subject: AW: raid5 to raid6 reshape - power loss - does not assemble any more
+Date: Mon, 15 Nov 2010 17:39:50 -0800 (PST)
+Message-ID: <927810.82724.qm@web114711.mail.gq1.yahoo.com>
+References: <654169.58144.qm@web114706.mail.gq1.yahoo.com> <20101116072204.04c03b7f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1289853590.25762.1405436033@webmail.messagingengine.com>
+In-Reply-To: <20101116072204.04c03b7f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nate Dailey <nate.dailey@stratus.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 15 Nov 2010 15:39:50 -0500
-"Nate Dailey" <nate.dailey@stratus.com> wrote:
+Neil,
 
-> I've got a patch (against kernel 2.6.36) to address the following scenario: the "wrong" disk with the correct UUID is added to a degraded mirror, and a fast resync is done instead of a full resync.
-> 
-> I posted about a similar situation a few months ago (http://www.spinics.net/lists/raid/msg29324.html). In that case I was concerned with two disks in a mirror, each disk having been assembled on its own without the other. It was suggested that I look at each superblock, and see if each device thinks that the other is failed/removed. This did indeed work.
-> 
-> Now, I've got something a bit different:
-> 
-> - one disk from a raid1 (with internal bitmap) is set aside as a backup
-> - remaining disk is re-mirrored with a new partner
-> - at some later time, the system is booted from the backup disk
-> - one of the more-recent disks is then paired with the backup disk
-> - we get an incomplete resync, using the bitmap on the backup disk
-> 
-> In this case, neither disk thinks that the other is failed.
+that worked nicely, thanks - back to 80% reshape and mountable.
 
-When you boot from the backup disk, md will assemble the raid1 from one one
-device, so it should record in the superblock that the other device is
-missing.  So it will think "the other is failed".
+i could not find a newer RPM, but should have tried updating from sourc=
+e.
 
-Presumably when the more recent disk is added, you want the data on it to be
-completely ignored.
-If the 'more recent' disk has a newer event count that the old disk it should
-be possible to trigger off that to force a full resync.  But that isn't a
-complete solution as the 'backup disk' could easily get a higher event count
-before the 'more recent' disk is added.
-
-We could possibly look at the two event counts in the bitmap - for
-internal-bitmap cases - and make a decision based on that....
-
-For v1.x metadata this should be a bit easier as the device number is
-distinct from its role in the array, so in the scenario you describe each
-disk should think that the other is failed (or missing).
-
-> 
-> Another possible scenario is cloning a mirror to create a boot disk for a different system. Now we have two different mirrors in two different systems, each with the same MD UUID. Moving a disk from one system to the other (to replace a failed disk, for example) leads to an incorrect bitmap resync.
-
-I would say this is a configuration error.  If you have two live arrays, you
-should have two different uuids.  Otherwise confusion is too possible.  It
-isn't hard to update the uuid on first boot of the cloned system.
-
-(i.e. it is meant to be universally unique, and if you deliberately make it
-not unique, that is your problem).
+thanks again
+   Martin
 
 
-> 
-> To deal with this, I've added a resync signature to the superblock. A new signature is generated when resync begins. If a disk with the wrong signature is added to an array, a full sync is performed.
 
-I don't really like this.  It seems to be a very specific response to a
-specific problem and I'm not sure it would generalise properly.
-e.g. if I have a 3 drive raid1, remove two drives, then add them back one at
-a time, I think your scheme would do a full sync on the second add, which
-would be wrong.
+----- Urspr=FCngliche Mail ----
+Von: Neil Brown <neilb@suse.de>
+An: Aussie <aussie_1968@yahoo.com>
+CC: linux-raid@vger.kernel.org
+Gesendet: Dienstag, den 16. November 2010, 7:22:04 Uhr
+Betreff: Re: raid5 to raid6 reshape - power loss - does not assemble an=
+y more
 
-Also I am not very keen on enhancing the v0.90 metadata format.  If we need
-new functionality it should be done in the 1.x metadata.  If it then fits
-acceptably into 0.90 as well - fine.  But the focus should be 1.x.
+On Mon, 15 Nov 2010 04:06:15 -0800 (PST)
+Aussie <aussie_1968@yahoo.com> wrote:
 
-As I said, v1.x should already be able to handle this as the backup disk and
-the newly added disk should get different 'dev_number' values.  If they are
-different, the confusion shouldn't happen.  If they are the same - we should
-fix that.
+> hi,
+>=20
+> i have tried everything discussed in "reboot before reshape from raid=
+ 5 to raid=20
+>
+> 6 ( was in state resync=3DDELAYED). Doesn't assemble anymore"
+> but i am not getting anywhere.
+>=20
+> i have changed from a raid5 with 4 drives to a raid6 with 5 drives.
+> at about 75%, the power to our house was cut and the server shut off.
+>=20
+> when rebooting, the raid does not get assembled any more and mdadm di=
+es when=20
+> using "--backup-file" with assemble
+>=20
+> here is my setup and what i have done.
+> clean install of fedora 13 64bit on i7-950 with 12GB ram
+> system is on /dev/sdf
+> 5x 1.5TB SATA drives connected to motherboard (/dev/sda1-sde1 =3D Lin=
+ux raid=20
+> autodetect)
+> raid 5 was running fine on the 4 drives.
+>=20
+> # mdadm /dev/md0 --add /dev/sde1
+> # mdadm --grow /dev/md0 --bitmap  none
+> #  mdadm --grow /dev/md0 --level=3D6 --raid-devices=3D5 =20
+> --backup-file=3D/root/raid-backup
+> then it was reshaping for about 5 days
+>=20
+> today we lost our power and when booting up, the raid is no longer in=
+=20
+>operation.
+>=20
+> #uname -a
+> #Linux localhost.localdomain 2.6.34.7-61.fc13.x86_64 #1 SMP Tue Oct 1=
+9 04:06:30=20
+>
+> UTC 2010 x86_64 x86_64 x86_64 GNU/Linux
+> #
+> #mdadm -V
+> #mdadm - v3.1.2 - 10th March 2010
+> #
+> #cat /etc/mdadm.conf
+> #ARRAY /dev/md0 metadata=3D0.90 UUID=3D2b0bc473:1b35585a:1458de10:75d=
+df3b2
+> #
+> #cat /proc/mdstat=20
+> #Personalities : [raid6] [raid5] [raid4]=20
+> #md0 : inactive sdd1[3] sdb1[1] sde1[4] sda1[0] sdc1[2]
+> #      7325679680 blocks super 0.91
+> #     =20
+> #unused devices: <none>
+> #
+> #dmesg (extract)
+> #md: bind<sdc1>
+> #md: bind<sda1>
+> #md: bind<sde1>
+> #md: bind<sdb1>
+> #md: bind<sdd1>
+> #raid6: int64x1   2929 MB/s
+> #raid6: int64x2   3109 MB/s
+> #raid6: int64x4   2503 MB/s
+> #raid6: int64x8   1976 MB/s
+> #raid6: sse2x1    7535 MB/s
+> #raid6: sse2x2    8910 MB/s
+> #raid6: sse2x4   10316 MB/s
+> #raid6: using algorithm sse2x4 (10316 MB/s)
+> #md: raid6 personality registered for level 6
+> #md: raid5 personality registered for level 5
+> #md: raid4 personality registered for level 4
+> #raid5: in-place reshape must be started in read-only mode - aborting
+> #md: pers->run() failed ...
+>=20
+> reshape must be started.... does not seem to bad, but can not get it =
+to start=20
+> again.
+> are there commands to start it again ?
+>=20
+> then i tried commands from NeilBrown from the above mentioned thread.
+>=20
+> #mdadm -S /dev/md0
+> #mdadm: stopped /dev/md0
+> #
+> #mdadm -Avv --backup-file=3D/root/raid-backup /dev/md0
+> #mdadm: looking for devices for /dev/md0
+> #mdadm: cannot open device /dev/sdf3: Device or resource busy
+> #mdadm: /dev/sdf3 has wrong uuid.
+> #mdadm: cannot open device /dev/sdf2: Device or resource busy
+> #mdadm: /dev/sdf2 has wrong uuid.
+> #mdadm: cannot open device /dev/sdf1: Device or resource busy
+> #mdadm: /dev/sdf1 has wrong uuid.
+> #mdadm: cannot open device /dev/sdf: Device or resource busy
+> #mdadm: /dev/sdf has wrong uuid.
+> #mdadm: no RAID superblock on /dev/sde
+> #mdadm: /dev/sde has wrong uuid.
+> #mdadm: no RAID superblock on /dev/sdd
+> #mdadm: /dev/sdd has wrong uuid.
+> #mdadm: no RAID superblock on /dev/sdc
+> #mdadm: /dev/sdc has wrong uuid.
+> #mdadm: no RAID superblock on /dev/sdb
+> #mdadm: /dev/sdb has wrong uuid.
+> #mdadm: no RAID superblock on /dev/sda
+> #mdadm: /dev/sda has wrong uuid.
+> #mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 4.
+> #mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 3.
+> #mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 2.
+> #mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+> #mdadm: /dev/sda1 is identified as a member of /dev/md0, slot 0.
+> #mdadm:/dev/md0 has an active reshape - checking if critical section =
+needs to=20
+>be=20
+>
+> restored
+> #*** buffer overflow detected ***: mdadm terminated
 
+I suspect you have been hit by this bug:
+
+http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D0155af90d8352d3=
+ca031347e75854b3a5a4052ac
+
+
+
+So you need an mdadm newer than 3.1.2.  You could just grab the source =
+from
+  http://www.kernel.org/pub/linux/utils/raid/mdadm/
+
+and
+  make
+  make install
+
+and go from there...
 
 NeilBrown
 
 
-> 
-> Comments?
-> 
-> Thanks,
-> 
-> Nate Dailey
-> Stratus Technologies
-> 
-> Signed-off-by: Nate Dailey <Nate.Dailey@stratus.com>
-> 
-> diff -uprN -X linux-2.6.36-vanilla/Documentation/dontdiff linux-2.6.36-vanilla/drivers/md/md.c linux-2.6.36/drivers/md/md.c
-> --- linux-2.6.36-vanilla/drivers/md/md.c	2010-11-15 10:47:58.000000000 -0500
-> +++ linux-2.6.36/drivers/md/md.c	2010-11-15 12:47:41.000000000 -0500
-> @@ -653,6 +653,23 @@ static inline sector_t calc_dev_sboffset
->  	return MD_NEW_SIZE_SECTORS(num_sectors);
->  }
->  
-> +#define MD_ZERO_SIGNATURE "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-> +
-> +static int md_has_zero_signature(mddev_t *mddev)
-> +{
-> +	return !memcmp(mddev->signature, MD_ZERO_SIGNATURE, MD_SIGNATURE_LEN);
-> +}
-> +
-> +static void md_new_signature(mddev_t *mddev)
-> +{
-> +	do {
-> +		get_random_bytes(mddev->signature, MD_SIGNATURE_LEN);
-> +	} while (md_has_zero_signature(mddev));
-> +
-> +	/* Make sure the new signature is written to all disks. */
-> +	set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-> +}
-> +
->  static int alloc_disk_sb(mdk_rdev_t * rdev)
->  {
->  	if (rdev->sb_page)
-> @@ -1125,6 +1142,8 @@ static int super_90_validate(mddev_t *md
->  			mddev->bitmap_info.offset =
->  				mddev->bitmap_info.default_offset;
->  
-> +		memcpy(mddev->signature, sb->signature, MD_SIGNATURE_LEN);
-> +
->  	} else if (mddev->pers == NULL) {
->  		/* Insist on good event counter while assembling, except
->  		 * for spares (which don't need an event count) */
-> @@ -1145,6 +1164,14 @@ static int super_90_validate(mddev_t *md
->  			return 0;
->  	}
->  
-> +	/* Full sync for mismatched signatures. */
-> +	if (memcmp(mddev->signature, sb->signature, MD_SIGNATURE_LEN)) {
-> +		char b[BDEVNAME_SIZE];
-> +		printk(KERN_WARNING "md: %s mismatched signature on %s\n",
-> +		       mdname(mddev), bdevname(rdev->bdev, b));
-> +		return 0;
-> +	}
-> +
->  	if (mddev->level != LEVEL_MULTIPATH) {
->  		desc = sb->disks + rdev->desc_nr;
->  
-> @@ -1310,6 +1337,9 @@ static void super_90_sync(mddev_t *mddev
->  	sb->spare_disks = spare;
->  
->  	sb->this_disk = sb->disks[rdev->desc_nr];
-> +
-> +	memcpy(sb->signature, mddev->signature, MD_SB_SIGNATURE_LEN);
-> +
->  	sb->sb_csum = calc_sb_csum(sb);
->  }
->  
-> @@ -1527,6 +1557,8 @@ static int super_1_validate(mddev_t *mdd
->  			mddev->new_chunk_sectors = mddev->chunk_sectors;
->  		}
->  
-> +		memcpy(mddev->signature, sb->signature, MD_SIGNATURE_LEN);
-> +
->  	} else if (mddev->pers == NULL) {
->  		/* Insist of good event counter while assembling, except for
->  		 * spares (which don't need an event count) */
-> @@ -1547,6 +1579,15 @@ static int super_1_validate(mddev_t *mdd
->  			/* just a hot-add of a new device, leave raid_disk at -1 */
->  			return 0;
->  	}
-> +
-> +	/* Full sync for mismatched signatures. */
-> +	if (memcmp(mddev->signature, sb->signature, MD_SIGNATURE_LEN)) {
-> +		char b[BDEVNAME_SIZE];
-> +		printk(KERN_WARNING "md: %s mismatched signature on %s\n",
-> +		       mdname(mddev), bdevname(rdev->bdev, b));
-> +		return 0;
-> +	}
-> +
->  	if (mddev->level != LEVEL_MULTIPATH) {
->  		int role;
->  		if (rdev->desc_nr < 0 ||
-> @@ -1661,6 +1702,8 @@ static void super_1_sync(mddev_t *mddev,
->  			sb->dev_roles[i] = cpu_to_le16(0xffff);
->  	}
->  
-> +	memcpy(sb->signature, mddev->signature, MD_SB_SIGNATURE_LEN);
-> +
->  	sb->sb_csum = calc_sb_1_csum(sb);
->  }
->  
-> @@ -4403,6 +4446,12 @@ int md_run(mddev_t *mddev)
->  		analyze_sbs(mddev);
->  	}
->  
-> +	/* Generate a new signature for a zero-signature array, which means
-> +	   the array was last assembled on a non-signature-aware kernel. */
-> +	if (md_has_zero_signature(mddev)) {
-> +		md_new_signature(mddev);
-> +	}
-> +
->  	if (mddev->level != LEVEL_NONE)
->  		request_module("md-level-%d", mddev->level);
->  	else if (mddev->clevel[0])
-> @@ -6804,6 +6853,12 @@ void md_do_sync(mddev_t *mddev)
->  	}
->  	mddev->curr_resync_completed = mddev->curr_resync;
->  
-> +	/* Generate a new signature at the start of resync; after this point
-> +	   we don't want to allow a different disk to be added to the array. */
-> +	if (!test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
-> +		md_new_signature(mddev);
-> +	}
-> +
->  	while (j < max_sectors) {
->  		sector_t sectors;
->  
-> diff -uprN -X linux-2.6.36-vanilla/Documentation/dontdiff linux-2.6.36-vanilla/drivers/md/md.h linux-2.6.36/drivers/md/md.h
-> --- linux-2.6.36-vanilla/drivers/md/md.h	2010-11-15 10:47:58.000000000 -0500
-> +++ linux-2.6.36/drivers/md/md.h	2010-11-15 12:01:08.000000000 -0500
-> @@ -350,6 +350,9 @@ struct mddev_s
->  	atomic_t flush_pending;
->  	struct work_struct barrier_work;
->  	struct work_struct event_work;	/* used by dm to report failure event */
-> +
-> +#define MD_SIGNATURE_LEN 16
-> +	char				signature[MD_SIGNATURE_LEN];
->  };
->  
->  
-> diff -uprN -X linux-2.6.36-vanilla/Documentation/dontdiff linux-2.6.36-vanilla/include/linux/raid/md_p.h linux-2.6.36/include/linux/raid/md_p.h
-> --- linux-2.6.36-vanilla/include/linux/raid/md_p.h	2010-11-15 10:47:58.000000000 -0500
-> +++ linux-2.6.36/include/linux/raid/md_p.h	2010-11-15 12:29:08.000000000 -0500
-> @@ -61,6 +61,7 @@
->  #define MD_SB_DESCRIPTOR_OFFSET		992
->  
->  #define MD_SB_GENERIC_CONSTANT_WORDS	32
-> +#define MD_SB_SIGNATURE_LEN		16
->  #define MD_SB_GENERIC_STATE_WORDS	32
->  #define MD_SB_GENERIC_WORDS		(MD_SB_GENERIC_CONSTANT_WORDS + MD_SB_GENERIC_STATE_WORDS)
->  #define MD_SB_PERSONALITY_WORDS		64
-> @@ -163,7 +164,8 @@ typedef struct mdp_superblock_s {
->  	__u32 delta_disks;	/* 15 change in number of raid_disks	      */
->  	__u32 new_layout;	/* 16 new layout			      */
->  	__u32 new_chunk;	/* 17 new chunk size (bytes)		      */
-> -	__u32 gstate_sreserved[MD_SB_GENERIC_STATE_WORDS - 18];
-> +	__u8 signature[MD_SB_SIGNATURE_LEN];	/* 18-21 sync signature	      */
-> +	__u32 gstate_sreserved[MD_SB_GENERIC_STATE_WORDS - 22];
->  
->  	/*
->  	 * Personality information
-> @@ -253,7 +255,8 @@ struct mdp_superblock_1 {
->  	__le64	resync_offset;	/* data before this offset (from data_offset) known to be in sync */
->  	__le32	sb_csum;	/* checksum upto devs[max_dev] */
->  	__le32	max_dev;	/* size of devs[] array to consider */
-> -	__u8	pad3[64-32];	/* set to 0 when writing */
-> +	__u8	signature[MD_SB_SIGNATURE_LEN];	/* sync signature */
-> +	__u8	pad3[64-48];	/* set to 0 when writing */
->  
->  	/* device state information. Indexed by dev_number.
->  	 * 2 bytes per device
 
+> #=3D=3D=3D=3D=3D=3D=3D Backtrace: =3D=3D=3D=3D=3D=3D=3D=3D=3D
+> #/lib64/libc.so.6(__fortify_fail+0x37)[0x30228fb287]
+> #/lib64/libc.so.6[0x30228f9180]
+> #/lib64/libc.so.6(__read_chk+0x22)[0x30228f9652]
+> #mdadm[0x416aa6]
+> #mdadm[0x410ca7]
+> #mdadm[0x40552a]
+> #/lib64/libc.so.6(__libc_start_main+0xfd)[0x302281ec5d]
+> #mdadm[0x402a59]
+> #=3D=3D=3D=3D=3D=3D=3D Memory map: =3D=3D=3D=3D=3D=3D=3D=3D
+> #00400000-0044f000 r-xp 00000000 08:51 1802315                       =
+    =20
+> /sbin/mdadm
+> #0064e000-00655000 rw-p 0004e000 08:51 1802315                       =
+    =20
+> /sbin/mdadm
+> #00655000-00669000 rw-p 00000000 00:00 0=20
+> #00854000-00856000 rw-p 00054000 08:51 1802315                       =
+    =20
+> /sbin/mdadm
+> #009e9000-00a24000 rw-p 00000000 00:00 0                             =
+    =20
+>[heap]
+> #3022400000-302241e000 r-xp 00000000 08:51 2179368                   =
+    =20
+> /lib64/ld-2.12.1.so
+> #302261d000-302261e000 r--p 0001d000 08:51 2179368                   =
+    =20
+> /lib64/ld-2.12.1.so
+> #302261e000-302261f000 rw-p 0001e000 08:51 2179368                   =
+    =20
+> /lib64/ld-2.12.1.so
+> #302261f000-3022620000 rw-p 00000000 00:00 0=20
+> #3022800000-3022975000 r-xp 00000000 08:51 2179373                   =
+    =20
+> /lib64/libc-2.12.1.so
+> #3022975000-3022b75000 ---p 00175000 08:51 2179373                   =
+    =20
+> /lib64/libc-2.12.1.so
+> #3022b75000-3022b79000 r--p 00175000 08:51 2179373                   =
+    =20
+> /lib64/libc-2.12.1.so
+> #3022b79000-3022b7a000 rw-p 00179000 08:51 2179373                   =
+    =20
+> /lib64/libc-2.12.1.so
+> #3022b7a000-3022b7f000 rw-p 00000000 00:00 0=20
+> #302cc00000-302cc16000 r-xp 00000000 08:51 2179584                   =
+    =20
+> /lib64/libgcc_s-4.4.4-20100630.so.1
+> #3302cc16000-302ce15000 ---p 00016000 08:51 2179584                  =
+     =20
+> /lib64/libgcc_s-4.4.4-20100630.so.1
+> #302ce15000-302ce16000 rw-p 00015000 08:51 2179584                   =
+    =20
+> /lib64/libgcc_s-4.4.4-20100630.so.1
+> #7ff7377d9000-7ff7377dc000 rw-p 00000000 00:00 0=20
+> #7ff7377f5000-7ff7377f6000 rw-p 00000000 00:00 0=20
+> #7fffb1eef000-7fffb1f10000 rw-p 00000000 00:00 0                     =
+    =20
+> [stack]
+> #7fffb1fff000-7fffb2000000 r-xp 00000000 00:00 0                     =
+    =20
+>[vdso]
+> #ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0             =
+    =20
+> [vsyscall]
+> #Aborted (core dumped)
+>=20
+> unfortunately that is where it spits the dummy.
+> the raid-backup file is about 500MB in size.
+>=20
+> i have not been game enough to execute radical commands, as it looks =
+like there=20
+>
+> is only something minor wrong.
+> would be great if someone could help.
+>=20
+> thanks
+> Martin
+>=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
