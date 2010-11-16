@@ -1,143 +1,122 @@
-From: Zoltan Szecsei <zoltans@geograph.co.za>
-Subject: Re: Confusion with setting up new RAID6 with mdadm
-Date: Tue, 16 Nov 2010 08:48:59 +0200
-Message-ID: <4CE2295B.8050403@geograph.co.za>
-References: <4CE00206.4000301@geograph.co.za>	<20101115091326.42b38b84@notabene.brown>	<4CE1758C.5080008@geograph.co.za> <20101116065325.6dd5e8cf@notabene.brown>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: read errors (in superblock?) aren't fixed by md?
+Date: Tue, 16 Nov 2010 11:58:41 +0300
+Message-ID: <4CE247C1.8020703@msgid.tls.msk.ru>
+References: <4CDD47A7.9010501@msgid.tls.msk.ru> <20101113061227.44da7788@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101116065325.6dd5e8cf@notabene.brown>
+In-Reply-To: <20101113061227.44da7788@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2010-11-15 21:53, Neil Brown wrote:
-> On Mon, 15 Nov 2010 20:01:48 +0200
-> Zoltan Szecsei<zoltans@geograph.co.za>  wrote:
->
->   =20
->> Hi,
->> One last quick question:
->> ****************************************************
->> I have compiled the following mdadm on my Ubuntu 64 bit 10.04 Deskto=
-p
->> system:
->> root@gs0:/home/geograph# uname -a
->> Linux gs0 2.6.32-25-generic #45-Ubuntu SMP Sat Oct 16 19:52:42 UTC 2=
-010
->> x86_64 GNU/Linux
->> root@gs0:/home/geograph# mdadm -V
->> mdadm - v3.1.4 - 31st August 2010
->> root@gs0:/home/geograph#
+12.11.2010 22:12, Neil Brown wrote:
+> On Fri, 12 Nov 2010 16:56:55 +0300
+> Michael Tokarev <mjt@tls.msk.ru> wrote:
+> 
+>> end_request: I/O error, dev sdf, sector 142655961
+>> end_request: I/O error, dev sdd, sector 142656485
 >>
->> ****************************************************
->> I have deleted the partitions on all 8 drives, and done a mdadm -Ss
+>> Both sdf and sdd are parts of the same (raid10) array,
+
+>> # partition table of /dev/sdf
+>> unit: sectors
+>> /dev/sdf1 : start=       63, size=142657137, Id=83
 >>
->> root@gs0:/home/geograph# fdisk -lu
+>> Now, we've read errors on sectors 142655961 (sdf)
+>> and 142656485 (sdd), which are 1239 and 715 sectors
+>> before the end of the partition, respectively.
 >>
->> Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
->> 255 heads, 63 sectors/track, 243201 cylinders, total 3907029168 sect=
-ors
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x00000000
+>>           Magic : a92b4efc
+>>         Version : 00.90.00
+>>   Used Dev Size : 71328256 (68.02 GiB 73.04 GB)
+>>      Array Size : 499297792 (476.17 GiB 511.28 GB)
+>> Internal Bitmap : present
+>>  Active Devices : 14
+>>          Layout : near=2, far=1
+>>      Chunk Size : 256K
 >>
->> Disk /dev/sda doesn't contain a valid partition table
+>> What's wrong with these read errors?  I just verified -
+>> the error persists, i.e. reading the mentioned sectors
+>> using dd produces the same errors again, so there were
+>> no re-writes there.
 >>
->> Disk /dev/sdb: 2000.4 GB, 2000398934016 bytes
->>
->> ******************************************************
->> Based on the above "assume-clean" comment, plus all the help you guy=
-s
->> have offered, I have just run:
->> mdadm --create /dev/md0 --metadata=3D1.2 --auto=3Dmd --assume-clean
->> --bitmap=3Dinternal --bitmap-chunk=3D131072 --chunk=3D512 --level=3D=
-6
->> --raid-devices=3D8 /dev/sd[abcdefgh]
->>
->> It took a nano-second to complete!
->>
->> The man-pages for assume-clean say that "the array pre-existed". Sur=
-ely
->> as I have erased the HDs, and now have no partitions on them, this i=
-s
->> not true?
->> Do I need to re-run the above mdadm command, or is it safe to procee=
-d
->> with LVM then mkfs ext4?
->>     =20
-> It is safe to proceed.
->   =20
+>> Can md handle this situation gracefully?
+> 
+> These sectors would be in the internal bitmap which starts at 142657095
+> and ends before 142657215.
+> 
+> The bitmap is read from just one device when the array is assembled, then
+> written to all devices when it is modified.
 
-Too cool (A for away at last :-) )
-Neil: Big thanks to you and the others on this list for all the patienc=
-e=20
-& help you guys have given.,
-Kind regards,
-Zoltan
-> The situation is that the two parity block are probably not correct o=
-n most
-> (or even any) stripes.  But you have no live data on them to protect,=
- so it
-> doesn't really matter.
->
-> With the current implementation of RAID6, every time you write, the c=
-orrect
-> parity blocks are computed and written.  So any live data that is wri=
-tten
-> will be accompanies by correct parity blocks to protect it.
->
-> This does *not* apply to RAID5 as it sometimes uses the old parity bl=
-ock to
-> compute the new parity block.  If the old was wrong, the new will be =
-wrong
-> too.
->
-> It is conceivable that one day we might change the raid6 code to perf=
-orm
-> similar updates if it ever turns out to be faster to do it that way, =
-but it
-> seems unlikely at the moment.
->
-> NeilBrown
->
->
->   =20
+In this case there should be no reason to read these areas
+in the first place.  The read errors happened during regular
+operations, the machine had uptime of about 30 days and the
+array were in use since boot.  A few days before verify pass
+has been completed successfully.
 
+> I'm not sure off-hand exactly how md would handle read errors.  I would
+> expect it to just disable the bitmap, but it doesn't appear to be doing
+> that... odd.  I would need to investigate more.
 
+Again, it depends on why it tried to _read_ these areas to
+start with.
 
+> You should be able to get md to over-write the area by removing the internal
+> bitmap and adding it back (with --grow --bitmap=none / --grow
+> --bitmap=internal).
 
---=20
+I tried this - no, it appears md[adm] does not write into there.
+Neither of the two disks were fixed by this.
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Zoltan Szecsei PrGISc [PGP0031]
-Geograph (Pty) Ltd.
-P.O. Box 7, Muizenberg 7950, South Africa.
+I tried to re-write them manually using dd, but it's very error-prone
+so I rewrote only 2 sectors, very carefully (it appears there are more
+bads in these areas, sector with the next number is also unreadable) -
+and it stays fixed, drive just remapped them and increased Reallocated
+Sector Count (from 0 to 2 - for a 72Gb drive this is nothing).
 
-65 Main Road, Muizenberg 7945
-Western Cape, South Africa.
+Since this is an important production array, I went ahead and
+reconfigured it, completely - first I changed partitions to
+end before the problem area (and start later too, just in case -- moved
+the beginning from 63s to 1M), and created a bunch of raid1 arrays
+instead of single raid10 (on the array there was Oracle database
+with multiple files, so it's easy to distribute them across multiple
+filesystems).
 
-34=B0 6'16.35"S 18=B028'5.62"E
+I created bitmaps again, now in a different location, let's see how
+it all will work...
 
-Tel: +27-21-7884897  Mobile: +27-83-6004028
-=46ax: +27-86-6115323     www.geograph.co.za
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+But there are a few questions remains still.
 
+1) what is located in these areas?  If it is bitmap, md should
+   rewrite them during bitmap creation.  Maybe the bitmap were
+   smaller (I used --bitmap-chunk=4096 iirc)?  Again, if it
+   were, what was in these places, and why/who tried to read it?
 
+2) how to force mdadm to correct these, without risking to
+   over-write something so that the array wont work?
 
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 10.0.1153 / Virus Database: 424/3258 - Release Date: 11/15/10
+3) (probably not related to md but)  It is interesting that
+   several disks at once developed bad sectors in the same
+   area.  From 14 drives, I noticed 5 problematic - 2 with
+   real bad blocks and 3 more with long delays while reading
+   these areas (this is what prompted me to reconfigure
+   array).  They're even from different vendors.  In theory,
+   modern hard drives should not suffer even from multiple
+   writes to the same area (as it can be for high-write-
+   intensive bitmap areas, but due to (1) above it isn't
+   clear what is in there).  I've no explanation here.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+4) (related but different)  Is there a way to force md to
+   re-write or check a particular place on one of the
+   components?  While trying to fix the unreadable sector
+   I hit /dev/sdf somewhere in the middle and had to remove
+   it from the array, remove the bitmap and add it back,
+   just to be sure md will write right info into that sector...
+
+Thanks!
+
+/mjt
