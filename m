@@ -1,104 +1,146 @@
-From: Zoltan Szecsei <zoltans@geograph.co.za>
-Subject: Re: mdadm raid6->LVM->ext4 setup
-Date: Wed, 17 Nov 2010 09:49:27 +0200
-Message-ID: <4CE38907.8040709@geograph.co.za>
-References: <4CE2C8AC.7010103@geograph.co.za> <20101116221722.GC8943@maude.comedia.it> <4CE31641.50909@ziu.info>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [Patch 00/17] Autorebuild
+Date: Wed, 17 Nov 2010 21:22:42 +1100
+Message-ID: <20101117212242.5ad7b210@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CE31641.50909@ziu.info>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 2010-11-17 01:39, Michal Soltys wrote:
-> On 10-11-16 23:17, Luca Berra wrote:
->> On Tue, Nov 16, 2010 at 08:08:44PM +0200, Zoltan Szecsei wrote:
->>>
->>> *** Commands used:
->>> mdadm --create /dev/md0 --metadata=3D1.2 --auto=3Dmd --assume-clean
->>> --bitmap=3Dinternal --bitmap-chunk=3D131072 --chunk=3D512 --level=3D=
-6
->>> --raid-devices=3D8 /dev/sd[abcdefgh]
->>> mdadm --detail --scan >> /etc/mdadm.conf
->>> mdadm --assemble /dev/md0
->> as i said this is not useful
-Accepted, but I also understood "not harmfull". I tried it out of=20
-curiosity, it took a nano-second to complete, so didn't try to "undo it=
-".
->>> pvcreate --metadatasize 512 /dev/md0
->> you should use --dataalignment, not --metadatasize, also you should
-I checked out man pvcreate & lvm.conf had all the stuff below in it, so=
-=20
-I assumed it would sort itself out.
-md_component_detection =3D 1
-md_chunk_alignment =3D 1
-data_alignment_detection =3D 1
-data_alignment_offset_detection =3D 1
+On Fri, 29 Oct 2010 15:13:40 +0100
+"Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
 
->
-> Also with reference to metadatasize - keep in mind the value is=20
-> rounded up to the /next/ 64k boundary (or it was a while ago, perhaps=
-=20
-> it's changed now). So in your case, 512 would really result with 576.
->
-> With reference to --dataalignment - there's also --dataalignoffset=20
-> option (although not really important in your setup).
->
-> You might consider adjusting=20
-> /sys/block/<yourmddevice>/md/stripe_cache_size to higher values when=20
-> you have everything set. It tends to give quite a performance boost.
+> This is updated series of patches forming autorebuild functionality in mdadm monitor based on new policy code.
 
-I had trouble getting my head around all the calculations, mainly=20
-because I do not know if my sector size of 512 is falsely reported or=20
-not (so I just accepted it as 512).
+I Anna and all,
 
-I am loading the array as we speak, with 200MB to 400MB tiff files. In=20
-the past 11 hours approx 995GB was loaded, so that calculates to a writ=
-e=20
-speed of 25MB/s
+I have decided that the best way forward is for me to apply all of your
+patches and fix them up on the way.  It turned out there was quite a few
+changes that I wanted to make that I only discovered while examining the
+patches very closely, so this seems to be a very useful exercise.
 
-I have no problem stopping & deleting this if you feel that this=20
-represents problems in my setup, but then please can someone do the=20
-alignment calculations & command syntax for me.
-Regards to all,
-Zoltan
+I haven't finished yet, but you can see my current state - which is up to
+about patch 11 in your series - in my devel-3.2 branch.
 
+Probably the most significant change so far is the interpretation of
+action=spare-same-slot.  I have defined that in a way that is *more*
+permissive than action=spare, where you had it less permissive.
 
+The comment for that change set is below.
+The new list of policy actions is:
 
+enum policy_action {
+	act_default,
+	act_include,
+	act_re_add,
+	act_spare,	/* This only applies to bare devices */
+	act_spare_same_slot, /* this allows non-bare devices,
+			      * but only if recent removal */
+	act_force_spare, /* this allow non-bare devices in any case */
+	act_err
+};
 
+I'll hopefully get the rest of your patches done tomorrow and then I might
+start on Adam... and then on the changes that I want to make.
+If you can do some testing once enough code is in place, that would be great.
+Thanks,
+NeilBrown
 
+commit a2191ce8af4aa178d62df759fab47ef4dc8e6f67
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Nov 17 12:46:35 2010 +1100
 
-
---=20
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Zoltan Szecsei PrGISc [PGP0031]
-Geograph (Pty) Ltd.
-P.O. Box 7, Muizenberg 7950, South Africa.
-
-65 Main Road, Muizenberg 7945
-Western Cape, South Africa.
-
-34=B0 6'16.35"S 18=B028'5.62"E
-
-Tel: +27-21-7884897  Mobile: +27-83-6004028
-=46ax: +27-86-6115323     www.geograph.co.za
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+    Add action=spare-same-slot policy.
+    
+    When "mdadm -I" is given a device with no metadata, mdadm tries to add
+    it as a 'spare' somewhere based on policy.
+    
+    This patch changes the behaviour in two ways:
+    
+    1/ If the device is at a 'path' where a previous device was removed
+      from an array or container, then we preferentially add the spare to
+      that array or container.
+    
+    2/ Previously only 'bare' devices were considered for adding as
+      spares.  Now if action=spare-same-slot is active, we will add
+      non-bare devices, but *only* if the path was previously in use
+      for some array, and the device will only be added to that array.
+    
+    Based on code
+      From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+    
+    Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
 
+> 
+> Autorebuild Monitoring application:
+> Autorebuild monitor is part of monitor application (mdadm -F). In the current code of mdadm monitor autorebuild feature was based on spare group assignment in mdadm.conf file and worked only for native metadata. This code has been retained for compatibility with old config format.
+> The new autorebuild implementation works also for external metadata types. It uses the concept of domains in mdadm.conf introduced by Neil Brown. 
+> Monitoring application periodically checks the state of MD active arrays and triggers a rebuild if there are eligible spare disks in other arrays/containers.
+> Degraded arrays are checked one by one. If there is a spare disk in other array/container that matches the domain of the degraded array and the domain action allows for spare sharing the spare is moved using existing Manage_subdevs function. If the addition fails, the spare device is moved back to the original container and next potential spare is tried. The process is repeated until all arrays are checked and the process is put into a sleep state for a configured period.
+> 
+> New option --no-sharing has been added to Monitor mode to be able to run monitoring only (without moving spares). This is recommended when many instances of monitor are to be run on the same set of devices.
+> Spare sharing is allowed in only one instance of Monitor running with --scan option. User is still able to start Monitoring functions in multiple instances without --scan option.
+> 
+> The autorebuild build-in assumptions are:
+> 1\spares are shared between the arrays of the same metadata 2\spares are moved only from containers/volumes that are not degraded 3\spares are moved to containers/volumes lacking a *good* spare (size)
+> 
+> Anna Czarnowska
+> Przemyslaw Hawrylewicz-Czarnowski
+> Marcin Labun
+> 
+> 0001-added-path-path_id-to-give-the-information-on-the-pa.patch
+> 0002-Update-of-udev-rules-to-support-IMSM-devices.patch
+> 0003-extension-of-IncrementalRemove-to-store-location-pat.patch
+> 0004-Incremental-for-bare-disks-implementation-of-spare-s.patch
+> 0005-Util-get-device-size-from-id.patch
+> 0006-Monitor-set-err-on-arrays-not-in-mdstat.patch
+> 0007-Monitor-spare-group-based-spare-sharing-moved-to-sep.patch
+> 0008-mdadm-added-no-sharing-option-for-Monitor-mode.patch
+> 0009-Monitor-avoid-skipping-checks-on-external-arays.patch
+> 0010-Monitor-include-containers-in-scan-mode.patch
+> 0011-Monitor-link-containers-with-subarrays-in-statelist.patch
+> 0012-imsm-create-mdinfo-list-of-disks-in-a-container-from.patch
+> 0013-Monitor-autorebuild-functionality-added.patch
+> 0014-Monitor-Respect-policy-in-auto-rebuild-in-mdadm-moni.patch
+> 0015-Monitor-more-accurate-size-check-when-looking-for-sp.patch
+> 0016-IMSM-Fix-problem-in-mdmon-monitor-of-using-removed-d.patch
+> 0017-Policy-is-aware-of-metadata-disk-s-controller-domain.patch
+> 
+> Incremental.c      |  230 +++++++++++++++---
+> Makefile           |    3 +
+> Monitor.c          |  691 ++++++++++++++++++++++++++++++++++++++++++++--------
+> ReadMe.c           |    4 +
+> managemon.c        |   38 +++
+> mdadm.c            |   29 ++-
+> mdadm.h            |   49 ++++-
+> policy.c           |  134 +++++++++-
+> super-intel.c      |  274 ++++++++++++++++++---
+> udev-md-raid.rules |    7 +-
+> util.c             |   23 ++
+> 11 files changed, 1290 insertions(+), 192 deletions(-)
+> ---------------------------------------------------------------------
+> Intel Technology Poland sp. z o.o.
+> z siedziba w Gdansku
+> ul. Slowackiego 173
+> 80-298 Gdansk
+> 
+> Sad Rejonowy Gdansk Polnoc w Gdansku, 
+> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+> numer KRS 101882
+> 
+> NIP 957-07-52-316
+> Kapital zakladowy 200.000 zl
+> 
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
 
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 10.0.1153 / Virus Database: 424/3261 - Release Date: 11/16/10
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
