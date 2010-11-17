@@ -1,159 +1,164 @@
-From: Aniket Kulkarni <aniket@netezza.com>
-Subject: [PATCH] md: Fix nr_pending race during raid10 recovery
-Date: Wed, 17 Nov 2010 13:57:50 -0500
-Message-ID: <1290020270.3055.12.camel@aniket-desktop>
-Reply-To: <aniket@netezza.com>
+From: Michael Demmer <Michael.Demmer@riverbed.com>
+Subject: bug in bio_map_user_iov
+Date: Wed, 17 Nov 2010 13:24:47 -0800
+Message-ID: <4A89C515-6A74-4C0B-9A81-8FAB6C36AFF0@riverbed.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If a RAID10 rdev that is undergoing recovery is marked 'faulty', the rdev 
-could get taken out of the array in spite of outstanding IOs leading to 
-a kernel panic. There are two issues here -
+--_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-1. The ref count (nr_pending) increment for sync or recovery leaves a lot of
-open windows for concurrent rdev removals
-2. raid10 sync thread continues to submit recovery IOs to faulty devices. These get
-rejected at a later stage by management thread (raid10d).
+Hello all,
 
-Note - rd denotes the rdev from which we are reading, and wr the one we are
-writing to
+I've been doing some work with a Linux kernel module that enables zero-copy=
+ I/O to block devices using a custom user/kernel interface. In porting this=
+ from an older Linux kernel to a more modern release, I ran into an issue w=
+hen interacting with MD devices that I traced back to what I believe to be =
+a problem in bio_map_user_iov.
 
-  Sync Thread                                Management Thread
+The problem and fix are described in the first attached patch. The second i=
+s a simple test module and user program which triggers the bug and validate=
+s the fix.
 
-sync_request
-  ++rd.nr_pending
-  bi_end_io = end_sync_read
-  generic_make_request         -------> recovery_request_write
-         |                    |             wr.nr_pending++
-         |                    |             bi_end_io = end_sync_write
-         V                    |             generic_make_request
-end_sync_read    --------------                      |
-  --rd.nr_pending                                    |
-  reschedule_retry for write                         |
-                                                     v
-                                         end_sync_write
-                                             --wr.nr_pending
+Thanks,
+-m
 
-So a set-faulty and remove on recovery rdev between sync_request and 
-recovery_request_write is allowed and will lead to a panic.
-
-The fix is -
-
-1. Increment wr.nr_pending immediately after selecting a good target. Ofcourse
-the decrements will be added to error paths in sync_request and end_sync_read.
-2. Don't submit recovery IOs to faulty targets
-
-Signed-off-by: Aniket Kulkarni <aniket@netezza.com>
----
- drivers/md/raid10.c |   46 +++++++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 43 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c67aa54..ec1ea43 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1408,6 +1408,16 @@ static void sync_request_write(mddev_t *mddev, r10bio_t *r10_bio)
- 
- done:
- 	if (atomic_dec_and_test(&r10_bio->remaining)) {
-+		for (i = 0; i < conf->copies ; i++)  {
-+			/* for any unsuccessful IOs give up the pending count on the
-+			 * write device
-+			 */
-+			if (!test_bit(BIO_UPTODATE, &r10_bio->devs[i].bio->bi_flags) &&
-+				r10_bio->devs[i].bio->bi_end_io == end_sync_write) {
-+				int d = r10_bio->devs[i].devnum;
-+				rdev_dec_pending(conf->mirrors[d].rdev, mddev);
-+			}
-+		}
- 		md_done_sync(mddev, r10_bio->sectors, 1);
- 		put_buf(r10_bio);
- 	}
-@@ -1443,7 +1453,6 @@ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
- 	}
- 	d = r10_bio->devs[1].devnum;
- 
--	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
- 	md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
- 	if (test_bit(R10BIO_Uptodate, &r10_bio->state))
- 		generic_make_request(wbio);
-@@ -1906,14 +1915,24 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
- 		int j, k;
- 		r10_bio = NULL;
- 
--		for (i=0 ; i<conf->raid_disks; i++)
-+		for (i = 0; i < conf->raid_disks; i++)
- 			if (conf->mirrors[i].rdev &&
- 			    !test_bit(In_sync, &conf->mirrors[i].rdev->flags)) {
- 				int still_degraded = 0;
- 				/* want to reconstruct this device */
- 				r10bio_t *rb2 = r10_bio;
--				sector_t sect = raid10_find_virt(conf, sector_nr, i);
-+				sector_t sect;
- 				int must_sync;
-+
-+				/* Skip over the faulty drives */
-+				if (test_bit(Faulty, &conf->mirrors[i].rdev->flags))
-+					continue;
-+
-+				/* up the nr_pending count; this will be decremented on
-+				 * sync/recovery IO completion (success/erorr) to this dev
-+				 */
-+				atomic_inc(&conf->mirrors[i].rdev->nr_pending);
-+				sect = raid10_find_virt(conf, sector_nr, i);
- 				/* Unless we are doing a full sync, we only need
- 				 * to recover the block if it is set in the bitmap
- 				 */
-@@ -1927,6 +1946,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
- 					 * that there will never be anything to do here
- 					 */
- 					chunks_skipped = -1;
-+					rdev_dec_pending(conf->mirrors[i].rdev, mddev);
- 					continue;
- 				}
- 
-@@ -1997,6 +2017,10 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
- 				if (j == conf->copies) {
- 					/* Cannot recover, so abort the recovery */
- 					put_buf(r10_bio);
-+					/* we wanted to write to 'i' but we didn't; so dec the
-+					 * pending count
-+					 */
-+					rdev_dec_pending(conf->mirrors[i].rdev, mddev);
- 					if (rb2)
- 						atomic_dec(&rb2->remaining);
- 					r10_bio = rb2;
-@@ -2014,6 +2038,22 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
- 				r10_bio = (r10bio_t*) rb2->master_bio;
- 				rb2->master_bio = NULL;
- 				put_buf(rb2);
-+				if (r10_bio)  {
-+					int d;
-+					/* Before throwing away the complete r10bio chain, decrement
-+					 * the nr_pending ref counts incremented along the way
-+					 * We do this only for our master_bio and then on because
-+					 * if biolist == NULL no ref count was incremented in this
-+					 * r10_bio
-+					 */
-+					for (d = 0; d < conf->copies; d++)  {
-+						if (r10_bio->devs[d].bio &&
-+							r10_bio->devs[d].bio->bi_end_io)	{
-+							int dn = r10_bio->devs[d].devnum;
-+							rdev_dec_pending(conf->mirrors[dn].rdev, mddev);
-+						}
-+					}
-+				}
- 			}
- 			goto giveup;
- 		}
--- 
-1.7.1
+ps. This is my first attempt at pushing a patch upstream so please forgive =
+any newbie mistakes.
 
 
+--_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
+Content-Type: application/octet-stream;
+	name="0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch"
+Content-Description: 0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch
+Content-Disposition: attachment;
+	filename="0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch";
+	size=1462; creation-date="Wed, 17 Nov 2010 13:24:48 GMT";
+	modification-date="Wed, 17 Nov 2010 13:24:48 GMT"
+Content-Transfer-Encoding: base64
 
+RnJvbSAzYmZiYzhlZDQxYzkyMzJlOGZhMGQ1NWU0MDkzOTM1ZDBhZjMyYTc1IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBNaWNoYWVsIERlbW1lciA8ZGVtbWVyQHJpdmVyYmVkLmNvbT4K
+RGF0ZTogV2VkLCAxNyBOb3YgMjAxMCAxMToyMjo0NCAtMDgwMApTdWJqZWN0OiBbUEFUQ0ggMS8y
+XSBrZXJuZWw6IGZpeCBidWcgaW4gYmlvX21hcF91c2VyX2lvdiBvbiBNRCBkZXZpY2VzCgpXaGls
+ZSBidWlsZGluZyB1cCB0aGUgaW92ZWMgdG8gcGFzcyB0byB0aGUgbG93ZXIgbGV2ZWwgZGV2aWNl
+LApfX2Jpb19tYXBfdXNlcl9pb3YgY2FsbHMgX19iaW9fYWRkX3BhZ2Ugd2hpY2ggdHJpZXMgdG8g
+bWVyZ2UKY29uc2VjdXRpdmUgYmxvY2sgcG9pbnRlcnMgcmF0aGVyIHRoYW4gc3BsaXR0aW5nIHRo
+ZW0gaW50bwptdWx0aXBsZSBpb3YgZW50cmllcywgZ2l2aW5nIHRoZSB1bmRlcmx5aW5nIGRyaXZl
+ciBhbiBvcHBvcnR1bml0eQp0byByZXN0cmljdCB0aGVzZSBtZXJnZXMgdGhyb3VnaCB0aGUgbWVy
+Z2VfYnZlY19mbi4KCkZvciBNRCBkZXZpY2VzLCB0aGUgbWVyZ2UgZnVuY3Rpb24gbG9va3MgdGhy
+b3VnaCB0aGUgYmlvIGF0IHRoZQpiaV9iZGV2LCBob3dldmVyIGJpb19tYXBfdXNlcl9pb3YgZG9l
+c24ndCBhc3NpZ24gdGhlIGJsb2NrX2RldmljZQpwb2ludGVyIHRvIHRoZSBiaW8gdW50aWwgYWZ0
+ZXIgYWxsIHRoZSBtZXJnaW5nIGlzIGRvbmUuIFRoaXMgcGF0Y2gKc2ltcGx5IHJlb3JkZXJzIHRo
+ZSBhc3NpZ25tZW50IHNvIHRoYXQgYmlvIG9wZXJhdGlvbnMgb24gTUQgZGV2aWNlcwpkb24ndCBj
+cmFzaCBvbiBhIG51bGwgcG9pbnRlci4KLS0tCiBmcy9iaW8uYyB8ICAgIDMgKystCiAxIGZpbGVz
+IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
+cy9iaW8uYyBiL2ZzL2Jpby5jCmluZGV4IDRiZDQ1NGYuLjdmMjk1ODIgMTAwNjQ0Ci0tLSBhL2Zz
+L2Jpby5jCisrKyBiL2ZzL2Jpby5jCkBAIC05ODksNiArOTg5LDggQEAgc3RhdGljIHN0cnVjdCBi
+aW8gKl9fYmlvX21hcF91c2VyX2lvdihzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwKIAlpZiAoIWJp
+bykKIAkJcmV0dXJuIEVSUl9QVFIoLUVOT01FTSk7CiAKKwliaW8tPmJpX2JkZXYgPSBiZGV2Owor
+CiAJcmV0ID0gLUVOT01FTTsKIAlwYWdlcyA9IGtjYWxsb2MobnJfcGFnZXMsIHNpemVvZihzdHJ1
+Y3QgcGFnZSAqKSwgZ2ZwX21hc2spOwogCWlmICghcGFnZXMpCkBAIC0xMDQ2LDcgKzEwNDgsNiBA
+QCBzdGF0aWMgc3RydWN0IGJpbyAqX19iaW9fbWFwX3VzZXJfaW92KHN0cnVjdCByZXF1ZXN0X3F1
+ZXVlICpxLAogCWlmICghd3JpdGVfdG9fdm0pCiAJCWJpby0+YmlfcncgfD0gUkVRX1dSSVRFOwog
+Ci0JYmlvLT5iaV9iZGV2ID0gYmRldjsKIAliaW8tPmJpX2ZsYWdzIHw9ICgxIDw8IEJJT19VU0VS
+X01BUFBFRCk7CiAJcmV0dXJuIGJpbzsKIAotLSAKMS43LjEKCg==
+
+--_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
+Content-Type: application/octet-stream;
+	name="0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch"
+Content-Description: 0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch
+Content-Disposition: attachment;
+	filename="0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch";
+	size=4399; creation-date="Wed, 17 Nov 2010 13:24:48 GMT";
+	modification-date="Wed, 17 Nov 2010 13:24:48 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSA1NjNkOTI1ZmE5M2EwNGQxMmQxYWQ4NjliMzA2MTkzMTk4ZjY4OGMxIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBNaWNoYWVsIERlbW1lciA8ZGVtbWVyQHJpdmVyYmVkLmNvbT4K
+RGF0ZTogV2VkLCAxNyBOb3YgMjAxMCAxMToxMTowOSAtMDgwMApTdWJqZWN0OiBbUEFUQ0ggMi8y
+XSBUZXN0IHByb2dyYW0gdG8gdmVyaWZ5IHRoZSBiaW9fbWFwX3VzZXIgYnVnIGZpeCBmb3IgbWQg
+ZGV2aWNlcy4KClVzYWdlOgpjZCBiaW9fbWFwX3VzZXJfYnVnCmluc21vZCBiaW9fYnVnLmtvCm1r
+bm9kIC9kZXYvYmlvX2J1ZyBjIDk5OSAxCi4vYmlvX2J1Z190ZXN0IC9kZXYvbWRYCi0tLQogYmlv
+X21hcF91c2VyX2J1Zy9NYWtlZmlsZSAgICAgICB8ICAgMTYgKysrKysrKysKIGJpb19tYXBfdXNl
+cl9idWcvYmlvX2J1Zy5oICAgICAgfCAgICA1ICsrKwogYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVn
+X21vZC5jICB8ICAgNzQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBi
+aW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfdGVzdC5jIHwgICA0NCArKysrKysrKysrKysrKysrKysr
+KysrKwogNCBmaWxlcyBjaGFuZ2VkLCAxMzkgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkK
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBiaW9fbWFwX3VzZXJfYnVnL01ha2VmaWxlCiBjcmVhdGUgbW9k
+ZSAxMDA2NDQgYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmgKIGNyZWF0ZSBtb2RlIDEwMDY0NCBi
+aW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfbW9kLmMKIGNyZWF0ZSBtb2RlIDEwMDY0NCBiaW9fbWFw
+X3VzZXJfYnVnL2Jpb19idWdfdGVzdC5jCgpkaWZmIC0tZ2l0IGEvYmlvX21hcF91c2VyX2J1Zy9N
+YWtlZmlsZSBiL2Jpb19tYXBfdXNlcl9idWcvTWFrZWZpbGUKbmV3IGZpbGUgbW9kZSAxMDA2NDQK
+aW5kZXggMDAwMDAwMC4uODA3NTZjNQotLS0gL2Rldi9udWxsCisrKyBiL2Jpb19tYXBfdXNlcl9i
+dWcvTWFrZWZpbGUKQEAgLTAsMCArMSwxNiBAQAorCitvYmotbTo9IGJpb19idWcubworCitiaW9f
+YnVnLW9ianMgOj0gYmlvX2J1Z19tb2QubworCithbGw6IGJpb19idWcua28gYmlvX2J1Z190ZXN0
+CisKK2Jpb19idWcua286CisJbWFrZSAtQyAuLiBNPWBwd2RgIG1vZHVsZXMKKworYmlvX2J1Z190
+ZXN0OiBiaW9fYnVnX3Rlc3QuYworCSQoQ0MpIC1XYWxsIC1nICQ8IC1vICRACisKK2NsZWFuOgor
+CW1ha2UgLUMgLi4gTT1gcHdkYCBjbGVhbgorCXJtIC1mIGJpb19idWdfdGVzdApkaWZmIC0tZ2l0
+IGEvYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmggYi9iaW9fbWFwX3VzZXJfYnVnL2Jpb19idWcu
+aApuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi45N2FhMGI5Ci0tLSAvZGV2L251
+bGwKKysrIGIvYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmgKQEAgLTAsMCArMSw1IEBACisKK3N0
+cnVjdCBiaW9fbWFwX3VzZXJfYnVnX2FyZ3MgeworCWNoYXIgZGV2bmFtZVs2NF07CisJdW5zaWdu
+ZWQgbG9uZyB1c2VyYWRkcjsKK307CmRpZmYgLS1naXQgYS9iaW9fbWFwX3VzZXJfYnVnL2Jpb19i
+dWdfbW9kLmMgYi9iaW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfbW9kLmMKbmV3IGZpbGUgbW9kZSAx
+MDA2NDQKaW5kZXggMDAwMDAwMC4uZDAxYmY1YgotLS0gL2Rldi9udWxsCisrKyBiL2Jpb19tYXBf
+dXNlcl9idWcvYmlvX2J1Z19tb2QuYwpAQCAtMCwwICsxLDc0IEBACisjaW5jbHVkZSA8bGludXgv
+aW5pdC5oPgorI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPgorI2luY2x1ZGUgPGxpbnV4L3BvbGwu
+aD4KKyNpbmNsdWRlIDxsaW51eC9ibGtkZXYuaD4KKyNpbmNsdWRlIDxsaW51eC92ZXJzaW9uLmg+
+CisjaW5jbHVkZSA8bGludXgvZXJyLmg+CisKKyNpbmNsdWRlICJiaW9fYnVnLmgiCisKK3N0YXRp
+YyBsb25nCitidWdfaW9jdGwoc3RydWN0IGZpbGUgKmZpbGUsIHVuc2lnbmVkIGludCBjLCB1bnNp
+Z25lZCBsb25nIHYpCit7CisgICAgc3RydWN0IGJpb19tYXBfdXNlcl9idWdfYXJncyBhcmdzOwor
+ICAgIHN0cnVjdCBibG9ja19kZXZpY2UgKmJkZXY7CisgICAgc3RydWN0IHJlcXVlc3RfcXVldWUg
+KnE7CisgICAgc3RydWN0IGJpbyAqYmlvOworCisgICAgaWYgKGNvcHlfZnJvbV91c2VyKCZhcmdz
+LCAodm9pZCopdiwgc2l6ZW9mKGFyZ3MpKSkgeworICAgICAgICByZXR1cm4gLUVGQVVMVDsKKyAg
+ICB9CisKKyAgICBwcmludGsoInRlc3RpbmcgYmlvX21hcF91c2VyIGJ1ZyBvbiAlcy4uLlxuIiwg
+YXJncy5kZXZuYW1lKTsKKworICAgIGJkZXYgPSBvcGVuX2JkZXZfZXhjbHVzaXZlKGFyZ3MuZGV2
+bmFtZSwgRk1PREVfUkVBRHxGTU9ERV9XUklURSwgKHZvaWQqKTB4MDEwMTAxMDEpOworICAgIGlm
+IChJU19FUlIoYmRldikpIHsKKwlwcmludGsoImVycm9yIG9wZW5pbmcgYmxvY2sgZGV2aWNlXG4i
+KTsKKwlyZXR1cm4gLUVJTlZBTDsKKyAgICB9CQorCisgICAgcSA9IGJkZXZfZ2V0X3F1ZXVlKGJk
+ZXYpOworICAgIGlmIChxID09IE5VTEwpIHsKKyAgICAgICAgcHJpbnRrKCJibG9jayBkZXZpY2Ug
+aGFzIHF1ZXVlIG1pc3NpbmcuXG4iKTsKKyAgICAgICAgcmV0dXJuIC1FRkFVTFQ7CisgICAgfQor
+ICAgIAorICAgIC8vIHdpbGwgY3Jhc2ggaGVyZQorICAgIGJpbyA9IGJpb19tYXBfdXNlcihxLCBi
+ZGV2LCBhcmdzLnVzZXJhZGRyLCA0MDk2LCAwLCBHRlBfS0VSTkVMKTsKKworICAgIGNsb3NlX2Jk
+ZXZfZXhjbHVzaXZlKGJkZXYsIEZNT0RFX1JFQUR8Rk1PREVfV1JJVEUpOworICAgIAorICAgIHBy
+aW50aygidGVzdGluZyBiaW9fbWFwX3VzZXIgYnVnIG9uICVzLi4uIG9rXG4iLCBhcmdzLmRldm5h
+bWUpOworICAgIHJldHVybiAwOworfQorCitzdGF0aWMgc3RydWN0IGZpbGVfb3BlcmF0aW9ucyBi
+aW9fYnVnX2ZvcHMgPSB7CisgICAgb3duZXI6IFRISVNfTU9EVUxFLAorICAgIHVubG9ja2VkX2lv
+Y3RsOiBidWdfaW9jdGwKK307CisKK3N0YXRpYyBpbnQgX19pbml0IAorYnVnX2luaXQodm9pZCkg
+Cit7ICAgIAorICAgIHByaW50aygicmVnaXN0ZXJpbmcgZGV2aWNlXG4iKTsKKworICAgIGlmIChy
+ZWdpc3Rlcl9jaHJkZXYoOTk5LCAiYmlvX2J1ZyIsICZiaW9fYnVnX2ZvcHMpKSB7CisgICAgICAg
+IHByaW50aygiRVJST1IgcmVnaXN0ZXJfY2hyZGV2IGZvciAldSBpbiAvZGV2LyVzLlxuIiwKKyAg
+ICAgICAgICAgICAgIDk5OSwgImJpb19idWciKTsKKyAgICB9CisKKyAgICByZXR1cm4gMDsKK30K
+Kworc3RhdGljIHZvaWQgX19leGl0IAorYnVnX2V4aXQodm9pZCkgCit7CisgICAgcHJpbnRrKCJ1
+bnJlZ2lzdGVyaW5nIGRldmljZVxuIik7CisgICAgdW5yZWdpc3Rlcl9jaHJkZXYoOTk5LCAiYmlv
+X2J1ZyIpOworfQorCisKK21vZHVsZV9pbml0KGJ1Z19pbml0KTsKK21vZHVsZV9leGl0KGJ1Z19l
+eGl0KTsKKworTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOwpkaWZmIC0tZ2l0IGEvYmlvX21hcF91c2Vy
+X2J1Zy9iaW9fYnVnX3Rlc3QuYyBiL2Jpb19tYXBfdXNlcl9idWcvYmlvX2J1Z190ZXN0LmMKbmV3
+IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uMWY5N2I3MQotLS0gL2Rldi9udWxsCisr
+KyBiL2Jpb19tYXBfdXNlcl9idWcvYmlvX2J1Z190ZXN0LmMKQEAgLTAsMCArMSw0NCBAQAorCisj
+aW5jbHVkZSA8c3RkaW8uaD4KKyNpbmNsdWRlIDxlcnJuby5oPgorI2luY2x1ZGUgPGZjbnRsLmg+
+CisjaW5jbHVkZSA8bWFsbG9jLmg+CisjaW5jbHVkZSA8c3RyaW5nLmg+CisjaW5jbHVkZSA8c3lz
+L2lvY3RsLmg+CisKKyNpbmNsdWRlICJiaW9fYnVnLmgiCisKK2ludCBtYWluKGludCBhcmdjLCBj
+aGFyKiBhcmd2W10pIHsKKwlpbnQgZmQ7CisJc3RydWN0IGJpb19tYXBfdXNlcl9idWdfYXJncyBh
+cmdzOworCXZvaWQqIHA7CisKKwlpZiAoYXJnYyA8IDIpIHsKKwkJcHJpbnRmKCJ1c2FnZTogJXMg
+PGRldm5hbWU+XG4iLCBhcmd2WzBdKTsKKwkJcmV0dXJuIDE7CisJfQkKKworCWZkID0gb3Blbigi
+L2Rldi9iaW9fYnVnIiwgT19SRFdSKTsKKwlpZiAoZmQgPCAwKSB7CisJCXByaW50ZigiZXJyb3Ig
+b3BlbmluZyBkZXZpY2U6ICVzXG4iLCBzdHJlcnJvcihlcnJubykpOworCQlyZXR1cm4gMTsKKwl9
+CisKKwlwID0gbWVtYWxpZ24oNDA5NiwgNDA5Nik7CisJaWYgKHAgPT0gMCkgeworCQlwcmludGYo
+ImVycm9yIGluIG1lbWFsaWduOiAlc1xuIiwgc3RyZXJyb3IoZXJybm8pKTsKKwkJcmV0dXJuIDE7
+CisJfQorCisJc3RybmNweShhcmdzLmRldm5hbWUsIGFyZ3ZbMV0sIHNpemVvZihhcmdzLmRldm5h
+bWUpKTsKKwlhcmdzLnVzZXJhZGRyID0gKHVuc2lnbmVkIGxvbmcpcDsKKworCWlmIChpb2N0bChm
+ZCwgOTk5LCAmYXJncykgIT0gMCkgeworCQlwcmludGYoImVycm9yIGluIGlvY3RsOiAlc1xuIiwg
+c3RyZXJyb3IoZXJybm8pKTsKKwkJcmV0dXJuIDE7CisJfQorCisJcmV0dXJuIDA7Cit9CisKKwot
+LSAKMS43LjEKCg==
+
+--_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_--
