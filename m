@@ -1,164 +1,159 @@
-From: Michael Demmer <Michael.Demmer@riverbed.com>
-Subject: bug in bio_map_user_iov
-Date: Wed, 17 Nov 2010 13:24:47 -0800
-Message-ID: <4A89C515-6A74-4C0B-9A81-8FAB6C36AFF0@riverbed.com>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: RE: How to recreate a dmraid RAID array with mdadm
+Date: Wed, 17 Nov 2010 17:36:23 -0500
+Message-ID: <BAY148-w18A88E7D84CE0213B44F26EF380@phx.gbl>
+References: <BAY148-w65577551281F75C185BEBEF380@phx.gbl>,<20101117141514.759d9eea@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20101117141514.759d9eea@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, debian-user@lists.debian.org
 List-Id: linux-raid.ids
 
---_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 
-Hello all,
+> On Wed, 17 Nov 2010 14:15:14 +1100 <neilb@suse.de> wrote:
+>
+> This looks wrong. mdadm should be looking for the container as listed=
+ in
+> mdadm.conf and it should find a matching uuid on sda and sdb, but it =
+doesn't.
+>
+> Can you:
+>
+> mdadm -E /dev/sda /dev/sdb ; cat /etc/mdadm/mdadm.conf
+>
+> so I can compare the uuids?
+>
 
-I've been doing some work with a Linux kernel module that enables zero-copy=
- I/O to block devices using a custom user/kernel interface. In porting this=
- from an older Linux kernel to a more modern release, I ran into an issue w=
-hen interacting with MD devices that I traced back to what I believe to be =
-a problem in bio_map_user_iov.
+Sure.
 
-The problem and fix are described in the first attached patch. The second i=
-s a simple test module and user program which triggers the bug and validate=
-s the fix.
-
-Thanks,
--m
-
-ps. This is my first attempt at pushing a patch upstream so please forgive =
-any newbie mistakes.
+# definitions of existing MD arrays ( So you don't have to scroll down =
+:P )
 
 
---_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
-Content-Type: application/octet-stream;
-	name="0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch"
-Content-Description: 0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch
-Content-Disposition: attachment;
-	filename="0001-kernel-fix-bug-in-bio_map_user_iov-on-MD-devices.patch";
-	size=1462; creation-date="Wed, 17 Nov 2010 13:24:48 GMT";
-	modification-date="Wed, 17 Nov 2010 13:24:48 GMT"
-Content-Transfer-Encoding: base64
+ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
 
-RnJvbSAzYmZiYzhlZDQxYzkyMzJlOGZhMGQ1NWU0MDkzOTM1ZDBhZjMyYTc1IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBNaWNoYWVsIERlbW1lciA8ZGVtbWVyQHJpdmVyYmVkLmNvbT4K
-RGF0ZTogV2VkLCAxNyBOb3YgMjAxMCAxMToyMjo0NCAtMDgwMApTdWJqZWN0OiBbUEFUQ0ggMS8y
-XSBrZXJuZWw6IGZpeCBidWcgaW4gYmlvX21hcF91c2VyX2lvdiBvbiBNRCBkZXZpY2VzCgpXaGls
-ZSBidWlsZGluZyB1cCB0aGUgaW92ZWMgdG8gcGFzcyB0byB0aGUgbG93ZXIgbGV2ZWwgZGV2aWNl
-LApfX2Jpb19tYXBfdXNlcl9pb3YgY2FsbHMgX19iaW9fYWRkX3BhZ2Ugd2hpY2ggdHJpZXMgdG8g
-bWVyZ2UKY29uc2VjdXRpdmUgYmxvY2sgcG9pbnRlcnMgcmF0aGVyIHRoYW4gc3BsaXR0aW5nIHRo
-ZW0gaW50bwptdWx0aXBsZSBpb3YgZW50cmllcywgZ2l2aW5nIHRoZSB1bmRlcmx5aW5nIGRyaXZl
-ciBhbiBvcHBvcnR1bml0eQp0byByZXN0cmljdCB0aGVzZSBtZXJnZXMgdGhyb3VnaCB0aGUgbWVy
-Z2VfYnZlY19mbi4KCkZvciBNRCBkZXZpY2VzLCB0aGUgbWVyZ2UgZnVuY3Rpb24gbG9va3MgdGhy
-b3VnaCB0aGUgYmlvIGF0IHRoZQpiaV9iZGV2LCBob3dldmVyIGJpb19tYXBfdXNlcl9pb3YgZG9l
-c24ndCBhc3NpZ24gdGhlIGJsb2NrX2RldmljZQpwb2ludGVyIHRvIHRoZSBiaW8gdW50aWwgYWZ0
-ZXIgYWxsIHRoZSBtZXJnaW5nIGlzIGRvbmUuIFRoaXMgcGF0Y2gKc2ltcGx5IHJlb3JkZXJzIHRo
-ZSBhc3NpZ25tZW50IHNvIHRoYXQgYmlvIG9wZXJhdGlvbnMgb24gTUQgZGV2aWNlcwpkb24ndCBj
-cmFzaCBvbiBhIG51bGwgcG9pbnRlci4KLS0tCiBmcy9iaW8uYyB8ICAgIDMgKystCiAxIGZpbGVz
-IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9m
-cy9iaW8uYyBiL2ZzL2Jpby5jCmluZGV4IDRiZDQ1NGYuLjdmMjk1ODIgMTAwNjQ0Ci0tLSBhL2Zz
-L2Jpby5jCisrKyBiL2ZzL2Jpby5jCkBAIC05ODksNiArOTg5LDggQEAgc3RhdGljIHN0cnVjdCBi
-aW8gKl9fYmlvX21hcF91c2VyX2lvdihzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwKIAlpZiAoIWJp
-bykKIAkJcmV0dXJuIEVSUl9QVFIoLUVOT01FTSk7CiAKKwliaW8tPmJpX2JkZXYgPSBiZGV2Owor
-CiAJcmV0ID0gLUVOT01FTTsKIAlwYWdlcyA9IGtjYWxsb2MobnJfcGFnZXMsIHNpemVvZihzdHJ1
-Y3QgcGFnZSAqKSwgZ2ZwX21hc2spOwogCWlmICghcGFnZXMpCkBAIC0xMDQ2LDcgKzEwNDgsNiBA
-QCBzdGF0aWMgc3RydWN0IGJpbyAqX19iaW9fbWFwX3VzZXJfaW92KHN0cnVjdCByZXF1ZXN0X3F1
-ZXVlICpxLAogCWlmICghd3JpdGVfdG9fdm0pCiAJCWJpby0+YmlfcncgfD0gUkVRX1dSSVRFOwog
-Ci0JYmlvLT5iaV9iZGV2ID0gYmRldjsKIAliaW8tPmJpX2ZsYWdzIHw9ICgxIDw8IEJJT19VU0VS
-X01BUFBFRCk7CiAJcmV0dXJuIGJpbzsKIAotLSAKMS43LjEKCg==
+ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:626=
+59383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
 
---_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_
-Content-Type: application/octet-stream;
-	name="0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch"
-Content-Description: 0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch
-Content-Disposition: attachment;
-	filename="0002-Test-program-to-verify-the-bio_map_user-bug-fix-for-.patch";
-	size=4399; creation-date="Wed, 17 Nov 2010 13:24:48 GMT";
-	modification-date="Wed, 17 Nov 2010 13:24:48 GMT"
-Content-Transfer-Encoding: base64
+mdadm -E /dev/sda /dev/sdb
 
-RnJvbSA1NjNkOTI1ZmE5M2EwNGQxMmQxYWQ4NjliMzA2MTkzMTk4ZjY4OGMxIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBNaWNoYWVsIERlbW1lciA8ZGVtbWVyQHJpdmVyYmVkLmNvbT4K
-RGF0ZTogV2VkLCAxNyBOb3YgMjAxMCAxMToxMTowOSAtMDgwMApTdWJqZWN0OiBbUEFUQ0ggMi8y
-XSBUZXN0IHByb2dyYW0gdG8gdmVyaWZ5IHRoZSBiaW9fbWFwX3VzZXIgYnVnIGZpeCBmb3IgbWQg
-ZGV2aWNlcy4KClVzYWdlOgpjZCBiaW9fbWFwX3VzZXJfYnVnCmluc21vZCBiaW9fYnVnLmtvCm1r
-bm9kIC9kZXYvYmlvX2J1ZyBjIDk5OSAxCi4vYmlvX2J1Z190ZXN0IC9kZXYvbWRYCi0tLQogYmlv
-X21hcF91c2VyX2J1Zy9NYWtlZmlsZSAgICAgICB8ICAgMTYgKysrKysrKysKIGJpb19tYXBfdXNl
-cl9idWcvYmlvX2J1Zy5oICAgICAgfCAgICA1ICsrKwogYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVn
-X21vZC5jICB8ICAgNzQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBi
-aW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfdGVzdC5jIHwgICA0NCArKysrKysrKysrKysrKysrKysr
-KysrKwogNCBmaWxlcyBjaGFuZ2VkLCAxMzkgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkK
-IGNyZWF0ZSBtb2RlIDEwMDY0NCBiaW9fbWFwX3VzZXJfYnVnL01ha2VmaWxlCiBjcmVhdGUgbW9k
-ZSAxMDA2NDQgYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmgKIGNyZWF0ZSBtb2RlIDEwMDY0NCBi
-aW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfbW9kLmMKIGNyZWF0ZSBtb2RlIDEwMDY0NCBiaW9fbWFw
-X3VzZXJfYnVnL2Jpb19idWdfdGVzdC5jCgpkaWZmIC0tZ2l0IGEvYmlvX21hcF91c2VyX2J1Zy9N
-YWtlZmlsZSBiL2Jpb19tYXBfdXNlcl9idWcvTWFrZWZpbGUKbmV3IGZpbGUgbW9kZSAxMDA2NDQK
-aW5kZXggMDAwMDAwMC4uODA3NTZjNQotLS0gL2Rldi9udWxsCisrKyBiL2Jpb19tYXBfdXNlcl9i
-dWcvTWFrZWZpbGUKQEAgLTAsMCArMSwxNiBAQAorCitvYmotbTo9IGJpb19idWcubworCitiaW9f
-YnVnLW9ianMgOj0gYmlvX2J1Z19tb2QubworCithbGw6IGJpb19idWcua28gYmlvX2J1Z190ZXN0
-CisKK2Jpb19idWcua286CisJbWFrZSAtQyAuLiBNPWBwd2RgIG1vZHVsZXMKKworYmlvX2J1Z190
-ZXN0OiBiaW9fYnVnX3Rlc3QuYworCSQoQ0MpIC1XYWxsIC1nICQ8IC1vICRACisKK2NsZWFuOgor
-CW1ha2UgLUMgLi4gTT1gcHdkYCBjbGVhbgorCXJtIC1mIGJpb19idWdfdGVzdApkaWZmIC0tZ2l0
-IGEvYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmggYi9iaW9fbWFwX3VzZXJfYnVnL2Jpb19idWcu
-aApuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi45N2FhMGI5Ci0tLSAvZGV2L251
-bGwKKysrIGIvYmlvX21hcF91c2VyX2J1Zy9iaW9fYnVnLmgKQEAgLTAsMCArMSw1IEBACisKK3N0
-cnVjdCBiaW9fbWFwX3VzZXJfYnVnX2FyZ3MgeworCWNoYXIgZGV2bmFtZVs2NF07CisJdW5zaWdu
-ZWQgbG9uZyB1c2VyYWRkcjsKK307CmRpZmYgLS1naXQgYS9iaW9fbWFwX3VzZXJfYnVnL2Jpb19i
-dWdfbW9kLmMgYi9iaW9fbWFwX3VzZXJfYnVnL2Jpb19idWdfbW9kLmMKbmV3IGZpbGUgbW9kZSAx
-MDA2NDQKaW5kZXggMDAwMDAwMC4uZDAxYmY1YgotLS0gL2Rldi9udWxsCisrKyBiL2Jpb19tYXBf
-dXNlcl9idWcvYmlvX2J1Z19tb2QuYwpAQCAtMCwwICsxLDc0IEBACisjaW5jbHVkZSA8bGludXgv
-aW5pdC5oPgorI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPgorI2luY2x1ZGUgPGxpbnV4L3BvbGwu
-aD4KKyNpbmNsdWRlIDxsaW51eC9ibGtkZXYuaD4KKyNpbmNsdWRlIDxsaW51eC92ZXJzaW9uLmg+
-CisjaW5jbHVkZSA8bGludXgvZXJyLmg+CisKKyNpbmNsdWRlICJiaW9fYnVnLmgiCisKK3N0YXRp
-YyBsb25nCitidWdfaW9jdGwoc3RydWN0IGZpbGUgKmZpbGUsIHVuc2lnbmVkIGludCBjLCB1bnNp
-Z25lZCBsb25nIHYpCit7CisgICAgc3RydWN0IGJpb19tYXBfdXNlcl9idWdfYXJncyBhcmdzOwor
-ICAgIHN0cnVjdCBibG9ja19kZXZpY2UgKmJkZXY7CisgICAgc3RydWN0IHJlcXVlc3RfcXVldWUg
-KnE7CisgICAgc3RydWN0IGJpbyAqYmlvOworCisgICAgaWYgKGNvcHlfZnJvbV91c2VyKCZhcmdz
-LCAodm9pZCopdiwgc2l6ZW9mKGFyZ3MpKSkgeworICAgICAgICByZXR1cm4gLUVGQVVMVDsKKyAg
-ICB9CisKKyAgICBwcmludGsoInRlc3RpbmcgYmlvX21hcF91c2VyIGJ1ZyBvbiAlcy4uLlxuIiwg
-YXJncy5kZXZuYW1lKTsKKworICAgIGJkZXYgPSBvcGVuX2JkZXZfZXhjbHVzaXZlKGFyZ3MuZGV2
-bmFtZSwgRk1PREVfUkVBRHxGTU9ERV9XUklURSwgKHZvaWQqKTB4MDEwMTAxMDEpOworICAgIGlm
-IChJU19FUlIoYmRldikpIHsKKwlwcmludGsoImVycm9yIG9wZW5pbmcgYmxvY2sgZGV2aWNlXG4i
-KTsKKwlyZXR1cm4gLUVJTlZBTDsKKyAgICB9CQorCisgICAgcSA9IGJkZXZfZ2V0X3F1ZXVlKGJk
-ZXYpOworICAgIGlmIChxID09IE5VTEwpIHsKKyAgICAgICAgcHJpbnRrKCJibG9jayBkZXZpY2Ug
-aGFzIHF1ZXVlIG1pc3NpbmcuXG4iKTsKKyAgICAgICAgcmV0dXJuIC1FRkFVTFQ7CisgICAgfQor
-ICAgIAorICAgIC8vIHdpbGwgY3Jhc2ggaGVyZQorICAgIGJpbyA9IGJpb19tYXBfdXNlcihxLCBi
-ZGV2LCBhcmdzLnVzZXJhZGRyLCA0MDk2LCAwLCBHRlBfS0VSTkVMKTsKKworICAgIGNsb3NlX2Jk
-ZXZfZXhjbHVzaXZlKGJkZXYsIEZNT0RFX1JFQUR8Rk1PREVfV1JJVEUpOworICAgIAorICAgIHBy
-aW50aygidGVzdGluZyBiaW9fbWFwX3VzZXIgYnVnIG9uICVzLi4uIG9rXG4iLCBhcmdzLmRldm5h
-bWUpOworICAgIHJldHVybiAwOworfQorCitzdGF0aWMgc3RydWN0IGZpbGVfb3BlcmF0aW9ucyBi
-aW9fYnVnX2ZvcHMgPSB7CisgICAgb3duZXI6IFRISVNfTU9EVUxFLAorICAgIHVubG9ja2VkX2lv
-Y3RsOiBidWdfaW9jdGwKK307CisKK3N0YXRpYyBpbnQgX19pbml0IAorYnVnX2luaXQodm9pZCkg
-Cit7ICAgIAorICAgIHByaW50aygicmVnaXN0ZXJpbmcgZGV2aWNlXG4iKTsKKworICAgIGlmIChy
-ZWdpc3Rlcl9jaHJkZXYoOTk5LCAiYmlvX2J1ZyIsICZiaW9fYnVnX2ZvcHMpKSB7CisgICAgICAg
-IHByaW50aygiRVJST1IgcmVnaXN0ZXJfY2hyZGV2IGZvciAldSBpbiAvZGV2LyVzLlxuIiwKKyAg
-ICAgICAgICAgICAgIDk5OSwgImJpb19idWciKTsKKyAgICB9CisKKyAgICByZXR1cm4gMDsKK30K
-Kworc3RhdGljIHZvaWQgX19leGl0IAorYnVnX2V4aXQodm9pZCkgCit7CisgICAgcHJpbnRrKCJ1
-bnJlZ2lzdGVyaW5nIGRldmljZVxuIik7CisgICAgdW5yZWdpc3Rlcl9jaHJkZXYoOTk5LCAiYmlv
-X2J1ZyIpOworfQorCisKK21vZHVsZV9pbml0KGJ1Z19pbml0KTsKK21vZHVsZV9leGl0KGJ1Z19l
-eGl0KTsKKworTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOwpkaWZmIC0tZ2l0IGEvYmlvX21hcF91c2Vy
-X2J1Zy9iaW9fYnVnX3Rlc3QuYyBiL2Jpb19tYXBfdXNlcl9idWcvYmlvX2J1Z190ZXN0LmMKbmV3
-IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uMWY5N2I3MQotLS0gL2Rldi9udWxsCisr
-KyBiL2Jpb19tYXBfdXNlcl9idWcvYmlvX2J1Z190ZXN0LmMKQEAgLTAsMCArMSw0NCBAQAorCisj
-aW5jbHVkZSA8c3RkaW8uaD4KKyNpbmNsdWRlIDxlcnJuby5oPgorI2luY2x1ZGUgPGZjbnRsLmg+
-CisjaW5jbHVkZSA8bWFsbG9jLmg+CisjaW5jbHVkZSA8c3RyaW5nLmg+CisjaW5jbHVkZSA8c3lz
-L2lvY3RsLmg+CisKKyNpbmNsdWRlICJiaW9fYnVnLmgiCisKK2ludCBtYWluKGludCBhcmdjLCBj
-aGFyKiBhcmd2W10pIHsKKwlpbnQgZmQ7CisJc3RydWN0IGJpb19tYXBfdXNlcl9idWdfYXJncyBh
-cmdzOworCXZvaWQqIHA7CisKKwlpZiAoYXJnYyA8IDIpIHsKKwkJcHJpbnRmKCJ1c2FnZTogJXMg
-PGRldm5hbWU+XG4iLCBhcmd2WzBdKTsKKwkJcmV0dXJuIDE7CisJfQkKKworCWZkID0gb3Blbigi
-L2Rldi9iaW9fYnVnIiwgT19SRFdSKTsKKwlpZiAoZmQgPCAwKSB7CisJCXByaW50ZigiZXJyb3Ig
-b3BlbmluZyBkZXZpY2U6ICVzXG4iLCBzdHJlcnJvcihlcnJubykpOworCQlyZXR1cm4gMTsKKwl9
-CisKKwlwID0gbWVtYWxpZ24oNDA5NiwgNDA5Nik7CisJaWYgKHAgPT0gMCkgeworCQlwcmludGYo
-ImVycm9yIGluIG1lbWFsaWduOiAlc1xuIiwgc3RyZXJyb3IoZXJybm8pKTsKKwkJcmV0dXJuIDE7
-CisJfQorCisJc3RybmNweShhcmdzLmRldm5hbWUsIGFyZ3ZbMV0sIHNpemVvZihhcmdzLmRldm5h
-bWUpKTsKKwlhcmdzLnVzZXJhZGRyID0gKHVuc2lnbmVkIGxvbmcpcDsKKworCWlmIChpb2N0bChm
-ZCwgOTk5LCAmYXJncykgIT0gMCkgeworCQlwcmludGYoImVycm9yIGluIGlvY3RsOiAlc1xuIiwg
-c3RyZXJyb3IoZXJybm8pKTsKKwkJcmV0dXJuIDE7CisJfQorCisJcmV0dXJuIDA7Cit9CisKKwot
-LSAKMS43LjEKCg==
+/dev/sda:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : Intel Raid ISM Cfg Sig.
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.1.00
+=A0=A0=A0 Orig Family : 601eee02
+=A0=A0=A0=A0=A0=A0=A0=A0 Family : 601eee02
+=A0=A0=A0=A0 Generation : 00001187
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 084b969a:0808f5b8:6c784fb7:626593=
+83
+=A0=A0=A0=A0=A0=A0 Checksum : 2f91ce06 correct
+=A0=A0=A0 MPB Sectors : 1
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Disks : 2
+=A0=A0 RAID Devices : 1
 
---_003_4A89C5156A744C0B9A818FAB6C36AFF0riverbedcom_--
+=A0 Disk00 Serial : STF604MH0J34LB
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Id : 00020000
+=A0=A0=A0 Usable Size : 1953520654 (931.51 GiB 1000.20 GB)
+
+[OneTB-RAID1-PV]:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : ae4a1598:72267ed7:3b34867b:9c5649=
+7a
+=A0=A0=A0=A0 RAID Level : 1
+=A0=A0=A0=A0=A0=A0=A0 Members : 2
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Slots : [UU]
+=A0=A0=A0=A0=A0 This Slot : 0
+=A0=A0=A0=A0 Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+=A0=A0 Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+=A0 Sector Offset : 0
+=A0=A0=A0 Num Stripes : 7630936
+=A0=A0=A0=A0 Chunk Size : 64 KiB
+=A0=A0=A0=A0=A0=A0 Reserved : 0
+=A0 Migrate State : idle
+=A0=A0=A0=A0=A0 Map State : normal
+=A0=A0=A0 Dirty State : clean
+
+=A0 Disk01 Serial : STF604MH0PN2YB
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Id : 00030000
+=A0=A0=A0 Usable Size : 1953520654 (931.51 GiB 1000.20 GB)
+/dev/sdb:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : Intel Raid ISM Cfg Sig.
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.1.00
+=A0=A0=A0 Orig Family : 601eee02
+=A0=A0=A0=A0=A0=A0=A0=A0 Family : 601eee02
+=A0=A0=A0=A0 Generation : 00001187
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 084b969a:0808f5b8:6c784fb7:626593=
+83
+=A0=A0=A0=A0=A0=A0 Checksum : 2f91ce06 correct
+=A0=A0=A0 MPB Sectors : 1
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Disks : 2
+=A0=A0 RAID Devices : 1
+
+=A0 Disk01 Serial : STF604MH0PN2YB
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Id : 00030000
+=A0=A0=A0 Usable Size : 1953520654 (931.51 GiB 1000.20 GB)
+
+[OneTB-RAID1-PV]:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : ae4a1598:72267ed7:3b34867b:9c5649=
+7a
+=A0=A0=A0=A0 RAID Level : 1
+=A0=A0=A0=A0=A0=A0=A0 Members : 2
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Slots : [UU]
+=A0=A0=A0=A0=A0 This Slot : 1
+=A0=A0=A0=A0 Array Size : 1953519616 (931.51 GiB 1000.20 GB)
+=A0=A0 Per Dev Size : 1953519880 (931.51 GiB 1000.20 GB)
+=A0 Sector Offset : 0
+=A0=A0=A0 Num Stripes : 7630936
+=A0=A0=A0=A0 Chunk Size : 64 KiB
+=A0=A0=A0=A0=A0=A0 Reserved : 0
+=A0 Migrate State : idle
+=A0=A0=A0=A0=A0 Map State : normal
+=A0=A0=A0 Dirty State : clean
+
+=A0 Disk00 Serial : STF604MH0J34LB
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Id : 00020000
+=A0=A0=A0 Usable Size : 1953520654 (931.51 GiB 1000.20 GB)
+
+----------------------------------
+cat /etc/mdadm/mdadm.conf
+
+# mdadm.conf
+#
+# Please refer to mdadm.conf(5) for information about this file.
+#
+
+# by default, scan all partitions (/proc/partitions) for MD superblocks=
+=2E
+# alternatively, specify devices to scan, using wildcards if desired.
+DEVICE partitions
+
+# auto-create devices with Debian standard permissions
+CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR root
+
+# definitions of existing MD arrays
+ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
+ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:626=
+59383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
+
+# This file was auto-generated on Fri, 05 Nov 2010 16:29:48 -0400
+# by mkconf 3.1.4-1+8efb9d1
+
+
+-M
+ 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
