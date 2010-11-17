@@ -1,38 +1,70 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: mdadm raid6->LVM->ext4 setup
-Date: Wed, 17 Nov 2010 00:39:45 +0100
-Message-ID: <4CE31641.50909@ziu.info>
-References: <4CE2C8AC.7010103@geograph.co.za> <20101116221722.GC8943@maude.comedia.it>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: RE: How to recreate a dmraid RAID array with mdadm (was: no subject)
+Date: Tue, 16 Nov 2010 20:02:17 -0500
+Message-ID: <BAY148-w211AE8BF243615980CE527EF380@phx.gbl>
+References: <BAY148-w337E193E7493BB69F27B31EF350@phx.gbl>,<20101115162122.4fef2542@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101116221722.GC8943@maude.comedia.it>
+In-Reply-To: <20101115162122.4fef2542@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: zoltans@geograph.co.za
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, debian-user@lists.debian.org
 List-Id: linux-raid.ids
 
-On 10-11-16 23:17, Luca Berra wrote:
-> On Tue, Nov 16, 2010 at 08:08:44PM +0200, Zoltan Szecsei wrote:
->>
->> *** Commands used:
->> mdadm --create /dev/md0 --metadata=1.2 --auto=md --assume-clean
->> --bitmap=internal --bitmap-chunk=131072 --chunk=512 --level=6
->> --raid-devices=8 /dev/sd[abcdefgh]
->> mdadm --detail --scan >> /etc/mdadm.conf
->> mdadm --assemble /dev/md0
-> as i said this is not useful
->> pvcreate --metadatasize 512 /dev/md0
-> you should use --dataalignment, not --metadatasize, also you should
 
-Also with reference to metadatasize - keep in mind the value is rounded 
-up to the /next/ 64k boundary (or it was a while ago, perhaps it's 
-changed now). So in your case, 512 would really result with 576.
+> On Mon, 15 Nov 2010 16:21:22 +1100 <neilb@suse.de> wrote:
+> > On Sun, 14 Nov 2010 01:50:42 -0500 Mike wrote:
+> > 
+> > How does one fix the problem of not having the array not starting at boot?
+> >
+>
+> To be able to answer that one would need to know exactly what is in the
+> initramfs. And unfortunately all distros are different and I'm not
+> particularly familiar with Ubuntu.
+>
+> Maybe if you
+> mkdir /tmp/initrd
+> cd /tmp/initrd
+> zcat /boot/initrd.img-2.6.32-5-amd64 | cpio -idv
+>
+> and then have a look around and particularly report etc/mdadm/mdadm.conf
+> and anything else that might be interesting.
+>
+> If the mdadm.conf in the initrd is the same as in /etc/mdadm, then it
+> *should* work.
+>
 
-With reference to --dataalignment - there's also --dataalignoffset 
-option (although not really important in your setup).
+Thanks again Neil. I got a chance to examine my systems initramfs to discover two differences in the local copy of mdadm.conf and the initramfs's copy.
 
-You might consider adjusting 
-/sys/block/<yourmddevice>/md/stripe_cache_size to higher values when you 
-have everything set. It tends to give quite a performance boost.
+The initramfs's copy contains:
+
+DEVICE partitions
+HOMEHOST <system>
+ARRAY metadata=imsm UUID=084b969a:0808f5b8:6c784fb7:62659383
+ARRAY /dev/md/OneTB-RAID1-PV container=084b969a:0808f5b8:6c784fb7:62659383 member=0 UUID=ae4a1598:72267ed7:3b34867b:9c56497a
+
+So both ARRAY lines got copied over to the initramfs's copy of mdadm.conf, but
+
+CREATE owner=root group=disk mode=0660 auto=yes
+
+and
+
+MAILADDR root
+
+were not carried over on the update-initramfs command.
+
+
+To your clearly better understanding of all this, does the CREATE stanza NEED to be present in the initramfs's copy of mdadm.conf in order for the array to be created on boot? If so, how can one accomplish this, so that the line is added whenever a new initramfs is created for the kernel?
+
+
+My diff findings between the local copy of mdadm.conf and the initramfs's copy pasted at:
+http://debian.pastebin.com/5VNnd9g1
+
+
+Thanks for your help.
+
+
+-M
+ 		 	   		  
