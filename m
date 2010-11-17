@@ -1,36 +1,159 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: RE: [Patch 00/17] Autorebuild
-Date: Wed, 17 Nov 2010 16:04:37 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174B0D200@irsmsx503.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
- <20101117212242.5ad7b210@notabene.brown>
+From: Aniket Kulkarni <aniket@netezza.com>
+Subject: [PATCH] md: Fix nr_pending race during raid10 recovery
+Date: Wed, 17 Nov 2010 13:57:50 -0500
+Message-ID: <1290020270.3055.12.camel@aniket-desktop>
+Reply-To: <aniket@netezza.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101117212242.5ad7b210@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
+If a RAID10 rdev that is undergoing recovery is marked 'faulty', the rdev 
+could get taken out of the array in spite of outstanding IOs leading to 
+a kernel panic. There are two issues here -
+
+1. The ref count (nr_pending) increment for sync or recovery leaves a lot of
+open windows for concurrent rdev removals
+2. raid10 sync thread continues to submit recovery IOs to faulty devices. These get
+rejected at a later stage by management thread (raid10d).
+
+Note - rd denotes the rdev from which we are reading, and wr the one we are
+writing to
+
+  Sync Thread                                Management Thread
+
+sync_request
+  ++rd.nr_pending
+  bi_end_io = end_sync_read
+  generic_make_request         -------> recovery_request_write
+         |                    |             wr.nr_pending++
+         |                    |             bi_end_io = end_sync_write
+         V                    |             generic_make_request
+end_sync_read    --------------                      |
+  --rd.nr_pending                                    |
+  reschedule_retry for write                         |
+                                                     v
+                                         end_sync_write
+                                             --wr.nr_pending
+
+So a set-faulty and remove on recovery rdev between sync_request and 
+recovery_request_write is allowed and will lead to a panic.
+
+The fix is -
+
+1. Increment wr.nr_pending immediately after selecting a good target. Ofcourse
+the decrements will be added to error paths in sync_request and end_sync_read.
+2. Don't submit recovery IOs to faulty targets
+
+Signed-off-by: Aniket Kulkarni <aniket@netezza.com>
+---
+ drivers/md/raid10.c |   46 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c67aa54..ec1ea43 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1408,6 +1408,16 @@ static void sync_request_write(mddev_t *mddev, r10bio_t *r10_bio)
+ 
+ done:
+ 	if (atomic_dec_and_test(&r10_bio->remaining)) {
++		for (i = 0; i < conf->copies ; i++)  {
++			/* for any unsuccessful IOs give up the pending count on the
++			 * write device
++			 */
++			if (!test_bit(BIO_UPTODATE, &r10_bio->devs[i].bio->bi_flags) &&
++				r10_bio->devs[i].bio->bi_end_io == end_sync_write) {
++				int d = r10_bio->devs[i].devnum;
++				rdev_dec_pending(conf->mirrors[d].rdev, mddev);
++			}
++		}
+ 		md_done_sync(mddev, r10_bio->sectors, 1);
+ 		put_buf(r10_bio);
+ 	}
+@@ -1443,7 +1453,6 @@ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
+ 	}
+ 	d = r10_bio->devs[1].devnum;
+ 
+-	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 	md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
+ 	if (test_bit(R10BIO_Uptodate, &r10_bio->state))
+ 		generic_make_request(wbio);
+@@ -1906,14 +1915,24 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 		int j, k;
+ 		r10_bio = NULL;
+ 
+-		for (i=0 ; i<conf->raid_disks; i++)
++		for (i = 0; i < conf->raid_disks; i++)
+ 			if (conf->mirrors[i].rdev &&
+ 			    !test_bit(In_sync, &conf->mirrors[i].rdev->flags)) {
+ 				int still_degraded = 0;
+ 				/* want to reconstruct this device */
+ 				r10bio_t *rb2 = r10_bio;
+-				sector_t sect = raid10_find_virt(conf, sector_nr, i);
++				sector_t sect;
+ 				int must_sync;
++
++				/* Skip over the faulty drives */
++				if (test_bit(Faulty, &conf->mirrors[i].rdev->flags))
++					continue;
++
++				/* up the nr_pending count; this will be decremented on
++				 * sync/recovery IO completion (success/erorr) to this dev
++				 */
++				atomic_inc(&conf->mirrors[i].rdev->nr_pending);
++				sect = raid10_find_virt(conf, sector_nr, i);
+ 				/* Unless we are doing a full sync, we only need
+ 				 * to recover the block if it is set in the bitmap
+ 				 */
+@@ -1927,6 +1946,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 					 * that there will never be anything to do here
+ 					 */
+ 					chunks_skipped = -1;
++					rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+ 					continue;
+ 				}
+ 
+@@ -1997,6 +2017,10 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 				if (j == conf->copies) {
+ 					/* Cannot recover, so abort the recovery */
+ 					put_buf(r10_bio);
++					/* we wanted to write to 'i' but we didn't; so dec the
++					 * pending count
++					 */
++					rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+ 					if (rb2)
+ 						atomic_dec(&rb2->remaining);
+ 					r10_bio = rb2;
+@@ -2014,6 +2038,22 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 				r10_bio = (r10bio_t*) rb2->master_bio;
+ 				rb2->master_bio = NULL;
+ 				put_buf(rb2);
++				if (r10_bio)  {
++					int d;
++					/* Before throwing away the complete r10bio chain, decrement
++					 * the nr_pending ref counts incremented along the way
++					 * We do this only for our master_bio and then on because
++					 * if biolist == NULL no ref count was incremented in this
++					 * r10_bio
++					 */
++					for (d = 0; d < conf->copies; d++)  {
++						if (r10_bio->devs[d].bio &&
++							r10_bio->devs[d].bio->bi_end_io)	{
++							int dn = r10_bio->devs[d].devnum;
++							rdev_dec_pending(conf->mirrors[dn].rdev, mddev);
++						}
++					}
++				}
+ 			}
+ 			goto giveup;
+ 		}
+-- 
+1.7.1
 
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Wednesday, November 17, 2010 11:23 AM
-> To: Czarnowska, Anna
-> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
-> Ciechanowski, Ed; Labun, Marcin; Hawrylewicz Czarnowski, Przemyslaw
-> Subject: Re: [Patch 00/17] Autorebuild
-> 
-> 
-> I'll hopefully get the rest of your patches done tomorrow and then I
-> might
-> start on Adam... and then on the changes that I want to make.
-> If you can do some testing once enough code is in place, that would be
-> great.
-We will start testing of hot-plug and are waiting for auto-rebuild staff integrated on your devel branch do run the rest of tests.
-Marcin
 
