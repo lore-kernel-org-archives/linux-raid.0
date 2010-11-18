@@ -1,7 +1,8 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 04/13] Grow: mark some functions static
-Date: Thu, 18 Nov 2010 10:21:53 +0100
-Message-ID: <20101118092153.29508.45431.stgit@gklab-170-111.igk.intel.com>
+Subject: [PATCH 05/13] Assemble: fix assembly in the delta_disks >
+	max_degraded case
+Date: Thu, 18 Nov 2010 10:22:01 +0100
+Message-ID: <20101118092201.29508.16243.stgit@gklab-170-111.igk.intel.com>
 References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,69 +16,31 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-Going through the Grow api found some local routines that could be
-marked static.
+Incremental assembly works on such an array because the kernel sees the
+disk as in-sync and that the array is reshaping.  Teach Assemble() the
+same assumptions.
+
+This is only needed on kernels that do not initialize ->recovery_offset
+when activating spares for reshape.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Grow.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ Assemble.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 0571f5b..f16228d 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -409,7 +409,7 @@ static struct mdp_backup_super {
- 	__u8 pad[512-68-32];
- } __attribute__((aligned(512))) bsb, bsb2;
- 
--__u32 bsb_csum(char *buf, int len)
-+static __u32 bsb_csum(char *buf, int len)
- {
- 	int i;
- 	int csum = 0;
-@@ -432,7 +432,7 @@ static int child_same_size(int afd, struct mdinfo *sra, unsigned long blocks,
- 			   int disks, int chunk, int level, int layout, int data,
- 			   int dests, int *destfd, unsigned long long *destoffsets);
- 
--int freeze_array(struct mdinfo *sra)
-+static int freeze_array(struct mdinfo *sra)
- {
- 	/* Try to freeze resync on this array.
- 	 * Return -1 if the array is busy,
-@@ -450,14 +450,14 @@ int freeze_array(struct mdinfo *sra)
- 	return 1;
- }
- 
--void unfreeze_array(struct mdinfo *sra, int frozen)
-+static void unfreeze_array(struct mdinfo *sra, int frozen)
- {
- 	/* If 'frozen' is 1, unfreeze the array */
- 	if (frozen > 0)
- 		sysfs_set_str(sra, NULL, "sync_action", "idle");
- }
- 
--void wait_reshape(struct mdinfo *sra)
-+static void wait_reshape(struct mdinfo *sra)
- {
- 	int fd = sysfs_get_fd(sra, NULL, "sync_action");
- 	char action[20];
-@@ -1266,7 +1266,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
-  */
- 
- /* FIXME return status is never checked */
--int grow_backup(struct mdinfo *sra,
-+static int grow_backup(struct mdinfo *sra,
- 		unsigned long long offset, /* per device */
- 		unsigned long stripes, /* per device */
- 		int *sources, unsigned long long *offsets,
-@@ -1381,7 +1381,7 @@ int grow_backup(struct mdinfo *sra,
-  * every works.
-  */
- /* FIXME return value is often ignored */
--int wait_backup(struct mdinfo *sra,
-+static int wait_backup(struct mdinfo *sra,
- 		unsigned long long offset, /* per device */
- 		unsigned long long blocks, /* per device */
- 		unsigned long long blocks2, /* per device - hack */
+diff --git a/Assemble.c b/Assemble.c
+index afd4e60..409f0d7 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -804,7 +804,9 @@ int Assemble(struct supertype *st, char *mddev,
+ 		    devices[most_recent].i.events) {
+ 			devices[j].uptodate = 1;
+ 			if (i < content->array.raid_disks) {
+-				if (devices[j].i.recovery_start == MaxSector) {
++				if (devices[j].i.recovery_start == MaxSector ||
++				    (content->reshape_active &&
++				     j >= content->array.raid_disks - content->delta_disks)) {
+ 					okcnt++;
+ 					avail[i]=1;
+ 				} else
 
