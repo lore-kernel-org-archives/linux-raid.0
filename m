@@ -1,53 +1,78 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: bug in bio_map_user_iov
-Date: Thu, 18 Nov 2010 11:02:52 +1100
-Message-ID: <20101118110252.498cc1ea@notabene.brown>
-References: <4A89C515-6A74-4C0B-9A81-8FAB6C36AFF0@riverbed.com>
+Subject: Re: How to recreate a dmraid RAID array with mdadm
+Date: Thu, 18 Nov 2010 11:11:49 +1100
+Message-ID: <20101118111149.7b5004a2@notabene.brown>
+References: <BAY148-w65577551281F75C185BEBEF380@phx.gbl>
+	<20101117141514.759d9eea@notabene.brown>
+	<BAY148-w18A88E7D84CE0213B44F26EF380@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A89C515-6A74-4C0B-9A81-8FAB6C36AFF0@riverbed.com>
+In-Reply-To: <BAY148-w18A88E7D84CE0213B44F26EF380@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Demmer <Michael.Demmer@riverbed.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Mike Viau <viaum@sheridanc.on.ca>
+Cc: linux-raid@vger.kernel.org, debian-user@lists.debian.org
 List-Id: linux-raid.ids
 
-On Wed, 17 Nov 2010 13:24:47 -0800
-Michael Demmer <Michael.Demmer@riverbed.com> wrote:
+On Wed, 17 Nov 2010 17:36:23 -0500
+Mike Viau <viaum@sheridanc.on.ca> wrote:
 
-> Hello all,
-> 
-> I've been doing some work with a Linux kernel module that enables zero-copy I/O to block devices using a custom user/kernel interface. In porting this from an older Linux kernel to a more modern release, I ran into an issue when interacting with MD devices that I traced back to what I believe to be a problem in bio_map_user_iov.
-> 
-> The problem and fix are described in the first attached patch. The second is a simple test module and user program which triggers the bug and validates the fix.
-> 
-> Thanks,
-> -m
-> 
-> ps. This is my first attempt at pushing a patch upstream so please forgive any newbie mistakes.
-> 
+>=20
+> > On Wed, 17 Nov 2010 14:15:14 +1100 <neilb@suse.de> wrote:
+> >
+> > This looks wrong. mdadm should be looking for the container as list=
+ed in
+> > mdadm.conf and it should find a matching uuid on sda and sdb, but i=
+t doesn't.
+> >
+> > Can you:
+> >
+> > mdadm -E /dev/sda /dev/sdb ; cat /etc/mdadm/mdadm.conf
+> >
+> > so I can compare the uuids?
+> >
+>=20
+> Sure.
+>=20
+> # definitions of existing MD arrays ( So you don't have to scroll dow=
+n :P )
+>=20
+>=20
+> ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
+>=20
+> ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:6=
+2659383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
+>=20
+=2E...
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 084b969a:0808f5b8:6c784fb7:6265=
+9383
+> [OneTB-RAID1-PV]:
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : ae4a1598:72267ed7:3b34867b:9c56=
+497a
+=2E...
+> # definitions of existing MD arrays
+> ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
+> ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:6=
+2659383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
 
-I think the real issue here is that bio_map_user is an interface that was
-only intended to be used by bottom level devices like SCSI drivers etc.
-It is a function that a device driver can use if it knows that it makes sense
-to use it.
+Yes, the uuids are definitely all correct.
+This really should work.  I just tested a similar config and it worked
+exactly as exported.
+Weird.
 
-You are trying to use it as a generic interface that works for all block
-devices, and it wasn't intended for that.
+Whatever version of mdadm are you running???
+Can you try getting the latest (3.1.4) from
+     http://www.kernel.org/pub/linux/utils/raid/mdadm/
 
-So while it is reasonably simple to 'fix' bio_map_user_iov, it is not
-possible to 'fix' bio_map_kern_iov in the same way, because it doesn't have
-access to the bdev at all.
-
-
-So the question we should be asking is: are you really using the right
-interface for the job?  Is bio_map_user something that you really should be
-using?
-And to answer that, we would need to know what you are trying to do.
-
-And why isn't O_DIRECT a suitable zero-copy interface for I/O to block
-devices?
+and see how that works.
+Just
+    make
+    ./mdadm -Asvv
 
 NeilBrown
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
