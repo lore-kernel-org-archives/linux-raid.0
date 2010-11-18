@@ -1,7 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 06/13] Grow: fix check for raid6 layout normalization
-Date: Thu, 18 Nov 2010 10:22:09 +0100
-Message-ID: <20101118092209.29508.12528.stgit@gklab-170-111.igk.intel.com>
+Subject: [PATCH 07/13] Grow: add missing raid4 geometries to geo_map()
+Date: Thu, 18 Nov 2010 10:22:17 +0100
+Message-ID: <20101118092217.29508.33761.stgit@gklab-170-111.igk.intel.com>
 References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,49 +15,32 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-If the user does not specify a layout, don't skip asking about retaining
-the non-standard raid6 layout which may be implicitly changed.
+They are equivalent to their raid5 versions and let the reshape code
+optionally use either.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Grow.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+ restripe.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index f16228d..bf634d3 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -706,9 +706,9 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+diff --git a/restripe.c b/restripe.c
+index 3074693..c2fbe5b 100644
+--- a/restripe.c
++++ b/restripe.c
+@@ -46,6 +46,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
+ 	switch(level*100 + layout) {
+ 	case 000:
+ 	case 400:
++	case 400 + ALGORITHM_PARITY_N:
+ 	case 500 + ALGORITHM_PARITY_N:
+ 		/* raid 4 isn't messed around by parity blocks */
+ 		if (block == -1)
+@@ -75,6 +76,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
+ 		if (block == -1) return pd;
+ 		return (pd + 1 + block) % raid_disks;
  
- 	/* ========= set shape (chunk_size / layout / ndisks)  ============== */
- 	/* Check if layout change is a no-op */
--	if (layout_str) switch(array.level) {
-+	switch(array.level) {
- 	case 5:
--		if (array.layout == map_name(r5layout, layout_str))
-+		if (layout_str && array.layout == map_name(r5layout, layout_str))
- 			layout_str = NULL;
- 		break;
- 	case 6:
-@@ -724,8 +724,9 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 			rv = 1;
- 			goto release;
- 		}
--		if (strcmp(layout_str, "normalise") == 0 ||
--		    strcmp(layout_str, "normalize") == 0) {
-+		if (layout_str &&
-+		    (strcmp(layout_str, "normalise") == 0 ||
-+		     strcmp(layout_str, "normalize") == 0)) {
- 			char *hyphen;
- 			strcpy(alt_layout, map_num(r6layout, array.layout));
- 			hyphen = strrchr(alt_layout, '-');
-@@ -735,7 +736,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 			}
- 		}
++	case 400 + ALGORITHM_PARITY_0:
+ 	case 500 + ALGORITHM_PARITY_0:
+ 		return block + 1;
  
--		if (array.layout == map_name(r6layout, layout_str))
-+		if (layout_str && array.layout == map_name(r6layout, layout_str))
- 			layout_str = NULL;
- 		if (layout_str && strcmp(layout_str, "preserve") == 0)
- 			layout_str = NULL;
 
