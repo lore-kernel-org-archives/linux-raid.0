@@ -1,182 +1,94 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
- / Debian 5.0 - lenny 2.6.26 kernel
-Date: Thu, 18 Nov 2010 18:04:25 +0000
-Message-ID: <4CE56AA9.2010905@seoss.co.uk>
-References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk>	<20100922083039.283ccdfd@notabene>	<4CBC9774.6020500@seoss.co.uk>	<20101019171650.20c83e7e@notabene>	<4CBDC641.9090009@seoss.co.uk>	<4CBDC756.7010606@seoss.co.uk>	<4CBDF190.2000007@seoss.co.uk>	<4CBF5267.7080304@seoss.co.uk> <20101021100429.4879a001@notabene>
+From: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Subject: faulty array member
+Date: Thu, 18 Nov 2010 18:08:46 +0100
+Message-ID: <4CE55D9E.4070406@supsi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101021100429.4879a001@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/21/10 00:04, Neil Brown wrote:
->
-> Maybe you could add a could of global atomic variables, one for reads and one
-> for writes.
-> Then on each call to generic_make_request in:
->   flush_pending_writes, make_request, raid1d
-> increment one or the other depending on whether it is a read or a write.
-> Then in raid1_end_read_request and raid1_end_write_request decrement them
-> appropriately.
->   
+Hello.
+
+I have a linux file-server with to 1TB sata disks
+in software raid1.
+
+as my drives are no longer in full health raid put
+one array member in faulty state.
+
+A bit about my environment:
+
+# uname -rms
+Linux 2.6.9-89.0.18.ELsmp i686
+
+# cat /etc/redhat-release
+CentOS release 4.8 (Final)
 
 
-Ended up with runs like this:
+# parted /dev/sda print
+Disk geometry for /dev/sda: 0.000-953869.710 megabytes
+Disk label type: msdos
+Minor    Start       End     Type      Filesystem  Flags
+1          0.031    251.015  primary   ext3        boot
+2        251.016  40248.786  primary   ext3        raid
+3      40248.787  42296.132  primary   linux-swap
+4      42296.133 953867.219  primary   ext3        raid
 
-[  464.244109] 0 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.244109] conf nr_pending is 5
-[  464.244109] 0 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.244109] 2216: Post wait until no IO waiting - barrier: 0, pend:
-5, wait: 0, queued: 0
-[  464.244113] 2216: Pre wait pending to complete - barrier: 1, pend: 5,
-wait: 0, queued: 0
-[  464.244116] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.244469] 5113 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.244469] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.244469] conf nr_pending is 4
-[  464.244469] 5127 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.246176] In raid1_unplug debug read count: 4 write count: 0
-conf->nr_queued: 0
-[  464.244469] conf nr_pending is 3
-[  464.244469] 5127 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.244469] conf nr_pending is 2
-[  464.244469] 5127 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.246176] In raid1_unplug debug read count: 2 write count: 0
-conf->nr_queued: 0
-[  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.244469] conf nr_pending is 1
-[  464.244469] 5127 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.246176] In raid1_unplug debug read count: 1 write count: 0
-conf->nr_queued: 0
-[  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.244469] conf nr_pending is 0
-[  464.244469] 5127 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.244469] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246176] 2216: Post wait pending to complete - barrier: 1, pend:
-0, wait: 1, queued: 0
-[  464.246176] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246176] 2216: Pre wait until no IO waiting - barrier: 1, pend: 0,
-wait: 1, queued: 0
-[  464.246176] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246176] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246176] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246633] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 1
-[  464.244469] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246176] In raid1_unplug debug read count: 0 write count: 0
-conf->nr_queued: 0
-[  464.246990] 5118 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.244469] 5113 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246990] 5118 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246990] 5118 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.244469] In raid1_unplug debug read count: 3 write count: 0
-conf->nr_queued: 0
-[  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246990] 5118 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246990] 5118 Released resync_lock and enabling interrupts for
-wait_barrier
-[  464.246176] 2216: Post wait until no IO waiting - barrier: 0, pend:
-6, wait: 0, queued: 0
-[  464.246176] 2216: Pre wait pending to complete - barrier: 1, pend: 6,
-wait: 0, queued: 0
-[  464.246176] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246990] In raid1_unplug debug read count: 6 write count: 0
-conf->nr_queued: 0
-[  464.247091] 0 Obtaining resync_lock and disabling interrupts for
-allow_barrier
-[  464.247091] conf nr_pending is 5
-[  464.247091] 0 Released resync_lock and enabling interrupts for
-allow_barrier
-[  464.247091] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.244469] 5113 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.246176] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.244469] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  464.328828] 3639 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  464.328834] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  466.065137] 2479 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  466.065137] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  467.051970] 2478 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  467.051975] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  471.293667] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  471.525081] 220 Obtaining resync_lock and disabling interrupts for
-wait_barrier
-[  471.525081] In raid1_unplug debug read count: 5 write count: 0
-conf->nr_queued: 0
-[  505.308962] 2216 WARNING, schedule_timeout timed out for raise_barrier
-[  505.308076] 5118 WARNING, schedule_timeout timed out for wait_barrier
+# parted /dev/sdb print
+Disk geometry for /dev/sdb: 0.000-953869.710 megabytes
+Disk label type: msdos
+Minor    Start       End     Type      Filesystem  Flags
+1          0.031  39997.771  primary   ext3        boot, raid
+2      39997.771  42045.117  primary   linux-swap
+3      42045.117  42296.132  primary   ext3
+4      42296.133 953867.219  primary   ext3        raid
 
 
-... so does that mean that there are are read requests going awol in the
-block layer?
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sdb4[1] sda4[0]
+       933448704 blocks [2/2] [UU]
+md0 : active raid1 sdb1[1] sda2[2](F)
+       40957568 blocks [2/1] [_U]
+unused devices: <none>
 
-If so, then the circumstantial evidence from when the lockups occur make
-it look to me like this is probably an OpenVZ bug, but I'll try and do
-some more digging tomorrow...
 
-Does that make sense?
+Don't ask me why the two drives are not specular
+and md0 is mapped sdb1+sda2.. I have no idea.
+It was made so by anaconda using kickstart during install.
 
-Cheers,
 
-Tim.
+So, I was using debugfs:
+# debugfs
+debugfs 1.35 (28-Feb-2004)
+debugfs:  open /dev/md0
+debugfs:  testb 1736947
+Block 1736947 marked in use
+debugfs:  icheck 1736947
+Block   Inode number
+1736947 <block not found>
+debugfs:  icheck 1736947 10
+Block   Inode number
+1736947 <block not found>
+10      7
 
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+in an attempt to locate the bad disk blocks, and after that
+software raid put sda2 in faulty state.
 
+
+Now, as smartctl is telling me that there are errors spread
+on all partitions used in both raids, I would like to take
+a full backup of at least /dev/md1 (that's still healthy).
+
+The question is:
+Is there a way and is it safe to put back /dev/sda2 into
+/dev/md0 so that I'm sure I can backup even the blocks
+that are unreadable on the first array member but probably
+are still readable on failed device?
+
+Thank you for your time and help!
+
+Best regards.
+Robi
