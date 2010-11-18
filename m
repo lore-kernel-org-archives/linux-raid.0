@@ -1,353 +1,83 @@
-From: Mike Viau <viaum@sheridanc.on.ca>
-Subject: RE: How to recreate a dmraid RAID array with mdadm
-Date: Wed, 17 Nov 2010 19:56:10 -0500
-Message-ID: <BAY148-w607755AA342EF4ACCCC9A5EF390@phx.gbl>
-References: <BAY148-w65577551281F75C185BEBEF380@phx.gbl>,<20101117141514.759d9eea@notabene.brown>,<BAY148-w18A88E7D84CE0213B44F26EF380@phx.gbl>,<20101118111149.7b5004a2@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: How to recreate a dmraid RAID array with mdadm
+Date: Thu, 18 Nov 2010 12:28:47 +1100
+Message-ID: <20101118122847.1530d86c@notabene.brown>
+References: <BAY148-w65577551281F75C185BEBEF380@phx.gbl>
+	<20101117141514.759d9eea@notabene.brown>
+	<BAY148-w18A88E7D84CE0213B44F26EF380@phx.gbl>
+	<20101118111149.7b5004a2@notabene.brown>
+	<BAY148-w607755AA342EF4ACCCC9A5EF390@phx.gbl>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_f4366ee5-14f5-476f-9684-7b6604b151da_"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101118111149.7b5004a2@notabene.brown>
+In-Reply-To: <BAY148-w607755AA342EF4ACCCC9A5EF390@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: Mike Viau <viaum@sheridanc.on.ca>
 Cc: linux-raid@vger.kernel.org, debian-user@lists.debian.org
 List-Id: linux-raid.ids
 
---_f4366ee5-14f5-476f-9684-7b6604b151da_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+On Wed, 17 Nov 2010 19:56:10 -0500
+Mike Viau <viaum@sheridanc.on.ca> wrote:
 
 
-> On Thu=2C 18 Nov 2010 11:11:49 +1100 <neilb@suse.de> wrote:
->
-> > On Wed=2C 17 Nov 2010 17:36:23 -0500 Mike Viau  wrote:
-> >
-> > > On Wed=2C 17 Nov 2010 14:15:14 +1100
-> > >
-> > > This looks wrong. mdadm should be looking for the container as listed=
- in
-> > > mdadm.conf and it should find a matching uuid on sda and sdb=2C but i=
-t doesn't.
-> > >
-> > > Can you:
-> > >
-> > > mdadm -E /dev/sda /dev/sdb =3B cat /etc/mdadm/mdadm.conf
-> > >
-> > > so I can compare the uuids?
-> > >
-> >
-> > Sure.
-> >
-> > # definitions of existing MD arrays ( So you don't have to scroll down =
-:P )
-> >
-> > ARRAY metadata=3Dimsm UUID=3D084b969a:0808f5b8:6c784fb7:62659383
-> >
-> > ARRAY /dev/md/OneTB-RAID1-PV container=3D084b969a:0808f5b8:6c784fb7:626=
-59383 member=3D0 UUID=3Dae4a1598:72267ed7:3b34867b:9c56497a
-> >
-> ....
-> >            UUID : 084b969a:0808f5b8:6c784fb7:62659383
-> > [OneTB-RAID1-PV]:
-> >            UUID : ae4a1598:72267ed7:3b34867b:9c56497a
-> ....
->
-> Yes=2C the uuids are definitely all correct.
-> This really should work. I just tested a similar config and it worked
-> exactly as exported.
-> Weird.
->
-> Whatever version of mdadm are you running???
-> Can you try getting the latest (3.1.4) from
-> http://www.kernel.org/pub/linux/utils/raid/mdadm/
+> I am running the same version, from a Debian Squeeze package which I presume is the same.
+> 
+> mdadm -V
+> 
+> mdadm - v3.1.4 - 31st August 2010
 
-I am running the same version=2C from a Debian Squeeze package which I pres=
-ume is the same.
-
-mdadm -V
-
-mdadm - v3.1.4 - 31st August 2010
-
->
-> and see how that works.
-> Just
-> make
+Yes, should be identical to what I am running.
+> 
+> >
+> > and see how that works.
+> > Just
+> > make
+> > ./mdadm -Asvv
+> 
+> Regardless, I did recompile (attached is the make output -- no errors) and got similar mdadm output:
+> 
 > ./mdadm -Asvv
+> mdadm: looking for devices for further assembly
+> mdadm: no RAID superblock on /dev/md126p1
+> mdadm: /dev/md126p1 has wrong uuid.
+> mdadm: no RAID superblock on /dev/md/OneTB-RAID1-PV
+> mdadm: /dev/md/OneTB-RAID1-PV has wrong uuid
+....
+> mdadm: cannot open device /dev/sdb: Device or resource busy
+> mdadm: /dev/sdb has wrong uuid.
+> mdadm: cannot open device /dev/sda: Device or resource busy
+> mdadm: /dev/sda has wrong uuid.
 
-Regardless=2C I did recompile (attached is the make output -- no errors) an=
-d got similar mdadm output:
+The arrays are clearly currently assembled.  Trying to assemble them again is
+not likely to produce a good result :-)  I should have said to "./mdadm -Ss"
+first.
 
-./mdadm -Asvv
-mdadm: looking for devices for further assembly
-mdadm: no RAID superblock on /dev/md126p1
-mdadm: /dev/md126p1 has wrong uuid.
-mdadm: no RAID superblock on /dev/md/OneTB-RAID1-PV
-mdadm: /dev/md/OneTB-RAID1-PV has wrong uuid.
-mdadm: no RAID superblock on /dev/dm-3
-mdadm: /dev/dm-3 has wrong uuid.
-mdadm: no RAID superblock on /dev/dm-2
-mdadm: /dev/dm-2 has wrong uuid.
-mdadm: no RAID superblock on /dev/dm-1
-mdadm: /dev/dm-1 has wrong uuid.
-mdadm: no RAID superblock on /dev/dm-0
-mdadm: /dev/dm-0 has wrong uuid.
-mdadm: no RAID superblock on /dev/loop0
-mdadm: /dev/loop0 has wrong uuid.
-mdadm: cannot open device /dev/sdc7: Device or resource busy
-mdadm: /dev/sdc7 has wrong uuid.
-mdadm: cannot open device /dev/sdc6: Device or resource busy
-mdadm: /dev/sdc6 has wrong uuid.
-mdadm: cannot open device /dev/sdc5: Device or resource busy
-mdadm: /dev/sdc5 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdc2
-mdadm: /dev/sdc2 has wrong uuid.
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm: /dev/sdc1 has wrong uuid.
-mdadm: cannot open device /dev/sdc: Device or resource busy
-mdadm: /dev/sdc has wrong uuid.
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: /dev/sdb has wrong uuid.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sda has wrong uuid.
-mdadm: looking for devices for /dev/md/OneTB-RAID1-PV
-mdadm: no recogniseable superblock on /dev/md126p1
-mdadm/dev/md126p1 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/md/OneTB-RAID1-PV
-mdadm/dev/md/OneTB-RAID1-PV is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/dm-3
-mdadm/dev/dm-3 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/dm-2
-mdadm/dev/dm-2 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/dm-1
-mdadm/dev/dm-1 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/dm-0
-mdadm/dev/dm-0 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/loop0
-mdadm/dev/loop0 is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdc7: Device or resource busy
-mdadm/dev/sdc7 is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdc6: Device or resource busy
-mdadm/dev/sdc6 is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdc5: Device or resource busy
-mdadm/dev/sdc5 is not a container=2C and one is required.
-mdadm: no recogniseable superblock on /dev/sdc2
-mdadm/dev/sdc2 is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm/dev/sdc1 is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdc: Device or resource busy
-mdadm/dev/sdc is not a container=2C and one is required.
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm/dev/sdb is not a container=2C and one is required.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm/dev/sda is not a container=2C and one is required.
+Could you apply this patch and then test again with:
 
+ ./mdadm -Ss
+ ./mdadm -Asvvv
 
-So what could this mean???
+Thanks,
+NeilBrown
 
-
--M
- 		 	   		  =
-
---_f4366ee5-14f5-476f-9684-7b6604b151da_
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="mdadm_compile.txt"
-
-bWFrZQoKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8t
-dW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAt
-dCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21k
-YWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJt
-YXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBt
-ZGFkbS5vIG1kYWRtLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4
-dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9z
-ZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9
-XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQ
-X0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMg
-ICAtYyAtbyBjb25maWcubyBjb25maWcuYwpnY2MgLVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90
-b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQtcGFyYW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIi
-L3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1EQ09ORkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAt
-RENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRhZG0uY29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1k
-YWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1ETURNT05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVT
-RV9QVEhSRUFEUyAgIC1jIC1vIG1kc3RhdC5vIG1kc3RhdC5jCmdjYyAtV2FsbCAtV2Vycm9yIC1X
-c3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURT
-ZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRh
-ZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElS
-PVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5t
-ZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gUmVhZE1lLm8gUmVhZE1lLmMKZ2NjIC1XYWxs
-IC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRl
-ciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxF
-PVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZc
-IiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJ
-Uj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyB1dGlsLm8gdXRpbC5jCmdj
-YyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1w
-YXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURD
-T05GRklMRT1cIi9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFk
-bS5jb25mXCIgLURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURN
-RE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gTWFuYWdlLm8g
-TWFuYWdlLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1X
-bm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFp
-bCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRj
-L21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9
-XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAt
-byBBc3NlbWJsZS5vIEFzc2VtYmxlLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90
-eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91
-c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURD
-T05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFk
-bVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0Vf
-UFRIUkVBRFMgICAtYyAtbyBCdWlsZC5vIEJ1aWxkLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJp
-Y3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRt
-YWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5j
-b25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIv
-ZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRt
-XCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBDcmVhdGUubyBDcmVhdGUuYwpnY2MgLVdhbGwgLVdl
-cnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQtcGFyYW1ldGVyIC1n
-Z2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1EQ09ORkZJTEU9XCIv
-ZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRhZG0uY29uZlwiIC1E
-TUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1ETURNT05fRElSPVwi
-L2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1jIC1vIERldGFpbC5vIERldGFpbC5jCmdj
-YyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1w
-YXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURD
-T05GRklMRT1cIi9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFk
-bS5jb25mXCIgLURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURN
-RE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gRXhhbWluZS5v
-IEV4YW1pbmUuYwpnY2MgLVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEg
-LVduby11bnVzZWQtcGFyYW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRt
-YWlsIC10IlwiIC1EQ09ORkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9l
-dGMvbWRhZG0vbWRhZG0uY29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklM
-RT1cIm1hcFwiIC1ETURNT05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1j
-IC1vIEdyb3cubyBHcm93LmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAt
-V2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jp
-bi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklM
-RTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1E
-TUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVB
-RFMgICAtYyAtbyBNb25pdG9yLm8gTW9uaXRvci5jCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0
-LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFp
-bD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0uY29u
-ZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwiL2Rl
-di8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwi
-IC1EVVNFX1BUSFJFQURTICAgLWMgLW8gZGxpbmsubyBkbGluay5jCmdjYyAtV2FsbCAtV2Vycm9y
-IC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIg
-LURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMv
-bWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBf
-RElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2
-Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gS2lsbC5vIEtpbGwuYwpnY2MgLVdhbGwg
-LVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQtcGFyYW1ldGVy
-IC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1EQ09ORkZJTEU9
-XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRhZG0uY29uZlwi
-IC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1ETURNT05fRElS
-PVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1jIC1vIFF1ZXJ5Lm8gUXVlcnkuYwpn
-Y2MgLVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQt
-cGFyYW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1E
-Q09ORkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRh
-ZG0uY29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1E
-TURNT05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1jIC1vIEluY3JlbWVu
-dGFsLm8gSW5jcmVtZW50YWwuYwpnY2MgLVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVz
-IC1XZXh0cmEgLVduby11bnVzZWQtcGFyYW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9z
-YmluL3NlbmRtYWlsIC10IlwiIC1EQ09ORkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZG
-SUxFMj1cIi9ldGMvbWRhZG0vbWRhZG0uY29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIg
-LURNQVBfRklMRT1cIm1hcFwiIC1ETURNT05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhS
-RUFEUyAgIC1jIC1vIG1kb3Blbi5vIG1kb3Blbi5jCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0
-LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFp
-bD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0uY29u
-ZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwiL2Rl
-di8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwi
-IC1EVVNFX1BUSFJFQURTICAgLWMgLW8gc3VwZXIwLm8gc3VwZXIwLmMKZ2NjIC1XYWxsIC1XZXJy
-b3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dk
-YiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0
-Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1B
-UF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9k
-ZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBzdXBlcjEubyBzdXBlcjEuYwpnY2Mg
-LVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQtcGFy
-YW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1EQ09O
-RkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRhZG0u
-Y29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1ETURN
-T05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1jIC1vIHN1cGVyLWRkZi5v
-IHN1cGVyLWRkZi5jCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRy
-YSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2Vu
-ZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwi
-L2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9G
-SUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAg
-LWMgLW8gc3VwZXItaW50ZWwubyBzdXBlci1pbnRlbC5jCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3Ry
-aWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5k
-bWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0u
-Y29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwi
-L2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFk
-bVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gYml0bWFwLm8gYml0bWFwLmMKZ2NjIC1XYWxsIC1X
-ZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAt
-Z2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwi
-L2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAt
-RE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1c
-Ii9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyByZXN0cmlwZS5vIHJlc3RyaXBl
-LmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51
-c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJc
-IiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRt
-L21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBc
-IiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBzeXNm
-cy5vIHN5c2ZzLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJh
-IC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5k
-bWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIv
-ZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJ
-TEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgLURI
-QVZFX1NURElOVF9IIC1vIHNoYTEubyAtYyBzaGExLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJp
-Y3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRt
-YWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5j
-b25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIv
-ZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRt
-XCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBtYXBmaWxlLm8gbWFwZmlsZS5jCmdjYyAtV2FsbCAt
-V2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIg
-LWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1c
-Ii9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIg
-LURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9
-XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gY3JjMzIubyBjcmMzMi5jCmdj
-YyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1w
-YXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURD
-T05GRklMRT1cIi9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFk
-bS5jb25mXCIgLURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURN
-RE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gc2dfaW8ubyBz
-Z19pby5jCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25v
-LXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwg
-LXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9t
-ZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwi
-bWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8g
-bXNnLm8gbXNnLmMKZ2NjIC1XYWxsIC1XZXJyb3IgLVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJh
-IC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAtRFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5k
-bWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9tZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIv
-ZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9ESVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJ
-TEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAt
-YyAtbyBwbGF0Zm9ybS1pbnRlbC5vIHBsYXRmb3JtLWludGVsLmMKZ2NjIC1XYWxsIC1XZXJyb3Ig
-LVdzdHJpY3QtcHJvdG90eXBlcyAtV2V4dHJhIC1Xbm8tdW51c2VkLXBhcmFtZXRlciAtZ2dkYiAt
-RFNlbmRtYWlsPVwiIi91c3Ivc2Jpbi9zZW5kbWFpbCAtdCJcIiAtRENPTkZGSUxFPVwiL2V0Yy9t
-ZGFkbS5jb25mXCIgLURDT05GRklMRTI9XCIvZXRjL21kYWRtL21kYWRtLmNvbmZcIiAtRE1BUF9E
-SVI9XCIvZGV2Ly5tZGFkbVwiIC1ETUFQX0ZJTEU9XCJtYXBcIiAtRE1ETU9OX0RJUj1cIi9kZXYv
-Lm1kYWRtXCIgLURVU0VfUFRIUkVBRFMgICAtYyAtbyBwcm9iZV9yb21zLm8gcHJvYmVfcm9tcy5j
-CmdjYyAgLW8gbWRhZG0gbWRhZG0ubyBjb25maWcubyBtZHN0YXQubyAgUmVhZE1lLm8gdXRpbC5v
-IE1hbmFnZS5vIEFzc2VtYmxlLm8gQnVpbGQubyBDcmVhdGUubyBEZXRhaWwubyBFeGFtaW5lLm8g
-R3Jvdy5vIE1vbml0b3IubyBkbGluay5vIEtpbGwubyBRdWVyeS5vIEluY3JlbWVudGFsLm8gbWRv
-cGVuLm8gc3VwZXIwLm8gc3VwZXIxLm8gc3VwZXItZGRmLm8gc3VwZXItaW50ZWwubyBiaXRtYXAu
-byByZXN0cmlwZS5vIHN5c2ZzLm8gc2hhMS5vIG1hcGZpbGUubyBjcmMzMi5vIHNnX2lvLm8gbXNn
-Lm8gcGxhdGZvcm0taW50ZWwubyBwcm9iZV9yb21zLm8gCmdjYyAtV2FsbCAtV2Vycm9yIC1Xc3Ry
-aWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdnZGIgLURTZW5k
-bWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9ldGMvbWRhZG0u
-Y29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURNQVBfRElSPVwi
-L2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIvZGV2Ly5tZGFk
-bVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gbWRtb24ubyBtZG1vbi5jCmdjYyAtV2FsbCAtV2Vy
-cm9yIC1Xc3RyaWN0LXByb3RvdHlwZXMgLVdleHRyYSAtV25vLXVudXNlZC1wYXJhbWV0ZXIgLWdn
-ZGIgLURTZW5kbWFpbD1cIiIvdXNyL3NiaW4vc2VuZG1haWwgLXQiXCIgLURDT05GRklMRT1cIi9l
-dGMvbWRhZG0uY29uZlwiIC1EQ09ORkZJTEUyPVwiL2V0Yy9tZGFkbS9tZGFkbS5jb25mXCIgLURN
-QVBfRElSPVwiL2Rldi8ubWRhZG1cIiAtRE1BUF9GSUxFPVwibWFwXCIgLURNRE1PTl9ESVI9XCIv
-ZGV2Ly5tZGFkbVwiIC1EVVNFX1BUSFJFQURTICAgLWMgLW8gbW9uaXRvci5vIG1vbml0b3IuYwpn
-Y2MgLVdhbGwgLVdlcnJvciAtV3N0cmljdC1wcm90b3R5cGVzIC1XZXh0cmEgLVduby11bnVzZWQt
-cGFyYW1ldGVyIC1nZ2RiIC1EU2VuZG1haWw9XCIiL3Vzci9zYmluL3NlbmRtYWlsIC10IlwiIC1E
-Q09ORkZJTEU9XCIvZXRjL21kYWRtLmNvbmZcIiAtRENPTkZGSUxFMj1cIi9ldGMvbWRhZG0vbWRh
-ZG0uY29uZlwiIC1ETUFQX0RJUj1cIi9kZXYvLm1kYWRtXCIgLURNQVBfRklMRT1cIm1hcFwiIC1E
-TURNT05fRElSPVwiL2Rldi8ubWRhZG1cIiAtRFVTRV9QVEhSRUFEUyAgIC1jIC1vIG1hbmFnZW1v
-bi5vIG1hbmFnZW1vbi5jCmdjYyAgLXB0aHJlYWQgLXogbm93IC1vIG1kbW9uIG1kbW9uLm8gbW9u
-aXRvci5vIG1hbmFnZW1vbi5vIHV0aWwubyBtZHN0YXQubyBzeXNmcy5vIGNvbmZpZy5vIEtpbGwu
-byBzZ19pby5vIGRsaW5rLm8gUmVhZE1lLm8gc3VwZXIwLm8gc3VwZXIxLm8gc3VwZXItaW50ZWwu
-byBzdXBlci1kZGYubyBzaGExLm8gY3JjMzIubyBtc2cubyBiaXRtYXAubyBwbGF0Zm9ybS1pbnRl
-bC5vIHByb2JlX3JvbXMubyAKc2VkIC1lICdzL3tERUZBVUxUX01FVEFEQVRBfS8xLjIvZycgbWRh
-ZG0uOC5pbiA+IG1kYWRtLjgKbnJvZmYgLW1hbiBtZGFkbS44ID4gbWRhZG0ubWFuCm5yb2ZmIC1t
-YW4gbWQuNCA+IG1kLm1hbgpucm9mZiAtbWFuIG1kYWRtLmNvbmYuNSA+IG1kYWRtLmNvbmYubWFu
-Cm5yb2ZmIC1tYW4gbWRtb24uOCA+IG1kbW9uLm1hbgoK
-
---_f4366ee5-14f5-476f-9684-7b6604b151da_--
+diff --git a/Assemble.c b/Assemble.c
+index afd4e60..11323fa 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -344,9 +344,14 @@ int Assemble(struct supertype *st, char *mddev,
+ 		if (ident->uuid_set && (!update || strcmp(update, "uuid")!= 0) &&
+ 		    (!tst || !tst->sb ||
+ 		     same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0)) {
+-			if (report_missmatch)
++			if (report_missmatch) {
++				char buf[200];
+ 				fprintf(stderr, Name ": %s has wrong uuid.\n",
+ 					devname);
++				fprintf(stderr, " want %s\n", __fname_from_uuid(ident->uuid, 0, buf, ':'));
++				fprintf(stderr, " have %s\n", __fname_from_uuid(content->uuid, 0, buf, ':'));
++				fprintf(stderr, " metadata=%s\n", tst->ss->name);
++			}
+ 			goto loop;
+ 		}
+ 		if (ident->name[0] && (!update || strcmp(update, "name")!= 0) &&
