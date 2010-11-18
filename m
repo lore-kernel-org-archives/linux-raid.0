@@ -1,63 +1,79 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 00/13] Series short description
-Date: Thu, 18 Nov 2010 10:21:20 +0100
-Message-ID: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
+Subject: [PATCH 01/13] Provide a mdstat_ent to subarray helper
+Date: Thu, 18 Nov 2010 10:21:29 +0100
+Message-ID: <20101118092129.29508.65722.stgit@gklab-170-111.igk.intel.com>
+References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-The following series of patches are based on mdadm version 3.1.4.
+From: Dan Williams <dan.j.williams@intel.com>
 
-This series is the first of three parts of reshape/takeover implementation for external metadata.
-Next parts are:
-- OnlineCapacityExpansion/Checkpointing (already sent)
-- Takeover/Migrations (will be send)
+...before introducing another open coded instace of this conversion.
 
-The external-reshape-design.txt file
-(provided by 0011-Document-the-external-reshape-implementation.patch patch)
-contains detailed description of the reshape/takeover design.
-
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ managemon.c |    2 +-
+ mdadm.h     |    5 +++++
+ util.c      |   11 ++++-------
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-Dan Williams (13):
-      Provide a mdstat_ent to subarray helper
-      block monitor: freeze spare assignment for external arrays
-      Manage: allow manual control of external raid0 readonly flag
-      Grow: mark some functions static
-      Assemble: fix assembly in the delta_disks > max_degraded case
-      Grow: fix check for raid6 layout normalization
-      Grow: add missing raid4 geometries to geo_map()
-      fix a get_linux_version() comparison typo
-      Create: cleanup/unify default geometry handling
-      Initialize st->devnum and st->container_dev in super_by_fd
-      Document the external reshape implementation
-      External reshape (step 1): container reshape and ->reshape_super()
-      External reshape (step 2): Freeze container
+diff --git a/managemon.c b/managemon.c
+index bab0397..544c4a6 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -511,7 +511,7 @@ static void manage_new(struct mdstat_ent *mdstat,
+ 
+ 	new->container = container;
+ 
+-	inst = &mdstat->metadata_version[10+strlen(container->devname)+1];
++	inst = to_subarray(mdstat, container->devname);
+ 
+ 	new->info.array = mdi->array;
+ 	new->info.component_size = mdi->component_size;
+diff --git a/mdadm.h b/mdadm.h
+index 03dd41c..9787f9e 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -979,6 +979,11 @@ static inline int is_subarray(char *vers)
+ 	return (*vers == '/' || *vers == '-');
+ }
+ 
++static inline char *to_subarray(struct mdstat_ent *ent, char *container)
++{
++	return &ent->metadata_version[10+strlen(container)+1];
++}
++
+ #ifdef DEBUG
+ #define dprintf(fmt, arg...) \
+ 	fprintf(stderr, fmt, ##arg)
+diff --git a/util.c b/util.c
+index c9bdd6e..6f1c1d2 100644
+--- a/util.c
++++ b/util.c
+@@ -1437,14 +1437,11 @@ int is_subarray_active(char *subarray, char *container)
+ 	struct mdstat_ent *mdstat = mdstat_read(0, 0);
+ 	struct mdstat_ent *ent;
+ 
+-	for (ent = mdstat; ent; ent = ent->next) {
+-		if (is_container_member(ent, container)) {
+-			char *inst = &ent->metadata_version[10+strlen(container)+1];
+-
+-			if (!subarray || strcmp(inst, subarray) == 0)
++	for (ent = mdstat; ent; ent = ent->next)
++		if (is_container_member(ent, container))
++			if (!subarray ||
++			    strcmp(to_subarray(ent, container), subarray) == 0)
+ 				break;
+-		}
+-	}
+ 
+ 	free_mdstat(mdstat);
+ 
 
-
- Assemble.c                  |    4 
- Create.c                    |   21 +-
- Detail.c                    |   11 -
- Grow.c                      |  493 ++++++++++++++++++++++++++++++++++++++++---
- Manage.c                    |    1 
- external-reshape-design.txt |  168 +++++++++++++++
- managemon.c                 |   21 ++
- mdadm.c                     |    2 
- mdadm.h                     |   26 ++
- msg.c                       |  195 +++++++++++++++++
- msg.h                       |    2 
- restripe.c                  |    2 
- super-ddf.c                 |   11 +
- super-intel.c               |   15 +
- sysfs.c                     |   33 +++
- util.c                      |   48 +++-
- 16 files changed, 965 insertions(+), 88 deletions(-)
- create mode 100644 external-reshape-design.txt
-
--- 
-Krzysztof Wojcik
