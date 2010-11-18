@@ -1,8 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 05/13] Assemble: fix assembly in the delta_disks >
-	max_degraded case
-Date: Thu, 18 Nov 2010 10:22:01 +0100
-Message-ID: <20101118092201.29508.16243.stgit@gklab-170-111.igk.intel.com>
+Subject: [PATCH 06/13] Grow: fix check for raid6 layout normalization
+Date: Thu, 18 Nov 2010 10:22:09 +0100
+Message-ID: <20101118092209.29508.12528.stgit@gklab-170-111.igk.intel.com>
 References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,31 +15,49 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-Incremental assembly works on such an array because the kernel sees the
-disk as in-sync and that the array is reshaping.  Teach Assemble() the
-same assumptions.
-
-This is only needed on kernels that do not initialize ->recovery_offset
-when activating spares for reshape.
+If the user does not specify a layout, don't skip asking about retaining
+the non-standard raid6 layout which may be implicitly changed.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Assemble.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ Grow.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index afd4e60..409f0d7 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -804,7 +804,9 @@ int Assemble(struct supertype *st, char *mddev,
- 		    devices[most_recent].i.events) {
- 			devices[j].uptodate = 1;
- 			if (i < content->array.raid_disks) {
--				if (devices[j].i.recovery_start == MaxSector) {
-+				if (devices[j].i.recovery_start == MaxSector ||
-+				    (content->reshape_active &&
-+				     j >= content->array.raid_disks - content->delta_disks)) {
- 					okcnt++;
- 					avail[i]=1;
- 				} else
+diff --git a/Grow.c b/Grow.c
+index f16228d..bf634d3 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -706,9 +706,9 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 
+ 	/* ========= set shape (chunk_size / layout / ndisks)  ============== */
+ 	/* Check if layout change is a no-op */
+-	if (layout_str) switch(array.level) {
++	switch(array.level) {
+ 	case 5:
+-		if (array.layout == map_name(r5layout, layout_str))
++		if (layout_str && array.layout == map_name(r5layout, layout_str))
+ 			layout_str = NULL;
+ 		break;
+ 	case 6:
+@@ -724,8 +724,9 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 			rv = 1;
+ 			goto release;
+ 		}
+-		if (strcmp(layout_str, "normalise") == 0 ||
+-		    strcmp(layout_str, "normalize") == 0) {
++		if (layout_str &&
++		    (strcmp(layout_str, "normalise") == 0 ||
++		     strcmp(layout_str, "normalize") == 0)) {
+ 			char *hyphen;
+ 			strcpy(alt_layout, map_num(r6layout, array.layout));
+ 			hyphen = strrchr(alt_layout, '-');
+@@ -735,7 +736,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 			}
+ 		}
+ 
+-		if (array.layout == map_name(r6layout, layout_str))
++		if (layout_str && array.layout == map_name(r6layout, layout_str))
+ 			layout_str = NULL;
+ 		if (layout_str && strcmp(layout_str, "preserve") == 0)
+ 			layout_str = NULL;
 
