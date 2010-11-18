@@ -1,59 +1,57 @@
-From: David Lethe <david@santools.com>
-Subject: RE: Array read 3 time slower to read after data fully loaded
-Date: Thu, 18 Nov 2010 14:53:28 -0600
-Message-ID: <EB9469C209DB064DA15714214B92D5167F3433F8E0@34093-MBX-C09.mex07a.mlsrvr.com>
-References: <4CE4B9E6.1040802@geograph.co.za>,<4CE58FF9.3050202@ziu.info>
+From: Michael Demmer <Michael.Demmer@riverbed.com>
+Subject: Re: bug in bio_map_user_iov
+Date: Thu, 18 Nov 2010 13:08:49 -0800
+Message-ID: <4845A84C-AE4A-41FF-9147-719D414F27D8@riverbed.com>
+References: <4A89C515-6A74-4C0B-9A81-8FAB6C36AFF0@riverbed.com>
+ <20101118110252.498cc1ea@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CE58FF9.3050202@ziu.info>
+In-Reply-To: <20101118110252.498cc1ea@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>, Zoltan Szecsei <zoltans@geograph.co.za>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Throughput is a function of block size & chunk size.  For operations such as copying large files, then larger block/chunk sizes mean
-higher throughput .. at the COST of I/Os per second.
+>> Hello all,
+>> 
+>> I've been doing some work with a Linux kernel module that enables zero-copy I/O to block devices using a custom user/kernel interface. In porting this from an older Linux kernel to a more modern release, I ran into an issue when interacting with MD devices that I traced back to what I believe to be a problem in bio_map_user_iov.
+>> 
+>> The problem and fix are described in the first attached patch. The second is a simple test module and user program which triggers the bug and validates the fix.
+>> 
+>> Thanks,
+>> -m
+>> 
+>> ps. This is my first attempt at pushing a patch upstream so please forgive any newbie mistakes.
+>> 
+> 
+> I think the real issue here is that bio_map_user is an interface that was
+> only intended to be used by bottom level devices like SCSI drivers etc.
+> It is a function that a device driver can use if it knows that it makes sense
+> to use it.
+> 
+> You are trying to use it as a generic interface that works for all block
+> devices, and it wasn't intended for that.
+> 
+> So while it is reasonably simple to 'fix' bio_map_user_iov, it is not
+> possible to 'fix' bio_map_kern_iov in the same way, because it doesn't have
+> access to the bdev at all.
+> 
+> 
+> So the question we should be asking is: are you really using the right
+> interface for the job?  Is bio_map_user something that you really should be
+> using?
+> And to answer that, we would need to know what you are trying to do.
+> 
+> And why isn't O_DIRECT a suitable zero-copy interface for I/O to block
+> devices?
 
-There is no free lunch. Before doing any tuning, ask yourself what the normal mix of random, sequential, read, write, large and small
-block I/O is.  If you are constantly moving large files around, then by all means redo the RAID and file system setup, but if this exercise is an exception, then you may be better off leaving things as they are.
-________________________________________
-From: linux-raid-owner@vger.kernel.org [linux-raid-owner@vger.kernel.org] On Behalf Of Michal Soltys [soltys@ziu.info]
-Sent: Thursday, November 18, 2010 2:43 PM
-To: Zoltan Szecsei
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Array read 3 time slower to read after data fully loaded
+Thanks -- I understand your concerns, but unfortunately I can't really go into more detail about our use case since it's something we use internally. Given which, I understand your potential reluctance to take the patch.
 
-On 10-11-18 06:30, Zoltan Szecsei wrote:
-> Hi,
-> Can anyone please explain this to me?
->
-> For the last >30 hours I have been loading some 2.5TB of 200-400MB tiff
-> images, from another PC on our internal network, onto this new array.
-> Yesterday, during this load process, I copied 10 of these files (about
-> 2.5GB) from the array onto the /home directory of the same system.
->
-> It took 33 seconds, equating to some 75MB/s.
->
-> This morning I came in to find that the load process had finished, so I
-> deleted the 10 test files from /home, and redid the identical copy test
-> (using bash-history, so: identical).
->
-> It took 123 seconds, equating to some 20MB/s.
->
-> Que? (as in Manuel from Faulty Towers :-) )
->
+Best,
+-m
 
-Is the situation with reading into /dev/null instead of /home the same ?
 
-As this is reading issue, one thing that came to my mind:
 
-- make sure the kernel is _not_ compiled with  CONFIG_MULTICORE_RAID456.
-It's afaik still experimental and can cause severe slowdowns
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
