@@ -1,57 +1,59 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: faulty array member
-Date: Fri, 19 Nov 2010 10:47:01 +0000
-Message-ID: <4CE655A5.4050802@seoss.co.uk>
-References: <4CE55D9E.4070406@supsi.ch> <4CE57E8E.2040902@buttersideup.com> <4CE640C6.3090607@supsi.ch>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: Devel 3.2 branch issues
+Date: Fri, 19 Nov 2010 12:43:20 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE90089@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
+ <20101117212242.5ad7b210@notabene.brown>
+ <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CE640C6.3090607@supsi.ch>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
+Hi Neil,
+Our validation team have reported problems with assembly on the devel 3.2 branch.
+I have verified that currently it is not possible to assemble any array.
 
->> then copy those individual blocks (only) over from sda2 (e.g. using
->> dd).  Once sdb1 has no pending sectors left, you should then be able to
->> re-add sda2 back into md0.
->
-> that is exactly what I was trying to do.. but as the two drives
-> partitioning are not the same, I don't know how to find the
-> corresponding blocks/sectors in the two drives.
+Patch: Assemble - avoid including wayward devices
+It does not affect native metadata but breaks assembly of external arrays.
+Only one disk is assembled for any raid level. 
 
-Under later kernels, you can definitely do something like:
+After patch: super_by_fd: return subarray info explicitly
+Assembly becomes much slower.
 
-cat /sys/block/sda/sda2/start
+Patch: Assemble: small cleanup of error checking
+Breaks assembly for all metadata types. Nothing assembles after it is applied.
 
-to find what the offset is from the start of the drive for each partition.
+These are just early modifications of Assemble.c. The impact of further changes
+can't be verified at the moment. 
+Are you aware of the above issues? This is stopping our further validation.
+I also mentioned issues with Incremental in previous mail.
+When are you planning to submit the rest of modified autorebuild code?
 
->> I don't know what the bad-block remapping is like on the CentOS4 kernel,
->
-> I believe in this case, the bad-block remapping is done by the
-> hd firmware.. please correct me if I'm wrong.
+Regards
+Anna
 
-Yes it is, but the remap is triggered by a write to the block, so when
-it happens automatically due to md, the following has to happen:
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
 
-md tries to read from a sector, the read fails, so md reads from the
-other drive, and then writes that data back to the original drive
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
 
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
 
-> By the way, why it is not possible to re-add /dev/sda2 into the raid?
-
-You should be able to do that, but md would in that case start a rebuild
-from the other drive (i.e. copy all blocks from the other drive), and as
-there are currently pending sectors on that drive, the rebuild will fail
-- so you have to eliminate those faulty sectors on the source drive first.
-
-Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
