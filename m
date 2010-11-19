@@ -1,59 +1,99 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: Devel 3.2 branch issues
-Date: Fri, 19 Nov 2010 12:43:20 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE90089@irsmsx504.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
- <20101117212242.5ad7b210@notabene.brown>
- <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
+From: =?ISO-8859-1?Q?Bj=F6rn_Englund?= <be@smarteye.se>
+Subject: raid6 failed due to loss of connection
+Date: Fri, 19 Nov 2010 13:33:29 +0100
+Message-ID: <4CE66E99.6050806@smarteye.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-Our validation team have reported problems with assembly on the devel 3.2 branch.
-I have verified that currently it is not possible to assemble any array.
+Hi,
 
-Patch: Assemble - avoid including wayward devices
-It does not affect native metadata but breaks assembly of external arrays.
-Only one disk is assembled for any raid level. 
+I have a raid 6 consisting of 10 drives, 2x5 sata disks. Each set of 5
+behind a port multiplier. The port multipliers/disk/drivers are a bit
+flaky sometimes and I need to pull the cable between the controller and
+port multiplier to get the disks recognized sometimes.
 
-After patch: super_by_fd: return subarray info explicitly
-Assembly becomes much slower.
+Now after rebooting I can't assemble the array.
+mdadm -A /dev/md12, reports that 5 disks are too few to assemble array.
 
-Patch: Assemble: small cleanup of error checking
-Breaks assembly for all metadata types. Nothing assembles after it is applied.
+One set of (5) disks says that everything is ok when checked with mdadm
+-E, but the other set says that 5 disks are failed.
 
-These are just early modifications of Assemble.c. The impact of further changes
-can't be verified at the moment. 
-Are you aware of the above issues? This is stopping our further validation.
-I also mentioned issues with Incremental in previous mail.
-When are you planning to submit the rest of modified autorebuild code?
+The first set of 5 disks report this:
 
-Regards
-Anna
+/dev/sdax2:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : 557d7924:1c547f1c:d878c05d:5a37cfcd
+           Name : 12
+  Creation Time : Sun Oct 18 22:07:52 2009
+     Raid Level : raid6
+   Raid Devices : 10
 
----------------------------------------------------------------------
-Intel Technology Poland sp. z o.o.
-z siedziba w Gdansku
-ul. Slowackiego 173
-80-298 Gdansk
+ Avail Dev Size : 1953118176 (931.32 GiB 1000.00 GB)
+     Array Size : 15624941568 (7450.55 GiB 7999.97 GB)
+  Used Dev Size : 1953117696 (931.32 GiB 1000.00 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : ac9db196:fc239a13:2a44b03b:aa45055a
 
-Sad Rejonowy Gdansk Polnoc w Gdansku, 
-VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
-numer KRS 101882
+    Update Time : Thu Nov 18 13:17:25 2010
+       Checksum : d65e4e57 - correct
+         Events : 6
 
-NIP 957-07-52-316
-Kapital zakladowy 200.000 zl
+     Chunk Size : 256K
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+    Array Slot : 5 (failed, failed, failed, failed, failed, 5, 6, 7, 8,=
+ 9)
+   Array State : _____Uuuuu 5 failed
 
+
+other 5 disks report this:
+
+/dev/sdt2:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : 557d7924:1c547f1c:d878c05d:5a37cfcd
+           Name : 12
+  Creation Time : Sun Oct 18 22:07:52 2009
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 1953118176 (931.32 GiB 1000.00 GB)
+     Array Size : 15624941568 (7450.55 GiB 7999.97 GB)
+  Used Dev Size : 1953117696 (931.32 GiB 1000.00 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : 2bc9f9dc:efcc4041:8a495b40:ad504353
+
+    Update Time : Sat Nov  6 14:56:15 2010
+       Checksum : 482b7858 - correct
+         Events : 2
+
+     Chunk Size : 256K
+
+    Array Slot : 0 (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+   Array State : Uuuuuuuuuu
+
+
+Should I try mdadm -A -f /dev/md12 or do I need to run a create command
+to get the array up and running?
+
+I'm in the process of copying the drives so I have a backup in case
+something goes wrong with the assembling...
+
+
+/Bj=F6rn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
