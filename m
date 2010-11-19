@@ -1,51 +1,55 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Help! I killed my mdadm raid 5
-Date: Thu, 18 Nov 2010 19:32:06 -0600
-Message-ID: <8F.28.07087.893D5EC4@cdptpa-omtalb.mail.rr.com>
-References: <20101118195109.1GA4L.64443.root@cdptpa-web04-z02>
+From: Malahal Naineni <malahal@us.ibm.com>
+Subject: Re: [dm-devel] [RFC] training mpath to discern between SCSI errors
+Date: Thu, 18 Nov 2010 19:11:49 -0800
+Message-ID: <20101119031149.GA28455@us.ibm.com>
+References: <20100825155918.GB8509@redhat.com>
+ <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101118195109.1GA4L.64443.root@cdptpa-web04-z02>
-Sender: linux-raid-owner@vger.kernel.org
-To: p3-500@roadrunner.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4CBC35AE.9050002@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of p3-500@roadrunner.com
-> Sent: Thursday, November 18, 2010 1:51 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Help! I killed my mdadm raid 5
+Hannes Reinecke [hare@suse.de] wrote:
+> > Also (although this might be a bit off topic from your patch),
+> > can we expand such a distinction to what should be logged?
+> > Currently, it's difficult to distinguish important SCSI/block errors
+> > and less important ones in kernel log.
+> > For example, when I get a link failure on sda, kernel prints something
+> > like below, regardless of whether the I/O is recovered by multipathing or not:
+> >   end_request: I/O error, dev sda, sector XXXXX
+> > 
+> Indeed, when using the above we could be modifying the above
+> message, eg by
 > 
-> Arrg, Major goof. I managed to kill my raid 5 through my own stupidity.
-> Here is the chain of events, Your help is greatly appreciated.
+> end_request: transport error, dev sda, sector XXXXX
 > 
-> I added disk #6 to my working 5 disk array, after about 24 hours it was
-> done but i did not see the extra space (I now know all I needed to do was
-> fsck and resize).
+> or
 > 
-> I failed and removed the new disk from the array then somehow also failed
-> and removed drive # 5 from the array. At this point the array was still
-> running so I added drive #5 & 6 back to the array but they got added as
-> spares instead of active components. next I rebooted and could not
-> assemble the array.
+> end_request: target error, dev sda, sector XXXXX
 > 
-> I tried --assemble and --assemble --force which results with "mdadm:
-> /dev/md0 assembled from 4 drives and 1 spare - not enough to start the
-> array". I am naming all 6 drives on the command line.
+> which would improve the output noticeable.
 > 
-> Several posts have suggested I --create the array again but I am hesitant
-> to do this as I do not want to lose my data.
+> > Setting REQ_QUIET in dm-multipath could mask the message
+> > but also other important ones in SCSI.
+> > 
+> Hmm. Not sure about that, but I think the above modifications will
+> be useful already.
+> 
+> I'll be sending an updated patch.
 
-	Yep, that's it.  I would carefully inspect each drive using
---examine to determine its proper place, but the two failed drives are a bit
-of a craps shoot, since you have already overwritten their metafiles.  I
-would assemble the array in read-only mode and then read-only fsck the
-unmounted file system.  IF this passes, the do a read-write fsck.  Finally,
-mount the file system read-only and test the data well before continuing.
-The first file system access should trigger a resync.  When creating the
-array, use the --assume-clean option so no resync will occur.
+Hannes, is there an updated version of this patch? It applied fine with
+Linus git tree with a minor reject! I would like to test an updated
+version if you have one (the update seems to refer to better logging
+only, right?).
 
+Thanks, Malahal.
