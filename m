@@ -1,97 +1,193 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: Device state during an incremental assembly
-Date: Sun, 21 Nov 2010 17:45:22 -0500
-Message-ID: <20101121224522.GA10945@animx.eu.org>
-References: <20101120015225.GA9625@animx.eu.org> <20101121144159.GB29163@animx.eu.org> <20101122075840.1153b020@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
+ / Debian 5.0 - lenny 2.6.26 kernel
+Date: Mon, 22 Nov 2010 10:05:09 +1100
+Message-ID: <20101122100509.76592b59@notabene.brown>
+References: <4C938103.1010304@seoss.co.uk>
+	<20100918085925.5fee83ee@notabene>
+	<4C97BD21.1040405@seoss.co.uk>
+	<4C991D61.1040400@seoss.co.uk>
+	<20100922083039.283ccdfd@notabene>
+	<4CBC9774.6020500@seoss.co.uk>
+	<20101019171650.20c83e7e@notabene>
+	<4CBDC641.9090009@seoss.co.uk>
+	<4CBDC756.7010606@seoss.co.uk>
+	<4CBDF190.2000007@seoss.co.uk>
+	<4CBF5267.7080304@seoss.co.uk>
+	<20101021100429.4879a001@notabene>
+	<4CE56AA9.2010905@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20101122075840.1153b020@notabene.brown>
+In-Reply-To: <4CE56AA9.2010905@seoss.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Sun, 21 Nov 2010 09:41:59 -0500
-> > > Note: if you don't find that there is enough detail in this answer, it
-> > > simply
-> > > reflects the level of detail in the question :-)
-> > 
-> > Next, mdadm -I /dev/sdb1
-> > Still not enough.
-> > Next, mdadm -I /dev/sdc1
-> > At this point, I could start the array in degraded.  This is what I'd like
-> > to beable to query from beneath /sys/block/md0 or some where else.
+On Thu, 18 Nov 2010 18:04:25 +0000
+Tim Small <tim@seoss.co.uk> wrote:
+
+> On 10/21/10 00:04, Neil Brown wrote:
+> >
+> > Maybe you could add a could of global atomic variables, one for reads and one
+> > for writes.
+> > Then on each call to generic_make_request in:
+> >   flush_pending_writes, make_request, raid1d
+> > increment one or the other depending on whether it is a read or a write.
+> > Then in raid1_end_read_request and raid1_end_write_request decrement them
+> > appropriately.
+> >   
 > 
-> Ahh.. In this case the answer is actually "no" - sorry.
+> 
+> Ended up with runs like this:
+> 
+> [  464.244109] 0 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.244109] conf nr_pending is 5
+> [  464.244109] 0 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.244109] 2216: Post wait until no IO waiting - barrier: 0, pend:
+> 5, wait: 0, queued: 0
+> [  464.244113] 2216: Pre wait pending to complete - barrier: 1, pend: 5,
+> wait: 0, queued: 0
+> [  464.244116] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] 5113 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.244469] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.244469] conf nr_pending is 4
+> [  464.244469] 5127 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.246176] In raid1_unplug debug read count: 4 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] conf nr_pending is 3
+> [  464.244469] 5127 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.244469] conf nr_pending is 2
+> [  464.244469] 5127 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.246176] In raid1_unplug debug read count: 2 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.244469] conf nr_pending is 1
+> [  464.244469] 5127 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.246176] In raid1_unplug debug read count: 1 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] 5127 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.244469] conf nr_pending is 0
+> [  464.244469] 5127 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.244469] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246176] 2216: Post wait pending to complete - barrier: 1, pend:
+> 0, wait: 1, queued: 0
+> [  464.246176] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246176] 2216: Pre wait until no IO waiting - barrier: 1, pend: 0,
+> wait: 1, queued: 0
+> [  464.246176] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246176] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246176] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246633] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 1
+> [  464.244469] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246176] In raid1_unplug debug read count: 0 write count: 0
+> conf->nr_queued: 0
+> [  464.246990] 5118 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.244469] 5113 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.244469] In raid1_unplug debug read count: 3 write count: 0
+> conf->nr_queued: 0
+> [  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246990] 5118 Released resync_lock and enabling interrupts for
+> wait_barrier
+> [  464.246176] 2216: Post wait until no IO waiting - barrier: 0, pend:
+> 6, wait: 0, queued: 0
+> [  464.246176] 2216: Pre wait pending to complete - barrier: 1, pend: 6,
+> wait: 0, queued: 0
+> [  464.246176] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.246990] 5118 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246990] In raid1_unplug debug read count: 6 write count: 0
+> conf->nr_queued: 0
+> [  464.247091] 0 Obtaining resync_lock and disabling interrupts for
+> allow_barrier
+> [  464.247091] conf nr_pending is 5
+> [  464.247091] 0 Released resync_lock and enabling interrupts for
+> allow_barrier
+> [  464.247091] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] 5113 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.246176] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.244469] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  464.328828] 3639 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  464.328834] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  466.065137] 2479 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  466.065137] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  467.051970] 2478 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  467.051975] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  471.293667] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  471.525081] 220 Obtaining resync_lock and disabling interrupts for
+> wait_barrier
+> [  471.525081] In raid1_unplug debug read count: 5 write count: 0
+> conf->nr_queued: 0
+> [  505.308962] 2216 WARNING, schedule_timeout timed out for raise_barrier
+> [  505.308076] 5118 WARNING, schedule_timeout timed out for wait_barrier
+> 
+> 
+> ... so does that mean that there are are read requests going awol in the
+> block layer?
+> 
+> If so, then the circumstantial evidence from when the lockups occur make
+> it look to me like this is probably an OpenVZ bug, but I'll try and do
+> some more digging tomorrow...
+> 
+> Does that make sense?
 
-Ok, I wasn't sure so I figured I'd ask.
+Yes.  Superficially, it appears that there are still 5 outstanding read
+requests that are not being completed.   I cannot guess how OpenVZ would
+cause that, but I don't really know much about OpenVZ.
 
-> The answer is a non-trivial function of:
->   the raid level
->   the number of available non-spare devices
->   (for raid10) which slots the available non-spare devices fill.
+NeilBrown
 
-I've tested only on raid5 at the moment.
-
-> All of this information is available in sysfs, and mdadm has code to perform
-> the computation and then take appropriate action.  But there is no simple way
-> to get this information.
-
-For this environment, I'm limited to what busybox and it's ash can do.
-
-> Why do you want this information?  What action will you take depending on the
-> answer?
-
-I'm building an initramfs for myself that can be thrown at any of my systems
-and "just work" (and w/o using modules so that it'll work with most kernels).
-
-I was reading in the kernel md.txt that there is a start degraded
-option.  I wanted a way to prompt the user (or have a parameter on boot)
-that would do this.  After reading it, I really wouldn't want to just enable
-that since it was for dirty and degraded.
-
-> If you just want mdadm to assemble as soon a a degraded array is possible,
-> just use "mdadm -IR" - but I suspect you already know that.
-
-Sort of, but I didn't think of -I and -R together.  Another question on
-that.  If I have /sys/module/md_mod/parameters/start_ro set to 1, I use
--IR with each device, will a resync happen once all devices show up?
-
-IE:
-mdadm -IR /dev/sda1
-mdadm -IR /dev/sdb1
-mdadm -IR /dev/sdc1
-At this point it would be running in degraded (start_ro = 1).
-mdadm -IR /dev/sdd1
-Does a resync happen here?  (assume there's no bitmap)
-
-> > And of course, mdadm -I /dev/sdd1
-> > makes the array fully active.
-> > 
-> > P.S. cantor2.suse.de[195.135.220.15] does pipelining even if pipelining
-> > wasn't performed.
-> I'm guessing this is a statement about SMTP? This would be why I got a bounce
->  <wakko@animx.eu.org>: host veg.animx.eu.org[76.7.162.186] said: 554 SMTP
->     synchronization error (in reply to MAIL FROM command)
-> to my original mail.
-
-Yes, w/o pipelining, MAIL command must not be sent without waiting for the
-status code from the previous command (or initial connect).  I'm actually
-surprised that postfix did that.
-
-> I guess suse.de is not being conservative in what it sends, and animx is not
-> being liberal in what it accepts...  Do you know what mail system is in use
-> on animx??
-
-I run both servers.  It hit my primary and rDNS wasn't available (temp
-fail), so it hit my secondary and rDNS passed, but that system was
-configured not to advertise pipelining due to some poorly setup systems that
-had broken pipelining and had SMTP errors at the same time.  Both servers
-use exim.
-
--- 
- Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
- million bugs.
