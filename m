@@ -1,35 +1,33 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: raid6 failed due to loss of connection
-Date: Sat, 20 Nov 2010 06:37:44 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1011200635460.1154@uplift.swm.pp.se>
-References: <4CE66E99.6050806@smarteye.se>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Device state during an incremental assembly
+Date: Sun, 21 Nov 2010 17:19:48 +1100
+Message-ID: <20101121171948.4b793254@notabene.brown>
+References: <20101120015225.GA9625@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1880971805-1290231408=:1154"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CE66E99.6050806@smarteye.se>
+In-Reply-To: <20101120015225.GA9625@animx.eu.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Bj=F6rn_Englund?= <be@smarteye.se>
+To: Wakko Warner <wakko@animx.eu.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, 19 Nov 2010 20:52:25 -0500
+Wakko Warner <wakko@animx.eu.org> wrote:
 
----137064504-1880971805-1290231408=:1154
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
+> I am not on this list, please always CC me.
+> 
+> Is there anyway to determine the array state after incrementally adding a
+> device?  I was hoping to find something in /sys but I was unable to.  I was
+> trying not to parse the output of mdadm for each invocation.
+> 
 
-On Fri, 19 Nov 2010, Björn Englund wrote:
+Yes.
 
-> Should I try mdadm -A -f /dev/md12 or do I need to run a create command 
-> to get the array up and running?
 
-Doing a create is always the last measure to try. Forcing re-assembly is a 
-gazillion times safer because you can't get the data-disks in wrong order.
 
-Make sure you have the latest mdadm (3.1.4 I believe) and force-assemble 
-the array and see if that works.
+Note: if you don't find that there is enough detail in this answer, it simply
+reflects the level of detail in the question :-)
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1880971805-1290231408=:1154--
+NeilBrown
