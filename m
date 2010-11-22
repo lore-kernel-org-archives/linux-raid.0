@@ -1,40 +1,71 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Devel 3.2 branch issues
-Date: Mon, 22 Nov 2010 10:47:31 -0800
-Message-ID: <4CEABAC3.5050602@intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>	<20101117212242.5ad7b210@notabene.brown>	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE90089@irsmsx504.ger.corp.intel.com> <20101122142953.7934c8ca@notabene.brown>  <905EDD02F158D948B186911EB64DB3D174BA8CE8@irsmsx503.ger.corp.intel.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: Devel 3.2 branch issues
+Date: Mon, 22 Nov 2010 22:39:00 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BF03CC6@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D174BA8CE8@irsmsx503.ger.corp.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 11/22/2010 9:18 AM, Labun, Marcin wrote:
->> - the getinfo_super_disks method.  I couldn't see why you need this.
->> All the
->>    info about the state of the arrays should already be available.
->>    If there is something that you need that we don't have, please
->> explain and
->>    we can see how best to add it back in.
->
-> For external metadata we have added a metadata handler to get a disk state (a spare or not a spare) based on current metadata state on disk.
-> Ioctl(GET_DISK_INFO) does not have a disk state info for containers (returns 0 - so we don't know if it is a spare or a failed disk).
-> We know that a disk is an array member based on check its state in the array.
 
-I'm still catching up on the devel-3.2 getinfo/load_super reworks, but I 
-think this info would probably fit into the new 'map' parameter of 
-getinfo_super().  Spares can be indicated as 'working' in the map.  I.e. 
-if map returns 1 for a container member and that disk is not currently 
-in use in a subarray then we can assume it is a spare at the container 
-level.
+> by the way, some of the changes in you of the patches you sent have not
+> been
+> included in any form.  They include:
+> 
+> - the getinfo_super_disks method.  I couldn't see why you need this.
+> All the
+>   info about the state of the arrays should already be available.
+>   If there is something that you need that we don't have, please
+> explain and
+>   we can see how best to add it back in.
 
-Alternatively we could just return 2 in the map to indicate spare, but I 
-think in the locations we care about we already know that it is not 
-currently in use in a subarray.
+Marcin has already answered this but here is my explanation.
+Current test devstate[i]==0 is always true for container so any device seems a good candidate to move.
+To be able to identify members, failed devices and real spares we updated devstate for containers.
+To find members we can just check which disks are used in subarrays, but a failed disk is removed from subarray after a short while and as soon as it happens we are not able to see a difference between the failed disk and a spare unless we look at metadata. 
 
---
-Dan
+> - min_active_disk_size_in_array.  I don't think the minimum current
+> size is
+>   really a good guide.  I've kept the code for letting the metadata
+> handler
+>   check the size, but anything beyond that should be done with domains
+> I
+>   think.
+>   E.g have a domain '2G-or-greater' which is assigned to all 2G or
+> greater
+>   devices.  Then anything smaller will automatically be excluded from
+> arrays
+>   with those devices.
+ 
+So if someone doesn't base domains on size they may have a small spare added to an array where it cannot be used. 
+Min_active_disk_size was more than required for an array that didn't occupy the whole disk but at least it ensured that we are not throwing in something that wouldn't help. If we do this the array will remain degraded but will have spare - so Monitor may think it does not need more.
+For this reason we also checked the case when there was a spare in "to" container. If the spare was not suitable (size check here too) we would still look for a good one. 
+
+And now back to assembly. There is still a segmentation fault when we try to assemble a subarray. Occurs when there is any config file and we run "mdadm -As" or "mdadm -Asc /etc/mdadm.conf". content is NULL when we try to compare uuid in line 413 in Assemble.c.
+We are going to prepare some tests to add to current suite so it will be easier to verify new patches. 
+
+Regards
+Anna
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
