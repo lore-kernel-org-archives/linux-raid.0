@@ -1,318 +1,123 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Superblocks out-of-sync on a RAID5 array
-Date: Tue, 23 Nov 2010 00:09:29 +0100
-Message-ID: <1290467369.28581.14.camel@michal-laptop.sawicz.net>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: Autorebuild, new dynamic udev rules for hot-plugs
+Date: Mon, 22 Nov 2010 23:50:04 +0000
+Message-ID: <66C59AD0932712458090B447266D638C0109E6AE6C@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
+	<20101117212242.5ad7b210@notabene.brown>
+	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
+	<66C59AD0932712458090B447266D638C0109E0E1E7@irsmsx504.ger.corp.intel.com>
+ <20101122160201.24ad85f8@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fpfzryuRZXcMYIxUDDHt"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101122160201.24ad85f8@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-
---=-fpfzryuRZXcMYIxUDDHt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
 Hi,
-I have recovered (forced assembly) my array after some power issues and
-it works quite fine (parity and fsck are fine), except for the fact
-superblocks seem to be out of sync...
 
-/proc/mdstat says:
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Neil Brown
+> Sent: Monday, November 22, 2010 6:02 AM
+> To: Hawrylewicz Czarnowski, Przemyslaw
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
+> Ciechanowski, Ed; Labun, Marcin; Czarnowska, Anna
+> Subject: Re: Autorebuild, new dynamic udev rules for hot-plugs
+> 
+> On Fri, 19 Nov 2010 15:12:19 +0000
+> "Hawrylewicz Czarnowski, Przemyslaw"
+> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+> 
+> > Hi,
+> >
+> > I would like to present another patch for our autorebuild tree (it should
+> be applied on the top of Autorebuild series, as devel-3.2 is not stable
+> yet). Dan Williams proposed to reduce overhead associated with passing each
+> hot-plugged block device to mdadm, using just the devices described in
+> policies via mdadm.conf file.
+> > See patch below for details, comments are as always very welcome.
+> 
+> I am in general in favour of this approach.
+> It has the benefit that it can very easily be not-used if there turn out to
+> be problems with it.
+> 
+> Four comments.
+> 
+> 1/ I wouldn't write a file in /lib/udev/rules.d/
+>   I think it should be written to "/dev/.udev/rules.d/"
+>   which is referred to as the "temporary rules directory"
+>   in the udev documentation.
+I am not sure if it is what we are looking for. Temporary means they disappear after reboot. It is OK as cold-plug does not need support for bare disks (or maybe I am wrong?). But in such case, one who wants to use autorebuild should invoke mdadm --activate-domains for example in /etc/init.d/local.boot or somewhere else. Second idea here is to use ActivateDomain() when one starts monitor with autorebuild enabled. Which one? I would prefer to leave it as it was written initially (considering comment #4). Then, if one removes policies from config, invoking --activate-domains should reset/remove rules (but see #3)
 
-> md2 : active raid5 sdf1[9](S) sdj1[0] sdb1[8] sdd1[5] sda1[7] sde1[3] sdc=
-1[2] sdh1[4]
->       5860558848 blocks super 1.1 level 5, 256k chunk, algorithm 2 [7/7] =
-[UUUUUUU]
+> 
+> 2/ I would be good to process the type=disk or type=part part of the
+>    policy into the rules file as well.
+OK
 
-And that's correct - 7 active devices and one spare. Superblocks for
-sdb1 and sdf1 (spare) look fine, too, totaling at 6TB, except they're
-both marked as spares... event count and checksums are also off...:
+> 
+> 3/ I'm not very comfortable with hard-coding the name of the
+>    file to be created in the rules.d directory.  Maybe usage could be
+>       --activate-domains=63-md-whatever
+Good idea, but only if we store our rules in /dev/.udev/rules.d. Otherwise it would be difficult to maintain all generated rules and remove the old ones... I would leave default if not given by user, but one can pass any file name.
 
-> /dev/sdb1:
->           Magic : a92b4efc
->         Version : 1.1
->     Feature Map : 0x0
->      Array UUID : 9ce41f94:7489a7f2:6897e4b5:269c8b3b
->            Name : media:2  (local to host media)
->   Creation Time : Sun Jan 24 22:32:58 2010
->      Raid Level : raid5
->    Raid Devices : 7
->=20
->  Avail Dev Size : 1953519738 (931.51 GiB 1000.20 GB)
->      Array Size : 11721117696 (5589.06 GiB 6001.21 GB)
->   Used Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
->     Data Offset : 264 sectors
->    Super Offset : 0 sectors
->           State : clean
->     Device UUID : ee806dee:ccd5281f:733506c5:6db54b07
->=20
->     Update Time : Mon Nov 22 23:53:38 2010
->        Checksum : a0e54380 - correct
->          Events : 4325711
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->    Device Role : spare
->    Array State : AAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
-> /dev/sdf1:
->           Magic : a92b4efc
->         Version : 1.1
->     Feature Map : 0x0
->      Array UUID : 9ce41f94:7489a7f2:6897e4b5:269c8b3b
->            Name : media:2  (local to host media)
->   Creation Time : Sun Jan 24 22:32:58 2010
->      Raid Level : raid5
->    Raid Devices : 7
->=20
->  Avail Dev Size : 1953519738 (931.51 GiB 1000.20 GB)
->      Array Size : 11721117696 (5589.06 GiB 6001.21 GB)
->   Used Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
->     Data Offset : 264 sectors
->    Super Offset : 0 sectors
->           State : active
->     Device UUID : 97945e4f:9f439aec:951cb289:47862ad7
->=20
->     Update Time : Mon Nov 22 23:53:38 2010
->        Checksum : 63d27cf9 - correct
->          Events : 4325710
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->    Device Role : spare
->    Array State : AAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
+> 
+> 4/ I don't think it is good to have an incomplete file in rules.d that udev
+>    might accidentally read.  We should create the file with a name with a
+>    leading '.' (assuming udev ignores those, I haven't checked) and then
+>    rename it after it has been completely written.
+You're right. In theory, such partial udev rules are excluded when udev can't interpret them properly. I have looked into udev's sources and found that it looks for "*.rules" files. All other file extensions are ignored. Files with leading dots are also omitted. I would prefer to create <name>.temp file and then rename it into <name>.rules.
 
-The rest are clearly wrong, must even be from an array that was there
-earlier (like two years ago!) on these devices:
+> 
+> Other than that, it looks pretty good.
+Great
 
-> /dev/sda1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a20a8 - expected 299a2120
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     5       8      177        5      active sync
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-> /dev/sdc1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a208a - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     2       8       33        2      active sync   /dev/sdc1
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-> /dev/sdd1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a20a0 - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     5       8       49        5      active sync   /dev/sdd1
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-> /dev/sde1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a20ac - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     3       8       65        3      active sync   /dev/sde1
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-> /dev/sdh1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a20d8 - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     1       8      113        1      active sync   /dev/sdh1
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-> /dev/sdj1:
->           Magic : a92b4efc
->         Version : 0.90.00
->            UUID : eadb0d2c:827ea119:462a36bb:f8f383a4 (local to host medi=
-a)
->   Creation Time : Fri Nov 12 21:00:47 2010
->      Raid Level : raid5
->   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
->      Array Size : 4883799040 (4657.55 GiB 5001.01 GB)
->    Raid Devices : 6
->   Total Devices : 6
-> Preferred Minor : 2
->=20
->     Update Time : Fri Nov 12 21:00:47 2010
->           State : clean
->  Active Devices : 6
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 0
->        Checksum : 299a20f6 - correct
->          Events : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 256K
->=20
->       Number   Major   Minor   RaidDevice State
-> this     0       8      145        0      active sync   /dev/sdj1
->=20
->    0     0       8      145        0      active sync   /dev/sdj1
->    1     1       8      113        1      active sync   /dev/sdh1
->    2     2       8       33        2      active sync   /dev/sdc1
->    3     3       8       65        3      active sync   /dev/sde1
->    4     4       8       81        4      active sync   /dev/sdf1
->    5     5       8       49        5      active sync   /dev/sdd1
-
-Can anyone please tell me what's going on here? Should I worry? How can
-I make the superblocks contain proper data again? Should I recreate the
-array with --zero-superblock --assume-clean or is there some less
-dangerous way?
-
-Best regards
---=20
-Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
-
---=-fpfzryuRZXcMYIxUDDHt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
-
-iEYEABECAAYFAkzq+CkACgkQzQlUjpZYlbcNPACg0u8XNYsJn21YDrkhLZXb/ueK
-TewAnjUciX+R0e8t3Cu9FTqKaPrh1wYf
-=DrBl
------END PGP SIGNATURE-----
-
---=-fpfzryuRZXcMYIxUDDHt--
-
+> 
+> Thanks,
+> NeilBrown
+> 
+> >
+> > Date: Thu, 18 Nov 2010 01:19:52 +0100
+> > Subject: [PATCH] New dynamic hot-plug udev rules for policies
+> >
+> > When introducing policies, new hot-plug rules were added to support
+> > bare disks. Mdadm was started for each hot plugged block device
+> > to determine if it could be used as spare or as a replacement member for
+> > degraded array.
+> > This patch introduces limitation of range of devices that are handled
+> > by mdadm. It limits them to the ones specified in domains associated
+> > with the actions: spare-same-port, spare and spare-force.
+> > In order to enable hot-plug for bare disks one must update udev rules
+> > with command
+> >
+> > 	mdadm --activate-domains
+> >
+> > After mdadm.conf is changed one is obliged to re-run
+> > "mdadm --activate-domains" command in order to bring the system
+> > configuration up to date.
+> > All hot-plugged disks containing metadata are still handled by existing
+> > rules.
+> >
+> > Note: this patch is just a proposition to minimize overhead of using
+> mdadm for
+> > each plugged block device. If accepted, it will be incorporated in
+> > previous implementation of hot-plug for bare disks.
+> >
+> > Signed-off-by: Przemyslaw Czarnowski
+> <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> > ---
+> >  Makefile           |    2 +
+> >  ReadMe.c           |    1 +
+> >  mdadm.c            |    4 ++
+> >  mdadm.h            |    9 +++-
+> >  policy.c           |  137
+> ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  udev-md-raid.rules |    5 +-
+> >  6 files changed, 154 insertions(+), 4 deletions(-)
+> >
+[cut]
