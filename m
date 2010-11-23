@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 03/21] imsm: FIX: imsm_check_reshape_conditions change ret_val
-Date: Tue, 23 Nov 2010 13:40:02 +0100
-Message-ID: <20101123124001.17770.35323.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 04/21] FIX: Use MDADM_EXPERIMENTAL environment variable
+Date: Tue, 23 Nov 2010 13:40:09 +0100
+Message-ID: <20101123124009.17770.77913.stgit@gklab-170-024.igk.intel.com>
 References: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,70 +13,91 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Put information to return variable (ret_val) in more clear way.
-manage_reshape will always unfreeze container
-and this will not base on return value as it has to be always unfrozen,
-on success and on error.
+Instead 'EXPERIMENTAL' compilation flag, use 'MDADM_EXPERIMENTAL'
+environment variable to enable features.
+Function experimental was put to util.c for reuse.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- mdadm/mdadm/super-intel.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+ mdadm/mdadm/mdadm.h       |    1 +
+ mdadm/mdadm/super-intel.c |   18 ++----------------
+ mdadm/mdadm/util.c        |   10 ++++++++++
+ 3 files changed, 13 insertions(+), 16 deletions(-)
 
+diff --git a/mdadm/mdadm/mdadm.h b/mdadm/mdadm/mdadm.h
+index c722475..844c354 100644
+--- a/mdadm/mdadm/mdadm.h
++++ b/mdadm/mdadm/mdadm.h
+@@ -970,6 +970,7 @@ extern int read_attr(char *buf, int len, int fd);
+ extern int read_dev_state(int fd);
+ extern int find_array_minor(char *text_version, int external, int *minor);
+ extern int find_array_minor2(char *text_version, int external, int *minor);
++extern inline int experimental(void);
+ 
+ extern void free_line(char *line);
+ extern int match_oneof(char *devices, char *devname);
 diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c
-index f628c2c..b58eb5f 100644
+index b58eb5f..1005595 100644
 --- a/mdadm/mdadm/super-intel.c
 +++ b/mdadm/mdadm/super-intel.c
-@@ -7969,7 +7969,7 @@ exit_imsm_check_reshape_conditions:
+@@ -195,16 +195,6 @@ struct bbm_log {
+ static char *map_state_str[] = { "normal", "uninitialized", "degraded", "failed" };
+ #endif
  
- int imsm_manage_container_reshape(struct supertype *st)
- {
--	int ret_val = 0;
-+	int ret_val = 1;
- 	char buf[PATH_MAX];
- 	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb = super->anchor;
-@@ -8028,12 +8028,10 @@ int imsm_manage_container_reshape(struct supertype *st)
- 	find_array_minor(info2.name, 1, &current_array);
- 	if (current_array < 0) {
- 		dprintf("imsm. Error.Cannot get first array.\n");
--		ret_val = 1;
- 		goto imsm_manage_container_reshape_exit;
- 	}
- 	if (imsm_check_reshape_conditions(fd, st, current_array)) {
- 		dprintf("imsm. Error. Wrong reshape conditions.\n");
--		ret_val = 1;
- 		goto imsm_manage_container_reshape_exit;
- 	}
- 	raid_disks = info2.array.raid_disks;
-@@ -8128,6 +8126,7 @@ int imsm_manage_container_reshape(struct supertype *st)
- 			close(fd2);
- 			if (ret_val) {
- 				dprintf("Reshape is broken (cannot reshape)\n");
-+				ret_val = 1;
- 				goto imsm_manage_container_reshape_exit;
- 			}
- 			current_array = -1;
-@@ -8156,6 +8155,7 @@ int imsm_manage_container_reshape(struct supertype *st)
+-static inline int experimental(void)
+-{
+-#ifdef EXPERIMENTAL
+-	return 1;
+-#else
+-	fprintf(stderr, Name "(IMSM): To use this feature EXPERIMENTAL compilation flag has to be used.\n");
+-	return 0;
+-#endif
+-}
+-
+ #define UNIT_SRC_NORMAL     0   /* Source data for curr_migr_unit must
+ 				 *  be recovered using srcMap */
+ #define UNIT_SRC_IN_CP_AREA 1   /* Source data for curr_migr_unit has
+@@ -7253,10 +7243,8 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 	dprintf("\tfor level      : %i\n", level);
+ 	dprintf("\tfor raid_disks : %i\n", raid_disks);
  
- 						if (imsm_check_reshape_conditions(fd, st, current_array)) {
- 							dprintf("imsm. Error. Wrong reshape conditions.\n");
-+							ret_val = 1;
- 							current_array = -1;
- 						}
- 					} else
-@@ -8205,8 +8205,10 @@ int imsm_manage_reshape(struct supertype *st, char *backup)
+-	if (experimental() == 0) {
+-		dprintf("imsm: Error: Operation not supported without EXPERIMENTAL compilaton flag.\n");
++	if (experimental() == 0)
  		return ret_val;
- 	}
- 	ret_val = imsm_manage_container_reshape(st);
--	if (ret_val)
--		unfreeze_container(st);
-+	/* unfreeze on error and success
-+	 * for any result this is end of work
-+	 */
-+	unfreeze_container(st);
+-	}
  
- 	return ret_val;
+ 	snprintf(buf, PATH_MAX, "/dev/md%i", st->devnum);
+ 	fd = open(buf , O_RDONLY | O_DIRECT);
+@@ -8192,10 +8180,8 @@ int imsm_manage_reshape(struct supertype *st, char *backup)
+ 
+ 	dprintf("imsm: manage_reshape() called\n");
+ 
+-	if (experimental() == 0) {
+-		dprintf("imsm: Error: Operation not supported without EXPERIMENTAL compilaton flag.\n");
++	if (experimental() == 0)
+ 		return ret_val;
+-	}
+ 
+ 	/* verify reshape conditions
+ 	 * for single vlolume reshape exit only and reuse Grow_reshape() code
+diff --git a/mdadm/mdadm/util.c b/mdadm/mdadm/util.c
+index 58ba6f0..d176ec0 100644
+--- a/mdadm/mdadm/util.c
++++ b/mdadm/mdadm/util.c
+@@ -2010,3 +2010,13 @@ int find_array_minor2(char *text_version, int external, int *minor)
+ 	}
+ 	return result;
  }
++
++inline int experimental(void)
++{
++	if (check_env("MDADM_EXPERIMENTAL"))
++		return 1;
++	else {
++		fprintf(stderr, Name "(IMSM): To use this feature MDADM_EXPERIMENTAL enviroment variable has to defined.\n");
++		return 0;
++	}
++}
 
