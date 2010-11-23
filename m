@@ -1,97 +1,187 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Autorebuild, new dynamic udev rules for hot-plugs
-Date: Tue, 23 Nov 2010 16:27:54 +1100
-Message-ID: <20101123162754.081dd804@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
-	<20101117212242.5ad7b210@notabene.brown>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
-	<66C59AD0932712458090B447266D638C0109E0E1E7@irsmsx504.ger.corp.intel.com>
-	<20101122160201.24ad85f8@notabene.brown>
-	<66C59AD0932712458090B447266D638C0109E6AE6C@irsmsx504.ger.corp.intel.com>
-	<4CEB06BD.9090407@intel.com>
-	<20101123121725.09378dc8@notabene.brown>
-	<4CEB4B47.10504@intel.com>
+Subject: Re: [PATCH 13/13] External reshape (step 2): Freeze container
+Date: Tue, 23 Nov 2010 17:11:25 +1100
+Message-ID: <20101123171125.0e71f3f1@notabene.brown>
+References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
+	<20101118092308.29508.21225.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CEB4B47.10504@intel.com>
+In-Reply-To: <20101118092308.29508.21225.stgit@gklab-170-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
+To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Mon, 22 Nov 2010 21:04:07 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
+On Thu, 18 Nov 2010 10:23:08 +0100
+Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
 
-> On 11/22/2010 5:17 PM, Neil Brown wrote:
-> > On Mon, 22 Nov 2010 16:11:41 -0800
-> > Dan Williams<dan.j.williams@intel.com>  wrote:
-> >
-> >> On 11/22/2010 3:50 PM, Hawrylewicz Czarnowski, Przemyslaw wrote:
-> >>>> Four comments.
-> >>>>
-> >>>> 1/ I wouldn't write a file in /lib/udev/rules.d/
-> >>>>     I think it should be written to "/dev/.udev/rules.d/"
-> >>>>     which is referred to as the "temporary rules directory"
-> >>>>     in the udev documentation.
-> >>> I am not sure if it is what we are looking for. Temporary means they disappear after reboot. It is OK as cold-plug does not need support for bare disks (or maybe I am wrong?). But in such case, one who wants to use autorebuild should invoke mdadm --activate-domains for example in /etc/init.d/local.boot or somewhere else. Second idea here is to use ActivateDomain() when one starts monitor with autorebuild enabled. Which one? I would prefer to leave it as it was written initially (considering comment #4). Then, if one removes policies from config, invoking --activate-domains should reset/remove rules (but see #3)
-> >>
-> >> The intent was always to have this be something reinitialized at boot.
-> >> Putting these in the temporary rule directory also precludes them from
-> >> being added to the initramfs where they are not needed / potentially
-> >> confusing.
-> >>
-> >> The other intent was to only match the pci paths for the controllers we
-> >> cared about.  That does not appear to be a part of this patch.
-> >
-> > Can you define "we cared about".  Don't we care about everything listed in
-> > mdadm.conf??
+> From: Dan Williams <dan.j.williams@intel.com>
 > 
-> A hot plug event outside of ahci (in raid mode), or the upcoming isci 
-> driver needs to be ignored and an error thrown on activate if we can 
-> unambiguously determine that the domain defines firmware unreachable 
-> devices.
+> When growing the number of raid disks the reshape process will promote
+> container-spares to subarray-spares (later the kernel promotes them to
+> subarray-members in raid5_start_reshape()).  The automatic spare
+> promotion that mdmon performs upon seeing a degraded array must be
+> disabled until the reshape process has been initiated.  Otherwise, mdmon
+> may start a rebuild before the reshape parameters can be specified.
+> 
+> In the external case we arrange for the monitor to be blocked, and turn off the safemode delay.
+> Mdmon is updated to check sync_action is not frozen before initiating
+> recovery.  This introduces a need to check which version of mdmon is
+> running to be sure it honors the expected semantics.  Extend
+> ping_monitor() to report the version of mdmon.  This also permits
+> discrimination of known buggy mdmon implementations in the future.
+> Note, it's not enough to know the current version of mdadm because the
+> mdmon instance may have originated from the initrd, so there is no
+> guaratee that mdadm and mdmon versions are synchronized.
 
+I have applied this, and all the others that I didn't raise explicit issues
+with (which I think was only 
+    [PATCH 07/13] Grow: add missing raid4 geometries to geo_map()
 
-I can agree that a hot plug event for a non-firmware-reachable device should
-not cause that device to be added to an imsm array.  But the domain setting
-should stop that happening already.
+and I have pushed out a new devel-3.2
 
-I don't agree (as I *think* you are saying) that hot plug events on such
-devices should be completely ignored by mdadm.  But as I am very surprised
-that you would say that, I suspect I'm misunderstanding.
-
-
+Thanks,
 NeilBrown
 
 
-
-
 > 
-> The IMSM_NO_PLATFORM debug environment variable can override this 
-> behavior, or in the ahci case you can run in raid disabled mode.  I need 
-> to check if the same raid disabled case holds for isci.
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  Grow.c |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++--------------
+>  1 files changed, 69 insertions(+), 19 deletions(-)
 > 
-> >
-> > We could avoid both these issues by just writing the new rules file to stdout.
-> > When when the init script gets it wrong, it isn't our fault :-)
-> >
-> > But I don't really like that.  At least there should be a simple and uniform
-> > way to propagate any mdadm.conf changes into udev.
-> >
-> > Maybe the name of the rules file should be given in mdadm.conf, and e.g.
-> >    mdadm --check-config
-> > would report any syntax errors, report any inconsistencies with current
-> > arrays, and update the udev file if necessary..
-> >
-> > Maybe leave that for 3.2.1, and just support '--activate-domains=filename'
-> > for now.
-> >
-> > ???
-> 
-> A more generic mdadm.conf checker sounds like a good idea in general.
-> 
-> --
-> Dan
+> diff --git a/Grow.c b/Grow.c
+> index 59032ef..4139265 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -432,29 +432,78 @@ static int child_same_size(int afd, struct mdinfo *sra, unsigned long blocks,
+>  			   int disks, int chunk, int level, int layout, int data,
+>  			   int dests, int *destfd, unsigned long long *destoffsets);
+>  
+> -static int freeze_array(struct mdinfo *sra)
+> +static int freeze_container(struct supertype *st)
+>  {
+> -	/* Try to freeze resync on this array.
+> +	int container_dev = st->subarray[0] ? st->container_dev : st->devnum;
+> +	char *container = devnum2devname(container_dev);
+> +
+> +	if (!container) {
+> +		fprintf(stderr, Name
+> +			": could not determine container name, freeze aborted\n");
+> +		return -2;
+> +	}
+> +
+> +	if (block_monitor(container, 1)) {
+> +		fprintf(stderr, Name ": failed to freeze container\n");
+> +		return -2;
+> +	}
+> +
+> +	return 1;
+> +}
+> +
+> +static void unfreeze_container(struct supertype *st)
+> +{
+> +	int container_dev = st->subarray[0] ? st->container_dev : st->devnum;
+> +	char *container = devnum2devname(container_dev);
+> +
+> +	if (!container) {
+> +		fprintf(stderr, Name
+> +			": could not determine container name, unfreeze aborted\n");
+> +		return;
+> +	}
+> +
+> +	unblock_monitor(container, 1);
+> +}
+> +
+> +static int freeze(struct supertype *st)
+> +{
+> +	/* Try to freeze resync/rebuild on this array/container.
+>  	 * Return -1 if the array is busy,
+> +	 * return -2 container cannot be frozen,
+>  	 * return 0 if this kernel doesn't support 'frozen'
+>  	 * return 1 if it worked.
+>  	 */
+> -	char buf[20];
+> -	if (sysfs_get_str(sra, NULL, "sync_action", buf, 20) <= 0)
+> -		return 0;
+> -	if (strcmp(buf, "idle\n") != 0 &&
+> -	    strcmp(buf, "frozen\n") != 0)
+> -		return -1;
+> -	if (sysfs_set_str(sra, NULL, "sync_action", "frozen") < 0)
+> -		return 0;
+> -	return 1;
+> +	if (st->ss->external)
+> +		return freeze_container(st);
+> +	else {
+> +		struct mdinfo *sra = sysfs_read(-1, st->devnum, GET_VERSION);
+> +		int err;
+> +
+> +		if (!sra)
+> +			return -1;
+> +		err = sysfs_freeze_array(sra);
+> +		sysfs_free(sra);
+> +		return err;
+> +	}
+>  }
+>  
+> -static void unfreeze_array(struct mdinfo *sra, int frozen)
+> +static void unfreeze(struct supertype *st, int frozen)
+>  {
+>  	/* If 'frozen' is 1, unfreeze the array */
+> -	if (frozen > 0)
+> -		sysfs_set_str(sra, NULL, "sync_action", "idle");
+> +	if (frozen <= 0)
+> +		return;
+> +
+> +	if (st->ss->external)
+> +		return unfreeze_container(st);
+> +	else {
+> +		struct mdinfo *sra = sysfs_read(-1, st->devnum, GET_VERSION);
+> +
+> +		if (sra)
+> +			sysfs_set_str(sra, NULL, "sync_action", "idle");
+> +		else
+> +			fprintf(stderr, Name ": failed to unfreeze array\n");
+> +		sysfs_free(sra);
+> +	}
+>  }
+>  
+>  static void wait_reshape(struct mdinfo *sra)
+> @@ -818,19 +867,21 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			array.level = LEVEL_CONTAINER;
+>  			sra->array.level = LEVEL_CONTAINER;
+>  		}
+> -		frozen = freeze_array(sra);
+>  	} else {
+>  		fprintf(stderr, Name ": failed to read sysfs parameters for %s\n",
+>  			devname);
+>  		return 1;
+>  	}
+> -	if (frozen < 0) {
+> +	frozen = freeze(st);
+> +	if (frozen < -1) {
+> +		/* freeze() already spewed the reason */
+> +		return 1;
+> +	} else if (frozen < 0) {
+>  		fprintf(stderr, Name ": %s is performing resync/recovery and cannot"
+>  			" be reshaped\n", devname);
+>  		return 1;
+>  	}
+>  
+> -
+>  	/* ========= set size =============== */
+>  	if (size >= 0 && (size == 0 || size != array.size)) {
+>  		long long orig_size = array.size;
+> @@ -1611,8 +1662,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  		if (c && sysfs_set_str(sra, NULL, "level", c) == 0)
+>  			fprintf(stderr, Name ": aborting level change\n");
+>  	}
+> -	if (sra)
+> -		unfreeze_array(sra, frozen);
+> +	unfreeze(st, frozen);
+>  	return rv;
+>  }
+>  
 
