@@ -1,69 +1,58 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 03/13] Manage: allow manual control of external raid0
- readonly flag
-Date: Tue, 23 Nov 2010 15:08:22 +1100
-Message-ID: <20101123150822.32e0322a@notabene.brown>
+Subject: Re: [PATCH 07/13] Grow: add missing raid4 geometries to geo_map()
+Date: Tue, 23 Nov 2010 15:16:32 +1100
+Message-ID: <20101123151632.1ee99cc5@notabene.brown>
 References: <20101118080359.29508.50648.stgit@gklab-170-111.igk.intel.com>
-	<20101118092145.29508.68627.stgit@gklab-170-111.igk.intel.com>
+	<20101118092217.29508.33761.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101118092145.29508.68627.stgit@gklab-170-111.igk.intel.com>
+In-Reply-To: <20101118092217.29508.33761.stgit@gklab-170-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 18 Nov 2010 10:21:45 +0100
+On Thu, 18 Nov 2010 10:22:17 +0100
 Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
 
 > From: Dan Williams <dan.j.williams@intel.com>
 > 
-> mdadm --readwrite <subarray> will clear the external readonly flag ('-'
-> to '/'), but only for redudant arrays.  Allow raid0 arrays as well so
-> the user has a simple helper to control this flag.
+> They are equivalent to their raid5 versions and let the reshape code
+> optionally use either.
 > 
 > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  Manage.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+>  restripe.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> diff --git a/Manage.c b/Manage.c
-> index 6e9d4a0..ac9415b 100644
-> --- a/Manage.c
-> +++ b/Manage.c
-> @@ -56,7 +56,6 @@ int Manage_ro(char *devname, int fd, int readonly)
->  	mdi = sysfs_read(fd, -1, GET_LEVEL|GET_VERSION);
->  	if (mdi &&
->  	    mdi->array.major_version == -1 &&
-> -	    mdi->array.level > 0 &&
->  	    is_subarray(mdi->text_version)) {
->  		char vers[64];
->  		strcpy(vers, "external:");
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/restripe.c b/restripe.c
+> index 3074693..c2fbe5b 100644
+> --- a/restripe.c
+> +++ b/restripe.c
+> @@ -46,6 +46,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
+>  	switch(level*100 + layout) {
+>  	case 000:
+>  	case 400:
+> +	case 400 + ALGORITHM_PARITY_N:
+>  	case 500 + ALGORITHM_PARITY_N:
+>  		/* raid 4 isn't messed around by parity blocks */
+>  		if (block == -1)
+> @@ -75,6 +76,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
+>  		if (block == -1) return pd;
+>  		return (pd + 1 + block) % raid_disks;
+>  
+> +	case 400 + ALGORITHM_PARITY_0:
+>  	case 500 + ALGORITHM_PARITY_0:
+>  		return block + 1;
+>  
 
-I've added:
-diff --git a/Manage.c b/Manage.c
-index 919dc01..a203ec9 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -87,6 +87,8 @@ int Manage_ro(char *devname, int fd, int readonly)
- 			if (*cp)
- 				*cp = 0;
- 			ping_monitor(vers+10);
-+			if (mdi->array.level <= 0)
-+				sysfs_set_str(mdi, NULL, "array_state", "active");
- 		}
- 		return 0;
- 	}
+I'm not sure about this.
+In the kernel, raid4 ignores the 'layout'.  So it seems safest to do the same
+in mdadm, and always use a level of '5' when we want PARITY_0.
 
+Why is this needed exactly?
 
-so that you can set raid0 to --readonly again.  Yell if you think that is
-wrong.
-
+Thanks,
 NeilBrown
