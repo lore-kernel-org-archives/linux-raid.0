@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 20/21] Migration raid0->raid5
-Date: Tue, 23 Nov 2010 13:42:20 +0100
-Message-ID: <20101123124220.17770.7527.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 21/21] Migration: Chunk size migration
+Date: Tue, 23 Nov 2010 13:42:28 +0100
+Message-ID: <20101123124227.17770.88168.stgit@gklab-170-024.igk.intel.com>
 References: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,132 +13,82 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Add implementation for migration from raid0 to raid5 in one step.
-For imsm raid level parameters flow from mdadm (vi metadata update) to managemon was added.
-
-Block takeover for this migration case (update_reshape is used only)
-For migration on container (OLCE) reinitialize variables that are changed
-by single array reshape case.
+Add implementation for chunk size migration for external metadata.
+Update works using array parameters update in managemon. Reshape is started by managemon also.
+mdadm waits for reshape array state instead starting reshape process.
+For imsm chunk size parameter flow, from mdadm (via metadata update) to managemon was added.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- mdadm/mdadm/super-intel.c |   53 +++++++++++++++++++++++++++++++++++++++++----
- 1 files changed, 48 insertions(+), 5 deletions(-)
+ mdadm/mdadm/managemon.c   |    6 ++++++
+ mdadm/mdadm/mdmon.h       |    1 +
+ mdadm/mdadm/super-intel.c |    4 ++++
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
+diff --git a/mdadm/mdadm/managemon.c b/mdadm/mdadm/managemon.c
+index 8b2d73c..860354a 100644
+--- a/mdadm/mdadm/managemon.c
++++ b/mdadm/mdadm/managemon.c
+@@ -522,6 +522,12 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 					}
+ 				}
+ 
++				if (status_ok && newa->reshape_chunk_size > 0) {
++					dprintf("managemon: set chunk_size to %i\n", newa->reshape_chunk_size);
++					if (sysfs_set_num(&newa->info, NULL, "chunk_size", newa->reshape_chunk_size) < 0)
++						status_ok = 0;
++				}
++
+ 				if (status_ok && newa->reshape_layout >= 0) {
+ 					dprintf("managemon: set layout to %i\n", newa->reshape_layout);
+ 					if (sysfs_set_num(&newa->info, NULL, "layout", newa->reshape_layout) < 0)
+diff --git a/mdadm/mdadm/mdmon.h b/mdadm/mdadm/mdmon.h
+index 18bd780..cf8c1f2 100644
+--- a/mdadm/mdadm/mdmon.h
++++ b/mdadm/mdadm/mdmon.h
+@@ -62,6 +62,7 @@ struct active_array {
+ 	int reshape_raid_disks;
+ 	int reshape_level;
+ 	int reshape_layout;
++	int reshape_chunk_size;
+ 	unsigned long long grow_sync_max; /* sync_max from mdadm Grow */
+ 	enum reshape_wait waiting_for; /* we can wait for grow backup event
+ 					  or for md reshape completed */
 diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c
-index f874f2f..0b553bc 100644
+index 0b553bc..2d61df4 100644
 --- a/mdadm/mdadm/super-intel.c
 +++ b/mdadm/mdadm/super-intel.c
-@@ -5335,7 +5335,7 @@ static void imsm_sync_metadata(struct supertype *container)
- {
- 	struct intel_super *super = container->sb;
+@@ -347,6 +347,7 @@ struct imsm_update_reshape {
+ 	int reshape_raid_disks;
+ 	int reshape_level;
+ 	int reshape_layout;
++	int reshape_chunk_size;
+ 	int disks_count;
+ 	int spares_in_update;
+ 	int devnum;
+@@ -5776,6 +5777,7 @@ static void imsm_process_update(struct supertype *st,
+ 			a->reshape_level = 5;
+ 			a->reshape_layout = 5;
+ 		}
++		a->reshape_chunk_size = u->reshape_chunk_size;
  
--	if (!super->updates_pending)
-+	if (!super || !super->updates_pending)
- 		return;
- 
- 	write_super_imsm(container, 0);
-@@ -7193,6 +7193,13 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 
- 	dprintf("imsm imsm_update_metadata_for_reshape(enter) raid_disks = %i\n", geo->raid_disks);
- 
-+	if (super == NULL || super->anchor == NULL) {
-+		dprintf("Error: imsm_create_metadata_update_for_reshape(): null pointers on input\n");
-+		dprintf("\t\t super = %p\n", super);
-+		if (super)
-+			dprintf("\t\t super->anchor = %p\n", super->anchor);
-+		return ret_val;
-+	}
- 	if ((geo->raid_disks < super->anchor->num_disks) ||
- 	    (geo->raid_disks == UnSet))
- 		geo->raid_disks = super->anchor->num_disks;
-@@ -7271,8 +7278,11 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 						set_imsm_ord_tbl_ent(new_map, idx, idx);
- 				}
- 				u->devnum = geo->dev_id;
--				/* case for reshape without grow */
--				if (u->reshape_delta_disks == 0) {
-+				/* case for reshape without grow
-+				 * or grow is level change effect
-+				 */
-+				if ((u->reshape_delta_disks == 0) ||
-+				    ((new_map->raid_level != geo->level) && (geo->level != UnSet))) {
- 					dprintf("imsm: reshape prepate metadata for volume= %d, index= %d\n", geo->dev_id, i);
- 					if (update_geometry(st, geo) == -1) {
- 						dprintf("imsm: ERROR: Cannot prepare update for volume map!\n");
-@@ -7534,6 +7544,13 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 		int dn;
- 		int err;
- 
-+		/* takeover raid0->raid5 doesn't need meta update
-+		 * this can be handled by migrations if necessary
-+		 */
-+		if ((geo.level == 5) && (sra->array.level == 5)) {
-+			ret_val = 0;
-+			goto imsm_reshape_super_exit;
-+		}
- 		dn = devname2devnum(sra->text_version + 1);
- 		container_fd = open_dev_excl(dn);
- 		if (container_fd < 0) {
-@@ -7570,8 +7587,10 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 	 */
- 	if (geo.raid_disks > 0 && geo.raid_disks != UnSet)
- 		delta_disks = geo.raid_disks - sra->array.raid_disks;
--	else
-+	else {
- 		delta_disks = 0;
-+		geo.raid_disks = sra->array.raid_disks;
-+	}
- 	dprintf("imsm: imsm_reshape_super() called on array when delta disks = %i\n", delta_disks);
- 	if (delta_disks == 0) {
- 		struct imsm_update_reshape *u;
-@@ -7579,7 +7598,26 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 		dprintf("imsm: imsm_reshape_super(): raid_disks not changed for volume reshape. Reshape allowed.\n");
- 
- 		if (find_array_minor(geo.dev_name, 1, st->devnum, &geo.dev_id) > -1) {
--			u = imsm_create_metadata_update_for_reshape(st, &geo);
-+			struct supertype *st2 = NULL;
-+			struct supertype *st_tmp = st;
-+			if (st->sb == NULL) {
-+				close(fd);
-+				/* open container
-+				 */
-+				snprintf(buf, PATH_MAX, "/dev/md%i", st->container_dev);
-+				dprintf("imsm: open device %s\n", buf);
-+				fd = open(buf , O_RDWR | O_DIRECT);
-+				if (fd < 0) {
-+					dprintf("imsm: cannot open device %s\n", buf);
-+					goto imsm_reshape_super_exit;
-+				}
-+				st2 = super_by_fd(fd);
-+				st->ss->load_super(st2, fd, NULL);
-+				if (st2)
-+					st_tmp = st2;
-+			}
-+
-+			u = imsm_create_metadata_update_for_reshape(st_tmp, &geo);
- 			if (u) {
- 				if (geo.raid_disks > raid_disks)
+ 		/* Clear migration record */
+ 		memset(super->migr_rec, 0, sizeof(struct migr_record));
+@@ -7231,6 +7233,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 	u->reshape_raid_disks = 0;
+ 	u->reshape_level = -1;
+ 	u->reshape_layout = -1;
++	u->reshape_chunk_size = -1;
+ 	u->update_memory_size = update_memory_size;
+ 	u->type = update_reshape;
+ 	u->spares_in_update = 0;
+@@ -7623,6 +7626,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
  					u->reshape_raid_disks = geo.raid_disks;
-@@ -7587,7 +7625,10 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 				u->reshape_level = geo.level;
  				u->reshape_layout = geo.layout;
++				u->reshape_chunk_size = geo.chunksize;
  				ret_val = 0;
  				append_metadata_update(st, u, u->update_memory_size);
-+
- 			}
-+			if (st2)
-+				st->ss->free_super(st2);
- 		}
- 		goto imsm_reshape_super_exit;
- 	} else {
-@@ -8396,6 +8437,8 @@ int imsm_manage_container_reshape(struct supertype *st)
- 					 */
- 					dprintf("imsm: Preparing metadata update for: %s (md%i)\n", array, geo.dev_id);
- 					st->update_tail = &st->updates;
-+					geo.size = UnSet;
-+					geo.level = UnSet;
- 					u = imsm_create_metadata_update_for_reshape(st, &geo);
- 					if (u) {
- 						u->reshape_delta_disks = delta_disks;
+ 
 
