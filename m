@@ -1,88 +1,40 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] md: Fix single printks with multiple KERN_<level>s
-Date: Tue, 23 Nov 2010 16:57:40 -0800
-Message-ID: <1290560260.11971.5.camel@Joe-Laptop>
-References: <20101011152516.GF27153@n2100.arm.linux.org.uk>
-	 <1290505382-16110-1-git-send-email-u.kleine-koenig@pengutronix.de>
-	 <20101123101210.GA18170@n2100.arm.linux.org.uk>
-	 <20101123103940.GN4693@pengutronix.de>
-	 <20101123105830.GO4693@pengutronix.de>
-	 <AANLkTinmky17XZZPh7QvcY_r=66f_PwzRYFPUSvhiJGK@mail.gmail.com>
-	 <20101123223344.GE26510@n2100.arm.linux.org.uk>
+From: Spelic <spelic@shiftmail.org>
+Subject: Raid10 algorithm for choosing the reading drive
+Date: Tue, 23 Nov 2010 23:47:36 +0100
+Message-ID: <4CEC4488.7000703@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101123223344.GE26510@n2100.arm.linux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Noticed-by: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Joe Perches <joe@perches.com>
----
-> Note that KERN_foo in the middle of strings, even after a newline are
-> preserved in the output.  So:
-> 
->                 printk(KERN_WARNING "BUG: Your driver calls ioremap() on system memory.  This leads\n"
->                        KERN_WARNING "to architecturally unpredictable behaviour on ARMv6+, and ioremap()\n"
->                        KERN_WARNING "will fail in the next kernel release.  Please fix your driver.\n");
-> 
-> results in <4>'s appearing on the console.  I've always written code
-> over the last 15 years assuming that after any newline in printk output,
-> the log level gets reset and so needs a new log level specifier.
-> 
-> Sounds like this is something which needs auditing as a result of your
-> change, and sounds like its something that kernelnewbies people could
-> do.  My own greps haven't revealed any cases though.
+Hello raid ML,
+in order to be able to correctly choose the layout for my new raid10 
+array, I would like to know one thing:
 
- drivers/md/raid1.c  |    5 +++--
- drivers/md/raid10.c |    5 +++--
- drivers/md/raid5.c  |    1 -
- 3 files changed, 6 insertions(+), 5 deletions(-)
+Every time a (small) read request comes in, MD has to choose one of two 
+drives to serve it. It is not clear to me what is the algorithm for 
+choosing this. I have looked at the manpages and kernel docs, but they 
+do not say.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 45f8324..e05381b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1027,8 +1027,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 	} else
- 		set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	printk(KERN_ALERT "md/raid1:%s: Disk failure on %s, disabling device.\n"
--	       KERN_ALERT "md/raid1:%s: Operation continuing on %d devices.\n",
-+	printk(KERN_ALERT
-+	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
-+	       "md/raid1:%s: Operation continuing on %d devices.\n",
- 	       mdname(mddev), bdevname(rdev->bdev, b),
- 	       mdname(mddev), conf->raid_disks - mddev->degraded);
- }
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c67aa54..686543d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1051,8 +1051,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 	}
- 	set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	printk(KERN_ALERT "md/raid10:%s: Disk failure on %s, disabling device.\n"
--	       KERN_ALERT "md/raid10:%s: Operation continuing on %d devices.\n",
-+	printk(KERN_ALERT
-+	       "md/raid10:%s: Disk failure on %s, disabling device.\n"
-+	       "md/raid10:%s: Operation continuing on %d devices.\n",
- 	       mdname(mddev), bdevname(rdev->bdev, b),
- 	       mdname(mddev), conf->raid_disks - mddev->degraded);
- }
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dc574f3..316fbe7 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1721,7 +1721,6 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 		set_bit(Faulty, &rdev->flags);
- 		printk(KERN_ALERT
- 		       "md/raid:%s: Disk failure on %s, disabling device.\n"
--		       KERN_ALERT
- 		       "md/raid:%s: Operation continuing on %d devices.\n",
- 		       mdname(mddev),
- 		       bdevname(rdev->bdev, b),
+E.g. I have noticed in n2 (near) mode when one process reads a big file 
+sequentially, only half of the drives are used. When a second thread 
+reads, the other drives are used. I also noticed this for raid1.
+I think this is a good low level technique to avoid starvation between 
+two threads and avoid seeks, and with many threads it will still reduce 
+starvation by half and reduce seeks.
+
+With the array in offset or far layouts, I notice all drives are used 
+for a single reading thread. If another streaming read process comes in, 
+will it compete for *all* the drives (and cause massive seeking) or will 
+MD assign half of the drives to one process and half to the other process?
+(ok maybe for far it's reasonable to assign all drives to all processes, 
+but for offset it's not so clear. Also I still haven't really understood 
+the algorithm for near, apart from the observation above)
+
+In general, can anybody spend a few words on the algorithm used by MD to 
+choose which drive(s) should serve read requests?
+
+Thank you
