@@ -1,62 +1,101 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: RE: Devel 3.2 branch issues
-Date: Tue, 23 Nov 2010 12:04:37 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BF9203D@irsmsx504.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BF03CC6@irsmsx504.ger.corp.intel.com>
- <20101123115213.3664ec27@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 00/21] Series short description
+Date: Tue, 23 Nov 2010 13:39:38 +0100
+Message-ID: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101123115213.3664ec27@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+This patch series bases on previously sent patch series: array/container freezing by Dan Williams, and my and Maciej Trela's patches for OLCE and check pointing for external metadata.
+This patch series implements:
+1. Patches 0001 to 0018 : fixes for freezing, OLCE and check pointing
+2. Patches 0018 to 0021 : implements new migration features for external metadata:
+    - Migration raid0 to raid5
+    - Migration raid5 to raid0
+    - Chunk size migration
 
-> I don't think it is possible to come up with an automatic way to
-> determine if
-> a given spare suits a given array that is always correct.  There are
-> too many
-> subtleties.
-> So I would like to allow the sysadmin to exercise complete control, and
-> have
-> defaults that make reasonable sense in common cases.
-> 
-> The 'complete control' can be exercised through domain - though I will
-> probably add some size based rule mechanism to the policy code so
-> devices can
-> be categorised by size if wanted.
-> The 'safe default' is probably best left to the metadata handler.  So
-> ultimately all metadata types *should* specify
-> min_acceptable_spare_size,
-> and we will just make do with that.
-> 
-> Does that sound OK?
+We are planning in the few days add fixes for raid10 <-> raid0 takeover also.
 
-Yes. 
-When all metadata types have min_acceptable_spare_size there will be no need for min_active_disk_size at all.
-One more thought: Manage_subdevs checks component_size so for native metadata it will not allow to add a spare that is too small.
-But checking size in Monitor will prevent unnecessary removal and re-adding. 
-It would make sense to get Manage_subdevs to check the size properly for external metadata too.
-Anna
----------------------------------------------------------------------
-Intel Technology Poland sp. z o.o.
-z siedziba w Gdansku
-ul. Slowackiego 173
-80-298 Gdansk
+Migration feature reuses code flow introduced for OLCE (Online Capacity Expansion) and uses the same grow/reshape flow in mdadm/mdmon.
+Migration is executed in the following way:
+1. mdadm: reshape_super() prepares metadata update and sends it to mdmon
+2. mdadm: waits for reshape array state
+3. monitor: receives metadata update and applies it.
+4. monitor: metadata update triggers managemon.
+5. managemon: updates array (md) configuration and starts reshape
+6. mdadm: finds that reshape is started and continues it using check pointing
+7. mdadm: reshape is finished and manage_reshape() finalizes array:
+    - Sets array size as is given in metadata
+    - Performs takeover to raid0 if necessary
 
-Sad Rejonowy Gdansk Polnoc w Gdansku, 
-VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
-numer KRS 101882
+In current patches placement of manage_reshape() function call was changed.
+It is moved to end of array processing to use common code form Grow.c for external metadata reshape case
+(we do not need to duplicate existing code) as it would do the same things as code for native metadata.
+New manage_reshape() placement causes a few things to do in implementation only and simplifees code.
 
-NIP 957-07-52-316
-Kapital zakladowy 200.000 zl
+Migrations command line:
+1. Execute migration raid0->raid5:
+    mdadm  - -grow /dev/md/array_name -level 5 -layout=left-asymmetric
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+    This converts n-disks raid0 array to (n+1)-disks raid5 array. Additional raid5 array disk is user from spares pool
 
+2. Execute migration raid5->raid0:
+    mdadm  - -grow /dev/md/array_name -level 0
+
+    This converts n-disks raid5 array to n-disks raid0 array.
+3. Execute chunk size migration
+    mdadm  - -grow /dev/md/array_name -chunk N
+
+    where N is ne chunk size value
+
+In current patch series testing of 'experimental' flag was changes according to Neil's suggestion, as I've found it useable for my testing purposes.
+The rest of comments to already reviewed patches (OLCE/check pointing) will be implemented in next step.
+
+
+---
+
+Adam Kwolek (21):
+      Migration: Chunk size migration
+      Migration raid0->raid5
+      Migration: raid5->raid0
+      imsm: Use geo structure
+      Change manage_reshape() placement
+      FIX: Start mdmon after changing level
+      FIX: Checkpointing: Enable checkpointing for non-growing migrations
+      FIX: Level field can be NULL
+      imsm Fix: Core during rebuild on array details read
+      WORKAROUND: md reports idle state during reshape start
+      FIX: Honor !reshape state on wait_reshape() entry
+      FIX: Unfreeze not only container for external metadata
+      FIX: Cannot exit monitor after takeover
+      imsm: FIX: Continue expansion after -As command
+      imsm: FIX: Reshape Cancel message on 2nd array doesn't work correctly
+      imsm: FIX: Guard size setting
+      FIX: Allow for reshape without backup file
+      FIX: Use MDADM_EXPERIMENTAL environment variable
+      imsm: FIX: imsm_check_reshape_conditions change ret_val
+      imsm: Change some debug output information
+      imsm: Remove unnecessary code
+
+
+ mdadm/mdadm/Detail.c      |    1 
+ mdadm/mdadm/Grow.c        |  178 ++++++++----
+ mdadm/mdadm/Makefile      |    6 
+ mdadm/mdadm/managemon.c   |  113 ++++++-
+ mdadm/mdadm/mdadm.h       |    7 
+ mdadm/mdadm/mdmon.h       |    4 
+ mdadm/mdadm/mdstat.c      |    2 
+ mdadm/mdadm/monitor.c     |   11 +
+ mdadm/mdadm/msg.c         |    5 
+ mdadm/mdadm/restripe.c    |    1 
+ mdadm/mdadm/super-intel.c |  693 +++++++++++++++++++++++++++++++++------------
+ mdadm/mdadm/util.c        |   88 +++++-
+ 12 files changed, 830 insertions(+), 279 deletions(-)
+
+-- 
+Signature
