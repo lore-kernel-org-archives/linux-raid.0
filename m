@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 18/21] imsm: Use geo structure
-Date: Tue, 23 Nov 2010 13:42:03 +0100
-Message-ID: <20101123124203.17770.96784.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 19/21] Migration: raid5->raid0
+Date: Tue, 23 Nov 2010 13:42:11 +0100
+Message-ID: <20101123124211.17770.37025.stgit@gklab-170-024.igk.intel.com>
 References: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,550 +13,640 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-For passing parameters use geo structures.
-Add function (update_geometry()) to update geometry structure.
+Add implementation for migration from raid5 to raid0 in one step.
+For this migration case (and others for external metadata case)
+flow used for Expansion is used. This causes update array parameters
+in managemon based on sent metadata update. To do this uptate md parameters
+in Grow.c has to be disabled for external metadata case.
 
-Signed-off-by: Krysztof Wojcik <krzysztof.wojcik@intel.com>
+In Grow.c instead starting reshape for external metadata case
+wait_reshape_start_ext() function is introduced.
+Function waits for reshape start initialized by managemon after setting
+array parameter as for Expansion case.
+
+In managemon was added subarray_set_num_man() function.
+It is similar to function that exists in Grow.c except 2 things:
+1. it uses different way to "ping" monitor
+2. it tries to set raid_disks more than 2 times as we are more sure that monitor works
+   during processing in managemon context
+
+For imsm raid level parameters flow from mdadm (via metadata update)
+to managemon was added.
+
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- mdadm/mdadm/super-intel.c |  271 +++++++++++++++++++++++++++++++++------------
- 1 files changed, 199 insertions(+), 72 deletions(-)
+ mdadm/mdadm/Grow.c        |   93 ++++++++++++++++++++++--------
+ mdadm/mdadm/managemon.c   |  107 ++++++++++++++++++++++++++++++----
+ mdadm/mdadm/mdadm.h       |    2 +
+ mdadm/mdadm/mdmon.h       |    3 +
+ mdadm/mdadm/super-intel.c |  141 +++++++++++++++++++++++++++++++++++++--------
+ 5 files changed, 283 insertions(+), 63 deletions(-)
 
-diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c
-index 7481126..113c3bb 100644
---- a/mdadm/mdadm/super-intel.c
-+++ b/mdadm/mdadm/super-intel.c
-@@ -329,6 +329,16 @@ struct imsm_update_activate_spare {
- 	struct imsm_update_activate_spare *next;
- };
- 
-+struct geo_params {
-+	int dev_id;
-+	char *dev_name;
-+	long long size;
-+	int level;
-+	int layout;
-+	int chunksize;
-+	int raid_disks;
-+};
-+
- 
- struct imsm_update_reshape {
- 	enum imsm_update_type type;
-@@ -6797,8 +6807,7 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
- }
- 
- int imsm_reshape_is_allowed_on_container(struct supertype *st,
--					 long long size, int level, int layout,
--					 int chunksize, int raid_disks)
-+					 struct geo_params *geo)
- {
- 	int ret_val = 0;
- 	struct mdinfo *info = NULL;
-@@ -6809,8 +6818,9 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 
- 	dprintf("imsm: imsm_reshape_is_allowed_on_container(ENTER): st->devnum = (%i)\n", st->devnum);
- 
--	if ((size != -1) || (level != UnSet) ||
--	    (layout != UnSet) || (chunksize != 0)) {
-+	if (geo == NULL ||
-+	    (geo->size != -1) || (geo->level != UnSet) ||
-+	    (geo->layout != UnSet) || (geo->chunksize != 0)) {
- 		dprintf("imsm: Container operation is allowed for raid disks number change only.\n");
- 		return ret_val;
- 	}
-@@ -6823,7 +6833,7 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 		return ret_val;
- 	}
- 
--	if (raid_disks == UnSet) {
-+	if (geo->raid_disks == UnSet) {
- 		dprintf("imsm: for container operation raid disks change is required\n");
- 		goto exit_imsm_reshape_is_allowed_on_container;
- 	}
-@@ -6868,7 +6878,7 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 		}
- 		st->ss->getinfo_super(st, info);
- 
--		if (raid_disks < info->array.raid_disks) {
-+		if (geo->raid_disks < info->array.raid_disks) {
- 			/* we work on container for Online Capacity Expansion
- 			 * only so raid_disks has to grow
- 			 */
-@@ -6892,7 +6902,8 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 			break;
- 		}
- 		used_disks = imsm_num_data_members(dev, 0);
--		dprintf("read raid_disks =%i\n", used_disks);
-+		dprintf("read raid_disks = %i\n", used_disks);
-+		dprintf("read requested disks = %i\n", geo->raid_disks);
- 		array_blocks = map->blocks_per_member * used_disks;
- 		/* round array size down to closest MB
- 		 */
-@@ -6900,7 +6911,7 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 		if (sysfs_set_num(info, NULL, "array_size", array_blocks/2) < 0)
- 			dprintf("cannot set array size to %llu\n", array_blocks/2);
- 
--		if (raid_disks > info->array.raid_disks)
-+		if (geo->raid_disks > info->array.raid_disks)
- 			devices_that_can_grow++;
- 
- 		if ((info->array.level != 0) &&
-@@ -6913,9 +6924,9 @@ int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 			/* check for platform support for this raid level configuration
- 			 */
- 			struct intel_super *super = st->sb;
--			if (!is_raid_level_supported(super->orom,  info->array.level, raid_disks)) {
-+			if (!is_raid_level_supported(super->orom,  info->array.level, geo->raid_disks)) {
- 				dprintf("platform does not support raid%d with %d disk%s\n",
--					 info->array.level, raid_disks, raid_disks > 1 ? "s" : "");
-+					 info->array.level, geo->raid_disks, geo->raid_disks > 1 ? "s" : "");
+diff --git a/mdadm/mdadm/Grow.c b/mdadm/mdadm/Grow.c
+index eaa10c1..5347847 100644
+--- a/mdadm/mdadm/Grow.c
++++ b/mdadm/mdadm/Grow.c
+@@ -1699,28 +1699,32 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
  				break;
  			}
+ 		} else {
+-			/* set them all just in case some old 'new_*' value
+-			 * persists from some earlier problem
++			/* set parametes here only if managemon is not responsible for this
+ 			 */
+-			int err = err; /* only used if rv==1, and always set if
+-					* rv==1, so initialisation not needed,
+-					* despite gcc warning
+-					*/
+-			if (sysfs_set_num(sra, NULL, "chunk_size", nchunk) < 0)
+-				rv = 1, err = errno;
+-			if (!rv && sysfs_set_num(sra, NULL, "layout", nlayout) < 0)
+-				rv = 1, err = errno;
+-			if (!rv && sysfs_set_num(sra, NULL, "raid_disks", ndisks) < 0)
+-				rv = 1, err = errno;
+-			if (rv) {
+-				fprintf(stderr, Name ": Cannot set device shape for %s\n",
+-					devname);
+-				if (get_linux_version() < 2006030)
+-					fprintf(stderr, Name ": linux 2.6.30 or later required\n");
+-				if (err == EBUSY && 
+-				    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
+-					fprintf(stderr, "       Bitmap must be removed before shape can be changed\n");
+-				break;
++			if ((st->ss->external == 0) || (st->ss->reshape_super == NULL)) {
++				/* set them all just in case some old 'new_*' value
++				 * persists from some earlier problem
++				 */
++				int err = err; /* only used if rv==1, and always set if
++						* rv==1, so initialisation not needed,
++						* despite gcc warning
++						*/
++				if (sysfs_set_num(sra, NULL, "chunk_size", nchunk) < 0)
++					rv = 1, err = errno;
++				if (!rv && sysfs_set_num(sra, NULL, "layout", nlayout) < 0)
++					rv = 1, err = errno;
++				if (!rv && sysfs_set_num(sra, NULL, "raid_disks", ndisks) < 0)
++					rv = 1, err = errno;
++				if (rv) {
++					fprintf(stderr, Name ": Cannot set device shape for %s\n",
++						devname);
++					if (get_linux_version() < 2006030)
++						fprintf(stderr, Name ": linux 2.6.30 or later required\n");
++					if (err == EBUSY &&
++					    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
++						fprintf(stderr, "       Bitmap must be removed before shape can be changed\n");
++					break;
++				}
+ 			}
  		}
-@@ -7051,6 +7062,106 @@ abort:
- 	return ret_val;
+ 
+@@ -2199,6 +2203,42 @@ int wait_reshape_completed_ext(struct supertype *st,
+ 	return 0;
  }
  
-+/*****************************************************************************
-+ * Function: update_geometry
-+ * Description: Prepares imsm volume map update in case of volume reshape
-+ * Returns: 0 on success, -1 if fail
-+ * ***************************************************************************/
-+int update_geometry(struct supertype *st,
-+		    struct geo_params *geo)
++int wait_reshape_start_ext(struct supertype *st, struct mdinfo *sra)
 +{
-+	int fd = -1, ret_val = -1;
-+	struct mdinfo *sra = NULL;
-+	char buf[PATH_MAX];
-+	char supported = 1;
++#define WAIT_FOR_RESHAPE_START 20
++	int wait_time = WAIT_FOR_RESHAPE_START;
++	int ret_val = -1;
++	char *container = devnum2devname(st->devnum);
 +
-+	snprintf(buf, PATH_MAX, "/dev/md%i", geo->dev_id);
-+	fd = open(buf , O_RDONLY | O_DIRECT);
-+	if (fd < 0) {
-+		dprintf("imsm: cannot open device\n");
-+		return -1;
++	if (container == NULL) {
++		dprintf("wait_reshape_start_ext: cannot find container.\n");
++		return ret_val;
 +	}
-+
-+	sra = sysfs_read(fd, 0, GET_DISKS | GET_LAYOUT | GET_CHUNK | GET_SIZE | GET_LEVEL | GET_DEVS);
-+	if (!sra) {
-+		dprintf("imsm: Cannot get mdinfo!\n");
-+		goto update_geometry_exit;
-+	}
-+
-+	if (sra->devs == NULL) {
-+		dprintf("imsm: Cannot load device information.\n");
-+		goto update_geometry_exit;
-+	}
-+	/* is size change possible??? */
-+	if (((unsigned long long)geo->size != sra->devs->component_size) && (geo->size != UnSet) && (geo->size > 0)) {
-+		geo->size = sra->devs->component_size;
-+		dprintf("imsm: Change the array size not supported in imsm!\n");
-+		goto update_geometry_exit;
-+	}
-+
-+	if ((geo->level != sra->array.level) && (geo->level >= 0) && (geo->level != UnSet)) {
-+		switch (sra->array.level) {
-+		case 0:
-+			if (geo->level != 5)
-+				supported = 0;
-+			break;
-+		case 5:
-+			if (geo->level != 0)
-+				supported = 0;
-+			break;
-+		case 1:
-+			if ((geo->level != 5) || (geo->level != 0))
-+				supported = 0;
-+			break;
-+		case 10:
-+			if (geo->level != 5)
-+				supported = 0;
-+			break;
-+		default:
-+			supported = 0;
++	ping_manager(container);
++	ping_monitor(container);
++	while (wait_time) {
++		char action[20];
++		dprintf("wait_reshape_start_ext Waiting for reshape state (%i) ...\n", WAIT_FOR_RESHAPE_START - wait_time + 1);
++		if (sysfs_get_str(sra, NULL, "sync_action",  action, 20) < 0) {
++			dprintf("Error: wait_reshape_start_ext cannot read sync_action\n");
 +			break;
 +		}
-+		if (!supported) {
-+			dprintf("imsm: Error. Level Migration from %d to %d not supported!\n", sra->array.level, geo->level);
-+			goto update_geometry_exit;
++		dprintf("wait_reshape_start_ext: read from sysfs: %s\n", action);
++		if (strncmp(action, "reshape", 7) == 0) {
++			dprintf("wait_reshape_start_ext: reshape started.\n");
++			ret_val = 0;
++			break;
 +		}
-+	} else {
-+		geo->level = sra->array.level;
++		ping_manager(container);
++		ping_monitor(container);
++		sleep(1);
++		wait_time--;
 +	}
 +
-+	if ((geo->layout != sra->array.layout) && ((geo->layout != UnSet) && (geo->layout != -1))) {
-+		if ((sra->array.layout == 0) && (sra->array.level == 5) && (geo->layout == 5)) {
-+			/* reshape 5 -> 4 */
-+			geo->raid_disks++;
-+		} else if ((sra->array.layout == 5) && (sra->array.level == 5) && (geo->layout == 0)) {
-+			/* reshape 4 -> 5 */
-+			geo->layout = 0;
-+			geo->level = 5;
-+		} else {
-+			dprintf("imsm: Error. Layout Migration from %d to %d not supported!\n", sra->array.layout, geo->layout);
-+			ret_val = -1;
-+			goto update_geometry_exit;
-+		}
-+	}
-+
-+	if ((geo->chunksize == 0) || (geo->chunksize == UnSet))
-+	    geo->chunksize = sra->array.chunk_size;
-+
-+	if (!validate_geometry_imsm(st, geo->level, geo->layout, geo->raid_disks,
-+					geo->chunksize,  geo->size,
-+					0, 0, 1))
-+		goto update_geometry_exit;
-+
-+	ret_val = 0;
-+
-+update_geometry_exit:
-+	sysfs_free(sra);
-+	if (fd > -1)
-+		close(fd);
-+
++	free(container);
 +	return ret_val;
 +}
 +
- /******************************************************************************
-  * function: imsm_create_metadata_update_for_reshape
-  * Function creates update for whole IMSM container.
-@@ -7058,7 +7169,7 @@ abort:
-  * when reshape will be triggered and md sets slot numbers.
-  * Slot numbers in metadata will be updated with stage_2 update
-  ******************************************************************************/
--struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct supertype *st, int raid_disks, int imsm_volume)
-+struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct supertype *st, struct geo_params *geo)
+ void send_resync_max_to_mdmon(struct supertype *st,
+ 			      struct mdinfo *sra,
+ 			      unsigned long long resync_max)
+@@ -2437,10 +2477,13 @@ static int child_same_size_ext(struct supertype *st, int afd, struct mdinfo *sra
+ 	sysfs_get_ll(sra, NULL, "sync_speed_min", &speed);
+ 	sysfs_set_num(sra, NULL, "sync_speed_min", 200000);
+ 
+-	/* Start the reshape - give a chance to update the metadata */
+-	sysfs_set_num(sra, NULL, "sync_max", 0);
+-	sysfs_set_str(sra, NULL, "sync_action", "reshape");
+-	flush_metadata_updates(st);
++	/* wait reshape is starteb by managemon
++	 * - give a chance to update the metadata */
++	if (wait_reshape_start_ext(st, sra)) {
++		dprintf("Error: Reshape not started\n");
++		free(buf);
++		return -1;
++	}
+ 
+ 	size = sra->component_size / (chunk/512);
+ 	while (start < size) {
+diff --git a/mdadm/mdadm/managemon.c b/mdadm/mdadm/managemon.c
+index 2c7be12..8b2d73c 100644
+--- a/mdadm/mdadm/managemon.c
++++ b/mdadm/mdadm/managemon.c
+@@ -109,6 +109,8 @@
+ #include	<signal.h>
+ #include	<limits.h>
+ 
++extern char *map_num(mapping_t *map, int num);
++
+ static void close_aa(struct active_array *aa)
  {
- 	struct imsm_update_reshape *ret_val = NULL;
- 	struct intel_super *super = st->sb;
-@@ -7074,12 +7185,12 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 	int device_size;
- 	void *upd_devs;
+ 	struct mdinfo *d;
+@@ -380,6 +382,43 @@ static int disk_init_and_add(struct mdinfo *disk, struct mdinfo *clone,
+ 	return 0;
+ }
  
--	dprintf("imsm imsm_update_metadata_for_reshape(enter) raid_disks = %i\n", raid_disks);
-+	dprintf("imsm imsm_update_metadata_for_reshape(enter) raid_disks = %i\n", geo->raid_disks);
++int subarray_set_num_man(char *container, struct mdinfo *sra, char *name, int n)
++{
++	/* when dealing with external metadata subarrays we need to be
++	 * prepared to handle EAGAIN.  The kernel may need to wait for
++	 * mdmon to mark the array active so the kernel can handle
++	 * allocations/writeback when preparing the reshape action
++	 * (md_allow_write()).  We temporarily disable safe_mode_delay
++	 * to close a race with the array_state going clean before the
++	 * next write to raid_disks / stripe_cache_size
++	 */
++	char safe[50];
++	int rc;
++#define MANAGEMON_COUNTER	20
++	int counter = MANAGEMON_COUNTER;
++
++	/* only 'raid_disks' and 'stripe_cache_size' trigger md_allow_write */
++	if (strcmp(name, "raid_disks") != 0 &&
++	    strcmp(name, "stripe_cache_size") != 0)
++		return sysfs_set_num(sra, NULL, name, n);
++
++	rc = sysfs_get_str(sra, NULL, "safe_mode_delay", safe, sizeof(safe));
++	if (rc <= 0)
++		return -1;
++	sysfs_set_num(sra, NULL, "safe_mode_delay", 0);
++	rc = sysfs_set_num(sra, NULL, name, n);
++	while ((rc < 0) && counter) {
++		counter--;
++		dprintf("managemon: Try to set %s to value %i (%i time(s)).\n", name, n, MANAGEMON_COUNTER - counter);
++		wakeup_monitor();
++		usleep(250000);
++		rc = sysfs_set_num(sra, NULL, name, n);
++	}
++	sysfs_set_str(sra, NULL, "safe_mode_delay", safe);
++	return rc;
++}
++
++
+ static void manage_member(struct mdstat_ent *mdstat,
+ 			  struct active_array *a)
+ {
+@@ -431,17 +470,17 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 			struct mdinfo *newdev = NULL;
+ 			struct mdinfo *d;
+ 			int delta_disks = a->reshape_delta_disks;
++			int status_ok = 1;
  
--	if ((raid_disks < super->anchor->num_disks) ||
--	    (raid_disks == UnSet))
--		raid_disks = super->anchor->num_disks;
--	delta_disks = raid_disks - super->anchor->num_disks;
-+	if ((geo->raid_disks < super->anchor->num_disks) ||
-+	    (geo->raid_disks == UnSet))
-+		geo->raid_disks = super->anchor->num_disks;
-+	delta_disks = geo->raid_disks - super->anchor->num_disks;
+-			newdev = a->container->ss->reshape_array(a, RESHAPE_IN_PROGRESS, &updates);
++			newa = duplicate_aa(a);
++			if (newa == NULL) {
++				a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
++				goto reshape_out;
++			}
++			newdev = newa->container->ss->reshape_array(newa, RESHAPE_IN_PROGRESS, &updates);
+ 			if (newdev) {
+-				int status_ok = 1;
+-				newa = duplicate_aa(a);
+-				if (newa == NULL)
+-					goto reshape_out;
+-
+ 				for (d = newdev; d ; d = d->next) {
+ 					struct mdinfo *newd;
+-
+ 					newd = malloc(sizeof(*newd));
+ 					if (!newd) {
+ 						status_ok = 0;
+@@ -456,11 +495,41 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 					}
+ 					disk_init_and_add(newd, d, newa);
+ 				}
+-				/* go with reshape
++			}
++			if (newa->reshape_delta_disks == RESHAPE_IN_PROGRESS) {
++				/* set reshape parametars
+ 				 */
+-				if (status_ok)
++				if (status_ok) {
++					dprintf("managemon: set sync_max to 0\n");
+ 					if (sysfs_set_num(&newa->info, NULL, "sync_max", 0) < 0)
+ 						status_ok = 0;
++				}
++
++				if (status_ok && newa->reshape_raid_disks) {
++					dprintf("managemon: set raid_disks to %i\n", newa->reshape_raid_disks);
++					if (subarray_set_num_man(a->container->devname, &newa->info, "raid_disks", newa->reshape_raid_disks))
++							status_ok = 0;
++				}
++
++				if (status_ok && newa->reshape_level > -1) {
++					char *c = map_num(pers, newa->reshape_level);
++					if (c == NULL)
++						status_ok = 0;
++					else {
++						dprintf("managemon: set level to %s\n", c);
++						if (sysfs_set_str(&newa->info, NULL, "level", c) < 0)
++							status_ok = 0;
++					}
++				}
++
++				if (status_ok && newa->reshape_layout >= 0) {
++					dprintf("managemon: set layout to %i\n", newa->reshape_layout);
++					if (sysfs_set_num(&newa->info, NULL, "layout", newa->reshape_layout) < 0)
++						status_ok = 0;
++				}
++
++				/* go with reshape
++				 */
+ 				if (status_ok && sysfs_set_str(&newa->info, NULL, "sync_action", "reshape") == 0) {
+ 					/* reshape executed
+ 					 */
+@@ -475,7 +544,10 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 						newa->old_data_disks--;
+ 					if (newa->info.array.level == 6)
+ 						newa->old_data_disks--;
+-					newa->new_data_disks = newa->info.array.raid_disks + delta_disks;
++					if (newa->reshape_raid_disks > 0)
++						newa->new_data_disks = newa->reshape_raid_disks;
++					else
++						newa->new_data_disks = newa->info.array.raid_disks + delta_disks;
+ 					if (level == 4)
+ 						newa->new_data_disks--;
+ 					if (level == 5)
+@@ -487,28 +559,35 @@ static void manage_member(struct mdstat_ent *mdstat,
  
- 	/* size of all update data without anchor */
- 	update_memory_size = sizeof(struct imsm_update_reshape);
-@@ -7088,7 +7199,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 	 */
- 	device_size = sizeof(struct imsm_dev);
- 	device_size += sizeof(struct imsm_map);
--	device_size += 2*(raid_disks - 1) * sizeof(__u32);
-+	device_size += 2 * (geo->raid_disks - 1) * sizeof(__u32);
+ 					replace_array(a->container, a, newa);
+ 					a = newa;
++					newa = NULL;
+ 				} else {
+ 					/* on problems cancelupdate
+ 					 */
+-					free_aa(newa);
+ 					free_updates(&updates);
+ 					updates = NULL;
+-					a->container->ss->reshape_array(a, RESHAPE_CANCEL_REQUEST, &updates);
+-					sysfs_set_str(&a->info, NULL, "sync_action", "idle");
++					a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
+ 				}
+ 			}
++reshape_out:
++			if (a->reshape_delta_disks == RESHAPE_NOT_ACTIVE) {
++				dprintf("Cancel reshape.\n");
++				a->container->ss->reshape_array(a, RESHAPE_CANCEL_REQUEST, &updates);
++				sysfs_set_str(&a->info, NULL, "sync_action", "idle");
++			}
+ 			dprintf("Send metadata update for reshape.\n");
  
- 	update_memory_size += device_size * super->anchor->num_raid_devs;
- 	if (delta_disks > 1) {
-@@ -7121,7 +7232,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 			queue_metadata_update(updates);
+ 			updates = NULL;
+ 			wakeup_monitor();
+-reshape_out:
++
+ 			while (newdev) {
+ 				d = newdev->next;
+ 				free(newdev);
+ 				newdev = d;
+ 			}
+ 			free_updates(&updates);
++			if (newa)
++				free_aa(newa);
+ 		}
+ 	}
+ 
+diff --git a/mdadm/mdadm/mdadm.h b/mdadm/mdadm/mdadm.h
+index ddff47a..32db716 100644
+--- a/mdadm/mdadm/mdadm.h
++++ b/mdadm/mdadm/mdadm.h
+@@ -429,6 +429,8 @@ extern int sysfs_attr_match(const char *attr, const char *str);
+ extern int sysfs_match_word(const char *word, char **list);
+ extern int sysfs_set_str(struct mdinfo *sra, struct mdinfo *dev,
+ 			 char *name, char *val);
++extern int sysfs_get_ll(struct mdinfo *sra, struct mdinfo *dev,
++			char *name, unsigned long long *val);
+ extern int sysfs_set_num(struct mdinfo *sra, struct mdinfo *dev,
+ 			 char *name, unsigned long long val);
+ extern int sysfs_uevent(struct mdinfo *sra, char *event);
+diff --git a/mdadm/mdadm/mdmon.h b/mdadm/mdadm/mdmon.h
+index 8362dbd..18bd780 100644
+--- a/mdadm/mdadm/mdmon.h
++++ b/mdadm/mdadm/mdmon.h
+@@ -59,6 +59,9 @@ struct active_array {
+ #define RESHAPE_CANCEL_REQUEST	(RESHAPE_IN_PROGRESS-1)
+ 
+ 	int reshape_delta_disks;
++	int reshape_raid_disks;
++	int reshape_level;
++	int reshape_layout;
+ 	unsigned long long grow_sync_max; /* sync_max from mdadm Grow */
+ 	enum reshape_wait waiting_for; /* we can wait for grow backup event
+ 					  or for md reshape completed */
+diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c
+index 113c3bb..f874f2f 100644
+--- a/mdadm/mdadm/super-intel.c
++++ b/mdadm/mdadm/super-intel.c
+@@ -344,6 +344,9 @@ struct imsm_update_reshape {
+ 	enum imsm_update_type type;
+ 	int update_memory_size;
+ 	int reshape_delta_disks;
++	int reshape_raid_disks;
++	int reshape_level;
++	int reshape_layout;
+ 	int disks_count;
+ 	int spares_in_update;
+ 	int devnum;
+@@ -5684,6 +5687,7 @@ static void imsm_process_update(struct supertype *st,
+ 		__u32 new_mpb_size;
+ 		int new_disk_num;
+ 		struct intel_dev *current_dev;
++		struct imsm_dev *new_dev;
+ 
+ 		dprintf("imsm: imsm_process_update() for update_reshape [u->update_prepared  = %i]\n", u->update_prepared);
+ 		if ((u->update_prepared == -1) ||
+@@ -5741,11 +5745,12 @@ static void imsm_process_update(struct supertype *st,
+ 		}
+ 		/* find current dev in intel_super
+ 		 */
+-		dprintf("\t\tLooking  for volume %s\n", (char *)u->devs_mem.dev->volume);
++		new_dev = (struct imsm_dev *)((void *)u + u->upd_devs_offset);
++		dprintf("\t\tLooking  for volume %s\n", (char *)new_dev->volume);
+ 		current_dev = super->devlist;
+ 		while (current_dev) {
+ 			if (strcmp((char *)current_dev->dev->volume,
+-				   (char *)u->devs_mem.dev->volume) == 0)
++				   (char *)new_dev->volume) == 0)
+ 				break;
+ 			current_dev = current_dev->next;
+ 		}
+@@ -5764,7 +5769,13 @@ static void imsm_process_update(struct supertype *st,
+ 		/* set reshape_delta_disks
+ 		 */
+ 		a->reshape_delta_disks = u->reshape_delta_disks;
+-
++		a->reshape_raid_disks = u->reshape_raid_disks;
++		a->reshape_level = u->reshape_level;
++		a->reshape_layout = u->reshape_layout;
++		if (a->reshape_level == 0) {
++			a->reshape_level = 5;
++			a->reshape_layout = 5;
++		}
+ 
+ 		/* Clear migration record */
+ 		memset(super->migr_rec, 0, sizeof(struct migr_record));
+@@ -6280,12 +6291,7 @@ static void imsm_prepare_update(struct supertype *st,
+ 		if (u->reshape_delta_disks < 0)
  			break;
- 
- 		find_array_minor((char *)old_dev->volume, 1, st->devnum, &devnum);
--		if (devnum == imsm_volume) {
-+		if (devnum == geo->dev_id) {
- 			__u8 to_state;
- 			struct imsm_map *new_map2;
- 			int idx;
-@@ -7130,7 +7241,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 			imsm_copy_dev(upd_devs, old_dev);
- 			new_map = get_imsm_map(upd_devs, 0);
- 			old_disk_number = new_map->num_members;
--			new_map->num_members = raid_disks;
-+			new_map->num_members = geo->raid_disks;
- 			u->reshape_delta_disks = new_map->num_members - old_disk_number;
- 			/* start migration on new device
- 			 * it puts second map there also
-@@ -7150,7 +7261,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
- 					for (idx = new_map2->num_members; idx < new_map->num_members; idx++)
+ 		u->update_prepared = 1;
+-		if (u->reshape_delta_disks == 0) {
+-			/* for non growing reshape buffers sizes are not affected
+-			 * but check some parameters
+-			 */
+-			break;
+-		}
++
+ 		/* count HDDs
+ 		 */
+ 		u->disks_count = 0;
+@@ -7215,6 +7221,9 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 	}
+ 	u->reshape_delta_disks = delta_disks;
+ 	u->update_prepared = -1;
++	u->reshape_raid_disks = 0;
++	u->reshape_level = -1;
++	u->reshape_layout = -1;
+ 	u->update_memory_size = update_memory_size;
+ 	u->type = update_reshape;
+ 	u->spares_in_update = 0;
+@@ -7262,6 +7271,18 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
  						set_imsm_ord_tbl_ent(new_map, idx, idx);
  				}
--				u->devnum = imsm_volume;
-+				u->devnum = geo->dev_id;
+ 				u->devnum = geo->dev_id;
++				/* case for reshape without grow */
++				if (u->reshape_delta_disks == 0) {
++					dprintf("imsm: reshape prepate metadata for volume= %d, index= %d\n", geo->dev_id, i);
++					if (update_geometry(st, geo) == -1) {
++						dprintf("imsm: ERROR: Cannot prepare update for volume map!\n");
++						ret_val = NULL;
++						goto exit_imsm_create_metadata_update_for_reshape;
++					} else {
++						new_map->raid_level = geo->level;
++						new_map->blocks_per_strip = geo->chunksize / 512;
++					}
++				}
  				break;
  			}
  		}
-@@ -7322,10 +7433,20 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+@@ -7433,6 +7454,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
  	struct mdinfo *sra = NULL;
  	int fd = -1;
  	char buf[PATH_MAX];
-+	struct geo_params geo;
++	int delta_disks = -1;
+ 	struct geo_params geo;
+ 
+ 	memset(&geo, sizeof (struct geo_params), 0);
+@@ -7493,6 +7515,13 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 	} else
+ 		dprintf("imsm: not a container operation\n");
+ 
++	sra = sysfs_read(fd, 0,  GET_VERSION | GET_LEVEL | GET_LAYOUT |
++			 GET_DISKS | GET_DEVS | GET_CHUNK | GET_SIZE);
++	if (sra == NULL) {
++		fprintf(stderr, Name ": Cannot read sysfs info (imsm)\n");
++		goto imsm_reshape_super_exit;
++	}
 +
-+	memset(&geo, sizeof (struct geo_params), 0);
-+
-+	geo.dev_name = dev;
-+	geo.size = size;
-+	geo.level = level;
-+	geo.layout = layout;
-+	geo.chunksize = chunksize;
-+	geo.raid_disks = raid_disks;
+ 	geo.dev_id = -1;
+ 	find_array_minor(geo.dev_name, 1, st->devnum, &geo.dev_id);
  
- 	dprintf("imsm: reshape_super called().\n");
--	dprintf("\tfor level      : %i\n", level);
--	dprintf("\tfor raid_disks : %i\n", raid_disks);
-+	dprintf("\tfor level      : %i\n", geo.level);
-+	dprintf("\tfor raid_disks : %i\n", geo.raid_disks);
- 
- 	if (experimental() == 0)
- 		return ret_val;
-@@ -7341,38 +7462,44 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 	 * on container level we can do almost  everything */
- 	if (st->subarray[0] == 0) {
- 		/* check for delta_disks > 0 and supported raid levels 0 and 5 only in container */
--		if (imsm_reshape_is_allowed_on_container(st, size, level, layout, chunksize, raid_disks)) {
-+		if (imsm_reshape_is_allowed_on_container(st, &geo)) {
- 			struct imsm_update_reshape *u;
- 			char *array;
- 
--			array = get_volume_for_olce(st, raid_disks);
-+			array = get_volume_for_olce(st, geo.raid_disks);
- 			if (array) {
--				int devnum = -1;
--				find_array_minor(array, 1, st->devnum, &devnum);
--				if (devnum > 0) {
-+				find_array_minor(array, 1, st->devnum, &geo.dev_id);
-+				if (geo.dev_id > 0) {
- 					dprintf("imsm: Preparing metadata update for: %s\n", array);
- 
- 					st->update_tail = &st->updates;
--					u = imsm_create_metadata_update_for_reshape(st, raid_disks, devnum);
-+					u = imsm_create_metadata_update_for_reshape(st, &geo);
- 
- 					if (u) {
- 						ret_val = 0;
- 						append_metadata_update(st, u, u->update_memory_size);
--					}
--				}
-+					} else
-+						dprintf("imsm: Cannot prepare update\n");
-+				} else
-+					dprintf("imsm: Cannot find array in container\n");
- 				free(array);
- 			}
--		}
-+		} else
-+			dprintf("imsm: Operation is not allowed on container\n");
- 		if (ret_val)
- 			unfreeze_container(st);
- 		*st->subarray = 0;
- 		goto imsm_reshape_super_exit;
--	}
-+	} else
-+		dprintf("imsm: not a container operation\n");
-+
-+	geo.dev_id = -1;
-+	find_array_minor(geo.dev_name, 1, st->devnum, &geo.dev_id);
- 
- 	/* we have volume so takeover can be performed for single volume only
- 	 */
--	if ((size == -1) && (layout == UnSet) && (raid_disks == 0) && (level != UnSet)) {
--
-+	if ((geo.size == -1) && (geo.layout == UnSet) && (geo.raid_disks == 0) && (geo.level != UnSet) &&
-+	    (geo.dev_id > -1)) {
- 		/* ok - this is takeover */
- 		int container_fd;
+@@ -7505,12 +7534,6 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
  		int dn;
-@@ -7400,9 +7527,9 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 		 * to/from different than raid10 level
- 		 * if source level is raid0 mdmon is sterted only
- 		 */
--		if (((level == 10) || (sra->array.level == 10) || (sra->array.level == 0)) &&
--		     (level != sra->array.level) &&
--		     (level > 0)) {
-+		if (((geo.level == 10) || (sra->array.level == 10) || (sra->array.level == 0)) &&
-+		     (geo.level != sra->array.level) &&
-+		     (geo.level > 0)) {
- 			st->update_tail = &st->updates;
- 			err = update_level_imsm(st, sra, sra->name, 0, 0, NULL);
- 			if (err != 0) {
-@@ -8039,17 +8166,17 @@ int imsm_manage_container_reshape(struct supertype *st)
- 	char buf[PATH_MAX];
- 	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb = super->anchor;
--	char *devname;
- 	int fd;
- 	struct mdinfo *info = NULL;
- 	struct mdinfo info2;
- 	int validate_fd;
--	int current_array;
--	int delta_disks, raid_disks;
-+	int delta_disks;
-+	struct geo_params geo;
- #ifdef DEBUG
- 	int i;
- #endif
+ 		int err;
  
-+	memset(&geo, sizeof (struct geo_params), 0);
- 	/* verify reshape conditions
+-		sra = sysfs_read(fd, 0,  GET_VERSION | GET_LEVEL |
+-				 GET_LAYOUT | GET_DISKS | GET_DEVS);
+-		if (sra == NULL) {
+-			fprintf(stderr, Name ": Cannot read sysfs info (imsm)\n");
+-			goto imsm_reshape_super_exit;
+-		}
+ 		dn = devname2devnum(sra->text_version + 1);
+ 		container_fd = open_dev_excl(dn);
+ 		if (container_fd < 0) {
+@@ -7538,11 +7561,49 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 				goto imsm_reshape_super_exit;
+ 			}
+ 			ret_val = 0;
++			goto imsm_reshape_super_exit;
+ 		}
+-		sysfs_free(sra);
+-		sra = NULL;
+ 	}
+ 
++	/* this is not takeover
++	 * continue volume check - proceed if delta_disk is zero only
++	 */
++	if (geo.raid_disks > 0 && geo.raid_disks != UnSet)
++		delta_disks = geo.raid_disks - sra->array.raid_disks;
++	else
++		delta_disks = 0;
++	dprintf("imsm: imsm_reshape_super() called on array when delta disks = %i\n", delta_disks);
++	if (delta_disks == 0) {
++		struct imsm_update_reshape *u;
++		st->update_tail = &st->updates;
++		dprintf("imsm: imsm_reshape_super(): raid_disks not changed for volume reshape. Reshape allowed.\n");
++
++		if (find_array_minor(geo.dev_name, 1, st->devnum, &geo.dev_id) > -1) {
++			u = imsm_create_metadata_update_for_reshape(st, &geo);
++			if (u) {
++				if (geo.raid_disks > raid_disks)
++					u->reshape_raid_disks = geo.raid_disks;
++				u->reshape_level = geo.level;
++				u->reshape_layout = geo.layout;
++				ret_val = 0;
++				append_metadata_update(st, u, u->update_memory_size);
++			}
++		}
++		goto imsm_reshape_super_exit;
++	} else {
++		char *devname = devnum2devname(st->devnum);
++		char *devtoprint = devname;
++
++		if (devtoprint == NULL)
++			devtoprint = "Device";
++		fprintf(stderr, Name
++			": %s cannot be reshaped. Command has to be executed on container.\n",
++			devtoprint);
++		if (devname)
++			free(devname);
++	}
++
++
+ imsm_reshape_super_exit:
+ 	sysfs_free(sra);
+ 	if (fd >= 0)
+@@ -7829,7 +7890,8 @@ struct mdinfo *imsm_reshape_array(struct active_array *a, int request_type,
+ 
+ 	if (a->reshape_delta_disks == 0) {
+ 		dprintf("array parameters has to be changed\n");
+-		/* TBD */
++		a->reshape_delta_disks = RESHAPE_IN_PROGRESS;
++		return disk_list;
+ 	}
+ 	if (a->reshape_delta_disks > 0) {
+ 		dprintf("grow is detected.\n");
+@@ -7850,20 +7912,18 @@ struct mdinfo *imsm_reshape_array(struct active_array *a, int request_type,
+ imsm_reshape_array_exit:
+ 	if (u == NULL) {
+ 		dprintf("imsm: send update update_reshape_cancel\n");
++		a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
+ 		sysfs_set_str(&a->info, NULL, "sync_action", "idle");
+ 		imsm_grow_array_remove_devices_on_cancel(a);
+ 		u = (struct imsm_update_reshape *)calloc(1, sizeof(struct imsm_update_reshape));
+-		if (u) {
++		if (u)
+ 			u->type = update_reshape_cancel;
+-			a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
+-		}
+ 	}
+ 
+ 	if (u) {
+ 		/* post any prepared update
+ 		 */
+ 		u->devnum = a->devnum;
+-
+ 		u->update_memory_size = sizeof(struct imsm_update_reshape);
+ 		u->reshape_delta_disks = a->reshape_delta_disks;
+ 		u->update_prepared = 1;
+@@ -7876,11 +7936,11 @@ imsm_reshape_array_exit:
+ 			mu->next = *updates;
+ 			*updates = mu;
+ 		} else {
++			a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
+ 			free(u);
+ 			u = NULL;
+ 		}
+ 	}
+-	a->reshape_delta_disks = RESHAPE_NOT_ACTIVE;
+ 
+ 	if ((disk_list) && (u == NULL)) {
+ 		while (disk_list) {
+@@ -8026,7 +8086,8 @@ int imsm_child_grow(struct supertype *st, char *devname, int validate_fd, struct
+ 
+ void return_to_raid0(struct mdinfo *sra)
+ {
+-	if (sra->array.level == 4) {
++	if ((sra->array.level == 4) ||
++	    (sra->array.level == 0)) {
+ 		dprintf("Execute backward takeover to raid0\n");
+ 		sysfs_set_str(sra, NULL, "level", "raid0");
+ 	}
+@@ -8392,7 +8453,38 @@ int imsm_manage_reshape(struct supertype *st, char *backup)
  	 * for single vlolume reshape exit only and reuse Grow_reshape() code
  	 */
-@@ -8059,24 +8186,23 @@ int imsm_manage_container_reshape(struct supertype *st)
+ 	if (st->subarray[0] != 0) {
++		char buf[PATH_MAX];
++		int fd;
++
+ 		dprintf("imsm: manage_reshape() current volume: %s (devnum = %i)\n", st->subarray, st->devnum);
++
++		snprintf(buf, PATH_MAX, "/dev/md%i", st->devnum);
++		fd = open(buf , O_RDWR | O_DIRECT);
++		if (fd > -1) {
++			struct mdinfo *info;
++			struct mdinfo sra;
++
++			sra.devs = NULL;
++			st->ss->getinfo_super(st, &sra);
++			/* wait for reshape finish
++			* and manage array size based on metadata information
++			*/
++			imsm_grow_manage_size(st, &sra);
++
++			/* for level == 4: execute takeover to raid0 */
++			info = sysfs_read(fd, 0, GET_VERSION | GET_LEVEL | GET_DEVS | GET_LAYOUT);
++			if (info) {
++				/* curently md doesn't support direct translation from raid5 to raid4
++				 * it has be done via raid5 layout5
++				 */
++				if ((info->array.level == 5) &&
++				    (info->array.layout == 5))
++					info->array.level = 4;
++				return_to_raid0(info);
++				sysfs_free(info);
++			}
++			close(fd);
++		}
  		return ret_val;
  	}
- 
--	devname = devnum2devname(st->devnum);
--	if (devname == NULL) {
--		dprintf("imsm: Error: imsm_manage_container_reshape(): cannot get device name.\n");
-+	geo.dev_name = devnum2devname(st->devnum);
-+	if (geo.dev_name == NULL) {
-+		dprintf("imsm: Error: imsm_manage_reshape(): cannot get device name.\n");
- 		return ret_val;
- 	}
- 
--	snprintf(buf, PATH_MAX, "/dev/%s", devname);
-+	snprintf(buf, PATH_MAX, "/dev/%s", geo.dev_name);
- 	fd = open(buf , O_RDONLY | O_DIRECT);
- 	if (fd < 0) {
- 		dprintf("imsm: cannot open device\n");
--		free(devname);
--		return ret_val;
-+		goto imsm_manage_container_reshape_exit;
- 	}
- 
- 	/* send pings to roll managemon and monitor
- 	 */
--	ping_manager(devname);
--	ping_monitor(devname);
-+	ping_manager(geo.dev_name);
-+	ping_monitor(geo.dev_name);
- 
- #ifdef DEBUG
- 	/* device list for reshape
-@@ -8090,22 +8216,22 @@ int imsm_manage_container_reshape(struct supertype *st)
- 
- 	info2.devs = NULL;
- 	st->ss->getinfo_super(st, &info2);
--	current_array = -1;
--	find_array_minor(info2.name, 1, st->devnum, &current_array);
--	if (current_array < 0) {
-+	geo.dev_id = -1;
-+	find_array_minor(info2.name, 1, st->devnum, &geo.dev_id);
-+	if (geo.dev_id < 0) {
- 		dprintf("imsm. Error.Cannot get first array.\n");
- 		goto imsm_manage_container_reshape_exit;
- 	}
--	if (imsm_check_reshape_conditions(fd, st, current_array)) {
-+	if (imsm_check_reshape_conditions(fd, st, geo.dev_id)) {
- 		dprintf("imsm. Error. Wrong reshape conditions.\n");
- 		goto imsm_manage_container_reshape_exit;
- 	}
--	raid_disks = info2.array.raid_disks;
-+	geo.raid_disks = info2.array.raid_disks;
- 	dprintf("Container is ready for reshape ...\n");
- 	switch (fork()) {
- 	case 0:
- 		fprintf(stderr, Name ": Child forked to run and monitor reshape\n");
--		while (current_array > -1) {
-+		while (geo.dev_id > -1) {
- 			int fd2 = -1;
- 			int i;
- 			int temp_array = -1;
-@@ -8123,11 +8249,11 @@ int imsm_manage_container_reshape(struct supertype *st)
- 				st->ss->getinfo_super(st, &info2);
- 				dprintf("Checking slots for device %s\n", info2.sys_name);
- 				find_array_minor(info2.name, 1, st->devnum, &temp_array);
--				if (temp_array == current_array)
-+				if (temp_array == geo.dev_id)
- 					break;
- 			}
- 			snprintf(buf, PATH_MAX, "/dev/%s", info2.sys_name);
--			dprintf("Prepare to reshape for device %s (md%i)\n", info2.sys_name, current_array);
-+			dprintf("Prepare to reshape for device %s (md%i)\n", info2.sys_name, geo.dev_id);
- 			fd2 = open(buf, O_RDWR | O_DIRECT);
- 			if (fd2 < 0) {
- 				dprintf("Reshape is broken (cannot open array)\n");
-@@ -8160,7 +8286,7 @@ int imsm_manage_container_reshape(struct supertype *st)
- 				     /* or this array was already reshaped */
- 				     (strncmp(buf, "none", 4) == 0)) {
- 					dprintf("Skip this array, sync_completed is %s\n", buf);
--					current_array = -1;
-+					geo.dev_id = -1;
- 					sysfs_free(info);
- 					info = NULL;
- 					close(fd2);
-@@ -8176,10 +8302,10 @@ int imsm_manage_container_reshape(struct supertype *st)
- 			snprintf(buf, PATH_MAX, "/dev/md/%s", info2.name);
- 			info->delta_disks = info2.delta_disks;
- 
--			delta_disks = info->array.raid_disks - raid_disks;
--			raid_disks = info->array.raid_disks;
-+			delta_disks = info->array.raid_disks - geo.raid_disks;
-+			geo.raid_disks = info->array.raid_disks;
- 			if (info->array.level == 4) {
--				raid_disks--;
-+				geo.raid_disks--;
- 				delta_disks--;
- 			}
- 
-@@ -8195,37 +8321,37 @@ int imsm_manage_container_reshape(struct supertype *st)
- 				ret_val = 1;
- 				goto imsm_manage_container_reshape_exit;
- 			}
--			current_array = -1;
-+			geo.dev_id = -1;
- 			sprintf(st->subarray, "%i", 0);
--			array = get_volume_for_olce(st, raid_disks);
-+			array = get_volume_for_olce(st, geo.raid_disks);
- 			if (array) {
- 				struct imsm_update_reshape *u;
- 				dprintf("imsm: next volume to reshape is: %s\n", array);
- 				info2.devs = NULL;
- 				st->ss->getinfo_super(st, &info2);
--				find_array_minor(info2.name, 1, st->devnum, &current_array);
--				if (current_array > -1) {
-+				find_array_minor(info2.name, 1, st->devnum, &geo.dev_id);
-+				if (geo.dev_id > -1) {
- 					/* send next array update
- 					 */
--					dprintf("imsm: Preparing metadata update for: %s (md%i)\n", array, current_array);
-+					dprintf("imsm: Preparing metadata update for: %s (md%i)\n", array, geo.dev_id);
- 					st->update_tail = &st->updates;
--					u = imsm_create_metadata_update_for_reshape(st, raid_disks, current_array);
-+					u = imsm_create_metadata_update_for_reshape(st, &geo);
- 					if (u) {
- 						u->reshape_delta_disks = delta_disks;
- 						append_metadata_update(st, u, u->update_memory_size);
- 						flush_metadata_updates(st);
- 						/* send pings to roll managemon and monitor
- 						 */
--						ping_manager(devname);
--						ping_monitor(devname);
-+						ping_manager(geo.dev_name);
-+						ping_monitor(geo.dev_name);
- 
--						if (imsm_check_reshape_conditions(fd, st, current_array)) {
-+						if (imsm_check_reshape_conditions(fd, st, geo.dev_id)) {
- 							dprintf("imsm. Error. Wrong reshape conditions.\n");
- 							ret_val = 1;
--							current_array = -1;
-+							geo.dev_id = -1;
- 						}
- 					} else
--						current_array = -1;
-+						geo.dev_id = -1;
- 				}
- 				free(array);
- 			}
-@@ -8244,10 +8370,11 @@ int imsm_manage_container_reshape(struct supertype *st)
- 	}
- 
- imsm_manage_container_reshape_exit:
--	free(devname);
- 	sysfs_free(info);
- 	if (fd > -1)
- 		close(fd);
-+	if (geo.dev_name)
-+		free(geo.dev_name);
- 
- 	return ret_val;
- }
+ 	ret_val = imsm_manage_container_reshape(st);
+@@ -8460,3 +8552,4 @@ struct superswitch super_imsm = {
+ 	.prepare_update = imsm_prepare_update,
+ #endif /* MDASSEMBLE */
+ };
++
 
