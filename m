@@ -1,101 +1,152 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 00/21] Series short description
-Date: Tue, 23 Nov 2010 13:39:38 +0100
-Message-ID: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 01/21] imsm: Remove unnecessary code
+Date: Tue, 23 Nov 2010 13:39:46 +0100
+Message-ID: <20101123123946.17770.33181.stgit@gklab-170-024.igk.intel.com>
+References: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101123123900.17770.75516.stgit@gklab-170-024.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-This patch series bases on previously sent patch series: array/container freezing by Dan Williams, and my and Maciej Trela's patches for OLCE and check pointing for external metadata.
-This patch series implements:
-1. Patches 0001 to 0018 : fixes for freezing, OLCE and check pointing
-2. Patches 0018 to 0021 : implements new migration features for external metadata:
-    - Migration raid0 to raid5
-    - Migration raid5 to raid0
-    - Chunk size migration
+Remove unused or not necessary/not used/redundant code
 
-We are planning in the few days add fixes for raid10 <-> raid0 takeover also.
-
-Migration feature reuses code flow introduced for OLCE (Online Capacity Expansion) and uses the same grow/reshape flow in mdadm/mdmon.
-Migration is executed in the following way:
-1. mdadm: reshape_super() prepares metadata update and sends it to mdmon
-2. mdadm: waits for reshape array state
-3. monitor: receives metadata update and applies it.
-4. monitor: metadata update triggers managemon.
-5. managemon: updates array (md) configuration and starts reshape
-6. mdadm: finds that reshape is started and continues it using check pointing
-7. mdadm: reshape is finished and manage_reshape() finalizes array:
-    - Sets array size as is given in metadata
-    - Performs takeover to raid0 if necessary
-
-In current patches placement of manage_reshape() function call was changed.
-It is moved to end of array processing to use common code form Grow.c for external metadata reshape case
-(we do not need to duplicate existing code) as it would do the same things as code for native metadata.
-New manage_reshape() placement causes a few things to do in implementation only and simplifees code.
-
-Migrations command line:
-1. Execute migration raid0->raid5:
-    mdadm  - -grow /dev/md/array_name -level 5 -layout=left-asymmetric
-
-    This converts n-disks raid0 array to (n+1)-disks raid5 array. Additional raid5 array disk is user from spares pool
-
-2. Execute migration raid5->raid0:
-    mdadm  - -grow /dev/md/array_name -level 0
-
-    This converts n-disks raid5 array to n-disks raid0 array.
-3. Execute chunk size migration
-    mdadm  - -grow /dev/md/array_name -chunk N
-
-    where N is ne chunk size value
-
-In current patch series testing of 'experimental' flag was changes according to Neil's suggestion, as I've found it useable for my testing purposes.
-The rest of comments to already reviewed patches (OLCE/check pointing) will be implemented in next step.
-
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (21):
-      Migration: Chunk size migration
-      Migration raid0->raid5
-      Migration: raid5->raid0
-      imsm: Use geo structure
-      Change manage_reshape() placement
-      FIX: Start mdmon after changing level
-      FIX: Checkpointing: Enable checkpointing for non-growing migrations
-      FIX: Level field can be NULL
-      imsm Fix: Core during rebuild on array details read
-      WORKAROUND: md reports idle state during reshape start
-      FIX: Honor !reshape state on wait_reshape() entry
-      FIX: Unfreeze not only container for external metadata
-      FIX: Cannot exit monitor after takeover
-      imsm: FIX: Continue expansion after -As command
-      imsm: FIX: Reshape Cancel message on 2nd array doesn't work correctly
-      imsm: FIX: Guard size setting
-      FIX: Allow for reshape without backup file
-      FIX: Use MDADM_EXPERIMENTAL environment variable
-      imsm: FIX: imsm_check_reshape_conditions change ret_val
-      imsm: Change some debug output information
-      imsm: Remove unnecessary code
+ mdadm/mdadm/super-intel.c |   40 ++++++++++++----------------------------
+ 1 files changed, 12 insertions(+), 28 deletions(-)
 
+diff --git a/mdadm/mdadm/super-intel.c b/mdadm/mdadm/super-intel.c
+index 5cd3ba1..1248612 100644
+--- a/mdadm/mdadm/super-intel.c
++++ b/mdadm/mdadm/super-intel.c
+@@ -6997,7 +6997,6 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 	struct mdinfo *spares = NULL;
+ 	int i;
+ 	unsigned long long array_blocks;
+-	unsigned long long array_blocks_current;
+ 	int used_disks;
+ 	int delta_disks = 0;
+ 	struct dl *new_disks;
+@@ -7056,7 +7055,6 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 			struct imsm_map *new_map2;
+ 			int idx;
+ 
+-			u->devnum = -1;
+ 			new_map = NULL;
+ 			imsm_copy_dev(upd_devs, old_dev);
+ 			new_map = get_imsm_map(upd_devs, 0);
+@@ -7165,11 +7163,8 @@ calculate_size_only:
+ 		/* round array size down to closest MB
+ 		 */
+ 		array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
+-		array_blocks_current = (((unsigned long long)((struct imsm_dev *)upd_devs)->size_high) << 32)
+-				+ ((struct imsm_dev *)upd_devs)->size_low;
+ 		((struct imsm_dev *)(upd_devs))->size_low = __cpu_to_le32((__u32)array_blocks);
+ 		((struct imsm_dev *)(upd_devs))->size_high = __cpu_to_le32((__u32)(array_blocks >> 32));
+-
+ 		/* finalize update */
+ 		ret_val = u;
+ 	}
+@@ -7247,13 +7242,12 @@ exit_get_volume_for_olce:
+ 
+ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		       int layout, int chunksize, int raid_disks,
+-		       char *backup, char*dev, int verbouse)
++		       char *backup, char *dev, int verbouse)
+ {
+ 	int ret_val = 1;
+ 	struct mdinfo *sra = NULL;
+ 	int fd = -1;
+ 	char buf[PATH_MAX];
+-	char *devname = NULL;
+ 
+ 	dprintf("imsm: reshape_super called().\n");
+ 	dprintf("\tfor level      : %i\n", level);
+@@ -7264,13 +7258,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		return ret_val;
+ 	}
+ 
+-	devname = devnum2devname(st->devnum);
+-	if (devname == NULL) {
+-		dprintf("imsm: Error: imsm_reshape_super(): cannot get device name.\n");
+-		return ret_val;
+-	}
+-
+-	snprintf(buf, PATH_MAX, "/dev/%s", devname);
++	snprintf(buf, PATH_MAX, "/dev/md%i", st->devnum);
+ 	fd = open(buf , O_RDONLY | O_DIRECT);
+ 	if (fd < 0) {
+ 		dprintf("imsm: cannot open device\n");
+@@ -7371,9 +7359,6 @@ imsm_reshape_super_exit:
+ 	sysfs_free(sra);
+ 	if (fd >= 0)
+ 		close(fd);
+-	if (devname)
+-		free(devname);
+-
+ 	dprintf("imsm: reshape_super Exit code = %i\n", ret_val);
+ 	return ret_val;
+ }
+@@ -7725,28 +7710,29 @@ int imsm_grow_manage_size(struct supertype *st, struct mdinfo *sra)
+ 	struct mdinfo *info = NULL;
+ 	unsigned long long size;
+ 	int container_fd;
+-	int dn;
+ 
+ 	/* finalize current volume reshape
+ 	 * for external meta size has to be managed by mdadm
+ 	 * read size set in meta and put it to md when
+ 	 * reshape is finished.
+-	 *
+-	 * for takeovered array, return to original raid level
+ 	 */
+ 
+-	if (sra == NULL)
++	if (sra == NULL) {
++		dprintf("Error: imsm_grow_manage_size(): sra == NULL\n");
+ 		goto exit_grow_manage_size_ext_meta;
++	}
+ 	wait_reshape(sra);
+ 
+ 	/* reshape has finished, update md size
+ 	 * get per-device size and multiply by data disks
+ 	 */
+-	dn = devname2devnum(sra->text_version + 1);
+-	container_fd = open_dev(dn);
+-	if (container_fd < 0)
++	container_fd = open_dev(st->devnum);
++	if (container_fd < 0) {
++		dprintf("Error: imsm_grow_manage_size(): container_fd == 0\n");
+ 		goto exit_grow_manage_size_ext_meta;
+-	st->ss->load_super(st, container_fd, NULL);
++	}
++	if (st->loaded_container)
++		st->ss->load_super(st, container_fd, NULL);
+ 	info = sysfs_read(container_fd, 0, GET_LEVEL|GET_VERSION|GET_DEVS|GET_STATE);
+ 	close(container_fd);
+ 	if (info == NULL) {
+@@ -7756,8 +7742,6 @@ int imsm_grow_manage_size(struct supertype *st, struct mdinfo *sra)
+ 	st->ss->getinfo_super(st, info);
+ 	size = info->custom_array_size/2;
+ 	sysfs_set_num(sra, NULL, "array_size", size);
+-
+-	/* for takeovered array return to original raid level */
+ 	ret_val = 1;
+ 
+ exit_grow_manage_size_ext_meta:
+@@ -8116,7 +8100,7 @@ int imsm_manage_container_reshape(struct supertype *st)
+ 					continue;
+ 				}
+ 			} else {
+-			dprintf("Reshape is broken (cannot read sync_complete)\n");
++				dprintf("Reshape is broken (cannot read sync_complete)\n");
+ 				dprintf("Array level is: %i\n", info->array.level);
+ 				ret_val = 1;
+ 				close(fd2);
 
- mdadm/mdadm/Detail.c      |    1 
- mdadm/mdadm/Grow.c        |  178 ++++++++----
- mdadm/mdadm/Makefile      |    6 
- mdadm/mdadm/managemon.c   |  113 ++++++-
- mdadm/mdadm/mdadm.h       |    7 
- mdadm/mdadm/mdmon.h       |    4 
- mdadm/mdadm/mdstat.c      |    2 
- mdadm/mdadm/monitor.c     |   11 +
- mdadm/mdadm/msg.c         |    5 
- mdadm/mdadm/restripe.c    |    1 
- mdadm/mdadm/super-intel.c |  693 +++++++++++++++++++++++++++++++++------------
- mdadm/mdadm/util.c        |   88 +++++-
- 12 files changed, 830 insertions(+), 279 deletions(-)
-
--- 
-Signature
