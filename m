@@ -1,110 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Call blk_queue_flush() to establish flush/fua
- support
-Date: Tue, 23 Nov 2010 10:50:00 +1100
-Message-ID: <20101123105000.331b40f8@notabene.brown>
-References: <20101122232208.GU14383@tux1.beaverton.ibm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Autorebuild, new dynamic udev rules for hot-plugs
+Date: Mon, 22 Nov 2010 16:11:41 -0800
+Message-ID: <4CEB06BD.9090407@intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>	<20101117212242.5ad7b210@notabene.brown>	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>	<66C59AD0932712458090B447266D638C0109E0E1E7@irsmsx504.ger.corp.intel.com> <20101122160201.24ad85f8@notabene.brown>  <66C59AD0932712458090B447266D638C0109E6AE6C@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101122232208.GU14383@tux1.beaverton.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: djwong@us.ibm.com
-Cc: linux-raid@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <66C59AD0932712458090B447266D638C0109E6AE6C@irsmsx504.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 22 Nov 2010 15:22:08 -0800
-"Darrick J. Wong" <djwong@us.ibm.com> wrote:
+On 11/22/2010 3:50 PM, Hawrylewicz Czarnowski, Przemyslaw wrote:
+>> Four comments.
+>>
+>> 1/ I wouldn't write a file in /lib/udev/rules.d/
+>>    I think it should be written to "/dev/.udev/rules.d/"
+>>    which is referred to as the "temporary rules directory"
+>>    in the udev documentation.
+> I am not sure if it is what we are looking for. Temporary means they disappear after reboot. It is OK as cold-plug does not need support for bare disks (or maybe I am wrong?). But in such case, one who wants to use autorebuild should invoke mdadm --activate-domains for example in /etc/init.d/local.boot or somewhere else. Second idea here is to use ActivateDomain() when one starts monitor with autorebuild enabled. Which one? I would prefer to leave it as it was written initially (considering comment #4). Then, if one removes policies from config, invoking --activate-domains should reset/remove rules (but see #3)
 
-> Before 2.6.37, the md layer had a mechanism for catching I/Os with the barrier
-> flag set, and translating the barrier into barriers for all the underlying
-> devices.  With 2.6.37, I/O barriers have become plain old flushes, and the md
-> code was updated to reflect this.  However, one piece was left out -- the md
-> layer does not tell the block layer that it supports flushes or FUA access at
-> all, which results in md silently dropping flush requests.
-> 
-> Since the support already seems there, just add this one piece of bookkeeping
-> to restore the ability to flush writes through md.
+The intent was always to have this be something reinitialized at boot. 
+Putting these in the temporary rule directory also precludes them from 
+being added to the initramfs where they are not needed / potentially 
+confusing.
 
-I would rather just unconditionally call
-   blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
+The other intent was to only match the pci paths for the controllers we 
+cared about.  That does not appear to be a part of this patch.
 
-I don't think there is much to be gained by trying to track exactly what the
-underlying devices support, and as the devices can change, that is racy
-anyway.
+>
+>>
+>> 2/ I would be good to process the type=disk or type=part part of the
+>>     policy into the rules file as well.
+> OK
+>
+>>
+>> 3/ I'm not very comfortable with hard-coding the name of the
+>>     file to be created in the rules.d directory.  Maybe usage could be
+>>        --activate-domains=63-md-whatever
+> Good idea, but only if we store our rules in /dev/.udev/rules.d. Otherwise it would be difficult to maintain all generated rules and remove the old ones... I would leave default if not given by user, but one can pass any file name.
 
-Thoughts?
+The issue is that this namespace belongs to the distro and since they 
+need to modify initscripts to turn this feature on might as well dump 
+the entirety of the naming responsibility to the user.
 
-NeilBrown
+>> 4/ I don't think it is good to have an incomplete file in rules.d that udev
+>>     might accidentally read.  We should create the file with a name with a
+>>     leading '.' (assuming udev ignores those, I haven't checked) and then
+>>     rename it after it has been completely written.
+> You're right. In theory, such partial udev rules are excluded when udev can't interpret them properly. I have looked into udev's sources and found that it looks for "*.rules" files. All other file extensions are ignored. Files with leading dots are also omitted. I would prefer to create<name>.temp file and then rename it into<name>.rules.
 
+There must be an existing convention for this sort of the thing, if so 
+let's not invent another one.
 
-
-
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> ---
-> 
->  drivers/md/md.c |   25 ++++++++++++++++++++++++-
->  1 files changed, 24 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 324a366..a52d7be 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -356,6 +356,21 @@ EXPORT_SYMBOL(mddev_congested);
->  /*
->   * Generic flush handling for md
->   */
-> +static void evaluate_flush_capability(mddev_t *mddev)
-> +{
-> +	mdk_rdev_t *rdev;
-> +	unsigned int flush = REQ_FLUSH | REQ_FUA;
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(rdev, &mddev->disks, same_set) {
-> +		if (rdev->raid_disk < 0)
-> +			continue;
-> +		flush &= rdev->bdev->bd_disk->queue->flush_flags;
-> +	}
-> +	rcu_read_unlock();
-> +
-> +	blk_queue_flush(mddev->queue, flush);
-> +}
->  
->  static void md_end_flush(struct bio *bio, int err)
->  {
-> @@ -1885,6 +1900,8 @@ static int bind_rdev_to_array(mdk_rdev_t * rdev, mddev_t * mddev)
->  	/* May as well allow recovery to be retried once */
->  	mddev->recovery_disabled = 0;
->  
-> +	evaluate_flush_capability(mddev);
-> +
->  	return 0;
->  
->   fail:
-> @@ -1903,17 +1920,23 @@ static void md_delayed_delete(struct work_struct *ws)
->  static void unbind_rdev_from_array(mdk_rdev_t * rdev)
->  {
->  	char b[BDEVNAME_SIZE];
-> +	mddev_t *mddev;
-> +
->  	if (!rdev->mddev) {
->  		MD_BUG();
->  		return;
->  	}
-> -	bd_release_from_disk(rdev->bdev, rdev->mddev->gendisk);
-> +	mddev = rdev->mddev;
-> +	bd_release_from_disk(rdev->bdev, mddev->gendisk);
->  	list_del_rcu(&rdev->same_set);
->  	printk(KERN_INFO "md: unbind<%s>\n", bdevname(rdev->bdev,b));
->  	rdev->mddev = NULL;
->  	sysfs_remove_link(&rdev->kobj, "block");
->  	sysfs_put(rdev->sysfs_state);
->  	rdev->sysfs_state = NULL;
-> +
-> +	evaluate_flush_capability(mddev);
-> +
->  	/* We need to delay this, otherwise we can deadlock when
->  	 * writing to 'remove' to "dev/state".  We also need
->  	 * to delay it due to rcu usage.
+--
+Dan
