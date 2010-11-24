@@ -1,47 +1,36 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH v2] md: Call blk_queue_flush() to establish flush/fua
-	support
-Date: Tue, 23 Nov 2010 11:01:03 -0800
-Message-ID: <20101123190103.GW14383@tux1.beaverton.ibm.com>
-References: <20101122232208.GU14383@tux1.beaverton.ibm.com> <20101123105000.331b40f8@notabene.brown>
-Reply-To: djwong@us.ibm.com
+From: Spelic <spelic@shiftmail.org>
+Subject: raid10 speed drops significantly on large chunks
+Date: Wed, 24 Nov 2010 01:22:49 +0100
+Message-ID: <4CEC5AD9.4030708@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20101123105000.331b40f8@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Here's a shorter version that sets up flush/fua unconditionally.
----
-Before 2.6.37, the md layer had a mechanism for catching I/Os with the barrier
-flag set, and translating the barrier into barriers for all the underlying
-devices.  With 2.6.37, I/O barriers have become plain old flushes, and the md
-code was updated to reflect this.  However, one piece was left out -- the md
-layer does not tell the block layer that it supports flushes or FUA access at
-all, which results in md silently dropping flush requests.
+Hi there
+I'm doing some testing on raid10 layouts and chunksizes.
 
-Since the support already seems there, just add this one piece of bookkeeping.
+I am checking chunksizes 128, 1024 and 8192, on a 6-disk array.
+On streaming read / streaming write (dd bs=1M from/to /dev/zero 
+/dev/null) the speed of 128 and 1024 on my hardware is around 270MB/sec 
+writes (all layouts) and 280MB/sec(near)--450MB/sec(far) read speed.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+But when I try chunksize 8192 speed drops significantly and I have 
+231(near)--175(far) write speed and 205(near)--323(far) read speed.
 
- drivers/md/md.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I tried the kitchen sink on settings... but there's no way to bring 8192 
+speed up to the others. I tried raising nr_requests on all the drives up 
+by a factor 16, changing schedulers, raising deadline scheduler 
+expirations, readahead on drives... no way.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 324a366..43243a4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4338,6 +4338,8 @@ static int md_alloc(dev_t dev, char *name)
- 	if (mddev->kobj.sd &&
- 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
- 		printk(KERN_DEBUG "pointless warning\n");
-+
-+	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
-  abort:
- 	mutex_unlock(&disks_mutex);
- 	if (!error && mddev->kobj.sd) {
+This surprises me... what could be the reason? In particular on a near 
+layout I can't see what could be wrong with a big chunksize.
+I suspect the situation would have gone worse if I went further up with 
+the chunksize.
+
+There is plenty of free RAM (8GB free).
+
+Thanks for your insights
