@@ -1,36 +1,88 @@
-From: Spelic <spelic@shiftmail.org>
-Subject: raid10 speed drops significantly on large chunks
-Date: Wed, 24 Nov 2010 01:22:49 +0100
-Message-ID: <4CEC5AD9.4030708@shiftmail.org>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] md: Fix single printks with multiple KERN_<level>s
+Date: Tue, 23 Nov 2010 16:57:40 -0800
+Message-ID: <1290560260.11971.5.camel@Joe-Laptop>
+References: <20101011152516.GF27153@n2100.arm.linux.org.uk>
+	 <1290505382-16110-1-git-send-email-u.kleine-koenig@pengutronix.de>
+	 <20101123101210.GA18170@n2100.arm.linux.org.uk>
+	 <20101123103940.GN4693@pengutronix.de>
+	 <20101123105830.GO4693@pengutronix.de>
+	 <AANLkTinmky17XZZPh7QvcY_r=66f_PwzRYFPUSvhiJGK@mail.gmail.com>
+	 <20101123223344.GE26510@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101123223344.GE26510@n2100.arm.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there
-I'm doing some testing on raid10 layouts and chunksizes.
+Noticed-by: Russell King <linux@arm.linux.org.uk>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+> Note that KERN_foo in the middle of strings, even after a newline are
+> preserved in the output.  So:
+> 
+>                 printk(KERN_WARNING "BUG: Your driver calls ioremap() on system memory.  This leads\n"
+>                        KERN_WARNING "to architecturally unpredictable behaviour on ARMv6+, and ioremap()\n"
+>                        KERN_WARNING "will fail in the next kernel release.  Please fix your driver.\n");
+> 
+> results in <4>'s appearing on the console.  I've always written code
+> over the last 15 years assuming that after any newline in printk output,
+> the log level gets reset and so needs a new log level specifier.
+> 
+> Sounds like this is something which needs auditing as a result of your
+> change, and sounds like its something that kernelnewbies people could
+> do.  My own greps haven't revealed any cases though.
 
-I am checking chunksizes 128, 1024 and 8192, on a 6-disk array.
-On streaming read / streaming write (dd bs=1M from/to /dev/zero 
-/dev/null) the speed of 128 and 1024 on my hardware is around 270MB/sec 
-writes (all layouts) and 280MB/sec(near)--450MB/sec(far) read speed.
+ drivers/md/raid1.c  |    5 +++--
+ drivers/md/raid10.c |    5 +++--
+ drivers/md/raid5.c  |    1 -
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-But when I try chunksize 8192 speed drops significantly and I have 
-231(near)--175(far) write speed and 205(near)--323(far) read speed.
-
-I tried the kitchen sink on settings... but there's no way to bring 8192 
-speed up to the others. I tried raising nr_requests on all the drives up 
-by a factor 16, changing schedulers, raising deadline scheduler 
-expirations, readahead on drives... no way.
-
-This surprises me... what could be the reason? In particular on a near 
-layout I can't see what could be wrong with a big chunksize.
-I suspect the situation would have gone worse if I went further up with 
-the chunksize.
-
-There is plenty of free RAM (8GB free).
-
-Thanks for your insights
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 45f8324..e05381b 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1027,8 +1027,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	} else
+ 		set_bit(Faulty, &rdev->flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-	printk(KERN_ALERT "md/raid1:%s: Disk failure on %s, disabling device.\n"
+-	       KERN_ALERT "md/raid1:%s: Operation continuing on %d devices.\n",
++	printk(KERN_ALERT
++	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
++	       "md/raid1:%s: Operation continuing on %d devices.\n",
+ 	       mdname(mddev), bdevname(rdev->bdev, b),
+ 	       mdname(mddev), conf->raid_disks - mddev->degraded);
+ }
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index c67aa54..686543d 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1051,8 +1051,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	}
+ 	set_bit(Faulty, &rdev->flags);
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-	printk(KERN_ALERT "md/raid10:%s: Disk failure on %s, disabling device.\n"
+-	       KERN_ALERT "md/raid10:%s: Operation continuing on %d devices.\n",
++	printk(KERN_ALERT
++	       "md/raid10:%s: Disk failure on %s, disabling device.\n"
++	       "md/raid10:%s: Operation continuing on %d devices.\n",
+ 	       mdname(mddev), bdevname(rdev->bdev, b),
+ 	       mdname(mddev), conf->raid_disks - mddev->degraded);
+ }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index dc574f3..316fbe7 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1721,7 +1721,6 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		set_bit(Faulty, &rdev->flags);
+ 		printk(KERN_ALERT
+ 		       "md/raid:%s: Disk failure on %s, disabling device.\n"
+-		       KERN_ALERT
+ 		       "md/raid:%s: Operation continuing on %d devices.\n",
+ 		       mdname(mddev),
+ 		       bdevname(rdev->bdev, b),
