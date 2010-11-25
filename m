@@ -1,41 +1,48 @@
-From: Carlos Carvalho <carlos@fisica.ufpr.br>
-Subject: Re: raid related kernel hang in 2.6.36
-Date: Wed, 24 Nov 2010 19:15:26 -0200
-Message-ID: <19693.32878.255666.504304@fisica.ufpr.br>
-References: <4CED17A4.7050604@perabytes.com>
-	<AANLkTinfbPDQhmKRVibUv+Rm50wDkGizeYLGXQqY_xOu@mail.gmail.com>
-	<4CED226D.6090602@perabytes.com>
-	<20101125070155.277a0d62@notabene.brown>
+From: Aniket Kulkarni <aniket@netezza.com>
+Subject: Re: [PATCH] md: Fix =?utf-8?b?bnJfcGVuZGluZw==?= race during raid10 recovery
+Date: Thu, 25 Nov 2010 01:36:42 +0000 (UTC)
+Message-ID: <loom.20101125T023013-905@post.gmane.org>
+References: <1290020270.3055.12.camel@aniket-desktop> <20101124162953.4a405299@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101125070155.277a0d62@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Du Jun <dujun@perabytes.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown (neilb@suse.de) wrote on 25 November 2010 07:01:
- >On Wed, 24 Nov 2010 22:34:21 +0800 Du Jun <dujun@perabytes.com> wrote:
- >
- >> Their's no dmesg information at all before the hang. The system just 
- >> hangs suddenly without any kernel printk or oops.
- >> 
- >> mdadm version is debian lenny version 2.6.7.2-3
- >> 
- >> I will get mdadm -E & mdadm -D informations tomorrow but I doubt they 
- >> are useful.
- >
- >Probably not, but they wouldn't hurt either.
- >
- >What would really help is if you could capture the result of
- >    sysrq-T
- >
- >which I accept might be a challenge depending on how hard the machine really
- >has frozen.
- >
- >Also, make sure the LOCKUP_DETECTOR config options are set, and wait a few
- >minutes after the hand to see if something pops up.
+Neil Brown <neilb <at> suse.de> writes:
+> > The fix is -
+> > 
+> > 1. Increment wr.nr_pending immediately after selecting a good target. 
+Ofcourse
+> > the decrements will be added to error paths in sync_request and 
+end_sync_read.
+> > 2. Don't submit recovery IOs to faulty targets
+> 
+> Hi again,
+>  I've been thinking about this some more and cannot see that it is a real
+>  problem.
+>  Do you have an actual 'oops' showing a crash in this situation?
+> 
+>  The reason it shouldn't happen is that devices are only removed by
+>  remove_and_add_devices, and that is only called when no resync/recovery is
+>  happening.
+>  So when a device fail, the recovery will abort (waiting for all requests to
+>  complete), then failed devices are removed and possibly spares are added,
+>  then possible recovery starts up again.
+> 
+>  So it should work correctly as it is....
 
-You could also boot with the NMI watchdog. Using netconsole to capture
-the full traces would be useful as well.
+Hi Neil
+
+You are right, the 'oops' is possible only if devices can be removed during an 
+active recovery.
+
+I have a patch for that but I had forgotten to include in the original posting. 
+As you have suggested, let me go back and post the patches I have as a series.
+
+Thanks
+--
+aniket
+
