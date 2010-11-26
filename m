@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 23/53] Process reshape initialization by managemon
-Date: Fri, 26 Nov 2010 09:06:53 +0100
-Message-ID: <20101126080653.5221.97203.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 25/53] imsm: Verify slots in meta against slot numbers set by
+	md
+Date: Fri, 26 Nov 2010 09:07:08 +0100
+Message-ID: <20101126080708.5221.28457.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,138 +14,363 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Monitor signals request to managemon (using reshape_delta_disks variable).
-This caused call to reshape_array() vector. It prepares second metadata update for added disks slot verification.
-Slots are set by md during reshape start and they are unknown to user space so far.
-Second update is sent after reshape is started. During this update processing, metadata is checked against slot numbers set by md and in mismatch case information metadata is updated.
+To verify slots numbers stored in metadata against those chosen by md, update_reshape_set_slots_update is used.
 
-The reshape is being stared in delayed state due to sync_max was set to 0. After this reshape_delta_disk is set to 'in progress' value to avoid reentry.
-Reshape process is continued in mdadm.
-
-If reshape cannot be started or any failure condition occurs, 'cancel' message is prepared by reshape_array() and send to monitor, to rollback metadata changes.
-Mdadm is informed about failure by idle array state.
+Managemon calls reshape_array() vector and prepares slot verification metadata update there. It is sent when reshape is started successfully in md.
+Then monitor updates/verifies slots.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- managemon.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.h     |   26 +++++++++++++++++++++++
- 2 files changed, 94 insertions(+), 0 deletions(-)
+ super-intel.c |  302 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 302 insertions(+), 0 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index d495014..d9eb743 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -424,6 +424,74 @@ static void manage_member(struct mdstat_ent *mdstat,
- 		}
- 	}
+diff --git a/super-intel.c b/super-intel.c
+index 56f7ea4..799bb51 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -287,6 +287,7 @@ enum imsm_update_type {
+ 	update_add_disk,
+ 	update_level,
+ 	update_reshape,
++	update_reshape_set_slots,
+ };
  
-+	if ((a->reshape_state != reshape_not_active) &&
-+	    (a->reshape_state != reshape_in_progress)) {
-+		dprintf("Reshape signals need to manage this member\n");
-+		if (a->container->ss->reshape_array) {
-+			struct metadata_update *updates = NULL;
-+			struct mdinfo *newdev = NULL;
-+			struct mdinfo *d;
+ struct imsm_update_activate_spare {
+@@ -5250,6 +5251,7 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
+ }
+ 
+ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned index);
++int imsm_reshape_array_set_slots(struct active_array *a);
+ int imsm_get_new_device_name(struct dl *dl);
+ 
+ static void imsm_process_update(struct supertype *st,
+@@ -5382,6 +5384,25 @@ update_reshape_exit:
+ 			free(u->devs_mem.dev);
+ 		break;
+ 	}
++	case update_reshape_set_slots: {
++		struct imsm_update_reshape *u = (void *)update->buf;
++		struct active_array *a;
 +
-+			newdev = newa->container->ss->reshape_array(newa, reshape_in_progress, &updates);
-+			if (newdev) {
-+				int status_ok = 1;
-+				newa = duplicate_aa(a);
-+				if (newa == NULL)
-+					goto reshape_out;
-+
-+				for (d = newdev; d ; d = d->next) {
-+					struct mdinfo *newd;
-+
-+					newd = malloc(sizeof(*newd));
-+					if (!newd) {
-+						status_ok = 0;
-+						dprintf("Cannot aallocate memory for new disk.\n");
-+						continue;
-+					}
-+					if (sysfs_add_disk(&newa->info, d, 0) < 0) {
-+						free(newd);
-+						status_ok = 0;
-+						dprintf("Cannot add disk to array.\n");
-+						continue;
-+					}
-+					disk_init_and_add(newd, d, newa);
-+				}
-+				/* go with reshape
-+				 */
-+				if (status_ok)
-+					if (sysfs_set_num(&newa->info, NULL, "sync_max", 0) < 0)
-+						status_ok = 0;
-+				if (status_ok && sysfs_set_str(&newa->info, NULL, "sync_action", "reshape") == 0) {
-+					/* reshape executed
-+					 */
-+					dprintf("Reshape was started\n");
-+					replace_array(a->container, a, newa);
-+					a = newa;
-+				} else {
-+					/* on problems cancel update
-+					 */
-+					free_aa(newa);
-+					free_updates(&updates);
-+					updates = NULL;
-+					a->container->ss->reshape_array(a, reshape_cancel_request, &updates);
-+					sysfs_set_str(&a->info, NULL, "sync_action", "idle");
-+				}
++		dprintf("imsm: process_update() for update_reshape_set_slot for device %i\n", u->devnum);
++		for (a = st->arrays; a; a = a->next)
++			if (a->devnum == u->devnum) {
++				break;
 +			}
-+			dprintf("Send metadata update for reshape.\n");
 +
-+			queue_metadata_update(updates);
-+			updates = NULL;
-+			wakeup_monitor();
-+reshape_out:
-+			while (newdev) {
-+				d = newdev->next;
-+				free(newdev);
-+				newdev = d;
-+			}
-+			free_updates(&updates);
++		if (a == NULL) {
++			dprintf(" - cannot locate requested array\n");
++			break;
++		}
++
++		if (imsm_reshape_array_set_slots(a) > -1)
++			super->updates_pending++;
++		break;
++	}
+ 	case update_level: {
+ 		struct imsm_update_level *u = (void *)update->buf;
+ 		struct imsm_dev *dev_new, *dev = NULL;
+@@ -5802,6 +5823,9 @@ static void imsm_prepare_update(struct supertype *st,
+ 		dprintf("New anchor length is %llu\n", (unsigned long long)len);
+ 		break;
+ 	}
++	case update_reshape_set_slots: {
++		break;
++	}
+ 	case update_level: {
+ 		struct imsm_update_level *u = (void *) update->buf;
+ 		struct active_array *a;
+@@ -6694,6 +6718,283 @@ int imsm_get_new_device_name(struct dl *dl)
+ 	return rv;
+ }
+ 
++int imsm_reshape_array_manage_new_slots(struct intel_super *super, int inst, int devnum, int correct);
++
++int imsm_reshape_array_set_slots(struct active_array *a)
++{
++	struct intel_super *super = a->container->sb;
++	int inst = a->info.container_member;
++
++	return imsm_reshape_array_manage_new_slots(super, inst, a->devnum, 1);
++}
++/* imsm_reshape_array_manage_new_slots()
++ * returns: number of corrected slots for correct == 1
++ *          counted number of different slots for correct == 0
++*/
++int imsm_reshape_array_manage_new_slots(struct intel_super *super, int inst, int devnum, int correct)
++{
++
++	struct imsm_dev *dev = get_imsm_dev(super, inst);
++	struct imsm_map *map_1 = get_imsm_map(dev, 0);
++	struct imsm_map *map_2 = get_imsm_map(dev, 1);
++	struct dl *dl;
++	unsigned long long sysfs_slot;
++	char buf[PATH_MAX];
++	char *devname;
++	int fd;
++	struct mdinfo *sra = NULL;
++	int ret_val = 0;
++
++	if ((map_1 == NULL) || (map_2 == NULL)) {
++		dprintf("imsm_reshape_array_set_slots() no maps (map_1 =%p, map_2 = %p)\n", map_1, map_2);
++		dprintf("\t\tdev->vol.migr_state = %i\n", dev->vol.migr_state);
++		dprintf("\t\tdev->volume = %s\n", dev->volume);
++		return -1;
++	}
++
++	/* verify/correct slot configuration of added disks
++	 */
++	dprintf("\n\nStart map verification for %i added devices on device no %i\n",
++		map_1->num_members - map_2->num_members, devnum);
++	devname = devnum2devname(devnum);
++	if (devname == NULL) {
++		dprintf("imsm: ERROR: Cannot get device name.\n");
++		return -1;
++	}
++	sprintf(buf, "/dev/%s", devname);
++	free(devname);
++
++	fd = open(buf, O_RDONLY);
++	if (fd < 0) {
++		dprintf("imsm: ERROR: Cannot open device %s.\n", buf);
++		return -1;
++	}
++
++	sra = sysfs_read(fd, 0, GET_LEVEL|GET_VERSION|GET_DEVS|GET_STATE);
++	if (!sra) {
++		dprintf("imsm: ERROR: Device not found.\n");
++		close(fd);
++		return -1;
++	}
++
++	for (dl = super->disks; dl; dl = dl->next) {
++		int fd2;
++		int rv;
++
++		dprintf("\tLooking at device %s (index = %i).\n", dl->devname, dl->index);
++		if (dl->devname && (strlen(dl->devname) > 5))
++			sprintf(buf, "/sys/block/%s/md/dev-%s/slot",
++				sra->sys_name, dl->devname+5);
++		fd2 = open(buf, O_RDONLY);
++		if (fd2 < 0)
++			continue;
++		rv = sysfs_fd_get_ll(fd2, &sysfs_slot);
++		close(fd2);
++		if (rv < 0)
++			continue;
++		dprintf("\t\tLooking at slot %llu in sysfs.\n", sysfs_slot);
++		if ((int)sysfs_slot != dl->index) {
++			dprintf("Slots doesn't match sysfs->%i and imsm->%i\n", (int)sysfs_slot, dl->index);
++			ret_val++;
++			if (correct)
++				dl->index = sysfs_slot;
++		}
++	}
++	close(fd);
++	sysfs_free(sra);
++	dprintf("IMSM Map verification finished (found wrong slots : %i).\n", ret_val);
++
++	return ret_val;
++}
++
++struct mdinfo *imsm_grow_array(struct active_array *a)
++{
++	int disk_count = 0;
++	struct intel_super *super = a->container->sb;
++	int inst = a->info.container_member;
++	struct imsm_dev *dev = get_imsm_dev(super, inst);
++	struct imsm_map *map = get_imsm_map(dev, 0);
++	struct mdinfo *di;
++	struct dl *dl;
++	int i;
++	int prev_raid_disks = a->info.array.raid_disks;
++	int new_raid_disks = prev_raid_disks + a->reshape_delta_disks;
++	struct mdinfo *vol = NULL;
++	char buf[PATH_MAX];
++	char *p;
++	int fd;
++	struct mdinfo *rv = NULL;
++
++	dprintf("imsm: grow array: inst=%d raid disks=%d(%d) level=%d\n",
++		inst, a->info.array.raid_disks, new_raid_disks, a->info.array.level);
++
++	/* get array sysfs entry
++	 */
++	p = devnum2devname(a->devnum);
++	if (p == NULL)
++		return rv;
++	sprintf(buf, "/dev/%s", p);
++	free(p);
++	fd = open(buf, O_RDONLY);
++	if (fd < 0)
++		return rv;
++	vol = sysfs_read(fd, 0, GET_LEVEL|GET_VERSION|GET_DEVS|GET_STATE);
++	if (vol == NULL) {
++		close(fd);
++		return rv;
++	}
++	/* Look for all disks beyond current configuration
++	 * To handle degradation after takeover
++	 * look also on last disk in configuration.
++	 */
++	for (i = prev_raid_disks; i < new_raid_disks; i++) {
++		/* OK, this device can be added.  Try to add.
++		 */
++		dl = imsm_add_spare(super, i, a, 0);
++		if (!dl)
++			continue;
++
++		if (dl->index < 0)
++			dl->index = i;
++		/* found a usable disk with enough space */
++		di = malloc(sizeof(*di));
++		if (!di)
++			continue;
++
++		memset(di, 0, sizeof(*di));
++		/* dl->index will be -1 in the case we are activating a
++		 * pristine spare.  imsm_process_update() will create a
++		 * new index in this case.  On disks=4(5)ce a disk is found to be
++		 * failed in all member arrays it is kicked from the
++		 * metadata
++		 */
++		di->disk.number = dl->index;
++
++		/* (ab)use di->devs to store a pointer to the device
++		 * we chose
++		 */
++		di->devs = (struct mdinfo *) dl;
++
++		di->disk.raid_disk = -1;
++		di->disk.major = dl->major;
++		di->disk.minor = dl->minor;
++		di->disk.state = (1<<MD_DISK_SYNC) |
++				 (1<<MD_DISK_ACTIVE);
++		di->next_state = 0;
++
++		di->recovery_start = MaxSector;
++		di->data_offset = __le32_to_cpu(map->pba_of_lba0);
++		di->component_size = a->info.component_size;
++		di->container_member = inst;
++		super->random = random32();
++
++		di->next = rv;
++		rv = di;
++		disk_count++;
++		dprintf("%x:%x to be %d at %llu\n", dl->major, dl->minor,
++			i, di->data_offset);
++	}
++
++	dprintf("imsm: imsm_grow_array() configures %i raid disks\n", disk_count);
++	close(fd);
++	sysfs_free(vol);
++	if (disk_count != a->reshape_delta_disks) {
++
++		dprintf("imsm: ERROR: but it should configure %i\n",
++			a->reshape_delta_disks);
++
++		while (rv) {
++			di = rv;
++			rv = rv->next;
++			free(di);
 +		}
 +	}
 +
- 	if (a->check_degraded && !frozen) {
- 		struct metadata_update *updates = NULL;
- 		struct mdinfo *newdev = NULL;
-diff --git a/mdadm.h b/mdadm.h
-index 4777ad2..750afcc 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -680,6 +680,32 @@ extern struct superswitch {
- 	struct mdinfo *(*activate_spare)(struct active_array *a,
- 					 struct metadata_update **updates);
- 
-+	/* reshape_array() will
-+	 * 1. check is sync_max is set to 0
-+	 * 2. prepare device list that has to be added
-+	 * 3. prepare metadata update message to set disks slots
-+	 *    after reshape is started
-+	 * request_type:
-+	 * 1. RESHAPE_CANCEL_REQUEST
-+	 *    In error case it prepares metadata roll back message.
-+	 *    Such error case message should be prepared when
-+	 *    passed request_type is set to RESHAPE_CANCEL_REQUEST.
-+	 * 1. RESHAPE_IN_PROGRESS
-+	 *    requests transition to RESHAPE_IN_PROGRESS state
-+	 *    so proper update has to be prepared
-+	 * In active array structure can appear values:
-+	 * 1. RESHAPE_NOT_ACTIVE
-+	 * 2. RESHAPE_IN_PROGRESS
-+	 * 3. any other value indicates requested disk number if array change
-+	 *    this is visible only during reshape and metadata initialization
-+	 *    after initialization RESHAPE_IN_PROGRESS has to be placed
-+	 *    in reshape_delta_disks. When reshape is finished it is replaced
-+	 *    by RESHAPE_NOT_ACTIVE
-+	 */
-+	struct mdinfo *(*reshape_array)(struct active_array *a,
-+			     enum state_of_reshape request_type,
-+			     struct metadata_update **updates);
++	return rv;
++}
 +
- 	int swapuuid; /* true if uuid is bigending rather than hostendian */
- 	int external;
- 	const char *name; /* canonical metadata name */
++struct mdinfo *imsm_reshape_array(struct active_array *a, enum state_of_reshape request_type,
++			struct metadata_update **updates)
++{
++	struct imsm_update_reshape *u = NULL;
++	struct metadata_update *mu;
++	struct mdinfo *disk_list = NULL;
++
++	dprintf("imsm: imsm_reshape_array(reshape_delta_disks = %i)\t", a->reshape_delta_disks);
++	if (request_type == reshape_cancel_request) {
++		dprintf("prepare cancel message.\n");
++		goto imsm_reshape_array_exit;
++	}
++	if (a->reshape_state == reshape_not_active) {
++		dprintf("has nothing to do.\n");
++		return disk_list;
++	}
++	if (a->reshape_delta_disks < 0) {
++		dprintf("doesn't support shrinking.\n");
++		a->reshape_state = reshape_not_active;
++		return disk_list;
++	}
++
++	if (a->reshape_delta_disks == 0) {
++		dprintf("array parameters has to be changed\n");
++		/* TBD */
++	}
++	if (a->reshape_delta_disks > 0) {
++		dprintf("grow is detected.\n");
++		disk_list = imsm_grow_array(a);
++	}
++
++	if (disk_list) {
++		dprintf("imsm: send update update_reshape_set_slots\n");
++
++		u = (struct imsm_update_reshape *)calloc(1, sizeof(struct imsm_update_reshape));
++		if (u) {
++			u->type = update_reshape_set_slots;
++			a->reshape_state = reshape_in_progress;
++		}
++	} else
++		dprintf("error: cannot start reshape\n");
++
++imsm_reshape_array_exit:
++	if (u == NULL) {
++		dprintf("imsm: send update update_reshape_cancel\n");
++		a->reshape_state = reshape_not_active;
++		sysfs_set_str(&a->info, NULL, "sync_action", "idle");
++	}
++
++	if (u) {
++		/* post any prepared update
++		 */
++		u->devnum = a->devnum;
++
++		u->update_memory_size = sizeof(struct imsm_update_reshape);
++		u->reshape_delta_disks = a->reshape_delta_disks;
++		u->update_prepared = 1;
++
++		mu = malloc(sizeof(struct metadata_update));
++		if (mu) {
++			mu->buf = (void *)u;
++			mu->space = NULL;
++			mu->len = u->update_memory_size;
++			mu->next = *updates;
++			*updates = mu;
++		} else {
++			a->reshape_state = reshape_not_active;
++			free(u);
++			u = NULL;
++		}
++	}
++
++	if ((disk_list) && (u == NULL)) {
++		while (disk_list) {
++			struct mdinfo *di = disk_list;
++			disk_list = disk_list->next;
++			free(di);
++		}
++	}
++	return disk_list;
++}
++
+ struct superswitch super_imsm = {
+ #ifndef	MDASSEMBLE
+ 	.examine_super	= examine_super_imsm,
+@@ -6726,6 +7027,7 @@ struct superswitch super_imsm = {
+ 	.container_content = container_content_imsm,
+ 	.default_geometry = default_geometry_imsm,
+ 	.reshape_super  = imsm_reshape_super,
++	.reshape_array	= imsm_reshape_array,
+ 
+ 	.external	= 1,
+ 	.name = "imsm",
 
