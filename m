@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 24/53] Add support to skip slot configuration
-Date: Fri, 26 Nov 2010 09:07:00 +0100
-Message-ID: <20101126080700.5221.43788.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 22/53] Send information to managemon about reshape request
+Date: Fri, 26 Nov 2010 09:06:45 +0100
+Message-ID: <20101126080645.5221.32785.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,27 +13,71 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-When managemon is signaled by monitor (using reshape_delta_disks variable), it adds new disks to md configuration.
-To allow md to set slot numbers, flag SYSFS_ADD_DISK_DO_NOT_SET_SLOT was introduced to skip slot setting in sysfs_add_disk() function.
+When monitor made metadata update and indicates request to managemon to continue reshape initialization, kick managemon to perform its action, unless array is not during deactivation.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- sysfs.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ monitor.c     |   14 +++++++++++++-
+ super-intel.c |   14 ++++++++++++++
+ 2 files changed, 27 insertions(+), 1 deletions(-)
 
-diff --git a/sysfs.c b/sysfs.c
-index e316785..fa15895 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -614,7 +614,8 @@ int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume)
- 			 * yet, so just ignore status for now.
- 			 */
- 			sysfs_set_str(sra, sd, "state", "insync");
--		rv |= sysfs_set_num(sra, sd, "slot", sd->disk.raid_disk);
-+		if (sd->disk.raid_disk >= 0)
-+			rv |= sysfs_set_num(sra, sd, "slot", sd->disk.raid_disk);
- 		if (resume)
- 			sysfs_set_num(sra, sd, "recovery_start", sd->recovery_start);
+diff --git a/monitor.c b/monitor.c
+index 5705a9b..05bd96c 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -399,8 +399,20 @@ static int read_and_act(struct active_array *a)
+ 		signal_manager();
  	}
+ 
+-	if (deactivate)
++	if (deactivate) {
+ 		a->container = NULL;
++		/* break reshape also
++		 */
++		if (a->reshape_state !=  reshape_in_progress)
++			a->reshape_state = reshape_not_active;
++	}
++
++	/* signal manager when real delta_disks value is present
++	 */
++	if ((a->reshape_state != reshape_not_active) &&
++	    (a->reshape_state != reshape_in_progress)) {
++		signal_manager();
++	}
+ 
+ 	return dirty;
+ }
+diff --git a/super-intel.c b/super-intel.c
+index 1231fa8..56f7ea4 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4755,6 +4755,16 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 	__u8 map_state = imsm_check_degraded(super, dev, failed);
+ 	__u32 blocks_per_unit;
+ 
++	if (a->reshape_state != reshape_not_active) {
++		/* array state change is blocked due to reshape action
++		 * metadata changes are during applying only before reshape.
++		 *
++		 * '1' is returned to indicate that array is clean
++		 */
++		dprintf("imsm: prepare to reshape\n");
++		return 1;
++	}
++
+ 	/* before we activate this array handle any missing disks */
+ 	if (consistent == 2)
+ 		handle_missing(super, dev);
+@@ -5106,6 +5116,10 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+ 
+ 	dprintf("imsm: activate spare: inst=%d failed=%d (%d) level=%d\n",
+ 		inst, failed, a->info.array.raid_disks, a->info.array.level);
++
++	if (a->reshape_state != reshape_not_active)
++		return NULL;
++
+ 	if (imsm_check_degraded(super, dev, failed) != IMSM_T_STATE_DEGRADED)
+ 		return NULL;
+ 
 
