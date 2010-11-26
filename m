@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 10/53] Initialize st->devnum and st->container_dev in
-	super_by_fd
-Date: Fri, 26 Nov 2010 09:05:07 +0100
-Message-ID: <20101126080507.5221.27587.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 11/53] Document the external reshape implementation
+Date: Fri, 26 Nov 2010 09:05:15 +0100
+Message-ID: <20101126080515.5221.48627.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,121 +13,185 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Precludes needing to deduce this information later, like in Detail.c and
-soon in Grow.c.
-
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Detail.c |   21 ++++++++++-----------
- util.c   |   23 ++++++++++++++---------
- 2 files changed, 24 insertions(+), 20 deletions(-)
+ external-reshape-design.txt |  168 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 168 insertions(+), 0 deletions(-)
+ create mode 100644 external-reshape-design.txt
 
-diff --git a/Detail.c b/Detail.c
-index e0817aa..0fb90e8 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -97,16 +97,13 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
- 	if (st)
- 		max_disks = st->max_devs;
- 
--	if (sra && is_subarray(sra->text_version) &&
--		strchr(sra->text_version+1, '/')) {
-+	if (st && st->subarray[0]) {
- 		/* This is a subarray of some container.
- 		 * We want the name of the container, and the member
- 		 */
--		char *s = strchr(sra->text_version+1, '/');
--		int dn;
--		*s++ = '\0';
--		member = s;
--		dn = devname2devnum(sra->text_version+1);
-+		int dn = st->container_dev;
+diff --git a/external-reshape-design.txt b/external-reshape-design.txt
+new file mode 100644
+index 0000000..28e3434
+--- /dev/null
++++ b/external-reshape-design.txt
+@@ -0,0 +1,168 @@
++External Reshape
 +
-+		member = st->subarray;
- 		container = map_dev(dev2major(dn), dev2minor(dn), 1);
- 	}
- 
-@@ -417,7 +414,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
- 		}
- 		free_mdstat(ms);
- 
--		if (st->sb && info.reshape_active) {
-+		if (st && st->sb && info.reshape_active) {
- #if 0
- This is pretty boring
- 			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info.reshape_progress<<9,
-@@ -567,9 +564,11 @@ This is pretty boring
- 		if (!brief) printf("\n");
- 	}
- 	if (spares && brief && array.raid_disks) printf(" spares=%d", spares);
--	if (brief && st && st->sb)
--		st->ss->brief_detail_super(st);
--	st->ss->free_super(st);
-+	if (st) {
-+		if (brief && st->sb)
-+			st->ss->brief_detail_super(st);
-+		st->ss->free_super(st);
-+	}
- 
- 	if (brief > 1 && devices) printf("\n   devices=%s", devices);
- 	if (brief) printf("\n");
-diff --git a/util.c b/util.c
-index 5f2694e..8739278 100644
---- a/util.c
-+++ b/util.c
-@@ -1085,9 +1085,10 @@ struct supertype *super_by_fd(int fd)
- 	struct supertype *st = NULL;
- 	struct mdinfo *sra;
- 	char *verstr;
--	char version[20];
-+	char version[30];
- 	int i;
- 	char *subarray = NULL;
-+	int container = NoMdDev;
- 
- 	sra = sysfs_read(fd, 0, GET_VERSION);
- 
-@@ -1109,15 +1110,16 @@ struct supertype *super_by_fd(int fd)
- 	}
- 	if (minor == -2 && is_subarray(verstr)) {
- 		char *dev = verstr+1;
++1 Problem statement
 +
- 		subarray = strchr(dev, '/');
--		int devnum;
--		if (subarray)
-+		if (subarray) {
- 			*subarray++ = '\0';
--		devnum = devname2devnum(dev);
--		subarray = strdup(subarray);
-+			subarray = strdup(subarray);
-+		}
-+		container = devname2devnum(dev);
- 		if (sra)
- 			sysfs_free(sra);
--		sra = sysfs_read(-1, devnum, GET_VERSION);
-+		sra = sysfs_read(-1, container, GET_VERSION);
- 		if (sra && sra->text_version[0])
- 			verstr = sra->text_version;
- 		else
-@@ -1132,12 +1134,15 @@ struct supertype *super_by_fd(int fd)
- 	if (st) {
- 		st->sb = NULL;
- 		if (subarray) {
--			strncpy(st->subarray, subarray, 32);
--			st->subarray[31] = 0;
--			free(subarray);
-+			strncpy(st->subarray, subarray, sizeof(st->subarray));
-+			st->subarray[sizeof(st->subarray) - 1] = 0;
- 		} else
- 			st->subarray[0] = 0;
-+		st->container_dev = container;
-+		st->devnum = fd2devnum(fd);
- 	}
-+	if (subarray)
-+		free(subarray);
- 	return st;
- }
- #endif /* !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AUTO) */
++External (third-party metadata) reshape differs from native-metadata
++reshape in three key ways:
++
++1.1 Format specific constraints
++
++In the native case reshape is limited by what is implemented in the
++generic reshape routine (Grow_reshape()) and what is supported by the
++kernel.  There are exceptional cases where Grow_reshape() may block
++operations when it knows that the kernel implementation is broken, but
++otherwise the kernel is relied upon to be the final arbiter of what
++reshape operations are supported.
++
++In the external case the kernel, and the generic checks in
++Grow_reshape(), become the super-set of what reshapes are possible.  The
++metadata format may not support, or have yet to implement a given
++reshape type.  The implication for Grow_reshape() is that it must query
++the metadata handler and effect changes in the metadata before the new
++geometry is posted to the kernel.  The ->reshape_super method allows
++Grow_reshape() to validate the requested operation and post the metadata
++update.
++
++1.2 Scope of reshape
++
++Native metadata reshape is always performed at the array scope (no
++metadata relationship with sibling arrays on the same disks).  External
++reshape, depending on the format, may not allow the number of member
++disks to be changed in a subarray unless the change is simultaneously
++applied to all subarrays in the container.  For example the imsm format
++requires all member disks to be a member of all subarrays, so a 4-disk
++raid5 in a container that also houses a 4-disk raid10 array could not be
++reshaped to 5 disks as the imsm format does not support a 5-disk raid10
++representation.  This requires the ->reshape_super method to check the
++contents of the array and ask the user to run the reshape at container
++scope (if both subarrays are agreeable to the change), or report an
++error in the case where one subarray cannot support the change.
++
++1.3 Monitoring / checkpointing
++
++Reshape, unlike rebuild/resync, requires strict checkpointing to survive
++interrupted reshape operations.  For example when expanding a raid5
++array the first few stripes of the array will be overwritten in a
++destructive manner.  When restarting the reshape process we need to know
++the exact location of the last successfully written stripe, and we need
++to restore the data in any partially overwritten stripe.  Native
++metadata stores this backup data in the unused portion of spares that
++are being promoted to array members, or in an external backup file
++(located on a non-involved block device).
++
++The kernel is in charge of recording checkpoints of reshape progress,
++but mdadm is delegated the task of managing the backup space which
++involves:
++1/ Identifying what data will be overwritten in the next unit of reshape
++   operation
++2/ Suspending access to that region so that a snapshot of the data can
++   be transferred to the backup space.
++3/ Allowing the kernel to reshape the saved region and setting the
++   boundary for the next backup.
++
++In the external reshape case we want to preserve this mdadm
++'reshape-manager' arrangement, but have a third actor, mdmon, to
++consider.  It is tempting to give the role of managing reshape to mdmon,
++but that is counter to its role as a monitor, and conflicts with the
++existing capabilities and role of mdadm to manage the progress of
++reshape.  For clarity the external reshape implementation maintains the
++role of mdmon as a (mostly) passive recorder of raid events, and mdadm
++treats it as it would the kernel in the native reshape case (modulo
++needing to send explicit metadata update messages and checking that
++mdmon took the expected action).
++
++External reshape can use the generic md backup file as a fallback, but in the
++optimal/firmware-compatible case the reshape-manager will use the metadata
++specific areas for managing reshape.  The implementation also needs to spawn a
++reshape-manager per subarray when the reshape is being carried out at the
++container level.  For these two reasons the ->manage_reshape() method is
++introduced.  This method in addition to base tasks mentioned above:
++1/ Spawns a manager per-subarray, when necessary
++2/ Uses either generic routines in Grow.c for md-style backup file
++   support, or uses the metadata-format specific location for storing
++   recovery data.
++This aims to avoid a "midlayer mistake"[1] and lets the metadata handler
++optionally take advantage of generic infrastructure in Grow.c
++
++2 Details for specific reshape requests
++
++There are quite a few moving pieces spread out across md, mdadm, and mdmon for
++the support of external reshape, and there are several different types of
++reshape that need to be comprehended by the implementation.  A rundown of
++these details follows.
++
++2.0 General provisions:
++
++Obtain an exclusive open on the container to make sure we are not
++running concurrently with a Create() event.
++
++2.1 Freezing sync_action
++
++2.2 Reshape size
++
++   1/ mdadm::Grow_reshape(): checks if mdmon is running and optionally
++      initializes st->update_tail
++   2/ mdadm::Grow_reshape() calls ->reshape_super() to check that the size change
++      is allowed (being performed at subarray scope / enough room) prepares a
++      metadata update
++   3/ mdadm::Grow_reshape(): flushes the metadata update (via
++      flush_metadata_update(), or ->sync_metadata())
++   4/ mdadm::Grow_reshape(): post the new size to the kernel
++
++
++2.3 Reshape level (simple-takeover)
++
++"simple-takeover" implies the level change can be satisfied without touching
++sync_action
++
++    1/ mdadm::Grow_reshape(): checks if mdmon is running and optionally
++       initializes st->update_tail
++    2/ mdadm::Grow_reshape() calls ->reshape_super() to check that the level change
++       is allowed (being performed at subarray scope) prepares a
++       metadata update
++       2a/ raid10 --> raid0: degrade all mirror legs prior to calling
++           ->reshape_super
++    3/ mdadm::Grow_reshape(): flushes the metadata update (via
++       flush_metadata_update(), or ->sync_metadata())
++    4/ mdadm::Grow_reshape(): post the new level to the kernel
++
++2.4 Reshape chunk, layout
++
++2.5 Reshape raid disks (grow)
++
++    1/ mdadm::Grow_reshape(): unconditionally initializes st->update_tail
++       because only redundant raid levels can modify the number of raid disks
++    2/ mdadm::Grow_reshape(): calls ->reshape_super() to check that the level
++       change is allowed (being performed at proper scope / permissible
++       geometry / proper spares available in the container) prepares a metadata
++       update.
++    3/ mdadm::Grow_reshape(): Converts each subarray in the container to the
++       raid level that can perform the reshape and starts mdmon.
++    4/ mdadm::Grow_reshape(): Pushes the update to mdmon...
++       4a/ mdmon::process_update(): marks the array as reshaping
++       4b/ mdmon::manage_member(): adds the spares (without assigning a slot)
++    5/ mdadm::Grow_reshape(): Notes that mdmon has assigned spares and invokes
++       ->manage_reshape()
++    5/ mdadm::<format>->manage_reshape(): (for each subarray) sets sync_max to
++       zero, starts the reshape, and pings mdmon
++       5a/ mdmon::read_and_act(): notices that reshape has started and notifies
++           the metadata handler to record the slots chosen by the kernel
++    6/ mdadm::<format>->manage_reshape(): saves data that will be overwritten by
++       the kernel to either the backup file or the metadata specific location,
++       advances sync_max, waits for reshape, ping mdmon, repeat.
++       6a/ mdmon::read_and_act(): records checkpoints
++    7/ mdadm::<format>->manage_reshape(): Once reshape completes changes the raid
++       level back to the nominal raid level (if necessary)
++
++       FIXME: native metadata does not have the capability to record the original
++       raid level in reshape-restart case because the kernel always records current
++       raid level to the metadata, whereas external metadata can masquerade at an
++       alternate level based on the reshape state.
++
++2.6 Reshape raid disks (shrink)
++
++3 TODO
++
++...
++
++[1]: Linux kernel design patterns - part 3, Neil Brown http://lwn.net/Articles/336262/
 
