@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 32/53] imsm: FIX: spare list contains one device several times
-Date: Fri, 26 Nov 2010 09:08:01 +0100
-Message-ID: <20101126080801.5221.57631.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 34/53] Compute backup blocks in function.
+Date: Fri, 26 Nov 2010 09:08:16 +0100
+Message-ID: <20101126080816.5221.1108.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,86 +13,104 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Assumption for spares searching was that after picking new device, it has to be added to array before next search.
-This causes returning different disk on each call.
-
-When spares list is created during Online Capacity Expansion, first devices list is collected and then all devices are added to md.
-Picked device from spares pool has to be checked against picked devices so far. If not, the same disk will be returned all the time.
-Already picked devices are stored in the list and this list is used for new devices verification also.
+number of backup blocks evaluation is put in to function for code reuse.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   24 +++++++++++++++++-------
- 1 files changed, 17 insertions(+), 7 deletions(-)
+ Grow.c  |   44 +++++++++++++++++++++++++++-----------------
+ mdadm.h |    4 +++-
+ 2 files changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 3f75550..e4ba875 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5006,7 +5006,8 @@ static struct dl *imsm_readd(struct intel_super *super, int idx, struct active_a
+diff --git a/Grow.c b/Grow.c
+index 8cba82b..8cc17d5 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -929,6 +929,31 @@ release:
+ 	return d;
  }
  
- static struct dl *imsm_add_spare(struct intel_super *super, int slot,
--				 struct active_array *a, int activate_new)
-+				 struct active_array *a, int activate_new,
-+				 struct mdinfo *additional_test_list)
- {
- 	struct imsm_dev *dev = get_imsm_dev(super, a->info.container_member);
- 	int idx = get_imsm_disk_idx(dev, slot);
-@@ -5032,6 +5033,16 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
- 			}
- 		if (d)
- 			continue;
-+		while (additional_test_list) {
-+			if (additional_test_list->disk.major == dl->major &&
-+			    additional_test_list->disk.minor == dl->minor) {
-+				dprintf("%x:%x already in additional test list\n", dl->major, dl->minor);
-+				break;
-+			}
-+			additional_test_list = additional_test_list->next;
-+		}
-+		if (additional_test_list)
-+			continue;
++unsigned long compute_backup_blocks(int nchunk, int ochunk,
++				    unsigned int ndata, unsigned int odata)
++{
++	unsigned long a, b, blocks;
++	/* So how much do we need to backup.
++	 * We need an amount of data which is both a whole number of
++	 * old stripes and a whole number of new stripes.
++	 * So LCM for (chunksize*datadisks).
++	 */
++	a = (ochunk/512) * odata;
++	b = (nchunk/512) * ndata;
++	/* Find GCD */
++	while (a != b) {
++		if (a < b)
++			b -= a;
++		if (b < a)
++			a -= b;
++	}
++	/* LCM == product / GCD */
++	blocks = (ochunk/512) * (nchunk/512) * odata * ndata / a;
++
++	return blocks;
++}
++
++
+ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		 long long size,
+ 		 int level, char *layout_str, int chunksize, int raid_disks)
+@@ -967,7 +992,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 	int nrdisks;
+ 	int err;
+ 	int frozen;
+-	unsigned long a,b, blocks, stripes;
++	unsigned long blocks, stripes;
+ 	unsigned long cache;
+ 	unsigned long long array_size;
+ 	int changed = 0;
+@@ -1587,22 +1612,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 			break;
+ 		}
  
- 		/* skip in use or failed drives */
- 		if (is_failed(&dl->disk) || idx == dl->index ||
-@@ -5165,9 +5176,9 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 		 */
- 		dl = imsm_readd(super, i, a);
- 		if (!dl)
--			dl = imsm_add_spare(super, i, a, 0);
-+			dl = imsm_add_spare(super, i, a, 0, NULL);
- 		if (!dl)
--			dl = imsm_add_spare(super, i, a, 1);
-+			dl = imsm_add_spare(super, i, a, 1, NULL);
- 		if (!dl)
- 			continue;
-  
-@@ -6422,11 +6433,11 @@ struct mdinfo *get_spares_imsm(int devnum)
- 	sprintf(buf, "/dev/md/%s", info->name);
- 	ret_val = sysfs_get_unused_spares(cont_id, fd);
- 	if (ret_val == NULL) {
--		dprintf("imsm: ERROR: Cannot get spare devices.\n");
-+		fprintf(stderr, Name": imsm: ERROR: Cannot get spare devices.\n");
- 		goto abort;
- 	}
- 	if (ret_val->array.spare_disks == 0) {
--		dprintf("imsm: ERROR: No available spares.\n");
-+		fprintf(stderr, Name": imsm: ERROR: No available spares.\n");
- 		free(ret_val);
- 		ret_val = NULL;
- 		goto abort;
-@@ -7013,10 +7024,9 @@ struct mdinfo *imsm_grow_array(struct active_array *a)
- 	for (i = prev_raid_disks; i < new_raid_disks; i++) {
- 		/* OK, this device can be added.  Try to add.
- 		 */
--		dl = imsm_add_spare(super, i, a, 0);
-+		dl = imsm_add_spare(super, i, a, 0, rv);
- 		if (!dl)
- 			continue;
+-		/* So how much do we need to backup.
+-		 * We need an amount of data which is both a whole number of
+-		 * old stripes and a whole number of new stripes.
+-		 * So LCM for (chunksize*datadisks).
+-		 */
+-		a = (ochunk/512) * odata;
+-		b = (nchunk/512) * ndata;
+-		/* Find GCD */
+-		while (a != b) {
+-			if (a < b)
+-				b -= a;
+-			if (b < a)
+-				a -= b;
+-		}
+-		/* LCM == product / GCD */
+-		blocks = (ochunk/512) * (nchunk/512) * odata * ndata / a;
++		blocks = compute_backup_blocks(nchunk, ochunk, ndata, odata);
+ 
+ 		sysfs_free(sra);
+ 		sra = sysfs_read(fd, 0,
+diff --git a/mdadm.h b/mdadm.h
+index 698f1bf..06195c8 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -459,7 +459,8 @@ extern int reshape_prepare_fdlist(char *devname,
+ extern void reshape_free_fdlist(int **fdlist_in,
+ 				unsigned long long **offsets_in,
+ 				int size);
 -
- 		if (dl->index < 0)
- 			dl->index = i;
- 		/* found a usable disk with enough space */
++extern unsigned long compute_backup_blocks(int nchunk, int ochunk,
++					   unsigned int ndata, unsigned int odata);
+ 
+ extern int save_stripes(int *source, unsigned long long *offsets,
+ 			int raid_disks, int chunk_size, int level, int layout,
+@@ -471,6 +472,7 @@ extern int restore_stripes(int *dest, unsigned long long *offsets,
+ 			   int source, unsigned long long read_offset,
+ 			   unsigned long long start, unsigned long long length);
+ 
++
+ #ifndef Sendmail
+ #define Sendmail "/usr/lib/sendmail -t"
+ #endif
 
