@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 29/53] Add spares to raid0 array using takeover
-Date: Fri, 26 Nov 2010 09:07:38 +0100
-Message-ID: <20101126080738.5221.94947.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 30/53] imsm: FIX: Fill sys_name field in getinfo_super()
+Date: Fri, 26 Nov 2010 09:07:46 +0100
+Message-ID: <20101126080746.5221.40610.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,218 +13,55 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Spares are used by Online Capacity Expansion to expand array.
-To run expansion on raid0, spares have to be added to raid0 volume also.
-Raid0 cannot have spares (no mdmon runs for raid0 array).
-To do this, takeover to raid5 (and back) is used. mdmon runs temporary for raid5 and spare drives can be added to container.
+sys_name field is not filled during getinfo_super() call.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Manage.c |  154 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 153 insertions(+), 1 deletions(-)
+ super-intel.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/Manage.c b/Manage.c
-index ac9415b..65e345e 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -31,6 +31,137 @@
- #define START_MD     		_IO (MD_MAJOR, 2)
- #define STOP_MD      		_IO (MD_MAJOR, 3)
+diff --git a/super-intel.c b/super-intel.c
+index 42219f6..3243132 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1489,6 +1489,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+ 	struct imsm_map *map = get_imsm_map(dev, 0);
+ 	struct dl *dl;
+ 	char *devname;
++	int minor;
  
+ 	for (dl = super->disks; dl; dl = dl->next)
+ 		if (dl->raiddisk == info->disk.raid_disk)
+@@ -1560,6 +1561,11 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+ 	free(devname);
+ 	info->safe_mode_delay = 4000;  /* 4 secs like the Matrix driver */
+ 	uuid_from_super_imsm(st, info->uuid);
 +
-+void takeover5to0(struct mdinfo *sra)
-+{
-+	char *c;
-+	int err;
-+
-+	dprintf("Takeover Raid5->Raid0.\n");
-+
-+	if (sra == NULL)
-+		return;
-+
-+	c = map_num(pers, 0);
-+	if (c == NULL)
-+		return;
-+
-+	err = sysfs_set_str(sra, NULL, "level", c);
-+
-+	if (err)
-+		fprintf(stderr,
-+			Name ": %s: could not set level "
-+			"to %s for external super.\n",
-+			sra->sys_name, c);
-+	sysfs_free(sra);
-+}
-+
-+struct mdinfo *takeover0to5(int fd)
-+{
-+	struct mdinfo *ret_val = NULL;
-+	int devnum;
-+	struct mdinfo *sra = NULL;
-+	struct supertype *st = NULL;
-+	struct mdinfo info;
-+	int dev_fd = -1;
-+	int device_num;
-+
-+	dprintf("Takeover Raid0->Raid5.\n");
-+	devnum = fd2devnum(fd);
-+	if (mdmon_running(devnum)) {
-+		dprintf("mdmon is runnig for this container - takeover is not required\n");
-+		return ret_val;
-+	}
-+
-+	sra = sysfs_read(fd, 0, GET_VERSION);
-+	if (sra == NULL)
-+		return ret_val;
-+
-+	st = super_by_fd(fd);
-+
-+	if ((sra->array.major_version != -1) ||
-+	    (strncmp(sra->text_version, "imsm", 4) != 0) ||
-+	    (st == NULL) ||
-+	    (st->ss->external == 0))
-+		goto exit_takeover0to5;
-+
-+	device_num = 0;
-+	while (device_num > -1) {
-+		char dev_name[1024];
-+		char *c;
-+		int err;
-+
-+		sprintf(st->subarray, "%i", device_num);
-+		st->ss->load_super(st, fd, NULL);
-+		if (st->sb == NULL)
-+			break;
-+
-+		st->ss->getinfo_super(st, &info);
-+		if (info.array.level == 0) {
-+			char *p = NULL;
-+
-+			sprintf(dev_name, "/dev/md/%s", info.name);
-+			dev_fd = open_mddev(dev_name , 1);
-+
-+			if (dev_fd < 0)
-+				continue;
-+
-+			sysfs_free(sra);
-+			sra = sysfs_read(dev_fd, 0, GET_VERSION);
-+			if (!sra)
-+				continue;
-+
-+			c = map_num(pers, 5);
-+			if (c == NULL)
-+				break;
-+
-+			err = sysfs_set_str(sra, NULL, "level", c);
-+			if (err) {
-+				fprintf(stderr, Name": %s: could not set level to "
-+					"%s for external super.\n", sra->sys_name, c);
-+				break;
-+			}
-+
-+			/* return to this raid level and do not release
-+			 */
-+			ret_val = sra;
-+			sra = NULL;
-+
-+			/* send update with return level,
-+			 * return level tells monitor to:
-+			 * - after reshape return automatically to this level
-+			 * - if return level is set do not activate spares
-+			 */
-+
-+			/* if after takeover mdmon is not running,
-+			 * start it
-+			 */
-+			if (!mdmon_running(devnum))
-+				start_mdmon(devnum);
-+			p = devnum2devname(devnum);
-+			if (p) {
-+				ping_monitor(p);
-+				free(p);
-+			}
-+			sleep(1);
-+			device_num = -2;
-+			break;
-+		}
-+		device_num++;
-+	}
-+
-+exit_takeover0to5:
-+	if (st)
-+		st->ss->free_super(st);
-+	sysfs_free(sra);
-+	if (dev_fd >= 0)
-+		close(dev_fd);
-+
-+dprintf("Takeover ret = %p\n\n", ret_val);
-+	return ret_val;
-+
-+}
-+
- int Manage_ro(char *devname, int fd, int readonly)
++	/* fill sys_name field
++	 */
++	if (find_array_minor2(info->text_version, 1, st->devnum, &minor) == 0)
++		sprintf(info->sys_name, "md%i", minor);
+ }
+ 
+ /* check the config file to see if we can return a real uuid for this spare */
+@@ -1611,6 +1617,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
  {
- 	/* switch to readonly or rw
-@@ -811,6 +942,7 @@ int Manage_subdevs(char *devname, int fd,
- 				struct mdinfo *sra;
- 				int container_fd;
- 				int devnum = fd2devnum(fd);
-+				char *devname = NULL;
+ 	struct intel_super *super = st->sb;
+ 	struct imsm_disk *disk;
++	int minor;
  
- 				container_fd = open_dev_excl(devnum);
- 				if (container_fd < 0) {
-@@ -819,10 +951,17 @@ int Manage_subdevs(char *devname, int fd,
- 						dv->devname);
- 					return 1;
- 				}
-+				/* Raid 0 add spare via takeover
-+				*/
-+				struct mdinfo *return_raid0_sra = NULL;
-+				/* try to perform takeover if needed
-+				*/
-+				return_raid0_sra = takeover0to5(container_fd);
+ 	if (super->current_vol >= 0) {
+ 		getinfo_super_imsm_volume(st, info);
+@@ -1712,6 +1719,10 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 		memcpy(info->uuid, uuid_match_any, sizeof(int[4]));
+ 		fixup_container_spare_uuid(info);
+ 	}
++	/* fill sys_name field
++	 */
++	if (find_array_minor2(info->text_version, 1, st->devnum, &minor) == 0)
++		sprintf(info->sys_name, "md%i", minor);
+ }
  
- 				if (!mdmon_running(devnum)) {
- 					fprintf(stderr, Name ": add failed for %s: mdmon not running\n",
- 						dv->devname);
-+					takeover5to0(return_raid0_sra);
- 					close(container_fd);
- 					return 1;
- 				}
-@@ -831,7 +970,13 @@ int Manage_subdevs(char *devname, int fd,
- 				if (!sra) {
- 					fprintf(stderr, Name ": add failed for %s: sysfs_read failed\n",
- 						dv->devname);
-+					takeover5to0(return_raid0_sra);
- 					close(container_fd);
-+					devname = devnum2devname(devnum);
-+					if (devname) {
-+						ping_monitor(devname);
-+						free(devname);
-+					}
- 					return 1;
- 				}
- 				sra->array.level = LEVEL_CONTAINER;
-@@ -843,12 +988,19 @@ int Manage_subdevs(char *devname, int fd,
- 				if (sysfs_add_disk(sra, &new_mdi, 0) != 0) {
- 					fprintf(stderr, Name ": add new device to external metadata"
- 						" failed for %s\n", dv->devname);
-+					takeover5to0(return_raid0_sra);
- 					close(container_fd);
-+					sysfs_free(sra);
- 					return 1;
- 				}
--				ping_monitor(devnum2devname(devnum));
-+				takeover5to0(return_raid0_sra);
- 				sysfs_free(sra);
- 				close(container_fd);
-+				devname = devnum2devname(devnum);
-+				if (devname) {
-+					ping_monitor(devname);
-+					free(devname);
-+				}
- 			} else if (ioctl(fd, ADD_NEW_DISK, &disc)) {
- 				fprintf(stderr, Name ": add new device failed for %s as %d: %s\n",
- 					dv->devname, j, strerror(errno));
+ static int is_raid_level_supported(const struct imsm_orom *orom, int level, int raiddisks);
 
