@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 28/53] imsm: Do not indicate resync during reshape
-Date: Fri, 26 Nov 2010 09:07:31 +0100
-Message-ID: <20101126080731.5221.83421.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 27/53] imsm: Do not accept messages sent by mdadm
+Date: Fri, 26 Nov 2010 09:07:23 +0100
+Message-ID: <20101126080723.5221.90397.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,32 +13,66 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-If reshape is started resync is not allowed in parallel. This would break reshape.
-If array is in General Migration state do not indicate resync and allow for reshape continuation.
+Messages update_reshape_cancel and update_reshape_set_slots ara intended to send by managemon.
+If those message would be issued by mdadm prepare_message() is called in managemon for them.
+In such cases set update_prepared to '-1' to indicate process_message() to not proceed such messages.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ super-intel.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 2984685..42219f6 100644
+index 89fb118..2984685 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -4677,9 +4677,13 @@ static int is_resyncing(struct imsm_dev *dev)
- 	    migr_type(dev) == MIGR_REPAIR)
- 		return 1;
+@@ -5400,6 +5400,13 @@ update_reshape_exit:
+ 			break;
+ 		}
  
-+	if (migr_type(dev) == MIGR_GEN_MIGR)
-+		return 0;
++		/* do not accept this update type sent by mdadm
++		 */
++		if (u->update_prepared == -1) {
++			dprintf("imsm: message is sent by mdadm. cannot accept\n\n");
++			break;
++		}
 +
- 	migr_map = get_imsm_map(dev, 1);
+ 		if (imsm_reshape_array_set_slots(a) > -1)
+ 			super->updates_pending++;
+ 		break;
+@@ -5427,6 +5434,13 @@ update_reshape_exit:
+ 		if (a == NULL)
+ 			break;
  
--	if (migr_map->map_state == IMSM_T_STATE_NORMAL)
-+	if ((migr_map->map_state == IMSM_T_STATE_NORMAL) &&
-+	    (dev->vol.migr_type != MIGR_GEN_MIGR))
- 		return 1;
- 	else
- 		return 0;
++		/* do not accept this update type sent by mdadm
++		 */
++		if (u->update_prepared == -1) {
++			dprintf("imsm: message is sent by mdadm. cannot accept\n\n");
++			break;
++		}
++
+ 		inst = a->info.container_member;
+ 		dev = get_imsm_dev(super, inst);
+ 		map_1 = get_imsm_map(dev, 0);
+@@ -5913,9 +5927,19 @@ static void imsm_prepare_update(struct supertype *st,
+ 		break;
+ 	}
+ 	case update_reshape_set_slots: {
++		struct imsm_update_reshape *u = (void *)update->buf;
++
++		/* do not accept this update type sent by mdadm
++		 */
++		u->update_prepared = -1;
+ 		break;
+ 	}
+ 	case update_reshape_cancel: {
++		struct imsm_update_reshape *u = (void *)update->buf;
++
++		/* do not accept this update type sent by mdadm
++		 */
++		u->update_prepared = -1;
+ 		break;
+ 	}
+ 	case update_level: {
 
