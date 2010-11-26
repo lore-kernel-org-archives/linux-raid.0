@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 43/53] mdadm: migration restart for external meta
-Date: Fri, 26 Nov 2010 09:09:24 +0100
-Message-ID: <20101126080924.5221.36664.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 44/53] Add mdadm->mdmon sync_max command message
+Date: Fri, 26 Nov 2010 09:09:32 +0100
+Message-ID: <20101126080932.5221.41940.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,357 +13,266 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Add support for assembling partially migrated arrays with external meta.
-Note that if Raid0 was used while migration it should be changed to
-Raid4 while assembling (see check_mpb_migr_compatibility and switch_raid0_configuration).
+Currently only metadata_update messages can be send from mdadm do mdmon using a socket.
+For the external metadata reshape implementation a support for sending sync_max command will be also needed.
 
-getinfo_super_imsm_volume() reads migration record and initializes mdadm reshape specific structures.
+A new type of message "cmd_message" was defined.
+cmd_message is a generic structure that enables to define different types of commands to be send from mdadm to mdmon.
+
+cmd_message's and update_message's are recognized by different start magic numbers sent through the socket.
+
+In this patch only one type of cmd_message was defined:
+'SET_SYNC_MAX'
 
 Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c    |    8 ++
- super-intel.c |  205 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 208 insertions(+), 5 deletions(-)
+ managemon.c |   39 +++++++++++++++++++++++++++++++++++++--
+ mdadm.h     |   18 ++++++++++++++++++
+ mdmon.h     |    3 +++
+ msg.c       |   33 +++++++++++++++++++++++++++++++--
+ msg.h       |    2 ++
+ util.c      |   25 +++++++++++++++++++++++++
+ 6 files changed, 116 insertions(+), 4 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 409f0d7..c34c109 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1313,6 +1313,14 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 			close(mdfd);
- 			return 1;
- 		}
-+
-+	if (content->reshape_active) {
-+		sysfs_set_num(sra, NULL, "reshape_position", content->reshape_progress);
-+		sysfs_set_num(sra, NULL, "chunk_size", content->new_chunk);
-+		sysfs_set_num(sra, NULL, "layout", content->new_layout);
-+		sysfs_set_num(sra, NULL, "raid_disks", content->array.raid_disks + content->delta_disks);
-+	}
-+
- 	if (sra)
- 		sysfs_free(sra);
- 
-diff --git a/super-intel.c b/super-intel.c
-index a4dda6a..7eb7107 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -850,6 +850,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	printf("    Orig Family : %08x\n", __le32_to_cpu(mpb->orig_family_num));
- 	printf("         Family : %08x\n", __le32_to_cpu(mpb->family_num));
- 	printf("     Generation : %08x\n", __le32_to_cpu(mpb->generation_num));
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	printf("           UUID : %s\n", nbuf + 5);
-@@ -877,6 +878,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
- 
- 		super->current_vol = i;
-+		info.devs = NULL;
- 		getinfo_super_imsm(st, &info);
- 		fname_from_uuid(st, &info, nbuf, ':');
- 		print_imsm_dev(dev, nbuf + 5, super->disks->index);
-@@ -900,6 +902,7 @@ static void brief_examine_super_imsm(struct supertype *st, int verbose)
- 		return;
+diff --git a/managemon.c b/managemon.c
+index d9eb743..9ff3632 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -729,13 +729,36 @@ static void handle_message(struct supertype *container, struct metadata_update *
  	}
- 
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	printf("ARRAY metadata=imsm UUID=%s\n", nbuf + 5);
-@@ -917,12 +920,14 @@ static void brief_examine_subarrays_imsm(struct supertype *st, int verbose)
- 	if (!super->anchor->num_raid_devs)
- 		return;
- 
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	for (i = 0; i < super->anchor->num_raid_devs; i++) {
- 		struct imsm_dev *dev = get_imsm_dev(super, i);
- 
- 		super->current_vol = i;
-+		info.devs = NULL;
- 		getinfo_super_imsm(st, &info);
- 		fname_from_uuid(st, &info, nbuf1, ':');
- 		printf("ARRAY /dev/md/%.16s container=%s member=%d UUID=%s\n",
-@@ -937,6 +942,7 @@ static void export_examine_super_imsm(struct supertype *st)
- 	struct mdinfo info;
- 	char nbuf[64];
- 
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	printf("MD_METADATA=imsm\n");
-@@ -950,6 +956,7 @@ static void detail_super_imsm(struct supertype *st, char *homehost)
- 	struct mdinfo info;
- 	char nbuf[64];
- 
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	printf("\n           UUID : %s\n", nbuf + 5);
-@@ -959,6 +966,7 @@ static void brief_detail_super_imsm(struct supertype *st)
- {
- 	struct mdinfo info;
- 	char nbuf[64];
-+	info.devs = NULL;
- 	getinfo_super_imsm(st, &info);
- 	fname_from_uuid(st, &info, nbuf, ':');
- 	printf(" UUID=%s", nbuf + 5);
-@@ -1624,6 +1632,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 	struct dl *dl;
- 	char *devname;
- 	int minor;
-+	__u32 blocks_per_member;
-+	__u32 blocks_per_strip;
- 
- 	for (dl = super->disks; dl; dl = dl->next)
- 		if (dl->raiddisk == info->disk.raid_disk)
-@@ -1631,7 +1641,13 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 	info->container_member	  = super->current_vol;
- 	info->array.raid_disks    = map->num_members;
- 	info->array.level	  = get_imsm_raid_level(map);
--	info->array.layout	  = imsm_level_to_layout(info->array.level);
-+	if (info->array.level == 4) {
-+		map->raid_level = 5;
-+		info->array.level = 5;
-+		info->array.layout = ALGORITHM_PARITY_N;
-+	} else {
-+		info->array.layout	  = imsm_level_to_layout(info->array.level);
-+	}
- 	info->array.md_minor	  = -1;
- 	info->array.ctime	  = 0;
- 	info->array.utime	  = 0;
-@@ -1649,7 +1665,15 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 	}
- 
- 	info->data_offset	  = __le32_to_cpu(map->pba_of_lba0);
--	info->component_size	  = __le32_to_cpu(map->blocks_per_member);
-+	/* FIXME: For some unknown reason sometimes in a volume created by
-+	 * IMSM blocks_per_member is not a multiple of blocks_per strip.
-+	 * Fix blocks_per_member here:
-+	 */
-+	blocks_per_member = __le32_to_cpu(map->blocks_per_member);
-+	blocks_per_strip = __le16_to_cpu(map->blocks_per_strip);
-+	blocks_per_member &= ~(blocks_per_strip - 1);
-+	info->component_size = blocks_per_member;
-+
- 	memset(info->uuid, 0, sizeof(info->uuid));
- 	info->recovery_start = MaxSector;
- 	info->reshape_active = 0;
-@@ -1673,7 +1697,43 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 			 */
- 		case MIGR_REBUILD:
- 			/* this is handled by container_content_imsm() */
--		case MIGR_GEN_MIGR:
-+		case MIGR_GEN_MIGR: {
-+			struct imsm_map *prev_map;
-+			int data_members;
-+
-+			load_imsm_migr_rec(super, info);
-+
-+			info->reshape_progress = (unsigned long long)
-+			  __le32_to_cpu(super->migr_rec->blocks_per_unit) *
-+			  __le32_to_cpu(super->migr_rec->curr_migr_unit);
-+
-+			/* set previous and new map configurations */
-+			prev_map = get_imsm_map(dev, 1);
-+			info->reshape_active = 1;
-+			info->array.raid_disks = prev_map->num_members;
-+			info->delta_disks = map->num_members - prev_map->num_members;
-+			info->new_level = info->array.level;
-+			info->array.level = get_imsm_raid_level(prev_map);
-+			info->new_layout = info->array.layout;
-+			info->array.layout = imsm_level_to_layout(info->array.level);
-+			info->array.chunk_size = __le16_to_cpu(prev_map->blocks_per_strip) << 9;
-+			info->new_chunk = __le16_to_cpu(map->blocks_per_strip) << 9;
-+
-+			if (info->array.level == 4) {
-+				prev_map->raid_level = 5;
-+				info->array.level = 5;
-+				info->array.layout = ALGORITHM_PARITY_N;
-+			}
-+
-+			/* IMSM FIX for blocks_per_member */
-+			blocks_per_strip = __le16_to_cpu(prev_map->blocks_per_strip);
-+			blocks_per_member &= ~(blocks_per_strip - 1);
-+			info->component_size = blocks_per_member;
-+
-+			/* Calculate previous array size */
-+			data_members = imsm_num_data_members(dev, 1);
-+			info->custom_array_size = blocks_per_member * data_members;
-+		}
- 		case MIGR_STATE_CHANGE:
- 			/* FIXME handle other migrations */
- 		default:
-@@ -2445,6 +2505,117 @@ struct bbm_log *__get_imsm_bbm_log(struct imsm_super *mpb)
- 	return ptr;
  }
  
-+/* Switches N-disk Raid0 map configuration (N+1)disk Raid4
-+ */
-+void switch_raid0_configuration(struct imsm_super *mpb, struct imsm_map *map)
++static void handle_command(struct supertype *container, struct cmd_message *msg)
 +{
-+	__u8 *src, *dst;
-+	int bytes_to_copy;
++	struct active_array *a;
 +
-+	/* get the pointer to the rest of the metadata */
-+	src = (__u8 *)map + sizeof_imsm_map(map);
++	/* Search for a member of this container */
++	for (a = container->arrays; a; a = a->next)
++		if (msg->devnum == a->devnum)
++			break;
 +
-+	/* change the level and disk number to be compatible with IMSM */
-+	map->raid_level = 4;
-+	map->num_members++;
++	if (!a)
++		return;
 +
-+	/* get the updated pointer to the rest of the metadata */
-+	dst = (__u8 *)map + sizeof_imsm_map(map);
-+	/* Now move the rest of the metadata to be properly aligned */
-+	bytes_to_copy = mpb->mpb_size - (src - (__u8 *)mpb);
-+	if (bytes_to_copy > 0)
-+		memmove(dst, src, bytes_to_copy);
-+	/* Now insert new entry to the map */
-+	set_imsm_ord_tbl_ent(map, map->num_members - 1/*slot*/,
-+			     mpb->num_disks | IMSM_ORD_REBUILD);
-+	/* update size */
-+	mpb->mpb_size += sizeof(__u32);
-+}
-+
-+/* Make sure that in case of migration in progress we'll convert raid
-+ * personalities so we could continue migrating
-+ */
-+void convert_raid_personalities(struct intel_super *super)
-+{
-+	struct imsm_super *mpb = super->anchor;
-+	struct imsm_map *map;
-+	struct imsm_disk *newMissing;
-+	int i, map_modified = 0;
-+	int bytes_to_copy;
-+	__u8 *src, *dst;
-+
-+	for (i = 0; i < super->anchor->num_raid_devs; i++) {
-+		struct imsm_dev *dev_iter = __get_imsm_dev(super->anchor, i);
-+
-+		map_modified = 0;
-+		if (dev_iter &&
-+		    dev_iter->vol.migr_state == 1 &&
-+		    dev_iter->vol.migr_type == MIGR_GEN_MIGR) {
-+			/* This device is migrating, check for raid0 levels */
-+			map = get_imsm_map(dev_iter, 0);
-+			if (map->raid_level == 0) {
-+				/* Map0: Migrating raid0 detected - lets switch it to level4 */
-+				switch_raid0_configuration(mpb, map);
-+				map_modified++;
-+			}
-+			map = get_imsm_map(dev_iter, 1);
-+			if (map->raid_level == 0) {
-+				/* Map1: Migrating raid0 detected - lets switch it to level4 */
-+				switch_raid0_configuration(mpb, map);
-+				map_modified++;
-+			}
-+		}
-+	}
-+
-+	if (map_modified > 0) {
-+		/* Add missing device to the MPB disk table */
-+		src = (__u8 *)mpb->disk + sizeof(struct imsm_disk) * mpb->num_disks;
-+		mpb->num_disks++;
-+		dst = (__u8 *)mpb->disk + sizeof(struct imsm_disk) * mpb->num_disks;
-+
-+		/* Now move the rest of the metadata to be properly aligned */
-+		bytes_to_copy = mpb->mpb_size - (src - (__u8 *)mpb);
-+		if (bytes_to_copy > 0)
-+			memmove(dst, src, bytes_to_copy);
-+
-+		/* Update mpb size */
-+		mpb->mpb_size += sizeof(struct imsm_disk);
-+
-+		/* Now fill in the new missing disk fields */
-+		newMissing = (struct imsm_disk *)src;
-+		sprintf((char *)newMissing->serial, "%s", "MISSING DISK");
-+		/* copy the device size from the first disk */
-+		newMissing->total_blocks = mpb->disk[0].total_blocks;
-+		newMissing->scsi_id = 0x0;
-+		newMissing->status = FAILED_DISK;
++	/* check command msg type */
++	switch (msg->type) {
++	case SET_SYNC_MAX:
++		/* Add SET_SYNC_MAX handler here */
++		break;
 +	}
 +}
 +
-+/* Check for unsupported migration features:
-+ *  migration optimization area
-+ */
-+int check_mpb_migr_compatibility(struct intel_super *super)
-+{
-+	struct imsm_map *map0, *map1;
-+	int i;
+ void read_sock(struct supertype *container)
+ {
+ 	int fd;
+ 	struct metadata_update msg;
++	struct mdmon_update *update;
++	struct cmd_message *cmd_msg;
+ 	int terminate = 0;
+ 	long fl;
+ 	int tmo = 3; /* 3 second timeout before hanging up the socket */
++	int rv;
+ 
+ 	fd = accept(container->sock, NULL, NULL);
+ 	if (fd < 0)
+@@ -749,7 +772,9 @@ void read_sock(struct supertype *container)
+ 		msg.buf = NULL;
+ 
+ 		/* read and validate the message */
+-		if (receive_message(fd, &msg, tmo) == 0) {
++		rv = receive_message(fd, &msg, tmo);
++		if (rv == 0) {
++			/* metadata update */
+ 			handle_message(container, &msg);
+ 			if (msg.len == 0) {
+ 				/* ping reply with version */
+@@ -759,8 +784,18 @@ void read_sock(struct supertype *container)
+ 					terminate = 1;
+ 			} else if (ack(fd, tmo) < 0)
+ 				terminate = 1;
+-		} else
++		} else if (rv == 1) {
++			/* mdmon_update received */
++			update = (struct mdmon_update *)&msg;
++			cmd_msg = (struct cmd_message *)(update->buf);
++			handle_command(container, cmd_msg);
 +
-+	for (i = 0; i < super->anchor->num_raid_devs; i++) {
-+		struct imsm_dev *dev_iter = __get_imsm_dev(super->anchor, i);
-+
-+		if (dev_iter &&
-+		    dev_iter->vol.migr_state == 1 &&
-+		    dev_iter->vol.migr_type == MIGR_GEN_MIGR) {
-+			/* This device is migrating */
-+			map0 = get_imsm_map(dev_iter, 0);
-+			map1 = get_imsm_map(dev_iter, 1);
-+			if (map0->pba_of_lba0 != map1->pba_of_lba0)
-+				/* migration optimization area was used */
-+				return -1;
++			free(msg.buf);
++			if (ack(fd, tmo) < 0)
++				terminate = 1;
++		} else {
+ 			terminate = 1;
 +		}
+ 
+ 	} while (!terminate);
+ 
+diff --git a/mdadm.h b/mdadm.h
+index be9a93e..eacf0f5 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -750,6 +750,23 @@ struct metadata_update {
+ 	struct metadata_update *next;
+ };
+ 
++struct mdmon_update {
++	int len;
++	char *buf;
++};
++
++enum cmd_type {
++	SET_SYNC_MAX,
++};
++
++struct cmd_message {
++	enum cmd_type type;
++	int devnum;
++	union {
++		unsigned long long new_sync_max;
++	} msg_buf;
++};
++
+ /* A supertype holds a particular collection of metadata.
+  * It identifies the metadata type by the superswitch, and the particular
+  * sub-version of that metadata type.
+@@ -979,6 +996,7 @@ extern int assemble_container_content(struct supertype *st, int mdfd,
+ extern int add_disk(int mdfd, struct supertype *st,
+ 		    struct mdinfo *sra, struct mdinfo *info);
+ extern int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info);
++extern int send_mdmon_cmd(struct supertype *st, struct mdmon_update *update);
+ unsigned long long min_recovery_start(struct mdinfo *array);
+ 
+ extern char *human_size(long long bytes);
+diff --git a/mdmon.h b/mdmon.h
+index 9ea0b93..2c41e47 100644
+--- a/mdmon.h
++++ b/mdmon.h
+@@ -49,6 +49,9 @@ struct active_array {
+ 
+ 	enum state_of_reshape reshape_state;
+ 	int reshape_delta_disks;
++	int waiting_resync_max; /* wait for resync_max cmd from mdadm */
++	long long unsigned resync_max;
++	long long unsigned sync_completed;
+ 
+ 	int check_degraded; /* flag set by mon, read by manage */
+ 
+diff --git a/msg.c b/msg.c
+index 95c6f0b..f413824 100644
+--- a/msg.c
++++ b/msg.c
+@@ -32,6 +32,7 @@
+ #include "mdmon.h"
+ 
+ static const __u32 start_magic = 0x5a5aa5a5;
++static const __u32 start_magic_cmd = 0x6b6bb6b6;
+ static const __u32 end_magic = 0xa5a55a5a;
+ 
+ static int send_buf(int fd, const void* buf, int len, int tmo)
+@@ -93,14 +94,42 @@ int send_message(int fd, struct metadata_update *msg, int tmo)
+ 	return rv;
+ }
+ 
++int send_message_cmd(int fd, struct mdmon_update *update, int tmo)
++{
++	__s32 len = update->len;
++	int rv;
++
++	rv = send_buf(fd, &start_magic_cmd, 4, tmo);
++	rv = rv ?: send_buf(fd, &len, 4, tmo);
++	if (len > 0)
++		rv = rv ?: send_buf(fd, update->buf, update->len, tmo);
++	rv = send_buf(fd, &end_magic, 4, tmo);
++
++	return rv;
++}
++
++/*
++ * return:
++ *  0 - metadata_update received
++ *  1 - mdmon_update received
++ * -1 - error case
++ */
+ int receive_message(int fd, struct metadata_update *msg, int tmo)
+ {
+ 	__u32 magic;
+ 	__s32 len;
+ 	int rv;
++	int msg_type;
+ 
+ 	rv = recv_buf(fd, &magic, 4, tmo);
+-	if (rv < 0 || magic != start_magic)
++	if (rv < 0)
++		return -1;
++
++	if (magic == start_magic)
++		msg_type = 0;
++	else if (magic == start_magic_cmd)
++		msg_type = 1;
++	else
+ 		return -1;
+ 	rv = recv_buf(fd, &len, 4, tmo);
+ 	if (rv < 0 || len > MSG_MAX_LEN)
+@@ -122,7 +151,7 @@ int receive_message(int fd, struct metadata_update *msg, int tmo)
+ 		return -1;
+ 	}
+ 	msg->len = len;
+-	return 0;
++	return msg_type;
+ }
+ 
+ int ack(int fd, int tmo)
+diff --git a/msg.h b/msg.h
+index 1f916de..046f7c4 100644
+--- a/msg.h
++++ b/msg.h
+@@ -20,9 +20,11 @@
+ 
+ struct mdinfo;
+ struct metadata_update;
++struct mdmon_update;
+ 
+ extern int receive_message(int fd, struct metadata_update *msg, int tmo);
+ extern int send_message(int fd, struct metadata_update *msg, int tmo);
++extern int send_message_cmd(int fd, struct mdmon_update *update, int tmo);
+ extern int ack(int fd, int tmo);
+ extern int wait_reply(int fd, int tmo);
+ extern int connect_monitor(char *devname);
+diff --git a/util.c b/util.c
+index 396f6d8..ea9b148 100644
+--- a/util.c
++++ b/util.c
+@@ -1840,6 +1840,31 @@ int flush_metadata_updates(struct supertype *st)
+ 	return 0;
+ }
+ 
++int send_mdmon_cmd(struct supertype *st, struct mdmon_update *update)
++{
++	int sfd;
++	char *devname;
++
++	devname = devnum2devname(st->container_dev);
++	if (devname == NULL)
++		return -1;
++	sfd = connect_monitor(devname);
++	if (sfd < 0) {
++		free(devname);
++		return -1;
 +	}
++
++	send_message_cmd(sfd, update, 0);
++	wait_reply(sfd, 0);
++
++	ack(sfd, 0);
++	wait_reply(sfd, 0);
++	close(sfd);
++	st->update_tail = NULL;
++	free(devname);
 +	return 0;
 +}
 +
- static void __free_imsm(struct intel_super *super, int free_disks);
- 
- /* load_imsm_mpb - read matrix metadata
-@@ -2556,6 +2727,21 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- 		return 3;
- 	}
- 
-+	/* Check for unsupported migration features */
-+	if (check_mpb_migr_compatibility(super) != 0) {
-+		if (devname)
-+			fprintf(stderr,
-+				Name ": Unsupported migration detected on %s\n",
-+				devname);
-+
-+		return 4;
-+	}
-+
-+	/* Now make sure that in case of migration
-+	 * we'll convert raid personalities
-+	 */
-+	convert_raid_personalities(super);
-+
- 	/* FIXME the BBM log is disk specific so we cannot use this global
- 	 * buffer for all disks.  Ok for now since we only look at the global
- 	 * bbm_log_size parameter to gate assembly
-@@ -4601,6 +4787,8 @@ static void update_recovery_start(struct imsm_dev *dev, struct mdinfo *array)
- 	rebuild->recovery_start = units * blocks_per_migr_unit(dev);
- }
- 
-+int recover_backup_imsm(struct supertype *st, struct mdinfo *info,
-+			void *ptr, int length);
- 
- static struct mdinfo *container_content_imsm(struct supertype *st)
+ void append_metadata_update(struct supertype *st, void *buf, int len)
  {
-@@ -4718,8 +4906,15 @@ static struct mdinfo *container_content_imsm(struct supertype *st)
- 			info_d->data_offset = __le32_to_cpu(map->pba_of_lba0);
- 			info_d->component_size = __le32_to_cpu(map->blocks_per_member);
- 		}
--		/* now that the disk list is up-to-date fixup recovery_start */
--		update_recovery_start(dev, this);
-+		if (this) {
-+			/* now that the disk list is up-to-date fixup recovery_start */
-+			update_recovery_start(dev, this);
-+
-+			/* check for reshape */
-+			if (this->reshape_active == 1)
-+				recover_backup_imsm(st, this, NULL, 0);
-+		}
-+
- 		rest = this;
- 	}
  
 
