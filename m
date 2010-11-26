@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 09/53] Create: cleanup/unify default geometry handling
-Date: Fri, 26 Nov 2010 09:05:00 +0100
-Message-ID: <20101126080500.5221.15559.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 10/53] Initialize st->devnum and st->container_dev in
+	super_by_fd
+Date: Fri, 26 Nov 2010 09:05:07 +0100
+Message-ID: <20101126080507.5221.27587.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,164 +14,121 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-From: Dan Williams <dan.j.williams@intel.com>
-
-Support metadata specific level, layout and chunksize defaults.  Kill an
-uneeded superswitch methods ahead of adding more for the reshape case.
+Precludes needing to deduce this information later, like in Detail.c and
+soon in Grow.c.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Create.c      |   21 ++++++---------------
- mdadm.h       |    8 +++-----
- super-ddf.c   |   11 ++++++++++-
- super-intel.c |   15 +++++++++------
- 4 files changed, 28 insertions(+), 27 deletions(-)
+ Detail.c |   21 ++++++++++-----------
+ util.c   |   23 ++++++++++++++---------
+ 2 files changed, 24 insertions(+), 20 deletions(-)
 
-diff --git a/Create.c b/Create.c
-index 2bf7ebe..bc2613a 100644
---- a/Create.c
-+++ b/Create.c
-@@ -31,8 +31,8 @@ static int default_layout(struct supertype *st, int level, int verbose)
- {
- 	int layout = UnSet;
+diff --git a/Detail.c b/Detail.c
+index e0817aa..0fb90e8 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -97,16 +97,13 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 	if (st)
+ 		max_disks = st->max_devs;
  
--	if (st && st->ss->default_layout)
--		layout = st->ss->default_layout(level);
-+	if (st && st->ss->default_geometry)
-+		st->ss->default_geometry(st, &level, &layout, NULL);
- 
- 	if (layout == UnSet)
- 		switch(level) {
-@@ -120,15 +120,8 @@ int Create(struct supertype *st, char *mddev,
- 	int major_num = BITMAP_MAJOR_HI;
- 
- 	memset(&info, 0, sizeof(info));
--
--	if (level == UnSet) {
--		/* "ddf" and "imsm" metadata only supports one level - should possibly
--		 * push this into metadata handler??
--		 */
--		if (st && (st->ss == &super_ddf || st->ss == &super_imsm))
--			level = LEVEL_CONTAINER;
--	}
--
-+	if (level == UnSet && st && st->ss->default_geometry)
-+		st->ss->default_geometry(st, &level, NULL, NULL);
- 	if (level == UnSet) {
- 		fprintf(stderr,
- 			Name ": a RAID level is needed to create an array.\n");
-@@ -235,11 +228,9 @@ int Create(struct supertype *st, char *mddev,
- 	case 6:
- 	case 0:
- 		if (chunk == 0) {
--			if (st && st->ss->default_chunk)
--				chunk = st->ss->default_chunk(st);
--
-+			if (st && st->ss->default_geometry)
-+				st->ss->default_geometry(st, NULL, NULL, &chunk);
- 			chunk = chunk ? : 512;
--
- 			if (verbose > 0)
- 				fprintf(stderr, Name ": chunk size defaults to %dK\n", chunk);
- 		}
-diff --git a/mdadm.h b/mdadm.h
-index f7172e9..a4de06f 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -612,7 +612,7 @@ extern struct superswitch {
- 	 * added to validate changing size and new devices.  If there are
- 	 * inter-device dependencies, it should record sufficient details
- 	 * so these can be validated.
--	 * Both 'size' and '*freesize' are in sectors.  chunk is bytes.
-+	 * Both 'size' and '*freesize' are in sectors.  chunk is KiB.
- 	 */
- 	int (*validate_geometry)(struct supertype *st, int level, int layout,
- 				 int raiddisks,
-@@ -621,10 +621,8 @@ extern struct superswitch {
- 				 int verbose);
- 
- 	struct mdinfo *(*container_content)(struct supertype *st);
--	/* Allow a metadata handler to override mdadm's default layouts */
--	int (*default_layout)(int level); /* optional */
--	/* query the supertype for default chunk size */
--	int (*default_chunk)(struct supertype *st); /* optional */
-+	/* query the supertype for default geometry */
-+	void (*default_geometry)(struct supertype *st, int *level, int *layout, int *chunk); /* optional */
- 	/* Permit subarray's to be deleted from inactive containers */
- 	int (*kill_subarray)(struct supertype *st); /* optional */
- 	/* Permit subarray's to be modified */
-diff --git a/super-ddf.c b/super-ddf.c
-index dba5970..772ca97 100644
---- a/super-ddf.c
-+++ b/super-ddf.c
-@@ -3653,6 +3653,15 @@ static int ddf_level_to_layout(int level)
+-	if (sra && is_subarray(sra->text_version) &&
+-		strchr(sra->text_version+1, '/')) {
++	if (st && st->subarray[0]) {
+ 		/* This is a subarray of some container.
+ 		 * We want the name of the container, and the member
+ 		 */
+-		char *s = strchr(sra->text_version+1, '/');
+-		int dn;
+-		*s++ = '\0';
+-		member = s;
+-		dn = devname2devnum(sra->text_version+1);
++		int dn = st->container_dev;
++
++		member = st->subarray;
+ 		container = map_dev(dev2major(dn), dev2minor(dn), 1);
  	}
- }
  
-+static void default_geometry_ddf(struct supertype *st, int *level, int *layout, int *chunk)
-+{
-+	if (level && *level == UnSet)
-+		*level = LEVEL_CONTAINER;
+@@ -417,7 +414,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		}
+ 		free_mdstat(ms);
+ 
+-		if (st->sb && info.reshape_active) {
++		if (st && st->sb && info.reshape_active) {
+ #if 0
+ This is pretty boring
+ 			printf("  Reshape pos'n : %llu%s\n", (unsigned long long) info.reshape_progress<<9,
+@@ -567,9 +564,11 @@ This is pretty boring
+ 		if (!brief) printf("\n");
+ 	}
+ 	if (spares && brief && array.raid_disks) printf(" spares=%d", spares);
+-	if (brief && st && st->sb)
+-		st->ss->brief_detail_super(st);
+-	st->ss->free_super(st);
++	if (st) {
++		if (brief && st->sb)
++			st->ss->brief_detail_super(st);
++		st->ss->free_super(st);
++	}
+ 
+ 	if (brief > 1 && devices) printf("\n   devices=%s", devices);
+ 	if (brief) printf("\n");
+diff --git a/util.c b/util.c
+index 5f2694e..8739278 100644
+--- a/util.c
++++ b/util.c
+@@ -1085,9 +1085,10 @@ struct supertype *super_by_fd(int fd)
+ 	struct supertype *st = NULL;
+ 	struct mdinfo *sra;
+ 	char *verstr;
+-	char version[20];
++	char version[30];
+ 	int i;
+ 	char *subarray = NULL;
++	int container = NoMdDev;
+ 
+ 	sra = sysfs_read(fd, 0, GET_VERSION);
+ 
+@@ -1109,15 +1110,16 @@ struct supertype *super_by_fd(int fd)
+ 	}
+ 	if (minor == -2 && is_subarray(verstr)) {
+ 		char *dev = verstr+1;
 +
-+	if (level && layout && *layout == UnSet)
-+		*layout = ddf_level_to_layout(*level);
-+}
-+
- struct superswitch super_ddf = {
- #ifndef	MDASSEMBLE
- 	.examine_super	= examine_super_ddf,
-@@ -3680,7 +3689,7 @@ struct superswitch super_ddf = {
- 	.free_super	= free_super_ddf,
- 	.match_metadata_desc = match_metadata_desc_ddf,
- 	.container_content = container_content_ddf,
--	.default_layout	= ddf_level_to_layout,
-+	.default_geometry = default_geometry_ddf,
- 
- 	.external	= 1,
- 
-diff --git a/super-intel.c b/super-intel.c
-index b880a74..7c5fcc4 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4115,14 +4115,18 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 	return 0;
+ 		subarray = strchr(dev, '/');
+-		int devnum;
+-		if (subarray)
++		if (subarray) {
+ 			*subarray++ = '\0';
+-		devnum = devname2devnum(dev);
+-		subarray = strdup(subarray);
++			subarray = strdup(subarray);
++		}
++		container = devname2devnum(dev);
+ 		if (sra)
+ 			sysfs_free(sra);
+-		sra = sysfs_read(-1, devnum, GET_VERSION);
++		sra = sysfs_read(-1, container, GET_VERSION);
+ 		if (sra && sra->text_version[0])
+ 			verstr = sra->text_version;
+ 		else
+@@ -1132,12 +1134,15 @@ struct supertype *super_by_fd(int fd)
+ 	if (st) {
+ 		st->sb = NULL;
+ 		if (subarray) {
+-			strncpy(st->subarray, subarray, 32);
+-			st->subarray[31] = 0;
+-			free(subarray);
++			strncpy(st->subarray, subarray, sizeof(st->subarray));
++			st->subarray[sizeof(st->subarray) - 1] = 0;
+ 		} else
+ 			st->subarray[0] = 0;
++		st->container_dev = container;
++		st->devnum = fd2devnum(fd);
+ 	}
++	if (subarray)
++		free(subarray);
+ 	return st;
  }
- 
--static int default_chunk_imsm(struct supertype *st)
-+static void default_geometry_imsm(struct supertype *st, int *level, int *layout, int *chunk)
- {
- 	struct intel_super *super = st->sb;
- 
--	if (!super->orom)
--		return 0;
-+	if (level && *level == UnSet)
-+		*level = LEVEL_CONTAINER;
-+
-+	if (level && layout && *layout == UnSet)
-+		*layout = imsm_level_to_layout(*level);
- 
--	return imsm_orom_default_chunk(super->orom);
-+	if (chunk && (*chunk == UnSet || *chunk == 0) && super->orom)
-+		*chunk = imsm_orom_default_chunk(super->orom);
- }
- 
- static void handle_missing(struct intel_super *super, struct imsm_dev *dev);
-@@ -5567,7 +5571,6 @@ struct superswitch super_imsm = {
- 	.brief_detail_super = brief_detail_super_imsm,
- 	.write_init_super = write_init_super_imsm,
- 	.validate_geometry = validate_geometry_imsm,
--	.default_chunk	= default_chunk_imsm,
- 	.add_to_super	= add_to_super_imsm,
- 	.detail_platform = detail_platform_imsm,
- 	.kill_subarray = kill_subarray_imsm,
-@@ -5588,7 +5591,7 @@ struct superswitch super_imsm = {
- 	.free_super	= free_super_imsm,
- 	.match_metadata_desc = match_metadata_desc_imsm,
- 	.container_content = container_content_imsm,
--	.default_layout = imsm_level_to_layout,
-+	.default_geometry = default_geometry_imsm,
- 
- 	.external	= 1,
- 	.name = "imsm",
+ #endif /* !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AUTO) */
 
