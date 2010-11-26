@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 27/53] imsm: Do not accept messages sent by mdadm
-Date: Fri, 26 Nov 2010 09:07:23 +0100
-Message-ID: <20101126080723.5221.90397.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 29/53] Add spares to raid0 array using takeover
+Date: Fri, 26 Nov 2010 09:07:38 +0100
+Message-ID: <20101126080738.5221.94947.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,66 +13,218 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Messages update_reshape_cancel and update_reshape_set_slots ara intended to send by managemon.
-If those message would be issued by mdadm prepare_message() is called in managemon for them.
-In such cases set update_prepared to '-1' to indicate process_message() to not proceed such messages.
+Spares are used by Online Capacity Expansion to expand array.
+To run expansion on raid0, spares have to be added to raid0 volume also.
+Raid0 cannot have spares (no mdmon runs for raid0 array).
+To do this, takeover to raid5 (and back) is used. mdmon runs temporary for raid5 and spare drives can be added to container.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+), 0 deletions(-)
+ Manage.c |  154 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 153 insertions(+), 1 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 89fb118..2984685 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5400,6 +5400,13 @@ update_reshape_exit:
- 			break;
- 		}
+diff --git a/Manage.c b/Manage.c
+index ac9415b..65e345e 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -31,6 +31,137 @@
+ #define START_MD     		_IO (MD_MAJOR, 2)
+ #define STOP_MD      		_IO (MD_MAJOR, 3)
  
-+		/* do not accept this update type sent by mdadm
-+		 */
-+		if (u->update_prepared == -1) {
-+			dprintf("imsm: message is sent by mdadm. cannot accept\n\n");
++
++void takeover5to0(struct mdinfo *sra)
++{
++	char *c;
++	int err;
++
++	dprintf("Takeover Raid5->Raid0.\n");
++
++	if (sra == NULL)
++		return;
++
++	c = map_num(pers, 0);
++	if (c == NULL)
++		return;
++
++	err = sysfs_set_str(sra, NULL, "level", c);
++
++	if (err)
++		fprintf(stderr,
++			Name ": %s: could not set level "
++			"to %s for external super.\n",
++			sra->sys_name, c);
++	sysfs_free(sra);
++}
++
++struct mdinfo *takeover0to5(int fd)
++{
++	struct mdinfo *ret_val = NULL;
++	int devnum;
++	struct mdinfo *sra = NULL;
++	struct supertype *st = NULL;
++	struct mdinfo info;
++	int dev_fd = -1;
++	int device_num;
++
++	dprintf("Takeover Raid0->Raid5.\n");
++	devnum = fd2devnum(fd);
++	if (mdmon_running(devnum)) {
++		dprintf("mdmon is runnig for this container - takeover is not required\n");
++		return ret_val;
++	}
++
++	sra = sysfs_read(fd, 0, GET_VERSION);
++	if (sra == NULL)
++		return ret_val;
++
++	st = super_by_fd(fd);
++
++	if ((sra->array.major_version != -1) ||
++	    (strncmp(sra->text_version, "imsm", 4) != 0) ||
++	    (st == NULL) ||
++	    (st->ss->external == 0))
++		goto exit_takeover0to5;
++
++	device_num = 0;
++	while (device_num > -1) {
++		char dev_name[1024];
++		char *c;
++		int err;
++
++		sprintf(st->subarray, "%i", device_num);
++		st->ss->load_super(st, fd, NULL);
++		if (st->sb == NULL)
++			break;
++
++		st->ss->getinfo_super(st, &info);
++		if (info.array.level == 0) {
++			char *p = NULL;
++
++			sprintf(dev_name, "/dev/md/%s", info.name);
++			dev_fd = open_mddev(dev_name , 1);
++
++			if (dev_fd < 0)
++				continue;
++
++			sysfs_free(sra);
++			sra = sysfs_read(dev_fd, 0, GET_VERSION);
++			if (!sra)
++				continue;
++
++			c = map_num(pers, 5);
++			if (c == NULL)
++				break;
++
++			err = sysfs_set_str(sra, NULL, "level", c);
++			if (err) {
++				fprintf(stderr, Name": %s: could not set level to "
++					"%s for external super.\n", sra->sys_name, c);
++				break;
++			}
++
++			/* return to this raid level and do not release
++			 */
++			ret_val = sra;
++			sra = NULL;
++
++			/* send update with return level,
++			 * return level tells monitor to:
++			 * - after reshape return automatically to this level
++			 * - if return level is set do not activate spares
++			 */
++
++			/* if after takeover mdmon is not running,
++			 * start it
++			 */
++			if (!mdmon_running(devnum))
++				start_mdmon(devnum);
++			p = devnum2devname(devnum);
++			if (p) {
++				ping_monitor(p);
++				free(p);
++			}
++			sleep(1);
++			device_num = -2;
 +			break;
 +		}
++		device_num++;
++	}
 +
- 		if (imsm_reshape_array_set_slots(a) > -1)
- 			super->updates_pending++;
- 		break;
-@@ -5427,6 +5434,13 @@ update_reshape_exit:
- 		if (a == NULL)
- 			break;
++exit_takeover0to5:
++	if (st)
++		st->ss->free_super(st);
++	sysfs_free(sra);
++	if (dev_fd >= 0)
++		close(dev_fd);
++
++dprintf("Takeover ret = %p\n\n", ret_val);
++	return ret_val;
++
++}
++
+ int Manage_ro(char *devname, int fd, int readonly)
+ {
+ 	/* switch to readonly or rw
+@@ -811,6 +942,7 @@ int Manage_subdevs(char *devname, int fd,
+ 				struct mdinfo *sra;
+ 				int container_fd;
+ 				int devnum = fd2devnum(fd);
++				char *devname = NULL;
  
-+		/* do not accept this update type sent by mdadm
-+		 */
-+		if (u->update_prepared == -1) {
-+			dprintf("imsm: message is sent by mdadm. cannot accept\n\n");
-+			break;
-+		}
-+
- 		inst = a->info.container_member;
- 		dev = get_imsm_dev(super, inst);
- 		map_1 = get_imsm_map(dev, 0);
-@@ -5913,9 +5927,19 @@ static void imsm_prepare_update(struct supertype *st,
- 		break;
- 	}
- 	case update_reshape_set_slots: {
-+		struct imsm_update_reshape *u = (void *)update->buf;
-+
-+		/* do not accept this update type sent by mdadm
-+		 */
-+		u->update_prepared = -1;
- 		break;
- 	}
- 	case update_reshape_cancel: {
-+		struct imsm_update_reshape *u = (void *)update->buf;
-+
-+		/* do not accept this update type sent by mdadm
-+		 */
-+		u->update_prepared = -1;
- 		break;
- 	}
- 	case update_level: {
+ 				container_fd = open_dev_excl(devnum);
+ 				if (container_fd < 0) {
+@@ -819,10 +951,17 @@ int Manage_subdevs(char *devname, int fd,
+ 						dv->devname);
+ 					return 1;
+ 				}
++				/* Raid 0 add spare via takeover
++				*/
++				struct mdinfo *return_raid0_sra = NULL;
++				/* try to perform takeover if needed
++				*/
++				return_raid0_sra = takeover0to5(container_fd);
+ 
+ 				if (!mdmon_running(devnum)) {
+ 					fprintf(stderr, Name ": add failed for %s: mdmon not running\n",
+ 						dv->devname);
++					takeover5to0(return_raid0_sra);
+ 					close(container_fd);
+ 					return 1;
+ 				}
+@@ -831,7 +970,13 @@ int Manage_subdevs(char *devname, int fd,
+ 				if (!sra) {
+ 					fprintf(stderr, Name ": add failed for %s: sysfs_read failed\n",
+ 						dv->devname);
++					takeover5to0(return_raid0_sra);
+ 					close(container_fd);
++					devname = devnum2devname(devnum);
++					if (devname) {
++						ping_monitor(devname);
++						free(devname);
++					}
+ 					return 1;
+ 				}
+ 				sra->array.level = LEVEL_CONTAINER;
+@@ -843,12 +988,19 @@ int Manage_subdevs(char *devname, int fd,
+ 				if (sysfs_add_disk(sra, &new_mdi, 0) != 0) {
+ 					fprintf(stderr, Name ": add new device to external metadata"
+ 						" failed for %s\n", dv->devname);
++					takeover5to0(return_raid0_sra);
+ 					close(container_fd);
++					sysfs_free(sra);
+ 					return 1;
+ 				}
+-				ping_monitor(devnum2devname(devnum));
++				takeover5to0(return_raid0_sra);
+ 				sysfs_free(sra);
+ 				close(container_fd);
++				devname = devnum2devname(devnum);
++				if (devname) {
++					ping_monitor(devname);
++					free(devname);
++				}
+ 			} else if (ioctl(fd, ADD_NEW_DISK, &disc)) {
+ 				fprintf(stderr, Name ": add new device failed for %s as %d: %s\n",
+ 					dv->devname, j, strerror(errno));
 
