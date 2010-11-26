@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 21/53] imsm: FIX: core dump during imsm metadata writing
-Date: Fri, 26 Nov 2010 09:06:38 +0100
-Message-ID: <20101126080638.5221.2095.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 23/53] Process reshape initialization by managemon
+Date: Fri, 26 Nov 2010 09:06:53 +0100
+Message-ID: <20101126080653.5221.97203.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,89 +13,138 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Wrong number of disks during metadata update causes core dump.
-New disks number based on internal mdmon information has to used for calculation (not previously read from metadata).
+Monitor signals request to managemon (using reshape_delta_disks variable).
+This caused call to reshape_array() vector. It prepares second metadata update for added disks slot verification.
+Slots are set by md during reshape start and they are unknown to user space so far.
+Second update is sent after reshape is started. During this update processing, metadata is checked against slot numbers set by md and in mismatch case information metadata is updated.
+
+The reshape is being stared in delayed state due to sync_max was set to 0. After this reshape_delta_disk is set to 'in progress' value to avoid reentry.
+Reshape process is continued in mdadm.
+
+If reshape cannot be started or any failure condition occurs, 'cancel' message is prepared by reshape_array() and send to monitor, to rollback metadata changes.
+Mdadm is informed about failure by idle array state.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   27 ++++++++++++++++++---------
- 1 files changed, 18 insertions(+), 9 deletions(-)
+ managemon.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ mdadm.h     |   26 +++++++++++++++++++++++
+ 2 files changed, 94 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 98e4c6d..1231fa8 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3510,8 +3510,9 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- 	return 0;
- }
- 
--static int write_super_imsm(struct intel_super *super, int doclose)
-+static int write_super_imsm(struct supertype *st, int doclose)
- {
-+	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb = super->anchor;
- 	struct dl *d;
- 	__u32 generation;
-@@ -3519,6 +3520,7 @@ static int write_super_imsm(struct intel_super *super, int doclose)
- 	int spares = 0;
- 	int i;
- 	__u32 mpb_size = sizeof(struct imsm_super) - sizeof(struct imsm_disk);
-+	int num_disks = 0;
- 
- 	/* 'generation' is incremented everytime the metadata is written */
- 	generation = __le32_to_cpu(mpb->generation_num);
-@@ -3531,21 +3533,28 @@ static int write_super_imsm(struct intel_super *super, int doclose)
- 	if (mpb->orig_family_num == 0)
- 		mpb->orig_family_num = mpb->family_num;
- 
--	mpb_size += sizeof(struct imsm_disk) * mpb->num_disks;
- 	for (d = super->disks; d; d = d->next) {
- 		if (d->index == -1)
- 			spares++;
--		else
-+		else {
- 			mpb->disk[d->index] = d->disk;
-+			num_disks++;
-+		}
+diff --git a/managemon.c b/managemon.c
+index d495014..d9eb743 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -424,6 +424,74 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 		}
  	}
--	for (d = super->missing; d; d = d->next)
-+	for (d = super->missing; d; d = d->next) {
- 		mpb->disk[d->index] = d->disk;
-+		num_disks++;
+ 
++	if ((a->reshape_state != reshape_not_active) &&
++	    (a->reshape_state != reshape_in_progress)) {
++		dprintf("Reshape signals need to manage this member\n");
++		if (a->container->ss->reshape_array) {
++			struct metadata_update *updates = NULL;
++			struct mdinfo *newdev = NULL;
++			struct mdinfo *d;
++
++			newdev = newa->container->ss->reshape_array(newa, reshape_in_progress, &updates);
++			if (newdev) {
++				int status_ok = 1;
++				newa = duplicate_aa(a);
++				if (newa == NULL)
++					goto reshape_out;
++
++				for (d = newdev; d ; d = d->next) {
++					struct mdinfo *newd;
++
++					newd = malloc(sizeof(*newd));
++					if (!newd) {
++						status_ok = 0;
++						dprintf("Cannot aallocate memory for new disk.\n");
++						continue;
++					}
++					if (sysfs_add_disk(&newa->info, d, 0) < 0) {
++						free(newd);
++						status_ok = 0;
++						dprintf("Cannot add disk to array.\n");
++						continue;
++					}
++					disk_init_and_add(newd, d, newa);
++				}
++				/* go with reshape
++				 */
++				if (status_ok)
++					if (sysfs_set_num(&newa->info, NULL, "sync_max", 0) < 0)
++						status_ok = 0;
++				if (status_ok && sysfs_set_str(&newa->info, NULL, "sync_action", "reshape") == 0) {
++					/* reshape executed
++					 */
++					dprintf("Reshape was started\n");
++					replace_array(a->container, a, newa);
++					a = newa;
++				} else {
++					/* on problems cancel update
++					 */
++					free_aa(newa);
++					free_updates(&updates);
++					updates = NULL;
++					a->container->ss->reshape_array(a, reshape_cancel_request, &updates);
++					sysfs_set_str(&a->info, NULL, "sync_action", "idle");
++				}
++			}
++			dprintf("Send metadata update for reshape.\n");
++
++			queue_metadata_update(updates);
++			updates = NULL;
++			wakeup_monitor();
++reshape_out:
++			while (newdev) {
++				d = newdev->next;
++				free(newdev);
++				newdev = d;
++			}
++			free_updates(&updates);
++		}
 +	}
-+	mpb->num_disks = num_disks;
-+	mpb_size += sizeof(struct imsm_disk) * mpb->num_disks;
++
+ 	if (a->check_degraded && !frozen) {
+ 		struct metadata_update *updates = NULL;
+ 		struct mdinfo *newdev = NULL;
+diff --git a/mdadm.h b/mdadm.h
+index 4777ad2..750afcc 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -680,6 +680,32 @@ extern struct superswitch {
+ 	struct mdinfo *(*activate_spare)(struct active_array *a,
+ 					 struct metadata_update **updates);
  
- 	for (i = 0; i < mpb->num_raid_devs; i++) {
- 		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
--
--		imsm_copy_dev(dev, get_imsm_dev(super, i));
--		mpb_size += sizeof_imsm_dev(dev, 0);
-+		struct imsm_dev *dev2 = get_imsm_dev(super, i);
-+		if ((dev) && (dev2)) {
-+			imsm_copy_dev(dev, dev2);
-+			mpb_size += sizeof_imsm_dev(dev, 0);
-+		}
- 	}
- 	mpb_size += __le32_to_cpu(mpb->bbm_log_size);
- 	mpb->mpb_size = __cpu_to_le32(mpb_size);
-@@ -3665,7 +3674,7 @@ static int write_init_super_imsm(struct supertype *st)
- 		struct dl *d;
- 		for (d = super->disks; d; d = d->next)
- 			Kill(d->devname, NULL, 0, 1, 1);
--		return write_super_imsm(st->sb, 1);
-+		return write_super_imsm(st, 1);
- 	}
- }
- #endif
-@@ -4938,7 +4947,7 @@ static void imsm_sync_metadata(struct supertype *container)
- 	if (!super->updates_pending)
- 		return;
- 
--	write_super_imsm(super, 0);
-+	write_super_imsm(container, 0);
- 
- 	super->updates_pending = 0;
- }
++	/* reshape_array() will
++	 * 1. check is sync_max is set to 0
++	 * 2. prepare device list that has to be added
++	 * 3. prepare metadata update message to set disks slots
++	 *    after reshape is started
++	 * request_type:
++	 * 1. RESHAPE_CANCEL_REQUEST
++	 *    In error case it prepares metadata roll back message.
++	 *    Such error case message should be prepared when
++	 *    passed request_type is set to RESHAPE_CANCEL_REQUEST.
++	 * 1. RESHAPE_IN_PROGRESS
++	 *    requests transition to RESHAPE_IN_PROGRESS state
++	 *    so proper update has to be prepared
++	 * In active array structure can appear values:
++	 * 1. RESHAPE_NOT_ACTIVE
++	 * 2. RESHAPE_IN_PROGRESS
++	 * 3. any other value indicates requested disk number if array change
++	 *    this is visible only during reshape and metadata initialization
++	 *    after initialization RESHAPE_IN_PROGRESS has to be placed
++	 *    in reshape_delta_disks. When reshape is finished it is replaced
++	 *    by RESHAPE_NOT_ACTIVE
++	 */
++	struct mdinfo *(*reshape_array)(struct active_array *a,
++			     enum state_of_reshape request_type,
++			     struct metadata_update **updates);
++
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */
+ 	int external;
+ 	const char *name; /* canonical metadata name */
 
