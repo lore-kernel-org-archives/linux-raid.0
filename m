@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/53] Grow: add missing raid4 geometries to geo_map()
-Date: Fri, 26 Nov 2010 09:04:45 +0100
-Message-ID: <20101126080445.5221.99011.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 08/53] fix a get_linux_version() comparison typo
+Date: Fri, 26 Nov 2010 09:04:52 +0100
+Message-ID: <20101126080452.5221.53227.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,33 +15,23 @@ List-Id: linux-raid.ids
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-They are equivalent to their raid5 versions and let the reshape code
-optionally use either.
-
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- restripe.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ mdadm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/restripe.c b/restripe.c
-index 3074693..c2fbe5b 100644
---- a/restripe.c
-+++ b/restripe.c
-@@ -46,6 +46,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
- 	switch(level*100 + layout) {
- 	case 000:
- 	case 400:
-+	case 400 + ALGORITHM_PARITY_N:
- 	case 500 + ALGORITHM_PARITY_N:
- 		/* raid 4 isn't messed around by parity blocks */
- 		if (block == -1)
-@@ -75,6 +76,7 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
- 		if (block == -1) return pd;
- 		return (pd + 1 + block) % raid_disks;
- 
-+	case 400 + ALGORITHM_PARITY_0:
- 	case 500 + ALGORITHM_PARITY_0:
- 		return block + 1;
- 
+diff --git a/mdadm.c b/mdadm.c
+index 08e8ea4..e3361ed 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1484,7 +1484,7 @@ int main(int argc, char *argv[])
+ 			break;
+ 		}
+ 		if (delay == 0) {
+-			if (get_linux_version() > 20616)
++			if (get_linux_version() > 2006016)
+ 				/* mdstat responds to poll */
+ 				delay = 1000;
+ 			else
 
