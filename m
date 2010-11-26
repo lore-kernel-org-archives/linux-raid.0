@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 48/53] WORKAROUND: md reports idle state during reshape start
-Date: Fri, 26 Nov 2010 09:10:03 +0100
-Message-ID: <20101126081003.5221.6736.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 49/53] imsm Fix: Core during rebuild on array details read
+Date: Fri, 26 Nov 2010 09:10:10 +0100
+Message-ID: <20101126081010.5221.40742.stgit@gklab-170-024.igk.intel.com>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,28 +13,26 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-md reports reshape->idle->reshape states transition on reshape start, so reshape finalization is wrongly indicated.
-Finalize reshape when we have any progress only,
-When reshape is really started, idle state causes reshape finalization as usually.
+When rebuild/reshape is in progress, executing mdadm for read array details causes core dump.
+This is due to not initialized devices list pointer in getinfo_super() call.
+Initializing it to NULL value allows code to detect such situation.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- monitor.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ Detail.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/monitor.c b/monitor.c
-index 2a92dee..59d9bd6 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -387,7 +387,8 @@ static int read_and_act(struct active_array *a)
- 		/* finalize reshape detection
- 		 */
- 		if ((a->curr_action != reshape) &&
--		    (a->prev_action == reshape)) {
-+		    (a->prev_action == reshape) &&
-+		    (a->info.reshape_progress > 2)) {
- 			/* set zero to allow for future rebuilds
- 			 */
- 			a->reshape_state = reshape_not_active;
+diff --git a/Detail.c b/Detail.c
+index 0fb90e8..a2d72f6 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -140,6 +140,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		close(fd2);
+ 		if (err)
+ 			continue;
++		info.devs = NULL;
+ 		st->ss->getinfo_super(st, &info);
+ 
+ 		if (array.raid_disks != 0 && /* container */
 
