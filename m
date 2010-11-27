@@ -1,44 +1,60 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 4/4] Monitor: array that has disappeared doesn't need spares
-Date: Fri, 26 Nov 2010 18:28:57 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010C009E40@irsmsx504.ger.corp.intel.com>
+From: "Eric" <cheung65@web.de>
+Subject: Mr Cheung.
+Date: Sat, 27 Nov 2010 04:28:08 -0800
+Message-ID: <201011270331.oAR3VG5r072643@vsmtp6.jaring.my>
+Reply-To: <chngeric@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_003A_01C2A9A6.46BCA030"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-From 4d1f9e34397a7e9f0af8a68025a9f9e76ead57c3 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 26 Nov 2010 15:31:15 +0100
-Subject: [PATCH 4/4] Monitor: array that has disappeared doesn't need spares
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+This is a multi-part message in MIME format.
 
-If a degraded array disappears we still have it in statelist
-with active<raid but it is pointless to look for spares for it.
+------=_NextPart_000_003A_01C2A9A6.46BCA030
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- Monitor.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Eric Cheung.,
 
-diff --git a/Monitor.c b/Monitor.c
-index b78a66b..0a7c25f 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -877,7 +877,7 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
- 	link_containers_with_subarrays(statelist);
- 	for (st = statelist; st; st = st->next)
- 		if (st->active < st->raid &&
--		    st->spare == 0) {
-+		    st->spare == 0 && !st->err) {
- 			struct domainlist *domlist = NULL;
- 			int d;
- 			struct state *to = st;
--- 
-1.7.1
+Mitt namn är Eric Cheung., Jag jobbar med Hang Seng Bank. Det är summan av
+$ 15,500,000.00 i min bank "Hang Seng Bank, Hong Kong.
 
+Jag vill göra överföringen av $ 15,500,000.00. Jag värva för dig
+hjälp i att sprida denna transaction.I för avsikt att ge 50% av den totala
+ersättningsfonden för din hjälp.
+
+Skulle du vara intresserad så skicka mig ett mail på min privata e-post
+1. Fullständigt namn
+2. Privat telefonnummer
+3. Nuvarande bostadsadress
+(Chngeric@aol.com).
+
+Hälsningar,
+chngeric@aol.com
+Eric Cheung.
+
+------=_NextPart_000_003A_01C2A9A6.46BCA030
+Content-Type: application/octet-stream;
+	name="cheung  small.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="cheung  small.txt"
+
+TXIgRXJpYyBDaGV1bmcuLCANCg0KTXkgbmFtZSBpcyBFcmljIENoZXVuZy4s
+IEkgd29yayB3aXRoIHRoZSBIYW5nIFNlbmcgQmFuay4gVGhlcmUgaXMgdGhl
+IHN1bSBvZg0KJCAxNSw1MDAsMDAwLjAwIGluIG15IGJhbmsgIkhhbmcgU2Vu
+ZyBCYW5rLCBIb25nIEtvbmcuDQoNCkkgd2lzaCB0byBtYWtlIHRoZSB0cmFu
+c2ZlciBvZiB0aGUgJCAxNSw1MDAsMDAwLjAwLiBJIHRvIHNvbGljaXQgZm9y
+IHlvdQ0KYXNzaXN0YW5jZSBpbiBlZmZlY3RpbmcgdGhpcyB0cmFuc2FjdGlv
+bi5JIGludGVuZCB0byBnaXZlIDUwJSBvZiB0aGUgdG90YWwNCnRoZSBjb21w
+ZW5zYXRpb24gZnVuZCBmb3IgeW91ciBhc3Npc3RhbmNlLg0KDQpTaG91bGQg
+eW91IGJlIEludGVyZXN0ZWQgcGxlYXNlIHNlbmQgbWUgYW4gZW1haWwgb24g
+bXkgcHJpdmF0ZSBlbWFpbA0KMS4gRnVsbCBuYW1lcw0KMi4gUHJpdmF0ZSBw
+aG9uZSBudW1iZXINCjMuIEN1cnJlbnQgcmVzaWRlbnRpYWwgYWRkcmVzcw0K
+KGNobmdlcmljQGFvbC5jb20pLg0KDQpSZWdhcmRzLA0KY2huZ2VyaWNAYW9s
+LmNvbQ0KRXJpYyBDaGV1bmcu
+
+------=_NextPart_000_003A_01C2A9A6.46BCA030--
