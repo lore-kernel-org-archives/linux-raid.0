@@ -1,60 +1,61 @@
-From: "Eric" <cheung65@web.de>
-Subject: Mr Cheung.
-Date: Sat, 27 Nov 2010 04:28:08 -0800
-Message-ID: <201011270331.oAR3VG5r072643@vsmtp6.jaring.my>
-Reply-To: <chngeric@aol.com>
+From: hansbkk@gmail.com
+Subject: RAID10 striping vs LVM striping over RAID1 (noob)
+Date: Sun, 28 Nov 2010 17:30:58 +0700
+Message-ID: <AANLkTinW4sxsii=g-4hG_qSMjvyLk92XQPb5HHtGFT94@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_003A_01C2A9A6.46BCA030"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: hansbkk@gmail.com
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+I'm building a filer on a limited budget with two sets of SATAII
+disks, one made of 6x500GB, the other 4x2TB and a recent kernel.
 
-------=_NextPart_000_003A_01C2A9A6.46BCA030
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+I understand that LVM over software RAID is the way to go, but I'm not
+clear on which of the following two scenarios would be "better" - data
+availability, flexibility in handling future space expansion and ease
+of recovery are more important than performance issues for me, but of
+course I'd like to optimize for both if possible.
 
-Eric Cheung.,
+(ASCII art best viewed with a monospaced font)
 
-Mitt namn är Eric Cheung., Jag jobbar med Hang Seng Bank. Det är summan av
-$ 15,500,000.00 i min bank "Hang Seng Bank, Hong Kong.
+Scenario A is traditional RAID1 mirroring, letting LVM handling the striping.
+ ________________________________________________
+|                      LVM VG                    |
+|  _____________   _____________   ____________  |
+| |   LVM PV1   | |   LVM PV2   | |   LVM PV3  | |
+| | ___________ | | ___________ | | ___________| |
+| ||   RAID1   || ||   RAID1   || ||   RAID1   | |
+| ||  __   __  || ||  __   __  || ||  __   __  | |
+| || |__| |__| || || |__| |__| || || |__| |__| | |
+| ||___________|| ||___________|| ||___________| |
+| |_____________| |_____________| |____________| |
+|________________________________________________|
 
-Jag vill göra överföringen av $ 15,500,000.00. Jag värva för dig
-hjälp i att sprida denna transaction.I för avsikt att ge 50% av den totala
-ersättningsfonden för din hjälp.
 
-Skulle du vara intresserad så skicka mig ett mail på min privata e-post
-1. Fullständigt namn
-2. Privat telefonnummer
-3. Nuvarande bostadsadress
-(Chngeric@aol.com).
 
-Hälsningar,
-chngeric@aol.com
-Eric Cheung.
+Scenario B is making use of RAID10 (the mdm-specific one, not generic
+RAID1+0, probably the ",f2" flavor) to handle the striping, presenting
+one physical disk to LVM to use as a PV.
+   _______________
+  |  LVM PV = VG  |
+  |  ___________  |
+  | | RAID10,f2 | |
+  | |  __   __  | |
+  | | |__| |__| | |
+  | |  __   __  | |
+  | | |__| |__| | |
+  | |  __   __  | |
+  | | |__| |__| | |
+  | |___________| |
+  |_______________|
 
-------=_NextPart_000_003A_01C2A9A6.46BCA030
-Content-Type: application/octet-stream;
-	name="cheung  small.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="cheung  small.txt"
 
-TXIgRXJpYyBDaGV1bmcuLCANCg0KTXkgbmFtZSBpcyBFcmljIENoZXVuZy4s
-IEkgd29yayB3aXRoIHRoZSBIYW5nIFNlbmcgQmFuay4gVGhlcmUgaXMgdGhl
-IHN1bSBvZg0KJCAxNSw1MDAsMDAwLjAwIGluIG15IGJhbmsgIkhhbmcgU2Vu
-ZyBCYW5rLCBIb25nIEtvbmcuDQoNCkkgd2lzaCB0byBtYWtlIHRoZSB0cmFu
-c2ZlciBvZiB0aGUgJCAxNSw1MDAsMDAwLjAwLiBJIHRvIHNvbGljaXQgZm9y
-IHlvdQ0KYXNzaXN0YW5jZSBpbiBlZmZlY3RpbmcgdGhpcyB0cmFuc2FjdGlv
-bi5JIGludGVuZCB0byBnaXZlIDUwJSBvZiB0aGUgdG90YWwNCnRoZSBjb21w
-ZW5zYXRpb24gZnVuZCBmb3IgeW91ciBhc3Npc3RhbmNlLg0KDQpTaG91bGQg
-eW91IGJlIEludGVyZXN0ZWQgcGxlYXNlIHNlbmQgbWUgYW4gZW1haWwgb24g
-bXkgcHJpdmF0ZSBlbWFpbA0KMS4gRnVsbCBuYW1lcw0KMi4gUHJpdmF0ZSBw
-aG9uZSBudW1iZXINCjMuIEN1cnJlbnQgcmVzaWRlbnRpYWwgYWRkcmVzcw0K
-KGNobmdlcmljQGFvbC5jb20pLg0KDQpSZWdhcmRzLA0KY2huZ2VyaWNAYW9s
-LmNvbQ0KRXJpYyBDaGV1bmcu
+If I should go with A, then my next question is - does LVM
+automatically optimize the striping for performance, or should I
+"help" it by created multiple PVs by slicing the disks up into
+partitions? If the latter, then that seems to sacrifice a lot of A's
+simplicity and perhaps greater ease of data recovery.
 
-------=_NextPart_000_003A_01C2A9A6.46BCA030--
+Any and all feedback welcome, TIA.
