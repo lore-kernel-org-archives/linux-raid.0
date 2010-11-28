@@ -1,61 +1,56 @@
 From: hansbkk@gmail.com
-Subject: RAID10 striping vs LVM striping over RAID1 (noob)
-Date: Sun, 28 Nov 2010 17:30:58 +0700
-Message-ID: <AANLkTinW4sxsii=g-4hG_qSMjvyLk92XQPb5HHtGFT94@mail.gmail.com>
+Subject: Re: RAID10 striping vs LVM striping over RAID1 (noob)
+Date: Sun, 28 Nov 2010 20:49:22 +0700
+Message-ID: <AANLkTimiR9xeDhCnMSSO49Gxvbdi5j+m=vuNr-WRqfMc@mail.gmail.com>
+References: <AANLkTinW4sxsii=g-4hG_qSMjvyLk92XQPb5HHtGFT94@mail.gmail.com>
+	<alpine.DEB.1.10.1011281140580.1154@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.1011281140580.1154@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 List-Id: linux-raid.ids
 
-I'm building a filer on a limited budget with two sets of SATAII
-disks, one made of 6x500GB, the other 4x2TB and a recent kernel.
+On Sun, Nov 28, 2010 at 5:43 PM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+> What about data reliability? I'd recommend doing two RAID6:es out of the
+> drives you have and using them as PVs, one VG, and don't stripe them at all.
+>
+> <http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162>
+> applies to large drives even in RAID1.
+>
+> --
+> Mikael Abrahamsson
 
-I understand that LVM over software RAID is the way to go, but I'm not
-clear on which of the following two scenarios would be "better" - data
-availability, flexibility in handling future space expansion and ease
-of recovery are more important than performance issues for me, but of
-course I'd like to optimize for both if possible.
+Mikael,
 
-(ASCII art best viewed with a monospaced font)
+I personally use "data availability" (my top priority listed) as
+inclusive of what you most likely mean by data reliability.
 
-Scenario A is traditional RAID1 mirroring, letting LVM handling the striping.
- ________________________________________________
-|                      LVM VG                    |
-|  _____________   _____________   ____________  |
-| |   LVM PV1   | |   LVM PV2   | |   LVM PV3  | |
-| | ___________ | | ___________ | | ___________| |
-| ||   RAID1   || ||   RAID1   || ||   RAID1   | |
-| ||  __   __  || ||  __   __  || ||  __   __  | |
-| || |__| |__| || || |__| |__| || || |__| |__| | |
-| ||___________|| ||___________|| ||___________| |
-| |_____________| |_____________| |____________| |
-|________________________________________________|
+I hadn't considered RAID6, as my understanding has been that it's
+usually implemented by specialized "enterprise-level" hardware, as
+opposed to my "consumer level" stuff, and much larger sets of disks
+than what I'm working with.
 
+Although performance isn't such a big issue for me, my (several
+generations old now) CPU will already be handling all the disk I/O
+discussed - plus the filer's going to be serving out a
+yet-to-be-determined number of iSCSI LUNs, so I'm willing to trade off
+space penalty for the performance and (even more important) the
+simplicity of RAID1 or RAID10.
 
+Regarding the possibility (IMO slim) of the primary drive failing
+during a straight-mirror rebuild, the first (smaller) RAID set is
+being regularly backed up to the larger one, and I'm even trying to
+build off-site disk rotation into my planning (we can't afford tapes).
 
-Scenario B is making use of RAID10 (the mdm-specific one, not generic
-RAID1+0, probably the ",f2" flavor) to handle the striping, presenting
-one physical disk to LVM to use as a PV.
-   _______________
-  |  LVM PV = VG  |
-  |  ___________  |
-  | | RAID10,f2 | |
-  | |  __   __  | |
-  | | |__| |__| | |
-  | |  __   __  | |
-  | | |__| |__| | |
-  | |  __   __  | |
-  | | |__| |__| | |
-  | |___________| |
-  |_______________|
+Next step up will be "full-server" mirroring via drdb/heartbeat to an
+offsite location, but we're not quite there yet.
 
+So I appreciate your "even better" suggestion, but do you have
+anything to say about the relative merits of the two alternatives I
+put forward?
 
-If I should go with A, then my next question is - does LVM
-automatically optimize the striping for performance, or should I
-"help" it by created multiple PVs by slicing the disks up into
-partitions? If the latter, then that seems to sacrifice a lot of A's
-simplicity and perhaps greater ease of data recovery.
+Thanks,
 
-Any and all feedback welcome, TIA.
+Hans
