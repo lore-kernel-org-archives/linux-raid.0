@@ -1,58 +1,123 @@
 From: hansbkk@gmail.com
-Subject: Re: RAID10 striping vs LVM striping over RAID1 (noob)
-Date: Sun, 28 Nov 2010 21:49:26 +0700
-Message-ID: <AANLkTik=pheuEZZ5+uPcnm3_bM5iBvHb5Em=PtrU=53t@mail.gmail.com>
-References: <AANLkTinW4sxsii=g-4hG_qSMjvyLk92XQPb5HHtGFT94@mail.gmail.com>
-	<alpine.DEB.1.10.1011281140580.1154@uplift.swm.pp.se>
-	<AANLkTimiR9xeDhCnMSSO49Gxvbdi5j+m=vuNr-WRqfMc@mail.gmail.com>
-	<alpine.DEB.1.10.1011281525270.1154@uplift.swm.pp.se>
+Subject: Q: LVM over RAID, or plain disks? A:"Yes" = best of both worlds?
+Date: Sun, 28 Nov 2010 22:30:56 +0700
+Message-ID: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1011281525270.1154@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Nov 28, 2010 at 9:29 PM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+ - - - - - - My abject apologies to all for improper addressing in my
+previous messages (thanks to all those who set me straight :)
 
->striping in lvm is something I wouldn't do.
+Hope you're all still willing to consider my request for feedback.
+Start with a bit of context:
 
-Aren't you "striping in LVM" as soon as you have a VG spanning
-multiple PVs anyway? I guess you mean don't bother with the
-  >> should I "help" it by created multiple PVs by slicing the disks
-up into partitions
-question in my OP?
+- SAN/NAS (call it FILER-A) hosting say a dozen TB and servicing a few
+dozen client machines and servers, mostly virtual hosts. Another,
+larger (FILER-B - still just tens of TB) host's drives are used for
+storing backup sets, via not only Amanda, but also filesystems
+comprising gazillions of hard-linked archive sets created by (eg)
+rdiff-backup, rsnapshot and BackupPC. We're on a very limited budget,
+therefore no tape storage for backups.
 
-I've seen comments in multiple reliable places that the striping
-inherent in LVM will give performance increases comparable to RAID's,
-and no suggestions that it isn't as stable.
+- I plan to run LVM over RAID (likely RAID1 or RAID10) for IMO an
+ideal combination of fault tolerance, performance and flexibility.
+
+- I am not at this point overly concerned about performance issues -
+reliability/redundancy and ease of recovery are my main priorities.
 
 
-> Go for the raid10 approach per drive size and then vg them together if you really want a bigger fs, otherwise keep them as separate vg:s and you won't run into case of losing all data at once if one md fails.
+Problem:
 
-Actually I want to keep the LVs containing backup data on a completely
-separate set of spindles from the data being backed up, and definitely
-want to just mirror the discs to enable offsite rotation and easy
-disaster recovery. My understanding is that putting RAID10 on a single
-pair of disks is A- in effect the same as RAID1 in the event one of
-the drives fails but B- that there might be a performance boost  in
-normal operations from the striping feature?
+For off-site data rotation, the hard-linked filesystems on FILER-B
+require full filesystem cloning with block-level tools rather than
+file-level copying or sync'ing. My current plan is to swap out disks
+mirrored via RAID, marking them as "failed" and then rebuilding using
+the (re-initialized) incoming rotation set.
 
-And yes that's another question - feedback from anyone welcome. . .
+HOWEVER - the use of LVM (and possibly RAID10) adds complexity to the
+filesystems, which makes disaster recovery from the detached disk sets
+much more difficult than regular partitions on physical disks.
 
-> I'd say "keep it simple". CPU won't be a problem, even with several
-> generation old CPUs and doing raid6.
->
-> mdadm does raid6 just fine, so you should consider if it suits you.
->
-> If you still want to go with raid10, then you can do so, best is to not
-> complicate things too much,
 
-Thanks Mikael, yes simplicity is critical to "ease of recovery",
-especially given my noobness. Are you saying RAID6 is "simpler" than
-RAID10? Actually your reminder of KISS is nudging me to straight
-RAID1, maybe even drop the LVM.
+Theoretical solution:
 
-Actually this gives me another idea, but unrelated enough I'll start a
-new thread. . .
+Use RAID1 on the "top layer" to mirror the data stored in an LVM (set
+of) disk(s) on the one hand (call it TopRAID1) to ***regular
+partitions*** on actual physical disks on the other (call this the
+TopRAID2 side).
+
+
+(ASCII art best viewed with a monospaced font)
+
+"TopRAID1" side
+ ______________________________________
+|                LVM VG                |
+|  _____   _____________   __________  |
+| | LV1 | |     LV2     | |    LV3   | |
+| |     | |             | |          | |
+| |     | |             | |          | |
+| |     | |             | |          | |
+| |     | |             | |          | |
+| |     | |             | |          | |
+| |_____| |_____________| |__________| |
+|____v___________v______________v______|
+     v           v              v
+     v           v              v
+   RAID1       RAID1          RAID1
+     v           v              v
+   __v__   ______v______   _____v____
+  | HD1 | |     HD2     | |    HD3   |
+  |     | |             | |          |
+  |     | |             | |          |
+  |     | |             | |          |
+  |     | |             | |          |
+  |     | |             | |          |
+  |_____| |_____________| |__________|
+
+"TopRAID2" side
+
+The mirroring at the top level would be set up between the individual
+LVs on the TopRAID1 side and regular filesystem partitions (no RAID or
+LVM) on the TopRAID2 side. In the event of a massive host failure, the
+filesystems on the TopRAID2 side could be easily mounted for data
+recovery and/or service resumption on another machine, and the
+TopRAID1 disk set rebuilt from scratch and then re-mirrored from the
+TopRAID2 disks.
+
+One design goal would be to not allow any LV to get so large that it
+won't fit on a single physical disk on the TopRAID2 side. If this is
+not possible, then the corresponding TopRAID2 side would need to
+comprise a multiple disk set, perhaps striped by RAID0 - not as
+straightforward to recover as single disks, but at least without the
+LVM layer.
+
+Remember, the main purpose of this arrangement is so that the disks in
+the TopRAID2 set can be rotated out for offsite storage. Ideally this
+would be done by using an extra identical set (TopRAID2a and
+TopRAID2b) to minimize the time windows when the live data is running
+on TopRAID1 only.
+
+Note that on the TopRAID1 side the LVM layers could be running on top
+of another set of RAID disks (call it the BottomRAID), again either
+RAID1 or perhaps RAID10 mirroring at the lowest layer. This disk set
+could be allowed to grow in both size and complexity, with an
+expectation that in the event of massive failure I won't even attempt
+to rebuild/recover it, just tear it down and set it up again from
+scratch, then mirror the data back from TopRAID2.
+
+At this point this is all idle speculation on my part, and although I
+think the technology makes it possible, I don't know whether it is a
+practical scheme.
+
+An enhancement of this idea would be to implement the "TopRAID" with a
+full-server mirror using drdb and heartbeat, perhaps eliminating the
+need for intra-server disk mirroring. In this case the TopRAID1 server
+would have the flexibile disk space allocation of LVM, while the
+TopRAID2 server's disks would all be just regular partitions (no LVM),
+again, easily swapped out for offsite rotation.
+
+Any feedback on these ideas would be most appreciated.
