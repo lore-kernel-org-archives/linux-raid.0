@@ -1,89 +1,59 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 18/53] Treat feature as experimental
-Date: Mon, 29 Nov 2010 12:13:17 +1100
-Message-ID: <20101129121317.2f6decce@notabene.brown>
+Subject: Re: [PATCH 19/53] imsm: Add support for general migration
+Date: Mon, 29 Nov 2010 12:17:47 +1100
+Message-ID: <20101129121747.7cca2a64@notabene.brown>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
-	<20101126080608.5221.55622.stgit@gklab-170-024.igk.intel.com>
+	<20101126080615.5221.22468.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101126080608.5221.55622.stgit@gklab-170-024.igk.intel.com>
+In-Reply-To: <20101126080615.5221.22468.stgit@gklab-170-024.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, 26 Nov 2010 09:06:08 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Fri, 26 Nov 2010 09:06:15 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Due to fact that IMSM Windows compatibility was not tested yet, feature has to be treated as experimental until compatibility verification will be performed.
-
-I've applied most of this patch.
-The addition to imsm_reshape_super cannot be added until that function itself
-is added, and I didn't like that patch.
-
-Also it is not correct to mark the function as 'inline', and mentioning
-'IMSM' is the error message is not appropriate as experimental() could
-eventually be used by other metadata handlers.
-
-But with those changes, I have applied it.
-
-Thanks,
-NeilBrown
-
-
+> Internal IMSM procedures need to support the General Migration.
+> It is used during operations like:
+> - Online Capacity Expansion,
+> - migration initialization,
+> - finishing migration,
+> - apply changes to raid disks etc.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  mdadm.h       |    1 +
->  super-intel.c |    4 ++++
->  util.c        |   10 ++++++++++
->  3 files changed, 15 insertions(+), 0 deletions(-)
+>  mdmon.h       |    2 +-
+>  super-intel.c |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++------
+>  2 files changed, 56 insertions(+), 8 deletions(-)
 > 
-> diff --git a/mdadm.h b/mdadm.h
-> index 64b32cc..bf3c1d3 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -890,6 +890,7 @@ extern char *conf_word(FILE *file, int allow_key);
->  extern int conf_name_is_free(char *name);
->  extern int devname_matches(char *name, char *match);
->  extern struct mddev_ident_s *conf_match(struct mdinfo *info, struct supertype *st);
-> +extern inline int experimental(void);
+> diff --git a/mdmon.h b/mdmon.h
+> index 5c51566..8190358 100644
+> --- a/mdmon.h
+> +++ b/mdmon.h
+> @@ -76,7 +76,7 @@ void do_monitor(struct supertype *container);
+>  void do_manager(struct supertype *container);
+>  extern int sigterm;
 >  
->  extern void free_line(char *line);
->  extern int match_oneof(char *devices, char *devname);
-> diff --git a/super-intel.c b/super-intel.c
-> index 2434fa1..f092ccc 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5780,6 +5780,10 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
->  	int fd = -1;
->  	char buf[PATH_MAX];
->  
-> +
-> +	if (experimental() == 0)
-> +		return ret_val;
-> +
->  	snprintf(buf, PATH_MAX, "/dev/md%i", st->devnum);
->  	fd = open(buf , O_RDONLY | O_DIRECT);
->  	if (fd < 0) {
-> diff --git a/util.c b/util.c
-> index 8739278..f220792 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1859,3 +1859,13 @@ void append_metadata_update(struct supertype *st, void *buf, int len)
->  unsigned int __invalid_size_argument_for_IOC = 0;
->  #endif
->  
-> +inline int experimental(void)
-> +{
-> +	if (check_env("MDADM_EXPERIMENTAL"))
-> +		return 1;
-> +	else {
-> +		fprintf(stderr, Name "(IMSM): To use this feature MDADM_EXPERIMENTAL enviroment variable has to defined.\n");
-> +		return 0;
-> +	}
-> +}
-> +
+> -int read_dev_state(int fd);
+> +extern int read_dev_state(int fd);
+>  int is_container_member(struct mdstat_ent *mdstat, char *container);
+
+Here is another case of irrelevant extra changes.  This change really isn't
+needed.  'extern' before a function declaration is completely redundant.
+
+It is true that in the various .h files, we sometimes do include 'extern' and
+sometimes don't.  It might be good to be consistent, so a single patch which
+makes them all consistent, either removing 'extern' from function
+declarations or adding it where missing, would be OK.  But adding here when
+you aren't changing anything else about the declaration is noise, and I
+really don't need more noise.
+
+I haven't applied the rest of this patch as I suspect it should be applied
+after the 'imsm_reshape_super' patch is applied.
+
+NeilBrown
 
