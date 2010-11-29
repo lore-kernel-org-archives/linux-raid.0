@@ -1,47 +1,105 @@
-From: hansbkk@gmail.com
-Subject: Re: LVM over RAID, or plain disks? A:"Yes" = best of both worlds?
-Date: Mon, 29 Nov 2010 23:00:19 +0700
-Message-ID: <AANLkTikPbbGbqRgF=ZR+nw-7Lf7_zcwcMtSsXzOowvFu@mail.gmail.com>
-References: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com>
-	<2D.98.07087.690A2FC4@cdptpa-omtalb.mail.rr.com>
-	<AANLkTinUmZoqSWNZ7NK+tg5DTpc5JFbbPPZV6YONq+ox@mail.gmail.com>
-	<20101129152916.GB13310@www2.open-std.org>
+From: Michele Bonera <mbonera@gmail.com>
+Subject: Problems after reshaping of Raid5 array
+Date: Mon, 29 Nov 2010 18:24:18 +0100
+Message-ID: <AANLkTinUU6Mh-cYbyCF_vL2PzGzFKMcqSZmPULxctquh@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary=0015175cf7c098883504963457d0
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101129152916.GB13310@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2010/11/29 Keld J=F8rn Simonsen <keld@keldix.com>:
->> I can see how RAID6 is simpler than RAID10, but compared to RAID1?
->
-> Hmm, does not compute by me. RAID1 and RAID10 are the same in complex=
-ity,
-> RAID10 is just a modern RAID1, and should actually have been called
-> RAID1.
+--0015175cf7c098883504963457d0
+Content-Type: text/plain; charset=ISO-8859-1
 
-My understanding is that if I use RAID10 on a single pair of disks
-then that is literally the same as RAID1. These to me are very simple
-in that I can take either one of the pair and mount it on any normal
-machine and get at the data without doing anything special.
+Hi all.
 
-However, if I have my six disks configured as a single RAID10 array, I
-believe this is no longer true - the data from (at least the larger
-of) the files has been distributed over all six disks, correct?
+I'm a little bit in panic... and I really need some help to solve this
+(if possible......)...
 
-Now compare putting LVM on top of this array, compared to three RAID1
-pairs on the one hand and a RAID6 array on the other (third) hand :)
+I have a storage server in my LAN where I save everything
+for security (sigh).
 
-If I were trying to recover the data using the latest version of a
-LiveCD - say Fedora or Knoppix, which would be easier?
+The system consists in a 32 GB SSD containing the o.s.
+plus 4 WD EADS 1TB harddisks in RAID5 with all my data.
+The disks are seen by the system as sdb1, sdc1, sdd1, sde1
 
-I'm not trying to score any points, it's a genuine question.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yesterday evening I added another WD, this time an EARS
+(512 byte sectors): I created a partition on it, respecting the
+alignment and then I added it to the array and performed a
+grow command
+
+mdadm --add /dev/md6 /dev/sdb1 (after adding it, the hd took sdb)
+mdadm --grow /dev/md6 --raid-devices=5
+
+Reshape started... and worked until today. Or better, until the system
+hangs and I have to sync+remount-ro with the sysrq keys.
+
+After rebooting, the reshaping restarted, but the disk become sdb
+not sdb1 in the raid array, and the file system became unreadable
+
+Any ideas of what happened?
+
+Thanks a lot for any suggestion you can give me.
+I attach the mdadm -E and dumpe2fs outputs
+
+--0015175cf7c098883504963457d0
+Content-Type: application/x-gzip; name="mdadm-e.tgz"
+Content-Disposition: attachment; filename="mdadm-e.tgz"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gh3mocpz0
+
+H4sIAK7N80wAA+2Xy27aQBSGWfspZtdkEWeuvi0q5dJGVZuoCqFdD/Y4uAEbjQ0SffqOx9ghqCIq
+AkKj87Ewnst/zlzsf1wmkvT2DDZ4nNurYf1Kief3COG++Xke83qYYCb8HsL7TqxmVlZSI9TTRVFt
+avda/X/KeaLm56XZBJGDOm7lYxajCMmQDrlK467qh9JlVuSmCmM3JC7GK73QYPDl2lSlKQniOFYR
+C4eYK09GaUA9lpg/NBQY+0kteKWVrGqth2yiTK/+LEd3xRwhgnAYURJhjCjGYRPgXmYJ+qbmamya
+anMjTPmgVAm6VnPUz37XEoEIfROIeegkIKEbYnSTXaIgwK4purk8baQutJaLtgvjLAixYJyjE0b9
+0PWaTkxQ4prCZS8b3kTKYlWaXnXwh6KS4xdl37VKldYmp9ssL7Qp8xzT8F6VIzlVaFqUH+qZMxkS
+IZio06QCm5DChqReyF2fLENeq3ElV+QJOuFnH8WpYwcxmCayUu3U3RbN1NEQES8SQUSomTqyujb9
+qm4foXisZO6gi7jK5upF9j8L/ZTljy9H+VlmY7U68lqzP5VarZVZrkYqfipnk3opOKNMpOgMxYWZ
+krh6zuXTXOWVHZJ55APnueKbXBSzylSMVVqdlYvJRFU6W26+q9Esf2pXjdDga9vxbjYZKm037a/C
+Xu3kN2vWJNmM3qlGWWm7kGXAoI1M1v7IZnrKRR6bu+4RsSGxbYHXJIjfSuANEkPidEG2TsLcUNuA
+rikEnQLdoJBaBWYbsDUFsxOXsA0Kyipw24CvKbA2qbbmrwqx89avPWBJvSn3HWMb//cw+P8h6N5M
+4P/g/zv2fy85Tv/f2rzB/8H/3xlmMfYe43X/Fyv+79f+T334/j8I7RMJ9g/2v2P7D/hx2v+2ngXu
+D+7/7qgXdN8x/u3732++/zn4/yHonmo4AMABYMcHAMmO8wCwtfHBCQBOAO+MekPsO8ZW/i/A/w9B
+91YA/wf/37H/D8lx+v/Wxgn+D/4PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwxvwBDsOC
+FgBQAAA=
+--0015175cf7c098883504963457d0
+Content-Type: application/octet-stream; name=dumpe2fs
+Content-Disposition: attachment; filename=dumpe2fs
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gh3mogta1
+
+cm9vdEBtaXphcjp+IyBkdW1wZTJmcyAvZGV2L21kNgpkdW1wZTJmcyAxLjQxLjExICgxNC1NYXIt
+MjAxMCkKRmlsZXN5c3RlbSB2b2x1bWUgbmFtZTogICA8bm9uZT4KTGFzdCBtb3VudGVkIG9uOiAg
+ICAgICAgICA8bm90IGF2YWlsYWJsZT4KRmlsZXN5c3RlbSBVVUlEOiAgICAgICAgICAxMWU2MDIz
+NC05N2EyLTQ3YTAtOGU1Mi04ZmUwYzg2YWE2NjcKRmlsZXN5c3RlbSBtYWdpYyBudW1iZXI6ICAw
+eEVGNTMKRmlsZXN5c3RlbSByZXZpc2lvbiAjOiAgICAxIChkeW5hbWljKQpGaWxlc3lzdGVtIGZl
+YXR1cmVzOiAgICAgIGhhc19qb3VybmFsIGV4dF9hdHRyIHJlc2l6ZV9pbm9kZSBkaXJfaW5kZXgg
+ZmlsZXR5cGUgbmVlZHNfcmVjb3Zlcnkgc3BhcnNlX3N1cGVyIGxhcmdlX2ZpbGUKRmlsZXN5c3Rl
+bSBmbGFnczogICAgICAgICBzaWduZWRfZGlyZWN0b3J5X2hhc2ggCkRlZmF1bHQgbW91bnQgb3B0
+aW9uczogICAgKG5vbmUpCkZpbGVzeXN0ZW0gc3RhdGU6ICAgICAgICAgY2xlYW4gd2l0aCBlcnJv
+cnMKRXJyb3JzIGJlaGF2aW9yOiAgICAgICAgICBDb250aW51ZQpGaWxlc3lzdGVtIE9TIHR5cGU6
+ICAgICAgIExpbnV4Cklub2RlIGNvdW50OiAgICAgICAgICAgICAgMTYxMjAyMTc2CkJsb2NrIGNv
+dW50OiAgICAgICAgICAgICAgNjQ0Nzk0NzUyClJlc2VydmVkIGJsb2NrIGNvdW50OiAgICAgMzIy
+Mzk3MzcKRnJlZSBibG9ja3M6ICAgICAgICAgICAgICA0MjYxNDQwNgpGcmVlIGlub2RlczogICAg
+ICAgICAgICAgIDEyMDM2MzUwNwpGaXJzdCBibG9jazogICAgICAgICAgICAgIDAKQmxvY2sgc2l6
+ZTogICAgICAgICAgICAgICA0MDk2CkZyYWdtZW50IHNpemU6ICAgICAgICAgICAgNDA5NgpSZXNl
+cnZlZCBHRFQgYmxvY2tzOiAgICAgIDg3MApCbG9ja3MgcGVyIGdyb3VwOiAgICAgICAgIDMyNzY4
+CkZyYWdtZW50cyBwZXIgZ3JvdXA6ICAgICAgMzI3NjgKSW5vZGVzIHBlciBncm91cDogICAgICAg
+ICA4MTkyCklub2RlIGJsb2NrcyBwZXIgZ3JvdXA6ICAgNTEyClJBSUQgc3RyaWRlOiAgICAgICAg
+ICAgICAgMzIKUkFJRCBzdHJpcGUgd2lkdGg6ICAgICAgICA5NgpGaWxlc3lzdGVtIGNyZWF0ZWQ6
+ICAgICAgIFN1biBOb3YgIDEgMDk6MjI6MjIgMjAwOQpMYXN0IG1vdW50IHRpbWU6ICAgICAgICAg
+IE1vbiBOb3YgMjkgMDc6NTU6MzcgMjAxMApMYXN0IHdyaXRlIHRpbWU6ICAgICAgICAgIE1vbiBO
+b3YgMjkgMTY6NDY6MDAgMjAxMApNb3VudCBjb3VudDogICAgICAgICAgICAgIDEKTWF4aW11bSBt
+b3VudCBjb3VudDogICAgICAzMQpMYXN0IGNoZWNrZWQ6ICAgICAgICAgICAgIFN1biBOb3YgMjgg
+MjM6MDQ6MjcgMjAxMApDaGVjayBpbnRlcnZhbDogICAgICAgICAgIDE1NTUyMDAwICg2IG1vbnRo
+cykKTmV4dCBjaGVjayBhZnRlcjogICAgICAgICBTYXQgTWF5IDI4IDAwOjA0OjI3IDIwMTEKUmVz
+ZXJ2ZWQgYmxvY2tzIHVpZDogICAgICAwICh1c2VyIHJvb3QpClJlc2VydmVkIGJsb2NrcyBnaWQ6
+ICAgICAgMCAoZ3JvdXAgcm9vdCkKRmlyc3QgaW5vZGU6ICAgICAgICAgICAgICAxMQpJbm9kZSBz
+aXplOgkgICAgICAgICAgMjU2ClJlcXVpcmVkIGV4dHJhIGlzaXplOiAgICAgMjgKRGVzaXJlZCBl
+eHRyYSBpc2l6ZTogICAgICAyOApKb3VybmFsIGlub2RlOiAgICAgICAgICAgIDgKRGVmYXVsdCBk
+aXJlY3RvcnkgaGFzaDogICBoYWxmX21kNApEaXJlY3RvcnkgSGFzaCBTZWVkOiAgICAgIDRiNjlm
+ZmZkLTVkZDEtNDI1ZS04ZWJkLWJkMjk5NDBjMDcyMgpKb3VybmFsIGJhY2t1cDogICAgICAgICAg
+IGlub2RlIGJsb2NrcwpKb3VybmFsIHN1cGVyYmxvY2sgbWFnaWMgbnVtYmVyIGludmFsaWQhCgo=
+--0015175cf7c098883504963457d0--
