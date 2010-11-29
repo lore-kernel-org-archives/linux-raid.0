@@ -1,47 +1,72 @@
-From: Michele Bonera <mbonera@gmail.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Problems after reshaping of Raid5 array
-Date: Mon, 29 Nov 2010 21:04:39 +0100
-Message-ID: <1291061079.5909.84.camel@bellatrix.morrisoft.local>
+Date: Tue, 30 Nov 2010 08:45:01 +1100
+Message-ID: <20101130084501.702e7486@notabene.brown>
 References: <AANLkTinUU6Mh-cYbyCF_vL2PzGzFKMcqSZmPULxctquh@mail.gmail.com>
-	 <4CF3FB20.2040100@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CF3FB20.2040100@computer.org>
+In-Reply-To: <AANLkTinUU6Mh-cYbyCF_vL2PzGzFKMcqSZmPULxctquh@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
+To: Michele Bonera <mbonera@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Il giorno lun, 29/11/2010 alle 20.12 +0100, Jan Ceuleers ha scritto:
+On Mon, 29 Nov 2010 18:24:18 +0100 Michele Bonera <mbonera@gmail.com> wrote:
 
-> I've had similar problems, which I resolved by changing the partition 
-> type from fd (Linux RAID autodetect) to 83 (Linux), ensuring that the 
-> initrd is able to assemble the RAID.
-> Worth a shot.
-> HTH, Jan
+> Hi all.
+> 
+> I'm a little bit in panic... and I really need some help to solve this
+> (if possible......)...
+> 
+> I have a storage server in my LAN where I save everything
+> for security (sigh).
+> 
+> The system consists in a 32 GB SSD containing the o.s.
+> plus 4 WD EADS 1TB harddisks in RAID5 with all my data.
+> The disks are seen by the system as sdb1, sdc1, sdd1, sde1
+> 
+> Yesterday evening I added another WD, this time an EARS
+> (512 byte sectors): I created a partition on it, respecting the
+> alignment and then I added it to the array and performed a
+> grow command
+> 
+> mdadm --add /dev/md6 /dev/sdb1 (after adding it, the hd took sdb)
+> mdadm --grow /dev/md6 --raid-devices=5
+> 
+> Reshape started... and worked until today. Or better, until the system
+> hangs and I have to sync+remount-ro with the sysrq keys.
+> 
+> After rebooting, the reshaping restarted, but the disk become sdb
+> not sdb1 in the raid array, and the file system became unreadable
+> 
+> Any ideas of what happened?
 
-Thanks for the reply, Jan, but the problem is not at raid level, or
-better, the raid just finished to reshape and now has 5/5 of his
-components and is active:
+Yes.
+I think you can fix it by simply failing and removing sdc
+Then md/raid5 will recover that data using the parity block, and that should
+be correct.
 
-root@mizar:~# cat /proc/mdstat 
-Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0]
-[raid1] [raid10] 
-md6 : active raid5 sdf1[2] sdb1[0] sda1[1] sdc[4] sde1[3]
-      3438905344 blocks level 5, 128k chunk, algorithm 2 [5/5] [UUUUU]
+It appears that the partition you created on the new device started at a
+multiple of 64K.  When this happen, the superblock at the end of the
+partition also looks valid when seen at the end of the whole device.
+Somehow mdadm got confused and choose the whole device (sdc) instead of the
+partition (sdc1).
 
+I am surprised at this because since mdadm-2.5.1, mdadm will refuse to
+assemble an array if it sees two devices that appear to have the same
+superblock.  Could you possibly be using something that old??
 
-The problem is that I added a device partition (sdc1) but after the
-crash the array has sdc (the device) as one of his components. The
-partition table on the disk was wiped-out.
+So when the reshape started, it was writing data for the 5th device to sdc1.
+Then after you restared, it was writing data for the 5th device to sdc, which
+the same drive of course, but at a different offset.  So everthing that was
+written before the crash will look wrong.
 
-The result is that the filesystem on it (dev/md6) is unreadable and
-fsck.ext3 can't fix it.
+So the thing to do is to stop md from reading from sdc at all, as that device
+is clearly corrupt.  So just fail and remove it.  Then add it back in again.
+If you do re-partition, try to make sure sdc1 does not start at a multiple of
+64K (128 sectors).
 
-Bye
---
-Michele Bonera
-linux user group brescia
+NeilBrown
 
