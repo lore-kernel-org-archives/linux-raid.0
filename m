@@ -1,44 +1,46 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] FIX: chunk_size cannot be read by mdstat
-Date: Mon, 29 Nov 2010 14:26:19 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174C3238A@irsmsx503.ger.corp.intel.com>
-References: <20101129095650.12551.98023.stgit@gklab-170-024.igk.intel.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: LVM over RAID, or plain disks? A:"Yes" = best of both worlds?
+Date: Mon, 29 Nov 2010 16:29:16 +0100
+Message-ID: <20101129152916.GB13310@www2.open-std.org>
+References: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com> <2D.98.07087.690A2FC4@cdptpa-omtalb.mail.rr.com> <AANLkTinUmZoqSWNZ7NK+tg5DTpc5JFbbPPZV6YONq+ox@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101129095650.12551.98023.stgit@gklab-170-024.igk.intel.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <AANLkTinUmZoqSWNZ7NK+tg5DTpc5JFbbPPZV6YONq+ox@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>, "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: hansbkk@gmail.com
+Cc: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org, linux-lvm@redhat.com
 List-Id: linux-raid.ids
 
-SSd2ZSBmb3VuZCB0aGF0IGNvbmRpdGlvbiBvbiBzdHJsZW4oKSBkb2Vzbid0IGFsd2F5cyB3b3Jr
-IChJIHdhbnRlZCB0byBhY2hpZXZlIHRoZSBzYW1lIGNvZGUgc3R5bGUgOykpLA0Kc28gY2hlY2sg
-Zm9yICJjaGVjayIgc3RyaW5nIGhhcyB0byBiZSB1c2VkIGluc3RlYWQuDQoNCkJSDQpBZGFtDQoN
-Cg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVy
-QHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVs
-Lm9yZ10gT24gQmVoYWxmIE9mIEFkYW0gS3dvbGVrDQo+IFNlbnQ6IE1vbmRheSwgTm92ZW1iZXIg
-MjksIDIwMTAgMTA6NTcgQU0NCj4gVG86IG5laWxiQHN1c2UuZGUNCj4gQ2M6IGxpbnV4LXJhaWRA
-dmdlci5rZXJuZWwub3JnOyBXaWxsaWFtcywgRGFuIEo7IENpZWNoYW5vd3NraSwgRWQNCj4gU3Vi
-amVjdDogW1BBVENIXSBGSVg6IGNodW5rX3NpemUgY2Fubm90IGJlIHJlYWQgYnkgbWRzdGF0DQo+
-IA0KPiBDaHVuayBzaXplIGlzIG5vdCByZWFkIGJ5IG1kc3RhdCBkdWUgdG8gdG9vIHdlZWsgY2hl
-Y2tpbmcgb2YgJ2NoZWNrJw0KPiBzdHJpbmcgaW4gbWRzdGF0Lg0KPiBJdCBpcyB0aGUgc2FtZSBy
-ZXN1bHQgZm9yICdjaGVjaycgYW5kICdjaHVua19zaXplJyBjaGVjay4NCj4gDQo+IEFkZCAgc3Ry
-aW5nIGxlbmd0aCBhZGRpdGlvbmFsIGNvbmRpdGlvbiBmb3IgY2hlY2tpbmcuDQo+IA0KPiBTaWdu
-ZWQtb2ZmLWJ5OiBBZGFtIEt3b2xlayA8YWRhbS5rd29sZWtAaW50ZWwuY29tPg0KPiAtLS0NCj4g
-DQo+ICBtZHN0YXQuYyB8ICAgIDMgKystDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDIgaW5zZXJ0aW9u
-cygrKSwgMSBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9tZHN0YXQuYyBiL21kc3Rh
-dC5jDQo+IGluZGV4IGJiMDMwYmYuLjVmNjllMzEgMTAwNjQ0DQo+IC0tLSBhL21kc3RhdC5jDQo+
-ICsrKyBiL21kc3RhdC5jDQo+IEBAIC0yNDgsNyArMjQ4LDggQEAgc3RydWN0IG1kc3RhdF9lbnQg
-Km1kc3RhdF9yZWFkKGludCBob2xkLCBpbnQgc3RhcnQpDQo+ICAJCQkJZWxzZQ0KPiAgCQkJCQll
-bnQtPnJlc3luYyA9IDA7DQo+ICAJCQl9IGVsc2UgaWYgKGVudC0+cGVyY2VudCA9PSAtMSAmJg0K
-PiAtCQkJCSAgICh3WzBdID09ICdyJyB8fCB3WzBdID09ICdjJykpIHsNCj4gKwkJCQkgICAod1sw
-XSA9PSAncicgfHwNCj4gKwkJCQkgICAgKCh3WzBdID09ICdjJykgJiYgc3RybGVuKHcpIDwgOSkp
-KSB7DQo+ICAJCQkJaWYgKHN0cm5jbXAodywgInJlc3luYyIsIDQpPT0wKQ0KPiAgCQkJCQllbnQt
-PnJlc3luYyA9IDE7DQo+ICAJCQkJaWYgKHN0cm5jbXAodywgInJlc2hhcGUiLCA3KT09MCkNCj4g
-DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
-bnN1YnNjcmliZSBsaW51eC1yYWlkIg0KPiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
-bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+On Mon, Nov 29, 2010 at 06:01:11PM +0700, hansbkk@gmail.com wrote:
+> On Mon, Nov 29, 2010 at 1:34 AM, Leslie Rhorer <lrhorer@satx.rr.com> =
+wrote:
+> >> - I am not at this point overly concerned about performance issues=
+ -
+> >> reliability/redundancy and ease of recovery are my main priorities=
+=2E
+> >
+> > =A0 =A0 =A0 =A0In that case, I'm not sure about your desire for the=
+ additional
+> > complexity. =A0Someone else suggested RAID6, which from an operatio=
+nal
+> > standpoint is much simpler. =A0The main reason, it seems to me, for=
+ the more
+> > complex topologies would be enhancing perfromance.
+>=20
+> I can see how RAID6 is simpler than RAID10, but compared to RAID1?
+
+Hmm, does not compute by me. RAID1 and RAID10 are the same in complexit=
+y,
+RAID10 is just a modern RAID1, and should actually have been called
+RAID1.
+
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
