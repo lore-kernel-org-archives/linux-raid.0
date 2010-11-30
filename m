@@ -1,124 +1,57 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 14/53] FIX: Cannot exit monitor after takeover
-Date: Tue, 30 Nov 2010 16:03:16 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D174C8AB57@irsmsx503.ger.corp.intel.com>
-References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
-	<20101126080537.5221.28837.stgit@gklab-170-024.igk.intel.com>
- <20101129103829.0964debb@notabene.brown>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v6 0/4] ext4: Coordinate data-only flush requests sent by fsync
+Date: Tue, 30 Nov 2010 17:41:24 +0100
+Message-ID: <20101130164124.GA30858@lst.de>
+References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101129103829.0964debb@notabene.brown>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-The problem is that, when raid0 array is about unfreezing and this is single/last array in container,
-Ping to this container causes to mdmon not to exit.
-In such condition managemon receives message and in handle_message() for ping case, calls wakeup_monitor()
-and then goes in to loop for monitor_loop_cnt update 
-1. this occurs after timeout 
-2. when this happens managemon stops on pselect() and as there is nothing to monitor in never wakeups.
-3. monitor waits to be allowed to exit on open handlers.
+FYI, here's an updated version of my patch to not run pure flushes
+that also works on SCSI/ATA and not just virtio.  I suspect the patch
+alone might not be enough, but together with a variant of Neil's
+suggestion might do the trick, with my patch taking care of the
+highend-devices and Neil's scheme of taking care of stupid SATA disks.
 
-How can this be resolved:
-1. do not ping for last raid0 array during unfreezing (I've reworked patch to meet this condition)
-2. guard waiting for monitor_loop_cnt change in handle_message() with:
-	if (container->arrays)
 
-3. change in manage member condition:
-	if (sigterm)
-		Wakeup_monitor();
-
-To
-	if (sigterm || (container->arrays == NULL))
-		Wakeup_monitor();
-
-This causes additional monitor wakeup.
-
-Any of method causes mdmon to exit as expected. 
-In cases 2 and 3 it takes a while (we are waiting on communication timeouts).
-Method 1 is fast and we are not blocking mdmon exit by communication.
-
-BR
-Adam
-
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Monday, November 29, 2010 12:38 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [PATCH 14/53] FIX: Cannot exit monitor after takeover
-> 
-> On Fri, 26 Nov 2010 09:05:37 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > When performing backward takeover to raid0 monitor cannot exit
-> > for single raid0 array configuration.
-> > Monitor is locked by communication (ping_manager()) after unfreeze()
-> 
-> I think you are saying that when we convert a RAID5 to a RAID0, the
-> mdmon
-> notices that there is nothing more for it to do, so it exits.  Then
-> mdadm has
-> problems contacting it.  Is that right?
-> It doesn't seem quite right as the 'ping_monitor' should simply fail if
-> the
-> mdmon has disappeared.
-> 
-> Could you say a bit more about what you observe happening.
-> 
-> >
-> > Do not ping manager for raid0 array as they shouldn't be monitored.
-> 
-> Only this isn't quite what the patch does.  What it does is:
->    if the 'last' subarray found is raid0, then don't ping the monitor.
-> In general, (though possibly not in imsm) there could be multiple
-> arrays,
-> some RAID0, some not.  So we would need to track if there are an with
->    level > 0
-> and ping_monitor if any such were found.
-> 
-> I would be reasonably happy with such a patch, except that I cannot yet
-> see
-> exactly why it is needed.  So could you explain exactly what you are
-> seeing
-> please?
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> 
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
-> >
-> >  msg.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/msg.c b/msg.c
-> > index 8e7ebfd..95c6f0b 100644
-> > --- a/msg.c
-> > +++ b/msg.c
-> > @@ -385,11 +385,12 @@ void unblock_monitor(char *container, const int
-> unfreeze)
-> >  		if (!is_container_member(e, container))
-> >  			continue;
-> >  		sysfs_free(sra);
-> > -		sra = sysfs_read(-1, e->devnum, GET_VERSION);
-> > +		sra = sysfs_read(-1, e->devnum, GET_VERSION|GET_LEVEL);
-> >  		if (unblock_subarray(sra, unfreeze))
-> >  			fprintf(stderr, Name ": Failed to unfreeze %s\n", e-
-> >dev);
-> >  	}
-> > -	ping_monitor(container);
-> > +	if (sra && sra->array.level > 0)
-> > +		ping_monitor(container);
-> >
-> >  	sysfs_free(sra);
-> >  	free_mdstat(ent);
-
+Index: linux-2.6/block/blk-flush.c
+===================================================================
+--- linux-2.6.orig/block/blk-flush.c	2010-11-30 17:27:33.108254088 +0100
++++ linux-2.6/block/blk-flush.c	2010-11-30 17:27:38.790004333 +0100
+@@ -143,6 +143,17 @@ struct request *blk_do_flush(struct requ
+ 	unsigned skip = 0;
+ 
+ 	/*
++	 * Just issue pure flushes directly.
++	 */
++	if (!blk_rq_sectors(rq)) {
++		if (!do_preflush) {
++			__blk_end_request_all(rq, 0);
++			return NULL;
++		}
++		return rq;
++	}
++
++	/*
+ 	 * Special case.  If there's data but flush is not necessary,
+ 	 * the request can be issued directly.
+ 	 *
+Index: linux-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_lib.c	2010-11-30 17:27:33.120254298 +0100
++++ linux-2.6/drivers/scsi/scsi_lib.c	2010-11-30 17:27:38.791003634 +0100
+@@ -1060,7 +1060,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+ 	 * that does not transfer data, in which case they may optionally
+ 	 * submit a request without an attached bio.
+ 	 */
+-	if (req->bio) {
++	if (req->bio && !(req->cmd_flags & REQ_FLUSH)) {
+ 		int ret;
+ 
+ 		BUG_ON(!req->nr_phys_segments);
