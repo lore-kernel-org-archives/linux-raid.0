@@ -1,69 +1,84 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCH v6 0/4] ext4: Coordinate data-only flush requests sent
- by fsync
-Date: Tue, 30 Nov 2010 08:58:02 -0500
-Message-ID: <4CF502EA.20403@redhat.com>
-References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com> <20101130113906.176ffcad@notabene.brown> <4CF4FFE1.9060507@kernel.org>
+From: hansbkk@gmail.com
+Subject: Re: [linux-lvm] Q: LVM over RAID, or plain disks? A:"Yes" = best of
+ both worlds?
+Date: Tue, 30 Nov 2010 22:39:16 +0700
+Message-ID: <AANLkTi=F5Ttrp9-_wto4ZNWiDvY=cPe0_p26BPyzvMDz@mail.gmail.com>
+References: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com>
+	<AANLkTimGkMJGiJC+7L+Pu3+yf-J_s0Ex3hM2-g-0+UqQ@mail.gmail.com>
+	<4CF3F7A0.2080108@rjl.com>
+	<AANLkTim67atrgHEzunBRvp4ij+MUDiTg4vu5t6sbgFLq@mail.gmail.com>
+	<4CF4A472.20107@rjl.com>
+	<AANLkTing5ApAXM2o0M+pxNvg01mHewNgGGBiUXM3aLzZ@mail.gmail.com>
+	<4CF4F85C.1020806@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <4CF4FFE1.9060507@kernel.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, "Darrick J. Wong" <djwong@us.ibm.com>, Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4CF4F85C.1020806@turmel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Nataraj <incoming-centos@rjl.com>, linux-raid@vger.kernel.org, linux-lvm@redhat.com
 List-Id: linux-raid.ids
 
-On 11/30/2010 08:45 AM, Tejun Heo wrote:
-> Hello,
+On Tue, Nov 30, 2010 at 8:13 PM, Phil Turmel <philip@turmel.org> wrote:
+> I think you are making this overly complex, insisting on a RAID1 operation to backup from on filer to the other.  Consider having each disk on filer #2 configured as a single LVM PV/VG, so it can stand alone in a rotation.  The try the alternate below.
+
+<snip>
+
+> As an alternate, with simpler recovery semantics:
+>  Create matching LV on non-RAID PV/VG on filer #2
+>  dd + netcat + dd or other technique to dup the snapshot on filer #1 to filer #2
 >
-> On 11/30/2010 01:39 AM, Neil Brown wrote:
->> I haven't seen any of the preceding discussion do I might be missing
->> something important, but this seems needlessly complex and intrusive.
->> In particular, I don't like adding code to md to propagate these timings up
->> to the fs, and I don't the arbitrary '2ms' number.
->>
->> Would it not be sufficient to simply gather flushes while a flush is pending.
->> i.e
->>    - if no flush is pending, set the 'flush pending' flag, submit a flush,
->>      then clear the flag.
->>    - if a flush is pending, then wait for it to complete, and then submit a
->>      single flush on behalf of all pending flushes.
-> Heh, I was about to suggest exactly the same thing.  Unless the delay
-> is gonna be multiple times longer than avg flush time, I don't think
-> the difference between the above scheme and the one w/ preemptive
-> delay would be anything significant especially now that the cost of
-> flush is much lower.  Also, as Neil pointed out in another message,
-> the above scheme will result in lower latency for flushes issued while
-> no flush is in progress.
->
-> IMO, this kind of optimization is gonna make noticeable difference
-> only when there are a lot of simulatenous fsyncs, in which case the
-> above would behave in mostly identical way with the more elaborate
-> timer based one anyway.
->
-> Thanks.
->
+>>   - delete the snapshot
 
-When we played with this in ext3/4, it was important to not wait when doing 
-single threaded fsync's (a pretty common case) since that would just make them 
-slower.
+Thanks Phil, and yes I do tend to complicate things during a
+learning/planning stage, then when I get to implementation reality
+tends to force simplification :)
 
-Also, the wait time for multi-threaded fsync's should be capped at some fraction 
-of the time to complete a flush. For example, we had ATA_CACHE_FLUSH_EXT 
-commands that took say 16ms or so to flush and waited one jiffie (4ms) and that 
-worked well. It tanked when we used that fixed waiting time for a high speed 
-device that could execute a flush in say 1ms (meaning we waited 4 times as long 
-as it would have taken to just submit the fsync().
+Perhaps I miscommunicated, but your suggestion misses a couple of factors:
+  - this process is (so far) only targeting the backup data hosted on Filer-B
+  - the backup-mirroring I'm considering is all within that one
+server, not across a network connection
+  - I can't have "each disk configured as a single VG", since the
+whole point of my using LVM is to get as much flexibility as possible
+for dozens of hosts to share my dozen-terabyte disk space, when I only
+have a half-dozen disks.
+  - my goal is for the snapshot-copy to end up in a regular partition
+on a physical disk, without any RAID/LVM layers standing between the
+data and easy recovery
 
-I am still not clear that the scheme that you and Neil are proposing would 
-really batch up enough flushes to help though since you effectively do not wait.
+However your main point is perfectly valid - dd basically does the
+same block-level data transfer as mdm RAID1 - which is a must for the
+gazillions-of-hardlinks backup filesystems (as opposed to file-level
+tools like rsync).
 
-The workload that we used years back was single threaded fs_mark (small files), 
-2 threads, 4 threads, 8 threads, 16 threads.
+So adapting your suggestion to fit (my perception of) my needs:
 
-Single threaded should show no slow down with various schemes showing 
-multi-threaded writes grow with the number threads to some point....
+  - create an LV snapshot
+  - mount a plain partition on a physical hard disk (preferably on a
+separate controller?)
+  - dd the data from the LV snapshot over to the partition
+  - delete the snapshot
 
-Ric
+> A RAID mirror can only duplicate the raw block device.
 
+Isn't that all that dd is doing as well?
+
+
+My perception is that software like mdm, designed as it is to maximize
+data reliability would handle the cloning more reliably than dd -
+isn't there more error-checking going on during a RAID1 re-mirroring?
+Your main (and quite valid) point is that a user-space tool designed
+to do the job is probably more appropriate than putting RAID1 to use
+in a way beyond what was originally intended.
+
+
+So I guess my question becomes:
+
+What is the best tool to block-level clone an LV snapshot to a regular
+disk partition?
+
+  - "best" = as close to 100% reliably as possible, speed isn't nearly
+as important
+
+Would a COT cloning package (something like Acronis TrueImage) have
+data reliability advantages (like mdm's) over dd?
