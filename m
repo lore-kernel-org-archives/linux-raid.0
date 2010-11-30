@@ -1,29 +1,35 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Problems after reshaping of Raid5 array
-Date: Tue, 30 Nov 2010 20:45:41 +0100
-Message-ID: <4CF55465.5070804@computer.org>
-References: <AANLkTinUU6Mh-cYbyCF_vL2PzGzFKMcqSZmPULxctquh@mail.gmail.com>	 <20101130084501.702e7486@notabene.brown> <1291101780.15141.4.camel@bellatrix.morrisoft.local>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Tue, 30 Nov 2010 14:54:40 -0500
+Message-ID: <4CF55680.5010703@cfl.rr.com>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1291101780.15141.4.camel@bellatrix.morrisoft.local>
+In-Reply-To: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michele Bonera <mbonera@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: The development of GNU GRUB <grub-devel@gnu.org>
+Cc: John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/11/10 08:23, Michele Bonera wrote:
->> It appears that the partition you created on the new device started at a
->> multiple of 64K.  When this happen, the superblock at the end of the
->> partition also looks valid when seen at the end of the whole device.
->> Somehow mdadm got confused and choose the whole device (sdc) instead of the
->> partition (sdc1).
->
-> I did it and it worked! Thanks a lot Neil!!!
+On 11/25/2010 5:26 AM, John Sheu wrote:
+> What's the preferred way to differentiate BIOS fakeraid from regular
+> software mdraid?
 
-Michele,
+The only way I know of is detecting that it is a dmraid device as
+opposed to md, which is why grub does it that way.  This worked well in
+the past when each tool exclusively handled one type of raid.
 
-Does it survive a reboot?
+> I ask this as I'm booting with GRUB2 off a system that has one of those
+> Intel fakeraid chipsets.  As of a few months ago, the mdadm package has
+> supported these fakeraid setups, so the RAID array comes up as a /dev/md###
+> device.  This is unfortunate, as GRUB2 assumes that any device of the type
+> /dev/md### must be a pure software RAID device, and in
+> util/grub-setup.c:939, tries to install itself to the RAID members
+> individually:
 
-Jan
+For grub to support fakeraids activated by the md driver, it needs some
+way to find out that it is actually a fake raid, and not a software
+raid.  Adding linux-raid to Cc list to see if they can suggest a way of
+doing that.
