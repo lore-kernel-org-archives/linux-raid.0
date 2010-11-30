@@ -1,49 +1,82 @@
-From: Michele Bonera <mbonera@gmail.com>
-Subject: Re: Problems after reshaping of Raid5 array
-Date: Tue, 30 Nov 2010 08:23:00 +0100
-Message-ID: <1291101780.15141.4.camel@bellatrix.morrisoft.local>
-References: <AANLkTinUU6Mh-cYbyCF_vL2PzGzFKMcqSZmPULxctquh@mail.gmail.com>
-	 <20101130084501.702e7486@notabene.brown>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH] FIX: chunk_size cannot be read by mdstat
+Date: Tue, 30 Nov 2010 07:28:01 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D174C8A476@irsmsx503.ger.corp.intel.com>
+References: <20101129095650.12551.98023.stgit@gklab-170-024.igk.intel.com>
+ <20101130112211.700f5940@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101130084501.702e7486@notabene.brown>
+In-Reply-To: <20101130112211.700f5940@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Il giorno mar, 30/11/2010 alle 08.45 +1100, Neil Brown ha scritto:
+In such case code: 
+	a->info.array.chunk_size = mdstat->chunk_size;
 
-> > Yesterday evening I added another WD, this time an EARS
-> > (512 byte sectors): I created a partition on it, respecting the
+from managemon.c, function manage_member() 
+has to be removed or guarded for 0 value of mdstat->chunk_size as it corrupts information in active array.
 
-Just to be precise: 4K byte sector (my mistake).
+BR
+Adam
 
-> Yes.
-> I think you can fix it by simply failing and removing sdc
-> Then md/raid5 will recover that data using the parity block, and that should
-> be correct.
-> It appears that the partition you created on the new device started at a
-> multiple of 64K.  When this happen, the superblock at the end of the
-> partition also looks valid when seen at the end of the whole device.
-> Somehow mdadm got confused and choose the whole device (sdc) instead of the
-> partition (sdc1).
 
-I did it and it worked! Thanks a lot Neil!!!
 
-> I am surprised at this because since mdadm-2.5.1, mdadm will refuse to
-> assemble an array if it sees two devices that appear to have the same
-> superblock.  Could you possibly be using something that old??
 
-The distribution is Ubuntu Server 10.04, 
-kernel 2.6.32-26-generic-pae, mdadm 2.6.7.1
-
-Again many thanks Neil, you saved me! :)
-
-Cheers,
---
-Michele Bonera
-linux user group brescia
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Tuesday, November 30, 2010 1:22 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [PATCH] FIX: chunk_size cannot be read by mdstat
+> 
+> On Mon, 29 Nov 2010 10:56:50 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > Chunk size is not read by mdstat due to too week checking of 'check'
+> string in mdstat.
+> > It is the same result for 'check' and 'chunk_size' check.
+> 
+> Actually chunk size is not read because there is no code to try to read
+> it.
+> The chunk size needs to be reported by the personality, and they are
+> inconsistent in the way they report it so it is much easier to just
+> ignore it.
+> GET_ARRAY_INFO gets the chunk size easily, so we stick with that when
+> chunk
+> size is needed.
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> 
+> >
+> > Add  string length additional condition for checking.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  mdstat.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/mdstat.c b/mdstat.c
+> > index bb030bf..5f69e31 100644
+> > --- a/mdstat.c
+> > +++ b/mdstat.c
+> > @@ -248,7 +248,8 @@ struct mdstat_ent *mdstat_read(int hold, int
+> start)
+> >  				else
+> >  					ent->resync = 0;
+> >  			} else if (ent->percent == -1 &&
+> > -				   (w[0] == 'r' || w[0] == 'c')) {
+> > +				   (w[0] == 'r' ||
+> > +				    ((w[0] == 'c') && strlen(w) < 9))) {
+> >  				if (strncmp(w, "resync", 4)==0)
+> >  					ent->resync = 1;
+> >  				if (strncmp(w, "reshape", 7)==0)
 
