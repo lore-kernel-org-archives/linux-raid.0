@@ -1,55 +1,57 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: chunk_size cannot be read by mdstat
-Date: Tue, 30 Nov 2010 11:22:11 +1100
-Message-ID: <20101130112211.700f5940@notabene.brown>
-References: <20101129095650.12551.98023.stgit@gklab-170-024.igk.intel.com>
+Subject: Re: [PATCH v6 0/4] ext4: Coordinate data-only flush requests sent
+ by fsync
+Date: Tue, 30 Nov 2010 11:39:06 +1100
+Message-ID: <20101130113906.176ffcad@notabene.brown>
+References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101129095650.12551.98023.stgit@gklab-170-024.igk.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, 29 Nov 2010 10:56:50 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Mon, 29 Nov 2010 14:05:36 -0800 "Darrick J. Wong" <djwong@us.ibm.com>
+wrote:
 
-> Chunk size is not read by mdstat due to too week checking of 'check' string in mdstat.
-> It is the same result for 'check' and 'chunk_size' check.
+> On certain types of hardware, issuing a write cache flush takes a considerable
+> amount of time.  Typically, these are simple storage systems with write cache
+> enabled and no battery to save that cache after a power failure.  When we
+> encounter a system with many I/O threads that write data and then call fsync
+> after more transactions accumulate, ext4_sync_file performs a data-only flush,
+> the performance of which is suboptimal because each of those threads issues its
+> own flush command to the drive instead of trying to coordinate the flush,
+> thereby wasting execution time.
+> 
+> Instead of each fsync call initiating its own flush, there's now a flag to
+> indicate if (0) no flushes are ongoing, (1) we're delaying a short time to
+> collect other fsync threads, or (2) we're actually in-progress on a flush.
+> 
+> So, if someone calls ext4_sync_file and no flushes are in progress, the flag
+> shifts from 0->1 and the thread delays for a short time to see if there are any
+> other threads that are close behind in ext4_sync_file.  After that wait, the
+> state transitions to 2 and the flush is issued.  Once that's done, the state
+> goes back to 0 and a completion is signalled.
 
-Actually chunk size is not read because there is no code to try to read it.
-The chunk size needs to be reported by the personality, and they are
-inconsistent in the way they report it so it is much easier to just ignore it.
-GET_ARRAY_INFO gets the chunk size easily, so we stick with that when chunk
-size is needed.
+I haven't seen any of the preceding discussion do I might be missing
+something important, but this seems needlessly complex and intrusive.
+In particular, I don't like adding code to md to propagate these timings up
+to the fs, and I don't the arbitrary '2ms' number.
+
+Would it not be sufficient to simply gather flushes while a flush is pending.
+i.e
+  - if no flush is pending, set the 'flush pending' flag, submit a flush,
+    then clear the flag.
+  - if a flush is pending, then wait for it to complete, and then submit a
+    single flush on behalf of all pending flushes.
+
+That way when flush is fast, you do a flush every time, and when it is slow
+you gather multiple flushes together.
+I think it would issues a few more flushes than your scheme, but it would be
+a much neater solution.  Have you tried that and found it to be insufficient?
 
 Thanks,
 NeilBrown
-
-
-
-> 
-> Add  string length additional condition for checking.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  mdstat.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/mdstat.c b/mdstat.c
-> index bb030bf..5f69e31 100644
-> --- a/mdstat.c
-> +++ b/mdstat.c
-> @@ -248,7 +248,8 @@ struct mdstat_ent *mdstat_read(int hold, int start)
->  				else
->  					ent->resync = 0;
->  			} else if (ent->percent == -1 &&
-> -				   (w[0] == 'r' || w[0] == 'c')) {
-> +				   (w[0] == 'r' ||
-> +				    ((w[0] == 'c') && strlen(w) < 9))) {
->  				if (strncmp(w, "resync", 4)==0)
->  					ent->resync = 1;
->  				if (strncmp(w, "reshape", 7)==0)
-
