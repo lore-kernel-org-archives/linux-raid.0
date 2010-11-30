@@ -1,61 +1,68 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Software RAID and Fakeraid
-Date: Wed, 1 Dec 2010 09:25:08 +1100
-Message-ID: <20101201092508.7023f974@notabene.brown>
-References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>
-	<4CF55680.5010703@cfl.rr.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Tue, 30 Nov 2010 17:59:56 -0500
+Message-ID: <20101130225956.GA8882@redhat.com>
+References: <20100825155918.GB8509@redhat.com>
+ <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
+ <20101119031149.GA28455@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CF55680.5010703@cfl.rr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101119031149.GA28455@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 30 Nov 2010 14:54:40 -0500 Phillip Susi <psusi@cfl.rr.com> wrote:
+On Thu, Nov 18 2010 at 10:11pm -0500,
+Malahal Naineni <malahal@us.ibm.com> wrote:
 
-> On 11/25/2010 5:26 AM, John Sheu wrote:
-> > What's the preferred way to differentiate BIOS fakeraid from regular
-> > software mdraid?
+> Hannes Reinecke [hare@suse.de] wrote:
+> > > Also (although this might be a bit off topic from your patch),
+> > > can we expand such a distinction to what should be logged?
+> > > Currently, it's difficult to distinguish important SCSI/block errors
+> > > and less important ones in kernel log.
+> > > For example, when I get a link failure on sda, kernel prints something
+> > > like below, regardless of whether the I/O is recovered by multipathing or not:
+> > >   end_request: I/O error, dev sda, sector XXXXX
+> > > 
+> > Indeed, when using the above we could be modifying the above
+> > message, eg by
+> > 
+> > end_request: transport error, dev sda, sector XXXXX
+> > 
+> > or
+> > 
+> > end_request: target error, dev sda, sector XXXXX
+> > 
+> > which would improve the output noticeable.
+> > 
+> > > Setting REQ_QUIET in dm-multipath could mask the message
+> > > but also other important ones in SCSI.
+> > > 
+> > Hmm. Not sure about that, but I think the above modifications will
+> > be useful already.
+> > 
+> > I'll be sending an updated patch.
 > 
-> The only way I know of is detecting that it is a dmraid device as
-> opposed to md, which is why grub does it that way.  This worked well in
-> the past when each tool exclusively handled one type of raid.
-> 
-> > I ask this as I'm booting with GRUB2 off a system that has one of those
-> > Intel fakeraid chipsets.  As of a few months ago, the mdadm package has
-> > supported these fakeraid setups, so the RAID array comes up as a /dev/md###
-> > device.  This is unfortunate, as GRUB2 assumes that any device of the type
-> > /dev/md### must be a pure software RAID device, and in
-> > util/grub-setup.c:939, tries to install itself to the RAID members
-> > individually:
-> 
-> For grub to support fakeraids activated by the md driver, it needs some
-> way to find out that it is actually a fake raid, and not a software
-> raid.  Adding linux-raid to Cc list to see if they can suggest a way of
-> doing that.
+> Hannes, is there an updated version of this patch? It applied fine with
+> Linus git tree with a minor reject! I would like to test an updated
+> version if you have one (the update seems to refer to better logging
+> only, right?).
 
-My feeling is that grub just needs to be a bit more careful.
+Hannes,
 
-If the members of the md array are partitions, then installing itself in the
-boot blocks of the devices holding those partitions always makes sense.
+Any chance you've had time to fold your proposed logging changes in and
+rebase this patch?  Could you post that updated patch?
 
-If the members of the md array are whole devices, then installing grub in
-those devices might make sense depending on specific details of the
-metadata.  The default should be that it doesn't make sense, but specific
-cases do.
-e.g. if the metadata (/sys/block/mdX/md/metadata_version) is 0.90 or 1.0, and
-the array is RAID1, then grub should install itself in the *array*, not in
-the devices.
-If the metadata is 1.1, then grub cannot install itself
-If the metadata is 1.2, then grub can install itself at the start
-If the metadata is external:imsm then (I think) grub should install itself in
-the array ... though there are some complexities there.
+I'd like to help see this patch through to inclussion when 2.6.38 merge
+window opens.  I can help with further review, testing and development.
 
-I often wonder why people who add knowledge of md to grub etc don't at least
-let me know what they are doing in case I can see something obviously wrong
-with their approach..
-
-NeilBrown
+Please advise, thanks.
+Mike
