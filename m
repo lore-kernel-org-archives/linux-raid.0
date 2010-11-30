@@ -1,67 +1,81 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 29/53] Add spares to raid0 array using takeover
-Date: Tue, 30 Nov 2010 13:00:19 +1100
-Message-ID: <20101130130019.3bbfd525@notabene.brown>
+Subject: Re: [PATCH 30/53] imsm: FIX: Fill sys_name field in getinfo_super()
+Date: Tue, 30 Nov 2010 13:06:04 +1100
+Message-ID: <20101130130604.2dcabe4d@notabene.brown>
 References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
-	<20101126080738.5221.94947.stgit@gklab-170-024.igk.intel.com>
+	<20101126080746.5221.40610.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101126080738.5221.94947.stgit@gklab-170-024.igk.intel.com>
+In-Reply-To: <20101126080746.5221.40610.stgit@gklab-170-024.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, 26 Nov 2010 09:07:38 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Fri, 26 Nov 2010 09:07:46 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Spares are used by Online Capacity Expansion to expand array.
-> To run expansion on raid0, spares have to be added to raid0 volume also.
-> Raid0 cannot have spares (no mdmon runs for raid0 array).
-> To do this, takeover to raid5 (and back) is used. mdmon runs temporary for raid5 and spare drives can be added to container.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> sys_name field is not filled during getinfo_super() call.
 
-I don't like this patch at all.
+No metadata ever sets sys_name.  I agree this can be confusing, but it is the
+sort of thing that needs to be tidied up across-the-board, just piecemeal
+like this.
 
-There is a lot of code in here that is very specific to IMSM, that has been
-placed directly in Manage.c.  That is bad.
+What was your particular need for setting sys_name?
 
-I gather you want to support
-
-  mdadm /dev/md/imsm  --add /dev/newdisk
-
-on a RAID0 and have it convert to RAID5, do the restripe, and convert back.
-
-The IMSM specific code goes through a container and converts every member
-array to raid5.
-
-The 
-  mdadm /dev/md/imsm --add /dev/newdisk
-
-should just add the device to the container as a spare.  This might require
-updating the IMSM metadata in some way, but doesn't require changing anything
-to RAID5 and back.
-
-Then when you do
-
-  mdadm -G /dev/imsm --raid-disks=4
-
-it will work with the imsm code to update every member array and add parts of
-the newdisk to each array.
-
-The conversion to RAID5 needs to happen in Grow_reshape when raid-disks is
-changed on a RAID0.  It needs to happen while the array is frozen.
-
-Not in Manage.c
-
+thanks,
 NeilBrown
 
 
-
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  Manage.c |  154 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 153 insertions(+), 1 deletions(-)
+>  super-intel.c |   11 +++++++++++
+>  1 files changed, 11 insertions(+), 0 deletions(-)
 > 
+> diff --git a/super-intel.c b/super-intel.c
+> index 42219f6..3243132 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -1489,6 +1489,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+>  	struct imsm_map *map = get_imsm_map(dev, 0);
+>  	struct dl *dl;
+>  	char *devname;
+> +	int minor;
+>  
+>  	for (dl = super->disks; dl; dl = dl->next)
+>  		if (dl->raiddisk == info->disk.raid_disk)
+> @@ -1560,6 +1561,11 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+>  	free(devname);
+>  	info->safe_mode_delay = 4000;  /* 4 secs like the Matrix driver */
+>  	uuid_from_super_imsm(st, info->uuid);
+> +
+> +	/* fill sys_name field
+> +	 */
+> +	if (find_array_minor2(info->text_version, 1, st->devnum, &minor) == 0)
+> +		sprintf(info->sys_name, "md%i", minor);
+>  }
+>  
+>  /* check the config file to see if we can return a real uuid for this spare */
+> @@ -1611,6 +1617,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+>  {
+>  	struct intel_super *super = st->sb;
+>  	struct imsm_disk *disk;
+> +	int minor;
+>  
+>  	if (super->current_vol >= 0) {
+>  		getinfo_super_imsm_volume(st, info);
+> @@ -1712,6 +1719,10 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+>  		memcpy(info->uuid, uuid_match_any, sizeof(int[4]));
+>  		fixup_container_spare_uuid(info);
+>  	}
+> +	/* fill sys_name field
+> +	 */
+> +	if (find_array_minor2(info->text_version, 1, st->devnum, &minor) == 0)
+> +		sprintf(info->sys_name, "md%i", minor);
+>  }
+>  
+>  static int is_raid_level_supported(const struct imsm_orom *orom, int level, int raiddisks);
+
