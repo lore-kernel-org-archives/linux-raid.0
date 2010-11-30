@@ -1,107 +1,105 @@
-From: hansbkk@gmail.com
-Subject: Re: [linux-lvm] Q: LVM over RAID, or plain disks? A:"Yes" = best of
- both worlds?
-Date: Tue, 30 Nov 2010 12:20:46 +0700
-Message-ID: <AANLkTim67atrgHEzunBRvp4ij+MUDiTg4vu5t6sbgFLq@mail.gmail.com>
-References: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com>
-	<AANLkTimGkMJGiJC+7L+Pu3+yf-J_s0Ex3hM2-g-0+UqQ@mail.gmail.com>
-	<4CF3F7A0.2080108@rjl.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 3/4] dm: Compute average flush time from component devices
+Date: Tue, 30 Nov 2010 00:21:09 -0500
+Message-ID: <20101130052108.GA2107@redhat.com>
+References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
+ <20101129220558.12401.95229.stgit@elm3b57.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CF3F7A0.2080108@rjl.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Nataraj <incoming-redhat@rjl.com>
-Cc: linux-raid@vger.kernel.org, linux-lvm@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101129220558.12401.95229.stgit@elm3b57.beaverton.ibm.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-On Tue, Nov 30, 2010 at 1:57 AM, Nataraj <incoming-redhat@rjl.com> wrote:
-> Your proposed solution is a bit confusing to understand,
+On Mon, Nov 29 2010 at  5:05pm -0500,
+Darrick J. Wong <djwong@us.ibm.com> wrote:
 
-Thanks for taking the time to give me feedback! And sorry I couldn't
-make it clearer, but if the diagram is pasted into a monospace screen
-it becomes more so - duplicated below.
+> For dm devices which are composed of other block devices, a flush is mapped out
+> to those other block devices.  Therefore, the average flush time can be
+> computed as the average flush time of whichever device flushes most slowly.
 
-The key is that I want to RAID1 from a given **LV** within the
-TopRAID1 set to regular partitions on physical disks on the TopRAID2
-side.
+I share Neil's concern about having to track such fine grained
+additional state in order to make the FS behave somewhat better.  What
+are the _real_ fsync-happy workloads which warrant this optimization?
 
-> however raid1 works for doing backups in the manner that you describe .
-> I use it myself and I
-> have, over time read about others doing so as well.  Be sure to create your
-> volumes with --bitmap=internal, that way when you swap in a drive, it won't
-> need to replicate the entire drive, only the part that is changed.
+That concern aside, my comments on your proposed DM changes are inlined below.
 
-TopRAID1's LVM is likely to be running over a RAID6 set , so I'm not
-depending on the TopRAID mirroring for reliability, just using it for
-the above volume cloning.
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 7cb1352..62aeeb9 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -846,12 +846,38 @@ static void start_queue(struct request_queue *q)
+>  	spin_unlock_irqrestore(q->queue_lock, flags);
+>  }
+>  
+> +static void measure_flushes(struct mapped_device *md)
+> +{
+> +	struct dm_table *t;
+> +	struct dm_dev_internal *dd;
+> +	struct list_head *devices;
+> +	u64 max = 0, samples = 0;
+> +
+> +	t = dm_get_live_table(md);
+> +	devices = dm_table_get_devices(t);
+> +	list_for_each_entry(dd, devices, list) {
+> +		if (dd->dm_dev.bdev->bd_disk->avg_flush_time_ns <= max)
+> +			continue;
+> +		max = dd->dm_dev.bdev->bd_disk->avg_flush_time_ns;
+> +		samples = dd->dm_dev.bdev->bd_disk->flush_samples;
+> +	}
+> +	dm_table_put(t);
+> +
+> +	spin_lock(&md->disk->flush_time_lock);
+> +	md->disk->avg_flush_time_ns = max;
+> +	md->disk->flush_samples = samples;
+> +	spin_unlock(&md->disk->flush_time_lock);
+> +}
+> +
 
-When TopRAID1 is running with the TopRAID2 side marked faulty or
-missing, will there be a performance hit or other negative
-consequences?
+You're checking all devices in a table rather than all devices that will
+receive a flush.  The devices that will receive a flush is left for each
+target to determine (target exposes num_flush_requests).  I'd prefer to
+see a more controlled .iterate_devices() based iteration of devices in
+each target.
 
-If so, would it be possible/better for the host In normal operations
-to mount the underlying LV directly rather than the degraded top-level
-RAID1?
+dm-table.c:dm_calculate_queue_limits() shows how iterate_devices can be
+used to combine device specific data using a common callback and a data
+pointer -- for that data pointer we'd need a local temporary structure
+with your 'max' and 'samples' members.
 
-Obviously I'm asking the whole list here, not just Nataraj :)
+>  static void dm_done(struct request *clone, int error, bool mapped)
+>  {
+>  	int r = error;
+>  	struct dm_rq_target_io *tio = clone->end_io_data;
+>  	dm_request_endio_fn rq_end_io = tio->ti->type->rq_end_io;
+>  
+> +	if (clone->cmd_flags & REQ_FLUSH)
+> +		measure_flushes(tio->md);
+> +
+>  	if (mapped && rq_end_io)
+>  		r = rq_end_io(tio->ti, clone, error, &tio->info);
+>  
+> @@ -2310,6 +2336,8 @@ static void dm_wq_work(struct work_struct *work)
+>  		if (dm_request_based(md))
+>  			generic_make_request(c);
+>  		else
+> +			if (c->bi_rw & REQ_FLUSH)
+> +				measure_flushes(md);
+>  			__split_and_process_bio(md, c);
+>  
+>  		down_read(&md->io_lock);
+> 
 
+You're missing important curly braces for the else in your dm_wq_work()
+change...
 
-> If your not going to manage the drives yourself, you will need an operations
-> staff that has a pretty good understanding of how raid works and/or possibly
-> write a robust set of scripts to manage the drives, ensure that the correct
-> volume is mounted, etc.
+But the bio-based call to measure_flushes() (dm_wq_work's call) should
+be pushed into __split_and_process_bio() -- and maybe measure_flushes()
+could grow a 'struct dm_table *table' argument that, if not NULL, avoids
+getting the reference that __split_and_process_bio() already has on the
+live table.
 
-Just me, and I'm sure my understanding will grow over time :)
-
-We're not keeping archive sets of the drives themselves, rather
-managing the archives created by BackupPC/rsnapshot/rdiff-backup and
-Amanda, keeping them "live" in the disk sets discussed here, each in
-its own LV(s), which data is constantly being refreshed onto the
-rotating drives through the RAID re-mirroring process.
-
-> Also, I don't personally feel that disks are a
-> suitable media for long term data archival, so if that is really your
-> purpose, as opposed to a quick way to recover from a disk failure, then you
-> might consider doing periodic tape or optical media backups as well.
-
-Remember we're talking about tens of terabytes here! I do also make
-occasional DVD runs of key data sets + 20% PAR2s, but even then, I'm
-not counting on these lasting more than 3 years, maybe 5 if I use
-well-recommended media (checking the media ID). If we could afford
-Verbatim "archive quality" I'd probably invest in a tape unit.
-
-I just keep in mind Mr Keynes' "In the long run, we're all dead."
-
-Thanks to all for your help!
-
-----------------------------------------------
-
-Repeat of conceptual diagram, best viewed with a monospaced font
-
-"TopRAID1" side - LV's within a VG running on a RAID6 set
- ______________________________________
-|                LVM VG                |
-|  _____   _____________   __________  |
-| | LV1 | |     LV2     | |    LV3   | |
-| |     | |             | |          | |
-| |     | |             | |          | |
-| |     | |             | |          | |
-| |     | |             | |          | |
-| |     | |             | |          | |
-| |_____| |_____________| |__________| |
-|____v___________v______________v______|
-    v           v              v
-    v           v              v
-  RAID1       RAID1          RAID1
-    v           v              v
-  __v__   ______v______   _____v____
- | HD1 | |     HD2     | |    HD3   |
- |     | |             | |          |
- |     | |             | |          |
- |     | |             | |          |
- |     | |             | |          |
- |     | |             | |          |
- |_____| |_____________| |__________|
-
-"TopRAID2" side - regular partitions on physical disks
+Mike
