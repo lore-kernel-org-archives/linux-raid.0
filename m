@@ -1,54 +1,48 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: [linux-lvm] Q: LVM over RAID, or plain disks? A:"Yes" = best
- of both worlds?
-Date: Tue, 30 Nov 2010 08:13:00 -0500
-Message-ID: <4CF4F85C.1020806@turmel.org>
-References: <AANLkTimTYse7vnqZydc1Z5z60vNuQw3juj7J_W7+bQEm@mail.gmail.com>	<AANLkTimGkMJGiJC+7L+Pu3+yf-J_s0Ex3hM2-g-0+UqQ@mail.gmail.com>	<4CF3F7A0.2080108@rjl.com>	<AANLkTim67atrgHEzunBRvp4ij+MUDiTg4vu5t6sbgFLq@mail.gmail.com>	<4CF4A472.20107@rjl.com> <AANLkTing5ApAXM2o0M+pxNvg01mHewNgGGBiUXM3aLzZ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 0/4] ext4: Coordinate data-only flush requests sent
+ by fsync
+Date: Tue, 30 Nov 2010 14:45:05 +0100
+Message-ID: <4CF4FFE1.9060507@kernel.org>
+References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com> <20101130113906.176ffcad@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTing5ApAXM2o0M+pxNvg01mHewNgGGBiUXM3aLzZ@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: Nataraj <incoming-centos@rjl.com>, linux-raid@vger.kernel.org, linux-lvm@redhat.com
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20101130113906.176ffcad@notabene.brown>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jens Axboe <axboe@kernel.dk>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, linux-ext4@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Hans, (?)
+Hello,
 
-On 11/30/2010 02:34 AM, hansbkk@gmail.com wrote:
-> On Tue, Nov 30, 2010 at 2:14 PM, Nataraj <incoming-centos@rjl.com> wrote:
->>> TopRAID1's LVM is likely to be running over a RAID6 set , so I'm not
->>> depending on the TopRAID mirroring for reliability, just using it for
->>> the above volume cloning.
->>
->> Your raid 1 backups won't mirror any snapshots of your LV's unless you
->> specifically setup mirroring of the snapshots after they exist.
+On 11/30/2010 01:39 AM, Neil Brown wrote:
+> I haven't seen any of the preceding discussion do I might be missing
+> something important, but this seems needlessly complex and intrusive.
+> In particular, I don't like adding code to md to propagate these timings up
+> to the fs, and I don't the arbitrary '2ms' number.
 > 
-> Ah, getting clearer to me, I was thinking I'd be mirroring the LV
-> itself, but you're right, taking a snapshot and mirroring that is a
-> much better idea.
+> Would it not be sufficient to simply gather flushes while a flush is pending.
+> i.e
+>   - if no flush is pending, set the 'flush pending' flag, submit a flush,
+>     then clear the flag.
+>   - if a flush is pending, then wait for it to complete, and then submit a
+>     single flush on behalf of all pending flushes.
 
-I think you are making this overly complex, insisting on a RAID1 operation to backup from on filer to the other.  Consider having each disk on filer #2 configured as a single LVM PV/VG, so it can stand alone in a rotation.  The try the alternate below.
+Heh, I was about to suggest exactly the same thing.  Unless the delay
+is gonna be multiple times longer than avg flush time, I don't think
+the difference between the above scheme and the one w/ preemptive
+delay would be anything significant especially now that the cost of
+flush is much lower.  Also, as Neil pointed out in another message,
+the above scheme will result in lower latency for flushes issued while
+no flush is in progress.
 
-> So here's a summary of steps, please confirm:
->   - create a snapshot of a given volume
+IMO, this kind of optimization is gonna make noticeable difference
+only when there are a lot of simulatenous fsyncs, in which case the
+above would behave in mostly identical way with the more elaborate
+timer based one anyway.
 
-Here's where you are over-complicating things:
->   - create a new RAID1 mdN between that and a physical partition (blank?)
->   - let that get sync'd up
->   - break the RAID (fail the partition?), remove the drive
+Thanks.
 
-As an alternate, with simpler recovery semantics:
-  Create matching LV on non-RAID PV/VG on filer #2
-  dd + netcat + dd or other technique to dup the snapshot on filer #1 to filer #2
-
->   - delete the snapshot
-
-Now, you have a single disk in your backup set that can be mounted on either filer, and either copied back into service, or in an emergency, used directly (live) in filer #1.
-
-This approach also gives you the *option* to implement the backup transfer with file system conversions, compression, free space removal, or any other administrative adjustments you need.  A RAID mirror can only duplicate the raw block device.
-
-HTH,
-
-Phil
+-- 
+tejun
