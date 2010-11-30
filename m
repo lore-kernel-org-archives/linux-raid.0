@@ -1,59 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 14/53] FIX: Cannot exit monitor after takeover
-Date: Wed, 1 Dec 2010 09:06:50 +1100
-Message-ID: <20101201090650.46481f95@notabene.brown>
-References: <20101126075407.5221.62582.stgit@gklab-170-024.igk.intel.com>
-	<20101126080537.5221.28837.stgit@gklab-170-024.igk.intel.com>
-	<20101129103829.0964debb@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D174C8AB57@irsmsx503.ger.corp.intel.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Wed, 1 Dec 2010 09:25:08 +1100
+Message-ID: <20101201092508.7023f974@notabene.brown>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>
+	<4CF55680.5010703@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D174C8AB57@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <4CF55680.5010703@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Nov 2010 16:03:16 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On Tue, 30 Nov 2010 14:54:40 -0500 Phillip Susi <psusi@cfl.rr.com> wrote:
 
-> The problem is that, when raid0 array is about unfreezing and this is single/last array in container,
-> Ping to this container causes to mdmon not to exit.
-> In such condition managemon receives message and in handle_message() for ping case, calls wakeup_monitor()
-> and then goes in to loop for monitor_loop_cnt update 
-> 1. this occurs after timeout 
-> 2. when this happens managemon stops on pselect() and as there is nothing to monitor in never wakeups.
-> 3. monitor waits to be allowed to exit on open handlers.
+> On 11/25/2010 5:26 AM, John Sheu wrote:
+> > What's the preferred way to differentiate BIOS fakeraid from regular
+> > software mdraid?
 > 
-> How can this be resolved:
-> 1. do not ping for last raid0 array during unfreezing (I've reworked patch to meet this condition)
-> 2. guard waiting for monitor_loop_cnt change in handle_message() with:
-> 	if (container->arrays)
+> The only way I know of is detecting that it is a dmraid device as
+> opposed to md, which is why grub does it that way.  This worked well in
+> the past when each tool exclusively handled one type of raid.
 > 
-> 3. change in manage member condition:
-> 	if (sigterm)
-> 		Wakeup_monitor();
+> > I ask this as I'm booting with GRUB2 off a system that has one of those
+> > Intel fakeraid chipsets.  As of a few months ago, the mdadm package has
+> > supported these fakeraid setups, so the RAID array comes up as a /dev/md###
+> > device.  This is unfortunate, as GRUB2 assumes that any device of the type
+> > /dev/md### must be a pure software RAID device, and in
+> > util/grub-setup.c:939, tries to install itself to the RAID members
+> > individually:
 > 
-> To
-> 	if (sigterm || (container->arrays == NULL))
-> 		Wakeup_monitor();
-> 
-> This causes additional monitor wakeup.
-> 
-> Any of method causes mdmon to exit as expected. 
-> In cases 2 and 3 it takes a while (we are waiting on communication timeouts).
-> Method 1 is fast and we are not blocking mdmon exit by communication.
+> For grub to support fakeraids activated by the md driver, it needs some
+> way to find out that it is actually a fake raid, and not a software
+> raid.  Adding linux-raid to Cc list to see if they can suggest a way of
+> doing that.
 
-Thanks for the explanation!
-I definitely want to fix the managemon/monitor interaction so that it doesn't
-hang as you describe.  I might end up with something a lot more heavy-weight
-that the changes you suggest.
+My feeling is that grub just needs to be a bit more careful.
 
-It might still be OK to include your option '1' as well - I decide when you
-post the patch.
+If the members of the md array are partitions, then installing itself in the
+boot blocks of the devices holding those partitions always makes sense.
 
-thanks,
+If the members of the md array are whole devices, then installing grub in
+those devices might make sense depending on specific details of the
+metadata.  The default should be that it doesn't make sense, but specific
+cases do.
+e.g. if the metadata (/sys/block/mdX/md/metadata_version) is 0.90 or 1.0, and
+the array is RAID1, then grub should install itself in the *array*, not in
+the devices.
+If the metadata is 1.1, then grub cannot install itself
+If the metadata is 1.2, then grub can install itself at the start
+If the metadata is external:imsm then (I think) grub should install itself in
+the array ... though there are some complexities there.
+
+I often wonder why people who add knowledge of md to grub etc don't at least
+let me know what they are doing in case I can see something obviously wrong
+with their approach..
+
 NeilBrown
-
