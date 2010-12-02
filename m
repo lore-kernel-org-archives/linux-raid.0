@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/10] FIX: Do not use layout for raid4 and raid0 while geo
-	map computing
-Date: Thu, 02 Dec 2010 09:19:35 +0100
-Message-ID: <20101202081935.4639.12285.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 08/10] FIX: sync_completed_fd handler has to be closed
+Date: Thu, 02 Dec 2010 09:19:43 +0100
+Message-ID: <20101202081943.4639.19975.stgit@gklab-170-024.igk.intel.com>
 References: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,30 +13,25 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-After takeover layout has no matter for computing geo map for raid0 and raid4.
-Set layout to 0 for such cases.
-It can happen after takeover operation when not whole array information is reread.
+sync_completed_fd handler has to be closed when array is closing.
+This is in pair to open handler code.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- restripe.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ managemon.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/restripe.c b/restripe.c
-index 3074693..dcce3cc 100644
---- a/restripe.c
-+++ b/restripe.c
-@@ -43,6 +43,11 @@ static int geo_map(int block, unsigned long long stripe, int raid_disks,
- 	 */
- 	int pd;
+diff --git a/managemon.c b/managemon.c
+index 12a3792..df491ba 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -120,6 +120,7 @@ static void close_aa(struct active_array *aa)
+ 	close(aa->action_fd);
+ 	close(aa->info.state_fd);
+ 	close(aa->resync_start_fd);
++	close(aa->sync_completed_fd);
+ }
  
-+	/* layout has no matter for raid0 and raid4 */
-+	if ((level == 0) ||
-+	    (level == 4))
-+		layout = 0;
-+
- 	switch(level*100 + layout) {
- 	case 000:
- 	case 400:
+ static void free_aa(struct active_array *aa)
 
