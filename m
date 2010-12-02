@@ -1,33 +1,44 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: turn off auto assembly
-Date: Thu, 02 Dec 2010 20:28:41 +0100
-Message-ID: <4CF7F369.4090303@stud.tu-ilmenau.de>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: turn off auto assembly
+Date: Thu, 2 Dec 2010 22:16:25 +0100
+Message-ID: <slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <4CF7F369.4090303@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi List,
+Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmenau.de> wrote:
+> Now I have the effect that upon plugging in drives that formerly were
+> part of an array, the md_mod modules gets loaded and tries to
+> auto-assemble arrays.  This disturbs the diagnosis.
+> I've tried raid=3Dnoautodetect as kernel commandline, and I grepped t=
+he
+> source for the MODULE_PARM_DESC macro, which yielded no (useful) resu=
+lt.
+>  This "automagic" behaviour happens since 2.6.36.
 
-i have multiple technicians computers where I need the md-modules f.e.
-for recoveries and such.  But these computers are also used to just
-diagnose failing drives.
+Are you sure this autodetection is triggered by the module?
+And are you sure this behaviour is bound to this specific kernel
+version?
 
-Now I have the effect that upon plugging in drives that formerly were
-part of an array, the md_mod modules gets loaded and tries to
-auto-assemble arrays.  This disturbs the diagnosis.
+In-Kernel auto-assembly is usually not active when md is compiled as
+module. Probably in your case this is some udev-triggered assembly?
 
-I've tried raid=noautodetect as kernel commandline, and I grepped the
-source for the MODULE_PARM_DESC macro, which yielded no (useful) result.
- This "automagic" behaviour happens since 2.6.36.
 
-Is there any way to turn it off - i.e. that I need to explicitly issue
-mdadm commands to bind any drive to any array?
+regards
+   Mario
+--=20
+Programmieren in C++ haelt die grauen Zellen am Leben. Es schaerft
+alle fuenf Sinne: den Schwachsinn, den Bloedsinn, den Wahnsinn, den
+Unsinn und den Stumpfsinn.
+                                 [Holger Veit in doc]
 
-Cheers,
-Stefan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
