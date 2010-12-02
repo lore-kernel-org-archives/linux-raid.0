@@ -1,115 +1,49 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: RE: md as module cannot be reloaded.
-Date: Wed, 1 Dec 2010 23:42:16 +0000
-Message-ID: <66C59AD0932712458090B447266D638C0109FF332F@irsmsx504.ger.corp.intel.com>
-References: <66C59AD0932712458090B447266D638C0109FF2E8A@irsmsx504.ger.corp.intel.com>
- <20101202085723.59a5694e@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 00/10] Pre-migration patch series
+Date: Thu, 02 Dec 2010 09:18:41 +0100
+Message-ID: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101202085723.59a5694e@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Neil Brown
-> Sent: Wednesday, December 01, 2010 10:57 PM
-> To: Hawrylewicz Czarnowski, Przemyslaw
-> Cc: linux-raid@vger.kernel.org; Labun, Marcin; Czarnowska, Anna; Neubauer,
-> Wojciech; Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: md as module cannot be reloaded.
-> 
-> On Wed, 1 Dec 2010 14:23:14 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> 
-> > Hi,
-> >
-> > I have found an annoying problem with md module. If it is compiled as
-> loadable module it is impossible to reload module if unloaded once.
-> >
-> > Eg.
-> > # mdadm -Ss
-> > # modprobe -r raid1 && modprobe -r md-mod
-> > # cat /proc/modules | grep md_mod || echo Unloaded
-> > Unloaded
-> > # cat /proc/mdstat
-> > cat /proc/mdstat: Invalid arguments
-> 
-> I cannot reproduce this.  That this point I get
-> 
-> cat: /proc/mdstat: No such file or directory
-> 
-> 
-> > # modprobe md-mod
-> > # cat /proc/mdstat
-> > cat /proc/mdstat: Invalid argument
-> > # cat /proc/modules | grep md_mod || echo Unloaded
-> > md_mod 94178 0 - Live 0xf857a000
-> >
-> > Some functionalities seem to work, but nothing is able to read
-> /proc/mdstat.
-> >
-> > If have tried few kernels from 2.6.27 to 2.6.37-rc3, openSUSE 11.x/RHEL6,
-> doesn't matter, still the same result. What can be wrong?
-> 
-> openSUSE doesn't compile md as a module, it is compiled in to the kernel.
-> But presumably you are compiling your own kernel with md as a module?  Is
-> that right?  You aren't compiling a module and loading it into a kernel
-> which
-> already has md in it are you?  I don't think that would work anyway...
-Yes, I have recompiled kernel with MD as module.
+This is bunch of patches that I've pull from my OLCE/Migration tree and I believe that
+they can be applied before we apply main feature (I'm curently going for some rework after your feedback).
 
-> 
-> And you give a full sequence of commands from loading to unload that
-> reliably
-> produces this error for you?
-Ok, here you are:
-* Original opensuse config updated to new kernel with defaults
-* Changed CONFIG_BLK_DEV_MD=y->m
-* Added prefix -mdadm
+This series is for some behaviours of mdadm that I've forund so far. 
+Mainly they are bugs that are present in code or behaviour that I've observe using takeover (i.e. geo map fix).
+Some of them are not visible at this moment, when we reshape big arrays (i.e. wait functions fixes) etc.
 
-make
-su
-make modules_install
-make install
-mdadm -Ss
-mdadm --zero-superblock /dev/sd[b-g]
-reboot
-...
-localhost:~ # uname -r
-2.6.37-rc3-pae-mdadm
-localhost:~ # cat /proc/mdstat
-cat: /proc/mdstat: No such file or directory
-localhost:~ # cat /proc/modules | grep md_mod
-localhost:~ # modprobe md_mod
-localhost:~ # ll /proc/mdstat
--r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-localhost:~ # cat /proc/mdstat
-Personalities : 
-unused devices: <none>
-localhost:~ # modprobe -r md_mod
-localhost:~ # ll /proc/mdstat
--r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-localhost:~ # cat /proc/mdstat
-cat: /proc/mdstat: Invalid argument
-localhost:~ # modprobe -r md_mod
-localhost:~ # ll /proc/mdstat
--r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-localhost:~ # cat /proc/mdstat
-cat: /proc/mdstat: Invalid argument
 
-that's all.
+---
 
-> 
-> NeilBrown
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Adam Kwolek (10):
+      FIX: wait_backup() sometimes hungs
+      FIX: Honor !reshape state on wait_reshape() entry
+      FIX: sync_completed_fd handler has to be closed
+      FIX: Do not use layout for raid4 and raid0 while geo map computing
+      FIX: open backup file for reshape as function
+      Add spares to raid0 array using takeover
+      Add support to skip slot configuration
+      FIX: Add error code for raid_disks set
+      FIX: Problem with removing array after takeover
+      FIX: Cannot exit monitor after takeover
+
+
+ Grow.c      |  137 +++++++++++++++++++++++++++++++++++++----------------------
+ Manage.c    |  120 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ managemon.c |    1 
+ mdadm.h     |    8 +++
+ monitor.c   |   16 +++++++
+ msg.c       |    8 +++
+ restripe.c  |    5 ++
+ sysfs.c     |    3 +
+ 8 files changed, 242 insertions(+), 56 deletions(-)
+
+-- 
+BR
+Adam Kwolek
