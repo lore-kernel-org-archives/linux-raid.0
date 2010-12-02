@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 09/10] FIX: Honor !reshape state on wait_reshape() entry
-Date: Thu, 02 Dec 2010 09:19:51 +0100
-Message-ID: <20101202081950.4639.14389.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 10/10] FIX: wait_backup() sometimes hungs
+Date: Thu, 02 Dec 2010 09:19:58 +0100
+Message-ID: <20101202081958.4639.17010.stgit@gklab-170-024.igk.intel.com>
 References: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,48 +13,33 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-When wait_reshape() function starts it can occurs that reshape is finished already,
-before wait_reshape() start. This can lead to wait for change state inside this function for a long time.
-To avoid this before wait we should test if finish conditions are not reached already.
+Sometimes wait_backup() omits transition from reshape to iddle state and mdadm seams to be hung.
+Add 1 sec. timeout wor waiting on select. This allows for wait_backup exit when reshape is ended.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
+ Grow.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index 96c9526..24c5c39 100644
+index 24c5c39..e16b1ad 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -548,17 +548,22 @@ static void wait_reshape(struct mdinfo *sra)
- 	int fd = sysfs_get_fd(sra, NULL, "sync_action");
- 	char action[20];
- 
--	do {
-+	if (fd < 0)
-+		return;
+@@ -2074,10 +2074,14 @@ static int wait_backup(struct mdinfo *sra,
+ 		sysfs_set_str(sra, NULL, "sync_action", "reshape");
+ 	do {
+ 		char action[20];
++		struct timeval t;
 +
-+	if (sysfs_fd_get_str(fd, action, 20) < 0) {
-+		close(fd);
-+		return;
-+	}
-+	while  (strncmp(action, "reshape", 7) == 0) {
++		t.tv_sec = 1;
++		t.tv_usec = 0;
  		fd_set rfds;
  		FD_ZERO(&rfds);
  		FD_SET(fd, &rfds);
- 		select(fd+1, NULL, NULL, &rfds, NULL);
--		
--		if (sysfs_fd_get_str(fd, action, 20) < 0) {
--			close(fd);
--			return;
--		}
--	} while  (strncmp(action, "reshape", 7) == 0);
-+		if (sysfs_fd_get_str(fd, action, 20) < 0)
-+			break;
-+	}
-+	close(fd);
- }
- 
- static int reshape_super(struct supertype *st, long long size, int level,
+-		select(fd+1, NULL, NULL, &rfds, NULL);
++		select(fd+1, NULL, NULL, &rfds, &t);
+ 		if (sysfs_fd_get_ll(fd, &completed) < 0) {
+ 			close(fd);
+ 			return -1;
 
