@@ -1,118 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] Monitor: don't add more spares than needed
-Date: Fri, 3 Dec 2010 14:12:50 +1100
-Message-ID: <20101203141250.6330ee79@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010C172D60@irsmsx504.ger.corp.intel.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Thu, 02 Dec 2010 22:15:55 -0500
+Message-ID: <4CF860EB.7010005@cfl.rr.com>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>	<4CF55680.5010703@cfl.rr.com>	<20101201092508.7023f974@notabene.brown>	<4CF81A16.2010606@cfl.rr.com>
+	<20101203123615.6edce071@notabene.brown>
+Reply-To: The development of GNU GRUB <grub-devel@gnu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010C172D60@irsmsx504.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Return-path: <grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org>
+In-Reply-To: <20101203123615.6edce071@notabene.brown>
+List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/grub-devel>,
+	<mailto:grub-devel-request@gnu.org?subject=unsubscribe>
+List-Archive: <http://lists.gnu.org/archive/html/grub-devel>
+List-Post: <mailto:grub-devel@gnu.org>
+List-Help: <mailto:grub-devel-request@gnu.org?subject=help>
+List-Subscribe: <http://lists.gnu.org/mailman/listinfo/grub-devel>,
+	<mailto:grub-devel-request@gnu.org?subject=subscribe>
+Sender: grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org
+Errors-To: grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>
 List-Id: linux-raid.ids
 
-On Thu, 2 Dec 2010 21:59:27 +0000 "Czarnowska, Anna"
-<anna.czarnowska@intel.com> wrote:
+On 12/02/2010 08:36 PM, Neil Brown wrote:
+> If the array uses 0.90 or 1.0 metadata and comprises whole-disks (not
+> partitions), and if the array is RAID1, then each device (except for the very
+> end) contains exactly the same data as the whole array.
+> If you install grub to the array, then it will be installed onto all of the
+> (active) devices in the array.  And that is certainly the easiest way to
+> write to all device.
+>
+> It won't write to 'spares', so if you want to be able to boot from spares as
+> well .... but I'm not sure that makes sense anyway.
 
-> >From ce59ecdb2b6a6e1fc65c645d0ca8733056e4979a Mon Sep 17 00:00:00 2001
-> From: Anna Czarnowska <anna.czarnowska@intel.com>
-> Date: Thu, 2 Dec 2010 22:48:19 +0100
-> Subject: [PATCH 2/2] Monitor: don't add more spares than needed
-> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
-> 
-> When we add a spare to a container it takes a while
-> before it is noticed by mdmon and recovery starts.
-> During this time the array remains degraded but we don't want to add
-> any more spares to this container. Therefore we must check container
-> with degraded array if it doesn't already have a suitable spare.
-> container_choose_spare is reused with from=to
-> Domain check is not needed in this situation.
-> 
-> Ping_manager after moving disk is needed to be able to see
-> newly added disk in container after coming back through the loop.
-> 
+Yes, for a raid1 with no spares, installing to the array is equivalent 
+to installing to each individual disk, but it helps avoid confusion to 
+ignore this fact and remain thinking in terms of the physical disks, at 
+least as they appear to the bios.
 
-Thanks for these.  I have applied both.
+> Completely agree.  As I said, there are only some cases where you can boot
+> from an array which uses whole-disks.
+> One case if in the bios understands the array, such as Intel bios's with IMSM
+> metadata, or possibly some bioses with DDF metadata.
+> Another case is RAID1 which starts at the beginning of the device, where the
+> bios doesn't need to know about the RAID.
 
-The second I made a few little changes to resulting the the following.
-
-thanks,
-NeilBrown
-
-
-commit e9a2ac028eb66fdc50c079fc9bf03aa4325bcd5f
-Author: Anna Czarnowska <anna.czarnowska@intel.com>
-Date:   Fri Dec 3 14:11:29 2010 +1100
-
-    Monitor: don't add more spares than needed
-    
-    When we add a spare to a container it takes a while
-    before it is noticed by mdmon and recovery starts.
-    During this time the array remains degraded but we don't want to add
-    any more spares to this container. Therefore we must check container
-    with degraded array if it doesn't already have a suitable spare.
-    container_choose_spare is reused with from=to
-    Domain check is not needed in this situation.
-    
-    Ping_manager after moving disk is needed to be able to see
-    newly added disk in container after coming back through the loop.
-    
-    Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Monitor.c b/Monitor.c
-index 8f1bfea..61550ee 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -743,6 +743,11 @@ static int move_spare(struct state *from, struct state *to,
- 		devlist.disposition = 'a';
- 		if (Manage_subdevs(to->devname, fd1, &devlist, -1, 0) == 0) {
- 			alert("MoveSpare", to->devname, from->devname, info);
-+			/* make sure we will see newly added spare before next
-+			 * time through loop
-+			 */
-+			ping_manager(to->devname);
-+			ping_manager(from->devname);
- 			close(fd1);
- 			close(fd2);
- 			return 1;
-@@ -853,13 +858,20 @@ static dev_t container_choose_spare(struct state *from, struct state *to,
- 				dev = 0;
- 				continue;
- 			}
-+			if (from == to)
-+				/* Just checking if destination already has
-+				 * a spare, no need to check policy, we are
-+				 * done.
-+				 */
-+				break;
-+
- 			pol = devnum_policy(dev);
- 			if (from->spare_group)
- 				pol_add(&pol, pol_domain,
- 					from->spare_group, NULL);
- 			if (!domain_test(domlist, pol, to->metadata->ss->name))
- 				dev = 0;
--			
-+
- 			dev_policy_free(pol);
- 		}
- 	}
-@@ -887,6 +899,15 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
- 				to = to->parent;
- 
- 			min_size = min_spare_size_required(to);
-+			if (to->metadata->ss->external) {
-+				/* We must make sure there is
-+				 * no suitable spare in container already.
-+				 * If there is we don't add more */
-+				dev_t devid = container_choose_spare(
-+					to, to, NULL, min_size);
-+				if (devid > 0)
-+					continue;
-+			}
- 			for (d = 0; d < MaxDisks; d++)
- 				if (to->devid[d])
- 					domainlist_add_dev(&domlist,
+So how do we tell the difference?  Right now grub uses the rule of 
+dmraid = bios aware, so install to the raid device, and mdadm = software 
+raid, so install to the component devices individually.  You have noted 
+that in same cases both methods will produce the same results, but grub 
+needs to be certain that whichever method it chooses will work, whether 
+or not either one will.  To do this, it needs to install to the raid 
+device if and only if it is a bios recognized fakeraid.
