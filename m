@@ -1,61 +1,79 @@
-From: Phil Karn <karn@ka9q.net>
-Subject: Re: RAID-5 implementation questions
-Date: Fri, 03 Dec 2010 04:02:23 -0800
-Message-ID: <4CF8DC4F.4020206@ka9q.net>
-References: <4CF8AF30.5070505@ka9q.net> <alpine.DEB.1.10.1012031057070.9121@uplift.swm.pp.se>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: Write cache
+Date: Fri, 3 Dec 2010 13:09:26 +0000
+Message-ID: <AANLkTimqBJ91OxvDDMQKKqhjrg1sriQYNk_WkJ1Gjfyy@mail.gmail.com>
+References: <AANLkTim+dHWMeZkdFuRiimmNdkZ04j9tO3DCyOPAdxJK@mail.gmail.com>
+	<20101203122739.32af28a1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1012031057070.9121@uplift.swm.pp.se>
+In-Reply-To: <20101203122739.32af28a1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/3/10 2:02 AM, Mikael Abrahamsson wrote:
+Hi Neil,
 
-> "--assume-clean".
+Actually I made a silly presumption simply because MD is so fast
+compared to most of the hardware raids I am testing =96 so I simple
+presumed it was using write cache without really investigating it well
+enough
 
-Thanks.
+Thank you for the feedback!
 
-> Some raid implementations won't read/write to all drives, but might
-> instead read the block being written to, and the parity block, then
-> write the new block and recalculate the parity, thus not read/writing to
-> all blocks. If this is the case, if the parity is wrong, it'll still be
-> wrong after the operation, thus you don't have any redundancy.
 
-Good point. That had occurred to me too but I didn't know if Linux did
-that. I can see how one might dynamically pick one way or the other
-depending on how much of the stripe is already in the buffer cache.
 
-> Doing a rebuild when creating the array is something I'd only skip if I
-> was doing lab work, never in production. I use raid for redundancy, thus
-> I want to make sure everything is ok and it doesn't matter to me if it
-> takes half a day.
-
-I hear you. But I think an important special case is when you're
-initially loading a new RAID-5 array from an existing (typically
-smaller) file system that will then be replaced by the new array.
-
-Why not let the new array work something like a RAID-0, leaving the
-parity blocks unwritten until you're finished loading the array? Then
-pass through the array writing all the parity blocks with the final
-data. If a drive fails in the new array before you're done, you still
-have all your original data; you haven't lost anything.
-
-Ultimately, RAID-5 in software is always going to be at least somewhat
-vulnerable because of the lack of an atomic (all or none) committed
-write of all the blocks in a stripe. This might silently corrupt an old,
-stable file in a way that you won't notice until a drive fails and you
-don't have the redundancy you thought you had to reconstruct it. can
-accept losing whatever files I was writing at the time of a crash, but
-silent corruption of an old and stable file seems far more insidious. I
-do periodically run checkarray to ensure that the parities are
-consistent, but this takes a long time and seems inelegant somehow.
-Maybe we need software ECC on all data so that one doesn't have to rely
-on the drive itself to detect errors.
-
-Thanks,
-
-Phil
+On Fri, Dec 3, 2010 at 1:27 AM, Neil Brown <neilb@suse.de> wrote:
+> On Thu, 2 Dec 2010 15:58:51 +0000 mark delfman <markdelfman@googlemai=
+l.com>
+> wrote:
+>
+>> Hi
+>>
+>> Is there any way to use an MD RAID in write through mode? =A0I
+>> appreciate that there is a performance impact but this is important
+>> from a security prospective....
+>
+> MD RAID does work in write-through mode. =A0I have occasionally thoug=
+ht about
+> adding a write-back mode which would make sense now that we have a se=
+nsible
+> flushing infrastructure in Linux. =A0But I haven't implemented it.
+>
+>>
+>> The likelihood is that I would use RAID0 (I know this sounds like a
+>> contradiction to the above, but the =91drives=92 are probably hardwa=
+re
+>> RAIDs). =A0But may use standard RAID6.
+>
+> RAID0 doesn't do any caching at all.
+>
+>>
+>> I cannot see any way to disable write cache in MD, but I am hopefull=
+y
+>> I am simply missing something obvious.
+>
+> Why do you think these is a write-behind cache in MD ??
+>
+> NeilBrown
+>
+>
+>
+>>
+>> I appreciate any feedback....
+>>
+>> Thanks, Mark
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
