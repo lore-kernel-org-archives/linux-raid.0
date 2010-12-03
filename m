@@ -1,69 +1,61 @@
-From: Neil Brown <neilb@suse.de>
+From: Phil Karn <karn@ka9q.net>
 Subject: Re: RAID-5 implementation questions
-Date: Fri, 3 Dec 2010 22:08:07 +1100
-Message-ID: <20101203220807.68ce9f58@notabene.brown>
-References: <4CF8AF30.5070505@ka9q.net>
+Date: Fri, 03 Dec 2010 04:02:23 -0800
+Message-ID: <4CF8DC4F.4020206@ka9q.net>
+References: <4CF8AF30.5070505@ka9q.net> <alpine.DEB.1.10.1012031057070.9121@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CF8AF30.5070505@ka9q.net>
+In-Reply-To: <alpine.DEB.1.10.1012031057070.9121@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Karn <karn@ka9q.net>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 03 Dec 2010 00:49:52 -0800 Phil Karn <karn@ka9q.net> wrote:
+On 12/3/10 2:02 AM, Mikael Abrahamsson wrote:
 
-> Are there any papers documenting the implementation of the Linux RAID
-> subsystem? I'm interested in some of the details of how RAID-5 works.
+> "--assume-clean".
 
-I would suggest
-  man mdadm
-and
-  man md
+Thanks.
 
-That should answer at least some of your questions.
+> Some raid implementations won't read/write to all drives, but might
+> instead read the block being written to, and the parity block, then
+> write the new block and recalculate the parity, thus not read/writing to
+> all blocks. If this is the case, if the parity is wrong, it'll still be
+> wrong after the operation, thus you don't have any redundancy.
 
-Then try  http://raid.wiki.kernel.org/
+Good point. That had occurred to me too but I didn't know if Linux did
+that. I can see how one might dynamically pick one way or the other
+depending on how much of the stripe is already in the buffer cache.
 
-If you have further questions after that, please ask.
+> Doing a rebuild when creating the array is something I'd only skip if I
+> was doing lab work, never in production. I use raid for redundancy, thus
+> I want to make sure everything is ok and it doesn't matter to me if it
+> takes half a day.
 
-NeilBrown
+I hear you. But I think an important special case is when you're
+initially loading a new RAID-5 array from an existing (typically
+smaller) file system that will then be replaced by the new array.
 
+Why not let the new array work something like a RAID-0, leaving the
+parity blocks unwritten until you're finished loading the array? Then
+pass through the array writing all the parity blocks with the final
+data. If a drive fails in the new array before you're done, you still
+have all your original data; you haven't lost anything.
 
-> 
-> I've never seen a virgin disk drive from the factory that wasn't all
-> 0's. Creating a RAID array on a set of such drives triggers an initial
-> rebuild that simply writes lots zeroes on lots of zeroes. With disks now
-> pushing past 2 TB, this can easily take half a day.
-> 
-> Except for the admittedly somewhat useful side effect of scanning the
-> disks for bad sectors, all this activity seems rather unnecessary. Is
-> there a way to create a RAID-5 (or any other RAID level) array so that
-> it will immediately come up without an initial rebuild?
-> 
-> File systems generally don't read disk blocks that they haven't already
-> written. So even when you build a RAID array from drives with old data,
-> I can't see how skipping the initial rebuild can cause any real harm.
-> The first write to any block causes the RAID system to initialize the
-> parity in that stripe, thus making it possible to regenerate that block
-> in case of a drive failure.
-> 
-> During the initial rebuild of a RAID-5 array, /proc/mdstat suggests that
-> the array is operating in degraded mode and the last drive in the array
-> is being rebuilt. Is this true, i.e., are all the rebuild writes going
-> to that last drive?
-> 
-> How does a rebuilding RAID-5 array handle a read or write operation when
-> it lands on the "broken" drive? Does it depend on whether the block is
-> before or after the rebuild pointer?
-> 
-> Thanks much,
-> 
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ultimately, RAID-5 in software is always going to be at least somewhat
+vulnerable because of the lack of an atomic (all or none) committed
+write of all the blocks in a stripe. This might silently corrupt an old,
+stable file in a way that you won't notice until a drive fails and you
+don't have the redundancy you thought you had to reconstruct it. can
+accept losing whatever files I was writing at the time of a crash, but
+silent corruption of an old and stable file seems far more insidious. I
+do periodically run checkarray to ensure that the parities are
+consistent, but this takes a long time and seems inelegant somehow.
+Maybe we need software ECC on all data so that one doesn't have to rely
+on the drive itself to detect errors.
 
+Thanks,
+
+Phil
