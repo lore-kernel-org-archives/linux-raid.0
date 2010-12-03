@@ -1,143 +1,69 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 10/10] FIX: wait_backup() sometimes hungs
-Date: Fri, 3 Dec 2010 21:35:46 +1100
-Message-ID: <20101203213546.557054fd@notabene.brown>
-References: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
-	<20101202081958.4639.17010.stgit@gklab-170-024.igk.intel.com>
-	<20101203151655.04e48dff@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D174CCC3BA@irsmsx503.ger.corp.intel.com>
+Subject: Re: RAID-5 implementation questions
+Date: Fri, 3 Dec 2010 22:08:07 +1100
+Message-ID: <20101203220807.68ce9f58@notabene.brown>
+References: <4CF8AF30.5070505@ka9q.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D174CCC3BA@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <4CF8AF30.5070505@ka9q.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Phil Karn <karn@ka9q.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 3 Dec 2010 07:45:14 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On Fri, 03 Dec 2010 00:49:52 -0800 Phil Karn <karn@ka9q.net> wrote:
 
-> I think you applied not a whole patch (no 't' definition and initialization), you missed:
-> 
-> +		struct timeval t;
-> +
-> +		t.tv_sec = 1;
-> +		t.tv_usec = 0;
-> 
-> so mdadm is not compiling
+> Are there any papers documenting the implementation of the Linux RAID
+> subsystem? I'm interested in some of the details of how RAID-5 works.
 
-Thanks.
+I would suggest
+  man mdadm
+and
+  man md
 
-I meant to remove the 'struct timeval t', but I forgot to remove the 't' from
-select.
-And somehow I forgot to run 'make' after that patch.
+That should answer at least some of your questions.
 
-Fixed now.
-Thanks,
+Then try  http://raid.wiki.kernel.org/
+
+If you have further questions after that, please ask.
+
 NeilBrown
 
 
 > 
-> BR
-> Adam
+> I've never seen a virgin disk drive from the factory that wasn't all
+> 0's. Creating a RAID array on a set of such drives triggers an initial
+> rebuild that simply writes lots zeroes on lots of zeroes. With disks now
+> pushing past 2 TB, this can easily take half a day.
 > 
-> > -----Original Message-----
-> > From: Neil Brown [mailto:neilb@suse.de]
-> > Sent: Friday, December 03, 2010 5:17 AM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> > Subject: Re: [PATCH 10/10] FIX: wait_backup() sometimes hungs
-> > 
-> > On Thu, 02 Dec 2010 09:19:58 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> > wrote:
-> > 
-> > > Sometimes wait_backup() omits transition from reshape to iddle state
-> > and mdadm seams to be hung.
-> > > Add 1 sec. timeout wor waiting on select. This allows for wait_backup
-> > exit when reshape is ended.
-> > >
-> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > > ---
-> > >
-> > >  Grow.c |    6 +++++-
-> > >  1 files changed, 5 insertions(+), 1 deletions(-)
-> > >
-> > > diff --git a/Grow.c b/Grow.c
-> > > index 24c5c39..e16b1ad 100644
-> > > --- a/Grow.c
-> > > +++ b/Grow.c
-> > > @@ -2074,10 +2074,14 @@ static int wait_backup(struct mdinfo *sra,
-> > >  		sysfs_set_str(sra, NULL, "sync_action", "reshape");
-> > >  	do {
-> > >  		char action[20];
-> > > +		struct timeval t;
-> > > +
-> > > +		t.tv_sec = 1;
-> > > +		t.tv_usec = 0;
-> > >  		fd_set rfds;
-> > >  		FD_ZERO(&rfds);
-> > >  		FD_SET(fd, &rfds);
-> > > -		select(fd+1, NULL, NULL, &rfds, NULL);
-> > > +		select(fd+1, NULL, NULL, &rfds, &t);
-> > >  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
-> > >  			close(fd);
-> > >  			return -1;
-> > 
-> > 
-> > Thanks.  However I don't think the 1 second timeout is necessary.  This
-> > is
-> > really the same problem as the previous one.  We just need to read
-> > 'completed' before the first 'select'.  Like this.
-> > 
-> > Thanks,
-> > NeilBrown
-> > 
-> > commit 97bef35459306dfd291f40bc5221ad20ab9c21ba
-> > Author: Adam Kwolek <adam.kwolek@intel.com>
-> > Date:   Fri Dec 3 15:15:51 2010 +1100
-> > 
-> >     FIX: wait_backup() sometimes hungs
-> > 
-> >     Sometimes wait_backup() omits transition from reshape to idle state
-> >     and mdadm seams to be hung.  So check the 'complete' count
-> >     *before* waiting rather than only after.
-> > 
-> >     Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> >     Signed-off-by: NeilBrown <neilb@suse.de>
-> > 
-> > diff --git a/Grow.c b/Grow.c
-> > index 3322cf7..99807b4 100644
-> > --- a/Grow.c
-> > +++ b/Grow.c
-> > @@ -2058,12 +2058,17 @@ static int wait_backup(struct mdinfo *sra,
-> >  	sysfs_set_num(sra, NULL, "sync_max", offset + blocks + blocks2);
-> >  	if (offset == 0)
-> >  		sysfs_set_str(sra, NULL, "sync_action", "reshape");
-> > -	do {
-> > +
-> > +	if (sysfs_fd_get_ll(fd, &completed) < 0) {
-> > +		close(fd);
-> > +		return -1;
-> > +	}
-> > +	while (completed < offset + blocks) {
-> >  		char action[20];
-> >  		fd_set rfds;
-> >  		FD_ZERO(&rfds);
-> >  		FD_SET(fd, &rfds);
-> > -		select(fd+1, NULL, NULL, &rfds, NULL);
-> > +		select(fd+1, NULL, NULL, &rfds, &t);
-> >  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
-> >  			close(fd);
-> >  			return -1;
-> > @@ -2072,7 +2077,7 @@ static int wait_backup(struct mdinfo *sra,
-> >  				  action, 20) > 0 &&
-> >  		    strncmp(action, "reshape", 7) != 0)
-> >  			break;
-> > -	} while (completed < offset + blocks);
-> > +	}
-> >  	close(fd);
-> > 
-> >  	if (part) {
+> Except for the admittedly somewhat useful side effect of scanning the
+> disks for bad sectors, all this activity seems rather unnecessary. Is
+> there a way to create a RAID-5 (or any other RAID level) array so that
+> it will immediately come up without an initial rebuild?
+> 
+> File systems generally don't read disk blocks that they haven't already
+> written. So even when you build a RAID array from drives with old data,
+> I can't see how skipping the initial rebuild can cause any real harm.
+> The first write to any block causes the RAID system to initialize the
+> parity in that stripe, thus making it possible to regenerate that block
+> in case of a drive failure.
+> 
+> During the initial rebuild of a RAID-5 array, /proc/mdstat suggests that
+> the array is operating in degraded mode and the last drive in the array
+> is being rebuilt. Is this true, i.e., are all the rebuild writes going
+> to that last drive?
+> 
+> How does a rebuilding RAID-5 array handle a read or write operation when
+> it lands on the "broken" drive? Does it depend on whether the block is
+> before or after the rebuild pointer?
+> 
+> Thanks much,
+> 
+> Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
