@@ -1,42 +1,143 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID-5 implementation questions
-Date: Fri, 3 Dec 2010 11:02:04 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1012031057070.9121@uplift.swm.pp.se>
-References: <4CF8AF30.5070505@ka9q.net>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 10/10] FIX: wait_backup() sometimes hungs
+Date: Fri, 3 Dec 2010 21:35:46 +1100
+Message-ID: <20101203213546.557054fd@notabene.brown>
+References: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
+	<20101202081958.4639.17010.stgit@gklab-170-024.igk.intel.com>
+	<20101203151655.04e48dff@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D174CCC3BA@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4CF8AF30.5070505@ka9q.net>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D174CCC3BA@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, 3 Dec 2010, Phil Karn wrote:
+On Fri, 3 Dec 2010 07:45:14 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> Except for the admittedly somewhat useful side effect of scanning the 
-> disks for bad sectors, all this activity seems rather unnecessary. Is 
-> there a way to create a RAID-5 (or any other RAID level) array so that 
-> it will immediately come up without an initial rebuild?
+> I think you applied not a whole patch (no 't' definition and initialization), you missed:
+> 
+> +		struct timeval t;
+> +
+> +		t.tv_sec = 1;
+> +		t.tv_usec = 0;
+> 
+> so mdadm is not compiling
 
-"--assume-clean".
+Thanks.
 
-> File systems generally don't read disk blocks that they haven't already
-> written. So even when you build a RAID array from drives with old data,
-> I can't see how skipping the initial rebuild can cause any real harm.
-> The first write to any block causes the RAID system to initialize the
-> parity in that stripe, thus making it possible to regenerate that block
-> in case of a drive failure.
+I meant to remove the 'struct timeval t', but I forgot to remove the 't' from
+select.
+And somehow I forgot to run 'make' after that patch.
 
-Some raid implementations won't read/write to all drives, but might 
-instead read the block being written to, and the parity block, then write 
-the new block and recalculate the parity, thus not read/writing to all 
-blocks. If this is the case, if the parity is wrong, it'll still be wrong 
-after the operation, thus you don't have any redundancy.
+Fixed now.
+Thanks,
+NeilBrown
 
-Doing a rebuild when creating the array is something I'd only skip if I 
-was doing lab work, never in production. I use raid for redundancy, thus I 
-want to make sure everything is ok and it doesn't matter to me if it takes 
-half a day.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> 
+> BR
+> Adam
+> 
+> > -----Original Message-----
+> > From: Neil Brown [mailto:neilb@suse.de]
+> > Sent: Friday, December 03, 2010 5:17 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> > Subject: Re: [PATCH 10/10] FIX: wait_backup() sometimes hungs
+> > 
+> > On Thu, 02 Dec 2010 09:19:58 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> > wrote:
+> > 
+> > > Sometimes wait_backup() omits transition from reshape to iddle state
+> > and mdadm seams to be hung.
+> > > Add 1 sec. timeout wor waiting on select. This allows for wait_backup
+> > exit when reshape is ended.
+> > >
+> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > ---
+> > >
+> > >  Grow.c |    6 +++++-
+> > >  1 files changed, 5 insertions(+), 1 deletions(-)
+> > >
+> > > diff --git a/Grow.c b/Grow.c
+> > > index 24c5c39..e16b1ad 100644
+> > > --- a/Grow.c
+> > > +++ b/Grow.c
+> > > @@ -2074,10 +2074,14 @@ static int wait_backup(struct mdinfo *sra,
+> > >  		sysfs_set_str(sra, NULL, "sync_action", "reshape");
+> > >  	do {
+> > >  		char action[20];
+> > > +		struct timeval t;
+> > > +
+> > > +		t.tv_sec = 1;
+> > > +		t.tv_usec = 0;
+> > >  		fd_set rfds;
+> > >  		FD_ZERO(&rfds);
+> > >  		FD_SET(fd, &rfds);
+> > > -		select(fd+1, NULL, NULL, &rfds, NULL);
+> > > +		select(fd+1, NULL, NULL, &rfds, &t);
+> > >  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
+> > >  			close(fd);
+> > >  			return -1;
+> > 
+> > 
+> > Thanks.  However I don't think the 1 second timeout is necessary.  This
+> > is
+> > really the same problem as the previous one.  We just need to read
+> > 'completed' before the first 'select'.  Like this.
+> > 
+> > Thanks,
+> > NeilBrown
+> > 
+> > commit 97bef35459306dfd291f40bc5221ad20ab9c21ba
+> > Author: Adam Kwolek <adam.kwolek@intel.com>
+> > Date:   Fri Dec 3 15:15:51 2010 +1100
+> > 
+> >     FIX: wait_backup() sometimes hungs
+> > 
+> >     Sometimes wait_backup() omits transition from reshape to idle state
+> >     and mdadm seams to be hung.  So check the 'complete' count
+> >     *before* waiting rather than only after.
+> > 
+> >     Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> >     Signed-off-by: NeilBrown <neilb@suse.de>
+> > 
+> > diff --git a/Grow.c b/Grow.c
+> > index 3322cf7..99807b4 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -2058,12 +2058,17 @@ static int wait_backup(struct mdinfo *sra,
+> >  	sysfs_set_num(sra, NULL, "sync_max", offset + blocks + blocks2);
+> >  	if (offset == 0)
+> >  		sysfs_set_str(sra, NULL, "sync_action", "reshape");
+> > -	do {
+> > +
+> > +	if (sysfs_fd_get_ll(fd, &completed) < 0) {
+> > +		close(fd);
+> > +		return -1;
+> > +	}
+> > +	while (completed < offset + blocks) {
+> >  		char action[20];
+> >  		fd_set rfds;
+> >  		FD_ZERO(&rfds);
+> >  		FD_SET(fd, &rfds);
+> > -		select(fd+1, NULL, NULL, &rfds, NULL);
+> > +		select(fd+1, NULL, NULL, &rfds, &t);
+> >  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
+> >  			close(fd);
+> >  			return -1;
+> > @@ -2072,7 +2077,7 @@ static int wait_backup(struct mdinfo *sra,
+> >  				  action, 20) > 0 &&
+> >  		    strncmp(action, "reshape", 7) != 0)
+> >  			break;
+> > -	} while (completed < offset + blocks);
+> > +	}
+> >  	close(fd);
+> > 
+> >  	if (part) {
+
