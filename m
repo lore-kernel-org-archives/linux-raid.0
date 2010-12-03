@@ -1,42 +1,49 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Software RAID and Fakeraid
-Date: Thu, 02 Dec 2010 17:13:42 -0500
-Message-ID: <4CF81A16.2010606@cfl.rr.com>
-References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>	<4CF55680.5010703@cfl.rr.com> <20101201092508.7023f974@notabene.brown>
+From: =?ISO-8859-1?Q?Stefan_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: turn off auto assembly
+Date: Fri, 03 Dec 2010 02:24:02 +0100
+Message-ID: <4CF846B2.8040001@stud.tu-ilmenau.de>
+References: <4CF7F369.4090303@stud.tu-ilmenau.de> <slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101201092508.7023f974@notabene.brown>
+In-Reply-To: <slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/30/2010 5:25 PM, Neil Brown wrote:
-> My feeling is that grub just needs to be a bit more careful.
-> 
-> If the members of the md array are partitions, then installing itself in the
-> boot blocks of the devices holding those partitions always makes sense.
+Am 02.12.2010 22:16, schrieb Mario 'BitKoenig' Holbe:
+> Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmenau.de> wrote:
+>> Now I have the effect that upon plugging in drives that formerly wer=
+e
+>> part of an array, the md_mod modules gets loaded and tries to
+>> auto-assemble arrays.  This disturbs the diagnosis.
+>> I've tried raid=3Dnoautodetect as kernel commandline, and I grepped =
+the
+>> source for the MODULE_PARM_DESC macro, which yielded no (useful) res=
+ult.
+>>  This "automagic" behaviour happens since 2.6.36.
+> Are you sure this autodetection is triggered by the module?
+> And are you sure this behaviour is bound to this specific kernel
+> version?
 >
-> If the members of the md array are whole devices, then installing grub in
-> those devices might make sense depending on specific details of the
-> metadata.  The default should be that it doesn't make sense, but specific
-> cases do.
-> e.g. if the metadata (/sys/block/mdX/md/metadata_version) is 0.90 or 1.0, and
-> the array is RAID1, then grub should install itself in the *array*, not in
-> the devices.
+> In-Kernel auto-assembly is usually not active when md is compiled as
+> module. Probably in your case this is some udev-triggered assembly?
+>
+>
+> regards
+>    Mario
+Hi Mario,
 
-I don't think that is quite right.  For software raid, you can't
-actually install to the array per se, since the bios does not know about
-it; it only knows about the individual disks.  Therefore, grub needs to
-be installed to the individual disk(s), and preferably on each member of
-a raid 1 so you can still boot with a failed disk.  To do this, it needs
-the embed area to place the core image into, which doesn't exist if the
-array uses the whole disk instead of a partition in it.
+thanks for the hint, I'll check the rules files then ...
 
-In the case of fakeraid, the bios does know about it, so grub can and
-does install itself into the array, but since this won't work with true
-mdadm soft raid using the raw disks, grub needs to be able to tell the
-difference.  Only seeing the members of the array are raw disks instead
-of partitions is not enough information.
+Greetings from nebenan sozusagen,
+Stefan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
