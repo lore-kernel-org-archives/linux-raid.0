@@ -1,55 +1,85 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Software RAID and Fakeraid
-Date: Thu, 02 Dec 2010 22:15:55 -0500
-Message-ID: <4CF860EB.7010005@cfl.rr.com>
-References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>	<4CF55680.5010703@cfl.rr.com>	<20101201092508.7023f974@notabene.brown>	<4CF81A16.2010606@cfl.rr.com>
-	<20101203123615.6edce071@notabene.brown>
-Reply-To: The development of GNU GRUB <grub-devel@gnu.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 02/10] FIX: Problem with removing array after takeover
+Date: Fri, 3 Dec 2010 14:46:21 +1100
+Message-ID: <20101203144621.03528cb9@notabene.brown>
+References: <20101202080818.4639.38119.stgit@gklab-170-024.igk.intel.com>
+	<20101202081856.4639.29114.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org>
-In-Reply-To: <20101203123615.6edce071@notabene.brown>
-List-Unsubscribe: <http://lists.gnu.org/mailman/listinfo/grub-devel>,
-	<mailto:grub-devel-request@gnu.org?subject=unsubscribe>
-List-Archive: <http://lists.gnu.org/archive/html/grub-devel>
-List-Post: <mailto:grub-devel@gnu.org>
-List-Help: <mailto:grub-devel-request@gnu.org?subject=help>
-List-Subscribe: <http://lists.gnu.org/mailman/listinfo/grub-devel>,
-	<mailto:grub-devel-request@gnu.org?subject=subscribe>
-Sender: grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org
-Errors-To: grub-devel-bounces+gcbgd-grub-devel=m.gmane.org@gnu.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101202081856.4639.29114.stgit@gklab-170-024.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On 12/02/2010 08:36 PM, Neil Brown wrote:
-> If the array uses 0.90 or 1.0 metadata and comprises whole-disks (not
-> partitions), and if the array is RAID1, then each device (except for the very
-> end) contains exactly the same data as the whole array.
-> If you install grub to the array, then it will be installed onto all of the
-> (active) devices in the array.  And that is certainly the easiest way to
-> write to all device.
->
-> It won't write to 'spares', so if you want to be able to boot from spares as
-> well .... but I'm not sure that makes sense anyway.
+On Thu, 02 Dec 2010 09:18:56 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-Yes, for a raid1 with no spares, installing to the array is equivalent 
-to installing to each individual disk, but it helps avoid confusion to 
-ignore this fact and remain thinking in terms of the physical disks, at 
-least as they appear to the bios.
+> When array parameters are changed old array 'A' is going to be removed
+> and new array 'B' is going to be serviced. If array B is raid0 array (takeovered),
+> array 'A' will never be deleted and mdmon is not going to exit.
+> Scenario:
+> 1. managemon creates array 'B' and inserts it to begin of active arrays list
+> 2. managemon sets field B->replaces = A
+> 
+> 3. monitor: finds that array 'B' is raid 0 array and removes it from list
+>    information about removing array 'A' from list is lost
+>    and array 'A' stays in list forever
+> 
+> To resolve this situation first try to remove replaced arrays and then proceed
+> regular array servicing.
+> 
+> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-> Completely agree.  As I said, there are only some cases where you can boot
-> from an array which uses whole-disks.
-> One case if in the bios understands the array, such as Intel bios's with IMSM
-> metadata, or possibly some bioses with DDF metadata.
-> Another case is RAID1 which starts at the beginning of the device, where the
-> bios doesn't need to know about the RAID.
+This doesn't look right.  You are duplicating a chunk of code, and having two
+copies of it is dangerous and confusing.
 
-So how do we tell the difference?  Right now grub uses the rule of 
-dmraid = bios aware, so install to the raid device, and mdadm = software 
-raid, so install to the component devices individually.  You have noted 
-that in same cases both methods will produce the same results, but grub 
-needs to be certain that whichever method it chooses will work, whether 
-or not either one will.  To do this, it needs to install to the raid 
-device if and only if it is a bios recognized fakeraid.
+Based on your description of the issue, maybe it would make sense to avoid
+step 3.  i.e. if monitor find array 'B' which is RAID0, it doesn't remove it
+from the list while it still has a 'replaces' pointer.  Obviously monitor
+would need to be careful not to do anything else with the array.  I think the
+'remove it if it is RAID0' is in code that I having accepted yet, so I cannot
+easily check if that does make sense.. What do you think?
+
+I won't apply this patch at this stage though.
+
+Thanks,
+NeilBrown
+
+
+
+> ---
+> 
+>  monitor.c |   16 ++++++++++++++++
+>  1 files changed, 16 insertions(+), 0 deletions(-)
+> 
+> diff --git a/monitor.c b/monitor.c
+> index 59b4181..0fbe198 100644
+> --- a/monitor.c
+> +++ b/monitor.c
+> @@ -480,6 +480,22 @@ static int wait_and_act(struct supertype *container, int nowait)
+>  
+>  	for (ap = aap ; *ap ;) {
+>  		a = *ap;
+> +
+> +		/* Remove array that current array points to remove
+> +		 */
+> +		if (a->replaces && !discard_this) {
+> +			struct active_array **ap;
+> +			for (ap = &a->next; *ap && *ap != a->replaces;
+> +			     ap = & (*ap)->next)
+> +				;
+> +			if (*ap)
+> +				*ap = (*ap)->next;
+> +			discard_this = a->replaces;
+> +			a->replaces = NULL;
+> +			/* FIXME check if device->state_fd need to be cleared?*/
+> +			signal_manager();
+> +		}
+> +
+>  		/* once an array has been deactivated we want to
+>  		 * ask the manager to discard it.
+>  		 */
+
