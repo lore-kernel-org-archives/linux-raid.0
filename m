@@ -1,61 +1,53 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Write cache
-Date: Fri, 3 Dec 2010 12:27:39 +1100
-Message-ID: <20101203122739.32af28a1@notabene.brown>
-References: <AANLkTim+dHWMeZkdFuRiimmNdkZ04j9tO3DCyOPAdxJK@mail.gmail.com>
+Subject: Re: turn off auto assembly
+Date: Fri, 3 Dec 2010 12:30:09 +1100
+Message-ID: <20101203123009.0aa23102@notabene.brown>
+References: <4CF7F369.4090303@stud.tu-ilmenau.de>
+	<slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim+dHWMeZkdFuRiimmNdkZ04j9tO3DCyOPAdxJK@mail.gmail.com>
+In-Reply-To: <slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2 Dec 2010 15:58:51 +0000 mark delfman <markdelfman@googlemail.=
-com>
-wrote:
+On Thu, 2 Dec 2010 22:16:25 +0100 Mario 'BitKoenig' Holbe
+<Mario.Holbe@TU-Ilmenau.DE> wrote:
 
-> Hi
+> Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmenau.de> wrote:
+> > Now I have the effect that upon plugging in drives that formerly we=
+re
+> > part of an array, the md_mod modules gets loaded and tries to
+> > auto-assemble arrays.  This disturbs the diagnosis.
+> > I've tried raid=3Dnoautodetect as kernel commandline, and I grepped=
+ the
+> > source for the MODULE_PARM_DESC macro, which yielded no (useful) re=
+sult.
+> >  This "automagic" behaviour happens since 2.6.36.
 >=20
-> Is there any way to use an MD RAID in write through mode?  I
-> appreciate that there is a performance impact but this is important
-> from a security prospective....
-
-MD RAID does work in write-through mode.  I have occasionally thought a=
-bout
-adding a write-back mode which would make sense now that we have a sens=
-ible
-flushing infrastructure in Linux.  But I haven't implemented it.
-
+> Are you sure this autodetection is triggered by the module?
+> And are you sure this behaviour is bound to this specific kernel
+> version?
 >=20
-> The likelihood is that I would use RAID0 (I know this sounds like a
-> contradiction to the above, but the =91drives=92 are probably hardwar=
-e
-> RAIDs).  But may use standard RAID6.
+> In-Kernel auto-assembly is usually not active when md is compiled as
+> module. Probably in your case this is some udev-triggered assembly?
 
-RAID0 doesn't do any caching at all.
+s/usually not/never/
 
->=20
-> I cannot see any way to disable write cache in MD, but I am hopefully
-> I am simply missing something obvious.
+With a sufficiently recent mdadm, you can put
+   AUTO -all
 
-Why do you think these is a write-behind cache in MD ??
+in mdadm.conf to disable auto-assembly.
+
+Alternately, find the udev rule (/lib/udev/rules.d/64-md-something) and=
+=20
+comment out the bit where it runs "mdadm -I" or "mdadm --incremental".
 
 NeilBrown
 
-
-
->=20
-> I appreciate any feedback....
->=20
-> Thanks, Mark
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
