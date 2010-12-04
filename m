@@ -1,86 +1,39 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH] Monitor: do not move partitions to external container
-Date: Fri, 3 Dec 2010 23:13:48 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010C173482@irsmsx504.ger.corp.intel.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Degraded Array
+Date: Fri, 3 Dec 2010 20:42:27 -0600
+Message-ID: <83.63.13137.69AA9FC4@cdptpa-omtalb.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From de798c689a31f939aca41ef4d21199525d581fe8 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Fri, 3 Dec 2010 15:23:41 +0100
-Subject: [PATCH] Monitor: do not move partitions to external container
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+Hello everyone.
 
-Since we are allowing moving spares between different metadata arrays
-we need to ensure that external metadata array does not get a partition for a spare.
-Arrays on partitions are not supported for external metadata
-so do not take such spare from a native array.
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 I was just growing one of my RAID6 ar=
+rays from 13 to 14
+members.=A0 The array growth had passed its critical stage and had been
+growing for several minutes when the system came to a screeching halt.=A0=
+ It
+hit the big red switch, and when the system rebooted, the array assembl=
+ed,
+but two members are missing.=A0 One of the members is the new drive and=
+ the
+other is the 13th drive in the RAID set.=A0 Of course, the array can ru=
+n well
+enough with only 12 members, but it=92s definitely not the best situati=
+on,
+especially since the re-shape will take another day and a half.=A0 Is i=
+t best
+I go ahead and leave the array in its current state until the re-shape =
+is
+done, or should I go ahead and add back the two failed drives?
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- Monitor.c |    4 ++++
- mdadm.h   |    1 +
- util.c    |   13 +++++++++++++
- 3 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/Monitor.c b/Monitor.c
-index 61550ee..f7de9ff 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -798,6 +798,10 @@ static dev_t choose_spare(struct state *from, struct state *to,
- 		    from->devstate[d] == 0) {
- 			struct dev_policy *pol;
- 			unsigned long long dev_size;
-+			
-+			if (to->metadata->ss->external &&
-+			    test_partition_from_id(from->devid[d]))
-+				continue;
- 
- 			if (min_size &&
- 			    dev_size_from_id(from->devid[d], &dev_size) &&
-diff --git a/mdadm.h b/mdadm.h
-index a0126eb..28d983d 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1073,6 +1073,7 @@ extern int ask(char *mesg);
- extern unsigned long long get_component_size(int fd);
- extern void remove_partitions(int fd);
- extern int test_partition(int fd);
-+extern int test_partition_from_id(dev_t id);
- extern unsigned long long calc_array_size(int level, int raid_disks, int layout,
- 				   int chunksize, unsigned long long devsize);
- extern int flush_metadata_updates(struct supertype *st);
-diff --git a/util.c b/util.c
-index 4b41e2b..070b58a 100644
---- a/util.c
-+++ b/util.c
-@@ -295,6 +295,19 @@ int test_partition(int fd)
- 	return 1;
- }
- 
-+int test_partition_from_id(dev_t id)
-+{
-+	char buf[20];
-+	int fd, rv;
-+
-+	sprintf(buf, "%d:%d", major(id), minor(id));
-+	fd = dev_open(buf, O_RDONLY);
-+	if (fd < 0)
-+		return -1;
-+	rv = test_partition(fd);
-+	close(fd);
-+	return rv;
-+}
- 
- int enough(int level, int raid_disks, int layout, int clean,
- 	   char *avail, int avail_disks)
--- 
-1.7.1
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
