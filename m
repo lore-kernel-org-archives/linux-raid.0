@@ -1,73 +1,51 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Degraded Array
-Date: Sat, 4 Dec 2010 02:53:45 -0600
-Message-ID: <EB.15.13137.D910AFC4@cdptpa-omtalb.mail.rr.com>
-References: <20101204174457.4249ba23@notabene.brown>
-Reply-To: <lrhorer@satx.rr.com>
+From: Christian Parpart <trapni@gentoo.org>
+Subject: Re: systemd kills mdmon if it was started manually
+	by user
+Date: Sat, 4 Dec 2010 10:12:23 +0100
+Message-ID: <201012041012.23757.trapni@gentoo.org>
+References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101204174457.4249ba23@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>, "'Majed B.'" <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org>
+In-Reply-To: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+	<mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+	<mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Sender: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
+Errors-To: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
+To: systemd-devel@lists.freedesktop.org
+Cc: Andrey Borzenkov <arvidjaar@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Neil Brown
-> Sent: Saturday, December 04, 2010 12:45 AM
-> To: Majed B.
-> Cc: lrhorer@satx.rr.com; linux-raid@vger.kernel.org
-> Subject: Re: Degraded Array
-> 
-> On Sat, 4 Dec 2010 07:26:36 +0300 "Majed B." <majedb@gmail.com> wrote:
-> 
-> > You have a degraded array now with 1 disk down. If you proceed, more
-> > disks might pop out due to errors.
-> >
-> > It's best to backup your data, run a check on the array, fix it then
-> > try to resume the reshape.
-> 
-> Backups are always a good idea, but are sometimes impractical.
-
-	I always have backups.  I have a backup system running a RAID array
-always kept a bit bigger than my primary server.  Every morning at 04:00 I
-run an rsync (well, the system does, of course).
-
- 
-> I don't think running a 'check' would help at all.  A 'reshape' will do
-> much
-> the same sort of work, and more.
-> 
-> It isn't strictly true that the array is '1 disk down'.  Parts of it are 1
-> disk down, parts are 2 disks down.  As the reshape progresses more and
-> more
-> will be 2 disks down.  We don't really want that.
-
-	Well, I'm not too fussed if there is no better option.
-
-> This case isn't really handled well at present.  You want to do a
-> 'recovery'
-> and a 'reshape' at the same time.  This is quite possible, but doesn't
-> currently happen when you restart a reshape in the middle (added to my
-> todo
-> list).
-> 
-> I suggest you:
->  - apply the patch below to mdadm.
->  - assemble the array with --update=revert-reshape.  You should give
->    it a --backup-file too.
->  - let the reshape complete so you are back to 13 devices.
->  - add  a spare and let it recovery
->  - then add a spare and reshape the array.
-> 
-> Of course you needed to be running a new enough kernel to be able decrease
-> the number of devices in a raid5.
-
-	I don't think I am.  Mdadm 2.6.7.2 and kernel 2.6.26-2-amd64.
-
+T24gU2F0dXJkYXksIERlY2VtYmVyIDA0LCAyMDEwIDA5OjQxOjI2IGFtIEFuZHJleSBCb3J6ZW5r
+b3Ygd3JvdGU6Cj4gSWYgdXNlciBzdGFydHMgYXJyYXkgbWFudWFsbHkgKG1kYWRtIC1BIC1zIGFz
+IGV4YW1wbGUpIGZyb20gd2l0aGluCj4gdXNlciBzZXNzaW9uIGFuZCBhcnJheSBuZWVkcyBtZG1v
+biwgbWRtb24gYmVjb21lcyBwYXJ0IG9mIHVzZXIgc2Vzc2lvbgo+IGNvbnRyb2wgZ3JvdXA6Cj4g
+Cj4g4pScIHVzZXIKPiDilIIg4pSUIHJvb3QKPiDilIIgICDilJQgMQo+IOKUgiAgICAg4pScIDE5
+MTYgbG9naW4gLS0gcm9vdAo+IOKUgiAgICAg4pScIDE5MzAgLWJhc2gKPiDilIIgICAgIOKUnCAx
+OTY0IGdwZy1hZ2VudCAtLWtlZXAtZGlzcGxheSAtLWRhZW1vbiAtLXdyaXRlLWVudi1maWxlCj4g
+L3Jvb3QvLmdudXAuLi4g4pSCICAgICDilJQgMjA2MiBtZG1vbiBtZDEyNwo+IAo+IAo+IEl0IGlz
+IHRoZW4ga2lsbGVkIGJ5IHN5c3RlbWQgZHVyaW5nIHNodXRkb3duIGFzIHBhcnQgb2YgdXNlciBz
+ZXNzaW9uLgo+IEl0IHJlc3VsdHMgaW4gZGlydHkgYXJyYXkgb24gbmV4dCBib290Lgo+IAo+IElz
+IHRoZXJlIGFueSBtYWdpYyB0aGF0IGFsbG93cyBkYWVtb24gdG8gYmUgZXhlbXB0ZWQgZnJvbSBr
+aWxsaW5nPwoKV2hpbGUgeW91ciByYWlkIHNob3VsZCBhYnNvbHV0ZWx5IG5vdCBiZSBjb3JydXB0
+ZWQgb24gbmV4dCByZWJvb3QgCndoZW4gbWRtb24gcmVjZWl2ZXMgYSBTSUdURVJNLCBJIHN1c3Bl
+Y3QgeW91J3JlIHVzaW5nIHBhbV9zeXN0ZW1kLnNvIAooL2V0Yy9wYW0uZC9zeXN0ZW0tYXV0aCks
+IHdoaWNoIGF1dG9tYXRpY2FsbHkgY3JlYXRlcyBjZ3JvdXBzIGJ5IGxvZ2luIApzZXNzaW9uLCB3
+aGljaCBpbiB0dXJuIGdldHMga2lsbGVkIHdoZW4gdGhlIHVzZXIgaGFzICJjb21wbGV0ZWx5IGxv
+Z2dlZCBvdXQiLgpUaGF0IGlzIHdoeSB5b3VyIG1kYWRtIGdldHMgdGVybWluYXRlZCwgdG9vLgpZ
+b3UgY2FuIGF2b2lkIHRoYXQgYnkgYWRkaW5nIGNyZWF0ZS1zZXNzaW9uPTAgdG8gaXQsIGxpa2U6
+CgojIGdyZXAgcGFtX3N5c3RlbWQgL2V0Yy9wYW0uZC9zeXN0ZW1kLWF1dGgKc2Vzc2lvbiAgICAg
+b3B0aW9uYWwgICAgcGFtX3N5c3RlbWQuc28gY3JlYXRlLXNlc3Npb249MAoKV2hpY2ggaXMgdGhl
+IHJlY29tbWVudGVkIHdheSBpZiB5b3Ugd2FudCBwcm9jZXNzZXMgKGNyZWF0ZWQgYnkgdGhlICJ1
+c2VyIikgdG8gCmxpdmUgb24gZXZlbiB3aGVuIHRoaXMgdXNlciBoYXMgZnVsbHkgbG9nZ2VkIG91
+dC4KClJlZ2FyZHMsCkNocmlzdGlhbiBQYXJwYXJ0LgoKcC5zLjogc2VlIHBhbV9zeXN0ZW1kKDgp
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnN5c3RlbWQt
+ZGV2ZWwgbWFpbGluZyBsaXN0CnN5c3RlbWQtZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0
+dHA6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9zeXN0ZW1kLWRldmVs
+Cg==
