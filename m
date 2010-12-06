@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 24/27] Add takeover support for external meta
-Date: Mon, 06 Dec 2010 14:23:54 +0100
-Message-ID: <20101206132354.21125.90742.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 25/27] Takeover raid10 -> raid0 for external metadata
+Date: Mon, 06 Dec 2010 14:24:02 +0100
+Message-ID: <20101206132402.21125.32679.stgit@gklab-170-024.igk.intel.com>
 References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,276 +13,233 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-This patch introduces 0->10 and 10->0 takeover operations for external
-metadata. It defines all neccessary functions, interfaces and structures.
+The patch introduces takeover form level 10 to level 0 for imsm
+metadata. This patch contains procedures connected with preparing
+and applying metadata update during 10 -> 0 takeover.
+When performing takeover 10->0 mdmon should update the external
+metadata (due to disk slot and level changes).
+To achieve that mdadm, after changing the level in md, mdadm calls
+reshape_super() with and prepare the "update_level" metadata update type.
+reshape_super) allocates a new imsm_dev with updated disk slot
+numbers to be processed by mdmon in process_update().
+process_update() discovers missing disks and adds them to imsm
+metadata.
 
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- Grow.c        |   55 +++++++++++++++++++++++++++-------
- super-intel.c |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 133 insertions(+), 13 deletions(-)
+ super-intel.c |  193 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 193 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 465309c..cf37288 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1012,7 +1012,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 	 *
- 	 */
- 	struct mdu_array_info_s array, orig;
--	char *c;
-+	char *c = NULL;
- 	int rv = 0;
- 	struct supertype *st;
- 	char *subarray = NULL;
-@@ -1305,17 +1305,47 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 				rv = 1;/* not possible */
- 				goto release;
- 			}
--			err = sysfs_set_str(sra, NULL, "level", c);
--			if (err) {
--				err = errno;
--				fprintf(stderr, Name ": %s: could not set level to %s\n",
--					devname, c);
--				if (err == EBUSY && 
--				    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
--					fprintf(stderr, "       Bitmap must be removed before level can be changed\n");
-+			if (level > 0) {
-+				err = sysfs_set_str(sra, NULL, "level", c);
-+				if (err) {
-+					err = errno;
-+					fprintf(stderr, Name ": %s: could not set level to %s\n",
-+						devname, c);
-+					if (err == EBUSY &&
-+					    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
-+						fprintf(stderr, "       Bitmap must be removed before level can be changed\n");
-+					rv = 1;
-+					goto release;
-+				}
-+			}
-+
-+			if (st && reshape_super(st, -1, level, UnSet, 0, 0, NULL, devname, !quiet)) {
- 				rv = 1;
- 				goto release;
- 			}
-+			/* before sending update make sure that for external metadata
-+			 * and after changing raid level mdmon is running
-+			 */
-+			if (st->ss->external && !mdmon_running(st->container_dev) &&
-+			    level > 0) {
-+				start_mdmon(st->container_dev);
-+				if (container)
-+					ping_monitor(container);
-+			}
-+			sync_metadata(st);
-+			if (level == 0) {
-+				err = sysfs_set_str(sra, NULL, "level", c);
-+				if (err) {
-+					err = errno;
-+					fprintf(stderr, Name ": %s: could not set level to %s\n",
-+						devname, c);
-+					if (err == EBUSY &&
-+					    (array.state & (1<<MD_SB_BITMAP_PRESENT)))
-+						fprintf(stderr, "       Bitmap must be removed before level can be changed\n");
-+					rv = 1;
-+				}
-+				goto release;
-+			}
- 			orig = array;
- 			orig_level = orig.level;
- 			ioctl(fd, GET_ARRAY_INFO, &array);
-@@ -1327,6 +1357,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 				fprintf(stderr, Name " level of %s changed to %s\n",
- 					devname, c);
- 			changed = 1;
-+
- 		}
- 	}
- 
-@@ -1381,8 +1412,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 			/* Looks like this level change doesn't need
- 			 * a reshape after all.
- 			 */
--			c = map_num(pers, level);
--			if (c) {
-+			if ((c) && (level == 0)) {
- 				rv = sysfs_set_str(sra, NULL, "level", c);
- 				if (rv) {
- 					int err = errno;
-@@ -1401,7 +1431,8 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		if (st->ss->external && !mdmon_running(st->container_dev) &&
- 		    level > 0) {
- 			start_mdmon(st->container_dev);
--			ping_monitor(container);
-+			if (container)
-+				ping_monitor(container);
- 		}
- 		goto release;
- 	}
 diff --git a/super-intel.c b/super-intel.c
-index 5779129..27196d7 100644
+index 27196d7..a39292a 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -289,6 +289,7 @@ enum imsm_update_type {
- 	update_reshape,
- 	update_reshape_set_slots,
- 	update_reshape_cancel,
-+	update_level,
- };
- 
- struct imsm_update_activate_spare {
-@@ -365,6 +366,30 @@ struct imsm_update_add_disk {
- 	enum imsm_update_type type;
- };
- 
-+struct imsm_disk_changes {
-+	int major;
-+	int minor;
-+	int index;
-+};
-+
-+struct imsm_update_level {
-+	enum imsm_update_type type;
-+	struct dl *disk_list;
-+	int delta_disks;
-+	int container_member;
-+	int disk_qan;
-+	int changes_offset;
-+	int rm_qan;
-+	int add_qan;
-+	struct imsm_dev dev;
-+	/* here goes the table with disk changes
-+	 */
-+	/* and here goes imsm_disk_changes pointed by changes_offset
-+	 * disk_changes are put here as row data every sizeof(struct imsm_disk_changes)
-+	 *
-+	 */
-+};
-+
- static struct supertype *match_metadata_desc_imsm(char *arg)
- {
- 	struct supertype *st;
-@@ -5575,6 +5600,9 @@ update_reshape_exit:
- 		super->updates_pending++;
+@@ -5601,6 +5601,85 @@ update_reshape_exit:
  		break;
  	}
-+	case update_level: {
-+		break;
-+	}
+ 	case update_level: {
++		struct imsm_update_level *u = (void *)update->buf;
++		struct imsm_dev *dev_new, *dev = NULL;
++		struct imsm_map *map;
++		struct dl *d;
++		int i, j;
++		int start_disk;
++
++		dev_new = &u->dev;
++		for (i = 0; i < mpb->num_raid_devs; i++) {
++			dev = get_imsm_dev(super, i);
++			if (strcmp((char *)dev_new->volume, (char *)dev->volume) == 0)
++				break;
++		}
++		if (i == super->anchor->num_raid_devs)
++			return;
++
++		if (dev == NULL)
++			return;
++
++		struct imsm_disk_changes *changes = (struct imsm_disk_changes *)((void *)u + u->changes_offset);
++		map = get_imsm_map(dev_new, 0);
++		int *tab = (int *)&map->disk_ord_tbl;
++
++		/* iterate through devices to mark unused disks as spare and update order table */
++		for (i = 0; i < u->rm_qan; i++) {
++			struct dl *dm = NULL;
++			for (dm = super->disks; dm; dm = dm->next) {
++				if ((dm->major != changes[i].major) ||
++				    (dm->minor != changes[i].minor))
++					continue;
++				for (j = 0; j < u->disk_qan; j++)
++					if ((tab[j] > dm->index) && (dm->index >= 0))
++						tab[j]--;
++				struct dl *du;
++				for (du = super->disks; du; du = du->next)
++					if ((du->index > dm->index) && (du->index > 0))
++						du->index--;
++				dm->disk.status = SPARE_DISK;
++				dm->index = -1;
++			}
++		}
++
++		if (u->rm_qan) {
++			/* Remove unused entrys in disk_ord_tbl */
++			for (i = 0; i < u->disk_qan; i++) {
++				if (tab[i] < 0)
++					for (j = i; j < (u->disk_qan - 1); j++)
++						tab[j] = tab[j+1];
++			}
++		}
++
++		imsm_copy_dev(dev, dev_new);
++		map = get_imsm_map(dev, 0);
++		start_disk = mpb->num_disks;
++
++		/* clear missing disks list */
++		while (super->missing) {
++			d = super->missing;
++			super->missing = d->next;
++			__free_imsm_disk(d);
++		}
++		if (u->rm_qan)
++			find_missing(super);
++
++		/* clear new disk entries if number of disks increased*/
++		d = super->missing;
++		for (i = start_disk; i < map->num_members; i++) {
++			if (!d)
++				break;
++			memset(&d->disk, 0, sizeof(d->disk));
++			strcpy((char *)d->disk.serial, "MISSING");
++			d->disk.total_blocks = map->blocks_per_member;
++			/* Set slot for missing disk */
++			set_imsm_ord_tbl_ent(map, i, d->index | IMSM_ORD_REBUILD);
++			d->raiddisk = i;
++			d = d->next;
++		}
++
++		super->updates_pending++;
+ 		break;
+ 	}
  	case update_activate_spare: {
- 		struct imsm_update_activate_spare *u = (void *) update->buf; 
- 		struct imsm_dev *dev = get_imsm_dev(super, u->array);
-@@ -5955,6 +5983,9 @@ static void imsm_prepare_update(struct supertype *st,
- 		u->update_prepared = -1;
- 		break;
- 	}
-+	case update_level: {
-+		break;
+@@ -6143,6 +6222,120 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
+ 			     struct geo_params *geo, int verbose,
+ 			     int uuid_set, char *homehost)
+ {
++	struct intel_super *super = st->sb;
++	struct imsm_update_level *u;
++	struct imsm_dev *dev_new, *dev = NULL;
++	struct imsm_map *map_new, *map;
++	struct mdinfo *newdi;
++	struct dl *dl;
++	int *tmp_ord_tbl;
++	int i, slot, idx;
++	int len;
++
++	/* update level is used only for 0->10 and 10->0 transitions */
++	if ((info->array.level != 10 && (geo->level != 0)) &&
++		((info->array.level != 0) && (geo->level != 10)))
++		return 1;
++
++	/* find requested device */
++	for (i = 0; i < super->anchor->num_raid_devs; i++) {
++		dev = __get_imsm_dev(super->anchor, i);
++		int devnum = -1;
++
++		if (dev == NULL)
++			return 1;
++
++		find_array_minor((char *)dev->volume, 1, st->devnum, &devnum);
++		if (devnum == geo->dev_id)
++			break;
 +	}
- 	case update_create_array: {
- 		struct imsm_update_create_array *u = (void *) update->buf;
- 		struct intel_dev *dv;
-@@ -6108,6 +6139,13 @@ static const char *imsm_get_disk_controller_domain(const char *path)
- 		return NULL;
++
++	map = get_imsm_map(dev, 0);
++	geo->raid_disks = (geo->level == 10) ? 4 : map->num_members;
++
++	if (!is_raid_level_supported(super->orom,
++				     geo->level,
++				     geo->raid_disks))
++		return 1;
++
++	len = sizeof(struct imsm_update_level) +
++		((geo->raid_disks - 1) * sizeof(__u32)) +
++		(geo->raid_disks * sizeof(struct imsm_disk_changes));
++
++	u = malloc(len);
++	if (u == NULL)
++		return 1;
++
++	u->changes_offset = sizeof(struct imsm_update_level) + ((geo->raid_disks - 1) * sizeof(__u32));
++	struct imsm_disk_changes *change = (struct imsm_disk_changes *) ((void *)u + u->changes_offset);
++	u->rm_qan = 0;
++	u->disk_list = NULL;
++	u->disk_qan = geo->raid_disks;
++
++	dev_new = &u->dev;
++	imsm_copy_dev(dev_new, dev);
++	map_new = get_imsm_map(dev_new, 0);
++
++	tmp_ord_tbl = malloc(sizeof(int) * geo->raid_disks);
++	if (tmp_ord_tbl == NULL) {
++		free(u);
++		return 1;
++	}
++
++	for (i = 0; i < geo->raid_disks; i++) {
++		tmp_ord_tbl[i] = -1;
++		change[i].major = -1;
++		change[i].minor = -1;
++	}
++
++	/* 10->0 transition:
++	 * - mark unused disks
++	 * - update indexes in order table
++	 */
++	if (geo->level == 0) {
++	/* iterate through devices to detect slot changes */
++		i = 0;
++		for (dl = super->disks; dl; dl = dl->next) {
++			idx = -1;
++			for (newdi = info->devs; newdi; newdi = newdi->next) {
++				if ((dl->major != newdi->disk.major) ||
++					    (dl->minor != newdi->disk.minor) ||
++					    (newdi->disk.raid_disk < 0))
++					continue;
++				slot = get_imsm_disk_slot(map, dl->index);
++				idx = get_imsm_ord_tbl_ent(dev_new, slot);
++				tmp_ord_tbl[newdi->disk.raid_disk] = idx;
++				break;
++			}
++			/* if slot not found, mark disk as not used */
++			if ((idx == -1) && (!(dl->disk.status & SPARE_DISK))) {
++				change[i].major = dl->major;
++				change[i].minor = dl->minor;
++				u->rm_qan++;
++				i++;
++			}
++		}
++		for (i = 0; i < geo->raid_disks; i++)
++		set_imsm_ord_tbl_ent(map_new, i, tmp_ord_tbl[i]);
++	}
++
++	map_new->num_members = (geo->level == 10) ? geo->raid_disks : (info->array.raid_disks - u->rm_qan);
++	map_new->map_state = IMSM_T_STATE_NORMAL;
++	map_new->failed_disk_num = 0;
++
++	if (geo->level == 10) {
++		map_new->num_domains = map_new->num_members / 2;
++		map_new->raid_level = 1;
++	} else {
++		map_new->num_domains = 1;
++		map_new->raid_level = geo->level;
++	}
++
++	u->type = update_level;
++	u->delta_disks = 0;
++	u->container_member = info->container_member;
++	append_metadata_update(st, u, len);
++	free(tmp_ord_tbl);
+ 	return 0;
  }
  
-+static int update_level_imsm(struct supertype *st, struct mdinfo *info,
-+			     struct geo_params *geo, int verbose,
-+			     int uuid_set, char *homehost)
-+{
-+	return 0;
-+}
-+
- int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 					 struct geo_params *geo)
- {
-@@ -6777,6 +6815,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- {
- 	int ret_val = 1;
- 	struct mdinfo *sra = NULL;
-+	struct mdinfo *srac = NULL;
- 	int fd = -1;
- 	int fdc = -1;
- 	char buf[PATH_MAX];
-@@ -6830,6 +6869,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 			dprintf("imsm: Operation is not allowed on container\n");
- 		if (ret_val)
- 			unfreeze_container(st);
-+
- 		goto imsm_reshape_super_exit;
- 	} else
- 		dprintf("imsm: not a container operation\n");
-@@ -6841,6 +6881,13 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 		goto imsm_reshape_super_exit;
- 	}
- 
-+	srac = sysfs_read(fdc, 0,  GET_VERSION | GET_LEVEL | GET_LAYOUT |
-+			  GET_DISKS | GET_DEVS | GET_CHUNK | GET_SIZE);
-+	if (srac == NULL) {
-+		fprintf(stderr, Name ": Cannot read sysfs info (imsm)\n");
-+		goto imsm_reshape_super_exit;
-+	}
-+
- 	fd = open(geo.dev_name , O_RDONLY | O_DIRECT);
- 	if (fd < 0) {
- 		dprintf("imsm: cannot open device: %s\n", geo.dev_name);
-@@ -6857,7 +6904,48 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 	geo.dev_id = -1;
- 	find_array_minor(geo.dev_name, 1, st->devnum, &geo.dev_id);
- 
--	/* continue volume check - proceed if delta_disk is zero only
-+	/* we have volume so takeover can be performed for single volume only
-+	 */
-+	if ((geo.size == -1) && (geo.layout == UnSet) && (geo.raid_disks == 0) && (geo.level != UnSet) &&
-+	    (geo.dev_id > -1)) {
-+		/* ok - this is takeover */
-+		struct intel_super *super;
-+
-+		/* takeover raid0<->raid5 doesn't need meta update
-+		 * this can be handled by migrations if necessary
-+		 */
-+		if ((geo.level == 5) && (sra->array.level == 5)) {
-+			ret_val = 0;
-+			goto imsm_reshape_super_exit;
-+		}
-+		st->ss->load_super(st, fdc, NULL);
-+		super = st->sb;
-+		if (!super) {
-+			fprintf(stderr, Name ": Super pointer is NULL.\n");
-+			goto imsm_reshape_super_exit;
-+		}
-+		if (super->anchor->num_raid_devs > 1) {
-+			fprintf(stderr, Name ": Cannot perform raid10 takeover on multiarray container for imsm.\n");
-+			goto imsm_reshape_super_exit;
-+		}
-+		super->current_vol = 0;
-+		st->ss->getinfo_super(st, sra, NULL);
-+
-+		/* send metadata update for
-+		 * raid10 -> raid0 or raid0 -> raid10 takeover */
-+		if (((geo.level == 0) && (sra->array.level == 10)) ||
-+		   ((geo.level == 10) && (sra->array.level == 0))) {
-+			st->update_tail = &st->updates;
-+			if (update_level_imsm(st, sra, &geo, 0, 0, NULL) == 0)
-+				ret_val = 0;
-+			else
-+				ret_val = 1;
-+			goto imsm_reshape_super_exit;
-+		}
-+	}
-+
-+	/* this is not takeover
-+	 * continue volume check - proceed if delta_disk is zero only
- 	 */
- 	if (geo.raid_disks > 0 && geo.raid_disks != UnSet)
- 		delta_disks = geo.raid_disks - sra->array.raid_disks;
-@@ -6910,6 +6998,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
- 
- imsm_reshape_super_exit:
- 	sysfs_free(sra);
-+	sysfs_free(srac);
- 	if (fd >= 0)
- 		close(fd);
- 	if (fdc >= 0)
 
