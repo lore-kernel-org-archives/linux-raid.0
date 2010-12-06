@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 25/27] Takeover raid10 -> raid0 for external metadata
-Date: Mon, 06 Dec 2010 14:24:02 +0100
-Message-ID: <20101206132402.21125.32679.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 26/27] Takeover raid0 -> raid10 for external metadata
+Date: Mon, 06 Dec 2010 14:24:10 +0100
+Message-ID: <20101206132410.21125.56259.stgit@gklab-170-024.igk.intel.com>
 References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,13 +13,15 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-The patch introduces takeover form level 10 to level 0 for imsm
+The patch introduces takeover form level 0 to level 10 for imsm
 metadata. This patch contains procedures connected with preparing
-and applying metadata update during 10 -> 0 takeover.
-When performing takeover 10->0 mdmon should update the external
+and applying metadata update during 0 -> 10 takeover.
+
+When performing takeover 0->10 mdmon should update the external
 metadata (due to disk slot and level changes).
-To achieve that mdadm, after changing the level in md, mdadm calls
-reshape_super() with and prepare the "update_level" metadata update type.
+To achieve that mdadm, after changing the level in md, calls
+reshape_super() with and prepare the "update_level" metadata update
+type.
 reshape_super) allocates a new imsm_dev with updated disk slot
 numbers to be processed by mdmon in process_update().
 process_update() discovers missing disks and adds them to imsm
@@ -28,218 +30,133 @@ metadata.
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- super-intel.c |  193 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 193 insertions(+), 0 deletions(-)
+ Grow.c        |    2 ++
+ super-intel.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+), 0 deletions(-)
 
+diff --git a/Grow.c b/Grow.c
+index cf37288..24955b4 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1346,6 +1346,8 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 				}
+ 				goto release;
+ 			}
++			if (level == 10)
++			    goto release;
+ 			orig = array;
+ 			orig_level = orig.level;
+ 			ioctl(fd, GET_ARRAY_INFO, &array);
 diff --git a/super-intel.c b/super-intel.c
-index 27196d7..a39292a 100644
+index a39292a..67209d2 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5601,6 +5601,85 @@ update_reshape_exit:
+@@ -3623,6 +3623,8 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 	for (d = super->disks; d ; d = d->next) {
+ 		if (d->index < 0)
+ 			continue;
++		if (d->fd < 0)
++		    continue;
+ 		if (store_imsm_mpb(d->fd, mpb))
+ 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
+ 				__func__, d->major, d->minor, strerror(errno));
+@@ -5652,6 +5654,25 @@ update_reshape_exit:
+ 			}
+ 		}
+ 
++		if (u->add_qan)
++		    for (i = 0; i < u->disk_qan; i++)
++			tab[i] = i;
++
++		struct dl *dc;
++		for (i = 0; i < u->add_qan; i++) {
++			/* update indexes in current list */
++			for (dc = super->disks; dc; dc = dc->next) {
++				if (dc->index >= changes[i].index)
++				    dc->index++;
++			}
++			/* mark dummy disks for rebuild */
++			tab[changes[i].index] |= IMSM_ORD_REBUILD;
++		}
++		/* append dummy disk list at the end of current list */
++		for (dc = super->disks; dc->next; dc = dc->next)
++			; /* nothing to do, just go to the end of list */
++		dc->next = u->disk_list;
++
+ 		imsm_copy_dev(dev, dev_new);
+ 		map = get_imsm_map(dev, 0);
+ 		start_disk = mpb->num_disks;
+@@ -6063,6 +6084,30 @@ static void imsm_prepare_update(struct supertype *st,
  		break;
  	}
  	case update_level: {
-+		struct imsm_update_level *u = (void *)update->buf;
-+		struct imsm_dev *dev_new, *dev = NULL;
-+		struct imsm_map *map;
-+		struct dl *d;
-+		int i, j;
-+		int start_disk;
-+
-+		dev_new = &u->dev;
-+		for (i = 0; i < mpb->num_raid_devs; i++) {
-+			dev = get_imsm_dev(super, i);
-+			if (strcmp((char *)dev_new->volume, (char *)dev->volume) == 0)
-+				break;
-+		}
-+		if (i == super->anchor->num_raid_devs)
-+			return;
-+
-+		if (dev == NULL)
-+			return;
-+
++		struct imsm_update_level *u = (void *) update->buf;
++		int i;
 +		struct imsm_disk_changes *changes = (struct imsm_disk_changes *)((void *)u + u->changes_offset);
-+		map = get_imsm_map(dev_new, 0);
-+		int *tab = (int *)&map->disk_ord_tbl;
 +
-+		/* iterate through devices to mark unused disks as spare and update order table */
-+		for (i = 0; i < u->rm_qan; i++) {
-+			struct dl *dm = NULL;
-+			for (dm = super->disks; dm; dm = dm->next) {
-+				if ((dm->major != changes[i].major) ||
-+				    (dm->minor != changes[i].minor))
-+					continue;
-+				for (j = 0; j < u->disk_qan; j++)
-+					if ((tab[j] > dm->index) && (dm->index >= 0))
-+						tab[j]--;
-+				struct dl *du;
-+				for (du = super->disks; du; du = du->next)
-+					if ((du->index > dm->index) && (du->index > 0))
-+						du->index--;
-+				dm->disk.status = SPARE_DISK;
-+				dm->index = -1;
-+			}
-+		}
++		dprintf("prepare_update(): update level\n");
 +
-+		if (u->rm_qan) {
-+			/* Remove unused entrys in disk_ord_tbl */
-+			for (i = 0; i < u->disk_qan; i++) {
-+				if (tab[i] < 0)
-+					for (j = i; j < (u->disk_qan - 1); j++)
-+						tab[j] = tab[j+1];
-+			}
-+		}
-+
-+		imsm_copy_dev(dev, dev_new);
-+		map = get_imsm_map(dev, 0);
-+		start_disk = mpb->num_disks;
-+
-+		/* clear missing disks list */
-+		while (super->missing) {
-+			d = super->missing;
-+			super->missing = d->next;
-+			__free_imsm_disk(d);
-+		}
-+		if (u->rm_qan)
-+			find_missing(super);
-+
-+		/* clear new disk entries if number of disks increased*/
-+		d = super->missing;
-+		for (i = start_disk; i < map->num_members; i++) {
++		for (i = 0; i < u->add_qan; i++) {
++			struct dl *d = calloc(1, sizeof(struct dl));
 +			if (!d)
-+				break;
-+			memset(&d->disk, 0, sizeof(d->disk));
-+			strcpy((char *)d->disk.serial, "MISSING");
-+			d->disk.total_blocks = map->blocks_per_member;
-+			/* Set slot for missing disk */
-+			set_imsm_ord_tbl_ent(map, i, d->index | IMSM_ORD_REBUILD);
-+			d->raiddisk = i;
-+			d = d->next;
-+		}
++			    break;
++			memcpy(d, super->disks, sizeof(struct dl));
 +
-+		super->updates_pending++;
++			d->disk.status = FAILED_DISK;
++			strcpy((char *)d->disk.serial, "dummy");
++			strcpy((char *)d->serial, "dummy");
++			d->disk.scsi_id = 0;
++			d->fd = -1;
++			d->minor = 0;
++			d->major = 0;
++			d->index = changes[i].index;
++			d->next = u->disk_list;
++			u->disk_list = d;
++		}
++		len = disks_to_mpb_size(u->add_qan + mpb->num_disks - u->rm_qan);
  		break;
  	}
- 	case update_activate_spare: {
-@@ -6143,6 +6222,120 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
- 			     struct geo_params *geo, int verbose,
- 			     int uuid_set, char *homehost)
- {
-+	struct intel_super *super = st->sb;
-+	struct imsm_update_level *u;
-+	struct imsm_dev *dev_new, *dev = NULL;
-+	struct imsm_map *map_new, *map;
-+	struct mdinfo *newdi;
-+	struct dl *dl;
-+	int *tmp_ord_tbl;
-+	int i, slot, idx;
-+	int len;
-+
-+	/* update level is used only for 0->10 and 10->0 transitions */
-+	if ((info->array.level != 10 && (geo->level != 0)) &&
-+		((info->array.level != 0) && (geo->level != 10)))
-+		return 1;
-+
-+	/* find requested device */
-+	for (i = 0; i < super->anchor->num_raid_devs; i++) {
-+		dev = __get_imsm_dev(super->anchor, i);
-+		int devnum = -1;
-+
-+		if (dev == NULL)
-+			return 1;
-+
-+		find_array_minor((char *)dev->volume, 1, st->devnum, &devnum);
-+		if (devnum == geo->dev_id)
-+			break;
-+	}
-+
-+	map = get_imsm_map(dev, 0);
-+	geo->raid_disks = (geo->level == 10) ? 4 : map->num_members;
-+
-+	if (!is_raid_level_supported(super->orom,
-+				     geo->level,
-+				     geo->raid_disks))
-+		return 1;
-+
-+	len = sizeof(struct imsm_update_level) +
-+		((geo->raid_disks - 1) * sizeof(__u32)) +
-+		(geo->raid_disks * sizeof(struct imsm_disk_changes));
-+
-+	u = malloc(len);
-+	if (u == NULL)
-+		return 1;
-+
-+	u->changes_offset = sizeof(struct imsm_update_level) + ((geo->raid_disks - 1) * sizeof(__u32));
-+	struct imsm_disk_changes *change = (struct imsm_disk_changes *) ((void *)u + u->changes_offset);
-+	u->rm_qan = 0;
-+	u->disk_list = NULL;
-+	u->disk_qan = geo->raid_disks;
-+
-+	dev_new = &u->dev;
-+	imsm_copy_dev(dev_new, dev);
-+	map_new = get_imsm_map(dev_new, 0);
-+
-+	tmp_ord_tbl = malloc(sizeof(int) * geo->raid_disks);
-+	if (tmp_ord_tbl == NULL) {
-+		free(u);
-+		return 1;
-+	}
-+
-+	for (i = 0; i < geo->raid_disks; i++) {
-+		tmp_ord_tbl[i] = -1;
-+		change[i].major = -1;
-+		change[i].minor = -1;
-+	}
-+
-+	/* 10->0 transition:
-+	 * - mark unused disks
-+	 * - update indexes in order table
-+	 */
-+	if (geo->level == 0) {
-+	/* iterate through devices to detect slot changes */
-+		i = 0;
-+		for (dl = super->disks; dl; dl = dl->next) {
-+			idx = -1;
-+			for (newdi = info->devs; newdi; newdi = newdi->next) {
-+				if ((dl->major != newdi->disk.major) ||
-+					    (dl->minor != newdi->disk.minor) ||
-+					    (newdi->disk.raid_disk < 0))
-+					continue;
-+				slot = get_imsm_disk_slot(map, dl->index);
-+				idx = get_imsm_ord_tbl_ent(dev_new, slot);
-+				tmp_ord_tbl[newdi->disk.raid_disk] = idx;
-+				break;
-+			}
-+			/* if slot not found, mark disk as not used */
-+			if ((idx == -1) && (!(dl->disk.status & SPARE_DISK))) {
-+				change[i].major = dl->major;
-+				change[i].minor = dl->minor;
-+				u->rm_qan++;
-+				i++;
-+			}
-+		}
-+		for (i = 0; i < geo->raid_disks; i++)
-+		set_imsm_ord_tbl_ent(map_new, i, tmp_ord_tbl[i]);
-+	}
-+
-+	map_new->num_members = (geo->level == 10) ? geo->raid_disks : (info->array.raid_disks - u->rm_qan);
-+	map_new->map_state = IMSM_T_STATE_NORMAL;
-+	map_new->failed_disk_num = 0;
-+
-+	if (geo->level == 10) {
-+		map_new->num_domains = map_new->num_members / 2;
-+		map_new->raid_level = 1;
-+	} else {
-+		map_new->num_domains = 1;
-+		map_new->raid_level = geo->level;
-+	}
-+
-+	u->type = update_level;
-+	u->delta_disks = 0;
-+	u->container_member = info->container_member;
-+	append_metadata_update(st, u, len);
-+	free(tmp_ord_tbl);
- 	return 0;
- }
+ 	case update_create_array: {
+@@ -6269,6 +6314,7 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
+ 	u->changes_offset = sizeof(struct imsm_update_level) + ((geo->raid_disks - 1) * sizeof(__u32));
+ 	struct imsm_disk_changes *change = (struct imsm_disk_changes *) ((void *)u + u->changes_offset);
+ 	u->rm_qan = 0;
++	u->add_qan = 0;
+ 	u->disk_list = NULL;
+ 	u->disk_qan = geo->raid_disks;
  
+@@ -6286,6 +6332,7 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
+ 		tmp_ord_tbl[i] = -1;
+ 		change[i].major = -1;
+ 		change[i].minor = -1;
++		change[i].index = -1;
+ 	}
+ 
+ 	/* 10->0 transition:
+@@ -6319,6 +6366,25 @@ static int update_level_imsm(struct supertype *st, struct mdinfo *info,
+ 		set_imsm_ord_tbl_ent(map_new, i, tmp_ord_tbl[i]);
+ 	}
+ 
++	/* 0->10 transition:
++	 * - add dummy disks to metdata
++	 * - store slots for dummy disks in update buffer
++	 */
++	if (geo->level == 10) {
++		u->add_qan = 0;
++		for (i = 0; i < geo->raid_disks; i++) {
++			int found = 0;
++			for (newdi = info->devs; newdi; newdi = newdi->next) {
++				if (newdi->disk.raid_disk == i) {
++					found = 1;
++					break;
++				}
++			}
++		if (!found)
++		    change[u->add_qan++].index = i;
++		}
++	}
++
+ 	map_new->num_members = (geo->level == 10) ? geo->raid_disks : (info->array.raid_disks - u->rm_qan);
+ 	map_new->map_state = IMSM_T_STATE_NORMAL;
+ 	map_new->failed_disk_num = 0;
 
