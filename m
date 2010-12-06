@@ -1,44 +1,84 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Deadlock in md barrier code? / RAID1 / LVM CoW snapshot + ext3
- / Debian 5.0 - lenny 2.6.26 kernel
-Date: Mon, 06 Dec 2010 15:42:31 +0000
-Message-ID: <4CFD0467.2060606@seoss.co.uk>
-References: <4C938103.1010304@seoss.co.uk>	<20100918085925.5fee83ee@notabene>	<4C97BD21.1040405@seoss.co.uk>	<4C991D61.1040400@seoss.co.uk>	<20100922083039.283ccdfd@notabene>	<4CBC9774.6020500@seoss.co.uk>	<20101019171650.20c83e7e@notabene>	<4CBDC641.9090009@seoss.co.uk>	<4CBDC756.7010606@seoss.co.uk>	<4CBDF190.2000007@seoss.co.uk>	<4CBF5267.7080304@seoss.co.uk>	<20101021100429.4879a001@notabene>	<4CE56AA9.2010905@seoss.co.uk> <20101122100509.76592b59@notabene.brown>
+From: =?ISO-8859-1?Q?Stefan_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: turn off auto assembly
+Date: Mon, 06 Dec 2010 22:52:56 +0100
+Message-ID: <4CFD5B38.2090801@stud.tu-ilmenau.de>
+References: <4CF7F369.4090303@stud.tu-ilmenau.de>	<slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org> <20101203123009.0aa23102@notabene.brown>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101122100509.76592b59@notabene.brown>
+In-Reply-To: <20101203123009.0aa23102@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/21/10 23:05, Neil Brown wrote:
-> Yes.  Superficially, it appears that there are still 5 outstanding read
-> requests that are not being completed.   I cannot guess how OpenVZ would
-> cause that, but I don't really know much about OpenVZ
+Thanks for all the hints.
 
-Hi Neil,
-
-I very much appreciate your help debugging this.
-
-I opened a bug against the relevant Debian kernel.  Now that this is
-pretty well characterised, I think it's probably best to just workaround
-it (e.g. by setting speed_limit_max to 0 during the backups which were
-tripping over this), until such time as the kernel can be replaced with
-a more recent one...
+There were no udev-rules on the computers, so I fixed the problem using
+Neil's hints: 'echo "AUTO -all" >> /etc/mdadm.conf'.
 
 Cheers,
+Stefan
 
-Tim.
+P.S.: as the "auto assemble everything with 0xfd partition type" may
+become destructive at times (I have to deal a lot with damaged arrays),
+I'd suggest not to make it the default setting.  But the other side is:
+most people who set up a RAID would want to have it this way, so I gues=
+s
+it's my duty to make sure no autoassembly on my technicians' computers
+happens, unless I tell mdadm to do so...
 
+P.P.S.: The behaviour might very well have come with the update to
+mdadm-3.1.4, which may well have come nearly in parallel with me
+updating the kernels... (as Gentoo stable jumped from 3.0 to 3.1.4 in
+late October, at the beginning of November I updated the kernels...)
 
+Am 03.12.2010 02:30, schrieb Neil Brown:
+> On Thu, 2 Dec 2010 22:16:25 +0100 Mario 'BitKoenig' Holbe
+> <Mario.Holbe@TU-Ilmenau.DE> wrote:
+>
+>> Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmenau.de> wrote:
+>>> Now I have the effect that upon plugging in drives that formerly we=
+re
+>>> part of an array, the md_mod modules gets loaded and tries to
+>>> auto-assemble arrays.  This disturbs the diagnosis.
+>>> I've tried raid=3Dnoautodetect as kernel commandline, and I grepped=
+ the
+>>> source for the MODULE_PARM_DESC macro, which yielded no (useful) re=
+sult.
+>>>  This "automagic" behaviour happens since 2.6.36.
+>> Are you sure this autodetection is triggered by the module?
+>> And are you sure this behaviour is bound to this specific kernel
+>> version?
+>>
+>> In-Kernel auto-assembly is usually not active when md is compiled as
+>> module. Probably in your case this is some udev-triggered assembly?
+> s/usually not/never/
+>
+> With a sufficiently recent mdadm, you can put
+>    AUTO -all
+>
+> in mdadm.conf to disable auto-assembly.
+>
+> Alternately, find the udev rule (/lib/udev/rules.d/64-md-something) a=
+nd=20
+> comment out the bit where it runs "mdadm -I" or "mdadm --incremental"=
+=2E
+>
+> NeilBrown
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
