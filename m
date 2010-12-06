@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 22/27] Read chunk size and layout from mdstat
-Date: Mon, 06 Dec 2010 14:23:38 +0100
-Message-ID: <20101206132338.21125.13338.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 23/27] Migration: Chunk size migration
+Date: Mon, 06 Dec 2010 14:23:46 +0100
+Message-ID: <20101206132346.21125.93222.stgit@gklab-170-024.igk.intel.com>
 References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,80 +13,82 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Support reading layout and chunk size from mdstat.
-It is needed for external reshape with layout or chunk size changes.
+Add implementation for chunk size migration for external metadata.
+Update works using array parameters update in managemon. Reshape is started by managemon also.
+mdadm waits for reshape array state instead starting reshape process.
+For imsm chunk size parameter flow, from mdadm (via metadata update) to managemon was added.
 
-This patch removes chunk size changing as result of mdadm action.
-Chunk size in mdmon has to change when it is really changed in md only.
-
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- managemon.c |    1 +
- mdadm.h     |    2 ++
- mdstat.c    |   11 +++++++++--
- 3 files changed, 12 insertions(+), 2 deletions(-)
+ managemon.c   |    6 ++++++
+ mdmon.h       |    1 +
+ super-intel.c |    4 ++++
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
 diff --git a/managemon.c b/managemon.c
-index 0f02f74..4874681 100644
+index 4874681..6ac7178 100644
 --- a/managemon.c
 +++ b/managemon.c
-@@ -441,6 +441,7 @@ static void manage_member(struct mdstat_ent *mdstat,
- 	a->info.array.raid_disks = mdstat->raid_disks;
- 	// MORE
+@@ -520,6 +520,12 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 					}
+ 				}
  
-+	a->info.array.chunk_size = mdstat->chunk_size;
- 	/* honor 'frozen' */
- 	if (sysfs_get_str(&a->info, NULL, "metadata_version", buf, sizeof(buf)) > 0)
- 		frozen = buf[9] == '-';
-diff --git a/mdadm.h b/mdadm.h
-index 7aba440..4aae4cf 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -387,6 +387,8 @@ struct mdstat_ent {
- 	int		resync; /* 3 if check, 2 if reshape, 1 if resync, 0 if recovery */
- 	int		devcnt;
- 	int		raid_disks;
-+	int		layout;
-+	int		chunk_size;
- 	char *		metadata_version;
- 	struct dev_member {
- 		char			*name;
-diff --git a/mdstat.c b/mdstat.c
-index fdce516..d1fb18f 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -146,7 +146,7 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 	end = &all;
- 	for (; (line = conf_line(f)) ; free_line(line)) {
- 		struct mdstat_ent *ent;
--		char *w;
-+		char *w, *prev = NULL;
- 		int devnum;
- 		int in_devs = 0;
- 		char *ep;
-@@ -191,7 +191,7 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 		ent->dev = strdup(line);
- 		ent->devnum = devnum;
++				if (status_ok && newa->reshape_chunk_size > 0) {
++					dprintf("managemon: set chunk_size to %i\n", newa->reshape_chunk_size);
++					if (sysfs_set_num(&newa->info, NULL, "chunk_size", newa->reshape_chunk_size) < 0)
++						status_ok = 0;
++				}
++
+ 				if (status_ok && newa->reshape_layout >= 0) {
+ 					dprintf("managemon: set layout to %i\n", newa->reshape_layout);
+ 					if (sysfs_set_num(&newa->info, NULL, "layout", newa->reshape_layout) < 0)
+diff --git a/mdmon.h b/mdmon.h
+index a31ad97..c83bd99 100644
+--- a/mdmon.h
++++ b/mdmon.h
+@@ -52,6 +52,7 @@ struct active_array {
+ 	int reshape_raid_disks;
+ 	int reshape_level;
+ 	int reshape_layout;
++	int reshape_chunk_size;
  
--		for (w=dl_next(line); w!= line ; w=dl_next(w)) {
-+		for (w = dl_next(line); w != line ; prev = w, w = dl_next(w)) {
- 			int l = strlen(w);
- 			char *eq;
- 			if (strcmp(w, "active")==0)
-@@ -266,6 +266,13 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 				   w[0] <= '9' &&
- 				   w[l-1] == '%') {
- 				ent->percent = atoi(w);
-+			} else if (strcmp(w, "algorithm") == 0 &&
-+				   dl_next(w) != line) {
-+				w = dl_next(w);
-+				ent->layout = atoi(w);
-+			} else if (strncmp(w, "chunk", 5) == 0 &&
-+				   prev != NULL) {
-+				ent->chunk_size = atoi(prev) * 1024;
- 			}
+ 	int check_degraded; /* flag set by mon, read by manage */
+ 
+diff --git a/super-intel.c b/super-intel.c
+index dee23e2..5779129 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -317,6 +317,7 @@ struct imsm_update_reshape {
+ 	int reshape_raid_disks;
+ 	int reshape_level;
+ 	int reshape_layout;
++	int reshape_chunk_size;
+ 	int disks_count;
+ 	int spares_in_update;
+ 	int devnum;
+@@ -5445,6 +5446,7 @@ static void imsm_process_update(struct supertype *st,
+ 			a->reshape_level = 5;
+ 			a->reshape_layout = 5;
  		}
- 		if (insert_here && (*insert_here)) {
++		a->reshape_chunk_size = u->reshape_chunk_size;
+ 
+ 		super->updates_pending++;
+ update_reshape_exit:
+@@ -6540,6 +6542,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(struct super
+ 	u->reshape_raid_disks = 0;
+ 	u->reshape_level = -1;
+ 	u->reshape_layout = -1;
++	u->reshape_chunk_size = -1;
+ 	u->update_memory_size = update_memory_size;
+ 	u->type = update_reshape;
+ 	u->spares_in_update = 0;
+@@ -6884,6 +6887,7 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 					u->reshape_raid_disks = geo.raid_disks;
+ 				u->reshape_level = geo.level;
+ 				u->reshape_layout = geo.layout;
++				u->reshape_chunk_size = geo.chunksize;
+ 				ret_val = 0;
+ 				append_metadata_update(st, u, u->update_memory_size);
+ 			}
 
