@@ -1,66 +1,40 @@
-From: Andrey Borzenkov <arvidjaar@gmail.com>
-Subject: Re: systemd kills mdmon if it was started manually
-	by user
-Date: Sat, 4 Dec 2010 15:08:05 +0300
-Message-ID: <AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
-References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
-	<201012041012.23757.trapni@gentoo.org>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] fix: incremental on invalid container causes segfault
+Date: Mon, 6 Dec 2010 06:40:40 +0000
+Message-ID: <66C59AD0932712458090B447266D638C010A080454@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org>
-In-Reply-To: <201012041012.23757.trapni@gentoo.org>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
-	<mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
-	<mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Sender: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
-Errors-To: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
-To: Christian Parpart <trapni@gentoo.org>
-Cc: linux-raid@vger.kernel.org, systemd-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-T24gU2F0LCBEZWMgNCwgMjAxMCBhdCAxMjoxMiBQTSwgQ2hyaXN0aWFuIFBhcnBhcnQgPHRyYXBu
-aUBnZW50b28ub3JnPiB3cm90ZToKPiBPbiBTYXR1cmRheSwgRGVjZW1iZXIgMDQsIDIwMTAgMDk6
-NDE6MjYgYW0gQW5kcmV5IEJvcnplbmtvdiB3cm90ZToKPj4gSWYgdXNlciBzdGFydHMgYXJyYXkg
-bWFudWFsbHkgKG1kYWRtIC1BIC1zIGFzIGV4YW1wbGUpIGZyb20gd2l0aGluCj4+IHVzZXIgc2Vz
-c2lvbiBhbmQgYXJyYXkgbmVlZHMgbWRtb24sIG1kbW9uIGJlY29tZXMgcGFydCBvZiB1c2VyIHNl
-c3Npb24KPj4gY29udHJvbCBncm91cDoKPj4KPj4g4pScIHVzZXIKPj4g4pSCIOKUlCByb290Cj4+
-IOKUgiDCoCDilJQgMQo+PiDilIIgwqAgwqAg4pScIDE5MTYgbG9naW4gLS0gcm9vdAo+PiDilIIg
-wqAgwqAg4pScIDE5MzAgLWJhc2gKPj4g4pSCIMKgIMKgIOKUnCAxOTY0IGdwZy1hZ2VudCAtLWtl
-ZXAtZGlzcGxheSAtLWRhZW1vbiAtLXdyaXRlLWVudi1maWxlCj4+IC9yb290Ly5nbnVwLi4uIOKU
-giDCoCDCoCDilJQgMjA2MiBtZG1vbiBtZDEyNwo+Pgo+Pgo+PiBJdCBpcyB0aGVuIGtpbGxlZCBi
-eSBzeXN0ZW1kIGR1cmluZyBzaHV0ZG93biBhcyBwYXJ0IG9mIHVzZXIgc2Vzc2lvbi4KPj4gSXQg
-cmVzdWx0cyBpbiBkaXJ0eSBhcnJheSBvbiBuZXh0IGJvb3QuCj4+Cj4+IElzIHRoZXJlIGFueSBt
-YWdpYyB0aGF0IGFsbG93cyBkYWVtb24gdG8gYmUgZXhlbXB0ZWQgZnJvbSBraWxsaW5nPwo+Cj4g
-V2hpbGUgeW91ciByYWlkIHNob3VsZCBhYnNvbHV0ZWx5IG5vdCBiZSBjb3JydXB0ZWQgb24gbmV4
-dCByZWJvb3QKPiB3aGVuIG1kbW9uIHJlY2VpdmVzIGEgU0lHVEVSTSwKClRoaXMgd29uJ3QgYmUg
-Y29ycnVwdGVkIGJ1dCBpdCB3aWxsIGluaXRpYXRlIHJlYnVpbHQuIEkgaGF2ZSByZXBvcnRzCnRo
-YXQgc3VjaCByZWJ1aWxkIG1heSB0YWtlIGhvdXJzLCBjb3N0aW5nIHBlcmZvcm1hbmNlIGFuZCBs
-b3NzIG9mCnJlZHVuZGFuY3kuCgo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIEkgc3VzcGVjdCB5b3UncmUgdXNpbmcgcGFtX3N5c3RlbWQuc28K
-ClllcwoKPiAoL2V0Yy9wYW0uZC9zeXN0ZW0tYXV0aCksIHdoaWNoIGF1dG9tYXRpY2FsbHkgY3Jl
-YXRlcyBjZ3JvdXBzIGJ5IGxvZ2luCj4gc2Vzc2lvbiwgd2hpY2ggaW4gdHVybiBnZXRzIGtpbGxl
-ZCB3aGVuIHRoZSB1c2VyIGhhcyAiY29tcGxldGVseSBsb2dnZWQgb3V0Ii4KPiBUaGF0IGlzIHdo
-eSB5b3VyIG1kYWRtIGdldHMgdGVybWluYXRlZCwgdG9vLgoKU3VyZS4KCj4gWW91IGNhbiBhdm9p
-ZCB0aGF0IGJ5IGFkZGluZyBjcmVhdGUtc2Vzc2lvbj0wIHRvIGl0LCBsaWtlOgo+Cj4gIyBncmVw
-IHBhbV9zeXN0ZW1kIC9ldGMvcGFtLmQvc3lzdGVtZC1hdXRoCj4gc2Vzc2lvbiDCoCDCoCBvcHRp
-b25hbCDCoCDCoHBhbV9zeXN0ZW1kLnNvIGNyZWF0ZS1zZXNzaW9uPTAKPgoKQnV0IEkgZG8gd2Fu
-dCB1c2VyIHNlc3Npb24gdG8gYmUgY3JlYXRlZDsgYW5kIHN5c3RlbWQgd2FzIHNwZWNpZmljYWxs
-eQpleHRlbmRlZCB0byBwcm9wZXJseSB0ZXJtaW5hdGUgdXNlciBzZXNzaW9ucyBvbiBzaHV0ZG93
-bi4gSXQgaXMganVzdAp0aGF0IG1kbW9uIGRvZXMgbm90IGJlbG9uZyB0byB1c2VyIHNlc3Npb24g
-YXQgYWxsLgoKPiBXaGljaCBpcyB0aGUgcmVjb21tZW50ZWQgd2F5IGlmIHlvdSB3YW50IHByb2Nl
-c3NlcyAoY3JlYXRlZCBieSB0aGUgInVzZXIiKSB0bwo+IGxpdmUgb24gZXZlbiB3aGVuIHRoaXMg
-dXNlciBoYXMgZnVsbHkgbG9nZ2VkIG91dC4KPgoKbWRtb24gZG9lcyBub3QgYmVsb25nIHRvIHVz
-ZXIuIFVzZXIgaXMgbm90IGV2ZW4gYXdhcmUgdGhhdCBpdCBpcwpzdGFydGVkLiBBbmQgaXQgaXMg
-bGlrZWx5IG5vdCB0aGUgbGFzdCBjYXNlLiBTbyBzeXN0ZW1kIGRvZXMgbmVlZCBzb21lCmZyYW1l
-d29yayB3aGljaCBjYW4gbW92ZSBzdWNoIHByb2Nlc3NlcyBvdXQgb2YgdXNlciBzZXNzaW9uLiBJ
-dApwcm9iYWJseSBuZWVkcyBzb21lIHNkX2RhZW1vbiBBUEkgdG8gbm90aWZ5IHN5c3RlbWQgdGhh
-dCBpdCBpcyBzeXN0ZW0KbGV2ZWwgdGFzayBldmVuIGlmIGl0IHdhcyBzdGFydGVkIGFzIHJlc3Vs
-dCBvZiB1c2VyIGludGVyYWN0aW9uLgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpzeXN0ZW1kLWRldmVsIG1haWxpbmcgbGlzdApzeXN0ZW1kLWRldmVsQGxp
-c3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4v
-bGlzdGluZm8vc3lzdGVtZC1kZXZlbAo=
+counterpart of 417f346ee0 for incremental.
+If md device has metadata_version="none" super_by_fd() matches supertype=super0. 
+Call of load_container() dereferences null, so we have to forbid it.
+
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ Incremental.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Incremental.c b/Incremental.c
+index 8cae1ee..9399f5b 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -134,7 +134,7 @@ int Incremental(char *devname, int verbose, int runstop,
+ 	if (must_be_container(dfd)) {
+ 		if (!st)
+ 			st = super_by_fd(dfd, NULL);
+-		if (st)
++		if (st && st->ss->load_container)
+ 			rv = st->ss->load_container(st, dfd, NULL);
+ 
+ 		close(dfd);
+-- 
+1.7.1
+
