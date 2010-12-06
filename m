@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 02/27] Add state_of_reshape for external metadata
-Date: Mon, 06 Dec 2010 14:21:01 +0100
-Message-ID: <20101206132100.21125.68010.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 05/27] imsm: Block array state change during reshape
+Date: Mon, 06 Dec 2010 14:21:24 +0100
+Message-ID: <20101206132124.21125.93475.stgit@gklab-170-024.igk.intel.com>
 References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,88 +13,47 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-During reshape we have to know what is present reshape state:
-reshape_not_active: reshape is not started, array is in other state than reshape
-reshape_is_starting: reshape is about to start, provably metadata is updated,
-                     array in md can be in reshape state.
-                     In this state mdmon should not allow for array rebuilds
-                     as reconfiguration is in progress.
-                     When everything goes fine the next state should be reshape_in_progress
-                     In error case reshape_cancel_request should be reached.
-reshape_in_progress: md is in reshape state and reshape is in progress
-                     when reshape ends state_of_reshape will return to reshape_not_active
-reshape_cancel_request: reshape canceling request is issued in error case.
-                        during this state metadata rollback should occurs.
-                        From this state state_of_reshape should go to reshape_not_active state
+Array state change is blocked due to reshape action in progress
+metadata changes are during applying.
 
-reshape_delta_disks field should contain valid value in reshape_in_progress state
-and tells how many disks are added to array.
+'1' is returned to indicate that array is clean
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- managemon.c |    2 ++
- mdmon.h     |    4 ++++
- monitor.c   |   12 +++++++++++-
- 3 files changed, 17 insertions(+), 1 deletions(-)
+ super-intel.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index ebd9b73..945b173 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -521,6 +521,8 @@ static void manage_new(struct mdstat_ent *mdstat,
+diff --git a/super-intel.c b/super-intel.c
+index 402cc30..c072753 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4780,6 +4780,16 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 	__u8 map_state = imsm_check_degraded(super, dev, failed);
+ 	__u32 blocks_per_unit;
  
- 	new->container = container;
- 
-+	new->reshape_state = reshape_not_active;
-+
- 	inst = to_subarray(mdstat, container->devname);
- 
- 	new->info.array = mdi->array;
-diff --git a/mdmon.h b/mdmon.h
-index 5c51566..b869544 100644
---- a/mdmon.h
-+++ b/mdmon.h
-@@ -23,6 +23,7 @@ enum array_state { clear, inactive, suspended, readonly, read_auto,
- 
- enum sync_action { idle, reshape, resync, recover, check, repair, bad_action };
- 
-+enum state_of_reshape { reshape_not_active, reshape_is_starting, reshape_in_progress, reshape_cancel_request };
- 
- struct active_array {
- 	struct mdinfo info;
-@@ -45,6 +46,9 @@ struct active_array {
- 	enum array_state prev_state, curr_state, next_state;
- 	enum sync_action prev_action, curr_action, next_action;
- 
-+	enum state_of_reshape reshape_state;
-+	int reshape_delta_disks;
-+
- 	int check_degraded; /* flag set by mon, read by manage */
- 
- 	int devnum;
-diff --git a/monitor.c b/monitor.c
-index 59b4181..986fdb0 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -399,8 +399,18 @@ static int read_and_act(struct active_array *a)
- 		signal_manager();
- 	}
- 
--	if (deactivate)
-+	if (deactivate) {
- 		a->container = NULL;
-+		/* break reshape also
++	if (a->reshape_state != reshape_not_active) {
++		/* array state change is blocked due to reshape action
++		 * metadata changes are during applying.
++		 *
++		 * '1' is returned to indicate that array is clean
 +		 */
-+		if (a->reshape_state !=  reshape_in_progress)
-+			a->reshape_state = reshape_not_active;
++		dprintf("imsm: imsm_set_array_state() called during reshape.\n");
++		return 1;
 +	}
 +
-+	/* signal manager when reshape is in reshape_is_starting state
-+	 */
-+	if (a->reshape_state == reshape_is_starting)
-+		signal_manager();
+ 	/* before we activate this array handle any missing disks */
+ 	if (consistent == 2)
+ 		handle_missing(super, dev);
+@@ -5144,6 +5154,10 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
  
- 	return dirty;
- }
+ 	dprintf("imsm: activate spare: inst=%d failed=%d (%d) level=%d\n",
+ 		inst, failed, a->info.array.raid_disks, a->info.array.level);
++
++	if (a->reshape_state != reshape_not_active)
++		return NULL;
++
+ 	if (imsm_check_degraded(super, dev, failed) != IMSM_T_STATE_DEGRADED)
+ 		return NULL;
+ 
 
