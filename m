@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 06/27] Process reshape initialization by managemon
-Date: Mon, 06 Dec 2010 14:21:32 +0100
-Message-ID: <20101206132132.21125.86142.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 08/27] imsm: Cancel metadata changes on reshape start failure
+Date: Mon, 06 Dec 2010 14:21:48 +0100
+Message-ID: <20101206132148.21125.84631.stgit@gklab-170-024.igk.intel.com>
 References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,154 +13,176 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Monitor signals request to managemon (using reshape_delta_disks variable).
-This caused call to reshape_array() vector. It prepares second metadata update for added disks slot verification.
-Slots are set by md during reshape start and they are unknown to user space so far.
-Second update is sent after reshape is started. During this update processing, metadata is checked against slot numbers set by md and in mismatch case information metadata is updated.
-
-The reshape is being stared in delayed state due to sync_max was set to 0. After this reshape_delta_disk is set to 'in progress' value to avoid reentry.
-Reshape process is continued in mdadm.
-
-If reshape cannot be started or any failure condition occurs, 'cancel' message is prepared by reshape_array() and send to monitor, to rollback metadata changes.
-Mdadm is informed about failure by idle array state.
+It can occurs that managemon cannot run reshape in md.
+To perform metadata changes cancellation, update_reshape_cancel message is used. It is prepared by reshape_array() vector.
+When monitor receives this message, it rollbacks metadata changes made previously during processing update_reshape update.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- managemon.c |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mdadm.h     |   27 +++++++++++++++++++++++
- 2 files changed, 96 insertions(+), 0 deletions(-)
+ super-intel.c |  123 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 123 insertions(+), 0 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index 945b173..a6e6880 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -398,6 +398,7 @@ static void manage_member(struct mdstat_ent *mdstat,
- 	 */
- 	char buf[64];
- 	int frozen;
-+	struct active_array *newa = NULL;
+diff --git a/super-intel.c b/super-intel.c
+index 82c17ba..e43b58a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -287,6 +287,7 @@ enum imsm_update_type {
+ 	update_add_disk,
+ 	update_reshape,
+ 	update_reshape_set_slots,
++	update_reshape_cancel,
+ };
  
- 	// FIXME
- 	a->info.array.raid_disks = mdstat->raid_disks;
-@@ -409,6 +410,74 @@ static void manage_member(struct mdstat_ent *mdstat,
- 	else
- 		frozen = 1; /* can't read metadata_version assume the worst */
+ struct imsm_update_activate_spare {
+@@ -5441,6 +5442,94 @@ update_reshape_exit:
+ 			super->updates_pending++;
+ 		break;
+ 	}
++	case update_reshape_cancel: {
++		struct imsm_update_reshape *u = (void *)update->buf;
++		struct active_array *a;
++		int inst;
++		int i;
++		struct imsm_dev *dev;
++		struct imsm_dev *devi;
++		struct imsm_map *map_1;
++		struct imsm_map *map_2;
++		int reshape_delta_disks ;
++		struct dl *curr_disk;
++		int used_disks;
++		unsigned long long array_blocks;
++
++
++		dprintf("imsm: process_update() for update_reshape_cancel for device %i\n", u->devnum);
++		for (a = st->arrays; a; a = a->next)
++			if (a->devnum == u->devnum) {
++				break;
++			}
++		if (a == NULL)
++			break;
++
++		inst = a->info.container_member;
++		dev = get_imsm_dev(super, inst);
++		map_1 = get_imsm_map(dev, 0);
++		map_2 = get_imsm_map(dev, 1);
++		if (map_2 == NULL)
++			break;
++		reshape_delta_disks = map_1->num_members - map_2->num_members;
++		dprintf("\t\tRemove %i device(s) from configuration.\n", reshape_delta_disks);
++
++		/* when cancel was applied during reshape of second volume, we need disks for first
++		 * array reshaped previously, find the smallest delta_disks to remove
++		 */
++		i = 0;
++		devi = get_imsm_dev(super, i);
++		while (devi) {
++			struct imsm_map *mapi = get_imsm_map(devi, 0);
++			int delta_disks = map_1->num_members - mapi->num_members;
++			if ((i != inst) &&
++			    (delta_disks < reshape_delta_disks) &&
++			    (delta_disks >= 0))
++				reshape_delta_disks = delta_disks;
++			i++;
++			devi = get_imsm_dev(super, i);
++		}
++		/* remove disks
++		 */
++		if (reshape_delta_disks > 0) {
++			/* reverse device(s) back to spares
++			*/
++			curr_disk = super->disks;
++			while (curr_disk) {
++				dprintf("Looking at %i device to remove\n", curr_disk->index);
++				if (curr_disk->index >= map_2->num_members) {
++					dprintf("\t\t\tREMOVE\n");
++					curr_disk->index = -1;
++					curr_disk->raiddisk = -1;
++					curr_disk->disk.status &= ~CONFIGURED_DISK;
++					curr_disk->disk.status |= SPARE_DISK;
++				}
++				curr_disk = curr_disk->next;
++			}
++		}
++		/* roll back maps and migration
++		 */
++		memcpy(map_1, map_2, sizeof_imsm_map(map_2));
++		/* reconfigure map_2 and perform migration end
++		 */
++		map_2 = get_imsm_map(dev, 1);
++		memcpy(map_2, map_1, sizeof_imsm_map(map_1));
++		end_migration(dev, map_1->map_state);
++		/* array size rollback
++		 */
++		used_disks = imsm_num_data_members(dev);
++		if (used_disks) {
++			array_blocks = map_1->blocks_per_member * used_disks;
++			/* round array size down to closest MB
++			*/
++			array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
++			dev->size_low = __cpu_to_le32((__u32)array_blocks);
++			dev->size_high = __cpu_to_le32((__u32)(array_blocks >> 32));
++		}
++
++		super->updates_pending++;
++		break;
++	}
+ 	case update_activate_spare: {
+ 		struct imsm_update_activate_spare *u = (void *) update->buf; 
+ 		struct imsm_dev *dev = get_imsm_dev(super, u->array);
+@@ -5813,6 +5902,9 @@ static void imsm_prepare_update(struct supertype *st,
+ 	case update_reshape_set_slots: {
+ 		break;
+ 	}
++	case update_reshape_cancel: {
++		break;
++	}
+ 	case update_create_array: {
+ 		struct imsm_update_create_array *u = (void *) update->buf;
+ 		struct intel_dev *dv;
+@@ -6562,6 +6654,31 @@ int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 	return ret_val;
+ }
  
-+	if ((a->reshape_state != reshape_not_active) &&
-+	    (a->reshape_state != reshape_in_progress)) {
-+		dprintf("Reshape signals need to manage this member\n");
-+		if (a->container->ss->reshape_array) {
-+			struct metadata_update *updates = NULL;
-+			struct mdinfo *newdev = NULL;
-+			struct mdinfo *d;
++void imsm_grow_array_remove_devices_on_cancel(struct active_array *a)
++{
++	struct mdinfo *di = a->info.devs;
++	struct mdinfo *di_prev = NULL;
 +
-+			newdev = newa->container->ss->reshape_array(newa, reshape_in_progress, &updates);
-+			if (newdev) {
-+				int status_ok = 1;
-+				newa = duplicate_aa(a);
-+				if (newa == NULL)
-+					goto reshape_out;
++	while (di) {
++		if (di->disk.raid_disk < 0) {
++			struct mdinfo *rmdev = di;
++			sysfs_set_str(&a->info, rmdev, "state", "faulty");
++			sysfs_set_str(&a->info, rmdev, "slot", "none");
++			sysfs_set_str(&a->info, rmdev, "state", "remove");
 +
-+				for (d = newdev; d ; d = d->next) {
-+					struct mdinfo *newd;
-+
-+					newd = malloc(sizeof(*newd));
-+					if (!newd) {
-+						status_ok = 0;
-+						dprintf("Cannot aallocate memory for new disk.\n");
-+						continue;
-+					}
-+					if (sysfs_add_disk(&newa->info, d, 0) < 0) {
-+						free(newd);
-+						status_ok = 0;
-+						dprintf("Cannot add disk to array.\n");
-+						continue;
-+					}
-+					disk_init_and_add(newd, d, newa);
-+				}
-+				/* go with reshape
-+				 */
-+				if (status_ok)
-+					if (sysfs_set_num(&newa->info, NULL, "sync_max", 0) < 0)
-+						status_ok = 0;
-+				if (status_ok && sysfs_set_str(&newa->info, NULL, "sync_action", "reshape") == 0) {
-+					/* reshape executed
-+					 */
-+					dprintf("Reshape was started\n");
-+					replace_array(a->container, a, newa);
-+					a = newa;
-+				} else {
-+					/* on problems cancel update
-+					 */
-+					free_aa(newa);
-+					free_updates(&updates);
-+					updates = NULL;
-+					a->container->ss->reshape_array(a, reshape_cancel_request, &updates);
-+					sysfs_set_str(&a->info, NULL, "sync_action", "idle");
-+				}
-+			}
-+			dprintf("Send metadata update for reshape.\n");
-+
-+			queue_metadata_update(updates);
-+			updates = NULL;
-+			wakeup_monitor();
-+reshape_out:
-+			while (newdev) {
-+				d = newdev->next;
-+				free(newdev);
-+				newdev = d;
-+			}
-+			free_updates(&updates);
++			if (di_prev)
++				di_prev->next = di->next;
++			else
++				a->info.devs = di->next;
++			di = di->next;
++			free(rmdev);
++		} else {
++			di_prev = di;
++			di = di->next;
 +		}
 +	}
++}
 +
- 	if (a->check_degraded && !frozen) {
- 		struct metadata_update *updates = NULL;
- 		struct mdinfo *newdev = NULL;
-diff --git a/mdadm.h b/mdadm.h
-index 423f62c..20f65cc 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -520,6 +520,7 @@ extern char *map_dev(int major, int minor, int create);
+ int imsm_get_new_device_name(struct dl *dl)
+ {
+ 	int rv;
+@@ -6832,6 +6949,12 @@ imsm_reshape_array_exit:
+ 		dprintf("imsm: send update update_reshape_cancel\n");
+ 		a->reshape_state = reshape_not_active;
+ 		sysfs_set_str(&a->info, NULL, "sync_action", "idle");
++		imsm_grow_array_remove_devices_on_cancel(a);
++		u = (struct imsm_update_reshape *)calloc(1, sizeof(struct imsm_update_reshape));
++		if (u) {
++			u->type = update_reshape_cancel;
++			a->reshape_state = reshape_not_active;
++		}
+ 	}
  
- struct active_array;
- struct metadata_update;
-+enum state_of_reshape;
- 
- /* A superswitch provides entry point the a metadata handler.
-  *
-@@ -747,6 +748,32 @@ extern struct superswitch {
- 	 */
- 	const char *(*get_disk_controller_domain)(const char *path);
- 
-+	/* reshape_array() will
-+	 * 1. check is sync_max is set to 0
-+	 * 2. prepare device list that has to be added
-+	 * 3. prepare metadata update message to set disks slots
-+	 *    after reshape is started
-+	 * request_type:
-+	 * 1. RESHAPE_CANCEL_REQUEST
-+	 *    In error case it prepares metadata roll back message.
-+	 *    Such error case message should be prepared when
-+	 *    passed request_type is set to RESHAPE_CANCEL_REQUEST.
-+	 * 1. RESHAPE_IN_PROGRESS
-+	 *    requests transition to RESHAPE_IN_PROGRESS state
-+	 *    so proper update has to be prepared
-+	 * In active array structure can appear values:
-+	 * 1. RESHAPE_NOT_ACTIVE
-+	 * 2. RESHAPE_IN_PROGRESS
-+	 * 3. any other value indicates requested disk number if array change
-+	 *    this is visible only during reshape and metadata initialization
-+	 *    after initialization RESHAPE_IN_PROGRESS has to be placed
-+	 *    in reshape_delta_disks. When reshape is finished it is replaced
-+	 *    by RESHAPE_NOT_ACTIVE
-+	 */
-+	struct mdinfo *(*reshape_array)(struct active_array *a,
-+			     enum state_of_reshape request_type,
-+			     struct metadata_update **updates);
-+
- 	int swapuuid; /* true if uuid is bigending rather than hostendian */
- 	int external;
- 	const char *name; /* canonical metadata name */
+ 	if (u) {
 
