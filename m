@@ -1,47 +1,40 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH] fix: mdadm -Ss for external metadata don't stop container
-Date: Tue, 7 Dec 2010 06:44:21 +0000
-Message-ID: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
+From: hansbkk@gmail.com
+Subject: General Q on adding new PVs to existing striped RAID set
+Date: Tue, 7 Dec 2010 16:15:52 +0700
+Message-ID: <AANLkTiktmuWTBC-s1Qi4KBjQOyhYh+TtLxiu0hPhNh+K@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
+To: LVM general discussion and development <linux-lvm@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+According to the advice I've been given so far - I should use RAID
+"under" my LVM configuration, not only for fault tolerance but also
+for the performance benefits of striping, and leave LVM as a "top
+layer" for disk space management efficiency and flexibility, plus of
+course the benefits of snapshots.
 
-The one below is a fix for the problem we encounter quite often when we try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds open container device and then exits. The time that system make clean up is quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened. 
-Second resolution is to retry ioctl in mdadm after mdmon exits, but closing handle is I what should be done before process exist.
-Take a look at the patch below:
+One of LVM's biggest wins is the fact that if you're running out of
+space you can just slap in more disks, add them to your VG and extend
+your LVs. But I can see how this may result in performance or fault
+tolerance issues.
 
---
-Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its device
-and do not close it before exit(). The period between open and release of
-handle is too long and md is not able stop device. Releasing handle before
-exit does not block md.
+Example - if I have say 6TB of RAID10 managed by LVM, and then find I
+need to add another 2TB, I might add a RAID1 mirror of 2x 2TB drives
+and extend my VG to get more space. However it seems for optimum
+performance and fault tolerance I should  consider this a somewhat
+temporary workaround. Ultimately I would want to get back to a
+coherent single 8TB RAID set, and take the RAID1 mirror out.
 
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- monitor.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This seems to be better from multiple POVs - more space efficient,
+more consistently predictable performance (if not actually faster),
+and most importantly more fault tolerant.
 
-diff --git a/monitor.c b/monitor.c
-index 59b4181..f166bc8 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -525,6 +525,7 @@ static int wait_and_act(struct supertype *container, int nowait)
- 				remove_pidfile(container->devname);
- 			exit_now = 1;
- 			signal_manager();
-+			close(fd);
- 			exit(0);
- 		}
- 	}
--- 
-1.7.1
+I realize if I was using RAID6 as many have advised I should, I could
+grow the underlying RAID itself directly and then expand the VG, and
+obviously this would be ideal. But I wanted to clarify regarding those
+RAID flavors that can't be grown in place, as a principle of best
+practice.
 
+Please confirm if my thinking on this is on the right track.
