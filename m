@@ -1,84 +1,45 @@
-From: =?ISO-8859-1?Q?Stefan_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: turn off auto assembly
-Date: Mon, 06 Dec 2010 22:52:56 +0100
-Message-ID: <4CFD5B38.2090801@stud.tu-ilmenau.de>
-References: <4CF7F369.4090303@stud.tu-ilmenau.de>	<slrnifg359.9qh.Mario.Holbe@darkside.dyn.samba-tng.org> <20101203123009.0aa23102@notabene.brown>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: Customer Service <info@bmw.co.uk>
+Subject: REFNO.:BMW/75-A080332010
+Date: Tue, 07 Dec 2010 06:09:55 +0200
+Message-ID: <20101207060955.c48sxn160o0o0848@webmail.welho.com>
+Reply-To: bmwdpt1@shqiptar.eu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101203123009.0aa23102@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for all the hints.
 
-There were no udev-rules on the computers, so I fixed the problem using
-Neil's hints: 'echo "AUTO -all" >> /etc/mdadm.conf'.
 
-Cheers,
-Stefan
+-- 
+CUSTOMER SERVICE
+REFNO.:BMW/75-A080332010
+Batch: 174/05/ZY369
 
-P.S.: as the "auto assemble everything with 0xfd partition type" may
-become destructive at times (I have to deal a lot with damaged arrays),
-I'd suggest not to make it the default setting.  But the other side is:
-most people who set up a RAID would want to have it this way, so I gues=
-s
-it's my duty to make sure no autoassembly on my technicians' computers
-happens, unless I tell mdadm to do so...
 
-P.P.S.: The behaviour might very well have come with the update to
-mdadm-3.1.4, which may well have come nearly in parallel with me
-updating the kernels... (as Gentoo stable jumped from 3.0 to 3.1.4 in
-late October, at the beginning of November I updated the kernels...)
+Dear E-mail Owner,
 
-Am 03.12.2010 02:30, schrieb Neil Brown:
-> On Thu, 2 Dec 2010 22:16:25 +0100 Mario 'BitKoenig' Holbe
-> <Mario.Holbe@TU-Ilmenau.DE> wrote:
->
->> Stefan /*St0fF*/ H=FCbner <stefan.huebner@stud.tu-ilmenau.de> wrote:
->>> Now I have the effect that upon plugging in drives that formerly we=
-re
->>> part of an array, the md_mod modules gets loaded and tries to
->>> auto-assemble arrays.  This disturbs the diagnosis.
->>> I've tried raid=3Dnoautodetect as kernel commandline, and I grepped=
- the
->>> source for the MODULE_PARM_DESC macro, which yielded no (useful) re=
-sult.
->>>  This "automagic" behaviour happens since 2.6.36.
->> Are you sure this autodetection is triggered by the module?
->> And are you sure this behaviour is bound to this specific kernel
->> version?
->>
->> In-Kernel auto-assembly is usually not active when md is compiled as
->> module. Probably in your case this is some udev-triggered assembly?
-> s/usually not/never/
->
-> With a sufficiently recent mdadm, you can put
->    AUTO -all
->
-> in mdadm.conf to disable auto-assembly.
->
-> Alternately, find the udev rule (/lib/udev/rules.d/64-md-something) a=
-nd=20
-> comment out the bit where it runs "mdadm -I" or "mdadm --incremental"=
-=2E
->
-> NeilBrown
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You are receiving this message because you are a Winner of (300,000.00 G.B.P)
+from BMW Automobile end of year promo Online Lottery game.
+
+A random email balloting system selected your email address amongst a total of
+five (5) winners without the sale of any tickets.
+
+Confirm receipt by sending your Name: Address: Age: Nationality:  
+Mobile Number:
+and Occupation etc to Mr. Thomas Hillary on (bmwdpt1@shqiptar.eu). Telephone :
++44-704-570-7201.
+
+You will be furnished with details on how to receive your prize as soon as we
+receive your response to this mail. Be sure to check all incoming mail folders
+including your junk folder for subsequent mails from us.
+
+Cynthia Morris
+Annoucer For BMW Automobile Promo.
+
