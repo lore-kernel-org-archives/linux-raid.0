@@ -1,45 +1,47 @@
-From: Customer Service <info@bmw.co.uk>
-Subject: REFNO.:BMW/75-A080332010
-Date: Tue, 07 Dec 2010 06:09:55 +0200
-Message-ID: <20101207060955.c48sxn160o0o0848@webmail.welho.com>
-Reply-To: bmwdpt1@shqiptar.eu
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] fix: mdadm -Ss for external metadata don't stop container
+Date: Tue, 7 Dec 2010 06:44:21 +0000
+Message-ID: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
+Neil,
 
+The one below is a fix for the problem we encounter quite often when we try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds open container device and then exits. The time that system make clean up is quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened. 
+Second resolution is to retry ioctl in mdadm after mdmon exits, but closing handle is I what should be done before process exist.
+Take a look at the patch below:
 
+--
+Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its device
+and do not close it before exit(). The period between open and release of
+handle is too long and md is not able stop device. Releasing handle before
+exit does not block md.
+
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ monitor.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/monitor.c b/monitor.c
+index 59b4181..f166bc8 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -525,6 +525,7 @@ static int wait_and_act(struct supertype *container, int nowait)
+ 				remove_pidfile(container->devname);
+ 			exit_now = 1;
+ 			signal_manager();
++			close(fd);
+ 			exit(0);
+ 		}
+ 	}
 -- 
-CUSTOMER SERVICE
-REFNO.:BMW/75-A080332010
-Batch: 174/05/ZY369
-
-
-Dear E-mail Owner,
-
-
-You are receiving this message because you are a Winner of (300,000.00 G.B.P)
-from BMW Automobile end of year promo Online Lottery game.
-
-A random email balloting system selected your email address amongst a total of
-five (5) winners without the sale of any tickets.
-
-Confirm receipt by sending your Name: Address: Age: Nationality:  
-Mobile Number:
-and Occupation etc to Mr. Thomas Hillary on (bmwdpt1@shqiptar.eu). Telephone :
-+44-704-570-7201.
-
-You will be furnished with details on how to receive your prize as soon as we
-receive your response to this mail. Be sure to check all incoming mail folders
-including your junk folder for subsequent mails from us.
-
-Cynthia Morris
-Annoucer For BMW Automobile Promo.
+1.7.1
 
