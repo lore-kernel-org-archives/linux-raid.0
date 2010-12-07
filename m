@@ -1,67 +1,157 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
- container
-Date: Tue, 7 Dec 2010 21:16:11 +1100
-Message-ID: <20101207211611.475410d1@notabene.brown>
-References: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
+Subject: Re: [PATCH 00/27] OLCE, migrations and raid10 takeover
+Date: Tue, 7 Dec 2010 21:18:47 +1100
+Message-ID: <20101207211847.5addda4b@notabene.brown>
+References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 7 Dec 2010 06:44:21 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+On Mon, 06 Dec 2010 14:20:45 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Neil,
+> This series for mdadm and introduces features (after some rework):
+> - Online Capacity Expansion (OLCE): patches 0002 to 0016
+> -  Migrations: patches 0017 to 0023
+>     1. raid0 to raid5 : patches 0017, 0018
+>     2. raid5 to raid0 : patches 0019, 0020
+>     3. chunk size migration) : patches 0020, 0021
+> - Takeover: patches 0024 to 0027
 > 
-> The one below is a fix for the problem we encounter quite often when we try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds open container device and then exits. The time that system make clean up is quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened. 
-> Second resolution is to retry ioctl in mdadm after mdmon exits, but closing handle is I what should be done before process exist.
-> Take a look at the patch below:
-> 
-> --
-> Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its device
-> and do not close it before exit(). The period between open and release of
-> handle is too long and md is not able stop device. Releasing handle before
-> exit does not block md.
-> 
-> Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> Next steps:
+> - Adding spares to raid0 for IMSM will be rewritten by Krzysztof Wojcik in the few days.
+> - I'll correct checkpointing to work without md fix for moving suspend_hi
 
-I've applied this, but I'm not 100% sure it is completely safe.
-mdmon holds the O_EXCL open to be sure that mdadm isn't creating or
-assembling another array in the container.
-mdadm will get an O_EXCL and then try sending a signal to mdmon.  If it
-succeeds, it knows mdmon is still running.  But this patch might open a
-window where mdadm can get O_EXCL, and a signal still works.
+Thanks Adam.
 
-However I'm not certain that window wasn't already there, and this might just
-make it a bit bigger.
-I've put a note in my to-do list to look into this more closely and figure
-out if there is a problem, and if so, how to fix it.
+I had hoped to get to these today, but other things got in the way and I just
+couldn't make the time.  Hopefully I'll look through and provide some feed
+back (and apply a lot of them) tomorrow.
 
 Thanks,
 NeilBrown
 
 
-
-> ---
->  monitor.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
 > 
-> diff --git a/monitor.c b/monitor.c
-> index 59b4181..f166bc8 100644
-> --- a/monitor.c
-> +++ b/monitor.c
-> @@ -525,6 +525,7 @@ static int wait_and_act(struct supertype *container, int nowait)
->  				remove_pidfile(container->devname);
->  			exit_now = 1;
->  			signal_manager();
-> +			close(fd);
->  			exit(0);
->  		}
->  	}
+> 
+> Online Capacity Expansion for raid0 and raid5 arrays implements the following algorithm for container reshape:
+> 1.      mdadm: Freeze container
+> 2.      mdadm: Perform takeover to raid5 for all raid0 arrays in container (imsm for raid0 <->raid5 takeover requires no metadata updates)
+> 3.      mdadm: set raid_disks sysfs entry for all arrays in container
+> 4.      mdadm: prepares and sends metadata update using reshape_super() vector for first array in container.
+> 5.      mdadm: waits for array idle or reshape state
+> 6.      managemon: prepare_update(): allocates memory for bigger device object
+> 7.      monitor: process_update(): applies update, relinks memory for device objects. Sets reshape_delta_disks variable in active array to requested ne disks
+> 8.      monitor: kicks managemon on reshape_delta_disks  value other than RESHAPE_NOT_ACTIVE and RESHAPE_IN_PROGRESS  value
+> 9.      managemon: adds devices to md (let md set slot number on reshape start)
+> 10.     managemon: sets sync_max to 0
+> 11.     managemon: starts reshape in md
+> 12.     managemon: on success sends slot verification message to monitor to update slots
+> 13.     managemon: on failure sends reshape cancelation message (sets idle state to md)
+> 14.     managemon: sets reshape_delta_disks variable to RESHAPE_IN_PROGRESS value to avoid managemon procedures reentry.
+> 15.     monitor:
+>            a. for set slot message verifies and corrects (if necessary) slot information in metadata
+>            b. for cancel message roll backs metadata information, set reshape_delta_disks variable to RESHAPE_NOT_ACTIVE
+> 16.     mdadm:  on idle array state exits and unfreezes array. End
+> 17.     mdadm: on reshape array state continues with reshape (it also sends ping to monitor and mandgemon to be sure that metadata updates hits disks)
+> 18.     mdadm: verifies array state: if slots are set correctly
+> 19.     mdadm: calls child_grow() function
+> 20.     mdadm: waits for reshape finish
+> 21.     monitor: on reshape finish sets reshape_delta_disks variable to RESHAPE_NOT_ACTIVE
+> 22.     mdadm: sets array size according to information in metadata
+> 23.     mdadm: for raid0 array backward takeover to raid0 is executed.
+> 24.     mdadm: check if other array in container requires reshape if, yes starts from #4
+> 25.     mdadm: unfreezes array
+> 
+> Migration feature reuses code flow introduced for OLCE (Online Capacity Expansion) and uses the same grow/reshape flow in mdadm/mdmon.
+> Migration works in the following way:
+> 1. mdadm: reshape_super() prepares metadata update and sends it to mdmon
+> 2. mdadm: waits for reshape array state
+> 3. monitor: receives metadata update and applies it.
+> 4. monitor: metadata update triggers managemon.
+> 5. managemon: updates array (md) configuration and starts reshape
+> 6. mdadm: finds that reshape is started and continues it using check pointing
+> 7. mdadm: reshape is finished and manage_reshape() finalizes array:
+>     - Sets array size as is given in metadata
+>     - Performs takeover to raid0 if necessary
+> 
+> In current patches placement of manage_reshape() function call was changed (patch 0019).
+> It is moved to end of array processing to use common code form Grow.c for external metadata reshape case (we do not need to duplicate existing code) as it would do the same
+> things as code for native metadata. New manage_reshape() placement causes a few things to do in current implementation only and simplifees code.
+> 
+> Migrations command line:
+> 1. Execute migration raid0->raid5:
+>     mdadm  --grow /dev/md/array_name -level 5 -layout=left-asymmetric
+> 
+>     This converts n-disks raid0 array to (n+1)-disks raid5 array.
+>     Additional disk is user from spares pool for raid5 array.
+> 
+> 2. Execute migration raid5->raid0:
+>     mdadm  - -grow /dev/md/array_name -level 0
+> 
+>     This converts n-disks raid5 array to n-disks raid0 array.
+> 
+> 3. Execute chunk size migration
+>     mdadm  - -grow /dev/md/array_name -chunk N
+> 
+>     where N is ne chunk size value
+> 
+> Online Capacity Expansion command line:
+> 1. Add spares to container i.e. mdadm -add /dev/md/imsm_container_name /dev/sdX
+>    For Raid0 spares are required also. Patch "[PATCH 16] Add spares to raid0 array using takeover" enables this.
+> 2. Execute reshape i.e. : mdadm -grown /dev/md/imsm_container_name -raid-devices=requested_raid_disks_number
+>    Grow is executed for all arrays in container that command is executed on.
+> 
+> Feature is treated as experimental due to Windows compatibility during reshape process, code is guarded by MDADM_EXPERIMENTAL environment variable.
+> 
+> 
+> ---
+> 
+> Adam Kwolek (27):
+>       FIX: Problem with removing array after takeover
+>       Takeover raid0 -> raid10 for external metadata
+>       Takeover raid10 -> raid0 for external metadata
+>       Add takeover support for external meta
+>       Migration: Chunk size migration
+>       Read chunk size and layout from mdstat
+>       Migration raid0->raid5
+>       Detect level change
+>       Migration: raid5->raid0
+>       Change manage_reshape() placement
+>       Enable reshape for subarrays
+>       FIX: core during getting map
+>       WORKAROUND: md reports idle state during reshape start
+>       Add reshape progress updating
+>       Finalize reshape after adding disks to array
+>       Control reshape in mdadm
+>       imsm: Fill delta_disks field in getinfo_super()
+>       imsm: Do not indicate resync during reshape
+>       imsm: Do not accept messages sent by mdadm
+>       imsm: Cancel metadata changes on reshape start failure
+>       imsm: Verify slots in meta against slot numbers set by md
+>       Process reshape initialization by managemon
+>       imsm: Block array state change during reshape
+>       imsm: Process reshape_update in mdmon
+>       imsm: Prepare reshape_update in mdadm
+>       Add state_of_reshape for external metadata
+>       FIX: wait_backup() sometimes hangs
+> 
+> 
+>  Grow.c        |  161 ++--
+>  managemon.c   |  179 ++++
+>  mdadm.h       |   40 +
+>  mdmon.c       |   65 ++
+>  mdmon.h       |    9 
+>  mdstat.c      |   11 
+>  monitor.c     |   37 +
+>  super-intel.c | 2468 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  sysfs.c       |  169 ++++
+>  util.c        |  147 +++
+>  10 files changed, 3218 insertions(+), 68 deletions(-)
+> 
 
