@@ -1,55 +1,95 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v2 3/3] block: improve detail in I/O error messages
-Date: Wed, 8 Dec 2010 10:05:09 -0500
-Message-ID: <20101208150509.GB14056@redhat.com>
-References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
- <1291763802-8251-4-git-send-email-snitzer@redhat.com>
- <4CFF6BE0.4090109@ru.mvista.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: RE: [PATCH 1/2] IMSM: Fix problem in mdmon monitor of using removed
+ disk from in imsm container.
+Date: Wed, 8 Dec 2010 17:17:10 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176A1AE79@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D17676E3B8@irsmsx503.ger.corp.intel.com>
+ <20101208132942.1a59efb1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4CFF6BE0.4090109@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101208132942.1a59efb1@notabene.brown>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-Classify severity of I/O errors for target and transport errors.
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Wednesday, December 08, 2010 3:30 AM
+> To: Labun, Marcin
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
+> Ciechanowski, Ed; Hawrylewicz Czarnowski, Przemyslaw; Czarnowska, Anna
+> Subject: Re: [PATCH 1/2] IMSM: Fix problem in mdmon monitor of using
+> removed disk from in imsm container.
+> 
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- block/blk-core.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+<cut>
 
-Index: linux-2.6/block/blk-core.c
-===================================================================
---- linux-2.6.orig/block/blk-core.c
-+++ linux-2.6/block/blk-core.c
-@@ -2028,9 +2028,23 @@ bool blk_update_request(struct request *
- 
- 	if (error && req->cmd_type == REQ_TYPE_FS &&
- 	    !(req->cmd_flags & REQ_QUIET)) {
--		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
--				req->rq_disk ? req->rq_disk->disk_name : "?",
--				(unsigned long long)blk_rq_pos(req));
-+		char *error_type;
-+
-+		switch (error) {
-+		case -ENOLINK:
-+			error_type = "recoverable transport";
-+			break;
-+		case -EREMOTEIO:
-+			error_type = "critical target";
-+			break;
-+		case -EIO:
-+		default:
-+			error_type = "I/O";
-+			break;
-+		}
-+		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
-+		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
-+		       (unsigned long long)blk_rq_pos(req));
- 	}
- 
- 	blk_account_io_completion(req, nr_bytes);
+> > int (*remove_from_super)(struct supertype *st, mdu_disk_info_t
+> *dinfo,
+> >                          int fd);
+> > The message prepared in remove_from_super is later processed
+> > by proceess_update handler in monitor thread.
+> 
+> I don't like this.  There is unnecessary complexity.
+> 
+> adding a disk and removing a disk are very different sorts of
+> operations.
+> When adding a disk, you need to pass extra information about how the
+> disk
+> might be used - whether it is already part of the array, or if it is a
+> fresh
+> spare or whatever.
+> When removing a device there is none of that.  Just remove the device.
+> 
+> So when mdadm removes a device from a container it should
+>   - get a lock so mdmon won't assign the device as spare
+>   - check that the device is still a spare
+>   - remove the device from the container
+>   - unlock
+>   - ping mdmon
+> 
+> mdmon should notice that the device has gone and should update the
+> metadata
+> accordingly.
+
+Let me add a couple of comments and questions, so I can understand correctly what solution you want to get.
+
+My changes are in manager and monitor threads of mdmon. 
+
+As you said, manager notices that a device has gone.
+So I added a call to new remove_disk_from_container in manage_container function (in manager thread).
+remove_disk_from_container is called for every device that has disappeared.
+The function remove_disk_from_container prepares an metadata update using handler functions and queues them using queue_metadata_update
+And that's all for manager thread.
+
+Now monitor thread of mdmon checks for metadata updates in update_queue global.
+Monitor walks update__queue list to call process_update handler.
+In IMSM process_update handler, I added code that removes spare disk descriptor from IMSM device list.
+
+Now my questions:
+- do you want to get rid of update_queue communication between manager and monitor for disk removal? 
+
+- do you want to add non-metadata specific communication between manager and monitor? This would introduce generic disk_remove message
+that is passed from manager to monitor. The monitor would call metadata handler. 
+
+- do you want the monitor thread to find out what disks has been removed and call metadata handlers?
+
+> 
+> So you may still need a 'remove_from_super' method, but it will not
+> send a
+> metadata update request to mdmon.
+> Rather it will be run by mdmon when it notices the device is gone.
+> 
+> It is probably appropriate to pass an mdu_disk_info_t or maybe just a
+> device
+> number.  I don't think there is any need to pass an 'fd'.
+
+That's correct: fd is not needed.
+
+Thanks in advance,
+Marcin
+
