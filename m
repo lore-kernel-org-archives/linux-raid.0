@@ -1,118 +1,84 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 03/27] imsm: Prepare reshape_update in mdadm
-Date: Thu, 9 Dec 2010 09:05:58 +1100
-Message-ID: <20101209090558.32f48daa@notabene.brown>
-References: <20101206131821.21125.65217.stgit@gklab-170-024.igk.intel.com>
-	<20101206132108.21125.54920.stgit@gklab-170-024.igk.intel.com>
-	<20101208141016.437dfd2d@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D17676EAED@irsmsx503.ger.corp.intel.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Thu, 9 Dec 2010 09:43:54 +1100
+Message-ID: <20101209094354.4c6aaa93@notabene.brown>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>
+	<4CF55680.5010703@cfl.rr.com>
+	<20101201092508.7023f974@notabene.brown>
+	<4CF81A16.2010606@cfl.rr.com>
+	<20101203123615.6edce071@notabene.brown>
+	<4CF860EB.7010005@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D17676EAED@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <4CF860EB.7010005@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 8 Dec 2010 13:51:27 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On Thu, 02 Dec 2010 22:15:55 -0500 Phillip Susi <psusi@cfl.rr.com> wrote:
 
-> I didn't describe those functions, because I've realized that it has to be changed after your email.
-> I've planned to do this before I send patches, but unfortunately this "thread" was missed before sending ;).
-> Here is current state.
+> On 12/02/2010 08:36 PM, Neil Brown wrote:
+> > If the array uses 0.90 or 1.0 metadata and comprises whole-disks (not
+> > partitions), and if the array is RAID1, then each device (except for the very
+> > end) contains exactly the same data as the whole array.
+> > If you install grub to the array, then it will be installed onto all of the
+> > (active) devices in the array.  And that is certainly the easiest way to
+> > write to all device.
+> >
+> > It won't write to 'spares', so if you want to be able to boot from spares as
+> > well .... but I'm not sure that makes sense anyway.
 > 
-> Functions: 
-> 	- path2devnum() (Translates path (or symbolic link) to md device given by user to device number.)
-> 	- find_array_minor() (returns device minor for given array name, it uses maps to find names with additions (i.e. "_0") from assebbly)
-> 	- find_array_minor2() (as find_array_minor() but works for frozen arrays also)
+> Yes, for a raid1 with no spares, installing to the array is equivalent 
+> to installing to each individual disk, but it helps avoid confusion to 
+> ignore this fact and remain thinking in terms of the physical disks, at 
+> least as they appear to the bios.
 > 
-> Will be removed and replaced by:
+> > Completely agree.  As I said, there are only some cases where you can boot
+> > from an array which uses whole-disks.
+> > One case if in the bios understands the array, such as Intel bios's with IMSM
+> > metadata, or possibly some bioses with DDF metadata.
+> > Another case is RAID1 which starts at the beginning of the device, where the
+> > bios doesn't need to know about the RAID.
 > 
-> int find_array_minor_by_subdev(int subdev, int container, int *minor)
-> {
-> 	char text_version[PATH_MAX];
-> 	char path[PATH_MAX];
-> 	int i;
-> 	struct stat s;
-> 
-> 	sprintf(text_version, "md%i/%i", container, subdev);
-> 	for (i = 127; i >= 0; i--) {
-> 		char buf[PATH_MAX];
-> 
-> 		snprintf(path, PATH_MAX, "/sys/block/md%d/md/", i);
-> 		if (stat(path, &s) != -1) {
-> 			char *version;
-> 
-> 			strcat(path, "metadata_version");
-> 			if (load_sys(path, buf))
-> 				continue;
-> 			version = strchr(buf, ':');
-> 			/* compare without first letter
-> 			 * it could be marked as frozen with '-'
-> 			 */
-> 			if (!version || strcmp(version + 2, text_version))
-> 				continue;
-> 			*minor = i;
-> 			return 0;
-> 		}
-> 	}
-> 
-> 	return -1;
-> }
-> 
-> This is a little part of find_array_minor() with changed input.
-> 
-> This function searches given container for subdev and returns it minor id.
-> i.e.: for input parameters 0 and 127 it creates search string i.e. "md127/0" and for such device returns minor (~126).
-> For success 0 is returned, and -1 for failure (and passed minor variable remains untouched). 
-> It searches all devices from 127 to 0. 
-> I think it is simpler now (as you raised this issue), and mdadm doesn't make decisions based on array name/string/ now.
-> 
-> Please let me know how do you find this change. 
+> So how do we tell the difference?  Right now grub uses the rule of 
+> dmraid = bios aware, so install to the raid device, and mdadm = software 
+> raid, so install to the component devices individually.  You have noted 
+> that in same cases both methods will produce the same results, but grub 
+> needs to be certain that whichever method it chooses will work, whether 
+> or not either one will.  To do this, it needs to install to the raid 
+> device if and only if it is a bios recognized fakeraid.
 
-Yes much simpler and better.  And I understand easily what you are trying to
-do which is also good!
+Could you install to both??  Maybe not...
 
-There are two problems:
-1/ it assumes that subdevs have a number.  I would prefer that generic code
-  assumed that a subdev has a name - if that happens to always be a numeric
-  name, that is up to the metadata handler.
-2/ searching from 127 to 0 is wrong because md number can be much bigger than
-  127 if you have enough devices.  It would be better to use readdir to get a
-  list of the /sys/block/mdXX that actually exist.
+What exactly needs to be installed?  My understanding is that you need to
+install a boot block which cal load a larger chunk from some fixed location,
+and the larger chunk understands raid and filesystems and everything and can
+figure out what to do.
+Where do you install that larger chunk??
 
-However I would rather not uses sysfs at all, but mdstat as that is easy to
-read and search quickly.
-Have a look at mdstat_by_component.  Write something similar which is given a
-container and subarray name and returns the corresponding mdstat_ent.
+I'd be happy to get mdadm to provide useful information for grub if I knew
+what information was needed, and knew that grub would use it.
+It would probably be an extension to "mdadm --detail --export".
+It could:
+ - list devices on which it was safe to install a boot block, which might be
+   the array, or might be components, or might be nothing
+ - list and offset/size on each device where there is some spare space for
+   the second stage (or is that 'stage1.5'??) could be stored safely.
+ - report an offset for mapping from 'the array' to 'individual device' when
+   that makes sense (i.e. raid1 and maybe linear).
+ - anything else required.
 
-That would be much cleaner and even simpler.
+I'd really rather if grub didn't assume that 'md' meant something specific,
+but rather asked mdadm what it should do with a given 'md' device.
 
+So if you (or someone) can tell me what grub needs and how it would use it,
+and undertakes to teach grub to ask mdadm and make use of the answers, and to
+continue the dialogue if it turns out that our first design approach doesn't
+quite work right,  then I will very happily get the required functionality
+into mdadm very promptly.
 
-> 
-> I've replaced open() with open_dev() in this patch (and in a few next one: 0003, 0007, 0012, 0019, 0021)
-> 
-> If it is ok, please let me know if you want fresh series or you'll apply current one and I'll send patches for above changes then.
-> In future patches, I'll address problem with lines longer than 80 characters also.
-
-Please always send a series of patches against what you pull from my
-devel-3.2 branch.  I'll fix up any conflicts against anything I might have
-committed since you pulled.
-It is probably best to send smallish sets of patches  - maybe about 10 at a
-time.  If they are accepted, you can send the next batch.  If there are
-issues, you can revise subsequent patches before you send them.
-
+Thanks,
 NeilBrown
-
-
-> 
-> Please note also that implementation of searching spare devices for reshape is not final. 
-> It requires better integration with auto-rebuild searching spares mechanism.
-> This task is in my nearest plans (I'm hoping to post fixes instead of whole series again ;))
-> 
-> 
-> BR
-> Adam
-> 
