@@ -1,45 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [RFC PATCH 3/3] block: improve detail in I/O error messages
-Date: Wed, 08 Dec 2010 14:28:32 +0300
-Message-ID: <4CFF6BE0.4090109@ru.mvista.com>
-References: <1291763802-8251-1-git-send-email-snitzer@redhat.com> <1291763802-8251-4-git-send-email-snitzer@redhat.com>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] fix: mdstat_read() incorrectly translates value of
+ mdstat_ent->reshape for recovering
+Date: Wed, 8 Dec 2010 11:30:28 +0000
+Message-ID: <66C59AD0932712458090B447266D638C010C05314A@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1291763802-8251-4-git-send-email-snitzer@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
 List-Id: linux-raid.ids
 
-Hello.
+it results in wrong output of mdadm --detail (shows reshaping instead
+of recovering)
 
-On 08-12-2010 2:16, Mike Snitzer wrote:
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ mdstat.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Classify severity of I/O errors for target and transport errors.
+diff --git a/mdstat.c b/mdstat.c
+index fdce516..c5a07b5 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -253,7 +253,7 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+ 				if (strncmp(w, "reshape", 7)==0)
+ 					ent->resync = 2;
+ 				if (strncmp(w, "recovery", 8)==0)
+-					ent->resync = 2;
++					ent->resync = 0;
+ 				if (strncmp(w, "check", 5)==0)
+ 					ent->resync = 3;
+ 
+-- 
+1.7.1
 
-> Signed-off-by: Mike Snitzer<snitzer@redhat.com>
-[...]
-
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 4ce953f..ab8c776 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2028,9 +2028,15 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->
->   	if (error&&  req->cmd_type == REQ_TYPE_FS&&
->   	!(req->cmd_flags&  REQ_QUIET)) {
-> -		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
-> -				req->rq_disk ? req->rq_disk->disk_name : "?",
-> -				(unsigned long long)blk_rq_pos(req));
-> +		char *error_type = "I/O";
-> +
-> +		if (error == -ENOLINK)
-> +			error_type = "recoverable transport";
-> +		else if (error == -EREMOTEIO)
-> +			error_type = "critical target";
-
-    *switch* would be more natural here.
-
-WBR, Sergei
