@@ -1,96 +1,70 @@
-From: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Subject: RE: interrupted resync not restarted properly?
-Date: Thu, 9 Dec 2010 11:53:25 -0500
-Message-ID: <AC1B83CE65082B4DBDDB681ED2F6B2EF866E07@EXHQ.corp.stratus.com>
-References: <AC1B83CE65082B4DBDDB681ED2F6B2EF866DF8@EXHQ.corp.stratus.com> <20101209141611.38a26357@notabene.brown>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Thu, 09 Dec 2010 14:48:29 -0500
+Message-ID: <4D01328D.9050503@cfl.rr.com>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>	<4CF55680.5010703@cfl.rr.com>	<20101201092508.7023f974@notabene.brown>	<4CF81A16.2010606@cfl.rr.com>	<20101203123615.6edce071@notabene.brown>	<4CF860EB.7010005@cfl.rr.com> <20101209094354.4c6aaa93@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20101209141611.38a26357@notabene.brown>
+In-Reply-To: <20101209094354.4c6aaa93@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: The development of GNU GRUB <grub-devel@gnu.org>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I tried this out, and it does indeed fix the problem I was seeing.
+On 12/8/2010 5:43 PM, Neil Brown wrote:
+> Could you install to both??  Maybe not...
 
-Thanks!
-Nate
+For a fakeraid raid1 you could do both, or either.  For a conventional
+md raid1, or a fakeraid raid0 ( or raid5/6 ) you can not.
 
+> What exactly needs to be installed?  My understanding is that you need to
+> install a boot block which cal load a larger chunk from some fixed location,
+> and the larger chunk understands raid and filesystems and everything and can
+> figure out what to do.
+> Where do you install that larger chunk??
 
+The larger chunk is called the core image in grub terminology.  It is
+generated during installation and written to /boot/grub/core.img and
+contains the main kernel plus all disk, filesystem, and abstraction
+modules required to access /boot/grub and load more modules and the
+config file from there.  The MBR can be written with blocklists directly
+pointing to that file, but this is inherently unreliable ( and not even
+possible on some filesystems that do things like tail packing ) so it is
+preferred to copy the core image to the embed area immediately following
+the MBR, or to the BIOS boot partition if you are using GPT.
 
+> I'd be happy to get mdadm to provide useful information for grub if I knew
+> what information was needed, and knew that grub would use it.
+> It would probably be an extension to "mdadm --detail --export".
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Wednesday, December 08, 2010 10:16 PM
-To: Dailey, Nate
-Cc: linux-raid@vger.kernel.org
-Subject: Re: interrupted resync not restarted properly?
+What grub really needs to know is whether or not the array is accessible
+via the bios int 13.  If it is not, then we need to figure out which
+abstraction modules are needed to access the array ( md and possibly lvm
+), build them into the core image, and install the mbr and core image to
+the underlying physical disks.  If it is an int13 device, then the md
+module is not required.
 
-On Tue, 7 Dec 2010 15:37:00 -0500 "Dailey, Nate"
-<Nate.Dailey@stratus.com>
-wrote:
+If mdadm --detail --export lists the metadata type being used, we can
+probably use that to infer whether it is conventional md metadata, or
+fakeraid metadata, and thus assume int13 access, but it might be better
+to get a more explicit statement from mdadm about whether it is fakeraid
+or some kind of pure software raid, whether it be conventional md or
+otherwise.
 
-> It seems to me that resuming an interrupted resync doesn't always work
-> right... here's what I'm doing (kernel 2.6.36):
-> 
-> - start with a 2 disk raid1 with internal bitmap
-> - fail/remove one disk and zero the superblock
-> - add the disk to the raid1
-> - before resync completes, fail/remove the disk again
-> - re-add the disk again
-> 
-> For version 0 superblocks, this works the way I'd expect: on adding
-the
-> disk the second time, the resync continues (or restarts from the
-> beginning, not sure).
-> 
-> But for version 1 superblocks, on adding the disk the second time, the
-> resync completes immediately, leaving some part of the array
-> out-of-sync.
-> 
-> Should there be something in the v1 superblock to prevent this?
-> 
-> If the raid1 is stopped in the middle of the resync (instead of
-removing
-> the target disk) the resync is resumed correctly on re-assembly with
-> both devices.
-> 
-> Nate
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Things get a little tricky with md using the whole disks instead of
+partitions in them.  In that case, it is simply not possible to install
+grub if using 1.1.  For 0.9 and 1.0, it is possible iff it is a
+partitioned array and therefore, the primary component disk appears to
+have a valid partition table and embed area and the stripe size is >=
+32k ( except for raid1 ).  Even then it is only possible to install grub
+to the primary disk, which obviously means you can not boot if that disk
+fails, so this isn't a desirable setup.
 
-Thanks for the report.
-That is pretty bad behaviour.
-
-The following is a patch that I plan to submit to -linus and -stable.
-It
-doesn't make it work quite as I would like (that would be a lot more
-code)
-but it makes it a lot safer.
-
-Thanks,
-NeilBrown
-
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5170,7 +5174,10 @@ static int add_new_disk(mddev_t * mddev,
-mdu_disk_info_t *info)
- 		} else
- 			super_types[mddev->major_version].
- 				validate_super(mddev, rdev);
--		rdev->saved_raid_disk = rdev->raid_disk;
-+		if (test_bit(In_sync, &rdev->flags))
-+			rdev->saved_raid_disk = rdev->raid_disk;
-+		else
-+			rdev->saved_raid_disk = -1;
- 
- 		clear_bit(In_sync, &rdev->flags); /* just to be sure */
- 		if (info->state & (1<<MD_DISK_WRITEMOSTLY))
+I suppose it could be possible to install with 1.2, if mdadm can point
+grub to a location it can install the core to, instead of the embed area
+( since the md metadata is there ).  This would probably be the leftover
+space at the end of the disk, that is not part of a stripe ( but still
+needs to be >= 32k ).  This would even allow you to install to all
+components and have redundant boot from each of them.
