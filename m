@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 10/29] imsm: Fill delta_disks field in getinfo_super()
-Date: Thu, 09 Dec 2010 16:20:03 +0100
-Message-ID: <20101209152003.26876.7143.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 12/29] Finalize reshape after adding disks to array
+Date: Thu, 09 Dec 2010 16:20:20 +0100
+Message-ID: <20101209152020.26876.53740.stgit@gklab-170-024.igk.intel.com>
 References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,46 +13,43 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-delta_disks field is not always filled during getinfo_super() call.
+When reshape is finished monitor, has to finalize reshape in metadata.
+To do this set_array_state() should be called.
+This finishes migration and stores metadata on disks.
+
+reshape_delta_disks is set to not active value.
+This finishes reshape flow in mdmon.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ monitor.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 19859ef..07851ce 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1511,6 +1511,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	struct intel_super *super = st->sb;
- 	struct imsm_dev *dev = get_imsm_dev(super, super->current_vol);
- 	struct imsm_map *map = get_imsm_map(dev, 0);
-+	struct imsm_map *prev_map = get_imsm_map(dev, 1);
- 	struct dl *dl;
- 	char *devname;
- 	int map_disks = info->array.raid_disks;
-@@ -1542,7 +1543,11 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	info->component_size	  = __le32_to_cpu(map->blocks_per_member);
- 	memset(info->uuid, 0, sizeof(info->uuid));
- 	info->recovery_start = MaxSector;
--	info->reshape_active = 0;
-+	info->reshape_active = (prev_map != NULL);
-+	if (info->reshape_active)
-+		info->delta_disks = map->num_members - prev_map->num_members;
-+	else
-+		info->delta_disks = 0;
- 
- 	if (map->map_state == IMSM_T_STATE_UNINITIALIZED || dev->vol.dirty) {
- 		info->resync_start = 0;
-@@ -1599,7 +1604,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 			}
+diff --git a/monitor.c b/monitor.c
+index 5298fa1..6191886 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -305,6 +305,21 @@ static int read_and_act(struct active_array *a)
  		}
  	}
--}				
-+}
  
- /* check the config file to see if we can return a real uuid for this spare */
- static void fixup_container_spare_uuid(struct mdinfo *inf)
++	/* finalize reshape detection
++	 */
++	if ((a->curr_action != reshape) &&
++	    (a->prev_action == reshape)) {
++		/* set reshape_not_active
++		 * to allow for future rebuilds
++		 */
++		a->reshape_state = reshape_not_active;
++		/* A reshape has finished.
++		 * Some disks may be in sync now.
++		 */
++		a->container->ss->set_array_state(a, a->curr_state <= clean);
++		check_degraded = 1;
++	}
++
+ 	/* Check for failures and if found:
+ 	 * 1/ Record the failure in the metadata and unblock the device.
+ 	 *    FIXME update the kernel to stop notifying on failed drives when
 
