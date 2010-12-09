@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 13/29] Add reshape progress updating
-Date: Thu, 09 Dec 2010 16:20:28 +0100
-Message-ID: <20101209152028.26876.54064.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 14/29] WORKAROUND: md reports idle state during reshape start
+Date: Thu, 09 Dec 2010 16:20:36 +0100
+Message-ID: <20101209152036.26876.23154.stgit@gklab-170-024.igk.intel.com>
 References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,79 +13,28 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Reshape progress is not updated in mdmon.
-This patch adds reshape progress updating feature.
+md reports reshape->idle->reshape states transition on reshape start, so reshape finalization is wrongly indicated.
+Finalize reshape when we have any progress only,
+When reshape is really started, idle state causes reshape finalization as usually.
 
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- managemon.c |   11 +++++++++++
- mdmon.h     |    1 +
- monitor.c   |    4 ++++
- 3 files changed, 16 insertions(+), 0 deletions(-)
+ monitor.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index c48b114..dda9d95 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -417,6 +417,7 @@ static void manage_member(struct mdstat_ent *mdstat,
- 			struct metadata_update *updates = NULL;
- 			struct mdinfo *newdev = NULL;
- 			struct mdinfo *d;
-+			int delta_disks = a->reshape_delta_disks;
- 
- 			newdev = newa->container->ss->reshape_array(newa,
- 							reshape_in_progress,
-@@ -463,6 +464,15 @@ static void manage_member(struct mdstat_ent *mdstat,
- 					/* reshape executed
- 					 */
- 					dprintf("Reshape was started\n");
-+					newa->new_data_disks =
-+						newa->info.array.raid_disks +
-+						delta_disks;
-+					if (a->info.array.level == 4)
-+						newa->new_data_disks--;
-+					if (a->info.array.level == 5)
-+						newa->new_data_disks--;
-+					if (a->info.array.level == 6)
-+						newa->new_data_disks--;
- 					replace_array(a->container, a, newa);
- 					a = newa;
- 				} else {
-@@ -608,6 +618,7 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	new->container = container;
- 
- 	new->reshape_state = reshape_not_active;
-+	new->new_data_disks = 0;
- 
- 	inst = to_subarray(mdstat, container->devname);
- 
-diff --git a/mdmon.h b/mdmon.h
-index 6f8b439..eff4988 100644
---- a/mdmon.h
-+++ b/mdmon.h
-@@ -49,6 +49,7 @@ struct active_array {
- 
- 	enum state_of_reshape reshape_state;
- 	int reshape_delta_disks;
-+	int new_data_disks;
- 
- 	int check_degraded; /* flag set by mon, read by manage */
- 
 diff --git a/monitor.c b/monitor.c
-index 6191886..b5cd3c6 100644
+index b5cd3c6..bbfe3d2 100644
 --- a/monitor.c
 +++ b/monitor.c
-@@ -305,6 +305,10 @@ static int read_and_act(struct active_array *a)
- 		}
- 	}
- 
-+	if (a->curr_action == reshape)
-+		a->info.reshape_progress = a->info.resync_start *
-+					   a->new_data_disks;
-+
+@@ -312,7 +312,8 @@ static int read_and_act(struct active_array *a)
  	/* finalize reshape detection
  	 */
  	if ((a->curr_action != reshape) &&
+-	    (a->prev_action == reshape)) {
++	    (a->prev_action == reshape) &&
++	    (a->info.reshape_progress > 2)) {
+ 		/* set reshape_not_active
+ 		 * to allow for future rebuilds
+ 		 */
 
