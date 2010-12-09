@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 04/29] imsm: Block array state change during reshape
-Date: Thu, 09 Dec 2010 16:19:14 +0100
-Message-ID: <20101209151914.26876.15145.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 09/29] imsm: Do not indicate resync during reshape
+Date: Thu, 09 Dec 2010 16:19:55 +0100
+Message-ID: <20101209151954.26876.1934.stgit@gklab-170-024.igk.intel.com>
 References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,48 +13,32 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Array state change is blocked due to reshape action in progress
-metadata changes are during applying.
-
-'1' is returned to indicate that array is clean
+If reshape is started resync is not allowed in parallel. This would break reshape.
+If array is in General Migration state do not indicate resync and allow for reshape continuation.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ super-intel.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 48e26b1..4cc02d7 100644
+index 7e61f52..19859ef 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -4780,6 +4780,17 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 	__u8 map_state = imsm_check_degraded(super, dev, failed);
- 	__u32 blocks_per_unit;
+@@ -4702,9 +4702,13 @@ static int is_resyncing(struct imsm_dev *dev)
+ 	    migr_type(dev) == MIGR_REPAIR)
+ 		return 1;
  
-+	if (a->reshape_state != reshape_not_active) {
-+		/* array state change is blocked due to reshape action
-+		 * metadata changes are during applying.
-+		 *
-+		 * '1' is returned to indicate that array is clean
-+		 */
-+		dprintf("imsm: imsm_set_array_state() called "\
-+			"during reshape.\n");
-+		return 1;
-+	}
++	if (migr_type(dev) == MIGR_GEN_MIGR)
++		return 0;
 +
- 	/* before we activate this array handle any missing disks */
- 	if (consistent == 2)
- 		handle_missing(super, dev);
-@@ -5144,6 +5155,10 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+ 	migr_map = get_imsm_map(dev, 1);
  
- 	dprintf("imsm: activate spare: inst=%d failed=%d (%d) level=%d\n",
- 		inst, failed, a->info.array.raid_disks, a->info.array.level);
-+
-+	if (a->reshape_state != reshape_not_active)
-+		return NULL;
-+
- 	if (imsm_check_degraded(super, dev, failed) != IMSM_T_STATE_DEGRADED)
- 		return NULL;
- 
+-	if (migr_map->map_state == IMSM_T_STATE_NORMAL)
++	if ((migr_map->map_state == IMSM_T_STATE_NORMAL) &&
++	    (dev->vol.migr_type != MIGR_GEN_MIGR))
+ 		return 1;
+ 	else
+ 		return 0;
 
