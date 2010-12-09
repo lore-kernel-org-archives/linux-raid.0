@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 14/29] WORKAROUND: md reports idle state during reshape start
-Date: Thu, 09 Dec 2010 16:20:36 +0100
-Message-ID: <20101209152036.26876.23154.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 15/29] FIX: core during getting map
+Date: Thu, 09 Dec 2010 16:20:44 +0100
+Message-ID: <20101209152044.26876.40865.stgit@gklab-170-024.igk.intel.com>
 References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,28 +13,41 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-md reports reshape->idle->reshape states transition on reshape start, so reshape finalization is wrongly indicated.
-Finalize reshape when we have any progress only,
-When reshape is really started, idle state causes reshape finalization as usually.
+It can occurs that during walking container end conditions bases on "map"
+function return value, so function can be protected for wrong data input.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- monitor.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ super-intel.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/monitor.c b/monitor.c
-index b5cd3c6..bbfe3d2 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -312,7 +312,8 @@ static int read_and_act(struct active_array *a)
- 	/* finalize reshape detection
- 	 */
- 	if ((a->curr_action != reshape) &&
--	    (a->prev_action == reshape)) {
-+	    (a->prev_action == reshape) &&
-+	    (a->info.reshape_progress > 2)) {
- 		/* set reshape_not_active
- 		 * to allow for future rebuilds
- 		 */
+diff --git a/super-intel.c b/super-intel.c
+index d747322..1ac6bc2 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -435,8 +435,12 @@ static size_t sizeof_imsm_map(struct imsm_map *map)
+ 
+ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
+ {
+-	struct imsm_map *map = &dev->vol.map[0];
++	struct imsm_map *map;
++
++	if (dev == NULL)
++		return NULL;
+ 
++	map = &dev->vol.map[0];
+ 	if (second_map && !dev->vol.migr_state)
+ 		return NULL;
+ 	else if (second_map) {
+@@ -1517,6 +1521,9 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	char *devname;
+ 	int map_disks = info->array.raid_disks;
+ 
++	if (map == NULL)
++		return;
++
+ 	for (dl = super->disks; dl; dl = dl->next)
+ 		if (dl->raiddisk == info->disk.raid_disk)
+ 			break;
 
