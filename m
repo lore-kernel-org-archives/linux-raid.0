@@ -1,91 +1,63 @@
-From: Phil Genera <pg@fivesevenfive.org>
-Subject: Re: Crash during raid6 reshape, now cannot restart?
-Date: Fri, 10 Dec 2010 14:11:50 -0800
-Message-ID: <AANLkTikSZTahD2teZg7dkDkfrTaHJhjbG4q0W8n40C7o@mail.gmail.com>
-References: <AANLkTimk7Ecth7n+qPZ7R-JOAmCmJUJbCTAw3uY8FpPO@mail.gmail.com>
- <20101211074305.5f55c4b4@notabene.brown> <20101211090253.2f2b7a7c@notabene.brown>
+From: "Patrick H." <linux-raid@feystorm.net>
+Subject: Re: disable creation of md127
+Date: Fri, 10 Dec 2010 15:36:01 -0700
+Message-ID: <4D02AB51.5090707@feystorm.net>
+References: <4D029DD6.5070705@feystorm.net> <20101211085859.55d0f889@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101211090253.2f2b7a7c@notabene.brown>
+In-Reply-To: <20101211085859.55d0f889@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 10, 2010 at 14:02, Neil Brown <neilb@suse.de> wrote:
-> On Sat, 11 Dec 2010 07:43:05 +1100 Neil Brown <neilb@suse.de> wrote:
+Sent: Fri Dec 10 2010 14:58:59 GMT-0700 (Mountain Standard Time)
+From: Neil Brown <neilb@suse.de>
+To: Patrick H. <linux-raid@feystorm.net> linux-raid@vger.kernel.org
+Subject: Re: disable creation of md127
+> On Fri, 10 Dec 2010 14:38:30 -0700 "Patrick H." <linux-raid@feystorm.net>
+> wrote:
 >
->> >
->> > raid5: reshape_position too early for auto-recovery - aborting.
+>   
+>> How can I prevent the MD driver from auto-creating md127 on boot?
+>> I have a server which is exporting /dev/sdb1 via iSCSI. The remote 
+>> client for this device is using it in a raid device so it has raid 
+>> metadata on it. However because of this, when the target server boots 
+>> up, the md driver shoves it into md127. And because of this, the iSCSI 
+>> target daemon (tgtd) wont export the device as its now part of a raid 
+>> device.
+>> The partition type is 0x83, not 0xfd.
 >>
->> Something must be going wrong with the math in raid5:
->>
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (mddev->delta_disks < 0
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ? (here_new * mddev->new_chu=
-nk_sectors <=3D
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0here_old * mddev->chu=
-nk_sectors)
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 : (here_new * mddev->new_chu=
-nk_sectors >=3D
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0here_old * mddev->chu=
-nk_sectors)) {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Reading from the =
-same stripe as writing to - bad */
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_ERR "rai=
-d5: reshape_position too early for "
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"auto=
--recovery - aborting.\n");
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
->>
->> there 'here_new* new_chunk_size' must be over-flowing. =A0So the siz=
-e of the
->> array must only just fit into sector_t.
->> On and arm5 you would need to have CONFIG_LBD set - do you know if i=
-t is?
-
-Looking at what I think are the relevant kirkwood kernel config, I
-only see CONFIG_LBDAF here:
-http://merkel.debian.org/~jurij/
-
-Which upon further investigation is the new name of CONFIG_LBD. So, I
-believe so.
-
->> I guess I need to make that code more robust when sector_t doesn't h=
-ave lots
->> more bits that the size of the device...
->>
->> If you can compile your own kernel, you should be able to get it to =
-work
->> easily. =A0If not ... complain to whoever provided you with a kernel=
-=2E
-
-That'd be the nice folks working on debian squeeze.
-
-> No ... I take that back. =A0here_new is the result of dividing the
-> reshape_position by chunk_sector times number of disks.
-> So multiplying by chunk_sectors again is not going to cause an overfl=
-ow.
+>> RHEL6 2.6.32-71
+>>     
 >
-> So I have no idea what if going on here.... maybe a compiler bug?
+> The md driver isn't auto-creating this.  
+> mdadm is being run and being asked to create this, possibly implicitly.
 >
-> If you compile your own kernel, I would put some printk's in
-> drives/md/raid5.c just before the above code to see what the values o=
-f the
-> variables are, and to see what the results of the multiplications wil=
-l be.
+> Exactly how you stop this from happening depends on where it is an initrd
+> script or a boot script that is doing it, and which version of mdadm you have.
+>
+> If you have 3.0 or later, then putting
+>    AUTO -all
+>
+> in mdadm.conf might be enough.
+> If you have a 2.x, you probably need to tell the init script not to run
+> mdadm, maybe edit the script, maybe set some default variable.  I know little
+> about RHEL and so cannot suggest specifics.
+>
+> NeilBrown
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
+Youre right. I removed every single md-related init script so I didnt 
+think mdadm was doing it. But apparently I forgot about udev. I replaced 
+mdadm with a script to dump out a bunch of info and found that udev is 
+calling `mdadm -I /dev/sdb1`. Any idea where this might be configured 
+at? I did a recursive grep for 'mdadm' in the entire /etc and found 
+nothing but init scripts and a little selinux stuff  (nothing in /etc/udev).
 
-I'm happy to try my own kernel, but first I think I'll try pulling the
-disks and putting them on an x86 machine to see if its actually
-platform related. If that works, I can keep the broken array around
-for a bit to troubleshoot on. Thanks!
-
---=20
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Patrick
