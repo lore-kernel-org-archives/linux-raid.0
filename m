@@ -1,147 +1,303 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: RE: md as module cannot be reloaded.
-Date: Fri, 10 Dec 2010 11:57:51 +0000
-Message-ID: <66C59AD0932712458090B447266D638C010C0E5B1C@irsmsx504.ger.corp.intel.com>
-References: <66C59AD0932712458090B447266D638C0109FF2E8A@irsmsx504.ger.corp.intel.com>
- <20101202085723.59a5694e@notabene.brown>
- <66C59AD0932712458090B447266D638C0109FF332F@irsmsx504.ger.corp.intel.com>
+From: Phil Genera <pg@fivesevenfive.org>
+Subject: Crash during raid6 reshape, now cannot restart?
+Date: Fri, 10 Dec 2010 09:05:47 -0800
+Message-ID: <AANLkTimk7Ecth7n+qPZ7R-JOAmCmJUJbCTAw3uY8FpPO@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed; boundary=0016e64cbe0a47b4b10497115fd9
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66C59AD0932712458090B447266D638C0109FF332F@irsmsx504.ger.corp.intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Hawrylewicz Czarnowski, Przemyslaw
-> Sent: Thursday, December 02, 2010 12:42 AM
-> To: Neil Brown
-> Cc: linux-raid@vger.kernel.org; Labun, Marcin; Czarnowska, Anna; Neubauer,
-> Wojciech; Williams, Dan J; Ciechanowski, Ed
-> Subject: RE: md as module cannot be reloaded.
-> 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Neil Brown
-> > Sent: Wednesday, December 01, 2010 10:57 PM
-> > To: Hawrylewicz Czarnowski, Przemyslaw
-> > Cc: linux-raid@vger.kernel.org; Labun, Marcin; Czarnowska, Anna;
-> Neubauer,
-> > Wojciech; Williams, Dan J; Ciechanowski, Ed
-> > Subject: Re: md as module cannot be reloaded.
-> >
-> > On Wed, 1 Dec 2010 14:23:14 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> >
-> > > Hi,
-> > >
-> > > I have found an annoying problem with md module. If it is compiled as
-> > loadable module it is impossible to reload module if unloaded once.
-> > >
-> > > Eg.
-> > > # mdadm -Ss
-> > > # modprobe -r raid1 && modprobe -r md-mod
-> > > # cat /proc/modules | grep md_mod || echo Unloaded
-> > > Unloaded
-> > > # cat /proc/mdstat
-> > > cat /proc/mdstat: Invalid arguments
-> >
-> > I cannot reproduce this.  That this point I get
-> >
-> > cat: /proc/mdstat: No such file or directory
-> >
-> >
-> > > # modprobe md-mod
-> > > # cat /proc/mdstat
-> > > cat /proc/mdstat: Invalid argument
-> > > # cat /proc/modules | grep md_mod || echo Unloaded
-> > > md_mod 94178 0 - Live 0xf857a000
-> > >
-> > > Some functionalities seem to work, but nothing is able to read
-> > /proc/mdstat.
-> > >
-> > > If have tried few kernels from 2.6.27 to 2.6.37-rc3, openSUSE
-> 11.x/RHEL6,
-> > doesn't matter, still the same result. What can be wrong?
-> >
-> > openSUSE doesn't compile md as a module, it is compiled in to the kernel.
-> > But presumably you are compiling your own kernel with md as a module?  Is
-> > that right?  You aren't compiling a module and loading it into a kernel
-> > which
-> > already has md in it are you?  I don't think that would work anyway...
-> Yes, I have recompiled kernel with MD as module.
-> 
-> >
-> > And you give a full sequence of commands from loading to unload that
-> > reliably
-> > produces this error for you?
-> Ok, here you are:
-> * Original opensuse config updated to new kernel with defaults
-> * Changed CONFIG_BLK_DEV_MD=y->m
-> * Added prefix -mdadm
-> 
-> make
-> su
-> make modules_install
-> make install
-> mdadm -Ss
-> mdadm --zero-superblock /dev/sd[b-g]
-> reboot
-> ...
-> localhost:~ # uname -r
-> 2.6.37-rc3-pae-mdadm
-> localhost:~ # cat /proc/mdstat
-> cat: /proc/mdstat: No such file or directory
-> localhost:~ # cat /proc/modules | grep md_mod
-> localhost:~ # modprobe md_mod
-> localhost:~ # ll /proc/mdstat
-> -r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-> localhost:~ # cat /proc/mdstat
-> Personalities :
-> unused devices: <none>
-> localhost:~ # modprobe -r md_mod
-> localhost:~ # ll /proc/mdstat
-> -r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-> localhost:~ # cat /proc/mdstat
-> cat: /proc/mdstat: Invalid argument
-> localhost:~ # modprobe -r md_mod
-Here is just "modprobe md_mod" of course...
-> localhost:~ # ll /proc/mdstat
-> -r--r--r-- 1 root root 0 Dec  2 00:14 /proc/mdstat
-> localhost:~ # cat /proc/mdstat
-> cat: /proc/mdstat: Invalid argument
-> 
-> that's all.
-And another scenario - it might put some new light at this problem:
+--0016e64cbe0a47b4b10497115fd9
+Content-Type: text/plain; charset=ISO-8859-1
 
-[system right after restart]
+I had a power failure during a large raid6 reshape (6->8 disks) on one
+of my arm systems last night, and can't seem to get it going again.
 
-localhost:~ # mdadm -Ss
-mdadm: stopped /dev/md126
-mdadm: stopped /dev/md127
-localhost:~ # cat /proc/mdstat
-Personalities : [raid1]
-unused devices: <none>
-localhost:~ # modprobe -r raid1
-localhost:~ # ll /proc/mdstat
--r--r--r-- 1 root root 0 Dec  9 16:52 /proc/mdstat
-localhost:~ # cat /proc/mdstat
-cat: /proc/mdstat: Invalid argument
+I did this:
+# mdadm --grow --backup-file=./backup.mdadm --array-size=8 /dev/md0
 
-One more thing... For some time everything worked perfectly. And problem appeared again after few days.
-I do not remember any unusual activity which may change this behavior.
+which (I've now noticed) didn't seem to write a backup file. There was
+a read error during the reshape, but it claimed recovery:
+Dec  9 20:48:07 love kernel: sd 2:0:0:0: [sda] Unhandled sense code
+Dec  9 20:48:07 love kernel: sd 2:0:0:0: [sda] Result: hostbyte=DID_OK
+driverbyte=DRIVER_SENSE
+Dec  9 20:48:07 love kernel: sd 2:0:0:0: [sda] Sense Key : Medium
+Error [current]
+Dec  9 20:48:07 love kernel: sd 2:0:0:0: [sda] Add. Sense: Unrecovered
+read error
+Dec  9 20:48:07 love kernel: sd 2:0:0:0: [sda] CDB: Read(10): 28 00 00
+02 09 60 00 00 20 00
+Dec  9 20:48:07 love kernel: end_request: I/O error, dev sda, sector 133472
+Dec  9 20:48:08 love kernel: raid5:md0: read error corrected (8
+sectors at 133472 on sda)
+Dec  9 20:48:08 love kernel: raid5:md0: read error corrected (8
+sectors at 133480 on sda)
+Dec  9 20:48:08 love kernel: raid5:md0: read error corrected (8
+sectors at 133488 on sda)
+Dec  9 20:48:08 love kernel: raid5:md0: read error corrected (8
+sectors at 133496 on sda)
 
-> 
-> >
-> > NeilBrown
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Some time during the night, the electricity went away, and on reboot I get this:
+
+raid5: reshape_position too early for auto-recovery - aborting.
+
+as well as when I try to assemble the array manually. There's nothing
+critical I don't have backed up, but there's a lot of TV on there I
+was planning to watch :).
+
+Any good ideas? I'd sure appreciate some help. I'm guessing this is
+just a crash in the critical section, and without a backup file I'm
+screwed. I'm surprised the backup file is still needed 200gb into the
+reshape though. Thanks!
+
+
+Versions & status:
+
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md0 : inactive sdg[0] sdj[7] sdi[6] sdf[5] sde[4] sdd[3] sdc[2] sdh[1]
+      3125690368 blocks super 0.91
+
+# uname -a
+Linux love 2.6.32-5-kirkwood #1 Sun Oct 31 11:19:32 UTC 2010 armv5tel GNU/Linux
+# mdadm --version
+mdadm - v3.1.4 - 31st August 2010
+
+
+More details (and --examine of all disks attached):
+
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.91
+  Creation Time : Fri Oct  9 09:32:08 2009
+     Raid Level : raid6
+  Used Dev Size : 390711296 (372.61 GiB 400.09 GB)
+   Raid Devices : 8
+  Total Devices : 8
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Dec 10 05:52:35 2010
+          State : active, Not Started
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+  Delta Devices : 2, (6->8)
+
+           UUID : 81ddccd8:5abf5b03:181548d9:47e92625
+         Events : 0.1048248
+
+    Number   Major   Minor   RaidDevice State
+       0       8       96        0      active sync   /dev/sdg
+       1       8      112        1      active sync   /dev/sdh
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8      128        6      active sync   /dev/sdi
+       7       8      144        7      active sync   /dev/sdj
+
+--
+Phil
+
+--0016e64cbe0a47b4b10497115fd9
+Content-Type: text/plain; charset=US-ASCII; name="examine.txt"
+Content-Disposition: attachment; filename="examine.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ghjbi5zm0
+
+L2Rldi9zZGM6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAu
+OTEuMDAKICAgICAgICAgICBVVUlEIDogODFkZGNjZDg6NWFiZjViMDM6MTgxNTQ4ZDk6NDdlOTI2
+MjUKICBDcmVhdGlvbiBUaW1lIDogRnJpIE9jdCAgOSAwOTozMjowOCAyMDA5CiAgICAgUmFpZCBM
+ZXZlbCA6IHJhaWQ2CiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDcxMTI5NiAoMzcyLjYxIEdpQiA0MDAu
+MDkgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDIzNDQyNjc3NzYgKDIyMzUuNjcgR2lCIDI0MDAuNTMg
+R0IpCiAgIFJhaWQgRGV2aWNlcyA6IDgKICBUb3RhbCBEZXZpY2VzIDogOApQcmVmZXJyZWQgTWlu
+b3IgOiAwCgogIFJlc2hhcGUgcG9zJ24gOiAzMDY2ODA4MzIgKDI5Mi40NyBHaUIgMzE0LjA0IEdC
+KQogIERlbHRhIERldmljZXMgOiAyICg2LT44KQoKICAgIFVwZGF0ZSBUaW1lIDogRnJpIERlYyAx
+MCAwNTo1MjozNSAyMDEwCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6
+IDgKV29ya2luZyBEZXZpY2VzIDogOAogRmFpbGVkIERldmljZXMgOiAwCiAgU3BhcmUgRGV2aWNl
+cyA6IDAKICAgICAgIENoZWNrc3VtIDogYjk5MzZjN2EgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50
+cyA6IDEwNDgyNDgKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCiAgICAgQ2h1bmsg
+U2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3Rh
+dGUKdGhpcyAgICAgMiAgICAgICA4ICAgICAgICAwICAgICAgICAyICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkYQoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDY0ICAgICAgICAwICAgICAgYWN0
+aXZlIHN5bmMgICAvZGV2L3NkZQogICAxICAgICAxICAgICAgIDggICAgICAgODAgICAgICAgIDEg
+ICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RmCiAgIDIgICAgIDIgICAgICAgOCAgICAgICAgMCAg
+ICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGEKICAgMyAgICAgMyAgICAgICA4ICAg
+ICAgIDE2ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYgogICA0ICAgICA0ICAg
+ICAgIDggICAgICAgMzIgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDUg
+ICAgIDUgICAgICAgOCAgICAgICA0OCAgICAgICAgNSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGQKICAgNiAgICAgNiAgICAgICA4ICAgICAgIDk2ICAgICAgICA2ICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZwogICA3ICAgICA3ICAgICAgIDggICAgICAxMTIgICAgICAgIDcgICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RoCi9kZXYvc2RkOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwog
+ICAgICAgIFZlcnNpb24gOiAwLjkxLjAwCiAgICAgICAgICAgVVVJRCA6IDgxZGRjY2Q4OjVhYmY1
+YjAzOjE4MTU0OGQ5OjQ3ZTkyNjI1CiAgQ3JlYXRpb24gVGltZSA6IEZyaSBPY3QgIDkgMDk6MzI6
+MDggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNgogIFVzZWQgRGV2IFNpemUgOiAzOTA3MTEy
+OTYgKDM3Mi42MSBHaUIgNDAwLjA5IEdCKQogICAgIEFycmF5IFNpemUgOiAyMzQ0MjY3Nzc2ICgy
+MjM1LjY3IEdpQiAyNDAwLjUzIEdCKQogICBSYWlkIERldmljZXMgOiA4CiAgVG90YWwgRGV2aWNl
+cyA6IDgKUHJlZmVycmVkIE1pbm9yIDogMAoKICBSZXNoYXBlIHBvcyduIDogMzA2NjgwODMyICgy
+OTIuNDcgR2lCIDMxNC4wNCBHQikKICBEZWx0YSBEZXZpY2VzIDogMiAoNi0+OCkKCiAgICBVcGRh
+dGUgVGltZSA6IEZyaSBEZWMgMTAgMDU6NTI6MzUgMjAxMAogICAgICAgICAgU3RhdGUgOiBjbGVh
+bgogQWN0aXZlIERldmljZXMgOiA4CldvcmtpbmcgRGV2aWNlcyA6IDgKIEZhaWxlZCBEZXZpY2Vz
+IDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IGI5OTM2YzhjIC0gY29y
+cmVjdAogICAgICAgICBFdmVudHMgOiAxMDQ4MjQ4CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5
+bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlu
+b3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDMgICAgICAgOCAgICAgICAxNiAgICAgICAg
+MyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGIKCiAgIDAgICAgIDAgICAgICAgOCAgICAgICA2
+NCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGUKICAgMSAgICAgMSAgICAgICA4
+ICAgICAgIDgwICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZgogICAyICAgICAy
+ICAgICAgIDggICAgICAgIDAgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RhCiAg
+IDMgICAgIDMgICAgICAgOCAgICAgICAxNiAgICAgICAgMyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
+di9zZGIKICAgNCAgICAgNCAgICAgICA4ICAgICAgIDMyICAgICAgICA0ICAgICAgYWN0aXZlIHN5
+bmMgICAvZGV2L3NkYwogICA1ICAgICA1ICAgICAgIDggICAgICAgNDggICAgICAgIDUgICAgICBh
+Y3RpdmUgc3luYyAgIC9kZXYvc2RkCiAgIDYgICAgIDYgICAgICAgOCAgICAgICA5NiAgICAgICAg
+NiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGcKICAgNyAgICAgNyAgICAgICA4ICAgICAgMTEy
+ICAgICAgICA3ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaAovZGV2L3NkZToKICAgICAgICAg
+IE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMC45MS4wMAogICAgICAgICAgIFVV
+SUQgOiA4MWRkY2NkODo1YWJmNWIwMzoxODE1NDhkOTo0N2U5MjYyNQogIENyZWF0aW9uIFRpbWUg
+OiBGcmkgT2N0ICA5IDA5OjMyOjA4IDIwMDkKICAgICBSYWlkIExldmVsIDogcmFpZDYKICBVc2Vk
+IERldiBTaXplIDogMzkwNzExMjk2ICgzNzIuNjEgR2lCIDQwMC4wOSBHQikKICAgICBBcnJheSBT
+aXplIDogMjM0NDI2Nzc3NiAoMjIzNS42NyBHaUIgMjQwMC41MyBHQikKICAgUmFpZCBEZXZpY2Vz
+IDogOAogIFRvdGFsIERldmljZXMgOiA4ClByZWZlcnJlZCBNaW5vciA6IDAKCiAgUmVzaGFwZSBw
+b3MnbiA6IDMwNjY4MDgzMiAoMjkyLjQ3IEdpQiAzMTQuMDQgR0IpCiAgRGVsdGEgRGV2aWNlcyA6
+IDIgKDYtPjgpCgogICAgVXBkYXRlIFRpbWUgOiBGcmkgRGVjIDEwIDA1OjUyOjM1IDIwMTAKICAg
+ICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogOApXb3JraW5nIERldmljZXMg
+OiA4CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tz
+dW0gOiBiOTkzNmM5ZSAtIGNvcnJlY3QKICAgICAgICAgRXZlbnRzIDogMTA0ODI0OAoKICAgICAg
+ICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogNjRLCgogICAgICBO
+dW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAgICA0ICAgICAg
+IDggICAgICAgMzIgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCgogICAwICAg
+ICAwICAgICAgIDggICAgICAgNjQgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2Rl
+CiAgIDEgICAgIDEgICAgICAgOCAgICAgICA4MCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAg
+L2Rldi9zZGYKICAgMiAgICAgMiAgICAgICA4ICAgICAgICAwICAgICAgICAyICAgICAgYWN0aXZl
+IHN5bmMgICAvZGV2L3NkYQogICAzICAgICAzICAgICAgIDggICAgICAgMTYgICAgICAgIDMgICAg
+ICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiCiAgIDQgICAgIDQgICAgICAgOCAgICAgICAzMiAgICAg
+ICAgNCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMKICAgNSAgICAgNSAgICAgICA4ICAgICAg
+IDQ4ICAgICAgICA1ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZAogICA2ICAgICA2ICAgICAg
+IDggICAgICAgOTYgICAgICAgIDYgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RnCiAgIDcgICAg
+IDcgICAgICAgOCAgICAgIDExMiAgICAgICAgNyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGgK
+L2Rldi9zZGY6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAu
+OTEuMDAKICAgICAgICAgICBVVUlEIDogODFkZGNjZDg6NWFiZjViMDM6MTgxNTQ4ZDk6NDdlOTI2
+MjUKICBDcmVhdGlvbiBUaW1lIDogRnJpIE9jdCAgOSAwOTozMjowOCAyMDA5CiAgICAgUmFpZCBM
+ZXZlbCA6IHJhaWQ2CiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDcxMTI5NiAoMzcyLjYxIEdpQiA0MDAu
+MDkgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDIzNDQyNjc3NzYgKDIyMzUuNjcgR2lCIDI0MDAuNTMg
+R0IpCiAgIFJhaWQgRGV2aWNlcyA6IDgKICBUb3RhbCBEZXZpY2VzIDogOApQcmVmZXJyZWQgTWlu
+b3IgOiAwCgogIFJlc2hhcGUgcG9zJ24gOiAzMDY2ODA4MzIgKDI5Mi40NyBHaUIgMzE0LjA0IEdC
+KQogIERlbHRhIERldmljZXMgOiAyICg2LT44KQoKICAgIFVwZGF0ZSBUaW1lIDogRnJpIERlYyAx
+MCAwNTo1MjozNSAyMDEwCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6
+IDgKV29ya2luZyBEZXZpY2VzIDogOAogRmFpbGVkIERldmljZXMgOiAwCiAgU3BhcmUgRGV2aWNl
+cyA6IDAKICAgICAgIENoZWNrc3VtIDogYjk5MzZjYjAgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50
+cyA6IDEwNDgyNDgKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCiAgICAgQ2h1bmsg
+U2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3Rh
+dGUKdGhpcyAgICAgNSAgICAgICA4ICAgICAgIDQ4ICAgICAgICA1ICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZAoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDY0ICAgICAgICAwICAgICAgYWN0
+aXZlIHN5bmMgICAvZGV2L3NkZQogICAxICAgICAxICAgICAgIDggICAgICAgODAgICAgICAgIDEg
+ICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RmCiAgIDIgICAgIDIgICAgICAgOCAgICAgICAgMCAg
+ICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGEKICAgMyAgICAgMyAgICAgICA4ICAg
+ICAgIDE2ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYgogICA0ICAgICA0ICAg
+ICAgIDggICAgICAgMzIgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDUg
+ICAgIDUgICAgICAgOCAgICAgICA0OCAgICAgICAgNSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGQKICAgNiAgICAgNiAgICAgICA4ICAgICAgIDk2ICAgICAgICA2ICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZwogICA3ICAgICA3ICAgICAgIDggICAgICAxMTIgICAgICAgIDcgICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RoCi9kZXYvc2RnOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwog
+ICAgICAgIFZlcnNpb24gOiAwLjkxLjAwCiAgICAgICAgICAgVVVJRCA6IDgxZGRjY2Q4OjVhYmY1
+YjAzOjE4MTU0OGQ5OjQ3ZTkyNjI1CiAgQ3JlYXRpb24gVGltZSA6IEZyaSBPY3QgIDkgMDk6MzI6
+MDggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNgogIFVzZWQgRGV2IFNpemUgOiAzOTA3MTEy
+OTYgKDM3Mi42MSBHaUIgNDAwLjA5IEdCKQogICAgIEFycmF5IFNpemUgOiAyMzQ0MjY3Nzc2ICgy
+MjM1LjY3IEdpQiAyNDAwLjUzIEdCKQogICBSYWlkIERldmljZXMgOiA4CiAgVG90YWwgRGV2aWNl
+cyA6IDgKUHJlZmVycmVkIE1pbm9yIDogMAoKICBSZXNoYXBlIHBvcyduIDogMzA2NjgwODMyICgy
+OTIuNDcgR2lCIDMxNC4wNCBHQikKICBEZWx0YSBEZXZpY2VzIDogMiAoNi0+OCkKCiAgICBVcGRh
+dGUgVGltZSA6IEZyaSBEZWMgMTAgMDU6NTI6MzUgMjAxMAogICAgICAgICAgU3RhdGUgOiBjbGVh
+bgogQWN0aXZlIERldmljZXMgOiA4CldvcmtpbmcgRGV2aWNlcyA6IDgKIEZhaWxlZCBEZXZpY2Vz
+IDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IGI5OTM2Y2I2IC0gY29y
+cmVjdAogICAgICAgICBFdmVudHMgOiAxMDQ4MjQ4CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5
+bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlu
+b3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDAgICAgICAgOCAgICAgICA2NCAgICAgICAg
+MCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGUKCiAgIDAgICAgIDAgICAgICAgOCAgICAgICA2
+NCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGUKICAgMSAgICAgMSAgICAgICA4
+ICAgICAgIDgwICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZgogICAyICAgICAy
+ICAgICAgIDggICAgICAgIDAgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RhCiAg
+IDMgICAgIDMgICAgICAgOCAgICAgICAxNiAgICAgICAgMyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
+di9zZGIKICAgNCAgICAgNCAgICAgICA4ICAgICAgIDMyICAgICAgICA0ICAgICAgYWN0aXZlIHN5
+bmMgICAvZGV2L3NkYwogICA1ICAgICA1ICAgICAgIDggICAgICAgNDggICAgICAgIDUgICAgICBh
+Y3RpdmUgc3luYyAgIC9kZXYvc2RkCiAgIDYgICAgIDYgICAgICAgOCAgICAgICA5NiAgICAgICAg
+NiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGcKICAgNyAgICAgNyAgICAgICA4ICAgICAgMTEy
+ICAgICAgICA3ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaAovZGV2L3NkaDoKICAgICAgICAg
+IE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMC45MS4wMAogICAgICAgICAgIFVV
+SUQgOiA4MWRkY2NkODo1YWJmNWIwMzoxODE1NDhkOTo0N2U5MjYyNQogIENyZWF0aW9uIFRpbWUg
+OiBGcmkgT2N0ICA5IDA5OjMyOjA4IDIwMDkKICAgICBSYWlkIExldmVsIDogcmFpZDYKICBVc2Vk
+IERldiBTaXplIDogMzkwNzExMjk2ICgzNzIuNjEgR2lCIDQwMC4wOSBHQikKICAgICBBcnJheSBT
+aXplIDogMjM0NDI2Nzc3NiAoMjIzNS42NyBHaUIgMjQwMC41MyBHQikKICAgUmFpZCBEZXZpY2Vz
+IDogOAogIFRvdGFsIERldmljZXMgOiA4ClByZWZlcnJlZCBNaW5vciA6IDAKCiAgUmVzaGFwZSBw
+b3MnbiA6IDMwNjY4MDgzMiAoMjkyLjQ3IEdpQiAzMTQuMDQgR0IpCiAgRGVsdGEgRGV2aWNlcyA6
+IDIgKDYtPjgpCgogICAgVXBkYXRlIFRpbWUgOiBGcmkgRGVjIDEwIDA1OjUyOjM1IDIwMTAKICAg
+ICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogOApXb3JraW5nIERldmljZXMg
+OiA4CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tz
+dW0gOiBiOTkzNmNjOCAtIGNvcnJlY3QKICAgICAgICAgRXZlbnRzIDogMTA0ODI0OAoKICAgICAg
+ICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKICAgICBDaHVuayBTaXplIDogNjRLCgogICAgICBO
+dW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAgICAxICAgICAg
+IDggICAgICAgODAgICAgICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RmCgogICAwICAg
+ICAwICAgICAgIDggICAgICAgNjQgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2Rl
+CiAgIDEgICAgIDEgICAgICAgOCAgICAgICA4MCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAg
+L2Rldi9zZGYKICAgMiAgICAgMiAgICAgICA4ICAgICAgICAwICAgICAgICAyICAgICAgYWN0aXZl
+IHN5bmMgICAvZGV2L3NkYQogICAzICAgICAzICAgICAgIDggICAgICAgMTYgICAgICAgIDMgICAg
+ICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiCiAgIDQgICAgIDQgICAgICAgOCAgICAgICAzMiAgICAg
+ICAgNCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMKICAgNSAgICAgNSAgICAgICA4ICAgICAg
+IDQ4ICAgICAgICA1ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZAogICA2ICAgICA2ICAgICAg
+IDggICAgICAgOTYgICAgICAgIDYgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RnCiAgIDcgICAg
+IDcgICAgICAgOCAgICAgIDExMiAgICAgICAgNyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGgK
+L2Rldi9zZGk6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAu
+OTEuMDAKICAgICAgICAgICBVVUlEIDogODFkZGNjZDg6NWFiZjViMDM6MTgxNTQ4ZDk6NDdlOTI2
+MjUKICBDcmVhdGlvbiBUaW1lIDogRnJpIE9jdCAgOSAwOTozMjowOCAyMDA5CiAgICAgUmFpZCBM
+ZXZlbCA6IHJhaWQ2CiAgVXNlZCBEZXYgU2l6ZSA6IDM5MDcxMTI5NiAoMzcyLjYxIEdpQiA0MDAu
+MDkgR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDIzNDQyNjc3NzYgKDIyMzUuNjcgR2lCIDI0MDAuNTMg
+R0IpCiAgIFJhaWQgRGV2aWNlcyA6IDgKICBUb3RhbCBEZXZpY2VzIDogOApQcmVmZXJyZWQgTWlu
+b3IgOiAwCgogIFJlc2hhcGUgcG9zJ24gOiAzMDY2ODA4MzIgKDI5Mi40NyBHaUIgMzE0LjA0IEdC
+KQogIERlbHRhIERldmljZXMgOiAyICg2LT44KQoKICAgIFVwZGF0ZSBUaW1lIDogRnJpIERlYyAx
+MCAwNTo1MjozNSAyMDEwCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6
+IDgKV29ya2luZyBEZXZpY2VzIDogOAogRmFpbGVkIERldmljZXMgOiAwCiAgU3BhcmUgRGV2aWNl
+cyA6IDAKICAgICAgIENoZWNrc3VtIDogYjk5MzZjZTIgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50
+cyA6IDEwNDgyNDgKCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCiAgICAgQ2h1bmsg
+U2l6ZSA6IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3Rh
+dGUKdGhpcyAgICAgNiAgICAgICA4ICAgICAgIDk2ICAgICAgICA2ICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZwoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDY0ICAgICAgICAwICAgICAgYWN0
+aXZlIHN5bmMgICAvZGV2L3NkZQogICAxICAgICAxICAgICAgIDggICAgICAgODAgICAgICAgIDEg
+ICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RmCiAgIDIgICAgIDIgICAgICAgOCAgICAgICAgMCAg
+ICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGEKICAgMyAgICAgMyAgICAgICA4ICAg
+ICAgIDE2ICAgICAgICAzICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYgogICA0ICAgICA0ICAg
+ICAgIDggICAgICAgMzIgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjCiAgIDUg
+ICAgIDUgICAgICAgOCAgICAgICA0OCAgICAgICAgNSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGQKICAgNiAgICAgNiAgICAgICA4ICAgICAgIDk2ICAgICAgICA2ICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZwogICA3ICAgICA3ICAgICAgIDggICAgICAxMTIgICAgICAgIDcgICAgICBhY3Rp
+dmUgc3luYyAgIC9kZXYvc2RoCi9kZXYvc2RqOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwog
+ICAgICAgIFZlcnNpb24gOiAwLjkxLjAwCiAgICAgICAgICAgVVVJRCA6IDgxZGRjY2Q4OjVhYmY1
+YjAzOjE4MTU0OGQ5OjQ3ZTkyNjI1CiAgQ3JlYXRpb24gVGltZSA6IEZyaSBPY3QgIDkgMDk6MzI6
+MDggMjAwOQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNgogIFVzZWQgRGV2IFNpemUgOiAzOTA3MTEy
+OTYgKDM3Mi42MSBHaUIgNDAwLjA5IEdCKQogICAgIEFycmF5IFNpemUgOiAyMzQ0MjY3Nzc2ICgy
+MjM1LjY3IEdpQiAyNDAwLjUzIEdCKQogICBSYWlkIERldmljZXMgOiA4CiAgVG90YWwgRGV2aWNl
+cyA6IDgKUHJlZmVycmVkIE1pbm9yIDogMAoKICBSZXNoYXBlIHBvcyduIDogMzA2NjgwODMyICgy
+OTIuNDcgR2lCIDMxNC4wNCBHQikKICBEZWx0YSBEZXZpY2VzIDogMiAoNi0+OCkKCiAgICBVcGRh
+dGUgVGltZSA6IEZyaSBEZWMgMTAgMDU6NTI6MzUgMjAxMAogICAgICAgICAgU3RhdGUgOiBjbGVh
+bgogQWN0aXZlIERldmljZXMgOiA4CldvcmtpbmcgRGV2aWNlcyA6IDgKIEZhaWxlZCBEZXZpY2Vz
+IDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IGI5OTM2Y2Y0IC0gY29y
+cmVjdAogICAgICAgICBFdmVudHMgOiAxMDQ4MjQ4CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5
+bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlu
+b3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDcgICAgICAgOCAgICAgIDExMiAgICAgICAg
+NyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGgKCiAgIDAgICAgIDAgICAgICAgOCAgICAgICA2
+NCAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGUKICAgMSAgICAgMSAgICAgICA4
+ICAgICAgIDgwICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZgogICAyICAgICAy
+ICAgICAgIDggICAgICAgIDAgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RhCiAg
+IDMgICAgIDMgICAgICAgOCAgICAgICAxNiAgICAgICAgMyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
+di9zZGIKICAgNCAgICAgNCAgICAgICA4ICAgICAgIDMyICAgICAgICA0ICAgICAgYWN0aXZlIHN5
+bmMgICAvZGV2L3NkYwogICA1ICAgICA1ICAgICAgIDggICAgICAgNDggICAgICAgIDUgICAgICBh
+Y3RpdmUgc3luYyAgIC9kZXYvc2RkCiAgIDYgICAgIDYgICAgICAgOCAgICAgICA5NiAgICAgICAg
+NiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGcKICAgNyAgICAgNyAgICAgICA4ICAgICAgMTEy
+ICAgICAgICA3ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaAo=
+--0016e64cbe0a47b4b10497115fd9--
