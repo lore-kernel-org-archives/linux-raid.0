@@ -1,45 +1,57 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: disable creation of md127
-Date: Sat, 11 Dec 2010 08:58:59 +1100
-Message-ID: <20101211085859.55d0f889@notabene.brown>
-References: <4D029DD6.5070705@feystorm.net>
+Subject: Re: Crash during raid6 reshape, now cannot restart?
+Date: Sat, 11 Dec 2010 09:02:53 +1100
+Message-ID: <20101211090253.2f2b7a7c@notabene.brown>
+References: <AANLkTimk7Ecth7n+qPZ7R-JOAmCmJUJbCTAw3uY8FpPO@mail.gmail.com>
+	<20101211074305.5f55c4b4@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D029DD6.5070705@feystorm.net>
+In-Reply-To: <20101211074305.5f55c4b4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patrick H." <linux-raid@feystorm.net>
+To: Phil Genera <pg@fivesevenfive.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 10 Dec 2010 14:38:30 -0700 "Patrick H." <linux-raid@feystorm.net>
-wrote:
+On Sat, 11 Dec 2010 07:43:05 +1100 Neil Brown <neilb@suse.de> wrote:
 
-> How can I prevent the MD driver from auto-creating md127 on boot?
-> I have a server which is exporting /dev/sdb1 via iSCSI. The remote 
-> client for this device is using it in a raid device so it has raid 
-> metadata on it. However because of this, when the target server boots 
-> up, the md driver shoves it into md127. And because of this, the iSCSI 
-> target daemon (tgtd) wont export the device as its now part of a raid 
-> device.
-> The partition type is 0x83, not 0xfd.
+> > 
+> > raid5: reshape_position too early for auto-recovery - aborting.  
 > 
-> RHEL6 2.6.32-71
+> Something must be going wrong with the math in raid5:
+> 
+>                if (mddev->delta_disks < 0
+>                     ? (here_new * mddev->new_chunk_sectors <=
+>                        here_old * mddev->chunk_sectors)
+>                     : (here_new * mddev->new_chunk_sectors >=
+>                        here_old * mddev->chunk_sectors)) {
+>                         /* Reading from the same stripe as writing to - bad */
+>                         printk(KERN_ERR "raid5: reshape_position too early for "
+>                                "auto-recovery - aborting.\n");
+>                         return -EINVAL;
+>                 }
+> 
+> there 'here_new* new_chunk_size' must be over-flowing.  So the size of the
+> array must only just fit into sector_t.
+> On and arm5 you would need to have CONFIG_LBD set - do you know if it is?
+> 
+> I guess I need to make that code more robust when sector_t doesn't have lots
+> more bits that the size of the device...
+> 
+> If you can compile your own kernel, you should be able to get it to work
+> easily.  If not ... complain to whoever provided you with a kernel.
+> 
 
-The md driver isn't auto-creating this.  
-mdadm is being run and being asked to create this, possibly implicitly.
+No ... I take that back.  here_new is the result of dividing the
+reshape_position by chunk_sector times number of disks.
+So multiplying by chunk_sectors again is not going to cause an overflow.
 
-Exactly how you stop this from happening depends on where it is an initrd
-script or a boot script that is doing it, and which version of mdadm you have.
+So I have no idea what if going on here.... maybe a compiler bug?
 
-If you have 3.0 or later, then putting
-   AUTO -all
-
-in mdadm.conf might be enough.
-If you have a 2.x, you probably need to tell the init script not to run
-mdadm, maybe edit the script, maybe set some default variable.  I know little
-about RHEL and so cannot suggest specifics.
+If you compile your own kernel, I would put some printk's in
+drives/md/raid5.c just before the above code to see what the values of the
+variables are, and to see what the results of the multiplications will be.
 
 NeilBrown
 
