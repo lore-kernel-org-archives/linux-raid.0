@@ -1,48 +1,31 @@
 From: Luca Berra <bluca@comedia.it>
-Subject: [PATCH] segfault in imsm create with wrong arguments
-Date: Sun, 12 Dec 2010 12:33:55 +0100
-Message-ID: <20101212113355.GA24577@maude.comedia.it>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+	by user
+Date: Sun, 12 Dec 2010 14:20:28 +0100
+Message-ID: <20101212132028.GB24577@maude.comedia.it>
+References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com> <201012041012.23757.trapni@gentoo.org> <AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="HlL+5n6rz5pIUxbD"
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, Dec 04, 2010 at 03:08:05PM +0300, Andrey Borzenkov wrote:
+>mdmon does not belong to user. User is not even aware that it is
+>started. And it is likely not the last case. So systemd does need some
+>framework which can move such processes out of user session. It
+>probably needs some sd_daemon API to notify systemd that it is system
+>level task even if it was started as result of user interaction.
 
---HlL+5n6rz5pIUxbD
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Disposition: inline
+what about running mdmon --all --takeover outside of user context at
+shutdown, it should replace all mdmon processes with new ones that won't
+be killed when user sessions are being closed?
 
-When calling mdadm -C --metadata=imsm -l 1 /dev/sd..
-mdadm segfaults in default_chunk_imsm()
-above syntax is incorrect, but mdadm should error instead of segfaulting
+Regards,
+L.
 
 -- 
 Luca Berra -- bluca@comedia.it
-
---HlL+5n6rz5pIUxbD
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: attachment; filename="mdadm-3.1.4-imsm-create-segfault.patch"
-
-When calling mdadm -C --metadata=imsm -l 1 /dev/sd..
-mdadm segfaults in default_chunk_imsm()
-above syntax is incorrect, but mdadm should error instead of segfaulting
-
-Signed-off-by: Luca Berra <bluca@comedia.it>
-
-diff -p -up mdadm-3.1.4/super-intel.c.bluca mdadm-3.1.4/super-intel.c
---- mdadm-3.1.4/super-intel.c.bluca	2010-08-26 02:24:16.000000000 +0000
-+++ mdadm-3.1.4/super-intel.c	2010-12-12 11:13:00.024371004 +0000
-@@ -4119,7 +4119,7 @@ static int default_chunk_imsm(struct sup
- {
- 	struct intel_super *super = st->sb;
- 
--	if (!super->orom)
-+	if (!super || !super->orom)
- 		return 0;
- 
- 	return imsm_orom_default_chunk(super->orom);
-
---HlL+5n6rz5pIUxbD--
