@@ -1,54 +1,37 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Degraded Array
-Date: Fri, 10 Dec 2010 22:29:39 -0600
-Message-ID: <CA.F2.19545.73EF20D4@cdptpa-omtalb.mail.rr.com>
-References: <20101204174457.4249ba23@notabene.brown>
-Reply-To: <lrhorer@satx.rr.com>
+From: Phil Genera <pg@fivesevenfive.org>
+Subject: Re: Crash during raid6 reshape, now cannot restart?
+Date: Sat, 11 Dec 2010 19:12:37 -0800
+Message-ID: <AANLkTimgP5Cc5U+B6fa8SO8X00PXECtcdbw6H5taHumU@mail.gmail.com>
+References: <AANLkTimk7Ecth7n+qPZ7R-JOAmCmJUJbCTAw3uY8FpPO@mail.gmail.com>
+ <20101211074305.5f55c4b4@notabene.brown> <20101211090253.2f2b7a7c@notabene.brown>
+ <AANLkTikSZTahD2teZg7dkDkfrTaHJhjbG4q0W8n40C7o@mail.gmail.com> <AANLkTin=_nTe8RgrOSyhPbcU26EDxJ=Sx177CzB2MD58@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101204174457.4249ba23@notabene.brown>
+In-Reply-To: <AANLkTin=_nTe8RgrOSyhPbcU26EDxJ=Sx177CzB2MD58@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>, "'Majed B.'" <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	Well, that was painful, and more than a little odd.  As I reported
-before, the system halted dead during the re-shape from 13 disks to 14 on
-the RAID6 array of the main server.  The array reassembled after reboot, but
-with only 12 drives.  I'm pretty sure one drive was missing because it (the
-14th) wasn't in mdadm.conf, because of course I had not put it there, yet.
-I'm not exactly sure why the 12th wasn't assembled in the array.  Any way,
-during the continued re-shape, it halted again.  I brought it back up again,
-and it eventually completed the re-shape, but with hundreds of thousands of
-reported inconsistencies. I re-added the two faulted drives one at a time
-and the recovery finished both times without apparent error.  When it was
-done, I started looking at the file system, and it was a mess.  At one
-point, XFS crashed altogether.  I ran XFS_Repair, and it found numerous
-problems at the file system level.  Several files were lost.  I ran a cmp
-between every file on the backup and on the RAID array I had just re-shaped,
-and nearly every large file was corrupted.  Most small files were intact,
-but a few of them were also toast.  The large files were not totally
-unreadable, however.  In fact most of the videos were mostly intact, but
-with frequent video breakups, stutters, and drop-outs encountered on every
-file I checked that had failed the compare.  I then ran an rsync against the
-corrupted file system with the --checksum option, but it did not copy most
-of the files back from the backup, although it did copy quite a few.  Weird.
-Checking a few of the known bad files with md5sum, every pair had different
-CRCs.  I also checked a few apparently good files, and every pair of those
-had matching CRCs.  I ran another cmp, piping the list of failures to a log
-file, and then used the list to copy the remaining failed files back to the
-main array.  Finally, I did one last cmp between the two, and every file
-passed except those which were expected not to.
+On Sat, Dec 11, 2010 at 11:06, Phil Genera <pg@fivesevenfive.org> wrote:
+> On Fri, Dec 10, 2010 at 14:11, Phil Genera <pg@fivesevenfive.org> wrote:
+>> I'm happy to try my own kernel, but first I think I'll try pulling the
+>> disks and putting them on an x86 machine to see if its actually
+>> platform related. If that works, I can keep the broken array around
+>> for a bit to troubleshoot on. Thanks!
+>
+> Gave it a shot on an x86 machine today (with an oddly old mdadm, from
+> ubuntu lucid), and mdadm segfault'd. I guess there's no avoiding
+> building some kernel modules.
+>
+> details:
+>
+> $ mdadm --version
+> mdadm - v2.6.7.1 - 15th October 2008
 
-I have no idea what could have caused this, but given the symptoms it seems
-likely the stripes on one of the drives were accidentally put in the wrong
-place while the re-shape took place, or something like that.  On the up
-side, the arrays have never performed better.  I'm very pleased.  Running
-two TCP transfers at once over a 1000M Ethernet link, the transfers topped
-out at over 928 Mbps.  Single TCP transfers managed better than 800Mbps.
-Some intra-machine processes topped out at nearly 2200 Mbps.  There is no
-sign at all of any corruption post re-shape.
+I built mdam 3.1.4 from source, and got the array reshaping again on
+x86. I'm still trying to build a new raid456.ko on this tiny arm box
+with some extra debugging in it.
 
+-- 
+Phil
