@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 02/16] WORKAROUND: md reports idle state during reshape start
-	- Remove
-Date: Mon, 13 Dec 2010 15:45:04 +0100
-Message-ID: <20101213144504.4384.60937.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 03/16] FIX: remove unnecessary load_super() call
+Date: Mon, 13 Dec 2010 15:45:13 +0100
+Message-ID: <20101213144513.4384.80149.stgit@gklab-170-024.igk.intel.com>
 References: <20101213143604.4384.55544.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,26 +13,31 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Remove previously inserted workaround.
+Code cleanup. Remove unnecessary load_super() call
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- monitor.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ super-intel.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/monitor.c b/monitor.c
-index 0961636..cab558c 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -312,8 +312,7 @@ static int read_and_act(struct active_array *a)
- 	/* finalize reshape detection
- 	 */
- 	if ((a->curr_action != reshape) &&
--	    (a->prev_action == reshape) &&
--	    (a->info.reshape_progress > 2)) {
-+	    (a->prev_action == reshape)) {
- 		/* set reshape_not_active
- 		 * to allow for future rebuilds
- 		 */
+diff --git a/super-intel.c b/super-intel.c
+index 6697257..0a27836 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -8159,14 +8159,6 @@ int imsm_manage_container_reshape(struct supertype *st, char *backup)
+ 			int array;
+ 
+ 			for (i = 0; i < mpb->num_raid_devs; i++) {
+-				struct intel_super *super;
+-
+-				st->ss->load_super(st, fd, NULL);
+-				if (st->sb == NULL) {
+-					dprintf("cannot get sb\n");
+-					ret_val = 1;
+-					goto imsm_manage_container_reshape_exit;
+-				}
+ 				info2.devs = NULL;
+ 				super = st->sb;
+ 				super->current_vol = i;
 
