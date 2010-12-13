@@ -1,89 +1,139 @@
-From: Neil Brown <neilb@suse.de>
+From: "Patrick H." <linux-raid@feystorm.net>
 Subject: Re: md device renaming
-Date: Mon, 13 Dec 2010 14:13:47 +1100
-Message-ID: <20101213141347.0753fbca@notabene.brown>
-References: <4D0586D1.2040501@feystorm.net>
-	<20101213134920.70512086@notabene.brown>
-	<4D058AA2.8090401@feystorm.net>
+Date: Sun, 12 Dec 2010 20:37:56 -0700
+Message-ID: <4D059514.6040901@feystorm.net>
+References: <4D0586D1.2040501@feystorm.net>	<20101213134920.70512086@notabene.brown>	<4D058AA2.8090401@feystorm.net> <20101213141347.0753fbca@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D058AA2.8090401@feystorm.net>
+In-Reply-To: <20101213141347.0753fbca@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patrick H." <linux-raid@feystorm.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 12 Dec 2010 19:53:22 -0700 "Patrick H." <linux-raid@feystorm.net>
-wrote:
+Sent: Sun Dec 12 2010 20:13:47 GMT-0700 (Mountain Standard Time)
+From: Neil Brown <neilb@suse.de>
+To: Patrick H. <linux-raid@feystorm.net> linux-raid@vger.kernel.org
+Subject: Re: md device renaming
+> Sorry, I obviously didn't read properly...
+> It must be getting the old name from somewhere.
+> I would
+>  - stop the array
+>  - use "mdadm -E" to examine each device and see what name is recorded.
+>  - look in /etc/mdadm.conf to see what name is there.
+>  - check /dev/.mdadm/map or possible /var/run/mdadm/map to see if the
+>    array is mentioned in there (it shouldn't be).
+>
+> to find out where the old name still is.  Then at least you know what needs
+> fixing.
+> Just for completeness: what version of mdadm are you using?
+>
+> NeilBrown
+>   
+At the bottom is the output from the `mdadm -E` after stopping the 
+array. None of them say anything about the old name
+I'm not using mdadm.conf. This is part of a HA cluster, so I'm trying 
+not to keep any info in local files, but all in the HA software 
+(pacemaker). The only thing in mdadm.conf is "MAILADDR root" and "AUTO -all"
+/dev/.mdadm/ is completely empty, and /var/run/mdadm/map doesnt exist 
+either (just a pid file in that dir)
 
-> Sent: Sun Dec 12 2010 19:49:20 GMT-0700 (Mountain Standard Time)
-> From: Neil Brown <neilb@suse.de>
-> To: Patrick H. <linux-raid@feystorm.net> linux-raid@vger.kernel.org
-> Subject: Re: md device renaming
-> > On Sun, 12 Dec 2010 19:37:05 -0700 "Patrick H." <linux-raid@feystorm.net>
-> > wrote:
-> >
-> >   
-> >> So, every time I start up this md device with a specified name, it 
-> >> renames itself to something else.
-> >>
-> >> When I first created the array, I typo'd the name as 'nas01:isci-sdb1' 
-> >> (should be nas01:iscsi-sdb1). And now every time I assemble it with the 
-> >> correct name, it renames itself:
-> >>
-> >> # /sbin/mdadm -A /dev/md/nas01:iscsi-sdb1 --uuid 
-> >> abddf4ea:06524e68:8e2b8f4e:1b24c56d -R -U name
-> >> mdadm: /dev/md/nas01:iscsi-sdb1 has been started with 2 drives (out of 3)
-> >> # ls /dev/md/nas*
-> >> /dev/md/nas01:isci-sdb1
-> >> # ls /dev/disk/by-id/md-name*
-> >> /dev/disk/by-id/md-name-nas01:iscsi-sdb1
-> >> # mdadm -D /dev/md/nas01:isci-sdb1|grep Name
-> >>            Name : nas01:iscsi-sdb1  (local to host nas01)
-> >>
-> >>
-> >> So, notice how it says it started it as "nas01:iscsi-sdb1", however once 
-> >> its up and I do the `ls`, it has the original name on it. I've tried -U 
-> >> name to update the name on it when its assembled, but doesnt do a thing.
-> >>
-> >> Am I missing something here. Shouldnt it be assembling itself with the 
-> >> specified name I gave it, not the original name? And then how do I 
-> >> update it so the name in the metadata is correct?
-> >> (and yes I know its missing a drive, I'm testing some stuff out)
-> >>     
-> >
-> > It is assembling it with the name you give it, but the name stored in the
-> > metadata is still the old name.
-> > Try adding --update=name to the --assemble command.
-> >
-> > NeilBrown
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >   
-> How is it assembling with the name I gave it? It says 
-> "/dev/md/nas01:iscsi-sdb1 has been started", but it really is using 
-> "nas01:isci-sdb1". Even if it is going to use the name I created it 
-> with, it should say that instead of the name I provided on the assemble 
-> command.
-> And I did add the update argument, see the '-U name' option on the end 
-> of the command above.
+# mdadm --version
+mdadm - v3.1.3 - 6th August 2010
+# uname -r
+2.6.32-71.el6.x86_64
 
 
-Sorry, I obviously didn't read properly...
-It must be getting the old name from somewhere.
-I would
- - stop the array
- - use "mdadm -E" to examine each device and see what name is recorded.
- - look in /etc/mdadm.conf to see what name is there.
- - check /dev/.mdadm/map or possible /var/run/mdadm/map to see if the
-   array is mentioned in there (it shouldn't be).
+The first 2 disks are the ones that ended up in the array. The third 
+disk is one I failed out so its not in it
 
-to find out where the old name still is.  Then at least you know what needs
-fixing.
-Just for completeness: what version of mdadm are you using?
+# mdadm -E 
+/dev/disk/by-path/ip-165.212.101.241\:3260-iscsi-iqn.165.212.101.240\:nas01.sdb1-lun-1
+/dev/disk/by-path/ip-165.212.101.241:3260-iscsi-iqn.165.212.101.240:nas01.sdb1-lun-1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : abddf4ea:06524e68:8e2b8f4e:1b24c56d
+           Name : nas01:126  (local to host nas01)
+  Creation Time : Thu Dec  9 20:41:53 2010
+     Raid Level : raid5
+   Raid Devices : 3
 
-NeilBrown
+ Avail Dev Size : 524032 (255.92 MiB 268.30 MB)
+     Array Size : 1048064 (511.84 MiB 536.61 MB)
+    Data Offset : 224 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : c38615d5:53c09e0c:33160bea:237031fd
+
+    Update Time : Mon Dec 13 03:28:28 2010
+       Checksum : 7e6f1bdd - correct
+         Events : 4321
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 0
+   Array State : AA. ('A' == active, '.' == missing)
+
+2010/12/13 03:28:35
+root@nas01 /etc/syslog-ng # mdadm -E 
+/dev/disk/by-path/ip-165.212.101.242\:3260-iscsi-iqn.165.212.101.240\:nas02.sdb1-lun-1
+/dev/disk/by-path/ip-165.212.101.242:3260-iscsi-iqn.165.212.101.240:nas02.sdb1-lun-1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : abddf4ea:06524e68:8e2b8f4e:1b24c56d
+           Name : nas01:126  (local to host nas01)
+  Creation Time : Thu Dec  9 20:41:53 2010
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 524032 (255.92 MiB 268.30 MB)
+     Array Size : 1048064 (511.84 MiB 536.61 MB)
+    Data Offset : 224 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : aab5bf73:94242880:8d28b333:f0c88918
+
+    Update Time : Mon Dec 13 03:28:39 2010
+       Checksum : f5a31a3a - correct
+         Events : 4325
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 1
+   Array State : AA. ('A' == active, '.' == missing)
+
+# mdadm -E 
+/dev/disk/by-path/ip-165.212.101.243\:3260-iscsi-iqn.165.212.101.240\:nas03.sdb1-lun-1
+/dev/disk/by-path/ip-165.212.101.243:3260-iscsi-iqn.165.212.101.240:nas03.sdb1-lun-1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : abddf4ea:06524e68:8e2b8f4e:1b24c56d
+           Name : nas01:iscsi-sdb1  (local to host nas01)
+  Creation Time : Thu Dec  9 20:41:53 2010
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 524032 (255.92 MiB 268.30 MB)
+     Array Size : 1048064 (511.84 MiB 536.61 MB)
+    Data Offset : 224 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 78faaa98:22154538:aeeab927:19a62875
+
+    Update Time : Mon Dec 13 03:03:18 2010
+       Checksum : c358be3f - correct
+         Events : 3731
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+   Device Role : Active device 2
+   Array State : AAA ('A' == active, '.' == missing)
+
+
