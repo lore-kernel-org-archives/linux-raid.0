@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 03/16] FIX: remove unnecessary load_super() call
-Date: Mon, 13 Dec 2010 15:45:13 +0100
-Message-ID: <20101213144513.4384.80149.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH 04/16] FIX: prepare for new spares management
+Date: Mon, 13 Dec 2010 15:45:22 +0100
+Message-ID: <20101213144522.4384.80703.stgit@gklab-170-024.igk.intel.com>
 References: <20101213143604.4384.55544.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,31 +13,27 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Code cleanup. Remove unnecessary load_super() call
+When grow uses new spares management from auto-rebuild
+Disks list is not guaranteed to be in order.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Signed-off-by: Krzysztof Wojcik <krzysztof.wolcik@intel.com>
 ---
 
- super-intel.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+ super-intel.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 6697257..0a27836 100644
+index 0a27836..bee28bc 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -8159,14 +8159,6 @@ int imsm_manage_container_reshape(struct supertype *st, char *backup)
- 			int array;
+@@ -7499,6 +7499,9 @@ static int imsm_reshape_array_manage_new_slots(struct intel_super *super,
+ 		int fd2;
+ 		int rv;
  
- 			for (i = 0; i < mpb->num_raid_devs; i++) {
--				struct intel_super *super;
--
--				st->ss->load_super(st, fd, NULL);
--				if (st->sb == NULL) {
--					dprintf("cannot get sb\n");
--					ret_val = 1;
--					goto imsm_manage_container_reshape_exit;
--				}
- 				info2.devs = NULL;
- 				super = st->sb;
- 				super->current_vol = i;
++		if (dl->index < 0)
++			continue;
++
+ 		dprintf("\tLooking at device %s (index = %i).\n",
+ 			dl->devname,
+ 			dl->index);
 
