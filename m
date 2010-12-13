@@ -1,404 +1,418 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH] Finding spare devices for grow - rework
-Date: Mon, 13 Dec 2010 13:29:03 +0100
-Message-ID: <20101213122903.7090.92287.stgit@gklab-170-111.igk.intel.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: PATCH 1/2] IMSM: Fix problem in mdmon monitor of using removed disk
+ from in imsm container.
+Date: Mon, 13 Dec 2010 16:27:20 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176AAED46@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-This patch introduces new method of finding spare devices
-for grow (OnLine Capacity Expansion) operation.
-The patch reuses code and procedures delivered
-by the Array Auto Rebuild functionality hence it reduce
-code redundancy.
-The patch also introduces spare drive size verification
-(missing in early implementation)
+Hi Neil,
+Reworked according your suggestion:
+- fd removed from remove_from_super() parameters list.
+Marcin
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+
+
+From 259b9d4911f92070d91d79deb79ce9563b351039 Mon Sep 17 00:00:00 2001
+From: Marcin Labun <marcin.labun@intel.com>
+Date: Mon, 13 Dec 2010 16:29:56 +0100
+Subject: [PATCH 1/2] IMSM: Fix problem in mdmon monitor of using removed disk from in imsm container.
+
+Manager thread shall pass the information to monitor thread (mdmon)
+that some devices are removed from container. Otherwise, monitor (mdmon)
+might use such devices (spares) to rebuild the array that has gone degraded.
+
+This problem happens for imsm containers, since a list of the container disks
+is maintained in intel_super structure. When array goes degraded, the list is
+searched to find a spare disks to start rebuild.
+Without this fix the rebuild could be stared on the spare device that was
+a member of the container, but has been removed from it.
+
+New super type function handler has been introduced to prepare metadata
+format specific information about removed devices.
+int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo)
+
+The message prepared in remove_from_super is later processed
+by proceess_update handler in monitor thread.
+
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 ---
- super-intel.c |  142 +++++++++++++++++++++++------------------------
- sysfs.c       |  174 ---------------------------------------------------------
- 2 files changed, 70 insertions(+), 246 deletions(-)
+ managemon.c   |   31 ++++++++++
+ mdadm.h       |    6 ++-
+ super-intel.c |  173 +++++++++++++++++++++++++++++++++++++++++++++++---------
+ 3 files changed, 181 insertions(+), 29 deletions(-)
 
+diff --git a/managemon.c b/managemon.c
+index ebd9b73..ca1ba0a 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -299,6 +299,36 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
+ 	st->update_tail = NULL;
+ }
+ 
++/*
++ * Create and queue update structure about the removed disks.
++ * The update is prepared by super type handler and passed to the monitor
++ * thread.
++ */
++static void remove_disk_from_container(struct supertype *st, struct mdinfo *sd)
++{
++	struct metadata_update *update = NULL;
++	mdu_disk_info_t dk = {
++		.number = -1,
++		.major = sd->disk.major,
++		.minor = sd->disk.minor,
++		.raid_disk = -1,
++		.state = 0,
++	};
++	/* nothing to do if super type handler does not support
++	 * remove disk primitive
++	 */
++	if (!st->ss->remove_from_super)
++		return;
++	dprintf("%s: remove %d:%d from container\n",
++		__func__, sd->disk.major, sd->disk.minor);
++
++	st->update_tail = &update;
++	st->ss->remove_from_super(st, &dk);
++	st->ss->write_init_super(st);
++	queue_metadata_update(update);
++	st->update_tail = NULL;
++}
++
+ static void manage_container(struct mdstat_ent *mdstat,
+ 			     struct supertype *container)
+ {
+@@ -336,6 +366,7 @@ static void manage_container(struct mdstat_ent *mdstat,
+ 			if (!found) {
+ 				cd = *cdp;
+ 				*cdp = (*cdp)->next;
++				remove_disk_from_container(container, cd);
+ 				free(cd);
+ 			} else
+ 				cdp = &(*cdp)->next;
+diff --git a/mdadm.h b/mdadm.h
+index 175d228..f5b59c0 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -634,7 +634,11 @@ extern struct superswitch {
+ 	 * when hot-adding a spare.
+ 	 */
+ 	int (*add_to_super)(struct supertype *st, mdu_disk_info_t *dinfo,
+-			     int fd, char *devname);
++			    int fd, char *devname);
++	/* update the metadata to delete a device,
++	 * when hot-removing.
++	 */
++	int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo);
+ 
+ 	/* Write metadata to one device when fixing problems or adding
+ 	 * a new device.
 diff --git a/super-intel.c b/super-intel.c
-index 626ecb6..c8d6382 100644
+index 2943898..fe642ed 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -7352,77 +7352,72 @@ exit_imsm_reshape_is_allowed_on_container:
- 	return ret_val;
+@@ -233,6 +233,10 @@ struct intel_dev {
+ 	unsigned index;
+ };
+ 
++enum action {
++	DISK_REMOVE = 1,
++	DISK_ADD
++};
+ /* internal representation of IMSM metadata */
+ struct intel_super {
+ 	union {
+@@ -258,8 +262,10 @@ struct intel_super {
+ 		int extent_cnt;
+ 		struct extent *e; /* for determining freespace @ create */
+ 		int raiddisk; /* slot to fill in autolayout */
++		enum action action;
+ 	} *disks;
+-	struct dl *add; /* list of disks to add while mdmon active */
++	struct dl *disk_mgmt_list; /* list of disks to add/remove while mdmon
++				      active */
+ 	struct dl *missing; /* disks removed while we weren't looking */
+ 	struct bbm_log *bbm_log;
+ 	const char *hba; /* device path of the raid controller for this metadata */
+@@ -285,6 +291,7 @@ enum imsm_update_type {
+ 	update_kill_array,
+ 	update_rename_array,
+ 	update_add_disk,
++	update_add_remove_disk
+ };
+ 
+ struct imsm_update_activate_spare {
+@@ -316,7 +323,7 @@ struct imsm_update_rename_array {
+ 	int dev_idx;
+ };
+ 
+-struct imsm_update_add_disk {
++struct imsm_update_add_remove_disk {
+ 	enum imsm_update_type type;
+ };
+ 
+@@ -2437,6 +2444,7 @@ static void __free_imsm_disk(struct dl *d)
+ 	free(d);
+ 
+ }
++
+ static void free_imsm_disks(struct intel_super *super)
+ {
+ 	struct dl *d;
+@@ -3402,6 +3410,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	dd->devname = devname ? strdup(devname) : NULL;
+ 	dd->fd = fd;
+ 	dd->e = NULL;
++	dd->action = DISK_ADD;
+ 	rv = imsm_read_serial(fd, devname, dd->serial);
+ 	if (rv) {
+ 		fprintf(stderr,
+@@ -3421,8 +3430,8 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		dd->disk.scsi_id = __cpu_to_le32(0);
+ 
+ 	if (st->update_tail) {
+-		dd->next = super->add;
+-		super->add = dd;
++		dd->next = super->disk_mgmt_list;
++		super->disk_mgmt_list = dd;
+ 	} else {
+ 		dd->next = super->disks;
+ 		super->disks = dd;
+@@ -3431,6 +3440,43 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	return 0;
  }
  
--struct mdinfo *get_spares_imsm(int devnum)
-+/* Function: get_spares_for_grow
-+ * Description: Allocates memory and creates list of spare devices
-+ * 		avaliable in containter. Checks if spare drive size is acceptable.
-+ * Parameters: Pointer to the supertype structure
-+ * Returns: Pointer to the list of spare devices (mdinfo structure) on sucess,
-+ * 		NULL if fail
-+ */
-+struct mdinfo *get_spares_for_grow(struct supertype *st)
++
++static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk)
++{
++	struct intel_super *super = st->sb;
++	struct dl *dd;
++
++	/* remove from super works only in mdmon - for communication
++	 * manager - monitor. Check if communication memory buffer
++	 * is prepared.
++	 */
++	if (!st->update_tail) {
++		fprintf(stderr,
++			Name ": %s shall be used in mdmon context only"
++			"(line %d).\n", __func__, __LINE__);
++		return 1;
++	}
++	dd = malloc(sizeof(*dd));
++	if (!dd) {
++		fprintf(stderr,
++			Name ": malloc failed %s:%d.\n", __func__, __LINE__);
++		return 1;
++	}
++	memset(dd, 0, sizeof(*dd));
++	dd->major = dk->major;
++	dd->minor = dk->minor;
++	dd->index = -1;
++	dd->fd = -1;
++	dd->disk.status = SPARE_DISK;
++	dd->action = DISK_REMOVE;
++
++	dd->next = super->disk_mgmt_list;
++	super->disk_mgmt_list = dd;
++
++
++	return 0;
++}
++
+ static int store_imsm_mpb(int fd, struct imsm_super *mpb);
+ 
+ static union {
+@@ -3592,13 +3638,13 @@ static int create_array(struct supertype *st, int dev_idx)
+ 	return 0;
+ }
+ 
+-static int _add_disk(struct supertype *st)
++static int mgmt_disk(struct supertype *st)
  {
-+	int err;
-+	char buf[PATH_MAX];
- 	int fd = -1;
--	struct mdinfo *info = NULL;
--	struct mdinfo *ret_val = NULL;
--	int cont_fd = -1;
--	struct supertype *st = NULL;
--	int find_result;
--	struct intel_super *super = NULL;
--
--	dprintf("imsm: get_spares_imsm for device: %i.\n", devnum);
-+	dev_t dev = 0;
-+	struct mdinfo *disks, *d, *ds;
-+	struct mdinfo *spares = NULL;
-+	unsigned long long min_size = min_acceptable_spare_size_imsm(st);
+ 	struct intel_super *super = st->sb;
+ 	size_t len;
+-	struct imsm_update_add_disk *u;
++	struct imsm_update_add_remove_disk *u;
  
--	cont_fd = open_dev(devnum);
--	if (cont_fd < 0) {
--		dprintf("imsm: ERROR: Cannot open container.\n");
--		goto abort;
--	}
-+	sprintf(buf, "/dev/md%i", st->container_dev);
-+	fd = open(buf, O_RDONLY);
+-	if (!super->add)
++	if (!super->disk_mgmt_list)
+ 		return 0;
  
--	/* get first volume */
--	st = super_by_fd(cont_fd, NULL);
--	if (st == NULL) {
--		dprintf("imsm: ERROR: Cannot load container information.\n");
--		goto abort;
--	}
--	find_result = imsm_find_array_minor_by_subdev(0, devnum, &devnum);
--	if (find_result < 0) {
--		dprintf("imsm: ERROR: Cannot find array.\n");
--		goto abort;
--	}
--	fd = open_dev(devnum);
--	if (fd < 0) {
--		dprintf("imsm: ERROR: Cannot open device.\n");
--		goto abort;
--	}
--	st->ss->load_super(st, cont_fd, NULL);
--	if (st->sb == NULL) {
--		dprintf("imsm: ERROR: Cannot load array information.\n");
--		goto abort;
--	}
--	info = sysfs_read(fd,
--			  0,
--			  GET_LEVEL | GET_VERSION | GET_DEVS | GET_STATE);
--	if (info == NULL) {
--		dprintf("imsm: Cannot get device info.\n");
--		goto abort;
--	}
--	super = st->sb;
--	super->current_vol = 0;
--	st->ss->getinfo_super(st, info, NULL);
--	ret_val = sysfs_get_unused_spares(cont_fd, fd);
--	if (ret_val == NULL) {
--		dprintf("imsm: ERROR: Cannot get spare devices.\n");
--		goto abort;
--	}
--	if (ret_val->array.spare_disks == 0) {
--		dprintf("imsm: ERROR: No available spares.\n");
--		free(ret_val);
--		ret_val = NULL;
--		goto abort;
--	}
-+	err = load_container_imsm(st, fd, NULL);
-+	close(fd);
-+	if (err)
-+		return NULL;
+ 	len = sizeof(*u);
+@@ -3609,7 +3655,7 @@ static int _add_disk(struct supertype *st)
+ 		return 1;
+ 	}
  
--abort:
--	if (st)
--		st->ss->free_super(st);
--	sysfs_free(info);
--	if (fd > -1)
--		close(fd);
--	if (cont_fd > -1)
--		close(cont_fd);
-+	/* get list of alldisks in container */
-+	disks = getinfo_super_disks_imsm(st);
+-	u->type = update_add_disk;
++	u->type = update_add_remove_disk;
+ 	append_metadata_update(st, u, len);
  
--	return ret_val;
-+	if (!disks)
-+		return NULL;
-+	/* find spare devices on the list */
-+	for (d = disks->devs ; d ; d = d->next) {
-+		int found = 0;
-+		if (d->disk.state == 0) {
-+			/* check if size is acceptable */
-+			unsigned long long dev_size;
-+			dev = makedev(d->disk.major,d->disk.minor);
-+			if (min_size &&
-+			    dev_size_from_id(dev,  &dev_size) &&
-+			    dev_size >= min_size) {
-+				dev = 0;
-+				found = 1;
+ 	return 0;
+@@ -3631,10 +3677,10 @@ static int write_init_super_imsm(struct supertype *st)
+ 
+ 		/* determine if we are creating a volume or adding a disk */
+ 		if (current_vol < 0) {
+-			/* in the add disk case we are running in mdmon
+-			 * context, so don't close fd's
++			/* in the mgmt (add/remove) disk case we are running
++			 * in mdmon context, so don't close fd's
+ 			 */
+-			return _add_disk(st);
++			return mgmt_disk(st);
+ 		} else
+ 			rv = create_array(st, current_vol);
+ 
+@@ -4931,6 +4977,7 @@ static void imsm_sync_metadata(struct supertype *container)
+ {
+ 	struct intel_super *super = container->sb;
+ 
++	dprintf("sync metadata: %d\n", super->updates_pending);
+ 	if (!super->updates_pending)
+ 		return;
+ 
+@@ -5235,8 +5282,84 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
+ 	return 0;
+ }
+ 
++
++static struct dl *get_disk_super(struct intel_super *super, int major, int minor)
++{
++	struct dl *dl = NULL;
++	for (dl = super->disks; dl; dl = dl->next)
++		if ((dl->major == major) &&  (dl->minor == minor))
++			return dl;
++	return NULL;
++}
++
++static int remove_disk_super(struct intel_super *super, int major, int minor)
++{
++	struct dl *prev = NULL;
++	struct dl *dl;
++
++	prev = NULL;
++	for (dl = super->disks; dl; dl = dl->next) {
++		if ((dl->major == major) && (dl->minor == minor)) {
++			/* remove */
++			if (prev)
++				prev->next = dl->next;
++			else
++				super->disks = dl->next;
++			dl->next = NULL;
++			__free_imsm_disk(dl);
++			dprintf("%s: removed %x:%x\n",
++				__func__, major, minor);
++			break;
++		}
++		prev = dl;
++	}
++	return 0;
++}
++
+ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned index);
+ 
++static int add_remove_disk_update(struct intel_super *super)
++{
++	int check_degraded = 0;
++	struct dl *disk = NULL;
++	/* add/remove some spares to/from the metadata/contrainer */
++	while (super->disk_mgmt_list) {
++		struct dl *disk_cfg;
++
++		disk_cfg = super->disk_mgmt_list;
++		super->disk_mgmt_list = disk_cfg->next;
++		disk_cfg->next = NULL;
++
++		if (disk_cfg->action == DISK_ADD) {
++			disk_cfg->next = super->disks;
++			super->disks = disk_cfg;
++			check_degraded = 1;
++			dprintf("%s: added %x:%x\n",
++				__func__, disk_cfg->major,
++				disk_cfg->minor);
++		} else if (disk_cfg->action == DISK_REMOVE) {
++			dprintf("Disk remove action processed: %x.%x\n",
++				disk_cfg->major, disk_cfg->minor);
++			disk = get_disk_super(super,
++					      disk_cfg->major,
++					      disk_cfg->minor);
++			if (disk) {
++				/* store action status */
++				disk->action = DISK_REMOVE;
++				/* remove spare disks only */
++				if (disk->index == -1) {
++					remove_disk_super(super,
++							  disk_cfg->major,
++							  disk_cfg->minor);
++				}
 +			}
-+		}
-+		if (found) {
-+			/* append spare to the list */
-+			ds = malloc(sizeof(struct mdinfo));
-+			if (ds == NULL)
-+				goto exit_get_spares_for_grow;
-+			memcpy(ds, d, sizeof(struct mdinfo));
-+			ds->next = spares;
-+			spares = ds;
-+			disks->array.spare_disks++;
++			/* release allocate disk structure */
++			__free_imsm_disk(disk_cfg);
 +		}
 +	}
-+exit_get_spares_for_grow:
-+	/* free memory */
-+	d = disks->devs;
-+	while (d) {
-+		struct mdinfo *tmp;
-+		tmp = d->next;
-+		free(d);
-+		d = tmp;
-+	}
-+	disks->devs = spares;
-+	return disks;
- }
- 
- /*****************************************************************************
-@@ -7707,7 +7702,7 @@ struct imsm_update_reshape *imsm_create_metadata_update_for_reshape(
- 
- 	/* now get spare disks list
- 	 */
--	spares = get_spares_imsm(st->container_dev);
-+	spares = get_spares_for_grow(st);
- 
- 	if (spares == NULL) {
- 		dprintf("imsm: ERROR: Cannot get spare devices.\n");
-@@ -8133,6 +8128,7 @@ static int imsm_reshape_array_manage_new_slots(struct intel_super *super,
- 		int fd2;
- 		int rv;
- 
-+		/* skip not configured disks */
- 		if (dl->index < 0)
- 			continue;
- 
-@@ -8189,10 +8185,11 @@ struct mdinfo *imsm_grow_array(struct active_array *a)
- 	int inst = a->info.container_member;
- 	struct imsm_dev *dev = get_imsm_dev(super, inst);
- 	struct imsm_map *map = get_imsm_map(dev, 0);
-+	struct imsm_map *map_2 = get_imsm_map(dev, 1);
- 	struct mdinfo *di;
- 	struct dl *dl;
- 	int i;
--	int prev_raid_disks = a->info.array.raid_disks;
-+	int prev_raid_disks = map_2->num_members;
- 	int new_raid_disks = prev_raid_disks + a->reshape_delta_disks;
- 	struct mdinfo *vol = NULL;
- 	int fd;
-@@ -8221,12 +8218,13 @@ struct mdinfo *imsm_grow_array(struct active_array *a)
- 	for (i = prev_raid_disks; i < new_raid_disks; i++) {
- 		/* OK, this device can be added.  Try to add.
- 		 */
--		dl = imsm_add_spare(super, i, a, 0, rv);
--		if (!dl)
--			continue;
-+		dl = super->disks;
-+		while (dl) {
-+			if (dl->index == i)
-+				break;
-+			dl = dl->next;
-+		}
- 
--		if (dl->index < 0)
--			dl->index = i;
- 		/* found a usable disk with enough space */
- 		di = malloc(sizeof(*di));
- 		if (!di)
-diff --git a/sysfs.c b/sysfs.c
-index ca29aab..7a0403d 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -801,180 +801,6 @@ int sysfs_unique_holder(int devnum, long rdev)
- 		return found;
- }
- 
--int sysfs_is_spare_device_belongs_to(int fd, char *devname)
--{
--	int ret_val = -1;
--	char fname[PATH_MAX];
--	char *base;
--	char *dbase;
--	struct mdinfo *sra;
--	DIR *dir = NULL;
--	struct dirent *de;
--
--	sra = malloc(sizeof(*sra));
--	if (sra == NULL)
--		goto abort;
--	memset(sra, 0, sizeof(*sra));
--	sysfs_init(sra, fd, -1);
--	if (sra->sys_name[0] == 0)
--		goto abort;
--
--	memset(fname, PATH_MAX, 0);
--	sprintf(fname, "/sys/block/%s/md/", sra->sys_name);
--	base = fname + strlen(fname);
--
--	/* Get all the devices as well */
--	*base = 0;
--	dir = opendir(fname);
--	if (!dir)
--		goto abort;
--	while ((de = readdir(dir)) != NULL) {
--		if (de->d_ino == 0 ||
--		    strncmp(de->d_name, "dev-", 4) != 0)
--			continue;
--		strcpy(base, de->d_name);
--		dbase = base + strlen(base);
--		*dbase = '\0';
--		dbase = strstr(fname, "/md/");
--		if (dbase && strcmp(devname, dbase) == 0) {
--			ret_val = 1;
--			goto abort;
--		}
--	}
--abort:
--	if (dir)
--		closedir(dir);
--	sysfs_free(sra);
--
--	return ret_val;
--}
--
--struct mdinfo *sysfs_get_unused_spares(int container_fd, int fd)
--{
--	char fname[PATH_MAX];
--	char buf[PATH_MAX];
--	char *base;
--	char *dbase;
--	struct mdinfo *ret_val;
--	struct mdinfo *dev;
--	DIR *dir = NULL;
--	struct dirent *de;
--	int is_in;
--	char *to_check;
--
--	ret_val = malloc(sizeof(*ret_val));
--	if (ret_val == NULL)
--		goto abort;
--	memset(ret_val, 0, sizeof(*ret_val));
--	sysfs_init(ret_val, container_fd, -1);
--	if (ret_val->sys_name[0] == 0)
--		goto abort;
--
--	sprintf(fname, "/sys/block/%s/md/", ret_val->sys_name);
--	base = fname + strlen(fname);
--
--	strcpy(base, "raid_disks");
--	if (load_sys(fname, buf))
--		goto abort;
--	ret_val->array.raid_disks = strtoul(buf, NULL, 0);
--
--	/* Get all the devices as well */
--	*base = 0;
--	dir = opendir(fname);
--	if (!dir)
--		goto abort;
--	ret_val->array.spare_disks = 0;
--	while ((de = readdir(dir)) != NULL) {
--		char *ep;
--		if (de->d_ino == 0 ||
--		    strncmp(de->d_name, "dev-", 4) != 0)
--			continue;
--		strcpy(base, de->d_name);
--		dbase = base + strlen(base);
--		*dbase = '\0';
--
--		to_check = strstr(fname, "/md/");
--		is_in = sysfs_is_spare_device_belongs_to(fd, to_check);
--		if (is_in == -1) {
--			char *p;
--			struct stat stb;
--			char stb_name[PATH_MAX];
--
--			dev = malloc(sizeof(*dev));
--			if (!dev)
--				goto abort;
--			strncpy(dev->text_version, fname, 50);
--
--			*dbase++ = '/';
--
--			dev->disk.raid_disk = strtoul(buf, &ep, 10);
--			dev->disk.raid_disk = -1;
--
--			strcpy(dbase, "block/dev");
--			if (load_sys(fname, buf)) {
--				free(dev);
--				continue;
--			}
--			/* check first if we are working on block device
--			 * if not, we cannot check it
--			 */
--			p = strchr(dev->text_version, '-');
--			if (p)
--				p++;
--			sprintf(stb_name, "/dev/%s", p);
--			if (stat(stb_name, &stb) < 0) {
--				dprintf(Name ": stat failed for %s: %s.\n",
--					stb_name, strerror(errno));
--				free(dev);
--				continue;
--			}
--			if (!S_ISBLK(stb.st_mode)) {
--				dprintf(Name\
--					": %s is not a block device."\
--					" Skip checking.\n",
--					stb_name);
--				goto skip;
--			}
--			dprintf(Name": %s seams to a be block device\n",
--				stb_name);
--			sscanf(buf, "%d:%d",
--			       &dev->disk.major,
--			       &dev->disk.minor);
--			strcpy(dbase, "block/device/state");
--			if (load_sys(fname, buf) != 0) {
--				free(dev);
--				continue;
--			}
--			if (strncmp(buf, "offline", 7) == 0) {
--				free(dev);
--				continue;
--			}
--			if (strncmp(buf, "failed", 6) == 0) {
--				free(dev);
--				continue;
--			}
--
--skip:
--			/* add this disk to spares list */
--			dev->next = ret_val->devs;
--			ret_val->devs = dev;
--			ret_val->array.spare_disks++;
--			*(dbase-1) = '\0';
--			dprintf("sysfs: found spare: %s [%d:%d]\n",
--				fname, dev->disk.major, dev->disk.minor);
--		}
--	}
--	closedir(dir);
--	return ret_val;
--
--abort:
--	if (dir)
--		closedir(dir);
--	sysfs_free(ret_val);
--
--	return NULL;
--}
--
- int sysfs_freeze_array(struct mdinfo *sra)
++	return check_degraded;
++}
++
+ static void imsm_process_update(struct supertype *st,
+ 			        struct metadata_update *update)
  {
- 	/* Try to freeze resync/rebuild on this array/container.
+@@ -5546,31 +5669,24 @@ static void imsm_process_update(struct supertype *st,
+ 		super->updates_pending++;
+ 		break;
+ 	}
+-	case update_add_disk:
+-
++	case update_add_remove_disk: {
+ 		/* we may be able to repair some arrays if disks are
+-		 * being added */
+-		if (super->add) {
++		 * being added, check teh status of add_remove_disk
++		 * if discs has been added.
++		 */
++		if (add_remove_disk_update(super)) {
+ 			struct active_array *a;
+ 
+ 			super->updates_pending++;
+- 			for (a = st->arrays; a; a = a->next)
++			for (a = st->arrays; a; a = a->next)
+ 				a->check_degraded = 1;
+ 		}
+-		/* add some spares to the metadata */
+-		while (super->add) {
+-			struct dl *al;
+-
+-			al = super->add;
+-			super->add = al->next;
+-			al->next = super->disks;
+-			super->disks = al;
+-			dprintf("%s: added %x:%x\n",
+-				__func__, al->major, al->minor);
+-		}
+-
+ 		break;
+ 	}
++	default:
++		fprintf(stderr, "error: unsuported process update type:"
++			"(type: %d)\n",	type);
++	}
+ }
+ 
+ static void imsm_prepare_update(struct supertype *st,
+@@ -5755,6 +5871,7 @@ struct superswitch super_imsm = {
+ 	.write_init_super = write_init_super_imsm,
+ 	.validate_geometry = validate_geometry_imsm,
+ 	.add_to_super	= add_to_super_imsm,
++	.remove_from_super = remove_from_super_imsm,
+ 	.detail_platform = detail_platform_imsm,
+ 	.kill_subarray = kill_subarray_imsm,
+ 	.update_subarray = update_subarray_imsm,
+-- 
+1.6.4.2
 
