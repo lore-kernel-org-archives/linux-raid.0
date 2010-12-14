@@ -1,75 +1,86 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] fix: Monitor doesn't return after starting daemon
-Date: Wed, 15 Dec 2010 08:58:14 +1100
-Message-ID: <20101215085814.6a04b9af@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010BAF0FAF@irsmsx504.ger.corp.intel.com>
-	<20101117212242.5ad7b210@notabene.brown>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BE8FD35@irsmsx504.ger.corp.intel.com>
-	<20101122131644.6ba971f2@notabene.brown>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010BF03A1F@irsmsx504.ger.corp.intel.com>
-	<20101123123417.09397400@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D174BA9762@irsmsx503.ger.corp.intel.com>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010E24D4A4@irsmsx504.ger.corp.intel.com>
-	<20101213112102.4a39c1b3@notabene.brown>
-	<A9DE54D0CD747C4CB06DCE5B6FA2246F010E44C3EC@irsmsx504.ger.corp.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH][rfc] md: Close mem leak in userspace_ctr()
+Date: Tue, 14 Dec 2010 17:18:16 -0500
+Message-ID: <20101214221816.GA14227@redhat.com>
+References: <alpine.LNX.2.00.1012140034300.26491@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E44C3EC@irsmsx504.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.1012140034300.26491@swampdragon.chaosbits.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: dm-devel@redhat.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 14 Dec 2010 14:47:27 +0000 "Czarnowska, Anna"
-<anna.czarnowska@intel.com> wrote:
+On Mon, Dec 13 2010 at  6:40pm -0500,
+Jesper Juhl <jj@chaosbits.net> wrote:
 
-> >From 8b2465b0d314cc93bba5797dbad9fd2813f0a79e Mon Sep 17 00:00:00 2001
-> From: Anna Czarnowska <anna.czarnowska@intel.com>
-> Date: Tue, 14 Dec 2010 12:26:33 +0100
-> Subject: [PATCH] fix: Monitor doesn't return after starting daemon
-> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+> Hi,
 > 
-> Because both parent and child process continue after make_daemon succeeds.
-
-Applied, thanks.
-
-NeilBrown
-
-
+> There's a small memory leak in 
+> drivers/md/dm-log-userspace-base.c::userspace_ctr().
 > 
-> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> ---
->  Monitor.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Monitor.c b/Monitor.c
-> index e7f6d03..4ae1d2b 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -152,9 +152,11 @@ int Monitor(struct mddev_dev *devlist,
->  	info.mailfrom = mailfrom;
->  	info.dosyslog = dosyslog;
+> The call to build_constructor_string() dynamically allocates memory for 
+> its last argument, but we do not always clean up that allocated memory.
+
+I'm not seeing a leak.
+
+The kfree() that you've added to the build_constructor_string() failure
+path isn't needed because build_constructor_string() only returns error
+if the kzalloc() failed.
+
+Mike
+
+> diff --git a/drivers/md/dm-log-userspace-base.c b/drivers/md/dm-log-userspace-base.c
+> index 1ed0094..71a3049 100644
+> --- a/drivers/md/dm-log-userspace-base.c
+> +++ b/drivers/md/dm-log-userspace-base.c
+> @@ -99,26 +99,22 @@ static int build_constructor_string(struct dm_target *ti,
+>  				    char **ctr_str)
+>  {
+>  	int i, str_size;
+> -	char *str = NULL;
+> -
+> -	*ctr_str = NULL;
 >  
-> -	if (daemonise)
-> -		if (make_daemon(pidfile))
-> -			return 1;
-> +	if (daemonise) {
-> +		int rv = make_daemon(pidfile);
-> +		if (rv >= 0)
-> +			return rv;
-> +	}
+>  	for (i = 0, str_size = 0; i < argc; i++)
+>  		str_size += strlen(argv[i]) + 1; /* +1 for space between args */
 >  
->  	if (share) 
->  		if (check_one_sharer(scan))
-> @@ -272,7 +274,7 @@ static int make_daemon(char *pidfile)
->  	dup2(0,1);
->  	dup2(0,2);
->  	setsid();
-> -	return 0;
-> +	return -1;
+>  	str_size += 20; /* Max number of chars in a printed u64 number */
+>  
+> -	str = kzalloc(str_size, GFP_KERNEL);
+> -	if (!str) {
+> +	*ctr_str = kzalloc(str_size, GFP_KERNEL);
+> +	if (!*ctr_str) {
+>  		DMWARN("Unable to allocate memory for constructor string");
+>  		return -ENOMEM;
+>  	}
+>  
+> -	str_size = sprintf(str, "%llu", (unsigned long long)ti->len);
+> +	str_size = sprintf(*ctr_str, "%llu", (unsigned long long)ti->len);
+>  	for (i = 0; i < argc; i++)
+> -		str_size += sprintf(str + str_size, " %s", argv[i]);
+> +		str_size += sprintf(*ctr_str + str_size, " %s", argv[i]);
+>  
+> -	*ctr_str = str;
+>  	return str_size;
 >  }
 >  
->  static int check_one_sharer(int scan)
-
+> @@ -140,7 +136,7 @@ static int userspace_ctr(struct dm_dirty_log *log, struct dm_target *ti,
+>  {
+>  	int r = 0;
+>  	int str_size;
+> -	char *ctr_str = NULL;
+> +	char *ctr_str;
+>  	struct log_c *lc = NULL;
+>  	uint64_t rdata;
+>  	size_t rdata_size = sizeof(rdata);
+> @@ -173,6 +169,7 @@ static int userspace_ctr(struct dm_dirty_log *log, struct dm_target *ti,
+>  
+>  	str_size = build_constructor_string(ti, argc - 1, argv + 1, &ctr_str);
+>  	if (str_size < 0) {
+> +		kfree(ctr_str);
+>  		kfree(lc);
+>  		return str_size;
+>  	}
