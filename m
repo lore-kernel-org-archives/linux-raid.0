@@ -1,40 +1,45 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: "David W." <darewi@gmail.com>
 Subject: Re: Debugging a strange array corruption
-Date: Tue, 14 Dec 2010 18:29:31 +0800
-Message-ID: <4D07470B.4060601@wasp.net.au>
-References: <4D07265F.8060109@wasp.net.au>	<20101214142246.20c927e1@natsu>	<4D073AF1.7090709@wasp.net.au> <20101214144231.0493d534@natsu>
+Date: Tue, 14 Dec 2010 05:59:17 -0600
+Message-ID: <AANLkTikpQ822E0BQqDhGcDvcvK5c+odW-w1DRfAkTMmX@mail.gmail.com>
+References: <4D07265F.8060109@wasp.net.au>
+	<20101214142246.20c927e1@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101214144231.0493d534@natsu>
+In-Reply-To: <20101214142246.20c927e1@natsu>
 Sender: linux-raid-owner@vger.kernel.org
 To: Roman Mamedov <roman@rm.pp.ru>
-Cc: RAID Linux <linux-raid@vger.kernel.org>
+Cc: Brad Campbell <brad@wasp.net.au>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/12/10 17:42, Roman Mamedov wrote:
-> On Tue, 14 Dec 2010 17:37:53 +0800
-> Brad Campbell<brad@wasp.net.au>  wrote:
+On Tue, Dec 14, 2010 at 03:22, Roman Mamedov <roman@rm.pp.ru> wrote:
+> On Tue, 14 Dec 2010 16:10:07 +0800
+> Brad Campbell <brad@wasp.net.au> wrote:
 >
->> And in the prior incarnation I was only using 1 port on that controller so
->> the problem would never have manifested itself. Thanks, at least I have
->> something to try.
+>> The drives are all on separate channels. 8 are on a pair of Marvell 88SX7042
+>> controllers and 2 are on a SIL3132. This has occurred since I upgraded the
+>> mainboard (and kernel at the same time - nothing like throwing more
+>> variables in the mix) and its effects were subtle enough that I missed them
+>> until it had successfully rotated out all of my good backups with broken
+>> data. Lesson learned.
 >
-> To add another idea to my previous reply, it should be pretty easy to test for
-> the presence of this particular problem by running your dd+md5sum test on just
-> the two physical disks which are plugged into that controller, starting the
-> tests simultaneously on both disks (in two terminal windows). See if you get
-> varying sums over several runs that way.
+> I'd suggest that you try moving two disks away from SiI3132, change your
+> setup so that at most ONE port on that controller is used, or none at all.
+>
+> Some time ago there was a report of data corruption with controllers using
+> that chip when both ports simultaneously read at full speed:
+> http://forum.ixbt.com/topic.cgi?id=11:35147:1200#1200 (in Russian)
+> Perhaps problem not in the chip itself, but in some variations of
+> schematics/components/soldering, because only two of five supposedly identical
+> boards the reporter bought were corrupting data in that way, one much
+> more often than the other.
+>
 
-I just finished that test. Can I cry now?
+Interesting... Any idea if the problem affects the SiI 3114 chipset as
+well?  I've been seeing some similar problems, but haven't had enough
+time to dig into it to query the list yet.
 
-Thanks Roman, I'd *never* have pegged it otherwise.
-
-Anyone want a slightly second hand SIL 2 port controller?
-
-Regards,
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+--
+david williams
+<darewi@gmail.com>
