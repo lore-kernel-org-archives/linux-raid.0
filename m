@@ -1,45 +1,50 @@
-From: "David W." <darewi@gmail.com>
+From: Roman Mamedov <roman@rm.pp.ru>
 Subject: Re: Debugging a strange array corruption
-Date: Tue, 14 Dec 2010 05:59:17 -0600
-Message-ID: <AANLkTikpQ822E0BQqDhGcDvcvK5c+odW-w1DRfAkTMmX@mail.gmail.com>
+Date: Tue, 14 Dec 2010 17:07:20 +0500
+Message-ID: <20101214170720.2907e25c@natsu>
 References: <4D07265F.8060109@wasp.net.au>
 	<20101214142246.20c927e1@natsu>
+	<AANLkTikpQ822E0BQqDhGcDvcvK5c+odW-w1DRfAkTMmX@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/xNme8SLtybNRnuACXmH4CV+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101214142246.20c927e1@natsu>
+In-Reply-To: <AANLkTikpQ822E0BQqDhGcDvcvK5c+odW-w1DRfAkTMmX@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
+To: "David W." <darewi@gmail.com>
 Cc: Brad Campbell <brad@wasp.net.au>, RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 14, 2010 at 03:22, Roman Mamedov <roman@rm.pp.ru> wrote:
-> On Tue, 14 Dec 2010 16:10:07 +0800
-> Brad Campbell <brad@wasp.net.au> wrote:
->
->> The drives are all on separate channels. 8 are on a pair of Marvell 88SX7042
->> controllers and 2 are on a SIL3132. This has occurred since I upgraded the
->> mainboard (and kernel at the same time - nothing like throwing more
->> variables in the mix) and its effects were subtle enough that I missed them
->> until it had successfully rotated out all of my good backups with broken
->> data. Lesson learned.
->
-> I'd suggest that you try moving two disks away from SiI3132, change your
-> setup so that at most ONE port on that controller is used, or none at all.
->
-> Some time ago there was a report of data corruption with controllers using
-> that chip when both ports simultaneously read at full speed:
-> http://forum.ixbt.com/topic.cgi?id=11:35147:1200#1200 (in Russian)
-> Perhaps problem not in the chip itself, but in some variations of
-> schematics/components/soldering, because only two of five supposedly identical
-> boards the reporter bought were corrupting data in that way, one much
-> more often than the other.
->
+--Sig_/xNme8SLtybNRnuACXmH4CV+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Interesting... Any idea if the problem affects the SiI 3114 chipset as
-well?  I've been seeing some similar problems, but haven't had enough
-time to dig into it to query the list yet.
+On Tue, 14 Dec 2010 05:59:17 -0600
+"David W." <darewi@gmail.com> wrote:
 
---
-david williams
-<darewi@gmail.com>
+> Interesting... Any idea if the problem affects the SiI 3114 chipset as
+> well?  I've been seeing some similar problems, but haven't had enough
+> time to dig into it to query the list yet.
+
+There are data corruption issues reported with 3114 as well, not sure how m=
+any
+of those have been worked around, traced down to something else, or still
+remain. See https://encrypted.google.com/search?q=3D3114+data+corruption
+
+--=20
+With respect,
+Roman
+
+--Sig_/xNme8SLtybNRnuACXmH4CV+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk0HXfkACgkQTLKSvz+PZwh+SACfY/9V86/glJo5DiNdqqso4wfz
+7PoAoInyWbftaA9XlsXx4ZPT3OqnOCWr
+=jWVS
+-----END PGP SIGNATURE-----
+
+--Sig_/xNme8SLtybNRnuACXmH4CV+--
