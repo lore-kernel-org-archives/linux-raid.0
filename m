@@ -1,46 +1,54 @@
-From: Brad Campbell <brad@wasp.net.au>
+From: Roman Mamedov <roman@rm.pp.ru>
 Subject: Re: Debugging a strange array corruption
-Date: Tue, 14 Dec 2010 17:37:53 +0800
-Message-ID: <4D073AF1.7090709@wasp.net.au>
-References: <4D07265F.8060109@wasp.net.au> <20101214142246.20c927e1@natsu>
+Date: Tue, 14 Dec 2010 14:42:31 +0500
+Message-ID: <20101214144231.0493d534@natsu>
+References: <4D07265F.8060109@wasp.net.au>
+	<20101214142246.20c927e1@natsu>
+	<4D073AF1.7090709@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/S4tV7k4fTWJShj0goxlNmDg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101214142246.20c927e1@natsu>
+In-Reply-To: <4D073AF1.7090709@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
+To: Brad Campbell <brad@wasp.net.au>
 Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/12/10 17:22, Roman Mamedov wrote:
-> On Tue, 14 Dec 2010 16:10:07 +0800
-> Brad Campbell<brad@wasp.net.au>  wrote:
->
->> The drives are all on separate channels. 8 are on a pair of Marvell 88SX7042
->> controllers and 2 are on a SIL3132. This has occurred since I upgraded the
->> mainboard (and kernel at the same time - nothing like throwing more
->> variables in the mix) and its effects were subtle enough that I missed them
->> until it had successfully rotated out all of my good backups with broken
->> data. Lesson learned.
->
-> I'd suggest that you try moving two disks away from SiI3132, change your
-> setup so that at most ONE port on that controller is used, or none at all.
->
-> Some time ago there was a report of data corruption with controllers using
-> that chip when both ports simultaneously read at full speed:
-> http://forum.ixbt.com/topic.cgi?id=11:35147:1200#1200 (in Russian)
-> Perhaps problem not in the chip itself, but in some variations of
-> schematics/components/soldering, because only two of five supposedly identical
-> boards the reporter bought were corrupting data in that way, one much
-> more often than the other.
->
+--Sig_/S4tV7k4fTWJShj0goxlNmDg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-And in the prior incarnation I was only using 1 port on that controller so the problem would never 
-have manifested itself. Thanks, at least I have something to try.
+On Tue, 14 Dec 2010 17:37:53 +0800
+Brad Campbell <brad@wasp.net.au> wrote:
 
-Regards,
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+> And in the prior incarnation I was only using 1 port on that controller so
+> the problem would never have manifested itself. Thanks, at least I have
+> something to try.
+
+To add another idea to my previous reply, it should be pretty easy to test =
+for
+the presence of this particular problem by running your dd+md5sum test on j=
+ust
+the two physical disks which are plugged into that controller, starting the
+tests simultaneously on both disks (in two terminal windows). See if you get
+varying sums over several runs that way.
+
+
+--=20
+With respect,
+Roman
+
+--Sig_/S4tV7k4fTWJShj0goxlNmDg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk0HPAcACgkQTLKSvz+PZwgw1gCbB8TG9PgTDYkcEr8sjBVNYBFH
+ZIMAn3rf6PkgF/qXJgoefkhPbG5JvZRN
+=t9uM
+-----END PGP SIGNATURE-----
+
+--Sig_/S4tV7k4fTWJShj0goxlNmDg--
