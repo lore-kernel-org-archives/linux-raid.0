@@ -1,23 +1,72 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: raid1 module is not ready to take IO request
-Date: Wed, 15 Dec 2010 17:23:56 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176B3CE2F@irsmsx503.ger.corp.intel.com>
+From: Spelic <spelic@shiftmail.org>
+Subject: mdadm incremental failed: md device busy
+Date: Wed, 15 Dec 2010 18:50:11 +0100
+Message-ID: <4D08FFD3.9040406@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-We have spotted that when RAID 1 array is assembled and stopped in a loop, there is an occasional kernel oops in raid1 module.
-It occurs in make_request function on wait_barrier(conf). In this case mddev->private was NULL, since probably it was not yet initialized in run() function.
-The straightforward approach is test for mdadm->private and return bio_endio with an error if private not set.
-The question is:
-Since raid1 module might receive IO request when it is not ready, what make_request can check for to test if for instance run() function has finished.
+Hi there
+this happened:
 
-Thanks,
-Marcin Labun
+# cat /proc/mdstat
+...other arrays not including sdb3...
+md2 : active raid1 sda3[0]
+       52428728 blocks super 1.2 [2/1] [U_]
+       bitmap: 6/200 pages [24KB], 128KB chunk
+...other arrays not including sdb3...
+
+strangely sdb3 was not added to array at boot, I am still investigating 
+that, but now see this:
+
+# mdadm --incremental /dev/sdb3
+mdadm: failed to open /dev/md2: Device or resource busy.
+
+
+#strace mdadm --incremental /dev/sdb3
+...lots of stuff, then...
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+nanosleep({0, 200000000}, NULL)         = 0
+open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource busy)
+........
+write(2, "mdadm: failed to open /dev/md2: "..., 57mdadm: failed to open 
+/dev/md2: Device or resource busy.
+) = 57
+
+
+hmmm... strange thing, I just booted and md2 is not even mounted...
+but now see this:
+
+# mdadm /dev/md2 --add /dev/sdb3
+mdadm: re-added /dev/sdb3
+
+worked perfectly!
+
+So?
+Bug?
+
+Thank you
