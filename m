@@ -1,36 +1,23 @@
-From: raincatsdogs@me.com
-Subject: inactive device
-Date: Wed, 15 Dec 2010 14:20:37 +0100
-Message-ID: <C7BDC8B0-E26E-4E42-9D71-DF90C4A80784@me.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: raid1 module is not ready to take IO request
+Date: Wed, 15 Dec 2010 17:23:56 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176B3CE2F@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-My name is Paolo from Italy (bad english)
-I am not subscribed to the list
+Hi Neil,
+We have spotted that when RAID 1 array is assembled and stopped in a loop, there is an occasional kernel oops in raid1 module.
+It occurs in make_request function on wait_barrier(conf). In this case mddev->private was NULL, since probably it was not yet initialized in run() function.
+The straightforward approach is test for mdadm->private and return bio_endio with an error if private not set.
+The question is:
+Since raid1 module might receive IO request when it is not ready, what make_request can check for to test if for instance run() function has finished.
 
-I am using a Ubuntu 10.04 x64 desktop and try to create a raid1 with a couple of disk.
-After the removal of the super block from the 2 discs (--zero-superblock) I assembled the raid with the command
-"mdadm --create --auto=md -b internal --symlink=no -l raid1 -n2 --force /dev/md0 /dev/sdc /dev/sdd"
-My intention is not to partition the raid (md_d0p1, md_d0p2, etc..); does not create links to the disks in /etc, and finally have the bitmap in order to accelerate the reconstruction.
-After launching the command, the construction is done and the raid is completed. Format the new device /dev/md0 and everything works.
-
-After rebooting the operating system the problem start.
-1.Mdstat reports:
-paolo@machiavelli:~$ cat /proc/mdstat 
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md_d0 : inactive sdd[1](S)
-      312571136 blocks
-
-2.and in /etc I find the device md0 partitioned into 4: md_d0p1, md_d0p2,md_d0p3,md_d0p4
-
-I do not understand why then the device /dev/md0 became /dev/md_d0, despite the command --auto=md
-also do not understand why the device md_d0 is inactive and mdstat shows a (S) (I can not find documentation about this symbol)
-
-It seems that the options "--auto=md --symlink=no" wonts work!
-Or maybe the mdadm command syntax is wrong?
-Thanks
+Thanks,
+Marcin Labun
