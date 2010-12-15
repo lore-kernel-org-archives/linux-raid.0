@@ -1,91 +1,39 @@
-From: Spelic <spelic@shiftmail.org>
-Subject: Re: mdadm incremental failed: md device busy
-Date: Wed, 15 Dec 2010 19:50:46 +0100
-Message-ID: <4D090E06.7030504@shiftmail.org>
-References: <4D08FFD3.9040406@shiftmail.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid1 module is not ready to take IO request
+Date: Thu, 16 Dec 2010 08:52:22 +1100
+Message-ID: <20101216085222.77efd1ef@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D176B3CE2F@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <4D08FFD3.9040406@shiftmail.org>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176B3CE2F@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-On 12/15/2010 06:50 PM, Spelic wrote:
-> Hi there
-> this happened:
->
-> # cat /proc/mdstat
-> ...other arrays not including sdb3...
-> md2 : active raid1 sda3[0]
->       52428728 blocks super 1.2 [2/1] [U_]
->       bitmap: 6/200 pages [24KB], 128KB chunk
-> ...other arrays not including sdb3...
->
-> strangely sdb3 was not added to array at boot, I am still 
-> investigating that, but now see this:
->
-> # mdadm --incremental /dev/sdb3
-> mdadm: failed to open /dev/md2: Device or resource busy.
->
->
-> #strace mdadm --incremental /dev/sdb3
-> ...lots of stuff, then...
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> nanosleep({0, 200000000}, NULL)         = 0
-> open("/dev/md2", O_RDWR|O_EXCL)         = -1 EBUSY (Device or resource 
-> busy)
-> ........
-> write(2, "mdadm: failed to open /dev/md2: "..., 57mdadm: failed to 
-> open /dev/md2: Device or resource busy.
-> ) = 57
->
->
-> hmmm... strange thing, I just booted and md2 is not even mounted...
-> but now see this:
->
-> # mdadm /dev/md2 --add /dev/sdb3
-> mdadm: re-added /dev/sdb3
->
-> worked perfectly!
->
-> So?
-> Bug?
->
-> Thank you
+On Wed, 15 Dec 2010 17:23:56 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+wrote:
 
-I add one detail: the drive probably had been kicked at boot because it 
-was non-fresh.
+> Hi Neil,
+> We have spotted that when RAID 1 array is assembled and stopped in a loop, there is an occasional kernel oops in raid1 module.
+> It occurs in make_request function on wait_barrier(conf). In this case mddev->private was NULL, since probably it was not yet initialized in run() function.
+> The straightforward approach is test for mdadm->private and return bio_endio with an error if private not set.
+> The question is:
+> Since raid1 module might receive IO request when it is not ready, what make_request can check for to test if for instance run() function has finished.
+> 
+> Thanks,
+> Marcin Labun
 
+
+I cannot imagine how this would happen.
+It should not be possible to call do_md_stop while there are any requests
+still in flight.
+Are you generating any IO between assembling the RAID1 and stopping it?  If
+so, how?
+
+Can you get me the full oops message?
+
+Thanks,
+NeilBrown
