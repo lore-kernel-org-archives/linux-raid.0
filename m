@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm: FIX: imsm_add_spare() wrongly tests spares list
-Date: Wed, 15 Dec 2010 10:38:15 +0100
-Message-ID: <20101215093814.9746.43002.stgit@gklab-170-024.igk.intel.com>
+Subject: [PATCH] imsm: FIX: do not load migration record from spare disk
+Date: Wed, 15 Dec 2010 11:42:19 +0100
+Message-ID: <20101215104219.15687.32092.stgit@gklab-170-024.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -11,51 +11,56 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-For more than one disk tested additional_test_list was searched from last
-point, not from begin.
+Load migration record from first 2 disks only, not from spare disks.
+Check for negative values is missing.
 
-This bug causes that more than 2 disks cannot be added to imsm array,
-when imsm_add_spare() is used for this.
+This problem can be observed when slots are managed by md.
+When they are set by mdadm problem is not visible, but still exists.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+ super-intel.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index e32228e..4758951 100644
+index 4758951..2070869 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5454,6 +5454,7 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
- 	__u32 array_start = 0;
- 	__u32 array_end = 0;
- 	struct dl *dl;
-+	struct mdinfo *test_list;
+@@ -1602,14 +1602,15 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ {
+ 	unsigned long long dsize;
+ 	struct mdinfo *sd;
+-	struct dl *dl;
++	struct dl *dl = NULL;
+ 	char nm[30];
+ 	int retval = -1;
+ 	int fd = -1;
  
- 	for (dl = super->disks; dl; dl = dl->next) {
- 		/* If in this array, skip */
-@@ -5467,16 +5468,17 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
- 			}
- 		if (d)
+ 	for (sd = info->devs ; sd ; sd = sd->next) {
+ 		/* read only from one of the first two slots */
+-		if (sd->disk.raid_disk > 1)
++		if ((sd->disk.raid_disk > 1) ||
++		    (sd->disk.raid_disk < 0))
  			continue;
--		while (additional_test_list) {
--			if (additional_test_list->disk.major == dl->major &&
--			    additional_test_list->disk.minor == dl->minor) {
-+		test_list = additional_test_list;
-+		while (test_list) {
-+			if (test_list->disk.major == dl->major &&
-+			    test_list->disk.minor == dl->minor) {
- 				dprintf("%x:%x already in additional test list\n",
- 					dl->major, dl->minor);
- 				break;
- 			}
--			additional_test_list = additional_test_list->next;
-+			test_list = test_list->next;
- 		}
--		if (additional_test_list)
-+		if (test_list)
- 			continue;
+ 		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+ 		fd = dev_open(nm, O_RDONLY);
+@@ -1643,7 +1644,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 		goto out;
+ 	}
+ 	retval = 0;
+- out:
++out:
+ 	if (fd >= 0)
+ 		close(fd);
+ 	return retval;
+@@ -1662,7 +1663,7 @@ static int write_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
  
- 		/* skip in use or failed drives */
+ 	for (sd = info->devs ; sd ; sd = sd->next) {
+ 		/* write only to the first two slots */
+-		if (sd->disk.raid_disk > 1)
++		if ((sd->disk.raid_disk > 1) || (sd->disk.raid_disk < 0))
+ 			continue;
+ 		sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+ 		fd = dev_open(nm, O_RDWR);
 
