@@ -1,59 +1,32 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: training mpath to discern between SCSI errors
-Date: Fri, 17 Dec 2010 09:06:06 -0500
-Message-ID: <20101217140605.GA740@redhat.com>
-References: <20100825155918.GB8509@redhat.com> <4C7B984E.4070802@suse.de>
-	<4C7B9F14.9080900@mvista.com> <4C7BA670.2060303@suse.de>
-	<4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com>
-	<4CBC35AE.9050002@suse.de> <20101119031149.GA28455@us.ibm.com>
-	<20101130225956.GA8882@redhat.com> <4D0B31B5.101@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Przemyslaw Czarnowski
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH 0/2] Fixes for Incremental()
+Date: Fri, 17 Dec 2010 15:16:58 +0100
+Message-ID: <20101217141641.4219.88151.stgit@gklab-170-211.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <4D0B31B5.101@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, Dec 17 2010 at  4:47am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
+The following series consists of two fixes for problems revealed during the tests 
+of autorebuild. First one is quite important, as recovery process do not start
+if bare disk is added to degraded array via incremental. Second one is just
+a change in return value of array_try_spare().
 
-> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
-> > Hannes,
-> > 
-> > Any chance you've had time to fold your proposed logging changes in and
-> > rebase this patch?  Could you post that updated patch?
-> > 
-> yes, will be following shortly.
-> 
-> > I'd like to help see this patch through to inclussion when 2.6.38 merge
-> > window opens.  I can help with further review, testing and development.
-> > 
-> Ok, thanks.
+---
 
-I took some steps at furthering your work.  Here is the cover letter to
-the patches I resently sent to dm-devel:
-https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
+Przemyslaw Czarnowski (2):
+      fix: adding spare via incremental do not trigger recovery
+      fix: incremental for bare disks return invalid value
 
-And here are the patches:
-https://patchwork.kernel.org/patch/384612/
-https://patchwork.kernel.org/patch/384602/
-https://patchwork.kernel.org/patch/390882/
 
-Please feel free to change these how ever you see fit but your feedback
-is really appreciated.
+ Incremental.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-Thanks,
-Mike
+-- 
+Best regards,
+Przemyslaw Czarnowski
