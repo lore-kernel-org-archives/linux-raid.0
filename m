@@ -1,52 +1,64 @@
-From: "Patrick H." <linux-raid@feystorm.net>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: integrity verification on raid-5?
-Date: Fri, 17 Dec 2010 14:25:02 -0700
-Message-ID: <4D0BD52E.9000905@feystorm.net>
-References: <4D0BD140.6040205@feystorm.net> <20101218081745.63b05bc2@notabene.brown>
+Date: Fri, 17 Dec 2010 21:24:37 +0000
+Message-ID: <20101217212436.GA11425@cthulhu.home.robinhill.me.uk>
+References: <4D0BD140.6040205@feystorm.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101218081745.63b05bc2@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <4D0BD140.6040205@feystorm.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Perfect, thank you very much.
 
-Hopefully google indexes the mailing list so this answer will be out 
-there now :-)
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--Patrick
+On Fri Dec 17, 2010 at 02:08:16PM -0700, Patrick H. wrote:
 
-Sent: Fri Dec 17 2010 14:17:45 GMT-0700 (Mountain Standard Time)
-From: Neil Brown <neilb@suse.de>
-To: Patrick H. <linux-raid@feystorm.net> linux-raid@vger.kernel.org
-Subject: Re: integrity verification on raid-5?
-> On Fri, 17 Dec 2010 14:08:16 -0700 "Patrick H." <linux-raid@feystorm.net>
-> wrote:
->
->   
->> Is there a way to do integrity verification on a raid-5 array? I'm 
->> working on building a storage system on SSDs under raid-5 and want to be 
->> able to perform periodic integrity checks. Basically just check the 
->> drives to make sure that they match what the parity drive has.
->> After a bit of googling I saw other people wanting the same thing but 
->> nobody with any result. I dont see why this cant be done, but is there 
->> any tool to do so?
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>     
->
-> % man 4 md
->
-> search for 'check'.
->
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+> Is there a way to do integrity verification on a raid-5 array? I'm=20
+> working on building a storage system on SSDs under raid-5 and want to be=
+=20
+> able to perform periodic integrity checks. Basically just check the=20
+> drives to make sure that they match what the parity drive has.
+> After a bit of googling I saw other people wanting the same thing but=20
+> nobody with any result. I dont see why this cant be done, but is there=20
+> any tool to do so?
+
+There's built-in functionality to do this.  To start the check, run:
+    echo check > /sys/block/mdX/md/sync_action
+
+You can check progress by catting /proc/mdstat, and the number of errors
+is reported at the end in /sys/block/mdX/md/mismatch_cnt.  To rewrite
+the parity data for any mismatches, use "repair" instead of "check" in
+the first command.
+
+Currently, there's no easy way to find out what file(s) are affected by
+the mismatches though.
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEARECAAYFAk0L1RQACgkQShxCyD40xBJZWgCfVzZ/esa3YFE7oyS1WYGqaaWG
+K/sAoLlD+/wMZf0A9dEXpbc+xyLDSZhf
+=AhFt
+-----END PGP SIGNATURE-----
+
+--7AUc2qLy4jB3hD7Z--
