@@ -1,72 +1,59 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] Monitor: Check destination array domain early.
-Date: Fri, 17 Dec 2010 13:26:42 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176B9CF39@irsmsx503.ger.corp.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Fri, 17 Dec 2010 09:06:06 -0500
+Message-ID: <20101217140605.GA740@redhat.com>
+References: <20100825155918.GB8509@redhat.com> <4C7B984E.4070802@suse.de>
+	<4C7B9F14.9080900@mvista.com> <4C7BA670.2060303@suse.de>
+	<4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com>
+	<4CBC35AE.9050002@suse.de> <20101119031149.GA28455@us.ibm.com>
+	<20101130225956.GA8882@redhat.com> <4D0B31B5.101@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <4D0B31B5.101@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-From 868faba9b94b8278c93f9f8026b05fb698212207 Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Thu, 16 Dec 2010 15:16:12 +0100
-Subject: [PATCH] Monitor: Check destination array domain early.
+On Fri, Dec 17 2010 at  4:47am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
-Destination arrays that do not have any domains are excluded
-from spare sharing. We can check it early, without searching
-for donor arrays.
+> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
+> > Hannes,
+> > 
+> > Any chance you've had time to fold your proposed logging changes in and
+> > rebase this patch?  Could you post that updated patch?
+> > 
+> yes, will be following shortly.
+> 
+> > I'd like to help see this patch through to inclussion when 2.6.38 merge
+> > window opens.  I can help with further review, testing and development.
+> > 
+> Ok, thanks.
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- Monitor.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+I took some steps at furthering your work.  Here is the cover letter to
+the patches I resently sent to dm-devel:
+https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
 
-diff --git a/Monitor.c b/Monitor.c
-index ce160f3..e79f658 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -767,8 +767,7 @@ static int move_spare(struct state *from, struct state *to,
- 	return 0;
- }
- 
--static int check_donor(struct state *from, struct state *to,
--		       struct domainlist *domlist)
-+static int check_donor(struct state *from, struct state *to)
- {
- 	struct state *sub;
- 
-@@ -790,8 +789,6 @@ static int check_donor(struct state *from, struct state *to,
- 			return 0;
- 	if (from->spare <= 0)
- 		return 0;
--	if (domlist == NULL)
--		return 0;
- 	return 1;
- }
- 
-@@ -923,10 +920,15 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
- 							   to->metadata->ss->name);
- 			if (to->spare_group)
- 				domain_add(&domlist, to->spare_group);
--
-+			/*
-+			 * No spare migration if the destination
-+			 * has no domain. Skip this array.
-+			 */
-+			if (!domlist)
-+				continue;
- 			for (from=statelist ; from ; from=from->next) {
- 				dev_t devid;
--				if (!check_donor(from, to, domlist))
-+				if (!check_donor(from, to))
- 					continue;
- 				if (from->metadata->ss->external)
- 					devid = container_choose_spare(
--- 
-1.6.4.2
+And here are the patches:
+https://patchwork.kernel.org/patch/384612/
+https://patchwork.kernel.org/patch/384602/
+https://patchwork.kernel.org/patch/390882/
 
+Please feel free to change these how ever you see fit but your feedback
+is really appreciated.
+
+Thanks,
+Mike
