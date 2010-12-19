@@ -1,89 +1,223 @@
-From: "fibreraid@gmail.com" <fibreraid@gmail.com>
-Subject: Kernel panic with mdadm 3.1.4 on Ubuntu Lucid 64-bit
-Date: Sat, 18 Dec 2010 15:14:25 -0700
-Message-ID: <AANLkTi=oUmkbxfziccDGqe=ErgUSsXM-AG_WAbVWcO5W@mail.gmail.com>
+From: =?ISO-8859-1?Q?Bj=F8rn_Eikeland?= <beikeland@gmail.com>
+Subject: best way to try recovering inactive raid6
+Date: Sun, 19 Dec 2010 14:21:01 +0100
+Message-ID: <AANLkTin71JrpmKJC6df+ZX7jsm7P8RwCzUSfV8CMWk2v@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi,
 
-I am seeing an occassional kernel panic when running "mdadm -S
-/dev/md0" to stop a RAID 5 array that is syncing. The
-/var/log/messages snip-it is below. My system is a VMware Ubuntu 10.04
-(Lucid) 64-bit VM, with mdadm 3.1.4 instead of the stock version in
-Ubuntu. I have no additional mdadm nor kernel patches.
+I've got myself into a pickle:
 
-I have 11 virtual hard drives in my VM, and I am using 9 as active
-drives and 2 as spares. Chunk size is 64K.
+$ sudo mdadm -As
+mdadm: /dev/md6 assembled from 2 drives and 2 spares - not enough to
+start the array.
 
-The issue is tough to duplicate but if I create the md array, and then
-mdadm -S it, and then recreate it again, and do this sequence in rapid
-succession, I can sometimes make this kernel panic happen.
+This was a 5 device raid6 array, made up of /dev/sd[abcdh]1. I'm
+unsure what caused /dev/sdh to need resync, during this process
+/dev/sdb decided it was a good time to get hardware problems, and this
+slowed the resync down to <1000kB/s.
 
-Dec 18 14:08:33 localhost kernel: [ 1077.948456] mdadm         D
-0000000000000000     0 12873  12872 0x00000000
-Dec 18 14:08:33 localhost kernel: [ 1077.948463]  ffff880052201a68
-0000000000000082 0000000000015bc0 0000000000015bc0
-Dec 18 14:08:33 localhost kernel: [ 1077.948469]  ffff8800418a1a98
-ffff880052201fd8 0000000000015bc0 ffff8800418a16e0
-Dec 18 14:08:33 localhost kernel: [ 1077.948473]  0000000000015bc0
-ffff880052201fd8 0000000000015bc0 ffff8800418a1a98
-Dec 18 14:08:33 localhost kernel: [ 1077.948478] Call Trace:
-Dec 18 14:08:33 localhost kernel: [ 1077.948504]  [<ffffffff81558a7d>]
-schedule_timeout+0x22d/0x300
-Dec 18 14:08:33 localhost kernel: [ 1077.948510]  [<ffffffff81557d26>]
-wait_for_common+0xd6/0x180
-Dec 18 14:08:33 localhost kernel: [ 1077.948518]  [<ffffffff8115c3c8>]
-? ifind_fast+0x58/0xb0
-Dec 18 14:08:33 localhost kernel: [ 1077.948529]  [<ffffffff81059a60>]
-? default_wake_function+0x0/0x20
-Dec 18 14:08:33 localhost kernel: [ 1077.948542]  [<ffffffff811ae899>]
-? sysfs_drop_dentry+0x139/0x160
-Dec 18 14:08:33 localhost kernel: [ 1077.948548]  [<ffffffff81557e8d>]
-wait_for_completion+0x1d/0x20
-Dec 18 14:08:33 localhost kernel: [ 1077.948553]  [<ffffffff811af3b8>]
-sysfs_addrm_finish+0x118/0x150
-Dec 18 14:08:33 localhost kernel: [ 1077.948578]  [<ffffffff811accbb>]
-sysfs_hash_and_remove+0x5b/0x80
-Dec 18 14:08:33 localhost kernel: [ 1077.948583]  [<ffffffff811b0c8f>]
-sysfs_remove_group+0x5f/0x100
-Dec 18 14:08:33 localhost kernel: [ 1077.948596]  [<ffffffffa0425c31>]
-stop+0x61/0x80 [raid456]
-Dec 18 14:08:33 localhost kernel: [ 1077.948607]  [<ffffffff8142cabd>]
-do_md_stop+0xdd/0x560
-Dec 18 14:08:33 localhost kernel: [ 1077.948620]  [<ffffffff81284b51>]
-? apparmor_capable+0x31/0xa0
-Dec 18 14:08:33 localhost kernel: [ 1077.948626]  [<ffffffff8142f694>]
-md_ioctl+0x514/0x7f0
-Dec 18 14:08:33 localhost kernel: [ 1077.948630]  [<ffffffff81059a72>]
-? default_wake_function+0x12/0x20
-Dec 18 14:08:33 localhost kernel: [ 1077.948636]  [<ffffffff810f34be>]
-? find_get_page+0x1e/0xa0
-Dec 18 14:08:33 localhost kernel: [ 1077.948640]  [<ffffffff810f4ecb>]
-? filemap_fault+0x8b/0x450
-Dec 18 14:08:33 localhost kernel: [ 1077.948646]  [<ffffffff8113cb5d>]
-? mem_cgroup_update_mapped_file_stat+0x2d/0x90
-Dec 18 14:08:33 localhost kernel: [ 1077.948652]  [<ffffffff812a56b7>]
-__blkdev_driver_ioctl+0x27/0x80
-Dec 18 14:08:33 localhost kernel: [ 1077.948656]  [<ffffffff812a5b8d>]
-blkdev_ioctl+0x1ed/0x6f0
-Dec 18 14:08:33 localhost kernel: [ 1077.948661]  [<ffffffff81172ffc>]
-block_ioctl+0x3c/0x40
-Dec 18 14:08:33 localhost kernel: [ 1077.948667]  [<ffffffff81153d42>]
-vfs_ioctl+0x22/0xa0
-Dec 18 14:08:33 localhost kernel: [ 1077.948671]  [<ffffffff81153ee1>]
-do_vfs_ioctl+0x81/0x410
-Dec 18 14:08:33 localhost kernel: [ 1077.948676]  [<ffffffff8155d273>]
-? do_page_fault+0x153/0x3b0
-Dec 18 14:08:33 localhost kernel: [ 1077.948680]  [<ffffffff811542f1>]
-sys_ioctl+0x81/0xa0
-Dec 18 14:08:33 localhost kernel: [ 1077.948687]  [<ffffffff810121b2>]
-system_call_fastpath+0x16/0x1b
+Then I got the incredible idea that I didn't need the drive that was
+_actually_ failing, and failed/pulled the disk labeled with that
+particular serial number, only to find out I had labeled it wrong,
+which left me with:
+
+$ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md6 : inactive sdc1[0](S) sdd1[6](S) sdh1[5](S) sda1[3](S)
+      3906236416 blocks
+
+unused devices: <none>
+
+As far as I've gone through google and this list, I should first try
+mdadm --assemble --force and if that fails try to re-create the array.
+
+Force assemble fails, so I guess re-create it is. I've looked at
+Permute array.pl and just have the following questions
+
+do I need to re-create it to the same /dev/mdN device?
+with raid6 should I try permutations with two missing drives or go for
+one missing and --assume-clean?
+is there any point to ddrescue / clone /dev/sdb when it has a
+different event count than the rest?
+there is no --read-only involved in creating the array, only mounting?
+
+Hope you guys can help me out with some input here!
+
+regards,
+Bjorn
 
 
-Thank you in advance for any guidance!
--Tommy
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 50ed6314:84f965cd:c5795ac2:70ba0679
+  Creation Time : Thu May 29 20:51:39 2008
+     Raid Level : raid6
+  Used Dev Size : 976559104 (931.32 GiB 1000.00 GB)
+     Array Size : 2929677312 (2793.96 GiB 2999.99 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Dec 19 12:12:34 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 3
+  Spare Devices : 2
+       Checksum : 84f2dc10 - correct
+         Events : 1290388
+
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8        1        3      active sync   /dev/sda1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       0        0        4      faulty removed
+   5     5       8      113        5      spare   /dev/sdh1
+   6     6       8       49        6      spare   /dev/sdd1
+-----------------------------------------------------------------
+   /dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 50ed6314:84f965cd:c5795ac2:70ba0679
+  Creation Time : Thu May 29 20:51:39 2008
+     Raid Level : raid6
+  Used Dev Size : 976559104 (931.32 GiB 1000.00 GB)
+     Array Size : 2929677312 (2793.96 GiB 2999.99 GB)
+   Raid Devices : 5
+  Total Devices : 4
+Preferred Minor : 6
+
+    Update Time : Sun Dec 19 12:02:52 2010
+          State : active
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 84df28e2 - correct
+         Events : 1290382
+
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       17        1      active sync   /dev/sdb1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       0        0        2      faulty removed
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       0        0        4      faulty removed
+   5     5       8      113        5      spare   /dev/sdh1
+-----------------------------------------------------------------
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 50ed6314:84f965cd:c5795ac2:70ba0679
+  Creation Time : Thu May 29 20:51:39 2008
+     Raid Level : raid6
+  Used Dev Size : 976559104 (931.32 GiB 1000.00 GB)
+     Array Size : 2929677312 (2793.96 GiB 2999.99 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Dec 19 12:12:34 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 3
+  Spare Devices : 2
+       Checksum : 84f2dc2a - correct
+         Events : 1290388
+
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       33        0      active sync   /dev/sdc1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       0        0        4      faulty removed
+   5     5       8      113        5      spare   /dev/sdh1
+   6     6       8       49        6      spare   /dev/sdd1
+-----------------------------------------------------------------
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 50ed6314:84f965cd:c5795ac2:70ba0679
+  Creation Time : Thu May 29 20:51:39 2008
+     Raid Level : raid6
+  Used Dev Size : 976559104 (931.32 GiB 1000.00 GB)
+     Array Size : 2929677312 (2793.96 GiB 2999.99 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Dec 19 12:12:34 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 3
+  Spare Devices : 2
+       Checksum : 84f2dc40 - correct
+         Events : 1290388
+
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       49        6      spare   /dev/sdd1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       0        0        4      faulty removed
+   5     5       8      113        5      spare   /dev/sdh1
+   6     6       8       49        6      spare   /dev/sdd1
+-----------------------------------------------------------------
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 50ed6314:84f965cd:c5795ac2:70ba0679
+  Creation Time : Thu May 29 20:51:39 2008
+     Raid Level : raid6
+  Used Dev Size : 976559104 (931.32 GiB 1000.00 GB)
+     Array Size : 2929677312 (2793.96 GiB 2999.99 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 6
+
+    Update Time : Sun Dec 19 12:12:34 2010
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 3
+  Spare Devices : 2
+       Checksum : 84f2dc7e - correct
+         Events : 1290388
+
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     5       8      113        5      spare   /dev/sdh1
+
+   0     0       8       33        0      active sync   /dev/sdc1
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8        1        3      active sync   /dev/sda1
+   4     4       0        0        4      faulty removed
+   5     5       8      113        5      spare   /dev/sdh1
+   6     6       8       49        6      spare   /dev/sdd1
