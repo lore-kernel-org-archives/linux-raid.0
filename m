@@ -1,332 +1,45 @@
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: BUG after md/raid10:md0: not enough operational mirrors.
-Date: Mon, 20 Dec 2010 14:26:17 -0500
-Message-ID: <AANLkTikPNMC3Pxr9m55ayeyee4Er4F-aqAZ_Yqc-gDwZ@mail.gmail.com>
-References: <AANLkTi=mSTLTi29Da5WRzeuG5xyryj-FW7bb8HEW3mGn@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 00/29] OLCE, migrations and raid10 takeover
+Date: Tue, 21 Dec 2010 08:59:19 +1100
+Message-ID: <20101221085919.34ce91ce@notabene.brown>
+References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
+	<20101216222058.03132812@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408066B84342@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=mSTLTi29Da5WRzeuG5xyryj-FW7bb8HEW3mGn@mail.gmail.com>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408066B84342@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-[-dm-devel, +linux-raid]
+On Mon, 20 Dec 2010 08:27:38 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
 
-It has been pointed out to me that I picked the wrong mailing list.
-Didn't go down far enough in MAINTAINERS =3D/
+> Neil,
+> 
+> How we can help you to speed up your work?
+> 
 
-On Mon, Dec 20, 2010 at 2:57 AM, Ilia Mirkin <imirkin@alum.mit.edu> wro=
-te:
-> Hello,
->
-> I've just upgraded to linux-2.6.36.2 on this machine. Right after the
-> upgrade, I got an oops on boot which I was unable to capture. I'm
-> guessing that it left md state in a somewhat undefined place, althoug=
-h
-> I don't know what caused the initial oops. Anyways, on second boot:
->
-> [ =A0 17.336794] md: Scanned 11 and added 11 devices.
-> [ =A0 17.337050] md: autorun ...
-> [ =A0 17.337298] md: considering sdj1 ...
-> [ =A0 17.337552] md: =A0adding sdj1 ...
-> [ =A0 17.337800] md: =A0adding sdg1 ...
-> [ =A0 17.338047] md: =A0adding sdi1 ...
-> [ =A0 17.338295] md: =A0adding sdh1 ...
-> [ =A0 17.338548] md: =A0adding sdf1 ...
-> [ =A0 17.338797] md: =A0adding sde1 ...
-> [ =A0 17.339046] md: =A0adding sdk1 ...
-> [ =A0 17.339295] md: =A0adding sdd1 ...
-> [ =A0 17.339556] md: =A0adding sda1 ...
-> [ =A0 17.339808] md: =A0adding sdb1 ...
-> [ =A0 17.340058] md: =A0adding sdc1 ...
-> [ =A0 17.340305] md: created md0
-> [ =A0 17.340547] md: bind<sdc1>
-> [ =A0 17.340793] md: bind<sdb1>
-> [ =A0 17.341037] md: bind<sda1>
-> [ =A0 17.341287] md: bind<sdd1>
-> [ =A0 17.341543] md: bind<sdk1>
-> [ =A0 17.341790] md: bind<sde1>
-> [ =A0 17.342036] md: bind<sdf1>
-> [ =A0 17.342284] md: bind<sdh1>
-> [ =A0 17.342534] md: bind<sdi1>
-> [ =A0 17.342783] md: bind<sdg1>
-> [ =A0 17.343031] md: bind<sdj1>
-> [ =A0 17.343281] md: running:
-> <sdj1><sdg1><sdi1><sdh1><sdf1><sde1><sdk1><sdd1><sda1><sdb1><sdc1>
-> [ =A0 17.344151] md: kicking non-fresh sdj1 from array!
-> [ =A0 17.344406] md: unbind<sdj1>
-> [ =A0 17.348365] md: export_rdev(sdj1)
-> [ =A0 17.348613] md: kicking non-fresh sdg1 from array!
-> [ =A0 17.348852] md: unbind<sdg1>
-> [ =A0 17.356343] md: export_rdev(sdg1)
-> [ =A0 17.356589] md: kicking non-fresh sdi1 from array!
-> [ =A0 17.356827] md: unbind<sdi1>
-> [ =A0 17.364325] md: export_rdev(sdi1)
-> [ =A0 17.364582] md: kicking non-fresh sdh1 from array!
-> [ =A0 17.364831] md: unbind<sdh1>
-> [ =A0 17.372308] md: export_rdev(sdh1)
-> [ =A0 17.372563] md: kicking non-fresh sdf1 from array!
-> [ =A0 17.372812] md: unbind<sdf1>
-> [ =A0 17.380291] md: export_rdev(sdf1)
-> [ =A0 17.380551] md: kicking non-fresh sde1 from array!
-> [ =A0 17.380801] md: unbind<sde1>
-> [ =A0 17.388274] md: export_rdev(sde1)
-> [ =A0 17.388522] md: kicking non-fresh sdk1 from array!
-> [ =A0 17.388763] md: unbind<sdk1>
-> [ =A0 17.396256] md: export_rdev(sdk1)
-> [ =A0 17.397013] md/raid10:md0: not enough operational mirrors.
-> [ =A0 17.397364] BUG: unable to handle kernel NULL pointer dereferenc=
-e
-> at 0000000000000014
-> [ =A0 17.397882] IP: [<ffffffff814ccc1f>] _raw_spin_lock_irq+0xa/0x1b
-> [ =A0 17.398162] PGD 0
-> [ =A0 17.398450] Oops: 0002 [#1] SMP
-> [ =A0 17.398749] last sysfs file:
-> [ =A0 17.398986] CPU 13
-> [ =A0 17.399022] Modules linked in:
-> [ =A0 17.399538]
-> [ =A0 17.399771] Pid: 1519, comm: md0_raid10 Not tainted 2.6.36.2 #2 =
-X8DT3/X8DT3
-> [ =A0 17.400013] RIP: 0010:[<ffffffff814ccc1f>] =A0[<ffffffff814ccc1f=
->]
-> _raw_spin_lock_irq+0xa/0x1b
-> [ =A0 17.400510] RSP: 0018:ffff88033d151cc0 =A0EFLAGS: 00010082
-> [ =A0 17.400750] RAX: 0000000000000100 RBX: 0000000000000000 RCX: 000=
-0000000000000
-> [ =A0 17.400995] RDX: ffff88033e381650 RSI: 0000000000000000 RDI: 000=
-0000000000014
-> [ =A0 17.401288] RBP: ffff88033d151cc0 R08: ffff88033d150000 R09: 000=
-0000000000000
-> [ =A0 17.401531] R10: ffffffff81a7d7f0 R11: ffff88033e355dc8 R12: fff=
-f88033d700d80
-> [ =A0 17.401774] R13: 0000000000000014 R14: 0000000000000000 R15: fff=
-f88033d151e80
-> [ =A0 17.402018] FS: =A00000000000000000(0000) GS:ffff88034e340000(00=
-00)
-> knlGS:0000000000000000
-> [ =A0 17.402478] CS: =A00010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [ =A0 17.402718] CR2: 0000000000000014 CR3: 0000000001a05000 CR4: 000=
-00000000006e0
-> [ =A0 17.402961] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000=
-0000000000000
-> [ =A0 17.403252] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000=
-0000000000400
-> [ =A0 17.403496] Process md0_raid10 (pid: 1519, threadinfo
-> ffff88033d150000, task ffff88033e381650)
-> [ =A0 17.403940] Stack:
-> [ =A0 17.404195] =A0ffff88033d151cf0 ffffffff81380efb ffff88033d151d1=
-0
-> 0000000000000014
-> [ =A0 17.404536] <0> ffff88033d700d80 ffff88033e381650 ffff88033d151e=
-50
-> ffffffff81381900
-> [ =A0 17.405141] <0> ffffffff81a1cd80 ffff88033e381650 ffff88033e3816=
-50
-> ffffffff814cb876
-> [ =A0 17.406019] Call Trace:
-> [ =A0 17.406279] =A0[<ffffffff81380efb>] flush_pending_writes+0x1c/0x=
-8a
-> [ =A0 17.406524] =A0[<ffffffff81381900>] raid10d+0x69/0xe06
-> [ =A0 17.406765] =A0[<ffffffff814cb876>] ? schedule+0x61e/0x66b
-> [ =A0 17.407008] =A0[<ffffffff814cbc42>] ? schedule_timeout+0x22/0xbf
-> [ =A0 17.407299] =A0[<ffffffff81032a25>] ? finish_task_switch+0x3d/0x=
-b0
-> [ =A0 17.407547] =A0[<ffffffff813936bd>] md_thread+0xf8/0x116
-> [ =A0 17.407791] =A0[<ffffffff81051e93>] ? autoremove_wake_function+0=
-x0/0x38
-> [ =A0 17.408033] =A0[<ffffffff813935c5>] ? md_thread+0x0/0x116
-> [ =A0 17.408291] =A0[<ffffffff810519fb>] kthread+0x81/0x89
-> [ =A0 17.408534] =A0[<ffffffff81003854>] kernel_thread_helper+0x4/0x1=
-0
-> [ =A0 17.408777] =A0[<ffffffff8105197a>] ? kthread+0x0/0x89
-> [ =A0 17.409017] =A0[<ffffffff81003850>] ? kernel_thread_helper+0x0/0=
-x10
-> [ =A0 17.409301] Code: eb f6 c9 c3 55 48 89 e5 9c 58 fa ba 00 01 00 0=
-0
-> f0 66 0f c1 17 38 f2 74 06 f3 90 8a 17 eb f6 c9 c3 55 48 89 e5 fa b8
-> 00 01 00 00 <f0> 66 0f c1 07 38 e0 74 06 f3 90 8a 07 eb f6 c9 c3 55 4=
-8
-> 89 e5
-> [ =A0 17.412131] RIP =A0[<ffffffff814ccc1f>] _raw_spin_lock_irq+0xa/0=
-x1b
-> [ =A0 17.417553] =A0RSP <ffff88033d151cc0>
-> [ =A0 17.417789] CR2: 0000000000000014
-> [ =A0 17.418026] ---[ end trace 1dc7eeca43b701f8 ]---
-> [ =A0 17.418302] md0_raid10 used greatest stack depth: 4632 bytes lef=
-t
-> [ =A0 17.418338] md: pers->run() failed ...
-> [ =A0 17.418342] md: do_md_run() returned -5
-> [ =A0 17.418344] md: md0 still in use.
-> [ =A0 17.418346] md: ... autorun DONE.
->
-> Shortly followed by:
->
-> [ =A0 18.572342] udev: starting version 149
-> [ =A0 18.572396] udevd (1612): /proc/1612/oom_adj is deprecated, plea=
-se
-> use /proc/1612/oom_score_adj instead.
-> [ =A0 18.615329] BUG: unable to handle kernel paging request at 00000=
-000000ffeb6
-> [ =A0 18.615645] IP: [<ffffffff8102a0c7>] __wake_up_common+0x29/0x76
-> [ =A0 18.615923] PGD 73cd4a067 PUD 73cd4b067 PMD 0
-> [ =A0 18.616264] Oops: 0000 [#2] SMP
-> [ =A0 18.616570] last sysfs file:
-> /sys/devices/pci0000:00/0000:00:1a.2/usb5/5-2/5-2:1.0/input/input2/na=
-me
-> [ =A0 18.617020] CPU 2
-> [ =A0 18.617057] Modules linked in:
-> [ =A0 18.617558]
-> [ =A0 18.617796] Pid: 1635, comm: udevd Tainted: G =A0 =A0 =A0D =A0 =A0=
- 2.6.36.2
-> #2 X8DT3/X8DT3
-> [ =A0 18.618242] RIP: 0010:[<ffffffff8102a0c7>] =A0[<ffffffff8102a0c7=
->]
-> __wake_up_common+0x29/0x76
-> [ =A0 18.618719] RSP: 0018:ffff88073cd69de8 =A0EFLAGS: 00010096
-> [ =A0 18.618958] RAX: 00000000000ffeb6 RBX: ffff88033d700d90 RCX: 000=
-0000000000000
-> [ =A0 18.619202] RDX: 0000000000000001 RSI: 0000000000000003 RDI: fff=
-f88033d700d90
-> [ =A0 18.619447] RBP: ffff88073cd69e18 R08: 00000000000ffe9e R09: 000=
-000000000000a
-> [ =A0 18.619691] R10: 0000000000000000 R11: 0000000000000000 R12: 000=
-0000000000001
-> [ =A0 18.619934] R13: 0000000000000001 R14: ffff88033d700d98 R15: 000=
-0000000000000
-> [ =A0 18.620177] FS: =A000007fcae5aba6f0(0000) GS:ffff880001c80000(00=
-00)
-> knlGS:0000000000000000
-> [ =A0 18.620625] CS: =A00010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ =A0 18.620886] CR2: 00000000000ffeb6 CR3: 000000073cd49000 CR4: 000=
-00000000006e0
-> [ =A0 18.621146] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000=
-0000000000000
-> [ =A0 18.621410] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000=
-0000000000400
-> [ =A0 18.621761] Process udevd (pid: 1635, threadinfo ffff88073cd6800=
-0,
-> task ffff88073cd30770)
-> [ =A0 18.622238] Stack:
-> [ =A0 18.622487] =A00000000300000000 ffff88033d700d90 000000000000000=
-0
-> 0000000000000001
-> [ =A0 18.622928] <0> 0000000000000296 0000000000000003 ffff88073cd69e=
-58
-> ffffffff8102d080
-> [ =A0 18.623596] <0> ffff88073cd69ee8 ffff88033d10b400 00000000000000=
-00
-> ffffffff81a44410
-> [ =A0 18.624514] Call Trace:
-> [ =A0 18.624816] =A0[<ffffffff8102d080>] __wake_up+0x38/0x50
-> [ =A0 18.625075] =A0[<ffffffff8138e297>] md_wakeup_thread+0x27/0x29
-> [ =A0 18.625319] =A0[<ffffffff8138f301>] mddev_unlock+0xa6/0xab
-> [ =A0 18.625605] =A0[<ffffffff8138f533>] md_attr_show+0x4c/0x58
-> [ =A0 18.625867] =A0[<ffffffff8112a83b>] sysfs_read_file+0xb2/0x131
-> [ =A0 18.626121] =A0[<ffffffff810dbd8e>] vfs_read+0xa8/0x100
-> [ =A0 18.626371] =A0[<ffffffff810dbeaa>] sys_read+0x47/0x70
-> [ =A0 18.626666] =A0[<ffffffff81002aab>] system_call_fastpath+0x16/0x=
-1b
-> [ =A0 18.626928] Code: c9 c3 55 48 89 e5 41 57 4d 89 c7 41 56 4c 8d 7=
-7
-> 08 41 55 41 54 41 89 d4 53 48 83 ec 08 89 75 d4 89 4d d0 48 8b 47 08
-> 4c 8d 40 e8 <49> 8b 40 18 48 8d 58 e8 eb 2d 45 8b 28 4c 89 f9 8b 55 d=
-0
-> 8b 75
-> [ =A0 18.629848] RIP =A0[<ffffffff8102a0c7>] __wake_up_common+0x29/0x=
-76
-> [ =A0 18.630139] =A0RSP <ffff88073cd69de8>
-> [ =A0 18.630386] CR2: 00000000000ffeb6
-> [ =A0 18.630680] ---[ end trace 1dc7eeca43b701f9 ]---
->
-> And then a watchdog:
->
-> [ =A0230.799819] ------------[ cut here ]------------
-> [ =A0230.800081] WARNING: at kernel/watchdog.c:240
-> watchdog_overflow_callback+0xa9/0xbb()
-> [ =A0230.805856] Hardware name: X8DT3
-> [ =A0230.806106] Watchdog detected hard LOCKUP on cpu 1
-> [ =A0230.806147] Modules linked in: cifs kvm_intel kvm iTCO_wdt
-> iTCO_vendor_support i2c_i801
-> [ =A0230.807114] Pid: 2594, comm: udevd Tainted: G =A0 =A0 =A0D =A0 =A0=
- 2.6.36.2 #2
-> [ =A0230.807358] Call Trace:
-> [ =A0230.807636] =A0<NMI> =A0[<ffffffff8107f1d2>] ?
-> watchdog_overflow_callback+0xa9/0xbb
-> [ =A0230.808134] =A0[<ffffffff81038abf>] warn_slowpath_common+0x80/0x=
-99
-> [ =A0230.808382] =A0[<ffffffff81038bbb>] warn_slowpath_fmt+0x69/0x6b
-> [ =A0230.808679] =A0[<ffffffff8107f1d2>] watchdog_overflow_callback+0=
-xa9/0xbb
-> [ =A0230.808938] =A0[<ffffffff8109ebeb>] __perf_event_overflow+0x189/=
-0x1fc
-> [ =A0230.809195] =A0[<ffffffff8109efcd>] perf_event_overflow+0x14/0x1=
-6
-> [ =A0230.809448] =A0[<ffffffff81011b52>] intel_pmu_handle_irq+0x385/0=
-x3ee
-> [ =A0230.809744] =A0[<ffffffff814ce2c0>] perf_event_nmi_handler+0x6f/=
-0xcf
-> [ =A0230.810001] =A0[<ffffffff814cfdf2>] notifier_call_chain+0x33/0x5=
-b
-> [ =A0230.810249] =A0[<ffffffff814cfe3c>] atomic_notifier_call_chain+0=
-x13/0x15
-> [ =A0230.810499] =A0[<ffffffff814cfe6c>] notify_die+0x2e/0x30
-> [ =A0230.810789] =A0[<ffffffff814cda31>] do_nmi+0x91/0x261
-> [ =A0230.811042] =A0[<ffffffff814cd4fa>] nmi+0x1a/0x20
-> [ =A0230.811290] =A0[<ffffffff814ccc0f>] ? _raw_spin_lock_irqsave+0x1=
-7/0x1d
-> [ =A0230.811576] =A0<<EOE>> =A0[<ffffffff8102d06a>] __wake_up+0x22/0x=
-50
-> [ =A0230.811875] =A0[<ffffffff8138e297>] md_wakeup_thread+0x27/0x29
-> [ =A0230.812125] =A0[<ffffffff8138f301>] mddev_unlock+0xa6/0xab
-> [ =A0230.812373] =A0[<ffffffff8138f533>] md_attr_show+0x4c/0x58
-> [ =A0230.812663] =A0[<ffffffff8112a83b>] sysfs_read_file+0xb2/0x131
-> [ =A0230.812919] =A0[<ffffffff810dbd8e>] vfs_read+0xa8/0x100
-> [ =A0230.813168] =A0[<ffffffff810dbeaa>] sys_read+0x47/0x70
-> [ =A0230.813415] =A0[<ffffffff81002aab>] system_call_fastpath+0x16/0x=
-1b
-> [ =A0230.813706] ---[ end trace 1dc7eeca43b701fa ]---
->
-> I will be throwing out/rebuilding this raid shortly (it's used for
-> swap, no real data on it anyways), but thought it would be good to
-> report this. Let me know if I can provide any further details about
-> this system.
+Thanks for the offer, but you probably cannot at the moment.
 
-And to add some real content to this e-mail rather than just changing l=
-ist CC's:
+You (collectively) have already done a great job in exploring the problem
+space and hitting lots of different issues and attempted solutions.
+That allows me to get a good understanding of what is required and where the
+difficulties and important details etc.
+I can see that the solutions you have come up with aren't ideal (aren't
+really easy to maintain and are subtly wrong in some cases), largely because
+the infrastructure that you were working in was too restrictive.
 
-The above happened consistently on boots until I rebuilt the md. (Took
-me a few tries to realize I had to do raid=3Dnoautodetect.) Also,
-looking over things more carefully, there were errors on the md
-shortly before reboot (online disk controller firmware upgrade,
-probably temporarily took out some of the drives, as resetting the
-controller is part of the upgrade procedure) of the form:
+Now that I have that big, detailed, picture, I can re-write the infrastructure
+to (hopefully) make it easy to implement the same functionality in a much
+clearer and more maintainable way.  And I'm getting close.
 
-[2519101.140755] end_request: I/O error, dev sdk, sector 16787775
-[2519101.140761] md: super_written gets error=3D-5, uptodate=3D0
-[2519101.140765] raid10: Disk failure on sdk1, disabling device.
-[2519101.140766] raid10: Operation continuing on 10 devices.
+Once that is done, you can certainly help by modifying the IMSM specific code
+to fit the new model (which I will try to document a bit better).
 
-repeated for a bunch of the drives (with kernel 2.6.33). Then, after
-rebooting again (into 2.6.33, but fresh boot with the new controller
-firmware all there from the start), I got the same errors as in
-2.6.36.2, wrt the array not being able to start:
 
-[   17.703472] raid10: not enough operational mirrors for md0
-[   17.703743] md: pers->run() failed ...
-[   17.704018] md: do_md_run() returned -5
-[   17.704268] md: md0 still in use.
-[   17.704519] md: ... autorun DONE.
-
-But no oopses. Right after that, I upgraded to 2.6.36.2, with the
-results from above.
-
---=20
-Ilia Mirkin
-imirkin@alum.mit.edu
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+NeilBrown
