@@ -1,79 +1,49 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH v3 0/8] dm-raid (raid456) target
-Date: Tue, 21 Dec 2010 14:14:43 +1100
-Message-ID: <20101221141443.5aea0b12@notabene.brown>
-References: <1292899065-31943-1-git-send-email-snitzer@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: [PATCH 00/29] OLCE, migrations and raid10 takeover
+Date: Tue, 21 Dec 2010 23:37:14 +1100
+Message-ID: <20101221233714.61b29ad9@notabene.brown>
+References: <20101209150352.26876.33974.stgit@gklab-170-024.igk.intel.com>
+	<20101216222058.03132812@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408066B84342@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1292899065-31943-1-git-send-email-snitzer@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, agk@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408066B84342@irsmsx503.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 20 Dec 2010 21:37:37 -0500 Mike Snitzer <snitzer@redhat.com> wrote:
+On Mon, 20 Dec 2010 08:27:38 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
 
-> I reviewed all patches and adjusted patch headers in preparation for
-> inclusion in Alasdair's tree (upstream target being v2.6.38).  The 2
-> md/bitmap changes can obviously go through Neil's MD tree if that is
-> preferred.
-> 
-> - added Copyright to the top of dm-raid.c
-> - fixed drivers/md/Kconfig so that DM_RAID will select MD_RAID456
-> - removed unused 'conf' variable in raid_status()
-> - few misc style and whitespace changes
-> 
 > Neil,
-> Hopefully you're comfortable with the authorship of most of these
-> patches still being attributed to you (despite Jon's changes to your
-> original patches).
 > 
-> Please advise, thanks!
+> How we can help you to speed up your work?
+> 
 
-I haven't had a chance to have a proper look yet, and I'm about to go on
-leave for a couple of weeks.
-I'm probably happy with the authorship remaining as-is, but I reserve the
-right to change my mind (about anything) once I've had a chance to have a
-proper look.
+An update:
+
+ I got the code to a state where the shape of what I'm trying to do should be
+ clear, though the code to do it isn't quite complete yet.
+ The last commit in my devel-3.2 tree contains some incomplete code, some
+ enhanced documentation for how it is supposed to work, and a to-do list
+ to remind me what I should be doing next.
+
+ If any of your people have time to look at it and possibly fill in some of
+ the gaps that would be great.  I am on leave for the next 2 weeks but I'll
+ be reading email and will try to respond to any question or small patches
+ that arise (I won't be reviewing any long patch series though).
+
+ Probably the most useful next step would be to fit the migration checkpoint
+ patches into the new approach - that should be fairly straight forward.
+ Then probably look at reshape_super and make sure it is doing the right
+ thing according to the new rules.
+ manage_reshape will probably need to wait until the new code has stablised a
+ bit.
 
 Thanks,
+
 NeilBrown
 
-
-> Mike
-> 
-> Jonathan Brassow (2):
->   md/bitmap: revert dm-dirty-log preparation
->   md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
-> 
-> NeilBrown (6):
->   md/bitmap: use DIV_ROUND_UP in bitmap_init_from_disk
->   dm raid: skeleton raid456 target support
->   dm: introduce target callbacks and congestion fn
->   dm: unplug callback
->   dm raid: add iterate_devices and io_hints functions
->   dm raid: add suspend and resume functions
-> 
->  drivers/md/Kconfig            |   23 ++
->  drivers/md/Makefile           |    1 +
->  drivers/md/bitmap.c           |  139 +++------
->  drivers/md/bitmap.h           |    5 -
->  drivers/md/dm-raid.c          |  664 +++++++++++++++++++++++++++++++++++++++++
->  drivers/md/dm-table.c         |   19 ++
->  drivers/md/md.h               |    5 -
->  drivers/md/raid5.c            |    2 +-
->  include/linux/device-mapper.h |   13 +
->  9 files changed, 766 insertions(+), 105 deletions(-)
->  create mode 100644 drivers/md/dm-raid.c
-> 
