@@ -1,40 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/2] Fixes for Incremental()
-Date: Tue, 21 Dec 2010 09:12:20 +1100
-Message-ID: <20101221091220.36751131@notabene.brown>
-References: <20101217141641.4219.88151.stgit@gklab-170-211.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH v3 0/8] dm-raid (raid456) target
+Date: Mon, 20 Dec 2010 21:37:37 -0500
+Message-ID: <1292899065-31943-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101217141641.4219.88151.stgit@gklab-170-211.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: jbrassow@redhat.com, neilb@suse.de
+Cc: agk@redhat.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 17 Dec 2010 15:16:58 +0100 Przemyslaw Czarnowski
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+I reviewed all patches and adjusted patch headers in preparation for
+inclusion in Alasdair's tree (upstream target being v2.6.38).  The 2
+md/bitmap changes can obviously go through Neil's MD tree if that is
+preferred.
 
-> The following series consists of two fixes for problems revealed during the tests 
-> of autorebuild. First one is quite important, as recovery process do not start
-> if bare disk is added to degraded array via incremental. Second one is just
-> a change in return value of array_try_spare().
-> 
-> ---
-> 
-> Przemyslaw Czarnowski (2):
->       fix: adding spare via incremental do not trigger recovery
->       fix: incremental for bare disks return invalid value
+- added Copyright to the top of dm-raid.c
+- fixed drivers/md/Kconfig so that DM_RAID will select MD_RAID456
+- removed unused 'conf' variable in raid_status()
+- few misc style and whitespace changes
 
-Both applied,
-Thanks,
+Neil,
+Hopefully you're comfortable with the authorship of most of these
+patches still being attributed to you (despite Jon's changes to your
+original patches).
 
-NeilBrown
+Please advise, thanks!
+Mike
 
-> 
-> 
->  Incremental.c |   11 ++++++++++-
->  1 files changed, 10 insertions(+), 1 deletions(-)
-> 
+Jonathan Brassow (2):
+  md/bitmap: revert dm-dirty-log preparation
+  md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
+
+NeilBrown (6):
+  md/bitmap: use DIV_ROUND_UP in bitmap_init_from_disk
+  dm raid: skeleton raid456 target support
+  dm: introduce target callbacks and congestion fn
+  dm: unplug callback
+  dm raid: add iterate_devices and io_hints functions
+  dm raid: add suspend and resume functions
+
+ drivers/md/Kconfig            |   23 ++
+ drivers/md/Makefile           |    1 +
+ drivers/md/bitmap.c           |  139 +++------
+ drivers/md/bitmap.h           |    5 -
+ drivers/md/dm-raid.c          |  664 +++++++++++++++++++++++++++++++++++++++++
+ drivers/md/dm-table.c         |   19 ++
+ drivers/md/md.h               |    5 -
+ drivers/md/raid5.c            |    2 +-
+ include/linux/device-mapper.h |   13 +
+ 9 files changed, 766 insertions(+), 105 deletions(-)
+ create mode 100644 drivers/md/dm-raid.c
+
+-- 
+1.7.2.3
 
