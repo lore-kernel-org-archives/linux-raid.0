@@ -1,84 +1,51 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: reshape changing chunk size won't restart
-Date: Tue, 21 Dec 2010 18:59:17 -0800
-Message-ID: <1292986757.5543.3@athlon>
-References: <20101222132935.01d140c1@notabene.brown>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: [PATCH] mv_xor: fix race in tasklet function
+Date: Wed, 22 Dec 2010 13:21:43 +0200
+Message-ID: <AANLkTi=KSPEurnOvh_kXPua1xR7-=dno14C8gRm2kJF=@mail.gmail.com>
+References: <1292943219-26470-1-git-send-email-saeed@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101222132935.01d140c1@notabene.brown> (from neilb@suse.de on
-	Tue Dec 21 18:29:35 2010)
-Content-Disposition: inline
+In-Reply-To: <1292943219-26470-1-git-send-email-saeed@marvell.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux raid mailing list <linux-raid@vger.kernel.org>
+To: Saeed Bishara <saeed@marvell.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/21/2010 06:29:35 PM, Neil Brown wrote:
+Dan, can you please merge this patch?
 
-> > mdadm -E /dev/sdg1
-> > mdadm: cannot open /dev/sdg1: No such device or address
-> 
-> Maybe it has forgotten it's partition table... try
-> 
->   blockdev --rereadpt /dev/sdg
-> 
-> (check man page to make sure I have the right spell.  Definitely sdg,  
-> not
-> sdg1).
-
-that made the syslog say:
-
-Dec 21 18:33:26 athlon kernel: sdg: sdg1
-Dec 21 18:33:26 athlon kernel: md: bind<sdg1>
-
-and mdadm -E likes it and Reshape pos'n matches the rest
-
-> > unless old timestamp is helpful:
-> 
-> Yes, it is.  Makes sense too.
-> I never really didn't get the timestamp logic straight in my mind.
-> 
-> Try
-> 
->   MDADM_GROW_ALLOW_OLD=1  mdadm --verbose -A ....
-
-> and see how that goes.  Requires mdadm-3.1.2 or later which I think  
-> you have.
-
-seems happy:
-
-MDADM_GROW_ALLOW_OLD=1  mdadm --verbose -A /dev/md5  
---backup-file=/my/raid/RAID_BACKUP_FILE  /dev/sd[dfcbhljkg]1
-mdadm: looking for devices for /dev/md5
-mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 0.
-mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 1.
-mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 2.
-mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 8.
-mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 7.
-mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
-mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
-mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
-mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
-mdadm:/dev/md5 has an active reshape - checking if critical section  
-needs to be restored
-mdadm: accepting backup with timestamp 1292959293 for array with  
-timestamp 1292974027
-mdadm: restoring critical section
-mdadm: added /dev/sdc1 to /dev/md5 as 1
-mdadm: added /dev/sdd1 to /dev/md5 as 2
-mdadm: added /dev/sdj1 to /dev/md5 as 3
-mdadm: added /dev/sdh1 to /dev/md5 as 4
-mdadm: added /dev/sdl1 to /dev/md5 as 5
-mdadm: added /dev/sdk1 to /dev/md5 as 6
-mdadm: added /dev/sdg1 to /dev/md5 as 7
-mdadm: added /dev/sdf1 to /dev/md5 as 8
-mdadm: added /dev/sdb1 to /dev/md5 as 0
-mdadm: /dev/md5 has been started with 9 drives.
-
-It's munching away again.
-
-I'll try an fsck...
-
-Thank you Neil!
+On Tue, Dec 21, 2010 at 4:53 PM, Saeed Bishara <saeed@marvell.com> wrot=
+e:
+> use mv_xor_slot_cleanup() instead of __mv_xor_slot_cleanup() as the f=
+ormer function
+> aquires the spin lock that needed to protect the drivers data.
+>
+> Signed-off-by: Saeed Bishara <saeed@marvell.com>
+> ---
+> =C2=A0drivers/dma/mv_xor.c | =C2=A0 =C2=A02 +-
+> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/dma/mv_xor.c b/drivers/dma/mv_xor.c
+> index 411d5bf..a25f5f6 100644
+> --- a/drivers/dma/mv_xor.c
+> +++ b/drivers/dma/mv_xor.c
+> @@ -449,7 +449,7 @@ mv_xor_slot_cleanup(struct mv_xor_chan *mv_chan)
+> =C2=A0static void mv_xor_tasklet(unsigned long data)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct mv_xor_chan *chan =3D (struct mv_xo=
+r_chan *) data;
+> - =C2=A0 =C2=A0 =C2=A0 __mv_xor_slot_cleanup(chan);
+> + =C2=A0 =C2=A0 =C2=A0 mv_xor_slot_cleanup(chan);
+> =C2=A0}
+>
+> =C2=A0static struct mv_xor_desc_slot *
+> --
+> 1.6.0.4
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
