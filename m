@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 3/3] Assemble loose imsm spares.
-Date: Thu, 23 Dec 2010 15:13:48 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E5CFBA3@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 2/3] Assemble imsm spares in matching domain only
+Date: Thu, 23 Dec 2010 15:13:15 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E5CFBA0@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,90 +12,147 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-From 93a06ce304e80ad8d4956a87203fc8c084f2c384 Mon Sep 17 00:00:00 2001
+From 9aa8c183c10c121d663bcf0f715cf9c17daa048d Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Thu, 23 Dec 2010 12:29:52 +0100
-Subject: [PATCH 3/3] Assemble loose imsm spares.
+Date: Thu, 23 Dec 2010 12:12:19 +0100
+Subject: [PATCH 2/3] Assemble imsm spares in matching domain only
 Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-All imsm spares (uuid=0:0:0:0) that do not match any array
-will fall into spares_imsm container in auto assembly mode.
-This also applies when there is no config file. Previously
-no spares were assembled as there were no domains defined in such case.
+Imsm spare will only be taken if it matches domain of
+identified members of currently assembled array.
 
-When assembling spare container we don't look at domains.
-Spares assembled on their own need to be considered uptodate.
-Spares do not set st because it prevents auto assembly of subarrays,
-so when assebling spare container we will use superblock of first spare.
+This implies that:
+- spare with null domain will match first array assembled.
+- if array has null domain then no spare will match
+
+If we allow spares to set st they may block assembly of subarrays.
+This is because in autossembly tmpdev->used=0 for a spare not matching
+any array. If we find such spare before container and set st, the content
+will not get assembled.
+
+We allow uuid_zero match any uuid in assembly as unsuitable spares will
+be rejected on domain check.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Assemble.c |   20 +++++++++++++++++++-
- mdadm.c    |   12 ++++++++++++
- 2 files changed, 31 insertions(+), 1 deletions(-)
+ Assemble.c |   44 +++++++++++++++++++++++++++++++++++++++++---
+ 1 files changed, 41 insertions(+), 3 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index 4b8ab5c..e6da702 100644
+index ac489e8..4b8ab5c 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -553,6 +553,22 @@ int Assemble(struct supertype *st, char *mddev,
- 		struct stat stb;
- 		if (tmpdev->used != 3)
- 			continue;
-+		/* If assembling spare container don't look at domains */
-+		if (ident->uuid_set &&
-+		    !memcmp(ident->uuid, uuid_zero, sizeof(int[4]))) {
-+			tmpdev->used = 1;
-+			content=&info;
-+			if (!st->sb) {
-+				/* we need sb from one of the spares */
-+				int dfd = dev_open(tmpdev->devname, O_RDONLY);
-+				if (dfd < 0 ||
-+				    st->ss->load_super(st, dfd, NULL))
-+					tmpdev->used = 2;
-+				if (dfd > 0)
-+					close(dfd);
-+			}
-+			continue;
-+		}
- 		if (stat(tmpdev->devname, &stb)< 0) {
- 			fprintf(stderr, Name ": fstat failed for %s: %s\n",
- 				tmpdev->devname, strerror(errno));
-@@ -883,8 +899,10 @@ int Assemble(struct supertype *st, char *mddev,
- 		if (content->array.level != LEVEL_MULTIPATH)
- 			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
- 				if (!(devices[j].i.disk.state
--				      & (1<<MD_DISK_FAULTY)))
-+				      & (1<<MD_DISK_FAULTY))) {
-+					devices[j].uptodate = 1;
- 					sparecnt++;
-+				}
- 				continue;
- 			}
- 		/* If this devices thinks that 'most_recent' has failed, then
-diff --git a/mdadm.c b/mdadm.c
-index 2ffe94f..d4c0ad4 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1350,6 +1350,18 @@ int main(int argc, char *argv[])
- 				fprintf(stderr, Name ": No arrays found in config file\n");
- 				rv = 1;
- 			}
-+			/* Try to assemble container with spares */
-+			ident.uuid_set = 1;
-+			memset(ident.uuid, 0, sizeof(int[4]));
-+			if (!ss)
-+				ss = super_imsm.match_metadata_desc("imsm");
-+			if (Assemble(ss, "spares_imsm", &ident,
-+				     NULL, backup_file, invalid_backup,
-+				     readonly, runstop, update,
-+				     homehost, require_homehost,
-+				     verbose-quiet, force) == 0)
-+				rv = 0;
-+			free(ss);
+@@ -78,7 +78,8 @@ static int ident_matches(struct mddev_ident *ident,
+ {
+ 
+ 	if (ident->uuid_set && (!update || strcmp(update, "uuid")!= 0) &&
+-	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0) {
++	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0 &&
++	    memcmp(content->uuid, uuid_zero, sizeof(int[4]))) {
+ 		if (devname)
+ 			fprintf(stderr, Name ": %s has wrong uuid.\n",
+ 				devname);
+@@ -231,7 +232,8 @@ int Assemble(struct supertype *st, char *mddev,
+ 	char *name = NULL;
+ 	int trustworthy;
+ 	char chosen_name[1024];
+-
++	struct domainlist *domains = NULL;
++	
+ 	if (get_linux_version() < 2004000)
+ 		old_linux = 1;
+ 
+@@ -350,6 +352,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 			} else
+ 				found_container = 1;
+ 		} else {
++			pol = devnum_policy(stb.st_rdev);
+ 			if (!tst && (tst = guess_super(dfd)) == NULL) {
+ 				if (report_missmatch)
+ 					fprintf(stderr, Name ": no recogniseable superblock on %s\n",
+@@ -366,7 +369,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 						tst->ss->name, devname);
+ 				tmpdev->used = 2;
+ 			} else if (auto_assem && st == NULL &&
+-				   !conf_test_metadata(tst->ss->name, (pol = devnum_policy(stb.st_rdev)),
++				   !conf_test_metadata(tst->ss->name, pol,
+ 						       tst->ss->match_home(tst, homehost) == 1)) {
+ 				if (report_missmatch)
+ 					fprintf(stderr, Name ": %s has metadata type %s for which "
+@@ -392,6 +395,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 			if (st)
+ 				st->ss->free_super(st);
+ 			dev_policy_free(pol);
++			domain_free(domains);
+ 			return 1;
  		}
- 		break;
- 	case BUILD:
+ 
+@@ -459,6 +463,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 					devname);
+ 				st->ss->free_super(st);
+ 				dev_policy_free(pol);
++				domain_free(domains);
+ 				return 1;
+ 			}
+ 			if (verbose > 0)
+@@ -479,6 +484,12 @@ int Assemble(struct supertype *st, char *mddev,
+ 					   report_missmatch ? devname : NULL))
+ 				goto loop;
+ 
++			if (!memcmp(content->uuid, uuid_zero, sizeof(int[4]))) {
++				/* this is imsm_spare - do not set st */
++				tmpdev->used = 3;
++				goto loop;
++			}
++				
+ 			if (st == NULL)
+ 				st = dup_super(tst);
+ 			if (st->minor_version == -1)
+@@ -522,17 +533,44 @@ int Assemble(struct supertype *st, char *mddev,
+ 				tst->ss->free_super(tst);
+ 				st->ss->free_super(st);
+ 				dev_policy_free(pol);
++				domain_free(domains);
+ 				return 1;
+ 			}
+ 			tmpdev->used = 1;
+ 		}
+ 	loop:
++		/* Collect domain information from members only */
++		if (tmpdev && tmpdev->used == 1)
++			domain_merge(&domains, pol, tst?tst->ss->name:NULL);
+ 		dev_policy_free(pol);
+ 		pol = NULL;
+ 		if (tst)
+ 			tst->ss->free_super(tst);
+ 	}
+ 
++	/* Now reject spares that don't match domains of identified members */
++	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
++		struct stat stb;
++		if (tmpdev->used != 3)
++			continue;
++		if (stat(tmpdev->devname, &stb)< 0) {
++			fprintf(stderr, Name ": fstat failed for %s: %s\n",
++				tmpdev->devname, strerror(errno));
++			tmpdev->used = 2;
++		} else {
++			struct dev_policy *pol = NULL;
++			pol = devnum_policy(stb.st_rdev);
++			if (domain_test(domains, pol, NULL))
++				/* take this spare if domains match */
++				tmpdev->used = 1;
++			else
++				/* if domains don't match mark as unused */
++				tmpdev->used = 0;
++			dev_policy_free(pol);
++		}
++	}
++	domain_free(domains);
++	
+ 	if (!st || !st->sb || !content)
+ 		return 2;
+ 
 -- 
 1.7.1
 
