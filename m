@@ -1,8 +1,8 @@
 From: Przemyslaw Czarnowski
 	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 2/5] Added test for array degradation for spare-same-slot
-Date: Thu, 23 Dec 2010 17:03:06 +0100
-Message-ID: <20101223160306.5562.84302.stgit@gklab-170-211.igk.intel.com>
+Subject: [PATCH 3/5] Skip domain check for spare-same-slot
+Date: Thu, 23 Dec 2010 17:03:39 +0100
+Message-ID: <20101223160339.5562.40006.stgit@gklab-170-211.igk.intel.com>
 References: <20101223155614.5562.4773.stgit@gklab-170-211.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,33 +14,47 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-spare-same-slot allows re-adding of missing array member with disk
-re-inserted into the same slot where previous member was plugged in.
-If in the meantime another spare has been used for recovery, same slot
-cookie should be ignored.
-
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+If lost disk was the only one that belonged to particular domain, array
+won't match with that domain any longer. We can achieve this by moving
+domain check below the 'target' test.
 ---
- Incremental.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ Incremental.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/Incremental.c b/Incremental.c
-index ef719fa..137bd75 100644
+index 137bd75..8d9f825 100644
 --- a/Incremental.c
 +++ b/Incremental.c
-@@ -968,11 +968,13 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+@@ -954,15 +954,6 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 					devname, mp->path);
+ 			goto next;
+ 		}
+-		dl = domain_from_array(sra, st2->ss->name);
+-		if (!domain_test(dl, pol, st2->ss->name)) {
+-			/* domain test fails */
+-			if (verbose > 1)
+-				fprintf(stderr, Name ": not adding %s to %s as it is not in a compatible domain\n",
+-					devname, mp->path);
+-
+-			goto next;
+-		}
+ 		/* test against target.
+ 		 * If 'target' is set and 'bare' is false, we only accept
  		 * arrays/containers that match 'target'.
- 		 * If 'target' is set and 'bare' is true, we prefer the
- 		 * array which matches 'target'.
-+		 * target is considered only if we deal with degraded array
- 		 */
- 		if (target) {
- 			if (strcmp(target->metadata, mp->metadata) == 0 &&
- 			    memcmp(target->uuid, mp->uuid,
--				   sizeof(target->uuid)) == 0) {
-+				   sizeof(target->uuid)) == 0 && 
-+			    sra->array.failed_disks > 0) {
- 				/* This is our target!! */
- 				if (chosen)
- 					sysfs_free(chosen);
+@@ -990,6 +981,15 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 				goto next;
+ 		}
+ 
++		dl = domain_from_array(sra, st2->ss->name);
++		if (!domain_test(dl, pol, st2->ss->name)) {
++			/* domain test fails */
++			if (verbose > 1)
++				fprintf(stderr, Name ": not adding %s to %s as it is not in a compatible domain\n",
++					devname, mp->path);
++
++			goto next;
++		}
+ 		/* all tests passed, OK to add to this array */
+ 		if (!chosen) {
+ 			chosen = sra;
 
