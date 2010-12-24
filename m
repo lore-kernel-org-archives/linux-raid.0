@@ -1,37 +1,44 @@
-From: Przemyslaw Czarnowski
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 5/5] Consider target only for spare-same-domain
-Date: Thu, 23 Dec 2010 17:04:45 +0100
-Message-ID: <20101223160445.5562.41182.stgit@gklab-170-211.igk.intel.com>
-References: <20101223155614.5562.4773.stgit@gklab-170-211.igk.intel.com>
+From: Jean de Largentaye <jean@largentaye.org>
+Subject: Aliens ate my superblock!
+Date: Fri, 24 Dec 2010 18:44:57 +0100
+Message-ID: <AANLkTimzJEdHDgnKbA5rk1Jwf7471Tib-JW3akEuWbwE@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101223155614.5562.4773.stgit@gklab-170-211.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-otherwise, matching target will force spare-same-domain regardless of
-action that comes in domain.
----
- Incremental.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Hi folks,
 
-diff --git a/Incremental.c b/Incremental.c
-index e022506..24015ca 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -978,7 +978,8 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
- 		 * array which matches 'target'.
- 		 * target is considered only if we deal with degraded array
- 		 */
--		if (target) {
-+		if (target && policy_action_allows(pol, st2->ss->name,
-+						   act_spare_same_slot)) {
- 			if (strcmp(target->metadata, mp->metadata) == 0 &&
- 			    memcmp(target->uuid, mp->uuid,
- 				   sizeof(target->uuid)) == 0 && 
+I have a case where I lost the last ~2000 sectors of my hard drives*.
+As that's where the 0.90 superblock is stored, those disks are no
+longer automatically recognized by md. Apart from that part, my disks
+and other hardware is fine.
 
+This is a RAID6 with 6 disks, 3 of which were chomped, so my RAID is
+at this point failed. However, I'm the kind of embedded engineer who
+likes to program with live wires and magnetic tape, so I figure I can
+try and reconstruct that data, possibly by copying and altering the
+superblocks from the other disks.
+
+My google-fu may be weak, but I haven't found any info on the wiki or
+on the ML about on-disk structures and recovering from this kind of
+nightmare scenario. I haven't yet opened up the source (kernel or
+mdadm). So my questions are:
+
+Has anybody else faced and recovered from such a situation? Apart from
+the superblock, is there any metadata I have to worry about in the
+last 1MB of space on the disk? This may not be the best place to ask,
+but is there any XFS data around there which I have to worry about as
+well?
+
+I can give much more details of course. And, oh yeah, merry Festivus ;)
+
+John
+
+*I'm going to name names: the consumer motherboard Gigabyte GA-P35-DS4
+has a feature/bug where it backs up the BIOS at the end of the first
+hard disk, hiding that part using Host Protected Area. By the time I
+understood what was going on, I had already had 3 disks chomped from
+swapping them on the controller.
