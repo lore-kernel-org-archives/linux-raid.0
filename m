@@ -1,52 +1,92 @@
-From: Spelic <spelic@shiftmail.org>
-Subject: Re: Aliens ate my superblock!
-Date: Fri, 24 Dec 2010 19:43:30 +0100
-Message-ID: <4D14E9D2.6000702@shiftmail.org>
-References: <AANLkTimzJEdHDgnKbA5rk1Jwf7471Tib-JW3akEuWbwE@mail.gmail.com>
+From: "kernel.majianpeng" <kernel.majianpeng@gmail.com>
+Subject: (unknown)
+Date: Sat, 25 Dec 2010 10:49:02 +0800
+Message-ID: <201012251048579216597@gmail.com>
+References: <201012251036232181820@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="gb2312"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimzJEdHDgnKbA5rk1Jwf7471Tib-JW3akEuWbwE@mail.gmail.com>
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Jean de Largentaye <jean@largentaye.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/24/2010 06:44 PM, Jean de Largentaye wrote:
-> Hi folks,
->
-> I have a case where I lost the last ~2000 sectors of my hard drives*.
-> As that's where the 0.90 superblock is stored, those disks are no
-> longer automatically recognized by md. Apart from that part, my disks
-> and other hardware is fine.
->
-> This is a RAID6 with 6 disks, 3 of which were chomped
->    
 
-Hi Jean
-Is the chomped part writable? Otherwise you will first have to copy 
-those drives elsewhere.
 
-I think the only way would be to recreate the RAID over the drives with 
---assume-clean so that no resync is made.
-(resync would destroy your data)
-Be sure to make it same size (don't use smaller partitions) and same 
-superblock type.
-When recreating the array you have to correctly guess the order of 
-devices to make it identical to the first time you created it. Then it 
-will become readable.
-For the 3 still readable devices you can read their position number via 
-mdadm --examine /dev/device  (it's called Array Slot)
-If you have 3 devices with unknown position number (array slot) in the 
-array you can try all combinations, which are 6.
-At each iteration you can try to mount readonly and see if you see 
-something.
-When you have something readable you can try xfs_repair to fix it 
-better. But better to ask in the xfs mailing list first.
-If xfs is not repairable an extreme measure is to extract data with 
-photorec.
-See also older posts in this ML mentioning the --assume-clean trick for 
-array recovery, many are from Neil Brown himself.
+According md.c:
+ * We have a system wide 'event count' that is incremented
+ * on any 'interesting' event, and readers of /proc/mdstat
+ * can use 'poll' or 'select' to find out when the event
+ * count increases.
+Events are:
+ *  start array, stop array, error, add device, remove device,
+ *  start build, activate spare
+I wanted to monitor RAID5 events,so I writed a c-function:
+int fd = open("/proc/mdstat",O_RDONLY);
+if(fd < 0){
+printf("open /proc/mdstat error:%s\n",strerror(errno));
+return -errno;
+}
+struct pollfd fds[1];
+int ret;
+fds[0].fd = fd;
+fds[0].events = POLLPRI;
+while(1){
+fds[0].fd = fd;
+fds[0].events = POLLPRI;
+ret = poll(fds,1,-1);
+if(ret < 0){
+printf("poll error:%s\n",strerror(errno));
+break;
+}else
+printf("ret value=%d\n",ret);
+}
+close(fd);
+But this function  did not run like my thought.
+After a raid event occured,the poll did not blocked,.The function only well at first.
+I wrote anthoer function:
+do{
+int fd = open("/proc/mdstat",O_RDONLY);
+if(fd < 0){
+printf("open /proc/mdstat error:%s\n",strerror(errno));
+return ;
+}
+struct pollfd fds;
+memset(&fds,0, sizeof(struct pollfd));
+fds.fd = fd;
+fds.events = POLLPRI|POLLERR;
+if(poll(&fds,1,-1) == -1){
+printf("poll error:%s\n",strerror(errno));
+break;
+}
+printf("return events:%d\n",fds.revents);
+close(fd);
+}while(1);
+this function work well, can return when raid_event occured.
+I read the source found:
+static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
+{
+struct seq_file *m = filp->private_data;
+struct mdstat_info *mi = m->private;
+int mask;
+poll_wait(filp, &md_event_waiters, wait);
+/* always allow read */
+mask = POLLIN | POLLRDNORM;
+if (mi->event != atomic_read(&md_event_count)){
+mask |= POLLERR | POLLPRI;
+}
+return mask;
+}
+the mi->event assigned at function:md_seq_open.
+When open /proc/mdstat,the mi->event = md_event_count, so the first poll blocked.
+But after poll return,mi->event != md_event_count,so the rest poll must immediately return.
+In second function,every time I opend /proc/mdstat,so mi->event = md_event_count, when blocked
 
-Merry Christmas to everybody
+2010-12-25 
+
+
+
+kernel.majianpeng 
+
