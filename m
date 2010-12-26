@@ -1,92 +1,123 @@
-From: "kernel.majianpeng" <kernel.majianpeng@gmail.com>
-Subject: (unknown)
-Date: Sat, 25 Dec 2010 10:49:02 +0800
-Message-ID: <201012251048579216597@gmail.com>
-References: <201012251036232181820@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] FIX: Bad block verification during assembling array
+Date: Sun, 26 Dec 2010 21:42:29 +1100
+Message-ID: <20101226214229.55c80aed@notabene.brown>
+References: <20101216133454.8504.60474.stgit@gklab-170-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Subject: 
+In-Reply-To: <20101216133454.8504.60474.stgit@gklab-170-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+On Thu, 16 Dec 2010 14:34:54 +0100 Krzysztof Wojcik
+<krzysztof.wojcik@intel.com> wrote:
+
+> We need to refuse to assemble an arrays with bad blocks.
+> Initially there was condition in container_content function
+> that returns error value in the case when metadata store information
+> about bad blocks.
+> When the container_content function is called from functions NOT connected
+> with assemble (Kill_subarray, Detail) we get faulty error return value.
+> Patch introduces new flag in array.status - MD_SB_BBM_ERRORS. It is set
+> in container_content when bad blocks are detected and can be checked by
+> container_content caller.
+> 
+> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+
+Applied, thanks.
+
+NeilBrown
 
 
-According md.c:
- * We have a system wide 'event count' that is incremented
- * on any 'interesting' event, and readers of /proc/mdstat
- * can use 'poll' or 'select' to find out when the event
- * count increases.
-Events are:
- *  start array, stop array, error, add device, remove device,
- *  start build, activate spare
-I wanted to monitor RAID5 events,so I writed a c-function:
-int fd = open("/proc/mdstat",O_RDONLY);
-if(fd < 0){
-printf("open /proc/mdstat error:%s\n",strerror(errno));
-return -errno;
-}
-struct pollfd fds[1];
-int ret;
-fds[0].fd = fd;
-fds[0].events = POLLPRI;
-while(1){
-fds[0].fd = fd;
-fds[0].events = POLLPRI;
-ret = poll(fds,1,-1);
-if(ret < 0){
-printf("poll error:%s\n",strerror(errno));
-break;
-}else
-printf("ret value=%d\n",ret);
-}
-close(fd);
-But this function  did not run like my thought.
-After a raid event occured,the poll did not blocked,.The function only well at first.
-I wrote anthoer function:
-do{
-int fd = open("/proc/mdstat",O_RDONLY);
-if(fd < 0){
-printf("open /proc/mdstat error:%s\n",strerror(errno));
-return ;
-}
-struct pollfd fds;
-memset(&fds,0, sizeof(struct pollfd));
-fds.fd = fd;
-fds.events = POLLPRI|POLLERR;
-if(poll(&fds,1,-1) == -1){
-printf("poll error:%s\n",strerror(errno));
-break;
-}
-printf("return events:%d\n",fds.revents);
-close(fd);
-}while(1);
-this function work well, can return when raid_event occured.
-I read the source found:
-static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
-{
-struct seq_file *m = filp->private_data;
-struct mdstat_info *mi = m->private;
-int mask;
-poll_wait(filp, &md_event_waiters, wait);
-/* always allow read */
-mask = POLLIN | POLLRDNORM;
-if (mi->event != atomic_read(&md_event_count)){
-mask |= POLLERR | POLLPRI;
-}
-return mask;
-}
-the mi->event assigned at function:md_seq_open.
-When open /proc/mdstat,the mi->event = md_event_count, so the first poll blocked.
-But after poll return,mi->event != md_event_count,so the rest poll must immediately return.
-In second function,every time I opend /proc/mdstat,so mi->event = md_event_count, when blocked
-
-2010-12-25 
-
-
-
-kernel.majianpeng 
+> ---
+>  Assemble.c    |    7 +++++++
+>  Incremental.c |    6 ++++++
+>  md_p.h        |    1 +
+>  super-intel.c |   14 ++++++++------
+>  4 files changed, 22 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Assemble.c b/Assemble.c
+> index 7293ee6..34c0aad 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -435,6 +435,13 @@ int Assemble(struct supertype *st, char *mddev,
+>  			     content;
+>  			     content = content->next) {
+>  
+> +				/* do not assemble arrays that might have bad blocks */
+> +				if (content->array.state & (1<<MD_SB_BBM_ERRORS)) {
+> +					fprintf(stderr, Name ": BBM log found in metadata. "
+> +								"Cannot activate array(s).\n");
+> +					tmpdev->used = 2;
+> +					goto loop;
+> +				}
+>  				if (!ident_matches(ident, content, tst,
+>  						   homehost, update,
+>  						   report_missmatch ? devname : NULL))
+> diff --git a/Incremental.c b/Incremental.c
+> index 9399f5b..75acfb6 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1402,6 +1402,12 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  	if (map_lock(&map))
+>  		fprintf(stderr, Name ": failed to get exclusive lock on "
+>  			"mapfile\n");
+> +	/* do not assemble arrays that might have bad blocks */
+> +	if (list->array.state & (1<<MD_SB_BBM_ERRORS)) {
+> +		fprintf(stderr, Name ": BBM log found in metadata. "
+> +					"Cannot activate array(s).\n");
+> +		list = NULL;
+> +	}
+>  
+>  	for (ra = list ; ra ; ra = ra->next) {
+>  		int mdfd;
+> diff --git a/md_p.h b/md_p.h
+> index 4594a36..6c79a3d 100644
+> --- a/md_p.h
+> +++ b/md_p.h
+> @@ -100,6 +100,7 @@ typedef struct mdp_device_descriptor_s {
+>   */
+>  #define MD_SB_CLEAN		0
+>  #define MD_SB_ERRORS		1
+> +#define MD_SB_BBM_ERRORS	2
+>  
+>  #define	MD_SB_BITMAP_PRESENT	8 /* bitmap may be present nearby */
+>  
+> diff --git a/super-intel.c b/super-intel.c
+> index 2070869..8d7cd05 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -4874,13 +4874,11 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+>  	struct imsm_super *mpb = super->anchor;
+>  	struct mdinfo *rest = NULL;
+>  	unsigned int i;
+> +	int bbm_errors = 0;
+>  
+> -	/* do not assemble arrays that might have bad blocks */
+> -	if (imsm_bbm_log_size(super->anchor)) {
+> -		fprintf(stderr, Name ": BBM log found in metadata. "
+> -				"Cannot activate array(s).\n");
+> -		return NULL;
+> -	}
+> +	/* check for bad blocks */
+> +	if (imsm_bbm_log_size(super->anchor))
+> +		bbm_errors = 1;
+>  
+>  	for (i = 0; i < mpb->num_raid_devs; i++) {
+>  		struct imsm_dev *dev;
+> @@ -4997,6 +4995,10 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+>  		rest = this;
+>  	}
+>  
+> +	/* if array has bad blocks, set suitable bit in array status */
+> +	if (bbm_errors)
+> +		rest->array.state |= (1<<MD_SB_BBM_ERRORS);
+> +
+>  	return rest;
+>  }
+>  
 
