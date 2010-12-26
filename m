@@ -1,120 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: using poll on /proc/mdstat
-Date: Sun, 26 Dec 2010 22:44:34 +1100
-Message-ID: <20101226224434.0c34f445@notabene.brown>
-References: <201012251036232181820@gmail.com>
-	<201012251048579216597@gmail.com>
+From: Carl Cook <CACook@quantum-sci.com>
+Subject: Is It Hopeless?
+Date: Sun, 26 Dec 2010 10:19:55 -0800
+Message-ID: <201012261019.56481.CACook@quantum-sci.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201012251048579216597@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "kernel.majianpeng" <kernel.majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 25 Dec 2010 10:49:02 +0800 "kernel.majianpeng"
-<kernel.majianpeng@gmail.com> wrote:
+I went in to turn on my home theater system today, and found a blank screen.  I rebooted and it would not mount /home, which is a 4TB RAID10 array with every movie and show I've recorded over the past two years.  I try to mount it manually, and "wrong fs or bad superblock".  The array is getting set up fine, but the filesystem seems to be destroyed.  
 
-> 
-> 
-> According md.c:
->  * We have a system wide 'event count' that is incremented
->  * on any 'interesting' event, and readers of /proc/mdstat
->  * can use 'poll' or 'select' to find out when the event
->  * count increases.
-> Events are:
->  *  start array, stop array, error, add device, remove device,
->  *  start build, activate spare
-> I wanted to monitor RAID5 events,so I writed a c-function:
-> int fd = open("/proc/mdstat",O_RDONLY);
-> if(fd < 0){
-> printf("open /proc/mdstat error:%s\n",strerror(errno));
-> return -errno;
-> }
-> struct pollfd fds[1];
-> int ret;
-> fds[0].fd = fd;
-> fds[0].events = POLLPRI;
-> while(1){
-> fds[0].fd = fd;
-> fds[0].events = POLLPRI;
-> ret = poll(fds,1,-1);
-> if(ret < 0){
-> printf("poll error:%s\n",strerror(errno));
-> break;
-> }else
-> printf("ret value=%d\n",ret);
-> }
-> close(fd);
-> But this function  did not run like my thought.
-> After a raid event occured,the poll did not blocked,.The function only well at first.
+Unbelievable.  This isn't supposed to happen.  It happened once before when I wasn't using RAID, but that was the BTRFS filesystem and I blamed it for being pre-release.  But now it's RAID10 with JFS.
 
-poll will only block again after you read to the end of the file (and thus
-observe any change), and then seek back to the start.
+The only sign of trouble:
+Dec 25 16:14:56 cygnus shutdown[2180]: shutting down for system reboot
+Dec 25 16:14:58 cygnus kernel: [16607.840197] md: md2 stopped.
+Dec 25 16:14:58 cygnus kernel: [16607.840210] md: unbind<sdb3>
+Dec 25 16:14:58 cygnus kernel: [16607.852029] md: export_rdev(sdb3)
+Dec 25 16:14:58 cygnus kernel: [16607.852083] md: unbind<sdc3>
+Dec 25 16:14:58 cygnus kernel: [16607.864031] md: export_rdev(sdc3)
+Dec 25 16:14:58 cygnus kernel: [16607.864092] md2: detected capacity change from 1913403736064 to 0
+Dec 25 16:15:00 cygnus kernel: Kernel logging (proc) stopped.
 
-Any time that poll reports and event, you need to respond to that event (e.g.
-by reading) or poll will continue to tell you that the event is pending.
-This helps avoid some races.
-
-
-> I wrote anthoer function:
-> do{
-> int fd = open("/proc/mdstat",O_RDONLY);
-> if(fd < 0){
-> printf("open /proc/mdstat error:%s\n",strerror(errno));
-> return ;
-> }
-> struct pollfd fds;
-> memset(&fds,0, sizeof(struct pollfd));
-> fds.fd = fd;
-> fds.events = POLLPRI|POLLERR;
-> if(poll(&fds,1,-1) == -1){
-> printf("poll error:%s\n",strerror(errno));
-> break;
-> }
-> printf("return events:%d\n",fds.revents);
-> close(fd);
-> }while(1);
-> this function work well, can return when raid_event occured.
-
-After each poll, you close and re-open the file.  This is enough to 'tell'
-poll that you have noticed the event.
-
-If you have further questions, please ask.
-
-NeilBrown
-
-
-
-> I read the source found:
-> static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
-> {
-> struct seq_file *m = filp->private_data;
-> struct mdstat_info *mi = m->private;
-> int mask;
-> poll_wait(filp, &md_event_waiters, wait);
-> /* always allow read */
-> mask = POLLIN | POLLRDNORM;
-> if (mi->event != atomic_read(&md_event_count)){
-> mask |= POLLERR | POLLPRI;
-> }
-> return mask;
-> }
-> the mi->event assigned at function:md_seq_open.
-> When open /proc/mdstat,the mi->event = md_event_count, so the first poll blocked.
-> But after poll return,mi->event != md_event_count,so the rest poll must immediately return.
-> In second function,every time I opend /proc/mdstat,so mi->event = md_event_count, when blocked
-> 
-> 2010-12-25 
-> 
-> 
-> 
-> kernel.majianpeng 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Reboot:
+Dec 25 16:15:48 cygnus kernel: [    1.156657] Uniform CD-ROM driver Revision: 3.20
+Dec 25 16:15:48 cygnus kernel: [    1.464298] md: raid10 personality registered for level 10
+Dec 25 16:15:48 cygnus kernel: [    1.469307] md: md2 stopped.
+Dec 25 16:15:48 cygnus kernel: [    1.470540] md: bind<sdc3>
+Dec 25 16:15:48 cygnus kernel: [    1.470642] md: bind<sdb3>
+Dec 25 16:15:48 cygnus kernel: [    1.471381] raid10: raid set md2 active with 2 out of 2 devices
+Dec 25 16:15:48 cygnus kernel: [    1.476048] md2: bitmap initialized from disk: read 14/14 pags, set 0 bits
+Dec 25 16:15:48 cygnus kernel: [    1.476050] created bitmap (223 pages) for device md2
+Dec 25 16:15:48 cygnus kernel: [    1.488465] md2: detected capacity change from 0 to 1913403736064
+Dec 25 16:15:48 cygnus kernel: [    1.488942]  md2: unknown partition table
+Dec 25 16:15:48 cygnus kernel: [    1.597375] PM: Starting manual resume from disk
+Dec 25 16:15:48 cygnus kernel: [    1.650832] kjournald starting.  Commit interval 5 seconds
