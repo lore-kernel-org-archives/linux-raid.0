@@ -1,90 +1,100 @@
-From: "kernel.majianpeng" <kernel.majianpeng@gmail.com>
-Subject: Re: Re: using poll on /proc/mdstat
-Date: Mon, 27 Dec 2010 09:21:00 +0800
-Message-ID: <201012270920567187973@gmail.com>
-References: <201012251036232181820@gmail.com>,
- <201012251048579216597@gmail.com>,
- <20101226224434.0c34f445@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is It Hopeless?
+Date: Sun, 26 Dec 2010 22:45:37 -0600
+Message-ID: <4D1819F1.3090504@hardwarefreak.com>
+References: <201012261019.56481.CACook@quantum-sci.com> <201012261219.41912.CACook@quantum-sci.com> <20101227073330.6acb577a@notabene.brown> <201012261606.29281.CACook@quantum-sci.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201012261606.29281.CACook@quantum-sci.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGkgYWxsOg0KICAgIHJlYWQgTmVpbCBCcm93bidzIG1haWwsIEkgbW9kaWZpZWQgdGhlIGZ1bmN0
-aW9uOg0KY2hhciBidWZmWzQwOTZdID0gezB9Ow0KCWludCBmZCA9IG9wZW4oIi9wcm9jL21kc3Rh
-dCIsT19SRE9OTFkpOw0KCWlmKGZkIDwgMCl7DQoJCXByaW50Zigib3BlbiAvcHJvYy9tZHN0YXQg
-ZXJyb3I6JXNcbiIsc3RyZXJyb3IoZXJybm8pKTsNCgkJcmV0dXJuIC1lcnJubzsNCgl9DQoNCglz
-dHJ1Y3QgcG9sbGZkIGZkc1sxXTsNCglpbnQgcmV0Ow0KDQoJZmRzWzBdLmZkID0gZmQ7DQoJZmRz
-WzBdLmV2ZW50cyA9IFBPTExQUkk7DQoJd2hpbGUoMSl7DQoJCWZkc1swXS5mZCA9IGZkOw0KCQlm
-ZHNbMF0uZXZlbnRzID0gUE9MTFBSSTsNCgkJcmV0ID0gcG9sbChmZHMsMSwtMSk7DQoJCWlmKHJl
-dCA8IDApew0KCQkJcHJpbnRmKCJwb2xsIGVycm9yOiVzXG4iLHN0cmVycm9yKGVycm5vKSk7DQoJ
-CQlicmVhazsNCgkJfWVsc2UNCgkJCXByaW50ZigicmV0IHZhbHVlPSVkXG4iLGZkc1swXS5yZXZl
-bnRzKTsNCgkJcmVhZChmZCxidWZmLDQwOTYpOw0KCQltZW1zZXQoYnVmZiAsMCw0MDk2KTsNCgl9
-DQoJY2xvc2UoZmQpOw0KDQpJIGFkZCByZWFkIGNvbW1hbmQgYW5kIGNvbmZpcm0gcmVhZCBlbmQg
-b2YgZmlsZSAvcHJvYy9tZHN0YXQuDQpCdXQgdGhpcyBmdXRpb24gYWxzbyB0byBmaW5kIG9ubHkg
-b25lIGV2ZW50Lg0KDQotLS0tLS0tLS0tLS0tLS0tLS0JCQkJIA0Ka2VybmVsLm1hamlhbnBlbmcN
-CjIwMTAtMTItMjcNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQ0Kt6K8/sjLo7pOZWlsIEJyb3duDQq3osvNyNXG2qO6MjAxMC0x
-Mi0yNiAxOTo0NDo0Mw0KytW8/sjLo7prZXJuZWwubWFqaWFucGVuZw0Ks63LzaO6bGludXgtcmFp
-ZA0K1vfM4qO6UmU6IHVzaW5nIHBvbGwgb24gL3Byb2MvbWRzdGF0DQoNCk9uIFNhdCwgMjUgRGVj
-IDIwMTAgMTA6NDk6MDIgKzA4MDAgImtlcm5lbC5tYWppYW5wZW5nIg0KPGtlcm5lbC5tYWppYW5w
-ZW5nQGdtYWlsLmNvbT4gd3JvdGU6DQoNCj4gDQo+IA0KPiBBY2NvcmRpbmcgbWQuYzoNCj4gICog
-V2UgaGF2ZSBhIHN5c3RlbSB3aWRlICdldmVudCBjb3VudCcgdGhhdCBpcyBpbmNyZW1lbnRlZA0K
-PiAgKiBvbiBhbnkgJ2ludGVyZXN0aW5nJyBldmVudCwgYW5kIHJlYWRlcnMgb2YgL3Byb2MvbWRz
-dGF0DQo+ICAqIGNhbiB1c2UgJ3BvbGwnIG9yICdzZWxlY3QnIHRvIGZpbmQgb3V0IHdoZW4gdGhl
-IGV2ZW50DQo+ICAqIGNvdW50IGluY3JlYXNlcy4NCj4gRXZlbnRzIGFyZToNCj4gICogIHN0YXJ0
-IGFycmF5LCBzdG9wIGFycmF5LCBlcnJvciwgYWRkIGRldmljZSwgcmVtb3ZlIGRldmljZSwNCj4g
-ICogIHN0YXJ0IGJ1aWxkLCBhY3RpdmF0ZSBzcGFyZQ0KPiBJIHdhbnRlZCB0byBtb25pdG9yIFJB
-SUQ1IGV2ZW50cyxzbyBJIHdyaXRlZCBhIGMtZnVuY3Rpb246DQo+IGludCBmZCA9IG9wZW4oIi9w
-cm9jL21kc3RhdCIsT19SRE9OTFkpOw0KPiBpZihmZCA8IDApew0KPiBwcmludGYoIm9wZW4gL3By
-b2MvbWRzdGF0IGVycm9yOiVzXG4iLHN0cmVycm9yKGVycm5vKSk7DQo+IHJldHVybiAtZXJybm87
-DQo+IH0NCj4gc3RydWN0IHBvbGxmZCBmZHNbMV07DQo+IGludCByZXQ7DQo+IGZkc1swXS5mZCA9
-IGZkOw0KPiBmZHNbMF0uZXZlbnRzID0gUE9MTFBSSTsNCj4gd2hpbGUoMSl7DQo+IGZkc1swXS5m
-ZCA9IGZkOw0KPiBmZHNbMF0uZXZlbnRzID0gUE9MTFBSSTsNCj4gcmV0ID0gcG9sbChmZHMsMSwt
-MSk7DQo+IGlmKHJldCA8IDApew0KPiBwcmludGYoInBvbGwgZXJyb3I6JXNcbiIsc3RyZXJyb3Io
-ZXJybm8pKTsNCj4gYnJlYWs7DQo+IH1lbHNlDQo+IHByaW50ZigicmV0IHZhbHVlPSVkXG4iLHJl
-dCk7DQo+IH0NCj4gY2xvc2UoZmQpOw0KPiBCdXQgdGhpcyBmdW5jdGlvbiAgZGlkIG5vdCBydW4g
-bGlrZSBteSB0aG91Z2h0Lg0KPiBBZnRlciBhIHJhaWQgZXZlbnQgb2NjdXJlZCx0aGUgcG9sbCBk
-aWQgbm90IGJsb2NrZWQsLlRoZSBmdW5jdGlvbiBvbmx5IHdlbGwgYXQgZmlyc3QuDQoNCnBvbGwg
-d2lsbCBvbmx5IGJsb2NrIGFnYWluIGFmdGVyIHlvdSByZWFkIHRvIHRoZSBlbmQgb2YgdGhlIGZp
-bGUgKGFuZCB0aHVzDQpvYnNlcnZlIGFueSBjaGFuZ2UpLCBhbmQgdGhlbiBzZWVrIGJhY2sgdG8g
-dGhlIHN0YXJ0Lg0KDQpBbnkgdGltZSB0aGF0IHBvbGwgcmVwb3J0cyBhbmQgZXZlbnQsIHlvdSBu
-ZWVkIHRvIHJlc3BvbmQgdG8gdGhhdCBldmVudCAoZS5nLg0KYnkgcmVhZGluZykgb3IgcG9sbCB3
-aWxsIGNvbnRpbnVlIHRvIHRlbGwgeW91IHRoYXQgdGhlIGV2ZW50IGlzIHBlbmRpbmcuDQpUaGlz
-IGhlbHBzIGF2b2lkIHNvbWUgcmFjZXMuDQoNCg0KPiBJIHdyb3RlIGFudGhvZXIgZnVuY3Rpb246
-DQo+IGRvew0KPiBpbnQgZmQgPSBvcGVuKCIvcHJvYy9tZHN0YXQiLE9fUkRPTkxZKTsNCj4gaWYo
-ZmQgPCAwKXsNCj4gcHJpbnRmKCJvcGVuIC9wcm9jL21kc3RhdCBlcnJvcjolc1xuIixzdHJlcnJv
-cihlcnJubykpOw0KPiByZXR1cm4gOw0KPiB9DQo+IHN0cnVjdCBwb2xsZmQgZmRzOw0KPiBtZW1z
-ZXQoJmZkcywwLCBzaXplb2Yoc3RydWN0IHBvbGxmZCkpOw0KPiBmZHMuZmQgPSBmZDsNCj4gZmRz
-LmV2ZW50cyA9IFBPTExQUkl8UE9MTEVSUjsNCj4gaWYocG9sbCgmZmRzLDEsLTEpID09IC0xKXsN
-Cj4gcHJpbnRmKCJwb2xsIGVycm9yOiVzXG4iLHN0cmVycm9yKGVycm5vKSk7DQo+IGJyZWFrOw0K
-PiB9DQo+IHByaW50ZigicmV0dXJuIGV2ZW50czolZFxuIixmZHMucmV2ZW50cyk7DQo+IGNsb3Nl
-KGZkKTsNCj4gfXdoaWxlKDEpOw0KPiB0aGlzIGZ1bmN0aW9uIHdvcmsgd2VsbCwgY2FuIHJldHVy
-biB3aGVuIHJhaWRfZXZlbnQgb2NjdXJlZC4NCg0KQWZ0ZXIgZWFjaCBwb2xsLCB5b3UgY2xvc2Ug
-YW5kIHJlLW9wZW4gdGhlIGZpbGUuICBUaGlzIGlzIGVub3VnaCB0byAndGVsbCcNCnBvbGwgdGhh
-dCB5b3UgaGF2ZSBub3RpY2VkIHRoZSBldmVudC4NCg0KSWYgeW91IGhhdmUgZnVydGhlciBxdWVz
-dGlvbnMsIHBsZWFzZSBhc2suDQoNCk5laWxCcm93bg0KDQoNCg0KPiBJIHJlYWQgdGhlIHNvdXJj
-ZSBmb3VuZDoNCj4gc3RhdGljIHVuc2lnbmVkIGludCBtZHN0YXRfcG9sbChzdHJ1Y3QgZmlsZSAq
-ZmlscCwgcG9sbF90YWJsZSAqd2FpdCkNCj4gew0KPiBzdHJ1Y3Qgc2VxX2ZpbGUgKm0gPSBmaWxw
-LT5wcml2YXRlX2RhdGE7DQo+IHN0cnVjdCBtZHN0YXRfaW5mbyAqbWkgPSBtLT5wcml2YXRlOw0K
-PiBpbnQgbWFzazsNCj4gcG9sbF93YWl0KGZpbHAsICZtZF9ldmVudF93YWl0ZXJzLCB3YWl0KTsN
-Cj4gLyogYWx3YXlzIGFsbG93IHJlYWQgKi8NCj4gbWFzayA9IFBPTExJTiB8IFBPTExSRE5PUk07
-DQo+IGlmIChtaS0+ZXZlbnQgIT0gYXRvbWljX3JlYWQoJm1kX2V2ZW50X2NvdW50KSl7DQo+IG1h
-c2sgfD0gUE9MTEVSUiB8IFBPTExQUkk7DQo+IH0NCj4gcmV0dXJuIG1hc2s7DQo+IH0NCj4gdGhl
-IG1pLT5ldmVudCBhc3NpZ25lZCBhdCBmdW5jdGlvbjptZF9zZXFfb3Blbi4NCj4gV2hlbiBvcGVu
-IC9wcm9jL21kc3RhdCx0aGUgbWktPmV2ZW50ID0gbWRfZXZlbnRfY291bnQsIHNvIHRoZSBmaXJz
-dCBwb2xsIGJsb2NrZWQuDQo+IEJ1dCBhZnRlciBwb2xsIHJldHVybixtaS0+ZXZlbnQgIT0gbWRf
-ZXZlbnRfY291bnQsc28gdGhlIHJlc3QgcG9sbCBtdXN0IGltbWVkaWF0ZWx5IHJldHVybi4NCj4g
-SW4gc2Vjb25kIGZ1bmN0aW9uLGV2ZXJ5IHRpbWUgSSBvcGVuZCAvcHJvYy9tZHN0YXQsc28gbWkt
-PmV2ZW50ID0gbWRfZXZlbnRfY291bnQsIHdoZW4gYmxvY2tlZA0KPiANCj4gMjAxMC0xMi0yNSAN
-Cj4gDQo+IA0KPiANCj4ga2VybmVsLm1hamlhbnBlbmcgDQo+IA0KPiAtLQ0KPiBUbyB1bnN1YnNj
-cmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFp
-ZCIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5v
-cmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpv
-cmRvbW8taW5mby5odG1sDQo=
+Carl Cook put forth on 12/26/2010 6:06 PM:
+> On Sun 26 December 2010 12:33:30 Neil Brown wrote:
+>> But the important thing is that you have your data back, preparing you for a
+>> Happy New Year!
+>> NeilBrown
+> 
+> Indeed.  Thank you Neil, you saved me (along with my not touching anything).
+> 
+> 
+> On Sun 26 December 2010 13:14:32 you wrote:
+>> Excellent save!!!  The OP might want to continue the "Giving Season" by 
+>> giving himself a brand new system backup.
+> 
+> Actually I have much too much data to back anything up
 
+ <snip>
+
+Every time I read/hear this I cringe.  If that is the case your data is
+worthless to begin with so just delete it all right now.  You are
+literally saying the same thing with your statement.  The difference is
+that I _KNOW_ you drives will fail, or you'll lose an array due to
+corruption, etc.  Your HTPC storage system will fail.  It's not an _IF_
+but a _WHEN_ issue.  The question then becomes, what is the best
+backup/restore strategy to fit HTPC needs.  Build another system with
+similar technology and you have the same failure modes and risks as the
+first.
+
+Spinning Rust Disks (SRDs) are not a suitable long term backup/restore
+solution.  What happens when your disk-to-disk backup server solution
+drops an MD array for no reason such as just happened, _during_ a
+restore operation?  Or you suffer a disk failure on the backup server
+during a restore operation (which is very common today)?  Will your
+backup server contain a 4 x 2 TB disk RAID 10 set?
+
+I'd suggest tape as the better solution to D2D in the HTPC case,
+primarily based on cost and availability of library and media, and the
+fact the disaster recover procedure is much easier and much more
+straightforward:
+
+8 drive LTO-2 autoloader
+
+http://www.msrcglobal.com/p-216-af203a.aspx?gclid=CI789Mm_i6YCFQTrKgodIg0pnA&
+http://h18000.www1.hp.com/products/quickspecs/11841_div/11841_div.HTML
+Ultrium 448 drive
+3.2 TB compressed max per library
+U160 LVD/SE SCSI interface
+172 GB/hour capacity -
+"desktop" model
+$650 USD
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816118057
+$90 USD
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16840999118
+8 x $22 = $176 USD
+
+Total = $916 + shipping
+
+Using the correct backup strategy this should easily meet your needs.
+The 8 tapes in the library will handle 75% of your RAW level 10 mdraid
+device capacity.  Once a filesystem is laid down, and you take overhead
+concerns into account, you won't be putting more than 3.2 TB of data on
+it anyway (or, at least, you SHOULDN'T be doing so).
+
+The total cost should be similar to a disk based backup server but the
+reliability and ease of restore should be better.  There's no beating a
+tape library as a long term backup solution, especially for data that
+doesn't change often, such as HTPC files.  10 tapes for 4 TB of space is
+$220.  How much does a 4 TB SATA drive cost?  Or 2 x 2TB drives.  Quite
+a bit more.  You can store spare tapes more easily than spare drives,
+and the tapes take almost zero configuration when adding capacity to the
+backup system.  Adding drives, especially if you don't buy a large
+chassis with hot swap bays up front, is much more a PITA.
+
+Keep in mind that using tape allows essentially unlimited backup
+expansion, whereas you are severely limited with a backup server for
+your HTPC unless you buy a large box upfront, which nobody doing HTPC
+wants.  Each time you add larger/more disks to the HTPC, you have to do
+the same for the backup server.  With tape, you simply swap tape
+inventory and create a modified or new backup schedule.
+
+Many people outside the corporate/government data center completely
+ignore tape today as a backup solution.  Many times at their peril.
+
+-- 
+Stan
