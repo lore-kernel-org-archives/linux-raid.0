@@ -1,62 +1,48 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: using poll on /proc/mdstat
-Date: Mon, 27 Dec 2010 17:27:19 +1100
-Message-ID: <20101227172719.01bae9db@notabene.brown>
-References: <201012251036232181820@gmail.com>
-	<201012251048579216597@gmail.com>
-	<20101226224434.0c34f445@notabene.brown>
-	<201012270920567187973@gmail.com>
+From: "D.S. Ljungmark" <spider@skuggor.se>
+Subject: md-raid and block sizes
+Date: Mon, 27 Dec 2010 13:00:28 +0100
+Message-ID: <1293451228.3266.9.camel@Waves.darkmere>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201012270920567187973@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "kernel.majianpeng" <kernel.majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Spider <spider@skuggor.se>
 List-Id: linux-raid.ids
 
-On Mon, 27 Dec 2010 09:21:00 +0800 "kernel.majianpeng"
-<kernel.majianpeng@gmail.com> wrote:
+Hello, 
+  With the advent of the WD*EARS drives and the "advanced partitioning"
+system that requires 4k blocks, I wanted to pop a quick question to see
+how the md metadata is aligned and how it should be aligned to get
+proper performance out of the devices.
 
-> Hi all:
->     read Neil Brown's mail, I modified the function:
-> char buff[4096] = {0};
-> 	int fd = open("/proc/mdstat",O_RDONLY);
-> 	if(fd < 0){
-> 		printf("open /proc/mdstat error:%s\n",strerror(errno));
-> 		return -errno;
-> 	}
-> 
-> 	struct pollfd fds[1];
-> 	int ret;
-> 
-> 	fds[0].fd = fd;
-> 	fds[0].events = POLLPRI;
-> 	while(1){
-> 		fds[0].fd = fd;
-> 		fds[0].events = POLLPRI;
-> 		ret = poll(fds,1,-1);
-> 		if(ret < 0){
-> 			printf("poll error:%s\n",strerror(errno));
-> 			break;
-> 		}else
-> 			printf("ret value=%d\n",fds[0].revents);
-> 		read(fd,buff,4096);
-> 		memset(buff ,0,4096);
-> 	}
-> 	close(fd);
-> 
-> I add read command and confirm read end of file /proc/mdstat.
-> But this fution also to find only one event.
+So, For raid1,  I'll assume there is some metadata-overhead on the
+drives, how large is this block? Will there be need to make a partition
+on the md-device in order to get proper alignment of filesystem =>
+platters?
 
-You missed this bit:
+for both raid1 and 5/6 levels, what are the appropiate stride-sizes for
+ext3/4?
+
+For more advanced raid configurations (5-6), how should the ext3/4
+stripe size be configured?
 
 
-> poll will only block again after you read to the end of the file (and thus
-> observe any change), and then seek back to the start.
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Yes, a lot of similarly naive questions, however, I'm asking mostly
+because of how devices are changing from 512 to 4k sized blocks, with
+quite interesting changes in performance, and I wanted to figure out
+what is the current state of software raid. At which "level" of the
+stack: (partition) raid (partition) filesystem ,  do you have to account
+for the block sizes in order to not degrade performance of the devices.
 
-NeilBrown
+( In a perfect world I'd be able to purchase a stack of the devices and
+test for myself and come back with a report. However, money and hardware
+is a scarce resource ;)
+
+ps.  please keep me CC'd as I'm not subscribed to the list.
+
+
+// Spider
 
 
