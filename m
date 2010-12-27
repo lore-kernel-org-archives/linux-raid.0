@@ -1,131 +1,135 @@
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Partitions not recognized when auto-assembling array in initramfs
-Date: Mon, 27 Dec 2010 16:18:08 +0100
-Message-ID: <201012271618.09209.laurent.pinchart@ideasonboard.com>
+From: Jean de Largentaye <jean@largentaye.org>
+Subject: Re: Aliens ate my superblock!
+Date: Mon, 27 Dec 2010 16:51:26 +0100
+Message-ID: <AANLkTimdTj5_jjEZxWPvt1dkKfhAswRE=An+V3cTbeX-@mail.gmail.com>
+References: <AANLkTimzJEdHDgnKbA5rk1Jwf7471Tib-JW3akEuWbwE@mail.gmail.com>
+	<4D14E9D2.6000702@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D14E9D2.6000702@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everybody,
+On Fri, Dec 24, 2010 at 7:43 PM, Spelic <spelic@shiftmail.org> wrote:
+> On 12/24/2010 06:44 PM, Jean de Largentaye wrote:
+>>
+>> Hi folks,
+>>
+>> I have a case where I lost the last ~2000 sectors of my hard drives*=
+=2E
+>> As that's where the 0.90 superblock is stored, those disks are no
+>> longer automatically recognized by md. Apart from that part, my disk=
+s
+>> and other hardware is fine.
+>>
+>> This is a RAID6 with 6 disks, 3 of which were chomped
+>>
+>
+> Hi Jean
+> Is the chomped part writable? Otherwise you will first have to copy t=
+hose
+> drives elsewhere.
+>
+> I think the only way would be to recreate the RAID over the drives wi=
+th
+> --assume-clean so that no resync is made.
+> (resync would destroy your data)
+> Be sure to make it same size (don't use smaller partitions) and same
+> superblock type.
+> When recreating the array you have to correctly guess the order of de=
+vices
+> to make it identical to the first time you created it. Then it will b=
+ecome
+> readable.
+> For the 3 still readable devices you can read their position number v=
+ia
+> mdadm --examine /dev/device =A0(it's called Array Slot)
+> If you have 3 devices with unknown position number (array slot) in th=
+e array
+> you can try all combinations, which are 6.
+> At each iteration you can try to mount readonly and see if you see
+> something.
+> When you have something readable you can try xfs_repair to fix it bet=
+ter.
+> But better to ask in the xfs mailing list first.
+> If xfs is not repairable an extreme measure is to extract data with
+> photorec.
+> See also older posts in this ML mentioning the --assume-clean trick f=
+or
+> array recovery, many are from Neil Brown himself.
+>
+> Merry Christmas to everybody
 
-I've been struggling with a software RAID issue for several days now. Before 
-sending the computer back to the vendor and asking for real RAID support, I'd 
-like to try my luck here.
+Hi, thanks for the hint. Thanks to that I've been able to go further,
+and apparently dig myself into deeper trouble. I guess the only good
+thing is that this is a personal array which I won't get fired for
+whacking.
 
-The system as an Intel Matrix Storage SATA controller and two 250GB disks on 
-which I want to use a RAID1.
+Regarding writability of the chomped part, yes it is writable. I was
+able to restore access to that using "hdparm -N" to restore the
+original number of sectors.
 
-I've been able to create the array properly from a Gentoo installation CD 
-(this might be a detail, but it might also influence homehost values, so I 
-thought I'd mention it) with the metadata stored in IMSM format.
+Note that my RAID used the whole disks, not partitions thereof. They
+are sdb through sdg.
 
-Assembling the array automatically from the installation CD works.
+By the way, before my first mail to the list, I had attempted to add a
+drive to the array using "mdadm --add", but the drive was added as a
+spare. I am still unsure whether that affected the data on that disk,
+or just the superblock. Anyhow, even with that disk out, I still had 5
+out of 6 drives of my raid6, so I still had breathing room.
 
-livecd ~ # mdadm --assemble --scan
-mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-mdadm: Started /dev/md/vol0_0 with 2 devices
+The rest is a comedy of errors.
+1) I forgot the '-e 0.90' to specify the superblock format, so mdadm
+created a 1.2 superblock. I understand this superblock was created at
+the beginning (offset 2048?) of the disks, further corrupting data.
+2) I forgot '--chunk 64', so mdadm created an array with 512k chunks.
+Nothing was readable without that
 
-livecd ~ # cat /proc/mdstat 
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md126 : active (auto-read-only) raid1 sda[1] sdb[0]
-      244195328 blocks super external:/md127/0 [2/2] [UU]
-      
-md127 : inactive sdb[1](S) sda[0](S)
-      4514 blocks super external:imsm
-       
-unused devices: <none>
+With a proper metadata format and chunk size, I was able to mount my
+broken filesystem, with errors. The odd thing is that different
+permutations yielded working results, which I attribute to the magic
+of Galois field algebra. However I certainly corrupted my filesystem
+more at this point. But first, this is what I know about the raid
+slots:
+0 - unknown, 1 - sdg, 2 - sdf, 3 - unknown, 4 - sdc, 5 - unknown
 
-livecd ~ # cat /proc/partitions 
-major minor  #blocks  name
+So I had to find where sdb, sdd and sde fit in there. As I was afraid
+I had corrupted sdb by adding as a spare previously, and considering
+the redundancy of raid6, I left sdb out as 'missing'. The following
+permutations yielded results:
+0 - missing, 1 - sdg, 2 - sdf, 3 - sdd, 4 - sdc, 5 - sde
+0 - sdd, 1 - sdg, 2 - sdf, 3 - missing, 4 - sdc, 5 - sde
+0 - sdd, 1 - sdg, 2 - sdf, 3 - sde, 4 - sdc, 5 - missing
 
-   7        0      94664 loop0
-   8        0  244198584 sda
-   8       16  244198584 sdb
-   8       32     998400 sdc
-   8       33     998368 sdc1
-   9      126  244195328 md126
- 259        0    5242882 md126p1
- 259        1    5242884 md126p2
- 259        2  233709560 md126p3
+On all three of these, I was able to mount the file system (without
+specifying any parameters) and listing its root contents. However some
+files and directories were inaccessible, with more inacessible in the
+first set, and same behaviour in the last two. This is where the
+comedy of errors continues:
+3) I forgot the '-o ro' option to 'mount', so I suppose some IO
+happened on the disks (by mount?). I can now no longer mount the file
+system at all through any of the above three permutations.
+4) I have (foolishly?) attempted an 'xfs_repair -n' (-n avoids
+modifying the fs) to try and retrieve the secondary xfs superblock, to
+no avail.
 
-So far, so good.
+I assume either of these mistakes have tickled md into resyncing the
+drives, as /proc/mdstat no longer displayed "auto-read-only" after the
+xfs_repair, and I'm afraid I have corrupted my data further. I did not
+run "mdadm --monitor" at any time, and I see nothing in the kernel
+logs pertaining to resyncing. I can of course provide kernel logs.
 
-I've then created an mdadm.conf file with mdadm -E --scan
+At each step I've made a rookie mistake that further worsened the
+situation, so at this point I'm too terrified to proceed further
+without external assistance. Any more hints would be greatly
+appreciated :)
 
-livecd ~ # mdadm -E --scan    
-ARRAY metadata=imsm UUID=480da1d0:8150f280:7dd8425d:bec99c46
-ARRAY /dev/md/vol0 container=480da1d0:8150f280:7dd8425d:bec99c46 member=0 
-UUID=17e28225:34f7c425:eb78aece:05c29a40
-
-livecd ~ # mdadm --assemble --scan
-mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-mdadm: Started /dev/md/vol0 with 2 devices
-
-livecd ~ # cat /proc/mdstat 
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md126 : active (auto-read-only) raid1 sda[1] sdb[0]
-      244195328 blocks super external:/md127/0 [2/2] [UU]
-      
-md127 : inactive sdb[1](S) sda[0](S)
-      4514 blocks super external:imsm
-       
-unused devices: <none>
-
-livecd ~ # cat /proc/partitions 
-major minor  #blocks  name
-
-   7        0      94664 loop0
-   8        0  244198584 sda
-   8       16  244198584 sdb
-   8       32     998400 sdc
-   8       33     998368 sdc1
-   9      126  244195328 md126
- 259        0    5242882 md126p1
- 259        1    5242884 md126p2
- 259        2  233709560 md126p3
-
-Still good so far. The /dev/md/vol0_0 device is now called /dev/md/vol0.
-
-Copying the mdadm.conf file to initramfs and rebooting, the array is correctly 
-assemble with mdadm --assemble --scan
-
-livecd ~ # mdadm --assemble --scan
-mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-mdadm: Started /dev/md/vol0 with 2 devices
-
-livecd ~ # cat /proc/mdstat 
-Personalities : [raid1]
-md126 : active (read-only) raid1 sda[1] sdb[0]
-      244195328 blocks super external:/md127/0 [2/2] [UU]
-      
-md127 : inactive sdb[1](S) sda[0](S)
-      4514 blocks super external:imsm
-       
-unused devices: <none>
-
-However, no partitions are detected.
-
-livecd ~ # cat /proc/partitions 
-major minor  #blocks  name
-
-   8        0  244198584 sda
-   8       16  244198584 sdb
-   8       32     998400 sdc
-   8       33     998368 sdc1
-   9      126  244195328 md126
-
-If I remove the /etc/mdadm.conf file from the initramfs image, the volume is 
-detected as vol0_0 instead of vol0 and the partitions are correctly detected.
-
-I don't understand what's going on there, and how I could fix it. Help would 
-be greatly appreciated.
-
--- 
-Regards,
-
-Laurent Pinchart
+John
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
