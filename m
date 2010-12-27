@@ -1,135 +1,138 @@
-From: Jean de Largentaye <jean@largentaye.org>
-Subject: Re: Aliens ate my superblock!
-Date: Mon, 27 Dec 2010 16:51:26 +0100
-Message-ID: <AANLkTimdTj5_jjEZxWPvt1dkKfhAswRE=An+V3cTbeX-@mail.gmail.com>
-References: <AANLkTimzJEdHDgnKbA5rk1Jwf7471Tib-JW3akEuWbwE@mail.gmail.com>
-	<4D14E9D2.6000702@shiftmail.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Is It Hopeless?
+Date: Mon, 27 Dec 2010 10:37:25 -0600
+Message-ID: <4D18C0C5.4010606@hardwarefreak.com>
+References: <201012261019.56481.CACook@quantum-sci.com> <201012261606.29281.CACook@quantum-sci.com> <4D182587.4040801@turmel.org> <201012270510.51520.CACook@quantum-sci.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D14E9D2.6000702@shiftmail.org>
+In-Reply-To: <201012270510.51520.CACook@quantum-sci.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 24, 2010 at 7:43 PM, Spelic <spelic@shiftmail.org> wrote:
-> On 12/24/2010 06:44 PM, Jean de Largentaye wrote:
->>
->> Hi folks,
->>
->> I have a case where I lost the last ~2000 sectors of my hard drives*=
-=2E
->> As that's where the 0.90 superblock is stored, those disks are no
->> longer automatically recognized by md. Apart from that part, my disk=
-s
->> and other hardware is fine.
->>
->> This is a RAID6 with 6 disks, 3 of which were chomped
->>
->
-> Hi Jean
-> Is the chomped part writable? Otherwise you will first have to copy t=
-hose
-> drives elsewhere.
->
-> I think the only way would be to recreate the RAID over the drives wi=
-th
-> --assume-clean so that no resync is made.
-> (resync would destroy your data)
-> Be sure to make it same size (don't use smaller partitions) and same
-> superblock type.
-> When recreating the array you have to correctly guess the order of de=
-vices
-> to make it identical to the first time you created it. Then it will b=
-ecome
-> readable.
-> For the 3 still readable devices you can read their position number v=
-ia
-> mdadm --examine /dev/device =A0(it's called Array Slot)
-> If you have 3 devices with unknown position number (array slot) in th=
-e array
-> you can try all combinations, which are 6.
-> At each iteration you can try to mount readonly and see if you see
-> something.
-> When you have something readable you can try xfs_repair to fix it bet=
-ter.
-> But better to ask in the xfs mailing list first.
-> If xfs is not repairable an extreme measure is to extract data with
-> photorec.
-> See also older posts in this ML mentioning the --assume-clean trick f=
-or
-> array recovery, many are from Neil Brown himself.
->
-> Merry Christmas to everybody
+Carl Cook put forth on 12/27/2010 7:10 AM:
+>> Every time I read/hear this I cringe.  If that is the case your data is worthless to begin with so just delete it all right now.  You are literally saying the same thing with your statement. 
+> 
+> No, I'm saying that the MTBF of disk drives is astronomical, 
 
-Hi, thanks for the hint. Thanks to that I've been able to go further,
-and apparently dig myself into deeper trouble. I guess the only good
-thing is that this is a personal array which I won't get fired for
-whacking.
+Interesting statement.  You're arguing the reliability of these modern
+giant driver, yet use RAID 10 instead of simple spanning or striping.  I
+wonder why that is...
 
-Regarding writability of the chomped part, yes it is writable. I was
-able to restore access to that using "hdparm -N" to restore the
-original number of sectors.
+> and the likelihood of a fail during backup is miniscule.  
 
-Note that my RAID used the whole disks, not partitions thereof. They
-are sdb through sdg.
+Failure during backup is of less concern.  Failure of the source
+media/system during _restore_ is.  Read this thread and the previous
+thread from Eli a few months prior.  It will open your eyes to the peril
+of using a D2D backup system with 2TB WD Green drives.  His choice of
+such, along with other poor choices based on acquisition cost, almost
+cost him his job.  Everything is cheap until it costs you dearly.
 
-By the way, before my first mail to the list, I had attempted to add a
-drive to the array using "mdadm --add", but the drive was added as a
-spare. I am still unsure whether that affected the data on that disk,
-or just the superblock. Anyhow, even with that disk out, I still had 5
-out of 6 drives of my raid6, so I still had breathing room.
+http://comments.gmane.org/gmane.comp.file-systems.xfs.general/35555
 
-The rest is a comedy of errors.
-1) I forgot the '-e 0.90' to specify the superblock format, so mdadm
-created a 1.2 superblock. I understand this superblock was created at
-the beginning (offset 2048?) of the disks, further corrupting data.
-2) I forgot '--chunk 64', so mdadm created an array with 512k chunks.
-Nothing was readable without that
+Too many (especially younger) IT people _only_ consider up front
+acquisition cost of systems and not long term support of such systems.
+Total system cost _must_ include a reliable DRS (Disaster Recover
+System).  If you can't afford the DRS to go with a new system, then you
+can't afford that system, and must downsize it or reduce its costs in
+some way to allow inclusion of DRS.
 
-With a proper metadata format and chunk size, I was able to mount my
-broken filesystem, with errors. The odd thing is that different
-permutations yielded working results, which I attribute to the magic
-of Galois field algebra. However I certainly corrupted my filesystem
-more at this point. But first, this is what I know about the raid
-slots:
-0 - unknown, 1 - sdg, 2 - sdf, 3 - unknown, 4 - sdc, 5 - unknown
+ There is no free lunch.  Eli nearly lost his job over poor acquisition
+and architecture choices.  In that thread he makes the same excuses you
+do regarding his total storage size needs and his "budget for backup".
+There is no such thing as "budget for backup".  DRS _must_ be included
+in all acquisition costs.  If not, someone will pay dear consequences at
+some point in time if the lost data has real value.  In Eli's case the
+lost data was Ph.D. student research data.  If one student lost all his
+data, he may likely have to redo an entire year of school.  Who pays for
+that?  Who pays for his year of lost earnings sine he can't (re)enter
+the workforce at Ph.D. pay scale?  This snafu may cost a single Ph.D.
+student, the university, or both, $200K or more depending on career field.
 
-So I had to find where sdb, sdd and sde fit in there. As I was afraid
-I had corrupted sdb by adding as a spare previously, and considering
-the redundancy of raid6, I left sdb out as 'missing'. The following
-permutations yielded results:
-0 - missing, 1 - sdg, 2 - sdf, 3 - sdd, 4 - sdc, 5 - sde
-0 - sdd, 1 - sdg, 2 - sdf, 3 - missing, 4 - sdc, 5 - sde
-0 - sdd, 1 - sdg, 2 - sdf, 3 - sde, 4 - sdc, 5 - missing
+If they'd had a decent tape silo he'd have lost no data.
 
-On all three of these, I was able to mount the file system (without
-specifying any parameters) and listing its root contents. However some
-files and directories were inaccessible, with more inacessible in the
-first set, and same behaviour in the last two. This is where the
-comedy of errors continues:
-3) I forgot the '-o ro' option to 'mount', so I suppose some IO
-happened on the disks (by mount?). I can now no longer mount the file
-system at all through any of the above three permutations.
-4) I have (foolishly?) attempted an 'xfs_repair -n' (-n avoids
-modifying the fs) to try and retrieve the secondary xfs superblock, to
-no avail.
+> MTBF of tape is hundreds of times sooner.  
 
-I assume either of these mistakes have tickled md into resyncing the
-drives, as /proc/mdstat no longer displayed "auto-read-only" after the
-xfs_repair, and I'm afraid I have corrupted my data further. I did not
-run "mdadm --monitor" at any time, and I see nothing in the kernel
-logs pertaining to resyncing. I can of course provide kernel logs.
+Really?  Eli had those WD20EARS online in his D2D backup system for less
+than 5 months.  LTO tape reliability is less than 5 months?  Show data
+to back that argument up please.
 
-At each step I've made a rookie mistake that further worsened the
-situation, so at this point I'm too terrified to proceed further
-without external assistance. Any more hints would be greatly
-appreciated :)
+Tape isn't perfect either, but based on my experience and reading that
+of many many others, it's still better than D2D is many cases.  Also
+note that tapes don't wholesale fail as disks do.  Bad spots on tape
+cause some lost files, not _all_ the files, as is the case when a D2D
+system fails during restore.
 
-John
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If a tape drive fails during restore, you don't lose all the backup
+data.  You simply replace the drive and run the tapes through the new
+drive.  If you have a multi-drive silo or library, you simply get a log
+message of the drive failure, and your restore may simply be slower.
+This depends on how you've setup parallelism in your silo.  Outside of
+the supercomputing centers where large files are backed up in parallel
+streams to multiple tapes/drives simultaneously ("tape RAID" or tape
+striping) most organizations don't stripe this way.  They simply
+schedule simultaneous backups of various servers each hitting a
+different drive in the silo.  In this case if all other silo drives are
+busy, then your restore will have to wait.  But, you'll get your system
+restored.
+
+> Not to mention that tape would take forever, and require constant tending.  
+
+Eli made similar statements as well, and they're bogus.  Modern high cap
+drives/tapes are quite speedy, especially if striped using the proper
+library/silo management software and planning/architecure.  Some silos
+can absorb streaming backups at rates much higher than midrange SAN
+arrays, in the multiple GB/s range.  They're not cheap, but then, good
+DRS solutions aren't. :)
+
+The D2D vendors use this scare tactic often also.  Would you care to
+explain this "constant tending"?
+
+> This is why it's not used anymore.
+
+Would you care to back this up with actual evidence?  Tape unit shipment
+numbers are down and declining as more folks (making informed decisions,
+or otherwise) move to D2D and cloud services, but tape isn't dead by any
+stretch of the imagination.  The D2D vendors sure want you to think so.
+ Helps them sell more units.  This is simply FUD spreading.
+
+> My storage is 2TB now, but my library is growing all the time.  Backing to off-line disk storage is the only practical way now, given the extremely low cost and high capacity and speed.  Each WD 2TB drive is $99 from Newegg!  Astounding.  Thanks for the input though.
+
+No, it's not the only practical methodology.  Are you not familiar with
+"differential copying"?  It's the feature that makes rsync so useful, as
+well as tape.  Once you have your first complete backup of that 2TB of
+media files, you're only writing to tape anything that's changed.
+
+At $99 you'll have $396 of drives in your backup server.  Add the cost
+of a case ($50), PSU ($30), mobo ($80), CPU ($100), DIMMs ($30), optical
+drive ($20), did I omit anything?  You're now at around $700.
+
+You now have a second system requiring "constant tending".  You also
+have 9 components that could fail during restore.  With a tape drive you
+have one.  Calculate the total MTBF of those 9 components using the
+inverse probability rule and compare that to the MTBF of a single HP
+LTO-2 drive?
+
+Again, you're like a deer in the headlights mesmerized by initial
+acquisition cost.  The tape solution I mentioned has a ~$200 greater
+acquisition cost, yet its reliability is greater, and it is purpose
+built for the task at hand.   Your DIY D2D server is not.
+
+Please keep in mind Carl I'm not necessarily speaking directly to you,
+or singling you out on this issue.  This list has a wider audience.
+Many sites archive this list, and those Googling the subject need good
+information on this subject.  The prevailing wind is D2D, but that
+doesn't make it God's gift to DRS.  As I' noted earlier, many folks are
+being bitten badly by the mindset you've demonstrated in this thread.
+
+D2D and tape both have their place, and both can do some jobs equally
+well at the same or varying costs.  D2D is better for some scenarios in
+some environments.  Tape is the _ONLY_ solution for others, and
+especially do for some government and business scenarios that require
+WORM capability for legal compliance.  There are few, if any, disk based
+solutions that can guarantee WORM archiving.
+
+-- 
+Stan
