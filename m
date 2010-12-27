@@ -1,55 +1,131 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Is It Hopeless?
-Date: Mon, 27 Dec 2010 10:04:00 -0500
-Message-ID: <4D18AAE0.40700@turmel.org>
-References: <201012261019.56481.CACook@quantum-sci.com> <201012261606.29281.CACook@quantum-sci.com> <4D182587.4040801@turmel.org> <201012270510.51520.CACook@quantum-sci.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Partitions not recognized when auto-assembling array in initramfs
+Date: Mon, 27 Dec 2010 16:18:08 +0100
+Message-ID: <201012271618.09209.laurent.pinchart@ideasonboard.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090701080807010304060606"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201012270510.51520.CACook@quantum-sci.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carl Cook <CACook@quantum-sci.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------090701080807010304060606
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hi everybody,
 
-On 12/27/2010 08:10 AM, Carl Cook wrote:
->> Every time I read/hear this I cringe.  If that is the case your data is worthless to begin with so just delete it all right now.  You are literally saying the same thing with your statement. 
-> 
-> No, I'm saying that the MTBF of disk drives is astronomical, and the likelihood of a fail during backup is miniscule.  MTBF of tape is hundreds of times sooner.  Not to mention that tape would take forever, and require constant tending.  This is why it's not used anymore.  My storage is 2TB now, but my library is growing all the time.  Backing to off-line disk storage is the only practical way now, given the extremely low cost and high capacity and speed.  Each WD 2TB drive is $99 from Newegg!  Astounding.  Thanks for the input though.
-> 
-> 
-> On Sun 26 December 2010 21:35:03 Phil Turmel wrote:
->> I, too, use an alternate server to back up to, but my daily changes are small enough to rsync over the net.  To reduce the chance of double failures in my arrays, a cron job kicks off a "resync" weekly.
-> 
-> Can you please give some detail on your sync scripts?  I've never done this and am not a programmer, but I'm a pretty good shade-tree admin.
+I've been struggling with a software RAID issue for several days now. Before 
+sending the computer back to the vendor and asking for real RAID support, I'd 
+like to try my luck here.
 
-Sure.  Attached.  Note that the script doesn't set the sysctls for speed limits...  The defaults are fine for me.
+The system as an Intel Matrix Storage SATA controller and two 250GB disks on 
+which I want to use a RAID1.
 
-HTH,
+I've been able to create the array properly from a Gentoo installation CD 
+(this might be a detail, but it might also influence homehost values, so I 
+thought I'd mention it) with the metadata stored in IMSM format.
 
-Phil
+Assembling the array automatically from the installation CD works.
 
---------------090701080807010304060606
-Content-Type: text/plain;
- name="raidrepair"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="raidrepair"
+livecd ~ # mdadm --assemble --scan
+mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
+mdadm: Started /dev/md/vol0_0 with 2 devices
 
-#!/bin/bash
-#
-# Weekly Cron Job to initiate RAID scan/repair cycles
+livecd ~ # cat /proc/mdstat 
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md126 : active (auto-read-only) raid1 sda[1] sdb[0]
+      244195328 blocks super external:/md127/0 [2/2] [UU]
+      
+md127 : inactive sdb[1](S) sda[0](S)
+      4514 blocks super external:imsm
+       
+unused devices: <none>
 
-for x in /sys/block/md*/md/sync_action ; do
-	echo repair >$x
-done
+livecd ~ # cat /proc/partitions 
+major minor  #blocks  name
 
-# Process occurs in background kernel tasks
+   7        0      94664 loop0
+   8        0  244198584 sda
+   8       16  244198584 sdb
+   8       32     998400 sdc
+   8       33     998368 sdc1
+   9      126  244195328 md126
+ 259        0    5242882 md126p1
+ 259        1    5242884 md126p2
+ 259        2  233709560 md126p3
 
---------------090701080807010304060606--
+So far, so good.
+
+I've then created an mdadm.conf file with mdadm -E --scan
+
+livecd ~ # mdadm -E --scan    
+ARRAY metadata=imsm UUID=480da1d0:8150f280:7dd8425d:bec99c46
+ARRAY /dev/md/vol0 container=480da1d0:8150f280:7dd8425d:bec99c46 member=0 
+UUID=17e28225:34f7c425:eb78aece:05c29a40
+
+livecd ~ # mdadm --assemble --scan
+mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
+mdadm: Started /dev/md/vol0 with 2 devices
+
+livecd ~ # cat /proc/mdstat 
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md126 : active (auto-read-only) raid1 sda[1] sdb[0]
+      244195328 blocks super external:/md127/0 [2/2] [UU]
+      
+md127 : inactive sdb[1](S) sda[0](S)
+      4514 blocks super external:imsm
+       
+unused devices: <none>
+
+livecd ~ # cat /proc/partitions 
+major minor  #blocks  name
+
+   7        0      94664 loop0
+   8        0  244198584 sda
+   8       16  244198584 sdb
+   8       32     998400 sdc
+   8       33     998368 sdc1
+   9      126  244195328 md126
+ 259        0    5242882 md126p1
+ 259        1    5242884 md126p2
+ 259        2  233709560 md126p3
+
+Still good so far. The /dev/md/vol0_0 device is now called /dev/md/vol0.
+
+Copying the mdadm.conf file to initramfs and rebooting, the array is correctly 
+assemble with mdadm --assemble --scan
+
+livecd ~ # mdadm --assemble --scan
+mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
+mdadm: Started /dev/md/vol0 with 2 devices
+
+livecd ~ # cat /proc/mdstat 
+Personalities : [raid1]
+md126 : active (read-only) raid1 sda[1] sdb[0]
+      244195328 blocks super external:/md127/0 [2/2] [UU]
+      
+md127 : inactive sdb[1](S) sda[0](S)
+      4514 blocks super external:imsm
+       
+unused devices: <none>
+
+However, no partitions are detected.
+
+livecd ~ # cat /proc/partitions 
+major minor  #blocks  name
+
+   8        0  244198584 sda
+   8       16  244198584 sdb
+   8       32     998400 sdc
+   8       33     998368 sdc1
+   9      126  244195328 md126
+
+If I remove the /etc/mdadm.conf file from the initramfs image, the volume is 
+detected as vol0_0 instead of vol0 and the partitions are correctly detected.
+
+I don't understand what's going on there, and how I could fix it. Help would 
+be greatly appreciated.
+
+-- 
+Regards,
+
+Laurent Pinchart
