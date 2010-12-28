@@ -1,29 +1,57 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: md-raid and block sizes
-Date: Tue, 28 Dec 2010 11:45:15 +0000
-Message-ID: <4D19CDCB.4090208@anonymous.org.uk>
-References: <1293451228.3266.9.camel@Waves.darkmere> <AANLkTim_vvdzYpdgQitK0942h-cW-q14MLhooSoaBOeL@mail.gmail.com>
+Date: Tue, 28 Dec 2010 22:45:13 +1100
+Message-ID: <20101228224513.31e71638@notabene.brown>
+References: <1293451228.3266.9.camel@Waves.darkmere>
+	<AANLkTikWxCxVUO+O8MXRXRR7Y8R5xGC1Catv-EiNGcDj@mail.gmail.com>
+	<1293525980.23780.2.camel@Waves.darkmere>
+	<AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim_vvdzYpdgQitK0942h-cW-q14MLhooSoaBOeL@mail.gmail.com>
+In-Reply-To: <AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: hansbkk@gmail.com
+Cc: "D.S. Ljungmark" <spider@skuggor.se>, doug@easyco.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/12/2010 19:02, Doug Dumitru wrote:
-[...]
-> The same rules apply to most SSDs.  Most SSDs prefer 4K alignment
-> because of how the FTL (Flash Translation Layers) operate, even though
-> <4K will sometimes still work pretty well.
+On Tue, 28 Dec 2010 18:29:26 +0700 hansbkk@gmail.com wrote:
 
-If I remember correctly, it may be better to align on SSDs at a larger 
-granularity, to the SSDs' erase block size, which may be up to 512K 
-depending on the SSD, though I don't remember at all how well Linux 
-filesystems, VFS, block layer drivers etc. handle SSD TRIM etc.
+> This doesn't actually relate to the blocksize issue, but a caveat -
+> I've heard that these "green" drives are not suitable for use in a
+> RAID.
+> 
+> The specific issue is apparently that these drives spin down very
+> frequently, but most RAID implementations keep spinning them back up
+> again just as frequently (perhaps unnecessarily?), thus causing undue
+> wear and tear on the drives' mechanics and ultimately premature
+> failure.
+> 
 
-Cheers,
+After a brief period of no writes, md will update the bitmap and/or the
+superblock to record that the array is clean (it may update the bitmap at
+other times too, but that is not relevant here).
 
-John.
+If the auto-spindown time of the drive is less than the delay-before-marking
+the-array-clean of md, then you could get extra spin-ups.
+
+The delay for updating the superblock is in sysfs in the md/safe_mode_timeout
+file which defaults to 0.2 seconds (200msec).
+The delay for updating the bitmap is set by an mdadm option (--bitmap-delay
+or something like that) when adding a bitmap to an array, and I think is
+available in sysfs in md/bitmap/something in recent kernels.
+The actual delay before a write is between 2 and 3 times this number.
+I think it defaults to 5 seconds (hence 10 to 15 second delay).
+
+So if the drive spins down sooner than 15 seconds after the last IO, there
+could be a problem but tuning md can git rid of that problem.
+If the drive spin-down time is longer than 15 seconds, they should be no
+unnecessary spin-ups.
+
+If anyone has any data on default spin-down times of these "green" drives I
+would be keen to hear about it.
+
+Thanks,
+NeilBrown
 
