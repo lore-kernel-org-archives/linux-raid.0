@@ -1,84 +1,58 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: md-raid and block sizes
-Date: Tue, 28 Dec 2010 16:45:15 +0500
-Message-ID: <20101228164515.06ffa62f@natsu>
-References: <1293451228.3266.9.camel@Waves.darkmere>
-	<AANLkTikWxCxVUO+O8MXRXRR7Y8R5xGC1Catv-EiNGcDj@mail.gmail.com>
-	<1293525980.23780.2.camel@Waves.darkmere>
-	<AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Partitions not recognized when auto-assembling array in initramfs
+Date: Tue, 28 Dec 2010 20:00:04 +0100
+Message-ID: <20101228190004.D0C084F0@gemini.denx.de>
+References: <201012271618.09209.laurent.pinchart@ideasonboard.com> <201012272235.45824.laurent.pinchart@ideasonboard.com> <20101228170542.2d55944e@notabene.brown> <201012281250.20838.laurent.pinchart@ideasonboard.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/7A9uet6CmpIHrOpAQBnKyQk"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
+In-reply-to: <201012281250.20838.laurent.pinchart@ideasonboard.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: "D.S. Ljungmark" <spider@skuggor.se>, doug@easyco.com, linux-raid@vger.kernel.org
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/7A9uet6CmpIHrOpAQBnKyQk
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Dear Laurent Pinchart,
 
-On Tue, 28 Dec 2010 18:29:26 +0700
-hansbkk@gmail.com wrote:
+In message <201012281250.20838.laurent.pinchart@ideasonboard.com> you wrote:
+> 
+> > If you are using udev, then something strange is happening.
+> > 
+> > If you aren't using udev, then you need to have something open /dev/md/vol0
+> > after mdadm assembles it and before you try to mount it.
+> 
+> I'm using mdev, the embedded udev replacement from busybox. I suppose it 
+> doesn't open the array.
+> 
+> Would it make sense to have mdadm open the array after assembling it, or is 
+> that udev's job only ?
 
-> This doesn't actually relate to the blocksize issue, but a caveat -
-> I've heard that these "green" drives are not suitable for use in a
-> RAID.
->=20
-> The specific issue is apparently that these drives spin down very
-> frequently, but most RAID implementations keep spinning them back up
-> again just as frequently (perhaps unnecessarily?), thus causing undue
-> wear and tear on the drives' mechanics and ultimately premature
-> failure.
->=20
-> Of course this could be spin from the vendors to get people to spend
-> more money on the "enterprise" level drives - I personally am a firm
-> believer in saving money by buying consumer-level hardware and using
-> the savings to buy extra redundancy.
->=20
-> It just so happens that I've bought a batch of Samsung 2TB drives for
-> a RAID6 I'm building, and it turns out they are quite similar to the
-> WDEARS, both in their use of "new format" 4K blocks and some of the
-> green features. I haven't yet detected any undue drive
-> stopping/starting, but then again they are so quite I'm not sure how
-> to check. . .
->=20
-> Confirmation or refutation of these thoughts would be most welcome.
+You may want to read the comments for this Fedora bug report:
+https://bugzilla.redhat.com/show_bug.cgi?id=597300
 
-This all is just FUD and you shouldn't repeat and spread it further, helping
-the vendor's marketing department get people spend money on an "Enterprise"
-sticker.
+It appears that in my case the problem was caused by the drives being
+used in a different setup before.  I just today found how I could work
+around this issue in the Fedora ramdisk setup - maybe you use
+something similar.
 
-WD*EARS/EADS, or at least most older models in that line-up, do indeed unlo=
-ad
-their heads after a short period of time, however that in no way inhibits t=
-heir
-usage in RAID (with this issue there's no difference at all, RAID or no RAI=
-D),
-and is user-adjustable using the WDIDLE3 utility:
-https://encrypted.google.com/search?q=3DWDIDLE3
+Now that I know what I have to look for I also understand why another
+array has similar issues: here I see
 
-Samsung drives do not have any spindown/load/unload problems, but be aware =
-of
-this: http://sourceforge.net/apps/trac/smartmontools/wiki/SamsungF4EGBadBlo=
-cks
+	# blkid -o udev -p /dev/sdd
+	ID_FS_TYPE=hpt45x_raid_member
+	ID_FS_USAGE=raid
 
---=20
-With respect,
-Roman
+for one of the disks.  Does anybody know how to get rid of such
+signatures as the "hpt45x_raid_member" here (without disturbin any
+other data on the drive) ?
 
---Sig_/7A9uet6CmpIHrOpAQBnKyQk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Best regards,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Wolfgang Denk
 
-iEYEARECAAYFAk0ZzcsACgkQTLKSvz+PZwhObwCcDr/JNUbD7SJ2xuvPE/QCNfD/
-MTsAnj8us5uXa5AGsU8XrKA6oUmjinOP
-=czwn
------END PGP SIGNATURE-----
-
---Sig_/7A9uet6CmpIHrOpAQBnKyQk--
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+"It is easier to port a shell than a shell script."      - Larry Wall
