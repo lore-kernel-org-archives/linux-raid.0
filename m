@@ -1,98 +1,95 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Partitions not recognized when auto-assembling array in
- initramfs
-Date: Tue, 28 Dec 2010 17:05:42 +1100
-Message-ID: <20101228170542.2d55944e@notabene.brown>
-References: <201012271618.09209.laurent.pinchart@ideasonboard.com>
-	<201012272135.48528.laurent.pinchart@ideasonboard.com>
-	<20101228080408.2d8ecada@notabene.brown>
-	<201012272235.45824.laurent.pinchart@ideasonboard.com>
+From: "D.S. Ljungmark" <spider@skuggor.se>
+Subject: Re: md-raid and block sizes
+Date: Tue, 28 Dec 2010 09:46:20 +0100
+Message-ID: <1293525980.23780.2.camel@Waves.darkmere>
+References: <1293451228.3266.9.camel@Waves.darkmere>
+	 <AANLkTikWxCxVUO+O8MXRXRR7Y8R5xGC1Catv-EiNGcDj@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201012272235.45824.laurent.pinchart@ideasonboard.com>
+In-Reply-To: <AANLkTikWxCxVUO+O8MXRXRR7Y8R5xGC1Catv-EiNGcDj@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: doug@easyco.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 27 Dec 2010 22:35:45 +0100 Laurent Pinchart
-<laurent.pinchart@ideasonboard.com> wrote:
+Thankyou, 
+  This makes planning ahead a bit easier, and means that I "only" have
+to worry about the traditional issues regarding block sizes, stripe and
+stride on "naked" disks in the array. 
 
-> Hi Neil,
+Regards,
+   Spid
+
+On Mon, 2010-12-27 at 10:59 -0800, Doug Dumitru wrote:
+> Mr. Ljungmark,
 > 
-> On Monday 27 December 2010 22:04:08 Neil Brown wrote:
-> > On Mon, 27 Dec 2010 21:35:48 +0100 Laurent Pinchart wrote:
-> > > > So something odd is happening, and more logs are needed to guess what.
-> > > 
-> > > I'll try to get more logs. In the meantime I've found something weird. If
-> > > I run mdadm --assemble --scan twice in a row, the partitions are
-> > > correctly created the second time.
-> > > 
-> > > The next problem will be that the array is created in read-only mode.
-> > > mdadm -- readwrite /dev/md126 doesn't help there, but echo active >
-> > > /sys/class/block/md126/md/array_state does.
-> > 
-> > The array is read-only because 'mdmon' is not running.  When mdadm
-> > assembles the array it starts mdmon to monitor the array.  This is needed
-> > when the array uses a metadata format that the kernel doesn't understand.
-> > It is mdmon's job to switch the array to read-write
-> > 
-> > I cannot think why mdmon is not being started, unless maybe it doesn't
-> > exist on the initramfs - it should be in /sbin.
+> The meta data is stored at the end of each raid device.  So if you are
+> dealing with an "advanced partitioned" device, just make sure your
+> individual elements are stores with alignments that make sense.  Normally,
+> this is just 'fdisk -u' and start the partition on a multiple of 8 sectors
+> (start at 64).
 > 
-> Bingo! That solved part of the problem. Adding mdmon to initramfs now switches 
-> the array to read-write. Partitions detection still doesn't work though.
-
-Good!
-
-
+> In terms of stripe sizes, they are all multiples of 4K pages anyway, so it
+> is not really possible for them to be "wrong" in terms of drive format
+> alignment.
 > 
-> > The logs you sent show that the partitions aren't getting detected at all,
-> > so it isn't the case that they get detected and then removed.
-> > 
-> > I don't remember exactly what triggers the partition detection.  Maybe just
-> > opening the array device...
-> > It is entirely possible that once you get the mdmon issue sorted out, the
-> > other will disappear.
-> > 
-> > You could try
-> > 
-> >   mdmon md126 &
-> > 
-> > and see if that makes the array read/write and creates the partitions.
-> > Also check with ps to confirm that mdmon isn't running.
+> File systems should be 4K or multiples thereof.  It has been a while, but I
+> think only XFS really breaks this rule unless you overwrite the block size
+> to 4K.  extn is fine.
 > 
-> After adding mdmon to the initramfs image, the md126 array is correctly 
-> switched to active. ps reports that mdmon is running of md127 (the container), 
-> but not md126.
+> The same rules apply to most SSDs.  Most SSDs prefer 4K alignment because of
+> how the FTL (Flash Translation Layers) operate, even though <4K will
+> sometimes still work pretty well.
 > 
-> The partitions are still not created. If I run mdmon md126, I get
+> Doug Dumitru
+> CTO EasyCo LLC
 > 
-> mdmon: md126 is not a container - cannot monitor
-
-It should have been 'md127' - md127 is the container, md126 is the array
-inside the container.
-
-But now that mdmon is on the initramfs, this shouldn't be needed.
-
+> On Mon, Dec 27, 2010 at 4:00 AM, D.S. Ljungmark <spider@skuggor.se> wrote:
 > 
-> And the partitions are then created. Does that sound familiar ?
+> > Hello,
+> >  With the advent of the WD*EARS drives and the "advanced partitioning"
+> > system that requires 4k blocks, I wanted to pop a quick question to see
+> > how the md metadata is aligned and how it should be aligned to get
+> > proper performance out of the devices.
+> >
+> > So, For raid1,  I'll assume there is some metadata-overhead on the
+> > drives, how large is this block? Will there be need to make a partition
+> > on the md-device in order to get proper alignment of filesystem =>
+> > platters?
+> >
+> > for both raid1 and 5/6 levels, what are the appropiate stride-sizes for
+> > ext3/4?
+> >
+> > For more advanced raid configurations (5-6), how should the ext3/4
+> > stripe size be configured?
+> >
+> >
+> > Yes, a lot of similarly naive questions, however, I'm asking mostly
+> > because of how devices are changing from 512 to 4k sized blocks, with
+> > quite interesting changes in performance, and I wanted to figure out
+> > what is the current state of software raid. At which "level" of the
+> > stack: (partition) raid (partition) filesystem ,  do you have to account
+> > for the block sizes in order to not degrade performance of the devices.
+> >
+> > ( In a perfect world I'd be able to purchase a stack of the devices and
+> > test for myself and come back with a report. However, money and hardware
+> > is a scarce resource ;)
+> >
+> > ps.  please keep me CC'd as I'm not subscribed to the list.
+> >
+> >
+> > // Spider
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> 
 > 
 
-I guess it is simply anything that accesses /dev/md126 will cause the
-partition detection to happen.  Usually udev comes along and pokes an md
-device as soon as it is created and that should be enough for the partitions
-to appear.  Do you have udev running??
-
-Maybe I need to get mdadm to open/close the array once it is assembled so as
-to trigger partition detection.
-
-If you are using udev, then something strange is happening.
-
-If you aren't using udev, then you need to have something open /dev/md/vol0
-after mdadm assembles it and before you try to mount it.
-
-NeilBrown
 
