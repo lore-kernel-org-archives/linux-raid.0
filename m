@@ -1,50 +1,98 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Partitions not recognized when auto-assembling array in initramfs
-Date: Tue, 28 Dec 2010 04:35:41 +0000
-Message-ID: <4D19691D.5010707@anonymous.org.uk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Partitions not recognized when auto-assembling array in
+ initramfs
+Date: Tue, 28 Dec 2010 17:05:42 +1100
+Message-ID: <20101228170542.2d55944e@notabene.brown>
 References: <201012271618.09209.laurent.pinchart@ideasonboard.com>
+	<201012272135.48528.laurent.pinchart@ideasonboard.com>
+	<20101228080408.2d8ecada@notabene.brown>
+	<201012272235.45824.laurent.pinchart@ideasonboard.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201012271618.09209.laurent.pinchart@ideasonboard.com>
+In-Reply-To: <201012272235.45824.laurent.pinchart@ideasonboard.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/12/2010 15:18, Laurent Pinchart wrote:
-[...]
-> livecd ~ # mdadm --assemble --scan
-> mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-> mdadm: Started /dev/md/vol0_0 with 2 devices
-[...]
-> livecd ~ # mdadm -E --scan
-> ARRAY metadata=imsm UUID=480da1d0:8150f280:7dd8425d:bec99c46
-> ARRAY /dev/md/vol0 container=480da1d0:8150f280:7dd8425d:bec99c46 member=0
-> UUID=17e28225:34f7c425:eb78aece:05c29a40
->
-> livecd ~ # mdadm --assemble --scan
-> mdadm: Container /dev/md/imsm0 has been assembled with 2 drives
-> mdadm: Started /dev/md/vol0 with 2 devices
-[...]
-> Still good so far. The /dev/md/vol0_0 device is now called /dev/md/vol0.
-[...]
-> If I remove the /etc/mdadm.conf file from the initramfs image, the volume is
-> detected as vol0_0 instead of vol0 and the partitions are correctly detected.
->
-> I don't understand what's going on there, and how I could fix it. Help would
-> be greatly appreciated.
+On Mon, 27 Dec 2010 22:35:45 +0100 Laurent Pinchart
+<laurent.pinchart@ideasonboard.com> wrote:
 
-I don't quite get it either, but there's something funny going on with 
-the device name. I don't know if you've a choice in the name or what, 
-but do things run any more smoothly if you edit the mdadm.conf to have 
-ARRAY /dev/md/vol0_0 container= etc? If so, and you don't like the _0, 
-you may be able to rename the array with --update=name when assembling 
-it. Disclaimer: I don't know much about imsm so I don't really know 
-about the device names and whether they can be selected or renamed.
+> Hi Neil,
+> 
+> On Monday 27 December 2010 22:04:08 Neil Brown wrote:
+> > On Mon, 27 Dec 2010 21:35:48 +0100 Laurent Pinchart wrote:
+> > > > So something odd is happening, and more logs are needed to guess what.
+> > > 
+> > > I'll try to get more logs. In the meantime I've found something weird. If
+> > > I run mdadm --assemble --scan twice in a row, the partitions are
+> > > correctly created the second time.
+> > > 
+> > > The next problem will be that the array is created in read-only mode.
+> > > mdadm -- readwrite /dev/md126 doesn't help there, but echo active >
+> > > /sys/class/block/md126/md/array_state does.
+> > 
+> > The array is read-only because 'mdmon' is not running.  When mdadm
+> > assembles the array it starts mdmon to monitor the array.  This is needed
+> > when the array uses a metadata format that the kernel doesn't understand.
+> > It is mdmon's job to switch the array to read-write
+> > 
+> > I cannot think why mdmon is not being started, unless maybe it doesn't
+> > exist on the initramfs - it should be in /sbin.
+> 
+> Bingo! That solved part of the problem. Adding mdmon to initramfs now switches 
+> the array to read-write. Partitions detection still doesn't work though.
 
-Cheers,
+Good!
 
-John.
+
+> 
+> > The logs you sent show that the partitions aren't getting detected at all,
+> > so it isn't the case that they get detected and then removed.
+> > 
+> > I don't remember exactly what triggers the partition detection.  Maybe just
+> > opening the array device...
+> > It is entirely possible that once you get the mdmon issue sorted out, the
+> > other will disappear.
+> > 
+> > You could try
+> > 
+> >   mdmon md126 &
+> > 
+> > and see if that makes the array read/write and creates the partitions.
+> > Also check with ps to confirm that mdmon isn't running.
+> 
+> After adding mdmon to the initramfs image, the md126 array is correctly 
+> switched to active. ps reports that mdmon is running of md127 (the container), 
+> but not md126.
+> 
+> The partitions are still not created. If I run mdmon md126, I get
+> 
+> mdmon: md126 is not a container - cannot monitor
+
+It should have been 'md127' - md127 is the container, md126 is the array
+inside the container.
+
+But now that mdmon is on the initramfs, this shouldn't be needed.
+
+> 
+> And the partitions are then created. Does that sound familiar ?
+> 
+
+I guess it is simply anything that accesses /dev/md126 will cause the
+partition detection to happen.  Usually udev comes along and pokes an md
+device as soon as it is created and that should be enough for the partitions
+to appear.  Do you have udev running??
+
+Maybe I need to get mdadm to open/close the array once it is assembled so as
+to trigger partition detection.
+
+If you are using udev, then something strange is happening.
+
+If you aren't using udev, then you need to have something open /dev/md/vol0
+after mdadm assembles it and before you try to mount it.
+
+NeilBrown
 
