@@ -1,57 +1,100 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md-raid and block sizes
-Date: Tue, 28 Dec 2010 22:45:13 +1100
-Message-ID: <20101228224513.31e71638@notabene.brown>
-References: <1293451228.3266.9.camel@Waves.darkmere>
-	<AANLkTikWxCxVUO+O8MXRXRR7Y8R5xGC1Catv-EiNGcDj@mail.gmail.com>
-	<1293525980.23780.2.camel@Waves.darkmere>
-	<AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: Partitions not recognized when auto-assembling array in initramfs
+Date: Tue, 28 Dec 2010 12:50:20 +0100
+Message-ID: <201012281250.20838.laurent.pinchart@ideasonboard.com>
+References: <201012271618.09209.laurent.pinchart@ideasonboard.com> <201012272235.45824.laurent.pinchart@ideasonboard.com> <20101228170542.2d55944e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin=-0CN-teD5p4H_nFbuZ944DVuDMku3FaD7uv7@mail.gmail.com>
+In-Reply-To: <20101228170542.2d55944e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: "D.S. Ljungmark" <spider@skuggor.se>, doug@easyco.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 Dec 2010 18:29:26 +0700 hansbkk@gmail.com wrote:
+Hi Neil,
 
-> This doesn't actually relate to the blocksize issue, but a caveat -
-> I've heard that these "green" drives are not suitable for use in a
-> RAID.
+On Tuesday 28 December 2010 07:05:42 Neil Brown wrote:
+> On Mon, 27 Dec 2010 22:35:45 +0100 Laurent Pinchart wrote:
+> > On Monday 27 December 2010 22:04:08 Neil Brown wrote:
+> > > On Mon, 27 Dec 2010 21:35:48 +0100 Laurent Pinchart wrote:
+> > > > > So something odd is happening, and more logs are needed to guess
+> > > > > what.
+> > > > 
+> > > > I'll try to get more logs. In the meantime I've found something
+> > > > weird. If I run mdadm --assemble --scan twice in a row, the
+> > > > partitions are correctly created the second time.
+> > > > 
+> > > > The next problem will be that the array is created in read-only mode.
+> > > > mdadm -- readwrite /dev/md126 doesn't help there, but echo active >
+> > > > /sys/class/block/md126/md/array_state does.
+> > > 
+> > > The array is read-only because 'mdmon' is not running.  When mdadm
+> > > assembles the array it starts mdmon to monitor the array.  This is
+> > > needed when the array uses a metadata format that the kernel doesn't
+> > > understand. It is mdmon's job to switch the array to read-write
+> > > 
+> > > I cannot think why mdmon is not being started, unless maybe it doesn't
+> > > exist on the initramfs - it should be in /sbin.
+> > 
+> > Bingo! That solved part of the problem. Adding mdmon to initramfs now
+> > switches the array to read-write. Partitions detection still doesn't
+> > work though.
 > 
-> The specific issue is apparently that these drives spin down very
-> frequently, but most RAID implementations keep spinning them back up
-> again just as frequently (perhaps unnecessarily?), thus causing undue
-> wear and tear on the drives' mechanics and ultimately premature
-> failure.
+> Good!
 > 
+> > > The logs you sent show that the partitions aren't getting detected at
+> > > all, so it isn't the case that they get detected and then removed.
+> > > 
+> > > I don't remember exactly what triggers the partition detection.  Maybe
+> > > just opening the array device...
+> > > It is entirely possible that once you get the mdmon issue sorted out,
+> > > the other will disappear.
+> > > 
+> > > You could try
+> > > 
+> > >   mdmon md126 &
+> > > 
+> > > and see if that makes the array read/write and creates the partitions.
+> > > Also check with ps to confirm that mdmon isn't running.
+> > 
+> > After adding mdmon to the initramfs image, the md126 array is correctly
+> > switched to active. ps reports that mdmon is running of md127 (the
+> > container), but not md126.
+> > 
+> > The partitions are still not created. If I run mdmon md126, I get
+> > 
+> > mdmon: md126 is not a container - cannot monitor
+> 
+> It should have been 'md127' - md127 is the container, md126 is the array
+> inside the container.
+> 
+> But now that mdmon is on the initramfs, this shouldn't be needed.
+> 
+> > And the partitions are then created. Does that sound familiar ?
+> 
+> I guess it is simply anything that accesses /dev/md126 will cause the
+> partition detection to happen.  Usually udev comes along and pokes an md
+> device as soon as it is created and that should be enough for the
+> partitions to appear.  Do you have udev running??
+> 
+> Maybe I need to get mdadm to open/close the array once it is assembled so
+> as to trigger partition detection.
+> 
+> If you are using udev, then something strange is happening.
+> 
+> If you aren't using udev, then you need to have something open /dev/md/vol0
+> after mdadm assembles it and before you try to mount it.
 
-After a brief period of no writes, md will update the bitmap and/or the
-superblock to record that the array is clean (it may update the bitmap at
-other times too, but that is not relevant here).
+I'm using mdev, the embedded udev replacement from busybox. I suppose it 
+doesn't open the array.
 
-If the auto-spindown time of the drive is less than the delay-before-marking
-the-array-clean of md, then you could get extra spin-ups.
+Would it make sense to have mdadm open the array after assembling it, or is 
+that udev's job only ?
 
-The delay for updating the superblock is in sysfs in the md/safe_mode_timeout
-file which defaults to 0.2 seconds (200msec).
-The delay for updating the bitmap is set by an mdadm option (--bitmap-delay
-or something like that) when adding a bitmap to an array, and I think is
-available in sysfs in md/bitmap/something in recent kernels.
-The actual delay before a write is between 2 and 3 times this number.
-I think it defaults to 5 seconds (hence 10 to 15 second delay).
+-- 
+Regards,
 
-So if the drive spins down sooner than 15 seconds after the last IO, there
-could be a problem but tuning md can git rid of that problem.
-If the drive spin-down time is longer than 15 seconds, they should be no
-unnecessary spin-ups.
-
-If anyone has any data on default spin-down times of these "green" drives I
-would be keen to hear about it.
-
-Thanks,
-NeilBrown
-
+Laurent Pinchart
