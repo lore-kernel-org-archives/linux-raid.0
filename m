@@ -1,224 +1,162 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: read errors corrected
-Date: Fri, 31 Dec 2010 10:12:43 +1100
-Message-ID: <20101231101243.666e0f9e@notabene.brown>
-References: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
-	<20101230201501.2f39a85f@notabene.brown>
-	<AANLkTik2+Gk1XveqD=crGMH5JshzJqQb_i77ZpOFUncB@mail.gmail.com>
-	<AANLkTi=vBWKjQStwpWZ3b=YL93LTDBfGk7b5jKUHLcO7@mail.gmail.com>
+From: Jim Schatzman <james.schatzman@futurelabusa.com>
+Subject: Re: Why won't mdadm start several RAIDs that appear to be fine?
+Date: Thu, 30 Dec 2010 16:20:58 -0700
+Message-ID: <20101230232227.96C1CE30991@mail.futurelabusa.com>
+References: <20101230082356.GC2986@bitwizard.nl>
+ <4D1C470E.4080406@crc.id.au>
+ <20101230094230.GE2986@bitwizard.nl>
+ <4D1C616D.8030904@hardwarefreak.com>
+ <4D1C73D4.6050600@anonymous.org.uk>
+ <4D1C851B.3040304@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=vBWKjQStwpWZ3b=YL93LTDBfGk7b5jKUHLcO7@mail.gmail.com>
+In-Reply-To: <4D1C851B.3040304@hardwarefreak.com>
+References: <20101230082356.GC2986@bitwizard.nl>
+ <4D1C470E.4080406@crc.id.au>
+ <20101230094230.GE2986@bitwizard.nl>
+ <4D1C616D.8030904@hardwarefreak.com>
+ <4D1C73D4.6050600@anonymous.org.uk>
+ <4D1C851B.3040304@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: James <jtp@nc.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 30 Dec 2010 11:35:59 -0500 James <jtp@nc.rr.com> wrote:
+When I rebooted my server yesterday, not all the RAIDs came up. There were no errors in the system log. All devices appear to be working correctly. There is no evidence of  hardware errors or data corruption.
 
-> Sorry Neil, I meant to reply-all.
->=20
-> -james
->=20
-> On Thu, Dec 30, 2010 at 11:35, James <jtp@nc.rr.com> wrote:
-> > Inline.
-> >
-> > On Thu, Dec 30, 2010 at 04:15, Neil Brown <neilb@suse.de> wrote:
-> >> On Thu, 30 Dec 2010 03:20:48 +0000 James <jtp@nc.rr.com> wrote:
-> >>
-> >>> All,
-> >>>
-> >>> I'm looking for a bit of guidance here. I have a RAID 6 set up on=
- my
-> >>> system and am seeing some errors in my logs as follows:
-> >>>
-> >>> # cat messages | grep "read erro"
-> >>> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (=
-8
-> >>> sectors at 974262528 on sda4)
-> >>> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (=
-8
-> >>> sectors at 974262536 on sda4)
-> >> .....
-> >>
-> >>>
-> >>> I've Google'd the heck out of this error message but am not seein=
-g a
-> >>> clear and concise message: is this benign? What would cause these
-> >>> errors? Should I be concerned?
-> >>>
-> >>> There is an error message (read error corrected) on each of the d=
-rives
-> >>> in the array. They all seem to be functioning properly. The I/O o=
-n the
-> >>> drives is pretty heavy for some parts of the day.
-> >>>
-> >>> # cat /proc/mdstat
-> >>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-> >>> [raid4] [multipath]
-> >>> md1 : active raid6 sdb1[1] sda1[0] sdd1[3] sdc1[2]
-> >>> =A0 =A0 =A0 497792 blocks level 6, 64k chunk, algorithm 2 [4/4] [=
-UUUU]
-> >>>
-> >>> md2 : active raid6 sdb2[1] sda2[0] sdd2[3] sdc2[2]
-> >>> =A0 =A0 =A0 4000000 blocks level 6, 64k chunk, algorithm 2 [4/4] =
-[UUUU]
-> >>>
-> >>> md3 : active raid6 sdb3[1] sda3[0] sdd3[3] sdc3[2]
-> >>> =A0 =A0 =A0 25992960 blocks level 6, 64k chunk, algorithm 2 [4/4]=
- [UUUU]
-> >>>
-> >>> md4 : active raid6 sdb4[1] sda4[0] sdd4[3] sdc4[2]
-> >>> =A0 =A0 =A0 2899780480 blocks level 6, 64k chunk, algorithm 2 [4/=
-4] [UUUU]
-> >>>
-> >>> unused devices: <none>
-> >>>
-> >>> I have a really hard time believing there's something wrong with =
-all
-> >>> of the drives in the array, although admittedly they're the same =
-model
-> >>> from the same manufacturer.
-> >>>
-> >>> Can someone point me in the right direction?
-> >>> (a) what causes these errors precisely?
-> >>
-> >> When md/raid6 tries to read from a device and gets a read error, i=
-t try to
-> >> read from other other devices. =A0When that succeeds it computes t=
-he data that
-> >> it had tried to read and then write it back to the original drive.=
- =A0If this
-> >> succeeded is assumes that the read error has been correct by a wri=
-te, and
-> >> prints the message that you see.
-> >>
-> >>
-> >>> (b) is the error benign? How can I determine if it is *likely* a
-> >>> hardware problem? (I imagine it's probably impossible to tell if =
-it's
-> >>> HW until it's too late)
-> >>
-> >> A few occasional messages like this are fairly benign. =A0The coul=
-d be a sign
-> >> that the drive surface is degrading. =A0If you see lots of these m=
-essages, then
-> >> you should seriously consider replacing the drive.
-> >
-> > Wow, this is hard for me to believe considering this is happening o=
-n
-> > all the drives. It's not impossible, however, since the drives are
-> > likely from the same batch.
-> >
-> >> As you are seeing these message across all devices, it is possible=
- that the
-> >> problem is with the sata controller rather than the disks. =A0Do k=
-now which you
-> >> should check the errors that are reported in dmesg. =A0If you don'=
-t understand
-> >> these message, then post them to the list - feel free to post seve=
-ral hundred
-> >> lines of logs - too much is much much better than not enough.
-> >
-> > I posted a few errors in my response to the thread a bit ago -- her=
-e's
-> > another snippet:
-> >
-> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] Unhandled error cod=
-e
-> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] Result: hostbyte=3D=
-0x00
-> > driverbyte=3D0x06
-> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] CDB: cdb[0]=3D0x28:=
- 28
-> > 00 25 a2 a0 6a 00 00 80 00
-> > Dec 29 01:55:03 nuova kernel: end_request: I/O error, dev sdc, sect=
-or 631414890
-> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] Unhandled error cod=
-e
-> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] Result: hostbyte=3D=
-0x00
-> > driverbyte=3D0x06
+To prevent mdadm from failing RAID drives, I removed the RAID entries from /etc/mdadm.conf, and I have a cron script that does things like
 
-"Unhandled error code" sounds like it could be a driver problem...
+mdadm -A --no-degraded /dev/md5 --uuid 291655c3:b6c334ff:8dfe69a4:447f777b
+mdadm: /dev/md5 assembled from 2 drives (out of 4), but not started.
 
-Try googling that error message...
+The question is, why did mdadm assemble only 2 drives, when all 4 drives appear to be fine?  The same problem occurred for 4 RAIDs, each with similar geometry, and using the same 4 physical drives.
 
-http://us.generation-nt.com/answer/2-6-33-libata-issues-via-sata-pata-c=
-ontroller-help-197123882.html
+Here is the status of all 4 partitions that should have been assembled into /dev/md5:
+
+[root@l1 ~]# mdadm -E /dev/sda5
+/dev/sda5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
+           Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
+  Creation Time : Thu Sep 23 13:41:31 2010
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
+     Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
+  Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 4088b63f:68d66426:a2abd280:28476493
+
+    Update Time : Wed Dec 22 08:27:57 2010
+       Checksum : 48e371ac - correct
+         Events : 339
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAA ('A' == active, '.' == missing)
+[root@l1 ~]# mdadm -E /dev/sdi5
+/dev/sdi5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
+           Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
+  Creation Time : Thu Sep 23 13:41:31 2010
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
+     Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
+  Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : bfc9fe39:c3e40f6a:7418831b:87e08f16
+
+    Update Time : Wed Dec 22 08:27:57 2010
+       Checksum : a4b2c7b7 - correct
+         Events : 339
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAA ('A' == active, '.' == missing)
+[root@l1 ~]# mdadm -E /dev/sdj5
+/dev/sdj5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
+           Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
+  Creation Time : Thu Sep 23 13:41:31 2010
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
+     Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
+  Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 3e1f7e30:730c70c0:c2770470:8e40ea84
+
+    Update Time : Wed Dec 22 08:27:57 2010
+       Checksum : b46e043d - correct
+         Events : 339
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAA ('A' == active, '.' == missing)
+[root@l1 ~]# mdadm -E /dev/sdk5
+/dev/sdk5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
+           Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
+  Creation Time : Thu Sep 23 13:41:31 2010
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
+     Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
+  Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 5acc120a:e7197136:7d7a29c2:971e410d
+
+    Update Time : Wed Dec 22 08:27:57 2010
+       Checksum : de7f9f92 - correct
+         Events : 339
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAA ('A' == active, '.' == missing)
 
 
-"Also, please try the latest 2.6.34-rc kernel, as that has several fixe=
-s
-for both pata_via and sata_via which did not make 2.6.33."
+I could try assembling the RAID with other command syntaxes (such as by listing all the partitions/devices manually). However, I see no reason why this should be necessary.
 
-What kernel are  you running???
+Also,
 
-NeilBrown
+mdadm -V
+mdadm - v3.1.2 - 10th March 2010
 
+What is going on?
 
+Thanks!
 
+Jim
 
-> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] CDB: cdb[0]=3D0x28:=
- 28
-> > 00 25 a2 a0 ea 00 00 38 00
-> > Dec 29 01:55:03 nuova kernel: end_request: I/O error, dev sdb, sect=
-or 631415018
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923648 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923656 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923664 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923672 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923680 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923688 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923696 on sdb4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923520 on sdc4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923528 on sdc4)
-> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
-> > sectors at 600923536 on sdc4)
-> >
-> > Is there a good way to determine if the issue is with the motherboa=
-rd
-> > (where the SATA controller is), or with the drives themselves?
-> >
-> >> NeilBrown
-> >>
-> >>
-> >>
-> >>> (c) are these errors expected in a RAID array that is heavily use=
-d?
-> >>> (d) what kind of errors should I see regarding "read errors" that
-> >>> *would* indicate an imminent hardware failure?
-> >>>
-> >>> Thoughts and ideas would be welcomed. I'm sure a thread where som=
-e
-> >>> hefty discussion is thrown at this topic will help future Googler=
-s
-> >>> like me. :)
-> >>>
-> >>> -james
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-r=
-aid" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.h=
-tml
-> >>
-> >>
-> >
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
