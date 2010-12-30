@@ -1,70 +1,101 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: New raid level suggestion.
-Date: Thu, 30 Dec 2010 19:47:10 +1100
-Message-ID: <4D1C470E.4080406@crc.id.au>
-References: <20101230082356.GC2986@bitwizard.nl>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: read errors corrected
+Date: Thu, 30 Dec 2010 20:15:01 +1100
+Message-ID: <20101230201501.2f39a85f@notabene.brown>
+References: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101230082356.GC2986@bitwizard.nl>
+In-Reply-To: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+To: James <jtp@nc.rr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/12/2010 7:23 PM, Rogier Wolff wrote:
->
-> Hi,
->
-> A friend has a webserver. He has 4 drive bays and due to previous
-> problems he's not content to have 3 or 4 drives in a raid5
-> configuration, but he wants a "hot spare" so that when it takes him a
-> week to find a new drive and some time to drive to the hosting
-> company, he isn't susceptible to a second drive crashing in the
-> meantime.
->
-> So in principle he'll build a 3-drive RAID5 with a hot spare....
->
-> Now we've been told that raid5 performs badly for the workload that is
-> expected. It would be much better to run the system in RAID10. However
-> if he'd switch to RAID10, after a single drive failure he has a window
-> of about a week where he has a 33% chance of a second drive failure
-> being "fatal".
->
-> So I was thinking.... He's resigned himself to a configuration where
-> he pays for 4x the disk space and only gets 2x the available space.
->
-> So he could run his array in RAID10 mode, however when a drive fails,
-> a fallback to raid5 would be in order. In this case, after the resync
-> a single-drive-failure tolerance is again obtained.
->
-> In practise scaling down to raid5 is not easy/possible. RAID4 however
-> should be doable.
->
-> In fact this can almost be implemented entirely in userspace. Just
-> remove the mirror drive from the underlying raid0, and reinitialize as
-> raid4. If you do this correctly the data will still be there....
->
-> Although doing this with an active filesystem running on these drives
-> is probably impossible due to "device is in use" error messages....
->
-> So: Has anybody tried this before?
-> Can this be implemented without kernel support?
-> Anybody feel like implementing this?
->
-> 	Roger.
->
+On Thu, 30 Dec 2010 03:20:48 +0000 James <jtp@nc.rr.com> wrote:
 
-Maybe I'm not quite understanding right, however you can easily do RAID6 
-with 4 drives. That will give you two redundant, effectively give you 
-RAID5 if I drive fails, and save buttloads of messing around...
+> All,
+> 
+> I'm looking for a bit of guidance here. I have a RAID 6 set up on my
+> system and am seeing some errors in my logs as follows:
+> 
+> # cat messages | grep "read erro"
+> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+> sectors at 974262528 on sda4)
+> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+> sectors at 974262536 on sda4)
+.....
+
+> 
+> I've Google'd the heck out of this error message but am not seeing a
+> clear and concise message: is this benign? What would cause these
+> errors? Should I be concerned?
+> 
+> There is an error message (read error corrected) on each of the drives
+> in the array. They all seem to be functioning properly. The I/O on the
+> drives is pretty heavy for some parts of the day.
+> 
+> # cat /proc/mdstat
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+> [raid4] [multipath]
+> md1 : active raid6 sdb1[1] sda1[0] sdd1[3] sdc1[2]
+>       497792 blocks level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> md2 : active raid6 sdb2[1] sda2[0] sdd2[3] sdc2[2]
+>       4000000 blocks level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> md3 : active raid6 sdb3[1] sda3[0] sdd3[3] sdc3[2]
+>       25992960 blocks level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> md4 : active raid6 sdb4[1] sda4[0] sdd4[3] sdc4[2]
+>       2899780480 blocks level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> unused devices: <none>
+> 
+> I have a really hard time believing there's something wrong with all
+> of the drives in the array, although admittedly they're the same model
+> from the same manufacturer.
+> 
+> Can someone point me in the right direction?
+> (a) what causes these errors precisely?
+
+When md/raid6 tries to read from a device and gets a read error, it try to
+read from other other devices.  When that succeeds it computes the data that
+it had tried to read and then write it back to the original drive.  If this
+succeeded is assumes that the read error has been correct by a write, and
+prints the message that you see.
 
 
--- 
-Steven Haigh
+> (b) is the error benign? How can I determine if it is *likely* a
+> hardware problem? (I imagine it's probably impossible to tell if it's
+> HW until it's too late)
 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+A few occasional messages like this are fairly benign.  The could be a sign
+that the drive surface is degrading.  If you see lots of these messages, then
+you should seriously consider replacing the drive.
+
+As you are seeing these message across all devices, it is possible that the
+problem is with the sata controller rather than the disks.  Do know which you
+should check the errors that are reported in dmesg.  If you don't understand
+these message, then post them to the list - feel free to post several hundred
+lines of logs - too much is much much better than not enough.
+
+NeilBrown
+
+
+
+> (c) are these errors expected in a RAID array that is heavily used?
+> (d) what kind of errors should I see regarding "read errors" that
+> *would* indicate an imminent hardware failure?
+> 
+> Thoughts and ideas would be welcomed. I'm sure a thread where some
+> hefty discussion is thrown at this topic will help future Googlers
+> like me. :)
+> 
+> -james
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
