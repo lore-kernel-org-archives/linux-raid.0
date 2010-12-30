@@ -1,82 +1,54 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: New raid level suggestion.
-Date: Thu, 30 Dec 2010 21:01:49 +1100
-Message-ID: <20101230210149.761fa210@notabene.brown>
-References: <20101230082356.GC2986@bitwizard.nl>
+From: Giovanni Tessore <giotex@texsoft.it>
+Subject: Re: read errors corrected
+Date: Thu, 30 Dec 2010 11:13:35 +0100
+Message-ID: <4D1C5B4F.8050506@texsoft.it>
+References: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101230082356.GC2986@bitwizard.nl>
+In-Reply-To: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 30 Dec 2010 09:23:56 +0100 Rogier Wolff <R.E.Wolff@BitWizard.nl>
-wrote:
+On 12/30/2010 04:20 AM, James wrote:
+> Can someone point me in the right direction?
+> (a) what causes these errors precisely?
+> (b) is the error benign? How can I determine if it is *likely* a
+> hardware problem? (I imagine it's probably impossible to tell if it's
+> HW until it's too late)
+> (c) are these errors expected in a RAID array that is heavily used?
+> (d) what kind of errors should I see regarding "read errors" that
+> *would* indicate an imminent hardware failure?
 
-> 
-> Hi,
-> 
-> A friend has a webserver. He has 4 drive bays and due to previous
-> problems he's not content to have 3 or 4 drives in a raid5
-> configuration, but he wants a "hot spare" so that when it takes him a
-> week to find a new drive and some time to drive to the hosting
-> company, he isn't susceptible to a second drive crashing in the
-> meantime.
-> 
-> So in principle he'll build a 3-drive RAID5 with a hot spare.... 
-> 
-> Now we've been told that raid5 performs badly for the workload that is
-> expected. It would be much better to run the system in RAID10. However
-> if he'd switch to RAID10, after a single drive failure he has a window
-> of about a week where he has a 33% chance of a second drive failure
-> being "fatal".
-> 
-> So I was thinking.... He's resigned himself to a configuration where
-> he pays for 4x the disk space and only gets 2x the available space.
-> 
-> So he could run his array in RAID10 mode, however when a drive fails, 
-> a fallback to raid5 would be in order. In this case, after the resync 
-> a single-drive-failure tolerance is again obtained. 
-> 
-> In practise scaling down to raid5 is not easy/possible. RAID4 however
-> should be doable.
-> 
-> In fact this can almost be implemented entirely in userspace. Just
-> remove the mirror drive from the underlying raid0, and reinitialize as
-> raid4. If you do this correctly the data will still be there....
-> 
-> Although doing this with an active filesystem running on these drives
-> is probably impossible due to "device is in use" error messages.... 
-> 
-> So: Has anybody tried this before?
-> Can this be implemented without kernel support?
-> Anybody feel like implementing this?
-> 
-> 	Roger. 
-> 
+(a) these errors usually come from defective disk sectors. raid 
+recostructs the missing sector from parity from other disks in the 
+array, then rewrites the sector on the defective disk; if the sector is 
+rewritten without error (maybe the hd remaps the sector into its 
+reserved area), then just the log messages is displayed.
 
-The kernel already supports this, though only with very recent kernels.
-I'm not 100% sure about mdadm support, but if it isn't there yet, it probably
-will be soon.
+(b) with raid-6 it's almost benign; to get troubles you should get a 
+read error on same sector for >2 disks; or have 2 disks failed and out 
+of the array and get a read error on one of the other disks while 
+recostructing the array; or have 1 disk failed and get a read error on 
+same sector on >1 disk while recostructing (with raid-5 it's almost 
+dangerous instead, as you can have big troubles if a disk fails and you 
+get a read error on another disk while recostructing; that happened to me!)
 
-You can convert a RAID10 to a RAID0.  You probably have to remove two devices
-first, so there are just two working devices - no redundancy.
+(c) no; it's also a good rule to perform a periodic scrub of the array 
+(check of the array), to reveal and correct defective sectors
 
-  mdadm --grow /dev/md0 --level=0
+(d) check smart status of the disks, for "relocated sectors count"; also 
+if md superblock is >= 1 there is a persistent count of corrected read 
+errors for each device into /sys/block/mdXX/md/dev-XX/errors, when this 
+counter reaches 256 the disk is marked failed; ihmo when a disk is 
+giving even few corrected read errors in a short interval its better to 
+replace it.
 
-Then you can convert the RAID0 to RAID4
+-- 
+Yours faithfully.
 
-  mdadm --grow /dev/md0 --level=4
+Giovanni Tessore
 
-Then add the good device back in
-
-  mdadm /dev/md0 --add /dev/sdXX
-
-This should all work, though you should certainly test it before you depend
-on it at all.
-
-NeilBrown
 
