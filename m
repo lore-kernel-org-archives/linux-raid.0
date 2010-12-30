@@ -1,91 +1,171 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: New raid level suggestion.
-Date: Thu, 30 Dec 2010 18:10:48 +0000
-Message-ID: <4D1CCB28.8030705@anonymous.org.uk>
-References: <20101230082356.GC2986@bitwizard.nl> <4D1C470E.4080406@crc.id.au> <20101230094230.GE2986@bitwizard.nl> <4D1C616D.8030904@hardwarefreak.com> <4D1C73D4.6050600@anonymous.org.uk> <4D1C851B.3040304@hardwarefreak.com>
+From: Doug Dumitru <doug@easyco.com>
+Subject: Re: Raid/5 optimization for linear writes
+Date: Thu, 30 Dec 2010 10:47:31 -0800
+Message-ID: <AANLkTin=TUv0ebNLxhDtrQZbaNyCy0BdDRGxWtyPtZjS@mail.gmail.com>
+References: <AANLkTinEuKzKxWTOY7Mpj207Y2t_mzjy9_8D5O5dP+Qe@mail.gmail.com>
+	<AANLkTikKpFARod23akheM3-P_CUh7DtNTEtw72hVbYAZ@mail.gmail.com>
+Reply-To: doug@easyco.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D1C851B.3040304@hardwarefreak.com>
+In-Reply-To: <AANLkTikKpFARod23akheM3-P_CUh7DtNTEtw72hVbYAZ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/12/2010 13:11, Stan Hoeppner wrote:
-> John Robinson put forth on 12/30/2010 5:58 AM:
->> On 30/12/2010 10:39, Stan Hoeppner wrote:
->> [...]
->>> Any RAID scheme that uses parity is less than optimal, and up to
->>> horrible, for heavy random IO loads.  As always, this depends on "how
->>> heavy" the load is.  For up to a few hundred constant IOPS you can get
->>> away with parity RAID schemes.  If you need a few thousand or many
->>> thousand IOPS, better stay away from parity RAID.
->>
->> Sorry, I have to disagree with this, in this situation. RAID-6 over 4
->> discs will be just as fast for reading multiple small files as RAID-10
->> over 4 discs, and a web server is a read-mostly environment, while at
->> the same time I can't imagine any RAID schema ever giving thousands of
->> IOPS over 4 discs, parity or no.
+What I have been working on does not change the raid algorithm.  The
+issue is scheduling.
+
+When raid/456 gets a write, it needs to write not only the new blocks,
+but also the parity blocks that are associated.  In order to calculate
+the parity blocks, it needs data from other blocks in the same stripe
+set.  The issue is, a) should the raid code issue read requests for
+the needed blocks, or b) should the raid code wait for more write
+requests hoping that these requests will contain data for the needed
+blocks.  Both of these approaches are wrong some of the time.  To make
+things worse, with some drives, guessing wrong just a fraction of a
+percent of the time can hurt performance dramatically.
+
+In my case, if the raid code can get an entire stripe in a single
+write request, then it can bypass most of the raid logic and just
+"compute and go".  Unfortunately, such big requests break a lot of
+conventions about how big requests can be, especially for large drive
+count arrays.
+
+Doug Dumitru
+EasyCo LLC
+
+On Thu, Dec 30, 2010 at 6:36 AM, Roberto Spadim <roberto@spadim.com.br>=
+ wrote:
 >
-> That's because you apparently didn't learn about paragraph's in English
-> class:  http://en.wikipedia.org/wiki/Paragraph  Do you Brits use
-> paragraphs differently than we do here in the states?
+> could we make a
+> write algorithm
+> read algorithm
+>
+> for each raid type? we don=B4t need to change default md algorithm, j=
+ust
+> put a option to select algorithm, it=B4s good since new developers co=
+uld
+> "plugin" news read/write algorithm
+> thanks
+>
+> 2010/12/29 Doug Dumitru <doug@easyco.com>:
+> > Hello all,
+> >
+> > I have been using an in-house mod to the raid5.c driver to optimize
+> > for linear writes.=A0 The optimization is probably too specific for
+> > general kernel inclusion, but I wanted to throw out what I have bee=
+n
+> > doing in case anyone is interested.
+> >
+> > The application involves a kernel module that can produce precisely
+> > aligned, long, linear writes. =A0In the case of raid-5, the obvious=
+ plan
+> > is to issue writes that are complete raid stripes of
+> > 'optimal_io_length'.
+> >
+> > Unfortunately, optimal_io_length is often less than the advertised =
+max
+> > io_buf size value and sometime less than the system max io_buf size
+> > value. =A0Thus just pumping up the max value inside of raid5 is dub=
+ious.
+> > =A0Even though dubious, just punching up the
+> > mddev->queue->limits.max_hw_sectors does seem to work, not break
+> > anything obvious, and does help performance out a little.
+> >
+> > In looking at long linear writes with the stock raid5 driver, I am
+> > seeing a small amount of reads to individual devices. =A0The test
+> > application code calling the raid layer has > 100MB of locked kerne=
+l
+> > buffer slamming the raid5 driver, so exactly why raid5 needs to
+> > back-fill some reads is not very clear to me. =A0Looking at the rai=
+d5
+> > code, it does not look like there is a real "scheduler" for decidin=
+g
+> > when to back-fill the stripe cache, but instead it just relies on
+> > thread round trips. =A0In my case, I am testing on server-class sys=
+tems
+> > with 8 or 16 3GHz threads, so availability of CPU cycles for the ra=
+id5
+> > code is very high.
+> >
+> > My patch ended up special casing a single inbound bio that containe=
+d a
+> > write for a single full raid stripe. =A0So for 8 drives raid-5, thi=
+s is
+> > 7 * 64K or an IO 448KB long. =A0With 4K pages this is a bi_io_vec a=
+rray
+> > of 112 pages. =A0Big for kernel memory generally, but easily handle=
+d by
+> > server systems. =A0With more drives, you can be talking well over 1=
+MB in
+> > a single bio call.
+> >
+> > The patch takes this special case write, makes sure it is raid-5 an=
+d
+> > layout 2, is not degraded and is not migrating. =A0If all of these =
+are
+> > true, the code allocates a new bi_io_vec and pages for the parity
+> > stripe, new bios for each drive, computes parity "in thread", and t=
+hen
+> > issues simultanious IOs to all of the devices. =A0A single bio comp=
+lete
+> > function catches any errors and completes the IO.
+> >
+> > My testing is all done using SSDs. =A0I have tests for 8 drives and=
+ for
+> > 32 partition on the 8 drives. =A0The drives themselves do about
+> > 100MB/sec per drive. =A0With the stock code I tend to get 550 MB/se=
+c
+> > with 8 drives and 375 MB/sec with 32 partitions on 8 drives. =A0Wit=
+h the
+> > patch, both 8 and 32 yield about 670 MB/sec which is within 5% of
+> > theoretical bandwidth.
+> >
+> > My "fix" for linear writes is probably way to "miopic" for general
+> > kernel use, but it does show that properly fed, really big raid/456
+> > arrays should be able to crank linear bandwidth far beyond the curr=
+ent
+> > code base.
+> >
+> > What is really needed is some general technique to give the raid
+> > driver a "hint" that an IO stream is linear writes so that it will =
+not
+> > try to back-fill too eagerly. =A0Exactly how this can make it back =
+up
+> > the bio stack is the real trick.
+> >
+> > I am happy to discuss this on-list or privately.
+> >
+> > --
+> > Doug Dumitru
+> > EasyCo LLC
+> >
+> > ps: =A0I am also working on patches to propagate "discard" requests
+> > through the raid stack, but don't have any operational code yet.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+> >
+>
+>
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
 
-No, but apparently we use apostrophes correctly over here.
 
-> My first paragraph dealt with general performance of parity vs non
-> parity RAID WRT high IO loads.
 
-Yes, and I suppose that I should have pointed out that the OP's friend 
-had been given slightly inappropriate advice, since a web server doesn't 
-do small file I/O like a mailserver. You expanded on a general situation 
-which didn't apply, and the statement you made was wrong, or at least 
-not correct in all circumstances.
-
->  My second paragraph covered the downside
-> of the redundancy methods of RAID 3/4.
-
-You were wrong again there: if you lose the parity disc in RAID 3/4 you 
-don't lose the array, as the data discs are all still there. It is true 
-that with modern huge (1TB+) drives where the error rate per bit read is 
-still much the same as when drives were tiny (1GB+) that a recovery is 
-much more risky than it used to be due to the dramatically increased 
-chance of a second disc failing, but that is equally true of RAID 5.
-
->  My third paragraph dealt
-> specifically with Roger's web server.
-
-The third and the fourth; jolly good.
-
-> Note that nothing in my first paragraph mentioned a web server workload.
->   Also note that nowhere did I mention a count of 4 drive, nor commented
-> regarding the suitability of any RAID level with 4 drives.
-
-No indeed, but that was the context of the question; why give entirely 
-general advice when a specific usage applies?
-
-> Also note there were two "situations" mentioned by Roger.  The first
-> referenced a previous thread which dealt with a high transaction load
-> server similar to a mail server, IIRC.
-
-I see no such reference, apart from noting that "when asking for help, 
-everybody pounced on us: - NEVER use raid5 for a server doing 
-small-file-io like a mailserver. (always use RAID10)" which as I say is 
-in my opinion inappropriate advice, since they're not trying to run a 
-mailserver and won't have heavy random writes.
-
->  My first paragraph related to
-> that.  The second "situation", to which you refer, dealt with Roger's
-> web server.
-
-I had surmised from the original question about using RAID-10, RAID-4 
-etc that there was a desire to have more storage than a single drive 
-mirrored twice, so I didn't think plain mirroring would suit, but 
-perhaps that wasn't the intention and your solution would work.
-
-Cheers,
-
-John.
-
+--
+Doug Dumitru
+EasyCo LLC
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
