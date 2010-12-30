@@ -1,128 +1,205 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Raid/5 optimization for linear writes
-Date: Thu, 30 Dec 2010 12:36:33 -0200
-Message-ID: <AANLkTikKpFARod23akheM3-P_CUh7DtNTEtw72hVbYAZ@mail.gmail.com>
-References: <AANLkTinEuKzKxWTOY7Mpj207Y2t_mzjy9_8D5O5dP+Qe@mail.gmail.com>
+From: James <jtp@nc.rr.com>
+Subject: Re: read errors corrected
+Date: Thu, 30 Dec 2010 11:33:31 -0500
+Message-ID: <AANLkTiksB7D6XwJRE+0oH26U3yz5h--JwmSYcMX+VrCo@mail.gmail.com>
+References: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com> <alpine.DEB.1.10.1012300623070.27193@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinEuKzKxWTOY7Mpj207Y2t_mzjy9_8D5O5dP+Qe@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.1012300623070.27193@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-could we make a
-write algorithm
-read algorithm
+Lots of tremendous responses. I appreciate it. I'm going to reply to
+the first person who responded here, but this email should cover some
+of the questions posed in further responses.
 
-for each raid type? we don=B4t need to change default md algorithm, jus=
-t
-put a option to select algorithm, it=B4s good since new developers coul=
-d
-"plugin" news read/write algorithm
-thanks
+On Thu, Dec 30, 2010 at 00:24, Mikael Abrahamsson <swmike@swm.pp.se> wr=
+ote:
+> On Thu, 30 Dec 2010, James wrote:
+>
+>> Can someone point me in the right direction?
+>> (a) what causes these errors precisely?
+>
+> dmesg should give you information if this is SATA errors.
 
-2010/12/29 Doug Dumitru <doug@easyco.com>:
-> Hello all,
+Here are some other logs that may be relevant:
+
+Dec 15 15:40:34 nuova kernel: sd 0:0:0:0: [sda] Unhandled error code
+Dec 15 15:40:34 nuova kernel: sd 0:0:0:0: [sda] Result: hostbyte=3D0x00
+driverbyte=3D0x06
+Dec 15 15:40:34 nuova kernel: sd 0:0:0:0: [sda] CDB: cdb[0]=3D0x28: 28
+00 3b e3 53 ea 00 00 48 00
+Dec 15 15:40:34 nuova kernel: end_request: I/O error, dev sda, sector 1=
+004753898
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262528 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262536 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262544 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262552 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262560 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262568 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262576 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262584 on sda4)
+Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 974262592 on sda4)
+
+Unfortunately I had not caught those error messages at first
+glance...I/O error? Hrmm...doesn't sound good. The issue is repeated
+later on.
+
+Dec 29 03:04:01 nuova kernel: sd 1:0:1:0: [sdd] Unhandled error code
+Dec 29 03:04:01 nuova kernel: sd 0:0:1:0: [sdb] Unhandled error code
+Dec 29 03:04:01 nuova kernel: sd 0:0:1:0: [sdb] Result: hostbyte=3D0x00
+driverbyte=3D0x06
+Dec 29 03:04:01 nuova kernel: sd 0:0:1:0: [sdb] CDB: cdb[0]=3D0x28: 28
+00 1b 06 d2 ea 00 00 78 00
+Dec 29 03:04:01 nuova kernel: end_request: I/O error, dev sdb, sector 4=
+53432042
+Dec 29 03:04:01 nuova kernel: sd 1:0:1:0: [sdd] Result: hostbyte=3D0x00
+driverbyte=3D0x06
+Dec 29 03:04:01 nuova kernel: sd 1:0:1:0: [sdd] CDB: cdb[0]=3D0x28: 28
+00 1b 06 d2 62 00 00 88 00
+Dec 29 03:04:01 nuova kernel: end_request: I/O error, dev sdd, sector 4=
+53431906
+Dec 29 03:04:01 nuova kernel: raid5_end_read_request: 13 callbacks supp=
+ressed
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940552 on sdd4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940672 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940680 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940688 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940696 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940704 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940712 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940720 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940728 on sdb4)
+Dec 29 03:04:01 nuova kernel: md/raid:md4: read error corrected (8
+sectors at 422940736 on sdb4)
+
+Ouch.
+
+>> (c) are these errors expected in a RAID array that is heavily used?
 >
-> I have been using an in-house mod to the raid5.c driver to optimize
-> for linear writes.=A0 The optimization is probably too specific for
-> general kernel inclusion, but I wanted to throw out what I have been
-> doing in case anyone is interested.
+> No.
 >
-> The application involves a kernel module that can produce precisely
-> aligned, long, linear writes. =A0In the case of raid-5, the obvious p=
-lan
-> is to issue writes that are complete raid stripes of
-> 'optimal_io_length'.
+>> (d) what kind of errors should I see regarding "read errors" that
+>> *would* indicate an imminent hardware failure?
 >
-> Unfortunately, optimal_io_length is often less than the advertised ma=
-x
-> io_buf size value and sometime less than the system max io_buf size
-> value. =A0Thus just pumping up the max value inside of raid5 is dubio=
-us.
-> =A0Even though dubious, just punching up the
-> mddev->queue->limits.max_hw_sectors does seem to work, not break
-> anything obvious, and does help performance out a little.
->
-> In looking at long linear writes with the stock raid5 driver, I am
-> seeing a small amount of reads to individual devices. =A0The test
-> application code calling the raid layer has > 100MB of locked kernel
-> buffer slamming the raid5 driver, so exactly why raid5 needs to
-> back-fill some reads is not very clear to me. =A0Looking at the raid5
-> code, it does not look like there is a real "scheduler" for deciding
-> when to back-fill the stripe cache, but instead it just relies on
-> thread round trips. =A0In my case, I am testing on server-class syste=
-ms
-> with 8 or 16 3GHz threads, so availability of CPU cycles for the raid=
-5
-> code is very high.
->
-> My patch ended up special casing a single inbound bio that contained =
-a
-> write for a single full raid stripe. =A0So for 8 drives raid-5, this =
-is
-> 7 * 64K or an IO 448KB long. =A0With 4K pages this is a bi_io_vec arr=
-ay
-> of 112 pages. =A0Big for kernel memory generally, but easily handled =
-by
-> server systems. =A0With more drives, you can be talking well over 1MB=
- in
-> a single bio call.
->
-> The patch takes this special case write, makes sure it is raid-5 and
-> layout 2, is not degraded and is not migrating. =A0If all of these ar=
-e
-> true, the code allocates a new bi_io_vec and pages for the parity
-> stripe, new bios for each drive, computes parity "in thread", and the=
-n
-> issues simultanious IOs to all of the devices. =A0A single bio comple=
-te
-> function catches any errors and completes the IO.
->
-> My testing is all done using SSDs. =A0I have tests for 8 drives and f=
-or
-> 32 partition on the 8 drives. =A0The drives themselves do about
-> 100MB/sec per drive. =A0With the stock code I tend to get 550 MB/sec
-> with 8 drives and 375 MB/sec with 32 partitions on 8 drives. =A0With =
-the
-> patch, both 8 and 32 yield about 670 MB/sec which is within 5% of
-> theoretical bandwidth.
->
-> My "fix" for linear writes is probably way to "miopic" for general
-> kernel use, but it does show that properly fed, really big raid/456
-> arrays should be able to crank linear bandwidth far beyond the curren=
-t
-> code base.
->
-> What is really needed is some general technique to give the raid
-> driver a "hint" that an IO stream is linear writes so that it will no=
-t
-> try to back-fill too eagerly. =A0Exactly how this can make it back up
-> the bio stack is the real trick.
->
-> I am happy to discuss this on-list or privately.
->
+> You should look into the SMART information on the drives using smartc=
+tl.
+
+All of the drives indicate that the SMART status is
+"passed"...unfortuantely this isn't very verbose. :)
+
+Is there something specific I should be looking at in my SMART status?
+
+I also see hundreds and hundreds of lines in my /var/log/messages that
+indicates the following:
+
+
+Dec 20 06:12:40 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 47 to 46
+Dec 20 07:12:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+Dec 20 07:12:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 32
+Dec 20 07:12:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+Dec 20 07:12:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 32
+Dec 20 07:42:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 46 to 45
+Dec 20 08:12:39 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 42 to 41
+Dec 20 08:42:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 46 to 45
+Dec 20 08:42:39 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 66 to 67
+Dec 20 08:42:39 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 34 to 33
+Dec 20 09:42:39 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+Dec 20 09:42:39 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 32
+Dec 20 10:12:39 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 67
+Dec 20 10:12:39 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 32 to 33
+Dec 20 10:12:39 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 45 to 44
+Dec 20 11:12:40 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 41 to 40
+Dec 20 13:42:39 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 44 to 43
+Dec 20 14:42:40 nuova smartd[22451]: Device: /dev/sdb [SAT], SMART
+Usage Attribute: 195 Hardware_ECC_Recovered changed from 40 to 39
+Dec 20 15:42:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 67
+Dec 20 15:42:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 32 to 33
+Dec 20 15:42:40 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 66
+Dec 20 15:42:40 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 34
+Dec 20 15:42:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 67
+Dec 20 15:42:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 32 to 33
+Dec 20 16:12:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+Dec 20 16:12:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 32
+Dec 20 16:12:40 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 66 to 67
+Dec 20 16:12:40 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 34 to 33
+Dec 20 16:12:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+Dec 20 16:12:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 32
+Dec 20 16:42:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 67
+Dec 20 16:42:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 32 to 33
+Dec 20 16:42:39 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 66
+Dec 20 16:42:39 nuova smartd[22451]: Device: /dev/sdc [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 33 to 34
+Dec 20 16:42:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 67
+Dec 20 16:42:40 nuova smartd[22451]: Device: /dev/sdd [SAT], SMART
+Usage Attribute: 194 Temperature_Celsius changed from 32 to 33
+Dec 20 17:12:39 nuova smartd[22451]: Device: /dev/sda [SAT], SMART
+Usage Attribute: 190 Airflow_Temperature_Cel changed from 67 to 68
+
+Is it normal for SMART to update the attributes as the drives are
+being used? (I've never had SMART installed before, so this is all
+very new to me).
+
+-james
+
 > --
-> Doug Dumitru
-> EasyCo LLC
+> Mikael Abrahamsson =A0 =A0email: swmike@swm.pp.se
 >
-> ps: =A0I am also working on patches to propagate "discard" requests
-> through the raid stack, but don't have any operational code yet.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
