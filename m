@@ -1,50 +1,46 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Ryan Wagoner <rswagoner@gmail.com>
 Subject: Re: New raid level suggestion.
-Date: Thu, 30 Dec 2010 07:11:55 -0600
-Message-ID: <4D1C851B.3040304@hardwarefreak.com>
-References: <20101230082356.GC2986@bitwizard.nl> <4D1C470E.4080406@crc.id.au> <20101230094230.GE2986@bitwizard.nl> <4D1C616D.8030904@hardwarefreak.com> <4D1C73D4.6050600@anonymous.org.uk>
+Date: Thu, 30 Dec 2010 09:24:32 -0500
+Message-ID: <AANLkTinJCQsaOuzQub9A7qU_HjGhUuXpp1oq+=5hTb3E@mail.gmail.com>
+References: <20101230082356.GC2986@bitwizard.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D1C73D4.6050600@anonymous.org.uk>
+In-Reply-To: <20101230082356.GC2986@bitwizard.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson put forth on 12/30/2010 5:58 AM:
-> On 30/12/2010 10:39, Stan Hoeppner wrote:
-> [...]
->> Any RAID scheme that uses parity is less than optimal, and up to
->> horrible, for heavy random IO loads.  As always, this depends on "how
->> heavy" the load is.  For up to a few hundred constant IOPS you can get
->> away with parity RAID schemes.  If you need a few thousand or many
->> thousand IOPS, better stay away from parity RAID.
-> 
-> Sorry, I have to disagree with this, in this situation. RAID-6 over 4
-> discs will be just as fast for reading multiple small files as RAID-10
-> over 4 discs, and a web server is a read-mostly environment, while at
-> the same time I can't imagine any RAID schema ever giving thousands of
-> IOPS over 4 discs, parity or no.
+On Thu, Dec 30, 2010 at 3:23 AM, Rogier Wolff <R.E.Wolff@bitwizard.nl> wrote:
+> So I was thinking.... He's resigned himself to a configuration where
+> he pays for 4x the disk space and only gets 2x the available space.
+>
+> So he could run his array in RAID10 mode, however when a drive fails,
+> a fallback to raid5 would be in order. In this case, after the resync
+> a single-drive-failure tolerance is again obtained.
+>
+> In practise scaling down to raid5 is not easy/possible. RAID4 however
+> should be doable.
+>
+> In fact this can almost be implemented entirely in userspace. Just
+> remove the mirror drive from the underlying raid0, and reinitialize as
+> raid4. If you do this correctly the data will still be there....
+>
+> Although doing this with an active filesystem running on these drives
+> is probably impossible due to "device is in use" error messages....
 
-That's because you apparently didn't learn about paragraph's in English
-class:  http://en.wikipedia.org/wiki/Paragraph  Do you Brits use
-paragraphs differently than we do here in the states?
+Paying for 4x the disk space and only getting 2x is about performance.
+You can't just view disks by the raw space they provide.
 
-My first paragraph dealt with general performance of parity vs non
-parity RAID WRT high IO loads.  My second paragraph covered the downside
-of the redundancy methods of RAID 3/4.  My third paragraph dealt
-specifically with Roger's web server.
+Even if the scenario of converting RAID10 to RAID4 was possible you
+now have no redundancy during the conversion. The chance of a disk
+failing is greater than just running the RAID10 until you can replace
+the faulty disk. Not to mention the performance penalty of the resync
+parity calculation. RAID10 when degraded has minor hit to performance
+compared to a RAID level with parity.
 
-Note that nothing in my first paragraph mentioned a web server workload.
- Also note that nowhere did I mention a count of 4 drive, nor commented
-regarding the suitability of any RAID level with 4 drives.
+All you need to do is purchase 5 disks if you want 4 in RAID10. Have
+the cold spare ready when one fails. This reduces the replacement time
+as you don't have to wait for a drive to be ordered.
 
-Also note there were two "situations" mentioned by Roger.  The first
-referenced a previous thread which dealt with a high transaction load
-server similar to a mail server, IIRC.  My first paragraph related to
-that.  The second "situation", to which you refer, dealt with Roger's
-web server.
-
--- 
-Stan
+Ryan
