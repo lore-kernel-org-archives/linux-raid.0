@@ -1,33 +1,41 @@
-From: Jim Schatzman <james.schatzman@futurelabusa.com>
-Subject: Re: Why won't mdadm start several RAIDs that appear to be
-  fine? (more info)
-Date: Thu, 30 Dec 2010 16:32:29 -0700
-Message-ID: <20101230233318.49098E30991@mail.futurelabusa.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Why does md3 persist after deleting and recreating the partitions?
+Date: Thu, 30 Dec 2010 16:10:53 -0800
+Message-ID: <AANLkTik9quhP_h-vWji8nex8QT6X+_Ss2_KQiVSr5AK6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-My /etc/mdadm.conf file contains
+Hi,
+   What am I forgetting to do? I had a RAID1 using sd{a,b,c}3. I
+stopped md3, removed the md3 line in /etc/mdadm.conf, deleted the
+partitions using fdisk, and then created 5 new partitions using
+sd{a,b,c,d,e}3 to get ready to do a 5 disk RAID6. The new partitions
+are the same size as the old ones and located at the same sector
+addresses.
 
-DEVICE partitions
-AUTO -1.x
-ARRAY /dev/md0 metadata=0.90 spares=1 UUID=6c5f2fe8:b54cb47f:132783e8:19cdff95
-ARRAY /dev/md3 metadata=1.2 name=l1.fu-lab.com:3 UUID=038e1a1d:f04cc12e:7ca649d2:15ef9dff
-ARRAY /dev/md2 metadata=1.2 name=l1.fu-lab.com:2 UUID=ce4b65d9:fd8d13a8:696ebf42:6b353d25
-ARRAY /dev/md1 metadata=1.2 name=l1.fu-lab.com:1 UUID=308f78bb:7e0a2a39:2b4effe3:91d69223
+   After rebooting, but before creating the new RAID6, I still see md3:
 
-The above 4 RAIDs assembled correctly. The remaining 5, which my cron script attempted to assemble, did not.
+mark@c2stable ~ $ cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md6 : active raid1 sdb6[1] sdc6[2] sda6[0]
+      247416933 blocks super 1.1 [3/3] [UUU]
 
-My current process has worked fine many times in the past. Just didn't work this time.
+md3 : active raid1 sdc3[2] sdb3[1] sda3[0]
+      52436096 blocks [3/3] [UUU]
 
-I am wondering if, perhaps, two of the drives were a bit slow in coming up and mdadm didn't find them when I rebooted. Fine, but why is it now unable to find the other two partitions? Running "mdadm -A" (as detailed in the previous posting) makes no difference. Rebooting multiple times since the problem first occured has made no difference. All 4 partitions have the right UUID and they are all marked as "clean".  If my theory is correct, mdadm must have stashed some other status information somewhere that doesn't show with "mdadm -E". Why and how (and how can I fix it)?
+md5 : active raid1 sdc5[2] sdb5[1] sda5[0]
+      52436032 blocks [3/3] [UUU]
 
-I don't get it.
+unused devices: <none>
+mark@c2stable ~ $
 
-Any help would be appreciated.
 
-Jim
+   What am I doing wrong or forgetting? I would like md3 to be totally
+gone before I create a new md3 in it's place.
 
+Thanks,
+Mark
