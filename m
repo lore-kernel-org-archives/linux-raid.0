@@ -1,174 +1,133 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Why won't mdadm start several RAIDs that appear to be fine?
-Date: Fri, 31 Dec 2010 12:08:16 +1100
-Message-ID: <20101231120816.6b87fa2e@notabene.brown>
-References: <20101230082356.GC2986@bitwizard.nl>
-	<4D1C470E.4080406@crc.id.au>
-	<20101230094230.GE2986@bitwizard.nl>
-	<4D1C616D.8030904@hardwarefreak.com>
-	<4D1C73D4.6050600@anonymous.org.uk>
-	<4D1C851B.3040304@hardwarefreak.com>
-	<20101230232227.96C1CE30991@mail.futurelabusa.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Why does md3 persist after deleting and recreating the partitions?
+Date: Thu, 30 Dec 2010 17:33:50 -0800
+Message-ID: <AANLkTimBPdQjiayvZ1HN2y7DgvtEjUsG0KpRNEA1jgO_@mail.gmail.com>
+References: <AANLkTik9quhP_h-vWji8nex8QT6X+_Ss2_KQiVSr5AK6@mail.gmail.com>
+	<AANLkTikrCJMpvkzNQE-PC_r-Fk=zD+OSG=rnLAvqnR+O@mail.gmail.com>
+	<AANLkTimWL8boLkV-byGk1am52HbDPvn0weyP1+0+0-9q@mail.gmail.com>
+	<AANLkTikv4WgxTmBO496Hx7k-YEpsF-iCVzmMFydw_S=Y@mail.gmail.com>
+	<AANLkTinJwh8mcPS79pgKARP_jJaYLKyVp2gv3x=T3fmw@mail.gmail.com>
+	<20101231120733.5439205c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101230232227.96C1CE30991@mail.futurelabusa.com>
+In-Reply-To: <20101231120733.5439205c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Schatzman <james.schatzman@futurelabusa.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 30 Dec 2010 16:20:58 -0700 Jim Schatzman
-<james.schatzman@futurelabusa.com> wrote:
+On Thu, Dec 30, 2010 at 5:07 PM, Neil Brown <neilb@suse.de> wrote:
+> On Thu, 30 Dec 2010 16:17:51 -0800 Mark Knecht <markknecht@gmail.com>=
+ wrote:
+>
+>> On Thu, Dec 30, 2010 at 4:16 PM, Mathias Bur=C3=A9n <mathias.buren@g=
+mail.com> wrote:
+>> > On 31 December 2010 00:14, Mark Knecht <markknecht@gmail.com> wrot=
+e:
+>> >> On Thu, Dec 30, 2010 at 4:12 PM, Mathias Bur=C3=A9n <mathias.bure=
+n@gmail.com> wrote:
+>> >>> On 31 December 2010 00:10, Mark Knecht <markknecht@gmail.com> wr=
+ote:
+>> >>>> Hi,
+>> >>>> =C2=A0 What am I forgetting to do? I had a RAID1 using sd{a,b,c=
+}3. I
+>> >>>> stopped md3, removed the md3 line in /etc/mdadm.conf, deleted t=
+he
+>> >>>> partitions using fdisk, and then created 5 new partitions using
+>> >>>> sd{a,b,c,d,e}3 to get ready to do a 5 disk RAID6. The new parti=
+tions
+>> >>>> are the same size as the old ones and located at the same secto=
+r
+>> >>>> addresses.
+>> >>>>
+>> >>>> =C2=A0 After rebooting, but before creating the new RAID6, I st=
+ill see md3:
+>> >>>>
+>> >>>> mark@c2stable ~ $ cat /proc/mdstat
+>> >>>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid=
+5] [raid4]
+>> >>>> md6 : active raid1 sdb6[1] sdc6[2] sda6[0]
+>> >>>> =C2=A0 =C2=A0 =C2=A0247416933 blocks super 1.1 [3/3] [UUU]
+>> >>>>
+>> >>>> md3 : active raid1 sdc3[2] sdb3[1] sda3[0]
+>> >>>> =C2=A0 =C2=A0 =C2=A052436096 blocks [3/3] [UUU]
+>> >>>>
+>> >>>> md5 : active raid1 sdc5[2] sdb5[1] sda5[0]
+>> >>>> =C2=A0 =C2=A0 =C2=A052436032 blocks [3/3] [UUU]
+>> >>>>
+>> >>>> unused devices: <none>
+>> >>>> mark@c2stable ~ $
+>> >>>>
+>> >>>>
+>> >>>> =C2=A0 What am I doing wrong or forgetting? I would like md3 to=
+ be totally
+>> >>>> gone before I create a new md3 in it's place.
+>> >>>>
+>> >>>> Thanks,
+>> >>>> Mark
+>> >>>> --
+>> >>>> To unsubscribe from this list: send the line "unsubscribe linux=
+-raid" in
+>> >>>> the body of a message to majordomo@vger.kernel.org
+>> >>>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-i=
+nfo.html
+>> >>>>
+>> >>>
+>> >>> Erase the superblocks? Recreating partitions doesn't (usually) a=
+ffect
+>> >>> the data on the HDDs.
+>> >>>
+>> >>> // M
+>> >>>
+>> >>
+>> >> Is erasing the superblocks a mdadm operation? I've not heard of t=
+hat one before.
+>> >>
+>> >> Thanks,
+>> >> Mark
+>> >>
+>> >
+>> > Yes, see mdadm --misc. Like:
+>> >
+>> > mdadm --zero-superblock <device>
+>> >
+>> > // M
+>> >
+>>
+>> Yes, just found that.
+>>
+>> Can I still use /dev/md3 safely even though it's no longer in
+>> mdadm.conf? I suspect I can?
+>
+> That sentence doesn't make much sense to me, so I suspect some misund=
+erstand
+> is going on. =C2=A0So to be explicit:
+>
+> =C2=A0Use
+> =C2=A0 =C2=A0mdadm --zero-superblock /dev/sdc3 /dev/sdb3 /dev/sda3
+>
+> =C2=A0to remove =C2=A0from those devices any record that they are par=
+t of any md array.
+>
+> Does that clarify thing sufficienty?
+>
+> NeilBrown
 
-> When I rebooted my server yesterday, not all the RAIDs came up. There were no errors in the system log. All devices appear to be working correctly. There is no evidence of  hardware errors or data corruption.
-> 
-> To prevent mdadm from failing RAID drives, I removed the RAID entries from /etc/mdadm.conf, and I have a cron script that does things like
-> 
-> mdadm -A --no-degraded /dev/md5 --uuid 291655c3:b6c334ff:8dfe69a4:447f777b
-> mdadm: /dev/md5 assembled from 2 drives (out of 4), but not started.
-> 
-> The question is, why did mdadm assemble only 2 drives, when all 4 drives appear to be fine?  The same problem occurred for 4 RAIDs, each with similar geometry, and using the same 4 physical drives.
+Yes, making sure to do
 
-Add a '--verbose' to the '-A' command.  Hopefully it will reveal something
-interesting.
+mdadm -S /dev/md3
 
-NeilBrown
+first.
 
+/dev/md3 seems to be gone at this point. On to doing the new RAID6.
+(See other thread - no one has responded to that one yet.)
 
-> 
-> Here is the status of all 4 partitions that should have been assembled into /dev/md5:
-> 
-> [root@l1 ~]# mdadm -E /dev/sda5
-> /dev/sda5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
->            Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
->   Creation Time : Thu Sep 23 13:41:31 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
->      Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
->   Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 4088b63f:68d66426:a2abd280:28476493
-> 
->     Update Time : Wed Dec 22 08:27:57 2010
->        Checksum : 48e371ac - correct
->          Events : 339
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 0
->    Array State : AAAA ('A' == active, '.' == missing)
-> [root@l1 ~]# mdadm -E /dev/sdi5
-> /dev/sdi5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
->            Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
->   Creation Time : Thu Sep 23 13:41:31 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
->      Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
->   Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : bfc9fe39:c3e40f6a:7418831b:87e08f16
-> 
->     Update Time : Wed Dec 22 08:27:57 2010
->        Checksum : a4b2c7b7 - correct
->          Events : 339
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 1
->    Array State : AAAA ('A' == active, '.' == missing)
-> [root@l1 ~]# mdadm -E /dev/sdj5
-> /dev/sdj5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
->            Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
->   Creation Time : Thu Sep 23 13:41:31 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
->      Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
->   Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 3e1f7e30:730c70c0:c2770470:8e40ea84
-> 
->     Update Time : Wed Dec 22 08:27:57 2010
->        Checksum : b46e043d - correct
->          Events : 339
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 2
->    Array State : AAAA ('A' == active, '.' == missing)
-> [root@l1 ~]# mdadm -E /dev/sdk5
-> /dev/sdk5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : 291655c3:b6c334ff:8dfe69a4:447f777b
->            Name : l1.fu-lab.com:5  (local to host l1.fu-lab.com)
->   Creation Time : Thu Sep 23 13:41:31 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 957214849 (456.44 GiB 490.09 GB)
->      Array Size : 2871641088 (1369.31 GiB 1470.28 GB)
->   Used Dev Size : 957213696 (456.44 GiB 490.09 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 5acc120a:e7197136:7d7a29c2:971e410d
-> 
->     Update Time : Wed Dec 22 08:27:57 2010
->        Checksum : de7f9f92 - correct
->          Events : 339
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : Active device 3
->    Array State : AAAA ('A' == active, '.' == missing)
-> 
-> 
-> I could try assembling the RAID with other command syntaxes (such as by listing all the partitions/devices manually). However, I see no reason why this should be necessary.
-> 
-> Also,
-> 
-> mdadm -V
-> mdadm - v3.1.2 - 10th March 2010
-> 
-> What is going on?
-> 
-> Thanks!
-> 
-> Jim
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks again,
+Mark
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
