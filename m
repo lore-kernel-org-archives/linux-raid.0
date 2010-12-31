@@ -1,131 +1,242 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Why does md3 persist after deleting and recreating the partitions?
-Date: Thu, 30 Dec 2010 17:33:50 -0800
-Message-ID: <AANLkTimBPdQjiayvZ1HN2y7DgvtEjUsG0KpRNEA1jgO_@mail.gmail.com>
-References: <AANLkTik9quhP_h-vWji8nex8QT6X+_Ss2_KQiVSr5AK6@mail.gmail.com>
-	<AANLkTikrCJMpvkzNQE-PC_r-Fk=zD+OSG=rnLAvqnR+O@mail.gmail.com>
-	<AANLkTimWL8boLkV-byGk1am52HbDPvn0weyP1+0+0-9q@mail.gmail.com>
-	<AANLkTikv4WgxTmBO496Hx7k-YEpsF-iCVzmMFydw_S=Y@mail.gmail.com>
-	<AANLkTinJwh8mcPS79pgKARP_jJaYLKyVp2gv3x=T3fmw@mail.gmail.com>
-	<20101231120733.5439205c@notabene.brown>
+From: James <jtp@nc.rr.com>
+Subject: Re: read errors corrected
+Date: Fri, 31 Dec 2010 01:48:07 +0000
+Message-ID: <AANLkTimhWHfcnDH4Zy6=VGX17_JAH0ON3OMuPhA4oBjf@mail.gmail.com>
+References: <AANLkTimmuxMU1yVHcg8fjB6CUtkhq_dxAkm_+Hv+UoTX@mail.gmail.com>
+ <20101230201501.2f39a85f@notabene.brown> <AANLkTik2+Gk1XveqD=crGMH5JshzJqQb_i77ZpOFUncB@mail.gmail.com>
+ <AANLkTi=vBWKjQStwpWZ3b=YL93LTDBfGk7b5jKUHLcO7@mail.gmail.com> <20101231101243.666e0f9e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101231120733.5439205c@notabene.brown>
+In-Reply-To: <20101231101243.666e0f9e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Dec 30, 2010 at 5:07 PM, Neil Brown <neilb@suse.de> wrote:
-> On Thu, 30 Dec 2010 16:17:51 -0800 Mark Knecht <markknecht@gmail.com>=
- wrote:
+Neil,
+
+I'm runinng 2.6.35.
+
+Although an expensive route, the only thing I can think to do to
+determine 100% whether the issue is software or hardware (and, if
+hardware, whether SATA controller or the drives) is to swap the drives
+out.
+
+Ouch!
+
+Any other ideas, however, would be appreciated before I drop a few
+hundred bucks. :)
+
+-james
+
+On Thu, Dec 30, 2010 at 23:12, Neil Brown <neilb@suse.de> wrote:
+> On Thu, 30 Dec 2010 11:35:59 -0500 James <jtp@nc.rr.com> wrote:
 >
->> On Thu, Dec 30, 2010 at 4:16 PM, Mathias Bur=C3=A9n <mathias.buren@g=
-mail.com> wrote:
->> > On 31 December 2010 00:14, Mark Knecht <markknecht@gmail.com> wrot=
-e:
->> >> On Thu, Dec 30, 2010 at 4:12 PM, Mathias Bur=C3=A9n <mathias.bure=
-n@gmail.com> wrote:
->> >>> On 31 December 2010 00:10, Mark Knecht <markknecht@gmail.com> wr=
-ote:
->> >>>> Hi,
->> >>>> =C2=A0 What am I forgetting to do? I had a RAID1 using sd{a,b,c=
-}3. I
->> >>>> stopped md3, removed the md3 line in /etc/mdadm.conf, deleted t=
-he
->> >>>> partitions using fdisk, and then created 5 new partitions using
->> >>>> sd{a,b,c,d,e}3 to get ready to do a 5 disk RAID6. The new parti=
-tions
->> >>>> are the same size as the old ones and located at the same secto=
-r
->> >>>> addresses.
->> >>>>
->> >>>> =C2=A0 After rebooting, but before creating the new RAID6, I st=
-ill see md3:
->> >>>>
->> >>>> mark@c2stable ~ $ cat /proc/mdstat
->> >>>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid=
-5] [raid4]
->> >>>> md6 : active raid1 sdb6[1] sdc6[2] sda6[0]
->> >>>> =C2=A0 =C2=A0 =C2=A0247416933 blocks super 1.1 [3/3] [UUU]
->> >>>>
->> >>>> md3 : active raid1 sdc3[2] sdb3[1] sda3[0]
->> >>>> =C2=A0 =C2=A0 =C2=A052436096 blocks [3/3] [UUU]
->> >>>>
->> >>>> md5 : active raid1 sdc5[2] sdb5[1] sda5[0]
->> >>>> =C2=A0 =C2=A0 =C2=A052436032 blocks [3/3] [UUU]
->> >>>>
->> >>>> unused devices: <none>
->> >>>> mark@c2stable ~ $
->> >>>>
->> >>>>
->> >>>> =C2=A0 What am I doing wrong or forgetting? I would like md3 to=
- be totally
->> >>>> gone before I create a new md3 in it's place.
->> >>>>
->> >>>> Thanks,
->> >>>> Mark
->> >>>> --
->> >>>> To unsubscribe from this list: send the line "unsubscribe linux=
--raid" in
->> >>>> the body of a message to majordomo@vger.kernel.org
->> >>>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-i=
-nfo.html
->> >>>>
->> >>>
->> >>> Erase the superblocks? Recreating partitions doesn't (usually) a=
-ffect
->> >>> the data on the HDDs.
->> >>>
->> >>> // M
->> >>>
->> >>
->> >> Is erasing the superblocks a mdadm operation? I've not heard of t=
-hat one before.
->> >>
->> >> Thanks,
->> >> Mark
->> >>
->> >
->> > Yes, see mdadm --misc. Like:
->> >
->> > mdadm --zero-superblock <device>
->> >
->> > // M
->> >
+>> Sorry Neil, I meant to reply-all.
 >>
->> Yes, just found that.
+>> -james
 >>
->> Can I still use /dev/md3 safely even though it's no longer in
->> mdadm.conf? I suspect I can?
+>> On Thu, Dec 30, 2010 at 11:35, James <jtp@nc.rr.com> wrote:
+>> > Inline.
+>> >
+>> > On Thu, Dec 30, 2010 at 04:15, Neil Brown <neilb@suse.de> wrote:
+>> >> On Thu, 30 Dec 2010 03:20:48 +0000 James <jtp@nc.rr.com> wrote:
+>> >>
+>> >>> All,
+>> >>>
+>> >>> I'm looking for a bit of guidance here. I have a RAID 6 set up o=
+n my
+>> >>> system and am seeing some errors in my logs as follows:
+>> >>>
+>> >>> # cat messages | grep "read erro"
+>> >>> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected =
+(8
+>> >>> sectors at 974262528 on sda4)
+>> >>> Dec 15 15:40:34 nuova kernel: md/raid:md4: read error corrected =
+(8
+>> >>> sectors at 974262536 on sda4)
+>> >> .....
+>> >>
+>> >>>
+>> >>> I've Google'd the heck out of this error message but am not seei=
+ng a
+>> >>> clear and concise message: is this benign? What would cause thes=
+e
+>> >>> errors? Should I be concerned?
+>> >>>
+>> >>> There is an error message (read error corrected) on each of the =
+drives
+>> >>> in the array. They all seem to be functioning properly. The I/O =
+on the
+>> >>> drives is pretty heavy for some parts of the day.
+>> >>>
+>> >>> # cat /proc/mdstat
+>> >>> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5=
+]
+>> >>> [raid4] [multipath]
+>> >>> md1 : active raid6 sdb1[1] sda1[0] sdd1[3] sdc1[2]
+>> >>> =A0 =A0 =A0 497792 blocks level 6, 64k chunk, algorithm 2 [4/4] =
+[UUUU]
+>> >>>
+>> >>> md2 : active raid6 sdb2[1] sda2[0] sdd2[3] sdc2[2]
+>> >>> =A0 =A0 =A0 4000000 blocks level 6, 64k chunk, algorithm 2 [4/4]=
+ [UUUU]
+>> >>>
+>> >>> md3 : active raid6 sdb3[1] sda3[0] sdd3[3] sdc3[2]
+>> >>> =A0 =A0 =A0 25992960 blocks level 6, 64k chunk, algorithm 2 [4/4=
+] [UUUU]
+>> >>>
+>> >>> md4 : active raid6 sdb4[1] sda4[0] sdd4[3] sdc4[2]
+>> >>> =A0 =A0 =A0 2899780480 blocks level 6, 64k chunk, algorithm 2 [4=
+/4] [UUUU]
+>> >>>
+>> >>> unused devices: <none>
+>> >>>
+>> >>> I have a really hard time believing there's something wrong with=
+ all
+>> >>> of the drives in the array, although admittedly they're the same=
+ model
+>> >>> from the same manufacturer.
+>> >>>
+>> >>> Can someone point me in the right direction?
+>> >>> (a) what causes these errors precisely?
+>> >>
+>> >> When md/raid6 tries to read from a device and gets a read error, =
+it try to
+>> >> read from other other devices. =A0When that succeeds it computes =
+the data that
+>> >> it had tried to read and then write it back to the original drive=
+=2E =A0If this
+>> >> succeeded is assumes that the read error has been correct by a wr=
+ite, and
+>> >> prints the message that you see.
+>> >>
+>> >>
+>> >>> (b) is the error benign? How can I determine if it is *likely* a
+>> >>> hardware problem? (I imagine it's probably impossible to tell if=
+ it's
+>> >>> HW until it's too late)
+>> >>
+>> >> A few occasional messages like this are fairly benign. =A0The cou=
+ld be a sign
+>> >> that the drive surface is degrading. =A0If you see lots of these =
+messages, then
+>> >> you should seriously consider replacing the drive.
+>> >
+>> > Wow, this is hard for me to believe considering this is happening =
+on
+>> > all the drives. It's not impossible, however, since the drives are
+>> > likely from the same batch.
+>> >
+>> >> As you are seeing these message across all devices, it is possibl=
+e that the
+>> >> problem is with the sata controller rather than the disks. =A0Do =
+know which you
+>> >> should check the errors that are reported in dmesg. =A0If you don=
+'t understand
+>> >> these message, then post them to the list - feel free to post sev=
+eral hundred
+>> >> lines of logs - too much is much much better than not enough.
+>> >
+>> > I posted a few errors in my response to the thread a bit ago -- he=
+re's
+>> > another snippet:
+>> >
+>> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] Unhandled error co=
+de
+>> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] Result: hostbyte=3D=
+0x00
+>> > driverbyte=3D0x06
+>> > Dec 29 01:55:03 nuova kernel: sd 1:0:0:0: [sdc] CDB: cdb[0]=3D0x28=
+: 28
+>> > 00 25 a2 a0 6a 00 00 80 00
+>> > Dec 29 01:55:03 nuova kernel: end_request: I/O error, dev sdc, sec=
+tor 631414890
+>> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] Unhandled error co=
+de
+>> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] Result: hostbyte=3D=
+0x00
+>> > driverbyte=3D0x06
 >
-> That sentence doesn't make much sense to me, so I suspect some misund=
-erstand
-> is going on. =C2=A0So to be explicit:
+> "Unhandled error code" sounds like it could be a driver problem...
 >
-> =C2=A0Use
-> =C2=A0 =C2=A0mdadm --zero-superblock /dev/sdc3 /dev/sdb3 /dev/sda3
+> Try googling that error message...
 >
-> =C2=A0to remove =C2=A0from those devices any record that they are par=
-t of any md array.
+> http://us.generation-nt.com/answer/2-6-33-libata-issues-via-sata-pata=
+-controller-help-197123882.html
 >
-> Does that clarify thing sufficienty?
+>
+> "Also, please try the latest 2.6.34-rc kernel, as that has several fi=
+xes
+> for both pata_via and sata_via which did not make 2.6.33."
+>
+> What kernel are =A0you running???
 >
 > NeilBrown
-
-Yes, making sure to do
-
-mdadm -S /dev/md3
-
-first.
-
-/dev/md3 seems to be gone at this point. On to doing the new RAID6.
-(See other thread - no one has responded to that one yet.)
-
-Thanks again,
-Mark
+>
+>
+>
+>
+>> > Dec 29 01:55:03 nuova kernel: sd 0:0:1:0: [sdb] CDB: cdb[0]=3D0x28=
+: 28
+>> > 00 25 a2 a0 ea 00 00 38 00
+>> > Dec 29 01:55:03 nuova kernel: end_request: I/O error, dev sdb, sec=
+tor 631415018
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923648 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923656 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923664 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923672 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923680 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923688 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923696 on sdb4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923520 on sdc4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923528 on sdc4)
+>> > Dec 29 01:58:23 nuova kernel: md/raid:md4: read error corrected (8
+>> > sectors at 600923536 on sdc4)
+>> >
+>> > Is there a good way to determine if the issue is with the motherbo=
+ard
+>> > (where the SATA controller is), or with the drives themselves?
+>> >
+>> >> NeilBrown
+>> >>
+>> >>
+>> >>
+>> >>> (c) are these errors expected in a RAID array that is heavily us=
+ed?
+>> >>> (d) what kind of errors should I see regarding "read errors" tha=
+t
+>> >>> *would* indicate an imminent hardware failure?
+>> >>>
+>> >>> Thoughts and ideas would be welcomed. I'm sure a thread where so=
+me
+>> >>> hefty discussion is thrown at this topic will help future Google=
+rs
+>> >>> like me. :)
+>> >>>
+>> >>> -james
+>> >>> --
+>> >>> To unsubscribe from this list: send the line "unsubscribe linux-=
+raid" in
+>> >>> the body of a message to majordomo@vger.kernel.org
+>> >>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.=
+html
+>> >>
+>> >>
+>> >
+>
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
