@@ -1,11 +1,11 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Mark Knecht <markknecht@gmail.com>
 Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Mon, 3 Jan 2011 03:31:00 +0500
-Message-ID: <20110103033100.40a80113@natsu>
+Date: Sun, 2 Jan 2011 14:41:25 -0800
+Message-ID: <AANLkTimG0c+Hfk=cLFXKke77ufjq33QAYn7TfnSMow7c@mail.gmail.com>
 References: <4D20E9F7.2080800@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/OUAG.N.P28SSynPHf+Vt1+7"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4D20E9F7.2080800@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,43 +13,61 @@ To: John Robinson <john.robinson@anonymous.org.uk>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/OUAG.N.P28SSynPHf+Vt1+7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, Jan 2, 2011 at 1:11 PM, John Robinson
+<john.robinson@anonymous.org.uk> wrote:
+> Please could someone suggest a cheap PCI-E SATA card with 4 internal =
+ports?
+>
+> I currently have 6 motherboard SATA ports and a 5-drive hot-swap chas=
+sis, I
+> am thinking of adding a second 5-drive hot-swap chassis to my case an=
+d would
+> need another 4 SATA ports to drive it.
+>
+> Other requirements: known to work with RHEL/CentOS 5 kernels, even if=
+ it
+> means installing a driver with DKMS or whatever.
+>
+> Doesn't have to be PCI-E x1 because I've a spare x8 (logical)/x16 (ph=
+ysical)
+> slot, but I don't know if anything cheap's going to be anything other=
+ than
+> PCI-E x1. v2.0 (5GT/s) would be nice though.
+>
+> Looking through my usual suppliers' listings, there are occasional ch=
+eap
+> cards with one or several e-SATA ports, or considerably more expensiv=
+e cards
+> claiming to have RAID, but I don't want to spend more on a 4-port SAT=
+A card
+> than I would on a motherboard.
+>
+> Happy new year all!
+>
+> Cheers,
+>
+> John.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-On Sun, 02 Jan 2011 21:11:19 +0000
-John Robinson <john.robinson@anonymous.org.uk> wrote:
+If you're OK with SATA II then I found a couple at Newegg:
 
-> Please could someone suggest a cheap PCI-E SATA card with 4 internal port=
-s?
+http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816132017&Tpk=3D=
+SiliconImage%204-port
 
-"Marvell 88SE6445 Raid 0,1,5,10 and JBOD", $60 at eBay: http://ur1.ca/2qa3t
 
-"LSI SAS3041E-R 4-Port SAS/SATA Host Bus Adapter", $73 at DX:
-http://www.dealextreme.com/details.dx/sku.51317
+http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816102065&cm_re=
+=3D4-port_SATA_III-_-16-102-065-_-Product
 
-Or if you meant 'cheap' as in $20-30 cheap, then there's no such (4-Port PC=
-I-E)
-thing, but you can easily get not one, but two 2-Port PCI-E x1 boards for t=
-hat
-price. If you go that route, make sure you get the JMB363 chip, unlike SiI3=
-132
-it has not been spotted having any data corruption issues AFAIK.
-
---=20
-With respect,
-Roman
-
---Sig_/OUAG.N.P28SSynPHf+Vt1+7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk0g/KQACgkQTLKSvz+PZwi+LACfUsvaH+gDdBngoAfkHtnuIrYj
-8s4AnRbixGSqfg1qUoxspCQW4Cn0wu9U
-=zfLD
------END PGP SIGNATURE-----
-
---Sig_/OUAG.N.P28SSynPHf+Vt1+7--
+Hope this helps,
+Mark
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
