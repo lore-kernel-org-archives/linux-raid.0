@@ -1,65 +1,36 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Guidance on how to best assemble new root drive?
-Date: Sat, 1 Jan 2011 17:24:01 -0800
-Message-ID: <AANLkTimYmmhHYybvQ_mdDxizd9Qe2Qc6RrPbY-8zAUhX@mail.gmail.com>
-References: <AANLkTi=eU7Z8OaiAkEkatoN3-U67LEYcB5reB1f27QyU@mail.gmail.com>
-	<4D1F8E3C.1000006@anonymous.org.uk>
+From: Carlos Mennens <carloswill@gmail.com>
+Subject: How To Remove Rogue RAID
+Date: Sun, 2 Jan 2011 14:42:48 -0500
+Message-ID: <AANLkTi=95GkF4QqW7s1tOsYT0oZ0WrruD_Ggrx+q6FLp@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D1F8E3C.1000006@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Jan 1, 2011 at 12:27 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 01/01/2011 19:47, Mark Knecht wrote:
-> [...]
->>
->> Is there a way to rename the array in the SuperBlock?
->
-> mdadm --update=homehost
-> mdadm --update=name
->
->> Should I bother? I may go back and forth between these two Gentoo
->> installations for a while and want the RAID to be available in both,
->> at least until I delete the old RAID1 system to recapture the disk
->> space.
->
-> I wouldn't have changed hostname, but if your new root is on the RAID-6 yes
-> I'd change its homehost to suit its hostname. You will then have to tell the
-> old RAID-1 to start the array using the new homehost.
->
-> Cheers,
->
-> John.
+I added two new physical drives to my Linux server and for some reason
+I now see '/dev/md127' when I run 'cat /proc/mdstat':
 
-Hey John,
-   Thanks for the response and the commands above. Makes sense.
+root ~ # cat /proc/mdstat
+Personalities : [raid1]
+md127 : active (auto-read-only) raid1 sdc2[1] sdd2[0]
+      243199936 blocks [2/2] [UU]
+      	resync=PENDING
 
-   There really isn't any reason I had to change the name. I just did
-it so I'd be clear which environment I was working in if one was in a
-chroot. I could easily change it to c2stable.
+I never create /dev/md127 what so ever and I'm fairly sure it just
+popped up. I can tell you the two new disks I added above (/dev/sdc &
+/dev/sdd) did have 'fd' RAID partition tables on the disk so I don't
+know if that is why it (/dev/md127) shows up when I run 'cat
+/proc/mdstat'.
 
-   However that name is a Gentoo machine name that doesn't get set (I
-think) until much later in a real boot. At the point where the kernel
-is trying to find the devices and assembling the RAID6 I don't think
-it knows anything about the machine name does it? This is really early
-on in the boot process. It has to read the RAID6 to figure out what
-the machine name will eventually be...
+I tried to remove the drives too but they failed:
 
-   I suspect that the other way I could tell mdadm to assemble is
-based on the explicit disk name and partition number. However I
-thought mdadm was going to search all the Super Blocks and figure that
-out as these are bright & shiny 1.2 Super Blocks. Guess I was wrong
-about that. Rereading the man page I suspect this feature is to
-protect from assembling partitions that below to some other machine or
-something. I don't understand how they get used in a PC at boot time,
-but PCs are a small part of what mdadm supports.
+root ~ # mdadm --manage /dev/md127 --remove /dev/sdc2
+mdadm: hot remove failed for /dev/sdc2: Device or resource busy
+root ~ # mdadm --manage /dev/md127 --remove /dev/sdd2
+mdadm: hot remove failed for /dev/sdd2: Device or resource busy
 
-   I do appreciate the response.
 
-Cheers,
-Mark
+Can someone please tell me how I can stop the RAID, remove /dev/md127
+so that I can create a separate mirror with /dev/sdc & /dev/sdd.
