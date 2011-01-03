@@ -1,100 +1,183 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: dmaengine: fix dma_unmap (was: Re: [PATCH 06/13] DMAENGINE:
- driver for the ARM PL080/PL081 PrimeCells)
-Date: Mon, 3 Jan 2011 13:26:05 -0800
-Message-ID: <AANLkTinMCLC8j=AvzaCQ+Uuyk75T=rAkaLUz0jHPOJ-d@mail.gmail.com>
-References: <AANLkTinJAULeb1EsWk=S=b32h69X1x-noRw73Ok0uyfx@mail.gmail.com>
-	<20110103165227.GC32508@n2100.arm.linux.org.uk>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
+Date: Mon, 03 Jan 2011 16:18:10 -0600
+Message-ID: <4D224B22.6070007@hardwarefreak.com>
+References: <4D20E9F7.2080800@anonymous.org.uk> <4D216FA1.5010502@hardwarefreak.com> <4D21F2BB.3020905@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110103165227.GC32508@n2100.arm.linux.org.uk>
+In-Reply-To: <4D21F2BB.3020905@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Viresh Kumar <viresh.kumar@st.com>, Kukjin Kim <kgene.kim@samsung.com>, Linus Walleij <linus.ml.walleij@gmail.com>, Peter Pearse <peter.pearse@arm.com>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Ben Dooks <ben-linux@fluff.org>, yuanyabin1978@sina.com, linux-arm-kernel@lists.infradead.org, Alessandro Rubini <rubini@unipv.it>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 3, 2011 at 8:52 AM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Mon, Jan 03, 2011 at 08:36:00AM -0800, Dan Williams wrote:
->> For raid this will have implications for architectures that split
->> operation types on to different physical channels. =A0Preparing the
->> entire operation chain ahead of time is not possible on such
->> configuration because we need to remap the buffers for each channel
->> transition.
->
-> That's not entirely true. =A0You will only need to remap buffers if
-> old_chan->device !=3D new_chan->device, as the underlying struct devi=
-ce
-> will be the different and could possibly have a different IOMMU or
-> DMA-able memory parameters.
->
+John Robinson put forth on 1/3/2011 10:00 AM:
+> On 03/01/2011 06:41, Stan Hoeppner wrote:
 
-Yes, but currently operation capabilities are organized per dma device
-(i.e. all channels on a dma device share the same set of
-capabilities).  The channel allocator will keep the chain on a single
-channel where possible, but if it determines we need to switch to a
-channel with a different capability set then we have also switched dma
-devices at that point.
+>> http://www.addonics.com/products/host_controller/ad5sapm.asp
+>> http://www.buy.com/prod/addonics-ad5sapm-serial-ata-controller-5-x-7=
+-pin-serial-ata-300-serial/q/loc/101/213272437.html
 
-iop3xx and ppc4xx have this dma_device-per-dma_chan
-organization.currently.  They could switch to a model of hiding
-multiple hw channels behind a single dma_chan, but then they would
-need to handle the operation ordering and channel transitions
-internally.
+>> If your mobo SATA ports support FIS based switching, this PMP will g=
+ive
+>> you 5 SATA II drive ports.  It doesn't use a PCI slot of any kind.  =
+No
+>> additional software required.  No kernel driver issues.  300MB/s is
+>> sufficient for 5 drives in an mdraid setup isn't it?
 
+> For a backup array, yes, but I'm not sure it is for online storage.
+> 300MB/s is an absolute max and there's protocol overhead etc, but eve=
+n
+> if it's minimal we're still looking at no better than 50MB/s per driv=
+e,
+> while the drives can manage 125MB/s these days.
 
-> So, when changing channels, the optimization is not engine specific,
-> but can be effected when the chan->device points to the same dma_devi=
-ce
-> structure. =A0That means it should still be possible to chain several
-> operations together, even if it means that they occur on different
-> channels on the same device.
->
-> One passing idea is the async_* operations need to chain buffers in
-> terms of <virtual page+offset, len, dma_addr_t, struct dma_device *>,=
- or
-> maybe <struct dma_device *, scatterlist>. =A0If the dma_device pointe=
-r is
-> initialized, the scatterlist is already mapped. =A0If this differs fr=
-om
-> the dma_device for the next selected operation, the previous operatio=
-ns
-> need to be run, then unmap and remap for the new device.
->
-> Does that sound possible?
+When using PMPs one will always have less theoretical b/w per drive tha=
+n
+what that drive can push on paper with a streaming read.  Considering
+that over 90% of real world workloads are random IO heavy, not
+streaming, it's unlikely you'll ever run out of b/w using a PMP based
+setup.  I haven't.
 
-Yes, but the dma driver still does not have enough information to
-determine when it is finally safe to unmap / allow speculative reads.
-The raid driver can make a much cleaner guarantee of "this stripe now
-belongs to a dma device" and "all dma operations have completed this
-stripe can be returned to the cpu / rescheduled on a new channel".
+Also, as has been pointed out, you will be limited by PCIe x1 2.0 b/w
+before you are limited by qty 2 SATA II ports:  500 MB/s for PCIe x1
+rev2.0 versus 600MB/s for 2xSATA II links.  This is true whether you us=
+e
+a 4 port PCIe rev 2.0 card with 4 direct attached SATA II drives or 10
+drives with 2 PMPs.  You only have one PCIe slot.  To get more
+bandwidth, you'll have to use an x4 or x8 card, which is way above your
+stated price range.
 
->> > I'd also like to see DMA_COMPL_SKIP_*_UNMAP always set by prep_sla=
-ve_sg()
->> > in tx->flags so we don't have to end up with "is this a slave oper=
-ation"
->> > tests in the completion handler.
->>
->> Longer term I do not see these flags surviving, but yes a 2.6.38
->> change along these lines makes sense.
->
-> Well, if the idea is to kill those flags, then it would be a good ide=
-a
-> not to introduce new uses of them as that'll only complicate matters.
->
-> I do have an untested patch which adds the unmap to pl08x, but I'm
-> wondering if it's worth it, or whether to disable the memcpy support
-> for the time being.
+> I doubt my motherboard supports FIS PMPs. It's an Asus P5Q Pro, Intel
+> P45+ICH10R, and I'm pretty sure the ICH10R doesn't support PMPs even =
+if
+> the original spec said it would.
 
-We could disable the driver if NET_DMA or ASYNC_TX_DMA are selected.
- That still allows the driver to be exercised with dmatest.  Although
-I notice the driver is already marked experimental, do we need
-something stronger for 37-final?
+I just looked it up, and the ICH10R does _NOT_ support PMP.  Neither
+does the onboard Silicon Image 5723 chip, which actually connects to th=
+e
+southbridge via a SATA II port (stupid).
 
---
-Dan
+BTW, the P5Q Pro has 3 PCIe x1 slots and 2 PCIe x16/x8 slots, plus 2 PC=
+I
+slots.  You told us the only slot you have available is 1 PCIe x16/x8.
+What is consuming the 3 PCIe x1 slots?  The PCIe x1 slot just North of
+the top x16 slot should be free.  I'm guessing the other 2 are blocked
+by your GPU cooler, correct?
+
+Picture:
+http://www.asus.com/product.aspx?P_ID=3DqH6ZSEJ8EPY6HoNU&templete=3D2
+
+Move your GPU card to the bottom x16 slot and you free up all 3 x1
+slots.  This gives you a lot more options to get the solution you want
+inexpensively.
+
+> There is a Marvell 88SE6121 SATA+IDE chip on there but it's currently=
+ in
+> IDE-only mode for the DVD drive and even if I switched over to SATA m=
+ode
+> and a SATA DVD drive that'd only give me one more SATA port. But it
+> might work with a FIS PMP, I suppose.
+
+Originally I was going to propose a $20 Sil 3132 based 2 port card for
+use with 2 of the Addonics PMPs, but all those I could find are PCIe re=
+v
+1 only, for only 250MB/s of b/w.  All of the SI SATA host controller
+chips work perfectly with Silicon Image PMPs (3276 chip) and the kernel
+drivers have no issues.  If you had two PCIe x1 slots available, using
+two such cards with one PMP plugged into each would work very well
+indeed.  This is what I do.  Your b/w would max at 500MB/s, but again,
+this is more than sufficient for the vast majority of workloads.  Keep
+in mind that this bandwidth is bidirectional, so you actually have 1GB/=
+s
+of throughput with reads and writes in flight simultaneously with
+multi-user or multi-threaded workloads, especially with a deep NCQ buff=
+er.
+
+> I'd do that too - no problems doing case mods here. I suppose it's
+> possible the mounting holes might be able to be made to line up with
+> some of the mounting holes on the side of the hot-swap chassis. On th=
+e
+> other hand I might cheat and use the little plastic mounts with
+> double-sided tape on their feet.
+
+Yeah, there are lots of possibilities for mounting these handy little
+PMPs.  I've seen folks just put that really thick double sided foam tap=
+e
+on the back side and stick them to an open spot on the bottom or side o=
+f
+the chassis.
+
+> [...]
+>>   The driver for the Marvell chip is present in kernel
+>> 2.6.19 and later.  Considering that 2.6.19 is like 6 years old, I'd =
+hope
+>> your kernel is newer.
+>=20
+> It's kernel-2.6.18-194.26.1.el5 so it's stuffed full of backports and
+> security updates, it's less than two months old. Yes, I have sata_mv,
+> but several people have reported data corruption issues with some
+> Marvell controllers - a bad interaction with SMART I think.
+
+I recommended the Marvell based card strictly because it does PCIe x1
+rev 2 for 500MB/s.  I only use the Silicon Image based cards, but I use
+more than one if I have more than 4 drives in an array.  The cost comes
+out the same at $40 as the Marvell card, but the SI route requires 2
+PCIe slots, and you only have one.
+
+>> It may be a little more money than you were planning on spending, bu=
+t
+>> for little more than the cost of one hard drive
+>=20
+> In this case I'm using consumer-level drives so they're about =C2=A34=
+0 ($60),
+> so $165 is a bit rich for me, especially since it's potentially limit=
+ed
+> for throughput.
+
+Well, you've given us conflicting requirements that are impossible to
+meet with any solution:
+
+1.  Low cost
+2.  Full b/w per drive
+3.  Only one PCIe slot availiable
+
+There is not a solution available to meet all of your criteria.  Either
+you must spend more on the card to get all the SATA ports and b/w you
+want, or you have to go the PMP route to lower costs, and sacrifice som=
+e
+theoretical performance.
+
+Below is probably the closest you will get to what you want but the
+price is higher than what you've said you want to spend.  It'll give yo=
+u
+8 direct attach SAS/SATA II ports with a PCIe x4 interface:
+
+http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816115057
+$149
+
+But you'll have to buy 2 fanout cables:
+http://www.satacables.com/sata_multilane_SAS_cables.html
+=46AN-OUT-20INCH4X
+Which run $20 apiece, $40 total.  So you're up to just under $200.
+
+Your most cost effective option for adding a 5 drive cage, by far, is
+this:  http://www.newegg.com/Product/Product.aspx?Item=3DN82E1681612403=
+2
+
+But it's only PCIe x1 at 250MB/s.
+
+> Nevertheless, thank you very much for taking the time for such a
+> considered reply.
+
+You're welcome.  I think you're finding yourself in that "I want to hav=
+e
+my cake, but eat it too" situation.  You can't get what you want at the
+price point you want.
+
+--=20
+Stan
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
