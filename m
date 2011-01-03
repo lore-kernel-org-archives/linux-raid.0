@@ -1,104 +1,183 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Mon, 03 Jan 2011 16:00:59 +0000
-Message-ID: <4D21F2BB.3020905@anonymous.org.uk>
-References: <4D20E9F7.2080800@anonymous.org.uk> <4D216FA1.5010502@hardwarefreak.com>
+From: Andrew Burgess <aab@cichlid.com>
+Subject: mdadm confusion between whole disk and partition
+Date: Mon, 03 Jan 2011 08:14:57 -0800
+Message-ID: <1294071297.9742.0@athlon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D216FA1.5010502@hardwarefreak.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 03/01/2011 06:41, Stan Hoeppner wrote:
-[...]
-> Go with one or two of these SATA II port multipliers with 1 host
-> interface and 5 drive interfaces--perfect for a 10 drive setup with t=
-wo
-> 5 drive cages.
->
-> http://www.addonics.com/products/host_controller/ad5sapm.asp
->
-> http://www.buy.com/prod/addonics-ad5sapm-serial-ata-controller-5-x-7-=
-pin-serial-ata-300-serial/q/loc/101/213272437.html
->
-> http://www.siliconimage.com/products/product.aspx?pid=3D32
->
-> If your mobo SATA ports support FIS based switching, this PMP will gi=
-ve
-> you 5 SATA II drive ports.  It doesn't use a PCI slot of any kind.  N=
-o
-> additional software required.  No kernel driver issues.  300MB/s is
-> sufficient for 5 drives in an mdraid setup isn't it?
+I had a power failure while changing the chunk size
+on a raid6 array. This happened before (well, last time
+I interrupted the reshape manually).
 
-=46or a backup array, yes, but I'm not sure it is for online storage.=20
-300MB/s is an absolute max and there's protocol overhead etc, but even=20
-if it's minimal we're still looking at no better than 50MB/s per drive,=
-=20
-while the drives can manage 125MB/s these days.
+This time as well as last, on reassembly mdadm got confused
+between the first partition and the whole disk on two
+of the devices.
 
-I doubt my motherboard supports FIS PMPs. It's an Asus P5Q Pro, Intel=20
-P45+ICH10R, and I'm pretty sure the ICH10R doesn't support PMPs even if=
-=20
-the original spec said it would.
+The alarming thing is that if there hadn't been a reshape
+in progress I think the array would have been assembled
+with e.g. sdg instead of sdg1 which would have of course been
+a disaster.
 
-There is a Marvell 88SE6121 SATA+IDE chip on there but it's currently i=
-n=20
-IDE-only mode for the DVD drive and even if I switched over to SATA mod=
-e=20
-and a SATA DVD drive that'd only give me one more SATA port. But it=20
-might work with a FIS PMP, I suppose.
+My workaround now is to specify devices=/dev/sd?1 in mdadm.conf.
 
-> When I use these I remove the slot bracket and mount the PCB directly=
- to
-> my server chassis side wall using mobo type standoffs.  You may need =
-to
-> drill a couple of holes in the chassis depending on where you decide =
-to
-> mount it.  If you're not a mechanically inclined DIY type person, jus=
-t
-> use the supplied mounting bracket.  This may deny access to an
-> underlying PCI slot though.  I prefer the more solid mount and having
-> all slots available.
+An idea I had was maybe after assembling an array mdadm should
+test read a few (hundred) stripes and see if parity is ok
+before allowing writes to the array, refusing to start if there
+are mismatches and this could be overridden with a
+--dont-sanity-check or something.
 
-I'd do that too - no problems doing case mods here. I suppose it's=20
-possible the mounting holes might be able to be made to line up with=20
-some of the mounting holes on the side of the hot-swap chassis. On the=20
-other hand I might cheat and use the little plastic mounts with=20
-double-sided tape on their feet.
+Here is the transcript:
 
-[...]
->   The driver for the Marvell chip is present in kernel
-> 2.6.19 and later.  Considering that 2.6.19 is like 6 years old, I'd h=
-ope
-> your kernel is newer.
+root@athlon:~ # mdadm -A /dev/md5
+mdadm: WARNING /dev/sdg1 and /dev/sdg appear to have very similar  
+superblocks.
+       If they are really different, please --zero the superblock on one
+       If they are the same or overlap, please remove one from the
+       DEVICE list in mdadm.conf.
 
-It's kernel-2.6.18-194.26.1.el5 so it's stuffed full of backports and=20
-security updates, it's less than two months old. Yes, I have sata_mv,=20
-but several people have reported data corruption issues with some=20
-Marvell controllers - a bad interaction with SMART I think.
+root@athlon:~ # cat /proc/mdstat
 
-> It may be a little more money than you were planning on spending, but
-> for little more than the cost of one hard drive
+<shows other valid arrays but not md5>
 
-In this case I'm using consumer-level drives so they're about =C2=A340 =
-($60),=20
-so $165 is a bit rich for me, especially since it's potentially limited=
-=20
-for throughput.
+root@athlon:~ # mdadm -Av /dev/md5
+mdadm: looking for devices for /dev/md5
+...
+mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
+mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
+mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
+mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
+mdadm: /dev/sdg is identified as a member of /dev/md5, slot 7.        
+<<<<<<<<<<<<<<< ERROR s.b sdg1
+mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 8.
+mdadm: /dev/sdf is identified as a member of /dev/md5, slot 8.        
+<<<<<<<<<<<<<<< now sdf
+mdadm: WARNING /dev/sdf1 and /dev/sdf appear to have very similar  
+superblocks.
+       If they are really different, please --zero the superblock on one
+       If they are the same or overlap, please remove one from the
+       DEVICE list in mdadm.conf.
 
-Nevertheless, thank you very much for taking the time for such a=20
-considered reply.
+<notice how subsequent mdadm runs lose the partitions, perhaps
+something still has them open from a previous run?>
 
-Cheers,
+root@athlon:~ # mdadm -Av /dev/md5
+mdadm: looking for devices for /dev/md5
+...
+mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
+mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
+mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
+mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
+mdadm: /dev/sdg is identified as a member of /dev/md5, slot 7.  
+<<<<<<<<<<<<< whole disk
+mdadm: /dev/sdf is identified as a member of /dev/md5, slot 8.  
+<<<<<<<<<<<<< whole disk
+mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 2.
+mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 1.
+mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 0.
+mdadm:/dev/md5 has an active reshape - checking if critical section  
+needs to be restored
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+       Possibly you needed to specify the --backup-file
 
-John.
+<so then I tried specifying the partitions, it ignores g1 and f1>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+root@athlon:~ # mdadm -Av /dev/md5 /dev/sd[lkjhgfdcb]1
+...
+mdadm: looking for devices for /dev/md5
+mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 0.
+mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 1.
+mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 2.
+mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
+mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
+mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
+mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
+mdadm:/dev/md5 has an active reshape - checking if critical section  
+needs to be restored
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+       Possibly you needed to specify the --backup-file
+
+<Neil suggested blockdev last time so I tried that again>
+
+root@athlon:~ # blockdev --rereadpt /dev/sdg
+root@athlon:~ # blockdev --rereadpt /dev/sdf
+root@athlon:~ # mdadm -Av /dev/md5 /dev/sd[lkjhgfdcb]1
+mdadm: looking for devices for /dev/md5
+mdadm: cannot open device /dev/sdf1: Device or resource busy
+mdadm: /dev/sdf1 has no superblock - assembly aborted
+
+<this is probably just a tiny error reporting bug, failure to
+open doesn't mean there is no superblock>
+
+root@athlon:~ # cat /proc/mdstat
+Personalities : [raid0] [raid6] [raid5] [raid4]
+md5 : inactive sdf1[8](S) sdg1[7](S)
+       3907026944 blocks super 0.91
+
+<ok, someone (udev?) grabbed the partitions as soon as blockdev
+made them available and tried to assemble something. No problem.>
+
+root@athlon:~ # mdadm -S /dev/md5
+mdadm: stopped /dev/md5
+
+root@athlon:~ # mdadm -Av /dev/md5 /dev/sd[lkjhgfdcb]1
+mdadm: looking for devices for /dev/md5
+mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 0.
+mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 1.
+mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 2.
+mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 8.
+mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 7.
+mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
+mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
+mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
+mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
+mdadm:/dev/md5 has an active reshape - checking if critical section  
+needs to be restored
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+       Possibly you needed to specify the --backup-file
+
+<and now everything is fine>
+
+root@athlon:~ # mdadm -Av /dev/md5 --backup-file  
+/my/raid/RAID_BACKUP_FILE /dev/sd[lkjhgfdcb]1
+mdadm: looking for devices for /dev/md5
+mdadm: /dev/sdb1 is identified as a member of /dev/md5, slot 0.
+mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 1.
+mdadm: /dev/sdd1 is identified as a member of /dev/md5, slot 2.
+mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 8.
+mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 7.
+mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 4.
+mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 3.
+mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 6.
+mdadm: /dev/sdl1 is identified as a member of /dev/md5, slot 5.
+mdadm:/dev/md5 has an active reshape - checking if critical section  
+needs to be restored
+mdadm: restoring critical section
+mdadm: added /dev/sdc1 to /dev/md5 as 1
+mdadm: added /dev/sdd1 to /dev/md5 as 2
+mdadm: added /dev/sdj1 to /dev/md5 as 3
+mdadm: added /dev/sdh1 to /dev/md5 as 4
+mdadm: added /dev/sdl1 to /dev/md5 as 5
+mdadm: added /dev/sdk1 to /dev/md5 as 6
+mdadm: added /dev/sdg1 to /dev/md5 as 7
+mdadm: added /dev/sdf1 to /dev/md5 as 8
+mdadm: added /dev/sdb1 to /dev/md5 as 0
+mdadm: /dev/md5 has been started with 9 drives.
+
+root@athlon:~ # cat /proc/mdstat
+Personalities : [raid0] [raid6] [raid5] [raid4]
+md5 : active raid6 sdb1[0] sdf1[8] sdg1[7] sdk1[6] sdl1[5] sdh1[4]  
+sdj1[3] sdd1[2] sdc1[1]
+       13674583552 blocks super 0.91 level 6, 128k chunk, algorithm 2  
+[9/9] [UUUUUUUUU]
+       [=============>.......]  reshape = 68.6% (1341812608/1953511936)  
+finish=7496.3min speed=1359K/sec
+
