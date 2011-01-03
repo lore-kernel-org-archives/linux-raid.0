@@ -1,79 +1,75 @@
-From: Jan Kasprzak <kas@fi.muni.cz>
-Subject: RAID-10 initial sync is CPU-limited
-Date: Mon, 3 Jan 2011 17:32:13 +0100
-Message-ID: <20110103163213.GC17455@fi.muni.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: dmaengine: fix dma_unmap (was: Re: [PATCH 06/13] DMAENGINE: driver
+ for the ARM PL080/PL081 PrimeCells)
+Date: Mon, 3 Jan 2011 08:36:00 -0800
+Message-ID: <AANLkTinJAULeb1EsWk=S=b32h69X1x-noRw73Ok0uyfx@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Linus Walleij <linus.ml.walleij@gmail.com>, Viresh Kumar <viresh.kumar@st.com>, Kukjin Kim <kgene.kim@samsung.com>, yuanyabin1978@sina.com, linux-kernel@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>, Peter Pearse <peter.pearse@arm.com>, linux-arm-kernel@lists.infradead.org, Alessandro Rubini <rubini@unipv.it>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-	Hello, Linux md developers!
+On Mon, Jan 3, 2011 at 3:14 AM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> On Sun, Jan 02, 2011 at 09:33:34PM +0100, Linus Walleij wrote:
+>> As for the in-tree PL08x driver I'd say it's doing pretty well for
+>> memcpy() so we could add platform data for that on supported
+>> platforms, then for device transfers we need more elaborative
+>> work.
+>
+> It has the issue that it's not unmapping the buffers after the memcpy=
+()
+> operation has completed, so on ARMv6+ we have the possibility for
+> speculative prefetches to corrupt the destination buffer.
+>
+> Neither are a number of the other DMA engine drivers. =A0This is why =
+I'd
+> like to see some common infrastructure in the DMA engine core for say=
+ing
+> "this tx descriptor is now complete" so that DMA engine driver author=
+s
+> don't have to even think about whether they should be unmapping buffe=
+rs.
 
-I am trying to build a new md-based RAID-10 array out of 24 disks,
-but it seems that the initial sync of the array is heavily limited
-by CPU:
+This requires that a copy of the mapped addresses be maintained
+outside the driver's physical descriptor.  This needs support from the
+client to set up storage for this information (probably a
+scatterlist).  The dmaengine core could use this to implement a common
+unmap routine.  However,  this still has the problem of how to prevent
+unmapping too early in the multi-operation raid case and how to
+communicate the full set of addresses to unmap to the final descriptor
+in such a chain.  I think the only way to fully solve this is to make
+the client solely responsible for both mapping and unmapping.
 
-	During the resync only 1-2 CPUs are busy (one for md1_raid10 thread
-which is uses 100 % of a single CPU, and one for md1_resync thread, which
-uses about 80 % of a single CPU).
+=46or raid this will have implications for architectures that split
+operation types on to different physical channels.  Preparing the
+entire operation chain ahead of time is not possible on such
+configuration because we need to remap the buffers for each channel
+transition.  So, raid will have an optimized path for engines like
+mv_xor, ioatdma, and iop-adma (iop13xx) where all buffers can be
+mapped upfront (against a single physical channel) and then unmapped
+when all stripe operations complete.  For the others iop-adma (iop3xx)
+and ppc44x we need to wait for each leg to finish before mapping and
+issuing the next leg.  There will most likely be negative performance
+implications of waiting and reissuing, but as far as I can see this is
+unavoidable.
 
-	Are there plans to make this process more parallel? I can imagine
-that for near-copies algorithm there can be a separate thread for each
-pair of disks in the RAID-10 array.
+> I'd also like to see DMA_COMPL_SKIP_*_UNMAP always set by prep_slave_=
+sg()
+> in tx->flags so we don't have to end up with "is this a slave operati=
+on"
+> tests in the completion handler.
 
-	My hardware is apparently able to keep all the disks busy most
-of the time (verified by running dd if=/dev/sd$i bs=1M of=/dev/null
-in parallel - iostat reports 99-100 % utilization of each disk and about
-55 MB/s read per disk). All the disks are connected by a four-lane
-SAS controller, so the maximum theoretical throughput is 4x 3 Gbit/s
-= 12 Gbit/s = 0.5 Gbit/s per disk = 62.5 MByte/s per disk).
+Longer term I do not see these flags surviving, but yes a 2.6.38
+change along these lines makes sense.
 
-	Here are the performance data from the initial resync:
-
-# cat /proc/mdstat
-[...]
-md1 : active raid10 sdz2[23] sdy2[22] sdx2[21] sdw2[20] sdu2[19] sdt2[18] sds2[17] sdr2[16] sdq2[15] sdp2[14] sdo2[13] sdn2[12] sdm2[11] sdl2[10] sdk2[9] sdj2[8] sdi2[7] sdh2[6] sdg2[5] sdf2[4] sde2[3] sdd2[2] sdc2[1] sdb2[0]
-      23190484992 blocks super 1.2 512K chunks 2 near-copies [24/24] [UUUUUUUUUUUUUUUUUUUUUUUU]
-      [=>...................]  resync =  7.3% (1713514432/23190484992) finish=796.4min speed=449437K/sec
-
-# top
-top - 23:05:31 up  8:20,  5 users,  load average: 3.12, 3.29, 3.25
-Tasks: 356 total,   3 running, 353 sleeping,   0 stopped,   0 zombie
-Cpu(s):  0.0%us,  8.3%sy,  0.0%ni, 91.1%id,  0.0%wa,  0.0%hi,  0.6%si,  0.0%st
-Mem:  132298920k total,  3528792k used, 128770128k free,    53892k buffers
-Swap: 10485756k total,        0k used, 10485756k free,   818496k cached
-
-  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND           
-12561 root      20   0     0    0    0 R 99.8  0.0  61:12.61 md1_raid10         
-12562 root      20   0     0    0    0 R 79.6  0.0  47:06.60 md1_resync         
-[...]
-
-# iostat -kx 5
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.00    0.00    9.54    0.00    0.00   90.46
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
-sdb              19.20     0.00  573.60    0.00 37939.20     0.00   132.28     0.50    0.87   0.30  17.26
-sdc              19.60     0.00  573.20    0.00 37939.20     0.00   132.38     0.51    0.89   0.31  17.58
-sdd              13.80     0.00  578.20    0.00 37888.00     0.00   131.05     0.52    0.89   0.31  18.02
-sdf              19.20     0.00  572.80    0.00 37888.00     0.00   132.29     0.50    0.88   0.32  18.12
-sde              12.80     0.00  579.40    0.00 37900.80     0.00   130.83     0.54    0.94   0.32  18.38
-sdg              16.60     0.00  575.40    0.00 37888.00     0.00   131.69     0.53    0.93   0.33  18.76
-[...]
-sdy              14.40     0.00  579.20    0.00 37990.40     0.00   131.18     0.52    0.91   0.31  17.78
-sdz             135.00   229.00  458.60  363.00 37990.40 37888.00   184.71     2.30    2.80   0.76  62.32
-md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
-
-	Thanks,
-
--Yenya
-
--- 
-| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
-| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
-| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
-Please don't top post and in particular don't attach entire digests to your
-mail or we'll all soon be using bittorrent to read the list.     --Alan Cox
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
