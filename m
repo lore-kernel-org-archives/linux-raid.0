@@ -1,66 +1,51 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: New raid level suggestion.
-Date: Sun, 2 Jan 2011 22:33:20 -0600
-Message-ID: <4D.AA.19545.091512D4@cdptpa-omtalb.mail.rr.com>
-References: <20101230094230.GE2986@bitwizard.nl>
-Reply-To: <lrhorer@satx.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: filesystem corruption
+Date: Mon, 3 Jan 2011 15:56:30 +1100
+Message-ID: <20110103155630.565341d0@notabene.brown>
+References: <4D212D4A.3040003@feystorm.net>
+	<20110103141603.632fdf3e@notabene.brown>
+	<4D214B5C.3010103@feystorm.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101230094230.GE2986@bitwizard.nl>
+In-Reply-To: <4D214B5C.3010103@feystorm.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Rogier Wolff' <R.E.Wolff@BitWizard.nl>, 'Steven Haigh' <netwiz@crc.id.au>
+To: "Patrick H." <linux-raid@feystorm.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, 02 Jan 2011 21:06:52 -0700 "Patrick H." <linux-raid@feystorm.net>
+wrote:
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Rogier Wolff
-> Sent: Thursday, December 30, 2010 3:43 AM
-> To: Steven Haigh
-> Cc: Rogier Wolff; linux-raid@vger.kernel.org
-> Subject: Re: New raid level suggestion.
+> That makes sense assuming that MD acknowleges the write once the data is 
+> written to the data disks but not necessarily the parity disk, which is 
+> what I gather you were saying is what happens. Is there any option that 
+> can change the behavior so that md wont ack the write until its been 
+> committed to all disks (I'm guessing no since you didnt mention it)?
+> Also does raid6 suffer this problem? Is it smart enough to use both 
+> parity disks when calculating replacement, or will it just use one?
 > 
-> On Thu, Dec 30, 2010 at 07:47:10PM +1100, Steven Haigh wrote:
-> > Maybe I'm not quite understanding right, however you can easily do RAID6
-> > with 4 drives. That will give you two redundant, effectively give you
-> > RAID5 if I drive fails, and save buttloads of messing around...
 
-	Theree's been quite a bit of back and forth in this thread.  I think
-it would be best if you could more narrowly define your application.
-Exactly what is this app doing?  Is it, as has been suggested, a web server?
-How many transactions / second is it servicing at peak?  How large are the
-files?  Is there some unusual .cgi script which causes huge amounts of disk
-thrashing?  You might post the results of iostat.
+md/raid5 doesn't acknowledge the write until both the data and the parity
+have been written.  But that doesn't make any difference.
+If you schedule a number of interdependent writes (data and parity) and then
+allow some to complete but not all, then you have inconsistency.
+Recovery from losing a single device requires consistency of parity and data.
 
-> Steven, My friend has a server where the drives take up to a third of
-> a second to respond.
+RAID6 suffers equally from this problem.  Even if it used both parity disks
+to recover (which it doesn't) how would that help?  It would then have two
+possible value for the data and no way to know which was correct, and every
+possibility that both are incorrect.  This would happen if a single data
+block was successfully written, but neither parity blocks were.
 
-	Respond to what?  I have a .cgi script that takes up to 30 seconds
-to respond, but it's not because of any lack of array responsiveness.  It's
-performing all sorts of investigations and calculations.  1/3of a second may
-or may not be a terrible delay depending on what is going on, and the delay
-may not be as a result of disk I/O.
+The only way you can avoid this 'write hole' is by journalling in multiples
+of whole stripes.  No current filesystems that I know of can do this as they
+journal in blocks, and the maximum block size is less than the minimum stripe
+size.  So you would need journalling integrated with md/raid, or you would
+need a filesystem which was designed to understand this problem and write
+whole stripes at a time, always to an area of the device which did not
+contain live data.
 
-> When asking for help, everybody pounced on us:
-> - NEVER use raid5 for a server doing small-file-io like a mailserver.
->   (always use RAID10).
-
-	Even a mailserver may not need anything radical in terms of disk
-performance, depending on the number of users.  Again, you haven't
-quantified the number of users the server is tending.
-
-> So apparently RAID5 (and by extension RAID6) is not an option for some
-> systems.
-> 
-> I'm willing to tolerate the RAID4 situation during the time that it
-> takes me to replace the drive.
-
-	A hot spare can certainly mitigate any windshield time, but before
-anyone can really determine that RAID5 or RAID5 is not sufficient, one must
-specify the actual service parameters.
-
+NeilBrown
