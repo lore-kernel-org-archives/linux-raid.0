@@ -1,56 +1,127 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: dmaengine: fix dma_unmap (was: Re: [PATCH 06/13] DMAENGINE:
-	driver for the ARM PL080/PL081 PrimeCells)
-Date: Mon, 3 Jan 2011 16:52:27 +0000
-Message-ID: <20110103165227.GC32508@n2100.arm.linux.org.uk>
-References: <AANLkTinJAULeb1EsWk=S=b32h69X1x-noRw73Ok0uyfx@mail.gmail.com>
+From: "Sven Eschenberg" <sven@whgl.uni-frankfurt.de>
+Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
+Date: Mon, 3 Jan 2011 18:02:51 +0100 (CET)
+Message-ID: <1625d1dff8a739c00a1b1738d98b9c31.squirrel@ssl.verfeiert.org>
+References: <4D20E9F7.2080800@anonymous.org.uk>
+    <20110103033100.40a80113@natsu> <4D21E726.7070306@anonymous.org.uk>
+Reply-To: sven@whgl.uni-frankfurt.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTinJAULeb1EsWk=S=b32h69X1x-noRw73Ok0uyfx@mail.gmail.com>
+In-Reply-To: <4D21E726.7070306@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Viresh Kumar <viresh.kumar@st.com>, Kukjin Kim <kgene.kim@samsung.com>, Linus Walleij <linus.ml.walleij@gmail.com>, Peter Pearse <peter.pearse@arm.com>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Ben Dooks <ben-linux@fluff.org>, yuanyabin1978@sina.com, linux-arm-kernel@lists.infradead.org, Alessandro Rubini <rubini@unipv.it>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 03, 2011 at 08:36:00AM -0800, Dan Williams wrote:
-> For raid this will have implications for architectures that split
-> operation types on to different physical channels.  Preparing the
-> entire operation chain ahead of time is not possible on such
-> configuration because we need to remap the buffers for each channel
-> transition.
 
-That's not entirely true.  You will only need to remap buffers if
-old_chan->device != new_chan->device, as the underlying struct device
-will be the different and could possibly have a different IOMMU or
-DMA-able memory parameters.
+http://skinflint.co.uk/eu/a367722.html
 
-So, when changing channels, the optimization is not engine specific,
-but can be effected when the chan->device points to the same dma_device
-structure.  That means it should still be possible to chain several
-operations together, even if it means that they occur on different
-channels on the same device.
+I got one of those, still a little too expensive imho, but it does it's
+job as expected.
 
-One passing idea is the async_* operations need to chain buffers in
-terms of <virtual page+offset, len, dma_addr_t, struct dma_device *>, or
-maybe <struct dma_device *, scatterlist>.  If the dma_device pointer is
-initialized, the scatterlist is already mapped.  If this differs from
-the dma_device for the next selected operation, the previous operations
-need to be run, then unmap and remap for the new device.
+In-kernel drivers seem to work well till now (used several 2.6.33.x and
+following kernel versions without any problems so far).
 
-Does that sound possible?
+Does have PCI-e x4 thus providing more bandwidth that the 4 connected
+drives can achieve and should support FIS PMPs aswell.
 
-> > I'd also like to see DMA_COMPL_SKIP_*_UNMAP always set by prep_slave_sg()
-> > in tx->flags so we don't have to end up with "is this a slave operation"
-> > tests in the completion handler.
-> 
-> Longer term I do not see these flags surviving, but yes a 2.6.38
-> change along these lines makes sense.
+lspci agrees on this: LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train-
+SlotClk+ DLActive- BWMgmt- ABWMgmt-.
 
-Well, if the idea is to kill those flags, then it would be a good idea
-not to introduce new uses of them as that'll only complicate matters.
+/dev/md127:
+ Timing O_DIRECT cached reads:   888 MB in  2.00 seconds =3D 443.38 MB/=
+sec
+ Timing O_DIRECT disk reads: 602 MB in  3.00 seconds =3D 200.40 MB/sec
 
-I do have an untested patch which adds the unmap to pl08x, but I'm
-wondering if it's worth it, or whether to disable the memcpy support
-for the time being.
+Since I use a raid 6 setup on the four drives and reading from each mem=
+ber
+drive's cache yiels roughly 220MB/sec the value of 440 MB/sec seems
+reasonable. I don't have the chance right now to set up a stripeset of =
+4
+drives to check if I could get around 800MB from their caches, but I di=
+d
+achieve roughly 450 MB/sec from a SSD stripe I had connected. So I cann=
+ot
+tell you what the upper limit of the card/chipset is there, but I found
+the rates fair enough for my needs.
+
+I couldn't find any UK Reseller for an equivalent board at a similiar l=
+ow
+price (unfortunately) - misco UK does have the following:
+
+http://www.misco.co.uk/applications/SearchTools/item-details.asp?EdpNo=3D=
+399329&Tab=3D2&NoMapp=3D0
+
+Which is definately too expensive ... maybe you got better luck digging
+for a card+reseller with that chipset.
+
+Regards
+
+-Sven
+
+
+
+
+On Mon, January 3, 2011 16:11, John Robinson wrote:
+> On 02/01/2011 22:31, Roman Mamedov wrote:
+>> On Sun, 02 Jan 2011 21:11:19 +0000
+>> John Robinson<john.robinson@anonymous.org.uk>  wrote:
+>>
+>>> Please could someone suggest a cheap PCI-E SATA card with 4 interna=
+l
+>>> ports?
+>>
+>> "Marvell 88SE6445 Raid 0,1,5,10 and JBOD", $60 at eBay:
+>> http://ur1.ca/2qa3t
+>
+> In the UK the best I've found is the Highpoint 2640x1 at =A392 ex del=
+ivery
+> and taxes, which at current exchange rates is $142. I'm slightly
+> reluctant to buy a no-brand item direct from China.
+>
+>> "LSI SAS3041E-R 4-Port SAS/SATA Host Bus Adapter", $73 at DX:
+>> http://www.dealextreme.com/details.dx/sku.51317
+>
+> =A3113 or $174 is the best I can find in the UK. I wonder if they shi=
+p
+> internationally... their $73 is =A348...
+>
+>> Or if you meant 'cheap' as in $20-30 cheap, then there's no such (4-=
+Port
+>> PCI-E)
+>> thing, but you can easily get not one, but two 2-Port PCI-E x1 board=
+s
+>> for that
+>> price. If you go that route, make sure you get the JMB363 chip, unli=
+ke
+>> SiI3132
+>> it has not been spotted having any data corruption issues AFAIK.
+>
+> Well, there are 4-port PCI cards in the =A317-25 cheap range, so I ha=
+d
+> hoped there would be 4-port PCI-E cards in the =A335-50 range, which =
+is
+> the ballpark for basic cheap motherboards with 4-6 SATA ports on them=
+,
+> but it's not generally true.
+>
+> Anyway thanks for the help, I shall chase up DX and think on...
+>
+> Cheers,
+>
+> John.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
