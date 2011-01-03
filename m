@@ -1,52 +1,48 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Sun, 2 Jan 2011 17:04:44 -0600
-Message-ID: <AANLkTimDZR0ZFaXT49UL7DQttEtWJ2X2Rkc40UAD6VkS@mail.gmail.com>
-References: <4D20E9F7.2080800@anonymous.org.uk>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Mismatches
+Date: Sun, 2 Jan 2011 19:10:38 -0600
+Message-ID: <A3.34.13137.F02212D4@cdptpa-omtalb.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D20E9F7.2080800@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 2, 2011 at 3:11 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> Please could someone suggest a cheap PCI-E SATA card with 4 internal ports?
->
-> I currently have 6 motherboard SATA ports and a 5-drive hot-swap chassis, I
-> am thinking of adding a second 5-drive hot-swap chassis to my case and would
-> need another 4 SATA ports to drive it.
->
-> Other requirements: known to work with RHEL/CentOS 5 kernels, even if it
-> means installing a driver with DKMS or whatever.
 
-You can also get a SAS card, and an overpriced mini-SAS to SATA cable.
- The LSI SAS 1068e chip is quite common and well supported by Linux.
-You can buy LSI-branded cards, or from another OEM that uses the same
-chip.  Intel makes such a card, and I just read that IBM does as well,
-the ServeRAID BR10i LSI SAS3082E-R.  Covered in detail here:
+	OK, I asked this question here before, and I got no answer
+whatsoever.  I wasn't too concerned previously, but now that I lost the
+entire array the last time I tried to do a growth, I am truly concerned.
+Would someone please answer my question this time, and perhaps point me
+toward a resolution?  The monthly array check just finished on my main
+machine.  For many months, this happened at the first of the month and
+completed without issue and with zero mismatches.  As of a couple of months
+ago, it started to report large numbers of mismatches.  It just completed
+this afternoon with the following:
 
-    http://www.servethehome.com/ibm-serveraid-br10i-lsi-sas3082e-r-pciexpress-sas-raid-controller/
+RebuildFinished /dev/md0 mismatches found: 96614968
 
-Such a card will actually give you a total of eight SATA ports, but
-you obviously don't have to use them all; you can get away with only
-buying one of the SAS to 4-SATA port fanout cables.
+	Now, 96,000,000 mismatches would seem to be a matter of great
+concern, if you ask me.  How can there be any, really, when the entire array
+- all 11T - was re-written just a few weeks ago?  How can I find out what
+the nature of these mismatches is, and how can I correct them without
+destroying the data on the array?  How can I look to prevent them in the
+future?  I take it the monthly checkarray routine (which basically
+implements ` echo check > /sys/block/md0/md/sync_action`) does not attempt
+to fix any errors it finds?
 
-I grabbed two of those IBM BR10i cards off of ebay for about $50.
-Unfortunately, I didn't pay close attention to the listing, and mine
-came without PCI brackets.  But so far I've tested one, and it works
-just fine.
+	I just recently found out md uses simple parity to try to maintain
+the validity of the data.  I had always thought it was ECC.  With simple
+parity it can be difficult or even impossible to tell which data member is
+in error, given two conflicting members.  Where should I go from here?  Can
+I use `echo repair > /sys/block/md0/md/sync_action` with impunity?  What,
+exactly, will this do when it comes across a mismatch between one or more
+members?
 
-> Doesn't have to be PCI-E x1 because I've a spare x8 (logical)/x16 (physical)
-> slot, but I don't know if anything cheap's going to be anything other than
-> PCI-E x1. v2.0 (5GT/s) would be nice though.
+RAID6 array
+mdadm - v2.6.7.2
+kernel 2.6.26-2-amd64
 
-If you're using a typical consumer-grade motherboard, watch out that
-the PCIe slot supports things other than video cards.  For whatever
-reason, particularly on micro-ATX boards, the PCIe x8/x16 slots often
-won't work with anything other than video cards.  Trying to use
-something else (e.g. a RAID card) will, at best, prohibit the machine
-from booting, or at worst, cause very subtle random problems.
