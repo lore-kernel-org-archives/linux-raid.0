@@ -1,62 +1,79 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Mon, 3 Jan 2011 21:08:03 +0500
-Message-ID: <20110103210803.7119ec8b@natsu>
-References: <4D20E9F7.2080800@anonymous.org.uk>
- <20110103033100.40a80113@natsu>
- <4D21E726.7070306@anonymous.org.uk>
+From: Jan Kasprzak <kas@fi.muni.cz>
+Subject: RAID-10 initial sync is CPU-limited
+Date: Mon, 3 Jan 2011 17:32:13 +0100
+Message-ID: <20110103163213.GC17455@fi.muni.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GJouUKQzPYK3uQeOfxUG9Uc"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D21E726.7070306@anonymous.org.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/GJouUKQzPYK3uQeOfxUG9Uc
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+	Hello, Linux md developers!
 
-On Mon, 03 Jan 2011 15:11:34 +0000
-John Robinson <john.robinson@anonymous.org.uk> wrote:
+I am trying to build a new md-based RAID-10 array out of 24 disks,
+but it seems that the initial sync of the array is heavily limited
+by CPU:
 
-> > "LSI SAS3041E-R 4-Port SAS/SATA Host Bus Adapter", $73 at DX:
-> > http://www.dealextreme.com/details.dx/sku.51317
->=20
-> =C2=A3113 or $174 is the best I can find in the UK. I wonder if they ship=
-=20
-> internationally... their $73 is =C2=A348...
+	During the resync only 1-2 CPUs are busy (one for md1_raid10 thread
+which is uses 100 % of a single CPU, and one for md1_resync thread, which
+uses about 80 % of a single CPU).
 
-Any item on http://www.dealextreme.com/ is shipped for free to anywhere in =
-the
-world. Personally I have ordered some goods from there, all fine.
+	Are there plans to make this process more parallel? I can imagine
+that for near-copies algorithm there can be a separate thread for each
+pair of disks in the RAID-10 array.
 
-> Well, there are 4-port PCI cards in the =C2=A317-25 cheap range, so I had=
-=20
-> hoped there would be 4-port PCI-E cards in the =C2=A335-50 range, which i=
-s=20
-> the ballpark for basic cheap motherboards with 4-6 SATA ports on them,=20
-> but it's not generally true.
+	My hardware is apparently able to keep all the disks busy most
+of the time (verified by running dd if=/dev/sd$i bs=1M of=/dev/null
+in parallel - iostat reports 99-100 % utilization of each disk and about
+55 MB/s read per disk). All the disks are connected by a four-lane
+SAS controller, so the maximum theoretical throughput is 4x 3 Gbit/s
+= 12 Gbit/s = 0.5 Gbit/s per disk = 62.5 MByte/s per disk).
 
-Yes, for some reason there are no 4-Port PCI-E chips from Silicon Image,
-JMicron or VIA, hence no inexpensive 4-Port PCI-E boards.
+	Here are the performance data from the initial resync:
 
---=20
-With respect,
-Roman
+# cat /proc/mdstat
+[...]
+md1 : active raid10 sdz2[23] sdy2[22] sdx2[21] sdw2[20] sdu2[19] sdt2[18] sds2[17] sdr2[16] sdq2[15] sdp2[14] sdo2[13] sdn2[12] sdm2[11] sdl2[10] sdk2[9] sdj2[8] sdi2[7] sdh2[6] sdg2[5] sdf2[4] sde2[3] sdd2[2] sdc2[1] sdb2[0]
+      23190484992 blocks super 1.2 512K chunks 2 near-copies [24/24] [UUUUUUUUUUUUUUUUUUUUUUUU]
+      [=>...................]  resync =  7.3% (1713514432/23190484992) finish=796.4min speed=449437K/sec
 
---Sig_/GJouUKQzPYK3uQeOfxUG9Uc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+# top
+top - 23:05:31 up  8:20,  5 users,  load average: 3.12, 3.29, 3.25
+Tasks: 356 total,   3 running, 353 sleeping,   0 stopped,   0 zombie
+Cpu(s):  0.0%us,  8.3%sy,  0.0%ni, 91.1%id,  0.0%wa,  0.0%hi,  0.6%si,  0.0%st
+Mem:  132298920k total,  3528792k used, 128770128k free,    53892k buffers
+Swap: 10485756k total,        0k used, 10485756k free,   818496k cached
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND           
+12561 root      20   0     0    0    0 R 99.8  0.0  61:12.61 md1_raid10         
+12562 root      20   0     0    0    0 R 79.6  0.0  47:06.60 md1_resync         
+[...]
 
-iEYEARECAAYFAk0h9GMACgkQTLKSvz+PZwgOTQCeK2mD3KoyUN+FgR7lK17jW8WM
-ZqAAniecGdUwsEORCDqSMOEW9l76FUjp
-=+H/+
------END PGP SIGNATURE-----
+# iostat -kx 5
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.00    0.00    9.54    0.00    0.00   90.46
 
---Sig_/GJouUKQzPYK3uQeOfxUG9Uc--
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sdb              19.20     0.00  573.60    0.00 37939.20     0.00   132.28     0.50    0.87   0.30  17.26
+sdc              19.60     0.00  573.20    0.00 37939.20     0.00   132.38     0.51    0.89   0.31  17.58
+sdd              13.80     0.00  578.20    0.00 37888.00     0.00   131.05     0.52    0.89   0.31  18.02
+sdf              19.20     0.00  572.80    0.00 37888.00     0.00   132.29     0.50    0.88   0.32  18.12
+sde              12.80     0.00  579.40    0.00 37900.80     0.00   130.83     0.54    0.94   0.32  18.38
+sdg              16.60     0.00  575.40    0.00 37888.00     0.00   131.69     0.53    0.93   0.33  18.76
+[...]
+sdy              14.40     0.00  579.20    0.00 37990.40     0.00   131.18     0.52    0.91   0.31  17.78
+sdz             135.00   229.00  458.60  363.00 37990.40 37888.00   184.71     2.30    2.80   0.76  62.32
+md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+
+	Thanks,
+
+-Yenya
+
+-- 
+| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - private}> |
+| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18A5E |
+| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/blog/ |
+Please don't top post and in particular don't attach entire digests to your
+mail or we'll all soon be using bittorrent to read the list.     --Alan Cox
