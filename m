@@ -1,95 +1,73 @@
-From: Hank Barta <hbarta@gmail.com>
-Subject: RAID for USB flash drives
-Date: Tue, 4 Jan 2011 13:40:53 -0600
-Message-ID: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Is It Hopeless?
+Date: Tue, 04 Jan 2011 15:03:45 -0500
+Message-ID: <4D237D21.5050509@cfl.rr.com>
+References: <201012261019.56481.CACook@quantum-sci.com> <201012261606.29281.CACook@quantum-sci.com> <4D182587.4040801@turmel.org> <201012270510.51520.CACook@quantum-sci.com> <4D18C0C5.4010606@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D18C0C5.4010606@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks,
-This is going to be one of those corner cases and I'm sure some of you
-won't even think it a good idea. But I won;t let that stop me from
-asking your opinion.
+On 12/27/2010 11:37 AM, Stan Hoeppner wrote:
+> If they'd had a decent tape silo he'd have lost no data.
 
-I'm building a NAS based on a micro-ATX Atom based board (D525MW.) The
-board has two SATA ports to which I will attach two mirrored 2TB
-drives form another system. There are 8 USB ports but no other ports
-to which to attach a boot drive and I had not partitioned the 2 TB
-drives for another partition. Rather than muck with them, I sought USB
-boot devices and found prior art on RAIDing USB devices. I purchased
-4x 4GB USB flash drives for a grand total of $27 (US)
+Unless the tape failed, which they often do.
 
-I plan to operate them as a stripe set. I'm not too concerned about
-reliability, thinking that the USB drives should be pretty reliable if
-thery're not subject to going through the wash in my pocket.
+>> MTBF of tape is hundreds of times sooner.  
+> 
+> Really?  Eli had those WD20EARS online in his D2D backup system for less
+> than 5 months.  LTO tape reliability is less than 5 months?  Show data
+> to back that argument up please.
 
-I've done some initial testing (on another PC) and found that striping
-provides increasing performance even if all of the sticks are on the
-same USB bus. That surprised me a bit because I expected the USB bus
-to be a bottleneck, but that does not happen until there are several
-USB devices active.
+Those particular drives seem to have a rather high infant mortality
+rate.  That does not change the fact that modern drives are rated with
+MTBF of 300,000+ hours, which is a heck of a lot more than a tape.
 
-The particular items that I'd appreciate opinions on are the
-parameters used to construct the RAID and file system. The guidance
-I've used so far is found in the following two articles:
-http://www.analogbit.com/node/4 http://www.analogbit.com/node/13 (I
-would feel a lot better if the folks here agreed that their selections
-made sense.)
+> Tape isn't perfect either, but based on my experience and reading that
+> of many many others, it's still better than D2D is many cases.  Also
+> note that tapes don't wholesale fail as disks do.  Bad spots on tape
+> cause some lost files, not _all_ the files, as is the case when a D2D
+> system fails during restore.
 
-First is partitioning. I used fdisk and default partitioning of one
-primary partition:
-===============================================================
-root@cypress:~# fdisk -l -c -u /dev/sdb
+Not necessarily.  Both systems can fail partially or totally, though
+total failure is probably more likely with disks.
 
-Disk /dev/sdb: 4009 MB, 4009754624 bytes
-8 heads, 4 sectors/track, 244736 cylinders, total 7831552 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0xf924b0d3
+> If a tape drive fails during restore, you don't lose all the backup
+> data.  You simply replace the drive and run the tapes through the new
+> drive.  If you have a multi-drive silo or library, you simply get a log
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1            2048     7831551     3914752   fd  Linux raid autodetect
-===============================================================
+It isn't the drive that is the problem; it's the tape.
 
-Next will be to create the RAID using:
-# mdadm --create /dev/md0 -e 0.9 -n 6 --chunk=64 --level=raid0 /dev/sd[abcd]1
+> At $99 you'll have $396 of drives in your backup server.  Add the cost
+> of a case ($50), PSU ($30), mobo ($80), CPU ($100), DIMMs ($30), optical
+> drive ($20), did I omit anything?  You're now at around $700.
 
+Or you can just spend $30 on an esata drive dock instead of building a
+dedicated backup server.  Then you are looking at $430 to back up 4tb of
+data.  An LTO Ultrium 3 tape drive looks like it's nearly two grand, and
+only holds 400gb per tape at $30 a pop, so you're spending nearly $2500
+on the drive and 20 tapes.  It doesn't make sense to spend 5x as much on
+the backup solution as the primary storage solution.
 
-For the file system I saw arguments for and against journaling
-filesystems for SSD drives. I decided to go with EXT4
+> You now have a second system requiring "constant tending".  You also
+> have 9 components that could fail during restore.  With a tape drive you
+> have one.  Calculate the total MTBF of those 9 components using the
+> inverse probability rule and compare that to the MTBF of a single HP
+> LTO-2 drive?
 
-Recalculating from the formula in the second article:
-'stride' size is numDevice*chunkSize/blockSize => 4*64K/4k => 64
+This is a disingenuous argument since only one failure ( the drive )
+results in data loss.  If the power supply fails, you just plug in
+another one.  Also again, it is the tape that matters, not the tape
+drive, so what is the MTBF of those tapes?
 
-# mkfs.ext4 /dev/md0 -b 4096 -E stride=64
-
-I plan to add noatime to the mount options. (Would relatime be
-better?) I also plan to put active directories like /tmp and /var/log
-into RAM via tmpfs. I'll use an OS w/out graphics and have purchased a
-2GB RAM stick. I don't plan to use any swap.
-
-Alternatives? I could probably boot off the network but that would be
-less interesting. ;) I could also use RAID5 over the 4 USB drives to
-guard against a single drive failure. I did try that nut it seemed to
-sacrifice some throughput.
-
-OS will be Ubuntu Server 10.04 (LTS) 32 bit.
-
-So... Anything you would do differently?
-
-Thanks for your comments.
-
-best,
-hank
-
--- 
-'03 BMW F650CS - hers
-'98 Dakar K12RS - "BABY K" grew up.
-'93 R100R w/ Velorex 700 (MBD starts...)
-'95 Miata - "OUR LC"
-polish visor: apply squashed bugs, rinse, repeat
-Beautiful Sunny Winfield, Illinois
+I know it isn't a significant sample size, but in 20 years of computing
+I have only personally ever had one hard drive outright fail on me, and
+that was a WD15EARS ( died in under 24 hours ), but I had tapes fail a
+few times, often within 24 hours of them verifying fine, then you go to
+restore from them and they are unreadable.  That combined with their
+absurd cost is why I don't use tapes any more.
