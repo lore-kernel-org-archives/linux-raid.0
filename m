@@ -1,40 +1,33 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID-10 initial sync is CPU-limited
-Date: Tue, 04 Jan 2011 14:54:28 +0000
-Message-ID: <4D2334A4.4040109@anonymous.org.uk>
-References: <20110103163213.GC17455@fi.muni.cz>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH 0/3] deal with imsm spares in Incremental
+Date: Tue, 4 Jan 2011 15:03:04 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759FDE@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110103163213.GC17455@fi.muni.cz>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Kasprzak <kas@fi.muni.cz>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 03/01/2011 16:32, Jan Kasprzak wrote:
-[...]
-> 	My hardware is apparently able to keep all the disks busy most
-> of the time (verified by running dd if=/dev/sd$i bs=1M of=/dev/null
-> in parallel - iostat reports 99-100 % utilization of each disk and about
-> 55 MB/s read per disk). All the disks are connected by a four-lane
-> SAS controller, so the maximum theoretical throughput is 4x 3 Gbit/s
-> = 12 Gbit/s = 0.5 Gbit/s per disk = 62.5 MByte/s per disk).
+Hi Neil,
+Some time ago you suggested that Incremental may migrate spares from spare-container
+when it is ready to start array as it is impossible to know array's domain before we have all members.
+Here are patches that do this.
+First two patches modify slightly existing functions to be able to use them in Incremental too.
+Third one does the work.
+Regards
+Anna
 
-This is part of your limit. You're able to read from your discs at about 
-1320MB/s (24*55MB/s), but you're throwing the data away. Doing the 
-resync, you'd be reading two chunks for each one that's written, so 
-reading about 880MB/s and writing about 440MB/s. Modern 7200rpm discs 
-ought to be able to read at perhaps 125MB/s and write at over 100MB/s, 
-but because you're throttled by the PCIe x4 interface, you're only 
-getting about half of what your discs could do.
-
-Check how fast one disc can go on its own with access to the whole PCIe 
-interface with a single dd invocation.
-
-Cheers,
-
-John.
-
-
+0001-Use-one-function-chosing-spares-from-container.patch
+0002-move_spare-function-modified-and-moved-to-Manage.c.patch
+0003-Incremental-move-suitable-spares-to-container-when-s.patch
+ 
+ Incremental.c |   45 +++++++++++++++++++++++++
+ Manage.c      |   44 ++++++++++++++++++++++++
+ Monitor.c     |  102 +++++++++-----------------------------------------------
+ mdadm.h       |    7 +++-
+ super-intel.c |   46 ++++++++++++++++++++-----
+ 5 files changed, 149 insertions(+), 95 deletions(-)
