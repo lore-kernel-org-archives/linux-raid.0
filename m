@@ -1,128 +1,68 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 2/2] Assemble: allow to assemble spares on their own
-Date: Tue, 4 Jan 2011 14:06:30 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F4E@irsmsx504.ger.corp.intel.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 00/34] OLCE for external metadata (devel3.2)
+Date: Tue, 04 Jan 2011 15:34:38 +0100
+Message-ID: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-From eb737197e6a3a43f6724003900a87410acec9495 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Tue, 4 Jan 2011 12:18:18 +0100
-Subject: [PATCH 2/2] Assemble: allow to assemble spares on their own
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+This patch series implements Online Capacity Expansion (OLCE) feature in mdadm devel3.2. for Raid5 and Raid0.
+This is implemented as reshape of whole container (all arrays that belongs to container are reshaped).
+Raid0 reshape is implemented using takeover to raid4 transition.
 
-If we find spares but no members of given array
-we create container with just spares.
-
-This allows auto assemble to pick up all lose imsm spares when there
-is no config file.
-When there is a valid config file and any array is assembled from it
-we don't try auto assembly so we will not assemble spares that don't
-match any array.
-To remedy this we must add
-ARRAY metadata=imsm UUID=00000000:00000000:00000000:00000000
-to config file.
-This container will include all remaining spares.
-
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Assemble.c |   66 ++++++++++++++++++++++++++++++++++++++++-------------------
- 1 files changed, 45 insertions(+), 21 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index ed59e8b..7ea1783 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -554,28 +554,50 @@ int Assemble(struct supertype *st, char *mddev,
- 		if (tst)
- 			tst->ss->free_super(tst);
- 	}
--
-+	
-+	/* Check if we found some imsm spares but no members */
-+	if (!st || !st->sb)
-+		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
-+			if (tmpdev->used != 3)
-+				continue;
-+			tmpdev->used = 1;
-+			content = &info;
-+			if (!st)
-+				st = super_imsm.match_metadata_desc("imsm");
-+			if (!st->sb) {
-+				/* we need sb from one of the spares */
-+				int dfd = dev_open(tmpdev->devname, O_RDONLY);
-+				if (dfd < 0 ||
-+				    st->ss->load_super(st, dfd, NULL))
-+					tmpdev->used = 2;
-+				if (dfd > 0)
-+					close(dfd);
-+			}
-+		}
-+	else
- 	/* Now reject spares that don't match domains of identified members */
--	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
--		struct stat stb;
--		if (tmpdev->used != 3)
--			continue;
--		if (stat(tmpdev->devname, &stb)< 0) {
--			fprintf(stderr, Name ": fstat failed for %s: %s\n",
--				tmpdev->devname, strerror(errno));
--			tmpdev->used = 2;
--		} else {
--			struct dev_policy *pol = NULL;
--			pol = devnum_policy(stb.st_rdev);
--			if (domain_test(domains, pol, NULL))
--				/* take this spare if domains match */
--				tmpdev->used = 1;
--			else
--				/* if domains don't match mark as unused */
--				tmpdev->used = 0;
--			dev_policy_free(pol);
-+		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
-+			struct stat stb;
-+			if (tmpdev->used != 3)
-+				continue;
-+			if (stat(tmpdev->devname, &stb)< 0) {
-+				fprintf(stderr, Name ": fstat failed for %s: "
-+					"%s\n", tmpdev->devname,
-+					strerror(errno));
-+				tmpdev->used = 2;
-+			} else {
-+				struct dev_policy *pol = NULL;
-+				pol = devnum_policy(stb.st_rdev);
-+				if (domain_test(domains, pol, NULL))
-+					/* take this spare if domains match */
-+					tmpdev->used = 1;
-+				else
-+					/* if domains don't match
-+					* mark as unused */
-+					tmpdev->used = 0;
-+				dev_policy_free(pol);
-+			}
- 		}
--	}
- 	domain_free(domains);
- 	
- 	if (!st || !st->sb || !content)
-@@ -890,8 +912,10 @@ int Assemble(struct supertype *st, char *mddev,
- 		if (content->array.level != LEVEL_MULTIPATH)
- 			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE))) {
- 				if (!(devices[j].i.disk.state
--				      & (1<<MD_DISK_FAULTY)))
-+				      & (1<<MD_DISK_FAULTY))) {
-+					devices[j].uptodate = 1;
- 					sparecnt++;
-+				}
- 				continue;
- 			}
- 		/* If this devices thinks that 'most_recent' has failed, then
+Adam Kwolek (31):
+      Raid0: detect reshape on array start
+      Raid0: Reload disk list on 'next' raid0 array
+      Raid0: Run 'next' reshapes without meta update
+      imsm: FIX: do not repair raid4 arrays
+      Raid0: execute backward takeover
+      Detect level change
+      Take in mind takeover during disk add
+      imsm: Update raid0 metadata for reshape
+      imsm: Move reshape update processing to function
+      Add spares to raid0 in mdadm
+      imsm: Update metadata for second array
+      Set array size after adding new disks
+      imsm: update array size information in metadata
+      FIX: Initialize subarray variable in reshape_array
+      imsm: FIX: Division by 0
+      imsm: Finalize reshape in metadata
+      Finalize reshape after adding disks to array
+      imsm: FIX: Fill sys_name in container_content()
+      FIX: Use sysfs to change array parameters
+      FIX: added disks are not used by reshape process /md/
+      FIX: change adding disks criteria
+      FIX: Get array information in reshape_array()
+      imsm: FIX: support general migration by getinfo_super_imsm_volume
+      FIX: Arrays cannot be opened exclusively
+      imsm: FIX: update first array in container only
+      FIX: get updated information from metadata
+      imsm: FIX: Do not update anchor directly
+      imsm: FIX: Perform first metadata update for container operation
+      imsm: FIX: display error message
+      imsm: FIX: display correct information for '-E' option
+      mdadm: second_map enhancement for imsm_get_map()
+
+Krzysztof Wojcik (3):
+      FIX: Position calculation in mdstat_by_subdev
+      FIX: Change size condition in imsm_reshape_is_allowed_on_container
+      Manage reshape process in manage_reshape vector.
+
+
+ Grow.c        |  174 ++++++++++++------
+ Manage.c      |   13 -
+ managemon.c   |   12 +
+ mdstat.c      |    4 
+ monitor.c     |   20 ++
+ super-intel.c |  561 ++++++++++++++++++++++++++++++++++++++++++---------------
+ 6 files changed, 576 insertions(+), 208 deletions(-)
+
 -- 
-1.7.1
-
+Signature
