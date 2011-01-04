@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 22/34] imsm: update array size information in metadata
-Date: Tue, 04 Jan 2011 15:38:31 +0100
-Message-ID: <20110104143831.6697.67491.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 23/34] Set array size after adding new disks
+Date: Tue, 04 Jan 2011 15:38:39 +0100
+Message-ID: <20110104143839.6697.70347.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,54 +13,94 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When disks are added size has to increase in metadata.
-This size should be used by common code to set size in md when reshape will be finished.
+When new disks are added array size has to be set by mdadm as array grows.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+ Grow.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++++---------------
+ 1 files changed, 51 insertions(+), 16 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index dc4f308..72b6cf5 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5672,6 +5672,7 @@ static void imsm_process_update(struct supertype *st,
- 			/* update one device only
+diff --git a/Grow.c b/Grow.c
+index 1c10889..0b151f1 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2034,26 +2034,61 @@ static int reshape_array(char *container, int fd, char *devname,
+ 			unlink(backup_file);
+ 		if (!done)
+ 			abort_reshape(sra);
+-		else if (info->new_level != info->array.level) {
+-			/* We need to wait for the reshape to finish
+-			 * (which will have happened unless odata < ndata)
+-			 * and then set the level
++		else {
++			/* set new array size size - if required
  			 */
- 			if (devices_to_reshape) {
-+				int used_disks;
- 				dprintf("process_update(): modifying "\
- 					"subdev: %i\n", id->index);
- 				devices_to_reshape--;
-@@ -5688,6 +5689,28 @@ static void imsm_process_update(struct supertype *st,
- 				 */
- 				newmap = get_imsm_map(newdev, 1);
- 				memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
++			if (reshape.before.raid_disks <
++			    reshape.after.raid_disks) {
++				struct mdinfo *info2;
+ 
+-			c = map_num(pers, info->new_level);
+-			if (c == NULL) {
+-				if (forked)
+-					return 1;
+-				exit(0);/* not possible */
++				wait_reshape(sra);
++				ping_monitor(container);
 +
-+				/* calculate new size
-+				 */
-+				used_disks = imsm_num_data_members(newdev, 0);
-+				if (used_disks) {
-+					unsigned long long array_blocks;
++				info2 = st->ss->container_content(st, subarray);
++				if (info2) {
++					unsigned long long current_size = 0;
++					unsigned long long new_size =
++						info2->custom_array_size/2;
 +
-+					array_blocks =
-+						newmap->blocks_per_member
-+						* used_disks;
-+					/* round array size down to closest MB
-+					 */
-+					array_blocks = (array_blocks
-+							>> SECT_PER_MB_SHIFT)
-+							<< SECT_PER_MB_SHIFT;
-+					newdev->size_low =
-+						__cpu_to_le32(
-+							(__u32)array_blocks);
-+					newdev->size_high =
-+						__cpu_to_le32(
-+						(__u32)(array_blocks >> 32));
++					sysfs_get_ll(sra,
++						     NULL,
++						     "array_size",
++						     &current_size);
++					if (new_size > current_size) {
++						if (sysfs_set_num(sra, NULL,
++							"array_size", new_size)
++						    < 0)
++							dprintf("Error: Cannot"\
++							     " set array size");
++						else
++							dprintf("Array size "\
++								"changed");
++						dprintf(" from %llu to %llu.\n",
++							current_size, new_size);
++					}
++					sysfs_free(info2);
 +				}
  			}
  
- 			sp = (void **)id->dev;
+-			if (reshape.before.raid_disks < 
+-			    reshape.after.raid_disks)
+-				wait_reshape(sra);
+-			err = sysfs_set_str(sra, NULL, "level", c);
+-			if (err)
+-				fprintf(stderr, Name ": %s: could not set level to %s\n",
+-					devname, c);
++			if (info->new_level != info->array.level) {
++				/* We need to wait for the reshape to finish
++				* (which will have happened unless
++				 * odata < ndata) and then set the level
++				*/
++
++				c = map_num(pers, info->new_level);
++				if (c == NULL) {
++					if (forked)
++						return 1;
++					exit(0);/* not possible */
++				}
++
++				err = sysfs_set_str(sra, NULL, "level", c);
++				if (err)
++					fprintf(stderr, Name\
++						": %s: could not set level"\
++						"to %s\n", devname, c);
++			}
+ 		}
+ 		if (forked)
+ 			return 0;
 
