@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 24/34] imsm: Update metadata for second array
-Date: Tue, 04 Jan 2011 15:38:47 +0100
-Message-ID: <20110104143847.6697.35790.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 25/34] Add spares to raid0 in mdadm
+Date: Tue, 04 Jan 2011 15:38:55 +0100
+Message-ID: <20110104143855.6697.57925.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,101 +13,79 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When second array reshape is about to start metadata should be update
-by mdmon in imsm_set_array_state().
+When user wants to add spares to container with raid0 arrays only
+it is not possible to update metadata due to lack of running mdmon.
+To allow for this direct metadata update by mdadm is used in such case.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- super-intel.c |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 77 insertions(+), 0 deletions(-)
+ Manage.c      |   13 +++----------
+ super-intel.c |    8 ++++++++
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
+diff --git a/Manage.c b/Manage.c
+index 81fa986..6b5e4be 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -844,9 +844,8 @@ int Manage_subdevs(char *devname, int fd,
+ 			if (dv->writemostly == 1)
+ 				disc.state |= (1 << MD_DISK_WRITEMOSTLY);
+ 			if (tst->ss->external) {
+-				/* add a disk to an external metadata container
+-				 * only if mdmon is around to see it
+-				 */
++				/* add a disk
++				 * to an external metadata container */
+ 				struct mdinfo new_mdi;
+ 				struct mdinfo *sra;
+ 				int container_fd;
+@@ -860,13 +859,6 @@ int Manage_subdevs(char *devname, int fd,
+ 					return 1;
+ 				}
+ 
+-				if (!mdmon_running(devnum)) {
+-					fprintf(stderr, Name ": add failed for %s: mdmon not running\n",
+-						dv->devname);
+-					close(container_fd);
+-					return 1;
+-				}
+-
+ 				sra = sysfs_read(container_fd, -1, 0);
+ 				if (!sra) {
+ 					fprintf(stderr, Name ": add failed for %s: sysfs_read failed\n",
+@@ -884,6 +876,7 @@ int Manage_subdevs(char *devname, int fd,
+ 					fprintf(stderr, Name ": add new device to external metadata"
+ 						" failed for %s\n", dv->devname);
+ 					close(container_fd);
++					sysfs_free(sra);
+ 					return 1;
+ 				}
+ 				ping_monitor(devnum2devname(devnum));
 diff --git a/super-intel.c b/super-intel.c
-index 72b6cf5..0f10e32 100644
+index 0f10e32..276e72d 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5002,6 +5002,83 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+@@ -3442,6 +3442,8 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 	return 0;
+ }
  
- 		for (mdi = a->info.devs; mdi; mdi = mdi->next)
- 			imsm_set_disk(a, mdi->disk.raid_disk, mdi->curr_state);
-+	} else if (dev->vol.migr_state == 0) {
-+		/* check here if this is container action
-+		 * and next metadata should be prepared
-+		*/
-+		struct active_array *aa = a->container->arrays;
-+		int arrays_under_reshape = 0;
++static int write_super_imsm(struct supertype *st, int doclose);
 +
-+		/* check if no other arrays is under reshape
-+		 */
-+		while (aa) {
-+			if (aa->container) {
-+				int inst = aa->info.container_member;
-+				struct intel_super *super = aa->container->sb;
-+				struct imsm_dev *dev =
-+						get_imsm_dev(super, inst);
-+				struct imsm_map *map2 = get_imsm_map(dev, 1);
-+
-+				if (map2)
-+					arrays_under_reshape++;
-+			}
-+			aa = aa->next;
-+		}
-+		if (arrays_under_reshape == 0) {
-+			struct imsm_map *map = get_imsm_map(dev, 0);
-+			struct dl *dl = NULL;
-+			int disks_count = 0;
-+
-+			/* check if this array should be reshaped
-+			*/
-+			for (dl = super->disks; dl; dl = dl->next)
-+				if (dl->index >= 0)
-+					disks_count++;
-+			if (disks_count > map->num_members) {
-+				/* manage changes in volume
-+				 */
-+				struct imsm_map *map, *map2;
-+				int prev_num_members;
-+				int used_disks;
-+				int i;
-+
-+				map = get_imsm_map(dev, 0);
-+				prev_num_members = map->num_members;
-+				map->num_members = disks_count;
-+				dev->vol.migr_state = 1;
-+				dev->vol.curr_migr_unit = 0;
-+				dev->vol.migr_type = MIGR_GEN_MIGR;
-+				for (i = prev_num_members;
-+					i < map->num_members; i++)
-+					set_imsm_ord_tbl_ent(map, i, i);
-+				map2 = get_imsm_map(dev, 1);
-+				/* Copy the current map */
-+				memcpy(map2, map, sizeof_imsm_map(map));
-+				map2->num_members = prev_num_members;
-+
-+				/* calculate new size
-+				 */
-+				used_disks = imsm_num_data_members(dev, 0);
-+				if (used_disks) {
-+					unsigned long long array_blocks;
-+
-+					array_blocks =
-+						map->blocks_per_member
-+						* used_disks;
-+					/* round array size down to closest MB
-+					 */
-+					array_blocks = (array_blocks
-+							>> SECT_PER_MB_SHIFT)
-+							<< SECT_PER_MB_SHIFT;
-+					dev->size_low =
-+					     __cpu_to_le32((__u32)array_blocks);
-+					dev->size_high =
-+						__cpu_to_le32(
-+						(__u32)(array_blocks >> 32));
-+				}
-+				super->updates_pending++;
-+			}
-+		}
+ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 			      int fd, char *devname)
+ {
+@@ -3506,6 +3508,12 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		super->disks = dd;
  	}
  
- 	return consistent;
++	if (!mdmon_running(st->container_dev)) {
++		dprintf("imsm: mdmon is not active- write metadata by mdadm\n");
++		super->updates_pending++;
++		write_super_imsm(st, 0);
++	}
++
+ 	return 0;
+ }
+ 
 
