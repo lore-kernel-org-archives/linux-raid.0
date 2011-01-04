@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 26/34] imsm: Move reshape update processing to function
-Date: Tue, 04 Jan 2011 15:39:03 +0100
-Message-ID: <20110104143903.6697.67817.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 27/34] imsm: Update raid0 metadata for reshape
+Date: Tue, 04 Jan 2011 15:39:11 +0100
+Message-ID: <20110104143911.6697.74488.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,267 +13,125 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-For code reuse in raid0 reshape case when monitor is not loaded.
+When raid0 reshape is performed metadata has to be applied by mdadm.
+(without mdmon)
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |  229 +++++++++++++++++++++++++++++++--------------------------
- 1 files changed, 126 insertions(+), 103 deletions(-)
+ super-intel.c |   82 +++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 71 insertions(+), 11 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 276e72d..565afd4 100644
+index 565afd4..1be0e72 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5660,6 +5660,121 @@ static int add_remove_disk_update(struct intel_super *super)
- 	return check_degraded;
- }
+@@ -6595,36 +6595,96 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		return ret_val;
  
-+static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
-+						 struct intel_super *super,
-+						 void ***space_list,
-+						 int devices_to_reshape)
-+{
-+	struct dl *new_disk;
-+	struct intel_dev *id;
-+	int i;
-+	int delta_disks = u->new_raid_disks - u->old_raid_disks;
-+	void **tofree = NULL;
-+	struct imsm_super *mpb;
-+	int ret_val = 0;
-+
-+	dprintf("imsm: apply_reshape_container_disks_update() for reshape\n");
-+	mpb = super->anchor;
-+	/* enable spares to use in array
+ 	/* verify reshape conditions
+-	 * on container level we can only increase number of devices. */
++	 * on container level we can only increase number of devices.
 +	 */
-+	for (i = 0; i < delta_disks; i++) {
-+		new_disk = get_disk_super(super,
-+					  major(u->new_disks[i]),
-+					  minor(u->new_disks[i]));
-+		dprintf("imsm: apply_reshape_container_disks_update():"\
-+			"new disk for reshape is: %i:%i (%p, index = %i)\n",
-+			major(u->new_disks[i]), minor(u->new_disks[i]),
-+			new_disk, new_disk->index);
-+		if ((new_disk == NULL) ||
-+		    ((new_disk->index >= 0) &&
-+		     (new_disk->index < u->old_raid_disks)))
-+			goto update_reshape_exit;
-+		new_disk->index = mpb->num_disks++;
-+		/* slot to fill in autolayout
+ 	if (st->container_dev == st->devnum) {
+ 		/* check for delta_disks > 0
+-		 *and supported raid levels 0 and 5 only in container */
++		 * and supported raid levels 0 and 5 only in container
 +		 */
-+		new_disk->raiddisk = new_disk->index;
-+		new_disk->disk.status |=
-+			CONFIGURED_DISK;
-+		new_disk->disk.status &= ~SPARE_DISK;
-+	}
+ 		int old_raid_disks = 0;
+ 		if (imsm_reshape_is_allowed_on_container(
+ 			    st, &geo, &old_raid_disks)) {
+ 			struct imsm_update_reshape *u = NULL;
+ 			int len;
++			struct intel_super *super = st->sb;
++			void **space_list;
++			struct intel_dev *dl;
++			void **space_tail = (void **)&space_list;
 +
-+	dprintf("imsm: apply_reshape_container_disks_update():"
-+		"update_reshape: volume set mpb->num_raid_devs = %i\n",
-+		mpb->num_raid_devs);
-+	/* manage changes in volume
-+	 */
-+	for (id = super->devlist ; id; id = id->next) {
-+		void **sp = *space_list;
-+		struct imsm_dev *newdev;
-+		struct imsm_map *newmap, *oldmap;
-+
-+		if (!sp)
-+			continue;
-+		*space_list = *sp;
-+		newdev = (void *)sp;
-+		/* Copy the dev, but not (all of) the map
-+		 */
-+		memcpy(newdev, id->dev, sizeof(*newdev));
-+		oldmap = get_imsm_map(id->dev, 0);
-+		newmap = get_imsm_map(newdev, 0);
-+		/* Copy the current map
-+		 */
-+		memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
-+		/* update one device only
-+		 */
-+		if (devices_to_reshape) {
-+			int used_disks;
-+
-+			dprintf("apply_reshape_container_disks_update():"\
-+				"modifying subdev: %i\n", id->index);
-+			devices_to_reshape--;
-+			newdev->vol.migr_state = 1;
-+			newdev->vol.curr_migr_unit = 0;
-+			newdev->vol.migr_type = MIGR_GEN_MIGR;
-+			newmap->num_members = u->new_raid_disks;
-+			for (i = 0; i < delta_disks; i++) {
-+				set_imsm_ord_tbl_ent(newmap,
-+						     u->old_raid_disks + i,
-+						     u->old_raid_disks + i);
-+			}
-+			/* New map is correct, now need to save old map
-+			 */
-+			newmap = get_imsm_map(newdev, 1);
-+			memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
-+
-+			/* calculate new size
-+			 */
-+			used_disks = imsm_num_data_members(newdev, 0);
-+			if (used_disks) {
-+				unsigned long long array_blocks;
-+
-+				array_blocks =
-+					newmap->blocks_per_member * used_disks;
-+				/* round array size down to closest MB
-+				 */
-+				array_blocks = (array_blocks
-+					>> SECT_PER_MB_SHIFT)
-+					<< SECT_PER_MB_SHIFT;
-+				newdev->size_low =
-+					__cpu_to_le32((__u32)array_blocks);
-+				newdev->size_high =
-+					__cpu_to_le32((__u32)
-+							(array_blocks >> 32));
-+			}
-+		}
-+
-+		sp = (void **)id->dev;
-+		id->dev = newdev;
-+		*sp = tofree;
-+		tofree = sp;
-+	}
-+	ret_val = 1;
-+
-+update_reshape_exit:
-+
-+	return ret_val;
-+}
-+
- static void imsm_process_update(struct supertype *st,
- 			        struct metadata_update *update)
- {
-@@ -5704,109 +5819,12 @@ static void imsm_process_update(struct supertype *st,
- 	switch (type) {
- 	case update_reshape_container_disks: {
- 		struct imsm_update_reshape *u = (void *)update->buf;
--		struct dl *new_disk;
--		struct intel_dev *id;
--		int i;
--		int delta_disks = u->new_raid_disks - u->old_raid_disks;
--		void **tofree = NULL;
--		int devices_to_reshape = 1;
--
--		dprintf("imsm: imsm_process_update() for update_reshape\n");
--
--		/* enable spares to use in array */
--		for (i = 0; i < delta_disks; i++) {
--			new_disk = get_disk_super(super,
--						  major(u->new_disks[i]),
--						  minor(u->new_disks[i]));
--			dprintf("imsm: imsm_process_update(): new disk "\
--				"for reshape is: %i:%i (%p, index = %i)\n",
--				major(u->new_disks[i]), minor(u->new_disks[i]),
--				new_disk, new_disk->index);
--			if ((new_disk == NULL) ||
--			    ((new_disk->index >= 0) &&
--			     (new_disk->index < u->old_raid_disks)))
--				goto update_reshape_exit;
--
--			new_disk->index = mpb->num_disks++;
--			/* slot to fill in autolayout */
--			new_disk->raiddisk = new_disk->index;
--			new_disk->disk.status |=
--				CONFIGURED_DISK;
--			new_disk->disk.status &= ~SPARE_DISK;
--		}
--
--		dprintf("imsm: process_update(): update_reshape: volume set"\
--			" mpb->num_raid_devs = %i\n", mpb->num_raid_devs);
--		/* manage changes in volume
--		 */
--		for (id = super->devlist ; id; id = id->next) {
--			void **sp = update->space_list;
--			struct imsm_dev *newdev;
--			struct imsm_map *newmap, *oldmap;
--
--			if (!sp)
--				continue;
--			update->space_list = *sp;
--			newdev = (void*)sp;
--			/* Copy the dev, but not (all of) the map */
--			memcpy(newdev, id->dev, sizeof(*newdev));
--			oldmap = get_imsm_map(id->dev, 0);
--			newmap = get_imsm_map(newdev, 0);
--			/* Copy the current map */
--			memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
--			/* update one device only
--			 */
--			if (devices_to_reshape) {
--				int used_disks;
--				dprintf("process_update(): modifying "\
--					"subdev: %i\n", id->index);
--				devices_to_reshape--;
--				newdev->vol.migr_state = 1;
--				newdev->vol.curr_migr_unit = 0;
--				newdev->vol.migr_type = MIGR_GEN_MIGR;
--				newmap->num_members = u->new_raid_disks;
--				for (i = 0; i < delta_disks; i++) {
--					set_imsm_ord_tbl_ent(newmap,
--							u->old_raid_disks + i,
--							u->old_raid_disks + i);
--				}
--				/* New map is correct, now need to save old map
--				 */
--				newmap = get_imsm_map(newdev, 1);
--				memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
-+		int ret_val;
  
--				/* calculate new size
--				 */
--				used_disks = imsm_num_data_members(newdev, 0);
--				if (used_disks) {
--					unsigned long long array_blocks;
--
--					array_blocks =
--						newmap->blocks_per_member
--						* used_disks;
--					/* round array size down to closest MB
--					 */
--					array_blocks = (array_blocks
--							>> SECT_PER_MB_SHIFT)
--							<< SECT_PER_MB_SHIFT;
--					newdev->size_low =
--						__cpu_to_le32(
--							(__u32)array_blocks);
--					newdev->size_high =
--						__cpu_to_le32(
--						(__u32)(array_blocks >> 32));
--				}
--			}
--
--			sp = (void **)id->dev;
--			id->dev = newdev;
--			*sp = tofree;
--			tofree = sp;
--		}
--
--		update->space_list = tofree;
--		super->updates_pending++;
--update_reshape_exit:
-+		ret_val = apply_reshape_container_disks_update(u, super,
-+							&update->space_list, 1);
-+		if (ret_val)
-+			super->updates_pending++;
- 		break;
- 	}
- 	case update_activate_spare: {
-@@ -6592,7 +6610,12 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 			len = imsm_create_metadata_update_for_reshape(
+ 				st, &geo, old_raid_disks, &u);
  
- 			if (len) {
+-			if (len) {
++			if (len <= 0) {
++				dprintf("imsm: Cannot prepare update\n");
++				goto exit_imsm_reshape_super;
++
++			}
++			if (mdmon_running(st->container_dev)) {
  				ret_val = 0;
--				append_metadata_update(st, u, len);
-+				if (mdmon_running(st->container_dev))
-+					append_metadata_update(st, u, len);
-+				else {
-+					/* no mdmon - apply update
-+					 */
+-				if (mdmon_running(st->container_dev))
+-					append_metadata_update(st, u, len);
+-				else {
+-					/* no mdmon - apply update
+-					 */
++				append_metadata_update(st, u, len);
++				goto exit_imsm_reshape_super;
++			}
++
++			/* no mdmon - apply update
++			 */
++
++			dprintf("imsm:prepare space list for update_reshape\n");
++			for (dl = super->devlist; dl;
++			     dl = dl->next) {
++				int size = sizeof_imsm_dev(dl->dev, 1);
++				void *s;
++				if (u->new_raid_disks > u->old_raid_disks)
++					size += sizeof(__u32)*2*
++					(u->new_raid_disks - u->old_raid_disks);
++				s = malloc(size);
++				if (!s)
++					break;
++				*space_tail = s;
++				space_tail = s;
++				*space_tail = NULL;
++			}
++			ret_val = apply_reshape_container_disks_update(u, super,
++								&space_list, 1);
++			if (ret_val) {
++				/* reallocate anchor
++				 */
++				size_t buf_len = super->len;
++				size_t len =
++					disks_to_mpb_size(u->new_raid_disks);
++				struct imsm_super *mpb = super->anchor;
++				void *new_anchor;
++
++				if (__le32_to_cpu(mpb->mpb_size) + len >
++				    buf_len) {
++					buf_len = ROUND_UP(__le32_to_cpu(
++						mpb->mpb_size) + len, 512);
++					if (posix_memalign(&new_anchor,
++							   512, buf_len) == 0) {
++						memcpy(new_anchor, super->buf,
++						       super->len);
++						free(super->buf);
++						super->buf = new_anchor;
++						super->len = buf_len;
++					}
++					super->updates_pending++;
++					ret_val = 0;
 +				}
- 			} else
- 				dprintf("imsm: Cannot prepare "\
- 					"update\n");
++			} else {
++				while (space_list) {
++					void *space = space_list;
++					space_list = *space_list;
++					free(space);
+ 				}
+-			} else
+-				dprintf("imsm: Cannot prepare "\
+-					"update\n");
++				free(u);
++			}
+ 		} else
+ 			fprintf(stderr, Name "imsm: Operation is not allowed "\
+ 				"on this container\n");
+ 	} else
+ 		dprintf("imsm: not a container operation\n");
+ 
++exit_imsm_reshape_super:
+ 	dprintf("imsm: reshape_super Exit code = %i\n", ret_val);
+ 	return ret_val;
+ }
 
