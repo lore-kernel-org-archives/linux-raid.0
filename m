@@ -1,134 +1,143 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Tue, 04 Jan 2011 14:03:36 +0000
-Message-ID: <4D2328B8.4070608@anonymous.org.uk>
-References: <4D20E9F7.2080800@anonymous.org.uk> <4D216FA1.5010502@hardwarefreak.com> <4D21F2BB.3020905@anonymous.org.uk> <4D224B22.6070007@hardwarefreak.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: [PATCH 2/3] Assemble imsm spares in matching domain only
+Date: Tue, 4 Jan 2011 14:04:13 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F48@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E5CFBA0@irsmsx504.ger.corp.intel.com>
+ <20101226222252.1255c6a9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D224B22.6070007@hardwarefreak.com>
+In-Reply-To: <20101226222252.1255c6a9@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 03/01/2011 22:18, Stan Hoeppner wrote:
-> John Robinson put forth on 1/3/2011 10:00 AM:
->> On 03/01/2011 06:41, Stan Hoeppner wrote:
-[...]
-> When using PMPs one will always have less theoretical b/w per drive t=
-han
-> what that drive can push on paper with a streaming read.  Considering
-> that over 90% of real world workloads are random IO heavy, not
-> streaming, it's unlikely you'll ever run out of b/w using a PMP based
-> setup.  I haven't.
 
-That's probably true but I don't like making compromises if I can=20
-possibly avoid it :-)
 
->> I doubt my motherboard supports FIS PMPs. It's an Asus P5Q Pro, Inte=
-l
->> P45+ICH10R, and I'm pretty sure the ICH10R doesn't support PMPs even=
- if
->> the original spec said it would.
->
-> I just looked it up, and the ICH10R does _NOT_ support PMP.  Neither
-> does the onboard Silicon Image 5723 chip, which actually connects to =
-the
-> southbridge via a SATA II port (stupid).
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Sunday, December 26, 2010 12:23 PM
+> To: Czarnowska, Anna
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Hawrylewicz Czarnowski, Przemyslaw; Labun, Marcin; Neubauer, Wojciech
+> Subject: Re: [PATCH 2/3] Assemble imsm spares in matching domain only
+> 
+> 
+> Thanks for these three.
+> 
+> I have applied the first,
+> applied the seconds with a couple of changes as mentioned below,
+> but I haven't applied the first.  I don't like the fact that knowledge
+> about
+> imsm is explicitly hard-coded into mdadm.c  All explicit knowledge
+> about imsm
+> should be in super-intel.c...
+> 
+> I think you can make this work by adding some code in to Assemble()
+> just near:
+> 	/* Now reject spares that don't match domains of identified
+> members */
+> 
+> at that point, if (!st  || !st->sb), then we could include all those
+> spares
+> which have ->used == 3.
+> i.e. when there are now more arrays to be found, all the spares get
+> included
+> into one last array.
 
-Must be connected to the Marvell 88SE6111's SATA port. Well, the spec=20
-says 88SE6111 but my lspci shows an 88SE6121. The 88SE6121 ought to hav=
-e=20
-two SATA ports, but I've found odd behaviour with the two non-ICH10R=20
-ports on the board when testing - basically if I use the second port bu=
-t=20
-not the first port, nothing appears, even with Asus' Drive Xpert=20
-disabled. This is presumably the SilI 5723's contribution, hanging off=20
-the Marvell chip's SATA port, and clearly no use for RAID where a drive=
-=20
-might die but we want to carry on, so I'll be ignoring the on-board=20
-Marvell/SilI stuff.
+I have implemented it this way but:
+(!st || !st->sb) does not necessarily mean we are assembling "last" array.
+This also happens when we find no devices for an array from config file.
+So if the first array is missing we take all spares into spare-container
+and they don't have a chance to be matched with other arrays.
+Should we ignore this case as a bad config?
 
-> BTW, the P5Q Pro has 3 PCIe x1 slots and 2 PCIe x16/x8 slots, plus 2 =
-PCI
-> slots.  You told us the only slot you have available is 1 PCIe x16/x8=
-=2E
-> What is consuming the 3 PCIe x1 slots?  The PCIe x1 slot just North o=
-f
-> the top x16 slot should be free.  I'm guessing the other 2 are blocke=
-d
-> by your GPU cooler, correct?
+With auto assembly if we have this condition it means we can take all spares
+that did not match anything before.
+This is what we want but there is another problem: we do not attempt auto assembly
+if we manage to assemble anything from config file. 
+This means that when there is a good config file then
+only the spares matching some array will be assembled.
+We will not come back for the remaining ones.
 
-Ah, I'm sorry, no I didn't say I only the PCIe x16/x8 slot available, o=
-r=20
-at least that's not what I meant. I do need PCIe because both PCI slots=
-=20
-are taken, but I do have all three PCIe x1 slots and one PCIe x8/x16=20
-slot available. The graphics card is only single thickness and could=20
-indeed be moved.
+If mdadm.c is a bad place to force spares assembly then maybe it makes sense
+to add an ARRAY line with uuid=0 as last array in config?
+This would take care of spares that have different domains than all arrays. 
 
-I know I could easily put two $30 2-port cards in, but for neatness I'd=
-=20
-prefer one card with 4 ports, which is what I started this thread to=20
-look for. One 2-port card and a PMP is a reasonable solution that I=20
-might yet go for.
+> It might make sense to have an new super_switch field which gives the
+> name of
+> the array-of-spares as there is no name stored in the spares to use ...
+> just
+> a thought though, you might not need that.
 
-NB My PCI slots are occupied by a TV tuner card and a SCSI card which=20
-serves my tape library, and in any case I want to avoid the limitation=20
-of the PCI bus which would have half the bandwidth of one PCIe x1 v1=20
-slot even if it wasn't sharing with two other highish-bandwidth devices=
-=2E
+Monitor doesn't need to know the name of the array-of-spares. It always checks all.
 
-[...]
-> I recommended the Marvell based card strictly because it does PCIe x1
-> rev 2 for 500MB/s.  I only use the Silicon Image based cards, but I u=
-se
-> more than one if I have more than 4 drives in an array.  The cost com=
-es
-> out the same at $40 as the Marvell card, but the SI route requires 2
-> PCIe slots, and you only have one.
+> 
+> Could you try that and see if you can make it work?
+> 
+> The issues I fixed with this second patch are:
+> 
+> 
+> > @@ -78,7 +78,8 @@ static int ident_matches(struct mddev_ident *ident,
+> >  {
+> >
+> >  	if (ident->uuid_set && (!update || strcmp(update, "uuid")!= 0) &&
+> > -	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0)
+> {
+> > +	    same_uuid(content->uuid, ident->uuid, tst->ss->swapuuid)==0
+> &&
+> > +	    memcmp(content->uuid, uuid_zero, sizeof(int[4]))) {
+> >  		if (devname)
+> >  			fprintf(stderr, Name ": %s has wrong uuid.\n",
+> >  				devname);
+> 
+> I really really don't like that way of testing the return value of
+> memcmp (or
+> strcmp).  It make it very hard to read - for me at least.
+> I *always* want to see one a comparison with zero with memcmp or
+> strcmp.
+> 
+> So:
+>    memcmp() == 0
+> means the values are equal,
+>    memcmp() > 0
+> means the first is greater than the second
+> etc.  So the comparison operator just has to be moved in my thoughts
+> in between the two values and I can see clearly what is intended.
+> 
+> > @@ -350,6 +352,7 @@ int Assemble(struct supertype *st, char *mddev,
+> >  			} else
+> >  				found_container = 1;
+> >  		} else {
+> > +			pol = devnum_policy(stb.st_rdev);
+> >  			if (!tst && (tst = guess_super(dfd)) == NULL) {
+> >  				if (report_missmatch)
+> >  					fprintf(stderr, Name ": no recogniseable
+> superblock on %s\n",
+> > @@ -366,7 +369,7 @@ int Assemble(struct supertype *st, char *mddev,
+> >  						tst->ss->name, devname);
+> >  				tmpdev->used = 2;
+> >  			} else if (auto_assem && st == NULL &&
+> > -				   !conf_test_metadata(tst->ss->name, (pol =
+> devnum_policy(stb.st_rdev)),
+> > +				   !conf_test_metadata(tst->ss->name, pol,
+> >  						       tst->ss->match_home(tst,
+> homehost) == 1)) {
+> >  				if (report_missmatch)
+> >  					fprintf(stderr, Name ": %s has metadata
+> type %s for which "
+> 
+> I have reverted this change.  I only want the devnum_policy to be
+> computed if
+> it is needed.
 
-As noted I do have more PCIe slots, and I've just found a Lycom PE-115=20
-PCIe x1 2-port SATA-III card for =C2=A320, which some third-party sites=
- say=20
-has a Marvell 88SE912x chip, and is PCIe v2.0, so that'd be my=20
-multi-card solution - two of them would give me the 4 ports I need to a=
-dd.
+It was needed to build array domain. I add it later on devices with used=1 only.
 
-[...]
-> Well, you've given us conflicting requirements that are impossible to
-> meet with any solution:
->
-> 1.  Low cost
-> 2.  Full b/w per drive
-> 3.  Only one PCIe slot availiable
->
-> There is not a solution available to meet all of your criteria.
+> Thanks,
+> NeilBrown
 
-My own research had got me that far, that's why I was asking here. If=20
-this is unreasonable, please excuse the noise...
-
->> Nevertheless, thank you very much for taking the time for such a
->> considered reply.
->
-> You're welcome.  I think you're finding yourself in that "I want to h=
-ave
-> my cake, but eat it too" situation.  You can't get what you want at t=
-he
-> price point you want.
-
-Don't we all want to have our cake and eat it sometimes? ;-)
-
-Thanks again for your thoughts.
-
-Cheers,
-
-John.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards
+Anna
