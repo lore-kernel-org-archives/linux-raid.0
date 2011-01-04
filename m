@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 1/3] Use one function chosing spares from container
-Date: Tue, 4 Jan 2011 15:04:02 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759FE0@irsmsx504.ger.corp.intel.com>
+Subject: PATCH 2/3] move_spare function modified and moved to Manage.c
+Date: Tue, 4 Jan 2011 15:04:59 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759FE2@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,197 +12,155 @@ To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-From 1c6a89cda7f5f4b05ca0f9760d444f6e9e877559 Mon Sep 17 00:00:00 2001
+From 2779f42c919a6870f9cfab6478cc97858d7ad7f8 Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Thu, 23 Dec 2010 14:51:08 +0100
-Subject: [PATCH 1/3] Use one function chosing spares from container
+Date: Tue, 4 Jan 2011 15:22:21 +0100
+Subject: [PATCH 2/3] move_spare function modified and moved to Manage.c
 Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-container_chose_spares in Monitor.c and
-get_spares_for_grow in super-intel.c
-do the same thing: search for spares in a container.
-
-Another version will also be needed for Incremental
-so a more general solution is presented here and
-applied in two previous contexts.
-
-Normally domlist==NULL would lead an empty list but
-this is typically checked earlier so here it is interpreted
-as "do not test domains".
+It will also be needed for Incremental.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- Monitor.c     |   51 +++++++++++++--------------------------------------
- mdadm.h       |    6 +++++-
- super-intel.c |   46 +++++++++++++++++++++++++++++++++++++---------
- 3 files changed, 55 insertions(+), 48 deletions(-)
+ Manage.c  |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ Monitor.c |   51 ++++-----------------------------------------------
+ mdadm.h   |    1 +
+ 3 files changed, 49 insertions(+), 47 deletions(-)
 
+diff --git a/Manage.c b/Manage.c
+index 81fa986..6b0853d 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -1096,4 +1096,48 @@ int Update_subarray(char *dev, char *subarray, char *update, struct mddev_ident
+ 
+ 	return rv;
+ }
++
++/* Move spare from one array to another
++ * If adding to destination array fails
++ * add back to original array
++ * Returns 1 on success, 0 on failure */
++int move_spare(char *from_devname, char *to_devname, dev_t devid)
++{
++	struct mddev_dev devlist;
++	char devname[20];
++
++	/* try to remove and add */
++	int fd1 = open(to_devname, O_RDONLY);
++	int fd2 = open(from_devname, O_RDONLY);
++
++	if (fd1 < 0 || fd2 < 0) {
++		if (fd1>=0) close(fd1);
++		if (fd2>=0) close(fd2);
++		return 0;
++	}
++
++	devlist.next = NULL;
++	devlist.used = 0;
++	devlist.re_add = 0;
++	devlist.writemostly = 0;
++	devlist.devname = devname;
++	sprintf(devname, "%d:%d", major(devid), minor(devid));
++
++	devlist.disposition = 'r';
++	if (Manage_subdevs(from_devname, fd2, &devlist, -1, 0, NULL) == 0) {
++		devlist.disposition = 'a';
++		if (Manage_subdevs(to_devname, fd1, &devlist, -1, 0, NULL) == 0) {
++			/* make sure manager is aware of changes */
++			ping_manager(to_devname);
++			ping_manager(from_devname);
++			close(fd1);
++			close(fd2);
++			return 1;
++		}
++		else Manage_subdevs(from_devname, fd2, &devlist, -1, 0, NULL);
++	}
++	close(fd1);
++	close(fd2);
++	return 0;
++}
+ #endif
 diff --git a/Monitor.c b/Monitor.c
-index e79f658..428c227 100644
+index 428c227..8f28382 100644
 --- a/Monitor.c
 +++ b/Monitor.c
-@@ -828,59 +828,34 @@ static dev_t container_choose_spare(struct state *from, struct state *to,
- 	/* This is similar to choose_spare, but we cannot trust devstate,
- 	 * so we need to read the metadata instead
- 	 */
--
-+	struct mdinfo *list;
- 	struct supertype *st = from->metadata;
- 	int fd = open(from->devname, O_RDONLY);
- 	int err;
--	struct mdinfo *disks, *d;
- 	dev_t dev = 0;
- 
- 	if (fd < 0)
- 		return 0;
--	if (!st->ss->getinfo_super_disks)
-+	if (!st->ss->getinfo_super_disks) {
-+		close(fd);
- 		return 0;
-+	}
- 	
- 	err = st->ss->load_container(st, fd, NULL);
- 	close(fd);
- 	if (err)
- 		return 0;
--
--	disks = st->ss->getinfo_super_disks(st);
--	st->ss->free_super(st);
--
--	if (!disks)
--		return 0;
- 	
--	for (d = disks->devs ; d && !dev ; d = d->next) {
--		if (d->disk.state == 0) {
--			struct dev_policy *pol;
--			unsigned long long dev_size;
--			dev = makedev(d->disk.major,d->disk.minor);
--			
--			if (min_size &&
--			    dev_size_from_id(dev,  &dev_size) &&
--			    dev_size < min_size) {
--				dev = 0;
--				continue;
--			}
--			if (from == to)
--				/* Just checking if destination already has
--				 * a spare, no need to check policy, we are
--				 * done.
--				 */
--				break;
--
--			pol = devnum_policy(dev);
--			if (from->spare_group)
--				pol_add(&pol, pol_domain,
--					from->spare_group, NULL);
--			if (!domain_test(domlist, pol, to->metadata->ss->name))
--				dev = 0;
--
--			dev_policy_free(pol);
--		}
-+	/* We only need one spare so full list not needed */
-+	list = container_chose_spares(st, min_size, domlist, from->spare_group,
-+				      to->metadata->ss->name, 1);
-+	if (list) {
-+		struct mdinfo *disks = list->devs;
-+		if (disks)
-+			dev = makedev(disks->disk.major, disks->disk.minor);
-+		sysfs_free(list);
- 	}
--	sysfs_free(disks);
-+	st->ss->free_super(st);
- 	return dev;
+@@ -722,51 +722,6 @@ unsigned long long min_spare_size_required(struct state *st)
+ 	return rv;
  }
  
+-static int move_spare(struct state *from, struct state *to,
+-		      dev_t devid,
+-		      struct alert_info *info)
+-{
+-	struct mddev_dev devlist;
+-	char devname[20];
+-
+-	/* try to remove and add */
+-	int fd1 = open(to->devname, O_RDONLY);
+-	int fd2 = open(from->devname, O_RDONLY);
+-
+-	if (fd1 < 0 || fd2 < 0) {
+-		if (fd1>=0) close(fd1);
+-		if (fd2>=0) close(fd2);
+-		return 0;
+-	}
+-
+-	devlist.next = NULL;
+-	devlist.used = 0;
+-	devlist.re_add = 0;
+-	devlist.writemostly = 0;
+-	devlist.devname = devname;
+-	sprintf(devname, "%d:%d", major(devid), minor(devid));
+-
+-	devlist.disposition = 'r';
+-	if (Manage_subdevs(from->devname, fd2, &devlist, -1, 0, NULL) == 0) {
+-		devlist.disposition = 'a';
+-		if (Manage_subdevs(to->devname, fd1, &devlist, -1, 0, NULL) == 0) {
+-			alert("MoveSpare", to->devname, from->devname, info);
+-			/* make sure we will see newly added spare before next
+-			 * time through loop
+-			 */
+-			ping_manager(to->devname);
+-			ping_manager(from->devname);
+-			close(fd1);
+-			close(fd2);
+-			return 1;
+-		}
+-		else Manage_subdevs(from->devname, fd2, &devlist, -1, 0, NULL);
+-	}
+-	close(fd1);
+-	close(fd2);
+-	return 0;
+-}
+-
+ static int check_donor(struct state *from, struct state *to)
+ {
+ 	struct state *sub;
+@@ -912,8 +867,10 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ 					devid = choose_spare(from, to, domlist,
+ 							     min_size);
+ 				if (devid > 0
+-				    && move_spare(from, to, devid, info))
+-						break;
++				    && move_spare(from->devname, to->devname, devid)) {
++					alert("MoveSpare", to->devname, from->devname, info);
++					break;
++				}
+ 			}
+ 			domain_free(domlist);
+ 		}
 diff --git a/mdadm.h b/mdadm.h
-index d3e88bc..dd5c901 100644
+index dd5c901..925f997 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -1095,7 +1095,11 @@ extern void append_metadata_update(struct supertype *st, void *buf, int len);
- extern int assemble_container_content(struct supertype *st, int mdfd,
- 				      struct mdinfo *content, int runstop,
- 				      char *chosen_name, int verbose);
--
-+extern struct mdinfo *container_chose_spares(struct supertype *st,
-+					     unsigned long long min_size,
-+					     struct domainlist *domlist,
-+					     char *spare_group,
-+					     const char *metadata, int get_one);
+@@ -1100,6 +1100,7 @@ extern struct mdinfo *container_chose_spares(struct supertype *st,
+ 					     struct domainlist *domlist,
+ 					     char *spare_group,
+ 					     const char *metadata, int get_one);
++extern int move_spare(char *from_devname, char *to_devname, dev_t devid);
  extern int add_disk(int mdfd, struct supertype *st,
  		    struct mdinfo *sra, struct mdinfo *info);
  extern int remove_disk(int mdfd, struct supertype *st,
-diff --git a/super-intel.c b/super-intel.c
-index c4100ef..a30dfaa 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6241,12 +6241,26 @@ static int imsm_reshape_is_allowed_on_container(struct supertype *st,
-  */
- static struct mdinfo *get_spares_for_grow(struct supertype *st)
- {
--	dev_t dev = 0;
--	struct mdinfo *disks, *d, **dp;
- 	unsigned long long min_size = min_acceptable_spare_size_imsm(st);
-+	return container_chose_spares(st, min_size, NULL, NULL, NULL, 0);
-+}
-+
-+/* Pick all spares matching given criteria from a container
-+ * if min_size == 0 do not check size
-+ * if domlist == NULL do not check domains
-+ * if spare_group given add it to domains of each spare
-+ * metadata allows to test domains using metadata of destination array */
-+struct mdinfo *container_chose_spares(struct supertype *st,
-+				      unsigned long long min_size,
-+				      struct domainlist *domlist,
-+				      char *spare_group,
-+				      const char *metadata, int get_one)
-+{
-+	struct mdinfo *d, **dp, *disks = NULL;
- 
--	/* get list of alldisks in container */
--	disks = getinfo_super_disks_imsm(st);
-+	/* get list of all disks in container */
-+	if (st->ss->getinfo_super_disks)
-+		disks = st->ss->getinfo_super_disks(st);
- 
- 	if (!disks)
- 		return NULL;
-@@ -6259,17 +6273,31 @@ static struct mdinfo *get_spares_for_grow(struct supertype *st)
- 		if (d->disk.state == 0) {
- 			/* check if size is acceptable */
- 			unsigned long long dev_size;
--			dev = makedev(d->disk.major,d->disk.minor);
--			if (min_size &&
--			    dev_size_from_id(dev,  &dev_size) &&
--			    dev_size >= min_size) {
--				dev = 0;
-+			dev_t dev = makedev(d->disk.major,d->disk.minor);
-+
-+			if (!min_size ||
-+			   (dev_size_from_id(dev,  &dev_size) &&
-+			    dev_size >= min_size))
- 				found = 1;
-+			/* check if domain matches */
-+			if (found && domlist) {
-+				struct dev_policy *pol = devnum_policy(dev);
-+				if (spare_group)
-+					pol_add(&pol, pol_domain,
-+						spare_group, NULL);
-+				if (!domain_test(domlist, pol, metadata))
-+					found = 0;
-+				dev_policy_free(pol);
- 			}
- 		}
- 		if (found) {
- 			dp = &d->next;
- 			disks->array.spare_disks++;
-+			if (get_one) {
-+				sysfs_free(*dp);
-+				d->next = NULL;
-+				return(disks);
-+			}
- 		} else {
- 			*dp = d->next;
- 			d->next = NULL;
 -- 
 1.7.1
 
