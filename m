@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 08/34] imsm: FIX: Do not update anchor directly
-Date: Tue, 04 Jan 2011 15:36:41 +0100
-Message-ID: <20110104143641.6697.14030.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 09/34] FIX: get updated information from metadata
+Date: Tue, 04 Jan 2011 15:36:49 +0100
+Message-ID: <20110104143649.6697.20310.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,82 +13,74 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-During preparing metadata update local /mdadm/ anchor shouldn't be updated directly.
-information should be get from metadata after update.
-It makes us sure that metadata is on disk(s) already.
+Metadata is not modified by metadata preparation handler.
+It has to be read again from array.
+There is 2 read required:
+1. before 'for' entry to get updated information after reshape_super() call
+2. inside 'for' loop to get updated information for every processed array
+  (it can happen /i.e. imsm case/ that container operation is a set of array operations
+   and information in metadata is changed after every loop).
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   31 ++++++++-----------------------
- 1 files changed, 8 insertions(+), 23 deletions(-)
+ Grow.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 7c73b67..0a915c0 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6329,13 +6329,13 @@ static int imsm_create_metadata_update_for_reshape(
- 	int old_raid_disks,
- 	struct imsm_update_reshape **updatep)
+diff --git a/Grow.c b/Grow.c
+index 9e0a51d..5d73365 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2083,6 +2083,8 @@ int reshape_container(char *container, int cfd, char *devname,
+ 		      int quiet)
  {
--	struct intel_super *super = st->sb;
--	struct imsm_super *mpb = super->anchor;
- 	int update_memory_size = 0;
- 	struct imsm_update_reshape *u = NULL;
- 	struct mdinfo *spares = NULL;
- 	int i;
- 	int delta_disks = 0;
-+	struct mdinfo *dev;
-+	int added_disks = 0;
+ 	struct mdinfo *cc;
++	struct mdinfo *cc_fresh = NULL;
++
+ 	if (reshape_super(st, info->component_size, info->new_level,
+ 			  info->new_layout, info->new_chunk,
+ 			  info->array.raid_disks + info->delta_disks,
+@@ -2091,6 +2093,14 @@ int reshape_container(char *container, int cfd, char *devname,
  
- 	dprintf("imsm_update_metadata_for_reshape(enter) raid_disks = %i\n",
- 		geo->raid_disks);
-@@ -6374,27 +6374,12 @@ static int imsm_create_metadata_update_for_reshape(
- 	dprintf("imsm: %i spares are available.\n\n",
- 		spares->array.spare_disks);
+ 	sync_metadata(st);
  
--	for (i = 0; i < delta_disks; i++) {
--		struct mdinfo *dev = spares->devs;
--		struct dl *dl;
++	/* ping monitor to be sure that update is on disk
++	 */
++	ping_monitor(container);
++
++	/* reload metadata to get updated information
++	 */
++	st->ss->load_container(st, cfd, NULL);
++
+ 	cc = st->ss->container_content(st, NULL);
+ 
+ 	if (!cc)
+@@ -2106,7 +2116,6 @@ int reshape_container(char *container, int cfd, char *devname,
+ 	case 0: /* child */
+ 		break;
+ 	}
 -
-+	dev = spares->devs;
-+	for (i = 0; (i < delta_disks) && dev; i++) {
- 		u->new_disks[i] = makedev(dev->disk.major,
- 					  dev->disk.minor);
--		dl = get_disk_super(super, dev->disk.major, dev->disk.minor);
--		dl->index = mpb->num_disks++;
--	}
--	/* Now update the metadata so that container_content will find
--	 * the new devices
--	 */
--	for (i = 0; i < mpb->num_raid_devs; i++) {
--		int d;
--		struct imsm_dev *dev = get_imsm_dev(super, i);
--		struct imsm_map *map = get_imsm_map(dev, 0);
--		map->num_members = geo->raid_disks;
--		for (d = 0; d < delta_disks; d++) {
--			set_imsm_ord_tbl_ent(map, old_raid_disks + d,
--					     mpb->num_disks - delta_disks + d);
--		}
-+		dev = dev->next;
-+		added_disks++;
+ 	/* For each member array, we need to perform the reshape */
+ 	for (; cc; cc = cc->next) {
+ 		int rv;
+@@ -2128,12 +2137,18 @@ int reshape_container(char *container, int cfd, char *devname,
+ 		if (!adev)
+ 			adev = cc->text_version;
+ 
+-		rv = reshape_array(container, fd, adev, st, cc, force,
++		sysfs_free(cc_fresh);
++		st->ss->load_container(st, cfd, NULL);
++		cc_fresh = st->ss->container_content(st, subarray);
++		rv = reshape_array(container, fd, adev, st,
++				   cc_fresh, force,
+ 				   backup_file, quiet, 1);
+ 		close(fd);
+ 		if (rv)
+ 			break;
  	}
- 
- abort:
-@@ -6403,13 +6388,13 @@ abort:
- 	sysfs_free(spares);
- 
- 	dprintf("imsm: reshape update preparation :");
--	if (i == delta_disks) {
-+	if (added_disks == delta_disks) {
- 		dprintf(" OK\n");
- 		*updatep = u;
- 		return update_memory_size;
- 	}
- 	free(u);
--	dprintf(" Error\n");
-+	dprintf(" Error: added_disks = %i\n", added_disks);
- 
- 	return 0;
++	sysfs_free(cc_fresh);
++	sysfs_free(cc);
+ 	exit(0);
  }
+ 
 
