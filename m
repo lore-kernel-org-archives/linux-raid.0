@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 17/34] imsm: FIX: Fill sys_name in container_content()
-Date: Tue, 04 Jan 2011 15:37:52 +0100
-Message-ID: <20110104143752.6697.88374.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 18/34] Finalize reshape after adding disks to array
+Date: Tue, 04 Jan 2011 15:38:00 +0100
+Message-ID: <20110104143800.6697.78088.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,50 +13,39 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-If sys_name field is empty structures produced by container_content()
-cannot be used for sysfs access.
+When reshape is finished monitor, has to finalize reshape in metadata.
+To do this set_array_state() should be called.
+This finishes migration and stores metadata on disks.
+
+reshape_delta_disks is set to not active value.
+This finishes reshape flow in mdmon.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ monitor.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index de3585e..f07665b 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4517,6 +4517,9 @@ static void update_recovery_start(struct imsm_dev *dev, struct mdinfo *array)
- 	rebuild->recovery_start = units * blocks_per_migr_unit(dev);
- }
+diff --git a/monitor.c b/monitor.c
+index 3962d9e..65fcba1 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -315,6 +315,17 @@ static int read_and_act(struct active_array *a)
+ 		 */
+ 		check_reshape = 1;
  
-+static int imsm_find_array_minor_by_subdev(int subdev,
-+					   int container,
-+					   int *minor);
- 
- static struct mdinfo *container_content_imsm(struct supertype *st, char *subarray)
- {
-@@ -4545,6 +4548,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 		struct mdinfo *this;
- 		int slot;
- 		char *ep;
-+		int minor;
- 
- 		if (subarray &&
- 		    (i != strtoul(subarray, &ep, 10) || *ep != '\0'))
-@@ -4575,6 +4579,14 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 
- 		super->current_vol = i;
- 		getinfo_super_imsm_volume(st, this, NULL);
++	/* finalize reshape detection
++	 */
++	if ((a->curr_action != reshape) &&
++	    (a->prev_action == reshape)) {
++		/* A reshape has finished.
++		 * Some disks may be in sync now.
++		 */
++		a->container->ss->set_array_state(a, a->curr_state <= clean);
++		check_degraded = 1;
++	}
 +
-+		if (imsm_find_array_minor_by_subdev(i,
-+						    st->container_dev,
-+						    &minor) >= 0) {
-+			sprintf(this->sys_name, "md%i", minor);
-+		}
-+
-+
- 		for (slot = 0 ; slot <  map->num_members; slot++) {
- 			unsigned long long recovery_start;
- 			struct mdinfo *info_d;
+ 	/* Check for failures and if found:
+ 	 * 1/ Record the failure in the metadata and unblock the device.
+ 	 *    FIXME update the kernel to stop notifying on failed drives when
 
