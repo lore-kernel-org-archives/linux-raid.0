@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/34] imsm: FIX: Perform first metadata update for container
-	operation
-Date: Tue, 04 Jan 2011 15:36:33 +0100
-Message-ID: <20110104143633.6697.68443.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 08/34] imsm: FIX: Do not update anchor directly
+Date: Tue, 04 Jan 2011 15:36:41 +0100
+Message-ID: <20110104143641.6697.14030.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,70 +13,81 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Meta data was not updated due to the following problems:
-1.disk index < 0 was treated as invalid, but this is spare device
-2. disk index greater than currently used disks is correct also
-3. newmap pointer has to be refreshed for second map copy operation
-4. size calculation has to be guarded for shrinking operation
+During preparing metadata update local /mdadm/ anchor shouldn't be updated directly.
+information should be get from metadata after update.
+It makes us sure that metadata is on disk(s) already.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+ super-intel.c |   31 ++++++++-----------------------
+ 1 files changed, 8 insertions(+), 23 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index ffbf741..7c73b67 100644
+index 7c73b67..0a915c0 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5602,7 +5602,13 @@ static void imsm_process_update(struct supertype *st,
- 			new_disk = get_disk_super(super,
- 						  major(u->new_disks[i]),
- 						  minor(u->new_disks[i]));
--			if (new_disk == NULL || new_disk->index < 0)
-+			dprintf("imsm: imsm_process_update(): new disk "\
-+				"for reshape is: %i:%i (%p, index = %i)\n",
-+				major(u->new_disks[i]), minor(u->new_disks[i]),
-+				new_disk, new_disk->index);
-+			if ((new_disk == NULL) ||
-+			    ((new_disk->index >= 0) &&
-+			     (new_disk->index < u->old_raid_disks)))
- 				goto update_reshape_exit;
+@@ -6329,13 +6329,13 @@ static int imsm_create_metadata_update_for_reshape(
+ 	int old_raid_disks,
+ 	struct imsm_update_reshape **updatep)
+ {
+-	struct intel_super *super = st->sb;
+-	struct imsm_super *mpb = super->anchor;
+ 	int update_memory_size = 0;
+ 	struct imsm_update_reshape *u = NULL;
+ 	struct mdinfo *spares = NULL;
+ 	int i;
+ 	int delta_disks = 0;
++	struct mdinfo *dev;
++	int added_disks = 0;
  
- 			new_disk->index = mpb->num_disks++;
-@@ -5642,7 +5648,7 @@ static void imsm_process_update(struct supertype *st,
- 						     u->old_raid_disks + i);
- 			}
- 			/* New map is correct, now need to save old map */
--			oldmap = get_imsm_map(newdev, 1);
-+			newmap = get_imsm_map(newdev, 1);
- 			memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
+ 	dprintf("imsm_update_metadata_for_reshape(enter) raid_disks = %i\n",
+ 		geo->raid_disks);
+@@ -6374,27 +6374,12 @@ static int imsm_create_metadata_update_for_reshape(
+ 	dprintf("imsm: %i spares are available.\n\n",
+ 		spares->array.spare_disks);
  
- 			sp = (void **)id->dev;
-@@ -5987,8 +5993,9 @@ static void imsm_prepare_update(struct supertype *st,
- 		for (dl = super->devlist; dl; dl = dl->next) {
- 			int size = sizeof_imsm_dev(dl->dev, 1);
- 			void *s;
--			size += sizeof(__u32) * 2 * 
--				(u->new_raid_disks - u->old_raid_disks);
-+			if (u->new_raid_disks > u->old_raid_disks)
-+				size += sizeof(__u32)*2*
-+					(u->new_raid_disks - u->old_raid_disks);
- 			s = malloc(size);
- 			if (!s)
- 				break;
-@@ -6395,11 +6402,14 @@ abort:
- 	 */
+-	for (i = 0; i < delta_disks; i++) {
+-		struct mdinfo *dev = spares->devs;
+-		struct dl *dl;
+-
++	dev = spares->devs;
++	for (i = 0; (i < delta_disks) && dev; i++) {
+ 		u->new_disks[i] = makedev(dev->disk.major,
+ 					  dev->disk.minor);
+-		dl = get_disk_super(super, dev->disk.major, dev->disk.minor);
+-		dl->index = mpb->num_disks++;
+-	}
+-	/* Now update the metadata so that container_content will find
+-	 * the new devices
+-	 */
+-	for (i = 0; i < mpb->num_raid_devs; i++) {
+-		int d;
+-		struct imsm_dev *dev = get_imsm_dev(super, i);
+-		struct imsm_map *map = get_imsm_map(dev, 0);
+-		map->num_members = geo->raid_disks;
+-		for (d = 0; d < delta_disks; d++) {
+-			set_imsm_ord_tbl_ent(map, old_raid_disks + d,
+-					     mpb->num_disks - delta_disks + d);
+-		}
++		dev = dev->next;
++		added_disks++;
+ 	}
+ 
+ abort:
+@@ -6403,13 +6388,13 @@ abort:
  	sysfs_free(spares);
  
-+	dprintf("imsm: reshape update preparation :");
- 	if (i == delta_disks) {
-+		dprintf(" OK\n");
+ 	dprintf("imsm: reshape update preparation :");
+-	if (i == delta_disks) {
++	if (added_disks == delta_disks) {
+ 		dprintf(" OK\n");
  		*updatep = u;
  		return update_memory_size;
  	}
  	free(u);
-+	dprintf(" Error\n");
+-	dprintf(" Error\n");
++	dprintf(" Error: added_disks = %i\n", added_disks);
  
  	return 0;
  }
