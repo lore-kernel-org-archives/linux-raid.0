@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 28/34] Take in mind takeover during disk add
-Date: Tue, 04 Jan 2011 15:39:19 +0100
-Message-ID: <20110104143919.6697.35990.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 29/34] Detect level change
+Date: Tue, 04 Jan 2011 15:39:27 +0100
+Message-ID: <20110104143926.6697.37287.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,42 +13,52 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Reduce disk number of added disks if disk number was increased by takeover.
+For level migration support it is necessary to allow mdmon to react for level changes.
+It has to have ability to change configuration of active array,
+and for array level change to raid0 finish array monitoring.
 
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ managemon.c |   12 ++++++++++++
+ monitor.c   |    2 +-
+ 2 files changed, 13 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 0b151f1..3814579 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1694,10 +1694,12 @@ static int reshape_array(char *container, int fd, char *devname,
- 			st->ss->container_content(st, subarray);
- 		struct mdinfo *d;
+diff --git a/managemon.c b/managemon.c
+index 9cb8049..269d06e 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -448,6 +448,18 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 	else
+ 		frozen = 1; /* can't read metadata_version assume the worst */
  
--		if (info2)
-+		if (info2) {
-+			int before_raid_disks = reshape.before.raid_disks;
-+			if (orig_level == 0)
-+				before_raid_disks--;
- 			for (d = info2->devs; d; d = d->next) {
--				if (d->disk.raid_disk >=
--				    reshape.before.raid_disks) {
-+				if (d->disk.raid_disk >= before_raid_disks) {
- 					/* This is a spare that wants to
- 					 * be part of the array.
- 					 */
-@@ -1705,7 +1707,8 @@ static int reshape_array(char *container, int fd, char *devname,
- 					add_disk(fd, st, info2, d);
- 				}
- 			}
--		sysfs_free(info2);
-+			sysfs_free(info2);
++	if (mdstat->level) {
++		int level = map_name(pers, mdstat->level);
++		if (a->info.array.level != level && level >= 0) {
++			struct active_array *newa = duplicate_aa(a);
++			if (newa) {
++				newa->info.array.level = level;
++				replace_array(a->container, a, newa);
++				a = newa;
++			}
 +		}
- 	}
- 
- 	if (reshape.blocks == 0) {
++	}
++
+ 	if (a->check_degraded && !frozen) {
+ 		struct metadata_update *updates = NULL;
+ 		struct mdinfo *newdev = NULL;
+diff --git a/monitor.c b/monitor.c
+index 65fcba1..937cc6b 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -517,7 +517,7 @@ static int wait_and_act(struct supertype *container, int nowait)
+ 		/* once an array has been deactivated we want to
+ 		 * ask the manager to discard it.
+ 		 */
+-		if (!a->container) {
++		if (!a->container || (a->info.array.level == 0)) {
+ 			if (discard_this) {
+ 				ap = &(*ap)->next;
+ 				continue;
 
