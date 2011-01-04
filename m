@@ -1,73 +1,55 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Is It Hopeless?
-Date: Tue, 04 Jan 2011 15:03:45 -0500
-Message-ID: <4D237D21.5050509@cfl.rr.com>
-References: <201012261019.56481.CACook@quantum-sci.com> <201012261606.29281.CACook@quantum-sci.com> <4D182587.4040801@turmel.org> <201012270510.51520.CACook@quantum-sci.com> <4D18C0C5.4010606@hardwarefreak.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: RAID for USB flash drives
+Date: Tue, 04 Jan 2011 20:09:20 +0000
+Message-ID: <4D237E70.6030104@anonymous.org.uk>
+References: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D18C0C5.4010606@hardwarefreak.com>
+In-Reply-To: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Hank Barta <hbarta@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/27/2010 11:37 AM, Stan Hoeppner wrote:
-> If they'd had a decent tape silo he'd have lost no data.
+On 04/01/2011 19:40, Hank Barta wrote:
+> Hi folks,
+> This is going to be one of those corner cases and I'm sure some of you
+> won't even think it a good idea. But I won;t let that stop me from
+> asking your opinion.
+[...]
 
-Unless the tape failed, which they often do.
+Go ahead :-)
 
->> MTBF of tape is hundreds of times sooner.  
-> 
-> Really?  Eli had those WD20EARS online in his D2D backup system for less
-> than 5 months.  LTO tape reliability is less than 5 months?  Show data
-> to back that argument up please.
+> So... Anything you would do differently?
 
-Those particular drives seem to have a rather high infant mortality
-rate.  That does not change the fact that modern drives are rated with
-MTBF of 300,000+ hours, which is a heck of a lot more than a tape.
+First up, booting. You'll have to boot off a bare device which may in 
+fact be a mirror over 2 or more sticks. Make that your first partition. 
+I think it's simpler to make it over all 4. Look up booting from RAID to 
+find out how.
 
-> Tape isn't perfect either, but based on my experience and reading that
-> of many many others, it's still better than D2D is many cases.  Also
-> note that tapes don't wholesale fail as disks do.  Bad spots on tape
-> cause some lost files, not _all_ the files, as is the case when a D2D
-> system fails during restore.
+Then, as far as I know USB flash sticks have lousy or no wear-levelling 
+algorithms and use cheap flash which may not have very many write 
+cycles, so given that, I'd either:
 
-Not necessarily.  Both systems can fail partially or totally, though
-total failure is probably more likely with disks.
+1. Use RAID-1, 5 or 10 for the rest of the system with ext4 as you suggest,
 
-> If a tape drive fails during restore, you don't lose all the backup
-> data.  You simply replace the drive and run the tapes through the new
-> drive.  If you have a multi-drive silo or library, you simply get a log
+or 2. Use btrfs for the rest of the system - btrfs is included in Ubuntu 
+10.10 but you may be able to get it for 10.04.
 
-It isn't the drive that is the problem; it's the tape.
+And in either case, make sure there are regular backups of the whole lot 
+to your main disc-based array, because those $7 USB sticks could still 
+give you problems.
 
-> At $99 you'll have $396 of drives in your backup server.  Add the cost
-> of a case ($50), PSU ($30), mobo ($80), CPU ($100), DIMMs ($30), optical
-> drive ($20), did I omit anything?  You're now at around $700.
+Or 3. I might just decide to use just one stick to boot the system from 
+(as a /boot) and put the rest of the system in an LVM LV, or even a 
+file, on the main array, and make sure I had a second stick to start the 
+system from if the first one went bad.
 
-Or you can just spend $30 on an esata drive dock instead of building a
-dedicated backup server.  Then you are looking at $430 to back up 4tb of
-data.  An LTO Ultrium 3 tape drive looks like it's nearly two grand, and
-only holds 400gb per tape at $30 a pop, so you're spending nearly $2500
-on the drive and 20 tapes.  It doesn't make sense to spend 5x as much on
-the backup solution as the primary storage solution.
+In any case, it's an interesting project, so good luck!
 
-> You now have a second system requiring "constant tending".  You also
-> have 9 components that could fail during restore.  With a tape drive you
-> have one.  Calculate the total MTBF of those 9 components using the
-> inverse probability rule and compare that to the MTBF of a single HP
-> LTO-2 drive?
+Cheers,
 
-This is a disingenuous argument since only one failure ( the drive )
-results in data loss.  If the power supply fails, you just plug in
-another one.  Also again, it is the tape that matters, not the tape
-drive, so what is the MTBF of those tapes?
+John.
 
-I know it isn't a significant sample size, but in 20 years of computing
-I have only personally ever had one hard drive outright fail on me, and
-that was a WD15EARS ( died in under 24 hours ), but I had tapes fail a
-few times, often within 24 hours of them verifying fine, then you go to
-restore from them and they are unreadable.  That combined with their
-absurd cost is why I don't use tapes any more.
