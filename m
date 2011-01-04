@@ -1,185 +1,105 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: [Slightly OT] Cheap 4-port PCI-E SATA card?
-Date: Mon, 03 Jan 2011 16:18:10 -0600
-Message-ID: <4D224B22.6070007@hardwarefreak.com>
-References: <4D20E9F7.2080800@anonymous.org.uk> <4D216FA1.5010502@hardwarefreak.com> <4D21F2BB.3020905@anonymous.org.uk>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID-10 initial sync is CPU-limited
+Date: Tue, 4 Jan 2011 16:24:37 +1100
+Message-ID: <20110104162437.31dae9c9@notabene.brown>
+References: <20110103163213.GC17455@fi.muni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D21F2BB.3020905@anonymous.org.uk>
+In-Reply-To: <20110103163213.GC17455@fi.muni.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Jan Kasprzak <kas@fi.muni.cz>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson put forth on 1/3/2011 10:00 AM:
-> On 03/01/2011 06:41, Stan Hoeppner wrote:
+On Mon, 3 Jan 2011 17:32:13 +0100 Jan Kasprzak <kas@fi.muni.cz> wrote:
 
->> http://www.addonics.com/products/host_controller/ad5sapm.asp
->> http://www.buy.com/prod/addonics-ad5sapm-serial-ata-controller-5-x-7=
--pin-serial-ata-300-serial/q/loc/101/213272437.html
+> 	Hello, Linux md developers!
+> 
+> I am trying to build a new md-based RAID-10 array out of 24 disks,
+> but it seems that the initial sync of the array is heavily limited
+> by CPU:
+> 
+> 	During the resync only 1-2 CPUs are busy (one for md1_raid10 thread
+> which is uses 100 % of a single CPU, and one for md1_resync thread, which
+> uses about 80 % of a single CPU).
+> 
+> 	Are there plans to make this process more parallel? I can imagine
+> that for near-copies algorithm there can be a separate thread for each
+> pair of disks in the RAID-10 array.
 
->> If your mobo SATA ports support FIS based switching, this PMP will g=
-ive
->> you 5 SATA II drive ports.  It doesn't use a PCI slot of any kind.  =
-No
->> additional software required.  No kernel driver issues.  300MB/s is
->> sufficient for 5 drives in an mdraid setup isn't it?
+No, no plans to make the resync more parallel at all.
 
-> For a backup array, yes, but I'm not sure it is for online storage.
-> 300MB/s is an absolute max and there's protocol overhead etc, but eve=
-n
-> if it's minimal we're still looking at no better than 50MB/s per driv=
-e,
-> while the drives can manage 125MB/s these days.
+The md1_raid10 process is probably spending lots of time in memcmp and memcpy.
+The way it works is to read all blocks that should be the same, see if they
+are the same and if not, copy on to the orders and write those other (or in
+your case "that other").
 
-When using PMPs one will always have less theoretical b/w per drive tha=
-n
-what that drive can push on paper with a streaming read.  Considering
-that over 90% of real world workloads are random IO heavy, not
-streaming, it's unlikely you'll ever run out of b/w using a PMP based
-setup.  I haven't.
+In general this is cleaner and easier than always reading one device and
+writing another.
 
-Also, as has been pointed out, you will be limited by PCIe x1 2.0 b/w
-before you are limited by qty 2 SATA II ports:  500 MB/s for PCIe x1
-rev2.0 versus 600MB/s for 2xSATA II links.  This is true whether you us=
-e
-a 4 port PCIe rev 2.0 card with 4 direct attached SATA II drives or 10
-drives with 2 PMPs.  You only have one PCIe slot.  To get more
-bandwidth, you'll have to use an x4 or x8 card, which is way above your
-stated price range.
+It might be appropriate to special-case some layouts and do 'read one, write
+other' when that is likely to be more efficient (patches welcome).
 
-> I doubt my motherboard supports FIS PMPs. It's an Asus P5Q Pro, Intel
-> P45+ICH10R, and I'm pretty sure the ICH10R doesn't support PMPs even =
-if
-> the original spec said it would.
+I'm surprised that md1_resync has such a high cpu usage though - it is just
+scheduling read requests, not actually doing anything with data.
 
-I just looked it up, and the ICH10R does _NOT_ support PMP.  Neither
-does the onboard Silicon Image 5723 chip, which actually connects to th=
-e
-southbridge via a SATA II port (stupid).
 
-BTW, the P5Q Pro has 3 PCIe x1 slots and 2 PCIe x16/x8 slots, plus 2 PC=
-I
-slots.  You told us the only slot you have available is 1 PCIe x16/x8.
-What is consuming the 3 PCIe x1 slots?  The PCIe x1 slot just North of
-the top x16 slot should be free.  I'm guessing the other 2 are blocked
-by your GPU cooler, correct?
+For a RAID10 it is perfectly safe to create with --assume-clean.  If you also
+add a write-intent bitmap, then you should never see a resync take much time
+at all.
 
-Picture:
-http://www.asus.com/product.aspx?P_ID=3DqH6ZSEJ8EPY6HoNU&templete=3D2
 
-Move your GPU card to the bottom x16 slot and you free up all 3 x1
-slots.  This gives you a lot more options to get the solution you want
-inexpensively.
+NeilBrown
 
-> There is a Marvell 88SE6121 SATA+IDE chip on there but it's currently=
- in
-> IDE-only mode for the DVD drive and even if I switched over to SATA m=
-ode
-> and a SATA DVD drive that'd only give me one more SATA port. But it
-> might work with a FIS PMP, I suppose.
 
-Originally I was going to propose a $20 Sil 3132 based 2 port card for
-use with 2 of the Addonics PMPs, but all those I could find are PCIe re=
-v
-1 only, for only 250MB/s of b/w.  All of the SI SATA host controller
-chips work perfectly with Silicon Image PMPs (3276 chip) and the kernel
-drivers have no issues.  If you had two PCIe x1 slots available, using
-two such cards with one PMP plugged into each would work very well
-indeed.  This is what I do.  Your b/w would max at 500MB/s, but again,
-this is more than sufficient for the vast majority of workloads.  Keep
-in mind that this bandwidth is bidirectional, so you actually have 1GB/=
-s
-of throughput with reads and writes in flight simultaneously with
-multi-user or multi-threaded workloads, especially with a deep NCQ buff=
-er.
-
-> I'd do that too - no problems doing case mods here. I suppose it's
-> possible the mounting holes might be able to be made to line up with
-> some of the mounting holes on the side of the hot-swap chassis. On th=
-e
-> other hand I might cheat and use the little plastic mounts with
-> double-sided tape on their feet.
-
-Yeah, there are lots of possibilities for mounting these handy little
-PMPs.  I've seen folks just put that really thick double sided foam tap=
-e
-on the back side and stick them to an open spot on the bottom or side o=
-f
-the chassis.
-
+> 
+> 	My hardware is apparently able to keep all the disks busy most
+> of the time (verified by running dd if=/dev/sd$i bs=1M of=/dev/null
+> in parallel - iostat reports 99-100 % utilization of each disk and about
+> 55 MB/s read per disk). All the disks are connected by a four-lane
+> SAS controller, so the maximum theoretical throughput is 4x 3 Gbit/s
+> = 12 Gbit/s = 0.5 Gbit/s per disk = 62.5 MByte/s per disk).
+> 
+> 	Here are the performance data from the initial resync:
+> 
+> # cat /proc/mdstat
 > [...]
->>   The driver for the Marvell chip is present in kernel
->> 2.6.19 and later.  Considering that 2.6.19 is like 6 years old, I'd =
-hope
->> your kernel is newer.
->=20
-> It's kernel-2.6.18-194.26.1.el5 so it's stuffed full of backports and
-> security updates, it's less than two months old. Yes, I have sata_mv,
-> but several people have reported data corruption issues with some
-> Marvell controllers - a bad interaction with SMART I think.
+> md1 : active raid10 sdz2[23] sdy2[22] sdx2[21] sdw2[20] sdu2[19] sdt2[18] sds2[17] sdr2[16] sdq2[15] sdp2[14] sdo2[13] sdn2[12] sdm2[11] sdl2[10] sdk2[9] sdj2[8] sdi2[7] sdh2[6] sdg2[5] sdf2[4] sde2[3] sdd2[2] sdc2[1] sdb2[0]
+>       23190484992 blocks super 1.2 512K chunks 2 near-copies [24/24] [UUUUUUUUUUUUUUUUUUUUUUUU]
+>       [=>...................]  resync =  7.3% (1713514432/23190484992) finish=796.4min speed=449437K/sec
+> 
+> # top
+> top - 23:05:31 up  8:20,  5 users,  load average: 3.12, 3.29, 3.25
+> Tasks: 356 total,   3 running, 353 sleeping,   0 stopped,   0 zombie
+> Cpu(s):  0.0%us,  8.3%sy,  0.0%ni, 91.1%id,  0.0%wa,  0.0%hi,  0.6%si,  0.0%st
+> Mem:  132298920k total,  3528792k used, 128770128k free,    53892k buffers
+> Swap: 10485756k total,        0k used, 10485756k free,   818496k cached
+> 
+>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND           
+> 12561 root      20   0     0    0    0 R 99.8  0.0  61:12.61 md1_raid10         
+> 12562 root      20   0     0    0    0 R 79.6  0.0  47:06.60 md1_resync         
+> [...]
+> 
+> # iostat -kx 5
+> avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+>            0.00    0.00    9.54    0.00    0.00   90.46
+> 
+> Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+> sdb              19.20     0.00  573.60    0.00 37939.20     0.00   132.28     0.50    0.87   0.30  17.26
+> sdc              19.60     0.00  573.20    0.00 37939.20     0.00   132.38     0.51    0.89   0.31  17.58
+> sdd              13.80     0.00  578.20    0.00 37888.00     0.00   131.05     0.52    0.89   0.31  18.02
+> sdf              19.20     0.00  572.80    0.00 37888.00     0.00   132.29     0.50    0.88   0.32  18.12
+> sde              12.80     0.00  579.40    0.00 37900.80     0.00   130.83     0.54    0.94   0.32  18.38
+> sdg              16.60     0.00  575.40    0.00 37888.00     0.00   131.69     0.53    0.93   0.33  18.76
+> [...]
+> sdy              14.40     0.00  579.20    0.00 37990.40     0.00   131.18     0.52    0.91   0.31  17.78
+> sdz             135.00   229.00  458.60  363.00 37990.40 37888.00   184.71     2.30    2.80   0.76  62.32
+> md1               0.00     0.00    0.00    0.00     0.00     0.00     0.00     0.00    0.00   0.00   0.00
+> 
+> 	Thanks,
+> 
+> -Yenya
+> 
 
-I recommended the Marvell based card strictly because it does PCIe x1
-rev 2 for 500MB/s.  I only use the Silicon Image based cards, but I use
-more than one if I have more than 4 drives in an array.  The cost comes
-out the same at $40 as the Marvell card, but the SI route requires 2
-PCIe slots, and you only have one.
-
->> It may be a little more money than you were planning on spending, bu=
-t
->> for little more than the cost of one hard drive
->=20
-> In this case I'm using consumer-level drives so they're about =C2=A34=
-0 ($60),
-> so $165 is a bit rich for me, especially since it's potentially limit=
-ed
-> for throughput.
-
-Well, you've given us conflicting requirements that are impossible to
-meet with any solution:
-
-1.  Low cost
-2.  Full b/w per drive
-3.  Only one PCIe slot availiable
-
-There is not a solution available to meet all of your criteria.  Either
-you must spend more on the card to get all the SATA ports and b/w you
-want, or you have to go the PMP route to lower costs, and sacrifice som=
-e
-theoretical performance.
-
-Below is probably the closest you will get to what you want but the
-price is higher than what you've said you want to spend.  It'll give yo=
-u
-8 direct attach SAS/SATA II ports with a PCIe x4 interface:
-
-http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816115057
-$149
-
-But you'll have to buy 2 fanout cables:
-http://www.satacables.com/sata_multilane_SAS_cables.html
-=46AN-OUT-20INCH4X
-Which run $20 apiece, $40 total.  So you're up to just under $200.
-
-Your most cost effective option for adding a 5 drive cage, by far, is
-this:  http://www.newegg.com/Product/Product.aspx?Item=3DN82E1681612403=
-2
-
-But it's only PCIe x1 at 250MB/s.
-
-> Nevertheless, thank you very much for taking the time for such a
-> considered reply.
-
-You're welcome.  I think you're finding yourself in that "I want to hav=
-e
-my cake, but eat it too" situation.  You can't get what you want at the
-price point you want.
-
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
