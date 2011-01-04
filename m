@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 02/34] FIX: Change size condition in
-	imsm_reshape_is_allowed_on_container
-Date: Tue, 04 Jan 2011 15:35:54 +0100
-Message-ID: <20110104143554.6697.63473.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 03/34] FIX: Position calculation in mdstat_by_subdev
+Date: Tue, 04 Jan 2011 15:36:02 +0100
+Message-ID: <20110104143602.6697.39390.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,26 +15,26 @@ List-Id: linux-raid.ids
 
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 
-Size has to be "0" when imsm_reshape_is_allowed_on_container
-function is called.
-
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- super-intel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ mdstat.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 17737cf..06b795e 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6149,7 +6149,7 @@ static int imsm_reshape_is_allowed_on_container(struct supertype *st,
- 		"st->devnum = (%i)\n",
- 		st->devnum);
- 
--	if (geo->size != -1 ||
-+	if (geo->size != 0 ||
- 	    geo->level != UnSet ||
- 	    geo->layout != UnSet ||
- 	    geo->chunksize != 0 ||
+diff --git a/mdstat.c b/mdstat.c
+index bac3742..3d2edad 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -399,9 +399,9 @@ struct mdstat_ent *mdstat_by_subdev(char *subdev, int container)
+ 		    strncmp(mdstat->metadata_version, "external:", 9) == 0 &&
+ 		    strchr("/-", mdstat->metadata_version[9]) != NULL &&
+ 		    strncmp(mdstat->metadata_version+10, "md", 2) == 0 &&
+-		    strtoul(mdstat->metadata_version+11, &pos, 10)
++		    strtoul(mdstat->metadata_version+12, &pos, 10)
+ 		    == (unsigned)container &&
+-		    pos > mdstat->metadata_version+11 &&
++		    pos > mdstat->metadata_version+12 &&
+ 		    *pos == '/' &&
+ 		    strcmp(pos+1, subdev) == 0
+ 			) {
 
