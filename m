@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 21/34] FIX: Initialize subarray variable in reshape_array
-Date: Tue, 04 Jan 2011 15:38:23 +0100
-Message-ID: <20110104143823.6697.85242.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 22/34] imsm: update array size information in metadata
+Date: Tue, 04 Jan 2011 15:38:31 +0100
+Message-ID: <20110104143831.6697.67491.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,25 +13,54 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-subarray variable was not initialized in reshape_array()
+When disks are added size has to increase in metadata.
+This size should be used by common code to set size in md when reshape will be finished.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ super-intel.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index dae9bbf..1c10889 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1616,7 +1616,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	struct mdu_array_info_s array;
- 	char *c;
- 	int rv = 0;
--	char *subarray = NULL;
-+	char *subarray = strchr(info->text_version+1, '/') + 1;
+diff --git a/super-intel.c b/super-intel.c
+index dc4f308..72b6cf5 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5672,6 +5672,7 @@ static void imsm_process_update(struct supertype *st,
+ 			/* update one device only
+ 			 */
+ 			if (devices_to_reshape) {
++				int used_disks;
+ 				dprintf("process_update(): modifying "\
+ 					"subdev: %i\n", id->index);
+ 				devices_to_reshape--;
+@@ -5688,6 +5689,28 @@ static void imsm_process_update(struct supertype *st,
+ 				 */
+ 				newmap = get_imsm_map(newdev, 1);
+ 				memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
++
++				/* calculate new size
++				 */
++				used_disks = imsm_num_data_members(newdev, 0);
++				if (used_disks) {
++					unsigned long long array_blocks;
++
++					array_blocks =
++						newmap->blocks_per_member
++						* used_disks;
++					/* round array size down to closest MB
++					 */
++					array_blocks = (array_blocks
++							>> SECT_PER_MB_SHIFT)
++							<< SECT_PER_MB_SHIFT;
++					newdev->size_low =
++						__cpu_to_le32(
++							(__u32)array_blocks);
++					newdev->size_high =
++						__cpu_to_le32(
++						(__u32)(array_blocks >> 32));
++				}
+ 			}
  
- 	int *fdlist;
- 	unsigned long long *offsets;
+ 			sp = (void **)id->dev;
 
