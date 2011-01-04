@@ -1,39 +1,33 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: Re: RAID for USB flash drives
-Date: Tue, 04 Jan 2011 16:22:16 -0500
-Message-ID: <4D238F88.7050908@cdf.toronto.edu>
-References: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
+From: Linus Walleij <linus.ml.walleij@gmail.com>
+Subject: Re: dmaengine: fix dma_unmap (was: Re: [PATCH 06/13] DMAENGINE:
+ driver for the ARM PL080/PL081 PrimeCells)
+Date: Tue, 4 Jan 2011 23:34:31 +0100
+Message-ID: <AANLkTi=84fdEcS9EkgK-5CK0f43ZVJRHu0F6eKQpWTO6@mail.gmail.com>
+References: <AANLkTinJAULeb1EsWk=S=b32h69X1x-noRw73Ok0uyfx@mail.gmail.com>
+	<20110103165227.GC32508@n2100.arm.linux.org.uk>
+	<AANLkTinMCLC8j=AvzaCQ+Uuyk75T=rAkaLUz0jHPOJ-d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Hank Barta <hbarta@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinMCLC8j=AvzaCQ+Uuyk75T=rAkaLUz0jHPOJ-d@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Viresh Kumar <viresh.kumar@st.com>, Kukjin Kim <kgene.kim@samsung.com>, Peter Pearse <peter.pearse@arm.com>, linux-kernel@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>, Ben Dooks <ben-linux@fluff.org>, yuanyabin1978@sina.com, linux-arm-kernel@lists.infradead.org, Alessandro Rubini <rubini@unipv.it>
 List-Id: linux-raid.ids
 
-Debirf is a project which allows one to create an initrd image which 
-contains a complete Debian system.
+2011/1/3 Dan Williams <dan.j.williams@intel.com>:
 
-We use debirf to create an image that we then boot from a single USB 
-stick. We use this to boot a fleet of machines which export iscsi 
-targets, so we don't have to waste a drive bay for the OS.
+> We could disable the driver if NET_DMA or ASYNC_TX_DMA are selected.
+> =A0That still allows the driver to be exercised with dmatest. =A0Alth=
+ough
+> I notice the driver is already marked experimental, do we need
+> something stronger for 37-final?
 
-http://cmrg.fifthhorseman.net/wiki/debirf
+Your pick, IMHO. To use it out-of-the-box with 2.6.37 is not possible
+on any system anyway - we have not patched in the required
+platform data to any ARM system! Those who do such things surely
+know what they're doing.
 
-For us, this solution works great, since there is absolutely NO wear on 
-the stick - the entire OS runs in memory. However, this does mean that 
-you would have to consider Debian rather than Ubuntu, or find a way to 
-make debirf work under Ubuntu.
-
-As far as constructing the RAID sets, I would look into using larger 
-chunks. Our testing showed that in our environment where our requests 
-are small (of size around 1 - 2kb), large 1MB chunks gave the best 
-performance. Chunks of size 512kb were a close second in performance for us.
-
-Booting over the network can create certain chicken-and-egg scenarios 
-which again depend on your environment :).
-
-Cheers,
-Iordan
+Yours,
+Linus Walleij
