@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 18/34] Finalize reshape after adding disks to array
-Date: Tue, 04 Jan 2011 15:38:00 +0100
-Message-ID: <20110104143800.6697.78088.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 19/34] imsm: Finalize reshape in metadata
+Date: Tue, 04 Jan 2011 15:38:08 +0100
+Message-ID: <20110104143808.6697.95865.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,39 +13,33 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When reshape is finished monitor, has to finalize reshape in metadata.
-To do this set_array_state() should be called.
-This finishes migration and stores metadata on disks.
-
-reshape_delta_disks is set to not active value.
-This finishes reshape flow in mdmon.
+When reshape is finished monitor calls set_array_state() and finishes migration in metadata.
+This change allows for finishing metadata migration on reshape end.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- monitor.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ super-intel.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/monitor.c b/monitor.c
-index 3962d9e..65fcba1 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -315,6 +315,17 @@ static int read_and_act(struct active_array *a)
- 		 */
- 		check_reshape = 1;
+diff --git a/super-intel.c b/super-intel.c
+index f07665b..58ed702 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4894,6 +4894,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 				dev->vol.curr_migr_unit = __cpu_to_le32(unit);
+ 				super->updates_pending++;
+ 			}
++			return 0;
+ 		} else {
+ 			if (a->last_checkpoint == 0 && a->prev_action == reshape) {
+ 				/* for some reason we aborted the reshape.
+@@ -4928,7 +4929,6 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 				super->updates_pending++;
+ 			}				
+ 		}
+-		return 0;
+ 	}
  
-+	/* finalize reshape detection
-+	 */
-+	if ((a->curr_action != reshape) &&
-+	    (a->prev_action == reshape)) {
-+		/* A reshape has finished.
-+		 * Some disks may be in sync now.
-+		 */
-+		a->container->ss->set_array_state(a, a->curr_state <= clean);
-+		check_degraded = 1;
-+	}
-+
- 	/* Check for failures and if found:
- 	 * 1/ Record the failure in the metadata and unblock the device.
- 	 *    FIXME update the kernel to stop notifying on failed drives when
+ 	/* before we activate this array handle any missing disks */
 
