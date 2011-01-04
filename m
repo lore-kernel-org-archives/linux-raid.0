@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 30/34] Raid0: execute backward takeover
-Date: Tue, 04 Jan 2011 15:39:34 +0100
-Message-ID: <20110104143934.6697.81006.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 31/34] imsm: FIX: do not repair raid4 arrays
+Date: Tue, 04 Jan 2011 15:39:42 +0100
+Message-ID: <20110104143942.6697.48922.stgit@gklab-128-013.igk.intel.com>
 References: <20110104143240.6697.52355.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,27 +13,30 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-After raid0 reshape is finished backward takeover has to be executed.
+As raid4 is not supported by imsm (this is takeovered raid0)
+do not fix degraded raid4 arrays.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ super-intel.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 3814579..c88df1b 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2072,8 +2072,8 @@ static int reshape_array(char *container, int fd, char *devname,
- 					sysfs_free(info2);
- 				}
- 			}
--
--			if (info->new_level != info->array.level) {
-+			if ((info->new_level != info->array.level) ||
-+			    ((info->new_level == 0) && (orig_level == 0))) {
- 				/* We need to wait for the reshape to finish
- 				* (which will have happened unless
- 				 * odata < ndata) and then set the level
+diff --git a/super-intel.c b/super-intel.c
+index 1be0e72..b01d52a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5432,6 +5432,12 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
+ 		/* No repair during migration */
+ 		return NULL;
+ 
++	if (a->info.array.level == 4)
++		/* No repair for takeovered array
++		 * imsm doesn't support raid4
++		 */
++		return NULL;
++
+ 	if (imsm_check_degraded(super, dev, failed) != IMSM_T_STATE_DEGRADED)
+ 		return NULL;
+ 
 
