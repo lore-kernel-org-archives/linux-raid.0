@@ -1,238 +1,89 @@
-From: "Patrick H." <linux-raid@feystorm.net>
-Subject: Re: filesystem corruption
-Date: Tue, 04 Jan 2011 18:22:33 -0700
-Message-ID: <4D23C7D9.3040109@feystorm.net>
-References: <4D212D4A.3040003@feystorm.net>	<20110103141603.632fdf3e@notabene.brown>	<4D214B5C.3010103@feystorm.net>	<20110103155630.565341d0@notabene.brown>	<4D215902.9010308@feystorm.net> <20110104163324.70baff54@notabene.brown> <4D22D14F.8070407@feystorm.net> <4D23598C.3040901@feystorm.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/3] Assemble imsm spares in matching domain only
+Date: Wed, 5 Jan 2011 13:36:57 +1100
+Message-ID: <20110105133657.42864b56@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E5CFBA0@irsmsx504.ger.corp.intel.com>
+	<20101226222252.1255c6a9@notabene.brown>
+	<A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F48@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D23598C.3040901@feystorm.net>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F48@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-I think I may have found something on this. I was messing around with it 
-more (switched to iSCSI instead of ATAoE), and managed to create a 
-situation where 2 of the 3 raid-5 disks had failed, yet the MD device 
-was still active, and it was letting me use it. This is bad.
+On Tue, 4 Jan 2011 14:04:13 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-mdadm -D /dev/md/fs01
-/dev/md/fs01:
-        Version : 1.2
-  Creation Time : Tue Jan  4 04:45:50 2011
-     Raid Level : raid5
-     Array Size : 2119424 (2.02 GiB 2.17 GB)
-  Used Dev Size : 1059712 (1035.05 MiB 1085.15 MB)
-   Raid Devices : 3
-  Total Devices : 1
-    Persistence : Superblock is persistent
+> 
+> 
+> > -----Original Message-----
+> > From: Neil Brown [mailto:neilb@suse.de]
+> > Sent: Sunday, December 26, 2010 12:23 PM
+> > To: Czarnowska, Anna
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Hawrylewicz Czarnowski, Przemyslaw; Labun, Marcin; Neubauer, Wojciech
+> > Subject: Re: [PATCH 2/3] Assemble imsm spares in matching domain only
+> > 
+> > 
+> > Thanks for these three.
+> > 
+> > I have applied the first,
+> > applied the seconds with a couple of changes as mentioned below,
+> > but I haven't applied the first.  I don't like the fact that knowledge
+> > about
+> > imsm is explicitly hard-coded into mdadm.c  All explicit knowledge
+> > about imsm
+> > should be in super-intel.c...
+> > 
+> > I think you can make this work by adding some code in to Assemble()
+> > just near:
+> > 	/* Now reject spares that don't match domains of identified
+> > members */
+> > 
+> > at that point, if (!st  || !st->sb), then we could include all those
+> > spares
+> > which have ->used == 3.
+> > i.e. when there are now more arrays to be found, all the spares get
+> > included
+> > into one last array.
+> 
+> I have implemented it this way but:
+> (!st || !st->sb) does not necessarily mean we are assembling "last" array.
+> This also happens when we find no devices for an array from config file.
+> So if the first array is missing we take all spares into spare-container
+> and they don't have a chance to be matched with other arrays.
+> Should we ignore this case as a bad config?
 
-  Intent Bitmap : Internal
+I think we should only automatically gather the spares when auto_assem is
+true.
+So the condition would be
+    if (auto_assem && (!st || !st->sb))
 
-    Update Time : Tue Jan  4 22:58:44 2011
-          State : active, FAILED
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
+> 
+> With auto assembly if we have this condition it means we can take all spares
+> that did not match anything before.
+> This is what we want but there is another problem: we do not attempt auto assembly
+> if we manage to assemble anything from config file. 
+> This means that when there is a good config file then
+> only the spares matching some array will be assembled.
+> We will not come back for the remaining ones.
+> 
+> If mdadm.c is a bad place to force spares assembly then maybe it makes sense
+> to add an ARRAY line with uuid=0 as last array in config?
+> This would take care of spares that have different domains than all arrays. 
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Yes, I think having an array with uuid=0 to collect all the remaining spares
+seems like a good idea.
+It may turn out not to work quite the way we want, but I think we should try
+it an get some experience with how well it works.  I think it is at least
+close to the correct solution.
 
-           Name : dm01:125  (local to host dm01)
-           UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-         Events : 2980
+Thanks,
 
-    Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       8       80        1      active sync   /dev/sdf
-       2       0        0        2      removed
-
-
-Notice, there's only one disk in the array, the other 2 failed and were 
-removed. Yet state is still saying active. The filesystem is still up 
-and running, and I can even read and write to it, though it spits out 
-tons of IO errors.
-I then stopped the array and tried to reassemble it, and now it wont 
-reassemble.
-
-
-# mdadm -A /dev/md/fs01 --uuid 9cd9ae9b:39454845:62f2b08d:a4a1ac6c -vv
-mdadm: looking for devices for /dev/md/fs01
-mdadm: no recogniseable superblock on /dev/md/fs01_journal
-mdadm: /dev/md/fs01_journal has wrong uuid.
-mdadm: cannot open device /dev/sdg: Device or resource busy
-mdadm: /dev/sdg has wrong uuid.
-mdadm: cannot open device /dev/sdd: Device or resource busy
-mdadm: /dev/sdd has wrong uuid.
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: /dev/sdb has wrong uuid.
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: /dev/sda2 has wrong uuid.
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: /dev/sda1 has wrong uuid.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sda has wrong uuid.
-mdadm: /dev/sde is identified as a member of /dev/md/fs01, slot 2.
-mdadm: /dev/sdc is identified as a member of /dev/md/fs01, slot 0.
-mdadm: /dev/sdf is identified as a member of /dev/md/fs01, slot 1.
-mdadm: added /dev/sdc to /dev/md/fs01 as 0
-mdadm: added /dev/sde to /dev/md/fs01 as 2
-mdadm: added /dev/sdf to /dev/md/fs01 as 1
-mdadm: /dev/md/fs01 assembled from 1 drive - not enough to start the array.
-
-
-# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md125 : inactive sdf[1](S) sde[3](S) sdc[0](S)
-      3179280 blocks super 1.2
-
-md126 : active raid1 sdg[0] sdb[2] sdd[1]
-      265172 blocks super 1.2 [3/3] [UUU]
-      bitmap: 0/3 pages [0KB], 64KB chunk
-
-unused devices: <none>
-
-
-md126 is the ext3 journal for the filesystem
-Below is mdadm info on all the devices in the array
-
-# mdadm -E /dev/sdc
-/dev/sdc:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-           Name : dm01:125  (local to host dm01)
-  Creation Time : Tue Jan  4 04:45:50 2011
-     Raid Level : raid5
-   Raid Devices : 3
-
- Avail Dev Size : 2119520 (1035.10 MiB 1085.19 MB)
-     Array Size : 4238848 (2.02 GiB 2.17 GB)
-  Used Dev Size : 2119424 (1035.05 MiB 1085.15 MB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : a20adb76:af00f276:5be79a36:b4ff3a8b
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Tue Jan  4 22:44:20 2011
-       Checksum : 350c988f - correct
-         Events : 1150
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 0
-   Array State : AA. ('A' == active, '.' == missing)
-
-# mdadm -X /dev/sdc
-        Filename : /dev/sdc
-           Magic : 6d746962
-         Version : 4
-            UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-          Events : 1150
-  Events Cleared : 1144
-           State : OK
-       Chunksize : 64 KB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 1059712 (1035.05 MiB 1085.15 MB)
-          Bitmap : 16558 bits (chunks), 93 dirty (0.6%)
-
-# mdadm -E /dev/sdf
-/dev/sdf:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-           Name : dm01:125  (local to host dm01)
-  Creation Time : Tue Jan  4 04:45:50 2011
-     Raid Level : raid5
-   Raid Devices : 3
-
- Avail Dev Size : 2119520 (1035.10 MiB 1085.19 MB)
-     Array Size : 4238848 (2.02 GiB 2.17 GB)
-  Used Dev Size : 2119424 (1035.05 MiB 1085.15 MB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : f9205ace:0796ecf5:2cca363c:c2873816
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Tue Jan  4 23:00:49 2011
-       Checksum : 9c20ba71 - correct
-         Events : 3062
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 1
-   Array State : .A. ('A' == active, '.' == missing)
-
-# mdadm -X /dev/sdf
-        Filename : /dev/sdf
-           Magic : 6d746962
-         Version : 4
-            UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-          Events : 3062
-  Events Cleared : 1144
-           State : OK
-       Chunksize : 64 KB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 1059712 (1035.05 MiB 1085.15 MB)
-          Bitmap : 16558 bits (chunks), 150 dirty (0.9%)
-
-# mdadm -E /dev/sde
-/dev/sde:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-           Name : dm01:125  (local to host dm01)
-  Creation Time : Tue Jan  4 04:45:50 2011
-     Raid Level : raid5
-   Raid Devices : 3
-
- Avail Dev Size : 2119520 (1035.10 MiB 1085.19 MB)
-     Array Size : 4238848 (2.02 GiB 2.17 GB)
-  Used Dev Size : 2119424 (1035.05 MiB 1085.15 MB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 7f90958d:22de5c08:88750ecb:5f376058
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Tue Jan  4 22:43:53 2011
-       Checksum : 3ecec198 - correct
-         Events : 1144
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-   Device Role : Active device 2
-   Array State : AAA ('A' == active, '.' == missing)
-
-# mdadm -X /dev/sde
-        Filename : /dev/sde
-           Magic : 6d746962
-         Version : 4
-            UUID : 9cd9ae9b:39454845:62f2b08d:a4a1ac6c
-          Events : 1144
-  Events Cleared : 1143
-           State : OK
-       Chunksize : 64 KB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 1059712 (1035.05 MiB 1085.15 MB)
-          Bitmap : 16558 bits (chunks), 38 dirty (0.2%)
-
-
-
-
-
+NeilBrown
 
 
