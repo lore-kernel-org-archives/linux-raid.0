@@ -1,167 +1,100 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Considering a complete rework of RAID on my home compute server
-Date: Thu, 6 Jan 2011 10:17:28 -0800
-Message-ID: <AANLkTikxViM45MfjZvMCDAobeVVwBqMZHrm_Ws-bsAQt@mail.gmail.com>
-References: <AANLkTinsQoPVaYVe4H9kMK7_-GFzHoKt_Zdf4nUKc+C2@mail.gmail.com>
-	<87.68.02631.5E6052D4@cdptpa-omtalb.mail.rr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: Re: [dm-devel] [PATCH v3 0/8] dm-raid (raid456) target
+Date: Thu, 6 Jan 2011 14:59:12 -0600
+Message-ID: <3AD00905-D14B-4D3F-AB6C-06E0DC8009CD@redhat.com>
+References: <1292899065-31943-1-git-send-email-snitzer@redhat.com>	<20101221141443.5aea0b12@notabene.brown>	<20110105223628.GA13164@redhat.com> <20110106214645.2bd321f4@notabene.brown> <4D25E617.70509@cfl.rr.com>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87.68.02631.5E6052D4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <4D25E617.70509@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: linux-raid@vger.kernel.org, Kergon Alasdair <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, Jan 5, 2011 at 4:03 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
-te:
->> 1) The Linux/MySQL stuff is a 3 drive RAID1. (sda/sdb/sdc)
+
+On Jan 6, 2011, at 9:56 AM, Phillip Susi wrote:
+
+> On 1/6/2011 5:46 AM, NeilBrown wrote:
+>> 3:	<#raid_devs> <meta_dev1> <dev1> .. <meta_devN> <devN>
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Well, RAID1 certainly offers the most robu=
-st solution, especially
-> with more than 1 mirror.
+> Let me get this straight.  You specify a separate device to hold the
+> metadata and write intent bitmap for each data device?  So for a 3  
+> disk
+> raid 5, lvm will need to create two logical volumes on each of the 3
+> physical volumes, one of which will only be a single physical extent,
+> and will hold the raid metadata and write intent bitmap?
 >
-<SNIP>
->
->> 3) There is a second RAID1 (sda/sdb/sdc) used for backups of the
->> RAID0. The RAID0 is backed up to RAID1 nightly. If the RAID0 fails
->> then I lose 1 day's work.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Well, first of all, unless you meant to sa=
-y sda1/sdb1/sdc1, etc,
-> then this can't be different from the #1 RAID array above. =C2=A0Assu=
-ming you are
-> actually using partitions, then I don't really see the value of two s=
-eparate
-> arrays. =C2=A0Why not just one RAID1 array?
->
+> Why not just store the metadata on the main device like mdadm does  
+> today?
 
-Sorry I wasn't very clear.
+There is no single big reason to do things as I've propose, just a lot  
+of little reasons...
 
-In #1 the RAID1 is my main Linux system on sda3/sdb3/sdc3.
-In #3 the RAID1 is purely for backups on /swa6/sdb6/sdc6 and is used
-only for the backup of the RAID0 data. It is not normally mounted
-except when doing backups. I wanted the extra protection that if
-something went wrong with the basic Linux box the backup partition
-would not normally be mounted and the data hopefully a bit safer.
+1) Device-mapper already has a few cases where metadata is kept on  
+separate devices from the data (snapshots and mirror log) and no cases  
+where they are kept together.  This new raid module is similar to the  
+mirroring case, where bitmaps are kept separately.
 
+2) It seems a bit funny to specify a length (second param of the  
+device-mapper CTR) and then expect the devices to be larger than their  
+share of that amount to accommodate metadata.  You might say it is  
+funny to have to specify a separate device to hold the metadata, but I  
+would again give the mirror log as an example.
 
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Also, I personally would reverse the backu=
-p strategy. =C2=A0I would put
-> the Windows VM on the (single) main RAID array and back up the data t=
-o a
-> single 1T hard drive.
->
+3) Where multiple physical devices form a single leg/component of the  
+array, the argument for having a metadata device specifically tied to  
+its data device as an indivisible unit is weakened.
 
-I do this today backing up the existing RAID1 partitions to an
-external eSATA 1TB drive.
+4) Having the metadata on a separate logical device increases the  
+flexibility of its placement.  You could have it at the beginning, in  
+the middle, or at the end.  (The middle might actually be preferred  
+for performance reasons.)  There are no offset calculations to perform  
+in the kernel that depend on metadata placement.
 
->> =C2=A0 =C2=A0OK - the problems I have with this arrangement are:
->>
->> 1) I used the older v0.9 metadata.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0This may be necessary if you are booting f=
-rom the array. =C2=A0The
-> limitations of the 0.90 superblock may never impact you. =C2=A0That's=
- a small
-> system with only a few drives.
->
->> 2) The RAIDs are assembled by the kernel automatically. I do not use
->> an initrd. (Because I don't know how/newer have)
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0How is that a problem? =C2=A0An initrd, or=
- lack thereof, won't prevent
-> you from disabling the automatic assembly of one or more arrays, unle=
-ss once
-> again you boot from the array in question. =C2=A0Most modern distros =
-default to
-> using an initrd. =C2=A0What distro are you using?
->
+5) Resizing an array might require the resizing of the metadata area.   
+Because the devices are separate, there is no need to move around data  
+or metadata to accommodate this.  If they were mixed in the same  
+device and the metadata was at the beginning, that's a problem if the  
+metadata no longer fits in its area.  Likewise, if the metadata were  
+at the end of a mixed device, you would have to move it when growing.   
+These problems are eliminated.
 
-The machines are Gentoo and an initrd/initramfs is up to the builder.
-The new RAID6/superblock-1.2  boot uses one. The RAID1/superblock-0.9
-does not.
+6) The metadata areas are not necessary in every case.  Some raid  
+controllers handle the metadata on their own (dm-raid works with  
+these).  You might say it is merely another flag on the CTR line to  
+indicate whether to use metadata or not.  Perhaps, but having them  
+separate means you can easily convert between the two types.
 
->> 3) I think with 5 disks I could get better performance =C2=A0than I
->> currently get , with similar or better safety using maybe RAID5 or
->> RAID6.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0No, RAID1 is as safe as it gets. =C2=A0RAI=
-D0 allows for better
-> performance, but if you make the RAID0 into your backup solution, the
-> performance won't matter much.
->
+7) Clustering?  Perhaps one of the weaker arguments, but having the  
+metadata separate allows it to easily grow to accommodate a bitmap /  
+device / node, for example.  This is really the same argument as  
+easily being able to reform/resize the metadata area.
 
-If I'm wrong about RAID6 please correct me as this understanding is
-why I chose it.
+8) Bitmaps/superblocks that are updated often could be placed on  
+separate devices, like SSDs, while the data is on spinning media.  I'm  
+not necessarily advocating this, but if someone wants to do it, I  
+think they should be able to.
 
-1) A 5-drive RAID6 can survive losing 2 disks and still return good dat=
-a.
+9) Flexibility for the future.  Imagine a mirror and you'd like to  
+split off a leg - the data portion alone becomes the linear device.   
+The metadata device could be discarded, or it could be recombined with  
+the data device and reinserted into the array - having just the deltas  
+be played back from the original mirror that has remained actively in- 
+use.
 
-2) A 5-drive RAID6 reads data as nearly fast as a 3-drive RAID0.
+Each of these reasons is not all that compelling in isolation; but  
+together, I think they make a pretty good case.  There is additional  
+flexibility here; and this is to be sacrificed for what?  A simpler  
+CTR line?  I don't know of anyone who enters these by hand without  
+instead using LVM, dm-raid, multipath, etc.  MD does it this way?   
+Well, this is device-mapper and it has its own idiosyncrasies and  
+precedents.
 
-If those two aren't true then my choice of RAID6 doesn't improve my
-system as I hoped.
+Also, I understand what you mean by your final question, but for those  
+who are new to this I'd like to point out that we /are/ storing the  
+metadata on the main physical device, but not the same logical  
+device.  [Again, this will be the rule, but is flexible.]
 
-3) My current 3-drive RAID1 can lose 2 disks and still return good
-data making #1 equivalent to #3
-
-4) #2 would be faster than my current 2-drive RAID0 and wouldn't have
-the risk of a single drive loss.
-
-If #3 & #4 aren't correct then maybe RAID6 isn't buying me anything.
-
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Is performance a really big issue? =C2=A0A=
-re you having problems with bad
-> performance?
->
-
-I think I am. On the current RAID0 side I'm running 4-5 Win XP VMs
-doing number crunching. Each is sitting in a 20GB virtual disk which
-is just files in VMWare or Virtualbox. Sometimes I run into moderate
-periods of time (5-30 seconds) with disk activity lights flashing,
-apparent loss of interactivity on the machine (mouse & keyboard not
-responding quickly in Linux) even when the RAID1/Linux side isn't
-doing anything. No cron jobs or anything like that running, just the
-VMs sucking up CPU and disk. Most of the number crunching is reading
-larger amounts of data, using the CPU and then writing some smallish
-files out.
-
->> =C2=A0 =C2=A0Overall, as I see it, I can suffer no disk loss on the =
-RAID0, and
->> can handle a 2 disk loss on the RAID1. (Is that correct?) I'm thinki=
-ng
->> that with a 5-drive RAID6 I might well get better performance than
->> either of the current RAIDs and (from reading) more protection durin=
-g
->> a rebuild if one of my drives goes bad.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0A single RAID5 or RAID6 solution is certai=
-nly simpler, and there is
-> significant value there. =C2=A0Read performance should be enhanced, b=
-ut write
-> performance will be impacted. =C2=A0You've also lost your backup solu=
-tion in this
-> scenario, though, so you will need to come up with something.
->
-
-I have a local eSATA in my office and then a second machine in the
-house with a 2-drive RAID1. I use them both for backups currently.
-
-<SNIP>
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0You might consider an external enclosure. =
-=C2=A0Enclosures for up to 5
-> dives are quite economical.
-
-I will give it some thought.
-
-Thanks!
-
-- Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+brassow
