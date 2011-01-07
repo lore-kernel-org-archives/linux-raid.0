@@ -1,68 +1,70 @@
-From: Lennart Poettering <lennart@poettering.net>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
-  by user
-Date: Fri, 7 Jan 2011 02:42:01 +0100
-Message-ID: <20110107014200.GA28194@tango.0pointer.de>
-References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
- <20110107003827.GD21627@tango.0pointer.de>
- <20110107121628.71146d21@notabene.brown>
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Patch to issue pure flushes directly (Was: Re: [PATCH v6 0/4]
+ ext4: Coordinate data-only flush requests sent) by fsync
+Date: Fri, 7 Jan 2011 18:54:49 -0500
+Message-ID: <20110107235449.GT21922@thunk.org>
+References: <20101129220536.12401.16581.stgit@elm3b57.beaverton.ibm.com>
+ <20101130164124.GA30858@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-ext4-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110107121628.71146d21@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andrey Borzenkov <arvidjaar@gmail.com>, linux-raid@vger.kernel.org, SystemD Devel <systemd-devel@lists.freedesktop.org>
+In-Reply-To: <20101130164124.GA30858@lst.de>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jens Axboe <axboe@kernel.dk>, Neil Brown <neilb@suse.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Alasdair G Kergon <agk@redhat.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, Keith Mannthey <kmannth@us.ibm.com>, dm-devel@redhat.com, Mingming Cao <cmm@us.ibm.com>, Tejun Heo <tj@kernel.org>, linux-ext4@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-On Fri, 07.01.11 12:16, NeilBrown (neilb@suse.de) wrote:
+This patch seemed like a good idea to me; I just checked linux-next,
+and looks like nothing like this is planned to be merged.  Just
+thought I would send a prod-o-gram to see what the current thinking
+was around adding something like this.
 
+Thanks,
+
+						- Ted
+
+
+On Tue, Nov 30, 2010 at 05:41:24PM +0100, Christoph Hellwig wrote:
+> FYI, here's an updated version of my patch to not run pure flushes
+> that also works on SCSI/ATA and not just virtio.  I suspect the patch
+> alone might not be enough, but together with a variant of Neil's
+> suggestion might do the trick, with my patch taking care of the
+> highend-devices and Neil's scheme of taking care of stupid SATA disks.
 > 
-> On Fri, 7 Jan 2011 01:38:27 +0100 Lennart Poettering <lennart@poettering.net>
-> wrote:
 > 
-> > On Sat, 04.12.10 11:41, Andrey Borzenkov (arvidjaar@gmail.com) wrote:
-> > 
-> > > If user starts array manually (mdadm -A -s as example) from within
-> > > user session and array needs mdmon, mdmon becomes part of user session
-> > > control group:
-> > 
-> > Are you suggesting that mdadm forks off mdmon from within the user
-> > session? This is horribly ugly and broken and they shouldn't do that.
-> 
-> What alternative would you suggest?
-
-Start it as a normal service like any other. But if you fork off the
-daemon from the user session then the daemon will run in a very broken
-context: the resource limits of the user apply, the audit trail will
-point to the user (i.e. /proc/self/loginuid), the cgroup will be of the
-user, the daemon cannot be supervised as every other daemon. Also, the
-daemon will inherit all the other process properties from the user,
-which is almost definitely wrong. i.e. the env block and so
-on, the sig mask. gazillions of small little properties. Of course, a
-big bunch of them you can reset in your code, but that's a race you
-cannot win: the kernel adds new process properties all the time, and
-you'd have to reset them manually.
-
-It's is really essential that daemons are started from a clean process
-environment, and are detached from the user session. SysV kinda provides
-that, for everything started on boot and in a limited way for stuff
-started via /sbin/service. systemd provides that too and much more
-correct. But just forking off things just like that is not a good
-solution.
-
-A thinkable, relatively simple solution in a systemd world is to pull in
-the mdmon service from the udev device. The udev device would do all the
-necessary matching to figure out whether mdmon is needed or not. If you
-care about non-systemd environments something like this of course
-becomes a lot more complex.
-
-> A daemon needs to be running while certain md arrays are running and writable.
-
-Well, but auto-spawning it from the user session is not really a usable solution.
-
-Lennart
-
--- 
-Lennart Poettering - Red Hat, Inc.
+> Index: linux-2.6/block/blk-flush.c
+> ===================================================================
+> --- linux-2.6.orig/block/blk-flush.c	2010-11-30 17:27:33.108254088 +0100
+> +++ linux-2.6/block/blk-flush.c	2010-11-30 17:27:38.790004333 +0100
+> @@ -143,6 +143,17 @@ struct request *blk_do_flush(struct requ
+>  	unsigned skip = 0;
+>  
+>  	/*
+> +	 * Just issue pure flushes directly.
+> +	 */
+> +	if (!blk_rq_sectors(rq)) {
+> +		if (!do_preflush) {
+> +			__blk_end_request_all(rq, 0);
+> +			return NULL;
+> +		}
+> +		return rq;
+> +	}
+> +
+> +	/*
+>  	 * Special case.  If there's data but flush is not necessary,
+>  	 * the request can be issued directly.
+>  	 *
+> Index: linux-2.6/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/scsi_lib.c	2010-11-30 17:27:33.120254298 +0100
+> +++ linux-2.6/drivers/scsi/scsi_lib.c	2010-11-30 17:27:38.791003634 +0100
+> @@ -1060,7 +1060,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+>  	 * that does not transfer data, in which case they may optionally
+>  	 * submit a request without an attached bio.
+>  	 */
+> -	if (req->bio) {
+> +	if (req->bio && !(req->cmd_flags & REQ_FLUSH)) {
+>  		int ret;
+>  
+>  		BUG_ON(!req->nr_phys_segments);
