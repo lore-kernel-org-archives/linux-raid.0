@@ -1,15 +1,17 @@
 From: Lennart Poettering <lennart@poettering.net>
 Subject: Re: systemd kills mdmon if it was started manually
  by user
-Date: Fri, 7 Jan 2011 01:38:27 +0100
-Message-ID: <20110107003827.GD21627@tango.0pointer.de>
+Date: Fri, 7 Jan 2011 01:40:24 +0100
+Message-ID: <20110107004024.GE21627@tango.0pointer.de>
 References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
+	<201012041012.23757.trapni@gentoo.org>
+	<AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
+In-Reply-To: <AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
 List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
 	<mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
 List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
@@ -20,45 +22,28 @@ List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
 Sender: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
 Errors-To: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
 To: Andrey Borzenkov <arvidjaar@gmail.com>
-Cc: linux-raid@vger.kernel.org, SystemD Devel <systemd-devel@lists.freedesktop.org>
+Cc: linux-raid@vger.kernel.org, systemd-devel@lists.freedesktop.org
 List-Id: linux-raid.ids
 
-T24gU2F0LCAwNC4xMi4xMCAxMTo0MSwgQW5kcmV5IEJvcnplbmtvdiAoYXJ2aWRqYWFyQGdtYWls
-LmNvbSkgd3JvdGU6Cgo+IElmIHVzZXIgc3RhcnRzIGFycmF5IG1hbnVhbGx5IChtZGFkbSAtQSAt
-cyBhcyBleGFtcGxlKSBmcm9tIHdpdGhpbgo+IHVzZXIgc2Vzc2lvbiBhbmQgYXJyYXkgbmVlZHMg
-bWRtb24sIG1kbW9uIGJlY29tZXMgcGFydCBvZiB1c2VyIHNlc3Npb24KPiBjb250cm9sIGdyb3Vw
-OgoKQXJlIHlvdSBzdWdnZXN0aW5nIHRoYXQgbWRhZG0gZm9ya3Mgb2ZmIG1kbW9uIGZyb20gd2l0
-aGluIHRoZSB1c2VyCnNlc3Npb24/IFRoaXMgaXMgaG9ycmlibHkgdWdseSBhbmQgYnJva2VuIGFu
-ZCB0aGV5IHNob3VsZG4ndCBkbyB0aGF0LgoKPiAKPiDilJwgdXNlcgo+IOKUgiDilJQgcm9vdAo+
-IOKUgiAgIOKUlCAxCj4g4pSCICAgICDilJwgMTkxNiBsb2dpbiAtLSByb290Cj4g4pSCICAgICDi
-lJwgMTkzMCAtYmFzaAo+IOKUgiAgICAg4pScIDE5NjQgZ3BnLWFnZW50IC0ta2VlcC1kaXNwbGF5
-IC0tZGFlbW9uIC0td3JpdGUtZW52LWZpbGUgL3Jvb3QvLmdudXAuLi4KPiDilIIgICAgIOKUlCAy
-MDYyIG1kbW9uIG1kMTI3Cj4gCj4gCj4gSXQgaXMgdGhlbiBraWxsZWQgYnkgc3lzdGVtZCBkdXJp
-bmcgc2h1dGRvd24gYXMgcGFydCBvZiB1c2VyIHNlc3Npb24uCgpXZWxsLCBvbmx5IGlmIHlvdSBl
-bmFibGUgdGhhdCB0aGUgdXNlciBzZXNzaW9uIGlzIGNvbXBsZXRlbHkga2lsbGVkIG9uCmxvZ291
-dCwgd2hpY2ggd2UgY3VycmVudGx5IGRvbid0IGRvIGJ5IGRlZmF1bHQuCgpJIHdvbmRlciBpZiBp
-dCB3b3VsZCBtYWtlIHNlbnNlIHRvIGFkZCBhbiBvcHRpb24gd2hpY2gga2lsbHMgdXNlcgpzZXNz
-aW9ucyBvbiBsb2cgb3V0IG9ubHkgZm9yIHVpZCAhPSAwLiBUaGlzIG1pZ2h0IGhlbHAgaGVyZSwg
-YnV0IG9ubHkKaGFsZi13YXksIHNpbmNlIHN1ZG8gd291bGQgc3RpbGwgYnJlYWsuIEJ1dCBhbnl3
-YXksIEknbGwgYWRkIHRoaXMgdG8gdGhlCnRvZG8gbGlzdC4KCj4gSXQgcmVzdWx0cyBpbiBkaXJ0
-eSBhcnJheSBvbiBuZXh0IGJvb3QuCgpIbW0sIHRoYXQgc2hvdWxkbid0IGhhcHBlbi4KCj4gSXMg
-dGhlcmUgYW55IG1hZ2ljIHRoYXQgYWxsb3dzIGRhZW1vbiB0byBiZSBleGVtcHRlZCBmcm9tIGtp
-bGxpbmc/CgpXZWxsLCBJIGhhdmUgYmVlbiBkaXNjdXNzaW5nIHRoaXMgd2l0aCBLYXkgYW5kIHdl
-J2xsIG1vc3QgbGlrZWx5IGFkZApzb21ldGhpbmcgbGlrZSBEb250S2lsbE9uU2h1dGRvd249eWVz
-IG9yIHNvLCB3aGljaCBpZiBhZGRlZCB0byBhIHVuaXQKZmlsZSB3aWxsIGV4ZW1wdCBpdCBmcm9t
-IGtpbGxpbmcgZHVyaW5nIHRoZSBub3JtYWwgc2VydmljZSBzaHV0ZG93bgpwaGFzZSwgYW5kIHRo
-ZSBmaXJzdCBraWxsaW5nIHNwcmVlIChidXQgbm90IHRoZSBzZWNvbmQsIHBvc3QtdW1vdW50Cmtp
-bGxpbmcgc3ByZWUpLiBCdXQgdGhhdCBvZiBjb3Vyc2Ugd291bGQgcmVxdWlyZSBtZG1vbiB0byBi
-ZSBzdGFydGVkCmxpa2UgYW55IG90aGVyIGRhZW1vbiwgYW5kIG5vdCBmb3JrZWQgb2ZmIG1kYWRt
-LgoKVGhhdCBzaG91bGQgbW9zdGx5IGZpeCB0aGUgcHJvYmxlbSwgYnV0IHRoZW4gYWdhaW4gSSBk
-byBiZWxpZXZlIHRoYXQgdGhlCndob2xlIGlkZWEgb2YgbWRtb24gaXMganVzdCBib3JrZWQsIHNp
-bmNlIGl0IHdpbGwgbmVjZXNzYXJpbHkgcGluIHBhZ2UKZnJvbSB0aGUgcm9vdCBmcyBpbnRvIG1l
-bW9yeSB3aGljaCB3aWxsIGNyZWF0ZSBhbGwga2luZHMgb2YgcHJvYmxlbXMsCmZvciBleGFtcGxl
-IGFmdGVyIHVwZ3JhZGVzIChpLmUuIG1kbW9uIG1hcHMgbGliYyBpbnRvIG1lbW9yeSwgbGliYyBn
-ZXRzCnVwZGF0ZWQsIHRoZSBvbGQgbGliYyBkZWxldGVkLCB3aGljaCBjYW5ub3QgYmUgd3JpdHRl
-biB0byBkaXNrIGFzIGxvbmcKYXMgbWRtb24gc3RheXMgcnVubmluZyBwaW5uaW5nIGl0LCB3aGlj
-aCB3aWxsIGRpc2FsbG93IHRoZSB1bHRpbWF0ZQp1bm1vdW50aW5nL3JlbW91bnRpbmcgb2YgdGhl
-IGZzKS4KCkxlbm5hcnQKCi0tIApMZW5uYXJ0IFBvZXR0ZXJpbmcgLSBSZWQgSGF0LCBJbmMuCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnN5c3RlbWQtZGV2
-ZWwgbWFpbGluZyBsaXN0CnN5c3RlbWQtZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHA6
-Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9zeXN0ZW1kLWRldmVsCg==
+On Sat, 04.12.10 15:08, Andrey Borzenkov (arvidjaar@gmail.com) wrote:
+
+> >> It is then killed by systemd during shutdown as part of user session.
+> >> It results in dirty array on next boot.
+> >>
+> >> Is there any magic that allows daemon to be exempted from killing?
+> >
+> > While your raid should absolutely not be corrupted on next reboot
+> > when mdmon receives a SIGTERM,
+> 
+> This won't be corrupted but it will initiate rebuilt. I have reports
+> that such rebuild may take hours, costing performance and loss of
+> redundancy.
+
+Well, eventually we need to be able to kill mdmon. Otherwise we might
+not be able to remount the root dir r/o. How exactly is mdmon supposed
+to behave on shutdown?
+
+Lennart
+
+-- 
+Lennart Poettering - Red Hat, Inc.
