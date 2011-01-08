@@ -1,119 +1,100 @@
-From: =?UTF-8?B?VmxhZGltaXIgJ8+GLWNvZGVyL3BoY29kZXInIFNlcmJpbmVua28=?=
-	<phcoder@gmail.com>
-Subject: 2 RAID devices with index 0 [Fwd: Re: Bug#597563: grub-common: grub-probe
- segfaults scanning lvm devices]
-Date: Sat, 08 Jan 2011 23:44:27 +0100
-Message-ID: <4D28E8CB.50003@gmail.com>
+From: Matthew Gabeler-Lee <cheetah@cheetah.fastcat.org>
+Subject: Bug#597563: grub-common: grub-probe segfaults scanning lvm devices
+Date: Sat, 8 Jan 2011 17:53:07 -0500 (EST)
+Message-ID: <alpine.DEB.2.00.1101081739500.14736@cheetah.fastcat.org>
+References: <20100920202854.27101.8288.reportbug@cheetah.fastcat.org> <4D274FF9.8010004@gmail.com> <alpine.DEB.2.00.1101072241560.25170@cheetah.fastcat.org> <4D285B79.9040100@gmail.com>
+Reply-To: Matthew Gabeler-Lee <cheetah@cheetah.fastcat.org>, 597563@bugs.debian.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="------------enigC5D3158C22347D0D0C733F05"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1371069890-1362913481-1294527255=:14736"
+Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist=m.gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.597563.B597563.12945272607064@bugs.debian.org>
+In-Reply-To: <4D285B79.9040100@gmail.com>
+List-Post: <mailto:debian-bugs-dist@lists.debian.org>
+List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
+To: Vladimir =?UTF-8?Q?'=CF=86-coder/phcoder'?= Serbinenko <phcoder@gmail.com>
+Cc: 597563@bugs.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigC5D3158C22347D0D0C733F05
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-
-
--------- Original Message --------
-Subject: 	Re: Bug#597563: grub-common: grub-probe segfaults scanning lvm
-devices
-Date: 	Sat, 8 Jan 2011 17:39:09 -0500 (EST)
-From: 	Matthew Gabeler-Lee <cheetah@cheetah.fastcat.org>
-To: 	Vladimir '=CF=86-coder/phcoder' Serbinenko <phcoder@gmail.com>
-CC: 	597563@bugs.debian.org
-
-
+---1371069890-1362913481-1294527255=:14736
+Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 On Sat, 8 Jan 2011, Vladimir '=CF=86-coder/phcoder' Serbinenko wrote:
 
-> There may be a problem in RAID assembling. Are any of the devices marke=
-d
-> as faulty or spare?
+> As was recommended I forward the remaining part to linux-raid mailing lis=
+t.
+> In short: on his system mdraid, raid5, 4 devices, metadata (presumably)
+> 0.90, two devices have index 0.
+> If such situation is valid please advice me on how such situation should
+> be handled.
+> @Matthew: could you supply mdadm -Q outputput and *last* 64K of every dis=
+k?
 
-No (see below).
+$ sudo mdadm -QD /dev/md2
+/dev/md2:
+         Version : 0.90
+   Creation Time : Mon Mar 27 14:04:18 2006
+      Raid Level : raid5
+      Array Size : 2185667136 (2084.41 GiB 2238.12 GB)
+   Used Dev Size : 728555712 (694.80 GiB 746.04 GB)
+    Raid Devices : 4
+   Total Devices : 4
+Preferred Minor : 2
+     Persistence : Superblock is persistent
 
-> it's ls -- -l / for now, will be fixed later.
+     Update Time : Sat Jan  8 17:40:20 2011
+           State : clean
+  Active Devices : 4
+Working Devices : 4
+  Failed Devices : 0
+   Spare Devices : 0
 
-$ sudo ./grub-fstest -c 4 /dev/sda3 /dev/sdb3 /dev/sdc3 /dev/sdd3 ls -- -=
-l
-Device raid5-grande: Not a known filesystem - Total size 15548416 sectors=
+          Layout : left-symmetric
+      Chunk Size : 64K
 
-Device raid5-usr: Filesystem type reiserfs - Label "/usr", UUID 4fba6590-=
-71f4-49cb-9e56-879b1ce80893 - Total size 20971520 sectors
-Device raid5-home: Filesystem type reiserfs - Label "/home", UUID 214d66d=
-c-77d8-4ba8-adba-aa03c44ae360 - Total size 8388608 sectors
-Device raid5-tmp: Filesystem type ext2 - Label "/tmp" - Last modification=
- time 2011-01-03 22:45:38 Monday, UUID 10ebe510-49bc-4f33-87e5-f0b41594e2=
-47 - Total size 2097152 sectors
-Device raid5-var: Filesystem type reiserfs - Label "/var", UUID c39288ed-=
-f6c2-467a-bd40-68ac3cabef7f - Total size 4194304 sectors
-Device md2: Not a known filesystem - Total size 76366976 sectors
-Device loop3: Not a known filesystem - Total size 1457111565 sectors
-Device loop2: Not a known filesystem - Total size 1457111565 sectors
-Device loop1: Not a known filesystem - Total size 1457111565 sectors
-Device loop0: Not a known filesystem - Total size 1457111565 sectors
-Device host: Filesystem type hostfs - Total size 0 sectors
+            UUID : 01e2f978:88d1f867:34e1e46c:f3c01470
+          Events : 0.32040050
 
-> Is the size of md2 correctly 3 times the size of a single disk?
+     Number   Major   Minor   RaidDevice State
+        0       8       35        0      active sync   /dev/sdc3
+        1       8       19        1      active sync   /dev/sdb3
+        2       8        3        2      active sync   /dev/sda3
+        3       8       51        3      active sync   /dev/sdd3
 
-Yes:
-
-$ cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md1 : active raid1 sdd2[3] sdc2[2] sdb2[1] sda2[0]
-       2008000 blocks [4/4] [UUUU]
-
-md2 : active raid5 sdd3[3] sdc3[0] sdb3[1] sda3[2]
-       2185667136 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-
-md0 : active raid1 sdd1[3] sdc1[1] sdb1[0] sda1[2]
-       2008000 blocks [4/4] [UUUU]
-
-unused devices: <none>
-$ sudo fdisk -l /dev/sda
-
-Disk /dev/sda: 750.2 GB, 750156374016 bytes
-255 heads, 63 sectors/track, 91201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0xbb1ed82c
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1         250     2008093+  fd  Linux raid autode=
-tect
-/dev/sda2             251         500     2008125   fd  Linux raid autode=
-tect
-/dev/sda3             501       91201   728555782+  fd  Linux raid autode=
-tect
+The actual last 64k of all the partitions in the array is all zeros.=20
+So is the 64k up to the end of the "Used Dev Size".  What has some data=20
+in it is the 64k after that.  I hope that has the superblock data I=20
+presume you're looking for.  I.e.  dd if=3D/dev/sdX3 bs=3D1024=20
+skip=3D728555712 count=3D64.
 
 --=20
- 	-Matt
+ =09-Matt
 "Reality is that which, when you stop believing in it, doesn't go away".
                  -- Philip K. Dick
-GPG pubkey fingerprint: A57F B354 FD30 A502 795B 9637 3EF1 3F22 A85E 2AD1=
+GPG pubkey fingerprint: A57F B354 FD30 A502 795B 9637 3EF1 3F22 A85E 2AD1
+---1371069890-1362913481-1294527255=:14736
+Content-Type: APPLICATION/octet-stream; name=last64k.tar.bz2
+Content-Transfer-Encoding: BASE64
+Content-ID: <alpine.DEB.2.00.1101081753070.14736@cheetah.fastcat.org>
+Content-Description: 
+Content-Disposition: attachment; filename=last64k.tar.bz2
 
+QlpoOTFBWSZTWc8QUogACmB/3//ADkpoWf+EBEcAVH7u3kQAUAApQABABKAA
+dGAJfMAB/AABw00wQyGmmRkwgGmgDCaNMmABA0OGmmCGQ00yMmEA00AYTRpk
+wAIGhw00wQyGmmRkwgGmgDCaNMmABA0CpIiIyjU8U8TSMPUNRkYGQDQaGiaN
+N6oeyp3Nc5jBMTeijKZdg4+U0nlMZ16M2qcWgtukxmbMYTKVERiURCSpSVjN
++KOkdOPCcEcUYxMRWzJuGUq1rl4vF4yRhFIqEcBQgQ+Pw57xm/Xu96sIzC5v
+N9R19oyReKRO5RKKiQDTJgdmXjlP9ylyjSck8+EMhksksWyC8J4TkNsukqsK
+SdBqtE+RUceibsc8YRvcdo850dEw5z2G8dkqM51mybqB7D26DakmCopki0Wt
+F7GjtReLsM+gxSjLGHv5vh8csY545knQbmGO4xi0VLZy/JCjaNs2y7GOYqSj
+WWSbWxJ1IWvVe638npfR9TunC6j5mYnDDUXPy/7xTSfY7w/sbJ0ozn1P6lp8
+jCH3j7bA4Ib6o+8b549RXpNNqnTNJUazUeY5TVOI4U/DGTVlNmaSjUVJEkk1
+muFp/4u5IpwoSGeIKUQA
 
-
-
---------------enigC5D3158C22347D0D0C733F05
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iF4EAREKAAYFAk0o6MsACgkQNak7dOguQgnaeQD/Y0R3VbDEhezHXJICCk1v+y/A
-A0vgb1T9Y1TExNRew8MA+gOur8SVMMwcCdcTMatfqPTnBCwqXAa5U9bbc/vP7RiE
-=hi22
------END PGP SIGNATURE-----
-
---------------enigC5D3158C22347D0D0C733F05--
+---1371069890-1362913481-1294527255=:14736--
