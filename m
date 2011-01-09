@@ -1,48 +1,196 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Bug#597563: grub-common: grub-probe segfaults scanning lvm
- devices
-Date: Mon, 10 Jan 2011 09:29:17 +1100
-Message-ID: <20110110092917.6c230326@notabene.brown>
-References: <20100920202854.27101.8288.reportbug@cheetah.fastcat.org>
-	<4D274FF9.8010004@gmail.com>
-	<alpine.DEB.2.00.1101072241560.25170@cheetah.fastcat.org>
-	<4D285B79.9040100@gmail.com>
-	<alpine.DEB.2.00.1101081739500.14736@cheetah.fastcat.org>
-	<20110110075543.4969998e@notabene.brown>
-	<4D2A2951.5020902@gmail.com>
-	<20110110085735.1c68e425@notabene.brown>
-	<4D2A32F6.4050304@fastcat.org>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: [PATCH 2/2] Assemble: allow to assemble spares on their own
+Date: Sun, 9 Jan 2011 22:29:51 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E7D9E7A@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F4E@irsmsx504.ger.corp.intel.com>
+ <20110105135855.478982e9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2A32F6.4050304@fastcat.org>
+In-Reply-To: <20110105135855.478982e9@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthew Gabeler-Lee <cheetah@fastcat.org>
-Cc: Vladimir =?UTF-8?B?J8+GLWNvZGVyL3BoY29kZXIn?= Serbinenko <phcoder@gmail.com>, 597563@bugs.debian.org, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, 09 Jan 2011 17:13:10 -0500 Matthew Gabeler-Lee <cheetah@fastcat.org>
-wrote:
-
-> On 1/9/2011 16:57, NeilBrown wrote:
-> > Simply running
-> >     mdadm --zero-superblock /dev/sdb
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Wednesday, January 05, 2011 3:59 AM
+> To: Czarnowska, Anna
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Hawrylewicz Czarnowski, Przemyslaw; Labun, Marcin; Neubauer, Wojciech
+> Subject: Re: [PATCH 2/2] Assemble: allow to assemble spares on their
+> own
+> 
+> On Tue, 4 Jan 2011 14:06:30 +0000 "Czarnowska, Anna"
+> <anna.czarnowska@intel.com> wrote:
+> 
+> > >From eb737197e6a3a43f6724003900a87410acec9495 Mon Sep 17 00:00:00
+> 2001
+> > From: Anna Czarnowska <anna.czarnowska@intel.com>
+> > Date: Tue, 4 Jan 2011 12:18:18 +0100
+> > Subject: [PATCH 2/2] Assemble: allow to assemble spares on their own
+> > Cc: linux-raid@vger.kernel.org, Williams, Dan J
+> <dan.j.williams@intel.com>, Ciechanowski, Ed
+> <ed.ciechanowski@intel.com>
 > >
-> > should fix it.
-> Well, that doesn't work very well: "mdadm: Couldn't open /dev/sdb for write 
-> - not zeroing" ... strace reveals that mdadm is trying to open it O_EXCL, 
-> which I presume is why it's not working ... I presume I'd have to reboot to 
-> single user mode and stop the LVM and possibly MD stuff in order for that to 
-> work, which might then require booting from a rescue cd to do it.
+> > If we find spares but no members of given array
+> > we create container with just spares.
+> >
+> > This allows auto assemble to pick up all lose imsm spares when there
+> > is no config file.
+> > When there is a valid config file and any array is assembled from it
+> > we don't try auto assembly so we will not assemble spares that don't
+> > match any array.
+> > To remedy this we must add
+> > ARRAY metadata=imsm UUID=00000000:00000000:00000000:00000000
+> > to config file.
+> > This container will include all remaining spares.
+> 
+> Thanks.
+> I have made some modifications resulting in the following patch.
+> 
+> The main problem was that your code explicitly mentioned "imsm" in
+> generic
+> code.  That is always the wrong thing to do.  One day we might have a
+> different metadata type that has the same sort of floating spare, in
+> which
+> case the imsm spares need to be handled separately to the new type of
+> spares.
+> 
+> So:
+>  I move the place where ->used is set to '3' so that st gets set.
+> So if we see and IMSM device, we will create an IMSM array at that
+> point,
+> though it might end up being a container of spares.
+> 
+> I removed the 'else' so that the original loop searching for 'used ==
+> 3'
+> always runs. If we just set up an array of spares, then it will find
+> nothing,
+> but that is no loss.  This avoids the need to indent it further.
+> 
+> As mentioned earlier, I added a test for 'auto_assem'.
 
-Sorry, I forgot that the device would be in use.
-In that case
+Adding such test means that we can only assemble spares on their own when there is no config file.
+When there is a config file with at least one ARRAY line we do not try auto assembly.
+This also means that adding special ARRAY line for spares will not work - in this case
+we have no auto_assem (because uuid is set) so we try the second loop where all spares get rejected because domains is null.
+Should `mdadm -As` only assemble what it finds in config?
+Maybe we should always try auto assembly? 
+What is the original reasoning behind not trying auto assembly when there is at least one array in config?
+Regards
+Anna
 
-   mdadm --zero-superblock --force /dev/sdb
-
-would have done the trick.  But you found another way which worked just as
-well.
-
-NeilBrown
-
+> Thanks,
+> NeilBrown
+> 
+> commit ed7fc6b4d91a5342886ba6fe6d175f69f0875d3b
+> Author: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date:   Wed Jan 5 13:54:18 2011 +1100
+> 
+>     Assemble: allow to assemble spares on their own
+> 
+>     If we find spares but no members of given array
+>     we create container with just spares.
+> 
+>     This allows auto assemble to pick up all lose imsm spares when
+> there
+>     is no config file.
+>     When there is a valid config file and any array is assembled from
+> it
+>     we don't try auto assembly so we will not assemble spares that
+> don't
+>     match any array.
+>     To remedy this we must add
+>     ARRAY metadata=imsm UUID=00000000:00000000:00000000:00000000
+>     to config file.
+>     This container will include all remaining spares.
+> 
+>     Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+>     Signed-off-by: NeilBrown <neilb@suse.de>
+> 
+> diff --git a/Assemble.c b/Assemble.c
+> index 7ef9dc3..532335e 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -489,17 +489,23 @@ int Assemble(struct supertype *st, char *mddev,
+>  					   homehost, update,
+>  					   report_missmatch ? devname : NULL))
+>  				goto loop;
+> -
+> -			if (!memcmp(content->uuid, uuid_zero,
+> sizeof(int[4]))) {
+> -				/* this is imsm_spare - do not set st */
+> -				tmpdev->used = 3;
+> -				goto loop;
+> -			}
+> 
+>  			if (st == NULL)
+>  				st = dup_super(tst);
+>  			if (st->minor_version == -1)
+>  				st->minor_version = tst->minor_version;
+> +
+> +			if (memcmp(content->uuid, uuid_zero,
+> +				   sizeof(int[4])) == 0) {
+> +				/* this is a floating spare.  It cannot define
+> +				 * an array unless there are no more arrays of
+> +				 * this type to be found.  It can be included
+> +				 * in an array of this type though.
+> +				 */
+> +				tmpdev->used = 3;
+> +				goto loop;
+> +			}
+> +
+>  			if (st->ss != tst->ss ||
+>  			    st->minor_version != tst->minor_version ||
+>  			    st->ss->compare_super(st, tst) != 0) {
+> @@ -557,6 +563,25 @@ int Assemble(struct supertype *st, char *mddev,
+>  			tst->ss->free_super(tst);
+>  	}
+> 
+> +	/* Check if we found some imsm spares but no members */
+> +	if (auto_assem && (!st || !st->sb))
+> +		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+> +			if (tmpdev->used != 3)
+> +				continue;
+> +			tmpdev->used = 1;
+> +			content = &info;
+> +
+> +			if (!st->sb) {
+> +				/* we need sb from one of the spares */
+> +				int dfd = dev_open(tmpdev->devname, O_RDONLY);
+> +				if (dfd < 0 ||
+> +				    st->ss->load_super(st, dfd, NULL))
+> +					tmpdev->used = 2;
+> +				if (dfd > 0)
+> +					close(dfd);
+> +			}
+> +		}
+> +
+>  	/* Now reject spares that don't match domains of identified
+> members */
+>  	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+>  		struct stat stb;
+> @@ -892,8 +917,10 @@ int Assemble(struct supertype *st, char *mddev,
+>  		if (content->array.level != LEVEL_MULTIPATH)
+>  			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE)))
+> {
+>  				if (!(devices[j].i.disk.state
+> -				      & (1<<MD_DISK_FAULTY)))
+> +				      & (1<<MD_DISK_FAULTY))) {
+> +					devices[j].uptodate = 1;
+>  					sparecnt++;
+> +				}
+>  				continue;
+>  			}
+>  		/* If this devices thinks that 'most_recent' has failed,
+> then
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
