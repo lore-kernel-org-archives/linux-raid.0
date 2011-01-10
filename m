@@ -1,127 +1,162 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: What exactly does echo check > /sys/block/mdX/md/sync_action
- do?
-Date: Mon, 10 Jan 2011 10:26:13 +1100
-Message-ID: <20110110102613.692fa2e3@notabene.brown>
-References: <4D2A3B25.6050504@digadd.de>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Considering a complete rework of RAID on my home compute server
+Date: Sun, 9 Jan 2011 18:10:31 -0600
+Message-ID: <68.C0.13137.77E4A2D4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTikxViM45MfjZvMCDAobeVVwBqMZHrm_Ws-bsAQt@mail.gmail.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2A3B25.6050504@digadd.de>
+In-Reply-To: <AANLkTikxViM45MfjZvMCDAobeVVwBqMZHrm_Ws-bsAQt@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Schmidt <charlie@digadd.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Mark Knecht' <markknecht@gmail.com>
+Cc: 'Linux-RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 09 Jan 2011 23:48:05 +0100 Christian Schmidt <charlie@digadd.de>
-wrote:
+> On Wed, Jan 5, 2011 at 4:03 PM, Leslie Rhorer <lrhorer@satx.rr.com> w=
+rote:
+> >> 1) The Linux/MySQL stuff is a 3 drive RAID1. (sda/sdb/sdc)
+> >
+> > =A0 =A0 =A0 =A0Well, RAID1 certainly offers the most robust solutio=
+n, especially
+> > with more than 1 mirror.
+> >
+> <SNIP>
+> >
+> >> 3) There is a second RAID1 (sda/sdb/sdc) used for backups of the
+> >> RAID0. The RAID0 is backed up to RAID1 nightly. If the RAID0 fails
+> >> then I lose 1 day's work.
+> >
+> > =A0 =A0 =A0 =A0Well, first of all, unless you meant to say sda1/sdb=
+1/sdc1, etc,
+> > then this can't be different from the #1 RAID array above. =A0Assum=
+ing you
+> are
+> > actually using partitions, then I don't really see the value of two
+> separate
+> > arrays. =A0Why not just one RAID1 array?
+> >
+>=20
+> Sorry I wasn't very clear.
+>=20
+> In #1 the RAID1 is my main Linux system on sda3/sdb3/sdc3.
+> In #3 the RAID1 is purely for backups on /swa6/sdb6/sdc6 and is used
+> only for the backup of the RAID0 data. It is not normally mounted
+> except when doing backups. I wanted the extra protection that if
+> something went wrong with the basic Linux box the backup partition
+> would not normally be mounted and the data hopefully a bit safer.
+>=20
+>=20
+> > =A0 =A0 =A0 =A0Also, I personally would reverse the backup strategy=
+=2E =A0I would
+> put
+> > the Windows VM on the (single) main RAID array and back up the data=
+ to a
+> > single 1T hard drive.
+> >
+>=20
+> I do this today backing up the existing RAID1 partitions to an
+> external eSATA 1TB drive.
 
-> Hi all,
-> 
-> As the subject says, I'm wondering what issuing the "check" command to a
-> raid array does.
-> The wiki says it starts a full read of the raid array. However I wonder
-> if all members, especially the parts of the drives containing the
-> redundancy information, will be read, and possibly the validity of the
-> redundancy data will be checked?
+	What I meant was, you currently have a 2 disk RAID0.  Why not buy a
+larger disk and move the 2 drives currently tied up in the RAID0 to a 5=
+ disk
+RAID6 array with no partitions?  The function currently provided by the=
+ 2nd
+RAID1 can be taken over by the single drive, and the function of the RA=
+ID0
+can be taken over by a directory on the main array.  This makes better
+functional use of the space and may provide performance benefits, not t=
+o
+mention being much simpler.  I'm a fan of having a separate, small disk=
+ for
+booting.  My servers both have a pair of small drives each partitioned =
+into
+three sections.  Each of the partition pairs are in turn assembled into=
+ a
+RAID array for a total of 3 mounts:
 
-May I suggest
-   man 4 md
+md1 - a tiny /boot
+md2 - a small /
+md3 - swap. =20
 
-and search for 'check'
-???
+> >> =A0 =A0OK - the problems I have with this arrangement are:
+> >>
+> >> 1) I used the older v0.9 metadata.
+> >
+> > =A0 =A0 =A0 =A0This may be necessary if you are booting from the ar=
+ray. =A0The
+> > limitations of the 0.90 superblock may never impact you. =A0That's =
+a small
+> > system with only a few drives.
+> >
+> >> 2) The RAIDs are assembled by the kernel automatically. I do not u=
+se
+> >> an initrd. (Because I don't know how/newer have)
+> >
+> > =A0 =A0 =A0 =A0How is that a problem? =A0An initrd, or lack thereof=
+, won't prevent
+> > you from disabling the automatic assembly of one or more arrays, un=
+less
+> once
+> > again you boot from the array in question. =A0Most modern distros d=
+efault
+> to
+> > using an initrd. =A0What distro are you using?
+> >
+>=20
+> The machines are Gentoo and an initrd/initramfs is up to the builder.
+> The new RAID6/superblock-1.2  boot uses one. The RAID1/superblock-0.9
+> does not.
 
-       md/sync_action
-              This can be used to monitor and control the resync/recovery pro-
-              cess  of MD.  In particular, writing "check" here will cause the
-              array to read all data block and check that they are  consistent
-              (e.g.  parity  is correct, or all mirror replicas are the same).
-              Any discrepancies found are NOT corrected.
+	OK, well, either way, any array can have auto-assembly disabled.  If
+you go with a single RAID6 plus a simple drive, it won't be required,
+though.
 
-              A count of problems found will be stored in md/mismatch_count.
+> >> 3) I think with 5 disks I could get better performance =A0than I
+> >> currently get , with similar or better safety using maybe RAID5 or
+> >> RAID6.
+> >
+> > =A0 =A0 =A0 =A0No, RAID1 is as safe as it gets. =A0RAID0 allows for=
+ better
+> > performance, but if you make the RAID0 into your backup solution, t=
+he
+> > performance won't matter much.
+> >
+>=20
+> If I'm wrong about RAID6 please correct me as this understanding is
+> why I chose it.
+>=20
+> 1) A 5-drive RAID6 can survive losing 2 disks and still return good d=
+ata.
 
-              Alternately, "repair" can be written which will cause  the  same
-              check to be performed, but any errors will be corrected.
+	Yes.
 
-              Finally, "idle" can be written to stop the check/repair process.
+> 2) A 5-drive RAID6 reads data as nearly fast as a 3-drive RAID0.
 
+	Or faster.  Right now your 3 drive arrays are RAID1, though, aren't
+they?  RAID6 should read *MUCH* faster than RAID1
 
-Does that answer your question?
+> If those two aren't true then my choice of RAID6 doesn't improve my
+> system as I hoped.
+>=20
+> 3) My current 3-drive RAID1 can lose 2 disks and still return good
+> data making #1 equivalent to #3
 
-A more recent man page says:
+	Well, only in terms of survivability and only for the configuration
+you mention.  An N drive RAID1 array can lose N-1 drives.  Any RAID6 ar=
+ray
+can lose 2 drives.
 
-       md arrays can be scrubbed by writing either check or repair to the file
-       md/sync_action in the sysfs directory for the device.
+> 4) #2 would be faster than my current 2-drive RAID0 and wouldn't have
+> the risk of a single drive loss.
 
-       Requesting a scrub will cause md to read every block on every device in
-       the  array,  and  check  that  the  data  is consistent.  For RAID1 and
-       RAID10, this means checking that the copies are identical.  For  RAID4,
-       RAID5,  RAID6  this  means checking that the parity block is (or blocks
-       are) correct.
+	Yes.
+=20
 
-       If a read error is detected during this process, the normal  read-error
-       handling  causes  correct data to be found from other devices and to be
-       written back to the faulty device.  In many case this will  effectively
-       fix the bad block.
-
-       If  all  blocks  read  successfully but are found to not be consistent,
-       then this is regarded as a mismatch.
-
-
-> 
-> A possibly related question is: why did this member turn into "spare"
-> role? The system was fully functional and in daily use for about a year.
-> It was declared to be a four drive raid 5 with no spares. If I remember
-> level 5 correctly there is no single drive for the redundancy data to
-> avoid bottlenecks, right?
-
-One would need to see the history of the whole array, not just the current
-state of a single device, to be able to guess the reason for the current
-state.
-
-And yes:  RAID5 distributes the parity blocks to avoid bottlenecks.
-
-> 
-> alpha md # mdadm --examine --verbose /dev/sdh2
-> /dev/sdh2:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : fa8fb033:6312742f:0524501d:5aa24a28
->            Name : sysresccd:1
->   Creation Time : Sat Jul 17 02:57:27 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 3904927887 (1862.01 GiB 1999.32 GB)
->      Array Size : 11714780160 (5586.04 GiB 5997.97 GB)
->   Used Dev Size : 3904926720 (1862.01 GiB 1999.32 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 172eb49b:03e62242:614d7ed3:1fb25f65
-> 
->     Update Time : Sun Jan  9 19:55:09 2011
->        Checksum : a991f168 - correct
->          Events : 34
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->    Device Role : spare
->    Array State : AAAA ('A' == active, '.' == missing)
-> 
-> Too bad that 1.2 superblocks don't contain the full array information
-> like 0.90 did.
-
-The extra information that 0.90 stored was not (and could not be) reliable.
-
-This device thinks that that the array is functioning correctly with no
-failed devices, and that this device is a spare - presumably a 5th device?
-It doesn't know the names of the other devices (and if it thought it did, it
-could easily be wrong as names changed).  What do the other devices think of
-the state of the array?
-
-NeilBrown
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
