@@ -1,49 +1,56 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 13/13] FIX: Fill sys_name for disk add
-Date: Mon, 10 Jan 2011 12:29:12 +0100
-Message-ID: <20110110112912.10776.73847.stgit@gklab-128-013.igk.intel.com>
-References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: Re: [PATCH v3 0/8] dm-raid (raid456) target
+Date: Mon, 10 Jan 2011 14:14:59 -0600
+Message-ID: <5F7256B3-BE4F-489F-8B2B-0E830A8BBE0B@redhat.com>
+References: <1292899065-31943-1-git-send-email-snitzer@redhat.com> <20101221141443.5aea0b12@notabene.brown> <20110105223628.GA13164@redhat.com> <20110106214645.2bd321f4@notabene.brown> <D3D5994A-7CA9-43BE-8B81-A09139220A9E@redhat.com> <20110110113718.1e042548@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110110113718.1e042548@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add disks fails due to empty sys name field.
-sysfs_init fills out required fields for add disk operation.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+On Jan 9, 2011, at 6:37 PM, NeilBrown wrote:
 
- Grow.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+>>> Also:
+>>>
+>>> 3:	<#raid_devs> <meta_dev1> <dev1> .. <meta_devN> <devN>
+>>>
+>>> This doesn't allow offsets into the various devices like dm-stripe,
+>>> dm-linear, dm-raid1 all do.
+>>
+>> This is a conscious choice.  The offset was discarded because it is
+>> unneeded.
+>
+> Famous last words!!!
 
-diff --git a/Grow.c b/Grow.c
-index 9d31087..2ca9835 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1692,7 +1692,8 @@ static int reshape_array(char *container, int fd, char *devname,
- 			st->ss->container_content(st, subarray);
- 		struct mdinfo *d;
- 
--		if (info2)
-+		if (info2) {
-+			sysfs_init(info2, fd, st->devnum);
- 			for (d = info2->devs; d; d = d->next) {
- 				if (d->disk.state == 0 &&
- 				    d->disk.raid_disk >= 0) {
-@@ -1703,7 +1704,8 @@ static int reshape_array(char *container, int fd, char *devname,
- 					add_disk(fd, st, info2, d);
- 				}
- 			}
--		sysfs_free(info2);
-+			sysfs_free(info2);
-+		}
- 	}
- 
- 	if (reshape.blocks == 0) {
+:)
+
+>
+> When reshaping a RAID5/6 to change the chunk size or layout, or when
+> converting an N drive RAID5 to N+1 drive RAID6, it makes it a lot  
+> easier if
+> you can can change the data offset at the same time.  Then you don't  
+> have to
+> keep backing up data.  md cannot do this yet but I hope to add the  
+> code soon
+> and because 'data_offset' is a distinct value it is conceptually  
+> easy to do.
+> If 'data_offset' is assumed to be zero, then it isn't.
+
+I guess I don't understand this part.  Why would you need to change  
+the data offset?  Especially the offset as it relates to the  
+individual drives?
+
+> But I don't know to what extent you are planning on supporting  
+> reshaping of
+> arrays....
+
+I don't see a reason why this can't be completely supported...
+
+  brassow
 
