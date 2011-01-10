@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 05/13] msm: FIX: when mdadm reloads anchor not need for local
-	modyfication
-Date: Mon, 10 Jan 2011 12:28:07 +0100
-Message-ID: <20110110112806.10776.74388.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 06/13] imsm: FIX: update disks status in container_contents()
+Date: Mon, 10 Jan 2011 12:28:15 +0100
+Message-ID: <20110110112815.10776.44824.stgit@gklab-128-013.igk.intel.com>
 References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,38 +13,44 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-imsm part to patch: "FIX: load anchor to get all information"
-mdadm should not update anchor but reload metadata.
-For details look previous patch.
+Based on status information disks are added to array during grow (in reshape_array()).
+This information currently is not present and all disks (old and new) were added to md.
+To avoid adding already present disks, disk.state has to be set.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+ super-intel.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 8644c39..9687993 100644
+index 9687993..2700401 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6483,19 +6483,6 @@ static int imsm_create_metadata_update_for_reshape(
- 		dl = get_disk_super(super, dev->disk.major, dev->disk.minor);
- 		dl->index = mpb->num_disks++;
- 	}
--	/* Now update the metadata so that container_content will find
--	 * the new devices
--	 */
--	for (i = 0; i < mpb->num_raid_devs; i++) {
--		int d;
--		struct imsm_dev *dev = get_imsm_dev(super, i);
--		struct imsm_map *map = get_imsm_map(dev, 0);
--		map->num_members = geo->raid_disks;
--		for (d = 0; d < delta_disks; d++) {
--			set_imsm_ord_tbl_ent(map, old_raid_disks + d,
--					     mpb->num_disks - delta_disks + d);
--		}
--	}
+@@ -4541,6 +4541,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 	for (i = 0; i < mpb->num_raid_devs; i++) {
+ 		struct imsm_dev *dev;
+ 		struct imsm_map *map;
++		struct imsm_map *map2;
+ 		struct mdinfo *this;
+ 		int slot;
+ 		char *ep;
+@@ -4551,6 +4552,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
  
- abort:
- 	/* free spares
+ 		dev = get_imsm_dev(super, i);
+ 		map = get_imsm_map(dev, 0);
++		map2 = get_imsm_map(dev, 1);
+ 
+ 		/* do not publish arrays that are in the middle of an
+ 		 * unsupported migration
+@@ -4632,7 +4634,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			info_d->disk.minor = d->minor;
+ 			info_d->disk.raid_disk = slot;
+ 			info_d->recovery_start = recovery_start;
+-
++			if (map2 && (map2->num_members > slot))
++				info_d->disk.state = (1 << MD_DISK_ACTIVE);
+ 			if (info_d->recovery_start == MaxSector)
+ 				this->array.working_disks++;
+ 
 
