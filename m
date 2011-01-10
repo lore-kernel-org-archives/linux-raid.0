@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/13] FIX: wrong flags are passed to function
-Date: Mon, 10 Jan 2011 12:28:24 +0100
-Message-ID: <20110110112823.10776.61675.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 08/13] FIX/WORKAROUND: added disks are not used by reshape
+	process /md/
+Date: Mon, 10 Jan 2011 12:28:32 +0100
+Message-ID: <20110110112832.10776.61385.stgit@gklab-128-013.igk.intel.com>
 References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,25 +14,32 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-flags == 1 are always passed to sysfs_read() due to '||' usage.
+md runs reshape but added disk is not touched
+/proc/mdstat reports that disk is used.
+
+To fix this let md to set slot for reshape.
+It is possible that slot verification mechanism has to be added.
+
+Second possibility is to investigate problem in md.
+md/raid5 treats disks as spare with disk index == -1 during raid5 reshape_start.
+Probably rqaid5 should treat as spare disks when disk index > used disks
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ Grow.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index 1d0ef12..0efa106 100644
+index 0efa106..6b2889e 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -1788,7 +1788,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	}
- 
- 	sra = sysfs_read(fd, 0,
--			 GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE||GET_CHUNK|
-+			 GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE|GET_CHUNK|
- 			 GET_CACHE);
- 
- 	if (!sra) {
+@@ -1697,6 +1697,7 @@ static int reshape_array(char *container, int fd, char *devname,
+ 					/* This is a spare that wants to
+ 					 * be part of the array.
+ 					 */
++					d->disk.raid_disk = -1;
+ 					add_disk(fd, st, info2, d);
+ 				}
+ 			}
 
