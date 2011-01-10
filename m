@@ -1,240 +1,69 @@
-From: Christian Schmidt <charlie@digadd.de>
-Subject: Re: What exactly does echo check > /sys/block/mdX/md/sync_action
- do?
-Date: Mon, 10 Jan 2011 02:14:35 +0100
-Message-ID: <4D2A5D7B.5080500@digadd.de>
-References: <4D2A3B25.6050504@digadd.de>	<20110110102613.692fa2e3@notabene.brown>	<4D2A5297.6000601@digadd.de> <20110110114329.091d577c@notabene.brown>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Considering a complete rework of RAID on my home compute server
+Date: Sun, 9 Jan 2011 17:45:18 -0800
+Message-ID: <AANLkTik3+QSvvuegLtSXGnghDkjfsCDQCDWUktq-W1zR@mail.gmail.com>
+References: <AANLkTikxViM45MfjZvMCDAobeVVwBqMZHrm_Ws-bsAQt@mail.gmail.com>
+	<68.C0.13137.77E4A2D4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110114329.091d577c@notabene.brown>
+In-Reply-To: <68.C0.13137.77E4A2D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/10/2011 01:43 AM, NeilBrown wrote:
-> On Mon, 10 Jan 2011 01:28:07 +0100 Christian Schmidt <charlie@digadd.de>
-> wrote:
-> 
-> 
->>> This device thinks that that the array is functioning correctly with no
->>> failed devices, and that this device is a spare - presumably a 5th device?
->>> It doesn't know the names of the other devices (and if it thought it did, it
->>> could easily be wrong as names changed).  What do the other devices think of
->>> the state of the array?
->>
->> [~]>mdadm -Q --detail /dev/md3
->> /dev/md3:
->>         Version : 1.02
->>   Creation Time : Sat Jul 17 02:57:27 2010
->>      Raid Level : raid5
->>      Array Size : 5857390080 (5586.04 GiB 5997.97 GB)
->>   Used Dev Size : 1952463360 (1862.01 GiB 1999.32 GB)
->>    Raid Devices : 4
->>   Total Devices : 4
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Mon Jan 10 00:38:00 2011
->>           State : clean, recovering
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>          Layout : left-symmetric
->>      Chunk Size : 512K
->>
->>  Rebuild Status : 68% complete
->>
->>            Name : sysresccd:1
->>            UUID : fa8fb033:6312742f:0524501d:5aa24a28
->>          Events : 34
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       34        0      active sync   /dev/sdc2
->>        1       8       50        1      active sync   /dev/sdd2
->>        2       8       82        2      active sync   /dev/sdf2
->>        4       8      114        3      active sync   /dev/sdh2
->>
->> So just "check" turns the array into rebuild mode and one of the drives
->> into a spare? That's unexpected.
-> 
-> I very much doubt writing "check" is all that happened.  Maybe seeing some
-> kernel logs would help.  
+On Sun, Jan 9, 2011 at 4:10 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
+te:
+<SNIP>
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0What I meant was, you currently have a 2 d=
+isk RAID0. =C2=A0Why not buy a
+> larger disk and move the 2 drives currently tied up in the RAID0 to a=
+ 5 disk
+> RAID6 array with no partitions? =C2=A0The function currently provided=
+ by the 2nd
+> RAID1 can be taken over by the single drive, and the function of the =
+RAID0
+> can be taken over by a directory on the main array. =C2=A0This makes =
+better
+> functional use of the space and may provide performance benefits, not=
+ to
+> mention being much simpler. =C2=A0I'm a fan of having a separate, sma=
+ll disk for
+> booting. =C2=A0My servers both have a pair of small drives each parti=
+tioned into
+> three sections. =C2=A0Each of the partition pairs are in turn assembl=
+ed into a
+> RAID array for a total of 3 mounts:
+>
+> md1 - a tiny /boot
+> md2 - a small /
+> md3 - swap.
+>
 
-Here they are:
+I believe that is essentially what I'm doing:
 
-[  235.503895] md: md3 stopped.
-[  235.505428] md: bind<sdd2>
-[  235.505557] md: bind<sdf2>
-[  235.505673] md: bind<sdh2>
-[  235.505804] md: bind<sdc2>
-[  235.510288] md/raid:md3: device sdc2 operational as raid disk 0
-[  235.510292] md/raid:md3: device sdh2 operational as raid disk 3
-[  235.510294] md/raid:md3: device sdf2 operational as raid disk 2
-[  235.510296] md/raid:md3: device sdd2 operational as raid disk 1
-[  235.510569] md/raid:md3: allocated 4280kB
-[  235.510604] md/raid:md3: raid level 5 active with 4 out of 4 devices,
-algorithm 2
-[  235.510607] RAID conf printout:
-[  235.510609]  --- level:5 rd:4 wd:4
-[  235.510611]  disk 0, o:1, dev:sdc2
-[  235.510613]  disk 1, o:1, dev:sdd2
-[  235.510614]  disk 2, o:1, dev:sdf2
-[  235.510616]  disk 3, o:1, dev:sdh2
-[  235.510652] md3: detected capacity change from 0 to 5997967441920
-[  236.204947]  md3: unknown partition table
-[ 1347.192343] md: data-check of RAID array md3
-[ 1347.192346] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[ 1347.192347] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for data-check.
-[ 1347.192352] md: using 128k window, over a total of 1952463360 blocks.
+- 2 drive RAID0 using 500GB drives is 1TB
+- 3 drive RAID1 using 500GB drives is 500GB
 
-Actually I rebooted the machine after a kernel update, which turned out
-to change the drive names (I left an unrelated drive in a hotswap bay).
-Also, I had an erroneous /etc/mdadm.conf which was still referring to
-the old drive naming. When I realized this drive array wasn't started I
-completely renamed the config file and ran
-mdadm -A --scan
-after which the array was found. I have some issues opening crypto
-volumes on the LVM though and tried to figure out whether I forgot the
-key for one and never created the other, or something's wrong on the
-underlying layer, so I started a check.
+- 5 drive RAID6 using 500GB drives is 1.5TB
 
-> What does
->    cat /proc/mdstat
+The RAID0 is moving to the RAID6
+The RAID1 is moving to the RAID6
 
-It says:
+I'll purchase 1 additional 500GB drive to sit cold in my office in
+case I drop a drive in the RAID6.
 
-md3 : active raid5 sdc2[0] sdh2[4] sdf2[2] sdd2[1]
-      5857390080 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4]
-[UUUU]
-      [=================>...]  check = 85.3% (1667391744/1952463360)
-finish=57.5min speed=82511K/sec
+Sounds like it should work out well.
 
-> show (assuming the check/recovery/whatever hasn't finished yet).
-> It should say "recovering" as I think the key word is copied into the
-> 'State:' line above.
-> 
-> But writing "check" should not cause any drive to become a 'spare', and
-> should not trigger a 'rebuild' - just a 'check'.
+I'll investigate using a different drive for booting.
 
-Well... so what is this raid actually doing? mdstat says check, mdam -q
---detail says recovering, and mdadm --examine on one of the drives says
-spare (while no spare are listed at any other point).
-
-mdadm --examine:
-
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : fa8fb033:6312742f:0524501d:5aa24a28
-           Name : sysresccd:1
-  Creation Time : Sat Jul 17 02:57:27 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3904927887 (1862.01 GiB 1999.32 GB)
-     Array Size : 11714780160 (5586.04 GiB 5997.97 GB)
-  Used Dev Size : 3904926720 (1862.01 GiB 1999.32 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 801bb0ab:256d6f57:7e53e467:62094362
-
-    Update Time : Mon Jan 10 01:43:39 2011
-       Checksum : 5f661441 - correct
-         Events : 35
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 0
-   Array State : AAAA ('A' == active, '.' == missing)
-
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : fa8fb033:6312742f:0524501d:5aa24a28
-           Name : sysresccd:1
-  Creation Time : Sat Jul 17 02:57:27 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3904927887 (1862.01 GiB 1999.32 GB)
-     Array Size : 11714780160 (5586.04 GiB 5997.97 GB)
-  Used Dev Size : 3904926720 (1862.01 GiB 1999.32 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : d14e0126:4c8be6cd:418165b2:24bba827
-
-    Update Time : Mon Jan 10 01:43:39 2011
-       Checksum : 6015453f - correct
-         Events : 35
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 1
-   Array State : AAAA ('A' == active, '.' == missing)
-
-/dev/sdf2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : fa8fb033:6312742f:0524501d:5aa24a28
-           Name : sysresccd:1
-  Creation Time : Sat Jul 17 02:57:27 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3904927887 (1862.01 GiB 1999.32 GB)
-     Array Size : 11714780160 (5586.04 GiB 5997.97 GB)
-  Used Dev Size : 3904926720 (1862.01 GiB 1999.32 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 3b8a4934:40a3270d:7e285e98:07aec354
-
-    Update Time : Mon Jan 10 01:43:39 2011
-       Checksum : c0b232bd - correct
-         Events : 35
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : Active device 2
-   Array State : AAAA ('A' == active, '.' == missing)
-
-/dev/sdh2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : fa8fb033:6312742f:0524501d:5aa24a28
-           Name : sysresccd:1
-  Creation Time : Sat Jul 17 02:57:27 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3904927887 (1862.01 GiB 1999.32 GB)
-     Array Size : 11714780160 (5586.04 GiB 5997.97 GB)
-  Used Dev Size : 3904926720 (1862.01 GiB 1999.32 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 172eb49b:03e62242:614d7ed3:1fb25f65
-
-    Update Time : Mon Jan 10 01:43:39 2011
-       Checksum : a8d4425a - correct
-         Events : 35
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-   Device Role : spare
-   Array State : AAAA ('A' == active, '.' == missing)
+Thanks,
+Mark
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
