@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 04/13] FIX: load anchor to get all information
-Date: Mon, 10 Jan 2011 12:27:58 +0100
-Message-ID: <20110110112758.10776.44079.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 05/13] msm: FIX: when mdadm reloads anchor not need for local
+	modyfication
+Date: Mon, 10 Jan 2011 12:28:07 +0100
+Message-ID: <20110110112806.10776.74388.stgit@gklab-128-013.igk.intel.com>
 References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,40 +14,38 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When reshape_super() puts updated metadata to array, mdadm should reload it,
-to get all information that are changed during update operation.
-To avoid (follow curent implementation) reload operation mdadm should update metadata 2 times.
-One time for mdmon, second for internal mdadm purposes. Both updates has to update whole
-array information (not disks only) to know everything about reshape process.
-Local/mdadm update ie. for imsm should contain:
-- reshape_active field update
-- second map update
-- migration state update
-....
-- and most important during disk add metadata anchor should be reallocated
-  to make space for new/greater disks number,
-  and then metadata contents has to be copied to new area ...
-
-This makes also problem with keeping in sync both those updates, so I'm resending
-patches for reloading metadata after update (this one)
-and removing anchor modifications in mdadm (next patch)
+imsm part to patch: "FIX: load anchor to get all information"
+mdadm should not update anchor but reload metadata.
+For details look previous patch.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ super-intel.c |   13 -------------
+ 1 files changed, 0 insertions(+), 13 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 4cbe427..1d0ef12 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2159,6 +2159,7 @@ int reshape_container(char *container, int cfd, char *devname,
+diff --git a/super-intel.c b/super-intel.c
+index 8644c39..9687993 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6483,19 +6483,6 @@ static int imsm_create_metadata_update_for_reshape(
+ 		dl = get_disk_super(super, dev->disk.major, dev->disk.minor);
+ 		dl->index = mpb->num_disks++;
+ 	}
+-	/* Now update the metadata so that container_content will find
+-	 * the new devices
+-	 */
+-	for (i = 0; i < mpb->num_raid_devs; i++) {
+-		int d;
+-		struct imsm_dev *dev = get_imsm_dev(super, i);
+-		struct imsm_map *map = get_imsm_map(dev, 0);
+-		map->num_members = geo->raid_disks;
+-		for (d = 0; d < delta_disks; d++) {
+-			set_imsm_ord_tbl_ent(map, old_raid_disks + d,
+-					     mpb->num_disks - delta_disks + d);
+-		}
+-	}
  
- 		sysfs_free(cc);
- 
-+		st->ss->load_container(st, cfd, NULL);
- 		cc = st->ss->container_content(st, NULL);
- 
- 		for (content = cc; content ; content = content->next) {
+ abort:
+ 	/* free spares
 
