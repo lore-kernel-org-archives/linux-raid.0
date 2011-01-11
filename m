@@ -1,100 +1,73 @@
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: An extensible superblock
-Date: Tue, 11 Jan 2011 12:02:18 -0800
-Message-ID: <4D2CB74A.6000905@gmail.com>
-References: <4D2C9FB7.6050806@gmail.com> <01BF00A4-AC7E-4071-9FC1-16F123ED2500@redhat.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 00/13] md patches for the current merge window
+Date: Wed, 12 Jan 2011 09:12:46 +1100
+Message-ID: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <01BF00A4-AC7E-4071-9FC1-16F123ED2500@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jonathan Brassow <jbrassow@redhat.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
+Cc: Jonathan Brassow <jbrassow@redhat.com>, Mike Snitzer <snitzer@redhat.com>, =?utf-8?b?UsOpbWk=?= =?utf-8?q?R=C3=A9rolle?= <rrerolle@lacie.com>, Joe Perches <joe@perches.com>
 List-Id: linux-raid.ids
 
-On 01/11/2011 11:52 AM, Jonathan Brassow wrote:
-> Would it make sense for me to bring up my idea of having the metadata
-> and data kept separately here? (Perhaps not, as this is related to the
-> device-mapper/MD integration work; but I'll post it for what it is worth.)
+The following assortment of patches for md are planned to be submitted
+for the current merge window, probably in a couple of days.  Any
+comments most welcome.
 
-I firmly believe that such schemes - and the idea of metadata in 
-userspace in general - may be profoundly useful and ought to be 
-supported to the extent that they are useful, but they shouldn't get in 
-the way of having something simple and consistent. Emphasis on simple.
+Some are bug fixes, some of minor changes to prepare for future work,
+nothing is really significant
 
-Hell, external metadata is basically what bcache does today. But if your 
-metadata isn't stored with the data it's describing, then... well, it's 
-not really correct but the way I think of it is whether the data is self 
-describing or not.
+They are all currently in my for-next branch
+   git://neil.brown.name/md for-next
+and so should appear in -next today or tomorrow.
 
-If you've got a filesystem with a cache on another device, then it's not 
-just a filesystem, it's a filesystem with a cache on another device; 
-using it as such is critical for consistency, and if you leave that 
-superblock out then there's no way you can tell them (a plain filesystem 
-vs. a filesystem with a cache) if you haven't already seen the metadata.
+Thanks,
+NeilBrown
 
-N.B.:
+---
 
-Just because you have a md superblock doesn't mean you can't put all the 
-important things somewhere else, it's just absolutely critical that you 
-have some way of noting that in your superblock. Else you can never know 
-if you have a correct/consistent view of your data.
+Joe Perches (1):
+      md: Fix single printks with multiple KERN_<level>s
 
->
-> http://marc.info/?l=linux-raid&m=129434759113635&w=2
->
-> brassow
->
-> On Jan 11, 2011, at 12:21 PM, Kent Overstreet wrote:
->
->> This is, in a roundabout way, an extension of some stuff I was talking
->> to Neil about - but this is slightly more wild speculation.
->>
->> Background: bcache
->> http://bcache.evilpiepirate.org
->>
->> Bcache currently caches block devices transparently; this is useful
->> but unsafe. It needs a superblock for the backing device, and it turns
->> out what it needs out of a superblock is not very dissimilar from what
->> md does, so I've been thinking about how to best go about using md.
->>
->> Well, the annoying thing about that for the end user is that if you
->> want to cache your hard drive safely, you have to plan ahead...
->> there's no technical reason you shouldn't be able to add a cache to
->> the filesystem you've already got but you need a place to put the
->> superblock.
->>
->> The exact same problem exists with raid: you installed to a single
->> disk, you decide you want to mirror it - there's no good way of doing
->> that. There's three different solutions I know of (make a degraded
->> raid1 on the new disk, copy everything over; use a 1.2 superblock - if
->> it fits; or when you first install force create a single disk raid1).
->> They work but they're hacks, it'd be nice to have something better.
->>
->> The last solution - start with a raid superblock - would be
->> particularly nice if there was an explicit "noop" raid level; you
->> could quite conceivable grow from a single disk to a raid6, online.
->> Trouble is, you could add a cache, create a raid, but not both.
->>
->> Well, not without a new superblock, which is why I prefaced this by
->> calling it wild speculation - I really like this solution but it'd be
->> a fair amount of work.
->>
->> Change the superblock so it describes a tree structure:
->> Leaf nodes correspond to component devices. Thus, a superblock that
->> describes an array with only one component would be a noop superblock.
->>
->> Then, interior nodes correspond to raid arrays or cache sets. Much of
->> what's in the start of the version 1 superblock would be here.
->>
->> Anyways, once you've got that you can have a standard superblock that
->> you use for everything, and you can safely and easily transition to
->> whatever you might want to in the future.
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+Jonathan Brassow (4):
+      md: separate meta and data devs
+      md-new-param-to_sync_page_io
+      md-new-param-to-calc_dev_sboffset
+      md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
 
+NeilBrown (7):
+      md: allow suspend_lo and suspend_hi to decrease as well as increa=
+se.
+      md: Don't let implementation detail of curr_resync leak out throu=
+gh sysfs.
+      md: Be more careful about clearing flags bit in ->recovery
+      md: md_stop_writes requires mddev_lock.
+      md: Ensure no IO request to get md device before it is properly i=
+nitialised.
+      md: fix regression resulting in delays in clearing bits in a bitm=
+ap
+      md: fix regression with re-adding devices to arrays with no metad=
+ata
+
+R=C3=A9mi R=C3=A9rolle (1):
+      md: fix sync_completed reporting for very large drives (>2TB)
+
+
+ drivers/md/bitmap.c |   12 ++-
+ drivers/md/md.c     |  187 +++++++++++++++++++++++++++++++------------=
+--------
+ drivers/md/md.h     |   13 +++-
+ drivers/md/raid1.c  |   33 ++++-----
+ drivers/md/raid10.c |   17 ++---
+ drivers/md/raid5.c  |    7 +-
+ 6 files changed, 157 insertions(+), 112 deletions(-)
+
+--=20
+Signature
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
