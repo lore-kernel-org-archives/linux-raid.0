@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 8/9] FIX: container has to be frozen during reshape
-Date: Tue, 11 Jan 2011 15:04:52 +0100
-Message-ID: <20110111140451.13862.24555.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 9/9] imsm: Proceed with second array reshape only for frozen
+	container
+Date: Tue, 11 Jan 2011 15:04:59 +0100
+Message-ID: <20110111140459.13862.63761.stgit@gklab-128-013.igk.intel.com>
 References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,36 +14,51 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Parent process unfreezes container when reshape was forked.
-Container has to be frozen during entire reshape for container case.
-Based on reshape flag "next array" reshape decision is taken also.
+In IMSM case container operation is set of array operations.
+We have 2 cases:
+1. reshape initiated by mdadm grow
+2. continue reshape from checkpoint after i.e. reboot.
+
+In first case we have continue reshape for next array.
+In second case we cannot be sure that assembly procedure will assembly
+arrays in required order, and can potentially have parallel reshapes.
+
+Monitor cannot keep information for this because for raid0 it will not be started.
+Difference between 2 cases is that. In first case we have frozen container,
+so only for frozen container 2nd array reshape is allowed.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ super-intel.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 6238eb3..29a78a6 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1579,6 +1579,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		 */
- 		rv = reshape_container(container, fd, devname, st, &info,
- 				       force, backup_file, quiet);
-+		frozen = rv;
- 	} else {
- 		/* Impose these changes on a single array.  First
- 		 * check that the metadata is OK with the change. */
-@@ -2201,6 +2202,9 @@ int reshape_container(char *container, int cfd, char *devname,
- 			break;
- 	}
- 	sysfs_free(cc);
-+
-+	unfreeze(st, 1);
-+
- 	exit(0);
- }
+diff --git a/super-intel.c b/super-intel.c
+index c465288..d3da6f9 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5076,10 +5076,22 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		struct active_array *aa = a->container->arrays;
+ 		int arrays_under_reshape = 0;
+ 		int array_counter = 0;
++		int frozen = 0;
++		char buf[PATH_MAX];
  
++		/* do not process next volume if container is not frozen.
++		 * 'not frozen' case can occure,
++		 * when array in migration state  is assembled
++		 */			/* do not process next volume if container is not frozen
++			 */
++
++		if (sysfs_get_str(&a->info, NULL, "metadata_version", buf, sizeof(buf)) > 0)
++			frozen = buf[9] == '-';
++		if (frozen == 0)
++			arrays_under_reshape = -1;
+ 		/* check if no other arrays is under reshape
+ 		 */
+-		while (aa) {
++		while (aa && frozen) {
+ 			array_counter++;
+ 			/* when we have takeovered array even single array
+ 			 * can be initialized for reshape, if mdadm didn't
 
