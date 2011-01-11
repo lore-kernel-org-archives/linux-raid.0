@@ -1,73 +1,56 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 00/13] md patches for the current merge window
+Subject: [md PATCH 01/13] md: fix regression with re-adding devices to arrays
+	with no metadata
 Date: Wed, 12 Jan 2011 09:12:46 +1100
-Message-ID: <20110111221050.12732.31647.stgit@notabene.brown>
+Message-ID: <20110111221246.12732.67207.stgit@notabene.brown>
+References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Jonathan Brassow <jbrassow@redhat.com>, Mike Snitzer <snitzer@redhat.com>, =?utf-8?b?UsOpbWk=?= =?utf-8?q?R=C3=A9rolle?= <rrerolle@lacie.com>, Joe Perches <joe@perches.com>
 List-Id: linux-raid.ids
 
-The following assortment of patches for md are planned to be submitted
-for the current merge window, probably in a couple of days.  Any
-comments most welcome.
+Commit 1a855a0606 (2.6.37-rc4) fixed a problem where devices were
+re-added when they shouldn't be but caused a regression in a less
+common case that means sometimes devices cannot be re-added when they
+should be.
 
-Some are bug fixes, some of minor changes to prepare for future work,
-nothing is really significant
+In particular, when re-adding a device to an array without metadata
+we should always access the device, but after the above commit we
+didn't.
 
-They are all currently in my for-next branch
-   git://neil.brown.name/md for-next
-and so should appear in -next today or tomorrow.
+This patch sets the In_sync flag in that case so that the re-add
+succeeds.
 
-Thanks,
-NeilBrown
+This patch is suitable for any -stable kernel to which 1a855a0606 was
+applied.
 
+Cc: stable@kernel.org
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
-Joe Perches (1):
-      md: Fix single printks with multiple KERN_<level>s
+ drivers/md/md.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Jonathan Brassow (4):
-      md: separate meta and data devs
-      md-new-param-to_sync_page_io
-      md-new-param-to-calc_dev_sboffset
-      md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
-
-NeilBrown (7):
-      md: allow suspend_lo and suspend_hi to decrease as well as increa=
-se.
-      md: Don't let implementation detail of curr_resync leak out throu=
-gh sysfs.
-      md: Be more careful about clearing flags bit in ->recovery
-      md: md_stop_writes requires mddev_lock.
-      md: Ensure no IO request to get md device before it is properly i=
-nitialised.
-      md: fix regression resulting in delays in clearing bits in a bitm=
-ap
-      md: fix regression with re-adding devices to arrays with no metad=
-ata
-
-R=C3=A9mi R=C3=A9rolle (1):
-      md: fix sync_completed reporting for very large drives (>2TB)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 175c424..0da25da 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5159,9 +5159,10 @@ static int add_new_disk(mddev_t * mddev, mdu_disk_info_t *info)
+ 		/* set saved_raid_disk if appropriate */
+ 		if (!mddev->persistent) {
+ 			if (info->state & (1<<MD_DISK_SYNC)  &&
+-			    info->raid_disk < mddev->raid_disks)
++			    info->raid_disk < mddev->raid_disks) {
+ 				rdev->raid_disk = info->raid_disk;
+-			else
++				set_bit(In_sync, &rdev->flags);
++			} else
+ 				rdev->raid_disk = -1;
+ 		} else
+ 			super_types[mddev->major_version].
 
 
- drivers/md/bitmap.c |   12 ++-
- drivers/md/md.c     |  187 +++++++++++++++++++++++++++++++------------=
---------
- drivers/md/md.h     |   13 +++-
- drivers/md/raid1.c  |   33 ++++-----
- drivers/md/raid10.c |   17 ++---
- drivers/md/raid5.c  |    7 +-
- 6 files changed, 157 insertions(+), 112 deletions(-)
-
---=20
-Signature
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
