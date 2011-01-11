@@ -1,66 +1,41 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 7/9] imsm: FIX: monitor should initialize 2nd reshape only
-Date: Tue, 11 Jan 2011 15:04:43 +0100
-Message-ID: <20110111140443.13862.80670.stgit@gklab-128-013.igk.intel.com>
-References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: mdadm raid5 with lvm: advantages?
+Date: Wed, 12 Jan 2011 01:10:03 +1100
+Message-ID: <4D2C64BB.6070803@crc.id.au>
+References: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Richard Grundy <richguk@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-in case configuration:
-	raid5
-	raid0
-first array is monitored only.
-During reshape of such container first array (raid5), in metadata
-migration is initialized for both arrays.
-This is imsm incompatible case.
+On 12/01/2011 1:06 AM, Richard Grundy wrote:
+> I'm building a new RAID5 array (of 5 1.5 TB drives) with mdadm and
+> would like to know the benefits of creating an LVM on top of this are
+> instead of just creating the filesystem on the md directly. I've never
+> had a problem growing the array and then resizing the filesystem
+> before and wondered if in this situation the only gain would be lvm
+> snapshot stuff? I'm planning to use ext4 for this array, if that makes
+> any difference.
 
-Allow for 2nd array in metadata reshape initialization when there is more than 1 array monitored.
+I used lvm over RAID5 on my latest server. It runs the Xen Hypervisor to 
+do virtualisation. It was the first project that I have *ever* used lvm 
+on. I have to say, I'm quite impressed. I have a volume group that takes 
+up the entire RAID5, then split that into logical volumes for each VM.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+I guess the bottom line here is what you are using it for. If its one 
+massive file dumping ground, then lvm probably won't get you any extra 
+features. If you plan to have more things later on than a single 
+filesystem, then it might be an advantage to put lvm on there now.
 
- super-intel.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+-- 
+Steven Haigh
 
-diff --git a/super-intel.c b/super-intel.c
-index 1db15c2..c465288 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5075,10 +5075,20 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 		*/
- 		struct active_array *aa = a->container->arrays;
- 		int arrays_under_reshape = 0;
-+		int array_counter = 0;
- 
- 		/* check if no other arrays is under reshape
- 		 */
- 		while (aa) {
-+			array_counter++;
-+			/* when we have takeovered array even single array
-+			 * can be initialized for reshape, if mdadm didn't
-+			 * do this.
-+			 * This is due to fact, that raid0 (takeovered to raid4)
-+			 * appears in monitor one by one
-+			 */
-+			if (aa->info.array.level == 4)
-+				array_counter++;
- 			if (aa->container) {
- 				int inst = aa->info.container_member;
- 				struct intel_super *super = aa->container->sb;
-@@ -5091,7 +5101,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 			}
- 			aa = aa->next;
- 		}
--		if (arrays_under_reshape == 0) {
-+		if ((arrays_under_reshape == 0) && (array_counter > 1)) {
- 			struct imsm_map *map = get_imsm_map(dev, 0);
- 			struct dl *dl = NULL;
- 			int disks_count = 0;
-
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
