@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 03/13] md: Fix single printks with multiple KERN_<level>s
+Subject: [md PATCH 04/13] md: Ensure no IO request to get md device before it
+	is properly initialised.
 Date: Wed, 12 Jan 2011 09:12:46 +1100
-Message-ID: <20110111221246.12732.83999.stgit@notabene.brown>
+Message-ID: <20110111221246.12732.57094.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,64 +11,84 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Joe Perches <joe@perches.com>
 List-Id: linux-raid.ids
 
-From: Joe Perches <joe@perches.com>
+When an md device is in the process of coming on line it is possible
+for an IO request (typically a partition table probe) to get through
+before the array is fully initialised, which can cause unexpected
+behaviour (e.g. a crash).
 
-Noticed-by: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Joe Perches <joe@perches.com>
+So explicitly record when the array is ready for IO and don't allow IO
+through until then.
+
+There is no possibility for a similar problem when the array is going
+off-line as there must only be one 'open' at that time, and it is busy
+off-lining the array and so cannot send IO requests.  So no memory
+barrier is needed in md_stop()
+
+This has been a bug since commit 409c57f3801 in 2.6.30 which
+introduced md_make_request.  Before then, each personality would
+register its own make_request_fn when it was ready.
+This is suitable for any stable kernel from 2.6.30.y onwards.
+
+Cc: <stable@kernel.org>
 Signed-off-by: NeilBrown <neilb@suse.de>
+Reported-by:  "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 ---
 
- drivers/md/raid1.c  |    5 +++--
- drivers/md/raid10.c |    5 +++--
- drivers/md/raid5.c  |    1 -
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/md/md.c |    8 ++++++--
+ drivers/md/md.h |    3 ++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 845cf95..d50056b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1027,8 +1027,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 	} else
- 		set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	printk(KERN_ALERT "md/raid1:%s: Disk failure on %s, disabling device.\n"
--	       KERN_ALERT "md/raid1:%s: Operation continuing on %d devices.\n",
-+	printk(KERN_ALERT
-+	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
-+	       "md/raid1:%s: Operation continuing on %d devices.\n",
- 	       mdname(mddev), bdevname(rdev->bdev, b),
- 	       mdname(mddev), conf->raid_disks - mddev->degraded);
- }
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0641674..03825cb 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1051,8 +1051,9 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a301912..540347c 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -288,10 +288,12 @@ static int md_make_request(struct request_queue *q, struct bio *bio)
+ 	int rv;
+ 	int cpu;
+ 
+-	if (mddev == NULL || mddev->pers == NULL) {
++	if (mddev == NULL || mddev->pers == NULL
++	    || !mddev->ready) {
+ 		bio_io_error(bio);
+ 		return 0;
  	}
- 	set_bit(Faulty, &rdev->flags);
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
--	printk(KERN_ALERT "md/raid10:%s: Disk failure on %s, disabling device.\n"
--	       KERN_ALERT "md/raid10:%s: Operation continuing on %d devices.\n",
-+	printk(KERN_ALERT
-+	       "md/raid10:%s: Disk failure on %s, disabling device.\n"
-+	       "md/raid10:%s: Operation continuing on %d devices.\n",
- 	       mdname(mddev), bdevname(rdev->bdev, b),
- 	       mdname(mddev), conf->raid_disks - mddev->degraded);
- }
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dc574f3..316fbe7 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1721,7 +1721,6 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 		set_bit(Faulty, &rdev->flags);
- 		printk(KERN_ALERT
- 		       "md/raid:%s: Disk failure on %s, disabling device.\n"
--		       KERN_ALERT
- 		       "md/raid:%s: Operation continuing on %d devices.\n",
- 		       mdname(mddev),
- 		       bdevname(rdev->bdev, b),
++	smp_rmb(); /* Ensure implications of  'active' are visible */
+ 	rcu_read_lock();
+ 	if (mddev->suspended) {
+ 		DEFINE_WAIT(__wait);
+@@ -4564,7 +4566,8 @@ int md_run(mddev_t *mddev)
+ 	mddev->safemode_timer.data = (unsigned long) mddev;
+ 	mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
+ 	mddev->in_sync = 1;
+-
++	smp_wmb();
++	mddev->ready = 1;
+ 	list_for_each_entry(rdev, &mddev->disks, same_set)
+ 		if (rdev->raid_disk >= 0) {
+ 			char nm[20];
+@@ -4725,6 +4728,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
+ 
+ void md_stop(mddev_t *mddev)
+ {
++	mddev->ready = 0;
+ 	mddev->pers->stop(mddev);
+ 	if (mddev->pers->sync_request && mddev->to_remove == NULL)
+ 		mddev->to_remove = &md_redundancy_group;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index d05bab5..229675a 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -148,7 +148,8 @@ struct mddev_s
+ 						       * are happening, so run/
+ 						       * takeover/stop are not safe
+ 						       */
+-
++	int				ready; /* See when safe to pass 
++						* IO requests down */
+ 	struct gendisk			*gendisk;
+ 
+ 	struct kobject			kobj;
 
 
