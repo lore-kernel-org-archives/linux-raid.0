@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 04/13] md: Ensure no IO request to get md device before it
-	is properly initialised.
+Subject: [md PATCH 05/13] md/raid5: use sysfs_notify_dirent_safe to avoid NULL
+	pointer
 Date: Wed, 12 Jan 2011 09:12:46 +1100
-Message-ID: <20110111221246.12732.57094.stgit@notabene.brown>
+Message-ID: <20110111221246.12732.4023.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,84 +11,34 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Jonathan Brassow <jbrassow@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 List-Id: linux-raid.ids
 
-When an md device is in the process of coming on line it is possible
-for an IO request (typically a partition table probe) to get through
-before the array is fully initialised, which can cause unexpected
-behaviour (e.g. a crash).
+From: Jonathan Brassow <jbrassow@redhat.com>
 
-So explicitly record when the array is ready for IO and don't allow IO
-through until then.
+With the module parameter 'start_dirty_degraded' set,
+raid5_spare_active() previously called sysfs_notify_dirent() with a NULL
+argument (rdev->sysfs_state) when a rebuild finished.
 
-There is no possibility for a similar problem when the array is going
-off-line as there must only be one 'open' at that time, and it is busy
-off-lining the array and so cannot send IO requests.  So no memory
-barrier is needed in md_stop()
-
-This has been a bug since commit 409c57f3801 in 2.6.30 which
-introduced md_make_request.  Before then, each personality would
-register its own make_request_fn when it was ready.
-This is suitable for any stable kernel from 2.6.30.y onwards.
-
-Cc: <stable@kernel.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
-Reported-by:  "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
 
- drivers/md/md.c |    8 ++++++--
- drivers/md/md.h |    3 ++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/md/raid5.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index a301912..540347c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -288,10 +288,12 @@ static int md_make_request(struct request_queue *q, struct bio *bio)
- 	int rv;
- 	int cpu;
- 
--	if (mddev == NULL || mddev->pers == NULL) {
-+	if (mddev == NULL || mddev->pers == NULL
-+	    || !mddev->ready) {
- 		bio_io_error(bio);
- 		return 0;
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 316fbe7..9212c07 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5338,7 +5338,7 @@ static int raid5_spare_active(mddev_t *mddev)
+ 		    && !test_bit(Faulty, &tmp->rdev->flags)
+ 		    && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+ 			count++;
+-			sysfs_notify_dirent(tmp->rdev->sysfs_state);
++			sysfs_notify_dirent_safe(tmp->rdev->sysfs_state);
+ 		}
  	}
-+	smp_rmb(); /* Ensure implications of  'active' are visible */
- 	rcu_read_lock();
- 	if (mddev->suspended) {
- 		DEFINE_WAIT(__wait);
-@@ -4564,7 +4566,8 @@ int md_run(mddev_t *mddev)
- 	mddev->safemode_timer.data = (unsigned long) mddev;
- 	mddev->safemode_delay = (200 * HZ)/1000 +1; /* 200 msec delay */
- 	mddev->in_sync = 1;
--
-+	smp_wmb();
-+	mddev->ready = 1;
- 	list_for_each_entry(rdev, &mddev->disks, same_set)
- 		if (rdev->raid_disk >= 0) {
- 			char nm[20];
-@@ -4725,6 +4728,7 @@ EXPORT_SYMBOL_GPL(md_stop_writes);
- 
- void md_stop(mddev_t *mddev)
- {
-+	mddev->ready = 0;
- 	mddev->pers->stop(mddev);
- 	if (mddev->pers->sync_request && mddev->to_remove == NULL)
- 		mddev->to_remove = &md_redundancy_group;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index d05bab5..229675a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -148,7 +148,8 @@ struct mddev_s
- 						       * are happening, so run/
- 						       * takeover/stop are not safe
- 						       */
--
-+	int				ready; /* See when safe to pass 
-+						* IO requests down */
- 	struct gendisk			*gendisk;
- 
- 	struct kobject			kobj;
+ 	spin_lock_irqsave(&conf->device_lock, flags);
 
 
