@@ -1,41 +1,48 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: mdadm raid5 with lvm: advantages?
-Date: Wed, 12 Jan 2011 01:10:03 +1100
-Message-ID: <4D2C64BB.6070803@crc.id.au>
-References: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 8/9] FIX: container has to be frozen during reshape
+Date: Tue, 11 Jan 2011 15:04:52 +0100
+Message-ID: <20110111140451.13862.24555.stgit@gklab-128-013.igk.intel.com>
+References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
+In-Reply-To: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Grundy <richguk@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On 12/01/2011 1:06 AM, Richard Grundy wrote:
-> I'm building a new RAID5 array (of 5 1.5 TB drives) with mdadm and
-> would like to know the benefits of creating an LVM on top of this are
-> instead of just creating the filesystem on the md directly. I've never
-> had a problem growing the array and then resizing the filesystem
-> before and wondered if in this situation the only gain would be lvm
-> snapshot stuff? I'm planning to use ext4 for this array, if that makes
-> any difference.
+Parent process unfreezes container when reshape was forked.
+Container has to be frozen during entire reshape for container case.
+Based on reshape flag "next array" reshape decision is taken also.
 
-I used lvm over RAID5 on my latest server. It runs the Xen Hypervisor to 
-do virtualisation. It was the first project that I have *ever* used lvm 
-on. I have to say, I'm quite impressed. I have a volume group that takes 
-up the entire RAID5, then split that into logical volumes for each VM.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-I guess the bottom line here is what you are using it for. If its one 
-massive file dumping ground, then lvm probably won't get you any extra 
-features. If you plan to have more things later on than a single 
-filesystem, then it might be an advantage to put lvm on there now.
+ Grow.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
--- 
-Steven Haigh
+diff --git a/Grow.c b/Grow.c
+index 6238eb3..29a78a6 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1579,6 +1579,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		 */
+ 		rv = reshape_container(container, fd, devname, st, &info,
+ 				       force, backup_file, quiet);
++		frozen = rv;
+ 	} else {
+ 		/* Impose these changes on a single array.  First
+ 		 * check that the metadata is OK with the change. */
+@@ -2201,6 +2202,9 @@ int reshape_container(char *container, int cfd, char *devname,
+ 			break;
+ 	}
+ 	sysfs_free(cc);
++
++	unfreeze(st, 1);
++
+ 	exit(0);
+ }
+ 
 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
