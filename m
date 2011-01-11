@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 6/9] imsm: FIX: container content gathering is not needed for
-	size set
-Date: Tue, 11 Jan 2011 15:04:35 +0100
-Message-ID: <20110111140435.13862.5816.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 7/9] imsm: FIX: monitor should initialize 2nd reshape only
+Date: Tue, 11 Jan 2011 15:04:43 +0100
+Message-ID: <20110111140443.13862.80670.stgit@gklab-128-013.igk.intel.com>
 References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,87 +13,54 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Size information is loaded already and there is no need to load it again,
-when metadata is not reloaded.
+in case configuration:
+	raid5
+	raid0
+first array is monitored only.
+During reshape of such container first array (raid5), in metadata
+migration is initialized for both arrays.
+This is imsm incompatible case.
+
+Allow for 2nd array in metadata reshape initialization when there is more than 1 array monitored.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |   58 +++++++++++++++++++++++++---------------------------------
- 1 files changed, 25 insertions(+), 33 deletions(-)
+ super-intel.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 2ca9835..6238eb3 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2019,44 +2019,36 @@ static int reshape_array(char *container, int fd, char *devname,
- 		if (reshape.before.data_disks !=
- 		    reshape.after.data_disks &&
- 		    info->custom_array_size) {
--			struct mdinfo *info2;
--			char *subarray = strchr(info->text_version+1, '/')+1;
-+			unsigned long long current_size = 0;
-+			unsigned long long new_size = info->custom_array_size/2;
-+			unsigned long long suspend_value;
+diff --git a/super-intel.c b/super-intel.c
+index 1db15c2..c465288 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5075,10 +5075,20 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		*/
+ 		struct active_array *aa = a->container->arrays;
+ 		int arrays_under_reshape = 0;
++		int array_counter = 0;
  
- 			wait_reshape(sra);
- 			ping_monitor(container);
- 
--			info2 = st->ss->container_content(st, subarray);
--			if (info2) {
--				unsigned long long current_size = 0;
--				unsigned long long new_size =
--					info2->custom_array_size/2;
--				unsigned long long suspend_value;
--
--				if (sysfs_get_ll(sra,
--						 NULL,
--						 "array_size",
--						 &current_size) == 0 &&
--				    new_size > current_size) {
--					if (sysfs_set_num(sra, NULL,
--							  "array_size", new_size)
--					    < 0)
--						dprintf("Error: Cannot"
--							" set array size");
--					else
--						dprintf("Array size "
--							"changed");
--					dprintf(" from %llu to %llu.\n",
--						current_size, new_size);
--				}
--				/* manage suspend_* entries
--				 * set suspend_lo to suspend_hi value
--				 * to unblock array
--				 */
--				sysfs_get_ll(sra, NULL, "suspend_hi", &suspend_value);
--				sysfs_set_num(sra, NULL, "suspend_lo", suspend_value);
--
--				sysfs_free(info2);
-+
-+			if (sysfs_get_ll(sra,
-+					 NULL,
-+					 "array_size",
-+					 &current_size) == 0 &&
-+			    new_size > current_size) {
-+				if (sysfs_set_num(sra, NULL,
-+						  "array_size", new_size)
-+				    < 0)
-+					dprintf("Error: Cannot"
-+						" set array size");
-+				else
-+					dprintf("Array size "
-+						"changed");
-+				dprintf(" from %llu to %llu.\n",
-+					current_size, new_size);
- 			}
-+			/* manage suspend_* entries
-+			 * set suspend_lo to suspend_hi value
-+			 * to unblock array
+ 		/* check if no other arrays is under reshape
+ 		 */
+ 		while (aa) {
++			array_counter++;
++			/* when we have takeovered array even single array
++			 * can be initialized for reshape, if mdadm didn't
++			 * do this.
++			 * This is due to fact, that raid0 (takeovered to raid4)
++			 * appears in monitor one by one
 +			 */
-+			sysfs_get_ll(sra, NULL, "suspend_hi", &suspend_value);
-+			sysfs_set_num(sra, NULL, "suspend_lo", suspend_value);
++			if (aa->info.array.level == 4)
++				array_counter++;
+ 			if (aa->container) {
+ 				int inst = aa->info.container_member;
+ 				struct intel_super *super = aa->container->sb;
+@@ -5091,7 +5101,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 			}
+ 			aa = aa->next;
  		}
- 
- 		if (info->new_level != reshape.level) {
+-		if (arrays_under_reshape == 0) {
++		if ((arrays_under_reshape == 0) && (array_counter > 1)) {
+ 			struct imsm_map *map = get_imsm_map(dev, 0);
+ 			struct dl *dl = NULL;
+ 			int disks_count = 0;
 
