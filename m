@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 07/13] md: Be more careful about clearing flags bit in
-	->recovery
-Date: Wed, 12 Jan 2011 09:12:46 +1100
-Message-ID: <20110111221246.12732.87440.stgit@notabene.brown>
+Subject: [md PATCH 10/13] md: separate meta and data devs
+Date: Wed, 12 Jan 2011 09:12:47 +1100
+Message-ID: <20110111221247.12732.87882.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,165 +10,108 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-Setting ->recovery to 0 is generally not a good idea as it could clear
-bits that shouldn't be cleared.  In particular, MD_RECOVERY_FROZEN
-should only be cleared on explicit request from user-space.
+From: Jonathan Brassow <jbrassow@redhat.com>
 
-So when we need to clear things, just clear the bits that need
-clearing.
+Allow the metadata to be on a separate device from the
+data.
 
-As there are a few different places which reap a resync process - and
-some do an incomplte job - factor out the code for doing the from
-md_check_recovery and call that function instead of open coding part
-of it.
+This doesn't mean the data and metadata will by on separate
+physical devices - it simply gives device-mapper and userspace
+tools more flexibility.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
-Reported-by: Jonathan Brassow <jbrassow@redhat.com>
 ---
 
- drivers/md/md.c |   86 +++++++++++++++++++++++++++++++------------------------
- 1 files changed, 49 insertions(+), 37 deletions(-)
+ drivers/md/bitmap.c |    6 +++++-
+ drivers/md/md.c     |   10 ++++++----
+ drivers/md/md.h     |    6 ++++++
+ 3 files changed, 17 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 1977765..6cf5871 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -264,14 +264,18 @@ static mdk_rdev_t *next_active_rdev(mdk_rdev_t *rdev, mddev_t *mddev)
+ static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
+ {
+ 	mdk_rdev_t *rdev = NULL;
++	struct block_device *bdev;
+ 	mddev_t *mddev = bitmap->mddev;
+ 
+ 	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
+ 		int size = PAGE_SIZE;
+ 		loff_t offset = mddev->bitmap_info.offset;
++
++		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
++
+ 		if (page->index == bitmap->file_pages-1)
+ 			size = roundup(bitmap->last_page_size,
+-				       bdev_logical_block_size(rdev->bdev));
++				       bdev_logical_block_size(bdev));
+ 		/* Just make sure we aren't corrupting data or
+ 		 * metadata
+ 		 */
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index f43ff29..a91dc59 100644
+index 0bc10cc..b98a85f 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -3746,6 +3746,8 @@ action_show(mddev_t *mddev, char *page)
- 	return sprintf(page, "%s\n", type);
- }
+@@ -765,7 +765,7 @@ void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
+ 	 */
+ 	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
  
-+static void reap_sync_thread(mddev_t *mddev);
-+
- static ssize_t
- action_store(mddev_t *mddev, const char *page, size_t len)
- {
-@@ -3760,9 +3762,7 @@ action_store(mddev_t *mddev, const char *page, size_t len)
- 	if (cmd_match(page, "idle") || cmd_match(page, "frozen")) {
- 		if (mddev->sync_thread) {
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--			md_unregister_thread(mddev->sync_thread);
--			mddev->sync_thread = NULL;
--			mddev->recovery = 0;
-+			reap_sync_thread(mddev);
- 		}
- 	} else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
- 		   test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))
-@@ -4709,8 +4709,7 @@ static void __md_stop_writes(mddev_t *mddev)
- 	if (mddev->sync_thread) {
- 		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
- 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
--		md_unregister_thread(mddev->sync_thread);
--		mddev->sync_thread = NULL;
-+		reap_sync_thread(mddev);
- 	}
+-	bio->bi_bdev = rdev->bdev;
++	bio->bi_bdev = rdev->meta_bdev ? rdev->meta_bdev : rdev->bdev;
+ 	bio->bi_sector = sector;
+ 	bio_add_page(bio, page, size, 0);
+ 	bio->bi_private = rdev;
+@@ -803,7 +803,8 @@ int sync_page_io(mdk_rdev_t *rdev, sector_t sector, int size,
  
- 	del_timer_sync(&mddev->safemode_timer);
-@@ -7044,6 +7043,45 @@ static int remove_and_add_spares(mddev_t *mddev)
- 	}
- 	return spares;
- }
-+
-+static void reap_sync_thread(mddev_t *mddev)
-+{
-+	mdk_rdev_t *rdev;
-+
-+	/* resync has finished, collect result */
-+	md_unregister_thread(mddev->sync_thread);
-+	mddev->sync_thread = NULL;
-+	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-+	    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
-+		/* success...*/
-+		/* activate any spares */
-+		if (mddev->pers->spare_active(mddev))
-+			sysfs_notify(&mddev->kobj, NULL,
-+				     "degraded");
-+	}
-+	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
-+	    mddev->pers->finish_reshape)
-+		mddev->pers->finish_reshape(mddev);
-+	md_update_sb(mddev, 1);
-+
-+	/* if array is no-longer degraded, then any saved_raid_disk
-+	 * information must be scrapped
+ 	rw |= REQ_SYNC | REQ_UNPLUG;
+ 
+-	bio->bi_bdev = rdev->bdev;
++	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
++		rdev->meta_bdev : rdev->bdev;
+ 	if (metadata_op)
+ 		bio->bi_sector = sector + rdev->sb_start;
+ 	else
+@@ -4435,7 +4436,9 @@ int md_run(mddev_t *mddev)
+ 		 * We don't want the data to overlap the metadata,
+ 		 * Internal Bitmap issues have been handled elsewhere.
+ 		 */
+-		if (rdev->data_offset < rdev->sb_start) {
++		if (rdev->meta_bdev) {
++			/* Nothing to check */;
++		} else if (rdev->data_offset < rdev->sb_start) {
+ 			if (mddev->dev_sectors &&
+ 			    rdev->data_offset + mddev->dev_sectors
+ 			    > rdev->sb_start) {
+@@ -5532,7 +5535,6 @@ static int update_size(mddev_t *mddev, sector_t num_sectors)
+ 	 * sb_start or, if that is <data_offset, it must fit before the size
+ 	 * of each device.  If num_sectors is zero, we find the largest size
+ 	 * that fits.
+-
+ 	 */
+ 	if (mddev->sync_thread)
+ 		return -EBUSY;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 7e4f358..eec517c 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -60,6 +60,12 @@ struct mdk_rdev_s
+ 	mddev_t *mddev;			/* RAID array if running */
+ 	int last_events;		/* IO event timestamp */
+ 
++	/*
++	 * If meta_bdev is non-NULL, it means that a separate device is
++	 * being used to store the metadata (superblock/bitmap) which
++	 * would otherwise be contained on the same device as the data (bdev).
 +	 */
-+	if (!mddev->degraded)
-+		list_for_each_entry(rdev, &mddev->disks, same_set)
-+			rdev->saved_raid_disk = -1;
-+
-+	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-+	clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
-+	/* flag recovery needed just to double check */
-+	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
-+	sysfs_notify_dirent_safe(mddev->sysfs_action);
-+	md_new_event(mddev);
-+}
-+
- /*
-  * This routine is regularly called by all per-raid-array threads to
-  * deal with generic issues like resync and super-block update.
-@@ -7068,9 +7106,6 @@ static int remove_and_add_spares(mddev_t *mddev)
-  */
- void md_check_recovery(mddev_t *mddev)
- {
--	mdk_rdev_t *rdev;
--
--
- 	if (mddev->bitmap)
- 		bitmap_daemon_work(mddev);
++	struct block_device *meta_bdev;
+ 	struct block_device *bdev;	/* block device handle */
  
-@@ -7138,34 +7173,7 @@ void md_check_recovery(mddev_t *mddev)
- 			goto unlock;
- 		}
- 		if (mddev->sync_thread) {
--			/* resync has finished, collect result */
--			md_unregister_thread(mddev->sync_thread);
--			mddev->sync_thread = NULL;
--			if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
--			    !test_bit(MD_RECOVERY_REQUESTED, &mddev->recovery)) {
--				/* success...*/
--				/* activate any spares */
--				if (mddev->pers->spare_active(mddev))
--					sysfs_notify(&mddev->kobj, NULL,
--						     "degraded");
--			}
--			if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
--			    mddev->pers->finish_reshape)
--				mddev->pers->finish_reshape(mddev);
--			md_update_sb(mddev, 1);
--
--			/* if array is no-longer degraded, then any saved_raid_disk
--			 * information must be scrapped
--			 */
--			if (!mddev->degraded)
--				list_for_each_entry(rdev, &mddev->disks, same_set)
--					rdev->saved_raid_disk = -1;
--
--			mddev->recovery = 0;
--			/* flag recovery needed just to double check */
--			set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
--			sysfs_notify_dirent_safe(mddev->sysfs_action);
--			md_new_event(mddev);
-+			reap_sync_thread(mddev);
- 			goto unlock;
- 		}
- 		/* Set RUNNING before clearing NEEDED to avoid
-@@ -7223,7 +7231,11 @@ void md_check_recovery(mddev_t *mddev)
- 					" thread...\n", 
- 					mdname(mddev));
- 				/* leave the spares where they are, it shouldn't hurt */
--				mddev->recovery = 0;
-+				clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-+				clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
-+				clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-+				clear_bit(MD_RECOVERY_REQUESTED, &mddev->recovery);
-+				clear_bit(MD_RECOVERY_CHECK, &mddev->recovery);
- 			} else
- 				md_wakeup_thread(mddev->sync_thread);
- 			sysfs_notify_dirent_safe(mddev->sysfs_action);
+ 	struct page	*sb_page;
 
 
