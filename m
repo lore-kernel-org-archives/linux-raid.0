@@ -1,49 +1,52 @@
-From: Richard Grundy <richguk@gmail.com>
+From: Jan Kasprzak <kas@fi.muni.cz>
 Subject: Re: mdadm raid5 with lvm: advantages?
-Date: Tue, 11 Jan 2011 14:13:51 +0000
-Message-ID: <AANLkTinXgE+-z3gUrbqGrzzFLtruH+XGGQ=j=71KdO2W@mail.gmail.com>
-References: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com> <4D2C64BB.6070803@crc.id.au>
+Date: Tue, 11 Jan 2011 15:16:20 +0100
+Message-ID: <20110111141620.GE15871@fi.muni.cz>
+References: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2C64BB.6070803@crc.id.au>
+Content-Disposition: inline
+In-Reply-To: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
+To: Richard Grundy <richguk@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It will be used as storage for all my media (audio, videos, apps,
-etc), oh and a folder for backups of other computers; sounds like in
-my situation lvm wouldn't provide much benefit.
+Richard Grundy wrote:
+: Hi,
+:=20
+: I'm building a new RAID5 array (of 5 1.5 TB drives) with mdadm and
+: would like to know the=A0benefits of creating an LVM on top of this a=
+re
+: instead of just creating the filesystem on the md directly. I've neve=
+r
+: had a problem growing the array and then resizing the filesystem
+: before and wondered if in this situation the only gain would be lvm
+: snapshot stuff? I'm planning to use ext4 for this array, if that make=
+s
+: any difference.
 
-Cheers Rich
+	The disadvantage of lvm over md is that with LV filesystems
+usually cannot see the physical layout and determine the correct
+level of parallelism (like swidth in XFS, stripe in ext4).
 
-On Tue, Jan 11, 2011 at 2:10 PM, Steven Haigh <netwiz@crc.id.au> wrote:
-> On 12/01/2011 1:06 AM, Richard Grundy wrote:
->>
->> I'm building a new RAID5 array (of 5 1.5 TB drives) with mdadm and
->> would like to know the benefits of creating an LVM on top of this are
->> instead of just creating the filesystem on the md directly. I've never
->> had a problem growing the array and then resizing the filesystem
->> before and wondered if in this situation the only gain would be lvm
->> snapshot stuff? I'm planning to use ext4 for this array, if that makes
->> any difference.
->
-> I used lvm over RAID5 on my latest server. It runs the Xen Hypervisor to do
-> virtualisation. It was the first project that I have *ever* used lvm on. I
-> have to say, I'm quite impressed. I have a volume group that takes up the
-> entire RAID5, then split that into logical volumes for each VM.
->
-> I guess the bottom line here is what you are using it for. If its one
-> massive file dumping ground, then lvm probably won't get you any extra
-> features. If you plan to have more things later on than a single filesystem,
-> then it might be an advantage to put lvm on there now.
->
-> --
-> Steven Haigh
->
-> Email: netwiz@crc.id.au
-> Web: http://www.crc.id.au
-> Phone: (03) 9001 6090 - 0412 935 897
-> Fax: (03) 8338 0299
->
+-Yenya
+
+--=20
+| Jan "Yenya" Kasprzak  <kas at {fi.muni.cz - work | yenya.net - privat=
+e}> |
+| GPG: ID 1024/D3498839      Fingerprint 0D99A7FB206605D7 8B35FCDE05B18=
+A5E |
+| http://www.fi.muni.cz/~kas/    Journal: http://www.fi.muni.cz/~kas/bl=
+og/ |
+Please don't top post and in particular don't attach entire digests to =
+your
+mail or we'll all soon be using bittorrent to read the list.     --Alan=
+ Cox
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
