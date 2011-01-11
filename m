@@ -1,31 +1,59 @@
-From: Richard Grundy <richguk@gmail.com>
-Subject: mdadm raid5 with lvm: advantages?
-Date: Tue, 11 Jan 2011 14:06:17 +0000
-Message-ID: <AANLkTineOZXNQaGoF_WDnzHbzvCq0=Fi+kw=TseV+agQ@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/9] OLCE for external meta (cont.)
+Date: Tue, 11 Jan 2011 15:03:47 +0100
+Message-ID: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Hi,
+The following series continues OLCE implementation for external metadata.
 
-I'm building a new RAID5 array (of 5 1.5 TB drives) with mdadm and
-would like to know the=C2=A0benefits of creating an LVM on top of this =
-are
-instead of just creating the filesystem on the md directly. I've never
-had a problem growing the array and then resizing the filesystem
-before and wondered if in this situation the only gain would be lvm
-snapshot stuff? I'm planning to use ext4 for this array, if that makes
-any difference.
+Main changes:
+- Raid0 OLCE is possible
+- OLCE for container with 2 arrays works (imsm) 
+- Spares can be added to raid5 container (roll back of some changes)
+- some bugs fixed
 
-Thanks in advanced,
+Problems:
+- checkpointing sometimes hangs 
+  reshape in md is finished, but mdadm stops responding before size set is executed,
+  somewhere in child_monitor()
+- when second array in container is raid0, it is not reshaped during OLCE 
+  for imsm no one at this moment can update metadata:
+     - mdadm is decided not to do this
+     - mdmon is not running for this array yet (array_set_state() cannot be called for metadata update)
+     - mdmon can be run later in reshape_array(), but we need meta update earlier to get reshape_active variable updated
 
-Rich
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+BR
+Adam
+
+
+
+     
+
+---
+
+Adam Kwolek (9):
+      imsm: Proceed with second array reshape only for frozen container
+      FIX: container has to be frozen during reshape
+      imsm: FIX: monitor should initialize 2nd reshape only
+      imsm: FIX: container content gathering is not needed for size set
+      imsm: Update metadata for second array
+      imsm: FIX: only one spare is passed in update
+      imsm:FIX: one spare can be added to raid0 only
+      FIX: Cannot add spare to monitored container
+      imsm: FIX: set correct slot information in metadata (raid0)
+
+
+ Grow.c        |   62 ++++++++++++++----------------
+ Manage.c      |    8 ++--
+ super-intel.c |  119 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 149 insertions(+), 40 deletions(-)
+
+-- 
+Signature
