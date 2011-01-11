@@ -1,97 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 12/13] md: allow suspend_lo and suspend_hi to decrease as
-	well as increase.
+Subject: [md PATCH 13/13] md: fix sync_completed reporting for very large
+	drives (>2TB)
 Date: Wed, 12 Jan 2011 09:12:47 +1100
-Message-ID: <20110111221247.12732.75960.stgit@notabene.brown>
+Message-ID: <20110111221247.12732.59395.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: =?utf-8?b?UsOpbWk=?= =?utf-8?q?R=C3=A9rolle?= <rrerolle@lacie.com>
 List-Id: linux-raid.ids
 
-The sysfs attributes 'suspend_lo' and 'suspend_hi' describe a region
-to which read/writes are suspended so that the under lying data can be
-manipulated without user-space noticing.
-Currently the window they describe can only move forwards along the
-device.  However this is an unnecessary restriction which will cause
-problems with planned developments.
-So relax this restriction and allow these endpoint to move
-arbitrarily.
+=46rom: R=C3=A9mi R=C3=A9rolle <rrerolle@lacie.com>
 
+The values exported in the sync_completed file are unsigned long, which
+overflows with very large drives, resulting in wrong values reported.
+
+Since sync_completed uses sectors as unit, we'll start getting wrong
+values with components larger than 2TB.
+
+This patch simply replaces the use of unsigned long by unsigned long lo=
+ng.
+
+Signed-off-by: R=C3=A9mi R=C3=A9rolle <rrerolle@lacie.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c |   32 ++++++++++++++++++++------------
- 1 files changed, 20 insertions(+), 12 deletions(-)
+ drivers/md/md.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 42b1d9e..c0cba8d 100644
+index c0cba8d..126453f 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4016,19 +4016,24 @@ suspend_lo_store(mddev_t *mddev, const char *buf, size_t len)
+@@ -3918,7 +3918,7 @@ static struct md_sysfs_entry md_sync_speed =3D __=
+ATTR_RO(sync_speed);
+ static ssize_t
+ sync_completed_show(mddev_t *mddev, char *page)
  {
- 	char *e;
- 	unsigned long long new = simple_strtoull(buf, &e, 10);
-+	unsigned long long old = mddev->suspend_lo;
- 
- 	if (mddev->pers == NULL || 
- 	    mddev->pers->quiesce == NULL)
- 		return -EINVAL;
- 	if (buf == e || (*e && *e != '\n'))
- 		return -EINVAL;
--	if (new >= mddev->suspend_hi ||
--	    (new > mddev->suspend_lo && new < mddev->suspend_hi)) {
--		mddev->suspend_lo = new;
-+
-+	mddev->suspend_lo = new;
-+	if (new >= old)
-+		/* Shrinking suspended region */
- 		mddev->pers->quiesce(mddev, 2);
--		return len;
--	} else
--		return -EINVAL;
-+	else {
-+		/* Expanding suspended region - need to wait */
-+		mddev->pers->quiesce(mddev, 1);
-+		mddev->pers->quiesce(mddev, 0);
-+	}
-+	return len;
+-	unsigned long max_sectors, resync;
++	unsigned long long max_sectors, resync;
+=20
+ 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+ 		return sprintf(page, "none\n");
+@@ -3929,7 +3929,7 @@ sync_completed_show(mddev_t *mddev, char *page)
+ 		max_sectors =3D mddev->dev_sectors;
+=20
+ 	resync =3D mddev->curr_resync_completed;
+-	return sprintf(page, "%lu / %lu\n", resync, max_sectors);
++	return sprintf(page, "%llu / %llu\n", resync, max_sectors);
  }
- static struct md_sysfs_entry md_suspend_lo =
- __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
-@@ -4045,20 +4050,23 @@ suspend_hi_store(mddev_t *mddev, const char *buf, size_t len)
- {
- 	char *e;
- 	unsigned long long new = simple_strtoull(buf, &e, 10);
-+	unsigned long long old = mddev->suspend_hi;
- 
- 	if (mddev->pers == NULL ||
- 	    mddev->pers->quiesce == NULL)
- 		return -EINVAL;
- 	if (buf == e || (*e && *e != '\n'))
- 		return -EINVAL;
--	if ((new <= mddev->suspend_lo && mddev->suspend_lo >= mddev->suspend_hi) ||
--	    (new > mddev->suspend_lo && new > mddev->suspend_hi)) {
--		mddev->suspend_hi = new;
-+
-+	if (new <= old)
-+		/* Shrinking suspended region */
-+		mddev->pers->quiesce(mddev, 2);
-+	else {
-+		/* Expanding suspended region - need to wait */
- 		mddev->pers->quiesce(mddev, 1);
- 		mddev->pers->quiesce(mddev, 0);
--		return len;
--	} else
--		return -EINVAL;
-+	}
-+	return len;
- }
- static struct md_sysfs_entry md_suspend_hi =
- __ATTR(suspend_hi, S_IRUGO|S_IWUSR, suspend_hi_show, suspend_hi_store);
+=20
+ static struct md_sysfs_entry md_sync_completed =3D __ATTR_RO(sync_comp=
+leted);
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
