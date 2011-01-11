@@ -1,95 +1,87 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: fix sync_completed reporting for very large drives
- (>2TB)
-Date: Tue, 11 Jan 2011 22:01:50 +1100
-Message-ID: <20110111220150.6444d493@notabene.brown>
-References: <1294155883-31421-1-git-send-email-remi.rerolle@gmail.com>
-	<4D2C3302.2090708@lacie.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH] Monitor: skip array if error getting size
+Date: Tue, 11 Jan 2011 13:09:55 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E87582C@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2C3302.2090708@lacie.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?B?UultaSBS6XJvbGxl?= <rrerolle@lacie.com>
-Cc: =?ISO-8859-1?B?UultaSBS6XJvbGxl?= <remi.rerolle@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 11:37:54 +0100 R=E9mi R=E9rolle <rrerolle@lacie.com=
-> wrote:
+From 10d178721c3870ea5802a30ea3f008f9f379551a Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Tue, 11 Jan 2011 12:36:37 +0100
+Subject: [PATCH] Monitor: skip array if error getting size
+Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-> Le 04/01/2011 16:44, R=E9mi R=E9rolle a =E9crit :
-> > From: R=E9mi R=E9rolle<rrerolle@lacie.com>
-> >
-> > The values exported in the sync_completed file are unsigned long, w=
-hich
-> > overflows with very large drives, resulting in wrong values reporte=
-d.
-> >
-> > Since sync_completed uses sectors as unit, we'll start getting wron=
-g
-> > values with components larger than 2TB.
-> >
-> > This patch simply replaces the use of unsigned long by unsigned lon=
-g long.
-> >
->=20
-> Hi Neil,
->=20
-> What is the status for this patch ?
->=20
-> Thanks in advance!
+load_super tries to load container first anyway but if it fails
+eg. after physically removing a disk
+then it tries to read metadata from container device.
+This will always fail and print confusing errors.
+So use load_container instead of load_super on container.
 
-Perfect timing!!
+On failure to read metadata we should skip this array.
+It will be dealt with the next time round.
 
-The status is that I had completely forgotten about it, but I have just=
- been
-assembling some md patches for the current merge window, so I have just=
- added
-your patch - it should appear in -next in a day or so and go to Linus b=
-y the
-end of the week.
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ Monitor.c |   21 +++++++++++++--------
+ 1 files changed, 13 insertions(+), 8 deletions(-)
 
-Thanks!
+diff --git a/Monitor.c b/Monitor.c
+index 18462f2..db4e8cc 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -702,24 +702,28 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+ 	return new_found;
+ }
+ 
+-unsigned long long min_spare_size_required(struct state *st)
++static int get_min_spare_size_required(struct state *st, unsigned long long *sizep)
+ {
+ 	int fd;
+-	unsigned long long rv = 0;
+ 
+ 	if (!st->metadata ||
+ 	    !st->metadata->ss->min_acceptable_spare_size)
+-		return rv;
++		return 0;
+ 
+ 	fd = open(st->devname, O_RDONLY);
+ 	if (fd < 0)
+-		return 0;
+-	st->metadata->ss->load_super(st->metadata, fd, st->devname);
++		return 1;
++	if (st->metadata->ss->external)
++		st->metadata->ss->load_container(st->metadata, fd, st->devname);
++	else
++		st->metadata->ss->load_super(st->metadata, fd, st->devname);
+ 	close(fd);
+-	rv = st->metadata->ss->min_acceptable_spare_size(st->metadata);
++	if (!st->metadata->sb)
++		return 1;
++	*sizep = st->metadata->ss->min_acceptable_spare_size(st->metadata);
+ 	st->metadata->ss->free_super(st->metadata);
+ 
+-	return rv;
++	return 0;
+ }
+ 
+ static int check_donor(struct state *from, struct state *to)
+@@ -833,7 +837,8 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+ 				/* member of a container */
+ 				to = to->parent;
+ 
+-			min_size = min_spare_size_required(to);
++			if (get_min_spare_size_required(to, &min_size))
++				continue;
+ 			if (to->metadata->ss->external) {
+ 				/* We must make sure there is
+ 				 * no suitable spare in container already.
+-- 
+1.7.1
 
-NeilBrown
-
-
->=20
-> > Signed-off-by: R=E9mi R=E9rolle<rrerolle@lacie.com>
-> > ---
-> >   drivers/md/md.c |    4 ++--
-> >   1 files changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 175c424..ea46b3b 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -3912,7 +3912,7 @@ static struct md_sysfs_entry md_sync_speed =3D=
- __ATTR_RO(sync_speed);
-> >   static ssize_t
-> >   sync_completed_show(mddev_t *mddev, char *page)
-> >   {
-> > -	unsigned long max_sectors, resync;
-> > +	unsigned long long max_sectors, resync;
-> >
-> >   	if (!test_bit(MD_RECOVERY_RUNNING,&mddev->recovery))
-> >   		return sprintf(page, "none\n");
-> > @@ -3923,7 +3923,7 @@ sync_completed_show(mddev_t *mddev, char *pag=
-e)
-> >   		max_sectors =3D mddev->dev_sectors;
-> >
-> >   	resync =3D mddev->curr_resync_completed;
-> > -	return sprintf(page, "%lu / %lu\n", resync, max_sectors);
-> > +	return sprintf(page, "%llu / %llu\n", resync, max_sectors);
-> >   }
-> >
-> >   static struct md_sysfs_entry md_sync_completed =3D __ATTR_RO(sync=
-_completed);
->=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
