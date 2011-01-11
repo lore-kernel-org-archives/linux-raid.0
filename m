@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 10/13] md: separate meta and data devs
+Subject: [md PATCH 08/13] md-new-param-to-calc_dev_sboffset
 Date: Wed, 12 Jan 2011 09:12:47 +1100
-Message-ID: <20110111221247.12732.87882.stgit@notabene.brown>
+Message-ID: <20110111221246.12732.12190.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,103 +15,67 @@ List-Id: linux-raid.ids
 
 From: Jonathan Brassow <jbrassow@redhat.com>
 
-Allow the metadata to be on a separate device from the
-data.
+When we allow for separate devices for data and metadata
+in a later patch, we will need to be able to calculate
+the superblock offset based on more than the bdev.
 
-This doesn't mean the data and metadata will by on separate
-physical devices - it simply gives device-mapper and userspace
-tools more flexibility.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 ---
 
- drivers/md/bitmap.c |    6 +++++-
- drivers/md/md.c     |   10 ++++++----
- drivers/md/md.h     |    6 ++++++
- 3 files changed, 17 insertions(+), 5 deletions(-)
+ drivers/md/md.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 1977765..6cf5871 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -264,14 +264,18 @@ static mdk_rdev_t *next_active_rdev(mdk_rdev_t *rdev, mddev_t *mddev)
- static int write_sb_page(struct bitmap *bitmap, struct page *page, int wait)
- {
- 	mdk_rdev_t *rdev = NULL;
-+	struct block_device *bdev;
- 	mddev_t *mddev = bitmap->mddev;
- 
- 	while ((rdev = next_active_rdev(rdev, mddev)) != NULL) {
- 		int size = PAGE_SIZE;
- 		loff_t offset = mddev->bitmap_info.offset;
-+
-+		bdev = (rdev->meta_bdev) ? rdev->meta_bdev : rdev->bdev;
-+
- 		if (page->index == bitmap->file_pages-1)
- 			size = roundup(bitmap->last_page_size,
--				       bdev_logical_block_size(rdev->bdev));
-+				       bdev_logical_block_size(bdev));
- 		/* Just make sure we aren't corrupting data or
- 		 * metadata
- 		 */
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0bc10cc..b98a85f 100644
+index a91dc59..0a0d7c2 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -765,7 +765,7 @@ void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
+@@ -705,9 +705,9 @@ static struct mdk_personality *find_pers(int level, char *clevel)
+ }
+ 
+ /* return the offset of the super block in 512byte sectors */
+-static inline sector_t calc_dev_sboffset(struct block_device *bdev)
++static inline sector_t calc_dev_sboffset(mdk_rdev_t *rdev)
+ {
+-	sector_t num_sectors = i_size_read(bdev->bd_inode) / 512;
++	sector_t num_sectors = i_size_read(rdev->bdev->bd_inode) / 512;
+ 	return MD_NEW_SIZE_SECTORS(num_sectors);
+ }
+ 
+@@ -991,7 +991,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
+ 	 *
+ 	 * It also happens to be a multiple of 4Kb.
  	 */
- 	struct bio *bio = bio_alloc_mddev(GFP_NOIO, 1, mddev);
+-	rdev->sb_start = calc_dev_sboffset(rdev->bdev);
++	rdev->sb_start = calc_dev_sboffset(rdev);
  
--	bio->bi_bdev = rdev->bdev;
-+	bio->bi_bdev = rdev->meta_bdev ? rdev->meta_bdev : rdev->bdev;
- 	bio->bi_sector = sector;
- 	bio_add_page(bio, page, size, 0);
- 	bio->bi_private = rdev;
-@@ -803,7 +803,8 @@ int sync_page_io(mdk_rdev_t *rdev, sector_t sector, int size,
+ 	ret = read_disk_sb(rdev, MD_SB_BYTES);
+ 	if (ret) return ret;
+@@ -1332,7 +1332,7 @@ super_90_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+ 		return 0; /* component must fit device */
+ 	if (rdev->mddev->bitmap_info.offset)
+ 		return 0; /* can't move bitmap */
+-	rdev->sb_start = calc_dev_sboffset(rdev->bdev);
++	rdev->sb_start = calc_dev_sboffset(rdev);
+ 	if (!num_sectors || num_sectors > rdev->sb_start)
+ 		num_sectors = rdev->sb_start;
+ 	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
+@@ -5249,7 +5249,7 @@ static int add_new_disk(mddev_t * mddev, mdu_disk_info_t *info)
+ 			printk(KERN_INFO "md: nonpersistent superblock ...\n");
+ 			rdev->sb_start = i_size_read(rdev->bdev->bd_inode) / 512;
+ 		} else
+-			rdev->sb_start = calc_dev_sboffset(rdev->bdev);
++			rdev->sb_start = calc_dev_sboffset(rdev);
+ 		rdev->sectors = rdev->sb_start;
  
- 	rw |= REQ_SYNC | REQ_UNPLUG;
+ 		err = bind_rdev_to_array(rdev, mddev);
+@@ -5316,7 +5316,7 @@ static int hot_add_disk(mddev_t * mddev, dev_t dev)
+ 	}
  
--	bio->bi_bdev = rdev->bdev;
-+	bio->bi_bdev = (metadata_op && rdev->meta_bdev) ?
-+		rdev->meta_bdev : rdev->bdev;
- 	if (metadata_op)
- 		bio->bi_sector = sector + rdev->sb_start;
+ 	if (mddev->persistent)
+-		rdev->sb_start = calc_dev_sboffset(rdev->bdev);
++		rdev->sb_start = calc_dev_sboffset(rdev);
  	else
-@@ -4435,7 +4436,9 @@ int md_run(mddev_t *mddev)
- 		 * We don't want the data to overlap the metadata,
- 		 * Internal Bitmap issues have been handled elsewhere.
- 		 */
--		if (rdev->data_offset < rdev->sb_start) {
-+		if (rdev->meta_bdev) {
-+			/* Nothing to check */;
-+		} else if (rdev->data_offset < rdev->sb_start) {
- 			if (mddev->dev_sectors &&
- 			    rdev->data_offset + mddev->dev_sectors
- 			    > rdev->sb_start) {
-@@ -5532,7 +5535,6 @@ static int update_size(mddev_t *mddev, sector_t num_sectors)
- 	 * sb_start or, if that is <data_offset, it must fit before the size
- 	 * of each device.  If num_sectors is zero, we find the largest size
- 	 * that fits.
--
- 	 */
- 	if (mddev->sync_thread)
- 		return -EBUSY;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 7e4f358..eec517c 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -60,6 +60,12 @@ struct mdk_rdev_s
- 	mddev_t *mddev;			/* RAID array if running */
- 	int last_events;		/* IO event timestamp */
+ 		rdev->sb_start = i_size_read(rdev->bdev->bd_inode) / 512;
  
-+	/*
-+	 * If meta_bdev is non-NULL, it means that a separate device is
-+	 * being used to store the metadata (superblock/bitmap) which
-+	 * would otherwise be contained on the same device as the data (bdev).
-+	 */
-+	struct block_device *meta_bdev;
- 	struct block_device *bdev;	/* block device handle */
- 
- 	struct page	*sb_page;
 
 
