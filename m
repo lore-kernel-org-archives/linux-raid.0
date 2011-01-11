@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/9] FIX: Cannot add spare to monitored container
-Date: Tue, 11 Jan 2011 15:04:03 +0100
-Message-ID: <20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/9] imsm:FIX: one spare can be added to raid0 only
+Date: Tue, 11 Jan 2011 15:04:11 +0100
+Message-ID: <20110111140411.13862.59242.stgit@gklab-128-013.igk.intel.com>
 References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,38 +13,39 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-This fix rolls backs some changes introduced by patch:
-	"Add spares to raid0 in mdadm"
+This is part of original commit "Add spares to raid0 in mdadm"
 
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Manage.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ super-intel.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/Manage.c b/Manage.c
-index 4e6afb5..fa1b13f 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -800,16 +800,16 @@ int Manage_subdevs(char *devname, int fd,
- 				if (dv->writemostly == 1)
- 					disc.state |= 1 << MD_DISK_WRITEMOSTLY;
- 				dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
--				if (tst->ss->external &&
--				    mdmon_running(tst->container_dev))
--					tst->update_tail = &tst->updates;
- 				if (tst->ss->add_to_super(tst, &disc, dfd,
- 							  dv->devname)) {
- 					close(dfd);
- 					return 1;
- 				}
- 				/* write_init_super will close 'dfd' */
--				if (tst->ss->write_init_super(tst))
-+				if (tst->ss->external)
-+					/* mdmon will write the metadata */
-+					close(dfd);
-+				else if (tst->ss->write_init_super(tst))
- 					return 1;
- 			} else if (dv->re_add) {
- 				/*  this had better be raid1.
+diff --git a/super-intel.c b/super-intel.c
+index 90bff47..ef51000 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -3442,6 +3442,8 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 	return 0;
+ }
+ 
++static int write_super_imsm(struct supertype *st, int doclose);
++
+ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 			      int fd, char *devname)
+ {
+@@ -3506,6 +3508,12 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 		super->disks = dd;
+ 	}
+ 
++	if (!mdmon_running(st->container_dev)) {
++		dprintf("imsm: mdmon is not active- write metadata by mdadm\n");
++		super->updates_pending++;
++		write_super_imsm(st, 0);
++	}
++
+ 	return 0;
+ }
+ 
 
