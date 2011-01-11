@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 11/13] md: Don't let implementation detail of curr_resync
-	leak out through sysfs.
+Subject: [md PATCH 12/13] md: allow suspend_lo and suspend_hi to decrease as
+	well as increase.
 Date: Wed, 12 Jan 2011 09:12:47 +1100
-Message-ID: <20110111221247.12732.76833.stgit@notabene.brown>
+Message-ID: <20110111221247.12732.75960.stgit@notabene.brown>
 References: <20110111221050.12732.31647.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,87 +13,85 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mddev->curr_resync has artificial values of '1' and '2' which are used
-by the which ensures only one resync is happening at a time on any
-given device.
-
-These values are internal and should never be exposed to user-space
-(except when translated appropriately as in the 'pending' status in
-/proc/mdstat).
-
-Unfortunately they are as ->curr_resync is assigned to
-->curr_resync_completed and that value is directly visible through
-sysfs.
-
-So change the assignments to ->curr_resync_completed to get the same
-valued from elsewhere in a form that doesn't have the magic '1' or '2'
-values.
+The sysfs attributes 'suspend_lo' and 'suspend_hi' describe a region
+to which read/writes are suspended so that the under lying data can be
+manipulated without user-space noticing.
+Currently the window they describe can only move forwards along the
+device.  However this is an unnecessary restriction which will cause
+problems with planned developments.
+So relax this restriction and allow these endpoint to move
+arbitrarily.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |    2 +-
- drivers/md/md.c     |    5 ++---
- drivers/md/raid5.c  |    4 ++--
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/md/md.c |   32 ++++++++++++++++++++------------
+ 1 files changed, 20 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 6cf5871..9a35320 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1546,7 +1546,7 @@ void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector)
- 	wait_event(bitmap->mddev->recovery_wait,
- 		   atomic_read(&bitmap->mddev->recovery_active) == 0);
- 
--	bitmap->mddev->curr_resync_completed = bitmap->mddev->curr_resync;
-+	bitmap->mddev->curr_resync_completed = sector;
- 	set_bit(MD_CHANGE_CLEAN, &bitmap->mddev->flags);
- 	sector &= ~((1ULL << CHUNK_BLOCK_SHIFT(bitmap)) - 1);
- 	s = 0;
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b98a85f..42b1d9e 100644
+index 42b1d9e..c0cba8d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -6824,7 +6824,7 @@ void md_do_sync(mddev_t *mddev)
- 		       desc, mdname(mddev));
- 		mddev->curr_resync = j;
- 	}
--	mddev->curr_resync_completed = mddev->curr_resync;
-+	mddev->curr_resync_completed = j;
+@@ -4016,19 +4016,24 @@ suspend_lo_store(mddev_t *mddev, const char *buf, size_t len)
+ {
+ 	char *e;
+ 	unsigned long long new = simple_strtoull(buf, &e, 10);
++	unsigned long long old = mddev->suspend_lo;
  
- 	while (j < max_sectors) {
- 		sector_t sectors;
-@@ -6842,8 +6842,7 @@ void md_do_sync(mddev_t *mddev)
- 			md_unplug(mddev);
- 			wait_event(mddev->recovery_wait,
- 				   atomic_read(&mddev->recovery_active) == 0);
--			mddev->curr_resync_completed =
--				mddev->curr_resync;
-+			mddev->curr_resync_completed = j;
- 			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
- 			sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 		}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 9212c07..d223a6c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4236,7 +4236,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		wait_event(conf->wait_for_overlap,
- 			   atomic_read(&conf->reshape_stripes)==0);
- 		mddev->reshape_position = conf->reshape_progress;
--		mddev->curr_resync_completed = mddev->curr_resync;
-+		mddev->curr_resync_completed = sector_nr;
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 		md_wakeup_thread(mddev->thread);
-@@ -4337,7 +4337,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		wait_event(conf->wait_for_overlap,
- 			   atomic_read(&conf->reshape_stripes) == 0);
- 		mddev->reshape_position = conf->reshape_progress;
--		mddev->curr_resync_completed = mddev->curr_resync + reshape_sectors;
-+		mddev->curr_resync_completed = sector_nr;
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 		md_wakeup_thread(mddev->thread);
+ 	if (mddev->pers == NULL || 
+ 	    mddev->pers->quiesce == NULL)
+ 		return -EINVAL;
+ 	if (buf == e || (*e && *e != '\n'))
+ 		return -EINVAL;
+-	if (new >= mddev->suspend_hi ||
+-	    (new > mddev->suspend_lo && new < mddev->suspend_hi)) {
+-		mddev->suspend_lo = new;
++
++	mddev->suspend_lo = new;
++	if (new >= old)
++		/* Shrinking suspended region */
+ 		mddev->pers->quiesce(mddev, 2);
+-		return len;
+-	} else
+-		return -EINVAL;
++	else {
++		/* Expanding suspended region - need to wait */
++		mddev->pers->quiesce(mddev, 1);
++		mddev->pers->quiesce(mddev, 0);
++	}
++	return len;
+ }
+ static struct md_sysfs_entry md_suspend_lo =
+ __ATTR(suspend_lo, S_IRUGO|S_IWUSR, suspend_lo_show, suspend_lo_store);
+@@ -4045,20 +4050,23 @@ suspend_hi_store(mddev_t *mddev, const char *buf, size_t len)
+ {
+ 	char *e;
+ 	unsigned long long new = simple_strtoull(buf, &e, 10);
++	unsigned long long old = mddev->suspend_hi;
+ 
+ 	if (mddev->pers == NULL ||
+ 	    mddev->pers->quiesce == NULL)
+ 		return -EINVAL;
+ 	if (buf == e || (*e && *e != '\n'))
+ 		return -EINVAL;
+-	if ((new <= mddev->suspend_lo && mddev->suspend_lo >= mddev->suspend_hi) ||
+-	    (new > mddev->suspend_lo && new > mddev->suspend_hi)) {
+-		mddev->suspend_hi = new;
++
++	if (new <= old)
++		/* Shrinking suspended region */
++		mddev->pers->quiesce(mddev, 2);
++	else {
++		/* Expanding suspended region - need to wait */
+ 		mddev->pers->quiesce(mddev, 1);
+ 		mddev->pers->quiesce(mddev, 0);
+-		return len;
+-	} else
+-		return -EINVAL;
++	}
++	return len;
+ }
+ static struct md_sysfs_entry md_suspend_hi =
+ __ATTR(suspend_hi, S_IRUGO|S_IWUSR, suspend_hi_show, suspend_hi_store);
 
 
