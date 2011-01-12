@@ -1,87 +1,30 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 2/9] FIX: Cannot add spare to monitored container
-Date: Wed, 12 Jan 2011 15:57:45 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176E1ADE0@irsmsx503.ger.corp.intel.com>
-References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
-	<20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
- <20110112164317.5ccfd59e@notabene.brown>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH 0/6] raid10->raid0 takeover for imsm metadata
+Date: Wed, 12 Jan 2011 17:00:49 +0100
+Message-ID: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110112164317.5ccfd59e@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, January 12, 2011 6:43 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored container
-> 
-> On Tue, 11 Jan 2011 15:04:03 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > This fix rolls backs some changes introduced by patch:
-> > 	"Add spares to raid0 in mdadm"
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> 
-> It would help a lot if you explained *why* you were rolling back these
-> changes.
-> 
-> Not applied.
-> 
-> NeilBrown
+---
+
+Krzysztof Wojcik (6):
+      reshape_super reorganization
+      Define imsm_analyze_change function
+      Set delta_disks for raid10 -> raid0 takeover
+      FIX: Mistake in delta_disk comparison.
+      Remove code for non re-striping operations.
+      Add raid10 -> raid0 takeover support
 
 
-I cannot add spare to i.e. raid5 array. In my unit tests, I'm creating raid5 array and then I'm adding spares for expansion (mdadm --add).
-If I've create container with more disks than create array that is using fewer disks, I can test expansion.
-Spares can be added to raid0 with no monitor usage without problems.
-I've started to observe this problem when patch for adding spares to raid0 was applied.
-I've identify code change that makes problem. This causes this code rollback. 
+ Grow.c        |   80 +++++---------
+ super-intel.c |  322 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 334 insertions(+), 68 deletions(-)
 
-Problem that is visible is  that. Monitor cannot write major:minor to new_dev in sysfs /without code roll back/.
-I didn't dig this problem deeply. This patch is rather reminder to signalize problem /and not forget about it/.
-
-BR
-Adam
-
-> 
-> > ---
-> >
-> >  Manage.c |    8 ++++----
-> >  1 files changed, 4 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/Manage.c b/Manage.c
-> > index 4e6afb5..fa1b13f 100644
-> > --- a/Manage.c
-> > +++ b/Manage.c
-> > @@ -800,16 +800,16 @@ int Manage_subdevs(char *devname, int fd,
-> >  				if (dv->writemostly == 1)
-> >  					disc.state |= 1 << MD_DISK_WRITEMOSTLY;
-> >  				dfd = dev_open(dv->devname, O_RDWR |
-> O_EXCL|O_DIRECT);
-> > -				if (tst->ss->external &&
-> > -				    mdmon_running(tst->container_dev))
-> > -					tst->update_tail = &tst->updates;
-> >  				if (tst->ss->add_to_super(tst, &disc, dfd,
-> >  							  dv->devname)) {
-> >  					close(dfd);
-> >  					return 1;
-> >  				}
-> >  				/* write_init_super will close 'dfd' */
-> > -				if (tst->ss->write_init_super(tst))
-> > +				if (tst->ss->external)
-> > +					/* mdmon will write the metadata */
-> > +					close(dfd);
-> > +				else if (tst->ss->write_init_super(tst))
-> >  					return 1;
-> >  			} else if (dv->re_add) {
-> >  				/*  this had better be raid1.
-
+-- 
+Signature
