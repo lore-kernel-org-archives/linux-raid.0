@@ -1,98 +1,57 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Monitor: skip array if error getting size
-Date: Wed, 12 Jan 2011 16:18:42 +1100
-Message-ID: <20110112161842.22744002@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E87582C@irsmsx504.ger.corp.intel.com>
+Subject: Re: Cancel reshape?
+Date: Wed, 12 Jan 2011 16:32:58 +1100
+Message-ID: <20110112163258.699a6fe0@notabene.brown>
+References: <4D2D2BD2.7000601@anonymous.org.uk>
+	<4D2D32DF.9010002@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E87582C@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <4D2D32DF.9010002@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 13:09:55 +0000 "Czarnowska, Anna"
-<anna.czarnowska@intel.com> wrote:
+On Wed, 12 Jan 2011 04:49:35 +0000 John Robinson
+<john.robinson@anonymous.org.uk> wrote:
 
-> >From 10d178721c3870ea5802a30ea3f008f9f379551a Mon Sep 17 00:00:00 2001
-> From: Anna Czarnowska <anna.czarnowska@intel.com>
-> Date: Tue, 11 Jan 2011 12:36:37 +0100
-> Subject: [PATCH] Monitor: skip array if error getting size
-> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+> On 12/01/2011 04:19, John Robinson wrote:
+> [...]
+> > Can I cancel reshape that's currently running, and using the backup file
+> > that's actually on another (RAID-1) array on three of the same drives,
+> > and running at ~7MB/s, and try again?
 > 
-> load_super tries to load container first anyway but if it fails
-> eg. after physically removing a disk
-> then it tries to read metadata from container device.
-> This will always fail and print confusing errors.
-> So use load_container instead of load_super on container.
+> Blast. I found this patch to add a revert-reshape option from archives 
+> of this list - http://www.spinics.net/lists/raid/msg30961.html - but 
+> it's not included in mdadm 3.1.4 and I'm running from a rescue CD so I 
+> can't rebuild mdadm with it. I think I might just have to wait a while.
 > 
-> On failure to read metadata we should skip this array.
-> It will be dealt with the next time round.
-> 
-> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 
-Applied, thanks.
+That patch only works to revert a reshape that is increasing the number of
+data-devices in the array.
 
-BTW, load_super should try load_container any longer, so I have removed that
-- thanks for the reminder.
+> Perhaps I can stop the reshape and restart it with the backup file 
+> elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to 
+> give it a wee workout :-)
+
+That should work.
+
+ mdadm --stop ...
+ copy file
+ mdadm --assemble ...... --backup-file=/new/place
 
 NeilBrown
 
 
-> ---
->  Monitor.c |   21 +++++++++++++--------
->  1 files changed, 13 insertions(+), 8 deletions(-)
+
 > 
-> diff --git a/Monitor.c b/Monitor.c
-> index 18462f2..db4e8cc 100644
-> --- a/Monitor.c
-> +++ b/Monitor.c
-> @@ -702,24 +702,28 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
->  	return new_found;
->  }
->  
-> -unsigned long long min_spare_size_required(struct state *st)
-> +static int get_min_spare_size_required(struct state *st, unsigned long long *sizep)
->  {
->  	int fd;
-> -	unsigned long long rv = 0;
->  
->  	if (!st->metadata ||
->  	    !st->metadata->ss->min_acceptable_spare_size)
-> -		return rv;
-> +		return 0;
->  
->  	fd = open(st->devname, O_RDONLY);
->  	if (fd < 0)
-> -		return 0;
-> -	st->metadata->ss->load_super(st->metadata, fd, st->devname);
-> +		return 1;
-> +	if (st->metadata->ss->external)
-> +		st->metadata->ss->load_container(st->metadata, fd, st->devname);
-> +	else
-> +		st->metadata->ss->load_super(st->metadata, fd, st->devname);
->  	close(fd);
-> -	rv = st->metadata->ss->min_acceptable_spare_size(st->metadata);
-> +	if (!st->metadata->sb)
-> +		return 1;
-> +	*sizep = st->metadata->ss->min_acceptable_spare_size(st->metadata);
->  	st->metadata->ss->free_super(st->metadata);
->  
-> -	return rv;
-> +	return 0;
->  }
->  
->  static int check_donor(struct state *from, struct state *to)
-> @@ -833,7 +837,8 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
->  				/* member of a container */
->  				to = to->parent;
->  
-> -			min_size = min_spare_size_required(to);
-> +			if (get_min_spare_size_required(to, &min_size))
-> +				continue;
->  			if (to->metadata->ss->external) {
->  				/* We must make sure there is
->  				 * no suitable spare in container already.
+> Cheers,
+> 
+> John.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
