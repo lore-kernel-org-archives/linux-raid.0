@@ -1,250 +1,124 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Subject: [PATCH 4/4] imsm: support for raid0 <-> raid5
- migration
-Date: Wed, 12 Jan 2011 17:20:05 +1100
-Message-ID: <20110112172005.6b3ff180@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D176E1A452@irsmsx503.ger.corp.intel.com>
+Subject: Re: advanced data recovery project for the wife - need help with
+ raid6 layout P&Q ordering
+Date: Wed, 12 Jan 2011 17:34:27 +1100
+Message-ID: <20110112173427.17e84e2f@notabene.brown>
+References: <AANLkTiknO4kvOU7JRY_EzFx1=bb7yGm8Yi5BNuLqE-q1@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1A452@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <AANLkTiknO4kvOU7JRY_EzFx1=bb7yGm8Yi5BNuLqE-q1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Brian Wolfe <brianw@terrabox.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 15:24:54 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
-wrote:
+On Tue, 11 Jan 2011 23:47:12 -0600 Brian Wolfe <brianw@terrabox.com> wrote:
 
-> >From 218f21b2d6f55798ea7df2f82668fdf51f4b158a Mon Sep 17 00:00:00 2001
-> From: Marcin Labun <marcin.labun@intel.com>
-> Date: Tue, 11 Jan 2011 16:01:59 +0100
-> Subject: [PATCH 4/4] imsm: support for raid0 <-> raid5 migration
+> For a period of a year I've had power loss to more than one drive on
+> more than one ocasion (y cables SUCK). a month ago I had power loss
+> after I dist-upgrade my debian server with a raid6 array of 8 drives.
+> I then proceeded to re-create the raid array only to discover to my
+> horror that 2 things were seriously wrong. #1 The 2.6.32 kernel
+> discovered the sata HDDs in a different order than the 2.6.26 kernel.
+> So /dev/sdc was now /dev/sdg  type scenario.  Horror #2 was that I
+> forgot to specify --assume-clean on the re-creation. Horror #3 is that
+> I discovered that the dist-upgrade had also updated mdadm so that it
+> used superblock version 1.2 when the raid array had been created with
+> superblock version 0.9.
+
+ouch.
+
+
 > 
-> Support for raid0 to raid5 and raid5 to raid0 migration in imsm.
-> This is work in progress.
+> Now I'm in the process of writing a C app that is assisting me to
+> identify which chunks in each stripe of the raid array is data and
+> which is parity. I was successful at discovering the original ordering
+> of the drives using my app and have recreated the array with
+> --assume-clean under 2.6.26 with superblock ver 0.9. So far so good. I
+> now find the ReIsEr2Fs and ReIsErLB tags at the proper offsets based
+> on the LVM2 metadata that I had a backup of. However I'm still seeing
+> data corruption in chunks that appears to be semi-random.
+> 
+> so, assuming the following parameters used to run mdadm with the
+> proper flags for chunk size, pairity, etc, what should the ordering of
+> the data, P and Q chunks be on the stripes?  I attempted to work this
+> out by reading wikipedia's raid6, and the kernel code and various
+> pages on the net, but none of them seem to agree. 8-(
 
-This could usefully be broken up into smaller patches.
+The kernel code is of course authoritative.  Ignore everything else.
 
-e.g. your 'allocate_space_list' contains code copied from imsm_prepare_update.
-It would be better to have a single patch which moved that code into a
-separate function, then another patch which uses the new function in the new
-for the new functionality.
+You have an 8-drive left-symmetric RAID6 so the first 16 stripes should
+be:
 
-So: not applied.
+Q   D0  D1  D2  D3  D4  D5  P 
+D6  D7  D8  D9  D10 D11 P   Q
+D13 D14 D15 D16 D17 P   Q   D12
+D20 D21 D22 D23 P   Q   D18 D19
+D27 D28 D29 P   Q   D24 D25 D26
+D34 D35 P   Q   D30 D31 D32 D33
+D41 P   Q   D36 D37 D38 D39 D40
+P   Q   D42 D43 D44 D45 D46 D47
+Q   D48 D49 D50 D51 D52 D53 P
+
+... and so forth.
+
+good luck.
 
 NeilBrown
 
 
 > 
-> Signed-off-by: Marcin Labun <marcin.labun@intel.com>
-> ---
->  super-intel.c |  147 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
->  1 files changed, 143 insertions(+), 4 deletions(-)
+> Can anyone tell me what that ordering or chunks should be for the
+> first 16 stripes so that I can finally work out the bad ordering under
+> 2.6.32 and rebuild my raid array "by hand"?
 > 
-> diff --git a/super-intel.c b/super-intel.c
-> index d3da6f9..3a471c3 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -317,6 +317,9 @@ struct imsm_update_reshape {
->  	enum imsm_update_type type;
->  	int old_raid_disks;
->  	int new_raid_disks;
-> +  	int new_level;
-> +	int new_chunksize;
-> +	long long new_size;
->  	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
->  };
->  
-> @@ -5816,6 +5819,7 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
->  			newdev->vol.curr_migr_unit = 0;
->  			newdev->vol.migr_type = MIGR_GEN_MIGR;
->  			newmap->num_members = u->new_raid_disks;
-> +			newmap->raid_level = u->new_level;
->  			for (i = 0; i < delta_disks; i++) {
->  				set_imsm_ord_tbl_ent(newmap,
->  						     u->old_raid_disks + i,
-> @@ -6421,6 +6425,18 @@ static int imsm_find_array_minor_by_subdev(int subdev, int container, int *minor
->  	return 0;
->  }
->  
-> +
-> +static int imsm_reshape_is_allowed_on_subarray(struct supertype *st,
-> +					       struct geo_params *geo,
-> +					       int *old_raid_disks)
-> +{
-> +	/* needs to convert requested geo to IMSM valid geometry 
-> +	 * all unset value shall be converted to current array values 
-> +	 */
-> +	dprintf("\tSub-array operation operation allowed\n");
-> +	return 1;
-> +}
-> +
->  static int imsm_reshape_is_allowed_on_container(struct supertype *st,
->  						struct geo_params *geo,
->  						int *old_raid_disks)
-> @@ -6569,12 +6585,14 @@ static int imsm_create_metadata_update_for_reshape(
->  	u->type = update_reshape_container_disks;
->  	u->old_raid_disks = old_raid_disks;
->  	u->new_raid_disks = geo->raid_disks;
-> -
-> +	u->new_level = geo->level;
-> +	u->new_chunksize = geo->chunksize;
-> +	u->new_size = geo->size;
->  	/* now get spare disks list
->  	 */
->  	spares = get_spares_for_grow(st);
->  
-> -	if (spares == NULL
-> +	if (((spares == NULL) && (delta_disks != 0)) 
->  	    || delta_disks > spares->array.spare_disks) {
->  		dprintf("imsm: ERROR: Cannot get spare devices.\n");
->  		goto abort;
-> @@ -6618,6 +6636,75 @@ abort:
->  }
->  
->  
-> +static int allocate_space_list(struct intel_super *super, struct imsm_update_reshape *u, void ***space_list)
-> +{
-> +	/* Every raid device in the container is about to
-> +	 * gain some more devices, and we will enter a
-> +	 * reconfiguration.
-> +	 * So each 'imsm_map' will be bigger, and the imsm_vol
-> +	 * will now hold 2 of them.
-> +	 * Thus we need new 'struct imsm_dev' allocations sized
-> +	 * as sizeof_imsm_dev but with more devices in both maps.
-> +	 */
-> +	struct intel_dev *dl;
-> +	void **space_tail = (void**)space_list;
-> +
-> +	dprintf("imsm: allocate_space_list() for update_reshape\n");
-> +	
-> +	for (dl = super->devlist; dl; dl = dl->next) {
-> +		int size = sizeof_imsm_dev(dl->dev, 1);
-> +		void *s;
-> +		if (u->new_raid_disks > u->old_raid_disks)
-> +			size += sizeof(__u32)*2*
-> +			  (u->new_raid_disks - u->old_raid_disks);
-> +		s = malloc(size);
-> +		if (!s)
-> +			return 1;
-> +		*space_tail = s;
-> +		space_tail = s;
-> +		*space_tail = NULL;
-> +	}
-> +	return 0;
-> +}
-> +
-> +// static int reallocate_anchor_for_update(struct intel_super *super, struct imsm_update_reshape *u);
-> +/*  
-> + * Check if there is enouht spare and reallocate anchor if neccessary
-> + * Return:
-> + *  1 - no enouth space for new request
-> + *  0 - anchor ready for updates
-> + */
-> +static int reallocate_anchor_for_update(struct intel_super *super, struct imsm_update_reshape *u)
-> +{
-> +	/* reallocate anchor
-> +	 */
-> +	size_t buf_len = super->len;
-> +	size_t len = disks_to_mpb_size(u->new_raid_disks);
-> +	struct imsm_super *mpb = super->anchor;
-> +	void *new_anchor;
-> +
-> +	dprintf("imsm: realocate anchore\n");
-> +
-> +	if (__le32_to_cpu(mpb->mpb_size) + len > buf_len) {
-> +		buf_len = ROUND_UP(__le32_to_cpu(mpb->mpb_size) + len, 512);
-> +		if (posix_memalign(&new_anchor,
-> +				   512, buf_len) == 0) {
-> +			memcpy(new_anchor, super->buf, super->len);
-> +			free(super->buf);
-> +			super->buf = new_anchor;
-> +			super->len = buf_len;
-> +		} else 
-> +			return 1;
-> +
-> +	}
-> +	return 0;
-> +}
-> +
-> +/* 
-> + * Reshape IMSM metadata - prepare metadata update 
-> + * 0 - update successfully reshaped
-> + * 1 - reshape start failed - abort the process 
-> + */
->  static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  			      int layout, int chunksize, int raid_disks,
->  			      char *backup, char *dev, int verbose)
-> @@ -6643,6 +6730,9 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  
->  	dprintf("\tfor level      : %i\n", geo.level);
->  	dprintf("\tfor raid_disks : %i\n", geo.raid_disks);
-> +	dprintf("\tfor layout : %i\n", geo.layout);
-> +	dprintf("\tfor size : %llu\n", geo.size);
-> +	dprintf("\tfor chunksize : %i\n", geo.chunksize);
->  
->  	if (experimental() == 0)
->  		return ret_val;
-> @@ -6734,8 +6824,57 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  		} else
->  			fprintf(stderr, Name "imsm: Operation is not allowed "
->  				"on this container\n");
-> -	} else
-> -		fprintf(stderr, Name "imsm: not a container operation\n");
-> +	} else {
-> +		struct imsm_update_reshape *u = NULL;
-> +		int len;
-> +		struct intel_super *super = st->sb;
-> +		void **space_list=NULL;
-> +
-> +		int old_raid_disks = 0;
-> +
-> +		dprintf("imsm: subarray reshape\n");
-> +		if (imsm_reshape_is_allowed_on_subarray(st, &geo, &old_raid_disks) == 0) {
-> +			dprintf("imsm: reshape not allowed\n");
-> +			goto exit_imsm_reshape_super;
-> +		}
-> +		
-> +		len = imsm_create_metadata_update_for_reshape(st, &geo, old_raid_disks, &u);
-> +
-> +		if (len <= 0) {
-> +			dprintf("imsm: Cannot prepare update\n");
-> +			goto exit_imsm_reshape_super;
-> +		}
-> +
-> +		if (mdmon_running(st->container_dev)) {
-> +			ret_val = 0;
-> +			append_metadata_update(st, u, len);
-> +			goto exit_imsm_reshape_super;
-> +		}
-> +		/* no mdmon - apply update
-> +		 */
-> +
-> +		dprintf("imsm:prepare space list for update_reshape\n");
-> +		ret_val = allocate_space_list(super, u, &space_list);
-> +		if (ret_val == 0) {
-> +			ret_val = apply_reshape_container_disks_update(u, super, &space_list);
-> +			/* processed if reshape applied */
-> +			if (ret_val == 1) {
-> +				ret_val = reallocate_anchor_for_update(super, u);
-> +				if (ret_val == 0)
-> +				  super->updates_pending++;
-> +			}
-> +			else
-> +				/* set error code */
-> +				ret_val = 1;
-> +		}
-> +		/* release memory */
-> +		while (space_list) {
-> +			void *space = space_list;
-> +			space_list = *space_list;
-> +			free(space);
-> +		}
-> +		free(u);
-> +	}
->  
->  exit_imsm_reshape_super:
->  	dprintf("imsm: reshape_super Exit code = %i\n", ret_val);
+> Yes, I permanently "fixed" the Y cable problem by manufacturing a
+> power backplane for the 12 drives in the system. :)
+> 
+> Thanks!
+> 
+> 
+> #mdadm --examine /dev/sdc
+> 
+> /dev/sdc:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 5108f419:93f471c4:36668fe2:a3f57f0d (local to host iscsi1)
+>   Creation Time : Tue Dec 21 00:55:29 2010
+>      Raid Level : raid6
+>   Used Dev Size : 976762496 (931.51 GiB 1000.20 GB)
+>      Array Size : 5860574976 (5589.08 GiB 6001.23 GB)
+>    Raid Devices : 8
+>   Total Devices : 8
+> Preferred Minor : 0
+> 
+>     Update Time : Tue Dec 21 00:55:29 2010
+>           State : clean
+>  Active Devices : 8
+> Working Devices : 8
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 3cdf9d27 - correct
+>          Events : 1
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 128K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8       32        0      active sync   /dev/sdc
+>    0     0       8       32        0      active sync   /dev/sdc
+>    1     1       8       96        1      active sync   /dev/sdg
+>    2     2       8      128        2      active sync   /dev/sdi
+>    3     3       8      144        3      active sync   /dev/sdj
+>    4     4       8       64        4      active sync   /dev/sde
+>    5     5       8       80        5      active sync   /dev/sdf
+>    6     6       8       48        6      active sync   /dev/sdd
+>    7     7       8      112        7      active sync   /dev/sdh
+> i
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
