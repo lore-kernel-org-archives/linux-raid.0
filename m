@@ -1,66 +1,47 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Speed up reshape? (was Re: Cancel reshape?)
-Date: Wed, 12 Jan 2011 17:02:11 +1100
-Message-ID: <20110112170211.3e88fdcb@notabene.brown>
-References: <4D2D2BD2.7000601@anonymous.org.uk>
-	<4D2D32DF.9010002@anonymous.org.uk>
-	<20110112163258.699a6fe0@notabene.brown>
-	<4D2D41E4.1000109@anonymous.org.uk>
+Subject: Re: Subject: [PATCH 2/4] Grow_reshape: need text_version for
+ sub-array processing.
+Date: Wed, 12 Jan 2011 17:12:22 +1100
+Message-ID: <20110112171222.6f5d60d4@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D176E1A44C@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2D41E4.1000109@anonymous.org.uk>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1A44C@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 12 Jan 2011 05:53:40 +0000 John Robinson
-<john.robinson@anonymous.org.uk> wrote:
+On Tue, 11 Jan 2011 15:24:17 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+wrote:
 
-> On 12/01/2011 05:32, NeilBrown wrote:
-> > On Wed, 12 Jan 2011 04:49:35 +0000 John Robinson
-> > <john.robinson@anonymous.org.uk>  wrote:
-> [...]
-> >> Perhaps I can stop the reshape and restart it with the backup file
-> >> elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to
-> >> give it a wee workout :-)
-> >
-> > That should work.
-> >
-> >   mdadm --stop ...
-> >   copy file
-> >   mdadm --assemble ...... --backup-file=/new/place
+> >From bffebd79d2f18176727d2c6d9dd111470969cf7a Mon Sep 17 00:00:00 2001
+> From: Marcin Labun <marcin.labun@intel.com>
+> Date: Tue, 11 Jan 2011 14:13:10 +0100
+> Subject: [PATCH 2/4] Grow_reshape: need text_version for sub-array processing.
 > 
-> Yup. Not much of an improvement, though; the reshape is now running at 
-> ~10MB/s instead of ~6.5MB/s, so ~27 hours to go instead of ~40 hours.
+> Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+> ---
+>  Grow.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 > 
-> iostat tells me the original 3 discs are doing ~120 transactions per 
-> second, reading ~20MB/s and writing ~10MB/s, while the one new disc is 
-> doing ~60 tps, reading nothing (obviously) and writing ~10MB/s and the 
-> backup (SSD) is doing ~45 tps and writing ~20MB/s. ~120tps sounds about 
-> right for 120 seeks, 60 reads and 60 writes, and would explain the 
-> speed, but otherwise this looks odd to me - why are we reading ~60MB/s 
-> in total and writing ~40MB/s? I'd have expected to be reading less than 
-> we're writing. And why are we apparently reading and writing in blocks 
-> of under 512KB per device, when the backup file is 32MB? Is there 
-> something I can tweak to run the reshape in bigger chunks? 
-> sync_speed_min is already 200000...
+> diff --git a/Grow.c b/Grow.c
+> index 41db6f2..1998750 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1497,6 +1497,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  
+>  	info.array = array;
+>  	sysfs_init(&info, fd, NoMdDev);
+> +	strcpy(info.text_version, sra->text_version);
+>  	info.component_size = size*2;
+>  	info.new_level = level;
+>  	info.new_chunk = chunksize * 1024;
 
-1/ everything is read twice, once to back it up, once to relocate it.
-  That is unfortunate, but awkward to avoid.
-
-2/ try increasing the stripe_cache_size - it might help.
+This and the previous patch are fixing the one issue, so I have combined them
+together.
 
 NeilBrown
-
-
-> 
-> Currently running SystemRescueCD 2.0.0, 32-bit kernel 2.6.35 and mdadm 
-> 3.1.4. CPU usage is 2% system, 4% iowait.
-> 
-> Cheers,
-> 
-> John.
 
