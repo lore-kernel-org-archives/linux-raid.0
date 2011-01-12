@@ -1,58 +1,98 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 13/13] FIX: Fill sys_name for disk add
-Date: Wed, 12 Jan 2011 16:02:00 +1100
-Message-ID: <20110112160200.30b94087@notabene.brown>
-References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
-	<20110110112912.10776.73847.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] Monitor: skip array if error getting size
+Date: Wed, 12 Jan 2011 16:18:42 +1100
+Message-ID: <20110112161842.22744002@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E87582C@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110112912.10776.73847.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E87582C@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 10 Jan 2011 12:29:12 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 11 Jan 2011 13:09:55 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> Add disks fails due to empty sys name field.
-> sysfs_init fills out required fields for add disk operation.
+> >From 10d178721c3870ea5802a30ea3f008f9f379551a Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Tue, 11 Jan 2011 12:36:37 +0100
+> Subject: [PATCH] Monitor: skip array if error getting size
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 > 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> load_super tries to load container first anyway but if it fails
+> eg. after physically removing a disk
+> then it tries to read metadata from container device.
+> This will always fail and print confusing errors.
+> So use load_container instead of load_super on container.
+> 
+> On failure to read metadata we should skip this array.
+> It will be dealt with the next time round.
+> 
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 
 Applied, thanks.
+
+BTW, load_super should try load_container any longer, so I have removed that
+- thanks for the reminder.
 
 NeilBrown
 
 
 > ---
+>  Monitor.c |   21 +++++++++++++--------
+>  1 files changed, 13 insertions(+), 8 deletions(-)
 > 
->  Grow.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 9d31087..2ca9835 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1692,7 +1692,8 @@ static int reshape_array(char *container, int fd, char *devname,
->  			st->ss->container_content(st, subarray);
->  		struct mdinfo *d;
+> diff --git a/Monitor.c b/Monitor.c
+> index 18462f2..db4e8cc 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -702,24 +702,28 @@ static int add_new_arrays(struct mdstat_ent *mdstat, struct state **statelist,
+>  	return new_found;
+>  }
 >  
-> -		if (info2)
-> +		if (info2) {
-> +			sysfs_init(info2, fd, st->devnum);
->  			for (d = info2->devs; d; d = d->next) {
->  				if (d->disk.state == 0 &&
->  				    d->disk.raid_disk >= 0) {
-> @@ -1703,7 +1704,8 @@ static int reshape_array(char *container, int fd, char *devname,
->  					add_disk(fd, st, info2, d);
->  				}
->  			}
-> -		sysfs_free(info2);
-> +			sysfs_free(info2);
-> +		}
->  	}
+> -unsigned long long min_spare_size_required(struct state *st)
+> +static int get_min_spare_size_required(struct state *st, unsigned long long *sizep)
+>  {
+>  	int fd;
+> -	unsigned long long rv = 0;
 >  
->  	if (reshape.blocks == 0) {
+>  	if (!st->metadata ||
+>  	    !st->metadata->ss->min_acceptable_spare_size)
+> -		return rv;
+> +		return 0;
+>  
+>  	fd = open(st->devname, O_RDONLY);
+>  	if (fd < 0)
+> -		return 0;
+> -	st->metadata->ss->load_super(st->metadata, fd, st->devname);
+> +		return 1;
+> +	if (st->metadata->ss->external)
+> +		st->metadata->ss->load_container(st->metadata, fd, st->devname);
+> +	else
+> +		st->metadata->ss->load_super(st->metadata, fd, st->devname);
+>  	close(fd);
+> -	rv = st->metadata->ss->min_acceptable_spare_size(st->metadata);
+> +	if (!st->metadata->sb)
+> +		return 1;
+> +	*sizep = st->metadata->ss->min_acceptable_spare_size(st->metadata);
+>  	st->metadata->ss->free_super(st->metadata);
+>  
+> -	return rv;
+> +	return 0;
+>  }
+>  
+>  static int check_donor(struct state *from, struct state *to)
+> @@ -833,7 +837,8 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
+>  				/* member of a container */
+>  				to = to->parent;
+>  
+> -			min_size = min_spare_size_required(to);
+> +			if (get_min_spare_size_required(to, &min_size))
+> +				continue;
+>  			if (to->metadata->ss->external) {
+>  				/* We must make sure there is
+>  				 * no suitable spare in container already.
 
