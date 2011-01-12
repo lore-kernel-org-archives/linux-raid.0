@@ -1,65 +1,64 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 03/13] imsm: FIX: when monitor is active post update
-Date: Wed, 12 Jan 2011 14:56:24 +1100
-Message-ID: <20110112145624.3991f041@notabene.brown>
+Subject: Re: [PATCH 04/13] FIX: load anchor to get all information
+Date: Wed, 12 Jan 2011 14:58:54 +1100
+Message-ID: <20110112145854.7e75eef9@notabene.brown>
 References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
-	<20110110112750.10776.44373.stgit@gklab-128-013.igk.intel.com>
+	<20110110112758.10776.44079.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110112750.10776.44373.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110110112758.10776.44079.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon, 10 Jan 2011 12:27:50 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Mon, 10 Jan 2011 12:27:58 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Updates has to be posted when monitor is active for this array/container.
-> Only when monitor is not active mdadm has update metadata itself.
+> When reshape_super() puts updated metadata to array, mdadm should reload it,
+> to get all information that are changed during update operation.
+> To avoid (follow curent implementation) reload operation mdadm should update metadata 2 times.
+> One time for mdmon, second for internal mdadm purposes. Both updates has to update whole
+> array information (not disks only) to know everything about reshape process.
+> Local/mdadm update ie. for imsm should contain:
+> - reshape_active field update
+> - second map update
+> - migration state update
+> ....
+> - and most important during disk add metadata anchor should be reallocated
+>   to make space for new/greater disks number,
+>   and then metadata contents has to be copied to new area ...
+> 
+> This makes also problem with keeping in sync both those updates, so I'm resending
+> patches for reloading metadata after update (this one)
+> and removing anchor modifications in mdadm (next patch)
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+
+I don't agree with this.
+Is there some specific problem that you are trying to solve?  If so, please
+explain that symptoms.
+
+Thanks,
+NeilBrown
+
+
 > ---
 > 
->  super-intel.c |   10 ++++++++--
->  1 files changed, 8 insertions(+), 2 deletions(-)
+>  Grow.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 > 
-> diff --git a/super-intel.c b/super-intel.c
-> index 58a776e..8644c39 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -6570,9 +6570,15 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  				goto exit_imsm_reshape_super;
->  			}
+> diff --git a/Grow.c b/Grow.c
+> index 4cbe427..1d0ef12 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2159,6 +2159,7 @@ int reshape_container(char *container, int cfd, char *devname,
 >  
-> -			/* As well as creating update, we apply update.
-> -			 */
-> +			if (mdmon_running(st->container_dev)) {
-> +				ret_val = 0;
-> +				append_metadata_update(st, u, len);
-> +				goto exit_imsm_reshape_super;
-> +			}
-> +			
+>  		sysfs_free(cc);
 >  
-> +			/* no mdmon - apply update
-> +			 */
->  			dprintf("imsm:prepare space list for update_reshape\n");
->  			for (dl = super->devlist; dl;
->  			     dl = dl->next) {
-
-
-I really don't like have code in super-* calling "mdmon_running".  It feels
-like a layering violation.
-
-
-imsm_reshape_super should:
- -  *always* change the metadata as required
- -  if st->update_tail is non-null, then a metadata update should also
-    be added with append_metadata_update
-
-The common code will then call sync_metadata() to either flush the updates
-through mdmon or write them directly.
-
-NeilBrown
+> +		st->ss->load_container(st, cfd, NULL);
+>  		cc = st->ss->container_content(st, NULL);
+>  
+>  		for (content = cc; content ; content = content->next) {
 
