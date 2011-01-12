@@ -1,65 +1,64 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 13/13] md: fix sync_completed reporting for very large
-	drives (>2TB)
-Date: Wed, 12 Jan 2011 09:12:47 +1100
-Message-ID: <20110111221247.12732.59395.stgit@notabene.brown>
-References: <20110111221050.12732.31647.stgit@notabene.brown>
+Subject: Re: [PATCH 01/13] Manage reshape process in manage_reshape vector.
+Date: Wed, 12 Jan 2011 14:51:30 +1100
+Message-ID: <20110112145130.70529414@notabene.brown>
+References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
+	<20110110112733.10776.24185.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110111221050.12732.31647.stgit@notabene.brown>
+In-Reply-To: <20110110112733.10776.24185.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: =?utf-8?b?UsOpbWk=?= =?utf-8?q?R=C3=A9rolle?= <rrerolle@lacie.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-=46rom: R=C3=A9mi R=C3=A9rolle <rrerolle@lacie.com>
+On Mon, 10 Jan 2011 12:27:33 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-The values exported in the sync_completed file are unsigned long, which
-overflows with very large drives, resulting in wrong values reported.
-
-Since sync_completed uses sectors as unit, we'll start getting wrong
-values with components larger than 2TB.
-
-This patch simply replaces the use of unsigned long by unsigned long lo=
-ng.
-
-Signed-off-by: R=C3=A9mi R=C3=A9rolle <rrerolle@lacie.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
-
- drivers/md/md.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c0cba8d..126453f 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3918,7 +3918,7 @@ static struct md_sysfs_entry md_sync_speed =3D __=
-ATTR_RO(sync_speed);
- static ssize_t
- sync_completed_show(mddev_t *mddev, char *page)
- {
--	unsigned long max_sectors, resync;
-+	unsigned long long max_sectors, resync;
-=20
- 	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
- 		return sprintf(page, "none\n");
-@@ -3929,7 +3929,7 @@ sync_completed_show(mddev_t *mddev, char *page)
- 		max_sectors =3D mddev->dev_sectors;
-=20
- 	resync =3D mddev->curr_resync_completed;
--	return sprintf(page, "%lu / %lu\n", resync, max_sectors);
-+	return sprintf(page, "%llu / %llu\n", resync, max_sectors);
- }
-=20
- static struct md_sysfs_entry md_sync_completed =3D __ATTR_RO(sync_comp=
-leted);
+> The manage_reshape vector is intended to be be used as
+> reshape process supervisor for external metadata types.
+> Sometimes there is no need for separate control,
+> and main code for native meta can be used instead.
+> 
+> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
+I have address this issue a different way.
+->manage_reshape is still required, but it can trivially be implemented by
+calling child_monitor to use the native backup mechanism.
+
+NeilBrown
+
+
+> 
+>  Grow.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Grow.c b/Grow.c
+> index 1222263..4cbe427 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -574,8 +574,7 @@ static int reshape_super(struct supertype *st, long long size, int level,
+>  	/* nothing extra to check in the native case */
+>  	if (!st->ss->external)
+>  		return 0;
+> -	if (!st->ss->reshape_super ||
+> -	    !st->ss->manage_reshape) {
+> +	if (!st->ss->reshape_super) {
+>  		fprintf(stderr, Name ": %s metadata does not support reshape\n",
+>  			st->ss->name);
+>  		return 1;
+> @@ -1940,7 +1939,7 @@ static int reshape_array(char *container, int fd, char *devname,
+>  	}
+>  
+>  	start_reshape(sra);
+> -	if (st->ss->external) {
+> +	if ((st->ss->external) && (st->ss->manage_reshape)) {
+>  		/* metadata handler takes it from here */
+>  		ping_manager(container);
+>  		st->ss->manage_reshape(st, backup_file);
+
