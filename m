@@ -1,117 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 6/9] imsm: FIX: container content gathering is not
- needed for size set
-Date: Wed, 12 Jan 2011 16:52:39 +1100
-Message-ID: <20110112165239.720cb9e4@notabene.brown>
-References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
-	<20110111140435.13862.5816.stgit@gklab-128-013.igk.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Speed up reshape? (was Re: Cancel reshape?)
+Date: Wed, 12 Jan 2011 05:53:40 +0000
+Message-ID: <4D2D41E4.1000109@anonymous.org.uk>
+References: <4D2D2BD2.7000601@anonymous.org.uk>	<4D2D32DF.9010002@anonymous.org.uk> <20110112163258.699a6fe0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110111140435.13862.5816.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110112163258.699a6fe0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 15:04:35 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On 12/01/2011 05:32, NeilBrown wrote:
+> On Wed, 12 Jan 2011 04:49:35 +0000 John Robinson
+> <john.robinson@anonymous.org.uk>  wrote:
+[...]
+>> Perhaps I can stop the reshape and restart it with the backup file
+>> elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to
+>> give it a wee workout :-)
+>
+> That should work.
+>
+>   mdadm --stop ...
+>   copy file
+>   mdadm --assemble ...... --backup-file=/new/place
 
-> Size information is loaded already and there is no need to load it again,
-> when metadata is not reloaded.
+Yup. Not much of an improvement, though; the reshape is now running at 
+~10MB/s instead of ~6.5MB/s, so ~27 hours to go instead of ~40 hours.
 
-Why do you say that?  It seems wrong.
+iostat tells me the original 3 discs are doing ~120 transactions per 
+second, reading ~20MB/s and writing ~10MB/s, while the one new disc is 
+doing ~60 tps, reading nothing (obviously) and writing ~10MB/s and the 
+backup (SSD) is doing ~45 tps and writing ~20MB/s. ~120tps sounds about 
+right for 120 seeks, 60 reads and 60 writes, and would explain the 
+speed, but otherwise this looks odd to me - why are we reading ~60MB/s 
+in total and writing ~40MB/s? I'd have expected to be reading less than 
+we're writing. And why are we apparently reading and writing in blocks 
+of under 512KB per device, when the backup file is 32MB? Is there 
+something I can tweak to run the reshape in bigger chunks? 
+sync_speed_min is already 200000...
 
-When growing an array, the size will not change until the reshape completes.
-When it does complete, it will be mdmon which updates the metadata and
-records in it the desired size of the array.
+Currently running SystemRescueCD 2.0.0, 32-bit kernel 2.6.35 and mdadm 
+3.1.4. CPU usage is 2% system, 4% iowait.
 
-The only way mdadm can find this number out is by loading the metadata.
+Cheers,
 
-Where am I wrong?
-
-NeilBrown
-
-
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  Grow.c |   58 +++++++++++++++++++++++++---------------------------------
->  1 files changed, 25 insertions(+), 33 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 2ca9835..6238eb3 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -2019,44 +2019,36 @@ static int reshape_array(char *container, int fd, char *devname,
->  		if (reshape.before.data_disks !=
->  		    reshape.after.data_disks &&
->  		    info->custom_array_size) {
-> -			struct mdinfo *info2;
-> -			char *subarray = strchr(info->text_version+1, '/')+1;
-> +			unsigned long long current_size = 0;
-> +			unsigned long long new_size = info->custom_array_size/2;
-> +			unsigned long long suspend_value;
->  
->  			wait_reshape(sra);
->  			ping_monitor(container);
->  
-> -			info2 = st->ss->container_content(st, subarray);
-> -			if (info2) {
-> -				unsigned long long current_size = 0;
-> -				unsigned long long new_size =
-> -					info2->custom_array_size/2;
-> -				unsigned long long suspend_value;
-> -
-> -				if (sysfs_get_ll(sra,
-> -						 NULL,
-> -						 "array_size",
-> -						 &current_size) == 0 &&
-> -				    new_size > current_size) {
-> -					if (sysfs_set_num(sra, NULL,
-> -							  "array_size", new_size)
-> -					    < 0)
-> -						dprintf("Error: Cannot"
-> -							" set array size");
-> -					else
-> -						dprintf("Array size "
-> -							"changed");
-> -					dprintf(" from %llu to %llu.\n",
-> -						current_size, new_size);
-> -				}
-> -				/* manage suspend_* entries
-> -				 * set suspend_lo to suspend_hi value
-> -				 * to unblock array
-> -				 */
-> -				sysfs_get_ll(sra, NULL, "suspend_hi", &suspend_value);
-> -				sysfs_set_num(sra, NULL, "suspend_lo", suspend_value);
-> -
-> -				sysfs_free(info2);
-> +
-> +			if (sysfs_get_ll(sra,
-> +					 NULL,
-> +					 "array_size",
-> +					 &current_size) == 0 &&
-> +			    new_size > current_size) {
-> +				if (sysfs_set_num(sra, NULL,
-> +						  "array_size", new_size)
-> +				    < 0)
-> +					dprintf("Error: Cannot"
-> +						" set array size");
-> +				else
-> +					dprintf("Array size "
-> +						"changed");
-> +				dprintf(" from %llu to %llu.\n",
-> +					current_size, new_size);
->  			}
-> +			/* manage suspend_* entries
-> +			 * set suspend_lo to suspend_hi value
-> +			 * to unblock array
-> +			 */
-> +			sysfs_get_ll(sra, NULL, "suspend_hi", &suspend_value);
-> +			sysfs_set_num(sra, NULL, "suspend_lo", suspend_value);
->  		}
->  
->  		if (info->new_level != reshape.level) {
-
+John.
