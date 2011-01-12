@@ -1,63 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/9] imsm:FIX: one spare can be added to raid0 only
-Date: Wed, 12 Jan 2011 16:44:36 +1100
-Message-ID: <20110112164436.04b5e337@notabene.brown>
+Subject: Re: [PATCH 4/9] imsm: FIX: only one spare is passed in update
+Date: Wed, 12 Jan 2011 16:46:51 +1100
+Message-ID: <20110112164651.17b03d41@notabene.brown>
 References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
-	<20110111140411.13862.59242.stgit@gklab-128-013.igk.intel.com>
+	<20110111140419.13862.65110.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110111140411.13862.59242.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110111140419.13862.65110.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 15:04:11 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 11 Jan 2011 15:04:19 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> This is part of original commit "Add spares to raid0 in mdadm"
+> Only one spare is passed in update.
+> When more than one disk is added first spare is passed multiple times.
 > 
-> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  super-intel.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
+>  super-intel.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
 > 
 > diff --git a/super-intel.c b/super-intel.c
-> index 90bff47..ef51000 100644
+> index ef51000..321dc47 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -3442,6 +3442,8 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
->  	return 0;
->  }
+> @@ -6448,6 +6448,7 @@ static int imsm_create_metadata_update_for_reshape(
+>  	struct mdinfo *spares = NULL;
+>  	int i;
+>  	int delta_disks = 0;
+> +	struct mdinfo *dev;
 >  
-> +static int write_super_imsm(struct supertype *st, int doclose);
-> +
->  static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
->  			      int fd, char *devname)
->  {
-> @@ -3506,6 +3508,12 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
->  		super->disks = dd;
+>  	dprintf("imsm_update_metadata_for_reshape(enter) raid_disks = %i\n",
+>  		geo->raid_disks);
+> @@ -6486,15 +6487,18 @@ static int imsm_create_metadata_update_for_reshape(
+>  	dprintf("imsm: %i spares are available.\n\n",
+>  		spares->array.spare_disks);
+>  
+> +	dev = spares->devs;
+>  	for (i = 0; i < delta_disks; i++) {
+> -		struct mdinfo *dev = spares->devs;
+>  		struct dl *dl;
+>  
+> +		if (dev == NULL)
+> +			break;
+>  		u->new_disks[i] = makedev(dev->disk.major,
+>  					  dev->disk.minor);
+>  		dl = get_disk_super(super, dev->disk.major, dev->disk.minor);
+>  		dl->index = mpb->num_disks;
+>  		mpb->num_disks++;
+> +		dev = dev->next;
 >  	}
 >  
-> +	if (!mdmon_running(st->container_dev)) {
-> +		dprintf("imsm: mdmon is not active- write metadata by mdadm\n");
-> +		super->updates_pending++;
-> +		write_super_imsm(st, 0);
-> +	}
-> +
->  	return 0;
->  }
->  
+>  abort:
 
 
-No.
-I don't want "mdmon_running" tests in super-intel.c
-
-What is the problem you are trying to fix (the comment in the patch should
-*always* answer that question for me - I shouldn't have to ask).
+Applied, thanks.
 
 NeilBrown
 
