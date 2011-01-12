@@ -1,81 +1,32 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 08/13] FIX/WORKAROUND: added disks are not used by
- reshape process /md/
-Date: Wed, 12 Jan 2011 15:39:18 +1100
-Message-ID: <20110112153918.078ce82c@notabene.brown>
-References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
-	<20110110112832.10776.61385.stgit@gklab-128-013.igk.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Cancel reshape?
+Date: Wed, 12 Jan 2011 04:49:35 +0000
+Message-ID: <4D2D32DF.9010002@anonymous.org.uk>
+References: <4D2D2BD2.7000601@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110112832.10776.61385.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <4D2D2BD2.7000601@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 10 Jan 2011 12:28:32 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On 12/01/2011 04:19, John Robinson wrote:
+[...]
+> Can I cancel reshape that's currently running, and using the backup file
+> that's actually on another (RAID-1) array on three of the same drives,
+> and running at ~7MB/s, and try again?
 
-> md runs reshape but added disk is not touched
-> /proc/mdstat reports that disk is used.
-> 
-> To fix this let md to set slot for reshape.
-> It is possible that slot verification mechanism has to be added.
-> 
-> Second possibility is to investigate problem in md.
-> md/raid5 treats disks as spare with disk index == -1 during raid5 reshape_start.
-> Probably rqaid5 should treat as spare disks when disk index > used disks
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  Grow.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 0efa106..6b2889e 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1697,6 +1697,7 @@ static int reshape_array(char *container, int fd, char *devname,
->  					/* This is a spare that wants to
->  					 * be part of the array.
->  					 */
-> +					d->disk.raid_disk = -1;
->  					add_disk(fd, st, info2, d);
->  				}
->  			}
+Blast. I found this patch to add a revert-reshape option from archives 
+of this list - http://www.spinics.net/lists/raid/msg30961.html - but 
+it's not included in mdadm 3.1.4 and I'm running from a rescue CD so I 
+can't rebuild mdadm with it. I think I might just have to wait a while.
 
-We really should fix md.
-I think the following might help.  I'll try testing at some stage, but if you
-could let me know if it helps, that would be great.
+Perhaps I can stop the reshape and restart it with the backup file 
+elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to 
+give it a wee workout :-)
 
-NeilBrown
+Cheers,
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d223a6c..5044bab 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5527,8 +5527,8 @@ static int raid5_start_reshape(mddev_t *mddev)
- 		return -ENOSPC;
- 
- 	list_for_each_entry(rdev, &mddev->disks, same_set)
--		if (rdev->raid_disk < 0 &&
--		    !test_bit(Faulty, &rdev->flags))
-+		if ((rdev->raid_disk < 0 || rdev->raid_disk >= conf->raid_disks)
-+		     && !test_bit(Faulty, &rdev->flags))
- 			spares++;
- 
- 	if (spares - mddev->degraded < mddev->delta_disks - conf->max_degraded)
-@@ -5588,6 +5588,11 @@ static int raid5_start_reshape(mddev_t *mddev)
- 					/* Failure here is OK */;
- 			} else
- 				break;
-+		} else if (rdev->raid_disk >= conf->previous_raid_disks
-+			   && !test_bit(Faulty, &rdev->flags)) {
-+			/* This is a spare that was manually added */
-+			set_bit(In_sync, &rdev->flags);
-+			added_devices++;
- 		}
- 
- 	/* When a reshape changes the number of devices, ->degraded
+John.
