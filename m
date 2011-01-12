@@ -1,121 +1,33 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 06/13] imsm: FIX: update disks status in
- container_contents()
-Date: Wed, 12 Jan 2011 15:14:00 +1100
-Message-ID: <20110112151400.6ddab5a7@notabene.brown>
-References: <20110110110950.10776.75218.stgit@gklab-128-013.igk.intel.com>
-	<20110110112815.10776.44824.stgit@gklab-128-013.igk.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Cancel reshape?
+Date: Wed, 12 Jan 2011 04:19:30 +0000
+Message-ID: <4D2D2BD2.7000601@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110110112815.10776.44824.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 10 Jan 2011 12:28:15 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+I've just started reshaping a RAID-5 to a RAID-6. I had meant to 
+increase the number of drives too, so avoiding using the backup file all 
+the way through. Unfortunately I forgot to specify that, so it's going 
+rather slowly. I said:
 
-> Based on status information disks are added to array during grow (in reshape_array()).
-> This information currently is not present and all disks (old and new) were added to md.
-> To avoid adding already present disks, disk.state has to be set.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  super-intel.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 9687993..2700401 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -4541,6 +4541,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
->  	for (i = 0; i < mpb->num_raid_devs; i++) {
->  		struct imsm_dev *dev;
->  		struct imsm_map *map;
-> +		struct imsm_map *map2;
->  		struct mdinfo *this;
->  		int slot;
->  		char *ep;
-> @@ -4551,6 +4552,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
->  
->  		dev = get_imsm_dev(super, i);
->  		map = get_imsm_map(dev, 0);
-> +		map2 = get_imsm_map(dev, 1);
->  
->  		/* do not publish arrays that are in the middle of an
->  		 * unsupported migration
-> @@ -4632,7 +4634,8 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
->  			info_d->disk.minor = d->minor;
->  			info_d->disk.raid_disk = slot;
->  			info_d->recovery_start = recovery_start;
-> -
-> +			if (map2 && (map2->num_members > slot))
-> +				info_d->disk.state = (1 << MD_DISK_ACTIVE);
->  			if (info_d->recovery_start == MaxSector)
->  				this->array.working_disks++;
->  
+mdadm /dev/md1 --grow --level=6 --backup-file=/some/where/else
 
+where md1 had 3 active and 2 spare devices. It's now reshaping itself to 
+RAID-6 with 4 active and 1 spare.
 
-This patch looks a little odd.  It should still be setting disk.state even if
-map2 == NULL.
+What I meant was
 
-The real problem here is simply that container_content isn't setting
-disk.state properly.
+mdadm /dev/md1 --grow --level=6 --raid-disks=5 --backup-file=...
 
-I have change the patch to the following which should be closed to correct.
+Can I cancel reshape that's currently running, and using the backup file 
+that's actually on another (RAID-1) array on three of the same drives, 
+and running at ~7MB/s, and try again?
 
-NeilBrown
+Cheers,
 
-
-commit 86e3692b06f255ead5c290288f0fe9318f75440d
-Author: Adam Kwolek <adam.kwolek@intel.com>
-Date:   Wed Jan 12 15:12:44 2011 +1100
-
-    imsm: FIX: update disks status in container_contents()
-    
-    Based on status information disks are added to array during grow (in reshape_array()).
-    This information currently is not present and all disks (old and new) were added to md.
-    To avoid adding already present disks, disk.state has to be set.
-    
-    Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/super-intel.c b/super-intel.c
-index d62e6b7..f158163 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4541,6 +4541,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 	for (i = 0; i < mpb->num_raid_devs; i++) {
- 		struct imsm_dev *dev;
- 		struct imsm_map *map;
-+		struct imsm_map *map2;
- 		struct mdinfo *this;
- 		int slot;
- 		char *ep;
-@@ -4551,6 +4552,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 
- 		dev = get_imsm_dev(super, i);
- 		map = get_imsm_map(dev, 0);
-+		map2 = get_imsm_map(dev, 1);
- 
- 		/* do not publish arrays that are in the middle of an
- 		 * unsupported migration
-@@ -4632,7 +4634,13 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 			info_d->disk.minor = d->minor;
- 			info_d->disk.raid_disk = slot;
- 			info_d->recovery_start = recovery_start;
--
-+			if (map2) {
-+				if (slot < map2->num_members)
-+					info_d->disk.state = (1 << MD_DISK_ACTIVE);
-+			} else {
-+				if (slot < map->num_members)
-+					info_d->disk.state = (1 << MD_DISK_ACTIVE);
-+			}
- 			if (info_d->recovery_start == MaxSector)
- 				this->array.working_disks++;
- 
-
+John.
