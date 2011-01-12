@@ -1,57 +1,62 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Cancel reshape?
-Date: Wed, 12 Jan 2011 16:32:58 +1100
-Message-ID: <20110112163258.699a6fe0@notabene.brown>
-References: <4D2D2BD2.7000601@anonymous.org.uk>
-	<4D2D32DF.9010002@anonymous.org.uk>
+Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored container
+Date: Wed, 12 Jan 2011 16:43:17 +1100
+Message-ID: <20110112164317.5ccfd59e@notabene.brown>
+References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
+	<20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D2D32DF.9010002@anonymous.org.uk>
+In-Reply-To: <20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 12 Jan 2011 04:49:35 +0000 John Robinson
-<john.robinson@anonymous.org.uk> wrote:
+On Tue, 11 Jan 2011 15:04:03 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> On 12/01/2011 04:19, John Robinson wrote:
-> [...]
-> > Can I cancel reshape that's currently running, and using the backup file
-> > that's actually on another (RAID-1) array on three of the same drives,
-> > and running at ~7MB/s, and try again?
+> This fix rolls backs some changes introduced by patch:
+> 	"Add spares to raid0 in mdadm"
 > 
-> Blast. I found this patch to add a revert-reshape option from archives 
-> of this list - http://www.spinics.net/lists/raid/msg30961.html - but 
-> it's not included in mdadm 3.1.4 and I'm running from a rescue CD so I 
-> can't rebuild mdadm with it. I think I might just have to wait a while.
-> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-That patch only works to revert a reshape that is increasing the number of
-data-devices in the array.
+It would help a lot if you explained *why* you were rolling back these
+changes.
 
-> Perhaps I can stop the reshape and restart it with the backup file 
-> elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to 
-> give it a wee workout :-)
-
-That should work.
-
- mdadm --stop ...
- copy file
- mdadm --assemble ...... --backup-file=/new/place
+Not applied.
 
 NeilBrown
 
 
-
+> ---
 > 
-> Cheers,
+>  Manage.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
 > 
-> John.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/Manage.c b/Manage.c
+> index 4e6afb5..fa1b13f 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -800,16 +800,16 @@ int Manage_subdevs(char *devname, int fd,
+>  				if (dv->writemostly == 1)
+>  					disc.state |= 1 << MD_DISK_WRITEMOSTLY;
+>  				dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
+> -				if (tst->ss->external &&
+> -				    mdmon_running(tst->container_dev))
+> -					tst->update_tail = &tst->updates;
+>  				if (tst->ss->add_to_super(tst, &disc, dfd,
+>  							  dv->devname)) {
+>  					close(dfd);
+>  					return 1;
+>  				}
+>  				/* write_init_super will close 'dfd' */
+> -				if (tst->ss->write_init_super(tst))
+> +				if (tst->ss->external)
+> +					/* mdmon will write the metadata */
+> +					close(dfd);
+> +				else if (tst->ss->write_init_super(tst))
+>  					return 1;
+>  			} else if (dv->re_add) {
+>  				/*  this had better be raid1.
 
