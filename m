@@ -1,47 +1,49 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Subject: [PATCH 2/4] Grow_reshape: need text_version for
- sub-array processing.
-Date: Wed, 12 Jan 2011 17:12:22 +1100
-Message-ID: <20110112171222.6f5d60d4@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D176E1A44C@irsmsx503.ger.corp.intel.com>
+Subject: Re: Subject: [PATCH 3/4] Grow_reshape: need sub-array component
+ size in data migration.
+Date: Wed, 12 Jan 2011 17:16:01 +1100
+Message-ID: <20110112171601.14e70973@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D176E1A451@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1A44C@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1A451@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Labun, Marcin" <Marcin.Labun@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 11 Jan 2011 15:24:17 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+On Tue, 11 Jan 2011 15:24:49 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
 wrote:
 
-> >From bffebd79d2f18176727d2c6d9dd111470969cf7a Mon Sep 17 00:00:00 2001
+> >From a187f2281d4053b02b1e0e3e99cdd8f406db38e3 Mon Sep 17 00:00:00 2001
 > From: Marcin Labun <marcin.labun@intel.com>
-> Date: Tue, 11 Jan 2011 14:13:10 +0100
-> Subject: [PATCH 2/4] Grow_reshape: need text_version for sub-array processing.
+> Date: Wed, 5 Jan 2011 17:38:00 +0100
+> Subject: [PATCH 3/4] Grow_reshape: need sub-array component size in data migration.
 > 
 > Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 > ---
->  Grow.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index 41db6f2..1998750 100644
+> index 1998750..9db4594 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -1497,6 +1497,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
->  
->  	info.array = array;
->  	sysfs_init(&info, fd, NoMdDev);
-> +	strcpy(info.text_version, sra->text_version);
->  	info.component_size = size*2;
->  	info.new_level = level;
->  	info.new_chunk = chunksize * 1024;
+> @@ -1406,7 +1406,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			array.spare_disks);
+>  		return 1;
+>  	}
+> -	sra = sysfs_read(fd, 0, GET_LEVEL | GET_DISKS | GET_DEVS | GET_STATE | GET_VERSION);
+> +	sra = sysfs_read(fd, 0, GET_LEVEL | GET_DISKS | GET_DEVS | GET_STATE | GET_VERSION | GET_COMPONENT);
+>  	if (sra) {
+>  		if (st->ss->external && subarray == NULL) {
+>  			array.level = LEVEL_CONTAINER;
 
-This and the previous patch are fixing the one issue, so I have combined them
-together.
+
+I cannot see where sra->component_size is used.
+Please be more explicit. (Please always be more explicit).
 
 NeilBrown
 
