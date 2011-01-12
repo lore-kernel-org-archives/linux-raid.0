@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 5/8] FIX: Cannot load container information
-Date: Wed, 12 Jan 2011 14:55:03 +0100
-Message-ID: <20110112135503.15045.97311.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 6/8] imsm: FIX: spares are not counted
+Date: Wed, 12 Jan 2011 14:55:10 +0100
+Message-ID: <20110112135510.15045.78096.stgit@gklab-128-013.igk.intel.com>
 References: <20110112132954.15045.41564.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,27 +13,36 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When container is passed to grow_reshape(), load_container() function has to be used to
-get all required information from metadata. In such case subarray variable is not set.
-This means that currently used condition is wrong.
+Field info->array.spare_disks is used on begin of reshape_array() to check
+if there is enough number of spares to process reshape.
+During container_content_imsm() call spare disks are not counted.
+This causes that reshape_array() reports that there is not enough spares
+to execute reshape.
+
+Patch adds spares counting for reshape process.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ super-intel.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index c2e84f3..519fbc2 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1356,7 +1356,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		fmt_devname(container_buf, container_dev);
- 		container = container_buf;
- 
--		if (subarray)
-+		if (!subarray)
- 			rv = st->ss->load_container(st, cfd, NULL);
- 		else
- 			rv = st->ss->load_super(st, cfd, NULL);
+diff --git a/super-intel.c b/super-intel.c
+index c3ff365..0c70fda 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4632,9 +4632,13 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
+ 			if (map2) {
+ 				if (slot < map2->num_members)
+ 					info_d->disk.state = (1 << MD_DISK_ACTIVE);
++				else
++					this->array.spare_disks++;
+ 			} else {
+ 				if (slot < map->num_members)
+ 					info_d->disk.state = (1 << MD_DISK_ACTIVE);
++				else
++					this->array.spare_disks++;
+ 			}
+ 			if (info_d->recovery_start == MaxSector)
+ 				this->array.working_disks++;
 
