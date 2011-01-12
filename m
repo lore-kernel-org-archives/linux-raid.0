@@ -1,50 +1,78 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Speed up reshape? (was Re: Cancel reshape?)
-Date: Wed, 12 Jan 2011 05:53:40 +0000
-Message-ID: <4D2D41E4.1000109@anonymous.org.uk>
-References: <4D2D2BD2.7000601@anonymous.org.uk>	<4D2D32DF.9010002@anonymous.org.uk> <20110112163258.699a6fe0@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 7/9] imsm: FIX: monitor should initialize 2nd reshape
+ only
+Date: Wed, 12 Jan 2011 16:57:18 +1100
+Message-ID: <20110112165718.7ffd5cdc@notabene.brown>
+References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
+	<20110111140443.13862.80670.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110112163258.699a6fe0@notabene.brown>
+In-Reply-To: <20110111140443.13862.80670.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On 12/01/2011 05:32, NeilBrown wrote:
-> On Wed, 12 Jan 2011 04:49:35 +0000 John Robinson
-> <john.robinson@anonymous.org.uk>  wrote:
-[...]
->> Perhaps I can stop the reshape and restart it with the backup file
->> elsewhere. Hmm, I've an SSD I haven't installed yet... Maybe time to
->> give it a wee workout :-)
->
-> That should work.
->
->   mdadm --stop ...
->   copy file
->   mdadm --assemble ...... --backup-file=/new/place
+On Tue, 11 Jan 2011 15:04:43 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-Yup. Not much of an improvement, though; the reshape is now running at 
-~10MB/s instead of ~6.5MB/s, so ~27 hours to go instead of ~40 hours.
+> in case configuration:
+> 	raid5
+> 	raid0
+> first array is monitored only.
+> During reshape of such container first array (raid5), in metadata
+> migration is initialized for both arrays.
+> This is imsm incompatible case.
+> 
+> Allow for 2nd array in metadata reshape initialization when there is more than 1 array monitored.
 
-iostat tells me the original 3 discs are doing ~120 transactions per 
-second, reading ~20MB/s and writing ~10MB/s, while the one new disc is 
-doing ~60 tps, reading nothing (obviously) and writing ~10MB/s and the 
-backup (SSD) is doing ~45 tps and writing ~20MB/s. ~120tps sounds about 
-right for 120 seeks, 60 reads and 60 writes, and would explain the 
-speed, but otherwise this looks odd to me - why are we reading ~60MB/s 
-in total and writing ~40MB/s? I'd have expected to be reading less than 
-we're writing. And why are we apparently reading and writing in blocks 
-of under 512KB per device, when the backup file is 32MB? Is there 
-something I can tweak to run the reshape in bigger chunks? 
-sync_speed_min is already 200000...
+I'm sorry, but I cannot follow what you are saying here.
 
-Currently running SystemRescueCD 2.0.0, 32-bit kernel 2.6.35 and mdadm 
-3.1.4. CPU usage is 2% system, 4% iowait.
+Maybe if you could explain what you see happening, and what should actually
+happen instead.  At which stop in the process does something go wrong?
 
-Cheers,
+NeilBrown
 
-John.
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+> 
+>  super-intel.c |   12 +++++++++++-
+>  1 files changed, 11 insertions(+), 1 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 1db15c2..c465288 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5075,10 +5075,20 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+>  		*/
+>  		struct active_array *aa = a->container->arrays;
+>  		int arrays_under_reshape = 0;
+> +		int array_counter = 0;
+>  
+>  		/* check if no other arrays is under reshape
+>  		 */
+>  		while (aa) {
+> +			array_counter++;
+> +			/* when we have takeovered array even single array
+> +			 * can be initialized for reshape, if mdadm didn't
+> +			 * do this.
+> +			 * This is due to fact, that raid0 (takeovered to raid4)
+> +			 * appears in monitor one by one
+> +			 */
+> +			if (aa->info.array.level == 4)
+> +				array_counter++;
+>  			if (aa->container) {
+>  				int inst = aa->info.container_member;
+>  				struct intel_super *super = aa->container->sb;
+> @@ -5091,7 +5101,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+>  			}
+>  			aa = aa->next;
+>  		}
+> -		if (arrays_under_reshape == 0) {
+> +		if ((arrays_under_reshape == 0) && (array_counter > 1)) {
+>  			struct imsm_map *map = get_imsm_map(dev, 0);
+>  			struct dl *dl = NULL;
+>  			int disks_count = 0;
+
