@@ -1,47 +1,100 @@
-From: Milan Broz <mbroz@redhat.com>
-Subject: Re: [dm-devel] linux-next - WARNING: at fs/block_dev.c:824 bd_link_disk_holder+0x92/0x1ac()
-Date: Thu, 13 Jan 2011 15:49:50 +0100
-Message-ID: <4D2F110E.3010401@redhat.com>
-References: <16069.1294853673@localhost>	<4D2E4611.90002@redhat.com>	<4D2E6129.8000700@ce.jp.nec.com>	<20110113110640.GC30719@htj.dyndns.org>	<4D2EE156.1050006@redhat.com>	<20110113122701.GG16523@nb.net.home>	<20110113131216.GF30719@htj.dyndns.org>	<20110113132637.GH16523@nb.net.home>	<20110113133722.GG30719@htj.dyndns.org>	<4D2F04FF.1070309@redhat.com>	<20110113141107.GI30719@htj.dyndns.org>	<4D2F0B6A.6010201@redhat.com> <AANLkTinJ68D6Yc-U-Q=ZfS9mqozj5qtHPtySZHOgjcgP@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 1/6] imsm: Update metadata for second array
+Date: Thu, 13 Jan 2011 15:50:10 +0100
+Message-ID: <20110113145010.12728.65626.stgit@gklab-128-013.igk.intel.com>
+References: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinJ68D6Yc-U-Q=ZfS9mqozj5qtHPtySZHOgjcgP@mail.gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Karel Zak <kzak@redhat.com>, device-mapper development <dm-devel@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Valdis.Kletnieks@vt.edu, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On 01/13/2011 03:30 PM, Tejun Heo wrote:
+When second array reshape is about to start external metadata should be updated
+by mdmon in imsm_set_array_state().
+for this purposes imsm_progress_container_reshape() is reused.
 
-Hi,
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
->> Anyway, it is /sys/block - so it represents block devices.
->>
->> If btrfs internally creates some virtual _block_ device for its pool, it should
->> present it here too with slaves/holders. If not, why it should create any links there?
-> 
-> Yeah, that's the most bothering part for me.  The biggest customers of
-> bd_claim are filesystems and all these custom symlinkeries don't do
-> nothing for them.  It just doesn't make a whole lot of sense to me.
+ super-intel.c |   35 ++++++++++++++++++++++++++++++++---
+ 1 files changed, 32 insertions(+), 3 deletions(-)
 
-Well, then it is not optimal for fs and should it be separated?
-There is also /sys/fs now...
+diff --git a/super-intel.c b/super-intel.c
+index cb2b51b..4cbb070 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4863,7 +4863,9 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
+ 
+ static void imsm_set_disk(struct active_array *a, int n, int state);
+ 
+-static void imsm_progress_container_reshape(struct intel_super *super)
++static void imsm_progress_container_reshape(struct intel_super *super,
++					    struct imsm_dev *dev_in,
++					    int disk_count)
+ {
+ 	/* if no device has a migr_state, but some device has a
+ 	 * different number of members than the previous device, start
+@@ -4871,7 +4873,7 @@ static void imsm_progress_container_reshape(struct intel_super *super)
+ 	 * previous.
+ 	 */
+ 	struct imsm_super *mpb = super->anchor;
+-	int prev_disks = -1;
++	int prev_disks = disk_count;
+ 	int i;
+ 
+ 	for (i = 0; i < mpb->num_raid_devs; i++) {
+@@ -4884,6 +4886,10 @@ static void imsm_progress_container_reshape(struct intel_super *super)
+ 		if (dev->vol.migr_state)
+ 			return;
+ 
++		if (((dev_in != NULL) && disk_count > 0) &&
++		     (dev_in != dev))
++			continue;
++
+ 		if (prev_disks == -1)
+ 			prev_disks = map->num_members;
+ 		if (prev_disks == map->num_members)
+@@ -4999,7 +5005,9 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 						       * array size
+ 						       */
+ 				super->updates_pending++;
+-				imsm_progress_container_reshape(super);
++				imsm_progress_container_reshape(super,
++								NULL,
++								-1);
+ 			}				
+ 		}
+ 	}
+@@ -5072,6 +5080,27 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 
+ 		for (mdi = a->info.devs; mdi; mdi = mdi->next)
+ 			imsm_set_disk(a, mdi->disk.raid_disk, mdi->curr_state);
++	} else if (dev->vol.migr_state == 0) {
++		/* check here if this is container action
++		 * and next metadata should be prepared
++		*/
++		struct imsm_map *map = get_imsm_map(dev, 0);
++		struct dl *dl = NULL;
++		int disks_count = 0;
++
++		/* check if this array should be reshaped
++		 */
++		for (dl = super->disks; dl; dl = dl->next)
++			if (dl->index >= 0)
++				disks_count++;
++		if (disks_count > map->num_members) {
++			/* manage changes in volume
++			 */
++			imsm_progress_container_reshape(super,
++							dev,
++							disks_count);
++			super->updates_pending++;
++		}
+ 	}
+ 
+ 	return consistent;
 
-I think represent dependences of block devices in some generic (and exactly defined)
-way is useful. So if there is something missing, lets define it properly.
-
-The whole idea behind lsblk was practical: we responded many questions why
-"device is busy" and what keeps it open in stacked subsystem.
-Just try fdisk, mdadm, dmsetup table, losetup -a, kpartx, cryptsetup, etc ...
-
-So listing block device tree using ONE interface (sysfs) to check and display
-device tree for ALL subsystems seems to be good idea for me.
-In this exactly defined case.
-
-I am not saying that symlinks are perfect, just that generic interface here
-is not superfluous.
-
-Thanks,
-Milan
