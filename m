@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/6] imsm: Update metadata for second array
-Date: Thu, 13 Jan 2011 15:50:10 +0100
-Message-ID: <20110113145010.12728.65626.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 2/6] FIX: continue raid0 reshape
+Date: Thu, 13 Jan 2011 15:50:18 +0100
+Message-ID: <20110113145018.12728.49048.stgit@gklab-128-013.igk.intel.com>
 References: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,88 +13,78 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When second array reshape is about to start external metadata should be updated
-by mdmon in imsm_set_array_state().
-for this purposes imsm_progress_container_reshape() is reused.
+In case when second array is raid0 array, mdmon will not start reshape
+for it because this array is not monitored.
+To resolve this situation, all reshaped devices are collected in to list.
+If nothing is found for reshape (no arrays with reshape_active flag),
+already reshaped list is searched and checked if everything
+is reshaped. If we find that raid0 array is not reshaped we are continuing
+reshape for this device.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   35 ++++++++++++++++++++++++++++++++---
- 1 files changed, 32 insertions(+), 3 deletions(-)
+ Grow.c |   30 ++++++++++++++++++++++++++++++
+ 1 files changed, 30 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index cb2b51b..4cbb070 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4863,7 +4863,9 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
- 
- static void imsm_set_disk(struct active_array *a, int n, int state);
- 
--static void imsm_progress_container_reshape(struct intel_super *super)
-+static void imsm_progress_container_reshape(struct intel_super *super,
-+					    struct imsm_dev *dev_in,
-+					    int disk_count)
+diff --git a/Grow.c b/Grow.c
+index a765308..fadaf2d 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2056,6 +2056,7 @@ int reshape_container(char *container, int cfd, char *devname,
+ 		      int quiet)
  {
- 	/* if no device has a migr_state, but some device has a
- 	 * different number of members than the previous device, start
-@@ -4871,7 +4873,7 @@ static void imsm_progress_container_reshape(struct intel_super *super)
- 	 * previous.
- 	 */
- 	struct imsm_super *mpb = super->anchor;
--	int prev_disks = -1;
-+	int prev_disks = disk_count;
- 	int i;
+ 	struct mdinfo *cc = NULL;
++	struct mdstat_ent *mdstat_collection = NULL;
  
- 	for (i = 0; i < mpb->num_raid_devs; i++) {
-@@ -4884,6 +4886,10 @@ static void imsm_progress_container_reshape(struct intel_super *super)
- 		if (dev->vol.migr_state)
- 			return;
- 
-+		if (((dev_in != NULL) && disk_count > 0) &&
-+		     (dev_in != dev))
-+			continue;
-+
- 		if (prev_disks == -1)
- 			prev_disks = map->num_members;
- 		if (prev_disks == map->num_members)
-@@ -4999,7 +5005,9 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 						       * array size
- 						       */
- 				super->updates_pending++;
--				imsm_progress_container_reshape(super);
-+				imsm_progress_container_reshape(super,
-+								NULL,
-+								-1);
- 			}				
+ 	/* component_size is not meaningful for a container,
+ 	 * so pass '-1' meaning 'no change'
+@@ -2113,6 +2114,31 @@ int reshape_container(char *container, int cfd, char *devname,
+ 				continue;
+ 			break;
  		}
- 	}
-@@ -5072,6 +5080,27 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 
- 		for (mdi = a->info.devs; mdi; mdi = mdi->next)
- 			imsm_set_disk(a, mdi->disk.raid_disk, mdi->curr_state);
-+	} else if (dev->vol.migr_state == 0) {
-+		/* check here if this is container action
-+		 * and next metadata should be prepared
-+		*/
-+		struct imsm_map *map = get_imsm_map(dev, 0);
-+		struct dl *dl = NULL;
-+		int disks_count = 0;
-+
-+		/* check if this array should be reshaped
++		/* check if reshape decision should be taken here
 +		 */
-+		for (dl = super->disks; dl; dl = dl->next)
-+			if (dl->index >= 0)
-+				disks_count++;
-+		if (disks_count > map->num_members) {
-+			/* manage changes in volume
-+			 */
-+			imsm_progress_container_reshape(super,
-+							dev,
-+							disks_count);
-+			super->updates_pending++;
++		if (!content) {
++			for (content = cc; content ; content = content->next) {
++				struct mdstat_ent *mdstat_check =
++							      mdstat_collection;
++				char *subarray;
++
++				subarray = strchr(content->text_version + 1,
++						  '/') + 1;
++				mdstat = mdstat_by_subdev(subarray,
++						  devname2devnum(container));
++				while (mdstat_check &&
++				       mdstat &&
++					(mdstat->devnum !=
++					 mdstat_check->devnum)) {
++					mdstat_check = mdstat_check->next;
++				}
++				if (mdstat_check) {
++					free_mdstat(mdstat);
++					continue;
++				}
++				break;
++			}
 +		}
- 	}
+ 		if (!content)
+ 			break;
  
- 	return consistent;
+@@ -2131,11 +2157,15 @@ int reshape_container(char *container, int cfd, char *devname,
+ 				   content, force,
+ 				   backup_file, quiet, 1);
+ 		close(fd);
++		mdstat->next = mdstat_collection;
++		mdstat_collection = mdstat;
+ 		if (rv)
+ 			break;
+ 	}
+ 	unfreeze(st);
++	free_mdstat(mdstat_collection);
+ 	sysfs_free(cc);
++
+ 	exit(0);
+ }
+ 
 
