@@ -1,38 +1,81 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: [dm-devel] linux-next - WARNING: at fs/block_dev.c:824
- bd_link_disk_holder+0x92/0x1ac()
-Date: Thu, 13 Jan 2011 15:41:45 -0500
-Message-ID: <20110113204145.GC31800@thunk.org>
-References: <20110113122701.GG16523@nb.net.home>
- <20110113131216.GF30719@htj.dyndns.org>
- <20110113132637.GH16523@nb.net.home>
- <20110113133722.GG30719@htj.dyndns.org>
- <4D2F04FF.1070309@redhat.com>
- <20110113141107.GI30719@htj.dyndns.org>
- <4D2F0B6A.6010201@redhat.com>
- <AANLkTinJ68D6Yc-U-Q=ZfS9mqozj5qtHPtySZHOgjcgP@mail.gmail.com>
- <656A2F9B-4E1C-44AA-80CB-9E3428E26CDE@mit.edu>
- <20110114071858.7eee145c@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: PULL REQUEST - md updates for 2.6.38
+Date: Fri, 14 Jan 2011 09:18:55 +1100
+Message-ID: <20110114091855.29910ed3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110114071858.7eee145c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Milan Broz <mbroz@redhat.com>, Karel Zak <kzak@redhat.com>, device-mapper development <dm-devel@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Valdis.Kletnieks@vt.edu, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 14, 2011 at 07:18:58AM +1100, NeilBrown wrote:
-> 
-> open(O_EXCL) will fail on a block device if it is being used by anything else
-> - a filesystem or a dm target or an md array or ....
-> 
-> So if the *only* thing you want is "is this currently an active part of
-> something else", then O_EXCL works since 2.6.0 (I think).
 
-Unfortunately, that won't distinguish between a currently active file
-system, and a device which is being used by a dm target, which is what
-we want to do.
+Hi Linus,
+ please pull some md update as below.
 
-						- Ted
+ There is an unfortunately high number for fixes for regressions - obvi=
+ously
+ someone hasn't been doing methodical testing as often as he would like=
+ to.
+
+ Most of this is bug fixes.  For the few that are new functionality, mo=
+st of
+ them are related to our work to make md and dm able to share more code=
+=2E
+
+Thanks,
+NeilBrown
+
+
+
+The following changes since commit 3c0eee3fe6a3a1c745379547c7e7c904aa64=
+f6d5:
+
+  Linux 2.6.37 (2011-01-04 16:50:19 -0800)
+
+are available in the git repository at:
+  git://neil.brown.name/md/ for-linus
+
+Joe Perches (1):
+      md: Fix single printks with multiple KERN_<level>s
+
+Jonathan Brassow (4):
+      md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
+      md-new-param-to-calc_dev_sboffset
+      md-new-param-to_sync_page_io
+      md: separate meta and data devs
+
+NeilBrown (10):
+      md: fix regression with re-adding devices to arrays with no metad=
+ata
+      md: fix regression resulting in delays in clearing bits in a bitm=
+ap
+      md: Ensure no IO request to get md device before it is properly i=
+nitialised.
+      md: md_stop_writes requires mddev_lock.
+      md: Be more careful about clearing flags bit in ->recovery
+      md: Don't let implementation detail of curr_resync leak out throu=
+gh sysfs.
+      md: allow suspend_lo and suspend_hi to decrease as well as increa=
+se.
+      md/raid5: handle manually-added spares in start_reshape.
+      md: range check slot number when manually adding a spare.
+      md: Fix removal of extra drives when converting RAID6 to RAID5
+
+R=E9mi R=E9rolle (1):
+      md: fix sync_completed reporting for very large drives (>2TB)
+
+ drivers/md/bitmap.c |   12 ++-
+ drivers/md/md.c     |  197 +++++++++++++++++++++++++++++++------------=
+--------
+ drivers/md/md.h     |   13 +++-
+ drivers/md/raid1.c  |   33 ++++-----
+ drivers/md/raid10.c |   17 +++--
+ drivers/md/raid5.c  |   16 +++--
+ 6 files changed, 172 insertions(+), 116 deletions(-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
