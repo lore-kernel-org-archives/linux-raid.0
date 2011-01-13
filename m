@@ -1,74 +1,138 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: open_dev_excl in reshape_container() fails
-Date: Thu, 13 Jan 2011 15:40:32 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: RE: [PATCH 5/6] Remove code for non re-striping operations.
+Date: Thu, 13 Jan 2011 16:00:38 +0000
+Message-ID: <BE2BFE91933D1B4089447C644860408066E9AFA5@irsmsx503.ger.corp.intel.com>
+References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
+	<20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
+ <20110113135134.584c1264@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110113135134.584c1264@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Hi,
-
-I've got a problem using open_dev_excl() in reshape_container(), it fai=
-ls. This functions goes down
-and calls open() with flags O_DIRECT| O_RDWR| O_EXCL.
-It fails in reshape_container(), ealier in Grow_reshape() exactly the s=
-ame test call to open_dev_excl() succeed.=20
-Between test open and open in reshape_container() there is no other ope=
-n() performed (or other i/o operation that can cause problem).
-It not depends on mdmon action because it is the same for raid5 and rai=
-d0.
-=46unction open_dev() works, and I'm using it as workaround.
-
-In man pages for open() is told that O_EXCL flag should be used with O_=
-CREAT flag only.
-I've read in manual for open() also: "If O_EXCL is set and O_CREAT is n=
-ot set, the result is undefined"
-This can explain my experiences, about open_dev_excl() results.
-
-Please let me know if above is right? What tell you your tests?
-
-If mdadm needs some locking mechanism, probably we should use F_SETLK/F=
-_GETLK i.e.:
-    int fd =3D open("/dev/name", <flags>);
-
-   /* To lock the file/device */
-  =20
-    struct flock fl =3D { F_WRLCK, SEEK_SET, 0, 0, 0 };
-    fl.l_pid =3D getpid();
-    fcntl(ld, F_SETLK, &fl);
-
-    ...
-
-    / * To unlock the file/device */
-
-    struct flock fl =3D { F_UNLCK, SEEK_SET, 0, 0, 0 };
-    fl.l_pid =3D getpid();
-    fcntl(ld, F_SETLK, &fl);
-   =20
-    ...
-
-    close(fd);
-
-Please tell me your opinion, because I think we have got a problem.
-
-BR
-Adam
 
 
--------------------------------------------------------------
-Intel Technology Poland Sp. z o.o.
-email: adam.kwolek@intel.com=A0=A0=A0=20
-phone: +48 58 766 1773
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, January 13, 2011 3:52 AM
+> To: Wojcik, Krzysztof
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
+> Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
+> 
+> On Wed, 12 Jan 2011 17:01:32 +0100 Krzysztof Wojcik
+> <krzysztof.wojcik@intel.com> wrote:
+> 
+> > Neil,
+> > How was your intention when you add this part of code?
+> > I can't find the case when it will be necessary.
+> > Moreover it breaks flow for takeover operations because
+> > ioctl not succeeded when more than one parameter is changed.
+> > I've remove this code temporally to be able test takeover
+> > operations.
+> > We can restore this code after we decide what it should do.
+> 
+> Asking what the purpose of some code is is perfectly OK.  Asking by
+> sending a
+> patch which removes the code seems ... odd.
+
+Sorry. It was just a proposal :)
+
+> 
+> If the number of data devices is 1, then a RAID5 can have
+> layout/chunksize
+> changed without any restriping.
+> This code handles that case.
+
+So maybe it will be good to limit this part of code execution only for raid5?
+(reshape.backup_blocks == 0) {
+	If (info->array.level != 5)
+		Return rv;
+...
+
+How do you mean?
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> NeilBrown
+> 
+> 
+> >
+> > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> > ---
+> >  Grow.c |   43 +++++--------------------------------------
+> >  1 files changed, 5 insertions(+), 38 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index 253f289..6835f34 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -1666,6 +1666,11 @@ static int reshape_array(char *container, int
+> fd, char *devname,
+> >  		ping_monitor(container);
+> >  	}
+> >
+> > +	if (reshape.backup_blocks == 0) {
+> > +		/* If operation not not reuire re-striping we can finish */
+> > +		return rv;
+> > +	}
+> > +
+> >  	/* ->reshape_super might have chosen some spares from the
+> >  	 * container that it wants to be part of the new array.
+> >  	 * We can collect them with ->container_content and give
+> > @@ -1692,44 +1697,6 @@ static int reshape_array(char *container, int
+> fd, char *devname,
+> >  		}
+> >  	}
+> >
+> > -	if (reshape.backup_blocks == 0) {
+> > -		/* No restriping needed, but we might need to impose
+> > -		 * some more changes: layout, raid_disks, chunk_size
+> > -		 */
+> > -		if (info->new_layout != UnSet &&
+> > -		    info->new_layout != info->array.layout) {
+> > -			info->array.layout = info->new_layout;
+> > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > -				fprintf(stderr, Name ": failed to set new
+> layout\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("layout for %s set to %d\n",
+> > -				       devname, info->array.layout);
+> > -		}
+> > -		if (info->delta_disks != UnSet &&
+> > -		    info->delta_disks != 0) {
+> > -			info->array.raid_disks += info->delta_disks;
+> > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > -				fprintf(stderr, Name ": failed to set raid
+> disks\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("raid_disks for %s set to %d\n",
+> > -				       devname, info->array.raid_disks);
+> > -		}
+> > -		if (info->new_chunk != 0 &&
+> > -		    info->new_chunk != info->array.chunk_size) {
+> > -			if (sysfs_set_num(info, NULL,
+> > -					  "chunk_size", info->new_chunk) != 0) {
+> > -				fprintf(stderr, Name ": failed to set chunk
+> size\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("chunk size for %s set to %d\n",
+> > -				       devname, info->array.chunk_size);
+> > -		}
+> > -
+> > -		return rv;
+> > -	}
+> > -
+> >  	/*
+> >  	 * There are three possibilities.
+> >  	 * 1/ The array will shrink.
+
