@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 4/6] FIX: mdadm throws coredump on exit in error case
-Date: Thu, 13 Jan 2011 15:50:34 +0100
-Message-ID: <20110113145034.12728.14388.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 6/6] FIX: sync_completed == 0 causes reshape cancellation in
+	metadata
+Date: Thu, 13 Jan 2011 15:50:50 +0100
+Message-ID: <20110113145050.12728.43280.stgit@gklab-128-013.igk.intel.com>
 References: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,35 +14,32 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When mdadm falls in "reduce size" error on takeovered array it jumps
-to release and tries execute backward takeover. This time sra pointer is not initialized
-and coredump is generated.
+md signals reshape completion (whole area or parts) by setting sync_completed to 0.
+This causes in set_array_state() to rollback metadata changes (super-intel.c:4977.
+To avoid this do not allow for set last_checkpoint to 0 if reshape is finished.
+
+This was also root cause of my previous fix for finalization reshape that I agreed earlier is not necessary,
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ monitor.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 7cc6bae..f1a6218 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1594,7 +1594,7 @@ static int reshape_array(char *container, int cfd, int fd, char *devname,
- 	unsigned long cache;
- 	unsigned long long array_size;
- 	int done;
--	struct mdinfo *sra;
-+	struct mdinfo *sra = NULL;
- 	int info_reloaded = 0;
+diff --git a/monitor.c b/monitor.c
+index 1107d47..b7287d8 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -363,8 +363,10 @@ static int read_and_act(struct active_array *a)
+ 		/* Reshape has progressed or completed so we need to
+ 		 * update the array state - and possibly the array size
+ 		 */
+-		a->last_checkpoint = sync_completed;
++		if (sync_completed != 0)
++			a->last_checkpoint = sync_completed;
+ 		a->container->ss->set_array_state(a, a->curr_state <= clean);
++		a->last_checkpoint = sync_completed;
+ 	}
  
- 
-@@ -1802,7 +1802,6 @@ static int reshape_array(char *container, int cfd, int fd, char *devname,
- 	sra = sysfs_read(fd, 0,
- 			 GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE|GET_CHUNK|
- 			 GET_CACHE);
--
- 	if (!sra) {
- 		fprintf(stderr, Name ": %s: Cannot get array details from sysfs\n",
- 			devname);
+ 	if (sync_completed > a->last_checkpoint)
 
