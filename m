@@ -1,53 +1,74 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 6/6] raid0->raid10 takeover- allocate memory for added disks
-Date: Thu, 13 Jan 2011 16:33:09 +0100
-Message-ID: <20110113153308.20266.32688.stgit@gklab-128-111.igk.intel.com>
-References: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: open_dev_excl in reshape_container() fails
+Date: Thu, 13 Jan 2011 15:40:32 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Allocate memory necessary to add new dummy disks
-in process_update.
+Hi,
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- super-intel.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+I've got a problem using open_dev_excl() in reshape_container(), it fai=
+ls. This functions goes down
+and calls open() with flags O_DIRECT| O_RDWR| O_EXCL.
+It fails in reshape_container(), ealier in Grow_reshape() exactly the s=
+ame test call to open_dev_excl() succeed.=20
+Between test open and open in reshape_container() there is no other ope=
+n() performed (or other i/o operation that can cause problem).
+It not depends on mdmon action because it is the same for raid5 and rai=
+d0.
+=46unction open_dev() works, and I'm using it as workaround.
 
-diff --git a/super-intel.c b/super-intel.c
-index 63bd2d2..a7d7d08 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6224,6 +6224,24 @@ static void imsm_prepare_update(struct supertype *st,
- 	size_t len = 0;
- 
- 	switch (type) {
-+	case update_takeover: {
-+		struct imsm_update_takeover *u = (void *)update->buf;
-+		if (u->direction == R0_TO_R10) {
-+			void **tail = (void**)&update->space_list;
-+			void *space;
-+			int size = sizeof_imsm_dev(super->devlist->dev, 0) +
-+				(TAKEOVER_DISKS * sizeof(__u32));
-+			space = malloc(size);
-+			if (!space)
-+				break;
-+			*tail = space;
-+			tail = space;
-+			*tail = NULL;
-+
-+			len = disks_to_mpb_size(TAKEOVER_DISKS * 2);
-+		}
-+		break;
-+	}
- 	case update_reshape_container_disks: {
- 		/* Every raid device in the container is about to
- 		 * gain some more devices, and we will enter a
+In man pages for open() is told that O_EXCL flag should be used with O_=
+CREAT flag only.
+I've read in manual for open() also: "If O_EXCL is set and O_CREAT is n=
+ot set, the result is undefined"
+This can explain my experiences, about open_dev_excl() results.
 
+Please let me know if above is right? What tell you your tests?
+
+If mdadm needs some locking mechanism, probably we should use F_SETLK/F=
+_GETLK i.e.:
+    int fd =3D open("/dev/name", <flags>);
+
+   /* To lock the file/device */
+  =20
+    struct flock fl =3D { F_WRLCK, SEEK_SET, 0, 0, 0 };
+    fl.l_pid =3D getpid();
+    fcntl(ld, F_SETLK, &fl);
+
+    ...
+
+    / * To unlock the file/device */
+
+    struct flock fl =3D { F_UNLCK, SEEK_SET, 0, 0, 0 };
+    fl.l_pid =3D getpid();
+    fcntl(ld, F_SETLK, &fl);
+   =20
+    ...
+
+    close(fd);
+
+Please tell me your opinion, because I think we have got a problem.
+
+BR
+Adam
+
+
+-------------------------------------------------------------
+Intel Technology Poland Sp. z o.o.
+email: adam.kwolek@intel.com=A0=A0=A0=20
+phone: +48 58 766 1773
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
