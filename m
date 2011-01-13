@@ -1,107 +1,96 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored container
-Date: Thu, 13 Jan 2011 14:07:29 +1100
-Message-ID: <20110113140729.141ff645@notabene.brown>
-References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
-	<20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
-	<20110112164317.5ccfd59e@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176E1ADE0@irsmsx503.ger.corp.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 7/8] Finalize reshape after adding disks to array
+Date: Thu, 13 Jan 2011 09:25:24 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176E59C6F@irsmsx503.ger.corp.intel.com>
+References: <20110112132954.15045.41564.stgit@gklab-128-013.igk.intel.com>
+	<20110112135518.15045.88138.stgit@gklab-128-013.igk.intel.com>
+ <20110113134317.173c0b26@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1ADE0@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20110113134317.173c0b26@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
+To: NeilBrown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 12 Jan 2011 15:57:45 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
-
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Wednesday, January 12, 2011 6:43 AM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > Neubauer, Wojciech
-> > Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored container
-> > 
-> > On Tue, 11 Jan 2011 15:04:03 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> > wrote:
-> > 
-> > > This fix rolls backs some changes introduced by patch:
-> > > 	"Add spares to raid0 in mdadm"
-> > >
-> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > 
-> > It would help a lot if you explained *why* you were rolling back these
-> > changes.
-> > 
-> > Not applied.
-> > 
-> > NeilBrown
-> 
-> 
-> I cannot add spare to i.e. raid5 array. In my unit tests, I'm creating raid5 array and then I'm adding spares for expansion (mdadm --add).
-> If I've create container with more disks than create array that is using fewer disks, I can test expansion.
-> Spares can be added to raid0 with no monitor usage without problems.
-> I've started to observe this problem when patch for adding spares to raid0 was applied.
-> I've identify code change that makes problem. This causes this code rollback. 
-> 
-> Problem that is visible is  that. Monitor cannot write major:minor to new_dev in sysfs /without code roll back/.
-> I didn't dig this problem deeply. This patch is rather reminder to signalize problem /and not forget about it/.
-> 
-
-Fair enough.
-Having a patch which works around a problem and reminds you to fix it later
-is a good idea.  However you should make sure that the notes at the top of
-the patch make it clear that is the purpose of the patch  - especially when
-you post it to me.
-It is just SO important to include completed details in the notes at the top
-of the patch!!!!
-
-NeilBrown
 
 
-> BR
-> Adam
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Thursday, January 13, 2011 3:43 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 7/8] Finalize reshape after adding disks to array
 > 
-> > 
-> > > ---
-> > >
-> > >  Manage.c |    8 ++++----
-> > >  1 files changed, 4 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/Manage.c b/Manage.c
-> > > index 4e6afb5..fa1b13f 100644
-> > > --- a/Manage.c
-> > > +++ b/Manage.c
-> > > @@ -800,16 +800,16 @@ int Manage_subdevs(char *devname, int fd,
-> > >  				if (dv->writemostly == 1)
-> > >  					disc.state |= 1 << MD_DISK_WRITEMOSTLY;
-> > >  				dfd = dev_open(dv->devname, O_RDWR |
-> > O_EXCL|O_DIRECT);
-> > > -				if (tst->ss->external &&
-> > > -				    mdmon_running(tst->container_dev))
-> > > -					tst->update_tail = &tst->updates;
-> > >  				if (tst->ss->add_to_super(tst, &disc, dfd,
-> > >  							  dv->devname)) {
-> > >  					close(dfd);
-> > >  					return 1;
-> > >  				}
-> > >  				/* write_init_super will close 'dfd' */
-> > > -				if (tst->ss->write_init_super(tst))
-> > > +				if (tst->ss->external)
-> > > +					/* mdmon will write the metadata */
-> > > +					close(dfd);
-> > > +				else if (tst->ss->write_init_super(tst))
-> > >  					return 1;
-> > >  			} else if (dv->re_add) {
-> > >  				/*  this had better be raid1.
+> On Wed, 12 Jan 2011 14:55:18 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > When reshape is finished, monitor has to finalize reshape in metadata
+> for curent array.
+> > To do this set_array_state() should be called.
+> > This finishes migration and stores metadata on disks.
+> >
+> > This finishes reshape flow in mdmon.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  monitor.c |   11 +++++++++++
+> >  1 files changed, 11 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/monitor.c b/monitor.c
+> > index 1107d47..a0068d3 100644
+> > --- a/monitor.c
+> > +++ b/monitor.c
+> > @@ -322,6 +322,17 @@ static int read_and_act(struct active_array *a)
+> >  		 */
+> >  		check_reshape = 1;
+> >
+> > +	/* finalize reshape detection
+> > +	 */
+> > +	if ((a->curr_action != reshape) &&
+> > +	    (a->prev_action == reshape)) {
+> > +		/* A reshape has finished.
+> > +		 * Some disks may be in sync now.
+> > +		 */
+> > +		a->container->ss->set_array_state(a, a->curr_state <=
+> clean);
+> > +		check_degraded = 1;
+> > +	}
+> > +
+> >  	/* Check for failures and if found:
+> >  	 * 1/ Record the failure in the metadata and unblock the device.
+> >  	 *    FIXME update the kernel to stop notifying on failed drives
+> when
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> One day you will explain to me why the current code isn't sufficient
+> like I
+> keep asking you do.  Then maybe I'll apply this patch.
+> 
+> Until then, I won't.
+> 
+> NeilBrown
+
+I've made some tests and you are right, current code is enough.
+
+Thanks
+Adam
+
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
