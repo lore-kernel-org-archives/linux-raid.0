@@ -1,146 +1,188 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: RE: [PATCH 2/9] FIX: Cannot add spare to monitored container
-Date: Thu, 13 Jan 2011 15:15:21 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E8FE023@irsmsx504.ger.corp.intel.com>
-References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
-	<20110111140403.13862.8338.stgit@gklab-128-013.igk.intel.com>
-	<20110112164317.5ccfd59e@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176E1ADE0@irsmsx503.ger.corp.intel.com>
- <20110113140729.141ff645@notabene.brown>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH 1/6] Define imsm_analyze_change function
+Date: Thu, 13 Jan 2011 16:32:27 +0100
+Message-ID: <20110113153227.20266.42368.stgit@gklab-128-111.igk.intel.com>
+References: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113140729.141ff645@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-With this problem we are not able to move any spare to imsm container 
-and so most of Monitor tests fail at the moment.
-Regards 
-Anna
+Function intended to use for single volume migration.
+Function analyze transition and validate if it is supported.
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Thursday, January 13, 2011 4:07 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored container
-> 
-> On Wed, 12 Jan 2011 15:57:45 +0000 "Kwolek, Adam"
-> <adam.kwolek@intel.com>
-> wrote:
-> 
-> > > -----Original Message-----
-> > > From: NeilBrown [mailto:neilb@suse.de]
-> > > Sent: Wednesday, January 12, 2011 6:43 AM
-> > > To: Kwolek, Adam
-> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > > Neubauer, Wojciech
-> > > Subject: Re: [PATCH 2/9] FIX: Cannot add spare to monitored
-> container
-> > >
-> > > On Tue, 11 Jan 2011 15:04:03 +0100 Adam Kwolek
-> <adam.kwolek@intel.com>
-> > > wrote:
-> > >
-> > > > This fix rolls backs some changes introduced by patch:
-> > > > 	"Add spares to raid0 in mdadm"
-> > > >
-> > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > >
-> > > It would help a lot if you explained *why* you were rolling back
-> these
-> > > changes.
-> > >
-> > > Not applied.
-> > >
-> > > NeilBrown
-> >
-> >
-> > I cannot add spare to i.e. raid5 array. In my unit tests, I'm
-> creating raid5 array and then I'm adding spares for expansion (mdadm --
-> add).
-> > If I've create container with more disks than create array that is
-> using fewer disks, I can test expansion.
-> > Spares can be added to raid0 with no monitor usage without problems.
-> > I've started to observe this problem when patch for adding spares to
-> raid0 was applied.
-> > I've identify code change that makes problem. This causes this code
-> rollback.
-> >
-> > Problem that is visible is  that. Monitor cannot write major:minor to
-> new_dev in sysfs /without code roll back/.
-> > I didn't dig this problem deeply. This patch is rather reminder to
-> signalize problem /and not forget about it/.
-> >
-> 
-> Fair enough.
-> Having a patch which works around a problem and reminds you to fix it
-> later
-> is a good idea.  However you should make sure that the notes at the top
-> of
-> the patch make it clear that is the purpose of the patch  - especially
-> when
-> you post it to me.
-> It is just SO important to include completed details in the notes at
-> the top
-> of the patch!!!!
-> 
-> NeilBrown
-> 
-> 
-> > BR
-> > Adam
-> >
-> > >
-> > > > ---
-> > > >
-> > > >  Manage.c |    8 ++++----
-> > > >  1 files changed, 4 insertions(+), 4 deletions(-)
-> > > >
-> > > > diff --git a/Manage.c b/Manage.c
-> > > > index 4e6afb5..fa1b13f 100644
-> > > > --- a/Manage.c
-> > > > +++ b/Manage.c
-> > > > @@ -800,16 +800,16 @@ int Manage_subdevs(char *devname, int fd,
-> > > >  				if (dv->writemostly == 1)
-> > > >  					disc.state |= 1 <<
-> MD_DISK_WRITEMOSTLY;
-> > > >  				dfd = dev_open(dv->devname, O_RDWR |
-> > > O_EXCL|O_DIRECT);
-> > > > -				if (tst->ss->external &&
-> > > > -				    mdmon_running(tst->container_dev))
-> > > > -					tst->update_tail = &tst->updates;
-> > > >  				if (tst->ss->add_to_super(tst, &disc,
-> dfd,
-> > > >  							  dv->devname)) {
-> > > >  					close(dfd);
-> > > >  					return 1;
-> > > >  				}
-> > > >  				/* write_init_super will close 'dfd' */
-> > > > -				if (tst->ss->write_init_super(tst))
-> > > > +				if (tst->ss->external)
-> > > > +					/* mdmon will write the metadata */
-> > > > +					close(dfd);
-> > > > +				else if (tst->ss->write_init_super(tst))
-> > > >  					return 1;
-> > > >  			} else if (dv->re_add) {
-> > > >  				/*  this had better be raid1.
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ super-intel.c |  135 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 124 insertions(+), 11 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index 4cbb070..c12ba74 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6576,16 +6576,110 @@ static void imsm_update_metadata_locally(struct supertype *st,
+ 	}
+ }
+ 
+-/*******************************************************************************
++/***************************************************************************
+ * Function:	imsm_analyze_change
+-* Description:	Function analyze and validate change for single volume migration
++* Description:	Function analyze change for single volume
++* 		and validate if transition is supported
+ * Parameters:	Geometry parameters, supertype structure
+ * Returns:	Operation type code on success, -1 if fail
+-********************************************************************************/
+-enum imsm_reshape_type imsm_analyze_change(
+-	struct supertype *st, struct geo_params *geo)
++****************************************************************************/
++enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
++						struct geo_params *geo)
+ {
+-	return -1;
++	struct mdinfo info;
++	int change = -1;
++	int check_devs = 0;
++
++	getinfo_super_imsm_volume(st, &info, NULL);
++
++	if ((geo->level != info.array.level) &&
++		(geo->level >= 0) &&
++		(geo->level != UnSet)) {
++		switch (info.array.level) {
++		case 0:
++			if (geo->level == 5) {
++				change = CH_LEVEL_MIGRATION;
++				check_devs = 1;
++			}
++			if (geo->level == 10) {
++				change = CH_TAKEOVER;
++				check_devs = 1;
++			}
++			break;
++		case 5:
++			if (geo->level != 0)
++				change = CH_LEVEL_MIGRATION;
++			break;
++		case 10:
++			if (geo->level == 0) {
++				change = CH_TAKEOVER;
++				check_devs = 1;
++			}
++			break;
++		}
++		if (change == -1) {
++			fprintf(stderr, Name " Error. Level Migration from %d to %d "\
++				"not supported!\n", info.array.level, geo->level);
++			goto analyse_change_exit;
++		}
++	} else {
++		geo->level = info.array.level;
++	}
++
++	if ((geo->layout != info.array.layout)
++		&& ((geo->layout != UnSet) && (geo->layout != -1))) {
++		change = CH_LEVEL_MIGRATION;
++		if ((info.array.layout == 0) && (info.array.level == 5)
++			&& (geo->layout == 5)) {
++			/* reshape 5 -> 4 */
++		} else if ((info.array.layout == 5)
++				&& (info.array.level == 5)
++				&& (geo->layout == 0)) {
++			/* reshape 4 -> 5 */
++			geo->layout = 0;
++			geo->level = 5;
++		} else {
++			fprintf(stderr, Name " Error. Layout Migration from %d to %d "\
++				"not supported!\n", info.array.layout, geo->layout);
++			change = -1;
++			goto analyse_change_exit;
++		}
++	} else {
++		geo->layout = info.array.layout;
++	}
++
++	if ((geo->chunksize > 0) && (geo->chunksize != UnSet)
++		&& (geo->chunksize != info.array.chunk_size)) {
++		change = CH_CHUNK_MIGR;
++	} else {
++		geo->chunksize = info.array.chunk_size;
++	}
++
++	if (!validate_geometry_imsm(st,
++					geo->level,
++					geo->layout,
++					geo->raid_disks,
++					(geo->chunksize / 1024),
++					geo->size,
++					0, 0, 1))
++		change = -1;
++
++	if (check_devs) {
++		struct intel_super *super = st->sb;
++		struct imsm_super *mpb = super->anchor;
++
++		if (mpb->num_raid_devs > 1) {
++			fprintf(stderr, Name " Error. Cannot perform operation on %s"\
++				"- for this operation it MUST be single "\
++			       "array in container\n",
++				geo->dev_name);
++			change = -1;
++		}
++	}
++
++analyse_change_exit:
++
++	return change;
+ }
+ 
+ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+@@ -6649,18 +6743,37 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		* - chunk size migration
+ 		* - migration: raid5 -> raid0; raid0 -> raid5
+ 		*/
+-		int change;
++		struct intel_super *super = st->sb;
++		struct intel_dev *dev = super->devlist;
++		int change, devnum;
+ 		dprintf("imsm: info: Volume operation\n");
++		/* find requested device */
++		while (dev) {
++			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
++			if (devnum == geo.dev_id)
++				break;
++			dev = dev->next;
++		}
++		if (dev == NULL) {
++			fprintf(stderr, Name " Cannot find %s (%i) subarray\n",
++					geo.dev_name, geo.dev_id);
++				goto exit_imsm_reshape_super;
++		}
++		super->current_vol = dev->index;
+ 		change = imsm_analyze_change(st, &geo);
+ 		switch (change) {
+ 			case CH_TAKEOVER:
+-			break;
++				ret_val = 0;
++				break;
+ 			case CH_CHUNK_MIGR:
+-			break;
++				ret_val = 0;
++				break;
+ 			case CH_LEVEL_MIGRATION:
+-			break;
++				ret_val = 0;
++				break;
++			default:
++				ret_val = 1;
+ 		}
+-		ret_val = 0;
+ 	}
+ 
+ exit_imsm_reshape_super:
+
