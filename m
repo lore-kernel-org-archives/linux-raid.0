@@ -1,96 +1,48 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 7/8] Finalize reshape after adding disks to array
-Date: Thu, 13 Jan 2011 09:25:24 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176E59C6F@irsmsx503.ger.corp.intel.com>
-References: <20110112132954.15045.41564.stgit@gklab-128-013.igk.intel.com>
-	<20110112135518.15045.88138.stgit@gklab-128-013.igk.intel.com>
- <20110113134317.173c0b26@notabene.brown>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: linux-next - WARNING: at fs/block_dev.c:824
+ bd_link_disk_holder+0x92/0x1ac()
+Date: Thu, 13 Jan 2011 12:06:40 +0100
+Message-ID: <20110113110640.GC30719@htj.dyndns.org>
+References: <16069.1294853673@localhost>
+ <4D2E4611.90002@redhat.com>
+ <4D2E6129.8000700@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113134317.173c0b26@notabene.brown>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D2E6129.8000700@ce.jp.nec.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Milan Broz <mbroz@redhat.com>, Valdis.Kletnieks@vt.edu, Alexander Viro <viro@zeniv.linux.org.uk>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
+Hello,
 
+On Thu, Jan 13, 2011 at 11:19:21AM +0900, Jun'ichi Nomura wrote:
+> > "block: simplify holder symlink handling"
+> > 
+> > dm linear just claims device in table constructor, I don't think it is bug in DM code.
+> 
+> The patch assumes only one holder disk for a claimed dev, which is not true.
+> E.g. if there are multiple LVs on a PV.
+> 
+> In addition to that, since claiming is done in table constructor,
+> there can be 2 claim instances for a slave/holder pair at a time
+> when you load a table while there's already an active one.
+> E.g. if you do lvresize.
+> We need consideration for this, too.
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Thursday, January 13, 2011 3:43 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 7/8] Finalize reshape after adding disks to array
-> 
-> On Wed, 12 Jan 2011 14:55:18 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > When reshape is finished, monitor has to finalize reshape in metadata
-> for curent array.
-> > To do this set_array_state() should be called.
-> > This finishes migration and stores metadata on disks.
-> >
-> > This finishes reshape flow in mdmon.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
-> >
-> >  monitor.c |   11 +++++++++++
-> >  1 files changed, 11 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/monitor.c b/monitor.c
-> > index 1107d47..a0068d3 100644
-> > --- a/monitor.c
-> > +++ b/monitor.c
-> > @@ -322,6 +322,17 @@ static int read_and_act(struct active_array *a)
-> >  		 */
-> >  		check_reshape = 1;
-> >
-> > +	/* finalize reshape detection
-> > +	 */
-> > +	if ((a->curr_action != reshape) &&
-> > +	    (a->prev_action == reshape)) {
-> > +		/* A reshape has finished.
-> > +		 * Some disks may be in sync now.
-> > +		 */
-> > +		a->container->ss->set_array_state(a, a->curr_state <=
-> clean);
-> > +		check_degraded = 1;
-> > +	}
-> > +
-> >  	/* Check for failures and if found:
-> >  	 * 1/ Record the failure in the metadata and unblock the device.
-> >  	 *    FIXME update the kernel to stop notifying on failed drives
-> when
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> One day you will explain to me why the current code isn't sufficient
-> like I
-> keep asking you do.  Then maybe I'll apply this patch.
-> 
-> Until then, I won't.
-> 
-> NeilBrown
+Urgh... gees, so there actually was a user using all that cruft.
+Sorry about the breakage, I'll see how multiple symlinks can be
+restored.  I'm curious why this was added at all tho.  What was the
+rationalization?  It's not like two subsystems can share the same
+block device so marking the currently owning subsystem should have
+been enough at the block layer.  There is no reason for block devices
+to present information which is of no use to itself.  All that's
+necessary is "this is taken by dm or md for more information, query
+those".  dm and md need their own conf/representation layer anyway.
 
-I've made some tests and you are right, current code is enough.
+Thanks.
 
-Thanks
-Adam
-
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
