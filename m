@@ -1,49 +1,47 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH] fix: segfault if subarray is monitored but container is not
-Date: Thu, 13 Jan 2011 13:22:16 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E8FDE84@irsmsx504.ger.corp.intel.com>
+From: Karel Zak <kzak@redhat.com>
+Subject: Re: [dm-devel] linux-next - WARNING: at fs/block_dev.c:824
+	bd_link_disk_holder+0x92/0x1ac()
+Date: Thu, 13 Jan 2011 14:26:37 +0100
+Message-ID: <20110113132637.GH16523@nb.net.home>
+References: <16069.1294853673@localhost> <4D2E4611.90002@redhat.com> <4D2E6129.8000700@ce.jp.nec.com> <20110113110640.GC30719@htj.dyndns.org> <4D2EE156.1050006@redhat.com> <20110113122701.GG16523@nb.net.home> <20110113131216.GF30719@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20110113131216.GF30719@htj.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Milan Broz <mbroz@redhat.com>, device-mapper development <dm-devel@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Valdis.Kletnieks@vt.edu, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 List-Id: linux-raid.ids
 
-From 7ea892adec6d2f383059b2a337db766735d7217f Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Thu, 13 Jan 2011 14:14:57 +0100
-Subject: [PATCH] fix: segfault if subarray is monitored but container is not
+On Thu, Jan 13, 2011 at 02:12:16PM +0100, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Jan 13, 2011 at 01:27:01PM +0100, Karel Zak wrote:
+> >  We also use holders/slaves links in libblkid to evaluate dependencies
+> >  between devices (since 2008).
+> > 
+> > > Whatever changes are needed, please keep this functionality, it
+> > > can be useful.
+> > 
+> >  Definitely.
+> 
+> Yeah, sure, it's not like I can afford to avoid fixing it at this
+> point anyway, but I still want to point out it's at the wrong layer
+> and shouldn't have been added like this, really.  If you want blkid to
+> identify it, the proper thing to do would be querying blk device for
+> the claimer and then use claimer-specific method to query them.  It's
 
-In this situation to->parent is null so "to" doesn't change to
-parent container and to->metadata is still null.
-This results in segmentation fault when checking
-to->metadata->ss->external.
-We should just skip this array as container is needed to move spares to.
+ It seems that dependencies (holders/slaves) between devices is pretty
+ generic thing. Why do you think that we need claimer-specific method?
+ The /sys filesystem is better that ictls in many ways.
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- Monitor.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+> not like the current method would make sense for btrfs or whatnot.
 
-diff --git a/Monitor.c b/Monitor.c
-index db4e8cc..ab1ae26 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -833,6 +833,11 @@ static void try_spare_migration(struct state *statelist, struct alert_info *info
- 			struct state *to = st;
- 			unsigned long long min_size;
- 
-+			if (to->parent_dev != NoMdDev && !to->parent)
-+				/* subarray monitored without parent container
-+				 * we can't move spares here */
-+				continue;
-+			
- 			if (to->parent)
- 				/* member of a container */
- 				to = to->parent;
+ Could you be more verbose, please?
+
+    Karel
+
 -- 
-1.7.1
-
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
