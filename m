@@ -1,106 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
-Date: Thu, 13 Jan 2011 13:51:34 +1100
-Message-ID: <20110113135134.584c1264@notabene.brown>
-References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
-	<20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
+Subject: Re: [PATCH 6/9] imsm: FIX: container content gathering is not
+ needed for size set
+Date: Thu, 13 Jan 2011 14:04:38 +1100
+Message-ID: <20110113140438.6f62ef2b@notabene.brown>
+References: <20110111135227.13862.88465.stgit@gklab-128-013.igk.intel.com>
+	<20110111140435.13862.5816.stgit@gklab-128-013.igk.intel.com>
+	<20110112165239.720cb9e4@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D176E1AD80@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E1AD80@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 12 Jan 2011 17:01:32 +0100 Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
+On Wed, 12 Jan 2011 15:30:50 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> Neil,
-> How was your intention when you add this part of code?
-> I can't find the case when it will be necessary.
-> Moreover it breaks flow for takeover operations because
-> ioctl not succeeded when more than one parameter is changed.
-> I've remove this code temporally to be able test takeover
-> operations.
-> We can restore this code after we decide what it should do.
+> 
+> 
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Wednesday, January 12, 2011 6:53 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Neubauer, Wojciech
+> > Subject: Re: [PATCH 6/9] imsm: FIX: container content gathering is not
+> > needed for size set
+> > 
+> > On Tue, 11 Jan 2011 15:04:35 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> > wrote:
+> > 
+> > > Size information is loaded already and there is no need to load it
+> > again,
+> > > when metadata is not reloaded.
+> > 
+> > Why do you say that?  It seems wrong.
+> > 
+> > When growing an array, the size will not change until the reshape
+> > completes.
+> > When it does complete, it will be mdmon which updates the metadata and
+> > records in it the desired size of the array.
+> > 
+> > The only way mdadm can find this number out is by loading the metadata.
+> > 
+> > Where am I wrong?
+> > 
+> > NeilBrown
+> 
+> Size is set in metadata, before reshape start in reshape_super() and remains unchanged during whole reshape.
+> After reshape this value doesn't change in metadata also.
+> It is possible that this behavior is imsm specific, and for general case reload is required as you describes.
+> 
 
-Asking what the purpose of some code is is perfectly OK.  Asking by sending a
-patch which removes the code seems ... odd.
+If reshape_super does to that (and it looks like it does) then I strongly
+suspect that it is wrong.
 
-If the number of data devices is 1, then a RAID5 can have layout/chunksize
-changed without any restriping.
-This code handles that case.
+While an array is in the middle of a migration from one configuration to
+another its effective size must be the smaller of those two sizes.
+So when we add a device to a RAID5, the device size must stay unchanged until
+the migration completes.  At the moment when the migration completes the size
+can change, not before.  So I suspect that the size recorded in the metadata
+should be the smaller size.
+
+So I think that apply_reshape_container_disks_update and
+imsm_progress_container_reshape need to be fixed to change the size after the migration.
 
 NeilBrown
-
-
-> 
-> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> ---
->  Grow.c |   43 +++++--------------------------------------
->  1 files changed, 5 insertions(+), 38 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 253f289..6835f34 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1666,6 +1666,11 @@ static int reshape_array(char *container, int fd, char *devname,
->  		ping_monitor(container);
->  	}
->  
-> +	if (reshape.backup_blocks == 0) {
-> +		/* If operation not not reuire re-striping we can finish */
-> +		return rv;
-> +	}
-> +
->  	/* ->reshape_super might have chosen some spares from the
->  	 * container that it wants to be part of the new array.
->  	 * We can collect them with ->container_content and give
-> @@ -1692,44 +1697,6 @@ static int reshape_array(char *container, int fd, char *devname,
->  		}
->  	}
->  
-> -	if (reshape.backup_blocks == 0) {
-> -		/* No restriping needed, but we might need to impose
-> -		 * some more changes: layout, raid_disks, chunk_size
-> -		 */
-> -		if (info->new_layout != UnSet &&
-> -		    info->new_layout != info->array.layout) {
-> -			info->array.layout = info->new_layout;
-> -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-> -				fprintf(stderr, Name ": failed to set new layout\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("layout for %s set to %d\n",
-> -				       devname, info->array.layout);
-> -		}
-> -		if (info->delta_disks != UnSet &&
-> -		    info->delta_disks != 0) {
-> -			info->array.raid_disks += info->delta_disks;
-> -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-> -				fprintf(stderr, Name ": failed to set raid disks\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("raid_disks for %s set to %d\n",
-> -				       devname, info->array.raid_disks);
-> -		}
-> -		if (info->new_chunk != 0 &&
-> -		    info->new_chunk != info->array.chunk_size) {
-> -			if (sysfs_set_num(info, NULL,
-> -					  "chunk_size", info->new_chunk) != 0) {
-> -				fprintf(stderr, Name ": failed to set chunk size\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("chunk size for %s set to %d\n",
-> -				       devname, info->array.chunk_size);
-> -		}
-> -
-> -		return rv;
-> -	}
-> -
->  	/*
->  	 * There are three possibilities.
->  	 * 1/ The array will shrink.
 
