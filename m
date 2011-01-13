@@ -1,78 +1,37 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/6] Define imsm_analyze_change function
-Date: Thu, 13 Jan 2011 13:46:30 +1100
-Message-ID: <20110113134630.6afbd4ed@notabene.brown>
+Subject: Re: [PATCH 3/6] Set delta_disks for raid10 -> raid0 takeover
+Date: Thu, 13 Jan 2011 13:48:20 +1100
+Message-ID: <20110113134820.0b6b0a63@notabene.brown>
 References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
-	<20110112160106.18013.76270.stgit@gklab-128-111.igk.intel.com>
+	<20110112160115.18013.26281.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110112160106.18013.76270.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110112160115.18013.26281.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 12 Jan 2011 17:01:06 +0100 Krzysztof Wojcik
+On Wed, 12 Jan 2011 17:01:15 +0100 Krzysztof Wojcik
 <krzysztof.wojcik@intel.com> wrote:
 
-> Function intended to use for single volume migration.
-> Function analyze transition and validate if it is supported.
+> remove_disks_on_raid10_to_raid0_takeover function has been
+> changed to return number of removed disks.
+> Returned value is used to set info.delta_disks to proper value.
+> Part of code used to set delta_disks for case when raid_disks
+> is not zero has been moved above remove_disks_on_raid10_to_raid0_takeover
+> function to avoid overwrite delta_disks variable.
 > 
 > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> ---
->  super-intel.c |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
->  1 files changed, 125 insertions(+), 9 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 8c1ed4e..81f8e81 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -6549,15 +6549,127 @@ static void imsm_update_metadata_locally(struct supertype *st,
->  	}
->  }
->  
-> -/**************************************************************************************
-> +/***************************************************************************
-> +>>>>>>> 686d792... Define imsm_analyze_change function:super-intel.c
 
-Leaving that sort of thing in the patch is a bad idea....
+I'm not really sure what this is trying to do, but it is doing it wrongly.
 
-
-
->  * Function:	imsm_analyze_change
-> -* Description:	Function analyze and validate change for single volume migration
-> +* Description:	Function analyze change for single volume
-> +* 		and validate if transition is supported
->  * Parameters:	Geometry parameters, supertype structure
->  * Returns:	Operation type code on success, -1 if fail
-> -*************************************************************************************/
-> -enum imsm_reshape_type imsm_analyze_change(struct supertype *st, struct geo_params *geo)
-> +****************************************************************************/
-> +enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
-> +						struct geo_params *geo)
->  {
-> -	return -1;
-> +	int fd = -1;
-> +	struct mdinfo *sra = NULL;
-> +	int change = -1;
-> +	int check_devs = 0;
-> +
-> +	fd = open_dev(geo->dev_id);
-> +	if (fd < 0) {
-> +		printf("imsm: Error. Cannot open %s device\n", geo->dev_name);
-> +		return -1;
-> +	}
-> +
-> +	sra = sysfs_read(fd, 0,
-> +			GET_DISKS | GET_LAYOUT | GET_CHUNK |
-> +			GET_SIZE | GET_LEVEL | GET_DEVS);
-
-
-loading info from the array is the wrong thing to do.  You have to superblock
-in st - you should use that to determine the current state of the array.
-Maybe use getinfo_super_imsm or something.
+delta_disks should be the number to reduce 'raid_disks' by.  So when
+converting a copies=2 raid10 to a raid0 it must be exactly half of raid_disks.
+But you are counting the number of active disks that get removed.  That is
+wrong and there could be some faulty disks that get removed as well.
 
 Not applied.
 
@@ -80,125 +39,92 @@ NeilBrown
 
 
 
-> +	if (!sra) {
-> +		dprintf("imsm: Error. Cannot get mdinfo for %s!\n", geo->dev_name);
-> +		goto analyse_change_exit;
-> +	}
-> +
-> +	if ((geo->level != sra->array.level) &&
-> +		(geo->level >= 0) &&
-> +		(geo->level != UnSet)) {
-> +		switch (sra->array.level) {
-> +		case 0:
-> +			if (geo->level == 5) {
-> +				change = CH_LEVEL_MIGRATION;
-> +				check_devs = 1;
-> +			}
-> +			if (geo->level == 10) {
-> +				change = CH_TAKEOVER;
-> +				check_devs = 1;
-> +			}
-> +			break;
-> +		case 5:
-> +			if (geo->level != 0)
-> +				change = CH_LEVEL_MIGRATION;
-> +			break;
-> +		case 10:
-> +			if (geo->level == 0) {
-> +				change = CH_TAKEOVER;
-> +				check_devs = 1;
-> +			}
-> +			break;
-> +		}
-> +		if (change == -1) {
-> +			dprintf("imsm: Error. Level Migration from %d to %d "\
-> +				"not supported!\n", sra->array.level, geo->level);
-> +			goto analyse_change_exit;
-> +		}
-> +	} else {
-> +		geo->level = sra->array.level;
-> +	}
-> +
-> +	if ((geo->layout != sra->array.layout)
-> +		&& ((geo->layout != UnSet) && (geo->layout != -1))) {
-> +		change = CH_LEVEL_MIGRATION;
-> +		if ((sra->array.layout == 0) && (sra->array.level == 5)
-> +			&& (geo->layout == 5)) {
-> +			/* reshape 5 -> 4 */
-> +		} else if ((sra->array.layout == 5)
-> +				&& (sra->array.level == 5)
-> +				&& (geo->layout == 0)) {
-> +			/* reshape 4 -> 5 */
-> +			geo->layout = 0;
-> +			geo->level = 5;
-> +		} else {
-> +			dprintf("imsm: Error. Layout Migration from %d to %d "\
-> +				"not supported!\n", sra->array.layout, geo->layout);
-> +			change = -1;
-> +			goto analyse_change_exit;
-> +		}
-> +	} else {
-> +		geo->layout = sra->array.layout;
-> +	}
-> +
-> +	if ((geo->chunksize > 0) && (geo->chunksize != UnSet)
-> +		&& (geo->chunksize != sra->array.chunk_size)) {
-> +		change = CH_CHUNK_MIGR;
-> +	} else {
-> +		geo->chunksize = sra->array.chunk_size;
-> +	}
-> +
-> +	if (!validate_geometry_imsm(st,
-> +					geo->level,
-> +					geo->layout,
-> +					geo->raid_disks,
-> +					(geo->chunksize / 1024),
-> +					geo->size,
-> +					0, 0, 1))
-> +		change = -1;
-> +
-> +	if (check_devs) {
-> +		struct intel_super *super = st->sb;
-> +		struct imsm_super *mpb = super->anchor;
-> +
-> +		if (mpb->num_raid_devs > 1) {
-> +			printf("imsm: Error. Cannot perform operation on %s"\
-> +				"- for this operation it MUST be single "\
-> +			       "array in container\n",
-> +				geo->dev_name);
-> +			change = -1;
-> +		}
-> +	}
-> +
-> +analyse_change_exit:
-> +	sysfs_free(sra);
-> +	if (fd > -1)
-> +		close(fd);
-> +
-> +	return change;
->  }
+
+
+> ---
+>  Grow.c |   34 +++++++++++++++++++---------------
+>  1 files changed, 19 insertions(+), 15 deletions(-)
+> 
+> diff --git a/Grow.c b/Grow.c
+> index 3455115..c06561f 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -666,6 +666,7 @@ int remove_disks_on_raid10_to_raid0_takeover(struct supertype *st,
+>  	int nr_of_copies;
+>  	struct mdinfo *remaining;
+>  	int slot;
+> +	int delta = 0;
 >  
->  static int imsm_reshape_super(struct supertype *st, long long size, int level,
-> @@ -6623,13 +6735,17 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  		change = imsm_analyze_change(st, &geo);
->  		switch (change) {
->  			case CH_TAKEOVER:
-> -			break;
-> +				ret_val = 0;
-> +				break;
->  			case CH_CHUNK_MIGR:
-> -			break;
-> +				ret_val = 0;
-> +				break;
->  			case CH_LEVEL_MIGRATION:
-> -			break;
-> +				ret_val = 0;
-> +				break;
-> +			default:
-> +				ret_val = 1;
->  		}
-> -		ret_val = 0;
+>  	nr_of_copies = layout & 0xff;
+>  
+> @@ -710,7 +711,7 @@ int remove_disks_on_raid10_to_raid0_takeover(struct supertype *st,
+>  			e = &(*e)->next;
+>  		*e = sra->devs;
+>  		sra->devs = remaining;
+> -		return 1;
+> +		return 0;
 >  	}
 >  
->  exit_imsm_reshape_super:
+>  	/* Remove all 'remaining' devices from the array */
+> @@ -725,8 +726,9 @@ int remove_disks_on_raid10_to_raid0_takeover(struct supertype *st,
+>  		sd->disk.state &= ~(1<<MD_DISK_SYNC);
+>  		sd->next = sra->devs;
+>  		sra->devs = sd;
+> +		delta--;
+>  	}
+> -	return 0;
+> +	return delta;
+>  }
+>  
+>  void reshape_free_fdlist(int *fdlist,
+> @@ -1456,6 +1458,17 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			size = array.size;
+>  	}
+>  
+> +	info.array = array;
+> +	sysfs_init(&info, fd, NoMdDev);
+> +	strcpy(info.text_version, sra->text_version);
+> +	info.component_size = size*2;
+> +	info.new_level = level;
+> +	info.new_chunk = chunksize * 1024;
+> +	if (raid_disks)
+> +		info.delta_disks = raid_disks - info.array.raid_disks;
+> +	else
+> +		info.delta_disks = UnSet;
+> +
+>  	/* ========= check for Raid10 -> Raid0 conversion ===============
+>  	 * current implementation assumes that following conditions must be met:
+>  	 * - far_copies == 1
+> @@ -1463,27 +1476,18 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  	 */
+>  	if (level == 0 && array.level == 10 && sra &&
+>  	    array.layout == ((1 << 8) + 2) && !(array.raid_disks & 1)) {
+> -		int err;
+> -		err = remove_disks_on_raid10_to_raid0_takeover(st, sra, array.layout);
+> -		if (err) {
+> +		int rv;
+> +		rv = remove_disks_on_raid10_to_raid0_takeover(st, sra, array.layout);
+> +		if (!rv) {
+>  			dprintf(Name": Array cannot be reshaped\n");
+>  			if (cfd > -1)
+>  				close(cfd);
+>  			rv = 1;
+>  			goto release;
+>  		}
+> +		info.delta_disks = rv;
+>  	}
+>  
+> -	info.array = array;
+> -	sysfs_init(&info, fd, NoMdDev);
+> -	strcpy(info.text_version, sra->text_version);
+> -	info.component_size = size*2;
+> -	info.new_level = level;
+> -	info.new_chunk = chunksize * 1024;
+> -	if (raid_disks)
+> -		info.delta_disks = raid_disks - info.array.raid_disks;
+> -	else
+> -		info.delta_disks = UnSet;
+>  	if (layout_str == NULL) {
+>  		info.new_layout = UnSet;
+>  		if (info.array.level == 6 &&
 
