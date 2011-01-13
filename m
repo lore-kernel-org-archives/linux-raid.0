@@ -1,170 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] block: restore multiple bd_link_disk_holder() support
-Date: Thu, 13 Jan 2011 18:21:33 +0100
-Message-ID: <20110113172133.GE14096@htj.dyndns.org>
-References: <16069.1294853673@localhost>
- <4D2E4611.90002@redhat.com>
- <4D2E6129.8000700@ce.jp.nec.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: open_dev_excl in reshape_container() fails
+Date: Thu, 13 Jan 2011 09:27:34 -0800
+Message-ID: <AANLkTinKyBbX7S-yaM_FG=HU0ABuAzw+FxaUgdZPzy0Q@mail.gmail.com>
+References: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D2E6129.8000700@ce.jp.nec.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Milan Broz <mbroz@redhat.com>, Valdis.Kletnieks@vt.edu, Alexander Viro <viro@zeniv.linux.org.uk>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Kay Sievers <kay.sievers@vrfy.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Commit e09b457b (block: simplify holder symlink handling) incorrectly
-assumed that there is only one holder at maximum.  dm may use multiple
-holders.  Remove the single holder assumption and automatic removal of
-the link.  Let the callers explicitly remove them.  This change makes
-it even more alien from the rest of the block layer.
+2011/1/13 Kwolek, Adam <adam.kwolek@intel.com>:
+> Hi,
+>
+> I've got a problem using open_dev_excl() in reshape_container(), it fails. This functions goes down
+> and calls open() with flags O_DIRECT| O_RDWR| O_EXCL.
+> It fails in reshape_container(), ealier in Grow_reshape() exactly the same test call to open_dev_excl() succeed.
+> Between test open and open in reshape_container() there is no other open() performed (or other i/o operation that can cause problem).
+> It not depends on mdmon action because it is the same for raid5 and raid0.
+> Function open_dev() works, and I'm using it as workaround.
+>
+> In man pages for open() is told that O_EXCL flag should be used with O_CREAT flag only.
+> I've read in manual for open() also: "If O_EXCL is set and O_CREAT is not set, the result is undefined"
 
-While at it, note that this facility should not be used by anyone else
-than the current ones.  Sysfs symlinks shouldn't be abused like this
-and the whole thing doesn't belong in the block layer at all.
+Right, it is undefined with respect to Posix, but for Linux O_EXCL on
+a block device without O_CREAT is defined to bd_claim the block
+device.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Milan Broz <mbroz@redhat.com>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
-Cc: Kay Sievers <kay.sievers@vrfy.org>
----
-Milan, Jun, can you guys please verify this works correctly for the
-multi holder dm case?  Thank you.
+http://www.kernel.org/doc/man-pages/online/pages/man2/open.2.html
 
- drivers/md/dm-table.c |    1 +
- drivers/md/md.c       |    1 +
- fs/block_dev.c        |   28 +++++++++++++++-------------
- include/linux/fs.h    |    9 ++++++---
- 4 files changed, 23 insertions(+), 16 deletions(-)
+The second call to open_dev_excl is a bug, by definition you can't
+exclusive open twice.  Can you reuse the fd established in
+Grow_reshape?
 
-Index: work/include/linux/fs.h
-===================================================================
---- work.orig/include/linux/fs.h
-+++ work/include/linux/fs.h
-@@ -663,9 +663,6 @@ struct block_device {
- 	void *			bd_holder;
- 	int			bd_holders;
- 	bool			bd_write_holder;
--#ifdef CONFIG_SYSFS
--	struct gendisk *	bd_holder_disk;	/* for sysfs slave linkng */
--#endif
- 	struct block_device *	bd_contains;
- 	unsigned		bd_block_size;
- 	struct hd_struct *	bd_part;
-@@ -2045,12 +2042,18 @@ extern struct block_device *blkdev_get_b
- extern int blkdev_put(struct block_device *bdev, fmode_t mode);
- #ifdef CONFIG_SYSFS
- extern int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk);
-+extern void bd_unlink_disk_holder(struct block_device *bdev,
-+				  struct gendisk *disk);
- #else
- static inline int bd_link_disk_holder(struct block_device *bdev,
- 				      struct gendisk *disk)
- {
- 	return 0;
- }
-+static inline void bd_unlink_disk_holder(struct block_device *bdev,
-+					 struct gendisk *disk)
-+{
-+}
- #endif
- #endif
- 
-Index: work/drivers/md/dm-table.c
-===================================================================
---- work.orig/drivers/md/dm-table.c
-+++ work/drivers/md/dm-table.c
-@@ -347,6 +347,7 @@ static void close_dev(struct dm_dev_inte
- 	if (!d->dm_dev.bdev)
- 		return;
- 
-+	bd_unlink_disk_holder(d->dm_dev.bdev, dm_disk(md));
- 	blkdev_put(d->dm_dev.bdev, d->dm_dev.mode | FMODE_EXCL);
- 	d->dm_dev.bdev = NULL;
- }
-Index: work/drivers/md/md.c
-===================================================================
---- work.orig/drivers/md/md.c
-+++ work/drivers/md/md.c
-@@ -1907,6 +1907,7 @@ static void unbind_rdev_from_array(mdk_r
- 		MD_BUG();
- 		return;
- 	}
-+	bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
- 	list_del_rcu(&rdev->same_set);
- 	printk(KERN_INFO "md: unbind<%s>\n", bdevname(rdev->bdev,b));
- 	rdev->mddev = NULL;
-Index: work/fs/block_dev.c
-===================================================================
---- work.orig/fs/block_dev.c
-+++ work/fs/block_dev.c
-@@ -788,6 +788,8 @@ static void del_symlink(struct kobject *
-  * @bdev: the claimed slave bdev
-  * @disk: the holding disk
-  *
-+ * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
-+ *
-  * This functions creates the following sysfs symlinks.
-  *
-  * - from "slaves" directory of the holder @disk to the claimed @bdev
-@@ -815,7 +817,7 @@ int bd_link_disk_holder(struct block_dev
- 
- 	mutex_lock(&bdev->bd_mutex);
- 
--	WARN_ON_ONCE(!bdev->bd_holder || bdev->bd_holder_disk);
-+	WARN_ON_ONCE(!bdev->bd_holder);
- 
- 	/* FIXME: remove the following once add_disk() handles errors */
- 	if (WARN_ON(!disk->slave_dir || !bdev->bd_part->holder_dir))
-@@ -831,27 +833,28 @@ int bd_link_disk_holder(struct block_dev
- 		goto out_unlock;
- 	}
- 
--	bdev->bd_holder_disk = disk;
- out_unlock:
- 	mutex_unlock(&bdev->bd_mutex);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(bd_link_disk_holder);
- 
--static void bd_unlink_disk_holder(struct block_device *bdev)
-+/**
-+ * bd_unlink_disk_holder - destroy symlinks created by bd_link_disk_holder()
-+ * @bdev: the calimed slave bdev
-+ * @disk: the holding disk
-+ *
-+ * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
-+ *
-+ * CONTEXT:
-+ * Might sleep.
-+ */
-+void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
- {
--	struct gendisk *disk = bdev->bd_holder_disk;
--
--	bdev->bd_holder_disk = NULL;
--	if (!disk)
--		return;
--
- 	del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
- 	del_symlink(bdev->bd_part->holder_dir, &disk_to_dev(disk)->kobj);
- }
--#else
--static inline void bd_unlink_disk_holder(struct block_device *bdev)
--{ }
-+EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
- #endif
- 
- /**
-@@ -1374,7 +1377,6 @@ int blkdev_put(struct block_device *bdev
- 		 * unblock evpoll if it was a write holder.
- 		 */
- 		if (bdev_free) {
--			bd_unlink_disk_holder(bdev);
- 			if (bdev->bd_write_holder) {
- 				disk_unblock_events(bdev->bd_disk);
- 				bdev->bd_write_holder = false;
+--
+Dan
