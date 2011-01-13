@@ -1,34 +1,37 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 0/6] Add raid0<->raid10 takeover support for imsm metadata
-Date: Thu, 13 Jan 2011 16:32:18 +0100
-Message-ID: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 3/6] Unfreeze for non re-striping transitions
+Date: Thu, 13 Jan 2011 16:32:44 +0100
+Message-ID: <20110113153244.20266.59989.stgit@gklab-128-111.igk.intel.com>
+References: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-The following series implements raid0<->raid10 takeover support
-for imsm metadata format.
-It contains also some fixes for generic takeover flow.
+For non re-striping transitions array must be unfrozen
+before end of processing.
 
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
+ Grow.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Krzysztof Wojcik (6):
-      Define imsm_analyze_change function
-      Set reshape.after.data_disks for raid0<->raid10 takeover
-      Unfreeze for non re-striping transitions
-      Add raid10 -> raid0 takeover support
-      raid0->raid10 takeover- create metadata update
-      raid0->raid10 takeover- allocate memory for added disks
+diff --git a/Grow.c b/Grow.c
+index 47a8fb8..c0f9419 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1751,7 +1751,7 @@ static int reshape_array(char *container, int cfd, int fd, char *devname,
+ 				printf("chunk size for %s set to %d\n",
+ 				       devname, info->array.chunk_size);
+ 		}
+-
++		unfreeze(st);
+ 		return rv;
+ 	}
+ 
 
-
- Grow.c        |    5 +
- super-intel.c |  289 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 282 insertions(+), 12 deletions(-)
-
--- 
-Krzyszto Wojcik
