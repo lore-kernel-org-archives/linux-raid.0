@@ -1,42 +1,42 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/2] md/raid5: FIX: manually-added spare is not used
-Date: Fri, 14 Jan 2011 13:38:32 +0100
-Message-ID: <20110114123832.14953.89359.stgit@gklab-128-013.igk.intel.com>
-References: <20110114123139.14953.81620.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 0/2] fixes for manually-added spares in raid5
+Date: Fri, 14 Jan 2011 13:38:24 +0100
+Message-ID: <20110114123139.14953.81620.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110114123139.14953.81620.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Manually added spares are not used due to fact that they not added to md configuration.
-Counters are updated only.
+After patch "md/raid5: handle manually-added spares in start_reshape." spres with set slot are almost used by md for raid5 reshape.
+It works this way: before and after reshape process disks number in array is the same, new disks are not used during reshape process.
+This is addressed by first patch.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Second problem I've found is for degraded arrays (i.e. takeovered raid0). Scenario is as follow:
+1. Create raid0 array using 2 disks
+2. add 2 spare disks to container
+3. expand capacity to 4 disks in array
+
+In result we will get raid0 build on 3 disks with one spare disk. this is due to fact that disk degradataion is not used
+for comparing disks slot number (disk used for degraded slot is considered as present in array)
+This is addressed by second patch.
+
+BR
+Adam
+
+
 ---
 
- drivers/md/raid5.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Adam Kwolek (2):
+      md/raid5: FIX: reshape on degraded devices has wrong configuration
+      md/raid5: FIX: manually-added spare is not used
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a2087c7..b98b01c 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5592,8 +5592,10 @@ static int raid5_start_reshape(mddev_t *mddev)
- 		} else if (rdev->raid_disk >= conf->previous_raid_disks
- 			   && !test_bit(Faulty, &rdev->flags)) {
- 			/* This is a spare that was manually added */
--			set_bit(In_sync, &rdev->flags);
--			added_devices++;
-+			if (raid5_add_disk(mddev, rdev) == 0) {
-+			    set_bit(In_sync, &rdev->flags);
-+			    added_devices++;
-+			}
- 		}
- 
- 	/* When a reshape changes the number of devices, ->degraded
 
+ drivers/md/raid5.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+-- 
+Signature
