@@ -1,47 +1,85 @@
-From: GarBoge <garboge@shaw.ca>
-Subject: Re: filesystem on mdadm raid from unpartioned block devices
-Date: Fri, 14 Jan 2011 08:44:26 -0700
-Message-ID: <1295019866.3788.2.camel@TRAVLOR>
-References: <1294871497.16201.9.camel@TRAVLOR>
-	 <20110113130044.3784907c@notabene.brown>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH 1/2] raid0->raid10 takeover- allocate memory for added disks
+Date: Fri, 14 Jan 2011 16:57:24 +0100
+Message-ID: <20110114155724.7904.49078.stgit@gklab-128-111.igk.intel.com>
+References: <20110114155044.7904.91011.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113130044.3784907c@notabene.brown>
+In-Reply-To: <20110114155044.7904.91011.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Thanks for the quick reply. I thank you for the great mdadm software.
+Allocate memory will be used in process_update.
+For raid0->raid10 takeover operation number of disks doubles
+so we should allocate memory for additional disks
+and one imsm_dev structure with extended order table.
 
-Ashley
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ super-intel.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 48 insertions(+), 0 deletions(-)
 
-
-On Thu, 2011-01-13 at 13:00 +1100, NeilBrown wrote:
-> On Wed, 12 Jan 2011 15:31:37 -0700 GarBoge <garboge@shaw.ca> wrote:
-> 
-> > A quick question that I haven't been able to find and answer for.
-> > 
-> > I have been using whole block devices (whole unpartitioned hard drives)
-> > in various raid 1 and 5 setups using mdadm 3.1.4 with pretty mundane
-> > options (default options such as striping and but using metadata 1.2).
-> > Typically I use mkfs.ext4 with no options (default) to install the
-> > filesystem.
-> > 
-> > Is there an issue with alignment on the newer 4096-byte drives. If so
-> > what would be the proper approach?
-> 
-> No, no issue.
-> 
-> NeilBrown
-> 
-> 
-> > 
-> > I thank you for your time.
-> > 
-> > Ashley
-> 
-
+diff --git a/super-intel.c b/super-intel.c
+index 839b8d8..642feba 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6233,6 +6233,54 @@ static void imsm_prepare_update(struct supertype *st,
+ 	size_t len = 0;
+ 
+ 	switch (type) {
++	case update_takeover: {
++		struct imsm_update_takeover *u = (void *)update->buf;
++		if (u->direction == R0_TO_R10) {
++			void **tail = (void**)&update->space_list;
++			struct imsm_dev *dev = get_imsm_dev(super, u->subarray);
++			struct imsm_map *map = get_imsm_map(dev, 0);
++			int num_members = map->num_members;
++			void *space;
++			int size, i;
++			int err = 0;
++			/* allocate memory for added disks */
++			for (i = 0; i < num_members; i++) {
++				size = sizeof(struct dl);
++				space = malloc(size);
++				if (!space) {
++					err++;
++					goto update_takeover_exit;
++				}
++				*tail = space;
++				tail = space;
++				*tail = NULL;
++			}
++			/* allocate memory for new device */
++			size = sizeof_imsm_dev(super->devlist->dev, 0) +
++				(num_members * sizeof(__u32));
++			space = malloc(size);
++			if (!space) {
++				err++;
++				goto update_takeover_exit;
++			}
++			*tail = space;
++			tail = space;
++			*tail = NULL;
++update_takeover_exit:
++			if (!err) {
++				len = disks_to_mpb_size(num_members * 2);
++			} else {
++				/* if allocation didn't success, free buffer */
++				while (update->space_list) {
++					void **sp = update->space_list;
++					update->space_list = *sp;
++					free(sp);
++				}
++			}
++		}
++
++		break;
++	}
+ 	case update_reshape_container_disks: {
+ 		/* Every raid device in the container is about to
+ 		 * gain some more devices, and we will enter a
 
