@@ -1,38 +1,108 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: open_dev_excl in reshape_container() fails
-Date: Fri, 14 Jan 2011 14:49:43 -0800
-Message-ID: <4D30D307.6030602@intel.com>
-References: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com> <AANLkTinKyBbX7S-yaM_FG=HU0ABuAzw+FxaUgdZPzy0Q@mail.gmail.com> <905EDD02F158D948B186911EB64DB3D176E5A4CA@irsmsx503.ger.corp.intel.com>  <905EDD02F158D948B186911EB64DB3D176E5A6CF@irsmsx503.ger.corp.intel.com>
+From: Hank Barta <hbarta@gmail.com>
+Subject: Re: RAID for USB flash drives
+Date: Fri, 14 Jan 2011 17:25:29 -0600
+Message-ID: <AANLkTi=cOHgdradDDOFTdZ_xOGMXv8qf_n6xxppGA12y@mail.gmail.com>
+References: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>
+	<4D237E70.6030104@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E5A6CF@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <4D237E70.6030104@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/14/2011 2:36 AM, Kwolek, Adam wrote:
-> Hi,
+On Tue, Jan 4, 2011 at 2:09 PM, John Robinson
+<john.robinson@anonymous.org.uk> wrote:
+
 >
-> I think I've found problem root cause.
-> As I'm working on "Online Capacity Expansion", my tests uses mounted arrays - this is in conflict with open_dev_ext()
-> and fails this function. Evrything is ok  This means that reshape operation cannot be performed online (or this is valid on my system only?).
+> First up, booting. You'll have to boot off a bare device which may in fact
+> be a mirror over 2 or more sticks. Make that your first partition. I think
+> it's simpler to make it over all 4. Look up booting from RAID to find out
+> how.
+
+I should have read this more carefully. I performed a full install to
+a raid0 only to find it incapable of setting up grub. It simply told
+me there was a fatal error. :-/ It took me a bit more research before
+the reality of your comment sunk in. So I proceeded again and tried to
+use the first 100MB of each stick to create a 4 device raid1. For some
+reason, the partitioning S/W (Ubuntu 10.04.1 server) didn't like that
+and just hung when it tried to discover the disks. Repeatedly. I
+finally worked around that by deleting the 100 MB partitions on three
+of the four drives and just using the first 100 MB on one of the
+drives for a /boot partition. I completed the installation but the
+system hung on boot. It just provides a blank screen. Experimenting
+with the installation USB drive, it seemed to me that I couldn't even
+boot that with all five thumb drives installed. I scaled back to
+installation three USB drives, install media on a fourth. I also
+figured out which slot I needed to put the install media in so as to
+boot. The BIOS - or perhaps some stage in the boot process - gets
+confused otherwise.
+
+I've booted a live CD and tried running grub-install from a chroot
+with the /boot and / file systems and the command concluded w/out any
+errors or warnings. But the system still will not boot. I'm not sure
+if this is a grub or a RAID problem or some combination.
+
+Is there something I need to include with grub when the root file
+system is on a RAID0?
+
+> Then, as far as I know USB flash sticks have lousy or no wear-levelling
+> algorithms and use cheap flash which may not have very many write cycles, so
+> given that, I'd either:
+
+Time will tell. I plan to move active directories like /var/log and
+/tmp to tmpfs to reduce writes to the USB sticks. The ones I got,
+though inexpensive, are from a reputable manufacturer (Mushkin.)
+Hopefully they have decent wear leveling. Certainly my benchmarks
+produced irregular results which I suspect were a result of wear
+leveling delaying writes.
+
+
 >
-> I do not know why on begin (in main() of mdadm.c) this function can succeed and later not (later system blocks array ?).
-> More, when I've made some open_dev_exe()+close() earlier, it works later also (please look used code below/treat patch as demo/).
+> 1. Use RAID-1, 5 or 10 for the rest of the system with ext4 as you suggest,
 >
-> Summarizing problem is related to mounted arrays only.
+> or 2. Use btrfs for the rest of the system - btrfs is included in Ubuntu
+> 10.10 but you may be able to get it for 10.04.
+>
+> And in either case, make sure there are regular backups of the whole lot to
+> your main disc-based array, because those $7 USB sticks could still give you
+> problems.
 
-Why do we need an exclusive open on the subarrays, that defeats the 
-purpose of online capacity expansion?  The exclusive open on the 
-container prevents new arrays from being created and other races, but I 
-do not see why we would need exclusive access to the subarray.
+Well... As long as I have the install media and capture any
+customization to backup I should be OK.
 
-I would look at the code, but I am distracted by another firefight at 
-the moment.
+>
+> Or 3. I might just decide to use just one stick to boot the system from (as
+> a /boot) and put the rest of the system in an LVM LV, or even a file, on the
+> main array, and make sure I had a second stick to start the system from if
+> the first one went bad.
 
---
-Dan
+I could do something like that. However I don't care to mess with the
+main array (the two spinning drives) as recovery of those takes a
+while.
 
+I could just install to a single USB (no RAID) and try to migrate the
+/ to a RAID once I'm off the install media. I could run from the
+single stick (as Steven Haigh) suggested, but I'd like to take
+advantage of the speed gains from a RAID0.
+
+I could also use 'debirf' as suggested by Iordan Iordanov, but I
+prefer to retain the full (disk based) environment with ease of
+installing and updating S/W. I haven't studied debirf but I suspect I
+would have to create and install a new image any time I want to update
+or install new packages.
+
+Suggestions on how to solve the boot problem would be welcome!
+
+thanks,
+hank
+
+-- 
+'03 BMW F650CS - hers
+'98 Dakar K12RS - "BABY K" grew up.
+'93 R100R w/ Velorex 700 (MBD starts...)
+'95 Miata - "OUR LC"
+polish visor: apply squashed bugs, rinse, repeat
+Beautiful Sunny Winfield, Illinois
