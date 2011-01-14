@@ -1,274 +1,212 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH UPDATED] block: restore multiple
- bd_link_disk_holder() support
-Date: Fri, 14 Jan 2011 17:10:43 +0100
-Message-ID: <20110114161043.GB978@htj.dyndns.org>
-References: <16069.1294853673@localhost> <4D2E4611.90002@redhat.com>
-	<4D2E6129.8000700@ce.jp.nec.com>
-	<20110113172133.GE14096@htj.dyndns.org>
-	<4D2F4799.5030901@redhat.com> <4D2FFBED.6010406@ce.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: =?ISO-8859-1?Q?Bj=F6rn_Englund?= <be@smarteye.se>
+Subject: raid6 recovery
+Date: Fri, 14 Jan 2011 17:16:26 +0100
+Message-ID: <4D3076DA.4020204@smarteye.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <4D2FFBED.6010406@ce.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Valdis.Kletnieks@vt.edu, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Alasdair G Kergon <agk@redhat.com>, Milan Broz <mbroz@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Commit e09b457b (block: simplify holder symlink handling) incorrectly
-assumed that there is only one link at maximum.  dm may use multiple
-links and expects block layer to track reference count for each link,
-which is different from and unrelated to the exclusive device holder
-identified by @holder when the device is opened.
+Hi.
 
-Remove the single holder assumption and automatic removal of the link
-and revive the per-link reference count tracking.  The code
-essentially behaves the same as before commit e09b457b sans the
-unnecessary kobject reference count dancing.
+After a loss of communication with a drive in a 10 disk raid6 the disk
+was dropped out of the raid.
 
-While at it, note that this facility should not be used by anyone else
-than the current ones.  Sysfs symlinks shouldn't be abused like this
-and the whole thing doesn't belong in the block layer at all.
+I added it again with
+mdadm /dev/md16 --add /dev/sdbq1
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Milan Broz <mbroz@redhat.com>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
-Cc: Kay Sievers <kay.sievers@vrfy.org>
----
-Thanks for the test commands.  They were very helpful.  Can you please
-test this one?
+The array resynced and I used the xfs filesystem on top of the raid.
 
-Thanks.
+After a while I started noticing filesystem errors.
 
- drivers/md/dm-table.c |    1 
- drivers/md/md.c       |    1 
- fs/block_dev.c        |   93 ++++++++++++++++++++++++++++++++++++++++----------
- include/linux/fs.h    |    8 +++-
- 4 files changed, 84 insertions(+), 19 deletions(-)
+I did
+echo check > /sys/block/md16/md/sync_action
 
-Index: work/include/linux/fs.h
-===================================================================
---- work.orig/include/linux/fs.h
-+++ work/include/linux/fs.h
-@@ -664,7 +664,7 @@ struct block_device {
- 	int			bd_holders;
- 	bool			bd_write_holder;
- #ifdef CONFIG_SYSFS
--	struct gendisk *	bd_holder_disk;	/* for sysfs slave linkng */
-+	struct list_head	bd_holder_disks;
- #endif
- 	struct block_device *	bd_contains;
- 	unsigned		bd_block_size;
-@@ -2045,12 +2045,18 @@ extern struct block_device *blkdev_get_b
- extern int blkdev_put(struct block_device *bdev, fmode_t mode);
- #ifdef CONFIG_SYSFS
- extern int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk);
-+extern void bd_unlink_disk_holder(struct block_device *bdev,
-+				  struct gendisk *disk);
- #else
- static inline int bd_link_disk_holder(struct block_device *bdev,
- 				      struct gendisk *disk)
- {
- 	return 0;
- }
-+static inline void bd_unlink_disk_holder(struct block_device *bdev,
-+					 struct gendisk *disk)
-+{
-+}
- #endif
- #endif
- 
-Index: work/drivers/md/dm-table.c
-===================================================================
---- work.orig/drivers/md/dm-table.c
-+++ work/drivers/md/dm-table.c
-@@ -347,6 +347,7 @@ static void close_dev(struct dm_dev_inte
- 	if (!d->dm_dev.bdev)
- 		return;
- 
-+	bd_unlink_disk_holder(d->dm_dev.bdev, dm_disk(md));
- 	blkdev_put(d->dm_dev.bdev, d->dm_dev.mode | FMODE_EXCL);
- 	d->dm_dev.bdev = NULL;
- }
-Index: work/drivers/md/md.c
-===================================================================
---- work.orig/drivers/md/md.c
-+++ work/drivers/md/md.c
-@@ -1907,6 +1907,7 @@ static void unbind_rdev_from_array(mdk_r
- 		MD_BUG();
- 		return;
- 	}
-+	bd_unlink_disk_holder(rdev->bdev, rdev->mddev->gendisk);
- 	list_del_rcu(&rdev->same_set);
- 	printk(KERN_INFO "md: unbind<%s>\n", bdevname(rdev->bdev,b));
- 	rdev->mddev = NULL;
-Index: work/fs/block_dev.c
-===================================================================
---- work.orig/fs/block_dev.c
-+++ work/fs/block_dev.c
-@@ -426,6 +426,9 @@ static void init_once(void *foo)
- 	mutex_init(&bdev->bd_mutex);
- 	INIT_LIST_HEAD(&bdev->bd_inodes);
- 	INIT_LIST_HEAD(&bdev->bd_list);
-+#ifdef CONFIG_SYSFS
-+	INIT_LIST_HEAD(&bdev->bd_holder_disks);
-+#endif
- 	inode_init_once(&ei->vfs_inode);
- 	/* Initialize mutex for freeze. */
- 	mutex_init(&bdev->bd_fsfreeze_mutex);
-@@ -773,6 +776,23 @@ static struct block_device *bd_start_cla
- }
- 
- #ifdef CONFIG_SYSFS
-+struct bd_holder_disk {
-+	struct list_head	list;
-+	struct gendisk		*disk;
-+	int			refcnt;
-+};
-+
-+static struct bd_holder_disk *bd_find_holder_disk(struct block_device *bdev,
-+						  struct gendisk *disk)
-+{
-+	struct bd_holder_disk *holder;
-+
-+	list_for_each_entry(holder, &bdev->bd_holder_disks, list)
-+		if (holder->disk == disk)
-+			return holder;
-+	return NULL;
-+}
-+
- static int add_symlink(struct kobject *from, struct kobject *to)
- {
- 	return sysfs_create_link(from, to, kobject_name(to));
-@@ -788,6 +808,8 @@ static void del_symlink(struct kobject *
-  * @bdev: the claimed slave bdev
-  * @disk: the holding disk
-  *
-+ * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
-+ *
-  * This functions creates the following sysfs symlinks.
-  *
-  * - from "slaves" directory of the holder @disk to the claimed @bdev
-@@ -811,47 +833,83 @@ static void del_symlink(struct kobject *
-  */
- int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
- {
-+	struct bd_holder_disk *holder;
- 	int ret = 0;
- 
- 	mutex_lock(&bdev->bd_mutex);
- 
--	WARN_ON_ONCE(!bdev->bd_holder || bdev->bd_holder_disk);
-+	WARN_ON_ONCE(!bdev->bd_holder);
- 
- 	/* FIXME: remove the following once add_disk() handles errors */
- 	if (WARN_ON(!disk->slave_dir || !bdev->bd_part->holder_dir))
- 		goto out_unlock;
- 
--	ret = add_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
--	if (ret)
-+	holder = bd_find_holder_disk(bdev, disk);
-+	if (holder) {
-+		holder->refcnt++;
- 		goto out_unlock;
-+	}
- 
--	ret = add_symlink(bdev->bd_part->holder_dir, &disk_to_dev(disk)->kobj);
--	if (ret) {
--		del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-+	holder = kzalloc(sizeof(*holder), GFP_KERNEL);
-+	if (!holder) {
-+		ret = -ENOMEM;
- 		goto out_unlock;
- 	}
- 
--	bdev->bd_holder_disk = disk;
-+	INIT_LIST_HEAD(&holder->list);
-+	holder->disk = disk;
-+	holder->refcnt = 1;
-+
-+	ret = add_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-+	if (ret)
-+		goto out_free;
-+
-+	ret = add_symlink(bdev->bd_part->holder_dir, &disk_to_dev(disk)->kobj);
-+	if (ret)
-+		goto out_del;
-+
-+	list_add(&holder->list, &bdev->bd_holder_disks);
-+	goto out_unlock;
-+
-+out_del:
-+	del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-+out_free:
-+	kfree(holder);
- out_unlock:
- 	mutex_unlock(&bdev->bd_mutex);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(bd_link_disk_holder);
- 
--static void bd_unlink_disk_holder(struct block_device *bdev)
-+/**
-+ * bd_unlink_disk_holder - destroy symlinks created by bd_link_disk_holder()
-+ * @bdev: the calimed slave bdev
-+ * @disk: the holding disk
-+ *
-+ * DON'T USE THIS UNLESS YOU'RE ALREADY USING IT.
-+ *
-+ * CONTEXT:
-+ * Might sleep.
-+ */
-+void bd_unlink_disk_holder(struct block_device *bdev, struct gendisk *disk)
- {
--	struct gendisk *disk = bdev->bd_holder_disk;
-+	struct bd_holder_disk *holder;
- 
--	bdev->bd_holder_disk = NULL;
--	if (!disk)
--		return;
-+	mutex_lock(&bdev->bd_mutex);
- 
--	del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
--	del_symlink(bdev->bd_part->holder_dir, &disk_to_dev(disk)->kobj);
-+	holder = bd_find_holder_disk(bdev, disk);
-+
-+	if (!WARN_ON_ONCE(holder == NULL) && !--holder->refcnt) {
-+		del_symlink(disk->slave_dir, &part_to_dev(bdev->bd_part)->kobj);
-+		del_symlink(bdev->bd_part->holder_dir,
-+			    &disk_to_dev(disk)->kobj);
-+		list_del_init(&holder->list);
-+		kfree(holder);
-+	}
-+
-+	mutex_unlock(&bdev->bd_mutex);
- }
--#else
--static inline void bd_unlink_disk_holder(struct block_device *bdev)
--{ }
-+EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
- #endif
- 
- /**
-@@ -1374,7 +1432,6 @@ int blkdev_put(struct block_device *bdev
- 		 * unblock evpoll if it was a write holder.
- 		 */
- 		if (bdev_free) {
--			bd_unlink_disk_holder(bdev);
- 			if (bdev->bd_write_holder) {
- 				disk_unblock_events(bdev->bd_disk);
- 				bdev->bd_write_holder = false;
+I got a lot of errors in /sys/block/md16/md/mismatch_cnt
+
+I failed and removed the disk I added before from the array.
+
+Did a check again (on the 9/10 array)
+echo check > /sys/block/md16/md/sync_action
+
+No errors  /sys/block/md16/md/mismatch_cnt
+
+Wiped the superblock from /dev/sdbq1 and added it again to the array.
+Let it finish resyncing.
+Did a check and once again a lot of errors.
+
+The drive now has slot 10 instead of slot 3 which it had before the
+first error.
+
+Examining each device (see below) shows 11 slots and one failed?
+(0, 1, 2, failed, 4, 5, 6, 7, 8, 9, 3) ?
+
+
+Any idea what is going on?
+
+mdadm --version
+mdadm - v2.6.9 - 10th March 2009
+
+Centos 5.5
+
+
+mdadm -D /dev/md16
+/dev/md16:
+        Version : 1.01
+  Creation Time : Thu Nov 25 09:15:54 2010
+     Raid Level : raid6
+     Array Size : 7809792000 (7448.00 GiB 7997.23 GB)
+  Used Dev Size : 976224000 (931.00 GiB 999.65 GB)
+   Raid Devices : 10
+  Total Devices : 10
+Preferred Minor : 16
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Jan 14 16:22:10 2011
+          State : clean
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 256K
+
+           Name : 16
+           UUID : fcd585d0:f2918552:7090d8da:532927c8
+         Events : 90
+
+    Number   Major   Minor   RaidDevice State
+       0       8      145        0      active sync   /dev/sdj1
+       1      65        1        1      active sync   /dev/sdq1
+       2      65       17        2      active sync   /dev/sdr1
+      10      68       65        3      active sync   /dev/sdbq1
+       4      65       49        4      active sync   /dev/sdt1
+       5      65       65        5      active sync   /dev/sdu1
+       6      65      113        6      active sync   /dev/sdx1
+       7      65      129        7      active sync   /dev/sdy1
+       8      65       33        8      active sync   /dev/sds1
+       9      65      145        9      active sync   /dev/sdz1
+
+
+
+mdadm -E /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : fcd585d0:f2918552:7090d8da:532927c8
+           Name : 16
+  Creation Time : Thu Nov 25 09:15:54 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 1952448248 (931.00 GiB 999.65 GB)
+     Array Size : 15619584000 (7448.00 GiB 7997.23 GB)
+  Used Dev Size : 1952448000 (931.00 GiB 999.65 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : 5db9c8f7:ce5b375e:757c53d0:04e89a06
+
+    Update Time : Fri Jan 14 16:22:10 2011
+       Checksum : 1f17a675 - correct
+         Events : 90
+
+     Chunk Size : 256K
+
+    Array Slot : 0 (0, 1, 2, failed, 4, 5, 6, 7, 8, 9, 3)
+   Array State : Uuuuuuuuuu 1 failed
+
+
+
+mdadm -E /dev/sdq1
+/dev/sdq1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : fcd585d0:f2918552:7090d8da:532927c8
+           Name : 16
+  Creation Time : Thu Nov 25 09:15:54 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 1952448248 (931.00 GiB 999.65 GB)
+     Array Size : 15619584000 (7448.00 GiB 7997.23 GB)
+  Used Dev Size : 1952448000 (931.00 GiB 999.65 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : fb113255:fda391a6:7368a42b:1d6d4655
+
+    Update Time : Fri Jan 14 16:22:10 2011
+       Checksum : 6ed7b859 - correct
+         Events : 90
+
+     Chunk Size : 256K
+
+    Array Slot : 1 (0, 1, 2, failed, 4, 5, 6, 7, 8, 9, 3)
+   Array State : uUuuuuuuuu 1 failed
+
+
+ mdadm -E /dev/sdr1
+/dev/sdr1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : fcd585d0:f2918552:7090d8da:532927c8
+           Name : 16
+  Creation Time : Thu Nov 25 09:15:54 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 1952448248 (931.00 GiB 999.65 GB)
+     Array Size : 15619584000 (7448.00 GiB 7997.23 GB)
+  Used Dev Size : 1952448000 (931.00 GiB 999.65 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : afcb4dd8:2aa58944:40a32ed9:eb6178af
+
+    Update Time : Fri Jan 14 16:22:10 2011
+       Checksum : 97a7a2d7 - correct
+         Events : 90
+
+     Chunk Size : 256K
+
+    Array Slot : 2 (0, 1, 2, failed, 4, 5, 6, 7, 8, 9, 3)
+   Array State : uuUuuuuuuu 1 failed
+
+
+mdadm -E /dev/sdbq1
+/dev/sdbq1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : fcd585d0:f2918552:7090d8da:532927c8
+           Name : 16
+  Creation Time : Thu Nov 25 09:15:54 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 1952448248 (931.00 GiB 999.65 GB)
+     Array Size : 15619584000 (7448.00 GiB 7997.23 GB)
+  Used Dev Size : 1952448000 (931.00 GiB 999.65 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : clean
+    Device UUID : 93c6ae7c:d8161356:7ada1043:d0c5a924
+
+    Update Time : Fri Jan 14 16:22:10 2011
+       Checksum : 2ca5aa8f - correct
+         Events : 90
+
+     Chunk Size : 256K
+
+    Array Slot : 10 (0, 1, 2, failed, 4, 5, 6, 7, 8, 9, 3)
+   Array State : uuuUuuuuuu 1 failed
+
+
+and so on for the rest of the drives.
