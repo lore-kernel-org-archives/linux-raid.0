@@ -1,52 +1,75 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH 0/3] differentiate between I/O errors
-Date: Thu, 13 Jan 2011 20:15:39 -0500
-Message-ID: <20110114011538.GB21818@redhat.com>
-References: <20101130225956.GA8882@redhat.com>
- <1291763802-8251-1-git-send-email-snitzer@redhat.com>
- <20101210234036.GA4841@us.ibm.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: open_dev_excl in reshape_container() fails
+Date: Fri, 14 Jan 2011 07:31:38 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176E5A4CA@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
+ <AANLkTinKyBbX7S-yaM_FG=HU0ABuAzw+FxaUgdZPzy0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20101210234036.GA4841@us.ibm.com>
+In-Reply-To: <AANLkTinKyBbX7S-yaM_FG=HU0ABuAzw+FxaUgdZPzy0Q@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-f
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, Dec 10 2010 at  6:40pm -0500,
-Malahal Naineni <malahal@us.ibm.com> wrote:
 
-> Mike Snitzer [snitzer@redhat.com] wrote:
-> > Refreshed Hannes' initial "scsi: Detailed I/O errors" patch against
-> > v2.6.37-rc5.  v2 introduces __scsi_error_from_host_byte to avoid
-> > the duplicate switch statement.  Also a few whitespace and comment
-> > changes.
-> > 
-> > Split DM mpath change out to separate v2 patch; failed discard is now
-> > retryable in the face of a non-target IO error.
-> > 
-> > Added improved block layer's I/O error message (based on the finer
-> > grained I/O error returns afforded by SCSI).
-> > 
-> > Comments/suggestions are welcome.
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Dan Williams
+> Sent: Thursday, January 13, 2011 6:28 PM
+> To: Kwolek, Adam
+> Cc: neilb@suse.de; linux-raid@vger.kernel.org; Neubauer, Wojciech;
+> Ciechanowski, Ed
+> Subject: Re: open_dev_excl in reshape_container() fails
 > 
-> I did test the Hannes original patch with the latest Linus' git tree! I
-> used scsi_debug to simulate path failures as well as 'Media' failures
-> and it did work as expected. I will test your patches soon.
+> 2011/1/13 Kwolek, Adam <adam.kwolek@intel.com>:
+> > Hi,
+> >
+> > I've got a problem using open_dev_excl() in reshape_container(), it
+> fails. This functions goes down
+> > and calls open() with flags O_DIRECT| O_RDWR| O_EXCL.
+> > It fails in reshape_container(), ealier in Grow_reshape() exactly the
+> same test call to open_dev_excl() succeed.
+> > Between test open and open in reshape_container() there is no other
+> open() performed (or other i/o operation that can cause problem).
+> > It not depends on mdmon action because it is the same for raid5 and
+> raid0.
+> > Function open_dev() works, and I'm using it as workaround.
+> >
+> > In man pages for open() is told that O_EXCL flag should be used with
+> O_CREAT flag only.
+> > I've read in manual for open() also: "If O_EXCL is set and O_CREAT is
+> not set, the result is undefined"
+> 
+> Right, it is undefined with respect to Posix, but for Linux O_EXCL on
+> a block device without O_CREAT is defined to bd_claim the block
+> device.
+> 
+> http://www.kernel.org/doc/man-pages/online/pages/man2/open.2.html
+> 
+> The second call to open_dev_excl is a bug, by definition you can't
+> exclusive open twice.  Can you reuse the fd established in
+> Grow_reshape?
+> 
+> --
+> Dan
 
-Hi Malahal,
+There is no second open. My test call to open_dev_excl() is closed at once ;),
+and it is used to detect where I can successfully open device and if there is any duplicated open.
+There is no other open that can block open_dev_excl() in reshape_container() (when monitor is absent also),
+or I was unable to find it.
+Handle cannot be reused, because in Grow_reshape() container is opened and in reshape_container() all arrays
+Are opened one by one.
 
-I was wondering if you had any feedback (testing or otherwise) for these
-patches:
+BR
+Adam
 
-https://patchwork.kernel.org/patch/384612/
-https://patchwork.kernel.org/patch/384602/
-https://patchwork.kernel.org/patch/390882/
-
-We haven't heard from Hannes in a bit but I was hoping we could at least
-understand that the few changes I made are agreeable and working as
-expected.
-
-Thanks,
-Mike
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
