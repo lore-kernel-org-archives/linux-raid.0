@@ -1,81 +1,66 @@
-From: NeilBrown <neilb@suse.de>
-Subject: PULL REQUEST - md updates for 2.6.38
-Date: Fri, 14 Jan 2011 09:18:55 +1100
-Message-ID: <20110114091855.29910ed3@notabene.brown>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Thu, 13 Jan 2011 20:09:49 -0500
+Message-ID: <20110114010948.GA21818@redhat.com>
+References: <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
+ <20101119031149.GA28455@us.ibm.com>
+ <20101130225956.GA8882@redhat.com>
+ <4D0B31B5.101@suse.de>
+ <20101217140605.GA740@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101217140605.GA740@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
+On Fri, Dec 17 2010 at  9:06am -0500,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-Hi Linus,
- please pull some md update as below.
+> On Fri, Dec 17 2010 at  4:47am -0500,
+> Hannes Reinecke <hare@suse.de> wrote:
+> 
+> > On 11/30/2010 11:59 PM, Mike Snitzer wrote:
+> > > Hannes,
+> > > 
+> > > Any chance you've had time to fold your proposed logging changes in and
+> > > rebase this patch?  Could you post that updated patch?
+> > > 
+> > yes, will be following shortly.
+> > 
+> > > I'd like to help see this patch through to inclussion when 2.6.38 merge
+> > > window opens.  I can help with further review, testing and development.
+> > > 
+> > Ok, thanks.
+> 
+> I took some steps at furthering your work.  Here is the cover letter to
+> the patches I resently sent to dm-devel:
+> https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
+> 
+> And here are the patches:
+> https://patchwork.kernel.org/patch/384612/
+> https://patchwork.kernel.org/patch/384602/
+> https://patchwork.kernel.org/patch/390882/
+> 
+> Please feel free to change these how ever you see fit but your feedback
+> is really appreciated.
 
- There is an unfortunately high number for fixes for regressions - obvi=
-ously
- someone hasn't been doing methodical testing as often as he would like=
- to.
+Hannes,
 
- Most of this is bug fixes.  For the few that are new functionality, mo=
-st of
- them are related to our work to make md and dm able to share more code=
-=2E
+Any update?  I'd really like to see this work get upstream ASAP.  I'm
+doubtful that is possible for 2.6.38 given the merge window is likely to
+close shortly.
+
+Regardless, if we could get consensus on this work now and then stage it
+with James that would be great.
 
 Thanks,
-NeilBrown
-
-
-
-The following changes since commit 3c0eee3fe6a3a1c745379547c7e7c904aa64=
-f6d5:
-
-  Linux 2.6.37 (2011-01-04 16:50:19 -0800)
-
-are available in the git repository at:
-  git://neil.brown.name/md/ for-linus
-
-Joe Perches (1):
-      md: Fix single printks with multiple KERN_<level>s
-
-Jonathan Brassow (4):
-      md/raid5: use sysfs_notify_dirent_safe to avoid NULL pointer
-      md-new-param-to-calc_dev_sboffset
-      md-new-param-to_sync_page_io
-      md: separate meta and data devs
-
-NeilBrown (10):
-      md: fix regression with re-adding devices to arrays with no metad=
-ata
-      md: fix regression resulting in delays in clearing bits in a bitm=
-ap
-      md: Ensure no IO request to get md device before it is properly i=
-nitialised.
-      md: md_stop_writes requires mddev_lock.
-      md: Be more careful about clearing flags bit in ->recovery
-      md: Don't let implementation detail of curr_resync leak out throu=
-gh sysfs.
-      md: allow suspend_lo and suspend_hi to decrease as well as increa=
-se.
-      md/raid5: handle manually-added spares in start_reshape.
-      md: range check slot number when manually adding a spare.
-      md: Fix removal of extra drives when converting RAID6 to RAID5
-
-R=E9mi R=E9rolle (1):
-      md: fix sync_completed reporting for very large drives (>2TB)
-
- drivers/md/bitmap.c |   12 ++-
- drivers/md/md.c     |  197 +++++++++++++++++++++++++++++++------------=
---------
- drivers/md/md.h     |   13 +++-
- drivers/md/raid1.c  |   33 ++++-----
- drivers/md/raid10.c |   17 +++--
- drivers/md/raid5.c  |   16 +++--
- 6 files changed, 172 insertions(+), 116 deletions(-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mike
