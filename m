@@ -1,152 +1,61 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 2/2] raid0->raid10 takeover- process metadata update
-Date: Fri, 14 Jan 2011 16:57:32 +0100
-Message-ID: <20110114155732.7904.95910.stgit@gklab-128-111.igk.intel.com>
-References: <20110114155044.7904.91011.stgit@gklab-128-111.igk.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [dm-devel] linux-next - WARNING: at fs/block_dev.c:824
+ bd_link_disk_holder+0x92/0x1ac()
+Date: Fri, 14 Jan 2011 17:20:22 +0100
+Message-ID: <20110114162022.GC978@htj.dyndns.org>
+References: <20110113131216.GF30719@htj.dyndns.org>
+ <20110113132637.GH16523@nb.net.home>
+ <20110113133722.GG30719@htj.dyndns.org>
+ <4D2F04FF.1070309@redhat.com>
+ <20110113141107.GI30719@htj.dyndns.org>
+ <4D2F0B6A.6010201@redhat.com>
+ <AANLkTinJ68D6Yc-U-Q=ZfS9mqozj5qtHPtySZHOgjcgP@mail.gmail.com>
+ <656A2F9B-4E1C-44AA-80CB-9E3428E26CDE@mit.edu>
+ <20110114071858.7eee145c@notabene.brown>
+ <20110113204145.GC31800@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110114155044.7904.91011.stgit@gklab-128-111.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20110113204145.GC31800@thunk.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Ted Ts'o <tytso@mit.edu>, NeilBrown <neilb@suse.de>, Milan Broz <mbroz@redhat.com>, Karel Zak <kzak@redhat.com>, device-mapper development <dm-devel@redhat.com>, Jun'ichi Nomura <j-no>
 List-Id: linux-raid.ids
 
-Implementation of raid0->raid10 takeover metadata update
-at process_update level.
-- We are using memory prievously alocated in prepare_update to
-create two dummy disks will be inserted in the metadata and
-new imsm_dev structure with expanded disk order table.
-- Update indexes in disk list
-- Update metadata map
-- Update disk order table
+Hello, Ted, Neil.
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- super-intel.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 64 insertions(+), 16 deletions(-)
+On Thu, Jan 13, 2011 at 03:41:45PM -0500, Ted Ts'o wrote:
+> On Fri, Jan 14, 2011 at 07:18:58AM +1100, NeilBrown wrote:
+> > 
+> > open(O_EXCL) will fail on a block device if it is being used by anything else
+> > - a filesystem or a dm target or an md array or ....
+> > 
+> > So if the *only* thing you want is "is this currently an active part of
+> > something else", then O_EXCL works since 2.6.0 (I think).
+> 
+> Unfortunately, that won't distinguish between a currently active file
+> system, and a device which is being used by a dm target, which is what
+> we want to do.
 
-diff --git a/super-intel.c b/super-intel.c
-index 642feba..95940a1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5815,22 +5815,25 @@ update_reshape_exit:
- }
- 
- static int apply_takeover_update(struct imsm_update_takeover *u,
--				struct intel_super *super)
-+				struct intel_super *super,
-+				void ***space_list)
- {
- 	struct imsm_dev *dev = NULL;
-+	struct intel_dev *dv;
-+	struct imsm_dev *dev_new;
- 	struct imsm_map *map;
- 	struct dl *dm, *du;
--	int *tab;
- 	int i;
- 
--	dev = get_imsm_dev(super, u->subarray);
-+	for (dv = super->devlist; dv; dv = dv->next)
-+		if (dv->index == (unsigned int)u->subarray) {
-+			dev = dv->dev;
-+			break;
-+		}
- 
- 	if (dev == NULL)
- 		return 0;
- 
--	map = get_imsm_map(dev, 0);
--	tab = (int *)&map->disk_ord_tbl;
--
- 	if (u->direction == R10_TO_R0) {
- 		/* iterate through devices to mark removed disks as spare */
- 		for (i = 0; i < TAKEOVER_DISKS; i++) {
-@@ -5845,22 +5848,67 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 				dm->index = -1;
- 			}
- 		}
--		/* update disk order table */
--		i = 0;
--		for (du = super->disks; du; du = du->next) {
--			if (du->index >= 0) {
--				tab[du->index] = i;
--				i++;
--			}
--		}
- 		/* update map */
--		map->num_members = 2;
-+		map = get_imsm_map(dev, 0);
-+
-+		map->num_members = map->num_members / 2;
- 		map->map_state = IMSM_T_STATE_NORMAL;
- 		map->num_domains = 1;
- 		map->raid_level = 0;
- 		map->failed_disk_num = -1;
- 	}
- 
-+	if (u->direction == R0_TO_R10) {
-+		void **space;
-+		/* update slots in current disk list */
-+		for (dm = super->disks; dm; dm = dm->next) {
-+			if (dm->index >= 0)
-+				dm->index *= 2;
-+		}
-+		/* create new *missing* disks */
-+		for (i = 0; i < TAKEOVER_DISKS; i++) {
-+			space = *space_list;
-+			if (!space)
-+				continue;
-+			*space_list = *space;
-+			du = (void*)space;
-+			memcpy(du, super->disks, sizeof(*du));
-+			du->disk.status = FAILED_DISK;
-+			du->disk.scsi_id = 0;
-+			du->fd = -1;
-+			du->minor = 0;
-+			du->major = 0;
-+			du->index = (i * 2) + 1;
-+			sprintf((char *)du->disk.serial, " MISSING_%d", du->index);
-+			sprintf((char *)du->serial, "MISSING_%d", du->index);
-+			du->next = super->missing;
-+			super->missing = du;
-+		}
-+		/* create new dev and map */
-+		space = *space_list;
-+		if (!space)
-+			return 0;
-+		*space_list = *space;
-+		dev_new = (void*)space;
-+		memcpy(dev_new, dev, sizeof(*dev));
-+		/* update new map */
-+		map = get_imsm_map(dev_new, 0);
-+		map->failed_disk_num = map->num_members;
-+		map->num_members = map->num_members * 2;
-+		map->map_state = IMSM_T_STATE_NORMAL;
-+		map->num_domains = 2;
-+		map->raid_level = 1;
-+		/* replace dev<->dev_new */
-+		dv->dev = dev_new;
-+	}
-+	/* update disk order table */
-+	for (du = super->disks; du; du = du->next)
-+		if (du->index >= 0)
-+			set_imsm_ord_tbl_ent(map, du->index, du->index);
-+	for (du = super->missing; du; du = du->next)
-+		if (du->index >= 0)
-+			set_imsm_ord_tbl_ent(map, du->index, du->index | IMSM_ORD_REBUILD);
-+
- 	return 1;
- }
- 
-@@ -5908,7 +5956,7 @@ static void imsm_process_update(struct supertype *st,
- 	switch (type) {
- 	case update_takeover: {
- 		struct imsm_update_takeover *u = (void *)update->buf;
--		if (apply_takeover_update(u, super))
-+		if (apply_takeover_update(u, super, &update->space_list))
- 			super->updates_pending++;
- 		break;
- 	}
+Hmmm... that's already possible with the existing holders symlinks,
+right?  As Kay said in another message, I don't think we can do
+anything about the symlinks at this point.  It already has userland
+users, so we'll have to maintain them and there's no reason to create
+something else for the same functionality.
 
+It's silly that there's no way to tell whether the device is mounted
+from a given block device but then again we've been working around it
+by reverse mapping it till now so unless there's a new requirement
+maybe it's okay as it is now.
+
+Ideally, it would have been nice and more fitting with the whole bd
+claim API if we just exported single attribute which identifies the
+current holder supplied at the time of claiming (just the kernel
+identifier in string), so that we can forward-map the exclusive opener
+in general instead of having to reverse-map it for everything other
+than md/dm.
+
+Thank you.
+
+-- 
+tejun
