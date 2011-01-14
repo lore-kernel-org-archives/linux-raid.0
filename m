@@ -1,56 +1,82 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/2] md/raid5: FIX: reshape on degraded devices has wrong
-	configuration
-Date: Fri, 14 Jan 2011 14:00:08 +0100
-Message-ID: <20110114130007.15648.48487.stgit@gklab-128-013.igk.intel.com>
-References: <20110114125537.15648.73873.stgit@gklab-128-013.igk.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Fri, 14 Jan 2011 08:59:17 -0500
+Message-ID: <20110114135917.GA25506@redhat.com>
+References: <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
+ <20101119031149.GA28455@us.ibm.com>
+ <20101130225956.GA8882@redhat.com>
+ <4D0B31B5.101@suse.de>
+ <20101217140605.GA740@redhat.com>
+ <20110114010948.GA21818@redhat.com>
+ <4D2FFF00.8020702@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110114125537.15648.73873.stgit@gklab-128-013.igk.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D2FFF00.8020702@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-raid.ids
 
-When we performing expansion on degraded array (takeovered raid0),
-and we are adding i.e. 2 disks, one disk is added only.
+On Fri, Jan 14 2011 at  2:45am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
-this is due to fact that parity (missing) disk is moved to the end
-and added disk index is smaller than starting disk number in array.
+> On 01/14/2011 02:09 AM, Mike Snitzer wrote:
+> > On Fri, Dec 17 2010 at  9:06am -0500,
+> > Mike Snitzer <snitzer@redhat.com> wrote:
+> > 
+> >> On Fri, Dec 17 2010 at  4:47am -0500,
+> >> Hannes Reinecke <hare@suse.de> wrote:
+> >>
+> >>> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
+> >>>> Hannes,
+> >>>>
+> >>>> Any chance you've had time to fold your proposed logging changes in and
+> >>>> rebase this patch?  Could you post that updated patch?
+> >>>>
+> >>> yes, will be following shortly.
+> >>>
+> >>>> I'd like to help see this patch through to inclussion when 2.6.38 merge
+> >>>> window opens.  I can help with further review, testing and development.
+> >>>>
+> >>> Ok, thanks.
+> >>
+> >> I took some steps at furthering your work.  Here is the cover letter to
+> >> the patches I resently sent to dm-devel:
+> >> https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
+> >>
+> >> And here are the patches:
+> >> https://patchwork.kernel.org/patch/384612/
+> >> https://patchwork.kernel.org/patch/384602/
+> >> https://patchwork.kernel.org/patch/390882/
+> >>
+> >> Please feel free to change these how ever you see fit but your feedback
+> >> is really appreciated.
+> > 
+> > Hannes,
+> > 
+> > Any update?  I'd really like to see this work get upstream ASAP.  I'm
+> > doubtful that is possible for 2.6.38 given the merge window is likely to
+> > close shortly.
+> > 
+> Sorry for the late answer; the above patches somehow got lost in my
+> various mail folders :-(
+> 
+> But yes, the patchset looks okay.
+> Feel free to add my Acked-by: to last two.
 
-To resolve this situation array degradation should be used for adding
-disk(s) on reshape start.
+OK.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+> > Regardless, if we could get consensus on this work now and then stage it
+> > with James that would be great.
+> > 
+> Indeed. Will you resend it to linux-scsi or shall I do it?
 
- drivers/md/raid5.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+I can resend, will do so shortly.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 59c4150..3b9da76 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5528,7 +5528,8 @@ static int raid5_start_reshape(mddev_t *mddev)
- 		return -ENOSPC;
- 
- 	list_for_each_entry(rdev, &mddev->disks, same_set)
--		if ((rdev->raid_disk < 0 || rdev->raid_disk >= conf->raid_disks)
-+		if ((rdev->raid_disk < 0 ||
-+		     rdev->raid_disk >= (conf->raid_disks - mddev->degraded))
- 		     && !test_bit(Faulty, &rdev->flags))
- 			spares++;
- 
-@@ -5589,7 +5590,8 @@ static int raid5_start_reshape(mddev_t *mddev)
- 					/* Failure here is OK */;
- 			} else
- 				break;
--		} else if (rdev->raid_disk >= conf->previous_raid_disks
-+		} else if (rdev->raid_disk >= (conf->previous_raid_disks
-+						- mddev->degraded)
- 			   && !test_bit(Faulty, &rdev->flags)) {
- 			/* This is a spare that was manually added */
- 			if (raid5_add_disk(mddev, rdev) == 0) {
-
+Thanks!
+Mike
