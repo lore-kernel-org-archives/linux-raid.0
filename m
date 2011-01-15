@@ -1,175 +1,90 @@
-From: Bart Kus <me@bartk.us>
-Subject: Re: (help!) MD RAID6 won't --re-add devices?
-Date: Sat, 15 Jan 2011 11:50:58 -0800
-Message-ID: <4D31FAA2.2080202@bartk.us>
-References: <4D2EF83D.6080203@bartk.us> <4D31DE07.1000507@bartk.us>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: RAID for USB flash drives
+Date: Sat, 15 Jan 2011 20:54:31 +0000
+Message-ID: <4D320987.7020001@anonymous.org.uk>
+References: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>	<4D237E70.6030104@anonymous.org.uk> <AANLkTi=cOHgdradDDOFTdZ_xOGMXv8qf_n6xxppGA12y@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D31DE07.1000507@bartk.us>
+In-Reply-To: <AANLkTi=cOHgdradDDOFTdZ_xOGMXv8qf_n6xxppGA12y@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Hank Barta <hbarta@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some research has revealed a frightening solution:
-
-http://forums.gentoo.org/viewtopic-t-716757-start-0.html
-
-That thread calls upon mdadm --create with the --assume-clean flag.  It 
-also seems to re-enforce my suspicions that MD has lost my device order 
-numbers when it marked the drives as spare (thanks, MD!  Remind me to 
-get you a nice christmas present next year.).  I know the order of 5 out 
-of 10 devices, so that leaves 120 permutations to try.  I've whipped up 
-some software to generate all the permuted mdadm --create commands.
-
-The question now: how do I test if I've got the right combination?  Can 
-I dd a meg off the assembled array and check for errors somewhere?
-
-The other question: Is testing incorrect combinations destructive to any 
-data on the drives?  Like, would RAID6 kick in and start "fixing" parity 
-errors, even if I'm just reading?
-
---Bart
-
-On 1/15/2011 9:48 AM, Bart Kus wrote:
-> Things seem to have gone from bad to worse.  I upgraded to the latest 
-> mdadm, and it actually let me do an --add operation, but --re-add was 
-> still failing.  It added all the devices as spares though.  I stopped 
-> the array and tried to re-assemble it, but it's not starting.
+On 14/01/2011 23:25, Hank Barta wrote:
+> On Tue, Jan 4, 2011 at 2:09 PM, John Robinson
+> <john.robinson@anonymous.org.uk>  wrote:
 >
-> jo ~ # mdadm -A /dev/md4 -f -u da14eb85:00658f24:80f7a070:b9026515
-> mdadm: /dev/md4 assembled from 5 drives and 5 spares - not enough to 
-> start the array.
+>>
+>> First up, booting. You'll have to boot off a bare device which may in fact
+>> be a mirror over 2 or more sticks. Make that your first partition. I think
+>> it's simpler to make it over all 4. Look up booting from RAID to find out
+>> how.
 >
-> How do I promote these "spares" to being the active decides they once 
-> were?  Yes, they're behind a few events, so there will be some data loss.
->
-> --Bart
->
-> On 1/13/2011 5:03 AM, Bart Kus wrote:
->> Hello,
->>
->> I had a Port Multiplier failure overnight.  This put 5 out of 10 
->> drives offline, degrading my RAID6 array.  The file system is still 
->> mounted (and failing to write):
->>
->> Buffer I/O error on device md4, logical block 3907023608
->> Filesystem "md4": xfs_log_force: error 5 returned.
->> etc...
->>
->> The array is in the following state:
->>
->> /dev/md4:
->>         Version : 1.02
->>   Creation Time : Sun Aug 10 23:41:49 2008
->>      Raid Level : raid6
->>      Array Size : 15628094464 (14904.11 GiB 16003.17 GB)
->>   Used Dev Size : 1953511808 (1863.01 GiB 2000.40 GB)
->>    Raid Devices : 10
->>   Total Devices : 11
->>     Persistence : Superblock is persistent
->>
->>     Update Time : Wed Jan 12 05:32:14 2011
->>           State : clean, degraded
->>  Active Devices : 5
->> Working Devices : 5
->>  Failed Devices : 6
->>   Spare Devices : 0
->>
->>      Chunk Size : 64K
->>
->>            Name : 4
->>            UUID : da14eb85:00658f24:80f7a070:b9026515
->>          Events : 4300692
->>
->>     Number   Major   Minor   RaidDevice State
->>       15       8        1        0      active sync   /dev/sda1
->>        1       0        0        1      removed
->>       12       8       33        2      active sync   /dev/sdc1
->>       16       8       49        3      active sync   /dev/sdd1
->>        4       0        0        4      removed
->>       20       8      193        5      active sync   /dev/sdm1
->>        6       0        0        6      removed
->>        7       0        0        7      removed
->>        8       0        0        8      removed
->>       13       8       17        9      active sync   /dev/sdb1
->>
->>       10       8       97        -      faulty spare
->>       11       8      129        -      faulty spare
->>       14       8      113        -      faulty spare
->>       17       8       81        -      faulty spare
->>       18       8       65        -      faulty spare
->>       19       8      145        -      faulty spare
->>
->> I have replaced the faulty PM and the drives have registered back 
->> with the system, under new names:
->>
->> sd 3:0:0:0: [sdn] Attached SCSI disk
->> sd 3:1:0:0: [sdo] Attached SCSI disk
->> sd 3:2:0:0: [sdp] Attached SCSI disk
->> sd 3:4:0:0: [sdr] Attached SCSI disk
->> sd 3:3:0:0: [sdq] Attached SCSI disk
->>
->> But I can't seem to --re-add them into the array now!
->>
->> # mdadm /dev/md4 --re-add /dev/sdn1 --re-add /dev/sdo1 --re-add 
->> /dev/sdp1 --re-add /dev/sdr1 --re-add /dev/sdq1
->> mdadm: add new device failed for /dev/sdn1 as 21: Device or resource 
->> busy
->>
->> I haven't unmounted the file system and/or stopped the /dev/md4 
->> device, since I think that would drop any buffers either layer might 
->> be holding.  I'd of course prefer to lose as little data as 
->> possible.  How can I get this array going again?
->>
->> PS: I think the reason "Failed Devices" shows 6 and not 5 is because 
->> I had a single HD failure a couple weeks back.  I replaced the drive 
->> and the array re-built A-OK.  I guess it still counted the failure 
->> since the array wasn't stopped during the repair.
->>
->> Thanks for any guidance,
->>
->> --Bart
->>
->> PPS: mdadm - v3.0 - 2nd June 2009
->> PPS: Linux jo.bartk.us 2.6.35-gentoo-r9 #1 SMP Sat Oct 2 21:22:14 PDT 
->> 2010 x86_64 Intel(R) Core(TM)2 Quad CPU @ 2.40GHz GenuineIntel GNU/Linux
->> PPS:  # mdadm --examine /dev/sdn1
->> /dev/sdn1:
->>           Magic : a92b4efc
->>         Version : 1.2
->>     Feature Map : 0x0
->>      Array UUID : da14eb85:00658f24:80f7a070:b9026515
->>            Name : 4
->>   Creation Time : Sun Aug 10 23:41:49 2008
->>      Raid Level : raid6
->>    Raid Devices : 10
->>
->>  Avail Dev Size : 3907023730 (1863.01 GiB 2000.40 GB)
->>      Array Size : 31256188928 (14904.11 GiB 16003.17 GB)
->>   Used Dev Size : 3907023616 (1863.01 GiB 2000.40 GB)
->>     Data Offset : 272 sectors
->>    Super Offset : 8 sectors
->>           State : clean
->>     Device UUID : c0cf419f:4c33dc64:84bc1c1a:7e9778ba
->>
->>     Update Time : Wed Jan 12 05:39:55 2011
->>        Checksum : bdb14e66 - correct
->>          Events : 4300672
->>
->>      Chunk Size : 64K
->>
->>    Device Role : spare
->>    Array State : A.AA.A...A ('A' == active, '.' == missing)
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I should have read this more carefully. I performed a full install to
+> a raid0 only to find it incapable of setting up grub. It simply told
+> me there was a fatal error. :-/ It took me a bit more research before
+> the reality of your comment sunk in. So I proceeded again and tried to
+> use the first 100MB of each stick to create a 4 device raid1.
 
+I'm sorry I wasn't clearer. Yes, I meant you needed a RAID-1 on small 
+partitions across all 4 sticks for your /boot partition, just as you 
+would need a RAID-1 across both your hard drives if you were installing 
+on those. (I believe new grub can cope with other RAID levels but I 
+don't have any experience with it.) You also need to have the partitions 
+starting no earlier than sector 63, to give grub somewhere to put its 
+filesystem-aware code.
+
+> For some
+> reason, the partitioning S/W (Ubuntu 10.04.1 server) didn't like that
+> and just hung when it tried to discover the disks. Repeatedly. I
+> finally worked around that by deleting the 100 MB partitions on three
+> of the four drives and just using the first 100 MB on one of the
+> drives for a /boot partition. I completed the installation but the
+> system hung on boot. It just provides a blank screen. Experimenting
+> with the installation USB drive, it seemed to me that I couldn't even
+> boot that with all five thumb drives installed. I scaled back to
+> installation three USB drives, install media on a fourth. I also
+> figured out which slot I needed to put the install media in so as to
+> boot. The BIOS - or perhaps some stage in the boot process - gets
+> confused otherwise.
+>
+> I've booted a live CD and tried running grub-install from a chroot
+> with the /boot and / file systems and the command concluded w/out any
+> errors or warnings. But the system still will not boot. I'm not sure
+> if this is a grub or a RAID problem or some combination.
+>
+> Is there something I need to include with grub when the root file
+> system is on a RAID0?
+
+I think you need your final boot media in the right place while you're 
+running the installer. Booting off one USB stick (your installation 
+drive) while trying to make another bootable is liable to go wrong, or 
+at least give you a slightly incorrect mdadm.conf or make grub-install 
+do the wrong thing. If you can, just plug in the 4 USB sticks you're 
+installing on, and hook up a DVD-ROM drive via IDE or SATA to install from.
+
+Even then, you could have trouble unless you make very sure grub-install 
+installs on ALL FOUR of your destination USB sticks, because it's 
+possible your BIOS will detect the USB sticks in a different order than 
+the Linux kernel does. (I don't know that for sure but I wouldn't be 
+surprised, I've seen it happen with hard drive interfaces.) grub-install 
+should get it right as long as your RAID-1 /boot is spread across all 4 
+USB sticks, as long as you're not using USB install media (as per 
+previous para).
+
+You will also need to make sure your initrd or initramfs includes the 
+USB drivers if it doesn't do that automatically, as well as the 
+usb-storage, scsi and md modules for your root filesystem, and just to 
+be sure I'd include raid1.ko so it can potentially start /boot as well.
+
+I may be being over-cautious with some of what I say above, but 
+hopefully I've covered all the possibilities even if some are overkill, 
+and your installer is likely getting more right than I'm giving it 
+credit for. Anyway, once again, good luck!
+
+Cheers,
+
+John.
