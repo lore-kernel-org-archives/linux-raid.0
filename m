@@ -1,90 +1,104 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID for USB flash drives
-Date: Sat, 15 Jan 2011 20:54:31 +0000
-Message-ID: <4D320987.7020001@anonymous.org.uk>
-References: <AANLkTi=kcbanFit5x27ccS_1RChxC=Dn+Hs4Ak+FbKsX@mail.gmail.com>	<4D237E70.6030104@anonymous.org.uk> <AANLkTi=cOHgdradDDOFTdZ_xOGMXv8qf_n6xxppGA12y@mail.gmail.com>
+From: =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>
+Subject: Re: (help!) MD RAID6 won't --re-add devices?
+Date: Sat, 15 Jan 2011 19:05:16 -0500
+Message-ID: <AANLkTikwEG30jkZuPT+WAEc8=LLPi6c1-Rtv91uH3v-z@mail.gmail.com>
+References: <4D2EF83D.6080203@bartk.us> <4D31DE07.1000507@bartk.us> <4D31FAA2.2080202@bartk.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=cOHgdradDDOFTdZ_xOGMXv8qf_n6xxppGA12y@mail.gmail.com>
+In-Reply-To: <4D31FAA2.2080202@bartk.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hank Barta <hbarta@gmail.com>
+To: Bart Kus <me@bartk.us>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/01/2011 23:25, Hank Barta wrote:
-> On Tue, Jan 4, 2011 at 2:09 PM, John Robinson
-> <john.robinson@anonymous.org.uk>  wrote:
+On Sat, Jan 15, 2011 at 2:50 PM, Bart Kus <me@bartk.us> wrote:
+> Some research has revealed a frightening solution:
 >
->>
->> First up, booting. You'll have to boot off a bare device which may in fact
->> be a mirror over 2 or more sticks. Make that your first partition. I think
->> it's simpler to make it over all 4. Look up booting from RAID to find out
->> how.
+> http://forums.gentoo.org/viewtopic-t-716757-start-0.html
 >
-> I should have read this more carefully. I performed a full install to
-> a raid0 only to find it incapable of setting up grub. It simply told
-> me there was a fatal error. :-/ It took me a bit more research before
-> the reality of your comment sunk in. So I proceeded again and tried to
-> use the first 100MB of each stick to create a 4 device raid1.
-
-I'm sorry I wasn't clearer. Yes, I meant you needed a RAID-1 on small 
-partitions across all 4 sticks for your /boot partition, just as you 
-would need a RAID-1 across both your hard drives if you were installing 
-on those. (I believe new grub can cope with other RAID levels but I 
-don't have any experience with it.) You also need to have the partitions 
-starting no earlier than sector 63, to give grub somewhere to put its 
-filesystem-aware code.
-
-> For some
-> reason, the partitioning S/W (Ubuntu 10.04.1 server) didn't like that
-> and just hung when it tried to discover the disks. Repeatedly. I
-> finally worked around that by deleting the 100 MB partitions on three
-> of the four drives and just using the first 100 MB on one of the
-> drives for a /boot partition. I completed the installation but the
-> system hung on boot. It just provides a blank screen. Experimenting
-> with the installation USB drive, it seemed to me that I couldn't even
-> boot that with all five thumb drives installed. I scaled back to
-> installation three USB drives, install media on a fourth. I also
-> figured out which slot I needed to put the install media in so as to
-> boot. The BIOS - or perhaps some stage in the boot process - gets
-> confused otherwise.
+> That thread calls upon mdadm --create with the --assume-clean flag. =A0=
+It also
+> seems to re-enforce my suspicions that MD has lost my device order nu=
+mbers
+> when it marked the drives as spare (thanks, MD! =A0Remind me to get y=
+ou a nice
+> christmas present next year.). =A0I know the order of 5 out of 10 dev=
+ices, so
+> that leaves 120 permutations to try. =A0I've whipped up some software=
+ to
+> generate all the permuted mdadm --create commands.
 >
-> I've booted a live CD and tried running grub-install from a chroot
-> with the /boot and / file systems and the command concluded w/out any
-> errors or warnings. But the system still will not boot. I'm not sure
-> if this is a grub or a RAID problem or some combination.
+> The question now: how do I test if I've got the right combination? =A0=
+Can I dd
+> a meg off the assembled array and check for errors somewhere?
+
+I guess running a read-only fsck is the best way to proove it working.
+
 >
-> Is there something I need to include with grub when the root file
-> system is on a RAID0?
+> The other question: Is testing incorrect combinations destructive to =
+any
+> data on the drives? =A0Like, would RAID6 kick in and start "fixing" p=
+arity
+> errors, even if I'm just reading?
+>
 
-I think you need your final boot media in the right place while you're 
-running the installer. Booting off one USB stick (your installation 
-drive) while trying to make another bootable is liable to go wrong, or 
-at least give you a slightly incorrect mdadm.conf or make grub-install 
-do the wrong thing. If you can, just plug in the 4 USB sticks you're 
-installing on, and hook up a DVD-ROM drive via IDE or SATA to install from.
+If you don't want to risk your data, you could create a cowloop of
+each device before writing to it, or dm snapshot using dmsetup.
 
-Even then, you could have trouble unless you make very sure grub-install 
-installs on ALL FOUR of your destination USB sticks, because it's 
-possible your BIOS will detect the USB sticks in a different order than 
-the Linux kernel does. (I don't know that for sure but I wouldn't be 
-surprised, I've seen it happen with hard drive interfaces.) grub-install 
-should get it right as long as your RAID-1 /boot is spread across all 4 
-USB sticks, as long as you're not using USB install media (as per 
-previous para).
+I made a script for dmsetup snapshot on the side when I really needed
+it because cowloop wouldn't compile. Here it is, it should help you
+understand how it works!
 
-You will also need to make sure your initrd or initramfs includes the 
-USB drivers if it doesn't do that automatically, as well as the 
-usb-storage, scsi and md modules for your root filesystem, and just to 
-be sure I'd include raid1.ko so it can potentially start /boot as well.
 
-I may be being over-cautious with some of what I say above, but 
-hopefully I've covered all the possibilities even if some are overkill, 
-and your installer is likely getting more right than I'm giving it 
-credit for. Anyway, once again, good luck!
+RODATA=3D$1
+shift
+COWFILE=3D$1
+shift
+=46SIZE=3D$1
+shift
+PREFIX=3D$1
+shift
 
-Cheers,
+if [ -z $RODATA ] || [ -z $COWFILE ] || [ -z $FSIZE ] || [ ! -z $5 ]
+then
+	echo "Usage: $0 [read only device] [loop file] [size of loop in MB] {p=
+refix}"
+	echo "Read only device won't ever get a write."
+	echo "Loop file can be a file or device where writes will be directed =
+too."
+	echo "Size is specified in MB, you will be able to write that much
+change to the device created."
+	echo "Prefix will get prepended to all devices created by this script
+in /dev/mapper"
+	exit -1
+fi
 
-John.
+MRODATA=3D$PREFIX${RODATA#/dev/}data
+COWFILELOOP=3D$(losetup -f)
+MCOWFILE=3D$PREFIX${RODATA#/dev/}cow
+MSNAPSHOT=3D$PREFIX${RODATA#/dev/}snap
+
+
+dd if=3D/dev/zero of=3D$COWFILE bs=3D1M seek=3D$FSIZE count=3D1
+losetup $COWFILELOOP $COWFILE
+echo "0 $(blockdev --getsz $RODATA) linear $RODATA 0" | dmsetup create =
+$MRODATA
+echo "0 $(blockdev --getsz $COWFILELOOP) linear $COWFILELOOP 0" |
+dmsetup create $MCOWFILE
+echo "0 $(blockdev --getsz /dev/mapper/$MRODATA) snapshot
+/dev/mapper/$MRODATA /dev/mapper/$MCOWFILE p 64" | dmsetup create
+$MSNAPSHOT
+
+echo "You can now use $MSNAPSHOT for your tests, up to ${FSIZE}MB."
+exit 0
+
+
+> --Bart
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
