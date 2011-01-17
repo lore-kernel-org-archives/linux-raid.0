@@ -1,129 +1,135 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 4/4] raid0->raid10 takeover- process metadata update
-Date: Mon, 17 Jan 2011 16:43:08 +0100
-Message-ID: <20110117154308.25096.54013.stgit@gklab-128-111.igk.intel.com>
-References: <20110117153908.25096.42697.stgit@gklab-128-111.igk.intel.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: RE: [PATCH 5/6] Remove code for non re-striping operations.
+Date: Mon, 17 Jan 2011 15:49:25 +0000
+Message-ID: <BE2BFE91933D1B4089447C644860408066EF065D@irsmsx503.ger.corp.intel.com>
+References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
+	<20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
+ <20110113135134.584c1264@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110117153908.25096.42697.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110113135134.584c1264@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
 List-Id: linux-raid.ids
 
-Implementation of raid0->raid10 takeover metadata update
-at process_update level.
-- We are using memory prievously alocated in prepare_update to
-create two dummy disks will be inserted in the metadata and
-new imsm_dev structure with expanded disk order table.
-- Update indexes in disk list
-- Update metadata map
-- Update disk order table
+Hi Neil,
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- super-intel.c |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 files changed, 55 insertions(+), 4 deletions(-)
+So maybe it will be good to limit this part of code execution only for raid5?
+(reshape.backup_blocks == 0) {
+	If (info->array.level != 5)
+		return rv;
+...
 
-diff --git a/super-intel.c b/super-intel.c
-index 3b2a273..e284a4a 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5813,12 +5813,15 @@ update_reshape_exit:
- }
- 
- static int apply_takeover_update(struct imsm_update_takeover *u,
--				struct intel_super *super)
-+				struct intel_super *super,
-+				void ***space_list)
- {
- 	struct imsm_dev *dev = NULL;
-+	struct intel_dev *dv;
-+	struct imsm_dev *dev_new;
- 	struct imsm_map *map;
- 	struct dl *dm, *du;
--	struct intel_dev *dv;
-+	int i;
- 
- 	for (dv = super->devlist; dv; dv = dv->next)
- 		if (dv->index == (unsigned int)u->subarray) {
-@@ -5845,7 +5848,6 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 				dm->index = -1;
- 			}
- 		}
--
- 		/* update map */
- 		map->num_members = map->num_members / 2;
- 		map->map_state = IMSM_T_STATE_NORMAL;
-@@ -5854,10 +5856,59 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 		map->failed_disk_num = -1;
- 	}
- 
-+	if (u->direction == R0_TO_R10) {
-+		void **space;
-+		/* update slots in current disk list */
-+		for (dm = super->disks; dm; dm = dm->next) {
-+			if (dm->index >= 0)
-+				dm->index *= 2;
-+		}
-+		/* create new *missing* disks */
-+		for (i = 0; i < map->num_members; i++) {
-+			space = *space_list;
-+			if (!space)
-+				continue;
-+			*space_list = *space;
-+			du = (void *)space;
-+			memcpy(du, super->disks, sizeof(*du));
-+			du->disk.status = FAILED_DISK;
-+			du->disk.scsi_id = 0;
-+			du->fd = -1;
-+			du->minor = 0;
-+			du->major = 0;
-+			du->index = (i * 2) + 1;
-+			sprintf((char *)du->disk.serial,
-+				" MISSING_%d", du->index);
-+			sprintf((char *)du->serial,
-+				"MISSING_%d", du->index);
-+			du->next = super->missing;
-+			super->missing = du;
-+		}
-+		/* create new dev and map */
-+		space = *space_list;
-+		if (!space)
-+			return 0;
-+		*space_list = *space;
-+		dev_new = (void *)space;
-+		memcpy(dev_new, dev, sizeof(*dev));
-+		/* update new map */
-+		map = get_imsm_map(dev_new, 0);
-+		map->failed_disk_num = map->num_members;
-+		map->num_members = map->num_members * 2;
-+		map->map_state = IMSM_T_STATE_NORMAL;
-+		map->num_domains = 2;
-+		map->raid_level = 1;
-+		/* replace dev<->dev_new */
-+		dv->dev = dev_new;
-+	}
- 	/* update disk order table */
- 	for (du = super->disks; du; du = du->next)
- 		if (du->index >= 0)
- 			set_imsm_ord_tbl_ent(map, du->index, du->index);
-+	for (du = super->missing; du; du = du->next)
-+		if (du->index >= 0)
-+			set_imsm_ord_tbl_ent(map, du->index,
-+						du->index | IMSM_ORD_REBUILD);
- 
- 	return 1;
- }
-@@ -5906,7 +5957,7 @@ static void imsm_process_update(struct supertype *st,
- 	switch (type) {
- 	case update_takeover: {
- 		struct imsm_update_takeover *u = (void *)update->buf;
--		if (apply_takeover_update(u, super))
-+		if (apply_takeover_update(u, super, &update->space_list))
- 			super->updates_pending++;
- 		break;
- 	}
+Do you agree?
+
+Regards- Krzysztof
+
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, January 13, 2011 3:52 AM
+> To: Wojcik, Krzysztof
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
+> Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
+> 
+> On Wed, 12 Jan 2011 17:01:32 +0100 Krzysztof Wojcik
+> <krzysztof.wojcik@intel.com> wrote:
+> 
+> > Neil,
+> > How was your intention when you add this part of code?
+> > I can't find the case when it will be necessary.
+> > Moreover it breaks flow for takeover operations because
+> > ioctl not succeeded when more than one parameter is changed.
+> > I've remove this code temporally to be able test takeover
+> > operations.
+> > We can restore this code after we decide what it should do.
+> 
+> Asking what the purpose of some code is is perfectly OK.  Asking by
+> sending a
+> patch which removes the code seems ... odd.
+> 
+> If the number of data devices is 1, then a RAID5 can have
+> layout/chunksize
+> changed without any restriping.
+> This code handles that case.
+> 
+> NeilBrown
+> 
+> 
+> >
+> > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> > ---
+> >  Grow.c |   43 +++++--------------------------------------
+> >  1 files changed, 5 insertions(+), 38 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index 253f289..6835f34 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -1666,6 +1666,11 @@ static int reshape_array(char *container, int
+> fd, char *devname,
+> >  		ping_monitor(container);
+> >  	}
+> >
+> > +	if (reshape.backup_blocks == 0) {
+> > +		/* If operation not not reuire re-striping we can finish */
+> > +		return rv;
+> > +	}
+> > +
+> >  	/* ->reshape_super might have chosen some spares from the
+> >  	 * container that it wants to be part of the new array.
+> >  	 * We can collect them with ->container_content and give
+> > @@ -1692,44 +1697,6 @@ static int reshape_array(char *container, int
+> fd, char *devname,
+> >  		}
+> >  	}
+> >
+> > -	if (reshape.backup_blocks == 0) {
+> > -		/* No restriping needed, but we might need to impose
+> > -		 * some more changes: layout, raid_disks, chunk_size
+> > -		 */
+> > -		if (info->new_layout != UnSet &&
+> > -		    info->new_layout != info->array.layout) {
+> > -			info->array.layout = info->new_layout;
+> > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > -				fprintf(stderr, Name ": failed to set new
+> layout\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("layout for %s set to %d\n",
+> > -				       devname, info->array.layout);
+> > -		}
+> > -		if (info->delta_disks != UnSet &&
+> > -		    info->delta_disks != 0) {
+> > -			info->array.raid_disks += info->delta_disks;
+> > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > -				fprintf(stderr, Name ": failed to set raid
+> disks\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("raid_disks for %s set to %d\n",
+> > -				       devname, info->array.raid_disks);
+> > -		}
+> > -		if (info->new_chunk != 0 &&
+> > -		    info->new_chunk != info->array.chunk_size) {
+> > -			if (sysfs_set_num(info, NULL,
+> > -					  "chunk_size", info->new_chunk) != 0) {
+> > -				fprintf(stderr, Name ": failed to set chunk
+> size\n");
+> > -				rv = 1;
+> > -			} else if (!quiet)
+> > -				printf("chunk size for %s set to %d\n",
+> > -				       devname, info->array.chunk_size);
+> > -		}
+> > -
+> > -		return rv;
+> > -	}
+> > -
+> >  	/*
+> >  	 * There are three possibilities.
+> >  	 * 1/ The array will shrink.
 
