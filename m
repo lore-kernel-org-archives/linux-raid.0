@@ -1,160 +1,135 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: RE: [PATCH 2/2] Assemble: allow to assemble spares on their own
-Date: Mon, 17 Jan 2011 10:42:43 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E96E1C4@irsmsx504.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F4E@irsmsx504.ger.corp.intel.com>
- <20110105135855.478982e9@notabene.brown>
- <A9DE54D0CD747C4CB06DCE5B6FA2246F010E7D9E7A@irsmsx504.ger.corp.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 0/6] OLCE raid5/0 (all arrays in container)
+Date: Mon, 17 Jan 2011 11:52:09 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176EA5287@irsmsx503.ger.corp.intel.com>
+References: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
+ <20110117123107.58d1024e@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E7D9E7A@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <20110117123107.58d1024e@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>, NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
 
-> > As mentioned earlier, I added a test for 'auto_assem'.
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Monday, January 17, 2011 2:31 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 0/6] OLCE raid5/0 (all arrays in container)
 > 
-> Adding such test means that we can only assemble spares on their own
-> when there is no config file.
-> When there is a config file with at least one ARRAY line we do not try
-> auto assembly.
-> This also means that adding special ARRAY line for spares will not work
-> - in this case
-> we have no auto_assem (because uuid is set) so we try the second loop
-> where all spares get rejected because domains is null.
-
-...and st->sb is not loaded. 
-
-> Should `mdadm -As` only assemble what it finds in config?
-> Maybe we should always try auto assembly?
-> What is the original reasoning behind not trying auto assembly when
-> there is at least one array in config?
-> Regards
-> Anna
+> On Thu, 13 Jan 2011 15:50:02 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
 > 
+> > The following series adds possibility to reshape all (raid0/5) arrays
+> in container for expansion feature.
+> > The main problem resolved in this series is how initialize second
+> (and next) raid0 reshapes for container reshape
+> > executed as set of array reshapes.
+> >
+> > For i.e. second raid0 array mdmon should initialize metadata to let
+> know to mdadm that there is something more to reshape.
+> > But problem is what to do when mdmon is not loaded? (for first raid0
+> array this is not a problem, reshape_super() in mdadm updates
+> metadata).
+> >
+> > this is resolved by allowing mdadm to know what was reshaped so far.
+> This allows to reshape arrays that are not reshaped yet,
+> > without update from mdmon.
+> 
+> There certainly are some complexities with reshaping a container with 2
+> RAID0
+> arrays in it.  However the approach you are taking seems too
+> complicated.
+> 
+> This is how I think the particular case of 2 RAID0 array would work.
+> It
+> should generalise neatly to all other combinations.
+> 
+> 1/ mdadm decides to proceeds with the reshape, updates the metadata
+> (because
+>    mdmon isn't running), converts the array to RAID4, starts mdmon and
+> then
+>    lets the reshape for the first array proceed.
+> 
+> 2/ when the reshape completes, mdmon will notice and will call
+>    imsm_progress_container_reshape which will update the metadata
+>    for the second array so that reshape appears to be active.
 
-Spares not matching any array will not be picked up by auto assembly
-when there is config file.
-Should we just remove the check
-cnt == 0
-in mdadm.c line 1290?
-Regards 
-Anna
+For i.e. second raid5 it is ok.
+This will never happened when second array is raid0, it is not monitored yet as arrays metadata are updated/monitored one by one.
+This means that that mdmon cannot tell (via metadata) to mdadm that next raid0 array needs to be reshaped.
+This information is used in container_content() before second takeover (in reshape_array()) is executed.
 
-> > Thanks,
-> > NeilBrown
+> 
+> 3/ mdadm will convert the raid4 back to raid0 and so mdmon will exit.
+> 
+> 4/ mdadm calls container_content and finds that the second array needs
+> to
+>    be reshaped.  It converts the array to raid4 and starts mdmon.
+>    Then they oversee the reshape of the second array
+
+Metadata for second array is not updates by mdmon as we want "now" start mdmon for it.
+
+> 
+> 5/ when the reshape completes, mdadm converts the array back to RAID0
+> and
+>    mdmon exits.
+> 
+> All done.
+
+
+All looks ok, except "next/2nd" raid0 array is reshaped. At "previous/1st" reshape finish, it is not monitored yet, so mdmon can't update metadata,
+before mdadm enters reshape_array() to execute takeover and then mdmon is started.
+Decision to enter reshape_array() is made based on metadata (not updated).
+
+This is a reason why I'm using additional list for reshape decision. If mdmon doesn't make update for raid0 (not monitored)
+Mdadm tries to run mdmon for it (in reshape_array()) and waits for metadata update and decision about reshape.
+
+Such implementation allows to follow directions for single reshape_super() call for container operation.
+
+BR
+Adam
+
+
+> 
+> 
+> This should avoid almost all special-casing.
+> 
+> NeilBrown
+> 
+> 
 > >
-> > commit ed7fc6b4d91a5342886ba6fe6d175f69f0875d3b
-> > Author: Anna Czarnowska <anna.czarnowska@intel.com>
-> > Date:   Wed Jan 5 13:54:18 2011 +1100
+> > BR
+> > Adam
 > >
-> >     Assemble: allow to assemble spares on their own
+> > ---
 > >
-> >     If we find spares but no members of given array
-> >     we create container with just spares.
+> > Adam Kwolek (6):
+> >       FIX: sync_completed == 0 causes reshape cancellation in
+> metadata
+> >       FIX: mdadm hangs during reshape
+> >       FIX: mdadm throws coredump on exit in error case
+> >       FIX: reshape raid0 on second array
+> >       FIX: continue raid0 reshape
+> >       imsm: Update metadata for second array
 > >
-> >     This allows auto assemble to pick up all lose imsm spares when
-> > there
-> >     is no config file.
-> >     When there is a valid config file and any array is assembled from
-> > it
-> >     we don't try auto assembly so we will not assemble spares that
-> > don't
-> >     match any array.
-> >     To remedy this we must add
-> >     ARRAY metadata=imsm UUID=00000000:00000000:00000000:00000000
-> >     to config file.
-> >     This container will include all remaining spares.
 > >
-> >     Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> >     Signed-off-by: NeilBrown <neilb@suse.de>
+> >  Grow.c        |   95
+> +++++++++++++++++++++++++++++++++++++++++++++++++++------
+> >  monitor.c     |    4 ++
+> >  super-intel.c |   35 +++++++++++++++++++--
+> >  3 files changed, 120 insertions(+), 14 deletions(-)
 > >
-> > diff --git a/Assemble.c b/Assemble.c
-> > index 7ef9dc3..532335e 100644
-> > --- a/Assemble.c
-> > +++ b/Assemble.c
-> > @@ -489,17 +489,23 @@ int Assemble(struct supertype *st, char *mddev,
-> >  					   homehost, update,
-> >  					   report_missmatch ? devname : NULL))
-> >  				goto loop;
-> > -
-> > -			if (!memcmp(content->uuid, uuid_zero,
-> > sizeof(int[4]))) {
-> > -				/* this is imsm_spare - do not set st */
-> > -				tmpdev->used = 3;
-> > -				goto loop;
-> > -			}
-> >
-> >  			if (st == NULL)
-> >  				st = dup_super(tst);
-> >  			if (st->minor_version == -1)
-> >  				st->minor_version = tst->minor_version;
-> > +
-> > +			if (memcmp(content->uuid, uuid_zero,
-> > +				   sizeof(int[4])) == 0) {
-> > +				/* this is a floating spare.  It cannot define
-> > +				 * an array unless there are no more arrays of
-> > +				 * this type to be found.  It can be included
-> > +				 * in an array of this type though.
-> > +				 */
-> > +				tmpdev->used = 3;
-> > +				goto loop;
-> > +			}
-> > +
-> >  			if (st->ss != tst->ss ||
-> >  			    st->minor_version != tst->minor_version ||
-> >  			    st->ss->compare_super(st, tst) != 0) {
-> > @@ -557,6 +563,25 @@ int Assemble(struct supertype *st, char *mddev,
-> >  			tst->ss->free_super(tst);
-> >  	}
-> >
-> > +	/* Check if we found some imsm spares but no members */
-> > +	if (auto_assem && (!st || !st->sb))
-> > +		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
-> > +			if (tmpdev->used != 3)
-> > +				continue;
-> > +			tmpdev->used = 1;
-> > +			content = &info;
-> > +
-> > +			if (!st->sb) {
-> > +				/* we need sb from one of the spares */
-> > +				int dfd = dev_open(tmpdev->devname, O_RDONLY);
-> > +				if (dfd < 0 ||
-> > +				    st->ss->load_super(st, dfd, NULL))
-> > +					tmpdev->used = 2;
-> > +				if (dfd > 0)
-> > +					close(dfd);
-> > +			}
-> > +		}
-> > +
-> >  	/* Now reject spares that don't match domains of identified
-> > members */
-> >  	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
-> >  		struct stat stb;
-> > @@ -892,8 +917,10 @@ int Assemble(struct supertype *st, char *mddev,
-> >  		if (content->array.level != LEVEL_MULTIPATH)
-> >  			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE)))
-> > {
-> >  				if (!(devices[j].i.disk.state
-> > -				      & (1<<MD_DISK_FAULTY)))
-> > +				      & (1<<MD_DISK_FAULTY))) {
-> > +					devices[j].uptodate = 1;
-> >  					sparecnt++;
-> > +				}
-> >  				continue;
-> >  			}
-> >  		/* If this devices thinks that 'most_recent' has failed,
-> > then
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"
 > in
