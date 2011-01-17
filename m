@@ -1,232 +1,153 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/6] Add raid10 -> raid0 takeover support
-Date: Mon, 17 Jan 2011 13:06:38 +1100
-Message-ID: <20110117130638.00741da9@notabene.brown>
-References: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
-	<20110113153252.20266.14758.stgit@gklab-128-111.igk.intel.com>
+Subject: Re: open_dev_excl in reshape_container() fails
+Date: Mon, 17 Jan 2011 15:07:34 +1100
+Message-ID: <20110117150734.4473de2f@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D176E5A1BC@irsmsx503.ger.corp.intel.com>
+	<AANLkTinKyBbX7S-yaM_FG=HU0ABuAzw+FxaUgdZPzy0Q@mail.gmail.com>
+	<905EDD02F158D948B186911EB64DB3D176E5A4CA@irsmsx503.ger.corp.intel.com>
+	<905EDD02F158D948B186911EB64DB3D176E5A6CF@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113153252.20266.14758.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176E5A6CF@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 13 Jan 2011 16:32:52 +0100 Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
+On Fri, 14 Jan 2011 10:36:04 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> The patch introduces takeover form level 10 to level 0 for imsm
-> metadata. This patch contains procedures connected with preparing
-> and applying metadata update during 10 -> 0 takeover.
-> When performing takeover 10->0 mdmon should update the external
-> metadata (due to disk slot and level changes).
-> To achieve that mdadm calls reshape_super() and prepare
-> the "update_takeover" metadata update type.
-> Prepared update is processed by mdmon in process_update().
+> Hi, 
+> 
+> I think I've found problem root cause.
+> As I'm working on "Online Capacity Expansion", my tests uses mounted arrays - this is in conflict with open_dev_ext()
+> and fails this function. Evrything is ok  This means that reshape operation cannot be performed online (or this is valid on my system only?).
+> 
+> I do not know why on begin (in main() of mdadm.c) this function can succeed and later not (later system blocks array ?).
+> More, when I've made some open_dev_exe()+close() earlier, it works later also (please look used code below/treat patch as demo/).
+> 
+> Summarizing problem is related to mounted arrays only.
 
-You are using sysfs_read inside super-intel again.  That is the wrong thing
-to do for the same reasons as last time.
+Thanks.  I see what is wrong - it is OK to open containers exclusively, but
+not arrays  - as you say, that could be mounted.
 
-And I'm not very comfortable about sending a list of devices to delete from
-mdadm to mdmon.
-I would think that mdadm would simply fail/remove the devices from the array,
-then tell mdmon to update the metadata.  It would see which ones are still
-working and construct the RAID0 out of those.
+I have applied your original patch to change open_dev_excl to open_dev now
+that I understand what the issue is..
+
+Thanks,
 
 NeilBrown
 
 
 > 
-> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> BR
+> Adam
+> 
+> 
+> >From cf545d2ffb906096da89aff7b1a5c5830221cc4a Mon Sep 17 00:00:00 2001
+> From: Adam Kwolek <adam.kwolek@intel.com>
+> Date: Fri, 14 Jan 2011 11:11:19 +0100
+> Subject: [PATCH] ADK: open workaround 2
+> 
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
->  Grow.c        |    1 
->  super-intel.c |  126 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 126 insertions(+), 1 deletions(-)
+>  Grow.c  |   17 +++++++++++++++++
+>  mdadm.c |   11 +++++++++++
+>  2 files changed, 28 insertions(+), 0 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index c0f9419..e1ec01c 100644
+> index 763287b..3b37f97 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -1463,6 +1463,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
->  			rv = 1;
+> @@ -1285,6 +1285,10 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  
+>  	struct mdinfo info;
+>  	struct mdinfo *sra;
+> +//adk
+> +	int fd_test = open_dev_excl(126);
+> +	if (fd_test >= 0)
+> +		close(fd_test);
+>  
+>  	if (ioctl(fd, GET_ARRAY_INFO, &array) < 0) {
+>  		fprintf(stderr, Name ": %s is not an active md array - aborting\n",
+> @@ -1319,6 +1323,10 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			" beyond %d\n", st->max_devs);
+>  		return 1;
+>  	}
+> +//adk
+> +	fd_test = open_dev_excl(126);
+> +	if (fd_test >= 0)
+> +		close(fd_test);
+>  
+>  	/* in the external case we need to check that the requested reshape is
+>  	 * supported, and perform an initial check that the container holds the
+> @@ -1394,6 +1402,10 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			" be reshaped\n", devname);
+>  		return 1;
+>  	}
+> +//adk
+> +	fd_test = open_dev_excl(126);
+> +	if (fd_test >= 0)
+> +		close(fd_test);
+>  
+>  	/* ========= set size =============== */
+>  	if (size >= 0 && (size == 0 || size != array.size)) {
+> @@ -1462,6 +1474,10 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
 >  			goto release;
 >  		}
-> +		ping_monitor(container);
 >  	}
+> +//adk
+> +	fd_test = open_dev_excl(126);
+> +	if (fd_test >= 0)
+> +		close(fd_test);
 >  
 >  	info.array = array;
-> diff --git a/super-intel.c b/super-intel.c
-> index c12ba74..7d2d777 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -299,6 +299,7 @@ enum imsm_update_type {
->  	update_rename_array,
->  	update_add_remove_disk,
->  	update_reshape_container_disks,
-> +	update_takeover
->  };
+>  	sysfs_init(&info, fd, NoMdDev);
+> @@ -1545,6 +1561,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  		 * number of devices (On-Line Capacity Expansion) must be
+>  		 * performed at the level of the container
+>  		 */
+> +
+>  		rv = reshape_container(container, fd, devname, st, &info,
+>  				       force, backup_file, quiet);
+>  		frozen = 0;
+> diff --git a/mdadm.c b/mdadm.c
+> index 2ffe94f..bc9d34e 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -127,6 +127,7 @@ int main(int argc, char *argv[])
+>  	ident.name[0] = 0;
+>  	ident.container = NULL;
+>  	ident.member = NULL;
+> +//adk - can open
 >  
->  struct imsm_update_activate_spare {
-> @@ -319,6 +320,17 @@ struct geo_params {
->  	int raid_disks;
->  };
->  
-> +#define TAKEOVER_DISKS 2
-> +enum takeover_direction {
-> +	R10_TO_R0,
-> +	R0_TO_R10
-> +};
-> +struct imsm_update_takeover {
-> +	enum imsm_update_type type;
-> +	int subarray;
-> +	enum takeover_direction direction;
-> +	int disks[TAKEOVER_DISKS];
-> +};
->  
->  struct imsm_update_reshape {
->  	enum imsm_update_type type;
-> @@ -5793,6 +5805,56 @@ update_reshape_exit:
->  	return ret_val;
->  }
->  
-> +static int apply_takeover_update(struct imsm_update_takeover *u,
-> +				struct intel_super *super)
-> +{
-> +	struct imsm_dev *dev = NULL;
-> +	struct imsm_map *map;
-> +	struct dl *dm, *du;
-> +	int *tab;
-> +	int i;
+>  	while ((option_index = -1) ,
+>  	       (opt=getopt_long(argc, argv,
+> @@ -134,6 +135,11 @@ int main(int argc, char *argv[])
+>  				&option_index)) != -1) {
+>  		int newmode = mode;
+>  		/* firstly, some mode-independent options */
+> +//adk
+> +		int fd_test = open_dev_excl(126);
+> +		if (fd_test >= 0)
+> +			close(fd_test);
 > +
-> +	dev = get_imsm_dev(super, u->subarray);
+>  		switch(opt) {
+>  		case HelpOptions:
+>  			print_help = 2;
+> @@ -1115,6 +1121,11 @@ int main(int argc, char *argv[])
+>  			exit(2);
+>  		}
+>  		if (mode == MANAGE || mode == GROW) {
+> +//adk
+> +			int fd_test = open_dev_excl(126);
+> +			if (fd_test >= 0)
+> +				close(fd_test);
 > +
-> +	if (dev == NULL)
-> +		return 0;
-> +
-> +	map = get_imsm_map(dev, 0);
-> +	tab = (int *)&map->disk_ord_tbl;
-> +
-> +	if (u->direction == R10_TO_R0) {
-> +		/* iterate through devices to mark removed disks as spare */
-> +		for (i = 0; i < TAKEOVER_DISKS; i++) {
-> +			for (dm = super->disks; dm; dm = dm->next) {
-> +				if (((unsigned int)dm->major != major(u->disks[i])) ||
-> +				    ((unsigned int)dm->minor != minor(u->disks[i])))
-> +					continue;
-> +				for (du = super->disks; du; du = du->next)
-> +				    if ((du->index > dm->index) && (du->index > 0))
-> +					du->index--;
-> +				dm->disk.status = SPARE_DISK;
-> +				dm->index = -1;
-> +			}
-> +		}
-> +		/* update disk order table */
-> +		i = 0;
-> +		for (du = super->disks; du; du = du->next) {
-> +			if (du->index >= 0) {
-> +				tab[du->index] = i;
-> +				i++;
-> +			}
-> +		}
-> +		/* update map */
-> +		map->num_members = 2;
-> +		map->map_state = IMSM_T_STATE_NORMAL;
-> +		map->num_domains = 1;
-> +		map->raid_level = 0;
-> +		map->failed_disk_num = -1;
-> +	}
-> +
-> +	return 1;
-> +}
-> +
->  static void imsm_process_update(struct supertype *st,
->  			        struct metadata_update *update)
->  {
-> @@ -5835,6 +5897,13 @@ static void imsm_process_update(struct supertype *st,
->  	mpb = super->anchor;
->  
->  	switch (type) {
-> +	case update_takeover: {
-> +		struct imsm_update_takeover *u = (void *)update->buf;
-> +		if (apply_takeover_update(u, super))
-> +			super->updates_pending++;
-> +		break;
-> +	}
-> +
->  	case update_reshape_container_disks: {
->  		struct imsm_update_reshape *u = (void *)update->buf;
->  		if (apply_reshape_container_disks_update(
-> @@ -6682,6 +6751,61 @@ analyse_change_exit:
->  	return change;
->  }
->  
-> +int imsm_takeover(struct supertype *st, struct geo_params *geo)
-> +{
-> +	struct intel_super *super = st->sb;
-> +	struct imsm_update_takeover *u;
-> +	struct mdinfo *info;
-> +	struct mdinfo *newdi;
-> +	struct dl *dl;
-> +	int i, fd;
-> +	int found = 0;
-> +	char buf[PATH_MAX];
-> +
-> +	sprintf(buf, "/dev/md%i", geo->dev_id);
-> +	fd = open(buf, O_RDONLY);
-> +	if (!fd) {
-> +		fprintf(stderr, Name "Cannot open %s", buf);
-> +		return 1;
-> +	}
-> +	info = sysfs_read(fd, 0, GET_LEVEL|GET_VERSION|GET_DEVS|GET_STATE);
-> +	if (!info) {
-> +		fprintf(stderr, Name "Cannot load sysfs information for %s (%i)",
-> +			geo->dev_name, geo->dev_id);
-> +		return 1;
-> +	}
-> +
-> +	u = malloc(sizeof(struct imsm_update_takeover));
-> +	if (u == NULL)
-> +		return 1;
-> +
-> +	u->type = update_takeover;
-> +	u->subarray = super->current_vol;
-> +
-> +	/* 10->0 transition - mark disks to remove */
-> +	if (geo->level == 0) {
-> +		u->direction = R10_TO_R0;
-> +		i = 0;
-> +		for (dl = super->disks; dl; dl = dl->next) {
-> +			found = 0;
-> +			for (newdi = info->devs; newdi; newdi = newdi->next) {
-> +				if ((dl->major != newdi->disk.major) ||
-> +					    (dl->minor != newdi->disk.minor) ||
-> +					    (newdi->disk.raid_disk < 0))
-> +					continue;
-> +				found = 1;
-> +				break;
-> +			}
-> +			/* if disk not found, mark it for remove */
-> +			if ((found == 0) && (!(dl->disk.status & SPARE_DISK)))
-> +				u->disks[i++] = makedev(dl->major, dl->minor);
-> +		}
-> +	}
-> +
-> +	append_metadata_update(st, u, sizeof(struct imsm_update_takeover));
-> +	return 0;
-> +}
-> +
->  static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  			      int layout, int chunksize, int raid_disks,
->  			      char *backup, char *dev, int verbose)
-> @@ -6763,7 +6887,7 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  		change = imsm_analyze_change(st, &geo);
->  		switch (change) {
->  			case CH_TAKEOVER:
-> -				ret_val = 0;
-> +				ret_val = imsm_takeover(st, &geo);
->  				break;
->  			case CH_CHUNK_MIGR:
->  				ret_val = 0;
+>  			mdfd = open_mddev(devlist->devname, 1);
+>  			if (mdfd < 0)
+>  				exit(1);
 
