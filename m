@@ -1,131 +1,155 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: RE: [PATCH] Monitor: do not move partitions to external container
-Date: Mon, 17 Jan 2011 10:27:27 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E96E18A@irsmsx504.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010C173482@irsmsx504.ger.corp.intel.com>
- <A9DE54D0CD747C4CB06DCE5B6FA2246F010E24D635@irsmsx504.ger.corp.intel.com>
+Subject: RE: [PATCH 2/2] Assemble: allow to assemble spares on their own
+Date: Mon, 17 Jan 2011 10:42:43 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E96E1C4@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E759F4E@irsmsx504.ger.corp.intel.com>
+ <20110105135855.478982e9@notabene.brown>
+ <A9DE54D0CD747C4CB06DCE5B6FA2246F010E7D9E7A@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E24D635@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E7D9E7A@irsmsx504.ger.corp.intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>, NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Hi Neil,
-Is there any particular reason why you are ignoring this patch?
-Regards
-Anna
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Czarnowska, Anna
-> Sent: Thursday, December 09, 2010 3:18 PM
-> To: Neil Brown
-> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
-> Ciechanowski, Ed; Labun, Marcin; Hawrylewicz Czarnowski, Przemyslaw
-> Subject: RE: [PATCH] Monitor: do not move partitions to external
-> container
+> > As mentioned earlier, I added a test for 'auto_assem'.
 > 
-> This patch seems to have been overlooked.
-> Monitor will move a spare and start recovery on a partition without the
-> check.
+> Adding such test means that we can only assemble spares on their own
+> when there is no config file.
+> When there is a config file with at least one ARRAY line we do not try
+> auto assembly.
+> This also means that adding special ARRAY line for spares will not work
+> - in this case
+> we have no auto_assem (because uuid is set) so we try the second loop
+> where all spares get rejected because domains is null.
+
+...and st->sb is not loaded. 
+
+> Should `mdadm -As` only assemble what it finds in config?
+> Maybe we should always try auto assembly?
+> What is the original reasoning behind not trying auto assembly when
+> there is at least one array in config?
 > Regards
 > Anna
 > 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Czarnowska, Anna
-> > Sent: Saturday, December 04, 2010 12:14 AM
-> > To: Neil Brown
-> > Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
-> > Ciechanowski, Ed; Labun, Marcin; Hawrylewicz Czarnowski, Przemyslaw
-> > Subject: [PATCH] Monitor: do not move partitions to external
-> container
+
+Spares not matching any array will not be picked up by auto assembly
+when there is config file.
+Should we just remove the check
+cnt == 0
+in mdadm.c line 1290?
+Regards 
+Anna
+
+> > Thanks,
+> > NeilBrown
 > >
-> > From de798c689a31f939aca41ef4d21199525d581fe8 Mon Sep 17 00:00:00
-> 2001
-> > From: Anna Czarnowska <anna.czarnowska@intel.com>
-> > Date: Fri, 3 Dec 2010 15:23:41 +0100
-> > Subject: [PATCH] Monitor: do not move partitions to external
-> container
-> > Cc: linux-raid@vger.kernel.org, Williams, Dan J
-> > <dan.j.williams@intel.com>, Ciechanowski, Ed
-> > <ed.ciechanowski@intel.com>
+> > commit ed7fc6b4d91a5342886ba6fe6d175f69f0875d3b
+> > Author: Anna Czarnowska <anna.czarnowska@intel.com>
+> > Date:   Wed Jan 5 13:54:18 2011 +1100
 > >
-> > Since we are allowing moving spares between different metadata arrays
-> > we need to ensure that external metadata array does not get a
-> partition
-> > for a spare.
-> > Arrays on partitions are not supported for external metadata
-> > so do not take such spare from a native array.
+> >     Assemble: allow to assemble spares on their own
 > >
-> > Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> > ---
-> >  Monitor.c |    4 ++++
-> >  mdadm.h   |    1 +
-> >  util.c    |   13 +++++++++++++
-> >  3 files changed, 18 insertions(+), 0 deletions(-)
+> >     If we find spares but no members of given array
+> >     we create container with just spares.
 > >
-> > diff --git a/Monitor.c b/Monitor.c
-> > index 61550ee..f7de9ff 100644
-> > --- a/Monitor.c
-> > +++ b/Monitor.c
-> > @@ -798,6 +798,10 @@ static dev_t choose_spare(struct state *from,
-> > struct state *to,
-> >  		    from->devstate[d] == 0) {
-> >  			struct dev_policy *pol;
-> >  			unsigned long long dev_size;
+> >     This allows auto assemble to pick up all lose imsm spares when
+> > there
+> >     is no config file.
+> >     When there is a valid config file and any array is assembled from
+> > it
+> >     we don't try auto assembly so we will not assemble spares that
+> > don't
+> >     match any array.
+> >     To remedy this we must add
+> >     ARRAY metadata=imsm UUID=00000000:00000000:00000000:00000000
+> >     to config file.
+> >     This container will include all remaining spares.
+> >
+> >     Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> >     Signed-off-by: NeilBrown <neilb@suse.de>
+> >
+> > diff --git a/Assemble.c b/Assemble.c
+> > index 7ef9dc3..532335e 100644
+> > --- a/Assemble.c
+> > +++ b/Assemble.c
+> > @@ -489,17 +489,23 @@ int Assemble(struct supertype *st, char *mddev,
+> >  					   homehost, update,
+> >  					   report_missmatch ? devname : NULL))
+> >  				goto loop;
+> > -
+> > -			if (!memcmp(content->uuid, uuid_zero,
+> > sizeof(int[4]))) {
+> > -				/* this is imsm_spare - do not set st */
+> > -				tmpdev->used = 3;
+> > -				goto loop;
+> > -			}
+> >
+> >  			if (st == NULL)
+> >  				st = dup_super(tst);
+> >  			if (st->minor_version == -1)
+> >  				st->minor_version = tst->minor_version;
 > > +
-> > +			if (to->metadata->ss->external &&
-> > +			    test_partition_from_id(from->devid[d]))
+> > +			if (memcmp(content->uuid, uuid_zero,
+> > +				   sizeof(int[4])) == 0) {
+> > +				/* this is a floating spare.  It cannot define
+> > +				 * an array unless there are no more arrays of
+> > +				 * this type to be found.  It can be included
+> > +				 * in an array of this type though.
+> > +				 */
+> > +				tmpdev->used = 3;
+> > +				goto loop;
+> > +			}
+> > +
+> >  			if (st->ss != tst->ss ||
+> >  			    st->minor_version != tst->minor_version ||
+> >  			    st->ss->compare_super(st, tst) != 0) {
+> > @@ -557,6 +563,25 @@ int Assemble(struct supertype *st, char *mddev,
+> >  			tst->ss->free_super(tst);
+> >  	}
+> >
+> > +	/* Check if we found some imsm spares but no members */
+> > +	if (auto_assem && (!st || !st->sb))
+> > +		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+> > +			if (tmpdev->used != 3)
 > > +				continue;
-> >
-> >  			if (min_size &&
-> >  			    dev_size_from_id(from->devid[d], &dev_size) &&
-> > diff --git a/mdadm.h b/mdadm.h
-> > index a0126eb..28d983d 100644
-> > --- a/mdadm.h
-> > +++ b/mdadm.h
-> > @@ -1073,6 +1073,7 @@ extern int ask(char *mesg);
-> >  extern unsigned long long get_component_size(int fd);
-> >  extern void remove_partitions(int fd);
-> >  extern int test_partition(int fd);
-> > +extern int test_partition_from_id(dev_t id);
-> >  extern unsigned long long calc_array_size(int level, int raid_disks,
-> > int layout,
-> >  				   int chunksize, unsigned long long devsize);
-> >  extern int flush_metadata_updates(struct supertype *st);
-> > diff --git a/util.c b/util.c
-> > index 4b41e2b..070b58a 100644
-> > --- a/util.c
-> > +++ b/util.c
-> > @@ -295,6 +295,19 @@ int test_partition(int fd)
-> >  	return 1;
-> >  }
-> >
-> > +int test_partition_from_id(dev_t id)
-> > +{
-> > +	char buf[20];
-> > +	int fd, rv;
+> > +			tmpdev->used = 1;
+> > +			content = &info;
 > > +
-> > +	sprintf(buf, "%d:%d", major(id), minor(id));
-> > +	fd = dev_open(buf, O_RDONLY);
-> > +	if (fd < 0)
-> > +		return -1;
-> > +	rv = test_partition(fd);
-> > +	close(fd);
-> > +	return rv;
-> > +}
-> >
-> >  int enough(int level, int raid_disks, int layout, int clean,
-> >  	   char *avail, int avail_disks)
-> > --
-> > 1.7.1
-> >
+> > +			if (!st->sb) {
+> > +				/* we need sb from one of the spares */
+> > +				int dfd = dev_open(tmpdev->devname, O_RDONLY);
+> > +				if (dfd < 0 ||
+> > +				    st->ss->load_super(st, dfd, NULL))
+> > +					tmpdev->used = 2;
+> > +				if (dfd > 0)
+> > +					close(dfd);
+> > +			}
+> > +		}
+> > +
+> >  	/* Now reject spares that don't match domains of identified
+> > members */
+> >  	for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
+> >  		struct stat stb;
+> > @@ -892,8 +917,10 @@ int Assemble(struct supertype *st, char *mddev,
+> >  		if (content->array.level != LEVEL_MULTIPATH)
+> >  			if (!(devices[j].i.disk.state & (1<<MD_DISK_ACTIVE)))
+> > {
+> >  				if (!(devices[j].i.disk.state
+> > -				      & (1<<MD_DISK_FAULTY)))
+> > +				      & (1<<MD_DISK_FAULTY))) {
+> > +					devices[j].uptodate = 1;
+> >  					sparecnt++;
+> > +				}
+> >  				continue;
+> >  			}
+> >  		/* If this devices thinks that 'most_recent' has failed,
+> > then
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-raid"
 > > in
