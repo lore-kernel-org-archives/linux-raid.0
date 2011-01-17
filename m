@@ -1,58 +1,52 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 6/6] FIX: sync_completed == 0 causes reshape
- cancellation in metadata
-Date: Mon, 17 Jan 2011 12:38:48 +1100
-Message-ID: <20110117123848.42fd416b@notabene.brown>
-References: <20110113144252.12728.82642.stgit@gklab-128-013.igk.intel.com>
-	<20110113145050.12728.43280.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] fix: Monitor: min_size must be set to 0
+Date: Mon, 17 Jan 2011 12:46:28 +1100
+Message-ID: <20110117124628.30c8bd5e@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E8FDFF2@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113145050.12728.43280.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010E8FDFF2@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 13 Jan 2011 15:50:50 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Thu, 13 Jan 2011 15:03:14 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> md signals reshape completion (whole area or parts) by setting sync_completed to 0.
-> This causes in set_array_state() to rollback metadata changes (super-intel.c:4977.
-> To avoid this do not allow for set last_checkpoint to 0 if reshape is finished.
+> >From ac2d3550f2bd4fafb6497b881cac3c02d147c21a Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Thu, 13 Jan 2011 15:58:39 +0100
+> Subject: [PATCH] fix: Monitor: min_size must be set to 0
 > 
-> This was also root cause of my previous fix for finalization reshape that I agreed earlier is not necessary,
+> Otherwise a random value will be used for comparison later
+> for native and ddf metadata (until min_acceptable_spare_size is defined).
 > 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 > ---
-> 
->  monitor.c |    4 +++-
+>  Monitor.c |    4 +++-
 >  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
-> diff --git a/monitor.c b/monitor.c
-> index 1107d47..b7287d8 100644
-> --- a/monitor.c
-> +++ b/monitor.c
-> @@ -363,8 +363,10 @@ static int read_and_act(struct active_array *a)
->  		/* Reshape has progressed or completed so we need to
->  		 * update the array state - and possibly the array size
->  		 */
-> -		a->last_checkpoint = sync_completed;
-> +		if (sync_completed != 0)
-> +			a->last_checkpoint = sync_completed;
->  		a->container->ss->set_array_state(a, a->curr_state <= clean);
-> +		a->last_checkpoint = sync_completed;
->  	}
+> diff --git a/Monitor.c b/Monitor.c
+> index ab1ae26..9e2a478 100644
+> --- a/Monitor.c
+> +++ b/Monitor.c
+> @@ -707,8 +707,10 @@ static int get_min_spare_size_required(struct state *st, unsigned long long *siz
+>  	int fd;
 >  
->  	if (sync_completed > a->last_checkpoint)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	if (!st->metadata ||
+> -	    !st->metadata->ss->min_acceptable_spare_size)
+> +	    !st->metadata->ss->min_acceptable_spare_size) {
+> +		*sizep = 0;
+>  		return 0;
+> +	}
+>  
+>  	fd = open(st->devname, O_RDONLY);
+>  	if (fd < 0)
 
-
-Applied, thanks.!!!
+Applied, thanks.
 
 NeilBrown
 
