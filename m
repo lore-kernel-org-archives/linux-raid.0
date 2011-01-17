@@ -1,56 +1,53 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/6] Set reshape.after.data_disks for raid0<->raid10
- takeover
-Date: Mon, 17 Jan 2011 13:03:05 +1100
-Message-ID: <20110117130305.1f998863@notabene.brown>
+Subject: Re: [PATCH 3/6] Unfreeze for non re-striping transitions
+Date: Mon, 17 Jan 2011 13:04:08 +1100
+Message-ID: <20110117130408.4bb4f6c3@notabene.brown>
 References: <20110113152722.20266.24174.stgit@gklab-128-111.igk.intel.com>
-	<20110113153235.20266.84653.stgit@gklab-128-111.igk.intel.com>
+	<20110113153244.20266.59989.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110113153235.20266.84653.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110113153244.20266.59989.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 13 Jan 2011 16:32:35 +0100 Krzysztof Wojcik
+On Thu, 13 Jan 2011 16:32:44 +0100 Krzysztof Wojcik
 <krzysztof.wojcik@intel.com> wrote:
 
-> reshape.after.data_disks field must be initiated
-> for raid0<->rai10 transition.
-> Instead calculated spares_needed variable in reshape_array
-> function has random value.
+> For non re-striping transitions array must be unfrozen
+> before end of processing.
 > 
 > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 > ---
->  Grow.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index 763287b..47a8fb8 100644
+> index 47a8fb8..c0f9419 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -966,6 +966,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
->  		re->level = 0;
->  		re->parity = 0;
->  		re->before.data_disks = new_disks;
-> +		re->after.data_disks = re->before.data_disks;
->  		re->before.layout = 0;
->  		re->backup_blocks = 0;
->  		return NULL;
-> @@ -1003,6 +1004,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
->  			re->parity = 0;
->  			re->before.data_disks = (info->array.raid_disks +
->  						 info->delta_disks);
-> +			re->after.data_disks = re->before.data_disks;
->  			re->before.layout = info->new_layout;
->  			re->backup_blocks = 0;
->  			return NULL;
+> @@ -1751,7 +1751,7 @@ static int reshape_array(char *container, int cfd, int fd, char *devname,
+>  				printf("chunk size for %s set to %d\n",
+>  				       devname, info->array.chunk_size);
+>  		}
+> -
+> +		unfreeze(st);
+>  		return rv;
+>  	}
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-apply, thanks.
+I already had an unfreeze in there, condition on 'forked', how I think yours
+is more correct - I don't want the condition there.
+
+Applied thanks,
 
 NeilBrown
-
