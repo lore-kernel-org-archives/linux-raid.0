@@ -1,106 +1,75 @@
 From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Read algorithm-raid1/raid10
-Date: Tue, 18 Jan 2011 14:15:16 -0200
-Message-ID: <AANLkTikUgkuYjr5ChovwE6srnK=_h1MVT1bhposmo3tB@mail.gmail.com>
-References: <AANLkTin+Kd+RfuEUyBrvnunBbQ+2uzzdy57Xy-LEJ_6J@mail.gmail.com>
-	<AANLkTi=ULecH9g9Mt+axPY_KsyvZU=KdawphxpJ2kDGi@mail.gmail.com>
-	<20110118150149.GB602@www2.open-std.org>
-	<AANLkTinJNLYd6uYp+zjrQsWiwKS9ZWMuhMQfcpg-4rj4@mail.gmail.com>
+Subject: Re: Hi! Why having LSR's chunk size 2^n limitation?
+Date: Tue, 18 Jan 2011 14:46:43 -0200
+Message-ID: <AANLkTimUq41Ki7A8=KvsmNUhCw1D9PiOjyVqHME1UvEz@mail.gmail.com>
+References: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinJNLYd6uYp+zjrQsWiwKS9ZWMuhMQfcpg-4rj4@mail.gmail.com>
+In-Reply-To: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: for.poige+linux@gmail.com
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-yes i found it in my /sys filesystem, a rotational information 0 for
-hd 1 for ssd
+performace increase=3D
+     good algorithm for minimal read/write time
+     +high speed disks (latency and read / write
+time/unit(bit,byte,page), latency =3D time to head position at the righ=
+t
+sector, cilinder, etc etc, read/write speed =3D time to read/write a
+block of bits/bytes/pages)
+     + fast filesystem (without many writes like journaling... but
+it=B4s not crash safe....)
+     + faster memory caches (for read we could cache information that
+don=B4t change... if it change on next read it will be cached)
 
-i write a long time ago a more interesting algorithm but complex... a
-minimal time algorithm, it should have information about head position
-time, read time (per bit, per byte, per units....) and calculate the
-time to make a read in each disk considering that it could be reading
-(time to stop read current requestion) and after this get the smallest
-time -> the best read performace
+see that:
+filesystem is a upper level (not device level)
+cache is a under level (operational system level, maybe raid cache,
+maybe filesystem cache, maybe another cache)
+high speed disk (a physical level)
+algorithm (the raid level)
 
-if we use only ssd disk today implementation isn=B4t good, if we use hd=
-d
-maybe a good (if we don=B4t use 7200rpm + 10000rpm + 15000rpm disks), i=
+we could implement raid at filesystem (ok it=B4s not mdadm)... (brtfs i=
 f
-we use a mixed ssd+hdd it will not work very good too... this should
-be a per disk optimization (minimal time to read) a round robin is a
-good feature (for ssd only) but a mixed array should allow minimal
-time algorithm
+i=B4m not wrong, and fuse raid system (a userspace raid software using
+diferent filesystems))
+since we want speed, get it closer to hardware (device) like md linux d=
+o
+better than it just a dedicated hardware (faster than your cpu+memory+l=
+inux)
 
-any idea how to implement a round robin and a algorithm (per raid
-device) selection using sysfs?
-there=B4s a patch but i didn=B4t found information about how to patch t=
-he
-kernel with it
-can anyone help me?
-thanks
+the problems are: more secure (file system/checksums/jornaling) =3D mor=
+e
+writes, more writes =3D more i/o, more i/o =3D more reads/writes =3D le=
+ss
+usefull information (file).
+got?
 
-2011/1/18 Mathias Bur=E9n <mathias.buren@gmail.com>:
-> 2011/1/18 Keld J=F8rn Simonsen <keld@keldix.com>:
->> On Tue, Jan 18, 2011 at 12:00:49PM -0200, Roberto Spadim wrote:
->>> like this patch (a long time ago)
->>> http://www.spinics.net/lists/raid/msg30003.html
->>>
->>>
->>> 2011/1/18 Roberto Spadim <roberto@spadim.com.br>:
->>> > hi guys, could we implement a load_balance read algorithm for SSD=
-?
->>> > nearest head isn't as fast as round robin for ssd.
->>> > i'm talking about raid1 (raid10 too)
->>> > what's my problem?
->>> > as i can see, raid0 is faster than raid1
->>> > for example:
->>> > two disks raid0 is faster than
->>> > two disks raid1.
->>> >
->>> > why?
->>> > nearest head
->>> > instead of a balanced read algorithm (like raid0) the nearest hea=
-d
->>> > make raid1 use only one disk for searchs where we could use two d=
-isks
->>> > (like raid0)
->>> >
->>> > could we implement a round robin for ssd? and make raid1 as fast =
-as
->>> > raid0 for ssd?
->>> > i didn't tested the raid10 algorithm yet.
->>> > thanks a lot.
->>
->> This should only be in use for SSDs. For disks it would be a waste o=
-f IO
->> bandwidth. How do we detect whether it is a SSSD.
->> Another way to accomplish an improvement os to use the offset layout=
- of
->> raid10.
->>
->> best regards
->> Keld
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
+
+
+2011/1/18 Igor Podlesny <for.poige+linux@gmail.com>:
+> =A0 I had experience of using FreeBSD's vinum (another software RAID)=
+=2E
+> Its author, Greg Lehey, stated in vinum's manual: "... A good
+> guideline for stripe size is between 256 kB and 512 kB. =A0Avoid powe=
+rs
+> of 2, however: they tend to cause all superblocks to be placed on the
+> first subdisk. ..."
 >
-> Hi,
+> =A0 Meanwhile, with LSR we're given exactly 2^n choices, for e. g.,
+> neither 768 KiB, nor 387 KiB won't go: "mdadm: invalid chunk/rounding
+> value: 387".
 >
-> There is a way to check if the device is an SSD or not; the rotationa=
-l
-> queue flag in sysfs. See
-> http://amailbox.org/mailarchive/git-commits-head/2009/1/30/4859834/th=
-read
-> .
+> =A0 So, why... ($Subj) and how complex would it be to abolish this
+> restriction? I think this could be a key to performance increase.
 >
-> // Mathias
+> =A0 P. S. Thanks a ton for LSR, Neil, BTW. :-)
+>
+> --
+> End of message. Next message?
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
