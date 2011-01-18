@@ -1,77 +1,30 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Read algorithm-raid1/raid10
-Date: Tue, 18 Jan 2011 15:51:08 +0000
-Message-ID: <AANLkTinJNLYd6uYp+zjrQsWiwKS9ZWMuhMQfcpg-4rj4@mail.gmail.com>
-References: <AANLkTin+Kd+RfuEUyBrvnunBbQ+2uzzdy57Xy-LEJ_6J@mail.gmail.com>
-	<AANLkTi=ULecH9g9Mt+axPY_KsyvZU=KdawphxpJ2kDGi@mail.gmail.com>
-	<20110118150149.GB602@www2.open-std.org>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Hi! Why having LSR's chunk size 2^n limitation?
+Date: Tue, 18 Jan 2011 22:59:07 +0700
+Message-ID: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110118150149.GB602@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@keldix.com>
-Cc: Roberto Spadim <roberto@spadim.com.br>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2011/1/18 Keld J=C3=B8rn Simonsen <keld@keldix.com>:
-> On Tue, Jan 18, 2011 at 12:00:49PM -0200, Roberto Spadim wrote:
->> like this patch (a long time ago)
->> http://www.spinics.net/lists/raid/msg30003.html
->>
->>
->> 2011/1/18 Roberto Spadim <roberto@spadim.com.br>:
->> > hi guys, could we implement a load_balance read algorithm for SSD?
->> > nearest head isn't as fast as round robin for ssd.
->> > i'm talking about raid1 (raid10 too)
->> > what's my problem?
->> > as i can see, raid0 is faster than raid1
->> > for example:
->> > two disks raid0 is faster than
->> > two disks raid1.
->> >
->> > why?
->> > nearest head
->> > instead of a balanced read algorithm (like raid0) the nearest head
->> > make raid1 use only one disk for searchs where we could use two di=
-sks
->> > (like raid0)
->> >
->> > could we implement a round robin for ssd? and make raid1 as fast a=
-s
->> > raid0 for ssd?
->> > i didn't tested the raid10 algorithm yet.
->> > thanks a lot.
->
-> This should only be in use for SSDs. For disks it would be a waste of=
- IO
-> bandwidth. How do we detect whether it is a SSSD.
-> Another way to accomplish an improvement os to use the offset layout =
-of
-> raid10.
->
-> best regards
-> Keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+   I had experience of using FreeBSD's vinum (another software RAID).
+Its author, Greg Lehey, stated in vinum's manual: "... A good
+guideline for stripe size is between 256 kB and 512 kB.  Avoid powers
+of 2, however: they tend to cause all superblocks to be placed on the
+first subdisk. ..."
 
-Hi,
+   Meanwhile, with LSR we're given exactly 2^n choices, for e. g.,
+neither 768 KiB, nor 387 KiB won't go: "mdadm: invalid chunk/rounding
+value: 387".
 
-There is a way to check if the device is an SSD or not; the rotational
-queue flag in sysfs. See
-http://amailbox.org/mailarchive/git-commits-head/2009/1/30/4859834/thre=
-ad
-=2E
+   So, why... ($Subj) and how complex would it be to abolish this
+restriction? I think this could be a key to performance increase.
 
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   P. S. Thanks a ton for LSR, Neil, BTW. :-)
+
+-- 
+End of message. Next message?
