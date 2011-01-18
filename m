@@ -1,112 +1,50 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Hi! Why having LSR's chunk size 2^n limitation?
-Date: Tue, 18 Jan 2011 16:53:00 -0200
-Message-ID: <AANLkTinuJ_vQxdygGyN2ARHDLfM5gEbd1LD6d8c=OMfV@mail.gmail.com>
+Date: Wed, 19 Jan 2011 06:44:57 +1100
+Message-ID: <20110119064457.5ab8bdd0@notabene.brown>
 References: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com>
-	<4D35C9BB.20908@anonymous.org.uk>
-	<AANLkTimn9j08BPvE0hZdBk3NvqJ6_iQELQczBOA8LruO@mail.gmail.com>
-	<4D35D67B.20004@anonymous.org.uk>
-	<AANLkTin-RcJNR+gUc711R7Z1gAfx9ZFazvQz4AbR0Ugn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin-RcJNR+gUc711R7Z1gAfx9ZFazvQz4AbR0Ugn@mail.gmail.com>
+In-Reply-To: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: for.poige+linux@gmail.com
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thinking about performace, and rewrite the first question....
-could we optimize something (at raid software) about chunck, blocks
-and other thinks (used at filesystem space, not lvm or database direct
-device access)?
-ok... they should adjust the code to our raid source...
-we can propose some tweaks for especific filesystems?
-ok, who developed filesystems should make especific benchmarks....
+On Tue, 18 Jan 2011 22:59:07 +0700 Igor Podlesny <for.poige+linux@gmail.com>
+wrote:
 
-again... could we implement some optimization for the first question?
-thanks
+>    I had experience of using FreeBSD's vinum (another software RAID).
+> Its author, Greg Lehey, stated in vinum's manual: "... A good
+> guideline for stripe size is between 256 kB and 512 kB.  Avoid powers
+> of 2, however: they tend to cause all superblocks to be placed on the
+> first subdisk. ..."
+> 
+>    Meanwhile, with LSR we're given exactly 2^n choices, for e. g.,
+> neither 768 KiB, nor 387 KiB won't go: "mdadm: invalid chunk/rounding
+> value: 387".
+> 
+>    So, why... ($Subj) and how complex would it be to abolish this
+> restriction? I think this could be a key to performance increase.
+> 
+>    P. S. Thanks a ton for LSR, Neil, BTW. :-)
+> 
 
-2011/1/18 Igor Podlesny <for.poige+linux@gmail.com>:
-> On 19 January 2011 01:05, John Robinson <john.robinson@anonymous.org.=
-uk> wrote:
->> On 18/01/2011 17:23, Igor Podlesny wrote:
-> [...]
->>> =A0 =A0Am I? Take a look
->>>
->>> http://www.freebsd.org/cgi/man.cgi?query=3Dvinum&apropos=3D0&sektio=
-n=3D0&manpath=3DFreeBSD+4.9-RELEASE&format=3Dhtml
->>
->> Why should I be reading FreeBSD man pages when this is a Linux list?=
- I am
->> using the terms stripe size and chunk size in the sense I understand=
- them,
->> which is I believe the Linux sense. If you and FreeBSD choose to use=
- the
->
-> =A0 Have you ever configured any "hardware" controller? Have seen wor=
-ds
-> "stripe size" there?
-> =A0 (You can give no answer, of course.)
->
->> terms differently, so be it, but please don't pull me up about my us=
-e of
->> terms when you're the one using the wrong ones in this context.
->> [...]
->>>>
->>>> Secondly, as far as I know all Linux filesystems are RAID-aware so=
- know
->>>> how
->>>
->>> =A0 =A0You're mistaken. There're too many are not.
->>
->> I'll concede, only all the major filesystems you'd ever use in a pro=
-duction
->> environment.
->
-> =A0 I don't care what you think is ready for production and what is
-> not. There're people who still think that Linux isn't production
-> ready. (Though I don't care either.)
->>
-> [...]
->>
->>> =A0 =A0P. S. I think now everyone can see why this letter was
->>> intentionally addressed to the author of LSR, not to the list.
->>
->> There's absolutely no need for that. Please leave, and take your
->> condescension, ignorance and offensiveness with you.
->
-> =A0 So nice to see that all those words is highly related to you in t=
-he
-> first place: "Why should I read man from freebsd", "I use terms in th=
-e
-> sense I understand them". Hey, what a stupidity, dare I ask? :-)
->
-> =A0 John Robinson, I didn't ask you to peek your nose into this
-> conversation. Calm down, take a rest. You can take a look at manual o=
-f
-> your mailer to ignore mails from people you don't wanna read. Don't
-> ask me why you should read man(s). And just before jumping in with a
-> nonsense like "You're slightly confusing things", please make a
-> favour: RTFM.
->
-> --
-> End of message. Next message?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+1/ The rationale given by Greg for non-power-of-two chunk sizes is not so
+ relevant for Linux I think.  The more common filesystems  can be told that
+ the device is a RAID and can deliberately offset the extra super blocks so
+ they don't all end up on the one device.
+
+2/ Power-off-two is required simply because it was easier to code.  The
+  restriction was dropped for RAID0 a year or more ago.  The restriction 
+  could be dropped for RAID4/5/6 and RAID10 relatively easily.  It would just
+  require a thorough code review and changing a few 'mask' and 'shift'
+  operations to divisions.
+
+3/ You are welcome.
+
+NeilBrown
 
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
