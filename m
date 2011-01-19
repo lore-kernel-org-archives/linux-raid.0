@@ -1,133 +1,156 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not used
-Date: Thu, 20 Jan 2011 07:48:40 +1100
-Message-ID: <20110120074840.2977b276@notabene.brown>
-References: <20110114125537.15648.73873.stgit@gklab-128-013.igk.intel.com>
-	<20110114130000.15648.52870.stgit@gklab-128-013.igk.intel.com>
-	<20110117101128.60a9b683@notabene.brown>
-	<20110117102821.3460a918@notabene.brown>
-	<20110117114441.141f249f@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176EA541F@irsmsx503.ger.corp.intel.com>
+Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
+Date: Thu, 20 Jan 2011 07:52:44 +1100
+Message-ID: <20110120075244.0ef3352a@notabene.brown>
+References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
+	<20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
+	<20110113135134.584c1264@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408066EF065D@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176EA541F@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408066EF065D@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 17 Jan 2011 14:13:34 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On Mon, 17 Jan 2011 15:49:25 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
+
+> Hi Neil,
+> 
+> So maybe it will be good to limit this part of code execution only for raid5?
+> (reshape.backup_blocks == 0) {
+> 	If (info->array.level != 5)
+> 		return rv;
+> ...
+> 
+> Do you agree?
+
+No.  Why would you want do to that?
+
+The code is relevant in other cases too (I hadn't thought it through last
+time I commented).  There are other cases where re-striping isn't needed such
+as when adding an extra device to a RAID1.
+
+Why do you think this code needs any change at all??  Is it causing you some
+sort of problem?
+
+NeilBrown
+
 
 > 
+> Regards- Krzysztof
 > 
 > > -----Original Message-----
 > > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Monday, January 17, 2011 1:45 AM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > Neubauer, Wojciech
-> > Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not
-> > used
+> > Sent: Thursday, January 13, 2011 3:52 AM
+> > To: Wojcik, Krzysztof
+> > Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
+> > Williams, Dan J; Ciechanowski, Ed
+> > Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
 > > 
-> > On Mon, 17 Jan 2011 10:28:21 +1100 NeilBrown <neilb@suse.de> wrote:
+> > On Wed, 12 Jan 2011 17:01:32 +0100 Krzysztof Wojcik
+> > <krzysztof.wojcik@intel.com> wrote:
 > > 
-> > > On Mon, 17 Jan 2011 10:11:28 +1100 NeilBrown <neilb@suse.de> wrote:
-> > >
-> > > > On Fri, 14 Jan 2011 14:00:00 +0100 Adam Kwolek
-> > <adam.kwolek@intel.com> wrote:
-> > > >
-> > > > > Manually added spares are not used due to fact that they not
-> > added to md configuration.
-> > > > > Counters are updated only.
-> > > > >
-> > > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > > > > ---
-> > > > >
-> > > > >  drivers/md/raid5.c |    6 ++++--
-> > > > >  1 files changed, 4 insertions(+), 2 deletions(-)
-> > > > >
-> > > > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> > > > > index a2087c7..59c4150 100644
-> > > > > --- a/drivers/md/raid5.c
-> > > > > +++ b/drivers/md/raid5.c
-> > > > > @@ -5592,8 +5592,10 @@ static int raid5_start_reshape(mddev_t
-> > *mddev)
-> > > > >  		} else if (rdev->raid_disk >= conf-
-> > >previous_raid_disks
-> > > > >  			   && !test_bit(Faulty, &rdev->flags)) {
-> > > > >  			/* This is a spare that was manually added */
-> > > > > -			set_bit(In_sync, &rdev->flags);
-> > > > > -			added_devices++;
-> > > > > +			if (raid5_add_disk(mddev, rdev) == 0) {
-> > > > > +				set_bit(In_sync, &rdev->flags);
-> > > > > +				added_devices++;
-> > > > > +			}
-> > > > >  		}
-> > > > >
-> > > > >  	/* When a reshape changes the number of devices, ->degraded
-> > > >
-> > > > This should not be needed.
-> > > > When a device is manually added, the desired slot number is written
-> > to
-> > > >    ..../md/dev-XXX/slot
-> > > >
-> > > > This calls slot_store (in md.c) which call mddev->pers-
-> > >hot_add_disk which
-> > > > for raid5 is raid5_add_disk.
-> > > > So you shouldn't need to call raid5_add_disk again.
-> > > >
-> > >
-> > > ahhh... I see.  raid5_add_disk doesn't do the right thing in that
-> > case.  It
-> > > actually indexes beyond the end of an array, which is bad.
-> > >
-> > > We possibly do need the raid5_add_disk where you had put it.  I'll
-> > have a
-> > > think and see what is best.
+> > > Neil,
+> > > How was your intention when you add this part of code?
+> > > I can't find the case when it will be necessary.
+> > > Moreover it breaks flow for takeover operations because
+> > > ioctl not succeeded when more than one parameter is changed.
+> > > I've remove this code temporally to be able test takeover
+> > > operations.
+> > > We can restore this code after we decide what it should do.
 > > 
-> > On third thoughts, I cannot see the problem you are seeing.
-> > I even did some simple testing (manually writing to things in sysfs)
-> > and it
-> > seems to include the new device properly.
+> > Asking what the purpose of some code is is perfectly OK.  Asking by
+> > sending a
+> > patch which removes the code seems ... odd.
 > > 
-> > There are some issues that I found which are address by the following
-> > patch,
-> > but it isn't clear to me that any of them relate to what you are
-> > seeing.
-> > Maybe if you could be more specific about what you see happening?
+> > If the number of data devices is 1, then a RAID5 can have
+> > layout/chunksize
+> > changed without any restriping.
+> > This code handles that case.
 > > 
-> > Thanks,
 > > NeilBrown
+> > 
+> > 
+> > >
+> > > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> > > ---
+> > >  Grow.c |   43 +++++--------------------------------------
+> > >  1 files changed, 5 insertions(+), 38 deletions(-)
+> > >
+> > > diff --git a/Grow.c b/Grow.c
+> > > index 253f289..6835f34 100644
+> > > --- a/Grow.c
+> > > +++ b/Grow.c
+> > > @@ -1666,6 +1666,11 @@ static int reshape_array(char *container, int
+> > fd, char *devname,
+> > >  		ping_monitor(container);
+> > >  	}
+> > >
+> > > +	if (reshape.backup_blocks == 0) {
+> > > +		/* If operation not not reuire re-striping we can finish */
+> > > +		return rv;
+> > > +	}
+> > > +
+> > >  	/* ->reshape_super might have chosen some spares from the
+> > >  	 * container that it wants to be part of the new array.
+> > >  	 * We can collect them with ->container_content and give
+> > > @@ -1692,44 +1697,6 @@ static int reshape_array(char *container, int
+> > fd, char *devname,
+> > >  		}
+> > >  	}
+> > >
+> > > -	if (reshape.backup_blocks == 0) {
+> > > -		/* No restriping needed, but we might need to impose
+> > > -		 * some more changes: layout, raid_disks, chunk_size
+> > > -		 */
+> > > -		if (info->new_layout != UnSet &&
+> > > -		    info->new_layout != info->array.layout) {
+> > > -			info->array.layout = info->new_layout;
+> > > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > > -				fprintf(stderr, Name ": failed to set new
+> > layout\n");
+> > > -				rv = 1;
+> > > -			} else if (!quiet)
+> > > -				printf("layout for %s set to %d\n",
+> > > -				       devname, info->array.layout);
+> > > -		}
+> > > -		if (info->delta_disks != UnSet &&
+> > > -		    info->delta_disks != 0) {
+> > > -			info->array.raid_disks += info->delta_disks;
+> > > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
+> > > -				fprintf(stderr, Name ": failed to set raid
+> > disks\n");
+> > > -				rv = 1;
+> > > -			} else if (!quiet)
+> > > -				printf("raid_disks for %s set to %d\n",
+> > > -				       devname, info->array.raid_disks);
+> > > -		}
+> > > -		if (info->new_chunk != 0 &&
+> > > -		    info->new_chunk != info->array.chunk_size) {
+> > > -			if (sysfs_set_num(info, NULL,
+> > > -					  "chunk_size", info->new_chunk) != 0) {
+> > > -				fprintf(stderr, Name ": failed to set chunk
+> > size\n");
+> > > -				rv = 1;
+> > > -			} else if (!quiet)
+> > > -				printf("chunk size for %s set to %d\n",
+> > > -				       devname, info->array.chunk_size);
+> > > -		}
+> > > -
+> > > -		return rv;
+> > > -	}
+> > > -
+> > >  	/*
+> > >  	 * There are three possibilities.
+> > >  	 * 1/ The array will shrink.
 > 
-> 
-> When I'm not using raid5_add_disk() in raid5_start_reshape() added disk LED light doesn't blinks
-> (but it should during reshape ;)),
-> md doesn't make any signs that something goes wrong (even size can be increased).
-> 
-> I've made some debug, and at second (during reshape start) raid5_add_disk() call rcu_assign_pointer() is called again.
-> This means that somehow previous assignment when slot is set was cleared.
-> 
-> Correct situation (all disks are used during reshape) I can archive when instead raid5_add_disk() call
-> I've add the following code:
-> 
->      struct disk_info *p = conf->disks + rdev->raid_disk;
->      rcu_assign_pointer(p->rdev, rdev);
-> 
-> and (conf->disks + rdev->raid_disk)->rdev pointer is present in configuration.
-> I've checked that if I do not do call to rcu_assign_pointer() pointer  (p->rdev) has NULL value.
-> In both cases call rcu_assign_pointer() sets p->rdev to the same value, so rdev doesn't change his location in memory.
-> 
-> 
-> BR
-> Adam
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Could you put some debug printks in slot_store (in md.c) and make sure it is
-being called, and that it calls raid5_add_disk, and see what raid5_add_disk
-does in that case?
-Thanks,
-
-NeilBrown
