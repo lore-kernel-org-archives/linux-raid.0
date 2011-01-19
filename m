@@ -1,38 +1,46 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 6/6] FIX: Unblock disk in kernel only if it is blocked.
-Date: Wed, 19 Jan 2011 17:23:49 +0100
-Message-ID: <20110119162349.8738.43217.stgit@gklab-128-111.igk.intel.com>
-References: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
+From: Cory Coager <ccoager@gmail.com>
+Subject: Re: support for external persistent cache
+Date: Wed, 19 Jan 2011 11:29:41 -0500
+Message-ID: <20110119162941.GA32537@erebus.underworld.local>
+References: <4D365551.7090207@gmail.com>
+ <AANLkTimTnaHEA0+==hs7Ew0Zzvdr1EOtxEqH=EfgdN-7@mail.gmail.com>
+ <AANLkTim3BJVbHdtByAni2ObUf0Qjece9jkd1_MSkT56P@mail.gmail.com>
+ <4D365BE2.9020300@gmail.com>
+ <AANLkTi=5rNxQtNsixdSYZE_XBtQR+q=WpwA_BNXp5vpr@mail.gmail.com>
+ <20110119155211.GA31671@erebus.underworld.local>
+ <AANLkTimP0eTReK+UH4mm67tUckV+Q=DxNXgUgvqB=4zi@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <AANLkTimP0eTReK+UH4mm67tUckV+Q=DxNXgUgvqB=4zi@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Missing condition during setting next state for disk.
+On Wed, Jan 19, 2011 at 02:16:08PM -0200, Roberto Spadim wrote:
+> ok, your hardware have:
+> cpu, memory, disk controller, disks
+> 
+> and you computer have:
+> cpu, memory, disk controler (your hardware)
+> 
+> if your computer cache don?t sync to your disk controller you will
+> lose information....
+> 
+> check that *memory, is the volatille memory and *disk controller is
+> the non volatille memory
+> if you tell me that you will never have a *memory, and you have always
+> a non volatille memory, no problem, you will never need a kernel
+> load... just a boot loader that read previous memory information and
+> start in that point... why don?t do this? non volatille memory is not
+> as fast as volatille memory
+> got the problem?
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- monitor.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Sorry, we're still not on the same page.  I would use both a ramdisk
+and sata disk.  The ramdisk would act as a persistent cache
+(with the battery) for the sata disks.  Enabling write through
+would write to the cache first then sync to the sata disks.
 
-diff --git a/monitor.c b/monitor.c
-index ed3ce49..4fba5fd 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -336,7 +336,9 @@ static int read_and_act(struct active_array *a)
- 			a->container->ss->set_disk(a, mdi->disk.raid_disk,
- 						   mdi->curr_state);
- 			check_degraded = 1;
--			mdi->next_state |= DS_UNBLOCK;
-+			/* if '-blocked' wasn't passed to kernel, do it now */
-+			if (mdi->curr_state == DS_BLOCKED)
-+				mdi->next_state |= DS_UNBLOCK;
- 			if (a->curr_state == read_auto) {
- 				a->container->ss->set_array_state(a, 0);
- 				a->next_state = active;
-
+Understand what I'm getting at now?
