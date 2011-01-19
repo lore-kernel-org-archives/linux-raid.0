@@ -1,43 +1,59 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Optimize RAID0 for max IOPS?
-Date: Wed, 19 Jan 2011 08:11:38 +0100
-Message-ID: <20110119071138.7B2D02FC@gemini.denx.de>
-References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <AANLkTi=v6yA_0OOfi2ymA67X0x+KsvV9VC5OgG+0DvKq@mail.gmail.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: How to force rewrite of a smart detected bad block with raid5: checkarray?
+Date: Tue, 18 Jan 2011 23:04:19 -0800
+Message-ID: <20110119070419.GC31606@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <AANLkTi=v6yA_0OOfi2ymA67X0x+KsvV9VC5OgG+0DvKq@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear Roberto Spadim,
+I couldn't quite find the answer to this with a search.
 
-In message <AANLkTi=v6yA_0OOfi2ymA67X0x+KsvV9VC5OgG+0DvKq@mail.gmail.com> you wrote:
-> maybe removing hwraid and using swraid may reduce speed (depend how
-> much cpu you use with hw and with sw)
-> what we can optimize? less I/O per seconds making as much useful
-> read/write data on array, how? good read/write algorithms for raid.
-> (for each device type, ssd, hd) but... like stefan, disks are your
-> bottleneck
+Smart reported a bad block (pending).
+I confirmed it with:
 
-No, they are not.  Run some benchmarks yourself if you don't believe
-me.
+hdrecover /dev/sdk
+(...)
+Sector 3907017780 (99%) ETR: 0 seconds
+Error at sector 3907029168
+Attempting to pounce on it...
+Attempt 1 from sector   3219409027: FAILED
+Attempt 2 from sector   1546846730: FAILED
+(...)
+Attempt 19 from sector   3837517549: FAILED
+Attempt 20 from sector   2281104567: FAILED
+Couldn't recover sector 3907029168
+The data for this sector could not be recovered. However, destroying the
+contents of this sector (ie writing zeros to it) should cause the hard disk
+to reallocate it making the drive useable again
+Do you really want to destroy the data in sector 3907029168?     [ (y)es / (n)o / (a)ll / (q)uit ]:^C
 
-Even a single disk drive is performing better than the hw RAID under
-this workload.
+Now, hdrecover had no idea that /dev/sdk is part of a raid5, so I'm not going to
+use it to rewrite the bad block.
 
-Best regards,
+I know I can remove /dev/sdk1 from my array and put it back in, but that's
+unsafe because if during a rebuild another block from another drive happens
+to be bad, I'm then left with a double raid failure.
 
-Wolfgang Denk
+So, I tried this: /usr/share/mdadm/checkarray md7
 
+md7 : active raid5 sdi1[0] sdh1[5] sdl1[3] sdk1[2] sdj1[1]
+      7814045696 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
+      [>....................]  check =  0.0% (447616/1953511424) finish=28435.6min speed=1144K/sec
+
+But I couldn't quite find documentation on what the kernel does in this case.
+
+Does this actually do what I want? Try all the blocks on each drive and if
+one block is unreadable, it forces a rewrite on the bad drive using the n-1
+other ones to recreate it?
+
+Thanks,
+Marc
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-WARNING:  This Product Attracts Every Other Piece  of  Matter in  the
-Universe, Including the Products of Other Manufacturers, with a Force
-Proportional  to the Product of the Masses and Inversely Proportional
-to the Distance Between Them.
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
