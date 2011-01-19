@@ -1,63 +1,26 @@
-From: Igor Podlesny <for.poige+linux@gmail.com>
-Subject: Re: Hi! Why having LSR's chunk size 2^n limitation?
-Date: Wed, 19 Jan 2011 14:41:10 +0700
-Message-ID: <AANLkTi=C6Pn9qHXPXX0NCEtEwihb1rVPDM48RUDXD_Eh@mail.gmail.com>
-References: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com> <20110119064457.5ab8bdd0@notabene.brown>
-Reply-To: for.poige+linux@gmail.com
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: How to force rewrite of a smart detected bad block with raid5:
+ checkarray?
+Date: Wed, 19 Jan 2011 08:42:53 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1101190842170.13151@uplift.swm.pp.se>
+References: <20110119070419.GC31606@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119064457.5ab8bdd0@notabene.brown>
+In-Reply-To: <20110119070419.GC31606@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Marc MERLIN <marc@merlins.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19 January 2011 02:44, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 18 Jan 2011 22:59:07 +0700 Igor Podlesny <for.poige+linux@gma=
-il.com>
-> wrote:
+On Tue, 18 Jan 2011, Marc MERLIN wrote:
 
-   Hi Neil! Thanks for your reply.
+> Does this actually do what I want? Try all the blocks on each drive and 
+> if one block is unreadable, it forces a rewrite on the bad drive using 
+> the n-1 other ones to recreate it?
 
-> 1/ The rationale given by Greg for non-power-of-two chunk sizes is no=
-t so
-> =C2=A0relevant for Linux I think. =C2=A0The more common filesystems =C2=
-=A0can be told that
-> =C2=A0the device is a RAID and can deliberately offset the extra supe=
-r blocks so
-> =C2=A0they don't all end up on the one device.
+You want to use the "repair" command. This has been discussed numerous 
+times and discussions regarding it can be found in the archives.
 
-   Yeah, that's right. But "non-2^n"-stripe is simpler in general and
-wouldn't require any additional "tuning" and hopes, that FS'
-developers took into consideration such things as possible RAID below
-=46S- or even FS/LVM-2-layer. Shorter speaking, it would give benefits
-in a much more simpler way. Also, there's another problem with "2^n":
-stripe size are "gaped" more and more: 512, 1024, 2048, 4096. I'd
-rather try using something like 768, 1355, 1719. Unable at present
-though...
->
-> 2/ Power-off-two is required simply because it was easier to code. =C2=
-=A0The
-
-   I guessed that. :-)
-
-> =C2=A0restriction was dropped for RAID0 a year or more ago. =C2=A0The=
- restriction
-> =C2=A0could be dropped for RAID4/5/6 and RAID10 relatively easily. =C2=
-=A0It would just
-> =C2=A0require a thorough code review and changing a few 'mask' and 's=
-hift'
-> =C2=A0operations to divisions.
-[...]
-
-   Would be really great. Really!
-
---=20
-End of message. Next message?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
