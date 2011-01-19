@@ -1,51 +1,74 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: How to force rewrite of a smart detected bad block with raid5: checkarray?
-Date: Wed, 19 Jan 2011 10:49:14 -0800
-Message-ID: <20110119184914.GA27358@merlins.org>
-References: <4D372F1C.7080703@clear.net.nz>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Optimize RAID0 for max IOPS?
+Date: Wed, 19 Jan 2011 20:21:04 +0100
+Message-ID: <20110119192104.1FA92D30267@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D372F1C.7080703@clear.net.nz>
+In-reply-to: <4D361F26.3060507@stud.tu-ilmenau.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <r.scobie@clear.net.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: stefan.huebner@stud.tu-ilmenau.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 20, 2011 at 07:36:12AM +1300, Richard Scobie wrote:
-> Marc Merlin wrote:
-> 
-> > Also, I didn't find anything about sync_action, check, and repair in
-> > the mdadm man page (a pointer to
-> > https://raid.wiki.kernel.org/index.php/RAID_Administration
-> > would me useful).
-> > Actually the above page still says that you can't check just a range
-> > of blocks.
-> 
-> > Is there more up to date documentation that I should be reading
-> > somewhere?
-> 
-> The kernel source, Documentation/md.txt.
+Dear =3D?ISO-8859-15?Q?Stefan_/*St0fF*/_H=3DFCbner?=3D,
 
-Ah, yes of course. Didn't think about looking there, thanks.
+In message <4D361F26.3060507@stud.tu-ilmenau.de> you wrote:
+>=20
+> [in German:] Sch=E4tzelein, Dein Problem sind die Platten, nicht der
+> Controller.
+>=20
+> [in English:] Dude, the disks are your bottleneck.
+=2E..
 
-Mmmh, so I was curious as to how repair, when reading all the blocks of a
-stripe with no read errors, and finding a parity mismatch, would know which
-block was corrupted and needs to be rewritten.
-Given that I don't see how it can figure that out, I'm not even sure when
-repair would be useful for raid5 when there are no underlying media errors
-returned (raid6 obviously has redundant info and it's possible there).
+Maybe we can stop speculations about what might be the cause of the
+problems in some setup I do NOT intend to use, and rather discuss the
+questions I asked.
 
-Not that I need repair in my case (check indeed does the right thing), I'm
-just not sure when repair would be useful.
+> > I will have 4 x 1 TB disks for this setup.
+> >=20
+> > The plan is to build a RAID0 from the 4 devices, create a physical
+> > volume and a volume group on the resulting /dev/md?, then create 2 =
+or
+> > 3 logical volumes that will be used as XFS file systems.
 
-Anyway, thanks again for the pointer.
+Clarrification: I'll run /dev/md* on the raw disks, without any
+partitions on them.
 
-Cheers,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+> > My goal is to optimize for maximum number of I/O operations per
+> > second. ...
+> >=20
+> > Is this a reasonable approach for such a task?
+> >=20
+> > Should I do anything different to acchive maximum performance?
+> >=20
+> > What are the tunables in this setup?  [It seems the usual recipies =
+are
+> > more oriented in maximizing the data troughput for large, mostly
+> > sequential accesses - I figure that things like increasing read-ahe=
+ad
+> > etc. will not help me much here?]
+
+So can anybody help answering these questions:
+
+- are there any special options when creating the RAID0 to make it
+  perform faster for such a use case?
+- are there other tunables, any special MD / LVM / file system /
+  read ahead / buffer cache / ... parameters to look for?
+
+Thanks.
+
+Wolfgang Denk
+
+--=20
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Boykottiert Microsoft - Kauft Eure Fenster bei OBI!
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
