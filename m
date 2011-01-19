@@ -1,145 +1,71 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Optimize RAID0 for max IOPS?
-Date: Wed, 19 Jan 2011 17:50:17 -0200
-Message-ID: <AANLkTimY8XWxnx1MZWXp2undt9J35U8vCyuCHaSF2KkJ@mail.gmail.com>
-References: <20110118210112.D13A236C@gemini.denx.de>
-	<4D361F26.3060507@stud.tu-ilmenau.de>
-	<20110119192104.1FA92D30267@gemini.denx.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: How to force rewrite of a smart detected bad block with raid5:
+ checkarray?
+Date: Thu, 20 Jan 2011 07:01:33 +1100
+Message-ID: <20110120070133.47eccd10@notabene.brown>
+References: <4D372F1C.7080703@clear.net.nz>
+	<20110119184914.GA27358@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119192104.1FA92D30267@gemini.denx.de>
+In-Reply-To: <20110119184914.GA27358@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
+To: Marc MERLIN <marc@merlins.org>
+Cc: Richard Scobie <r.scobie@clear.net.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-So can anybody help answering these questions:
+On Wed, 19 Jan 2011 10:49:14 -0800 Marc MERLIN <marc@merlins.org> wrote:
 
-- are there any special options when creating the RAID0 to make it
-perform faster for such a use case?
-- are there other tunables, any special MD / LVM / file system / read
-ahead / buffer cache / ... parameters to look for?
+> On Thu, Jan 20, 2011 at 07:36:12AM +1300, Richard Scobie wrote:
+> > Marc Merlin wrote:
+> > 
+> > > Also, I didn't find anything about sync_action, check, and repair in
+> > > the mdadm man page (a pointer to
+> > > https://raid.wiki.kernel.org/index.php/RAID_Administration
+> > > would me useful).
+> > > Actually the above page still says that you can't check just a range
+> > > of blocks.
+> > 
+> > > Is there more up to date documentation that I should be reading
+> > > somewhere?
+> > 
+> > The kernel source, Documentation/md.txt.
+> 
+> Ah, yes of course. Didn't think about looking there, thanks.
 
-lets see:
-what=B4s your disk (ssd or sas or sata) best block size to write/read?
-write this at ->(A)
-what=B4s your work load? 50% write 50% read ?
+"man md" is also an appropriate place to look.
 
-raid0 block size should be multiple of (A)
-*****filesystem size should be multiple of (A) of all disks
-*****read ahead should be a multiple of (A)
-for example
-/dev/sda 1kb
-/dev/sdb 4kb
+> 
+> Mmmh, so I was curious as to how repair, when reading all the blocks of a
+> stripe with no read errors, and finding a parity mismatch, would know which
+> block was corrupted and needs to be rewritten.
 
-you should use 6kb... you should use 4kb, 8kb, 16kb (multiple of 1kb an=
-d 4kb)
+It doesn't repair the data - that would be impossible.  It repairs the
+redundancy information which is all that raid really knows about.
+i.e. if it finds an inconsistency it re-writes the parity block.
 
-check i/o sheduller per disk too (ssd should use noop, disks should
-use cfq, deadline or another...)
-async and sync option at mount /etc/fstab, noatime reduce a lot of i/o
-too, you should optimize your application too
-hdparm each disk to use dma and fastest i/o options
+> Given that I don't see how it can figure that out, I'm not even sure when
+> repair would be useful for raid5 when there are no underlying media errors
+> returned (raid6 obviously has redundant info and it's possible there).
 
-are you using only filesystem? are you using somethink more? samba?
-mysql? apache? lvm?
-each of this programs have some tunning, check their benchmarks
+It isn't often useful.  But if you parity blocks are wrong somehow, then it
+can be useful.  It will not recover data that you have already lost, but it
+could make it less likely to lose more data.
 
+md currently treats RAID6 just the same way as RAID5 - parity is re-written.
+It is possible that more could be done, but it isn't completely clear that it
+should - and it certainly isn't high on my priority list.
 
-getting back....
-what=B4s a raid controller?
-cpu + memory + disk controller + disks
-but... it only run raid software (it can run linux....)
-
-if you computer is slower than raid cpu+memory+disk controller, you
-will have a slower software raid, than hardware raid
-it=B4s like load balance on cpu/memory utilization of disk i/o (use
-dedicated hardware, or use your hardware?)
-got it?
-using a super fast xeon with ddr3 and optical fiber running software
-raid, is faster than a hardware raid using a arm (or fpga) ddrX memory
-and sas(fiber optical) connection to disks
-
-two solutions for the same problem
-what=B4s fast? benchmark it
-i think that if your xeon run a database and a very workloaded apache,
-a dedicated hardware raid can run faster, but a light xeon can run
-faster than a dedicated hardware raid
+NeilBrown
 
 
+> 
+> Not that I need repair in my case (check indeed does the right thing), I'm
+> just not sure when repair would be useful.
+> 
+> Anyway, thanks again for the pointer.
+> 
+> Cheers,
+> Marc
 
-2011/1/19 Wolfgang Denk <wd@denx.de>:
-> Dear =3D?ISO-8859-15?Q?Stefan_/*St0fF*/_H=3DFCbner?=3D,
->
-> In message <4D361F26.3060507@stud.tu-ilmenau.de> you wrote:
->>
->> [in German:] Sch=E4tzelein, Dein Problem sind die Platten, nicht der
->> Controller.
->>
->> [in English:] Dude, the disks are your bottleneck.
-> ...
->
-> Maybe we can stop speculations about what might be the cause of the
-> problems in some setup I do NOT intend to use, and rather discuss the
-> questions I asked.
->
->> > I will have 4 x 1 TB disks for this setup.
->> >
->> > The plan is to build a RAID0 from the 4 devices, create a physical
->> > volume and a volume group on the resulting /dev/md?, then create 2=
- or
->> > 3 logical volumes that will be used as XFS file systems.
->
-> Clarrification: I'll run /dev/md* on the raw disks, without any
-> partitions on them.
->
->> > My goal is to optimize for maximum number of I/O operations per
->> > second. ...
->> >
->> > Is this a reasonable approach for such a task?
->> >
->> > Should I do anything different to acchive maximum performance?
->> >
->> > What are the tunables in this setup? =A0[It seems the usual recipi=
-es are
->> > more oriented in maximizing the data troughput for large, mostly
->> > sequential accesses - I figure that things like increasing read-ah=
-ead
->> > etc. will not help me much here?]
->
-> So can anybody help answering these questions:
->
-> - are there any special options when creating the RAID0 to make it
-> =A0perform faster for such a use case?
-> - are there other tunables, any special MD / LVM / file system /
-> =A0read ahead / buffer cache / ... parameters to look for?
->
-> Thanks.
->
-> Wolfgang Denk
->
-> --
-> DENX Software Engineering GmbH, =A0 =A0 MD: Wolfgang Denk & Detlev Zu=
-ndel
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-> Boykottiert Microsoft - Kauft Eure Fenster bei OBI!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
