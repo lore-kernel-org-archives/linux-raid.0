@@ -1,7 +1,8 @@
 From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH 1/5] imsm platform: support for Intel(R) SAS controller.
-Date: Wed, 19 Jan 2011 17:13:35 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D176EFD54A@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 3/5] imsm: prepare detail_platform_imsm to support different
+ types of controllers
+Date: Wed, 19 Jan 2011 17:13:50 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176EFD54E@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,193 +13,163 @@ To: "neilb@suse.de" <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-From 306a1aa953f2923b46b270ad03d032298c2fdcaf Mon Sep 17 00:00:00 2001
+From f16509e68d6007daca14ca4b03dfab0008c6a8dc Mon Sep 17 00:00:00 2001
 From: Marcin Labun <marcin.labun@intel.com>
-Date: Wed, 19 Jan 2011 17:12:28 +0100
-Subject: [PATCH 1/5] imsm platform: support for Intel(R) SAS controller.
+Date: Wed, 19 Jan 2011 12:04:58 +0100
+Subject: [PATCH 3/5] imsm: prepare detail_platform_imsm to support different types of controllers
 
-This patch adds platform support for SAS controller(s) built in Intel(R) Patsburg
-chipset.
+Pull out the AHCI specific parts of detail_platform_imsm to separate functions.
+Introduce support new types of controllers.
 
+Based on code From: Artur Wojcik <artur.wojcik@intel.com>
 Signed-off-by: Marcin Labun <marcin.labun@intel.com>
-Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
 ---
- platform-intel.c |   67 +++++++++++++++++++++++++++++++++++++-----------------
- platform-intel.h |   16 +++++++++++++
- 2 files changed, 62 insertions(+), 21 deletions(-)
+ super-intel.c |   96 ++++++++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 62 insertions(+), 34 deletions(-)
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 6174908..3516a1b 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -51,6 +51,14 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 	struct dirent *de;
- 	struct sys_dev *head = NULL;
- 	struct sys_dev *list = NULL;
-+	enum sys_dev_type type;
-+
-+	if (strcmp(driver, "isci") == 0)
-+		type = SYS_DEV_SAS;
-+	else if (strcmp(driver, "ahci") == 0)
-+		type = SYS_DEV_SATA;
-+	else
-+		type = SYS_DEV_UNKNOWN;
+diff --git a/super-intel.c b/super-intel.c
+index d0bbd54..d77d61c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1124,10 +1124,10 @@ static void brief_detail_super_imsm(struct supertype *st)
+ static int imsm_read_serial(int fd, char *devname, __u8 *serial);
+ static void fd2devname(int fd, char *name);
  
- 	sprintf(path, "/sys/bus/%s/drivers/%s", bus, driver);
- 	driver_dir = opendir(path);
-@@ -74,6 +82,13 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 		if (strncmp(bus, c+1, strlen(bus)) != 0)
- 			continue;
- 
-+		sprintf(path, "/sys/bus/%s/drivers/%s/%s",
-+			bus, driver, de->d_name);
-+
-+		/* if it's not Intel device skip it. */
-+		if (devpath_to_vendor(path) != 0x8086)
-+			continue;
-+
- 		/* start / add list entry */
- 		if (!head) {
- 			head = malloc(sizeof(*head));
-@@ -88,11 +103,11 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 			break;
- 		}
- 
--		/* generate canonical path name for the device */
--		sprintf(path, "/sys/bus/%s/drivers/%s/%s",
--			bus, driver, de->d_name);
-+		list->type = type;
- 		list->path = canonicalize_file_name(path);
- 		list->next = NULL;
-+		if ((list->pci_id = strrchr(list->path, '/')) != NULL)
-+			list->pci_id++;
- 	}
- 	closedir(driver_dir);
- 	return head;
-@@ -122,23 +137,34 @@ __u16 devpath_to_vendor(const char *dev_path)
- 	return id;
- }
- 
--static int platform_has_intel_ahci(void)
-+struct sys_dev *find_intel_devices(void)
+-static int imsm_enumerate_ports(const char *hba_path, int port_count, int host_base, int verbose)
++static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_base, int verbose)
  {
--	struct sys_dev *devices = find_driver_devices("pci", "ahci");
--	struct sys_dev *dev;
--	int ret = 0;
--
--	for (dev = devices; dev; dev = dev->next)
--		if (devpath_to_vendor(dev->path) == 0x8086) {
--			ret = 1;
--			break;
--		}
--
--	free_sys_dev(&devices);
--
--	return ret;
-+	struct sys_dev *ahci, *isci;
-+
-+	isci = find_driver_devices("pci", "isci");
-+	ahci = find_driver_devices("pci", "ahci");
-+
-+	if (!ahci) {
-+		ahci = isci;
-+	} else {
-+		struct sys_dev *elem = ahci;
-+		while (elem->next)
-+			elem = elem->next;
-+		elem->next = isci;
-+	}
-+	return ahci;
+-	/* dump an unsorted list of devices attached to ahci, as well as
+-	 * non-connected ports
++	/* dump an unsorted list of devices attached to AHCI Intel storage
++	 * controller, as well as non-connected ports
+ 	 */
+ 	int hba_len = strlen(hba_path) + 1;
+ 	struct dirent *ent;
+@@ -1287,6 +1287,49 @@ static int imsm_enumerate_ports(const char *hba_path, int port_count, int host_b
+ 	return err;
  }
  
-+static int platform_has_intel_devices(void)
++
++static void print_found_intel_controllers(struct sys_dev *elem)
 +{
-+	struct sys_dev *devices;
-+	devices = find_intel_devices();
-+	if (devices) {
-+		free_sys_dev(&devices);
-+		return 1;
++	for (; elem; elem = elem->next) {
++		fprintf(stderr, Name ": found Intel(R) ");
++		if (elem->type == SYS_DEV_SATA)
++			fprintf(stderr, "SATA ");
++		fprintf(stderr, "RAID controller");
++		if (elem->pci_id)
++			fprintf(stderr, " at %s", elem->pci_id);
++		fprintf(stderr, ".\n");
 +	}
-+	return 0;
++	fflush(stderr);
 +}
- 
- static struct imsm_orom imsm_orom;
- static int scan(const void *start, const void *end)
-@@ -185,7 +211,7 @@ const struct imsm_orom *find_imsm_orom(void)
- 		return &imsm_orom;
- 	}
- 
--	if (!platform_has_intel_ahci())
-+	if (!platform_has_intel_devices())
- 		return NULL;
- 
- 	/* scan option-rom memory looking for an imsm signature */
-@@ -212,7 +238,7 @@ char *devt_to_devpath(dev_t dev)
- 	return canonicalize_file_name(device);
- }
- 
--static char *diskfd_to_devpath(int fd)
-+char *diskfd_to_devpath(int fd)
++
++
++static int ahci_get_port_count(const char *hba_path, int *port_count)
++{
++	struct dirent *ent;
++	DIR *dir;
++	int host_base = -1;
++
++	*port_count = 0;
++	if ((dir = opendir(hba_path)) == NULL)
++		return -1;
++
++	for (ent = readdir(dir); ent; ent = readdir(dir)) {
++		int host;
++
++		if (sscanf(ent->d_name, "host%d", &host) != 1)
++			continue;
++		if (*port_count == 0)
++			host_base = host;
++		else if (host < host_base)
++			host_base = host;
++
++		if (host + 1 > *port_count + host_base)
++			*port_count = host + 1 - host_base;
++	}
++	closedir(dir);
++	return host_base;
++}
++
+ static int detail_platform_imsm(int verbose, int enumerate_only)
  {
- 	/* return the device path for a disk, return NULL on error or fd
- 	 * refers to a partition
-@@ -233,7 +259,7 @@ int path_attached_to_hba(const char *disk_path, const char *hba_path)
+ 	/* There are two components to imsm platform support, the ahci SATA
+@@ -1302,11 +1345,9 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+ 	 */
+ 	const struct imsm_orom *orom;
+ 	struct sys_dev *list, *hba;
+-	DIR *dir;
+-	struct dirent *ent;
+-	const char *hba_path;
+ 	int host_base = 0;
+ 	int port_count = 0;
++	int result=0;
  
- 	if (!disk_path || !hba_path)
- 		return 0;
+ 	if (enumerate_only) {
+ 		if (check_env("IMSM_NO_PLATFORM") || find_imsm_orom())
+@@ -1326,10 +1367,8 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+ 		return 2;
+ 	} else if (verbose)
+ 		fprintf(stderr, Name ": found Intel SATA AHCI Controller\n");
+-	hba_path = hba->path;
+-	hba->path = NULL;
+-	free_sys_dev(&list);
+ 
++	print_found_intel_controllers(list);
+ 	orom = find_imsm_orom();
+ 	if (!orom) {
+ 		if (verbose)
+@@ -1365,35 +1404,24 @@ static int detail_platform_imsm(int verbose, int enumerate_only)
+ 	       imsm_orom_has_chunk(orom, 1024*64) ? " 64M" : "");
+ 	printf("      Max Disks : %d\n", orom->tds);
+ 	printf("    Max Volumes : %d\n", orom->vpa);
+-	printf(" I/O Controller : %s\n", hba_path);
 -
-+	dprintf("hba: %s - disk: %s\n", hba_path, disk_path);
- 	if (strncmp(disk_path, hba_path, strlen(hba_path)) == 0)
- 		rc = 1;
- 	else
-@@ -263,4 +289,3 @@ int disk_attached_to_hba(int fd, const char *hba_path)
+-	/* find the smallest scsi host number to determine a port number base */
+-	dir = opendir(hba_path);
+-	for (ent = dir ? readdir(dir) : NULL; ent; ent = readdir(dir)) {
+-		int host;
  
- 	return rc;
- }
+-		if (sscanf(ent->d_name, "host%d", &host) != 1)
+-			continue;
+-		if (port_count == 0)
+-			host_base = host;
+-		else if (host < host_base)
+-			host_base = host;
+ 
+-		if (host + 1 > port_count + host_base)
+-			port_count = host + 1 - host_base;
++	for (hba = list; hba; hba = hba->next) {
++		printf(" I/O Controller : %s (%s)\n",
++			hba->path, get_sys_dev_type(hba->type));
+ 
++		if (hba->type == SYS_DEV_SATA) {
++			host_base = ahci_get_port_count(hba->path, &port_count);
++			if (ahci_enumerate_ports(hba->path, port_count, host_base, verbose)) {
++				if (verbose)
++					fprintf(stderr, Name ": failed to enumerate "
++						"ports on SATA controller at %s.", hba->pci_id);
++				result |= 2;
++			}
++		}
+ 	}
+-	if (dir)
+-		closedir(dir);
 -
-diff --git a/platform-intel.h b/platform-intel.h
-index 9088436..82cc85e 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -115,6 +115,7 @@ static inline int imsm_orom_has_chunk(const struct imsm_orom *orom, int chunk)
- 	return !!(orom->sss & (1 << (fs - 1)));
+-	if (!port_count || imsm_enumerate_ports(hba_path, port_count,
+-						host_base, verbose) != 0) {
+-		if (verbose)
+-			fprintf(stderr, Name ": failed to enumerate ports\n");
+-		return 2;
+-	}
+-
+-	return 0;
++	free_sys_dev(&list);
++	return result;
  }
+ #endif
  
-+
- /**
-  * fls - find last (most-significant) bit set
-  * @x: the word to search
-@@ -164,15 +165,30 @@ static inline int imsm_orom_default_chunk(const struct imsm_orom *orom)
- 	return min(512, (1 << fs));
- }
- 
-+
-+enum sys_dev_type {
-+	SYS_DEV_UNKNOWN = 0,
-+	SYS_DEV_SAS,
-+	SYS_DEV_SATA,
-+	SYS_DEV_MAX
-+};
-+
-+
- struct sys_dev {
-+	enum sys_dev_type type;
- 	char *path;
-+	char *pci_id;
- 	struct sys_dev *next;
- };
- 
-+char *diskfd_to_devpath(int fd);
- struct sys_dev *find_driver_devices(const char *bus, const char *driver);
-+struct sys_dev *find_intel_devices(void);
- __u16 devpath_to_vendor(const char *dev_path);
- void free_sys_dev(struct sys_dev **list);
- const struct imsm_orom *find_imsm_orom(void);
- int disk_attached_to_hba(int fd, const char *hba_path);
- char *devt_to_devpath(dev_t dev);
- int path_attached_to_hba(const char *disk_path, const char *hba_path);
-+const char *get_sys_dev_type(enum sys_dev_type);
-+
 -- 
 1.6.4.2
 
