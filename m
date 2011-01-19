@@ -1,67 +1,64 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: How to force rewrite of a smart detected bad block with raid5: checkarray?
-Date: Wed, 19 Jan 2011 12:57:39 -0800
-Message-ID: <20110119205739.GI7117@merlins.org>
-References: <4D372F1C.7080703@clear.net.nz> <20110119184914.GA27358@merlins.org> <20110120070133.47eccd10@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: How to force rewrite of a smart detected bad block with raid5:
+ checkarray?
+Date: Thu, 20 Jan 2011 07:58:42 +1100
+Message-ID: <20110120075842.25912e84@notabene.brown>
+References: <20110119070419.GC31606@merlins.org>
+	<alpine.DEB.1.10.1101190842170.13151@uplift.swm.pp.se>
+	<20110119204115.0fe4b159@notabene.brown>
+	<20110119173150.GB6823@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110120070133.47eccd10@notabene.brown>
+In-Reply-To: <20110119173150.GB6823@merlins.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Richard Scobie <r.scobie@clear.net.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Marc MERLIN <marc@merlins.org>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 20, 2011 at 07:01:33AM +1100, NeilBrown wrote:
-> > > The kernel source, Documentation/md.txt.
-> > 
-> > Ah, yes of course. Didn't think about looking there, thanks.
+On Wed, 19 Jan 2011 09:31:50 -0800 Marc MERLIN <marc@merlins.org> wrote:
+
+> On Wed, Jan 19, 2011 at 08:41:15PM +1100, NeilBrown wrote:
+> > All you need to do is get md/raid5 to try reading the bad block.  Once it does
+> > that it will get a read error and automagically try to correct it.
+>  
+> So, if I get this right, raid5 only reads n-1 drives. Unless I'm unlucky
+> enough to have the bad disk be the parity stripe, just reading the file with
+> a bad stripe by luck would cause the kernel to recompute parity on the read
+> error and re-write the bad block?
+> (I also read in the online docs that raid4 actually reads all the blocks,
+> including parity, which is a bit slower, but would actually guarantee that
+> all blocks are read, and parity is still consistent at ready time?)
 > 
-> "man md" is also an appropriate place to look.
-
-Ah yes. Thanks for that too.
-
-> > Mmmh, so I was curious as to how repair, when reading all the blocks of a
-> > stripe with no read errors, and finding a parity mismatch, would know which
-> > block was corrupted and needs to be rewritten.
 > 
-> It doesn't repair the data - that would be impossible.  It repairs the
+> But back to your point: check, which I had started, will indeed do what I
+> was hoping it would, thanks.
+> 
+> > If you were really keen, you could 
+> >   cd /sys/block/mdXX/md
+> >   echo 3907029168 > sync_min
+> >   echo 3907029170 > sync_max
+> >   echo check > sync_action
+> 
+> I stopped the full check, and tried:
+>  
+> gargamel:/sys/block/md7/md# cat sync_min
+> 244188936
+> gargamel:/sys/block/md7/md# cat sync_max
+> max
+> gargamel:/sys/block/md7/md# echo 3907029168 > sync_min
+> bash: echo: write error: Invalid argument
+> 
+> Any idea what went wrong here?
 
-that's what I thought.
+Like I suggest, rounding might be necessary.
+I just checked the code and this number does need to be a multiple of the
+chunk size, which is 1024 sectors for you.
+so 
+   echo 3907028992 > sync_min
 
-> redundancy information which is all that raid really knows about.
-> i.e. if it finds an inconsistency it re-writes the parity block.
+should do the trick.
 
-Right, so it has only chance out of n to fix the right drive. Better than
-nothing though.
+NeilBrown
 
-> It isn't often useful.  But if you parity blocks are wrong somehow, then it
-> can be useful.  It will not recover data that you have already lost, but it
-> could make it less likely to lose more data.
- 
-Fair enough.
-
-> md currently treats RAID6 just the same way as RAID5 - parity is re-written.
-> It is possible that more could be done, but it isn't completely clear that it
-> should - and it certainly isn't high on my priority list.
-
-Understood.
-
-So, I went back and read man md, and md.txt in the kernel Documentation
-tree, but I could not find documentation on this:
-  echo 3907029168 > sync_min                                                                                                
-  echo 3907029170 > sync_max 
-
-and as per my other post, it didn't work for me on 2.6.36
-(echo: write error: Invalid argument)
-
-Any suggestions?
-
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
