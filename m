@@ -1,35 +1,35 @@
-From: FLD <fld@r00t3d.com>
-Subject: I wonder what the bad blocks were storing
-Date: Wed, 19 Jan 2011 16:03:13 +0200
-Message-ID: <20110119140313.GB18805@r00t3d.com>
+From: David Flynn <davidf@rd.bbc.co.uk>
+Subject: Re: md raid5 blocked in get_active_stripe after disk failure
+Date: Wed, 19 Jan 2011 13:45:49 +0000
+Message-ID: <20110119134549.GE26257@rd.bbc.co.uk>
+References: <20110112130420.GA6275@rd.bbc.co.uk>
+ <20110112140632.GB6275@rd.bbc.co.uk>
+ <20110113073331.687bc941@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20110113073331.687bc941@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: David Flynn <davidf@rd.bbc.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After dd_rescuing a device that belongs to a degraded raid-5 array I got
-a summary like this:
+* NeilBrown (neilb@suse.de) wrote:
+> If this is easily reproducible (which I think you suggested it is), I would
+> put a printk in raid5_end_read_request where it sets "retry = 1" to report
+> "trying to fix a failed read".
+>
+> If you then get a hang but don't get that message, it is a device driver
+> problem.  If you do get that message it is probably an md/raid5 problem.
 
-Summary for /dev/sdb1 -> /dev/sdg1:
-dd_rescue: (info):
-ipos: 976760001.0k,
-opos: 976760001.0k,
-xferd: 976760001.0k,
-errs: 48,
-errxfer: 24.0k,
-succxfer: 976759977.0k
+Thanks for the quick reply.
 
-Since it's a degraded array I'm guessing there is gonna be 24 KiB worth
-of damage to the filesystem. But I do have fairly recent full filesystem 
-level backups, it would be nice if I could figure out what those 48 bad 
-sectors contained, so I could restore just those things from my backups.
+At the time it was easily reproducible (after rebooting as soon as the
+nfs clients retried their requests).  Unfortunately, I had to remove the
+disk from the array, and will not be able to test the above until next
+month.
 
-So basically I would need to figure out which blocks are the 48 damaged
-ones on /dev/md0 and then ask my filesystems debugging tools to tell me
-what those blocks should contain.
+Kind regards,
 
-And to make it a bit more fun there is a luks crypto layer between the
-md and filesystem, but that should be a simple luks header sized offset.
+..david
