@@ -1,64 +1,35 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: How to force rewrite of a smart detected bad block with raid5:
- checkarray?
-Date: Thu, 20 Jan 2011 07:58:42 +1100
-Message-ID: <20110120075842.25912e84@notabene.brown>
-References: <20110119070419.GC31606@merlins.org>
-	<alpine.DEB.1.10.1101190842170.13151@uplift.swm.pp.se>
-	<20110119204115.0fe4b159@notabene.brown>
-	<20110119173150.GB6823@merlins.org>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: How to force rewrite of a smart detected bad block with raid5: checkarray?
+Date: Wed, 19 Jan 2011 13:03:06 -0800
+Message-ID: <20110119210306.GJ7117@merlins.org>
+References: <20110119070419.GC31606@merlins.org> <alpine.DEB.1.10.1101190842170.13151@uplift.swm.pp.se> <20110119204115.0fe4b159@notabene.brown> <20110119173150.GB6823@merlins.org> <20110120075842.25912e84@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119173150.GB6823@merlins.org>
+Content-Disposition: inline
+In-Reply-To: <20110120075842.25912e84@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
+To: NeilBrown <neilb@suse.de>
 Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 19 Jan 2011 09:31:50 -0800 Marc MERLIN <marc@merlins.org> wrote:
-
-> On Wed, Jan 19, 2011 at 08:41:15PM +1100, NeilBrown wrote:
-> > All you need to do is get md/raid5 to try reading the bad block.  Once it does
-> > that it will get a read error and automagically try to correct it.
->  
-> So, if I get this right, raid5 only reads n-1 drives. Unless I'm unlucky
-> enough to have the bad disk be the parity stripe, just reading the file with
-> a bad stripe by luck would cause the kernel to recompute parity on the read
-> error and re-write the bad block?
-> (I also read in the online docs that raid4 actually reads all the blocks,
-> including parity, which is a bit slower, but would actually guarantee that
-> all blocks are read, and parity is still consistent at ready time?)
+On Thu, Jan 20, 2011 at 07:58:42AM +1100, NeilBrown wrote:
+> Like I suggest, rounding might be necessary.
+> I just checked the code and this number does need to be a multiple of the
+> chunk size, which is 1024 sectors for you.
+> so 
+>    echo 3907028992 > sync_min
 > 
-> 
-> But back to your point: check, which I had started, will indeed do what I
-> was hoping it would, thanks.
-> 
-> > If you were really keen, you could 
-> >   cd /sys/block/mdXX/md
-> >   echo 3907029168 > sync_min
-> >   echo 3907029170 > sync_max
-> >   echo check > sync_action
-> 
-> I stopped the full check, and tried:
->  
-> gargamel:/sys/block/md7/md# cat sync_min
-> 244188936
-> gargamel:/sys/block/md7/md# cat sync_max
-> max
-> gargamel:/sys/block/md7/md# echo 3907029168 > sync_min
-> bash: echo: write error: Invalid argument
-> 
-> Any idea what went wrong here?
+> should do the trick.
 
-Like I suggest, rounding might be necessary.
-I just checked the code and this number does need to be a multiple of the
-chunk size, which is 1024 sectors for you.
-so 
-   echo 3907028992 > sync_min
+I misunderstood, I thought you were worried that I wouldn't check the right
+blocks, not "rounding or it won't be accepted by the kernel" :)
 
-should do the trick.
+This worked fine, thanks for your help.
 
-NeilBrown
-
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
