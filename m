@@ -1,156 +1,67 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
-Date: Thu, 20 Jan 2011 07:52:44 +1100
-Message-ID: <20110120075244.0ef3352a@notabene.brown>
-References: <20110112155905.18013.73701.stgit@gklab-128-111.igk.intel.com>
-	<20110112160132.18013.92612.stgit@gklab-128-111.igk.intel.com>
-	<20110113135134.584c1264@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408066EF065D@irsmsx503.ger.corp.intel.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: How to force rewrite of a smart detected bad block with raid5: checkarray?
+Date: Wed, 19 Jan 2011 12:57:39 -0800
+Message-ID: <20110119205739.GI7117@merlins.org>
+References: <4D372F1C.7080703@clear.net.nz> <20110119184914.GA27358@merlins.org> <20110120070133.47eccd10@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C644860408066EF065D@irsmsx503.ger.corp.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20110120070133.47eccd10@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Richard Scobie <r.scobie@clear.net.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 17 Jan 2011 15:49:25 +0000 "Wojcik, Krzysztof"
-<krzysztof.wojcik@intel.com> wrote:
-
-> Hi Neil,
+On Thu, Jan 20, 2011 at 07:01:33AM +1100, NeilBrown wrote:
+> > > The kernel source, Documentation/md.txt.
+> > 
+> > Ah, yes of course. Didn't think about looking there, thanks.
 > 
-> So maybe it will be good to limit this part of code execution only for raid5?
-> (reshape.backup_blocks == 0) {
-> 	If (info->array.level != 5)
-> 		return rv;
-> ...
+> "man md" is also an appropriate place to look.
+
+Ah yes. Thanks for that too.
+
+> > Mmmh, so I was curious as to how repair, when reading all the blocks of a
+> > stripe with no read errors, and finding a parity mismatch, would know which
+> > block was corrupted and needs to be rewritten.
 > 
-> Do you agree?
+> It doesn't repair the data - that would be impossible.  It repairs the
 
-No.  Why would you want do to that?
+that's what I thought.
 
-The code is relevant in other cases too (I hadn't thought it through last
-time I commented).  There are other cases where re-striping isn't needed such
-as when adding an extra device to a RAID1.
+> redundancy information which is all that raid really knows about.
+> i.e. if it finds an inconsistency it re-writes the parity block.
 
-Why do you think this code needs any change at all??  Is it causing you some
-sort of problem?
+Right, so it has only chance out of n to fix the right drive. Better than
+nothing though.
 
-NeilBrown
+> It isn't often useful.  But if you parity blocks are wrong somehow, then it
+> can be useful.  It will not recover data that you have already lost, but it
+> could make it less likely to lose more data.
+ 
+Fair enough.
 
+> md currently treats RAID6 just the same way as RAID5 - parity is re-written.
+> It is possible that more could be done, but it isn't completely clear that it
+> should - and it certainly isn't high on my priority list.
 
-> 
-> Regards- Krzysztof
-> 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Thursday, January 13, 2011 3:52 AM
-> > To: Wojcik, Krzysztof
-> > Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
-> > Williams, Dan J; Ciechanowski, Ed
-> > Subject: Re: [PATCH 5/6] Remove code for non re-striping operations.
-> > 
-> > On Wed, 12 Jan 2011 17:01:32 +0100 Krzysztof Wojcik
-> > <krzysztof.wojcik@intel.com> wrote:
-> > 
-> > > Neil,
-> > > How was your intention when you add this part of code?
-> > > I can't find the case when it will be necessary.
-> > > Moreover it breaks flow for takeover operations because
-> > > ioctl not succeeded when more than one parameter is changed.
-> > > I've remove this code temporally to be able test takeover
-> > > operations.
-> > > We can restore this code after we decide what it should do.
-> > 
-> > Asking what the purpose of some code is is perfectly OK.  Asking by
-> > sending a
-> > patch which removes the code seems ... odd.
-> > 
-> > If the number of data devices is 1, then a RAID5 can have
-> > layout/chunksize
-> > changed without any restriping.
-> > This code handles that case.
-> > 
-> > NeilBrown
-> > 
-> > 
-> > >
-> > > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> > > ---
-> > >  Grow.c |   43 +++++--------------------------------------
-> > >  1 files changed, 5 insertions(+), 38 deletions(-)
-> > >
-> > > diff --git a/Grow.c b/Grow.c
-> > > index 253f289..6835f34 100644
-> > > --- a/Grow.c
-> > > +++ b/Grow.c
-> > > @@ -1666,6 +1666,11 @@ static int reshape_array(char *container, int
-> > fd, char *devname,
-> > >  		ping_monitor(container);
-> > >  	}
-> > >
-> > > +	if (reshape.backup_blocks == 0) {
-> > > +		/* If operation not not reuire re-striping we can finish */
-> > > +		return rv;
-> > > +	}
-> > > +
-> > >  	/* ->reshape_super might have chosen some spares from the
-> > >  	 * container that it wants to be part of the new array.
-> > >  	 * We can collect them with ->container_content and give
-> > > @@ -1692,44 +1697,6 @@ static int reshape_array(char *container, int
-> > fd, char *devname,
-> > >  		}
-> > >  	}
-> > >
-> > > -	if (reshape.backup_blocks == 0) {
-> > > -		/* No restriping needed, but we might need to impose
-> > > -		 * some more changes: layout, raid_disks, chunk_size
-> > > -		 */
-> > > -		if (info->new_layout != UnSet &&
-> > > -		    info->new_layout != info->array.layout) {
-> > > -			info->array.layout = info->new_layout;
-> > > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-> > > -				fprintf(stderr, Name ": failed to set new
-> > layout\n");
-> > > -				rv = 1;
-> > > -			} else if (!quiet)
-> > > -				printf("layout for %s set to %d\n",
-> > > -				       devname, info->array.layout);
-> > > -		}
-> > > -		if (info->delta_disks != UnSet &&
-> > > -		    info->delta_disks != 0) {
-> > > -			info->array.raid_disks += info->delta_disks;
-> > > -			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-> > > -				fprintf(stderr, Name ": failed to set raid
-> > disks\n");
-> > > -				rv = 1;
-> > > -			} else if (!quiet)
-> > > -				printf("raid_disks for %s set to %d\n",
-> > > -				       devname, info->array.raid_disks);
-> > > -		}
-> > > -		if (info->new_chunk != 0 &&
-> > > -		    info->new_chunk != info->array.chunk_size) {
-> > > -			if (sysfs_set_num(info, NULL,
-> > > -					  "chunk_size", info->new_chunk) != 0) {
-> > > -				fprintf(stderr, Name ": failed to set chunk
-> > size\n");
-> > > -				rv = 1;
-> > > -			} else if (!quiet)
-> > > -				printf("chunk size for %s set to %d\n",
-> > > -				       devname, info->array.chunk_size);
-> > > -		}
-> > > -
-> > > -		return rv;
-> > > -	}
-> > > -
-> > >  	/*
-> > >  	 * There are three possibilities.
-> > >  	 * 1/ The array will shrink.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Understood.
 
+So, I went back and read man md, and md.txt in the kernel Documentation
+tree, but I could not find documentation on this:
+  echo 3907029168 > sync_min                                                                                                
+  echo 3907029170 > sync_max 
+
+and as per my other post, it didn't work for me on 2.6.36
+(echo: write error: Invalid argument)
+
+Any suggestions?
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
