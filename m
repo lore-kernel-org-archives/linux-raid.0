@@ -1,31 +1,37 @@
-From: Cory Coager <ccoager@gmail.com>
-Subject: Re: support for external persistent cache
-Date: Tue, 18 Jan 2011 22:34:58 -0500
-Message-ID: <4D365BE2.9020300@gmail.com>
-References: <4D365551.7090207@gmail.com>	<AANLkTimTnaHEA0+==hs7Ew0Zzvdr1EOtxEqH=EfgdN-7@mail.gmail.com> <AANLkTim3BJVbHdtByAni2ObUf0Qjece9jkd1_MSkT56P@mail.gmail.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Optimize RAID0 for max IOPS?
+Date: Wed, 19 Jan 2011 08:04:32 +0100
+Message-ID: <20110119070432.7EC462FC@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <AANLkTimzwgg_Htj4rMxjdjhMQHExeWOqzd5Puu9KbXug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim3BJVbHdtByAni2ObUf0Qjece9jkd1_MSkT56P@mail.gmail.com>
+In-reply-to: <AANLkTimzwgg_Htj4rMxjdjhMQHExeWOqzd5Puu9KbXug@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/18/2011 10:17 PM, Roberto Spadim wrote:
-> reading again... should you use a good ups system with information
-> about % of batery, like a notebook?
-> read/write cache can be change with async or sync options on filesystem mount
-> batery support is done with ups system
-> maybe with some time of use (10 years) the baterry of you ramdisk
-> should be replaced, will you replace it? is easier replace a ups
-> batery or a ramdisk specific batery?
-> check at internet about 12vdc atx power supply, and use a charger and
-> a car batery to supply power to your computer, it's a very nice
-> solution =)
-Sure, I'll replace the battery in the ram disk.  Not much different than 
-a hardware raid card with a battery in it.
+Dear Roberto Spadim,
 
-I think you're missing my point.  A UPS isn't going to save your file 
-system if the machine dies mid-write.
+In message <AANLkTimzwgg_Htj4rMxjdjhMQHExeWOqzd5Puu9KbXug@mail.gmail.com> you wrote:
+>
+> try partitioning all hard drives and make many paritions and make raid
+> on each one
+> another way could be a lvm over mdxxx and try to partition it (can lvm
+> be partitioned?)
 
+I do not intend to use any partitions.  I will use LVM on the full
+device /dev/mdX, and then use logical volumes.
+
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+What was sliced bread the greatest thing since?
