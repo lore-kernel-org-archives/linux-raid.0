@@ -1,59 +1,63 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: How to force rewrite of a smart detected bad block with raid5: checkarray?
-Date: Tue, 18 Jan 2011 23:04:19 -0800
-Message-ID: <20110119070419.GC31606@merlins.org>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Re: Hi! Why having LSR's chunk size 2^n limitation?
+Date: Wed, 19 Jan 2011 14:41:10 +0700
+Message-ID: <AANLkTi=C6Pn9qHXPXX0NCEtEwihb1rVPDM48RUDXD_Eh@mail.gmail.com>
+References: <AANLkTi=Nk_4vNH5BpHj5fMJxOaSAGjuiSD8agbACdzaQ@mail.gmail.com> <20110119064457.5ab8bdd0@notabene.brown>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20110119064457.5ab8bdd0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I couldn't quite find the answer to this with a search.
+On 19 January 2011 02:44, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 18 Jan 2011 22:59:07 +0700 Igor Podlesny <for.poige+linux@gma=
+il.com>
+> wrote:
 
-Smart reported a bad block (pending).
-I confirmed it with:
+   Hi Neil! Thanks for your reply.
 
-hdrecover /dev/sdk
-(...)
-Sector 3907017780 (99%) ETR: 0 seconds
-Error at sector 3907029168
-Attempting to pounce on it...
-Attempt 1 from sector   3219409027: FAILED
-Attempt 2 from sector   1546846730: FAILED
-(...)
-Attempt 19 from sector   3837517549: FAILED
-Attempt 20 from sector   2281104567: FAILED
-Couldn't recover sector 3907029168
-The data for this sector could not be recovered. However, destroying the
-contents of this sector (ie writing zeros to it) should cause the hard disk
-to reallocate it making the drive useable again
-Do you really want to destroy the data in sector 3907029168?     [ (y)es / (n)o / (a)ll / (q)uit ]:^C
+> 1/ The rationale given by Greg for non-power-of-two chunk sizes is no=
+t so
+> =C2=A0relevant for Linux I think. =C2=A0The more common filesystems =C2=
+=A0can be told that
+> =C2=A0the device is a RAID and can deliberately offset the extra supe=
+r blocks so
+> =C2=A0they don't all end up on the one device.
 
-Now, hdrecover had no idea that /dev/sdk is part of a raid5, so I'm not going to
-use it to rewrite the bad block.
+   Yeah, that's right. But "non-2^n"-stripe is simpler in general and
+wouldn't require any additional "tuning" and hopes, that FS'
+developers took into consideration such things as possible RAID below
+=46S- or even FS/LVM-2-layer. Shorter speaking, it would give benefits
+in a much more simpler way. Also, there's another problem with "2^n":
+stripe size are "gaped" more and more: 512, 1024, 2048, 4096. I'd
+rather try using something like 768, 1355, 1719. Unable at present
+though...
+>
+> 2/ Power-off-two is required simply because it was easier to code. =C2=
+=A0The
 
-I know I can remove /dev/sdk1 from my array and put it back in, but that's
-unsafe because if during a rebuild another block from another drive happens
-to be bad, I'm then left with a double raid failure.
+   I guessed that. :-)
 
-So, I tried this: /usr/share/mdadm/checkarray md7
+> =C2=A0restriction was dropped for RAID0 a year or more ago. =C2=A0The=
+ restriction
+> =C2=A0could be dropped for RAID4/5/6 and RAID10 relatively easily. =C2=
+=A0It would just
+> =C2=A0require a thorough code review and changing a few 'mask' and 's=
+hift'
+> =C2=A0operations to divisions.
+[...]
 
-md7 : active raid5 sdi1[0] sdh1[5] sdl1[3] sdk1[2] sdj1[1]
-      7814045696 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
-      [>....................]  check =  0.0% (447616/1953511424) finish=28435.6min speed=1144K/sec
+   Would be really great. Really!
 
-But I couldn't quite find documentation on what the kernel does in this case.
-
-Does this actually do what I want? Try all the blocks on each drive and if
-one block is unreadable, it forces a rewrite on the bad drive using the n-1
-other ones to recreate it?
-
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+--=20
+End of message. Next message?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
