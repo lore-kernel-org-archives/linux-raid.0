@@ -1,35 +1,121 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: How to force rewrite of a smart detected bad block with raid5: checkarray?
-Date: Wed, 19 Jan 2011 13:03:06 -0800
-Message-ID: <20110119210306.GJ7117@merlins.org>
-References: <20110119070419.GC31606@merlins.org> <alpine.DEB.1.10.1101190842170.13151@uplift.swm.pp.se> <20110119204115.0fe4b159@notabene.brown> <20110119173150.GB6823@merlins.org> <20110120075842.25912e84@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: RAID0 - cache
+Date: Wed, 19 Jan 2011 19:35:57 -0200
+Message-ID: <AANLkTimGp+P1kkq0UQKQ7FHiGi7vwGiGnBZvEoOMWeVA@mail.gmail.com>
+References: <AANLkTik7xBOYVgZJC0sStpK=oPHdX53XzwYC5CVDKy_v@mail.gmail.com>
+	<20110120072016.1b2162c8@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110120075842.25912e84@notabene.brown>
+In-Reply-To: <20110120072016.1b2162c8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jan 20, 2011 at 07:58:42AM +1100, NeilBrown wrote:
-> Like I suggest, rounding might be necessary.
-> I just checked the code and this number does need to be a multiple of the
-> chunk size, which is 1024 sectors for you.
-> so 
->    echo 3907028992 > sync_min
-> 
-> should do the trick.
+there=B4s a forum (linux kernel) for ideas?
 
-I misunderstood, I thought you were worried that I wouldn't check the right
-blocks, not "rounding or it won't be accepted by the kernel" :)
+2011/1/19 NeilBrown <neilb@suse.de>:
+> On Wed, 19 Jan 2011 18:13:23 -0200 Roberto Spadim <roberto@spadim.com=
+=2Ebr>
+> wrote:
+>
+>> Hi guys, from a long email i will start this one: (the last one wasn=
+=B4t send)
+>>
+>> think about this:
+>>
+>> /dev/sda (sata disk 1000gb size, latency of 1ms to move head, 100mb/=
+s
+>> to write/read)
+>> /dev/sdb (ssd 1gb size, latency of <100us to find what flash and
+>> position, 500mb/s to write/read)
+>> ram memory (8gb size, with 1gb not used)
+>> /dev/mdxxx (the new device i=B4m calling it as raid0-cache)
+>>
+>> how raid0-cache work?
+>>
+>>
+>> how to create raid?
+>> tell what the sequencial read cache estrategy:
+>> memory(tell fixed memory size) - /dev/sdb - /dev/sda - another devic=
+e
+>> (maybe just 2 is suficiente /dev/sdb and /dev/sda)...
+>>
+>>
+>> how to read?
+>> first, read from the first read device (memory)
+>> if information not there -> read from second read device (/dev/sdb),
+>> update information at first read device, return the read value
+>> if information not there -> read from third read device (/dev/sda),
+>> update information at second and first read device, return the read
+>> value
+>>
+>> how to write?
+>> flush space from first read device to second read device
+>> write to first read device, return OK
+>>
+>> background thread:
+>> sync from first write device (memory) to second write device (/dev/s=
+db)
+>> flush from second write device (/dev/sdb) to third write device (/de=
+v/sda)
+>>
+>> startup:
+>> using cache:
+>> =A0flush everythink from first write device (memory) to second write
+>> device (/dev/sdb)
+>> =A0flush everythink from second write device (/dev/sdb) to second wr=
+ite
+>> device (/dev/sda)
+>> =A0since memory is volatille, at startup it can=B4be flushed...
+>> without cache:
+>> =A0make first write device unusable (memory)
+>> =A0make second write device unusable
+>> =A0here we can have write problems, since a wrong power off, can los=
+t
+>> information from cache (first and second write device)
+>>
+>>
+>>
+>> anyidea who can make it?
+>
+> "Hey, I've got this clever idea, I wish someone would implement it" a=
+lmost
+> always results in ... nothing.
+> People with the ability to implement are much more interested in impl=
+ementing
+> their own ideas.
+>
+> But see also "bcache".
+>
+> NeilBrown
+>
+>> thanks
+>> --
+>> Roberto Spadim
+>> Spadim Technology / SPAEmpresarial
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-This worked fine, thanks for your help.
 
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems & security ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
