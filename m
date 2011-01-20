@@ -1,37 +1,32 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: Three+ Cheers to Neil Brown.
-Date: Thu, 20 Jan 2011 11:00:00 +1100
-Message-ID: <4D377B00.4080001@crc.id.au>
-References: <4D377585.5020004@crc.id.au> <1295480624.2892.5.camel@michal-laptop.sawicz.net>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: cpu/memory use
+Date: Wed, 19 Jan 2011 22:14:45 -0200
+Message-ID: <AANLkTincv7RsGN5mOwAiYhPqH9ryiJ31yoVsF_9-ywnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1295480624.2892.5.camel@michal-laptop.sawicz.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgiBTYXdpY3o=?= <michal@sawicz.net>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 20/01/2011 10:43 AM, Micha=C5=82 Sawicz wrote:
-> Dnia 2011-01-20, czw o godzinie 10:36 +1100, Steven Haigh pisze:
->> everything goes pair shaped!
->
-> Like in a pair of? ;) Pear-shaped sounds much better, although I've n=
-o
-> idea what are pears to blame here for.
-
-Yeah - that - I have to learn to write email AFTER my morning beverage =
-;)
+Hi, i wass thinking about cpu/memory use
+i have a dual (three four) cpu
+could i make linux to only use cpu1 for raid? and others to anythink
+else, don=B4t migrate raid between cpus... and don=B4t allow others
+programs to use raid cpu...
+is it possible?
+is it dificult?
+it=B4s more linux related feature, not raid related, but could we imple=
+ment it?
+what about memory usage? how many memory software raid use? is it per
+device, per raid, does it have a hard limit (offcourse)? could we
+calculate it? for example i want raid1 with two disks of 1tb, how many
+memory should i buy?
 
 --=20
-Steven Haigh
-
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-=46ax: (03) 8338 0299
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
