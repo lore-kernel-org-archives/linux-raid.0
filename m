@@ -1,51 +1,50 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 4/4] WORKAROUND: mdadm hangs during reshape
-Date: Thu, 20 Jan 2011 11:57:46 +0100
-Message-ID: <20110120105746.22926.74908.stgit@gklab-128-013.igk.intel.com>
-References: <20110120104759.22926.66874.stgit@gklab-128-013.igk.intel.com>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: [PATCH] fix extended partition detection
+Date: Thu, 20 Jan 2011 11:28:25 +0000
+Message-ID: <66C59AD0932712458090B447266D638C010C732371@irsmsx504.ger.corp.intel.com>
+References: <20110114013731.14866.3356.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110120104759.22926.66874.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110114013731.14866.3356.stgit@localhost6.localdomain6>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Wasilewski, Krzysztof" <krzysztof.wasilewski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-During reshape when reshape is finished in md, progress_reshape() hangs
-on select(). Timeout is introduced to allow for reshape conditions check.
-
-You point in the email that you do not like this solution.
-It is put in to series as reminder.
-
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
-
- Grow.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index 717d087..c9f4b9c 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2394,6 +2394,7 @@ int progress_reshape(struct mdinfo *info, struct reshape *reshape,
- 		 * waiting forever on a dead array
- 		 */
- 		char action[20];
-+		struct timeval timeout;
- 		fd_set rfds;
- 		if (sysfs_get_str(info, NULL, "sync_action",
- 				  action, 20) <= 0 ||
-@@ -2401,7 +2402,9 @@ int progress_reshape(struct mdinfo *info, struct reshape *reshape,
- 			break;
- 		FD_ZERO(&rfds);
- 		FD_SET(fd, &rfds);
--		select(fd+1, NULL, NULL, &rfds, NULL);
-+		timeout.tv_sec = 1;
-+		timeout.tv_usec = 0;
-+		select(fd+1, NULL, NULL, &rfds, &timeout);
- 		if (sysfs_fd_get_ll(fd, &completed) < 0) {
- 			close(fd);
- 			goto check_progress;
-
+TmVpbCwNCg0KQ291bGQgeW91IHBsZWFzZSB0YWtlIGEgbG9vayBhdCB0aGlzIHBhdGNoIGFuZCBw
+b3NzaWJseSBpbmNsdWRlIGl0IHRvIHlvdXIgZGV2ZWwtMy4yIGJyYW5jaD8NClRoYW5rcyBpbiBh
+ZHZhbmNlDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV2lsbGlhbXMs
+IERhbiBKDQo+IFNlbnQ6IEZyaWRheSwgSmFudWFyeSAxNCwgMjAxMSAyOjM5IEFNDQo+IFRvOiBu
+ZWlsYkBzdXNlLmRlDQo+IENjOiBsaW51eC1yYWlkQHZnZXIua2VybmVsLm9yZzsgV2FzaWxld3Nr
+aSwgS3J6eXN6dG9mOyBIYXdyeWxld2ljeg0KPiBDemFybm93c2tpLCBQcnplbXlzbGF3DQo+IFN1
+YmplY3Q6IFtQQVRDSF0gZml4IGV4dGVuZGVkIHBhcnRpdGlvbiBkZXRlY3Rpb24NCj4gDQo+ICMg
+bWRhZG0gLS1kZXRhaWwgLS1leHBvcnQgL2Rldi9tZDEyN3AxDQo+IA0KPiBCZWZvcmU6DQo+IE1E
+X0xFVkVMPXJhaWQ1DQo+IE1EX0RFVklDRVM9NA0KPiBNRF9NRVRBREFUQT0wLjkwDQo+IA0KPiBB
+ZnRlcjoNCj4gTURfTEVWRUw9cmFpZDUNCj4gTURfREVWSUNFUz00DQo+IE1EX0NPTlRBSU5FUj0v
+ZGV2L21kMA0KPiBNRF9NRU1CRVI9MA0KPiBNRF9VVUlEPTU1NzQ2YTIwOjkyNWQyNGE3OjRmOWJk
+N2UyOjljOWE0MTFmDQo+IA0KPiBXZSBwYXJzZSB0aGUgc3ltbGluayB0YXJnZXQgd2l0aCBhIGZv
+cm1hdDoNCj4gDQo+IC4uLy4uL2Jsb2NrL21kWFhYL21kWFhYcFlZDQo+IA0KPiAuLi5hbmQgbmVl
+ZCB0aGUgc2Vjb25kICcvJyBmcm9tIHRoZSBlbmQgb2YgdGhlIHN0cmluZyB0byByZWFkIGRldGVj
+dCBhDQo+ICdtZCcgZGV2aWNlLg0KPiANCj4gUmVwb3J0ZWQtYnk6IEtyenlzenRvZiBXYXNpbGV3
+c2tpIDxrcnp5c3p0b2Yud2FzaWxld3NraUBpbnRlbC5jb20+DQo+IENjOiBQcnplbXlzbGF3IEN6
+YXJub3dza2kgPHByemVteXNsYXcuaGF3cnlsZXdpY3ouY3phcm5vd3NraUBpbnRlbC5jb20+DQo+
+IFNpZ25lZC1vZmYtYnk6IERhbiBXaWxsaWFtcyA8ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPg0K
+PiAtLS0NCj4gDQo+IElmIHRoZXJlIGFyZSBhbnkgMy4xLnggc3RhYmxlIHJlbGVhc2VzIHBsYW5u
+ZWQgSSB3b3VsZCBjb25zaWRlciB0aGlzIGENCj4gY2FuZGlkYXRlIGFzIGl0IGFsbG93cyBjdXN0
+b20gbmFtZSBwYXJ0aXRpb25zIHRvIGJlIGNyZWF0ZWQgYnkgdWRldg0KPiAobGlrZSAvZGV2L21k
+L3ZvbDFwMSkuICBJIGJlbGlldmUgdGhpcyB3YXMgbWFza2VkIGJ5IHRoZSB1c2FnZSBvZiBtZHAN
+Cj4gZGV2aWNlcy4NCj4gDQo+IE9uIDMuMiBpdCBleHBvc2VzIGEgc2VnZmF1bHQgYXMgd2UgdHJ5
+IHRvIGdldCB0aGUgY29udGFpbmVyX2NvbnRlbnQoKSBvZg0KPiAnbWJyJyBtZXRhZGF0YS4NCj4g
+DQo+IC0tDQo+IERhbg0KPiANCj4gIHV0aWwuYyB8ICAgIDIgKy0NCj4gIDEgZmlsZXMgY2hhbmdl
+ZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL3V0
+aWwuYyBiL3V0aWwuYw0KPiBpbmRleCBjOWJkZDZlLi43NWE1ZTZkIDEwMDY0NA0KPiAtLS0gYS91
+dGlsLmMNCj4gKysrIGIvdXRpbC5jDQo+IEBAIC0xNjY0LDcgKzE2NjQsNyBAQCBpbnQgc3RhdDJk
+ZXZudW0oc3RydWN0IHN0YXQgKnN0KQ0KPiAgCQlsaW5rW25dID0gMDsNCj4gIAkJY3AgPSBzdHJy
+Y2hyKGxpbmssICcvJyk7DQo+ICAJCWlmIChjcCkgKmNwID0gMDsNCj4gLQkJY3AgPSBzdHJjaHIo
+bGluaywgJy8nKTsNCj4gKwkJY3AgPSBzdHJyY2hyKGxpbmssICcvJyk7DQo+ICAJCWlmIChjcCAm
+JiBzdHJuY21wKGNwLCAiL21kIiwgMykgPT0gMCkNCj4gIAkJCXJldHVybiBkZXZuYW1lMmRldm51
+bShjcCsxKTsNCj4gIAl9DQoNCg==
