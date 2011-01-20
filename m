@@ -1,39 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not used
-Date: Thu, 20 Jan 2011 21:15:56 +1100
-Message-ID: <20110120211556.4c022b65@notabene.brown>
-References: <20110114125537.15648.73873.stgit@gklab-128-013.igk.intel.com>
-	<20110114130000.15648.52870.stgit@gklab-128-013.igk.intel.com>
-	<20110117101128.60a9b683@notabene.brown>
-	<20110117102821.3460a918@notabene.brown>
-	<20110117114441.141f249f@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176EA541F@irsmsx503.ger.corp.intel.com>
-	<20110120074840.2977b276@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176EFD77C@irsmsx503.ger.corp.intel.com>
-	<20110120203050.633eb1b1@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D176F42F97@irsmsx503.ger.corp.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Moving existing RAID5 disks to an alternate server
+Date: Thu, 20 Jan 2011 10:28:42 +0000
+Message-ID: <4D380E5A.7030601@anonymous.org.uk>
+References: <AANLkTim4xsHXxBERJf0qucYgAizmzB8__66RR3XnT081@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176F42F97@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <AANLkTim4xsHXxBERJf0qucYgAizmzB8__66RR3XnT081@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: John Powell <powellj@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 20 Jan 2011 09:40:34 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On 20/01/2011 03:05, John Powell wrote:
+[...]
+> Anyhow, the point of my post: Is it really as simple as it sounds? Use
+> mdadm to recreate the RAID5 volume and away I go? Are there any
+> details that one can offer that I may need to be aware of or is simply
+> reading the man pages and various HOWTO's out on the net enough to get
+> started? Obviously I am taking this slow as the data on the disks is
+> important to me.
 
-> 
-> Could you publish your current mdadm development code base? 
-> It will be easier to synchronize changes.
-> (If yes, please let me know development branch name to pull)
-> 
-> Thanks 
-> Adam
+Well, you might be really lucky and find that a few mdadm --examine 
+commands give you all you need to know, or even that whatever distro you 
+run auto-detects and starts your array, but given that the data is 
+valuable, I'd recommend making images of the discs and working with 
+those instead.
 
+First up, use smartctl to check the drives don't have bad sectors. If 
+they do, and perhaps even if they don't, ddrescue or dd_rescue is your 
+friend (I don't know which is better).
 
-I've just now pushed it to devel-3.2
+Then, if you have another 4 drives of exactly the same size, that's 
+perfect, but you probably don't. If your PATA drives are relatively 
+small, you might be as well dd'ing or dd_rescuing all four drives to 
+images on a new larger SATA drive, then mounting the images via loopback 
+devices.
 
-NeilBrown
+If you have trouble reading any of the drives for any reason, you might 
+make a backup copy of the image before starting to test it, or look at 
+some previous ideas on this list about making Copy-on-Write devices on 
+top of your loopback devices. This may be paranoia but may be worth 
+reading about, just to give you the option.
+
+Then you can start poking the images with mdadm, dmraid, and perhaps 
+kpartx to activate any partitions, and report back as Neil suggested in 
+his post.
+
+Best of luck.
+
+Cheers,
+
+John.
+
