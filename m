@@ -1,88 +1,182 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Moving existing RAID5 disks to an alternate server
-Date: Thu, 20 Jan 2011 15:48:04 +1100
-Message-ID: <20110120154804.3a4695f4@notabene.brown>
-References: <AANLkTim4xsHXxBERJf0qucYgAizmzB8__66RR3XnT081@mail.gmail.com>
+Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not used
+Date: Thu, 20 Jan 2011 20:30:50 +1100
+Message-ID: <20110120203050.633eb1b1@notabene.brown>
+References: <20110114125537.15648.73873.stgit@gklab-128-013.igk.intel.com>
+	<20110114130000.15648.52870.stgit@gklab-128-013.igk.intel.com>
+	<20110117101128.60a9b683@notabene.brown>
+	<20110117102821.3460a918@notabene.brown>
+	<20110117114441.141f249f@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D176EA541F@irsmsx503.ger.corp.intel.com>
+	<20110120074840.2977b276@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D176EFD77C@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim4xsHXxBERJf0qucYgAizmzB8__66RR3XnT081@mail.gmail.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176EFD77C@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Powell <powellj@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 19 Jan 2011 19:05:52 -0800 John Powell <powellj@gmail.com> wrote:
+On Thu, 20 Jan 2011 08:29:12 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> So practically speaking I don't have hardly any experience managing
-> RAID volumes. I have used some LSI web bios's to create RAID volumes
-> of various forms for functional dev/test and am familiar enough with
-> the terminology and implementation but when left with the choice of
-> building my own home NAS or buying some proprietary piece of hardware
-> pre-configured I chose the later in the interest of time and money.
-> Perhaps I made a poor choice there as my proprietary hardware died and
-> has left me with a seemingly intact RAID 5 volume spanned over 4 500GB
-> PATA disks. Seeing as how the hardware is bricked I am going to
-> attempt to pull out those disks and configure a RAID5 volume on a
-> custom built machine, (something I constructed over 5 years ago.. it
-> still as PATA interfaces :D ). The goal here is to copy the contents
-> of this volume to an alternate server that I will be using for backups
-> with some more updated hardware.
 > 
-> Anyhow, the point of my post: Is it really as simple as it sounds? Use
-> mdadm to recreate the RAID5 volume and away I go? Are there any
-> details that one can offer that I may need to be aware of or is simply
-> reading the man pages and various HOWTO's out on the net enough to get
-> started? Obviously I am taking this slow as the data on the disks is
-> important to me.
+> 
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Wednesday, January 19, 2011 9:49 PM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Neubauer, Wojciech
+> > Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not
+> > used
+> > 
+> > On Mon, 17 Jan 2011 14:13:34 +0000 "Kwolek, Adam"
+> > <adam.kwolek@intel.com>
+> > wrote:
+> > 
+> > >
+> > >
+> > > > -----Original Message-----
+> > > > From: NeilBrown [mailto:neilb@suse.de]
+> > > > Sent: Monday, January 17, 2011 1:45 AM
+> > > > To: Kwolek, Adam
+> > > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > > > Neubauer, Wojciech
+> > > > Subject: Re: [PATCH 1/2] md/raid5: FIX: manually-added spare is not
+> > > > used
+> > > >
+> > > > On Mon, 17 Jan 2011 10:28:21 +1100 NeilBrown <neilb@suse.de> wrote:
+> > > >
+> > > > > On Mon, 17 Jan 2011 10:11:28 +1100 NeilBrown <neilb@suse.de>
+> > wrote:
+> > > > >
+> > > > > > On Fri, 14 Jan 2011 14:00:00 +0100 Adam Kwolek
+> > > > <adam.kwolek@intel.com> wrote:
+> > > > > >
+> > > > > > > Manually added spares are not used due to fact that they not
+> > > > added to md configuration.
+> > > > > > > Counters are updated only.
+> > > > > > >
+> > > > > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > > > > > ---
+> > > > > > >
+> > > > > > >  drivers/md/raid5.c |    6 ++++--
+> > > > > > >  1 files changed, 4 insertions(+), 2 deletions(-)
+> > > > > > >
+> > > > > > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> > > > > > > index a2087c7..59c4150 100644
+> > > > > > > --- a/drivers/md/raid5.c
+> > > > > > > +++ b/drivers/md/raid5.c
+> > > > > > > @@ -5592,8 +5592,10 @@ static int raid5_start_reshape(mddev_t
+> > > > *mddev)
+> > > > > > >  		} else if (rdev->raid_disk >= conf-
+> > > > >previous_raid_disks
+> > > > > > >  			   && !test_bit(Faulty, &rdev->flags)) {
+> > > > > > >  			/* This is a spare that was manually added */
+> > > > > > > -			set_bit(In_sync, &rdev->flags);
+> > > > > > > -			added_devices++;
+> > > > > > > +			if (raid5_add_disk(mddev, rdev) == 0) {
+> > > > > > > +				set_bit(In_sync, &rdev->flags);
+> > > > > > > +				added_devices++;
+> > > > > > > +			}
+> > > > > > >  		}
+> > > > > > >
+> > > > > > >  	/* When a reshape changes the number of devices, ->degraded
+> > > > > >
+> > > > > > This should not be needed.
+> > > > > > When a device is manually added, the desired slot number is
+> > written
+> > > > to
+> > > > > >    ..../md/dev-XXX/slot
+> > > > > >
+> > > > > > This calls slot_store (in md.c) which call mddev->pers-
+> > > > >hot_add_disk which
+> > > > > > for raid5 is raid5_add_disk.
+> > > > > > So you shouldn't need to call raid5_add_disk again.
+> > > > > >
+> > > > >
+> > > > > ahhh... I see.  raid5_add_disk doesn't do the right thing in that
+> > > > case.  It
+> > > > > actually indexes beyond the end of an array, which is bad.
+> > > > >
+> > > > > We possibly do need the raid5_add_disk where you had put it.
+> > I'll
+> > > > have a
+> > > > > think and see what is best.
+> > > >
+> > > > On third thoughts, I cannot see the problem you are seeing.
+> > > > I even did some simple testing (manually writing to things in
+> > sysfs)
+> > > > and it
+> > > > seems to include the new device properly.
+> > > >
+> > > > There are some issues that I found which are address by the
+> > following
+> > > > patch,
+> > > > but it isn't clear to me that any of them relate to what you are
+> > > > seeing.
+> > > > Maybe if you could be more specific about what you see happening?
+> > > >
+> > > > Thanks,
+> > > > NeilBrown
+> > >
+> > >
+> > > When I'm not using raid5_add_disk() in raid5_start_reshape() added
+> > disk LED light doesn't blinks
+> > > (but it should during reshape ;)),
+> > > md doesn't make any signs that something goes wrong (even size can be
+> > increased).
+> > >
+> > > I've made some debug, and at second (during reshape start)
+> > raid5_add_disk() call rcu_assign_pointer() is called again.
+> > > This means that somehow previous assignment when slot is set was
+> > cleared.
+> > >
+> > > Correct situation (all disks are used during reshape) I can archive
+> > when instead raid5_add_disk() call
+> > > I've add the following code:
+> > >
+> > >      struct disk_info *p = conf->disks + rdev->raid_disk;
+> > >      rcu_assign_pointer(p->rdev, rdev);
+> > >
+> > > and (conf->disks + rdev->raid_disk)->rdev pointer is present in
+> > configuration.
+> > > I've checked that if I do not do call to rcu_assign_pointer() pointer
+> > (p->rdev) has NULL value.
+> > > In both cases call rcu_assign_pointer() sets p->rdev to the same
+> > value, so rdev doesn't change his location in memory.
+> > >
+> > >
+> > > BR
+> > > Adam
+> > >
+> > 
+> > Could you put some debug printks in slot_store (in md.c) and make sure
+> > it is
+> > being called, and that it calls raid5_add_disk, and see what
+> > raid5_add_disk
+> > does in that case?
+> > Thanks,
+> > 
+> > NeilBrown
+> 
+> 
+> I've did it before (and I've double checked now).
+> slot_store() calls raid5_add_disk() and inside it, rcu_assign_pointer() sets correct rdev pointer (I've checked, it is set during slot_store() call).
+> During raid5_start_reshape() this pointer has NULL value. When I set it again, disk is used properly. Second time rdev pointer I'm setting is the same as I've set during slot_store() call.
+> It seems that slot_store() works correctly. I've didn't find why rdev pointer is cleaned meanwhile. I have it in my plans after I've close mdadm OLCE/migration code (main parts at least ;)).
 > 
 
-"slowly" is good.  You could easily make a mess.  But with suitable care you
-will probably be able to get access to all of your data.
-
-The issues are:
- 1/ you need to know the correct order of the devices.  They might be in the
- "obvious" order, though if you have ever had a device fail and had to
- replace it, they might not.
-
- 2/ you need to know the 'chunk size' and 'layout'.  It is possible to
- discover these by trial and error, but much easier if you can know for
- certain somehow.
-
- 3/ you need to know which parts of the devices container data and which
- parts contain metadata.  Typically the metadata is at the end and the data
- is at the start of the device.  This is certainly easiest to work with and
- is most likely, but safest not to assume.
-
-
-If you can answer all those questions with certainty it is quite easy to get
-your data back.
-
-As a first step I would see if the metadata is recognised by mdadm or dmraid.
-e.g.
-   mdadm --examine /dev/sdXXX
-or
-   dmraid --raid-devices /dev/sdXXX
-
-If you get something informative, report that and we'll go from there.  Don't
-assume that just because either of them recognise the format, that they can
-work.
-
-If not you will need to try something like:
-
-  mdadm -C /dev/md0 -e 1.0 -l5 -n4 --chunk=128 --layout=ra \
-  --assume-clean /dev/sdXX /dev/sdYY ....
-
-and then examine the data on /dev/md0.  If it doesn't look perfect, change
-the chunk size, the layout, or the order of the devices until you find
-something that works.
-
-Note that this over-writes about 8K at the end of each device.  This probably
-does not container important data, but a paranoid person might take a copy of
-the last megabyte from each device first, just to be on the safe side.
-
-Note that if you leave out 'assume-clean' then you might be in trouble ... or
-you might not, but I cannot make any promises.
+Thanks.
+It is almost certainly getting removed by remove_add_add_spares calling
+raid5_remove_disk.  One of those should stop the removal happening in that
+case, but presumably isn't.
+I'll try to figure out what "should" happen and get you a patch to try - not
+sure when.
 
 NeilBrown
+
