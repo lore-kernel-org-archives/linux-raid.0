@@ -1,30 +1,29 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
- for HW owners/users
-Date: Fri, 21 Jan 2011 08:00:14 -0800
-Message-ID: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: Bug - native array blocks external container
+Date: Fri, 21 Jan 2011 17:24:08 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EAB48DC@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-The SUPERMICRO AOC-SASLP-MV8 PCI Express x4 Low Profile SAS SAS RAID
-Controller seems to fit my needs and budget except for one glaring
-omission on Supermicro's product page, and every other site that
-blindly copies it.
+Hi Neil,
+Our validation reported it was not possible to move a spare from native array to imsm container.
+After closer investigation it appears that this issue shows in kernels from 2.6.36 upwards.
+It turns out even more serious: 
+If a native array exists in the system it is not possible to create, assemble or add to an imsm container.
+(confirmed on raid1 arrays, 2 disks for native, 2 disks for imsm + 1 spare)
+In such case for some reason AllReserved is set in rdev->flags in rdev_size_store function in md.c
+so writing to size file by sysfs_set_str always fails when native array exists.
+The flag is not set when there is no native arrays and all actions can be completed normally.
 
-Has anyone tested this hardware with a 48-bit LBA required drive (EG
-one of the 3TB drives that still exposes 512k sectors)?
+This is just to inform about the issue.
+It will be investigated further after the weekend.
+Regards
+Anna
 
-
-The other question, which is more on topic for linux-raid, is related
-to current driver support.  I understand that the drivers have greatly
-matured since the last time I saw the card discussed in the list.
-With recent kernels have all the older issues been resolved?
-
-
-Thank you,
-
-Michael
