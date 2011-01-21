@@ -1,45 +1,57 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
- for HW owners/users
-Date: Fri, 21 Jan 2011 13:04:21 -0600
-Message-ID: <4D39D8B5.1090901@hardwarefreak.com>
-References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Optimize RAID0 for max IOPS?
+Date: Fri, 21 Jan 2011 20:34:57 +0100
+Message-ID: <20110121193457.C7719D30268@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <20110119192104.1FA92D30267@gemini.denx.de> <AANLkTimY8XWxnx1MZWXp2undt9J35U8vCyuCHaSF2KkJ@mail.gmail.com> <4D37677D.9010108@stud.tu-ilmenau.de> <AANLkTi=igTEuP4+NT+RFgc=k03z_qjhSWZKp_jcH1OdR@mail.gmail.com> <AANLkTiki_FfRrLtL3dMsrDLXeT8jNO0ndnTNpXk1OXMW@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
+In-reply-to: <AANLkTiki_FfRrLtL3dMsrDLXeT8jNO0ndnTNpXk1OXMW@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Evans put forth on 1/21/2011 10:00 AM:
-> The SUPERMICRO AOC-SASLP-MV8 PCI Express x4 Low Profile SAS SAS RAID
-> Controller seems to fit my needs and budget except for one glaring
-> omission on Supermicro's product page, and every other site that
-> blindly copies it.
-> 
-> Has anyone tested this hardware with a 48-bit LBA required drive (EG
-> one of the 3TB drives that still exposes 512k sectors)?
+Dear Roberto,
 
-NewEgg has an excellent return policy:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816101358
+In message <AANLkTiki_FfRrLtL3dMsrDLXeT8jNO0ndnTNpXk1OXMW@mail.gmail.co=
+m> you wrote:
+> a good idea....
+> why not start a opensource raid controller?
+> what we need? a cpu, memory, power supply with battery or capacitor,
+> sas/sata (disk interfaces), pci-express or another (computer
+> interface)
+> it don=B4t need a operational system, since it will only run one prog=
+ram
+> with some threads (ok a small operational system to implement threads
+> easly)
+>
+> we could use arm, fpga, intel core2duo, atlhon, xeon, or another syst=
+em...
 
-But, BTW, if you can afford over $1000 of 3TB drives, why are you demanding to
-go so cheap with the HBA?  There are plenty of much better LSI based dual
-SFF8087 HBAs available with no LBA or driver issues.  For instance:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16816117157
+You could evenuse a processor dedicated for such a job, like a
+PPC440SPe or PPC460SX or similar, which provide hardware-offload
+capabilities for the RAID calculations.  These are even supported by
+drivers in mainline Linux.
 
-$155 Quality/compatible LSI SAS1068E chip+driver vs
-$109 Marvell 88SE6480 less than quality chip+driver
+But again, thee would not helpo to maximize IOPS - goal for
+optimization has always been maximum sequential troughput only
+(and yes, I know exactly what I'm talking about; guess where the
+aforementioned drivers are coming from).
 
-If you can afford 5+ 3TB drives you can certainly afford an extra ~$50 for a
-decent quality known to work SAS/SATA HBA.  I say 5+ because you're obviously
-starting out with 5 or you'd be looking at cards with a single SFF8087, or
-simply 4 individual SATA connectors.
+Best regards,
 
-I can't imagine an easier decision to make:  $50 for guaranteed piece of mind,
-performance, compatibility.
+Wolfgang Denk
 
--- 
-Stan
+--=20
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+I don't see any direct evidence ...  but, then, my crystal ball is in
+dire need of an ectoplasmic upgrade. :-)              -- Howard Smith
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
