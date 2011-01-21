@@ -1,29 +1,45 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: Bug - native array blocks external container
-Date: Fri, 21 Jan 2011 17:24:08 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EAB48DC@irsmsx504.ger.corp.intel.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
+ for HW owners/users
+Date: Fri, 21 Jan 2011 13:04:21 -0600
+Message-ID: <4D39D8B5.1090901@hardwarefreak.com>
+References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
-Our validation reported it was not possible to move a spare from native array to imsm container.
-After closer investigation it appears that this issue shows in kernels from 2.6.36 upwards.
-It turns out even more serious: 
-If a native array exists in the system it is not possible to create, assemble or add to an imsm container.
-(confirmed on raid1 arrays, 2 disks for native, 2 disks for imsm + 1 spare)
-In such case for some reason AllReserved is set in rdev->flags in rdev_size_store function in md.c
-so writing to size file by sysfs_set_str always fails when native array exists.
-The flag is not set when there is no native arrays and all actions can be completed normally.
+Michael Evans put forth on 1/21/2011 10:00 AM:
+> The SUPERMICRO AOC-SASLP-MV8 PCI Express x4 Low Profile SAS SAS RAID
+> Controller seems to fit my needs and budget except for one glaring
+> omission on Supermicro's product page, and every other site that
+> blindly copies it.
+> 
+> Has anyone tested this hardware with a 48-bit LBA required drive (EG
+> one of the 3TB drives that still exposes 512k sectors)?
 
-This is just to inform about the issue.
-It will be investigated further after the weekend.
-Regards
-Anna
+NewEgg has an excellent return policy:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816101358
 
+But, BTW, if you can afford over $1000 of 3TB drives, why are you demanding to
+go so cheap with the HBA?  There are plenty of much better LSI based dual
+SFF8087 HBAs available with no LBA or driver issues.  For instance:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816117157
+
+$155 Quality/compatible LSI SAS1068E chip+driver vs
+$109 Marvell 88SE6480 less than quality chip+driver
+
+If you can afford 5+ 3TB drives you can certainly afford an extra ~$50 for a
+decent quality known to work SAS/SATA HBA.  I say 5+ because you're obviously
+starting out with 5 or you'd be looking at cards with a single SFF8087, or
+simply 4 individual SATA connectors.
+
+I can't imagine an easier decision to make:  $50 for guaranteed piece of mind,
+performance, compatibility.
+
+-- 
+Stan
