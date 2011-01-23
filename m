@@ -1,52 +1,60 @@
-From: Spelic <spelic@shiftmail.org>
-Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA
- questions for HW owners/users
-Date: Sun, 23 Jan 2011 05:00:35 +0100
-Message-ID: <4D3BA7E3.1070400@shiftmail.org>
-References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
- <4D39D8B5.1090901@hardwarefreak.com>
- <AANLkTin2UZJc8yP6DGf2fgcDemQHznch5rGozmnL+V_u@mail.gmail.com>
- <4D3B0009.6020006@hardwarefreak.com>
- <AANLkTimqNjq6H5X5dPnM8Aw5W3NWtdY7ptGqQJ3ogJmO@mail.gmail.com>
- <4D3B6B05.1020303@shiftmail.org> <4D3B9617.9010800@tomt.net>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: RAID6 chunk size change?
+Date: Sun, 23 Jan 2011 10:53:03 -0800
+Message-ID: <AANLkTimzLwmtMsrUdsLe9svywTFLbs_pZ8SXTCSyG4f4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <4D3B9617.9010800@tomt.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: Michael Evans <mjevans1983@gmail.com>, Spelic <spelic@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/23/2011 03:44 AM, Andre Tomt wrote:
->
-> Since we're talking about "non hardware raid" usage, I don't really 
-> understand how it would be harder to manage mixed controllers? Care to 
-> explain? 
+Hi,
+   I've got an existing (and well backed up as of a couple of minutes
+ago) 5-drive RAID6 shown here:
 
-Well, yeah, probably I have exxagerated. If you need to replace a drive 
-you have to associate the drive letter to the hardware slot, and if you 
-have two controllers you have to remember two mappings. Also you have to 
-know the idiosincracies of 2 controllers, like, do they support hot swap 
-or they freeze? Do the support smartmontools well or not, are both 
-capable of withstanding high IOPS situation or one drops out and 
-degrades the array... but probably the OP can accept these drawbacks.
+c2stable ~ # mdadm --detail /dev/md7
+/dev/md7:
+        Version : 1.2
+  Creation Time : Sun Jan 16 17:02:24 2011
+     Raid Level : raid6
+     Array Size : 395387904 (377.07 GiB 404.88 GB)
+  Used Dev Size : 131795968 (125.69 GiB 134.96 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
 
-> I can't quite get the performance statement to compute, either.. Its 
-> not like the same I/O goes out to all controllers. If your other 
-> controller is slower, just put fewer drives on it. Balance it out.
+    Update Time : Sun Jan 23 10:25:41 2011
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-I was thinking more to the round trip time, which will be different for 
-the 2 controllers, and supposing the OP is creating an array spanning 
-both controllers.
+         Layout : left-symmetric
+     Chunk Size : 512K
 
->
-> Anyways, If you settle for SATA and a desktop motherboard, most mid to 
-> high end s1156/1155 motherboards nowadays are fitted with 6 to 8 SATA 
-> ports. They're in now way hard to come by - even 8 ports seems to be 
-> available at $130 (I spent 10 seconds looking on newegg). 
+           Name : c2stable:7  (local to host c2stable)
+           UUID : ded5e0c6:1a5a73ad:01949557:bb4e015a
+         Events : 17
 
-I think other mainboards can cost down to $50, but I haven't checked 
-recently
+    Number   Major   Minor   RaidDevice State
+       0       8        7        0      active sync   /dev/sda7
+       1       8       23        1      active sync   /dev/sdb7
+       2       8       39        2      active sync   /dev/sdc7
+       3       8       50        3      active sync   /dev/sdd2
+       4       8       66        4      active sync   /dev/sde2
+c2stable ~ #
 
+   I would like to change this RAID to a smaller chunk size. (16K for
+now) What is the right command to use?
+
+   From Google and the mdadm man pages I'm coming up with something like:
+
+mdadm --grow /dev/md7 --level=6 --chunk=16 --backup-file=/root/backup-md7
+
+Maybe I don't need --level because the level isn't changing? Neither
+is the number of drives.
+
+Thanks in advance,
+Mark
