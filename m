@@ -1,304 +1,140 @@
-From: Daniel Landstedt <daniel.landstedt@gmail.com>
-Subject: Raid 5, 2 disk failed
-Date: Mon, 24 Jan 2011 22:31:34 +0100
-Message-ID: <AANLkTi=17u_e24gJMQFQJiCYCUok7-fETW=__HGhJFXg@mail.gmail.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Optimize RAID0 for max IOPS?
+Date: Mon, 24 Jan 2011 22:57:13 +0100
+Message-ID: <20110124215713.82D75B187@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <20110119192104.1FA92D30267@gemini.denx.de> <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com> <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Hi, for starters, great work with the linux raid guys.
+Dear Justin,
 
-Now for the unpleasantness's
+In message <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan> you wrote:
+> 
+> Some info on XFS benchmark with delaylog here:
+> http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
 
-Please..
-...help
-
-
-I have a raid 5 with 4 disks and 1 spare.
-2 disks failed at the same time.
-
-This i what happened:
-I ran mdadm --fail /dev/md0 /dev/dm-1
-
-From /var/log/messages:
-Jan 24 01:06:51 metafor kernel: [87838.338996] md/raid:md0: Disk
-failure on dm-1, disabling device.
-Jan 24 01:06:51 metafor kernel: [87838.338997] <1>md/raid:md0:
-Operation continuing on 3 devices.
-Jan 24 01:06:51 metafor kernel: [87838.408494] RAID conf printout:
-Jan 24 01:06:51 metafor kernel: [87838.408497]  --- level:5 rd:4 wd:3
-Jan 24 01:06:51 metafor kernel: [87838.408500]  disk 0, o:1, dev:dm-2
-Jan 24 01:06:51 metafor kernel: [87838.408503]  disk 1, o:1, dev:dm-3
-Jan 24 01:06:51 metafor kernel: [87838.408505]  disk 2, o:1, dev:sdb1
-Jan 24 01:06:51 metafor kernel: [87838.408507]  disk 3, o:0, dev:dm-1
-Jan 24 01:06:51 metafor kernel: [87838.412006] RAID conf printout:
-Jan 24 01:06:51 metafor kernel: [87838.412009]  --- level:5 rd:4 wd:3
-Jan 24 01:06:51 metafor kernel: [87838.412011]  disk 0, o:1, dev:dm-2
-Jan 24 01:06:51 metafor kernel: [87838.412013]  disk 1, o:1, dev:dm-3
-Jan 24 01:06:51 metafor kernel: [87838.412015]  disk 2, o:1, dev:sdb1
-Jan 24 01:06:51 metafor kernel: [87838.412022] RAID conf printout:
-Jan 24 01:06:51 metafor kernel: [87838.412024]  --- level:5 rd:4 wd:3
-Jan 24 01:06:51 metafor kernel: [87838.412026]  disk 0, o:1, dev:dm-2
-Jan 24 01:06:51 metafor kernel: [87838.412028]  disk 1, o:1, dev:dm-3
-Jan 24 01:06:51 metafor kernel: [87838.412030]  disk 2, o:1, dev:sdb1
-Jan 24 01:06:51 metafor kernel: [87838.412032]  disk 3, o:1, dev:sdf1
-Jan 24 01:06:51 metafor kernel: [87838.412071] md: recovery of RAID array md0
-Jan 24 01:06:51 metafor kernel: [87838.412074] md: minimum
-_guaranteed_  speed: 1000 KB/sec/disk.
-Jan 24 01:06:51 metafor kernel: [87838.412076] md: using maximum
-available idle IO bandwidth (but not more than 200000 KB/sec) for
-recovery.
-Jan 24 01:06:51 metafor kernel: [87838.412081] md: using 128k window,
-over a total of 1953510272 blocks.
-Jan 24 01:06:52 metafor kernel: [87838.501501] ata2: EH in SWNCQ
-mode,QC:qc_active 0x21 sactive 0x21
-Jan 24 01:06:52 metafor kernel: [87838.501505] ata2: SWNCQ:qc_active
-0x21 defer_bits 0x0 last_issue_tag 0x0
-Jan 24 01:06:52 metafor kernel: [87838.501507]   dhfis 0x20 dmafis
-0x20 sdbfis 0x0
-Jan 24 01:06:52 metafor kernel: [87838.501510] ata2: ATA_REG 0x41 ERR_REG 0x84
-Jan 24 01:06:52 metafor kernel: [87838.501512] ata2: tag : dhfis
-dmafis sdbfis sacitve
-Jan 24 01:06:52 metafor kernel: [87838.501515] ata2: tag 0x0: 0 0 0 1
-Jan 24 01:06:52 metafor kernel: [87838.501518] ata2: tag 0x5: 1 1 0 1
-Jan 24 01:06:52 metafor kernel: [87838.501527] ata2.00: exception
-Emask 0x1 SAct 0x21 SErr 0x280000 action 0x6 frozen
-Jan 24 01:06:52 metafor kernel: [87838.501530] ata2.00: Ata error. fis:0x21
-Jan 24 01:06:52 metafor kernel: [87838.501533] ata2: SError: { 10B8B BadCRC }
-Jan 24 01:06:52 metafor kernel: [87838.501537] ata2.00: failed
-command: READ FPDMA QUEUED
-Jan 24 01:06:52 metafor kernel: [87838.501543] ata2.00: cmd
-60/10:00:80:24:00/00:00:00:00:00/40 tag 0 ncq 8192 in
-Jan 24 01:06:52 metafor kernel: [87838.501545]          res
-41/84:00:80:24:00/84:00:00:00:00/40 Emask 0x10 (ATA bus error)
-Jan 24 01:06:52 metafor kernel: [87838.501548] ata2.00: status: { DRDY ERR }
-Jan 24 01:06:52 metafor kernel: [87838.501550] ata2.00: error: { ICRC ABRT }
-
-The spare kicked in and started to sync, but almost at the same time
-/dev/sdb disconnected from the sata controller..
-And thus I lost 2 drives at once.
-
-I ran mdadm -r /dev/md0 /dev/mapper/luks3
-Then i tried to readd the device with mdadm --add /dev/md0 /dev/mapper/luks3
-
-After a shutdown, I disconnected and reconnected the sata cable, and
-haven't had any more problems with /dev/sdb since.
-
-So, /dev/sdb1 and/or /dev/dm-1 _should_ have it's data intact? Right?
-
-I Panicked and tried to assemble the device with mdadm --assemble --scan --force
-which didn't work.
-
-Then I went to https://raid.wiki.kernel.org/index.php/RAID_Recovery
-and tried to collect my thoughts.
-
-As suggested I ran: mdadm --examine /dev/mapper/luks[3,4,5] /dev/sdb1
-/dev/sdf1 > raid.status
-(/dev/mapper/luks[3,4,5] is the same device as /dev/dm-[1,2,3])
-
-From raid.status:
-/dev/mapper/luks3:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 264a224d:1e5acc54:25627026:3fb802f2
-           Name : metafor:0  (local to host metafor)
-  Creation Time : Thu Dec 30 21:06:02 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907020976 (1863.01 GiB 2000.39 GB)
-     Array Size : 11721061632 (5589.04 GiB 6001.18 GB)
-  Used Dev Size : 3907020544 (1863.01 GiB 2000.39 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : b96c7045:cedbbc01:2a1c6150:a3f59a88
-
-    Update Time : Mon Jan 24 01:19:59 2011
-       Checksum : 45959b82 - correct
-         Events : 190990
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : spare
-   Array State : AA.A ('A' == active, '.' == missing)
-/dev/mapper/luks4:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 264a224d:1e5acc54:25627026:3fb802f2
-           Name : metafor:0  (local to host metafor)
-  Creation Time : Thu Dec 30 21:06:02 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907020976 (1863.01 GiB 2000.39 GB)
-     Array Size : 11721061632 (5589.04 GiB 6001.18 GB)
-  Used Dev Size : 3907020544 (1863.01 GiB 2000.39 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : b30343f4:542a2e59:b614ba85:934e31d5
-
-    Update Time : Mon Jan 24 01:19:59 2011
-       Checksum : cdc8d27b - correct
-         Events : 190990
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 0
-   Array State : AA.A ('A' == active, '.' == missing)
-/dev/mapper/luks5:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 264a224d:1e5acc54:25627026:3fb802f2
-           Name : metafor:0  (local to host metafor)
-  Creation Time : Thu Dec 30 21:06:02 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907020976 (1863.01 GiB 2000.39 GB)
-     Array Size : 11721061632 (5589.04 GiB 6001.18 GB)
-  Used Dev Size : 3907020544 (1863.01 GiB 2000.39 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : active
-    Device UUID : 6e5af09b:b69ebb8c:f8725f20:cb53d033
-
-    Update Time : Mon Jan 24 01:19:59 2011
-       Checksum : a2480112 - correct
-         Events : 190990
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 1
-   Array State : AA.A ('A' == active, '.' == missing)
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x0
-     Array UUID : 264a224d:1e5acc54:25627026:3fb802f2
-           Name : metafor:0  (local to host metafor)
-  Creation Time : Thu Dec 30 21:06:02 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 11721061632 (5589.04 GiB 6001.18 GB)
-  Used Dev Size : 3907020544 (1863.01 GiB 2000.39 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 87288108:5cc4715a:7c50cedf:551fa3a9
-
-    Update Time : Mon Jan 24 01:06:51 2011
-       Checksum : 11d4aacb - correct
-         Events : 190987
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 2
-   Array State : AAAA ('A' == active, '.' == missing)
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x2
-     Array UUID : 264a224d:1e5acc54:25627026:3fb802f2
-           Name : metafor:0  (local to host metafor)
-  Creation Time : Thu Dec 30 21:06:02 2010
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
-     Array Size : 11721061632 (5589.04 GiB 6001.18 GB)
-  Used Dev Size : 3907020544 (1863.01 GiB 2000.39 GB)
-    Data Offset : 2048 sectors
-   Super Offset : 8 sectors
-Recovery Offset : 2 sectors
-          State : active
-    Device UUID : f2e95701:07d717fb:7b57316c:92e01add
-
-    Update Time : Mon Jan 24 01:19:59 2011
-       Checksum : 6b284a3b - correct
-         Events : 190990
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-   Device Role : Active device 3
-   Array State : AA.A ('A' == active, '.' == missing)
+For the record: I tested both the "delaylog" and "logbsize=262144" on
+two systems running Fedora 14 x86_64 (kernel version
+2.6.35.10-74.fc14.x86_64).
 
 
-Then I tried a hole bunch of recreate commands..
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md1
-/dev/mapper/luks3 /dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 missing
-lvm vgscan
-lvm vgchange -a y
-LVM reported that it found 1 new vg and 3 lvs.
-But, I couldn't mount the volumes..
-fsck.ext4 found nothing. Not with backup superblock either.
-I continued..:
-mdadm --assemble /dev/md0 /dev/mapper/luks3 /dev/mapper/luks4
-/dev/mapper/luks5 /dev/sdb1 /dev/sdf1
-mdadm --assemble /dev/md0 /dev/mapper/luks3 /dev/mapper/luks4 /dev/mapper/luks5
-mdadm --assemble /dev/md0 /dev/mapper/luks3 /dev/mapper/luks4
-/dev/mapper/luks5 /dev/sdb1
-mdadm --assemble /dev/md0 /dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 missing
-Didn't work..
-mdadm --create --level=5 --raid-devices=4 /dev/md0 /dev/mapper/luks4
-/dev/mapper/luks5 missing /dev/mapper/luks3
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 missing /dev/mapper/luks3
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 missing
-Still no luck
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 missing /dev/mapper/luks3
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 /dev/mapper/luks3
-lvm vgscan
-lvm vgchange -a y
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-missing /dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks3 /dev/mapper/luks4 /dev/mapper/luks5 missing
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/sdb1 /dev/mapper/luks4 /dev/mapper/luks5 missing
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 missing /dev/sdb1
-lvm vgscan
-lvm vgchange -a y
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 missing
-lvm vgscan
-lvm vgchange -a y
-mdadm --create --assume-clean --level=5 --raid-devices=4 /dev/md0
-/dev/mapper/luks4 /dev/mapper/luks5 /dev/sdb1 /dev/mapper/luks3
-lvm vgscan
-lvm vgchange -a y
-
-You get the point.
+Test No.	Mount options
+1		rw,noatime
+2		rw,noatime,delaylog
+3		rw,noatime,delaylog,logbsize=262144
 
 
-So, did I screw it up when I went a bit crazy? Or do you think my raid
-can be saved?
-/dev/mapper/luks[4,5] (/dev/dm-2,3]) should be unharmed.
-Can /dev/mapper/luks3 (/dev/dm-1) or /dev/sdb1 be saved and help
-rebuild the array?
+System A: Gigabyte EP35C-DS3R Mainbord, Core 2 Quad CPU Q9550 @ 2.83GHz, 4 GB RAM
+--------- software RAID 5 using 4 x old Maxtor 7Y250M0 S-ATA I disks
+	  (chunk size 16 kB, using S-ATA ports on main board), XFS
 
-If its possible, do you have any pointers how I can go about?
+Test 1:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+A1               8G   844  96 153107  19 56427  11  2006  98 127174  15 369.4   6
+Latency             13686us    1480ms    1128ms   14986us     136ms   74911us
+Version  1.96       ------Sequential Create------ --------Random Create--------
+A1                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16   104   0 +++++ +++   115   0    89   0 +++++ +++   111   0
+Latency               326ms     171us     277ms     343ms       9us     360ms
+1.96,1.96,A1,1,1295714835,8G,,844,96,153107,19,56427,11,2006,98,127174,15,369.4,6,16,,,,,104,0,+++++,+++,115,0,89,0,+++++,+++,111,0,13686us,1480ms,1128ms,14986us,136ms,74911us,326ms,171us,277ms,343ms,9us,360ms
+
+Test 2:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+A2               8G   417  46 67526   8 28251   5  1338  63 53780   5 236.0   4
+Latency             38626us    1859ms     508ms   26689us     258ms     188ms
+Version  1.96       ------Sequential Create------ --------Random Create--------
+A2                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16    51   0 +++++ +++   128   0   102   0 +++++ +++   125   0
+Latency              1526ms     169us     277ms     363ms       8us     324ms
+1.96,1.96,A2,1,1295901138,8G,,417,46,67526,8,28251,5,1338,63,53780,5,236.0,4,16,,,,,51,0,+++++,+++,128,0,102,0,+++++,+++,125,0,38626us,1859ms,508ms,26689us,258ms,188ms,1526ms,169us,277ms,363ms,8us,324ms
+
+Test 3:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+A3               8G   417  46 67526   8 28251   5  1338  63 53780   5 236.0   4
+Latency             38626us    1859ms     508ms   26689us     258ms     188ms
+Version  1.96       ------Sequential Create------ --------Random Create--------
+A3                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16    51   0 +++++ +++   128   0   102   0 +++++ +++   125   0
+Latency              1526ms     169us     277ms     363ms       8us     324ms
+1.96,1.96,A3,1,1295901138,8G,,417,46,67526,8,28251,5,1338,63,53780,5,236.0,4,16,,,,,51,0,+++++,+++,128,0,102,0,+++++,+++,125,0,38626us,1859ms,508ms,26689us,258ms,188ms,1526ms,169us,277ms,363ms,8us,324ms
+
+System B: Supermicro H8DM8-2 Mainbord, Dual-Core AMD Opteron 2216 @ 2.4 GHz, 8 GB RAM
+          software RAID 6 using 6 x Seagate ST31000524NS S-ATA II disks
+          (chunk size 16 kB, using a Marvell MV88SX6081 8-port SATA II PCI-X Controller)
+          XFS
+
+Test 1:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+B1              16G   403  98 198720  66 53287  49  1013  99 228076  91 545.0  31
+Latency             43022us     127ms     126ms   29328us     105ms   66395us
+Version  1.96       ------Sequential Create------ --------Random Create--------
+B1                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16    97   1 +++++ +++    96   1    96   1 +++++ +++    95   1
+Latency               326ms     349us     351ms     355ms      49us     363ms
+1.96,1.96,B1,1,1295784794,16G,,403,98,198720,66,53287,49,1013,99,228076,91,545.0,31,16,,,,,97,1,+++++,+++,96,1,96,1,+++++,+++,95,1,43022us,127ms,126ms,29328us,105ms,66395us,326ms,349us,351ms,355ms,49us,363ms
+
+Test 2:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+B2              16G   380  98 197319  68 54835  48   983  99 216812  89 527.8  31
+Latency             47456us     227ms     280ms   24696us   38233us   80147us
+Version  1.96       ------Sequential Create------ --------Random Create--------
+B2                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16    91   1 +++++ +++   115   1    73   1 +++++ +++    96   1
+Latency               355ms    2274us     833ms     750ms    1079us     400ms
+1.96,1.96,B2,1,1295884032,16G,,380,98,197319,68,54835,48,983,99,216812,89,527.8,31,16,,,,,91,1,+++++,+++,115,1,73,1,+++++,+++,96,1,47456us,227ms,280ms,24696us,38233us,80147us,355ms,2274us,833ms,750ms,1079us,400ms
+
+Test 3:
+
+Version  1.96       ------Sequential Output------ --Sequential Input- --Random-
+Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+B3              16G   402  99 175802  64 55639  48  1006  99 232748  87 543.7  32
+Latency             43160us     426ms     164ms   13306us   40857us   65114us
+Version  1.96       ------Sequential Create------ --------Random Create--------
+B3                  -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+                 16    93   1 +++++ +++   101   1    95   1 +++++ +++    95   1
+Latency               479ms    2281us     383ms     366ms      22us     402ms
+1.96,1.96,B3,1,1295880202,16G,,402,99,175802,64,55639,48,1006,99,232748,87,543.7,32,16,,,,,93,1,+++++,+++,101,1,95,1,+++++,+++,95,1,43160us,426ms,164ms,13306us,40857us,65114us,479ms,2281us,383ms,366ms,22us,402ms
 
 
-Thanks,
-Daniel
+I do not see any significant improvement in any of the parameters -
+especially when compared to the serious performance degradation (down
+to 44% for block write, 42% for block read) on system A.
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+A supercomputer is a machine that runs an endless loop in 2 seconds.
