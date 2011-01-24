@@ -1,35 +1,75 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Optimize RAID0 for max IOPS?
-Date: Mon, 24 Jan 2011 21:48:27 +0100
-Message-ID: <20110124204827.B707FB187@gemini.denx.de>
-References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <20110119192104.1FA92D30267@gemini.denx.de> <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com> <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] imsm: FIX: spare cannot be added
+Date: Tue, 25 Jan 2011 07:58:56 +1100
+Message-ID: <20110125075856.1b2e5cd6@notabene.brown>
+References: <20110114121304.14523.87734.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+In-Reply-To: <20110114121304.14523.87734.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Dear Justin Piszcz,
+On Fri, 14 Jan 2011 13:13:04 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-In message <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan> you wrote:
->
-> > So, you may need to benchmark fs part.
+> When Manage.c adds spare, it calls write_init_super() and this function
+> is responsible for closing disk handle (Manage.c:812).
+> For imsm case this handle is reused for managing this disk and handle
+> (due to this it is not closed).
+> As handle was opened with flag O_EXCL, adding disk to md fails on writing
+> to new_dev (md cannot set lock on device).
+> To resolve situation close current handle and open new one without O_EXCL flag.
 > 
-> Some info on XFS benchmark with delaylog here:
-> http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
 
-Thanks a lot for the pointer. I will try this out.
+Thanks for the patch.
+I think the real problem is that write_init_super show not be closing
+the fds.  That seemed to make sense once, but it really doesn't now.
+So I have:
+  - made sure that free_super always closed the fds
+  - stopped write_init_super from ever closing fds
+  - added a few more calls to free_super.
 
-Best regards,
+In particular, the bug you found is now simply fixed by calling
+free_super before calling sysfs_add_disk.
 
-Wolfgang Denk
+Thanks,
+NeilBrown
 
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Madness takes its toll. Please have exact change.
+> 
+>  super-intel.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 4cbb070..4e1be5d 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -3714,6 +3714,7 @@ static int mgmt_disk(struct supertype *st)
+>  	struct intel_super *super = st->sb;
+>  	size_t len;
+>  	struct imsm_update_add_remove_disk *u;
+> +	struct dl *d;
+>  
+>  	if (!super->disk_mgmt_list)
+>  		return 0;
+> @@ -3729,6 +3730,14 @@ static int mgmt_disk(struct supertype *st)
+>  	u->type = update_add_remove_disk;
+>  	append_metadata_update(st, u, len);
+>  
+> +	for (d = super->disk_mgmt_list; d ; d = d->next) {
+> +		char buf[PATH_MAX];
+> +
+> +		close(d->fd);
+> +		sprintf(buf, "%d:%d", d->major, d->minor);
+> +		d->fd = dev_open(buf, O_RDWR | O_DIRECT);
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+
