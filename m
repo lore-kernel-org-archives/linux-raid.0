@@ -1,39 +1,96 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
- for HW owners/users
-Date: Mon, 24 Jan 2011 11:56:06 +0000
-Message-ID: <4D3D68D6.7090403@anonymous.org.uk>
-References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>	<4D39D8B5.1090901@hardwarefreak.com>	<AANLkTin2UZJc8yP6DGf2fgcDemQHznch5rGozmnL+V_u@mail.gmail.com>	<4D3B0009.6020006@hardwarefreak.com>	<AANLkTimqNjq6H5X5dPnM8Aw5W3NWtdY7ptGqQJ3ogJmO@mail.gmail.com>	<4D3B7B2C.5040003@hardwarefreak.com>	<4D3C64CB.2080002@harddata.com>	<4D3C9C94.8090607@hardwarefreak.com>	<4D3CB72E.3050000@harddata.com>	<4D3CDB79.4000100@hardwarefreak.com>	<4D3CF1D1.5090809@anonymous.org.uk> <AANLkTinEHOB+GM7sGD0pibByLKG1J8r_8FuMmU08xT_6@mail.gmail.com>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] Add raid1->raid0 takeover support
+Date: Mon, 24 Jan 2011 15:16:34 +0100
+Message-ID: <20110124141632.16380.20483.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinEHOB+GM7sGD0pibByLKG1J8r_8FuMmU08xT_6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On 24/01/2011 11:27, Mark Knecht wrote:
-> On Sun, Jan 23, 2011 at 7:28 PM, John Robinson
-> <john.robinson@anonymous.org.uk>  wrote:
->> On 24/01/2011 01:52, Stan Hoeppner wrote:
->>> Maurice Hilarius put forth on 1/23/2011 5:18 PM:
->> [...]
->>>> If you connect 6GB drives and interfaces to it, you see a lot of errors.
->>
->> The first PC I bought had a 6GB drive in it.
->
-> You make me feel old. I was part of the 'boot CPM from floppy' era...
-> 5MHz and it didn't have a hard drive... ;-)
+This patch introduces raid 1 to raid0 takeover operation
+in kernel space.
 
-We're probably actually about the same age then; my first computer used 
-cassette tape and had a 2MHz 8-bit processor. I started using 
-PC-compatibles 7 or 8 years later, but didn't buy one myself for another 
-6 years (that was the one with the 6GB hard drive) by which time I'd 
-contributed patches to the Linux kernel, Postgres and PHP - and that was 
-12 years ago now...
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ drivers/md/raid0.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
 
-Cheers,
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index a39f4c3..c534651 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -179,6 +179,14 @@ static int create_strip_zones(mddev_t *mddev, raid0_conf_t **private_conf)
+ 			rdev1->new_raid_disk = j;
+ 		}
+ 
++		if (mddev->level == 1) {
++			/* taiking over a raid1 array-
++			 * we have only one active disk
++			 */
++			j = 0;
++			rdev1->new_raid_disk = 0;
++		}
++
+ 		if (j < 0 || j >= mddev->raid_disks) {
+ 			printk(KERN_ERR "md/raid0:%s: bad disk number %d - "
+ 			       "aborting!\n", mdname(mddev), j);
+@@ -644,12 +652,41 @@ static void *raid0_takeover_raid10(mddev_t *mddev)
+ 	return priv_conf;
+ }
+ 
++static void *raid0_takeover_raid1(mddev_t *mddev)
++{
++	raid0_conf_t *priv_conf;
++
++	/* Check layout:
++	 *  - (N - 1) mirror drives must be already faulty
++	 */
++	if ((mddev->raid_disks - 1) != mddev->degraded) {
++		printk(KERN_ERR "md/raid0:%s: (N - 1) mirrors drives must be already faulty!\n",
++		       mdname(mddev));
++		return ERR_PTR(-EINVAL);
++	}
++
++	/* Set new parameters */
++	mddev->new_level = 0;
++	mddev->new_layout = 0;
++	mddev->chunk_sectors = 128; /* by default set chunk size to 64k */
++	mddev->new_chunk_sectors = mddev->chunk_sectors;
++	mddev->delta_disks = -1;
++	mddev->raid_disks = 1;
++	mddev->degraded = 0;
++	/* make sure it will be not marked as dirty */
++	mddev->recovery_cp = MaxSector;
++
++	create_strip_zones(mddev, &priv_conf);
++	return priv_conf;
++}
++
+ static void *raid0_takeover(mddev_t *mddev)
+ {
+ 	/* raid0 can take over:
+ 	 *  raid4 - if all data disks are active.
+ 	 *  raid5 - providing it is Raid4 layout and one disk is faulty
+ 	 *  raid10 - assuming we have all necessary active disks
++	 *  raid1 - with (N -1) mirror drives faulty
+ 	 */
+ 	if (mddev->level == 4)
+ 		return raid0_takeover_raid45(mddev);
+@@ -665,6 +702,12 @@ static void *raid0_takeover(mddev_t *mddev)
+ 	if (mddev->level == 10)
+ 		return raid0_takeover_raid10(mddev);
+ 
++	if (mddev->level == 1)
++		return raid0_takeover_raid1(mddev);
++
++	printk(KERN_ERR "Takeover from raid%i to raid0 not supported\n",
++		mddev->level);
++
+ 	return ERR_PTR(-EINVAL);
+ }
+ 
 
-John.
