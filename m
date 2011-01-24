@@ -1,7 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 3/5] Mistake in raid1->raid5 migration
-Date: Mon, 24 Jan 2011 15:17:20 +0100
-Message-ID: <20110124141720.16405.54759.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 4/5] FIX: Validate input in ping_monitor function
+Date: Mon, 24 Jan 2011 15:17:29 +0100
+Message-ID: <20110124141728.16405.6921.stgit@gklab-128-111.igk.intel.com>
 References: <20110124141704.16405.6081.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,29 +13,34 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-1. Mistake in target level comparison.
-2. Initialize reshape->after.data_disks field
-to proper spares_needed calculation
----
- Grow.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+For native case we do not have monitor running so we have to
+return without pinging.
+Moreover we have NULL as input parameter. We should to avoid
+segmentation fault.
 
-diff --git a/Grow.c b/Grow.c
-index a8da20a..e1e509e 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -941,11 +941,12 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 			return NULL;
- 		}
- 		if (info->array.raid_disks == 2 &&
--		    info->array.raid_disks == 5) {
-+		    info->new_level == 5) {
- 			/* simple in-place conversion */
- 			re->level = 5;
- 			re->parity = 1;
- 			re->before.data_disks = 1;
-+			re->after.data_disks = 1;
- 			re->before.layout = ALGORITHM_LEFT_SYMMETRIC;
- 			re->backup_blocks = 0;
- 			return NULL;
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ msg.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/msg.c b/msg.c
+index 76e74e7..b97ebec 100644
+--- a/msg.c
++++ b/msg.c
+@@ -206,8 +206,13 @@ int fping_monitor(int sfd)
+ /* give the monitor a chance to update the metadata */
+ int ping_monitor(char *devname)
+ {
+-	int sfd = connect_monitor(devname);
+-	int err = fping_monitor(sfd);
++	int sfd, err;
++
++	if (!devname)
++		return -1;
++
++	sfd = connect_monitor(devname);
++	err = fping_monitor(sfd);
+ 
+ 	close(sfd);
+ 	return err;
 
