@@ -1,99 +1,46 @@
-From: CoolCold <coolthecold@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: Optimize RAID0 for max IOPS?
-Date: Mon, 24 Jan 2011 17:40:08 +0300
-Message-ID: <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
-References: <20110118210112.D13A236C@gemini.denx.de>
-	<4D361F26.3060507@stud.tu-ilmenau.de>
-	<20110119192104.1FA92D30267@gemini.denx.de>
+Date: Mon, 24 Jan 2011 10:25:02 -0500 (EST)
+Message-ID: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
+References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <20110119192104.1FA92D30267@gemini.denx.de> <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="655872-1146966783-1295882702=:14640"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119192104.1FA92D30267@gemini.denx.de>
+In-Reply-To: <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org
+To: CoolCold <coolthecold@gmail.com>
+Cc: Wolfgang Denk <wd@denx.de>, stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Wed, Jan 19, 2011 at 10:21 PM, Wolfgang Denk <wd@denx.de> wrote:
-> Dear =3D?ISO-8859-15?Q?Stefan_/*St0fF*/_H=3DFCbner?=3D,
->
-> In message <4D361F26.3060507@stud.tu-ilmenau.de> you wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--655872-1146966783-1295882702=:14640
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+
+
+
+On Mon, 24 Jan 2011, CoolCold wrote:
+
+>> So can anybody help answering these questions:
 >>
->> [in German:] Sch=E4tzelein, Dein Problem sind die Platten, nicht der
->> Controller.
->>
->> [in English:] Dude, the disks are your bottleneck.
-> ...
+>> - are there any special options when creating the RAID0 to make it
+>> =A0perform faster for such a use case?
+>> - are there other tunables, any special MD / LVM / file system /
+>> =A0read ahead / buffer cache / ... parameters to look for?
+> XFS is known for it's slow speed on metadata operations like updating
+> file attributes/removing files..but things gonna change after 2.6.35
+> where delaylog is used. Citating Dave Chinner :
+> < dchinner> Indeed, the biggest concurrency limitation has
+> traditionally been the transaction commit/journalling code, but that's
+> a lot more scalable now with delayed logging....
 >
-> Maybe we can stop speculations about what might be the cause of the
-> problems in some setup I do NOT intend to use, and rather discuss the
-> questions I asked.
->
->> > I will have 4 x 1 TB disks for this setup.
->> >
->> > The plan is to build a RAID0 from the 4 devices, create a physical
->> > volume and a volume group on the resulting /dev/md?, then create 2=
- or
->> > 3 logical volumes that will be used as XFS file systems.
->
-> Clarrification: I'll run /dev/md* on the raw disks, without any
-> partitions on them.
->
->> > My goal is to optimize for maximum number of I/O operations per
->> > second. ...
->> >
->> > Is this a reasonable approach for such a task?
->> >
->> > Should I do anything different to acchive maximum performance?
->> >
->> > What are the tunables in this setup? =A0[It seems the usual recipi=
-es are
->> > more oriented in maximizing the data troughput for large, mostly
->> > sequential accesses - I figure that things like increasing read-ah=
-ead
->> > etc. will not help me much here?]
->
-> So can anybody help answering these questions:
->
-> - are there any special options when creating the RAID0 to make it
-> =A0perform faster for such a use case?
-> - are there other tunables, any special MD / LVM / file system /
-> =A0read ahead / buffer cache / ... parameters to look for?
-XFS is known for it's slow speed on metadata operations like updating
-file attributes/removing files..but things gonna change after 2.6.35
-where delaylog is used. Citating Dave Chinner :
-< dchinner> Indeed, the biggest concurrency limitation has
-traditionally been the transaction commit/journalling code, but that's
-a lot more scalable now with delayed logging....
+> So, you may need to benchmark fs part.
 
-So, you may need to benchmark fs part.
+Some info on XFS benchmark with delaylog here:
+http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
 
->
-> Thanks.
->
-> Wolfgang Denk
->
-> --
-> DENX Software Engineering GmbH, =A0 =A0 MD: Wolfgang Denk & Detlev Zu=
-ndel
-> HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-> Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-> Boykottiert Microsoft - Kauft Eure Fenster bei OBI!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Justin.
 
-
-
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--655872-1146966783-1295882702=:14640--
