@@ -1,47 +1,45 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: "Sven Eschenberg" <sven@whgl.uni-frankfurt.de>
 Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA
- questions for HW owners/users
-Date: Mon, 24 Jan 2011 03:27:57 -0800
-Message-ID: <AANLkTinEHOB+GM7sGD0pibByLKG1J8r_8FuMmU08xT_6@mail.gmail.com>
+     questions for HW owners/users
+Date: Mon, 24 Jan 2011 12:45:07 +0100 (CET)
+Message-ID: <4e5d3b19722645eed2d3de31c5c71dc0.squirrel@ssl.verfeiert.org>
 References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com>
-	<4D39D8B5.1090901@hardwarefreak.com>
-	<AANLkTin2UZJc8yP6DGf2fgcDemQHznch5rGozmnL+V_u@mail.gmail.com>
-	<4D3B0009.6020006@hardwarefreak.com>
-	<AANLkTimqNjq6H5X5dPnM8Aw5W3NWtdY7ptGqQJ3ogJmO@mail.gmail.com>
-	<4D3B7B2C.5040003@hardwarefreak.com>
-	<4D3C64CB.2080002@harddata.com>
-	<4D3C9C94.8090607@hardwarefreak.com>
-	<4D3CB72E.3050000@harddata.com>
-	<4D3CDB79.4000100@hardwarefreak.com>
-	<4D3CF1D1.5090809@anonymous.org.uk>
+    <4D39D8B5.1090901@hardwarefreak.com>
+    <AANLkTin2UZJc8yP6DGf2fgcDemQHznch5rGozmnL+V_u@mail.gmail.com>
+    <4D3B0009.6020006@hardwarefreak.com>
+    <AANLkTimqNjq6H5X5dPnM8Aw5W3NWtdY7ptGqQJ3ogJmO@mail.gmail.com>
+    <4D3B6B05.1020303@shiftmail.org> <4D3B9617.9010800@tomt.net>
+    <4D3BA7E3.1070400@shiftmail.org>
+Reply-To: sven@whgl.uni-frankfurt.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D3CF1D1.5090809@anonymous.org.uk>
+In-Reply-To: <4D3BA7E3.1070400@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Jan 23, 2011 at 7:28 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 24/01/2011 01:52, Stan Hoeppner wrote:
+Would you mind explaining what you mean by mapping and why this should be
+an issue? Or are you suggesting, when talking about drive letter, to still
+use sdN names when handling drives? Because that seems to be somewhat from
+the dark ages...
+
+
+On Sun, January 23, 2011 05:00, Spelic wrote:
+> On 01/23/2011 03:44 AM, Andre Tomt wrote:
 >>
->> Maurice Hilarius put forth on 1/23/2011 5:18 PM:
+>> Since we're talking about "non hardware raid" usage, I don't really
+>> understand how it would be harder to manage mixed controllers? Care to
+>> explain?
 >
-> [...]
->>>
->>> If you connect 6GB drives and interfaces to it, you see a lot of errors.
+> Well, yeah, probably I have exxagerated. If you need to replace a drive
+> you have to associate the drive letter to the hardware slot, and if you
+> have two controllers you have to remember two mappings. Also you have to
+> know the idiosincracies of 2 controllers, like, do they support hot swap
+> or they freeze? Do the support smartmontools well or not, are both
+> capable of withstanding high IOPS situation or one drops out and
+> degrades the array... but probably the OP can accept these drawbacks.
 >
-> The first PC I bought had a 6GB drive in it.
->
-> Cheers,
->
-> John.
 
-You make me feel old. I was part of the 'boot CPM from floppy' era...
-5MHz and it didn't have a hard drive... ;-)
 
-My home work machine has 2.5TB.
-
-- Mark
