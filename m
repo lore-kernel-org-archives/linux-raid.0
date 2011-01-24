@@ -1,57 +1,43 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: RAID6 chunk size change?
-Date: Sun, 23 Jan 2011 12:16:57 -0800
-Message-ID: <AANLkTikAESsqaB7=6PRou_YwP0_U4oJh8ouB1-eDu3t_@mail.gmail.com>
-References: <AANLkTimzLwmtMsrUdsLe9svywTFLbs_pZ8SXTCSyG4f4@mail.gmail.com>
-	<AANLkTimRZgzDd5Na_F3XR8x6YE5wTyDjkBnQSCeCFbWe@mail.gmail.com>
-	<20110124005204.71688cc2@natsu>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
+ for HW owners/users
+Date: Sun, 23 Jan 2011 19:52:57 -0600
+Message-ID: <4D3CDB79.4000100@hardwarefreak.com>
+References: <AANLkTimp7xxQTv419oL7x6L-sbrhv1ZcEqLq+CfY6gs5@mail.gmail.com> <4D39D8B5.1090901@hardwarefreak.com> <AANLkTin2UZJc8yP6DGf2fgcDemQHznch5rGozmnL+V_u@mail.gmail.com> <4D3B0009.6020006@hardwarefreak.com> <AANLkTimqNjq6H5X5dPnM8Aw5W3NWtdY7ptGqQJ3ogJmO@mail.gmail.com> <4D3B7B2C.5040003@hardwarefreak.com> <4D3C64CB.2080002@harddata.com> <4D3C9C94.8090607@hardwarefreak.com> <4D3CB72E.3050000@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110124005204.71688cc2@natsu>
+In-Reply-To: <4D3CB72E.3050000@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Maurice Hilarius <maurice@harddata.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Jan 23, 2011 at 11:52 AM, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Sun, 23 Jan 2011 11:10:40 -0800
-> Mark Knecht <markknecht@gmail.com> wrote:
-<SNIP>
+Maurice Hilarius put forth on 1/23/2011 5:18 PM:
+> On 1/23/2011 2:24 PM, Stan Hoeppner wrote:
+>> ..
+>>> Chenbro backplanes do not support 6Gb SAS/SATA.
+>> Considering no single (mech) drive can push 600 MB/s, let alone 300 MB/s, is
+>> this really an issue?
+
+> Yes.
+> I have seen it first hand.
+> If you connect 6GB drives and interfaces to it, you see a lot of errors.
+> One has to be careful to set all devices to 3GB, assuming the devices have
+> jumpers or other means to do so.
+
+Which chassis model was this?
+
+>>    Mech drives aren't even going to be surpassing 300 MB/s
+>> in the foreseeable future.
 >>
->> OK, I found a blog of Neil's in which I had read the top but hadn't
->> gone through the comments:
->>
->> http://neil.brown.name/blog/20090817000931
->> It seems he answers my question further down in the comments.
->>
->> Looks like
->>
->> mdadm --grow /dev/md7 --chunk=16
->
-> I suggest that you reconsider going with 16K, it is a suboptimal chunk size.
-> The older default of 64K seems to be the sweet spot, at least for RAID5/6:
-> http://louwrentius.com/blog/2010/05/linux-raid-level-and-chunk-size-the-benchmarks/
->
-> --
-> With respect,
-> Roman
->
-Thanks for the link. That's good information.
+> Perhaps, but their buffers do, and if one uses expanders it is useful
 
-I have no strong preference for 16K other than I have two RAID6's on
-this set of drives and the one that's 16K tests in iozone as about 2
-times faster than the 512K one that I want to change.
+The _real world_ application performance difference between SATA II and SATA III
+mech drive interfaces is something on the order of 1%.  With SSDs a little more
+as some of them can actually push data faster than 3 Gb/s.
 
-I can certainly try 64K, see how it works out, and then do the reshape
-again if necessary.
+Upstream of an expander the additional b/w is useful, not downstream.
 
-My work model for this drive is basically running VMware virtual
-machines. The bulk of the files stored on this RAID are 2GB files. I
-have no idea how VMware (or Virtualbox which I also us) makes use
-those files other than they represent the virtual hard drive.
-
-Again, thanks for the info.
-
-Cheers,
-Mark
+-- 
+Stan
