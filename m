@@ -1,46 +1,47 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Optimize RAID0 for max IOPS?
-Date: Mon, 24 Jan 2011 10:25:02 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
-References: <20110118210112.D13A236C@gemini.denx.de> <4D361F26.3060507@stud.tu-ilmenau.de> <20110119192104.1FA92D30267@gemini.denx.de> <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
+Subject: Re: experience with Adaptec 1430SA
+Date: Mon, 24 Jan 2011 14:09:49 -0500
+Message-ID: <4D3DCE7D.8050702@cdf.toronto.edu>
+References: <4D39E466.60803@cdf.toronto.edu> <4D3A0C11.6040106@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="655872-1146966783-1295882702=:14640"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
+In-Reply-To: <4D3A0C11.6040106@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Wolfgang Denk <wd@denx.de>, stefan.huebner@stud.tu-ilmenau.de, linux-raid@vger.kernel.org, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Stan,
 
---655872-1146966783-1295882702=:14640
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Thanks for pointing out the Rosewill card, I think we'll go for that one 
+instead. Does anybody have something negative to say about this? We will 
+be using it with kernel 2.6.26. I'm looking mostly for:
 
+1) Data corruption horror stories.
+2) Performance limitation nightmare scenarios.
 
+Thanks!
+Iordan
 
-On Mon, 24 Jan 2011, CoolCold wrote:
-
->> So can anybody help answering these questions:
+On 01/21/11 17:43, Stan Hoeppner wrote:
+> Iordan Iordanov put forth on 1/21/2011 1:54 PM:
+>> Hi Guys,
 >>
->> - are there any special options when creating the RAID0 to make it
->> =A0perform faster for such a use case?
->> - are there other tunables, any special MD / LVM / file system /
->> =A0read ahead / buffer cache / ... parameters to look for?
-> XFS is known for it's slow speed on metadata operations like updating
-> file attributes/removing files..but things gonna change after 2.6.35
-> where delaylog is used. Citating Dave Chinner :
-> < dchinner> Indeed, the biggest concurrency limitation has
-> traditionally been the transaction commit/journalling code, but that's
-> a lot more scalable now with delayed logging....
+>> Has any of you used an Adaptec 1430SA, Marvell 88SX7042 based adapter?
+>>
+>> Here is an example link to it:
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16816103105&cm_re=Adaptec_1430SA-_-16-103-105-_-Product
+>>
+>>
+>> What about any other Marvell 88SX7042 based adapter for that matter?
 >
-> So, you may need to benchmark fs part.
-
-Some info on XFS benchmark with delaylog here:
-http://comments.gmane.org/gmane.comp.file-systems.xfs.general/34379
-
-Justin.
-
---655872-1146966783-1295882702=:14640--
+> Save yourself $40 and get this PCIe x4 Rosewill card built with the same Marvell
+> 88SX7042:
+>
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16816132018
+>
+> It even gives you the choice between 2 internal and 2 external ports, or 4
+> internal ports.  Eat your heart out Adaptec. :)
+>
