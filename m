@@ -1,31 +1,57 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
- for HW owners/users
-Date: Tue, 25 Jan 2011 11:30:08 -0700
-Message-ID: <4D3F16B0.5070506@harddata.com>
-References: <A8.F0.07087.1E7FD3D4@cdptpa-omtalb.mail.rr.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: Optimize RAID0 for max IOPS?
+Date: Tue, 25 Jan 2011 19:41:15 +0100
+Message-ID: <20110125184115.1119FB187@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <20110125171017.GA24921@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A8.F0.07087.1E7FD3D4@cdptpa-omtalb.mail.rr.com>
+In-reply-to: <20110125171017.GA24921@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1/24/2011 3:06 PM, Leslie Rhorer wrote:
->> ..
->>>> If you connect 6GB drives and interfaces to it, you see a lot of
->> errors.
->>
->> The first PC I bought had a 6GB drive in it.
-> 	Infant.  :-)
+Dear Christoph,
+
+In message <20110125171017.GA24921@infradead.org> you wrote:
 >
-> 	The first computer I bought (not a "PC") didn't have a hard drive,
-> at all.  The first x86 computer I ever bought (I waited for the introduction
-> of the 80386 before going with an x86 computer) had a 40 MB hard drive.
->
-Of course I was speaking of 6GB/Sec SAS2 drives..
+> > There may be 20...50 millions of files, or more. 65% of the files are
+> > smaller than 4 kB; 80% are smaller than 8 kB; 90% are smaller than 16
+> > kB; 98.4% are smaller than 64 kB.
+> 
+> I don't think you even want a RAID0 in that case.  For small IOPs
+> you're much better off with a simple concatenation of devices.
 
+What exactly do you mean by "conatenation"? LVM striping?
+At least the discussion here does not show any significant advantages
+for this concept:
+http://groups.google.com/group/ubuntu-user-community/web/pick-your-pleasure-raid-0-mdadm-striping-or-lvm-striping
 
+> > Should I do anything different to acchive maximum performance?
+> 
+> Make sure to disable the disk write caches and if not using the newest
+> kernel also mount the filesystem with -o nobarrier.  With lots of small
+> I/Os and metadata intensive workloads that's usually a lot faster.
 
+Tests if done recently indicate that on the other hand nobarrier causes
+a serious degradation of read and write performance (down to some 40%
+of the values before).
+
+> Also if you have a lot of log traffic an external log devices will
+> help a lot.  It's doesn't need to be larger, but it will keep the
+> amount of seeks on the other devices down.
+
+Understood, thanks.
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Never underestimate the bandwidth of a station wagon full of tapes.
+                                -- Dr. Warren Jackson, Director, UTCS
