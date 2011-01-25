@@ -1,36 +1,37 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: raid1 mirror optimizations
-Date: Tue, 25 Jan 2011 16:56:04 -0200
-Message-ID: <AANLkTimUbWcHi8w6UzxKjkavpOihV7V5Nm58mV7HA0AE@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Low cost PCI-E unRAID - Supermicro AOC-SASLP-MV8 Driver/LBA questions
+ for HW owners/users
+Date: Tue, 25 Jan 2011 14:00:09 -0600
+Message-ID: <4D3F2BC9.8060904@hardwarefreak.com>
+References: <A8.F0.07087.1E7FD3D4@cdptpa-omtalb.mail.rr.com> <4D3F16B0.5070506@harddata.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D3F16B0.5070506@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi guys... i have a damaged disk...
-i=B4m using raid1
-the computer crashed with the floor :P hihiih sorry, but the disks are
-damaged at the same position
-check: http://www.spadim.com.br/hd%20agra.zip
-the problem: since raid1 (mirror) is done with real mirror, the disk
-position are the same...
-if i was using a mirror but on disk 1 i write from beggining to end,
-and disk 2 from end to beggining , i don=B4t crash the disk at the same
-position, for disk 1 i crash it some bytes, for disk 2 i crash some
-others bytes, since beggining is a small cilinder and end a bigger, i
-could loose less information than mirror
-could we implement a 'inverted' mirror? just for hard disks (for ssd
-it=B4s a small loss of cpu/memory)
-thanks
+Maurice Hilarius put forth on 1/25/2011 12:30 PM:
+> On 1/24/2011 3:06 PM, Leslie Rhorer wrote:
+>>> ..
+>>>>> If you connect 6GB drives and interfaces to it, you see a lot of
+>>> errors.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Of course I was speaking of 6GB/Sec SAS2 drives..
+
+Capital "B" stands for BYTES.  Small "b" stands for bits.
+You stated 6 GigaBYTES/sec when you meant to say 6 gigabits/sec.
+
+Always use a BIG B when stating parallel bus data rates.  Always use small b
+when stating serial interconnect data rates.  SAS and SATA are serial
+interconnect technologies.
+
+You've formed a bad habit which may be difficult to break.  Nonetheless, you
+must break this habit if you want those reading your text to correctly
+understand what you're saying.
+
+-- 
+Stan
