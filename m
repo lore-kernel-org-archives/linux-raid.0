@@ -1,60 +1,190 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: Help With RAID Configuration
-Date: Tue, 25 Jan 2011 16:18:31 +0100
-Message-ID: <4D3EE9C7.8030008@gmail.com>
-References: <AANLkTi=_tU68DF+WocBfdzW0chDgivinCeKCJ2D0LVO-@mail.gmail.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH  0/1] unblock the creation of an external metadata RAID if
+ native one exists
+Date: Tue, 25 Jan 2011 15:23:30 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176F91B9A@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=_tU68DF+WocBfdzW0chDgivinCeKCJ2D0LVO-@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Mennens <carloswill@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Dne 25.1.2011 15:53, Carlos Mennens napsal(a):
-> I've got 4 identical 1 TB drives and would like to use them in a
-> software RAID configuration on my home server. I'm running Debian
-> Linux using 'mdadm' utility to manage the software RAID. I don't know
-> how much I've read is fact or dated or even false so I decided I would
-> ask here to get help from people who know more about this than I do.
-> This is essentially just a file server machine to store all my data so
-> being that I've got four identical SATA hard drives, I was thinking
-> about doing RAID level 5. I guess I'll start here and ask if that is
-> the recommended level of RAID. I think RAID level 5 will be fine for
-> my general server usage. My second issue is partitioning the four
-> individual drives to get maximum performance / space from them.
-> Basically just asking here how would you or you recommend I partition
-> the drives? I was thinking about doing three seperate partitions per
-> drive:
+From aa169142c6dde0a7c1dc1b91dec0973474661036 Mon Sep 17 00:00:00 2001
+From: Marcin Labun <marcin.labun@intel.com>
+Date: Tue, 25 Jan 2011 16:10:45 +0100
+Subject: [PATCH 0/1] unblock the creation of an external metadata RAID if native one exists
+
+
+> -----Original Message-----
+> From: Czarnowska, Anna
+> Sent: Friday, January 21, 2011 6:24 PM
+> To: NeilBrown
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Hawrylewicz Czarnowski, Przemyslaw; Labun, Marcin; Neubauer, Wojciech
+> Subject: Bug - native array blocks external container
 > 
-> /dev/sda1 = 4 GB (swap)
-> /dev/sda2 = 1 GB (/boot)
-> /dev/sda3 = 995 GB (/)
+> Hi Neil,
+> Our validation reported it was not possible to move a spare from native
+> array to imsm container.
+> After closer investigation it appears that this issue shows in kernels
+> from 2.6.36 upwards.
+> It turns out even more serious:
+> If a native array exists in the system it is not possible to create,
+> assemble or add to an imsm container.
+> (confirmed on raid1 arrays, 2 disks for native, 2 disks for imsm + 1
+> spare)
+> In such case for some reason AllReserved is set in rdev->flags in
+> rdev_size_store function in md.c
+> so writing to size file by sysfs_set_str always fails when native array
+> exists.
+> The flag is not set when there is no native arrays and all actions can
+> be completed normally.
 > 
-> Now from that partition schema above, obviously all the types will be
-> 'fd' for RAID and the partition for /boot is going to be bootable. My
-> confusion is that I read Grub doesn't support booting from RAID 5
-> since Grub can't handle disk assembly. If /dev/sdx2 (sda2, sdb2, sdc2,
-> sdd2) are partitioned for /boot (bootable), how would you guys
-> configure this RAID to match up equally? I don't think I do a RAID
-> level 1 on 4 identical partitions, right? Can anyone please help and
-> tell me how I should configure these 4 identical drives to work on my
-> system? How would you set this up?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This is just to inform about the issue.
+> It will be investigated further after the weekend.
+> Regards
+> Anna
 
-You can use RAID1 with 2+ drives without any problems.
+Native metadata reserves a parent disk device for exclusive use by setting
+AllReserved in rdev->flags. Now if a member device has AllReserved flag set
+on its block device then creation of any external metadata array/container on
+is unreasonably blocked.
+Solution:
+When creating a new external RAID device we must check that the new
+device is not using a partition of a disk, when there is another array
+using another partition of the same disk calming exclusive usage for the
+disk. Exclusive usage is enforced by setting AllReserved in rdev->flags.
 
-sd[a-d]1 /boot (128MB?, RAID1)  - metadata 0.90 for GRUB compatibility
-sd[a-d]2 /     (2GB?,   RAID10) - for better system maintenance
-sd[a-d]3 swap  (2GB?,   RAID10) - for high availability
-sd[a-d]4 /data (REST,   RAID5)
+Here is the list of my tests and conclusion after applying the patch:
+1. I have validated that containers and arrays can be created when there is a native raid present. Previously it was failing.
+If there was a native raid, the rdev_size_store prevented from creation of any external metadata, even if there was no disk or block device
+overlap. This was because of invalid AllReserved bit check for external metadata arrays.
 
-Since you mentioned Debian, wait with new installation for new version
-(around february).
+# mdadm -CR /dev/md122 -l 1 -n 2  /dev/sdb1 /dev/sdb2
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md122 started.
 
-HTH, Z.
+# cat /proc/mdstat 
+Personalities : [raid1] 
+md122 : active raid1 sdb2[1] sdb1[0]
+      19530154 blocks super 1.2 [2/2] [UU]
+      [>....................]  resync =  0.3% (63680/19530154) finish=20.3min speed=15920K/sec
+      
+unused devices: <none>
+
+# mdadm -CR /dev/md121 -e ddf -n 2 --force /dev/sdc /dev/sdd
+mdadm: container /dev/md121 prepared.
+
+# mdadm -CR /dev/md123 -l 1  -n 2 --force /dev/sdc /dev/sdd
+mdadm: largest drive (/dev/sdd) exceeds size (78117976K) by more than 1%
+mdadm: Creating array inside ddf container /dev/md121
+mdadm: array /dev/md123 started.
+starting mdmon for md121
+
+# cat /proc/mdstat 
+Personalities : [raid1] 
+md123 : active raid1 sdd[1] sdc[0]
+      78117976 blocks super external:/md121/0 [2/2] [UU]
+      [=>...................]  resync =  8.9% (6980928/78117976) finish=15.6min speed=75612K/sec
+      
+md121 : inactive sdd[1](S) sdc[0](S)
+      65536 blocks super external:ddf
+       
+md122 : active raid1 sdb2[1] sdb1[0]
+      19530154 blocks super 1.2 [2/2] [UU]
+      [=====>...............]  resync = 25.5% (4995776/19530154) finish=9.4min speed=25659K/sec
+      
+unused devices: <none>
+
+
+2. Creating native raid array on partitions on the same disk works fine.
+The same for dff container (imsm does not allow for raids on partitions). 
+In case of container, raid array can be created.
+
+# mdadm -CR /dev/md121 -l 1 -n 2 --force /dev/sdb1 /dev/sdb2
+mdadm: /dev/sdb1 appears to contain an ext2fs file system
+    size=19529728K  mtime=Thu Jan  1 01:00:00 1970
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=0.90
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md121 started.
+
+
+
+# mdadm -CR /dev/md121 -e ddf -n 2 --force /dev/sdb1 /dev/sdb2
+
+
+# mdadm -CR /dev/md122 -l 1 -n 2  /dev/sdb1 /dev/sdb2
+
+mdadm: Creating array inside ddf container /dev/md121
+mdadm: array /dev/md122 started.
+
+
+
+3. Preventing external container from from using partition of the disk, when there is a native raid using another partition of the same disk.
+Since, the prevention is conducted in store_size, the container is created with zero size. mdadm aborts the creation but does not clean-up.
+
+# mdadm -CR /dev/md119 -l 0 -n 2 --force /dev/sdb1 /dev/sdd
+mdadm: array /dev/md119 started.
+
+
+# mdadm -CR /dev/md120 -e ddf -n 2 --force /dev/sdb2 /dev/sdc
+mdadm: failed to write '32768' to '/sys/block/md120/md/dev-sdb2/size' (Device or resource busy)
+mdadm: ADD_NEW_DISK for /dev/sdb2 failed: Device or resource busy
+
+ # cat /proc/mdstat 
+Personalities : [raid1] [raid0] 
+md120 : inactive sdb2[0](S)
+      0 blocks super external:ddf
+       
+md119 : active raid0 sdd[1] sdb1[0]
+      175819264 blocks super 1.2 512k chunks
+      
+unused devices: <none>
+
+
+4. Two native raid can be created when they use different partitions of the same disks:
+
+# mdadm -CR /dev/md119 -l 0 -n 2 --force /dev/sdb1 /dev/sdd
+# mdadm -CR /dev/md120 -l 0 -n 2 --force /dev/sdb2 /dev/sdc
+
+# cat /proc/mdstat 
+Personalities : [raid1] [raid0] 
+md120 : active raid0 sdc[1] sdb2[0]
+      97679360 blocks super 1.2 512k chunks
+      
+md119 : active raid0 sdd[1] sdb1[0]
+      175819264 blocks super 1.2 512k chunks
+      
+unused devices: <none>
+
+5. size_store does not prevent for using the partition and its disk in the same container or native raid.
+Later mdadm aborts creation and clean-ups. The fix does not tries to detect this situation earlier.
+
+# mdadm -CR /dev/md121 -e ddf  -n 2 --force /dev/sdb1 /dev/sdb
+mdadm: /dev/sdb1 appears to contain an ext2fs file system
+    size=19529728K  mtime=Thu Jan  1 01:00:00 1970
+mdadm: /dev/sdb appears to be part of a raid array:
+    level=raid1 devices=1 ctime=Mon Jan 24 16:23:59 2011
+mdadm: failed to open /dev/sdb after earlier success - aborting
+
+
+Marcin Labun (1):
+  md: unblock the creation of an external metadata RAID if native one
+    exists
+
+ drivers/md/md.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
+
+
+
+
+
+
