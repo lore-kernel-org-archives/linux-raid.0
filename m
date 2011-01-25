@@ -1,48 +1,39 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Optimize RAID0 for max IOPS?
-Date: Tue, 25 Jan 2011 13:51:23 +0100
-Message-ID: <20110125135123.0342f116@harpe.intellique.com>
-References: <20110118210112.D13A236C@gemini.denx.de>
-	<4D361F26.3060507@stud.tu-ilmenau.de>
-	<20110119192104.1FA92D30267@gemini.denx.de>
-	<AANLkTikx4g99-Cf_09kEGfF2mmf4Dnuh2A5gTrtKweDy@mail.gmail.com>
-	<alpine.DEB.2.00.1101241024230.14640@p34.internal.lan>
-	<20110124215713.82D75B187@gemini.denx.de>
-	<20110124230314.GA11040@dastard>
-	<20110125083900.4dd65bf2@galadriel2.home>
-	<20110125083643.GE28803@dastard>
-	<20110125124509.D76D6BB0B9@gemini.denx.de>
+From: Carlos Mennens <carloswill@gmail.com>
+Subject: Help With RAID Configuration
+Date: Tue, 25 Jan 2011 09:53:20 -0500
+Message-ID: <AANLkTi=_tU68DF+WocBfdzW0chDgivinCeKCJ2D0LVO-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110125124509.D76D6BB0B9@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-raid@vger.kernel.org, Justin Piszcz <jpiszcz@lucidpixels.com>, xfs@oss.sgi.com
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Le Tue, 25 Jan 2011 13:45:09 +0100
-Wolfgang Denk <wd@denx.de> =E9crivait:
+I've got 4 identical 1 TB drives and would like to use them in a
+software RAID configuration on my home server. I'm running Debian
+Linux using 'mdadm' utility to manage the software RAID. I don't know
+how much I've read is fact or dated or even false so I decided I would
+ask here to get help from people who know more about this than I do.
+This is essentially just a file server machine to store all my data so
+being that I've got four identical SATA hard drives, I was thinking
+about doing RAID level 5. I guess I'll start here and ask if that is
+the recommended level of RAID. I think RAID level 5 will be fine for
+my general server usage. My second issue is partitioning the four
+individual drives to get maximum performance / space from them.
+Basically just asking here how would you or you recommend I partition
+the drives? I was thinking about doing three seperate partitions per
+drive:
 
-> > This is smelling like a case of barrier IOs on software raid on
-> > cheap storage.... =20
->=20
-> Right. [Any way to avoid these, btw?]=20
+/dev/sda1 = 4 GB (swap)
+/dev/sda2 = 1 GB (/boot)
+/dev/sda3 = 995 GB (/)
 
-Easy enough, use the "nobarrier" mount option.=20
-
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now from that partition schema above, obviously all the types will be
+'fd' for RAID and the partition for /boot is going to be bootable. My
+confusion is that I read Grub doesn't support booting from RAID 5
+since Grub can't handle disk assembly. If /dev/sdx2 (sda2, sdb2, sdc2,
+sdd2) are partitioned for /boot (bootable), how would you guys
+configure this RAID to match up equally? I don't think I do a RAID
+level 1 on 4 identical partitions, right? Can anyone please help and
+tell me how I should configure these 4 identical drives to work on my
+system? How would you set this up?
