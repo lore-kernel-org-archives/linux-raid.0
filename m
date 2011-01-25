@@ -1,151 +1,459 @@
-From: Hank Barta <hbarta@gmail.com>
-Subject: Resizing a RAID1
-Date: Tue, 25 Jan 2011 09:41:24 -0600
-Message-ID: <AANLkTikY7+mS+H6u+8Tvs0BkSHcp87aSDThszJj3TVzJ@mail.gmail.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH] Dynamic hot-plug udev rules for policies
+Date: Tue, 25 Jan 2011 15:59:32 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D176F91C29@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-My previous experiment with USB flash drives has not gone too far. I
-can install Ubuntu Server 10.04 to a single USB flash drive and boot
-my Eee PC 901 and Thinkpad T500 from it, but I cannot boot the Intel
-D525MW from it. The Intel board will boot install media on USB flash,
-but not a normal install. (This is an aside.) The desire to use an
-alternate boot was to avoid having to fiddle with a two drive RAID1.
-The drives have a single partition consisting of the entire drive
-which is combined into the RAID1.
+Neil,
+Please consider this patch that once was discussed and I think agreed with in general direction. It was sent a while ago
+but somehow did not merged into your devel3-2. This patch enables hot-plug of so called bare devices (as understand by domain policies rules in mdadm.conf).
+Without this patch we do NOT serve hot-plug of bare devices at all.
 
-My desire to get this system up and running is overrunning my desire
-to get the USB flash raid to boot. My strategy is to
- - remove one drive from the raid,
- - repartition it to allow for a system installation
- - create a new RAID1 with that drive and format the new data
-partition. (both would be  RAID1 and now both degraded to one drive)
- - copy data from the existing RAID1 data partition to the new RAID1
-data partition.
- - stop the old RAID1
- - repartition the other drive (most recently the old RAID1) to match
-the new RAID1
- - add the second drive to the new RAID1
- - watch it rebuild and breathe big sigh of relief.
+Thanks,
+Marcin Labun
 
-When convenient I can install Linux to the space I've opened up via
-the above machinations and move this project down the road.
+Subject was: FW: Autorebuild, new dynamic udev rules for hot-plugs
 
-That looks pretty straightforward to me, but I've never let that sort
-of thing prevent me from cobbling things up in the past. (And at this
-moment, I'm making a copy of the RAID1 to an external drive just in
-case.) For anyone interested, I'll share the details of my plan to the
-command level in the case that any of you can spot a problem I have
-overlooked.
+From c0aecd4dd96691e8bfa6f2dc187261ec8bb2c5a2 Mon Sep 17 00:00:00 2001
+From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Date: Thu, 23 Dec 2010 16:35:01 +0100
+Subject: [PATCH] Dynamic hot-plug udev rules for policies
+Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-A related question Is what are the constraints for partitioning the
-drive to achieve best performance? I plan to create a 10G partition on
-each drive for the system. Likewise, suggestions for tuning the RAID
-and filesystem configurations would be appreciated. Usage for the RAID
-is backup for my home LAN as well as storing pictures and more
-recently my video library so there's a mix of large and small files.
-I'm not obsessed with performance as most clients are on WiFi, but I
-might as well grab the low hanging fruit in this regard.
+When introducing policies, new hot-plug rules were added to support
+bare disks. Mdadm was started for each hot plugged block device
+to determine if it could be used as spare or as a replacement member for
+degraded array.
+This patch introduces limitation of range of devices that are handled
+by mdadm.
+It limits them to the ones specified in domains associated with
+the actions: spare-same-port, spare and spare-force.
+In order to enable hot-plug for bare disks one must update udev rules
+with command
 
-Feel free to comment on any aspects of the details listed below.
+        mdadm --activate-domains[=filename]
 
-many thanks,
-hank
+Above command writes udev rule configuration to stdout. If 'filename'
+is given output is written to the file provided as parameter. It is up
+to system administrator what should be done later. To make such rule
+permanent (i.e. remain after reboot) rule should be writen to
+/lib/udev/rules.d directory. Other cases will just need to write it to
+/dev/.udev/rules.d directory where temporary rules lies. One should be
+aware of the meaning of names/priorities of the udev rules.
 
-This is what is presently on the drives:
-========================
-root@oak:~# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md1 : active raid1 sdc1[0] sda1[1]
-      1953511936 blocks [2/2] [UU]
+After mdadm.conf is changed one is obliged to re-run
+"mdadm --activate-domains" command in order to bring the system
+configuration up to date.
+All hot-plugged disks containing metadata are still handled by existing
+rules.
 
-unused devices: <none>
-root@oak:~# fdisk -l /dev/sda /dev/sdc
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ ReadMe.c |    1 +
+ mdadm.c  |   18 ++++++++
+ mdadm.h  |    2 +
+ policy.c |  141 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 162 insertions(+), 0 deletions(-)
 
-Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x00000000
+diff --git a/ReadMe.c b/ReadMe.c
+index 5714849..cf41fa5 100644
+--- a/ReadMe.c
++++ b/ReadMe.c
+@@ -110,6 +110,7 @@ struct option long_options[] = {
+     {"detail-platform", 0, 0, DetailPlatform},
+     {"kill-subarray", 1, 0, KillSubarray},
+     {"update-subarray", 1, 0, UpdateSubarray},
++    {"activate-domains", 2, 0, ActivateDomains},
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1      243201  1953512001   fd  Linux raid autodetect
+     /* synonyms */
+     {"monitor",   0, 0, 'F'},
+diff --git a/mdadm.c b/mdadm.c
+index 2ffe94f..f3021cc 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
+        int auto_update_home = 0;
+        char *subarray = NULL;
+        char *remove_path = NULL;
++       char *udev_filename = NULL;
 
-Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x00000000
+        int print_help = 0;
+        FILE *outf;
+@@ -234,6 +235,7 @@ int main(int argc, char *argv[])
+                                }
+                                subarray = optarg;
+                        }
++               case ActivateDomains:
+                case 'K': if (!mode) newmode = MISC; break;
+                case NoSharing: newmode = MONITOR; break;
+                }
+@@ -929,6 +931,20 @@ int main(int argc, char *argv[])
+                        }
+                        devmode = opt;
+                        continue;
++               case O(MISC, ActivateDomains):
++                       if (devmode && devmode != opt) {
++                               fprintf(stderr, Name ": --ActivateDomains must"
++                                                    " be the only option.\n");
++                       } else {
++                               if (udev_filename)
++                               fprintf(stderr, Name ": only specify one udev "
++                                                    "rule filename. %s ignored.\n",
++                                       optarg);
++                               else
++                                       udev_filename = optarg;
++                       }
++                       devmode = opt;
++                       continue;
+                case O(MISC,'t'):
+                        test = 1;
+                        continue;
+@@ -1493,6 +1509,8 @@ int main(int argc, char *argv[])
+                                                free_mdstat(ms);
+                                        } while (!last && err);
+                                        if (err) rv |= 1;
++                               } else if (devmode == ActivateDomains) {
++                                       rv = Activate_Domains(udev_filename);
+                                } else {
+                                        fprintf(stderr, Name ": No devices given.\n");
+                                        exit(2);
+diff --git a/mdadm.h b/mdadm.h
+index 36124de..1242015 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -311,6 +311,7 @@ enum special_options {
+        Bitmap,
+        RebuildMapOpt,
+        InvalidBackup,
++       ActivateDomains
+ };
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1      243201  1953512001   fd  Linux raid autodetect
-root@oak:~#
-========================
+ /* structures read from config file */
+@@ -1031,6 +1032,7 @@ extern int CreateBitmap(char *filename, int force, char uuid[16],
+                        unsigned long long array_size,
+                        int major);
+ extern int ExamineBitmap(char *filename, int brief, struct supertype *st);
++extern int Activate_Domains(char *rule_name);
+ extern int bitmap_update_uuid(int fd, int *uuid, int swap);
+ extern unsigned long bitmap_sectors(struct bitmap_super_s *bsb);
 
-One drive is a Seagate ST32000542AS and the other a Samsung HD204UI.
-The Samsung is one of those with 4K sectors. (I think the Seagate may
-be too.)
+diff --git a/policy.c b/policy.c
+index ba976db..81d3e70 100644
+--- a/policy.c
++++ b/policy.c
+@@ -764,3 +764,144 @@ int policy_check_path(struct mdinfo *disk, struct map_ent *array)
+        fclose(f);
+        return rv == 5;
+ }
++
++/* invocation of udev rule file */
++char udev_template_start[] =
++"# do not edit this file, it will be overwritten on update\n"
++"\n"
++"SUBSYSTEM!=\"block\", GOTO=\"md_autorebuild_end\"\n"
++"\n"
++"ENV{ID_FS_TYPE}==\"linux_raid_member\", GOTO=\"md_autorebuild_end\"\n"
++"ENV{ID_FS_TYPE}==\"isw_raid_member\", GOTO=\"md_autorebuild_end\"\n"
++"\n";
++
++/* ending of udev rule file */
++char udev_template_end[] =
++"\n"
++"LABEL=\"md_autorebuild_end\"\n"
++"\n";
++
++/* find rule named rule_type and return its value */
++char *find_rule(struct rule *rule, char *rule_type)
++{
++       while (rule) {
++               if (rule->name == rule_type)
++                       return rule->value;
++
++               rule = rule->next;
++       }
++       return NULL;
++}
++
++#define UDEV_RULE_FORMAT \
++"ACTION==\"add\", KERNEL!=\"md*\" ENV{ID_PATH}==\"%s\" " \
++"RUN+=\"/sbin/mdadm --incremental $env{DEVNAME}\", " \
++"GOTO=\"md_autorebuild_end\"\n" \
++
++/* Write rule in the rule file. Use format from UDEV_RULE_FORMAT */
++int write_rule(struct rule *rule, int fd)
++{
++       char line[1024];
++       char *r = find_rule(rule, rule_path);
++       if (!r)
++               return -1;
++
++       snprintf(line, sizeof(line) - 1, UDEV_RULE_FORMAT, r);
++       return write(fd, line, strlen(line));
++}
++
++/* Generate single entry in udev rule basing on POLICY line found in config
++ * file. Take only those with paths, only first occurrence if paths are equal
++ * and if actions supports handling of spares (>=act_spare_same_slot)
++ */
++int generate_entries(int fd)
++{
++       struct pol_rule *loop, *dup;
++       char *loop_value, *dup_value;
++       int duplicate;
++       int written = 0;
++
++       for (loop = config_rules; loop; loop = loop->next) {
++               if (loop->type != rule_policy && loop->type != rule_part)
++                       continue;
++               duplicate = 0;
++
++               /* only policies with paths and with actions supporting
++                * bare disks are considered */
++               loop_value = find_rule(loop->rule, pol_act);
++               if (!loop_value || map_act(loop_value) < act_spare_same_slot)
++                       continue;
++               loop_value = find_rule(loop->rule, rule_path);
++               if (!loop_value)
++                       continue;
++               for (dup = config_rules; dup != loop; dup = dup->next) {
++                       if (dup->type != rule_policy && loop->type != rule_part)
++                               continue;
++                       dup_value = find_rule(dup->rule, pol_act);
++                       if (!dup_value || map_act(dup_value) < act_spare_same_slot)
++                               continue;
++                       dup_value = find_rule(dup->rule, rule_path);
++                       if (!dup_value)
++                               continue;
++                       if (strcmp(loop_value, dup_value) == 0) {
++                               duplicate = 1;
++                               break;
++                       }
++               }
++
++               /* not a dup or first occurrence */
++               if (!duplicate) {
++                       if (write_rule(loop->rule, fd) == -1)
++                               return 0;
++                       written++;
++               }
++       }
++       return written;
++}
++
++/* Activate_Domains routine creates dynamic udev rules used to handle
++ * hot-plug events for bare devices (and making them spares)
++ */
++int Activate_Domains(char *rule_name)
++{
++       int fd = 0;
++       int rv;
++       char udev_rule_file[PATH_MAX];
++
++       if (rule_name)
++               fd = creat(udev_rule_file,
++                          S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++       else
++               fd = dup(fileno(stdout));
++       if (fd == -1)
++               return 1;
++
++       /* write static invocation */
++       if (write(fd, udev_template_start,
++               sizeof(udev_template_start) - 1) == -1) {
++               close(fd);
++               if (rule_name)
++                       unlink(udev_rule_file);
++               return 1;
++       }
++
++       /* iterate, if none created or error occurred, remove file */
++       rv = generate_entries(fd);
++       if (rv <= 0) {
++               close(fd);
++               if (rule_name)
++                       unlink(udev_rule_file);
++               return rv == -1 ? -1 : 0;
++       }
++
++       /* write ending */
++       if (write(fd, udev_template_end, sizeof(udev_template_end) - 1) == -1) {
++               close(fd);
++               if (rule_name)
++                       unlink(udev_rule_file);
++               return 1;
++       }
++
++       close(fd);
++       return 0;
++}
+--
+1.7.1
 
-Selecting /dev/sdc to migrate first (and following more or less the
-guide on http://mkfblog.blogspot.com/2007/11/resizing-raid1-system-partition.html)
 
-Fail the drive:
-> mdadm --manage /dev/md1 --fail /dev/sdc1
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Hawrylewicz Czarnowski, Przemyslaw
+Sent: Thursday, December 23, 2010 4:44 PM
+To: Neil Brown
+Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Ciechanowski, Ed; Williams, Dan J
+Subject: RE: Autorebuild, new dynamic udev rules for hot-plugs
 
-Remove from the array:
-> mdadm --manage /dev/md1 --remove /dev/sdc1
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Hawrylewicz Czarnowski, Przemyslaw
+> Sent: Tuesday, November 23, 2010 6:02 PM
+> To: Neil Brown
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Ciechanowski, Ed;
+> Labun, Marcin; Czarnowska, Anna; Williams, Dan J
+> Subject: RE: Autorebuild, new dynamic udev rules for hot-plugs
+>
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Neil Brown
+> > Sent: Tuesday, November 23, 2010 2:17 AM
+> > To: Williams, Dan J
+> > Cc: Hawrylewicz Czarnowski, Przemyslaw; linux-raid@vger.kernel.org;
+> > Neubauer, Wojciech; Ciechanowski, Ed; Labun, Marcin; Czarnowska,
+> > Anna
+> > Subject: Re: Autorebuild, new dynamic udev rules for hot-plugs
+> >
+> > On Mon, 22 Nov 2010 16:11:41 -0800
+> > Dan Williams <dan.j.williams@intel.com> wrote:
+> >
+> > > On 11/22/2010 3:50 PM, Hawrylewicz Czarnowski, Przemyslaw wrote:
+> > > >> Four comments.
+> > > >>
+> > > >> 1/ I wouldn't write a file in /lib/udev/rules.d/
+> > > >>    I think it should be written to "/dev/.udev/rules.d/"
+> > > >>    which is referred to as the "temporary rules directory"
+> > > >>    in the udev documentation.
+> > > > I am not sure if it is what we are looking for. Temporary means
+> > > > they
+> > disappear after reboot. It is OK as cold-plug does not need support
+> > for bare disks (or maybe I am wrong?). But in such case, one who
+> > wants to use autorebuild should invoke mdadm --activate-domains for
+> > example in /etc/init.d/local.boot or somewhere else. Second idea
+> > here is to use
+> > ActivateDomain() when one starts monitor with autorebuild enabled.
+> > Which one? I would prefer to leave it as it was written initially
+> > (considering comment #4). Then, if one removes policies from config,
+> > invoking -- activate-domains should reset/remove rules (but see #3)
+> > >
+> > > The intent was always to have this be something reinitialized at boot.
+> > > Putting these in the temporary rule directory also precludes them
+> > > from being added to the initramfs where they are not needed /
+> > > potentially confusing.
+> > >
+> > > The other intent was to only match the pci paths for the
+> > > controllers we cared about.  That does not appear to be a part of this patch.
+> >
+> > Can you define "we cared about".  Don't we care about everything
+> > listed
+> in
+> > mdadm.conf??
+> >
+> >
+> > >
+> > > >
+> > > >>
+> > > >> 2/ I would be good to process the type=disk or type=part part of the
+> > > >>     policy into the rules file as well.
+> > > > OK
+> > > >
+> > > >>
+> > > >> 3/ I'm not very comfortable with hard-coding the name of the
+> > > >>     file to be created in the rules.d directory.  Maybe usage
+> > > >> could
+> be
+> > > >>        --activate-domains=63-md-whatever
+> > > > Good idea, but only if we store our rules in /dev/.udev/rules.d.
+> > Otherwise it would be difficult to maintain all generated rules and
+> remove
+> > the old ones... I would leave default if not given by user, but one
+> > can pass any file name.
+> > >
+> > > The issue is that this namespace belongs to the distro and since
+> > > they need to modify initscripts to turn this feature on might as
+> > > well dump the entirety of the naming responsibility to the user.
+> > >
+> > > >> 4/ I don't think it is good to have an incomplete file in
+> > > >> rules.d
+> that
+> > udev
+> > > >>     might accidentally read.  We should create the file with a
+> > > >> name
+> > with a
+> > > >>     leading '.' (assuming udev ignores those, I haven't
+> > > >> checked) and
+> > then
+> > > >>     rename it after it has been completely written.
+> > > > You're right. In theory, such partial udev rules are excluded
+> > > > when
+> udev
+> > can't interpret them properly. I have looked into udev's sources and
+> found
+> > that it looks for "*.rules" files. All other file extensions are ignored.
+> > Files with leading dots are also omitted. I would prefer to
+> > create<name>.temp file and then rename it into<name>.rules.
+> > >
+> > > There must be an existing convention for this sort of the thing,
+> > > if so let's not invent another one.
+> I haven't found anything similar. Just mountall, but it writes single
+> line in one "shot"... Both options with extension or with leading dot will work.
+>
+> >
+> > We could avoid both these issues by just writing the new rules file
+> > to stdout.
+> > When when the init script gets it wrong, it isn't our fault :-)
+> I like that idea at this stage. Later on we might develop better
+> solution (see below)
+>
+> >
+> > But I don't really like that.  At least there should be a simple and
+> > uniform way to propagate any mdadm.conf changes into udev.
+> >
+> > Maybe the name of the rules file should be given in mdadm.conf, and e.g.
+> >   mdadm --check-config
+> > would report any syntax errors, report any inconsistencies with
+> > current arrays, and update the udev file if necessary..
+> >
+> > Maybe leave that for 3.2.1, and just support '--activate-
+> domains=filename'
+> > for now.
+> Let me extend this thought a little. As I mentioned above I like the
+> idea of writing rule to stdout. Or if somebody wants to pass a file
+> name, just write the file in current directory - similar to the way
+> one creates mdadm.conf with mdadm --examine (but with small improvement:).
+Replying to my last post I would like to present new patch based on the above scheme.
+I also want to raise the discussion again, as this thread is dead for a while...
 
-Zero the superblock:
-> mdadm --zero-superblock /dev/sdc1
+Please comment.
 
-<Repartition drive with one 10G primary partition at the beginning and
-a second primary partition using the remainder of the drive: /dev/sdc1
-and /dev/sdc2>
-
-Create new RAID:
-> mdadm --create /dev/md2 -n 2 --level=1 /dev/sdc2 missing
-
-Format:
-> mkfs.ext4 /dev/md2
-
-Mount:
-> mount /dev/md2 /mnt/md2
-
-Copy:
-> rsync -av -H -K --partial --partial-dir=.rsync-partial /mnt/md1/ /mnt/USB/
-
-Stop the old RAID:
-> mdadm --stop /dev/md1
-
-Zero the superblock:
-> mdadm --zero-superblock /dev/sda1
-
-Repartition to match the other drive
-
-Add the second drive to the RAID:
-> mdadm --manage /dev/md2 --add /dev/sda2
-
-Watch the resync complete.
-
-Done! (Except for doing something with the new 10G partition, but
-that's another subject.)
-
-Many thanks for reading this far!
-
-best,
-hank
-
--- 
-'03 BMW F650CS - hers
-'98 Dakar K12RS - "BABY K" grew up.
-'93 R100R w/ Velorex 700 (MBD starts...)
-'95 Miata - "OUR LC"
-polish visor: apply squashed bugs, rinse, repeat
-Beautiful Sunny Winfield, Illinois
+> But the general problem is to find "simple and uniform way". Something
+> distro-independent. Rules should be prepared once, right after config
+> file is finished. Fire and forget:) We need to handle hot/cold-plug
+> events for action=spare, and hot-plug events for
+> actions=spare-same-slot. Considering we use temporary udev rules
+> directory they need to be regenerated each reboot, putting attention
+> at the moment when we have to do it so we handle all cases. What options then?
+>
+> As a last resort, maybe just a note in man pages with possibilities,
+> leaving implementation to user/admin?
+>
+> >
+> > ???
+> >
+> > NeilBrown
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in the body of a message to majordomo@vger.kernel.org More majordomo
+> info at  http://vger.kernel.org/majordomo-info.html
