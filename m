@@ -1,161 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/6] Limit no-restriping operations only for raid5
-Date: Wed, 26 Jan 2011 11:01:32 +1000
-Message-ID: <20110126110132.1ef42d13@nbeee.brown>
+Subject: Re: [PATCH 4/6] FIX: Remove disks in mdmon for external metadata
+Date: Wed, 26 Jan 2011 11:04:29 +1000
+Message-ID: <20110126110429.144b9aab@nbeee.brown>
 References: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
-	<20110119162308.8738.44079.stgit@gklab-128-111.igk.intel.com>
+	<20110119162333.8738.79313.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119162308.8738.44079.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110119162333.8738.79313.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 19 Jan 2011 17:23:08 +0100
+On Wed, 19 Jan 2011 17:23:33 +0100
 Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
 
-> If no-restriping needed, we might need to impose some more
-> changes: layout, raid_disks, chunk_size but only for raid5 arrays.
-> Move this part of code before operations connected with restriping.
+> For raid10 -> raid0 takeover operation we shoud reject disks
+> in mirror by mark them as 'failed' and then remove them from
+> array.
+> For external metadata second action should be execuded by
+> mdmon so additional condition is necessary.
 
-I haven't applied this.
-It is not clear to me that the code is in the wrong place.
-Maybe you introduced some code before this that should have gone after?
-or something....
-
-Don't know ...  maybe if you try again it will make more sense next
-time.
+I don't understand this..
+I think you are saying that removing failed devices should be done by
+mdmon rather than mdadm.  Is that what you are saying?
+I don't think that is correct.  WHY do you want to make this change?
+What is not working that should.
 
 NeilBrown
-
 
 > 
 > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 > ---
->  Grow.c |   81
-> ++++++++++++++++++++++++++++++++++------------------------------ 1
-> files changed, 43 insertions(+), 38 deletions(-)
+>  Grow.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index e1ec01c..0ce7c17 100644
+> index 78d5b0e..c5f83a8 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -1656,6 +1656,49 @@ static int reshape_array(char *container, int
-> cfd, int fd, char *devname, }
->  	ping_monitor(container);
->  
-> +	if (reshape.backup_blocks == 0) {
-> +		/* No restriping needed, but we might need to impose
-> +		 * some more changes: layout, raid_disks, chunk_size
-> +		 */
-> +		/* Changes possible only for raid5 arrays */
-> +		if (info->array.level != 5) {
-> +			unfreeze(st);
-> +			return rv;
-> +		}
-> +		if (info->new_layout != UnSet &&
-> +		    info->new_layout != info->array.layout) {
-> +			info->array.layout = info->new_layout;
-> +			if (ioctl(fd, SET_ARRAY_INFO,
-> &info->array) != 0) {
-> +				fprintf(stderr, Name ": failed to
-> set new layout\n");
-> +				rv = 1;
-> +			} else if (!quiet)
-> +				printf("layout for %s set to %d\n",
-> +				       devname, info->array.layout);
-> +		}
-> +		if (info->delta_disks != UnSet &&
-> +		    info->delta_disks != 0) {
-> +			info->array.raid_disks += info->delta_disks;
-> +			if (ioctl(fd, SET_ARRAY_INFO,
-> &info->array) != 0) {
-> +				fprintf(stderr, Name ": failed to
-> set raid disks\n");
-> +				rv = 1;
-> +			} else if (!quiet)
-> +				printf("raid_disks for %s set to
-> %d\n",
-> +				       devname,
-> info->array.raid_disks);
-> +		}
-> +		if (info->new_chunk != 0 &&
-> +		    info->new_chunk != info->array.chunk_size) {
-> +			if (sysfs_set_num(info, NULL,
-> +					  "chunk_size",
-> info->new_chunk) != 0) {
-> +				fprintf(stderr, Name ": failed to
-> set chunk size\n");
-> +				rv = 1;
-> +			} else if (!quiet)
-> +				printf("chunk size for %s set to
-> %d\n",
-> +				       devname,
-> info->array.chunk_size);
-> +		}
-> +		unfreeze(st);
-> +		return rv;
-> +	}
-> +
->  	/* reload metadat as it is possible to change made by monitor
->  	 */
->  	if ((cfd >= 0) &&
-> @@ -1718,44 +1761,6 @@ static int reshape_array(char *container, int
-> cfd, int fd, char *devname, }
->  	}
->  
-> -	if (reshape.backup_blocks == 0) {
-> -		/* No restriping needed, but we might need to impose
-> -		 * some more changes: layout, raid_disks, chunk_size
-> -		 */
-> -		if (info->new_layout != UnSet &&
-> -		    info->new_layout != info->array.layout) {
-> -			info->array.layout = info->new_layout;
-> -			if (ioctl(fd, SET_ARRAY_INFO,
-> &info->array) != 0) {
-> -				fprintf(stderr, Name ": failed to
-> set new layout\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("layout for %s set to %d\n",
-> -				       devname, info->array.layout);
-> -		}
-> -		if (info->delta_disks != UnSet &&
-> -		    info->delta_disks != 0) {
-> -			info->array.raid_disks += info->delta_disks;
-> -			if (ioctl(fd, SET_ARRAY_INFO,
-> &info->array) != 0) {
-> -				fprintf(stderr, Name ": failed to
-> set raid disks\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("raid_disks for %s set to
-> %d\n",
-> -				       devname,
-> info->array.raid_disks);
-> -		}
-> -		if (info->new_chunk != 0 &&
-> -		    info->new_chunk != info->array.chunk_size) {
-> -			if (sysfs_set_num(info, NULL,
-> -					  "chunk_size",
-> info->new_chunk) != 0) {
-> -				fprintf(stderr, Name ": failed to
-> set chunk size\n");
-> -				rv = 1;
-> -			} else if (!quiet)
-> -				printf("chunk size for %s set to
-> %d\n",
-> -				       devname,
-> info->array.chunk_size);
-> -		}
-> -		unfreeze(st);
-> -		return rv;
-> -	}
-> -
->  	/*
->  	 * There are three possibilities.
->  	 * 1/ The array will shrink.
+> @@ -711,7 +711,9 @@ int
+> remove_disks_on_raid10_to_raid0_takeover(struct supertype *st, 
+>  		sysfs_set_str(sra, sd, "state", "faulty");
+>  		sysfs_set_str(sra, sd, "slot", "none");
+> -		sysfs_set_str(sra, sd, "state", "remove");
+> +		/* for external metadata disks should be removed in
+> mdmon */
+> +		if (!st->ss->external)
+> +			sysfs_set_str(sra, sd, "state", "remove");
+>  		sd->disk.state |= (1<<MD_DISK_REMOVED);
+>  		sd->disk.state &= ~(1<<MD_DISK_SYNC);
+>  		sd->next = sra->devs;
 
