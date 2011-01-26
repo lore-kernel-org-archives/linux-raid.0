@@ -1,78 +1,85 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: [PATCH 4/6] FIX: Remove disks in mdmon for external metadata
-Date: Wed, 26 Jan 2011 13:00:49 +0000
-Message-ID: <BE2BFE91933D1B4089447C644860408066FF062B@irsmsx503.ger.corp.intel.com>
-References: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
-	<20110119162333.8738.79313.stgit@gklab-128-111.igk.intel.com>
- <20110126110429.144b9aab@nbeee.brown>
+From: Paul Clements <paul.clements@us.sios.com>
+Subject: Re: [BUG 2.6.32] md/raid1: barrier disabling does not work correctly
+ in all cases
+Date: Wed, 26 Jan 2011 08:55:16 -0500
+Message-ID: <AANLkTi=NqHV9p0rc4VBBNAzxwjvfA0DpKgkxQpsX9gsT@mail.gmail.com>
+References: <AANLkTimp7eGLu5UEr-wH9MVSGrQWA3PKMakW74_48gk7@mail.gmail.com>
+	<AANLkTikGsB=ZdA-TpjC+npqW-TM9NjwZkWpjWtUEzswn@mail.gmail.com>
+	<20110121072515.07dc2b74@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed; boundary=001636c5a9efd1e798049ac02e1e
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110126110429.144b9aab@nbeee.brown>
-Content-Language: en-US
+In-Reply-To: <20110121072515.07dc2b74@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--001636c5a9efd1e798049ac02e1e
+Content-Type: text/plain; charset=ISO-8859-1
 
+On Thu, Jan 20, 2011 at 3:25 PM, NeilBrown <neilb@suse.de> wrote:
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Wednesday, January 26, 2011 2:04 AM
-> To: Wojcik, Krzysztof
-> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
-> Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [PATCH 4/6] FIX: Remove disks in mdmon for external
-> metadata
-> 
-> On Wed, 19 Jan 2011 17:23:33 +0100
-> Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
-> 
-> > For raid10 -> raid0 takeover operation we shoud reject disks
-> > in mirror by mark them as 'failed' and then remove them from
-> > array.
-> > For external metadata second action should be execuded by
-> > mdmon so additional condition is necessary.
-> 
-> I don't understand this..
-> I think you are saying that removing failed devices should be done by
-> mdmon rather than mdadm.  Is that what you are saying?
-> I don't think that is correct.  WHY do you want to make this change?
-> What is not working that should.
-> 
-> NeilBrown
+> Nonetheless, I think the correct fix is to add a special case for retrying a
+> zero-length.
+>
+> Something like this maybe?
 
-Hi,
+Close, but no cigar...
 
-According the description in monitor.c:175 when monitor detect "faulty" in device state, it blocks the device, mark it as failed in metadata, unblocks the device and finally writes "remove" to device state.
-So writing "remove" to device state in mdadm is not necessary- all operations connected with removing disk are supported by monitor. 
-Moreover write operation in mdadm is not successful because monior is blocking the device.
+Attached is a modified patch, which does the extra necessary work
+(bitmap_endwrite, md_write_end) on the bio before failing it.
 
-Krzysztof Wojcik
+Does this look correct? It seems to work.
 
-> 
-> >
-> > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> > ---
-> >  Grow.c |    4 +++-
-> >  1 files changed, 3 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/Grow.c b/Grow.c
-> > index 78d5b0e..c5f83a8 100644
-> > --- a/Grow.c
-> > +++ b/Grow.c
-> > @@ -711,7 +711,9 @@ int
-> > remove_disks_on_raid10_to_raid0_takeover(struct supertype *st,
-> >  		sysfs_set_str(sra, sd, "state", "faulty");
-> >  		sysfs_set_str(sra, sd, "slot", "none");
-> > -		sysfs_set_str(sra, sd, "state", "remove");
-> > +		/* for external metadata disks should be removed in
-> > mdmon */
-> > +		if (!st->ss->external)
-> > +			sysfs_set_str(sra, sd, "state", "remove");
-> >  		sd->disk.state |= (1<<MD_DISK_REMOVED);
-> >  		sd->disk.state &= ~(1<<MD_DISK_SYNC);
-> >  		sd->next = sra->devs;
+Thanks again Neil.
 
+--
+Paul
+
+--001636c5a9efd1e798049ac02e1e
+Content-Type: text/x-patch; charset=US-ASCII; name="raid1-2.6.32-barrier-retry-fix-2.diff"
+Content-Disposition: attachment;
+	filename="raid1-2.6.32-barrier-retry-fix-2.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gjeamks90
+
+LS0tIGxpbnV4LTIuNi4zMi03MS5lbDYueDg2XzY0L2RyaXZlcnMvbWQvcmFpZDEuYy5QUklTVElO
+RQkyMDExLTAxLTE0IDE0OjUxOjU2Ljk1OTgwOTY2OSAtMDUwMAorKysgbGludXgtMi42LjMyLTcx
+LmVsNi54ODZfNjQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTEtMDEtMjYgMDg6NDQ6MjAuMTc2OTM2
+MjM4IC0wNTAwCkBAIC0yMzYsMTQgKzIzNiwxOCBAQCBzdGF0aWMgdm9pZCByYWlkX2VuZF9iaW9f
+aW8ocjFiaW9fdCAqcjFfCiAKIAkvKiBpZiBub2JvZHkgaGFzIGRvbmUgdGhlIGZpbmFsIGVuZGlv
+IHlldCwgZG8gaXQgbm93ICovCiAJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFIxQklPX1JldHVybmVk
+LCAmcjFfYmlvLT5zdGF0ZSkpIHsKKwkJaW50IGVyciA9IDA7CiAJCVBSSU5USyhLRVJOX0RFQlVH
+ICJyYWlkMTogc3luYyBlbmQgJXMgb24gc2VjdG9ycyAlbGx1LSVsbHVcbiIsCiAJCQkoYmlvX2Rh
+dGFfZGlyKGJpbykgPT0gV1JJVEUpID8gIndyaXRlIiA6ICJyZWFkIiwKIAkJCSh1bnNpZ25lZCBs
+b25nIGxvbmcpIGJpby0+Ymlfc2VjdG9yLAogCQkJKHVuc2lnbmVkIGxvbmcgbG9uZykgYmlvLT5i
+aV9zZWN0b3IgKwogCQkJCShiaW8tPmJpX3NpemUgPj4gOSkgLSAxKTsKIAotCQliaW9fZW5kaW8o
+YmlvLAotCQkJdGVzdF9iaXQoUjFCSU9fVXB0b2RhdGUsICZyMV9iaW8tPnN0YXRlKSA/IDAgOiAt
+RUlPKTsKKwkJaWYgKHRlc3RfYml0KFIxQklPX0JhcnJpZXJSZXRyeSwgJnIxX2Jpby0+c3RhdGUp
+KQorCQkJZXJyID0gLUVPUE5PVFNVUFA7CisJCWVsc2UgaWYgKCF0ZXN0X2JpdChSMUJJT19VcHRv
+ZGF0ZSwgJnIxX2Jpby0+c3RhdGUpKQorCQkJZXJyID0gLUVJTzsKKwkJYmlvX2VuZGlvKGJpbywg
+ZXJyKTsKIAl9CiAJZnJlZV9yMWJpbyhyMV9iaW8pOwogfQpAQCAtMTYyMyw2ICsxNjI3LDE4IEBA
+IHN0YXRpYyB2b2lkIHJhaWQxZChtZGRldl90ICptZGRldikKIAkJCSAqLwogCQkJaW50IGk7CiAJ
+CQljb25zdCBib29sIGRvX3N5bmMgPSBiaW9fcndfZmxhZ2dlZChyMV9iaW8tPm1hc3Rlcl9iaW8s
+IEJJT19SV19TWU5DSU8pOworCQkJaWYgKHIxX2Jpby0+bWFzdGVyX2Jpby0+Ymlfc2l6ZSA9PSAw
+KSB7CisJCQkJLyogY2Fubm90IHJldHJ5IGVtcHR5IGJhcnJpZXJzLCBqdXN0IGZhaWwgKi8KKwkJ
+CQliaXRtYXBfZW5kd3JpdGUocjFfYmlvLT5tZGRldi0+Yml0bWFwLAorCQkJCQlyMV9iaW8tPnNl
+Y3RvciwKKwkJCQkJcjFfYmlvLT5zZWN0b3JzLAorCQkJCQkhdGVzdF9iaXQoUjFCSU9fRGVncmFk
+ZWQsICZyMV9iaW8tPnN0YXRlKSwKKwkJCQkJdGVzdF9iaXQoUjFCSU9fQmVoaW5kSU8sICZyMV9i
+aW8tPnN0YXRlKSk7CisJCQkJbWRfd3JpdGVfZW5kKHIxX2Jpby0+bWRkZXYpOworCisJCQkJcmFp
+ZF9lbmRfYmlvX2lvKHIxX2Jpbyk7CisJCQkJY29udGludWU7CisJCQl9CiAJCQljbGVhcl9iaXQo
+UjFCSU9fQmFycmllclJldHJ5LCAmcjFfYmlvLT5zdGF0ZSk7CiAJCQljbGVhcl9iaXQoUjFCSU9f
+QmFycmllciwgJnIxX2Jpby0+c3RhdGUpOwogCQkJZm9yIChpPTA7IGkgPCBjb25mLT5yYWlkX2Rp
+c2tzOyBpKyspCkBAIC0yMTM5LDcgKzIxNTUsNyBAQCBzdGF0aWMgaW50IHN0b3AobWRkZXZfdCAq
+bWRkZXYpCiAJLyogd2FpdCBmb3IgYmVoaW5kIHdyaXRlcyB0byBjb21wbGV0ZSAqLwogCXdoaWxl
+IChiaXRtYXAgJiYgYXRvbWljX3JlYWQoJmJpdG1hcC0+YmVoaW5kX3dyaXRlcykgPiAwKSB7CiAJ
+CWJlaGluZF93YWl0Kys7Ci0JCXByaW50ayhLRVJOX0lORk8gInJhaWQxOiBiZWhpbmQgd3JpdGVz
+IGluIHByb2dyZXNzIG9uIGRldmljZSAlcywgd2FpdGluZyB0byBzdG9wICglZClcbiIsIG1kbmFt
+ZShtZGRldiksIGJlaGluZF93YWl0KTsKKwkJcHJpbnRrKEtFUk5fSU5GTyAicmFpZDE6IGJlaGlu
+ZCB3cml0ZXMgKCVkKSBpbiBwcm9ncmVzcyBvbiBkZXZpY2UgJXMsIHdhaXRpbmcgdG8gc3RvcCAo
+JWQpXG4iLCBhdG9taWNfcmVhZCgmYml0bWFwLT5iZWhpbmRfd3JpdGVzKSwgbWRuYW1lKG1kZGV2
+KSwgYmVoaW5kX3dhaXQpOwogCQlzZXRfY3VycmVudF9zdGF0ZShUQVNLX1VOSU5URVJSVVBUSUJM
+RSk7CiAJCXNjaGVkdWxlX3RpbWVvdXQoSFopOyAvKiB3YWl0IGEgc2Vjb25kICovCiAJCS8qIG5l
+ZWQgdG8ga2ljayBzb21ldGhpbmcgaGVyZSB0byBtYWtlIHN1cmUgSS9PIGdvZXM/ICovCg==
+--001636c5a9efd1e798049ac02e1e--
