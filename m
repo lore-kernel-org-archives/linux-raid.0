@@ -1,67 +1,106 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/7] Online Capacity Expansion (raid5/0,
-	all arrays in container, rebased)
-Date: Wed, 26 Jan 2011 16:03:09 +0100
-Message-ID: <20110126145632.20454.20432.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/7] imsm: Update metadata for second array
+Date: Wed, 26 Jan 2011 16:03:17 +0100
+Message-ID: <20110126150317.20454.62750.stgit@gklab-128-013.igk.intel.com>
+References: <20110126145632.20454.20432.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110126145632.20454.20432.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-This patch series implements raid5 and raid0 Online Capacity Expansion
-for all arrays in container using imsm metadata.
-Series was re-based to new mdadm version (2011.01.26). 
+When second array reshape is about to start external metadata should be updated
+by mdmon in imsm_set_array_state().
+for this purposes imsm_progress_container_reshape() is reused.
 
-It replaces previously sent series for OLCE continuation on container.
-
-Comparing to previously sent series there are the following changes:
-1. imsm: Update metadata for second array
-   Patch is changed. There is no interface changes
-   in imsm_progress_container_reshape() as Neil suggested.
-   This patch implements next arrays reshape in container
-   for imsm metadata.
-   There is no more reshape limitation for 2 arrays in container only
-   (as previously exist),
-   If imsm will support more than 2 arrays in container reshape code is ready.
-2. FIX: monitor doesn't handshake with md
-   Patch is changed. ping_monitor() is sent for external metadata only.
-3. Added bug fixes:
-        - imsm: FIX: do not allow for container operation for the same disks number
-                (OLCE for no change in raid disks was accepted)
-        - FIX: Array after takeover has to be frozen
-                (for single disk raid0, OLCE fails due to recovery process
-                started by md, during reshape configuration)
-        - FIX: Container can be left frozen
-                (when reshape_container() fails, container was left frozen)
-        - FIX: start_reshape status should be checked
-                (if md fails to start reshape, mdadm didn't have such information
-                 and goes processed with check-pointing)
-4. Patch:
-        imsm: FIX: spare cannot be added
-   remains in series as issue is still observed
-
-BR
-Adam
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (7):
-      FIX: start_reshape status should be checked
-      FIX: Container can be left frozen
-      imsm: FIX: spare cannot be added
-      FIX: Array after takeover has to be frozen
-      imsm: FIX: do not allow for container operation for the same disks number
-      FIX: monitor doesn't handshake with md
-      imsm: Update metadata for second array
+ super-intel.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 48 insertions(+), 1 deletions(-)
 
+diff --git a/super-intel.c b/super-intel.c
+index 8d1f0ad..4e96196 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5052,6 +5052,46 @@ static void imsm_progress_container_reshape(struct intel_super *super)
+ 	struct imsm_super *mpb = super->anchor;
+ 	int prev_disks = -1;
+ 	int i;
++	int any_migration_in_progress = 0;
++	int disks_count_max = 0;
++	struct imsm_dev *dev_next = NULL;
++
++	/* find maximum number of disks used in any array
++	 * and check if any migration is in progress
++	*/
++	for (i = 0; i < mpb->num_raid_devs; i++) {
++		struct imsm_dev *dev = get_imsm_dev(super, i);
++		struct imsm_map *map = get_imsm_map(dev, 0);
++		struct imsm_map *migr_map = get_imsm_map(dev, 1);
++		if (migr_map)
++			any_migration_in_progress = 1;
++		if (map->num_members > disks_count_max)
++			disks_count_max = map->num_members;
++	}
++
++	if (any_migration_in_progress == 0) {
++		/* no migration in progress
++		 * so we can check if next migration in container
++		 * should be started
++		 */
++		int next_inst = -1;
++
++		for (i = 0; i < mpb->num_raid_devs; i++) {
++			struct imsm_dev *dev = get_imsm_dev(super, i);
++			struct imsm_map *map = get_imsm_map(dev, 0);
++			if (map->num_members < disks_count_max) {
++				next_inst = i;
++				break;
++			}
++		}
++		if (next_inst >= 0) {
++			/* found array with smaller number of disks in array,
++			 * this array should be expanded
++			 */
++			dev_next = get_imsm_dev(super, next_inst);
++			prev_disks = disks_count_max;
++		}
++	}
+ 
+ 	for (i = 0; i < mpb->num_raid_devs; i++) {
+ 		struct imsm_dev *dev = get_imsm_dev(super, i);
+@@ -5063,6 +5103,9 @@ static void imsm_progress_container_reshape(struct intel_super *super)
+ 		if (dev->vol.migr_state)
+ 			return;
+ 
++		if ((dev_next != NULL) && (dev_next != dev))
++			continue;
++
+ 		if (prev_disks == -1)
+ 			prev_disks = map->num_members;
+ 		if (prev_disks == map->num_members)
+@@ -5244,13 +5287,17 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		super->updates_pending++;
+ 	}
+ 
+-	/* finalize online capacity expansion/reshape */
++	/* manage online capacity expansion/reshape */
+ 	if ((a->curr_action != reshape) &&
+ 	    (a->prev_action == reshape)) {
+ 		struct mdinfo *mdi;
+ 
++		/* finalize online capacity expansion/reshape */
+ 		for (mdi = a->info.devs; mdi; mdi = mdi->next)
+ 			imsm_set_disk(a, mdi->disk.raid_disk, mdi->curr_state);
++
++		/* check next volume reshape */
++		imsm_progress_container_reshape(super);
+ 	}
+ 
+ 	return consistent;
 
- Grow.c        |   14 ++++++++++---
- super-intel.c |   60 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 69 insertions(+), 5 deletions(-)
-
--- 
-Signature
