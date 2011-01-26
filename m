@@ -1,85 +1,98 @@
-From: Paul Clements <paul.clements@us.sios.com>
-Subject: Re: [BUG 2.6.32] md/raid1: barrier disabling does not work correctly
- in all cases
-Date: Wed, 26 Jan 2011 08:55:16 -0500
-Message-ID: <AANLkTi=NqHV9p0rc4VBBNAzxwjvfA0DpKgkxQpsX9gsT@mail.gmail.com>
-References: <AANLkTimp7eGLu5UEr-wH9MVSGrQWA3PKMakW74_48gk7@mail.gmail.com>
-	<AANLkTikGsB=ZdA-TpjC+npqW-TM9NjwZkWpjWtUEzswn@mail.gmail.com>
-	<20110121072515.07dc2b74@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: raid1 mirror optimizations
+Date: Wed, 26 Jan 2011 12:18:02 -0200
+Message-ID: <AANLkTincmY_qUp4xGckdgweVqg5adRF1vGY3SdtmELv8@mail.gmail.com>
+References: <AANLkTimUbWcHi8w6UzxKjkavpOihV7V5Nm58mV7HA0AE@mail.gmail.com>
+	<ihoqek$nu4$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001636c5a9efd1e798049ac02e1e
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110121072515.07dc2b74@notabene.brown>
+In-Reply-To: <ihoqek$nu4$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: David Brown <david@westcontrol.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---001636c5a9efd1e798049ac02e1e
-Content-Type: text/plain; charset=ISO-8859-1
+nice :) i never read about it on raid 10, maybe i could use, thanks!
 
-On Thu, Jan 20, 2011 at 3:25 PM, NeilBrown <neilb@suse.de> wrote:
-
-> Nonetheless, I think the correct fix is to add a special case for retrying a
-> zero-length.
+2011/1/26 David Brown <david@westcontrol.com>:
+> On 25/01/2011 19:56, Roberto Spadim wrote:
+>>
+>> hi guys... i have a damaged disk...
+>> i=E6=83=B4 using raid1
+>> the computer crashed with the floor :P hihiih sorry, but the disks a=
+re
+>> damaged at the same position
+>> check: http://www.spadim.com.br/hd%20agra.zip
+>> the problem: since raid1 (mirror) is done with real mirror, the disk
+>> position are the same...
+>> if i was using a mirror but on disk 1 i write from beggining to end,
+>> and disk 2 from end to beggining , i don=E6=84=92 crash the disk at =
+the same
+>> position, for disk 1 i crash it some bytes, for disk 2 i crash some
+>> others bytes, since beggining is a small cilinder and end a bigger, =
+i
+>> could loose less information than mirror
+>> could we implement a 'inverted' mirror? just for hard disks (for ssd
+>> it=E6=84=80 a small loss of cpu/memory)
+>> thanks
+>>
 >
-> Something like this maybe?
+> If you are worried about the disks being in the same position, then I=
+ assume
+> you mean the heads were in the same position when they crashed into t=
+he
+> disk. =C2=A0If that's the case, then it doesn't really matter too muc=
+h if the
+> same bytes on the disk were hit - your disks are trashed anyway, and =
+you'll
+> need expensive professional recovery services to deal with it.
+>
+> If you are not talking about head crashes, and merely about corruptio=
+n
+> because the disks were being written to in the same place on both dis=
+ks,
+> then the layout on the disk will make little difference - the same da=
+ta will
+> be written to the same logical place at roughly the same time. =C2=A0=
+It doesn't
+> matter where this data is located physically on the disk, since it is=
+ the
+> data that matters. =C2=A0The same thing actually applies to head cras=
+hes too.
+>
+> If you really want an "inverted" mirror, there is an easy way to get =
+much of
+> the same effect. =C2=A0Instead of setting up raid1, use raid10 with "=
+far 2"
+> positioning. =C2=A0The effect is roughly like this:
+>
+> disk1 (stripe 1) (mirror of stripe 2)
+> disk2 (stripe 2) (mirror of stripe 1)
+>
+> So the two copies of the data are in different physical positions on =
+each
+> disk. =C2=A0It's not a full reversal, but you can think of disk 2 as =
+being split
+> in two and its two halves swapped.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-Close, but no cigar...
 
-Attached is a modified patch, which does the extra necessary work
-(bitmap_endwrite, md_write_end) on the bio before failing it.
 
-Does this look correct? It seems to work.
-
-Thanks again Neil.
-
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
-Paul
-
---001636c5a9efd1e798049ac02e1e
-Content-Type: text/x-patch; charset=US-ASCII; name="raid1-2.6.32-barrier-retry-fix-2.diff"
-Content-Disposition: attachment;
-	filename="raid1-2.6.32-barrier-retry-fix-2.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gjeamks90
-
-LS0tIGxpbnV4LTIuNi4zMi03MS5lbDYueDg2XzY0L2RyaXZlcnMvbWQvcmFpZDEuYy5QUklTVElO
-RQkyMDExLTAxLTE0IDE0OjUxOjU2Ljk1OTgwOTY2OSAtMDUwMAorKysgbGludXgtMi42LjMyLTcx
-LmVsNi54ODZfNjQvZHJpdmVycy9tZC9yYWlkMS5jCTIwMTEtMDEtMjYgMDg6NDQ6MjAuMTc2OTM2
-MjM4IC0wNTAwCkBAIC0yMzYsMTQgKzIzNiwxOCBAQCBzdGF0aWMgdm9pZCByYWlkX2VuZF9iaW9f
-aW8ocjFiaW9fdCAqcjFfCiAKIAkvKiBpZiBub2JvZHkgaGFzIGRvbmUgdGhlIGZpbmFsIGVuZGlv
-IHlldCwgZG8gaXQgbm93ICovCiAJaWYgKCF0ZXN0X2FuZF9zZXRfYml0KFIxQklPX1JldHVybmVk
-LCAmcjFfYmlvLT5zdGF0ZSkpIHsKKwkJaW50IGVyciA9IDA7CiAJCVBSSU5USyhLRVJOX0RFQlVH
-ICJyYWlkMTogc3luYyBlbmQgJXMgb24gc2VjdG9ycyAlbGx1LSVsbHVcbiIsCiAJCQkoYmlvX2Rh
-dGFfZGlyKGJpbykgPT0gV1JJVEUpID8gIndyaXRlIiA6ICJyZWFkIiwKIAkJCSh1bnNpZ25lZCBs
-b25nIGxvbmcpIGJpby0+Ymlfc2VjdG9yLAogCQkJKHVuc2lnbmVkIGxvbmcgbG9uZykgYmlvLT5i
-aV9zZWN0b3IgKwogCQkJCShiaW8tPmJpX3NpemUgPj4gOSkgLSAxKTsKIAotCQliaW9fZW5kaW8o
-YmlvLAotCQkJdGVzdF9iaXQoUjFCSU9fVXB0b2RhdGUsICZyMV9iaW8tPnN0YXRlKSA/IDAgOiAt
-RUlPKTsKKwkJaWYgKHRlc3RfYml0KFIxQklPX0JhcnJpZXJSZXRyeSwgJnIxX2Jpby0+c3RhdGUp
-KQorCQkJZXJyID0gLUVPUE5PVFNVUFA7CisJCWVsc2UgaWYgKCF0ZXN0X2JpdChSMUJJT19VcHRv
-ZGF0ZSwgJnIxX2Jpby0+c3RhdGUpKQorCQkJZXJyID0gLUVJTzsKKwkJYmlvX2VuZGlvKGJpbywg
-ZXJyKTsKIAl9CiAJZnJlZV9yMWJpbyhyMV9iaW8pOwogfQpAQCAtMTYyMyw2ICsxNjI3LDE4IEBA
-IHN0YXRpYyB2b2lkIHJhaWQxZChtZGRldl90ICptZGRldikKIAkJCSAqLwogCQkJaW50IGk7CiAJ
-CQljb25zdCBib29sIGRvX3N5bmMgPSBiaW9fcndfZmxhZ2dlZChyMV9iaW8tPm1hc3Rlcl9iaW8s
-IEJJT19SV19TWU5DSU8pOworCQkJaWYgKHIxX2Jpby0+bWFzdGVyX2Jpby0+Ymlfc2l6ZSA9PSAw
-KSB7CisJCQkJLyogY2Fubm90IHJldHJ5IGVtcHR5IGJhcnJpZXJzLCBqdXN0IGZhaWwgKi8KKwkJ
-CQliaXRtYXBfZW5kd3JpdGUocjFfYmlvLT5tZGRldi0+Yml0bWFwLAorCQkJCQlyMV9iaW8tPnNl
-Y3RvciwKKwkJCQkJcjFfYmlvLT5zZWN0b3JzLAorCQkJCQkhdGVzdF9iaXQoUjFCSU9fRGVncmFk
-ZWQsICZyMV9iaW8tPnN0YXRlKSwKKwkJCQkJdGVzdF9iaXQoUjFCSU9fQmVoaW5kSU8sICZyMV9i
-aW8tPnN0YXRlKSk7CisJCQkJbWRfd3JpdGVfZW5kKHIxX2Jpby0+bWRkZXYpOworCisJCQkJcmFp
-ZF9lbmRfYmlvX2lvKHIxX2Jpbyk7CisJCQkJY29udGludWU7CisJCQl9CiAJCQljbGVhcl9iaXQo
-UjFCSU9fQmFycmllclJldHJ5LCAmcjFfYmlvLT5zdGF0ZSk7CiAJCQljbGVhcl9iaXQoUjFCSU9f
-QmFycmllciwgJnIxX2Jpby0+c3RhdGUpOwogCQkJZm9yIChpPTA7IGkgPCBjb25mLT5yYWlkX2Rp
-c2tzOyBpKyspCkBAIC0yMTM5LDcgKzIxNTUsNyBAQCBzdGF0aWMgaW50IHN0b3AobWRkZXZfdCAq
-bWRkZXYpCiAJLyogd2FpdCBmb3IgYmVoaW5kIHdyaXRlcyB0byBjb21wbGV0ZSAqLwogCXdoaWxl
-IChiaXRtYXAgJiYgYXRvbWljX3JlYWQoJmJpdG1hcC0+YmVoaW5kX3dyaXRlcykgPiAwKSB7CiAJ
-CWJlaGluZF93YWl0Kys7Ci0JCXByaW50ayhLRVJOX0lORk8gInJhaWQxOiBiZWhpbmQgd3JpdGVz
-IGluIHByb2dyZXNzIG9uIGRldmljZSAlcywgd2FpdGluZyB0byBzdG9wICglZClcbiIsIG1kbmFt
-ZShtZGRldiksIGJlaGluZF93YWl0KTsKKwkJcHJpbnRrKEtFUk5fSU5GTyAicmFpZDE6IGJlaGlu
-ZCB3cml0ZXMgKCVkKSBpbiBwcm9ncmVzcyBvbiBkZXZpY2UgJXMsIHdhaXRpbmcgdG8gc3RvcCAo
-JWQpXG4iLCBhdG9taWNfcmVhZCgmYml0bWFwLT5iZWhpbmRfd3JpdGVzKSwgbWRuYW1lKG1kZGV2
-KSwgYmVoaW5kX3dhaXQpOwogCQlzZXRfY3VycmVudF9zdGF0ZShUQVNLX1VOSU5URVJSVVBUSUJM
-RSk7CiAJCXNjaGVkdWxlX3RpbWVvdXQoSFopOyAvKiB3YWl0IGEgc2Vjb25kICovCiAJCS8qIG5l
-ZWQgdG8ga2ljayBzb21ldGhpbmcgaGVyZSB0byBtYWtlIHN1cmUgSS9PIGdvZXM/ICovCg==
---001636c5a9efd1e798049ac02e1e--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
