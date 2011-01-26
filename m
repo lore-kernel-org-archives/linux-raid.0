@@ -1,48 +1,48 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Optimize RAID0 for max IOPS?
-Date: Wed, 26 Jan 2011 02:32:49 -0600
-Message-ID: <4D3FDC31.3010502@hardwarefreak.com>
-References: <20110118210112.D13A236C@gemini.denx.de> <20110125171017.GA24921@infradead.org> <20110125184115.1119FB187@gemini.denx.de> <20110125213523.GA14375@infradead.org> <20110126071616.824BEBB0B9@gemini.denx.de>
+Date: Wed, 26 Jan 2011 09:42:24 +0100
+Message-ID: <20110126084224.4E6E3CEA577@gemini.denx.de>
+References: <20110118210112.D13A236C@gemini.denx.de> <20110125171017.GA24921@infradead.org> <20110125184115.1119FB187@gemini.denx.de> <20110125213523.GA14375@infradead.org> <20110126071616.824BEBB0B9@gemini.denx.de> <4D3FDC31.3010502@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110126071616.824BEBB0B9@gemini.denx.de>
+In-reply-to: <4D3FDC31.3010502@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wolfgang Denk put forth on 1/26/2011 1:16 AM:
+Dear Stan Hoeppner,
 
-> I will not have a single file system, but several, so I'd probably go
-> with LVM. But - when I then create a LV, eventually smaller than any
-> of the disks, will the data (and thus the traffic) be really distri-
-> buted over all drives, or will I not basicly see the same results as
-> when using a single drive?
+In message <4D3FDC31.3010502@hardwarefreak.com> you wrote:
+> 
+> > # lvcreate -L 32G -n test castor0
+> >   Logical volume "test" created
+> > # mkfs.xfs /dev/mapper/castor0-test
+> 
+> Is this on that set of 4 low end Maxtor disks?  Is the above LV sitting atop
+> RAID 0, RAID 5, or concatenation?
 
-If creating multiple filesystems then concatenation is probably not what you
-want, for the reasons you suspect, if you want the IO spread across all 4 disks
-for all operations on all filesystems.
+No, this is the other system, using 6 x Seagate ST31000524NS on a
+Marvell MV88SX6081 8-port SATA II PCI-X Controller.
 
-> # lvcreate -L 32G -n test castor0
->   Logical volume "test" created
-> # mkfs.xfs /dev/mapper/castor0-test
+LVM is sitting on top of a RAID6 here:
 
-Is this on that set of 4 low end Maxtor disks?  Is the above LV sitting atop
-RAID 0, RAID 5, or concatenation?
+md2 : active raid6 sda[0] sdi[5] sdh[4] sde[3] sdd[2] sdb[1]
+      3907049792 blocks super 1.2 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
 
-> [[Only 2/3 of the speed of XFS for block write, but nearly 20% faster
-> for block read.  But magnitudes faster for file creates / deletes!]]
+> Try adding some concurrency, say 8, to bonnie++ and retest both XFS and ext4.
 
-Try adding some concurrency, say 8, to bonnie++ and retest both XFS and ext4.
-XFS was designed/optimized for parallel workloads, not single thread workloads
-(although it can extract some concurrency from a single thread workload).  XFS
-really shines with parallel workloads  (assuming the underlying hardware isn't
-junk, and the mdraid/lvm configuration is sane).  ext4 will probably always beat
-XFS performance with single thread workloads, and I don't believe anyone is
-surprised by that.  For most moderate to heavy parallel workloads, XFS usually
-trounces ext4 (and all other Linux filesystems).
+OK, will do.
+
+Best regards,
+
+Wolfgang Denk
 
 -- 
-Stan
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+The price of curiosity is a terminal experience.
+                         - Terry Pratchett, _The Dark Side of the Sun_
