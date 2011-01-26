@@ -1,20 +1,23 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5] Intel SAS controller support for IMSM
-Date: Wed, 26 Jan 2011 11:55:30 -0500
-Message-ID: <20110126165530.GA27259@infradead.org>
-References: <905EDD02F158D948B186911EB64DB3D176EFD548@irsmsx503.ger.corp.intel.com>
+From: Oliver Brakmann <obrakmann@gmx.net>
+Subject: Re: raid1 mirror optimizations
+Date: Wed, 26 Jan 2011 17:37:12 +0100
+Message-ID: <g6v518-37d.ln1@oberon.scorpius.lan>
+References: <AANLkTimUbWcHi8w6UzxKjkavpOihV7V5Nm58mV7HA0AE@mail.gmail.com>	<tqn318-q0c.ln1@oberon.scorpius.lan> <AANLkTik5rWNd+K8Cji=R3iMGNXjetXUgCbJyPyfD_A9K@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D176EFD548@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <AANLkTik5rWNd+K8Cji=R3iMGNXjetXUgCbJyPyfD_A9K@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 19, 2011 at 05:13:20PM +0000, Labun, Marcin wrote:
-> This series introduces support for Intel SAS controller (isci module) built in Intel(R) Patsburg
+On 2011-01-26 16:39, Roberto Spadim wrote:
+> i don't know what layout does, but, does raid1 have layout?
 
-Where can we find that driver?
+No, only raid10 has different layouts.  For an explanation, see David's
+mail, or take a look at the Wikipedia entry for non-standard RAID
+levels, it illustrates the idea of the different layouts quite well,
+IMO: http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+
 
