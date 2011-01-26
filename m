@@ -1,48 +1,20 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: raid1 mirror optimizations
-Date: Wed, 26 Jan 2011 13:39:39 -0200
-Message-ID: <AANLkTik5rWNd+K8Cji=R3iMGNXjetXUgCbJyPyfD_A9K@mail.gmail.com>
-References: <AANLkTimUbWcHi8w6UzxKjkavpOihV7V5Nm58mV7HA0AE@mail.gmail.com>
-	<tqn318-q0c.ln1@oberon.scorpius.lan>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/5] Intel SAS controller support for IMSM
+Date: Wed, 26 Jan 2011 11:55:30 -0500
+Message-ID: <20110126165530.GA27259@infradead.org>
+References: <905EDD02F158D948B186911EB64DB3D176EFD548@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <tqn318-q0c.ln1@oberon.scorpius.lan>
+Content-Disposition: inline
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D176EFD548@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Oliver Brakmann <obrakmann@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-i don't know what layout does, but, does raid1 have layout?
+On Wed, Jan 19, 2011 at 05:13:20PM +0000, Labun, Marcin wrote:
+> This series introduces support for Intel SAS controller (isci module) built in Intel(R) Patsburg
 
-2011/1/25 Oliver Brakmann <obrakmann@gmx.net>:
-> Hi,
->
-> On 2011-01-25 19:56, Roberto Spadim wrote:
->> could we implement a 'inverted' mirror? just for hard disks (for ssd
->> it=B4s a small loss of cpu/memory)
->
-> If I understood that correctly, this is exactly what the raid10 'far'
-> layout does.
->
-> Regards,
-> Oliver
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Where can we find that driver?
 
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
