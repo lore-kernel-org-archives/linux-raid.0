@@ -1,56 +1,58 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 4/6] FIX: Remove disks in mdmon for external metadata
-Date: Wed, 26 Jan 2011 11:04:29 +1000
-Message-ID: <20110126110429.144b9aab@nbeee.brown>
+Subject: Re: [PATCH 6/6] FIX: Unblock disk in kernel only if it is blocked.
+Date: Wed, 26 Jan 2011 11:06:26 +1000
+Message-ID: <20110126110626.2d280ef0@nbeee.brown>
 References: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
-	<20110119162333.8738.79313.stgit@gklab-128-111.igk.intel.com>
+	<20110119162349.8738.43217.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110119162333.8738.79313.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110119162349.8738.43217.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 19 Jan 2011 17:23:33 +0100
+On Wed, 19 Jan 2011 17:23:49 +0100
 Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
 
-> For raid10 -> raid0 takeover operation we shoud reject disks
-> in mirror by mark them as 'failed' and then remove them from
-> array.
-> For external metadata second action should be execuded by
-> mdmon so additional condition is necessary.
+> Missing condition during setting next state for disk.
 
-I don't understand this..
-I think you are saying that removing failed devices should be done by
-mdmon rather than mdadm.  Is that what you are saying?
-I don't think that is correct.  WHY do you want to make this change?
-What is not working that should.
+Yet again you completely fail to explain why you want to make this
+change.
+And again it looks wrong.
+
+There is no harm is setting "-blocked" if the device is not actually
+blocked is there?
+
+PLEASE PLEASE PLEASE explain exactly the problem you are trying to
+fix.  Don't waste my time and yours by making have to continually ask
+for explanations.
 
 NeilBrown
+
 
 > 
 > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 > ---
->  Grow.c |    4 +++-
+>  monitor.c |    4 +++-
 >  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
-> diff --git a/Grow.c b/Grow.c
-> index 78d5b0e..c5f83a8 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -711,7 +711,9 @@ int
-> remove_disks_on_raid10_to_raid0_takeover(struct supertype *st, 
->  		sysfs_set_str(sra, sd, "state", "faulty");
->  		sysfs_set_str(sra, sd, "slot", "none");
-> -		sysfs_set_str(sra, sd, "state", "remove");
-> +		/* for external metadata disks should be removed in
-> mdmon */
-> +		if (!st->ss->external)
-> +			sysfs_set_str(sra, sd, "state", "remove");
->  		sd->disk.state |= (1<<MD_DISK_REMOVED);
->  		sd->disk.state &= ~(1<<MD_DISK_SYNC);
->  		sd->next = sra->devs;
+> diff --git a/monitor.c b/monitor.c
+> index ed3ce49..4fba5fd 100644
+> --- a/monitor.c
+> +++ b/monitor.c
+> @@ -336,7 +336,9 @@ static int read_and_act(struct active_array *a)
+>  			a->container->ss->set_disk(a,
+> mdi->disk.raid_disk, mdi->curr_state);
+>  			check_degraded = 1;
+> -			mdi->next_state |= DS_UNBLOCK;
+> +			/* if '-blocked' wasn't passed to kernel, do
+> it now */
+> +			if (mdi->curr_state == DS_BLOCKED)
+> +				mdi->next_state |= DS_UNBLOCK;
+>  			if (a->curr_state == read_auto) {
+>  				a->container->ss->set_array_state(a,
+> 0); a->next_state = active;
 
