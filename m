@@ -1,237 +1,161 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/4] Add raid10 -> raid0 takeover support
-Date: Wed, 26 Jan 2011 10:58:57 +1000
-Message-ID: <20110126105857.243e0919@nbeee.brown>
-References: <20110117153908.25096.42697.stgit@gklab-128-111.igk.intel.com>
-	<20110117154243.25096.6278.stgit@gklab-128-111.igk.intel.com>
+Subject: Re: [PATCH 1/6] Limit no-restriping operations only for raid5
+Date: Wed, 26 Jan 2011 11:01:32 +1000
+Message-ID: <20110126110132.1ef42d13@nbeee.brown>
+References: <20110119161925.8738.85284.stgit@gklab-128-111.igk.intel.com>
+	<20110119162308.8738.44079.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110117154243.25096.6278.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110119162308.8738.44079.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Mon, 17 Jan 2011 16:42:43 +0100
+On Wed, 19 Jan 2011 17:23:08 +0100
 Krzysztof Wojcik <krzysztof.wojcik@intel.com> wrote:
 
-> The patch introduces takeover form level 10 to level 0 for imsm
-> metadata. This patch contains procedures connected with preparing
-> and applying metadata update during 10 -> 0 takeover.
-> When performing takeover 10->0 mdmon should update the external
-> metadata (due to disk slot and level changes).
-> To achieve that mdadm calls reshape_super() and prepare
-> the "update_takeover" metadata update type.
-> Prepared update is processed by mdmon in process_update().
+> If no-restriping needed, we might need to impose some more
+> changes: layout, raid_disks, chunk_size but only for raid5 arrays.
+> Move this part of code before operations connected with restriping.
 
-I've applied this, but I'm not sure that I like it.
+I haven't applied this.
+It is not clear to me that the code is in the wrong place.
+Maybe you introduced some code before this that should have gone after?
+or something....
 
-I don't think mdadm needs to send a metadata update for 10->0
-conversion.
-It should:
- - fail all the devices that aren't wanted
- - remove them
- - mdmon notices and updates the metadata
- - mdadm changes the level to RAID0
- - mdmon notices and updates the metadata.
+Don't know ...  maybe if you try again it will make more sense next
+time.
 
-Currently mdmon doesn't monitor 'level', but it could and probably
-should.
-However in the interest of forward progress I won't insist on that for
-now.
+NeilBrown
 
-Other problems:
 
 > 
 > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 > ---
->  Grow.c        |    1 +
->  super-intel.c |   98
-> ++++++++++++++++++++++++++++++++++++++++++++++++++++++++- 2 files
-> changed, 98 insertions(+), 1 deletions(-)
+>  Grow.c |   81
+> ++++++++++++++++++++++++++++++++++------------------------------ 1
+> files changed, 43 insertions(+), 38 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index ad13d6e..c4125ea 100644
+> index e1ec01c..0ce7c17 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -1463,6 +1463,7 @@ int Grow_reshape(char *devname, int fd, int
-> quiet, char *backup_file, rv = 1;
->  			goto release;
->  		}
-> +		ping_monitor(container);
-
-Why is this here??? EVERY change should be justified in the notes at
-the top!!!!!!!
-
-
+> @@ -1656,6 +1656,49 @@ static int reshape_array(char *container, int
+> cfd, int fd, char *devname, }
+>  	ping_monitor(container);
+>  
+> +	if (reshape.backup_blocks == 0) {
+> +		/* No restriping needed, but we might need to impose
+> +		 * some more changes: layout, raid_disks, chunk_size
+> +		 */
+> +		/* Changes possible only for raid5 arrays */
+> +		if (info->array.level != 5) {
+> +			unfreeze(st);
+> +			return rv;
+> +		}
+> +		if (info->new_layout != UnSet &&
+> +		    info->new_layout != info->array.layout) {
+> +			info->array.layout = info->new_layout;
+> +			if (ioctl(fd, SET_ARRAY_INFO,
+> &info->array) != 0) {
+> +				fprintf(stderr, Name ": failed to
+> set new layout\n");
+> +				rv = 1;
+> +			} else if (!quiet)
+> +				printf("layout for %s set to %d\n",
+> +				       devname, info->array.layout);
+> +		}
+> +		if (info->delta_disks != UnSet &&
+> +		    info->delta_disks != 0) {
+> +			info->array.raid_disks += info->delta_disks;
+> +			if (ioctl(fd, SET_ARRAY_INFO,
+> &info->array) != 0) {
+> +				fprintf(stderr, Name ": failed to
+> set raid disks\n");
+> +				rv = 1;
+> +			} else if (!quiet)
+> +				printf("raid_disks for %s set to
+> %d\n",
+> +				       devname,
+> info->array.raid_disks);
+> +		}
+> +		if (info->new_chunk != 0 &&
+> +		    info->new_chunk != info->array.chunk_size) {
+> +			if (sysfs_set_num(info, NULL,
+> +					  "chunk_size",
+> info->new_chunk) != 0) {
+> +				fprintf(stderr, Name ": failed to
+> set chunk size\n");
+> +				rv = 1;
+> +			} else if (!quiet)
+> +				printf("chunk size for %s set to
+> %d\n",
+> +				       devname,
+> info->array.chunk_size);
+> +		}
+> +		unfreeze(st);
+> +		return rv;
+> +	}
+> +
+>  	/* reload metadat as it is possible to change made by monitor
+>  	 */
+>  	if ((cfd >= 0) &&
+> @@ -1718,44 +1761,6 @@ static int reshape_array(char *container, int
+> cfd, int fd, char *devname, }
 >  	}
 >  
->  	info.array = array;
-> diff --git a/super-intel.c b/super-intel.c
-> index 334e0f4..86b365d 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -299,6 +299,7 @@ enum imsm_update_type {
->  	update_rename_array,
->  	update_add_remove_disk,
->  	update_reshape_container_disks,
-> +	update_takeover
->  };
->  
->  struct imsm_update_activate_spare {
-> @@ -319,6 +320,15 @@ struct geo_params {
->  	int raid_disks;
->  };
->  
-> +enum takeover_direction {
-> +	R10_TO_R0,
-> +	R0_TO_R10
-> +};
-> +struct imsm_update_takeover {
-> +	enum imsm_update_type type;
-> +	int subarray;
-> +	enum takeover_direction direction;
-> +};
->  
->  struct imsm_update_reshape {
->  	enum imsm_update_type type;
-> @@ -5802,6 +5812,56 @@ update_reshape_exit:
->  	return ret_val;
->  }
->  
-> +static int apply_takeover_update(struct imsm_update_takeover *u,
-> +				struct intel_super *super)
-> +{
-> +	struct imsm_dev *dev = NULL;
-> +	struct imsm_map *map;
-> +	struct dl *dm, *du;
-> +	struct intel_dev *dv;
-> +
-> +	for (dv = super->devlist; dv; dv = dv->next)
-> +		if (dv->index == (unsigned int)u->subarray) {
-> +			dev = dv->dev;
-> +			break;
-> +	}
-> +
-> +	if (dev == NULL)
-> +		return 0;
-> +
-> +	map = get_imsm_map(dev, 0);
-> +
-> +	if (u->direction == R10_TO_R0) {
-> +		/* iterate through devices to mark removed disks as
-> spare */
-> +		for (dm = super->disks; dm; dm = dm->next) {
-> +			if (dm->disk.status & FAILED_DISK) {
-> +				int idx = dm->index;
-> +				/* update indexes on the disk list */
-> +				for (du = super->disks; du; du =
-> du->next)
-> +					if (du->index > idx)
-> +						du->index--;
-> +				/* mark as spare disk */
-> +				dm->disk.status = SPARE_DISK;
-> +				dm->index = -1;
-
-This looks like it is probably wrong, but I'm not exactly sure what it
-is trying to do so I cannot be sure.
-In particular the changes to 'index' seem to be based on some
-assumption that are not necessarily true.
-Could you please explain exactly what this is trying to achieve?
-
-> +			}
-> +		}
-> +
-> +		/* update map */
-> +		map->num_members = map->num_members / 2;
-> +		map->map_state = IMSM_T_STATE_NORMAL;
-> +		map->num_domains = 1;
-
-I'm confused by this 'num_domains' thing.  Could you please explain
-it for me.  The term "parity domains" is meaningless to me in this
-context.
-
-Thanks,
-NeilBrown
-
-
-
-> +		map->raid_level = 0;
-> +		map->failed_disk_num = -1;
-> +	}
-> +
-> +	/* update disk order table */
-> +	for (du = super->disks; du; du = du->next)
-> +		if (du->index >= 0)
-> +			set_imsm_ord_tbl_ent(map, du->index,
-> du->index); +
-> +	return 1;
-> +}
-> +
->  static void imsm_process_update(struct supertype *st,
->  			        struct metadata_update *update)
->  {
-> @@ -5844,6 +5904,13 @@ static void imsm_process_update(struct
-> supertype *st, mpb = super->anchor;
->  
->  	switch (type) {
-> +	case update_takeover: {
-> +		struct imsm_update_takeover *u = (void *)update->buf;
-> +		if (apply_takeover_update(u, super))
-> +			super->updates_pending++;
-> +		break;
-> +	}
-> +
->  	case update_reshape_container_disks: {
->  		struct imsm_update_reshape *u = (void *)update->buf;
->  		if (apply_reshape_container_disks_update(
-> @@ -6691,6 +6758,35 @@ analyse_change_exit:
->  	return change;
->  }
->  
-> +int imsm_takeover(struct supertype *st, struct geo_params *geo)
-> +{
-> +	struct intel_super *super = st->sb;
-> +	struct imsm_update_takeover *u;
-> +
-> +	u = malloc(sizeof(struct imsm_update_takeover));
-> +	if (u == NULL)
-> +		return 1;
-> +
-> +	u->type = update_takeover;
-> +	u->subarray = super->current_vol;
-> +
-> +	/* 10->0 transition */
-> +	if (geo->level == 0)
-> +		u->direction = R10_TO_R0;
-> +
-> +	/* update metadata locally */
-> +	imsm_update_metadata_locally(st, u,
-> +					sizeof(struct
-> imsm_update_takeover));
-> +	/* and possibly remotely */
-> +	if (st->update_tail)
-> +		append_metadata_update(st, u,
-> +					sizeof(struct
-> imsm_update_takeover));
-> +	else
-> +		free(u);
-> +
-> +	return 0;
-> +}
-> +
->  static int imsm_reshape_super(struct supertype *st, long long size,
-> int level, int layout, int chunksize, int raid_disks,
->  			      char *backup, char *dev, int verbose)
-> @@ -6772,7 +6868,7 @@ static int imsm_reshape_super(struct supertype
-> *st, long long size, int level, change = imsm_analyze_change(st,
-> &geo); switch (change) {
->  			case CH_TAKEOVER:
-> -				ret_val = 0;
-> +				ret_val = imsm_takeover(st, &geo);
->  				break;
->  			case CH_CHUNK_MIGR:
->  				ret_val = 0;
+> -	if (reshape.backup_blocks == 0) {
+> -		/* No restriping needed, but we might need to impose
+> -		 * some more changes: layout, raid_disks, chunk_size
+> -		 */
+> -		if (info->new_layout != UnSet &&
+> -		    info->new_layout != info->array.layout) {
+> -			info->array.layout = info->new_layout;
+> -			if (ioctl(fd, SET_ARRAY_INFO,
+> &info->array) != 0) {
+> -				fprintf(stderr, Name ": failed to
+> set new layout\n");
+> -				rv = 1;
+> -			} else if (!quiet)
+> -				printf("layout for %s set to %d\n",
+> -				       devname, info->array.layout);
+> -		}
+> -		if (info->delta_disks != UnSet &&
+> -		    info->delta_disks != 0) {
+> -			info->array.raid_disks += info->delta_disks;
+> -			if (ioctl(fd, SET_ARRAY_INFO,
+> &info->array) != 0) {
+> -				fprintf(stderr, Name ": failed to
+> set raid disks\n");
+> -				rv = 1;
+> -			} else if (!quiet)
+> -				printf("raid_disks for %s set to
+> %d\n",
+> -				       devname,
+> info->array.raid_disks);
+> -		}
+> -		if (info->new_chunk != 0 &&
+> -		    info->new_chunk != info->array.chunk_size) {
+> -			if (sysfs_set_num(info, NULL,
+> -					  "chunk_size",
+> info->new_chunk) != 0) {
+> -				fprintf(stderr, Name ": failed to
+> set chunk size\n");
+> -				rv = 1;
+> -			} else if (!quiet)
+> -				printf("chunk size for %s set to
+> %d\n",
+> -				       devname,
+> info->array.chunk_size);
+> -		}
+> -		unfreeze(st);
+> -		return rv;
+> -	}
+> -
+>  	/*
+>  	 * There are three possibilities.
+>  	 * 1/ The array will shrink.
 
