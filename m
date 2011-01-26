@@ -1,117 +1,37 @@
-From: Reynald Borer <reynald.borer@gmail.com>
-Subject: mdXX: bitmap superblock UUID mismatch
-Date: Wed, 26 Jan 2011 21:58:25 +0100
-Message-ID: <AANLkTik83a9aEmywdcMEvpGwVMt_i=pS0dmg2s_o=EYG@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: raid1 mirror optimizations
+Date: Wed, 26 Jan 2011 22:08:58 +0100
+Message-ID: <ihq2ha$q0k$1@dough.gmane.org>
+References: <AANLkTimUbWcHi8w6UzxKjkavpOihV7V5Nm58mV7HA0AE@mail.gmail.com>	<tqn318-q0c.ln1@oberon.scorpius.lan> <AANLkTik5rWNd+K8Cji=R3iMGNXjetXUgCbJyPyfD_A9K@mail.gmail.com> <g6v518-37d.ln1@oberon.scorpius.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <g6v518-37d.ln1@oberon.scorpius.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello guys,
+On 26/01/11 17:37, Oliver Brakmann wrote:
+> On 2011-01-26 16:39, Roberto Spadim wrote:
+>> i don't know what layout does, but, does raid1 have layout?
+>
+> No, only raid10 has different layouts.  For an explanation, see David's
+> mail, or take a look at the Wikipedia entry for non-standard RAID
+> levels, it illustrates the idea of the different layouts quite well,
+> IMO: http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+>
 
-I have been using md raids for quite a long time now and it always
-worked fine, until recently when I upgraded some hardware on my
-workstation. Unfortunately the hardware I changed proved itself to be
-very unstable, and I encountered a lot of hard lockups of the system
-while running. Those lockups recently made one of my raid 1 array
-fails with the infamous error message "mdXX: bitmap superblock UUID
-mismatch".
+There are also different layouts for raid5 and raid6, though I don't 
+think they make much difference unless you are doing something odd like 
+trying to make your mdadm raid5/6 layout exactly match that of some 
+hardware raid controller.  There are also special layouts that are used 
+as intermediary steps in converting between raid5 and raid6 - you won't 
+want to touch these.
 
-Here is what I have found in the kernel logs when I try to activate
-the given raid group:
------------------
-md/raid1:md126: active with 2 out of 2 mirrors
-md126: bitmap superblock UUID mismatch
-md126: bitmap file superblock:
-         magic: 6d746962
-       version: 4
-          uuid: 37102258.af9c1930.b8397fb8.eba356af
-        events: 199168
-events cleared: 199166
-         state: 00000000
-     chunksize: 524288 B
-  daemon sleep: 5s
-     sync size: 248075584 KB
-max write behind: 0
-md126: failed to create bitmap (-22)
------------------
+So raid10 is the only level with /useful/ layout options.  The different 
+options can make a measurable speed difference, with the best choice 
+depending on the load.  The "far 2" layout is, I think, the best choice 
+for common ready-heavy loads.
 
 
-Such error messages are displayed each time I try to run the raid
-group. Content of /proc/mdstat is:
------------------
-md126 : inactive sdb6[0] sda6[1]
-      496151168 blocks
------------------
-
-
-If I try to examine both disks with mdadm -E it shows some checksum
-mismatch for both partitions:
------------------
-root@bob # mdadm -E /dev/sda6
-/dev/sda6:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 37102258:bf9c1930:b8397fb8:eba356af
-  Creation Time : Mon Aug  7 21:06:47 2006
-     Raid Level : raid1
-  Used Dev Size : 248075584 (236.58 GiB 254.03 GB)
-     Array Size : 248075584 (236.58 GiB 254.03 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 6
-
-    Update Time : Wed Jan 12 00:12:44 2011
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e4883f8e - expected e4883e8e
-         Events : 199168
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       38        1      active sync
-
-   0     0       8       70        0      active sync
-   1     1       8       38        1      active sync
-root@bob # mdadm -E /dev/sdb6
-/dev/sdb6:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 37102258:bf9c1930:b8397fb8:eba356af
-  Creation Time : Mon Aug  7 21:06:47 2006
-     Raid Level : raid1
-  Used Dev Size : 248075584 (236.58 GiB 254.03 GB)
-     Array Size : 248075584 (236.58 GiB 254.03 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 6
-
-    Update Time : Wed Jan 12 00:12:44 2011
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e4883fac - expected e4883eac
-         Events : 199168
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       70        0      active sync
-
-   0     0       8       70        0      active sync
-   1     1       8       38        1      active sync
------------------
-
-
-Any idea how I could try to save my raid group?
-
-Thanks in advance for your help.
-
-Best Regards,
-Reynald
