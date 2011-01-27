@@ -1,57 +1,65 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 3/4] FIX: monitor doesn't handshake with md
-Date: Thu, 27 Jan 2011 13:03:58 +1000
-Message-ID: <20110127130358.1e76ce26@nbeee.brown>
+Subject: Re: [PATCH 4/4] WORKAROUND: mdadm hangs during reshape
+Date: Thu, 27 Jan 2011 13:05:06 +1000
+Message-ID: <20110127130506.7813b19d@nbeee.brown>
 References: <20110120104759.22926.66874.stgit@gklab-128-013.igk.intel.com>
-	<20110120105738.22926.26416.stgit@gklab-128-013.igk.intel.com>
+	<20110120105746.22926.74908.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110120105738.22926.26416.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110120105746.22926.74908.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 20 Jan 2011 11:57:38 +0100
+On Thu, 20 Jan 2011 11:57:46 +0100
 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> when in container are present raid0 and raid5 arrays, and reshape
-> order is: 1. raid0 array
-> 2. raid5 array
+> During reshape when reshape is finished in md, progress_reshape()
+> hangs on select(). Timeout is introduced to allow for reshape
+> conditions check.
 > 
-> mdadm cannot set new raid_disks for raid0 array. For this action md
-> has to have handshake with mdmon. We have the following conditions:
-> 1. Raid0 is not monitored
-> 2. raid0 has been just takeovered to raid4/5 (it has to be monitored
-> 3. monitor has to start monitor new raid4/5 array
-> 4. monitor is not started (it is started to second raid5 array)
-> In such situation pig_monitor is required to let know to m monitor
-> about new array (not in the starting monitor case only)
+> You point in the email that you do not like this solution.
+> It is put in to series as reminder.
+
+Thanks for the reminder.  
+I figured out what is really happening and wrote a better work-around.
+You can find it in the git history - fully commented.
+
+Thanks,
+NeilBrown
+
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  Grow.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  Grow.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index 23ef88e..717d087 100644
+> index 717d087..c9f4b9c 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -1662,8 +1662,8 @@ static int reshape_array(char *container, int
-> fd, char *devname, if (reshape.level > 0 && st->ss->external &&
->  	    !mdmon_running(st->container_dev)) {
->  		start_mdmon(st->container_dev);
-> -		ping_monitor(container);
->  	}
-> +	ping_monitor(container);
->
+> @@ -2394,6 +2394,7 @@ int progress_reshape(struct mdinfo *info,
+> struct reshape *reshape,
+>  		 * waiting forever on a dead array
+>  		 */
+>  		char action[20];
+> +		struct timeval timeout;
+>  		fd_set rfds;
+>  		if (sysfs_get_str(info, NULL, "sync_action",
+>  				  action, 20) <= 0 ||
+> @@ -2401,7 +2402,9 @@ int progress_reshape(struct mdinfo *info,
+> struct reshape *reshape, break;
+>  		FD_ZERO(&rfds);
+>  		FD_SET(fd, &rfds);
+> -		select(fd+1, NULL, NULL, &rfds, NULL);
+> +		timeout.tv_sec = 1;
+> +		timeout.tv_usec = 0;
+> +		select(fd+1, NULL, NULL, &rfds, &timeout);
+>  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
+>  			close(fd);
+>  			goto check_progress;
 
-I see the need, but calling ping_monitor out side the test for
-->external is wrong.
-I've re-written the patch a bit so it should be safer and more general.
-
-Thanks,
-NeilBrown
