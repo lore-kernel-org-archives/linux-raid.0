@@ -1,65 +1,56 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 4/4] WORKAROUND: mdadm hangs during reshape
-Date: Thu, 27 Jan 2011 13:05:06 +1000
-Message-ID: <20110127130506.7813b19d@nbeee.brown>
-References: <20110120104759.22926.66874.stgit@gklab-128-013.igk.intel.com>
-	<20110120105746.22926.74908.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] FIX: reshape_active flag is always set for external
+ metadata
+Date: Thu, 27 Jan 2011 13:07:17 +1000
+Message-ID: <20110127130717.5da65455@nbeee.brown>
+References: <20110120155231.9026.34311.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110120105746.22926.74908.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110120155231.9026.34311.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 20 Jan 2011 11:57:46 +0100
+On Thu, 20 Jan 2011 16:52:31 +0100
 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> During reshape when reshape is finished in md, progress_reshape()
-> hangs on select(). Timeout is introduced to allow for reshape
-> conditions check.
-> 
-> You point in the email that you do not like this solution.
-> It is put in to series as reminder.
-
-Thanks for the reminder.  
-I figured out what is really happening and wrote a better work-around.
-You can find it in the git history - fully commented.
-
-Thanks,
-NeilBrown
-
+> For external metadata based on reshape_active flag is taken decision
+> about reshape when it is equal to 1. At this momenta mdadm cannot
+> give up when this flag is set for external metadata.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  Grow.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
 > diff --git a/Grow.c b/Grow.c
-> index 717d087..c9f4b9c 100644
+> index c9f4b9c..f220f50 100644
 > --- a/Grow.c
 > +++ b/Grow.c
-> @@ -2394,6 +2394,7 @@ int progress_reshape(struct mdinfo *info,
-> struct reshape *reshape,
->  		 * waiting forever on a dead array
->  		 */
->  		char action[20];
-> +		struct timeval timeout;
->  		fd_set rfds;
->  		if (sysfs_get_str(info, NULL, "sync_action",
->  				  action, 20) <= 0 ||
-> @@ -2401,7 +2402,9 @@ int progress_reshape(struct mdinfo *info,
-> struct reshape *reshape, break;
->  		FD_ZERO(&rfds);
->  		FD_SET(fd, &rfds);
-> -		select(fd+1, NULL, NULL, &rfds, NULL);
-> +		timeout.tv_sec = 1;
-> +		timeout.tv_usec = 0;
-> +		select(fd+1, NULL, NULL, &rfds, &timeout);
->  		if (sysfs_fd_get_ll(fd, &completed) < 0) {
->  			close(fd);
->  			goto check_progress;
+> @@ -1870,7 +1870,7 @@ started:
+>  
+>  	sra->new_chunk = info->new_chunk;
+>  	
+> -	if (info->reshape_active)
+> +	if ((info->reshape_active) && (st->ss->external == 0))
+
+This is a bit too simplistic.  I have applied a patch which is
+(hopefully) more thorough.
+
+Thanks,
+NeilBrown
+
+
+>  		/* nothing needed here */;
+>  	else if (info->array.chunk_size == info->new_chunk &&
+>  	    reshape.before.layout == reshape.after.layout &&
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
