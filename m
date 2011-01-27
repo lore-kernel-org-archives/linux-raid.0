@@ -1,131 +1,71 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Help - raid not assembling right on boot (was: Resizing a
- RAID1)
-Date: Thu, 27 Jan 2011 10:06:25 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1101271001170.31246@p34.internal.lan>
-References: <AANLkTimJiZHjAYkd4+93=-5b3QZfSqxaz2Ap+YPLYLEL@mail.gmail.com> <alpine.DEB.2.00.1101270656230.31246@p34.internal.lan> <AANLkTikP3mVU+=F6Luy5dzj7J9+6cvfZKUaifFW6RUf6@mail.gmail.com> <alpine.DEB.2.00.1101270736480.31246@p34.internal.lan>
- <AANLkTinf5kO9n6xsZ=GUC+BUKR4SSa0HvJE8WgSMH-EE@mail.gmail.com>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH 0/2] Release 3.2 summary
+Date: Thu, 27 Jan 2011 17:46:42 +0100
+Message-ID: <20110127154905.11703.56960.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="655872-2053702380-1296140785=:31246"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinf5kO9n6xsZ=GUC+BUKR4SSa0HvJE8WgSMH-EE@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Hank Barta <hbarta@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Neil,
 
---655872-2053702380-1296140785=:31246
-Content-Type: TEXT/PLAIN; format=flowed; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Intel plans to include following features in mdadm-3.2 release:
+- Array Auto Rebuild,
+- Online Capacity Expansion,
+- Takeover raid10->raid0,
+- Takeover raid0->raid10,
+- Takeover raid1->raid0
 
+They are almost incorporated into your repository and tested.
+Some of patches are waiting for your acceptation and some will be send
+today.
+We're getting closer to the end of release and I would like to summarize
+and explain what exactly needs to be done.
 
+To finish our features following patches have to be appyied:
+mdadm:
+- FIX: Meet SET_ARRAY_INFO ioctl requirements (this series)
+- FIX: Remove disks in mdmon for external metadata (this series)
+- WORKAROUND: mdadm hangs during reshape (PART #2)
+- FIX: delta_disk can have UnSet value
+- imsm: FIX: spare cannot be added (very imprtand fix- blocks many tests)
+- FIX: start_reshape status should be checked
+- FIX: Container can be left frozen
+- FIX: Array after takeover has to be frozen
+- imsm: FIX: do not allow for container operation for the same disks number
+- imsm: Update metadata for second array
+kernel:
+- Add raid1->raid0 takeover support
+- md/raid5: FIX: reshape on degraded devices has wrong configuration
+- md: do not write resync checkpoint, if max_sector has beeen reached
+- unblock the creation of an external metadata RAID if native one exists
 
-On Thu, 27 Jan 2011, Hank Barta wrote:
+Could you review patches above and eventually apply them, please?
 
-Hi,
+Besides "Assemble: allow to assemble spares on their own" patch has to be
+discused and final solution has to be found.
 
-You may just want to dd and start over; or:
+After all patches will be applyied we expect all planned featues will be
+working and we can finish the 3.2 release. Of course we will continue our
+testing after official release and new defects may be discovered.
 
+And question for you. When do you plan to announce official 3.2 release?
+Can we assume that this will be at the beginning of next week?
 
-If I try to zero the superblock that seems to be in error, I get:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
-root@oak:/var/log# mdadm --zero-superblock /dev/sdb
-mdadm: Couldn't open /dev/sdb for write - not zeroing
-root@oak:/var/log#
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
+---
 
-Have you tried using the partition itself?
-/dev/sdb1?
-
-Also, any reason for making partitions on a MD raid device?
-[ =A0 16.532107] EXT4-fs (md2p2): bad geometry: block count 485756928
-exceeds size of device (483135232 blocks)
-
-This is generally not a good idea.
-
-It sounds like you want to make a raid-1 with two disks and pop it into a=
-=20
-new system?
-
-Way I typically do this is insert both drives into the new system, boot=20
-off a system rescue cd and then create the raid there, boot off the cd=20
-again, with root=3D/dev/md2, then run LILO, make sure to use 0.90=20
-superblocks.
-
-See below:
-
-USE --assume-clean FOR LARGE FILESYSTEMS so you can reboot directly after
-array creation and system restore implantation. (you will want to run an
-echo repair > /sys/..sync_action though afterwards)
-
-root@Knoppix:/t/etc# mdadm --create -e 0.90 --verbose /dev/md0 --level=3D1 =
---raid-devices=3D2 /dev/sda1 /dev/sdb1=20
-mdadm: size set to 8393856K
-mdadm: array /dev/md0 started.
-root@Knoppix:/t/etc# cat /proc/mdstat=20
-Personalities : [raid1]=20
-md0 : active raid1 sdb1[1] sda1[0]
-       8393856 blocks [2/2] [UU]
-       [>....................]  resync =3D  1.4% (120512/8393856) finish=3D=
-3.4min speed=3D40170K/sec
-
-root@Knoppix:/t/etc# mdadm --create -e 0.90 --verbose /dev/md1 --level=3D1 =
---raid-devices=3D2 /dev/sda2 /dev/sdb2
-mdadm: size set to 136448K
-mdadm: array /dev/md1 started.
-root@Knoppix:/t/etc#
-
-root@Knoppix:/t/etc# mdadm --create -e 0.90 --verbose /dev/md2 --level=3D1 =
---raid-devices=3D2 /dev/sda3 /dev/sdb3
-mdadm: size set to 382178240K
-mdadm: array /dev/md2 started.
-root@Knoppix:/t/etc#
-
-root@Knoppix:/t/etc# cat /proc/mdstat=20
-Personalities : [raid1]=20
-md2 : active raid1 sdb3[1] sda3[0]
-       382178240 blocks [2/2] [UU]
-         resync=3DDELAYED
-
-md1 : active raid1 sdb2[1] sda2[0]
-       136448 blocks [2/2] [UU]
-         resync=3DDELAYED
-
-md0 : active raid1 sdb1[1] sda1[0]
-       8393856 blocks [2/2] [UU]
-       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>..........]  resync =3D 51.0% (42830=
-72/8393856) finish=3D1.0min speed=3D62280K/sec
-
-unused devices: <none>
-root@Knoppix:/t/etc#
-
-After this, you'll need to set them as 0xfd and make sure the boot is boota=
-ble,
-your LILO config should look something like this:
-
-boot=3D/dev/md1
-root=3D/dev/md2
-map=3D/boot/map
-prompt
-delay=3D100
-timeout=3D100
-lba32
-vga=3Dnormal
-append=3D""
-raid-extra-boot=3D"/dev/sda,/dev/sdb" # make boot blocks on both drives
-default=3D2.6.37-3
-
-image=3D/boot/2.6.37-3
-   label=3D2.6.37-3
-   read-only
-   root=3D/dev/md2
+Krzysztof Wojcik (2):
+      FIX: Remove disks in mdmon for external metadata
+      FIX: Meet SET_ARRAY_INFO ioctl requirements
 
 
-Justin.
+ Grow.c |   35 +++++++++++++++++++++++------------
+ 1 files changed, 23 insertions(+), 12 deletions(-)
 
---655872-2053702380-1296140785=:31246--
+-- 
+Regards
+Krzysztof Wojcik
