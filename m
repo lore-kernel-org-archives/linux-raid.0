@@ -1,78 +1,72 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] fix extended partition detection
-Date: Thu, 27 Jan 2011 12:58:00 +1000
-Message-ID: <20110127125800.622b2f30@nbeee.brown>
-References: <20110125025303.18675.61317.stgit@localhost6.localdomain6>
+Subject: Re: [PATCH 2/4] imsm: FIX: spare cannot be added
+Date: Thu, 27 Jan 2011 13:02:36 +1000
+Message-ID: <20110127130236.07f70a98@nbeee.brown>
+References: <20110120104759.22926.66874.stgit@gklab-128-013.igk.intel.com>
+	<20110120105730.22926.93231.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110125025303.18675.61317.stgit@localhost6.localdomain6>
+In-Reply-To: <20110120105730.22926.93231.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, Krzysztof Wasilewski <krzysztof.wasilewski@intel.com>, Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon, 24 Jan 2011 18:54:06 -0800
-Dan Williams <dan.j.williams@intel.com> wrote:
+On Thu, 20 Jan 2011 11:57:30 +0100
+Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> # mdadm --detail --export /dev/md127p1
-> 
-> Before:
-> MD_LEVEL=raid5
-> MD_DEVICES=4
-> MD_METADATA=0.90
-> 
-> After:
-> MD_LEVEL=raid5
-> MD_DEVICES=4
-> MD_CONTAINER=/dev/md0
-> MD_MEMBER=0
-> MD_UUID=55746a20:925d24a7:4f9bd7e2:9c9a411f
-> 
-> We parse the symlink target with a format:
-> 
-> ../../block/mdXXX/mdXXXpYY
-> 
-> ...and need the second '/' from the end of the string to read detect a
-> 'md' device.
-> 
-> Reported-by: Krzysztof Wasilewski <krzysztof.wasilewski@intel.com>
-> Cc: Przemyslaw Czarnowski
-> <przemyslaw.hawrylewicz.czarnowski@intel.com> Signed-off-by: Dan
-> Williams <dan.j.williams@intel.com> ---
-> 
-> [ sorry for any duplicates or triplicates, I failed to notice that my
->   MTA was misconfigured after an upgrade to F13, and all my mail from
->   stgit was getting rejected externally. ] 
-> 
-> If there are any 3.1.x stable releases planned I would consider this
-> a candidate as it allows custom name partitions to be created by udev 
-> (like /dev/md/vol1p1).  I believe this was masked by the usage of mdp 
-> devices.
-> 
-> On 3.2 it exposes a segfault as we try to get the container_content() 
-> of 'mbr' metadata.
-> 
->  util.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/util.c b/util.c
-> index c9bdd6e..75a5e6d 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1664,7 +1664,7 @@ int stat2devnum(struct stat *st)
->  		link[n] = 0;
->  		cp = strrchr(link, '/');
->  		if (cp) *cp = 0;
-> -		cp = strchr(link, '/');
-> +		cp = strrchr(link, '/');
->  		if (cp && strncmp(cp, "/md", 3) == 0)
->  			return devname2devnum(cp+1);
->  	}
+> When Manage.c adds spare, it calls write_init_super() and this
+> function is responsible for closing disk handle (Manage.c:812).
+> For imsm case this handle is reused for managing this disk and handle
+> (due to this it is not closed).
+> As handle was opened with flag O_EXCL, adding disk to md fails on
+> writing to new_dev (md cannot set lock on device).
+> To resolve situation close current handle and open new one without
+> O_EXCL flag.
 
+Thanks.
+I have created a different solution. write_init_super doesn't close
+anything any more. 
+Hopefully the new approach works better.
 
-Thanks.  Applied for 3.2.  Hopefully I'll remember 3.1 when I get back
-to my other computer..
-
+Thanks,
 NeilBrown
+
+> 
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+> 
+>  super-intel.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 7f907ef..0d6d2ee 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -3714,6 +3714,7 @@ static int mgmt_disk(struct supertype *st)
+>  	struct intel_super *super = st->sb;
+>  	size_t len;
+>  	struct imsm_update_add_remove_disk *u;
+> +	struct dl *d;
+>  
+>  	if (!super->disk_mgmt_list)
+>  		return 0;
+> @@ -3729,6 +3730,14 @@ static int mgmt_disk(struct supertype *st)
+>  	u->type = update_add_remove_disk;
+>  	append_metadata_update(st, u, len);
+>  
+> +	for (d = super->disk_mgmt_list; d ; d = d->next) {
+> +		char buf[PATH_MAX];
+> +
+> +		close(d->fd);
+> +		sprintf(buf, "%d:%d", d->major, d->minor);
+> +		d->fd = dev_open(buf, O_RDWR | O_DIRECT);
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+
