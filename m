@@ -1,99 +1,48 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 2/2] FIX: Meet SET_ARRAY_INFO ioctl requirements
-Date: Thu, 27 Jan 2011 17:46:58 +0100
-Message-ID: <20110127164658.11703.49930.stgit@gklab-128-111.igk.intel.com>
-References: <20110127154905.11703.56960.stgit@gklab-128-111.igk.intel.com>
+From: Przemyslaw Czarnowski
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] md: do not write resync checkpoint,
+	if max_sector has been reached.
+Date: Thu, 27 Jan 2011 17:50:15 +0100
+Message-ID: <20110127165015.7884.8099.stgit@gklab-128-080.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110127154905.11703.56960.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Problem has been observed when raid10<->raid0 takeover operation
-is executed.
-In code updating layout, raid_disks and chunk_size for non-restriping
-operations in reshape array functions SET_ARRAY_INFO ioctl call was
-not succeeded.
-Takeover process finish execution with error, mdadm shows message:
-"mdadm: failed to set disks"
+If disk fails during resync, sync service of personality usually skips the
+rest of not synchronized stripes. It finishes sync thread (md_do_sync())
+and wakes up the main raid thread. md_recovery_check() starts and
+unregisteres sync thread.
+In the meanwhile mdmon also services failed disk - removes and replaces it
+with a new one (if it was available).
+If checkpoint is stored (with value of array's max_sector), next
+md_recovery_check() will restart resync. It finishes normally and
+activates ALL spares (including the one added recently) what is wrong.
+Another md_recovery_check() will not start recovery as all disks are in
+sync. If checkpoint is not stored, second resync does not start and
+recovery can proceed.
 
-Cause is not meeting SET_ARRAY_INFO ioctl requirements:
-- only one parameter may be changed at one time
-- level of current array info and new info should be the same
-
-Patch introduces solution for this issue.
-At the beginning of discussed code we read current information
-about array and then compare them with new values should be set.
-If particular value is different (and should be set),
-we are overwrite only this one in array info and then call ioctl.
-
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
 ---
- Grow.c |   31 ++++++++++++++++++++-----------
- 1 files changed, 20 insertions(+), 11 deletions(-)
+ drivers/md/md.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 8c6ff23..194cc3e 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1714,35 +1714,44 @@ static int reshape_array(char *container, int fd, char *devname,
- 		/* No restriping needed, but we might need to impose
- 		 * some more changes: layout, raid_disks, chunk_size
- 		 */
-+		/* read current array info */
-+		if (ioctl(fd, GET_ARRAY_INFO, &array) != 0) {
-+			dprintf("Canot get array information.\n");
-+			goto release;
-+		}
-+		/* compare current array info with new values and if
-+		 * it is different update them to new */
- 		if (info->new_layout != UnSet &&
--		    info->new_layout != info->array.layout) {
--			info->array.layout = info->new_layout;
--			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-+		    info->new_layout != array.layout) {
-+			array.layout = info->new_layout;
-+			if (ioctl(fd, SET_ARRAY_INFO, &array) != 0) {
- 				fprintf(stderr, Name ": failed to set new layout\n");
- 				goto release;
- 			} else if (!quiet)
- 				printf("layout for %s set to %d\n",
--				       devname, info->array.layout);
-+				       devname, array.layout);
- 		}
- 		if (info->delta_disks != UnSet &&
--		    info->delta_disks != 0) {
--			info->array.raid_disks += info->delta_disks;
--			if (ioctl(fd, SET_ARRAY_INFO, &info->array) != 0) {
-+		    info->delta_disks != 0 &&
-+		    array.raid_disks != (info->array.raid_disks + info->delta_disks)) {
-+			array.raid_disks += info->delta_disks;
-+			if (ioctl(fd, SET_ARRAY_INFO, &array) != 0) {
- 				fprintf(stderr, Name ": failed to set raid disks\n");
- 				goto release;
--			} else if (!quiet)
-+			} else if (!quiet) {
- 				printf("raid_disks for %s set to %d\n",
--				       devname, info->array.raid_disks);
-+				       devname, array.raid_disks);
-+			}
- 		}
- 		if (info->new_chunk != 0 &&
--		    info->new_chunk != info->array.chunk_size) {
-+		    info->new_chunk != array.chunk_size) {
- 			if (sysfs_set_num(info, NULL,
- 					  "chunk_size", info->new_chunk) != 0) {
- 				fprintf(stderr, Name ": failed to set chunk size\n");
- 				goto release;
- 			} else if (!quiet)
- 				printf("chunk size for %s set to %d\n",
--				       devname, info->array.chunk_size);
-+				       devname, array.chunk_size);
- 		}
- 		unfreeze(st);
- 		return 0;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3e40aad..6eda858 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6929,7 +6929,8 @@ void md_do_sync(mddev_t *mddev)
+ 	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+ 	    mddev->curr_resync > 2) {
+ 		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+-			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
++			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
++			    mddev->curr_resync < max_sectors) {
+ 				if (mddev->curr_resync >= mddev->recovery_cp) {
+ 					printk(KERN_INFO
+ 					       "md: checkpointing %s of %s.\n",
 
