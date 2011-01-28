@@ -1,25 +1,34 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: Re: sub-array kicked out of raid6 on each reboot.
-Date: Fri, 28 Jan 2011 21:44:38 +0100
-Message-ID: <20110128214438.0a619fa6@atak.bl.pg.gda.pl>
-References: <20110128211534.697017aa@atak.bl.pg.gda.pl>
-	<20110129012156.00a935ec@natsu>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: partitions
+Date: Fri, 28 Jan 2011 19:24:37 -0200
+Message-ID: <AANLkTimGHtECH2oFdcWWmjXjzrFeRmDsXhfwg4FMR2a8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110129012156.00a935ec@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Roman Mamedov said:     (by the date of Sat, 29 Jan 2011 01:21:56 +0500)
+hi guys, could we implement raid partitions?
+for example:
+mdadm --create /dev/md0 --level=3D1 --devices /dev/sda /dev/sdb
+fdisk /dev/md0
+create pratition 1,2,3,4
 
-> (on current Debian, "update-initramfs -k all -u").
+mkfs.ext4 /dev/md0p1
+mkfs.ext4 /dev/md0p2
+mkfs.ext4 /dev/md0p3
+mkfs.ext4 /dev/md0p4
 
-Hi,
-it fixed the problem, thanks!
+?? any idea? could we implement it?
+there=B4s a TODO list for linux software raid?
 
--- 
-Janek Kozicki                               http://janek.kozicki.pl/  |
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
