@@ -1,39 +1,232 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Growing a single disk into a 2 disk raid0
-Date: Fri, 28 Jan 2011 12:17:50 -0500
-Message-ID: <4D42FA3E.6000206@cfl.rr.com>
+From: Przemyslaw Czarnowski
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] Man pages update for policy framework
+Date: Fri, 28 Jan 2011 18:29:57 +0100
+Message-ID: <20110128172957.12802.62262.stgit@gklab-128-080.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-I had someone wanting to take an existing disk full of data and expand
-it by adding a second disk.  This seemed reasonable, and I thought of
-several ways you could do this, but none of them pan out:
+Includes description of POLICY line in /etc/mdadm.conf
+and of changes in Monitor and Incremental related to autorebuild.
 
-1)  Create a single disk raid0 using the existing disk, then reshape it
-adding the second disk.  mdadm fails to add the second disk as a spare
-so that you can reshape, with the kernel complaining that personality
-does not support diskops.
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ mdadm.8.in   |   37 +++++++++++++++++++++--
+ mdadm.conf.5 |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 124 insertions(+), 5 deletions(-)
 
-2)  Create a single disk raid1 using the existing disk, then reshape it
-adding the second disk.  Apparently you can not reshape from raid1 to raid0.
+diff --git a/mdadm.8.in b/mdadm.8.in
+index ac87b47..f87578d 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -1330,6 +1330,11 @@ The device name given should be a kernel device name such as "sda",
+ not a name in
+ .IR /dev .
+ 
++.TP
++.BR \-\-path=
++Only used with \-\-fail. Allows the failed device to be automatically replaced
++by a new device without metadata if it appears at specified path.
++
+ .SH For Monitor mode:
+ .TP
+ .BR \-m ", " \-\-mail
+@@ -1401,6 +1406,18 @@ alert for every array found at startup.  This alert gets mailed and
+ passed to the alert program.  This can be used for testing that alert
+ message do get through successfully.
+ 
++.TP
++.BR \-\-no\-sharing
++Allows to run monitoring without moving spares between arrays.
++Only one monitoring process started with
++.B \-\-scan
++is allowed.
++Any subsequent call of
++.B mdadm \-F \-\-scan
++must also use
++.B \-\-no\-sharing
++option.
++
+ .SH ASSEMBLE MODE
+ 
+ .HP 12
+@@ -1951,6 +1968,8 @@ As well as reporting events,
+ may move a spare drive from one array to another if they are in the
+ same
+ .B spare-group
++or
++.B domain
+ and if the destination array has a failed drive but no spares.
+ 
+ If any devices are listed on the command line,
+@@ -2057,6 +2076,8 @@ notices that an array is degraded when it first sees the array.
+ .B MoveSpare
+ A spare drive has been moved from one array in a
+ .B spare-group
++or
++.B domain
+ to another to allow a failed drive to be replaced.
+ (syslog priority: Info)
+ 
+@@ -2109,6 +2130,7 @@ For
+ to move spares from one array to another, the different arrays need to
+ be labeled with the same
+ .B spare-group
++or the spares must be allowed to migrate through matching POLICY domains
+ in the configuration file.  The
+ .B spare-group
+ name can be any string; it is only necessary that different spare
+@@ -2125,6 +2147,11 @@ first.
+ If the removal succeeds but the adding fails, then it is added back to
+ the original array.
+ 
++If the spare group for degraded array is not defined mdadm will look
++at the rules of spare migration specified by POLICY lines
++in /etc/mdadm.conf and then follow similar steps as above if a matching
++spare is found.
++
+ .SH GROW MODE
+ The GROW mode is used for changing the size or shape of an active
+ array.
+@@ -2307,9 +2334,10 @@ adds the device to the array and conditionally starts the array.
+ 
+ Note that
+ .I mdadm
+-will only add devices to an array which were previously working
+-(active or spare) parts of that array.  It does not currently support
+-automatic inclusion of a new drive as a spare in some array.
++will always add devices to an array which were previously working
++(active or spare) parts of that array. The support for automatic
++inclusion of a new drive as a spare in some array requires
++a configuration through POLICY in config file.
+ 
+ The tests that
+ .I mdadm
+@@ -2341,7 +2369,8 @@ then only that style of metadata is accepted, otherwise
+ .I mdadm
+ finds any known version of metadata.  If no
+ .I md
+-metadata is found, the device is rejected.
++metadata is found, the device may be still added to an array
++as a spare if POLICY allows.
+ 
+ .ig
+ .IP +
+diff --git a/mdadm.conf.5 b/mdadm.conf.5
+index e677ba9..75a911f 100644
+--- a/mdadm.conf.5
++++ b/mdadm.conf.5
+@@ -418,6 +418,78 @@ The known metadata types are
+ .BR ddf ,
+ .BR imsm .
+ 
++.TP
++.B POLICY
++Allows to specify what automatic behavior is allowed on devices newly
++appearing in the system and provides a way of marking spares that can
++be moved to other array as well as the migration domains.
++.I Domain
++can be defined through
++.I policy
++line by specifying a domain name for a number of paths from
++.BR /dev/disk/by-path/ .
++A device may belong to several domains. Domain of an array is a union
++of domains of all devices in that array. A spare can be automatically
++moved from one array to another if the set of the destination array's
++.I domains
++contains all the
++.I domains
++of the new disk or if both arrays have the same
++.IR spare-group .
++
++To update hot plug configuration it is necessary to execute
++.B mdadm \-\-udev\-rules
++command after changing config file
++
++Key words used in
++.I POLICY
++line and supported values:
++
++.RS 7
++.TP
++.B domain=
++any arbitrary string
++.TP
++.B metadata=
++0.9 1.x ddf or imsm
++.TP
++.B path=
++file glob matching anything from 
++.B /dev/disk/by-path
++.TP
++.B action=
++include, re-add, spare, spare-same-slot, or force-spare
++
++.P
++The
++.I action
++item determines the automatic behavior allowed for devices matching the
++.I path
++in the same line. If a device matches several lines with different
++.I  actions
++then the most permissive will apply. The ordering of policy lines
++is irrelevant to the end result.
++.TP
++.B include
++allows adding a disk to an array if metadata on that disk matches that array
++.TP
++.B re-add
++will include device in the array if it appears to be a current member
++or a member that was recently removed
++.TP
++.B spare
++as above and additionally: if the device is bare it will
++become a spare (for metadata the same line)
++.TP
++.B spare\-same\-slot
++as above and additionally if given slot was used by an array that went
++degraded recently and the device plugged in has no metadata then it will
++be automatically added to that array (or it's container)
++.TP
++.B force-spare
++as above and the disk will become a spare in remaining cases
++.RE
++
+ .SH EXAMPLE
+ DEVICE /dev/sd[bcdjkl]1
+ .br
+@@ -456,7 +528,25 @@ ARRAY /dev/md5 uuid=19464854:03f71b1b:e0df2edd:246cc977
+ ARRAY /dev/md/home UUID=9187a482:5dde19d9:eea3cc4a:d646ab8b
+ .br
+            auto=part
+-
++.br
++POLICY domain=domain1 metadata=imsm path=pci-0000:00:1f.2-scsi-*
++.br
++           action=spare
++.br
++POLICY domain=domain1 metadata=imsm path=pci-0000:04:00.0-scsi-[01]*
++.br
++           action=include
++.br
++# One domain comprising of devices attached to specified paths is defined.
++.br
++# Bare device matching first path will be made an imsm spare on hot plug.
++.br
++# If more than one array is created on devices belonging to domain1 and
++.br
++# one of them becomes degraded, then any imsm spare matching any path for
++.br
++# given domain name can be migrated.
++.br
+ MAILADDR root@mydomain.tld
+ .br
+ PROGRAM /usr/sbin/handle\-mdadm\-events
 
-3)  Create a raid10 using the existing disk, setting the number of near
-copies to only 1 so as to preserve the existing data, then reshape
-adding the second disk.  I ran into two problems here:
-
-a) mdadm refuses to create a single disk raid10, saying that at least
-two devices are needed for raid level 4 or 5.  I am surprised that you
-can not create a single disk raid10 even with --force, and the message
-mentions the wrong level.  I would think that a single disk raid10 with
-2 far copies would be fairly useful.
-
-b) I tried 2 disks with one missing and mdadm refuses to create a raid10
-with only a single near copy.  The kernel complains that layout 0x101 is
-unsupported.
-
-Is there any way to accomplish this?
