@@ -1,61 +1,26 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: raid over ethernet
-Date: Sat, 29 Jan 2011 04:42:16 -0200
-Message-ID: <AANLkTin9L4u_vKJSpvVrnH7-QX_TbhqJ3drw7BKn2HDy@mail.gmail.com>
+Date: Sat, 29 Jan 2011 07:42:38 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1101290741510.13151@uplift.swm.pp.se>
 References: <AANLkTi=2PDZdVSEgF0mQ_ZdwxvkPoSywM6U0e4hMxTXS@mail.gmail.com>
-	<-8313021219290464576@unknownmsgid>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <-8313021219290464576@unknownmsgid>
+In-Reply-To: <AANLkTi=2PDZdVSEgF0mQ_ZdwxvkPoSywM6U0e4hMxTXS@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>
+To: Roberto Spadim <roberto@spadim.com.br>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-is it better than nbd+mdadm?
+On Fri, 28 Jan 2011, Roberto Spadim wrote:
 
-2011/1/29 J=E9r=F4me Poulin <jeromepoulin@gmail.com>:
-> DRBD: http://www.drbd.org/
->
-> Envoy=E9 de mon appareil mobile.
->
-> J=E9r=F4me Poulin
-> Solutions G.A.
->
-> On 2011-01-28, at 20:58, Roberto Spadim <roberto@spadim.com.br> wrote=
-:
->
->> hi guys, i was thinking about raid over ethernet... there's a soluti=
-on
->> to make a syncronous replica of my filesystem? no problem if my
->> primary server get down, i can mout my replica fsck it and continue
->> with available data
->> i was reading about nbd, anyone have more ideas?
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> hi guys, i was thinking about raid over ethernet... there's a solution
+> to make a syncronous replica of my filesystem? no problem if my
+> primary server get down, i can mout my replica fsck it and continue
+> with available data
+> i was reading about nbd, anyone have more ideas?
 
+Look into AoE (ATA over Ethernet).
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
