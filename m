@@ -1,36 +1,46 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Alexander Schreiber <als@thangorodrim.de>
 Subject: Re: raid over ethernet
-Date: Sat, 29 Jan 2011 19:34:12 +0100
-Message-ID: <ii1mj5$mah$1@dough.gmane.org>
-References: <AANLkTi=2PDZdVSEgF0mQ_ZdwxvkPoSywM6U0e4hMxTXS@mail.gmail.com> <alpine.DEB.1.10.1101290741510.13151@uplift.swm.pp.se>
+Date: Sat, 29 Jan 2011 22:08:15 +0100
+Message-ID: <20110129210815.GC15784@mordor.angband.thangorodrim.de>
+References: <AANLkTi=2PDZdVSEgF0mQ_ZdwxvkPoSywM6U0e4hMxTXS@mail.gmail.com>
+ <alpine.DEB.1.10.1101290741510.13151@uplift.swm.pp.se>
+ <AANLkTikFHBD_TjTe96tgd4Kmy6zZuD8kdE0W-0ncdCev@mail.gmail.com>
+ <20110129133457.GB15784@mordor.angband.thangorodrim.de>
+ <AANLkTi=6ridRPnHpfdOC=f2_ESndSARmQRkvT_shYO3s@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1101290741510.13151@uplift.swm.pp.se>
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=6ridRPnHpfdOC=f2_ESndSARmQRkvT_shYO3s@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Denis <denismpa@gmail.com>
+Cc: Roberto Spadim <roberto@spadim.com.br>, Mikael Abrahamsson <swmike@swm.pp.se>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 29/01/11 07:42, Mikael Abrahamsson wrote:
-> On Fri, 28 Jan 2011, Roberto Spadim wrote:
->
->> hi guys, i was thinking about raid over ethernet... there's a solution
->> to make a syncronous replica of my filesystem? no problem if my
->> primary server get down, i can mout my replica fsck it and continue
->> with available data
->> i was reading about nbd, anyone have more ideas?
->
-> Look into AoE (ATA over Ethernet).
->
+On Sat, Jan 29, 2011 at 12:23:14PM -0200, Denis wrote:
+> 2011/1/29 Alexander Schreiber <als@thangorodrim.de>
+> 
+> >
+> > plain disk performance for writes, while reads should be reasonably
+> > close to the plain disk performance - drbd optimizes reads by just reading
+> > from the local disk if it can.
+> >
+> >
+>  However, I have not used it with active-active fashion. Have you? if yes,
+> what is your overall experience?
 
-I think AoE is limited to fairly direct connections - it doesn't use IP, 
-and can't be routed (at least not easily - I'm sure it is possible if 
-you try hard enough).  The alternative is iSCSI, which does use IP and 
-can therefore be routed and passed around over networks.  AoE is 
-therefore slightly more efficient, and iSCSI more flexible.
+We are using drbd to provide mirrored disks for virtual machines running
+under Xen. 99% of the time, the drbd devices run in primary/secondary
+mode (aka active/passive), but they are switched to primary/primary
+(aka active/active) for live migrations of domains, as that needs the
+disks to be available on both nodes. From our experience, if the drbd
+device is healthy, this is very reliable. No experience with running
+drbd in primary/primary config for any extended period of time, though
+(the live migrations are usually over after a few seconds to a minute at
+most, then the drbd devices go back to primary/secondary).
 
-If you are looking at making a raid1 with an iSCSI or AoE target as one 
-of the disks, consider using a write-intent bitmap and the 
---write-mostly and --write-behind flags.
-
+Kind regards,
+          Alex.
+-- 
+"Opportunity is missed by most people because it is dressed in overalls and
+ looks like work."                                      -- Thomas A. Edison
