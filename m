@@ -1,58 +1,62 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Performance question, RAID5
-Date: Sun, 30 Jan 2011 19:46:46 +0000
-Message-ID: <AANLkTinnc9V8bZWaF+8JEXgAzxUVieiaiH4Fad5FERjJ@mail.gmail.com>
+Date: Mon, 31 Jan 2011 00:54:44 +0500
+Message-ID: <20110131005444.69a8e4d7@natsu>
 References: <AANLkTimXp-vGP8fb2Y-2EiaGxj+H6UJ9DfjtYMVDhDri@mail.gmail.com>
-	<20110130035352.1d72e8d1@natsu>
-	<AANLkTi=ii-iLybJBS8ncajwXWZnkwLY=u0AcQiBJKPUf@mail.gmail.com>
-	<20110130015231.GA1435@www2.open-std.org>
-	<AANLkTimw6CTP66FZdbH07kjMmHoxoFRF6Eq9WDR_LYt8@mail.gmail.com>
-	<20110130055616.GA13022@www2.open-std.org>
-	<AANLkTi=CdiOjA15umaaO9ORDQ9StoesC2eD5q0_e3Bb0@mail.gmail.com>
-	<4D45BF84.7030706@hardwarefreak.com>
+	<AANLkTi=SbAM3BXxjH6Mvcn-Tw4b0FYyLjLFqSGuxY1fk@mail.gmail.com>
+	<AANLkTik4MGS7V7ePBgbk+KW-FcBBV7MuYgB7n29RRXF=@mail.gmail.com>
+	<20110130094444.68288b0e@natsu>
+	<AANLkTi=jXwcEgRquKgsf5HQUA+AQdt8nHeHCUJYqdSbX@mail.gmail.com>
+	<20110130171533.4c9e236b@natsu>
+	<AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/an2+EAEsNjDHswgHQGR3G6f"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D45BF84.7030706@hardwarefreak.com>
+In-Reply-To: <AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@keldix.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+Cc: CoolCold <coolthecold@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 30 January 2011 19:44, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> Mathias Bur=C3=A9n put forth on 1/30/2011 6:12 AM:
->
->> Thanks to mdadm, and /dev/disks/by-label/ I should be fine with just
->> swapping the SATA cables around actually, without having to change a=
-ny
->> configs. I'll try that later on and let you know if it affects
->> performance anything. Good catch!
->
-> Be sure to change the mobo and PCIe card BIOS boot order after moving=
- the SSD
-> cable to the PCIe card or the machine won't boot. =C2=A0Also, before =
-swapping cables,
-> make sure you have the PCIe card chipset driver built into your kerne=
-l or
-> properly built into your initrd image. =C2=A0If not you still won't b=
-oot.
->
-> --
-> Stan
->
+--Sig_/an2+EAEsNjDHswgHQGR3G6f
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I forgot to mention it, but I already swapped the cables. I had to
-change a few things (reinstall GRUB, change menu.lst) but otherwise I
-was OK. Strange thing is that my mainboard doesn't seem to want to
-boot off a drive that's connected to the Highpoint controller. Just
-sits there. However, using GRUB from a USB stick enables me to just do
-root (hd2,0), then chainload + and load the GRUB of the SSD. Not
-elegant, but it works (for now). Will investigate more later...
+On Sun, 30 Jan 2011 19:41:47 +0000
+Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
 
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I did find another PCI-E SATA controller that is generation 2.0, and
+> looks like it may do the trick. This one:
+> http://www.newegg.com/Product/Product.aspx?Item=3DN82E16816115053
+> "HighPoint RocketRAID 2640x1 PCI-Express x1 Four-Port SATA and SAS
+> RAID Controller Card".
+>=20
+> It's ~=E2=82=AC110 on eBay, a bit hefty. I might just save up and build a=
+ NAS
+> box from scratch, with some mainboard which has 8 SATA from the start
+> etc.
+
+This one is cheaper:
+http://www.dealextreme.com/p/lsi-sas3041e-r-4-port-sas-sata-host-bus-adapte=
+r-51317
+Doesn't matter if it's v1.x or v2.0, since it's x4, it will have enough
+bandwidth either way.
+
+--=20
+With respect,
+Roman
+
+--Sig_/an2+EAEsNjDHswgHQGR3G6f
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk1FwgQACgkQTLKSvz+PZwjVHQCfT9iRrk02DFgZmC7hVfN6JGee
+2LEAn3jcE3nG40ei2I65OtUon/UxikIo
+=eBfi
+-----END PGP SIGNATURE-----
+
+--Sig_/an2+EAEsNjDHswgHQGR3G6f--
