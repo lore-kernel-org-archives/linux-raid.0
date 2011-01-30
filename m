@@ -1,69 +1,65 @@
-From: Alexander Schreiber <als@thangorodrim.de>
-Subject: Re: raid over ethernet
-Date: Sun, 30 Jan 2011 02:43:58 +0100
-Message-ID: <20110130014358.GE15784@mordor.angband.thangorodrim.de>
-References: <AANLkTi=2PDZdVSEgF0mQ_ZdwxvkPoSywM6U0e4hMxTXS@mail.gmail.com>
- <alpine.DEB.1.10.1101290741510.13151@uplift.swm.pp.se>
- <AANLkTikFHBD_TjTe96tgd4Kmy6zZuD8kdE0W-0ncdCev@mail.gmail.com>
- <20110129133457.GB15784@mordor.angband.thangorodrim.de>
- <AANLkTi=6ridRPnHpfdOC=f2_ESndSARmQRkvT_shYO3s@mail.gmail.com>
- <20110129210815.GC15784@mordor.angband.thangorodrim.de>
- <4D448CAF.6020409@anonymous.org.uk>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: Performance question, RAID5
+Date: Sun, 30 Jan 2011 02:52:31 +0100
+Message-ID: <20110130015231.GA1435@www2.open-std.org>
+References: <AANLkTimXp-vGP8fb2Y-2EiaGxj+H6UJ9DfjtYMVDhDri@mail.gmail.com> <20110130035352.1d72e8d1@natsu> <AANLkTi=ii-iLybJBS8ncajwXWZnkwLY=u0AcQiBJKPUf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4D448CAF.6020409@anonymous.org.uk>
+In-Reply-To: <AANLkTi=ii-iLybJBS8ncajwXWZnkwLY=u0AcQiBJKPUf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Mathias =?iso-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Roman Mamedov <rm@romanrm.ru>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Jan 29, 2011 at 09:54:55PM +0000, John Robinson wrote:
-> On 29/01/2011 21:08, Alexander Schreiber wrote:
-> >On Sat, Jan 29, 2011 at 12:23:14PM -0200, Denis wrote:
-> >>2011/1/29 Alexander Schreiber<als@thangorodrim.de>
-> >>
-> >>>
-> >>>plain disk performance for writes, while reads should be reasonably
-> >>>close to the plain disk performance - drbd optimizes reads by just reading
-> >>>from the local disk if it can.
-> >>>
-> >>>
-> >>  However, I have not used it with active-active fashion. Have you? if yes,
-> >>what is your overall experience?
+On Sat, Jan 29, 2011 at 11:44:01PM +0000, Mathias Bur=E9n wrote:
+> On 29 January 2011 22:53, Roman Mamedov <rm@romanrm.ru> wrote:
+> > On Sat, 29 Jan 2011 22:48:06 +0000
+> > Mathias Bur=E9n <mathias.buren@gmail.com> wrote:
 > >
-> >We are using drbd to provide mirrored disks for virtual machines running
-> >under Xen. 99% of the time, the drbd devices run in primary/secondary
-> >mode (aka active/passive), but they are switched to primary/primary
-> >(aka active/active) for live migrations of domains, as that needs the
-> >disks to be available on both nodes. From our experience, if the drbd
-> >device is healthy, this is very reliable. No experience with running
-> >drbd in primary/primary config for any extended period of time, though
-> >(the live migrations are usually over after a few seconds to a minute at
-> >most, then the drbd devices go back to primary/secondary).
-> 
-> Now that is interesting, to me at least. More as a thought
-> experiment for now, I was wondering how one would go about setting
-> up a small cluster of commodity servers (maybe 8 machines) running
-> Xen (or perhaps now KVM) VMs, such that if one (or potentially two)
-> of the machines died, the VMs could be picked up by the other
-> machines in the cluster, and only using locally-attached SATA/SAS
-> discs in each machine.
-> 
-> I guess I'm talking about RAIN or RAIS rather than RAID so maybe I'd
-> better start reading the Wikipedia pages on those and not talk about
-> it on this list...
+> >> Hi,
+> >>
+> >> I'm wondering if the performance I'm getting is OK or if there's
+> >> something I can do about it. Also, where the potential bottlenecks
+> >> are.
+> >
+> > How are your disks plugged in? Which controller model(s), which bus=
+=2E
+> > But generally, on an Atom 1.6 Ghz those seem like good results.
+> >
+> > --
+> > With respect,
+> > Roman
+> >
+>=20
+>=20
+> Hi,
+>=20
+> Sorry, of course I should've included that. Here's the info:
+>=20
+> ~/bin $ sudo ./drivescan.sh
+> Controller device @ pci0000:00/0000:00:0b.0 [ahci]
+>   SATA controller: nVidia Corporation MCP79 AHCI Controller (rev b1)
+>     host0: /dev/sda ATA Corsair CSSD-F60 {SN: 10326505580009990027}
+>     host1: /dev/sdb ATA WDC WD20EARS-00M {SN: WD-WCAZA1022443}
+>     host2: /dev/sdc ATA WDC WD20EARS-00M {SN: WD-WMAZ20152590}
+>     host3: /dev/sdd ATA WDC WD20EARS-00M {SN: WD-WMAZ20188479}
+>     host4: [Empty]
+>     host5: [Empty]
 
-For the "survive single node total machine failure" case your problem has
-already been solved: http://code.google.com/p/ganeti/
 
-We run a large number of clusters with that and the VMs routinely survive
-disk failures and recover (come back from what looks like a power failure
-to the VM) from node failure.
+Hmm, it seems like you have 2 empty slots on the on-board  SATA
+controller. Try to move 2 of the disks from the other controller to the
+on-board controller.
 
-Kind regards,
-           Alex.
--- 
-"Opportunity is missed by most people because it is dressed in overalls and
- looks like work."                                      -- Thomas A. Edison
+And I would also avoid LVM. I think LVM affects striping.
+
+best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
