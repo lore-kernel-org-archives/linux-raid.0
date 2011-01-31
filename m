@@ -1,60 +1,54 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 13:36:18 +0300
-Message-ID: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
-References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] imsm: FIX: mdmon crash during 2 raid0 arrays expansion
+Date: Mon, 31 Jan 2011 13:48:16 +0100
+Message-ID: <20110131124815.26942.85427.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon, Jan 31, 2011 at 12:41 PM, Mathias Bur=E9n <mathias.buren@gmail.=
-com> wrote:
-> Hi,
->
-> RAID10 is (could be) setup in this way, correct?
->
-> 2 devices in a RAID1
-> 2 devices in another RAID1
-I usually use LVM striping over two RAID1 arrays for this.
->
-> Then you run RAID0 on top of them. If you're lucky you can lose 2
-> devices at most (1 in each RAID1).
->
-> If you have, say 6 HDDs, would you create 3 RAID1 volumes? Then creat=
-e
-> a RAID0 on top of them?
->
-> How would one go about expanding a 4 HDD RAID10 into a 6 HDD RAID10?
-> Is it "just" a matter of creating a new RAID1 array of the 2 new HDDs=
-,
-> then adding them to the RAID0, then expanding whatever is on that
-> (lvm, xfs, ext4)?
->
-> Are there any design tips, or caveats? For example, how many disks
-> would you use at most, in a RAID10 setup?
->
-> Kind regards,
-> // Mathias
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+When expansion is run on 2 raid0 arrays in container no update
+is sent to mdmon because mdmon is off (mdadm performs update)
+Memory size for first reshaped array is allocated to satisfy memory
+requirements for expanded maps.
+Memory for second device is allocated using old disks number, as in metadata
+there is no information about this array reshape.
+When mdmon initiates second array reshape it overwrites internal structures
+and crashes). There is no place to keep expanded maps.
+To avoid this situation during loading metadata, allocated memory should be performed
+using the maximum used disks number in particular container.
 
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
+ super-intel.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/super-intel.c b/super-intel.c
+index 3e163ec..8c9e67f 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2483,6 +2483,7 @@ static int parse_raid_devices(struct intel_super *super)
+ 	int i;
+ 	struct imsm_dev *dev_new;
+ 	size_t len, len_migr;
++	size_t len max_len = 0;
+ 	size_t space_needed = 0;
+ 	struct imsm_super *mpb = super->anchor;
+ 
+@@ -2498,7 +2499,9 @@ static int parse_raid_devices(struct intel_super *super)
+ 		dv = malloc(sizeof(*dv));
+ 		if (!dv)
+ 			return 1;
+-		dev_new = malloc(len_migr);
++		if (max_len < len_migr)
++			max_len = len_migr;
++		dev_new = malloc(max_len);
+ 		if (!dev_new) {
+ 			free(dv);
+ 			return 1;
+
