@@ -1,104 +1,39 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: RAID HDDs spin up sequence
-Date: Mon, 31 Jan 2011 19:25:49 -0200
-Message-ID: <AANLkTikpRciBnYkoMwPFniEfPZinSKF=wiY3zvBRXh2q@mail.gmail.com>
-References: <20110131201823.GA15704@lazy.lzy>
-	<AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
-	<AANLkTi=Q7E5xhOxXA5KusWgpSb97hnmnbcm0fD1C9N5w@mail.gmail.com>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 15:27:18 -0600
+Message-ID: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=Q7E5xhOxXA5KusWgpSb97hnmnbcm0fD1C9N5w@mail.gmail.com>
+In-Reply-To: <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Cc: Roberto Spadim <roberto@spadim.com.br>, =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-just if you need information on all disks
-define your read. are you reading 1 byte or many bytes (on all hds?)
-the number of bytes read/write is the point
-if you need another disk to read/write you need to wake up your another=
- hd
+Before this goes any further, why not just reference the excellent
+Wikipedia article (actually, excellent applies to both Wikipedia *and*
+the article):
 
-check this implementations on mdadm:
-linear, raid0, 0, stripe
-maybe one is better for low power than another, but maybe one is
-faster than another
+http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
 
-2011/1/31 Mathias Bur=E9n <mathias.buren@gmail.com>:
-> On 31 January 2011 21:09, Roberto Spadim <roberto@spadim.com.br> wrot=
-e:
->> you psu must be dimensioned to work with everythink at full work loa=
-d
->> (it=B4s a real production NAS right?! not a test)
->> your SAS/IDE/SATA controller and HDD manual should be checked
->> how hdd wake up? one command (read/write) over sata/sas/ide channel =
-wake it up?
->> on linux raid we have a read algorithm and a write algorithm
->> if a raid1 write occur all disks will wake up
->> if a raid1 (raid0 or another) read occur only the disk will wake up
->>
->> but check you SATA/IDE/SATA controller, how it wake up your disk, an=
-d
->> how you hdd wake up
->>
->> 2011/1/31 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
->>> Hi all,
->>>
->>> assuming there is a NAS, with, for example, 10 HDDs
->>> in RAID-6. Assuming the HDDs are put in standby, in
->>> order to save energy, when the NAS is not used.
->>> How is the spin up sequence when the corresponding
->>> /dev/mdX device is accessed?
->>> Will the system spin up one HDD at time or all together?
->>>
->>> Obviously, one at time will limit the peak current,
->>> thus allowing a better dimensioned PSU, working almost
->>> always around the optimal efficiency point.
->>>
->>> Thanks a lot for any information on the topic,
->>>
->>> bye,
->>>
->>> --
->>>
->>> piergiorgio
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->>
->>
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
-> I would guess, that on a RAID0 setup, any read to that md device woul=
-d
-> wake every disk up in that setup. No?
->
-> // Mathias
->
->
+The only problem I have with the wikipedia article is the assertion
+that Linux MD RAID 10 is non-standard. It's as standard as anything
+else is in this world.
 
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jon
