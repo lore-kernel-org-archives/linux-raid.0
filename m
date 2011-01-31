@@ -1,77 +1,108 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID HDDs spin up sequence
-Date: Mon, 31 Jan 2011 23:23:48 +0100
-Message-ID: <20110131222348.GA15912@lazy.lzy>
-References: <20110131201823.GA15704@lazy.lzy>
- <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 20:33:58 -0200
+Message-ID: <AANLkTi=Lm8b+6pbQ0Gm3mw2qGX70uSeu6Li0+Gr7hnqF@mail.gmail.com>
+References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+	<AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<4D470F96.40409@cfl.rr.com>
+	<AANLkTim57HwYefXg=4CK06X+VXcW3o28VwRxCEnpaeEV@mail.gmail.com>
+	<4D4711A5.8070601@cfl.rr.com>
+	<AANLkTinVdMA0izAvN0ZS14wMV=p3XUtbgBe+1LwxafD=@mail.gmail.com>
+	<4D473366.6090401@cfl.rr.com>
+	<AANLkTinEGO9V7oZ7p8YveKe7QXXmLi9xdrhhmj7LS_JZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
+In-Reply-To: <AANLkTinEGO9V7oZ7p8YveKe7QXXmLi9xdrhhmj7LS_JZ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Denis <denismpa@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 31, 2011 at 07:09:24PM -0200, Roberto Spadim wrote:
-> you psu must be dimensioned to work with everythink at full work load
-> (it=B4s a real production NAS right?! not a test)
-> your SAS/IDE/SATA controller and HDD manual should be checked
-> how hdd wake up? one command (read/write) over sata/sas/ide channel w=
-ake it up?
-> on linux raid we have a read algorithm and a write algorithm
-> if a raid1 write occur all disks will wake up
-> if a raid1 (raid0 or another) read occur only the disk will wake up
->=20
-> but check you SATA/IDE/SATA controller, how it wake up your disk, and
-> how you hdd wake up
+it=B4s not just a probability problem, it=B4s a probability based on va=
+riable type
+if you want probability based on mirror you have a result, if you want
+probability based on disk you have another result
+raid0 allow disks (but we don=B4t have a 0,5 raid0 system, we just allo=
+w
+integers numbers, we can=B4t allow decimal numbers on this probability!=
+)
 
-Hi, thanks for the answer, unfortunately I was
-hoping to have made myself clear enough.
+the problem here is: raid0 isn=B4t divisible, we can=B4t run a 0,5 raid=
+0
+system. we need a full working raid0 to have a working mirror, a half
+disk don=B4t help us to WORK, just to test and play with data, not to
+real production work! why we don=B4t buy disks with bad blocks? got the
+problem? for tests ok, for production NEVER
 
-=46irst of all, it is a RAID-6, so let's say that's
-already decided by requirements. With SATA HDDs.
+i had a raid1 system broken last month, i have luck, two disks of 4
+disks are broken, the first raid0 and the last raid0 but they are on
+separated mirrors (the server hit the floor, sorry boss =3D( ).
 
-Second, the question was exactly about how the HDDs
-are waked up. This is a SW issue, trying with normal
-setups, i.e. a couple of disks, it is possible to
-send them to sleep (hdparm -y /dev/hdX) and the wake
-them up by a simple access.
-I had no opportunity to check this with a RAID-5/6,
-so I was asking if anyone knows.
+i lost information? no! the last raid0 brolen disk was never used =3D],
+i used concatenate raid0 (LINEAR), if i was using raid0 with stripe i
+was f****
+result: 4 new disks, 2 working 2 broken (i opened it! and 2 was good,
+after open it they are broken hehehe)
 
-=46inally, in order to be power efficient, the PSU,
-assuming something like an 80 Plus Gold, should work
-at not less than 20% of the nominal power, otherwise
-(according to some reviews), the efficiency drops far
-below the 80%~90% declared by the 80 Plus standard
-(which is measured at 20%, 50% and 100% of the maximum
-specified power).
-It seem it gets easily around 40%~50%.
-So, the PSU must be somehow under dimensioned for the
-spin up of 10 HDDs, which seem to require a possible
-30W*10=3D300W (some nasty HDDs seem to require 30W, in
-this situation) only for the storage.
+that=B4s the problem, we can=B4t allow luck on production servers,
+consider using probability based on mirrors(only integer numbers) not
+on disks(decimal number of mirror)
 
-If the HDDs spin up one after the other, then the peak
-consumption is only 30W, which might allow a lower
-power PSU, in contrast with the requirement to provide
-300W alone for the spin up.
+i could lost all my informations since i broken two mirrors on two
+mirror based server...
+make probability using integers not decimal numbers... since raid1 is
+mirrors based
 
-So, back to the original question, if a 10 HDDs RAID-6
-is in standby, how do the single HDD will be waked up,
-in case of access? Of course, a quite larger access,
-i.e. some GiB of data.
+another example...
+i want raid10 (2mirrors) if i make partition on 4 disks (8 partitions,
+2 per disk) and make raid1 on each partition on same disk (4 disk self
+mirrored) what the probability?
 
-Thanks again,
+i tell you is it mirror based or disk based?
+since software raid (mdadm) is mirror based you have 2 mirrors, you
+can lost 1 mirror! that=B4s the key. for mdadm you can=B4t go inside
+mirror device (just for raid0) but you can=B4t tell that=B4s a good
+probability
 
-bye,
+look OCZ Revo-drive
+it=B4s a ssd pci board with two SATA SSD storage (120gb revodrive =3D 2=
+x
+55gb ssd) if i make self mirror i have a fault tolerant system? yes!
+understand now? for mdadm we have 2 mirrors, don=B4t make probability
+based on disks! make probability based on mirrors!
+
+2011/1/31 Denis <denismpa@gmail.com>:
+> 2011/1/31 Phillip Susi <psusi@cfl.rr.com>:
+>> On 1/31/2011 2:53 PM, Roberto Spadim wrote:
+>>> if you have a bigger and bigger and bigger disk configuration and o=
+nly
+>>> two mirrors you still with =A050%
+> might help http://en.wikipedia.org/wiki/Probability
+>
+>
+> --
+> Denis Anjos,
+> www.versatushpc.com.br
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
 
 --=20
-
-piergiorgio
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
