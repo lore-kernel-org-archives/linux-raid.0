@@ -1,98 +1,57 @@
 From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Performance question, RAID5
-Date: Mon, 31 Jan 2011 19:43:02 -0200
-Message-ID: <AANLkTimcgi4+7k=8mnNGXQMk1WkFQx+jTgyEgVaV_WWQ@mail.gmail.com>
-References: <20110130094444.68288b0e@natsu>
-	<AANLkTi=jXwcEgRquKgsf5HQUA+AQdt8nHeHCUJYqdSbX@mail.gmail.com>
-	<20110130171533.4c9e236b@natsu>
-	<AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com>
-	<4D45C3FA.2040900@hardwarefreak.com>
-	<AANLkTikLX-d6CtXhLBQU_qoxx0fQ2HdR8acFCU+o9JeP@mail.gmail.com>
-	<20110131085202.GA25912@www2.open-std.org>
-	<AANLkTi=Zgqs958fSjkmKaDpgL21qshm=SRj_HUvjTbZz@mail.gmail.com>
-	<20110131131131.GA26525@www2.open-std.org>
-	<20110201074257.3c771181@notabene.brown>
-	<20110131214113.GA5274@www2.open-std.org>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 19:47:05 -0200
+Message-ID: <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
+References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110131214113.GA5274@www2.open-std.org>
+In-Reply-To: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: NeilBrown <neilb@suse.de>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>, Roman Mamedov <rm@romanrm.ru>, CoolCold <coolthecold@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-nice, but raid1 is not a very cpu consuming (a filesystem can use more
-cpu than a raid implementation...) a browser (firefox) too
-i think raid1 source code is well otimized for cpu and memory, maybe
-you need a faster cpu and not a less cpu consuming software, maybe a
-hardware raid could help you...
-
-2011/1/31 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Tue, Feb 01, 2011 at 07:42:57AM +1100, NeilBrown wrote:
->> On Mon, 31 Jan 2011 14:11:31 +0100 Keld J=F8rn Simonsen <keld@keldix=
-=2Ecom> wrote:
->>
->> > On Mon, Jan 31, 2011 at 09:37:46AM +0000, Mathias Bur=E9n wrote:
->> > > On 31 January 2011 08:52, Keld J=F8rn Simonsen <keld@keldix.com>=
- wrote:
->> > > > If your intallation is CPU bound, and you are
->> > > > using an Atom N270 processor or the like, well some ideas:
->> > > >
->> > > > The Atom CPU may have threading, so you could run 2 RAIDs
->> > > > which then probably would run in each thread.
->> > > > It would cost you 1 more disk if you run 2 RAID5's
->> > > > so you get 8 TB payload out of your 12 GB total (6 drives of 2=
- TB each).
->> > > >
->> > > > Another way to get better performance could be to use less
->> > > > CPU-intensitive RAID types. RAID5 is intensitive as it needs t=
-o
->> > > > calculate XOR information all the time. Maybe a mirrored
->> > > > raid type like RAID10,f2 would give you less CPU usage,
->> > > > and the run 2 RAIDS to have it running in both hyperthreads.
->> > > > Here you would then only get 6 TB payload of your 12 GB disks,
->> > > > but then also probably a faster system.
->> > > >
->> > > > Best regards
->> > > > keld
->> > > >
->> > >
->> > > Hi,
->> > >
->> > > It's interesting what you say about the XOR calculations. I thou=
-ght
->> > > that it was only calculated on writes? The Atom (330) has HT, so=
- Linux
->> > > sees 4 logical CPUs.
->> >
->> > Yes you are right, it only calculates XOR on writes with RAID5.
->> > But then I am puzzled what all these CPU cycles are used for.
->> > Also many cycles are used on mirrored raid types. Why?
->> > Maybe some is because of LVM? I have been puzzled for a long time =
-why
->> > ordinary RAID without LVM need to use so much CPU. Maybe a lot of =
-data
->> > sguffling between buffers? Neil?
->>
->> What is your evidence that RAID1 uses lots of CPU?
->
-> Much of this is raid10, but it should be the same:
-> http://home.comcast.net/~jpiszcz/20080329-raid/
-> http://home.comcast.net/~jpiszcz/raid/20080528/raid-levels.html
->
-> It seems like cpu usage is rather proportionate to the IO done.
-> And the CPU usage does get up to about 40 % for reading, and
-> 45 % for writing - this is most likely a significant delay factor.
-> For slower CPUs like the Atom CPU this may be an even more significan=
+=3D] hehehe there is no standard for linux, just the linux standard tha=
 t
-> delay factor.
+was implemented :P
+linux raid10 work and is the same idea of the 'raid10' academic standar=
+d
+i don=B4t know any raid standard, just hardware based standard
+you can=B4t get a smart array(hp) disk and put on a perc(dell) or linux
+mdadm and wait it will work without tweaking...
+
+
+2011/1/31 Jon Nelson <jnelson-linux-raid@jamponi.net>:
+> Before this goes any further, why not just reference the excellent
+> Wikipedia article (actually, excellent applies to both Wikipedia *and=
+*
+> the article):
 >
-> For RAID5 the situation is even worse, as expected.
+> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_1=
+0
 >
-> best regards
-> keld
+> The only problem I have with the wikipedia article is the assertion
+> that Linux MD RAID 10 is non-standard. It's as standard as anything
+> else is in this world.
+>
+>
+> --
+> Jon
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
