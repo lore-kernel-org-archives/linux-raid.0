@@ -1,140 +1,136 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 21:00:28 -0200
-Message-ID: <AANLkTikHnaEa_Ga64bjwOM7=DibXzRc9P53U_gfewWKY@mail.gmail.com>
-References: <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
-	<20110131225235.GA11775@www2.open-std.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID HDDs spin up sequence
+Date: Tue, 1 Feb 2011 00:07:03 +0100
+Message-ID: <20110131230703.GA16834@lazy.lzy>
+References: <20110131201823.GA15704@lazy.lzy>
+ <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
+ <20110131222348.GA15912@lazy.lzy>
+ <AANLkTi=gL3ATPN1+HHE+mhK7ZsM+aPyyQfVsz9Pq1Ajf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110131225235.GA11775@www2.open-std.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=gL3ATPN1+HHE+mhK7ZsM+aPyyQfVsz9Pq1Ajf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> =3D] hehehe there is no standard for linux, just the linux standard =
-that
->> was implemented :P
-it=B4s a joke =3DP hhehe
+On Mon, Jan 31, 2011 at 08:42:25PM -0200, Roberto Spadim wrote:
+> the better probability here is: all disks must be waked up
+> since you can have acces of 1gb but starting at a position that all
+> disks must be used
+> don=C2=B4t try used small PSU
 
->> you can?t get a smart array(hp) disk and put on a perc(dell) or linu=
-x
->> mdadm and wait it will work without tweaking...
-they are not standard based?! (they are standard based! before anyone t=
-ell...)
+No, that's not an option, HDDs must have staggered
+spin up, which is, to certain extent, supported by
+some SATA HDD manufactures (not all, it seems).
 
+> HP Proliant ML310G5 start all hardware on power up (a lot o Watts) an=
+d
+> after slow down thinks... why? check if PSU is ok, if not, don=C2=B4t=
+ start
+> server. that=C2=B4s a good PSU system.
 
-i was talking about wikipedia writers thinking that linux don=B4t have =
-a
-standard, check last email to understand the context:
+As I wrote, efficiency is paramount here.
 
->Before this goes any further, why not just reference the excellent
->Wikipedia article (actually, excellent applies to both Wikipedia *and*
->the article):
->http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
->
->The only problem I have with the wikipedia article is the assertion
->that Linux MD RAID 10 is non-standard. It's as standard as anything
->else is in this world.
->
->
->--
->Jon
-
-
-
-
-
-
-2011/1/31 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Mon, Jan 31, 2011 at 07:47:05PM -0200, Roberto Spadim wrote:
->> =3D] hehehe there is no standard for linux, just the linux standard =
-that
->> was implemented :P
->
-> There is a Linux standard, LSB Linux Standard Base ISO/IEC 23360.
-> And then there is the POSIX standard that the Linux kernel and
-> many utilities in GNU/linux follow. POSIX is ISO/IEC 9945.
->
->> linux raid10 work and is the same idea of the 'raid10' academic stan=
-dard
->
-> raid1+0 and Linux MD raid10 are similar, but significantly different
-> in a number of ways. Linux MD raid10 can run on only 2 drives.
-> Linux raid10,f2 has almost RAID0 striping performance in sequential r=
-ead.
-> You can have an odd number of drives in raid10.
-> And you can have as many copies as you like in raid10,
->
->> i don?t know any raid standard, just hardware based standard
->
-> There is an organisation that standardizes RAID levels.
-> Unfortunately I cannot find a link right now.
-> The raid10 offset layout is an implementation of one of their specs.
->
->> you can?t get a smart array(hp) disk and put on a perc(dell) or linu=
-x
->> mdadm and wait it will work without tweaking...
->
-> Yes. And?
->
-> best regards
-> keld
->
->> 2011/1/31 Jon Nelson <jnelson-linux-raid@jamponi.net>:
->> > Before this goes any further, why not just reference the excellent
->> > Wikipedia article (actually, excellent applies to both Wikipedia *=
-and*
->> > the article):
->> >
->> > http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAI=
-D_10
->> >
->> > The only problem I have with the wikipedia article is the assertio=
-n
->> > that Linux MD RAID 10 is non-standard. It's as standard as anythin=
+> ok if you want to test, i think the worst scenario is all disks beein=
 g
->> > else is in this world.
->> >
->> >
->> > --
->> > Jon
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->> >
->>
->>
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> waked up, i think linux use async (many threads) commands to send
+> write/read, maybe you will have a small time between wake up (maybe
+> just some microseconds)
 
+That's interesting information. I suspected something
+like async access could have happened.
+Is this confirmed? Are the requests from md to the
+device layer asynchronous?
+How about libata? Does this serialize wake ups?
 
+Thanks,
+
+bye,
+
+pg
+
+> 2011/1/31 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
+> > On Mon, Jan 31, 2011 at 07:09:24PM -0200, Roberto Spadim wrote:
+> >> you psu must be dimensioned to work with everythink at full work l=
+oad
+> >> (it=E6=84=80 a real production NAS right?! not a test)
+> >> your SAS/IDE/SATA controller and HDD manual should be checked
+> >> how hdd wake up? one command (read/write) over sata/sas/ide channe=
+l wake it up?
+> >> on linux raid we have a read algorithm and a write algorithm
+> >> if a raid1 write occur all disks will wake up
+> >> if a raid1 (raid0 or another) read occur only the disk will wake u=
+p
+> >>
+> >> but check you SATA/IDE/SATA controller, how it wake up your disk, =
+and
+> >> how you hdd wake up
+> >
+> > Hi, thanks for the answer, unfortunately I was
+> > hoping to have made myself clear enough.
+> >
+> > First of all, it is a RAID-6, so let's say that's
+> > already decided by requirements. With SATA HDDs.
+> >
+> > Second, the question was exactly about how the HDDs
+> > are waked up. This is a SW issue, trying with normal
+> > setups, i.e. a couple of disks, it is possible to
+> > send them to sleep (hdparm -y /dev/hdX) and the wake
+> > them up by a simple access.
+> > I had no opportunity to check this with a RAID-5/6,
+> > so I was asking if anyone knows.
+> >
+> > Finally, in order to be power efficient, the PSU,
+> > assuming something like an 80 Plus Gold, should work
+> > at not less than 20% of the nominal power, otherwise
+> > (according to some reviews), the efficiency drops far
+> > below the 80%~90% declared by the 80 Plus standard
+> > (which is measured at 20%, 50% and 100% of the maximum
+> > specified power).
+> > It seem it gets easily around 40%~50%.
+> > So, the PSU must be somehow under dimensioned for the
+> > spin up of 10 HDDs, which seem to require a possible
+> > 30W*10=3D300W (some nasty HDDs seem to require 30W, in
+> > this situation) only for the storage.
+> >
+> > If the HDDs spin up one after the other, then the peak
+> > consumption is only 30W, which might allow a lower
+> > power PSU, in contrast with the requirement to provide
+> > 300W alone for the spin up.
+> >
+> > So, back to the original question, if a 10 HDDs RAID-6
+> > is in standby, how do the single HDD will be waked up,
+> > in case of access? Of course, a quite larger access,
+> > i.e. some GiB of data.
+> >
+> > Thanks again,
+> >
+> > bye,
+> >
+> > --
+> >
+> > piergiorgio
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
+html
+> >
+>=20
+>=20
+>=20
+> --=20
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
 
 --=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+
+piergiorgio
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
