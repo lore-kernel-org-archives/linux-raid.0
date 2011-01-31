@@ -1,54 +1,61 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm: FIX: mdmon crash during 2 raid0 arrays expansion
-Date: Mon, 31 Jan 2011 13:48:16 +0100
-Message-ID: <20110131124815.26942.85427.stgit@gklab-128-013.igk.intel.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: Performance question, RAID5
+Date: Mon, 31 Jan 2011 14:11:31 +0100
+Message-ID: <20110131131131.GA26525@www2.open-std.org>
+References: <AANLkTi=SbAM3BXxjH6Mvcn-Tw4b0FYyLjLFqSGuxY1fk@mail.gmail.com> <AANLkTik4MGS7V7ePBgbk+KW-FcBBV7MuYgB7n29RRXF=@mail.gmail.com> <20110130094444.68288b0e@natsu> <AANLkTi=jXwcEgRquKgsf5HQUA+AQdt8nHeHCUJYqdSbX@mail.gmail.com> <20110130171533.4c9e236b@natsu> <AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com> <4D45C3FA.2040900@hardwarefreak.com> <AANLkTikLX-d6CtXhLBQU_qoxx0fQ2HdR8acFCU+o9JeP@mail.gmail.com> <20110131085202.GA25912@www2.open-std.org> <AANLkTi=Zgqs958fSjkmKaDpgL21qshm=SRj_HUvjTbZz@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=Zgqs958fSjkmKaDpgL21qshm=SRj_HUvjTbZz@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Mathias =?iso-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Roman Mamedov <rm@romanrm.ru>, CoolCold <coolthecold@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When expansion is run on 2 raid0 arrays in container no update
-is sent to mdmon because mdmon is off (mdadm performs update)
-Memory size for first reshaped array is allocated to satisfy memory
-requirements for expanded maps.
-Memory for second device is allocated using old disks number, as in metadata
-there is no information about this array reshape.
-When mdmon initiates second array reshape it overwrites internal structures
-and crashes). There is no place to keep expanded maps.
-To avoid this situation during loading metadata, allocated memory should be performed
-using the maximum used disks number in particular container.
+On Mon, Jan 31, 2011 at 09:37:46AM +0000, Mathias Bur=E9n wrote:
+> On 31 January 2011 08:52, Keld J=F8rn Simonsen <keld@keldix.com> wrot=
+e:
+> > If your intallation is CPU bound, and you are
+> > using an Atom N270 processor or the like, well some ideas:
+> >
+> > The Atom CPU may have threading, so you could run 2 RAIDs
+> > which then probably would run in each thread.
+> > It would cost you 1 more disk if you run 2 RAID5's
+> > so you get 8 TB payload out of your 12 GB total (6 drives of 2 TB e=
+ach).
+> >
+> > Another way to get better performance could be to use less
+> > CPU-intensitive RAID types. RAID5 is intensitive as it needs to
+> > calculate XOR information all the time. Maybe a mirrored
+> > raid type like RAID10,f2 would give you less CPU usage,
+> > and the run 2 RAIDS to have it running in both hyperthreads.
+> > Here you would then only get 6 TB payload of your 12 GB disks,
+> > but then also probably a faster system.
+> >
+> > Best regards
+> > keld
+> >
+>=20
+> Hi,
+>=20
+> It's interesting what you say about the XOR calculations. I thought
+> that it was only calculated on writes? The Atom (330) has HT, so Linu=
+x
+> sees 4 logical CPUs.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+Yes you are right, it only calculates XOR on writes with RAID5.=20
+But then I am puzzled what all these CPU cycles are used for.
+Also many cycles are used on mirrored raid types. Why?
+Maybe some is because of LVM? I have been puzzled for a long time why
+ordinary RAID without LVM need to use so much CPU. Maybe a lot of data
+sguffling between buffers? Neil?
 
- super-intel.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/super-intel.c b/super-intel.c
-index 3e163ec..8c9e67f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2483,6 +2483,7 @@ static int parse_raid_devices(struct intel_super *super)
- 	int i;
- 	struct imsm_dev *dev_new;
- 	size_t len, len_migr;
-+	size_t len max_len = 0;
- 	size_t space_needed = 0;
- 	struct imsm_super *mpb = super->anchor;
- 
-@@ -2498,7 +2499,9 @@ static int parse_raid_devices(struct intel_super *super)
- 		dv = malloc(sizeof(*dv));
- 		if (!dv)
- 			return 1;
--		dev_new = malloc(len_migr);
-+		if (max_len < len_migr)
-+			max_len = len_migr;
-+		dev_new = malloc(max_len);
- 		if (!dev_new) {
- 			free(dv);
- 			return 1;
-
+Best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
