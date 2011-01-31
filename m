@@ -1,53 +1,50 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/2] patches addresses problem with memory corruption
-Date: Mon, 31 Jan 2011 15:59:24 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17701C779@irsmsx503.ger.corp.intel.com>
-References: <20110131151657.13213.16328.stgit@gklab-128-013.igk.intel.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 15:45:23 +0000
+Message-ID: <20110131154523.GF7861@cthulhu.home.robinhill.me.uk>
+References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+ <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+ <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+ <20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+ <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+ <AANLkTinOkzo2+ZO2fWHShOXPKE6ikQgo4LsOVpkdxHWq@mail.gmail.com>
+ <AANLkTi=mWHz69_U1tWzyPGy3-drOA4T1-dHtu1OHLtA+@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110131151657.13213.16328.stgit@gklab-128-013.igk.intel.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=mWHz69_U1tWzyPGy3-drOA4T1-dHtu1OHLtA+@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcmFpZC1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1yYWlkLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBBZGFtIEt3b2xlaw0KPiBTZW50OiBNb25kYXksIEphbnVhcnkg
-MzEsIDIwMTEgNDoyNSBQTQ0KPiBUbzogbmVpbGJAc3VzZS5kZQ0KPiBDYzogbGludXgtcmFpZEB2
-Z2VyLmtlcm5lbC5vcmc7IFdpbGxpYW1zLCBEYW4gSjsgQ2llY2hhbm93c2tpLCBFZDsNCj4gTmV1
-YmF1ZXIsIFdvamNpZWNoDQo+IFN1YmplY3Q6IFtQQVRDSCAwLzJdIHBhdGNoZXMgYWRkcmVzc2Vz
-IHByb2JsZW0gd2l0aCBtZW1vcnkgY29ycnVwdGlvbg0KPiANCj4gV2hlbiBmb3IgcmFpZDAgbWV0
-YWRhdGEgaXMgdXBkYXRlZCBvdXRzaWRlIG1kbW9uIGl0IGNhbiBoYXBwZW4gdGhhdA0KPiBtZW1v
-cnkgY29ycnVwdGlvbiBvY2N1cnMgZHVlIHRvIHRvbyBhbW91bnQgb2YgbWVtb3J5IGlzIGFsbG9j
-YXRlZA0KPiBmb3IgaW1zbSBkZXZpY2Ugc3RydWN0dXJlLg0KPiANCj4gMS4gaW1zbTogRklYOiBt
-ZG1vbiBjcmFzaCBkdXJpbmcgMiByYWlkMCBhcnJheXMgZXhwYW5zaW9uDQo+ICAgdGhpcyBwYXRj
-aCBpcyBhbG1vc3QgdGhlIHNhbWUgdG8gc2VudCBlYXJsaWVyIGV4Y2VwdCAyIGNoYW5nZXM6DQo+
-ICAgIGEpIGNvbXBpbGF0aW9uIHByb2JsZW0NCj4gICAgYikgc2l6ZSBzaG91bGQgYWZmZWN0IGFu
-Y2hvciBzaXplIGFsc28NCj4gICAgICAgKGFkZGVkIGNhbGN1bGF0aW9uIGNoYW5nZXMgZXh0ZW5k
-cyBzcGFjZV9uZWVkZWQgdmFyaWFibGUgYWxzbw0KPiAgICAgICAgdGhpcyB2YXJpYWJsZSBpcyB1
-c2VkIGZvciBhbmNob3IgYWxsb2NhdGlvbikNCj4gICBzbyBpdCByZXBsYWNlcyBwcmV2aW91cyBv
-bmUuDQo+IDIuICBpbXNtOiBGSVg6IHNpemVvZl9pbXNtX2RldigpIGNhbiByZXR1cm4gdG9vIHNt
-YWxsIHZhbHVlDQo+IAlzaXplIHJldHVybmVkIGJ5IHNpemVvZl9pbXNtX2RldigpIGRlc2NyaWJl
-cyBtaW5pbXVtIHNpemUgb2YNCj4gZGV2aWNlDQo+ICAgICAgICAgVGhpcyBpcyBjb3JyZWN0IHdo
-ZW4gYm90aCBkZXZpY2UgbWFwcyBoYXMgdGhlIHNhbWUgbGVuZ3RoDQo+ICAgICAgICAgV2hlbiBk
-ZXZpY2UgZXhwYW5kcyBvciBzaHJpbmtzIHdlIHNob3VsZCByZXR1cm4gc2l6ZSB0aGF0DQo+IGFs
-bG93cw0KPiAgICAgICAgIGZvciBzdG9yaW5nIGxhcmdlciBkZXZpY2UgaW5mb3JtYXRpb24gdG8g
-YXZvaWQgbWVtb3J5DQo+IGNvcnJ1cHRpb24uDQo+IA0KPiBCUg0KPiBBZGFtDQoNCmltc206IEZJ
-WDogc2l6ZW9mX2ltc21fZGV2KCkgY2FuIHJldHVybiB0b28gc21hbGwgdmFsdWUNCglUaGlzIHNo
-b3VsZCBiZSBhZGRyZXNzZWQgaW4gZGlmZmVyZW50IHdheSAoZml4IGluIGRpZmZlcmVudCBwbGFj
-ZSksIEkgaGF2ZSB0byB0aGluayBhYm91dCBpdC4uLg0KCXBsZWFzZSByZXZpZXcvYXBwbHkgZmly
-c3QgcGF0Y2ggb25seSAoaW1zbTogRklYOiBtZG1vbiBjcmFzaCBkdXJpbmcgMiByYWlkMCBhcnJh
-eXMgZXhwYW5zaW9uKQ0KDQpCUg0KQWRhbQ0KDQo+IC0tLQ0KPiANCj4gQWRhbSBLd29sZWsgKDIp
-Og0KPiAgICAgICBpbXNtOiBGSVg6IHNpemVvZl9pbXNtX2RldigpIGNhbiByZXR1cm4gdG9vIHNt
-YWxsIHZhbHVlDQo+ICAgICAgIGltc206IEZJWDogbWRtb24gY3Jhc2ggZHVyaW5nIDIgcmFpZDAg
-YXJyYXlzIGV4cGFuc2lvbg0KPiANCj4gDQo+ICBzdXBlci1pbnRlbC5jIHwgICAyMCArKysrKysr
-KysrKysrKystLS0tLQ0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspLCA1IGRl
-bGV0aW9ucygtKQ0KPiANCj4gLS0NCj4gU2lnbmF0dXJlDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIg0K
-PiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
-Zw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9y
-ZG9tby1pbmZvLmh0bWwNCg==
+On Mon Jan 31, 2011 at 01:32:06PM -0200, Roberto Spadim wrote:
+
+> rewriting..
+> using raid10 or raid01 you will have problems if you lose 2 drives too...
+> if you lose two raid 1 devices you loose raid 1...
+> see:
+> 
+> disks=4
+> RAID 1+0
+> raid1= 1-2(A)  ; 3-4(B); 5-6(C)
+> raid0= A-B-C
+> if you lose (A,B or C) your raid0 stop
+> 
+> RAID 0+1
+> raid0= 1-2-3(A)  ; 4-5-6(B)
+> raid1= A-B
+> if you lose (1,4 OR 1,5 OR 1,6 OR 2,4 OR 2,5 OR 2,6 OR 3,4 OR 4,5 OR
+> 4,6) your raid0 stop
+> 
+> using raid1+0 or raid0+1 you can't lose two disks...
+> 
+Yes you can - it just depends which disks. With the 6-disk case you can
+lose a maximum of 3 drives, though only a single drive failure will
+definitely not cause total array failure.  For RAID1+0 your 2-drive
+failure cases are only 1,2 OR 3,4 OR 5,6 - any other pairing will not
+break the overall array.  For RAID0+1 there's 9 failure cases as you
+point out (except the last two should be 3,5 and 3,6).
+
+Cheers,
+    Robin
