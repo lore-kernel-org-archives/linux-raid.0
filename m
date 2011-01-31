@@ -1,7 +1,7 @@
 From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 19:47:05 -0200
-Message-ID: <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
+Date: Mon, 31 Jan 2011 19:51:32 -0200
+Message-ID: <AANLkTikYGquOk9wwMuLxaDRvOe3-iJOMMW7JQKpdZBpk@mail.gmail.com>
 References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
 	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
 	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
@@ -16,47 +16,67 @@ References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
 	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
 	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
 	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+In-Reply-To: <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon Nelson <jnelson-linux-raid@jamponi.net>
 Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=3D] hehehe there is no standard for linux, just the linux standard tha=
-t
-was implemented :P
-linux raid10 work and is the same idea of the 'raid10' academic standar=
-d
-i don=B4t know any raid standard, just hardware based standard
-you can=B4t get a smart array(hp) disk and put on a perc(dell) or linux
-mdadm and wait it will work without tweaking...
+now, a question....
 
+if raid1 is like raid10 (one disk =3D raid0)
+why not only one raid1 (raid10) software implementation?
+for example, if i have 4 disks and i want 4 mirrors.
+why not work with only raid10? why the option since we have all
+features of raid1 inside raid10?
+is it to allow small source code (a small ARM rom)? memory usage? cpu
+usage? easy to implement?
 
-2011/1/31 Jon Nelson <jnelson-linux-raid@jamponi.net>:
-> Before this goes any further, why not just reference the excellent
-> Wikipedia article (actually, excellent applies to both Wikipedia *and=
-*
-> the article):
+2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
+> =3D] hehehe there is no standard for linux, just the linux standard t=
+hat
+> was implemented :P
+> linux raid10 work and is the same idea of the 'raid10' academic stand=
+ard
+> i don=B4t know any raid standard, just hardware based standard
+> you can=B4t get a smart array(hp) disk and put on a perc(dell) or lin=
+ux
+> mdadm and wait it will work without tweaking...
 >
-> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_1=
-0
 >
-> The only problem I have with the wikipedia article is the assertion
-> that Linux MD RAID 10 is non-standard. It's as standard as anything
-> else is in this world.
+> 2011/1/31 Jon Nelson <jnelson-linux-raid@jamponi.net>:
+>> Before this goes any further, why not just reference the excellent
+>> Wikipedia article (actually, excellent applies to both Wikipedia *an=
+d*
+>> the article):
+>>
+>> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_=
+10
+>>
+>> The only problem I have with the wikipedia article is the assertion
+>> that Linux MD RAID 10 is non-standard. It's as standard as anything
+>> else is in this world.
+>>
+>>
+>> --
+>> Jon
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
 >
 >
 > --
-> Jon
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
 >
 
 
