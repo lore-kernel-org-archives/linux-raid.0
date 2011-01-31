@@ -1,53 +1,38 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 14:07:05 -0600
-Message-ID: <4D471669.3040303@hardwarefreak.com>
-References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+Date: Mon, 31 Jan 2011 14:17:37 -0600
+Message-ID: <4D4718E1.9040607@hardwarefreak.com>
+References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com> <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com> <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com> <20110131152151.GD7861@cthulhu.home.robinhill.me.uk> <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com> <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com> <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com> <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com> <AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com> <20110131192858.GD27952@www2.open-std.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+In-Reply-To: <20110131192858.GD27952@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
+Cc: Roberto Spadim <roberto@spadim.com.br>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Mathias Bur=E9n put forth on 1/31/2011 3:41 AM:
+Keld J=F8rn Simonsen put forth on 1/31/2011 1:28 PM:
+> Top-posting...
+>=20
+> How is the raid0+1 problem of only 33 % survival for 2 disk with RAID=
+10?
+>=20
+> I know for RAID10,F2 the implementation in Linux MD is bad.
+> It is only 33 % survival, while it with a probably minor fix could be=
+ 66%.
+>=20
+> But how with RAID10,n2 and RAID10,o2?
 
-> How would one go about expanding a 4 HDD RAID10 into a 6 HDD RAID10?
-> Is it "just" a matter of creating a new RAID1 array of the 2 new HDDs=
-,
-> then adding them to the RAID0, then expanding whatever is on that
-> (lvm, xfs, ext4)?
+I don't care what Neil or anyone says, these "layouts" are _NOT_ RAID 1=
+0.  If
+you want to discuss RAID 10, please leave these non-standard Frankenste=
+in
+"layouts" out of the discussion.  Including them only muddies things un=
+necessarily.
 
-The best way to do this "down the road" expansion is to simply create a=
-nother 4
-drive mdraid 10 array and concatenate it to the first with LVM.  My gue=
-ss is
-that you're more concerned with usable space than IOPs, so you should p=
-robably
-start with a 4 drive RAID5.  Down the road, you could add a 3 drive mdr=
-aid 5 and
-concatenate that with the first array using LVM.  This will avoid all k=
-inds of
-potentially messy, possibly earth shattering mdadm conversions.  Runnin=
-g such
-conversions on live arrays without a reliable backup/restore capability=
- is just
-asking for trouble.  Using concatenation leaves your old and new md arr=
-ays
-totally intact.
-
-http://linux.about.com/od/commands/l/blcmdl8_lvm.htm
-
-> Are there any design tips, or caveats? For example, how many disks
-> would you use at most, in a RAID10 setup?
-
-As many as you want, or that your hardware can support.  The largest RA=
-ID 10
-array I've setup was 40 drives.  That was an FC SAN controller though, =
-not mdraid.
+Thank you.
 
 --=20
 Stan
