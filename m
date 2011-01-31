@@ -1,7 +1,7 @@
 From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 13:34:13 -0200
-Message-ID: <AANLkTikRaUp5yr+G8V3jC48GWFmSnp-m+LRMQ9+fOgVy@mail.gmail.com>
+Date: Mon, 31 Jan 2011 13:37:04 -0200
+Message-ID: <AANLkTi=s6+d==dkm2rGFn2f8paRXFAT3ZJJS1gjkHbG7@mail.gmail.com>
 References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 	<AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
 	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
@@ -9,91 +9,106 @@ References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
 	<AANLkTinOkzo2+ZO2fWHShOXPKE6ikQgo4LsOVpkdxHWq@mail.gmail.com>
 	<AANLkTi=mWHz69_U1tWzyPGy3-drOA4T1-dHtu1OHLtA+@mail.gmail.com>
+	<AANLkTikRaUp5yr+G8V3jC48GWFmSnp-m+LRMQ9+fOgVy@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=mWHz69_U1tWzyPGy3-drOA4T1-dHtu1OHLtA+@mail.gmail.com>
+In-Reply-To: <AANLkTikRaUp5yr+G8V3jC48GWFmSnp-m+LRMQ9+fOgVy@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-the only way to make it safer, is put more devices on raid1
-for example:
-disks=3D6 (was wrong on last email)
-raid0=3D 1-2(a) 3-4(b) 5-6(c)
-raid1=3D a,b,c
+the main problem is, you can lose one disk
+if you lose any disk, you should replace all disks
+and raid1 allow you to make it online (without shutdown your server)
+that's the main use of raid1 (replica/mirror/redundance)
 
-or
-raid1=3D1-2-3(a) 4-5-6(b)
-raid0=3Da,b
-now you can loose tree disks
 
 2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
-> rewriting..
-> using raid10 or raid01 you will have problems if you lose 2 drives to=
-o...
-> if you lose two raid 1 devices you loose raid 1...
-> see:
+> the only way to make it safer, is put more devices on raid1
+> for example:
+> disks=3D6 (was wrong on last email)
+> raid0=3D 1-2(a) 3-4(b) 5-6(c)
+> raid1=3D a,b,c
 >
-> disks=3D4
-> RAID 1+0
-> raid1=3D 1-2(A) =A0; 3-4(B); 5-6(C)
-> raid0=3D A-B-C
-> if you lose (A,B or C) your raid0 stop
->
-> RAID 0+1
-> raid0=3D 1-2-3(A) =A0; 4-5-6(B)
-> raid1=3D A-B
-> if you lose (1,4 OR 1,5 OR 1,6 OR 2,4 OR 2,5 OR 2,6 OR 3,4 OR 4,5 OR
-> 4,6) your raid0 stop
->
-> using raid1+0 or raid0+1 you can't lose two disks...
->
->
+> or
+> raid1=3D1-2-3(a) 4-5-6(b)
+> raid0=3Da,b
+> now you can loose tree disks
 >
 > 2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
->> do you have a faster array using raid0+1 or raid1+0?
+>> rewriting..
+>> using raid10 or raid01 you will have problems if you lose 2 drives t=
+oo...
+>> if you lose two raid 1 devices you loose raid 1...
+>> see:
+>>
+>> disks=3D4
+>> RAID 1+0
+>> raid1=3D 1-2(A) =A0; 3-4(B); 5-6(C)
+>> raid0=3D A-B-C
+>> if you lose (A,B or C) your raid0 stop
+>>
+>> RAID 0+1
+>> raid0=3D 1-2-3(A) =A0; 4-5-6(B)
+>> raid1=3D A-B
+>> if you lose (1,4 OR 1,5 OR 1,6 OR 2,4 OR 2,5 OR 2,6 OR 3,4 OR 4,5 OR
+>> 4,6) your raid0 stop
+>>
+>> using raid1+0 or raid0+1 you can't lose two disks...
+>>
+>>
 >>
 >> 2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
->>> hum that's right,
->>> but not 'increase' (only if you compare raid0+1 betwen raid1+0) usi=
-ng
->>> raid1 and after raid0 have LESS point of fail between raid 0 and af=
-ter
->>> raid 1, since the number of point of fail is proportional to number=
- of
->>> raid1 devices.
+>>> do you have a faster array using raid0+1 or raid1+0?
 >>>
->>> 2011/1/31 Robin Hill <robin@robinhill.me.uk>:
->>>> On Mon Jan 31, 2011 at 01:00:13PM -0200, Roberto Spadim wrote:
+>>> 2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
+>>>> hum that's right,
+>>>> but not 'increase' (only if you compare raid0+1 betwen raid1+0) us=
+ing
+>>>> raid1 and after raid0 have LESS point of fail between raid 0 and a=
+fter
+>>>> raid 1, since the number of point of fail is proportional to numbe=
+r of
+>>>> raid1 devices.
 >>>>
->>>>> i think make two very big raid 0
->>>>> and after raid1
->>>>> is better
+>>>> 2011/1/31 Robin Hill <robin@robinhill.me.uk>:
+>>>>> On Mon Jan 31, 2011 at 01:00:13PM -0200, Roberto Spadim wrote:
 >>>>>
->>>> Not really - you increase the failure risk doing this. =A0With thi=
-s setup,
->>>> a single drive failure from each RAID0 array will lose you the ent=
-ire
->>>> array. =A0With the reverse (RAID0 over RAID1) then you require bot=
-h drives
->>>> in the RAID1 to fail in order to lose the array. =A0Of course, wit=
-h a 4
->>>> drive array then the risk is the same (33% with 2 drive failures) =
-but
->>>> with a 6 drive array it changes to 60% for RAID1 over RAID0 versus=
- 20%
->>>> for RAID0 over RAID1.
+>>>>>> i think make two very big raid 0
+>>>>>> and after raid1
+>>>>>> is better
+>>>>>>
+>>>>> Not really - you increase the failure risk doing this. =A0With th=
+is setup,
+>>>>> a single drive failure from each RAID0 array will lose you the en=
+tire
+>>>>> array. =A0With the reverse (RAID0 over RAID1) then you require bo=
+th drives
+>>>>> in the RAID1 to fail in order to lose the array. =A0Of course, wi=
+th a 4
+>>>>> drive array then the risk is the same (33% with 2 drive failures)=
+ but
+>>>>> with a 6 drive array it changes to 60% for RAID1 over RAID0 versu=
+s 20%
+>>>>> for RAID0 over RAID1.
+>>>>>
+>>>>> Cheers,
+>>>>> =A0 =A0Robin
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-r=
+aid" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.h=
+tml
+>>>>>
 >>>>
->>>> Cheers,
->>>> =A0 =A0Robin
+>>>>
+>>>>
 >>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
+>>>> Roberto Spadim
+>>>> Spadim Technology / SPAEmpresarial
 >>>>
 >>>
 >>>
