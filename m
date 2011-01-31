@@ -1,44 +1,58 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 15:30:44 +0000
-Message-ID: <20110131153044.GE7861@cthulhu.home.robinhill.me.uk>
-References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
- <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
- <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
- <20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 1/2] imsm: FIX: mdmon crash during 2 raid0 arrays expansion
+Date: Mon, 31 Jan 2011 16:25:16 +0100
+Message-ID: <20110131152516.13213.12376.stgit@gklab-128-013.igk.intel.com>
+References: <20110131151657.13213.16328.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20110131151657.13213.16328.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon Jan 31, 2011 at 03:21:51PM +0000, Robin Hill wrote:
+When expansion is run on 2 raid0 arrays in container no update
+is sent to mdmon because mdmon is off (mdadm performs update)
+Memory size for first reshaped array is allocated to satisfy memory
+requirements for expanded maps.
+Memory for second device is allocated using old disks number, as in metadata
+there is no information about this array reshape.
+When mdmon initiates second array reshape it overwrites internal structures
+and crashes). There is no place to keep expanded maps.
+To avoid this situation during loading metadata, allocated memory should be performed
+using the maximum used disks number in particular container.
 
-> On Mon Jan 31, 2011 at 01:00:13PM -0200, Roberto Spadim wrote:
-> 
-> > i think make two very big raid 0
-> > and after raid1
-> > is better
-> > 
-> Not really - you increase the failure risk doing this.  With this setup,
-> a single drive failure from each RAID0 array will lose you the entire
-> array.  With the reverse (RAID0 over RAID1) then you require both drives
-> in the RAID1 to fail in order to lose the array.  Of course, with a 4
-> drive array then the risk is the same (33% with 2 drive failures) but
-> with a 6 drive array it changes to 60% for RAID1 over RAID0 versus 20%
-> for RAID0 over RAID1.
-> 
-And I managed to get my maths wrong.  Even for a 4-drive array, RAID1
-over RAID0 will have a 66% 2-drive failure chance, versus 33% for RAID0
-over RAID1.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-Cheers,
-    Robin
--- 
-     ___        
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+ super-intel.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index 3e163ec..0c988d6 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2483,6 +2483,7 @@ static int parse_raid_devices(struct intel_super *super)
+ 	int i;
+ 	struct imsm_dev *dev_new;
+ 	size_t len, len_migr;
++	size_t max_len = 0;
+ 	size_t space_needed = 0;
+ 	struct imsm_super *mpb = super->anchor;
+ 
+@@ -2498,7 +2499,11 @@ static int parse_raid_devices(struct intel_super *super)
+ 		dv = malloc(sizeof(*dv));
+ 		if (!dv)
+ 			return 1;
+-		dev_new = malloc(len_migr);
++		if (max_len < len_migr)
++			max_len = len_migr;
++		if (max_len > len_migr)
++			space_needed += max_len - len_migr;
++		dev_new = malloc(max_len);
+ 		if (!dev_new) {
+ 			free(dv);
+ 			return 1;
+
