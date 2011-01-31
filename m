@@ -1,71 +1,56 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 17:53:28 -0200
-Message-ID: <AANLkTinVdMA0izAvN0ZS14wMV=p3XUtbgBe+1LwxafD=@mail.gmail.com>
+Date: Mon, 31 Jan 2011 14:07:05 -0600
+Message-ID: <4D471669.3040303@hardwarefreak.com>
 References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
-	<AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
-	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
-	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
-	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
-	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
-	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<4D470F96.40409@cfl.rr.com>
-	<AANLkTim57HwYefXg=4CK06X+VXcW3o28VwRxCEnpaeEV@mail.gmail.com>
-	<4D4711A5.8070601@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D4711A5.8070601@cfl.rr.com>
+In-Reply-To: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-nice, copies (mirrors)
-if you lose 2 mirros in a 2 mirrors raid, you lost you information
-so 2 mirrors fail >=3D 2 disk fail
-you have a probability to fail of 1/2 (50%, 1 failed mirror, 2 total mi=
-rrors)
-if you have a bigger and bigger and bigger disk configuration and only
-two mirrors you still with  50%
-if you put more mirrors: 1/3 (33%, 1 failed, 3 total), 1/4=3D25%, 1/5=3D=
-20% ......
-got?
-is this information on wikipedia? maybe we could put there
+Mathias Bur=E9n put forth on 1/31/2011 3:41 AM:
 
-(raid0/raid1/raid10) fail system:
-1 disk failed =3D 1 mirror failed
-2 disk failed on same mirror =3D 1 mirror failed
-probability to crash:
-(failed mirrors / total mirrors)!=3D(failed disks / total
-disks)!=3D(failed disks / total mirrors)!=3D(failed mirrors / total dis=
-ks)
+> How would one go about expanding a 4 HDD RAID10 into a 6 HDD RAID10?
+> Is it "just" a matter of creating a new RAID1 array of the 2 new HDDs=
+,
+> then adding them to the RAID0, then expanding whatever is on that
+> (lvm, xfs, ext4)?
 
+The best way to do this "down the road" expansion is to simply create a=
+nother 4
+drive mdraid 10 array and concatenate it to the first with LVM.  My gue=
+ss is
+that you're more concerned with usable space than IOPs, so you should p=
+robably
+start with a 4 drive RAID5.  Down the road, you could add a 3 drive mdr=
+aid 5 and
+concatenate that with the first array using LVM.  This will avoid all k=
+inds of
+potentially messy, possibly earth shattering mdadm conversions.  Runnin=
+g such
+conversions on live arrays without a reliable backup/restore capability=
+ is just
+asking for trouble.  Using concatenation leaves your old and new md arr=
+ays
+totally intact.
 
+http://linux.about.com/od/commands/l/blcmdl8_lvm.htm
 
-2011/1/31 Phillip Susi <psusi@cfl.rr.com>:
-> On 1/31/2011 2:41 PM, Roberto Spadim wrote:
->> nice,
->> linux raid1 allow many mirrors
->> does raid10 allow many mirrors or just one?
->
-> See the man page. =A0You can specify any number for near, far, or off=
-set
-> copies. =A0The default is 2 near.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> Are there any design tips, or caveats? For example, how many disks
+> would you use at most, in a RAID10 setup?
 
-
+As many as you want, or that your hardware can support.  The largest RA=
+ID 10
+array I've setup was 40 drives.  That was an FC SAN controller though, =
+not mdraid.
 
 --=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+Stan
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
