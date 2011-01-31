@@ -1,50 +1,41 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 2/2] Assemble: allow to assemble container with uuid=0:0:0:0
-Date: Mon, 31 Jan 2011 16:31:58 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EBB6C13@irsmsx504.ger.corp.intel.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Mon, 31 Jan 2011 11:44:07 -0500
+Message-ID: <4D46E6D7.2000205@cfl.rr.com>
+References: <AANLkTinhWh4FQ7q=Vkym_fd9aucXLMhgzgFuw23Z9o59@mail.gmail.com>	<4CF55680.5010703@cfl.rr.com>	<20101201092508.7023f974@notabene.brown>	<4CF81A16.2010606@cfl.rr.com>	<20101203123615.6edce071@notabene.brown>	<4CF860EB.7010005@cfl.rr.com>	<20101209094354.4c6aaa93@notabene.brown> <4D01328D.9050503@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <4D01328D.9050503@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: The development of GNU GRUB <grub-devel@gnu.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, John Sheu <john.sheu@gmail.com>
 List-Id: linux-raid.ids
 
-From d51b0cfdf904bf67adc84725875cd353a0173b75 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Mon, 31 Jan 2011 16:11:23 +0100
-Subject: [PATCH 2/2] Assemble: allow to assemble container with uuid=0:0:0:0
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+I know you went on vacation over the new year, but it has been about two
+months now so I figured I would try to revive this conversation.
 
-When there are any arrays in config file the spares with
-domain not matching any array are not assembled because
-auto assembly is not attempted.
-Addition of ARRAY line with uuid=0:0:0:0 in config will work
-with modified condition for gathering spares.
+Having collected my thoughts, this is what I propose:
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- Assemble.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+I believe that right now, grub recognizes an md device that is built on
+partitions, and installs to the underlying disks.  When the device is
+built on the whole disks, it needs to divide into two categories:
 
-diff --git a/Assemble.c b/Assemble.c
-index 532335e..36fd4b7 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -564,7 +564,10 @@ int Assemble(struct supertype *st, char *mddev,
- 	}
- 
- 	/* Check if we found some imsm spares but no members */
--	if (auto_assem && (!st || !st->sb))
-+	if ((auto_assem ||
-+	     (ident->uuid_set &&
-+	      memcmp(uuid_zero, ident->uuid,sizeof(uuid_zero)) == 0)) &&
-+	    (!st || !st->sb))
- 		for (tmpdev = devlist; tmpdev; tmpdev = tmpdev->next) {
- 			if (tmpdev->used != 3)
- 				continue;
--- 
-1.7.1
+1)  Native md metadata.  Grub should ask mdadm for a suitable location
+to embed the core image on each component disk.  This can be satisfied
+with a 32kb area at the end ( or maybe the beginning ) of the disk that
+is not used by the array ( or the metadata ).  This will work for all
+native formats except for 1.1, for the obvious reason that it is using
+the boot block.
 
+2)  Other metadata formats.  Either assume or explicitly be told by
+mdadm that these formats are fakeraid and thus understood by the bios
+int 13.  Grub installs to the array as a whole, just like it does today
+when they are handled by dmraid.  If it is known that it is not bios
+supported, then error out.  In the future this could be supported by
+creating additional grub modules that understand those metadata formats.
+
+One question that needs answered for method 1 is what should the
+partition table look like?  Should grub, or maybe mdadm, create a
+protective mbr when using the whole disk, similar to the one used with GPT?
