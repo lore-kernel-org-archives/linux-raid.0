@@ -1,104 +1,112 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 21:14:12 -0200
-Message-ID: <AANLkTimeegopp5SDo3ZD-nKKkmKwPsn8a0+vboOXGB9w@mail.gmail.com>
-References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
-	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
-	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
-	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
-	<AANLkTikYGquOk9wwMuLxaDRvOe3-iJOMMW7JQKpdZBpk@mail.gmail.com>
-	<20110201095030.65e2349b@notabene.brown>
-	<AANLkTik-XjBpViq5ibeQMcBH7z6BpFXhyzHk1QcPxHTq@mail.gmail.com>
-	<20110201101010.522361e4@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/2] imsm:FIX: change arrays reshape order
+Date: Tue, 1 Feb 2011 10:18:20 +1100
+Message-ID: <20110201101820.3c836f3e@notabene.brown>
+References: <20110131085922.7551.47081.stgit@gklab-128-013.igk.intel.com>
+	<20110131201800.3a0226de@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D17701C192@irsmsx503.ger.corp.intel.com>
+	<905EDD02F158D948B186911EB64DB3D17701C24A@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201101010.522361e4@notabene.brown>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D17701C24A@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-raid10 could be used as raid1+raid0
-so raid1+raid0 implementation could allow write-behind, raid10 don=B4t
-=3D]
+On Mon, 31 Jan 2011 10:10:30 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-2011/1/31 NeilBrown <neilb@suse.de>:
-> On Mon, 31 Jan 2011 20:53:07 -0200 Roberto Spadim <roberto@spadim.com=
-=2Ebr>
-> wrote:
->
->> uhmmmmm write-behind is nice,
->> raid0 have chunk size, don=B4t?
->
-> Yes, but we weren't discussing RAID0 (???)
->
-> NeilBrown
->
->>
->> 2011/1/31 NeilBrown <neilb@suse.de>:
->> > On Mon, 31 Jan 2011 19:51:32 -0200 Roberto Spadim <roberto@spadim.=
-com.br>
->> > wrote:
->> >
->> >> now, a question....
->> >>
->> >> if raid1 is like raid10 (one disk =3D raid0)
->> >> why not only one raid1 (raid10) software implementation?
->> >> for example, if i have 4 disks and i want 4 mirrors.
->> >> why not work with only raid10? why the option since we have all
->> >> features of raid1 inside raid10?
->> >> is it to allow small source code (a small ARM rom)? memory usage?=
- cpu
->> >> usage? easy to implement?
->> >
->> > It is mostly "historical reasons".
->> > RAID1 already existed. =A0When I wrote RAID10 I wanted to keep it =
-separate so
->> > as not to break RAID1. =A0I have never had a good reason to merge =
-the two
->> > implementations.
->> >
->> > And RAID1 does have some functionality that RAID10 doesn't, like w=
-rite-behind.
->> > Also RAID1 doesn't have a chunk size. =A0RAID10 does.
->> >
->> > NeilBrown
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->> >
->>
->>
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> 
+> 
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Kwolek, Adam
+> > Sent: Monday, January 31, 2011 10:30 AM
+> > To: NeilBrown
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Neubauer, Wojciech
+> > Subject: RE: [PATCH 1/2] imsm:FIX: change arrays reshape order
+> > 
+> > 
+> > 
+> > > -----Original Message-----
+> > > From: NeilBrown [mailto:neilb@suse.de]
+> > > Sent: Monday, January 31, 2011 10:18 AM
+> > > To: Kwolek, Adam
+> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > > Neubauer, Wojciech
+> > > Subject: Re: [PATCH 1/2] imsm:FIX: change arrays reshape order
+> > >
+> > > On Mon, 31 Jan 2011 09:59:22 +0100 Adam Kwolek
+> > <adam.kwolek@intel.com>
+> > > wrote:
+> > >
+> > > > Reshape is started from second array, so it causes imsm
+> > > incompatibility
+> > > > and problems during second array start.
+> > > >
+> > > > Reshape should be started in arrays metadata order.
+> > > >
+> > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > > ---
+> > > >
+> > > >  super-intel.c |    9 ++++++++-
+> > > >  1 files changed, 8 insertions(+), 1 deletions(-)
+> > > >
+> > > > diff --git a/super-intel.c b/super-intel.c
+> > > > index f578057..8484df6 100644
+> > > > --- a/super-intel.c
+> > > > +++ b/super-intel.c
+> > > > @@ -5848,6 +5848,7 @@ static int
+> > > apply_reshape_container_disks_update(struct imsm_update_reshape *u,
+> > > >  	int devices_to_reshape = 1;
+> > > >  	struct imsm_super *mpb = super->anchor;
+> > > >  	int ret_val = 0;
+> > > > +	unsigned int dev_id;
+> > > >
+> > > >  	dprintf("imsm: imsm_process_update() for update_reshape\n");
+> > > >
+> > > > @@ -5877,11 +5878,17 @@ static int
+> > > apply_reshape_container_disks_update(struct imsm_update_reshape *u,
+> > > >  		" mpb->num_raid_devs = %i\n", mpb->num_raid_devs);
+> > > >  	/* manage changes in volume
+> > > >  	 */
+> > > > -	for (id = super->devlist ; id; id = id->next) {
+> > > > +	for (dev_id = 0; dev_id < mpb->num_raid_devs; dev_id++) {
+> > > >  		void **sp = *space_list;
+> > > >  		struct imsm_dev *newdev;
+> > > >  		struct imsm_map *newmap, *oldmap;
+> > > >
+> > > > +		for (id = super->devlist ; id; id = id->next) {
+> > > > +			if (id->index == dev_id)
+> > > > +				break;
+> > > > +		}
+> > >
+> > > Could you replace that loop with a call to get_imsm_dev please?
+> > >
+> > > Otherwise, this look good.
+> > >
+> > > Thanks,
+> > > NeilBrown
+> > 
+> > In a while ;)
+> > BR
+> > Adam
+> 
+> I think we should leave this patch as I've proposed. I need to work not on imsm_dev but on intel_dev.
+> intel_dev is required for memory re-linking.
+> If I use there get_imsm_dev() I have to work on 2 pointers set, and keep them in sync. This can introduce more noise in to code.
+> Than 'for' loop you want to remove.
+> 
+> Summarizing if I use get_imsm_dev(), I cannot remove this loop (it is required for memory management purposes,
+> few lines below: id->dev = newdev, I need reference to correct intel_dev).
+> 
 
+Fair enough - I've applied the original version (not the v2).
 
+Thanks,
+NeilBrown 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
