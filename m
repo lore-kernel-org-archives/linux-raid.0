@@ -1,74 +1,60 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm:FIX: change arrays reshape order (v2)
-Date: Mon, 31 Jan 2011 11:20:46 +0100
-Message-ID: <20110131102046.12129.7335.stgit@gklab-128-013.igk.intel.com>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 13:36:18 +0300
+Message-ID: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Reshape is started from second array, so it causes imsm incompatibility
-and problems during second array start.
+On Mon, Jan 31, 2011 at 12:41 PM, Mathias Bur=E9n <mathias.buren@gmail.=
+com> wrote:
+> Hi,
+>
+> RAID10 is (could be) setup in this way, correct?
+>
+> 2 devices in a RAID1
+> 2 devices in another RAID1
+I usually use LVM striping over two RAID1 arrays for this.
+>
+> Then you run RAID0 on top of them. If you're lucky you can lose 2
+> devices at most (1 in each RAID1).
+>
+> If you have, say 6 HDDs, would you create 3 RAID1 volumes? Then creat=
+e
+> a RAID0 on top of them?
+>
+> How would one go about expanding a 4 HDD RAID10 into a 6 HDD RAID10?
+> Is it "just" a matter of creating a new RAID1 array of the 2 new HDDs=
+,
+> then adding them to the RAID0, then expanding whatever is on that
+> (lvm, xfs, ext4)?
+>
+> Are there any design tips, or caveats? For example, how many disks
+> would you use at most, in a RAID10 setup?
+>
+> Kind regards,
+> // Mathias
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-Reshape should be started in arrays metadata order.
 
-v2: added function to obtain intel_dev
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
-
- super-intel.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
-
-diff --git a/super-intel.c b/super-intel.c
-index 48336b2..3e163ec 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -641,6 +641,18 @@ static struct imsm_dev *get_imsm_dev(struct intel_super *super, __u8 index)
- 	return NULL;
- }
- 
-+static struct intel_dev *get_intel_dev(struct intel_super *super, __u8 index)
-+{
-+	struct intel_dev *dv;
-+
-+	if (index >= super->anchor->num_raid_devs)
-+		return NULL;
-+	for (dv = super->devlist; dv; dv = dv->next)
-+		if (dv->index == index)
-+			return dv;
-+	return NULL;
-+}
-+
- /*
-  * for second_map:
-  *  == 0 get first map
-@@ -5852,6 +5864,7 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
- 	int devices_to_reshape = 1;
- 	struct imsm_super *mpb = super->anchor;
- 	int ret_val = 0;
-+	unsigned int dev_id;
- 
- 	dprintf("imsm: imsm_process_update() for update_reshape\n");
- 
-@@ -5881,11 +5894,14 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
- 		" mpb->num_raid_devs = %i\n", mpb->num_raid_devs);
- 	/* manage changes in volume
- 	 */
--	for (id = super->devlist ; id; id = id->next) {
-+	for (dev_id = 0; dev_id < mpb->num_raid_devs; dev_id++) {
- 		void **sp = *space_list;
- 		struct imsm_dev *newdev;
- 		struct imsm_map *newmap, *oldmap;
- 
-+		id = get_intel_dev(super, dev_id);
-+		if (id == NULL)
-+			break;
- 		if (!sp)
- 			continue;
- 		*space_list = *sp;
-
+--=20
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
