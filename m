@@ -1,161 +1,95 @@
 From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: RAID HDDs spin up sequence
-Date: Mon, 31 Jan 2011 21:12:53 -0200
-Message-ID: <AANLkTin3UGmRGR8f=Z2qTAwvC4iYaBmirTf6ma3sv=1_@mail.gmail.com>
-References: <20110131201823.GA15704@lazy.lzy>
-	<AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
-	<20110131222348.GA15912@lazy.lzy>
-	<AANLkTi=gL3ATPN1+HHE+mhK7ZsM+aPyyQfVsz9Pq1Ajf@mail.gmail.com>
-	<20110131230703.GA16834@lazy.lzy>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 21:14:12 -0200
+Message-ID: <AANLkTimeegopp5SDo3ZD-nKKkmKwPsn8a0+vboOXGB9w@mail.gmail.com>
+References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
+	<AANLkTikYGquOk9wwMuLxaDRvOe3-iJOMMW7JQKpdZBpk@mail.gmail.com>
+	<20110201095030.65e2349b@notabene.brown>
+	<AANLkTik-XjBpViq5ibeQMcBH7z6BpFXhyzHk1QcPxHTq@mail.gmail.com>
+	<20110201101010.522361e4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110131230703.GA16834@lazy.lzy>
+In-Reply-To: <20110201101010.522361e4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-you have scheduler (elevator) maybe checking this code is nice, but
-it=C2=B4s device based (linux)
-check /sys/block/xxxx/
-to make some tweaks
-i don=C2=B4t know the real implementation (must check source code) but =
-i
-think mdadm is over linux device layer (it don=C2=B4t controll access t=
-o
-disk), i think it=C2=B4s async, and linux kernel make thinks more sync.=
-=2E.
-check you raid level source code
-somethink like: raid6.c
-it=C2=B4s small
-i think it=C2=B4s async
-does you know where linux kernel can get information (inside /sys or
-/proc filesystem) to know if you disk is weak?
-maybe a check and wait before send read command can be implemented...
+raid10 could be used as raid1+raid0
+so raid1+raid0 implementation could allow write-behind, raid10 don=B4t
+=3D]
 
-2011/1/31 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
-> On Mon, Jan 31, 2011 at 08:42:25PM -0200, Roberto Spadim wrote:
->> the better probability here is: all disks must be waked up
->> since you can have acces of 1gb but starting at a position that all
->> disks must be used
->> don=C2=B4t try used small PSU
+2011/1/31 NeilBrown <neilb@suse.de>:
+> On Mon, 31 Jan 2011 20:53:07 -0200 Roberto Spadim <roberto@spadim.com=
+=2Ebr>
+> wrote:
 >
-> No, that's not an option, HDDs must have staggered
-> spin up, which is, to certain extent, supported by
-> some SATA HDD manufactures (not all, it seems).
+>> uhmmmmm write-behind is nice,
+>> raid0 have chunk size, don=B4t?
 >
->> HP Proliant ML310G5 start all hardware on power up (a lot o Watts) a=
-nd
->> after slow down thinks... why? check if PSU is ok, if not, don=C2=B4=
-t start
->> server. that=C2=B4s a good PSU system.
+> Yes, but we weren't discussing RAID0 (???)
 >
-> As I wrote, efficiency is paramount here.
+> NeilBrown
 >
->> ok if you want to test, i think the worst scenario is all disks beei=
-ng
->> waked up, i think linux use async (many threads) commands to send
->> write/read, maybe you will have a small time between wake up (maybe
->> just some microseconds)
->
-> That's interesting information. I suspected something
-> like async access could have happened.
-> Is this confirmed? Are the requests from md to the
-> device layer asynchronous?
-> How about libata? Does this serialize wake ups?
->
-> Thanks,
->
-> bye,
->
-> pg
->
->> 2011/1/31 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
->> > On Mon, Jan 31, 2011 at 07:09:24PM -0200, Roberto Spadim wrote:
->> >> you psu must be dimensioned to work with everythink at full work =
-load
->> >> (it=E6=84=80 a real production NAS right?! not a test)
->> >> your SAS/IDE/SATA controller and HDD manual should be checked
->> >> how hdd wake up? one command (read/write) over sata/sas/ide chann=
-el wake it up?
->> >> on linux raid we have a read algorithm and a write algorithm
->> >> if a raid1 write occur all disks will wake up
->> >> if a raid1 (raid0 or another) read occur only the disk will wake =
-up
+>>
+>> 2011/1/31 NeilBrown <neilb@suse.de>:
+>> > On Mon, 31 Jan 2011 19:51:32 -0200 Roberto Spadim <roberto@spadim.=
+com.br>
+>> > wrote:
+>> >
+>> >> now, a question....
 >> >>
->> >> but check you SATA/IDE/SATA controller, how it wake up your disk,=
- and
->> >> how you hdd wake up
+>> >> if raid1 is like raid10 (one disk =3D raid0)
+>> >> why not only one raid1 (raid10) software implementation?
+>> >> for example, if i have 4 disks and i want 4 mirrors.
+>> >> why not work with only raid10? why the option since we have all
+>> >> features of raid1 inside raid10?
+>> >> is it to allow small source code (a small ARM rom)? memory usage?=
+ cpu
+>> >> usage? easy to implement?
 >> >
->> > Hi, thanks for the answer, unfortunately I was
->> > hoping to have made myself clear enough.
+>> > It is mostly "historical reasons".
+>> > RAID1 already existed. =A0When I wrote RAID10 I wanted to keep it =
+separate so
+>> > as not to break RAID1. =A0I have never had a good reason to merge =
+the two
+>> > implementations.
 >> >
->> > First of all, it is a RAID-6, so let's say that's
->> > already decided by requirements. With SATA HDDs.
+>> > And RAID1 does have some functionality that RAID10 doesn't, like w=
+rite-behind.
+>> > Also RAID1 doesn't have a chunk size. =A0RAID10 does.
 >> >
->> > Second, the question was exactly about how the HDDs
->> > are waked up. This is a SW issue, trying with normal
->> > setups, i.e. a couple of disks, it is possible to
->> > send them to sleep (hdparm -y /dev/hdX) and the wake
->> > them up by a simple access.
->> > I had no opportunity to check this with a RAID-5/6,
->> > so I was asking if anyone knows.
->> >
->> > Finally, in order to be power efficient, the PSU,
->> > assuming something like an 80 Plus Gold, should work
->> > at not less than 20% of the nominal power, otherwise
->> > (according to some reviews), the efficiency drops far
->> > below the 80%~90% declared by the 80 Plus standard
->> > (which is measured at 20%, 50% and 100% of the maximum
->> > specified power).
->> > It seem it gets easily around 40%~50%.
->> > So, the PSU must be somehow under dimensioned for the
->> > spin up of 10 HDDs, which seem to require a possible
->> > 30W*10=3D300W (some nasty HDDs seem to require 30W, in
->> > this situation) only for the storage.
->> >
->> > If the HDDs spin up one after the other, then the peak
->> > consumption is only 30W, which might allow a lower
->> > power PSU, in contrast with the requirement to provide
->> > 300W alone for the spin up.
->> >
->> > So, back to the original question, if a 10 HDDs RAID-6
->> > is in standby, how do the single HDD will be waked up,
->> > in case of access? Of course, a quite larger access,
->> > i.e. some GiB of data.
->> >
->> > Thanks again,
->> >
->> > bye,
->> >
->> > --
->> >
->> > piergiorgio
+>> > NeilBrown
 >> > --
 >> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
 id" in
 >> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info=
-=2Ehtml
+>> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >> >
 >>
 >>
 >>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
 >
-> --
->
-> piergiorgio
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
 
