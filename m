@@ -1,77 +1,75 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 20:53:07 -0200
-Message-ID: <AANLkTik-XjBpViq5ibeQMcBH7z6BpFXhyzHk1QcPxHTq@mail.gmail.com>
-References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
-	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
-	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
-	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
-	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
-	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
-	<AANLkTikYGquOk9wwMuLxaDRvOe3-iJOMMW7JQKpdZBpk@mail.gmail.com>
-	<20110201095030.65e2349b@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Performance question, RAID5
+Date: Tue, 1 Feb 2011 07:42:57 +1100
+Message-ID: <20110201074257.3c771181@notabene.brown>
+References: <AANLkTi=SbAM3BXxjH6Mvcn-Tw4b0FYyLjLFqSGuxY1fk@mail.gmail.com>
+	<AANLkTik4MGS7V7ePBgbk+KW-FcBBV7MuYgB7n29RRXF=@mail.gmail.com>
+	<20110130094444.68288b0e@natsu>
+	<AANLkTi=jXwcEgRquKgsf5HQUA+AQdt8nHeHCUJYqdSbX@mail.gmail.com>
+	<20110130171533.4c9e236b@natsu>
+	<AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com>
+	<4D45C3FA.2040900@hardwarefreak.com>
+	<AANLkTikLX-d6CtXhLBQU_qoxx0fQ2HdR8acFCU+o9JeP@mail.gmail.com>
+	<20110131085202.GA25912@www2.open-std.org>
+	<AANLkTi=Zgqs958fSjkmKaDpgL21qshm=SRj_HUvjTbZz@mail.gmail.com>
+	<20110131131131.GA26525@www2.open-std.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201095030.65e2349b@notabene.brown>
+In-Reply-To: <20110131131131.GA26525@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Keld =?ISO-8859-1?B?Svhybg==?= Simonsen <keld@keldix.com>
+Cc: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>, Stan Hoeppner <stan@hardwarefreak.com>, Roman Mamedov <rm@romanrm.ru>, CoolCold <coolthecold@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-uhmmmmm write-behind is nice,
-raid0 have chunk size, don=B4t?
+On Mon, 31 Jan 2011 14:11:31 +0100 Keld J=F8rn Simonsen <keld@keldix.co=
+m> wrote:
 
-2011/1/31 NeilBrown <neilb@suse.de>:
-> On Mon, 31 Jan 2011 19:51:32 -0200 Roberto Spadim <roberto@spadim.com=
-=2Ebr>
-> wrote:
->
->> now, a question....
->>
->> if raid1 is like raid10 (one disk =3D raid0)
->> why not only one raid1 (raid10) software implementation?
->> for example, if i have 4 disks and i want 4 mirrors.
->> why not work with only raid10? why the option since we have all
->> features of raid1 inside raid10?
->> is it to allow small source code (a small ARM rom)? memory usage? cp=
-u
->> usage? easy to implement?
->
-> It is mostly "historical reasons".
-> RAID1 already existed. =A0When I wrote RAID10 I wanted to keep it sep=
-arate so
-> as not to break RAID1. =A0I have never had a good reason to merge the=
- two
-> implementations.
->
-> And RAID1 does have some functionality that RAID10 doesn't, like writ=
-e-behind.
-> Also RAID1 doesn't have a chunk size. =A0RAID10 does.
->
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> On Mon, Jan 31, 2011 at 09:37:46AM +0000, Mathias Bur=E9n wrote:
+> > On 31 January 2011 08:52, Keld J=F8rn Simonsen <keld@keldix.com> wr=
+ote:
+> > > If your intallation is CPU bound, and you are
+> > > using an Atom N270 processor or the like, well some ideas:
+> > >
+> > > The Atom CPU may have threading, so you could run 2 RAIDs
+> > > which then probably would run in each thread.
+> > > It would cost you 1 more disk if you run 2 RAID5's
+> > > so you get 8 TB payload out of your 12 GB total (6 drives of 2 TB=
+ each).
+> > >
+> > > Another way to get better performance could be to use less
+> > > CPU-intensitive RAID types. RAID5 is intensitive as it needs to
+> > > calculate XOR information all the time. Maybe a mirrored
+> > > raid type like RAID10,f2 would give you less CPU usage,
+> > > and the run 2 RAIDS to have it running in both hyperthreads.
+> > > Here you would then only get 6 TB payload of your 12 GB disks,
+> > > but then also probably a faster system.
+> > >
+> > > Best regards
+> > > keld
+> > >
+> >=20
+> > Hi,
+> >=20
+> > It's interesting what you say about the XOR calculations. I thought
+> > that it was only calculated on writes? The Atom (330) has HT, so Li=
+nux
+> > sees 4 logical CPUs.
+>=20
+> Yes you are right, it only calculates XOR on writes with RAID5.=20
+> But then I am puzzled what all these CPU cycles are used for.
+> Also many cycles are used on mirrored raid types. Why?
+> Maybe some is because of LVM? I have been puzzled for a long time why
+> ordinary RAID without LVM need to use so much CPU. Maybe a lot of dat=
+a
+> sguffling between buffers? Neil?
 
+What is your evidence that RAID1 uses lots of CPU?
 
+I would expect it to use very little, but I've been wrong before.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+NeilBrown
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
