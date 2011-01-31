@@ -1,59 +1,47 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Performance question, RAID5
-Date: Mon, 31 Jan 2011 01:54:11 -0200
-Message-ID: <AANLkTi=8NbfzLhyCL_YzuLE42MsMG8WVdPnxq0mFtJ-K@mail.gmail.com>
-References: <AANLkTimXp-vGP8fb2Y-2EiaGxj+H6UJ9DfjtYMVDhDri@mail.gmail.com>
-	<AANLkTi=SbAM3BXxjH6Mvcn-Tw4b0FYyLjLFqSGuxY1fk@mail.gmail.com>
-	<AANLkTik4MGS7V7ePBgbk+KW-FcBBV7MuYgB7n29RRXF=@mail.gmail.com>
-	<20110130094444.68288b0e@natsu>
-	<AANLkTi=jXwcEgRquKgsf5HQUA+AQdt8nHeHCUJYqdSbX@mail.gmail.com>
-	<20110130171533.4c9e236b@natsu>
-	<AANLkTi=6UnGjDXdrM76-8_iW+1D6MC5fkGB-vhhYxUXu@mail.gmail.com>
-	<4D45C3FA.2040900@hardwarefreak.com>
-	<AANLkTikLX-d6CtXhLBQU_qoxx0fQ2HdR8acFCU+o9JeP@mail.gmail.com>
-	<4D462EFB.4050006@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0/2] Release 3.2 summary
+Date: Mon, 31 Jan 2011 17:34:06 +1100
+Message-ID: <20110131173406.1c69d042@notabene.brown>
+References: <20110127154905.11703.56960.stgit@gklab-128-111.igk.intel.com>
+	<20110128112606.076f6d49@nbeee.brown>
+	<BE2BFE91933D1B4089447C644860408067042CDE@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D462EFB.4050006@hardwarefreak.com>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408067042CDE@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roman Mamedov <rm@romanrm.ru>, CoolCold <coolthecold@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-try stress program, and sysstat
-it make a nice stress test over filesystem (maybe you will use it,
-only if using database over partition or something familiar)
+On Sat, 29 Jan 2011 17:52:45 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
 
-2011/1/31 Stan Hoeppner <stan@hardwarefreak.com>:
-> Mathias Bur=E9n put forth on 1/30/2011 3:43 PM:
->
->> 3) 7GB output from bonnie++. Like so:
->
-> The column in your graph http://stuff.dyndns.org/logs/bonnie_results.=
-html says
-> "Chunk size". =A0I'm not a bonnie++ user so my apologies for not bein=
-g familiar
-> with it. =A0I use iozone instead (on rare occasion) which I like much=
- better.
->
-> --
-> Stan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> Neil,
+> 
+> Thank you for applying last patches.
+> It seems that only two patches left to complete features planed for 3.2 release:
+> - imsm: Update metadata for second array
+> - imsm: FIX: not all disks are released in free_imsm_disks()
+> 
+> Please, apply them if they are meet your requirements.
 
+All the acceptable patches are now in my devel-3.2 branch
 
+   git://neil.brown.name/mdadm devel-3.2
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It still doesn't pass all of my self-tests, though it is getting closer.
+Hopefully it will pass them all tomorrow.
+
+> 
+> I would also mention that we expect that the kernel patches will be applied.
+
+All the acceptable patches are now in my for-next branch:
+
+    git://neil.brown.name/md  for-next
+
+Others have been replied to.
+
+NeilBrown
+
