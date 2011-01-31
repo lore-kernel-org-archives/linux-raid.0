@@ -1,38 +1,77 @@
-From: Denis <denismpa@gmail.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 20:14:04 -0200
-Message-ID: <AANLkTinEGO9V7oZ7p8YveKe7QXXmLi9xdrhhmj7LS_JZ@mail.gmail.com>
-References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
- <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
- <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
- <20110131152151.GD7861@cthulhu.home.robinhill.me.uk> <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
- <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
- <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
- <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
- <4D470F96.40409@cfl.rr.com> <AANLkTim57HwYefXg=4CK06X+VXcW3o28VwRxCEnpaeEV@mail.gmail.com>
- <4D4711A5.8070601@cfl.rr.com> <AANLkTinVdMA0izAvN0ZS14wMV=p3XUtbgBe+1LwxafD=@mail.gmail.com>
- <4D473366.6090401@cfl.rr.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID HDDs spin up sequence
+Date: Mon, 31 Jan 2011 23:23:48 +0100
+Message-ID: <20110131222348.GA15912@lazy.lzy>
+References: <20110131201823.GA15704@lazy.lzy>
+ <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D473366.6090401@cfl.rr.com>
+Content-Disposition: inline
+In-Reply-To: <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2011/1/31 Phillip Susi <psusi@cfl.rr.com>:
-> On 1/31/2011 2:53 PM, Roberto Spadim wrote:
->> if you have a bigger and bigger and bigger disk configuration and on=
-ly
->> two mirrors you still with =A050%
-might help http://en.wikipedia.org/wiki/Probability
+On Mon, Jan 31, 2011 at 07:09:24PM -0200, Roberto Spadim wrote:
+> you psu must be dimensioned to work with everythink at full work load
+> (it=B4s a real production NAS right?! not a test)
+> your SAS/IDE/SATA controller and HDD manual should be checked
+> how hdd wake up? one command (read/write) over sata/sas/ide channel w=
+ake it up?
+> on linux raid we have a read algorithm and a write algorithm
+> if a raid1 write occur all disks will wake up
+> if a raid1 (raid0 or another) read occur only the disk will wake up
+>=20
+> but check you SATA/IDE/SATA controller, how it wake up your disk, and
+> how you hdd wake up
 
+Hi, thanks for the answer, unfortunately I was
+hoping to have made myself clear enough.
+
+=46irst of all, it is a RAID-6, so let's say that's
+already decided by requirements. With SATA HDDs.
+
+Second, the question was exactly about how the HDDs
+are waked up. This is a SW issue, trying with normal
+setups, i.e. a couple of disks, it is possible to
+send them to sleep (hdparm -y /dev/hdX) and the wake
+them up by a simple access.
+I had no opportunity to check this with a RAID-5/6,
+so I was asking if anyone knows.
+
+=46inally, in order to be power efficient, the PSU,
+assuming something like an 80 Plus Gold, should work
+at not less than 20% of the nominal power, otherwise
+(according to some reviews), the efficiency drops far
+below the 80%~90% declared by the 80 Plus standard
+(which is measured at 20%, 50% and 100% of the maximum
+specified power).
+It seem it gets easily around 40%~50%.
+So, the PSU must be somehow under dimensioned for the
+spin up of 10 HDDs, which seem to require a possible
+30W*10=3D300W (some nasty HDDs seem to require 30W, in
+this situation) only for the storage.
+
+If the HDDs spin up one after the other, then the peak
+consumption is only 30W, which might allow a lower
+power PSU, in contrast with the requirement to provide
+300W alone for the spin up.
+
+So, back to the original question, if a 10 HDDs RAID-6
+is in standby, how do the single HDD will be waked up,
+in case of access? Of course, a quite larger access,
+i.e. some GiB of data.
+
+Thanks again,
+
+bye,
 
 --=20
-Denis Anjos,
-www.versatushpc.com.br
+
+piergiorgio
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
