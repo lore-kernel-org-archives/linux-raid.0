@@ -1,26 +1,22 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
 Subject: Re: RAID HDDs spin up sequence
-Date: Mon, 31 Jan 2011 19:10:17 -0200
-Message-ID: <AANLkTimSj9P7QBgt6uJ7DPEKyMdqBYVEP_CweZdHj6jV@mail.gmail.com>
+Date: Mon, 31 Jan 2011 21:11:21 +0000
+Message-ID: <AANLkTi=Q7E5xhOxXA5KusWgpSb97hnmnbcm0fD1C9N5w@mail.gmail.com>
 References: <20110131201823.GA15704@lazy.lzy>
 	<AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-normaly...
-raid1 send many writes and one read
-raid0 send one write and one read
-
-2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
+On 31 January 2011 21:09, Roberto Spadim <roberto@spadim.com.br> wrote:
 > you psu must be dimensioned to work with everythink at full work load
-> (it=B4s a real production NAS right?! not a test)
+> (it=C2=B4s a real production NAS right?! not a test)
 > your SAS/IDE/SATA controller and HDD manual should be checked
 > how hdd wake up? one command (read/write) over sata/sas/ide channel w=
 ake it up?
@@ -56,7 +52,8 @@ ake it up?
 >> To unsubscribe from this list: send the line "unsubscribe linux-raid=
 " in
 >> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml
 >>
 >
 >
@@ -64,13 +61,18 @@ ake it up?
 > --
 > Roberto Spadim
 > Spadim Technology / SPAEmpresarial
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
 
+I would guess, that on a RAID0 setup, any read to that md device would
+wake every disk up in that setup. No?
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+// Mathias
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
