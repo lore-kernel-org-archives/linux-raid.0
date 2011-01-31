@@ -1,35 +1,74 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 16:59:28 -0500
-Message-ID: <4D4730C0.8080900@cfl.rr.com>
-References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com> <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com> <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com> <20110131152151.GD7861@cthulhu.home.robinhill.me.uk> <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com> <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com> <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com> <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com> <4D470F96.40409@cfl.rr.com> <4D471A41.1090706@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: documentation
+Date: Tue, 1 Feb 2011 08:58:51 +1100
+Message-ID: <20110201085851.2b665f1a@notabene.brown>
+References: <AANLkTindmhPU3Lazk33XPaS_Pw7AL52LXKeXAML6F3Y=@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D471A41.1090706@hardwarefreak.com>
+In-Reply-To: <AANLkTindmhPU3Lazk33XPaS_Pw7AL52LXKeXAML6F3Y=@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Denis <denismpa@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 1/31/2011 3:23 PM, Stan Hoeppner wrote:
->> Raid 10 is not raid 1+0.  Raid 10 defaults to having 2 duplicate copies,
-> 
-> Yes, actually, they are two names for the same RAID level.
+On Mon, 31 Jan 2011 19:39:03 -0200 Roberto Spadim <roberto@spadim.com.b=
+r>
+wrote:
 
-No, they are not.  See the mdadm man page.  Raid10 can operate on 3
-drives, raid1+0 can not.  In theory a raid10 could be done on two disks
-though mdadm seems to want at least 3.
+> hi guys, where=B4s the official documentation page (wiki)? is it at
+> linux kernel source code? or at a wikipedia or another wiki page?
+> i found this:
+> http://www.linuxfoundation.org/collaborate/workgroups/linux-raid
+> at wikipedia
+> and some documentation inside kernel source code
+> what=B4s the most updated (official)?
+>=20
 
-> This is absolutely not correct.  In a 10 disk RAID 10 array, exactly 5 disks can
-> fail, as long as no two are in the same mirror pair, and the array will continue
-> to function, with little or no performance degradation.
+"official" has always struck me as a rather strange term in this sort o=
+f
+context.  It implies that there is an 'office' which the 'official' hol=
+ds.
+I wonder what this 'office' is....
 
-That is a raid 0+1, not raid10.
+However to be useful instead of philosophical:
 
-> Where are you getting your information?  Pretty much everything you stated is
-> wrong...
+ - the source code is the definitive documentation.  However few people=
+ can
+   read it very well.
+ - the man pages in the mdadm package are the formal documentation that=
+ I am
+   most likely to update in anything close to a timely manner.  In part=
+icular
+     man 4 md
+   is worth a read.
+ - An archive of this mailing line (linux-raid) is likely to be the bes=
+t
+   informal source of documentation.  It contains lots of valuable
+   information, but of course is not structured very well.
+ - https://linux-raid.wiki.kernel.org/ is a community-maintained wiki w=
+hich
+   should be reasonably reliable. (that is the same location as the lin=
+k that
+   you found above).
+ - the doco in the kernel (Documentation/md.txt) is hardly ever updated=
+ and so
+   is probably badly out of date.  Sorry.
+ - As has been mentioned, http://neil.brown.name/blog/mdadm and=20
+   http://neil.brown.name/blog/SoftRaid sometimes contain useful inform=
+ation
+   but I don't write as often as I would like to.
+ - This is a Book: Managing RAID on Linux
+     http://oreilly.com/catalog/9781565927308/index.html?CMP=3DIL7015
+   however it is now about 8 years old, so it will be missing a lot of =
+new
+   stuff.
 
-The mdadm man page.
-
+Hope that helps,
+NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
