@@ -1,140 +1,162 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: RE: [PATCH] md: do not write resync checkpoint, if max_sector has
- been reached.
-Date: Mon, 31 Jan 2011 18:48:08 +0000
-Message-ID: <66C59AD0932712458090B447266D638C010C8D149A@irsmsx504.ger.corp.intel.com>
-References: <20110127165015.7884.8099.stgit@gklab-128-080.igk.intel.com>
- <20110131134557.653a1db0@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: What's the typical RAID10 setup?
+Date: Mon, 31 Jan 2011 17:15:29 -0200
+Message-ID: <AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+References: <AANLkTi=oCi1oMTMk_uhsiYA0CA80+8_k-AtvYXZ3jC+U@mail.gmail.com>
+	<AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110131134557.653a1db0@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Denis <denismpa@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Monday, January 31, 2011 3:46 AM
-> To: Hawrylewicz Czarnowski, Przemyslaw
-> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
-> Ciechanowski, Ed
-> Subject: Re: [PATCH] md: do not write resync checkpoint, if max_sector has
-> been reached.
-> 
-> On Thu, 27 Jan 2011 17:50:15 +0100 Przemyslaw Czarnowski
-> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> 
-> > If disk fails during resync, sync service of personality usually skips
-> the
-> > rest of not synchronized stripes. It finishes sync thread (md_do_sync())
-> > and wakes up the main raid thread. md_recovery_check() starts and
-> > unregisteres sync thread.
-> > In the meanwhile mdmon also services failed disk - removes and replaces
-> it
-> > with a new one (if it was available).
-> > If checkpoint is stored (with value of array's max_sector), next
-> > md_recovery_check() will restart resync. It finishes normally and
-> > activates ALL spares (including the one added recently) what is wrong.
-> > Another md_recovery_check() will not start recovery as all disks are in
-> > sync. If checkpoint is not stored, second resync does not start and
-> > recovery can proceed.
-> >
-> > Signed-off-by: Przemyslaw Czarnowski
-> <przemyslaw.hawrylewicz.czarnowski@intel.com>
-> > ---
-> >  drivers/md/md.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index 3e40aad..6eda858 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -6929,7 +6929,8 @@ void md_do_sync(mddev_t *mddev)
-> >  	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
-> >  	    mddev->curr_resync > 2) {
-> >  		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
-> > -			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
-> > +			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
-> > +			    mddev->curr_resync < max_sectors) {
-> >  				if (mddev->curr_resync >= mddev->recovery_cp) {
-> >  					printk(KERN_INFO
-> >  					       "md: checkpointing %s of %s.\n",
-> >
-> 
-> This is wrong.  If curr_resync has reached some value, then the array *is*
-> in-sync up to that point.
-> 
-> If a device fails then that often makes the array fully in-sync - because
-> there it no longer any room for inconsistency.
-> This is particularly true for RAID1.  If one drive in a 2-drive RAID1
-> fails,
-> then the array instantly becomes in-sync.
-> For RAID5, we should arguably fail the array at that point rather than
-> marking it in-sync, but that would probably cause more data loss than it
-> avoids, so we don't.
-> In any case - the array is now in-sync.
-Yes, I agree. But it is not the point here, in this bug.
+ok, but lost of a disk =3D problem with hardware =3D big problems =3D m=
+irror failed
+think about a 'disaster recover' system
+you can=B4t lost the main data (you MUST have one 'primary' data source=
+)
 
-> 
-> If a spare is added by mdmon at this time, then the array is not 'out of
-> sync', it is 'in need for recovery'.  'recovery' and 'resync' are different
-> things.
-I fully understand the difference between recovery and resync (and reshape). 
+raid1 don=B4t have ecc or anyother 'paged' data recover solution (it
+have just all mirror resync)
 
-> 
-> md_check_recovery should run remove_and_add_spares are this point.  That
-And it does. 
+let=B4s get back a level... (inside hard disk)
+if your hard disk have 2 heads, you have a raid0 inside you disk (got
+the point?)
+using your math, you should consider head problem (since it make the
+real read of information)
 
-> should return a non-zero value (because it found the spare that mdmon
-> added)
-But the return value is wrong (it is correct according to current configuration). Please let me explain once again what's going on.
+but at raid (1/0) software (firmware) level, you have devices (with
+out without heads, can be memory or anyother type of adresseable
+information souce, RAID0 =3D DEVICE for raid software/firmware,  but yo=
+u
+have A DEVICE)
 
-The flow is as follows:
-0. resync is in progress
-1. one disk fails
-2. md_error() wakes up raid thread
-3. md_do_sync() gets skipped=1 from mddev->pers->sync_request() and some amount of skipped sectors/stripes - usually all remaining to resync. mddev->recovery_cp is set to last sector (max_sector in md_do_sync)
-3a. md_check_recovery() sees MD_RECOVERY_INTR (clears it) and unregisters recovery thread (which actually does resync)
-3b. mdmon unblocks array member
-4. md_check_recovery checks if some action is required. 
-4a. reshape is not taken into account as reshape_position==MaxSector
-4b. recovery is not taken into account as mdmon did not add spare yet
-4c. resync is started, as recovery_cp!=MaxSector (!)
-5. md_do_sync exists normally (gets skipped=1 from mddev->pers->sync_request()) as checkpoint pointed at the last sector; it clears mddev->recovery_cp.
-6. mdmon adds disk (via slot-store())
-7. md_check_recovery() does cleanup after finished resync
-7a. MD_RECOVERY_INTR is not set anymore, mddev->pers->spare_active() is started and ALL devices !In_sync available in array are set in_sync, and array degradation is cleared(!).
-7b. remove_and_add_spares() does not see spares available (mddev->degraded==0) so recovery does not start.
+for raid 1 you have mirrors(a copy of one primary device)
+if software find 1bit of error inside this mirror(device), you lost
+the full mirror, 1bit of fail =3D mirror fail!!!!! it=B4s not more sync
+with the main(primary) data source!!!!
 
-> and  should then start a recovery pass which will ignore recovery_cp (which
-> is a really badly chosen variable name - it should be 'resync_cp', not
-> 'recovery_cp'.
-as you can see above, recovery_cp is not ignored (yes the name is confusing)
+got the problem? mirror will need a resync if any disk fail (check
+what fail make you mirror to fail, but i think linux raid1 mirror fail
+with any disk fail)
 
-> 
-> So if you are experiencing a problem where mdmon adds a spare and appears
-> to
-> get recovered instantly, (which is what you seem to be saying) then the
-to be precise, recovery do not start at all...
+if you have 4 mirrors you can loose 4 disks (1 disk fail =3D mirror
+fail, 2 disk fail =3D mirror fail, 3 disk fail =3D mirror fail, any dev=
+ice
+with fail inside a raid1 device will make the mirror to fail, got? you
+can have good and bad disks on raid0, but you will have a mirror
+failed if you have >=3D1 disk fail inside your raid0)
 
-> problem is else-where.
+got the point?
+what=B4s the probability of your mirror fail?
+if you use raid0 as mirror
+any disk of raid0 failed =3D mirror failed got?
+you can lose all raid0 but you have just 1 mirror failed!
 
-> If you can reproduce it, then it would help to put some tracing in
-> md_check_recovery, particularly reporting the return value of
-> remove_and_add_spares, and the value that is finally chosen for
-> mddev->recovery.
-if you want some logs, I have plenty:) But I think my description will suffice to understand the problem.
 
-> 
-> Thanks,
-> NeilBrown
+could i be more explicit? you can=B4t make probability using bit, you
+must make probability using mirror, since it=B4s you level of data
+consistency
+=3D] got?
 
--- 
-Best Regards,
-Przemyslaw Hawrylewicz-Czarnowski
 
+2011/1/31 Denis <denismpa@gmail.com>:
+> 2011/1/31 Roberto Spadim <roberto@spadim.com.br>:
+>> i think that partial failure (raid0 fail) of a mirror, is a fail
+>> (since all mirror is repaired and resync)
+>> the security is, if you lose all mirrors you have a device
+>> so your 'secure' is the number of mirrors, not the number of disks s=
+sd
+>> or another type of device...
+>> how many mirrors you have here:
+>> raid0=3D 1,2(a) 3,4(b)
+>> raid1=3Da,b
+>> 1 mirror (a or b)
+>>
+>> and here:
+>> raid1=3D1,2(a) 3,4(b)
+>> raid0=3Dab
+>> 1 mirror (a or b)
+>>
+>> let=B4s think about hard disk?
+>> your hard disk have 2 disks?
+>> why not make two partition? first partition is disk1, second partiti=
+on is disk2
+>> mirror it
+>> what=B4s your security? 1 mirror
+>> is it security? normaly when a harddisk crash all disks inside it
+>> crash but you is secury if only one internal disk fail...
+>>
+>> that=B4s the point, how many mirror?
+>> the point is
+>> with raid1+0 (raid10) we know that disks are fragments (raid1)
+>> with raid0+1 we know that disks are a big disk (raid0)
+>> the point is, we can=B4t allow that information stop, we need mirror=
+ to
+>> be secured (1 is good, 2 better, 3 really better, 4 5 6 7...)
+>> you can=B4t break mirror (not disk) to don=B4t break mirror have a s=
+econd
+>> mirror (raid0 don=B4t help here! just raid1)
+>>
+>> with raid10 you will repair smal size of information (raid1), here
+>> sync will cost less time
+>> with raid01 you will repair big =A0size of information (raid0), here
+>> sync will cost more time
+>
+> Roberto, to quite understend how better a raid 10 is over raid 01 =A0=
+you
+> need to take down into a mathematical level:
+>
+> once I had the same doubt:
+>
+> "The difference is that the chance of system failure with two drive
+> failures in a RAID 0+1 system with two sets of drives is (n/2)/(n - 1=
+)
+> where n is the total number of drives in the system. The chance of
+> system failure in a RAID 1+0 system with two drives per mirror is 1/(=
+n
+> - 1). So, for example, using a 8 drive system, the chance that losing
+> a second drive would bring down the RAID system is 4/7 with a RAID 0+=
+1
+> system and 1/7 with a RAID 1+0 system."
+>
+>
+> Another problem is that in the case of a failury of one disk ( in a
+> two sets case), in a raid01 you will loose redundancy for ALL your
+> data, while in a raid10 you will loose redundancy for 1/[(n/2
+> -1)/(n/2)], in the same case 1/4 of your data set.
+>
+> And also, in a raid 10 you will have o re-mirror just one disk in the
+> case of a disk failure, in raid 01 you will have to re-mirror the
+> whole failed set.
+>
+> --
+> Denis Anjos,
+> www.versatushpc.com.br
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
