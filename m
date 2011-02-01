@@ -1,76 +1,48 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: User space RAID-6 access
-Date: Wed, 2 Feb 2011 07:18:50 +1100
-Message-ID: <20110202071850.3b671c1e@notabene.brown>
-References: <20110131202054.GA15712@lazy.lzy>
-	<20110201075259.4beaf501@notabene.brown>
-	<20110201192154.GA2696@lazy.lzy>
+From: Naira Kaieski <naira@faccat.br>
+Subject: Bootable Raid-1
+Date: Tue, 01 Feb 2011 18:20:59 -0200
+Message-ID: <4D486B2B.6030609@faccat.br>
+Reply-To: naira@faccat.br
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201192154.GA2696@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 1 Feb 2011 20:21:54 +0100 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+Hi,
 
-> On Tue, Feb 01, 2011 at 07:52:59AM +1100, NeilBrown wrote:
-> > On Mon, 31 Jan 2011 21:20:55 +0100 Piergiorgio Sartor
-> > <piergiorgio.sartor@nexgo.de> wrote:
-> > 
-> > > Hi all,
-> > > 
-> > > some times ago, I think was Neil, it was mentioned
-> > > about the possibility to access consistently a RAID-6
-> > > array from user space, in order to be able to perform
-> > > some checks, like the notorius "which HDD has wrong data".
-> > > 
-> > > Is there any reference or documentation or source code
-> > > which can be taken as example for such a case?
-> > > 
-> > 
-> > Look in the mdadm source code, particularly at restripe.c
-> > 
-> > Also
-> >    make test_stripe
-> > 
-> > make a program the the test suite uses for verify data correctness.
-> > 
-> > That should give you enough hints to get you started.
-> 
-> 
-> Hi Neil, thanks for the pointer.
-> 
-> I had a look at the code and there is something I did not get.
-> 
-> It seems to me the HDDs composing the array are "simply"
-> opened with "open".
-> 
-> In case the array is in use, how is avoided a race condition
-> between the "test_stripe" program and the md device?
-> 
-> I mean, the first could start to read from the HDDs and the
-> other could write something in the same place, leading to an
-> inconsistent parity, from the "test_stripe" point of view,
-> since it missed some update.
-> 
-> Or there is a locking inside md (in "test_stripe" I could
-> not see and it would also be dangerous)?
-> 
-> Thanks again,
-> 
-> bye,
-> 
+I have read several articles on the internet and researched in the 
+messages list, but I'm still having trouble configuring a raid level 1 
+array that is bootable.
 
-I didn't realise that you wanted to look at the members of the array while
-the array was active!!  That is a bit harder.  But not impossible.
+I configured a server some time agowith Gentoo Linux, Kernel 
+2.6.28-hardened-r9, mdadm - v3.0 and 2 IDE hard drives, this is working 
+correctly. For this installation iused as a basis for consultation 
+Article http://en.gentoo-wiki.com/wiki/Migrate_to_RAID
 
-If you write a couple of numbers to 'suspend_lo' and 'suspend_hi' in sysfs,
-then writes to blocks between those two array addresses will be blocked.
-So you could suspend a region, look at the blocks, then un-suspend.
+Now, I want to use two SATA drives in raid level 1,
 
-NeilBrown
+Now i have Gentoo Linux with kernel  2.6.36-hardened-r6 and mdadm - 
+v3.1.4 and the instructions of Article dont work. The kernel was 
+configured with support for disks raid autodetect and supported the raid 
+level 1. But in the logs of dmesg does not run the auto-detection of the 
+disks to the array, so in the boot when mounting the root device / 
+dev/md2 the system can not find the device.
+
+When I run mdadm - auto-detect the array are found somewhere but still 
+displays message indicating that the raid device is not a valid 
+partition table.
+
+How can you configure a raid level 1 with bootable disks / dev / sda and 
+/ dev / sdb?
+I want three partitions:
+     /dev/md1  - swap  - /dev/sda1, /dev/sdb1
+     /dev/md2  - boot   - /dev/sda2, /dev/sdb2
+     /dev/md3  - / - /dev/sda3, /dev/sdb3
+
+I am using grub as bootloader.
+
+Thanks,
+Naira Kaieski
