@@ -1,41 +1,42 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: User space RAID-6 access
-Date: Tue, 1 Feb 2011 22:00:19 +0100
-Message-ID: <20110201210019.GA16130@lazy.lzy>
-References: <20110131202054.GA15712@lazy.lzy>
- <20110201075259.4beaf501@notabene.brown>
- <20110201192154.GA2696@lazy.lzy>
- <20110202071850.3b671c1e@notabene.brown>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Subject: Re: Kernel 2.6.32-5-amd64 fails to boot.
+Date: Tue, 01 Feb 2011 22:02:10 +0100
+Message-ID: <4D4874D2.601@grumpydevil.homelinux.org>
+References: <1D.26.13137.882784D4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110202071850.3b671c1e@notabene.brown>
+In-Reply-To: <1D.26.13137.882784D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I didn't realise that you wanted to look at the members of the array while
-> the array was active!!  That is a bit harder.  But not impossible.
+On 02/01/2011 09:52 PM, Leslie Rhorer wrote:
+>> On 02/01/2011 09:23 PM, Leslie Rhorer wrote:
+>>      
+>>
+>>> doesn't boot, either.  It gives a bit more detail in the output, but
+>>>        
+>> nothing
+>>      
+>>> illuminating.  The old kernel (2.6.32-3-amd64) boots just fine.
+>>>
+>>>        
+>> Can you enable serial console and catch the console output that way?
+>>      
+> 	Well, not easily.  I don't have a serial terminal.  I suppose I
+> could set something up.  You're suggesting I poke around to see what md is
+> reporting?  Also, I'm not sure why - if the keyboard console is failing -
+> the serial console would work better.
+>
+>
+>    
+Serial console can be captured to a file and then the output analysed. 
+So you can read afterwards the messages that are flying past.
 
-Well, let's say that would be optimal, but even
-off-line could be OK.
+What i do in such case, is that i take serial connector from a laptop, 
+and run a terminal emulater like minicom. And capture it to a file so i 
+can analyse what has been happening.
 
-BTW, what does it mean "off-line"?
-Does it mean that /dev/mdX exists, but it is not
-used (un-mounted), or it is just read-only, or
-it should *not* exists and only the componing
-HDDs are available?
- 
-> If you write a couple of numbers to 'suspend_lo' and 'suspend_hi' in sysfs,
-> then writes to blocks between those two array addresses will be blocked.
-> So you could suspend a region, look at the blocks, then un-suspend.
-
-Oh, thanks, I will consider the option.
-
-bye,
-
--- 
-
-piergiorgio
