@@ -1,151 +1,66 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What's the typical RAID10 setup?
-Date: Tue, 1 Feb 2011 16:09:03 -0200
-Message-ID: <AANLkTim_JD8g9Kcg8xrBSEQCRrD3K-sTQNjPPBg=2ckS@mail.gmail.com>
-References: <4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
-	<20110131225235.GA11775@www2.open-std.org>
-	<ii8lcv$3jg$1@dough.gmane.org>
-	<20110201160245.GA25659@www2.open-std.org>
-	<AANLkTikUuJ5T8r0btFGzeb73BSW97kcsV5JDAjD9my+9@mail.gmail.com>
-	<20110201175625.GA25953@www2.open-std.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: User space RAID-6 access
+Date: Tue, 1 Feb 2011 20:21:54 +0100
+Message-ID: <20110201192154.GA2696@lazy.lzy>
+References: <20110131202054.GA15712@lazy.lzy>
+ <20110201075259.4beaf501@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201175625.GA25953@www2.open-std.org>
+Content-Disposition: inline
+In-Reply-To: <20110201075259.4beaf501@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ok, but you are wrong...
-> well, raid0 is for reading sequentially, about double as fast as raid=
-1.
-> https://raid.wiki.kernel.org/index.php/Performance
-
-it=B4s true for a mix of write/read (write is the time of slowest drive=
-)
-
-but if you just read, raid0 and raid1 have the same read time (depend
-on implementation, but can have the same speed)
-
-
-
-2011/2/1 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Tue, Feb 01, 2011 at 02:24:01PM -0200, Roberto Spadim wrote:
->> thinking about this:
->>
->> > I don't think you get the striping performance of raid10,f2 with t=
-his
->> > layout. And that is one of the main advantages of raid10,f2 layout=
-=2E
->> > Have you tried it out?
->>
->> since you have a raid1, you don?t need striping, you can read from a=
-ny
->> mirror, the information is the same, raid1 read is as fast as raid0
->> read, just write is slower (it must read on each mirror)
->> the only problem is raid0 part, or you use linear or stripe, i think
->> raid10 mdadm algorithm use stripe for raid0 part
->
-> well, raid0 is for reading sequentially, about double as fast as raid=
-1.
-> https://raid.wiki.kernel.org/index.php/Performance
->
-> best regards
-> keld
->
->> 2011/2/1 Keld J=F8rn Simonsen <keld@keldix.com>:
->> > On Tue, Feb 01, 2011 at 11:01:33AM +0100, David Brown wrote:
->> >> On 31/01/2011 23:52, Keld J=F8rn Simonsen wrote:
->> >> >raid1+0 and Linux MD raid10 are similar, but significantly diffe=
-rent
->> >> >in a number of ways. Linux MD raid10 can run on only 2 drives.
->> >> >Linux raid10,f2 has almost RAID0 striping performance in sequent=
-ial read.
->> >> >You can have an odd number of drives in raid10.
->> >> >And you can have as many copies as you like in raid10,
->> >> >
->> >>
->> >> You can make raid10,f2 functionality from raid1+0 by using partit=
-ions.
->> >> For example, to get a raid10,f2 equivalent on two drives, partiti=
-on them
->> >> into equal halves. =A0Then make md0 a raid1 mirror of sda1 and sd=
-b2, and
->> >> md1 a raid1 mirror of sdb1 and sda2. =A0Finally, make md2 a raid0=
- stripe
->> >> set of md0 and md1.
->> >
->> > I don't think you get the striping performance of raid10,f2 with t=
-his
->> > layout. And that is one of the main advantages of raid10,f2 layout=
-=2E
->> > Have you tried it out?
->> >
->> > As far as I can see the layout of blocks are not alternating betwe=
-en the
->> > disks. You have one raid1 of sda1 and sdb2, there a file is alloca=
-ted on
->> > blocks sequentially on sda1 and then mirrored on sdb2, where it is=
- also
->> > sequentially allocated. That gives no striping.
->> >
->> >> I don't think there is any way you can get the equivalent of raid=
-10,o2
->> >> in this way. =A0But then, I am not sure how much use raid10,o2 ac=
-tually is
->> >> - are there any usage patterns for which it is faster than raid10=
-,n2 or
->> >> raid10,f2?
->> >
->> > In theory raid10,o2 should have better performance on SSD's becaus=
-e of
->> > the low latency, and raid10,o2 doing multireading from each drive,=
- which
->> > raid0,n2 does not.
->> >
->> > We lack some evidence from benchmarks, tho.
->> >
->> > best regards
->> > keld
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->> >
->>
->>
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+On Tue, Feb 01, 2011 at 07:52:59AM +1100, NeilBrown wrote:
+> On Mon, 31 Jan 2011 21:20:55 +0100 Piergiorgio Sartor
+> <piergiorgio.sartor@nexgo.de> wrote:
+> 
+> > Hi all,
+> > 
+> > some times ago, I think was Neil, it was mentioned
+> > about the possibility to access consistently a RAID-6
+> > array from user space, in order to be able to perform
+> > some checks, like the notorius "which HDD has wrong data".
+> > 
+> > Is there any reference or documentation or source code
+> > which can be taken as example for such a case?
+> > 
+> 
+> Look in the mdadm source code, particularly at restripe.c
+> 
+> Also
+>    make test_stripe
+> 
+> make a program the the test suite uses for verify data correctness.
+> 
+> That should give you enough hints to get you started.
 
 
+Hi Neil, thanks for the pointer.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I had a look at the code and there is something I did not get.
+
+It seems to me the HDDs composing the array are "simply"
+opened with "open".
+
+In case the array is in use, how is avoided a race condition
+between the "test_stripe" program and the md device?
+
+I mean, the first could start to read from the HDDs and the
+other could write something in the same place, leading to an
+inconsistent parity, from the "test_stripe" point of view,
+since it missed some update.
+
+Or there is a locking inside md (in "test_stripe" I could
+not see and it would also be dangerous)?
+
+Thanks again,
+
+bye,
+
+-- 
+
+piergiorgio
