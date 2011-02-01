@@ -1,53 +1,159 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Mon, 31 Jan 2011 18:58:29 -0600
-Message-ID: <4D475AB5.10600@hardwarefreak.com>
-References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>	<20110131192858.GD27952@www2.open-std.org>	<4D4718E1.9040607@hardwarefreak.com>	<20110131203725.GB2283@www2.open-std.org>	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com> <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ
- @mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md: do not write resync checkpoint, if max_sector has
+ been reached.
+Date: Tue, 1 Feb 2011 12:07:52 +1100
+Message-ID: <20110201120752.00a9b534@notabene.brown>
+References: <20110127165015.7884.8099.stgit@gklab-128-080.igk.intel.com>
+	<20110131134557.653a1db0@notabene.brown>
+	<66C59AD0932712458090B447266D638C010C8D149A@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+In-Reply-To: <66C59AD0932712458090B447266D638C010C8D149A@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, =?UTF-8?B?S2VsZCBKw7hybiBTaW1vbnNlbg==?= <keld@keldix.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Jon Nelson put forth on 1/31/2011 3:27 PM:
-> Before this goes any further, why not just reference the excellent
-> Wikipedia article (actually, excellent applies to both Wikipedia *and*
-> the article):
+On Mon, 31 Jan 2011 18:48:08 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
+<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Monday, January 31, 2011 3:46 AM
+> > To: Hawrylewicz Czarnowski, Przemyslaw
+> > Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Williams, Dan J;
+> > Ciechanowski, Ed
+> > Subject: Re: [PATCH] md: do not write resync checkpoint, if max_sector has
+> > been reached.
+> > 
+> > On Thu, 27 Jan 2011 17:50:15 +0100 Przemyslaw Czarnowski
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+> > 
+> > > If disk fails during resync, sync service of personality usually skips
+> > the
+> > > rest of not synchronized stripes. It finishes sync thread (md_do_sync())
+> > > and wakes up the main raid thread. md_recovery_check() starts and
+> > > unregisteres sync thread.
+> > > In the meanwhile mdmon also services failed disk - removes and replaces
+> > it
+> > > with a new one (if it was available).
+> > > If checkpoint is stored (with value of array's max_sector), next
+> > > md_recovery_check() will restart resync. It finishes normally and
+> > > activates ALL spares (including the one added recently) what is wrong.
+> > > Another md_recovery_check() will not start recovery as all disks are in
+> > > sync. If checkpoint is not stored, second resync does not start and
+> > > recovery can proceed.
+> > >
+> > > Signed-off-by: Przemyslaw Czarnowski
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> > > ---
+> > >  drivers/md/md.c |    3 ++-
+> > >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > >
+> > > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > > index 3e40aad..6eda858 100644
+> > > --- a/drivers/md/md.c
+> > > +++ b/drivers/md/md.c
+> > > @@ -6929,7 +6929,8 @@ void md_do_sync(mddev_t *mddev)
+> > >  	if (!test_bit(MD_RECOVERY_CHECK, &mddev->recovery) &&
+> > >  	    mddev->curr_resync > 2) {
+> > >  		if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+> > > -			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+> > > +			if (test_bit(MD_RECOVERY_INTR, &mddev->recovery) &&
+> > > +			    mddev->curr_resync < max_sectors) {
+> > >  				if (mddev->curr_resync >= mddev->recovery_cp) {
+> > >  					printk(KERN_INFO
+> > >  					       "md: checkpointing %s of %s.\n",
+> > >
+> > 
+> > This is wrong.  If curr_resync has reached some value, then the array *is*
+> > in-sync up to that point.
+> > 
+> > If a device fails then that often makes the array fully in-sync - because
+> > there it no longer any room for inconsistency.
+> > This is particularly true for RAID1.  If one drive in a 2-drive RAID1
+> > fails,
+> > then the array instantly becomes in-sync.
+> > For RAID5, we should arguably fail the array at that point rather than
+> > marking it in-sync, but that would probably cause more data loss than it
+> > avoids, so we don't.
+> > In any case - the array is now in-sync.
+> Yes, I agree. But it is not the point here, in this bug.
 > 
-> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+> > 
+> > If a spare is added by mdmon at this time, then the array is not 'out of
+> > sync', it is 'in need for recovery'.  'recovery' and 'resync' are different
+> > things.
+> I fully understand the difference between recovery and resync (and reshape). 
 > 
-> The only problem I have with the wikipedia article is the assertion
-> that Linux MD RAID 10 is non-standard. It's as standard as anything
-> else is in this world.
+> > 
+> > md_check_recovery should run remove_and_add_spares are this point.  That
+> And it does. 
+> 
+> > should return a non-zero value (because it found the spare that mdmon
+> > added)
+> But the return value is wrong (it is correct according to current configuration). Please let me explain once again what's going on.
+> 
+> The flow is as follows:
+> 0. resync is in progress
+> 1. one disk fails
+> 2. md_error() wakes up raid thread
+> 3. md_do_sync() gets skipped=1 from mddev->pers->sync_request() and some amount of skipped sectors/stripes - usually all remaining to resync. mddev->recovery_cp is set to last sector (max_sector in md_do_sync)
+> 3a. md_check_recovery() sees MD_RECOVERY_INTR (clears it) and unregisters recovery thread (which actually does resync)
+> 3b. mdmon unblocks array member
+> 4. md_check_recovery checks if some action is required. 
+> 4a. reshape is not taken into account as reshape_position==MaxSector
+> 4b. recovery is not taken into account as mdmon did not add spare yet
+> 4c. resync is started, as recovery_cp!=MaxSector (!)
+> 5. md_do_sync exists normally (gets skipped=1 from mddev->pers->sync_request()) as checkpoint pointed at the last sector; it clears mddev->recovery_cp.
+> 6. mdmon adds disk (via slot-store())
+> 7. md_check_recovery() does cleanup after finished resync
+> 7a. MD_RECOVERY_INTR is not set anymore, mddev->pers->spare_active() is started and ALL devices !In_sync available in array are set in_sync, and array degradation is cleared(!).
+> 7b. remove_and_add_spares() does not see spares available (mddev->degraded==0) so recovery does not start.
+> 
 
-Unfortunately there is no organization, no standards body, that defines RAID
-levels.  The use of the word "standard" in the article means "de facto"
-standard.  All of the major and lesser expansion slot card and external RAID
-controller vendors have been using the same RAID level terminology for two
-decades.  In this case, some have used "RAID 10" while others have used "RAID
-1+0" for the same algorithm.  Some used to use "RAID 10" and switched to using
-"RAID 1+0" recently o avoid perceived confusion in the marketplace.  NONE of
-them include a RAID "10" or "1+0" implementation that works with only 3 disks,
-or even 2 disks.  In the hardware industry, RAID "10" or "1+0" always means a
-stripe of mirrored pairs, 4 drives (devices) being the minimum required.  I
-believe the "non standard" description is right on the money though because
-Linux mdraid is the only software/hardware solution that offers these other
-"layouts".
+Thank you for this excellent problem description.
 
-The reason I disdain these multiple layouts has nothing to do with their
-technical merit, but the fact that it's almost impossible to discuss some things
-because we don't know what the heck each other are talking about.  An OP may say
-"RAID 10" on this list, but is actually referring to one of the layouts that
-isn't the classic striped mirrors.  Such as when discussing how many drives can
-fail and you're still up and running.  That is well defined for traditional RAID
-10, but not so well, at least from my perspective, for these "non standard" RAID
-10 layouts.
+I think the mistake here is at step 6.
+mdmon should not be trying to add a disk until the resync has completed.
+In particular, mdmon shouldn't try, and md should not allow mdmon to succeed.
 
--- 
-Stan
+So slot_store should return -EBUSY if MD_RECOVERY_RUNNING is set
+
+mdmon needs to 'know' when a sync/etc is happening, and should avoid
+processing ->check_degraded if it is.
+
+I have added the md fix to my for-next branch.
+I might do the mdadm fix later.
+
+Thanks,
+NeilBrown
+
+
+
+> > and  should then start a recovery pass which will ignore recovery_cp (which
+> > is a really badly chosen variable name - it should be 'resync_cp', not
+> > 'recovery_cp'.
+> as you can see above, recovery_cp is not ignored (yes the name is confusing)
+> 
+> > 
+> > So if you are experiencing a problem where mdmon adds a spare and appears
+> > to
+> > get recovered instantly, (which is what you seem to be saying) then the
+> to be precise, recovery do not start at all...
+> 
+> > problem is else-where.
+> 
+> > If you can reproduce it, then it would help to put some tracing in
+> > md_check_recovery, particularly reporting the return value of
+> > remove_and_add_spares, and the value that is finally chosen for
+> > mddev->recovery.
+> if you want some logs, I have plenty:) But I think my description will suffice to understand the problem.
+> 
+> > 
+> > Thanks,
+> > NeilBrown
+> 
 
