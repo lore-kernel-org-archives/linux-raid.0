@@ -1,59 +1,72 @@
 From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: RAID HDDs spin up sequence
-Date: Tue, 1 Feb 2011 17:39:32 +0500
-Message-ID: <20110201173932.2455a20f@natsu>
-References: <20110131201823.GA15704@lazy.lzy>
-	<AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
-	<20110131222348.GA15912@lazy.lzy>
-	<AANLkTi=gL3ATPN1+HHE+mhK7ZsM+aPyyQfVsz9Pq1Ajf@mail.gmail.com>
-	<20110131230703.GA16834@lazy.lzy>
-	<4D4765B2.7090002@cfl.rr.com>
+Subject: Re: What's the typical RAID10 setup?
+Date: Tue, 1 Feb 2011 17:50:29 +0500
+Message-ID: <20110201175029.6971217e@natsu>
+References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+	<4D475AB5.10600@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RJJO6N3F8tTbFI7Mbn6=wSp"; protocol="application/pgp-signature"
+ boundary="Sig_/.DSX_pfraop9JwGT+Fd81q4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D4765B2.7090002@cfl.rr.com>
+In-Reply-To: <4D475AB5.10600@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, Mathias =?UTF-8?B?QnVy?= =?UTF-8?B?w6lu?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, Keld =?UTF-8?B?SsO4cm4=?= Simonsen <keld@keldix.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/RJJO6N3F8tTbFI7Mbn6=wSp
+--Sig_/.DSX_pfraop9JwGT+Fd81q4
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 31 Jan 2011 20:45:22 -0500
-Phillip Susi <psusi@cfl.rr.com> wrote:
+On Mon, 31 Jan 2011 18:58:29 -0600
+Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-> If you want to force serial wakeup, you would need to do some hacking in=
-=20
-> libata or the scsi layer to only allow one wakeup request at once.  Of=20
-> course, with a 6 disk raid where each disk takes 6 seconds to spin up,=20
-> you will be waiting 36 seconds to get your data.  Not exactly desirable.
+> Unfortunately there is no organization, no standards body, that defines R=
+AID
+> levels.
 
-Well, if the other option is to have your system hard-reset because the PSU
-overloads from 12-20-24 disks spinning up at once (you know staggered spin-=
-up
-is supported by disks/controllers for a reason), then the wait does not loo=
-k so
-bad.
+There actually is/was:
+http://www.freeopenbook.com/upgrading-repairing-pc/ch07lev1sec6.html
 
-My take on the problem: just don't spin down your RAIDs.
+"An organization called the RAID Advisory Board (RAB) was formed in July 19=
+92
+to standardize, classify, and educate on the subject of RAID. The RAB has
+developed specifications for RAID, a conformance program for the various RA=
+ID
+levels, and a classification program for RAID hardware."
+
+Just who the fsck they are and who gave them the authority to define anythi=
+ng,
+is another question. http://www.raid-advisory.com/ is mentioned in various
+sources as RAB's website, currently a placeholder domain with spam.
 
 --=20
 With respect,
 Roman
 
---Sig_/RJJO6N3F8tTbFI7Mbn6=wSp
+--Sig_/.DSX_pfraop9JwGT+Fd81q4
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAk1H/wQACgkQTLKSvz+PZwihnwCfUZLy2kWJe6dPp3xPYuxZY1g/
-BRIAoIe/xrjKMSThUehGSc6nvzFQbifK
-=1vwx
+iEYEARECAAYFAk1IAZUACgkQTLKSvz+PZwhiWwCfbencgGP3KBfKeRDK2Ci/cFNg
+QQIAnRPcrgj/hV/8J2p1xegxqM1WAesA
+=Zllj
 -----END PGP SIGNATURE-----
 
---Sig_/RJJO6N3F8tTbFI7Mbn6=wSp--
+--Sig_/.DSX_pfraop9JwGT+Fd81q4--
