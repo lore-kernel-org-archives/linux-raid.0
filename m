@@ -1,33 +1,76 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Tue, 1 Feb 2011 21:16:46 +0100
-Message-ID: <20110201201646.GA26268@www2.open-std.org>
-References: <AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com> <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com> <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com> <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com> <20110131225235.GA11775@www2.open-std.org> <ii8lcv$3jg$1@dough.gmane.org> <20110201160245.GA25659@www2.open-std.org> <AANLkTikUuJ5T8r0btFGzeb73BSW97kcsV5JDAjD9my+9@mail.gmail.com> <20110201175625.GA25953@www2.open-std.org> <AANLkTim_JD8g9Kcg8xrBSEQCRrD3K-sTQNjPPBg=2ckS@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: User space RAID-6 access
+Date: Wed, 2 Feb 2011 07:18:50 +1100
+Message-ID: <20110202071850.3b671c1e@notabene.brown>
+References: <20110131202054.GA15712@lazy.lzy>
+	<20110201075259.4beaf501@notabene.brown>
+	<20110201192154.GA2696@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTim_JD8g9Kcg8xrBSEQCRrD3K-sTQNjPPBg=2ckS@mail.gmail.com>
+In-Reply-To: <20110201192154.GA2696@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 01, 2011 at 04:09:03PM -0200, Roberto Spadim wrote:
-> ok, but you are wrong...
-> > well, raid0 is for reading sequentially, about double as fast as raid1.
-> > https://raid.wiki.kernel.org/index.php/Performance
+On Tue, 1 Feb 2011 20:21:54 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
+
+> On Tue, Feb 01, 2011 at 07:52:59AM +1100, NeilBrown wrote:
+> > On Mon, 31 Jan 2011 21:20:55 +0100 Piergiorgio Sartor
+> > <piergiorgio.sartor@nexgo.de> wrote:
+> > 
+> > > Hi all,
+> > > 
+> > > some times ago, I think was Neil, it was mentioned
+> > > about the possibility to access consistently a RAID-6
+> > > array from user space, in order to be able to perform
+> > > some checks, like the notorius "which HDD has wrong data".
+> > > 
+> > > Is there any reference or documentation or source code
+> > > which can be taken as example for such a case?
+> > > 
+> > 
+> > Look in the mdadm source code, particularly at restripe.c
+> > 
+> > Also
+> >    make test_stripe
+> > 
+> > make a program the the test suite uses for verify data correctness.
+> > 
+> > That should give you enough hints to get you started.
 > 
-> it?s true for a mix of write/read (write is the time of slowest drive)
 > 
-> but if you just read, raid0 and raid1 have the same read time (depend
-> on implementation, but can have the same speed)
+> Hi Neil, thanks for the pointer.
+> 
+> I had a look at the code and there is something I did not get.
+> 
+> It seems to me the HDDs composing the array are "simply"
+> opened with "open".
+> 
+> In case the array is in use, how is avoided a race condition
+> between the "test_stripe" program and the md device?
+> 
+> I mean, the first could start to read from the HDDs and the
+> other could write something in the same place, leading to an
+> inconsistent parity, from the "test_stripe" point of view,
+> since it missed some update.
+> 
+> Or there is a locking inside md (in "test_stripe" I could
+> not see and it would also be dangerous)?
+> 
+> Thanks again,
+> 
+> bye,
+> 
 
-For sequential reading, this is not true. For random reading and
-writing I agree with you in theory, but benchmarks show that it is not
-so, at least for Linux RAID, viz the above URL.
+I didn't realise that you wanted to look at the members of the array while
+the array was active!!  That is a bit harder.  But not impossible.
 
-Have you got benchmarks to shed some light on this?
+If you write a couple of numbers to 'suspend_lo' and 'suspend_hi' in sysfs,
+then writes to blocks between those two array addresses will be blocked.
+So you could suspend a region, look at the blocks, then un-suspend.
 
-best regards
-keld
+NeilBrown
