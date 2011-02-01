@@ -1,59 +1,79 @@
-From: hansbkk@gmail.com
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: What's the typical RAID10 setup?
-Date: Tue, 1 Feb 2011 15:46:46 +0700
-Message-ID: <AANLkTi=uAQ0dfZwmrCZLKNL4ssPx0LQAru0j+bJcjrEL@mail.gmail.com>
+Date: Tue, 1 Feb 2011 09:20:07 +0000
+Message-ID: <20110201092007.GA7860@cthulhu.home.robinhill.me.uk>
 References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
-	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
-	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
-	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
-	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
-	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+ <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+ <20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+ <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+ <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+ <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+ <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+ <4D470F96.40409@cfl.rr.com>
+ <4D471A41.1090706@hardwarefreak.com>
+ <4D4730C0.8080900@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4D4730C0.8080900@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-For regulars here on the list we understand "raid10" to mean (what
-outsiders call non-standard) "md raid10".
 
-To be very clear for everyone coming here, how about we agree to use
-that - "md raid10" and "raid1+0" to mean the (to outsiders "standard")
-version, and to just not use plain "raid10" at all as it is ambiguous.
+--x+6KMIRAuhnl3hBn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-My understanding of "standard" = accepted in all the subdomain
-discussion areas of the overall concept (md raid being a subset of
-raid).
+On Mon Jan 31, 2011 at 04:59:28PM -0500, Phillip Susi wrote:
 
-Within the overall topic domain, mdadm-implemented raid is just one
-flavor, one which in fact many consider substandard and
-inconsequential - although I and of course most here disagree, that's
-the way it is.
+> On 1/31/2011 3:23 PM, Stan Hoeppner wrote:
+> > This is absolutely not correct.  In a 10 disk RAID 10 array, exactly 5 =
+disks can
+> > fail, as long as no two are in the same mirror pair, and the array will=
+ continue
+> > to function, with little or no performance degradation.
+>=20
+> That is a raid 0+1, not raid10.
+>=20
+No, it's RAID 10 or RAID 1+0. RAID 0+1 would be 2 mirrored pairs of
+5-disk RAID 0 arrays, in which case you could only lose 5 disks if
+they're all from the same RAID 0 array.  With RAID 10 or RAID 1+0 (in
+the case of a 10-disk n2 setup, the physical layout should be exactly
+the same) then the restriction is, as stated, that no two are "mirrored"
+(whether that's a separate RAID 1 mirror or just that the two are
+defined by the RAID 10 layout to contain the same data is irrelevant).
 
-A major advantage is the fact that mdraid is not proprietary but open,
-and although the meaning of standard may often imply open as opposed
-to to proprietary, that's not so in this case.
+> > Where are you getting your information?  Pretty much everything you sta=
+ted is
+> > wrong...
+>=20
+> The mdadm man page.
+>=20
+The md man page would be better for information on the physical layouts,
+but I don't see anything on there to support what you're saying here.
 
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-On Tue, Feb 1, 2011 at 4:27 AM, Jon Nelson
-<jnelson-linux-raid@jamponi.net> wrote:
-> Before this goes any further, why not just reference the excellent
-> Wikipedia article (actually, excellent applies to both Wikipedia *and*
-> the article):
->
-> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
->
-> The only problem I have with the wikipedia article is the assertion
-> that Linux MD RAID 10 is non-standard. It's as standard as anything
-> else is in this world.
+--x+6KMIRAuhnl3hBn
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEYEARECAAYFAk1H0EcACgkQShxCyD40xBKefQCcDzqpsQvw134+tjGydo2dZdxL
+C5IAoJZwNqYP5SFq9bA+sjdHZyoumOSm
+=Eafb
+-----END PGP SIGNATURE-----
+
+--x+6KMIRAuhnl3hBn--
