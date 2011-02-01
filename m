@@ -1,71 +1,71 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Subject: Re: Kernel 2.6.32-5-amd64 fails to boot.
-Date: Tue, 01 Feb 2011 23:46:14 +0100
-Message-ID: <4D488D36.2000208@grumpydevil.homelinux.org>
-References: <26.D7.19545.BDE784D4@cdptpa-omtalb.mail.rr.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: What's the typical RAID10 setup?
+Date: Tue, 1 Feb 2011 21:12:11 -0200
+Message-ID: <AANLkTikcOA3hSwx29H++sayJ4PcY00_mQBw91TyYXO05@mail.gmail.com>
+References: <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
+	<20110131225235.GA11775@www2.open-std.org>
+	<ii8lcv$3jg$1@dough.gmane.org>
+	<AANLkTin1MPYZGMuL75c=_q+ndeiz0F5+eCRudpDdTwu9@mail.gmail.com>
+	<4D4883A3.6030605@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <26.D7.19545.BDE784D4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <4D4883A3.6030605@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/01/2011 10:44 PM, Leslie Rhorer wrote:
->> -----Original Message-----
->> From: Rudy Zijlstra [mailto:rudy@grumpydevil.homelinux.org]
->> Sent: Tuesday, February 01, 2011 3:02 PM
->> To: lrhorer@satx.rr.com
->> Cc: 'Linux RAID'
->> Subject: Re: Kernel 2.6.32-5-amd64 fails to boot.
->>
->> On 02/01/2011 09:52 PM, Leslie Rhorer wrote:
->>      
->>>> On 02/01/2011 09:23 PM, Leslie Rhorer wrote:
->>>>
->>>>
->>>>          
->>>>> doesn't boot, either.  It gives a bit more detail in the output, but
->>>>>
->>>>>            
->>>> nothing
->>>>
->>>>          
->>>>> illuminating.  The old kernel (2.6.32-3-amd64) boots just fine.
->>>>>
->>>>>
->>>>>            
->>>> Can you enable serial console and catch the console output that way?
->>>>
->>>>          
->>> 	Well, not easily.  I don't have a serial terminal.  I suppose I
->>> could set something up.  You're suggesting I poke around to see what md
->>>        
->> is
->>      
->>> reporting?  Also, I'm not sure why - if the keyboard console is failing
->>>        
->> -
->>      
->>> the serial console would work better.
->>>
->>>
->>>
->>>        
->> Serial console can be captured to a file and then the output analysed.
->> So you can read afterwards the messages that are flying past.
->>
->> What i do in such case, is that i take serial connector from a laptop,
->> and run a terminal emulater like minicom. And capture it to a file so i
->> can analyse what has been happening.
->>      
-> 	Yeah, I don't think there is anything pertinent prior to the md
-> failures, but it might be worth a shot.  I don't have a laptop, but I do
-> have another server sitting right below the one in question.  The main
-> problem is, neither one has a serial port.
+again....
+closest head algorithm (today raid1)
+is good for hard disks
+but isn=B4t good for ssd (round robin here is better)
+
+but the best algorithm is time based (minimize time to access data)
+
+2011/2/1 Stan Hoeppner <stan@hardwarefreak.com>:
+> Jon Nelson put forth on 2/1/2011 7:50 AM:
 >
->    
-Network console? I could tell you how to setup serial console, but i've 
-never done the network console
+>> The performance will not be the same because. Whenever possible, md
+>> reads from the outermost portion of the disk -- theoretically the
+>> fastest portion of the disk (by 2 or 3 times as much as the inner
+>> tracks) -- and in this way raid10,f2 can actually be faster than
+>> raid0.
+>
+> Faster in what regard? =A0I assume you mean purely sequential read, a=
+nd not random
+> IOPS. =A0The access patterns of the vast majority of workloads are ra=
+ndom, so I
+> don't see much real world benefit, if what you say is correct. =A0Thi=
+s might
+> benefit MythTV or similar niche streaming apps.
+>
+> --
+> Stan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
