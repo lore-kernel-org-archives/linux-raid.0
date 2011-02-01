@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 8/8] imsm: move common code for array size calculation to
-	function
-Date: Tue, 01 Feb 2011 14:50:00 +0100
-Message-ID: <20110201135000.13398.35393.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 7/8] imsm: FIX: Debug strings cleanup
+Date: Tue, 01 Feb 2011 14:49:52 +0100
+Message-ID: <20110201134952.13398.40751.stgit@gklab-128-013.igk.intel.com>
 References: <20110201134226.13398.4071.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,126 +13,60 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Array size calculation is made in the same way in few places in code.
-Make function imsm_set_device_size() for this common code.
+Some debug strings remains as they were introduced,
+before code was moved to separate function.
+Information displayed by debug information in not all cases
+was correct.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   74 +++++++++++++++++++++++++--------------------------------
- 1 files changed, 33 insertions(+), 41 deletions(-)
+ super-intel.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index e523313..c70d44b 100644
+index f604589..e523313 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5052,6 +5052,37 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
- 	super->updates_pending++;
- }
+@@ -5858,15 +5858,15 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
+ 	int ret_val = 0;
+ 	unsigned int dev_id;
  
-+static unsigned long long imsm_set_array_size(struct imsm_dev *dev)
-+{
-+	int used_disks = imsm_num_data_members(dev, 0);
-+	unsigned long long array_blocks;
-+	struct imsm_map *map;
-+
-+	if (used_disks == 0) {
-+		/* when problems occures
-+		 * return current array_blocks value
-+		 */
-+		array_blocks = __le32_to_cpu(dev->size_high);
-+		array_blocks = array_blocks << 32;
-+		array_blocks += __le32_to_cpu(dev->size_low);
-+
-+		return array_blocks;
-+	}
-+
-+	/* set array size in metadata
-+	 */
-+	map = get_imsm_map(dev, 0);
-+	array_blocks = map->blocks_per_member * used_disks;
-+
-+	/* round array size down to closest MB
-+	 */
-+	array_blocks = (array_blocks >> SECT_PER_MB_SHIFT) << SECT_PER_MB_SHIFT;
-+	dev->size_low = __cpu_to_le32((__u32)array_blocks);
-+	dev->size_high = __cpu_to_le32((__u32)(array_blocks >> 32));
-+
-+	return array_blocks;
-+}
-+
- static void imsm_set_disk(struct active_array *a, int n, int state);
+-	dprintf("imsm: imsm_process_update() for update_reshape\n");
++	dprintf("imsm: apply_reshape_container_disks_update()\n");
  
- static void imsm_progress_container_reshape(struct intel_super *super)
-@@ -5071,7 +5102,6 @@ static void imsm_progress_container_reshape(struct intel_super *super)
- 		struct imsm_map *map = get_imsm_map(dev, 0);
- 		struct imsm_map *map2;
- 		int prev_num_members;
--		int used_disks;
- 
- 		if (dev->vol.migr_state)
- 			return;
-@@ -5099,26 +5129,7 @@ static void imsm_progress_container_reshape(struct intel_super *super)
- 		memcpy(map2, map, copy_map_size);
- 		map2->num_members = prev_num_members;
- 
--		/* calculate new size
--		 */
--		used_disks = imsm_num_data_members(dev, 0);
--		if (used_disks) {
--			unsigned long long array_blocks;
--
--			array_blocks =
--				map->blocks_per_member
--				* used_disks;
--			/* round array size down to closest MB
--			 */
--			array_blocks = (array_blocks
--					>> SECT_PER_MB_SHIFT)
--				<< SECT_PER_MB_SHIFT;
--			dev->size_low =
--				__cpu_to_le32((__u32)array_blocks);
--			dev->size_high =
--				__cpu_to_le32(
--					(__u32)(array_blocks >> 32));
--		}
-+		imsm_set_array_size(dev);
- 		super->updates_pending++;
+ 	/* enable spares to use in array */
+ 	for (i = 0; i < delta_disks; i++) {
+ 		new_disk = get_disk_super(super,
+ 					  major(u->new_disks[i]),
+ 					  minor(u->new_disks[i]));
+-		dprintf("imsm: imsm_process_update(): new disk "
+-			"for reshape is: %i:%i (%p, index = %i)\n",
++		dprintf("imsm: new disk for reshape is: %i:%i "
++			"(%p, index = %i)\n",
+ 			major(u->new_disks[i]), minor(u->new_disks[i]),
+ 			new_disk, new_disk->index);
+ 		if ((new_disk == NULL) ||
+@@ -5882,8 +5882,8 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
+ 		new_disk->disk.status &= ~SPARE_DISK;
  	}
- }
-@@ -5910,8 +5921,6 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
- 		/* update one device only
- 		 */
+ 
+-	dprintf("imsm: process_update(): update_reshape: volume set"
+-		" mpb->num_raid_devs = %i\n", mpb->num_raid_devs);
++	dprintf("imsm: volume set mpb->num_raid_devs = %i\n",
++		mpb->num_raid_devs);
+ 	/* manage changes in volume
+ 	 */
+ 	for (dev_id = 0; dev_id < mpb->num_raid_devs; dev_id++) {
+@@ -5912,8 +5912,8 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
  		if (devices_to_reshape) {
--			int used_disks;
--
- 			dprintf("imsm: modifying subdev: %i\n",
- 				id->index);
+ 			int used_disks;
+ 
+-			dprintf("process_update(): modifying "
+-				"subdev: %i\n", id->index);
++			dprintf("imsm: modifying subdev: %i\n",
++				id->index);
  			devices_to_reshape--;
-@@ -5929,24 +5938,7 @@ static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
- 			newmap = get_imsm_map(newdev, 1);
- 			memcpy(newmap, oldmap, sizeof_imsm_map(oldmap));
- 
--			/* calculate new size
--			 */
--			used_disks = imsm_num_data_members(newdev, 0);
--			if (used_disks) {
--				unsigned long long array_blocks;
--
--				array_blocks =
--					newmap->blocks_per_member * used_disks;
--				/* round array size down to closest MB
--				 */
--				array_blocks = (array_blocks
--						>> SECT_PER_MB_SHIFT)
--					<< SECT_PER_MB_SHIFT;
--				newdev->size_low =
--					__cpu_to_le32((__u32)array_blocks);
--				newdev->size_high =
--					__cpu_to_le32((__u32)(array_blocks >> 32));
--			}
-+			imsm_set_array_size(newdev);
- 		}
- 
- 		sp = (void **)id->dev;
+ 			newdev->vol.migr_state = 1;
+ 			newdev->vol.curr_migr_unit = 0;
 
