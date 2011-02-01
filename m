@@ -1,46 +1,63 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID HDDs spin up sequence
-Date: Tue, 01 Feb 2011 13:10:06 +0000
-Message-ID: <4D48062E.9040405@anonymous.org.uk>
-References: <20110131201823.GA15704@lazy.lzy> <AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com> <20110131222348.GA15912@lazy.lzy> <AANLkTi=gL3ATPN1+HHE+mhK7ZsM+aPyyQfVsz9Pq1Ajf@mail.gmail.com> <20110131230703.GA16834@lazy.lzy> <4D4765B2.7090002@cfl.rr.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: documentation
+Date: Tue, 1 Feb 2011 11:49:43 -0200
+Message-ID: <AANLkTikGxk-ckfWPOY6EFCrTccbDiVnmeRU4LVWMsZHC@mail.gmail.com>
+References: <AANLkTindmhPU3Lazk33XPaS_Pw7AL52LXKeXAML6F3Y=@mail.gmail.com>
+	<20110201085851.2b665f1a@notabene.brown>
+	<AANLkTikkb__UELY6eaC8bHHH8WeJvJf2WD+hm=hp09wG@mail.gmail.com>
+	<AANLkTimgHi7yrevkJT_jSe9OTvAYPRJrwsPx6EhRBU9Y@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D4765B2.7090002@cfl.rr.com>
+In-Reply-To: <AANLkTimgHi7yrevkJT_jSe9OTvAYPRJrwsPx6EhRBU9Y@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: hansbkk@gmail.com
+Cc: NeilBrown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/02/2011 01:45, Phillip Susi wrote:
-> On 01/31/2011 06:07 PM, Piergiorgio Sartor wrote:
->> That's interesting information. I suspected something
->> like async access could have happened.
->> Is this confirmed? Are the requests from md to the
->> device layer asynchronous?
+nice! my vote to raid.wiki.kernel.org
+there=B4s links on wikipedia to it? linux source code documentation?
+
+2011/2/1  <hansbkk@gmail.com>:
+> For others googling later, there's also good user-level intro
+> information in SLES and RHEL's doc sets
 >
-> Yes, it sends down requests to all drives simultaneously to achieve
-> maximum performance. This is the main purpose of raid-5.
+> http://www.google.com/search?q=3Draid+site%3Adocs.redhat.com
+> http://www.google.com/search?q=3Draid+site%3Awww.novell.com%2Fdocumen=
+tation
 >
->> How about libata? Does this serialize wake ups?
+> Re the concept of "official" in the concept of open-source, to me it
+> means the docs maintained by those who "own" the project.
 >
-> It doesn't. It will wake them all up at once.
+> Otherwise, there is often a "canonical" central location maintained b=
+y
+> the community, which although perhaps not complete nor kept up to dat=
+e
+> should at least point to the more authoritative sources for those
+> learning about the topic.
 >
-> If you want to force serial wakeup, you would need to do some hacking in
-> libata or the scsi layer to only allow one wakeup request at once. Of
-> course, with a 6 disk raid where each disk takes 6 seconds to spin up,
-> you will be waiting 36 seconds to get your data. Not exactly desirable.
+> My two cents: I for one would vote for http://raid.wiki.kernel.org/ a=
+s
+> this, and since Neil's time is better spent coding than updating
+> user-level docs, those of us that would like to see better-maintained
+> documentation should dig in and help create it. Of course whatever
+> Neil can find the time to add at dev-tech levels is invaluable, and
+> should at least be pointed to by the "official" wiki.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-That'd be an excessive amount of time to wait. A quarter of a second is 
-more than enough, a tenth of a second would probably be enough. It's 
-just the motor inrush current you're trying to avoid having simultaneously.
 
-So waiting another second for your array to wake up would mean you could 
-use a sensibly-sized PSU operating in its 80%+ efficiency range, rather 
-than a huge PSU operating inefficiently.
 
-Cheers,
-
-John.
-
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
