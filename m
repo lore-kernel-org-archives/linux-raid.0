@@ -1,59 +1,75 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: nbd / hot plug
-Date: Tue, 1 Feb 2011 18:49:07 -0200
-Message-ID: <AANLkTinbrvs6Hh=y4qrAxNW5-=Kd+rTRspwnnASHH3YW@mail.gmail.com>
-References: <AANLkTi=NEgB_fJPfsK+36wUWZ_Kc_W23v15nT1Qz9iTP@mail.gmail.com>
-	<AANLkTi=uPpV0BGoMQytTofa3986a08GMGHT_8areu6Jk@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Kernel 2.6.32-5-amd64 fails to boot.
+Date: Tue, 1 Feb 2011 14:52:22 -0600
+Message-ID: <1D.26.13137.882784D4@cdptpa-omtalb.mail.rr.com>
+References: <4D487066.2010703@grumpydevil.homelinux.org>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=uPpV0BGoMQytTofa3986a08GMGHT_8areu6Jk@mail.gmail.com>
+In-Reply-To: <4D487066.2010703@grumpydevil.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: paul.clements@us.sios.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: 'Rudy Zijlstra' <rudy@grumpydevil.homelinux.org>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-nice =3DD raid over ethernet! =3DD
-just a heart beath and a primary decision algorithm to make a HA :D
-thanks for the notice paul
-i didn=B4t like drbd it=B4s have a algorithm that i can=B4t execute sin=
-ce my
-app must return the primary decision algorithm :/
+> On 02/01/2011 09:23 PM, Leslie Rhorer wrote:
+> > 	I have been attempting to upgrade a Debian "Squeeze" Linux box from
+> > 2.6.32-3-amd64 to 2.6.32-5-amd64, but the upgrade is a non-starter.
+> GRUB2
+> > comes up just fine, but when I select the new kernel version, a number
+> of
+> > announcements flash by too fast to seen.  I am not 100% certain, but I
+> > believe the initrd starts to load OK. Some text flies by far too quickly
+> to
+> > be seen, but then an error pops up concerning an address space collision
+> of
+> > some PCI device. Then it shows three errors for RAID devices md1. md2,
+> and
+> > md3, saying they are already in use. Immediately thereafter the system
+> shows
+> > errors concerning  the RAID targets being already in use, after which
+> point
+> > the system complains it can't mount / (md2), /dev, /sys, or /proc (in
+> that
+> > order) because the sources do not exist (if /dev/md2 does not exist, how
+> can
+> > it be busy?).  Thereafter, of course, it fails to find init, since / is
+> not
+> > mounted.  It then tries to run BusyBox, but Busybox complains:
+> >
+> > /bin/sh: can't access tty; job control turned off
+> >
+> > After that, it attempts to put up an initramfs prompt, but of course
+> with no
+> > tty access, it just hangs completely.  Not surprisingly, recovery mode
+> > doesn't boot, either.  It gives a bit more detail in the output, but
+> nothing
+> > illuminating.  The old kernel (2.6.32-3-amd64) boots just fine.
+> >
+> 
+> Can you enable serial console and catch the console output that way?
 
-2011/2/1 Paul Clements <paul.clements@steeleye.com>:
-> On Sun, Jan 30, 2011 at 3:27 PM, Roberto Spadim <roberto@spadim.com.b=
-r> wrote:
->> hi guys, i was thinking about nbd problems with server disconnection=
- /
->> client disconnection
->> it's not like a SATA disk hot plug?
->> for example unplug the disk (SATA) =A0=3D unplug the network card
->> could md raid work with it?
->> i tried but i should run
->> mdadm fail / remove / add
->> to get nbd back in array, it's right?
->
-> Yes, nbd with md/raid works fine. If the nbd connection gets broken,
-> the nbd component of the array will fail, you can then remove it and
-> re-add it.
->
-> --
-> Paul
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+	Well, not easily.  I don't have a serial terminal.  I suppose I
+could set something up.  You're suggesting I poke around to see what md is
+reporting?  Also, I'm not sure why - if the keyboard console is failing -
+the serial console would work better.
+
+ 
+> Cheers
+> 
+> Rudy
+> > Obviously there is a problem in the initramfs, probably with mdadm, but
+> > what?  What should I try to manipulate in the initrd so I can find out
+> what
+> > is failing?
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
 
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
