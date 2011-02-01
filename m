@@ -1,71 +1,68 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Tue, 1 Feb 2011 21:32:10 +0100
-Message-ID: <20110201203210.GB26468@www2.open-std.org>
-References: <20110131192858.GD27952@www2.open-std.org> <4D4718E1.9040607@hardwarefreak.com> <20110131203725.GB2283@www2.open-std.org> <AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com> <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com> <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com> <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com> <20110131225235.GA11775@www2.open-std.org> <ii8lcv$3jg$1@dough.gmane.org> <20110201160245.GA25659@www2.open-std.org>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Bootable Raid-1
+Date: Tue, 1 Feb 2011 14:43:13 -0600
+Message-ID: <8B.08.07087.360784D4@cdptpa-omtalb.mail.rr.com>
+References: <4D486B2B.6030609@faccat.br>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110201160245.GA25659@www2.open-std.org>
+In-Reply-To: <4D486B2B.6030609@faccat.br>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: naira@faccat.br, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 01, 2011 at 05:02:46PM +0100, Keld J=F8rn Simonsen wrote:
-> On Tue, Feb 01, 2011 at 11:01:33AM +0100, David Brown wrote:
-> > On 31/01/2011 23:52, Keld J=F8rn Simonsen wrote:
-> > >raid1+0 and Linux MD raid10 are similar, but significantly differe=
-nt
-> > >in a number of ways. Linux MD raid10 can run on only 2 drives.
-> > >Linux raid10,f2 has almost RAID0 striping performance in sequentia=
-l read.
-> > >You can have an odd number of drives in raid10.
-> > >And you can have as many copies as you like in raid10,
-> > >
-> >=20
-> > You can make raid10,f2 functionality from raid1+0 by using partitio=
-ns.=20
-> > For example, to get a raid10,f2 equivalent on two drives, partition=
- them=20
-> > into equal halves.  Then make md0 a raid1 mirror of sda1 and sdb2, =
-and=20
-> > md1 a raid1 mirror of sdb1 and sda2.  Finally, make md2 a raid0 str=
-ipe=20
-> > set of md0 and md1.
->=20
-> I don't think you get the striping performance of raid10,f2 with this
-> layout. And that is one of the main advantages of raid10,f2 layout.
-> Have you tried it out?
->=20
-> As far as I can see the layout of blocks are not alternating between =
-the
-> disks. You have one raid1 of sda1 and sdb2, there a file is allocated=
- on
-> blocks sequentially on sda1 and then mirrored on sdb2, where it is al=
-so
-> sequentially allocated. That gives no striping.
+> I have read several articles on the internet and researched in the
+> messages list, but I'm still having trouble configuring a raid level 1
+> array that is bootable.
+> 
+> I configured a server some time agowith Gentoo Linux, Kernel
+> 2.6.28-hardened-r9, mdadm - v3.0 and 2 IDE hard drives, this is working
+> correctly. For this installation iused as a basis for consultation
+> Article http://en.gentoo-wiki.com/wiki/Migrate_to_RAID
+> 
+> Now, I want to use two SATA drives in raid level 1,
+> 
+> Now i have Gentoo Linux with kernel  2.6.36-hardened-r6 and mdadm -
+> v3.1.4 and the instructions of Article dont work. The kernel was
+> configured with support for disks raid autodetect and supported the raid
+> level 1. But in the logs of dmesg does not run the auto-detection of the
+> disks to the array, so in the boot when mounting the root device /
+> dev/md2 the system can not find the device.
+> 
+> When I run mdadm - auto-detect the array are found somewhere but still
+> displays message indicating that the raid device is not a valid
+> partition table.
+> 
+> How can you configure a raid level 1 with bootable disks / dev / sda and
+> / dev / sdb?
+> I want three partitions:
+>      /dev/md1  - swap  - /dev/sda1, /dev/sdb1
+>      /dev/md2  - boot   - /dev/sda2, /dev/sdb2
+>      /dev/md3  - / - /dev/sda3, /dev/sdb3
+> 
+> I am using grub as bootloader.
 
-Well, maybe the RAID0 layer provides the adequate striping.=20
-I am noy sure, but it looks like it could hold in theory.
-One could try it out.
+	This is very similar to my boot configuration on my two servers.  I
+suspect your problem is the metadata.  What version of superblock are you
+using for /dev/md2?  GRUB2 does not recognize a version 1.x superblock.
+Since the boot images are quite small, and don't require an array of many
+disks, there is nothing wrong with the 0.90 superblock, however.  If your
+/dev/md2 array is not a 0.9 version superblock, try converting it.  Here is
+my configuration from one of the servers:
 
-One advantage of this scheme could be improved probability
-When 2 drives fail, eg. in the case of a 4 drive array.
-The probability of survival of a running system could then
-be enhaced form 33 % to 66 %.
+ARRAY /dev/md0 level=raid6 num-devices=10 metadata=01.2 name=Backup:0
+UUID=431244d6:45d9635a:e88b3de5:92f30255
+ARRAY /dev/md1 level=raid1 num-devices=2 metadata=0.90
+UUID=4cde286c:0687556a:4d9996dd:dd23e701
+ARRAY /dev/md2 level=raid1 num-devices=2 metadata=01.2 name=Backup:2
+UUID=d45ff663:9e53774c:6fcf9968:21692025
+ARRAY /dev/md3 level=raid1 num-devices=2 metadata=01.2 name=Backup:3
+UUID=51d22c47:10f58974:0b27ef04:5609d357
 
-One problem could be the choice of always the lowest block number, whic=
-h
-is secured in raid10,f2, but not in a raid0 over raid1 (or raid10,n2) s=
-cenario.
+	Where md0 is a large (11T) data array, md1 is boot, md2 is root, and
+md3 is swap.  The partitioning layout of the boot drives is the same as
+yours.
 
-best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
