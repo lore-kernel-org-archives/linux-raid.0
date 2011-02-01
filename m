@@ -1,156 +1,92 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: RAID HDDs spin up sequence
-Date: Tue, 1 Feb 2011 12:44:20 -0200
-Message-ID: <AANLkTi=B+CxNghSFTR-bQddOXPsNCeAJn4iZT7dmsasS@mail.gmail.com>
-References: <20110131201823.GA15704@lazy.lzy>
-	<AANLkTinPTaDfVtjMfz7DHUa95cKFF7MZeg=WhuuTnZM8@mail.gmail.com>
-	<20110131222348.GA15912@lazy.lzy>
-	<9EBB77E762A6744BACE68EDD6A4796990129EC0E@MX31A.corp.emc.com>
-	<AANLkTimKD79Yq3zp35YsrAmVu7EXLMPQLH9YojuoTXTf@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: What's the typical RAID10 setup?
+Date: Tue, 01 Feb 2011 15:48:28 +0100
+Message-ID: <ii96gl$vrl$1@dough.gmane.org>
+References: <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>	<20110131192858.GD27952@www2.open-std.org>	<4D4718E1.9040607@hardwarefreak.com>	<20110131203725.GB2283@www2.open-std.org>	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>	<20110131225235.GA11775@www2.open-std.org>	<ii8lcv$3jg$1@dough.gmane.org> <AANLkTin1MPYZGMuL75c=_q+ndeiz0F5+eCRudpDdTwu9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimKD79Yq3zp35YsrAmVu7EXLMPQLH9YojuoTXTf@mail.gmail.com>
+In-Reply-To: <AANLkTin1MPYZGMuL75c=_q+ndeiz0F5+eCRudpDdTwu9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: brian.foster@emc.com
-Cc: piergiorgio.sartor@nexgo.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-try to put big capacitors and inductors on energy cable... it=C2=B4s a =
-good
-eletric level solution... capacitor and inductors will help the start
-current/voltage oscilation
-
-2011/2/1 Roberto Spadim <roberto@spadim.com.br>:
-> maybe a check inside mdadm code should be implemented
->
-> before send read/write command check if device is sleeping,
-> if yes
-> if previous devices wakeup command was more than x seconds OR no
-> device, send a wakeup command
->
-> another idea: a fixed delay to wake up, diferent per device, but coul=
-d
-> only work when we send(before sleep part of code) to all devices
-> command at the same time
->
-> mdadm should be changed (options be included) and kernel source too
->
-> 2011/2/1 =C2=A0<brian.foster@emc.com>:
->>> -----Original Message-----
->>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->>> owner@vger.kernel.org] On Behalf Of Piergiorgio Sartor
->>> Sent: Monday, January 31, 2011 5:24 PM
->>> To: Roberto Spadim
->>> Cc: Piergiorgio Sartor; linux-raid@vger.kernel.org
->>> Subject: Re: RAID HDDs spin up sequence
+On 01/02/2011 14:50, Jon Nelson wrote:
+> On Tue, Feb 1, 2011 at 4:01 AM, David Brown<david@westcontrol.com>  w=
+rote:
+>> On 31/01/2011 23:52, Keld J=C3=B8rn Simonsen wrote:
 >>>
->>> On Mon, Jan 31, 2011 at 07:09:24PM -0200, Roberto Spadim wrote:
->>> > you psu must be dimensioned to work with everythink at full work =
-load
->>> > (it=E6=84=80 a real production NAS right?! not a test)
->>> > your SAS/IDE/SATA controller and HDD manual should be checked
->>> > how hdd wake up? one command (read/write) over sata/sas/ide chann=
-el
->>> wake it up?
->>> > on linux raid we have a read algorithm and a write algorithm
->>> > if a raid1 write occur all disks will wake up
->>> > if a raid1 (raid0 or another) read occur only the disk will wake =
-up
->>> >
->>> > but check you SATA/IDE/SATA controller, how it wake up your disk,=
- and
->>> > how you hdd wake up
+>>> raid1+0 and Linux MD raid10 are similar, but significantly differen=
+t
+>>> in a number of ways. Linux MD raid10 can run on only 2 drives.
+>>> Linux raid10,f2 has almost RAID0 striping performance in sequential=
+ read.
+>>> You can have an odd number of drives in raid10.
+>>> And you can have as many copies as you like in raid10,
 >>>
->>> Hi, thanks for the answer, unfortunately I was
->>> hoping to have made myself clear enough.
->>>
->>> First of all, it is a RAID-6, so let's say that's
->>> already decided by requirements. With SATA HDDs.
->>>
->>> Second, the question was exactly about how the HDDs
->>> are waked up. This is a SW issue, trying with normal
->>> setups, i.e. a couple of disks, it is possible to
->>> send them to sleep (hdparm -y /dev/hdX) and the wake
->>> them up by a simple access.
->>> I had no opportunity to check this with a RAID-5/6,
->>> so I was asking if anyone knows.
->>>
->>> Finally, in order to be power efficient, the PSU,
->>> assuming something like an 80 Plus Gold, should work
->>> at not less than 20% of the nominal power, otherwise
->>> (according to some reviews), the efficiency drops far
->>> below the 80%~90% declared by the 80 Plus standard
->>> (which is measured at 20%, 50% and 100% of the maximum
->>> specified power).
->>> It seem it gets easily around 40%~50%.
->>> So, the PSU must be somehow under dimensioned for the
->>> spin up of 10 HDDs, which seem to require a possible
->>> 30W*10=3D300W (some nasty HDDs seem to require 30W, in
->>> this situation) only for the storage.
->>>
->>> If the HDDs spin up one after the other, then the peak
->>> consumption is only 30W, which might allow a lower
->>> power PSU, in contrast with the requirement to provide
->>> 300W alone for the spin up.
->>>
->>> So, back to the original question, if a 10 HDDs RAID-6
->>> is in standby, how do the single HDD will be waked up,
->>> in case of access? Of course, a quite larger access,
->>> i.e. some GiB of data.
 >>
->> We have a similar situation with our Iomega NAS products. We had a f=
-airly crude locking mechanism implemented at the SCSI level that suits =
-our needs to support staggered spin up. As indicated previously, we fin=
-d that a 1 or 2 second delay between spin ups modulates the current dra=
-w enough such that we don't run into problems. We use this in conjuncti=
-on with MD without much of a problem.
+>> You can make raid10,f2 functionality from raid1+0 by using partition=
+s. For
+>> example, to get a raid10,f2 equivalent on two drives, partition them=
+ into
+>> equal halves.  Then make md0 a raid1 mirror of sda1 and sdb2, and md=
+1 a
+>> raid1 mirror of sdb1 and sda2.  Finally, make md2 a raid0 stripe set=
+ of md0
+>> and md1.
 >>
->> I'm not sure that the code as implemented is appropriate for mainlin=
-e inclusion (and I'm not going to post it directly), but FYI the patche=
-s are included in the open source tarball that is made available on the=
- support section of the iomega.com website (hint: check out the ix12 su=
-pport & downloads section).
+>> If you have three disks, you can do that too:
 >>
->> Brian
+>> md0 =3D raid1(sda1, sdb2)
+>> md1 =3D raid1(sdb1, sdc2)
+>> md2 =3D raid1(sdc1, sda2)
+>> md3 =3D raid0(md0, md1, md2)
 >>
->>>
->>> Thanks again,
->>>
->>> bye,
->>>
->>> --
->>>
->>> piergiorgio
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
-html
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
+>> As far as I can figure out, the performance should be pretty much th=
+e same
+>> (although wrapping everything in a single raid10,f2 is more convenie=
+nt).
 >
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
+> The performance will not be the same because. Whenever possible, md
+> reads from the outermost portion of the disk -- theoretically the
+> fastest portion of the disk (by 2 or 3 times as much as the inner
+> tracks) -- and in this way raid10,f2 can actually be faster than
+> raid0.
 >
 
+This would presumably apply to all raid1 arrangements, not just raid10 =
+-=20
+when md has a choice to read from more than one place it will prefer th=
+e=20
+outermost place.  In the arrangement I described above, the raid pairs=20
+such as md0 each have one have on an inner partition, and one half on a=
+n=20
+outer partition.  /If/ md is smart enough, then it will do the same her=
+e=20
+and read from the outer partition by preference.
+
+The question is, does md determine the "outermost" copy by track number=
+=20
+relative to the partition, or by absolute track number on the disk?  If=
+=20
+it is the former, then I see your point - with my raid 1 + 0 arrangemen=
+t=20
+the innermost and outermost partitions will be viewed the same.  If it=20
+is the later, then my arrangement will work equally well.
+
+On a related note, if you mix an SSD and a HD (partition) in a mirror,=20
+will md prefer to read from the SSD first?  I know it is possible to us=
+e=20
+the "write-mostly" flag to force all reads to come from the SSD=20
+(assuming it hasn't failed), but it would be nice to get parallel reads=
+=20
+from the HD as well whenever the read is large enough or when there are=
+=20
+multiple reads in parallel.
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
