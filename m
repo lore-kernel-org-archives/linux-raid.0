@@ -1,107 +1,44 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What's the typical RAID10 setup?
-Date: Tue, 1 Feb 2011 14:24:01 -0200
-Message-ID: <AANLkTikUuJ5T8r0btFGzeb73BSW97kcsV5JDAjD9my+9@mail.gmail.com>
-References: <AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
-	<20110131225235.GA11775@www2.open-std.org>
-	<ii8lcv$3jg$1@dough.gmane.org>
-	<20110201160245.GA25659@www2.open-std.org>
+From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
+Subject: Re: Software RAID and Fakeraid
+Date: Tue, 1 Feb 2011 11:26:42 -0500
+Message-ID: <20110201162642.GU343@caffeine.csclub.uwaterloo.ca>
+References: <4CF81A16.2010606@cfl.rr.com> <20101203123615.6edce071@notabene.brown> <4CF860EB.7010005@cfl.rr.com> <20101209094354.4c6aaa93@notabene.brown> <4D01328D.9050503@cfl.rr.com> <4D46E6D7.2000205@cfl.rr.com> <20110131170349.GR343@caffeine.csclub.uwaterloo.ca> <4D470BCF.20508@cfl.rr.com> <20110131221252.GT343@caffeine.csclub.uwaterloo.ca> <4D47627A.1080509@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201160245.GA25659@www2.open-std.org>
+Content-Disposition: inline
+In-Reply-To: <4D47627A.1080509@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, The development of GNU GRUB <grub-devel@gnu.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, John Sheu <john.sheu@gmail.com>
 List-Id: linux-raid.ids
 
-thinking about this:
+On Mon, Jan 31, 2011 at 08:31:38PM -0500, Phillip Susi wrote:
+> What do you mean help?
 
-> I don't think you get the striping performance of raid10,f2 with this
-> layout. And that is one of the main advantages of raid10,f2 layout.
-> Have you tried it out?
+If the raid stores the raid info at the end, then the data starts at
+sector 0.  So no space for a bootloader at all.
 
-since you have a raid1, you don=B4t need striping, you can read from an=
-y
-mirror, the information is the same, raid1 read is as fast as raid0
-read, just write is slower (it must read on each mirror)
-the only problem is raid0 part, or you use linear or stripe, i think
-raid10 mdadm algorithm use stripe for raid0 part
+> It is left empty afaik, which is the whole point of shifting it over to 4kb.
 
-2011/2/1 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Tue, Feb 01, 2011 at 11:01:33AM +0100, David Brown wrote:
->> On 31/01/2011 23:52, Keld J=F8rn Simonsen wrote:
->> >raid1+0 and Linux MD raid10 are similar, but significantly differen=
-t
->> >in a number of ways. Linux MD raid10 can run on only 2 drives.
->> >Linux raid10,f2 has almost RAID0 striping performance in sequential=
- read.
->> >You can have an odd number of drives in raid10.
->> >And you can have as many copies as you like in raid10,
->> >
->>
->> You can make raid10,f2 functionality from raid1+0 by using partition=
-s.
->> For example, to get a raid10,f2 equivalent on two drives, partition =
-them
->> into equal halves. =A0Then make md0 a raid1 mirror of sda1 and sdb2,=
- and
->> md1 a raid1 mirror of sdb1 and sda2. =A0Finally, make md2 a raid0 st=
-ripe
->> set of md0 and md1.
->
-> I don't think you get the striping performance of raid10,f2 with this
-> layout. And that is one of the main advantages of raid10,f2 layout.
-> Have you tried it out?
->
-> As far as I can see the layout of blocks are not alternating between =
-the
-> disks. You have one raid1 of sda1 and sdb2, there a file is allocated=
- on
-> blocks sequentially on sda1 and then mirrored on sdb2, where it is al=
-so
-> sequentially allocated. That gives no striping.
->
->> I don't think there is any way you can get the equivalent of raid10,=
-o2
->> in this way. =A0But then, I am not sure how much use raid10,o2 actua=
-lly is
->> - are there any usage patterns for which it is faster than raid10,n2=
- or
->> raid10,f2?
->
-> In theory raid10,o2 should have better performance on SSD's because o=
-f
-> the low latency, and raid10,o2 doing multireading from each drive, wh=
-ich
-> raid0,n2 does not.
->
-> We lack some evidence from benchmarks, tho.
->
-> best regards
-> keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Certainly makes sense.  Now is 4K enough for a boot loader?  Not sure.
 
+> Obviously doing nothing is the simplest thing one can do.  Instead I  
+> would like to do something and end up with a better, more functional  
+> system.  Hence my suggestion on WHAT to do and the existence of this  
+> entire thread.
 
+I personally consider soft raid on raw devices so convluted that I
+have never done it.  I would rather have something I know works with my
+bootloader and other tools, than gain that extra 1MB (at most) that not
+having partitions gives.  Also given many PCs won't boot from a drive
+without a partition table, it isn't even an option then.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Really I think it comes down to only being able to handle the case
+where there is a 4K gap, if you can fit grub in there in a format that
+a system would be able to boot reading just sector 0 of the device.
+The raid info at the start and raid info at the end both prevent you
+from having any boot code in sector 0 so can't be supported at all.
+
+-- 
+Len Sorensen
