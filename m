@@ -1,52 +1,59 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm: FIX: crash during getting map
-Date: Tue, 01 Feb 2011 08:57:37 +0100
-Message-ID: <20110201075736.4921.34737.stgit@gklab-128-013.igk.intel.com>
+From: hansbkk@gmail.com
+Subject: Re: What's the typical RAID10 setup?
+Date: Tue, 1 Feb 2011 15:46:46 +0700
+Message-ID: <AANLkTi=uAQ0dfZwmrCZLKNL4ssPx0LQAru0j+bJcjrEL@mail.gmail.com>
+References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com>
+	<AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com>
+	<20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
+	<AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
+	<AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
+	<AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
+	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
+	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
+	<20110131192858.GD27952@www2.open-std.org>
+	<4D4718E1.9040607@hardwarefreak.com>
+	<20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Stan Hoeppner <stan@hardwarefreak.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When get_imsm_map() is called with second_map parameter == '-1'
-and array is not in migration state NULL pointer is returned.
-This is wrong. '-1' means return map as migration record points.
+For regulars here on the list we understand "raid10" to mean (what
+outsiders call non-standard) "md raid10".
 
-'-1' can be passed to get_imsm_map() from imsm_num_data_members().
-imsm_num_data_members() is called to get current map members based
-on migr_state information
+To be very clear for everyone coming here, how about we agree to use
+that - "md raid10" and "raid1+0" to mean the (to outsiders "standard")
+version, and to just not use plain "raid10" at all as it is ambiguous.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+My understanding of "standard" = accepted in all the subdomain
+discussion areas of the overall concept (md raid being a subset of
+raid).
 
- super-intel.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+Within the overall topic domain, mdadm-implemented raid is just one
+flavor, one which in fact many consider substandard and
+inconsequential - although I and of course most here disagree, that's
+the way it is.
 
-diff --git a/super-intel.c b/super-intel.c
-index 84ab47b..ee0d9c4 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -567,15 +567,16 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- {
- 	struct imsm_map *map = &dev->vol.map[0];
- 
--	if (second_map && !dev->vol.migr_state)
-+	if ((second_map == 1) && !dev->vol.migr_state)
- 		return NULL;
--	else if (second_map) {
-+	else if ((second_map == 1) ||
-+		 ((second_map < 0) && (dev->vol.migr_state))) {
- 		void *ptr = map;
- 
- 		return ptr + sizeof_imsm_map(map);
- 	} else
- 		return map;
--		
-+
- }
- 
- /* return the size of the device.
+A major advantage is the fact that mdraid is not proprietary but open,
+and although the meaning of standard may often imply open as opposed
+to to proprietary, that's not so in this case.
 
+
+On Tue, Feb 1, 2011 at 4:27 AM, Jon Nelson
+<jnelson-linux-raid@jamponi.net> wrote:
+> Before this goes any further, why not just reference the excellent
+> Wikipedia article (actually, excellent applies to both Wikipedia *and*
+> the article):
+>
+> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+>
+> The only problem I have with the wikipedia article is the assertion
+> that Linux MD RAID 10 is non-standard. It's as standard as anything
+> else is in this world.
