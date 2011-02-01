@@ -1,31 +1,89 @@
-From: <tyder13@cox.net>
-Subject: Lucky Winner!
-Date: Mon, 31 Jan 2011 17:42:37 -0800
-Message-ID: <20110131204237.17XWR.1067459.imail__11073.6074661419$1296524979$gmane$org@fed1rmwml34>
-Reply-To: enquiry_jommyjacob01@londonmail.com
+From: NeilBrown <neilb@suse.de>
+Subject: Subject:  ANNOUNCE: mdadm 3.2 - A tool for managing Soft RAID under
+ Linux (DEVEL ONLY)
+Date: Tue, 1 Feb 2011 16:12:58 +1100
+Message-ID: <20110201161258.0dab6473@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You have been awarded =C3=82=C2=A3850,000 from the OXFAM GB - UK=20
-the cash/grant donation Promo for Global Economic Scheme.
-=46or claims, Contact Dr. Ben Andrew.=20
-via e-mail
 
-Name:
-Country:
-Age:
-Phone Number:
-Gender:
-Occupation:
-Your Qualification Number (OG/N231/E101/BDB)=20
+I am pleased to announce the availability of
+   mdadm version 3.2
 
- (oxfam003@aol.com)
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It is available at the usual places:
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm devel-3.2
+   http://neil.brown.name/git?p=mdadm
+
+This is a "Developers only" release.  Please don't consider using it
+or making it available to others without reading the following.
+
+
+By far the most significant change in this release related to the
+management of reshaping arrays.  This code has been substantially
+re-written so that it can work with 'externally managed metadata' -
+Intel's IMSM in particular.  We now support level migration and
+OnLine Capacity Expansion on these arrays.
+
+However, while the code largely works it has not been tested
+exhaustively so there are likely to be problems.  As the reshape code
+for native metadata arrays was changed as part of this rewrite these
+problems could also result in regressions for reshape of native
+metadata.
+
+It is partly to encourage greater testing that this release is being
+made.  Any reports of problem - particular reproducible recipes for
+triggering the problems - will be gratefully received.
+
+It is hopped that a "3.2.1" release will be available in early March
+which will be a bugfix release over this and can be considered
+suitable for general use.
+
+Other changes of note:
+
+ - Policy framework.
+   Various policy statements can be made in the mdadm.conf to guide
+   the behaviour of mdadm, particular with regards to how new devices
+   are treated by "mdadm -I".
+   Depending on the 'action' associated with a device (identified by
+   its 'path') such need devices can be automatically re-added to and
+   existing array that they previously fell out off, or automatically
+   added as a spare if they appear to contain no data.
+
+ - mdadm now has a limited understanding of partition tables.  This
+   allows the policy framework to make decisions about partitioned
+   devices as well.
+
+ - --incremental --remove can be told what --path the device was on,
+   and this info will be recorded so that another device appearing at
+   the same physical location can be preferentially added to the same
+   array (provides the spare-same-slot action policy applied to the
+   path).
+
+ - A new flags "--invalid-backup" flag is available in --assemble
+   mode.  This can be used to re-assemble an array which was stopping
+   in the middle of a reshape, and for which the 'backup file' is no
+   longer available or is corrupted.  The array may have some
+   corruption in it at the point where reshape was up to, but at least
+   the rest of the array will become available.
+   
+
+ - Various internal restructuring - more is needed.
+
+
+Any feed back and bug reports are always welcomed at:
+    linux-raid@vger.kernel.org
+
+And please:  don't use this in production - particularly not the
+--grow functionality.
+
+NeilBrown 1st February 2011
+
+
