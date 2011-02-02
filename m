@@ -1,34 +1,53 @@
-From: hansbkk@gmail.com
-Subject: Re: RAID 5 - One drive dropped while replacing another
-Date: Wed, 2 Feb 2011 23:48:12 +0700
-Message-ID: <AANLkTinvurdEuDFcXycrf=5qoZwEjxSc2izf8e0dgQAq@mail.gmail.com>
-References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>
-	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>
-	<20110202043605.593f0c5c@natsu>
-	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
-	<20110202144726.GB18517@cthulhu.home.robinhill.me.uk>
-	<iic0k1$950$1@dough.gmane.org>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Kernel 2.6.32-5-amd64 fails to boot.
+Date: Wed, 2 Feb 2011 11:00:03 -0600
+Message-ID: <65.C8.19545.59D894D4@cdptpa-omtalb.mail.rr.com>
+References: <alpine.DEB.2.00.1102020557270.21703@p34.internal.lan>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <iic0k1$950$1@dough.gmane.org>
+In-Reply-To: <alpine.DEB.2.00.1102020557270.21703@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: 'Justin Piszcz' <jpiszcz@lucidpixels.com>
+Cc: 'Rudy Zijlstra' <rudy@grumpydevil.homelinux.org>, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Feb 2, 2011 at 11:24 PM, David Brown <david@westcontrol.com> wrote:
-> Of course, there is a cost - if you have 15 2TB drives, with one being a
-> warm spare shared amongst the raid1 pairs, you have only 6 x 2TB storage.
+> Check the network console documentation in the kernel.  Essentially, in
+> LILO, run:
 
-Please correct me if I got the math (or anything else) wrong.
+	I'm not using LILO.
 
-If one didn't implement RAID5 (rather just using RAID0 or LVM) over
-the RAID1s, and were OK with the 6x2TB usable space out of 15 drives,
-then you'd have three spares (actually hot spares right?), allowing
-for *any four* drives to fail (but still as long as it wasn't a
-matched pair within the _much shorter_ rebuild time window.)
+> append="netconsole=4444@192.0.0.1/eth0,514@192.0.0.2/00:60:2D:CD:2A:B7"
+>                               ^^ src                  ^^dest / ^dest mac
+> addr
+> 
+> On the remote host, run syslogd -r (to accespt remote syslogging)
+> 
+> This *is* clearly documented here in the kernel docs:
+> linux/Documentation/networking/netconsole.txt
 
-While a RAID6+spare, where any three can fail (and unlike the above
-any two can fail within the (admittedly longer) rebuild window, gives
-*double* the usable space - 12x2TB.
+	It is?  It doesn't look that clear to me:
+
+Backup:/etc/mdadm# cd linux/Documentation/networking/
+-bash: cd: linux/Documentation/networking/: No such file or directory
+
+> It takes a string configuration parameter "netconsole" in the
+> following format:
+> 
+>   netconsole=[src-port]@[src-ip]/[<dev>],[tgt-port]@<tgt-ip>/[tgt-macaddr]
+> 
+>     where
+>          src-port      source for UDP packets (defaults to 6665)
+>          src-ip        source IP to use (interface address)
+>          dev           network interface (eth0)
+>          tgt-port      port for logging agent (6666)
+>          tgt-ip        IP address for logging agent
+>          tgt-macaddr   ethernet MAC address for logging agent (broadcast)
+
+	Thanks.  I'll give it a shot.
+ 
+
+
