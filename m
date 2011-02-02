@@ -1,107 +1,72 @@
-From: hansbkk@gmail.com
-Subject: Re: RAID 5 - One drive dropped while replacing another
-Date: Wed, 2 Feb 2011 22:28:56 +0700
-Message-ID: <AANLkTi=XzwtUGYH_wz44LHTYpyQRqnSCk4MxWZiQqZ8Z@mail.gmail.com>
-References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>
-	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>
-	<20110202043605.593f0c5c@natsu>
-	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
-	<20110202192835.5d35f2d1@natsu>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: Software RAID and Fakeraid
+Date: Wed, 02 Feb 2011 10:34:09 -0500
+Message-ID: <4D497971.4090709@cfl.rr.com>
+References: <4CF81A16.2010606@cfl.rr.com>	<20101203123615.6edce071@notabene.brown>	<4CF860EB.7010005@cfl.rr.com>	<20101209094354.4c6aaa93@notabene.brown>	<4D01328D.9050503@cfl.rr.com>	<4D46E6D7.2000205@cfl.rr.com>	<20110131170349.GR343@caffeine.csclub.uwaterloo.ca>	<4D470BCF.20508@cfl.rr.com>	<20110131221252.GT343@caffeine.csclub.uwaterloo.ca>	<4D47627A.1080509@cfl.rr.com>	<20110201162642.GU343@caffeine.csclub.uwaterloo.ca>	<4D48A069.8010202@cfl.rr.com> <20110202142233.79940092@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110202192835.5d35f2d1@natsu>
+In-Reply-To: <20110202142233.79940092@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>, Robin Hill <robin@robinhill.me.uk>
-Cc: Bryan Wintermute <bryanwintermute@gmail.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: The development of GNU GRUB <grub-devel@gnu.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 2, 2011 at 9:28 PM, Roman Mamedov <rm@romanrm.ru> wrote:
+On 2/1/2011 10:22 PM, NeilBrown wrote:
+> There is a difficulty in case 2 as it is not clear who's responsibility it is
+> to write a partition table at the start of each device.
+> Presumably GRUB doesn't like to write partition tables unless one already
+> exists.
 
-> Exactly, RAID6 would make an order of magnitude more sense.
-> A 15-drive RAID5 array is just one step (one drive failure) from beco=
-ming a
-> 14-drive RAID0 array (reliability-wise).
+Yes, it preserves the existing partition table and just modifies the
+boot loader code in the MBR.
 
-> Would you also ask "what's wrong with having a 14-drive RAID0"?
+> Currently mdadm doesn't write a partition table either.  Possibly it could,
+> but I would rather avoid that if possible.
+> Maybe once case 2 has been clearly identified, GRUB could consider that
+> sufficient permission to write a boot block and partition table even if no
+> partition table existed??
 
-Thanks Roman, I just wanted to check that's what you meant.
+Possibly, but that is the kind of thing I think should require an
+explicit request.  Whether it is done by mdadm or not, I think that
+someone should write a protective mbr.  Since mdadm is what is
+effectively formatting the disk, it makes the most sense to me to do it
+there, rather than in grub, which is just trying to install a boot
+loader to an existing disk.  I suppose the OS installer could add the
+MBR before asking mdadm to add its superblocks too.  What partition type
+would be appropriate to use?
 
+> In the 'reserved' case, mdadm would also report where the space is. e.g.
+> 
+>  MD_BOOT_SPACE="/dev/sda 8192 32768"
+> 
+> means that from byte offset 8192 there is 32768 bytes of available space.
+> I would need to make sure that mdadm kept that space available, so I would
+> need to know how much to reserve.  Maybe 32K.  Maybe 1M is safe?
 
-On Wed, Feb 2, 2011 at 9:47 PM, Robin Hill <robin@robinhill.me.uk> wrot=
-e:
+Sounds good.  Grub is used to operating with 32k or less since that is
+the historical amount of free space following the MBR.
 
->> Or is there an upper limit as to the number of drives that's advisab=
-le
->> for any array?
->>
-> I'm sure there's advice out there on this one - probably a recommende=
-d
-> minimum percentage of capacity used for redundancy.  I've not looked
-> though - I tend to go with gut feeling & err on the side of caution.
->
->> If so, then what do people reckon a reasonable limit should be for a
->> RAID6 made up of 2TB drives?
->>
-> As the drive capacities go up, you need to be thinking more carefully
-> about redundancy - with a 2TB drive, your rebuild time is probably ov=
-er
-> a day.  Rebuild also tends to put more load on drives than normal, so=
- is
-> more likely to cause a secondary (or even tertiary) failure.  I'd be
-> looking at RAID6 regardless, and throwing in a hot spare if there's m=
-ore
-> than 5 data drives.  If there's more than 10 then I'd be going with
-> multiple arrays.
+> However there is another complication.
+> I understand that the boot block sometimes lives at the start of the
+> partition instead of (or as well as) the start of the device.
+> I'm fairly syslinux does this - I don't know about GRUB.
+> So I really want to still report BIOS or 'reserved' or 'no' even when
+> partitions are in use.
 
-Thanks for the detailed reply Robin. I'm also sure there's advice "out
-there", but I figure there's no more authoritative place to explore
-this topic than here; I hope people don't mind the tangent.
+Grub can be installed to the partition boot block, but it is strongly
+discouraged since there is no gap to embed the core into, so the boot
+block must use block lists to locate it.  This comes with all kinds of
+headaches, including not being possible at all on some filesystems, and
+frequently breaking on others.  Either way you still have to have boot
+code in the MBR to go load the partition boot block, so I don't think
+that changes anything with respect to this discussion.
 
-So keeping the drive size fixed at 2TB for the sake of argument, do
-people agree with the following as a conservative rule of thumb?
-Obviously adjustable depending on financial resources available and
-the importance of keeping the data online, given the fact that
-restoring this much data from backups would take a loooong time. This
-example is for a money-poor environment that could live with a day or
-two of downtime if necessary.
+> So maybe I should scrap case 0 (MD_BOOTABLE=partitions), assume that the
+> boot-loader configurer can detect and understand partitions itself, and just
+> report the other 3 cases ignoring the details about partitions.
+> 
+> Would that be helpful?  Would it get used?  How could it be better?
 
-less than 6 drives =3D> RAID5
-6-8 drives =3D=3D> RAID6
-9-12 drives =3D=3D> RAID6+spare
-over 12 drives, start spanning multiple arrays (I use LVM in any case)
-
-On Wed, Feb 2, 2011 at 9:29 PM, Mathias Bur=E9n <mathias.buren@gmail.co=
-m> wrote:
-> With 15 drives, where only 1 can fail (RAID5) without data loss.. it'=
-s
-> a quite high risk that 2 (or more) drives will fail within a short
-> period of time. If you have less drives, this chance decreases. For
-> large amount of drives I recommend RAID10 personally (or RAID1+0,
-> whichever you prefer).
->
-> RAID6 + 1 hot spare is also nice, and cheaper. (for ~10 drives)
-
-Mathias, RAID1+0 (not talking about "mdm RAID10" here) would only
-protect my data if the "right pair" of drives failed at the same time,
-depending on luck, whereas RAID6 would allow **any** two (and
-RAID6+spare any *three*) drives to fail without my losing data. So I
-thought I'd always prefer RAID6. Or were you perhaps thinking of
-something fancy using "spare pools" or whatever they're called to
-allow for multiple spares to fill in for any failures at the
-underlying RAID1 layer? Now that I think about it, that seems like a
-good idea if it could be made to work, as the simple mirrors do repair
-much faster. But of course the greatly reduced usable disk space ratio
-make this pretty expensive. . .
-
-> with a 2TB drive, your rebuild time is probably over a day.
-
-On my lower-end systems, a RAID6 over 2TB drives takes about 10-11
-hours per failed disk to rebuild, and that's using embedded bitmaps
-and with nothing else going on.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, it sounds quite helpful.
