@@ -1,99 +1,68 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Bootable Raid-1
-Date: Wed, 2 Feb 2011 14:24:13 -0200
-Message-ID: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com>
-References: <4D487CA4.2030502@faccat.br>
-	<8A.7B.05134.9D0884D4@cdptpa-omtalb.mail.rr.com>
-	<AANLkTikmDeRgwHSenFb3KFdk993jGhy_oCoV3SZN+gmo@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: RAID 5 - One drive dropped while replacing another
+Date: Wed, 02 Feb 2011 17:24:35 +0100
+Message-ID: <iic0k1$950$1@dough.gmane.org>
+References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com> <AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com> <20110202043605.593f0c5c@natsu> <AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com> <20110202144726.GB18517@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikmDeRgwHSenFb3KFdk993jGhy_oCoV3SZN+gmo@mail.gmail.com>
+In-Reply-To: <20110202144726.GB18517@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: lrhorer@satx.rr.com, naira@faccat.br, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-grub2 work with raid1 boot partition and rootfs over mdadm raid1
-i tested today (03:00 AM) on my ubuntu desktop
+On 02/02/2011 15:47, Robin Hill wrote:
+> On Wed Feb 02, 2011 at 09:21:20PM +0700, hansbkk@gmail.com wrote:
+>
+>> On Wed, Feb 2, 2011 at 6:36 AM, Roman Mamedov<rm@romanrm.ru>  wrote:
+>>>
+>>>> I have a RAID5 setup with 15 drives.
+>>>
+>>> Looks like you got the problem you were so desperately asking for, with this
+>>> crazy setup. :(
+>>
+>> Please give some more details as to what's so crazy about this.
+>>
+> Just the number of drives in a single RAID5 array I think.  I'd be
+> looking at RAID6 well before I got to 10 drives.
+>
+>> I would think RAID6 would have made more sense, possibly with an
+>> additional spare if these are large drives (over a few hundred GB?)
+>>
+> With 15, RAID6 + spare would probably be what I'd go with (depending on
+> drive size of course, and whether you have cold spares handy).  For very
+> large drives, multiple arrays would be safer.
+>
+>> Or is there an upper limit as to the number of drives that's advisable
+>> for any array?
+>>
+> I'm sure there's advice out there on this one - probably a recommended
+> minimum percentage of capacity used for redundancy.  I've not looked
+> though - I tend to go with gut feeling&  err on the side of caution.
+>
+>> If so, then what do people reckon a reasonable limit should be for a
+>> RAID6 made up of 2TB drives?
+>>
+> As the drive capacities go up, you need to be thinking more carefully
+> about redundancy - with a 2TB drive, your rebuild time is probably over
+> a day.  Rebuild also tends to put more load on drives than normal, so is
+> more likely to cause a secondary (or even tertiary) failure.  I'd be
+> looking at RAID6 regardless, and throwing in a hot spare if there's more
+> than 5 data drives.  If there's more than 10 then I'd be going with
+> multiple arrays.
+>
 
-2011/2/2  <hansbkk@gmail.com>:
-> On Wed, Feb 2, 2011 at 4:53 AM, Leslie Rhorer <lrhorer@satx.rr.com> w=
-rote:
->> =A0I recall reading very recently (it might have even been today) th=
-at Linux RAID Autodetect partitions can cause problems. =A0I have mine =
-set to simply "Linux".
->
-> I haven't come across this at all, and have never had any problem
-> booting even older Linux kernels in RAID1 arrays using grub2.
->
->>> >> I am using grub as bootloader.
->
-> You didn't specify grub2, and if you're using grub legacy, that's a
-> real pain, not so much to get working, but to keep working if you hav=
-e
-> to reconfigure later on. I recommend going with grub 2, IMO it's very
-> much ready for production use now - keeping in mind it's "just a
-> bootloader", and you can always use Super Grub2 live CD to get things
-> going in a pinch.
->
-> I've found that many OS installation routines mess up the
-> partitioning/RAID creation, so I'll often set things up ahead of time
-> with a sysadmin Live CD (see below) so the block devices I want to us=
-e
-> are all available before I start the target OS installation itself.
->
-> You're not actually partitioning the mdX block device are you? I've
-> always set up my component partitions, created the array using those
-> partitions, and then created the filesystem on the mdX.
->
-> All of my systems now boot via grub2 into RAID1s. I usually set up my
-> partitioning so that every drive is exactly the same, the first
-> primary is used as the boot RAID1, and the RAID5/6 component
-> partitions used for the main storage Lvs are often logical inside
-> extended for flexibility. This allows me to have multiple
-> "rescue/recovery/maintenance" OSs available to boot from (System
-> Rescue, Grml, Ubuntu for the grub2) installed right on the HDD -
-> lately I've been able to get grub2 to boot directly from on-disk ISO
-> images rather than having to do any actual install for these. Another
-> advantage is that I can boot from any component drive and get the sam=
-e
-> config/menu, don't have to worry about drive order when swapping out
-> hardware, or even moving an array to another box.
->
-> Since most current "production-level" server OSs still use legacy
-> grub, I let it go ahead and do whatever it wants to do to setup
-> booting from its RAID1 array, and when it's all done if necessary I
-> then restore grub2 to the MBR(s) and adapt the grub1/lilo/whatever
-> code from the target OS to my grub2 configuration. Lately I've been
-> dedicating a partition/array to grub2 itself, so I'm not dependent on
-> a particular OS for maintenance.
->
-> I used to chainload into the partition-boot-sector MBR to load the
-> grub legacy (or lilo or whatever) menu, but found it better to just
-> boot the production OS directly from grub2 using regular
-> linux-kernel/initrd-image statements. The only downside to the latter
-> is that when the production OS gets a kernel upgrade, I have to
-> remember to update the grub2 config myself, again adapting the new
-> lines generated by the upgrade process.
->
-> I hope that helps, let me know if you need more detail, learning link=
-s etc.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+If the load due to rebuild is a problem, it can make sense to split the 
+raid into parts.  If you've got the money, you can start with a set of 
+raid1 pairs and then build raid5 (or even raid6) on top of that.  With 
+raid 1 + 5, you can survive any 3 drive failures, and generally more 
+than that unless you are very unlucky in the combinations.  However, 
+rebuilds are very fast - they are just a direct copy from one disk to 
+its neighbour, and thus are less of a load on the rest of the system.
+
+Of course, there is a cost - if you have 15 2TB drives, with one being a 
+warm spare shared amongst the raid1 pairs, you have only 6 x 2TB storage.
 
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
