@@ -1,38 +1,86 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Software RAID and Fakeraid
-Date: Tue, 01 Feb 2011 19:08:09 -0500
-Message-ID: <4D48A069.8010202@cfl.rr.com>
-References: <4CF81A16.2010606@cfl.rr.com>	<20101203123615.6edce071@notabene.brown>	<4CF860EB.7010005@cfl.rr.com>	<20101209094354.4c6aaa93@notabene.brown>	<4D01328D.9050503@cfl.rr.com> <4D46E6D7.2000205@cfl.rr.com>	<20110131170349.GR343@caffeine.csclub.uwaterloo.ca>	<4D470BCF.20508@cfl.rr.com>	<20110131221252.GT343@caffeine.csclub.uwaterloo.ca>	<4D47627A.1080509@cfl.rr.com> <20110201162642.GU343@caffeine.csclub.uwaterloo.ca>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [BUG 2.6.32] md/raid1: barrier disabling does not work
+ correctly in all cases
+Date: Wed, 2 Feb 2011 11:32:15 +1100
+Message-ID: <20110202113215.3e106ccb@notabene.brown>
+References: <AANLkTimp7eGLu5UEr-wH9MVSGrQWA3PKMakW74_48gk7@mail.gmail.com>
+	<AANLkTikGsB=ZdA-TpjC+npqW-TM9NjwZkWpjWtUEzswn@mail.gmail.com>
+	<20110121072515.07dc2b74@notabene.brown>
+	<AANLkTi=NqHV9p0rc4VBBNAzxwjvfA0DpKgkxQpsX9gsT@mail.gmail.com>
+	<AANLkTimS00pyoN2f4E-2ZbSLq8-Xar3oj9DZ2sEfXzgs@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201162642.GU343@caffeine.csclub.uwaterloo.ca>
+In-Reply-To: <AANLkTimS00pyoN2f4E-2ZbSLq8-Xar3oj9DZ2sEfXzgs@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: The development of GNU GRUB <grub-devel@gnu.org>
-Cc: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, Neil Brown <neilb@suse.de>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@us.sios.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/01/2011 11:26 AM, Lennart Sorensen wrote:
-> If the raid stores the raid info at the end, then the data starts at
-> sector 0.  So no space for a bootloader at all.
+On Tue, 1 Feb 2011 15:45:16 -0500 Paul Clements <paul.clements@us.sios.com>
+wrote:
 
-I know that is how it works with 0.9, but are you sure it is for 1.0? 
-If so, then for anything but raid-1 we will just have to try to install 
-only to the first device if it has an MBR.
+> On Wed, Jan 26, 2011 at 8:55 AM, Paul Clements
+> <paul.clements@us.sios.com> wrote:
+> 
+> > Attached is a modified patch, which does the extra necessary work
+> > (bitmap_endwrite, md_write_end) on the bio before failing it.
+> >
+> > Does this look correct? It seems to work.
+> 
+> Well, not quite...it's more complicated. From my reading of the code,
+> it looks like behind writes and barrier retries just do not work
+> correctly together. The issue is this:
+> 
+> - With behind writes, we signal the master_bio complete as soon as all
+> non-write-behind writes are complete.
+> 
+> - With barrier retries, you don't know if you'll need to retry until
+> you've completed all legs of the write (the last leg to complete might
+> throw EOPNOTSUPP).
+> 
+> So in the case where the master_bio has been completed, we still try
+> to do a retry for the leg that failed the barrier (but it's really too
+> late to retry). In any case, raid1d is touching master_bio (looking at
+> bi_size and bio_cloning it) during the retry, which causes a panic if
+> master_bio is already being reused by someone else.
+> 
+> I can't think of a good way to do behind writes and barrier retries
+> together. Seems we've got to disable behind writes for barriers, or
+> we've got to disable barrier retries when doing behind writes...
+> 
+> Any thoughts?
 
-> Certainly makes sense.  Now is 4K enough for a boot loader?  Not sure.
+I suspect you are right that barriers and behind writes are deeply
+incompatible.  I suspect they could be made to work together in some vaguely
+sane way, but I suspect it would be a lot of work and not worth the effort.
 
-It is enough for the MBR.  The core image will need to go elsewhere, 
-hence the proposal to ask mdadm for a suitable location.
+Disabling behind-writes for all barrier requests would be quite easy, but it
+might negate a lot of the value of behind writes
 
-> I personally consider soft raid on raw devices so convluted that I
-> have never done it.  I would rather have something I know works with my
-> bootloader and other tools, than gain that extra 1MB (at most) that not
-> having partitions gives.  Also given many PCs won't boot from a drive
-> without a partition table, it isn't even an option then.
+We could simply ignore the barrier flag on writes to behind-write devices,
+but that would risk them being even more inconsistent than they currently can
+be, so I doubt that is a good direct - though it is a possibility.
 
-That is why I like the idea of 1.2 since you could still have a bootable 
-MBR when using the whole disk.  Though now that you mention it, I can't 
-think of a good reason to use the whole disk instead of a partition either.
+I think the best option is to reject barrier writes if there are any
+behind-write devices.  That would be reasonably safe and reasonably
+consistent.
 
+So maybe something like this??
+
+NeilBrown
+
+Index: linux-2.6.32.orig/drivers/md/bitmap.c
+===================================================================
+--- linux-2.6.32.orig.orig/drivers/md/bitmap.c	2009-12-03 14:51:21.000000000 +1100
++++ linux-2.6.32.orig/drivers/md/bitmap.c	2011-02-02 11:31:51.156585883 +1100
+@@ -1676,6 +1676,8 @@ int bitmap_create(mddev_t *mddev)
+ 		pages, bmname(bitmap));
+ 
+ 	mddev->bitmap = bitmap;
++	if (bitmap->max_write_behind)
++		mddev->barriers_work = 0;
+ 
+ 	mddev->thread->timeout = bitmap->daemon_sleep * HZ;
+ 
