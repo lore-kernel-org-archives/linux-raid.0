@@ -1,36 +1,25 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Bootable Raid-1
-Date: Wed, 2 Feb 2011 11:44:38 -0600
-Message-ID: <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Help - New Read algorithm
+Date: Wed, 2 Feb 2011 15:48:41 -0200
+Message-ID: <AANLkTimxVG8zfVAaFA0wYdohTAg88aLsKkh0N3hyi8Z8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Roberto Spadim' <roberto@spadim.com.br>, hansbkk@gmail.com
-Cc: naira@faccat.br, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+can anyone help me developing a new read/write (i/o) algorithm to
+speedup mirrors reads?
+i have the idea, but i don=B4t know how to develope it on linux kernel =
+space
 
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Roberto Spadim
-> Sent: Wednesday, February 02, 2011 10:24 AM
-> To: hansbkk@gmail.com
-> Cc: lrhorer@satx.rr.com; naira@faccat.br; linux-raid@vger.kernel.org
-> Subject: Re: Bootable Raid-1
-> 
-> grub2 work with raid1 boot partition and rootfs over mdadm raid1
-> i tested today (03:00 AM) on my ubuntu desktop
-
-	There wasn't really any question about that.  I've been running
-RAID1 boots under GRUB2 for months.  Prior to that, it was RAID1 under GRUB
-legacy.  RAID1 under GRUB legacy takes some finagling.  Under GRUB2 it
-should be straightforward as long as the partitioning is correct and one
-employs a 0.90 superblock for the /boot array.
-
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
