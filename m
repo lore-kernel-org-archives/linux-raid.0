@@ -1,62 +1,60 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
 Subject: Re: RAID 5 - One drive dropped while replacing another
-Date: Wed, 2 Feb 2011 19:28:35 +0500
-Message-ID: <20110202192835.5d35f2d1@natsu>
+Date: Wed, 2 Feb 2011 14:29:35 +0000
+Message-ID: <AANLkTikpT3yCLkoz-5QaQ0O6QDHAAMqcO9D0SnB-Pt0m@mail.gmail.com>
 References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>
 	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>
 	<20110202043605.593f0c5c@natsu>
 	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ujSCqE8p/hSUoPVae74K4Zj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: hansbkk@gmail.com
-Cc: Bryan Wintermute <bryanwintermute@gmail.com>, linux-raid@vger.kernel.org
+Cc: Roman Mamedov <rm@romanrm.ru>, Bryan Wintermute <bryanwintermute@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ujSCqE8p/hSUoPVae74K4Zj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2 Feb 2011 21:21:20 +0700
-hansbkk@gmail.com wrote:
-
+On 2 February 2011 14:21,  <hansbkk@gmail.com> wrote:
 > On Wed, Feb 2, 2011 at 6:36 AM, Roman Mamedov <rm@romanrm.ru> wrote:
-> >
-> >> I have a RAID5 setup with 15 drives.
-> >
-> > Looks like you got the problem you were so desperately asking for, with
-> > this crazy setup. :(
->=20
+>>
+>>> I have a RAID5 setup with 15 drives.
+>>
+>> Looks like you got the problem you were so desperately asking for, w=
+ith this
+>> crazy setup. :(
+>
 > Please give some more details as to what's so crazy about this.
->=20
+>
 > I would think RAID6 would have made more sense, possibly with an
 > additional spare if these are large drives (over a few hundred GB?)
+>
+> Or is there an upper limit as to the number of drives that's advisabl=
+e
+> for any array?
+>
+> If so, then what do people reckon a reasonable limit should be for a
+> RAID6 made up of 2TB drives?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-Exactly, RAID6 would make an order of magnitude more sense.
-A 15-drive RAID5 array is just one step (one drive failure) from becoming a
-14-drive RAID0 array (reliability-wise).
-Would you also ask "what's wrong with having a 14-drive RAID0"?
-See the link below for some array failure probability calculations:
-http://louwrentius.com/blog/2010/08/raid-5-vs-raid-6-or-do-you-care-about-y=
-our-data/
+With 15 drives, where only 1 can fail (RAID5) without data loss.. it's
+a quite high risk that 2 (or more) drives will fail within a short
+period of time. If you have less drives, this chance decreases. For
+large amount of drives I recommend RAID10 personally (or RAID1+0,
+whichever you prefer).
 
---=20
-With respect,
-Roman
+RAID6 + 1 hot spare is also nice, and cheaper. (for ~10 drives)
 
---Sig_/ujSCqE8p/hSUoPVae74K4Zj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk1JahMACgkQTLKSvz+PZwhonQCfb/xbrZ268z7JUoPL3m91ST0j
-4ksAmwQObcXl/Z5qT/vOGv+zQAEQksfN
-=v4c7
------END PGP SIGNATURE-----
-
---Sig_/ujSCqE8p/hSUoPVae74K4Zj--
+// Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
