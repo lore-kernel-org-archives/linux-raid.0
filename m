@@ -1,68 +1,58 @@
-From: David Brown <david@westcontrol.com>
+From: hansbkk@gmail.com
 Subject: Re: RAID 5 - One drive dropped while replacing another
-Date: Wed, 02 Feb 2011 17:24:35 +0100
-Message-ID: <iic0k1$950$1@dough.gmane.org>
-References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com> <AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com> <20110202043605.593f0c5c@natsu> <AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com> <20110202144726.GB18517@cthulhu.home.robinhill.me.uk>
+Date: Wed, 2 Feb 2011 23:29:32 +0700
+Message-ID: <AANLkTim6g0damiQfqOWyP5S2VqD+KGfWRbTEHNGAjazo@mail.gmail.com>
+References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>
+	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>
+	<20110202043605.593f0c5c@natsu>
+	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
+	<20110202192835.5d35f2d1@natsu>
+	<AANLkTi=XzwtUGYH_wz44LHTYpyQRqnSCk4MxWZiQqZ8Z@mail.gmail.com>
+	<AANLkTikm5unULgkUBM__d8N9XPReu9BtjijAHt9zzvaP@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110202144726.GB18517@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <AANLkTikm5unULgkUBM__d8N9XPReu9BtjijAHt9zzvaP@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Scott E. Armitage" <launchpad@scott.armitage.name>
+Cc: Roman Mamedov <rm@romanrm.ru>, Robin Hill <robin@robinhill.me.uk>, Bryan Wintermute <bryanwintermute@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/02/2011 15:47, Robin Hill wrote:
-> On Wed Feb 02, 2011 at 09:21:20PM +0700, hansbkk@gmail.com wrote:
->
->> On Wed, Feb 2, 2011 at 6:36 AM, Roman Mamedov<rm@romanrm.ru>  wrote:
->>>
->>>> I have a RAID5 setup with 15 drives.
->>>
->>> Looks like you got the problem you were so desperately asking for, with this
->>> crazy setup. :(
->>
->> Please give some more details as to what's so crazy about this.
->>
-> Just the number of drives in a single RAID5 array I think.  I'd be
-> looking at RAID6 well before I got to 10 drives.
->
->> I would think RAID6 would have made more sense, possibly with an
->> additional spare if these are large drives (over a few hundred GB?)
->>
-> With 15, RAID6 + spare would probably be what I'd go with (depending on
-> drive size of course, and whether you have cold spares handy).  For very
-> large drives, multiple arrays would be safer.
->
->> Or is there an upper limit as to the number of drives that's advisable
->> for any array?
->>
-> I'm sure there's advice out there on this one - probably a recommended
-> minimum percentage of capacity used for redundancy.  I've not looked
-> though - I tend to go with gut feeling&  err on the side of caution.
->
->> If so, then what do people reckon a reasonable limit should be for a
->> RAID6 made up of 2TB drives?
->>
-> As the drive capacities go up, you need to be thinking more carefully
-> about redundancy - with a 2TB drive, your rebuild time is probably over
-> a day.  Rebuild also tends to put more load on drives than normal, so is
-> more likely to cause a secondary (or even tertiary) failure.  I'd be
-> looking at RAID6 regardless, and throwing in a hot spare if there's more
-> than 5 data drives.  If there's more than 10 then I'd be going with
-> multiple arrays.
->
+On Wed, Feb 2, 2011 at 11:03 PM, Scott E. Armitage
+<launchpad@scott.armitage.name> wrote:
+> RAID1+0 can lose up to half the drives in the array, as long as no single
+> mirror loses all it's drives. Instead of only being able to survive "the
+> right pair", it's quite the opposite: RAID1+0 will only fail if "the wrong
+> pair" of drives fail.
 
-If the load due to rebuild is a problem, it can make sense to split the 
-raid into parts.  If you've got the money, you can start with a set of 
-raid1 pairs and then build raid5 (or even raid6) on top of that.  With 
-raid 1 + 5, you can survive any 3 drive failures, and generally more 
-than that unless you are very unlucky in the combinations.  However, 
-rebuilds are very fast - they are just a direct copy from one disk to 
-its neighbour, and thus are less of a load on the rest of the system.
+AFAICT it''s a glass half-full/half-empty thing. Maybe it's just my
+personality, but I don't like leaving such things to chance. Maybe if
+I had more than two drives per array, but that would be **very**
+inefficient (ie expensive usable space ratio).
 
-Of course, there is a cost - if you have 15 2TB drives, with one being a 
-warm spare shared amongst the raid1 pairs, you have only 6 x 2TB storage.
+However, following up on the "spare-group" idea, I'd like confirmation
+please that this scenario would work:
 
+From the man page:
 
+mdadm may move a spare drive from one array to another if they are in
+the same spare-group and if the destination array has a failed drive
+but no spares.
 
+Given all component drives are the same size, mdadm.conf contains
+
+ARRAY 	/dev/md0 level=raid1 num-devices=2 spare-group=bigraid10
+ARRAY	/dev/md1 level=raid1 num-device=2 spare-group=bigraid10	
+etc
+
+I then add any number of spares to any of the RAID1 arrays (which
+under RAID 1+0 would be in turn components of the RAID0 span one layer
+up - personally I'd use LVM for this) the follow/monitor mode feature
+would allocate these spares as whatever RAID1 array needed them.
+
+Does this make sense?
+
+If so I would recognize this as being more fault-tolerant than RAID6,
+with the big advantage being fast rebuild times - performance
+advantages too, especially on writes - but obviously at a relatively
+higher cost.
