@@ -1,56 +1,70 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: What's the typical RAID10 setup?
-Date: Wed, 2 Feb 2011 09:25:08 +0000
-Message-ID: <20110202092508.GA18517@cthulhu.home.robinhill.me.uk>
-References: <20110131203725.GB2283@www2.open-std.org>
- <AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
- <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
- <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
- <AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
- <20110131225235.GA11775@www2.open-std.org>
- <ii8lcv$3jg$1@dough.gmane.org>
- <AANLkTin1MPYZGMuL75c=_q+ndeiz0F5+eCRudpDdTwu9@mail.gmail.com>
- <4D4883A3.6030605@hardwarefreak.com>
- <AANLkTikcOA3hSwx29H++sayJ4PcY00_mQBw91TyYXO05@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: RE: Kernel 2.6.32-5-amd64 fails to boot.
+Date: Wed, 2 Feb 2011 06:00:07 -0500 (EST)
+Message-ID: <alpine.DEB.2.00.1102020557270.21703@p34.internal.lan>
+References: <42.F7.13137.411094D4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTikcOA3hSwx29H++sayJ4PcY00_mQBw91TyYXO05@mail.gmail.com>
+In-Reply-To: <42.F7.13137.411094D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: 'Rudy Zijlstra' <rudy@grumpydevil.homelinux.org>, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---tKW2IUtsqtDRztdT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue Feb 01, 2011 at 09:12:11PM -0200, Roberto Spadim wrote:
+On Wed, 2 Feb 2011, Leslie Rhorer wrote:
 
-> but the best algorithm is time based (minimize time to access data)
->=20
-And what do you think takes the time accessing the data?  In a rotating
-disk, it's moving the heads - that's why the current strategy is nearest
-head.  In an SSD there's no head movement, so access time should be the
-same for accessing any data, making it pretty much irrelevant which
-strategy is used.
+>>>> Serial console can be captured to a file and then the output analysed.
+>>>> So you can read afterwards the messages that are flying past.
+>>>>
+>>>> What i do in such case, is that i take serial connector from a laptop,
+>>>> and run a terminal emulater like minicom. And capture it to a file so i
+>>>> can analyse what has been happening.
+>>>>
+>>> 	Yeah, I don't think there is anything pertinent prior to the md
+>>> failures, but it might be worth a shot.  I don't have a laptop, but I do
+>>> have another server sitting right below the one in question.  The main
+>>> problem is, neither one has a serial port.
+>>>
+>>>
+>> Network console? I could tell you how to setup serial console, but i've
+>> never done the network console
+>
+> 	Me either.  I tired to do a Google search, but I think the words
+> "network", "console", and "boot" are too common to return practical results,
+> even when combined with "initrd".  I waded through a ton of results, but
+> couldn't find a tutorial on how to enable a network console in the initrd.
 
-Cheers,
-    Robin
+Hi,
 
---tKW2IUtsqtDRztdT
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Check the network console documentation in the kernel.  Essentially, in 
+LILO, run:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
+append="netconsole=4444@192.0.0.1/eth0,514@192.0.0.2/00:60:2D:CD:2A:B7"
+                              ^^ src                  ^^dest / ^dest mac addr
 
-iEYEARECAAYFAk1JIvQACgkQShxCyD40xBLxFgCgsW3/NXDbbr9gmoCNxhGzV/4w
-IuQAoICJdWTzwjRtUcakvyrV3hCcImFI
-=MLBw
------END PGP SIGNATURE-----
+On the remote host, run syslogd -r (to accespt remote syslogging)
 
---tKW2IUtsqtDRztdT--
+This *is* clearly documented here in the kernel docs:
+linux/Documentation/networking/netconsole.txt
+
+Re:
+
+It takes a string configuration parameter "netconsole" in the
+following format:
+
+  netconsole=[src-port]@[src-ip]/[<dev>],[tgt-port]@<tgt-ip>/[tgt-macaddr]
+
+    where
+         src-port      source for UDP packets (defaults to 6665)
+         src-ip        source IP to use (interface address)
+         dev           network interface (eth0)
+         tgt-port      port for logging agent (6666)
+         tgt-ip        IP address for logging agent
+         tgt-macaddr   ethernet MAC address for logging agent (broadcast)
+
+Examples:
+
+Justin.
