@@ -1,72 +1,70 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Software RAID and Fakeraid
-Date: Wed, 2 Feb 2011 15:12:17 -0600
-Message-ID: <8E.67.19545.3B8C94D4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTinDrmxhSFbj5assuCPEPY-eAxeuVs-4D4xqhKi=@mail.gmail.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID 5 - One drive dropped while replacing another
+Date: Wed, 02 Feb 2011 22:15:31 +0100
+Message-ID: <iichhj$bnl$1@dough.gmane.org>
+References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>	<20110202043605.593f0c5c@natsu>	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>	<20110202192835.5d35f2d1@natsu>	<AANLkTi=XzwtUGYH_wz44LHTYpyQRqnSCk4MxWZiQqZ8Z@mail.gmail.com>	<AANLkTikm5unULgkUBM__d8N9XPReu9BtjijAHt9zzvaP@mail.gmail.com> <AANLkTim6g0damiQfqOWyP5S2VqD+KGfWRbTEHNGAjazo@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinDrmxhSFbj5assuCPEPY-eAxeuVs-4D4xqhKi=@mail.gmail.com>
+In-Reply-To: <AANLkTim6g0damiQfqOWyP5S2VqD+KGfWRbTEHNGAjazo@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of hansbkk@gmail.com
-> Sent: Wednesday, February 02, 2011 10:09 AM
-> To: linux-raid@vger.kernel.org
-> Cc: grub-devel@gnu.org
-> Subject: Re: Software RAID and Fakeraid
->=20
-> On Tue, Feb 1, 2011 at 11:26 PM, Lennart Sorensen
-> <lsorense@csclub.uwaterloo.ca> wrote:
-> > I personally consider soft raid on raw devices so convluted that I
-> > have never done it.
+On 02/02/11 17:29, hansbkk@gmail.com wrote:
+> On Wed, Feb 2, 2011 at 11:03 PM, Scott E. Armitage
+> <launchpad@scott.armitage.name>  wrote:
+>> RAID1+0 can lose up to half the drives in the array, as long as no single
+>> mirror loses all it's drives. Instead of only being able to survive "the
+>> right pair", it's quite the opposite: RAID1+0 will only fail if "the wrong
+>> pair" of drives fail.
+>
+> AFAICT it''s a glass half-full/half-empty thing. Maybe it's just my
+> personality, but I don't like leaving such things to chance. Maybe if
+> I had more than two drives per array, but that would be **very**
+> inefficient (ie expensive usable space ratio).
+>
+> However, following up on the "spare-group" idea, I'd like confirmation
+> please that this scenario would work:
+>
+>  From the man page:
+>
+> mdadm may move a spare drive from one array to another if they are in
+> the same spare-group and if the destination array has a failed drive
+> but no spares.
+>
+> Given all component drives are the same size, mdadm.conf contains
+>
+> ARRAY 	/dev/md0 level=raid1 num-devices=2 spare-group=bigraid10
+> ARRAY	/dev/md1 level=raid1 num-device=2 spare-group=bigraid10	
+> etc
+>
+> I then add any number of spares to any of the RAID1 arrays (which
+> under RAID 1+0 would be in turn components of the RAID0 span one layer
+> up - personally I'd use LVM for this) the follow/monitor mode feature
+> would allocate these spares as whatever RAID1 array needed them.
+>
+> Does this make sense?
+>
+> If so I would recognize this as being more fault-tolerant than RAID6,
+> with the big advantage being fast rebuild times - performance
+> advantages too, especially on writes - but obviously at a relatively
+> higher cost.
 
-	Convoluted?  It simply removes an unnecessary layer of management.
-If anything, it is less convoluted, and one needn't worry about partiti=
-on
-types and their associated limitations.  I currently have 24 un-partiti=
-oned
-drives in my two RAID systems.
+You have to be precise about what you mean by fault-tolerant.  With 
+RAID6, /any/ two drives can fail and your system is still running.  Hot 
+spares don't change that - they just minimise the time before one of the 
+failed drives is replaced.
 
-> > I would rather have something I know works with my
-> > bootloader and other tools, than gain that extra 1MB (at most) that=
- not
+If you have a set of RAID1 pairs that are striped together (by LVM or 
+RAID0), then you can only tolerate a single failed drive.  You /might/ 
+tolerate more failures.  For example, if you have 4 pairs, then a random 
+second failure has a 7/8 chance of being on a different pair, and 
+therefore safe.  If you crunch the numbers, it's possible that the 
+average or expected number of failures you can tolerate is more than 2. 
+  But for the guaranteed worst-case scenario, your set can only tolerate 
+a single drive failure.  Again, hot spares don't change that - they only 
+reduce your degraded (and therefore risky) time.
 
-	Modern bootloaders don't require partitions, either, IIRC, although
-in fact I do partition my boot drives.
 
-> > having partitions gives. =A0Also given many PCs won't boot from a d=
-rive
-> > without a partition table, it isn't even an option then.
-
-	Do you have an example?  I'm not aware of any.  In any case, as I
-said, I do recommend partitioning the boot drive, at a minimum into a r=
-oot
-and a swap partition.  I also like to keep the /boot target separate, b=
-ut
-then /boot is tiny.
-=20
-> For others googling this later, another very good reason for *never*
-> RAID'ing raw block devices (ie always creating at least one partition
-> first) is that if you ever mistakenly boot into some flavors of
-> Windows (even from some optical discs, perhaps unknowingly left ina
-> drive), your disks will automatically get "helpfully" initialized, as
-> windoze thinks it's a brand new empty drive being offered up like a
-> virgin for sacrifice - **poof** there goes all your data.
->=20
-> Speaking from experience 8-(
-
-	This is only true with very old versions of Windows.  What's more,
-the data certainly can be recovered.  None of my data drives are
-partitioned.  There's really no point.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
