@@ -1,69 +1,95 @@
-From: hansbkk@gmail.com
-Subject: Re: Bootable Raid-1
-Date: Wed, 2 Feb 2011 22:56:59 +0700
-Message-ID: <AANLkTikmDeRgwHSenFb3KFdk993jGhy_oCoV3SZN+gmo@mail.gmail.com>
-References: <4D487CA4.2030502@faccat.br>
-	<8A.7B.05134.9D0884D4@cdptpa-omtalb.mail.rr.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: What's the typical RAID10 setup?
+Date: Wed, 2 Feb 2011 14:00:15 -0200
+Message-ID: <AANLkTikjKp0C6TnT7TeGRBayS=dYONWNrb-9NA71tDSe@mail.gmail.com>
+References: <20110131203725.GB2283@www2.open-std.org>
+	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
+	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
+	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
+	<AANLkTi=kUGc8bjisn69BEEkZr6kcHUyfKnVZzNtgaJf3@mail.gmail.com>
+	<20110131225235.GA11775@www2.open-std.org>
+	<ii8lcv$3jg$1@dough.gmane.org>
+	<AANLkTin1MPYZGMuL75c=_q+ndeiz0F5+eCRudpDdTwu9@mail.gmail.com>
+	<4D4883A3.6030605@hardwarefreak.com>
+	<AANLkTikcOA3hSwx29H++sayJ4PcY00_mQBw91TyYXO05@mail.gmail.com>
+	<20110202092508.GA18517@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8A.7B.05134.9D0884D4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20110202092508.GA18517@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: naira@faccat.br, linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 2, 2011 at 4:53 AM, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
->  I recall reading very recently (it might have even been today) that Linux RAID Autodetect partitions can cause problems.  I have mine set to simply "Linux".
+time based: is the time to:
+HD:head positioning , SSD: time to send command to ROM chip
+HD:read/write time (disk speed - rpm), SSD: time to write/read (time
+to ssd rom chip receive bytes)
+that's time based
 
-I haven't come across this at all, and have never had any problem
-booting even older Linux kernels in RAID1 arrays using grub2.
+what is fast por read?
+consider that time based must know that disk is doing a I/O and that
+you have a time to end, this time to end is another time in algorithm
 
->> >> I am using grub as bootloader.
+for example:
+NBD (network block device)
+time to send read message + time to send command to rom or head positio=
+ning
+read/write time: time to nbd server return the read/write bytes
 
-You didn't specify grub2, and if you're using grub legacy, that's a
-real pain, not so much to get working, but to keep working if you have
-to reconfigure later on. I recommend going with grub 2, IMO it's very
-much ready for production use now - keeping in mind it's "just a
-bootloader", and you can always use Super Grub2 live CD to get things
-going in a pinch.
+what algorithm should do?
+calculate all time or all mirrors, including time to end current
+request (if only one request could be processed, or if allow more than
+1 request, the time spent to start our command)
+after all time calculated, select the minimal value/device
 
-I've found that many OS installation routines mess up the
-partitioning/RAID creation, so I'll often set things up ahead of time
-with a sysadmin Live CD (see below) so the block devices I want to use
-are all available before I start the target OS installation itself.
+that's time based
+it's not based on round robin
+it's not based on closest head
+it's based on device speed to:
+*(1)position head/send rom command
+*(2)read/write time (per total of bytes read/write)
+*(3)time to start out request command (if don't allow more than 1
+request per time, don't have a device queue)
 
-You're not actually partitioning the mdX block device are you? I've
-always set up my component partitions, created the array using those
-partitions, and then created the filesystem on the mdX.
+the total time per device will tell us the best device to read
+if we mix, nbd + ssd + hdd (5000rpm) + hdd(7500rpm) + hdd(10000rpm) +
+hdd(15000rpm)
+we can get the best read time using this algorithm
+the problem? we must run a constante benchmark to get this values *(1)
+*(2) *(3) and calculate good values of time spent on each process
 
-All of my systems now boot via grub2 into RAID1s. I usually set up my
-partitioning so that every drive is exactly the same, the first
-primary is used as the boot RAID1, and the RAID5/6 component
-partitions used for the main storage Lvs are often logical inside
-extended for flexibility. This allows me to have multiple
-"rescue/recovery/maintenance" OSs available to boot from (System
-Rescue, Grml, Ubuntu for the grub2) installed right on the HDD -
-lately I've been able to get grub2 to boot directly from on-disk ISO
-images rather than having to do any actual install for these. Another
-advantage is that I can boot from any component drive and get the same
-config/menu, don't have to worry about drive order when swapping out
-hardware, or even moving an array to another box.
+resuming... whe need a model of each device (simple-constants or very
+complex-neural network?), and calculate time spent per device
+nice?
 
-Since most current "production-level" server OSs still use legacy
-grub, I let it go ahead and do whatever it wants to do to setup
-booting from its RAID1 array, and when it's all done if necessary I
-then restore grub2 to the MBR(s) and adapt the grub1/lilo/whatever
-code from the target OS to my grub2 configuration. Lately I've been
-dedicating a partition/array to grub2 itself, so I'm not dependent on
-a particular OS for maintenance.
 
-I used to chainload into the partition-boot-sector MBR to load the
-grub legacy (or lilo or whatever) menu, but found it better to just
-boot the production OS directly from grub2 using regular
-linux-kernel/initrd-image statements. The only downside to the latter
-is that when the production OS gets a kernel upgrade, I have to
-remember to update the grub2 config myself, again adapting the new
-lines generated by the upgrade process.
+2011/2/2 Robin Hill <robin@robinhill.me.uk>:
+> On Tue Feb 01, 2011 at 09:12:11PM -0200, Roberto Spadim wrote:
+>
+>> but the best algorithm is time based (minimize time to access data)
+>>
+> And what do you think takes the time accessing the data? =A0In a rota=
+ting
+> disk, it's moving the heads - that's why the current strategy is near=
+est
+> head. =A0In an SSD there's no head movement, so access time should be=
+ the
+> same for accessing any data, making it pretty much irrelevant which
+> strategy is used.
+>
+> Cheers,
+> =A0 =A0Robin
+>
 
-I hope that helps, let me know if you need more detail, learning links etc.
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
