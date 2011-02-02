@@ -1,70 +1,56 @@
 From: David Brown <david.brown@hesbynett.no>
 Subject: Re: RAID 5 - One drive dropped while replacing another
-Date: Wed, 02 Feb 2011 22:15:31 +0100
-Message-ID: <iichhj$bnl$1@dough.gmane.org>
-References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>	<20110202043605.593f0c5c@natsu>	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>	<20110202192835.5d35f2d1@natsu>	<AANLkTi=XzwtUGYH_wz44LHTYpyQRqnSCk4MxWZiQqZ8Z@mail.gmail.com>	<AANLkTikm5unULgkUBM__d8N9XPReu9BtjijAHt9zzvaP@mail.gmail.com> <AANLkTim6g0damiQfqOWyP5S2VqD+KGfWRbTEHNGAjazo@mail.gmail.com>
+Date: Wed, 02 Feb 2011 22:22:55 +0100
+Message-ID: <iichvf$ebq$1@dough.gmane.org>
+References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>	<20110202043605.593f0c5c@natsu>	<AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>	<20110202144726.GB18517@cthulhu.home.robinhill.me.uk>	<iic0k1$950$1@dough.gmane.org> <AANLkTinvurdEuDFcXycrf=5qoZwEjxSc2izf8e0dgQAq@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim6g0damiQfqOWyP5S2VqD+KGfWRbTEHNGAjazo@mail.gmail.com>
+In-Reply-To: <AANLkTinvurdEuDFcXycrf=5qoZwEjxSc2izf8e0dgQAq@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/02/11 17:29, hansbkk@gmail.com wrote:
-> On Wed, Feb 2, 2011 at 11:03 PM, Scott E. Armitage
-> <launchpad@scott.armitage.name>  wrote:
->> RAID1+0 can lose up to half the drives in the array, as long as no single
->> mirror loses all it's drives. Instead of only being able to survive "the
->> right pair", it's quite the opposite: RAID1+0 will only fail if "the wrong
->> pair" of drives fail.
+On 02/02/11 17:48, hansbkk@gmail.com wrote:
+> On Wed, Feb 2, 2011 at 11:24 PM, David Brown<david@westcontrol.com>  wrote:
+>> Of course, there is a cost - if you have 15 2TB drives, with one being a
+>> warm spare shared amongst the raid1 pairs, you have only 6 x 2TB storage.
 >
-> AFAICT it''s a glass half-full/half-empty thing. Maybe it's just my
-> personality, but I don't like leaving such things to chance. Maybe if
-> I had more than two drives per array, but that would be **very**
-> inefficient (ie expensive usable space ratio).
+> Please correct me if I got the math (or anything else) wrong.
 >
-> However, following up on the "spare-group" idea, I'd like confirmation
-> please that this scenario would work:
+> If one didn't implement RAID5 (rather just using RAID0 or LVM) over
+> the RAID1s, and were OK with the 6x2TB usable space out of 15 drives,
+> then you'd have three spares (actually hot spares right?), allowing
+> for *any four* drives to fail (but still as long as it wasn't a
+> matched pair within the _much shorter_ rebuild time window.)
 >
->  From the man page:
->
-> mdadm may move a spare drive from one array to another if they are in
-> the same spare-group and if the destination array has a failed drive
-> but no spares.
->
-> Given all component drives are the same size, mdadm.conf contains
->
-> ARRAY 	/dev/md0 level=raid1 num-devices=2 spare-group=bigraid10
-> ARRAY	/dev/md1 level=raid1 num-device=2 spare-group=bigraid10	
-> etc
->
-> I then add any number of spares to any of the RAID1 arrays (which
-> under RAID 1+0 would be in turn components of the RAID0 span one layer
-> up - personally I'd use LVM for this) the follow/monitor mode feature
-> would allocate these spares as whatever RAID1 array needed them.
->
-> Does this make sense?
->
-> If so I would recognize this as being more fault-tolerant than RAID6,
-> with the big advantage being fast rebuild times - performance
-> advantages too, especially on writes - but obviously at a relatively
-> higher cost.
 
-You have to be precise about what you mean by fault-tolerant.  With 
-RAID6, /any/ two drives can fail and your system is still running.  Hot 
-spares don't change that - they just minimise the time before one of the 
-failed drives is replaced.
+Your maths is okay - it's your understanding of failures that is wrong :-)
 
-If you have a set of RAID1 pairs that are striped together (by LVM or 
-RAID0), then you can only tolerate a single failed drive.  You /might/ 
-tolerate more failures.  For example, if you have 4 pairs, then a random 
-second failure has a 7/8 chance of being on a different pair, and 
-therefore safe.  If you crunch the numbers, it's possible that the 
-average or expected number of failures you can tolerate is more than 2. 
-  But for the guaranteed worst-case scenario, your set can only tolerate 
-a single drive failure.  Again, hot spares don't change that - they only 
-reduce your degraded (and therefore risky) time.
+If you use raid0 over your raid1 pairs, and you lose both halves of a 
+raid1 pair, you data is gone.  You can have a dozen hot spares if you 
+want, it still doesn't matter.
+
+The point of having multiple redundancy is to handle multiple failures 
+at the same time, or while doing a rebuild.  Hot spares are there so 
+that a rebuild can start automatically without someone feeding a new 
+drive in the machine, thus minimising your risk window.  But they don't 
+improve the redundancy themselves.
+
+The /really/ good thing about a hot spare is that the administrator 
+doesn't have to remove the faulty disk until the array is rebuilt, and 
+safely redundant again.  That way there is no disaster when he removes 
+the wrong disk...
+
+
+> While a RAID6+spare, where any three can fail (and unlike the above
+> any two can fail within the (admittedly longer) rebuild window, gives
+> *double* the usable space - 12x2TB.
+
+Again, you are incorrect about the number of drives that can fail. 
+RAID6 + spare means any /two/ drives can fail.  You are correct about 
+having a lot more usable space, but you have lower redundancy and a lot 
+longer rebuild times.
 
 
