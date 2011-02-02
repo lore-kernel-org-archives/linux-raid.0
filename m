@@ -1,31 +1,33 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: After 0->10 takeover process hangs at "wait_barrier"
-Date: Wed, 2 Feb 2011 12:15:28 +0000
-Message-ID: <BE2BFE91933D1B4089447C6448604080670E9A24@irsmsx503.ger.corp.intel.com>
+From: hansbkk@gmail.com
+Subject: Re: RAID 5 - One drive dropped while replacing another
+Date: Wed, 2 Feb 2011 21:21:20 +0700
+Message-ID: <AANLkTimJC_e8=BmGj7Th_LLc=wnoNj8tRovAgTR=mmQ7@mail.gmail.com>
+References: <AANLkTinXTYds442gPrs9a9vKtWTo4OcDHDEzvO0njvyv@mail.gmail.com>
+	<AANLkTikSjLhoUM5f2ibqCUmo8XF-tsrhxZ7oieg08dtD@mail.gmail.com>
+	<20110202043605.593f0c5c@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20110202043605.593f0c5c@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Bryan Wintermute <bryanwintermute@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+On Wed, Feb 2, 2011 at 6:36 AM, Roman Mamedov <rm@romanrm.ru> wrote:
+>
+>> I have a RAID5 setup with 15 drives.
+>
+> Looks like you got the problem you were so desperately asking for, with this
+> crazy setup. :(
 
-I would like to return to problem related to raid0->raid10 takeover operation.
-I observed following symptoms:
-1. After raid0->raid10 takeover we have array with 2 missing disks. When we add disk for rebuild, recovery process starts as expected but it does not finish- it stops at about 90%, md126_resync process hangs in "D" state
-2. Similar behavior is when we have mounted raid0 array and we execute takeover to raid10. After this when we try to unmount array- it causes process umount hangs in "D"
+Please give some more details as to what's so crazy about this.
 
-In scenarios above processes hang at the same function- wait_barrier in raid10.c.
-Process waits in macro "wait_event_lock_irq" until the "!conf->barrier" condition will be true. In scenarios above it never happens.
+I would think RAID6 would have made more sense, possibly with an
+additional spare if these are large drives (over a few hundred GB?)
 
-Issue does not appear if after takeover we stop array and assemble it again- we can rebuild disks without problem. It indicates that raid0->raid10 takeover process does not initialize all array parameters in proper way.
+Or is there an upper limit as to the number of drives that's advisable
+for any array?
 
-Do you have any suggestions what can I do to get closer to solving this problem?
-
-Regards
-Krzysztof
-
+If so, then what do people reckon a reasonable limit should be for a
+RAID6 made up of 2TB drives?
