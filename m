@@ -1,72 +1,69 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Software RAID and Fakeraid
-Date: Wed, 02 Feb 2011 10:34:09 -0500
-Message-ID: <4D497971.4090709@cfl.rr.com>
-References: <4CF81A16.2010606@cfl.rr.com>	<20101203123615.6edce071@notabene.brown>	<4CF860EB.7010005@cfl.rr.com>	<20101209094354.4c6aaa93@notabene.brown>	<4D01328D.9050503@cfl.rr.com>	<4D46E6D7.2000205@cfl.rr.com>	<20110131170349.GR343@caffeine.csclub.uwaterloo.ca>	<4D470BCF.20508@cfl.rr.com>	<20110131221252.GT343@caffeine.csclub.uwaterloo.ca>	<4D47627A.1080509@cfl.rr.com>	<20110201162642.GU343@caffeine.csclub.uwaterloo.ca>	<4D48A069.8010202@cfl.rr.com> <20110202142233.79940092@notabene.brown>
+From: hansbkk@gmail.com
+Subject: Re: Bootable Raid-1
+Date: Wed, 2 Feb 2011 22:56:59 +0700
+Message-ID: <AANLkTikmDeRgwHSenFb3KFdk993jGhy_oCoV3SZN+gmo@mail.gmail.com>
+References: <4D487CA4.2030502@faccat.br>
+	<8A.7B.05134.9D0884D4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110202142233.79940092@notabene.brown>
+In-Reply-To: <8A.7B.05134.9D0884D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: The development of GNU GRUB <grub-devel@gnu.org>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, John Sheu <john.sheu@gmail.com>, linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: naira@faccat.br, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/1/2011 10:22 PM, NeilBrown wrote:
-> There is a difficulty in case 2 as it is not clear who's responsibility it is
-> to write a partition table at the start of each device.
-> Presumably GRUB doesn't like to write partition tables unless one already
-> exists.
+On Wed, Feb 2, 2011 at 4:53 AM, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
+>  I recall reading very recently (it might have even been today) that Linux RAID Autodetect partitions can cause problems.  I have mine set to simply "Linux".
 
-Yes, it preserves the existing partition table and just modifies the
-boot loader code in the MBR.
+I haven't come across this at all, and have never had any problem
+booting even older Linux kernels in RAID1 arrays using grub2.
 
-> Currently mdadm doesn't write a partition table either.  Possibly it could,
-> but I would rather avoid that if possible.
-> Maybe once case 2 has been clearly identified, GRUB could consider that
-> sufficient permission to write a boot block and partition table even if no
-> partition table existed??
+>> >> I am using grub as bootloader.
 
-Possibly, but that is the kind of thing I think should require an
-explicit request.  Whether it is done by mdadm or not, I think that
-someone should write a protective mbr.  Since mdadm is what is
-effectively formatting the disk, it makes the most sense to me to do it
-there, rather than in grub, which is just trying to install a boot
-loader to an existing disk.  I suppose the OS installer could add the
-MBR before asking mdadm to add its superblocks too.  What partition type
-would be appropriate to use?
+You didn't specify grub2, and if you're using grub legacy, that's a
+real pain, not so much to get working, but to keep working if you have
+to reconfigure later on. I recommend going with grub 2, IMO it's very
+much ready for production use now - keeping in mind it's "just a
+bootloader", and you can always use Super Grub2 live CD to get things
+going in a pinch.
 
-> In the 'reserved' case, mdadm would also report where the space is. e.g.
-> 
->  MD_BOOT_SPACE="/dev/sda 8192 32768"
-> 
-> means that from byte offset 8192 there is 32768 bytes of available space.
-> I would need to make sure that mdadm kept that space available, so I would
-> need to know how much to reserve.  Maybe 32K.  Maybe 1M is safe?
+I've found that many OS installation routines mess up the
+partitioning/RAID creation, so I'll often set things up ahead of time
+with a sysadmin Live CD (see below) so the block devices I want to use
+are all available before I start the target OS installation itself.
 
-Sounds good.  Grub is used to operating with 32k or less since that is
-the historical amount of free space following the MBR.
+You're not actually partitioning the mdX block device are you? I've
+always set up my component partitions, created the array using those
+partitions, and then created the filesystem on the mdX.
 
-> However there is another complication.
-> I understand that the boot block sometimes lives at the start of the
-> partition instead of (or as well as) the start of the device.
-> I'm fairly syslinux does this - I don't know about GRUB.
-> So I really want to still report BIOS or 'reserved' or 'no' even when
-> partitions are in use.
+All of my systems now boot via grub2 into RAID1s. I usually set up my
+partitioning so that every drive is exactly the same, the first
+primary is used as the boot RAID1, and the RAID5/6 component
+partitions used for the main storage Lvs are often logical inside
+extended for flexibility. This allows me to have multiple
+"rescue/recovery/maintenance" OSs available to boot from (System
+Rescue, Grml, Ubuntu for the grub2) installed right on the HDD -
+lately I've been able to get grub2 to boot directly from on-disk ISO
+images rather than having to do any actual install for these. Another
+advantage is that I can boot from any component drive and get the same
+config/menu, don't have to worry about drive order when swapping out
+hardware, or even moving an array to another box.
 
-Grub can be installed to the partition boot block, but it is strongly
-discouraged since there is no gap to embed the core into, so the boot
-block must use block lists to locate it.  This comes with all kinds of
-headaches, including not being possible at all on some filesystems, and
-frequently breaking on others.  Either way you still have to have boot
-code in the MBR to go load the partition boot block, so I don't think
-that changes anything with respect to this discussion.
+Since most current "production-level" server OSs still use legacy
+grub, I let it go ahead and do whatever it wants to do to setup
+booting from its RAID1 array, and when it's all done if necessary I
+then restore grub2 to the MBR(s) and adapt the grub1/lilo/whatever
+code from the target OS to my grub2 configuration. Lately I've been
+dedicating a partition/array to grub2 itself, so I'm not dependent on
+a particular OS for maintenance.
 
-> So maybe I should scrap case 0 (MD_BOOTABLE=partitions), assume that the
-> boot-loader configurer can detect and understand partitions itself, and just
-> report the other 3 cases ignoring the details about partitions.
-> 
-> Would that be helpful?  Would it get used?  How could it be better?
+I used to chainload into the partition-boot-sector MBR to load the
+grub legacy (or lilo or whatever) menu, but found it better to just
+boot the production OS directly from grub2 using regular
+linux-kernel/initrd-image statements. The only downside to the latter
+is that when the production OS gets a kernel upgrade, I have to
+remember to update the grub2 config myself, again adapting the new
+lines generated by the upgrade process.
 
-Yes, it sounds quite helpful.
+I hope that helps, let me know if you need more detail, learning links etc.
