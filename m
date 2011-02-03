@@ -1,152 +1,107 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] imsm: FIX: crash during getting map
-Date: Thu, 3 Feb 2011 08:21:30 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D1770B8137@irsmsx503.ger.corp.intel.com>
-References: <20110201075736.4921.34737.stgit@gklab-128-013.igk.intel.com>
- <20110203170338.38c28ae3@notabene.brown>
+Subject: RE: [PATCH 3/8] imsm: FIX: Size is already set in metadata
+Date: Thu, 3 Feb 2011 09:52:46 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D1770B8253@irsmsx503.ger.corp.intel.com>
+References: <20110201134226.13398.4071.stgit@gklab-128-013.igk.intel.com>
+	<20110201134920.13398.77330.stgit@gklab-128-013.igk.intel.com>
+ <20110203174519.105469f5@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110203170338.38c28ae3@notabene.brown>
+In-Reply-To: <20110203174519.105469f5@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Could you give me branch name were the changes can be visible?
-
-Thanks
-Adam
-
-
 > -----Original Message-----
 > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
 > owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Thursday, February 03, 2011 7:04 AM
+> Sent: Thursday, February 03, 2011 7:45 AM
 > To: Kwolek, Adam
 > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
 > Neubauer, Wojciech
-> Subject: Re: [PATCH] imsm: FIX: crash during getting map
+> Subject: Re: [PATCH 3/8] imsm: FIX: Size is already set in metadata
 > 
-> On Tue, 01 Feb 2011 08:57:37 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> On Tue, 01 Feb 2011 14:49:20 +0100 Adam Kwolek <adam.kwolek@intel.com>
 > wrote:
 > 
-> > When get_imsm_map() is called with second_map parameter == '-1'
-> > and array is not in migration state NULL pointer is returned.
-> > This is wrong. '-1' means return map as migration record points.
-> >
-> > '-1' can be passed to get_imsm_map() from imsm_num_data_members().
-> > imsm_num_data_members() is called to get current map members based
-> > on migr_state information
+> > In metadata size is set already during migration initialization.
+> > There is no reason for second /the same/ calculation.
 > >
 > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > > ---
 > >
-> >  super-intel.c |    7 ++++---
-> >  1 files changed, 4 insertions(+), 3 deletions(-)
+> >  super-intel.c |    5 +----
+> >  1 files changed, 1 insertions(+), 4 deletions(-)
 > >
 > > diff --git a/super-intel.c b/super-intel.c
-> > index 84ab47b..ee0d9c4 100644
+> > index 42f7065..62b13b0 100644
 > > --- a/super-intel.c
 > > +++ b/super-intel.c
-> > @@ -567,15 +567,16 @@ struct imsm_map *get_imsm_map(struct imsm_dev
-> *dev, int second_map)
-> >  {
-> >  	struct imsm_map *map = &dev->vol.map[0];
+> > @@ -5185,15 +5185,12 @@ static int imsm_set_array_state(struct
+> active_array *a, int consistent)
+> >  				/* round array size down to closest MB */
+> >  				array_blocks = (array_blocks >>
+> SECT_PER_MB_SHIFT)
+> >  					<< SECT_PER_MB_SHIFT;
+> > -				dev->size_low = __cpu_to_le32((__u32)
+> array_blocks);
+> > -				dev->size_high = __cpu_to_le32((__u32)
+> (array_blocks >> 32));
+> >  				a->info.custom_array_size = array_blocks/2;
+> >  				a->check_reshape = 1; /* encourage manager to
+> update
+> >  						       * array size
+> >  						       */
+> > -				super->updates_pending++;
+> >  				imsm_progress_container_reshape(super);
+> > -			}
+> > +			}
+> >  		}
+> >  	}
 > >
-> > -	if (second_map && !dev->vol.migr_state)
-> > +	if ((second_map == 1) && !dev->vol.migr_state)
-> >  		return NULL;
-> > -	else if (second_map) {
-> > +	else if ((second_map == 1) ||
-> > +		 ((second_map < 0) && (dev->vol.migr_state))) {
-> >  		void *ptr = map;
 > >
-> >  		return ptr + sizeof_imsm_map(map);
-> >  	} else
-> >  		return map;
-> > -
-> > +
-> >  }
-> >
-> >  /* return the size of the device.
 > 
-> Thanks.
-> I added some comments and took the opportunity to simplify
-> get_imsm_ord_tbl_ent.  See below.
+> Doing the same calculation in two placed does seem wrong, but are you
+> sure this is the right one to remove?
 > 
+> The available space in the array does not change until the reshape
+> completes.  So changing dev->size_{low,high} during initialisation
+> seems wrong.
+> 
+> Are you able to confirm what the windows driver does?
+
+Yes (look below).
+
+> 
+> If we do set the size early, then we have to be careful to reduce to
+> the
+> original size when assembling an array that is in the middle of
+> reshape.
+
+Yes (as you describes in your roadmap, it will be part of 3.2.1 code changes/investigation).
+Size for array with reshape in progress process, should be calculated based on second map information.
+
+> 
+> So I won't apply this patch now, and will wait for you to confirm when
+> the
+> windows driver updates dev->size_{low,high}
+> 
+> Thanks,
 > NeilBrown
-> 
-> commit 5e7b0330669594ee79201d19ff45a7850fa0f951
-> Author: Adam Kwolek <adam.kwolek@intel.com>
-> Date:   Thu Feb 3 17:02:39 2011 +1100
-> 
->     imsm: FIX: crash during getting map
-> 
->     When get_imsm_map() is called with second_map parameter == '-1'
->     and array is not in migration state NULL pointer is returned.
->     This is wrong. '-1' means return map as migration record points.
-> 
->     '-1' can be passed to get_imsm_map() from imsm_num_data_members().
->     imsm_num_data_members() is called to get current map members based
->     on migr_state information
-> 
->     Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
->     Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 84ab47b..4081071 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -565,17 +565,24 @@ static size_t sizeof_imsm_map(struct imsm_map
-> *map)
-> 
->  struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
->  {
-> +	/* A device can have 2 maps if it is in the middle of a
-> migration.
-> +	 * If second_map is:
-> +	 *    0   - we return the first map
-> +	 *    1   - we return the second map if it exists, else NULL
-> +	 *   -1   - we return the second map if it exists, else the first
-> +	 */
->  	struct imsm_map *map = &dev->vol.map[0];
-> 
-> -	if (second_map && !dev->vol.migr_state)
-> +	if (second_map == 1 && !dev->vol.migr_state)
->  		return NULL;
-> -	else if (second_map) {
-> +	else if (second_map == 1 ||
-> +		 (second_map < 0 && dev->vol.migr_state)) {
->  		void *ptr = map;
-> 
->  		return ptr + sizeof_imsm_map(map);
->  	} else
->  		return map;
-> -
-> +
->  }
-> 
->  /* return the size of the device.
-> @@ -654,14 +661,7 @@ static __u32 get_imsm_ord_tbl_ent(struct imsm_dev
-> *dev,
->  {
->  	struct imsm_map *map;
-> 
-> -	if (second_map == -1) {
-> -		if (dev->vol.migr_state)
-> -			map = get_imsm_map(dev, 1);
-> -		else
-> -			map = get_imsm_map(dev, 0);
-> -	} else {
-> -		map = get_imsm_map(dev, second_map);
-> -	}
-> +	map = get_imsm_map(dev, second_map);
-> 
->  	/* top byte identifies disk under rebuild */
->  	return __le32_to_cpu(map->disk_ord_tbl[slot]);
+
+I've (double) checked Windows driver behavior. Array size is set during expansion initialization (first metadata update).
+This means, that code for size changes on reshape end has to be removed as it was proposed.
+For volume expansion, size in imsm metadata has to be set in 2 places/cases:
+1. in metadata update during reshape update processing for first array(it is implemented)
+2. In initialization reshape by set_array_state on second array (it is implemented)
+
+BR
+Adam
+
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"
 > in
