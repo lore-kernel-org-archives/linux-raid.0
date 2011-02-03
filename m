@@ -1,68 +1,105 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/8] imsm: FIX: Size is already set in metadata
-Date: Thu, 3 Feb 2011 17:45:19 +1100
-Message-ID: <20110203174519.105469f5@notabene.brown>
+Subject: Re: [PATCH 6/8] FIX: Do not set array size after reshape in mdadm
+Date: Thu, 3 Feb 2011 17:56:59 +1100
+Message-ID: <20110203175659.1a4fd562@notabene.brown>
 References: <20110201134226.13398.4071.stgit@gklab-128-013.igk.intel.com>
-	<20110201134920.13398.77330.stgit@gklab-128-013.igk.intel.com>
+	<20110201134944.13398.41001.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201134920.13398.77330.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110201134944.13398.41001.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 01 Feb 2011 14:49:20 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 01 Feb 2011 14:49:44 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> In metadata size is set already during migration initialization.
-> There is no reason for second /the same/ calculation.
+> Do not set array size after reshape in mdadm,
+> as it is up to mdmon metadata handler (set_array_state()) now.
+
+I'm not sure about this...
+
+I agree that it is probably more appropriate for mdmon to impose the new
+array_size rather than for mdadm to do it.
+In general, if the kernel does something for native metadata, then mdmon
+should probably do it for external metadata (though there might be exceptions
+to this).
+
+However it is not the metadata handler which should do this (and it
+currently doesn't, which is good). The metadata handler should set
+custom_array_array, and the core code of mdmon should use this number
+to set array_size.
+And I don't see that mdmon does this at the moment.  It sets the array size
+when the reshape starts (which is possibly wrong) but it does not set
+it when the reshape finishes (which is the right time).
+
+Could you please review all of this and either point out to me where
+I am wrong, or fix up the code to do the right thing, thanks.
+
+I won't apply this patch now, but am happy to apply it once I'm sure
+mdmon is performing this task.
+
+NeilBrown
+
+
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  super-intel.c |    5 +----
->  1 files changed, 1 insertions(+), 4 deletions(-)
+>  Grow.c |   35 -----------------------------------
+>  1 files changed, 0 insertions(+), 35 deletions(-)
 > 
-> diff --git a/super-intel.c b/super-intel.c
-> index 42f7065..62b13b0 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5185,15 +5185,12 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
->  				/* round array size down to closest MB */
->  				array_blocks = (array_blocks >> SECT_PER_MB_SHIFT)
->  					<< SECT_PER_MB_SHIFT;
-> -				dev->size_low = __cpu_to_le32((__u32) array_blocks);
-> -				dev->size_high = __cpu_to_le32((__u32) (array_blocks >> 32));
->  				a->info.custom_array_size = array_blocks/2;
->  				a->check_reshape = 1; /* encourage manager to update
->  						       * array size
->  						       */
-> -				super->updates_pending++;
->  				imsm_progress_container_reshape(super);
-> -			}				
-> +			}
+> diff --git a/Grow.c b/Grow.c
+> index 8229b4d..a74da89 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2045,41 +2045,6 @@ started:
 >  		}
 >  	}
 >  
+> -	/* set new array size if required customer_array_size is used
+> -	 * by this metadata.
+> -	 */
+> -	if (reshape.before.data_disks !=
+> -	    reshape.after.data_disks &&
+> -	    info->custom_array_size) {
+> -		struct mdinfo *info2;
+> -		char *subarray = strchr(info->text_version+1, '/')+1;
+> -
+> -		info2 = st->ss->container_content(st, subarray);
+> -		if (info2) {
+> -			unsigned long long current_size = 0;
+> -			unsigned long long new_size =
+> -				info2->custom_array_size/2;
+> -
+> -			if (sysfs_get_ll(sra,
+> -					 NULL,
+> -					 "array_size",
+> -					 &current_size) == 0 &&
+> -			    new_size > current_size) {
+> -				if (sysfs_set_num(sra, NULL,
+> -						  "array_size", new_size)
+> -				    < 0)
+> -					dprintf("Error: Cannot"
+> -						" set array size");
+> -				else
+> -					dprintf("Array size "
+> -						"changed");
+> -				dprintf(" from %llu to %llu.\n",
+> -					current_size, new_size);
+> -			}
+> -			sysfs_free(info2);
+> -		}
+> -	}
+> -
+>  	if (info->new_level != reshape.level) {
+>  
+>  		c = map_num(pers, info->new_level);
 > 
-
-Doing the same calculation in two placed does seem wrong, but are you
-sure this is the right one to remove?
-
-The available space in the array does not change until the reshape
-completes.  So changing dev->size_{low,high} during initialisation
-seems wrong.
-
-Are you able to confirm what the windows driver does?
-
-If we do set the size early, then we have to be careful to reduce to the
-original size when assembling an array that is in the middle of reshape.
-
-So I won't apply this patch now, and will wait for you to confirm when the
-windows driver updates dev->size_{low,high}
-
-Thanks,
-NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
