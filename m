@@ -1,127 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: FIX: crash during getting map
-Date: Thu, 3 Feb 2011 17:03:38 +1100
-Message-ID: <20110203170338.38c28ae3@notabene.brown>
-References: <20110201075736.4921.34737.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 2/8] imsm: FIX: array size is wrong
+Date: Thu, 3 Feb 2011 17:41:18 +1100
+Message-ID: <20110203174118.5879e8be@notabene.brown>
+References: <20110201134226.13398.4071.stgit@gklab-128-013.igk.intel.com>
+	<20110201134912.13398.64773.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201075736.4921.34737.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110201134912.13398.64773.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 01 Feb 2011 08:57:37 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 01 Feb 2011 14:49:12 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> When get_imsm_map() is called with second_map parameter == '-1'
-> and array is not in migration state NULL pointer is returned.
-> This is wrong. '-1' means return map as migration record points.
-> 
-> '-1' can be passed to get_imsm_map() from imsm_num_data_members().
-> imsm_num_data_members() is called to get current map members based
-> on migr_state information
+> Calculation of size is almost ok, except concept of blocks.
+> Size for setting in md has to be divided by 2 to be correct.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  super-intel.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
+>  super-intel.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
 > diff --git a/super-intel.c b/super-intel.c
-> index 84ab47b..ee0d9c4 100644
+> index ee0d9c4..42f7065 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -567,15 +567,16 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
->  {
->  	struct imsm_map *map = &dev->vol.map[0];
->  
-> -	if (second_map && !dev->vol.migr_state)
-> +	if ((second_map == 1) && !dev->vol.migr_state)
->  		return NULL;
-> -	else if (second_map) {
-> +	else if ((second_map == 1) ||
-> +		 ((second_map < 0) && (dev->vol.migr_state))) {
->  		void *ptr = map;
->  
->  		return ptr + sizeof_imsm_map(map);
->  	} else
->  		return map;
-> -		
-> +
->  }
->  
->  /* return the size of the device.
+> @@ -5187,7 +5187,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+>  					<< SECT_PER_MB_SHIFT;
+>  				dev->size_low = __cpu_to_le32((__u32) array_blocks);
+>  				dev->size_high = __cpu_to_le32((__u32) (array_blocks >> 32));
+> -				a->info.custom_array_size = array_blocks;
+> +				a->info.custom_array_size = array_blocks/2;
+>  				a->check_reshape = 1; /* encourage manager to update
+>  						       * array size
+>  						       */
+> 
 
-Thanks.
-I added some comments and took the opportunity to simplify
-get_imsm_ord_tbl_ent.  See below.
 
+I think the original code is correct.
+custom_array_size is measured in sectors.
+In grow.c we divide by 2 before comparing with the "array_size" sysfs
+attribute which is measured in kilobytes.
+Also in getinfo_super_imsm_volume, custom_array_size is set from
+the same size_low/size_high fields as used here.
+
+However in manage_member custom_array_size is compared directly
+with "array_size" which is wrong and is probably causing whatever
+problem you experienced.
+
+So I'll change this patch to fix that up instead - see below.
+
+Thanks,
 NeilBrown
 
-commit 5e7b0330669594ee79201d19ff45a7850fa0f951
+commit 02eedb57aa0c6f7fdeda1b612f35545ab4eee58f
 Author: Adam Kwolek <adam.kwolek@intel.com>
-Date:   Thu Feb 3 17:02:39 2011 +1100
+Date:   Thu Feb 3 17:40:18 2011 +1100
 
-    imsm: FIX: crash during getting map
+    imsm: FIX: array size is wrong
     
-    When get_imsm_map() is called with second_map parameter == '-1'
-    and array is not in migration state NULL pointer is returned.
-    This is wrong. '-1' means return map as migration record points.
-    
-    '-1' can be passed to get_imsm_map() from imsm_num_data_members().
-    imsm_num_data_members() is called to get current map members based
-    on migr_state information
+    Calculation of size is almost ok, except concept of blocks.
+    Size for setting in md has to be divided by 2 to be correct.
     
     Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
     Signed-off-by: NeilBrown <neilb@suse.de>
 
-diff --git a/super-intel.c b/super-intel.c
-index 84ab47b..4081071 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -565,17 +565,24 @@ static size_t sizeof_imsm_map(struct imsm_map *map)
- 
- struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- {
-+	/* A device can have 2 maps if it is in the middle of a migration.
-+	 * If second_map is:
-+	 *    0   - we return the first map
-+	 *    1   - we return the second map if it exists, else NULL
-+	 *   -1   - we return the second map if it exists, else the first
-+	 */
- 	struct imsm_map *map = &dev->vol.map[0];
- 
--	if (second_map && !dev->vol.migr_state)
-+	if (second_map == 1 && !dev->vol.migr_state)
- 		return NULL;
--	else if (second_map) {
-+	else if (second_map == 1 ||
-+		 (second_map < 0 && dev->vol.migr_state)) {
- 		void *ptr = map;
- 
- 		return ptr + sizeof_imsm_map(map);
- 	} else
- 		return map;
--		
-+
- }
- 
- /* return the size of the device.
-@@ -654,14 +661,7 @@ static __u32 get_imsm_ord_tbl_ent(struct imsm_dev *dev,
- {
- 	struct imsm_map *map;
- 
--	if (second_map == -1) {
--		if (dev->vol.migr_state)
--			map = get_imsm_map(dev, 1);
--		else
--			map = get_imsm_map(dev, 0);
--	} else {
--		map = get_imsm_map(dev, second_map);
--	}
-+	map = get_imsm_map(dev, second_map);
- 
- 	/* top byte identifies disk under rebuild */
- 	return __le32_to_cpu(map->disk_ord_tbl[slot]);
+diff --git a/managemon.c b/managemon.c
+index 63c9705..6001f6a 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -549,9 +549,9 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 			disk_init_and_add(newd, d, newa);
+ 		}
+ 		if (sysfs_get_ll(info, NULL, "array_size", &array_size) == 0
+-		    && a->info.custom_array_size > array_size) {
++		    && a->info.custom_array_size > array_size*2) {
+ 			sysfs_set_num(info, NULL, "array_size",
+-				      a->info.custom_array_size);
++				      a->info.custom_array_size/2);
+ 		}
+ 	out2:
+ 		sysfs_free(info);
