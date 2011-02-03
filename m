@@ -1,42 +1,52 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Thu, 3 Feb 2011 12:04:28 +0100
-Message-ID: <20110203110428.GA26762@www2.open-std.org>
-References: <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com> <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com> <AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com> <20110131192858.GD27952@www2.open-std.org> <4D4718E1.9040607@hardwarefreak.com> <20110131203725.GB2283@www2.open-std.org> <AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com> <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com> <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com> <4D475AB5.10600@hardwarefreak.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH] fix: array is reassembled inactive if stopped during resync
+Date: Thu, 3 Feb 2011 13:40:56 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EC8FB8B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D475AB5.10600@hardwarefreak.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, Mathias =?iso-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Jan 31, 2011 at 06:58:29PM -0600, Stan Hoeppner wrote:
-> Jon Nelson put forth on 1/31/2011 3:27 PM:
-> > Before this goes any further, why not just reference the excellent
-> > Wikipedia article (actually, excellent applies to both Wikipedia *and*
-> > the article):
-> > 
-> > http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
-> > 
-> > The only problem I have with the wikipedia article is the assertion
-> > that Linux MD RAID 10 is non-standard. It's as standard as anything
-> > else is in this world.
-> 
-> Unfortunately there is no organization, no standards body, that defines RAID
-> levels. 
+From 085fade553c653f89c2b486b7ec552303a5fb9f1 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Thu, 3 Feb 2011 14:30:43 +0100
+Subject: [PATCH] fix: array is reassembled inactive if stopped during resync
+Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-Well there is an organisation that does just that, namely SNIA.
+If initial resync or recovery of a redundant array is not finished
+before it is stopped then during assembly md will start it as inactive.
+Writing readonly to array_state in assemble_container_content
+fails because md thinks the array is during reshape.
 
-http://www.snia.org
+In fact we only have a reshape if both current and previous map
+states are the same. Otherwise we may have resync or recovery.
+Setting reshape_active in such cases causes the issue.
 
-The RAID levels are defined in DDF - a "SNIA" standard.
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
+ super-intel.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-http://www.snia.org/tech_activities/standards/curr_standards/ddf/
+diff --git a/super-intel.c b/super-intel.c
+index d049cb7..59356e0 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1772,7 +1772,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 		__le32_to_cpu(map_to_analyse->blocks_per_member);
+ 	memset(info->uuid, 0, sizeof(info->uuid));
+ 	info->recovery_start = MaxSector;
+-	info->reshape_active = (prev_map != NULL);
++	info->reshape_active = (prev_map != NULL) &&
++			       (map->map_state == prev_map->map_state);
+ 	if (info->reshape_active)
+ 		info->delta_disks = map->num_members - prev_map->num_members;
+ 	else
+-- 
+1.7.1
 
-(Info courtesey of Neil Brown)
-
-best regards
-keld
