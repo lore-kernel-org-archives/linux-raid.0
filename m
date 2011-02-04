@@ -1,63 +1,93 @@
-From: Jon Forrest <jlforrest@berkeley.edu>
-Subject: Re: mdadm: ADD_NEW_DISK failed: Invalid argument
-Date: Fri, 04 Feb 2011 09:02:25 -0800
-Message-ID: <4D4C3121.2010508@berkeley.edu>
-References: <iifhb6$inv$1@dough.gmane.org> <20110204131028.5cae3c88@notabene.brown>
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: Re: systemd kills mdmon if it was started manually
+	by user
+Date: Fri, 4 Feb 2011 22:55:06 +0300
+Message-ID: <AANLkTik7dd5SHkuBVrS6LLDR9v57GsFjjxDKQKPp-YVL@mail.gmail.com>
+References: <AANLkTimHWjC5RrgZc6egrhgDLwX3zAi9ZPSvZomB2gW-@mail.gmail.com>
+	<201012041012.23757.trapni@gentoo.org>
+	<AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
+	<20101204121413.GC11336@mother.pipebreaker.pl>
+	<AANLkTi=nTSdHc55f08G9sdEK6u8eXp276VOTHHr0jmXT@mail.gmail.com>
+	<20110125034434.GC7046@tango.0pointer.de>
+	<AANLkTik189VTXYpzLFqP=MNBg=Nx-Yq6BOKURtiby++B@mail.gmail.com>
+	<20110125042814.GA9727@tango.0pointer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110204131028.5cae3c88@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org>
+In-Reply-To: <20110125042814.GA9727@tango.0pointer.de>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+	<mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+	<mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Sender: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
+Errors-To: systemd-devel-bounces+gcssd-systemd-devel=m.gmane.org@lists.freedesktop.org
+To: Lennart Poettering <lennart@poettering.net>
+Cc: linux-raid@vger.kernel.org, systemd-devel@lists.freedesktop.org
 List-Id: linux-raid.ids
 
-On 2/3/2011 6:10 PM, NeilBrown wrote:
-
-> Probably chunk size is larger than your 100k devices.
->
-> Try:
->
->    mdadm --create /dev/md1 --raid-devices=2 --level=0 --metadata=1.0
->    --chunksize=4 ....
->
-> The metadata=1.0 causes the least amount of space to be used for metadata.
-
-That worked (should be --bitmap-chunk instead of --chunksize).
-
-> OR just make much larger files.  Surely you can spare a few meg??
-
-Absolutely. My point is just that a failure such as this
-should result in a meaningful error message.
-Ironically, mdadm seems to have regressed.
-On Ubuntu 10.10, which uses version 2.6.7.1 of
-mdadm I see the kind of error message I'd expect, e.g.
-
-	mdadm: /dev/loop0 is too small: 100K
-	mdadm: /dev/loop1 is too small: 100K
-
-However, on RHEL6, which uses the newer version 3.1.3 of
-mdadm, I get
-
-	mdadm: ADD_NEW_DISK for /dev/loop2 failed: Invalid argument
-
-This looks like a regression to me.
-
-I'd agree that what I'm doing is unrealistic. I was
-just preparing a document about how to use mdadm so
-I didn't need large volumes. But, it would be nice
-if the latest version of mdadm did what earlier
-versions did.
-
-Cordially,
--- 
-Jon Forrest
-Research Computing Support
-College of Chemistry
-173 Tan Hall
-University of California Berkeley
-Berkeley, CA
-94720-1460
-510-643-1032
-jlforrest@berkeley.edu
+T24gVHVlLCBKYW4gMjUsIDIwMTEgYXQgNzoyOCBBTSwgTGVubmFydCBQb2V0dGVyaW5nCjxsZW5u
+YXJ0QHBvZXR0ZXJpbmcubmV0PiB3cm90ZToKPiBPbiBUdWUsIDI1LjAxLjExIDA2OjU4LCBBbmRy
+ZXkgQm9yemVua292IChhcnZpZGphYXJAbWFpbC5ydSkgd3JvdGU6Cj4KPj4gPiBzeXN0ZW1kIHN1
+cHBvcnRzIGluc3RhbnRpYXRlZCBzZXJ2aWNlcywgZm9yIGV4YW1wbGUgdG8gZGVhbCB3aXRoIHRo
+ZQo+PiA+IGdldHR5cyAoZS5nLiAiZ2V0dHlAdHR5NS5zZXJ2aWNlIikuIEl0IHNob3VsZCBiZSB0
+cml2aWFsIHRvIHVzZSB0aGUgc2FtZQo+PiA+IGZvciBtZG1vbiAoZS5nLiAibWRtb25AbWQzLnNl
+cnZpY2UiKS4KPj4gPgo+PiBUaGF0J3MgcmlnaHQsIGJ1dCB0aGUgbmFtZXMgYXJlIG5vdCBrbm93
+biBpbiBhZHZhbmNlIGFuZCBjYW4gY2hhbmdlCj4+IGJldHdlZW4gcmVib290cy4gVGhpcyBtZWFu
+cyBzdWNoIHVuaXRzIGhhdmUgdG8gYmUgZ2VuZXJhdGVkCj4+IGR5bmFtaWNhbGx5LCBleGlzdCB1
+bnRpbCByZWJvb3QgKHJhbWZzPykgYW5kIGJlIHJlbW92ZWQgd2hlbiBhcnJheSBpcwo+PiBkZXN0
+cm95ZWQuIE5vdCBzdXJlIGl0IGlzIHJlYWxseSBtYW5hZ2VhYmxlLgo+Cj4gSG1tPyBJdCBzaG91
+bGQgYmUgc3VmZmljaWVudCB0byBqdXN0IHdyaXRlIHRoZSBzZXJ2aWNlIHRlbXBsYXRlIHByb3Bl
+cmx5Cj4gKCJtZG1vbkAuc2VydmljZSIpIGFuZCB0aGVuIGluc3RhbnRpYXRlIGl0IHdoZW4gbmVl
+ZGVkIHdpdGggInN5c3RlbWN0bAo+IHN0YXJ0IG1kbW9uQHh5ei5zZXJ2aWNlIiBvciBzb21ldGhp
+bmcgZXF1aXZhbGVudC4gaXRNcyBhIG1hdHRlciBvZgo+IGlzc3VpbmcgYSBzaW5nbGUgZGJ1cyBj
+YWxsLgo+Cj4+IEFuZCB3aGljaCBpbnN0YW5jZSBzaG91bGQgZ2VuZXJhdGUgdGhlbT8gbWRhZG0/
+Cj4KPiBpIHRoaW5rIGl0IGlzIG11Y2ggbmljZXIgdG8gc3Bhd24gdGhlIG5lY2Vzc2FyeSBtZGFk
+bSBzZXJ2aWNlIGluc3RhbmNlCj4gZnJvbSBhIHVkZXYgcnVsZSwKClllcywgdGhpcyBjYW4gYmUg
+ZG9uZSByZWxhdGl2ZWx5IGVhc2lseTsgYXMgcHJvb2Ygb2YgY29uY2VwdDoKClNVQlNZU1RFTSE9
+ImJsb2NrIiwgR09UTz0ic3lzdGVtZF9tZF9lbmQiCkFDVElPTiE9ImNoYW5nZSIsIEdPVE89InN5
+c3RlbWRfbWRfZW5kIgpLRVJORUwhPSJtZCoiLCBHT1RPPSJzeXN0ZW1kX21kX2VuZCIKQVRUUntt
+ZC9tZXRhZGF0YV92ZXJzaW9ufT09ImV4dGVybmFsOltBLVphLXpdKiIsIFJVTis9Ii9iaW4vc3lz
+dGVtY3RsCnN0YXJ0IG1kbW9uQCVrLnNlcnZpY2UiCkxBQkVMPSJzeXN0ZW1kX21kX2VuZCIKCndo
+ZXJlIG1kb25ALnNlcnZpY2UgaXMKCgpbVW5pdF0KRGVzY3JpcHRpb249bWRtb24gc2VydmljZQpC
+aW5kVG89ZGV2LSVpLmRldmljZQpBZnRlcj1kZXYtJWkuZGV2aWNlCgpbU2VydmljZV0KVHlwZT1m
+b3JraW5nClBJREZpbGU9L2Rldi8ubWRhZG0vJWkucGlkCkV4ZWNTdGFydD0vc2Jpbi9tZG1vbiAt
+LXRha2VvdmVyICVpCgoKV2l0aCB0aGUgcmVzdWx0Cgpbcm9vdEBsb2NhbGhvc3Qgfl0jIHN5c3Rl
+bWN0bCBzdGF0dXMgbWRtb25AbWQxMjcuc2VydmljZQptZG1vbkBtZDEyNy5zZXJ2aWNlIC0gbWRt
+b24gc2VydmljZQogICAgICAgICAgTG9hZGVkOiBsb2FkZWQgKC9ldGMvc3lzdGVtZC9zeXN0ZW0v
+bWRtb25ALnNlcnZpY2UpCiAgICAgICAgICBBY3RpdmU6IGFjdGl2ZSAocnVubmluZykgc2luY2Ug
+VHVlLCAwOCBGZWIgMjAxMSAwOTo0MzozMAotMDUwMDsgNW1pbiBhZ28KICAgICAgICAgUHJvY2Vz
+czogMTQ2NyBFeGVjU3RhcnQ9L3NiaW4vbWRtb24gLS10YWtlb3ZlciAlaQooY29kZT1leGl0ZWQs
+IHN0YXR1cz0wL1NVQ0NFU1MpCiAgICAgICAgTWFpbiBQSUQ6IDE0NjggKG1kbW9uKQogICAgICAg
+ICAgQ0dyb3VwOiBuYW1lPXN5c3RlbWQ6L3N5c3RlbS9tZG1vbkAuc2VydmljZS9tZDEyNwogICAg
+ICAgICAgICAgICAgICDilJQgMTQ2OCAvc2Jpbi9tZG1vbiAtLXRha2VvdmVyIG1kMTI3CgpTZXR0
+aW5nIFNZU1RFTURfV0FOVFMgd291bGQgYmUgbW9yZSBlbGVnYW50IHNvbHV0aW9uLCBidXQgaXQg
+ZG9lcyBub3QKd29yayB3aXRoIGN1cnJlbnQgc3lzdGVtZCBpbXBsZW1lbnRhdGlvbi4gSXQgaXMg
+Y2FwYWJsZSBvZiBzdGFydGluZwpyZXF1ZXN0ZWQgdW5pdHMgb25seSBvbiAiYWRkIiBldmVudCAo
+ZWZmZWN0aXZlbHkgdGhlIHZlcnkgZmlyc3QgdGltZQpkZXZpY2UgYmVjb21lcyBwbHVnZ2VkKSwg
+d2hpbGUgbWRtb24gbXVzdCBiZSBzdGFydGVkIG9uICJjaGFuZ2UiCmV2ZW50LCBhcyBvbmx5IHRo
+ZW4gd2Uga25vdyB3aGV0aGVyIG1kbW9uIGlzIHJlcXVpcmVkIGF0IGFsbC4KClJ1bm5pbmcgbWRt
+b24gdmlhIHN5c3RlbWQgaW4gdGhpcyB3YXkgb3BlbnMgdXAgaW50ZXJlc3RpbmcKcG9zc2liaWxp
+dHkuIEUuZy4gc2VydmljZSBjb3VsZCBiZSBkZWNsYXJlZCAiaW1tb3J0YWwiIGFuZCBiZSBleGVt
+cHQKZnJvbSB1c3VhbCBzaHV0ZG93biBzZXF1ZW5jZSAuLi4gb3IgaXMgaXQgcG9zc2libGUgdG8g
+ZG8gYWxyZWFkeT8KCkFjdHVhbGx5IGl0IGNhbiBiZSBpbXBsZW1lbnRlZCBldmVuIHdpdGhvdXQg
+bWRhZG0gcGF0Y2hlczsgYXBwYXJlbnRseQppdCBpcyBwb3NzaWJsZSB0byBzdXBwcmVzcyBub3Jt
+YWwgc3RhcnRpbmcgb2YgbWRtb24gYnkgc2V0dGluZwpNREFETV9OT19NRE1PTj0xCgo+ICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgYnV0IHlvdSBjb3VsZCBldmVuIHJ1biBpdCBmcm9tIG1kYWRt
+IGJ5IGludm9raW5nIG9uZQo+IGRidXMgY2FsbCBmcm9tIGl0Lgo+CgpJdCBtYXkgdHVybiBvdXQg
+dG8gYmUgbmVjZXNzYXJ5IHN0aWxsLiBJZiBjb250YWluZXIgbmVlZHMgbWRtb24sCmFycmF5cyBp
+dCBjb250YWlucyB3b24ndCBiZWNvbWUgcmVhZC13cml0ZSB1bnRpbCBtZG1vbiBpcyBzdGFydGVk
+LiBJZgptZG1vbiBpcyBzdGFydGVkIGFzeW5jaHJvbm91c2x5IGJ5IHVkZXYsIHRoZXJlIGlzIHdp
+bmRvdyB3aGVyZSBzb21lb25lCm1heSB0cnkgdG8gdXNlIGFycmF5IGJlZm9yZSBpdCBpcyBydy4g
+QXMgdHJpdmlhbCBleGFtcGxlLCBtb3VudCB1bml0CndoaWNoIGRlcGVuZHMgb24gbWQgZGV2aWNl
+IHVuaXQuCgpJIGRvIG5vdCB0aGluayBtZGFkbSBtYWludGFpbmVyIHdpbGwgYmUgaGFwcHkgdG8g
+YWRkIEQtQnVzIGRlcGVuZGVuY3kKdG8gc29tZXRoaW5nIHRoYXQgaXMgbGlrZWx5IHRvIGJlIGlu
+Y2x1ZGVkIGluIGluaXRyZCB0aG91Z2ggOikgQnV0IG1heQpiZSB3ZSBjb3VsZCBzaW1wbHkgdHJ5
+IGV4ZWNsKCIvYmluL3N5c3RlbWN0bCIsICJzdGFydCIsIC4uLikgYmVmb3JlCmN1cnJlbnQgZXhl
+Y2woIi9zYmluL21kbW9uIiwuLi4gKT8KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWlsaW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBs
+aXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cDovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFu
+L2xpc3RpbmZvL3N5c3RlbWQtZGV2ZWwK
