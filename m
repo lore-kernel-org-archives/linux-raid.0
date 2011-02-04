@@ -1,31 +1,33 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: What's the typical RAID10 setup?
-Date: Fri, 04 Feb 2011 11:03:30 -0500
-Message-ID: <4D4C2352.9000407@cfl.rr.com>
-References: <AANLkTimc35i0W8vmsEGWrjCH7pYLBo=Ju1inA6xQ8bj6@mail.gmail.com> <AANLkTimoSvWj3mnowZbVKKHEMzwjiQ=WqRUUsj91n_Zr@mail.gmail.com> <20110131152151.GD7861@cthulhu.home.robinhill.me.uk> <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com> <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com> <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com> <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com> <4D470F96.40409@cfl.rr.com> <4D471A41.1090706@hardwarefreak.com> <4D4730C0.8080900@cfl.rr.com> <20110201092007.GA7860@cthulhu.home.robinhill.me.uk>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH 0/2] FIX: Process hangs at wait_barrier
+Date: Fri, 04 Feb 2011 14:18:18 +0100
+Message-ID: <20110204130757.6426.81544.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110201092007.GA7860@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-FYI, you should get in the habit of using your mail client's reply to
-all function.  I did not see this until now because you did not send me
-a copy.
+Patches resolve problem with process crash at wait_barrier()
+after raid0->raid10 takeover.
+First patch resolve this particular problem.
+Solution is similar to RAID1 barrier implementation.
+Second is proposal for general protection against barrier
+become negative.
 
-On 2/1/2011 4:20 AM, Robin Hill wrote:
-> No, it's RAID 10 or RAID 1+0. RAID 0+1 would be 2 mirrored pairs of
-> 5-disk RAID 0 arrays, in which case you could only lose 5 disks if
+---
 
-In English we read from left to right and top to bottom, so 0+1 means
-stripe on top of mirror.
+Krzysztof Wojcik (2):
+      FIX: md: process hangs at wait_barrier after 0->10 takeover
+      FIX: md: Prevent barrier become negative
 
-> The md man page would be better for information on the physical layouts,
-> but I don't see anything on there to support what you're saying here.
 
-The section on raid10 describes the layouts.  For a 4 disk array, the
-default layout of n2 is equivalent to raid 0+1.  A 2, 3, or 5 disk array
-is not even possible with 0+1, but raid10 is quite happy with that.
+ drivers/md/raid1.c  |    3 ++-
+ drivers/md/raid10.c |    9 ++++++---
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+-- 
+Krzysztof Wojcik
