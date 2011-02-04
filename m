@@ -1,81 +1,63 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: What's the typical RAID10 setup?
-Date: Fri, 4 Feb 2011 16:22:12 +0000
-Message-ID: <20110204162212.GA21779@cthulhu.home.robinhill.me.uk>
-References: <20110131152151.GD7861@cthulhu.home.robinhill.me.uk>
- <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com>
- <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com>
- <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
- <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
- <4D470F96.40409@cfl.rr.com>
- <4D471A41.1090706@hardwarefreak.com>
- <4D4730C0.8080900@cfl.rr.com>
- <20110201092007.GA7860@cthulhu.home.robinhill.me.uk>
- <4D4C2352.9000407@cfl.rr.com>
+From: Jon Forrest <jlforrest@berkeley.edu>
+Subject: Re: mdadm: ADD_NEW_DISK failed: Invalid argument
+Date: Fri, 04 Feb 2011 09:02:25 -0800
+Message-ID: <4D4C3121.2010508@berkeley.edu>
+References: <iifhb6$inv$1@dough.gmane.org> <20110204131028.5cae3c88@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D4C2352.9000407@cfl.rr.com>
+In-Reply-To: <20110204131028.5cae3c88@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 2/3/2011 6:10 PM, NeilBrown wrote:
 
---BXVAT5kNtrzKuDFl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Probably chunk size is larger than your 100k devices.
+>
+> Try:
+>
+>    mdadm --create /dev/md1 --raid-devices=2 --level=0 --metadata=1.0
+>    --chunksize=4 ....
+>
+> The metadata=1.0 causes the least amount of space to be used for metadata.
 
-On Fri Feb 04, 2011 at 11:03:30AM -0500, Phillip Susi wrote:
+That worked (should be --bitmap-chunk instead of --chunksize).
 
-> FYI, you should get in the habit of using your mail client's reply to
-> all function.  I did not see this until now because you did not send me
-> a copy.
->=20
-I'll make an exception in this case, but I generally reply to messages
-on mailing lists to the list only, and I have no plans to change this.
+> OR just make much larger files.  Surely you can spare a few meg??
 
-> On 2/1/2011 4:20 AM, Robin Hill wrote:
-> > No, it's RAID 10 or RAID 1+0. RAID 0+1 would be 2 mirrored pairs of
-> > 5-disk RAID 0 arrays, in which case you could only lose 5 disks if
->=20
-> In English we read from left to right and top to bottom, so 0+1 means
-> stripe on top of mirror.
->=20
-The vast majority of online sources would disagree with you.  See:
-    http://en.wikipedia.org/wiki/Nested_RAID_levels
-    http://www.aput.net/~jheiss/raid10/
-    http://decipherinfosys.wordpress.com/2008/01/15/difference-between-raid=
--01-vs-raid-10/
-    http://www.raid.com/04_01_0_1.html
-    http://www.pcguide.com/ref/hdd/perf/raid/levels/multLevel01-c.html
-    http://www.adrc.com/raid-01.html
+Absolutely. My point is just that a failure such as this
+should result in a meaningful error message.
+Ironically, mdadm seems to have regressed.
+On Ubuntu 10.10, which uses version 2.6.7.1 of
+mdadm I see the kind of error message I'd expect, e.g.
 
-The order it's written is the order of creation.  RAID0+1 =3D  RAID 0,
-then RAID 1 (mirrored stripes) and RAID1+0 =3D RAID 1, then RAID 0
-(striped mirrors).
+	mdadm: /dev/loop0 is too small: 100K
+	mdadm: /dev/loop1 is too small: 100K
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+However, on RHEL6, which uses the newer version 3.1.3 of
+mdadm, I get
 
---BXVAT5kNtrzKuDFl
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+	mdadm: ADD_NEW_DISK for /dev/loop2 failed: Invalid argument
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
+This looks like a regression to me.
 
-iEYEARECAAYFAk1MJ7MACgkQShxCyD40xBLu9gCg0bcz3kiUFnZqWJHSJ4itQMXg
-WsIAoJLvipPAYYBZA9m/4DhOVj6ZzIg+
-=TBDz
------END PGP SIGNATURE-----
+I'd agree that what I'm doing is unrealistic. I was
+just preparing a document about how to use mdadm so
+I didn't need large volumes. But, it would be nice
+if the latest version of mdadm did what earlier
+versions did.
 
---BXVAT5kNtrzKuDFl--
+Cordially,
+-- 
+Jon Forrest
+Research Computing Support
+College of Chemistry
+173 Tan Hall
+University of California Berkeley
+Berkeley, CA
+94720-1460
+510-643-1032
+jlforrest@berkeley.edu
