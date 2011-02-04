@@ -1,62 +1,82 @@
 From: hansbkk@gmail.com
-Subject: Re: What's the typical RAID10 setup?
-Date: Fri, 4 Feb 2011 10:49:45 +0700
-Message-ID: <AANLkTimGs4OnqMUozP4coaXXBkNJDA3DUyQmAEavgkP=@mail.gmail.com>
-References: <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com>
-	<AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com>
-	<AANLkTim_uQ7AQs_ZSyeYPJPYSLCJd6ChzzTBwBNk2qA9@mail.gmail.com>
-	<20110131192858.GD27952@www2.open-std.org>
-	<4D4718E1.9040607@hardwarefreak.com>
-	<20110131203725.GB2283@www2.open-std.org>
-	<AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com>
-	<AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com>
-	<AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com>
-	<4D475AB5.10600@hardwarefreak.com>
-	<20110203110428.GA26762@www2.open-std.org>
-	<4D4B3DAE.3070502@hardwarefreak.com>
+Subject: Inconsistent UUIDs between mkconf vs blkid
+Date: Fri, 4 Feb 2011 11:45:41 +0700
+Message-ID: <AANLkTimpqwEoyZTNB+as0UyK8uOAy7P1fihBUBpd1tCs@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D4B3DAE.3070502@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Feb 4, 2011 at 6:43 AM, Stan Hoeppner <stan@hardwarefreak.com> =
-wrote:
-> Keld J=F8rn Simonsen put forth on 2/3/2011 5:04 AM:
->>> Unfortunately there is no organization, no standards body, that def=
-ines RAID
->>> levels.
->
-> Something smells bad here. =A0Does one of the RAID companies own a pa=
-tent or
-> trademark on "RAID 10"? =A0I'll look into this. =A0It just doesn't ma=
-ke any sense
-> for RAID 10 to be omitted from the SNIA DDF but to be referenced in t=
-he manner
-> it is.
+I'm a bit of a Linux noob, feel free to redirect me elsewhere if this
+is an inappropriate post for this list - also, apologies for the many
+questions.
 
-=46or the sake of practical clarity, would it be possible for the list
-to simply agree to use
+I've got a set of arrays that I boot up using Ubuntu (latest MM) and a
+couple of Live CD distros for doing maintanence, particularly System
+Rescue (gentoo) and Grml (debian), as well as the regular production
+server OS, which is rpath-based, pretty close to "stable" (read:
+ancient) rhel.
 
-RAID1+0  =3D the "outside-the-mdadm-world" meaning of RAID10
+When one of the RAID1 arrays kept dropping all but two of the members,
+I re-created it with options "-e=0.90 --auto=md". This was the boot
+array for Ubuntu, which failed at boot time due to its UUID changing.
+I figured the best thing to do would be to simply set the array's UUID
+back to what it was before, so I ran e2fstune to do so, but
+unfortunately I got it wrong (UUIDs are so human-unfriendly!), so now
+it seems I'm doubly hosed, but I'm taking it on as a learning
+experience 8-)
 
-and something like
+When I ran update-initramfs I got an extended message, apparently from
+mdadm, about making sure that my UUIDs were consistent between
+mdadm.conf and fstab. Well my fstab is based on filesystem labels (so
+much better!), so I thought no worries, but when I ran the suggested
+script - /usr/share/mdadm/mkconf, that returned a UUID for the array
+that is completely different from that shown by blkid!
 
-"md RAID10" for "our" RAID10
+So, first the simple questions:
 
-and to just not use plain "RAID10" at all, to avoid confusion
+Q1 between mkconf and blkid, which should I trust for the current UUID
+of the array (both the filesystem and the underlying component
+partitions are the same right?)
 
-and move on?
+Q2 I've noticed that fail/removing a component doesn't always re-set
+the UUID, even when --zero-superblock'ing I sometimes need to actually
+re-format the partition or use e2fstune to reset the UUID manually,
+but other times no problems. Is this a version-specific difference?
 
-Others more senior can of course propose other syntax; my goal is to
-simply avoid the confusion caused by ambiguous terminology, and the
-unnecessary friction that seems to come up every time these terms are
-discussed.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Q3 Can I take the UUIDs out of my mdadmconf and just use the
+super-minor? I'd really like to use the filesystem label, but that
+doesn't seem to be an option.
+
+
+The more complex question (I realize it's OT for the list so feel free
+to ignore)
+
+Q4 Besides the following, are there other places need to be changed
+when the UUID changes?
+
+   bootloader kernel statements
+   fstab
+   mdadm.conf
+   update-initramfs
+
+grub2 is handling my booting from a dedicated partition where I
+manually maintain the grub.conf, so I'm using filesystem labels there
+as well, but I'm thinking I'll also have to re-run grub-install and
+grub-mkconfig to rebuild the boot-sector images and get a new
+intra-partition grub.conf for Ubuntu? I'm chaining from my manually
+maintained "uber grub.cfg" into Ubuntu's automatically-maintained
+grub.cfg via configfile.
+
+Finally, a big-picture question:
+
+Q5 I've noticed that my arrays aren't quite as as stable as I'd like,
+and I'm wondering if that might be due to the different
+flavors/versions of mdadm running? The kernels range from 24 to 35,
+and while I'm using .0.90.3 metadata for the boot arrays, I've gone
+with 1.2 for the big storage RAID6's.
+
+
+Thanks in advance. . .
