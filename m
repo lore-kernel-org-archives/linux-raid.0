@@ -1,25 +1,67 @@
-From: Phillip Susi <psusi@cfl.rr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
 Subject: Re: What's the typical RAID10 setup?
-Date: Fri, 04 Feb 2011 15:35:47 -0500
-Message-ID: <4D4C6323.6030905@cfl.rr.com>
-References: <20110131152151.GD7861@cthulhu.home.robinhill.me.uk> <AANLkTimfnRxm=chKx4MFSxX1c0hypnVW-jaYwq757DaH@mail.gmail.com> <AANLkTi=mLFwdLzcjcpzC0JJ=v8Aa817g+CzrR88pmy9y@mail.gmail.com> <AANLkTikvXk0gyXz6MBvhyzxXatk0FVeASPr8R8+74c_i@mail.gmail.com> <AANLkTinGSNmp6yUNfb9thnr3zKFTzw=fUFm+Gef3DAHw@mail.gmail.com> <4D470F96.40409@cfl.rr.com> <4D471A41.1090706@hardwarefreak.com> <4D4730C0.8080900@cfl.rr.com> <20110201092007.GA7860@cthulhu.home.robinhill.me.uk> <4D4C2352.9000407@cfl.rr.com> <20110204162212.GA21779@cthulhu.home.robinhill.me.uk>
+Date: Fri, 4 Feb 2011 21:35:23 +0100
+Message-ID: <20110204203523.GA6603@www2.open-std.org>
+References: <AANLkTimxCkxkg6xuz8FgFf0=u4KY=0M=6+afnxLzT+Tu@mail.gmail.com> <AANLkTi=+rPzaNTKAjB=QUEGsbUcwfN8uijm96DoY_4FA@mail.gmail.com> <AANLkTinM6FkJtxL8dNpoy-haGqNsZVfLDwmvZcshTEYQ@mail.gmail.com> <4D475AB5.10600@hardwarefreak.com> <20110203110428.GA26762@www2.open-std.org> <4D4B3DAE.3070502@hardwarefreak.com> <20110204070613.GA3788@www2.open-std.org> <4D4BB87A.30800@hardwarefreak.com> <20110204090602.GA4017@www2.open-std.org> <4D4BCF3A.1030809@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110204162212.GA21779@cthulhu.home.robinhill.me.uk>
+Content-Disposition: inline
+In-Reply-To: <4D4BCF3A.1030809@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Jon Nelson <jnelson-linux-raid@jamponi.net>, Mathias =?iso-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, Denis <denismpa@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2/4/2011 11:22 AM, Robin Hill wrote:
-> I'll make an exception in this case, but I generally reply to messages
-> on mailing lists to the list only, and I have no plans to change this.
+On Fri, Feb 04, 2011 at 04:04:42AM -0600, Stan Hoeppner wrote:
+> Keld J=F8rn Simonsen put forth on 2/4/2011 3:06 AM:
+>=20
+> > For RAID1+0, I think it is covered by the DDF standard
+>=20
+> RAID 10 and RAID 1+0 are the same thing by two different names.  It's=
+ not
+> covered in the DDF.
 
-You should as that is bad netiquette.  It breaks threads that are cross
-posted, and people who post on lists ( or end up getting Cc'd ) without
-subscribing, which happens a lot on high traffic lists.  Reply-to-list
-is an abomination that violates Internet Mail Standards.
+I agree that it is not described in detail in DDF.=20
 
-See http://david.woodhou.se/reply-to-list.html
+But it is covered, as I wrote. RAID 1+0 can be a number of things,
+as RAID1 can be a number of things. It can be what we know in Linux-lan=
+d
+as a RAID0 of MD raid10,n2 or of md raid10,o2, or some other raid1
+layout.
 
+when you then move a set of RAID 1+0 disks from one RAID device to anot=
+her,
+then, using DDF, you can handle that correctly on the new raid device,
+as you can see what kind of RAID1 that the disks are formatted with,
+thanks to the DDF standard. And you can then also see that the RAID0=20
+is a RAID0, according to the data stored in the RAID description
+adhering to the DDF standard.
+
+So you can safely move RAID 1+0 disks from one RAID device (say NAS box=
+) to another.
+Handy if a NAS box breaks down beyond repair, and you have to buy a new
+one of another make.
+
+> I just spent a paragraph explaining why it's not in the
+> DDF, and you agreed with me for Pete's sake!  Now you say you think i=
+t _is_ in
+> the DDF?
+
+Implicitely it is there, and for good reasons it is not spelled out.
+
+The same story goes for RAID 5+0 and other nested RAID types.
+It does not make sense to describe the combined nested type,
+only the component data formats are described.
+
+But one could have a brief description of the concepts, and why it
+is not adequate terminology in the DDF standard.
+
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
