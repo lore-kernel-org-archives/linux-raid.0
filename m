@@ -1,102 +1,32 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: External bitmap, questions
-Date: Sat, 19 Feb 2011 05:42:53 +0000
-Message-ID: <AANLkTinYr3UjU5X3Hfz0rNh0uciDEo34r4W624qSJzWG@mail.gmail.com>
-References: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
-	<20110219154924.2218c87c@notabene.brown>
-	<AANLkTimpQ2=EM97ELX3z4c=Yf6gDp=Ekdn6m+ws6O8rm@mail.gmail.com>
-	<20110219163018.26058ce3@notabene.brown>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Mixing 512 bytes and 4K sector harddrives in a raid1?
+Date: Mon, 07 Feb 2011 14:56:04 +0100
+Message-ID: <iiotq0$gpa$1@dough.gmane.org>
+References: <AANLkTi=43ujbivEtgq1fyn0hnRRXvJJKmojf7LZhtid9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110219163018.26058ce3@notabene.brown>
+In-Reply-To: <AANLkTi=43ujbivEtgq1fyn0hnRRXvJJKmojf7LZhtid9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19 February 2011 05:30, NeilBrown <neilb@suse.de> wrote:
-> On Sat, 19 Feb 2011 04:55:32 +0000 Mathias Bur=C3=A9n <mathias.buren@=
-gmail.com>
-> wrote:
+On 07/02/2011 12:41, Henrik Olsson wrote:
+> Hi,
 >
->> On 19 February 2011 04:49, NeilBrown <neilb@suse.de> wrote:
->> > On Sat, 19 Feb 2011 00:47:10 +0000 Mathias Bur=C3=A9n <mathias.bur=
-en@gmail.com>
->> > wrote:
->> >
->> >> Hi,
->> >>
->> >> >From the mdadm manual:
->> >>
->> >> "-b, --bitmap=3D
->> >> [...]
->> >> Note: external bitmaps are only known to work on ext2 and ext3.
->> >> Storing bitmap files on other filesystems may result in serious
->> >> problems."
->> >>
->> >> I was planning to store the external bitmap on an ext4 partition.=
- Will
->> >> this be a problem, or is the warning there because it hasn't been
->> >> tested enough but no problems found?
->> >
->> > External bitmaps use 'BMAP' to find where the file lives on the de=
-vice and
->> > then writes directly to the device - not through the filesystem.
->> >
->> > So as long as there is no tail-packing to block migration happenin=
-g it should
->> > work fine.
->> >
->> > I haven't looked inside ext4 but I am fairly confident that extern=
-al bitmaps
->> > will work properly.
->> >
->> > NeilBrown
->> >
->> >
->>
->> Thanks, Neil. Are there any differences between using an internal or
->> external bitmap? Also, does one need a bitmap at all when not planni=
-ng
->> to "mess" with the array? (does it provide any other purpose?)
+> One of the drives in my raid1 recently crashed and it looks like all
+> the replacement disks (2TB) i can find use 4K sectors, but the old
+> ones were 512 bytes.
+> Are there any issues with having a raid1 array with different sector
+> sizes for the drives?
 >
-> The difference between internal and external is simply that one is st=
-ored in
-> the array - a copy on each device - and the other is stored externall=
-y to the
-> array =C2=A0- a single copy in a file.
-> External are slightly harder to work with as you need somewhere separ=
-ate to
-> store the bitmap (it cannot be in the array) and you need to tell mda=
-dm where
-> to find it (so it needs to be listed in mdadm.conf).
->
-> I don't know what you mean by "mess" with the array. =C2=A0The main p=
-urpose of the
-> bitmap is the accelerate resync after an unclean shutdown. =C2=A0The =
-secondary
-> purpose is to accelerate recovery if you remove and then re-add a dev=
-ice.
-> Maybe that is what you mean by "mess with".
->
-> So if you don't want to "mess" with the array and you are certain tha=
-t your
-> machine will never crash, then you don't really need a bitmap.
->
-> NeilBrown
->
->
+> Regards,
+> Henrik
 
-Hi,
+I can't answer for sure, but I would think there would be no problem as 
+long as you make sure your partitions are 4 KB aligned.  AFAIUI, Linux 
+always writes in 4K blocks to the disks anyway, so alignment is the only 
+issue - and that's a performance issue, not a correctness one.
 
-Yes, you understood me correctly! Sorry, I should've been more clear.
-That answers my questions, thanks a bunch :-)
 
-// Mahtias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
