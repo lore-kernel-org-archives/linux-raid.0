@@ -1,63 +1,43 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Periodic RebuildStarted event
-Date: Mon, 7 Feb 2011 21:52:34 -0200
-Message-ID: <AANLkTimBTE1uutF3ZsjVTFsBn-AOSTJ8Oa=Y1dprtHxc@mail.gmail.com>
-References: <AANLkTikA=Qe1iwLMkB3V6RLdzRU0p4PB0xmFxJ7907Ez@mail.gmail.com>
-	<AANLkTinwowg1evk44=46VO+Eni1B=G5Mr_X1r32GO5eF@mail.gmail.com>
-	<20110207234411.GA93362@cons.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jeff Klingner <klingner@stanford.edu>
+Subject: raid1 with rotating offsite disks for backup
+Date: Mon, 7 Feb 2011 15:53:46 -0800
+Message-ID: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110207234411.GA93362@cons.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Cracauer <cracauer@cons.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i don=B4t know if exists, but maybe a internal mdadm command to check
-array (if have mirrors or ecc/checksum) with a limited speed (mb/s)
-read operation could help with periodic check (instead resync)
+I'm planning a backup system for my home server and have run into a question I can't find answered in the mailing list archives or the wiki.  Here's the plan:
 
-2011/2/7 Martin Cracauer <cracauer@cons.org>:
-> I just got through the RebuildStarted event which seems to be
-> monthly. =A0This is being triggered by my Debian config, but before I
-> nuke it I'd like to know a little more.
->
-> If a real disk error happens during this rebuild on a raid5, would th=
-e
-> disk go into regular degraded mode or would it count as a double
-> fault?
->
-> I also noticed that recently all the checks for all the arrays happen
-> simultaneously. =A0That's bad because most of them share the same
-> physical disks. =A0Am I imagining this or was the system smart enough=
- to
-> do them one after another until recently?
->
-> Do you do period checks? I get lots of device mismatches reported but
-> apparently that's normal if there's write activity. =A0The whole thin=
-g
-> sound contra-productive to me and might panic new users.
->
-> Martin
-> --
-> %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-> Martin Cracauer <cracauer@cons.org> =A0 http://www.cons.org/cracauer/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+1. Install system and valuable data on a 3-disk raid1 array (call the disks A, B, and C).
+2. Remove disk C, put it offsite.  ("offsite" is moderately time-consuming to get to.)
+3a. Periodically, remove disk B, take it offsite, and retrieve disk C
+3b. Insert disk C, which will be re-synced to gain any changes made since it was removed.
+4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B and C.
+
+Thus I hope to get continuous protection against a single drive failure and protection back to the last offsite swap for corrupted or deleted data.
+
+My questions are:
+
+In step 3b, when a disk that was a member of the array in the past but has been removed for a while is re-inserted into the 3-disk array, how does the raid system know to update C with A's contents and not A with C's contents?  Is there a timestamp involved, and if so, how can I examine it before syncing?
+
+Is it important to always rotate disks B and C, leaving one that never leaves the computer, or does it make no difference which of the two live disks I pluck out to swap with the offsite disk when I make the trip?  Can all three disks take turns offsite, so that they all have the same duty cycle?
+
+I saw in another list message the advice to use two stacked raid1s for this application: http://marc.info/?l=linux-raid&m=126761399008775&w=2
+> Also, if you want two rotating backups I would create two stacked raid1s.
+> 
+> mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-backup
+> mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
+> mkfs -j /dev/md1
 
 
+Are there important differences between the single 3-disk raid1 array I'm planning to use and this stacked configuration?
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for any help you can offer.
+
+Jeff
+
+
