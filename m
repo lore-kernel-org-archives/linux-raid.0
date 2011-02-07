@@ -1,181 +1,60 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH] Spare migration tests updated
-Date: Mon, 7 Feb 2011 13:37:36 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F010ECF58D8@irsmsx504.ger.corp.intel.com>
+From: Henrik Olsson <henrik@fixme.se>
+Subject: Re: Mixing 512 bytes and 4K sector harddrives in a raid1?
+Date: Mon, 7 Feb 2011 15:08:17 +0100
+Message-ID: <AANLkTin9zT62t6fBY5Zjxj8HqJHKo1224u3CN+1CWnph@mail.gmail.com>
+References: <AANLkTi=43ujbivEtgq1fyn0hnRRXvJJKmojf7LZhtid9@mail.gmail.com>
+	<iiotq0$gpa$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <iiotq0$gpa$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From ba9f22404ed0df2273aebc0deccf82d490c7e913 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Mon, 7 Feb 2011 14:30:34 +0100
-Subject: [PATCH] Spare migration tests updated
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+On Mon, Feb 7, 2011 at 14:56, David Brown <david@westcontrol.com> wrote=
+:
+> On 07/02/2011 12:41, Henrik Olsson wrote:
+>>
+>> Hi,
+>>
+>> One of the drives in my raid1 recently crashed and it looks like all
+>> the replacement disks (2TB) i can find use 4K sectors, but the old
+>> ones were 512 bytes.
+>> Are there any issues with having a raid1 array with different sector
+>> sizes for the drives?
+>>
+>> Regards,
+>> Henrik
+>
+> I can't answer for sure, but I would think there would be no problem =
+as long
+> as you make sure your partitions are 4 KB aligned. =A0AFAIUI, Linux a=
+lways
+> writes in 4K blocks to the disks anyway, so alignment is the only iss=
+ue -
+> and that's a performance issue, not a correctness one.
+>
+>
 
-Added tests for cases when:
-0  - there is no config file at all
-0a - config file has no domains defined
-9a - spare is in global domain
-15 - spare is in global domain for $platform metadata
+Yes, that's the impression i've gotten after reading about it too.
+As long as i create a 4KB aligned partition on the new drive that is
+at least as large as the old one and replace the old one with it in
+the array, it should just work?
 
-Test 4 pass condition changed for imsm metadata.
+I run dmcrypt and then lvm on top of the raid array though, trying to
+figure out what needs to be done with alignment with those...
 
-disk_policy only adds controller domain for imsm
-when config_rules_has_path=1.
-If there are any domains in config then every disk will have also
-a controller domain.
-As a result the array needing spares has at least
-one controller domain even when it doesn't have any other
-domains specified explicitly. In this case any spare in the same
-controller domain matches when it has no other domains from config.
-(This behaviour is different from the case when there is no paths
-in config at all as array domain then is null and no spare matches)
+Worst case i should be able to create a new properly aligned
+array/dmcrypt/lvm on the new drive, copy the old data over and add the
+old working drive to the new array since if it's 4K aligned it should
+also be 512B aligned?
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- tests/11spare-migration |   72 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 69 insertions(+), 3 deletions(-)
-
-diff --git a/tests/11spare-migration b/tests/11spare-migration
-index c8ef362..3567883 100644
---- a/tests/11spare-migration
-+++ b/tests/11spare-migration
-@@ -54,6 +54,33 @@ monitor(){
-        [ "$verbose" != "yes" ] || echo $mddevs $monitorpid
- }
- 
-+test0()
-+{
-+dsc "Test 0: No config file, no spare should be moved"
-+setupdevs 0 0 1 $platform
-+setupdevs 1 3 4 $platform
-+monitor 0 1
-+mdadm -a /dev/$c1 $dev2
-+mdadm --fail /dev/$v0 $dev0
-+# check that spare loop2 was not moved from container c1 to container c0
-+chksparemoved $c1 $c0 $dev2 n
-+tidyup
-+}
-+
-+test0a()
-+{
-+dsc "Test 0a: No domains in config file, no spare should be moved"
-+setupdevs 0 0 1 $platform
-+setupdevs 1 3 4 $platform
-+createconfig a
-+monitor 0 1
-+mdadm -a /dev/$c1 $dev2
-+mdadm --fail /dev/$v0 $dev0
-+# check that spare loop2 was not moved from container c1 to container c0
-+chksparemoved $c1 $c0 $dev2 n
-+tidyup
-+}
-+
- test1()
- {
- dsc "Test 1: Common domain, add disk to one container and fail first one in another container, spare should be moved"
-@@ -117,7 +144,7 @@ tidyup
- 
- test4()
- {
--dsc "Test 4: One domain holds one container, fail a disk in domain, and add disk to a container not described by domain, spare loop5 should not be moved"
-+dsc "Test 4: One domain holds one container, fail a disk in domain, and add disk to a container not described by domain, move if metadata allows"
- setupdevs 0 0 1 $platform
- setupdevs 1 3 4 $platform
- createconfig a
-@@ -125,7 +152,9 @@ createconfig domain-$platform $platform spare 0 1 2
- monitor 0 1
- mdadm --fail /dev/$v0 $dev1
- mdadm -a /dev/$c1 $dev5
--chksparemoved $c1 $c0 $dev5 n
-+unset shouldmove
-+[ "$platform" == "imsm" ] || shouldmove="n"
-+chksparemoved $c1 $c0 $dev5 $shouldmove
- tidyup
- }
- 
-@@ -236,7 +265,7 @@ tidyup
- 
- test9()
- {
--dsc "Test 9: imsm and native 1.2 - spare should be shared"
-+dsc "Test 9: imsm and native 1.2 - one domain, no metadata specified, spare should be moved"
- setupdevs 0 10 11 imsm
- setupdevs 1 8 9 1.2
- createconfig a
-@@ -248,6 +277,22 @@ chksparemoved $c1 $c0 $dev12
- tidyup
- }
- 
-+test9a()
-+{
-+dsc "Test 9a: imsm and native 1.2 - spare in global domain, should be moved"
-+setupdevs 0 10 11 imsm
-+setupdevs 1 8 9 1.2
-+createconfig a
-+createconfig domain-global noplatform spare 8 9 10 11 12
-+createconfig domain-1.2 1.2 spare 8 9
-+createconfig domain-imsm imsm spare 10 11
-+monitor 0 1
-+mdadm -a /dev/$c1 $dev12
-+mdadm --fail /dev/$v0 $dev10
-+chksparemoved $c1 $c0 $dev12
-+tidyup
-+}
-+
- test10()
- {
- dsc "Test 10: Two arrays on the same devices in container"
-@@ -335,8 +380,27 @@ chksparemoved $c1 $c0 $d2
- tidyup
- }
- 
-+test15()
-+{
-+dsc "Test 15: spare in global domain for $platform metadata, should be moved"
-+# this is like 9a but only one metadata used
-+setupdevs 0 10 11 $platform
-+setupdevs 1 8 9 $platform
-+createconfig a
-+createconfig domain-global $platform spare 8 9 10 11 12
-+createconfig domain-1 $platform spare 8 9
-+createconfig domain-2 $platform spare 10 11
-+monitor 0 1
-+mdadm -a /dev/$c1 $dev12
-+mdadm --fail /dev/$v0 $dev10
-+chksparemoved $c1 $c0 $dev12
-+tidyup
-+}
-+
- try()
- {
-+test0
-+test0a
- test1
- test1a
- test2
-@@ -351,6 +415,7 @@ if [ "$platform" != "1.2" ]; then
- fi
- test8
- test9
-+test9a
- if [ "$platform" != "1.2" ]; then
- # we can't create two subarrays on the same devices for native (without
- # partitions)
-@@ -360,6 +425,7 @@ test11
- test12
- test13
- test14
-+test15
- }
- 
- try_failed()
--- 
-1.7.1
-
+/Henrik
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
