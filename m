@@ -1,68 +1,73 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1 with rotating offsite disks for backup
-Date: Tue, 8 Feb 2011 11:17:43 +1100
-Message-ID: <20110208111743.1479308d@notabene.brown>
-References: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
+Subject: Re: Periodic RebuildStarted event
+Date: Tue, 8 Feb 2011 11:25:13 +1100
+Message-ID: <20110208112513.2b82111c@notabene.brown>
+References: <AANLkTikA=Qe1iwLMkB3V6RLdzRU0p4PB0xmFxJ7907Ez@mail.gmail.com>
+	<AANLkTinwowg1evk44=46VO+Eni1B=G5Mr_X1r32GO5eF@mail.gmail.com>
+	<20110207234411.GA93362@cons.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
+In-Reply-To: <20110207234411.GA93362@cons.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeff Klingner <klingner@stanford.edu>
+To: Martin Cracauer <cracauer@cons.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 7 Feb 2011 15:53:46 -0800 Jeff Klingner <klingner@stanford.edu> wrote:
+On Mon, 7 Feb 2011 18:44:11 -0500 Martin Cracauer <cracauer@cons.org> wrote:
 
-> I'm planning a backup system for my home server and have run into a question I can't find answered in the mailing list archives or the wiki.  Here's the plan:
+> I just got through the RebuildStarted event which seems to be
+> monthly.  This is being triggered by my Debian config, but before I
+> nuke it I'd like to know a little more.
 > 
-> 1. Install system and valuable data on a 3-disk raid1 array (call the disks A, B, and C).
-> 2. Remove disk C, put it offsite.  ("offsite" is moderately time-consuming to get to.)
-> 3a. Periodically, remove disk B, take it offsite, and retrieve disk C
-> 3b. Insert disk C, which will be re-synced to gain any changes made since it was removed.
-> 4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B and C.
+> If a real disk error happens during this rebuild on a raid5, would the
+> disk go into regular degraded mode or would it count as a double
+> fault?
+
+The monthly thing is a 'check', not a 'rebuild'  (yes, the 'monitor' email is
+a little misleading).
+So a real disk error will be handled correctly.  In fact the main point of a
+monthly check is to find and correct these latent read errors.
+
+
 > 
-> Thus I hope to get continuous protection against a single drive failure and protection back to the last offsite swap for corrupted or deleted data.
+> I also noticed that recently all the checks for all the arrays happen
+> simultaneously.  That's bad because most of them share the same
+> physical disks.  Am I imagining this or was the system smart enough to
+> do them one after another until recently?
+
+Arrays that share a partition certainly should not be
+synced/recovered/checked at the same time (unless you set
+sync_force_parallel in sysfs).
+
+If you have evidence that they do I would like to see that evidence.
+
 > 
-> My questions are:
-> 
-> In step 3b, when a disk that was a member of the array in the past but has been removed for a while is re-inserted into the 3-disk array, how does the raid system know to update C with A's contents and not A with C's contents?  Is there a timestamp involved, and if so, how can I examine it before syncing?
-> 
-> Is it important to always rotate disks B and C, leaving one that never leaves the computer, or does it make no difference which of the two live disks I pluck out to swap with the offsite disk when I make the trip?  Can all three disks take turns offsite, so that they all have the same duty cycle?
-> 
-> I saw in another list message the advice to use two stacked raid1s for this application: http://marc.info/?l=linux-raid&m=126761399008775&w=2
-> > Also, if you want two rotating backups I would create two stacked raid1s.
-> > 
-> > mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-backup
-> > mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
-> > mkfs -j /dev/md1
-> 
-> 
-> Are there important differences between the single 3-disk raid1 array I'm planning to use and this stacked configuration?
+> Do you do period checks? I get lots of device mismatches reported but
+> apparently that's normal if there's write activity.  The whole thing
+> sound contra-productive to me and might panic new users.
 
-Yes.  The single 3-disk RAID1 array won't work, the stacked configuration
-will.
+Periodic checks are a good thing.
+Yes, it can cause confusion.  That is not good, but a better approach has not
+yet been found.  Patches welcome.
 
+What would be really good is to just do an hour of check every night.  It is
+quite possible to get the kernel to do this, but it requires some non-trivial
+scripting that no-one has written yet.  You need to record where you are up
+to on which array, and when you last did each array.  Then start either the
+'next' array at the beginning, or the 'current' array at the current point
+(write to sync_min).
+Then wait for however long you want, abort the check (write 'idle' to
+'sync_action') and find out where it got up to (read sync_min) and record
+that for next time.
 
-md can resync 'just the changed blocks' by using the 'write intent bitmap'
-and event counters.
-However it only clears the bits in the bitmap when the array is not degraded.
-In your suggestion the 3-drive RAID1 is always degraded so bits are never
-cleared, so each resync is effectively a complete resync.
-
-In the stacked configuration there are two bitmaps so md can track of
-different differences on two different devices.
-
-You can see the event counts on each device with
-
-  mdadm --examine /dev/A
-
-The bitmap knows whether a device is new enough to be safely recovered based
-on the bitmap by storing the event count of the time a bit was cleared 
-'Events Cleared'.
-
-Hope that helps.
+Great project for someone.....
 
 NeilBrown
+
+
+
+> 
+> Martin
 
