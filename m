@@ -1,109 +1,122 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Periodic RebuildStarted event
-Date: Mon, 7 Feb 2011 22:28:01 -0200
-Message-ID: <AANLkTi=DbmP5WMwY5S6ZGgrZsUrzZ7K0=MN4ZHfdJn+U@mail.gmail.com>
-References: <AANLkTikA=Qe1iwLMkB3V6RLdzRU0p4PB0xmFxJ7907Ez@mail.gmail.com>
-	<AANLkTinwowg1evk44=46VO+Eni1B=G5Mr_X1r32GO5eF@mail.gmail.com>
-	<20110207234411.GA93362@cons.org>
-	<AANLkTimBTE1uutF3ZsjVTFsBn-AOSTJ8Oa=Y1dprtHxc@mail.gmail.com>
-	<20110207235909.GA2142@cons.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: After 0->10 takeover process hangs at "wait_barrier"
+Date: Tue, 8 Feb 2011 11:42:08 +1100
+Message-ID: <20110208114208.092cfd41@notabene.brown>
+References: <BE2BFE91933D1B4089447C6448604080670E9A24@irsmsx503.ger.corp.intel.com>
+	<20110203183548.3b875693@notabene.brown>
+	<BE2BFE91933D1B4089447C64486040806713E8FE@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110207235909.GA2142@cons.org>
+In-Reply-To: <BE2BFE91933D1B4089447C64486040806713E8FE@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Cracauer <cracauer@cons.org>
-Cc: linux-raid@vger.kernel.org
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-i don=B4t know how sync is executed, but each write you send to a ssd
-make the ssd write period of life smaller
-if it=B4s just a READ command no problem, but a WRITE command (sync) is
-a problem for ssd
-a check (a sync without WRITE) could be nice... it just need tell us
-how many mirrors are unsync and how many bytes(sectors) in each mirror
-(fail disk if it=B4s not sync, start a resync, these features as a
-command line option...)
+On Thu, 3 Feb 2011 16:21:18 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
 
-2011/2/7 Martin Cracauer <cracauer@cons.org>:
-> Roberto Spadim wrote on Mon, Feb 07, 2011 at 09:52:34PM -0200:
->> i don?t know if exists, but maybe a internal mdadm command to check
->> array (if have mirrors or ecc/checksum) with a limited speed (mb/s)
->> read operation could help with periodic check (instead resync)
->
-> I don't experience performance problems from this. =A0Linux md seems =
-to
-> be very good at putting the sync at a backburner when there is real
-> activity. =A0Just today I benchmarked an array that was in progress o=
-f
-> building a raid5 (initial sync). =A0Left most of the cycles to the
-> benchmark and took endless. =A0That should be configureable, too (for
-> those who want the sync done with priority but can't kill activity),
-> but anyway my concern isn't performance.
->
-> Martin
->
->> 2011/2/7 Martin Cracauer <cracauer@cons.org>:
->> > I just got through the RebuildStarted event which seems to be
->> > monthly. ?This is being triggered by my Debian config, but before =
-I
->> > nuke it I'd like to know a little more.
->> >
->> > If a real disk error happens during this rebuild on a raid5, would=
- the
->> > disk go into regular degraded mode or would it count as a double
->> > fault?
->> >
->> > I also noticed that recently all the checks for all the arrays hap=
-pen
->> > simultaneously. ?That's bad because most of them share the same
->> > physical disks. ?Am I imagining this or was the system smart enoug=
-h to
->> > do them one after another until recently?
->> >
->> > Do you do period checks? I get lots of device mismatches reported =
-but
->> > apparently that's normal if there's write activity. ?The whole thi=
-ng
->> > sound contra-productive to me and might panic new users.
->> >
->> > Martin
->> > --
->> > %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%=
-%
->> > Martin Cracauer <cracauer@cons.org> ? http://www.cons.org/cracauer=
-/
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at ?http://vger.kernel.org/majordomo-info.html
->> >
->>
->>
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->
+> 
+> 
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Thursday, February 03, 2011 8:36 AM
+> > To: Wojcik, Krzysztof
+> > Cc: linux-raid@vger.kernel.org
+> > Subject: Re: After 0->10 takeover process hangs at "wait_barrier"
+> > 
+> > On Wed, 2 Feb 2011 12:15:28 +0000 "Wojcik, Krzysztof"
+> > <krzysztof.wojcik@intel.com> wrote:
+> > 
+> > > Neil,
+> > >
+> > > I would like to return to problem related to raid0->raid10 takeover
+> > operation.
+> > > I observed following symptoms:
+> > > 1. After raid0->raid10 takeover we have array with 2 missing disks.
+> > When we add disk for rebuild, recovery process starts as expected but
+> > it does not finish- it stops at about 90%, md126_resync process hangs
+> > in "D" state
+> > > 2. Similar behavior is when we have mounted raid0 array and we
+> > execute takeover to raid10. After this when we try to unmount array- it
+> > causes process umount hangs in "D"
+> > >
+> > > In scenarios above processes hang at the same function- wait_barrier
+> > in raid10.c.
+> > > Process waits in macro "wait_event_lock_irq" until the "!conf-
+> > >barrier" condition will be true. In scenarios above it never happens.
+> > >
+> > > Issue does not appear if after takeover we stop array and assemble it
+> > again- we can rebuild disks without problem. It indicates that raid0-
+> > >raid10 takeover process does not initialize all array parameters in
+> > proper way.
+> > >
+> > > Do you have any suggestions what can I do to get closer to solving
+> > this problem?
+> > 
+> > Yes.
+> > 
+> > Towards the end of level_store, after calling pers->run, we call
+> > mddev_resume..
+> > This calls pers->quiesce(mddev, 0)
+> > 
+> > With RAID10, that calls lower_barrier.
+> > However raise_barrier hadn't been called on that 'conf' yet,
+> > so conf->barrier becomes negative, which is bad.
+> > 
+> > Maybe raid10_takeover_raid0 should call raise_barrier on the conf
+> > before returning it.
+> > I suspect that is the right approach, but I would need to review some
+> > of the code in various levels to make sure it makes sense, and would
+> > need to add some comments to clarify this.
+> > 
+> > Could you just try that one change and see if it fixed the problem?
+> 
+> Yes. This is a good clue.
+> I've prepared kernel with change below and it fix the problem.
+
+Good, thanks.
+
+> I understand it is only workaround and the final solution must be found?
+
+After some thought, I've decided that this is the final solution - at least
+for now.
+I might re-write the 'quiesce' stuff one day, but until then, I think this
+solution is correct.
+
+Thanks,
+NeilBrown
+
+
+> 
+> Regards
+> Krzysztof
+> 
+> > 
+> > i.e.
+> > 
+> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> > index 69b6595..10b636d 100644
+> > --- a/drivers/md/raid10.c
+> > +++ b/drivers/md/raid10.c
+> > @@ -2467,7 +2467,7 @@ static void *raid10_takeover_raid0(mddev_t
+> > *mddev)
+> >  		list_for_each_entry(rdev, &mddev->disks, same_set)
+> >  			if (rdev->raid_disk >= 0)
+> >  				rdev->new_raid_disk = rdev->raid_disk * 2;
+> > -
+> > +	conf->barrier++;
+> >  	return conf;
+> >  }
+> > 
+> > 
+> > 
+> > Thanks,
+> > NeilBrown
 > --
-> %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-> Martin Cracauer <cracauer@cons.org> =A0 http://www.cons.org/cracauer/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
