@@ -1,58 +1,98 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.38
-Date: Tue, 8 Feb 2011 15:20:44 +1100
-Message-ID: <20110208152044.06dfc9ba@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: raid1 with rotating offsite disks for backup
+Date: Mon, 7 Feb 2011 22:53:30 -0600
+Message-ID: <A3.F7.13137.B4CC05D4@cdptpa-omtalb.mail.rr.com>
+References: <20110208111743.1479308d@notabene.brown>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110208111743.1479308d@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>, 'Jeff Klingner' <klingner@stanford.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Linus,
- here are a few more md updates.
- most are bugs in relatively recent code.
- This is small "enhancement" in there in that raid1->raid0 conversion is now
- possible.  That is largely just an extension to the other conversions that
- were added in the merge window.
 
- One fix (from Chris Mason) is tagged for -stable.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Monday, February 07, 2011 6:18 PM
+> To: Jeff Klingner
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: raid1 with rotating offsite disks for backup
+> 
+> On Mon, 7 Feb 2011 15:53:46 -0800 Jeff Klingner <klingner@stanford.edu>
+> wrote:
+> 
+> > I'm planning a backup system for my home server and have run into a
+> question I can't find answered in the mailing list archives or the wiki.
+> Here's the plan:
+> >
+> > 1. Install system and valuable data on a 3-disk raid1 array (call the
+> disks A, B, and C).
+> > 2. Remove disk C, put it offsite.  ("offsite" is moderately time-
+> consuming to get to.)
+> > 3a. Periodically, remove disk B, take it offsite, and retrieve disk C
+> > 3b. Insert disk C, which will be re-synced to gain any changes made
+> since it was removed.
+> > 4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B
+> and C.
+> >
+> > Thus I hope to get continuous protection against a single drive failure
+> and protection back to the last offsite swap for corrupted or deleted
+> data.
+> >
+> > My questions are:
+> >
+> > In step 3b, when a disk that was a member of the array in the past but
+> has been removed for a while is re-inserted into the 3-disk array, how
+> does the raid system know to update C with A's contents and not A with C's
+> contents?  Is there a timestamp involved, and if so, how can I examine it
+> before syncing?
+> >
+> > Is it important to always rotate disks B and C, leaving one that never
+> leaves the computer, or does it make no difference which of the two live
+> disks I pluck out to swap with the offsite disk when I make the trip?  Can
+> all three disks take turns offsite, so that they all have the same duty
+> cycle?
+> >
+> > I saw in another list message the advice to use two stacked raid1s for
+> this application: http://marc.info/?l=linux-raid&m=126761399008775&w=2
+> > > Also, if you want two rotating backups I would create two stacked
+> raid1s.
+> > >
+> > > mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-
+> backup
+> > > mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
+> > > mkfs -j /dev/md1
+> >
+> >
+> > Are there important differences between the single 3-disk raid1 array
+> I'm planning to use and this stacked configuration?
+> 
+> Yes.  The single 3-disk RAID1 array won't work, the stacked configuration
+> will.
 
-Thanks,
-NeilBrown
+	Oh.  I think I mis-read his original post.  When I read it the first
+time, I inferred he was attempting this to do a full backup of the array.
+Reading again, I think you are correct.  If he wants to just update the data
+on the array, I think rsync (or maybe dar) would be a better solution.  If
+he wants a full backup from scratch, I don't see why a RAID1 solution would
+not work, do you?
 
+> md can resync 'just the changed blocks' by using the 'write intent bitmap'
+> and event counters.
+> However it only clears the bits in the bitmap when the array is not
+> degraded.
+> In your suggestion the 3-drive RAID1 is always degraded so bits are never
+> cleared, so each resync is effectively a complete resync.
 
-The following changes since commit 1f0324caefd39985e9fe052fac97da31694db31e:
+	Yeah, to do a full backup from scratch, I think I would set the
+array up as a 2 drive array, take the array off-line, remove one drive,
+assemble the array, and then add the spare.  'Clumsy, though.  I still think
+he would be better off with rsync or dar.
 
-  Merge branch 'stable/bug-fixes-rc2' of git://git.kernel.org/pub/scm/linux/kernel/git/konrad/xen (2011-01-28 12:24:34 +1000)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-Chris Mason (1):
-      md_make_request: don't touch the bio after calling make_request
-
-Krzysztof Wojcik (2):
-      Add raid1->raid0 takeover support
-      FIX: md: process hangs at wait_barrier after 0->10 takeover
-
-NeilBrown (8):
-      md: revert change to raid_disks on failure.
-      md: simplify some 'if' conditionals in raid5_start_reshape.
-      md: fix the test for finding spares in raid5_start_reshape.
-      md: don't abort checking spares as soon as one cannot be added.
-      md: Remove the AllReserved flag for component devices.
-      md: Don't use remove_and_add_spares to remove failed devices from a read-only array
-      md: don't clear curr_resync_completed at end of resync.
-      md: Don't allow slot_store while resync/recovery is happening.
-
- drivers/md/md.c     |   47 +++++++++++++++++++++++++++------------
- drivers/md/md.h     |    2 -
- drivers/md/raid0.c  |   40 ++++++++++++++++++++++++++++++++++
- drivers/md/raid10.c |    6 +++-
- drivers/md/raid5.c  |   60 +++++++++++++++++++++++++-------------------------
- 5 files changed, 106 insertions(+), 49 deletions(-)
