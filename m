@@ -1,76 +1,58 @@
-From: NeilBrown <neilb@suse.de>
+From: Martin Cracauer <cracauer@cons.org>
 Subject: Re: raid1 with rotating offsite disks for backup
-Date: Tue, 8 Feb 2011 13:02:12 +1100
-Message-ID: <20110208130212.71a7064d@notabene.brown>
+Date: Mon, 7 Feb 2011 22:04:17 -0500
+Message-ID: <20110208030417.GA65865@cons.org>
 References: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
-	<20110208111743.1479308d@notabene.brown>
-	<CD05E25F-0580-4BDE-B4C7-041D15B9C73F@stanford.edu>
-	<20110208121923.5908630d@notabene.brown>
-	<47409A64-9CF1-4E12-9DAD-F7079298B1FE@stanford.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47409A64-9CF1-4E12-9DAD-F7079298B1FE@stanford.edu>
+Content-Disposition: inline
+In-Reply-To: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jeff Klingner <klingner@stanford.edu>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 7 Feb 2011 17:32:48 -0800 Jeff Klingner <klingner@stanford.edu> wrote:
-
-> >>>> Also, if you want two rotating backups I would create two stacked raid1s.
-> >>>> 
-> >>>> mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-backup
-> >>>> mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
-> >>>> mkfs -j /dev/md1
+Jeff Klingner wrote on Mon, Feb 07, 2011 at 03:53:46PM -0800: 
+> I'm planning a backup system for my home server and have run into a question I can't find answered in the mailing list archives or the wiki.  Here's the plan:
 > 
+> 1. Install system and valuable data on a 3-disk raid1 array (call the disks A, B, and C).
+> 2. Remove disk C, put it offsite.  ("offsite" is moderately time-consuming to get to.)
+> 3a. Periodically, remove disk B, take it offsite, and retrieve disk C
+> 3b. Insert disk C, which will be re-synced to gain any changes made since it was removed.
+> 4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B and C.
 > 
-> 
-> On Feb 7, 2011, at 5:19 PM, NeilBrown wrote:
-> > I'm surprised that you found the correct advise, and chose not to follow
-> > it .....
-> 
-> Thanks again for your advice.  I didn't search the list until after completing my initial setup; my mistake and my lesson learned: research first.
-> 
-> > The array you will end up installing on is (slightly) smaller than than the
-> > array you have created.  So no: you cannot re-arrange things - you have to
-> > start again.
-> > 
-> > 
-> > (well, to be honest, it is possible that you could resize whatever is on the
-> > array and then build the secondary array and make it work.  But that path is
-> > error-prone and this margin is not large enough to properly describe the
-> > process).
-> 
-> Reckless fool that I am, I'm going to try it anyway.  Here's my rough plan:
-> 
-> 1. Degrade the 3-disk raid1 array by removing two disks, leaving only one, and leaving the array running.
-> 2. Set up the first 2-disk array (md0 in your description) de novo on the two freed disks
-> 3. Move my data from the original raid1 array (with only 1 of three disks present) to the new 2-disk md0 via lvm mirroring
+> Thus I hope to get continuous protection against a single drive failure and protection back to the last offsite swap for corrupted or deleted data.
 
-Nope.  That would be wrong.  You need to create both mirrors before moving
-any data.
-So:
+You are aware that this will only work reliably if at the point of
+time when you remove the disk the filesystem(s) on it are one of:
+- mounted readonly
+- unmounted
+- machine is off
 
-  3.  Set up the second 2-disk array (md1) as a degraded array containing
-  only md0 as a member:
+Linux doesn't really have a `umount -f`, so the first two options only
+work if you can get rid of all processes that might want to hold on to
+the filesystem at the time when you want to remove your disk.  A
+possible hack is going through a NFS mount which does support forceful
+operations on the filesystem in Linux.
 
-     mdadm --create /dev/md1 -l1 -n2 -b internal /dev/md0 missing
+As has been pointed out, you don't gain much from the added
+complexity.  If you would just rsync to one of the spare drives you
+would only copy over what actually changed, and not do a full re-sync
+of all blocks.  And that works fine with the source filesystem being
+mounted read-write.
 
-  3a. move my data from the original raid1 to the new md1 using pvmove
+Another problem is that you are temporarily screwed if disk A dies
+while re-syncing B, since C isn't with you, A is hosed and B is
+half-synced.
 
-> 4. Free the third disk by finally taking down the original raid1 array
-> 5. create the second 2-device array (md1) using md0 and the freed third disk.  Somehow ensure that the md0 component has primacy for syncing.
+What you do lose is that the raid1 based solution would keep the new
+disk up-to-date with then-new file disk writes.  But the problem with
+filesystem status is hard to solve.  Overall going 4 disks with raid1
+local and having two disks that are rsynced on demand is what I would
+do.
 
-Then step 5 becomes:
-  5.  Add this newly freed disk to the degraded md1:
-    mdadm /dev/md1 --add /dev/whatever
-
-NeilBrown
-
-
-
-> 
-> Jeff
-
+Martin
+-- 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Martin Cracauer <cracauer@cons.org>   http://www.cons.org/cracauer/
