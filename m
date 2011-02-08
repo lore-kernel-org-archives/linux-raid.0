@@ -1,122 +1,59 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: After 0->10 takeover process hangs at "wait_barrier"
-Date: Tue, 8 Feb 2011 11:42:08 +1100
-Message-ID: <20110208114208.092cfd41@notabene.brown>
-References: <BE2BFE91933D1B4089447C6448604080670E9A24@irsmsx503.ger.corp.intel.com>
-	<20110203183548.3b875693@notabene.brown>
-	<BE2BFE91933D1B4089447C64486040806713E8FE@irsmsx503.ger.corp.intel.com>
+Subject: Re: [PATCH] fix: array is reassembled inactive if stopped during
+ resync
+Date: Tue, 8 Feb 2011 11:46:38 +1100
+Message-ID: <20110208114638.46bb9f56@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EC8FB8B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C64486040806713E8FE@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F010EC8FB8B@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 3 Feb 2011 16:21:18 +0000 "Wojcik, Krzysztof"
-<krzysztof.wojcik@intel.com> wrote:
+On Thu, 3 Feb 2011 13:40:56 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
+> >From 085fade553c653f89c2b486b7ec552303a5fb9f1 Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Thu, 3 Feb 2011 14:30:43 +0100
+> Subject: [PATCH] fix: array is reassembled inactive if stopped during resync
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 > 
+> If initial resync or recovery of a redundant array is not finished
+> before it is stopped then during assembly md will start it as inactive.
+> Writing readonly to array_state in assemble_container_content
+> fails because md thinks the array is during reshape.
 > 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Thursday, February 03, 2011 8:36 AM
-> > To: Wojcik, Krzysztof
-> > Cc: linux-raid@vger.kernel.org
-> > Subject: Re: After 0->10 takeover process hangs at "wait_barrier"
-> > 
-> > On Wed, 2 Feb 2011 12:15:28 +0000 "Wojcik, Krzysztof"
-> > <krzysztof.wojcik@intel.com> wrote:
-> > 
-> > > Neil,
-> > >
-> > > I would like to return to problem related to raid0->raid10 takeover
-> > operation.
-> > > I observed following symptoms:
-> > > 1. After raid0->raid10 takeover we have array with 2 missing disks.
-> > When we add disk for rebuild, recovery process starts as expected but
-> > it does not finish- it stops at about 90%, md126_resync process hangs
-> > in "D" state
-> > > 2. Similar behavior is when we have mounted raid0 array and we
-> > execute takeover to raid10. After this when we try to unmount array- it
-> > causes process umount hangs in "D"
-> > >
-> > > In scenarios above processes hang at the same function- wait_barrier
-> > in raid10.c.
-> > > Process waits in macro "wait_event_lock_irq" until the "!conf-
-> > >barrier" condition will be true. In scenarios above it never happens.
-> > >
-> > > Issue does not appear if after takeover we stop array and assemble it
-> > again- we can rebuild disks without problem. It indicates that raid0-
-> > >raid10 takeover process does not initialize all array parameters in
-> > proper way.
-> > >
-> > > Do you have any suggestions what can I do to get closer to solving
-> > this problem?
-> > 
-> > Yes.
-> > 
-> > Towards the end of level_store, after calling pers->run, we call
-> > mddev_resume..
-> > This calls pers->quiesce(mddev, 0)
-> > 
-> > With RAID10, that calls lower_barrier.
-> > However raise_barrier hadn't been called on that 'conf' yet,
-> > so conf->barrier becomes negative, which is bad.
-> > 
-> > Maybe raid10_takeover_raid0 should call raise_barrier on the conf
-> > before returning it.
-> > I suspect that is the right approach, but I would need to review some
-> > of the code in various levels to make sure it makes sense, and would
-> > need to add some comments to clarify this.
-> > 
-> > Could you just try that one change and see if it fixed the problem?
+> In fact we only have a reshape if both current and previous map
+> states are the same. Otherwise we may have resync or recovery.
+> Setting reshape_active in such cases causes the issue.
 > 
-> Yes. This is a good clue.
-> I've prepared kernel with change below and it fix the problem.
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+>  super-intel.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index d049cb7..59356e0 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -1772,7 +1772,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  		__le32_to_cpu(map_to_analyse->blocks_per_member);
+>  	memset(info->uuid, 0, sizeof(info->uuid));
+>  	info->recovery_start = MaxSector;
+> -	info->reshape_active = (prev_map != NULL);
+> +	info->reshape_active = (prev_map != NULL) &&
+> +			       (map->map_state == prev_map->map_state);
+>  	if (info->reshape_active)
+>  		info->delta_disks = map->num_members - prev_map->num_members;
+>  	else
 
-Good, thanks.
 
-> I understand it is only workaround and the final solution must be found?
+Applied, thanks.
 
-After some thought, I've decided that this is the final solution - at least
-for now.
-I might re-write the 'quiesce' stuff one day, but until then, I think this
-solution is correct.
-
-Thanks,
 NeilBrown
-
-
-> 
-> Regards
-> Krzysztof
-> 
-> > 
-> > i.e.
-> > 
-> > diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> > index 69b6595..10b636d 100644
-> > --- a/drivers/md/raid10.c
-> > +++ b/drivers/md/raid10.c
-> > @@ -2467,7 +2467,7 @@ static void *raid10_takeover_raid0(mddev_t
-> > *mddev)
-> >  		list_for_each_entry(rdev, &mddev->disks, same_set)
-> >  			if (rdev->raid_disk >= 0)
-> >  				rdev->new_raid_disk = rdev->raid_disk * 2;
-> > -
-> > +	conf->barrier++;
-> >  	return conf;
-> >  }
-> > 
-> > 
-> > 
-> > Thanks,
-> > NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
