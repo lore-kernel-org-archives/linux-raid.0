@@ -1,52 +1,49 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/6] Reshape fixes (expansion)
-Date: Tue, 08 Feb 2011 14:30:28 +0100
-Message-ID: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 2/6] UT FIX: imsm container can have different blocks number
+Date: Tue, 08 Feb 2011 14:30:45 +0100
+Message-ID: <20110208133045.8787.69711.stgit@gklab-128-013.igk.intel.com>
+References: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-The following series adds some fixes for reshape (expansion).
+When imsm container is created it have different blocks number
+in /proc/mdstat depending on containing array raid level (raid0/raid5).
+raid5 case:
+md127 : inactive sdd[3](S) sde[2](S) sdc[1](S) sdb[0](S)
+      2884 blocks super external:imsm
 
-A while ago mdadm unit tests (suits 12 and 13) works correctly, now I've found problems.
-I've learned that containers created for raid5 and raid0 has different number of blocks in mdstat.
-I've put mdstat partial output to patch description:  UT FIX: imsm container can have different blocks number
-I'm not 100% sure that this is fix (for changed behavior), not workaround for container creation problem.
-This fix is first of fixes (3) that enables reshape (12, 13) UT.
-If you find this more as workaround, this patch is good point for discussion what change is correct.
+raid0 case:
+md127 : inactive sdd[3](S) sde[2](S) sdc[1](S) sdb[0](S)
+      836 blocks super external:imsm
 
-Patches:
-      FIX: compare blocks on all data disks
-      FIX: Compare the same units
-makes changes for blocks computing verification. After those 2 more  patches UT (12, 13) works. 
-Please let me know what you are thinking about them. It is possible that this is not final patch also,
-but I've tried to find out what this condition should do, and change code to archive it (IMHO).
+Due to this, it cannot be compared to one value for both cases.
 
-Rest of patches addresses other issues, I can observe during expansion.
+Test imsm container existence before unit test run only.
 
-BR
-Adam
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (6):
-      FIX: md runs recovery instead reshape for growing single disk raid0 array
-      FIX: Container can be left frozen
-      FIX: compare blocks on all data disks
-      FIX: Compare the same units
-      UT FIX: imsm container can have different blocks number
-      imsm: FIX: Wrong output string format
-
-
- Grow.c                  |    9 +++++++--
- super-intel.c           |    4 ++--
  tests/env-imsm-template |    2 +-
- 3 files changed, 10 insertions(+), 5 deletions(-)
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
--- 
-Signature
+diff --git a/tests/env-imsm-template b/tests/env-imsm-template
+index 74c43c6..7a2890c 100644
+--- a/tests/env-imsm-template
++++ b/tests/env-imsm-template
+@@ -2,7 +2,7 @@ imsm_check() {
+     udevadm settle
+     case $1 in
+     container )
+-        grep -s "$(((418 * $2) / 2)) blocks super external:imsm" /proc/mdstat > /dev/null || {
++        grep -s "blocks super external:imsm" /proc/mdstat > /dev/null || {
+             echo >&2 "**Fatal** Correctly formed container not found"; cat /proc/mdstat; exit 1; }
+         ;;
+     member )
+
