@@ -1,46 +1,31 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 6/6] FIX: md runs recovery instead reshape for growing single
-	disk raid0 array
-Date: Tue, 08 Feb 2011 14:31:17 +0100
-Message-ID: <20110208133117.8787.6335.stgit@gklab-128-013.igk.intel.com>
-References: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: Single-drive RAID0
+Date: Tue, 8 Feb 2011 16:15:53 +0000
+Message-ID: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Problem occurs when we want to expand single disk raid0 array.
-This is done via degraded 2 disks raid4 array. When new spare disk
-for reshape is added to array, md immediately initiates recovery before
-mdadm can configure and start reshape. This is due fact that 2 disk
-raid4/5 array is special md case.
-Mdmon does nothing here because container is blocked.
-This is caused because after takeover array is not in frozen state in md.
+Neil,
 
-Put array in to frozen state after takeover to allow mdadm to finish
-configuration before reshape is executed in md.
+I try to create a single-drive RAID0 array with data preservation.
+It means I have a single disk with partitions and data on them. 
+I would like to migrate this single disk to RAID0 array and then grow it to N devices.
+Of course I expect partitions with my useful data will be mapped to corresponding MD block devices (/dev/md126p1, /dev/md126p2 etc.). Indeed they are but when I try to mount new block device it disappears from /dev directory and mount is not succeeded. 
+/var/log/messages shows all the time: 
+md126: p1
+md126: detected capacity change from 0 to xxxxxxxxxxxxx
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+It is not always reproducible but very often.
+I try this operation on 0.9 and imsm metadata. Symptoms are similar.
 
- Grow.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Do you have any suggestions? How to fix this issue?
 
-diff --git a/Grow.c b/Grow.c
-index e77ab80..88e03ef 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1677,6 +1677,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 			fprintf(stderr, Name ": level of %s changed to %s\n",
- 				devname, c);	
- 		orig_level = info->array.level;
-+		sysfs_freeze_array(info);
- 
- 		if (reshape.level > 0 && st->ss->external) {
- 			/* make sure mdmon is aware of the new level */
-
+Regards
+Krzysztof
