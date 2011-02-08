@@ -1,51 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/2] FIX: Process hangs at wait_barrier
-Date: Tue, 8 Feb 2011 11:50:30 +1100
-Message-ID: <20110208115030.3cc6b2f0@notabene.brown>
-References: <20110204130757.6426.81544.stgit@gklab-128-111.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Jeff Klingner <klingner@stanford.edu>
+Subject: Re: raid1 with rotating offsite disks for backup
+Date: Mon, 7 Feb 2011 17:03:55 -0800
+Message-ID: <CD05E25F-0580-4BDE-B4C7-041D15B9C73F@stanford.edu>
+References: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu> <20110208111743.1479308d@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110204130757.6426.81544.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110208111743.1479308d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 04 Feb 2011 14:18:18 +0100 Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
 
-> Patches resolve problem with process crash at wait_barrier()
-> after raid0->raid10 takeover.
-> First patch resolve this particular problem.
-> Solution is similar to RAID1 barrier implementation.
-> Second is proposal for general protection against barrier
-> become negative.
+On Feb 7, 2011, at 4:17 PM, NeilBrown wrote:
+
+> On Mon, 7 Feb 2011 15:53:46 -0800 Jeff Klingner <klingner@stanford.edu> wrote:
 > 
-> ---
+>> I'm planning a backup system for my home server and have run into a question I can't find answered in the mailing list archives or the wiki.  Here's the plan:
+>> 
+>> 1. Install system and valuable data on a 3-disk raid1 array (call the disks A, B, and C).
+>> 2. Remove disk C, put it offsite.  ("offsite" is moderately time-consuming to get to.)
+>> 3a. Periodically, remove disk B, take it offsite, and retrieve disk C
+>> 3b. Insert disk C, which will be re-synced to gain any changes made since it was removed.
+>> 4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B and C.
+>> 
+>> Thus I hope to get continuous protection against a single drive failure and protection back to the last offsite swap for corrupted or deleted data.
+>> 
+>> I saw in another list message the advice to use two stacked raid1s for this application: http://marc.info/?l=linux-raid&m=126761399008775&w=2
+>>> Also, if you want two rotating backups I would create two stacked raid1s.
+>>> 
+>>> mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-backup
+>>> mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
+>>> mkfs -j /dev/md1
+>> 
+>> 
+>> Are there important differences between the single 3-disk raid1 array I'm planning to use and this stacked configuration?
 > 
-> Krzysztof Wojcik (2):
->       FIX: md: process hangs at wait_barrier after 0->10 takeover
-
-Applied, thanks.
-
-
->       FIX: md: Prevent barrier become negative
-
-If we ever trying to make 'barrier' negative, that is a bug somewhere.
-So I would prefer:
-
-   BUG_ON(conf->barrier <= 0);
-   conf->barrier--;
-
-NeilBrown
-
-
+> Yes.  The single 3-disk RAID1 array won't work, the stacked configuration
+> will.
 > 
-> 
->  drivers/md/raid1.c  |    3 ++-
->  drivers/md/raid10.c |    9 ++++++---
->  2 files changed, 8 insertions(+), 4 deletions(-)
-> 
+
+Goodness, I'm glad I asked!  Thank you!  I've already done step 1.  Do you know if I can transition to the stacked configuration without erasing the disks?  That is, generally speaking, can I change the logical arrangement of the devices in raid1 array(s), then re-sync and keep the current (lvm) storage system built on top of the raid intact?
+
+Jeff
+
+
 
