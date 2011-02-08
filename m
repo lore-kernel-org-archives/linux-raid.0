@@ -1,128 +1,68 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Temporarily Disable Array
-Date: Mon, 7 Feb 2011 18:14:37 -0600
-Message-ID: <4E.7A.13137.FEA805D4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTiktOdqq5Y3OWvU5dusDy+t_guEo88jm=DN-HnR8@mail.gmail.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 with rotating offsite disks for backup
+Date: Tue, 8 Feb 2011 11:17:43 +1100
+Message-ID: <20110208111743.1479308d@notabene.brown>
+References: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTiktOdqq5Y3OWvU5dusDy+t_guEo88jm=DN-HnR8@mail.gmail.com>
+In-Reply-To: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Jeff Klingner <klingner@stanford.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 7 Feb 2011 15:53:46 -0800 Jeff Klingner <klingner@stanford.edu> wrote:
+
+> I'm planning a backup system for my home server and have run into a question I can't find answered in the mailing list archives or the wiki.  Here's the plan:
+> 
+> 1. Install system and valuable data on a 3-disk raid1 array (call the disks A, B, and C).
+> 2. Remove disk C, put it offsite.  ("offsite" is moderately time-consuming to get to.)
+> 3a. Periodically, remove disk B, take it offsite, and retrieve disk C
+> 3b. Insert disk C, which will be re-synced to gain any changes made since it was removed.
+> 4. Repeat steps 3a and 3b indefinitely, alternating the roles of disks B and C.
+> 
+> Thus I hope to get continuous protection against a single drive failure and protection back to the last offsite swap for corrupted or deleted data.
+> 
+> My questions are:
+> 
+> In step 3b, when a disk that was a member of the array in the past but has been removed for a while is re-inserted into the 3-disk array, how does the raid system know to update C with A's contents and not A with C's contents?  Is there a timestamp involved, and if so, how can I examine it before syncing?
+> 
+> Is it important to always rotate disks B and C, leaving one that never leaves the computer, or does it make no difference which of the two live disks I pluck out to swap with the offsite disk when I make the trip?  Can all three disks take turns offsite, so that they all have the same duty cycle?
+> 
+> I saw in another list message the advice to use two stacked raid1s for this application: http://marc.info/?l=linux-raid&m=126761399008775&w=2
+> > Also, if you want two rotating backups I would create two stacked raid1s.
+> > 
+> > mdadm -C /dev/md0 -l1 -n2 -b internal  /dev/main-device /dev/first-backup
+> > mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 /dev/second-backup
+> > mkfs -j /dev/md1
+> 
+> 
+> Are there important differences between the single 3-disk raid1 array I'm planning to use and this stacked configuration?
+
+Yes.  The single 3-disk RAID1 array won't work, the stacked configuration
+will.
 
 
-> -----Original Message-----
-> From: hansbkk@gmail.com [mailto:hansbkk@gmail.com]
-> Sent: Sunday, February 06, 2011 9:07 AM
-> To: lrhorer@satx.rr.com
-> Subject: Re: Temporarily Disable Array
->=20
-> I assume no one every replied (and I can't comment other than "sounds
-> good to me" 8-)
->=20
-> FFR did you do this and did it work?
+md can resync 'just the changed blocks' by using the 'write intent bitmap'
+and event counters.
+However it only clears the bits in the bitmap when the array is not degraded.
+In your suggestion the 3-drive RAID1 is always degraded so bits are never
+cleared, so each resync is effectively a complete resync.
 
-	I did, but it didn't work as I had planned.  About a year ago, I ran
-across a bug that had caused the homehost field on the arrays to gave a=
- pair
-of single quote marks in it.  Upon upgrade of mdadm, this causes the
-automatic assembly of the RAID arrays to fail.  I thought I had fixed t=
-he
-issue on all the arrays, but evidently not.  When I tried the upgrade, =
-it
-failed to boot.  I never even thought about the problem with the quote =
-marks
-until I finally ran it to ground.  If I had thought of the issue, it wo=
-uld
-have been fine, and I would have fixed it in a matter of minutes.  As i=
-t
-was, it took me two days to find the problem, because every time I woul=
-d
-move down one avenue for recovery, something else would prohibit me fro=
-m
-getting the system into a state where troubleshooting was practical.  I=
-n the
-mean time, all four arrays on the system suffered some fairly dastardly
-abuse.  They all survived, however, if not entirely intact, then at lea=
-st
-with no more damage than could easily be fixed.  Most importantly, ther=
-e was
-no loss of data, other than a couple of battered superblocks and one sm=
-all
-array that had to be rebuilt.
+In the stacked configuration there are two bitmaps so md can track of
+different differences on two different devices.
 
-	There was also one small issue with the boot array.  GRUB2 was able
-to assemble it just fine so as to get through the boot, but then the ar=
-ray
-would not assemble for the kernel.  It turned out the newer mdadm was
-insisting the metadata statement say, "0.90", instead of "0.9" in
-mdadm.conf.
-=20
-> On Sat, Feb 5, 2011 at 11:44 AM, Leslie Rhorer <lrhorer@satx.rr.com>
-> wrote:
-> >
-> > =A0 =A0 =A0 =A0In a few days, I am going to be upgrading Linux on o=
-ne of my
-> servers
-> > from Debian "Lenny" to "Squeeze". =A0I've gone through this upgrade=
- a
-> handful
-> > of times, and it can be pretty tricky. =A0It would be best if the d=
-ata
-> array
-> > were not assembled over and over again during the process. =A0I kno=
-w it
-> really
-> > shouldn't make a difference, but in the real world stability issues=
- have
-> > raised their ugly heads more than once causing additional time and
-> heartache
-> > associated with the array to be required to complete the task. =A0W=
-ith
-> this in
-> > mind, I would like to temporarily disable the assembly of the array
-> until
-> > the upgrade is complete and the system stable. =A0Do I have the fol=
-lowing
-> > checklist correct, or is there something wrong or missing? =A0Are t=
-here
-> better
-> > alternatives? =A0I'm not missing something about the "homehost" uti=
-lity,
-> am I?
-> >
-> > 1. =A0Edit /etc/mdadm/mdadm.conf and comment out the line specifyin=
-g the
-> > array. =A0Also comment out the line "HOMEHOST <system>"
-> >
-> > 2. =A0Edit /etc/fstab and comment out the line specifying the mount=
- point
-> for
-> > the array.
-> >
-> > 3. =A0Issue the command `update-initramfs -u`
-> >
-> > 4. =A0Reboot the system, making sure the array does not assemble.
-> >
-> > 5. =A0Perform the OS upgrade.
-> >
-> > 6. =A0Edit mdadm.conf and fstab, removing the comment markers place=
-d in
-> steps
-> > 1 and 2.
-> >
-> > 7. =A0Issue the command `update-initramfs -u`
-> >
-> > 8. =A0Reboot the system, making sure the array assembles and mounts=
-=2E
+You can see the event counts on each device with
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  mdadm --examine /dev/A
+
+The bitmap knows whether a device is new enough to be safely recovered based
+on the bitmap by storing the event count of the time a bit was cleared 
+'Events Cleared'.
+
+Hope that helps.
+
+NeilBrown
+
