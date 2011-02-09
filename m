@@ -1,65 +1,42 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH] imsm: Test for raid1 -> raid0 takeover added
-Date: Wed, 09 Feb 2011 13:55:18 +0100
-Message-ID: <20110209125518.6363.83824.stgit@gklab-128-111.igk.intel.com>
+From: "Eric D. Mudama" <edmudama@bounceswoosh.org>
+Subject: Re: SSD - TRIM command
+Date: Wed, 9 Feb 2011 09:19:16 -0700
+Message-ID: <20110209161916.GB8632@bounceswoosh.org>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
+ <4D517F4F.4060003@gmail.com>
+ <4D5245DF.4020401@hardwarefreak.com>
+ <iiu4rc$9ju$1@dough.gmane.org>
+ <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+ <AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: "Scott E. Armitage" <launchpad@scott.armitage.name>
+Cc: Roberto Spadim <roberto@spadim.com.br>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Patch introduces test for raid1 to raid0 takeover operation
-verification for imsm metadata format.
+On Wed, Feb  9 at 10:00, Scott E. Armitage wrote:
+>I reiterate my previous reply that under the current md architecture,
+>where the complete device is considered to be in use, sending TRIM
+>commands makes little sense. AFAICT, reading back a trimmed page is
+>not defined, since the whole idea is that the host doesn't care about
+>what is on that page any more.
+>
+>The next time md comes around to corresponding trimmed pages on two
+>SSDs, their contents may differ, and all of a sudden our array is no
+>longer consistent.
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- tests/18imsm-r1_2d-takeover-r0_1d |   22 ++++++++++++++++++++++
- tests/imsm-grow-template          |    2 +-
- 2 files changed, 23 insertions(+), 1 deletions(-)
- create mode 100644 tests/18imsm-r1_2d-takeover-r0_1d
+For SATA devices, ATA8-ACS2 addresses this through Deterministic Read
+After Trim in the DATA SET MANAGEMENT command.  Devices can be
+indeterminate, determinate with a non-zero pattern (often all-ones) or
+determinate all-zero for sectors read after being trimmed.
 
-diff --git a/tests/18imsm-r1_2d-takeover-r0_1d b/tests/18imsm-r1_2d-takeover-r0_1d
-new file mode 100644
-index 0000000..1697d60
---- /dev/null
-+++ b/tests/18imsm-r1_2d-takeover-r0_1d
-@@ -0,0 +1,22 @@
-+. tests/env-imsm-template
-+
-+# RAID 1 volume, 2 disks change to RAID 0 volume, 1 disks
-+# POSITIVE test
-+
-+num_disks=2
-+device_list="$dev0 $dev1"
-+
-+# Before: RAID 1 volume, 2 disks
-+vol0_level=1
-+vol0_comp_size=$((5 * 1024))
-+vol0_chunk=64
-+vol0_num_comps=$(( $num_disks - 1 )) 
-+vol0_offset=0
-+
-+# After: RAID 0 volume, 1 disks, 64k chunk size
-+vol0_new_level=0
-+vol0_new_num_comps=1
-+vol0_new_chunk=64
-+new_num_disks=0
-+
-+. tests/imsm-grow-template 0 1
-diff --git a/tests/imsm-grow-template b/tests/imsm-grow-template
-index 0944d09..7c212c4 100644
---- a/tests/imsm-grow-template
-+++ b/tests/imsm-grow-template
-@@ -78,7 +78,7 @@ if [ $migration_test -ne 0 ]; then
- 		new_num_disks=$num_disks
- 	fi
- 	grow_member $member0 $new_num_disks $vol0_new_num_comps $vol0_new_level $vol0_comp_size $vol0_offset $vol0_new_chunk
--	if [ $vol1_new_chunk -ne 0 ]; then
-+	if [[ $vol1_new_chunk -ne 0 ]] ; then
- 		grow_member $member1 $new_num_disks $vol1_new_num_comps $vol1_new_level $vol1_comp_size $vol1_offset $vol1_new_chunk
- 	fi
- else
+--eric
+
+-- 
+Eric D. Mudama
+edmudama@bounceswoosh.org
 
