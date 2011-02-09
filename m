@@ -1,109 +1,48 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/6] Reshape fixes (expansion)
-Date: Wed, 9 Feb 2011 07:31:11 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D178B36531@irsmsx503.ger.corp.intel.com>
-References: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
- <20110209141057.7682d10d@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: SSD - TRIM command
+Date: Wed, 09 Feb 2011 01:44:31 -0600
+Message-ID: <4D5245DF.4020401@hardwarefreak.com>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com> <4D517F4F.4060003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209141057.7682d10d@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <4D517F4F.4060003@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: maurice <mhilarius@gmail.com>
+Cc: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+maurice put forth on 2/8/2011 11:37 AM:
+> On 2/7/2011 1:07 PM, Roberto Spadim wrote:
+>> hi guys, could md send TRIM command to ssd? using ext4 discart mount option?
+>> if i mix ssd and hd, could this TRIM be rewrite to non TRIM compatible disks?
+>>
+> I have read that using md with SSDs is not a great idea:
+> Form the Fedora 14 documentation:
 
+Using any RAID level but pure striping with SSDs is a bad idea, for the exact
+reason in that documentation:  excessive writes.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, February 09, 2011 4:11 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 0/6] Reshape fixes (expansion)
-> 
-> On Tue, 08 Feb 2011 14:30:28 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > The following series adds some fixes for reshape (expansion).
-> >
-> > A while ago mdadm unit tests (suits 12 and 13) works correctly, now
-> I've found problems.
-> > I've learned that containers created for raid5 and raid0 has
-> different number of blocks in mdstat.
-> > I've put mdstat partial output to patch description:  UT FIX: imsm
-> container can have different blocks number
-> > I'm not 100% sure that this is fix (for changed behavior), not
-> workaround for container creation problem.
-> > This fix is first of fixes (3) that enables reshape (12, 13) UT.
-> > If you find this more as workaround, this patch is good point for
-> discussion what change is correct.
-> >
-> > Patches:
-> >       FIX: compare blocks on all data disks
-> >       FIX: Compare the same units
-> > makes changes for blocks computing verification. After those 2 more
-> patches UT (12, 13) works.
-> > Please let me know what you are thinking about them. It is possible
-> that this is not final patch also,
-> > but I've tried to find out what this condition should do, and change
-> code to archive it (IMHO).
-> >
-> > Rest of patches addresses other issues, I can observe during
-> expansion.
-> >
-> > BR
-> > Adam
-> >
-> > ---
-> >
-> > Adam Kwolek (6):
-> >       FIX: md runs recovery instead reshape for growing single disk
-> raid0 array
-> Applied.
-> 
-> >       FIX: Container can be left frozen
-> Applied.
-> 
-> >       FIX: compare blocks on all data disks
-> >       FIX: Compare the same units
-> No, I don't like these.
-> The point here is to compare the amount of data to be backed up with
-> the
-> size of one of the spare devices, because in some cases the data will
-> be
-> backed up to a spare device.
-> If the size of the data to be backed up is bigger than half the size of
-> a
-> spare device, then it doesn't really fit and something is wrong.
-> Normally the amount of data to be backed up is much much smaller than
-> the
-> size of any device.
-> 
-> Maybe we just need to make the test use larger devices or smaller chunk
-> size,
-> or similar.
+SSD - Solid State Drive
 
-Thank you for explanation. I'll prepare changes to UT.
+Note the first two words.  Solid state device = integrated circuit.  ICs,
+including those comprised of flash memory transistors, have totally different
+failure modes than spinning rust disks, SRDs, or "plain old mechanical hard drives".
 
-BR
-Adam
+RAID'ing SSDs with any data duplicative RAID level, any mirroring or parity RAID
+levels, _decreases_ the life of all SSDs in the array.  This is the opposite
+effect of what you want:  reliability and lifespan.
 
-> 
-> 
-> >       UT FIX: imsm container can have different blocks number
-> Applied (the block numbers here are completely meaningless, so ignoring
-> them
-> is good).
-> >       imsm: FIX: Wrong output string format
-> Applied.
-> 
-> All pushed out to devel-3.2
-> 
-> Thanks.
-> 
-> NeilBrown
+People have a misconception that SSDs are like hard disks.  The only thing they
+have in common is that both store data and they can have a similar interface
+(SATA).  The similarities end there.
 
+RAID is not a proper method of extending the life of SSD storage nor protecting
+the data on SSD devices.  If you want to pool all the capacity of multiple SSDs
+into a single logical device, use RAID 0 or spanning, _not_ a mirror or parity
+RAID level.  If you want to protect the data, snap it to a single large SATA
+drive, or a D2D backup array, and then to tape.
+
+-- 
+Stan
