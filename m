@@ -1,73 +1,49 @@
-From: "Scott E. Armitage" <launchpad@scott.armitage.name>
+From: "Eric D. Mudama" <edmudama@bounceswoosh.org>
 Subject: Re: SSD - TRIM command
-Date: Wed, 9 Feb 2011 11:28:35 -0500
-Message-ID: <AANLkTimQ+B2sXt0AZiUYW2QrWqpUvt7PLnkVCOwZqx0k@mail.gmail.com>
+Date: Wed, 9 Feb 2011 10:17:44 -0700
+Message-ID: <20110209171744.GC8632@bounceswoosh.org>
 References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
-	<4D517F4F.4060003@gmail.com>
-	<4D5245DF.4020401@hardwarefreak.com>
-	<iiu4rc$9ju$1@dough.gmane.org>
-	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
-	<AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com>
-	<20110209161916.GB8632@bounceswoosh.org>
+ <4D517F4F.4060003@gmail.com>
+ <4D5245DF.4020401@hardwarefreak.com>
+ <iiu4rc$9ju$1@dough.gmane.org>
+ <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+ <AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com>
+ <20110209161916.GB8632@bounceswoosh.org>
+ <AANLkTimQ+B2sXt0AZiUYW2QrWqpUvt7PLnkVCOwZqx0k@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209161916.GB8632@bounceswoosh.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTimQ+B2sXt0AZiUYW2QrWqpUvt7PLnkVCOwZqx0k@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@bounceswoosh.org>
-Cc: Roberto Spadim <roberto@spadim.com.br>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: "Scott E. Armitage" <launchpad@scott.armitage.name>
+Cc: "Eric D. Mudama" <edmudama@bounceswoosh.org>, Roberto Spadim <roberto@spadim.com.br>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Who sends this command? If md can assume that determinate mode is
-always set, then RAID 1 at least would remain consistent. For RAID 5,
-consistency of the parity information depends on the determinate
-pattern used and the number of disks. If you used determinate
-all-zero, then parity information would always be consistent, but this
-is probably not preferable since every TRIM command would incur an
-extra write for each bit in each page of the block.
+On Wed, Feb  9 at 11:28, Scott E. Armitage wrote:
+>Who sends this command? If md can assume that determinate mode is
+>always set, then RAID 1 at least would remain consistent. For RAID 5,
+>consistency of the parity information depends on the determinate
+>pattern used and the number of disks. If you used determinate
+>all-zero, then parity information would always be consistent, but this
+>is probably not preferable since every TRIM command would incur an
+>extra write for each bit in each page of the block.
 
--S
+True, and there are several solutions.  Maybe track space used via
+some mechanism, such that when you trim you're only trimming the
+entire stripe width so no parity is required for the trimmed regions.
+Or, trust the drive's wear leveling and endurance rating, combined
+with SMART data, to indicate when you need to replace the device
+preemptive to eventual failure.
 
-On Wed, Feb 9, 2011 at 11:19 AM, Eric D. Mudama
-<edmudama@bounceswoosh.org> wrote:
-> On Wed, Feb =A09 at 10:00, Scott E. Armitage wrote:
->>
->> I reiterate my previous reply that under the current md architecture=
-,
->> where the complete device is considered to be in use, sending TRIM
->> commands makes little sense. AFAICT, reading back a trimmed page is
->> not defined, since the whole idea is that the host doesn't care abou=
-t
->> what is on that page any more.
->>
->> The next time md comes around to corresponding trimmed pages on two
->> SSDs, their contents may differ, and all of a sudden our array is no
->> longer consistent.
->
-> For SATA devices, ATA8-ACS2 addresses this through Deterministic Read
-> After Trim in the DATA SET MANAGEMENT command. =A0Devices can be
-> indeterminate, determinate with a non-zero pattern (often all-ones) o=
-r
-> determinate all-zero for sectors read after being trimmed.
->
-> --eric
->
-> --
-> Eric D. Mudama
-> edmudama@bounceswoosh.org
->
->
+It's not an unsolvable issue.  If the RAID5 used distributed parity,
+you could expect wear leveling to wear all the devices evenly, since
+on average, the # of writes to all devices will be the same.  Only a
+RAID4 setup would see a lopsided amount of writes to a single device.
 
+--eric
 
+-- 
+Eric D. Mudama
+edmudama@bounceswoosh.org
 
---=20
-Scott Armitage, B.A.Sc., M.A.Sc. candidate
-Space Flight Laboratory
-University of Toronto Institute for Aerospace Studies
-4925 Dufferin Street, Toronto, Ontario, Canada, M3H 5T6
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
