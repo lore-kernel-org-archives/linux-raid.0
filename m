@@ -1,90 +1,54 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: SSD - TRIM command
-Date: Wed, 09 Feb 2011 14:29:12 +0100
-Message-ID: <iiu4rc$9ju$1@dough.gmane.org>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com> <4D517F4F.4060003@gmail.com> <4D5245DF.4020401@hardwarefreak.com>
+From: Lennart Poettering <lennart@poettering.net>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+ by user
+Date: Wed, 9 Feb 2011 15:01:39 +0100
+Message-ID: <20110209140139.GA12063@tango.0pointer.de>
+References: <AANLkTikTa8stFAcXG9jknh=RG=-Mi+xW-AD9DgZCfQ=7@mail.gmail.com>
+ <20101204121413.GC11336@mother.pipebreaker.pl>
+ <AANLkTi=nTSdHc55f08G9sdEK6u8eXp276VOTHHr0jmXT@mail.gmail.com>
+ <20110125034434.GC7046@tango.0pointer.de>
+ <AANLkTik189VTXYpzLFqP=MNBg=Nx-Yq6BOKURtiby++B@mail.gmail.com>
+ <20110125042814.GA9727@tango.0pointer.de>
+ <AANLkTik7dd5SHkuBVrS6LLDR9v57GsFjjxDKQKPp-YVL@mail.gmail.com>
+ <20110208094843.GD11446@tango.0pointer.de>
+ <AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
+ <20110208110730.GF23157@tango.0pointer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5245DF.4020401@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20110208110730.GF23157@tango.0pointer.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/02/2011 08:44, Stan Hoeppner wrote:
-> maurice put forth on 2/8/2011 11:37 AM:
->> On 2/7/2011 1:07 PM, Roberto Spadim wrote:
->>> hi guys, could md send TRIM command to ssd? using ext4 discart
->>> mount option? if i mix ssd and hd, could this TRIM be rewrite to
->>> non TRIM compatible disks?
->>>
->> I have read that using md with SSDs is not a great idea: Form the
->> Fedora 14 documentation:
->
-> Using any RAID level but pure striping with SSDs is a bad idea, for
-> the exact reason in that documentation:  excessive writes.
->
-> SSD - Solid State Drive
->
-> Note the first two words.  Solid state device = integrated circuit.
-> ICs, including those comprised of flash memory transistors, have
-> totally different failure modes than spinning rust disks, SRDs, or
-> "plain old mechanical hard drives".
->
-> RAID'ing SSDs with any data duplicative RAID level, any mirroring or
-> parity RAID levels, _decreases_ the life of all SSDs in the array.
-> This is the opposite effect of what you want:  reliability and
-> lifespan.
->
-> People have a misconception that SSDs are like hard disks.  The only
-> thing they have in common is that both store data and they can have a
-> similar interface (SATA).  The similarities end there.
->
-> RAID is not a proper method of extending the life of SSD storage nor
-> protecting the data on SSD devices.  If you want to pool all the
-> capacity of multiple SSDs into a single logical device, use RAID 0 or
-> spanning, _not_ a mirror or parity RAID level.  If you want to
-> protect the data, snap it to a single large SATA drive, or a D2D
-> backup array, and then to tape.
->
+On Tue, 08.02.11 12:07, Lennart Poettering (lennart@poettering.net) wrote:
 
-First off, let me agree with you that backup is important no matter what 
-you use as your primary storage.
+> > At this point we know it is container, know that it has external
+> > metadata and know that we need external metadata handler (mdmon). But
+> > it is too late for systemd.
+> 
+> Kay, do you know why this "change" event is used here? Any chance we can
+> get rid of it?
 
-But beyond that, you've got a basic assumption wrong here.
+So, it seems that the "change" event does make some sense here. I have
+now added a new property to systemd: if you set SYSTEMD_READY=0 on a
+udev device then systemd will consider it unplugged even if it shows up
+in the udev tree. If this property is not set for a device, or is set to
+1 we will conisder the device plugged.
 
-Good quality, modern SSDs do not have write-endurance issues.  It's a 
-thing of the past.  Internally, of course, the flash /does/ have 
-endurance limits.  But these are high (especially with SLC devices 
-rather than MLC devices), and the combination of ECC, wear-levelling and 
-redundant blocks means that you can write to these devices continuously 
-at high speed for /years/ before endurance issues become visible by the 
-host.  An additional effect of the extensive ECC is that undetected read 
-errors are much less likely than with hard disks - when a failure /does/ 
-occur, you know it has occurred.
+To make this md stuff compatible with systemd we hence just need to set
+SYSTEMD_READY=0 during the "new" event and drop it when the device is
+fully set up. 
 
-Many SSD models suffer from a certain amount of performance degradation 
-when they have been used for a while.  Intel's devices were notorious 
-for this, though apparently they are better now.  But that's a speed 
-issue, not a reliability or lifetime issue.
+Andrey, since you are playing around with this, do you happen to know
+which attribute we should check to set SYSTEMD_READY=0 properly? It
+would be cool if we could come up with a default rule for inclusion in
+our systemd rules file that will ensure the device only shows up when it
+is ready.
 
-SSDs (again, I refer to good quality modern devices - earlier models had 
-more problems) are inherently more reliable than HDs, and have longer 
-expected lifetimes.  This means that it is often fine to put your SSDs 
-in a RAID0 combination - you still have a greater reliability than you 
-would with a single HDD.
+Lennart
 
-However, SSDs are not infallible - using redundant RAID with SSDs is a 
-perfectly valid setup.  Obviously you will have a whole disks worth of 
-extra writes when you set up the RAID, and redundant writes means more 
-writes, but the SSDs will handle those writes perfectly well.
-
-
-There is plenty of scope for md / SSD optimisation, however.  Good TRIM 
-support is just one aspect.  Other points include matching stripe sizes 
-to fit the geometry of the SSD, and taking advantage of the seek speeds 
-of SSD (this is particularly important if you are mirroring an SSD and 
-an HD).
-
-
+-- 
+Lennart Poettering - Red Hat, Inc.
