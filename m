@@ -1,30 +1,40 @@
-From: Chris Worley <worleys@gmail.com>
+From: David Brown <david@westcontrol.com>
 Subject: Re: SSD - TRIM command
-Date: Wed, 9 Feb 2011 08:45:29 -0700
-Message-ID: <AANLkTinCccc_qY5e=AfPsfkMnfH+Vpk2q+dm0WMxt2xu@mail.gmail.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
-	<4D517F4F.4060003@gmail.com>
-	<4D5245DF.4020401@hardwarefreak.com>
-	<20110209090522.GA8632@bounceswoosh.org>
+Date: Wed, 09 Feb 2011 16:49:40 +0100
+Message-ID: <iiud2r$qci$1@dough.gmane.org>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>	<4D517F4F.4060003@gmail.com>	<4D5245DF.4020401@hardwarefreak.com>	<iiu4rc$9ju$1@dough.gmane.org> <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209090522.GA8632@bounceswoosh.org>
+In-Reply-To: <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@bounceswoosh.org>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, maurice <mhilarius@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 9, 2011 at 2:05 AM, Eric D. Mudama
-<edmudama@bounceswoosh.org> wrote:
-<snip>
-> I agree that in aggregate we've now done 2 units worth of writes,
-> however, in a mirror case, we're protecting against both whole-device
-> failure and single-sector failure modes, so hardly seems like a bad
-> idea in all applications.
+On 09/02/2011 15:39, Roberto Spadim wrote:
+> guys...
+> if my ssd fail, i buy another...
+> let's make software ok, the hardware is another problem
+> raid1 should work with floppy disks, hard disks, ssd, nbd... that's the point
+> make solutions for hardware mix
+> the question is simple, could we send TRIM command to all mirrors (for
+> stripe just disks that should receive it)? if device don't have TRIM
+> we should translate it for a similar command, with the same READ
+> effect (no problem if it's not atomic)
+>
 
-Yes, just pass through the discards, and let us mirror.  Sync'ing a
-new drive w/o writing (only what needs to be written) is really
-trivial (needs no extra saved metadata/LBA bitmaps or ability to query
-the device for active sectors), if folks would give it some thought
-and quit saying it shouldn't be done.
+
+I've been reading a little more about this.  It seems that the days of 
+TRIM may well be numbered - the latest generation of high-end SSDs have 
+more powerful garbage collection algorithms, together with more spare 
+blocks, making TRIM pretty much redundant.  This is, of course, the most 
+convenient solution for everyone (as long as it doesn't cost too much!).
+
+The point of the TRIM command is to tell the SSD that a particular block 
+is no longer being used, so that the SSD can erase it in the background 
+- that way when you want to write more data, there are more free blocks 
+ready and waiting.  But if you've got plenty of spare blocks, it's easy 
+to have them erased in advance and you don't need TRIM.
+
+
