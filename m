@@ -1,168 +1,160 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: Single-drive RAID0
-Date: Wed, 9 Feb 2011 14:33:01 +0000
-Message-ID: <BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
- <20110209134557.4e607451@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: SSD - TRIM command
+Date: Wed, 9 Feb 2011 12:39:44 -0200
+Message-ID: <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
+	<4D517F4F.4060003@gmail.com>
+	<4D5245DF.4020401@hardwarefreak.com>
+	<iiu4rc$9ju$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_BE2BFE91933D1B4089447C644860408068C4429Dirsmsx503gercor_"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209134557.4e607451@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <iiu4rc$9ju$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---_002_BE2BFE91933D1B4089447C644860408068C4429Dirsmsx503gercor_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+guys...
+if my ssd fail, i buy another...
+let's make software ok, the hardware is another problem
+raid1 should work with floppy disks, hard disks, ssd, nbd... that's the=
+ point
+make solutions for hardware mix
+the question is simple, could we send TRIM command to all mirrors (for
+stripe just disks that should receive it)? if device don't have TRIM
+we should translate it for a similar command, with the same READ
+effect (no problem if it's not atomic)
+
+the point of good read, i sent a email to maurice, and many others
+emails in this raid list, there's a new read balance mode for kernel
+2.6.37 if you want try to benchmark it please test it:
+www.spadim.com.br/raid1
+for me it's work very well with hd and ssd mixed array, i need more
+test and benchmark to neil accept it as a default feature of md
+the sysfs interface is poor yet, in future it should change
+the time based mode work, but it should have some features implemented
+in futures (queue time estimation)
 
 
-Steps to reproduce:
-1. Create partition on disk (for example: 1 partition, size=3Dhalf of /dev/=
-sda disk)
-2. Create filesystem on partition (ext3)
-3. Mount partition and create some control data on partition
-4. Unmount partition
-5. Create RAID0 on disk (mdadm -C /dev/md/vol_1 -amd -e 0.9 -c 64 -l 0 -n 1=
- /dev/sda --force)
-6. md127 and md127p1 appears in /dev as expected
-7. Try to mount md127p1 and verify control data on them
+2011/2/9 David Brown <david@westcontrol.com>:
+> On 09/02/2011 08:44, Stan Hoeppner wrote:
+>>
+>> maurice put forth on 2/8/2011 11:37 AM:
+>>>
+>>> On 2/7/2011 1:07 PM, Roberto Spadim wrote:
+>>>>
+>>>> hi guys, could md send TRIM command to ssd? using ext4 discart
+>>>> mount option? if i mix ssd and hd, could this TRIM be rewrite to
+>>>> non TRIM compatible disks?
+>>>>
+>>> I have read that using md with SSDs is not a great idea: Form the
+>>> Fedora 14 documentation:
+>>
+>> Using any RAID level but pure striping with SSDs is a bad idea, for
+>> the exact reason in that documentation: =A0excessive writes.
+>>
+>> SSD - Solid State Drive
+>>
+>> Note the first two words. =A0Solid state device =3D integrated circu=
+it.
+>> ICs, including those comprised of flash memory transistors, have
+>> totally different failure modes than spinning rust disks, SRDs, or
+>> "plain old mechanical hard drives".
+>>
+>> RAID'ing SSDs with any data duplicative RAID level, any mirroring or
+>> parity RAID levels, _decreases_ the life of all SSDs in the array.
+>> This is the opposite effect of what you want: =A0reliability and
+>> lifespan.
+>>
+>> People have a misconception that SSDs are like hard disks. =A0The on=
+ly
+>> thing they have in common is that both store data and they can have =
+a
+>> similar interface (SATA). =A0The similarities end there.
+>>
+>> RAID is not a proper method of extending the life of SSD storage nor
+>> protecting the data on SSD devices. =A0If you want to pool all the
+>> capacity of multiple SSDs into a single logical device, use RAID 0 o=
+r
+>> spanning, _not_ a mirror or parity RAID level. =A0If you want to
+>> protect the data, snap it to a single large SATA drive, or a D2D
+>> backup array, and then to tape.
+>>
+>
+> First off, let me agree with you that backup is important no matter w=
+hat you
+> use as your primary storage.
+>
+> But beyond that, you've got a basic assumption wrong here.
+>
+> Good quality, modern SSDs do not have write-endurance issues. =A0It's=
+ a thing
+> of the past. =A0Internally, of course, the flash /does/ have enduranc=
+e limits.
+> =A0But these are high (especially with SLC devices rather than MLC de=
+vices),
+> and the combination of ECC, wear-levelling and redundant blocks means=
+ that
+> you can write to these devices continuously at high speed for /years/=
+ before
+> endurance issues become visible by the host. =A0An additional effect =
+of the
+> extensive ECC is that undetected read errors are much less likely tha=
+n with
+> hard disks - when a failure /does/ occur, you know it has occurred.
+>
+> Many SSD models suffer from a certain amount of performance degradati=
+on when
+> they have been used for a while. =A0Intel's devices were notorious fo=
+r this,
+> though apparently they are better now. =A0But that's a speed issue, n=
+ot a
+> reliability or lifetime issue.
+>
+> SSDs (again, I refer to good quality modern devices - earlier models =
+had
+> more problems) are inherently more reliable than HDs, and have longer
+> expected lifetimes. =A0This means that it is often fine to put your S=
+SDs in a
+> RAID0 combination - you still have a greater reliability than you wou=
+ld with
+> a single HDD.
+>
+> However, SSDs are not infallible - using redundant RAID with SSDs is =
+a
+> perfectly valid setup. =A0Obviously you will have a whole disks worth=
+ of extra
+> writes when you set up the RAID, and redundant writes means more writ=
+es, but
+> the SSDs will handle those writes perfectly well.
+>
+>
+> There is plenty of scope for md / SSD optimisation, however. =A0Good =
+TRIM
+> support is just one aspect. =A0Other points include matching stripe s=
+izes to
+> fit the geometry of the SSD, and taking advantage of the seek speeds =
+of SSD
+> (this is particularly important if you are mirroring an SSD and an HD=
+).
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-Expected result:
-md127p1 device mounted and control data not corrupted
-
-Actual result:
-1. Mount command returns error:
-mount: special device /dev/md127p1 does not exists
-2. md127p1 disappears from /dev/
-3. kernel indefinitely shows (until array will be stop):
-md126: p1
-md126: detected capacity change from 0 to xxxxxxxxxxxxx
-md126: p1
-md126: detected capacity change from 0 to xxxxxxxxxxxxx
-...
 
 
-Additional Info:
-Reproduced on:
-- SLES11 SP1
-- mdamd 3.2 from top of your devel-3.2 branch
-- kernel 2.6.38 RC2
-
-I've attached script that I use to reproduce this issue.
-For native metadata run:
-./raid_ready_drive native
-For imsm metadata just:
-./raid_ready_drive
-
-Regards
-Krzysztof
-
-
-
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, February 09, 2011 3:46 AM
-> To: Wojcik, Krzysztof
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Single-drive RAID0
->=20
-> On Tue, 8 Feb 2011 16:15:53 +0000 "Wojcik, Krzysztof"
-> <krzysztof.wojcik@intel.com> wrote:
->=20
-> > Neil,
-> >
-> > I try to create a single-drive RAID0 array with data preservation.
-> > It means I have a single disk with partitions and data on them.
-> > I would like to migrate this single disk to RAID0 array and then grow
-> it to N devices.
-> > Of course I expect partitions with my useful data will be mapped to
-> corresponding MD block devices (/dev/md126p1, /dev/md126p2 etc.).
-> Indeed they are but when I try to mount new block device it disappears
-> from /dev directory and mount is not succeeded.
->=20
-> > /var/log/messages shows all the time:
-> > md126: p1
-> > md126: detected capacity change from 0 to xxxxxxxxxxxxx
-> >
-> > It is not always reproducible but very often.
-> > I try this operation on 0.9 and imsm metadata. Symptoms are similar.
-> >
-> > Do you have any suggestions? How to fix this issue?
-> >
-> > Regards
-> > Krzysztof
->=20
-> It isn't clear to me what the issue is and when I try something that
-> might be
-> what you are suggesting it works perfectly every time.
->=20
-> Maybe if you could provide something more detailed and specific.
-> e.g. a series of steps that I can try together with all the messages
-> you get
-> (both from the kernel and from mdadm) throughout the process.
->=20
-> That will probably help.
->=20
-> NeilBrown
-
---_002_BE2BFE91933D1B4089447C644860408068C4429Dirsmsx503gercor_
-Content-Type: application/octet-stream; name="raid_ready_drive"
-Content-Description: raid_ready_drive
-Content-Disposition: attachment; filename="raid_ready_drive"; size=2635;
-	creation-date="Wed, 09 Feb 2011 14:31:26 GMT";
-	modification-date="Wed, 09 Feb 2011 14:30:25 GMT"
-Content-Transfer-Encoding: base64
-
-IyEvYmluL2Jhc2gKClYxTU5UPS9tbnQvdm9sMQpWMk1OVD0vbW50L3ZvbDIKQ09OVD0vZGV2L21k
-L2ltc20wCkZJTEVfU0laRT0xMDAwMDAwMDAKQ0hVTks9MTI4CgojIGRlZmluZSBkaXNrIGZvciB0
-ZXN0cwojZGlzaz0vZGV2L3NkYQoKTjE9L2Rldi9tZC92b2xfMQoKZnVuY3Rpb24gc3RhdCgpIHsK
-IwlzZXQgK3gKCWlmIFsgJDEgIT0gJDIgXSA7IHRoZW4KCSAgICBlY2hvIC1lICJcbkNvbW1hbmQg
-JDMgcmV0dXJuZWQgd3Jvbmcgc3RhdHVzIChleHBlY3RlZDogJDIsIGdvdDogJDEpXG4iCgkgICAg
-ZXhpdCAxCglmaQojCXNldCAteAp9CgppZiBbIC16ICRkaXNrIF0gOyB0aGVuCgllY2hvICJEaXNr
-IGZvciB0ZXN0IG5vdCBzcGVjaWZpZWQuIFBsZWFzZSBzZXQgXCJkaXNrXCIgdmFyaWFibGUuIgoJ
-ZXhpdApmaQplY2hvICJEaXNrIHRvIHRlc3Q9ICRkaXNrIgoKaWYgWyAhIC1kICRWMU1OVCBdIDsg
-dGhlbgogICAgbWtkaXIgJFYxTU5UCmZpCgppZiBbICEgLWQgJFYyTU5UIF0gOyB0aGVuCiAgICBt
-a2RpciAkVjJNTlQKZmkKCiNzZXQgLXgKCiMjIyMjIyMjIyMjIyMjIyMjIyBjbGVhbnVwICMjIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMKI3VubW91bnQKdW1vdW50ICRWMU1OVAp1bW91bnQgJFYy
-TU5UCgojc3RvcApyZXM9MQp3aGlsZSBbICRyZXMgIT0gMCBdIDsgZG8KCW1kYWRtIC1TcwoJcmVz
-PSQ/CmRvbmUKCiNjbGVhbgptZGFkbSAtLXplcm8tc3VwZXJibG9jayAkZGlzawoKCiMjIyMjIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIyMjIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIE1BSU4gIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMKIyMjIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjCgojIyMj
-IyMjIyMjIyMjIyMjIyMgcHJlcGFyZSBkaXNrIGZvciB0ZXN0cyAjIyMjIyMjIyMjIyMjIyMKCnNm
-ZGlzayAtdU0gJGRpc2sgPDwgRU9GCiw1MDAwMCxMCiw1MDAwMCxMCkVPRgoKdWRldmFkbSBzZXR0
-bGUKCglQMT0kZGlzaycxJwoJUDI9JGRpc2snMicKCW1rZnMgJFAxCglta2ZzICRQMgoKCW1vdW50
-ICRQMSAkVjFNTlQKCW1vdW50ICRQMiAkVjJNTlQKCglvcGVuc3NsIHJhbmQgLW91dCAkVjFNTlQv
-dGVzdDEuYmluICRGSUxFX1NJWkUKCVNVTTE9JChtZDVzdW0gJFYxTU5UL3Rlc3QxLmJpbiB8IGdh
-d2sgJ3twcmludCAkMX0nKQoJb3BlbnNzbCByYW5kIC1vdXQgJFYyTU5UL3Rlc3QxLmJpbiAkRklM
-RV9TSVpFCglTVU0yPSQobWQ1c3VtICRWMk1OVC90ZXN0MS5iaW4gfCBnYXdrICd7cHJpbnQgJDF9
-JykKCgllY2hvICJTVU0xPSRTVU0xIiA+ICRTVU0KCWVjaG8gIlNVTTI9JFNVTTIiID4+ICRTVU0K
-Cgl1bW91bnQgJFYxTU5UCgl1bW91bnQgJFYyTU5UCgojIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMg
-cnVuIHRlc3QgIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjCmlmIFtbICQxID0gIm5hdGl2ZSIgXV0g
-OyB0aGVuCgkjY3JlYXRlIHZvbAoJbWRhZG0gLUMgJE4xIC1lIDAuOSAtYW1kIC1sIDAgLS1jaHVu
-ayAkQ0hVTksgLW4gMSAkZGlzayAtUiAtLWZvcmNlCglzdGF0ICQ/IDAgY3JhZXRlX3ZvbDEKZWxz
-ZQoJI2NyZWF0ZSBjb250YWluZXIKCW1kYWRtIC1DICRDT05UIC1hbWQgLWUgaW1zbSAtbiAxICRk
-aXNrIC1SIC0tZm9yY2UKCXN0YXQgJD8gMCBjcmVhdGVfY29udGFpbmVyCgoJI2NyZWF0ZSB2b2wK
-CW1kYWRtIC1DICROMSAtYW1kIC1sIDAgLS1jaHVuayAkQ0hVTksgLW4gMSAkZGlzayAtUiAtLWZv
-cmNlCglzdGF0ICQ/IDAgY3JhZXRlX3ZvbDEKZmkKCiNjaGVjayBzdGF0dXMKY2F0IC9wcm9jL21k
-c3RhdAoKdWRldmFkbSBzZXR0bGUKCmxzIC9kZXYgfCBncmVwIG1kCmxzIC9kZXYvbWQKCmxzIC9k
-ZXYvbWQgfCBncmVwIHZvbF8xcDEgPiAvZGV2L251bGwKaWYgWyAkPyAhPSAwIF0gOyB0aGVuCgll
-Y2hvICJFcnJvci4gUGFydGl0aW9uICMxIG5vdCBtYXBwZWQhIgoJZXhpdApmaQpscyAvZGV2L21k
-IHwgZ3JlcCB2b2xfMXAyID4gL2Rldi9udWxsCmlmIFsgJD8gIT0gMCBdIDsgdGhlbgoJZWNobyAi
-RXJyb3IuIFBhcnRpdGlvbiAjMiBub3QgbWFwcGVkISIKCWV4aXQKZmkKCiNtb3VudAptb3VudCAk
-TjEncDEnICRWMU1OVApzdGF0ICQ/IDAgbW91bnRfdm9sMQoKbW91bnQgJE4xJ3AyJyAkVjJNTlQK
-c3RhdCAkPyAwIG1vdW50X3ZvbDIKClNVTTFfQT0kKG1kNXN1bSAkVjFNTlQvdGVzdDEuYmluIHwg
-Z2F3ayAne3ByaW50ICQxfScpClNVTTJfQT0kKG1kNXN1bSAkVjJNTlQvdGVzdDEuYmluIHwgZ2F3
-ayAne3ByaW50ICQxfScpCgppZiBbWyAkU1VNMSAhPSAkU1VNMV9BIF1dIHx8IFtbICRTVU0yICE9
-ICRTVU0yX0EgXV0gOyB0aGVuCiAgICAJZWNobyAiRXJyb3IuIFRlc3QgZmFpbGVkLiBtZDVzdW0g
-b2YgZmlsZXMgbm90IGVxdWFsISIKZWxzZQogICAgZWNobyAiVGVzdCBQQVNTRUQhIgpmaQoKIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
-IwojIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMgRU5EICMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
-IyMjIyMjCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj
-IyMjIyMjIyMjIyMKCg==
-
---_002_BE2BFE91933D1B4089447C644860408068C4429Dirsmsx503gercor_--
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
