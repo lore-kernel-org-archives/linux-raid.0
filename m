@@ -1,98 +1,267 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] Re: User space RAID-6 access
-Date: Wed, 9 Feb 2011 19:47:34 +0100
-Message-ID: <20110209184734.GA7169@lazy.lzy>
-References: <20110131202054.GA15712@lazy.lzy>
- <20110201075259.4beaf501@notabene.brown>
- <20110205173334.GA5952@lazy.lzy>
- <20110206075820.08fc19c9@notabene.brown>
- <20110207222459.GA25471@lazy.lzy>
- <20110208094952.49745c7b@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: SSD - TRIM command
+Date: Wed, 9 Feb 2011 16:52:01 -0200
+Message-ID: <AANLkTi=P91hs-K88-KsQzG41TSCkrrVDwv5ZpgDUM4Ja@mail.gmail.com>
+References: <4D5245DF.4020401@hardwarefreak.com>
+	<iiu4rc$9ju$1@dough.gmane.org>
+	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+	<AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com>
+	<20110209161916.GB8632@bounceswoosh.org>
+	<AANLkTimQ+B2sXt0AZiUYW2QrWqpUvt7PLnkVCOwZqx0k@mail.gmail.com>
+	<20110209171744.GC8632@bounceswoosh.org>
+	<AANLkTik4=Kq+r3H8p8n5gmtB2BJT8bGtZocVF=xPHkEs@mail.gmail.com>
+	<20110209182426.GA2724@lazy.lzy>
+	<AANLkTimtdL31Nx+XCBy3EUiewnq87vF1SWjv3K_25=E_@mail.gmail.com>
+	<20110209183814.GA7142@lazy.lzy>
+	<AANLkTi=TYtG62P0ANb_3OohYsLTCpunHu-yjEw26chwc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110208094952.49745c7b@notabene.brown>
+In-Reply-To: <AANLkTi=TYtG62P0ANb_3OohYsLTCpunHu-yjEw26chwc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: "Eric D. Mudama" <edmudama@bounceswoosh.org>, "Scott E. Armitage" <launchpad@scott.armitage.name>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I have applied some patch - with some formatting changes to make it consistent
-> with the rest of the code.
-> 
-> I don't really have time to look more deeply at it at the moment.
-> Maybe someone else will?...
+the other question...
+checked and repair
+i don=B4t know the today resync implementation (i need read source code=
+)
+but, a read check diferences and after write if any diference is
+found, is better than write without check diferences
+why better?
+to SSD: it will have a bigger life
+to HDD: i think it will have a bigger life too (I THINK)
+the problem: more operations
+without check:
+READ from source, WRITE to mirror
+with check:
+READ from source, READ from mirror, check diff, WRITE to mirror if diff
 
-Hi Neil,
-
-thanks for including this in git.
-
-Actually I did it look at it :-) and I already found a
-couple of issues, below is a small fix patch.
-
-One question about offsets.
-I noticed that offsets seems to be defined per component,
-in the md software stack.
-I mean, looking at sysfs, the offset are inside md/dev-sdX/offset
-or available with mdadm -E /dev/sdX
-It seems possible that different components have different
-offset (I can imagine this happening with different sizes).
-
-Now, from inside "test_stripe" there is no information about
-the RAID itself, I mean the device, nor about the metadata type.
-
-What would be the best way to get the offsets inside "restripe.c"?
-
-1) popen "mdadm -E ..." and grep the "Data Offset" field.
-2) pass one single offset as command line parameter.
-3) add the whole md device as command line parameter, removing
-the single devices, and use sysfs.
-
-Thanks for any advice,
-
-bye,
-
-pg
+maybe a option to mdadm could set the md device to RESYNC WITH CHECK,
+and RESYNC WITHOUT CHECK
+it=B4s a user option, not a md option, right? if user want a fast resyn=
+c
+it can use without check or with check, but we can give user
+options... that=B4s very nice (to user), the default option? i think
+WITHOUT CHECK should be the default option, without check is a feature
+like default chuck size...
 
 
-diff -uN a/restripe.c b/restripe.c
---- a/restripe.c	2011-02-09 19:31:18.989495816 +0100
-+++ b/restripe.c	2011-02-09 19:32:42.597955058 +0100
-@@ -430,7 +430,8 @@
- 
- 
- 		if((Px != 0) && (Qx != 0)) {
--			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]) & 0xFF;
-+			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]);
-+			if(data_id < 0) data_id += 255;
- 			diskD = geo_map(data_id, start/chunk_size,
- 					data_disks + 2, level, layout);
- 			curr_broken_disk = diskD;
-@@ -439,6 +440,9 @@
- 		if((Px == 0) && (Qx == 0))
- 			curr_broken_disk = curr_broken_disk;
- 
-+		if(curr_broken_disk >= data_disks + 2)
-+			broken_status = 2;
-+
- 		switch(broken_status) {
- 		case 0:
- 			if(curr_broken_disk != -1) {
-@@ -450,10 +454,6 @@
- 		case 1:
- 			if(curr_broken_disk != prev_broken_disk)
- 				broken_status = 2;
--
--			if(curr_broken_disk >= data_disks + 2)
--				broken_status = 2;
--
- 			break;
- 
- 		case 2:
- 
-bye,
+2011/2/9 Roberto Spadim <roberto@spadim.com.br>:
+> it=B4s just a discussion, right? no implementation yet, right?
+>
+> what i think....
+> if device accept TRIM, we can use TRIM.
+> if not, we must translate TRIM to something similar (maybe many WRITE=
+S
+> ?), and when we READ from disk we get the same information
+> the translation coulbe be done by kernel (not md) maybe options on
+> libata, nbd device....
+> other option is do it with md, internal (md) TRIM translate function
+>
+> who send trim?
+> internal md information: md can generate it (if necessary, maybe it=B4=
+s
+> not...) for parity disks (not data disks)
+> filesystem/or another upper layer program (database with direct devic=
+e
+> access), we could accept TRIM from filesystem/database, and send it t=
+o
+> disks/mirrors, when necessary translate it (internal or kernel
+> translate function)
+>
+>
+> 2011/2/9 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
+>> On Wed, Feb 09, 2011 at 04:30:15PM -0200, Roberto Spadim wrote:
+>>> nice =3D)
+>>> but check that parity block is a raid information, not a filesystem=
+ information
+>>> for raid we could implement trim when possible (like swap)
+>>> and implement a trim that we receive from filesystem, and send to a=
+ll
+>>> disks (if it=B4s a raid1 with mirrors, we should sent to all mirror=
+s)
+>>
+>> To all disk also in case of RAID-5?
+>>
+>> What if the TRIM belongs only to a single SDD block
+>> belonging to a single chunk of a stripe?
+>> That is a *single* SSD of the RAID-5.
+>>
+>> Should md re-read the block and re-write (not TRIM)
+>> the parity?
+>>
+>> I think anything that has to do with checking &
+>> repairing must be carefully considered...
+>>
+>> bye,
+>>
+>> pg
+>>
+>>> i don=B4t know what trim do very well, but i think it=B4s a very bi=
+g write
+>>> with only some bits for example:
+>>> set sector1=3D'00000000000000000000000000000000000000000000000000'
+>>> could be replace by:
+>>> trim sector1
+>>> it=B4s faster for sata communication, and it=B4s a good information=
+ for
+>>> hard disk (it can put a single '0' at the start of the sector and k=
+now
+>>> that all sector is 0, if it try to read any information it can use
+>>> internal memory (don=B4t read hard disk), if a write is done it sho=
+uld
+>>> write 0000 to bits, and after after the write operation, but it=B4s
+>>> internal function of hard disk/ssd, not a problem of md raid... md
+>>> raid should need know how to optimize and use it =3D] )
+>>>
+>>> 2011/2/9 Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>:
+>>> >> ext4 send trim commands to device (disk/md raid/nbd)
+>>> >> kernel swap send this commands (when possible) to device too
+>>> >> for internal raid5 parity disk this could be done by md, for dat=
+a
+>>> >> disks this should be done by ext4
+>>> >
+>>> > That's an interesting point.
+>>> >
+>>> > On which basis should a parity "block" get a TRIM?
+>>> >
+>>> > If you ask me, I think the complete TRIM story is, at
+>>> > best, a temporary patch.
+>>> >
+>>> > IMHO the wear levelling should be handled by the filesystem
+>>> > and, with awarness of this, by the underlining device drivers.
+>>> > Reason is that the FS knows better what's going on with the
+>>> > blocks and what will happen.
+>>> >
+>>> > bye,
+>>> >
+>>> > pg
+>>> >
+>>> >>
+>>> >> the other question... about resync with only write what is diffe=
+rent
+>>> >> this is very good since write and read speed can be different fo=
+r ssd
+>>> >> (hd don=B4t have this 'problem')
+>>> >> but i=B4m sure that just write what is diff is better than write=
+ all
+>>> >> (ssd life will be bigger, hd maybe... i think that will be bigge=
+r too)
+>>> >>
+>>> >>
+>>> >> 2011/2/9 Eric D. Mudama <edmudama@bounceswoosh.org>:
+>>> >> > On Wed, Feb =A09 at 11:28, Scott E. Armitage wrote:
+>>> >> >>
+>>> >> >> Who sends this command? If md can assume that determinate mod=
+e is
+>>> >> >> always set, then RAID 1 at least would remain consistent. For=
+ RAID 5,
+>>> >> >> consistency of the parity information depends on the determin=
+ate
+>>> >> >> pattern used and the number of disks. If you used determinate
+>>> >> >> all-zero, then parity information would always be consistent,=
+ but this
+>>> >> >> is probably not preferable since every TRIM command would inc=
+ur an
+>>> >> >> extra write for each bit in each page of the block.
+>>> >> >
+>>> >> > True, and there are several solutions. =A0Maybe track space us=
+ed via
+>>> >> > some mechanism, such that when you trim you're only trimming t=
+he
+>>> >> > entire stripe width so no parity is required for the trimmed r=
+egions.
+>>> >> > Or, trust the drive's wear leveling and endurance rating, comb=
+ined
+>>> >> > with SMART data, to indicate when you need to replace the devi=
+ce
+>>> >> > preemptive to eventual failure.
+>>> >> >
+>>> >> > It's not an unsolvable issue. =A0If the RAID5 used distributed=
+ parity,
+>>> >> > you could expect wear leveling to wear all the devices evenly,=
+ since
+>>> >> > on average, the # of writes to all devices will be the same. =A0=
+Only a
+>>> >> > RAID4 setup would see a lopsided amount of writes to a single =
+device.
+>>> >> >
+>>> >> > --eric
+>>> >> >
+>>> >> > --
+>>> >> > Eric D. Mudama
+>>> >> > edmudama@bounceswoosh.org
+>>> >> >
+>>> >> > --
+>>> >> > To unsubscribe from this list: send the line "unsubscribe linu=
+x-raid" in
+>>> >> > the body of a message to majordomo@vger.kernel.org
+>>> >> > More majordomo info at =A0http://vger.kernel.org/majordomo-inf=
+o.html
+>>> >> >
+>>> >>
+>>> >>
+>>> >>
+>>> >> --
+>>> >> Roberto Spadim
+>>> >> Spadim Technology / SPAEmpresarial
+>>> >> --
+>>> >> To unsubscribe from this list: send the line "unsubscribe linux-=
+raid" in
+>>> >> the body of a message to majordomo@vger.kernel.org
+>>> >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.=
+html
+>>> >
+>>> > --
+>>> >
+>>> > piergiorgio
+>>> > --
+>>> > To unsubscribe from this list: send the line "unsubscribe linux-r=
+aid" in
+>>> > the body of a message to majordomo@vger.kernel.org
+>>> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.h=
+tml
+>>> >
+>>>
+>>>
+>>>
+>>> --
+>>> Roberto Spadim
+>>> Spadim Technology / SPAEmpresarial
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>>
+>> --
+>>
+>> piergiorgio
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>
 
--- 
 
-piergiorgio
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
