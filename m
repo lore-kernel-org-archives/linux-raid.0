@@ -1,46 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Single-drive RAID0
-Date: Wed, 9 Feb 2011 13:45:57 +1100
-Message-ID: <20110209134557.4e607451@notabene.brown>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+Subject: Re: [PATCH 0/6] Reshape fixes (expansion)
+Date: Wed, 9 Feb 2011 14:10:57 +1100
+Message-ID: <20110209141057.7682d10d@notabene.brown>
+References: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20110208131046.8787.1777.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 8 Feb 2011 16:15:53 +0000 "Wojcik, Krzysztof"
-<krzysztof.wojcik@intel.com> wrote:
+On Tue, 08 Feb 2011 14:30:28 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Neil,
+> The following series adds some fixes for reshape (expansion).
 > 
-> I try to create a single-drive RAID0 array with data preservation.
-> It means I have a single disk with partitions and data on them. 
-> I would like to migrate this single disk to RAID0 array and then grow it to N devices.
-> Of course I expect partitions with my useful data will be mapped to corresponding MD block devices (/dev/md126p1, /dev/md126p2 etc.). Indeed they are but when I try to mount new block device it disappears from /dev directory and mount is not succeeded. 
-> /var/log/messages shows all the time: 
-> md126: p1
-> md126: detected capacity change from 0 to xxxxxxxxxxxxx
+> A while ago mdadm unit tests (suits 12 and 13) works correctly, now I've found problems.
+> I've learned that containers created for raid5 and raid0 has different number of blocks in mdstat.
+> I've put mdstat partial output to patch description:  UT FIX: imsm container can have different blocks number
+> I'm not 100% sure that this is fix (for changed behavior), not workaround for container creation problem.
+> This fix is first of fixes (3) that enables reshape (12, 13) UT.
+> If you find this more as workaround, this patch is good point for discussion what change is correct.
 > 
-> It is not always reproducible but very often.
-> I try this operation on 0.9 and imsm metadata. Symptoms are similar.
+> Patches:
+>       FIX: compare blocks on all data disks
+>       FIX: Compare the same units
+> makes changes for blocks computing verification. After those 2 more  patches UT (12, 13) works. 
+> Please let me know what you are thinking about them. It is possible that this is not final patch also,
+> but I've tried to find out what this condition should do, and change code to archive it (IMHO).
 > 
-> Do you have any suggestions? How to fix this issue?
+> Rest of patches addresses other issues, I can observe during expansion.
 > 
-> Regards
-> Krzysztof
+> BR
+> Adam
+> 
+> ---
+> 
+> Adam Kwolek (6):
+>       FIX: md runs recovery instead reshape for growing single disk raid0 array
+Applied.
 
-It isn't clear to me what the issue is and when I try something that might be
-what you are suggesting it works perfectly every time.
+>       FIX: Container can be left frozen
+Applied.
 
-Maybe if you could provide something more detailed and specific.
-e.g. a series of steps that I can try together with all the messages you get
-(both from the kernel and from mdadm) throughout the process.
+>       FIX: compare blocks on all data disks
+>       FIX: Compare the same units
+No, I don't like these.
+The point here is to compare the amount of data to be backed up with the
+size of one of the spare devices, because in some cases the data will be
+backed up to a spare device.
+If the size of the data to be backed up is bigger than half the size of a
+spare device, then it doesn't really fit and something is wrong.
+Normally the amount of data to be backed up is much much smaller than the
+size of any device.
 
-That will probably help.
+Maybe we just need to make the test use larger devices or smaller chunk size,
+or similar.
+
+
+>       UT FIX: imsm container can have different blocks number
+Applied (the block numbers here are completely meaningless, so ignoring them
+is good).
+>       imsm: FIX: Wrong output string format
+Applied.
+
+All pushed out to devel-3.2
+
+Thanks.
 
 NeilBrown
+
