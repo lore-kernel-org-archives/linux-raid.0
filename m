@@ -1,81 +1,44 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] UT FIX: Pass all UT in suit 13
-Date: Wed, 09 Feb 2011 09:31:29 +0100
-Message-ID: <20110209083129.27876.82194.stgit@gklab-128-013.igk.intel.com>
+From: "Eric D. Mudama" <edmudama@bounceswoosh.org>
+Subject: Re: SSD - TRIM command
+Date: Wed, 9 Feb 2011 02:05:22 -0700
+Message-ID: <20110209090522.GA8632@bounceswoosh.org>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
+ <4D517F4F.4060003@gmail.com>
+ <4D5245DF.4020401@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D5245DF.4020401@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: maurice <mhilarius@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Parameters in UT suit 13 were wrongly chosen. This causes that
-computed number of backup blocks was too big comparing to loop devices
-size used in test. Changes in test parameters (chunk, array size)
-causes that backup blocks passes mdadm condition for very small
-loop devices.
+On Wed, Feb  9 at  1:44, Stan Hoeppner wrote:
+>maurice put forth on 2/8/2011 11:37 AM:
+>> On 2/7/2011 1:07 PM, Roberto Spadim wrote:
+>>> hi guys, could md send TRIM command to ssd? using ext4 discart mount option?
+>>> if i mix ssd and hd, could this TRIM be rewrite to non TRIM compatible disks?
+>>>
+>> I have read that using md with SSDs is not a great idea:
+>> Form the Fedora 14 documentation:
+>
+>Using any RAID level but pure striping with SSDs is a bad idea, for the exact
+>reason in that documentation:  excessive writes.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+If I mirror two SSDs, and write 1 unit of data to the mirror, each
+element of the mirror should see 1 unit of write.  How does this
+perform excessive writes, compared to the same workload applied to a
+single SSD?
 
- tests/13imsm-r0_r0_2d-grow-r0_r0_5d |    4 ++--
- tests/13imsm-r0_r0_3d-grow-r0_r0_4d |    2 +-
- tests/13imsm-r0_r5_3d-grow-r0_r5_5d |    4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+I agree that in aggregate we've now done 2 units worth of writes,
+however, in a mirror case, we're protecting against both whole-device
+failure and single-sector failure modes, so hardly seems like a bad
+idea in all applications.
 
-diff --git a/tests/13imsm-r0_r0_2d-grow-r0_r0_5d b/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
-index 80e0cf0..1b851a9 100644
---- a/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
-+++ b/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
-@@ -10,13 +10,13 @@ spare_list="$dev2 $dev3 $dev4"
- # Before: RAID 0 volume in slot #0, 2 disks, 64k chunk size
- #         RAID 0 volume in slot #1, 2 disks, 256k chunk size
- vol0_level=0
--vol0_comp_size=$((5 * 1024))
-+vol0_comp_size=$((4 * 1024))
- vol0_chunk=64
- vol0_num_comps=$num_disks
- vol0_offset=0
- 
- vol1_level=0
--vol1_comp_size=$((5 * 1024))
-+vol1_comp_size=$((6 * 1024))
- vol1_chunk=256
- vol1_num_comps=$num_disks
- vol1_offset=$((vol0_comp_size + 2048))
-diff --git a/tests/13imsm-r0_r0_3d-grow-r0_r0_4d b/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
-index 17f24d7..27ba83b 100644
---- a/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
-+++ b/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
-@@ -17,7 +17,7 @@ vol0_offset=0
- 
- vol1_level=0
- vol1_comp_size=$((5 * 1024))
--vol1_chunk=512
-+vol1_chunk=128
- vol1_num_comps=$num_disks
- vol1_offset=$((vol0_comp_size + 2048))
- 
-diff --git a/tests/13imsm-r0_r5_3d-grow-r0_r5_5d b/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
-index 6462d6b..d0db9ae 100644
---- a/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
-+++ b/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
-@@ -11,13 +11,13 @@ spare_list="$dev3 $dev4"
- #         RAID 5 volume in slot #1, 3 disks, 512k chunk size
- vol0_level=0
- vol0_comp_size=$((5 * 1024))
--vol0_chunk=256
-+vol0_chunk=128
- vol0_num_comps=$num_disks
- vol0_offset=0
- 
- vol1_level=5
- vol1_comp_size=$((5 * 1024))
--vol1_chunk=512
-+vol1_chunk=128
- vol1_num_comps=$((num_disks - 1))
- vol1_offset=$((vol0_comp_size + 2048))
- 
+
+-- 
+Eric D. Mudama
+edmudama@bounceswoosh.org
 
