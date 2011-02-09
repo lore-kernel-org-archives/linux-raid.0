@@ -1,48 +1,81 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SSD - TRIM command
-Date: Wed, 09 Feb 2011 01:44:31 -0600
-Message-ID: <4D5245DF.4020401@hardwarefreak.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com> <4D517F4F.4060003@gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] UT FIX: Pass all UT in suit 13
+Date: Wed, 09 Feb 2011 09:31:29 +0100
+Message-ID: <20110209083129.27876.82194.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D517F4F.4060003@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: maurice <mhilarius@gmail.com>
-Cc: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-maurice put forth on 2/8/2011 11:37 AM:
-> On 2/7/2011 1:07 PM, Roberto Spadim wrote:
->> hi guys, could md send TRIM command to ssd? using ext4 discart mount option?
->> if i mix ssd and hd, could this TRIM be rewrite to non TRIM compatible disks?
->>
-> I have read that using md with SSDs is not a great idea:
-> Form the Fedora 14 documentation:
+Parameters in UT suit 13 were wrongly chosen. This causes that
+computed number of backup blocks was too big comparing to loop devices
+size used in test. Changes in test parameters (chunk, array size)
+causes that backup blocks passes mdadm condition for very small
+loop devices.
 
-Using any RAID level but pure striping with SSDs is a bad idea, for the exact
-reason in that documentation:  excessive writes.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-SSD - Solid State Drive
+ tests/13imsm-r0_r0_2d-grow-r0_r0_5d |    4 ++--
+ tests/13imsm-r0_r0_3d-grow-r0_r0_4d |    2 +-
+ tests/13imsm-r0_r5_3d-grow-r0_r5_5d |    4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Note the first two words.  Solid state device = integrated circuit.  ICs,
-including those comprised of flash memory transistors, have totally different
-failure modes than spinning rust disks, SRDs, or "plain old mechanical hard drives".
+diff --git a/tests/13imsm-r0_r0_2d-grow-r0_r0_5d b/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
+index 80e0cf0..1b851a9 100644
+--- a/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
++++ b/tests/13imsm-r0_r0_2d-grow-r0_r0_5d
+@@ -10,13 +10,13 @@ spare_list="$dev2 $dev3 $dev4"
+ # Before: RAID 0 volume in slot #0, 2 disks, 64k chunk size
+ #         RAID 0 volume in slot #1, 2 disks, 256k chunk size
+ vol0_level=0
+-vol0_comp_size=$((5 * 1024))
++vol0_comp_size=$((4 * 1024))
+ vol0_chunk=64
+ vol0_num_comps=$num_disks
+ vol0_offset=0
+ 
+ vol1_level=0
+-vol1_comp_size=$((5 * 1024))
++vol1_comp_size=$((6 * 1024))
+ vol1_chunk=256
+ vol1_num_comps=$num_disks
+ vol1_offset=$((vol0_comp_size + 2048))
+diff --git a/tests/13imsm-r0_r0_3d-grow-r0_r0_4d b/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
+index 17f24d7..27ba83b 100644
+--- a/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
++++ b/tests/13imsm-r0_r0_3d-grow-r0_r0_4d
+@@ -17,7 +17,7 @@ vol0_offset=0
+ 
+ vol1_level=0
+ vol1_comp_size=$((5 * 1024))
+-vol1_chunk=512
++vol1_chunk=128
+ vol1_num_comps=$num_disks
+ vol1_offset=$((vol0_comp_size + 2048))
+ 
+diff --git a/tests/13imsm-r0_r5_3d-grow-r0_r5_5d b/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
+index 6462d6b..d0db9ae 100644
+--- a/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
++++ b/tests/13imsm-r0_r5_3d-grow-r0_r5_5d
+@@ -11,13 +11,13 @@ spare_list="$dev3 $dev4"
+ #         RAID 5 volume in slot #1, 3 disks, 512k chunk size
+ vol0_level=0
+ vol0_comp_size=$((5 * 1024))
+-vol0_chunk=256
++vol0_chunk=128
+ vol0_num_comps=$num_disks
+ vol0_offset=0
+ 
+ vol1_level=5
+ vol1_comp_size=$((5 * 1024))
+-vol1_chunk=512
++vol1_chunk=128
+ vol1_num_comps=$((num_disks - 1))
+ vol1_offset=$((vol0_comp_size + 2048))
+ 
 
-RAID'ing SSDs with any data duplicative RAID level, any mirroring or parity RAID
-levels, _decreases_ the life of all SSDs in the array.  This is the opposite
-effect of what you want:  reliability and lifespan.
-
-People have a misconception that SSDs are like hard disks.  The only thing they
-have in common is that both store data and they can have a similar interface
-(SATA).  The similarities end there.
-
-RAID is not a proper method of extending the life of SSD storage nor protecting
-the data on SSD devices.  If you want to pool all the capacity of multiple SSDs
-into a single logical device, use RAID 0 or spanning, _not_ a mirror or parity
-RAID level.  If you want to protect the data, snap it to a single large SATA
-drive, or a D2D backup array, and then to tape.
-
--- 
-Stan
