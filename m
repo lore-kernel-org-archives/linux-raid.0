@@ -1,23 +1,57 @@
-From: "Kxwqz" <witheedcr@yahoo.dk>
-Subject: Mxdoovs Yidqdgy Z%RAN_
-Date: Thu, 10 Feb 2011 10:32:27 +0800
-Message-ID: <599179.61864.bm@smtp113.mail.bf1.yahoo.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH 1/2] fix: imsm: size must be in K for rounding to chunk
+Date: Thu, 10 Feb 2011 08:33:33 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F011149855B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-NLG+yczQ0Neo0rW5qdOmuPfA4L6rt8LP49HMoaOyydPD1K2zp9HMy7/F5NbGo6yw/New0+vV5sa3
-zt631rHwo6y/2rjQtL/V/aGjIL6tuf224MTqtcTK0LOhtLjBtqOssru2z7XE1srBv7jEvfijrLfC
-1ea2yLTvtb05MCXS1MnPoaPKx7OjxOrX1LPpoaLLzcDxoaK1yMrX0aGhow0KVrj3xrfFxs/j0cy8
-27jxo7rUqi/M9Si6rNPKt9EpICANCjPI7dbQu6qjpDI2MCAg07LW0Luqo6QyMzAgICDL1dHMo6Qy
-MjAgICAgu8a618KlMTkxNqOkNTAwICC67LrTtcCjpDU1MCAgvsXO5dau1/CjpDUwMCAgus3M7M/C
-o6Q0ODAgIL3w3L3I2KOkMTMwICAgwLbI7dy9yNijpDMwMCAgIMjt0/HPqqOkMTMwICANCsn6svrB
-tLXE16jStbuvo6y8vMr1tcS9+LK9o6zWysG/vfG3x870sciho9Pr1ebRzMTRt9ayrtbZoaPN6sir
-v8nS1MqkyM7I1bOjvbu8yqGjDQpquPy24Ma3xcbAtLXn18nRr6O6MTM1IDkwNDQgMTg0NiAgUVE6
-MTU5Nzc5Mzg2OA0KwarPtcjLo7qzwrHzDQrIq7n6v+y13cj9zOzE2r/Jtb2ho7v1tb24tr/uoaPH
-67fF0MS5usLyo6FI
+From 77d66de281e818f93e97b3150dc0e610634463de Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Tue, 8 Feb 2011 11:13:14 +0100
+Subject: [PATCH 1/2] fix: imsm: size must be in K for rounding to chunk
+Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+
+chunk is in K so size must be converted to K before it is rounded.
+Otherwise we may get wrong freesize returned
+resulting in creation failure.
+
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ super-intel.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index 6a21b26..5c16137 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4379,7 +4379,8 @@ static int reserve_space(struct supertype *st, int raiddisks,
+ 	maxsize = merge_extents(super, extent_cnt);
+ 	minsize = size;
+ 	if (size == 0)
+-		minsize = chunk;
++		/* chunk is in K */
++		minsize = chunk * 2;
+ 
+ 	if (cnt < raiddisks ||
+ 	    (super->orom && used && used != raiddisks) ||
+@@ -4392,8 +4393,8 @@ static int reserve_space(struct supertype *st, int raiddisks,
+ 	if (size == 0) {
+ 		size = maxsize;
+ 		if (chunk) {
+-			size /= chunk;
+-			size *= chunk;
++			size /= 2 * chunk;
++			size *= 2 * chunk;
+ 		}
+ 	}
+ 
+-- 
+1.7.1
+
