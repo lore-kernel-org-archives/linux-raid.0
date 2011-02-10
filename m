@@ -1,43 +1,56 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 2/2] fix: imsm: assemble doesn't restart recovery
-Date: Thu, 10 Feb 2011 08:35:05 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F0111498562@irsmsx504.ger.corp.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: raid1 with rotating offsite disks for backup
+Date: Thu, 10 Feb 2011 08:43:38 +0000
+Message-ID: <4D53A53A.2000409@anonymous.org.uk>
+References: <1ADCC31C-C4BD-4D43-829F-9341D3663185@stanford.edu>	<AANLkTik+WR5r_xBAFhKrUCwQgAzz+x2_AVQ9vjr=Rdco@mail.gmail.com> <AANLkTin6UFR6pR-E+z29kTd9VioRVxQqmOR-ABTnWymu@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <AANLkTin6UFR6pR-E+z29kTd9VioRVxQqmOR-ABTnWymu@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: hansbkk@gmail.com, Jeff Klingner <klingner@stanford.edu>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From 0dac844675a298df6c7d05445edac815db7e4419 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Wed, 9 Feb 2011 09:52:00 +0100
-Subject: [PATCH 2/2] fix: imsm: assemble doesn't restart recovery
-Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+On 09/02/2011 19:53, Roberto Spadim wrote:
+> i agree with rsync
+> rsync is more filesystem related feature
+> if you want copy files, you should use rsync
+> if you want to copy the device, may be a dd with devices?
+> dd if=3D/dev/md0 of=3D/dev/sda
+>
+> if you want a snapshot copy, you should first remount your filesystem
+> to readonly (there=B4s no flock() for /dev/md0 since filesystem don=B4=
+t
+> use flock() on /dev/md0) or another way to block writes to filesystem
+> while you is read from device, some filesystems have online backup
+> features..
+> i don=B4t know lvm very well, but maybe they implement online backup =
+there...
+> i don=B4t think it=B4s a problem to solve at md level (it could work,=
+ but
+> the raid1 purpose is make a fail safe device (or partially safe), not
+> a online backup device)
 
-Because IMSM_ORD_REBUILD is set in second map not first.
+I do both with several of my customers: md array with LVM on top,=20
+suspend system services (mailstore), take snapshot, start system=20
+services, then rsync diff the snapshot to another drive with luks=20
+crypto, which gets rotated off-site once a week. Generally the backup=20
+drives are bigger than the system array, so I can keep at least a week'=
+s=20
+worth of nightlies and several months' worth of weeklies on each one.
 
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
----
- super-intel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Yes, I have my own separate securely-stored copies of their crypto keys=
+=2E
 
-diff --git a/super-intel.c b/super-intel.c
-index 5c16137..29f8fc4 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4780,7 +4780,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 
- 			skip = 0;
- 			idx = get_imsm_disk_idx(dev, slot, 0);
--			ord = get_imsm_ord_tbl_ent(dev, slot, 0);
-+			ord = get_imsm_ord_tbl_ent(dev, slot, -1);
- 			for (d = super->disks; d ; d = d->next)
- 				if (d->index == idx)
- 					break;
--- 
-1.7.1
+Cheers,
 
+John.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
