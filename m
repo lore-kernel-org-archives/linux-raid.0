@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/4] imsm: FIX: Add spare disks information to array
-	description
-Date: Thu, 10 Feb 2011 14:56:34 +0100
-Message-ID: <20110210135634.9276.67316.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 2/4] FIX: Get spares from external metadata
+Date: Thu, 10 Feb 2011 14:56:26 +0100
+Message-ID: <20110210135626.9276.57246.stgit@gklab-128-013.igk.intel.com>
 References: <20110210134710.9276.91430.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,47 +13,43 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Spares that are specified on container can be used by any array in container.
-this means that for every array in container they should be reported.
-This let caller know how many spare devices (not used in any array)
-are still available.
+For external metadata cases, information about number of spares cannot
+be get via ioctl GET_ARRAY_INFO for particular array
+(as info variable is initialized by). In md this information is present
+in container object not array one.
+This causes need to get spare disks number from external metadata.
+
+This information is required for reshape_array() function to decide
+if spare disks number satisfy operation requirements.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ Grow.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index fed831d..e06a6f4 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4731,11 +4731,19 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 	struct mdinfo *rest = NULL;
- 	unsigned int i;
- 	int bbm_errors = 0;
-+	struct dl *d;
-+	int spare_disks = 0;
- 
- 	/* check for bad blocks */
- 	if (imsm_bbm_log_size(super->anchor))
- 		bbm_errors = 1;
- 
-+	/* count spare devices, not used in maps
-+	 */
-+	for (d = super->disks; d; d = d->next)
-+		if (d->index == -1)
-+			spare_disks++;
+diff --git a/Grow.c b/Grow.c
+index 9ae2ecd..08fc258 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1573,6 +1573,19 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 				       force, backup_file, quiet);
+ 		frozen = 0;
+ 	} else {
++		/* get spare devices from external metadata
++		 */
++		if (st->ss->external) {
++			struct mdinfo *info2;
 +
- 	for (i = 0; i < mpb->num_raid_devs; i++) {
- 		struct imsm_dev *dev;
- 		struct imsm_map *map;
-@@ -4852,6 +4860,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- 		}
- 		/* now that the disk list is up-to-date fixup recovery_start */
- 		update_recovery_start(dev, this);
-+		this->array.spare_disks += spare_disks;
- 		rest = this;
- 	}
++			info2 = st->ss->container_content(st, subarray);
++			if (info2) {
++				info.array.spare_disks =
++					info2->array.spare_disks;
++				sysfs_free(info2);
++			}
++		}
++
+ 		/* Impose these changes on a single array.  First
+ 		 * check that the metadata is OK with the change. */
  
 
