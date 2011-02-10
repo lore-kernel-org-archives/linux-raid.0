@@ -1,82 +1,23 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Temporarily Disable Array
-Date: Wed, 9 Feb 2011 18:37:42 -0600
-Message-ID: <02.05.13137.953335D4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTi=wMnKhZCMan-TnA=RqCMhNrZ52bzXdK8hq7quF@mail.gmail.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: "Kxwqz" <witheedcr@yahoo.dk>
+Subject: Mxdoovs Yidqdgy Z%RAN_
+Date: Thu, 10 Feb 2011 10:32:27 +0800
+Message-ID: <599179.61864.bm@smtp113.mail.bf1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=wMnKhZCMan-TnA=RqCMhNrZ52bzXdK8hq7quF@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: hansbkk@gmail.com [mailto:hansbkk@gmail.com]
-> Sent: Wednesday, February 09, 2011 1:09 PM
-> To: lrhorer@satx.rr.com
-> Cc: Linux RAID
-> Subject: Re: Temporarily Disable Array
->=20
-> On Tue, Feb 8, 2011 at 7:14 AM, Leslie Rhorer <lrhorer@satx.rr.com> w=
-rote:
-> >> From: hansbkk@gmail.com [mailto:hansbkk@gmail.com]
-> >> FFR did you do this and did it work?
-> >
-> >        I did, but it didn't work as I had planned.  About a year ag=
-o, I
-> ran
-> > across a bug that had caused the homehost field on the arrays to ga=
-ve a
-> pair
->=20
->=20
-> Thanks for the update Leslie.  Assuming your specific issues didn't
-> arise, is this checklist complete, or did you find you needed to do
-> something else to prevent auto-assembly?
-
-	I really don't know, for certain.  I was having so many other
-issues, I'm not sure if this would have been entirely sufficient, or no=
-t.  I
-think so, but I could not swear to it.
-
-> ------------------------------
->=20
-> >> > 1. =A0Edit /etc/mdadm/mdadm.conf and comment out the line specif=
-ying
-> the
-> >> > array. =A0Also comment out the line "HOMEHOST <system>"
-> >> >
-> >> > 2. =A0Edit /etc/fstab and comment out the line specifying the mo=
-unt
-> point
-> >> for
-> >> > the array.
-> >> >
-> >> > 3. =A0Issue the command `update-initramfs -u`
-> >> >
-> >> > 4. =A0Reboot the system, making sure the array does not assemble=
-=2E
-> >> >
-> >> > 5. =A0Perform the OS upgrade.
-> >> >
-> >> > 6. =A0Edit mdadm.conf and fstab, removing the comment markers pl=
-aced in
-> >> steps
-> >> > 1 and 2.
-> >> >
-> >> > 7. =A0Issue the command `update-initramfs -u`
-> >> >
-> >> > 8. =A0Reboot the system, making sure the array assembles and mou=
-nts.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NLG+yczQ0Neo0rW5qdOmuPfA4L6rt8LP49HMoaOyydPD1K2zp9HMy7/F5NbGo6yw/New0+vV5sa3
+zt631rHwo6y/2rjQtL/V/aGjIL6tuf224MTqtcTK0LOhtLjBtqOssru2z7XE1srBv7jEvfijrLfC
+1ea2yLTvtb05MCXS1MnPoaPKx7OjxOrX1LPpoaLLzcDxoaK1yMrX0aGhow0KVrj3xrfFxs/j0cy8
+27jxo7rUqi/M9Si6rNPKt9EpICANCjPI7dbQu6qjpDI2MCAg07LW0Luqo6QyMzAgICDL1dHMo6Qy
+MjAgICAgu8a618KlMTkxNqOkNTAwICC67LrTtcCjpDU1MCAgvsXO5dau1/CjpDUwMCAgus3M7M/C
+o6Q0ODAgIL3w3L3I2KOkMTMwICAgwLbI7dy9yNijpDMwMCAgIMjt0/HPqqOkMTMwICANCsn6svrB
+tLXE16jStbuvo6y8vMr1tcS9+LK9o6zWysG/vfG3x870sciho9Pr1ebRzMTRt9ayrtbZoaPN6sir
+v8nS1MqkyM7I1bOjvbu8yqGjDQpquPy24Ma3xcbAtLXn18nRr6O6MTM1IDkwNDQgMTg0NiAgUVE6
+MTU5Nzc5Mzg2OA0KwarPtcjLo7qzwrHzDQrIq7n6v+y13cj9zOzE2r/Jtb2ho7v1tb24tr/uoaPH
+67fF0MS5usLyo6FI
