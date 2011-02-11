@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/4] imsm: process update for raid level migrations
-Date: Fri, 11 Feb 2011 14:44:15 +0100
-Message-ID: <20110211134415.6212.82628.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/4] imsm: prepare update for level migrations reshape
+Date: Fri, 11 Feb 2011 14:43:59 +0100
+Message-ID: <20110211134359.6212.93337.stgit@gklab-128-013.igk.intel.com>
 References: <20110211133959.6212.57757.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,160 +13,169 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Received update and prepared memory is processed to update imsm metadata.
-There is available cases:
-1. Raid0->raid5(n+1 disk array) migration:
-   a) no spares: degraded raid5 array is created
-   b) spare disk is available: raid5 is created using spare device
-2. Raid5(n disk array)->raid0(n disk array): array size is increased
+For level migrations:
+1. raid0->raid5
+2. raid5->raid0
+
+metadata update is prepared
+If migration raid0->raid5 can get spare device it is included in to update also.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |  118 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 117 insertions(+), 1 deletions(-)
+ super-intel.c |  105 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 103 insertions(+), 2 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 223019a..1e3d1b9 100644
+index e06a6f4..fbc71ab 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5875,6 +5875,119 @@ static int add_remove_disk_update(struct intel_super *super)
- 	return check_degraded;
+@@ -305,6 +305,7 @@ enum imsm_update_type {
+ 	update_rename_array,
+ 	update_add_remove_disk,
+ 	update_reshape_container_disks,
++	update_reshape_migration,
+ 	update_takeover
+ };
+ 
+@@ -340,6 +341,12 @@ struct imsm_update_reshape {
+ 	enum imsm_update_type type;
+ 	int old_raid_disks;
+ 	int new_raid_disks;
++	/* fields for array migration changes
++	 */
++	int subdev;
++	int new_level;
++	int new_layout;
++
+ 	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
+ };
+ 
+@@ -6132,6 +6139,9 @@ static void imsm_process_update(struct supertype *st,
+ 			super->updates_pending++;
+ 		break;
+ 	}
++	case update_reshape_migration: {
++		break;
++	}
+ 	case update_activate_spare: {
+ 		struct imsm_update_activate_spare *u = (void *) update->buf; 
+ 		struct imsm_dev *dev = get_imsm_dev(super, u->array);
+@@ -6525,6 +6535,9 @@ static void imsm_prepare_update(struct supertype *st,
+ 		dprintf("New anchor length is %llu\n", (unsigned long long)len);
+ 		break;
+ 	}
++	case update_reshape_migration: {
++		break;
++	}
+ 	case update_create_array: {
+ 		struct imsm_update_create_array *u = (void *) update->buf;
+ 		struct intel_dev *dv;
+@@ -6891,6 +6904,78 @@ abort:
+ 	return 0;
  }
  
-+
-+static int apply_reshape_migration_update(struct imsm_update_reshape *u,
-+						struct intel_super *super,
-+						void ***space_list)
++/******************************************************************************
++ * function: imsm_create_metadata_update_for_migration()
++ *           Creates update for IMSM array.
++ *
++ ******************************************************************************/
++static int imsm_create_metadata_update_for_migration(
++					struct supertype *st,
++					struct geo_params *geo,
++					struct imsm_update_reshape **updatep)
 +{
-+	struct intel_dev *id;
-+	void **tofree = NULL;
-+	int ret_val = 0;
++	struct intel_super *super = st->sb;
++	int update_memory_size = 0;
++	struct imsm_update_reshape *u = NULL;
++	int delta_disks = 0;
 +
-+	dprintf("apply_reshape_migration_update()\n");
-+	if ((u->subdev < 0) ||
-+	    (u->subdev > 1)) {
-+		dprintf("imsm: Error: Wrong subdev: %i\n", u->subdev);
-+		return ret_val;
++	dprintf("imsm_create_metadata_update_for_migration(enter)"
++		" New Level = %i\n", geo->level);
++	delta_disks = 0;
++
++	/* size of all update data without anchor */
++	update_memory_size = sizeof(struct imsm_update_reshape);
++
++	/* now add space for spare disks that we need to add. */
++	if (delta_disks > 0)
++		update_memory_size += sizeof(u->new_disks[0])
++					* (delta_disks - 1);
++
++	u = calloc(1, update_memory_size);
++	if (u == NULL) {
++		dprintf("error: cannot get memory for "
++			"imsm_create_metadata_update_for_migration\n");
++		return 0;
 +	}
-+	if ((space_list == NULL) || (*space_list == NULL)) {
-+		dprintf("imsm: Error: Memory is not allocated\n");
-+		return ret_val;
-+	}
++	u->type = update_reshape_migration;
++	u->subdev = super->current_vol;
++	u->new_level = geo->level;
++	u->new_layout = geo->layout;
++	u->new_raid_disks = u->old_raid_disks = geo->raid_disks;
++	u->new_disks[0] = -1;
++	if (geo->level == 5) {
++		struct mdinfo *spares = NULL;
 +
-+	for (id = super->devlist ; id; id = id->next) {
-+		if (id->index == (unsigned)u->subdev) {
-+			struct imsm_dev *dev = get_imsm_dev(super, u->subdev);
-+			struct imsm_map *map;
-+			struct imsm_dev *new_dev =
-+				(struct imsm_dev *)*space_list;
-+			struct imsm_map *migr_map = get_imsm_map(dev, 1);
-+			int to_state;
-+			struct dl *new_disk;
++		u->new_raid_disks++;
++		spares = get_spares_for_grow(st);
++		if (spares) {
++			struct dl *dl;
++			struct mdinfo *dev;
 +
-+			if (new_dev == NULL)
-+				return ret_val;
-+			*space_list = **space_list;
-+			memcpy(new_dev, dev, sizeof_imsm_dev(dev, 0));
-+			map = get_imsm_map(new_dev, 0);
-+			if (migr_map) {
-+				dprintf("imsm: Error: migration in progress");
-+				return ret_val;
++			dev = spares->devs;
++			if (dev) {
++				u->new_disks[0] = makedev(dev->disk.major,
++							  dev->disk.minor);
++				dl = get_disk_super(super,
++						    dev->disk.major,
++						    dev->disk.minor);
++				dl->index = u->old_raid_disks;
++				dev = dev->next;
 +			}
-+
-+			to_state = map->map_state;
-+			if (u->new_level == 5) {
-+				map->num_members++;
-+				if (u->new_disks[0] < 0) {
-+					map->failed_disk_num =
-+						map->num_members - 1;
-+					to_state = IMSM_T_STATE_DEGRADED;
-+				} else
-+					to_state = IMSM_T_STATE_NORMAL;
-+			}
-+			migrate(new_dev, to_state, MIGR_GEN_MIGR);
-+			map->raid_level = u->new_level;
-+			if (u->new_level == 5) {
-+				int ord = map->num_members - 1;
-+				migr_map = get_imsm_map(new_dev, 1);
-+				migr_map->num_members--;
-+				if (u->new_disks[0] < 0)
-+					ord |= IMSM_ORD_REBUILD;
-+				set_imsm_ord_tbl_ent(map,
-+						     map->num_members - 1,
-+						     ord);
-+			}
-+			id->dev = new_dev;
-+			tofree = (void **)dev;
-+
-+			/* add disk
-+			 */
-+			if (u->new_level != 5)
-+				goto skip_disk_add;
-+
-+			if (u->new_disks[0] >= 0) {
-+				/* use passes spare
-+				 */
-+				new_disk = get_disk_super(super,
-+							major(u->new_disks[0]),
-+							minor(u->new_disks[0]));
-+				dprintf("imsm: new disk for reshape is: %i:%i "
-+					"(%p, index = %i)\n",
-+					major(u->new_disks[0]),
-+					minor(u->new_disks[0]),
-+					new_disk, new_disk->index);
-+				if (new_disk == NULL) 
-+					goto error_disk_add;
-+
-+				new_disk->index = map->num_members - 1;
-+				/* slot to fill in autolayout
-+				 */
-+				new_disk->raiddisk = new_disk->index;
-+				new_disk->disk.status |= CONFIGURED_DISK;
-+				new_disk->disk.status &= ~SPARE_DISK;
-+			} else 
-+				goto error_disk_add;
-+
-+skip_disk_add:
-+			*tofree = *space_list;
-+			/* calculate new size
-+			 */
-+			imsm_set_array_size(new_dev);
-+
-+			ret_val = 1;
++			sysfs_free(spares);
++		} else {
++			free(u);
++			dprintf("error: cannot get spare device "
++				"for requested migration");
++			return 0;
 +		}
 +	}
++	dprintf("imsm: reshape update preparation : OK\n");
++	*updatep = u;
 +
-+	if (tofree)
-+		*space_list = tofree;
-+	return ret_val;
-+
-+error_disk_add:
-+	dprintf("Error: imsm: Cannot find disk.\n");
-+	return ret_val;
++	return update_memory_size;
 +}
 +
-+
- static int apply_reshape_container_disks_update(struct imsm_update_reshape *u,
- 						struct intel_super *super,
- 						void ***space_list)
-@@ -6140,6 +6253,10 @@ static void imsm_process_update(struct supertype *st,
- 		break;
- 	}
- 	case update_reshape_migration: {
-+		struct imsm_update_reshape *u = (void *)update->buf;
-+		if (apply_reshape_migration_update(
-+			    u, super, &update->space_list))
-+			super->updates_pending++;
- 		break;
- 	}
- 	case update_activate_spare: {
-@@ -6168,7 +6285,6 @@ static void imsm_process_update(struct supertype *st,
+ static void imsm_update_metadata_locally(struct supertype *st,
+ 					 void *buf, int len)
+ {
+@@ -7145,9 +7230,25 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		case CH_TAKEOVER:
+ 			ret_val = imsm_takeover(st, &geo);
+ 			break;
+-		case CH_MIGRATION:
++		case CH_MIGRATION: {
++			struct imsm_update_reshape *u = NULL;
++			int len =
++				imsm_create_metadata_update_for_migration(
++					st, &geo, &u);
++			if (len < 1) {
++				dprintf("imsm: "
++					"Cannot prepare update\n");
++			}
+ 			ret_val = 0;
+-			break;
++			/* update metadata locally */
++			imsm_update_metadata_locally(st, u, len);
++			/* and possibly remotely */
++			if (st->update_tail)
++				append_metadata_update(st, u, len);
++			else
++				free(u);
++		}
++		break;
+ 		default:
+ 			ret_val = 1;
  		}
- 
- 		super->updates_pending++;
--
- 		/* count failures (excluding rebuilds and the victim)
- 		 * to determine map[0] state
- 		 */
 
