@@ -1,81 +1,77 @@
-From: NeilBrown <neilb@suse.de>
+From: Christian <cjs703@gmail.com>
 Subject: Re: RAID6 array won't start
-Date: Sat, 12 Feb 2011 08:32:24 +1100
-Message-ID: <20110212083224.6b1c2cee@notabene.brown>
+Date: Fri, 11 Feb 2011 16:51:54 -0500
+Message-ID: <AANLkTi=Y7zf9v6dobfWj-z97FSfkVk2FpWT9Yi4MMKMr@mail.gmail.com>
 References: <AANLkTimLfJHc2waPkvjUXn=mewc37qkCd-r0GG4k=e-D@mail.gmail.com>
 	<AANLkTi=dtMbuszU3x_hGduN-y5ATbgD0tgby_2mj4YsH@mail.gmail.com>
 	<20110212074904.41e113ed@notabene.brown>
 	<AANLkTikmCmutS_96PNYR0RKAv07cG5Vje0kyzzQ7U9rd@mail.gmail.com>
+	<20110212083224.6b1c2cee@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikmCmutS_96PNYR0RKAv07cG5Vje0kyzzQ7U9rd@mail.gmail.com>
+In-Reply-To: <20110212083224.6b1c2cee@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian <cjs703@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 11 Feb 2011 16:13:53 -0500 Christian <cjs703@gmail.com> wrote:
+> True.
+>
+> Ok, being sure that the array is stopped first, try the "-Af" command again,
+> but an a -v.
+> Then post the results together with any kernel messages (dmesg | tail -50
+> maybe)
+>
+> NeilBrown
+>
 
-> On Fri, Feb 11, 2011 at 3:49 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Fri, 11 Feb 2011 11:48:41 -0500 Christian <cjs703@gmail.com> wro=
-te:
-> >
-> >> Hello,
-> >>
-> >> I have a 10 disk RAID6 array.=A0 I had an issue with a molex conne=
-ctor
-> >> that caused drives to drop from a 5in3 SATA backplane.=A0 There wa=
-sn't
-> >> any activity occurring on the array during the time, so I think th=
-e
-> >> filesystem should be in tact.=A0 The issue now is the event counts=
- are
-> >> out of sync, along with the state of each drive.
-> >>
-> >> # mdadm -A /dev/md1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdk1 /dev/s=
-dl1
-> >> /dev/sdm1 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1
-> >> mdadm: /dev/md1 assembled from 8 drives - not enough to start the
-> >> array while not clean - consider --force.
-> >>
-> >> # cat /proc/mdstat
-> >> Personalities : [raid6] [raid5] [raid4]
-> >> md1 : inactive sdt1[1](S) sde1[9](S) sdl1[8](S) sdg1[7](S) sdf1[6]=
-(S)
-> >> sdk1[5](S) sdq1[4](S) sds1[3](S) sdr1[2](S) sdm1[0](S)
-> >> =A0=A0=A0=A0=A0 19535134720 blocks
-> >>
-> >>
-> >> # mdadm -Af /dev/md1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdk1 /dev/=
-sdl1
-> >> /dev/sdm1 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1
-> >> mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
-> >
-> > The array is already in a partially-assembled state.
-> >
-> > mdadm -S /dev/md1
-> >
-> > before trying to assemble again with -f.
-> >
-> > NeilBrown
->=20
-> I should have probably included it but I did stop the array with -S
-> before running -Af.
+ # mdadm -Af -v /dev/md1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdk1
+/dev/sdl1 /dev/sdm1 /dev/sdq1 /dev/sdr1 /dev/sds1 /dev/sdt1mdadm:
+looking for devices for /dev/md1
+mdadm: /dev/sde1 is identified as a member of /dev/md1, slot 9.
+mdadm: /dev/sdf1 is identified as a member of /dev/md1, slot 6.
+mdadm: /dev/sdg1 is identified as a member of /dev/md1, slot 7.
+mdadm: /dev/sdk1 is identified as a member of /dev/md1, slot 5.
+mdadm: /dev/sdl1 is identified as a member of /dev/md1, slot 8.
+mdadm: /dev/sdm1 is identified as a member of /dev/md1, slot 0.
+mdadm: /dev/sdq1 is identified as a member of /dev/md1, slot 4.
+mdadm: /dev/sdr1 is identified as a member of /dev/md1, slot 2.
+mdadm: /dev/sds1 is identified as a member of /dev/md1, slot 3.
+mdadm: /dev/sdt1 is identified as a member of /dev/md1, slot 1.
+mdadm: added /dev/sdm1 to /dev/md1 as 0
+mdadm: added /dev/sdr1 to /dev/md1 as 2
+mdadm: added /dev/sds1 to /dev/md1 as 3
+mdadm: added /dev/sdq1 to /dev/md1 as 4
+mdadm: added /dev/sdk1 to /dev/md1 as 5
+mdadm: added /dev/sdf1 to /dev/md1 as 6
+mdadm: added /dev/sdg1 to /dev/md1 as 7
+mdadm: added /dev/sdl1 to /dev/md1 as 8
+mdadm: added /dev/sde1 to /dev/md1 as 9
+mdadm: added /dev/sdt1 to /dev/md1 as 1
+mdadm: failed to RUN_ARRAY /dev/md1: Input/output error
 
-True.
 
-Ok, being sure that the array is stopped first, try the "-Af" command a=
-gain,
-but an a -v.
-Then post the results together with any kernel messages (dmesg | tail -=
-50
-maybe)
-
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[68107.441660] md/raid:md1: not clean -- starting background reconstruction
+[68107.441669] md/raid:md1: device sdt1 operational as raid disk 1
+[68107.441671] md/raid:md1: device sde1 operational as raid disk 9
+[68107.441673] md/raid:md1: device sdl1 operational as raid disk 8
+[68107.441674] md/raid:md1: device sdg1 operational as raid disk 7
+[68107.441676] md/raid:md1: device sdf1 operational as raid disk 6
+[68107.441678] md/raid:md1: device sdk1 operational as raid disk 5
+[68107.441679] md/raid:md1: device sdq1 operational as raid disk 4
+[68107.441681] md/raid:md1: device sdr1 operational as raid disk 2
+[68107.442368] md/raid:md1: allocated 10572kB
+[68107.442388] md/raid:md1: cannot start dirty degraded array.
+[68107.442394] RAID conf printout:
+[68107.442396]  --- level:6 rd:10 wd:8
+[68107.442397]  disk 1, o:1, dev:sdt1
+[68107.442399]  disk 2, o:1, dev:sdr1
+[68107.442400]  disk 4, o:1, dev:sdq1
+[68107.442402]  disk 5, o:1, dev:sdk1
+[68107.442403]  disk 6, o:1, dev:sdf1
+[68107.442404]  disk 7, o:1, dev:sdg1
+[68107.442406]  disk 8, o:1, dev:sdl1
+[68107.442407]  disk 9, o:1, dev:sde1
+[68107.442692] md/raid:md1: failed to run raid set.
+[68107.442693] md: pers->run() failed ...
