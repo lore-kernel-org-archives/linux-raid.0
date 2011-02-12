@@ -1,7 +1,7 @@
-From: NeilBrown <neilb@suse.de>
+From: Christian <cjs703@gmail.com>
 Subject: Re: RAID6 array won't start
-Date: Sat, 12 Feb 2011 12:03:25 +1100
-Message-ID: <20110212120325.07d55a2c@notabene.brown>
+Date: Fri, 11 Feb 2011 23:08:34 -0500
+Message-ID: <AANLkTimfH1zNiuetZeKvqWpGQkMiojMt8fe7+WEt81MY@mail.gmail.com>
 References: <AANLkTimLfJHc2waPkvjUXn=mewc37qkCd-r0GG4k=e-D@mail.gmail.com>
 	<AANLkTi=dtMbuszU3x_hGduN-y5ATbgD0tgby_2mj4YsH@mail.gmail.com>
 	<20110212074904.41e113ed@notabene.brown>
@@ -11,66 +11,418 @@ References: <AANLkTimLfJHc2waPkvjUXn=mewc37qkCd-r0GG4k=e-D@mail.gmail.com>
 	<AANLkTi=em0Wkj48SOECZqSuyJ01AwDnDdE76aQPzWiTp@mail.gmail.com>
 	<20110212115235.5e38c3db@notabene.brown>
 	<AANLkTikY5AvGBTS_P88z_WzPVBqbmRfS0qxOo98vcb1Y@mail.gmail.com>
+	<20110212120325.07d55a2c@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikY5AvGBTS_P88z_WzPVBqbmRfS0qxOo98vcb1Y@mail.gmail.com>
+In-Reply-To: <20110212120325.07d55a2c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian <cjs703@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 11 Feb 2011 19:57:52 -0500 Christian <cjs703@gmail.com> wrote:
+Here's the combined output
 
-> # mdadm -V
-> mdadm - v3.1.4 - 31st August 2010
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
 
-So either I didn't fix it like I thought, or I subsequently broke it.
+    Update Time : Wed Feb  9 19:24:09 2011
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27a7ead4 - correct
+         Events : 147226
 
-Could you send me the combined --examine output that you saved?
-That might help me reproduce the exact problem, then add it to the
-mdadm test suite.  Then fix it.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-Thanks,
-NeilBrown
+      Number   Major   Minor   RaidDevice State
+this     9       8       65        9      active sync   /dev/sde1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:24:09 2011
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27a7eade - correct
+         Events : 147226
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       81        6      active sync   /dev/sdf1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:24:09 2011
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27a7eaf0 - correct
+         Events : 147226
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     7       8       97        7      active sync   /dev/sdg1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdk1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:24:09 2011
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27a7eb2c - correct
+         Events : 147226
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     5       8      161        5      active sync   /dev/sdk1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdl1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:24:09 2011
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27a7eb42 - correct
+         Events : 147226
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     8       8      177        8      active sync   /dev/sdl1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdm1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 10
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 18:45:59 2011
+          State : clean
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 27aa228c - correct
+         Events : 147221
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8      193        0      active sync   /dev/sdm1
+
+   0     0       8      193        0      active sync   /dev/sdm1
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3      65       33        3      active sync   /dev/sds1
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdq1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:20:33 2011
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27aa2904 - correct
+         Events : 147225
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4      65        1        4      active sync   /dev/sdq1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdr1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:20:33 2011
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27aa2910 - correct
+         Events : 147225
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2      65       17        2      active sync   /dev/sdr1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sds1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 10
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 18:45:59 2011
+          State : clean
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 27aa222b - correct
+         Events : 147221
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3      65       33        3      active sync   /dev/sds1
+
+   0     0       8      193        0      active sync   /dev/sdm1
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3      65       33        3      active sync   /dev/sds1
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
+/dev/sdt1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0959650a:8a397113:e0647a97:fc2066cc (local to host ra=
+id)
+  Creation Time : Sat Sep 25 13:23:40 2010
+     Raid Level : raid6
+  Used Dev Size : 1953513472 (1863.02 GiB 2000.40 GB)
+     Array Size : 15628107776 (14904.13 GiB 16003.18 GB)
+   Raid Devices : 10
+  Total Devices : 8
+Preferred Minor : 1
+
+    Update Time : Wed Feb  9 19:20:33 2011
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 27aa292e - correct
+         Events : 147225
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1      65       49        1      active sync   /dev/sdt1
+
+   0     0       0        0        0      removed
+   1     1      65       49        1      active sync   /dev/sdt1
+   2     2      65       17        2      active sync   /dev/sdr1
+   3     3       0        0        3      faulty removed
+   4     4      65        1        4      active sync   /dev/sdq1
+   5     5       8      161        5      active sync   /dev/sdk1
+   6     6       8       81        6      active sync   /dev/sdf1
+   7     7       8       97        7      active sync   /dev/sdg1
+   8     8       8      177        8      active sync   /dev/sdl1
+   9     9       8       65        9      active sync   /dev/sde1
 
 
->=20
-> On Fri, Feb 11, 2011 at 7:52 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Fri, 11 Feb 2011 17:36:08 -0500 Christian <cjs703@gmail.com> wro=
-te:
-> >
-> >> Here it is again, there were a few other messages in there at the =
-beginning.
-> >>
-> >> [70745.855861] md: md1 stopped.
-> >> [70745.859303] md: bind<sdm1>
-> >> [70745.859576] md: bind<sdr1>
-> >> [70745.859720] md: bind<sds1>
-> >> [70745.860265] md: bind<sdq1>
-> >> [70745.860428] md: bind<sdk1>
-> >> [70745.860680] md: bind<sdf1>
-> >> [70745.860839] md: bind<sdg1>
-> >> [70745.860986] md: bind<sdl1>
-> >> [70745.861169] md: bind<sde1>
-> >> [70745.861359] md: bind<sdt1>
-> >> [70745.861407] md: kicking non-fresh sds1 from array!
-> >> [70745.861411] md: unbind<sds1>
-> >> [70745.870570] md: export_rdev(sds1)
-> >> [70745.870598] md: kicking non-fresh sdm1 from array!
-> >
-> > That shouldn't happen when you use -f ....
-> >
-> > Could be that you hit the mdadm bug fixed by commit =A067a8c82d606
-> > which is in mdadm-2.6
-> > What version of mdadm are you running???
-> >
-> > (I note you have got your data back by other means - good!)
-> >
-> > NeilBrown
-> >
-
+On Fri, Feb 11, 2011 at 8:03 PM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, 11 Feb 2011 19:57:52 -0500 Christian <cjs703@gmail.com> wrote=
+:
+>
+>> # mdadm -V
+>> mdadm - v3.1.4 - 31st August 2010
+>
+> So either I didn't fix it like I thought, or I subsequently broke it.
+>
+> Could you send me the combined --examine output that you saved?
+> That might help me reproduce the exact problem, then add it to the
+> mdadm test suite. =A0Then fix it.
+>
+> Thanks,
+> NeilBrown
+>
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
