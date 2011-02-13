@@ -1,58 +1,44 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [PATCH] md: Remove risk of overflow via sprintf) by using
- snprintf() in md_check_recovery()
-Date: Sun, 13 Feb 2011 21:18:52 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1102132118360.18930@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1102112227040.16994@swampdragon.chaosbits.net> <4D56541D.3030409@uw.no> <4D568FCA.90902@msgid.tls.msk.ru> <4D5693E7.2010000@uw.no>
+From: Bodo Eggert
+	<arcoristkaputtundbrauchtdiesentext.7eggert@nurfuerspam.de>
+Subject: Re: [PATCH] md: Remove risk of overflow via sprintf) by using snprintf()  in md_check_recovery()
+Date: Sun, 13 Feb 2011 21:53:21 +0100
+Message-ID: <E1Poiwb-0002rc-Lm@be1.7eggert.dyndns.org>
+References: <gl8SB-1hb-11@gated-at.bofh.it> <glk7o-3l2-17@gated-at.bofh.it> <glo1k-1AX-17@gated-at.bofh.it>
+Reply-To: 7eggert@nurfuerspam.de
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5693E7.2010000@uw.no>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Daniel K." <dk@uw.no>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, Neil Brown <neilb@cse.unsw.edu.au>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>, "Daniel K." <dk@uw.no>, Jesper Juhl <jj@chaosbits.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>Neil
 List-Id: linux-raid.ids
 
-On Sat, 12 Feb 2011, Daniel K. wrote:
+Michael Tokarev <mjt@tls.msk.ru> wrote:
+> 12.02.2011 12:34, Daniel K. wrote:
+>> Jesper Juhl wrote:
 
-> Michael Tokarev wrote:
-> > 12.02.2011 12:34, Daniel K. wrote:
-> > > Jesper Juhl wrote:
-> > > > sprintf() is dangerous - given the wrong source string it will
-> > > > overflow the destination. snprintf() is safer in that at least we'll
-> > > > never overflow the destination. Even if overflow will never happen
-> > > > today, code changes over time and snprintf() is just safer in the long
-> > > > run.
-> > > > -                        sprintf(nm,"rd%d", rdev->raid_disk);
-> > > > +                        snprintf(nm, sizeof(nm), "rd%d",
-> > > > rdev->raid_disk);
-> > > >                          sysfs_remove_link(&mddev->kobj, nm);
-> > > What if "rd1234" get truncated to "rd123" and you remove the wrong link.
-> > > (No, I didn't actually bother to check how much room was allocated.)
-> > 
-> > That allocation is in the line above first sprintf which you deleted.
-> > Sure, didn't bother, it's very difficult.
-> 
-> Yeah, early morning, I cut to much, and I didn't bother to look it up again,
-> sorry for being lazy. Nevertheless, the actual size is of the allocation is of
-> no particular importance. As you've shown, the current allocation of 20 bytes
-> is more than enough.
-> 
-> > C'mon guys, this is pointless.  20 bytes allocated for the device
-> > name, and this is for raid disk number.  It is impossible to have
-> > more than 10^17 (20 bytes total, 2 for "rd" and on for the zero
-> > terminator) drives in a single array.
-> 
-> Agreed, and this was sort of the point.
-> 
-> In all probability it would not overflow, and if it did, it would be better
-> for it to crash and burn, than to unlink the wrong files.
-> 
+>>> sprintf() is dangerous - given the wrong source string it will
+>>> overflow the destination. snprintf() is safer in that at least we'l=
+l
+>>> never overflow the destination. Even if overflow will never happen
+>>> today, code changes over time and snprintf() is just safer in the l=
+ong
+>>> run.
+>>
+>>> -                        sprintf(nm,"rd%d", rdev->raid_disk);
+>>> +                        snprintf(nm, sizeof(nm), "rd%d",
+>>> rdev->raid_disk);
+>>>                          sysfs_remove_link(&mddev->kobj, nm);
 
-Point taken. Ignore the patch.
+> C'mon guys, this is pointless.  20 bytes allocated for the device
+> name, and this is for raid disk number.  It is impossible to have
+> more than 10^17 (20 bytes total, 2 for "rd" and on for the zero
+> terminator) drives in a single array.
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Plain text mails only, please.
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+If you argue that you might get a buffer overflow, you'll have to check
+for snprintf errors, too.
+--=20
+Logic: The art of being wrong with confidence...=20
 
+=46ri=C3=9F, Spammer: tR@c.7eggert.dyndns.org S5xk@h.7eggert.dyndns.org
+ loqnjg@GFhzy.7eggert.dyndns.org 6hs4Axaqf@ndlJ.7eggert.dyndns.org
