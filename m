@@ -1,44 +1,48 @@
-From: Bodo Eggert
-	<arcoristkaputtundbrauchtdiesentext.7eggert@nurfuerspam.de>
-Subject: Re: [PATCH] md: Remove risk of overflow via sprintf) by using snprintf()  in md_check_recovery()
-Date: Sun, 13 Feb 2011 21:53:21 +0100
-Message-ID: <E1Poiwb-0002rc-Lm@be1.7eggert.dyndns.org>
-References: <gl8SB-1hb-11@gated-at.bofh.it> <glk7o-3l2-17@gated-at.bofh.it> <glo1k-1AX-17@gated-at.bofh.it>
-Reply-To: 7eggert@nurfuerspam.de
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/4] imsm: FIX: add raid5 to raid0 case to
+ analyse_change()
+Date: Mon, 14 Feb 2011 09:26:42 +1100
+Message-ID: <20110214092642.555377e7@notabene.brown>
+References: <20110209134737.4559.34527.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>, "Daniel K." <dk@uw.no>, Jesper Juhl <jj@chaosbits.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>Neil
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110209134737.4559.34527.stgit@gklab-128-013.igk.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Michael Tokarev <mjt@tls.msk.ru> wrote:
-> 12.02.2011 12:34, Daniel K. wrote:
->> Jesper Juhl wrote:
+On Wed, 09 Feb 2011 14:47:37 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
->>> sprintf() is dangerous - given the wrong source string it will
->>> overflow the destination. snprintf() is safer in that at least we'l=
-l
->>> never overflow the destination. Even if overflow will never happen
->>> today, code changes over time and snprintf() is just safer in the l=
-ong
->>> run.
->>
->>> -                        sprintf(nm,"rd%d", rdev->raid_disk);
->>> +                        snprintf(nm, sizeof(nm), "rd%d",
->>> rdev->raid_disk);
->>>                          sysfs_remove_link(&mddev->kobj, nm);
+> Transition raid0 to raid5 is not possible
+> due to wrong condition in imsm_analyze_change().
+> Current condition blocks migration possibility instead allow for it.
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-> C'mon guys, this is pointless.  20 bytes allocated for the device
-> name, and this is for raid disk number.  It is impossible to have
-> more than 10^17 (20 bytes total, 2 for "rd" and on for the zero
-> terminator) drives in a single array.
+Thanks.  All 4 in this series applied.
 
-If you argue that you might get a buffer overflow, you'll have to check
-for snprintf errors, too.
---=20
-Logic: The art of being wrong with confidence...=20
+NeilBrown
 
-=46ri=C3=9F, Spammer: tR@c.7eggert.dyndns.org S5xk@h.7eggert.dyndns.org
- loqnjg@GFhzy.7eggert.dyndns.org 6hs4Axaqf@ndlJ.7eggert.dyndns.org
+
+> ---
+> 
+>  super-intel.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 6a21b26..2875ade 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -6934,7 +6934,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+>  			}
+>  			break;
+>  		case 5:
+> -			if (geo->level != 0)
+> +			if (geo->level == 0)
+>  				change = CH_LEVEL_MIGRATION;
+>  			break;
+>  		case 10:
+
