@@ -1,48 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/4] imsm: FIX: add raid5 to raid0 case to
- analyse_change()
-Date: Mon, 14 Feb 2011 09:26:42 +1100
-Message-ID: <20110214092642.555377e7@notabene.brown>
-References: <20110209134737.4559.34527.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 1/2] fix: imsm: size must be in K for rounding to chunk
+Date: Mon, 14 Feb 2011 09:50:16 +1100
+Message-ID: <20110214095016.17e8258d@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F011149855B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209134737.4559.34527.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F011149855B@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 09 Feb 2011 14:47:37 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Thu, 10 Feb 2011 08:33:33 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> Transition raid0 to raid5 is not possible
-> due to wrong condition in imsm_analyze_change().
-> Current condition blocks migration possibility instead allow for it.
+> >From 77d66de281e818f93e97b3150dc0e610634463de Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Tue, 8 Feb 2011 11:13:14 +0100
+> Subject: [PATCH 1/2] fix: imsm: size must be in K for rounding to chunk
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 > 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> chunk is in K so size must be converted to K before it is rounded.
+> Otherwise we may get wrong freesize returned
+> resulting in creation failure.
+> 
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 
-Thanks.  All 4 in this series applied.
+Thanks.  I've applied both patches in this series.
 
 NeilBrown
 
 
 > ---
-> 
->  super-intel.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  super-intel.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
 > 
 > diff --git a/super-intel.c b/super-intel.c
-> index 6a21b26..2875ade 100644
+> index 6a21b26..5c16137 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -6934,7 +6934,7 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
->  			}
->  			break;
->  		case 5:
-> -			if (geo->level != 0)
-> +			if (geo->level == 0)
->  				change = CH_LEVEL_MIGRATION;
->  			break;
->  		case 10:
+> @@ -4379,7 +4379,8 @@ static int reserve_space(struct supertype *st, int raiddisks,
+>  	maxsize = merge_extents(super, extent_cnt);
+>  	minsize = size;
+>  	if (size == 0)
+> -		minsize = chunk;
+> +		/* chunk is in K */
+> +		minsize = chunk * 2;
+>  
+>  	if (cnt < raiddisks ||
+>  	    (super->orom && used && used != raiddisks) ||
+> @@ -4392,8 +4393,8 @@ static int reserve_space(struct supertype *st, int raiddisks,
+>  	if (size == 0) {
+>  		size = maxsize;
+>  		if (chunk) {
+> -			size /= chunk;
+> -			size *= chunk;
+> +			size /= 2 * chunk;
+> +			size *= 2 * chunk;
+>  		}
+>  	}
+>  
 
