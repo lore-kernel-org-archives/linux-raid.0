@@ -1,256 +1,130 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/4] Raid0 <-> Raid5 migrations (imsm)
-Date: Mon, 14 Feb 2011 12:21:29 +1100
-Message-ID: <20110214122129.6874e64a@notabene.brown>
-References: <20110211133959.6212.57757.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: mdadm: recovering from an aborted reshape op - to ensure at
+ least one email gets through!
+Date: Mon, 14 Feb 2011 13:07:33 +1100
+Message-ID: <20110214130733.6e9ab345@notabene.brown>
+References: <20110214110028.5353475d@notabene.brown>
+	<579146.69308.qm@web65101.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110211133959.6212.57757.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <579146.69308.qm@web65101.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Gavin Flower <gavinflower@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 11 Feb 2011 14:43:50 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Sun, 13 Feb 2011 16:36:15 -0800 (PST) Gavin Flower <gavinflower@yaho=
+o.com>
+wrote:
 
-> The following series implements Raid5 <-> Raid0 migrations
-> for imsm metadata.
-> 
-> Patches should be applied on top of patches previously sent by me.
-> 
-> BR
-> Adam
-> 
-> 
-> ---
-> 
-> Adam Kwolek (4):
->       FIX: Target disk number depends on source raid level
+> Hi Neil,
+>=20
+> You last command seems to be doing something useful, after I had give=
+n it the original backup file.
+>=20
+> I will update you when it finishes...
+>=20
+> Will you still want the diagnostic output?  I am happy to send it, if=
+ you think it will be useful.
 
-I don't like this fix - it just addresses the obvious symptom rather
-than the underlying problem.  See below for that patch I have added
-which should fix it and also make the code a lot cleaner.
+No, not necessary.
+
+I guess whatever boot script tried to assemble the device didn't know
+to tell it about a backup file and so the assembly didn't complete,
+leaving you to pick up the pieces, but with no clear message explaining
+what the pieces were...
 
 
->       imsm: process update for raid level migrations
->       imsm: prepare memory for level migration update
->       imsm: prepare update for level migrations reshape
+I hope that in a few releases we can largely do away with the backup
+file so I probably won't put much effort into trying to make this all
+run more seamlessly.
 
-I don't like having mdadm choose the spares to add.  That should
-always be the role of mdmon.
-So mdadm should at most tell mdmon that a reshape is happening
-and mdmon should determine that new spares are needed.
 
-Possibly mdadm wouldn't need to tell mdmon anything.  Having
-determined that the reshape is allowed, mdadm can set up the
-parameters for the reshape directly in the kernel.
-mdmon could notice and make the required changes to the metadata
-with at most a 'ping_monitor'.
+>=20
+> If you want me to run other diagnostics, please let me know.
+>=20
+> You deserve a huge bonus on top of the exorbitant (of zero dollars an=
+d zero cents) fee I am paying you! -)
 
-Maybe there will be some information that has to be sent to mdmon
-over the socket, but it should be absolutely minimal.
+:-)
+
 
 Thanks,
 NeilBrown
 
 
+>=20
+>=20
+> Thanks,
+> Gavin
+> --
+> All Adults share the Responsibility
+> to help Raise Today's Children,
+> for they are Tomorrow's Society!
+>=20
+>=20
+> --- On Mon, 14/2/11, NeilBrown <neilb@suse.de> wrote:
+>=20
+> > From: NeilBrown <neilb@suse.de>
+> > Subject: Re: mdadm: recovering from an aborted reshape op - to ensu=
+re at least one email gets through!
+> > To: "Gavin Flower" <gavinflower@yahoo.com>
+> > Cc: linux-raid@vger.kernel.org
+> > Date: Monday, 14 February, 2011, 13:00
+> > On Sun, 13 Feb 2011 15:10:36 -0800
+> > (PST) Gavin Flower <gavinflower@yahoo.com>
+> > wrote:
+> >=20
+> > > Hi Neil,
+> > >=20
+> > > I'll send this now.
+> > >=20
+> > > My previous 2 attempts failed.
+> > >=20
+> > > I had the first bounce due to HTML, but no errors
+> > reported for my second attempt.
+> > >=20
+> > > I replied to you blog post.
+> > >=20
+> >=20
+> > Yes - vger.kernel.org doesn't like html.
+> > Normal attachments should work - and you should get a
+> > bounce-message
+> > if there is something odd.
+> > But this and the following messages did get through.
+> >=20
+> > For those on linux-raid: the background is that a reshape
+> > for a RAID6
+> > to change chunksize was interrupted by the admin killing
+> > the mdadm
+> > which monitors the reshape.=A0 Then after a reboot the
+> > array isn't working=20
+> > properly.
+> >=20
+> > When I asked for "mdadm -Evs" I should have asked for an
+> > extra 'v' - I keep
+> > forgetting that.
+> > However for now:=A0 what would help is:
+> >=20
+> >  mdadm -S /dev/md1
+> >  mdadm -E /dev/md[abcde]2
+> >  mdadm -Av /dev/md1 /dev/sd[abcde]2
+> >  dmesg | tail -50
+> >=20
+> > capture all of the output and post that.
+> >=20
+> > Thanks,
+> > NeilBrown
+> >=20
+> >=20
+>=20
+>=20
+>      =20
 
-
-commit b545e14a2142b946446cf80127c7c8801dab55c8
-Author: NeilBrown <neilb@suse.de>
-Date:   Mon Feb 14 12:17:08 2011 +1100
-
-    analyse_change: fix calculation of after.data_disks and ->delta_disks.
-    
-    
-    When changing level when a new number of raid disks was explicitly
-    specified, we much make sure that the change implied by the
-    change in level is properly incorporated into the final result.
-    
-    So explicitly track the change in number of parity disks
-    (delta_parity) and use it together with delta_disks to determine
-    final data_disks.
-    Also set info->delta_disks so other code doesn't need to mirror
-    this analysis.
-    
-    And add some errors in cases where a new number of disks was
-    requested but is not currently supported
-    
-    Reported-by: Adam Kwolek <adam.kwolek@intel.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Grow.c b/Grow.c
-index 49831ad..424d489 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -893,6 +893,10 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 	 * when assembling an array that is undergoing reshape.
- 	 */
- 	int new_disks;
-+	/* delta_parity records change in number of devices
-+	 * caused by level change
-+	 */
-+	int delta_parity = 0;
- 
- 	/* If a new level not explicitly given, we assume no-change */
- 	if (info->new_level == UnSet)
-@@ -925,6 +929,10 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		 * raid0 with 1 disk
- 		 */
- 		if (info->new_level == 0) {
-+			if (info->delta_disks != UnSet &&
-+			    info->delta_disks != 0)
-+				return "Cannot change number of disks "
-+					"with RAID1->RAID0 conversion";
- 			re->level = 0;
- 			re->before.data_disks = 1;
- 			re->after.data_disks = 1;
-@@ -944,6 +952,10 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		}
- 		if (info->array.raid_disks == 2 &&
- 		    info->new_level == 5) {
-+			if (info->delta_disks != UnSet &&
-+			    info->delta_disks != 0)
-+				return "Cannot change number of disks "
-+					"with RAID1->RAID5 conversion";
- 			re->level = 5;
- 			re->before.data_disks = 1;
- 			re->after.data_disks = 1;
-@@ -970,10 +982,10 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 			return "RAID10 can only be changed to RAID0";
- 		new_disks = (info->array.raid_disks
- 			     / (info->array.layout & 0xff));
--		if (info->delta_disks == UnSet) {
-+		if (info->delta_disks == UnSet)
- 			info->delta_disks = (new_disks
- 					     - info->array.raid_disks);
--		}
-+
- 		if (info->delta_disks != new_disks - info->array.raid_disks)
- 			return "New number of raid-devices impossible for RAID10";
- 		if (info->new_chunk &&
-@@ -1032,16 +1044,19 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		 * a raid4 style layout of the final level.
- 		 */
- 		switch (info->new_level) {
--		case 0:
- 		case 4:
-+			delta_parity = 1;
-+		case 0:
- 			re->level = 4;
- 			re->before.layout = 0;
- 			break;
- 		case 5:
-+			delta_parity = 1;
- 			re->level = 5;
- 			re->before.layout = ALGORITHM_PARITY_N;
- 			break;
- 		case 6:
-+			delta_parity = 2;
- 			re->level = 6;
- 			re->before.layout = ALGORITHM_PARITY_N;
- 			break;
-@@ -1057,6 +1072,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 	case 5:
- 		switch (info->new_level) {
- 		case 0:
-+			delta_parity = -1;
- 		case 4:
- 			re->level = info->array.level;
- 			re->before.data_disks = info->array.raid_disks - 1;
-@@ -1068,6 +1084,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 			re->before.layout = info->array.layout;
- 			break;
- 		case 6:
-+			delta_parity = 1;
- 			re->level = 6;
- 			re->before.data_disks = info->array.raid_disks - 1;
- 			switch (info->array.layout) {
-@@ -1096,6 +1113,10 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		case 1:
- 			if (info->array.raid_disks != 2)
- 				return "Can only convert a 2-device array to RAID1";
-+			if (info->delta_disks != UnSet &&
-+			    info->delta_disks != 0)
-+				return "Cannot set raid_disk when "
-+					"converting RAID5->RAID1";
- 			re->level = 1;
- 			break;
- 		default:
-@@ -1106,6 +1127,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		switch (info->new_level) {
- 		case 4:
- 		case 5:
-+			delta_parity = -1;
- 		case 6:
- 			re->level = 6;
- 			re->before.data_disks = info->array.raid_disks - 2;
-@@ -1131,11 +1153,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		 */
- 		if (re->level != 4 && re->level != 5)
- 			return "Cannot covert to RAID0 from this level";
--		if (info->delta_disks == UnSet)
--			re->after.data_disks = re->before.data_disks;
--		else
--			re->after.data_disks =
--				info->array.raid_disks + info->delta_disks;
-+
- 		switch (re->level) {
- 		case 4:
- 			re->after.layout = 0 ; break;
-@@ -1148,11 +1166,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		/* We can only get to RAID4 from RAID5 */
- 		if (re->level != 4 && re->level != 5)
- 			return "Cannot convert to RAID4 from this level";
--		if (info->delta_disks == UnSet)
--			re->after.data_disks = re->before.data_disks;
--		else
--			re->after.data_disks =
--				re->before.data_disks + info->delta_disks;
-+
- 		switch (re->level) {
- 		case 4:
- 			re->after.layout = 0 ; break;
-@@ -1165,14 +1179,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		/* We get to RAID5 for RAID5 or RAID6 */
- 		if (re->level != 5 && re->level != 6)
- 			return "Cannot convert to RAID5 from this level";
--		if (info->delta_disks == UnSet)
--			re->after.data_disks = re->before.data_disks;
--		else if (re->level == 5)
--			re->after.data_disks =
--				re->before.data_disks + info->delta_disks;
--		else
--			re->after.data_disks =
--				info->array.raid_disks + info->delta_disks - 1;
-+
- 		switch (re->level) {
- 		case 5:
- 			if (info->new_layout == UnSet)
-@@ -1205,11 +1212,6 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 		/* We must already be at level 6 */
- 		if (re->level != 6)
- 			return "Impossible level change";
--		if (info->delta_disks == UnSet)
--			re->after.data_disks = re->before.data_disks;
--		else
--			re->after.data_disks = (info->array.raid_disks +
--						info->delta_disks) - 2;
- 		if (info->new_layout == UnSet)
- 			re->after.layout = info->array.layout;
- 		else
-@@ -1218,6 +1220,12 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
- 	default:
- 		return "Impossible level change requested";
- 	}
-+	if (info->delta_disks == UnSet)
-+		info->delta_disks = delta_parity;
-+
-+	re->after.data_disks = (re->before.data_disks
-+				+ info->delta_disks
-+				- delta_parity);
- 	switch (re->level) {
- 	case 6: re->parity = 2; break;
- 	case 4:
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
