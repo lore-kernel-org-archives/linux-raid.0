@@ -1,133 +1,78 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID10 failure(s)
-Date: Tue, 15 Feb 2011 10:20:07 +1100
-Message-ID: <20110215102007.0851f3b8@notabene.brown>
-References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>
-	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
-	<20110215094802.44d99c58@notabene.brown>
-	<AANLkTimk-Z2EqaOFM87zgQEvBPE6H0wS9_acp83Gc4+5@mail.gmail.com>
+Subject: Re: write-behind has no measurable effect?
+Date: Tue, 15 Feb 2011 10:41:09 +1100
+Message-ID: <20110215104109.06b12b33@notabene.brown>
+References: <20110214213817.GG836@hellgate.intra.guy>
+	<20110215095042.51ef7e0a@notabene.brown>
+	<20110214225754.GK19990@hellgate.intra.guy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimk-Z2EqaOFM87zgQEvBPE6H0wS9_acp83Gc4+5@mail.gmail.com>
+In-Reply-To: <20110214225754.GK19990@hellgate.intra.guy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Keisler <grimm26@gmail.com>
+To: Andras Korn <korn@raidlist.elan.rulez.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 17:08:45 -0600 Mark Keisler <grimm26@gmail.com> wro=
-te:
+On Mon, 14 Feb 2011 23:57:54 +0100 Andras Korn <korn@raidlist.elan.rulez.org>
+wrote:
 
-> On Mon, Feb 14, 2011 at 4:48 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 14 Feb 2011 14:33:03 -0600 Mark Keisler <grimm26@gmail.com>=
- wrote:
-> >
-> >> Sorry for the double-post on the original.
-> >> I realize that I also left out the fact that I rebooted since driv=
-e 0
-> >> also reported a fault and mdadm won't start the array at all. =A0I=
-'m not
-> >> sure how to tell which members were the in two RAID0 groups. =A0I =
-would
-> >> think that if I have a RAID0 pair left from the RAID10, I should b=
-e
-> >> able to recover somehow. =A0Not sure if that was drive 0 and 2, 1 =
-and 3
-> >> or 0 and 1, 2 and 3.
-> >>
-> >> Anyway, the drives do still show the correct array UUID when queri=
-ed
-> >> with mdadm -E, but they disagree about the state of the array:
-> >> # mdadm -E /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 | grep 'Array S=
-tate'
-> >> =A0 =A0Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
-> >> =A0 =A0Array State : .AAA ('A' =3D=3D active, '.' =3D=3D missing)
-> >> =A0 =A0Array State : ..AA ('A' =3D=3D active, '.' =3D=3D missing)
-> >> =A0 =A0Array State : ..AA ('A' =3D=3D active, '.' =3D=3D missing)
-> >>
-> >> sdc still shows a recovery offset, too:
-> >>
-> >> /dev/sdb1:
-> >> =A0 =A0 Data Offset : 2048 sectors
-> >> =A0 =A0Super Offset : 8 sectors
-> >> /dev/sdc1:
-> >> =A0 =A0 Data Offset : 2048 sectors
-> >> =A0 =A0Super Offset : 8 sectors
-> >> Recovery Offset : 2 sectors
-> >> /dev/sdd1:
-> >> =A0 =A0 Data Offset : 2048 sectors
-> >> =A0 =A0Super Offset : 8 sectors
-> >> /dev/sde1:
-> >> =A0 =A0 Data Offset : 2048 sectors
-> >> =A0 =A0Super Offset : 8 sectors
-> >>
-> >> I did some searching on the "READ FPDMA QUEUED" error message that=
- my
-> >> drive was reporting and have found that there seems to be a
-> >> correlation between that and having AHCI (NCQ in particular) enabl=
-ed.
-> >> I've now set my BIOS back to Native IDE (which was the default any=
-way)
-> >> instead of AHCI for the SATA setting. =A0I'm hoping that was the i=
-ssue.
-> >>
-> >> Still wondering if there is some magic to be done to get at my dat=
-a again :)
-> >
-> > No need for magic here .. but you better stand back, as
-> > =A0I'm going to try ... Science.
-> > (or is that Engineering...)
-> >
-> > =A0mdadm -S /dev/md0
-> > =A0mdadm -C /dev/md0 -l10 -n4 -c256 missing /dev/sdc1 /dev/sdd1 /de=
-v/sde1
-> > =A0mdadm --wait /dev/md0
-> > =A0mdadm /dev/md0 --add /dev/sdb1
-> >
-> > (but be really sure that the devices really are working before you =
-try this).
-> >
-> > BTW, for a near=3D2, Raid-disks=3D4 arrangement, the first and seco=
-nd devices
-> > contain the same data, and the third and fourth devices also contai=
-ner the
-> > same data as each other (but obviously different to the first and s=
-econd).
-> >
-> > NeilBrown
-> >
-> >
-> Ah, that's the kind of info that I was looking for.  So, the third an=
-d
-> fourth disks are a complete RAID0 set and the entire RAID10 should be
-> able to rebuild from them if I replace the first two disks with new
-> ones (hence being sure the devices are working)?  Or I need to hope
-> the originals will hold up to a rebuild?
+> On Tue, Feb 15, 2011 at 09:50:42AM +1100, NeilBrown wrote:
+> 
+> > > I experimented a bit with write-mostly and write-behind and found that
+> > > write-mostly provides a very significant benefit (see below) but
+> > > write-behind seems to have no effect whatsoever.
+> > 
+> > The use-case where write-behind can be expected to have an effect is when the
+> > throughput is low enough to be well within the capacity of all devices, but
+> > the latency of the write-behind device is higher than desired.
+> > write-behind will allow that high latency to be hidden (as long as the
+> > throughput limit is not exceeded).
+> > 
+> > I suspect your tests did not test for low latency in a low-throughput
+> > scenario.
+> 
+> I thought they did. "High latency" was, in my case, caused by the high seek
+> times (compared to the SSD) of the spinning disks. Throughput-wise, they
+> certainly could have kept up (their sequential read/write performance even
+> exceeds that of the SSD).
 
-No.
+A "MB/s" number is not going to show a difference with write-behind as it is
+fundamentally about throughput.  We cannot turn random writes into sequential
+writes just be doing 'write-behind' as the same locations on disk still have
+to be written to.
 
-third and fourth are like a RAID1 set, not a RAID0 set.
+You need a number like transactions-per-second to see a different.
+If you write with O_SYNC, the write-behind will probably show a difference.
 
-=46irst and second are a RAID1 pair.  Third and fourth are a RAID1 pair=
-=2E
 
-=46irst and third
-first and fourth
-second and third
-second and fourth
+> 
+> But maybe I misunderstand how write-behind works. I thought/hoped it would
+> commit writes to the fast drive(s) and mark affected areas dirty in the
+> intent map, then lazily sync the dirty areas over to the slow disk(s).
+> 
+> What does it actually do? md(4) isn't very forthcoming, and the wiki has no
+> relevant hits either.
 
-can each be seen as a RAID0 pair which container all of the data.
+write-behind makes a copy of the data, submits writes to all devices in
+parallel, and reports success to the upper layer as soon as all the
+non-write-behind writes have finished.
+
+The approach you suggest could be synthesised by:
+
+ - add a write-intent bitmap with fairly small chunks.  This should be
+   an external bitmap and should be directly on the fastest drive
+ - have some daemon that fails the 'slow' device, waits 30 seconds, re-adds
+   it, waits for recovery to complete, and loops back.
+
+Actually I just realised another reason why you don' see any improvement.
+You are using an internal bitmap.  This requires a synch write to both
+devices.  The use-case for which write-behind was developed involved an
+external bitmap.
+
+
+Maybe I should disable bitmap updates to write-behind devices .....
+
 
 NeilBrown
-
-
-
->=20
-> Thanks for the info, Neil, and all your work in FOSS :)
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
