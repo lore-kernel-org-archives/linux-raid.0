@@ -1,148 +1,175 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: can't removed failed/detached drives when using metadata
- 1.x
-Date: Mon, 14 Feb 2011 14:27:01 +1100
-Message-ID: <20110214142701.28950b00@notabene.brown>
-References: <4D54040C.4040201@lacie.com>
+From: Gavin Flower <gavinflower@yahoo.com>
+Subject: Re: mdadm: recovering from an aborted reshape op - to ensure at least one email gets through!
+Date: Sun, 13 Feb 2011 22:35:48 -0800 (PST)
+Message-ID: <89286.66236.qm@web65101.mail.ac2.yahoo.com>
+References: <20110214130733.6e9ab345@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D54040C.4040201@lacie.com>
+In-Reply-To: <20110214130733.6e9ab345@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?B?UultaSBS6XJvbGxl?= <rrerolle@lacie.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 10 Feb 2011 16:28:12 +0100 R=E9mi R=E9rolle <rrerolle@lacie.com=
+Hi Neil,
+
+It completed without apparent error (I did see errors in my very quick =
+look!) - so I rebooted.
+
+Unfortunately, it stopped in the same place.  It ran for over an hour b=
+efore I went out, it had stopped by the time I got back a couple of hou=
+rs late.
+
+I should have captured dmesg before I rebooted, but I didn't (I blame w=
+alking for almost an hour in the hot Sun...).
+
+I will follow this with email with hopefully useful diagnostics...
+
+
+Cheers,
+Gavin
+--
+All Adults share the Responsibility
+to help Raise Today's Children,
+for they are Tomorrow's Society!
+
+
+--- On Mon, 14/2/11, NeilBrown <neilb@suse.de> wrote:
+
+> From: NeilBrown <neilb@suse.de>
+> Subject: Re: mdadm: recovering from an aborted reshape op - to ensure=
+ at least one email gets through!
+> To: "Gavin Flower" <gavinflower@yahoo.com>
+> Cc: linux-raid@vger.kernel.org
+> Date: Monday, 14 February, 2011, 15:07
+> On Sun, 13 Feb 2011 16:36:15 -0800
+> (PST) Gavin Flower <gavinflower@yahoo.com>
 > wrote:
+>=20
+> > Hi Neil,
+> >=20
+> > You last command seems to be doing something useful,
+> after I had given it the original backup file.
+> >=20
+> > I will update you when it finishes...
+> >=20
+> > Will you still want the diagnostic output?=A0 I am
+> happy to send it, if you think it will be useful.
+>=20
+> No, not necessary.
+>=20
+> I guess whatever boot script tried to assemble the device
+> didn't know
+> to tell it about a backup file and so the assembly didn't
+> complete,
+> leaving you to pick up the pieces, but with no clear
+> message explaining
+> what the pieces were...
+>=20
+>=20
+> I hope that in a few releases we can largely do away with
+> the backup
+> file so I probably won't put much effort into trying to
+> make this all
+> run more seamlessly.
+>=20
+>=20
+> >=20
+> > If you want me to run other diagnostics, please let me
+> know.
+> >=20
+> > You deserve a huge bonus on top of the exorbitant (of
+> zero dollars and zero cents) fee I am paying you! -)
+>=20
+> :-)
+>=20
+>=20
+> Thanks,
+> NeilBrown
+>=20
+>=20
+> >=20
+> >=20
+> > Thanks,
+> > Gavin
+> > --
+> > All Adults share the Responsibility
+> > to help Raise Today's Children,
+> > for they are Tomorrow's Society!
+> >=20
+> >=20
+> > --- On Mon, 14/2/11, NeilBrown <neilb@suse.de>
+> wrote:
+> >=20
+> > > From: NeilBrown <neilb@suse.de>
+> > > Subject: Re: mdadm: recovering from an aborted
+> reshape op - to ensure at least one email gets through!
+> > > To: "Gavin Flower" <gavinflower@yahoo.com>
+> > > Cc: linux-raid@vger.kernel.org
+> > > Date: Monday, 14 February, 2011, 13:00
+> > > On Sun, 13 Feb 2011 15:10:36 -0800
+> > > (PST) Gavin Flower <gavinflower@yahoo.com>
+> > > wrote:
+> > >=20
+> > > > Hi Neil,
+> > > >=20
+> > > > I'll send this now.
+> > > >=20
+> > > > My previous 2 attempts failed.
+> > > >=20
+> > > > I had the first bounce due to HTML, but no
+> errors
+> > > reported for my second attempt.
+> > > >=20
+> > > > I replied to you blog post.
+> > > >=20
+> > >=20
+> > > Yes - vger.kernel.org doesn't like html.
+> > > Normal attachments should work - and you should
+> get a
+> > > bounce-message
+> > > if there is something odd.
+> > > But this and the following messages did get
+> through.
+> > >=20
+> > > For those on linux-raid: the background is that a
+> reshape
+> > > for a RAID6
+> > > to change chunksize was interrupted by the admin
+> killing
+> > > the mdadm
+> > > which monitors the reshape.=A0 Then after a reboot
+> the
+> > > array isn't working=20
+> > > properly.
+> > >=20
+> > > When I asked for "mdadm -Evs" I should have asked
+> for an
+> > > extra 'v' - I keep
+> > > forgetting that.
+> > > However for now:=A0 what would help is:
+> > >=20
+> > >=A0 mdadm -S /dev/md1
+> > >=A0 mdadm -E /dev/md[abcde]2
+> > >=A0 mdadm -Av /dev/md1 /dev/sd[abcde]2
+> > >=A0 dmesg | tail -50
+> > >=20
+> > > capture all of the output and post that.
+> > >=20
+> > > Thanks,
+> > > NeilBrown
+> > >=20
+> > >=20
+> >=20
+> >=20
+> >=A0 =A0 =A0=A0=A0
+>=20
+>=20
 
-> Hi Neil,
->=20
-> I recently came across what I believe is a regression in mdadm, which
-> has been introduced in version 3.1.3.
->=20
-> It seems that, when using metadata 1.x, the handling of failed/detach=
-ed
-> drives isn't effective anymore.
->=20
-> Here's a quick example:
->=20
-> [root@GrosCinq ~]# mdadm -C /dev/md4 -l1 -n2 --metadata=3D1.0 /dev/sd=
-c1=20
-> /dev/sdd1
-> mdadm: array /dev/md4 started.
-> [root@GrosCinq ~]#
-> [root@GrosCinq ~]# mdadm --wait /dev/md4
-> [root@GrosCinq ~]#
-> [root@GrosCinq ~]# mdadm -D /dev/md4
-> /dev/md4:
->          Version : 1.0
->    Creation Time : Thu Feb 10 13:56:31 2011
->       Raid Level : raid1
->       Array Size : 1953096 (1907.64 MiB 1999.97 MB)
->    Used Dev Size : 1953096 (1907.64 MiB 1999.97 MB)
->     Raid Devices : 2
->    Total Devices : 2
->      Persistence : Superblock is persistent
->=20
->      Update Time : Thu Feb 10 13:56:46 2011
->            State : clean
->   Active Devices : 2
-> Working Devices : 2
->   Failed Devices : 0
->    Spare Devices : 0
->=20
->             Name : GrosCinq:4  (local to host GrosCinq)
->             UUID : bbfef508:252e7ce1:c95d4a03:8beb3cbd
->           Events : 17
->=20
->      Number   Major   Minor   RaidDevice State
->         0       8        1        0      active sync   /dev/sdc1
->         1       8       49        1      active sync   /dev/sdd1
->=20
-> [root@GrosCinq ~]# mdadm --fail /dev/md4 /dev/sdc1
-> mdadm: set /dev/sdc1 faulty in /dev/md4
-> [root@GrosCinq ~]#
-> [root@GrosCinq ~]# mdadm -D /dev/md4 | tail -n 6
->=20
->      Number   Major   Minor   RaidDevice State
->         0       0        0        0      removed
->         1       8       49        1      active sync   /dev/sdd1
->=20
->         0       8        1        -      faulty spare   /dev/sdc1
-> [root@GrosCinq ~]#
-> [root@GrosCinq ~]# mdadm --remove /dev/md4 failed
-> [root@GrosCinq ~]#
-> [root@GrosCinq ~]# mdadm -D /dev/md4 | tail -n 6
->=20
->      Number   Major   Minor   RaidDevice State
->         0       0        0        0      removed
->         1       8       49        1      active sync   /dev/sdd1
->=20
->         0       8        1        -      faulty spare   /dev/sdc1
-> [root@GrosCinq ~]#
->=20
-> This is with mdadm 3.1.4, 3.1.3 or even 3.2, but not 3.1.2. I did a g=
-it=20
-> bisect to try and isolate the regression and it appears the guilty=20
-> commit is :
->=20
-> b3b4e8a : "Avoid skipping devices where removing all faulty/detached
->             devices."
->=20
-> As stated in the commit, this is only true with metadata 1.x. With 0.=
-9,=20
-> there is no problem. I also tested with detached drives as well as=20
-> raid5/6 and encountered the same issue. Actually, with detached drive=
-s,=20
-> it's even more annoying, since using --remove detached is the only wa=
-y=20
-> to remove the device without restarting the array. For a failed drive=
-,=20
-> there is still the possibility to use the device name.
->=20
-> Do you have any idea of the reason behind that regression ? Shall thi=
-s=20
-> patch only apply in the case of 0.9 metadata ?
->=20
-> Regards,
->=20
 
-
-Thanks for the report - especially for bitsecting it down to the errone=
-ous
-commit!
-
-This patch should fix the regression.  I'll ensure it is in all future
-releases.
-
-Thanks,
-NeilBrown
-
-
-diff --git a/Manage.c b/Manage.c
-index 481c165..8c86a53 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -421,7 +421,7 @@ int Manage_subdevs(char *devname, int fd,
- 				dnprintable =3D dvname;
- 				break;
- 			}
--			if (jnext =3D=3D 0)
-+			if (next !=3D dv)
- 				continue;
- 		} else if (strcmp(dv->devname, "detached") =3D=3D 0) {
- 			if (dv->disposition !=3D 'r' && dv->disposition !=3D 'f') {
-@@ -461,7 +461,7 @@ int Manage_subdevs(char *devname, int fd,
- 				dnprintable =3D dvname;
- 				break;
- 			}
--			if (jnext =3D=3D 0)
-+			if (next !=3D dv)
- 				continue;
- 		} else if (strcmp(dv->devname, "missing") =3D=3D 0) {
- 			if (dv->disposition !=3D 'a' || dv->re_add =3D=3D 0) {
+     =20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
