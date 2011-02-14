@@ -1,7 +1,7 @@
-From: Mark Keisler <mark@mitsein.net>
-Subject: raid10 failure(s)
-Date: Mon, 14 Feb 2011 10:07:34 -0600
-Message-ID: <AANLkTim+sRA+CYXaV08kyMAJRSyg4mBKm89y9JZr5BCD@mail.gmail.com>
+From: Mark Keisler <grimm26@gmail.com>
+Subject: RAID10 failure(s)
+Date: Mon, 14 Feb 2011 10:09:07 -0600
+Message-ID: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -95,36 +95,36 @@ I'm back to a degraded RAID10 again.  So I added it back in and did an
 mdadm --detail to check on it after a little while and found this:
 samsara log # mdadm --detail /dev/md0
 /dev/md0:
-        Version : 1.2
-  Creation Time : Sat Feb  5 22:00:52 2011
-     Raid Level : raid10
-     Array Size : 1953519104 (1863.02 GiB 2000.40 GB)
-  Used Dev Size : 976759552 (931.51 GiB 1000.20 GB)
-   Raid Devices : 4
-  Total Devices : 4
-    Persistence : Superblock is persistent
+       Version : 1.2
+ Creation Time : Sat Feb  5 22:00:52 2011
+    Raid Level : raid10
+    Array Size : 1953519104 (1863.02 GiB 2000.40 GB)
+ Used Dev Size : 976759552 (931.51 GiB 1000.20 GB)
+  Raid Devices : 4
+ Total Devices : 4
+   Persistence : Superblock is persistent
 
-    Update Time : Mon Feb 14 00:04:46 2011
-          State : clean, FAILED, recovering
+   Update Time : Mon Feb 14 00:04:46 2011
+         State : clean, FAILED, recovering
  Active Devices : 2
 Working Devices : 2
  Failed Devices : 2
-  Spare Devices : 0
+ Spare Devices : 0
 
-         Layout : near=2
-     Chunk Size : 256K
+        Layout : near=2
+    Chunk Size : 256K
 
  Rebuild Status : 99% complete
 
-           Name : samsara:0  (local to host samsara)
-           UUID : 26804ec8:a20a4365:bc7d5b4e:653ade03
-         Events : 30348
+          Name : samsara:0  (local to host samsara)
+          UUID : 26804ec8:a20a4365:bc7d5b4e:653ade03
+        Events : 30348
 
-    Number   Major   Minor   RaidDevice State
-       0       8       17        0      faulty spare rebuilding   /dev/sdb1
-       1       8       33        1      faulty spare rebuilding   /dev/sdc1
-       2       8       49        2      active sync   /dev/sdd1
-       3       8       65        3      active sync   /dev/sde1
+   Number   Major   Minor   RaidDevice State
+      0       8       17        0      faulty spare rebuilding   /dev/sdb1
+      1       8       33        1      faulty spare rebuilding   /dev/sdc1
+      2       8       49        2      active sync   /dev/sdd1
+      3       8       65        3      active sync   /dev/sde1
 samsara log # exit
 
 It had faulted drive 0 also during the rebuild.
@@ -167,6 +167,7 @@ mdadm: /dev/sdb1 has wrong uuid.
 
 Am I totally SOL?  Thanks for any suggestions or things to try.
 
-
 --
-Mark Keisler
+Mark
+Tact is the ability to tell a man he has an open mind when he has a
+hole in his head.
