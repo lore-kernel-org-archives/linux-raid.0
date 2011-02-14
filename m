@@ -1,38 +1,34 @@
-From: Gavin Flower <gavinflower@yahoo.com>
-Subject: mdadm: recovering from an aborted reshape op - boot messages
-Date: Mon, 14 Feb 2011 14:47:48 -0800 (PST)
-Message-ID: <396537.54229.qm@web65106.mail.ac2.yahoo.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: write-behind has no measurable effect?
+Date: Tue, 15 Feb 2011 09:50:42 +1100
+Message-ID: <20110215095042.51ef7e0a@notabene.brown>
+References: <20110214213817.GG836@hellgate.intra.guy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110214213817.GG836@hellgate.intra.guy>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: Andras Korn <korn@raidlist.elan.rulez.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Mon, 14 Feb 2011 22:38:17 +0100 Andras Korn <korn@raidlist.elan.rulez.org>
+wrote:
 
-I did not notice this before (note: I have poor eyesight, so unless I explicitly look, I may not notice things!). but just before Fedora drops to the shell on a reboot I saw these messages (hand transcribed, so might have the odd transcription error):
+> Hi,
+> 
+> I experimented a bit with write-mostly and write-behind and found that
+> write-mostly provides a very significant benefit (see below) but
+> write-behind seems to have no effect whatsoever.
 
-/dev/md1: The filing system size (according to the superblock) is 76799952 blocks
-The physical size of the device is 76799616
-Either the superblock or the partition table is likely to be corrupt!
+The use-case where write-behind can be expected to have an effect is when the
+throughput is low enough to be well within the capacity of all devices, but
+the latency of the write-behind device is higher than desired.
+write-behind will allow that high latency to be hidden (as long as the
+throughput limit is not exceeded).
 
-/dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
-(i.e. without -a or -p options)
+I suspect your tests did not test for low latency in a low-throughput
+scenario.
 
-Note that original size according mdadm was not a multiple of 512KB, so I reshaped it to be the largest multiple or 512KB less than the original size.  So my second attempt to reshape, using the 512 chunk size, started okay.
-
-Advice appreciated.
-
-
-Thanks,
-Gavin
---
-All Adults share the Responsibility
-to help Raise Today's Children,
-for they are Tomorrow's Society!
-
-
-      
+NeilBrown
