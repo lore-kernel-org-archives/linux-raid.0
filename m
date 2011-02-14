@@ -1,54 +1,75 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: recovering from an aborted reshape op - to ensure at
- least one email gets through!
-Date: Mon, 14 Feb 2011 11:00:28 +1100
-Message-ID: <20110214110028.5353475d@notabene.brown>
-References: <758136.48398.qm@web65107.mail.ac2.yahoo.com>
+Subject: Re: [PATCH 0/4] Prepare mdadm for migrations (external meta)
+Date: Mon, 14 Feb 2011 11:17:18 +1100
+Message-ID: <20110214111718.446fb4ac@notabene.brown>
+References: <20110210134710.9276.91430.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <758136.48398.qm@web65107.mail.ac2.yahoo.com>
+In-Reply-To: <20110210134710.9276.91430.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Sun, 13 Feb 2011 15:10:36 -0800 (PST) Gavin Flower <gavinflower@yahoo.com>
-wrote:
+On Thu, 10 Feb 2011 14:55:53 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Hi Neil,
+> This few patches prepares mdadm for level and chunk size migration using external metadata.
+> 1. FIX: delta_disk can have UnSet value
+>   A while ago I've reported problem that delta_disks can have UnSet value, so adding it
+>   to raid_disks can produce error in mdadm. Looking my first patch you proposed
+>   to address this problem by changing reshape_super() interface rather than
+>   set condition on function call. This patch implements your idea.
 > 
-> I'll send this now.
+> 2. FIX: Get spares from external metadata
+>    imsm: FIX: Add spare disks information to array description
+>   Those 2 patches addresses problem with not initializes spares counter in mdinfo
+>   using external metadata.
 > 
-> My previous 2 attempts failed.
-> 
-> I had the first bounce due to HTML, but no errors reported for my second attempt.
-> 
-> I replied to you blog post.
-> 
+> 3. FIX: Add raid5 to raid0 case to analyse_change()
+>   This patch adds missing of level transition in Grow.c
 
-Yes - vger.kernel.org doesn't like html.
-Normal attachments should work - and you should get a bounce-message
-if there is something odd.
-But this and the following messages did get through.
+I've applied all of these though I changed the last one to:
 
-For those on linux-raid: the background is that a reshape for a RAID6
-to change chunksize was interrupted by the admin killing the mdadm
-which monitors the reshape.  Then after a reboot the array isn't working 
-properly.
 
-When I asked for "mdadm -Evs" I should have asked for an extra 'v' - I keep
-forgetting that.
-However for now:  what would help is:
+--- a/Grow.c
++++ b/Grow.c
+@@ -1056,6 +1056,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 		info->array.layout = ALGORITHM_PARITY_N;
+ 	case 5:
+ 		switch (info->new_level) {
++		case 0:
+ 		case 4:
+ 			re->level = info->array.level;
+ 			re->before.data_disks = info->array.raid_disks - 1;
 
- mdadm -S /dev/md1
- mdadm -E /dev/md[abcde]2
- mdadm -Av /dev/md1 /dev/sd[abcde]2
- dmesg | tail -50
 
-capture all of the output and post that.
+as I think that is all that is required.
 
 Thanks,
+
 NeilBrown
+
+
+> 
+> This series should be applied on devel-3.2 branch with my yesterday's 4 patches
+> 
+> BR
+> Adam
+> 
+> ---
+> 
+> Adam Kwolek (4):
+>       FIX: Add raid5 to raid0 case to analyse_change()
+>       imsm: FIX: Add spare disks information to array description
+>       FIX: Get spares from external metadata
+>       FIX: delta_disk can have UnSet value
+> 
+> 
+>  Grow.c        |   36 ++++++++++++++++++++++++++++++------
+>  mdadm.h       |    3 ++-
+>  super-intel.c |   14 +++++++++++++-
+>  3 files changed, 45 insertions(+), 8 deletions(-)
+> 
 
