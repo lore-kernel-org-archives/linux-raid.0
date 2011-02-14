@@ -1,75 +1,38 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID10 failure(s)
-Date: Tue, 15 Feb 2011 09:48:02 +1100
-Message-ID: <20110215094802.44d99c58@notabene.brown>
-References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>
-	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
+From: Gavin Flower <gavinflower@yahoo.com>
+Subject: mdadm: recovering from an aborted reshape op - boot messages
+Date: Mon, 14 Feb 2011 14:47:48 -0800 (PST)
+Message-ID: <396537.54229.qm@web65106.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Keisler <grimm26@gmail.com>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 14:33:03 -0600 Mark Keisler <grimm26@gmail.com> wrote:
+Hi Neil,
 
-> Sorry for the double-post on the original.
-> I realize that I also left out the fact that I rebooted since drive 0
-> also reported a fault and mdadm won't start the array at all.  I'm not
-> sure how to tell which members were the in two RAID0 groups.  I would
-> think that if I have a RAID0 pair left from the RAID10, I should be
-> able to recover somehow.  Not sure if that was drive 0 and 2, 1 and 3
-> or 0 and 1, 2 and 3.
-> 
-> Anyway, the drives do still show the correct array UUID when queried
-> with mdadm -E, but they disagree about the state of the array:
-> # mdadm -E /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 | grep 'Array State'
->    Array State : AAAA ('A' == active, '.' == missing)
->    Array State : .AAA ('A' == active, '.' == missing)
->    Array State : ..AA ('A' == active, '.' == missing)
->    Array State : ..AA ('A' == active, '.' == missing)
-> 
-> sdc still shows a recovery offset, too:
-> 
-> /dev/sdb1:
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> /dev/sdc1:
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> Recovery Offset : 2 sectors
-> /dev/sdd1:
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> /dev/sde1:
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
-> 
-> I did some searching on the "READ FPDMA QUEUED" error message that my
-> drive was reporting and have found that there seems to be a
-> correlation between that and having AHCI (NCQ in particular) enabled.
-> I've now set my BIOS back to Native IDE (which was the default anyway)
-> instead of AHCI for the SATA setting.  I'm hoping that was the issue.
-> 
-> Still wondering if there is some magic to be done to get at my data again :)
+I did not notice this before (note: I have poor eyesight, so unless I explicitly look, I may not notice things!). but just before Fedora drops to the shell on a reboot I saw these messages (hand transcribed, so might have the odd transcription error):
 
-No need for magic here .. but you better stand back, as
-  I'm going to try ... Science.
-(or is that Engineering...)
+/dev/md1: The filing system size (according to the superblock) is 76799952 blocks
+The physical size of the device is 76799616
+Either the superblock or the partition table is likely to be corrupt!
 
- mdadm -S /dev/md0
- mdadm -C /dev/md0 -l10 -n4 -c256 missing /dev/sdc1 /dev/sdd1 /dev/sde1
- mdadm --wait /dev/md0
- mdadm /dev/md0 --add /dev/sdb1
+/dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
+(i.e. without -a or -p options)
 
-(but be really sure that the devices really are working before you try this).
+Note that original size according mdadm was not a multiple of 512KB, so I reshaped it to be the largest multiple or 512KB less than the original size.  So my second attempt to reshape, using the 512 chunk size, started okay.
 
-BTW, for a near=2, Raid-disks=4 arrangement, the first and second devices
-contain the same data, and the third and fourth devices also container the
-same data as each other (but obviously different to the first and second).
+Advice appreciated.
 
-NeilBrown
 
+Thanks,
+Gavin
+--
+All Adults share the Responsibility
+to help Raise Today's Children,
+for they are Tomorrow's Society!
+
+
+      
