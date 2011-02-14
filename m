@@ -1,479 +1,172 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: RE: [PATCH] fix: detect container early in Create
-Date: Mon, 14 Feb 2011 16:00:51 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D178E60EEC@irsmsx503.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246F01114985F2@irsmsx504.ger.corp.intel.com>
- <20110214095235.0fce04e9@notabene.brown>
- <A9DE54D0CD747C4CB06DCE5B6FA2246F0111762445@irsmsx504.ger.corp.intel.com>
+From: Mark Keisler <mark@mitsein.net>
+Subject: raid10 failure(s)
+Date: Mon, 14 Feb 2011 10:07:34 -0600
+Message-ID: <AANLkTim+sRA+CYXaV08kyMAJRSyg4mBKm89y9JZr5BCD@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F0111762445@irsmsx504.ger.corp.intel.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>, NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-That's right.
-We need to know which disks are making a container and make sure that they belong to the same SAS or SATA controller and load appropriate OROM.
-Each controller can have its own OROM.
+Sorry in advance for the long email :)
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Czarnowska, Anna
-> Sent: Monday, February 14, 2011 12:19 PM
-> To: NeilBrown
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: RE: [PATCH] fix: detect container early in Create
->
-> Hi Neil,
-> I can't fully agree with you.
-> Loading orom in validate_geometry_imsm is a good idea but
-> it will only work when -e imsm option is given.
-> When we have an imsm  container with sda and sdb and just call
-> mdadm -CR v0 -l 0 -n 2 /dev/sd[ab]
-> then default geometry will not be called and chunk will still be set to
-> 512.
-> We need to realize that /dev/sda is already in an imsm container to get
-> the correct setting.
-> Regards
-> Anna
->
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of NeilBrown
-> > Sent: Sunday, February 13, 2011 11:53 PM
-> > To: Czarnowska, Anna
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > Neubauer, Wojciech
-> > Subject: Re: [PATCH] fix: detect container early in Create
-> >
-> > On Thu, 10 Feb 2011 09:14:40 +0000 "Czarnowska, Anna"
-> > <anna.czarnowska@intel.com> wrote:
-> >
-> > > >From 082f13fb974059de27804e0f28d05f11e3c3eb3b Mon Sep 17 00:00:00
-> > 2001
-> > > From: Anna Czarnowska <anna.czarnowska@intel.com>
-> > > Date: Thu, 10 Feb 2011 09:52:42 +0100
-> > > Subject: [PATCH] fix: detect container early in Create
-> > > Cc: linux-raid@vger.kernel.org, Williams, Dan J
-> > <dan.j.williams@intel.com>, Ciechanowski, Ed
-> > <ed.ciechanowski@intel.com>
-> > >
-> > > When creating raid0 subarray in a container giving list of
-> > > devices on the command line Create always sets chunk=512
-> > > default_geometry will only return chunk!=0 for imsm
-> > > when we have superblock loaded.
-> > > When a list of disks is given instead of a container
-> > > we load superblock later, after wrong chunk size has been set.
-> > > This causes Create to fail for imsm.
-> > >
-> > > New function check_container is added to check if first
-> > > non "missing" device on given list is a container member.
-> > > If it is, we load container so we can get correct chunk.
-> > > At this stage we can abort creation if
-> > > - all given devices are "missing" or
-> > > - device can't be open for reading or
-> > > - metadata given on command line does not match container we found.
-> > >
-> > > As the container check was a part of validate geometry for ddf and
-> > imsm
-> > > metadata this part of code has been replaced by check_container.
-> >
-> > I don't like this patch.
-> >
-> > Choosing the correct default chunk size does not require loading
-> > the metadata.  It only requires finding the option rom which
-> > you can easily do in default_geometry_imsm just like it is done in
-> > validate_geometry_imsm_container.
-> >
-> > There may be a case for factoring code out of both ddf and intel and
-> > putting it in util.c - I'm not sure.  But it should be a separate
-> > patch with a separate justification.
-> >
-> > so: not applied.
-> >
-> > Thanks,
-> > NeilBrown
-> >
-> >
-> > >
-> > > Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> > > ---
-> > >  Create.c      |   21 +++++++++++++++
-> > >  mdadm.h       |    1 +
-> > >  super-ddf.c   |   78 ++++++---------------------------------------
-> --
-> > ---------
-> > >  super-intel.c |   58 +----------------------------------------
-> > >  util.c        |   79
-> > +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  5 files changed, 111 insertions(+), 126 deletions(-)
-> > >
-> > > diff --git a/Create.c b/Create.c
-> > > index a0669fe..8208b19 100644
-> > > --- a/Create.c
-> > > +++ b/Create.c
-> > > @@ -64,6 +64,21 @@ static int default_layout(struct supertype *st,
-> > int level, int verbose)
-> > >   return layout;
-> > >  }
-> > >
-> > > +static int devices_in_container(struct mddev_dev *devlist, struct
-> > supertype **stp, int verbose)
-> > > +{
-> > > + struct mddev_dev *dv;
-> > > +
-> > > + for(dv = devlist; dv; dv = dv->next)
-> > > +         if (strcasecmp(dv->devname, "missing") == 0)
-> > > +                 continue;
-> > > +         else
-> > > +                 break;
-> > > + if (!dv) {
-> > > +         fprintf(stderr, Name ": Cannot create this array on missing
-> > devices\n");
-> > > +         return -1;
-> > > + }
-> > > + return  check_container(dv->devname, stp, verbose);
-> > > +}
-> > >
-> > >  int Create(struct supertype *st, char *mddev,
-> > >      int chunk, int level, int layout, unsigned long long size,
-> > > @@ -230,6 +245,12 @@ int Create(struct supertype *st, char *mddev,
-> > >   case 6:
-> > >   case 0:
-> > >           if (chunk == 0) {
-> > > +                 /* check if listed devices are in a container
-> > > +                  * if so, load the container */
-> > > +                 if ((!st || !st->sb) &&
-> > > +                    devices_in_container(devlist, &st, verbose) < 0)
-> > > +                         /* error already printed */
-> > > +                         return 1;
-> > >                   if (st && st->ss->default_geometry)
-> > >                           st->ss->default_geometry(st, NULL, NULL,
-> > &chunk);
-> > >                   chunk = chunk ? : 512;
-> > > diff --git a/mdadm.h b/mdadm.h
-> > > index 608095f..9be236f 100644
-> > > --- a/mdadm.h
-> > > +++ b/mdadm.h
-> > > @@ -1133,6 +1133,7 @@ extern struct mdinfo
-> > *container_choose_spares(struct supertype *st,
-> > >                                         struct domainlist *domlist,
-> > >                                         char *spare_group,
-> > >                                         const char *metadata, int get_one);
-> > > +extern int check_container(char *devname, struct supertype **stp,
-> > int verbose);
-> > >  extern int move_spare(char *from_devname, char *to_devname, dev_t
-> > devid);
-> > >  extern int add_disk(int mdfd, struct supertype *st,
-> > >               struct mdinfo *sra, struct mdinfo *info);
-> > > diff --git a/super-ddf.c b/super-ddf.c
-> > > index 287fa7f..611626f 100644
-> > > --- a/super-ddf.c
-> > > +++ b/super-ddf.c
-> > > @@ -2555,10 +2555,6 @@ static int validate_geometry_ddf(struct
-> > supertype *st,
-> > >                            char *dev, unsigned long long *freesize,
-> > >                            int verbose)
-> > >  {
-> > > - int fd;
-> > > - struct mdinfo *sra;
-> > > - int cfd;
-> > > -
-> > >   /* ddf potentially supports lots of things, but it depends on
-> > >    * what devices are offered (and maybe kernel version?)
-> > >    * If given unused devices, we will make a container.
-> > > @@ -2601,79 +2597,21 @@ static int validate_geometry_ddf(struct
-> > supertype *st,
-> > >           return 1;
-> > >   }
-> > >
-> > > - if (st->sb) {
-> > > -         /* A container has already been opened, so we are
-> > > -          * creating in there.  Maybe a BVD, maybe an SVD.
-> > > + if (st->sb || check_container(dev, &st, verbose) == 1) {
-> > > +         /* A container has already been opened
-> > > +          * or dev is a ddf container member, so we are
-> > > +          * creating in there.
-> > > +          * Maybe a BVD, maybe an SVD.
-> > >            * Should make a distinction one day.
-> > >            */
-> > >           return validate_geometry_ddf_bvd(st, level, layout,
-> > raiddisks,
-> > >                                            chunk, size, dev, freesize,
-> > >                                            verbose);
-> > >   }
-> > > - /* This is the first device for the array.
-> > > -  * If it is a container, we read it in and do automagic
-> > allocations,
-> > > -  * no other devices should be given.
-> > > -  * Otherwise it must be a member device of a container, and we
-> > > -  * do manual allocation.
-> > > -  * Later we should check for a BVD and make an SVD.
-> > > -  */
-> > > - fd = open(dev, O_RDONLY|O_EXCL, 0);
-> > > - if (fd >= 0) {
-> > > -         sra = sysfs_read(fd, 0, GET_VERSION);
-> > > -         close(fd);
-> > > -         if (sra && sra->array.major_version == -1 &&
-> > > -             strcmp(sra->text_version, "ddf") == 0) {
-> > > -
-> > > -                 /* load super */
-> > > -                 /* find space for 'n' devices. */
-> > > -                 /* remember the devices */
-> > > -                 /* Somehow return the fact that we have enough */
-> > > -         }
-> > > -
-> > > -         if (verbose)
-> > > -                 fprintf(stderr,
-> > > -                         Name ": ddf: Cannot create this array "
-> > > -                         "on device %s - a container is required.\n",
-> > > -                         dev);
-> > > -         return 0;
-> > > - }
-> > > - if (errno != EBUSY || (fd = open(dev, O_RDONLY, 0)) < 0) {
-> > > -         if (verbose)
-> > > -                 fprintf(stderr, Name ": ddf: Cannot open %s: %s\n",
-> > > -                         dev, strerror(errno));
-> > > -         return 0;
-> > > - }
-> > > - /* Well, it is in use by someone, maybe a 'ddf' container. */
-> > > - cfd = open_container(fd);
-> > > - if (cfd < 0) {
-> > > -         close(fd);
-> > > -         if (verbose)
-> > > -                 fprintf(stderr, Name ": ddf: Cannot use %s: %s\n",
-> > > -                         dev, strerror(EBUSY));
-> > > -         return 0;
-> > > - }
-> > > - sra = sysfs_read(cfd, 0, GET_VERSION);
-> > > - close(fd);
-> > > - if (sra && sra->array.major_version == -1 &&
-> > > -     strcmp(sra->text_version, "ddf") == 0) {
-> > > -         /* This is a member of a ddf container.  Load the container
-> > > -          * and try to create a bvd
-> > > -          */
-> > > -         struct ddf_super *ddf;
-> > > -         if (load_super_ddf_all(st, cfd, (void **)&ddf, NULL) == 0)
-> > {
-> > > -                 st->sb = ddf;
-> > > -                 st->container_dev = fd2devnum(cfd);
-> > > -                 close(cfd);
-> > > -                 return validate_geometry_ddf_bvd(st, level, layout,
-> > > -                                                  raiddisks, chunk, size,
-> > > -                                                  dev, freesize,
-> > > -                                                  verbose);
-> > > -         }
-> > > -         close(cfd);
-> > > - } else /* device may belong to a different container */
-> > > -         return 0;
-> > > + if (verbose)
-> > > +         fprintf(stderr, Name ": ddf: failed container membership
-> > check\n");
-> > > + return 0;
-> > >
-> > > - return 1;
-> > >  }
-> > >
-> > >  static int
-> > > diff --git a/super-intel.c b/super-intel.c
-> > > index 29f8fc4..4d4ff89 100644
-> > > --- a/super-intel.c
-> > > +++ b/super-intel.c
-> > > @@ -4413,10 +4413,6 @@ static int validate_geometry_imsm(struct
-> > supertype *st, int level, int layout,
-> > >                             char *dev, unsigned long long *freesize,
-> > >                             int verbose)
-> > >  {
-> > > - int fd, cfd;
-> > > - struct mdinfo *sra;
-> > > - int is_member = 0;
-> > > -
-> > >   /* if given unused devices create a container
-> > >    * if given given devices in a container create a member volume
-> > >    */
-> > > @@ -4446,64 +4442,14 @@ static int validate_geometry_imsm(struct
-> > supertype *st, int level, int layout,
-> > >           }
-> > >           return 1;
-> > >   }
-> > > - if (st->sb) {
-> > > + if (st->sb || check_container(dev, &st, verbose) == 1) {
-> > >           /* creating in a given container */
-> > >           return validate_geometry_imsm_volume(st, level, layout,
-> > >                                                raiddisks, chunk, size,
-> > >                                                dev, freesize, verbose);
-> > >   }
-> > > -
-> > > - /* This device needs to be a device in an 'imsm' container */
-> > > - fd = open(dev, O_RDONLY|O_EXCL, 0);
-> > > - if (fd >= 0) {
-> > > -         if (verbose)
-> > > -                 fprintf(stderr,
-> > > -                         Name ": Cannot create this array on device
-> > %s\n",
-> > > -                         dev);
-> > > -         close(fd);
-> > > -         return 0;
-> > > - }
-> > > - if (errno != EBUSY || (fd = open(dev, O_RDONLY, 0)) < 0) {
-> > > -         if (verbose)
-> > > -                 fprintf(stderr, Name ": Cannot open %s: %s\n",
-> > > -                         dev, strerror(errno));
-> > > -         return 0;
-> > > - }
-> > > - /* Well, it is in use by someone, maybe an 'imsm' container. */
-> > > - cfd = open_container(fd);
-> > > - close(fd);
-> > > - if (cfd < 0) {
-> > > -         if (verbose)
-> > > -                 fprintf(stderr, Name ": Cannot use %s: It is busy\n",
-> > > -                         dev);
-> > > -         return 0;
-> > > - }
-> > > - sra = sysfs_read(cfd, 0, GET_VERSION);
-> > > - if (sra && sra->array.major_version == -1 &&
-> > > -     strcmp(sra->text_version, "imsm") == 0)
-> > > -         is_member = 1;
-> > > - sysfs_free(sra);
-> > > - if (is_member) {
-> > > -         /* This is a member of a imsm container.  Load the
-> > container
-> > > -          * and try to create a volume
-> > > -          */
-> > > -         struct intel_super *super;
-> > > -
-> > > -         if (load_super_imsm_all(st, cfd, (void **) &super, NULL) ==
-> > 0) {
-> > > -                 st->sb = super;
-> > > -                 st->container_dev = fd2devnum(cfd);
-> > > -                 close(cfd);
-> > > -                 return validate_geometry_imsm_volume(st, level,
-> > layout,
-> > > -                                                      raiddisks, chunk,
-> > > -                                                      size, dev,
-> > > -                                                      freesize, verbose);
-> > > -         }
-> > > - }
-> > > -
-> > >   if (verbose)
-> > > -         fprintf(stderr, Name ": failed container membership
-> > check\n");
-> > > -
-> > > - close(cfd);
-> > > +         fprintf(stderr, Name ": imsm: failed container membership
-> > check\n");
-> > >   return 0;
-> > >  }
-> > >
-> > > diff --git a/util.c b/util.c
-> > > index 87c23dc..6aeb789 100644
-> > > --- a/util.c
-> > > +++ b/util.c
-> > > @@ -1976,3 +1976,82 @@ struct mdinfo
-> *container_choose_spares(struct
-> > supertype *st,
-> > >   }
-> > >   return disks;
-> > >  }
-> > > +
-> > > +/* Returns
-> > > + *  1: if devname is a member of container with metadata type
-> > matching stp
-> > > + * -1: if device not suitable for creating array
-> > > + *  0: if not in container but device may be suitable for native
-> > array
-> > > + */
-> > > +int check_container(char *devname, struct supertype **stp, int
-> > verbose)
-> > > +{
-> > > + int fd, cfd, is_member = 0;
-> > > + struct mdinfo *sra;
-> > > + struct supertype *st = NULL;
-> > > + int container_expected = (*stp && (*stp)->ss->external);
-> > > +
-> > > + fd = open(devname, O_RDONLY|O_EXCL, 0);
-> > > + if (fd >= 0) {
-> > > +         /* not in container but don't stop create
-> > > +          * when creating native array */
-> > > +         close(fd);
-> > > +         if (container_expected) {
-> > > +                 fprintf(stderr, Name
-> > > +                         ": Cannot create this array on device %s "
-> > > +                         "- a container is required.\n",
-> > > +                         devname);
-> > > +                 return -1;
-> > > +         }
-> > > +         return 0;
-> > > + }
-> > > + if (errno != EBUSY || (fd = open(devname, O_RDONLY, 0)) < 0) {
-> > > +         if (verbose)
-> > > +                 fprintf(stderr, Name ": Cannot open %s: %s\n",
-> > > +                         devname, strerror(errno));
-> > > +         /* we can't create anything on this disk */
-> > > +         return -1;
-> > > + }
-> > > + /* Well, it is in use by someone, maybe a container. */
-> > > + cfd = open_container(fd);
-> > > + close(fd);
-> > > + if (cfd < 0) {
-> > > +         if (container_expected) {
-> > > +                 fprintf(stderr, Name ": Cannot use %s: It is busy\n",
-> > > +                         devname);
-> > > +                 return -1;
-> > > +         }
-> > > +         return 0;
-> > > + }
-> > > + sra = sysfs_read(cfd, 0, GET_VERSION);
-> > > + if (sra && sra->array.major_version == -1) {
-> > > +         int i;
-> > > +         for (i = 0; st == NULL && superlist[i] ; i++)
-> > > +                 st = superlist[i]->match_metadata_desc(sra-
-> > >text_version);
-> > > +         if (st)
-> > > +                 is_member = 1;
-> > > + }
-> > > + sysfs_free(sra);
-> > > + if (is_member) {
-> > > +         /* This is a member of a container.
-> > > +          * if *stp we expect some type of metadata
-> > > +          * check if it matches with what we have found
-> > > +          * then load the container */
-> > > +         if (*stp && st->ss != (*stp)->ss) {
-> > > +                 fprintf(stderr, Name ": Cannot use %s: "
-> > > +                         "member of %s container\n",
-> > > +                         devname, st->ss->name);
-> > > +                 close(cfd);
-> > > +                 free(st);
-> > > +                 return -1;
-> > > +         }
-> > > +         if (st->ss->load_container(st, cfd, NULL) == 0) {
-> > > +                 free(*stp);
-> > > +                 *stp = st;
-> > > +         } else /* still return ok status
-> > > +                 * validate_geometry will fail anyway because !st->sb
-> > */
-> > > +                 if (verbose)
-> > > +                         fprintf(stderr, Name ": Failed to load
-> > container"
-> > > +                                 "information for %s\n", devname);
-> > > + }
-> > > + close(cfd);
-> > > + return is_member;
-> > > +}
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I had a RAID10 array set up using 4 WD 1TB caviar black drives (SATA3)
+on 64 bit on a 2.6.36 kernel using mdadm 3.1.4.  I noticed last night
+that one drive had faulted out of the array.  It had a bunch of errors
+like so:
+
+Feb  8 03:39:48 samsara kernel: [41330.835285] ata3.00: exception
+Emask 0x0 SAct 0x1 SErr 0x0 action 0x0
+Feb  8 03:39:48 samsara kernel: [41330.835288] ata3.00: irq_stat 0x40000008
+Feb  8 03:39:48 samsara kernel: [41330.835292] ata3.00: failed
+command: READ FPDMA QUEUED
+Feb  8 03:39:48 samsara kernel: [41330.835297] ata3.00: cmd
+60/f8:00:f8:9a:45/00:00:04:00:00/40 tag 0 ncq 126976 in
+Feb  8 03:39:48 samsara kernel: [41330.835297]          res
+41/40:00:70:9b:45/00:00:04:00:00/40 Emask 0x409 (media error) <F>
+Feb  8 03:39:48 samsara kernel: [41330.835300] ata3.00: status: { DRDY ERR }
+Feb  8 03:39:48 samsara kernel: [41330.835301] ata3.00: error: { UNC }
+Feb  8 03:39:48 samsara kernel: [41330.839776] ata3.00: configured for UDMA/133
+Feb  8 03:39:48 samsara kernel: [41330.839788] ata3: EH complete
+....
+
+Feb  8 03:39:58 samsara kernel: [41340.423236] sd 2:0:0:0: [sdc]
+Unhandled sense code
+Feb  8 03:39:58 samsara kernel: [41340.423238] sd 2:0:0:0: [sdc]
+Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Feb  8 03:39:58 samsara kernel: [41340.423240] sd 2:0:0:0: [sdc]
+Sense Key : Medium Error [current] [descriptor]
+Feb  8 03:39:58 samsara kernel: [41340.423243] Descriptor sense data
+with sense descriptors (in hex):
+Feb  8 03:39:58 samsara kernel: [41340.423244]         72 03 11 04 00
+00 00 0c 00 0a 80 00 00 00 00 00
+Feb  8 03:39:58 samsara kernel: [41340.423249]         04 45 9b 70
+Feb  8 03:39:58 samsara kernel: [41340.423251] sd 2:0:0:0: [sdc]  Add.
+Sense: Unrecovered read error - auto reallocate failed
+Feb  8 03:39:58 samsara kernel: [41340.423254] sd 2:0:0:0: [sdc] CDB:
+Read(10): 28 00 04 45 9a f8 00 00 f8 00
+Feb  8 03:39:58 samsara kernel: [41340.423259] end_request: I/O error,
+dev sdc, sector 71670640
+Feb  8 03:39:58 samsara kernel: [41340.423262] md/raid10:md0: sdc1:
+rescheduling sector 143332600
+....
+Feb  8 03:40:10 samsara kernel: [41351.940796] md/raid10:md0: read
+error corrected (8 sectors at 2168 on sdc1)
+Feb  8 03:40:10 samsara kernel: [41351.954972] md/raid10:md0: sdb1:
+redirecting sector 143332600 to another mirror
+
+and so on until:
+Feb  8 03:55:01 samsara kernel: [42243.609414] md/raid10:md0: sdc1:
+Raid device exceeded read_error threshold [cur 21:max 20]
+Feb  8 03:55:01 samsara kernel: [42243.609417] md/raid10:md0: sdc1:
+Failing raid device
+Feb  8 03:55:01 samsara kernel: [42243.609419] md/raid10:md0: Disk
+failure on sdc1, disabling device.
+Feb  8 03:55:01 samsara kernel: [42243.609420] <1>md/raid10:md0:
+Operation continuing on 3 devices.
+Feb  8 03:55:01 samsara kernel: [42243.609423] md/raid10:md0: sdb1:
+redirecting sector 143163888 to another mirror
+Feb  8 03:55:01 samsara kernel: [42243.609650] md/raid10:md0: sdb1:
+redirecting sector 143164416 to another mirror
+Feb  8 03:55:01 samsara kernel: [42243.610095] md/raid10:md0: sdb1:
+redirecting sector 143164664 to another mirror
+Feb  8 03:55:01 samsara kernel: [42243.633814] RAID10 conf printout:
+Feb  8 03:55:01 samsara kernel: [42243.633817]  --- wd:3 rd:4
+Feb  8 03:55:01 samsara kernel: [42243.633820]  disk 0, wo:0, o:1, dev:sdb1
+Feb  8 03:55:01 samsara kernel: [42243.633821]  disk 1, wo:1, o:0, dev:sdc1
+Feb  8 03:55:01 samsara kernel: [42243.633823]  disk 2, wo:0, o:1, dev:sdd1
+Feb  8 03:55:01 samsara kernel: [42243.633824]  disk 3, wo:0, o:1, dev:sde1
+Feb  8 03:55:01 samsara kernel: [42243.645880] RAID10 conf printout:
+Feb  8 03:55:01 samsara kernel: [42243.645883]  --- wd:3 rd:4
+Feb  8 03:55:01 samsara kernel: [42243.645885]  disk 0, wo:0, o:1, dev:sdb1
+Feb  8 03:55:01 samsara kernel: [42243.645887]  disk 2, wo:0, o:1, dev:sdd1
+Feb  8 03:55:01 samsara kernel: [42243.645888]  disk 3, wo:0, o:1, dev:sde1
+
+
+This seemed weird as the machine is only a week or two old.  I powered
+down to open it up and get the serial number off the drive fro an RMA.
+ I powered back up and mdadm had automatically removed the drive from
+the RAID.  Fine.  The RAID had already been running on just 3 disks
+since the 8th.  For some reason, I thought to add the drive back into
+the array to see if it failed out again thinking worst case scenario
+I'm back to a degraded RAID10 again.  So I added it back in and did an
+mdadm --detail to check on it after a little while and found this:
+samsara log # mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Sat Feb  5 22:00:52 2011
+     Raid Level : raid10
+     Array Size : 1953519104 (1863.02 GiB 2000.40 GB)
+  Used Dev Size : 976759552 (931.51 GiB 1000.20 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Feb 14 00:04:46 2011
+          State : clean, FAILED, recovering
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 0
+
+         Layout : near=2
+     Chunk Size : 256K
+
+ Rebuild Status : 99% complete
+
+           Name : samsara:0  (local to host samsara)
+           UUID : 26804ec8:a20a4365:bc7d5b4e:653ade03
+         Events : 30348
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      faulty spare rebuilding   /dev/sdb1
+       1       8       33        1      faulty spare rebuilding   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       3       8       65        3      active sync   /dev/sde1
+samsara log # exit
+
+It had faulted drive 0 also during the rebuild.
+[ 1177.064359] RAID10 conf printout:
+[ 1177.064362]  --- wd:2 rd:4
+[ 1177.064365]  disk 0, wo:1, o:0, dev:sdb1
+[ 1177.064367]  disk 1, wo:1, o:0, dev:sdc1
+[ 1177.064368]  disk 2, wo:0, o:1, dev:sdd1
+[ 1177.064370]  disk 3, wo:0, o:1, dev:sde1
+[ 1177.073325] RAID10 conf printout:
+[ 1177.073328]  --- wd:2 rd:4
+[ 1177.073330]  disk 0, wo:1, o:0, dev:sdb1
+[ 1177.073332]  disk 2, wo:0, o:1, dev:sdd1
+[ 1177.073333]  disk 3, wo:0, o:1, dev:sde1
+[ 1177.073340] RAID10 conf printout:
+[ 1177.073341]  --- wd:2 rd:4
+[ 1177.073342]  disk 0, wo:1, o:0, dev:sdb1
+[ 1177.073343]  disk 2, wo:0, o:1, dev:sdd1
+[ 1177.073344]  disk 3, wo:0, o:1, dev:sde1
+[ 1177.083323] RAID10 conf printout:
+[ 1177.083326]  --- wd:2 rd:4
+[ 1177.083329]  disk 2, wo:0, o:1, dev:sdd1
+[ 1177.083330]  disk 3, wo:0, o:1, dev:sde1
+
+
+So the RAID ended up being marked "clean, FAILED."  Gee, glad it is
+clean at least ;).  I'm wondering wtf went wrong and if it actually
+makes sense that I had a double disk failure like that.  I can't even
+force it to assemble the raid anymore:
+ # mdadm --assemble --verbose --force /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: cannot open device /dev/sde1: Device or resource busy
+mdadm: /dev/sde1 has wrong uuid.
+mdadm: cannot open device /dev/sdd1: Device or resource busy
+mdadm: /dev/sdd1 has wrong uuid.
+mdadm: cannot open device /dev/sdc1: Device or resource busy
+mdadm: /dev/sdc1 has wrong uuid.
+mdadm: cannot open device /dev/sdb1: Device or resource busy
+mdadm: /dev/sdb1 has wrong uuid.
+
+Am I totally SOL?  Thanks for any suggestions or things to try.
+
+
+--
+Mark Keisler
