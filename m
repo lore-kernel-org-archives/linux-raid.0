@@ -1,41 +1,44 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID10 failure(s)
-Date: Mon, 14 Feb 2011 16:29:03 -0600
-Message-ID: <4D59ACAF.9020703@hardwarefreak.com>
-References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com> <AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] fix: detect container early in Create
+Date: Tue, 15 Feb 2011 09:37:57 +1100
+Message-ID: <20110215093757.3a0ae2ad@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F01114985F2@irsmsx504.ger.corp.intel.com>
+	<20110214095235.0fce04e9@notabene.brown>
+	<A9DE54D0CD747C4CB06DCE5B6FA2246F0111762445@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F0111762445@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Keisler <grimm26@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Mark Keisler put forth on 2/14/2011 2:33 PM:
+On Mon, 14 Feb 2011 11:19:24 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> Still wondering if there is some magic to be done to get at my data again :)
->>
->> Am I totally SOL?  Thanks for any suggestions or things to try.
->>
->> --
->> Mark
->> Tact is the ability to tell a man he has an open mind when he has a
->> hole in his head.
+> Hi Neil,
+> I can't fully agree with you. 
+> Loading orom in validate_geometry_imsm is a good idea but
+> it will only work when -e imsm option is given.
+> When we have an imsm  container with sda and sdb and just call 
+> mdadm -CR v0 -l 0 -n 2 /dev/sd[ab]
+> then default geometry will not be called and chunk will still be set to 512.
+> We need to realize that /dev/sda is already in an imsm container to get the correct setting.
 
-Interesting, and ironically appropriate, sig, Mark.
 
-No magic is required.  Simply wipe each disk by writing all zeros with dd.  You
-can do all 4 in parallel.  This will take a while with 1TB drives.  If there are
-still SATA/NCQ/etc issues they should pop up while wiping the drives.  If not,
-and all dd operations complete successfully, simply create a new RAID 10 array
-and format it with your favorite filesystem.
+OK.  How about we treat it the same way as 'layout'?
+So if we set a default, we also set a var called 'do_default_chunk' and then
+in the same places where we check do_default_layout, we also check
+do_default_chunk and apply a similar st-specific default.
 
-Then restore all your files from your backups.[1]
+Longer term, I think I would like to check validate_geometry to pass
+layout and chunksize by reference and if they are UnSet, validate_geometry
+can set defaults.
+Then we can get rid of ->default_geometry.
 
-[1] Tact is the ability to tell a man he has an open mind when he has a hole in
-his head.
+Thanks,
+NeilBrown
 
--- 
-Stan
+
