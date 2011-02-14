@@ -1,47 +1,41 @@
 From: Andras Korn <korn@raidlist.elan.rulez.org>
 Subject: Re: write-behind has no measurable effect?
-Date: Mon, 14 Feb 2011 23:57:54 +0100
-Message-ID: <20110214225754.GK19990@hellgate.intra.guy>
+Date: Tue, 15 Feb 2011 00:03:22 +0100
+Message-ID: <20110214230321.GH836@hellgate.intra.guy>
 References: <20110214213817.GG836@hellgate.intra.guy>
- <20110215095042.51ef7e0a@notabene.brown>
+ <AANLkTi=fte1B=D_8=KrEf9_dVT5gAEPTy-uw1Duz_ECB@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110215095042.51ef7e0a@notabene.brown>
+In-Reply-To: <AANLkTi=fte1B=D_8=KrEf9_dVT5gAEPTy-uw1Duz_ECB@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 15, 2011 at 09:50:42AM +1100, NeilBrown wrote:
+On Mon, Feb 14, 2011 at 02:56:37PM -0800, Doug Dumitru wrote:
 
-> > I experimented a bit with write-mostly and write-behind and found that
-> > write-mostly provides a very significant benefit (see below) but
-> > write-behind seems to have no effect whatsoever.
-> 
-> The use-case where write-behind can be expected to have an effect is when the
-> throughput is low enough to be well within the capacity of all devices, but
-> the latency of the write-behind device is higher than desired.
-> write-behind will allow that high latency to be hidden (as long as the
-> throughput limit is not exceeded).
-> 
-> I suspect your tests did not test for low latency in a low-throughput
-> scenario.
+> Not to be too cute, but the man page for mdadm says that
+> --write-behind is only attempted on drives marked --write-mostly.=A0 =
+I
+> did not see a --write-mostly in your array create statement.
 
-I thought they did. "High latency" was, in my case, caused by the high seek
-times (compared to the SSD) of the spinning disks. Throughput-wise, they
-certainly could have kept up (their sequential read/write performance even
-exceeds that of the SSD).
+Yeah, I abbreviated it as -W:
 
-But maybe I misunderstand how write-behind works. I thought/hoped it would
-commit writes to the fast drive(s) and mark affected areas dirty in the
-intent map, then lazily sync the dirty areas over to the slow disk(s).
+> > mdadm --create /dev/md/ssdraid --force --assume-clean --level=3D1 \
+> > --raid-devices=3D3 --bitmap=3Dinternal --bitmap-chunk=3D262144 \
+> > /dev/sdo2 --write-behind=3D16383 -W /dev/sd[nm]2
 
-What does it actually do? md(4) isn't very forthcoming, and the wiki has no
-relevant hits either.
+> Also, are you trying to create a three-way-mirror or mirror the one
 
-Thanks.
+A three-way mirror.
 
--- 
+--=20
                      Andras Korn <korn at elan.rulez.org>
-                  Baroque: (def.) When you are out of Monet.
+                     Caesar si viveret, ad remum dareris.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
