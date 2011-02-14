@@ -1,207 +1,93 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: mdXX: bitmap superblock UUID mismatch
-Date: Mon, 14 Feb 2011 16:36:29 +0000
-Message-ID: <AANLkTinDbx96HSTAUH7SRwtqZHqSqcAeRQYTf8Q==__T@mail.gmail.com>
-References: <AANLkTik83a9aEmywdcMEvpGwVMt_i=pS0dmg2s_o=EYG@mail.gmail.com>
-	<20110128075346.4276e2d1@notabene.brown>
-	<AANLkTi=xahVD7A29jYZ53fY4h6U0AU=kyWqhXwwmkgLK@mail.gmail.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: RE: Single-drive RAID0
+Date: Mon, 14 Feb 2011 17:04:38 +0000
+Message-ID: <BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
+References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+	<20110209134557.4e607451@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
+ <20110214131149.7f0655a3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=xahVD7A29jYZ53fY4h6U0AU=kyWqhXwwmkgLK@mail.gmail.com>
+In-Reply-To: <20110214131149.7f0655a3@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Reynald Borer <reynald.borer@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14 February 2011 16:33, Reynald Borer <reynald.borer@gmail.com> wrot=
-e:
-> Hi,
->
-> Nice catch for the 1 bit difference, I didn't see it. My point
-> regarding bitmap reconstruction was because this raid was used in a
-> LVM setup. the LVM partition used two distinct raid 1 disks, and I wa=
-s
-> not able to start the LVM correctly without this failing raid.
->
-> In the end, I was able to save my LVM by simply skipping the raid 1
-> and using directly one partition. The LVM tool was clever enough to
-> detect the MD bits and proposed me to remove them in order to mount
-> directly the partition, and it worked fine. Thus I was able to save m=
-y
-> data.
->
-> Thanks for your answer though.
->
-> Regards,
-> Reynald
->
->
-> On Thu, Jan 27, 2011 at 9:53 PM, NeilBrown <neilb@suse.de> wrote:
->> On Wed, 26 Jan 2011 21:58:25 +0100 Reynald Borer <reynald.borer@gmai=
-l.com>
->> wrote:
->>
->>> Hello guys,
->>>
->>> I have been using md raids for quite a long time now and it always
->>> worked fine, until recently when I upgraded some hardware on my
->>> workstation. Unfortunately the hardware I changed proved itself to =
-be
->>> very unstable, and I encountered a lot of hard lockups of the syste=
-m
->>> while running. Those lockups recently made one of my raid 1 array
->>> fails with the infamous error message "mdXX: bitmap superblock UUID
->>> mismatch".
->>>
->>> Here is what I have found in the kernel logs when I try to activate
->>> the given raid group:
->>> -----------------
->>> md/raid1:md126: active with 2 out of 2 mirrors
->>> md126: bitmap superblock UUID mismatch
->>> md126: bitmap file superblock:
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0magic: 6d746962
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0version: 4
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 uuid: 37102258.af9c1930.b8397fb8=
-=2Eeba356af
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 ^ this is an 'a'
->>
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 events: 199168
->>> events cleared: 199166
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0state: 00000000
->>> =C2=A0 =C2=A0 =C2=A0chunksize: 524288 B
->>> =C2=A0 daemon sleep: 5s
->>> =C2=A0 =C2=A0 =C2=A0sync size: 248075584 KB
->>> max write behind: 0
->>> md126: failed to create bitmap (-22)
->>> -----------------
->>>
->>>
->>> Such error messages are displayed each time I try to run the raid
->>> group. Content of /proc/mdstat is:
->>> -----------------
->>> md126 : inactive sdb6[0] sda6[1]
->>> =C2=A0 =C2=A0 =C2=A0 496151168 blocks
->>> -----------------
->>>
->>>
->>> If I try to examine both disks with mdadm -E it shows some checksum
->>> mismatch for both partitions:
->>> -----------------
->>> root@bob # mdadm -E /dev/sda6
->>> /dev/sda6:
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 0.90.03
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 37102258:bf9c1930:b=
-8397fb8:eba356af
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 ^ this is a 'b'
->>
->> So you certainly do have some sick hardware!!!
->>
->> I suggest that you find some hardware that you can trust,
->> mount one of the two devices ( (sdb6 or sda6) ignoring the raid stuf=
-f,
->> and copy data off to the device that you trust.
->>
->> Then start again.
->>
->> NeilBrown
->>
->>
->>> =C2=A0 Creation Time : Mon Aug =C2=A07 21:06:47 2006
->>> =C2=A0 =C2=A0 =C2=A0Raid Level : raid1
->>> =C2=A0 Used Dev Size : 248075584 (236.58 GiB 254.03 GB)
->>> =C2=A0 =C2=A0 =C2=A0Array Size : 248075584 (236.58 GiB 254.03 GB)
->>> =C2=A0 =C2=A0Raid Devices : 2
->>> =C2=A0 Total Devices : 2
->>> Preferred Minor : 6
->>>
->>> =C2=A0 =C2=A0 Update Time : Wed Jan 12 00:12:44 2011
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean
->>> =C2=A0Active Devices : 2
->>> Working Devices : 2
->>> =C2=A0Failed Devices : 0
->>> =C2=A0 Spare Devices : 0
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : e4883f8e - expected e4883e8e
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 199168
->>>
->>>
->>> =C2=A0 =C2=A0 =C2=A0 Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDe=
-vice State
->>> this =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 38=
- =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync
->>>
->>> =C2=A0 =C2=A00 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0=
- =C2=A0 70 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync
->>> =C2=A0 =C2=A01 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0=
- =C2=A0 38 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync
->>> root@bob # mdadm -E /dev/sdb6
->>> /dev/sdb6:
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Magic : a92b4efc
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Version : 0.90.03
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UUID : 37102258:bf9c1930:b=
-8397fb8:eba356af
->>> =C2=A0 Creation Time : Mon Aug =C2=A07 21:06:47 2006
->>> =C2=A0 =C2=A0 =C2=A0Raid Level : raid1
->>> =C2=A0 Used Dev Size : 248075584 (236.58 GiB 254.03 GB)
->>> =C2=A0 =C2=A0 =C2=A0Array Size : 248075584 (236.58 GiB 254.03 GB)
->>> =C2=A0 =C2=A0Raid Devices : 2
->>> =C2=A0 Total Devices : 2
->>> Preferred Minor : 6
->>>
->>> =C2=A0 =C2=A0 Update Time : Wed Jan 12 00:12:44 2011
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 State : clean
->>> =C2=A0Active Devices : 2
->>> Working Devices : 2
->>> =C2=A0Failed Devices : 0
->>> =C2=A0 Spare Devices : 0
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Checksum : e4883fac - expected e4883eac
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Events : 199168
->>>
->>>
->>> =C2=A0 =C2=A0 =C2=A0 Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDe=
-vice State
->>> this =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 70=
- =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync
->>>
->>> =C2=A0 =C2=A00 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0=
- =C2=A0 70 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync
->>> =C2=A0 =C2=A01 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0=
- =C2=A0 38 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync
->>> -----------------
->>>
->>>
->>> Any idea how I could try to save my raid group?
->>>
->>> Thanks in advance for your help.
->>>
->>> Best Regards,
->>> Reynald
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
-html
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
 
-Wow, that's cool. I suppose RAID1 is simple enough for this to be
-possible, though. Still, cool. :-)
 
-// M
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Monday, February 14, 2011 3:12 AM
+> To: Wojcik, Krzysztof
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Single-drive RAID0
+> 
+> On Wed, 9 Feb 2011 14:33:01 +0000 "Wojcik, Krzysztof"
+> <krzysztof.wojcik@intel.com> wrote:
+> 
+> >
+> > Steps to reproduce:
+> > 1. Create partition on disk (for example: 1 partition, size=half of
+> /dev/sda disk)
+> > 2. Create filesystem on partition (ext3)
+> > 3. Mount partition and create some control data on partition
+> > 4. Unmount partition
+> > 5. Create RAID0 on disk (mdadm -C /dev/md/vol_1 -amd -e 0.9 -c 64 -l
+> 0 -n 1 /dev/sda --force)
+> > 6. md127 and md127p1 appears in /dev as expected
+> > 7. Try to mount md127p1 and verify control data on them
+> 
+> I couldn't get this to fail for me.
+> It is possible that there is something subtle about the precise device
+> geometry.
+> Could you send me
+>    sfdisk -l /dev/sda
+> (or whatever device you are using)
+> 
+> However when I ran the script without requesting native metadata I did
+> get some results somewhat similar to yours - and they were not
+> consistent
+> which is an important similarity.
+> 
+> This patch should fix that particular problem.  Let me know if you
+> can still produce any of these errors with the patch applied.
+
+
+Unfortunately issue is reproducible with path applied.
+I tried to reproduce it on other setup (other PC and disks) also... issue exists :(
+
+Interesting observation is that when I stop array just after creation and then reassemble it again, everything work fine.
+On older kernel version (I tried 2.6.34) issue is NOT reproducible also.
+
+Regards
+Krzysztof
+
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 0cc30ec..6818ff4 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4138,10 +4138,10 @@ array_size_store(mddev_t *mddev, const char
+> *buf, size_t len)
+>  	}
+> 
+>  	mddev->array_sectors = sectors;
+> -	set_capacity(mddev->gendisk, mddev->array_sectors);
+> -	if (mddev->pers)
+> +	if (mddev->pers) {
+> +		set_capacity(mddev->gendisk, mddev->array_sectors);
+>  		revalidate_disk(mddev->gendisk);
+> -
+> +	}
+>  	return len;
+>  }
+> 
