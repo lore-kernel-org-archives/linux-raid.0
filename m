@@ -1,62 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Single-drive RAID0
-Date: Tue, 15 Feb 2011 11:01:41 +1100
-Message-ID: <20110215110141.30d28302@notabene.brown>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
-	<20110209134557.4e607451@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-	<20110214131149.7f0655a3@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: high throughput storage server?
+Date: Mon, 14 Feb 2011 17:59:28 -0600
+Message-ID: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 17:04:38 +0000 "Wojcik, Krzysztof"
-<krzysztof.wojcik@intel.com> wrote:
-> > It is possible that there is something subtle about the precise device
-> > geometry.
-> > Could you send me
-> >    sfdisk -l /dev/sda
-> > (or whatever device you are using)
+For many years, I have been using Linux software RAID at home for a
+simple NAS system.  Now at work, we are looking at buying a massive,
+high-throughput storage system (e.g. a SAN).  I have little
+familiarity with these kinds of pre-built, vendor-supplied solutions.
+I just started talking to a vendor, and the prices are extremely high.
 
-You didn't include this information...
+So I got to thinking, perhaps I could build an adequate device for
+significantly less cost using Linux.  The problem is, the requirements
+for such a system are significantly higher than my home media server,
+and put me into unfamiliar territory (in terms of both hardware and
+software configuration).
 
+The requirement is basically this: around 40 to 50 compute machines
+act as basically an ad-hoc scientific compute/simulation/analysis
+cluster.  These machines all need access to a shared 20 TB pool of
+storage.  Each compute machine has a gigabit network connection, and
+it's possible that nearly every machine could simultaneously try to
+access a large (100 to 1000 MB) file in the storage pool.  In other
+words, a 20 TB file store with bandwidth upwards of 50 Gbps.
 
+I was wondering if anyone on the list has built something similar to
+this using off-the-shelf hardware (and Linux of course)?
 
+My initial thoughts/questions are:
 
+    (1) We need lots of spindles (i.e. many small disks rather than
+few big disks).  How do you compute disk throughput when there are
+multiple consumers?  Most manufacturers provide specs on their drives
+such as sustained linear read throughput.  But how is that number
+affected when there are multiple processes simultanesously trying to
+access different data?  Is the sustained bulk read throughput value
+inversely proportional to the number of consumers?  (E.g. 100 MB/s
+drive only does 33 MB/s w/three consumers.)  Or is there are more
+specific way to estimate this?
 
+    (2) The big storage server(s) need to connect to the network via
+multiple bonded Gigabit ethernet, or something faster like
+FibreChannel or 10 GbE.  That seems pretty straightforward.
 
+    (3) This will probably require multiple servers connected together
+somehow and presented to the compute machines as one big data store.
+This is where I really don't know much of anything.  I did a quick
+"back of the envelope" spec for a system with 24 600 GB 15k SAS drives
+(based on the observation that 24-bay rackmount enclosures seem to be
+fairly common).  Such a system would only provide 7.2 TB of storage
+using a scheme like RAID-10.  So how could two or three of these
+servers be "chained" together and look like a single large data pool
+to the analysis machines?
 
-> > This patch should fix that particular problem.  Let me know if you
-> > can still produce any of these errors with the patch applied.
-> 
-> 
-> Unfortunately issue is reproducible with path applied.
-> I tried to reproduce it on other setup (other PC and disks) also... issue exists :(
-> 
-> Interesting observation is that when I stop array just after creation and then reassemble it again, everything work fine.
-> On older kernel version (I tried 2.6.34) issue is NOT reproducible also.
-> 
+I know this is a broad question, and not 100% about Linux software
+RAID.  But I've been lurking on this list for years now, and I get the
+impression there are list members who regularly work with "big iron"
+systems such as what I've described.  I'm just looking for any kind of
+relevant information here; any and all is appreciated!
 
-All very strange.  And as I cannot reproduce it, it is very hard to debug.
-
-Maybe some daemon is accessing the array at some awkward time and causing
-different behaviour for you...
-
-If it is repeatable enough that you could try 'git bisect' to find which
-commit introduced the problem, that would be helpful but I suspect it would
-be very time-consuming.
-
-It might help to put a "WARN_ON(1)" in the place where it prints "detected
-capacity change ..." so we get a stack trace and can see how it got there.
-That might git a hint to what is looping.
-Also a printk in md_open if it returns ERESTARTSYS would be interesting.
-
-Thanks,
-NeilBrown
+Thank you,
+Matt
