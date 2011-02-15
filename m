@@ -1,47 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: recovering from an aborted reshape op - boot messages
-Date: Tue, 15 Feb 2011 13:16:36 +1100
-Message-ID: <20110215131636.3ed62e81@notabene.brown>
-References: <20110215124107.7b6edea3@notabene.brown>
-	<729509.31129.qm@web65105.mail.ac2.yahoo.com>
+From: Andras Korn <korn@raidlist.elan.rulez.org>
+Subject: Re: write-behind has no measurable effect?
+Date: Tue, 15 Feb 2011 03:19:00 +0100
+Message-ID: <20110215021900.GB13135@hellgate.intra.guy>
+References: <20110214213817.GG836@hellgate.intra.guy>
+ <20110215095042.51ef7e0a@notabene.brown>
+ <20110214225754.GK19990@hellgate.intra.guy>
+ <20110215104109.06b12b33@notabene.brown>
+ <20110215010052.GA13135@hellgate.intra.guy>
+ <4D59D4A5.9050106@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <729509.31129.qm@web65105.mail.ac2.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <4D59D4A5.9050106@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 18:04:01 -0800 (PST) Gavin Flower <gavinflower@yahoo.com>
-wrote:
+On Tue, Feb 15, 2011 at 01:19:33AM +0000, John Robinson wrote:
 
-> output from: fsck.ext4 -f -n /dev/md1
+> >Another approach to take would be to mark as dirty, on the fast devices, all
+> >areas being written to, and in the background continuously synch them to the
+> >slow devices, sequentially (marking as clean synched-and-as-yet-unwritten-to
+> >areas); so that the array would be resyncing continually, but be very fast
+> >for random writes. This would of course also require the bitmap to only be
+> >synchronously updated on the fast devices.
+> >
+> >Otoh, this is really a different mechanism from the current write-behind,
+> >aimed at a different use-case, so maybe it could be implemented
+> >orthogonally. (Patches welcome, I'm sure; it's times like these I hate not
+> >being a coder.)
 > 
-> e2fsck 1.41.12 (17-May-2010)
-> The filesystem size (according to the superblock) is 76799952 blocks
-> The physical size of the device is 76799616 blocks
-> Either the superblock or the partition table is likely to be corrupt!
-> Abort? no
-> 
-> Pass 1: Checking inodes, blocks, and sizes
-> Pass 2: Checking directory structure
-> Pass 3: Checking directory connectivity
-> Pass 4: Checking reference counts
-> Pass 5: Checking group summary information
-> Block bitmap differences:  -9626 -(9728--9752) +(405344--405369)
-> Fix? no
-> 
-> 
-> I suspect that it might be simple to recover.  Are you able to advise on this, or should I run further diagnostics, or ask elsewhere.
-> 
+> I wonder whether bcache might do roughly what you want? I haven't
 
-No I am not.
+It only does very roughly what I want (the idea there is to _cache_ a much
+larger spinning disk using a relatively small SSD, whereas I basically want
+them both to be the same size, with the disk eventually mirroring the
+contents of the SSD); also, development of bcache has stalled (it doesn't
+even compile with recent kernels and the developer has stated that he's
+taking a break).
 
-e2fsck has a very good reputation so if it seems to claim that it can fix
-things then it almost certainly can.
+I also know of flashcache, which is similar to bcache and is more actively
+developed, but is still lagging quite a few versions behind (the latest
+kernel it works with is 2.6.32, I think; it certainly doesn't compile with
+2.6.38).
 
-Did you try asking on ext3-users@redhat.com ??
+So, while both of these may actually be good at what they do, neither of
+them does what I have in mind and I also can't use either of them because I
+need a newer kernel than what they support.
 
-NeilBrown
+But thanks anyway.
+
+-- 
+                     Andras Korn <korn at elan.rulez.org>
+                 I'm not nearly as think as you confused I am.
