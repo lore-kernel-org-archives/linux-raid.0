@@ -1,138 +1,177 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: high throughput storage server?
-Date: Tue, 15 Feb 2011 12:29:16 -0200
-Message-ID: <AANLkTimT=JLvBTU52aZDYC5gwryXmsp4F+WbzsJNbSCC@mail.gmail.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
-	<4D5A8415.5000905@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Linux software RAID assistance
+Date: Tue, 15 Feb 2011 09:51:31 -0500
+Message-ID: <4D5A92F3.1090004@turmel.org>
+References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5A8415.5000905@gmail.com>
+In-Reply-To: <20110215155315.55d35b8e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Zdenek Kaspar <zkaspar82@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: simonmcnair@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-first, run memtest86 (if you use x86 cpu)
-check ram memory speed
-my hp (ml350g5 very old: 2005) get 2500MB/s (~20 Gbits/s)
+Hi Neil,
 
-maybe ram is a bottleneck for 50gbits....
-you will need a multi computer raid or stripe fileaccess operations
-(database on one machine, s.o. on another...)
+Since Simon has responded, let me summarize the assistance I provided p=
+er his off-list request:
 
-for hobby =3D SATA2 disks, 50USD disks of 1TB 50MB/s
-the today state of art, in 'my world' is: http://www.ramsan.com/product=
-s/3
-
-
-2011/2/15 Zdenek Kaspar <zkaspar82@gmail.com>:
-> Dne 15.2.2011 0:59, Matt Garman napsal(a):
->> For many years, I have been using Linux software RAID at home for a
->> simple NAS system. =A0Now at work, we are looking at buying a massiv=
-e,
->> high-throughput storage system (e.g. a SAN). =A0I have little
->> familiarity with these kinds of pre-built, vendor-supplied solutions=
-=2E
->> I just started talking to a vendor, and the prices are extremely hig=
-h.
+On 02/14/2011 11:53 PM, NeilBrown wrote:
+> On Thu, 10 Feb 2011 16:16:44 +0000 Simon McNair <simonmcnair@gmail.co=
+m> wrote:
+>=20
 >>
->> So I got to thinking, perhaps I could build an adequate device for
->> significantly less cost using Linux. =A0The problem is, the requirem=
-ents
->> for such a system are significantly higher than my home media server=
-,
->> and put me into unfamiliar territory (in terms of both hardware and
->> software configuration).
+>> Hi all
 >>
->> The requirement is basically this: around 40 to 50 compute machines
->> act as basically an ad-hoc scientific compute/simulation/analysis
->> cluster. =A0These machines all need access to a shared 20 TB pool of
->> storage. =A0Each compute machine has a gigabit network connection, a=
-nd
->> it's possible that nearly every machine could simultaneously try to
->> access a large (100 to 1000 MB) file in the storage pool. =A0In othe=
-r
->> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
->>
->> I was wondering if anyone on the list has built something similar to
->> this using off-the-shelf hardware (and Linux of course)?
->>
->> My initial thoughts/questions are:
->>
->> =A0 =A0 (1) We need lots of spindles (i.e. many small disks rather t=
-han
->> few big disks). =A0How do you compute disk throughput when there are
->> multiple consumers? =A0Most manufacturers provide specs on their dri=
-ves
->> such as sustained linear read throughput. =A0But how is that number
->> affected when there are multiple processes simultanesously trying to
->> access different data? =A0Is the sustained bulk read throughput valu=
+>> I use a 3ware 9500-12 port sata card (JBOD) which will not work with=
+out a
+>> 128mb sodimm.  The sodimm socket is flakey and the result is that th=
 e
->> inversely proportional to the number of consumers? =A0(E.g. 100 MB/s
->> drive only does 33 MB/s w/three consumers.) =A0Or is there are more
->> specific way to estimate this?
+>> machine occasionally crashes.  Yesterday I finally gave in and put=20
+>> together another
+>> machine so that I can rsync between them.  When I turned the machine
+>> on today to set up rync, the RAID array was not gone, but corrupted.=
+=20
+>>   Typical...
+>=20
+> Presumably the old machine was called 'ubuntu' and the new machine 'p=
+ro=C3=B8lox'
+>=20
+>=20
 >>
->> =A0 =A0 (2) The big storage server(s) need to connect to the network=
- via
->> multiple bonded Gigabit ethernet, or something faster like
->> FibreChannel or 10 GbE. =A0That seems pretty straightforward.
+>> I built the array in Aug 2010 using the following command:
 >>
->> =A0 =A0 (3) This will probably require multiple servers connected to=
-gether
->> somehow and presented to the compute machines as one big data store.
->> This is where I really don't know much of anything. =A0I did a quick
->> "back of the envelope" spec for a system with 24 600 GB 15k SAS driv=
-es
->> (based on the observation that 24-bay rackmount enclosures seem to b=
-e
->> fairly common). =A0Such a system would only provide 7.2 TB of storag=
-e
->> using a scheme like RAID-10. =A0So how could two or three of these
->> servers be "chained" together and look like a single large data pool
->> to the analysis machines?
+>> mdadm --create --verbose /dev/md0 --metadata=3D1.1 --level=3D5
+>> --raid-devices=3D10 /dev/sd{b,c,d,e,f,g,h,i,j,k}1 --chunk=3D64
 >>
->> I know this is a broad question, and not 100% about Linux software
->> RAID. =A0But I've been lurking on this list for years now, and I get=
- the
->> impression there are list members who regularly work with "big iron"
->> systems such as what I've described. =A0I'm just looking for any kin=
-d of
->> relevant information here; any and all is appreciated!
+>> Using LVM, I did the following:
+>> pvscan
+>> pvcreate -M2 /dev/md0
+>> vgcreate lvm-raid /dev/md0
+>> vgdisplay lvm-raid
+>> vgscan
+>> lvscan
+>> lvcreate -v -l 100%VG -n RAID lvm-raid
+>> lvdisplay /dev/lvm-raid/lvm0
 >>
->> Thank you,
->> Matt
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>> I then formatted using:
+>> mkfs -t ext4 -v -m .1 -b 4096 -E stride=3D16,stripe-width=3D144=20
+>> /dev/lvm-raid/RAID
 >>
->
-> If you really need to handle 50Gbit/s storage traffic, then it's not =
-so
-> easy for hobby. For good price you probably want multiple machines wi=
-th
-> lots hard drives and interconnects..
->
-> Might be worth to ask here:
-> Newsgroups: gmane.comp.clustering.beowulf.general
->
-> HTH, Z.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+>> This worked perfectly since I created the array.  Now mdadm is comin=
+g up=20
+>> with
+>>
+>> proxmox:/dev/md# mdadm --assemble --scan --verbose
+>> mdadm: looking for devices for further assembly
+>> mdadm: no recogniseable superblock on /dev/md/ubuntu:0
+>=20
+> And it seems that ubuntu:0 have been successfully assembled.
+> It is missing one device for some reason (sdd1) but RAID can cope wit=
+h that.
 
+3ware card is compromised, with a loose buffer memory dimm.  Some of it=
+s ECC errors were caught and reported in dmesg.  Its likely, based on t=
+he loose memory socket, that many multiple-bit errors got through.
 
+[trim /]
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+>> mdadm: no uptodate device for slot 8 of /dev/md/pro=EF=BF=BDlox:0
+>> mdadm: no uptodate device for slot 9 of /dev/md/pro=EF=BF=BDlox:0
+>> mdadm: failed to add /dev/sdd1 to /dev/md/pro=EF=BF=BDlox:0: Invalid=
+ argument
+>> mdadm: /dev/md/pro=EF=BF=BDlox:0 assembled from 0 drives - not enoug=
+h to start
+>> the array.
+>=20
+> This looks like it is *after* to trying the --create command you give
+> below..  It is best to report things in the order they happen, else y=
+ou can
+> confuse people (or get caught out!).
+
+Yes, this was after.
+
+>> mdadm: looking for devices for further assembly
+>> mdadm: no recogniseable superblock on /dev/sdd
+>> mdadm: No arrays found in config file or automatically
+>>
+>> pvscan and vgscan show nothing.
+>>
+>> So I tried running mdadm --create --verbose /dev/md0 --metadata=3D1.=
+1
+>> --level=3D5 --raid-devices=3D10 missing /dev/sde1 /dev/sdf1 /dev/sdg=
+1
+>> /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 --chunk=3D=
+64
+>>
+>> as it seemed that /dev/sdd1 failed to be added to the array.  This d=
+id=20
+>> nothing.
+>=20
+> It did not to nothing.  It wrote a superblock to /dev/sdd1 and compla=
+ined
+> that it couldn't write to all the others --- didn't it?
+
+There were multiple attempts to create.  One wrote to just sdd1, anothe=
+r succeeded with all but sdd1.
+
+>> dmesg contains:
+>>
+>> md: invalid superblock checksum on sdd1
+>=20
+> I guess that is why sdd1 was missing from 'ubuntu:0'.  Though as I ca=
+nnot
+> tell if this happened before or after any of the various things repor=
+ted
+> above, it is hard to be sure.
+>=20
+>=20
+> The  real mystery is why 'pvscan' reports nothing.
+
+The original array was created with mdadm v2.6.7, and had a data offset=
+ of 264 sectors.  After Simon's various attempts to --create, he ended =
+up with data offset of 2048, using mdadm v3.1.4.  The mdadm -E reports =
+he posted to the list showed the 264 offset.  We didn't realize the off=
+set had been updated until somewhat later in our troubleshooting effort=
+s.
+
+In any case, pvscan couldn't see the LVM signature because it wasn't th=
+ere (at offset 2048).
+
+> What about
+>   pvscan --verbose
+>=20
+> or
+>=20
+>   blkid -p /dev/md/ubuntu:0
+>=20
+> or even
+>=20
+>   dd of=3D/dev/md/ubuntu:0 count=3D8 | od -c=20
+
+=46ortunately, Simon did have a copy of his LVM configuration.  With th=
+e help of dd, strings, and grep, we did locate his LVM sig at the corre=
+ct location on sdd1 (for data offset 264).  After a number of attempts =
+to bypass LVM and access his single LV with dmsetup (based on his backe=
+d up configuration, on the assembled new array less sdd1), I realized t=
+hat the data offset was wrong on the recreated array, and went looking =
+for the cause.  I found your git commit that changed that logic last sp=
+ring, and recommended that Simon revert to the default package for his =
+ubuntu install, which is v2.6.7.
+
+Simon has now attempted to recreate the array with v2.6.7, but the cont=
+roller is throwing too many errors to succeed, and I suggested it was t=
+oo flakey to trust any further.  Based on the existence of the LVM sig =
+on sdd1, I believe Simon's data is (mostly) intact, and only needs a su=
+ccessful create operation with a properly functioning controller.  (He =
+might also need to perform an lvm vgcfgrestore, but he has the necessar=
+y backup file.)
+
+A new controller is on order.
+
+Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
