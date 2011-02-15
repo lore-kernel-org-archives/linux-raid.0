@@ -1,132 +1,159 @@
-From: "A. Krijgsman" <a.krijgsman@draftsman.nl>
+From: Joe Landman <joe.landman@gmail.com>
 Subject: Re: high throughput storage server?
-Date: Tue, 15 Feb 2011 15:51:42 +0100
-Message-ID: <27EC7D7C61444EC6A29D95E88A8AF2AC@ManiePC>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com><4D5A8415.5000905@gmail.com> <AANLkTimT=JLvBTU52aZDYC5gwryXmsp4F+WbzsJNbSCC@mail.gmail.com>
+Date: Tue, 15 Feb 2011 10:16:15 -0500
+Message-ID: <4D5A98BF.3030704@gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com> <20110215044434.GA9186@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimT=JLvBTU52aZDYC5gwryXmsp4F+WbzsJNbSCC@mail.gmail.com>
+In-Reply-To: <20110215044434.GA9186@septictank.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, Zdenek Kaspar <zkaspar82@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: Doug Dumitru <doug@easyco.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Just ran memcheck 2 weeks ago.
+[disclosure: vendor posting, ignore if you wish, vendor html link at 
+bottom of message]
 
-If you triple-lane your memory you get 10GByte (!) per second memory.
-( This is memory from 2010 ;-) 1333 Mhz ) 
-
-
------Oorspronkelijk bericht----- 
-From: Roberto Spadim 
-Sent: Tuesday, February 15, 2011 3:29 PM 
-To: Zdenek Kaspar 
-Cc: linux-raid@vger.kernel.org 
-Subject: Re: high throughput storage server? 
-
-first, run memtest86 (if you use x86 cpu)
-check ram memory speed
-my hp (ml350g5 very old: 2005) get 2500MB/s (~20 Gbits/s)
-
-maybe ram is a bottleneck for 50gbits....
-you will need a multi computer raid or stripe fileaccess operations
-(database on one machine, s.o. on another...)
-
-for hobby = SATA2 disks, 50USD disks of 1TB 50MB/s
-the today state of art, in 'my world' is: http://www.ramsan.com/products/3
-
-
-2011/2/15 Zdenek Kaspar <zkaspar82@gmail.com>:
-> Dne 15.2.2011 0:59, Matt Garman napsal(a):
->> For many years, I have been using Linux software RAID at home for a
->> simple NAS system.  Now at work, we are looking at buying a massive,
->> high-throughput storage system (e.g. a SAN).  I have little
->> familiarity with these kinds of pre-built, vendor-supplied solutions.
->> I just started talking to a vendor, and the prices are extremely high.
->>
->> So I got to thinking, perhaps I could build an adequate device for
->> significantly less cost using Linux.  The problem is, the requirements
->> for such a system are significantly higher than my home media server,
->> and put me into unfamiliar territory (in terms of both hardware and
->> software configuration).
->>
->> The requirement is basically this: around 40 to 50 compute machines
->> act as basically an ad-hoc scientific compute/simulation/analysis
->> cluster.  These machines all need access to a shared 20 TB pool of
->> storage.  Each compute machine has a gigabit network connection, and
->> it's possible that nearly every machine could simultaneously try to
->> access a large (100 to 1000 MB) file in the storage pool.  In other
->> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
->>
->> I was wondering if anyone on the list has built something similar to
->> this using off-the-shelf hardware (and Linux of course)?
->>
->> My initial thoughts/questions are:
->>
->>     (1) We need lots of spindles (i.e. many small disks rather than
->> few big disks).  How do you compute disk throughput when there are
->> multiple consumers?  Most manufacturers provide specs on their drives
->> such as sustained linear read throughput.  But how is that number
->> affected when there are multiple processes simultanesously trying to
->> access different data?  Is the sustained bulk read throughput value
->> inversely proportional to the number of consumers?  (E.g. 100 MB/s
->> drive only does 33 MB/s w/three consumers.)  Or is there are more
->> specific way to estimate this?
->>
->>     (2) The big storage server(s) need to connect to the network via
->> multiple bonded Gigabit ethernet, or something faster like
->> FibreChannel or 10 GbE.  That seems pretty straightforward.
->>
->>     (3) This will probably require multiple servers connected together
->> somehow and presented to the compute machines as one big data store.
->> This is where I really don't know much of anything.  I did a quick
->> "back of the envelope" spec for a system with 24 600 GB 15k SAS drives
->> (based on the observation that 24-bay rackmount enclosures seem to be
->> fairly common).  Such a system would only provide 7.2 TB of storage
->> using a scheme like RAID-10.  So how could two or three of these
->> servers be "chained" together and look like a single large data pool
->> to the analysis machines?
->>
->> I know this is a broad question, and not 100% about Linux software
->> RAID.  But I've been lurking on this list for years now, and I get the
->> impression there are list members who regularly work with "big iron"
->> systems such as what I've described.  I'm just looking for any kind of
->> relevant information here; any and all is appreciated!
->>
->> Thank you,
->> Matt
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+On 02/14/2011 11:44 PM, Matt Garman wrote:
+> On Mon, Feb 14, 2011 at 06:06:43PM -0800, Doug Dumitru wrote:
+>> You have a whole slew of questions to answer before you can decide
+>> on a design.  This is true if you build it yourself or decide to
+>> go with a vendor and buy a supported server.  If you do go with a
+>> vendor, the odds are actually quite good you will end up with
+>> Linux anyway.
 >
-> If you really need to handle 50Gbit/s storage traffic, then it's not so
-> easy for hobby. For good price you probably want multiple machines with
-> lots hard drives and interconnects..
+> I kind of assumed/wondered if the vendor-supplied systems didn't run
+> Linux behind the scenes anyway.
+
+We've been using Linux as the basis for our storage systems. 
+Occasionally there are other OSes required by customers, but for the 
+most part, Linux is the preferred platform.
+
+[...]
+
+>> Next, is the space all the same.  Perhaps some of it is "active"
+>> and some of it is archival.  If you need 4TB of "fast" storage and
+>> ...
+>> well.  You can probably build this for around $5K (or maybe a bit
+>> less) including a 10GigE adapter and server class components.
 >
-> Might be worth to ask here:
-> Newsgroups: gmane.comp.clustering.beowulf.general
->
-> HTH, Z.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> The whole system needs to be "fast".
+
+Ok ... sounds strange, but ...
+
+Define what you mean by "fast".  Seriously ... we've had people tell us 
+about their "huge" storage needs that we can easily fit onto a single 
+small unit, no storage cluster needed.  We've had people say "fast" when 
+they mean "able to keep 1 GbE port busy".
+
+Fast needs to be articulated really in terms of what you will do with 
+it.  As you noted in this and other messages, you are scaling up from 10 
+compute nodes to 40 compute nodes.  4x change in demand, and I am 
+guessing bandwidth (if these are large files you are streaming) or IOPs 
+(if these are many small files you are reading).  Small and large here 
+would mean less than 64kB for small, and greater than 4MB for large.
 
 
+> Actually, to give more detail, we currently have a simple system I
+> built for backup/slow access.  This is exactly what you described, a
+> bunch of big, slow disks.  Lots of space, lowsy I/O performance, but
+> plenty adequate for backup purposes.
 
--- 
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Your choice is simple.  Build or buy.  Many folks have made suggestions, 
+and some are pretty reasonable, though a pure SSD or Flash based 
+machine, while doable (and we sell these), is quite unlikely to be close 
+to the realities of your budget.  There are use cases for which this 
+does make sense, but the costs are quite prohibitive for all but a few 
+users.
+
+> As of right now, we actually have about a dozen "users", i.e.
+> compute servers.  The collection is basically a home-grown compute
+> farm.  Each server has a gigabit ethernet connection, and 1 TB of
+> RAID-1 spinning disk storage.  Each storage mounts every other
+> server via NFS, and the current data is distributed evenly across
+> all systems.
+
+Ok ... this isn't something thats great to manage.  I might suggest 
+looking at GlusterFS for this.  You can aggregate and distribute your 
+data.  Even build in some resiliency if you wish/need.  GlusterFS 3.1.2 
+is open source, so you can deploy fairly easily.
+
+>
+> So, loosely speaking, right now we have roughly 10 TB of
+> "live"/"fast" data available at 1 to 10 gbps, depending on how you
+> look at it.
+>
+> While we only have about a dozen servers now, we have definitely
+> identified growing this compute farm about 4x (to 40--50 servers)
+> within the next year.  But the storage capacity requirements
+> shouldn't change too terribly much.  The 20 TB number was basically
+> thrown out there as a "it would be nice to have 2x the live
+> storage".
+
+Without building a storage unit, you could (in concept) use GlusterFS 
+for this.  In practice, this model gets harder and harder to manage as 
+you increase the number of nodes.  Adding the N+1 th node means you have 
+N+1 nodes to modify and manage storage on.  This does not scale well at all.
+
+>
+> I'll also add that this NAS needs to be optimized for *read*
+> throughput.  As I mentioned, the only real write process is the
+> daily "harvesting" of the data files.  Those are copied across
+> long-haul leased lines, and the copy process isn't really
+> performance sensitive.  In other words, in day-to-day use, those
+> 40--50 client machines will do 100% reading from the NAS.
+
+Ok.
+
+This isn't a commercial.  I'll keep this part short.
+
+We've built systems like this which sustain north of 10GB/s (big B not 
+little b) for concurrent read and write access from thousands of cores. 
+  20TB (and 40TB) are on the ... small ... side for this, but it is very 
+doable.
+
+As a tie in to the Linux RAID list, we use md raid for our OS drives 
+(SSD pairs), and other utility functions within the unit, as well as 
+striping over our hardware accelerated RAIDs.  We would like to use 
+non-power of two chunk sizes, but haven't delved into the code as much 
+as we'd like to see if we can make this work.
+
+As a rule, we find mdadm to be an excellent tool, and the whole md RAID 
+system to be quite good.  We may spend time at some point on figuring 
+out whats wrong with the multi-threaded raid456 bit (allocated 200+ 
+kernel threads last I played with it), but apart from bits like that, we 
+do find it very good for production use.  It isn't as fast as some 
+dedicated accelerated RAID hardware (though we have our md + kernel 
+stack very well tuned so some of our software RAIDs are faster than many 
+of our competitors hardware RAIDs).
+
+You could build a fairly competent unit using md RAID.
+
+It all gets back to build versus buy.  In either case, I'd recommend 
+grabbing a copy of dstat (http://dag.wieers.com/home-made/dstat/) and 
+watching your IO/network system throughput.  I am assuming 1 GbE 
+switches as the basis for your cluster.  I assume this will not change. 
+  The cost of your time/effort and any opportunity cost and productivity 
+loss should also be accounted for in the cost-benefit analysis.  That 
+is, if it costs you less overall to buy than to build, should you build 
+anyway?  Generally no, but some people simply want the experience.
+
+Big issues you need to be aware of with md raid are the hotswap problem. 
+  Your SATA link needs to allow you to pull a drive out without crashing 
+the machine.  Many of the on-motherboard SATA connections we've used 
+over the years don't tolerate unplugs/plugins very well.  I'd recommend 
+at least an reasonable HBA for this that understands hot swap and 
+handles it correctly (you need hardware and driver level support to 
+correctly signal the kernel of these events).
+
+If you decide to buy, have a really clear idea of your performance 
+regime, and a realistic eye towards budget.  A 48 TB server with > 2GB/s 
+streaming performance for TB sized files is very doable, well under $30k 
+USD.  A 48 TB software RAID version would be quite a bit less than that.
+
+Good luck with this, and let us know what you do.
+
+vendor html link:  http://scalableinformatics.com , our storage clusters 
+http://scalableinformatics.com/sicluster
