@@ -1,56 +1,80 @@
-From: Andras Korn <korn@raidlist.elan.rulez.org>
-Subject: Re: write-behind has no measurable effect?
-Date: Tue, 15 Feb 2011 03:19:00 +0100
-Message-ID: <20110215021900.GB13135@hellgate.intra.guy>
-References: <20110214213817.GG836@hellgate.intra.guy>
- <20110215095042.51ef7e0a@notabene.brown>
- <20110214225754.GK19990@hellgate.intra.guy>
- <20110215104109.06b12b33@notabene.brown>
- <20110215010052.GA13135@hellgate.intra.guy>
- <4D59D4A5.9050106@anonymous.org.uk>
+From: Gavin Flower <gavinflower@yahoo.com>
+Subject: physical size of the device inconsistent with superblock, after RAID problems
+Date: Mon, 14 Feb 2011 19:14:34 -0800 (PST)
+Message-ID: <1581.38921.qm@web65110.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D59D4A5.9050106@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: ext3-users@redhat.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 15, 2011 at 01:19:33AM +0000, John Robinson wrote:
+Hi,
 
-> >Another approach to take would be to mark as dirty, on the fast devices, all
-> >areas being written to, and in the background continuously synch them to the
-> >slow devices, sequentially (marking as clean synched-and-as-yet-unwritten-to
-> >areas); so that the array would be resyncing continually, but be very fast
-> >for random writes. This would of course also require the bitmap to only be
-> >synchronously updated on the fast devices.
-> >
-> >Otoh, this is really a different mechanism from the current write-behind,
-> >aimed at a different use-case, so maybe it could be implemented
-> >orthogonally. (Patches welcome, I'm sure; it's times like these I hate not
-> >being a coder.)
-> 
-> I wonder whether bcache might do roughly what you want? I haven't
+I would appreciate advice recovering from the following situation, after an aborted mdadm resizing operation and subsequent recovery actions:
 
-It only does very roughly what I want (the idea there is to _cache_ a much
-larger spinning disk using a relatively small SSD, whereas I basically want
-them both to be the same size, with the disk eventually mirroring the
-contents of the SSD); also, development of bcache has stalled (it doesn't
-even compile with recent kernels and the developer has stated that he's
-taking a break).
+/dev/md1: The filing system size (according to the superblock) is 76799952 blocks
+The physical size of the device is 76799616
+Either the superblock or the partition table is likely to be corrupt!
 
-I also know of flashcache, which is similar to bcache and is more actively
-developed, but is still lagging quite a few versions behind (the latest
-kernel it works with is 2.6.32, I think; it certainly doesn't compile with
-2.6.38).
+/dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
+(i.e. without -a or -p options)
 
-So, while both of these may actually be good at what they do, neither of
-them does what I have in mind and I also can't use either of them because I
-need a newer kernel than what they support.
 
-But thanks anyway.
+fsck.ext4 -f -n /dev/md1 output:
 
--- 
-                     Andras Korn <korn at elan.rulez.org>
-                 I'm not nearly as think as you confused I am.
+e2fsck 1.41.12 (17-May-2010)
+The filesystem size (according to the superblock) is 76799952 blocks
+The physical size of the device is 76799616 blocks
+Either the superblock or the partition table is likely to be corrupt!
+Abort? no
+
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+Block bitmap differences:  -9626 -(9728--9752) +(405344--405369)
+Fix? no
+
+/dev/md1: ********** WARNING: Filesystem still has errors **********
+
+/dev/md1: 1693644/19202048 files (0.3% non-contiguous), 54273929/76799952 blocks
+
+
+Note that original size, according mdadm, was not a multiple of 512KB, so I reshaped it to be the largest multiple or 512KB less than the original size using the -size option of mdadm.  So my second attempt to reshape, using the 512 chunk size, started okay.  The previous chunk size was 64KB.
+
+Note I am using Fedora 14, up-to-date as of Friday February 11th, and that there are 5X500KB drives, with 3 RAID-6 arrays:
+/dev/md0 swap
+/dev/md1 mostly user data (the problematic one)
+/dev/md2 distribution & O/S files
+plus /boot on a non-RAID ext4 partition
+
+Sequence of events:
+Reshaped /dev/md1 using mdadm, without first reducing size of the ext4 filesystem.
+
+The process of reshaping /dev/md1 was about 20% through when I killed it.
+
+System appeared okay.
+
+I rebooted a few minute later, but shortly after I selected the kernel, it stopped, and I dropped into a shell.
+
+With the help of Neil Brown, I made some progress and /dev/md1 reshaping appeared to have completed without error.
+
+However, on the next reboot I got the INCONSISTENCY message.
+
+Will it be safe to simply accept fsck's offer to fix, or are there other things I should do?
+
+
+Thanks,
+Gavin 
+
+--
+All Adults share the Responsibility
+to help Raise Today's Children,
+for they are Tomorrow's Society!
+
+
+      
