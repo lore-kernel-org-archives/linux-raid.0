@@ -1,133 +1,171 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: high throughput storage server?
-Date: Mon, 14 Feb 2011 22:44:34 -0600
-Message-ID: <20110215044434.GA9186@septictank.raw-sewage.fake>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
- <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Linux software RAID assistance
+Date: Tue, 15 Feb 2011 15:53:15 +1100
+Message-ID: <20110215155315.55d35b8e@notabene.brown>
+References: <4D540F6C.6050904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
+In-Reply-To: <4D540F6C.6050904@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Dumitru <doug@easyco.com>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: simonmcnair@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 14, 2011 at 06:06:43PM -0800, Doug Dumitru wrote:
-> You have a whole slew of questions to answer before you can decide
-> on a design.  This is true if you build it yourself or decide to
-> go with a vendor and buy a supported server.  If you do go with a
-> vendor, the odds are actually quite good you will end up with
-> Linux anyway.
+On Thu, 10 Feb 2011 16:16:44 +0000 Simon McNair <simonmcnair@gmail.com>=
+ wrote:
 
-I kind of assumed/wondered if the vendor-supplied systems didn't run
-Linux behind the scenes anyway. 
+>=20
+> Hi all
+>=20
+> I use a 3ware 9500-12 port sata card (JBOD) which will not work witho=
+ut a
+> 128mb sodimm.  The sodimm socket is flakey and the result is that the
+> machine occasionally crashes.  Yesterday I finally gave in and put=20
+> together another
+> machine so that I can rsync between them.  When I turned the machine
+> on today to set up rync, the RAID array was not gone, but corrupted.=20
+>   Typical...
 
-> You state a need for 20TB of storage split among 40-50 "users".
-> Your description implies that this space needs to be shared at the
-> file level.  This means you are building a NAS (Network Attached
-> Storage), not a SAN (Storage Area Network).  SANs typically export
-> block devices over protocols like iSCSI.  These block devices are
-> non-sharable (ie, only a single client can mount them (at least
-> read/write) at a time.
+Presumably the old machine was called 'ubuntu' and the new machine 'pro=
+=C3=B8lox'
 
-Is that the only distinction between SAN and NAS?  (Honest
-question, not rhetorical.)
 
-> So, 20TB of NAS.  Not really that hard to build.  Next, you need
-> to look at the space itself.  Is this all unique data, or is there
-> an opportunity for "data deduplication".  Some filesystems (ZFS)
-> and some block solutions can actively spot blocks that are
-> duplicates and only store a single copy.  With some applications
-> (like virtual servers all running the same OS), this can result in
-> de-dupe ratios of 20:1.  If your application is like this, your
-> 20TB might only be 1-2 TB.  I suspect this is not the case based
-> on your description.
+>=20
+> I built the array in Aug 2010 using the following command:
+>=20
+> mdadm --create --verbose /dev/md0 --metadata=3D1.1 --level=3D5
+> --raid-devices=3D10 /dev/sd{b,c,d,e,f,g,h,i,j,k}1 --chunk=3D64
+>=20
+> Using LVM, I did the following:
+> pvscan
+> pvcreate -M2 /dev/md0
+> vgcreate lvm-raid /dev/md0
+> vgdisplay lvm-raid
+> vgscan
+> lvscan
+> lvcreate -v -l 100%VG -n RAID lvm-raid
+> lvdisplay /dev/lvm-raid/lvm0
+>=20
+> I then formatted using:
+> mkfs -t ext4 -v -m .1 -b 4096 -E stride=3D16,stripe-width=3D144=20
+> /dev/lvm-raid/RAID
+>=20
+> This worked perfectly since I created the array.  Now mdadm is coming=
+ up=20
+> with
+>=20
+> proxmox:/dev/md# mdadm --assemble --scan --verbose
+> mdadm: looking for devices for further assembly
+> mdadm: no recogniseable superblock on /dev/md/ubuntu:0
 
-Unfortunately, no, there is no duplication.  Basically, we have a
-bunch of files that are generated via another big collection of
-servers scattered throughout different data centers.  These files
-are "harvested" daily (i.e. copied back to the big store in our
-office for the analysis I've mentioned).
+And it seems that ubuntu:0 have been successfully assembled.
+It is missing one device for some reason (sdd1) but RAID can cope with =
+that.
 
-> Next, is the space all the same.  Perhaps some of it is "active"
-> and some of it is archival.  If you need 4TB of "fast" storage and
-> ...
-> well.  You can probably build this for around $5K (or maybe a bit
-> less) including a 10GigE adapter and server class components.
 
-The whole system needs to be "fast".
 
-Actually, to give more detail, we currently have a simple system I
-built for backup/slow access.  This is exactly what you described, a
-bunch of big, slow disks.  Lots of space, lowsy I/O performance, but
-plenty adequate for backup purposes.
+> mdadm: cannot open device /dev/dm-2: Device or resource busy
+> mdadm: cannot open device /dev/dm-1: Device or resource busy
+> mdadm: cannot open device /dev/dm-0: Device or resource busy
+> mdadm: cannot open device /dev/sdm1: Device or resource busy
+> mdadm: cannot open device /dev/sdm: Device or resource busy
+> mdadm: cannot open device /dev/sdl1: Device or resource busy
+> mdadm: cannot open device /dev/sdl: Device or resource busy
+> mdadm: cannot open device /dev/sdk1: Device or resource busy
+> mdadm: cannot open device /dev/sdk: Device or resource busy
+> mdadm: cannot open device /dev/sdj1: Device or resource busy
+> mdadm: cannot open device /dev/sdj: Device or resource busy
+> mdadm: cannot open device /dev/sdh1: Device or resource busy
+> mdadm: cannot open device /dev/sdh: Device or resource busy
+> mdadm: cannot open device /dev/sdi1: Device or resource busy
+> mdadm: cannot open device /dev/sdi: Device or resource busy
+> mdadm: cannot open device /dev/sdg1: Device or resource busy
+> mdadm: cannot open device /dev/sdg: Device or resource busy
+> mdadm: cannot open device /dev/sdf1: Device or resource busy
+> mdadm: cannot open device /dev/sdf: Device or resource busy
+> mdadm: cannot open device /dev/sde1: Device or resource busy
+> mdadm: cannot open device /dev/sde: Device or resource busy
+> mdadm: no RAID superblock on /dev/sdd
+> mdadm: cannot open device /dev/sda2: Device or resource busy
+> mdadm: cannot open device /dev/sda1: Device or resource busy
+> mdadm: cannot open device /dev/sda: Device or resource busy
+> mdadm: /dev/sdd1 is identified as a member of /dev/md/pro=EF=BF=BDlox=
+:0, slot 0.
+> mdadm: no uptodate device for slot 1 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 2 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 3 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 4 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 5 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 6 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 7 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 8 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: no uptodate device for slot 9 of /dev/md/pro=EF=BF=BDlox:0
+> mdadm: failed to add /dev/sdd1 to /dev/md/pro=EF=BF=BDlox:0: Invalid =
+argument
+> mdadm: /dev/md/pro=EF=BF=BDlox:0 assembled from 0 drives - not enough=
+ to start
+> the array.
 
-As of right now, we actually have about a dozen "users", i.e.
-compute servers.  The collection is basically a home-grown compute
-farm.  Each server has a gigabit ethernet connection, and 1 TB of
-RAID-1 spinning disk storage.  Each storage mounts every other
-server via NFS, and the current data is distributed evenly across
-all systems.
+This looks like it is *after* to trying the --create command you give
+below..  It is best to report things in the order they happen, else you=
+ can
+confuse people (or get caught out!).
 
-So, loosely speaking, right now we have roughly 10 TB of
-"live"/"fast" data available at 1 to 10 gbps, depending on how you
-look at it.
 
-While we only have about a dozen servers now, we have definitely
-identified growing this compute farm about 4x (to 40--50 servers)
-within the next year.  But the storage capacity requirements
-shouldn't change too terribly much.  The 20 TB number was basically
-thrown out there as a "it would be nice to have 2x the live
-storage".
+> mdadm: looking for devices for further assembly
+> mdadm: no recogniseable superblock on /dev/sdd
+> mdadm: No arrays found in config file or automatically
+>=20
+> pvscan and vgscan show nothing.
+>=20
+> So I tried running mdadm --create --verbose /dev/md0 --metadata=3D1.1
+> --level=3D5 --raid-devices=3D10 missing /dev/sde1 /dev/sdf1 /dev/sdg1
+> /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 --chunk=3D=
+64
+>=20
+> as it seemed that /dev/sdd1 failed to be added to the array.  This di=
+d=20
+> nothing.
 
-I'll also add that this NAS needs to be optimized for *read*
-throughput.  As I mentioned, the only real write process is the
-daily "harvesting" of the data files.  Those are copied across
-long-haul leased lines, and the copy process isn't really
-performance sensitive.  In other words, in day-to-day use, those
-40--50 client machines will do 100% reading from the NAS.
+It did not to nothing.  It wrote a superblock to /dev/sdd1 and complain=
+ed
+that it couldn't write to all the others --- didn't it?
 
-> If you need IOPS (IO Operations Per Second), you are looking at
-> SSDs.  You can build 20TB of pure SSD space.  If you do it
-> yourself raid-10, expect to pay around $6/GB or $120K just for
-> drives.  18TB will fit in a 4U chassis (see the 72 drive
-> SuperMicro double-sided 4U).  72 500GB drives later and you have
-> 18,000 GB of space.  Not cheap, but if you quote a system from
-> NetApp or EMC it will seem so.
 
-Hmm.  That does seem high, but that would be a beast of a system.
-And I have to add, I'd love to build something like that!
+>=20
+> dmesg contains:
+>=20
+> md: invalid superblock checksum on sdd1
 
-> If you can cut the "fast" size down to 2-4TBs, SSDs become a lot
-> more realistic with commercial systems from new companies like
-> WhipTail for way under $100K.
-> 
-> If you go with hard drives, you are trading speed for space.  With
-> 600GB 10K drives would need 66 drives raid-10.  Multi-threaded, this
-> would read at around 10K IOPS and write at around 7K for "small"
-> blocks (4-8K).  Linear IO would be wicked fast but random OPs slow you
-> down.  Conversly, large SSDs arrays can routinely hit > 400K reads and
-> > 200K writes if built correctly.  Just the 66 hard drives will run
-> you $30K.  These are SAS drives, not WD Velociraptors which would save
-> you 30%.
-> 
-> If you opt for "lots of small drives" (ie, 72GB 15K SAS drives) or
-> worse (short seek small drives), the SSDs are actually faster and
-> cheaper per GB.  20TB of raid-10 72GB drives is 550 drives or $105K
-> (just for the drives, not counting jbod enclosures, racks, etc).
-> Short seeking would be 1000+ drives.  I highly expect you do not want
-> to do this.
+I guess that is why sdd1 was missing from 'ubuntu:0'.  Though as I cann=
+ot
+tell if this happened before or after any of the various things reporte=
+d
+above, it is hard to be sure.
 
-No.  :)  72 SSDs sounds like fun; 550 spinning disks sound dreadful.
-I have a feeling I'd probably have to keep a significant number
-on-hand as spares, as I predict drive failures would probably be a
-weekly occurance.
 
-Thank you for the detailed and thoughtful answers!  Definitely very
-helpful.
+The  real mystery is why 'pvscan' reports nothing.
 
-Take care,
-Matt
+What about
+  pvscan --verbose
 
+or
+
+  blkid -p /dev/md/ubuntu:0
+
+or even
+
+  dd of=3D/dev/md/ubuntu:0 count=3D8 | od -c=20
+
+??
+
+NeilBrown
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
