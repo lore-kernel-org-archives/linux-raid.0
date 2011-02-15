@@ -1,69 +1,62 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm: recovering from an aborted reshape op - boot messages
-Date: Tue, 15 Feb 2011 10:55:08 +1100
-Message-ID: <20110215105508.137097fa@notabene.brown>
-References: <396537.54229.qm@web65106.mail.ac2.yahoo.com>
+Subject: Re: Single-drive RAID0
+Date: Tue, 15 Feb 2011 11:01:41 +1100
+Message-ID: <20110215110141.30d28302@notabene.brown>
+References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+	<20110209134557.4e607451@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
+	<20110214131149.7f0655a3@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <396537.54229.qm@web65106.mail.ac2.yahoo.com>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 14:47:48 -0800 (PST) Gavin Flower <gavinflower@yahoo.com>
-wrote:
+On Mon, 14 Feb 2011 17:04:38 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
+> > It is possible that there is something subtle about the precise device
+> > geometry.
+> > Could you send me
+> >    sfdisk -l /dev/sda
+> > (or whatever device you are using)
 
-> Hi Neil,
+You didn't include this information...
+
+
+
+
+
+
+
+> > This patch should fix that particular problem.  Let me know if you
+> > can still produce any of these errors with the patch applied.
 > 
-> I did not notice this before (note: I have poor eyesight, so unless I explicitly look, I may not notice things!). but just before Fedora drops to the shell on a reboot I saw these messages (hand transcribed, so might have the odd transcription error):
 > 
-> /dev/md1: The filing system size (according to the superblock) is 76799952 blocks
-> The physical size of the device is 76799616
-> Either the superblock or the partition table is likely to be corrupt!
+> Unfortunately issue is reproducible with path applied.
+> I tried to reproduce it on other setup (other PC and disks) also... issue exists :(
 > 
-> /dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
-> (i.e. without -a or -p options)
+> Interesting observation is that when I stop array just after creation and then reassemble it again, everything work fine.
+> On older kernel version (I tried 2.6.34) issue is NOT reproducible also.
 > 
-> Note that original size according mdadm was not a multiple of 512KB, so I reshaped it to be the largest multiple or 512KB less than the original size.  So my second attempt to reshape, using the 512 chunk size, started okay.
-> 
-> Advice appreciated.
 
-Hmmm....
+All very strange.  And as I cannot reproduce it, it is very hard to debug.
 
-Firstly, the -A and -E output you sent are inconsistent.
+Maybe some daemon is accessing the array at some awkward time and causing
+different behaviour for you...
 
-The "-A" output reports:
+If it is repeatable enough that you could try 'git bisect' to find which
+commit introduced the problem, that would be helpful but I suspect it would
+be very time-consuming.
 
-mdadm:/dev/md1 has an active reshape - checking if critical section needs to be restored
+It might help to put a "WARN_ON(1)" in the place where it prints "detected
+capacity change ..." so we get a stack trace and can see how it got there.
+That might git a hint to what is looping.
+Also a printk in md_open if it returns ERESTARTSYS would be interesting.
 
-For 0.90 metadata (which you are using), that can only be reported if the
-minor number is at least 91.  i.e. it has been temporarily set to 0.91.
-
-However the "-E" output show that all devices are "0.90.00", not 0.91.
-
-So those devices cannot possibly produce that -A output.
-
-The devices appear to have all completely transitioned to 512K chunksize....
-
-And the -D output seems to show that the array is fine and working properly.
-
-Secondly, as you say you reshaped the array to make it slightly smaller so it
-would be a multiple of 512K.  This is obviously needed to change the chunk
-size.
-
-But before you did that - did you resize the filesystem to be only that big?
-I suspect not.  So the filesystem thinks that it is bigger than the device.
-I don't know how best to fix that.
-
-You could try running 'resize2fs" now (was it ext3? I don't remember).  Or
-maybe an 'fsck -f' might fix it.
-
-It might be safest to ask on ext3-users@redhat.com.  Report that you shrunk
-your array before shrinking the filesystem and ask what the best remedial
-strategy is.
-
+Thanks,
 NeilBrown
-
