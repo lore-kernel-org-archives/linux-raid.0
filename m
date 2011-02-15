@@ -1,313 +1,187 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: Single-drive RAID0
-Date: Tue, 15 Feb 2011 16:30:05 +0000
-Message-ID: <BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
-	<20110209134557.4e607451@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-	<20110214131149.7f0655a3@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
- <20110215110141.30d28302@notabene.brown>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: high throughput storage server?
+Date: Tue, 15 Feb 2011 14:44:43 -0200
+Message-ID: <AANLkTim4cdNjk0Avw-TgvvSKK7GpkpJYRKq5BUEG_6wm@mail.gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+	<4D5A8415.5000905@gmail.com>
+	<AANLkTimT=JLvBTU52aZDYC5gwryXmsp4F+WbzsJNbSCC@mail.gmail.com>
+	<27EC7D7C61444EC6A29D95E88A8AF2AC@ManiePC>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110215110141.30d28302@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <27EC7D7C61444EC6A29D95E88A8AF2AC@ManiePC>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "A. Krijgsman" <a.krijgsman@draftsman.nl>
+Cc: Zdenek Kaspar <zkaspar82@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+10Gbyte ~ 80Gbit, i don=B4t know if 50Gbit is possible
+you have SO cpu time to read and write many things not just memory,
+check filesystem cache, etc. etc. etc., maybe you can=B4t get this spee=
+d
+with just 80Gbit memory
+
+2011/2/15 A. Krijgsman <a.krijgsman@draftsman.nl>:
+> Just ran memcheck 2 weeks ago.
+>
+> If you triple-lane your memory you get 10GByte (!) per second memory.
+> ( This is memory from 2010 ;-) 1333 Mhz )
+>
+> -----Oorspronkelijk bericht----- From: Roberto Spadim Sent: Tuesday,
+> February 15, 2011 3:29 PM To: Zdenek Kaspar Cc: linux-raid@vger.kerne=
+l.org
+> Subject: Re: high throughput storage server?
+> first, run memtest86 (if you use x86 cpu)
+> check ram memory speed
+> my hp (ml350g5 very old: 2005) get 2500MB/s (~20 Gbits/s)
+>
+> maybe ram is a bottleneck for 50gbits....
+> you will need a multi computer raid or stripe fileaccess operations
+> (database on one machine, s.o. on another...)
+>
+> for hobby =3D SATA2 disks, 50USD disks of 1TB 50MB/s
+> the today state of art, in 'my world' is: http://www.ramsan.com/produ=
+cts/3
+>
+>
+> 2011/2/15 Zdenek Kaspar <zkaspar82@gmail.com>:
+>>
+>> Dne 15.2.2011 0:59, Matt Garman napsal(a):
+>>>
+>>> For many years, I have been using Linux software RAID at home for a
+>>> simple NAS system. =A0Now at work, we are looking at buying a massi=
+ve,
+>>> high-throughput storage system (e.g. a SAN). =A0I have little
+>>> familiarity with these kinds of pre-built, vendor-supplied solution=
+s.
+>>> I just started talking to a vendor, and the prices are extremely hi=
+gh.
+>>>
+>>> So I got to thinking, perhaps I could build an adequate device for
+>>> significantly less cost using Linux. =A0The problem is, the require=
+ments
+>>> for such a system are significantly higher than my home media serve=
+r,
+>>> and put me into unfamiliar territory (in terms of both hardware and
+>>> software configuration).
+>>>
+>>> The requirement is basically this: around 40 to 50 compute machines
+>>> act as basically an ad-hoc scientific compute/simulation/analysis
+>>> cluster. =A0These machines all need access to a shared 20 TB pool o=
+f
+>>> storage. =A0Each compute machine has a gigabit network connection, =
+and
+>>> it's possible that nearly every machine could simultaneously try to
+>>> access a large (100 to 1000 MB) file in the storage pool. =A0In oth=
+er
+>>> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
+>>>
+>>> I was wondering if anyone on the list has built something similar t=
+o
+>>> this using off-the-shelf hardware (and Linux of course)?
+>>>
+>>> My initial thoughts/questions are:
+>>>
+>>> =A0 =A0(1) We need lots of spindles (i.e. many small disks rather t=
+han
+>>> few big disks). =A0How do you compute disk throughput when there ar=
+e
+>>> multiple consumers? =A0Most manufacturers provide specs on their dr=
+ives
+>>> such as sustained linear read throughput. =A0But how is that number
+>>> affected when there are multiple processes simultanesously trying t=
+o
+>>> access different data? =A0Is the sustained bulk read throughput val=
+ue
+>>> inversely proportional to the number of consumers? =A0(E.g. 100 MB/=
+s
+>>> drive only does 33 MB/s w/three consumers.) =A0Or is there are more
+>>> specific way to estimate this?
+>>>
+>>> =A0 =A0(2) The big storage server(s) need to connect to the network=
+ via
+>>> multiple bonded Gigabit ethernet, or something faster like
+>>> FibreChannel or 10 GbE. =A0That seems pretty straightforward.
+>>>
+>>> =A0 =A0(3) This will probably require multiple servers connected to=
+gether
+>>> somehow and presented to the compute machines as one big data store=
+=2E
+>>> This is where I really don't know much of anything. =A0I did a quic=
+k
+>>> "back of the envelope" spec for a system with 24 600 GB 15k SAS dri=
+ves
+>>> (based on the observation that 24-bay rackmount enclosures seem to =
+be
+>>> fairly common). =A0Such a system would only provide 7.2 TB of stora=
+ge
+>>> using a scheme like RAID-10. =A0So how could two or three of these
+>>> servers be "chained" together and look like a single large data poo=
+l
+>>> to the analysis machines?
+>>>
+>>> I know this is a broad question, and not 100% about Linux software
+>>> RAID. =A0But I've been lurking on this list for years now, and I ge=
+t the
+>>> impression there are list members who regularly work with "big iron=
+"
+>>> systems such as what I've described. =A0I'm just looking for any ki=
+nd of
+>>> relevant information here; any and all is appreciated!
+>>>
+>>> Thank you,
+>>> Matt
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>>>
+>>
+>> If you really need to handle 50Gbit/s storage traffic, then it's not=
+ so
+>> easy for hobby. For good price you probably want multiple machines w=
+ith
+>> lots hard drives and interconnects..
+>>
+>> Might be worth to ask here:
+>> Newsgroups: gmane.comp.clustering.beowulf.general
+>>
+>> HTH, Z.
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
 
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Tuesday, February 15, 2011 1:02 AM
-> To: Wojcik, Krzysztof
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Single-drive RAID0
->=20
-> On Mon, 14 Feb 2011 17:04:38 +0000 "Wojcik, Krzysztof"
-> <krzysztof.wojcik@intel.com> wrote:
-> > > It is possible that there is something subtle about the precise
-> device
-> > > geometry.
-> > > Could you send me
-> > >    sfdisk -l /dev/sda
-> > > (or whatever device you are using)
->=20
-> You didn't include this information...
-
-Disk /dev/sdc: 30515 cylinders, 255 heads, 63 sectors/track
-Units =3D cylinders of 8225280 bytes, blocks of 1024 bytes, counting from 0
-
-   Device Boot Start     End   #cyls    #blocks   Id  System
-/dev/sdc1          0+   6374    6375-  51207187   83  Linux
-/dev/sdc2       6375   12749    6375   51207187+  83  Linux
-/dev/sdc3          0       -       0          0    0  Empty
-/dev/sdc4          0       -       0          0    0  Empty
-
->=20
-> > > This patch should fix that particular problem.  Let me know if you
-> > > can still produce any of these errors with the patch applied.
-> >
-> >
-> > Unfortunately issue is reproducible with path applied.
-> > I tried to reproduce it on other setup (other PC and disks) also...
-> issue exists :(
-> >
-> > Interesting observation is that when I stop array just after creation
-> and then reassemble it again, everything work fine.
-> > On older kernel version (I tried 2.6.34) issue is NOT reproducible
-> also.
-> >
->=20
-> All very strange.  And as I cannot reproduce it, it is very hard to
-> debug.
->=20
-> Maybe some daemon is accessing the array at some awkward time and
-> causing
-> different behaviour for you...
->=20
-> If it is repeatable enough that you could try 'git bisect' to find
-> which
-> commit introduced the problem, that would be helpful but I suspect it
-> would
-> be very time-consuming.
->=20
-> It might help to put a "WARN_ON(1)" in the place where it prints
-> "detected
-> capacity change ..." so we get a stack trace and can see how it got
-> there.
-> That might git a hint to what is looping.
-> Also a printk in md_open if it returns ERESTARTSYS would be
-> interesting.
-
-In attachment part of logs from kernel with WARN_ON(1) and value returned b=
-y md_open()=20
-(line preceded with "##### KW: err=3D x").
-
-I am trying to look for in new areas. I've run:
-Udevd --debug --dedug-traces
-
-Logs from udev and kernel in attachment.
-Maybe it will help to find solution...
-It seems to udev adds and removes device in loop...
-
-Regards
-Krzysztof
-
->=20
-> Thanks,
-> NeilBrown
-
---_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_
-Content-Type: application/x-compressed; name="kernel_log.tgz"
-Content-Description: kernel_log.tgz
-Content-Disposition: attachment; filename="kernel_log.tgz"; size=1396;
-	creation-date="Tue, 15 Feb 2011 15:34:23 GMT";
-	modification-date="Tue, 15 Feb 2011 15:31:32 GMT"
-Content-Transfer-Encoding: base64
-
-H4sIAJ9jWk0AA+1aXW/bNhTN837FBfqyoUsqSpZsGfvAUGDdMKwbhgJ9KAqCIimbsySqJBUn+/W7
-lGOvDZKWVhskXXkAQxRFHl0eXlI8SDbSdLKhjV6duQt3cidIEMVsNl4R167pbFaQE0LytMhJPp9h
-PUlneXYCyd2E8y4G65gBODFav3f4H3r+meJnWQHJgaTLdL7MFrDaNKw6JenilBACmzE7lvALM2LL
-jISOtXIJe3wV1vt3LYZGWmhUt5ECVLcEeeFSMExI3YFzLQjT0k1r6Vo2vTT+FlTKKWtWmlbKge0E
-7XlLtbVjuVUX0hzurHyzv1IhzxXHQGt8n+Yb4UuU8QbY4NbU9HzlOw0dlkD15wWwmvaMb6QD3g+1
-QQquOyvNOXPqXB4qB6yy2PC/ml5vsYphG8Z7Ra+qocUB1NAqbjTXQkKNPTEU3YNoaavFGOlaMOqf
-ciy16lqVEg61USI51KvOyebdVru7rZD9XpxRMbVIyFjgGqfLP3GqRUWxBFYPnRjrRz7KVj0Yh01b
-bUESXIsSem77jQHXt9jR+utYrhQ22fVauavpYCuJE4Qi70jG90mjNDVsC+rF0z/oFgcyFs5lJ7Sh
-duh7bdzYvlEV2BVUg3OYA4Ot1kqA/w1rruiaC5D7ghWjbtxw6kgiVO2bj++TQvhUyqCtOONrCX9X
-AmrWQY/iS2u1ASUkiqPoSnYYHB/vx77MsUNl729aZs5lg4mC78VcrQ5Xx8Byq8Yg3FqaljX7K7WX
-FtbbVneBa+FPJZaQpnmWfAtct+0SWsFECy+YVxefPdsvrpf4S8+Ks2xxanj6GB6lZeA7nuKswAuD
-uboM7AGvvquvsCBJXRZl+cNr+BFQUr6hQtkNteofFG7NupV8nFzMyifJxSKZRJ/lC8lHetxSOmob
-vUX919TLobvHnhfJy9DRXicvCbuBvBuaBqlJjtRk/gBlSdNqVsmRvhVU93JUgngl5LRwWZ7kIx+l
-VbPBfRHT3SEpl0ia5dMmD1mlvImVVPOPoi3n85H2XdLap0KW8YmkjGdvk16p6jnn0yZJ8IyI3fBx
-l6O2Vx0dOv+hQd60QOK0mphcvNjpWgn8XL0ZlPEJlfu5EukDGT5SVml9A2XBp3NySWpylVFCds5c
-7llJlnlBs8VE3ozveP2hRQm/xTtNa9X0+5WaT2MWbDbbCVurTtn1Pt6y8ptLMW22BF/ku3DFLsiD
-CtIvrEJO27SqhOW7WFu1Wjtas6HxK2vmE6uclKt3twjknLHdDjueK2gt/Pi58LKKabsgF3Vd7mXF
-j/Ve1ZwhqZw2VVwmbPeNeYuQjJMvJhEm6SKr9oROtpTj+HGqrPPfLk/uRSWhop6enr4CPHGB82cA
-SHg9T7J5mbHFLCOFgNfYIJCqFSQtliCkkxyPJ8AZHoGVu4TdJw9qo1tIwGkgRZJki5KkeIwMJH8U
-DPjtJXoGY76H4D3mKvKeQH99lss7jOf/xn36Fl4BHxzgwVeOKXRAINXLn/56/uvzZ0s8eUNtn1R+
-w/B27YwvyyL/4KHq628C3xNmVm/rHc1qNKtfmlm9bS0czOri483qbe+43aze1uMTubIw+olmNZR8
-gll9CLIcYVYDwz3SrIayHuUqQ0mPsFVhak44UIdmwRGu8r6Gf6SrDOM83lWG8h7vKsOYj3SVgaTH
-usow2uNc5T0vgqNcZWAWHOUqQzMr2FWGEU50le9xAu9xlfImV3kb1Sdxlffhhh6aq4zuLLqz6M6+
-cHc2y6I7i+7sc3RnR/4pMZq+aPqi6YumL5q+B2L66i/Q9N33P2xGRERERERERERERERERERERERE
-RERERERERERERERERERERERc4V9pK202AFAAAA==
-
---_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_
-Content-Type: application/x-compressed; name="kernel_with_udev.tgz"
-Content-Description: kernel_with_udev.tgz
-Content-Disposition: attachment; filename="kernel_with_udev.tgz"; size=2855;
-	creation-date="Tue, 15 Feb 2011 16:24:37 GMT";
-	modification-date="Tue, 15 Feb 2011 16:20:55 GMT"
-Content-Transfer-Encoding: base64
-
-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
-KQDIAAA=
-
---_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_
-Content-Type: application/x-compressed; name="udev_logs.tgz"
-Content-Description: udev_logs.tgz
-Content-Disposition: attachment; filename="udev_logs.tgz"; size=5751;
-	creation-date="Tue, 15 Feb 2011 16:26:16 GMT";
-	modification-date="Tue, 15 Feb 2011 16:25:55 GMT"
-Content-Transfer-Encoding: base64
-
-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
-
---_004_BE2BFE91933D1B4089447C644860408068FB347Birsmsx503gercor_--
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
