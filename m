@@ -1,70 +1,195 @@
-From: Mark Keisler <grimm26@gmail.com>
-Subject: Re: RAID10 failure(s)
-Date: Tue, 15 Feb 2011 11:47:53 -0600
-Message-ID: <AANLkTi=6GLBJSYrMXctLncEXC-HT66Jy++uxPq1yhGmQ@mail.gmail.com>
-References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>
-	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
-	<20110215094802.44d99c58@notabene.brown>
-	<AANLkTimk-Z2EqaOFM87zgQEvBPE6H0wS9_acp83Gc4+5@mail.gmail.com>
-	<20110215102007.0851f3b8@notabene.brown>
-	<AANLkTi=5+2WJzg4=7cdWx-1+vUwyLcyHxKishCtX_nOH@mail.gmail.com>
-	<20110215115744.3dd078b0@notabene.brown>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Tue, 15 Feb 2011 19:04:43 +0000
+Message-ID: <4D5ACE4B.9040309@gmail.com>
+References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110215115744.3dd078b0@notabene.brown>
+In-Reply-To: <4D5A92F3.1090004@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 14, 2011 at 6:57 PM, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 14 Feb 2011 18:49:03 -0600 Mark Keisler <grimm26@gmail.com> w=
-rote:
->
->> Oh, duh, was thinking in 0+1 instead of 10. =A0I'm still wondering w=
-hy
->> you made mention of "but be really sure that the devices really are
->> working before you try this." =A0If trying to bring the RAID back fa=
-ils,
->> I'm just back to not having access to the data which is where I am n=
-ow
->> :).
->
-> If you try reconstructing the array before you are sure you have reso=
-lved the
-> original problem (be it BIOS setting, bad cables, dodgey controller o=
-r even a
-> bad disk drive) then you risk compounding your problems and at least =
-are
-> likely to waste time.
-> Sometimes people are in such a hurry to get access to their data that=
- they
-> cut corners to their detriment. =A0I don't know if you are such a per=
-son, but
-> I mentioned it anyway just in case.
->
-> NeilBrown
->
->
-After checking things over, SMART tests were showing quite a few
-Offline_Uncorrectable and  a high Current_Pending_Sector count on the
-two drives that had failed out of the array.  So, based on that, I
-figured I had nothing to lose in trying to create the array again.  I
-just went with the array in a degraded state with 3 drives and was
-able to activate the volumes on it and get the part of the data off
-that wasn't backed up yet before it failed again.
+Phil,
+Thanks for filling in the gaps, I had forgotton quite how much help and=
+=20
+assistance you had provided up to now.  You're a real godsend.
 
-Stan's dd zero idea also confirms with its output and logs:
- # dd if=3D/dev/zero of=3D/dev/sdb
-dd: writing to `/dev/sdb': Input/output error
-9368201+0 records in
-9368200+0 records out
-4796518400 bytes (4.8 GB) copied, 229.128 s, 20.9 MB/s
+To fill in some of the other pieces of info:
+The original machine was called proxmox (KVM virtualisation machine) an=
+d=20
+I used an Ubuntu live cd to see if it was the software which was=20
+preventing progress or not.  It does seem like there is data corruption=
+=20
+in the machine name for some reason.
+
+The original company I ordered the controller through sent me an email=20
+at 4pm saying that they could not fulfill the order, 4pm was too late=20
+for them to pick & pack so there was another 24hr turn around delay. =20
+The supermicro card should arrive here tomorrow and hopefully I'll be=20
+able to get a dd of each of the drives prior to Phil coming online.
+
+=46or some reason blkid doesn't exist on my machine even though I have=20
+e2fs-utils installed.  V weird.
+
+Simon
 
 
-So, RMA of drives, keep smartd running, rebuild the array, load some
-data and monitor :).  Thanks for the help guys.
+On 15/02/2011 14:51, Phil Turmel wrote:
+> Hi Neil,
+>
+> Since Simon has responded, let me summarize the assistance I provided=
+ per his off-list request:
+>
+> On 02/14/2011 11:53 PM, NeilBrown wrote:
+>> On Thu, 10 Feb 2011 16:16:44 +0000 Simon McNair<simonmcnair@gmail.co=
+m>  wrote:
+>>
+>>> Hi all
+>>>
+>>> I use a 3ware 9500-12 port sata card (JBOD) which will not work wit=
+hout a
+>>> 128mb sodimm.  The sodimm socket is flakey and the result is that t=
+he
+>>> machine occasionally crashes.  Yesterday I finally gave in and put
+>>> together another
+>>> machine so that I can rsync between them.  When I turned the machin=
+e
+>>> on today to set up rync, the RAID array was not gone, but corrupted=
+=2E
+>>>    Typical...
+>> Presumably the old machine was called 'ubuntu' and the new machine '=
+pro=C3=B8lox'
+>>
+>>
+>>> I built the array in Aug 2010 using the following command:
+>>>
+>>> mdadm --create --verbose /dev/md0 --metadata=3D1.1 --level=3D5
+>>> --raid-devices=3D10 /dev/sd{b,c,d,e,f,g,h,i,j,k}1 --chunk=3D64
+>>>
+>>> Using LVM, I did the following:
+>>> pvscan
+>>> pvcreate -M2 /dev/md0
+>>> vgcreate lvm-raid /dev/md0
+>>> vgdisplay lvm-raid
+>>> vgscan
+>>> lvscan
+>>> lvcreate -v -l 100%VG -n RAID lvm-raid
+>>> lvdisplay /dev/lvm-raid/lvm0
+>>>
+>>> I then formatted using:
+>>> mkfs -t ext4 -v -m .1 -b 4096 -E stride=3D16,stripe-width=3D144
+>>> /dev/lvm-raid/RAID
+>>>
+>>> This worked perfectly since I created the array.  Now mdadm is comi=
+ng up
+>>> with
+>>>
+>>> proxmox:/dev/md# mdadm --assemble --scan --verbose
+>>> mdadm: looking for devices for further assembly
+>>> mdadm: no recogniseable superblock on /dev/md/ubuntu:0
+>> And it seems that ubuntu:0 have been successfully assembled.
+>> It is missing one device for some reason (sdd1) but RAID can cope wi=
+th that.
+> 3ware card is compromised, with a loose buffer memory dimm.  Some of =
+its ECC errors were caught and reported in dmesg.  Its likely, based on=
+ the loose memory socket, that many multiple-bit errors got through.
+>
+> [trim /]
+>
+>>> mdadm: no uptodate device for slot 8 of /dev/md/pro=EF=BF=BDlox:0
+>>> mdadm: no uptodate device for slot 9 of /dev/md/pro=EF=BF=BDlox:0
+>>> mdadm: failed to add /dev/sdd1 to /dev/md/pro=EF=BF=BDlox:0: Invali=
+d argument
+>>> mdadm: /dev/md/pro=EF=BF=BDlox:0 assembled from 0 drives - not enou=
+gh to start
+>>> the array.
+>> This looks like it is *after* to trying the --create command you giv=
+e
+>> below..  It is best to report things in the order they happen, else =
+you can
+>> confuse people (or get caught out!).
+> Yes, this was after.
+>
+>>> mdadm: looking for devices for further assembly
+>>> mdadm: no recogniseable superblock on /dev/sdd
+>>> mdadm: No arrays found in config file or automatically
+>>>
+>>> pvscan and vgscan show nothing.
+>>>
+>>> So I tried running mdadm --create --verbose /dev/md0 --metadata=3D1=
+=2E1
+>>> --level=3D5 --raid-devices=3D10 missing /dev/sde1 /dev/sdf1 /dev/sd=
+g1
+>>> /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 --chunk=
+=3D64
+>>>
+>>> as it seemed that /dev/sdd1 failed to be added to the array.  This =
+did
+>>> nothing.
+>> It did not to nothing.  It wrote a superblock to /dev/sdd1 and compl=
+ained
+>> that it couldn't write to all the others --- didn't it?
+> There were multiple attempts to create.  One wrote to just sdd1, anot=
+her succeeded with all but sdd1.
+>
+>>> dmesg contains:
+>>>
+>>> md: invalid superblock checksum on sdd1
+>> I guess that is why sdd1 was missing from 'ubuntu:0'.  Though as I c=
+annot
+>> tell if this happened before or after any of the various things repo=
+rted
+>> above, it is hard to be sure.
+>>
+>>
+>> The  real mystery is why 'pvscan' reports nothing.
+> The original array was created with mdadm v2.6.7, and had a data offs=
+et of 264 sectors.  After Simon's various attempts to --create, he ende=
+d up with data offset of 2048, using mdadm v3.1.4.  The mdadm -E report=
+s he posted to the list showed the 264 offset.  We didn't realize the o=
+ffset had been updated until somewhat later in our troubleshooting effo=
+rts.
+>
+> In any case, pvscan couldn't see the LVM signature because it wasn't =
+there (at offset 2048).
+>
+>> What about
+>>    pvscan --verbose
+>>
+>> or
+>>
+>>    blkid -p /dev/md/ubuntu:0
+>>
+>> or even
+>>
+>>    dd of=3D/dev/md/ubuntu:0 count=3D8 | od -c
+> Fortunately, Simon did have a copy of his LVM configuration.  With th=
+e help of dd, strings, and grep, we did locate his LVM sig at the corre=
+ct location on sdd1 (for data offset 264).  After a number of attempts =
+to bypass LVM and access his single LV with dmsetup (based on his backe=
+d up configuration, on the assembled new array less sdd1), I realized t=
+hat the data offset was wrong on the recreated array, and went looking =
+for the cause.  I found your git commit that changed that logic last sp=
+ring, and recommended that Simon revert to the default package for his =
+ubuntu install, which is v2.6.7.
+>
+> Simon has now attempted to recreate the array with v2.6.7, but the co=
+ntroller is throwing too many errors to succeed, and I suggested it was=
+ too flakey to trust any further.  Based on the existence of the LVM si=
+g on sdd1, I believe Simon's data is (mostly) intact, and only needs a =
+successful create operation with a properly functioning controller.  (H=
+e might also need to perform an lvm vgcfgrestore, but he has the necess=
+ary backup file.)
+>
+> A new controller is on order.
+>
+> Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
