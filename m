@@ -1,113 +1,119 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
- transition
-Date: Tue, 15 Feb 2011 19:58:17 +1100
-Message-ID: <20110215195817.4eb5fb00@notabene.brown>
-References: <20110214130213.8540.57401.stgit@gklab-128-013.igk.intel.com>
-	<20110214131249.8540.73388.stgit@gklab-128-013.igk.intel.com>
-	<20110215113206.4677e95d@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D178E61207@irsmsx503.ger.corp.intel.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: write-behind has no measurable effect?
+Date: Tue, 15 Feb 2011 06:10:17 -0300
+Message-ID: <AANLkTinAV4jJc8ueZ1mjRPpDnA_eWhUDcL8uz-0Ufifk@mail.gmail.com>
+References: <20110214213817.GG836@hellgate.intra.guy>
+	<20110215095042.51ef7e0a@notabene.brown>
+	<20110214225754.GK19990@hellgate.intra.guy>
+	<20110215104109.06b12b33@notabene.brown>
+	<20110215010052.GA13135@hellgate.intra.guy>
+	<4D59D4A5.9050106@anonymous.org.uk>
+	<20110215021900.GB13135@hellgate.intra.guy>
+	<AANLkTikFSOePZJXknAt=Tx6+FpdJ4tiSNwpuwuPC3RY=@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D178E61207@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <AANLkTikFSOePZJXknAt=Tx6+FpdJ4tiSNwpuwuPC3RY=@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Andras Korn <korn@raidlist.elan.rulez.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Feb 2011 08:30:22 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+andras could you make some benchmarks to raid1 with round robin read ba=
+lance?
+at this site:
+www.spadim.com.br/raid1/
 
-> 
-> 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Tuesday, February 15, 2011 1:32 AM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > Neubauer, Wojciech
-> > Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
-> > transition
-> > 
-> > On Mon, 14 Feb 2011 14:12:49 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> > wrote:
-> > 
-> > > We have to set proper value of delta_disks to avoid it wrongly being
-> > set
-> > > when it value remains UnSet for this level transition (Grow.c:1224).
-> > >
-> > > This causes too small value set to "raid_disks" in sysfs
-> > > and reshape raid5->raid0 fails.
-> > >
-> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > > ---
-> > >
-> > >  Grow.c |    1 +
-> > >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > >
-> > > diff --git a/Grow.c b/Grow.c
-> > > index 424d489..dba2825 100644
-> > > --- a/Grow.c
-> > > +++ b/Grow.c
-> > > @@ -1073,6 +1073,7 @@ char *analyse_change(struct mdinfo *info,
-> > struct reshape *re)
-> > >  		switch (info->new_level) {
-> > >  		case 0:
-> > >  			delta_parity = -1;
-> > > +			info->delta_disks = 0;
-> > >  		case 4:
-> > >  			re->level = info->array.level;
-> > >  			re->before.data_disks = info->array.raid_disks - 1;
-> > 
-> > I think we have different expectations about what a RAID5 -> RAID0
-> > transition
-> > means.
-> > 
-> > To me, it means getting rid of the parity information.  So a 4-device
-> > RAID5
-> > is converted to a 3-device RAID0 and stays the same size.
-> > 
-> > I think you want it to maintain the same number of devices, so a 4-
-> > device
-> > RAID5 becomes a 4-device RAID0 and thus has larger storage.
-> > 
-> > If you want that, you need to say:
-> >    mdadm -G /dev/md/xxx --level=0 --raid-disks=4
-> > 
-> > I'd be happy with functionality to do:
-> > 
-> >    mdadm -G /dev/md/xxx --level=0 --raid-disks=nochange
-> > 
-> > or something like that so it could be easily scripted easily, but I
-> > want the
-> > default to do the simplest possible change.
-> > 
-> > Am I correct about your expectations?
-> 
-> Yes you are right.
-> Working in the way you described above, will probably need a change in md or mdadm should degrade array after reshape (before takeover).
-> If I recall takeover code correctly, to execute takeover from raid4/5->raid0, raid4/5 has to be a degraded array.
-> This a reason I've make no changes to raid_disks number, as such behavior seams fit current implementation. 
-> 
-> Please let me know the direction you think we should go.
-> 
+it's kernel 2.6.37 based
 
-I don't understand....
-Working "the way I described" is just a slightly different way that arguments
-passed to mdadm are interpreted.  The underlying process can still happen
-exactly the same way - you just have to ask for it slightly differently.  No
-change in md or mdadm required.
 
-In any case, care is required if the RAID5 array goes degraded before you
-switch it to RAID0.  The sensible thing would probably be to leave it in
-RAID4 as the final switch to RAID0 would effectively destroy all your data.
-I suspect the kernel wouldn't allow the final switch if the RAID5 were
-degraded.
+2011/2/15 Roberto Spadim <roberto@spadim.com.br>
+>
+> andras could you make some benchmarks to raid1 with round robin read =
+balance?
+> at this site:
+> www.spadim.com.br/raid1/
+>
+> it's kernel 2.6.37 based
+>
+> 2011/2/14 Andras Korn <korn@raidlist.elan.rulez.org>
+>>
+>> On Tue, Feb 15, 2011 at 01:19:33AM +0000, John Robinson wrote:
+>>
+>> > >Another approach to take would be to mark as dirty, on the fast d=
+evices, all
+>> > >areas being written to, and in the background continuously synch =
+them to the
+>> > >slow devices, sequentially (marking as clean synched-and-as-yet-u=
+nwritten-to
+>> > >areas); so that the array would be resyncing continually, but be =
+very fast
+>> > >for random writes. This would of course also require the bitmap t=
+o only be
+>> > >synchronously updated on the fast devices.
+>> > >
+>> > >Otoh, this is really a different mechanism from the current write=
+-behind,
+>> > >aimed at a different use-case, so maybe it could be implemented
+>> > >orthogonally. (Patches welcome, I'm sure; it's times like these I=
+ hate not
+>> > >being a coder.)
+>> >
+>> > I wonder whether bcache might do roughly what you want? I haven't
+>>
+>> It only does very roughly what I want (the idea there is to _cache_ =
+a much
+>> larger spinning disk using a relatively small SSD, whereas I basical=
+ly want
+>> them both to be the same size, with the disk eventually mirroring th=
+e
+>> contents of the SSD); also, development of bcache has stalled (it do=
+esn't
+>> even compile with recent kernels and the developer has stated that h=
+e's
+>> taking a break).
+>>
+>> I also know of flashcache, which is similar to bcache and is more ac=
+tively
+>> developed, but is still lagging quite a few versions behind (the lat=
+est
+>> kernel it works with is 2.6.32, I think; it certainly doesn't compil=
+e with
+>> 2.6.38).
+>>
+>> So, while both of these may actually be good at what they do, neithe=
+r of
+>> them does what I have in mind and I also can't use either of them be=
+cause I
+>> need a newer kernel than what they support.
+>>
+>> But thanks anyway.
+>>
+>> --
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Andras Korn <korn at elan.ru=
+lez.org>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 I'm not nearly as think as you confu=
+sed I am.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
 
-The direction that I want to go is exactly as stated above.  If no explicit
-request is made to set the new value for raid-disks, then the change made
-should be the simplest possible - leaving the number of data-disks unchanged.
 
-NeilBrown
+
+--
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
