@@ -1,41 +1,160 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: high throughput storage server?
-Date: Tue, 15 Feb 2011 10:43:56 +0100
-Message-ID: <ijdhtg$on7$1@dough.gmane.org>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com> <20110215044434.GA9186@septictank.raw-sewage.fake>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
+ transition
+Date: Tue, 15 Feb 2011 10:12:35 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D178E6138B@irsmsx503.ger.corp.intel.com>
+References: <20110214130213.8540.57401.stgit@gklab-128-013.igk.intel.com>
+	<20110214131249.8540.73388.stgit@gklab-128-013.igk.intel.com>
+	<20110215113206.4677e95d@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D178E61207@irsmsx503.ger.corp.intel.com>
+ <20110215195817.4eb5fb00@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110215044434.GA9186@septictank.raw-sewage.fake>
+In-Reply-To: <20110215195817.4eb5fb00@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 15/02/2011 05:44, Matt Garman wrote:
-> On Mon, Feb 14, 2011 at 06:06:43PM -0800, Doug Dumitru wrote:
->
-> I'll also add that this NAS needs to be optimized for *read*
-> throughput.  As I mentioned, the only real write process is the
-> daily "harvesting" of the data files.  Those are copied across
-> long-haul leased lines, and the copy process isn't really
-> performance sensitive.  In other words, in day-to-day use, those
-> 40--50 client machines will do 100% reading from the NAS.
->
 
-If you are not too bothered about write performance, I'd put a fair 
-amount of the budget into ram rather than just disk performance.  When 
-you've got the ram space to make sure small reads are mostly cached, the 
-main bottleneck will be sequential reads - and big hard disks handle 
-sequential reads as fast as expensive SSDs.
 
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Tuesday, February 15, 2011 9:58 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
+> transition
+> 
+> On Tue, 15 Feb 2011 08:30:22 +0000 "Kwolek, Adam"
+> <adam.kwolek@intel.com>
+> wrote:
+> 
+> >
+> >
+> > > -----Original Message-----
+> > > From: NeilBrown [mailto:neilb@suse.de]
+> > > Sent: Tuesday, February 15, 2011 1:32 AM
+> > > To: Kwolek, Adam
+> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > > Neubauer, Wojciech
+> > > Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
+> > > transition
+> > >
+> > > On Mon, 14 Feb 2011 14:12:49 +0100 Adam Kwolek
+> <adam.kwolek@intel.com>
+> > > wrote:
+> > >
+> > > > We have to set proper value of delta_disks to avoid it wrongly
+> being
+> > > set
+> > > > when it value remains UnSet for this level transition
+> (Grow.c:1224).
+> > > >
+> > > > This causes too small value set to "raid_disks" in sysfs
+> > > > and reshape raid5->raid0 fails.
+> > > >
+> > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > > ---
+> > > >
+> > > >  Grow.c |    1 +
+> > > >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > > >
+> > > > diff --git a/Grow.c b/Grow.c
+> > > > index 424d489..dba2825 100644
+> > > > --- a/Grow.c
+> > > > +++ b/Grow.c
+> > > > @@ -1073,6 +1073,7 @@ char *analyse_change(struct mdinfo *info,
+> > > struct reshape *re)
+> > > >  		switch (info->new_level) {
+> > > >  		case 0:
+> > > >  			delta_parity = -1;
+> > > > +			info->delta_disks = 0;
+> > > >  		case 4:
+> > > >  			re->level = info->array.level;
+> > > >  			re->before.data_disks = info->array.raid_disks
+> - 1;
+> > >
+> > > I think we have different expectations about what a RAID5 -> RAID0
+> > > transition
+> > > means.
+> > >
+> > > To me, it means getting rid of the parity information.  So a 4-
+> device
+> > > RAID5
+> > > is converted to a 3-device RAID0 and stays the same size.
+> > >
+> > > I think you want it to maintain the same number of devices, so a 4-
+> > > device
+> > > RAID5 becomes a 4-device RAID0 and thus has larger storage.
+> > >
+> > > If you want that, you need to say:
+> > >    mdadm -G /dev/md/xxx --level=0 --raid-disks=4
+> > >
+> > > I'd be happy with functionality to do:
+> > >
+> > >    mdadm -G /dev/md/xxx --level=0 --raid-disks=nochange
+> > >
+> > > or something like that so it could be easily scripted easily, but I
+> > > want the
+> > > default to do the simplest possible change.
+> > >
+> > > Am I correct about your expectations?
+> >
+> > Yes you are right.
+> > Working in the way you described above, will probably need a change
+> in md or mdadm should degrade array after reshape (before takeover).
+> > If I recall takeover code correctly, to execute takeover from
+> raid4/5->raid0, raid4/5 has to be a degraded array.
+> > This a reason I've make no changes to raid_disks number, as such
+> behavior seams fit current implementation.
+> >
+> > Please let me know the direction you think we should go.
+> >
+> 
+> I don't understand....
+> Working "the way I described" is just a slightly different way that
+> arguments
+> passed to mdadm are interpreted.  The underlying process can still
+> happen
+> exactly the same way - you just have to ask for it slightly
+> differently.  No
+> change in md or mdadm required.
 >
-> No.  :)  72 SSDs sounds like fun; 550 spinning disks sound dreadful.
-> I have a feeling I'd probably have to keep a significant number
-> on-hand as spares, as I predict drive failures would probably be a
-> weekly occurance.
->
+> In any case, care is required if the RAID5 array goes degraded before
+> you
+> switch it to RAID0.  The sensible thing would probably be to leave it
+> in
+> RAID4 as the final switch to RAID0 would effectively destroy all your
+> data.
+> I suspect the kernel wouldn't allow the final switch if the RAID5 were
+> degraded.
 
-Don't forget to include running costs in this - 72 SSDs use a lot less 
-power than 550 hard disks.
+Look raid0.c:586, raid5 cannot be takeovered to raid0 if it is not degraded.
+Parity disk (in raid4) has to be "virtual". 
+In situation when we want to throw away parity disk, we have to make array degraded first or change md behavior (imho).
+
+> The direction that I want to go is exactly as stated above.  If no
+> explicit
+> request is made to set the new value for raid-disks, then the change
+> made
+> should be the simplest possible - leaving the number of data-disks
+> unchanged.
+> 
+> NeilBrown
+
+I wanted to maintain the same number of devices due to IMSM compatibility.
+It there are 2 arrays in container, number of devices in array cannot be changed in one array only.
+I wanted to avoid different command behavior depending on arrays number in container.
+This can make user confused, so I've decided to keep raid_disks without change.
+
+BR
+Adam
+
+
+
 
