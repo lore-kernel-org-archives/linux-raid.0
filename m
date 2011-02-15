@@ -1,68 +1,80 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
- transition
-Date: Tue, 15 Feb 2011 11:32:06 +1100
-Message-ID: <20110215113206.4677e95d@notabene.brown>
-References: <20110214130213.8540.57401.stgit@gklab-128-013.igk.intel.com>
-	<20110214131249.8540.73388.stgit@gklab-128-013.igk.intel.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: RAID10 failure(s)
+Date: Mon, 14 Feb 2011 18:40:53 -0600
+Message-ID: <4D59CB95.1090604@hardwarefreak.com>
+References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>	<4D59ACAF.9020703@hardwarefreak.com> <AANLkTikyjuUo=X3m5Q6L9x3vXbgV1KC+TfOaLN2z4Keo@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110214131249.8540.73388.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <AANLkTikyjuUo=X3m5Q6L9x3vXbgV1KC+TfOaLN2z4Keo@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Mark Keisler <grimm26@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 14:12:49 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
-
-> We have to set proper value of delta_disks to avoid it wrongly being set
-> when it value remains UnSet for this level transition (Grow.c:1224).
+Mark Keisler put forth on 2/14/2011 4:39 PM:
+> On Mon, Feb 14, 2011 at 4:29 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>>
+>> Mark Keisler put forth on 2/14/2011 2:33 PM:
+>>
+>>> Still wondering if there is some magic to be done to get at my data again :)
+>>>>
+>>>> Am I totally SOL?  Thanks for any suggestions or things to try.
+>>>>
+>>>> --
+>>>> Mark
+>>>> Tact is the ability to tell a man he has an open mind when he has a
+>>>> hole in his head.
+>>
+>> Interesting, and ironically appropriate, sig, Mark.
+>>
+>> No magic is required.  Simply wipe each disk by writing all zeros with dd.  You
+>> can do all 4 in parallel.  This will take a while with 1TB drives.  If there are
+>> still SATA/NCQ/etc issues they should pop up while wiping the drives.  If not,
+>> and all dd operations complete successfully, simply create a new RAID 10 array
+>> and format it with your favorite filesystem.
+>>
+>> Then restore all your files from your backups.[1]
+>>
+>> [1] Tact is the ability to tell a man he has an open mind when he has a hole in
+>> his head.
+>>
+>> --
+>> Stan
 > 
-> This causes too small value set to "raid_disks" in sysfs
-> and reshape raid5->raid0 fails.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  Grow.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 424d489..dba2825 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1073,6 +1073,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
->  		switch (info->new_level) {
->  		case 0:
->  			delta_parity = -1;
-> +			info->delta_disks = 0;
->  		case 4:
->  			re->level = info->array.level;
->  			re->before.data_disks = info->array.raid_disks - 1;
+> Well, that was completely unhelpful and devoid of any information.
+> Backups don't keep a RAID from failing and that's what my question was
+> about.  I don't want to spend all of my time rebuilding an array and
+> restoring from backup every week.
 
-I think we have different expectations about what a RAID5 -> RAID0 transition
-means.
+"Backups don't keep a RAID from failing" -- good sig material ;)
 
-To me, it means getting rid of the parity information.  So a 4-device RAID5
-is converted to a 3-device RAID0 and stays the same size.
+It seems you lack the sense of humor implied by your signature.  Given that
+fact, I can understand the defensiveness.  However, note that there are some
+very helpful suggestions in my reply.  IIRC, your question wasn't "how to keep a
+RAID from failing" but "why did one drive in my RAID 10 fail, and then another
+during rebuild".  My suggestions could help you answer the first, possibly the
+second.
 
-I think you want it to maintain the same number of devices, so a 4-device
-RAID5 becomes a 4-device RAID0 and thus has larger storage.
+You still don't know if the first dropped drive is actually bad or not.  Zeroing
+it with dd may very well help to inform you if there is a real problem with it.
+ Checking your logs and smart data during/afterward may/should tell you.
+Zeroing all of them with dd gives you a clean slate for further troubleshooting.
 
-If you want that, you need to say:
-   mdadm -G /dev/md/xxx --level=0 --raid-disks=4
+You don't currently have a full backup.  While the reminder of such may have
+irritated you, it is nonetheless very relevant, and useful, especially for other
+list OPs not donning a Jimmy hat.  RAID is not a replacement for a proper backup
+procedure.  You (re)discovered that fact here, or you simply believe, foolishly,
+the opposite.
 
-I'd be happy with functionality to do:
+My reply was full of useful information.  Apparently just not useful to someone
+who wants to cut corners without having to face the potential negative consequences.
 
-   mdadm -G /dev/md/xxx --level=0 --raid-disks=nochange
+RAID won't save you from massive filesystem corruption.  A proper backup can.
+And if this scenario would have turned dire (or still does) it could save you
+here as well.  Again, you need a proper backup solution.
 
-or something like that so it could be easily scripted easily, but I want the
-default to do the simplest possible change.
+-- 
+Stan
 
-Am I correct about your expectations?
-
-Thanks,
-NeilBrown
-
+Backups don't keep a RAID from failing. --Mark Keisler
