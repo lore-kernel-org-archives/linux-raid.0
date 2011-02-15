@@ -1,27 +1,101 @@
-From: hansbkk@gmail.com
-Subject: Re: high throughput storage server?
-Date: Tue, 15 Feb 2011 12:49:51 +0700
-Message-ID: <AANLkTimwd8YdWBeKyVb4Sq+W-we5ura79ZyLL=1ufro9@mail.gmail.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
-	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
-	<20110215044434.GA9186@septictank.raw-sewage.fake>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
+ transition
+Date: Tue, 15 Feb 2011 08:30:22 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D178E61207@irsmsx503.ger.corp.intel.com>
+References: <20110214130213.8540.57401.stgit@gklab-128-013.igk.intel.com>
+	<20110214131249.8540.73388.stgit@gklab-128-013.igk.intel.com>
+ <20110215113206.4677e95d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110215044434.GA9186@septictank.raw-sewage.fake>
+In-Reply-To: <20110215113206.4677e95d@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: Doug Dumitru <doug@easyco.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-I highly recommend taking a look at Openfiler, pretty simple to set up
-and very flexible, really just a stabilized/tested "appliance" built
-on Linux/FOSS tools. Then your choices come down to what
-top-of-the-line hardware you'd like to buy. . .
 
-With the money you'd save from not going COTS, you could build two of
-them and create high-availability mirrored servers with DRBD/heartbeat
-for extra redundancy/fault-tolerance. And pre-pay for a full lifetime
-of support, if that gives you and the company an extra level of
-comfort. And still have a nice chunk of budget left over for UPSs,
-backup hardware, network capacity expansion etc.
+
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Tuesday, February 15, 2011 1:32 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 1/5] FIX: set delta_disks to 0 for raid5->raid0
+> transition
+> 
+> On Mon, 14 Feb 2011 14:12:49 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > We have to set proper value of delta_disks to avoid it wrongly being
+> set
+> > when it value remains UnSet for this level transition (Grow.c:1224).
+> >
+> > This causes too small value set to "raid_disks" in sysfs
+> > and reshape raid5->raid0 fails.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  Grow.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index 424d489..dba2825 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -1073,6 +1073,7 @@ char *analyse_change(struct mdinfo *info,
+> struct reshape *re)
+> >  		switch (info->new_level) {
+> >  		case 0:
+> >  			delta_parity = -1;
+> > +			info->delta_disks = 0;
+> >  		case 4:
+> >  			re->level = info->array.level;
+> >  			re->before.data_disks = info->array.raid_disks - 1;
+> 
+> I think we have different expectations about what a RAID5 -> RAID0
+> transition
+> means.
+> 
+> To me, it means getting rid of the parity information.  So a 4-device
+> RAID5
+> is converted to a 3-device RAID0 and stays the same size.
+> 
+> I think you want it to maintain the same number of devices, so a 4-
+> device
+> RAID5 becomes a 4-device RAID0 and thus has larger storage.
+> 
+> If you want that, you need to say:
+>    mdadm -G /dev/md/xxx --level=0 --raid-disks=4
+> 
+> I'd be happy with functionality to do:
+> 
+>    mdadm -G /dev/md/xxx --level=0 --raid-disks=nochange
+> 
+> or something like that so it could be easily scripted easily, but I
+> want the
+> default to do the simplest possible change.
+> 
+> Am I correct about your expectations?
+
+Yes you are right.
+Working in the way you described above, will probably need a change in md or mdadm should degrade array after reshape (before takeover).
+If I recall takeover code correctly, to execute takeover from raid4/5->raid0, raid4/5 has to be a degraded array.
+This a reason I've make no changes to raid_disks number, as such behavior seams fit current implementation. 
+
+Please let me know the direction you think we should go.
+
+BR
+Adam
+
+
+
+> 
+> Thanks,
+> NeilBrown
+
