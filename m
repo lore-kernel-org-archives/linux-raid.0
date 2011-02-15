@@ -1,119 +1,41 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: write-behind has no measurable effect?
-Date: Tue, 15 Feb 2011 06:10:17 -0300
-Message-ID: <AANLkTinAV4jJc8ueZ1mjRPpDnA_eWhUDcL8uz-0Ufifk@mail.gmail.com>
-References: <20110214213817.GG836@hellgate.intra.guy>
-	<20110215095042.51ef7e0a@notabene.brown>
-	<20110214225754.GK19990@hellgate.intra.guy>
-	<20110215104109.06b12b33@notabene.brown>
-	<20110215010052.GA13135@hellgate.intra.guy>
-	<4D59D4A5.9050106@anonymous.org.uk>
-	<20110215021900.GB13135@hellgate.intra.guy>
-	<AANLkTikFSOePZJXknAt=Tx6+FpdJ4tiSNwpuwuPC3RY=@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: high throughput storage server?
+Date: Tue, 15 Feb 2011 10:43:56 +0100
+Message-ID: <ijdhtg$on7$1@dough.gmane.org>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com> <20110215044434.GA9186@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikFSOePZJXknAt=Tx6+FpdJ4tiSNwpuwuPC3RY=@mail.gmail.com>
+In-Reply-To: <20110215044434.GA9186@septictank.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andras Korn <korn@raidlist.elan.rulez.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-andras could you make some benchmarks to raid1 with round robin read ba=
-lance?
-at this site:
-www.spadim.com.br/raid1/
-
-it's kernel 2.6.37 based
-
-
-2011/2/15 Roberto Spadim <roberto@spadim.com.br>
+On 15/02/2011 05:44, Matt Garman wrote:
+> On Mon, Feb 14, 2011 at 06:06:43PM -0800, Doug Dumitru wrote:
 >
-> andras could you make some benchmarks to raid1 with round robin read =
-balance?
-> at this site:
-> www.spadim.com.br/raid1/
+> I'll also add that this NAS needs to be optimized for *read*
+> throughput.  As I mentioned, the only real write process is the
+> daily "harvesting" of the data files.  Those are copied across
+> long-haul leased lines, and the copy process isn't really
+> performance sensitive.  In other words, in day-to-day use, those
+> 40--50 client machines will do 100% reading from the NAS.
 >
-> it's kernel 2.6.37 based
->
-> 2011/2/14 Andras Korn <korn@raidlist.elan.rulez.org>
->>
->> On Tue, Feb 15, 2011 at 01:19:33AM +0000, John Robinson wrote:
->>
->> > >Another approach to take would be to mark as dirty, on the fast d=
-evices, all
->> > >areas being written to, and in the background continuously synch =
-them to the
->> > >slow devices, sequentially (marking as clean synched-and-as-yet-u=
-nwritten-to
->> > >areas); so that the array would be resyncing continually, but be =
-very fast
->> > >for random writes. This would of course also require the bitmap t=
-o only be
->> > >synchronously updated on the fast devices.
->> > >
->> > >Otoh, this is really a different mechanism from the current write=
--behind,
->> > >aimed at a different use-case, so maybe it could be implemented
->> > >orthogonally. (Patches welcome, I'm sure; it's times like these I=
- hate not
->> > >being a coder.)
->> >
->> > I wonder whether bcache might do roughly what you want? I haven't
->>
->> It only does very roughly what I want (the idea there is to _cache_ =
-a much
->> larger spinning disk using a relatively small SSD, whereas I basical=
-ly want
->> them both to be the same size, with the disk eventually mirroring th=
-e
->> contents of the SSD); also, development of bcache has stalled (it do=
-esn't
->> even compile with recent kernels and the developer has stated that h=
-e's
->> taking a break).
->>
->> I also know of flashcache, which is similar to bcache and is more ac=
-tively
->> developed, but is still lagging quite a few versions behind (the lat=
-est
->> kernel it works with is 2.6.32, I think; it certainly doesn't compil=
-e with
->> 2.6.38).
->>
->> So, while both of these may actually be good at what they do, neithe=
-r of
->> them does what I have in mind and I also can't use either of them be=
-cause I
->> need a newer kernel than what they support.
->>
->> But thanks anyway.
->>
->> --
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Andras Korn <korn at elan.ru=
-lez.org>
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 I'm not nearly as think as you confu=
-sed I am.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
 
+If you are not too bothered about write performance, I'd put a fair 
+amount of the budget into ram rather than just disk performance.  When 
+you've got the ram space to make sure small reads are mostly cached, the 
+main bottleneck will be sequential reads - and big hard disks handle 
+sequential reads as fast as expensive SSDs.
 
+>
+> No.  :)  72 SSDs sounds like fun; 550 spinning disks sound dreadful.
+> I have a feeling I'd probably have to keep a significant number
+> on-hand as spares, as I predict drive failures would probably be a
+> weekly occurance.
+>
 
---
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Don't forget to include running costs in this - 72 SSDs use a lot less 
+power than 550 hard disks.
+
