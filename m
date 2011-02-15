@@ -1,29 +1,58 @@
-From: Phil Turmel <philip@turmel.org>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: Linux software RAID assistance
-Date: Tue, 15 Feb 2011 14:37:55 -0500
-Message-ID: <4D5AD613.3040402@turmel.org>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org> <4D5ACE4B.9040309@gmail.com>
+Date: Wed, 16 Feb 2011 00:45:24 +0500
+Message-ID: <20110216004524.67abe977@natsu>
+References: <4D540F6C.6050904@gmail.com>
+	<20110215155315.55d35b8e@notabene.brown>
+	<4D5A92F3.1090004@turmel.org>
+	<4D5ACE4B.9040309@gmail.com>
+	<4D5AD613.3040402@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/fUQ2CcW+MQ_xtLnDIIS+KHg"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5ACE4B.9040309@gmail.com>
+In-Reply-To: <4D5AD613.3040402@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: simonmcnair@gmail.com
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: simonmcnair@gmail.com, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/15/2011 02:04 PM, Simon McNair wrote:
-> Phil,
-> Thanks for filling in the gaps, I had forgotton quite how much help and assistance you had provided up to now.  You're a real godsend.
-> 
-> To fill in some of the other pieces of info:
-> The original machine was called proxmox (KVM virtualisation machine) and I used an Ubuntu live cd to see if it was the software which was preventing progress or not.  It does seem like there is data corruption in the machine name for some reason.
-> 
-> The original company I ordered the controller through sent me an email at 4pm saying that they could not fulfill the order, 4pm was too late for them to pick & pack so there was another 24hr turn around delay.  The supermicro card should arrive here tomorrow and hopefully I'll be able to get a dd of each of the drives prior to Phil coming online.
-> 
-> For some reason blkid doesn't exist on my machine even though I have e2fs-utils installed.  V weird.
+--Sig_/fUQ2CcW+MQ_xtLnDIIS+KHg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-FWIW, on my VPS running Ubuntu Server 10.10, the blkid executable is part of util-linux, and installed in /sbin.  You might need to re-install it.
+On Tue, 15 Feb 2011 14:37:55 -0500
+Phil Turmel <philip@turmel.org> wrote:
 
-Phil
+> > For some reason blkid doesn't exist on my machine even though I have
+> > e2fs-utils installed.  V weird.
+
+Weird is that you think it is somehow a "e2fs-utils" program.
+
+dpkg -S blkid
+...
+util-linux: /sbin/blkid
+...
+
+>=20
+> FWIW, on my VPS running Ubuntu Server 10.10, the blkid executable is part=
+ of
+> util-linux, and installed in /sbin.  You might need to re-install it.
+
+--=20
+With respect,
+Roman
+
+--Sig_/fUQ2CcW+MQ_xtLnDIIS+KHg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk1a19QACgkQTLKSvz+PZwgzRgCggc5PkkLeGXlGvKlLiAL/iXvc
+JRYAnjvEhUbHENECZNV0QHpsZV+MOR+o
+=WXj6
+-----END PGP SIGNATURE-----
+
+--Sig_/fUQ2CcW+MQ_xtLnDIIS+KHg--
