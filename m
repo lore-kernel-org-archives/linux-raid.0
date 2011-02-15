@@ -1,80 +1,142 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Mark Keisler <grimm26@gmail.com>
 Subject: Re: RAID10 failure(s)
-Date: Mon, 14 Feb 2011 18:40:53 -0600
-Message-ID: <4D59CB95.1090604@hardwarefreak.com>
-References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>	<4D59ACAF.9020703@hardwarefreak.com> <AANLkTikyjuUo=X3m5Q6L9x3vXbgV1KC+TfOaLN2z4Keo@mail.gmail.com>
+Date: Mon, 14 Feb 2011 18:49:03 -0600
+Message-ID: <AANLkTi=5+2WJzg4=7cdWx-1+vUwyLcyHxKishCtX_nOH@mail.gmail.com>
+References: <AANLkTimqZqjJuwmC+zX3Uyx_xrWC0i07y5idrnaQXyWF@mail.gmail.com>
+	<AANLkTinfaYYcq1++_vx0nNMDftiv9Eqg_eDR2Q0QfoS7@mail.gmail.com>
+	<20110215094802.44d99c58@notabene.brown>
+	<AANLkTimk-Z2EqaOFM87zgQEvBPE6H0wS9_acp83Gc4+5@mail.gmail.com>
+	<20110215102007.0851f3b8@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikyjuUo=X3m5Q6L9x3vXbgV1KC+TfOaLN2z4Keo@mail.gmail.com>
+In-Reply-To: <20110215102007.0851f3b8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Keisler <grimm26@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Keisler put forth on 2/14/2011 4:39 PM:
-> On Mon, Feb 14, 2011 at 4:29 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+On Mon, Feb 14, 2011 at 5:20 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 14 Feb 2011 17:08:45 -0600 Mark Keisler <grimm26@gmail.com> w=
+rote:
+>
+>> On Mon, Feb 14, 2011 at 4:48 PM, NeilBrown <neilb@suse.de> wrote:
+>> > On Mon, 14 Feb 2011 14:33:03 -0600 Mark Keisler <grimm26@gmail.com=
+> wrote:
+>> >
+>> >> Sorry for the double-post on the original.
+>> >> I realize that I also left out the fact that I rebooted since dri=
+ve 0
+>> >> also reported a fault and mdadm won't start the array at all. =A0=
+I'm not
+>> >> sure how to tell which members were the in two RAID0 groups. =A0I=
+ would
+>> >> think that if I have a RAID0 pair left from the RAID10, I should =
+be
+>> >> able to recover somehow. =A0Not sure if that was drive 0 and 2, 1=
+ and 3
+>> >> or 0 and 1, 2 and 3.
+>> >>
+>> >> Anyway, the drives do still show the correct array UUID when quer=
+ied
+>> >> with mdadm -E, but they disagree about the state of the array:
+>> >> # mdadm -E /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 | grep 'Array =
+State'
+>> >> =A0 =A0Array State : AAAA ('A' =3D=3D active, '.' =3D=3D missing)
+>> >> =A0 =A0Array State : .AAA ('A' =3D=3D active, '.' =3D=3D missing)
+>> >> =A0 =A0Array State : ..AA ('A' =3D=3D active, '.' =3D=3D missing)
+>> >> =A0 =A0Array State : ..AA ('A' =3D=3D active, '.' =3D=3D missing)
+>> >>
+>> >> sdc still shows a recovery offset, too:
+>> >>
+>> >> /dev/sdb1:
+>> >> =A0 =A0 Data Offset : 2048 sectors
+>> >> =A0 =A0Super Offset : 8 sectors
+>> >> /dev/sdc1:
+>> >> =A0 =A0 Data Offset : 2048 sectors
+>> >> =A0 =A0Super Offset : 8 sectors
+>> >> Recovery Offset : 2 sectors
+>> >> /dev/sdd1:
+>> >> =A0 =A0 Data Offset : 2048 sectors
+>> >> =A0 =A0Super Offset : 8 sectors
+>> >> /dev/sde1:
+>> >> =A0 =A0 Data Offset : 2048 sectors
+>> >> =A0 =A0Super Offset : 8 sectors
+>> >>
+>> >> I did some searching on the "READ FPDMA QUEUED" error message tha=
+t my
+>> >> drive was reporting and have found that there seems to be a
+>> >> correlation between that and having AHCI (NCQ in particular) enab=
+led.
+>> >> I've now set my BIOS back to Native IDE (which was the default an=
+yway)
+>> >> instead of AHCI for the SATA setting. =A0I'm hoping that was the =
+issue.
+>> >>
+>> >> Still wondering if there is some magic to be done to get at my da=
+ta again :)
+>> >
+>> > No need for magic here .. but you better stand back, as
+>> > =A0I'm going to try ... Science.
+>> > (or is that Engineering...)
+>> >
+>> > =A0mdadm -S /dev/md0
+>> > =A0mdadm -C /dev/md0 -l10 -n4 -c256 missing /dev/sdc1 /dev/sdd1 /d=
+ev/sde1
+>> > =A0mdadm --wait /dev/md0
+>> > =A0mdadm /dev/md0 --add /dev/sdb1
+>> >
+>> > (but be really sure that the devices really are working before you=
+ try this).
+>> >
+>> > BTW, for a near=3D2, Raid-disks=3D4 arrangement, the first and sec=
+ond devices
+>> > contain the same data, and the third and fourth devices also conta=
+iner the
+>> > same data as each other (but obviously different to the first and =
+second).
+>> >
+>> > NeilBrown
+>> >
+>> >
+>> Ah, that's the kind of info that I was looking for. =A0So, the third=
+ and
+>> fourth disks are a complete RAID0 set and the entire RAID10 should b=
+e
+>> able to rebuild from them if I replace the first two disks with new
+>> ones (hence being sure the devices are working)? =A0Or I need to hop=
+e
+>> the originals will hold up to a rebuild?
+>
+> No.
+>
+> third and fourth are like a RAID1 set, not a RAID0 set.
+>
+> First and second are a RAID1 pair. =A0Third and fourth are a RAID1 pa=
+ir.
+>
+> First and third
+> first and fourth
+> second and third
+> second and fourth
+>
+> can each be seen as a RAID0 pair which container all of the data.
+>
+> NeilBrown
+>
+>
+>
 >>
->> Mark Keisler put forth on 2/14/2011 2:33 PM:
->>
->>> Still wondering if there is some magic to be done to get at my data again :)
->>>>
->>>> Am I totally SOL?  Thanks for any suggestions or things to try.
->>>>
->>>> --
->>>> Mark
->>>> Tact is the ability to tell a man he has an open mind when he has a
->>>> hole in his head.
->>
->> Interesting, and ironically appropriate, sig, Mark.
->>
->> No magic is required.  Simply wipe each disk by writing all zeros with dd.  You
->> can do all 4 in parallel.  This will take a while with 1TB drives.  If there are
->> still SATA/NCQ/etc issues they should pop up while wiping the drives.  If not,
->> and all dd operations complete successfully, simply create a new RAID 10 array
->> and format it with your favorite filesystem.
->>
->> Then restore all your files from your backups.[1]
->>
->> [1] Tact is the ability to tell a man he has an open mind when he has a hole in
->> his head.
->>
->> --
->> Stan
-> 
-> Well, that was completely unhelpful and devoid of any information.
-> Backups don't keep a RAID from failing and that's what my question was
-> about.  I don't want to spend all of my time rebuilding an array and
-> restoring from backup every week.
-
-"Backups don't keep a RAID from failing" -- good sig material ;)
-
-It seems you lack the sense of humor implied by your signature.  Given that
-fact, I can understand the defensiveness.  However, note that there are some
-very helpful suggestions in my reply.  IIRC, your question wasn't "how to keep a
-RAID from failing" but "why did one drive in my RAID 10 fail, and then another
-during rebuild".  My suggestions could help you answer the first, possibly the
-second.
-
-You still don't know if the first dropped drive is actually bad or not.  Zeroing
-it with dd may very well help to inform you if there is a real problem with it.
- Checking your logs and smart data during/afterward may/should tell you.
-Zeroing all of them with dd gives you a clean slate for further troubleshooting.
-
-You don't currently have a full backup.  While the reminder of such may have
-irritated you, it is nonetheless very relevant, and useful, especially for other
-list OPs not donning a Jimmy hat.  RAID is not a replacement for a proper backup
-procedure.  You (re)discovered that fact here, or you simply believe, foolishly,
-the opposite.
-
-My reply was full of useful information.  Apparently just not useful to someone
-who wants to cut corners without having to face the potential negative consequences.
-
-RAID won't save you from massive filesystem corruption.  A proper backup can.
-And if this scenario would have turned dire (or still does) it could save you
-here as well.  Again, you need a proper backup solution.
-
--- 
-Stan
-
-Backups don't keep a RAID from failing. --Mark Keisler
+>> Thanks for the info, Neil, and all your work in FOSS :)
+>
+>
+Oh, duh, was thinking in 0+1 instead of 10.  I'm still wondering why
+you made mention of "but be really sure that the devices really are
+working before you try this."  If trying to bring the RAID back fails,
+I'm just back to not having access to the data which is where I am now
+:).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
