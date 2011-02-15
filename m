@@ -1,65 +1,54 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: high throughput storage server?
-Date: Wed, 16 Feb 2011 08:41:36 +1100
-Message-ID: <20110216084136.1c7efa28@notabene.brown>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
-	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
-	<20110215044434.GA9186@septictank.raw-sewage.fake>
-	<4D5A98BF.3030704@gmail.com>
-	<20110216073756.4c0291eb@notabene.brown>
-	<4D5AE669.10107@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Samsung HD204UI (2TB F4EG) disk vs smart
+Date: Wed, 16 Feb 2011 03:00:52 +0500
+Message-ID: <20110216030052.5d9878cf@natsu>
+References: <4D5AF2EB.3060809@eyal.emu.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/e9ko9Zv98mRrKm1_Lg4lss5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5AE669.10107@gmail.com>
+In-Reply-To: <4D5AF2EB.3060809@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Matt Garman <matthew.garman@gmail.com>, Doug Dumitru <doug@easyco.com>, Mdadm <linux-raid@vger.kernel.org>
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 15 Feb 2011 15:47:37 -0500 Joe Landman <joe.landman@gmail.com> wrote:
+--Sig_/e9ko9Zv98mRrKm1_Lg4lss5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On 02/15/2011 03:37 PM, NeilBrown wrote:
-> > On Tue, 15 Feb 2011 10:16:15 -0500 Joe Landman<joe.landman@gmail.com>  wrote:
-> >
-> >> As a tie in to the Linux RAID list, we use md raid for our OS drives
-> >> (SSD pairs), and other utility functions within the unit, as well as
-> >> striping over our hardware accelerated RAIDs.  We would like to use
-> >> non-power of two chunk sizes, but haven't delved into the code as much
-> >> as we'd like to see if we can make this work.
-> >>
-> >
-> > md/raid0 (striping) currently supports non-power-of-two chunk sizes, though
-> > it is a relatively recent addition.
-> > (raid4/5/6 doesn't).
-> 
-> Cool!  We need to start playing with this ...
-> 
-> Which kernels have the support?
+On Wed, 16 Feb 2011 08:40:59 +1100
+Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
 
-It was enabled by commit fbb704efb784e2c8418e34dc3013af76bdd58101
-so 
+> In the end the problem turned out to be the disks. It seems that these
+> popular (cheap) disks have a firmware bug that causes bad writes if a
+> specific smart command is issued at the right (wrong) time.
+>=20
+> There is a fw fix but I found it not widely advertised. It can be found
+> here
+>      http://www.samsung.com/global/business/hdd/faqView.do?b2b_bbs_msg_id=
+=3D386
+> Unfortunately it does *not* change the fw revision so you will not know
+> if your disk has the patch applied or not. I just applied it and so far
+> so good. My fw rev was (and still is) 1AQ10001.
 
-$ git name-rev fbb704efb784e2c8418e34dc3013af76bdd58101
-fbb704efb784e2c8418e34dc3013af76bdd58101 tags/v2.6.31-rc1~143^2~18
+You are right. Here is the most comprehensive documentation on this issue:
+http://sourceforge.net/apps/trac/smartmontools/wiki/SamsungF4EGBadBlocks
 
+--=20
+With respect,
+Roman
 
-2.6.31 has this support.
+--Sig_/e9ko9Zv98mRrKm1_Lg4lss5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-However I note that mdadm still checks that the chunk size is a power of two:
-       if (chunk < 8 || ((chunk-1)&chunk)) {
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-I should fix that...
+iEYEARECAAYFAk1a95QACgkQTLKSvz+PZwgxqACghGSJqJn2B+wTpvD3JpavkGFs
+bDIAoI+JxuWdiWBR5YH5ou6osQWWTLmI
+=HJdA
+-----END PGP SIGNATURE-----
 
-NeilBrown
-
-
-> 
-> --
-> Joe
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--Sig_/e9ko9Zv98mRrKm1_Lg4lss5--
