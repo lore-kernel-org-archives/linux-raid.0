@@ -1,246 +1,193 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/5] imsm: prepare update for level migrations reshape
-Date: Tue, 15 Feb 2011 12:27:23 +1100
-Message-ID: <20110215122723.6c8893fb@notabene.brown>
-References: <20110214130213.8540.57401.stgit@gklab-128-013.igk.intel.com>
-	<20110214131257.8540.5981.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: mdadm: recovering from an aborted reshape op - boot messages
+Date: Tue, 15 Feb 2011 12:41:07 +1100
+Message-ID: <20110215124107.7b6edea3@notabene.brown>
+References: <20110215105508.137097fa@notabene.brown>
+	<434600.40091.qm@web65106.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110214131257.8540.5981.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <434600.40091.qm@web65106.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Gavin Flower <gavinflower@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 14 Feb 2011 14:12:57 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Mon, 14 Feb 2011 17:11:49 -0800 (PST) Gavin Flower <gavinflower@yaho=
+o.com>
+wrote:
 
-> For level migrations:
-> 1. raid0->raid5
-> 2. raid5->raid0
-> metadata update is prepared
-> 
-> For migration raid0->raid5 spare device is required.
-> It is checked in mdadm for spares, but it is not included in to update.
-> Mdmon will decide what spare device
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  super-intel.c |  116 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 114 insertions(+), 2 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index f3e248e..489340f 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -305,6 +305,7 @@ enum imsm_update_type {
->  	update_rename_array,
->  	update_add_remove_disk,
->  	update_reshape_container_disks,
-> +	update_reshape_migration,
->  	update_takeover
->  };
->  
-> @@ -340,6 +341,12 @@ struct imsm_update_reshape {
->  	enum imsm_update_type type;
->  	int old_raid_disks;
->  	int new_raid_disks;
-> +	/* fields for array migration changes
-> +	 */
-> +	int subdev;
-> +	int new_level;
-> +	int new_layout;
-> +
+> Hi Neil,
+>=20
+> Comments interspersed..
+>=20
+> --- On Tue, 15/2/11, NeilBrown <neilb@suse.de> wrote:
+>=20
+> > From: NeilBrown <neilb@suse.de>
+> > Subject: Re: mdadm: recovering from an aborted reshape op - boot me=
+ssages
+> > To: "Gavin Flower" <gavinflower@yahoo.com>
+> > Cc: linux-raid@vger.kernel.org
+> > Date: Tuesday, 15 February, 2011, 12:55
+> > On Mon, 14 Feb 2011 14:47:48 -0800
+> > (PST) Gavin Flower <gavinflower@yahoo.com>
+> > wrote:
+> >=20
+> > > Hi Neil,
+> > >=20
+> > > I did not notice this before (note: I have poor
+> > eyesight, so unless I explicitly look, I may not notice
+> > things!). but just before Fedora drops to the shell on a
+> > reboot I saw these messages (hand transcribed, so might have
+> > the odd transcription error):
+> > >=20
+> > > /dev/md1: The filing system size (according to the
+> > superblock) is 76799952 blocks
+> > > The physical size of the device is 76799616
+> > > Either the superblock or the partition table is likely
+> > to be corrupt!
+> > >=20
+> > > /dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
+> > > (i.e. without -a or -p options)
+> > >=20
+> > > Note that original size according mdadm was not a
+> > multiple of 512KB, so I reshaped it to be the largest
+> > multiple or 512KB less than the original size.  So my
+> > second attempt to reshape, using the 512 chunk size, started
+> > okay.
+> > >=20
+> > > Advice appreciated.
+> >=20
+> > Hmmm....
+> >=20
+> > Firstly, the -A and -E output you sent are inconsistent.
+>=20
+> I can not explain the inconsistency.
+>=20
+> However, they were both done on the same machine ('saturn').
+>=20
+> No software updates were done on 'saturn' since before the reshaping.
+>=20
+> The -A output was the process that took over an hour.
+                                     ^^^^^^^^^^^^^^^^^^^
 
-I don't like how you are overloading this structure.  You are adding fields
-to a structure that doesn't need them in its original context, and using a
-structure containing old_raid_disks and new_raid_disks in a context where
-they are needed.
+That is the piece of information that I was missing.
+The array was assembled, reshape continued. Reshape completed.
+Then you looked at the -E output after that.
 
-It would be much better to have a separate structure for each different
-imsm_update_type.
-
-
->  	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
-
-Hmmm... new_disks is already there, isn't it.
-I'm not at all sure that I'm happy about that.
-It is used when increasing the number of devices in an array, but I would
-like that to just change  the numbers and leave mdmon to add the devices.
-
-'reshape_super'  should just verify that the change is legal, update the
-metadata to show that the change has happened or is happening, and possibly
-create an update to send to mdmon.
-reshape_super should not choose or allocate spares.
-
-'prepare_update' should *only* perform any allocations that process_update
-will need.  It doesn't allocate spares either.  It *only* allocates memory.
-
-'process_update' takes the update description and modifies the metadata, and
-updates internal data structures so that they accurately reflect the
-information in the metadata.  It doesn't allocate spares either.
-
-'activate_spare' is the only place that should activate spares.  It analyses
-the array, determines if any devices need to be added, finds them, and
-creates a metadata update to describe the new devices.
-manage_member() then adds them to the array and process_update eventually
-records these new allocations in the metadata.
-
-It is really important to keep these function separate and make sure each
-function just does the one thing that it is supposed to do.  Otherwise all
-the interactions become too complex and so are easily broken.
+So it all makes sense.  The reshape has completed.
 
 
->  };
->  
-> @@ -6133,6 +6140,9 @@ static void imsm_process_update(struct supertype *st,
->  			super->updates_pending++;
->  		break;
->  	}
-> +	case update_reshape_migration: {
-> +		break;
-> +	}
->  	case update_activate_spare: {
->  		struct imsm_update_activate_spare *u = (void *) update->buf; 
->  		struct imsm_dev *dev = get_imsm_dev(super, u->array);
-> @@ -6526,6 +6536,9 @@ static void imsm_prepare_update(struct supertype *st,
->  		dprintf("New anchor length is %llu\n", (unsigned long long)len);
->  		break;
->  	}
-> +	case update_reshape_migration: {
-> +		break;
-> +	}
->  	case update_create_array: {
->  		struct imsm_update_create_array *u = (void *) update->buf;
->  		struct intel_dev *dv;
-> @@ -6892,6 +6905,89 @@ abort:
->  	return 0;
->  }
->  
-> +/******************************************************************************
-> + * function: imsm_create_metadata_update_for_migration()
-> + *           Creates update for IMSM array.
-> + *
-> + ******************************************************************************/
-> +static int imsm_create_metadata_update_for_migration(
-> +					struct supertype *st,
-> +					struct geo_params *geo,
-> +					struct imsm_update_reshape **updatep)
-> +{
-> +	struct intel_super *super = st->sb;
-> +	int update_memory_size = 0;
-> +	struct imsm_update_reshape *u = NULL;
-> +	int delta_disks = 0;
-> +	struct imsm_dev *dev;
-> +	int previous_level = -1;
-> +
-> +	dprintf("imsm_create_metadata_update_for_migration(enter)"
-> +		" New Level = %i\n", geo->level);
-> +	delta_disks = 0;
-> +
-> +	/* size of all update data without anchor */
-> +	update_memory_size = sizeof(struct imsm_update_reshape);
-> +
-> +	/* now add space for spare disks that we need to add. */
-> +	if (delta_disks > 0)
-> +		update_memory_size += sizeof(u->new_disks[0])
-> +					* (delta_disks - 1);
-> +
-> +	u = calloc(1, update_memory_size);
-> +	if (u == NULL) {
-> +		dprintf("error: cannot get memory for "
-> +			"imsm_create_metadata_update_for_migration\n");
-> +		return 0;
-> +	}
-> +	u->type = update_reshape_migration;
-> +	u->subdev = super->current_vol;
-> +	u->new_level = geo->level;
-> +	u->new_layout = geo->layout;
-> +	u->new_raid_disks = u->old_raid_disks = geo->raid_disks;
-> +	u->new_disks[0] = -1;
-> +
-> +	dev = get_imsm_dev(super, u->subdev);
-> +	if (dev) {
-> +		struct imsm_map *map;
-> +
-> +		map = get_imsm_map(dev, 0);
-> +		if (map)
-> +			previous_level = map->raid_level;
-> +	}
-> +	if ((geo->level == 5) && (previous_level == 0)) {
-> +		struct mdinfo *spares = NULL;
-> +
-> +		u->new_raid_disks++;
-> +		spares = get_spares_for_grow(st);
+> > Secondly, as you say you reshaped the array to make it
+> > slightly smaller so it
+> > would be a multiple of 512K.  This is obviously needed
+> > to change the chunk
+> > size.
+>=20
+> I used the =E2=80=93size=3D
+>  option of mdadm
+> >=20
+> > But before you did that - did you resize the filesystem to
+> > be only that big?
+>=20
+> No, and there is no mention in man mdadm to do so, that I could see.
+>=20
+> > I suspect not.  So the filesystem thinks that it is
+> > bigger than the device.
+> > I don't know how best to fix that.
+>=20
+> I would have thought mdadm would have done that as part of the proces=
+s =E2=80=93 as surely the size of the filesystem could not be reduced i=
+n advance of the reshaping.
+>=20
+> Perhaps, I have overlooked the obvious?
 
-And here you are allocating spares in mdadm even though we agreed that you
-weren't going to do that.
+mdadm isn't not able to make the filesystem smaller, nor is it able to =
+tell
+if the filesystem is small enough that it won't be a problem.
 
+I thought it was "obvious" that you would shrink the filesystem before
+shrinking the device that contains it, but clearly it is not. I have up=
+dated
+the man page - see patch below.
+
+It would be really nice of the kernel could have some sort of inter-loc=
+k so
+the device could ask the filesystem is shrinkage is OK, but we don't ha=
+ve
+that currently.
 
 NeilBrown
 
 
 
+commit c26d78fe040673b019e1c2e4a5507969d2869765
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Feb 15 12:40:21 2011 +1100
 
-> +		if (spares) {
-> +			struct dl *dl;
-> +			struct mdinfo *dev;
-> +
-> +			dev = spares->devs;
-> +			if (dev) {
-> +				u->new_disks[0] = makedev(dev->disk.major,
-> +							  dev->disk.minor);
-> +				dl = get_disk_super(super,
-> +						    dev->disk.major,
-> +						    dev->disk.minor);
-> +				dl->index = u->old_raid_disks;
-> +				dev = dev->next;
-> +			}
-> +			sysfs_free(spares);
-> +		} else {
-> +			free(u);
-> +			dprintf("error: cannot get spare device "
-> +				"for requested migration");
-> +			return 0;
-> +		}
-> +	}
-> +	dprintf("imsm: reshape update preparation : OK\n");
-> +	*updatep = u;
-> +
-> +	return update_memory_size;
-> +}
-> +
->  static void imsm_update_metadata_locally(struct supertype *st,
->  					 void *buf, int len)
->  {
-> @@ -7146,9 +7242,25 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  		case CH_TAKEOVER:
->  			ret_val = imsm_takeover(st, &geo);
->  			break;
-> -		case CH_MIGRATION:
-> +		case CH_MIGRATION: {
-> +			struct imsm_update_reshape *u = NULL;
-> +			int len =
-> +				imsm_create_metadata_update_for_migration(
-> +					st, &geo, &u);
-> +			if (len < 1) {
-> +				dprintf("imsm: "
-> +					"Cannot prepare update\n");
-> +			}
->  			ret_val = 0;
-> -			break;
-> +			/* update metadata locally */
-> +			imsm_update_metadata_locally(st, u, len);
-> +			/* and possibly remotely */
-> +			if (st->update_tail)
-> +				append_metadata_update(st, u, len);
-> +			else
-> +				free(u);
-> +		}
-> +		break;
->  		default:
->  			ret_val = 1;
->  		}
+    mdadm.man add encouragement to shrink filesystem before shrinking a=
+rray.
+   =20
+    Before resizing an array with --size or --array-size, then filesyst=
+em
+    should be resized.  mdadm cannot do this so the user should.
+   =20
+    Reported-by: Gavin Flower <gavinflower@yahoo.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
+diff --git a/mdadm.8.in b/mdadm.8.in
+index fafb305..b2e6c05 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -427,12 +427,24 @@ The size can be given as
+ .B max
+ which means to choose the largest size that fits on all current drives=
+=2E
+=20
++Before reducing the size of the array (with
++.BR "\-\-grow \-\-size=3D" )
++you should make sure that space isn't needed.  If the device holds a
++filesystem, you would need to resize the filesystem to use less space.
++
++After reducing the array size you should check that the data stored in
++the device is still available.  If the device holds a filesystem, then
++an 'fsck' of the filesystem is a minimum requirement.  If there are
++problems the array can be made bigger again with no loss with another
++.B "\-\-grow \-\-size=3D"
++command.
++
+ This value can not be used with
+ .B CONTAINER
+ metadata such as DDF and IMSM.
+=20
+ .TP
+-.BR \-Z ", " \-\-array-size=3D
++.BR \-Z ", " \-\-array\-size=3D
+ This is only meaningful with
+ .B \-\-grow
+ and its effect is not persistent: when the array is stopped and
+@@ -446,6 +458,17 @@ but setting the size with
+ is, it is required that the array size is reduced as appropriate
+ before the number of devices in the array is reduced.
+=20
++Before reducing the size of the array you should make sure that space
++isn't needed.  If the device holds a filesystem, you would need to
++resize the filesystem to use less space.
++
++After reducing the array size you should check that the data stored in
++the device is still available.  If the device holds a filesystem, then
++an 'fsck' of the filesystem is a minimum requirement.  If there are
++problems the array can be made bigger again with no loss with another
++.B "\-\-grow \-\-array\-size=3D"
++command.
++
+ A suffix of 'M' or 'G' can be given to indicate Megabytes or
+ Gigabytes respectively.
+ A value of
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
