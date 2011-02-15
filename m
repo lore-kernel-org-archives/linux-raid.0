@@ -1,68 +1,46 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: high throughput storage server?
-Date: Mon, 14 Feb 2011 17:59:28 -0600
-Message-ID: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm: can't removed failed/detached drives when using metadata
+ 1.x
+Date: Tue, 15 Feb 2011 11:05:10 +1100
+Message-ID: <20110215110510.4e21d7ce@notabene.brown>
+References: <4D54040C.4040201@lacie.com>
+	<20110214142701.28950b00@notabene.brown>
+	<4D5936A5.4010106@lacie.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D5936A5.4010106@lacie.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?B?UultaSBS6XJvbGxl?= <rrerolle@lacie.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For many years, I have been using Linux software RAID at home for a
-simple NAS system.  Now at work, we are looking at buying a massive,
-high-throughput storage system (e.g. a SAN).  I have little
-familiarity with these kinds of pre-built, vendor-supplied solutions.
-I just started talking to a vendor, and the prices are extremely high.
+On Mon, 14 Feb 2011 15:05:25 +0100 R=E9mi R=E9rolle <rrerolle@lacie.com=
+> wrote:
 
-So I got to thinking, perhaps I could build an adequate device for
-significantly less cost using Linux.  The problem is, the requirements
-for such a system are significantly higher than my home media server,
-and put me into unfamiliar territory (in terms of both hardware and
-software configuration).
 
-The requirement is basically this: around 40 to 50 compute machines
-act as basically an ad-hoc scientific compute/simulation/analysis
-cluster.  These machines all need access to a shared 20 TB pool of
-storage.  Each compute machine has a gigabit network connection, and
-it's possible that nearly every machine could simultaneously try to
-access a large (100 to 1000 MB) file in the storage pool.  In other
-words, a 20 TB file store with bandwidth upwards of 50 Gbps.
+> > Thanks for the report - especially for bitsecting it down to the er=
+roneous
+> > commit!
+> >
+> > This patch should fix the regression.  I'll ensure it is in all fut=
+ure
+> > releases.
+> >
+>=20
+> Hi Neil,
+>=20
+> I've tested your patch with the setup that was causing me trouble. It=
+=20
+> did fix the regression.
+>=20
 
-I was wondering if anyone on the list has built something similar to
-this using off-the-shelf hardware (and Linux of course)?
+Great - thanks for the confirmation.
 
-My initial thoughts/questions are:
-
-    (1) We need lots of spindles (i.e. many small disks rather than
-few big disks).  How do you compute disk throughput when there are
-multiple consumers?  Most manufacturers provide specs on their drives
-such as sustained linear read throughput.  But how is that number
-affected when there are multiple processes simultanesously trying to
-access different data?  Is the sustained bulk read throughput value
-inversely proportional to the number of consumers?  (E.g. 100 MB/s
-drive only does 33 MB/s w/three consumers.)  Or is there are more
-specific way to estimate this?
-
-    (2) The big storage server(s) need to connect to the network via
-multiple bonded Gigabit ethernet, or something faster like
-FibreChannel or 10 GbE.  That seems pretty straightforward.
-
-    (3) This will probably require multiple servers connected together
-somehow and presented to the compute machines as one big data store.
-This is where I really don't know much of anything.  I did a quick
-"back of the envelope" spec for a system with 24 600 GB 15k SAS drives
-(based on the observation that 24-bay rackmount enclosures seem to be
-fairly common).  Such a system would only provide 7.2 TB of storage
-using a scheme like RAID-10.  So how could two or three of these
-servers be "chained" together and look like a single large data pool
-to the analysis machines?
-
-I know this is a broad question, and not 100% about Linux software
-RAID.  But I've been lurking on this list for years now, and I get the
-impression there are list members who regularly work with "big iron"
-systems such as what I've described.  I'm just looking for any kind of
-relevant information here; any and all is appreciated!
-
-Thank you,
-Matt
+NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
