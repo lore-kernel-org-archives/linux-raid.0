@@ -1,47 +1,77 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 08:55:05 +1100
-Message-ID: <20110217085505.1deec298@notabene.brown>
+Date: Thu, 17 Feb 2011 08:59:24 +1100
+Message-ID: <20110217085924.01cdf22c@notabene.brown>
 References: <20110216212751.51a294aa@notabene.brown>
-	<4D5BB4EA.8030907@texsoft.it>
-	<AANLkTikiP+PTJzpQomr++4d0chRww3gOq0R-J2-vaQ1-@mail.gmail.com>
-	<20110216140024.GA18707@cthulhu.home.robinhill.me.uk>
-	<AANLkTikeGuar5eBb7fv3+bLt=Z=bM9Zt7LfKeshxxJ9U@mail.gmail.com>
-	<AANLkTi=DpeH0Ba2T_wJHuSYXzORpfW5W42SP6bUkBf-f@mail.gmail.com>
+	<4D5BDB84.8050706@gmail.com>
+	<20110217082412.51afa2a6@notabene.brown>
+	<20110217024402.1dd44267@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kPT6gwGmNG.p3DBNrn_DE14"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=DpeH0Ba2T_wJHuSYXzORpfW5W42SP6bUkBf-f@mail.gmail.com>
+In-Reply-To: <20110217024402.1dd44267@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Giovanni Tessore <giotex@texsoft.it>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Joe Landman <joe.landman@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 11:21:50 -0300 Roberto Spadim <roberto@spadim.com.br>
-wrote:
+--Sig_/kPT6gwGmNG.p3DBNrn_DE14
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> since we have the option1 done, why continue with raid1 code? could we
-> port write-behind to raid10 code?
+On Thu, 17 Feb 2011 02:44:02 +0500 Roman Mamedov <rm@romanrm.ru> wrote:
 
-No.  write-behind depends on write-mostly, and write-mostly only really makes
-sense for RAID1.  I much prefer to keep these two code bases separate.
+> On Thu, 17 Feb 2011 08:24:12 +1100
+> NeilBrown <neilb@suse.de> wrote:
+>=20
+> > "read/write/compare checksum" is not a lot of words so I may well not be
+> > understanding exactly what you mean, but I guess you are suggesting tha=
+t we
+> > could store (say) a 64bit hash of each 4K block somewhere.
+> > e.g. Use 513 4K blocks to store 512 4K blocks of data with checksums.
+> > When reading a block, read the checksum too and report an error if they
+> > don't match.  When writing the block, calculate and write the checksum =
+too.
+> >=20
+> > This is already done by the disk drive - I'm not sure what you hope to =
+gain
+> > by doing it in the RAID layer as well.
+>=20
+> Consider RAID1/RAID10/RAID5/RAID6, where one or more members are returnin=
+g bad
+> data for some reason (e.g. are failing or have written garbage to disk du=
+ring
+> a sudden power loss). Having per-block checksums would allow to determine
+> which members have correct data and which do not, and would help the RAID
+> layer recover from that situation in the smartest way possible (with abso=
+lutely
+> no loss or corruption of the user data).
+>=20
 
-> another thing, could raid10 work without replica? like a raid0?
+Why do you think that md would be able to reliably write consistent data and
+checksum to a device in a circumstance (power failure) where the hard drive
+is not able to do it itelf?
 
-Why don't you try it?  Choose a layout that asks for only 1 copy of the data.
-It should work.
-
-> 
-> why? just to remove many files with the same function (raid1and raid0,
-> if raid10 do the same work, many some mdadm changes allow us to
-> --level=1 to understand that's raid10 without stripe, --level=0 is
-> raid10 without mirrors)
-
-Again, RAID0 has some features that RAID10 doesn'tand cannot.  I suggest you
-read man pages (e.g. 'man md') to find out the details.
-
-Also the RAID0 code is much simpler and hence possibly faster.
+i.e. I would need to see a clear threat-model which can cause data corrupti=
+on
+that the hard drive itself would not be able to reliably report, but that
+checksums provided by md would be able to reliably report.
+Powerfail does not qualify (without sophisticated journalling on the part of
+md).
 
 NeilBrown
 
+--Sig_/kPT6gwGmNG.p3DBNrn_DE14
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iD4DBQFNXEjCG5fc6gV+Wb0RAl9UAKCu385ctgrvBenHdlpa95eFNZ6usQCYrkgP
+mCHYCobEjNDY3CmJ+3a/2g==
+=Y17k
+-----END PGP SIGNATURE-----
+
+--Sig_/kPT6gwGmNG.p3DBNrn_DE14--
