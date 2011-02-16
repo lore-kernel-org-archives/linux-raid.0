@@ -1,51 +1,94 @@
-From: NeilBrown <neilb@suse.de>
+From: Tobias McNulty <tobias@caktusgroup.com>
 Subject: Re: reshape failure
-Date: Thu, 17 Feb 2011 07:32:47 +1100
-Message-ID: <20110217073247.2dbc9299@notabene.brown>
-References: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
+Date: Wed, 16 Feb 2011 15:41:46 -0500
+Message-ID: <AANLkTin__CDHu4qxAJe2NACXBFdE7EV1kuFOMoG7-P-h@mail.gmail.com>
+References: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com> <20110217073247.2dbc9299@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
+In-Reply-To: <20110217073247.2dbc9299@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tobias McNulty <tobias@caktusgroup.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 10:46:32 -0500 Tobias McNulty <tobias@caktusgroup.com>
-wrote:
+On Wed, Feb 16, 2011 at 3:32 PM, NeilBrown <neilb@suse.de> wrote:
+> On Wed, 16 Feb 2011 10:46:32 -0500 Tobias McNulty <tobias@caktusgroup=
+=2Ecom>
+>> nas:~# mdadm --assemble /dev/md0 --backup-file=3Dmd0.backup /dev/sdc
+>> /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
+>> mdadm: Failed to restore critical section for reshape, sorry.
+>>
+>> Is my data lost for good? =A0Is there anything else I can do?
+>
+> Try above command with --verbose.
+> If a message about "too-old timestamp" appears, run
+>
+> =A0export MDADM_GROW_ALLOW_OLD=3D1
+>
+> and run the command again.
+>
+> In either case, post the output.
 
-> Hi,
-> 
-> I tried to start a reshape over the weekend (RAID6 -> RAID5) and was
-> dismayed to see that it was going to take roughly 2 weeks to complete:
-> 
-> md0 : active raid6 sdc[0] sdh[5](S) sdg[4] sdf[3] sde[2] sdd[1]
-> 5860543488 blocks super 0.91 level 6, 64k chunk, algorithm 2 [5/5]
-> [uuuuu] [>....................] reshape = 0.0% (245760/1953514496)
-> finish=21189.7min speed=1536K/sec
-> 
-> The disk that contained the backup file began experiencing SATA errors
-> several days into the reshape, due to what turned out to be a faulty
-> SATA card.  The card has since been replaced and the RAID1 device that
-> contains the backup file successfully resync'ed.
-> 
-> However, when I try to re-start the reshape now, I get the following error:
-> 
-> nas:~# mdadm --assemble /dev/md0 --backup-file=md0.backup /dev/sdc
-> /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
-> mdadm: Failed to restore critical section for reshape, sorry.
-> 
-> Is my data lost for good?  Is there anything else I can do?
+Wow - it looks like that might have done the trick:
 
-Try above command with --verbose.
-If a message about "too-old timestamp" appears, run
+nas:~# mdadm --verbose --assemble /dev/md0 --backup-file=3Dmd0.backup
+/dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdg is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdh is identified as a member of /dev/md0, slot 4.
+mdadm:/dev/md0 has an active reshape - checking if critical section
+needs to be restored
+mdadm: too-old timestamp on backup-metadata on md0.backup
+mdadm: Failed to find backup of critical section
+mdadm: Failed to restore critical section for reshape, sorry.
+nas:~# export MDADM_GROW_ALLOW_OLD=3D1
+nas:~# mdadm --verbose --assemble /dev/md0 --backup-file=3Dmd0.backup
+/dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdg is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdh is identified as a member of /dev/md0, slot 4.
+mdadm:/dev/md0 has an active reshape - checking if critical section
+needs to be restored
+mdadm: accepting backup with timestamp 1297624561 for array with
+timestamp 1297692473
+mdadm: restoring critical section
+mdadm: added /dev/sde to /dev/md0 as 1
+mdadm: added /dev/sdd to /dev/md0 as 2
+mdadm: added /dev/sdc to /dev/md0 as 3
+mdadm: added /dev/sdh to /dev/md0 as 4
+mdadm: added /dev/sdg to /dev/md0 as 5
+mdadm: added /dev/sdf to /dev/md0 as 0
+mdadm: /dev/md0 has been started with 5 drives and 1 spare.
 
- export MDADM_GROW_ALLOW_OLD=1
+Now I see this in /etc/mdstat:
 
-and run the command again.
+md0 : active raid6 sdf[0] sdg[5](S) sdh[4] sdc[3] sdd[2] sde[1]
+      5860543488 blocks super 0.91 level 6, 64k chunk, algorithm 2 [5/5=
+] [UUUUU]
+      [=3D>...................]  reshape =3D  9.9% (193691648/195351449=
+6)
+finish=3D97156886.4min speed=3D0K/sec
 
-In either case, post the output.
+Is the 0K/sec something I need to worry about?
 
-NeilBrown
+Thanks!
+Tobias
+--=20
+Tobias McNulty, Managing Partner
+Caktus Consulting Group, LLC
+http://www.caktusgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
