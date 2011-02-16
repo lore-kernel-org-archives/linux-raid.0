@@ -1,53 +1,96 @@
-From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Linux software RAID assistance
-Date: Wed, 16 Feb 2011 22:44:11 +0000
-Message-ID: <1377706586882297883@unknownmsgid>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown>
- <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com>
- <4D5BE119.7000804@turmel.org> <4D5C0E17.3060306@gmail.com>
- <4D5C140F.9010301@turmel.org> <4D5C1508.3040308@gmail.com>
- <4D5C15D3.1070608@turmel.org> <4D5C167C.7000101@turmel.org>
- <4D5C1CF8.1020507@gmail.com> <4D5C1E0B.9060300@turmel.org>
- <4D5C2061.4060106@gmail.com> <4D5C2143.3000907@turmel.org>
- <4D5C2260.3020800@gmail.com> <4D5C273E.7020609@turmel.org>
- <4D5C4176.80604@gmail.com> <4D5C4204.5020106@turmel.org>
-Mime-Version: 1.0 (iPhone Mail 8A306)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: md road-map: 2011
+Date: Wed, 16 Feb 2011 23:50:28 +0100
+Message-ID: <20110216225028.GA11472@www2.open-std.org>
+References: <20110216212751.51a294aa@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C4204.5020106@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <20110216212751.51a294aa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I just went to bed and one last question popped in to my mind. Since
-there is a fair timezone gap I thought I'd be presumptuous and ask it
-in the hope I can turn it around a bit quicker in the morning.
+On Wed, Feb 16, 2011 at 09:27:51PM +1100, NeilBrown wrote:
+> 
+> RAID1, RAID10 and RAID456 should all support bad blocks.  Every read
+> or write should perform a lookup of the bad block list.  If a read
+> finds a bad block, that device should be treated as failed for that
+> read.  This includes reads that are part of resync or recovery.
+> 
+> If a write finds a bad block there are two possible responses.  Either
+> the block can be ignored as with reads, or we can try to write the
+> data in the hope that it will fix the error.  Always taking the second
+> action would seem best as it allows blocks to be removed from the
+> bad-block list, but as a failing write can take a long time, there are
+> plenty of cases where it would not be good.
 
-My suspicion is that once I have 5 formatted 2tb drives I may be lucky
-to get 10x 1tb dd images on to it. Can I feed the dd process in to
-tar, bzip2, zip or something else which will give me enough space to
-fit the images on ?
+I was thinking of a further refinement, namely that if there is a bad
+block on one drive, then the corresponding good block of another drive
+should be read, and written to a bad block recovery area on the
+erroneous drive. In that way the erroneous dive would still hold
+the complete data. The bad block list would then hold both  the bad
+block and then the corresponding good block in the bad block recovery
+area. Given that the number of bad blocks would be small,
+this would not really hurt performance.
 
-Will I get more usable space from 5x2tb partitions or from 1xspanned
-volume ? (the thecus pretty much only allows you to create raid
-volumes so a jbod needs to be 5x1tb arrays or 1 spanned volume or
-stripe).
+the bad block recovery area could be handled as other metadata on the
+drive. I think this reflects much what is currently done in most disk
+hardware, except that the corresponding good block is copied from another
+drive.
 
-TIA
-Simon
+> Support reshape of RAID10 arrays.
+> ---------------------------------
+> 
+> 6/ changing layout to or from 'far' is nearly impossible...
+>    With a change in data_offset it might be possible to move one
+>    stripe at a time, always into the place just vacated.
+>    However keeping track of where we are and were it is safe to read
+>    from would be a major headache - unless it feel out with some
+>    really neat maths, which I don't think it does.
+>    So this option will be left out.
 
-On 16 Feb 2011, at 21:30, Phil Turmel <philip@turmel.org> wrote:
+I think this can easily be done for some of the more common cases of
+"far", eg a 2 or 4-drive raid10 - possibly all layouts involving an
+even number of drives. You can just have say one set of complete data 
+intact and then rewrite the whole other set of data in the new layout. 
+Please note that there may be two versions of the layout of "near" and
+"far", one looking like a raid 1+0 and one loking as a raid 0+1, giving
+distinct different survival characteristics with failure of more than
+one drive. In a 4-drive raid0, the one layout will have a 66 % chance of
+surviving a 2 drive crash, while the other version will have a 33 %
+chance of surviving 2 disks crashing.
 
-> On 02/16/2011 04:28 PM, Simon McNair wrote:
->> Phil,
->> Jeez I'm having a bad week (my windows 7x64 machine has just started randomly crashing, my Thecus n5200 is playing up and the weather has been dire so I've not been able to put my new shed up...oh and I have ongoing 'other' issues as you're well aware ;-))  The thecus n5200 has 5x2TB hdd's.  I wiped out the existing raid5 array to create a jbod span of 10tb in order to hold my 9tb of backups.  The Thecus has had a hissy fit and I've had to set the process off again, so you can bet it'll be a day or two before it get's the drives formatted (it's not a very powerful nas), then I'll do the backups, then I'll try as you suggested.
->
-> That's fine.
->>
->> Thanks for the ongoing assistance.
->
-> No problem.
->
-> Phil
+I am not sure this can be generalized to all combinations of drives and
+layouts. However, the simple cases are common enough and simple enough
+to do to warrant the implementation, IMHO.
+
+> So the only 'instant' conversion possible is to increase the device
+> size for 'near' and 'offset' array.
+> 
+> 'reshape' conversions can modify chunk size, increase/decrease number of
+> devices and swap between 'near' and 'offset' layout providing a
+> suitable number of chunks of backup space is available.
+> 
+> The device-size of a 'far' layout can also be changed by a reshape
+> providing the number of devices in not increased.
+
+given that most configurations of "far" can be reshaped into "near" -
+then the additin of drives should be possible by: reshape far to near,
+extend near, reshape near to far.
+
+Other improvements
+------------------
+
+I would like to hear if you are considering other improvements:
+
+1.  a layout version of raid10,far and raid10,near thathas a better
+survival ratio for failure fo 2 disks or more. The current layout only
+have properties of raid 0+1.
+
+2. better performance of resync etc, by using bigger buffers say 20 MB.
+
+best regards
+keld
