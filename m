@@ -1,100 +1,55 @@
-From: Simon McNair <simonmcnair@gmail.com>
-Subject: Re: Linux software RAID assistance
-Date: Wed, 16 Feb 2011 19:15:44 +0000
-Message-ID: <4D5C2260.3020800@gmail.com>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com> <4D5BE119.7000804@turmel.org> <4D5C0E17.3060306@gmail.com> <4D5C140F.9010301@turmel.org> <4D5C1508.3040308@gmail.com> <4D5C15D3.1070608@turmel.org> <4D5C167C.7000101@turmel.org> <4D5C1CF8.1020507@gmail.com> <4D5C1E0B.9060300@turmel.org> <4D5C2061.4060106@gmail.com> <4D5C2143.3000907@turmel.org>
-Reply-To: simonmcnair@gmail.com
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: Automate on-going checks?
+Date: Wed, 16 Feb 2011 17:27:25 -0200
+Message-ID: <AANLkTinGH-CYfSPq0qMryEJdxn0De266tj13tk+dkLat@mail.gmail.com>
+References: <AANLkTikpe3vShQXcMKFW5qK3ZuzaKqnotB29vciyFUEj@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C2143.3000907@turmel.org>
+In-Reply-To: <AANLkTikpe3vShQXcMKFW5qK3ZuzaKqnotB29vciyFUEj@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-proxmox:/home/simon# vgscan --verbose
-     Wiping cache of LVM-capable devices
-     Wiping internal VG cache
-   Reading all physical volumes.  This may take a while...
-     Finding all volume groups
-     Finding volume group "pve"
-   Found volume group "pve" using metadata type lvm2
-     Finding volume group "lvm-raid"
-   Found volume group "lvm-raid" using metadata type lvm2
-proxmox:/home/simon#
-proxmox:/home/simon# lvscan --verbose
-     Finding all logical volumes
-   ACTIVE            '/dev/pve/swap' [11.00 GB] inherit
-   ACTIVE            '/dev/pve/root' [96.00 GB] inherit
-   ACTIVE            '/dev/pve/data' [354.26 GB] inherit
-   inactive          '/dev/lvm-raid/RAID' [8.19 TB] inherit
+use raid1 with spare disks or write-mostly disks increase your disks re=
+dundancy
 
-proxmox:/home/simon# vgchange -ay
-   3 logical volume(s) in volume group "pve" now active
-   1 logical volume(s) in volume group "lvm-raid" now active
+2011/2/16 Mark Knecht <markknecht@gmail.com>:
+> Hi all,
+>
+> I'm setting up a new laptop that my dad bought as a present for my
+> mom. One interesting aspect of this laptop is that it has two 500GB
+> hard drives in it so I was going to use RAID1. As the laptop will be
+> at a location that I won't often visit I wanted to set up some sort o=
+f
+> on-going daily/weekly testing of the RAID that the machine could emai=
+l
+> the results to me.
+>
+> Is there a document somewhere that goes over what mdadm (or other
+> tools) provide in this area? I assume I'll use smartctl as part of th=
+e
+> solution but what else can I do to reduce the chances of something
+> getting overlooked?
+>
+> Thanks,
+> Mark
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-proxmox:/home/simon# fsck.ext4 -n /dev/mapper/lvm-raid-RAID
-e2fsck 1.41.3 (12-Oct-2008)
-fsck.ext4: No such file or directory while trying to open 
-/dev/mapper/lvm-raid-RAID
 
-The superblock could not be read or does not describe a correct ext2
-filesystem.  If the device is valid and it really contains an ext2
-filesystem (and not swap or ufs or something else), then the superblock
-is corrupt, and you might try running e2fsck with an alternate superblock:
-     e2fsck -b 8193 <device>
 
-proxmox:/home/simon# fsck.ext4 -n /dev/mapper/
-control         lvm--raid-RAID  pve-data        pve-root        pve-swap
-proxmox:/home/simon# fsck.ext4 -n /dev/mapper/lvm--raid-RAID
-e2fsck 1.41.3 (12-Oct-2008)
-/dev/mapper/lvm--raid-RAID has unsupported feature(s): FEATURE_I31
-e2fsck: Get a newer version of e2fsck!
-
-my version of e2fsck always worked before ?
-
-Simon
-
-On 16/02/2011 19:10, Phil Turmel wrote:
-> On 02/16/2011 02:07 PM, Simon McNair wrote:
->> pvscan is:
->> proxmox:/home/simon# pvscan --verbose
->>      Wiping cache of LVM-capable devices
->>      Wiping internal VG cache
->>      Walking through all physical volumes
->>    PV /dev/sda2   VG pve        lvm2 [465.26 GB / 4.00 GB free]
->>    PV /dev/md0    VG lvm-raid   lvm2 [8.19 TB / 0    free]
->>    Total: 2 [655.05 GB] / in use: 2 [655.05 GB] / in no VG: 0 [0   ]
->>
->> lvm-raid is there ....
-> Very good.
->
->> proxmox:/home/simon# fsck.ext4 -n /dev/md0
-> Uh, no.
->
->> e2fsck 1.41.3 (12-Oct-2008)
->> fsck.ext4: Superblock invalid, trying backup blocks...
->> Superblock has an invalid ext3 journal (inode 8).
->> Clear? no
->>
->> fsck.ext4: Illegal inode number while checking ext3 journal for /dev/md0
->
->> I thought I needed to run fsck against the lvm group ?  I used to do... fsck.ext4 /dev/lvm-raid/RAID so do I need to mount it or something ?
-> vgscan --verbose
->
-> lvscan --verbose
->
->
-> Then either:
->
-> fsck -N /dev/mapper/lvm-raid-RAID
->
-> or:
->
-> fsck -N /dev/lvm-raid/RAID
->
-> depends on what udev is doing.
->
-> Phil
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
