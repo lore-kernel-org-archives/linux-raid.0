@@ -1,44 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 10:01:39 +1100
-Message-ID: <20110217100139.7520893d@notabene.brown>
-References: <20110216212751.51a294aa@notabene.brown>
-	<ijgr9p$7v8$1@dough.gmane.org>
-	<20110217083531.3090a348@notabene.brown>
-	<ijhje3$ocd$1@dough.gmane.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Wed, 16 Feb 2011 17:32:58 -0600
+Message-ID: <4D5C5EAA.3020208@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5A7198.7060607@hardwarefreak.com> <ijdvmn$4ff$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ijhje3$ocd$1@dough.gmane.org>
+In-Reply-To: <ijdvmn$4ff$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 23:34:43 +0100 David Brown <david.brown@hesbynett.no>
-wrote:
+David Brown put forth on 2/15/2011 7:39 AM:
 
-> I thought there was some mechanism for block devices to report bad 
-> blocks back to the file system, and that file systems tracked bad block 
-> lists.  Modern drives automatically relocate bad blocks (at least, they 
-> do if they can), but there was a time when they did not and it was up to 
-> the file system to track these.  Whether that still applies to modern 
-> file systems, I do not know - they only file system I have studied in 
-> low-level detail is FAT16.
+> This brings up an important point - no matter what sort of system you get (home
+> made, mdadm raid, or whatever) you will want to do some tests and drills at
+> replacing failed drives.  Also make sure everything is well documented, and well
+> labelled.  When mdadm sends you an email telling you drive sdx has failed, you
+> want to be /very/ sure you know which drive is sdx before you take it out!
 
-When the block device reports an error the filesystem can certainly record
-that information in a bad-block list, and possibly does.
+This is one of the many reasons I recommended an enterprise class vendor
+solution.  The Nexsan unit can be configured for SMTP and/or SNMP and/or pager
+notification.  When a drive is taken offline the drive slot is identified in the
+GUI.  Additionally, the backplane board has power and activity LEDs next to each
+drive.  When you slide the chassis out of the rack (while still fully
+operating), and pull the cover, you will see a distinct blink pattern of the
+LEDs next to the failed drive.  This is fully described in the documentation,
+but even without reading such it'll be crystal clear which drive is down.  There
+is zero guess work.
 
-However I thought you were suggesting a situation where the block device
-could succeed with the request, but knew that area of the device was of low
-quality.
-e.g. IO to a block on a stripe which had one 'bad block'.  The IO should
-succeed, but the data isn't as safe as elsewhere.  It would be nice if we
-could tell the filesystem that fact, and if it could make use of it. But we
-currently cannot.   We can say "success" or "failure", but we cannot say
-"success, but you might not be so lucky next time".
+The drive replacement testing scenario you describe is unnecessary with the
+Nexsan products as well as any enterprise disk array.
 
+> You also want to consider your raid setup carefully.  RAID 10 has been mentioned
+> here several times - it is often a good choice, but not necessarily.  RAID 10
+> gives you fast recovery, and can at best survive a loss of half your disks - but
+> at worst a loss of two disks will bring down the whole set.  It is also very
+> inefficient in space.  If you use SSDs, it may not be worth double the price to
+> have RAID 10.  If you use hard disks, it may not be sufficient safety.
 
+RAID level space/cost efficiency from a TCO standpoint is largely irrelevant
+today due to the low price of mech drives.  Using the SATABeast as an example,
+the cost per TB of a 20TB RAID 10 is roughly $1600/TB and a 20TB RAID 6 is about
+$1200/TB.  Given all the advantages of RAID 10 over RAID 6 the 33% premium is
+more than worth it.
 
-NeilBrown
+-- 
+Stan
