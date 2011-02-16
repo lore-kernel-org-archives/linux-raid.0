@@ -1,26 +1,122 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Linux software RAID assistance
-Date: Wed, 16 Feb 2011 16:30:44 -0500
-Message-ID: <4D5C4204.5020106@turmel.org>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com> <4D5BE119.7000804@turmel.org> <4D5C0E17.3060306@gmail.com> <4D5C140F.9010301@turmel.org> <4D5C1508.3040308@gmail.com> <4D5C15D3.1070608@turmel.org> <4D5C167C.7000101@turmel.org> <4D5C1CF8.1020507@gmail.com> <4D5C1E0B.9060300@turmel.org> <4D5C2061.4060106@gmail.com> <4D5C2143.3000907@turmel.org> <4D5C2260.3020800@gmail.com> <4D5C273E.7020609@turmel.org> <4D5C4176.80604@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md road-map: 2011
+Date: Thu, 17 Feb 2011 08:35:31 +1100
+Message-ID: <20110217083531.3090a348@notabene.brown>
+References: <20110216212751.51a294aa@notabene.brown>
+	<ijgr9p$7v8$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C4176.80604@gmail.com>
+In-Reply-To: <ijgr9p$7v8$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: simonmcnair@gmail.com
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/16/2011 04:28 PM, Simon McNair wrote:
-> Phil,
-> Jeez I'm having a bad week (my windows 7x64 machine has just started randomly crashing, my Thecus n5200 is playing up and the weather has been dire so I've not been able to put my new shed up...oh and I have ongoing 'other' issues as you're well aware ;-))  The thecus n5200 has 5x2TB hdd's.  I wiped out the existing raid5 array to create a jbod span of 10tb in order to hold my 9tb of backups.  The Thecus has had a hissy fit and I've had to set the process off again, so you can bet it'll be a day or two before it get's the drives formatted (it's not a very powerful nas), then I'll do the backups, then I'll try as you suggested.
+On Wed, 16 Feb 2011 16:42:26 +0100 David Brown <david@westcontrol.com> wrote:
 
-That's fine.
+> On 16/02/2011 11:27, NeilBrown wrote:
+> >
+> > I all,
+> >   I wrote this today and posted it at
+> > http://neil.brown.name/blog/20110216044002
+> >
+> > I thought it might be worth posting it here too...
+> >
+> > NeilBrown
+> >
 > 
-> Thanks for the ongoing assistance.
+> 
+> The bad block log will be a huge step up for reliability by making 
+> failures fine-grained.  Occasional failures are a serious risk, 
+> especially with very large disks.  The bad block log, especially 
+> combined with the "hot replace" idea, will make md raid a lot safer 
+> because you avoid running the array in degraded mode (except for a few 
+> stripes).
+> 
+> When a block is marked as bad on a disk, is it possible to inform the 
+> file system that the whole stripe is considered bad?  Then the 
+> filesystem will (I hope) add that stripe to its own bad block list, move 
+> the data out to another stripe (or block, from the fs's viewpoint), thus 
+> restoring the raid redundancy for that data.
 
-No problem.
+There is no in-kernel mechanism to do this.  You could possibly write a tool
+which examined the bad-block-lists exported by md, and told a filesystem
+about them.
 
-Phil
+It might be good to have a feature where by when the filesystem requests a
+'read', it gets told 'here is the data, but I had trouble getting it so you
+should try to save it elsewhere and never write here again'.   If you can
+find a filesystem developer interested in using the information I'd be
+interested in trying to provide it.
+
+
+> 
+> Can a "hot spare" automatically turn into a "hot replace" based on some 
+> criteria (such as a certain number of bad blocks)?  Can the replaced 
+> drive then become a "hot spare" again?  It may not be perfect, but it is 
+> still better than nothing, and useful if the admin can't replace the 
+> drive quickly.
+
+Possibly.  This would be a job for user-space though.  May "mdadm --monitor"
+could be given some policy such as you describe.  Then it could activate a
+spare as appropriate.
+
+> 
+> It strikes me that "hot replace" is much like one of the original disks 
+> out of the array and replacing it with a RAID 1 pair using the original 
+> disk and a missing second.  The new disk is then added to the pair and 
+> they are sync'ed.  Finally, you remove the old disk from the RAID 1 
+> pair, then re-assign the drive from the RAID 1 "pair" to the original RAID.
+
+Very much.  However if that process finds an unreadable block, there is
+nothing it can do.  By integrating into the parent array, we can easily find
+that data from elsewhere.
+
+> 
+> I may be missing something, but if I think that using the bad-block list 
+> and the non-sync bitmaps, the only thing needed to support hot replace 
+> is a way to turn a member drive into a degraded RAID 1 set in an atomic 
+> action, and to reverse this action afterwards.  This may also give extra 
+> flexibility - it is conceivable that someone would want to keep the RAID 
+> 1 set afterwards as a reshape (turning a RAID 5 into a RAID 1+0, for 
+> example).
+
+You could do that .... the raid1 resync would need to record bad-blocks in
+the new device where badblocks are found in the old device.  Then you need
+the parent array to find and reconstruct all those bad blocks.  It would be
+do-able.  I'm not sure the complexity of doing it that way is less than the
+complexity of directly implementing hot-replace.  But I'll keep it in mind if
+the code gets too hairy.
+
+> 
+> For your non-sync bitmap, would it make sense to have a two-level 
+> bitmap?  Perhaps a coarse bitmap in blocks of 32 MB, with each entry 
+> showing a state of in sync, out of sync, partially synced, or never 
+> synced.  Partially synced coarse blocks would have their own fine bitmap 
+> at the 4K block size (or perhaps a bit bigger - maybe 32K or 64K would 
+> fit well with SSD block sizes).  Partially synced and out of sync blocks 
+> would be gradually brought into sync when the disks are otherwise free, 
+> while never synced blocks would not need to be synced at all.
+> 
+> This would let you efficiently store the state during initial builds 
+> (everything is marked "never synced" until it is used), and rebuilds are 
+> done by marking everything as "out of sync" on the new device.  The 
+> two-level structure would let you keep fine-grained sync information 
+> from file system discards without taking up unreasonable space.
+
+I cannot see that this gains anything.
+I need to allocate all the disk space that I might ever need for bitmaps at
+the beginning.  There is no sense in which I can allocate some when needed
+and free it up later (like there might be in a filesystem).
+So whatever granularity I need - the space must be pre-allocated.
+
+Certainly a two-level table might be appropriate for the in-memory copy of
+the bitmap.  Maybe even 3 level.  But I think you are talking about storing
+data on disk, and I think there - only one bitmap makes sense.
+
+??
+
+NeilBrown
+
