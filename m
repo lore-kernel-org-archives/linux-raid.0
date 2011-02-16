@@ -1,69 +1,27 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Single-drive RAID0
-Date: Wed, 16 Feb 2011 11:42:34 +1100
-Message-ID: <20110216114234.0311d27b@notabene.brown>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
-	<20110209134557.4e607451@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-	<20110214131149.7f0655a3@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
-	<20110215110141.30d28302@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: help with queue kernel information
+Date: Tue, 15 Feb 2011 23:30:15 -0200
+Message-ID: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 15 Feb 2011 16:30:05 +0000 "Wojcik, Krzysztof"
-<krzysztof.wojcik@intel.com> wrote:
+hi guys, i=B4m still looking about queue kernel information
+i=B4m writing a new read_balacne algorithm, and i need some information=
+s
+about mirror (device) queue
+total writes/read in queue, or some statistical informations
+where could i get it?
 
-> > It might help to put a "WARN_ON(1)" in the place where it prints
-> > "detected
-> > capacity change ..." so we get a stack trace and can see how it got
-> > there.
-> > That might git a hint to what is looping.
-> > Also a printk in md_open if it returns ERESTARTSYS would be
-> > interesting.
-> 
-> In attachment part of logs from kernel with WARN_ON(1) and value returned by md_open() 
-> (line preceded with "##### KW: err= x").
-> 
-> I am trying to look for in new areas. I've run:
-> Udevd --debug --dedug-traces
-> 
-> Logs from udev and kernel in attachment.
-> Maybe it will help to find solution...
-> It seems to udev adds and removes device in loop...
-
-Thanks for the extra logs.... it helps a bit, but I'm not a lot closer.
-
-I've seen something a little bit like this which was fixed by adding
-
-TEST!="md/array_state", GOTO="md_end"
-
-just after
-
-# container devices have a metadata version of e.g. 'external:ddf' and
-# never leave state 'inactive'
-
-in /lib/udev/rules.d/64-md-raid.rules
-
-
-Could you try that??
-
-It looks like the 'bdev' passed to md_open keeps changing, which it shouldn't.
-
-If the above doesn't help, please add:
-
-	printk("bdev=%p, mddev=%p, disk=%p dev=%x\n", bdev, mddev, mddev->gendisk, bdev->bd_dev);
-
-at the top of 'md_open', and see what it produces.
-
-Thanks,
-NeilBrown
-
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
