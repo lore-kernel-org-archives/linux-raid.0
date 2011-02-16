@@ -1,83 +1,135 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: md road-map: 2011
-Date: Wed, 16 Feb 2011 11:21:50 -0300
-Message-ID: <AANLkTi=DpeH0Ba2T_wJHuSYXzORpfW5W42SP6bUkBf-f@mail.gmail.com>
-References: <20110216212751.51a294aa@notabene.brown>
-	<4D5BB4EA.8030907@texsoft.it>
-	<AANLkTikiP+PTJzpQomr++4d0chRww3gOq0R-J2-vaQ1-@mail.gmail.com>
-	<20110216140024.GA18707@cthulhu.home.robinhill.me.uk>
-	<AANLkTikeGuar5eBb7fv3+bLt=Z=bM9Zt7LfKeshxxJ9U@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Linux software RAID assistance
+Date: Wed, 16 Feb 2011 09:37:13 -0500
+Message-ID: <4D5BE119.7000804@turmel.org>
+References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikeGuar5eBb7fv3+bLt=Z=bM9Zt7LfKeshxxJ9U@mail.gmail.com>
+In-Reply-To: <4D5BD678.2050200@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, Giovanni Tessore <giotex@texsoft.it>, linux-raid@vger.kernel.org
+To: simonmcnair@gmail.com
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-since we have the option1 done, why continue with raid1 code? could we
-port write-behind to raid10 code?
-another thing, could raid10 work without replica? like a raid0?
+Good morning, Simon,
 
-why? just to remove many files with the same function (raid1and raid0,
-if raid10 do the same work, many some mdadm changes allow us to
---level=3D1 to understand that's raid10 without stripe, --level=3D0 is
-raid10 without mirrors)
+On 02/16/2011 08:51 AM, Simon McNair wrote:
+> latest update.  A bit long I'm afraid...
+> 
+> hi, card installed and devices plugged in.  Now have
+> sda   sda2  sdb1  sdc1  sde   sdf1  sdg1  sdi   sdj1  sdk1  sdl1  sdm1
+> sda1  sdb   sdc   sdd   sdf   sdg   sdh   sdj   sdk   sdl   sdm
 
-2011/2/16 Roberto Spadim <roberto@spadim.com.br>:
-> hummm nice =3D)
-> near layout is the key for many mirrors?
-> i will check more layouts
->
-> 2011/2/16 Robin Hill <robin@robinhill.me.uk>:
->> On Wed Feb 16, 2011 at 10:40:40AM -0300, Roberto Spadim wrote:
->>
->>> i agree with giovanni, another question since we will make a lot of
->>> change on mirrors based arrays (raid1, raid10) with the badblock li=
-st,
->>> could we:
->>>
->>> option1) remove raid1 code, change raid10 to work without raid0
->>> 'service', change raid10 to work with more than 1mirror (like raid1
->>> do)?
->>> option2) port raid10 layout to raid1?
->>>
->> You can already do option1 (if I'm understanding you correctly). =A0=
-A
->> RAID10 array can use as many mirrors as you like (--layout n2 is the
->> default, meaning a near layout with 2 replicas, using n4 would give =
-4
->> replicas), and as long as the number of replicas is equal to the num=
-ber
->> of devices, there should be no striping involved in the process.
->>
->> Cheers,
->> =A0 =A0Robin
->> --
->> =A0 =A0 ___
->> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@=
-robinhill.me.uk> |
->> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
->> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 |
->>
->
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
->
+Hmmm.
 
+> proxmox:/home/simon# ./lsdrv.sh
+> Controller device @ pci0000:00/0000:00:01.0/0000:01:00.0 [mvsas]
+>   SCSI storage controller: Marvell Technology Group Ltd. MV64460/64461/64462 Sys                                         tem Controller, Revision B (rev 01)
+>     host4: /dev/sdf ATA Hitachi HDS72101 {SN: GTA000PAGABXRA}
+>     host4: /dev/sdg ATA Hitachi HDS72101 {SN: GTA000PAGAA5DA}
+>     host4: /dev/sdh ATA Hitachi HDS72101 {SN: GTA000PAG9NL9A}
+>     host4: /dev/sdi ATA Hitachi HDS72101 {SN: GTA000PAGA8V4A}
+>     host4: /dev/sdj ATA Hitachi HDS72101 {SN: GTD000PAGMT9GD}
+>     host4: /dev/sdk ATA Hitachi HDS72101 {SN: GTG000PAG18BJC}
+>     host4: /dev/sdl ATA Hitachi HDS72101 {SN: GTG000PAG1DPLC}
+>     host4: /dev/sdm ATA Hitachi HDS72101 {SN: GTA000PAG7WMEA}
+> Controller device @ pci0000:00/0000:00:1a.7/usb1/1-4/1-4.1/1-4.1.1/1-4.1.1:1.0 [                                         usb-storage]
+>   Bus 001 Device 007: ID 0424:2228 Standard Microsystems Corp. 9-in-2 Card Reade                                         r {SN: 08050920003A}
+>     host9: /dev/sdd Generic Flash HS-CF
+>     host9: /dev/sde Generic Flash HS-COMBO
+> Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.0 [ahci]
+>   SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA Controller                                          (rev 03)
+>     host7: [Empty]
+>     host8: [Empty]
+> Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.1 [pata_jmicron]
+>   IDE interface: JMicron Technology Corp. JMB362/JMB363 Serial ATA Controller (r                                         ev 03)
+>     host5: [Empty]
+>     host6: [Empty]
+> Controller device @ pci0000:00/0000:00:1f.2 [ata_piix]
+>   IDE interface: Intel Corporation 82801JI (ICH10 Family) 4 port SATA IDE Contro                                         ller #1
+>     host0: /dev/sda ATA STM3500418AS {SN: 9VM3QJ5C}
+>     host1: /dev/sr0 Optiarc DVD RW AD-5240S
+> Controller device @ pci0000:00/0000:00:1f.5 [ata_piix]
+>   IDE interface: Intel Corporation 82801JI (ICH10 Family) 2 port SATA IDE Contro                                         ller #2
+>     host2: /dev/sdb ATA Hitachi HDS72101 {SN: GTD000PAGMT8DD}
+>     host3: /dev/sdc ATA Hitachi HDS72101 {SN: GTG000PAG04V0C}
 
+Good thing we recorded the serial numbers.  From an earlier run of "lsdrv":
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Phil,
+> sg3-utils did the job :-)
+> Sorry for doubting you.
+> 
+>     host6: /dev/sdd AMCC 9500S-12 DISK {SN: PAGA8V4A3B8378002254}
+>     host6: /dev/sde AMCC 9500S-12 DISK {SN: PAG9NL9A3B8387004C88}
+>     host6: /dev/sdf AMCC 9500S-12 DISK {SN: PAGAA5DA3B8396001AE0}
+>     host6: /dev/sdg AMCC 9500S-12 DISK {SN: PAGABXRA3B83A0005EFB}
+>     host6: /dev/sdh AMCC 9500S-12 DISK {SN: PAG7WMEA3B83AA003E4F}
+>     host6: /dev/sdi AMCC 9500S-12 DISK {SN: PAG1DPLC3B83B40026E6}
+>     host6: /dev/sdj AMCC 9500S-12 DISK {SN: PAG18BJC3B83C3004760}
+>     host6: /dev/sdk AMCC 9500S-12 DISK {SN: PAGMT9GD3B83CD004B18}
+>     host6: /dev/sdl AMCC 9500S-12 DISK {SN: PAGMT8DD3B83D70021FF}
+>     host6: /dev/sdm AMCC 9500S-12 DISK {SN: PAG04V0C3B83E100ACA0}
+> 
+> Simon
+
+I don't know why the serial numbers are formatted differently, but we can still tell them apart (the eight characters starting with "PAG").
+
+So, our device order in your new setup is: [ihgfmlkjbc], where /dev/sdi corresponds to the original report's /dev/sdd, which matches the sig grep in your other note.
+
+Another note:  The controller for sd[abc] is still showing ata_piix as its controller.  That means you cannot hot-plug those ports.  If you change your BIOS to AHCI mode instead of "Compatibility" or "Emulation", the full-featured ahci driver will run those ports.  Not urgent, but I highly recommend it.
+
+> proxmox:/home/simon# parted -l
+> Model: ATA STM3500418AS (scsi)
+> Disk /dev/sda: 500GB
+> Sector size (logical/physical): 512B/512B
+> Partition Table: msdos
+> 
+> Number  Start   End    Size   Type     File system  Flags
+>  1      32.8kB  537MB  537MB  primary  ext3         boot
+>  2      537MB   500GB  500GB  primary               lvm
+> 
+> 
+> Error: The backup GPT table is not at the end of the disk, as it should be.  This might mean that another operating
+> system believes the disk is smaller.  Fix, by moving the backup to the end (and removing the old backup)?
+> Fix/Cancel? c
+
+The 3ware controller must have reserved some space at the end of each drive for its own use.  Didn't know it'd do that.  You will have to fix that.
+
+[trim /]
+
+> Error: /dev/sdh: unrecognised disk label
+> 
+> Error: /dev/sdi: unrecognised disk label
+
+It seems the flaky controller took out these partition tables.  Hope that's all it got.  They'll have to be re-created with parted.
+
+Please run parted on each of the ten drives, and make sure they end up like so:
+
+> proxmox:/home/simon# for x in sd{d..m} ; do parted -s /dev/$x unit s
+> print ; done
+> Model: AMCC 9500S-12 DISK (scsi)
+> Disk /dev/sdd: 1953103872s
+> Sector size (logical/physical): 512B/512B
+> Partition Table: gpt
+> 
+> Number  Start  End          Size         File system  Name     Flags
+>  1      2048s  1953101823s  1953099776s               primary  raid
+
+Make sure you request "unit s" before your other commands so we can make sure it matches.
+
+When you think you are done, check them all:
+
+for x in /dev/sd{i,h,g,f,m,l,k,j,b,c} ; do parted -s $x unit s print ; done
+
+After that, create:
+
+mdadm --create --verbose --assume-clean /dev/md0 --metadata=1.1 --level=5 --raid-devices=10 /dev/sd{i,h,g,f,m,l,k,j,b,c}1 --chunk=64
+
+And finally:
+
+pvscan --verbose
+
+Phil
