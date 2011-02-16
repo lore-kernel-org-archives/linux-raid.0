@@ -1,177 +1,407 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: md road-map: 2011
-Date: Wed, 16 Feb 2011 10:40:40 -0300
-Message-ID: <AANLkTikiP+PTJzpQomr++4d0chRww3gOq0R-J2-vaQ1-@mail.gmail.com>
-References: <20110216212751.51a294aa@notabene.brown>
-	<4D5BB4EA.8030907@texsoft.it>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Wed, 16 Feb 2011 13:51:52 +0000
+Message-ID: <4D5BD678.2050200@gmail.com>
+References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5BB4EA.8030907@texsoft.it>
+In-Reply-To: <4D5A92F3.1090004@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Giovanni Tessore <giotex@texsoft.it>
-Cc: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i agree with giovanni, another question since we will make a lot of
-change on mirrors based arrays (raid1, raid10) with the badblock list,
-could we:
+latest update.  A bit long I'm afraid...
 
-option1) remove raid1 code, change raid10 to work without raid0
-'service', change raid10 to work with more than 1mirror (like raid1
-do)?
-option2) port raid10 layout to raid1?
-
-raid10 can do the same job of raid1 if we don't use 0(stripe) feature.
-raid1 have the write-behind, and 'many mirrors' feature, but don't
-have layout/offset.
-
-a raid1 with offset layout could improve (a lot!) read performace of
-raid1 array. i'm not good in english i will explain with a example:
-
-raid1 (/dev/md0) with 2 mirrors (/dev/sda,/dev/sdb)
-
-/dev/md0 sector1 on /dev/sda =3D sector1
-/dev/md0 sector1 on /dev/sdb =3D sector2 (or another offset)
-
-reading sector 1 and 2 from /dev/md0:
-
-considering current disks (/dev/sda,/dev/sdb) head positions=3D0
-read sector1 from /dev/sda (distance from sda=3D0, distance from sdb=3D=
-1)
-read sector2 from /dev/sdb (distance from sda=3D1, distance from sdb=3D=
-0)
-
-see that i don't need more size(raid0) i just need a layout/offset to
-make reads faster
-others layouts could help too: odd sectors on start of disk1 even
-sectors on end of disk1; even sectors on start of disk2 odd sectors of
-end of disk2
-
-i don't know what is more time consuming (for short and long time),
-option1 or option2?
+hi, card installed and devices plugged in.  Now have
+sda   sda2  sdb1  sdc1  sde   sdf1  sdg1  sdi   sdj1  sdk1  sdl1  sdm1
+sda1  sdb   sdc   sdd   sdf   sdg   sdh   sdj   sdk   sdl   sdm
 
 
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-ps1:
-i made some benchmarks with ssd only array, a roundrobin read balance
-is faster than near head, let's explain my conclusion:
-    near head isn't good on devices where sequencial/non sequencial
-read have the same speed, it don't know anything about device read
-speed
-    the near_head algorithm get one disk and use it for a big
-sequencial read (some devices aren't good on sequencial read, or time
-for sequencial/non sequencial can be the same for some ssd device)
-    resume: a mixed speed ssd only is poor optimized with near head, be=
-cause:
-        1) near head don't know anything about read rate of devices,
-with a round robin with per mirror max counter resolve this problem
-        2) some ssd access time for sequencial/non sequencial read is
-the same (near 0.1ms)
-
-for a mixed array (andreas korn email) using time based with ssd
-corsair (~100mb/s, <.1ms accesstime) and 2 barracuda 7200rpm harddisk
-(~130mb/s, 0 accestime for sequencial, <=3D8ms accestime for non
-sequencial) we don't have a lot of performace since the performace of
-raid0 is just because layout/offset feature, just a read difference of
-+1% speed improvement using time based read (maybe marginal error,
-maybe not, iozone spend a lot of time to benchmark, we didn't have
-more time to test).
-
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-ps2/explanations:
-time based isn't a today kernel read_balance algorithm, it's a patch
-that i'm testing (www.spadim.com.br/raid1 for kernel 2.6.37)
-time based use near_head idea with some more informations to select bes=
-t disk:
-
-time to move head ( (near_head distance * per mirror head move speed)
-+ (fixed sequencial speed if sequencial) + (fixed non sequencial speed
-if non sequencial)
-+
-time to read (sectors to read * read_rate, something like: 130mb/s =3D
-3,7560096153e-6 seconds / sector)
-+
-time to end queue (sum of reads*read_rate + sum of writes*write_rate +
-time to move head(first read/write sector - last read/write sector) ,
-considering that disk queue (scheduler/elevators) make a good job
-moving head just 1 time, in futures versions when elevator  could
-inform time estimation we could just use it and remove this math from
-md code), not yet implemented
-
-time based work like near_head if:
-read_rate=3D0, write_rate=3D0, head_move_speed=3D1,
-fixed_sequencial_speed=3D0, fixed_nonsequencial_speed=3D0
-on all mirror
+proxmox:/home/simon# ./lsdrv.sh
+Controller device @ pci0000:00/0000:00:01.0/0000:01:00.0 [mvsas]
+   SCSI storage controller: Marvell Technology Group Ltd.=20
+MV64460/64461/64462 Sys                                         tem=20
+Controller, Revision B (rev 01)
+     host4: /dev/sdf ATA Hitachi HDS72101 {SN: GTA000PAGABXRA}
+     host4: /dev/sdg ATA Hitachi HDS72101 {SN: GTA000PAGAA5DA}
+     host4: /dev/sdh ATA Hitachi HDS72101 {SN: GTA000PAG9NL9A}
+     host4: /dev/sdi ATA Hitachi HDS72101 {SN: GTA000PAGA8V4A}
+     host4: /dev/sdj ATA Hitachi HDS72101 {SN: GTD000PAGMT9GD}
+     host4: /dev/sdk ATA Hitachi HDS72101 {SN: GTG000PAG18BJC}
+     host4: /dev/sdl ATA Hitachi HDS72101 {SN: GTG000PAG1DPLC}
+     host4: /dev/sdm ATA Hitachi HDS72101 {SN: GTA000PAG7WMEA}
+Controller device @=20
+pci0000:00/0000:00:1a.7/usb1/1-4/1-4.1/1-4.1.1/1-4.1.1:1.0=20
+[                                         usb-storage]
+   Bus 001 Device 007: ID 0424:2228 Standard Microsystems Corp. 9-in-2=20
+Card Reade                                         r {SN: 08050920003A}
+     host9: /dev/sdd Generic Flash HS-CF
+     host9: /dev/sde Generic Flash HS-COMBO
+Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.0 [ahci]
+   SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA=20
+Controller                                          (rev 03)
+     host7: [Empty]
+     host8: [Empty]
+Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.1 [pata_jmicron]
+   IDE interface: JMicron Technology Corp. JMB362/JMB363 Serial ATA=20
+Controller (r                                         ev 03)
+     host5: [Empty]
+     host6: [Empty]
+Controller device @ pci0000:00/0000:00:1f.2 [ata_piix]
+   IDE interface: Intel Corporation 82801JI (ICH10 Family) 4 port SATA=20
+IDE Contro                                         ller #1
+     host0: /dev/sda ATA STM3500418AS {SN: 9VM3QJ5C}
+     host1: /dev/sr0 Optiarc DVD RW AD-5240S
+Controller device @ pci0000:00/0000:00:1f.5 [ata_piix]
+   IDE interface: Intel Corporation 82801JI (ICH10 Family) 2 port SATA=20
+IDE Contro                                         ller #2
+     host2: /dev/sdb ATA Hitachi HDS72101 {SN: GTD000PAGMT8DD}
+     host3: /dev/sdc ATA Hitachi HDS72101 {SN: GTG000PAG04V0C}
 
 
+proxmox:/home/simon# parted -l
+Model: ATA STM3500418AS (scsi)
+Disk /dev/sda: 500GB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+
+Number  Start   End    Size   Type     File system  Flags
+  1      32.8kB  537MB  537MB  primary  ext3         boot
+  2      537MB   500GB  500GB  primary               lvm
 
 
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
 
-2011/2/16 Giovanni Tessore <giotex@texsoft.it>:
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Model: Linux device-mapper (linear) (dm)
+Disk /dev/mapper/pve-data: 380GB
+Sector size (logical/physical): 512B/512B
+Partition Table: loop
+
+Number  Start  End    Size   File system  Flags
+  1      0.00B  380GB  380GB  ext3
+
+
+cModel: Linux device-mapper (linear) (dm)
+Disk /dev/mapper/pve-root: 103GB
+Sector size (logical/physical): 512B/512B
+Partition Table: loop
+
+Number  Start  End    Size   File system  Flags
+  1      0.00B  103GB  103GB  ext3
+
+
+Model: Linux device-mapper (linear) (dm)
+Disk /dev/mapper/pve-swap: 11.8GB
+Sector size (logical/physical): 512B/512B
+Partition Table: loop
+
+Number  Start  End     Size    File system  Flags
+  1      0.00B  11.8GB  11.8GB  linux-swap
+
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: /dev/sdh: unrecognised disk label
+
+Error: /dev/sdi: unrecognised disk label
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: The backup GPT table is not at the end of the disk, as it should=
+=20
+be.  This might mean that another operating
+system believes the disk is smaller.  Fix, by moving the backup to the=20
+end (and removing the old backup)?
+=46ix/Cancel? c
+
+Error: /dev/md0: unrecognised disk label
+
+
+proxmox:/home/simon# mdadm --assemble --scan --verbose
+mdadm: looking for devices for /dev/md/0
+mdadm: cannot open device /dev/dm-2: Device or resource busy
+mdadm: /dev/dm-2 has wrong uuid.
+mdadm: cannot open device /dev/dm-1: Device or resource busy
+mdadm: /dev/dm-1 has wrong uuid.
+mdadm: cannot open device /dev/dm-0: Device or resource busy
+mdadm: /dev/dm-0 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf1
+mdadm: /dev/sdf1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf
+mdadm: /dev/sdf has wrong uuid.
+mdadm: no RAID superblock on /dev/sdm1
+mdadm: /dev/sdm1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdm
+mdadm: /dev/sdm has wrong uuid.
+mdadm: no RAID superblock on /dev/sdl1
+mdadm: /dev/sdl1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdl
+mdadm: /dev/sdl has wrong uuid.
+mdadm: no RAID superblock on /dev/sdk1
+mdadm: /dev/sdk1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdk
+mdadm: /dev/sdk has wrong uuid.
+mdadm: no RAID superblock on /dev/sdj1
+mdadm: /dev/sdj1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdj
+mdadm: /dev/sdj has wrong uuid.
+mdadm: /dev/sdi has wrong uuid.
+mdadm: /dev/sdh has wrong uuid.
+mdadm: no RAID superblock on /dev/sdg1
+mdadm: /dev/sdg1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdg
+mdadm: /dev/sdg has wrong uuid.
+mdadm: no RAID superblock on /dev/sdc1
+mdadm: /dev/sdc1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdc
+mdadm: /dev/sdc has wrong uuid.
+mdadm: no RAID superblock on /dev/sdb1
+mdadm: /dev/sdb1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdb
+mdadm: /dev/sdb has wrong uuid.
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: /dev/sda2 has wrong uuid.
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: /dev/sda1 has wrong uuid.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: /dev/sda has wrong uuid.
+mdadm: no devices found for /dev/md/0
+mdadm: looking for devices for further assembly
+mdadm: cannot open device /dev/dm-2: Device or resource busy
+mdadm: cannot open device /dev/dm-1: Device or resource busy
+mdadm: cannot open device /dev/dm-0: Device or resource busy
+mdadm: no recogniseable superblock on /dev/sdf1
+mdadm: no recogniseable superblock on /dev/sdf
+mdadm: no recogniseable superblock on /dev/sdm1
+mdadm: no recogniseable superblock on /dev/sdm
+mdadm: no recogniseable superblock on /dev/sdl1
+mdadm: no recogniseable superblock on /dev/sdl
+mdadm: no recogniseable superblock on /dev/sdk1
+mdadm: no recogniseable superblock on /dev/sdk
+mdadm: no recogniseable superblock on /dev/sdj1
+mdadm: no recogniseable superblock on /dev/sdj
+mdadm: /dev/sdi is not built for host proxmox.
+mdadm: /dev/sdh is not built for host proxmox.
+mdadm: no recogniseable superblock on /dev/sdg1
+mdadm: no recogniseable superblock on /dev/sdg
+mdadm: no recogniseable superblock on /dev/sdc1
+mdadm: no recogniseable superblock on /dev/sdc
+mdadm: no recogniseable superblock on /dev/sdb1
+mdadm: no recogniseable superblock on /dev/sdb
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: cannot open device /dev/sda: Device or resource busy
+
+proxmox:/home/simon# apt-show-versions -a mdadm
+mdadm 2.6.7.2-3 install ok installed
+mdadm 2.6.7.2-3       lenny ftp.uk.debian.org
+No stable version
+No testing version
+mdadm 3.1.4-1+8efb9d1 sid   ftp.uk.debian.org
+mdadm/lenny uptodate 2.6.7.2-3
+
+anything else you want ?
+
+Simon
+
+On 15/02/2011 14:51, Phil Turmel wrote:
 > Hi Neil,
-> I apreciate very much the Bad Block Log feature, as I had big trouble=
-s with
-> read errors during recovery of a degraded RAID-5 array.
-> It seems to me a very good idea to just fail a stripe or even a singl=
-e block
-> (the smallest possible unit of information possibly) if the read erro=
-r is
-> unrecoverable, letting the remainig 99.99..% of the device still onli=
-ne and
-> available (that is, return the unrecoverable read error to the 'calle=
-r' as
-> would do a single disk).
-> Also having the list of bad block availabe into sysfs is a very usefu=
-l
-> feature.
 >
-> Still regarding to correctable read errors, how are they currently ma=
-naged
-> with RAID-1? If a read error occurs on sector XZY of disk A, the same=
- sector
-> XYZ is get from another disk (ramdomly) in the same array and rewritt=
-en to
-> disk A? (for RAID456 it's reconstructed from parity, and it's clearly=
- much
-> safer).
+> Since Simon has responded, let me summarize the assistance I provided=
+ per his off-list request:
 >
-> Regards.
->
->
-> On 02/16/2011 11:27 AM, NeilBrown wrote:
+> On 02/14/2011 11:53 PM, NeilBrown wrote:
+>> On Thu, 10 Feb 2011 16:16:44 +0000 Simon McNair<simonmcnair@gmail.co=
+m>  wrote:
 >>
->> I all,
->> =A0I wrote this today and posted it at
->> http://neil.brown.name/blog/20110216044002
+>>> Hi all
+>>>
+>>> I use a 3ware 9500-12 port sata card (JBOD) which will not work wit=
+hout a
+>>> 128mb sodimm.  The sodimm socket is flakey and the result is that t=
+he
+>>> machine occasionally crashes.  Yesterday I finally gave in and put
+>>> together another
+>>> machine so that I can rsync between them.  When I turned the machin=
+e
+>>> on today to set up rync, the RAID array was not gone, but corrupted=
+=2E
+>>>    Typical...
+>> Presumably the old machine was called 'ubuntu' and the new machine '=
+pro=C3=B8lox'
 >>
->> I thought it might be worth posting it here too...
 >>
->> NeilBrown
+>>> I built the array in Aug 2010 using the following command:
+>>>
+>>> mdadm --create --verbose /dev/md0 --metadata=3D1.1 --level=3D5
+>>> --raid-devices=3D10 /dev/sd{b,c,d,e,f,g,h,i,j,k}1 --chunk=3D64
+>>>
+>>> Using LVM, I did the following:
+>>> pvscan
+>>> pvcreate -M2 /dev/md0
+>>> vgcreate lvm-raid /dev/md0
+>>> vgdisplay lvm-raid
+>>> vgscan
+>>> lvscan
+>>> lvcreate -v -l 100%VG -n RAID lvm-raid
+>>> lvdisplay /dev/lvm-raid/lvm0
+>>>
+>>> I then formatted using:
+>>> mkfs -t ext4 -v -m .1 -b 4096 -E stride=3D16,stripe-width=3D144
+>>> /dev/lvm-raid/RAID
+>>>
+>>> This worked perfectly since I created the array.  Now mdadm is comi=
+ng up
+>>> with
+>>>
+>>> proxmox:/dev/md# mdadm --assemble --scan --verbose
+>>> mdadm: looking for devices for further assembly
+>>> mdadm: no recogniseable superblock on /dev/md/ubuntu:0
+>> And it seems that ubuntu:0 have been successfully assembled.
+>> It is missing one device for some reason (sdd1) but RAID can cope wi=
+th that.
+> 3ware card is compromised, with a loose buffer memory dimm.  Some of =
+its ECC errors were caught and reported in dmesg.  Its likely, based on=
+ the loose memory socket, that many multiple-bit errors got through.
 >
+> [trim /]
 >
-> --
-> Cordiali saluti.
-> Yours faithfully.
+>>> mdadm: no uptodate device for slot 8 of /dev/md/pro=EF=BF=BDlox:0
+>>> mdadm: no uptodate device for slot 9 of /dev/md/pro=EF=BF=BDlox:0
+>>> mdadm: failed to add /dev/sdd1 to /dev/md/pro=EF=BF=BDlox:0: Invali=
+d argument
+>>> mdadm: /dev/md/pro=EF=BF=BDlox:0 assembled from 0 drives - not enou=
+gh to start
+>>> the array.
+>> This looks like it is *after* to trying the --create command you giv=
+e
+>> below..  It is best to report things in the order they happen, else =
+you can
+>> confuse people (or get caught out!).
+> Yes, this was after.
 >
-> Giovanni Tessore
+>>> mdadm: looking for devices for further assembly
+>>> mdadm: no recogniseable superblock on /dev/sdd
+>>> mdadm: No arrays found in config file or automatically
+>>>
+>>> pvscan and vgscan show nothing.
+>>>
+>>> So I tried running mdadm --create --verbose /dev/md0 --metadata=3D1=
+=2E1
+>>> --level=3D5 --raid-devices=3D10 missing /dev/sde1 /dev/sdf1 /dev/sd=
+g1
+>>> /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 --chunk=
+=3D64
+>>>
+>>> as it seemed that /dev/sdd1 failed to be added to the array.  This =
+did
+>>> nothing.
+>> It did not to nothing.  It wrote a superblock to /dev/sdd1 and compl=
+ained
+>> that it couldn't write to all the others --- didn't it?
+> There were multiple attempts to create.  One wrote to just sdd1, anot=
+her succeeded with all but sdd1.
 >
+>>> dmesg contains:
+>>>
+>>> md: invalid superblock checksum on sdd1
+>> I guess that is why sdd1 was missing from 'ubuntu:0'.  Though as I c=
+annot
+>> tell if this happened before or after any of the various things repo=
+rted
+>> above, it is hard to be sure.
+>>
+>>
+>> The  real mystery is why 'pvscan' reports nothing.
+> The original array was created with mdadm v2.6.7, and had a data offs=
+et of 264 sectors.  After Simon's various attempts to --create, he ende=
+d up with data offset of 2048, using mdadm v3.1.4.  The mdadm -E report=
+s he posted to the list showed the 264 offset.  We didn't realize the o=
+ffset had been updated until somewhat later in our troubleshooting effo=
+rts.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> In any case, pvscan couldn't see the LVM signature because it wasn't =
+there (at offset 2048).
 >
-
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+>> What about
+>>    pvscan --verbose
+>>
+>> or
+>>
+>>    blkid -p /dev/md/ubuntu:0
+>>
+>> or even
+>>
+>>    dd of=3D/dev/md/ubuntu:0 count=3D8 | od -c
+> Fortunately, Simon did have a copy of his LVM configuration.  With th=
+e help of dd, strings, and grep, we did locate his LVM sig at the corre=
+ct location on sdd1 (for data offset 264).  After a number of attempts =
+to bypass LVM and access his single LV with dmsetup (based on his backe=
+d up configuration, on the assembled new array less sdd1), I realized t=
+hat the data offset was wrong on the recreated array, and went looking =
+for the cause.  I found your git commit that changed that logic last sp=
+ring, and recommended that Simon revert to the default package for his =
+ubuntu install, which is v2.6.7.
+>
+> Simon has now attempted to recreate the array with v2.6.7, but the co=
+ntroller is throwing too many errors to succeed, and I suggested it was=
+ too flakey to trust any further.  Based on the existence of the LVM si=
+g on sdd1, I believe Simon's data is (mostly) intact, and only needs a =
+successful create operation with a properly functioning controller.  (H=
+e might also need to perform an lvm vgcfgrestore, but he has the necess=
+ary backup file.)
+>
+> A new controller is on order.
+>
+> Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
