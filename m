@@ -1,73 +1,51 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: md road-map: 2011
-Date: Wed, 16 Feb 2011 21:29:39 +0100
-Message-ID: <20110216202939.GA2756@lazy.lzy>
-References: <20110216212751.51a294aa@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: reshape failure
+Date: Thu, 17 Feb 2011 07:32:47 +1100
+Message-ID: <20110217073247.2dbc9299@notabene.brown>
+References: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110216212751.51a294aa@notabene.brown>
+In-Reply-To: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Tobias McNulty <tobias@caktusgroup.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Wed, 16 Feb 2011 10:46:32 -0500 Tobias McNulty <tobias@caktusgroup.com>
+wrote:
 
-> I all,
->  I wrote this today and posted it at
-> http://neil.brown.name/blog/20110216044002
+> Hi,
 > 
-> I thought it might be worth posting it here too...
-[...] 
-> So the following is a detailed road-map for md raid for the coming
-> months.
-
-Question, is this for information purpose or are we
-called to a "brainstorming"?
-
-[...]
-> Hot Replace
-> -----------
+> I tried to start a reshape over the weekend (RAID6 -> RAID5) and was
+> dismayed to see that it was going to take roughly 2 weeks to complete:
 > 
-> "Hot replace" is my name for the process of replacing one device in an
-> array by another one without first failing the one device.  Thus there
-
-Didn't we named it also "proactive replacement"? :-)
-
-> It is not clear whether the primary should be automatically failed
-> when the rebuild of the secondary completes.  Commonly this would be
-> ideal, but if the secondary experienced any write errors (that were
-> recorded in the bad block log) then it would be best to leave both in
-> place until the sysadmin resolves the situation.   So in the first
-> implementation this failing should not be automatic.
-
-Maybe putting the primary as "spare", i.e. not failed nor
-working, unless the "migration" was not successful. In that
-case the secondary device should be failed.
-
-My use case here is disk "rotation" :-). That is, for example, a
-RAID-5/6 with n disks + 1 spare. Each X months/weeks/days/hours
-one disk is pulled out of the array and the spare one takes over.
-The pulled out disk will be the new spare (and powered down, possibly).
-The idea here is to have n disks which will have, after some time,
-different (increasing) power on hours, so to minimize the possibility
-of multiple failures.
-
-> Better reporting of inconsistencies.
-> ------------------------------------
+> md0 : active raid6 sdc[0] sdh[5](S) sdg[4] sdf[3] sde[2] sdd[1]
+> 5860543488 blocks super 0.91 level 6, 64k chunk, algorithm 2 [5/5]
+> [uuuuu] [>....................] reshape = 0.0% (245760/1953514496)
+> finish=21189.7min speed=1536K/sec
 > 
-> When a 'check' finds a data inconsistency it would be useful if it
-> was reported.   That would allow a sysadmin to try to understand the
-> cause and possibly fix it.
+> The disk that contained the backup file began experiencing SATA errors
+> several days into the reshape, due to what turned out to be a faulty
+> SATA card.  The card has since been replaced and the RAID1 device that
+> contains the backup file successfully resync'ed.
+> 
+> However, when I try to re-start the reshape now, I get the following error:
+> 
+> nas:~# mdadm --assemble /dev/md0 --backup-file=md0.backup /dev/sdc
+> /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
+> mdadm: Failed to restore critical section for reshape, sorry.
+> 
+> Is my data lost for good?  Is there anything else I can do?
 
-Could you, please, consider to add, for RAID-6, the
-capability to report also which device, potentially,
-has the problem? Thanks!
+Try above command with --verbose.
+If a message about "too-old timestamp" appears, run
 
-bye,
+ export MDADM_GROW_ALLOW_OLD=1
 
--- 
+and run the command again.
 
-piergiorgio
+In either case, post the output.
+
+NeilBrown
