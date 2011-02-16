@@ -1,7 +1,7 @@
 From: Simon McNair <simonmcnair@gmail.com>
 Subject: Re: Linux software RAID assistance
-Date: Wed, 16 Feb 2011 13:51:52 +0000
-Message-ID: <4D5BD678.2050200@gmail.com>
+Date: Wed, 16 Feb 2011 13:56:39 +0000
+Message-ID: <4D5BD797.1040309@gmail.com>
 References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org>
 Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
@@ -15,242 +15,25 @@ To: Phil Turmel <philip@turmel.org>
 Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-latest update.  A bit long I'm afraid...
+one other snippet:
 
-hi, card installed and devices plugged in.  Now have
-sda   sda2  sdb1  sdc1  sde   sdf1  sdg1  sdi   sdj1  sdk1  sdl1  sdm1
-sda1  sdb   sdc   sdd   sdf   sdg   sdh   sdj   sdk   sdl   sdm
-
-
-proxmox:/home/simon# ./lsdrv.sh
-Controller device @ pci0000:00/0000:00:01.0/0000:01:00.0 [mvsas]
-   SCSI storage controller: Marvell Technology Group Ltd.=20
-MV64460/64461/64462 Sys                                         tem=20
-Controller, Revision B (rev 01)
-     host4: /dev/sdf ATA Hitachi HDS72101 {SN: GTA000PAGABXRA}
-     host4: /dev/sdg ATA Hitachi HDS72101 {SN: GTA000PAGAA5DA}
-     host4: /dev/sdh ATA Hitachi HDS72101 {SN: GTA000PAG9NL9A}
-     host4: /dev/sdi ATA Hitachi HDS72101 {SN: GTA000PAGA8V4A}
-     host4: /dev/sdj ATA Hitachi HDS72101 {SN: GTD000PAGMT9GD}
-     host4: /dev/sdk ATA Hitachi HDS72101 {SN: GTG000PAG18BJC}
-     host4: /dev/sdl ATA Hitachi HDS72101 {SN: GTG000PAG1DPLC}
-     host4: /dev/sdm ATA Hitachi HDS72101 {SN: GTA000PAG7WMEA}
-Controller device @=20
-pci0000:00/0000:00:1a.7/usb1/1-4/1-4.1/1-4.1.1/1-4.1.1:1.0=20
-[                                         usb-storage]
-   Bus 001 Device 007: ID 0424:2228 Standard Microsystems Corp. 9-in-2=20
-Card Reade                                         r {SN: 08050920003A}
-     host9: /dev/sdd Generic Flash HS-CF
-     host9: /dev/sde Generic Flash HS-COMBO
-Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.0 [ahci]
-   SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA=20
-Controller                                          (rev 03)
-     host7: [Empty]
-     host8: [Empty]
-Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.1 [pata_jmicron]
-   IDE interface: JMicron Technology Corp. JMB362/JMB363 Serial ATA=20
-Controller (r                                         ev 03)
-     host5: [Empty]
-     host6: [Empty]
-Controller device @ pci0000:00/0000:00:1f.2 [ata_piix]
-   IDE interface: Intel Corporation 82801JI (ICH10 Family) 4 port SATA=20
-IDE Contro                                         ller #1
-     host0: /dev/sda ATA STM3500418AS {SN: 9VM3QJ5C}
-     host1: /dev/sr0 Optiarc DVD RW AD-5240S
-Controller device @ pci0000:00/0000:00:1f.5 [ata_piix]
-   IDE interface: Intel Corporation 82801JI (ICH10 Family) 2 port SATA=20
-IDE Contro                                         ller #2
-     host2: /dev/sdb ATA Hitachi HDS72101 {SN: GTD000PAGMT8DD}
-     host3: /dev/sdc ATA Hitachi HDS72101 {SN: GTG000PAG04V0C}
+proxmox:/home/simon# for x in /dev/sd{d..m} ; do echo $x ; dd if=3D$x=20
+skip=3D2312 count=3D128 2>/dev/null |strings |grep=20
+9fAJEz-HcaP-RQ51-fV8b-nxrN-Uqwb-PPnOLJ ; done
+/dev/sdd
+/dev/sde
+/dev/sdf
+/dev/sdg
+/dev/sdh
+/dev/sdi
+id =3D "9fAJEz-HcaP-RQ51-fV8b-nxrN-Uqwb-PPnOLJ"
+id =3D "9fAJEz-HcaP-RQ51-fV8b-nxrN-Uqwb-PPnOLJ"
+/dev/sdj
+/dev/sdk
+/dev/sdl
+/dev/sdm
 
 
-proxmox:/home/simon# parted -l
-Model: ATA STM3500418AS (scsi)
-Disk /dev/sda: 500GB
-Sector size (logical/physical): 512B/512B
-Partition Table: msdos
-
-Number  Start   End    Size   Type     File system  Flags
-  1      32.8kB  537MB  537MB  primary  ext3         boot
-  2      537MB   500GB  500GB  primary               lvm
-
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Model: Linux device-mapper (linear) (dm)
-Disk /dev/mapper/pve-data: 380GB
-Sector size (logical/physical): 512B/512B
-Partition Table: loop
-
-Number  Start  End    Size   File system  Flags
-  1      0.00B  380GB  380GB  ext3
-
-
-cModel: Linux device-mapper (linear) (dm)
-Disk /dev/mapper/pve-root: 103GB
-Sector size (logical/physical): 512B/512B
-Partition Table: loop
-
-Number  Start  End    Size   File system  Flags
-  1      0.00B  103GB  103GB  ext3
-
-
-Model: Linux device-mapper (linear) (dm)
-Disk /dev/mapper/pve-swap: 11.8GB
-Sector size (logical/physical): 512B/512B
-Partition Table: loop
-
-Number  Start  End     Size    File system  Flags
-  1      0.00B  11.8GB  11.8GB  linux-swap
-
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: /dev/sdh: unrecognised disk label
-
-Error: /dev/sdi: unrecognised disk label
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: The backup GPT table is not at the end of the disk, as it should=
-=20
-be.  This might mean that another operating
-system believes the disk is smaller.  Fix, by moving the backup to the=20
-end (and removing the old backup)?
-=46ix/Cancel? c
-
-Error: /dev/md0: unrecognised disk label
-
-
-proxmox:/home/simon# mdadm --assemble --scan --verbose
-mdadm: looking for devices for /dev/md/0
-mdadm: cannot open device /dev/dm-2: Device or resource busy
-mdadm: /dev/dm-2 has wrong uuid.
-mdadm: cannot open device /dev/dm-1: Device or resource busy
-mdadm: /dev/dm-1 has wrong uuid.
-mdadm: cannot open device /dev/dm-0: Device or resource busy
-mdadm: /dev/dm-0 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdf1
-mdadm: /dev/sdf1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdf
-mdadm: /dev/sdf has wrong uuid.
-mdadm: no RAID superblock on /dev/sdm1
-mdadm: /dev/sdm1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdm
-mdadm: /dev/sdm has wrong uuid.
-mdadm: no RAID superblock on /dev/sdl1
-mdadm: /dev/sdl1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdl
-mdadm: /dev/sdl has wrong uuid.
-mdadm: no RAID superblock on /dev/sdk1
-mdadm: /dev/sdk1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdk
-mdadm: /dev/sdk has wrong uuid.
-mdadm: no RAID superblock on /dev/sdj1
-mdadm: /dev/sdj1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdj
-mdadm: /dev/sdj has wrong uuid.
-mdadm: /dev/sdi has wrong uuid.
-mdadm: /dev/sdh has wrong uuid.
-mdadm: no RAID superblock on /dev/sdg1
-mdadm: /dev/sdg1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdg
-mdadm: /dev/sdg has wrong uuid.
-mdadm: no RAID superblock on /dev/sdc1
-mdadm: /dev/sdc1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdc
-mdadm: /dev/sdc has wrong uuid.
-mdadm: no RAID superblock on /dev/sdb1
-mdadm: /dev/sdb1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdb
-mdadm: /dev/sdb has wrong uuid.
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: /dev/sda2 has wrong uuid.
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: /dev/sda1 has wrong uuid.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sda has wrong uuid.
-mdadm: no devices found for /dev/md/0
-mdadm: looking for devices for further assembly
-mdadm: cannot open device /dev/dm-2: Device or resource busy
-mdadm: cannot open device /dev/dm-1: Device or resource busy
-mdadm: cannot open device /dev/dm-0: Device or resource busy
-mdadm: no recogniseable superblock on /dev/sdf1
-mdadm: no recogniseable superblock on /dev/sdf
-mdadm: no recogniseable superblock on /dev/sdm1
-mdadm: no recogniseable superblock on /dev/sdm
-mdadm: no recogniseable superblock on /dev/sdl1
-mdadm: no recogniseable superblock on /dev/sdl
-mdadm: no recogniseable superblock on /dev/sdk1
-mdadm: no recogniseable superblock on /dev/sdk
-mdadm: no recogniseable superblock on /dev/sdj1
-mdadm: no recogniseable superblock on /dev/sdj
-mdadm: /dev/sdi is not built for host proxmox.
-mdadm: /dev/sdh is not built for host proxmox.
-mdadm: no recogniseable superblock on /dev/sdg1
-mdadm: no recogniseable superblock on /dev/sdg
-mdadm: no recogniseable superblock on /dev/sdc1
-mdadm: no recogniseable superblock on /dev/sdc
-mdadm: no recogniseable superblock on /dev/sdb1
-mdadm: no recogniseable superblock on /dev/sdb
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: cannot open device /dev/sda: Device or resource busy
-
-proxmox:/home/simon# apt-show-versions -a mdadm
-mdadm 2.6.7.2-3 install ok installed
-mdadm 2.6.7.2-3       lenny ftp.uk.debian.org
-No stable version
-No testing version
-mdadm 3.1.4-1+8efb9d1 sid   ftp.uk.debian.org
-mdadm/lenny uptodate 2.6.7.2-3
-
-anything else you want ?
-
-Simon
 
 On 15/02/2011 14:51, Phil Turmel wrote:
 > Hi Neil,
