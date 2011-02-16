@@ -1,36 +1,35 @@
-From: hansbkk@gmail.com
-Subject: old filesystem label remaining after partition --add 'ed?
-Date: Wed, 16 Feb 2011 12:44:46 +0700
-Message-ID: <AANLkTikcYz+AYXQBm+BhcjM1SkvDnR=-x58jLbyGB+2d@mail.gmail.com>
+From: =?ISO-8859-1?Q?Marc_Recht=E9?= <marc3@rechte.fr>
+Subject: Re: Linux tries to bring up raid before the disks are finished initializing
+Date: Wed, 16 Feb 2011 09:33:34 +0100
+Message-ID: <ijg24l$p2e$1@dough.gmane.org>
+References: <971504.54875.qm@web30805.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <971504.54875.qm@web30805.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I replaced a RAID6 member drive that hadn't been fully zero'd, had the
-same partitioning layout as the previous one.
+Hello Mike,
 
-The target partition had previously had an ext3 filesystem on it for
-temporary moving/copying files around, with an e2label on it.
+I found you discussion regarding a problem you had with a PMP with an 
+Adaptec 1430SA configuration with several SATA disks connected though 3 
+x SII3726 port multiplier
 
-I added the partition to the array with "mdadm /dev/md_raid6a --add
-/sde4", and let it rebuild, all looks good both via -D and
-/proc/mdstat
+Could you please confirm this Adpatec card support properly PMP, because 
+Adpatec support tech. say this card is not tested: "The 1430SA is a SATA 
+2 controller and has not been tested with expanders."
 
-Later on, I noticed that that partition still has the e2label on it? I
-know my RAID1's show the label same as if it's a regular partition,
-but I've always got a "bad magic" message back from checking for a
-label on a RAID5/6 array member partition.
+I am currently facing disk detection problem with the AMD700 SATA chip 
+(cold book will either not detect any disk, or some of them, but warm 
+reboot detects them all)  that's why I envisage this Adpatec controller 
+alternative.
 
-I'm assuming this is just cosmetic, but it bothers my (probably OCD)
-sense of order, so I thought I'd check in here.
+It seems the SB700 series chip has a known problem with PMP (see 
+http://en.wikipedia.org/wiki/AMD_700_chipset_series#Southbridges). 
+Kernel I use is 2.6.32 (RHEL6).
 
-I don't even know a command to remove an existing filesystem other
-than zeroing out the MBR/partition table - and in this case I didn't
-want to disturb data in the other partitions. I supposed I could have
-formatted it as ntfs or something, but that doesn't seem right.
+Many thanks
 
-Any advice/comments welcome, especially if anyone thinks this isn't
-just a cosmetic problem.
