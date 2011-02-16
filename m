@@ -1,86 +1,98 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: write-behind has no measurable effect?
-Date: Wed, 16 Feb 2011 12:00:41 -0300
-Message-ID: <AANLkTinus5p_A0sADMv7Z=+xnfdfwnRRo8p_-uye3ddD@mail.gmail.com>
-References: <20110214213817.GG836@hellgate.intra.guy>
-	<20110215095042.51ef7e0a@notabene.brown>
-	<20110214225754.GK19990@hellgate.intra.guy>
-	<20110215104109.06b12b33@notabene.brown>
-	<20110215010052.GA13135@hellgate.intra.guy>
-	<4D59D4A5.9050106@anonymous.org.uk>
-	<20110215021900.GB13135@hellgate.intra.guy>
-	<AANLkTikFSOePZJXknAt=Tx6+FpdJ4tiSNwpuwuPC3RY=@mail.gmail.com>
-	<AANLkTinAV4jJc8ueZ1mjRPpDnA_eWhUDcL8uz-0Ufifk@mail.gmail.com>
-	<20110216120056.GD13135@hellgate.intra.guy>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: File system corruption during setting new size (native/extarnal
+ metatdat) after expansion
+Date: Wed, 16 Feb 2011 15:24:53 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110216120056.GD13135@hellgate.intra.guy>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Andras Korn <korn@raidlist.elan.rulez.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-a question here...
-what happen if all disks are write-mostly and just ssd is write-behind?
+Hi,
 
-why?
-write-behind is an async feature (md only return ok to filesystem if
-non write-behind disks are sync writen)
-write-mostly is a read_balance optimization (ony read from that device
-if all non-write-mostly devices fail)
+I've met again array_size change problem. A while ago I've indicated it=
+, during array expansion, file system corruption occurs.
+The previous conclusion was that my tests were wrong (too small arrays,=
+ on bigger arrays it seems to be ok),=20
+I've got now reproduction in our lab on quite big arrays (250G) and on =
+my small test arrays also.
 
-making all disks write-mostly could allow us to use write-behind on
-slowest(s) disk(s)
+This problem is related to array expansion using native and external me=
+tadata.
+=20
+Problem is that after expansion file system on array is corrupted.
+Operation that corrupts file system is array size change via sysfs (and=
+ for native metadata during reshape finalization in md).
+In logs I've got information:
+	VFS: busy inodes on changed media or resized disks
 
-another idea...
-could we change raid1 write code? how?
-if a total of X write are done, return ok to filesystem, all other
-devices are marked as write-behind (automatic write-behind) after sync
-writes disks are marked as non-write-behind again
-maybe a optimization is: what disk MUST be sync(only non
-write-behind), what disk MUST BE async (only write-behind), what disk
-can be async/sync (any write-behind type)
+My investigation in md goes to block_dev.c/inode.c and flush_disk() (ca=
+lled from check_disk_size_change()).
+I've found above text there (about busy inodes).=20
+My traces shows that in __invalidate_inodes(), inode->i_count =3D=3D 2 =
+and it is locked. This makes me to look how invalidate_inodes() is call=
+ed.
+Before invalidate_inodes() is called, cache is cleared by shrink_dcache=
+_sb().
+If I've commented shrink_dcache_sb() file system seems to be safe. It i=
+s the same when invalidate_inodes() is commented (shrink_cache_sb() cal=
+led only).
+If I've changed functions order (1. invalidate_inodes(), 2. shrink_dcac=
+he_sb()) in __invalidate_device() (block_dev.c) there is no corruption =
+also.
+When after shrink_dcache_sb() is called invalidate_inodes() on busy ino=
+des corruption occurs (if it called earlier it doesn't matter).
 
-
-another question...
-can read balance use write-mostly device in a very busy system without
-failed devices (all mirrors are in sync)?
-
-
-2011/2/16 Andras Korn <korn@raidlist.elan.rulez.org>:
-> On Tue, Feb 15, 2011 at 06:10:17AM -0300, Roberto Spadim wrote:
->
->> andras could you make some benchmarks to raid1 with round robin read=
- balance?
->> at this site:
->> www.spadim.com.br/raid1/
->
-> For the record: we did some benchmarks and while the patch shows prom=
-ise and
-> seems to cause no problems, it resulted in no measurable performance
-> increase for a RAID1 array composed of an SSD and two 7200rpm HDDs.
->
-> Andras
->
-> --
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Andras Korn <korn at elan.rul=
-ez.org>
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 If it ain't broken, play with it unti=
-l it is.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+This problem can be reproduced on mounted arrays only. If array is not =
+mounted, file system corruption disappears.
+This means that whole expansion process is correct.
+In some cases (rarely) inodes on mounted device are not locked and then=
+ FS corruption doesn't happened.
 
 
+I'd like to know your opinion.
+Do you think that problem is in releasing cache but not all inodes (bus=
+y case), commands order...
+=2E.. or probably changing size on mounted array is a mistake (for curr=
+ent code)?
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+BR
+Adam
+
+
+---------------------------------
+My test commands:=09
+
+#create container
+mdadm -C /dev/md/imsm0 -amd -e imsm -n 3 /dev/sdb /dev/sdc /dev/sde -R
+
+#create volume
+mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --size 104857 -n 3 /de=
+v/sdb /dev/sdc /dev/sde -R
+mkfs /dev/md/raid5vol_0
+mount /dev/md/raid5vol_0 /mnt/vol
+
+#copy some files from current directory
+cp * /mnt/vol
+
+#add spare
+mdadm --add /dev/md/imsm0 /dev/sdd
+
+#start reshape
+mdadm --grow /dev/md/imsm0 --raid-devices 4 --backup-file=3D/backup.bak
+
+
+-------------------------------------------------------------
+Intel Technology Poland Sp. z o.o.
+email: adam.kwolek@intel.com=A0=A0=A0=20
+phone: +48 58 766 1773
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
