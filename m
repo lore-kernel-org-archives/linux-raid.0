@@ -1,28 +1,73 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: md - cache
-Date: Wed, 16 Feb 2011 17:41:25 +0100
-Message-ID: <4D5BFE35.7090408@tomt.net>
-References: <AANLkTi=qav77Q8pjU8_xhmuvYSkZk7_Hwd3Xe89BWtBK@mail.gmail.com>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current sysfs format
+Date: Wed, 16 Feb 2011 13:40:21 +0100
+Message-ID: <20110216124021.9092.83943.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=qav77Q8pjU8_xhmuvYSkZk7_Hwd3Xe89BWtBK@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On 02/16/2011 05:01 PM, Roberto Spadim wrote:
-> hi guys, i was thinking about cache insues
-> since md = multiple devices
-> could we implement a new device used for caches? (port bcache to md,
-> or flashcache (facebook))
-> something like:
-> mdadm --create /dev/md1 --level=cache --cache-device=/dev/XXX
-> --data-device=/dev/ZZZZ
->
+Problem: sysfs_disk_to_scsi_id() not returns correct scsi_id value.
+Reason: sysfs format has been changed
 
-Wny would you want to port when it works fine across different types of 
-block devices already, including md? At least bcache is supposed to - 
-and I think flashcache too.
+This patch adapt sysfs_disk_to_scsi_id() to new sysfs format.
+
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ sysfs.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/sysfs.c b/sysfs.c
+index f0773d4..883a834 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -705,7 +705,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+ 	if (fstat(fd, &st))
+ 		return 1;
+ 
+-	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device",
++	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device/scsi_device",
+ 		 major(st.st_rdev), minor(st.st_rdev));
+ 
+ 	dir = opendir(path);
+@@ -714,8 +714,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+ 
+ 	de = readdir(dir);
+ 	while (de) {
+-		if (strncmp("scsi_disk:", de->d_name,
+-			    strlen("scsi_disk:")) == 0)
++		if (strchr(de->d_name, ':'))
+ 			break;
+ 		de = readdir(dir);
+ 	}
+@@ -724,21 +723,20 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+ 	if (!de)
+ 		return 1;
+ 
+-	c1 = strchr(de->d_name, ':');
+-	c1++;
++	c1 = de->d_name;
+ 	c2 = strchr(c1, ':');
+ 	*c2 = '\0';
+ 	*id = strtol(c1, NULL, 10) << 24; /* host */
+ 	c1 = c2 + 1;
+ 	c2 = strchr(c1, ':');
+ 	*c2 = '\0';
+-	*id |= strtol(c1, NULL, 10) << 16; /* channel */
++	*id |= strtol(c1, NULL, 10) << 16; /* bus */
+ 	c1 = c2 + 1;
+ 	c2 = strchr(c1, ':');
+ 	*c2 = '\0';
+-	*id |= strtol(c1, NULL, 10) << 8; /* lun */
++	*id |= strtol(c1, NULL, 10) << 8; /* target */
+ 	c1 = c2 + 1;
+-	*id |= strtol(c1, NULL, 10); /* id */
++	*id |= strtol(c1, NULL, 10); /* lun */
+ 
+ 	return 0;
+ }
+
