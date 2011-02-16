@@ -1,45 +1,36 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: help with queue kernel information
-Date: Wed, 16 Feb 2011 01:43:01 -0200
-Message-ID: <AANLkTinvQM554ZhcpHZ4Wr=BaX4dqEUwuTQn+50mMtaj@mail.gmail.com>
-References: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
+From: hansbkk@gmail.com
+Subject: old filesystem label remaining after partition --add 'ed?
+Date: Wed, 16 Feb 2011 12:44:46 +0700
+Message-ID: <AANLkTikcYz+AYXQBm+BhcjM1SkvDnR=-x58jLbyGB+2d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-i found some informations here:
-http://tldp.org/LDP/tlk/ds/ds.html
+I replaced a RAID6 member drive that hadn't been fully zero'd, had the
+same partitioning layout as the previous one.
 
-about request struct
-i think all i need is there
-how could i get request list of a mirror device?
+The target partition had previously had an ext3 filesystem on it for
+temporary moving/copying files around, with an e2label on it.
 
+I added the partition to the array with "mdadm /dev/md_raid6a --add
+/sde4", and let it rebuild, all looks good both via -D and
+/proc/mdstat
 
-2011/2/15 Roberto Spadim <roberto@spadim.com.br>:
-> hi guys, i=B4m still looking about queue kernel information
-> i=B4m writing a new read_balacne algorithm, and i need some informati=
-ons
-> about mirror (device) queue
-> total writes/read in queue, or some statistical informations
-> where could i get it?
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
->
+Later on, I noticed that that partition still has the e2label on it? I
+know my RAID1's show the label same as if it's a regular partition,
+but I've always got a "bad magic" message back from checking for a
+label on a RAID5/6 array member partition.
 
+I'm assuming this is just cosmetic, but it bothers my (probably OCD)
+sense of order, so I thought I'd check in here.
 
+I don't even know a command to remove an existing filesystem other
+than zeroing out the MBR/partition table - and in this case I didn't
+want to disturb data in the other partitions. I supposed I could have
+formatted it as ntfs or something, but that doesn't seem right.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any advice/comments welcome, especially if anyone thinks this isn't
+just a cosmetic problem.
