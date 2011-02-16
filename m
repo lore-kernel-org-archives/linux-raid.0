@@ -1,76 +1,92 @@
 From: Phil Turmel <philip@turmel.org>
-Subject: Re: Linux software RAID assistance
-Date: Wed, 16 Feb 2011 14:36:30 -0500
-Message-ID: <4D5C273E.7020609@turmel.org>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown> <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com> <4D5BE119.7000804@turmel.org> <4D5C0E17.3060306@gmail.com> <4D5C140F.9010301@turmel.org> <4D5C1508.3040308@gmail.com> <4D5C15D3.1070608@turmel.org> <4D5C167C.7000101@turmel.org> <4D5C1CF8.1020507@gmail.com> <4D5C1E0B.9060300@turmel.org> <4D5C2061.4060106@gmail.com> <4D5C2143.3000907@turmel.org> <4D5C2260.3020800@gmail.com>
+Subject: Re: md road-map: 2011
+Date: Wed, 16 Feb 2011 14:37:26 -0500
+Message-ID: <4D5C2776.2080609@turmel.org>
+References: <20110216212751.51a294aa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C2260.3020800@gmail.com>
+In-Reply-To: <20110216212751.51a294aa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: simonmcnair@gmail.com
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/16/2011 02:15 PM, Simon McNair wrote:
-> proxmox:/home/simon# vgscan --verbose
->     Wiping cache of LVM-capable devices
->     Wiping internal VG cache
->   Reading all physical volumes.  This may take a while...
->     Finding all volume groups
->     Finding volume group "pve"
->   Found volume group "pve" using metadata type lvm2
->     Finding volume group "lvm-raid"
->   Found volume group "lvm-raid" using metadata type lvm2
-> proxmox:/home/simon#
-> proxmox:/home/simon# lvscan --verbose
->     Finding all logical volumes
->   ACTIVE            '/dev/pve/swap' [11.00 GB] inherit
->   ACTIVE            '/dev/pve/root' [96.00 GB] inherit
->   ACTIVE            '/dev/pve/data' [354.26 GB] inherit
->   inactive          '/dev/lvm-raid/RAID' [8.19 TB] inherit
+Hi Neil,
+
+On 02/16/2011 05:27 AM, NeilBrown wrote:
 > 
-> proxmox:/home/simon# vgchange -ay
->   3 logical volume(s) in volume group "pve" now active
->   1 logical volume(s) in volume group "lvm-raid" now active
-
-Heh.  Figures.
-
-> proxmox:/home/simon# fsck.ext4 -n /dev/mapper/lvm-raid-RAID
-
-Actually, I wanted you to try with a capital N.  Lower case 'n' is similar, but not quite the same.
-
-> e2fsck 1.41.3 (12-Oct-2008)
-> fsck.ext4: No such file or directory while trying to open /dev/mapper/lvm-raid-RAID
+> I all,
+>  I wrote this today and posted it at
+> http://neil.brown.name/blog/20110216044002
 > 
-> The superblock could not be read or does not describe a correct ext2
-> filesystem.  If the device is valid and it really contains an ext2
-> filesystem (and not swap or ufs or something else), then the superblock
-> is corrupt, and you might try running e2fsck with an alternate superblock:
->     e2fsck -b 8193 <device>
+> I thought it might be worth posting it here too...
 > 
-> proxmox:/home/simon# fsck.ext4 -n /dev/mapper/
-> control         lvm--raid-RAID  pve-data        pve-root        pve-swap
-
-Strange.  I guess it does that to distinguish dashes in the VG name from dashes between VG and LV names.
-
-> proxmox:/home/simon# fsck.ext4 -n /dev/mapper/lvm--raid-RAID
-> e2fsck 1.41.3 (12-Oct-2008)
-> /dev/mapper/lvm--raid-RAID has unsupported feature(s): FEATURE_I31
-> e2fsck: Get a newer version of e2fsck!
+> NeilBrown
 > 
-> my version of e2fsck always worked before ?
+> 
+> -------------------------
+> 
+> 
+> It is about 2 years since I last published a road-map[1] for md/raid
+> so I thought it was time for another one.  Unfortunately quite a few
+> things on the previous list remain undone, but there has been some
+> progress.
+> 
+> I think one of the problems with some to-do lists is that they aren't
+> detailed enough.  High-level design, low level design, implementation,
+> and testing are all very different sorts of tasks that seem to require
+> different styles of thinking and so are best done separately.  As
+> writing up a road-map is a high-level design task it makes sense to do
+> the full high-level design at that point so that the tasks are
+> detailed enough to be addressed individually with little reference to
+> the other tasks in the list (except what is explicit in the road map).
+> 
+> A particular need I am finding for this road map is to make explicit
+> the required ordering and interdependence of certain tasks.  Hopefully
+> that will make it easier to address them in an appropriate order, and
+> mean that I waste less time saying "this is too hard, I might go read
+> some email instead".
+> 
+> So the following is a detailed road-map for md raid for the coming
+> months.
+> 
+> [1] http://neil.brown.name/blog/20090129234603
+> 
+> Bad Block Log
+> -------------
+[trim /]
+> Bitmap of non-sync regions.
+> ---------------------------
+[trim /]
 
-v1.41.14 was release 7 weeks ago.  But, I suspect there's corruption in the superblock.  Do you still have your disk images tucked away somewhere safe?
+It occurred to me that if you go to the trouble (and space and performance)
+to create and maintain metadata for lists of bad blocks, and separate
+metadata for sync status aka "trim", or hot-replace status, or reshape-status,
+or whatever features are dreamt up later, why not create an infrastructure to
+carry all of it efficiently?
 
-If so, try:
+David Brown suggested a multi-level metadata structure.  I concur, but somewhat
+more generic:
+	Level 1:  Coarse bitmap, set bit indicates 'look at level 2'
+	Level 2:  Fine bitmap, set bit indicates 'look at level 3'
+	Level 3:  Extent list, with starting block, length, and feature payload
 
-1) The '-b' option to e2fsck.  We need to experiment with '-n -b offset' to find the alternate superblock.  Trying 'offset' = to 8193, 16384, and 32768, per the man-page.
+The bitmap levels are purely for hot-path performance.
 
-2) A newer e2fsprogs.
+As an option, it should be possible to spread the detailed metadata through the
+data area, possibly in chunk-sized areas spread out at some user-defined
+interval.  "meta-span", perhaps.  Then resizing partitions that compose an
+array would be less likely to bump up against metadata size limits.  The coarse
+bitmap should stay near the superblock, of course.
 
-Finally,
-3) mount -r /dev/lvm-raid/RAID /mnt/whatever
+Personally, I'd like to see the bad-block feature actually perform block
+remapping, much like hard drives themselves do, but with the option to unmap the
+block if a later write succeeds.  Using one retry per array restart as you
+described makes a lot of sense.  In any case, remapping would retain redundancy
+where applicable short of full drive failure or remap overflow.
+
+My $0.02, of course.
 
 Phil
