@@ -1,21 +1,39 @@
 From: Roberto Spadim <roberto@spadim.com.br>
-Subject: help with queue kernel information
-Date: Tue, 15 Feb 2011 23:30:15 -0200
-Message-ID: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
+Subject: Re: help with queue kernel information
+Date: Wed, 16 Feb 2011 01:43:01 -0200
+Message-ID: <AANLkTinvQM554ZhcpHZ4Wr=BaX4dqEUwuTQn+50mMtaj@mail.gmail.com>
+References: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTikp9Yd0ydyO7AZ5WcAzcV+ZyaH9Z51BoF=ZYwhO@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-hi guys, i=B4m still looking about queue kernel information
-i=B4m writing a new read_balacne algorithm, and i need some information=
-s
-about mirror (device) queue
-total writes/read in queue, or some statistical informations
-where could i get it?
+i found some informations here:
+http://tldp.org/LDP/tlk/ds/ds.html
+
+about request struct
+i think all i need is there
+how could i get request list of a mirror device?
+
+
+2011/2/15 Roberto Spadim <roberto@spadim.com.br>:
+> hi guys, i=B4m still looking about queue kernel information
+> i=B4m writing a new read_balacne algorithm, and i need some informati=
+ons
+> about mirror (device) queue
+> total writes/read in queue, or some statistical informations
+> where could i get it?
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>
+
+
 
 --=20
 Roberto Spadim
