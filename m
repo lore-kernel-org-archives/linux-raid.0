@@ -1,29 +1,42 @@
-From: hansbkk@gmail.com
-Subject: Shouldn't --zero-superblock reset the UUID?
-Date: Wed, 16 Feb 2011 23:10:53 +0700
-Message-ID: <AANLkTikuHrSyhmi01LgKGZhMCvAKoXJmutwhfL974zvT@mail.gmail.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: md - cache
+Date: Wed, 16 Feb 2011 16:18:48 +0000
+Message-ID: <AANLkTikxz2sBxJWdbPrddJh5uzO8ksQeMPiyL_zH4Z_Z@mail.gmail.com>
+References: <AANLkTi=qav77Q8pjU8_xhmuvYSkZk7_Hwd3Xe89BWtBK@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTi=qav77Q8pjU8_xhmuvYSkZk7_Hwd3Xe89BWtBK@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I've only seen this problem with RAID1, but perhaps it applies to other levels.
+On 16 February 2011 16:01, Roberto Spadim <roberto@spadim.com.br> wrote=
+:
+> hi guys, i was thinking about cache insues
+> since md =3D multiple devices
+> could we implement a new device used for caches? (port bcache to md,
+> or flashcache (facebook))
+> something like:
+> mdadm --create /dev/md1 --level=3Dcache --cache-device=3D/dev/XXX
+> --data-device=3D/dev/ZZZZ
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-When adding a member partition to an array, the UUID of that partition
-gets set to that of the array (and all the other members)
-
-However, when fail/remove/zero-superblock 'ing a member back out of
-the array, the UUID gets left behind, along with the label and fs
-type.
-
-Ideally the partition would be left in a state as if it never had any
-filesystem at all on it, as when using dd /if=dev/zero and a fresh
-sfdisk.
-
-If this isn't possible, perhaps the zero-superblock option should
-trigger a reminder message to either zero the drive or re-format the
-partition?
-
-Not a huge issue but. . .
+RAM
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
