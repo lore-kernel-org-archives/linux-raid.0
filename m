@@ -1,77 +1,40 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: md road-map: 2011
-Date: Wed, 16 Feb 2011 16:42:26 +0100
-Message-ID: <ijgr9p$7v8$1@dough.gmane.org>
-References: <20110216212751.51a294aa@notabene.brown>
+From: Tobias McNulty <tobias@caktusgroup.com>
+Subject: reshape failure
+Date: Wed, 16 Feb 2011 10:46:32 -0500
+Message-ID: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110216212751.51a294aa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 16/02/2011 11:27, NeilBrown wrote:
->
-> I all,
->   I wrote this today and posted it at
-> http://neil.brown.name/blog/20110216044002
->
-> I thought it might be worth posting it here too...
->
-> NeilBrown
->
+Hi,
 
+I tried to start a reshape over the weekend (RAID6 -> RAID5) and was
+dismayed to see that it was going to take roughly 2 weeks to complete:
 
-The bad block log will be a huge step up for reliability by making 
-failures fine-grained.  Occasional failures are a serious risk, 
-especially with very large disks.  The bad block log, especially 
-combined with the "hot replace" idea, will make md raid a lot safer 
-because you avoid running the array in degraded mode (except for a few 
-stripes).
+md0 : active raid6 sdc[0] sdh[5](S) sdg[4] sdf[3] sde[2] sdd[1]
+5860543488 blocks super 0.91 level 6, 64k chunk, algorithm 2 [5/5]
+[uuuuu] [>....................] reshape = 0.0% (245760/1953514496)
+finish=21189.7min speed=1536K/sec
 
-When a block is marked as bad on a disk, is it possible to inform the 
-file system that the whole stripe is considered bad?  Then the 
-filesystem will (I hope) add that stripe to its own bad block list, move 
-the data out to another stripe (or block, from the fs's viewpoint), thus 
-restoring the raid redundancy for that data.
+The disk that contained the backup file began experiencing SATA errors
+several days into the reshape, due to what turned out to be a faulty
+SATA card.  The card has since been replaced and the RAID1 device that
+contains the backup file successfully resync'ed.
 
-Can a "hot spare" automatically turn into a "hot replace" based on some 
-criteria (such as a certain number of bad blocks)?  Can the replaced 
-drive then become a "hot spare" again?  It may not be perfect, but it is 
-still better than nothing, and useful if the admin can't replace the 
-drive quickly.
+However, when I try to re-start the reshape now, I get the following error:
 
-It strikes me that "hot replace" is much like one of the original disks 
-out of the array and replacing it with a RAID 1 pair using the original 
-disk and a missing second.  The new disk is then added to the pair and 
-they are sync'ed.  Finally, you remove the old disk from the RAID 1 
-pair, then re-assign the drive from the RAID 1 "pair" to the original RAID.
+nas:~# mdadm --assemble /dev/md0 --backup-file=md0.backup /dev/sdc
+/dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh
+mdadm: Failed to restore critical section for reshape, sorry.
 
-I may be missing something, but if I think that using the bad-block list 
-and the non-sync bitmaps, the only thing needed to support hot replace 
-is a way to turn a member drive into a degraded RAID 1 set in an atomic 
-action, and to reverse this action afterwards.  This may also give extra 
-flexibility - it is conceivable that someone would want to keep the RAID 
-1 set afterwards as a reshape (turning a RAID 5 into a RAID 1+0, for 
-example).
+Is my data lost for good?  Is there anything else I can do?
 
-For your non-sync bitmap, would it make sense to have a two-level 
-bitmap?  Perhaps a coarse bitmap in blocks of 32 MB, with each entry 
-showing a state of in sync, out of sync, partially synced, or never 
-synced.  Partially synced coarse blocks would have their own fine bitmap 
-at the 4K block size (or perhaps a bit bigger - maybe 32K or 64K would 
-fit well with SSD block sizes).  Partially synced and out of sync blocks 
-would be gradually brought into sync when the disks are otherwise free, 
-while never synced blocks would not need to be synced at all.
-
-This would let you efficiently store the state during initial builds 
-(everything is marked "never synced" until it is used), and rebuilds are 
-done by marking everything as "out of sync" on the new device.  The 
-two-level structure would let you keep fine-grained sync information 
-from file system discards without taking up unreasonable space.
-
-
-
-
+Thanks,
+Tobias
+--
+Tobias McNulty, Managing Partner
+Caktus Consulting Group, LLC
+http://www.caktusgroup.com
