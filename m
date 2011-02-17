@@ -1,36 +1,53 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
-Date: Thu, 17 Feb 2011 12:42:14 +1100
-Message-ID: <20110217124214.00ad25dd@notabene.brown>
-References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>
+Subject: Re: Shouldn't --zero-superblock reset the UUID?
+Date: Thu, 17 Feb 2011 12:45:16 +1100
+Message-ID: <20110217124516.59c226e4@notabene.brown>
+References: <AANLkTikuHrSyhmi01LgKGZhMCvAKoXJmutwhfL974zvT@mail.gmail.com>
+	<4D5C7801.5070306@fastmail.fm>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>
+In-Reply-To: <4D5C7801.5070306@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Tehonica <matt.tehonica@mac.com>
-Cc: linux-raid@vger.kernel.org
+To: linbloke <linbloke@fastmail.fm>
+Cc: hansbkk@gmail.com, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 19:24:41 -0500 Matt Tehonica <matt.tehonica@mac.com>
-wrote:
+On Thu, 17 Feb 2011 12:21:05 +1100 linbloke <linbloke@fastmail.fm> wrote:
 
-> Hi all,
+> hansbkk@gmail.com wrote:
+> > I've only seen this problem with RAID1, but perhaps it applies to other levels.
+> >
+> > When adding a member partition to an array, the UUID of that partition
+> > gets set to that of the array (and all the other members)
+> >
+> > However, when fail/remove/zero-superblock 'ing a member back out of
+> > the array, the UUID gets left behind, along with the label and fs
+> > type.
+> >
+> > Ideally the partition would be left in a state as if it never had any
+> > filesystem at all on it, as when using dd /if=dev/zero and a fresh
+> > sfdisk.
+> >
+> > If this isn't possible, perhaps the zero-superblock option should
+> > trigger a reminder message to either zero the drive or re-format the
+> > partition?
+> >
+> >   
+> I recall reading on this list that zero-superblock only zero's the first 
+> superblock that it finds. It may be necessary to run mdadm 
+> zero-superblock several times to remove all superblocks that may be on 
+> the device from historical times.
 > 
-> I converted my RAID5 from 8 disks to 6 disks using "mdadm --grow /dev/md0 --array-size" and then "mdadm --grow /dev/md0 --raid-devices=6" and after rebooting, it won't mount.  It has been running fine for about a year.  File system is XFS.  Here is some info on it....
 
-.... uhmm... you did resize the filesystem to be smaller before you resized
-the array to be smaller ... didn't you?
+The latest mdadm will zero all superblocks it can find.
 
-Because if you didn't you have probably just lost 1/3 of your data.
+How I suspec the OP is actually talking about a 'filesystem' uuid rather than
+a 'raid' uuid...  After all it is "along with the label and fs type".
 
-That is the whole point of having to set the array-size first.  You then make
-sure your data is still safe before performing the irreversible reshape.
-
-If you did reshape the XFS filesystem first, then something else must be
-wrong.
+So: kansbkk: What makes you think the uuid is left behind?  Knowing that will
+  help know what uuid you are talking about.
 
 NeilBrown
-
 
