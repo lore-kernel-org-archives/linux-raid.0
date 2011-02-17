@@ -1,77 +1,71 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: raid5/raid6 write performance question
-Date: Thu, 17 Feb 2011 21:13:00 +0100
-Message-ID: <20110217201300.GC3296@lazy.lzy>
-References: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: md road-map: 2011
+Date: Thu, 17 Feb 2011 12:04:54 -0900 (AKST)
+Message-ID: <alpine.LNX.2.01.1102171149110.13914@filesrv1.baby-dragons.com>
+References: <20110216212751.51a294aa@notabene.brown> <20110216202939.GA2756@lazy.lzy> <20110217084826.77f4dbf1@notabene.brown> <4D5C6AAF.1040600@turmel.org> <20110217115257.28a8d174@notabene.brown> <4D5C768A.1010502@turmel.org>
+ <20110217141017.01e30eab@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
+In-Reply-To: <20110217141017.01e30eab@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patrick J. LoPresti" <lopresti@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Feb 17, 2011 at 10:52:07AM -0800, Patrick J. LoPresti wrote:
-> I have a fair amount of experience with hardware RAID devices, but now
-> I am investigating Linux software RAID and I have a question.  Well, a
-> few questions.
-> 
-> The classic problem for RAID5/RAID6 write performance, especially when
-> striping across many drives, is that a single small write requires
-> reading in the entire stripe from all disks to calculate the new
-> syndrome block(s).
-> 
-> Hardware RAID controllers typically mitigate this problem by using a
-> sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
-> that enough blocks will be written in a short period of time to
-> populate an entire stripe.  Once an entire stripe is in the write-back
-> cache, it can be written out with its syndrome blocks without having
-> to read anything.
-> 
-> Of course, the cache has to be non-volatile (battery backed or solid
-> state), because the kernel is expecting stuff it has written to disk
-> not to vanish because of a power failure.
-> 
-> My question is this:  How does Linux RAID5/RAID6 avoid reading an
-> entire stripe every time the kernel flushes a single page?  Does it
-> have a (volatile?) cache?  Or does it rely on the kernel flushing lots
-> of contiguous data in a single request?  Or something else?
+ 	Hello Neil ,
 
-This one I know... :-)
-There is a cache (volatile, since it is in system RAM), which
-can be tuned via sysfs.
+On Thu, 17 Feb 2011, NeilBrown wrote:
+> On Wed, 16 Feb 2011 20:14:50 -0500 Phil Turmel <philip@turmel.org> wrote:
+>> On 02/16/2011 07:52 PM, NeilBrown wrote:
+>>> So when you do the computation on all of the bytes in all of the blocks you
+>>> get a block full of answers.
+>>> If the answers are all the same - that tells you something fairly strong.
+>>> If they are a "all different" then that is also a fairly strong statement.
+>>> But what if most are the same, but a few are different?  How do you interpret
+>>> that?
+>>
+>> Actually, I was thinking about that.  (You suckered me into reading that PDF
+>> some weeks ago.)  I would be inclined to allow the kernel to make corrections
+>> where "all the same" covers individual sectors, per the sector size reported
+>> by the underlying device.
+>
+> To see what I am strongly against having the kernel make automatic
+> corrections like this, see
+>
+>    http://neil.brown.name/blog/20100211050355
+ 	Paraphrasing from the above ,  Mind all I did was skim the article . 
+But this statement from your conclusions leaves me a tad lost .
 
-I've an i7 xeon with 12GiB RAM, 4 HDDs RAID-5  and I set the
-cache to 6GiB. This is dynamically allocated, so it uses RAM
-only when needed.
-Some benchmarks show that you can achieve the full 3 HDDs
-speed in small data writes and sustained write.
+"... It could even be done entirely in user-space by suspending IO to the 
+affected stripe (md already supports that), making the required update, then 
+resuming IO. ..."
 
-I must say I was really impressed by the difference in
-writing performances after increasing the cache, not only
-in the benchmark world, but also with some I/O intensive
-applications.
+ 	Hopefully the quantity of 'required update'ng would be extremely small .
+ 	Tho if not ,  Then we'll start seeing locked at user level reports .  Of 
+course the process should be completely kill'able & nice'able in userspace as 
+long as there is documantation available to our 'informed admin' on howto limit 
+the processes possible abuses to his primary runtime service(s) .  Which will 
+probably be file sharing to other servers or workstations .
+ 	I am quite sure you have thought thru that particular (and many other) 
+scenarios before making that proposal .  Would you please either here OR at the 
+original document above inform us a little more on how you feel you'd like to 
+approach the problem of a 'large update' ?  if a 'large update' should even be 
+possible not even sure of can or not .
 
-It made me rethink about the "quality" of the benchmarks
-you can find around: it seems nobody understood this
-capability of md.
 
-Of course, in case of power failure, without UPS, you
-risk a lot. Nevertheless, it depends on what are the
-overall requirements, I guess.
+ 	I also find myself agreeing with your 'to conclude the conclusion'-) 
+that automaticity should in 'general' be avoided .  An Aware & informed admin 
+is the best method to be used .
 
-> Does Linux RAID keep track of which disk blocks have already been
-> written at least once, so that there is a difference between writing a
-> block for the first time and updating it later?  (But I guess that
-> would not make sense, since eventually all writes become updates as
-> files are created and deleted.)
 
-This one I do not know... :-)
+ 	And finally BUT not the least ,  Thank you .  Even tho we have our 
+differences of opinions on other aspects of the MD structure .
 
-bye,
-
+ 		Tia ,  JimL
 -- 
-
-piergiorgio
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 3237     Holden Road |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
++------------------------------------------------------------------+
