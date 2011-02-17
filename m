@@ -1,68 +1,102 @@
 From: David Brown <david@westcontrol.com>
-Subject: Re: high throughput storage server?
-Date: Thu, 17 Feb 2011 11:39:10 +0100
-Message-ID: <ijitt7$giq$1@dough.gmane.org>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5A7198.7060607@hardwarefreak.com> <ijdvmn$4ff$1@dough.gmane.org> <4D5C5EAA.3020208@hardwarefreak.com> <ijhpv7$o84$1@dough.gmane.org> <4D5C6F8E.9020802@hardwarefreak.com>
+Subject: Re: md road-map: 2011
+Date: Thu, 17 Feb 2011 11:45:35 +0100
+Message-ID: <ijiu99$ill$1@dough.gmane.org>
+References: <20110216212751.51a294aa@notabene.brown> <ijgr9p$7v8$1@dough.gmane.org> <20110217083531.3090a348@notabene.brown> <ijhje3$ocd$1@dough.gmane.org> <20110217100139.7520893d@notabene.brown> <ijhq7p$pjv$1@dough.gmane.org> <20110217010455.GA16324@www2.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C6F8E.9020802@hardwarefreak.com>
+In-Reply-To: <20110217010455.GA16324@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/02/2011 01:45, Stan Hoeppner wrote:
-> David Brown put forth on 2/16/2011 6:26 PM:
+On 17/02/2011 02:04, Keld J=F8rn Simonsen wrote:
+> On Thu, Feb 17, 2011 at 01:30:49AM +0100, David Brown wrote:
+>> On 17/02/11 00:01, NeilBrown wrote:
+>>> On Wed, 16 Feb 2011 23:34:43 +0100 David Brown<david.brown@hesbynet=
+t.no>
+>>> wrote:
+>>>
+>>>> I thought there was some mechanism for block devices to report bad
+>>>> blocks back to the file system, and that file systems tracked bad =
+block
+>>>> lists.  Modern drives automatically relocate bad blocks (at least,=
+ they
+>>>> do if they can), but there was a time when they did not and it was=
+ up to
+>>>> the file system to track these.  Whether that still applies to mod=
+ern
+>>>> file systems, I do not know - they only file system I have studied=
+ in
+>>>> low-level detail is FAT16.
+>>>
+>>> When the block device reports an error the filesystem can certainly=
+ record
+>>> that information in a bad-block list, and possibly does.
+>>>
+>>> However I thought you were suggesting a situation where the block d=
+evice
+>>> could succeed with the request, but knew that area of the device wa=
+s of low
+>>> quality.
+>>
+>> I guess that is what I was trying to suggest, though not very clearl=
+y.
+>>
+>>> e.g. IO to a block on a stripe which had one 'bad block'.  The IO s=
+hould
+>>> succeed, but the data isn't as safe as elsewhere.  It would be nice=
+ if we
+>>> could tell the filesystem that fact, and if it could make use of it=
+=2E But we
+>>> currently cannot.   We can say "success" or "failure", but we canno=
+t say
+>>> "success, but you might not be so lucky next time".
+>>>
+>>
+>> Do filesystems re-try reads when there is a failure?  Could you retu=
+rn
+>> fail on one read, then success on a re-read, which could be interpre=
+ted
+>> as "dying, but not yet dead" by the file system?
 >
->> On 17/02/11 00:32, Stan Hoeppner wrote:
->
->>> RAID level space/cost efficiency from a TCO standpoint is largely irrelevant
->>> today due to the low price of mech drives.  Using the SATABeast as an example,
->>> the cost per TB of a 20TB RAID 10 is roughly $1600/TB and a 20TB RAID 6 is about
->>> $1200/TB.  Given all the advantages of RAID 10 over RAID 6 the 33% premium is
->>> more than worth it.
->
->> I don't think it is fair to give general rules like that.  In this particular
->
-> The IT press does it every day.  CTOs read those articles.  In many cases it's
-> their primary source of information.  Speak in terms CTOs (i.e. those holding
-> the purse) understand.
+> This should not be a file system feature. The file system is built up=
+on
+> the raid, and in mirrorred rait types like raid1 and raid10, and also
+> other raid types, you cannot be sure which specific drive and sector =
+the
+> data was read from - it could be one out of many (typically two) plac=
+es.
+> So the bad blocks of a raid is a feature of the raid and its individu=
+al
+> drives, not the file system. If it was a property of the file system,
+> then the fs should be aware of the underlying raid topology, and know=
+ if
+> this was a parity block or data block of raid5 or raid6, or which
+> mirror instance of a raid1/10 type which  was involved.
 >
 
-I work at a small company - I get to read the articles, make the 
-recommendations, and build the servers.  So I can put more emphasis on 
-what I think is technically the best solution for us, rather than what 
-sounds good in the press.  Of course, the other side of the coin is that 
-being a small company with modest server needs, I don't get to play with 
-20 TB raid systems!
+Thanks for the explanation.
 
->> case, that might be how the sums work out.  But in other cases, using RAID 10
->> instead of RAID 6 might mean stepping up in chassis or controller size and
->> costs.  Also remember that RAID 10 is not better than RAID 6 in every way - a
->> RAID 6 array will survive any two failed drives, while with RAID 10 an unlucky
->> pairing of failed drives will bring down the whole raid.  Different applications
->> require different balances here.
->
-> I'm not sure about being "fair" but it directly relates to the original question
-> that started this thread.  The OP wanted performance and space with a preference
-> for performance.  This demonstrates he can get the performance for a ~33% cost
-> premium.  He didn't mention a budget limit, only that most vendor figures were
-> too high.
->
+I guess my worry is that if md layer has tracked a bad block on a disk,=
+=20
+then that stripe will be in a degraded mode.  It's great that it will=20
+still work, and it's great that the bad block list means that it is=20
+/only/ that stripe that is degraded - not the whole raid.
 
-I agree that RAID 10 sounds like a match for the OP.  All I am saying is 
-that it is not necessarily the best choice in general, and not just 
-because of the initial purchase price.
+But I'm hoping there can be some sort of relocation somewhere=20
+(ultimately it doesn't matter if it is handled by the file system, or b=
+y=20
+md for the whole stripe, or by md for just that disk block, or by the=20
+disk itself), so that you can get raid protection again for that stripe=
+=2E
 
-> Also, you're repeating points I've made in this (and other) threads back to me.
->   Try to keep up David. ;)
->
 
-I'm doing my best!  I believe I've got a fair understanding of various 
-sorts of RAID systems, but I am totally missing real-world experience of 
-anything more advanced than a four disk setup.  Bigger raid setups is 
-only a hobby interest for me at the moment, so I'm learning as I go 
-here.  And you write such a lot here that it's hard for an amateur to 
-take it all in :-)
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
