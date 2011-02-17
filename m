@@ -1,111 +1,132 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Linux software RAID assistance
-Date: Thu, 17 Feb 2011 08:48:19 -0500
-Message-ID: <4D5D2723.1010101@turmel.org>
-References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5BD678.2050200@gmail.com>	<4D5BE119.7000804@turmel.org>	<4D5C0E17.3060306@gmail.com>	<4D5C140F.9010301@turmel.org>	<4D5C1508.3040308@gmail.com>	<4D5C15D3.1070608@turmel.org>	<4D5C167C.7000101@turmel.org>	<4D5C1CF8.1020507@gmail.com>	<4D5C1E0B.9060300@turmel.org>	<4D5C2061.4060106@gmail.com>	<4D5C2143.3000907@turmel.org>	<4D5C2260.3020800@gmail.com>	<4D5C273E.7020609@turmel.org>	<4D5C4176.80604@gmail.com>	<4D5C4204.5020106@turmel.org>	<1377706586882297883@unknownmsgid>	<4D5C6016.6060809@turmel.org> <AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: high throughput storage server?
+Date: Thu, 17 Feb 2011 11:54:36 -0200
+Message-ID: <AANLkTimdxUPRnS8AwDeNaoZETVZ8vsL_D_yTWnTqjOeO@mail.gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+	<4D5D017B.50109@anonymous.org.uk>
+	<AANLkTi=4TbNNfYQTStryyK9=pW-KD_JqO=ZmCkiH8MvL@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060200030107030205010800"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
+In-Reply-To: <AANLkTi=4TbNNfYQTStryyK9=pW-KD_JqO=ZmCkiH8MvL@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Mcnair <simonmcnair@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------060200030107030205010800
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+building it on only one machine...
+if you want 50gbps, put six (one more) for network access (you need
+many pci-express slots with 4x(10gbps) or 8x(20gbps))
+i use raid10 for redundancy and speed
+you can do raid1 for redundancy and after raid0,4,5,6 over raid1
+devices for better speed
 
-On 02/17/2011 08:26 AM, Simon Mcnair wrote:
-> Phil,
-> After a couple of attempts I realised that all I needed to do was
-> ./backup.sh sdi rather than specifying ./backup.sh /dev/sdi  schoolboy
-> error huh, rtfm.
-> 
-> I tried modifying the code, so I could kick them all off at once, but
-> I wanted to check that this would work from a multithreaded/sane
-> perspective (yes I know it's a bit of IO, but iotop seems to infer I'm
-> only getting 10M/s throughput from the disk anyway).
+sata/sas/raid controllers? sata is very cheap you can use SSD with
+sata2 interface, sas have fasters (less accestime) hard disks with
+10k/15k rpm
 
-That sounds suspiciously like a 100 meg ethernet bottleneck, so parallel operation won't help.  If so, this'll take a very long time.
+ram? with more ran =3D more cache/buffers low disks usage, more read sp=
+eed
+cpu? i don't know what to use, but it's a big machine maybe you need
+servers motherboards (5 pci-express just for network =3D big
+motherboard, big motherboard =3D many cpus) try with only one cpu with
+6cores hiperthread, etc. if it's not enought put a second cpu
 
-> is this code kosha ?
+operational system? linux with md =3D), it's a md list heehhe, maybe a
+netbsd or freebsd or windows works too
+file server? nfs, samba
+filesystem? hummmmmm a cluster fs is good here, but a single ext4,
+xfs, reiserfs could work, your energy is good? you want jornaling?
+redundancy/cluster? beowolf openmosix, others. heartbeat, placemark, ot=
+hers.
+sql database? mysql have ndb for clusters, myisam is fast without some
+features, innodb is slower with many features, ariadb =3D myisam but
+slower to write with fail safe feature. oracle is good but mysql is
+low resource consuming. postgres is nice too, maybe you app will tell
+you what to use
+network? many 10gbit with bounding(linux module) on round robin or
+another good(working) loadbalance
 
-Looks pretty good.  I've attached a slight update with your changes and a bugfix.
+2011/2/17 Roberto Spadim <roberto@spadim.com.br>:
+> with more network cards =3D more network gbps
+> with better (faster) rams =3D more disks reads
+> with more raid0/4/5/6 =3D more speed on disks reads
+> with more raid1 mirrors =3D more security
+> with more sas/sata/raid controllers =3D more GB/TB on storage
+> with more anything ~=3D more money
+> just know what numbers you want and make it work
+>
+> 2011/2/17 John Robinson <john.robinson@anonymous.org.uk>:
+>> On 14/02/2011 23:59, Matt Garman wrote:
+>> [...]
+>>>
+>>> The requirement is basically this: around 40 to 50 compute machines
+>>> act as basically an ad-hoc scientific compute/simulation/analysis
+>>> cluster. =A0These machines all need access to a shared 20 TB pool o=
+f
+>>> storage. =A0Each compute machine has a gigabit network connection, =
+and
+>>> it's possible that nearly every machine could simultaneously try to
+>>> access a large (100 to 1000 MB) file in the storage pool. =A0In oth=
+er
+>>> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
+>>
+>> I'd recommend you analyse that requirement more closely. Yes, you ha=
+ve 50
+>> compute machines with GigE connections so it's possible they could a=
+ll
+>> demand data from the file store at once, but in actual use, would th=
+ey?
+>>
+>> For example, if these machines were each to demand a 100MB file, how=
+ long
+>> would they spend computing their results from it? If it's only 1 sec=
+ond,
+>> then you would indeed need an aggregate bandwidth of 50Gbps[1]. If i=
+t's 20
+>> seconds processing, your filer only needs an aggregate bandwidth of =
+2.5Gbps.
+>>
+>> So I'd recommend you work out first how much data the compute machin=
+es can
+>> actually chew through and work up from there, rather than what their=
+ network
+>> connections could stream through and work down.
+>>
+>> Cheers,
+>>
+>> John.
+>>
+>> [1] I'm assuming the compute nodes are fetching the data for the nex=
+t
+>> compute cycle while they're working on this one; if they're not you'=
+re
+>> likely making unnecessary demands on your filer while leaving your c=
+ompute
+>> nodes idle.
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>
 
-> #! /bin/bash
-> #
-> function usage() {
->        printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
->        printf "'devname' must be a relative path in /dev/ to the
-> desired block device.\n"
->        exit 1
-> }
-> 
-> # Verify the supplied name is a device
-> test -b "/dev/$1" || usage
-> 
-> # Convert path separators and spaces into dashes
-> outfile="`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
-> 
-> # Create a side-stream for computing the MD5 of the data read
-> fifo=`mktemp -u`
-> mkfifo $fifo || exit
-> md5sum -b <$fifo >$2/$outfile.md5 &
-> 
-> # Read the device and compress it
-> dd if="/dev/$1" bs=1M | tee 2>$fifo | gzip >$2/$outfile.gz
-> 
-> # Wait for the background task to close
-> wait
-> 
-> I was a little concerned as I didn't see the hdd drive LED light up
-> for my attempt even though the file was growing nicely on my CIFS
-> share.  I'm dumping it on the 5x2TB disks (JBOD) in my windows 7 box
-> as my Thecus is not a happy chappy and I need time to mount the DOM
-> module in another machine to find out why.
 
-If you're willing to dismantle the thecus, directly connecting its drives to your crippled system will make things go much faster.  You've got four empty motherboard SATA ports.  You just have to watch out for the power load.
 
-Phil
-
---------------060200030107030205010800
-Content-Type: application/x-sh;
- name="block2gz.sh"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="block2gz.sh"
-
-#! /bin/bash
-#
-function usage() {
-	printf "Usage:\n\t%s devname foldername\n\n" "`basename \"$0\"`"
-	printf "'devname' must be a relative path in /dev/ to the desired block device.\n"
-	printf "'foldername' is the directory that will receive the image and md5 files.\n"
-	exit 1
-}
-
-# Verify the supplied name is a device
-test -b "/dev/$1" || usage
-
-# Verify the supplied folder is a directory
-test -d "$2" || usage
-
-# Convert path separators and spaces into dashes
-outfile="`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
-
-# Create a side-stream for computing the MD5 of the data read
-fifo=`mktemp -u`
-mkfifo $fifo || exit
-md5sum -b <$fifo >$2/$outfile.md5 &
-
-# Read the device and compress it
-dd if="/dev/$1" bs=1M | tee 2>$fifo | gzip >$2/$outfile.gz
-
-# Wait for the background task to close
-wait
-rm -f "$fifo"
-
---------------060200030107030205010800--
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
