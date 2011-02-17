@@ -1,32 +1,74 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: high throughput storage server?
-Date: Thu, 17 Feb 2011 01:00:58 +0100
-Message-ID: <20110217000058.GA16130@www2.open-std.org>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5A7198.7060607@hardwarefreak.com> <ijdvmn$4ff$1@dough.gmane.org> <4D5C5EAA.3020208@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: md road-map: 2011
+Date: Wed, 16 Feb 2011 19:11:14 -0500
+Message-ID: <4D5C67A2.5090306@turmel.org>
+References: <20110216212751.51a294aa@notabene.brown>	<4D5C2776.2080609@turmel.org> <20110217084403.46b4d8ee@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D5C5EAA.3020208@hardwarefreak.com>
+In-Reply-To: <20110217084403.46b4d8ee@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 16, 2011 at 05:32:58PM -0600, Stan Hoeppner wrote:
-> David Brown put forth on 2/15/2011 7:39 AM:
+On 02/16/2011 04:44 PM, NeilBrown wrote:
+[trim /]
+> On Wed, 16 Feb 2011 14:37:26 -0500 Phil Turmel <philip@turmel.org> wrote:
+>> It occurred to me that if you go to the trouble (and space and performance)
+>> to create and maintain metadata for lists of bad blocks, and separate
+>> metadata for sync status aka "trim", or hot-replace status, or reshape-status,
+>> or whatever features are dreamt up later, why not create an infrastructure to
+>> carry all of it efficiently?
+>>
+>> David Brown suggested a multi-level metadata structure.  I concur, but somewhat
+>> more generic:
+>> 	Level 1:  Coarse bitmap, set bit indicates 'look at level 2'
+>> 	Level 2:  Fine bitmap, set bit indicates 'look at level 3'
+>> 	Level 3:  Extent list, with starting block, length, and feature payload
+>>
+>> The bitmap levels are purely for hot-path performance.
+>>
+>> As an option, it should be possible to spread the detailed metadata through the
+>> data area, possibly in chunk-sized areas spread out at some user-defined
+>> interval.  "meta-span", perhaps.  Then resizing partitions that compose an
+>> array would be less likely to bump up against metadata size limits.  The coarse
+>> bitmap should stay near the superblock, of course.
 > 
-> RAID level space/cost efficiency from a TCO standpoint is largely irrelevant
-> today due to the low price of mech drives.  Using the SATABeast as an example,
-> the cost per TB of a 20TB RAID 10 is roughly $1600/TB and a 20TB RAID 6 is about
-> $1200/TB.  Given all the advantages of RAID 10 over RAID 6 the 33% premium is
-> more than worth it.
+> This is starting to sound a lot more like a filesystem than a RAID system.
 
-I assume that you with 20 TB mean the payload space in both places, that
-is for the Linux MD RAID10 you actually have 40 TB of raw disk space.
-With the Linux MD raid10 solution you furthermore can enjoy an almost
-double up of the IO reading speed, involving 20 * 2 TB spindles compared
-to 12 * 2 TB spindles.
+Heh.  But if you are going to start adding block and/or block-extent metadata for
+a variety of features, common code and storage for it should be an all-around win.
 
-best regards
-keld
+> I really don't want there to be so much metadata that I am tempted to spread
+> it out among the data.  I think that implies too much complexity.
+
+It would be complex, yes.  Same math as computing block locations within raid 5
+stripes, though.
+
+> Maybe that is a good place to draw the line:  If some metadata doesn't fit
+> easily at the start of end of the devices, it has no place in RAID - you
+> should add it to a filesystem instead.
+
+I think that's arbitrary, but its moot until someone tries to implement it.
+
+>> Personally, I'd like to see the bad-block feature actually perform block
+>> remapping, much like hard drives themselves do, but with the option to unmap the
+>> block if a later write succeeds.  Using one retry per array restart as you
+>> described makes a lot of sense.  In any case, remapping would retain redundancy
+>> where applicable short of full drive failure or remap overflow.
+> 
+> If the hard drives already do this, why should md try to do it as well??
+> If a hard drive has had some many write errors that it has used up all of its
+> spare space, then it is long past time to replace it.
+
+True enough.
+
+>> My $0.02, of course.
+> 
+> Here in .au, the smallest legal tender is $0.05 - but thanks anyway :-)
+
+I guess the offer of "a penny for your thoughts" doesn't work down under ;)
+
+Phil
