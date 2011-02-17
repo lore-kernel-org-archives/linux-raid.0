@@ -1,48 +1,22 @@
-From: linbloke <linbloke@fastmail.fm>
-Subject: Re: Shouldn't --zero-superblock reset the UUID?
-Date: Thu, 17 Feb 2011 12:21:05 +1100
-Message-ID: <4D5C7801.5070306@fastmail.fm>
-References: <AANLkTikuHrSyhmi01LgKGZhMCvAKoXJmutwhfL974zvT@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
+Date: Wed, 16 Feb 2011 20:30:27 -0500
+Message-ID: <4D5C7A33.90007@turmel.org>
+References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikuHrSyhmi01LgKGZhMCvAKoXJmutwhfL974zvT@mail.gmail.com>
+In-Reply-To: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Matt Tehonica <matt.tehonica@mac.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hansbkk@gmail.com wrote:
-> I've only seen this problem with RAID1, but perhaps it applies to other levels.
->
-> When adding a member partition to an array, the UUID of that partition
-> gets set to that of the array (and all the other members)
->
-> However, when fail/remove/zero-superblock 'ing a member back out of
-> the array, the UUID gets left behind, along with the label and fs
-> type.
->
-> Ideally the partition would be left in a state as if it never had any
-> filesystem at all on it, as when using dd /if=dev/zero and a fresh
-> sfdisk.
->
-> If this isn't possible, perhaps the zero-superblock option should
-> trigger a reminder message to either zero the drive or re-format the
-> partition?
->
->   
-I recall reading on this list that zero-superblock only zero's the first 
-superblock that it finds. It may be necessary to run mdadm 
-zero-superblock several times to remove all superblocks that may be on 
-the device from historical times.
+On 02/16/2011 07:24 PM, Matt Tehonica wrote:
+> Hi all,
+> 
+> I converted my RAID5 from 8 disks to 6 disks using "mdadm --grow /dev/md0 --array-size" and then "mdadm --grow /dev/md0 --raid-devices=6" and after rebooting, it won't mount.  It has been running fine for about a year.  File system is XFS.  Here is some info on it....
 
-hth
+Did you resize (shrink) the XFS filesystem first?
 
-> Not a huge issue but. . .
->   
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
