@@ -1,55 +1,136 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Mixing mdadm versions
-Date: Thu, 17 Feb 2011 08:25:14 -0500
-Message-ID: <4D5D21BA.6060804@turmel.org>
-References: <AANLkTi=g2V9n_AEEGX58d1PkTLRj7HtxT=AGEaLQXNz1@mail.gmail.com>
+From: Simon Mcnair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Thu, 17 Feb 2011 13:26:34 +0000
+Message-ID: <AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
+References: <4D540F6C.6050904@gmail.com>
+	<20110215155315.55d35b8e@notabene.brown>
+	<4D5A92F3.1090004@turmel.org>
+	<4D5BD678.2050200@gmail.com>
+	<4D5BE119.7000804@turmel.org>
+	<4D5C0E17.3060306@gmail.com>
+	<4D5C140F.9010301@turmel.org>
+	<4D5C1508.3040308@gmail.com>
+	<4D5C15D3.1070608@turmel.org>
+	<4D5C167C.7000101@turmel.org>
+	<4D5C1CF8.1020507@gmail.com>
+	<4D5C1E0B.9060300@turmel.org>
+	<4D5C2061.4060106@gmail.com>
+	<4D5C2143.3000907@turmel.org>
+	<4D5C2260.3020800@gmail.com>
+	<4D5C273E.7020609@turmel.org>
+	<4D5C4176.80604@gmail.com>
+	<4D5C4204.5020106@turmel.org>
+	<1377706586882297883@unknownmsgid>
+	<4D5C6016.6060809@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=g2V9n_AEEGX58d1PkTLRj7HtxT=AGEaLQXNz1@mail.gmail.com>
+In-Reply-To: <4D5C6016.6060809@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/17/2011 05:21 AM, hansbkk@gmail.com wrote:
-> I've created and manage sets of arrays with mdadm v3.1.4 - I've been
-> using System Rescue CD and Grml for my sysadmin tasks, as they are
-> based on fairly up-to-date gentoo and debian and have a lot of
-> convenient tools not available on the production OS, a "stable" (read:
-> old packages) flavor of RHEL, which turns out is running mdadm v2.6.4.
-> I spec'd v1.2 metadata for the big raid6 storage arrays, but kept to
-> 0.90 for the smaller raid1's as some of those are my boot devices.
+Phil,
+After a couple of attempts I realised that all I needed to do was
+=2E/backup.sh sdi rather than specifying ./backup.sh /dev/sdi  schoolbo=
+y
+error huh, rtfm.
 
-The default data offset for for v1.1 and v1.2 meta-data changed in mdadm v3.1.2.  If you ever need to use the running system to "mdadm --create --assume-clean" in a recovery effort, the data segments will *NOT* line up if the original array was created with a current version of mdadm.
+I tried modifying the code, so I could kick them all off at once, but
+I wanted to check that this would work from a multithreaded/sane
+perspective (yes I know it's a bit of IO, but iotop seems to infer I'm
+only getting 10M/s throughput from the disk anyway).
 
-(git commit a380e2751efea7df "super1: encourage data alignment on 1Meg boundary")
+is this code kosha ?
 
-> As per a previous thread, I've noticed on the production OS the output
-> of mdadm -E on a member returns a long string of "failed, failed". The
-> more modern mdadm reports everything's OK.
-> 
-> - Also mixed in are some "fled"s - whazzup with that?
-> 
-> Unfortunately the server is designed to run as a packaged appliance
-> and uses the rpath/conary package manager, so I'm hesitant to fiddle
-> around upgrading some bits, afraid that other bits will break - the
-> sysadmin tools are run from a web interface to a bunch of PHP scripts.
-> 
-> So, here are my questions:
-> 
-> As long as the more recent versions of mdadm report that everything's
-> OK, can I ignore the mishmosh output of the older mdadm -E report?
+#! /bin/bash
+#
+function usage() {
+       printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
+       printf "'devname' must be a relative path in /dev/ to the
+desired block device.\n"
+       exit 1
+}
 
-Don't know.
+# Verify the supplied name is a device
+test -b "/dev/$1" || usage
 
-> And am I correct in thinking that from now on I should create
-> everything with the older native packages that are actually going to
-> serve the arrays in production?
+# Convert path separators and spaces into dashes
+outfile=3D"`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
 
-If there's a more modern Red Hat mdadm package that you can include in your appliance, that would be my first choice.  After testing with the web tools, though.
+# Create a side-stream for computing the MD5 of the data read
+fifo=3D`mktemp -u`
+mkfifo $fifo || exit
+md5sum -b <$fifo >$2/$outfile.md5 &
 
-Otherwise, I would say "Yes", for the above reason.  However, the reverse problem can also occur.  You won't be able to use a modern mdadm to do a "--create --assume-clean" on an offline system.  That's what happened to Simon in another thread.  Avoiding that might be worth the effort qualifying a newer version of mdadm.
+# Read the device and compress it
+dd if=3D"/dev/$1" bs=3D1M | tee 2>$fifo | gzip >$2/$outfile.gz
 
-Phil
+# Wait for the background task to close
+wait
+
+I was a little concerned as I didn't see the hdd drive LED light up
+for my attempt even though the file was growing nicely on my CIFS
+share.  I'm dumping it on the 5x2TB disks (JBOD) in my windows 7 box
+as my Thecus is not a happy chappy and I need time to mount the DOM
+module in another machine to find out why.
+
+cheers
+Simon
+
+
+On 16 February 2011 23:39, Phil Turmel <philip@turmel.org> wrote:
+> On 02/16/2011 05:44 PM, Simon Mcnair wrote:
+>> I just went to bed and one last question popped in to my mind. Since
+>> there is a fair timezone gap I thought I'd be presumptuous and ask i=
+t
+>> in the hope I can turn it around a bit quicker in the morning.
+>>
+>> My suspicion is that once I have 5 formatted 2tb drives I may be luc=
+ky
+>> to get 10x 1tb dd images on to it. Can I feed the dd process in to
+>> tar, bzip2, zip or something else which will give me enough space to
+>> fit the images on ?
+>>
+>> Will I get more usable space from 5x2tb partitions or from 1xspanned
+>> volume ? (the thecus pretty much only allows you to create raid
+>> volumes so a jbod needs to be 5x1tb arrays or 1 spanned volume or
+>> stripe).
+>
+> I'd use one spanned volume, and gzip. =A0I'd simultaneously generate =
+an md5sum while streaming to your thecus. =A0A script like so:
+>
+> #! /bin/bash
+> #
+> function usage() {
+> =A0 =A0 =A0 =A0printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
+> =A0 =A0 =A0 =A0printf "'devname' must be a relative path in /dev/ to =
+the desired block device.\n"
+> =A0 =A0 =A0 =A0exit 1
+> }
+>
+> # Verify the supplied name is a device
+> test -b "/dev/$1" || usage
+>
+> # Convert path separators and spaces into dashes
+> outfile=3D"`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
+>
+> # Create a side-stream for computing the MD5 of the data read
+> fifo=3D`mktemp -u`
+> mkfifo $fifo || exit
+> md5sum -b <$fifo >/mnt/thecus/$outfile.md5 &
+>
+> # Read the device and compress it
+> dd if=3D"/dev/$1" bs=3D1M | tee 2>$fifo | gzip >/mnt/thecus/$outfile.=
+gz
+>
+> # Wait for the background task to close
+> wait
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
