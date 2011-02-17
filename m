@@ -1,143 +1,76 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] Re: User space RAID-6 access
-Date: Thu, 17 Feb 2011 21:01:52 +0100
-Message-ID: <20110217200152.GB3296@lazy.lzy>
-References: <20110131202054.GA15712@lazy.lzy>
- <20110201075259.4beaf501@notabene.brown>
- <20110205173334.GA5952@lazy.lzy>
- <20110206075820.08fc19c9@notabene.brown>
- <20110207222459.GA25471@lazy.lzy>
- <20110208094952.49745c7b@notabene.brown>
- <20110209184734.GA7169@lazy.lzy>
- <20110217172332.2fbb5694@notabene.brown>
+Subject: Re: raid5/raid6 write performance question
+Date: Thu, 17 Feb 2011 21:13:00 +0100
+Message-ID: <20110217201300.GC3296@lazy.lzy>
+References: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110217172332.2fbb5694@notabene.brown>
+In-Reply-To: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: "Patrick J. LoPresti" <lopresti@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 17, 2011 at 05:23:32PM +1100, NeilBrown wrote:
-> On Wed, 9 Feb 2011 19:47:34 +0100 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
+On Thu, Feb 17, 2011 at 10:52:07AM -0800, Patrick J. LoPresti wrote:
+> I have a fair amount of experience with hardware RAID devices, but now
+> I am investigating Linux software RAID and I have a question.  Well, a
+> few questions.
 > 
-> > > I have applied some patch - with some formatting changes to make it consistent
-> > > with the rest of the code.
-> > > 
-> > > I don't really have time to look more deeply at it at the moment.
-> > > Maybe someone else will?...
-> > 
-> > Hi Neil,
-> > 
-> > thanks for including this in git.
-> > 
-> > Actually I did it look at it :-) and I already found a
-> > couple of issues, below is a small fix patch.
+> The classic problem for RAID5/RAID6 write performance, especially when
+> striping across many drives, is that a single small write requires
+> reading in the entire stripe from all disks to calculate the new
+> syndrome block(s).
 > 
-> Sorry for delay - I have applied this now.
+> Hardware RAID controllers typically mitigate this problem by using a
+> sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
+> that enough blocks will be written in a short period of time to
+> populate an entire stripe.  Once an entire stripe is in the write-back
+> cache, it can be written out with its syndrome blocks without having
+> to read anything.
+> 
+> Of course, the cache has to be non-volatile (battery backed or solid
+> state), because the kernel is expecting stuff it has written to disk
+> not to vanish because of a power failure.
+> 
+> My question is this:  How does Linux RAID5/RAID6 avoid reading an
+> entire stripe every time the kernel flushes a single page?  Does it
+> have a (volatile?) cache?  Or does it rely on the kernel flushing lots
+> of contiguous data in a single request?  Or something else?
 
-No, problem, I know it could happen, just concerned
-about the quality of the patch... :-)
- 
-> > One question about offsets.
-> > I noticed that offsets seems to be defined per component,
-> > in the md software stack.
-> > I mean, looking at sysfs, the offset are inside md/dev-sdX/offset
-> > or available with mdadm -E /dev/sdX
-> > It seems possible that different components have different
-> > offset (I can imagine this happening with different sizes).
-> > 
-> > Now, from inside "test_stripe" there is no information about
-> > the RAID itself, I mean the device, nor about the metadata type.
-> > 
-> > What would be the best way to get the offsets inside "restripe.c"?
-> > 
-> > 1) popen "mdadm -E ..." and grep the "Data Offset" field.
-> > 2) pass one single offset as command line parameter.
-> > 3) add the whole md device as command line parameter, removing
-> > the single devices, and use sysfs.
-> 
-> As this is really just for testing, I would add a :offset  suffix to the
-> device names where the offset is in sectors.
-> So:
->    /dev/sda
-> means read from the start of /dev/sda
-> 
->    /dev/sda:2048
-> 
-> means start 1Meg into /dev/sda.
-> 
-> That should be easy to parse and is quite general.
-> 
-> If you wanted to create separate functionality that could be given an active
-> md device and would read from the component devices, I would link with
-> sysfs.c and use those routines to read info from sysfs and use that to guide
-> the code which finds the data.
-> 
-> Make sense?
+This one I know... :-)
+There is a cache (volatile, since it is in system RAM), which
+can be tuned via sysfs.
 
-Thanks for the hint, I guess it makes a lot of sense.
+I've an i7 xeon with 12GiB RAM, 4 HDDs RAID-5  and I set the
+cache to 6GiB. This is dynamically allocated, so it uses RAM
+only when needed.
+Some benchmarks show that you can achieve the full 3 HDDs
+speed in small data writes and sustained write.
 
-I'll try the ":", it seems to me reasonable for the time being.
-Eventually, I could consider to write a separate piece of code
-linking restripe.c and sysfs.c together.
+I must say I was really impressed by the difference in
+writing performances after increasing the cache, not only
+in the benchmark world, but also with some I/O intensive
+applications.
 
-Thanks again,
+It made me rethink about the "quality" of the benchmarks
+you can find around: it seems nobody understood this
+capability of md.
+
+Of course, in case of power failure, without UPS, you
+risk a lot. Nevertheless, it depends on what are the
+overall requirements, I guess.
+
+> Does Linux RAID keep track of which disk blocks have already been
+> written at least once, so that there is a difference between writing a
+> block for the first time and updating it later?  (But I guess that
+> would not make sense, since eventually all writes become updates as
+> files are created and deleted.)
+
+This one I do not know... :-)
 
 bye,
-
-pg
-
-> > bye,
-> > 
-> > pg
-> > 
-> > 
-> > diff -uN a/restripe.c b/restripe.c
-> > --- a/restripe.c	2011-02-09 19:31:18.989495816 +0100
-> > +++ b/restripe.c	2011-02-09 19:32:42.597955058 +0100
-> > @@ -430,7 +430,8 @@
-> >  
-> >  
-> >  		if((Px != 0) && (Qx != 0)) {
-> > -			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]) & 0xFF;
-> > +			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]);
-> > +			if(data_id < 0) data_id += 255;
-> >  			diskD = geo_map(data_id, start/chunk_size,
-> >  					data_disks + 2, level, layout);
-> >  			curr_broken_disk = diskD;
-> > @@ -439,6 +440,9 @@
-> >  		if((Px == 0) && (Qx == 0))
-> >  			curr_broken_disk = curr_broken_disk;
-> >  
-> > +		if(curr_broken_disk >= data_disks + 2)
-> > +			broken_status = 2;
-> > +
-> >  		switch(broken_status) {
-> >  		case 0:
-> >  			if(curr_broken_disk != -1) {
-> > @@ -450,10 +454,6 @@
-> >  		case 1:
-> >  			if(curr_broken_disk != prev_broken_disk)
-> >  				broken_status = 2;
-> > -
-> > -			if(curr_broken_disk >= data_disks + 2)
-> > -				broken_status = 2;
-> > -
-> >  			break;
-> >  
-> >  		case 2:
-> >  
-> > bye,
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 
