@@ -1,60 +1,98 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 02:04:55 +0100
-Message-ID: <20110217010455.GA16324@www2.open-std.org>
-References: <20110216212751.51a294aa@notabene.brown> <ijgr9p$7v8$1@dough.gmane.org> <20110217083531.3090a348@notabene.brown> <ijhje3$ocd$1@dough.gmane.org> <20110217100139.7520893d@notabene.brown> <ijhq7p$pjv$1@dough.gmane.org>
+Date: Wed, 16 Feb 2011 20:14:50 -0500
+Message-ID: <4D5C768A.1010502@turmel.org>
+References: <20110216212751.51a294aa@notabene.brown>	<20110216202939.GA2756@lazy.lzy>	<20110217084826.77f4dbf1@notabene.brown>	<4D5C6AAF.1040600@turmel.org> <20110217115257.28a8d174@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ijhq7p$pjv$1@dough.gmane.org>
+In-Reply-To: <20110217115257.28a8d174@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 17, 2011 at 01:30:49AM +0100, David Brown wrote:
-> On 17/02/11 00:01, NeilBrown wrote:
-> >On Wed, 16 Feb 2011 23:34:43 +0100 David Brown<david.brown@hesbynett.no>
-> >wrote:
-> >
-> >>I thought there was some mechanism for block devices to report bad
-> >>blocks back to the file system, and that file systems tracked bad block
-> >>lists.  Modern drives automatically relocate bad blocks (at least, they
-> >>do if they can), but there was a time when they did not and it was up to
-> >>the file system to track these.  Whether that still applies to modern
-> >>file systems, I do not know - they only file system I have studied in
-> >>low-level detail is FAT16.
-> >
-> >When the block device reports an error the filesystem can certainly record
-> >that information in a bad-block list, and possibly does.
-> >
-> >However I thought you were suggesting a situation where the block device
-> >could succeed with the request, but knew that area of the device was of low
-> >quality.
+On 02/16/2011 07:52 PM, NeilBrown wrote:
+> On Wed, 16 Feb 2011 19:24:15 -0500 Phil Turmel <philip@turmel.org> wrote:
 > 
-> I guess that is what I was trying to suggest, though not very clearly.
+>> On 02/16/2011 04:48 PM, NeilBrown wrote:
+>>> On Wed, 16 Feb 2011 21:29:39 +0100 Piergiorgio Sartor
+>>>>
+>>>>> Better reporting of inconsistencies.
+>>>>> ------------------------------------
+>>>>>
+>>>>> When a 'check' finds a data inconsistency it would be useful if it
+>>>>> was reported.   That would allow a sysadmin to try to understand the
+>>>>> cause and possibly fix it.
+>>>>
+>>>> Could you, please, consider to add, for RAID-6, the
+>>>> capability to report also which device, potentially,
+>>>> has the problem? Thanks!
+>>>
+>>> I would rather leave that to user-space.  If I report where the problem is, a
+>>> tool could directly read all the blocks in that stripe and perform any fancy
+>>> calculations you like.  I may even write that tool (but no promises).
+>>
+>> Hmmm.  The existing "check" code, if it encounters a read error, will use
+>> available redundancy to recover that data and rewrite it on the spot.
+>>
+>> Without a read error, or with multiple redundancy, the calculations to
+>> check consistency are performed and reported.  With all the data "hot", and half
+>> the calculation to pinpoint an inconsistency done, it seems a shame to have
+>> userspace redo it.
+>>
+>> Are you adamantly opposed to the kernel doing this?  (For Raid6)  Code talks,
+>> of course, but I'd rather not start if I'm only going to be shot down.
+>>
 > 
-> >e.g. IO to a block on a stripe which had one 'bad block'.  The IO should
-> >succeed, but the data isn't as safe as elsewhere.  It would be nice if we
-> >could tell the filesystem that fact, and if it could make use of it. But we
-> >currently cannot.   We can say "success" or "failure", but we cannot say
-> >"success, but you might not be so lucky next time".
-> >
+> I like to think I remain open-minded to any compelling arguments.
 > 
-> Do filesystems re-try reads when there is a failure?  Could you return 
-> fail on one read, then success on a re-read, which could be interpreted 
-> as "dying, but not yet dead" by the file system?
+> However putting code into the kernel which *only* tells user-space something
+> that it could figure out for itself doesn't sound sensible - though it
+> depends a bit on how much code.
+> 
+> Also - as I understand it - the RAID6 code works on a byte-by-byte basis.
+> This the P and Q bytes are computed from the N data bytes, and collections of
+> these bytes form blocks.
+> 
+> The "which block is bad calculation" take the  data bytes and the P and Q
+> bytes and produces a new byte.  If that byte is < N, it means that just
+> changing data byte N can make P and Q consistent.  (if it is N, the the P
+> bytes is bad, if it is N+1 then the Q byte is bad).  If it is >N+1, then
+> ... possibly multiple bytes are bad .. my knowledge gets hazy here.
+> 
+> So when you do the computation on all of the bytes in all of the blocks you
+> get a block full of answers.
+> If the answers are all the same - that tells you something fairly strong.
+> If they are a "all different" then that is also a fairly strong statement.
+> But what if most are the same, but a few are different?  How do you interpret
+> that?
 
-This should not be a file system feature. The file system is built upon
-the raid, and in mirrorred rait types like raid1 and raid10, and also
-other raid types, you cannot be sure which specific drive and sector the
-data was read from - it could be one out of many (typically two) places.
-So the bad blocks of a raid is a feature of the raid and its individual
-drives, not the file system. If it was a property of the file system,
-then the fs should be aware of the underlying raid topology, and know if
-this was a parity block or data block of raid5 or raid6, or which
-mirror instance of a raid1/10 type which  was involved. 
+Actually, I was thinking about that.  (You suckered me into reading that PDF
+some weeks ago.)  I would be inclined to allow the kernel to make corrections
+where "all the same" covers individual sectors, per the sector size reported
+by the underlying device.
 
-Best regards
-keld
+Also, the comparison would have to ignore "neutral bytes", where P & Q
+happened to be correct for that byte position.
+
+> The point I'm trying to get to is that the result of this RAID6 calculation
+> isn't a simple "that device is bad".  It is a block of data that needs to be
+> interpreted.
+> 
+> I'd rather have user-space do that interpretation, so it may as well do the
+> calculation too.
+> 
+> If you wanted to do it in the kernel, you would need to be very clear about
+> what information you provide, what it means exactly, and why it is sufficient.
+
+Given that the hardware is going to do error correction and checking at a
+sector size granularity, and the kernel would in fact rewrite that sector using
+this calculation if the hardware made a "fairly strong" statement that it can't
+be trusted, I'd argue that rewriting the sector is appropriate.
+
+Any corrective action that isn't consistent at the sector level should be punted.
+I'm very curious what percentage that would be in production environments.
+
+Phil
