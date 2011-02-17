@@ -1,46 +1,53 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 01:30:49 +0100
-Message-ID: <ijhq7p$pjv$1@dough.gmane.org>
-References: <20110216212751.51a294aa@notabene.brown>	<ijgr9p$7v8$1@dough.gmane.org>	<20110217083531.3090a348@notabene.brown>	<ijhje3$ocd$1@dough.gmane.org> <20110217100139.7520893d@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Single-drive RAID0
+Date: Thu, 17 Feb 2011 11:38:48 +1100
+Message-ID: <20110217113848.17673231@notabene.brown>
+References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+	<20110209134557.4e607451@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
+	<20110214131149.7f0655a3@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
+	<20110215110141.30d28302@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
+	<20110216114234.0311d27b@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217100139.7520893d@notabene.brown>
+In-Reply-To: <BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 17/02/11 00:01, NeilBrown wrote:
-> On Wed, 16 Feb 2011 23:34:43 +0100 David Brown<david.brown@hesbynett.no>
-> wrote:
->
->> I thought there was some mechanism for block devices to report bad
->> blocks back to the file system, and that file systems tracked bad block
->> lists.  Modern drives automatically relocate bad blocks (at least, they
->> do if they can), but there was a time when they did not and it was up to
->> the file system to track these.  Whether that still applies to modern
->> file systems, I do not know - they only file system I have studied in
->> low-level detail is FAT16.
->
-> When the block device reports an error the filesystem can certainly record
-> that information in a bad-block list, and possibly does.
->
-> However I thought you were suggesting a situation where the block device
-> could succeed with the request, but knew that area of the device was of low
-> quality.
+On Wed, 16 Feb 2011 16:57:06 +0000 "Wojcik, Krzysztof"
+<krzysztof.wojcik@intel.com> wrote:
 
-I guess that is what I was trying to suggest, though not very clearly.
+> > 
+> > It looks like the 'bdev' passed to md_open keeps changing, which it
+> > shouldn't.
+> > 
+> > If the above doesn't help, please add:
+> > 
+> > 	printk("bdev=%p, mddev=%p, disk=%p dev=%x\n", bdev, mddev, mddev-
+> > >gendisk, bdev->bd_dev);
+> > 
+> > at the top of 'md_open', and see what it produces.
+> 
+> I tried this also but I can't see any useful information that can make me some idea.
+> Could you look at logs in attachment?
+> 
 
-> e.g. IO to a block on a stripe which had one 'bad block'.  The IO should
-> succeed, but the data isn't as safe as elsewhere.  It would be nice if we
-> could tell the filesystem that fact, and if it could make use of it. But we
-> currently cannot.   We can say "success" or "failure", but we cannot say
-> "success, but you might not be so lucky next time".
->
+Thanks.
 
-Do filesystems re-try reads when there is a failure?  Could you return 
-fail on one read, then success on a re-read, which could be interpreted 
-as "dying, but not yet dead" by the file system?
+That at-least confirms that the bdev is often changing while the mddev and
+disk stay unchanged.  Having that confirmation is useful..
+
+I didn't think that could happen - the bdev should remain pinned while the
+mddev exists.  Obviously it doesn't.
+
+I'll see what I can find out.
+
+NeilBrown
 
