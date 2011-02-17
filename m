@@ -1,92 +1,92 @@
-From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Linux software RAID assistance
-Date: Thu, 17 Feb 2011 13:56:15 +0000
-Message-ID: <6037962689649361915@unknownmsgid>
-References: <4D540F6C.6050904@gmail.com> <20110215155315.55d35b8e@notabene.brown>
- <4D5A92F3.1090004@turmel.org> <4D5BD678.2050200@gmail.com>
- <4D5BE119.7000804@turmel.org> <4D5C0E17.3060306@gmail.com>
- <4D5C140F.9010301@turmel.org> <4D5C1508.3040308@gmail.com>
- <4D5C15D3.1070608@turmel.org> <4D5C167C.7000101@turmel.org>
- <4D5C1CF8.1020507@gmail.com> <4D5C1E0B.9060300@turmel.org>
- <4D5C2061.4060106@gmail.com> <4D5C2143.3000907@turmel.org>
- <4D5C2260.3020800@gmail.com> <4D5C273E.7020609@turmel.org>
- <4D5C4176.80604@gmail.com> <4D5C4204.5020106@turmel.org> <1377706586882297883@unknownmsgid>
- <4D5C6016.6060809@turmel.org> <AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
- <4D5D2723.1010101@turmel.org>
-Mime-Version: 1.0 (iPhone Mail 8A306)
+From: hansbkk@gmail.com
+Subject: Re: Mixing mdadm versions
+Date: Thu, 17 Feb 2011 21:16:43 +0700
+Message-ID: <AANLkTikgDTTo-FaRB48BR04nZOrRuWsYY-46GnqQjhiV@mail.gmail.com>
+References: <AANLkTi=g2V9n_AEEGX58d1PkTLRj7HtxT=AGEaLQXNz1@mail.gmail.com>
+	<4D5D21BA.6060804@turmel.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5D2723.1010101@turmel.org>
+In-Reply-To: <4D5D21BA.6060804@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phil, I think I need to connect them to the crippled machine directly,
-I was just trying to leave it alone, I know that doesn't make much
-sense but I'm more familiar with windows than Linux. The cards that I
-have are all connected at gigabit and bonded. That machine has two
-ports, so does the other. I'm running two asus p6ts (1 deluxe and 1
-se) with i7 920's
+OK, thanks for those details.
 
-I cant understand why it's so slow though I have seen some reports
-that the supermicro card is quite slow.
-Simon
-Ps thanks for the bugfixes and updates
-Simon
+I plan to use the running system for day-to-day serving of the data,
+and to use the more modern versions (which originally created the
+arrays) for any recovery/maintenance.
 
-On 17 Feb 2011, at 13:48, Phil Turmel <philip@turmel.org> wrote:
+I believe the running system will be getting upgraded (RHEL5?) in the
+next few months, so unless I have reason to think there's actually
+something wrong, I think I'll leave it alone, I really don't feel like
+learning another package management system at the moment - the Linux
+learning curve has been making my brain ache lately 8-)
 
-> On 02/17/2011 08:26 AM, Simon Mcnair wrote:
->> Phil,
->> After a couple of attempts I realised that all I needed to do was
->> ./backup.sh sdi rather than specifying ./backup.sh /dev/sdi  schoolboy
->> error huh, rtfm.
->>
->> I tried modifying the code, so I could kick them all off at once, but
->> I wanted to check that this would work from a multithreaded/sane
->> perspective (yes I know it's a bit of IO, but iotop seems to infer I'm
->> only getting 10M/s throughput from the disk anyway).
+On Thu, Feb 17, 2011 at 8:25 PM, Phil Turmel <philip@turmel.org> wrote:
+> On 02/17/2011 05:21 AM, hansbkk@gmail.com wrote:
+>> I've created and manage sets of arrays with mdadm v3.1.4 - I've been
+>> using System Rescue CD and Grml for my sysadmin tasks, as they are
+>> based on fairly up-to-date gentoo and debian and have a lot of
+>> convenient tools not available on the production OS, a "stable" (rea=
+d:
+>> old packages) flavor of RHEL, which turns out is running mdadm v2.6.=
+4.
+>> I spec'd v1.2 metadata for the big raid6 storage arrays, but kept to
+>> 0.90 for the smaller raid1's as some of those are my boot devices.
 >
-> That sounds suspiciously like a 100 meg ethernet bottleneck, so parallel operation won't help.  If so, this'll take a very long time.
+> The default data offset for for v1.1 and v1.2 meta-data changed in md=
+adm v3.1.2. =A0If you ever need to use the running system to "mdadm --c=
+reate --assume-clean" in a recovery effort, the data segments will *NOT=
+* line up if the original array was created with a current version of m=
+dadm.
 >
->> is this code kosha ?
+> (git commit a380e2751efea7df "super1: encourage data alignment on 1Me=
+g boundary")
 >
-> Looks pretty good.  I've attached a slight update with your changes and a bugfix.
+>> As per a previous thread, I've noticed on the production OS the outp=
+ut
+>> of mdadm -E on a member returns a long string of "failed, failed". T=
+he
+>> more modern mdadm reports everything's OK.
+>>
+>> - Also mixed in are some "fled"s - whazzup with that?
+>>
+>> Unfortunately the server is designed to run as a packaged appliance
+>> and uses the rpath/conary package manager, so I'm hesitant to fiddle
+>> around upgrading some bits, afraid that other bits will break - the
+>> sysadmin tools are run from a web interface to a bunch of PHP script=
+s.
+>>
+>> So, here are my questions:
+>>
+>> As long as the more recent versions of mdadm report that everything'=
+s
+>> OK, can I ignore the mishmosh output of the older mdadm -E report?
 >
->> #! /bin/bash
->> #
->> function usage() {
->>       printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
->>       printf "'devname' must be a relative path in /dev/ to the
->> desired block device.\n"
->>       exit 1
->> }
->>
->> # Verify the supplied name is a device
->> test -b "/dev/$1" || usage
->>
->> # Convert path separators and spaces into dashes
->> outfile="`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
->>
->> # Create a side-stream for computing the MD5 of the data read
->> fifo=`mktemp -u`
->> mkfifo $fifo || exit
->> md5sum -b <$fifo >$2/$outfile.md5 &
->>
->> # Read the device and compress it
->> dd if="/dev/$1" bs=1M | tee 2>$fifo | gzip >$2/$outfile.gz
->>
->> # Wait for the background task to close
->> wait
->>
->> I was a little concerned as I didn't see the hdd drive LED light up
->> for my attempt even though the file was growing nicely on my CIFS
->> share.  I'm dumping it on the 5x2TB disks (JBOD) in my windows 7 box
->> as my Thecus is not a happy chappy and I need time to mount the DOM
->> module in another machine to find out why.
+> Don't know.
 >
-> If you're willing to dismantle the thecus, directly connecting its drives to your crippled system will make things go much faster.  You've got four empty motherboard SATA ports.  You just have to watch out for the power load.
+>> And am I correct in thinking that from now on I should create
+>> everything with the older native packages that are actually going to
+>> serve the arrays in production?
+>
+> If there's a more modern Red Hat mdadm package that you can include i=
+n your appliance, that would be my first choice. =A0After testing with =
+the web tools, though.
+>
+> Otherwise, I would say "Yes", for the above reason. =A0However, the r=
+everse problem can also occur. =A0You won't be able to use a modern mda=
+dm to do a "--create --assume-clean" on an offline system. =A0That's wh=
+at happened to Simon in another thread. =A0Avoiding that might be worth=
+ the effort qualifying a newer version of mdadm.
 >
 > Phil
-> <block2gz.sh>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
