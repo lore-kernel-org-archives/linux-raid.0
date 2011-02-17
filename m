@@ -1,152 +1,117 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: old filesystem label remaining after partition --add 'ed?
-Date: Thu, 17 Feb 2011 07:15:54 -0500
-Message-ID: <4D5D117A.3050709@turmel.org>
-References: <AANLkTikcYz+AYXQBm+BhcjM1SkvDnR=-x58jLbyGB+2d@mail.gmail.com>	<4D5C00DA.2060300@turmel.org> <AANLkTi=OVUYM4+TDVwB8FyCDK9GsWrv80EAWsNhA6HYu@mail.gmail.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: RE: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current sysfs
+ format
+Date: Thu, 17 Feb 2011 12:35:46 +0000
+Message-ID: <BE2BFE91933D1B4089447C6448604080690294D2@irsmsx503.ger.corp.intel.com>
+References: <20110216124021.9092.83943.stgit@gklab-128-111.igk.intel.com>
+ <20110217171751.264709cd@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=OVUYM4+TDVwB8FyCDK9GsWrv80EAWsNhA6HYu@mail.gmail.com>
+In-Reply-To: <20110217171751.264709cd@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On 02/17/2011 02:50 AM, hansbkk@gmail.com wrote:
-> On Wed, Feb 16, 2011 at 11:52 PM, Phil Turmel <philip@turmel.org> wrote:
->> Ext2 and friends leave space for a boot block at the beginning, so the first ext2 superblock is 1k (?) into the partition.  The blkid library knows this, so it is looking "past" your md superblock and seeing the ext2 superblock.
->>
->> A careful dd of the right sectors should knock it out.  (You're going to verify all this first, I hope.)
-> 
-> No thanks, if it's not causing a problem 'll just leave it alone.
-> 
 
-Actually, I guessed wrong.  You have v1.2 meta-data.
 
->>> I replaced a RAID6 member drive that hadn't been fully zero'd, had the
->>> same partitioning layout as the previous one.
->>>
->>> The target partition had previously had an ext3 filesystem on it for
->>> temporary moving/copying files around, with an e2label on it.
->>>
->>> I added the partition to the array with "mdadm /dev/md_raid6a --add
->>> /sde4", and let it rebuild, all looks good both via -D and
->>> /proc/mdstat
->>>
->>> Later on, I noticed that that partition still has the e2label on it? I
->>> know my RAID1's show the label same as if it's a regular partition,
->>> but I've always got a "bad magic" message back from checking for a
->>> label on a RAID5/6 array member partition.
->>>
->>> I'm assuming this is just cosmetic, but it bothers my (probably OCD)
->>> sense of order, so I thought I'd check in here.
->>>
->>> I don't even know a command to remove an existing filesystem other
->>> than zeroing out the MBR/partition table - and in this case I didn't
->>> want to disturb data in the other partitions. I supposed I could have
->>> formatted it as ntfs or something, but that doesn't seem right.
->>
->> I'm going to guess that your array has v1.1 metadata.  If so, a fragment of your old filesystem still exists between the end of the MD superblock and the beginning of the data area.  MD's bitmaps are supposed to live in that area, so I'm going to guess that you aren't using an internal bitmap.  An 'mdadm -E' for that partition would help.
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, February 17, 2011 7:18 AM
+> To: Wojcik, Krzysztof
+> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
+> Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current
+> sysfs format
 > 
-> Well, got something strange there. First here's a -D on the array:
+> On Wed, 16 Feb 2011 13:40:21 +0100 Krzysztof Wojcik
+> <krzysztof.wojcik@intel.com> wrote:
 > 
-> When I originally created the array (using sysresccd) I spec'd v1.2
-> metadata. However the production filer OS uses mdadm v2.6.4, so it
-> might have got downgraded in later recovery operations?
->
-> [root@sannas01 ~]# mdadm -D /dev/md_raid6a
-> /dev/md_raid6a:
->         Version : 01.02.03
->   Creation Time : Wed Dec 22 08:21:09 2010
->      Raid Level : raid6
->      Array Size : 7199998976 (6866.45 GiB 7372.80 GB)
->   Used Dev Size : 3599999488 (1716.61 GiB 1843.20 GB)
->    Raid Devices : 6
->   Total Devices : 7
-> Preferred Minor : 125
->     Persistence : Superblock is persistent
+> > Problem: sysfs_disk_to_scsi_id() not returns correct scsi_id value.
+> > Reason: sysfs format has been changed
+> >
+> > This patch adapt sysfs_disk_to_scsi_id() to new sysfs format.
 > 
->   Intent Bitmap : Internal
+> If there has been a change in sysfs format, we want the code to work in
+> both
+> old and new cases.
 > 
->     Update Time : Thu Feb 17 04:02:19 2011
->           State : active
->  Active Devices : 6
-> Working Devices : 7
->  Failed Devices : 0
->   Spare Devices : 1
+> Do you know if this new code works in the 'old' case?  Do you know when
+> (which kernel version) the change happened, or at least can you name a
+> kernel
+> version when the 'old' style worked.
 > 
->      Chunk Size : 256K
-> 
->            Name : sannas01:raid6a
->            UUID : 628ddb50:a718c3dc:bd53d3e3:51eb73ca
->          Events : 235750
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        4        0      active sync   /dev/sda4
->        6       8       20        1      active sync   /dev/sdb4
->        2       8       36        2      active sync   /dev/sdc4
->        3       8       52        3      active sync   /dev/sdd4
->        7       8       68        4      active sync   /dev/sde4
->        5       8       84        5      active sync   /dev/sdf4
-> 
->        8       8      164        -      spare   /dev/sdk4
-> 
-> 
-> When I do an -E on *any* of the members I get:
-> 
-> [root@sannas01 ~]# mdadm -E /dev/sde4
-> /dev/sde4:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 628ddb50:a718c3dc:bd53d3e3:51eb73ca
->            Name : sannas01:raid6a
->   Creation Time : Wed Dec 22 08:21:09 2010
->      Raid Level : raid6
->    Raid Devices : 6
-> 
->  Avail Dev Size : 3599999729 (1716.61 GiB 1843.20 GB)
->      Array Size : 14399997952 (6866.45 GiB 7372.80 GB)
->   Used Dev Size : 3599999488 (1716.61 GiB 1843.20 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : b8deffce:73f5296e:b9f17f4d:7373900c
+> The patch looks OK, but I want to be sure all bases are covered.
 
-You do indeed have v1.2 metadata, which is 4k from the start of the device (8 sectors).  The ext superblock was undisturbed at 1k.  DD zeros into the first eight sectors to clear the old fs superblock.
+I tested the patch with a few versions of kernels since 2.6.27. The patch works with all versions.
+I haven't found kernel working properly with initial code.
+I assume that scsi_id field was not filled properly for a long time.
+It is not critical because scsi_id is not currently used by mdadm so bug hasn't been discovered earlier.
+For today scsi_id is important from the viewpoint of IMSM metadata compatibility only.
+I suggest to apply the patch.
 
-> Internal Bitmap : 2 sectors from superblock
->     Update Time : Thu Feb 17 14:19:59 2011
->        Checksum : 6c94eb57 - correct
->          Events : 235750
 > 
->      Chunk Size : 256K
+> Thanks,
+> NeilBrown
 > 
->     Array Slot : 7 (0, failed, 2, 3, failed, 5, 1, 4, empty, failed,
-> failed, fled, failed, failed, failed, failed, failed, failed, failed,
-> failed, failed, fled, failed, failed, failed, failed, failed, failed,
-> failed, failed, failed, fled, failed, failed, failed, failed, failed,
-> failed, failed, failed, failed, fled, failed, failed, failed, failed,
-> failed, failed, failed, failed, failed, fled, failed, failed, failed,
-> failed, failed, failed, failed, failed, failed, fled, failed, failed,
-> failed, failed, failed, failed, failed, failed, failed, f
 > 
-> with many many more - note the "fled"s mixed in with the "failed"'s.
-> 
-> I wasn't worried before but I am now - should I be?
+> >
+> > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+> > ---
+> >  sysfs.c |   14 ++++++--------
+> >  1 files changed, 6 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/sysfs.c b/sysfs.c
+> > index f0773d4..883a834 100644
+> > --- a/sysfs.c
+> > +++ b/sysfs.c
+> > @@ -705,7 +705,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+> >  	if (fstat(fd, &st))
+> >  		return 1;
+> >
+> > -	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device",
+> > +	snprintf(path, sizeof(path),
+> "/sys/dev/block/%d:%d/device/scsi_device",
+> >  		 major(st.st_rdev), minor(st.st_rdev));
+> >
+> >  	dir = opendir(path);
+> > @@ -714,8 +714,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+> >
+> >  	de = readdir(dir);
+> >  	while (de) {
+> > -		if (strncmp("scsi_disk:", de->d_name,
+> > -			    strlen("scsi_disk:")) == 0)
+> > +		if (strchr(de->d_name, ':'))
+> >  			break;
+> >  		de = readdir(dir);
+> >  	}
+> > @@ -724,21 +723,20 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+> >  	if (!de)
+> >  		return 1;
+> >
+> > -	c1 = strchr(de->d_name, ':');
+> > -	c1++;
+> > +	c1 = de->d_name;
+> >  	c2 = strchr(c1, ':');
+> >  	*c2 = '\0';
+> >  	*id = strtol(c1, NULL, 10) << 24; /* host */
+> >  	c1 = c2 + 1;
+> >  	c2 = strchr(c1, ':');
+> >  	*c2 = '\0';
+> > -	*id |= strtol(c1, NULL, 10) << 16; /* channel */
+> > +	*id |= strtol(c1, NULL, 10) << 16; /* bus */
+> >  	c1 = c2 + 1;
+> >  	c2 = strchr(c1, ':');
+> >  	*c2 = '\0';
+> > -	*id |= strtol(c1, NULL, 10) << 8; /* lun */
+> > +	*id |= strtol(c1, NULL, 10) << 8; /* target */
+> >  	c1 = c2 + 1;
+> > -	*id |= strtol(c1, NULL, 10); /* id */
+> > +	*id |= strtol(c1, NULL, 10); /* lun */
+> >
+> >  	return 0;
+> >  }
 
-I have no idea.  Never seen this one.  Grep the source for 'fled' ?  Or wait for Neil to come online in eight hours or so...
-
-> In case it means anything (sde's the recent replacement):
-> 
-> [root@sannas01 ~]# e2label /dev/sdd4
-> e2label: Bad magic number in super-block while trying to open /dev/sdd4
-> Couldn't find valid filesystem superblock.
-> 
-> [root@sannas01 ~]# e2label /dev/sde4
-> tmp-hita
-
-As you've noted, just a nuisance, not a crisis.
-
-Phil
