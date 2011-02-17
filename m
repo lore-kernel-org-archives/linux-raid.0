@@ -1,53 +1,51 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Shouldn't --zero-superblock reset the UUID?
-Date: Thu, 17 Feb 2011 12:45:16 +1100
-Message-ID: <20110217124516.59c226e4@notabene.brown>
-References: <AANLkTikuHrSyhmi01LgKGZhMCvAKoXJmutwhfL974zvT@mail.gmail.com>
-	<4D5C7801.5070306@fastmail.fm>
+From: Matt Tehonica <matt.tehonica@mac.com>
+Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
+Date: Wed, 16 Feb 2011 20:47:08 -0500
+Message-ID: <00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com>
+References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>
+ <20110217124214.00ad25dd@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C7801.5070306@fastmail.fm>
+In-reply-to: <20110217124214.00ad25dd@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linbloke <linbloke@fastmail.fm>
-Cc: hansbkk@gmail.com, Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 17 Feb 2011 12:21:05 +1100 linbloke <linbloke@fastmail.fm> wrote:
+To be honest, I couldn't find good directions on how exactly to resize an array to be smaller so I put some bits and pieces together to do it.  Guess I didn't understand everything beforehand because I didn't read anything about resizing the file system.  I thought setting the "array-size" would take care of moving data before rebuilding onto the 6 disks.
 
-> hansbkk@gmail.com wrote:
-> > I've only seen this problem with RAID1, but perhaps it applies to other levels.
-> >
-> > When adding a member partition to an array, the UUID of that partition
-> > gets set to that of the array (and all the other members)
-> >
-> > However, when fail/remove/zero-superblock 'ing a member back out of
-> > the array, the UUID gets left behind, along with the label and fs
-> > type.
-> >
-> > Ideally the partition would be left in a state as if it never had any
-> > filesystem at all on it, as when using dd /if=dev/zero and a fresh
-> > sfdisk.
-> >
-> > If this isn't possible, perhaps the zero-superblock option should
-> > trigger a reminder message to either zero the drive or re-format the
-> > partition?
-> >
-> >   
-> I recall reading on this list that zero-superblock only zero's the first 
-> superblock that it finds. It may be necessary to run mdadm 
-> zero-superblock several times to remove all superblocks that may be on 
-> the device from historical times.
+Since I haven't resized the XFS filesystem, any recommendations on what to do next?  Think it's possible to recover any of the data?  For what it's worth, I haven't done anything to the 2 disks that I was going to remove.
+
+Thanks for the help.
+
+
+On Feb 16, 2011, at 8:42 PM, NeilBrown wrote:
+
+> On Wed, 16 Feb 2011 19:24:41 -0500 Matt Tehonica <matt.tehonica@mac.com>
+> wrote:
 > 
-
-The latest mdadm will zero all superblocks it can find.
-
-How I suspec the OP is actually talking about a 'filesystem' uuid rather than
-a 'raid' uuid...  After all it is "along with the label and fs type".
-
-So: kansbkk: What makes you think the uuid is left behind?  Knowing that will
-  help know what uuid you are talking about.
-
-NeilBrown
+>> Hi all,
+>> 
+>> I converted my RAID5 from 8 disks to 6 disks using "mdadm --grow /dev/md0 --array-size" and then "mdadm --grow /dev/md0 --raid-devices=6" and after rebooting, it won't mount.  It has been running fine for about a year.  File system is XFS.  Here is some info on it....
+> 
+> .... uhmm... you did resize the filesystem to be smaller before you resized
+> the array to be smaller ... didn't you?
+> 
+> Because if you didn't you have probably just lost 1/3 of your data.
+> 
+> That is the whole point of having to set the array-size first.  You then make
+> sure your data is still safe before performing the irreversible reshape.
+> 
+> If you did reshape the XFS filesystem first, then something else must be
+> wrong.
+> 
+> NeilBrown
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
