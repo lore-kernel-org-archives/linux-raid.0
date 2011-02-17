@@ -1,140 +1,68 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: File system corruption during setting new size (native/extarnal
- metatdat) after expansion
-Date: Thu, 17 Feb 2011 10:27:05 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D178EC3813@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
-	<20110217153815.2212b13d@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D178EC3637@irsmsx503.ger.corp.intel.com>
- <20110217210339.4adc1492@notabene.brown>
+From: David Brown <david@westcontrol.com>
+Subject: Re: high throughput storage server?
+Date: Thu, 17 Feb 2011 11:39:10 +0100
+Message-ID: <ijitt7$giq$1@dough.gmane.org>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5A7198.7060607@hardwarefreak.com> <ijdvmn$4ff$1@dough.gmane.org> <4D5C5EAA.3020208@hardwarefreak.com> <ijhpv7$o84$1@dough.gmane.org> <4D5C6F8E.9020802@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217210339.4adc1492@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <4D5C6F8E.9020802@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 17/02/2011 01:45, Stan Hoeppner wrote:
+> David Brown put forth on 2/16/2011 6:26 PM:
+>
+>> On 17/02/11 00:32, Stan Hoeppner wrote:
+>
+>>> RAID level space/cost efficiency from a TCO standpoint is largely irrelevant
+>>> today due to the low price of mech drives.  Using the SATABeast as an example,
+>>> the cost per TB of a 20TB RAID 10 is roughly $1600/TB and a 20TB RAID 6 is about
+>>> $1200/TB.  Given all the advantages of RAID 10 over RAID 6 the 33% premium is
+>>> more than worth it.
+>
+>> I don't think it is fair to give general rules like that.  In this particular
+>
+> The IT press does it every day.  CTOs read those articles.  In many cases it's
+> their primary source of information.  Speak in terms CTOs (i.e. those holding
+> the purse) understand.
+>
 
+I work at a small company - I get to read the articles, make the 
+recommendations, and build the servers.  So I can put more emphasis on 
+what I think is technically the best solution for us, rather than what 
+sounds good in the press.  Of course, the other side of the coin is that 
+being a small company with modest server needs, I don't get to play with 
+20 TB raid systems!
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Thursday, February 17, 2011 11:04 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: File system corruption during setting new size
-> (native/extarnal metatdat) after expansion
-> 
-> On Thu, 17 Feb 2011 08:45:36 +0000 "Kwolek, Adam"
-> <adam.kwolek@intel.com>
-> wrote:
-> 
-> > Thank you for workarounds/temporary fixes.
-> >
-> > Regarding imsm_num_data_members() setting second_map to 0 cannot help
-> as it is always called with this parameter set to 0.
-> > In this situation, when first map should be always present, we can
-> have some race condition.
-> > I have no reproduction for mdmon crash you are observing, but I'll try
-> some changes in my scripts and I'll carefully watch any signs
-> > that can indicate reproduction of this problem.
-> >
-> > If you could let me know details about changes you made to my
-> scenario, it could help.
-> >
-> 
-> This is the script I was using:
-> 
-> ----------------------------------------------
-> export IMSM_NO_PLATFORM=1
-> export IMSM_DEVNAME_AS_SERIAL=1
-> export MDADM_EXPERIMENTAL=1
-> umount /mnt/vol
-> mdadm -Ss
-> rm -f /backup.bak
-> 
-> #create container
-> mdadm -C /dev/md/imsm0 -amd -e imsm -n 3 /dev/sda /dev/sdb /dev/sdc -R
-> 
-> #create volume
-> mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --size 104857 -n 3
-> /dev/sda /dev/sdb /dev/sdc -R
-> mkfs /dev/md/raid5vol_0
-> mount /dev/md/raid5vol_0 /mnt/vol
-> 
-> #copy some files from current directory
-> cp * /mnt/vol
-> 
-> #add spare
-> mdadm --add /dev/md/imsm0 /dev/sdd
-> 
-> mdadm --wait /dev/md/raid5vol_0
-> 
-> #start reshape
-> mdadm --grow /dev/md/imsm0 --raid-devices 4 --backup-file=/backup.bak
-> #mdadm  --wait /dev/md/raid5vol_0
-> sleep 10
-> while grep reshape /proc/mdstat > /dev/null
-> do sleep 1
-> done
-> while ps axgu | grep 'md[a]dm' > /dev/null
-> do sleep 1
-> done
-> umount /mnt/vol
-> fsck -f -n /dev/md/raid5vol_0
-> -------------------------------------------------
-> 
-> I did have an 'mdadm --wait' where the 'while grep reshape' is.  I
-> changed it
-> because it seemed to be causing problems, but I may have been wrong
-> about the
-> cause.
-> 
-> This would fairly reliably result in mdmon dying.
-> 
-> This is the patch I applied
-> -------------------------------------
-> diff --git a/super-intel.c b/super-intel.c
-> index 5d39d5b..fa195c3 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1600,6 +1600,7 @@ static __u8 imsm_num_data_members(struct imsm_dev
-> *dev, int second_map)
->          */
->         struct imsm_map *map = get_imsm_map(dev, second_map);
-> 
-> +       if (map == NULL) map = get_imsm_map(dev, 0);
->         switch (get_imsm_raid_level(map)) {
->         case 0:
->         case 1:
-> 
-> -----------------------------------
-> 
-> This was on an oldish source tree (commit 152b223157), so maybe it is
-> already
-> fixed.
-> But without that patch is crashed often, and with it in didn't crash at
-> all.
-> 
-> NeilBrown
+>> case, that might be how the sums work out.  But in other cases, using RAID 10
+>> instead of RAID 6 might mean stepping up in chassis or controller size and
+>> costs.  Also remember that RAID 10 is not better than RAID 6 in every way - a
+>> RAID 6 array will survive any two failed drives, while with RAID 10 an unlucky
+>> pairing of failed drives will bring down the whole raid.  Different applications
+>> require different balances here.
+>
+> I'm not sure about being "fair" but it directly relates to the original question
+> that started this thread.  The OP wanted performance and space with a preference
+> for performance.  This demonstrates he can get the performance for a ~33% cost
+> premium.  He didn't mention a budget limit, only that most vendor figures were
+> too high.
+>
 
-Thank you for information.
+I agree that RAID 10 sounds like a match for the OP.  All I am saying is 
+that it is not necessarily the best choice in general, and not just 
+because of the initial purchase price.
 
-On older mdadm I've saw this problem and I think problem is fixed now
+> Also, you're repeating points I've made in this (and other) threads back to me.
+>   Try to keep up David. ;)
+>
 
-Problem was in set_array_state(),when second_map parameter was set to -1, and get_imsm_map() implementation causes problem (NULL can be returned for second_map == '-1').
-get_imsm_map() is fixed now (patch: 'imsm: FIX: crash during getting map' /2011-02-03/).
+I'm doing my best!  I believe I've got a fair understanding of various 
+sorts of RAID systems, but I am totally missing real-world experience of 
+anything more advanced than a four disk setup.  Bigger raid setups is 
+only a hobby interest for me at the moment, so I'm learning as I go 
+here.  And you write such a lot here that it's hard for an amateur to 
+take it all in :-)
 
-'-1' as second map was changed to 0 later by Anna in 'fix: imsm: assemble doesn't restart recovery' /2011-02-13/ patch.
-At this moment second_map is never set to '-1'.
-
-Our lab doesn't report mdmon crashes on latest mdadm code also.
-
-Anyway, I'll have a look during my tests for mdmon core (let say, more carefully than as usual ;)).
-
-BR
-Adam
