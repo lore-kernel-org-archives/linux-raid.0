@@ -1,49 +1,68 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: high throughput storage server?
-Date: Wed, 16 Feb 2011 18:45:02 -0600
-Message-ID: <4D5C6F8E.9020802@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5A7198.7060607@hardwarefreak.com> <ijdvmn$4ff$1@dough.gmane.org> <4D5C5EAA.3020208@hardwarefreak.com> <ijhpv7$o84$1@dough.gmane.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: md road-map: 2011
+Date: Wed, 16 Feb 2011 19:48:20 -0500
+Message-ID: <4D5C7054.10000@turmel.org>
+References: <20110216212751.51a294aa@notabene.brown>	<4D5BDB84.8050706@gmail.com>	<20110217082412.51afa2a6@notabene.brown>	<20110217024402.1dd44267@natsu> <20110217085924.01cdf22c@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ijhpv7$o84$1@dough.gmane.org>
+In-Reply-To: <20110217085924.01cdf22c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Roman Mamedov <rm@romanrm.ru>, Joe Landman <joe.landman@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Brown put forth on 2/16/2011 6:26 PM:
+On 02/16/2011 04:59 PM, NeilBrown wrote:
+> On Thu, 17 Feb 2011 02:44:02 +0500 Roman Mamedov <rm@romanrm.ru> wrote:
+> 
+>> On Thu, 17 Feb 2011 08:24:12 +1100
+>> NeilBrown <neilb@suse.de> wrote:
+>>
+>>> "read/write/compare checksum" is not a lot of words so I may well not be
+>>> understanding exactly what you mean, but I guess you are suggesting that we
+>>> could store (say) a 64bit hash of each 4K block somewhere.
+>>> e.g. Use 513 4K blocks to store 512 4K blocks of data with checksums.
+>>> When reading a block, read the checksum too and report an error if they
+>>> don't match.  When writing the block, calculate and write the checksum too.
+>>>
+>>> This is already done by the disk drive - I'm not sure what you hope to gain
+>>> by doing it in the RAID layer as well.
+>>
+>> Consider RAID1/RAID10/RAID5/RAID6, where one or more members are returning bad
+>> data for some reason (e.g. are failing or have written garbage to disk during
+>> a sudden power loss). Having per-block checksums would allow to determine
+>> which members have correct data and which do not, and would help the RAID
+>> layer recover from that situation in the smartest way possible (with absolutely
+>> no loss or corruption of the user data).
+>>
+> 
+> Why do you think that md would be able to reliably write consistent data and
+> checksum to a device in a circumstance (power failure) where the hard drive
+> is not able to do it itelf?
 
-> On 17/02/11 00:32, Stan Hoeppner wrote:
+It wouldn't have to be a power failure.  A kernel panic wouldn't be recoverable,
+either.
 
->> RAID level space/cost efficiency from a TCO standpoint is largely irrelevant
->> today due to the low price of mech drives.  Using the SATABeast as an example,
->> the cost per TB of a 20TB RAID 10 is roughly $1600/TB and a 20TB RAID 6 is about
->> $1200/TB.  Given all the advantages of RAID 10 over RAID 6 the 33% premium is
->> more than worth it.
+> i.e. I would need to see a clear threat-model which can cause data corruption
+> that the hard drive itself would not be able to reliably report, but that
+> checksums provided by md would be able to reliably report.
+> Powerfail does not qualify (without sophisticated journalling on the part of
+> md).
 
-> I don't think it is fair to give general rules like that.  In this particular
+I agree that the hash itself is insufficient, but I don't think a full journal
+is needed either.  If each hash had a timestamp and short sequence number, and
+was stored with copies of its siblings' sequence numbers, which data was out of
+sync could be worked out.  I admit that quantity of meta-data would be
+exhorbitant for 512B sectors, but might be acceptable for 4K blocks.  It does
+vary with number of raid devices, though.  I'll have think about ways to
+minimize that.
 
-The IT press does it every day.  CTOs read those articles.  In many cases it's
-their primary source of information.  Speak in terms CTOs (i.e. those holding
-the purse) understand.
+It would work for any situation where data in an MD member device's queue didn't
+make it to the platter, and the platter retained the old data.  Of course, if the
+number of devices with stale data in one stripe exceeds the failure tolerance
+of the array, it still can't be fixed.  The algorithm could *revert* to old data
+if the number of devices with new data was within the failure tolerance.  That
+might be valuable.
 
-> case, that might be how the sums work out.  But in other cases, using RAID 10
-> instead of RAID 6 might mean stepping up in chassis or controller size and
-> costs.  Also remember that RAID 10 is not better than RAID 6 in every way - a
-> RAID 6 array will survive any two failed drives, while with RAID 10 an unlucky
-> pairing of failed drives will bring down the whole raid.  Different applications
-> require different balances here.
-
-I'm not sure about being "fair" but it directly relates to the original question
-that started this thread.  The OP wanted performance and space with a preference
-for performance.  This demonstrates he can get the performance for a ~33% cost
-premium.  He didn't mention a budget limit, only that most vendor figures were
-too high.
-
-Also, you're repeating points I've made in this (and other) threads back to me.
- Try to keep up David. ;)
-
--- 
-Stan
+Phil
