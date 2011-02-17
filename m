@@ -1,134 +1,86 @@
-From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Linux software RAID assistance
-Date: Thu, 17 Feb 2011 13:26:34 +0000
-Message-ID: <AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
-References: <4D540F6C.6050904@gmail.com>
-	<20110215155315.55d35b8e@notabene.brown>
-	<4D5A92F3.1090004@turmel.org>
-	<4D5BD678.2050200@gmail.com>
-	<4D5BE119.7000804@turmel.org>
-	<4D5C0E17.3060306@gmail.com>
-	<4D5C140F.9010301@turmel.org>
-	<4D5C1508.3040308@gmail.com>
-	<4D5C15D3.1070608@turmel.org>
-	<4D5C167C.7000101@turmel.org>
-	<4D5C1CF8.1020507@gmail.com>
-	<4D5C1E0B.9060300@turmel.org>
-	<4D5C2061.4060106@gmail.com>
-	<4D5C2143.3000907@turmel.org>
-	<4D5C2260.3020800@gmail.com>
-	<4D5C273E.7020609@turmel.org>
-	<4D5C4176.80604@gmail.com>
-	<4D5C4204.5020106@turmel.org>
-	<1377706586882297883@unknownmsgid>
-	<4D5C6016.6060809@turmel.org>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: high throughput storage server?
+Date: Thu, 17 Feb 2011 11:36:49 -0200
+Message-ID: <AANLkTi=4TbNNfYQTStryyK9=pW-KD_JqO=ZmCkiH8MvL@mail.gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+	<4D5D017B.50109@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C6016.6060809@turmel.org>
+In-Reply-To: <4D5D017B.50109@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phil,
-After a couple of attempts I realised that all I needed to do was
-=2E/backup.sh sdi rather than specifying ./backup.sh /dev/sdi  schoolbo=
-y
-error huh, rtfm.
+with more network cards =3D more network gbps
+with better (faster) rams =3D more disks reads
+with more raid0/4/5/6 =3D more speed on disks reads
+with more raid1 mirrors =3D more security
+with more sas/sata/raid controllers =3D more GB/TB on storage
+with more anything ~=3D more money
+just know what numbers you want and make it work
 
-I tried modifying the code, so I could kick them all off at once, but
-I wanted to check that this would work from a multithreaded/sane
-perspective (yes I know it's a bit of IO, but iotop seems to infer I'm
-only getting 10M/s throughput from the disk anyway).
-
-is this code kosha ?
-
-#! /bin/bash
-#
-function usage() {
-       printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
-       printf "'devname' must be a relative path in /dev/ to the
-desired block device.\n"
-       exit 1
-}
-
-# Verify the supplied name is a device
-test -b "/dev/$1" || usage
-
-# Convert path separators and spaces into dashes
-outfile=3D"`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
-
-# Create a side-stream for computing the MD5 of the data read
-fifo=3D`mktemp -u`
-mkfifo $fifo || exit
-md5sum -b <$fifo >$2/$outfile.md5 &
-
-# Read the device and compress it
-dd if=3D"/dev/$1" bs=3D1M | tee 2>$fifo | gzip >$2/$outfile.gz
-
-# Wait for the background task to close
-wait
-
-I was a little concerned as I didn't see the hdd drive LED light up
-for my attempt even though the file was growing nicely on my CIFS
-share.  I'm dumping it on the 5x2TB disks (JBOD) in my windows 7 box
-as my Thecus is not a happy chappy and I need time to mount the DOM
-module in another machine to find out why.
-
-cheers
-Simon
-
-
-On 16 February 2011 23:39, Phil Turmel <philip@turmel.org> wrote:
-> On 02/16/2011 05:44 PM, Simon Mcnair wrote:
->> I just went to bed and one last question popped in to my mind. Since
->> there is a fair timezone gap I thought I'd be presumptuous and ask i=
-t
->> in the hope I can turn it around a bit quicker in the morning.
+2011/2/17 John Robinson <john.robinson@anonymous.org.uk>:
+> On 14/02/2011 23:59, Matt Garman wrote:
+> [...]
 >>
->> My suspicion is that once I have 5 formatted 2tb drives I may be luc=
-ky
->> to get 10x 1tb dd images on to it. Can I feed the dd process in to
->> tar, bzip2, zip or something else which will give me enough space to
->> fit the images on ?
->>
->> Will I get more usable space from 5x2tb partitions or from 1xspanned
->> volume ? (the thecus pretty much only allows you to create raid
->> volumes so a jbod needs to be 5x1tb arrays or 1 spanned volume or
->> stripe).
+>> The requirement is basically this: around 40 to 50 compute machines
+>> act as basically an ad-hoc scientific compute/simulation/analysis
+>> cluster. =A0These machines all need access to a shared 20 TB pool of
+>> storage. =A0Each compute machine has a gigabit network connection, a=
+nd
+>> it's possible that nearly every machine could simultaneously try to
+>> access a large (100 to 1000 MB) file in the storage pool. =A0In othe=
+r
+>> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
 >
-> I'd use one spanned volume, and gzip. =A0I'd simultaneously generate =
-an md5sum while streaming to your thecus. =A0A script like so:
+> I'd recommend you analyse that requirement more closely. Yes, you hav=
+e 50
+> compute machines with GigE connections so it's possible they could al=
+l
+> demand data from the file store at once, but in actual use, would the=
+y?
 >
-> #! /bin/bash
-> #
-> function usage() {
-> =A0 =A0 =A0 =A0printf "Usage:\n\t%s devname\n\n" "`basename \"$0\"`"
-> =A0 =A0 =A0 =A0printf "'devname' must be a relative path in /dev/ to =
-the desired block device.\n"
-> =A0 =A0 =A0 =A0exit 1
-> }
+> For example, if these machines were each to demand a 100MB file, how =
+long
+> would they spend computing their results from it? If it's only 1 seco=
+nd,
+> then you would indeed need an aggregate bandwidth of 50Gbps[1]. If it=
+'s 20
+> seconds processing, your filer only needs an aggregate bandwidth of 2=
+=2E5Gbps.
 >
-> # Verify the supplied name is a device
-> test -b "/dev/$1" || usage
+> So I'd recommend you work out first how much data the compute machine=
+s can
+> actually chew through and work up from there, rather than what their =
+network
+> connections could stream through and work down.
 >
-> # Convert path separators and spaces into dashes
-> outfile=3D"`echo \"$1\" |sed -r -e 's:[ /]+:-:g'`"
+> Cheers,
 >
-> # Create a side-stream for computing the MD5 of the data read
-> fifo=3D`mktemp -u`
-> mkfifo $fifo || exit
-> md5sum -b <$fifo >/mnt/thecus/$outfile.md5 &
+> John.
 >
-> # Read the device and compress it
-> dd if=3D"/dev/$1" bs=3D1M | tee 2>$fifo | gzip >/mnt/thecus/$outfile.=
-gz
+> [1] I'm assuming the compute nodes are fetching the data for the next
+> compute cycle while they're working on this one; if they're not you'r=
+e
+> likely making unnecessary demands on your filer while leaving your co=
+mpute
+> nodes idle.
 >
-> # Wait for the background task to close
-> wait
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
+
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
