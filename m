@@ -1,93 +1,129 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current sysfs
- format
-Date: Thu, 17 Feb 2011 17:17:51 +1100
-Message-ID: <20110217171751.264709cd@notabene.brown>
-References: <20110216124021.9092.83943.stgit@gklab-128-111.igk.intel.com>
+Subject: Re: [PATCH] Re: User space RAID-6 access
+Date: Thu, 17 Feb 2011 17:23:32 +1100
+Message-ID: <20110217172332.2fbb5694@notabene.brown>
+References: <20110131202054.GA15712@lazy.lzy>
+	<20110201075259.4beaf501@notabene.brown>
+	<20110205173334.GA5952@lazy.lzy>
+	<20110206075820.08fc19c9@notabene.brown>
+	<20110207222459.GA25471@lazy.lzy>
+	<20110208094952.49745c7b@notabene.brown>
+	<20110209184734.GA7169@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110216124021.9092.83943.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <20110209184734.GA7169@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 13:40:21 +0100 Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
+On Wed, 9 Feb 2011 19:47:34 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-> Problem: sysfs_disk_to_scsi_id() not returns correct scsi_id value.
-> Reason: sysfs format has been changed
+> > I have applied some patch - with some formatting changes to make it consistent
+> > with the rest of the code.
+> > 
+> > I don't really have time to look more deeply at it at the moment.
+> > Maybe someone else will?...
 > 
-> This patch adapt sysfs_disk_to_scsi_id() to new sysfs format.
+> Hi Neil,
+> 
+> thanks for including this in git.
+> 
+> Actually I did it look at it :-) and I already found a
+> couple of issues, below is a small fix patch.
 
-If there has been a change in sysfs format, we want the code to work in both
-old and new cases.
+Sorry for delay - I have applied this now.
 
-Do you know if this new code works in the 'old' case?  Do you know when
-(which kernel version) the change happened, or at least can you name a kernel
-version when the 'old' style worked.
 
-The patch looks OK, but I want to be sure all bases are covered.
+> 
+> One question about offsets.
+> I noticed that offsets seems to be defined per component,
+> in the md software stack.
+> I mean, looking at sysfs, the offset are inside md/dev-sdX/offset
+> or available with mdadm -E /dev/sdX
+> It seems possible that different components have different
+> offset (I can imagine this happening with different sizes).
+> 
+> Now, from inside "test_stripe" there is no information about
+> the RAID itself, I mean the device, nor about the metadata type.
+> 
+> What would be the best way to get the offsets inside "restripe.c"?
+> 
+> 1) popen "mdadm -E ..." and grep the "Data Offset" field.
+> 2) pass one single offset as command line parameter.
+> 3) add the whole md device as command line parameter, removing
+> the single devices, and use sysfs.
+
+As this is really just for testing, I would add a :offset  suffix to the
+device names where the offset is in sectors.
+So:
+   /dev/sda
+means read from the start of /dev/sda
+
+   /dev/sda:2048
+
+means start 1Meg into /dev/sda.
+
+That should be easy to parse and is quite general.
+
+If you wanted to create separate functionality that could be given an active
+md device and would read from the component devices, I would link with
+sysfs.c and use those routines to read info from sysfs and use that to guide
+the code which finds the data.
+
+Make sense?
 
 Thanks,
 NeilBrown
 
 
+
 > 
-> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> ---
->  sysfs.c |   14 ++++++--------
->  1 files changed, 6 insertions(+), 8 deletions(-)
+> Thanks for any advice,
 > 
-> diff --git a/sysfs.c b/sysfs.c
-> index f0773d4..883a834 100644
-> --- a/sysfs.c
-> +++ b/sysfs.c
-> @@ -705,7 +705,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
->  	if (fstat(fd, &st))
->  		return 1;
+> bye,
+> 
+> pg
+> 
+> 
+> diff -uN a/restripe.c b/restripe.c
+> --- a/restripe.c	2011-02-09 19:31:18.989495816 +0100
+> +++ b/restripe.c	2011-02-09 19:32:42.597955058 +0100
+> @@ -430,7 +430,8 @@
 >  
-> -	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device",
-> +	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device/scsi_device",
->  		 major(st.st_rdev), minor(st.st_rdev));
 >  
->  	dir = opendir(path);
-> @@ -714,8 +714,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+>  		if((Px != 0) && (Qx != 0)) {
+> -			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]) & 0xFF;
+> +			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]);
+> +			if(data_id < 0) data_id += 255;
+>  			diskD = geo_map(data_id, start/chunk_size,
+>  					data_disks + 2, level, layout);
+>  			curr_broken_disk = diskD;
+> @@ -439,6 +440,9 @@
+>  		if((Px == 0) && (Qx == 0))
+>  			curr_broken_disk = curr_broken_disk;
 >  
->  	de = readdir(dir);
->  	while (de) {
-> -		if (strncmp("scsi_disk:", de->d_name,
-> -			    strlen("scsi_disk:")) == 0)
-> +		if (strchr(de->d_name, ':'))
+> +		if(curr_broken_disk >= data_disks + 2)
+> +			broken_status = 2;
+> +
+>  		switch(broken_status) {
+>  		case 0:
+>  			if(curr_broken_disk != -1) {
+> @@ -450,10 +454,6 @@
+>  		case 1:
+>  			if(curr_broken_disk != prev_broken_disk)
+>  				broken_status = 2;
+> -
+> -			if(curr_broken_disk >= data_disks + 2)
+> -				broken_status = 2;
+> -
 >  			break;
->  		de = readdir(dir);
->  	}
-> @@ -724,21 +723,20 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
->  	if (!de)
->  		return 1;
 >  
-> -	c1 = strchr(de->d_name, ':');
-> -	c1++;
-> +	c1 = de->d_name;
->  	c2 = strchr(c1, ':');
->  	*c2 = '\0';
->  	*id = strtol(c1, NULL, 10) << 24; /* host */
->  	c1 = c2 + 1;
->  	c2 = strchr(c1, ':');
->  	*c2 = '\0';
-> -	*id |= strtol(c1, NULL, 10) << 16; /* channel */
-> +	*id |= strtol(c1, NULL, 10) << 16; /* bus */
->  	c1 = c2 + 1;
->  	c2 = strchr(c1, ':');
->  	*c2 = '\0';
-> -	*id |= strtol(c1, NULL, 10) << 8; /* lun */
-> +	*id |= strtol(c1, NULL, 10) << 8; /* target */
->  	c1 = c2 + 1;
-> -	*id |= strtol(c1, NULL, 10); /* id */
-> +	*id |= strtol(c1, NULL, 10); /* lun */
+>  		case 2:
 >  
->  	return 0;
->  }
+> bye,
+> 
 
