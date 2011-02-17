@@ -1,117 +1,55 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current sysfs
- format
-Date: Thu, 17 Feb 2011 12:35:46 +0000
-Message-ID: <BE2BFE91933D1B4089447C6448604080690294D2@irsmsx503.ger.corp.intel.com>
-References: <20110216124021.9092.83943.stgit@gklab-128-111.igk.intel.com>
- <20110217171751.264709cd@notabene.brown>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Mixing mdadm versions
+Date: Thu, 17 Feb 2011 08:25:14 -0500
+Message-ID: <4D5D21BA.6060804@turmel.org>
+References: <AANLkTi=g2V9n_AEEGX58d1PkTLRj7HtxT=AGEaLQXNz1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217171751.264709cd@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <AANLkTi=g2V9n_AEEGX58d1PkTLRj7HtxT=AGEaLQXNz1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: hansbkk@gmail.com
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 02/17/2011 05:21 AM, hansbkk@gmail.com wrote:
+> I've created and manage sets of arrays with mdadm v3.1.4 - I've been
+> using System Rescue CD and Grml for my sysadmin tasks, as they are
+> based on fairly up-to-date gentoo and debian and have a lot of
+> convenient tools not available on the production OS, a "stable" (read:
+> old packages) flavor of RHEL, which turns out is running mdadm v2.6.4.
+> I spec'd v1.2 metadata for the big raid6 storage arrays, but kept to
+> 0.90 for the smaller raid1's as some of those are my boot devices.
 
+The default data offset for for v1.1 and v1.2 meta-data changed in mdadm v3.1.2.  If you ever need to use the running system to "mdadm --create --assume-clean" in a recovery effort, the data segments will *NOT* line up if the original array was created with a current version of mdadm.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Thursday, February 17, 2011 7:18 AM
-> To: Wojcik, Krzysztof
-> Cc: linux-raid@vger.kernel.org; Neubauer, Wojciech; Kwolek, Adam;
-> Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [PATCH] FIX: sysfs_disk_to_scsi_id() adapted to current
-> sysfs format
-> 
-> On Wed, 16 Feb 2011 13:40:21 +0100 Krzysztof Wojcik
-> <krzysztof.wojcik@intel.com> wrote:
-> 
-> > Problem: sysfs_disk_to_scsi_id() not returns correct scsi_id value.
-> > Reason: sysfs format has been changed
-> >
-> > This patch adapt sysfs_disk_to_scsi_id() to new sysfs format.
-> 
-> If there has been a change in sysfs format, we want the code to work in
-> both
-> old and new cases.
-> 
-> Do you know if this new code works in the 'old' case?  Do you know when
-> (which kernel version) the change happened, or at least can you name a
-> kernel
-> version when the 'old' style worked.
-> 
-> The patch looks OK, but I want to be sure all bases are covered.
+(git commit a380e2751efea7df "super1: encourage data alignment on 1Meg boundary")
 
-I tested the patch with a few versions of kernels since 2.6.27. The patch works with all versions.
-I haven't found kernel working properly with initial code.
-I assume that scsi_id field was not filled properly for a long time.
-It is not critical because scsi_id is not currently used by mdadm so bug hasn't been discovered earlier.
-For today scsi_id is important from the viewpoint of IMSM metadata compatibility only.
-I suggest to apply the patch.
+> As per a previous thread, I've noticed on the production OS the output
+> of mdadm -E on a member returns a long string of "failed, failed". The
+> more modern mdadm reports everything's OK.
+> 
+> - Also mixed in are some "fled"s - whazzup with that?
+> 
+> Unfortunately the server is designed to run as a packaged appliance
+> and uses the rpath/conary package manager, so I'm hesitant to fiddle
+> around upgrading some bits, afraid that other bits will break - the
+> sysadmin tools are run from a web interface to a bunch of PHP scripts.
+> 
+> So, here are my questions:
+> 
+> As long as the more recent versions of mdadm report that everything's
+> OK, can I ignore the mishmosh output of the older mdadm -E report?
 
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> >
-> > Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> > ---
-> >  sysfs.c |   14 ++++++--------
-> >  1 files changed, 6 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/sysfs.c b/sysfs.c
-> > index f0773d4..883a834 100644
-> > --- a/sysfs.c
-> > +++ b/sysfs.c
-> > @@ -705,7 +705,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
-> >  	if (fstat(fd, &st))
-> >  		return 1;
-> >
-> > -	snprintf(path, sizeof(path), "/sys/dev/block/%d:%d/device",
-> > +	snprintf(path, sizeof(path),
-> "/sys/dev/block/%d:%d/device/scsi_device",
-> >  		 major(st.st_rdev), minor(st.st_rdev));
-> >
-> >  	dir = opendir(path);
-> > @@ -714,8 +714,7 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
-> >
-> >  	de = readdir(dir);
-> >  	while (de) {
-> > -		if (strncmp("scsi_disk:", de->d_name,
-> > -			    strlen("scsi_disk:")) == 0)
-> > +		if (strchr(de->d_name, ':'))
-> >  			break;
-> >  		de = readdir(dir);
-> >  	}
-> > @@ -724,21 +723,20 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
-> >  	if (!de)
-> >  		return 1;
-> >
-> > -	c1 = strchr(de->d_name, ':');
-> > -	c1++;
-> > +	c1 = de->d_name;
-> >  	c2 = strchr(c1, ':');
-> >  	*c2 = '\0';
-> >  	*id = strtol(c1, NULL, 10) << 24; /* host */
-> >  	c1 = c2 + 1;
-> >  	c2 = strchr(c1, ':');
-> >  	*c2 = '\0';
-> > -	*id |= strtol(c1, NULL, 10) << 16; /* channel */
-> > +	*id |= strtol(c1, NULL, 10) << 16; /* bus */
-> >  	c1 = c2 + 1;
-> >  	c2 = strchr(c1, ':');
-> >  	*c2 = '\0';
-> > -	*id |= strtol(c1, NULL, 10) << 8; /* lun */
-> > +	*id |= strtol(c1, NULL, 10) << 8; /* target */
-> >  	c1 = c2 + 1;
-> > -	*id |= strtol(c1, NULL, 10); /* id */
-> > +	*id |= strtol(c1, NULL, 10); /* lun */
-> >
-> >  	return 0;
-> >  }
+Don't know.
 
+> And am I correct in thinking that from now on I should create
+> everything with the older native packages that are actually going to
+> serve the arrays in production?
+
+If there's a more modern Red Hat mdadm package that you can include in your appliance, that would be my first choice.  After testing with the web tools, though.
+
+Otherwise, I would say "Yes", for the above reason.  However, the reverse problem can also occur.  You won't be able to use a modern mdadm to do a "--create --assume-clean" on an offline system.  That's what happened to Simon in another thread.  Avoiding that might be worth the effort qualifying a newer version of mdadm.
+
+Phil
