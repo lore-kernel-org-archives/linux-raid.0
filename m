@@ -1,76 +1,52 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 14:10:17 +1100
-Message-ID: <20110217141017.01e30eab@notabene.brown>
-References: <20110216212751.51a294aa@notabene.brown>
-	<20110216202939.GA2756@lazy.lzy>
-	<20110217084826.77f4dbf1@notabene.brown>
-	<4D5C6AAF.1040600@turmel.org>
-	<20110217115257.28a8d174@notabene.brown>
-	<4D5C768A.1010502@turmel.org>
+From: Joe Landman <joe.landman@gmail.com>
+Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
+Date: Wed, 16 Feb 2011 22:11:46 -0500
+Message-ID: <4D5C91F2.8000200@gmail.com>
+References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com> <20110217124214.00ad25dd@notabene.brown> <00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C768A.1010502@turmel.org>
+In-Reply-To: <00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Matt Tehonica <matt.tehonica@mac.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 20:14:50 -0500 Phil Turmel <philip@turmel.org> wrote:
+On 02/16/2011 08:47 PM, Matt Tehonica wrote:
+> To be honest, I couldn't find good directions on how exactly to
+> resize an array to be smaller so I put some bits and pieces together
+> to do it.  Guess I didn't understand everything beforehand because I
+> didn't read anything about resizing the file system.  I thought
+> setting the "array-size" would take care of moving data before
+> rebuilding onto the 6 disks.
+>
+> Since I haven't resized the XFS filesystem, any recommendations on
+> what to do next?  Think it's possible to recover any of the data?
+> For what it's worth, I haven't done anything to the 2 disks that I
+> was going to remove.
 
-> On 02/16/2011 07:52 PM, NeilBrown wrote:
+XFS isn't shrinkable.  See if
 
-> > So when you do the computation on all of the bytes in all of the blocks you
-> > get a block full of answers.
-> > If the answers are all the same - that tells you something fairly strong.
-> > If they are a "all different" then that is also a fairly strong statement.
-> > But what if most are the same, but a few are different?  How do you interpret
-> > that?
-> 
-> Actually, I was thinking about that.  (You suckered me into reading that PDF
-> some weeks ago.)  I would be inclined to allow the kernel to make corrections
-> where "all the same" covers individual sectors, per the sector size reported
-> by the underlying device.
+	xfs_check /dev/mdX
 
-To see what I am strongly against having the kernel make automatic
-corrections like this, see
+tells you anything.  If you have a backup, a restore would be the 
+fastest option.  If you don't, and you have no other possible way of 
+recovering the data from another source, try
 
-    http://neil.brown.name/blog/20100211050355
+	xfs_repair /dev/mdX
 
+I usually run it with the verbose flag on so I can see what its doing.
 
-> 
-> Also, the comparison would have to ignore "neutral bytes", where P & Q
-> happened to be correct for that byte position.
-> 
-> > The point I'm trying to get to is that the result of this RAID6 calculation
-> > isn't a simple "that device is bad".  It is a block of data that needs to be
-> > interpreted.
-> > 
-> > I'd rather have user-space do that interpretation, so it may as well do the
-> > calculation too.
-> > 
-> > If you wanted to do it in the kernel, you would need to be very clear about
-> > what information you provide, what it means exactly, and why it is sufficient.
-> 
-> Given that the hardware is going to do error correction and checking at a
-> sector size granularity, and the kernel would in fact rewrite that sector using
-> this calculation if the hardware made a "fairly strong" statement that it can't
-> be trusted, I'd argue that rewriting the sector is appropriate.
+I am not sure it will work, or result in recoverable data.
 
-You the RAID6 calculation tells you is that something cannot be trusted.  It
-doesn't tell you what.  It could be the controller, the cable, the drive
-logic, or the rust on the media.  Without the knowledge, correction can be
-dangerous.
+If you need to shrink xfs file systems, in general, it is best to use 
+xfsdump/xfsrestore or tar.
 
-NeilBrown
+> -- To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
-> 
-> Any corrective action that isn't consistent at the sector level should be punted.
-> I'm very curious what percentage that would be in production environments.
-> 
-> Phil
-
+-- 
+Joe Landman
+landman@scalableinformatics.com
