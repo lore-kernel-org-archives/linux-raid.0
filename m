@@ -1,71 +1,75 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 12:04:54 -0900 (AKST)
-Message-ID: <alpine.LNX.2.01.1102171149110.13914@filesrv1.baby-dragons.com>
-References: <20110216212751.51a294aa@notabene.brown> <20110216202939.GA2756@lazy.lzy> <20110217084826.77f4dbf1@notabene.brown> <4D5C6AAF.1040600@turmel.org> <20110217115257.28a8d174@notabene.brown> <4D5C768A.1010502@turmel.org>
- <20110217141017.01e30eab@notabene.brown>
+From: Tobias McNulty <tobias@caktusgroup.com>
+Subject: Re: reshape failure
+Date: Thu, 17 Feb 2011 16:39:37 -0500
+Message-ID: <AANLkTi=gP5QGbq-JguHuA3T91_+U1XYLP1xiK9nSQ_LO@mail.gmail.com>
+References: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
+ <20110217073247.2dbc9299@notabene.brown> <AANLkTin__CDHu4qxAJe2NACXBFdE7EV1kuFOMoG7-P-h@mail.gmail.com>
+ <20110217080634.510b017e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217141017.01e30eab@notabene.brown>
+In-Reply-To: <20110217080634.510b017e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Neil ,
-
-On Thu, 17 Feb 2011, NeilBrown wrote:
-> On Wed, 16 Feb 2011 20:14:50 -0500 Phil Turmel <philip@turmel.org> wrote:
->> On 02/16/2011 07:52 PM, NeilBrown wrote:
->>> So when you do the computation on all of the bytes in all of the blocks you
->>> get a block full of answers.
->>> If the answers are all the same - that tells you something fairly strong.
->>> If they are a "all different" then that is also a fairly strong statement.
->>> But what if most are the same, but a few are different?  How do you interpret
->>> that?
->>
->> Actually, I was thinking about that.  (You suckered me into reading that PDF
->> some weeks ago.)  I would be inclined to allow the kernel to make corrections
->> where "all the same" covers individual sectors, per the sector size reported
->> by the underlying device.
+On Wed, Feb 16, 2011 at 4:06 PM, NeilBrown <neilb@suse.de> wrote:
 >
-> To see what I am strongly against having the kernel make automatic
-> corrections like this, see
+> On Wed, 16 Feb 2011 15:41:46 -0500 Tobias McNulty <tobias@caktusgroup=
+=2Ecom>
+> wrote:
+> >
+> > Now I see this in /etc/mdstat:
+> >
+> > md0 : active raid6 sdf[0] sdg[5](S) sdh[4] sdc[3] sdd[2] sde[1]
+> > =A0 =A0 =A0 5860543488 blocks super 0.91 level 6, 64k chunk, algori=
+thm 2 [5/5] [UUUUU]
+> > =A0 =A0 =A0 [=3D>...................] =A0reshape =3D =A09.9% (19369=
+1648/1953514496)
+> > finish=3D97156886.4min speed=3D0K/sec
+> >
+> > Is the 0K/sec something I need to worry about?
 >
->    http://neil.brown.name/blog/20100211050355
- 	Paraphrasing from the above ,  Mind all I did was skim the article . 
-But this statement from your conclusions leaves me a tad lost .
+> Maybe. =A0If the stays at 0K/sec and the 9.9% stays at 9.9%, then yes=
+=2E =A0It is
+> something to worry about.
 
-"... It could even be done entirely in user-space by suspending IO to the 
-affected stripe (md already supports that), making the required update, then 
-resuming IO. ..."
+It seems like it was another buggy SATA HBA?? I moved everything back
+to the on-board SATA ports (1 of the 2 drives in the OS RAID1 device
+and the 5 non-spare devices in the RAID6 -> RAID5 device) and it's
+happily reshaping again (even without the=A0MDADM_GROW_ALLOW_OLD magic
+this time):
 
- 	Hopefully the quantity of 'required update'ng would be extremely small .
- 	Tho if not ,  Then we'll start seeing locked at user level reports .  Of 
-course the process should be completely kill'able & nice'able in userspace as 
-long as there is documantation available to our 'informed admin' on howto limit 
-the processes possible abuses to his primary runtime service(s) .  Which will 
-probably be file sharing to other servers or workstations .
- 	I am quite sure you have thought thru that particular (and many other) 
-scenarios before making that proposal .  Would you please either here OR at the 
-original document above inform us a little more on how you feel you'd like to 
-approach the problem of a 'large update' ?  if a 'large update' should even be 
-possible not even sure of can or not .
+md0 : active raid6 sda[0] sde[4] sdd[3] sdc[2] sdb[1]
+=A0=A0 =A0 =A05860543488 blocks super 0.91 level 6, 64k chunk, algorith=
+m 2 [5/5] [UUUUU]
+=A0=A0 =A0 =A0[=3D=3D>..................] =A0reshape =3D 10.0% (1969601=
+92/1953514496)
+finish=3D11376.9min speed=3D2572K/sec
 
+Is it really possible that I had two buggy SATA cards, from different
+manufacturers?  Perhaps the motherboard is at fault?  Or am I missing
+something very basic about connecting SATA drives to something other
+than the on-board ports?
 
- 	I also find myself agreeing with your 'to conclude the conclusion'-) 
-that automaticity should in 'general' be avoided .  An Aware & informed admin 
-is the best method to be used .
+Currently I'm using a SuperMicro X7SPA-HF [1] motherboard with a
+AOC-SASLP-MV8 [2] HBA, and the machine is running Debian squeeze
+(2.6.32-5-amd64).
 
+Tobias
 
- 	And finally BUT not the least ,  Thank you .  Even tho we have our 
-differences of opinions on other aspects of the MD structure .
-
- 		Tia ,  JimL
--- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 3237     Holden Road |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
-+------------------------------------------------------------------+
+[1] http://www.supermicro.com/products/motherboard/ATOM/ICH9/X7SPA.cfm?=
+typ=3DH&IPMI=3DY
+[2] http://www.supermicro.com/products/accessories/addon/AOC-SASLP-MV8.=
+cfm
+--
+Tobias McNulty, Managing Partner
+Caktus Consulting Group, LLC
+http://www.caktusgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
