@@ -1,52 +1,116 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
-Date: Wed, 16 Feb 2011 22:11:46 -0500
-Message-ID: <4D5C91F2.8000200@gmail.com>
-References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com> <20110217124214.00ad25dd@notabene.brown> <00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: File system corruption during setting new size (native/extarnal
+ metatdat) after expansion
+Date: Thu, 17 Feb 2011 15:38:15 +1100
+Message-ID: <20110217153815.2212b13d@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Tehonica <matt.tehonica@mac.com>
-Cc: linux-raid@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 02/16/2011 08:47 PM, Matt Tehonica wrote:
-> To be honest, I couldn't find good directions on how exactly to
-> resize an array to be smaller so I put some bits and pieces together
-> to do it.  Guess I didn't understand everything beforehand because I
-> didn't read anything about resizing the file system.  I thought
-> setting the "array-size" would take care of moving data before
-> rebuilding onto the 6 disks.
->
-> Since I haven't resized the XFS filesystem, any recommendations on
-> what to do next?  Think it's possible to recover any of the data?
-> For what it's worth, I haven't done anything to the 2 disks that I
-> was going to remove.
+On Wed, 16 Feb 2011 15:24:53 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-XFS isn't shrinkable.  See if
+> Hi,
+> 
+> I've met again array_size change problem. A while ago I've indicated it, during array expansion, file system corruption occurs.
+> The previous conclusion was that my tests were wrong (too small arrays, on bigger arrays it seems to be ok), 
+> I've got now reproduction in our lab on quite big arrays (250G) and on my small test arrays also.
+> 
+> This problem is related to array expansion using native and external metadata.
+>  
+> Problem is that after expansion file system on array is corrupted.
+> Operation that corrupts file system is array size change via sysfs (and for native metadata during reshape finalization in md).
+> In logs I've got information:
+> 	VFS: busy inodes on changed media or resized disks
+> 
+> My investigation in md goes to block_dev.c/inode.c and flush_disk() (called from check_disk_size_change()).
+> I've found above text there (about busy inodes). 
+> My traces shows that in __invalidate_inodes(), inode->i_count == 2 and it is locked. This makes me to look how invalidate_inodes() is called.
+> Before invalidate_inodes() is called, cache is cleared by shrink_dcache_sb().
+> If I've commented shrink_dcache_sb() file system seems to be safe. It is the same when invalidate_inodes() is commented (shrink_cache_sb() called only).
+> If I've changed functions order (1. invalidate_inodes(), 2. shrink_dcache_sb()) in __invalidate_device() (block_dev.c) there is no corruption also.
+> When after shrink_dcache_sb() is called invalidate_inodes() on busy inodes corruption occurs (if it called earlier it doesn't matter).
+> 
+> This problem can be reproduced on mounted arrays only. If array is not mounted, file system corruption disappears.
+> This means that whole expansion process is correct.
+> In some cases (rarely) inodes on mounted device are not locked and then FS corruption doesn't happened.
+> 
+> 
+> I'd like to know your opinion.
+> Do you think that problem is in releasing cache but not all inodes (busy case), commands order...
+> ... or probably changing size on mounted array is a mistake (for current code)?
+> 
+> BR
+> Adam
+> 
+> 
+> ---------------------------------
+> My test commands:	
+> 
+> #create container
+> mdadm -C /dev/md/imsm0 -amd -e imsm -n 3 /dev/sdb /dev/sdc /dev/sde -R
+> 
+> #create volume
+> mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --size 104857 -n 3 /dev/sdb /dev/sdc /dev/sde -R
+> mkfs /dev/md/raid5vol_0
+> mount /dev/md/raid5vol_0 /mnt/vol
+> 
+> #copy some files from current directory
+> cp * /mnt/vol
+> 
+> #add spare
+> mdadm --add /dev/md/imsm0 /dev/sdd
+> 
+> #start reshape
+> mdadm --grow /dev/md/imsm0 --raid-devices 4 --backup-file=/backup.bak
 
-	xfs_check /dev/mdX
+Thanks for the script - that makes things a lot easier.
 
-tells you anything.  If you have a backup, a restore would be the 
-fastest option.  If you don't, and you have no other possible way of 
-recovering the data from another source, try
+I had to add some "mdadm --wait" commands etc to make it work reliably, but
+then I could get it to generate filesystem corruption quite easily.
 
-	xfs_repair /dev/mdX
+I also had "mdmon" crashing because imsm_num_data_members got a 'map' of NULL,
+and then tried to get_imsm_raid_level on it.  Something needs to be fixed
+there (I hacked it so that if it got a NULL, it tried again with second_map
+== 0, but I don't know if that is right).
 
-I usually run it with the verbose flag on so I can see what its doing.
+The problem seems to be in the VFS/VM layer.  I can see two ways to fix it.
+I'll see if I can find some who wants to take responsibility and make a
+decision.
 
-I am not sure it will work, or result in recoverable data.
+1/ in invalidate_inodes (in fs/inodes.c), inside the loop, add a clause:
 
-If you need to shrink xfs file systems, in general, it is best to use 
-xfsdump/xfsrestore or tar.
+		if (inode->i_state & I_DIRTY)
+			continue;
 
-> -- To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  That is what is causing the problem - dirty inodes are being discarded.
 
--- 
-Joe Landman
-landman@scalableinformatics.com
+2/ in check_disk_size_change (in fs/block_dev.c), replace
+
+         flush_disk(bdev);
+   with
+
+         if (disk_size == 0 || bdev_size == 0)
+               flush_disk(bdev);
+
+ because I don't think there is any justification for calling flush_bdev if
+ we are just changing the size of the disk - though I don't really know why
+ that is there at all, so it is hard to say for sure.   Certainly if
+ disk_size > bdev_size we shouldn't be calling flush disk.
+
+So I suggest you make one of those changes to continue with your testing, and
+I'll try to get something sorted out.
+
+If you could look into the circumstances that might make imsm_num_data_members
+get a NULL map, I would appreciate that.
+
+Thanks,
+NeilBrown
+
