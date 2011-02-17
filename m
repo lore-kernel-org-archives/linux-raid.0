@@ -1,45 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
+From: David Brown <david.brown@hesbynett.no>
 Subject: Re: md road-map: 2011
-Date: Wed, 16 Feb 2011 19:24:15 -0500
-Message-ID: <4D5C6AAF.1040600@turmel.org>
-References: <20110216212751.51a294aa@notabene.brown>	<20110216202939.GA2756@lazy.lzy> <20110217084826.77f4dbf1@notabene.brown>
+Date: Thu, 17 Feb 2011 01:30:49 +0100
+Message-ID: <ijhq7p$pjv$1@dough.gmane.org>
+References: <20110216212751.51a294aa@notabene.brown>	<ijgr9p$7v8$1@dough.gmane.org>	<20110217083531.3090a348@notabene.brown>	<ijhje3$ocd$1@dough.gmane.org> <20110217100139.7520893d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217084826.77f4dbf1@notabene.brown>
+In-Reply-To: <20110217100139.7520893d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/16/2011 04:48 PM, NeilBrown wrote:
-> On Wed, 16 Feb 2011 21:29:39 +0100 Piergiorgio Sartor
->>
->>> Better reporting of inconsistencies.
->>> ------------------------------------
->>>
->>> When a 'check' finds a data inconsistency it would be useful if it
->>> was reported.   That would allow a sysadmin to try to understand the
->>> cause and possibly fix it.
->>
->> Could you, please, consider to add, for RAID-6, the
->> capability to report also which device, potentially,
->> has the problem? Thanks!
-> 
-> I would rather leave that to user-space.  If I report where the problem is, a
-> tool could directly read all the blocks in that stripe and perform any fancy
-> calculations you like.  I may even write that tool (but no promises).
+On 17/02/11 00:01, NeilBrown wrote:
+> On Wed, 16 Feb 2011 23:34:43 +0100 David Brown<david.brown@hesbynett.no>
+> wrote:
+>
+>> I thought there was some mechanism for block devices to report bad
+>> blocks back to the file system, and that file systems tracked bad block
+>> lists.  Modern drives automatically relocate bad blocks (at least, they
+>> do if they can), but there was a time when they did not and it was up to
+>> the file system to track these.  Whether that still applies to modern
+>> file systems, I do not know - they only file system I have studied in
+>> low-level detail is FAT16.
+>
+> When the block device reports an error the filesystem can certainly record
+> that information in a bad-block list, and possibly does.
+>
+> However I thought you were suggesting a situation where the block device
+> could succeed with the request, but knew that area of the device was of low
+> quality.
 
-Hmmm.  The existing "check" code, if it encounters a read error, will use
-available redundancy to recover that data and rewrite it on the spot.
+I guess that is what I was trying to suggest, though not very clearly.
 
-Without a read error, or with multiple redundancy, the calculations to
-check consistency are performed and reported.  With all the data "hot", and half
-the calculation to pinpoint an inconsistency done, it seems a shame to have
-userspace redo it.
+> e.g. IO to a block on a stripe which had one 'bad block'.  The IO should
+> succeed, but the data isn't as safe as elsewhere.  It would be nice if we
+> could tell the filesystem that fact, and if it could make use of it. But we
+> currently cannot.   We can say "success" or "failure", but we cannot say
+> "success, but you might not be so lucky next time".
+>
 
-Are you adamantly opposed to the kernel doing this?  (For Raid6)  Code talks,
-of course, but I'd rather not start if I'm only going to be shot down.
+Do filesystems re-try reads when there is a failure?  Could you return 
+fail on one read, then success on a re-read, which could be interpreted 
+as "dying, but not yet dead" by the file system?
 
-Phil
