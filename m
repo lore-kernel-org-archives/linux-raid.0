@@ -1,30 +1,22 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
-Date: Wed, 16 Feb 2011 20:43:21 -0600
-Message-ID: <4D5C8B49.6050206@hardwarefreak.com>
-References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com> <4D5C7A33.90007@turmel.org>
+Subject: Re: high throughput storage server?
+Date: Wed, 16 Feb 2011 21:05:42 -0600
+Message-ID: <4D5C9086.9070706@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<4D5A7198.7060607@hardwarefreak.com>	<ijdvmn$4ff$1@dough.gmane.org>	<4D5C5EAA.3020208@hardwarefreak.com>	<20110217000058.GA16130@www2.open-std.org>	<4D5C699D.5010509@hardwarefreak.com> <AANLkTi=z_JhT3Hig9gPB41m7odWhBcM3BdReD7i+wmE-@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5C7A33.90007@turmel.org>
+In-Reply-To: <AANLkTi=z_JhT3Hig9gPB41m7odWhBcM3BdReD7i+wmE-@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Matt Tehonica <matt.tehonica@mac.com>, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phil Turmel put forth on 2/16/2011 7:30 PM:
-> On 02/16/2011 07:24 PM, Matt Tehonica wrote:
->> Hi all,
->>
->> I converted my RAID5 from 8 disks to 6 disks using "mdadm --grow /dev/md0 --array-size" and then "mdadm --grow /dev/md0 --raid-devices=6" and after rebooting, it won't mount.  It has been running fine for about a year.  File system is XFS.  Here is some info on it....
-> 
-> Did you resize (shrink) the XFS filesystem first?
+Roberto Spadim put forth on 2/16/2011 8:23 PM:
+> what's 'enterprise' means?
 
-You can't shrink XFS filesystems.
-
-This has been talked about as a possibility in the future, but AFAIK
-there's no code yet.
+http://lmgtfy.com/?q=enterprise+storage
 
 -- 
 Stan
