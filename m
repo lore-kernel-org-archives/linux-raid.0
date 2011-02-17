@@ -1,66 +1,143 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 20:56:21 +0100
-Message-ID: <20110217195621.GA3296@lazy.lzy>
-References: <20110216212751.51a294aa@notabene.brown>
- <20110216202939.GA2756@lazy.lzy>
- <20110217084826.77f4dbf1@notabene.brown>
- <4D5C6AAF.1040600@turmel.org>
- <20110217115257.28a8d174@notabene.brown>
- <4D5C768A.1010502@turmel.org>
+Subject: Re: [PATCH] Re: User space RAID-6 access
+Date: Thu, 17 Feb 2011 21:01:52 +0100
+Message-ID: <20110217200152.GB3296@lazy.lzy>
+References: <20110131202054.GA15712@lazy.lzy>
+ <20110201075259.4beaf501@notabene.brown>
+ <20110205173334.GA5952@lazy.lzy>
+ <20110206075820.08fc19c9@notabene.brown>
+ <20110207222459.GA25471@lazy.lzy>
+ <20110208094952.49745c7b@notabene.brown>
+ <20110209184734.GA7169@lazy.lzy>
+ <20110217172332.2fbb5694@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4D5C768A.1010502@turmel.org>
+In-Reply-To: <20110217172332.2fbb5694@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > So when you do the computation on all of the bytes in all of the blocks you
-> > get a block full of answers.
-> > If the answers are all the same - that tells you something fairly strong.
-> > If they are a "all different" then that is also a fairly strong statement.
-> > But what if most are the same, but a few are different?  How do you interpret
-> > that?
+On Thu, Feb 17, 2011 at 05:23:32PM +1100, NeilBrown wrote:
+> On Wed, 9 Feb 2011 19:47:34 +0100 Piergiorgio Sartor
+> <piergiorgio.sartor@nexgo.de> wrote:
 > 
-> Actually, I was thinking about that.  (You suckered me into reading that PDF
-> some weeks ago.)  I would be inclined to allow the kernel to make corrections
-> where "all the same" covers individual sectors, per the sector size reported
-> by the underlying device.
+> > > I have applied some patch - with some formatting changes to make it consistent
+> > > with the rest of the code.
+> > > 
+> > > I don't really have time to look more deeply at it at the moment.
+> > > Maybe someone else will?...
+> > 
+> > Hi Neil,
+> > 
+> > thanks for including this in git.
+> > 
+> > Actually I did it look at it :-) and I already found a
+> > couple of issues, below is a small fix patch.
+> 
+> Sorry for delay - I have applied this now.
 
-I do agree with Neil on this.
-User space should collect the data, perform statistics
-and give suggestions.
-After that there should be a mechanism, at this point in
-kernel space, I guess, capable of correcting one single
-chunk of one device.
-
-> Also, the comparison would have to ignore "neutral bytes", where P & Q
-> happened to be correct for that byte position.
-
-<shameless advertisement>
-Have a look at the patch I submitted to "restripe.c", it
-should cover the interesting cases.
-Even if more statistics could be applied.
-</shameless advertisement>
+No, problem, I know it could happen, just concerned
+about the quality of the patch... :-)
  
-> Given that the hardware is going to do error correction and checking at a
-> sector size granularity, and the kernel would in fact rewrite that sector using
-> this calculation if the hardware made a "fairly strong" statement that it can't
-> be trusted, I'd argue that rewriting the sector is appropriate.
+> > One question about offsets.
+> > I noticed that offsets seems to be defined per component,
+> > in the md software stack.
+> > I mean, looking at sysfs, the offset are inside md/dev-sdX/offset
+> > or available with mdadm -E /dev/sdX
+> > It seems possible that different components have different
+> > offset (I can imagine this happening with different sizes).
+> > 
+> > Now, from inside "test_stripe" there is no information about
+> > the RAID itself, I mean the device, nor about the metadata type.
+> > 
+> > What would be the best way to get the offsets inside "restripe.c"?
+> > 
+> > 1) popen "mdadm -E ..." and grep the "Data Offset" field.
+> > 2) pass one single offset as command line parameter.
+> > 3) add the whole md device as command line parameter, removing
+> > the single devices, and use sysfs.
+> 
+> As this is really just for testing, I would add a :offset  suffix to the
+> device names where the offset is in sectors.
+> So:
+>    /dev/sda
+> means read from the start of /dev/sda
+> 
+>    /dev/sda:2048
+> 
+> means start 1Meg into /dev/sda.
+> 
+> That should be easy to parse and is quite general.
+> 
+> If you wanted to create separate functionality that could be given an active
+> md device and would read from the component devices, I would link with
+> sysfs.c and use those routines to read info from sysfs and use that to guide
+> the code which finds the data.
+> 
+> Make sense?
 
-The problem could be in the interface (it happened to me)
-and not in the disk. So, there will be no error correction,
-at this point, from the device.
- 
-> Any corrective action that isn't consistent at the sector level should be punted.
-> I'm very curious what percentage that would be in production environments.
+Thanks for the hint, I guess it makes a lot of sense.
 
-Yeah, me too.
+I'll try the ":", it seems to me reasonable for the time being.
+Eventually, I could consider to write a separate piece of code
+linking restripe.c and sysfs.c together.
+
+Thanks again,
 
 bye,
+
+pg
+
+> > bye,
+> > 
+> > pg
+> > 
+> > 
+> > diff -uN a/restripe.c b/restripe.c
+> > --- a/restripe.c	2011-02-09 19:31:18.989495816 +0100
+> > +++ b/restripe.c	2011-02-09 19:32:42.597955058 +0100
+> > @@ -430,7 +430,8 @@
+> >  
+> >  
+> >  		if((Px != 0) && (Qx != 0)) {
+> > -			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]) & 0xFF;
+> > +			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]);
+> > +			if(data_id < 0) data_id += 255;
+> >  			diskD = geo_map(data_id, start/chunk_size,
+> >  					data_disks + 2, level, layout);
+> >  			curr_broken_disk = diskD;
+> > @@ -439,6 +440,9 @@
+> >  		if((Px == 0) && (Qx == 0))
+> >  			curr_broken_disk = curr_broken_disk;
+> >  
+> > +		if(curr_broken_disk >= data_disks + 2)
+> > +			broken_status = 2;
+> > +
+> >  		switch(broken_status) {
+> >  		case 0:
+> >  			if(curr_broken_disk != -1) {
+> > @@ -450,10 +454,6 @@
+> >  		case 1:
+> >  			if(curr_broken_disk != prev_broken_disk)
+> >  				broken_status = 2;
+> > -
+> > -			if(curr_broken_disk >= data_disks + 2)
+> > -				broken_status = 2;
+> > -
+> >  			break;
+> >  
+> >  		case 2:
+> >  
+> > bye,
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
 
