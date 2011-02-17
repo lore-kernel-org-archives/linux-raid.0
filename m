@@ -1,34 +1,74 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Linux software RAID assistance
-Date: Thu, 17 Feb 2011 11:54:06 -0500
-Message-ID: <4D5D52AE.8070602@turmel.org>
-References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5BD678.2050200@gmail.com>	<4D5BE119.7000804@turmel.org>	<4D5C0E17.3060306@gmail.com>	<4D5C140F.9010301@turmel.org>	<4D5C1508.3040308@gmail.com>	<4D5C15D3.1070608@turmel.org>	<4D5C167C.7000101@turmel.org>	<4D5C1CF8.1020507@gmail.com>	<4D5C1E0B.9060300@turmel.org>	<4D5C2061.4060106@gmail.com>	<4D5C2143.3000907@turmel.org>	<4D5C2260.3020800@gmail.com>	<4D5C273E.7020609@turmel.org>	<4D5C4176.80604@gmail.com>	<4D5C4204.5020106@turmel.org>	<1377706586882297883@unknownmsgid>	<4D5C6016.6060809@turmel.org>	<AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>	<4D5D2723.1010101@turmel.org>	<6037962689649361915@unknownmsgid> <AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gm
- ail.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH] Fix over-zealous flush_disk when changing device size.
+Date: Thu, 17 Feb 2011 12:03:48 -0500
+Message-ID: <x494o82wq2z.fsf@segfault.boston.devel.redhat.com>
+References: <20110217165057.5c50e566@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gmail.com>
+In-Reply-To: <20110217165057.5c50e566@notabene.brown> (NeilBrown's message of
+	"Thu, 17 Feb 2011 16:50:57 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Mcnair <simonmcnair@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Patterson <andrew.patterson@hp.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/17/2011 09:34 AM, Simon Mcnair wrote:
-> 19390 root       17.49 M/s       0 B/s  0.00 % 21.36 % dd if /dev/sde bs 1M
-> 19333 root       16.52 M/s       0 B/s  0.00 % 17.07 % dd if /dev/sdd bs 1M
-> 19503 root       15.79 M/s       0 B/s  0.00 % 13.91 % dd if /dev/sdf bs 1M
-> 18896 root           0 B/s   16.10 M/s  0.00 %  0.00 % ntfs-3g
-> /dev/sdb1 /media/ntfs3g/sdb
-> 18909 root           0 B/s   13.49 M/s  0.00 %  0.00 % ntfs-3g
-> /dev/sdc1 /media/ntfs3g/sdc
-> 18920 root           0 B/s   15.73 M/s  0.00 %  0.00 % ntfs-3g
-> /dev/sdn1 /media/ntfs3g/sdn
-> 
-> this will certainly be quicker :-)
+NeilBrown <neilb@suse.de> writes:
 
-But still a long time...
+> Hi Andrew (and others)
+>  I wonder if you would review the following for me and comment.
+>
+> Thanks,
+> NeilBrown
+>
+>
+>
+> From e7f75c2a757108cdd83ce8c808a16bf27686c95f Mon Sep 17 00:00:00 2001
+> From: NeilBrown <neilb@suse.de>
+> Date: Thu, 17 Feb 2011 16:37:30 +1100
+> Subject: [PATCH] Fix over-zealous flush_disk when changing device size.
+>
+> There are two cases when we call flush_disk.
+> In one, the device has disappeared (check_disk_change) so any
+> data will hold becomes irrelevant.
+> In the oter, the device has changed size (check_disk_size_change)
+> so data we hold may be irrelevant.
+>
+> In both cases it makes sense to discard any 'clean' buffers,
+> so they will be read back from the device if needed.
+>
+> In the former case it makes sense to discard 'dirty' buffers
+> as there will never be anywhere safe to write the data.  In the
+> second case it *does*not* make sense to discard dirty buffers
+> as that will lead to file system corruption when you simply enlarge
+> the containing devices.
+>
+> flush_disk calls __invalidate_devices.
+> __invalidate_device calls both invalidate_inodes and invalidate_bdev.
+>
+> invalidate_inodes *does* discard I_DIRTY inodes and this does lead
+> to fs corruption.
+>
+> invalidate_bev *does*not* discard dirty pages, but I don't really care
+> about that at present.
+>
+> So this patch adds a flag to __invalidate_device (calling it
+> __invalidate_device2) to indicate whether dirty buffers should be
+> killed, and this is passed to invalidate_inodes which can choose to
+> skip dirty inodes.
+>
+> flusk_disk then passes true from check_disk_change and false from
+> check_disk_size_change.
+>
+> dm avoids tripping over this problem by calling i_size_write directly
+> rathher than using check_disk_size_change.
+>
+> md does use check_disk_size_change and so is affected.
+>
+> This regression was introduced by commit 608aeef17a
+> which causes check_disk_size_change to call
+> flush_disk.
 
-Let me know.
+This makes sense to me.  Nice write-up, Neil.
 
-Phil
+Acked-by: Jeff Moyer <jmoyer@redhat.com>
