@@ -1,45 +1,67 @@
-From: "Patrick J. LoPresti" <lopresti@gmail.com>
-Subject: raid5/raid6 write performance question
-Date: Thu, 17 Feb 2011 10:52:07 -0800
-Message-ID: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: md road-map: 2011
+Date: Thu, 17 Feb 2011 20:56:21 +0100
+Message-ID: <20110217195621.GA3296@lazy.lzy>
+References: <20110216212751.51a294aa@notabene.brown>
+ <20110216202939.GA2756@lazy.lzy>
+ <20110217084826.77f4dbf1@notabene.brown>
+ <4D5C6AAF.1040600@turmel.org>
+ <20110217115257.28a8d174@notabene.brown>
+ <4D5C768A.1010502@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D5C768A.1010502@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a fair amount of experience with hardware RAID devices, but now
-I am investigating Linux software RAID and I have a question.  Well, a
-few questions.
+> > So when you do the computation on all of the bytes in all of the blocks you
+> > get a block full of answers.
+> > If the answers are all the same - that tells you something fairly strong.
+> > If they are a "all different" then that is also a fairly strong statement.
+> > But what if most are the same, but a few are different?  How do you interpret
+> > that?
+> 
+> Actually, I was thinking about that.  (You suckered me into reading that PDF
+> some weeks ago.)  I would be inclined to allow the kernel to make corrections
+> where "all the same" covers individual sectors, per the sector size reported
+> by the underlying device.
 
-The classic problem for RAID5/RAID6 write performance, especially when
-striping across many drives, is that a single small write requires
-reading in the entire stripe from all disks to calculate the new
-syndrome block(s).
+I do agree with Neil on this.
+User space should collect the data, perform statistics
+and give suggestions.
+After that there should be a mechanism, at this point in
+kernel space, I guess, capable of correcting one single
+chunk of one device.
 
-Hardware RAID controllers typically mitigate this problem by using a
-sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
-that enough blocks will be written in a short period of time to
-populate an entire stripe.  Once an entire stripe is in the write-back
-cache, it can be written out with its syndrome blocks without having
-to read anything.
+> Also, the comparison would have to ignore "neutral bytes", where P & Q
+> happened to be correct for that byte position.
 
-Of course, the cache has to be non-volatile (battery backed or solid
-state), because the kernel is expecting stuff it has written to disk
-not to vanish because of a power failure.
+<shameless advertisement>
+Have a look at the patch I submitted to "restripe.c", it
+should cover the interesting cases.
+Even if more statistics could be applied.
+</shameless advertisement>
+ 
+> Given that the hardware is going to do error correction and checking at a
+> sector size granularity, and the kernel would in fact rewrite that sector using
+> this calculation if the hardware made a "fairly strong" statement that it can't
+> be trusted, I'd argue that rewriting the sector is appropriate.
 
-My question is this:  How does Linux RAID5/RAID6 avoid reading an
-entire stripe every time the kernel flushes a single page?  Does it
-have a (volatile?) cache?  Or does it rely on the kernel flushing lots
-of contiguous data in a single request?  Or something else?
+The problem could be in the interface (it happened to me)
+and not in the disk. So, there will be no error correction,
+at this point, from the device.
+ 
+> Any corrective action that isn't consistent at the sector level should be punted.
+> I'm very curious what percentage that would be in production environments.
 
-Does Linux RAID keep track of which disk blocks have already been
-written at least once, so that there is a difference between writing a
-block for the first time and updating it later?  (But I guess that
-would not make sense, since eventually all writes become updates as
-files are created and deleted.)
+Yeah, me too.
 
-Thanks.
+bye,
 
- - Pat
+-- 
+
+piergiorgio
