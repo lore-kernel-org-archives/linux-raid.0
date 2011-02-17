@@ -1,154 +1,152 @@
-From: Giovanni Tessore <giotex@texsoft.it>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 12:45:42 +0100
-Message-ID: <4D5D0A66.80608@texsoft.it>
-References: <20110216212751.51a294aa@notabene.brown> <ijgr9p$7v8$1@dough.gmane.org> <20110217083531.3090a348@notabene.brown> <ijhje3$ocd$1@dough.gmane.org> <20110217100139.7520893d@notabene.brown> <ijhq7p$pjv$1@dough.gmane.org> <20110217010455.GA16324@www2.open-std.org> <ijiu99$ill$1@dough.gmane.org> <20110217105815.GA24580@www2.open-std.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: old filesystem label remaining after partition --add 'ed?
+Date: Thu, 17 Feb 2011 07:15:54 -0500
+Message-ID: <4D5D117A.3050709@turmel.org>
+References: <AANLkTikcYz+AYXQBm+BhcjM1SkvDnR=-x58jLbyGB+2d@mail.gmail.com>	<4D5C00DA.2060300@turmel.org> <AANLkTi=OVUYM4+TDVwB8FyCDK9GsWrv80EAWsNhA6HYu@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217105815.GA24580@www2.open-std.org>
+In-Reply-To: <AANLkTi=OVUYM4+TDVwB8FyCDK9GsWrv80EAWsNhA6HYu@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: hansbkk@gmail.com
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/17/2011 11:58 AM, Keld J=F8rn Simonsen wrote:
-> On Thu, Feb 17, 2011 at 11:45:35AM +0100, David Brown wrote:
->> On 17/02/2011 02:04, Keld J=F8rn Simonsen wrote:
->>> On Thu, Feb 17, 2011 at 01:30:49AM +0100, David Brown wrote:
->>>> On 17/02/11 00:01, NeilBrown wrote:
->>>>> On Wed, 16 Feb 2011 23:34:43 +0100 David Brown<david.brown@hesbyn=
-ett.no>
->>>>> wrote:
->>>>>
->>>>>> I thought there was some mechanism for block devices to report b=
-ad
->>>>>> blocks back to the file system, and that file systems tracked ba=
-d block
->>>>>> lists.  Modern drives automatically relocate bad blocks (at leas=
-t, they
->>>>>> do if they can), but there was a time when they did not and it w=
-as up to
->>>>>> the file system to track these.  Whether that still applies to m=
-odern
->>>>>> file systems, I do not know - they only file system I have studi=
-ed in
->>>>>> low-level detail is FAT16.
->>>>> When the block device reports an error the filesystem can certain=
-ly
->>>>> record
->>>>> that information in a bad-block list, and possibly does.
->>>>>
->>>>> However I thought you were suggesting a situation where the block=
- device
->>>>> could succeed with the request, but knew that area of the device =
-was of
->>>>> low
->>>>> quality.
->>>> I guess that is what I was trying to suggest, though not very clea=
-rly.
->>>>
->>>>> e.g. IO to a block on a stripe which had one 'bad block'.  The IO=
- should
->>>>> succeed, but the data isn't as safe as elsewhere.  It would be ni=
-ce if we
->>>>> could tell the filesystem that fact, and if it could make use of =
-it. But
->>>>> we
->>>>> currently cannot.   We can say "success" or "failure", but we can=
-not say
->>>>> "success, but you might not be so lucky next time".
->>>>>
->>>> Do filesystems re-try reads when there is a failure?  Could you re=
-turn
->>>> fail on one read, then success on a re-read, which could be interp=
-reted
->>>> as "dying, but not yet dead" by the file system?
->>> This should not be a file system feature. The file system is built =
-upon
->>> the raid, and in mirrorred raid types like raid1 and raid10, and al=
-so
->>> other raid types, you cannot be sure which specific drive and secto=
-r the
->>> data was read from - it could be one out of many (typically two) pl=
-aces.
->>> So the bad blocks of a raid is a feature of the raid and its indivi=
-dual
->>> drives, not the file system. If it was a property of the file syste=
-m,
->>> then the fs should be aware of the underlying raid topology, and kn=
-ow if
->>> this was a parity block or data block of raid5 or raid6, or which
->>> mirror instance of a raid1/10 type which  was involved.
->>>
->> Thanks for the explanation.
+On 02/17/2011 02:50 AM, hansbkk@gmail.com wrote:
+> On Wed, Feb 16, 2011 at 11:52 PM, Phil Turmel <philip@turmel.org> wrote:
+>> Ext2 and friends leave space for a boot block at the beginning, so the first ext2 superblock is 1k (?) into the partition.  The blkid library knows this, so it is looking "past" your md superblock and seeing the ext2 superblock.
 >>
->> I guess my worry is that if md layer has tracked a bad block on a di=
-sk,
->> then that stripe will be in a degraded mode.  It's great that it wil=
-l
->> still work, and it's great that the bad block list means that it is
->> /only/ that stripe that is degraded - not the whole raid.
-> I am proposing that the stripe not be degraded, using a recovery area=
- for bad
-> blocks on the disk, that goes together with the metadata area.
+>> A careful dd of the right sectors should knock it out.  (You're going to verify all this first, I hope.)
+> 
+> No thanks, if it's not causing a problem 'll just leave it alone.
+> 
+
+Actually, I guessed wrong.  You have v1.2 meta-data.
+
+>>> I replaced a RAID6 member drive that hadn't been fully zero'd, had the
+>>> same partitioning layout as the previous one.
+>>>
+>>> The target partition had previously had an ext3 filesystem on it for
+>>> temporary moving/copying files around, with an e2label on it.
+>>>
+>>> I added the partition to the array with "mdadm /dev/md_raid6a --add
+>>> /sde4", and let it rebuild, all looks good both via -D and
+>>> /proc/mdstat
+>>>
+>>> Later on, I noticed that that partition still has the e2label on it? I
+>>> know my RAID1's show the label same as if it's a regular partition,
+>>> but I've always got a "bad magic" message back from checking for a
+>>> label on a RAID5/6 array member partition.
+>>>
+>>> I'm assuming this is just cosmetic, but it bothers my (probably OCD)
+>>> sense of order, so I thought I'd check in here.
+>>>
+>>> I don't even know a command to remove an existing filesystem other
+>>> than zeroing out the MBR/partition table - and in this case I didn't
+>>> want to disturb data in the other partitions. I supposed I could have
+>>> formatted it as ntfs or something, but that doesn't seem right.
+>>
+>> I'm going to guess that your array has v1.1 metadata.  If so, a fragment of your old filesystem still exists between the end of the MD superblock and the beginning of the data area.  MD's bitmaps are supposed to live in that area, so I'm going to guess that you aren't using an internal bitmap.  An 'mdadm -E' for that partition would help.
+> 
+> Well, got something strange there. First here's a -D on the array:
+> 
+> When I originally created the array (using sysresccd) I spec'd v1.2
+> metadata. However the production filer OS uses mdadm v2.6.4, so it
+> might have got downgraded in later recovery operations?
 >
->> But I'm hoping there can be some sort of relocation somewhere
->> (ultimately it doesn't matter if it is handled by the file system, o=
-r by
->> md for the whole stripe, or by md for just that disk block, or by th=
-e
->> disk itself), so that you can get raid protection again for that str=
-ipe.
-> I think we agree in hoping:-)
+> [root@sannas01 ~]# mdadm -D /dev/md_raid6a
+> /dev/md_raid6a:
+>         Version : 01.02.03
+>   Creation Time : Wed Dec 22 08:21:09 2010
+>      Raid Level : raid6
+>      Array Size : 7199998976 (6866.45 GiB 7372.80 GB)
+>   Used Dev Size : 3599999488 (1716.61 GiB 1843.20 GB)
+>    Raid Devices : 6
+>   Total Devices : 7
+> Preferred Minor : 125
+>     Persistence : Superblock is persistent
+> 
+>   Intent Bitmap : Internal
+> 
+>     Update Time : Thu Feb 17 04:02:19 2011
+>           State : active
+>  Active Devices : 6
+> Working Devices : 7
+>  Failed Devices : 0
+>   Spare Devices : 1
+> 
+>      Chunk Size : 256K
+> 
+>            Name : sannas01:raid6a
+>            UUID : 628ddb50:a718c3dc:bd53d3e3:51eb73ca
+>          Events : 235750
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        4        0      active sync   /dev/sda4
+>        6       8       20        1      active sync   /dev/sdb4
+>        2       8       36        2      active sync   /dev/sdc4
+>        3       8       52        3      active sync   /dev/sdd4
+>        7       8       68        4      active sync   /dev/sde4
+>        5       8       84        5      active sync   /dev/sdf4
+> 
+>        8       8      164        -      spare   /dev/sdk4
+> 
+> 
+> When I do an -E on *any* of the members I get:
+> 
+> [root@sannas01 ~]# mdadm -E /dev/sde4
+> /dev/sde4:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x1
+>      Array UUID : 628ddb50:a718c3dc:bd53d3e3:51eb73ca
+>            Name : sannas01:raid6a
+>   Creation Time : Wed Dec 22 08:21:09 2010
+>      Raid Level : raid6
+>    Raid Devices : 6
+> 
+>  Avail Dev Size : 3599999729 (1716.61 GiB 1843.20 GB)
+>      Array Size : 14399997952 (6866.45 GiB 7372.80 GB)
+>   Used Dev Size : 3599999488 (1716.61 GiB 1843.20 GB)
+>     Data Offset : 272 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : b8deffce:73f5296e:b9f17f4d:7373900c
 
-IMHO the point is that this feature (Bad Block Log) is a GREAT feature=20
-as it just helps in keeping track of the health status of the underlyin=
-g=20
-disks, and helps A LOT in recovering data from the array when a=20
-unrecoverable read error occurs (now the full array goes offline). Then=
-=20
-something must be done proactively to repair the situation, as it means=
-=20
-that a disk of the array has problems and should be replaced. So, first=
-=20
-it's worth to make a backup of the still alive array (getting some read=
-=20
-error when the bad blocks/stripes are encountered [maybe using ddrescue=
-=20
-or similar]), then replace the disk, and reconstruct the array; after=20
-that a fsck on the filesystem may repair the situation.
+You do indeed have v1.2 metadata, which is 4k from the start of the device (8 sectors).  The ext superblock was undisturbed at 1k.  DD zeros into the first eight sectors to clear the old fs superblock.
 
-You may argue that the unrecoverable read error come from just very few=
-=20
-sector of the disk, and it's not worth to replace it (personally I woul=
-d=20
-replace also on very few ones), as there are still many reserverd=20
-sectors for relocation on the disk. Then a simple solution would just b=
-e=20
-to zero-write the bad blocks in the Bad Block Log (the data is gone=20
-already): if the write succedes (disk uses reserved sectors for=20
-relocation), the blocks are removed from the log (now they are ok); the=
-n=20
-fsck (hopefully) may repair the filesystem. At this point there are no=20
-more md read erros, maybe just filesystem errors (the array is clean,=20
-the filesystem may be not, but notice that nothing can be done to avoid=
-=20
-filesystem problems, as there has been a data loss; only fsck may help)=
-=2E
+> Internal Bitmap : 2 sectors from superblock
+>     Update Time : Thu Feb 17 14:19:59 2011
+>        Checksum : 6c94eb57 - correct
+>          Events : 235750
+> 
+>      Chunk Size : 256K
+> 
+>     Array Slot : 7 (0, failed, 2, 3, failed, 5, 1, 4, empty, failed,
+> failed, fled, failed, failed, failed, failed, failed, failed, failed,
+> failed, failed, fled, failed, failed, failed, failed, failed, failed,
+> failed, failed, failed, fled, failed, failed, failed, failed, failed,
+> failed, failed, failed, failed, fled, failed, failed, failed, failed,
+> failed, failed, failed, failed, failed, fled, failed, failed, failed,
+> failed, failed, failed, failed, failed, failed, fled, failed, failed,
+> failed, failed, failed, failed, failed, failed, failed, f
+> 
+> with many many more - note the "fled"s mixed in with the "failed"'s.
+> 
+> I wasn't worried before but I am now - should I be?
 
-Regards
+I have no idea.  Never seen this one.  Grep the source for 'fled' ?  Or wait for Neil to come online in eight hours or so...
 
---=20
-Cordiali saluti.
-Yours faithfully.
+> In case it means anything (sde's the recent replacement):
+> 
+> [root@sannas01 ~]# e2label /dev/sdd4
+> e2label: Bad magic number in super-block while trying to open /dev/sdd4
+> Couldn't find valid filesystem superblock.
+> 
+> [root@sannas01 ~]# e2label /dev/sde4
+> tmp-hita
 
-Giovanni Tessore
+As you've noted, just a nuisance, not a crisis.
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Phil
