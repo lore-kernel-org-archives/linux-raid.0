@@ -1,75 +1,51 @@
-From: Tobias McNulty <tobias@caktusgroup.com>
-Subject: Re: reshape failure
-Date: Thu, 17 Feb 2011 16:39:37 -0500
-Message-ID: <AANLkTi=gP5QGbq-JguHuA3T91_+U1XYLP1xiK9nSQ_LO@mail.gmail.com>
-References: <AANLkTikniCc3NNxgf9tW8Gb4qvUM-UfCJDazYC6Th1jZ@mail.gmail.com>
- <20110217073247.2dbc9299@notabene.brown> <AANLkTin__CDHu4qxAJe2NACXBFdE7EV1kuFOMoG7-P-h@mail.gmail.com>
- <20110217080634.510b017e@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Thu, 17 Feb 2011 15:47:04 -0600
+Message-ID: <4D5D9758.2080400@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5D017B.50109@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217080634.510b017e@notabene.brown>
+In-Reply-To: <4D5D017B.50109@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Feb 16, 2011 at 4:06 PM, NeilBrown <neilb@suse.de> wrote:
->
-> On Wed, 16 Feb 2011 15:41:46 -0500 Tobias McNulty <tobias@caktusgroup=
-=2Ecom>
-> wrote:
-> >
-> > Now I see this in /etc/mdstat:
-> >
-> > md0 : active raid6 sdf[0] sdg[5](S) sdh[4] sdc[3] sdd[2] sde[1]
-> > =A0 =A0 =A0 5860543488 blocks super 0.91 level 6, 64k chunk, algori=
-thm 2 [5/5] [UUUUU]
-> > =A0 =A0 =A0 [=3D>...................] =A0reshape =3D =A09.9% (19369=
-1648/1953514496)
-> > finish=3D97156886.4min speed=3D0K/sec
-> >
-> > Is the 0K/sec something I need to worry about?
->
-> Maybe. =A0If the stays at 0K/sec and the 9.9% stays at 9.9%, then yes=
-=2E =A0It is
-> something to worry about.
+John Robinson put forth on 2/17/2011 5:07 AM:
+> On 14/02/2011 23:59, Matt Garman wrote:
+> [...]
+>> The requirement is basically this: around 40 to 50 compute machines
+>> act as basically an ad-hoc scientific compute/simulation/analysis
+>> cluster.  These machines all need access to a shared 20 TB pool of
+>> storage.  Each compute machine has a gigabit network connection, and
+>> it's possible that nearly every machine could simultaneously try to
+>> access a large (100 to 1000 MB) file in the storage pool.  In other
+>> words, a 20 TB file store with bandwidth upwards of 50 Gbps.
+> 
+> I'd recommend you analyse that requirement more closely. Yes, you have
+> 50 compute machines with GigE connections so it's possible they could
+> all demand data from the file store at once, but in actual use, would they?
 
-It seems like it was another buggy SATA HBA?? I moved everything back
-to the on-board SATA ports (1 of the 2 drives in the OS RAID1 device
-and the 5 non-spare devices in the RAID6 -> RAID5 device) and it's
-happily reshaping again (even without the=A0MDADM_GROW_ALLOW_OLD magic
-this time):
+This is a very good point and one which I somewhat ignored in my initial
+response, making a silent assumption.  I did so based on personal
+experience, and knowledge of what other sites are deploying.
 
-md0 : active raid6 sda[0] sde[4] sdd[3] sdc[2] sdb[1]
-=A0=A0 =A0 =A05860543488 blocks super 0.91 level 6, 64k chunk, algorith=
-m 2 [5/5] [UUUUU]
-=A0=A0 =A0 =A0[=3D=3D>..................] =A0reshape =3D 10.0% (1969601=
-92/1953514496)
-finish=3D11376.9min speed=3D2572K/sec
+You don't see many deployed filers on the planet with 5 * 10 GbE front
+end connections.  In fact, today, you still don't see many deployed
+filers with even one 10 GbE front end connection, but usually multiple
+(often but not always bonded) GbE connections.
 
-Is it really possible that I had two buggy SATA cards, from different
-manufacturers?  Perhaps the motherboard is at fault?  Or am I missing
-something very basic about connecting SATA drives to something other
-than the on-board ports?
+A single 10 GbE front end connection provides a truly enormous amount of
+real world bandwidth, over 1 GB/s aggregate sustained.  *This is
+equivalent to transferring a full length dual layer DVD in 10 seconds*
 
-Currently I'm using a SuperMicro X7SPA-HF [1] motherboard with a
-AOC-SASLP-MV8 [2] HBA, and the machine is running Debian squeeze
-(2.6.32-5-amd64).
+Few sites/applications actually need this kind of bandwidth, either
+burst or sustained.  But, this is the system I spec'd for the OP
+earlier.  Sometimes people get caught up in comparing raw bandwidth
+numbers between different platforms and lose sight of the real world
+performance they can get from any one of them.
 
-Tobias
-
-[1] http://www.supermicro.com/products/motherboard/ATOM/ICH9/X7SPA.cfm?=
-typ=3DH&IPMI=3DY
-[2] http://www.supermicro.com/products/accessories/addon/AOC-SASLP-MV8.=
-cfm
---
-Tobias McNulty, Managing Partner
-Caktus Consulting Group, LLC
-http://www.caktusgroup.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Stan
