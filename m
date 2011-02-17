@@ -1,42 +1,76 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: RAID5 won't mount after reducing disks from 8 to 6
-Date: Wed, 16 Feb 2011 21:06:40 -0600
-Message-ID: <4D5C90C0.6040607@hardwarefreak.com>
-References: <C2D86BF5-AECE-49B3-B139-1CD6375DCFC9@mac.com>	<20110217124214.00ad25dd@notabene.brown>	<00E3AF11-6D18-4C5D-A165-56C86823A6D2@mac.com> <20110217131453.39444287@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md road-map: 2011
+Date: Thu, 17 Feb 2011 14:10:17 +1100
+Message-ID: <20110217141017.01e30eab@notabene.brown>
+References: <20110216212751.51a294aa@notabene.brown>
+	<20110216202939.GA2756@lazy.lzy>
+	<20110217084826.77f4dbf1@notabene.brown>
+	<4D5C6AAF.1040600@turmel.org>
+	<20110217115257.28a8d174@notabene.brown>
+	<4D5C768A.1010502@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217131453.39444287@notabene.brown>
+In-Reply-To: <4D5C768A.1010502@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown put forth on 2/16/2011 8:14 PM:
+On Wed, 16 Feb 2011 20:14:50 -0500 Phil Turmel <philip@turmel.org> wrote:
 
-> So your best bet it to convince xfs_repair to work with what you've got and
-> try to knit together as much as it can  - which may be nothing, I really
-> don't know.
+> On 02/16/2011 07:52 PM, NeilBrown wrote:
 
-xfs_repair won't help.  He's hosed.  If this had been a grow from 8
-disks to 10 he'd be ok, as you grow mdadm first then XFS.  But as I
-said, XFS has no shrink capability.  xfs_repair will just puke all over
-itself if you run it.
+> > So when you do the computation on all of the bytes in all of the blocks you
+> > get a block full of answers.
+> > If the answers are all the same - that tells you something fairly strong.
+> > If they are a "all different" then that is also a fairly strong statement.
+> > But what if most are the same, but a few are different?  How do you interpret
+> > that?
+> 
+> Actually, I was thinking about that.  (You suckered me into reading that PDF
+> some weeks ago.)  I would be inclined to allow the kernel to make corrections
+> where "all the same" covers individual sectors, per the sector size reported
+> by the underlying device.
 
-> Maybe you could ask on an XFS list somewhere.
+To see what I am strongly against having the kernel make automatic
+corrections like this, see
 
-He already did, in a way, as I'm on that list.  You're more than welcome
-to ask on the XFS mailing list, but you'll get the same answer.
+    http://neil.brown.name/blog/20100211050355
 
-This really sucks and I feel for Matt.  I wish he'd have asked on either
-or both lists first...
 
-What he needs to do now is start over from scratch.  Delete the current
-md device and create a new one, then create a new XFS filesystem, and
-then restore his files from his backup device.
+> 
+> Also, the comparison would have to ignore "neutral bytes", where P & Q
+> happened to be correct for that byte position.
+> 
+> > The point I'm trying to get to is that the result of this RAID6 calculation
+> > isn't a simple "that device is bad".  It is a block of data that needs to be
+> > interpreted.
+> > 
+> > I'd rather have user-space do that interpretation, so it may as well do the
+> > calculation too.
+> > 
+> > If you wanted to do it in the kernel, you would need to be very clear about
+> > what information you provide, what it means exactly, and why it is sufficient.
+> 
+> Given that the hardware is going to do error correction and checking at a
+> sector size granularity, and the kernel would in fact rewrite that sector using
+> this calculation if the hardware made a "fairly strong" statement that it can't
+> be trusted, I'd argue that rewriting the sector is appropriate.
 
-Is there a Linux mdraid best practices document somewhere, that could
-help prevent folks from hosing themselves like this if they'd read it first?
+You the RAID6 calculation tells you is that something cannot be trusted.  It
+doesn't tell you what.  It could be the controller, the cable, the drive
+logic, or the rust on the media.  Without the knowledge, correction can be
+dangerous.
 
--- 
-Stan
+NeilBrown
+
+
+
+> 
+> Any corrective action that isn't consistent at the sector level should be punted.
+> I'm very curious what percentage that would be in production environments.
+> 
+> Phil
+
