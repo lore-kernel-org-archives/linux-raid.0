@@ -1,73 +1,45 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: md road-map: 2011
-Date: Thu, 17 Feb 2011 13:46:58 -0500
-Message-ID: <4D5D6D22.2010406@turmel.org>
-References: <20110216212751.51a294aa@notabene.brown>	<20110216202939.GA2756@lazy.lzy>	<20110217084826.77f4dbf1@notabene.brown>	<4D5C6AAF.1040600@turmel.org>	<20110217115257.28a8d174@notabene.brown>	<4D5C768A.1010502@turmel.org> <20110217141017.01e30eab@notabene.brown>
+From: "Patrick J. LoPresti" <lopresti@gmail.com>
+Subject: raid5/raid6 write performance question
+Date: Thu, 17 Feb 2011 10:52:07 -0800
+Message-ID: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110217141017.01e30eab@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/16/2011 10:10 PM, NeilBrown wrote:
-> On Wed, 16 Feb 2011 20:14:50 -0500 Phil Turmel <philip@turmel.org> wrote:
-> 
->> On 02/16/2011 07:52 PM, NeilBrown wrote:
-> 
->>> So when you do the computation on all of the bytes in all of the blocks you
->>> get a block full of answers.
->>> If the answers are all the same - that tells you something fairly strong.
->>> If they are a "all different" then that is also a fairly strong statement.
->>> But what if most are the same, but a few are different?  How do you interpret
->>> that?
->>
->> Actually, I was thinking about that.  (You suckered me into reading that PDF
->> some weeks ago.)  I would be inclined to allow the kernel to make corrections
->> where "all the same" covers individual sectors, per the sector size reported
->> by the underlying device.
-> 
-> To see what I am strongly against having the kernel make automatic
-> corrections like this, see
-> 
->     http://neil.brown.name/blog/20100211050355
+I have a fair amount of experience with hardware RAID devices, but now
+I am investigating Linux software RAID and I have a question.  Well, a
+few questions.
 
-I read it, and slept on it, and my gut wants to argue.  But I have no data to
-back me up.  I think I'll take a stab at reporting inconsistencies via simple
-printk with a sysfs on/off switch.
+The classic problem for RAID5/RAID6 write performance, especially when
+striping across many drives, is that a single small write requires
+reading in the entire stripe from all disks to calculate the new
+syndrome block(s).
 
->> Also, the comparison would have to ignore "neutral bytes", where P & Q
->> happened to be correct for that byte position.
->>
->>> The point I'm trying to get to is that the result of this RAID6 calculation
->>> isn't a simple "that device is bad".  It is a block of data that needs to be
->>> interpreted.
->>>
->>> I'd rather have user-space do that interpretation, so it may as well do the
->>> calculation too.
->>>
->>> If you wanted to do it in the kernel, you would need to be very clear about
->>> what information you provide, what it means exactly, and why it is sufficient.
->>
->> Given that the hardware is going to do error correction and checking at a
->> sector size granularity, and the kernel would in fact rewrite that sector using
->> this calculation if the hardware made a "fairly strong" statement that it can't
->> be trusted, I'd argue that rewriting the sector is appropriate.
-> 
-> You the RAID6 calculation tells you is that something cannot be trusted.  It
-> doesn't tell you what.  It could be the controller, the cable, the drive
-> logic, or the rust on the media.  Without the knowledge, correction can be
-> dangerous.
+Hardware RAID controllers typically mitigate this problem by using a
+sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
+that enough blocks will be written in a short period of time to
+populate an entire stripe.  Once an entire stripe is in the write-back
+cache, it can be written out with its syndrome blocks without having
+to read anything.
 
-True, but inconsistent data is also dangerous, as traffic on this list shows.  The
-question is, "When is it safer to correct than to leave alone?"  I don't think
-there's enough data to answer that, unless you have some pointers to studies that
-address it.
+Of course, the cache has to be non-volatile (battery backed or solid
+state), because the kernel is expecting stuff it has written to disk
+not to vanish because of a power failure.
 
-Either way, a reporting method is needed, and might give us some numbers to work
-with.
+My question is this:  How does Linux RAID5/RAID6 avoid reading an
+entire stripe every time the kernel flushes a single page?  Does it
+have a (volatile?) cache?  Or does it rely on the kernel flushing lots
+of contiguous data in a single request?  Or something else?
 
-Phil
+Does Linux RAID keep track of which disk blocks have already been
+written at least once, so that there is a difference between writing a
+block for the first time and updating it later?  (But I guess that
+would not make sense, since eventually all writes become updates as
+files are created and deleted.)
+
+Thanks.
+
+ - Pat
