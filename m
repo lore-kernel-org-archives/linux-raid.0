@@ -1,116 +1,185 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: File system corruption during setting new size (native/extarnal
- metatdat) after expansion
-Date: Thu, 17 Feb 2011 15:38:15 +1100
-Message-ID: <20110217153815.2212b13d@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH] Fix over-zealous flush_disk when changing device size.
+Date: Thu, 17 Feb 2011 16:50:57 +1100
+Message-ID: <20110217165057.5c50e566@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D178EC32BC@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 16 Feb 2011 15:24:53 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
 
-> Hi,
-> 
-> I've met again array_size change problem. A while ago I've indicated it, during array expansion, file system corruption occurs.
-> The previous conclusion was that my tests were wrong (too small arrays, on bigger arrays it seems to be ok), 
-> I've got now reproduction in our lab on quite big arrays (250G) and on my small test arrays also.
-> 
-> This problem is related to array expansion using native and external metadata.
->  
-> Problem is that after expansion file system on array is corrupted.
-> Operation that corrupts file system is array size change via sysfs (and for native metadata during reshape finalization in md).
-> In logs I've got information:
-> 	VFS: busy inodes on changed media or resized disks
-> 
-> My investigation in md goes to block_dev.c/inode.c and flush_disk() (called from check_disk_size_change()).
-> I've found above text there (about busy inodes). 
-> My traces shows that in __invalidate_inodes(), inode->i_count == 2 and it is locked. This makes me to look how invalidate_inodes() is called.
-> Before invalidate_inodes() is called, cache is cleared by shrink_dcache_sb().
-> If I've commented shrink_dcache_sb() file system seems to be safe. It is the same when invalidate_inodes() is commented (shrink_cache_sb() called only).
-> If I've changed functions order (1. invalidate_inodes(), 2. shrink_dcache_sb()) in __invalidate_device() (block_dev.c) there is no corruption also.
-> When after shrink_dcache_sb() is called invalidate_inodes() on busy inodes corruption occurs (if it called earlier it doesn't matter).
-> 
-> This problem can be reproduced on mounted arrays only. If array is not mounted, file system corruption disappears.
-> This means that whole expansion process is correct.
-> In some cases (rarely) inodes on mounted device are not locked and then FS corruption doesn't happened.
-> 
-> 
-> I'd like to know your opinion.
-> Do you think that problem is in releasing cache but not all inodes (busy case), commands order...
-> ... or probably changing size on mounted array is a mistake (for current code)?
-> 
-> BR
-> Adam
-> 
-> 
-> ---------------------------------
-> My test commands:	
-> 
-> #create container
-> mdadm -C /dev/md/imsm0 -amd -e imsm -n 3 /dev/sdb /dev/sdc /dev/sde -R
-> 
-> #create volume
-> mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --size 104857 -n 3 /dev/sdb /dev/sdc /dev/sde -R
-> mkfs /dev/md/raid5vol_0
-> mount /dev/md/raid5vol_0 /mnt/vol
-> 
-> #copy some files from current directory
-> cp * /mnt/vol
-> 
-> #add spare
-> mdadm --add /dev/md/imsm0 /dev/sdd
-> 
-> #start reshape
-> mdadm --grow /dev/md/imsm0 --raid-devices 4 --backup-file=/backup.bak
-
-Thanks for the script - that makes things a lot easier.
-
-I had to add some "mdadm --wait" commands etc to make it work reliably, but
-then I could get it to generate filesystem corruption quite easily.
-
-I also had "mdmon" crashing because imsm_num_data_members got a 'map' of NULL,
-and then tried to get_imsm_raid_level on it.  Something needs to be fixed
-there (I hacked it so that if it got a NULL, it tried again with second_map
-== 0, but I don't know if that is right).
-
-The problem seems to be in the VFS/VM layer.  I can see two ways to fix it.
-I'll see if I can find some who wants to take responsibility and make a
-decision.
-
-1/ in invalidate_inodes (in fs/inodes.c), inside the loop, add a clause:
-
-		if (inode->i_state & I_DIRTY)
-			continue;
-
-  That is what is causing the problem - dirty inodes are being discarded.
-
-2/ in check_disk_size_change (in fs/block_dev.c), replace
-
-         flush_disk(bdev);
-   with
-
-         if (disk_size == 0 || bdev_size == 0)
-               flush_disk(bdev);
-
- because I don't think there is any justification for calling flush_bdev if
- we are just changing the size of the disk - though I don't really know why
- that is there at all, so it is hard to say for sure.   Certainly if
- disk_size > bdev_size we shouldn't be calling flush disk.
-
-So I suggest you make one of those changes to continue with your testing, and
-I'll try to get something sorted out.
-
-If you could look into the circumstances that might make imsm_num_data_members
-get a NULL map, I would appreciate that.
+Hi Andrew (and others)
+ I wonder if you would review the following for me and comment.
 
 Thanks,
 NeilBrown
+
+
+
+From e7f75c2a757108cdd83ce8c808a16bf27686c95f Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 17 Feb 2011 16:37:30 +1100
+Subject: [PATCH] Fix over-zealous flush_disk when changing device size.
+
+There are two cases when we call flush_disk.
+In one, the device has disappeared (check_disk_change) so any
+data will hold becomes irrelevant.
+In the oter, the device has changed size (check_disk_size_change)
+so data we hold may be irrelevant.
+
+In both cases it makes sense to discard any 'clean' buffers,
+so they will be read back from the device if needed.
+
+In the former case it makes sense to discard 'dirty' buffers
+as there will never be anywhere safe to write the data.  In the
+second case it *does*not* make sense to discard dirty buffers
+as that will lead to file system corruption when you simply enlarge
+the containing devices.
+
+flush_disk calls __invalidate_devices.
+__invalidate_device calls both invalidate_inodes and invalidate_bdev.
+
+invalidate_inodes *does* discard I_DIRTY inodes and this does lead
+to fs corruption.
+
+invalidate_bev *does*not* discard dirty pages, but I don't really care
+about that at present.
+
+So this patch adds a flag to __invalidate_device (calling it
+__invalidate_device2) to indicate whether dirty buffers should be
+killed, and this is passed to invalidate_inodes which can choose to
+skip dirty inodes.
+
+flusk_disk then passes true from check_disk_change and false from
+check_disk_size_change.
+
+dm avoids tripping over this problem by calling i_size_write directly
+rathher than using check_disk_size_change.
+
+md does use check_disk_size_change and so is affected.
+
+This regression was introduced by commit 608aeef17a
+which causes check_disk_size_change to call
+flush_disk.
+
+Cc: stable@kernel.org
+Cc: Andrew Patterson <andrew.patterson@hp.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ fs/block_dev.c     |   12 ++++++------
+ fs/inode.c         |    6 +++++-
+ fs/internal.h      |    2 +-
+ include/linux/fs.h |    6 +++++-
+ 4 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 333a7bb..1575034 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -927,9 +927,9 @@ EXPORT_SYMBOL_GPL(bd_unlink_disk_holder);
+  * when a disk has been changed -- either by a media change or online
+  * resize.
+  */
+-static void flush_disk(struct block_device *bdev)
++static void flush_disk(struct block_device *bdev, bool kill_dirty)
+ {
+-	if (__invalidate_device(bdev)) {
++	if (__invalidate_device2(bdev, kill_dirty)) {
+ 		char name[BDEVNAME_SIZE] = "";
+ 
+ 		if (bdev->bd_disk)
+@@ -966,7 +966,7 @@ void check_disk_size_change(struct gendisk *disk, struct block_device *bdev)
+ 		       "%s: detected capacity change from %lld to %lld\n",
+ 		       name, bdev_size, disk_size);
+ 		i_size_write(bdev->bd_inode, disk_size);
+-		flush_disk(bdev);
++		flush_disk(bdev, false);
+ 	}
+ }
+ EXPORT_SYMBOL(check_disk_size_change);
+@@ -1019,7 +1019,7 @@ int check_disk_change(struct block_device *bdev)
+ 	if (!(events & DISK_EVENT_MEDIA_CHANGE))
+ 		return 0;
+ 
+-	flush_disk(bdev);
++	flush_disk(bdev, true);
+ 	if (bdops->revalidate_disk)
+ 		bdops->revalidate_disk(bdev->bd_disk);
+ 	return 1;
+@@ -1601,7 +1601,7 @@ fail:
+ }
+ EXPORT_SYMBOL(lookup_bdev);
+ 
+-int __invalidate_device(struct block_device *bdev)
++int __invalidate_device2(struct block_device *bdev, bool kill_dirty)
+ {
+ 	struct super_block *sb = get_super(bdev);
+ 	int res = 0;
+@@ -1614,7 +1614,7 @@ int __invalidate_device(struct block_device *bdev)
+ 		 * hold).
+ 		 */
+ 		shrink_dcache_sb(sb);
+-		res = invalidate_inodes(sb);
++		res = invalidate_inodes(sb, kill_dirty);
+ 		drop_super(sb);
+ 	}
+ 	invalidate_bdev(bdev);
+diff --git a/fs/inode.c b/fs/inode.c
+index da85e56..8352e06 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -544,7 +544,7 @@ void evict_inodes(struct super_block *sb)
+  * Attempts to free all inodes for a given superblock.  If there were any
+  * busy inodes return a non-zero value, else zero.
+  */
+-int invalidate_inodes(struct super_block *sb)
++int invalidate_inodes(struct super_block *sb, bool kill_dirty)
+ {
+ 	int busy = 0;
+ 	struct inode *inode, *next;
+@@ -556,6 +556,10 @@ int invalidate_inodes(struct super_block *sb)
+ 	list_for_each_entry_safe(inode, next, &sb->s_inodes, i_sb_list) {
+ 		if (inode->i_state & (I_NEW | I_FREEING | I_WILL_FREE))
+ 			continue;
++		if (inode->i_state & I_DIRTY && !kill_dirty) {
++			busy = 1;
++			continue;
++		}
+ 		if (atomic_read(&inode->i_count)) {
+ 			busy = 1;
+ 			continue;
+diff --git a/fs/internal.h b/fs/internal.h
+index 0663568..9b976b5 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -112,4 +112,4 @@ extern void release_open_intent(struct nameidata *);
+  */
+ extern int get_nr_dirty_inodes(void);
+ extern void evict_inodes(struct super_block *);
+-extern int invalidate_inodes(struct super_block *);
++extern int invalidate_inodes(struct super_block *, bool);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index bd32159..f8e2323 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2139,7 +2139,11 @@ extern void check_disk_size_change(struct gendisk *disk,
+ 				   struct block_device *bdev);
+ extern int revalidate_disk(struct gendisk *);
+ extern int check_disk_change(struct block_device *);
+-extern int __invalidate_device(struct block_device *);
++extern int __invalidate_device2(struct block_device *, bool);
++static inline int __invalidate_device(struct block_device *b)
++{
++	return __invalidate_device2(b, true);
++}
+ extern int invalidate_partition(struct gendisk *, int);
+ #endif
+ unsigned long invalidate_mapping_pages(struct address_space *mapping,
+-- 
+1.7.1
 
