@@ -1,80 +1,72 @@
-From: Larry Schwerzler <larry@schwerzler.com>
-Subject: Raid selection questions (10 vs 6, n2 vs f2) on an 8 drive array
-Date: Fri, 18 Feb 2011 12:55:05 -0800
-Message-ID: <AANLkTi=2xjjuvT3tTs1Y9Qfrn6HxWS3hwzF-Q0ZhPFVM@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [PATCH] Re: User space RAID-6 access
+Date: Sat, 19 Feb 2011 00:02:38 +0100
+Message-ID: <20110218230237.GA23883@lazy.lzy>
+References: <20110131202054.GA15712@lazy.lzy>
+ <20110201075259.4beaf501@notabene.brown>
+ <20110205173334.GA5952@lazy.lzy>
+ <20110206075820.08fc19c9@notabene.brown>
+ <20110207222459.GA25471@lazy.lzy>
+ <20110208094952.49745c7b@notabene.brown>
+ <20110209184734.GA7169@lazy.lzy>
+ <20110217172332.2fbb5694@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110217172332.2fbb5694@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a few questions about my raid array that I haven't been able to
-find=A0definitive=A0answers for, so thought I would ask here.
-My setup:
+> As this is really just for testing, I would add a :offset  suffix to the
+> device names where the offset is in sectors.
+> So:
+>    /dev/sda
+> means read from the start of /dev/sda
+> 
+>    /dev/sda:2048
+> 
+> means start 1Meg into /dev/sda.
+> 
+> That should be easy to parse and is quite general.
 
-* 8x 1TB drives in an external enclosure connected to my server via 2
-esata cables.
-* Currently all 8 drives are included in a raid 6 array.
-* I use the array to serve files (mostly larger .mkv/iso (several GB)
-and .flac/.mp3 (5-50MB) files) over my network via NFS and to perform
-offsite backup via rsync over ssh of another server.
-* This is a system in my home, so prolonged downtime, while annoying,
-is not the end of the world.
-* If it matters Ubuntu 10.04 64bit server is my distro
+Hi again,
 
-I'm considering and likely going to move forward moving my data and
-rebuilding the array as a raid10 array. Just a few questions before I
-make the switch.
+please find attached below another mini-patch
+which should add the offset option, as discussed.
+That is, "/dev/sdX:offset".
+It should work with or without the ":offset" tail,
+and possibly also with "/dev/sdX:", depending on
+"atoll()".
 
-Questions:
+Please consider for inclusion.
 
-1. In my research of raid10 I very seldom hear of drive configurations
-with more drives then 4, are there special considerations with having
-an 8 drive raid10 array? I understand that I'll be loosing 2TB of
-space from my current setup, but i'm not too worried about that.
+Thanks,
 
-2. One problem I'm having with my current setup is the esata cables
-have been knocked loose which effectively drops 4 of my drives. I'd
-really like to be able to survive this type of sudden drive loss. if
-my drives are /dev/sd[abcdefgh] and abcd are on one esata channel
-while efgh are on the other is there what drive order should I create
-the array with? I'd guess /dev/sd[aebfcgdh] would that give me
-survivability if one of my esata channels went dark?
+bye,
 
-3. One of the concerns I have with raid10 is expandability, and I'm
-glad to see reshaping raid10 as an item on the 2011 roadmap :) However
-it will likely be a while before I'll see that ability in my distro
-for a while. I did find a guide on expanding raid size when using lvm
-by increasing the size of each drive and creating two partitions 1 the
-size of the original drive, and one with the remainder of the new
-space. Once you have done this for all drives you create a new raid10
-array with the 2nd partitions on all the drives and add it to the lvm
-storage group, effectively you have two raid10 arrays 1 on the first
-half of the drives 1 on the 2nd half of the drives and the space
-pooled together. I'm sure many of you are familiar with this scenario,
-but I'm wondering if this scenario could be problematic, is having two
-raid10 arrays on one drive an issue?
 
-4. Part of the reason I'm wanting to switch is because of information
-I read on the "BAARF" site pointing out some of the issues in the
-parity raid's that can cause issues that people sometimes don't think
-about. (site:=A0http://www.miracleas.com/BAARF/BAARF2.html) A lot of th=
-e
-information on the site is a few years old now and given how fast
-things can change and the fact that I have not found many people
-complaining about the parity raids I'm wondering if some/all of the
-gotchas that they list are less of an issue now? Maybe my reasons for
-moving to raid10 are no longer relevant?
+diff -uN a/restripe.c b/restripe.c
+--- a/restripe.c	2011-02-18 23:18:20.377740868 +0100
++++ b/restripe.c	2011-02-18 23:30:07.589841525 +0100
+@@ -875,6 +875,14 @@
+ 		exit(3);
+ 	}
+ 	for (i=0; i<raid_disks; i++) {
++		char *p;
++		p = strchr(argv[9+i], ':');
++
++		if(p != NULL) {
++			*p++ = '\0';
++			offsets[i] = atoll(p) * 512;
++		}
++			
+ 		fds[i] = open(argv[9+i], O_RDWR);
+ 		if (fds[i] < 0) {
+ 			perror(argv[9+i]);
 
-Thank you in advance for any/all information given. And a big thank
-you to Neil and the other developers of linux-raid for=A0their=A0effort=
-s
-on this great tool.
-Larry Schwerzler
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+
+piergiorgio
