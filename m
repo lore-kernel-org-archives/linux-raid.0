@@ -1,153 +1,144 @@
-From: Gavin Flower <gavinflower@yahoo.com>
-Subject: Re: physical size of the device inconsistent with superblock, after RAID problems
-Date: Thu, 17 Feb 2011 15:53:11 -0800 (PST)
-Message-ID: <122234.22513.qm@web65103.mail.ac2.yahoo.com>
+From: Joe Landman <joe.landman@gmail.com>
+Subject: Re: high throughput storage server?
+Date: Thu, 17 Feb 2011 19:06:00 -0500
+Message-ID: <4D5DB7E8.1020003@gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <4D5D017B.50109@anonymous.org.uk> <4D5D9758.2080400@hardwarefreak.com> <4D5D9D70.9010603@gmail.com> <4D5DB3F3.8050209@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D5DB3F3.8050209@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: ext3-users@redhat.com, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
+On 2/17/2011 6:49 PM, Stan Hoeppner wrote:
+> Joe Landman put forth on 2/17/2011 4:13 PM:
+>
+>> Well, the application area appears to be high performance cluster
+>> computing, and the storage behind it.  Its a somewhat more specialized
+>> version of storage, and not one that a typical IT person runs into
+>> often.  There are different, some profoundly so, demands placed upon
+>> such storage.
+>
+> The OP's post described an ad hoc collection of 40-50 machines doing
+> various types of processing on shared data files.  This is not classical
+> cluster computing.  He didn't describe any kind of _parallel_
+> processing.  It sounded to me like staged batch processing, the
 
-My attempted post to ext3-users@redhat.com, had not been published ther=
-e (even though I had emailed it 4 days ago!), as at a minute ago.
+Semantics at best.  He is doing significant processing, in parallel, 
+doing data analysis, in parallel, across a cluster of machines.  Doing 
+MPI-IO?  No.  Does not using MPI make this not a cluster?  No.
 
-I finally bit the bullet and went ahead.
+> bandwidth demands of which are typically much lower than a parallel
+> compute cluster.
 
-I accepted the fixes put forward by fsck associated with bitmap differe=
-nces, and rebooted.
+See his original post.  He posits his bandwidth demands.
 
-Still problems.
+>
+>> Full disclosure:  this is our major market, we make/sell products in
+>> this space, have for a while.  Take what we say with that in your mind
+>> as a caveat, as it does color our opinions.
+>
+> Thanks for the disclosure Joe.
+>
+>> The spec's as stated, 50Gb/s ... its rare ... exceptionally rare ...
+>> that you ever see cluster computing storage requirements stated in such
+>> terms.  Usually they are stated in the MB/s or GB/s regime.  Using  a
+>> basic conversion of Gb/s to GB/s, the OP is looking for ~6GB/s support.
+>
+> Indeed.  You typically don't see this kind of storage b/w need outside
+> the government labs and supercomputing centers (LLNL, Sandia, NCCS,
+> SDSC, etc).  Of course those sites' requirements are quite a bit higher
+> than a "puny" 6 GB/s.
 
-Still had the discrepancy in the file size.=A0 So I ran the command:
+Heh ... we see it all the time in compute cluster, large data analysis 
+farms etc.  Not at the big labs.
 
-resize2fs -p /dev/md1 76799616
+[...]
 
-I used the smaller of the 2 block counts, as:
-(a) I needed to reduce the file system size, because I had already redu=
-ced the RAID size (I _SHOULD_ have done this first, before resizing the=
- RAID), and
-(b) it is reported as the 'physical' size of the device, so it is likel=
-y to be the correct value IMHO
+> McData, etc.  I've not hard of a front end loop being used in many many
+> years.  Some storage vendors still use loops on the _back_ end to
+> connect FC/SAS/SATA expansion chassis to the head controller, IBM and
 
-The system the came up successfully after a reboot, and I was able to l=
-og in as normal.
+I am talking about the back end.
 
-There appeared to be no apparent loss of data, not that I did an exhaus=
-tive systematic check. However, several users have logged on successful=
-ly, and it is playing its part as gateway to the Internet, and squid ap=
-pears to be providing its normal functionality.
+> NetApp come to mind, but it's usually dual loops per chassis, so you're
+> looking at ~3 GB/s per expansion chassis using 8 Gbit loops.  One would
 
-Neil, your help and encouragement was/is greatly appreciated!
+2 GB/s assuming FC-8, and 20 lower speed drives are sufficient to 
+completely fill 2 GB/s.  So, as I was saying, the design matters.
+
+[...]
+
+> Nexsan doesn't offer direct SAS connection on the big 42/102 drive Beast
+> units, only on the Boy units.  The Beast units all use dual or quad FC
+> front end ports, with a couple front end GbE iSCSI ports thrown in for
+> flexibility.  The SAS Boy units beat all competitors on price/TB, as do
+> all the Nexsan products.
+
+As I joked one time, many many years ago "broad sweeping generalizations 
+tend to be incorrect".  Yes, it is a recursive joke, but there is a 
+serious aspect to it.  Your proffered pricing per TB, which you claim 
+Nexsan beats all ... is much higher than ours, and many others.  No, 
+they don't beat all, or even many.
 
 
-Thanks,
-Gavin
+> I'd like to note that over subscription isn't intrinsic to a piece of
+> hardware.  It's indicative of an engineer or storage architect not
+> knowing what the blank he's doing.
+
+Oversubscription and it corresponding resource contention, not to 
+mention poor design of other aspects ... yeah, I agree that this is 
+indicative of something.  One must question why people continue to 
+deploy architectures which don't scale.
+
+>
+>> As I said, high performance storage design is a very ... very ...
+>> different animal from standard IT storage design.  There are very
+>> different decision points, and design concepts.
+>
+> Depends on the segment of the HPC market.  It seems you're competing in
+> the low end of it.  Configurations get a bit exotic at the very high
+
+I noted this about your previous responses, this particular tone you 
+take.  I debated for a while responding, until I saw something I simply 
+needed to correct.  I'll try not to take your bait.
+
+[...]
+
+> So, again, it really depends on the application(s), as always,
+> regardless of whether it's HPC or IT, although there are few purely
+> streaming IT workloads, EDL of decision support databases comes to mind,
+> but these are usually relatively short duration.  They can still put
+> some strain on a SAN if not architected correctly.
+>
+>>> You don't see many deployed filers on the planet with 5 * 10 GbE front
+>>> end connections.  In fact, today, you still don't see many deployed
+>>> filers with even one 10 GbE front end connection, but usually multiple
+>>> (often but not always bonded) GbE connections.
+>>
+>> In this space, high performance cluster storage, this statement is
+>> incorrect.
+>
+> The OP doesn't have a high performance cluster.  HPC cluster storage by
+
+Again, semantics.  They are doing massive data ingestion and processing. 
+  The view of this is called "big data" in HPC circles and it is *very 
+much* an HPC problem.
+
+> accepted definition includes highly parallel workloads.  This is not
+> what the OP described.  He described ad hoc staged data analysis.
+
+See above.  If you want to argue semantics, be my guest, I won't be 
+party to such a waste of time.  The OP is doing analysis that requires a 
+high performance architecture.  The architecture you suggested is not 
+one people in the field would likely recommend.
+
+[rest deleted]
+
+
 --
+joe
 
-All Adults share the Responsibility
-to help Raise Today's Children,
-for they are Tomorrow's Society!
-
---- On Tue, 15/2/11, Gavin Flower <gavinflower@yahoo.com> wrote:
-
-=46rom: Gavin Flower <gavinflower@yahoo.com>
-Subject: physical size of the device inconsistent with superblock, afte=
-r RAID problems
-To: ext3-users@redhat.com
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
-Date: Tuesday, 15 February, 2011, 16:14
-
-Hi,
-
-I would appreciate advice recovering from the following situation, afte=
-r an aborted mdadm resizing operation and subsequent recovery actions:
-
-/dev/md1: The filing system size (according to the superblock) is 76799=
-952 blocks
-The physical size of the device is 76799616
-Either the superblock or the partition table is likely to be corrupt!
-
-/dev/md1: UNEXPECTED INCONSISTENCY: RUN fsck manually
-(i.e. without -a or -p options)
-
-
-fsck.ext4 -f -n /dev/md1 output:
-
-e2fsck 1.41.12 (17-May-2010)
-The filesystem size (according to the superblock) is 76799952 blocks
-The physical size of the device is 76799616 blocks
-Either the superblock or the partition table is likely to be corrupt!
-Abort? no
-
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-Block bitmap differences:=A0 -9626 -(9728--9752) +(405344--405369)
-=46ix? no
-
-/dev/md1: ********** WARNING: Filesystem still has errors **********
-
-/dev/md1: 1693644/19202048 files (0.3% non-contiguous), 54273929/767999=
-52 blocks
-
-
-Note that original size, according mdadm, was not a multiple of 512KB, =
-so I reshaped it to be the largest multiple or 512KB less than the orig=
-inal size using the -size option of mdadm.=A0 So my second attempt to r=
-eshape, using the 512 chunk size, started okay.=A0 The previous chunk s=
-ize was 64KB.
-
-Note I am using Fedora 14, up-to-date as of Friday February 11th, and t=
-hat there are 5X500KB drives, with 3 RAID-6 arrays:
-/dev/md0 swap
-/dev/md1 mostly user data (the problematic one)
-/dev/md2 distribution & O/S files
-plus /boot on a non-RAID ext4 partition
-
-Sequence of events:
-Reshaped /dev/md1 using mdadm, without first reducing size of the ext4 =
-filesystem.
-
-The process of reshaping /dev/md1 was about 20% through when I killed i=
-t.
-
-System appeared okay.
-
-I rebooted a few minute later, but shortly after I selected the kernel,=
- it stopped, and I dropped into a shell.
-
-With the help of Neil Brown, I made some progress and /dev/md1 reshapin=
-g appeared to have completed without error.
-
-However, on the next reboot I got the INCONSISTENCY message.
-
-Will it be safe to simply accept fsck's offer to fix, or are there othe=
-r things I should do?
-
-
-Thanks,
-Gavin=20
-
---
-All Adults share the Responsibility
-to help Raise Today's Children,
-for they are Tomorrow's Society!
-
-
-
-
-
-
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
