@@ -1,137 +1,94 @@
-From: =?ISO-8859-1?Q?Marc_Recht=E9?= <marc3@rechte.fr>
-Subject: hdparm standby timeout stopped working
-Date: Fri, 18 Feb 2011 10:47:36 +0100
-Message-ID: <ijlf7c$f9k$1@dough.gmane.org>
+From: David Brown <david@westcontrol.com>
+Subject: Re: raid5/raid6 write performance question
+Date: Fri, 18 Feb 2011 10:56:34 +0100
+Message-ID: <ijlfpe$ief$1@dough.gmane.org>
+References: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+On 17/02/2011 19:52, Patrick J. LoPresti wrote:
+> I have a fair amount of experience with hardware RAID devices, but now
+> I am investigating Linux software RAID and I have a question.  Well, a
+> few questions.
+>
 
-I had sucessfully set the standby timeout on recent Hitachi SATA drives 
-(actually 3 of them in a PMP enclosure, using hdparm -S 5 /dev/sd?). The 
-drive were entering standby mode confirmed by hdparm -C.
+I'll give some answers, but I am not sure about all the details.  I hope 
+that someone else will correct me if I'm wrong :-)
 
-Suddenly all the drives stopped entering automatically standby mode, 
-even when not mounted, although forcing standby with hdparm -y is still 
-working...
+> The classic problem for RAID5/RAID6 write performance, especially when
+> striping across many drives, is that a single small write requires
+> reading in the entire stripe from all disks to calculate the new
+> syndrome block(s).
+>
 
-I tried to boot in single mode (s) to be sure fewer services are 
-running. Same thing.
+You don't need to read the whole stripe (at least, not for RAID5 - I 
+don't know enough about RAID6 to comment).
 
-I cannot see what I changed on the system. Day - 1 is was working fine...
+With RAID5, the parity is the xor of all the other blocks in the stripe. 
+  So if you only want to change one block, you can read the old block 
+and the old parity block, and calculate the new parity block as the xor 
+of the old data block, the old parity block, and the new data block.
 
-Thanks
+You still have to do some reads then a write, but at least you don't 
+need to read the whole stripe.
 
-Kernel is 2.6.32-71.14.1.el6.i686
+I presume that's the way md RAID5 implements small writes.
 
-[root@homecine ~]# hdparm -I /dev/sdb
+> Hardware RAID controllers typically mitigate this problem by using a
+> sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
+> that enough blocks will be written in a short period of time to
+> populate an entire stripe.  Once an entire stripe is in the write-back
+> cache, it can be written out with its syndrome blocks without having
+> to read anything.
+>
+> Of course, the cache has to be non-volatile (battery backed or solid
+> state), because the kernel is expecting stuff it has written to disk
+> not to vanish because of a power failure.
+>
+> My question is this:  How does Linux RAID5/RAID6 avoid reading an
+> entire stripe every time the kernel flushes a single page?  Does it
+> have a (volatile?) cache?  Or does it rely on the kernel flushing lots
+> of contiguous data in a single request?  Or something else?
+>
 
-/dev/sdb:
+My understanding is that md keeps a cache of the stripes in ram.  Any 
+writes must be completed to the disk itself, rather than just the stripe 
+cache, before being reported to the file system as completed, as this 
+cache is volatile.  But the next time you make a small write to a stripe 
+that is in the cache, it can avoid the reads.  Of course, the cache will 
+also be used for reads.
 
-ATA device, with non-removable media
-         Model Number:       Hitachi HDS723030ALA640
-         Serial Number:      MK0311YHG3X51A
-         Firmware Revision:  MKAOA3B0
-         Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II 
-Extensions, SATA Rev 2.5, SATA Rev 2.6; Revision: ATA8-AST T13 Project 
-D1697 Revision 0b
-Standards:
-         Used: unknown (minor revision code 0x0029)
-         Supported: 8 7 6 5
-         Likely used: 8
-Configuration:
-         Logical         max     current
-         cylinders       16383   16383
-         heads           16      16
-         sectors/track   63      63
-         --
-         CHS current addressable sectors:   16514064
-         LBA    user addressable sectors:  268435455
-         LBA48  user addressable sectors: 5860533168
-         Logical  Sector size:                   512 bytes
-         Physical Sector size:                   512 bytes
-         device size with M = 1024*1024:     2861588 MBytes
-         device size with M = 1000*1000:     3000592 MBytes (3000 GB)
-         cache/buffer size  = unknown
-         Form Factor: 3.5 inch
-         Nominal Media Rotation Rate: 7200
-Capabilities:
-         LBA, IORDY(can be disabled)
-         Queue depth: 32
-         Standby timer values: spec'd by Standard, no device specific 
-minimum
-         R/W multiple sector transfer: Max = 16  Current = 0
-         Advanced power management level: disabled
-         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udma6
-              Cycle time: min=120ns recommended=120ns
-         PIO: pio0 pio1 pio2 pio3 pio4
-              Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-         Enabled Supported:
-            *    SMART feature set
-                 Security Mode feature set
-            *    Power Management feature set
-            *    Write cache
-            *    Look-ahead
-            *    Host Protected Area feature set
-            *    WRITE_BUFFER command
-            *    READ_BUFFER command
-            *    NOP cmd
-            *    DOWNLOAD_MICROCODE
-                 Advanced Power Management feature set
-                 Power-Up In Standby feature set
-            *    SET_FEATURES required to spinup after power up
-                 SET_MAX security extension
-            *    48-bit Address feature set
-            *    Device Configuration Overlay feature set
-            *    Mandatory FLUSH_CACHE
-            *    FLUSH_CACHE_EXT
-            *    SMART error logging
-            *    SMART self-test
-                 Media Card Pass-Through
-            *    General Purpose Logging feature set
-            *    WRITE_{DMA|MULTIPLE}_FUA_EXT
-            *    64-bit World wide name
-            *    URG for READ_STREAM[_DMA]_EXT
-            *    URG for WRITE_STREAM[_DMA]_EXT
-            *    WRITE_UNCORRECTABLE_EXT command
-            *    {READ,WRITE}_DMA_EXT_GPL commands
-            *    Segmented DOWNLOAD_MICROCODE
-                 unknown 119[7]
-            *    Gen1 signaling speed (1.5Gb/s)
-            *    Gen2 signaling speed (3.0Gb/s)
-            *    unknown 76[3]
-            *    Native Command Queueing (NCQ)
-            *    Host-initiated interface power management
-            *    Phy event counters
-            *    NCQ priority information
-                 Non-Zero buffer offsets in DMA Setup FIS
-            *    DMA Setup Auto-Activate optimization
-                 Device-initiated interface power management
-                 In-order data delivery
-            *    Software settings preservation
-            *    SMART Command Transport (SCT) feature set
-            *    SCT LBA Segment Access (AC2)
-            *    SCT Error Recovery Control (AC3)
-            *    SCT Features Control (AC4)
-            *    SCT Data Tables (AC5)
-Security:
-         Master password revision code = 65534
-                 supported
-         not     enabled
-         not     locked
-         not     frozen
-         not     expired: security count
-         not     supported: enhanced erase
-         128min for SECURITY ERASE UNIT.
-Logical Unit WWN Device Identifier: 5000cca225c1c6d5
-         NAA             : 5
-         IEEE OUI        : 000cca
-         Unique ID       : 225c1c6d5
-Checksum: correct
+The size of this cache is configurable - using a larger stripe cache 
+will give you a higher hit ratio, and thus faster small writes on 
+average.  But the same ram can be used for other types of caches - 
+directory entry caches, file caches, etc.  The best balance will depend 
+on your load - for a read-mostly array, ram will probably be better 
+spent as file cache, while for a write-mostly array the stripe cache is 
+more important.
+
+
+My understanding of hardware raid cards is that the have stripe caches, 
+but these are typically volatile.  A non-volatile cache would mean you 
+can't swap out controllers or disks when the system is switched off, as 
+some of the data might be in the controller card's cache instead of the 
+disks.
+
+For high-end systems, your battery backup must not only keep the cache 
+alive, but it should keep your disks running so that the cache can be 
+flushed to disk when there is a power failure.  Then the controller will 
+be able to report a write as "complete" when it is cached, and handle 
+the flush to disk in the background.
+
+Less high-end systems would, I believe, handle the cache in the same way 
+as md raid - the stripe cache in ram would help avoid the reads before 
+writing to part of a RAID 5 stripe.  Typically, this on-board cache will 
+be a lot smaller than you would have in an md RAID system.
+
+
 
