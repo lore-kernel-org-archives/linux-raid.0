@@ -1,72 +1,51 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] Re: User space RAID-6 access
-Date: Sat, 19 Feb 2011 00:02:38 +0100
-Message-ID: <20110218230237.GA23883@lazy.lzy>
-References: <20110131202054.GA15712@lazy.lzy>
- <20110201075259.4beaf501@notabene.brown>
- <20110205173334.GA5952@lazy.lzy>
- <20110206075820.08fc19c9@notabene.brown>
- <20110207222459.GA25471@lazy.lzy>
- <20110208094952.49745c7b@notabene.brown>
- <20110209184734.GA7169@lazy.lzy>
- <20110217172332.2fbb5694@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Fri, 18 Feb 2011 17:16:38 -0600
+Message-ID: <4D5EFDD6.1020504@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110217172332.2fbb5694@notabene.brown>
+In-Reply-To: <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> As this is really just for testing, I would add a :offset  suffix to the
-> device names where the offset is in sectors.
-> So:
->    /dev/sda
-> means read from the start of /dev/sda
-> 
->    /dev/sda:2048
-> 
-> means start 1Meg into /dev/sda.
-> 
-> That should be easy to parse and is quite general.
+Mattias Wadenstein put forth on 2/18/2011 7:49 AM:
 
-Hi again,
+> Here you would either maintain a large list of nfs mounts for the read
+> load, or start looking at a distributed filesystem. Sticking them all
+> into one big fileserver is easier on the administration part, but
+> quickly gets really expensive when you look to put multiple 10GE
+> interfaces on it.
 
-please find attached below another mini-patch
-which should add the offset option, as discussed.
-That is, "/dev/sdX:offset".
-It should work with or without the ":offset" tail,
-and possibly also with "/dev/sdX:", depending on
-"atoll()".
+This really depends on one's definition of "really expensive".  Taking
+the total cost of such a system/infrastructure into account, these two
+Intel dual port 10 GbE NICs seem rather cheap at $650-$750 USD:
 
-Please consider for inclusion.
+http://www.newegg.com/Product/Product.aspx?Item=N82E16833106037
+http://www.newegg.com/Product/Product.aspx?Item=N82E16833106075
 
-Thanks,
+20 Gb/s (40 both ways) raw/peak throughput at this price seems like a
+bargain to me (plus the switch module cost obviously, if required,
+usually not for RJ-45 or CX4, thus my motivation for mentioning these).
 
-bye,
+The storage infrastructure on the back end required to keep these pipes
+full will be the "really expensive" piece.  With 40-50 NFS clients you
+end up with a random read/write workload, as has been mentioned.  To
+sustain 2 GB/s throughput (CRC+TCP+NFS+etc overhead limited) under such
+random IO conditions is going to require something on the order of 24-30
+15k SAS drives in a RAID 0 stripe, or 48-60 such drives in a RAID 10,
+assuming something like 80-90% efficiency in your software or hardware
+RAID engine.  To get this level of sustained random performance from the
+Nexsan arrays you'd have to use 2 units as the controller hardware just
+isn't fast enough.  This is also exactly why NetApp does good business
+in the midrange segment--one unit does it all, including block and file.
 
-
-diff -uN a/restripe.c b/restripe.c
---- a/restripe.c	2011-02-18 23:18:20.377740868 +0100
-+++ b/restripe.c	2011-02-18 23:30:07.589841525 +0100
-@@ -875,6 +875,14 @@
- 		exit(3);
- 	}
- 	for (i=0; i<raid_disks; i++) {
-+		char *p;
-+		p = strchr(argv[9+i], ':');
-+
-+		if(p != NULL) {
-+			*p++ = '\0';
-+			offsets[i] = atoll(p) * 512;
-+		}
-+			
- 		fds[i] = open(argv[9+i], O_RDWR);
- 		if (fds[i] < 0) {
- 			perror(argv[9+i]);
+RAID 5/6 need not apply due the abysmal RMW partial stripe write
+penalty, unless of course you're doing almost no writes.  But in that
+case, how did the data get there in the first place? :)
 
 -- 
-
-piergiorgio
+Stan
