@@ -1,122 +1,69 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: mdadm / force parity checking of blocks on all reads?
-Date: Fri, 18 Feb 2011 02:34:32 -0200
-Message-ID: <AANLkTim+WX1tWFmqAqt9C6U84ootdVmHtK4YSHEjtCJ1@mail.gmail.com>
-References: <4D5DD3C0.3020804@chaven.com>
-	<20110218142536.04d35fe5@notabene.brown>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Fri, 18 Feb 2011 09:13:33 +0000
+Message-ID: <4D5E383D.9010608@gmail.com>
+References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5ACE4B.9040309@gmail.com>	<4D5AD613.3040402@turmel.org>	<20110216004524.67abe977@natsu>	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com> <20110217204221.7a865364@natsu>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110218142536.04d35fe5@notabene.brown>
+In-Reply-To: <20110217204221.7a865364@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Steve Costaras <stevecs@chaven.com>, linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-put a lot of raid1 devices eheheh, but i don=B4t know if it=B4s a good
-idea... maybe... change your hardware and try another more mature
-filesystem
-maybe a solution of raid+lvm+filesystem is a better solution, with lvm
-you can online backup
+Hi Roman,
+Sorry to be so persistent on something that is not Linux raid specific, 
+but I still can't get blkid to run, the message is:
 
-2011/2/18 NeilBrown <neilb@suse.de>:
-> On Thu, 17 Feb 2011 20:04:48 -0600 Steve Costaras <stevecs@chaven.com=
-> wrote:
->
->>
->>
->> I'm looking at alternatives to ZFS since it still has some time to g=
-o
->> for large scale deployment as a kernel-level file system (and brtfs =
-has
->> years to go). =A0 I am running into problems with silent data corrup=
-tion
->> with large deployments of disks. =A0 =A0Currently no hardware raid v=
-endor
->> supports T10 DIF (which even if supported would only work w/ SAS/FC
->> drives anyway) nor does read parity checking.
->
-> Maybe I'm just naive, =A0but find it impossible to believe that "sile=
-nt data
-> corruption" is ever acceptable. =A0 You should fix or replace your ha=
-rdware.
->
-> Yes, I know silent data corruption is theoretically possible at a ver=
-y low
-> probability and that as you add more and more storage, that probabili=
-ty gets
-> higher and higher.
->
-> But my point is that the probability of unfixable but detectable corr=
-uption
-> will ALWAYS be much (much much) higher than the probability of silent=
- data
-> corruption (on a correctly working system).
->
-> So if you are getting unfixable errors reported on some component, re=
-place
-> that component. =A0And if you aren't then ask your vender to replace =
-the
-> system, because it is broken.
->
->
->>
->> I am hoping that either there is a way that I don't know of to enabl=
-e
->> mdadm to read the data plus p+q parity blocks for every request and
->> compare them for accuracy (simlar to what you need to do for a scrub=
- but
->> /ALWAYS/) or have the functionality added as an option.
->
-> No, it is not currently possible to do this, nor have I plan to imple=
-ment
-> it. =A0I guess it would be possible in theory though.
->
-> NeilBrown
->
->
->>
->> With the current large capacity drives we have today getting bit err=
-ors
->> is quite common (I have some scripts that I do complete file checks
->> every two weeks across 50TB arrays and come up with errros every
->> month). =A0 I'm looking at expanding to 200-300TB volumes shortly so=
- the
->> problem will only get that much more frequent. =A0 =A0 Being able to=
- check
->> the data against parity will be able to find/notify and correct erro=
-rs
->> at read time before they get to user space. =A0 This fixes bit rot a=
-s well
->> as torn/wild reads/writes and mitigates transmission issues.
->>
->> I searched the list but couldn't find this benig discussed before, i=
-s
->> this possible?
->>
->> Steve Costaras
->> stevecs@chaven.com
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+proxmox:~# ls -la /usr/lib/debug/sbin/blkid
+-rwx------ 1 root root 19887 2008-10-13 04:54 /usr/lib/debug/sbin/blkid
 
+proxmox:~# /usr/lib/debug/sbin/blkid --help
+-bash: /usr/lib/debug/sbin/blkid: cannot execute binary file
 
+If I can't run it directly I'm pretty sure symlinking it will not make 
+any difference.  It's weird, normally when I apt-get things it modifies 
+the path etc and does everything required to make it work, I would have 
+thought if I installed a debug version of something it should add the 
+debug path as well ?
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+blkid always works on my Ubuntu boxes, I don't know why this is any 
+different (apart from being a different distribution, it's still a 
+mature program, package and platform).
+
+:-)
+
+Simon
+
+On 17/02/2011 15:42, Roman Mamedov wrote:
+> On Thu, 17 Feb 2011 15:10:32 +0000
+> Simon Mcnair<simonmcnair@gmail.com>  wrote:
+>
+>> proxmox:~# dpkg -S blkid
+>> libblkid1: /lib/libblkid.so.1.0
+>> libblkid1: /lib/libblkid.so.1
+>> libblkid1: /usr/share/doc/libblkid1/changelog.Debian.gz
+>> libblkid1: /usr/share/doc/libblkid1/copyright
+>> libblkid1: /usr/share/doc/libblkid1
+>> e2fsprogs-dbg: /usr/lib/debug/sbin/blkid
+>>
+>> proxmox:~# apt-get install e2fsprogs-dbg
+>> Reading package lists... Done
+>> Building dependency tree
+>> Reading state information... Done
+>> e2fsprogs-dbg is already the newest version.
+>> 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+>>
+>>
+>> I still can't blkid installed, even though I have e2fsprogs-dbg installed...
+> /usr/lib/debug/sbin/ is not in system 'path', so you won't be able to run the
+> program just by entering 'blkid' into the shell prompt.
+> Either use the complete file name and path, e.g.
+>
+>    # /usr/lib/debug/sbin/blkid --help
+>
+> or symlink /usr/lib/debug/sbin/blkid to something like /usr/local/sbin/blkid.
+>
