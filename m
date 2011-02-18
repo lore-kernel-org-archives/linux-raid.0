@@ -1,88 +1,158 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: md road-map: 2011
-Date: Fri, 18 Feb 2011 17:22:31 -0200
-Message-ID: <AANLkTi=JsXwAVOi96aRVVwWnnJS0uPGMV+Fbi4u46G92@mail.gmail.com>
-References: <20110217010455.GA16324@www2.open-std.org>
-	<ijiu99$ill$1@dough.gmane.org>
-	<20110217105815.GA24580@www2.open-std.org>
-	<4D5D0A66.80608@texsoft.it>
-	<20110217154440.GA24982@www2.open-std.org>
-	<4D5DB9AC.10106@texsoft.it>
-	<20110218025623.GA26387@www2.open-std.org>
-	<4D5E4030.8020805@texsoft.it>
-	<20110218184329.GA2297@www2.open-std.org>
-	<AANLkTinYkEsaWinaz4LaOBpT36+fpizCSFO=AfH7sWEA@mail.gmail.com>
-	<20110218191820.GA2517@www2.open-std.org>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: Removed drive from mdadm raid 5 array after reboot
+Date: Fri, 18 Feb 2011 15:08:14 -0500
+Message-ID: <BAY148-w245C4F3B070F5743631EA9EFD40@phx.gbl>
+References: <BAY148-w38CAE450FEC67644025E33EFD40@phx.gbl>,<BAY148-w4658B4D2C63A5B2ADAEDBEFD40@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110218191820.GA2517@www2.open-std.org>
+In-Reply-To: <BAY148-w4658B4D2C63A5B2ADAEDBEFD40@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Giovanni Tessore <giotex@texsoft.it>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-yeah, disk with badblock =3D disk with dynamic layout
-i think with badblock we could port layout to all raid systems
-(including raid1 hehe, i like raid1)
 
-the area for badblock, we could clena then at startup with: write
-000000, send TRIM command to sectors used by badblock area, this will
-help disks with internal realloc functions (faster than md software)
+Hello,
 
-2011/2/18 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Fri, Feb 18, 2011 at 05:00:27PM -0200, Roberto Spadim wrote:
->> again... for realloc we need TRIM command or reserved sectors just f=
-or
->> bad block realloc, TRIM command tell MD what sector isn?t in use, at
->> WRITE command MD set the sector as inuse, at array creation md set
->> sector as inuse too. this will only work with ext4 and swap, others
->> filesystem don?t have TRIM. the solution of others filesystem are
->> based on not used block, but it?s a internal logic of each filesyste=
-m.
->> i don?t know what is best, TRIM command is nice (we can send TRIM to
->> disks, this help to make their life bigger) a bad block is a disk
->> getting smaller and smaller, the disk can realloc badblock. if it
->> cant, filesystem should realloc it (it have more information about
->> logic device, it shouldn?t, TRIM command is the information that dis=
-k
->> should have to discart blocks, not a filesystem logic, but... it?s a
->> option, filesystem can realloc)
->
-> I think I prefer a realloc area in the raid metadata area. And the
-> metadata area could be contaning a not-too-small realloc area, with a=
-n
-> option of enlarging the realloc area at a later time. This could be d=
-one
-> by shrinking the related file system, and then adding the freed space=
- to
-> the realloc area in the raid metadata.
->
-> Some MBs set aside for this would not be noticeable in todays TB disk=
-s
-> regime. I think current disk hardware allows relocation of under 1000
-> blocks a 512 byte =3D under 512 kB. So no problem sizewise.
-> Performance may be a bigger problem. =A0Maybe some binary searcheable=
- list
-> built at MD RAID assembly time.
->
-> best regards
-> keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+I was wondering if anyone had come across an issue where after rebooting the system, mdadm fails to reassemble an entire raid 5 array with all the drives. I am getting the array up with just /dev/sda and /dev/sdb, but the array is degraded as a consequence to missing /dev/sdd (which I assume has become the parity drive). 
+
+I also posted the question over at the debian-user list: http://lists.debian.org/debian-user/2011/02/msg01898.html
+No action yet over there, so I thought I should ask here :)
+
+Below is some information that I believe will help display my situation. Your help is greatly appreciated, TIA!
+
+mdadm -V
+mdadm - v3.1.4 - 31st August 2010
+(Debian Version: Version: 3.1.4-1+8efb9d1)
+
+
+uname -a
+Linux XEN-HOST 2.6.32.26-xen-amd64 #1 SMP Thu Dec 2 00:20:03 EST 2010 x86_64 GNU/Linux
+
+
+mdadm --detail /dev/md0
+/dev/md0:
+Version : 1.2
+Creation Time : Mon Dec 20 09:48:07 2010
+Raid Level : raid5
+Array Size : 1953517568 (1863.02 GiB 2000.40 GB)
+Used Dev Size : 976758784 (931.51 GiB 1000.20 GB)
+Raid Devices : 3
+Total Devices : 2
+Persistence : Superblock is persistent
+
+Update Time : Fri Feb 18 12:27:09 2011
+State : clean, degraded
+Active Devices : 2
+Working Devices : 2
+Failed Devices : 0
+Spare Devices : 0
+
+Layout : left-symmetric
+Chunk Size : 512K
+
+Name : XEN-HOST:0 (local to host XEN-HOST)
+UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+Events : 32122
+
+Number Major Minor RaidDevice State
+0 8 1 0 active sync /dev/sda1
+1 8 17 1 active sync /dev/sdb1
+2 0 0 2 removed <-------- Missing drive
 
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+fdisk -luc /dev/sda
+
+Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x411fb12e
+
+Device Boot Start End Blocks Id System
+/dev/sda1 63 1953520064 976760001 fd Linux raid autodetect
+
+
+
+fdisk -luc /dev/sdb
+
+Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders, total 1953525168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x02f65de3
+
+Device Boot Start End Blocks Id System
+/dev/sdb1 63 1953520064 976760001 fd Linux raid autodetect
+
+
+
+fdisk -luc /dev/sdd
+
+Disk /dev/sdd: 1000.2 GB, 1000204886016 bytes
+81 heads, 63 sectors/track, 382818 cylinders, total 1953525168 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x8b0c29c7
+
+Device Boot Start End Blocks Id System
+/dev/sdd1 2048 1953525167 976761560 fd Linux raid autodetect
+
+
+
+
+cat /etc/mdadm/mdadm.conf
+# mdadm.conf
+#
+# Please refer to mdadm.conf(5) for information about this file.
+#
+
+# by default, scan all partitions (/proc/partitions) for MD superblocks.
+# alternatively, specify devices to scan, using wildcards if desired.
+DEVICE partitions
+
+# auto-create devices with Debian standard permissions
+CREATE owner=root group=disk mode=0660 auto=yes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR root
+
+# definitions of existing MD arrays
+ARRAY /dev/md/0 metadata=1.2 UUID=7d8a7c68:95a230d0:0a8f6e74:4c8f81e9 name=XEN-HOST:0
+
+
+
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sda1[0] sdb1[1]
+1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
+
+unused devices:
+
+
+Then after:
+
+mdadm --add /dev/md0 /dev/sdd1
+mdadm: re-added /dev/sdd1
+
+
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdd1[3] sda1[0] sdb1[1]
+1953517568 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
+[....................] recovery = 0.0% (121732/976758784) finish=534.8min speed=30433K/sec
+
+
+
+Thanks.
+
+
+ 		 	   		  
