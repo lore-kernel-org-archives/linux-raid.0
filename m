@@ -1,94 +1,87 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: raid5/raid6 write performance question
-Date: Fri, 18 Feb 2011 10:56:34 +0100
-Message-ID: <ijlfpe$ief$1@dough.gmane.org>
-References: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
+From: Simon Mcnair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Fri, 18 Feb 2011 10:38:13 +0000
+Message-ID: <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com>
+References: <4D540F6C.6050904@gmail.com>
+	<20110215155315.55d35b8e@notabene.brown>
+	<4D5A92F3.1090004@turmel.org>
+	<4D5ACE4B.9040309@gmail.com>
+	<4D5AD613.3040402@turmel.org>
+	<20110216004524.67abe977@natsu>
+	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com>
+	<20110217204221.7a865364@natsu>
+	<4D5E383D.9010608@gmail.com>
+	<20110218093804.GA2405@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinRCMJq3bt5jmQfJ1PRfN1S-ZoJB0HXeMzFeqSA@mail.gmail.com>
+In-Reply-To: <20110218093804.GA2405@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Simon McNair <simonmcnair@gmail.com>, Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+Cc: Robin Hill <robin@robinhill.me.uk>
 List-Id: linux-raid.ids
 
-On 17/02/2011 19:52, Patrick J. LoPresti wrote:
-> I have a fair amount of experience with hardware RAID devices, but now
-> I am investigating Linux software RAID and I have a question.  Well, a
-> few questions.
+Hi Robin,
+
+proxmox:~# apt-get install e2fsprogs
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+e2fsprogs is already the newest version.
+0 upgraded, 0 newly installed, 0 to remove and 3 not upgraded.
+
+Yeah, It's installed :-)
+
+Simon
+
+On 18 February 2011 09:38, Robin Hill <robin@robinhill.me.uk> wrote:
+> On Fri Feb 18, 2011 at 09:13:33AM +0000, Simon McNair wrote:
 >
-
-I'll give some answers, but I am not sure about all the details.  I hope 
-that someone else will correct me if I'm wrong :-)
-
-> The classic problem for RAID5/RAID6 write performance, especially when
-> striping across many drives, is that a single small write requires
-> reading in the entire stripe from all disks to calculate the new
-> syndrome block(s).
+>> Hi Roman,
+>> Sorry to be so persistent on something that is not Linux raid specif=
+ic,
+>> but I still can't get blkid to run, the message is:
+>>
+>> proxmox:~# ls -la /usr/lib/debug/sbin/blkid
+>> -rwx------ 1 root root 19887 2008-10-13 04:54 /usr/lib/debug/sbin/bl=
+kid
+>>
+>> proxmox:~# /usr/lib/debug/sbin/blkid --help
+>> -bash: /usr/lib/debug/sbin/blkid: cannot execute binary file
+>>
+>> If I can't run it directly I'm pretty sure symlinking it will not ma=
+ke
+>> any difference. =A0It's weird, normally when I apt-get things it mod=
+ifies
+>> the path etc and does everything required to make it work, I would h=
+ave
+>> thought if I installed a debug version of something it should add th=
+e
+>> debug path as well ?
+>>
+> I suspect that those are just the debug symbols - they're split off f=
+rom
+> the binary so they can be automatically pulled in when needed, but do=
+n't
+> bloat the application itself. =A0From the package naming, the actual =
+blkid
+> binary should be in the e2fsprogs package - do you have that installe=
+d?
 >
-
-You don't need to read the whole stripe (at least, not for RAID5 - I 
-don't know enough about RAID6 to comment).
-
-With RAID5, the parity is the xor of all the other blocks in the stripe. 
-  So if you only want to change one block, you can read the old block 
-and the old parity block, and calculate the new parity block as the xor 
-of the old data block, the old parity block, and the new data block.
-
-You still have to do some reads then a write, but at least you don't 
-need to read the whole stripe.
-
-I presume that's the way md RAID5 implements small writes.
-
-> Hardware RAID controllers typically mitigate this problem by using a
-> sizable (512MiB - 4GiB) non-volatile write-back cache, in the hopes
-> that enough blocks will be written in a short period of time to
-> populate an entire stripe.  Once an entire stripe is in the write-back
-> cache, it can be written out with its syndrome blocks without having
-> to read anything.
+> Cheers,
+> =A0 =A0Robin
+> --
+> =A0 =A0 ___
+> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@r=
+obinhill.me.uk> |
+> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 |
 >
-> Of course, the cache has to be non-volatile (battery backed or solid
-> state), because the kernel is expecting stuff it has written to disk
-> not to vanish because of a power failure.
->
-> My question is this:  How does Linux RAID5/RAID6 avoid reading an
-> entire stripe every time the kernel flushes a single page?  Does it
-> have a (volatile?) cache?  Or does it rely on the kernel flushing lots
-> of contiguous data in a single request?  Or something else?
->
-
-My understanding is that md keeps a cache of the stripes in ram.  Any 
-writes must be completed to the disk itself, rather than just the stripe 
-cache, before being reported to the file system as completed, as this 
-cache is volatile.  But the next time you make a small write to a stripe 
-that is in the cache, it can avoid the reads.  Of course, the cache will 
-also be used for reads.
-
-The size of this cache is configurable - using a larger stripe cache 
-will give you a higher hit ratio, and thus faster small writes on 
-average.  But the same ram can be used for other types of caches - 
-directory entry caches, file caches, etc.  The best balance will depend 
-on your load - for a read-mostly array, ram will probably be better 
-spent as file cache, while for a write-mostly array the stripe cache is 
-more important.
-
-
-My understanding of hardware raid cards is that the have stripe caches, 
-but these are typically volatile.  A non-volatile cache would mean you 
-can't swap out controllers or disks when the system is switched off, as 
-some of the data might be in the controller card's cache instead of the 
-disks.
-
-For high-end systems, your battery backup must not only keep the cache 
-alive, but it should keep your disks running so that the cache can be 
-flushed to disk when there is a power failure.  Then the controller will 
-be able to report a write as "complete" when it is cached, and handle 
-the flush to disk in the background.
-
-Less high-end systems would, I believe, handle the cache in the same way 
-as md raid - the stripe cache in ram would help avoid the reads before 
-writing to part of a RAID 5 stripe.  Typically, this on-board cache will 
-be a lot smaller than you would have in an md RAID system.
-
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
