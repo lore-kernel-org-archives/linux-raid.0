@@ -1,42 +1,53 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Raid selection questions (10 vs 6, n2 vs f2) on an 8 drive array
-Date: Fri, 18 Feb 2011 22:33:39 -0600
-Message-ID: <4D5F4823.4070909@hardwarefreak.com>
-References: <AANLkTi=2xjjuvT3tTs1Y9Qfrn6HxWS3hwzF-Q0ZhPFVM@mail.gmail.com> <4D5F0458.3060403@hardwarefreak.com> <20110219005439.GA3251@www2.open-std.org> <AANLkTimpDXmRLxCQp6=BRJqf_EFbTEgZujQU9EyweywS@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: External bitmap, questions
+Date: Sat, 19 Feb 2011 15:49:24 +1100
+Message-ID: <20110219154924.2218c87c@notabene.brown>
+References: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimpDXmRLxCQp6=BRJqf_EFbTEgZujQU9EyweywS@mail.gmail.com>
+In-Reply-To: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Larry Schwerzler <larry@schwerzler.com>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Larry Schwerzler put forth on 2/18/2011 7:53 PM:
+On Sat, 19 Feb 2011 00:47:10 +0000 Mathias Bur=E9n <mathias.buren@gmail=
+=2Ecom>
+wrote:
 
-> While I have considered getting a new case that can hold 8 drives +
-> system drive + cd rom I always had trouble finding them. There are no
-> doubt better setups then mine, but Im trying to not buy new hardware
-> if I can get away with it.
+> Hi,
+>=20
+> >From the mdadm manual:
+>=20
+> "-b, --bitmap=3D
+> [...]
+> Note: external bitmaps are only known to work on ext2 and ext3.
+> Storing bitmap files on other filesystems may result in serious
+> problems."
+>=20
+> I was planning to store the external bitmap on an ext4 partition. Wil=
+l
+> this be a problem, or is the warning there because it hasn't been
+> tested enough but no problems found?
 
-Are you mechanically inclined in the slightest?  You can fix the "cable
-kick" problem for less than $5 with these:
+External bitmaps use 'BMAP' to find where the file lives on the device =
+and
+then writes directly to the device - not through the filesystem.
 
-http://www.lowes.com/ProductDisplay?partNumber=292685-1781-45-1MBUVL&langId=-1&storeId=10151&productId=3128405&catalogId=10051&cmRelshp=rel&rel=nofollow&cId=PDIO1
+So as long as there is no tail-packing to block migration happening it =
+should
+work fine.
 
-and these:
+I haven't looked inside ext4 but I am fairly confident that external bi=
+tmaps
+will work properly.
 
-http://www.lowes.com/pd_220871-1781-45-311UVL_0__?productId=3128261&Ntt=cable+tie&pl=1&currentURL=%2Fpl__0__s%3FVa%3Dtrue%26Ntt%3Dcable%2Btie
+NeilBrown
 
-and have most of them left over for other uses.  You'll get strain
-relief and kick protection, especially if you use two on each chassis.
-Though, if you are actually kicking or tripping over the cable, you'll
-simply end up jerking your equipment off the table and damaging it,
-instead of just having the eSATA plug pop out.
-
-I'm really curious to understand why/how your cables are exposed to
-"kicking" or other detachment due to accidental contact.
-
--- 
-Stan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
