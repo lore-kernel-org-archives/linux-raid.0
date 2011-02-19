@@ -1,24 +1,31 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Linux software RAID assistance
-Date: Sat, 19 Feb 2011 18:37:54 +0100
-Message-ID: <4D5FFFF2.8070009@computer.org>
-References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5ACE4B.9040309@gmail.com>	<4D5AD613.3040402@turmel.org>	<20110216004524.67abe977@natsu>	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com>	<20110217204221.7a865364@natsu>	<4D5E383D.9010608@gmail.com>	<20110218093804.GA2405@cthulhu.home.robinhill.me.uk> <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com> <4D5FADA5.1090108@computer.org> <4D5FBA50.7080306@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Possible HDD error, how do I find which HDD it is?
+Date: Sat, 19 Feb 2011 13:02:09 -0500
+Message-ID: <4D6005A1.7040307@turmel.org>
+References: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com> <4D5FE3D6.8070006@anonymous.org.uk> <4D5FF386.6070003@turmel.org> <4D5FFCEC.9040207@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5FBA50.7080306@gmail.com>
+In-Reply-To: <4D5FFCEC.9040207@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: simonmcnair@gmail.com
-Cc: Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
+To: John Robinson <john.robinson@anonymous.org.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19/02/11 13:40, Simon McNair wrote:
-> yay. Thanks very much. That worked. I don't quite understand why
-> something should need a reinstall to work, but thanks v much.
+(whoops, dropped the list.  Sorry about the dupe, John)
 
-If a package's binaries have been damaged or deleted, on purpose or 
-otherwise, then --reinstall helps. I have no idea what happened to your 
-copy of blkid, but --reinstall has brought it back for you.
+On 02/19/2011 12:25 PM, John Robinson wrote:
+[trim /]
+> So I changed the find regex as follows:
+> 
+> find /sys/devices/ -regex '.+/scsi_host\(:block\|:host[0-9]+\)?'
+> 
+> though I'd be interested to know why the simpler:
+> 
+> find /sys/devices/ -name 'scsi_host*'
+> 
+> isn't sufficient?
 
-Jan
+It probably is fine, and does work on all my machines close at hand.  I did a fair amount of rework after the last public discussion, and I try to be conservative with wildcard matches.  I'll use it for a while, and see if it bites.
+
+Phil
