@@ -1,72 +1,24 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Possible HDD error, how do I find which HDD it is?
-Date: Sat, 19 Feb 2011 17:25:33 +0000
-Message-ID: <4D5FFD0D.4030202@anonymous.org.uk>
-References: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com> <4D5FE3D6.8070006@anonymous.org.uk> <4D5FF386.6070003@turmel.org>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: Linux software RAID assistance
+Date: Sat, 19 Feb 2011 18:37:54 +0100
+Message-ID: <4D5FFFF2.8070009@computer.org>
+References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5ACE4B.9040309@gmail.com>	<4D5AD613.3040402@turmel.org>	<20110216004524.67abe977@natsu>	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com>	<20110217204221.7a865364@natsu>	<4D5E383D.9010608@gmail.com>	<20110218093804.GA2405@cthulhu.home.robinhill.me.uk> <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com> <4D5FADA5.1090108@computer.org> <4D5FBA50.7080306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5FF386.6070003@turmel.org>
+In-Reply-To: <4D5FBA50.7080306@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: simonmcnair@gmail.com
+Cc: Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
 List-Id: linux-raid.ids
 
-On 19/02/2011 16:44, Phil Turmel wrote:
-> On 02/19/2011 10:37 AM, John Robinson wrote:
->> On 19/02/2011 11:52, Mathias Bur=C3=A9n wrote:
->> [...]
->>> What I wonder is, how do I know what device is ata3? I do have 4
->>> devices of that model (WD20EARS). I've tried searching in /sys but
->>> there's nothing of value there (or I've missed it). If dmesg only
->>> showed the S/N...
->>> I posted the smartctl --all output of all devices here in case some=
-one
->>> has time to take a look:
->>> http://stuff.dyndns.org/logs/smart-sd[a,b,c,d,e,f,g].log
->>
->> Try using Phil Turmel's excellent lsdrv script; I've attached the ve=
-rsion I use on EL5, but I hacked it about to work on such an old distro=
- so I wouldn't swear it will work on more recent distros; Phil's origin=
-al that does work on more recent distros can be found in the list archi=
-ves around 6 November last year in the thread "Determining which spindl=
-e is out of order".
->
-> I've attached the latest version.  It falls back to smartctl if it ca=
-n't find the sginfo utility.  It should work on both old and new sysfs =
-layouts.
+On 19/02/11 13:40, Simon McNair wrote:
+> yay. Thanks very much. That worked. I don't quite understand why
+> something should need a reinstall to work, but thanks v much.
 
-It still lists nothing on EL5. My SCSI hosts appear in /sys/devices/ as=
-=20
-follows:
+If a package's binaries have been damaged or deleted, on purpose or 
+otherwise, then --reinstall helps. I have no idea what happened to your 
+copy of blkid, but --reinstall has brought it back for you.
 
-/sys/devices/pci0000:00/0000:00:1f.2/host7/scsi_host:host7
-/sys/devices/pci0000:00/0000:00:1f.2/host6/scsi_host:host6
-/sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host:host5
-/sys/devices/pci0000:00/0000:00:1f.2/host4/scsi_host:host4
-/sys/devices/pci0000:00/0000:00:1f.2/host3/scsi_host:host3
-/sys/devices/pci0000:00/0000:00:1f.2/host2/scsi_host:host2
-/sys/devices/pci0000:00/0000:00:1e.0/0000:05:01.1/host9/scsi_host:host9
-/sys/devices/pci0000:00/0000:00:1e.0/0000:05:01.0/host8/scsi_host:host8
-/sys/devices/pci0000:00/0000:00:1c.4/0000:03:00.0/host1/scsi_host:host1
-/sys/devices/pci0000:00/0000:00:1c.4/0000:03:00.0/host0/scsi_host:host0
-
-So I changed the find regex as follows:
-
-find /sys/devices/ -regex '.+/scsi_host\(:block\|:host[0-9]+\)?'
-
-though I'd be interested to know why the simpler:
-
-find /sys/devices/ -name 'scsi_host*'
-
-isn't sufficient?
-
-Cheers,
-
-John.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jan
