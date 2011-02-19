@@ -1,27 +1,39 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: External bitmap, questions
-Date: Sat, 19 Feb 2011 00:47:10 +0000
-Message-ID: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: Raid selection questions (10 vs 6, n2 vs f2) on an 8 drive array
+Date: Sat, 19 Feb 2011 01:54:39 +0100
+Message-ID: <20110219005439.GA3251@www2.open-std.org>
+References: <AANLkTi=2xjjuvT3tTs1Y9Qfrn6HxWS3hwzF-Q0ZhPFVM@mail.gmail.com> <4D5F0458.3060403@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D5F0458.3060403@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Larry Schwerzler <larry@schwerzler.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Feb 18, 2011 at 05:44:24PM -0600, Stan Hoeppner wrote:
+> Larry Schwerzler put forth on 2/18/2011 2:55 PM:
+> 
+> > 1. In my research of raid10 I very seldom hear of drive configurations
+> > with more drives then 4, are there special considerations with having
+> > an 8 drive raid10 array? I understand that I'll be loosing 2TB of
+> > space from my current setup, but i'm not too worried about that.
+> 
+> This is because Linux mdraid is most popular with the hobby crowd, not
+> business, and most folks in this segment aren't running more than 4
+> drives in a RAID 10.  For business solutions using embedded Linux and
+> mdraid, mdraid is typically hidden from the user who isn't going to be
+> writing posts on the net about mdraid.  He calls his vendor for support.
+>  In a nutshell, that's why you see little or no posts about mdraid 10
+> arrays larger than 4 drives.
 
-From the mdadm manual:
+well on https://raid.wiki.kernel.org/index.php/Performance
+there are several performance reports with 6 or 10 spindles, so there...
 
-"-b, --bitmap=
-[...]
-Note: external bitmaps are only known to work on ext2 and ext3.
-Storing bitmap files on other filesystems may result in serious
-problems."
+For an 8 drive Linux MD raid10 maybe you should consider a motherboard
+with 8 sata ports.
 
-I was planning to store the external bitmap on an ext4 partition. Will
-this be a problem, or is the warning there because it hasn't been
-tested enough but no problems found?
-
-Thanks,
-// Mathias
+Best regards
+keld
