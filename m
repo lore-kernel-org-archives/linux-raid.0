@@ -1,134 +1,49 @@
-From: Simon McNair <simonmcnair@gmail.com>
-Subject: Re: Possible HDD error, how do I find which HDD it is?
-Date: Sat, 19 Feb 2011 14:09:33 +0000
-Message-ID: <4D5FCF1D.1090708@gmail.com>
-References: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com>
-Reply-To: simonmcnair@gmail.com
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Linux software RAID assistance
+Date: Sat, 19 Feb 2011 10:30:16 -0500
+Message-ID: <4D5FE208.5020700@turmel.org>
+References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5BD678.2050200@gmail.com>	<4D5BE119.7000804@turmel.org>	<4D5C0E17.3060306@gmail.com>	<4D5C140F.9010301@turmel.org>	<4D5C1508.3040308@gmail.com>	<4D5C15D3.1070608@turmel.org>	<4D5C167C.7000101@turmel.org>	<4D5C1CF8.1020507@gmail.com>	<4D5C1E0B.9060300@turmel.org>	<4D5C2061.4060106@gmail.com>	<4D5C2143.3000907@turmel.org>	<4D5C2260.3020800@gmail.com>	<4D5C273E.7020609@turmel.org>	<4D5C4176.80604@gmail.com>	<4D5C4204.5020106@turmel.org>	<1377706586882297883@unknownmsgid>	<4D5C6016.6060809@turmel.org>	<AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>	<4D5D2723.1010101@turmel.org>	<6037962689649361915@unknownmsgid>	<AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gm
+ ail.com>	<4D5D52AE.8070602@turmel.org> <AANLkTi=MZ4vo+H16UMuUsVSA2_D-Wp+sFP-5RqOksjXm@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com>
+In-Reply-To: <AANLkTi=MZ4vo+H16UMuUsVSA2_D-Wp+sFP-5RqOksjXm@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Simon Mcnair <simonmcnair@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-does this help:
-http://www.linux-archive.org/centos/316405-how-map-ata-numbers-dev-sd-n=
-umbers.html
+On 02/19/2011 03:43 AM, Simon Mcnair wrote:
+> Phil,
+> Sorry for the spamming, but I'm just keeping you informed :-).
+> 
+> proxmox:/home/simon# ./block2gz.sh sdd /media/ntfs3g/sdb
+> 953869+1 records in
+> 953869+1 records out
+> 1000204886016 bytes (1.0 TB) copied, 95384 s, 10.5 MB/s
 
-?
-Simon
+[trim /]
 
-On 19/02/2011 11:52, Mathias Bur=C3=A9n wrote:
-> Hi, apologies in advance for the long email due to the log below. Thi=
-s
-> is the second time I've run a consistency check on the RAID (6 HDDs,
-> RAID5) that this error has occured. If you look on the ata3 entries i=
-n
-> the log below:
->
-> dmesg:
->
-> ata1: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76100 irq 40
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: ATA-8: Corsair CSSD-F60GB2, 1.1, max UDMA/133
-> ata1.00: 117231408 sectors, multi 1: LBA48 NCQ (depth 31/32)
-> ata1.00: configured for UDMA/133
->
-> ata2: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76180 irq 40
-> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata2.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
-> ata2.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata2.00: configured for UDMA/133
->
-> ata3: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76200 irq 40
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
-> ata3.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata3.00: configured for UDMA/133
-> ata3.00: exception Emask 0x0 SAct 0x800801 SErr 0x0 action 0x6 frozen
-> ata3.00: failed command: READ FPDMA QUEUED
-> ata3.00: cmd 60/b0:00:50:31:7b/02:00:8b:00:00/40 tag 0 ncq 352256 in
-> ata3.00: status: { DRDY }
-> ata3.00: failed command: READ FPDMA QUEUED
-> ata3.00: cmd 60/00:58:50:29:7b/04:00:8b:00:00/40 tag 11 ncq 524288 in
-> ata3.00: status: { DRDY }
-> ata3.00: failed command: READ FPDMA QUEUED
-> ata3.00: cmd 60/00:b8:50:2d:7b/04:00:8b:00:00/40 tag 23 ncq 524288 in
-> ata3.00: status: { DRDY }
-> ata3: hard resetting link
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: configured for UDMA/133
-> ata3.00: device reported invalid CHS sector 0
-> ata3.00: device reported invalid CHS sector 0
-> ata3.00: device reported invalid CHS sector 0
-> ata3: EH complete
->
-> ata4: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76280 irq 40
-> ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata4.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
-> ata4.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata4.00: configured for UDMA/133
->
-> ata5: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76300 irq 40
-> ata5: SATA link down (SStatus 0 SControl 300)
->
-> ata6: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76380 irq 40
-> ata6: SATA link down (SStatus 0 SControl 300)
->
-> ata7: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb22000 irq =
-19
-> ata7: SATA link down (SStatus 0 SControl 300)
->
-> ata8: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb24000 irq =
-19
-> ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata8.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
-> ata8.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata8.00: configured for UDMA/133
->
-> ata9: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb26000 irq =
-19
-> ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata9.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
-> ata9.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata9.00: configured for UDMA/133
->
-> ata10: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb28000 irq=
- 19
-> ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata10.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
-> ata10.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata10.00: configured for UDMA/133
->
-> hdparm -I /dev/sdc:
->
-> ATA device, with non-removable media
->          Model Number:       WDC WD20EARS-00MVWB0
->          Serial Number:      WD-WMAZ20152590
->          Firmware Revision:  50.0AB50
->
-> What I wonder is, how do I know what device is ata3? I do have 4
-> devices of that model (WD20EARS). I've tried searching in /sys but
-> there's nothing of value there (or I've missed it). If dmesg only
-> showed the S/N...
-> I posted the smartctl --all output of all devices here in case someon=
-e
-> has time to take a look:
-> http://stuff.dyndns.org/logs/smart-sd[a,b,c,d,e,f,g].log
->
-> Thanks,
-> // Mathias
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Have just started sdj,sdk,sdl,sdm.  I was thinking of renaming the
+> .gz's with the serial number as this would seem to me as more useful,
+> is this a good idea ?
+
+Yes.  I guess they'll finish some time tomorrow?
+
+> These numbers are not at all reflective of the drive or controller
+> speed as I took the lazy route and was writing 2 sets of images at the
+> same time to the same drive and in addition gzip was also running
+> (although not really stressing the system from what I could tell).
+
+The CPU was busy, but not overloaded.  The per-drive data rates were 1/5th to 1/10th what I would have expected.  The Asus P6T SE motherboard has a lot of bandwidth.  Something's odd.
+
+Can you attach a copy of your dmesg?
+
+> I suspect also that the drives may be pretty fragmented as the space
+> was not allocated at the start of the write, so that may have had some
+> impact too.
+
+Ntfs-3g can push 70+ MB/s onto my heavily fragged Windows laptop partition with only 50% of a Core2 Duo.  I doubt that's it.
+
+Phil
