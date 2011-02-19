@@ -1,60 +1,57 @@
-From: Larry Schwerzler <larry@schwerzler.com>
-Subject: Re: Raid selection questions (10 vs 6, n2 vs f2) on an 8 drive array
-Date: Fri, 18 Feb 2011 17:53:06 -0800
-Message-ID: <AANLkTimpDXmRLxCQp6=BRJqf_EFbTEgZujQU9EyweywS@mail.gmail.com>
-References: <AANLkTi=2xjjuvT3tTs1Y9Qfrn6HxWS3hwzF-Q0ZhPFVM@mail.gmail.com>
- <4D5F0458.3060403@hardwarefreak.com> <20110219005439.GA3251@www2.open-std.org>
+From: Beolach <beolach@gmail.com>
+Subject: Re: Upgrading from RAID 5 to 6 or build native level 6?
+Date: Fri, 18 Feb 2011 19:02:07 -0700
+Message-ID: <AANLkTikqytG1S1nU0NkZSjcEs08kyDFUUKpfgxGerQn7@mail.gmail.com>
+References: <AANLkTik8XFxjKJ+GoPjmos6Qm_WKzFw4O29Rr2w8cnGJ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110219005439.GA3251@www2.open-std.org>
+In-Reply-To: <AANLkTik8XFxjKJ+GoPjmos6Qm_WKzFw4O29Rr2w8cnGJ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Lasse Jensen <fafler@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2011/2/18 Keld J=F8rn Simonsen <keld@keldix.com>:
-> On Fri, Feb 18, 2011 at 05:44:24PM -0600, Stan Hoeppner wrote:
->> Larry Schwerzler put forth on 2/18/2011 2:55 PM:
->>
->> > 1. In my research of raid10 I very seldom hear of drive configurat=
-ions
->> > with more drives then 4, are there special considerations with hav=
-ing
->> > an 8 drive raid10 array? I understand that I'll be loosing 2TB of
->> > space from my current setup, but i'm not too worried about that.
->>
->> This is because Linux mdraid is most popular with the hobby crowd, n=
-ot
->> business, and most folks in this segment aren't running more than 4
->> drives in a RAID 10. =A0For business solutions using embedded Linux =
-and
->> mdraid, mdraid is typically hidden from the user who isn't going to =
-be
->> writing posts on the net about mdraid. =A0He calls his vendor for su=
-pport.
->> =A0In a nutshell, that's why you see little or no posts about mdraid=
- 10
->> arrays larger than 4 drives.
+On Wed, Feb 16, 2011 at 08:40, Lasse Jensen <fafler@gmail.com> wrote:
+> Is a RAID 6 array made by upgrading a RAID 5 array to RAID 6 in any
+> way inferior to a RAID 6 array build from scratch? I read somewhere
+> that the last drive would be parity only. I'm not sure what to make of
+> it and i cant find the link again either. Is it going to be a
+> bottleneck like in RAID 4?
 >
-> well on https://raid.wiki.kernel.org/index.php/Performance
-> there are several performance reports with 6 or 10 spindles, so there=
-=2E..
+
+That information is incomplete or out-of-date.  During a RAID 5 to
+RAID 6 reshape, there may be an intermediate step where all of the Q
+parity blocks are stored on one disk, but as the reshape continues, it
+will move all the Q parity blocks to a normal RAID 6 layout.  IIRC, in
+the very early stages of RAID 5 to RAID 6 reshape development, it
+would leave it in the abnormal layout, but that has not been the case
+for quite some time.  And I believe in some cases a RAID 5 to RAID 6
+reshape will not even use the intermediate step w/ the abnormal
+layout.  After the reshape fully completes, it is exactly the same as
+a RAID 6 array built from scratch.
+
+> The story is i have a degraded RAID 6 array with 3 out of 5 drives
+> active because of random read errors on the drives. Danm you, Western
+> Digital. Anyway, i can get all my data out, so no worries. I need to
+> ship the two drives for replacement and when i get them back, i'm
+> going to rearrange the array to put the encryption layer on top of the
+> RAID layer instead of the other way around as it drops out drives from
+> the array from time to time. Thats a whole different story.
 >
-> For an 8 drive Linux MD raid10 maybe you should consider a motherboar=
-d
-> with 8 sata ports.
+> Now, when i get the drives back, i could use one drive for most of my
+> data and put the rest on a couple of laptops and spare drives, build a
+> 4 drive RAID 6 array and then add the last drive to the array.
+> Or i could put my data on two drives a make a 3 drive RAID 5 array,
+> copy data in to it, add the last two drives and upgrade to RAID 6.
+> Which is better?
 >
-While I have considered getting a new case that can hold 8 drives +
-system drive + cd rom I always had trouble finding them. There are no
-doubt better setups then mine, but Im trying to not buy new hardware
-if I can get away with it.
-> Best regards
-> keld
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+If I understand you correctly, I think the RAID 6 route would be
+slightly better, because it would have enough parity info to recover
+from a single drive failure, while the RAID 5 route you describe would
+lose the array completely if a drive failed before you added the last
+two drives.
+
+
+Good luck!
