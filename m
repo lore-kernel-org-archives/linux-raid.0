@@ -1,19 +1,103 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Linux software RAID assistance
-Date: Sat, 19 Feb 2011 12:46:45 +0100
-Message-ID: <4D5FADA5.1090108@computer.org>
-References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5ACE4B.9040309@gmail.com>	<4D5AD613.3040402@turmel.org>	<20110216004524.67abe977@natsu>	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com>	<20110217204221.7a865364@natsu>	<4D5E383D.9010608@gmail.com>	<20110218093804.GA2405@cthulhu.home.robinhill.me.uk> <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Possible HDD error, how do I find which HDD it is?
+Date: Sat, 19 Feb 2011 11:52:37 +0000
+Message-ID: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Mcnair <simonmcnair@gmail.com>
-Cc: Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18/02/11 11:38, Simon Mcnair wrote:
-> Yeah, It's installed :-)
+Hi, apologies in advance for the long email due to the log below. This
+is the second time I've run a consistency check on the RAID (6 HDDs,
+RAID5) that this error has occured. If you look on the ata3 entries in
+the log below:
 
-apt-get install --reinstall e2fsprogs
+dmesg:
+
+ata1: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76100 irq 40
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-8: Corsair CSSD-F60GB2, 1.1, max UDMA/133
+ata1.00: 117231408 sectors, multi 1: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+
+ata2: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76180 irq 40
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
+ata2.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata2.00: configured for UDMA/133
+
+ata3: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76200 irq 40
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
+ata3.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata3.00: configured for UDMA/133
+ata3.00: exception Emask 0x0 SAct 0x800801 SErr 0x0 action 0x6 frozen
+ata3.00: failed command: READ FPDMA QUEUED
+ata3.00: cmd 60/b0:00:50:31:7b/02:00:8b:00:00/40 tag 0 ncq 352256 in
+ata3.00: status: { DRDY }
+ata3.00: failed command: READ FPDMA QUEUED
+ata3.00: cmd 60/00:58:50:29:7b/04:00:8b:00:00/40 tag 11 ncq 524288 in
+ata3.00: status: { DRDY }
+ata3.00: failed command: READ FPDMA QUEUED
+ata3.00: cmd 60/00:b8:50:2d:7b/04:00:8b:00:00/40 tag 23 ncq 524288 in
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: configured for UDMA/133
+ata3.00: device reported invalid CHS sector 0
+ata3.00: device reported invalid CHS sector 0
+ata3.00: device reported invalid CHS sector 0
+ata3: EH complete
+
+ata4: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76280 irq 40
+ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata4.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
+ata4.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata4.00: configured for UDMA/133
+
+ata5: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76300 irq 40
+ata5: SATA link down (SStatus 0 SControl 300)
+
+ata6: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76380 irq 40
+ata6: SATA link down (SStatus 0 SControl 300)
+
+ata7: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb22000 irq 19
+ata7: SATA link down (SStatus 0 SControl 300)
+
+ata8: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb24000 irq 19
+ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata8.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
+ata8.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata8.00: configured for UDMA/133
+
+ata9: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb26000 irq 19
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata9.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
+ata9.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata9.00: configured for UDMA/133
+
+ata10: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb28000 irq 19
+ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
+ata10.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata10.00: configured for UDMA/133
+
+hdparm -I /dev/sdc:
+
+ATA device, with non-removable media
+        Model Number:       WDC WD20EARS-00MVWB0
+        Serial Number:      WD-WMAZ20152590
+        Firmware Revision:  50.0AB50
+
+What I wonder is, how do I know what device is ata3? I do have 4
+devices of that model (WD20EARS). I've tried searching in /sys but
+there's nothing of value there (or I've missed it). If dmesg only
+showed the S/N...
+I posted the smartctl --all output of all devices here in case someone
+has time to take a look:
+http://stuff.dyndns.org/logs/smart-sd[a,b,c,d,e,f,g].log
+
+Thanks,
+// Mathias
