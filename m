@@ -1,103 +1,67 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Possible HDD error, how do I find which HDD it is?
-Date: Sat, 19 Feb 2011 11:52:37 +0000
-Message-ID: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: External bitmap, questions
+Date: Sat, 19 Feb 2011 17:14:37 +0500
+Message-ID: <20110219171437.3a6200e6@natsu>
+References: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
+	<20110219154924.2218c87c@notabene.brown>
+	<AANLkTimpQ2=EM97ELX3z4c=Yf6gDp=Ekdn6m+ws6O8rm@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/_4sGrJF=vZ9FaG84/PpBlRX"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTimpQ2=EM97ELX3z4c=Yf6gDp=Ekdn6m+ws6O8rm@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi, apologies in advance for the long email due to the log below. This
-is the second time I've run a consistency check on the RAID (6 HDDs,
-RAID5) that this error has occured. If you look on the ata3 entries in
-the log below:
+--Sig_/_4sGrJF=vZ9FaG84/PpBlRX
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-dmesg:
+On Sat, 19 Feb 2011 04:55:32 +0000
+Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
 
-ata1: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76100 irq 40
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: ATA-8: Corsair CSSD-F60GB2, 1.1, max UDMA/133
-ata1.00: 117231408 sectors, multi 1: LBA48 NCQ (depth 31/32)
-ata1.00: configured for UDMA/133
+> > External bitmaps use 'BMAP' to find where the file lives on the device =
+and
+> > then writes directly to the device - not through the filesystem.
+> >
+> > So as long as there is no tail-packing to block migration happening it
+> > should work fine.
+> >
+> > I haven't looked inside ext4 but I am fairly confident that external
+> > bitmaps will work properly.
+> >
+> > NeilBrown
+> >
+> >
+>=20
+> Thanks, Neil. Are there any differences between using an internal or
+> external bitmap? Also, does one need a bitmap at all when not planning
+> to "mess" with the array? (does it provide any other purpose?)
 
-ata2: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76180 irq 40
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
-ata2.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata2.00: configured for UDMA/133
+I have successfully stored an external bitmap on XFS for a brief time.
+However it proved difficult to ensure that the device storing the bitmap is
+mounted, accessible and writable prior to boot scripts attempting to run th=
+e md
+arrays, so since then I just switched to an internal bitmap. The negative
+performance it had can be minimized to almost zero by using a larger bitmap
+chunk size.
 
-ata3: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76200 irq 40
-ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
-ata3.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata3.00: configured for UDMA/133
-ata3.00: exception Emask 0x0 SAct 0x800801 SErr 0x0 action 0x6 frozen
-ata3.00: failed command: READ FPDMA QUEUED
-ata3.00: cmd 60/b0:00:50:31:7b/02:00:8b:00:00/40 tag 0 ncq 352256 in
-ata3.00: status: { DRDY }
-ata3.00: failed command: READ FPDMA QUEUED
-ata3.00: cmd 60/00:58:50:29:7b/04:00:8b:00:00/40 tag 11 ncq 524288 in
-ata3.00: status: { DRDY }
-ata3.00: failed command: READ FPDMA QUEUED
-ata3.00: cmd 60/00:b8:50:2d:7b/04:00:8b:00:00/40 tag 23 ncq 524288 in
-ata3.00: status: { DRDY }
-ata3: hard resetting link
-ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata3.00: configured for UDMA/133
-ata3.00: device reported invalid CHS sector 0
-ata3.00: device reported invalid CHS sector 0
-ata3.00: device reported invalid CHS sector 0
-ata3: EH complete
+--=20
+With respect,
+Roman
 
-ata4: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76280 irq 40
-ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4.00: ATA-8: WDC WD20EARS-00MVWB0, 50.0AB50, max UDMA/133
-ata4.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata4.00: configured for UDMA/133
+--Sig_/_4sGrJF=vZ9FaG84/PpBlRX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-ata5: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76300 irq 40
-ata5: SATA link down (SStatus 0 SControl 300)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-ata6: SATA max UDMA/133 abar m8192@0xfae76000 port 0xfae76380 irq 40
-ata6: SATA link down (SStatus 0 SControl 300)
+iEYEARECAAYFAk1ftC0ACgkQTLKSvz+PZwiZ+wCfU4oC+xYm31Osba5/vZ2Zg2UW
+9DgAnRTSKdAXcawOkCvQs0xd7kqHUK6v
+=Q+PW
+-----END PGP SIGNATURE-----
 
-ata7: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb22000 irq 19
-ata7: SATA link down (SStatus 0 SControl 300)
-
-ata8: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb24000 irq 19
-ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata8.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
-ata8.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata8.00: configured for UDMA/133
-
-ata9: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb26000 irq 19
-ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata9.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
-ata9.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata9.00: configured for UDMA/133
-
-ata10: SATA max UDMA/133 mmio m1048576@0xfeb00000 port 0xfeb28000 irq 19
-ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata10.00: ATA-8: SAMSUNG HD204UI, 1AQ10003, max UDMA/133
-ata10.00: 3907029168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata10.00: configured for UDMA/133
-
-hdparm -I /dev/sdc:
-
-ATA device, with non-removable media
-        Model Number:       WDC WD20EARS-00MVWB0
-        Serial Number:      WD-WMAZ20152590
-        Firmware Revision:  50.0AB50
-
-What I wonder is, how do I know what device is ata3? I do have 4
-devices of that model (WD20EARS). I've tried searching in /sys but
-there's nothing of value there (or I've missed it). If dmesg only
-showed the S/N...
-I posted the smartctl --all output of all devices here in case someone
-has time to take a look:
-http://stuff.dyndns.org/logs/smart-sd[a,b,c,d,e,f,g].log
-
-Thanks,
-// Mathias
+--Sig_/_4sGrJF=vZ9FaG84/PpBlRX--
