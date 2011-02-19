@@ -1,53 +1,28 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: External bitmap, questions
-Date: Sat, 19 Feb 2011 17:32:46 +0500
-Message-ID: <20110219173246.72a6aaca@natsu>
-References: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
-	<20110219154924.2218c87c@notabene.brown>
-	<AANLkTimpQ2=EM97ELX3z4c=Yf6gDp=Ekdn6m+ws6O8rm@mail.gmail.com>
-	<20110219171437.3a6200e6@natsu>
-	<AANLkTinyG9idKMethaqzAqvpTe30-UwhkJ=_BMzc39Tr@mail.gmail.com>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: Re: Linux software RAID assistance
+Date: Sat, 19 Feb 2011 12:40:48 +0000
+Message-ID: <4D5FBA50.7080306@gmail.com>
+References: <4D540F6C.6050904@gmail.com>	<20110215155315.55d35b8e@notabene.brown>	<4D5A92F3.1090004@turmel.org>	<4D5ACE4B.9040309@gmail.com>	<4D5AD613.3040402@turmel.org>	<20110216004524.67abe977@natsu>	<AANLkTikLWmC1u3rMFktwULgSPh-zL+D-xgcyogcJfqnP@mail.gmail.com>	<20110217204221.7a865364@natsu>	<4D5E383D.9010608@gmail.com>	<20110218093804.GA2405@cthulhu.home.robinhill.me.uk> <AANLkTimF5ExS7Wo_JK5Ap9KSFzDNJjNWk8davnLB70zZ@mail.gmail.com> <4D5FADA5.1090108@computer.org>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Cg2i4refBp7yCrXKsAx4aoP"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinyG9idKMethaqzAqvpTe30-UwhkJ=_BMzc39Tr@mail.gmail.com>
+In-Reply-To: <4D5FADA5.1090108@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Jan Ceuleers <jan.ceuleers@computer.org>
+Cc: Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Robin Hill <robin@robinhill.me.uk>
 List-Id: linux-raid.ids
 
---Sig_/Cg2i4refBp7yCrXKsAx4aoP
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Jan,
+yay.  Thanks very much.  That worked.  I don't quite understand why 
+something should need a reinstall to work, but thanks v much.
 
-On Sat, 19 Feb 2011 12:20:41 +0000
-Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
+regards
+Simon
 
-> I ended up storing the bitmap on my root filesystem (ext4) for now.
-> It's currently at the default size but I think I'll recreate it with
-> 64MB size.
-
-Thing is, the root filesystem is initially mounted read-only, after that
-perhaps fsck is executed if needed, and only a bit later it is remounted
-read-write. You need to check at which point in this process your distro's
-boot scripts initialize md arrays, and whether or not you will end up trying
-to do that with their bitmaps on a read-only FS.
-
---=20
-With respect,
-Roman
-
---Sig_/Cg2i4refBp7yCrXKsAx4aoP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk1fuG8ACgkQTLKSvz+PZwjQgACggT2U9qN+J5eFsPFvxSKXm2k0
-g9gAnRq5wmuM/CPL8+IxknIjypvNOA2l
-=0TtO
------END PGP SIGNATURE-----
-
---Sig_/Cg2i4refBp7yCrXKsAx4aoP--
+On 19/02/2011 11:46, Jan Ceuleers wrote:
+> On 18/02/11 11:38, Simon Mcnair wrote:
+>> Yeah, It's installed :-)
+>
+> apt-get install --reinstall e2fsprogs
