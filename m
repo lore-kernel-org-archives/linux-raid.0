@@ -1,57 +1,53 @@
 From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Upgrading from RAID 5 to 6 or build native level 6?
-Date: Sat, 19 Feb 2011 17:28:42 +0500
-Message-ID: <20110219172842.5bc79f44@natsu>
-References: <AANLkTik8XFxjKJ+GoPjmos6Qm_WKzFw4O29Rr2w8cnGJ@mail.gmail.com>
-	<AANLkTikqytG1S1nU0NkZSjcEs08kyDFUUKpfgxGerQn7@mail.gmail.com>
+Subject: Re: External bitmap, questions
+Date: Sat, 19 Feb 2011 17:32:46 +0500
+Message-ID: <20110219173246.72a6aaca@natsu>
+References: <AANLkTinb3TvJr_-GPjMhXsyA-zwkf45GRAfpb7+Xio6H@mail.gmail.com>
+	<20110219154924.2218c87c@notabene.brown>
+	<AANLkTimpQ2=EM97ELX3z4c=Yf6gDp=Ekdn6m+ws6O8rm@mail.gmail.com>
+	<20110219171437.3a6200e6@natsu>
+	<AANLkTinyG9idKMethaqzAqvpTe30-UwhkJ=_BMzc39Tr@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/R+28nxhfxQ2XQ0H2HE+mDPF"; protocol="application/pgp-signature"
+ boundary="Sig_/Cg2i4refBp7yCrXKsAx4aoP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikqytG1S1nU0NkZSjcEs08kyDFUUKpfgxGerQn7@mail.gmail.com>
+In-Reply-To: <AANLkTinyG9idKMethaqzAqvpTe30-UwhkJ=_BMzc39Tr@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Beolach <beolach@gmail.com>
-Cc: Lasse Jensen <fafler@gmail.com>, linux-raid@vger.kernel.org
+To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/R+28nxhfxQ2XQ0H2HE+mDPF
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/Cg2i4refBp7yCrXKsAx4aoP
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 18 Feb 2011 19:02:07 -0700
-Beolach <beolach@gmail.com> wrote:
+On Sat, 19 Feb 2011 12:20:41 +0000
+Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
 
-> That information is incomplete or out-of-date.  During a RAID 5 to
-> RAID 6 reshape, there may be an intermediate step where all of the Q
-> parity blocks are stored on one disk, but as the reshape continues, it
-> will move all the Q parity blocks to a normal RAID 6 layout.  IIRC, in
-> the very early stages of RAID 5 to RAID 6 reshape development, it
-> would leave it in the abnormal layout, but that has not been the case
-> for quite some time.  And I believe in some cases a RAID 5 to RAID 6
-> reshape will not even use the intermediate step w/ the abnormal
-> layout.  After the reshape fully completes, it is exactly the same as
-> a RAID 6 array built from scratch.
+> I ended up storing the bitmap on my root filesystem (ext4) for now.
+> It's currently at the default size but I think I'll recreate it with
+> 64MB size.
 
-See man mdadm --layout=3Dpreserve vs --layout=3Dnormalise.
-I am not sure which one of these is the default, but it is definitely still
-possible to convert RAID5 to RAID6 (while adding one disk) without restripi=
-ng,
-and to me this looks like a very useful feature, not something outdated.
+Thing is, the root filesystem is initially mounted read-only, after that
+perhaps fsck is executed if needed, and only a bit later it is remounted
+read-write. You need to check at which point in this process your distro's
+boot scripts initialize md arrays, and whether or not you will end up trying
+to do that with their bitmaps on a read-only FS.
 
 --=20
 With respect,
 Roman
 
---Sig_/R+28nxhfxQ2XQ0H2HE+mDPF
+--Sig_/Cg2i4refBp7yCrXKsAx4aoP
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAk1ft3sACgkQTLKSvz+PZwgyTACfYuPZMGraOimTSoUvw3ZIAKVk
-wN4Anj9+l7SbOzyqQs6Ji7KpYoha7G34
-=WYlt
+iEYEARECAAYFAk1fuG8ACgkQTLKSvz+PZwjQgACggT2U9qN+J5eFsPFvxSKXm2k0
+g9gAnRq5wmuM/CPL8+IxknIjypvNOA2l
+=0TtO
 -----END PGP SIGNATURE-----
 
---Sig_/R+28nxhfxQ2XQ0H2HE+mDPF--
+--Sig_/Cg2i4refBp7yCrXKsAx4aoP--
