@@ -1,142 +1,74 @@
 From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Linux software RAID assistance
-Date: Sun, 20 Feb 2011 09:56:24 +0000
-Message-ID: <AANLkTin4u9yk4XPiHzFtagrdV5_iZJZ0+P+yHqH0x9bm@mail.gmail.com>
-References: <4D540F6C.6050904@gmail.com>
-	<20110215155315.55d35b8e@notabene.brown>
-	<4D5A92F3.1090004@turmel.org>
-	<4D5BD678.2050200@gmail.com>
-	<4D5BE119.7000804@turmel.org>
-	<4D5C0E17.3060306@gmail.com>
-	<4D5C140F.9010301@turmel.org>
-	<4D5C1508.3040308@gmail.com>
-	<4D5C15D3.1070608@turmel.org>
-	<4D5C167C.7000101@turmel.org>
-	<4D5C1CF8.1020507@gmail.com>
-	<4D5C1E0B.9060300@turmel.org>
-	<4D5C2061.4060106@gmail.com>
-	<4D5C2143.3000907@turmel.org>
-	<4D5C2260.3020800@gmail.com>
-	<4D5C273E.7020609@turmel.org>
-	<4D5C4176.80604@gmail.com>
-	<4D5C4204.5020106@turmel.org>
-	<1377706586882297883@unknownmsgid>
-	<4D5C6016.6060809@turmel.org>
-	<AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
-	<4D5D2723.1010101@turmel.org>
-	<6037962689649361915@unknownmsgid>
-	<AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gmail.com>
-	<4D5D52AE.8070602@turmel.org>
-	<AANLkTi=MZ4vo+H16UMuUsVSA2_D-Wp+sFP-5RqOksjXm@mail.gmail.com>
-	<4D5FE208.5020700@turmel.org>
-	<AANLkTinOXJWRw_et2U43R_T9XPBzQLnN56Kf2bOAz=_c@mail.gmail.com>
-	<4D5FED98.6060407@turmel.org>
+Subject: Re: Raid selection questions (10 vs 6, n2 vs f2) on an 8 drive array
+Date: Sun, 20 Feb 2011 09:57:26 +0000
+Message-ID: <AANLkTikC+obKBShxpLLckd8-d6UvYazNc1poA2ULCAw=@mail.gmail.com>
+References: <AANLkTi=2xjjuvT3tTs1Y9Qfrn6HxWS3hwzF-Q0ZhPFVM@mail.gmail.com>
+	<4D5F0458.3060403@hardwarefreak.com>
+	<20110219005439.GA3251@www2.open-std.org>
+	<AANLkTimpDXmRLxCQp6=BRJqf_EFbTEgZujQU9EyweywS@mail.gmail.com>
+	<4D5F4823.4070909@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D5FED98.6060407@turmel.org>
+In-Reply-To: <4D5F4823.4070909@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Larry Schwerzler <larry@schwerzler.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Phil,
-I don't know how to find out if I'm running irqbalance, it's whatever
-was in the proxmox iso that I installed the OS from.  I ran a ps -aux
-| grep irq in case it shows anything of interest:
+Sorry, I can't help responding to this.  I love any post that go's
+back to cable ties.  Get as techy as you like, behind the scenes there
+WILL be cable ties (or posh Velcro ties, my personal favourite )
+somewhere holding the whole kit and caboodle together ;-)
 
-proxmox:/home/simon# ps -aux | grep irq
-Warning: bad ps syntax, perhaps a bogus '-'? See http://procps.sf.net/faq.html
-root         3  0.0  0.0      0     0 ?        S    Feb17   0:22 [ksoftirqd/0]
-root         7  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/1]
-root        10  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/2]
-root        13  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/3]
-root        16  0.0  0.0      0     0 ?        S    Feb17   0:11 [ksoftirqd/4]
-root        19  0.0  0.0      0     0 ?        S    Feb17   0:13 [ksoftirqd/5]
-root        22  0.0  0.0      0     0 ?        S    Feb17   0:06 [ksoftirqd/6]
-root        25  0.0  0.0      0     0 ?        S    Feb17   0:06 [ksoftirqd/7]
-root      4024  0.0  0.0      0     0 ?        S    Feb17   0:00
-[kvm-irqfd-clean]
-
-proxmox:/home/simon# cat /proc/interrupts
-            CPU0       CPU1       CPU2       CPU3       CPU4
-CPU5       CPU6       CPU7
-   0:   66008972          0          0          0          0
-0          0          0  IR-IO-APIC-edge      timer
-   1:     265829          0          0          0          0
-0          0          0  IR-IO-APIC-edge      i8042
-   8:          1          0          0          0          0
-0          0          0  IR-IO-APIC-edge      rtc0
-   9:          0          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   acpi
-  16:    4432639          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb3, ahci
-  17:     124325          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   pata_jmicron, eth1
-  18:     954710          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   ehci_hcd:usb1,
-uhci_hcd:usb8
-  19:       5994          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb5,
-uhci_hcd:usb7, firewire_ohci
-  21:          0          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb4
-  23:         62          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   ehci_hcd:usb2,
-uhci_hcd:usb6
-  24:     273558          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   nvidia
-  28:   30234710          0          0          0          0
-0          0          0  IR-IO-APIC-fasteoi   mvsas
-  64:          0          0          0          0          0
-0          0          0  DMAR_MSI-edge      dmar0
-  65:          0          0          0          0          0
-0          0          0  DMAR_MSI-edge      dmar1
-  73:   26838727          0          0          0          0
-0          0          0  IR-PCI-MSI-edge      eth0
-  74:   27057631          0          0          0          0
-0          0          0  IR-PCI-MSI-edge      ahci
-  75:        247          0          0          0          0
-0          0          0  IR-PCI-MSI-edge      hda_intel
- NMI:          0          0          0          0          0
-0          0          0   Non-maskable interrupts
- LOC:   23087679   23088282   21638323   20580136   22974769
-20856094   20144310   20084801   Local timer interrupts
- SPU:          0          0          0          0          0
-0          0          0   Spurious interrupts
- PMI:          0          0          0          0          0
-0          0          0   Performance monitoring interrupts
- PND:          0          0          0          0          0
-0          0          0   Performance pending work
- RES:   15236622    9388860    8532928    7181879   13444866
-6005599    4856933    3713707   Rescheduling interrupts
- CAL:       3384       5773       5839       5859       4590
-5748       5781       5691   Function call interrupts
- TLB:     201989     195383     193545     196155     251338
-249053     272032     319233   TLB shootdowns
- TRM:          0          0          0          0          0
-0          0          0   Thermal event interrupts
- THR:          0          0          0          0          0
-0          0          0   Threshold APIC interrupts
- MCE:          0          0          0          0          0
-0          0          0   Machine check exceptions
- MCP:        830        830        830        830        830
-830        830        830   Machine check polls
- ERR:          7
- MIS:          0
-
-cheers
+just an off topic attempt at humour :-)
 Simon
 
-On 19 February 2011 16:19, Phil Turmel <philip@turmel.org> wrote:
-> On 02/19/2011 10:36 AM, Simon Mcnair wrote:
->> as attached (hopefully).
->> regards
->> Simon
+2011/2/19 Stan Hoeppner <stan@hardwarefreak.com>:
+> Larry Schwerzler put forth on 2/18/2011 7:53 PM:
 >
-> Nothing obvious to me.
+>> While I have considered getting a new case that can hold 8 drives +
+>> system drive + cd rom I always had trouble finding them. There are n=
+o
+>> doubt better setups then mine, but Im trying to not buy new hardware
+>> if I can get away with it.
 >
-> Are you running irqbalance?
+> Are you mechanically inclined in the slightest? =A0You can fix the "c=
+able
+> kick" problem for less than $5 with these:
 >
-> cat /proc/interrupts ?
+> http://www.lowes.com/ProductDisplay?partNumber=3D292685-1781-45-1MBUV=
+L&langId=3D-1&storeId=3D10151&productId=3D3128405&catalogId=3D10051&cmR=
+elshp=3Drel&rel=3Dnofollow&cId=3DPDIO1
 >
+> and these:
+>
+> http://www.lowes.com/pd_220871-1781-45-311UVL_0__?productId=3D3128261=
+&Ntt=3Dcable+tie&pl=3D1&currentURL=3D%2Fpl__0__s%3FVa%3Dtrue%26Ntt%3Dca=
+ble%2Btie
+>
+> and have most of them left over for other uses. =A0You'll get strain
+> relief and kick protection, especially if you use two on each chassis=
+=2E
+> Though, if you are actually kicking or tripping over the cable, you'l=
+l
+> simply end up jerking your equipment off the table and damaging it,
+> instead of just having the eSATA plug pop out.
+>
+> I'm really curious to understand why/how your cables are exposed to
+> "kicking" or other detachment due to accidental contact.
+>
+> --
+> Stan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
