@@ -1,112 +1,142 @@
 From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Possible HDD error, how do I find which HDD it is?
-Date: Sun, 20 Feb 2011 09:52:39 +0000
-Message-ID: <AANLkTinhP1dDp7ACPh5CgMy-iEDCzNF=_9G5KJ3YDT1N@mail.gmail.com>
-References: <AANLkTimV8-mciW_9z_=U_-uYLvKp7Rbh0V1N0mr7rh8v@mail.gmail.com>
-	<4D5FE3D6.8070006@anonymous.org.uk>
-	<4D5FF386.6070003@turmel.org>
-	<AANLkTinw8hSks5kopU9ju1cNCQu11kUgPzRbC8L2h_ed@mail.gmail.com>
-	<4D60429E.1090501@turmel.org>
+Subject: Re: Linux software RAID assistance
+Date: Sun, 20 Feb 2011 09:56:24 +0000
+Message-ID: <AANLkTin4u9yk4XPiHzFtagrdV5_iZJZ0+P+yHqH0x9bm@mail.gmail.com>
+References: <4D540F6C.6050904@gmail.com>
+	<20110215155315.55d35b8e@notabene.brown>
+	<4D5A92F3.1090004@turmel.org>
+	<4D5BD678.2050200@gmail.com>
+	<4D5BE119.7000804@turmel.org>
+	<4D5C0E17.3060306@gmail.com>
+	<4D5C140F.9010301@turmel.org>
+	<4D5C1508.3040308@gmail.com>
+	<4D5C15D3.1070608@turmel.org>
+	<4D5C167C.7000101@turmel.org>
+	<4D5C1CF8.1020507@gmail.com>
+	<4D5C1E0B.9060300@turmel.org>
+	<4D5C2061.4060106@gmail.com>
+	<4D5C2143.3000907@turmel.org>
+	<4D5C2260.3020800@gmail.com>
+	<4D5C273E.7020609@turmel.org>
+	<4D5C4176.80604@gmail.com>
+	<4D5C4204.5020106@turmel.org>
+	<1377706586882297883@unknownmsgid>
+	<4D5C6016.6060809@turmel.org>
+	<AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>
+	<4D5D2723.1010101@turmel.org>
+	<6037962689649361915@unknownmsgid>
+	<AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gmail.com>
+	<4D5D52AE.8070602@turmel.org>
+	<AANLkTi=MZ4vo+H16UMuUsVSA2_D-Wp+sFP-5RqOksjXm@mail.gmail.com>
+	<4D5FE208.5020700@turmel.org>
+	<AANLkTinOXJWRw_et2U43R_T9XPBzQLnN56Kf2bOAz=_c@mail.gmail.com>
+	<4D5FED98.6060407@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D60429E.1090501@turmel.org>
+In-Reply-To: <4D5FED98.6060407@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, John Robinson <john.robinson@anonymous.org.uk>, Linux-RAID <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Phil,
-Results as follows:
-proxmox:/home/simon# ./lsdrv2.sh
-Controller device @ pci0000:00/0000:00:01.0/0000:01:00.0 [mvsas]
-  SCSI storage controller: Marvell Technology Group Ltd.
-MV64460/64461/64462 System Controller, Revision B (rev 01)
-    host0 0:0:0 sdf ATA Hitachi HDS72101 {SN: GTA000PAGABXRA}
-    host0 0:1:0 sdg ATA Hitachi HDS72101 {SN: GTA000PAGAA5DA}
-    host0 0:2:0 sdh ATA Hitachi HDS72101 {SN: GTA000PAG9NL9A}
-    host0 0:3:0 sdi ATA Hitachi HDS72101 {SN: GTA000PAGA8V4A}
-    host0 0:4:0 sdj ATA Hitachi HDS72101 {SN: GTD000PAGMT9GD}
-    host0 0:5:0 sdk ATA Hitachi HDS72101 {SN: GTG000PAG18BJC}
-    host0 0:6:0 sdl ATA Hitachi HDS72101 {SN: GTG000PAG1DPLC}
-    host0 0:7:0 sdm ATA Hitachi HDS72101 {SN: GTA000PAG7WMEA}
-Controller device @
-pci0000:00/0000:00:1a.7/usb1/1-6/1-6.1/1-6.1.1/1-6.1.1:1.0
-[usb-storage]
-  Bus 001 Device 095: ID 0424:2228 Standard Microsystems Corp. 9-in-2
-Card Reader {SN: 08050920003A}
-    host21 0:0:0 sdo Generic Flash HS-CF
-    host21 0:0:1 sdp Generic Flash HS-COMBO
-Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.0 [ahci]
-  SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA
-Controller (rev 03)
-    host9 [Empty]
-    host10 [Empty]
-Controller device @ pci0000:00/0000:00:1c.4/0000:04:00.1 [pata_jmicron]
-  IDE interface: JMicron Technology Corp. JMB362/JMB363 Serial ATA
-Controller (rev 03)
-    host1 [Empty]
-    host2 [Empty]
-Controller device @ pci0000:00/0000:00:1f.2 [ahci]
-  SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI C=
-ontroller
-    host3 0:0:0 sda ATA STM3500418AS {SN: 9VM3QJ5C}
-    host4 0:0:0 sr0 Optiarc DVD RW AD-5240S
-    host5 0:0:0 sds ATA SAMSUNG HD203WI {SN: S1UYJ1CZ404245 }
-    host6 0:0:0 sdr ATA SAMSUNG HD203WI {SN: S1UYJ1CZ404242 }
-    host7 0:0:0 sdd ATA Hitachi HDS72101 {SN: GTD000PAGMT8DD}
-    host8 0:0:0 sde ATA Hitachi HDS72101 {SN: GTG000PAG04V0C}
+Phil,
+I don't know how to find out if I'm running irqbalance, it's whatever
+was in the proxmox iso that I installed the OS from.  I ran a ps -aux
+| grep irq in case it shows anything of interest:
 
-I can't test the empty ports and/or specific ports assigned to
-specific LUNS until I've done the data recovery task.  Happy to do it
-afterwards once I know the state of my data.
+proxmox:/home/simon# ps -aux | grep irq
+Warning: bad ps syntax, perhaps a bogus '-'? See http://procps.sf.net/faq.html
+root         3  0.0  0.0      0     0 ?        S    Feb17   0:22 [ksoftirqd/0]
+root         7  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/1]
+root        10  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/2]
+root        13  0.0  0.0      0     0 ?        S    Feb17   0:05 [ksoftirqd/3]
+root        16  0.0  0.0      0     0 ?        S    Feb17   0:11 [ksoftirqd/4]
+root        19  0.0  0.0      0     0 ?        S    Feb17   0:13 [ksoftirqd/5]
+root        22  0.0  0.0      0     0 ?        S    Feb17   0:06 [ksoftirqd/6]
+root        25  0.0  0.0      0     0 ?        S    Feb17   0:06 [ksoftirqd/7]
+root      4024  0.0  0.0      0     0 ?        S    Feb17   0:00
+[kvm-irqfd-clean]
+
+proxmox:/home/simon# cat /proc/interrupts
+            CPU0       CPU1       CPU2       CPU3       CPU4
+CPU5       CPU6       CPU7
+   0:   66008972          0          0          0          0
+0          0          0  IR-IO-APIC-edge      timer
+   1:     265829          0          0          0          0
+0          0          0  IR-IO-APIC-edge      i8042
+   8:          1          0          0          0          0
+0          0          0  IR-IO-APIC-edge      rtc0
+   9:          0          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   acpi
+  16:    4432639          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb3, ahci
+  17:     124325          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   pata_jmicron, eth1
+  18:     954710          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   ehci_hcd:usb1,
+uhci_hcd:usb8
+  19:       5994          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb5,
+uhci_hcd:usb7, firewire_ohci
+  21:          0          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   uhci_hcd:usb4
+  23:         62          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   ehci_hcd:usb2,
+uhci_hcd:usb6
+  24:     273558          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   nvidia
+  28:   30234710          0          0          0          0
+0          0          0  IR-IO-APIC-fasteoi   mvsas
+  64:          0          0          0          0          0
+0          0          0  DMAR_MSI-edge      dmar0
+  65:          0          0          0          0          0
+0          0          0  DMAR_MSI-edge      dmar1
+  73:   26838727          0          0          0          0
+0          0          0  IR-PCI-MSI-edge      eth0
+  74:   27057631          0          0          0          0
+0          0          0  IR-PCI-MSI-edge      ahci
+  75:        247          0          0          0          0
+0          0          0  IR-PCI-MSI-edge      hda_intel
+ NMI:          0          0          0          0          0
+0          0          0   Non-maskable interrupts
+ LOC:   23087679   23088282   21638323   20580136   22974769
+20856094   20144310   20084801   Local timer interrupts
+ SPU:          0          0          0          0          0
+0          0          0   Spurious interrupts
+ PMI:          0          0          0          0          0
+0          0          0   Performance monitoring interrupts
+ PND:          0          0          0          0          0
+0          0          0   Performance pending work
+ RES:   15236622    9388860    8532928    7181879   13444866
+6005599    4856933    3713707   Rescheduling interrupts
+ CAL:       3384       5773       5839       5859       4590
+5748       5781       5691   Function call interrupts
+ TLB:     201989     195383     193545     196155     251338
+249053     272032     319233   TLB shootdowns
+ TRM:          0          0          0          0          0
+0          0          0   Thermal event interrupts
+ THR:          0          0          0          0          0
+0          0          0   Threshold APIC interrupts
+ MCE:          0          0          0          0          0
+0          0          0   Machine check exceptions
+ MCP:        830        830        830        830        830
+830        830        830   Machine check polls
+ ERR:          7
+ MIS:          0
+
 cheers
 Simon
 
-On 19 February 2011 22:22, Phil Turmel <philip@turmel.org> wrote:
-> On 02/19/2011 03:09 PM, Mathias Bur=E9n wrote:
->> The script works for me:
->>
->> =A0$ sudo ./lsdrv.sh
->> Password:
->> Controller device @ pci0000:00/0000:00:0b.0 [ahci]
->> =A0 SATA controller: nVidia Corporation MCP79 AHCI Controller (rev b=
-1)
->> =A0 =A0 host0: /dev/sda ATA Corsair CSSD-F60 {SN: 103265055800099900=
-27}
->> =A0 =A0 host1: /dev/sdb ATA WDC WD20EARS-00M {SN: WD-WCAZA1022443}
->> =A0 =A0 host2: /dev/sdc ATA WDC WD20EARS-00M {SN: WD-WMAZ20152590}
->> =A0 =A0 host3: /dev/sdd ATA WDC WD20EARS-00M {SN: WD-WMAZ20188479}
->> =A0 =A0 host4: [Empty]
->> =A0 =A0 host5: [Empty]
->> Controller device @ pci0000:00/0000:00:16.0/0000:05:00.0 [sata_mv]
->> =A0 SCSI storage controller: HighPoint Technologies, Inc. RocketRAID
->> 230x 4 Port SATA-II Controller (rev 02)
->> =A0 =A0 host6: [Empty]
->> =A0 =A0 host7: /dev/sde ATA SAMSUNG HD204UI {SN: S2HGJ1RZ800964 }
->> =A0 =A0 host8: /dev/sdf ATA WDC WD20EARS-00M {SN: WD-WCAZA1000331}
->> =A0 =A0 host9: /dev/sdg ATA SAMSUNG HD204UI {SN: S2HGJ1RZ800850 }
->>
->> So ata3 is the same as host3 then? How come no errors are logged on =
-the drive:
+On 19 February 2011 16:19, Phil Turmel <philip@turmel.org> wrote:
+> On 02/19/2011 10:36 AM, Simon Mcnair wrote:
+>> as attached (hopefully).
+>> regards
+>> Simon
 >
-> No, generally not. =A0ATA numbering starts from #1. =A0Host numbering=
- starts from #0, but includes non-ATA SCSI devices.
+> Nothing obvious to me.
 >
-> I've attached a version of the script that shows the LUN in addition =
-to the host number, and includes John's adjustment. =A0It might be usef=
-ul to people with port multipliers, and controllers that show all ports=
- under a single host.
+> Are you running irqbalance?
 >
-> Simon, I'm very curious what this latest script shows for the Supermi=
-cro when one or more ports are empty, and whether those LUNs are consis=
-tently assigned to specific ports.
+> cat /proc/interrupts ?
 >
-> Phil
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
