@@ -1,7 +1,7 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: SSD - TRIM command
-Date: Mon, 21 Feb 2011 19:39:44 +0000
-Message-ID: <AANLkTik7=t_QsMyk9ogmg6ygZzEL=ErTP24OWz8Zsb+w@mail.gmail.com>
+Date: Mon, 21 Feb 2011 16:39:52 -0300
+Message-ID: <AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
 References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
 	<4D517F4F.4060003@gmail.com>
 	<4D5245DF.4020401@hardwarefreak.com>
@@ -12,57 +12,46 @@ References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
 	<AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
 	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
 	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTinPrCw+wTns6Jb8ZNwwMPoKuV9sr5LXqjPtJyUn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinPrCw+wTns6Jb8ZNwwMPoKuV9sr5LXqjPtJyUn@mail.gmail.com>
+In-Reply-To: <AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
+To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
 Cc: Phillip Susi <psusi@cfl.rr.com>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21 February 2011 19:38, Mathias Bur=C3=A9n <mathias.buren@gmail.com>=
- wrote:
-> On 21 February 2011 19:32, Roberto Spadim <roberto@spadim.com.br> wro=
-te:
->> TRIM isn=C2=B4t a problem, it=C2=B4s a solution to optimize dynamic =
-allocation,
->> and life time of devices (SSD or harddisk)
->> i don=C2=B4t see any problem to implement trim command on hard disks=
- (not
->> in linux, but at harddisk firmware level)
->>
->> hard disk have the same problem of ssd, allocation of badblocks, any
->> harddisk could implement trim and use it to realloc badblocks...
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->>
+sorry, but i sent email without a information:
+TRIM is a 'ATA Specification' command
+
+http://en.wikipedia.org/wiki/TRIM_command
+
+any disk with ATA command could suport TRIM, hard disk or ssd or
+anyother type of phisical allocation
+
+
+2011/2/21 Roberto Spadim <roberto@spadim.com.br>:
+> TRIM isn=B4t a problem, it=B4s a solution to optimize dynamic allocat=
+ion,
+> and life time of devices (SSD or harddisk)
+> i don=B4t see any problem to implement trim command on hard disks (no=
+t
+> in linux, but at harddisk firmware level)
 >
-> I don't think you understand TRIM. It wouldn't work, and there is no
-> need for it, on a HDD. AFAIK a HDD does not have the same penalty as =
-a
-> SSD does when it needs to write to a (previously) used area. An SSD
-> cannot do this without erasing the whole (block? page?), usually 512K=
-B
-> in size (varies between different manufacturers), but the data that's
-> on there still needs to be moved elsewhere first, block erased, data
-> moved back the same time the new data is written together with it.
-> AFAIK it works something like this anyway. The only benefit TRIM will
-> give you would be potentially faster writes, right.
+> hard disk have the same problem of ssd, allocation of badblocks, any
+> harddisk could implement trim and use it to realloc badblocks...
 >
-> // M
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
 >
 
-Plus support is needed from the kernel (done) filesystem (ext4 has
-it). The filesystem seese the MD device, not the actual SSDs behind
-it, so it would probably be quite complicated to implement passthrough
-of the trim command in this case.
 
-// M
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
