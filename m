@@ -1,127 +1,79 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: New machine, new RAID, wrong device name...
-Date: Tue, 22 Feb 2011 08:23:12 +1100
-Message-ID: <20110222082312.75a72657@notabene.brown>
-References: <AANLkTin=E7m==Q0NASXv72jiB0h3XJhZ4-vsxCS6CvJU@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Mon, 21 Feb 2011 15:51:17 -0600
+Message-ID: <4D62DE55.8040705@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin=E7m==Q0NASXv72jiB0h3XJhZ4-vsxCS6CvJU@mail.gmail.com>
+In-Reply-To: <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Mattias Wadenstein <maswan@acc.umu.se>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 21 Feb 2011 11:59:06 -0800 Mark Knecht <markknecht@gmail.com> wrote:
+Mattias Wadenstein put forth on 2/21/2011 4:25 AM:
+> On Fri, 18 Feb 2011, Stan Hoeppner wrote:
+> 
+>> Mattias Wadenstein put forth on 2/18/2011 7:49 AM:
+>>
+>>> Here you would either maintain a large list of nfs mounts for the read
+>>> load, or start looking at a distributed filesystem. Sticking them all
+>>> into one big fileserver is easier on the administration part, but
+>>> quickly gets really expensive when you look to put multiple 10GE
+>>> interfaces on it.
+>>
+>> This really depends on one's definition of "really expensive".  Taking
+>> the total cost of such a system/infrastructure into account, these two
+>> Intel dual port 10 GbE NICs seem rather cheap at $650-$750 USD:
+>>
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16833106037
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16833106075
+>>
+>> 20 Gb/s (40 both ways) raw/peak throughput at this price seems like a
+>> bargain to me (plus the switch module cost obviously, if required,
+>> usually not for RJ-45 or CX4, thus my motivation for mentioning these).
+>>
+>> The storage infrastructure on the back end required to keep these pipes
+>> full will be the "really expensive" piece.
+> 
+> Exactly my point, a storage server that can sustain 20-200MB/s is rather
+> cheap, but one that can sustain 2GB/s is really expensive. Possibly to
+> the point where 10-100 smaller file servers are much cheaper. The worst
+> case here is very small random reads, and then you're screwed cost-wise
+> whatever you choose, if you want to get the 2GB/s number.
 
-> I've got a new laptop that has two hard drives in it and I've chosen
-> to use RAID1 on it. The Gentoo install is complete but when I reboot
-> the kernel doesn't find the RAID and I hang without syncing.
-> 
-> During the Gentoo install from a CD the machine is called (apparently)
-> "livecd". To build the RAID initially I wanted it to be /dev/md3 so I
-> used
-> 
-> livecd ~ # mknod /dev/md3 b 9 3
-> livecd ~ # mdadm --create /dev/md3 --level=1 --raid-devices=2
-> /dev/sda3 /dev/sdb3
-> livecd ~ # mke2fs -j /dev/md3
-> 
-> and everything went fine.
-> 
-> However once I've rebooted using the CD, and even though the machine
-> is once again called livecd the RAID is now called /dev/md127. I
-> assume, but don't know for sure, that something similar is happening
-> when I boot the actual installation, mdadm gives the RAID a different
-> name and it's likely not found by my new environment.
+"Screwed" may be a bit harsh, but I agree that one big fast storage
+server will usually cost more than many smaller ones with equal
+aggregate performance.  But looking at this from a TCO standpoint, the
+administrative burden is higher for the many small case, and file layout
+can be problematic, specifically in the case where all analysis nodes
+need to share a file or group of files.  This can create bottlenecks at
+individual storage servers.  Thus, acquisition cost must be weighed
+against operational costs.  If any of the data is persistent, backing up
+a single server is straight forward.  Backing up multiple servers, and
+restoring them if necessary, is more complicated.
 
-If it is being assembled as md127 even though the host name is livecd, the
-implication is that the hostname is not set un after the array is assembled.
-Maybe they are done in the initrd in the wrong order?
-If you 
-   mdadm -S /dev/md127
-   mdadm -As
-from the livecd, does it then assemble as /dev/md3?
+>> RAID 5/6 need not apply due the abysmal RMW partial stripe write
+>> penalty, unless of course you're doing almost no writes.  But in that
+>> case, how did the data get there in the first place? :)
 
-> 
-> What's the right solution to changing the RAID naming in the
-> superblock so that the laptop finds it as local to 'laptop1' and
-> mounts it according the fstab?
+> Actually, that's probably the common case for data analysis load. Lots
+> of random reads, but only occasional sequential writes when you add a
+> new file/fileset. So raid 5/6 performance-wise works out pretty much as
+> a stripe of n-[12] disks.
 
-I think you are asking how to change the name recorded in the metadata.
-When booted into the livecd:
-   mdadm -S /dev/md127
-   mdadm -A /dev/md3 --update=homehost --homehost=laptop1 /dev/sd[ab]3
+RAID5/6 have decent single streaming read performance, but sub optimal
+random read, less than sub optimal streaming write, and abysmal random
+write performance.  They exhibit poor random read performance with high
+client counts when compared to RAID0 or RAID10.  Additionally, with an
+analysis "cluster" designed for overall high utilization (no idle
+nodes), one node will be uploading data sets while others are doing
+analysis.  Thus you end up with a mixed simultaneous random read and
+streaming write workload on the server.  RAID10 will give many times the
+throughput in this case compared to RAID5/6, which will bog down rapidly
+under such a workload.
 
-should do it.
-
-NeilBrown
-
-
-> 
-> I understand that I can probably put the UUID in the mdadm config
-> file, and I will, but before I do I wanted to cross this threshold and
-> figure out the right way to do it automatically.
-> 
-> Thanks,
-> Mark
-> 
-> 
-> livecd ~ # mdadm --detail /dev/md127
-> /dev/md127:
->         Version : 1.2
->   Creation Time : Wed Feb 16 16:03:29 2011
->      Raid Level : raid1
->      Array Size : 343758245 (327.83 GiB 352.01 GB)
->   Used Dev Size : 343758245 (327.83 GiB 352.01 GB)
->    Raid Devices : 2
->   Total Devices : 2
->     Persistence : Superblock is persistent
-> 
->     Update Time : Thu Feb 17 19:42:36 2011
->           State : clean
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->            Name : livecd:3  (local to host livecd)
->            UUID : f75493a8:1189516e:0f192f04:e21fbe28
->          Events : 17
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        3        0      active sync   /dev/sda3
->        1       8       19        1      active sync   /dev/sdb3
-> livecd ~ # mdadm --examine /dev/sda3
-> /dev/sda3:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x0
->      Array UUID : f75493a8:1189516e:0f192f04:e21fbe28
->            Name : livecd:3  (local to host livecd)
->   Creation Time : Wed Feb 16 16:03:29 2011
->      Raid Level : raid1
->    Raid Devices : 2
-> 
->  Avail Dev Size : 687516763 (327.83 GiB 352.01 GB)
->      Array Size : 687516490 (327.83 GiB 352.01 GB)
->   Used Dev Size : 687516490 (327.83 GiB 352.01 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 4430631f:454150f1:903a86cc:9d2c034c
-> 
->     Update Time : Thu Feb 17 19:42:36 2011
->        Checksum : 9adbdc7f - correct
->          Events : 17
-> 
-> 
->    Device Role : Active device 0
->    Array State : AA ('A' == active, '.' == missing)
-> livecd ~ #
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+Stan
