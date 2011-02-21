@@ -1,141 +1,38 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: Single-drive RAID0
-Date: Mon, 21 Feb 2011 14:11:51 +0000
-Message-ID: <BE2BFE91933D1B4089447C64486040806908FC52@irsmsx503.ger.corp.intel.com>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
-	<20110209134557.4e607451@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-	<20110214131149.7f0655a3@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
-	<20110215110141.30d28302@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
-	<20110216114234.0311d27b@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>
- <20110221131519.1039f37c@notabene.brown>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: SSD - TRIM command
+Date: Mon, 21 Feb 2011 13:20:46 -0500
+Message-ID: <4D62ACFE.4020401@cfl.rr.com>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>	<4D517F4F.4060003@gmail.com>	<4D5245DF.4020401@hardwarefreak.com>	<iiu4rc$9ju$1@dough.gmane.org> <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com> <iiud2r$qci$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110221131519.1039f37c@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <iiud2r$qci$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 2/9/2011 10:49 AM, David Brown wrote:
+> I've been reading a little more about this.  It seems that the days of
+> TRIM may well be numbered - the latest generation of high-end SSDs have
+> more powerful garbage collection algorithms, together with more spare
+> blocks, making TRIM pretty much redundant.  This is, of course, the most
+> convenient solution for everyone (as long as it doesn't cost too much!).
+> 
+> The point of the TRIM command is to tell the SSD that a particular block
+> is no longer being used, so that the SSD can erase it in the background
+> - that way when you want to write more data, there are more free blocks
+> ready and waiting.  But if you've got plenty of spare blocks, it's easy
+> to have them erased in advance and you don't need TRIM.
 
+It is not just about having free blocks ready and waiting.  When doing
+wear leveling, you might find an erase block that has not been written
+to in a long time, so you want to move that data to a more worn block,
+and use the less worn block for more frequently written to sectors.  If
+you know that sectors are unused because they have been TRIMed, then you
+don't have to waste time and wear copying the junk there to the new
+flash block.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Monday, February 21, 2011 3:15 AM
-> To: Wojcik, Krzysztof
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Single-drive RAID0
-> 
-> On Wed, 16 Feb 2011 16:57:06 +0000 "Wojcik, Krzysztof"
-> <krzysztof.wojcik@intel.com> wrote:
-> 
-> > >
-> > > It looks like the 'bdev' passed to md_open keeps changing, which it
-> > > shouldn't.
-> > >
-> > > If the above doesn't help, please add:
-> > >
-> > > 	printk("bdev=%p, mddev=%p, disk=%p dev=%x\n", bdev, mddev, mddev-
-> > > >gendisk, bdev->bd_dev);
-> > >
-> > > at the top of 'md_open', and see what it produces.
-> >
-> > I tried this also but I can't see any useful information that can
-> make me some idea.
-> > Could you look at logs in attachment?
-> >
-> 
-> 
-> I've made some progress.
-> 
-> 
-> The struct block_device is definitely getting freed and re-allocated.
-> 
-> This can happen if you
-> 
->   mknod /dev/.tmp b 9 0
->   open /dev/.tmp and do stuff, then close
->   rm /dev/.tmp
-> 
-> 
-> If you open something in /dev which stays there, e.g. /dev/md0, then as
-> long
-> as the inode for /dev/md0 remains in the inode cache it will hold a
-> reference
-> to the block_device and so the same one will get reused.
-> But when to 'rm /dev/.tmp', the inode gets flushed from the cache and
-> the
-> reference of the block_device is dropped.  If that was the only
-> reference
-> then the block_device is discarded.
-> 
-> Each time a new block_device is created for a given block device, it
-> will
-> re-do the partition scan which will mean that the partition devices get
-> deleted and recreated.
-> 
-> Maybe you are racing with this somehow and that is how the partition
-> devices
-> appear to not be there - udev is removing and recreating them.
-> 
-> Something you could try would be to change fs/block_dev.c.
-> At about line 470 you should find:
-> 
-> static const struct super_operations bdev_sops = {
-> 	.statfs = simple_statfs,
-> 	.alloc_inode = bdev_alloc_inode,
-> 	.destroy_inode = bdev_destroy_inode,
-> 	.drop_inode = generic_delete_inode,
-> 	.evict_inode = bdev_evict_inode,
-> };
-> 
-> If you change the 'drop_inode' line to
->         .drop_inode = do_not_drop_inode,
-> 
-> and define a function:
-> 
-> 
-> static int do_not_drop_inode(struct inode *inode)
-> {
-> 	return 0;
-> }
-> 
-> That will cause the block_device to remain in a cache for a while after
-> the
-> last reference is dropped.
-> That should make your symptoms go away.
-> 
-> I'm not sure that is the "right" fix, but it should confirm what I
-> suspect
-> is happening.
-
-Hi,
-
-I tested your proposal.
-It resolve the problem.
-What are your future plans?
-Do you need to consult the patch with someone involved in the block devices code?
-When can I expect final patch?
-
-> 
-> If it does, then we can explore more...
-> Did you say that this works better on earlier kernels?  If so, what is
-> the
-> latest kernel that you have tried that you don't have this problem on?
-
-I've tested on kernel 2.6.32 from RHEL6.0 and, if I remember correctly, 2.6.34- they work properly.
-
-Regards
-Krzysztof
-
-> 
-> Thanks,
-> NeilBrown
-
-
+TRIM is also quite useful for thin provisioned storage, which seems to
+be getting popular.
