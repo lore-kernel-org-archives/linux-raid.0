@@ -1,42 +1,44 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: SSD - TRIM command
-Date: Mon, 21 Feb 2011 21:02:30 +0000
-Message-ID: <AANLkTimCU_g6hL5TX4-w6TPeFo7Wn0D+=t7iAqJ3MWcS@mail.gmail.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
-	<4D517F4F.4060003@gmail.com>
-	<4D5245DF.4020401@hardwarefreak.com>
-	<iiu4rc$9ju$1@dough.gmane.org>
-	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
-	<iiud2r$qci$1@dough.gmane.org>
-	<4D62ACFE.4020401@cfl.rr.com>
-	<AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
-	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
-	<4D62CF5F.6080007@cfl.rr.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Fix over-zealous flush_disk when changing device size.
+Date: Tue, 22 Feb 2011 08:14:43 +1100
+Message-ID: <20110222081443.6ec89942@notabene.brown>
+References: <20110217165057.5c50e566@notabene.brown>
+	<x49hbbx18pq.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D62CF5F.6080007@cfl.rr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Roberto Spadim <roberto@spadim.com.br>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <x49hbbx18pq.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Andrew Patterson <andrew.patterson@hp.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21 February 2011 20:47, Phillip Susi <psusi@cfl.rr.com> wrote:
-> On 2/21/2011 2:39 PM, Roberto Spadim wrote:
->> sorry, but i sent email without a information:
->> TRIM is a 'ATA Specification' command
->>
->> http://en.wikipedia.org/wiki/TRIM_command
->>
->> any disk with ATA command could suport TRIM, hard disk or ssd or
->> anyother type of phisical allocation
->
-> Sure, but hard disks have no reason to, which is why they don't and
-> won't support it.
->
+On Mon, 21 Feb 2011 14:36:01 -0500 Jeff Moyer <jmoyer@redhat.com> wrote:
 
-My point exactly.
+> NeilBrown <neilb@suse.de> writes:
+> 
+> > -int __invalidate_device(struct block_device *bdev)
+> > +int __invalidate_device2(struct block_device *bdev, bool kill_dirty)
+> >  {
+> >  	struct super_block *sb = get_super(bdev);
+> >  	int res = 0;
+> > @@ -1614,7 +1614,7 @@ int __invalidate_device(struct block_device *bdev)
+> >  		 * hold).
+> >  		 */
+> >  		shrink_dcache_sb(sb);
+> > -		res = invalidate_inodes(sb);
+> > +		res = invalidate_inodes(sb, kill_dirty);
+> >  		drop_super(sb);
+> >  	}
+> >  	invalidate_bdev(bdev);
+> 
+> Neil, I think you also need to change the EXPORT_SYMBOL from
+> __invalidate_device to __invalidate_device2.  The floppy module won't
+> build without that change.
 
-// M
+Good point, thank.
+I've just made this change in mt for-next tree so it should appear in -next
+today?
+
+NeilBrown
