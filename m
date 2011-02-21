@@ -1,39 +1,82 @@
-From: Phillip Susi <psusi@cfl.rr.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: SSD - TRIM command
-Date: Mon, 21 Feb 2011 13:24:20 -0500
-Message-ID: <4D62ADD4.8080601@cfl.rr.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com> <4D517F4F.4060003@gmail.com> <4D5245DF.4020401@hardwarefreak.com> <iiu4rc$9ju$1@dough.gmane.org> <AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com> <AANLkTik6D-r1ZbgxEACHZK9760pcUBB+3e7wVX3oqrKP@mail.gmail.com> <20110209161916.GB8632@bounceswoosh.org>
+Date: Mon, 21 Feb 2011 15:25:03 -0300
+Message-ID: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
+	<4D517F4F.4060003@gmail.com>
+	<4D5245DF.4020401@hardwarefreak.com>
+	<iiu4rc$9ju$1@dough.gmane.org>
+	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+	<iiud2r$qci$1@dough.gmane.org>
+	<4D62ACFE.4020401@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110209161916.GB8632@bounceswoosh.org>
+In-Reply-To: <4D62ACFE.4020401@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@bounceswoosh.org>
-Cc: "Scott E. Armitage" <launchpad@scott.armitage.name>, Roberto Spadim <roberto@spadim.com.br>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2/9/2011 11:19 AM, Eric D. Mudama wrote:
-> For SATA devices, ATA8-ACS2 addresses this through Deterministic Read
-> After Trim in the DATA SET MANAGEMENT command.  Devices can be
-> indeterminate, determinate with a non-zero pattern (often all-ones) or
-> determinate all-zero for sectors read after being trimmed.
+TRIM is a new feature for many hard disk/ssd
+it=B4s more to get a bigger life o disk, allow a dynamic badblock
+reallocation (filesystem must tell where is empty)
 
-IIRC, it was a word in the IDENTIFY response, not the DATA SET
-MANAGEMENT command.
 
-On 2/9/2011 11:28 AM, Scott E. Armitage wrote:
-> Who sends this command? If md can assume that determinate mode is
-> always set, then RAID 1 at least would remain consistent. For RAID 5,
-> consistency of the parity information depends on the determinate
-> pattern used and the number of disks. If you used determinate
-> all-zero, then parity information would always be consistent, but this
-> is probably not preferable since every TRIM command would incur an
-> extra write for each bit in each page of the block.
+2011/2/21 Phillip Susi <psusi@cfl.rr.com>:
+> On 2/9/2011 10:49 AM, David Brown wrote:
+>> I've been reading a little more about this. =A0It seems that the day=
+s of
+>> TRIM may well be numbered - the latest generation of high-end SSDs h=
+ave
+>> more powerful garbage collection algorithms, together with more spar=
+e
+>> blocks, making TRIM pretty much redundant. =A0This is, of course, th=
+e most
+>> convenient solution for everyone (as long as it doesn't cost too muc=
+h!).
+>>
+>> The point of the TRIM command is to tell the SSD that a particular b=
+lock
+>> is no longer being used, so that the SSD can erase it in the backgro=
+und
+>> - that way when you want to write more data, there are more free blo=
+cks
+>> ready and waiting. =A0But if you've got plenty of spare blocks, it's=
+ easy
+>> to have them erased in advance and you don't need TRIM.
+>
+> It is not just about having free blocks ready and waiting. =A0When do=
+ing
+> wear leveling, you might find an erase block that has not been writte=
+n
+> to in a long time, so you want to move that data to a more worn block=
+,
+> and use the less worn block for more frequently written to sectors. =A0=
+If
+> you know that sectors are unused because they have been TRIMed, then =
+you
+> don't have to waste time and wear copying the junk there to the new
+> flash block.
+>
+> TRIM is also quite useful for thin provisioned storage, which seems t=
+o
+> be getting popular.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-The drive tells YOU how its trim behaves; you don't command it.
 
-If the drive is deterministic and always returns zeros after TRIM, then
-mdadm could pass the TRIM down and process it like a write of all zeros,
-and recompute the parity.  If it isn't deterministic, then I don't think
-there's anything you can do to handle TRIM requests.
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
