@@ -1,44 +1,127 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fix over-zealous flush_disk when changing device size.
-Date: Tue, 22 Feb 2011 08:14:43 +1100
-Message-ID: <20110222081443.6ec89942@notabene.brown>
-References: <20110217165057.5c50e566@notabene.brown>
-	<x49hbbx18pq.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: New machine, new RAID, wrong device name...
+Date: Tue, 22 Feb 2011 08:23:12 +1100
+Message-ID: <20110222082312.75a72657@notabene.brown>
+References: <AANLkTin=E7m==Q0NASXv72jiB0h3XJhZ4-vsxCS6CvJU@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <x49hbbx18pq.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Andrew Patterson <andrew.patterson@hp.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTin=E7m==Q0NASXv72jiB0h3XJhZ4-vsxCS6CvJU@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 21 Feb 2011 14:36:01 -0500 Jeff Moyer <jmoyer@redhat.com> wrote:
+On Mon, 21 Feb 2011 11:59:06 -0800 Mark Knecht <markknecht@gmail.com> wrote:
 
-> NeilBrown <neilb@suse.de> writes:
+> I've got a new laptop that has two hard drives in it and I've chosen
+> to use RAID1 on it. The Gentoo install is complete but when I reboot
+> the kernel doesn't find the RAID and I hang without syncing.
 > 
-> > -int __invalidate_device(struct block_device *bdev)
-> > +int __invalidate_device2(struct block_device *bdev, bool kill_dirty)
-> >  {
-> >  	struct super_block *sb = get_super(bdev);
-> >  	int res = 0;
-> > @@ -1614,7 +1614,7 @@ int __invalidate_device(struct block_device *bdev)
-> >  		 * hold).
-> >  		 */
-> >  		shrink_dcache_sb(sb);
-> > -		res = invalidate_inodes(sb);
-> > +		res = invalidate_inodes(sb, kill_dirty);
-> >  		drop_super(sb);
-> >  	}
-> >  	invalidate_bdev(bdev);
+> During the Gentoo install from a CD the machine is called (apparently)
+> "livecd". To build the RAID initially I wanted it to be /dev/md3 so I
+> used
 > 
-> Neil, I think you also need to change the EXPORT_SYMBOL from
-> __invalidate_device to __invalidate_device2.  The floppy module won't
-> build without that change.
+> livecd ~ # mknod /dev/md3 b 9 3
+> livecd ~ # mdadm --create /dev/md3 --level=1 --raid-devices=2
+> /dev/sda3 /dev/sdb3
+> livecd ~ # mke2fs -j /dev/md3
+> 
+> and everything went fine.
+> 
+> However once I've rebooted using the CD, and even though the machine
+> is once again called livecd the RAID is now called /dev/md127. I
+> assume, but don't know for sure, that something similar is happening
+> when I boot the actual installation, mdadm gives the RAID a different
+> name and it's likely not found by my new environment.
 
-Good point, thank.
-I've just made this change in mt for-next tree so it should appear in -next
-today?
+If it is being assembled as md127 even though the host name is livecd, the
+implication is that the hostname is not set un after the array is assembled.
+Maybe they are done in the initrd in the wrong order?
+If you 
+   mdadm -S /dev/md127
+   mdadm -As
+from the livecd, does it then assemble as /dev/md3?
+
+> 
+> What's the right solution to changing the RAID naming in the
+> superblock so that the laptop finds it as local to 'laptop1' and
+> mounts it according the fstab?
+
+I think you are asking how to change the name recorded in the metadata.
+When booted into the livecd:
+   mdadm -S /dev/md127
+   mdadm -A /dev/md3 --update=homehost --homehost=laptop1 /dev/sd[ab]3
+
+should do it.
 
 NeilBrown
+
+
+> 
+> I understand that I can probably put the UUID in the mdadm config
+> file, and I will, but before I do I wanted to cross this threshold and
+> figure out the right way to do it automatically.
+> 
+> Thanks,
+> Mark
+> 
+> 
+> livecd ~ # mdadm --detail /dev/md127
+> /dev/md127:
+>         Version : 1.2
+>   Creation Time : Wed Feb 16 16:03:29 2011
+>      Raid Level : raid1
+>      Array Size : 343758245 (327.83 GiB 352.01 GB)
+>   Used Dev Size : 343758245 (327.83 GiB 352.01 GB)
+>    Raid Devices : 2
+>   Total Devices : 2
+>     Persistence : Superblock is persistent
+> 
+>     Update Time : Thu Feb 17 19:42:36 2011
+>           State : clean
+>  Active Devices : 2
+> Working Devices : 2
+>  Failed Devices : 0
+>   Spare Devices : 0
+> 
+>            Name : livecd:3  (local to host livecd)
+>            UUID : f75493a8:1189516e:0f192f04:e21fbe28
+>          Events : 17
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       8        3        0      active sync   /dev/sda3
+>        1       8       19        1      active sync   /dev/sdb3
+> livecd ~ # mdadm --examine /dev/sda3
+> /dev/sda3:
+>           Magic : a92b4efc
+>         Version : 1.2
+>     Feature Map : 0x0
+>      Array UUID : f75493a8:1189516e:0f192f04:e21fbe28
+>            Name : livecd:3  (local to host livecd)
+>   Creation Time : Wed Feb 16 16:03:29 2011
+>      Raid Level : raid1
+>    Raid Devices : 2
+> 
+>  Avail Dev Size : 687516763 (327.83 GiB 352.01 GB)
+>      Array Size : 687516490 (327.83 GiB 352.01 GB)
+>   Used Dev Size : 687516490 (327.83 GiB 352.01 GB)
+>     Data Offset : 2048 sectors
+>    Super Offset : 8 sectors
+>           State : clean
+>     Device UUID : 4430631f:454150f1:903a86cc:9d2c034c
+> 
+>     Update Time : Thu Feb 17 19:42:36 2011
+>        Checksum : 9adbdc7f - correct
+>          Events : 17
+> 
+> 
+>    Device Role : Active device 0
+>    Array State : AA ('A' == active, '.' == missing)
+> livecd ~ #
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
