@@ -1,94 +1,96 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: SSD - TRIM command
-Date: Mon, 21 Feb 2011 16:57:05 -0300
-Message-ID: <AANLkTi=H-SowrrifRgzTGbF4VEk0WcXCRP0P6G-OtpRL@mail.gmail.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
-	<4D517F4F.4060003@gmail.com>
-	<4D5245DF.4020401@hardwarefreak.com>
-	<iiu4rc$9ju$1@dough.gmane.org>
-	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
-	<iiud2r$qci$1@dough.gmane.org>
-	<4D62ACFE.4020401@cfl.rr.com>
-	<AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
-	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
-	<AANLkTikCxjXbTAPNX-OQBMeNfUa4zKzaXk=C078Z837x@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: New machine, new RAID, wrong device name...
+Date: Mon, 21 Feb 2011 11:59:06 -0800
+Message-ID: <AANLkTin=E7m==Q0NASXv72jiB0h3XJhZ4-vsxCS6CvJU@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikCxjXbTAPNX-OQBMeNfUa4zKzaXk=C078Z837x@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->Then again, my attitude
-> about this is very arrogant and I think the trim spec was broken from
-> the beginning.
+I've got a new laptop that has two hard drives in it and I've chosen
+to use RAID1 on it. The Gentoo install is complete but when I reboot
+the kernel doesn't find the RAID and I hang without syncing.
+
+During the Gentoo install from a CD the machine is called (apparently)
+"livecd". To build the RAID initially I wanted it to be /dev/md3 so I
+used
+
+livecd ~ # mknod /dev/md3 b 9 3
+livecd ~ # mdadm --create /dev/md3 --level=1 --raid-devices=2
+/dev/sda3 /dev/sdb3
+livecd ~ # mke2fs -j /dev/md3
+
+and everything went fine.
+
+However once I've rebooted using the CD, and even though the machine
+is once again called livecd the RAID is now called /dev/md127. I
+assume, but don't know for sure, that something similar is happening
+when I boot the actual installation, mdadm gives the RAID a different
+name and it's likely not found by my new environment.
+
+What's the right solution to changing the RAID naming in the
+superblock so that the laptop finds it as local to 'laptop1' and
+mounts it according the fstab?
+
+I understand that I can probably put the UUID in the mdadm config
+file, and I will, but before I do I wanted to cross this threshold and
+figure out the right way to do it automatically.
+
+Thanks,
+Mark
 
 
-maybe... we could put all harddisk firmware at linux code... why we
-need reallocation of harddisks? we need when filesystem don=B4t do it
-we question is: can we implement TRIM at MD device?
+livecd ~ # mdadm --detail /dev/md127
+/dev/md127:
+        Version : 1.2
+  Creation Time : Wed Feb 16 16:03:29 2011
+     Raid Level : raid1
+     Array Size : 343758245 (327.83 GiB 352.01 GB)
+  Used Dev Size : 343758245 (327.83 GiB 352.01 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Feb 17 19:42:36 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : livecd:3  (local to host livecd)
+           UUID : f75493a8:1189516e:0f192f04:e21fbe28
+         Events : 17
+
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
+livecd ~ # mdadm --examine /dev/sda3
+/dev/sda3:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : f75493a8:1189516e:0f192f04:e21fbe28
+           Name : livecd:3  (local to host livecd)
+  Creation Time : Wed Feb 16 16:03:29 2011
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 687516763 (327.83 GiB 352.01 GB)
+     Array Size : 687516490 (327.83 GiB 352.01 GB)
+  Used Dev Size : 687516490 (327.83 GiB 352.01 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 4430631f:454150f1:903a86cc:9d2c034c
+
+    Update Time : Thu Feb 17 19:42:36 2011
+       Checksum : 9adbdc7f - correct
+         Events : 17
 
 
-
-
-2011/2/21 Doug Dumitru <doug@easyco.com>:
-> To be technically accurate, trim is a hint to a storage device that
-> has a "block translation layer" that can take advantage of knowing
-> that a block contains no meaningful data.
->
-> Flash needs trim only if flash has an FTL (Flash Translation Layer)
-> that is re-mapping blocks in such a manner as free blocks are helpful
-> in making this process more efficient. =A0Older SSDs did not support
-> trim and had no real need for it. =A0If you look at the FTL used with
-> simple Flash (think CF cards, SD cards, and USB sticks) trim does not
-> help them. =A0Trim and wear leveling are un-related and don't really
-> impact each other.
->
-> On the linux side trim is "discard". =A0This is actually a much bette=
-r
-> abstraction as it does not imply SSDs.
->
-> Any type of block device that does dynamic block remapping will likel=
-y
-> be helped (at least somewhat) by discard. =A0The only examples of thi=
-s I
-> can think of off-hand are 1) my Flash SuperCharger code, and 2)
-> block-level de-dupe engines. =A0I am sure other examples will be crea=
-ted
-> over time.
->
-> Hopefully, discard can be driven down the stack. =A0I would personall=
-y
-> prefer the linux community declare that discard and zero writes are
-> identical. =A0If an SSD supports trim and linux wants to translate a
-> discard into a trim at the device driver layer, and the SSD is
-> non-deterministic, then that SSD is broken. =A0Then again, my attitud=
-e
-> about this is very arrogant and I think the trim spec was broken from
-> the beginning.
->
-> --
-> Doug Dumitru
-> EasyCo LLC
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   Device Role : Active device 0
+   Array State : AA ('A' == active, '.' == missing)
+livecd ~ #
