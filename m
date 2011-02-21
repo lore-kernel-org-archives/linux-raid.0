@@ -1,49 +1,57 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH] Fix over-zealous flush_disk when changing
-	device size.
-Date: Mon, 21 Feb 2011 14:36:01 -0500
-Message-ID: <x49hbbx18pq.fsf@segfault.boston.devel.redhat.com>
-References: <20110217165057.5c50e566@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: SSD - TRIM command
+Date: Mon, 21 Feb 2011 19:38:13 +0000
+Message-ID: <AANLkTinPrCw+wTns6Jb8ZNwwMPoKuV9sr5LXqjPtJyUn@mail.gmail.com>
+References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
+	<4D517F4F.4060003@gmail.com>
+	<4D5245DF.4020401@hardwarefreak.com>
+	<iiu4rc$9ju$1@dough.gmane.org>
+	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
+	<iiud2r$qci$1@dough.gmane.org>
+	<4D62ACFE.4020401@cfl.rr.com>
+	<AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
+	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
+	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20110217165057.5c50e566@notabene.brown> (NeilBrown's message of
-	"Thu, 17 Feb 2011 16:50:57 +1100")
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: NeilBrown <neilb@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Andrew Patterson <andrew.patterson@hp.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Phillip Susi <psusi@cfl.rr.com>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+On 21 February 2011 19:32, Roberto Spadim <roberto@spadim.com.br> wrote=
+:
+> TRIM isn=C2=B4t a problem, it=C2=B4s a solution to optimize dynamic a=
+llocation,
+> and life time of devices (SSD or harddisk)
+> i don=C2=B4t see any problem to implement trim command on hard disks =
+(not
+> in linux, but at harddisk firmware level)
+>
+> hard disk have the same problem of ssd, allocation of badblocks, any
+> harddisk could implement trim and use it to realloc badblocks...
+>
+> --
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+>
 
-> -int __invalidate_device(struct block_device *bdev)
-> +int __invalidate_device2(struct block_device *bdev, bool kill_dirty)
->  {
->  	struct super_block *sb = get_super(bdev);
->  	int res = 0;
-> @@ -1614,7 +1614,7 @@ int __invalidate_device(struct block_device *bdev)
->  		 * hold).
->  		 */
->  		shrink_dcache_sb(sb);
-> -		res = invalidate_inodes(sb);
-> +		res = invalidate_inodes(sb, kill_dirty);
->  		drop_super(sb);
->  	}
->  	invalidate_bdev(bdev);
+I don't think you understand TRIM. It wouldn't work, and there is no
+need for it, on a HDD. AFAIK a HDD does not have the same penalty as a
+SSD does when it needs to write to a (previously) used area. An SSD
+cannot do this without erasing the whole (block? page?), usually 512KB
+in size (varies between different manufacturers), but the data that's
+on there still needs to be moved elsewhere first, block erased, data
+moved back the same time the new data is written together with it.
+AFAIK it works something like this anyway. The only benefit TRIM will
+give you would be potentially faster writes, right.
 
-Neil, I think you also need to change the EXPORT_SYMBOL from
-__invalidate_device to __invalidate_device2.  The floppy module won't
-build without that change.
-
-Cheers,
-Jeff
+// M
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
