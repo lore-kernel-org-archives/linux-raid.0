@@ -1,7 +1,7 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: "Patrick J. LoPresti" <lopresti@gmail.com>
 Subject: Re: Two questions about stripe_cache_size
-Date: Tue, 22 Feb 2011 19:26:48 -0300
-Message-ID: <AANLkTimN47c6pKU0fM0==E54mozYhtWg3jGy5ALib+HM@mail.gmail.com>
+Date: Tue, 22 Feb 2011 14:35:46 -0800
+Message-ID: <AANLkTi=25QozqVfn814=2Tm=BLGQz7C=eejsOFNLwBQj@mail.gmail.com>
 References: <AANLkTi=bvRBoyUCH+9_9ZTjrWKdqjkfzpnNtdhmvgYCk@mail.gmail.com>
 	<20110223090105.4be62a1e@notabene.brown>
 	<AANLkTin-Ub0PAvdWDQwzqUyvzVDKia5FGGpyK4ip_=Lo@mail.gmail.com>
@@ -13,24 +13,11 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110223092422.230875fa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "Patrick J. LoPresti" <lopresti@gmail.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-could we select it with sysfs?
-
-2011/2/22 NeilBrown <neilb@suse.de>:
-> On Tue, 22 Feb 2011 14:13:14 -0800 "Patrick J. LoPresti" <lopresti@gm=
-ail.com>
-> wrote:
+On Tue, Feb 22, 2011 at 2:24 PM, NeilBrown <neilb@suse.de> wrote:
 >
->> Thanks, Neil. =A0Actually, I think I have one more question... =A0(W=
-ell,
->> one question with many faces.)
->>
->> Is the stripe cache write-back, or write-through? =A0If the latter, =
-when
->> does it get flushed to disk, exactly?
->>
 >
 > Write-through.
 >
@@ -39,20 +26,27 @@ when
 > requests which can be used to flush the cache. =A0I wonder if you wou=
 ld be able
 > to notice any performance difference...
->
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
 
+I imagine it would depend on your file system and what you are doing wi=
+th it.
 
+In my application, I am typically generating multi-gigabyte files,
+with linear writes, at a reasonably fast pace.  So write-back might
+help.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+On the other hand, "flush" alone might not be sufficient for high
+performance.  I do not know much about Linux file system internals,
+but it seems to me that there are two separate but related concepts.
+One is ordering of operations (to ensure file system consistency).
+The other is flushing (for data integrity; i.e. fsync()).  If the file
+system actually has to flush to ensure consistency -- rather than just
+tagging its writes with ordering constraints -- I think you might lose
+a lot of your performance to all of that flushing.
+
+But since I really do not know what the kernel provides internally in
+this regard I will stop rambling now.
+
+ - Pat
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
