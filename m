@@ -1,9 +1,8 @@
 From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 01:30:29 -0300
-Message-ID: <AANLkTi=m79=KJPCYHjWSaxtfZLtY8Vf+8=_0fBFF8mLX@mail.gmail.com>
+Date: Tue, 22 Feb 2011 01:37:38 -0300
+Message-ID: <AANLkTimdWwW6c2J7q5_nUabX=kWCbSbbh0MA41trSqdH@mail.gmail.com>
 References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
 	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
 	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
 	<4D62CF5F.6080007@cfl.rr.com>
@@ -16,37 +15,70 @@ References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
 	<AANLkTinH+2fbEHmO2CNrBtg2MEPCMG3Q-qcsMW5Ccce9@mail.gmail.com>
 	<AANLkTi=-hJ5SeTsUNT=in0GBNUQB=4uvdumrvuakZXgq@mail.gmail.com>
 	<AANLkTim_F1wqvLprPvytVAMLnbDcr71ys-38WcsFpFkB@mail.gmail.com>
-	<4D63218F.2000309@cfl.rr.com>
-	<AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
-	<4D6335D6.7000609@cfl.rr.com>
+	<alpine.DEB.1.10.1102220300400.11974@uplift.swm.pp.se>
+	<FA27C2E0242645B795811DDF282BFA05@m5>
+	<AANLkTi=910JELnSik=pGiN9Yz0YVUNLyWCmJSiFZotSM@mail.gmail.com>
+	<20110222144540.7cd53e7d@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D6335D6.7000609@cfl.rr.com>
+In-Reply-To: <20110222144540.7cd53e7d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "Eric D. Mudama" <edmudama@bounceswoosh.org>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Guy Watkins <linux-raid@watkins-home.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-it can't because today filesystem (exclude ext4 and swap) don't use
-trim command to tell device what block isn't in use
+thanks neil, i will try to read and make some patch, my focus is ssd
+optimization, at hardware level (hw raid) i didn't see any good
+improvement
+good =3D a good read balance (based on queue and disk read rate), trim =
+support
 
-2011/2/22 Phillip Susi <psusi@cfl.rr.com>:
-> On 02/21/2011 10:29 PM, Roberto Spadim wrote:
->>
->> what device level could do? use a 'good block' (if exists) =3D> =A0d=
-ynamic
->> reallocation
->> 'good block' =3D block not in use by filesystem, not marked as bad, =
-can
->> be used by realloc
+----
+good read balance =3D round robin or another time based algorithm (can
+be cpu intensive), i didn't found yet how to get queue of linux bio
+(mirrors)
+trim support - nothing to report, it's a 'feature request' for long
+term (after badblock and others features)
+
+-----
+
+ps...
+neil what are you thinking about badblock and layout?
+for example... reading from a bad block will be internaly (md source
+code) remapped to a good block? or just try read/write to another
+device?
+
+in other words we will have 'dynamic' layout?
+
+
+2011/2/22 NeilBrown <neilb@suse.de>:
+> On Mon, 21 Feb 2011 23:27:26 -0300 Roberto Spadim <roberto@spadim.com=
+=2Ebr>
+> wrote:
 >
-> No. =A0It can only use blocks reserved for spares at manufacture time=
-=2E =A0It can
-> not use any old block that the fs is not using at the time, because t=
-he fs
-> may choose to use it in the future.
+>> tape drive =3D harddisk with only one head, the head can't move, onl=
+y
+>> the tape (disk/plate or any other name you want)
+>>
+>> could we get back and answer the main question?
+>> --------------------------
+>> getting back to the first question, can MD support trim? yes/no/not
+>> now/some levels and layouts only?
+>>
+>
+> MD currently doesn't accept 'discard' requests.
+>
+> RAID0 and LINEAR could be made to accept 'discard' if any
+> member device accepted 'discard'. =A0Patches welcome.
+>
+> Other levels need md to know not to try to resync/recover regions tha=
+t
+> have been discarded. =A0See "non-sync bitmap" section of the recent
+> md roadmap.
+>
+> NeilBrown
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
