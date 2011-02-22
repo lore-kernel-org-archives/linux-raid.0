@@ -1,44 +1,49 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 00:25:35 +0000
-Message-ID: <AANLkTikwO_NYrNv6Uo3OaFHdPC8mVwBpu8GKQcTToEt0@mail.gmail.com>
-References: <AANLkTikfeH_n04iJ=5e=_G4a_GrxiWyZNJ1oCYyiBhNO@mail.gmail.com>
-	<4D517F4F.4060003@gmail.com>
-	<4D5245DF.4020401@hardwarefreak.com>
-	<iiu4rc$9ju$1@dough.gmane.org>
-	<AANLkTi=WNk3=3Jwm-YJeujcrdh-OQ4W4mJrq+YJ5Xv4k@mail.gmail.com>
-	<iiud2r$qci$1@dough.gmane.org>
-	<4D62ACFE.4020401@cfl.rr.com>
-	<AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
-	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
-	<4D62CF5F.6080007@cfl.rr.com>
-	<AANLkTimCU_g6hL5TX4-w6TPeFo7Wn0D+=t7iAqJ3MWcS@mail.gmail.com>
-	<AANLkTincnob7V3ockg2nqO_ddeZ9UXdigoX5ZwVxocqH@mail.gmail.com>
-	<AANLkTimrc0Sn8Mn9AM01rjgT1=4DsU6QLQoS3FA7Kn=8@mail.gmail.com>
-	<AANLkTim8fxO3M+jEqgBHvQaxgm+MyaVz670au2wG4MkO@mail.gmail.com>
-	<AANLkTim-t+69fcnan8HMsSuq+BCvVn2bfK4CRigO_iHn@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] set default chunk in validate_geometry
+Date: Tue, 22 Feb 2011 11:25:28 +1100
+Message-ID: <20110222112528.074589d5@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F011197D8D5@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim-t+69fcnan8HMsSuq+BCvVn2bfK4CRigO_iHn@mail.gmail.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F011197D8D5@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Phillip Susi <psusi@cfl.rr.com>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 21 February 2011 23:52, Roberto Spadim <roberto@spadim.com.br> wrote:
-> trim tell harddisk that those block are not in use
->
-> not in use block can be used by harddisk reallocation algorithm, like
-> spare sectors
->
-> hard disks can use TRIM command to 'create' 'good' blocks like spare sectors
->
+On Mon, 21 Feb 2011 10:09:37 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-Do you mean online defragmentation...? If so, that's for the
-filesystem to do. Or do you mean that it could be used to tell the HDD
-that it has extra sectors it can use to reallocate bad sectors?...
+> >From 33fa2700b9911b0815112b223a4df7b1f1716659 Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Mon, 21 Feb 2011 10:24:26 +0100
+> Subject: [PATCH] set default chunk in validate_geometry
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+> 
+> When chunk size is not set from command line we need to guess it
+> depending on metadata given on command line or found on listed devices.
+> 
+> Validate_geometry sets the default for it's metadata if chunk is not set.
+> For external metadata chunk is set only when creating in a container.
+> For imsm validate_geometry_imsm_orom is responsible for finding default
+> chunk depending on container metadata loaded. Container will already know
+> which controller it is attached to, and have this controllers orom
+> available.
+> do_default_chunk indicates that we need to find default chunk and
+> if validate_geometry fails for some metadata it tells us to reset chunk
+> that may have been set.
+> 
+> Current solution would set default chunk correctly for imsm only if
+> container device was given on command line. With the list of devices
+> chunk was always set to 512.
+> 
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 
-// M
+Thanks for this Anna.
+
+Applied.
+
+NeilBrown
+
