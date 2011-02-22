@@ -1,98 +1,127 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 01:37:38 -0300
-Message-ID: <AANLkTimdWwW6c2J7q5_nUabX=kWCbSbbh0MA41trSqdH@mail.gmail.com>
-References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
-	<4D62CF5F.6080007@cfl.rr.com>
-	<AANLkTimCU_g6hL5TX4-w6TPeFo7Wn0D+=t7iAqJ3MWcS@mail.gmail.com>
-	<AANLkTincnob7V3ockg2nqO_ddeZ9UXdigoX5ZwVxocqH@mail.gmail.com>
-	<AANLkTimrc0Sn8Mn9AM01rjgT1=4DsU6QLQoS3FA7Kn=8@mail.gmail.com>
-	<AANLkTim8fxO3M+jEqgBHvQaxgm+MyaVz670au2wG4MkO@mail.gmail.com>
-	<AANLkTim-t+69fcnan8HMsSuq+BCvVn2bfK4CRigO_iHn@mail.gmail.com>
-	<20110222003610.GB29101@bounceswoosh.org>
-	<AANLkTinH+2fbEHmO2CNrBtg2MEPCMG3Q-qcsMW5Ccce9@mail.gmail.com>
-	<AANLkTi=-hJ5SeTsUNT=in0GBNUQB=4uvdumrvuakZXgq@mail.gmail.com>
-	<AANLkTim_F1wqvLprPvytVAMLnbDcr71ys-38WcsFpFkB@mail.gmail.com>
-	<alpine.DEB.1.10.1102220300400.11974@uplift.swm.pp.se>
-	<FA27C2E0242645B795811DDF282BFA05@m5>
-	<AANLkTi=910JELnSik=pGiN9Yz0YVUNLyWCmJSiFZotSM@mail.gmail.com>
-	<20110222144540.7cd53e7d@notabene.brown>
+From: Albert Pauw <albert.pauw@gmail.com>
+Subject: Re: mdadm ddf questions
+Date: Tue, 22 Feb 2011 08:41:02 +0100
+Message-ID: <4D63688E.5030501@gmail.com>
+References: <4D5FA5C4.8030803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110222144540.7cd53e7d@notabene.brown>
+In-Reply-To: <4D5FA5C4.8030803@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thanks neil, i will try to read and make some patch, my focus is ssd
-optimization, at hardware level (hw raid) i didn't see any good
-improvement
-good =3D a good read balance (based on queue and disk read rate), trim =
-support
+  I experimented a bit further, and may have found an error in mdadm.
 
-----
-good read balance =3D round robin or another time based algorithm (can
-be cpu intensive), i didn't found yet how to get queue of linux bio
-(mirrors)
-trim support - nothing to report, it's a 'feature request' for long
-term (after badblock and others features)
+Again, this was my setup:
+- OS Fedora 14 fully updated, running in VirtualBox
+- mdadm version 3.1.4, fully updated (as of today) from the git repo
+- Five virtual disks, 1 GB each, to use
 
------
+I created two raid sets out of one ddf container:
 
-ps...
-neil what are you thinking about badblock and layout?
-for example... reading from a bad block will be internaly (md source
-code) remapped to a good block? or just try read/write to another
-device?
+mdadm -C /dev/md127 -l container -e ddf -n 5 /dev/sd[b-f]
+mdadm -C /dev/md1 -l 1 -n 2 /dev/md127
+mdadm -C /dev/md2 -l 2 -n 3 /dev/md127
 
-in other words we will have 'dynamic' layout?
+Disks sdb and sdc were used for the RAID 1 set, disks sdd, sde, sdf were 
+used for the RAID 5 set.
+All were fine and the command mdadm -E /dev/md127 showed all disks 
+active/Online
 
+Now I failed one of the disks of md1:
 
-2011/2/22 NeilBrown <neilb@suse.de>:
-> On Mon, 21 Feb 2011 23:27:26 -0300 Roberto Spadim <roberto@spadim.com=
-=2Ebr>
-> wrote:
+mdadm -f /dev/md1 /dev/sdb
+
+Indeed, looking at /proc/mdstat I saw the disk marked failed [F] before 
+it was automatically removed within a second (a bit weird).
+
+Now comes the weirdest part, mdadm -E /dev/md127 did show one disk as 
+"active/Online, Failed" but this was disk sdd
+which is part of the other RAID set!
+
+When I removed the correct disk, which can only be done from the container:
+
+mdadm -r /dev/md127 /dev/sdb
+
+the command mdadm -E /dev/md127 showed the 5 disks, the entry for sdb 
+didn't had a device but was still
+"active/Online" and sdd was marked Failed:
+
+Physical Disks : 5
+         Number       RefNo             Size            Device           
+Type/State
+                 0       d8a4179c    
+1015808K                             active/Online
+                 1       5d58f191    1015808K     /dev/sdc           
+active/Online
+                 2       267b2f97    1015808K     /dev/sdd           
+active/Online. Failed
+                 3       3e34307b   1015808K     /dev/sde           
+active/Online
+                 4       6a4fc28f     1015808K     /dev/sdf           
+active/Online
+
+When I try to mark sdd as failed, mdadm tells me that it did it, but 
+/proc/mdstat doesn't show the disk as failed,
+everything is still running. I also am not able to remove it, as it is 
+in use (obviously).
+
+So it looks like there are some errors in here.
+
+Albert
+
+On 02/19/11 12:13 PM, Albert Pauw wrote:
+>  I have dabbed a bit with the standard raid1/raid5 sets and am just 
+> diving into this whole ddf container stuff,
+> and see how I can fail, remove and add a disk.
 >
->> tape drive =3D harddisk with only one head, the head can't move, onl=
-y
->> the tape (disk/plate or any other name you want)
->>
->> could we get back and answer the main question?
->> --------------------------
->> getting back to the first question, can MD support trim? yes/no/not
->> now/some levels and layouts only?
->>
+> Here is what I have, Fedora 14, five 1GB Sata disks (they are virtual 
+> disks under VirtualBox but it all seems
+> to work well under the standard raid stuff. For mdadm I am using the 
+> latest git version, with version nr 3.1.4.
 >
-> MD currently doesn't accept 'discard' requests.
+> I created a ddf container:
 >
-> RAID0 and LINEAR could be made to accept 'discard' if any
-> member device accepted 'discard'. =A0Patches welcome.
+> mdadm -C /dev/md/container -e ddf -l container -n 5 /dev/sd[b-f]
 >
-> Other levels need md to know not to try to resync/recover regions tha=
-t
-> have been discarded. =A0See "non-sync bitmap" section of the recent
-> md roadmap.
+> I now create a raid 5 set in this container:
 >
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> mdadm -C /dev/md1 -l raid5 -n 5 /dev/md/container
 >
+> This all seems to work, I also noticed that after a stop and start of 
+> both the container and the raidset,
+> the container has been renamed to /dev/md/ddf0 which points to 
+> /dev/md127.
+>
+> I now fail one disk in the  raidset:
+>
+> mdadm -f /dev/md1 /dev/sdc
+>
+> I noticed that it is removed from the md1 raidset, and marked 
+> online,failed in the container. So far so
+> good. When I now stop the md1 array and start it again, it will be 
+> back again with all 5 disks, clean, no failure
+> although in the container the disk is marked failed. I then remove it 
+> from the container:
+>
+> mdadm -r /dev/md127 /dev/sdc
+>
+> I clean the disk with mdadm --zero-superblock /dev/sdc and add it again.
+>
+> But how do I add this disk again to the md1 raidset?
+>
+> I see in the container that /dev/sdc is back, with status 
+> "active/Online, Failed" and a new disk is added
+> with no device file and status "Global-Spare/Online".
+>
+> I am confused now.
+>
+> So my question: how do I replace a faulty disk in a raidset, which is 
+> in a ddf container?
+>
+> Thanks and bare with me, I am relatively new to all this.
+>
+> Albert
 
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
