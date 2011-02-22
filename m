@@ -1,9 +1,8 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 00:42:03 -0300
-Message-ID: <AANLkTinFBdsJnLYJnmZR6RsboRx6usEKDhYJg81eAZu4@mail.gmail.com>
+Date: Tue, 22 Feb 2011 14:45:40 +1100
+Message-ID: <20110222144540.7cd53e7d@notabene.brown>
 References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
 	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
 	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
 	<4D62CF5F.6080007@cfl.rr.com>
@@ -16,58 +15,38 @@ References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
 	<AANLkTinH+2fbEHmO2CNrBtg2MEPCMG3Q-qcsMW5Ccce9@mail.gmail.com>
 	<AANLkTi=-hJ5SeTsUNT=in0GBNUQB=4uvdumrvuakZXgq@mail.gmail.com>
 	<AANLkTim_F1wqvLprPvytVAMLnbDcr71ys-38WcsFpFkB@mail.gmail.com>
-	<4D63218F.2000309@cfl.rr.com>
-	<AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
+	<alpine.DEB.1.10.1102220300400.11974@uplift.swm.pp.se>
+	<FA27C2E0242645B795811DDF282BFA05@m5>
+	<AANLkTi=910JELnSik=pGiN9Yz0YVUNLyWCmJSiFZotSM@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
+In-Reply-To: <AANLkTi=910JELnSik=pGiN9Yz0YVUNLyWCmJSiFZotSM@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "Eric D. Mudama" <edmudama@bounceswoosh.org>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Guy Watkins <linux-raid@watkins-home.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-off topic again...
+On Mon, 21 Feb 2011 23:27:26 -0300 Roberto Spadim <roberto@spadim.com.br>
+wrote:
 
-continue with the idea of optimizations, the last otimization we could
-have is implement a filesystem at harddisk
-it could implement all filesystem functions, no device function, it
-could have many more information about data, not only block 'in
-use'/'not in use'. it could understand: file starting at block x
-ending at block y, with information w, accestime z, etc etc. it could
-be more intelligent than a raw device. in others words, it's a
-fileserver...
+> tape drive = harddisk with only one head, the head can't move, only
+> the tape (disk/plate or any other name you want)
+> 
+> could we get back and answer the main question?
+> --------------------------
+> getting back to the first question, can MD support trim? yes/no/not
+> now/some levels and layouts only?
+> 
 
-why implement algorithms at device level? today harddisk processors
-(fpga, arm processors, others) have a lot of cpu power not in use, why
-not use it? that's why we send trim to device, if it's a harddisk or
-ssd or anyother pseudo/real device no problem, we sent the trim
-command to otimize it
+MD currently doesn't accept 'discard' requests.
 
-----------------
-getting out of off topic,
+RAID0 and LINEAR could be made to accept 'discard' if any
+member device accepted 'discard'.  Patches welcome.
 
-please stop sending 'i think it's not a performace feature, it don't
-need be implemented in device level', let's implement all functions
-that device level could allow (ATA/SCSI specifications or any other)
-and optimize when possible
-checking neil md roadmap, badblock work will be very good for md
-devices, it's a good optimization for raid1 since mirror will only
-fail when many blocks fail
+Other levels need md to know not to try to resync/recover regions that
+have been discarded.  See "non-sync bitmap" section of the recent
+md roadmap.
 
-
-
-can we implement TRIM at MD level? it's a good feature to implement?
-we will have a lot of work to implement it?
-my opnion
-we can, on some raid levels
-it's a good feature
-we will have a lot of work to implement and test
-
-
-any answer from raid developers?
-
-
--- 
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+NeilBrown
