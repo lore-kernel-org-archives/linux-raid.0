@@ -1,63 +1,30 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: raid10 - without stripe
-Date: Tue, 22 Feb 2011 18:22:41 -0300
-Message-ID: <AANLkTinoGxdS7qq1HPtRO084LQjvT+VJUZ8H1Ex_BuBq@mail.gmail.com>
-References: <AANLkTimf64aT9smXdhvcGWLAo09Evn4sQ8KDbbB54W49@mail.gmail.com>
-	<20110223074357.0e1a3dd4@notabene.brown>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: removing AHCI SATA devices
+Date: Tue, 22 Feb 2011 16:36:20 -0500
+Message-ID: <4D642C54.9040604@garzik.org>
+References: <AANLkTimkAMh9T0G_6XyajcMVv9gbNn1-gPpvmBSAAfPY@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110223074357.0e1a3dd4@notabene.brown>
+In-Reply-To: <AANLkTimkAMh9T0G_6XyajcMVv9gbNn1-gPpvmBSAAfPY@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Simon Mcnair <simonmcnair@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i will try to get commands on bash history at production server, and po=
-st again
-
-the array was two disks on raid10
-expected result: fail a disk, the array continue
-i tryed with far and near layout but couldn=B4t get mirror only 'stripe=
-'
-
-
-
-2011/2/22 NeilBrown <neilb@suse.de>:
-> On Tue, 22 Feb 2011 16:17:08 -0300 Roberto Spadim <roberto@spadim.com=
-=2Ebr>
-> wrote:
+On 02/22/2011 11:05 AM, Simon Mcnair wrote:
+> hi all,
+> Whilst I am aware that with AHCI and SATAII I can just unplug a HDD at
+> will what is the correct process for doing a 'clean' dismount ?
 >
->> Hi guys, on old email, some one told me that was possible using raid=
-10
->> with layouts, and without stripe
->> could i make a 2disks raid10 with layout?
->> i tried many commands but couldn=B4t work without stripe (disk grow
->> after each mdadm --create i made :/)
->> can anyone help? i want faster aligned reads (like raid0) but withou=
-t
->> growing my disk size (i want only mirrors)
->>
->
-> What actual commands did you try? =A0What exactly were the results?
->
-> NeilBrown
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> Since MD is a layer over the top of the physical device how can you
+> ensure with certainty that all data has been flushed and the device
+> removal is clean ?
+
+Simply unplugged the hard drive's SATA cable should be fine.
+
+	Jeff
 
 
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
