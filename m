@@ -1,38 +1,52 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Possible availability improvement
-Date: Tue, 22 Feb 2011 15:53:30 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1102221552030.11974@uplift.swm.pp.se>
-References: <1298385935.2740.5.camel@michal-laptop.sawicz.net>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/3] Continue expansion after reboot
+Date: Tue, 22 Feb 2011 15:13:15 +0100
+Message-ID: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1690364820-1298386410=:11974"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1298385935.2740.5.camel@michal-laptop.sawicz.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-2?Q?Micha=B3_Sawicz?= <michal@sawicz.net>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Currently reshaped/expanded array is assembled but it stays in inactive state.
+This patches allows for array assembly when array is under expansion.
+Array with reshape/expansion information in metadata is assembled
+and reshape process continues automatically.
 
----137064504-1690364820-1298386410=:11974
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Next step:
+Problem is how to address container operation during assembly.
+1. After first array being reshaped, assebly process looks if mdmon
+   sets migration for other array in container. If yes it continues work
+   for next array.
 
-On Tue, 22 Feb 2011, Michał Sawicz wrote:
+2. Assembly process performs reshape of currently reshaped array only.
+   Mdmon sets next array for reshape and user triggers manually mdadm
+   to finish container operation with just the same parameters set.
 
-> When things in md-world break, there's usually some big and long strain
-> on the array members. My colleague's idea is to virtually split the
-> members into smaller chunks and keep some metadata (events, checksum?)
-> for each of them to reduce the extent of recovery needed when faced
-> with, say, a power failure.
->
-> Does that make sense?
+Reshape finish can be executed for container operation by container re-assembly
+also (this works in current code).
 
-Yes.
 
-Look in the documentation for "write intent bitmap".
+BR
+Adam
+
+
+
+
+---
+
+Adam Kwolek (3):
+      FIX: Assemble device in reshape state with new disks number
+      imsm: FIX: Report correct array size during reshape
+      imsm: FIX: initalize reshape progress as it is stored in metatdata
+
+
+ Assemble.c    |    2 ++
+ super-intel.c |   24 +++++++++++++++++++++++-
+ 2 files changed, 25 insertions(+), 1 deletions(-)
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1690364820-1298386410=:11974--
+Signature
