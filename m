@@ -1,7 +1,7 @@
 From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 00:29:09 -0300
-Message-ID: <AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
+Date: Tue, 22 Feb 2011 00:42:03 -0300
+Message-ID: <AANLkTinFBdsJnLYJnmZR6RsboRx6usEKDhYJg81eAZu4@mail.gmail.com>
 References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
 	<AANLkTimxTBTGupRk_1nSajjoWBstHdzVVpF4kEN3Y6XU@mail.gmail.com>
 	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
@@ -17,105 +17,57 @@ References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
 	<AANLkTi=-hJ5SeTsUNT=in0GBNUQB=4uvdumrvuakZXgq@mail.gmail.com>
 	<AANLkTim_F1wqvLprPvytVAMLnbDcr71ys-38WcsFpFkB@mail.gmail.com>
 	<4D63218F.2000309@cfl.rr.com>
+	<AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D63218F.2000309@cfl.rr.com>
+In-Reply-To: <AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phillip Susi <psusi@cfl.rr.com>
 Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "Eric D. Mudama" <edmudama@bounceswoosh.org>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-getting off topic...
-----
-they have - reallocation
-> Bad blocks are only reallocated when you write to them.  Since they a=
-re bad,
-> you can't read the previous contents anyway, so it does not matter wh=
-ether
-> the OS cared about it before or not.
+off topic again...
 
-when you write, if bad, mark block as bad. how? internal disk memory,
-spare blocks. it's a device level problem, if device can't correct
-move the problem to filesystem level.
+continue with the idea of optimizations, the last otimization we could
+have is implement a filesystem at harddisk
+it could implement all filesystem functions, no device function, it
+could have many more information about data, not only block 'in
+use'/'not in use'. it could understand: file starting at block x
+ending at block y, with information w, accestime z, etc etc. it could
+be more intelligent than a raw device. in others words, it's a
+fileserver...
 
-what device level could do? use a 'good block' (if exists) =3D> dynamic
-reallocation
-'good block' =3D block not in use by filesystem, not marked as bad, can
-be used by realloc
+why implement algorithms at device level? today harddisk processors
+(fpga, arm processors, others) have a lot of cpu power not in use, why
+not use it? that's why we send trim to device, if it's a harddisk or
+ssd or anyother pseudo/real device no problem, we sent the trim
+command to otimize it
 
-with trim, you can inform device firmware what blocks are not in use
-by filesystem, if harddisk have reallocation it can use 'good blocks'
-to store blocks that was realloc on badblock errors.
+----------------
+getting out of off topic,
 
-why implement it? if you have 11111filesystems mounted with bad blocks
-at same time you will have >=3D11111 iops to repair this error at
-filesystem level. if device can correct you don't need to waste cpu
-and memory at filesystem
-
-------
-any layer between ATA and [plate,NAND flash,NOR flash] can be
-implemented by harddisk/ssd firmware
-some layers that can be implemented: online reallocation, queue,
-online encrypt/decrypt, online compress/decompress and others, some
-ssd have optimizations to get better life time and write/read
-performace
-how to 'tune' these algorithms? ATA commands, SCSI or anyother
-protocol that support tune
-
-why trim? inform harddisk/ssd what block isn't in use
-
-what harddisk/ssd could do with trim information?
-dynamic reallocation (badblocks), any other operation that need not
-used blocks (some algorithms use it to get better read/write
-performace)
-on devices with byte read/write level (NAND flash) we could write to
-one timmed block without reading the block and write again, NOR flash
-and harddisk don't need this they work with bits not bytes/blocks
-why send a error to filesystem if it can be corrected at device level.
-just send error when can't correct it.
-
-
-2011/2/21 Phillip Susi <psusi@cfl.rr.com>:
-> On 02/21/2011 08:55 PM, Roberto Spadim wrote:
->>
->> it can be used for badblock reallocation if harddisk have it
->> a harddisk is near to NOR ssd with variable accesstime, if head is
->> near sector to be read/write accesstime is small, if sector is far
->> from head, access time increase (normaly<=3D1 disk revolution if hea=
-d
->> control system is good, for 7200rpm 1revolution is near to 8.33ms)
->
-> Bad blocks are only reallocated when you write to them. =A0Since they=
- are bad,
-> you can't read the previous contents anyway, so it does not matter wh=
-ether
-> the OS cared about it before or not.
->
-> You seem to not understand the fundamental purpose of TRIM. =A0Hard d=
-isks only
-> reallocate blocks when they go bad. =A0SSDs move blocks around all th=
-e time.
-> =A0That process can be optimized if the drive knows that the OS does =
-not care
-> about certain blocks. =A0Hard drives don't do this, so they have no r=
-eason to
-> support TRIM.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+please stop sending 'i think it's not a performace feature, it don't
+need be implemented in device level', let's implement all functions
+that device level could allow (ATA/SCSI specifications or any other)
+and optimize when possible
+checking neil md roadmap, badblock work will be very good for md
+devices, it's a good optimization for raid1 since mirror will only
+fail when many blocks fail
 
 
 
---=20
+can we implement TRIM at MD level? it's a good feature to implement?
+we will have a lot of work to implement it?
+my opnion
+we can, on some raid levels
+it's a good feature
+we will have a lot of work to implement and test
+
+
+any answer from raid developers?
+
+
+-- 
 Roberto Spadim
 Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
