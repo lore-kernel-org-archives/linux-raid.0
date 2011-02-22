@@ -1,26 +1,30 @@
-From: Garanti <uqbxcb@paragaranti.com>
-Subject: Garanti Internal Issues
-Date: Tue, 22 Feb 2011 09:23:32 -0600
-Message-ID: <B3Qj1g00M22TpZC053QnCS__40881.5431561836$1298391059$gmane$org@paragaranti.com>
-Reply-To: uqbxcb@paragaranti.com
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: Single-drive RAID0
+Date: Tue, 22 Feb 2011 17:42:14 +0100
+Message-ID: <4D63E766.1000104@computer.org>
+References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>	<20110209134557.4e607451@notabene.brown>	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>	<20110214131149.7f0655a3@notabene.brown>	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>	<20110215110141.30d28302@notabene.brown>	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>	<20110216114234.0311d27b@notabene.brown>	<BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>	<20110221131519.1039f37c@notabene.brown>	<BE2BFE91933D1B4089447C64486040806908FC52@irsmsx503.ger.corp.intel.com> <20110222115011.282804d9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110222115011.282804d9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Your Garanti account has been locked due to some internal issues on 22/02/2011. To avoid losing important information such as your current ballance, scheduled payments or payees, you must unlock your Garanti online account.
-Please follow these steps:
-1. Visit our secure website located at: http://rrcs-72-43-196-30.nys.biz.rr.com/tr/garanti/
-2. Login using your Customer Num and password.
-3. Enter the PIN you receive via SMS in order to login successfully, then enter your Single-Use PIN. 
-4. Logout. Please wait between 2-4 hours for your account access to be restored.
+On 22/02/11 01:50, NeilBrown wrote:
+> With the patch, the rescan is only performed when needed and so there
+> are no races.
 
-We apologize for any inconvenience this may have caused.
-Thank you for using Garanti.
-________________________
- 
-MNCKBJKXNRSGJVHGYQLEBVXCFTBTZDBVUPRQWU
+Neil,
 
+If I've properly understood your commit message you are reducing the 
+frequency of the rescans, but they can still occur. I submit that this 
+merely reduces the probability but does not remove the possibility of 
+races with udev.
+
+If my interpretation is correct, then is this something that should be 
+fixed (to remove the possibility of races altogether), or merely documented?
+
+Thanks, Jan
