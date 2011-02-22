@@ -1,60 +1,39 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: SSD - TRIM command
-Date: Tue, 22 Feb 2011 14:15:52 -0300
-Message-ID: <AANLkTimamcjMDV7FYthuzefeLreBhneuGZ26YJ2pdjgW@mail.gmail.com>
-References: <AANLkTim6qJRZABYj4y_1sL6xq7y_w-STbaC4MK3U05ug@mail.gmail.com>
-	<AANLkTikR+bKrGUCxnsnNz0vJVGOWoPiP0b618sZNBdqU@mail.gmail.com>
-	<AANLkTik+xMXqA1+bM=AAhsqtCha-rDcVNr3Qkd-AmbNY@mail.gmail.com>
-	<4D62CF5F.6080007@cfl.rr.com>
-	<AANLkTimCU_g6hL5TX4-w6TPeFo7Wn0D+=t7iAqJ3MWcS@mail.gmail.com>
-	<AANLkTincnob7V3ockg2nqO_ddeZ9UXdigoX5ZwVxocqH@mail.gmail.com>
-	<AANLkTimrc0Sn8Mn9AM01rjgT1=4DsU6QLQoS3FA7Kn=8@mail.gmail.com>
-	<AANLkTim8fxO3M+jEqgBHvQaxgm+MyaVz670au2wG4MkO@mail.gmail.com>
-	<AANLkTim-t+69fcnan8HMsSuq+BCvVn2bfK4CRigO_iHn@mail.gmail.com>
-	<20110222003610.GB29101@bounceswoosh.org>
-	<AANLkTinH+2fbEHmO2CNrBtg2MEPCMG3Q-qcsMW5Ccce9@mail.gmail.com>
-	<AANLkTi=-hJ5SeTsUNT=in0GBNUQB=4uvdumrvuakZXgq@mail.gmail.com>
-	<AANLkTim_F1wqvLprPvytVAMLnbDcr71ys-38WcsFpFkB@mail.gmail.com>
-	<4D63218F.2000309@cfl.rr.com>
-	<AANLkTik4qovN19Kv0q6wa54Cd-xCJBMbN491R4u6nbtX@mail.gmail.com>
-	<4D6335D6.7000609@cfl.rr.com>
-	<AANLkTi=m79=KJPCYHjWSaxtfZLtY8Vf+8=_0fBFF8mLX@mail.gmail.com>
-	<4D63CBEC.6060403@cfl.rr.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Linux software RAID assistance
+Date: Tue, 22 Feb 2011 13:23:27 -0500
+Message-ID: <4D63FF1F.4030201@turmel.org>
+References: <4D540F6C.6050904@gmail.com>	<4D5C2143.3000907@turmel.org>	<4D5C2260.3020800@gmail.com>	<4D5C273E.7020609@turmel.org>	<4D5C4176.80604@gmail.com>	<4D5C4204.5020106@turmel.org>	<1377706586882297883@unknownmsgid>	<4D5C6016.6060809@turmel.org>	<AANLkTi=P5vPKa0JwqcjM3D6u2v9AaK9D35SbJv8Yn+0E@mail.gmail.com>	<4D5D2723.1010101@turmel.org>	<6037962689649361915@unknownmsgid>	<AANLkTik6k7kG1CEj=ESsjUcDJVp58cG_bV4Jx3zrd7LM@mail.gmail.com>	<4D5D52AE.8070602@turmel.org>	<AANLkTi=MZ4vo+H16UMuUsVSA2_D-Wp+sFP-5RqOksjXm@mail.gmail.com>	<4D5FE208.5020700@turmel.org>	<AANLkTinOXJWRw_et2U43R_T9XPBzQLnN56Kf2bOAz=_c@mail.gmail.com>	<4D5FED98.6060407@turmel.org>	<AANLkTin4u9yk4XPiHzFtagrdV5_iZJZ0+P+yHqH0x9bm@mail.gmail.com>	<4D61707D.4040304@turmel.org>	<AANLkTimL5y_-RPB9KvTM_N_kMojO6v94PNKjeC+4C=T5@m
+ ail.gmail.com>	<4D61A64B.6090708@turmel.org>	<AANLkTikcDiKp_iPxaP9Ke231Rnb-wOgJP3owXUVxnkSD@mail.gmail.com> <AANLkTimDnfjqC=gUiUb2qshXOMeR_zKK8M55tOGmP+V-@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D63CBEC.6060403@cfl.rr.com>
+In-Reply-To: <AANLkTimDnfjqC=gUiUb2qshXOMeR_zKK8M55tOGmP+V-@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "Eric D. Mudama" <edmudama@bounceswoosh.org>, David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: Simon Mcnair <simonmcnair@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-i think it have. ssd have, why not hd? hd can implement a inteligent
-layer to speedup writes/reads without telling to fs
+On 02/22/2011 12:14 PM, Simon Mcnair wrote:
+> was this anything to do with the dist-upgrade that I performed ?
+> 
+> mdadm has upgraded again to
+> proxmox:~# mdadm -V
+> mdadm - v3.1.4 - 31st August 2010
 
-2011/2/22 Phillip Susi <psusi@cfl.rr.com>:
-> On 2/21/2011 11:30 PM, Roberto Spadim wrote:
->> it can't because today filesystem (exclude ext4 and swap) don't use
->> trim command to tell device what block isn't in use
->
-> You aren't getting it. =A0The fs can tell the drive all it wants: the
-> drive does not care. =A0It has nothing useful it can do with that inf=
-ormation.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+No, but you probably can't do any more "--create --assume-clean" operations with that array.
 
+As for the assembly errors, its probably an out-of-date mdadm.conf.
 
+My server's looks like this:
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> DEVICE /dev/sd[a-z][1-9]
+> 
+> ARRAY /dev/md23 UUID=c3cbe096:fc43d939:8aa66230:708c5670
+> ARRAY /dev/md22 UUID=1438a239:aa03c3f9:68e051d7:b59a6219
+> ARRAY /dev/md21 UUID=4b47d0f6:16f0e352:c67a2185:feb0b573
+> ARRAY /dev/md20 UUID=7676c77e:6ae70f65:30a170a2:b1a1b242
+
+Yours probably needs to be updated with the new md0 uuid.  Its not your boot drive, so your initramfs shouldn't matter.
+
+Phil
