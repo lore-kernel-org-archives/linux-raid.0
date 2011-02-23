@@ -1,117 +1,54 @@
-From: Jaap Crezee <jaap@jcz.nl>
-Subject: Re: Assembling RAID 5 array with missing superblock
-Date: Wed, 23 Feb 2011 21:55:56 +0100
-Message-ID: <4D65745C.20500@jcz.nl>
-References: <AANLkTinfMUaLOVHBh0ZXFmHs353u==XkbGYtM8MPNkh8@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Wed, 23 Feb 2011 15:11:00 -0600
+Message-ID: <4D6577E4.2080305@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020300050408080107020807"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinfMUaLOVHBh0ZXFmHs353u==XkbGYtM8MPNkh8@mail.gmail.com>
+In-Reply-To: <ik33nt$fd8$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lasse Jensen <fafler@gmail.com>
+To: David Brown <david@westcontrol.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a cryptographically signed message in MIME format.
+David Brown put forth on 2/23/2011 7:56 AM:
 
---------------ms020300050408080107020807
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
+> However, as disks get bigger, the chance of errors on any given disk is
+> increasing.  And the fact remains that if you have a failure on a RAID10
+> system, you then have a single point of failure during the rebuild
+> period - while with RAID6 you still have redundancy (obviously RAID5 is
+> far worse here).
 
-On 02/23/11 15:05, Lasse Jensen wrote:
-> I really, really hope this is the last time i need to ask you guys for =
-help.
+The problem isn't a 2nd whole drive failure during the rebuild, but a
+URE during rebuild:
 
-Well, just a little bit off-topic, but...:
-For me, and probably others as well, it does not harm in any way to keep =
-asking=20
-questions. I find it interesting and insightful reading some of the answe=
-rs to=20
-these questions.
-So please do ask.
+http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162
 
-Regards,
+> I don't know if you've followed the recent "md road-map: 2011" thread (I
+> can't see any replies from you in the thread), but that is my reference
+> point here.
 
-Jaap Crezee
+Actually I haven't.  Is Neil's motivation with this RAID5/6 "mirror
+rebuild" to avoid the URE problem?
+
+> Incidentally, what's your opinion on a RAID1+5 or RAID1+6 setup, where
+> you have a RAID5 or RAID6 build from RAID1 pairs?  You get all the
+> rebuild benefits of RAID1 or RAID10, such as simple and fast direct
+> copies for rebuilds, and little performance degradation.  But you also
+> get multiple failure redundancy from the RAID5 or RAID6.  It could be
+> that it is excessive - that the extra redundancy is not worth the
+> performance cost (you still have poor small write performance).
+
+I don't care for and don't use parity RAID levels.  Simple mirroring and
+RAID10 have served me well for a very long time.  They have many
+advantages over parity RAID and few, if any, disadvantages.  I've
+mentioned all of these in previous posts.
+
+-- 
+Stan
 
 
-
-
-
---------------ms020300050408080107020807
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIK2jCC
-BWkwggNRoAMCAQICAwnAGTANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0xMTAx
-MjgwODEzMDZaFw0xMzAxMjcwODEzMDZaMGIxHjAcBgNVBAMTFUphY29iIEJlbmphbWluIENy
-ZXplZTEaMBgGCSqGSIb3DQEJARYLamFhcEBqY3oubmwxJDAiBgkqhkiG9w0BCQEWFWphYXAu
-Y3JlemVlQGltdGVjaC5ubDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANnfQCy6
-Zrxwlai9XI3qiMDrGK1fFs1OrFjujjwfGCddd/WoXA+5F0dLUtfSxO1YrqTrxRL3WUI/q4Zi
-B6AqoPDsp0BcytjTkfILUxwzV2oBkJ29Ksz76fuaroK1IaeOzRujNSzoqKUJNiykISxyIuQM
-odYWpuZxMifCKoRUNtMYzOJH1N8dd4IpY1DK7pfTqm9Z/ToY7J7zNlgsC9DYKat1iNGO1HN2
-hhjPRAqT9Obc/1Bj9BtbObVi7aa88kzbnzNyenkDH+JmfY75I06SHZXOp37ErQcV3SUBeHWS
-uftf/xyKekrhDWL4JM3ELaj9r0+TdhbyV4S1bG03D5IU0zMCAwEAAaOCAQ8wggELMAwGA1Ud
-EwEB/wQCMAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBm
-b3IgRlJFRSBoZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcG
-CCsGAQUFBwMEBggrBgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQB
-MDIGCCsGAQUFBwEBBCYwJDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzAt
-BgNVHREEJjAkgQtqYWFwQGpjei5ubIEVamFhcC5jcmV6ZWVAaW10ZWNoLm5sMA0GCSqGSIb3
-DQEBBQUAA4ICAQB8quzWe1GvQwx1HFBCwMbB+0hthvbmDJP3eJRp2ADumRonhrmuRWaH4pqr
-wLmT6V65n56WPmO3Vb1FaZuzSP3sozBYJttwZCtptVny1SCI2E1zTpwii+I0+dmFMD3p5WE6
-s+p0pzqdi6uFgKAPtsMh5ZtR/eiSXpzT7MJ892c/t6WvEdNIZHhUan7QhyJfaebrfvdcgdVp
-26TYc0AkcLYUrQHNGG9qGykB78VJsPxF25qli2N+p0lQXJNcO4bUE5o7TxF3Q1BwGrVR+Z0C
-CLg1HVXUwUNQc/nClhNjy3MFyy0FsvEBERgAtIpm6XZ2qE7IyiwUcXwQlmP1BrOqgXPpoxhn
-KuYwNlbn08vxPsNo6/HZx3S8gMQNmcDQ7d/r4Zl8FmDxULHu3I+w83tUq8WfsfbJvry69MMR
-Y2OXtd84vai4Bv2Af6cXCBLZtz2aU57EFiIai8dgfa3fbQm5PJPt5u6DYmYR80GVV4P+oN8Q
-/EKOGH27VQQmgJq/CYrwFW1Dac5r0/kZP6z8lKtSRWdq6O6RRK5WpiRieOKnJBm0p0/cB5Om
-ytuZkW/wkSRXokbGedKhHRO4Ws/Lr0n9Z7yByVKVkWMGvQiFqv34cfTdduAv0xi55v/zL91u
-HsS1rSlnVWxLHxVeAOgk8KKaeYiIAquyk4n5xOWIBUdEGNUJ8zCCBWkwggNRoAMCAQICAwnA
-GTANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4wHAYDVQQLExVodHRwOi8v
-d3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmluZyBBdXRob3JpdHkxITAf
-BgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0xMTAxMjgwODEzMDZaFw0xMzAx
-MjcwODEzMDZaMGIxHjAcBgNVBAMTFUphY29iIEJlbmphbWluIENyZXplZTEaMBgGCSqGSIb3
-DQEJARYLamFhcEBqY3oubmwxJDAiBgkqhkiG9w0BCQEWFWphYXAuY3JlemVlQGltdGVjaC5u
-bDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANnfQCy6Zrxwlai9XI3qiMDrGK1f
-Fs1OrFjujjwfGCddd/WoXA+5F0dLUtfSxO1YrqTrxRL3WUI/q4ZiB6AqoPDsp0BcytjTkfIL
-UxwzV2oBkJ29Ksz76fuaroK1IaeOzRujNSzoqKUJNiykISxyIuQModYWpuZxMifCKoRUNtMY
-zOJH1N8dd4IpY1DK7pfTqm9Z/ToY7J7zNlgsC9DYKat1iNGO1HN2hhjPRAqT9Obc/1Bj9Btb
-ObVi7aa88kzbnzNyenkDH+JmfY75I06SHZXOp37ErQcV3SUBeHWSuftf/xyKekrhDWL4JM3E
-Laj9r0+TdhbyV4S1bG03D5IU0zMCAwEAAaOCAQ8wggELMAwGA1UdEwEB/wQCMAAwVgYJYIZI
-AYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBoZWFkIG92
-ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggrBgEF
-BQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
-JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzAtBgNVHREEJjAkgQtqYWFw
-QGpjei5ubIEVamFhcC5jcmV6ZWVAaW10ZWNoLm5sMA0GCSqGSIb3DQEBBQUAA4ICAQB8quzW
-e1GvQwx1HFBCwMbB+0hthvbmDJP3eJRp2ADumRonhrmuRWaH4pqrwLmT6V65n56WPmO3Vb1F
-aZuzSP3sozBYJttwZCtptVny1SCI2E1zTpwii+I0+dmFMD3p5WE6s+p0pzqdi6uFgKAPtsMh
-5ZtR/eiSXpzT7MJ892c/t6WvEdNIZHhUan7QhyJfaebrfvdcgdVp26TYc0AkcLYUrQHNGG9q
-GykB78VJsPxF25qli2N+p0lQXJNcO4bUE5o7TxF3Q1BwGrVR+Z0CCLg1HVXUwUNQc/nClhNj
-y3MFyy0FsvEBERgAtIpm6XZ2qE7IyiwUcXwQlmP1BrOqgXPpoxhnKuYwNlbn08vxPsNo6/HZ
-x3S8gMQNmcDQ7d/r4Zl8FmDxULHu3I+w83tUq8WfsfbJvry69MMRY2OXtd84vai4Bv2Af6cX
-CBLZtz2aU57EFiIai8dgfa3fbQm5PJPt5u6DYmYR80GVV4P+oN8Q/EKOGH27VQQmgJq/CYrw
-FW1Dac5r0/kZP6z8lKtSRWdq6O6RRK5WpiRieOKnJBm0p0/cB5OmytuZkW/wkSRXokbGedKh
-HRO4Ws/Lr0n9Z7yByVKVkWMGvQiFqv34cfTdduAv0xi55v/zL91uHsS1rSlnVWxLHxVeAOgk
-8KKaeYiIAquyk4n5xOWIBUdEGNUJ8zGCA5QwggOQAgEBMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMJ
-wBkwCQYFKw4DAhoFAKCCAegwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMTEwMjIzMjA1NTU2WjAjBgkqhkiG9w0BCQQxFgQU9LEyqTl4C3NFM6/4/7e2jY2b
-usUwXwYJKoZIhvcNAQkPMVIwUDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcN
-AwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEE
-AYI3EAQxgYMwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5j
-YWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZI
-hvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwnAGTCBkwYLKoZIhvcNAQkQAgsxgYOggYAw
-eTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIw
-IAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBw
-b3J0QGNhY2VydC5vcmcCAwnAGTANBgkqhkiG9w0BAQEFAASCAQAvk7LTl4SxFfogVbBByVPR
-WeFUudKh1lCpAE8Ufnm81l8tkXBEo9bQKqnDh7HJDN6DMah83dMzQdFgcuMtYpP3QX3tVuHC
-efKhA9wF2gNqZNYnJ6C10h6RkhUllzTApcpfgXiMK3n6MBbbrfsR/lQzKQnVjRbTea0XlGwk
-7X0CN0j/01V4bYxwIfLKAOcL+N0Ha3DBnBsIwnxxn9+vqKTlEHfj1z5d+Lvt1Ou62MRD0CvU
-Q4iOHtqHX5/ILosANYTSUJXhlunPuhMMibM7i3xQ2IldU+KifceXc8pcYt5g4judKqKxXuKt
-BrBp6KhENWbkkFR2G4XDyqrVIbFwaymXAAAAAAAA
---------------ms020300050408080107020807--
+-- 
+Stan
