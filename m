@@ -1,96 +1,117 @@
-From: Albert Pauw <albert.pauw@alice.nl>
-Subject: Re: failed drive in raid 1 array
-Date: Wed, 23 Feb 2011 19:20:08 +0100
-Message-ID: <4D654FD8.1070206@alice.nl>
-References: <4D653B57.1030203@supsi.ch> <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
+From: Jaap Crezee <jaap@jcz.nl>
+Subject: Re: Assembling RAID 5 array with missing superblock
+Date: Wed, 23 Feb 2011 21:55:56 +0100
+Message-ID: <4D65745C.20500@jcz.nl>
+References: <AANLkTinfMUaLOVHBh0ZXFmHs353u==XkbGYtM8MPNkh8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms020300050408080107020807"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
+In-Reply-To: <AANLkTinfMUaLOVHBh0ZXFmHs353u==XkbGYtM8MPNkh8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
+To: Lasse Jensen <fafler@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  On 02/23/11 06:56 PM, Roberto Spadim wrote:
-> sata2 without hot plug?
-> check if your sda sdb sdc will change after removing it, it=B4s depen=
-ds
-> on your udev or another /dev filesystem
->
-> 2011/2/23 Roberto Nunnari<roberto.nunnari@supsi.ch>:
->> Hello.
->>
->> I have a linux box, with two 2TB sata HD in raid 1.
->>
->> Now, one disk is in failed state and it has no spares:
->> # cat /proc/mdstat
->> Personalities : [raid1]
->> md1 : active raid1 sdb4[2](F) sda4[0]
->>       1910200704 blocks [2/1] [U_]
->>
->> md0 : active raid1 sdb1[1] sda2[0]
->>       40957568 blocks [2/2] [UU]
->>
->> unused devices:<none>
->>
->>
->> The drives are not hot-plug, so I need to shutdown the box.
->>
->> My plan is to:
->> # sfdisk -d /dev/sdb>  sdb.sfdisk
->> # mdadm /dev/md1 -r /dev/sdb4
--> removing should be ok, as the partition has failed in md1
->> # mdadm /dev/md0 -r /dev/sdb1
--> In this case, sdb1 hasn't failed according to the output of=20
-/proc/mdstat, so you should fail it otherwise you can't remove it:
-mdadm /dev/md0 -f /dev/sdb1
-mdadm /dev/md0 -r /dev/sdb1
+This is a cryptographically signed message in MIME format.
 
->> # shutdown -h now
->>
->> replace the disk and boot (it should come back up, even without one =
-drive,
->> right?)
->>
->> # sfdisk /dev/sdb<  sdb.sfdisk
->> # mdadm /dev/md1 -a /dev/sdb4
->> # mdadm /dev/md0 -a /dev/sdb1
->>
->> and the drives should start to resync, right?
->>
->> This is my first time I do such a thing, so please, correct me
->> if the above is not correct, or is not a best practice for
->> my configuration.
->>
->> My last backup of md1 is of mid november, so I need to be
->> pretty sure I will not lose my data (over 1TB).
->>
->> A bit abount my environment:
->> # mdadm --version
->> mdadm - v1.12.0 - 14 June 2005
->> # cat /etc/redhat-release
->> CentOS release 4.8 (Final)
->> # uname -rms
->> Linux 2.6.9-89.31.1.ELsmp i686
-What about sdb2 an sdb3, are they in use as normal mountpoints, or swap=
-=2E=20
-Then these should be commented out in /etc/fstab
-before you change the disk.
->> Thank you very much and best regards.
->> Robi
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
+--------------ms020300050408080107020807
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 02/23/11 15:05, Lasse Jensen wrote:
+> I really, really hope this is the last time i need to ask you guys for =
+help.
+
+Well, just a little bit off-topic, but...:
+For me, and probably others as well, it does not harm in any way to keep =
+asking=20
+questions. I find it interesting and insightful reading some of the answe=
+rs to=20
+these questions.
+So please do ask.
+
+Regards,
+
+Jaap Crezee
+
+
+
+
+
+--------------ms020300050408080107020807
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIK2jCC
+BWkwggNRoAMCAQICAwnAGTANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
+HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
+ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0xMTAx
+MjgwODEzMDZaFw0xMzAxMjcwODEzMDZaMGIxHjAcBgNVBAMTFUphY29iIEJlbmphbWluIENy
+ZXplZTEaMBgGCSqGSIb3DQEJARYLamFhcEBqY3oubmwxJDAiBgkqhkiG9w0BCQEWFWphYXAu
+Y3JlemVlQGltdGVjaC5ubDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANnfQCy6
+Zrxwlai9XI3qiMDrGK1fFs1OrFjujjwfGCddd/WoXA+5F0dLUtfSxO1YrqTrxRL3WUI/q4Zi
+B6AqoPDsp0BcytjTkfILUxwzV2oBkJ29Ksz76fuaroK1IaeOzRujNSzoqKUJNiykISxyIuQM
+odYWpuZxMifCKoRUNtMYzOJH1N8dd4IpY1DK7pfTqm9Z/ToY7J7zNlgsC9DYKat1iNGO1HN2
+hhjPRAqT9Obc/1Bj9BtbObVi7aa88kzbnzNyenkDH+JmfY75I06SHZXOp37ErQcV3SUBeHWS
+uftf/xyKekrhDWL4JM3ELaj9r0+TdhbyV4S1bG03D5IU0zMCAwEAAaOCAQ8wggELMAwGA1Ud
+EwEB/wQCMAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBm
+b3IgRlJFRSBoZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcG
+CCsGAQUFBwMEBggrBgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQB
+MDIGCCsGAQUFBwEBBCYwJDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzAt
+BgNVHREEJjAkgQtqYWFwQGpjei5ubIEVamFhcC5jcmV6ZWVAaW10ZWNoLm5sMA0GCSqGSIb3
+DQEBBQUAA4ICAQB8quzWe1GvQwx1HFBCwMbB+0hthvbmDJP3eJRp2ADumRonhrmuRWaH4pqr
+wLmT6V65n56WPmO3Vb1FaZuzSP3sozBYJttwZCtptVny1SCI2E1zTpwii+I0+dmFMD3p5WE6
+s+p0pzqdi6uFgKAPtsMh5ZtR/eiSXpzT7MJ892c/t6WvEdNIZHhUan7QhyJfaebrfvdcgdVp
+26TYc0AkcLYUrQHNGG9qGykB78VJsPxF25qli2N+p0lQXJNcO4bUE5o7TxF3Q1BwGrVR+Z0C
+CLg1HVXUwUNQc/nClhNjy3MFyy0FsvEBERgAtIpm6XZ2qE7IyiwUcXwQlmP1BrOqgXPpoxhn
+KuYwNlbn08vxPsNo6/HZx3S8gMQNmcDQ7d/r4Zl8FmDxULHu3I+w83tUq8WfsfbJvry69MMR
+Y2OXtd84vai4Bv2Af6cXCBLZtz2aU57EFiIai8dgfa3fbQm5PJPt5u6DYmYR80GVV4P+oN8Q
+/EKOGH27VQQmgJq/CYrwFW1Dac5r0/kZP6z8lKtSRWdq6O6RRK5WpiRieOKnJBm0p0/cB5Om
+ytuZkW/wkSRXokbGedKhHRO4Ws/Lr0n9Z7yByVKVkWMGvQiFqv34cfTdduAv0xi55v/zL91u
+HsS1rSlnVWxLHxVeAOgk8KKaeYiIAquyk4n5xOWIBUdEGNUJ8zCCBWkwggNRoAMCAQICAwnA
+GTANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4wHAYDVQQLExVodHRwOi8v
+d3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmluZyBBdXRob3JpdHkxITAf
+BgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0xMTAxMjgwODEzMDZaFw0xMzAx
+MjcwODEzMDZaMGIxHjAcBgNVBAMTFUphY29iIEJlbmphbWluIENyZXplZTEaMBgGCSqGSIb3
+DQEJARYLamFhcEBqY3oubmwxJDAiBgkqhkiG9w0BCQEWFWphYXAuY3JlemVlQGltdGVjaC5u
+bDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANnfQCy6Zrxwlai9XI3qiMDrGK1f
+Fs1OrFjujjwfGCddd/WoXA+5F0dLUtfSxO1YrqTrxRL3WUI/q4ZiB6AqoPDsp0BcytjTkfIL
+UxwzV2oBkJ29Ksz76fuaroK1IaeOzRujNSzoqKUJNiykISxyIuQModYWpuZxMifCKoRUNtMY
+zOJH1N8dd4IpY1DK7pfTqm9Z/ToY7J7zNlgsC9DYKat1iNGO1HN2hhjPRAqT9Obc/1Bj9Btb
+ObVi7aa88kzbnzNyenkDH+JmfY75I06SHZXOp37ErQcV3SUBeHWSuftf/xyKekrhDWL4JM3E
+Laj9r0+TdhbyV4S1bG03D5IU0zMCAwEAAaOCAQ8wggELMAwGA1UdEwEB/wQCMAAwVgYJYIZI
+AYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBoZWFkIG92
+ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggrBgEF
+BQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzAtBgNVHREEJjAkgQtqYWFw
+QGpjei5ubIEVamFhcC5jcmV6ZWVAaW10ZWNoLm5sMA0GCSqGSIb3DQEBBQUAA4ICAQB8quzW
+e1GvQwx1HFBCwMbB+0hthvbmDJP3eJRp2ADumRonhrmuRWaH4pqrwLmT6V65n56WPmO3Vb1F
+aZuzSP3sozBYJttwZCtptVny1SCI2E1zTpwii+I0+dmFMD3p5WE6s+p0pzqdi6uFgKAPtsMh
+5ZtR/eiSXpzT7MJ892c/t6WvEdNIZHhUan7QhyJfaebrfvdcgdVp26TYc0AkcLYUrQHNGG9q
+GykB78VJsPxF25qli2N+p0lQXJNcO4bUE5o7TxF3Q1BwGrVR+Z0CCLg1HVXUwUNQc/nClhNj
+y3MFyy0FsvEBERgAtIpm6XZ2qE7IyiwUcXwQlmP1BrOqgXPpoxhnKuYwNlbn08vxPsNo6/HZ
+x3S8gMQNmcDQ7d/r4Zl8FmDxULHu3I+w83tUq8WfsfbJvry69MMRY2OXtd84vai4Bv2Af6cX
+CBLZtz2aU57EFiIai8dgfa3fbQm5PJPt5u6DYmYR80GVV4P+oN8Q/EKOGH27VQQmgJq/CYrw
+FW1Dac5r0/kZP6z8lKtSRWdq6O6RRK5WpiRieOKnJBm0p0/cB5OmytuZkW/wkSRXokbGedKh
+HRO4Ws/Lr0n9Z7yByVKVkWMGvQiFqv34cfTdduAv0xi55v/zL91uHsS1rSlnVWxLHxVeAOgk
+8KKaeYiIAquyk4n5xOWIBUdEGNUJ8zGCA5QwggOQAgEBMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
+Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
+aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMJ
+wBkwCQYFKw4DAhoFAKCCAegwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMTEwMjIzMjA1NTU2WjAjBgkqhkiG9w0BCQQxFgQU9LEyqTl4C3NFM6/4/7e2jY2b
+usUwXwYJKoZIhvcNAQkPMVIwUDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcN
+AwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGRBgkrBgEE
+AYI3EAQxgYMwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5j
+YWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZI
+hvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwnAGTCBkwYLKoZIhvcNAQkQAgsxgYOggYAw
+eTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIw
+IAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBw
+b3J0QGNhY2VydC5vcmcCAwnAGTANBgkqhkiG9w0BAQEFAASCAQAvk7LTl4SxFfogVbBByVPR
+WeFUudKh1lCpAE8Ufnm81l8tkXBEo9bQKqnDh7HJDN6DMah83dMzQdFgcuMtYpP3QX3tVuHC
+efKhA9wF2gNqZNYnJ6C10h6RkhUllzTApcpfgXiMK3n6MBbbrfsR/lQzKQnVjRbTea0XlGwk
+7X0CN0j/01V4bYxwIfLKAOcL+N0Ha3DBnBsIwnxxn9+vqKTlEHfj1z5d+Lvt1Ou62MRD0CvU
+Q4iOHtqHX5/ILosANYTSUJXhlunPuhMMibM7i3xQ2IldU+KifceXc8pcYt5g4judKqKxXuKt
+BrBp6KhENWbkkFR2G4XDyqrVIbFwaymXAAAAAAAA
+--------------ms020300050408080107020807--
