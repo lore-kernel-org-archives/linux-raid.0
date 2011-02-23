@@ -1,80 +1,80 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/3] Continue expansion after reboot
-Date: Wed, 23 Feb 2011 14:37:56 +1100
-Message-ID: <20110223143756.41139e11@notabene.brown>
-References: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
+From: Daniel Reurich <daniel@centurion.net.nz>
+Subject: Re: md road-map: 2011
+Date: Wed, 23 Feb 2011 18:06:39 +1300
+Message-ID: <1298437599.24479.6030.camel@localhost.localdomain>
+References: <20110216212751.51a294aa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110216212751.51a294aa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Tue, 22 Feb 2011 15:13:15 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Wed, 2011-02-16 at 21:27 +1100, NeilBrown wrote:
 
-> Currently reshaped/expanded array is assembled but it stays in inactive state.
-> This patches allows for array assembly when array is under expansion.
-> Array with reshape/expansion information in metadata is assembled
-> and reshape process continues automatically.
+> Bitmap of non-sync regions.
+> ---------------------------
+
+> The granularity of the bit is probably quite hard to get right.
+> Having it match the block size would mean that no resync would be
+> needed and that every discard request could be handled exactly.
+> However it could result in a very large bitmap - 30 Megabytes for a 1
+> terabyte device with a 4K block size.  This would need to be kept in
+> memory and looked up for every access, which could be problematic.
 > 
-> Next step:
-> Problem is how to address container operation during assembly.
-> 1. After first array being reshaped, assebly process looks if mdmon
->    sets migration for other array in container. If yes it continues work
->    for next array.
-> 
-> 2. Assembly process performs reshape of currently reshaped array only.
->    Mdmon sets next array for reshape and user triggers manually mdadm
->    to finish container operation with just the same parameters set.
-> 
-> Reshape finish can be executed for container operation by container re-assembly
-> also (this works in current code).
-> 
+Why not store the map as a list of regions defined by:
+<start address><finish address>.  This may provide a better performance
+vs (storage+memory) cost implementation when compared with a bitmap
+which has a granularity vs storage problem.
 
-Yes, this is an awkward problem.
+It may well be more efficient to store a range list then a bitmap and
+makes granularity a non-issue as granularity will be at blocksize.   The
+limitation with this scheme is in choosing the size of the map, and the
+larger the map the more regions that can be stored before no longer
+being able to add new discards or splits (due to a write somewhere in
+the middle of a non-sync region).  However this could be handled to
+retain the best performance by ensuring that the largest non-sync
+regions are always in the list
 
-Just to be sure we are thinking about the same thing:
-  When restarting an array in which migration is already underway mdadm simply
-  forks and continues monitoring that migration.
-  However if it is an array-wide migration, then when the migration of the
-  first array completes, mdmon will update the metadata on the second array,
-  but it isn't clear how mdadm can be told to start monitoring that array.
+If we used full LBA48 addressing we could count on for each entry
+in the map to 12bytes (2x48bit).  (Perhaps this could be reduced for
+smaller devices that need less address bits.)  This would mean 85.3
+entries per kB, or 87381.33 per Mb of map size on disk (excluding
+possible headers).  In the case of a 1Tb raid volume a 1Mb map provide
+roughly 1 entry for every 13Mb of disk space.  This sounds coarse but
+when you consider you are setting regions based in units of the media's
+block size it's not.  Furthermore once the filesystem is that fragmented
+that you've exhausted the map space, the unhandled non-sync|discarded
+regions would be so small that you'd gain little benefit from it.  A bit
+of logic could ensure that large regions take precedence over smaller
+regions, as this will provide the best performance for resync/check
+passes.
 
-How about this:
-  the imsm metadata handler should report that an array is 'undergoing
-  migration if it is, or if an earlier array in the container is undergoing a
-  migration which will cause 'this' array to subsequently be migrated too.
+Another benefit is that it makes it easy for md to be-able to pass
+TRIM instructions down to media that support this feature whenever a
+region/stripe is marked as non-sync.  In the case of raid levels
+0 and linear there would be no need for a map and TRIM could be passed
+through to the media.  For Raid1,10 a TRIM would be issued to the media
+whenever a chunk is contained entirely within a non-sync region. With
+raid456, a TRIM would only be issued when a whole stripe is contained
+within a non-sync region.
 
-  So if the first array is in the middle of a 4drive->5drive conversion and
-  the second array is simply at '4 drives', then imsm reported (to
-  container_content) that the second drive is actually undergoing a migration
-  from 4 to 5 drives, and is at the very beginning.
+The real beauty of this region map is that creation of a new raid volume
+could (unless --assume-clean is set) mark the entire volume as non-sync
+with a single entry in the list.
 
-  When mdadm assembles that second array it will fork a child to monitor it.
-  It will need to somehow wait for mdmon to really update the metadata before
-  it starts.  This can probably be handled in the ->manage_reshape function.
+Of course this suggestion is only theoretical, and I might be way off on
+the implementation cost vs benefits and feasability.
 
-Something along those line would be the right way to go I think.  It avoid
-any races between arrays being assembled at different times.
+Regards,
+-- 
+Daniel Reurich.
 
-
-> Adam Kwolek (3):
->       FIX: Assemble device in reshape state with new disks number
-
-I don't think this patch is correct.  We need to configure the array with the
-'old' number of devices first, then 'reshape_array' will also set the 'new'
-number of devices.
-What exactly what the problem you were  trying to fix?
+Centurion Computer Technology (2005) Ltd
+Mobile 021 797 722
 
 
->       imsm: FIX: Report correct array size during reshape
->       imsm: FIX: initalize reshape progress as it is stored in metatdata
->
-These both look good - I have applied them.  Thanks.
-
-NeilBrown
 
 
