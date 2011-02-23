@@ -1,100 +1,130 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] Fix over-zealous flush_disk when changing device size.
-Date: Wed, 23 Feb 2011 08:48:09 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D178FAB804@irsmsx503.ger.corp.intel.com>
-References: <20110217165057.5c50e566@notabene.brown>
- <x494o82wq2z.fsf@segfault.boston.devel.redhat.com>
+Subject: RE: [PATCH 0/3] Continue expansion after reboot
+Date: Wed, 23 Feb 2011 09:02:25 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D178FAB82A@irsmsx503.ger.corp.intel.com>
+References: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
+ <20110223143756.41139e11@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <x494o82wq2z.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <20110223143756.41139e11@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
 
 
 > -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Jeff Moyer
-> Sent: Thursday, February 17, 2011 6:04 PM
-> To: NeilBrown
-> Cc: Andrew Patterson; Jens Axboe; linux-raid@vger.kernel.org; dm-
-> devel@redhat.com; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] Fix over-zealous flush_disk when changing device
-> size.
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Wednesday, February 23, 2011 4:38 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 0/3] Continue expansion after reboot
 > 
-> NeilBrown <neilb@suse.de> writes:
+> On Tue, 22 Feb 2011 15:13:15 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
 > 
-> > Hi Andrew (and others)
-> >  I wonder if you would review the following for me and comment.
+> > Currently reshaped/expanded array is assembled but it stays in
+> inactive state.
+> > This patches allows for array assembly when array is under expansion.
+> > Array with reshape/expansion information in metadata is assembled
+> > and reshape process continues automatically.
 > >
-> > Thanks,
-> > NeilBrown
+> > Next step:
+> > Problem is how to address container operation during assembly.
+> > 1. After first array being reshaped, assebly process looks if mdmon
+> >    sets migration for other array in container. If yes it continues
+> work
+> >    for next array.
 > >
+> > 2. Assembly process performs reshape of currently reshaped array only.
+> >    Mdmon sets next array for reshape and user triggers manually mdadm
+> >    to finish container operation with just the same parameters set.
 > >
+> > Reshape finish can be executed for container operation by container
+> re-assembly
+> > also (this works in current code).
 > >
-> > From e7f75c2a757108cdd83ce8c808a16bf27686c95f Mon Sep 17 00:00:00 2001
-> > From: NeilBrown <neilb@suse.de>
-> > Date: Thu, 17 Feb 2011 16:37:30 +1100
-> > Subject: [PATCH] Fix over-zealous flush_disk when changing device
-> size.
-> >
-> > There are two cases when we call flush_disk.
-> > In one, the device has disappeared (check_disk_change) so any
-> > data will hold becomes irrelevant.
-> > In the oter, the device has changed size (check_disk_size_change)
-> > so data we hold may be irrelevant.
-> >
-> > In both cases it makes sense to discard any 'clean' buffers,
-> > so they will be read back from the device if needed.
-> >
-> > In the former case it makes sense to discard 'dirty' buffers
-> > as there will never be anywhere safe to write the data.  In the
-> > second case it *does*not* make sense to discard dirty buffers
-> > as that will lead to file system corruption when you simply enlarge
-> > the containing devices.
-> >
-> > flush_disk calls __invalidate_devices.
-> > __invalidate_device calls both invalidate_inodes and invalidate_bdev.
-> >
-> > invalidate_inodes *does* discard I_DIRTY inodes and this does lead
-> > to fs corruption.
-> >
-> > invalidate_bev *does*not* discard dirty pages, but I don't really care
-> > about that at present.
-> >
-> > So this patch adds a flag to __invalidate_device (calling it
-> > __invalidate_device2) to indicate whether dirty buffers should be
-> > killed, and this is passed to invalidate_inodes which can choose to
-> > skip dirty inodes.
-> >
-> > flusk_disk then passes true from check_disk_change and false from
-> > check_disk_size_change.
-> >
-> > dm avoids tripping over this problem by calling i_size_write directly
-> > rathher than using check_disk_size_change.
-> >
-> > md does use check_disk_size_change and so is affected.
-> >
-> > This regression was introduced by commit 608aeef17a
-> > which causes check_disk_size_change to call
-> > flush_disk.
 > 
-> This makes sense to me.  Nice write-up, Neil.
+> Yes, this is an awkward problem.
 > 
-> Acked-by: Jeff Moyer <jmoyer@redhat.com>
+> Just to be sure we are thinking about the same thing:
+>   When restarting an array in which migration is already underway mdadm
+> simply
+>   forks and continues monitoring that migration.
+>   However if it is an array-wide migration, then when the migration of
+> the
+>   first array completes, mdmon will update the metadata on the second
+> array,
+>   but it isn't clear how mdadm can be told to start monitoring that
+> array.
+> 
+> How about this:
+>   the imsm metadata handler should report that an array is 'undergoing
+>   migration if it is, or if an earlier array in the container is
+> undergoing a
+>   migration which will cause 'this' array to subsequently be migrated
+> too.
+> 
+>   So if the first array is in the middle of a 4drive->5drive conversion
+> and
+>   the second array is simply at '4 drives', then imsm reported (to
+>   container_content) that the second drive is actually undergoing a
+> migration
+>   from 4 to 5 drives, and is at the very beginning.
+> 
+>   When mdadm assembles that second array it will fork a child to monitor
+> it.
+>   It will need to somehow wait for mdmon to really update the metadata
+> before
+>   it starts.  This can probably be handled in the ->manage_reshape
+> function.
+> 
+> Something along those line would be the right way to go I think.  It
+> avoid
+> any races between arrays being assembled at different times.
 
 
-Neil, Is this fix is ready? If yes, where can I find it?
+This looks fine for me.
+
+> 
+> 
+> > Adam Kwolek (3):
+> >       FIX: Assemble device in reshape state with new disks number
+> 
+> I don't think this patch is correct.  We need to configure the array
+> with the
+> 'old' number of devices first, then 'reshape_array' will also set the
+> 'new'
+> number of devices.
+> What exactly what the problem you were  trying to fix?
+
+When array is being assembled with old raid disk number assembly cannot set readOnly array state
+(error on sysfs state writing). Array stays in inactive state, so nothing (reshape) happened later.
+
+I think that array cannot be assembled with old disks number (added new disks are present as spares)
+because begin of array uses new disks already. This means we are assembling array with not complete disk set.
+Stripes on begin can be corrupted (not all disks present in array). At this point inactive array state is ok to keep safe user data.
+
+
+I'll test is setting old disk number and later configuration change in disks number and array state resolves problem.
+I'll let you know results.
 
 BR
 Adam
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> >       imsm: FIX: Report correct array size during reshape
+> >       imsm: FIX: initalize reshape progress as it is stored in
+> metatdata
+> >
+> These both look good - I have applied them.  Thanks.
+> 
+> NeilBrown
+> 
+
