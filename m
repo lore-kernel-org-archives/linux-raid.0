@@ -1,80 +1,82 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: Re: md road-map: 2011
-Date: Wed, 23 Feb 2011 18:06:39 +1300
-Message-ID: <1298437599.24479.6030.camel@localhost.localdomain>
-References: <20110216212751.51a294aa@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Tue, 22 Feb 2011 23:52:02 -0600
+Message-ID: <4D64A082.9000601@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110216212751.51a294aa@notabene.brown>
+In-Reply-To: <ik0gkm$nn$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2011-02-16 at 21:27 +1100, NeilBrown wrote:
+David Brown put forth on 2/22/2011 8:18 AM:
 
-> Bitmap of non-sync regions.
-> ---------------------------
+> Yes, this is definitely true - RAID10 is less affected by running
+> degraded, and recovering is faster and involves less disk wear.  The
+> disadvantage compared to RAID6 is, of course, if the other half of a
+> disk pair dies during recovery then your raid is gone - with RAID6 you
+> have better worst-case redundancy.
 
-> The granularity of the bit is probably quite hard to get right.
-> Having it match the block size would mean that no resync would be
-> needed and that every discard request could be handled exactly.
-> However it could result in a very large bitmap - 30 Megabytes for a 1
-> terabyte device with a 4K block size.  This would need to be kept in
-> memory and looked up for every access, which could be problematic.
-> 
-Why not store the map as a list of regions defined by:
-<start address><finish address>.  This may provide a better performance
-vs (storage+memory) cost implementation when compared with a bitmap
-which has a granularity vs storage problem.
+The odds of the mirror partner dying during rebuild are very very long,
+and the odds of suffering a URE are very low.  However, in the case of
+RAID5/6, moreso with RAID5, with modern very large drives (1/2/3TB),
+there is being quite a bit written these days about unrecoverable read
+error rates.  Using a sufficient number of these very large disks will
+at some point guarantee a URE during an array rebuild, which may very
+likely cost you your entire array.  This is because every block of every
+remaining disk (assuming full disk RAID not small partitions on each
+disk) must be read during a RAID5/6 rebuild.  I don't have the equation
+handy but Google should be able to fetch it for you.  IIRC this is one
+of the reasons RAID6 is becoming more popular today.  Not just because
+it can survive an additional disk failure, but that it's more resilient
+to a URE during a rebuild.
 
-It may well be more efficient to store a range list then a bitmap and
-makes granularity a non-issue as granularity will be at blocksize.   The
-limitation with this scheme is in choosing the size of the map, and the
-larger the map the more regions that can be stored before no longer
-being able to add new discards or splits (due to a write somewhere in
-the middle of a non-sync region).  However this could be handled to
-retain the best performance by ensuring that the largest non-sync
-regions are always in the list
+With a RAID10 rebuild, as you're only reading entire contents of a
+single disk, the odds of encountering a URE are much lower than with a
+RAID5 with the same number of drives, simply due to the total number of
+bits read.
 
-If we used full LBA48 addressing we could count on for each entry
-in the map to 12bytes (2x48bit).  (Perhaps this could be reduced for
-smaller devices that need less address bits.)  This would mean 85.3
-entries per kB, or 87381.33 per Mb of map size on disk (excluding
-possible headers).  In the case of a 1Tb raid volume a 1Mb map provide
-roughly 1 entry for every 13Mb of disk space.  This sounds coarse but
-when you consider you are setting regions based in units of the media's
-block size it's not.  Furthermore once the filesystem is that fragmented
-that you've exhausted the map space, the unhandled non-sync|discarded
-regions would be so small that you'd gain little benefit from it.  A bit
-of logic could ensure that large regions take precedence over smaller
-regions, as this will provide the best performance for resync/check
-passes.
+> Once md raid has support for bad block lists, hot replace, and non-sync
+> lists, then the differences will be far less clear.  If a disk in a RAID
+> 5/6 set has a few failures (rather than dying completely), then it will
+> run as normal except when bad blocks are accessed.  This means for all
+> but the few bad blocks, the degraded performance will be full speed. And
 
-Another benefit is that it makes it easy for md to be-able to pass
-TRIM instructions down to media that support this feature whenever a
-region/stripe is marked as non-sync.  In the case of raid levels
-0 and linear there would be no need for a map and TRIM could be passed
-through to the media.  For Raid1,10 a TRIM would be issued to the media
-whenever a chunk is contained entirely within a non-sync region. With
-raid456, a TRIM would only be issued when a whole stripe is contained
-within a non-sync region.
+You're muddying the definition of a "degraded RAID".
 
-The real beauty of this region map is that creation of a new raid volume
-could (unless --assume-clean is set) mark the entire volume as non-sync
-with a single entry in the list.
+> if you use "hot replace" to replace the partially failed drive, the
+> rebuild will have almost exactly the same characteristics as RAID10
+> rebuilds - apart from the bad blocks, which must be recovered by parity
+> calculations, you have a straight disk-to-disk copy.
 
-Of course this suggestion is only theoretical, and I might be way off on
-the implementation cost vs benefits and feasability.
+Are you saying you'd take a "partially failing" drive in a RAID5/6 and
+simply do a full disk copy onto the spare, except "bad blocks",
+rebuilding those in the normal fashion, simply to approximate the
+recover speed of RAID10?
 
-Regards,
+I think your logic is a tad flawed here.  If a drive is already failing,
+why on earth would you trust it, period?  I think you'd be asking for
+trouble doing this.  This is precisely one of the reasons many hardware
+RAID controllers have historically kicked drives offline after the first
+signs of trouble--if a drive is acting flaky we don't want to trust it,
+but replace it as soon as possible.
+
+The assumption is that the data on the array is far more valuable than
+the cost of a single drive or the entire hardware for that matter.  In
+most environments this is the case.  Everyone seems fond of the WD20EARS
+drives (which I disdain).  I hear they're loved because Newegg has them
+for less than $100.  What's your 2TB of data on that drive worth?  In
+the case of a MythTV box, to the owner, that $100 is worth more than the
+content.  In a business setting, I'd dare say the data on that drive is
+worth far more than the $100 cost of the drive and the admin $$ time
+required to replace/rebuild it.
+
+In the MythTV case what you propose might be a worthwhile risk.  In a
+business environment, definitely not.
+
 -- 
-Daniel Reurich.
-
-Centurion Computer Technology (2005) Ltd
-Mobile 021 797 722
-
-
-
-
+Stan
