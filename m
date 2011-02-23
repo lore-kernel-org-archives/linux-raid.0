@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/4] FIX: Block monitor when starting array with reshape in
-	progress
-Date: Wed, 23 Feb 2011 14:51:56 +0100
-Message-ID: <20110223135156.17074.75895.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/4] TBD: continue reshape after assembling array
+Date: Wed, 23 Feb 2011 14:52:04 +0100
+Message-ID: <20110223135204.17074.719.stgit@gklab-128-013.igk.intel.com>
 References: <20110223133557.17074.9671.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,31 +13,35 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-To allow for array reconfiguration, mdmon cannot push array in to active
-state. Assemble should block monitor for external metadata to allow
-for reshape configuration and restart.
+Shows direction of next patches for reshape continuation
+when array is assembled.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ Assemble.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index bffbbf0..bdbe50a 100644
+index bdbe50a..0aafdaf 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -1518,6 +1518,12 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 			return 1;
- 		}
- 	content->reshape_active = reshape_active;
-+	if (content->reshape_active) {
-+		char buf[64];
-+		sprintf(buf, "external:%s\n", content->text_version);
-+		buf[9] = '-';
-+		sysfs_set_str(sra, NULL, "metadata_version", buf);
-+	}
- 	if (sra)
- 		sysfs_free(sra);
- 
+@@ -696,8 +696,15 @@ int Assemble(struct supertype *st, char *mddev,
+ #ifndef MDASSEMBLE
+ 	if (content != &info) {
+ 		/* This is a member of a container.  Try starting the array. */
+-		return assemble_container_content(st, mdfd, content, runstop,
+-					   chosen_name, verbose);
++		int rv = assemble_container_content(st, mdfd, content, runstop,
++						    chosen_name, verbose);
++		dprintf(Name ": assemble_container_content() "
++			"returns status = %i\n", rv);
++		if (rv || content->reshape_active == 0)
++			return rv;
++		dprintf(Name ": Continue reshape after assemblation ...\n");
++		/* tbd: call Grow_restart() here */
++		return rv;
+ 	}
+ #endif
+ 	/* Ok, no bad inconsistancy, we can try updating etc */
 
