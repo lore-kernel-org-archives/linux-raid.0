@@ -1,45 +1,40 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm ddf questions
-Date: Wed, 23 Feb 2011 17:17:12 +1100
-Message-ID: <20110223171712.09509f9e@notabene.brown>
-References: <4D5FA5C4.8030803@gmail.com>
-	<4D63688E.5030501@gmail.com>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: Re: removing AHCI SATA devices
+Date: Wed, 23 Feb 2011 08:27:47 +0000
+Message-ID: <4D64C503.1080304@gmail.com>
+References: <AANLkTimkAMh9T0G_6XyajcMVv9gbNn1-gPpvmBSAAfPY@mail.gmail.com> <4D642C54.9040604@garzik.org>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D63688E.5030501@gmail.com>
+In-Reply-To: <4D642C54.9040604@garzik.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 22 Feb 2011 08:41:02 +0100 Albert Pauw <albert.pauw@gmail.com> wrote:
+thanks Jeff.   It just seems like a hit and miss solution (no way of 
+knowing all data has been written to and that the device has been 
+unmounted from all filesystems).  I kinda expected some kind of 'it is 
+safe to remove /dev/sdb' in dmesg.
 
-> When I removed the correct disk, which can only be done from the container:
-> 
-> mdadm -r /dev/md127 /dev/sdb
-> 
-> the command mdadm -E /dev/md127 showed the 5 disks, the entry for sdb 
-> didn't had a device but was still
-> "active/Online" and sdd was marked Failed:
+cheers
+Simon
 
-.....
-
-> 
-> So it looks like there are some errors in here.
-> 
-
-Indeed it does.  Thank you for putting some time in to testing and producing
-an excellent problem report.
-I have not put as much time into testing and polishing the DDF implementation
-as I would have liked, partly because there doesn't really seem to be much
-interest. 
-But reports like this make it a whole lot more interesting.
-
-I will try to look at this some time soon and let you know what I find in the
-code - feel free to remind me if you haven't heard in a week.
-
-Thanks,
-NeilBrown
-
+On 22/02/2011 21:36, Jeff Garzik wrote:
+> On 02/22/2011 11:05 AM, Simon Mcnair wrote:
+>> hi all,
+>> Whilst I am aware that with AHCI and SATAII I can just unplug a HDD at
+>> will what is the correct process for doing a 'clean' dismount ?
+>>
+>> Since MD is a layer over the top of the physical device how can you
+>> ensure with certainty that all data has been flushed and the device
+>> removal is clean ?
+>
+> Simply unplugged the hard drive's SATA cable should be fine.
+>
+>     Jeff
+>
+>
+>
