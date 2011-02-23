@@ -1,211 +1,78 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: failed drive in raid 1 array
-Date: Wed, 23 Feb 2011 18:34:59 -0300
-Message-ID: <AANLkTikKtkwHATrSE7Ymf2n22Fj06kw9fpNwTr-8WyS1@mail.gmail.com>
-References: <4D653B57.1030203@supsi.ch>
-	<AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
-	<4D655D01.6040803@supsi.ch>
-	<AANLkTimQhfvbx72izkg9qxMFkC0xixTPQa6aQ4HF04Hq@mail.gmail.com>
-	<4D657AFE.3010605@supsi.ch>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Wed, 23 Feb 2011 15:59:17 -0600
+Message-ID: <4D658335.3040401@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org> <4D6518ED.1080908@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D657AFE.3010605@supsi.ch>
+In-Reply-To: <4D6518ED.1080908@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hum, maybe you are using mdadm.conf or autodetect, non autodetect
-should be something like this:
-i don=C2=B4t know the best solution, but it works ehhehe
+John Robinson put forth on 2/23/2011 8:25 AM:
+> On 23/02/2011 13:56, David Brown wrote:
+> [...]
+>> Incidentally, what's your opinion on a RAID1+5 or RAID1+6 setup, where
+>> you have a RAID5 or RAID6 build from RAID1 pairs? You get all the
+>> rebuild benefits of RAID1 or RAID10, such as simple and fast direct
+>> copies for rebuilds, and little performance degradation. But you also
+>> get multiple failure redundancy from the RAID5 or RAID6. It could be
+>> that it is excessive - that the extra redundancy is not worth the
+>> performance cost (you still have poor small write performance).
+> 
+> I'd also be interested to hear what Stan and other experienced
+> large-array people think of RAID60. For example, elsewhere in this
+> thread Stan suggested using a 40-drive RAID-10 (i.e. a 20-way RAID-0
+> stripe over RAID-1 pairs), 
 
-        kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro root=3D/dev/md0 rhgb
-quiet md=3D0,/dev/sda,/dev/sdb md=3D1,xxxx,yyyy.....
+Actually, that's not what I mentioned.  What I described was a 48 drive
+storage system consisting of qty 6 RAID10 arrays of 8 drives each.
+These could be 6 mdraid10 8 drive arrays using LVM to concatenate them
+into a single volume, or they could be 6 HBA hardware RAID10 8 drive
+arrays stitched together with mdraid linear into a single logical device.
 
-or another md array...
+Then you would use XFS as your filesystem, and its allocation group
+architecture to achieve your multi user workload parallelism.  This
+works well for a lot of workloads.  Coincidentally, because we have 6
+arrays of 8 drives each, instead of one large 48 drive RAID10, the
+probability of the "dreaded" 2nd drive failure during rebuild drops
+dramatically.  Additionally, the the amount of data exposed to loss due
+to this architecture decreases to 1/6th of that of a single large RAID10
+of 48 drives.  If you were to lose both drives during the rebuild, as
+long as this 8 drive array is not the first array in the stitched
+logical device, it won't contain XFS metadata, and you can recover.
+Thus, it's possible to xfs_repair the filesystem, only losing the data
+contents of the 8 disk array that failed, or 1/6th of your data.  This
+failure/recovery scenario is a wild edge case so I wouldn't _rely_ on
+it, but it's interesting that it works, and is worth mentioning.
 
-humm i readed the sata specification and removing isn=C2=B4t a problem,=
- at
-eletronic level the sata channel is only data, no power source, all
-channels are diferencial (like rs422 or rs485), i don=C2=B4t see anypro=
-blem
-removing it. i tryed hot plug a revodrive (pciexpress ssd) and it
-don=C2=B4t work (reboot) hehehe, pci-express isn=C2=B4t hot plug =3DP, =
-sata2 don=C2=B4t
-have problems, the main problem is a short circuit at power source, if
-you remove with caution no problems =3D)
+> and I wondered how a 40-drive RAID-60 (i.e. a
+> 10-way RAID-0 stripe over 4-way RAID-6 arrays) would perform, both in
+> normal and degraded situations, and whether it might be preferable since
+> it would avoid the single-disk-failure issue that the RAID-1 mirrors
+> potentially expose. My guess is that it ought to have similar random
+> read performance and about half the random write performance, which
+> might be a trade-off worth making.
 
-i tried in some others distros and udev created a new device when add
-a diferent disk for example, remove sdb, and add another disk create
-sdc (not sdb), maybe with another udev configuration should work
+First off what you describe here is not a RAID60.  RAID60 is defined as
+a stripe across _two_ RAID6 arrays--not 10 arrays.  RAID50 is the same
+but with RAID5 arrays.  What you're describing is simply a custom nested
+RAID, much like what I mentioned above.  Let's call it RAID J-60.
 
+Anyway, you'd be better off striping 13 three-disk mirror sets with a
+spare drive making up the 40.  This covers the double drive failure
+during rebuild (a non issue in my book for RAID1/10), and suffers zero
+read or write performance, except possibly LVM striping overhead in the
+event you have to use LVM to create the stripe.  I'm not familiar enough
+with mdadm to know if you can do this nested setup all in mdadm.
 
-2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
-> Roberto Spadim wrote:
->>
->> i don=C2=B4t know how you setup your kernel (with or without raid
->
-> I use the official CentOS kernel with no modification and don't
-> know about raid autodetect, but:
-> # cat /boot/config-2.6.24-28-server |grep -i raid
-> CONFIG_BLK_DEV_3W_XXXX_RAID=3Dm
-> CONFIG_MD_RAID0=3Dm
-> CONFIG_MD_RAID1=3Dm
-> CONFIG_MD_RAID10=3Dm
-> CONFIG_MD_RAID456=3Dm
-> CONFIG_MD_RAID5_RESHAPE=3Dy
-> CONFIG_MEGARAID_LEGACY=3Dm
-> CONFIG_MEGARAID_MAILBOX=3Dm
-> CONFIG_MEGARAID_MM=3Dm
-> CONFIG_MEGARAID_NEWGEN=3Dy
-> CONFIG_MEGARAID_SAS=3Dm
-> CONFIG_RAID_ATTRS=3Dm
-> CONFIG_SCSI_AACRAID=3Dm
->
->
->> autodetect?) do you use kernel command line to setup raid? autodetec=
-t?
->
-> /dev/md0 in grub
-> I don't know if that means autodetect, but I guess so..
->
->
->> here in my test machine i=C2=B4m using kernel command line (grub), i=
- don=C2=B4t
->> have a server with hotplug bay, i open the case and remove the wire
->> with my hands =3D) after reconecting it with another device kerenel
->
-> Is it safe? Isn't it a blind bet to fry up the controller and/or disk=
-?
->
->
->> recognize the new device reread the parititions etc etc and i can ad=
-d
->> it to array again
->> my grub is something like:
->>
->> md=3D0,/dev/sda,/dev/sdb .....
->>
->> internal meta data, raid1, i didn=C2=B4t like the autodetect (it=C2=B4=
-s good)
->> but i prefer hardcoded kernel command line (it=C2=B4s not good with =
-usb
->> devices)
->
-> the relevant part of my grub is:
->
-> default=3D0
-> timeout=3D5
-> splashimage=3D(hd0,0)/grub/splash.xpm.gz
-> hiddenmenu
-> title CentOS (2.6.9-89.31.1.ELsmp)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0root (hd0,0)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro roo=
-t=3D/dev/md0 rhgb quiet
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0initrd /initrd-2.6.9-89.31.1.ELsmp.img
->
-> Best regards.
-> Robi
->
->
->>
->> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
->>>
->>> Roberto Spadim wrote:
->>>>
->>>> sata2 without hot plug?
->>>
->>> Hi Roberto.
->>>
->>> I mean that there is no hot-plug bay, with sliding rails etc..
->>> The drives are connected to the mb using standard sata cables.
->>>
->>>
->>>> check if your sda sdb sdc will change after removing it, it=E6=84=80=
- depends
->>>> on your udev or another /dev filesystem
->>>
->>> Ok, thank you.
->>> That means that if I take care to check the above, and
->>> the new drive will be sdb, then taking the steps indicated
->>> in my original post will do the job?
->>>
->>> Best regards.
->>> Robi
->>>
->>>
->>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
->>>>>
->>>>> Hello.
->>>>>
->>>>> I have a linux box, with two 2TB sata HD in raid 1.
->>>>>
->>>>> Now, one disk is in failed state and it has no spares:
->>>>> # cat /proc/mdstat
->>>>> Personalities : [raid1]
->>>>> md1 : active raid1 sdb4[2](F) sda4[0]
->>>>> =C2=A0 =C2=A01910200704 blocks [2/1] [U_]
->>>>>
->>>>> md0 : active raid1 sdb1[1] sda2[0]
->>>>> =C2=A0 =C2=A040957568 blocks [2/2] [UU]
->>>>>
->>>>> unused devices: <none>
->>>>>
->>>>>
->>>>> The drives are not hot-plug, so I need to shutdown the box.
->>>>>
->>>>> My plan is to:
->>>>> # sfdisk -d /dev/sdb > sdb.sfdisk
->>>>> # mdadm /dev/md1 -r /dev/sdb4
->>>>> # mdadm /dev/md0 -r /dev/sdb1
->>>>> # shutdown -h now
->>>>>
->>>>> replace the disk and boot (it should come back up, even without o=
-ne
->>>>> drive,
->>>>> right?)
->>>>>
->>>>> # sfdisk /dev/sdb < sdb.sfdisk
->>>>> # mdadm /dev/md1 -a /dev/sdb4
->>>>> # mdadm /dev/md0 -a /dev/sdb1
->>>>>
->>>>> and the drives should start to resync, right?
->>>>>
->>>>> This is my first time I do such a thing, so please, correct me
->>>>> if the above is not correct, or is not a best practice for
->>>>> my configuration.
->>>>>
->>>>> My last backup of md1 is of mid november, so I need to be
->>>>> pretty sure I will not lose my data (over 1TB).
->>>>>
->>>>> A bit abount my environment:
->>>>> # mdadm --version
->>>>> mdadm - v1.12.0 - 14 June 2005
->>>>> # cat /etc/redhat-release
->>>>> CentOS release 4.8 (Final)
->>>>> # uname -rms
->>>>> Linux 2.6.9-89.31.1.ELsmp i686
->>>>>
->>>>> Thank you very much and best regards.
->>>>> Robi
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+The big problem I see is stripe size.  How the !@#$ would you calculate
+the proper stripe size for this type of nested RAID and actually get
+decent performance from your filesystem sitting on top?
 
-
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Stan
