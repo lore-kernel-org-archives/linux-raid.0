@@ -1,65 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Single-drive RAID0
-Date: Wed, 23 Feb 2011 13:20:56 +1100
-Message-ID: <20110223132056.4098ec5f@notabene.brown>
-References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
-	<20110209134557.4e607451@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
-	<20110214131149.7f0655a3@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
-	<20110215110141.30d28302@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
-	<20110216114234.0311d27b@notabene.brown>
-	<BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>
-	<20110221131519.1039f37c@notabene.brown>
-	<BE2BFE91933D1B4089447C64486040806908FC52@irsmsx503.ger.corp.intel.com>
-	<20110222115011.282804d9@notabene.brown>
-	<4D63E766.1000104@computer.org>
+Subject: Re: [PATCH 0/3] Continue expansion after reboot
+Date: Wed, 23 Feb 2011 14:37:56 +1100
+Message-ID: <20110223143756.41139e11@notabene.brown>
+References: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D63E766.1000104@computer.org>
+In-Reply-To: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 22 Feb 2011 17:42:14 +0100 Jan Ceuleers <jan.ceuleers@computer.org>
-wrote:
+On Tue, 22 Feb 2011 15:13:15 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> On 22/02/11 01:50, NeilBrown wrote:
-> > With the patch, the rescan is only performed when needed and so there
-> > are no races.
+> Currently reshaped/expanded array is assembled but it stays in inactive state.
+> This patches allows for array assembly when array is under expansion.
+> Array with reshape/expansion information in metadata is assembled
+> and reshape process continues automatically.
 > 
-> Neil,
+> Next step:
+> Problem is how to address container operation during assembly.
+> 1. After first array being reshaped, assebly process looks if mdmon
+>    sets migration for other array in container. If yes it continues work
+>    for next array.
 > 
-> If I've properly understood your commit message you are reducing the 
-> frequency of the rescans, but they can still occur. I submit that this 
-> merely reduces the probability but does not remove the possibility of 
-> races with udev.
+> 2. Assembly process performs reshape of currently reshaped array only.
+>    Mdmon sets next array for reshape and user triggers manually mdadm
+>    to finish container operation with just the same parameters set.
 > 
-> If my interpretation is correct, then is this something that should be 
-> fixed (to remove the possibility of races altogether), or merely documented?
+> Reshape finish can be executed for container operation by container re-assembly
+> also (this works in current code).
 > 
-> Thanks, Jan
 
-Thanks for reviewing the code!!
+Yes, this is an awkward problem.
 
-The patch should reduce the frequency of rescans to just those times when it
-is actually needed.
-i.e. when the array data first becomes available, and when it stops being
-available.
-So it will only happen as a direct result of an administrative action.
+Just to be sure we are thinking about the same thing:
+  When restarting an array in which migration is already underway mdadm simply
+  forks and continues monitoring that migration.
+  However if it is an array-wide migration, then when the migration of the
+  first array completes, mdmon will update the metadata on the second array,
+  but it isn't clear how mdadm can be told to start monitoring that array.
 
-Previously it could happen at arbitrary times based on open /close/unlink
-patterns.
+How about this:
+  the imsm metadata handler should report that an array is 'undergoing
+  migration if it is, or if an earlier array in the container is undergoing a
+  migration which will cause 'this' array to subsequently be migrated too.
 
-So it isn't really "reducing the frequency" so much as "making it happen only
-at well defined times, not arbitrary times".
+  So if the first array is in the middle of a 4drive->5drive conversion and
+  the second array is simply at '4 drives', then imsm reported (to
+  container_content) that the second drive is actually undergoing a migration
+  from 4 to 5 drives, and is at the very beginning.
 
-So this does remove any possibility of races.
+  When mdadm assembles that second array it will fork a child to monitor it.
+  It will need to somehow wait for mdmon to really update the metadata before
+  it starts.  This can probably be handled in the ->manage_reshape function.
 
-Thanks,
+Something along those line would be the right way to go I think.  It avoid
+any races between arrays being assembled at different times.
+
+
+> Adam Kwolek (3):
+>       FIX: Assemble device in reshape state with new disks number
+
+I don't think this patch is correct.  We need to configure the array with the
+'old' number of devices first, then 'reshape_array' will also set the 'new'
+number of devices.
+What exactly what the problem you were  trying to fix?
+
+
+>       imsm: FIX: Report correct array size during reshape
+>       imsm: FIX: initalize reshape progress as it is stored in metatdata
+>
+These both look good - I have applied them.  Thanks.
+
 NeilBrown
+
 
