@@ -1,86 +1,104 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: Roberto Nunnari <roberto.nunnari@supsi.ch>
 Subject: Re: failed drive in raid 1 array
-Date: Wed, 23 Feb 2011 14:56:52 -0300
-Message-ID: <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
-References: <4D653B57.1030203@supsi.ch>
+Date: Wed, 23 Feb 2011 20:16:17 +0100
+Message-ID: <4D655D01.6040803@supsi.ch>
+References: <4D653B57.1030203@supsi.ch> <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D653B57.1030203@supsi.ch>
+In-Reply-To: <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
+To: Roberto Spadim <roberto@spadim.com.br>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-sata2 without hot plug?
-check if your sda sdb sdc will change after removing it, it=B4s depends
-on your udev or another /dev filesystem
+Roberto Spadim wrote:
+> sata2 without hot plug?
 
-2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
-> Hello.
->
-> I have a linux box, with two 2TB sata HD in raid 1.
->
-> Now, one disk is in failed state and it has no spares:
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sdb4[2](F) sda4[0]
-> =A0 =A0 =A01910200704 blocks [2/1] [U_]
->
-> md0 : active raid1 sdb1[1] sda2[0]
-> =A0 =A0 =A040957568 blocks [2/2] [UU]
->
-> unused devices: <none>
->
->
-> The drives are not hot-plug, so I need to shutdown the box.
->
-> My plan is to:
-> # sfdisk -d /dev/sdb > sdb.sfdisk
-> # mdadm /dev/md1 -r /dev/sdb4
-> # mdadm /dev/md0 -r /dev/sdb1
-> # shutdown -h now
->
-> replace the disk and boot (it should come back up, even without one d=
-rive,
-> right?)
->
-> # sfdisk /dev/sdb < sdb.sfdisk
-> # mdadm /dev/md1 -a /dev/sdb4
-> # mdadm /dev/md0 -a /dev/sdb1
->
-> and the drives should start to resync, right?
->
-> This is my first time I do such a thing, so please, correct me
-> if the above is not correct, or is not a best practice for
-> my configuration.
->
-> My last backup of md1 is of mid november, so I need to be
-> pretty sure I will not lose my data (over 1TB).
->
-> A bit abount my environment:
-> # mdadm --version
-> mdadm - v1.12.0 - 14 June 2005
-> # cat /etc/redhat-release
-> CentOS release 4.8 (Final)
-> # uname -rms
-> Linux 2.6.9-89.31.1.ELsmp i686
->
-> Thank you very much and best regards.
-> Robi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Hi Roberto.
+
+I mean that there is no hot-plug bay, with sliding rails etc..
+The drives are connected to the mb using standard sata cables.
 
 
+> check if your sda sdb sdc will change after removing it, it=B4s depen=
+ds
+> on your udev or another /dev filesystem
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+Ok, thank you.
+That means that if I take care to check the above, and
+the new drive will be sdb, then taking the steps indicated
+in my original post will do the job?
+
+Best regards.
+Robi
+
+
+>=20
+> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>> Hello.
+>>
+>> I have a linux box, with two 2TB sata HD in raid 1.
+>>
+>> Now, one disk is in failed state and it has no spares:
+>> # cat /proc/mdstat
+>> Personalities : [raid1]
+>> md1 : active raid1 sdb4[2](F) sda4[0]
+>>      1910200704 blocks [2/1] [U_]
+>>
+>> md0 : active raid1 sdb1[1] sda2[0]
+>>      40957568 blocks [2/2] [UU]
+>>
+>> unused devices: <none>
+>>
+>>
+>> The drives are not hot-plug, so I need to shutdown the box.
+>>
+>> My plan is to:
+>> # sfdisk -d /dev/sdb > sdb.sfdisk
+>> # mdadm /dev/md1 -r /dev/sdb4
+>> # mdadm /dev/md0 -r /dev/sdb1
+>> # shutdown -h now
+>>
+>> replace the disk and boot (it should come back up, even without one =
+drive,
+>> right?)
+>>
+>> # sfdisk /dev/sdb < sdb.sfdisk
+>> # mdadm /dev/md1 -a /dev/sdb4
+>> # mdadm /dev/md0 -a /dev/sdb1
+>>
+>> and the drives should start to resync, right?
+>>
+>> This is my first time I do such a thing, so please, correct me
+>> if the above is not correct, or is not a best practice for
+>> my configuration.
+>>
+>> My last backup of md1 is of mid november, so I need to be
+>> pretty sure I will not lose my data (over 1TB).
+>>
+>> A bit abount my environment:
+>> # mdadm --version
+>> mdadm - v1.12.0 - 14 June 2005
+>> # cat /etc/redhat-release
+>> CentOS release 4.8 (Final)
+>> # uname -rms
+>> Linux 2.6.9-89.31.1.ELsmp i686
+>>
+>> Thank you very much and best regards.
+>> Robi
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>=20
+>=20
+>=20
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
