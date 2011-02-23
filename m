@@ -1,101 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Likely forced assemby with wrong disk during raid5 grow.
- Recoverable?
-Date: Wed, 23 Feb 2011 12:53:38 +1100
-Message-ID: <20110223125338.2179dd78@notabene.brown>
-References: <AANLkTikhOAXQ6JAG1fK3x9V3icki8cjn0_ggyQwkGmnt@mail.gmail.com>
-	<AANLkTi=5UZcMRKHTiXC3w8joh-qyi50gtTYwRf_scksW@mail.gmail.com>
-	<20110220162509.2eb85a03@notabene.brown>
-	<AANLkTi=-guMf-8YJDMvq9ybyY9Fppi+W0pqhH2Of=mKd@mail.gmail.com>
-	<20110221115303.4862e093@notabene.brown>
-	<AANLkTimaemNqVwaLmqYCS+6fHCTVmAqzUe9RUh3rdhvc@mail.gmail.com>
+Subject: Re: Single-drive RAID0
+Date: Wed, 23 Feb 2011 13:20:56 +1100
+Message-ID: <20110223132056.4098ec5f@notabene.brown>
+References: <BE2BFE91933D1B4089447C644860408067197930@irsmsx503.ger.corp.intel.com>
+	<20110209134557.4e607451@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068C4429D@irsmsx503.ger.corp.intel.com>
+	<20110214131149.7f0655a3@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068FB2C6E@irsmsx503.ger.corp.intel.com>
+	<20110215110141.30d28302@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408068FB347B@irsmsx503.ger.corp.intel.com>
+	<20110216114234.0311d27b@notabene.brown>
+	<BE2BFE91933D1B4089447C644860408069028F47@irsmsx503.ger.corp.intel.com>
+	<20110221131519.1039f37c@notabene.brown>
+	<BE2BFE91933D1B4089447C64486040806908FC52@irsmsx503.ger.corp.intel.com>
+	<20110222115011.282804d9@notabene.brown>
+	<4D63E766.1000104@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimaemNqVwaLmqYCS+6fHCTVmAqzUe9RUh3rdhvc@mail.gmail.com>
+In-Reply-To: <4D63E766.1000104@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Claude Nobs <claudenobs@blunet.cc>
-Cc: linux-raid@vger.kernel.org
+To: Jan Ceuleers <jan.ceuleers@computer.org>
+Cc: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 23 Feb 2011 01:56:13 +0100 Claude Nobs <claudenobs@blunet.cc> w=
-rote:
+On Tue, 22 Feb 2011 17:42:14 +0100 Jan Ceuleers <jan.ceuleers@computer.org>
+wrote:
 
-> bernstein@server:~/mdadm$ sudo ./mdadm -Afvv /dev/md2 /dev/sda1
-> /dev/md0 /dev/md1 /dev/sdc1
-> mdadm: looking for devices for /dev/md2
-> mdadm: /dev/sda1 is identified as a member of /dev/md2, slot 4.
-> mdadm: /dev/md0 is identified as a member of /dev/md2, slot 3.
-> mdadm: /dev/md1 is identified as a member of /dev/md2, slot 2.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md2, slot 0.
-> mdadm: forcing event count in /dev/md1(2) from 133603 upto 133609
+> On 22/02/11 01:50, NeilBrown wrote:
+> > With the patch, the rescan is only performed when needed and so there
+> > are no races.
+> 
+> Neil,
+> 
+> If I've properly understood your commit message you are reducing the 
+> frequency of the rescans, but they can still occur. I submit that this 
+> merely reduces the probability but does not remove the possibility of 
+> races with udev.
+> 
+> If my interpretation is correct, then is this something that should be 
+> fixed (to remove the possibility of races altogether), or merely documented?
+> 
+> Thanks, Jan
 
-This is normal - mdadm is just letting you know that it is including in=
- the=20
-array a device that looks a bit old - we expected this.
+Thanks for reviewing the code!!
 
-> mdadm: Cannot open /dev/sdc1: Device or resource busy
+The patch should reduce the frequency of rescans to just those times when it
+is actually needed.
+i.e. when the array data first becomes available, and when it stops being
+available.
+So it will only happen as a direct result of an administrative action.
 
-This is odd.  I cannot explain this at all.  When this message is print=
-ed
-mdadm should give up and  not continue.  Yet it seems that it did conti=
-nue
-because the array is started and is reshaping.
+Previously it could happen at arbitrary times based on open /close/unlink
+patterns.
 
-> bernstein@server:~/mdadm$ cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10]
-> md2 : active raid5 md1[3] md0[4] sda1[5] sdc1[0]
-> =A0=A0=A0=A0=A0 2930281920 blocks super 1.2 level 5, 64k chunk, algor=
-ithm 2 [5/4] [U_UUU]
-> =A0=A0=A0=A0=A0 [=3D=3D>..................]=A0 reshape =3D 12.8% (125=
-839952/976760640)
-> finish=3D825.1min speed=3D17186K/sec
+So it isn't really "reducing the frequency" so much as "making it happen only
+at well defined times, not arbitrary times".
 
-This looks OK.  125839952 corresponds to a "reshape Pos'n" of=20
-503359808 which is slightly after where we would expect it to start, wh=
-ich
-is what we would expect.
-There won't be any info in the logs to tell us exactly where it started=
-,
-which is a shame, but it probably started at the right place.
+So this does remove any possibility of races.
 
->=20
-> this i not strictly a raid/mdadm question, but do you know a simple
-> way to ckeck everything went ok? i think that an e2fsck (ext4 fs) and
-> checksumming some random files located behind the interruption point
-> should verify all went ok. plus just to be sure i'd like to check
-> files located at the interruption point. is the offset to the
-> interruption point into the md device simply the reshape pos'n (e.g.
-> 502815488K) ?
-
-No - just the things you suggest.
-The Reshape pos'n is the address in the array where reshape was up to.
-You could try using 'debugfs' to have a look at the context of those bl=
-ocks.
-Remember to divide this number by 4 to get an ext4fs block number (assu=
-ming
-4K blocks).
-
-Use:   testb BLOCKNUMBER COUNT
-
-to see if the blocks were even allocated.
-Then
-       icheck BLOCKNUM
-on a few of the blocks to see what inode was using them.
-Then
-       ncheck INODE
-to find a path to that inode number.
-
-
-=46eel free to report your results - particularly if you find anything =
-helpful.
-
+Thanks,
 NeilBrown
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
