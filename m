@@ -1,54 +1,104 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: high throughput storage server?
-Date: Wed, 23 Feb 2011 15:11:00 -0600
-Message-ID: <4D6577E4.2080305@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org>
+From: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Subject: Re: failed drive in raid 1 array
+Date: Wed, 23 Feb 2011 22:21:09 +0100
+Message-ID: <4D657A45.7020306@supsi.ch>
+References: <4D653B57.1030203@supsi.ch> <AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com> <4D654FD8.1070206@alice.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ik33nt$fd8$1@dough.gmane.org>
+In-Reply-To: <4D654FD8.1070206@alice.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: Albert Pauw <albert.pauw@alice.nl>
+Cc: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Brown put forth on 2/23/2011 7:56 AM:
+Albert Pauw wrote:
+>  On 02/23/11 06:56 PM, Roberto Spadim wrote:
+>> sata2 without hot plug?
+>> check if your sda sdb sdc will change after removing it, it=B4s depe=
+nds
+>> on your udev or another /dev filesystem
+>>
+>> 2011/2/23 Roberto Nunnari<roberto.nunnari@supsi.ch>:
+>>> Hello.
+>>>
+>>> I have a linux box, with two 2TB sata HD in raid 1.
+>>>
+>>> Now, one disk is in failed state and it has no spares:
+>>> # cat /proc/mdstat
+>>> Personalities : [raid1]
+>>> md1 : active raid1 sdb4[2](F) sda4[0]
+>>>       1910200704 blocks [2/1] [U_]
+>>>
+>>> md0 : active raid1 sdb1[1] sda2[0]
+>>>       40957568 blocks [2/2] [UU]
+>>>
+>>> unused devices:<none>
+>>>
+>>>
+>>> The drives are not hot-plug, so I need to shutdown the box.
+>>>
+>>> My plan is to:
+>>> # sfdisk -d /dev/sdb>  sdb.sfdisk
+>>> # mdadm /dev/md1 -r /dev/sdb4
+> -> removing should be ok, as the partition has failed in md1
 
-> However, as disks get bigger, the chance of errors on any given disk is
-> increasing.  And the fact remains that if you have a failure on a RAID10
-> system, you then have a single point of failure during the rebuild
-> period - while with RAID6 you still have redundancy (obviously RAID5 is
-> far worse here).
-
-The problem isn't a 2nd whole drive failure during the rebuild, but a
-URE during rebuild:
-
-http://www.zdnet.com/blog/storage/why-raid-5-stops-working-in-2009/162
-
-> I don't know if you've followed the recent "md road-map: 2011" thread (I
-> can't see any replies from you in the thread), but that is my reference
-> point here.
-
-Actually I haven't.  Is Neil's motivation with this RAID5/6 "mirror
-rebuild" to avoid the URE problem?
-
-> Incidentally, what's your opinion on a RAID1+5 or RAID1+6 setup, where
-> you have a RAID5 or RAID6 build from RAID1 pairs?  You get all the
-> rebuild benefits of RAID1 or RAID10, such as simple and fast direct
-> copies for rebuilds, and little performance degradation.  But you also
-> get multiple failure redundancy from the RAID5 or RAID6.  It could be
-> that it is excessive - that the extra redundancy is not worth the
-> performance cost (you still have poor small write performance).
-
-I don't care for and don't use parity RAID levels.  Simple mirroring and
-RAID10 have served me well for a very long time.  They have many
-advantages over parity RAID and few, if any, disadvantages.  I've
-mentioned all of these in previous posts.
-
--- 
-Stan
+ok.
 
 
--- 
-Stan
+>>> # mdadm /dev/md0 -r /dev/sdb1
+> -> In this case, sdb1 hasn't failed according to the output of=20
+> /proc/mdstat, so you should fail it otherwise you can't remove it:
+> mdadm /dev/md0 -f /dev/sdb1
+> mdadm /dev/md0 -r /dev/sdb1
+
+good to know! Thank you.
+
+
+>=20
+>>> # shutdown -h now
+>>>
+>>> replace the disk and boot (it should come back up, even without one=
+=20
+>>> drive,
+>>> right?)
+>>>
+>>> # sfdisk /dev/sdb<  sdb.sfdisk
+>>> # mdadm /dev/md1 -a /dev/sdb4
+>>> # mdadm /dev/md0 -a /dev/sdb1
+>>>
+>>> and the drives should start to resync, right?
+>>>
+>>> This is my first time I do such a thing, so please, correct me
+>>> if the above is not correct, or is not a best practice for
+>>> my configuration.
+>>>
+>>> My last backup of md1 is of mid november, so I need to be
+>>> pretty sure I will not lose my data (over 1TB).
+>>>
+>>> A bit abount my environment:
+>>> # mdadm --version
+>>> mdadm - v1.12.0 - 14 June 2005
+>>> # cat /etc/redhat-release
+>>> CentOS release 4.8 (Final)
+>>> # uname -rms
+>>> Linux 2.6.9-89.31.1.ELsmp i686
+> What about sdb2 an sdb3, are they in use as normal mountpoints, or sw=
+ap.=20
+> Then these should be commented out in /etc/fstab
+> before you change the disk.
+
+Yes. They're normal mount point, so I'll have to
+comment them out before rebooting, especially the swap partition.
+Thank you for pointing that out!
+
+Best regards.
+Robi
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
