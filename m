@@ -1,45 +1,34 @@
 From: Matt Garman <matthew.garman@gmail.com>
 Subject: Re: high throughput storage server?
-Date: Thu, 24 Feb 2011 14:28:14 -0600
-Message-ID: <AANLkTi=DFXqt5VAJHdVkzigM1UfdNKwrTX589aCcBm4Q@mail.gmail.com>
+Date: Thu, 24 Feb 2011 14:36:50 -0600
+Message-ID: <AANLkTin0X1CP5yMAQV_iwWNuaVPdvv9NwYYj6uu05KsC@mail.gmail.com>
 References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
-	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
-	<20110215044434.GA9186@septictank.raw-sewage.fake>
-	<ijdhtg$on7$1@dough.gmane.org>
+	<4D5A8415.5000905@gmail.com>
+	<AANLkTimT=JLvBTU52aZDYC5gwryXmsp4F+WbzsJNbSCC@mail.gmail.com>
+	<4D5A9407.5000508@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ijdhtg$on7$1@dough.gmane.org>
+In-Reply-To: <4D5A9407.5000508@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: Zdenek Kaspar <zkaspar82@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wow, I can't believe the number of responses I've received to this
-question.  I've been trying to digest it all.  I'm going to throw some
-follow-up comments as time allows, starting here...
+On Tue, Feb 15, 2011 at 8:56 AM, Zdenek Kaspar <zkaspar82@gmail.com> wrote:
+> Dne 15.2.2011 15:29, Roberto Spadim napsal(a):
+>> for hobby = SATA2 disks, 50USD disks of 1TB 50MB/s
+>> the today state of art, in 'my world' is: http://www.ramsan.com/products/3
+>
+> I doubt 20TB SLC which will survive huge abuse (writes) is low-cost
+> solution what OP wants to build himself..
+>
+> or 20TB RAM omg..
 
-On Tue, Feb 15, 2011 at 3:43 AM, David Brown <david@westcontrol.com> wr=
-ote:
-> If you are not too bothered about write performance, I'd put a fair a=
-mount
-> of the budget into ram rather than just disk performance. =A0When you=
-'ve got
-> the ram space to make sure small reads are mostly cached, the main
-> bottleneck will be sequential reads - and big hard disks handle seque=
-ntial
-> reads as fast as expensive SSDs.
+Just to be clear, this is *not* a hobby system.  I mentioned hobby
+system in my original post just to serve as a reference for my current
+knowledge level.  I've built and configured the simple linux md raid6
+NAS box at home, and a similar system for backups here at work.
 
-I could be wrong, but I'm not so sure RAM would be beneficial for our
-case.  Are workload is virtually all reads, however, these are huge
-reads.  The analysis programs basically do a full read of data files
-that are generally pretty big: roughly 100 MB to 5 GB in the worst
-case.  Average file size is maybe 500 MB (rough estimate).  And there
-are hundreds of these falls, all of which need "immediate" access.  So
-to cache these in RAM, seems like it would take an awful lot of RAM.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But now I'm looking at something that's obviously a completely
+different game, with bigger and stricter requirements.
