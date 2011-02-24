@@ -1,143 +1,288 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] FIX: imsm: OROM does not recognize degraded arrays
-Date: Thu, 24 Feb 2011 09:42:53 -0800
-Message-ID: <AANLkTinS06EtPvr59C2ZY=gD8JFrp0AfAbmXAwWdjG5m@mail.gmail.com>
-References: <20110224065357.5594.92371.stgit@gklab-128-111.igk.intel.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: failed drive in raid 1 array
+Date: Thu, 24 Feb 2011 18:08:41 -0200
+Message-ID: <AANLkTinkz2Aq+EDh10-98wYTrDU7+h4F3FOpk2Mu6nqd@mail.gmail.com>
+References: <4D653B57.1030203@supsi.ch>
+	<AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
+	<4D655D01.6040803@supsi.ch>
+	<AANLkTimQhfvbx72izkg9qxMFkC0xixTPQa6aQ4HF04Hq@mail.gmail.com>
+	<4D657AFE.3010605@supsi.ch>
+	<AANLkTikKtkwHATrSE7Ymf2n22Fj06kw9fpNwTr-8WyS1@mail.gmail.com>
+	<4D658672.4000503@supsi.ch>
+	<4D6681E1.5010905@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110224065357.5594.92371.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <4D6681E1.5010905@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, ed.ciechanowski@intel.com
+To: Iordan Iordanov <iordan@cdf.toronto.edu>
+Cc: Roberto Nunnari <roberto.nunnari@supsi.ch>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Krzysztof, comments below:
+do you have the udev configuration for this (static)?
 
-On Wed, Feb 23, 2011 at 10:53 PM, Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
-> Defect description:
-> When we create an redundant array in mdadm and then degrade it
-> by disk removing, Option ROM and Windows OS does not detect any array=
-=2E
-> Reason:
-> Metadata created and updated after degrading array is not compatible
-> with IMSM standard.
+2011/2/24 Iordan Iordanov <iordan@cdf.toronto.edu>:
+> Hi guys,
 >
-> This patch synchronizes the metadata according IMSM requirements.
-> Following inconsistencies have been fixed:
-> - reset all fields in imsm_dev during creation to avoid random values
-> - init dev status during creation to proper state
-> - not reset CONFIGURED_DISK flag when disk is missing
-> - add ":0" suffix to the serial number for missing/failed disks
-> - update medatada signature after takeover operation
-> - mark map state as degraded after raid0->raid10 takeover
+> I saw a bunch of discussion of devices changing names when hot-plugge=
+d. If
+> you get the device name right when you add it to the array first, all=
+ is
+> good since the superblock is used to "discover" the device later.
 >
-> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-> ---
-> =A0super-intel.c | =A0 27 +++++++++++++++++----------
-> =A01 files changed, 17 insertions(+), 10 deletions(-)
+> However, to make things easier/clearer, and to avoid errors, one can =
+take a
+> look at the set of directories:
 >
-> diff --git a/super-intel.c b/super-intel.c
-> index c101dca..a40b7e5 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -3437,6 +3437,8 @@ static int init_super_imsm_volume(struct supert=
-ype *st, mdu_array_info_t *info,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprintf(stderr, Name": could not alloc=
-ate raid device\n");
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return 0;
-> =A0 =A0 =A0 =A0}
-> + =A0 =A0 =A0 memset(dev, 0, (sizeof(*dev) + sizeof(__u32) * (info->r=
-aid_disks - 1)));
-> +
-
-Consider changing the allocation to calloc, or store the size in a
-temporary variable so we don't duplicate the size calculation.
-
-> =A0 =A0 =A0 =A0strncpy((char *) dev->volume, name, MAX_RAID_SERIAL_LE=
-N);
-> =A0 =A0 =A0 =A0if (info->level =3D=3D 1)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0array_blocks =3D info_to_blocks_per_me=
-mber(info);
-> @@ -3449,8 +3451,7 @@ static int init_super_imsm_volume(struct supert=
-ype *st, mdu_array_info_t *info,
+> /dev/disk/by-id
+> /dev/disk/by-path
+> /dev/disk/by-uuid
+> /dev/disk/by-label
 >
-> =A0 =A0 =A0 =A0dev->size_low =3D __cpu_to_le32((__u32) array_blocks);
-> =A0 =A0 =A0 =A0dev->size_high =3D __cpu_to_le32((__u32) (array_blocks=
- >> 32));
-> - =A0 =A0 =A0 dev->status =3D __cpu_to_le32(0);
-> - =A0 =A0 =A0 dev->reserved_blocks =3D __cpu_to_le32(0);
-> + =A0 =A0 =A0 dev->status =3D (DEV_READ_COALESCING | DEV_WRITE_COALES=
-CING);
-
-The orom will fail to assemble arrays without these status bits set?
-
-> =A0 =A0 =A0 =A0vol =3D &dev->vol;
-> =A0 =A0 =A0 =A0vol->migr_state =3D 0;
-> =A0 =A0 =A0 =A0set_migr_type(dev, MIGR_INIT);
-> @@ -5046,6 +5047,7 @@ static int mark_failure(struct imsm_dev *dev, s=
-truct imsm_disk *disk, int idx)
-> =A0 =A0 =A0 =A0__u32 ord;
-> =A0 =A0 =A0 =A0int slot;
-> =A0 =A0 =A0 =A0struct imsm_map *map;
-> + =A0 =A0 =A0 char buf[PATH_MAX];
-
-This is a very large stack allocation which is potentially problematic
-for mdmon.
-
+> for a predictable, more static view of the drives. The symlinks in th=
+ese
+> directories are created by udev, and are simply links to the "real" d=
+evice
+> nodes /dev/sd{a-z}*. You can either just use these symlinks as a way =
+of
+> verifying that you are adding the right device, or add the device usi=
+ng the
+> symlink.
 >
-> =A0 =A0 =A0 =A0/* new failures are always set in map[0] */
-> =A0 =A0 =A0 =A0map =3D get_imsm_map(dev, 0);
-> @@ -5057,9 +5059,12 @@ static int mark_failure(struct imsm_dev *dev, =
-struct imsm_disk *disk, int idx)
-> =A0 =A0 =A0 =A0ord =3D __le32_to_cpu(map->disk_ord_tbl[slot]);
-> =A0 =A0 =A0 =A0if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return 0;
-> + =A0 =A0 =A0 sprintf(buf, "%s:0", disk->serial);
-> + =A0 =A0 =A0 int len =3D strlen(buf);
-> + =A0 =A0 =A0 unsigned int shift =3D len - MAX_RAID_SERIAL_LEN + 1;
-> + =A0 =A0 =A0 strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SER=
-IAL_LEN);
+> At our location, we even augmented udev to add links to labeled GPT
+> partitions in /dev/disk/by-label, and now our drives/partitions look =
+like
+> this:
+>
+> iscsi00-drive00-part00 -> ../../sda1
+> iscsi00-drive01-part00 -> ../../sdb1
+> iscsi00-drive02-part00 -> ../../sdc1
+> iscsi00-drive03-part00 -> ../../sdd1
+> iscsi00-drive04-part00 -> ../../sde1
+>
+> This way, we know exactly which bay contains exactly which drive, and=
+ it
+> stays this way. If you guys want, I can share with you the changes to=
+ udev
+> necessary and the script which extracts the GPT label and reports it =
+to udev
+> for this magic to happen :). Please reply to this thread with a reque=
+st if
+> you think it may be useful to you.
+>
+> Cheers,
+> Iordan
+>
+>
+> On 02/23/11 17:13, Roberto Nunnari wrote:
+>>
+>> Roberto Spadim wrote:
+>>>
+>>> hum, maybe you are using mdadm.conf or autodetect, non autodetect
+>>> should be something like this:
+>>> i don=C2=B4t know the best solution, but it works ehhehe
+>>>
+>>> kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro root=3D/dev/md0 rhgb
+>>> quiet md=3D0,/dev/sda,/dev/sdb md=3D1,xxxx,yyyy.....
+>>>
+>>> or another md array...
+>>>
+>>> humm i readed the sata specification and removing isn=C2=B4t a prob=
+lem, at
+>>> eletronic level the sata channel is only data, no power source, all
+>>> channels are diferencial (like rs422 or rs485), i don=C2=B4t see an=
+yproblem
+>>> removing it. i tryed hot plug a revodrive (pciexpress ssd) and it
+>>> don=C2=B4t work (reboot) hehehe, pci-express isn=C2=B4t hot plug =3D=
+P, sata2 don=C2=B4t
+>>> have problems, the main problem is a short circuit at power source,=
+ if
+>>> you remove with caution no problems =3D)
+>>>
+>>> i tried in some others distros and udev created a new device when a=
+dd
+>>> a diferent disk for example, remove sdb, and add another disk creat=
+e
+>>> sdc (not sdb), maybe with another udev configuration should work
+>>
+>> Ok. I'll keep all that in mind tomorrow.
+>> Best regards.
+>> Robi
+>>
+>>
+>>>
+>>>
+>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>>>
+>>>> Roberto Spadim wrote:
+>>>>>
+>>>>> i don=C2=B4t know how you setup your kernel (with or without raid
+>>>>
+>>>> I use the official CentOS kernel with no modification and don't
+>>>> know about raid autodetect, but:
+>>>> # cat /boot/config-2.6.24-28-server |grep -i raid
+>>>> CONFIG_BLK_DEV_3W_XXXX_RAID=3Dm
+>>>> CONFIG_MD_RAID0=3Dm
+>>>> CONFIG_MD_RAID1=3Dm
+>>>> CONFIG_MD_RAID10=3Dm
+>>>> CONFIG_MD_RAID456=3Dm
+>>>> CONFIG_MD_RAID5_RESHAPE=3Dy
+>>>> CONFIG_MEGARAID_LEGACY=3Dm
+>>>> CONFIG_MEGARAID_MAILBOX=3Dm
+>>>> CONFIG_MEGARAID_MM=3Dm
+>>>> CONFIG_MEGARAID_NEWGEN=3Dy
+>>>> CONFIG_MEGARAID_SAS=3Dm
+>>>> CONFIG_RAID_ATTRS=3Dm
+>>>> CONFIG_SCSI_AACRAID=3Dm
+>>>>
+>>>>
+>>>>> autodetect?) do you use kernel command line to setup raid? autode=
+tect?
+>>>>
+>>>> /dev/md0 in grub
+>>>> I don't know if that means autodetect, but I guess so..
+>>>>
+>>>>
+>>>>> here in my test machine i=C2=B4m using kernel command line (grub)=
+, i don=C2=B4t
+>>>>> have a server with hotplug bay, i open the case and remove the wi=
+re
+>>>>> with my hands =3D) after reconecting it with another device keren=
+el
+>>>>
+>>>> Is it safe? Isn't it a blind bet to fry up the controller and/or d=
+isk?
+>>>>
+>>>>
+>>>>> recognize the new device reread the parititions etc etc and i can=
+ add
+>>>>> it to array again
+>>>>> my grub is something like:
+>>>>>
+>>>>> md=3D0,/dev/sda,/dev/sdb .....
+>>>>>
+>>>>> internal meta data, raid1, i didn=C2=B4t like the autodetect (it=C2=
+=B4s good)
+>>>>> but i prefer hardcoded kernel command line (it=C2=B4s not good wi=
+th usb
+>>>>> devices)
+>>>>
+>>>> the relevant part of my grub is:
+>>>>
+>>>> default=3D0
+>>>> timeout=3D5
+>>>> splashimage=3D(hd0,0)/grub/splash.xpm.gz
+>>>> hiddenmenu
+>>>> title CentOS (2.6.9-89.31.1.ELsmp)
+>>>> root (hd0,0)
+>>>> kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro root=3D/dev/md0 rhgb quiet
+>>>> initrd /initrd-2.6.9-89.31.1.ELsmp.img
+>>>>
+>>>> Best regards.
+>>>> Robi
+>>>>
+>>>>
+>>>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>>>>>
+>>>>>> Roberto Spadim wrote:
+>>>>>>>
+>>>>>>> sata2 without hot plug?
+>>>>>>
+>>>>>> Hi Roberto.
+>>>>>>
+>>>>>> I mean that there is no hot-plug bay, with sliding rails etc..
+>>>>>> The drives are connected to the mb using standard sata cables.
+>>>>>>
+>>>>>>
+>>>>>>> check if your sda sdb sdc will change after removing it, it=E6=84=
+=80 depends
+>>>>>>> on your udev or another /dev filesystem
+>>>>>>
+>>>>>> Ok, thank you.
+>>>>>> That means that if I take care to check the above, and
+>>>>>> the new drive will be sdb, then taking the steps indicated
+>>>>>> in my original post will do the job?
+>>>>>>
+>>>>>> Best regards.
+>>>>>> Robi
+>>>>>>
+>>>>>>
+>>>>>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>>>>>>>
+>>>>>>>> Hello.
+>>>>>>>>
+>>>>>>>> I have a linux box, with two 2TB sata HD in raid 1.
+>>>>>>>>
+>>>>>>>> Now, one disk is in failed state and it has no spares:
+>>>>>>>> # cat /proc/mdstat
+>>>>>>>> Personalities : [raid1]
+>>>>>>>> md1 : active raid1 sdb4[2](F) sda4[0]
+>>>>>>>> 1910200704 blocks [2/1] [U_]
+>>>>>>>>
+>>>>>>>> md0 : active raid1 sdb1[1] sda2[0]
+>>>>>>>> 40957568 blocks [2/2] [UU]
+>>>>>>>>
+>>>>>>>> unused devices: <none>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> The drives are not hot-plug, so I need to shutdown the box.
+>>>>>>>>
+>>>>>>>> My plan is to:
+>>>>>>>> # sfdisk -d /dev/sdb > sdb.sfdisk
+>>>>>>>> # mdadm /dev/md1 -r /dev/sdb4
+>>>>>>>> # mdadm /dev/md0 -r /dev/sdb1
+>>>>>>>> # shutdown -h now
+>>>>>>>>
+>>>>>>>> replace the disk and boot (it should come back up, even withou=
+t one
+>>>>>>>> drive,
+>>>>>>>> right?)
+>>>>>>>>
+>>>>>>>> # sfdisk /dev/sdb < sdb.sfdisk
+>>>>>>>> # mdadm /dev/md1 -a /dev/sdb4
+>>>>>>>> # mdadm /dev/md0 -a /dev/sdb1
+>>>>>>>>
+>>>>>>>> and the drives should start to resync, right?
+>>>>>>>>
+>>>>>>>> This is my first time I do such a thing, so please, correct me
+>>>>>>>> if the above is not correct, or is not a best practice for
+>>>>>>>> my configuration.
+>>>>>>>>
+>>>>>>>> My last backup of md1 is of mid november, so I need to be
+>>>>>>>> pretty sure I will not lose my data (over 1TB).
+>>>>>>>>
+>>>>>>>> A bit abount my environment:
+>>>>>>>> # mdadm --version
+>>>>>>>> mdadm - v1.12.0 - 14 June 2005
+>>>>>>>> # cat /etc/redhat-release
+>>>>>>>> CentOS release 4.8 (Final)
+>>>>>>>> # uname -rms
+>>>>>>>> Linux 2.6.9-89.31.1.ELsmp i686
+>>>>>>>>
+>>>>>>>> Thank you very much and best regards.
+>>>>>>>> Robi
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-Other option-roms truncated the serial number just to make sure it did
-not match (see mark_missing()), are you sure the ":0" matters?  And if
-we are already tolerant of chopping characters why not just
-append/overwrite the end of the serial number.
 
-> =A0 =A0 =A0 =A0disk->status |=3D FAILED_DISK;
-> - =A0 =A0 =A0 disk->status &=3D ~CONFIGURED_DISK;
 
-The  Windows driver was observed making this modification, but maybe
-only in the "missing" case.  Have you verified that this works in the
-failed but still present case (versus the device gone case).
-
-> =A0 =A0 =A0 =A0set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD=
-);
-> =A0 =A0 =A0 =A0if (map->failed_disk_num =3D=3D 0xff)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0map->failed_disk_num =3D slot;
-> @@ -6063,16 +6068,16 @@ static int apply_takeover_update(struct imsm_=
-update_takeover *u,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*space_list =3D *space=
-;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0du =3D (void *)space;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0memcpy(du, super->disk=
-s, sizeof(*du));
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 du->disk.status =3D FAI=
-LED_DISK;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 du->disk.scsi_id =3D 0;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 du->disk.status =3D CON=
-=46IGURED_DISK | FAILED_DISK;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 du->disk.scsi_id =3D ~0=
-;
-
-Looks like the code has grown some open coded duplications of what
-mark_failure() is doing.  Let's unify this.  Keep subtle compatibility
-logic confined to one location.
-
---
-Dan
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
