@@ -1,92 +1,60 @@
-From: Paul Clements <paul.clements@us.sios.com>
-Subject: Re: [BUG 2.6.32] md/raid1: barrier disabling does not work correctly
- in all cases
-Date: Thu, 24 Feb 2011 16:04:30 -0500
-Message-ID: <AANLkTin14zpCfb9YkN-hvW35JhXo1UM6jNU+jTHJmVB6@mail.gmail.com>
-References: <AANLkTimp7eGLu5UEr-wH9MVSGrQWA3PKMakW74_48gk7@mail.gmail.com>
-	<AANLkTikGsB=ZdA-TpjC+npqW-TM9NjwZkWpjWtUEzswn@mail.gmail.com>
-	<20110121072515.07dc2b74@notabene.brown>
-	<AANLkTi=NqHV9p0rc4VBBNAzxwjvfA0DpKgkxQpsX9gsT@mail.gmail.com>
-	<AANLkTimS00pyoN2f4E-2ZbSLq8-Xar3oj9DZ2sEfXzgs@mail.gmail.com>
-	<20110202113215.3e106ccb@notabene.brown>
-	<AANLkTin_Xuo5hwPXr5bnYZJX5zjZheFaeYB6cDvOW-Qg@mail.gmail.com>
+From: Joe Landman <joe.landman@gmail.com>
+Subject: Re: high throughput storage server?
+Date: Thu, 24 Feb 2011 16:07:50 -0500
+Message-ID: <4D66C8A6.7030600@gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<4D5A7198.7060607@hardwarefreak.com>	<AANLkTinpUmxQ6gMWPfyZsfUKjQZ_rGMETf3=BMu5o4Dj@mail.gmail.com>	<AANLkTikSehaGsna8z4qFH_S2JPSsepiTUV8OEYdQPykm@mail.gmail.com> <AANLkTim3uq8_oq07theLrR8qVc4iRBzJUWmAk99E-=Vm@mail.gmail.com> <4D66C55F.2050003@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=bcaec53f943d4a2719049d0d8f8b
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin_Xuo5hwPXr5bnYZJX5zjZheFaeYB6cDvOW-Qg@mail.gmail.com>
+In-Reply-To: <4D66C55F.2050003@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Zdenek Kaspar <zkaspar82@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---bcaec53f943d4a2719049d0d8f8b
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 02/24/2011 03:53 PM, Zdenek Kaspar wrote:
 
-OK, so I finally got back to this. Just FYI, a slight adjustment to
-the patch was needed (bitmap_info now has the max_write_behind field).
-It's attached. You need both the barrier-retry-fix-2 patch that I
-posted a while back and this one.
+>> And likewise, what if there are three clients, or four clients, ...,
+>> all requesting different but large files simultaneously?
+>>
+>> How does one calculate the drive's throughput in these cases?  And,
+>> clearly, there are two throughputs, one from the clients'
+>> perspectives, and one from the drive's perspective.
 
-Thanks,
-Paul
+we us Jens Axboe's fio code to model this.
+
+Best case scenario is you get 1/N of the fixed sized resource that you 
+share averaged out over time for N requestors of equal size/priority. 
+Reality is often different, in that there are multiple stacks to 
+traverse, potential seek time issues as well as network contention 
+issues, interrupt and general OS "jitter", etc.  That is, all the 
+standard HPC issues you get for compute/analysis nodes, you get for this.
+
+Best advise is "go wide".  As many spindles as possible.  If you are 
+read bound (large block streaming IO), then RAID6 is good, and many of 
+them joined into a parallel file system (ala GlusterFS, FhGFS, MooseFS, 
+OrangeFS, ... ) is even better.  Well, as long as the baseline hardware 
+is fast to begin with.  We do not recommend a single drive per server, 
+turns out to be a terrible way to aggregate bandwidth in practice.  Its 
+better to build really fast units, and go "wide" with them.  Which is, 
+curiously, what we do with our siCluster boxen.
+
+MD raid should be fine for you.
+
+Regards,
+
+Joe
 
 
 
-On Tue, Feb 1, 2011 at 8:04 PM, Paul Clements <paul.clements@us.sios.com> w=
-rote:
-> On Tue, Feb 1, 2011 at 7:32 PM, NeilBrown <neilb@suse.de> wrote:
->> On Tue, 1 Feb 2011 15:45:16 -0500 Paul Clements <paul.clements@us.sios.c=
-om>
->> wrote:
->> Disabling behind-writes for all barrier requests would be quite easy, bu=
-t it
->> might negate a lot of the value of behind writes
->
-> Agreed...
->
->> I think the best option is to reject barrier writes if there are any
->> behind-write devices. =A0That would be reasonably safe and reasonably
->> consistent.
->
-> Yeah, I was leaning toward this.
->
->> So maybe something like this??
->
-> Yes, I think that would work.
->
-> Thanks,
-> Paul
->
-
---bcaec53f943d4a2719049d0d8f8b
-Content-Type: text/x-patch; charset=US-ASCII;
-	name="md-disable-barriers-with-write-behind.diff"
-Content-Disposition: attachment;
-	filename="md-disable-barriers-with-write-behind.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gkk5uoi30
-
-LS0tIC4vZHJpdmVycy9tZC9iaXRtYXAuYy5QUklTVElORQkyMDExLTAyLTIzIDE3OjQwOjI2LjYz
-MzI3MDgxNCAtMDUwMAorKysgLi9kcml2ZXJzL21kL2JpdG1hcC5jCTIwMTEtMDItMjMgMTQ6NDc6
-MzguNjUyNDM0NzQ1IC0wNTAwCkBAIC0xMjk4LDggKzEyOTgsNyBAQCBpbnQgYml0bWFwX3N0YXJ0
-d3JpdGUoc3RydWN0IGJpdG1hcCAqYml0CiAJCWlmIChidyA+IGJpdG1hcC0+YmVoaW5kX3dyaXRl
-c191c2VkKQogCQkJYml0bWFwLT5iZWhpbmRfd3JpdGVzX3VzZWQgPSBidzsKIAotCQlQUklOVEso
-S0VSTl9ERUJVRyAiaW5jIHdyaXRlLWJlaGluZCBjb3VudCAlZC8lZFxuIiwKLQkJICAgICAgIGJ3
-LCBiaXRtYXAtPm1heF93cml0ZV9iZWhpbmQpOworCQlQUklOVEsoS0VSTl9ERUJVRyAiaW5jIHdy
-aXRlLWJlaGluZCBjb3VudCAlZFxuIiwgYncpOwogCX0KIAogCXdoaWxlIChzZWN0b3JzKSB7CkBA
-IC0xMzU3LDggKzEzNTYsOCBAQCB2b2lkIGJpdG1hcF9lbmR3cml0ZShzdHJ1Y3QgYml0bWFwICpi
-aXRtCiAJaWYgKCFiaXRtYXApIHJldHVybjsKIAlpZiAoYmVoaW5kKSB7CiAJCWF0b21pY19kZWMo
-JmJpdG1hcC0+YmVoaW5kX3dyaXRlcyk7Ci0JCVBSSU5USyhLRVJOX0RFQlVHICJkZWMgd3JpdGUt
-YmVoaW5kIGNvdW50ICVkLyVkXG4iLAotCQkgIGF0b21pY19yZWFkKCZiaXRtYXAtPmJlaGluZF93
-cml0ZXMpLCBiaXRtYXAtPm1heF93cml0ZV9iZWhpbmQpOworCQlQUklOVEsoS0VSTl9ERUJVRyAi
-ZGVjIHdyaXRlLWJlaGluZCBjb3VudCAlZFxuIiwKKwkJICBhdG9taWNfcmVhZCgmYml0bWFwLT5i
-ZWhpbmRfd3JpdGVzKSk7CiAJfQogCWlmIChiaXRtYXAtPm1kZGV2LT5kZWdyYWRlZCkKIAkJLyog
-TmV2ZXIgY2xlYXIgYml0cyBvciB1cGRhdGUgZXZlbnRzX2NsZWFyZWQgd2hlbiBkZWdyYWRlZCAq
-LwpAQCAtMTcxMyw2ICsxNzEyLDEwIEBAIGludCBiaXRtYXBfY3JlYXRlKG1kZGV2X3QgKm1kZGV2
-KQogCWlmIChlcnIpCiAJCWdvdG8gZXJyb3I7CiAKKwkvKiB3cml0ZSBiZWhpbmQgYW5kIGJhcnJp
-ZXIgd3JpdGUgcmV0cmllcyBhcmUgbm90IGNvbXBhdGlibGUgKi8KKwlpZiAobWRkZXYtPmJpdG1h
-cF9pbmZvLm1heF93cml0ZV9iZWhpbmQpCisJCW1kZGV2LT5iYXJyaWVyc193b3JrID0gMDsKKwog
-CWJpdG1hcC0+ZGFlbW9uX2xhc3RydW4gPSBqaWZmaWVzOwogCWJpdG1hcC0+Y2h1bmtzaGlmdCA9
-IGZmeih+bWRkZXYtPmJpdG1hcF9pbmZvLmNodW5rc2l6ZSk7CiAK
---bcaec53f943d4a2719049d0d8f8b--
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
