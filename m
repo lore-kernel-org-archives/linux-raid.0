@@ -1,144 +1,249 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: high throughput storage server?
-Date: Thu, 24 Feb 2011 09:53:52 -0600
-Message-ID: <4D667F10.6060409@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org> <4D6518ED.1080908@anonymous.org.uk> <4D658335.3040401@hardwarefreak.com> <4D659B9A.2090406@anonymous.org.uk>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
+Subject: Re: failed drive in raid 1 array
+Date: Thu, 24 Feb 2011 11:05:53 -0500
+Message-ID: <4D6681E1.5010905@cdf.toronto.edu>
+References: <4D653B57.1030203@supsi.ch>	<AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>	<4D655D01.6040803@supsi.ch>	<AANLkTimQhfvbx72izkg9qxMFkC0xixTPQa6aQ4HF04Hq@mail.gmail.com>	<4D657AFE.3010605@supsi.ch> <AANLkTikKtkwHATrSE7Ymf2n22Fj06kw9fpNwTr-8WyS1@mail.gmail.com> <4D658672.4000503@supsi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D659B9A.2090406@anonymous.org.uk>
+In-Reply-To: <4D658672.4000503@supsi.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Roberto Nunnari <roberto.nunnari@supsi.ch>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson put forth on 2/23/2011 5:43 PM:
-> On 23/02/2011 21:59, Stan Hoeppner wrote:
+Hi guys,
 
->> Actually, that's not what I mentioned.
-> 
-> Yes, it's precisely what you mentioned in this post:
-> http://marc.info/?l=linux-raid&m=129777295601681&w=2
+I saw a bunch of discussion of devices changing names when hot-plugged.=
+=20
+If you get the device name right when you add it to the array first, al=
+l=20
+is good since the superblock is used to "discover" the device later.
 
-Sorry John.  I thought you were referring to my recent post regarding 48
-drives.  I usually don't remember my own posts very long, especially
-those over a week old.  Heck, I'm lucky to remember a post I made 2-3
-days ago.  ;)
+However, to make things easier/clearer, and to avoid errors, one can=20
+take a look at the set of directories:
 
-> [...]
->>> and I wondered how a 40-drive RAID-60 (i.e. a
->>> 10-way RAID-0 stripe over 4-way RAID-6 arrays) would perform
-> [...]
->> First off what you describe here is not a RAID60.  RAID60 is defined as
->> a stripe across _two_ RAID6 arrays--not 10 arrays.  RAID50 is the same
->> but with RAID5 arrays.  What you're describing is simply a custom nested
->> RAID, much like what I mentioned above.
-> 
-> In the same way that RAID10 is not specified as a stripe across two
-> RAID1 arrays, RAID60 is not specified as a stripe across two arrays. But
-> yes, it's a nested RAID, in the same way that you have repeatedly
-> insisted that RAID10 is nested RAID0 over RAID1.
+/dev/disk/by-id
+/dev/disk/by-path
+/dev/disk/by-uuid
+/dev/disk/by-label
 
-"RAID 10" is used to describe striped mirrors regardless of the number
-of mirror sets used, simply specifying the number of drives in the
-description, i.e. "20 drive RAID 10" or "8 drive RAID 10".  As I just
-learned from doing some research, apparently when ones stripes more than
-2 RAID6s one would then describe the array and an "n leg RAID 60", or "n
-element RAID 60".  In your example this would be a "10 leg RAID 60".
-I'd only seen the term "RAID 60" used to describe the 2 leg case.  My
-apologies for straying out here and wasting time on a non-issue.
+for a predictable, more static view of the drives. The symlinks in thes=
+e=20
+directories are created by udev, and are simply links to the "real"=20
+device nodes /dev/sd{a-z}*. You can either just use these symlinks as a=
+=20
+way of verifying that you are adding the right device, or add the devic=
+e=20
+using the symlink.
 
->> Anyway, you'd be better off striping 13 three-disk mirror sets with a
->> spare drive making up the 40.  This covers the double drive failure
->> during rebuild (a non issue in my book for RAID1/10), and suffers zero
->> read or write performance, except possibly LVM striping overhead in the
->> event you have to use LVM to create the stripe.  I'm not familiar enough
->> with mdadm to know if you can do this nested setup all in mdadm.
-> 
-> Yes of course you can. (You can use md RAID10 with layout n3 or do it
-> the long way round with multiple RAID1s and a RAID0.) But in order to
-> get the 20TB of storage you'd need 60 drives. That's why for the sake of
-> slightly better storage and energy efficiency I'd be interested in how a
-> RAID 6+0 (if you prefer) in the arrangement I suggested would perform
-> compared to a RAID 10.
+At our location, we even augmented udev to add links to labeled GPT=20
+partitions in /dev/disk/by-label, and now our drives/partitions look=20
+like this:
 
-For the definitive answer to this you'd have to test each RAID level
-with your target workload.  In general, I'd say, other than the problems
-with parity performance, the possible gotcha is being able to come up
-with a workable stripe block/width with such a setup.  Wide arrays
-typically don't work well for general use filesystems as most files are
-much smaller than the typical stripe block required to get decent
-performance from such a wide stripe.  The situation is even worse with
-nested stripes.
+iscsi00-drive00-part00 -> ../../sda1
+iscsi00-drive01-part00 -> ../../sdb1
+iscsi00-drive02-part00 -> ../../sdc1
+iscsi00-drive03-part00 -> ../../sdd1
+iscsi00-drive04-part00 -> ../../sde1
 
-Your example uses a top level stripe width of 10 with a nested stripe
-width of 2.  Getting any filesystem to work efficiently with such a
-nested RAID, from both an overall performance and space efficiency
-standpoint, may prove to be very difficult.  If you can't find a magic
-formula for this, you could very well end up with worse actual space
-efficiency in the FS than if you used a straight RAID10.
+This way, we know exactly which bay contains exactly which drive, and i=
+t=20
+stays this way. If you guys want, I can share with you the changes to=20
+udev necessary and the script which extracts the GPT label and reports=20
+it to udev for this magic to happen :). Please reply to this thread wit=
+h=20
+a request if you think it may be useful to you.
 
-If you prefer RAID6 legs, what I'd recommend is simply concatenating the
-legs instead of striping them.  Using your 40 drive example, I'd
-recommend using 4 RAID6 legs of 10 drives each, so you get an 8 drive
-stripe width per array and thus better performance than the 4 drive
-case.  Use a stripe block size of 64KB on each array as this should
-yield a good mix of space efficiency for average size files/extents and
-performance for random IO with such size files.  Concatenating in this
-manner will avoid the difficult to solve multiple layered stripe
-block/width to filesystem harmony problem.
+Cheers,
+Iordan
 
-Using XFS atop this concatenated RAID6 setup with an allocation group
-count of 32 (4 arrays x 8 stripe spindles/array) will give you good
-parallelism across the 4 arrays with a multiuser workload.  AFAIK,
-EXT3/4, ReiserFS, JFS, don't use allocation groups or anything like
-them, and thus can't get parallelism from such a concatenated setup.
-This is one of the many reasons why XFS is the only suitable Linux FS
-for large/complex arrays.  I haven't paid any attention to BTRFS, so I
-don't know if it would be suitable for scenarios like this.  It's so far
-from production quality at this point it's not really even worth
-mentioning, but I did so for the sake of being complete.
 
-As always, all of this is a strictly academic guessing exercise without
-testing the specific workload.  That said, for any multiuser workload
-this setup should perform relatively well, for a parity based array.
-
-The takeaway here is concatenation instead of layered striping, and
-using the appropriate filesystem to take advantage of such.
-
-> I'm positing this arrangement specifically to cope with the almost
-> inevitable URE when trying to recover an array. You dismissed it above
-> as a non-issue but in another post you linked to the zdnet article on
-> "why RAID5 stops working in 2009", and as far as I'm concerned much the
-> same applies to RAID1 pairs. UREs are now a fact of life. When they do
-> occur the drives aren't necessarily even operating outside their specs:
-> it's 1 in 10^14 or 10^15 bits, so read a lot more than that (as you will
-> on a busy drive) and they're going to happen.
-
-I didn't mean to discount anything.  The math shows that UREs during
-rebuild aren't relevant for mirrored RAID schemes.   This is because
-with current drive sizes and URE rates you have to read more than
-something like 12 TB before encountering a URE.  The largest drives
-available are 3TB, or ~1/4th the "URE rebuild threshold" bit count.
-Probabilities inform us about the hypothetical world in general terms.
-In the real world, sure, anything can happen.  Real world data of this
-type isn't published, do we have to base our calculation and planning on
-what the manufacturers provide.
-
-The article makes an interesting point in that as drives continue to
-increase in capacity, with their URE rates remaining basically static,
-eventually every RAID6 rebuild will see a URE.  I haven't done the math
-so I don't know at exactly what drive size/count this will occur.  The
-obvious answer to it will be RAID7, or triple parity RAID.  At that
-point, parity RAID will have, in practical $$, lost its only advantage
-over mirrors, i.e. RAID10.
-
-In the long run, if the current size:URE rate trend continues, we may
-see the 3 leg RAID 10 becoming popular.  My personal hope is that the
-drive makers can start producing drives with much lower URE rates.  I'd
-rather never see the days of anything close to hexa parity RAID9 and
-quad leg RAID10 being required simply to survive a rebuild process.
-
--- 
-Stan
+On 02/23/11 17:13, Roberto Nunnari wrote:
+> Roberto Spadim wrote:
+>> hum, maybe you are using mdadm.conf or autodetect, non autodetect
+>> should be something like this:
+>> i don=C2=B4t know the best solution, but it works ehhehe
+>>
+>> kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro root=3D/dev/md0 rhgb
+>> quiet md=3D0,/dev/sda,/dev/sdb md=3D1,xxxx,yyyy.....
+>>
+>> or another md array...
+>>
+>> humm i readed the sata specification and removing isn=C2=B4t a probl=
+em, at
+>> eletronic level the sata channel is only data, no power source, all
+>> channels are diferencial (like rs422 or rs485), i don=C2=B4t see any=
+problem
+>> removing it. i tryed hot plug a revodrive (pciexpress ssd) and it
+>> don=C2=B4t work (reboot) hehehe, pci-express isn=C2=B4t hot plug =3D=
+P, sata2 don=C2=B4t
+>> have problems, the main problem is a short circuit at power source, =
+if
+>> you remove with caution no problems =3D)
+>>
+>> i tried in some others distros and udev created a new device when ad=
+d
+>> a diferent disk for example, remove sdb, and add another disk create
+>> sdc (not sdb), maybe with another udev configuration should work
+>
+> Ok. I'll keep all that in mind tomorrow.
+> Best regards.
+> Robi
+>
+>
+>>
+>>
+>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>> Roberto Spadim wrote:
+>>>> i don=C2=B4t know how you setup your kernel (with or without raid
+>>> I use the official CentOS kernel with no modification and don't
+>>> know about raid autodetect, but:
+>>> # cat /boot/config-2.6.24-28-server |grep -i raid
+>>> CONFIG_BLK_DEV_3W_XXXX_RAID=3Dm
+>>> CONFIG_MD_RAID0=3Dm
+>>> CONFIG_MD_RAID1=3Dm
+>>> CONFIG_MD_RAID10=3Dm
+>>> CONFIG_MD_RAID456=3Dm
+>>> CONFIG_MD_RAID5_RESHAPE=3Dy
+>>> CONFIG_MEGARAID_LEGACY=3Dm
+>>> CONFIG_MEGARAID_MAILBOX=3Dm
+>>> CONFIG_MEGARAID_MM=3Dm
+>>> CONFIG_MEGARAID_NEWGEN=3Dy
+>>> CONFIG_MEGARAID_SAS=3Dm
+>>> CONFIG_RAID_ATTRS=3Dm
+>>> CONFIG_SCSI_AACRAID=3Dm
+>>>
+>>>
+>>>> autodetect?) do you use kernel command line to setup raid? autodet=
+ect?
+>>> /dev/md0 in grub
+>>> I don't know if that means autodetect, but I guess so..
+>>>
+>>>
+>>>> here in my test machine i=C2=B4m using kernel command line (grub),=
+ i don=C2=B4t
+>>>> have a server with hotplug bay, i open the case and remove the wir=
+e
+>>>> with my hands =3D) after reconecting it with another device kerene=
+l
+>>> Is it safe? Isn't it a blind bet to fry up the controller and/or di=
+sk?
+>>>
+>>>
+>>>> recognize the new device reread the parititions etc etc and i can =
+add
+>>>> it to array again
+>>>> my grub is something like:
+>>>>
+>>>> md=3D0,/dev/sda,/dev/sdb .....
+>>>>
+>>>> internal meta data, raid1, i didn=C2=B4t like the autodetect (it=C2=
+=B4s good)
+>>>> but i prefer hardcoded kernel command line (it=C2=B4s not good wit=
+h usb
+>>>> devices)
+>>> the relevant part of my grub is:
+>>>
+>>> default=3D0
+>>> timeout=3D5
+>>> splashimage=3D(hd0,0)/grub/splash.xpm.gz
+>>> hiddenmenu
+>>> title CentOS (2.6.9-89.31.1.ELsmp)
+>>> root (hd0,0)
+>>> kernel /vmlinuz-2.6.9-89.31.1.ELsmp ro root=3D/dev/md0 rhgb quiet
+>>> initrd /initrd-2.6.9-89.31.1.ELsmp.img
+>>>
+>>> Best regards.
+>>> Robi
+>>>
+>>>
+>>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>>>> Roberto Spadim wrote:
+>>>>>> sata2 without hot plug?
+>>>>> Hi Roberto.
+>>>>>
+>>>>> I mean that there is no hot-plug bay, with sliding rails etc..
+>>>>> The drives are connected to the mb using standard sata cables.
+>>>>>
+>>>>>
+>>>>>> check if your sda sdb sdc will change after removing it, it=E6=84=
+=80 depends
+>>>>>> on your udev or another /dev filesystem
+>>>>> Ok, thank you.
+>>>>> That means that if I take care to check the above, and
+>>>>> the new drive will be sdb, then taking the steps indicated
+>>>>> in my original post will do the job?
+>>>>>
+>>>>> Best regards.
+>>>>> Robi
+>>>>>
+>>>>>
+>>>>>> 2011/2/23 Roberto Nunnari <roberto.nunnari@supsi.ch>:
+>>>>>>> Hello.
+>>>>>>>
+>>>>>>> I have a linux box, with two 2TB sata HD in raid 1.
+>>>>>>>
+>>>>>>> Now, one disk is in failed state and it has no spares:
+>>>>>>> # cat /proc/mdstat
+>>>>>>> Personalities : [raid1]
+>>>>>>> md1 : active raid1 sdb4[2](F) sda4[0]
+>>>>>>> 1910200704 blocks [2/1] [U_]
+>>>>>>>
+>>>>>>> md0 : active raid1 sdb1[1] sda2[0]
+>>>>>>> 40957568 blocks [2/2] [UU]
+>>>>>>>
+>>>>>>> unused devices: <none>
+>>>>>>>
+>>>>>>>
+>>>>>>> The drives are not hot-plug, so I need to shutdown the box.
+>>>>>>>
+>>>>>>> My plan is to:
+>>>>>>> # sfdisk -d /dev/sdb > sdb.sfdisk
+>>>>>>> # mdadm /dev/md1 -r /dev/sdb4
+>>>>>>> # mdadm /dev/md0 -r /dev/sdb1
+>>>>>>> # shutdown -h now
+>>>>>>>
+>>>>>>> replace the disk and boot (it should come back up, even without=
+ one
+>>>>>>> drive,
+>>>>>>> right?)
+>>>>>>>
+>>>>>>> # sfdisk /dev/sdb < sdb.sfdisk
+>>>>>>> # mdadm /dev/md1 -a /dev/sdb4
+>>>>>>> # mdadm /dev/md0 -a /dev/sdb1
+>>>>>>>
+>>>>>>> and the drives should start to resync, right?
+>>>>>>>
+>>>>>>> This is my first time I do such a thing, so please, correct me
+>>>>>>> if the above is not correct, or is not a best practice for
+>>>>>>> my configuration.
+>>>>>>>
+>>>>>>> My last backup of md1 is of mid november, so I need to be
+>>>>>>> pretty sure I will not lose my data (over 1TB).
+>>>>>>>
+>>>>>>> A bit abount my environment:
+>>>>>>> # mdadm --version
+>>>>>>> mdadm - v1.12.0 - 14 June 2005
+>>>>>>> # cat /etc/redhat-release
+>>>>>>> CentOS release 4.8 (Final)
+>>>>>>> # uname -rms
+>>>>>>> Linux 2.6.9-89.31.1.ELsmp i686
+>>>>>>>
+>>>>>>> Thank you very much and best regards.
+>>>>>>> Robi
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
