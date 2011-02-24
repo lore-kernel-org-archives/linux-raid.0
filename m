@@ -1,108 +1,29 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: high throughput storage server?
-Date: Thu, 24 Feb 2011 17:30:35 -0600
-Message-ID: <4D66EA1B.7010801@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org> <4D6577E4.2080305@hardwarefreak.com> <ik5f7j$kuk$1@dough.gmane.org>
+From: "Ian Davies" <iandavies198@gmail.com>
+Subject: Please i wait to hear from you urgently, it very important
+Date: Thu, 24 Feb 2011 11:14:15 -0800
+Message-ID: <20110224200930.B5F185E000D__2668.46022937006$1298602518$gmane$org@mail.dumlupinar.edu.tr>
+Reply-To: <iandavies822@yahoo.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ik5f7j$kuk$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Brown put forth on 2/24/2011 5:24 AM:
+I am Ian Davies ;an accredited vendor of Alliot Groups, a subsidiary firm of Emirates International Holding (EIH); A private equity funds holding company that focuses on hedge funds.
 
-> My understanding of RAID controllers (software or hardware) is that they
-> consider a drive to be either "good" or "bad".  So if you get an URE,
-> the controller considers the drive "bad" and ejects it from the array.
-> It doesn't matter if it is an URE or a total disk death.
-> 
-> Maybe hardware RAID controllers do something else here - you know far
-> more about them than I do.
+I have contacted you in the hope that you can be my associate by accepting to stand as the legal recipient to a Fixed-Income deposit, valued at 25MUSD by provind an International Offshore account to clear the funds.
 
-Most HBA and SAN RAID firmware I've dealt with kicks drives offline
-pretty quickly at any sign of an unrecoverable error.  I've also seen
-drives kicked simply because the RAID firmware didn't like the drive
-firmware.  I have a fond (sarcasm) memory of DAC960s kicking ST118202
-18GB Cheetahs offline left and right in the late 90s.  The fact I still
-recall that Seagate drive# after 10+ years should be informative
-regarding the severity of that issue.  :(
+Once I file your details as the new recipient to the funds, the fundswill be approved through the AUTOMATED CLEARING HOUSE (ACH) - A facility used by financial institutions to distribute electronic debit and credit entries to bank accounts and therefore settles such entries. Under the automated clearing house system. 
 
-> The idea of the md raid "bad block list" is that there is a medium
-> ground - you can have disks that are "mostly good".
 
-Everything I've read and seen in the last few years regarding hard disk
-technology says that platter manufacturing quality and tolerance are so
-high on modern drives that media defects are rarely, if ever, seen by
-the customer, as they're mapped out at the factory.  The platters don't
-suffer wear effects, but the rest of the moving parts do.  From what
-I've read/seen, "media" errors observed in the wild today are actually
-caused by mechanical failures due to physical wear on various moving
-parts:  VC actuator pivot bearing/race, spindle bearings, etc.
-Mechanical failures tend to show mild "media errors" in the beginning
-and get worse with time as moving parts go further out of alignment.
-Thus, as I see it, any UREs on a modern drive represent a "Don't trust
-me--Replace me NOW" flag.  I could be all wrong here, but this is what
-I've read, and seen in manufacturer videos from WD and Seagate.
+upon approval of your details  as the new recipient; a Credit advice will be issued in your favor and the funds will clear in your account within three banking days. I am willing to give you 40% which is 10MUSD as your commission out of the 25MUSD for your assistance in providing an International Offshore account to clear the funds.
 
-> Supposing you have a RAID6 array, and one disk has died completely.  It
-> gets replaced by a hot spare, and rebuild begins.  As the rebuild
-> progresses, disk 1 gets an URE.  Traditional handling would mean disk 1
-> is ejected, and now you have a double-degraded RAID6 to rebuilt.  When
-> you later get an URE on disk 2, you have lost data for that stripe - and
-> the whole raid is gone.
-> 
-> But with bad block lists, the URE on disk 1 leads to a bad block entry
-> on disk 1, and the rebuild continues.  When you later get an URE on disk
-> 2, it's no problem - you use data from disk 1 and the other disks. URE's
-> are no longer a killer unless your set has no redundancy.
 
-They're not a killer with RAID 6 anyway, are they?.  You can be
-rebuilding one failed drive and suffer UREs left and right, as long as
-you don't get two of them on two drives simultaneously in the same
-stripe block read.  I think that's right.  Please correct me if not.
+I am confident you will be honest enough to adhere to our agreed commissions in spite of the 25MUSD coming through your account. I will need you to forward me your legal names address and phone to file your details on the fund as the new recipient in this first Quater of the financial fiscal year 2011.
 
-> URE's are also what I worry about with RAID1 (including RAID10)
-> rebuilds.  If a disk has failed, you are right in saying that the
-> chances of the second disk in the pair failing completely are tiny.  But
-> the chances of getting an URE on the second disk during the rebuild are
-> not negligible - they are small, but growing with each new jump in disk
-> size.
+Looking forward to working with you.
+Ian Davies
+Accredited vendor
+Alliot Groups PS
 
-I touched on this in my other reply, somewhat tongue-in-cheek mentioning
-3 leg and 4 leg RAID10.  At current capacities and URE ratings I'm not
-worried about it with mirror pairs.  If URE ratings haven't increased
-substantially by the time our avg drive capacity hits 10GB I'll start to
-worry.
-
-Somewhat related to this, does any else here build their arrays from the
-smallest cap drives they can get away with, preferably single platter
-models when possible?  I adopted this strategy quite some time ago,
-mostly to keep rebuild times to a minimum, keep rotational mass low to
-consume the least energy since using more drives, but also with the URE
-issue in the back of my mind.  Anecdotal evidence tends to point to the
-trend of OPs going with fewer gargantuan drives instead of many smaller
-ones.  Maybe that's just members of this list, whose criteria may be
-quite different from the typical enterprise data center.
-
-> With md raid's future bad block lists and hot replace features, then an
-> URE on the second disk during rebuilds is only a problem if the first
-> disk has died completely - if it only had a small problem, then the "hot
-> replace" rebuild will be able to use both disks to find the data.
-
-What happens when you have multiple drives at the same or similar bad
-block count?
-
-> I know you are more interested in hardware raid than software raid, but
-> I'm sure you'll find some interesting points in Neil's writings.  If you
-> don't want to read through the thread, at least read his blog post.
-> 
-> <http://neil.brown.name/blog/20110216044002>
-
-Will catch up.  Thanks for the blog link.
-
--- 
-Stan
