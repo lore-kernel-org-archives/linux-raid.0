@@ -1,139 +1,108 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: failed drive in raid 1 array
-Date: Thu, 24 Feb 2011 19:00:59 -0300
-Message-ID: <AANLkTikPk=ej0++J8uud_bTPoKUJPrA7tC4HgSVroqkR@mail.gmail.com>
-References: <4D653B57.1030203@supsi.ch>
-	<AANLkTim+Sz9Hrpu0rPQt2r4-SgmGEt1svsrs26Ejrkoq@mail.gmail.com>
-	<4D654FD8.1070206@alice.nl>
-	<4D657A45.7020306@supsi.ch>
-	<4D66D2FF.8090005@supsi.ch>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Thu, 24 Feb 2011 17:30:35 -0600
+Message-ID: <4D66EA1B.7010801@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <Pine.GSO.4.64.1102181429201.7398@montezuma.acc.umu.se> <4D5EFDD6.1020504@hardwarefreak.com> <Pine.GSO.4.64.1102211116030.7398@montezuma.acc.umu.se> <4D62DE55.8040705@hardwarefreak.com> <ijvtqg$pke$1@dough.gmane.org> <4D63BC6D.8010209@hardwarefreak.com> <ik0gkm$nn$1@dough.gmane.org> <4D64A082.9000601@hardwarefreak.com> <ik33nt$fd8$1@dough.gmane.org> <4D6577E4.2080305@hardwarefreak.com> <ik5f7j$kuk$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D66D2FF.8090005@supsi.ch>
+In-Reply-To: <ik5f7j$kuk$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Nunnari <roberto.nunnari@supsi.ch>
-Cc: Albert Pauw <albert.pauw@alice.nl>, linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=3D) nice hehe
+David Brown put forth on 2/24/2011 5:24 AM:
 
-2011/2/24 Roberto Nunnari <roberto.nunnari@supsi.ch>:
-> Roberto Nunnari wrote:
->>
->> Albert Pauw wrote:
->>>
->>> =C2=A0On 02/23/11 06:56 PM, Roberto Spadim wrote:
->>>>
->>>> sata2 without hot plug?
->>>> check if your sda sdb sdc will change after removing it, it=E6=84=80=
- depends
->>>> on your udev or another /dev filesystem
->>>>
->>>> 2011/2/23 Roberto Nunnari<roberto.nunnari@supsi.ch>:
->>>>>
->>>>> Hello.
->>>>>
->>>>> I have a linux box, with two 2TB sata HD in raid 1.
->>>>>
->>>>> Now, one disk is in failed state and it has no spares:
->>>>> # cat /proc/mdstat
->>>>> Personalities : [raid1]
->>>>> md1 : active raid1 sdb4[2](F) sda4[0]
->>>>> =C2=A0 =C2=A0 =C2=A01910200704 blocks [2/1] [U_]
->>>>>
->>>>> md0 : active raid1 sdb1[1] sda2[0]
->>>>> =C2=A0 =C2=A0 =C2=A040957568 blocks [2/2] [UU]
->>>>>
->>>>> unused devices:<none>
->>>>>
->>>>>
->>>>> The drives are not hot-plug, so I need to shutdown the box.
->>>>>
->>>>> My plan is to:
->>>>> # sfdisk -d /dev/sdb> =C2=A0sdb.sfdisk
->>>>> # mdadm /dev/md1 -r /dev/sdb4
->>>
->>> -> removing should be ok, as the partition has failed in md1
->>
->> ok.
->>
->>
->>>>> # mdadm /dev/md0 -r /dev/sdb1
->>>
->>> -> In this case, sdb1 hasn't failed according to the output of
->>> /proc/mdstat, so you should fail it otherwise you can't remove it:
->>> mdadm /dev/md0 -f /dev/sdb1
->>> mdadm /dev/md0 -r /dev/sdb1
->>
->> good to know! Thank you.
->>
->>
->>>
->>>>> # shutdown -h now
->>>>>
->>>>> replace the disk and boot (it should come back up, even without o=
-ne
->>>>> drive,
->>>>> right?)
->>>>>
->>>>> # sfdisk /dev/sdb< =C2=A0sdb.sfdisk
->>>>> # mdadm /dev/md1 -a /dev/sdb4
->>>>> # mdadm /dev/md0 -a /dev/sdb1
->>>>>
->>>>> and the drives should start to resync, right?
->>>>>
->>>>> This is my first time I do such a thing, so please, correct me
->>>>> if the above is not correct, or is not a best practice for
->>>>> my configuration.
->>>>>
->>>>> My last backup of md1 is of mid november, so I need to be
->>>>> pretty sure I will not lose my data (over 1TB).
->>>>>
->>>>> A bit abount my environment:
->>>>> # mdadm --version
->>>>> mdadm - v1.12.0 - 14 June 2005
->>>>> # cat /etc/redhat-release
->>>>> CentOS release 4.8 (Final)
->>>>> # uname -rms
->>>>> Linux 2.6.9-89.31.1.ELsmp i686
->>>
->>> What about sdb2 an sdb3, are they in use as normal mountpoints, or =
-swap.
->>> Then these should be commented out in /etc/fstab
->>> before you change the disk.
->>
->> Yes. They're normal mount point, so I'll have to
->> comment them out before rebooting, especially the swap partition.
->> Thank you for pointing that out!
->>
->> Best regards.
->> Robi
->
-> Thank you very much Roberto and Albert.
-> I replaced the defective drive.
-> md0 was rebuilt almost immediatly, md1 is still rebuilding
-> but already completed 77%.
->
-> Great linux-raid md!
-> Best regards.
-> Robi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+> My understanding of RAID controllers (software or hardware) is that they
+> consider a drive to be either "good" or "bad".  So if you get an URE,
+> the controller considers the drive "bad" and ejects it from the array.
+> It doesn't matter if it is an URE or a total disk death.
+> 
+> Maybe hardware RAID controllers do something else here - you know far
+> more about them than I do.
 
+Most HBA and SAN RAID firmware I've dealt with kicks drives offline
+pretty quickly at any sign of an unrecoverable error.  I've also seen
+drives kicked simply because the RAID firmware didn't like the drive
+firmware.  I have a fond (sarcasm) memory of DAC960s kicking ST118202
+18GB Cheetahs offline left and right in the late 90s.  The fact I still
+recall that Seagate drive# after 10+ years should be informative
+regarding the severity of that issue.  :(
 
+> The idea of the md raid "bad block list" is that there is a medium
+> ground - you can have disks that are "mostly good".
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Everything I've read and seen in the last few years regarding hard disk
+technology says that platter manufacturing quality and tolerance are so
+high on modern drives that media defects are rarely, if ever, seen by
+the customer, as they're mapped out at the factory.  The platters don't
+suffer wear effects, but the rest of the moving parts do.  From what
+I've read/seen, "media" errors observed in the wild today are actually
+caused by mechanical failures due to physical wear on various moving
+parts:  VC actuator pivot bearing/race, spindle bearings, etc.
+Mechanical failures tend to show mild "media errors" in the beginning
+and get worse with time as moving parts go further out of alignment.
+Thus, as I see it, any UREs on a modern drive represent a "Don't trust
+me--Replace me NOW" flag.  I could be all wrong here, but this is what
+I've read, and seen in manufacturer videos from WD and Seagate.
+
+> Supposing you have a RAID6 array, and one disk has died completely.  It
+> gets replaced by a hot spare, and rebuild begins.  As the rebuild
+> progresses, disk 1 gets an URE.  Traditional handling would mean disk 1
+> is ejected, and now you have a double-degraded RAID6 to rebuilt.  When
+> you later get an URE on disk 2, you have lost data for that stripe - and
+> the whole raid is gone.
+> 
+> But with bad block lists, the URE on disk 1 leads to a bad block entry
+> on disk 1, and the rebuild continues.  When you later get an URE on disk
+> 2, it's no problem - you use data from disk 1 and the other disks. URE's
+> are no longer a killer unless your set has no redundancy.
+
+They're not a killer with RAID 6 anyway, are they?.  You can be
+rebuilding one failed drive and suffer UREs left and right, as long as
+you don't get two of them on two drives simultaneously in the same
+stripe block read.  I think that's right.  Please correct me if not.
+
+> URE's are also what I worry about with RAID1 (including RAID10)
+> rebuilds.  If a disk has failed, you are right in saying that the
+> chances of the second disk in the pair failing completely are tiny.  But
+> the chances of getting an URE on the second disk during the rebuild are
+> not negligible - they are small, but growing with each new jump in disk
+> size.
+
+I touched on this in my other reply, somewhat tongue-in-cheek mentioning
+3 leg and 4 leg RAID10.  At current capacities and URE ratings I'm not
+worried about it with mirror pairs.  If URE ratings haven't increased
+substantially by the time our avg drive capacity hits 10GB I'll start to
+worry.
+
+Somewhat related to this, does any else here build their arrays from the
+smallest cap drives they can get away with, preferably single platter
+models when possible?  I adopted this strategy quite some time ago,
+mostly to keep rebuild times to a minimum, keep rotational mass low to
+consume the least energy since using more drives, but also with the URE
+issue in the back of my mind.  Anecdotal evidence tends to point to the
+trend of OPs going with fewer gargantuan drives instead of many smaller
+ones.  Maybe that's just members of this list, whose criteria may be
+quite different from the typical enterprise data center.
+
+> With md raid's future bad block lists and hot replace features, then an
+> URE on the second disk during rebuilds is only a problem if the first
+> disk has died completely - if it only had a small problem, then the "hot
+> replace" rebuild will be able to use both disks to find the data.
+
+What happens when you have multiple drives at the same or similar bad
+block count?
+
+> I know you are more interested in hardware raid than software raid, but
+> I'm sure you'll find some interesting points in Neil's writings.  If you
+> don't want to read through the thread, at least read his blog post.
+> 
+> <http://neil.brown.name/blog/20110216044002>
+
+Will catch up.  Thanks for the blog link.
+
+-- 
+Stan
