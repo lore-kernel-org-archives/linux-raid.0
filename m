@@ -1,29 +1,64 @@
-From: "Ian Davies" <iandavies198@gmail.com>
-Subject: Please i wait to hear from you urgently, it very important
-Date: Thu, 24 Feb 2011 11:14:15 -0800
-Message-ID: <20110224200930.B5F185E000D__2668.46022937006$1298602518$gmane$org@mail.dumlupinar.edu.tr>
-Reply-To: <iandavies822@yahoo.no>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: stripe cache question
+Date: Fri, 25 Feb 2011 14:51:25 +1100
+Message-ID: <20110225145125.69dd4b9d@notabene.brown>
+References: <20110224210642.GA20306@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="Windows-1251"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110224210642.GA20306@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am Ian Davies ;an accredited vendor of Alliot Groups, a subsidiary firm of Emirates International Holding (EIH); A private equity funds holding company that focuses on hedge funds.
+On Thu, 24 Feb 2011 22:06:43 +0100 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-I have contacted you in the hope that you can be my associate by accepting to stand as the legal recipient to a Fixed-Income deposit, valued at 25MUSD by provind an International Offshore account to clear the funds.
+> Hi all,
+> 
+> few posts ago was mentioned that the unit of the stripe
+> cache are "pages per device", usually 4K pages.
+> 
+> Questions:
+> 
+> 1) Does "device" means raid (md) device or component
+> device (HDD)?
 
-Once I file your details as the new recipient to the funds, the fundswill be approved through the AUTOMATED CLEARING HOUSE (ACH) - A facility used by financial institutions to distribute electronic debit and credit entries to bank accounts and therefore settles such entries. Under the automated clearing house system. 
+component device.
+In drivers/md/raid5.[ch] there is a 'struct stripe_head'.
+It holds one page per component device (ignoring spares).
+Several of these comprise the 'cache'.  The 'size' of the cache is the number
+oof 'struct stripe_head' and associated pages that are allocated.
 
 
-upon approval of your details  as the new recipient; a Credit advice will be issued in your favor and the funds will clear in your account within three banking days. I am willing to give you 40% which is 10MUSD as your commission out of the 25MUSD for your assistance in providing an International Offshore account to clear the funds.
+> 
+> 2) The max possible value seems to be 32768, which
+> means, in case of 4K page per md device, a max of
+> 128MiB of RAM.
+> Is this by design? Would it be possible to increase
+> up to whatever is available?
+
+32768 is just an arbitrary number.  It is there in raid5.c and is easy to
+change (for people comfortable with recompiling their kernels).
+
+I wanted an upper limit because setting it too high could easily cause your
+machine to run out of memory and become very sluggish - or worse.
+
+Ideally the cache should be automatically sized based on demand and memory
+size - with maybe just a tunable to select between "use a much memory as you
+need - within reason" verse "use a little memory as you can manage with".
+
+But that requires thought and design and code and .... it just never seemed
+like a priority.
+
+NeilBrown
 
 
-I am confident you will be honest enough to adhere to our agreed commissions in spite of the 25MUSD coming through your account. I will need you to forward me your legal names address and phone to file your details on the fund as the new recipient in this first Quater of the financial fiscal year 2011.
-
-Looking forward to working with you.
-Ian Davies
-Accredited vendor
-Alliot Groups PS
+> 
+> Thanks,
+> 
+> bye,
+> 
 
