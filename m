@@ -1,44 +1,58 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH] Partitions could be meaningful on single-drive RAID0
-Date: Fri, 25 Feb 2011 07:30:51 +0100
-Message-ID: <20110225063051.24710.33725.stgit@gklab-128-111.igk.intel.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: auto-read-only question
+Date: Fri, 25 Feb 2011 16:26:32 +0000
+Message-ID: <20110225162632.GD11345@cthulhu.home.robinhill.me.uk>
+References: <4D67D3D4.9040306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tThc/1wpZn/ma/RB"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D67D3D4.9040306@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Albert Pauw <albert.pauw@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If we create a single-drive RAID0 array on partitioned drive,
-we do not lose information about disk structure after operation
-(partitions are visible on created array)
-Warning message:
 
-mdadm: partition table exists on /dev/sdX but will be lost or
-       meaningless after creating array"
+--tThc/1wpZn/ma/RB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-is not necessary during creation single-drive RAID0 array.
-This patch removes the message.
+On Fri Feb 25, 2011 at 05:07:48PM +0100, Albert Pauw wrote:
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- Create.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+>   Can anybody explain to me what "active (auto-read-only)" mean in=20
+> /proc/mdstats?
+>=20
+When the array is assembled, it's set in "auto-read-only" mode. As soon
+as anything tries to write to it, it gets set to normal write mode (or
+you can trigger this manually by doing "mdadm -w" on the array). I'm not
+sure why this is done - possibly it make it simpler for md to skip
+running various internal processes on that array (as it knows that the
+array isn't being dirtied).
 
-diff --git a/Create.c b/Create.c
-index 1cadbcc..bbd25e5 100644
---- a/Create.c
-+++ b/Create.c
-@@ -381,7 +381,8 @@ int Create(struct supertype *st, char *mddev,
- 			    st->minor_version >= 1)
- 				/* metadata at front */
- 				warn |= check_partitions(fd, dname, 0);
--			else if (level == 1 || level == LEVEL_CONTAINER)
-+			else if (level == 1 || level == LEVEL_CONTAINER
-+				    || (level == 0 && raiddisks == 1))
- 				/* partitions could be meaningful */
- 				warn |= check_partitions(fd, dname, freesize*2);
- 			else
+I usually see this with swap arrays - most filesystems will immediately
+open the array in read/write mode, so trigger the switch.
 
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--tThc/1wpZn/ma/RB
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEARECAAYFAk1n2DYACgkQShxCyD40xBKeIwCcDx2irjuEHp8NI/Qf5v7GVX+b
+lGIAoIegB8J/wgDEYByU2XmEy/dxnA3P
+=4I25
+-----END PGP SIGNATURE-----
+
+--tThc/1wpZn/ma/RB--
