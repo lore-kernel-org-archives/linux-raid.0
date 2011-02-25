@@ -1,33 +1,44 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: auto-read-only question
-Date: Fri, 25 Feb 2011 17:07:48 +0100
-Message-ID: <4D67D3D4.9040306@gmail.com>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] Partitions could be meaningful on single-drive RAID0
+Date: Fri, 25 Feb 2011 07:30:51 +0100
+Message-ID: <20110225063051.24710.33725.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-  Can anybody explain to me what "active (auto-read-only)" mean in 
-/proc/mdstats? So the full entry in /proc/mdstats is:
+If we create a single-drive RAID0 array on partitioned drive,
+we do not lose information about disk structure after operation
+(partitions are visible on created array)
+Warning message:
 
-Personalities : [raid1]
-md2 : active (auto-read-only) raid1 sdd[1] sde[0]
-           1015808 blocks super external:/md127/0 [2/2] [UU]
+mdadm: partition table exists on /dev/sdX but will be lost or
+       meaningless after creating array"
 
-md1 : active (auto-read-only) raid1 sdb[1] sdc[0]
-           1015808 blocks super external:/md127/0 [2/2] [UU]
+is not necessary during creation single-drive RAID0 array.
+This patch removes the message.
 
-md127 : inactive sdb[4](S) sdf[3](S) sde[2](S) sdd[1](S) sdc[0](S)
-            163840 blocks super external:ddf
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ Create.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-unused devices: <none>
+diff --git a/Create.c b/Create.c
+index 1cadbcc..bbd25e5 100644
+--- a/Create.c
++++ b/Create.c
+@@ -381,7 +381,8 @@ int Create(struct supertype *st, char *mddev,
+ 			    st->minor_version >= 1)
+ 				/* metadata at front */
+ 				warn |= check_partitions(fd, dname, 0);
+-			else if (level == 1 || level == LEVEL_CONTAINER)
++			else if (level == 1 || level == LEVEL_CONTAINER
++				    || (level == 0 && raiddisks == 1))
+ 				/* partitions could be meaningful */
+ 				warn |= check_partitions(fd, dname, freesize*2);
+ 			else
 
-
-(Yes, two raid1 sets in a ddf container).
-
-Thanks,
-
-Albert
