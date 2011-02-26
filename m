@@ -1,79 +1,55 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: stripe cache question
-Date: Sat, 26 Feb 2011 11:21:28 +0100
-Message-ID: <20110226102128.GA15074@lazy.lzy>
-References: <20110224210642.GA20306@lazy.lzy>
- <20110225145125.69dd4b9d@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: OK, Now this is really weird
+Date: Sat, 26 Feb 2011 05:20:49 -0600
+Message-ID: <C2.5D.05134.F02E86D4@cdptpa-omtalb.mail.rr.com>
+References: <20110226003611.tjp3cxisu880co88-xnmenx@webmail.spamcop.net>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110225145125.69dd4b9d@notabene.brown>
+In-Reply-To: <20110226003611.tjp3cxisu880co88-xnmenx@webmail.spamcop.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: 'Jeff Woods' <jeff@jeffwoods.us>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Feb 25, 2011 at 02:51:25PM +1100, NeilBrown wrote:
-> On Thu, 24 Feb 2011 22:06:43 +0100 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
+
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Jeff Woods
+> Sent: Saturday, February 26, 2011 1:36 AM
+> To: lrhorer@satx.rr.com
+> Cc: 'Linux RAID'
+> Subject: Re: OK, Now this is really weird
 > 
-> > Hi all,
-> > 
-> > few posts ago was mentioned that the unit of the stripe
-> > cache are "pages per device", usually 4K pages.
-> > 
-> > Questions:
-> > 
-> > 1) Does "device" means raid (md) device or component
-> > device (HDD)?
+> Quoting Leslie Rhorer <lrhorer@satx.rr.com>:
+> > 	I have a pair of drives each of whose 3 partitions are members of a
+> > set of 3 RAID arrays.  One of the two drives had a flaky power
+> connection
+> > which I thought I had fixed, but I guess not, because the drive was
+> taken
+> > offline again on Tuesday.  The significant issue, however, is that both
+> > times the drive failed, mdadm behaved really oddly.  The first time I
+> > thought it might just be some odd anomaly, but the second time it did
+> > precisely the same thing.  Both times, when the drive was de-registered
+> by
+> > udev, the first two arrays properly responded to the failure, but the
+> third
+> > array did not.  Here is the layout:
 > 
-> component device.
-> In drivers/md/raid5.[ch] there is a 'struct stripe_head'.
-> It holds one page per component device (ignoring spares).
-> Several of these comprise the 'cache'.  The 'size' of the cache is the number
-> oof 'struct stripe_head' and associated pages that are allocated.
+> [snip lots of technical details]
 > 
+> > 	So what gives?  /dev/sdk3 no longer even exists, so why hasn't it
+> > been failed and removed on /dev /md3 like it has on /dev/md1 and
+> /dev/md2?
 > 
-> > 
-> > 2) The max possible value seems to be 32768, which
-> > means, in case of 4K page per md device, a max of
-> > 128MiB of RAM.
-> > Is this by design? Would it be possible to increase
-> > up to whatever is available?
-> 
-> 32768 is just an arbitrary number.  It is there in raid5.c and is easy to
-> change (for people comfortable with recompiling their kernels).
+> Is it possible there has been no I/O request for /dev/md3 since
+> /dev/sdk failed?
 
-Ah! I found it. Maybe, considering currently
-available memory you should think about incresing
-it to, for example, 128K or 512K.
- 
-> I wanted an upper limit because setting it too high could easily cause your
-> machine to run out of memory and become very sluggish - or worse.
-> 
-> Ideally the cache should be automatically sized based on demand and memory
-> size - with maybe just a tunable to select between "use a much memory as you
-> need - within reason" verse "use a little memory as you can manage with".
-> 
-> But that requires thought and design and code and .... it just never seemed
-> like a priority.
+	Well, I thought about that.  It's swap space, so I suppose it's
+possible.  I would have thought, however, that mdadm would fail a missing
+member whether there is any I/O or not.
 
-You're a bit contraddicting your philosopy of
-"let's do the smart things in user space"... :-)
-
-IMHO, if really necessary, it could be enough to
-have this "upper limit" avaialable in sysfs.
-
-Then user space can decide what to do with it.
-
-For example, at boot the amount of memory is checked
-and the upper limit set.
-I see a duplication here, maybe better just remove
-the upper limit and let user space to deal with that.
-
-bye,
-
--- 
-
-piergiorgio
