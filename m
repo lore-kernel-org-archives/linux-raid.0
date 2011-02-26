@@ -1,109 +1,206 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: Re: mdadm ddf questions
-Date: Fri, 25 Feb 2011 18:53:38 +0100
-Message-ID: <4D67ECA2.2020201@gmail.com>
-References: <4D5FA5C4.8030803@gmail.com>	<4D63688E.5030501@gmail.com> <20110223171712.09509f9e@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: OK, Now this is really weird
+Date: Sat, 26 Feb 2011 01:00:42 -0600
+Message-ID: <7A.41.13137.815A86D4@cdptpa-omtalb.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110223171712.09509f9e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  Hi Neil,
 
-I investigated a bit further, and here are my findings:
+	I have a pair of drives each of whose 3 partitions are members of a
+set of 3 RAID arrays.  One of the two drives had a flaky power connection
+which I thought I had fixed, but I guess not, because the drive was taken
+offline again on Tuesday.  The significant issue, however, is that both
+times the drive failed, mdadm behaved really oddly.  The first time I
+thought it might just be some odd anomaly, but the second time it did
+precisely the same thing.  Both times, when the drive was de-registered by
+udev, the first two arrays properly responded to the failure, but the third
+array did not.  Here is the layout:
 
-Looking at /proc/mdstat I see the following:
+ARRAY /dev/md1 metadata=0.90 UUID=4cde286c:0687556a:4d9996dd:dd23e701
+ARRAY /dev/md2 metadata=1.2 name=Backup:2
+UUID=d45ff663:9e53774c:6fcf9968:21692025
+ARRAY /dev/md3 metadata=1.2 name=Backup:3
+UUID=51d22c47:10f58974:0b27ef04:5609d357
 
-- When I create a ddf containter with a name (say /dev/md0), I stop it 
-and start it again, the name has always changed to /dev/md127,
-don't know if this is intentional.
-- After creating the containter, all disks are marked as spare, 
-designated with the (S) ending. However, when I put a disk in an array, it
-still stays marked as (S) in the containter entry in /proc/mdstat. I 
-think those disks should be branded (S) anymore.
-- When I fail a disk, it is kicked out of the array, effectively back 
-into the container. However this does not always work, e.g. when I 
-created two arrays in the container and
-fail a disk of the second array, this does not happen.
-- A failed disk stays marked (S) in the container, I think it should now 
-be marked (F).
 
-Looking at the end of the output of mdadm -E /dev/md127 I see the disks 
-in a table, with a unique serial nr, the devicename and the status.
-A freshly created container contains all disks marked as 
-GlobalSpare/Online. Adding a disk to an array marks it as active/Online. 
-So far so good.
+	Here is the result from examining the live parttions:
 
-- When I fail a disk, it is marked as active/Online, Failed. A bit 
-confusing as it has failed it cannot be active. When I fail a second 
-disk, the status
-stays active/Online. Only when I stop the arrays and container and 
-restart it (mdadm -A -s) it gets marked as failed.
-- When I remove a failed disk from the containter, the entry for the 
-disk stays online in the mdadm -E output, only the device file is 
-removed, but the disk is still marked active/Online, Failed.
-I think this whole entry should be removed.
-- When I add the disk again, it slots in its old entry, and is still 
-marked active/Online, Failed, apart from active/Online bit I agree, the 
-disk had failed anyway.
-- But when I zero the superblock (mdadm --zero-superblock /dev/sdb) and 
-then add it, I get a new entry in the container, which now contains an 
-extra entry
-apart from the old entry with not device mentioned. This makes sense 
-(effectively I added a "new" disk) but the old entry should have been 
-removed.
+/dev/sdl1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 4cde286c:0687556a:4d9996dd:dd23e701 (local to host Backup)
+  Creation Time : Fri Jun 11 20:45:51 2010
+     Raid Level : raid1
+  Used Dev Size : 6144704 (5.86 GiB 6.29 GB)
+     Array Size : 6144704 (5.86 GiB 6.29 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
 
-I have also encountered the fact that the same disk was used as a spare 
-disk in two arrays created in the containter. In other words, /dev/md1 
-failed -> disk replaced,
-after that /dev/md2 failed -> same spare disk used for replacement. How odd.
+    Update Time : Sat Feb 26 00:47:19 2011
+          State : clean
+Internal Bitmap : present
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : c127a1bf - correct
+         Events : 1014
 
-If I assume that the output of mdadm -E (especially the disk entries at 
-the end) isl taken from the superblock(s) it looks like these are not 
-updated correctly.
 
-I also noticed that a RAID5 array created in a containter cannot be 
-expanded with another disk (option -G) as it can in normal setup (i.e. 
-without using the container).
-The same hold for a RAID1 where you cannot add a third disk.
+      Number   Major   Minor   RaidDevice State
+this     1       8      177        1      active sync   /dev/sdl1
 
-I hope this gives you more clues about a possible fix?
+   0     0       0        0        0      removed
+   1     1       8      177        1      active sync   /dev/sdl1
 
-Cheers,
 
-Albert
+/dev/sdl2:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : d45ff663:9e53774c:6fcf9968:21692025
+           Name : Backup:2  (local to host Backup)
+  Creation Time : Sat Dec 19 22:59:43 2009
+     Raid Level : raid1
+   Raid Devices : 2
 
-On 02/23/11 07:17 AM, NeilBrown wrote:
-> On Tue, 22 Feb 2011 08:41:02 +0100 Albert Pauw<albert.pauw@gmail.com>  wrote:
->
->> When I removed the correct disk, which can only be done from the container:
->>
->> mdadm -r /dev/md127 /dev/sdb
->>
->> the command mdadm -E /dev/md127 showed the 5 disks, the entry for sdb
->> didn't had a device but was still
->> "active/Online" and sdd was marked Failed:
-> .....
->
->> So it looks like there are some errors in here.
->>
-> Indeed it does.  Thank you for putting some time in to testing and producing
-> an excellent problem report.
-> I have not put as much time into testing and polishing the DDF implementation
-> as I would have liked, partly because there doesn't really seem to be much
-> interest.
-> But reports like this make it a whole lot more interesting.
->
-> I will try to look at this some time soon and let you know what I find in the
-> code - feel free to remind me if you haven't heard in a week.
->
-> Thanks,
-> NeilBrown
->
->
+ Avail Dev Size : 554884828 (264.59 GiB 284.10 GB)
+     Array Size : 554884828 (264.59 GiB 284.10 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : e0896263:c0f95d43:9c0cb92a:79a95210
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Feb 26 00:47:18 2011
+       Checksum : 41881e60 - correct
+         Events : 902752
+
+
+   Device Role : Active device 1
+   Array State : .A ('A' == active, '.' == missing)
+
+
+/dev/sdl3:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 51d22c47:10f58974:0b27ef04:5609d357
+           Name : Backup:3  (local to host Backup)
+  Creation Time : Sat May 29 14:16:22 2010
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 409593096 (195.31 GiB 209.71 GB)
+     Array Size : 409593096 (195.31 GiB 209.71 GB)
+    Data Offset : 144 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 982c9519:48d21940:3720b6d5:dfb0a312
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Wed Feb  9 20:02:26 2011
+       Checksum : 6c78f4a2 - correct
+         Events : 364740
+
+
+   Device Role : Active device 1
+   Array State : AA ('A' == active, '.' == missing)
+
+
+	Here are the array details:
+
+/dev/md1:
+        Version : 0.90
+  Creation Time : Fri Jun 11 20:45:51 2010
+     Raid Level : raid1
+     Array Size : 6144704 (5.86 GiB 6.29 GB)
+  Used Dev Size : 6144704 (5.86 GiB 6.29 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sat Feb 26 00:53:23 2011
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           UUID : 4cde286c:0687556a:4d9996dd:dd23e701 (local to host Backup)
+         Events : 0.1016
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       8      177        1      active sync   /dev/sdl1
+
+       2       8      161        -      faulty spare
+/dev/md2:
+        Version : 1.2
+  Creation Time : Sat Dec 19 22:59:43 2009
+     Raid Level : raid1
+     Array Size : 277442414 (264.59 GiB 284.10 GB)
+  Used Dev Size : 277442414 (264.59 GiB 284.10 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sat Feb 26 00:53:47 2011
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : Backup:2  (local to host Backup)
+           UUID : d45ff663:9e53774c:6fcf9968:21692025
+         Events : 902890
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       3       8      178        1      active sync   /dev/sdl2
+
+       2       8      162        -      faulty spare
+/dev/md3:
+        Version : 1.2
+  Creation Time : Sat May 29 14:16:22 2010
+     Raid Level : raid1
+     Array Size : 204796548 (195.31 GiB 209.71 GB)
+  Used Dev Size : 204796548 (195.31 GiB 209.71 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Wed Feb  9 20:02:26 2011
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 1
+  Spare Devices : 0
+
+           Name : Backup:3  (local to host Backup)
+           UUID : 51d22c47:10f58974:0b27ef04:5609d357
+         Events : 364740
+
+    Number   Major   Minor   RaidDevice State
+       2       8      163        0      faulty spare rebuilding
+       3       8      179        1      active sync   /dev/sdl3
+
+	So what gives?  /dev/sdk3 no longer even exists, so why hasn't it
+been failed and removed on /dev /md3 like it has on /dev/md1 and /dev/md2?
 
