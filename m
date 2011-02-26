@@ -1,110 +1,96 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: OK, Now this is really weird
-Date: Sun, 27 Feb 2011 08:34:33 +1100
-Message-ID: <20110227083433.69b3d99a@notabene.brown>
-References: <20110226003611.tjp3cxisu880co88-xnmenx@webmail.spamcop.net>
-	<C2.5D.05134.F02E86D4@cdptpa-omtalb.mail.rr.com>
-	<AANLkTim_cF9nnXMz2pJfewFqW68p1b0gKoKbtjRa6wqE@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?  GPFS w/ 10GB/s throughput to
+ the rescue
+Date: Sat, 26 Feb 2011 17:54:54 -0600
+Message-ID: <4D6992CE.60803@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>	<20110215044434.GA9186@septictank.raw-sewage.fake>	<4D5A98BF.3030704@gmail.com> <AANLkTin+BWOn+45Y8op7k6cFymmv1VgLrh9Ro9sU7nPJ@mail.gmail.com> <4D66CBB8.5010804@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTim_cF9nnXMz2pJfewFqW68p1b0gKoKbtjRa6wqE@mail.gmail.com>
+In-Reply-To: <4D66CBB8.5010804@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>
-Cc: lrhorer@satx.rr.com, Jeff Woods <jeff@jeffwoods.us>, Linux RAID <linux-raid@vger.kernel.org>
+To: Joe Landman <joe.landman@gmail.com>
+Cc: Matt Garman <matthew.garman@gmail.com>, Doug Dumitru <doug@easyco.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 26 Feb 2011 11:35:11 +0000 Mathias Bur=E9n <mathias.buren@gmail=
-=2Ecom>
-wrote:
+Joe Landman put forth on 2/24/2011 3:20 PM:
 
-> On 26 February 2011 11:20, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> >> owner@vger.kernel.org] On Behalf Of Jeff Woods
-> >> Sent: Saturday, February 26, 2011 1:36 AM
-> >> To: lrhorer@satx.rr.com
-> >> Cc: 'Linux RAID'
-> >> Subject: Re: OK, Now this is really weird
-> >>
-> >> Quoting Leslie Rhorer <lrhorer@satx.rr.com>:
-> >> > =A0 =A0 I have a pair of drives each of whose 3 partitions are m=
-embers of a
-> >> > set of 3 RAID arrays. =A0One of the two drives had a flaky power
-> >> connection
-> >> > which I thought I had fixed, but I guess not, because the drive =
-was
-> >> taken
-> >> > offline again on Tuesday. =A0The significant issue, however, is =
-that both
-> >> > times the drive failed, mdadm behaved really oddly. =A0The first=
- time I
-> >> > thought it might just be some odd anomaly, but the second time i=
-t did
-> >> > precisely the same thing. =A0Both times, when the drive was de-r=
-egistered
-> >> by
-> >> > udev, the first two arrays properly responded to the failure, bu=
-t the
-> >> third
-> >> > array did not. =A0Here is the layout:
-> >>
-> >> [snip lots of technical details]
-> >>
-> >> > =A0 =A0 So what gives? =A0/dev/sdk3 no longer even exists, so wh=
-y hasn't it
-> >> > been failed and removed on /dev /md3 like it has on /dev/md1 and
-> >> /dev/md2?
-> >>
-> >> Is it possible there has been no I/O request for /dev/md3 since
-> >> /dev/sdk failed?
-> >
-> > =A0 =A0 =A0 =A0Well, I thought about that. =A0It's swap space, so I=
- suppose it's
-> > possible. =A0I would have thought, however, that mdadm would fail a=
- missing
-> > member whether there is any I/O or not.
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
-> >
->=20
-> I thought so as well. But how will mdadm know is the device is faulty=
-,
-> unless the device is generating errors? (which usually only happens o=
-n
-> read and/or write)
+> All this said, its better to express your IO bandwidth needs in MB/s,
+> preferably in terms of sustained bandwidth needs, as this is language
+> that you'd be talking to vendors in.  
 
-With very recent mdadm the command
+Heartily agree.
 
-   mdadm -If sdXX
+> that gets you 50x 117 MB/s or about 5.9 GB/s sustained bandwidth for
+> your IO.  10 machines running at a sustainable 600 MB/s delivered over
+> the network, and a parallel file system atop this, solves this problem.
 
-will find any md array that has /dev/sdXX as a member and will fail and
-remove it.
-Note the device name is 'sdxx', not '/dev/something'.  This is because =
-that
-at the time you want to do this, udev has probably removed all trace
-from /dev so you need to use the name mentioned in /proc/mdstat
-or /sys/block/mdXX/md/dev-$DEVNAME
+That's 1 file server for each 5 compute nodes Joe.  That is excessive.
+Your business is selling these storage servers, so I can understand this
+recommendation.  What cost is Matt looking at for these 10 storage
+servers?  $8-15k apiece?  $80-150K total, not including installation,
+maintenance, service contract, or administration training?  And these
+require a cluster file system.  I'm guessing that's in the territory of
+quotes he's already received from NetApp et al.
 
-You can set up a udev rule to run mdadm like this automatically when a =
-device
-is hot-unplugged.
-something like
+In that case it makes more sense to simply use direct attached storage
+in each compute node at marginal additional cost, and a truly scalable
+parallel filesystem across the compute nodes, IBM's GPFS.  This will
+give better aggregate performance at substantially lower cost, and
+likely with much easier filesystem administration.
 
- SUBSYSTEM=3D=3D"block", ACTION=3D=3D"remove", RUN+=3D"/sbin/mdadm -If =
-$name --path $env{ID_PATH}"
+Matt, if a parallel cluster file system is in your cards, and it very
+well may be, the very best way to achieve your storage bandwidth goal
+would be leveraging direct attached disks in each compute node, your
+existing GbE network, and using IBM GPFS as your parallel cluster
+filesystem.  I'd recommend using IBM 1U servers with 4 disk bays of
+146GB 10k SAS drives in hardware RAID 10 (it's built in--free).  With 50
+compute nodes, this will give you over 10GB/s aggregate disk bandwidth,
+over 200MB/s per node.  Using these 146GB 2.5" drives you'd have ~14TB
+of GPFS storage and can push/pull over 5GB/s of GPFS throughput over
+TCP/IP.  Throughput will be likely be limited by the network, not the disks.
 
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Each 1U server has dual GbE ports, allowing each node's application to
+read 100MB/s from the GPFS while the node is simultaneously serving
+100MB/s to all the other nodes, with full network redundancy in the
+event a single NIC or switch should fail in one of your redundant
+ethernet segments.  Or, you could bond the NICs, without fail over, for
+over 200MB/s full duplex, giving you aggregate GPFS throughput of
+between 6-10GB/s depending on actual workload access patterns.
+
+Your only additional cost here over the base compute node is 4 drives at
+~$1000, the GPFS licensing, and consulting fees to IBM Global Services
+for setup and training, and maybe another GbE switch or two.  This
+system is completely scalable.  Each time you add a compute node you add
+another 100-200MB/s+ of GPFS bandwidth to the cluster, at minimal cost.
+ I have no idea what IBM GPFS licensing costs are.  My wild ass guess
+would be a couple hundred dollars per node, which is pretty reasonable
+considering the capability it gives you, and the cost savings over other
+solutions.
+
+You should make an appointment with IBM Global Services to visit your
+site, go over your needs and budget, and make a recommendation or two.
+Request they send a GPFS educated engineer along on the call.  Express
+that you're looking at the architecture I've described.  They may have a
+better solution given your workload and cost criteria.  The key thing is
+that you need to get as much information as possible at this point so
+have the best options going forward.
+
+Here's an appropriate IBM compute cluster node:
+http://www-304.ibm.com/shop/americas/webapp/wcs/stores/servlet/default/ProductDisplay?productId=4611686018425930325&storeId=1&langId=-1&categoryId=4611686018425272306&dualCurrId=73&catalogId=-840
+
+1U rack chassis
+Xeon X3430 - 2.4 GHz, 4 core, 8MB cache
+8GB DDR3
+dual 10/100/1000 Ethernet
+4 x 146GB 10k rpm SAS hot swap, RADI10
+
+IBM web price per single unit:  ~$3,100
+If buying volume in one PO:     ~$2,500 or less through a wholesaler
+
+Hope this information is helpful Matt.
+
+-- 
+Stan
+
