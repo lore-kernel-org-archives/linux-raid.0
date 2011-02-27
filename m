@@ -1,96 +1,128 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Joe Landman <joe.landman@gmail.com>
 Subject: Re: high throughput storage server?  GPFS w/ 10GB/s throughput to
  the rescue
-Date: Sat, 26 Feb 2011 17:54:54 -0600
-Message-ID: <4D6992CE.60803@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>	<20110215044434.GA9186@septictank.raw-sewage.fake>	<4D5A98BF.3030704@gmail.com> <AANLkTin+BWOn+45Y8op7k6cFymmv1VgLrh9Ro9sU7nPJ@mail.gmail.com> <4D66CBB8.5010804@gmail.com>
+Date: Sat, 26 Feb 2011 19:56:52 -0500
+Message-ID: <4D69A154.3030403@gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>	<20110215044434.GA9186@septictank.raw-sewage.fake>	<4D5A98BF.3030704@gmail.com> <AANLkTin+BWOn+45Y8op7k6cFymmv1VgLrh9Ro9sU7nPJ@mail.gmail.com> <4D66CBB8.5010804@gmail.com> <4D6992CE.60803@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D66CBB8.5010804@gmail.com>
+In-Reply-To: <4D6992CE.60803@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Matt Garman <matthew.garman@gmail.com>, Doug Dumitru <doug@easyco.com>, Mdadm <linux-raid@vger.kernel.org>
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Joe Landman put forth on 2/24/2011 3:20 PM:
+On 02/26/2011 06:54 PM, Stan Hoeppner wrote:
+> Joe Landman put forth on 2/24/2011 3:20 PM:
 
-> All this said, its better to express your IO bandwidth needs in MB/s,
-> preferably in terms of sustained bandwidth needs, as this is language
-> that you'd be talking to vendors in.  
+[...]
 
-Heartily agree.
+>> that gets you 50x 117 MB/s or about 5.9 GB/s sustained bandwidth for
+>> your IO.  10 machines running at a sustainable 600 MB/s delivered over
+>> the network, and a parallel file system atop this, solves this problem.
+>
+> That's 1 file server for each 5 compute nodes Joe.  That is excessive.
 
-> that gets you 50x 117 MB/s or about 5.9 GB/s sustained bandwidth for
-> your IO.  10 machines running at a sustainable 600 MB/s delivered over
-> the network, and a parallel file system atop this, solves this problem.
+No Stan, it isn't.  As I said, this is our market, we know it pretty 
+well.  Matt stated his needs pretty clearly.
 
-That's 1 file server for each 5 compute nodes Joe.  That is excessive.
-Your business is selling these storage servers, so I can understand this
-recommendation.  What cost is Matt looking at for these 10 storage
-servers?  $8-15k apiece?  $80-150K total, not including installation,
-maintenance, service contract, or administration training?  And these
-require a cluster file system.  I'm guessing that's in the territory of
-quotes he's already received from NetApp et al.
+He needs 5.9GB/s sustained bandwidth.  Local drives (as you suggested 
+later on) will deliver 75-100 MB/s of bandwidth, and he'd need 2 for 
+RAID1, as well as a RAID0 (e.g. RAID10) for local bandwidth (150+ MB/s). 
+  4 drives per unit, 50 units.  200 drives.
 
-In that case it makes more sense to simply use direct attached storage
-in each compute node at marginal additional cost, and a truly scalable
-parallel filesystem across the compute nodes, IBM's GPFS.  This will
-give better aggregate performance at substantially lower cost, and
-likely with much easier filesystem administration.
+Any admin want to admin 200+ drives in 50 chassis?  Admin 50 different 
+file systems?
 
-Matt, if a parallel cluster file system is in your cards, and it very
-well may be, the very best way to achieve your storage bandwidth goal
-would be leveraging direct attached disks in each compute node, your
-existing GbE network, and using IBM GPFS as your parallel cluster
-filesystem.  I'd recommend using IBM 1U servers with 4 disk bays of
-146GB 10k SAS drives in hardware RAID 10 (it's built in--free).  With 50
-compute nodes, this will give you over 10GB/s aggregate disk bandwidth,
-over 200MB/s per node.  Using these 146GB 2.5" drives you'd have ~14TB
-of GPFS storage and can push/pull over 5GB/s of GPFS throughput over
-TCP/IP.  Throughput will be likely be limited by the network, not the disks.
+Oh, and what is the impact if some of those nodes went away?  Would they 
+take down the file system?  In the cloud of microdisk model Stan 
+suggested, yes they would.  Which is why you might not want to give that 
+advice serious consideration.  Unless you built in replication.  Now we 
+are at 400 disks in 50 chassis.
 
-Each 1U server has dual GbE ports, allowing each node's application to
-read 100MB/s from the GPFS while the node is simultaneously serving
-100MB/s to all the other nodes, with full network redundancy in the
-event a single NIC or switch should fail in one of your redundant
-ethernet segments.  Or, you could bond the NICs, without fail over, for
-over 200MB/s full duplex, giving you aggregate GPFS throughput of
-between 6-10GB/s depending on actual workload access patterns.
+Again, this design keeps getting worse.
 
-Your only additional cost here over the base compute node is 4 drives at
-~$1000, the GPFS licensing, and consulting fees to IBM Global Services
-for setup and training, and maybe another GbE switch or two.  This
-system is completely scalable.  Each time you add a compute node you add
-another 100-200MB/s+ of GPFS bandwidth to the cluster, at minimal cost.
- I have no idea what IBM GPFS licensing costs are.  My wild ass guess
-would be a couple hundred dollars per node, which is pretty reasonable
-considering the capability it gives you, and the cost savings over other
-solutions.
+> Your business is selling these storage servers, so I can understand this
+> recommendation.  What cost is Matt looking at for these 10 storage
 
-You should make an appointment with IBM Global Services to visit your
-site, go over your needs and budget, and make a recommendation or two.
-Request they send a GPFS educated engineer along on the call.  Express
-that you're looking at the architecture I've described.  They may have a
-better solution given your workload and cost criteria.  The key thing is
-that you need to get as much information as possible at this point so
-have the best options going forward.
+Now this is sad, very sad.
 
-Here's an appropriate IBM compute cluster node:
-http://www-304.ibm.com/shop/americas/webapp/wcs/stores/servlet/default/ProductDisplay?productId=4611686018425930325&storeId=1&langId=-1&categoryId=4611686018425272306&dualCurrId=73&catalogId=-840
+Stan started out selling the Nexsan version of things (and why was he 
+doing it on the MD RAID list I wonder?), which would have run into the 
+same costs Stan noted later.  Now Stan is selling (actually mis-selling) 
+GPFS (again, on an MD RAID list, seemingly having picked it off of a 
+website), without having a clue as to the pricing, implementation, 
+issues, etc.
 
-1U rack chassis
-Xeon X3430 - 2.4 GHz, 4 core, 8MB cache
-8GB DDR3
-dual 10/100/1000 Ethernet
-4 x 146GB 10k rpm SAS hot swap, RADI10
+> servers?  $8-15k apiece?  $80-150K total, not including installation,
+> maintenance, service contract, or administration training?  And these
+> require a cluster file system.  I'm guessing that's in the territory of
+> quotes he's already received from NetApp et al.
 
-IBM web price per single unit:  ~$3,100
-If buying volume in one PO:     ~$2,500 or less through a wholesaler
+I did suggest using GlusterFS as it will help with a number of aspects, 
+has an open source version.  I did also suggest (since he seems to wish 
+to build it himself) that he pursue a reasonable design to start with, 
+and avoid the filer based designs Stan suggested (two Nexsan's and some 
+sort of filer head to handle them), or a SAN switch of some sort. 
+Neither design works well in his scenario, or for that matter, in the 
+vast majority of HPC situations.
 
-Hope this information is helpful Matt.
+I did make a full disclosure of my interests up front, and people are 
+free to take my words with a grain of salt.  Insinuating based upon my 
+disclosure?  Sad.
+
+
+> In that case it makes more sense to simply use direct attached storage
+> in each compute node at marginal additional cost, and a truly scalable
+> parallel filesystem across the compute nodes, IBM's GPFS.  This will
+> give better aggregate performance at substantially lower cost, and
+> likely with much easier filesystem administration.
+
+See GlusterFS.  Open source at zero cost.  However, and this is a large 
+however, this design, using local storage for a pooled "cloud" of disks, 
+has some often problematic issues (resiliency, performance, hotspots). 
+A truly hobby design would use this.  Local disk is fine for scratch 
+space, for a few other things.  Managing the disk spread out among 50 
+nodes?  Yeah, its harder.
+
+I'm gonna go out on a limb here and suggest Matt speak with HPC cluster 
+and storage people.  He can implement things ranging from effectively 
+zero cost through things which can be quite expensive.  If you are 
+talking to Netapp about HPC storage, well, probably move onto a real HPC 
+storage shop.  His problem is squarely in the HPC arena.
+
+However, I would strongly advise against designs such as a single 
+centralized unit, or a cloud of micro disks.  The first design is 
+decidedly non-scalable, which is in part why the HPC community abandoned 
+it years ago.  The second design is very hard to manage and guarantee 
+any sort of resiliency.  You get all the benefits of a RAID0 in what 
+Stan proposed.
+
+Start out talking with and working with experts, and its pretty likely 
+you'll come out with a good solution.   The inverse is also true.
+
+MD RAID, which Stan dismissed as a "hobby RAID" at first can work well 
+for Matt.  GlusterFS can help with the parallel file system atop this. 
+Starting with a realistic design, an MD RAID based system (self built or 
+otherwise) could easily provide everything Matt needs, at the data rates 
+he needs it, using entirely open source technologies.  And good designs.
+
+You really won't get good performance out of a bad design.  The folks 
+doing HPC work who've responded have largely helped frame good design 
+patterns.  The folks who aren't sure what HPC really is, haven't.
+
+Regards,
+
+Joe
 
 -- 
-Stan
-
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics, Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
