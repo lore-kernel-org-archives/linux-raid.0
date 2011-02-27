@@ -1,128 +1,271 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: high throughput storage server?  GPFS w/ 10GB/s throughput to
- the rescue
-Date: Sat, 26 Feb 2011 19:56:52 -0500
-Message-ID: <4D69A154.3030403@gmail.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>	<20110215044434.GA9186@septictank.raw-sewage.fake>	<4D5A98BF.3030704@gmail.com> <AANLkTin+BWOn+45Y8op7k6cFymmv1VgLrh9Ro9sU7nPJ@mail.gmail.com> <4D66CBB8.5010804@gmail.com> <4D6992CE.60803@hardwarefreak.com>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: RE: Removed drive from mdadm raid 5 array after reboot
+Date: Sat, 26 Feb 2011 22:13:42 -0500
+Message-ID: <BAY148-w284BF16B173BA4A44C61D3EFDF0@phx.gbl>
+References: <BAY148-w38CAE450FEC67644025E33EFD40@phx.gbl>,<BAY148-w4658B4D2C63A5B2ADAEDBEFD40@phx.gbl>,<BAY148-w245C4F3B070F5743631EA9EFD40@phx.gbl>,<1298062156.4497.7.camel@michal-laptop.sawicz.net>,<BAY148-w63B278D088E2A88E2D3544EFD40@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D6992CE.60803@hardwarefreak.com>
+In-Reply-To: <BAY148-w63B278D088E2A88E2D3544EFD40@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/26/2011 06:54 PM, Stan Hoeppner wrote:
-> Joe Landman put forth on 2/24/2011 3:20 PM:
 
-[...]
-
->> that gets you 50x 117 MB/s or about 5.9 GB/s sustained bandwidth for
->> your IO.  10 machines running at a sustainable 600 MB/s delivered over
->> the network, and a parallel file system atop this, solves this problem.
+> > Date: Fri, 18 Feb 2011 21:49:16 +0100
+> >
+> > > Dnia 2011-02-18, pi=B1 o godzinie 15:08 -0500, Mike Viau pisze:
+> > > I was wondering if anyone had come across an issue where after
+> > > rebooting the system, mdadm fails to reassemble an entire raid 5 =
+array
+> > > with all the drives. I am getting the array up with just /dev/sda=
+ and
+> > > /dev/sdb, but the array is degraded as a consequence to missing
+> > > /dev/sdd (which I assume has become the parity drive).
+> >
+> > There is no such thing as a parity drive in raid5, everything (pari=
+ty
+> > data, too) is spread out evenly over all of the disks.
+> >
 >
-> That's 1 file server for each 5 compute nodes Joe.  That is excessive.
+> Hmm, that makes more sense hence distributed parity).
+>
+> > Please post the output of `mdadm --examine /dev/sd{a,b,d}1` and che=
+ck
+> > your logs to see if there are any mentions of why the array isn't
+> > assembled on boot.
+> >
+>
+> mdadm --examine /dev/sd{a,b,d}1
+> /dev/sda1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x0
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+>
+> Avail Dev Size : 1953517954 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> State : clean
+> Device UUID : 25f4baf0:9a378d2c:16a87f0c:ff89b2c8
+>
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : 37383bee - correct
+> Events : 32184
+>
+> Layout : left-symmetric
+> Chunk Size : 512K
+>
+> Device Role : Active device 0
+> Array State : AAA ('A' =3D=3D active, '.' =3D=3D missing)
+> /dev/sdb1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x0
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+>
+> Avail Dev Size : 1953517954 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> State : clean
+> Device UUID : f20ab5fd:1f141cae:e0547278:d6cf063e
+>
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : a70821e2 - correct
+> Events : 32184
+>
+> Layout : left-symmetric
+> Chunk Size : 512K
+>
+> Device Role : Active device 1
+> Array State : AAA ('A' =3D=3D active, '.' =3D=3D missing)
+> /dev/sdd1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x2
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+>
+> Avail Dev Size : 1953521072 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> Recovery Offset : 610474280 sectors
+> State : clean
+> Device UUID : 33d70114:ffdc4fcc:2c8d65ba:ab50bab2
+>
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : b692957e - correct
+> Events : 32184
+>
+> Layout : left-symmetric
+> Chunk Size : 512K
+>
+> Device Role : Active device 2
+> Array State : AAA ('A' =3D=3D active, '.' =3D=3D missing)
+>
+>
+>
+> The array actually does assemble on boot, but the /dev/sdd1 partition
+> is not added automatically, and I am not sure why?
+>
+> >
+> > Have you tried booting in single user mode (I assume this drive isn=
+'t
+> > your boot drive?) and try to assemble the array by hand? Have you s=
+een
+> > any errors?
+> >
+>
 
-No Stan, it isn't.  As I said, this is our market, we know it pretty 
-well.  Matt stated his needs pretty clearly.
 
-He needs 5.9GB/s sustained bandwidth.  Local drives (as you suggested 
-later on) will deliver 75-100 MB/s of bandwidth, and he'd need 2 for 
-RAID1, as well as a RAID0 (e.g. RAID10) for local bandwidth (150+ MB/s). 
-  4 drives per unit, 50 units.  200 drives.
+What specific command should I use to assemble the array by hand? I see=
+ that there are assemble and incremental assemble commands. I'd also as=
+sume I should increase the verbosity to see what is going on.
 
-Any admin want to admin 200+ drives in 50 chassis?  Admin 50 different 
-file systems?
+Does anyone think that trying to re-build this raid 5 array would be a =
+possible way to fix the removed drive problem on boot?
 
-Oh, and what is the impact if some of those nodes went away?  Would they 
-take down the file system?  In the cloud of microdisk model Stan 
-suggested, yes they would.  Which is why you might not want to give that 
-advice serious consideration.  Unless you built in replication.  Now we 
-are at 400 disks in 50 chassis.
+I read in the man page under the section for build:
 
-Again, this design keeps getting worse.
-
-> Your business is selling these storage servers, so I can understand this
-> recommendation.  What cost is Matt looking at for these 10 storage
-
-Now this is sad, very sad.
-
-Stan started out selling the Nexsan version of things (and why was he 
-doing it on the MD RAID list I wonder?), which would have run into the 
-same costs Stan noted later.  Now Stan is selling (actually mis-selling) 
-GPFS (again, on an MD RAID list, seemingly having picked it off of a 
-website), without having a clue as to the pricing, implementation, 
-issues, etc.
-
-> servers?  $8-15k apiece?  $80-150K total, not including installation,
-> maintenance, service contract, or administration training?  And these
-> require a cluster file system.  I'm guessing that's in the territory of
-> quotes he's already received from NetApp et al.
-
-I did suggest using GlusterFS as it will help with a number of aspects, 
-has an open source version.  I did also suggest (since he seems to wish 
-to build it himself) that he pursue a reasonable design to start with, 
-and avoid the filer based designs Stan suggested (two Nexsan's and some 
-sort of filer head to handle them), or a SAN switch of some sort. 
-Neither design works well in his scenario, or for that matter, in the 
-vast majority of HPC situations.
-
-I did make a full disclosure of my interests up front, and people are 
-free to take my words with a grain of salt.  Insinuating based upon my 
-disclosure?  Sad.
+"cannot differentiate between initial creation and subsequent assembly =
+of=A0 an=A0 array.=A0=20
+It also=A0 cannot=A0 perform=A0 any=A0 checks that appropriate componen=
+ts have been requested.=A0 Because of
+this, the Build mode should only be used together with a complete under=
+standing of what you are doing."
 
 
-> In that case it makes more sense to simply use direct attached storage
-> in each compute node at marginal additional cost, and a truly scalable
-> parallel filesystem across the compute nodes, IBM's GPFS.  This will
-> give better aggregate performance at substantially lower cost, and
-> likely with much easier filesystem administration.
+Therefor I am cautious to proceed without some advice first...
 
-See GlusterFS.  Open source at zero cost.  However, and this is a large 
-however, this design, using local storage for a pooled "cloud" of disks, 
-has some often problematic issues (resiliency, performance, hotspots). 
-A truly hobby design would use this.  Local disk is fine for scratch 
-space, for a few other things.  Managing the disk spread out among 50 
-nodes?  Yeah, its harder.
+Thanks.
 
-I'm gonna go out on a limb here and suggest Matt speak with HPC cluster 
-and storage people.  He can implement things ranging from effectively 
-zero cost through things which can be quite expensive.  If you are 
-talking to Netapp about HPC storage, well, probably move onto a real HPC 
-storage shop.  His problem is squarely in the HPC arena.
 
-However, I would strongly advise against designs such as a single 
-centralized unit, or a cloud of micro disks.  The first design is 
-decidedly non-scalable, which is in part why the HPC community abandoned 
-it years ago.  The second design is very hard to manage and guarantee 
-any sort of resiliency.  You get all the benefits of a RAID0 in what 
-Stan proposed.
 
-Start out talking with and working with experts, and its pretty likely 
-you'll come out with a good solution.   The inverse is also true.
-
-MD RAID, which Stan dismissed as a "hobby RAID" at first can work well 
-for Matt.  GlusterFS can help with the parallel file system atop this. 
-Starting with a realistic design, an MD RAID based system (self built or 
-otherwise) could easily provide everything Matt needs, at the data rates 
-he needs it, using entirely open source technologies.  And good designs.
-
-You really won't get good performance out of a bad design.  The folks 
-doing HPC work who've responded have largely helped frame good design 
-patterns.  The folks who aren't sure what HPC really is, haven't.
-
-Regards,
-
-Joe
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics, Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+> The array was initially created about a month ago, below are the mdad=
+m
+> events in my syslog. A couple questions arise:
+>
+> 1) If mdadm initially created the array as md127, and then I declared
+> it as md0 in mdadm.conf as:
+>
+> # definitions of existing MD arrays
+> ARRAY /dev/md/0 metadata=3D1.2 UUID=3D7d8a7c68:95a230d0:0a8f6e74:4c8f=
+81e9
+> name=3DXEN-HOST:0
+>
+>
+> 2) If sdd was an always connected usb enclosure connected hard drive =
+as
+> apposed to /dev/sda and /dev/sdb being directly connected SATA drives=
+=2E
+>
+>
+> Would either of these cause the problem such as the subject of this t=
+hread?
+>
+>
+> cat /var/log/syslog | grep mdadm
+> Jan 30 00:57:01 XEN-HOST /USR/SBIN/CRON[6944]: (root) CMD (if [ -x
+> /usr/share/mdadm/checkarray ] && [ $(date +%d) -le 7 ]; then
+> /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi)
+> Jan 30 22:33:48 XEN-HOST mdadm[25684]: NewArray event detected on md
+> device /dev/md127
+> Jan 30 22:33:48 XEN-HOST mdadm[25684]: DegradedArray event detected o=
+n
+> md device /dev/md127
+> Jan 30 22:45:13 XEN-HOST mdadm[1883]: NewArray event detected on md
+> device /dev/md127
+> Jan 30 22:45:15 XEN-HOST mdadm[1883]: DegradedArray event detected on
+> md device /dev/md127
+> Jan 30 23:29:31 XEN-HOST mdadm[1930]: DegradedArray event detected on
+> md device /dev/md/0
+> Jan 30 23:33:51 XEN-HOST mdadm[1889]: DegradedArray event detected on
+> md device /dev/md/0
+> Jan 30 23:38:32 XEN-HOST mdadm[1889]: RebuildStarted event detected o=
+n
+> md device /dev/md/0
+> Jan 31 01:51:53 XEN-HOST mdadm[1889]: Rebuild20 event detected on md
+> device /dev/md/0
+> Jan 31 04:05:13 XEN-HOST mdadm[1889]: Rebuild41 event detected on md
+> device /dev/md/0
+> Jan 31 06:18:34 XEN-HOST mdadm[1889]: Rebuild62 event detected on md
+> device /dev/md/0
+> Jan 31 08:15:15 XEN-HOST mdadm[1889]: Rebuild80 event detected on md
+> device /dev/md/0
+> Jan 31 10:15:50 XEN-HOST mdadm[1889]: RebuildFinished event detected =
+on
+> md device /dev/md/0
+> Jan 31 10:15:50 XEN-HOST mdadm[1889]: SpareActive event detected on m=
+d
+> device /dev/md/0
+> Feb 6 00:57:01 XEN-HOST /USR/SBIN/CRON[13578]: (root) CMD (if [ -x
+> /usr/share/mdadm/checkarray ] && [ $(date +%d) -le 7 ]; then
+> /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi)
+> Feb 6 00:57:01 XEN-HOST mdadm[1889]: RebuildStarted event detected on
+> md device /dev/md/0
+> Feb 6 02:37:02 XEN-HOST mdadm[1889]: Rebuild21 event detected on md
+> device /dev/md/0
+> Feb 6 04:17:02 XEN-HOST mdadm[1889]: Rebuild42 event detected on md
+> device /dev/md/0
+> Feb 6 05:40:23 XEN-HOST mdadm[1889]: Rebuild60 event detected on md
+> device /dev/md/0
+> Feb 6 07:20:23 XEN-HOST mdadm[1889]: Rebuild81 event detected on md
+> device /dev/md/0
+> Feb 6 08:44:40 XEN-HOST mdadm[1889]: RebuildFinished event detected o=
+n
+> md device /dev/md/0
+> Feb 6 23:11:07 XEN-HOST mdadm[1887]: DegradedArray event detected on
+> md device /dev/md/0
+> Feb 8 08:51:53 XEN-HOST mdadm[1887]: RebuildStarted event detected on
+> md device /dev/md/0
+> Feb 8 11:05:13 XEN-HOST mdadm[1887]: Rebuild20 event detected on md
+> device /dev/md/0
+> Feb 8 13:18:34 XEN-HOST mdadm[1887]: Rebuild41 event detected on md
+> device /dev/md/0
+> Feb 8 15:15:14 XEN-HOST mdadm[1887]: Rebuild60 event detected on md
+> device /dev/md/0
+> Feb 8 17:28:35 XEN-HOST mdadm[1887]: Rebuild81 event detected on md
+> device /dev/md/0
+> Feb 8 19:26:32 XEN-HOST mdadm[1887]: RebuildFinished event detected o=
+n
+> md device /dev/md/0
+> Feb 8 19:26:32 XEN-HOST mdadm[1887]: SpareActive event detected on md
+> device /dev/md/0
+> Feb 13 00:57:01 XEN-HOST /USR/SBIN/CRON[12933]: (root) CMD (if [ -x
+> /usr/share/mdadm/checkarray ] && [ $(date +%d) -le 7 ]; then
+> /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi)
+> Feb 18 12:19:31 XEN-HOST mdadm[1864]: DegradedArray event detected on
+> md device /dev/md/0
+> Feb 18 12:23:07 XEN-HOST mdadm[1613]: DegradedArray event detected on
+> md device /dev/md/0
+> Feb 18 12:26:24 XEN-HOST mdadm[1767]: DegradedArray event detected on
+> md device /dev/md/0
+> Feb 18 12:50:53 XEN-HOST mdadm[1767]: RebuildStarted event detected o=
+n
+> md device /dev/md/0
+> Feb 18 15:04:14 XEN-HOST mdadm[1767]: Rebuild21 event detected on md
+> device /dev/md/0
+>
+ 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
