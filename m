@@ -1,90 +1,271 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: stripe cache question
-Date: Sun, 27 Feb 2011 15:43:50 +1100
-Message-ID: <20110227154350.4448d731@notabene.brown>
-References: <20110224210642.GA20306@lazy.lzy>
-	<20110225145125.69dd4b9d@notabene.brown>
-	<20110226102128.GA15074@lazy.lzy>
+Subject: Re: [PATCH 0/3] Continue expansion after reboot
+Date: Sun, 27 Feb 2011 17:51:20 +1100
+Message-ID: <20110227175120.20b6fe2c@notabene.brown>
+References: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
+	<20110223143756.41139e11@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D17904F0CA@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110226102128.GA15074@lazy.lzy>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D17904F0CA@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Sat, 26 Feb 2011 11:21:28 +0100 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+On Fri, 25 Feb 2011 15:55:01 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> On Fri, Feb 25, 2011 at 02:51:25PM +1100, NeilBrown wrote:
-> > On Thu, 24 Feb 2011 22:06:43 +0100 Piergiorgio Sartor
-> > <piergiorgio.sartor@nexgo.de> wrote:
-> > 
-> > > Hi all,
-> > > 
-> > > few posts ago was mentioned that the unit of the stripe
-> > > cache are "pages per device", usually 4K pages.
-> > > 
-> > > Questions:
-> > > 
-> > > 1) Does "device" means raid (md) device or component
-> > > device (HDD)?
-> > 
-> > component device.
-> > In drivers/md/raid5.[ch] there is a 'struct stripe_head'.
-> > It holds one page per component device (ignoring spares).
-> > Several of these comprise the 'cache'.  The 'size' of the cache is the number
-> > oof 'struct stripe_head' and associated pages that are allocated.
-> > 
-> > 
-> > > 
-> > > 2) The max possible value seems to be 32768, which
-> > > means, in case of 4K page per md device, a max of
-> > > 128MiB of RAM.
-> > > Is this by design? Would it be possible to increase
-> > > up to whatever is available?
-> > 
-> > 32768 is just an arbitrary number.  It is there in raid5.c and is easy to
-> > change (for people comfortable with recompiling their kernels).
 > 
-> Ah! I found it. Maybe, considering currently
-> available memory you should think about incresing
-> it to, for example, 128K or 512K.
->  
-> > I wanted an upper limit because setting it too high could easily cause your
-> > machine to run out of memory and become very sluggish - or worse.
+> 
+> > -----Original Message-----
+> > From: Kwolek, Adam
+> > Sent: Wednesday, February 23, 2011 10:02 AM
+> > To: 'NeilBrown'
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Neubauer, Wojciech
+> > Subject: RE: [PATCH 0/3] Continue expansion after reboot
 > > 
-> > Ideally the cache should be automatically sized based on demand and memory
-> > size - with maybe just a tunable to select between "use a much memory as you
-> > need - within reason" verse "use a little memory as you can manage with".
 > > 
-> > But that requires thought and design and code and .... it just never seemed
-> > like a priority.
+> > 
+> > > -----Original Message-----
+> > > From: NeilBrown [mailto:neilb@suse.de]
+> > > Sent: Wednesday, February 23, 2011 4:38 AM
+> > > To: Kwolek, Adam
+> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > > Neubauer, Wojciech
+> > > Subject: Re: [PATCH 0/3] Continue expansion after reboot
+> > >
+> > > On Tue, 22 Feb 2011 15:13:15 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> > > wrote:
+> > >
+> > > > Currently reshaped/expanded array is assembled but it stays in
+> > > inactive state.
+> > > > This patches allows for array assembly when array is under
+> > expansion.
+> > > > Array with reshape/expansion information in metadata is assembled
+> > > > and reshape process continues automatically.
+> > > >
+> > > > Next step:
+> > > > Problem is how to address container operation during assembly.
+> > > > 1. After first array being reshaped, assebly process looks if mdmon
+> > > >    sets migration for other array in container. If yes it continues
+> > > work
+> > > >    for next array.
+> > > >
+> > > > 2. Assembly process performs reshape of currently reshaped array
+> > only.
+> > > >    Mdmon sets next array for reshape and user triggers manually
+> > mdadm
+> > > >    to finish container operation with just the same parameters set.
+> > > >
+> > > > Reshape finish can be executed for container operation by container
+> > > re-assembly
+> > > > also (this works in current code).
+> > > >
+> > >
+> > > Yes, this is an awkward problem.
+> > >
+> > > Just to be sure we are thinking about the same thing:
+> > >   When restarting an array in which migration is already underway
+> > mdadm
+> > > simply
+> > >   forks and continues monitoring that migration.
+> > >   However if it is an array-wide migration, then when the migration of
+> > > the
+> > >   first array completes, mdmon will update the metadata on the second
+> > > array,
+> > >   but it isn't clear how mdadm can be told to start monitoring that
+> > > array.
+> > >
+> > > How about this:
+> > >   the imsm metadata handler should report that an array is 'undergoing
+> > >   migration if it is, or if an earlier array in the container is
+> > > undergoing a
+> > >   migration which will cause 'this' array to subsequently be migrated
+> > > too.
+> > >
+> > >   So if the first array is in the middle of a 4drive->5drive
+> > conversion
+> > > and
+> > >   the second array is simply at '4 drives', then imsm reported (to
+> > >   container_content) that the second drive is actually undergoing a
+> > > migration
+> > >   from 4 to 5 drives, and is at the very beginning.
+> > >
+> > >   When mdadm assembles that second array it will fork a child to
+> > monitor
+> > > it.
+> > >   It will need to somehow wait for mdmon to really update the metadata
+> > > before
+> > >   it starts.  This can probably be handled in the ->manage_reshape
+> > > function.
+> > >
+> > > Something along those line would be the right way to go I think.  It
+> > > avoid
+> > > any races between arrays being assembled at different times.
+> > 
+> > 
+> > This looks fine for me.
+> > 
+> > >
+> > >
+> > > > Adam Kwolek (3):
+> > > >       FIX: Assemble device in reshape state with new disks number
+> > >
+> > > I don't think this patch is correct.  We need to configure the array
+> > > with the
+> > > 'old' number of devices first, then 'reshape_array' will also set the
+> > > 'new'
+> > > number of devices.
+> > > What exactly what the problem you were  trying to fix?
+> > 
+> > When array is being assembled with old raid disk number assembly cannot
+> > set readOnly array state
+> > (error on sysfs state writing). Array stays in inactive state, so
+> > nothing (reshape) happened later.
+> > 
+> > I think that array cannot be assembled with old disks number (added new
+> > disks are present as spares)
+> > because begin of array uses new disks already. This means we are
+> > assembling array with not complete disk set.
+> > Stripes on begin can be corrupted (not all disks present in array). At
+> > this point inactive array state is ok to keep safe user data.
+> > 
+> > 
+> > I'll test is setting old disk number and later configuration change in
+> > disks number and array state resolves problem.
+> > I'll let you know results.
 > 
-> You're a bit contraddicting your philosopy of
-> "let's do the smart things in user space"... :-)
+> I've made some investigations. I've tried assemble algorithm (as you suggested):
+> Conditions:
+>  reshape 3 disk raid5 array to 4 disks raid5 array
+>    is interrupted. Restart is invoked by command 'mdadm -As'
 > 
-> IMHO, if really necessary, it could be enough to
-> have this "upper limit" avaialable in sysfs.
+> 1. Assemble() builds container with new disks number
+> 2. Assemble() builds container content (array with /old/ 3 disks)
+> 3. array is set to frozen to block monitor
+> 4. sync_max in sysfs is set to 0, to block md until reshape monitoring takes carry about reshape process
+> 5. Continue_reshape() starts reshape process
+> 6. Continue_reshape() continues reshape process
 > 
-> Then user space can decide what to do with it.
-> 
-> For example, at boot the amount of memory is checked
-> and the upper limit set.
-> I see a duplication here, maybe better just remove
-> the upper limit and let user space to deal with that.
+> Problems I've met:
+> 1. not all disks in Assembly() are added to array (old disks number limitation)
+
+I want to fix this by getting sysfs_set_array to set up the new raid_disks
+number.
+It currently doesn't because the number of disks that md is to expect could
+be different to the number of disks recorded in the metadata, and
+"analyse_change" might be needed to resolve the difference.
+A particular example is that the metadata might think a RAID0 is changing from
+4 device to 5 devices, but md need to be told that a RAID4 is changing from
+5 devices to 6 devices.
+However in the case, we really need to do the 'analyse_change' before calling
+sysfs_set_array anyway.
+
+So get sysfs_set_array to set up the array fully, and find somewhere
+appropriate to put a call to analyse_change ... possibly modifying
+analyse_change a bit ...
+
+> 2. setting reshape_position invokes automatically reshape start in md on array run
+
+That shouldn't be a problem..  We start the array read-only and the reshape
+will not start while that is set.
+So:
+  set 'old' shape of array,
+  set reshape_position
+  set 'new' shape of array
+  start array 'readonly'
+  set sync_max to 0
+  enable read/write
+  allow reshape to continue while monitoring it with mdadm.
+
+Does this work, or is there something I have missed.
 
 
-Maybe....  I still feel I want some sort of built-in protection...
+> 3. setting of reshape position clears delta_disks in md (and other parameters, for now not important)
 
-Maybe if I did all the allocations with "__GFP_WAIT" clear so that it would
-only allocate memory that is easily available.  It wouldn't be a hard
-guarantee against running out, but it might help..
+That shouldn't matter ... where do we set reshape_position that it causes
+a problem?
 
-Maybe you could try removing the limit and see what actually happens when
-you set a ridiculously large size.??
+> 4. Assembly() closes handle to array (it has to be not closed and used in reshape continuation)
+
+I'm not sure what you are getting at.... reshape continuation is handled by 
+Grow_continue which is passed the handle to the array.  It should fork and
+monitor the array in the background, so it has its own copy of the handle
+???
+
+
+> 5. reshape continuation can require backup file. It depends where it was interrupted during expansion,
+>    Other reshapes can always require backup file 
+
+Yes ... Why is this a problem?
+
+> 6. to run reshape, 'reshape' has to be written to sync_action.
+>     Raid5_start_reshape() is not prepared for reshape restart (i.e reshape position can be 0 or max array value
+>     - it depends on operation grow/shrink)
+
+Yes ... raid5_start_reshape isn't used for restarting a reshape.
+run() will start the reshape thread, which will not run because the array is
+read-only
+Once you switch the array to read-write the sync_thread should get woken up
+and will continue the reshape.
+
+
+I think the remainder of your email is also addressed by what I have said
+above so I won't try to address specific things.
+
+Please let me know if you see any problem with what I have outlined.
+
+Thanks!
 
 NeilBrown
+
+
+
+
+> 7. After array start flag MD_RECOVERY_NEEDED is set, so reshape cannot be started from mdadm
+>     As array is started with not all disks (old raid disks), we cannot allow for such check (???)
+>     I've made workaround (setting reshape position clears this flag for external meta)
+> 
+> I've started reshape again on /all/ new disks number, but it still starts from array begin. This is a matter of search where checkpoint is lost.
+> 
+> I've tested my first idea also.
+> To do as much as we can, as for native meta (reshape is started by array run).
+> Some problems are similar as before (p.4, p.5)
+> The only serious problem, that I've got with this is how to let to know md about delta_disks.
+> I've resolved it by adding special case in raid_disks_store(), 
+> similar to native metadata when old_disks number is guessed.
+> For external metadata, I am storing old and then new disks numbers, md calculates delta disks from this raid disks numbers sequence. 
+> (as I remember you do not want to expose delta disks in sysfs). 
+> 
+> Other issue that I'm observing in both methods is sync_action sysfs entry behavior. It reports reshape->idle->reshape...
+> This 'idle' for a very short time causes migration cancelation. I've made workaround in mdmon for a now.
+> 
+> Both methods are not fully workable yet, but I think this will change on Monday.
+> 
+> Considering above, I still like more method when we construct array with new disks number.
+> Begin of array /already reshaped/ has all disks present. In the same way md works for native arrays.
+> 
+> I'm waiting for your comments/questions/ideas.
+> 
+> BR
+> Adam
+> 
+> > 
+> > BR
+> > Adam
+> > 
+> > >
+> > >
+> > > >       imsm: FIX: Report correct array size during reshape
+> > > >       imsm: FIX: initalize reshape progress as it is stored in
+> > > metatdata
+> > > >
+> > > These both look good - I have applied them.  Thanks.
+> > >
+> > > NeilBrown
+> > >
 
