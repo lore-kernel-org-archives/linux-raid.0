@@ -1,78 +1,81 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: OK, Now this is really weird
-Date: Sun, 27 Feb 2011 18:57:04 +1100
-Message-ID: <20110227185704.18777dfa@notabene.brown>
-References: <20110227083433.69b3d99a@notabene.brown>
-	<C3.E3.07087.0CBF96D4@cdptpa-omtalb.mail.rr.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: stripe cache question
+Date: Sun, 27 Feb 2011 12:37:11 +0100
+Message-ID: <20110227113710.GA16286@lazy.lzy>
+References: <20110224210642.GA20306@lazy.lzy>
+ <20110225145125.69dd4b9d@notabene.brown>
+ <20110226102128.GA15074@lazy.lzy>
+ <20110227154350.4448d731@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C3.E3.07087.0CBF96D4@cdptpa-omtalb.mail.rr.com>
+Content-Disposition: inline
+In-Reply-To: <20110227154350.4448d731@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 27 Feb 2011 01:22:41 -0600 "Leslie Rhorer" <lrhorer@satx.rr.com=
->
-wrote:
+> > > Ideally the cache should be automatically sized based on demand and memory
+> > > size - with maybe just a tunable to select between "use a much memory as you
+> > > need - within reason" verse "use a little memory as you can manage with".
+> > > 
+> > > But that requires thought and design and code and .... it just never seemed
+> > > like a priority.
+> > 
+> > You're a bit contraddicting your philosopy of
+> > "let's do the smart things in user space"... :-)
+> > 
+> > IMHO, if really necessary, it could be enough to
+> > have this "upper limit" avaialable in sysfs.
+> > 
+> > Then user space can decide what to do with it.
+> > 
+> > For example, at boot the amount of memory is checked
+> > and the upper limit set.
+> > I see a duplication here, maybe better just remove
+> > the upper limit and let user space to deal with that.
+> 
+> 
+> Maybe....  I still feel I want some sort of built-in protection...
 
->=20
-> > > >> > =A0 =A0 So what gives? =A0/dev/sdk3 no longer even exists, s=
-o why hasn't
-> > it
-> > > >> > been failed and removed on /dev /md3 like it has on /dev/md1=
- and
-> > > >> /dev/md2?
-> > > >>
-> > > >> Is it possible there has been no I/O request for /dev/md3 sinc=
-e
-> > > >> /dev/sdk failed?
-> > > >
-> > > > =A0 =A0 =A0 =A0Well, I thought about that. =A0It's swap space, =
-so I suppose it's
-> > > > possible. =A0I would have thought, however, that mdadm would fa=
-il a
-> > missing
-> > > > member whether there is any I/O or not.
-> > > >
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux=
--raid"
-> > in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at =A0http://vger.kernel.org/majordomo-info=
-=2Ehtml
-> > > >
-> > >
-> > > I thought so as well. But how will mdadm know is the device is fa=
-ulty,
-> > > unless the device is generating errors? (which usually only happe=
-ns on
-> > > read and/or write)
-> >=20
-> > With very recent mdadm the command
-> >=20
-> >    mdadm -If sdXX
-> >=20
-> > will find any md array that has /dev/sdXX as a member and will fail=
- and
-> > remove it.
->=20
-> 	No, it's version 3.1.4, and that gives me a "Device or Resource
-> busy" error.  It does report that it set sdk3 faulty, but the hot rem=
-ove
-> fails.
->=20
-> 	So how can I remove the drive (so I can add it back)?
+As I wrote, I think a second sysfs entry, with the upper
+limit, could be enough.
+It allows flexibility and somehow protection.
+It would be required two _coordinated_ access to sysfs in order
+to break the limit, which is unlikely to happen by random.
+That is, at boot /sys/block/mdX/md/stripe_cache_limit will
+be 32768 and the "cache_size" will be 256.
+If someone wants to play with the cache size, will be able
+to top it to 32768. Otherwise, the first entry has to be
+changed to higher values (min value should be the cache_size).
 
-Maybe:
-  mdadm /dev/md2 --remove failed
+This is, of course, a duplication, but it enforce a certain
+process (two accesses) giving then some degree of protection.
 
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I guess, but you're the expert, this should be easier than
+other solutions.
+
+> Maybe if I did all the allocations with "__GFP_WAIT" clear so that it would
+> only allocate memory that is easily available.  It wouldn't be a hard
+> guarantee against running out, but it might help..
+
+Again, I think you're over-designing it.
+
+BTW, I hope that is unswappable memory, or?
+
+> Maybe you could try removing the limit and see what actually happens when
+> you set a ridiculously large size.??
+
+Yes and no. The home PC has a RAID-10f2, the work PC has
+a RAID-5, but I do not want to play with the kernel on it.
+I guess using loop devices will not be meaningful.
+
+As soon as I manage to build the RAID-6 NAS I could give it
+a try, but this has no "schedule" right now.
+
+bye,
+
+-- 
+
+piergiorgio
