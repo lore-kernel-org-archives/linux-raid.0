@@ -1,370 +1,98 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/3] Continue expansion after reboot
-Date: Mon, 28 Feb 2011 13:35:33 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17904F8CE@irsmsx503.ger.corp.intel.com>
-References: <20110222135440.7582.87319.stgit@gklab-128-013.igk.intel.com>
-	<20110223143756.41139e11@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D17904F0CA@irsmsx503.ger.corp.intel.com>
- <20110227175120.20b6fe2c@notabene.brown>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] Warn the user about too small array size
+Date: Mon, 28 Feb 2011 06:00:43 +0100
+Message-ID: <20110228050043.23112.65994.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110227175120.20b6fe2c@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+If single-disk RAID0 or RAID1 array is created, user may preserve data on
+disk. If array given size covers all partitions on disk, all data will be
+available on created array. If array size is too small (not covers
+all partitions), data will be not accessible.
+This patch introduces warning message during array creation if given size
+is too small. User may interrupt creation process to avoid data loss.
 
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ Create.c |    7 +++----
+ mdadm.h  |    2 +-
+ util.c   |    9 ++++++++-
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Sunday, February 27, 2011 7:51 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 0/3] Continue expansion after reboot
-> 
-> On Fri, 25 Feb 2011 15:55:01 +0000 "Kwolek, Adam"
-> <adam.kwolek@intel.com>
-> wrote:
-> 
-> >
-> >
-> > > -----Original Message-----
-> > > From: Kwolek, Adam
-> > > Sent: Wednesday, February 23, 2011 10:02 AM
-> > > To: 'NeilBrown'
-> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > > Neubauer, Wojciech
-> > > Subject: RE: [PATCH 0/3] Continue expansion after reboot
-> > >
-> > >
-> > >
-> > > > -----Original Message-----
-> > > > From: NeilBrown [mailto:neilb@suse.de]
-> > > > Sent: Wednesday, February 23, 2011 4:38 AM
-> > > > To: Kwolek, Adam
-> > > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > > > Neubauer, Wojciech
-> > > > Subject: Re: [PATCH 0/3] Continue expansion after reboot
-> > > >
-> > > > On Tue, 22 Feb 2011 15:13:15 +0100 Adam Kwolek
-> <adam.kwolek@intel.com>
-> > > > wrote:
-> > > >
-> > > > > Currently reshaped/expanded array is assembled but it stays in
-> > > > inactive state.
-> > > > > This patches allows for array assembly when array is under
-> > > expansion.
-> > > > > Array with reshape/expansion information in metadata is
-> assembled
-> > > > > and reshape process continues automatically.
-> > > > >
-> > > > > Next step:
-> > > > > Problem is how to address container operation during assembly.
-> > > > > 1. After first array being reshaped, assebly process looks if
-> mdmon
-> > > > >    sets migration for other array in container. If yes it
-> continues
-> > > > work
-> > > > >    for next array.
-> > > > >
-> > > > > 2. Assembly process performs reshape of currently reshaped array
-> > > only.
-> > > > >    Mdmon sets next array for reshape and user triggers manually
-> > > mdadm
-> > > > >    to finish container operation with just the same parameters
-> set.
-> > > > >
-> > > > > Reshape finish can be executed for container operation by
-> container
-> > > > re-assembly
-> > > > > also (this works in current code).
-> > > > >
-> > > >
-> > > > Yes, this is an awkward problem.
-> > > >
-> > > > Just to be sure we are thinking about the same thing:
-> > > >   When restarting an array in which migration is already underway
-> > > mdadm
-> > > > simply
-> > > >   forks and continues monitoring that migration.
-> > > >   However if it is an array-wide migration, then when the
-> migration of
-> > > > the
-> > > >   first array completes, mdmon will update the metadata on the
-> second
-> > > > array,
-> > > >   but it isn't clear how mdadm can be told to start monitoring
-> that
-> > > > array.
-> > > >
-> > > > How about this:
-> > > >   the imsm metadata handler should report that an array is
-> 'undergoing
-> > > >   migration if it is, or if an earlier array in the container is
-> > > > undergoing a
-> > > >   migration which will cause 'this' array to subsequently be
-> migrated
-> > > > too.
-> > > >
-> > > >   So if the first array is in the middle of a 4drive->5drive
-> > > conversion
-> > > > and
-> > > >   the second array is simply at '4 drives', then imsm reported (to
-> > > >   container_content) that the second drive is actually undergoing
-> a
-> > > > migration
-> > > >   from 4 to 5 drives, and is at the very beginning.
-> > > >
-> > > >   When mdadm assembles that second array it will fork a child to
-> > > monitor
-> > > > it.
-> > > >   It will need to somehow wait for mdmon to really update the
-> metadata
-> > > > before
-> > > >   it starts.  This can probably be handled in the ->manage_reshape
-> > > > function.
-> > > >
-> > > > Something along those line would be the right way to go I think.
-> It
-> > > > avoid
-> > > > any races between arrays being assembled at different times.
-> > >
-> > >
-> > > This looks fine for me.
-> > >
-> > > >
-> > > >
-> > > > > Adam Kwolek (3):
-> > > > >       FIX: Assemble device in reshape state with new disks
-> number
-> > > >
-> > > > I don't think this patch is correct.  We need to configure the
-> array
-> > > > with the
-> > > > 'old' number of devices first, then 'reshape_array' will also set
-> the
-> > > > 'new'
-> > > > number of devices.
-> > > > What exactly what the problem you were  trying to fix?
-> > >
-> > > When array is being assembled with old raid disk number assembly
-> cannot
-> > > set readOnly array state
-> > > (error on sysfs state writing). Array stays in inactive state, so
-> > > nothing (reshape) happened later.
-> > >
-> > > I think that array cannot be assembled with old disks number (added
-> new
-> > > disks are present as spares)
-> > > because begin of array uses new disks already. This means we are
-> > > assembling array with not complete disk set.
-> > > Stripes on begin can be corrupted (not all disks present in array).
-> At
-> > > this point inactive array state is ok to keep safe user data.
-> > >
-> > >
-> > > I'll test is setting old disk number and later configuration change
-> in
-> > > disks number and array state resolves problem.
-> > > I'll let you know results.
-> >
-> > I've made some investigations. I've tried assemble algorithm (as you
-> suggested):
-> > Conditions:
-> >  reshape 3 disk raid5 array to 4 disks raid5 array
-> >    is interrupted. Restart is invoked by command 'mdadm -As'
-> >
-> > 1. Assemble() builds container with new disks number
-> > 2. Assemble() builds container content (array with /old/ 3 disks)
-> > 3. array is set to frozen to block monitor
-> > 4. sync_max in sysfs is set to 0, to block md until reshape monitoring
-> takes carry about reshape process
-> > 5. Continue_reshape() starts reshape process
-> > 6. Continue_reshape() continues reshape process
-> >
-> > Problems I've met:
-> > 1. not all disks in Assembly() are added to array (old disks number
-> limitation)
-> 
-> I want to fix this by getting sysfs_set_array to set up the new
-> raid_disks
-> number.
-> It currently doesn't because the number of disks that md is to expect
-> could
-> be different to the number of disks recorded in the metadata, and
-> "analyse_change" might be needed to resolve the difference.
-> A particular example is that the metadata might think a RAID0 is
-> changing from
-> 4 device to 5 devices, but md need to be told that a RAID4 is changing
-> from
-> 5 devices to 6 devices.
-> However in the case, we really need to do the 'analyse_change' before
-> calling
-> sysfs_set_array anyway.
-> 
-> So get sysfs_set_array to set up the array fully, and find somewhere
-> appropriate to put a call to analyse_change ... possibly modifying
-> analyse_change a bit ...
-
-In the nearest patches that I hope makes me closer to the final code, I will not use analyze changes.
-I want to have that makes the thing (restore from checkpoint) workable first.
-
-> 
-> > 2. setting reshape_position invokes automatically reshape start in md
-> on array run
-> 
-> That shouldn't be a problem..  We start the array read-only and the
-> reshape
-> will not start while that is set.
-> So:
->   set 'old' shape of array,
->   set reshape_position
->   set 'new' shape of array
->   start array 'readonly'
->   set sync_max to 0
->   enable read/write
->   allow reshape to continue while monitoring it with mdadm.
-> 
-> Does this work, or is there something I have missed.
-
-Everything in mdadm seems to be ok.
-One small problem is in md (raid5.c:5052):
-For grow case there is check for checkpoint. For my code chunk_sectors and new_chunk_sectors
-are the same, so array is not started. If I ignore '==' case array can be assembled.
+diff --git a/Create.c b/Create.c
+index bbd25e5..ff18ff8 100644
+--- a/Create.c
++++ b/Create.c
+@@ -121,7 +121,6 @@ int Create(struct supertype *st, char *mddev,
+ 	unsigned long long newsize;
  
-> 
-> 
-> > 3. setting of reshape position clears delta_disks in md (and other
-> parameters, for now not important)
-> 
-> That shouldn't matter ... where do we set reshape_position that it
-> causes
-> a problem?
-
-Yes I've found it during my tests.
-
-> 
-> > 4. Assembly() closes handle to array (it has to be not closed and used
-> in reshape continuation)
-> 
-> I'm not sure what you are getting at.... reshape continuation is handled
-> by
-> Grow_continue which is passed the handle to the array.  It should fork
-> and
-> monitor the array in the background, so it has its own copy of the
-> handle
-> ???
-
-Assemble_container_content() closes array handle. I've not fork() inside this function,
-but probably this will be better.
-
-> 
-> > 5. reshape continuation can require backup file. It depends where it
-> was interrupted during expansion,
-> >    Other reshapes can always require backup file
-> 
-> Yes ... Why is this a problem?
-
-... not a problem, rather TBD ;)
-Assemble operation has not pointed backup file, so backup file name has to be generated.
-
-
-> 
-> > 6. to run reshape, 'reshape' has to be written to sync_action.
-> >     Raid5_start_reshape() is not prepared for reshape restart (i.e
-> reshape position can be 0 or max array value
-> >     - it depends on operation grow/shrink)
-> 
-> Yes ... raid5_start_reshape isn't used for restarting a reshape.
-> run() will start the reshape thread, which will not run because the
-> array is
-> read-only
-> Once you switch the array to read-write the sync_thread should get woken
-> up
-> and will continue the reshape.
-
-This is what I wanted to hear :).
-
-> 
-> 
-> I think the remainder of your email is also addressed by what I have
-> said
-> above so I won't try to address specific things.
-> 
-> Please let me know if you see any problem with what I have outlined.
-> 
-> Thanks!
-> 
-> NeilBrown
-
-Everything is more or less clear, I'll prepare few patches that allows
-For reshape continuation for expansion to get your feedback.
-
-BR
-Adam
-
-
-> 
-> 
-> 
-> > 7. After array start flag MD_RECOVERY_NEEDED is set, so reshape cannot
-> be started from mdadm
-> >     As array is started with not all disks (old raid disks), we cannot
-> allow for such check (???)
-> >     I've made workaround (setting reshape position clears this flag
-> for external meta)
-> >
-> > I've started reshape again on /all/ new disks number, but it still
-> starts from array begin. This is a matter of search where checkpoint is
-> lost.
-> >
-> > I've tested my first idea also.
-> > To do as much as we can, as for native meta (reshape is started by
-> array run).
-> > Some problems are similar as before (p.4, p.5)
-> > The only serious problem, that I've got with this is how to let to
-> know md about delta_disks.
-> > I've resolved it by adding special case in raid_disks_store(),
-> > similar to native metadata when old_disks number is guessed.
-> > For external metadata, I am storing old and then new disks numbers, md
-> calculates delta disks from this raid disks numbers sequence.
-> > (as I remember you do not want to expose delta disks in sysfs).
-> >
-> > Other issue that I'm observing in both methods is sync_action sysfs
-> entry behavior. It reports reshape->idle->reshape...
-> > This 'idle' for a very short time causes migration cancelation. I've
-> made workaround in mdmon for a now.
-> >
-> > Both methods are not fully workable yet, but I think this will change
-> on Monday.
-> >
-> > Considering above, I still like more method when we construct array
-> with new disks number.
-> > Begin of array /already reshaped/ has all disks present. In the same
-> way md works for native arrays.
-> >
-> > I'm waiting for your comments/questions/ideas.
-> >
-> > BR
-> > Adam
-> >
-> > >
-> > > BR
-> > > Adam
-> > >
-> > > >
-> > > >
-> > > > >       imsm: FIX: Report correct array size during reshape
-> > > > >       imsm: FIX: initalize reshape progress as it is stored in
-> > > > metatdata
-> > > > >
-> > > > These both look good - I have applied them.  Thanks.
-> > > >
-> > > > NeilBrown
-> > > >
+ 	int major_num = BITMAP_MAJOR_HI;
+-
+ 	memset(&info, 0, sizeof(info));
+ 	if (level == UnSet && st && st->ss->default_geometry)
+ 		st->ss->default_geometry(st, &level, NULL, NULL);
+@@ -380,14 +379,14 @@ int Create(struct supertype *st, char *mddev,
+ 			if (strcmp(st->ss->name, "1.x") == 0 &&
+ 			    st->minor_version >= 1)
+ 				/* metadata at front */
+-				warn |= check_partitions(fd, dname, 0);
++				warn |= check_partitions(fd, dname, 0, 0);
+ 			else if (level == 1 || level == LEVEL_CONTAINER
+ 				    || (level == 0 && raiddisks == 1))
+ 				/* partitions could be meaningful */
+-				warn |= check_partitions(fd, dname, freesize*2);
++				warn |= check_partitions(fd, dname, freesize*2, size*2);
+ 			else
+ 				/* partitions cannot be meaningful */
+-				warn |= check_partitions(fd, dname, 0);
++				warn |= check_partitions(fd, dname, 0, 0);
+ 			if (strcmp(st->ss->name, "1.x") == 0 &&
+ 			    st->minor_version >= 1 &&
+ 			    did_default &&
+diff --git a/mdadm.h b/mdadm.h
+index a1be856..476a2be 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1078,7 +1078,7 @@ extern int parse_layout_faulty(char *layout);
+ extern int check_ext2(int fd, char *name);
+ extern int check_reiser(int fd, char *name);
+ extern int check_raid(int fd, char *name);
+-extern int check_partitions(int fd, char *dname, unsigned long long freesize);
++extern int check_partitions(int fd, char *dname, unsigned long long freesize, unsigned long long size);
+ 
+ extern int get_mdp_major(void);
+ extern int dev_open(char *dev, int flags);
+diff --git a/util.c b/util.c
+index 87c23dc..0f72b0e 100644
+--- a/util.c
++++ b/util.c
+@@ -1370,7 +1370,8 @@ static int get_last_partition_end(int fd, unsigned long long *endofpart)
+ 	return retval;
+ }
+ 
+-int check_partitions(int fd, char *dname, unsigned long long freesize)
++int check_partitions(int fd, char *dname, unsigned long long freesize,
++			unsigned long long size)
+ {
+ 	/*
+ 	 * Check where the last partition ends
+@@ -1393,6 +1394,12 @@ int check_partitions(int fd, char *dname, unsigned long long freesize)
+ 				Name ": metadata will over-write last partition on %s.\n",
+ 				dname);
+ 			return 1;
++		} else if (size && endofpart > size) {
++			/* partitions will be truncated in new device */
++			fprintf(stderr,
++				Name ": array size is too small to cover all partitions on %s.\n",
++				dname);
++			return 1;
+ 		}
+ 	}
+ 	return 0;
 
