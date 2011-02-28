@@ -1,65 +1,50 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 5/5] FIX: Do not configure and start, already started reshape
-Date: Mon, 28 Feb 2011 16:07:35 +0100
-Message-ID: <20110228150735.14670.87814.stgit@gklab-128-013.igk.intel.com>
-References: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Mon, 28 Feb 2011 16:22:08 -0600
+Message-ID: <4D6C2010.1030406@hardwarefreak.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com> <20110215044434.GA9186@septictank.raw-sewage.fake> <4D6AC288.20101@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <4D6AC288.20101@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Ed W <lists@wildgooses.com>
+Cc: Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When Grow_continue() calls reshape_array(), reshape is configured
-and it is started with array together.
-We cannot start it again.
+Ed W put forth on 2/27/2011 3:30 PM:
+> Your application appears to be an implementation of a queue processing
+> system?  ie each machine: pulls a file down, processes it, gets the next
+> file, etc?
+> 
+> Can you share some information on
+> - the size of files you pull down (I saw something in another post)
+> - how long each machine takes to process each file
+> - whether there is any dependency between the processing machines? eg
+> can each machine operate completely independently of the others and
+> start it's job when it wishes (or does it need to sync?)
+> 
+> Given the tentative assumption that
+> - processing each file takes many multiples of the time needed to
+> download the file, and
+> - files are processed independently
+> 
+> It would appear that you can use a much lower powered system to
+> basically push jobs out to the processing machines in advance, this way
+> your bandwidth basically only needs to be:
+>     size_of_job * num_machines / time_to_process_jobs
+> 
+> So if the time to process jobs is significant then you have quite some
+> time to push out the next job to local storage ready?
+> 
+> Firstly is this architecture workable?  If so then you have some new
+> performance parameters to target for the storage architecture?
+> 
+> Good luck
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+Ed, you stated this thought much more thoroughly and eloquently than I
+did in my last rambling post.  Thank you.
 
- Grow.c |   21 +++++++++++++--------
- 1 files changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index a5041de..47b8809 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1965,7 +1965,7 @@ started:
- 		 * metadata, and for kernels before 2.6.38 we can
- 		 * fail if we try.
- 		 */
--	} else {
-+	} else if (!restart) {
- 		/* set them all just in case some old 'new_*' value
- 		 * persists from some earlier problem.
- 		 * We even set them when restarting in the middle.  They will
-@@ -1995,13 +1995,18 @@ started:
- 		}
- 	}
- 
--	err = start_reshape(sra, (info->reshape_active && !st->ss->external));
--	if (err) {
--		fprintf(stderr, Name ": Cannot start reshape for %s\n",
--			devname);
--		goto release;
--	}
--	if (restart)
-+	/* if reshape is already started,
-+	 * there is no need to do this again
-+	 */
-+	if (!restart) {
-+		err = start_reshape(sra,
-+				   (info->reshape_active && !st->ss->external));
-+		if (err) {
-+			fprintf(stderr, Name ": Cannot start reshape for %s\n",
-+				devname);
-+			goto release;
-+		}
-+	} else
- 		sysfs_set_str(sra, NULL, "array_state", "active");
- 
- 	/* Now we just need to kick off the reshape and watch, while
-
+-- 
+Stan
