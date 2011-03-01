@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/7] FIX: reshape in md should wait for monitoring process
-	(external metadata)
-Date: Tue, 01 Mar 2011 15:56:58 +0100
-Message-ID: <20110301145658.10678.6778.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/7] Add block_subarray()
+Date: Tue, 01 Mar 2011 15:57:15 +0100
+Message-ID: <20110301145715.10678.25012.stgit@gklab-128-013.igk.intel.com>
 References: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,49 +13,49 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When container content is assembled it is possible that reshape
-is in progress. To avoid md to run reshape without monitoring.
-Before setting array parameters sync_max is set to 0, to not allow md
-for any move forward. After array parameters are set, sync_max is set to current
-reshape_progress. This is current reshape start point.
-Note that md is still blocked, and reshape is not continued.
+Put code for blocking subarray in to separate function.
+This little code/function will be used for blocking arrays from mdmon
+monitoring during assembly process. Arrays cannot wait for container
+assembly finish, because meanwhile monitor can enable arrays for writing.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+ msg.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 4d41081..6aff049 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1510,11 +1510,26 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 	sysfs_init(content, mdfd, 0);
+diff --git a/msg.c b/msg.c
+index 76e74e7..ce2ce00 100644
+--- a/msg.c
++++ b/msg.c
+@@ -255,6 +255,18 @@ static int unblock_subarray(struct mdinfo *sra, const int unfreeze)
+ 	return rc;
+ }
  
- 	sra = sysfs_read(mdfd, 0, GET_VERSION);
--	if (sra == NULL || strcmp(sra->text_version, content->text_version) != 0)
-+	if (sra == NULL || strcmp(sra->text_version,
-+				  content->text_version) != 0) {
-+		if (content->reshape_active) {
-+			/* block reshape until reshape monitoring
-+			 * allows for run
-+			 */
-+			sysfs_set_num(content, NULL, "sync_max", 0);
-+		}
- 		if (sysfs_set_array(content, md_get_version(mdfd)) != 0) {
- 			close(mdfd);
- 			return 1;
- 		}
-+		if (content->reshape_active) {
-+			/* set the current checkpoint to allow monitoring to
-+			 * restart reshape
-+			 */
-+			sysfs_set_num(content, NULL, "sync_max",
-+				      content->reshape_progress);
-+		}
-+	}
- 	if (sra)
- 		sysfs_free(sra);
++int block_subarray(struct mdinfo *sra)
++{
++	char buf[64];
++	int rc = 0;
++
++	sprintf(buf, "external:%s\n", sra->text_version);
++	buf[9] = '-';
++	if (sysfs_set_str(sra, NULL, "metadata_version", buf))
++		rc = -1;
++
++	return rc;
++}
+ /**
+  * block_monitor - prevent mdmon spare assignment
+  * @container - container to block
+@@ -334,9 +346,7 @@ int block_monitor(char *container, const int freeze)
+ 		 * takeover in reshape case and spare reassignment in the
+ 		 * auto-rebuild case)
+ 		 */
+-		sprintf(buf, "external:%s\n", sra->text_version);
+-		buf[9] = '-';
+-		if (sysfs_set_str(sra, NULL, "metadata_version", buf))
++		if (block_subarray(sra))
+ 			break;
+ 		ping_monitor(container);
  
 
