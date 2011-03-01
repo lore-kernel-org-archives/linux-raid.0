@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/7] FIX: Verify Backup file name before reshape
-Date: Tue, 01 Mar 2011 15:56:50 +0100
-Message-ID: <20110301145650.10678.1741.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/7] FIX: configure disks slot for expansion
+Date: Tue, 01 Mar 2011 15:57:06 +0100
+Message-ID: <20110301145706.10678.63966.stgit@gklab-128-013.igk.intel.com>
 References: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,29 +13,42 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When reshape is continued backup_file is required for user data safety.
-Grow_continue() has to verify if any file name is passed in.
+Some raid_disks that are used for expansion, are not configured yet.
+This is due to earlier set raid_disks limitation.
+Set raid_disks to new (bigger) value and finish disks slot configuration.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ Assemble.c |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 47b8809..1470a91 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3332,6 +3332,11 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
- 	char *container = NULL;
- 	int err;
- 
-+	if (backup_file == NULL) {
-+		fprintf(stderr, Name ": Backup file name has to be specified "
-+			"for reshape continuation.\n");
-+		return 1;
-+	}
- 	if (!st->ss->external) {
- 		err = sysfs_set_str(info, NULL, "array_state", "readonly");
- 		if (err)
+diff --git a/Assemble.c b/Assemble.c
+index 6aff049..fa3a0a6 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1586,9 +1586,22 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 					chosen_name, working + preexist);
+ 			if (preexist)
+ 				fprintf(stderr, " (%d new)", working);
+-			if (expansion)
++			if (expansion) {
+ 				fprintf(stderr, " ( + %d for expansion)",
+ 					expansion);
++			sysfs_set_num(content, NULL, "raid_disks",
++				      content->array.raid_disks + expansion);
++			for (dev = content->devs; dev; dev = dev->next)
++				if (dev->disk.raid_disk >=
++				    content->array.raid_disks) {
++					int rv;
++					dprintf("\n\tExpansion: configure slot:"
++						"%i", dev->disk.raid_disk);
++					rv = sysfs_set_num(content, dev, "slot",
++							   dev->disk.raid_disk);
++					dprintf(" (status = %i)\n", rv);
++				}
++			}
+ 			fprintf(stderr, "\n");
+ 		}
+ 		if (!err)
 
