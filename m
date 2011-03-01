@@ -1,73 +1,119 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: high throughput storage server?
-Date: Mon, 28 Feb 2011 17:14:20 -0600
-Message-ID: <4D6C2C4C.5090204@hardwarefreak.com>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com> <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com> <20110215044434.GA9186@septictank.raw-sewage.fake> <4D6AC288.20101@wildgooses.com> <4D6BC33E.7070703@gmail.com>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: Impact of missing parameter during mdadm create
+Date: Mon, 28 Feb 2011 22:19:58 -0500
+Message-ID: <BAY148-w3BBDF9F7CC665C5870D23EFC10@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D6BC33E.7070703@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Ed W <lists@wildgooses.com>, Matt Garman <matthew.garman@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Joe Landman put forth on 2/28/2011 9:46 AM:
-> On 02/27/2011 04:30 PM, Ed W wrote:
-> 
-> [...]
-> 
->> It would appear that you can use a much lower powered system to
->> basically push jobs out to the processing machines in advance, this way
->> your bandwidth basically only needs to be:
->> size_of_job * num_machines / time_to_process_jobs
-> 
-> This would be good.  Matt's original argument suggested he needed this
-> as his sustained bandwidth given the way the analysis proceeded.
 
-And Joe has provided a nice mathematical model for quantifying it.
+Hello mdadm hackers,
 
-> If we assume that the processing time is T_p, and the communication time
-> is T_c, ignoring other factors, the total time for 1 job is T_j = T_p +
-> T_c.  If T_c << T_p, then you can effectively ignore bandwidth related
-> issues (and use a much smaller bandwidth system).  For T_c << T_p, lets
-> (for laughs) say T_c = 0.1 x T_p (e.g. communication time is 1/10th the
-> processing time).  Then even if you halved your bandwidth, and doubled
-> T_c, you are making only an about 10% increase in your total execution
-> time for a job.
-> 
-> With Nmachines each with Ncores, you have Nmachines x Ncores jobs going
-> on all at once. If T_c << T_p (as in the above example), then most of
-> the time, on average, the machines will not be communicating.  In fact,
-> if we do a very rough first pass approximation to an answer (there are
-> more accurate statistical models) for this, one would expect the network
-> to be used T_c/T_p fraction of the time by each process.  Then the total
-> consumption of data for a run (assuming all runs are *approximately* of
-> equal duration)
-> 
->     D = B x T_c
-> 
-> D being the amount of data in MB or GB, and B being the bandwidth
-> expressed in MB/s or GB/s.  Your effective bandwidth per run, Beff will be
-> 
->     D = Beff x T = Beff x (T_c + T_p)
-> 
-> For Nmachines x Ncores jobs, Dtotal is the total data transfered
-> 
->     Dtotal    = Nmachines x Ncores * D = Nmachines x Ncores x Beff
->           x (T_c + T_p)
-> 
-> 
-> You know Dtotal (aggregate data needed for run).  You know Nmachines and
-> Ncores.  You know T_c and T_p (approximately).  From this, solve for
-> Beff.  Thats what you have to sustain (approximately).
+I was wondering what (if any) impact would creating an array with the missing parameter have on subsequent assemblies of a mdadm array? 
 
-This assumes his application is threaded and scales linearly across
-multiple cores.  If not, running Ncores processes on each node should
-achieve a similar result to the threaded case, assuming the application
-is written such that multiple process instances don't trip over each
-other by say, all using the same scratch file path/name, etc, etc.
+When the array was created, I used a command like:
 
--- 
-Stan
+mdadm --create -l5 -n3 /dev/md0 /dev/sda1 missing /dev/sdb1
+
+And then loaded some initial data on the md0 array from /dev/sdd1, and then I zeroed out /dev/sdd1 and added it to the md0 array.
+
+Details on each drive seem to show they all belong to the same Array UUID, but when the array is (re)assembled (on boot or manually), only /dev/sd{a,b}1 are added to mdadm array automatically, and /dev/sdd1 must be re-added manually.
+
+
+> mdadm --examine /dev/sd{a,b,d}1
+> /dev/sda1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x0
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+> 
+> Avail Dev Size : 1953517954 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> State : clean
+> Device UUID : 25f4baf0:9a378d2c:16a87f0c:ff89b2c8
+> 
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : 37383bee - correct
+> Events : 32184
+> 
+> Layout : left-symmetric
+> Chunk Size : 512K
+> 
+> Device Role : Active device 0
+> Array State : AAA ('A' == active, '.' == missing)
+> /dev/sdb1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x0
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+> 
+> Avail Dev Size : 1953517954 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> State : clean
+> Device UUID : f20ab5fd:1f141cae:e0547278:d6cf063e
+> 
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : a70821e2 - correct
+> Events : 32184
+> 
+> Layout : left-symmetric
+> Chunk Size : 512K
+> 
+> Device Role : Active device 1
+> Array State : AAA ('A' == active, '.' == missing)
+> /dev/sdd1:
+> Magic : a92b4efc
+> Version : 1.2
+> Feature Map : 0x2
+> Array UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81e9
+> Name : XEN-HOST:0 (local to host XEN-HOST)
+> Creation Time : Mon Dec 20 09:48:07 2010
+> Raid Level : raid5
+> Raid Devices : 3
+> 
+> Avail Dev Size : 1953521072 (931.51 GiB 1000.20 GB)
+> Array Size : 3907035136 (1863.02 GiB 2000.40 GB)
+> Used Dev Size : 1953517568 (931.51 GiB 1000.20 GB)
+> Data Offset : 2048 sectors
+> Super Offset : 8 sectors
+> Recovery Offset : 610474280 sectors
+> State : clean
+> Device UUID : 33d70114:ffdc4fcc:2c8d65ba:ab50bab2
+> 
+> Update Time : Fri Feb 18 16:32:19 2011
+> Checksum : b692957e - correct
+> Events : 32184
+> 
+> Layout : left-symmetric
+> Chunk Size : 512K
+> 
+> Device Role : Active device 2
+> Array State : AAA ('A' == active, '.' == missing)
+
+
+
+
+
+
+-M
+
+
+ 		 	   		  
