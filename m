@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 9/9] imsm: FIX: Variables declaration cleanup
-Date: Wed, 02 Mar 2011 14:30:07 +0100
-Message-ID: <20110302133007.24771.40353.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 8/9] FIX: Block array monitoring when assembling reshaped array
+Date: Wed, 02 Mar 2011 14:29:59 +0100
+Message-ID: <20110302132959.24771.86346.stgit@gklab-128-013.igk.intel.com>
 References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,33 +13,38 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Variables declaration moved a little bit up,
-to not mix declaration and code.
+To allow for array reconfiguration, mdmon cannot push array in to active
+state. Assemble should block monitor for external metadata to allow
+for reshape configuration and restart.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ Assemble.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 04e32ae..c5e459f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1803,13 +1803,13 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 		case MIGR_GEN_MIGR: {
- 			__u64 blocks_per_unit = blocks_per_migr_unit(dev);
- 			__u64 units = __le32_to_cpu(dev->vol.curr_migr_unit);
-+			unsigned long long array_blocks;
-+			int used_disks;
+diff --git a/Assemble.c b/Assemble.c
+index e65022c..8b4b037 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1532,6 +1532,11 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 		if (sysfs_set_array(content, md_get_version(mdfd)) != 0)
+ 			return 1;
+ 		if (content->reshape_active) {
++
++			/* mdmon can activate array, so array has to be blocked
++			 */
++			block_subarray(content);
++
+ 			/* set 'new' array geometry parameters
+ 			 * to restart reshape
+ 			 * ToDo:
+@@ -1545,6 +1550,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 					      content->delta_disks);
+ 		}
+ 	}
++
+ 	if (sra)
+ 		sysfs_free(sra);
  
- 			info->reshape_progress = blocks_per_unit * units;
- 			dprintf("IMSM: General Migration checkpoint : %llu "
- 			       "(%llu) -> read reshape progress : %llu\n",
- 				units, blocks_per_unit, info->reshape_progress);
--			unsigned long long array_blocks;
--			int used_disks;
- 
- 			used_disks = imsm_num_data_members(dev, 1);
- 			if (used_disks > 0) {
 
