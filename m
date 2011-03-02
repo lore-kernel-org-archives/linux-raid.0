@@ -1,67 +1,83 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/7] Grow_continue, use in assembly (cont.)
-Date: Wed, 2 Mar 2011 12:30:32 +1100
-Message-ID: <20110302123032.6d1996ca@notabene.brown>
-References: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Re: high throughput storage server?
+Date: Tue, 1 Mar 2011 21:44:18 -0600
+Message-ID: <AANLkTinjPJJrUYrA=fxcau02Q+4Z67YVsJhcGxeTpAAW@mail.gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
+	<20110215044434.GA9186@septictank.raw-sewage.fake>
+	<4D6AC288.20101@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <4D6AC288.20101@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Ed W <lists@wildgooses.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 01 Mar 2011 15:56:41 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Sun, Feb 27, 2011 at 3:30 PM, Ed W <lists@wildgooses.com> wrote:
+> Your application appears to be an implementation of a queue processin=
+g
+> system? =A0ie each machine: pulls a file down, processes it, gets the=
+ next
+> file, etc?
 
-> The following series implements next part of resuming reshape from checkpoint.
-> In this series call to invoke reshape is included.
-> It is required to have backup file to run reshape, so backup file validation is added
-> (without checking in file system)
-> Array seams to be configured for reshape, monitor is blocked and doesn't makes changes
-> to process. On the end of reshape monitor unblock is placed also.
-> 
-> In patch:
->    Continue reshape after assembling array
-> some plans for supporting container operations is placed.
-> 
-> Reshape restoring is not working yet (a few more pathes are still required)
-> I hope some of therm I'll post tomorrow.
-> 
-> BR
-> Adam
-> 
-> ---
-> 
-> Adam Kwolek (7):
->       FIX: array is frozen after reshape
->       Continue reshape after assembling array
->       FIX: Block monitor when starting array with reshape in progress
->       Add block_subarray()
->       FIX: configure disks slot for expansion
->       FIX: reshape in md should wait for monitoring process (external metadata)
->       FIX: Verify Backup file name before reshape
-> 
-> 
->  Assemble.c    |   64 +++++++++++++++++++++++++++++++++++++++++++++------------
->  Grow.c        |   15 ++++++++++++-
->  Incremental.c |    1 +
->  msg.c         |   18 ++++++++++++----
->  msg.h         |    2 ++
->  5 files changed, 81 insertions(+), 19 deletions(-)
-> 
+Sort of.  It's not so much "each machine" as it is "each job".  A
+machine can have multiple jobs.
 
+At this point I'm not exactly sure what the jobs' specifics are; that
+is, not sure if a job reads a bunch of files at once, then processes;
+or, reads one file, then processes (as you described).
 
-I have applied the patches among these which make sense, and replied to the
-ones that really don't.
+> Can you share some information on
+> - the size of files you pull down (I saw something in another post)
 
-If you think one of the patches that I rejected really is needed, please
-provide specific detail of what you try to do, how it doesn't work, and what
-you think is the reason.
+They vary; they can be anywhere from about 100 MB to a few TB.
+Average is probably on the order of a few hundred MB.
 
-All applied patches have been pushed to my  devel-3.2 branch.
+> - how long each machine takes to process each file
 
-Thanks,
-NeilBrown
+I'm not sure how long a job takes to process a file; I'm trying to get
+these answers from the people who design and run the jobs.
 
+> - whether there is any dependency between the processing machines? eg=
+ can
+> each machine operate completely independently of the others and start=
+ it's
+> job when it wishes (or does it need to sync?)
+
+I'm fairly sure the jobs are independent.
+
+> Given the tentative assumption that
+> - processing each file takes many multiples of the time needed to dow=
+nload
+> the file, and
+> - files are processed independently
+>
+> It would appear that you can use a much lower powered system to basic=
+ally
+> push jobs out to the processing machines in advance, this way your ba=
+ndwidth
+> basically only needs to be:
+> =A0 =A0size_of_job * num_machines / time_to_process_jobs
+>
+> So if the time to process jobs is significant then you have quite som=
+e time
+> to push out the next job to local storage ready?
+>
+> Firstly is this architecture workable? =A0If so then you have some ne=
+w
+> performance parameters to target for the storage architecture?
+
+That might be workable, but it would require me (or someone) to
+develop and deploy the job dispatching system.  Which is certainly
+doable, but it might meet some "political" resistance.  My boss
+basically said, "find a system to buy or spec out a system to build
+that meets [the requirements I've mentioned in this and other
+emails]."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
