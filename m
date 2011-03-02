@@ -1,281 +1,88 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Failed RAID 6 array advice
-Date: Wed, 2 Mar 2011 16:26:57 +1100
-Message-ID: <20110302162657.036d4ab5@notabene.brown>
-References: <65522.87245.qm@web55807.mail.re3.yahoo.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: high throughput storage server?
+Date: Wed, 2 Mar 2011 04:10:01 -0300
+Message-ID: <AANLkTi=yWhnqY_RTd8GH+fvEQfHfQ6TpWxnzpx-Fv=aj@mail.gmail.com>
+References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
+	<AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
+	<20110215044434.GA9186@septictank.raw-sewage.fake>
+	<4D6AC288.20101@wildgooses.com>
+	<AANLkTinjPJJrUYrA=fxcau02Q+4Z67YVsJhcGxeTpAAW@mail.gmail.com>
+	<4D6DC585.90304@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <65522.87245.qm@web55807.mail.re3.yahoo.com>
+In-Reply-To: <4D6DC585.90304@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: jahammonds prost <gmitch64@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Joe Landman <joe.landman@gmail.com>
+Cc: Matt Garman <matthew.garman@gmail.com>, Ed W <lists@wildgooses.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 1 Mar 2011 21:05:33 -0800 (PST) jahammonds prost <gmitch64@yaho=
-o.com>
-wrote:
+why not supercapacitors to power safe and ram memories as ramdisks?
+a backup solution could help on umount or backup
 
-> I've just had a 3rd drive fail on one of my RAID 6 arrays, and I'm lo=
-oking for=20
-> some advice on how to get it back enough that I can=A0recover the dat=
-a, and then=20
-> replacing the other failed drives.
->=20
->=20
-> mdadm -V
-> mdadm - v3.0.3 - 22nd October 2009
->=20
->=20
-> Not the most up to date release, but it seems to be the latest one av=
-ailable on=20
-> FC12
->=20
->=20
->=20
-> The /etc/mdadm.conf file is
->=20
-> ARRAY /dev/md0 uuid=3D1470c671:4236b155:67287625:899db153
->=20
->=20
-> Which explains why I didn't get emailed about the drive failures. Thi=
-s isn't my=20
-> standard file, and I don't know how it was changed, but that's anothe=
-r issue for=20
-> another day.
->=20
->=20
->=20
-> mdadm --detail /dev/md0
-> /dev/md0:
-> =A0=A0=A0=A0=A0=A0=A0 Version : 1.2
-> =A0 Creation Time : Sat Jun=A0 5 10:38:11 2010
-> =A0=A0=A0=A0 Raid Level : raid6
-> =A0 Used Dev Size : 488383488 (465.76 GiB 500.10 GB)
-> =A0=A0 Raid Devices : 15
-> =A0 Total Devices : 12
-> =A0=A0=A0 Persistence : Superblock is persistent
-> =A0=A0=A0 Update Time : Tue Mar=A0 1 22:17:41 2011
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active, degraded, Not Started
-> =A0Active Devices : 12
-> Working Devices : 12
-> =A0Failed Devices : 0
-> =A0 Spare Devices : 0
-> =A0=A0=A0=A0 Chunk Size : 512K
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : file00bert.woodlea.org.uk:0=A0 =
-(local to host=20
-> file00bert.woodlea.org.uk)
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 1470c671:4236b155:67287625:899d=
-b153
-> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 254890
-> =A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-> =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 113=A0=A0=A0=A0=
-=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdh1
-> =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 17=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb1
-> =A0=A0=A0=A0=A0=A0 2=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 177=A0=A0=A0=A0=
-=A0=A0=A0 2=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdl1
-> =A0=A0=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=
-=A0=A0=A0=A0=A0 3=A0=A0=A0=A0=A0 removed
-> =A0=A0=A0=A0=A0=A0 4=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 33=A0=A0=A0=
-=A0=A0=A0=A0 4=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdc1
-> =A0=A0=A0=A0=A0=A0 5=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 193=A0=A0=A0=A0=
-=A0=A0=A0 5=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdm1
-> =A0=A0=A0=A0=A0=A0 6=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=
-=A0=A0=A0=A0=A0 6=A0=A0=A0=A0=A0 removed
-> =A0=A0=A0=A0=A0=A0 7=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 49=A0=A0=A0=
-=A0=A0=A0=A0 7=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdd1
-> =A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 209=A0=A0=A0=A0=
-=A0=A0=A0 8=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdn1
-> =A0=A0=A0=A0=A0=A0 9=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 161=A0=A0=A0=A0=
-=A0=A0=A0 9=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdk1
-> =A0=A0=A0=A0=A0 10=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=
-=A0=A0=A0 10=A0=A0=A0=A0=A0 removed
-> =A0=A0=A0=A0=A0 11=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 225=A0=A0=A0=A0=
-=A0=A0 11=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdo1
-> =A0=A0=A0=A0=A0 12=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 81=A0=A0=A0=A0=
-=A0=A0 12=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdf1
-> =A0=A0=A0=A0=A0 13=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0 241=A0=A0=A0=A0=
-=A0=A0 13=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdp1
-> =A0=A0=A0=A0=A0 14=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 1=A0=A0=A0=
-=A0=A0=A0 14=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda1
->=20
->=20
->=20
-> The output from the=A0failed drives are as follows.
->=20
->=20
-> mdadm --examine /dev/sde1
-> /dev/sde1:
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-> =A0=A0=A0=A0=A0=A0=A0 Version : 1.2
-> =A0=A0=A0 Feature Map : 0x1
-> =A0=A0=A0=A0 Array UUID : 1470c671:4236b155:67287625:899db153
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : file00bert.woodlea.org.uk:0=A0 =
-(local to host=20
-> file00bert.woodlea.org.uk)
-> =A0 Creation Time : Sat Jun=A0 5 10:38:11 2010
-> =A0=A0=A0=A0 Raid Level : raid6
-> =A0=A0 Raid Devices : 15
-> =A0Avail Dev Size : 976767730 (465.76 GiB 500.11 GB)
-> =A0=A0=A0=A0 Array Size : 12697970688 (6054.86 GiB 6501.36 GB)
-> =A0 Used Dev Size : 976766976 (465.76 GiB 500.10 GB)
-> =A0=A0=A0 Data Offset : 272 sectors
-> =A0=A0 Super Offset : 8 sectors
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
-> =A0=A0=A0 Device UUID : 3e284f2e:d939fb97:0b74eb88:326e879c
-> Internal Bitmap : 2 sectors from superblock
-> =A0=A0=A0 Update Time : Tue Mar=A0 1 21:53:31 2011
-> =A0=A0=A0=A0=A0=A0 Checksum : 768f0f34 - correct
-> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 254591
-> =A0=A0=A0=A0 Chunk Size : 512K
-> =A0=A0 Device Role : Active device 10
-> =A0=A0 Array State : AAA.AA.AAAAAAAA ('A' =3D=3D active, '.' =3D=3D m=
-issing)
->=20
->=20
-> The above=A0is the drive that failed tonight, and the one I would lik=
-e to re add=20
-> back into the array. There have been no writes to the filesystem on t=
-he array in=20
-> the last couple of days (other than what ext4 would do on it's own).
->=20
->=20
-> =A0mdadm --examine /dev/sdi1
-> /dev/sdi1:
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-> =A0=A0=A0=A0=A0=A0=A0 Version : 1.2
-> =A0=A0=A0 Feature Map : 0x1
-> =A0=A0=A0=A0 Array UUID : 1470c671:4236b155:67287625:899db153
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : file00bert.woodlea.org.uk:0=A0 =
-(local to host=20
-> file00bert.woodlea.org.uk)
-> =A0 Creation Time : Sat Jun=A0 5 10:38:11 2010
-> =A0=A0=A0=A0 Raid Level : raid6
-> =A0=A0 Raid Devices : 15
-> =A0Avail Dev Size : 976767730 (465.76 GiB 500.11 GB)
-> =A0=A0=A0=A0 Array Size : 12697970688 (6054.86 GiB 6501.36 GB)
-> =A0 Used Dev Size : 976766976 (465.76 GiB 500.10 GB)
-> =A0=A0=A0 Data Offset : 272 sectors
-> =A0=A0 Super Offset : 8 sectors
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-> =A0=A0=A0 Device UUID : 8e668e39:06d8281b:b79aa3ab:a1d55fb5
-> Internal Bitmap : 2 sectors from superblock
-> =A0=A0=A0 Update Time : Thu Feb 10 18:20:54 2011
-> =A0=A0=A0=A0=A0=A0 Checksum : 4078396b - correct
-> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 254075
-> =A0=A0=A0=A0 Chunk Size : 512K
-> =A0=A0 Device Role : Active device 3
-> =A0=A0 Array State : AAAAAA.AAAAAAAA ('A' =3D=3D active, '.' =3D=3D m=
-issing)
->=20
->=20
-> mdadm --examine /dev/sdj1
-> /dev/sdj1:
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
-> =A0=A0=A0=A0=A0=A0=A0 Version : 1.2
-> =A0=A0=A0 Feature Map : 0x1
-> =A0=A0=A0=A0 Array UUID : 1470c671:4236b155:67287625:899db153
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : file00bert.woodlea.org.uk:0=A0 =
-(local to host=20
-> file00bert.woodlea.org.uk)
-> =A0 Creation Time : Sat Jun=A0 5 10:38:11 2010
-> =A0=A0=A0=A0 Raid Level : raid6
-> =A0=A0 Raid Devices : 15
-> =A0Avail Dev Size : 976767730 (465.76 GiB 500.11 GB)
-> =A0=A0=A0=A0 Array Size : 12697970688 (6054.86 GiB 6501.36 GB)
-> =A0 Used Dev Size : 976766976 (465.76 GiB 500.10 GB)
-> =A0=A0=A0 Data Offset : 272 sectors
-> =A0=A0 Super Offset : 8 sectors
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active
-> =A0=A0=A0 Device UUID : 37d422cc:8436960a:c3c4d11c:81a8e4fa
-> Internal Bitmap : 2 sectors from superblock
-> =A0=A0=A0 Update Time : Thu Oct 21 23:45:06 2010
-> =A0=A0=A0=A0=A0=A0 Checksum : 78950bb5 - correct
-> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 21435
-> =A0=A0=A0=A0 Chunk Size : 512K
-> =A0=A0 Device Role : Active device 6
-> =A0=A0 Array State : AAAAAAAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D m=
-issing)
->=20
->=20
-> Looks like sdj1 failed waaay back in Oct last year (sigh). As I said,=
- I am not=20
-> to bothered about adding these last 2 drives back into the array, sin=
-ce they=20
-> failed so long ago. I have a couple of spare drives sitting here, and=
- I will=20
-> replace these 2 drives with them (once I have completed a badblocks o=
-n them).=20
-> Looking at the output of dmesg, there are no other errors showing for=
- the 3=20
-> drives, other than them being kicked out of the array for being non f=
-resh.
->=20
-> I guess I have a couple of questions.
->=20
-> What's the correct process for adding the failed /dev/sde1 back into =
-the array=20
-> so I can start it. I don't want to rush into this and make things wor=
-se.
-
-If you think that the drives really are working and that it was a cabli=
-ng
-problem then stop the array (if it isn't stopped already) and assemble =
-with
---force:
-
- mdadm --assemble --force /dev/md0 /dev....list of devices
-
-Then find the devices that it chose not to include and add them individ=
-ually
-  mdadm /dev/md0 --add /dev/something
-
-However if any device has a bad block that cannot be read, then this wo=
-n't
-work.
-In that case you need to get a new device, partition it to have a parti=
-tion
-EXACTLY the same size, use
-  dd_rescue
-to copy all the good data from the bad drive to the new drive, remove t=
-he bad
-drive from the system, and use the "--assemble --force" command using t=
-he new
-drive, not the old drive.
-
-
->=20
-> What's the correct process for replacing the 2 other drives?
-> I am presuming that I need to --fail, then --remove then --add the dr=
-ives (one=20
-> at a time?), but I want to make sure.
-
-There are already failed and removed so there is no point in trying to =
-do
-that again
-
-Good luck.
-
-NeilBrown
-
-
->=20
->=20
-> Thanks for your help.
->=20
->=20
-> Graham.
->=20
->=20
->      =20
+2011/3/2 Joe Landman <joe.landman@gmail.com>:
+> On 03/01/2011 10:44 PM, Matt Garman wrote:
+>
+> [...]
+>
+>
+>> That might be workable, but it would require me (or someone) to
+>> develop and deploy the job dispatching system. =A0Which is certainly
+>
+> Happily, the "develop" part of this is already done. =A0Have a look a=
+t
+> GridEngine, Torque, slurm, and a number of others (commercial version=
+s
+> include the excellent LSF from Platform, PBSpro by Altair, and others=
+).
+>
+>> doable, but it might meet some "political" resistance. =A0My boss
+>> basically said, "find a system to buy or spec out a system to build
+>> that meets [the requirements I've mentioned in this and other
+>> emails]."
+>
+> This is wandering outside of the MD list focus. =A0You might want to =
+speak
+> with other folks on the Beowulf list, among others.
+>
+> I should note that nothing you've brought up isn't a solvable problem=
+=2E You
+> simply have some additional data to gather on the apps, some costs to
+> compare against the benefits they bring, and make decisions from ther=
+e.
+> =A0Build vs buy is one of the critical ones, but as Ed, myself and ot=
+hers have
+> noted, you do need more detail to make sure you don't under(over) spe=
+c the
+> design for the near/mid/far term.
+>
+> Regards,
+>
+> Joe
+>
+> --
+> Joseph Landman, Ph.D
+> Founder and CEO
+> Scalable Informatics, Inc.
+> email: landman@scalableinformatics.com
+> web =A0: http://scalableinformatics.com
+> =A0 =A0 =A0 http://scalableinformatics.com/sicluster
+> phone: +1 734 786 8423 x121
+> fax =A0: +1 866 888 3112
+> cell : +1 734 612 4615
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
