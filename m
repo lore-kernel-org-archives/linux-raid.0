@@ -1,66 +1,49 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm ddf questions
-Date: Thu, 3 Mar 2011 09:31:36 +1100
-Message-ID: <20110303093136.586df7e7@notabene.brown>
-References: <4D5FA5C4.8030803@gmail.com>
-	<4D63688E.5030501@gmail.com>
-	<20110223171712.09509f9e@notabene.brown>
-	<4D67ECA2.2020201@gmail.com>
+Subject: Re: Increasing maxsect of md devices?
+Date: Thu, 3 Mar 2011 09:59:29 +1100
+Message-ID: <20110303095929.25b800da@notabene.brown>
+References: <4D6EC3FA.4030809@bartk.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D67ECA2.2020201@gmail.com>
+In-Reply-To: <4D6EC3FA.4030809@bartk.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>
+To: Bart Kus <me@bartk.us>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 25 Feb 2011 18:53:38 +0100 Albert Pauw <albert.pauw@gmail.com> wrote:
+On Wed, 02 Mar 2011 14:26:02 -0800 Bart Kus <me@bartk.us> wrote:
 
->   Hi Neil,
+> Hello,
 > 
-> I investigated a bit further, and here are my findings:
+> This seems contradictory:
 > 
-> Looking at /proc/mdstat I see the following:
+> jo ~ # blockdev --getiomin /dev/md5
+> 524288
+> jo ~ # blockdev --getioopt /dev/md5
+> 4194304
+> jo ~ # blockdev --getmaxsect /dev/md5
+> 255
+> jo ~ # blockdev --getbsz /dev/md5
+> 4096
+> jo ~ # blockdev --getss /dev/md5
+> 512
+> jo ~ #
 > 
-> - When I create a ddf containter with a name (say /dev/md0), I stop it 
-> and start it again, the name has always changed to /dev/md127,
-> don't know if this is intentional.
+> Optimal IO size is reported as 4MB (and that is indeed the stripe size), 
+> but maximum sectors per request is only 128kB?  How can software do 
+> optimal 4MB IOs with the maxsect limit?  Does XFS care about this limit?
 
-It is intentional.  Numbers aren't really meaningful for ddf containers.
-mdadm should also create /dev/md/ddf0 as well which points to md127 and I
-consider 'ddf0' to be the 'official' name.  I hope to make the 'md127'
-disappear eventually.
+md/raid doesn't use 'requests' the any maximum is meaningless.
+raid4/5/6 does have a 'stripe cache' which is a vaguely similar thing.  There
+can sometimes be value in changing that.
 
+The devices that the array are built from may have a 'maximum sectors per
+request', but that probably isn't particularly related to chunk size.
 
-> - After creating the containter, all disks are marked as spare, 
-> designated with the (S) ending. However, when I put a disk in an array, it
-> still stays marked as (S) in the containter entry in /proc/mdstat. I 
-> think those disks should be branded (S) anymore.
+BTW, where do you find "maximum sectors per request in only 128kB" in the
+details you quoted - I don't see it.
 
-Yes, the (S) in the container is a bit misleading.  It simply means that the
-device isn't active in 'this' array - which is true because the container
-isn't really an active array.
-I've made a note to tidy this up at some stage.
-
-
-> I also noticed that a RAID5 array created in a containter cannot be 
-> expanded with another disk (option -G) as it can in normal setup (i.e. 
-> without using the container).
-> The same hold for a RAID1 where you cannot add a third disk.
-
-Yes.. ddf support is really still quite preliminary.  While reshaping arrays
-should be possible it requires quite a bit of coding in mdadm which it is
-hard to get motivated about .....
-
-> 
-> I hope this gives you more clues about a possible fix?
-
-Yes, very helpful.
-I hope to fix the bugs in a week or so.  The missing features will take
-longer.
-
-Thanks,
 NeilBrown
 
