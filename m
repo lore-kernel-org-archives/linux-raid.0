@@ -1,70 +1,58 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/9] Grow_continue() - single array.
-Date: Wed, 02 Mar 2011 14:28:56 +0100
-Message-ID: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/9] FIX: Do not configure and start, already started reshape
+Date: Wed, 02 Mar 2011 14:29:04 +0100
+Message-ID: <20110302132904.24771.65588.stgit@gklab-128-013.igk.intel.com>
+References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-The following series implements reshape restart from checkpoint.
-It supports single array reshape.
-Container operations are not fully supported (some code preparation is introduced only /fork()/).
+When Grow_continue() calls reshape_array(), reshape is configured
+and it is started with array. We cannot start reshape again,
+when reshape is in progress.
+/it in fact waits due to array_state == 'readonly'/
 
-As workaround for container operation multiple container assembly can be used.
-During each assembly one array will be reshaped. mdmon switches next array metadata in to reshape state.
-This information will be used during next container assembly process.
-
-This series contains some reviewed patches that you not accept last time asn few new.
-
-1. Calling start_reshape() I've changed, but passed flag calculation has to be a little different
-   that I've  pointed in the emails (external and restart flags cannot be used together).
-2. I'm resending patches for fork() and backup file check in Grow_continue().
-   This is begin of support for container operations. It is somehow similar to reshape_container() idea,
-   but adapted to assembly code. 
-   Assembled array processing is forked. This will allow later (during detected container operation)
-   to wait when mdmon set this particular array for reshape.
-3. I've added fixes for imsm:
-   a.Checkpoint calculation is wrong (per disk instead per array  units).
-     It was visible during restart from checkpoint. Md reports it
-   b.Array during reshape was marked as 'dirty'.
-     This makes mdadm to start reshape from 0 on restart
-4. Code for setting 'new' geometry is currently very simple. It sets new disks number only.
-   I've got a little problem where to place it. You pointed sysfs_set_array() as place to do this.
-   Inside sysfs_set_array() is placed a comment to set those parameters outside this function.
-   I've decided to follow suggestion from comment as they seams reasonable.
-   This code is narrowed to expansion case,
-   but I've put 'ToDo' information in to code comments, how/where it should be changed (I hope shortly).
-
-I think code follows direction you give me in last email (except above exclusions).
-
-BR
-Adam
-
-
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (9):
-      imsm: FIX: Variables declaration cleanup
-      FIX: Block array monitoring when assembling reshaped array
-      FIX: Set 'new' geometry when assembling reshaped array
-      FIX: Verify Backup file name before reshape
-      FIX: Continue reshape in the background
-      imsm: FIX: After checkpoint mark array have to be clean
-      imsm: FIX: Return blocks_per unit for general migration
-      FIX: Array during reshape cannot be configured
-      FIX: Do not configure and start, already started reshape
+ Grow.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
+diff --git a/Grow.c b/Grow.c
+index e321a39..d25b71d 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1641,6 +1641,7 @@ static int reshape_array(char *container, int fd, char *devname,
+ 	unsigned long long array_size;
+ 	int done;
+ 	struct mdinfo *sra = NULL;
++	int already_running;
+ 
+ 	msg = analyse_change(info, &reshape);
+ 	if (msg) {
+@@ -1995,10 +1996,15 @@ started:
+ 		}
+ 	}
+ 
+-	err = start_reshape(sra, (info->reshape_active && !st->ss->external));
++	already_running = info->reshape_active &&
++		restart ? restart : !st->ss->external;
++	dprintf("Reshape will be %s\n",
++		already_running ? "continued" : "started");
++	err = start_reshape(sra, already_running);
+ 	if (err) {
+-		fprintf(stderr, Name ": Cannot start reshape for %s\n",
+-			devname);
++		fprintf(stderr, Name ": Cannot %s reshape for %s\n",
++				already_running ? "continue" : "start",
++				devname);
+ 		goto release;
+ 	}
+ 	if (restart)
 
- Assemble.c    |   26 +++++++++++++++++++++++++-
- Grow.c        |   47 +++++++++++++++++++++++++++++++++++++++++------
- super-intel.c |    7 +++++--
- 3 files changed, 71 insertions(+), 9 deletions(-)
-
--- 
-Signature
