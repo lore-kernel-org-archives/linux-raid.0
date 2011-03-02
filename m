@@ -1,83 +1,105 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: RAID10 Performance
-Date: Wed, 2 Mar 2011 11:14:09 +0100
-Message-ID: <20110302101408.GC20427@www2.open-std.org>
-References: <4D6E0813.1070903@cendio.se> <20110302092425.GA4264@cthulhu.home.robinhill.me.uk>
+Date: Wed, 2 Mar 2011 22:16:02 +1100
+Message-ID: <20110302221602.52961e88@notabene.brown>
+References: <4D6E04E7.6060605@cendio.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.vCuTy81nH/._MK2xNXdB1."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110302092425.GA4264@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4D6E04E7.6060605@cendio.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Sowry <aaron@cendio.se>, linux-raid@vger.kernel.org
+To: Aaron Sowry <aaron@cendio.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 02, 2011 at 09:24:25AM +0000, Robin Hill wrote:
-> On Wed Mar 02, 2011 at 10:04:19AM +0100, Aaron Sowry wrote:
-> 
-> > Hello,
-> > 
-> > I have been testing different RAID configurations on a 2-disk setup, and
-> > have a couple of questions regarding performance. The information I have
-> > found online so far seems to contradict itself fairly regularly so I was
-> > hoping for a more coherent answer :)
-> > 
-> > 1) As I understand it, a RAID10 'near' configuration using two disks is
-> > essentially equivalent to a RAID1 configuration. Is this correct?
-> > 
-> It should be, yes, though I've not actually sat down and verified this.
-> 
-> > 2) Does md RAID1 support 'striped' reads? If not, is RAID1 read
-> > performance in any way related to the number of disks in the array?
-> > 
-> No, it doesn't support 'striped' reads (there's no real performance
-> advantage to doing so as you'd be losing the time skipping between
-> stripes that you'd gain on reading from multiple drives concurrently).
-> You do get a performance advantage with multiple drives in that more
-> requests can be handled concurrently though.
-> 
-> > 3) From what I have read so far, a RAID10 'far' configuration on 2 disks
-> > provides increased read performance over an equivalent 'near'
-> > configuration, however I am struggling to understand exactly why. I
-> > understand the difference between the 'near' and 'far' configurations,
-> > but not *why* this should provide any speed increases. What am I missing?
-> > 
-> The speed increase is because the read speed varies across a disk -
-> reading from the outer sectors is faster than reading from the inner
-> sectors. The 'far' configuration means that all data is available on the
-> outer half of the drive, so reads should mostly be served from there.
+--Sig_/.vCuTy81nH/._MK2xNXdB1.
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Also for sequential reads you get something like double the performance,
-compared to raid1. This is because the layout of "far" is the same as
-raid0, so you get striping performance. 
 
-> > 4) I have performed a(n admittedly fairly basic) benchmark on the same
-> > system under two different configurations - RAID10,n2 and RAID10,f2
-> > using tiobench with default settings. In short, the results showed a
-> > significant speed increase for single-threaded sequential reads (83Mb/s
-> > vs 166MB/s), some increase for single-threaded random reads (1.85Mb/s vs
-> > 2.25Mb/s), but a decrease for every other metric, including
-> > multi-threaded sequential and random reads. I was expecting write
-> > performance to decrease under RAID10,f2 compared to RAID10,n2, but am
-> > slightly confused about the multi-threaded read performance. Is it my
-> > expectations or my testing that needs to be reviewed?
-> > 
-> I'm not sure about that one - I'd expect multi-threaded reads to be at
-> least as good on a "far" layout as a "near", but I've not actually run
-> any benchmarks myself.
 
-I would also think multi-threaded sequential reads to be faster with
-"far". Especially I would think that an additional sequential read on a
-running file system would be much faster than with "near" or raid1. 
-That is my experience with the systems I run here.
+On Wed, 02 Mar 2011 09:50:47 +0100 Aaron Sowry <aaron@cendio.se> wrote:
 
-There are some figures on performance in:
-https://raid.wiki.kernel.org/index.php/Performance
-That indicates that the multi-threaded random reads are also better, 
-in the order of 40 % better that "near", and 125 % better than raid1.
-This was on a quite old kernel, but I don't think things have improved
-much in this area in the kernel. It would be nice to also have your
-numbers on the page.
+> Hello,
+>=20
+> I have been testing different RAID configurations on a 2-disk setup, and
+> have a couple of questions regarding performance. The information I have
+> found online so far seems to contradict itself fairly regularly so I was
+> hoping for a more coherent answer :)
+>=20
+> 1) As I understand it, a RAID10 'near' configuration using two disks is
+> essentially equivalent to a RAID1 configuration. Is this correct?
 
-best regards
-keld
+"equivalent" in that the data is stored in the same places.  However as
+different code is used to access it, performances could be different.
+
+>=20
+> 2) Does md RAID1 support 'striped' reads? If not, is RAID1 read
+> performance in any way related to the number of disks in the array?
+
+Not sure exactly what you mean by "striped" reads.  There is no concept of a
+stripe in RAID1.
+A single sequential read will tend to read from just one device.
+Random reads will tend to use all devices.
+
+>=20
+> 3) From what I have read so far, a RAID10 'far' configuration on 2 disks
+> provides increased read performance over an equivalent 'near'
+> configuration, however I am struggling to understand exactly why. I
+> understand the difference between the 'near' and 'far' configurations,
+> but not *why* this should provide any speed increases. What am I missing?
+
+A sequential read on raid10-far2 will read from both devices in parallel
+(once read-ahead kicks in or large enough reads are submitted).  So a single
+sequential read from a RAID10-far2 should be (nearly) twice as fast as a
+single sequential read from a RAID1 - as twice as many drives are used.
+
+>=20
+> 4) I have performed a(n admittedly fairly basic) benchmark on the same
+> system under two different configurations - RAID10,n2 and RAID10,f2
+> using tiobench with default settings. In short, the results showed a
+> significant speed increase for single-threaded sequential reads (83Mb/s
+> vs 166MB/s), some increase for single-threaded random reads (1.85Mb/s vs
+> 2.25Mb/s), but a decrease for every other metric, including
+> multi-threaded sequential and random reads. I was expecting write
+> performance to decrease slightly under RAID10,f2 compared to RAID10,n2,
+> but am slightly confused about the multi-threaded read performance. Is
+> it my expectations or my testing that needs to be reviewed?
+
+If the  random reads are smaller than the chunk size and suitably aligned,
+then you should get much the same performance - f2 might be a bit faster
+because it always reads from the 'faster' region of the device.
+
+If the random reads are larger than the chunk size, then each read will hit
+both disks in f2, but only one disk in n2, so f2 will have more contention.
+
+Writes (sequential or random) are certainly slower with f2 as the head keeps
+seeking from one half of the device to the other.  Large chunk sizes will
+reduce this a little.
+
+What chunk size did you use?  What block size for random IO?
+Do the results change as you vary these sizes?
+
+NeilBrown
+
+
+>=20
+> Cheers,
+> Aaron
+>=20
+
+
+--Sig_/.vCuTy81nH/._MK2xNXdB1.
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iD8DBQFNbib3G5fc6gV+Wb0RApmTAJ9nV8xtQD4RfVkYcVYesVMGEsaqLwCfeFRR
+un80fW4VovqWx2bk1IeK82s=
+=XFrI
+-----END PGP SIGNATURE-----
+
+--Sig_/.vCuTy81nH/._MK2xNXdB1.--
