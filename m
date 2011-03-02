@@ -1,105 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID10 Performance
-Date: Wed, 2 Mar 2011 22:16:02 +1100
-Message-ID: <20110302221602.52961e88@notabene.brown>
-References: <4D6E04E7.6060605@cendio.se>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/9] Grow_continue() - single array.
+Date: Wed, 02 Mar 2011 14:28:56 +0100
+Message-ID: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.vCuTy81nH/._MK2xNXdB1."; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D6E04E7.6060605@cendio.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Sowry <aaron@cendio.se>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
---Sig_/.vCuTy81nH/._MK2xNXdB1.
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+The following series implements reshape restart from checkpoint.
+It supports single array reshape.
+Container operations are not fully supported (some code preparation is introduced only /fork()/).
+
+As workaround for container operation multiple container assembly can be used.
+During each assembly one array will be reshaped. mdmon switches next array metadata in to reshape state.
+This information will be used during next container assembly process.
+
+This series contains some reviewed patches that you not accept last time asn few new.
+
+1. Calling start_reshape() I've changed, but passed flag calculation has to be a little different
+   that I've  pointed in the emails (external and restart flags cannot be used together).
+2. I'm resending patches for fork() and backup file check in Grow_continue().
+   This is begin of support for container operations. It is somehow similar to reshape_container() idea,
+   but adapted to assembly code. 
+   Assembled array processing is forked. This will allow later (during detected container operation)
+   to wait when mdmon set this particular array for reshape.
+3. I've added fixes for imsm:
+   a.Checkpoint calculation is wrong (per disk instead per array  units).
+     It was visible during restart from checkpoint. Md reports it
+   b.Array during reshape was marked as 'dirty'.
+     This makes mdadm to start reshape from 0 on restart
+4. Code for setting 'new' geometry is currently very simple. It sets new disks number only.
+   I've got a little problem where to place it. You pointed sysfs_set_array() as place to do this.
+   Inside sysfs_set_array() is placed a comment to set those parameters outside this function.
+   I've decided to follow suggestion from comment as they seams reasonable.
+   This code is narrowed to expansion case,
+   but I've put 'ToDo' information in to code comments, how/where it should be changed (I hope shortly).
+
+I think code follows direction you give me in last email (except above exclusions).
+
+BR
+Adam
 
 
 
-On Wed, 02 Mar 2011 09:50:47 +0100 Aaron Sowry <aaron@cendio.se> wrote:
+---
 
-> Hello,
->=20
-> I have been testing different RAID configurations on a 2-disk setup, and
-> have a couple of questions regarding performance. The information I have
-> found online so far seems to contradict itself fairly regularly so I was
-> hoping for a more coherent answer :)
->=20
-> 1) As I understand it, a RAID10 'near' configuration using two disks is
-> essentially equivalent to a RAID1 configuration. Is this correct?
-
-"equivalent" in that the data is stored in the same places.  However as
-different code is used to access it, performances could be different.
-
->=20
-> 2) Does md RAID1 support 'striped' reads? If not, is RAID1 read
-> performance in any way related to the number of disks in the array?
-
-Not sure exactly what you mean by "striped" reads.  There is no concept of a
-stripe in RAID1.
-A single sequential read will tend to read from just one device.
-Random reads will tend to use all devices.
-
->=20
-> 3) From what I have read so far, a RAID10 'far' configuration on 2 disks
-> provides increased read performance over an equivalent 'near'
-> configuration, however I am struggling to understand exactly why. I
-> understand the difference between the 'near' and 'far' configurations,
-> but not *why* this should provide any speed increases. What am I missing?
-
-A sequential read on raid10-far2 will read from both devices in parallel
-(once read-ahead kicks in or large enough reads are submitted).  So a single
-sequential read from a RAID10-far2 should be (nearly) twice as fast as a
-single sequential read from a RAID1 - as twice as many drives are used.
-
->=20
-> 4) I have performed a(n admittedly fairly basic) benchmark on the same
-> system under two different configurations - RAID10,n2 and RAID10,f2
-> using tiobench with default settings. In short, the results showed a
-> significant speed increase for single-threaded sequential reads (83Mb/s
-> vs 166MB/s), some increase for single-threaded random reads (1.85Mb/s vs
-> 2.25Mb/s), but a decrease for every other metric, including
-> multi-threaded sequential and random reads. I was expecting write
-> performance to decrease slightly under RAID10,f2 compared to RAID10,n2,
-> but am slightly confused about the multi-threaded read performance. Is
-> it my expectations or my testing that needs to be reviewed?
-
-If the  random reads are smaller than the chunk size and suitably aligned,
-then you should get much the same performance - f2 might be a bit faster
-because it always reads from the 'faster' region of the device.
-
-If the random reads are larger than the chunk size, then each read will hit
-both disks in f2, but only one disk in n2, so f2 will have more contention.
-
-Writes (sequential or random) are certainly slower with f2 as the head keeps
-seeking from one half of the device to the other.  Large chunk sizes will
-reduce this a little.
-
-What chunk size did you use?  What block size for random IO?
-Do the results change as you vary these sizes?
-
-NeilBrown
+Adam Kwolek (9):
+      imsm: FIX: Variables declaration cleanup
+      FIX: Block array monitoring when assembling reshaped array
+      FIX: Set 'new' geometry when assembling reshaped array
+      FIX: Verify Backup file name before reshape
+      FIX: Continue reshape in the background
+      imsm: FIX: After checkpoint mark array have to be clean
+      imsm: FIX: Return blocks_per unit for general migration
+      FIX: Array during reshape cannot be configured
+      FIX: Do not configure and start, already started reshape
 
 
->=20
-> Cheers,
-> Aaron
->=20
+ Assemble.c    |   26 +++++++++++++++++++++++++-
+ Grow.c        |   47 +++++++++++++++++++++++++++++++++++++++++------
+ super-intel.c |    7 +++++--
+ 3 files changed, 71 insertions(+), 9 deletions(-)
 
-
---Sig_/.vCuTy81nH/._MK2xNXdB1.
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iD8DBQFNbib3G5fc6gV+Wb0RApmTAJ9nV8xtQD4RfVkYcVYesVMGEsaqLwCfeFRR
-un80fW4VovqWx2bk1IeK82s=
-=XFrI
------END PGP SIGNATURE-----
-
---Sig_/.vCuTy81nH/._MK2xNXdB1.--
+-- 
+Signature
