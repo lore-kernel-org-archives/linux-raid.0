@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/9] FIX: Do not configure and start, already started reshape
-Date: Wed, 02 Mar 2011 14:29:04 +0100
-Message-ID: <20110302132904.24771.65588.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/9] imsm: FIX: Return blocks_per unit for general migration
+Date: Wed, 02 Mar 2011 14:29:20 +0100
+Message-ID: <20110302132920.24771.49777.stgit@gklab-128-013.igk.intel.com>
 References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,46 +13,26 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When Grow_continue() calls reshape_array(), reshape is configured
-and it is started with array. We cannot start reshape again,
-when reshape is in progress.
-/it in fact waits due to array_state == 'readonly'/
+For general migration, blocks per unit are required for all disks,
+not for per-member.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+ super-intel.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index e321a39..d25b71d 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1641,6 +1641,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	unsigned long long array_size;
- 	int done;
- 	struct mdinfo *sra = NULL;
-+	int already_running;
- 
- 	msg = analyse_change(info, &reshape);
- 	if (msg) {
-@@ -1995,10 +1996,15 @@ started:
- 		}
- 	}
- 
--	err = start_reshape(sra, (info->reshape_active && !st->ss->external));
-+	already_running = info->reshape_active &&
-+		restart ? restart : !st->ss->external;
-+	dprintf("Reshape will be %s\n",
-+		already_running ? "continued" : "started");
-+	err = start_reshape(sra, already_running);
- 	if (err) {
--		fprintf(stderr, Name ": Cannot start reshape for %s\n",
--			devname);
-+		fprintf(stderr, Name ": Cannot %s reshape for %s\n",
-+				already_running ? "continue" : "start",
-+				devname);
- 		goto release;
- 	}
- 	if (restart)
+diff --git a/super-intel.c b/super-intel.c
+index 1a7be71..11972f3 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1690,6 +1690,8 @@ static __u64 blocks_per_migr_unit(struct imsm_dev *dev)
+ 		migr_chunk = migr_strip_blocks_resync(dev);
+ 		disks = imsm_num_data_members(dev, 0);
+ 		blocks_per_unit = stripes_per_unit * migr_chunk * disks;
++		if (migr_type(dev) == MIGR_GEN_MIGR)
++			return blocks_per_unit;
+ 		stripe = __le32_to_cpu(map->blocks_per_strip) * disks;
+ 		segment = blocks_per_unit / stripe;
+ 		block_rel = blocks_per_unit - segment * stripe;
 
