@@ -1,77 +1,52 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/5] Grow_continue() prepare for usage in assembly
-Date: Wed, 2 Mar 2011 11:57:34 +1100
-Message-ID: <20110302115734.63b76660@notabene.brown>
-References: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 1/7] FIX: Verify Backup file name before reshape
+Date: Wed, 2 Mar 2011 12:01:33 +1100
+Message-ID: <20110302120133.74ef2c89@notabene.brown>
+References: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
+	<20110301145650.10678.1741.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110301145650.10678.1741.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon, 28 Feb 2011 16:06:55 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 01 Mar 2011 15:56:50 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> This is first part of reshape continuation. This patch series makes (mainly) some changes to Grow_continue()
-> for use for reshape continuation during array assembling.
+> When reshape is continued backup_file is required for user data safety.
+> Grow_continue() has to verify if any file name is passed in.
 > 
-> It runs reshape_array() in background (for container operation it should be also ok, as we can have only one
-> metadata marked for reshape at the time).
-
-This is the 4th patch I assume...
-That fork should not be needed.  We pass '0' as the 'forked' parameter to
-'reshape_array', so reshape_array will fork and continue in the background.
-Why does Grow_continue need to fork as well??
-
-
-> For external metadata reshape_array requires container name parameter.
-
-Yep.
-
-> 
-> For reshape invoked from assembly reshape_array cannot start reshape (this would push md to call i.e. start_reshape
-> vector from personality). Staring reshape is based on run() mechanism in md so reshape_array should not configure or start reshape.
-
-I think you just need to change the call:
--       err = start_reshape(sra, (info->reshape_active && !st->ss->external));
-
-to
-
-+       err = start_reshape(sra, info->reshape_active);
-
-to fix that, don't you?
-
-
-> It should monitor check-pointing only.
-> 
-> 
-> BR
-> Adam
-> 
-> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
-> Adam Kwolek (5):
->       FIX: Do not configure and start, already started reshape
->       FIX: Continue reshape in the background
+>  Grow.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Grow.c b/Grow.c
+> index 47b8809..1470a91 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -3332,6 +3332,11 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+>  	char *container = NULL;
+>  	int err;
+>  
+> +	if (backup_file == NULL) {
+> +		fprintf(stderr, Name ": Backup file name has to be specified "
+> +			"for reshape continuation.\n");
+> +		return 1;
+> +	}
+>  	if (!st->ss->external) {
+>  		err = sysfs_set_str(info, NULL, "array_state", "readonly");
+>  		if (err)
 
-The above 2 I have not applied.
 
->       FIX: Set readonly state in Grow_continue() when necessary
->       FIX: Pass container name to reshape array for external meta data
->       FIX: Spelling error in dprintf output
+reshape_array already performs checks to ensure that backup_file is set when
+needed - it isn't always needed.
 
-There 3 I have applied.
+Is there some reason those checks are not enough?
 
-Thanks,
 NeilBrown
-
-> 
-> 
->  Grow.c |   53 ++++++++++++++++++++++++++++++++++++++++-------------
->  1 files changed, 40 insertions(+), 13 deletions(-)
-> 
 
