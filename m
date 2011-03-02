@@ -1,118 +1,44 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/5] Grow_continue() prepare for usage in assembly
-Date: Wed, 2 Mar 2011 08:43:58 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17A534AA5@irsmsx503.ger.corp.intel.com>
-References: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
- <20110302115734.63b76660@notabene.brown>
+From: Aaron Sowry <aaron@cendio.se>
+Subject: RAID10 Performance
+Date: Wed, 02 Mar 2011 10:04:19 +0100
+Message-ID: <4D6E0813.1070903@cendio.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110302115734.63b76660@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello,
 
+I have been testing different RAID configurations on a 2-disk setup, and
+have a couple of questions regarding performance. The information I have
+found online so far seems to contradict itself fairly regularly so I was
+hoping for a more coherent answer :)
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Wednesday, March 02, 2011 1:58 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 0/5] Grow_continue() prepare for usage in assembly
-> 
-> On Mon, 28 Feb 2011 16:06:55 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > This is first part of reshape continuation. This patch series makes
-> (mainly) some changes to Grow_continue()
-> > for use for reshape continuation during array assembling.
-> >
-> > It runs reshape_array() in background (for container operation it
-> should be also ok, as we can have only one
-> > metadata marked for reshape at the time).
-> 
-> This is the 4th patch I assume...
-> That fork should not be needed.  We pass '0' as the 'forked' parameter
-> to
-> 'reshape_array', so reshape_array will fork and continue in the
-> background.
-> Why does Grow_continue need to fork as well??
-> 
-> 
-> > For external metadata reshape_array requires container name parameter.
-> 
-> Yep.
-> 
-> >
-> > For reshape invoked from assembly reshape_array cannot start reshape
-> (this would push md to call i.e. start_reshape
-> > vector from personality). Staring reshape is based on run() mechanism
-> in md so reshape_array should not configure or start reshape.
-> 
-> I think you just need to change the call:
-> -       err = start_reshape(sra, (info->reshape_active && !st->ss-
-> >external));
-> 
-> to
-> 
-> +       err = start_reshape(sra, info->reshape_active);
-> 
-> to fix that, don't you?
+1) As I understand it, a RAID10 'near' configuration using two disks is
+essentially equivalent to a RAID1 configuration. Is this correct?
 
+2) Does md RAID1 support 'striped' reads? If not, is RAID1 read
+performance in any way related to the number of disks in the array?
 
-For regular reshape start (not restart from checkpoint) info->reshape_active is set also.
-This flag is set to 1 for reshape start and continuation, based on this flag.
-I think that using flags in this call, change can look like this:
+3) From what I have read so far, a RAID10 'far' configuration on 2 disks
+provides increased read performance over an equivalent 'near'
+configuration, however I am struggling to understand exactly why. I
+understand the difference between the 'near' and 'far' configurations,
+but not *why* this should provide any speed increases. What am I missing?
 
-+       err = start_reshape(sra, (info->reshape_active && !st->ss->external && !restart));
+4) I have performed a(n admittedly fairly basic) benchmark on the same
+system under two different configurations - RAID10,n2 and RAID10,f2
+using tiobench with default settings. In short, the results showed a
+significant speed increase for single-threaded sequential reads (83Mb/s
+vs 166MB/s), some increase for single-threaded random reads (1.85Mb/s vs
+2.25Mb/s), but a decrease for every other metric, including
+multi-threaded sequential and random reads. I was expecting write
+performance to decrease under RAID10,f2 compared to RAID10,n2, but am
+slightly confused about the multi-threaded read performance. Is it my
+expectations or my testing that needs to be reviewed?
 
-... and yes, this looks better ;)
-This fix can be correct if restart flag has meaning "monitor only".
-
-BR
-Adam
-
-
-
-> 
-> 
-> > It should monitor check-pointing only.
-> >
-> >
-> > BR
-> > Adam
-> >
-> >
-> > ---
-> >
-> > Adam Kwolek (5):
-> >       FIX: Do not configure and start, already started reshape
-> >       FIX: Continue reshape in the background
-> 
-> The above 2 I have not applied.
-> 
-> >       FIX: Set readonly state in Grow_continue() when necessary
-> >       FIX: Pass container name to reshape array for external meta data
-> >       FIX: Spelling error in dprintf output
-> 
-> There 3 I have applied.
-> 
-> Thanks,
-> NeilBrown
-> 
-> >
-> >
-> >  Grow.c |   53 ++++++++++++++++++++++++++++++++++++++++-------------
-> >  1 files changed, 40 insertions(+), 13 deletions(-)
-> >
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Aaron
