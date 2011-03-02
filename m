@@ -1,14 +1,14 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/7] Grow_continue, use in assembly (cont.)
-Date: Wed, 2 Mar 2011 07:49:18 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17A534A21@irsmsx503.ger.corp.intel.com>
-References: <20110301144932.10678.20916.stgit@gklab-128-013.igk.intel.com>
- <20110302123032.6d1996ca@notabene.brown>
+Subject: RE: [PATCH 0/5] Grow_continue() prepare for usage in assembly
+Date: Wed, 2 Mar 2011 08:43:58 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A534AA5@irsmsx503.ger.corp.intel.com>
+References: <20110228145815.14670.56597.stgit@gklab-128-013.igk.intel.com>
+ <20110302115734.63b76660@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110302123032.6d1996ca@notabene.brown>
+In-Reply-To: <20110302115734.63b76660@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
@@ -18,83 +18,101 @@ List-Id: linux-raid.ids
 
 
 > -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, March 02, 2011 2:31 AM
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Wednesday, March 02, 2011 1:58 AM
 > To: Kwolek, Adam
 > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
 > Neubauer, Wojciech
-> Subject: Re: [PATCH 0/7] Grow_continue, use in assembly (cont.)
+> Subject: Re: [PATCH 0/5] Grow_continue() prepare for usage in assembly
 > 
-> On Tue, 01 Mar 2011 15:56:41 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> On Mon, 28 Feb 2011 16:06:55 +0100 Adam Kwolek <adam.kwolek@intel.com>
 > wrote:
 > 
-> > The following series implements next part of resuming reshape from
-> checkpoint.
-> > In this series call to invoke reshape is included.
-> > It is required to have backup file to run reshape, so backup file
-> validation is added
-> > (without checking in file system)
-> > Array seams to be configured for reshape, monitor is blocked and
-> doesn't makes changes
-> > to process. On the end of reshape monitor unblock is placed also.
+> > This is first part of reshape continuation. This patch series makes
+> (mainly) some changes to Grow_continue()
+> > for use for reshape continuation during array assembling.
 > >
-> > In patch:
-> >    Continue reshape after assembling array
-> > some plans for supporting container operations is placed.
-> >
-> > Reshape restoring is not working yet (a few more pathes are still
-> required)
-> > I hope some of therm I'll post tomorrow.
-> >
-> > BR
-> > Adam
-> >
-> > ---
-> >
-> > Adam Kwolek (7):
-> >       FIX: array is frozen after reshape
-> >       Continue reshape after assembling array
-> >       FIX: Block monitor when starting array with reshape in progress
-> >       Add block_subarray()
-> >       FIX: configure disks slot for expansion
-> >       FIX: reshape in md should wait for monitoring process (external
-> metadata)
-> >       FIX: Verify Backup file name before reshape
-> >
-> >
-> >  Assemble.c    |   64 +++++++++++++++++++++++++++++++++++++++++++++---
-> ---------
-> >  Grow.c        |   15 ++++++++++++-
-> >  Incremental.c |    1 +
-> >  msg.c         |   18 ++++++++++++----
-> >  msg.h         |    2 ++
-> >  5 files changed, 81 insertions(+), 19 deletions(-)
-> >
+> > It runs reshape_array() in background (for container operation it
+> should be also ok, as we can have only one
+> > metadata marked for reshape at the time).
+> 
+> This is the 4th patch I assume...
+> That fork should not be needed.  We pass '0' as the 'forked' parameter
+> to
+> 'reshape_array', so reshape_array will fork and continue in the
+> background.
+> Why does Grow_continue need to fork as well??
 > 
 > 
-> I have applied the patches among these which make sense, and replied to
-> the
-> ones that really don't.
+> > For external metadata reshape_array requires container name parameter.
 > 
-> If you think one of the patches that I rejected really is needed, please
-> provide specific detail of what you try to do, how it doesn't work, and
-> what
-> you think is the reason.
+> Yep.
 > 
-> All applied patches have been pushed to my  devel-3.2 branch.
+> >
+> > For reshape invoked from assembly reshape_array cannot start reshape
+> (this would push md to call i.e. start_reshape
+> > vector from personality). Staring reshape is based on run() mechanism
+> in md so reshape_array should not configure or start reshape.
 > 
-> Thanks,
-> NeilBrown
+> I think you just need to change the call:
+> -       err = start_reshape(sra, (info->reshape_active && !st->ss-
+> >external));
+> 
+> to
+> 
+> +       err = start_reshape(sra, info->reshape_active);
+> 
+> to fix that, don't you?
 
-Thanks, I'll review your comments.
 
-I think that patches:
-	FIX: Continue reshape in the background
-	FIX: array is frozen after reshape
-and reworked:
-	FIX: Verify Backup file name before reshape
-for fork() in Grow_continue() will be needed for container operation support.
+For regular reshape start (not restart from checkpoint) info->reshape_active is set also.
+This flag is set to 1 for reshape start and continuation, based on this flag.
+I think that using flags in this call, change can look like this:
+
++       err = start_reshape(sra, (info->reshape_active && !st->ss->external && !restart));
+
+... and yes, this looks better ;)
+This fix can be correct if restart flag has meaning "monitor only".
 
 BR
 Adam
 
+
+
+> 
+> 
+> > It should monitor check-pointing only.
+> >
+> >
+> > BR
+> > Adam
+> >
+> >
+> > ---
+> >
+> > Adam Kwolek (5):
+> >       FIX: Do not configure and start, already started reshape
+> >       FIX: Continue reshape in the background
+> 
+> The above 2 I have not applied.
+> 
+> >       FIX: Set readonly state in Grow_continue() when necessary
+> >       FIX: Pass container name to reshape array for external meta data
+> >       FIX: Spelling error in dprintf output
+> 
+> There 3 I have applied.
+> 
+> Thanks,
+> NeilBrown
+> 
+> >
+> >
+> >  Grow.c |   53 ++++++++++++++++++++++++++++++++++++++++-------------
+> >  1 files changed, 40 insertions(+), 13 deletions(-)
+> >
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
