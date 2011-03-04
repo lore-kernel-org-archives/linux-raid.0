@@ -1,90 +1,87 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: ideas - raid write
-Date: Thu, 3 Mar 2011 20:24:15 -0300
-Message-ID: <AANLkTim+BCATBoAFOmY+q=qw1ZviqyP4dV7f-=QQLnZJ@mail.gmail.com>
-References: <AANLkTimd08XFTZ+x2id5f=a=UCSfZi1y_qQGw0wKj18A@mail.gmail.com>
-	<AANLkTinr3fYB45220VJ+id+gvsvB5Xi_6nEQ8G-UgHYU@mail.gmail.com>
-	<AANLkTikr6OtGEHmJX2y+ga6HX=PZtDaXM1MEt20a61NU@mail.gmail.com>
-	<AANLkTi=wGopixZdTaRwB6++w9nFHsJ1zUpyoU9Svna12@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] Fix over-zealous flush_disk when changing device size.
+Date: Fri, 4 Mar 2011 11:16:24 +1100
+Message-ID: <20110304111624.4be27aaf@notabene.brown>
+References: <20110217165057.5c50e566@notabene.brown>
+	<20110303143120.GA8134@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=wGopixZdTaRwB6++w9nFHsJ1zUpyoU9Svna12@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110303143120.GA8134@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Patterson <andrew.patterson@hp.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, James.Bottomley@suse.de
 List-Id: linux-raid.ids
 
-in other words...
-the write speed is limited by the fastest disk (one or more disks how
-many sync/async writes should we allow is another problem, not for
-now), not the slowest
-the cache is another limit (when cache get full, async writes should wa=
-it)
+On Thu, 3 Mar 2011 09:31:20 -0500 Christoph Hellwig <hch@infradead.org> wrote:
 
-2011/3/3 Roberto Spadim <roberto@spadim.com.br>:
-> ops... ndb mysql cluster
->
-> it=B4s like to get more speed on small (cache time/size) writes
-> may be dirty, but if only X disks are in sync array could continue
-> running with async writes without problems
->
->
-> 2011/3/3 Roberto Spadim <roberto@spadim.com.br>:
->> if others fail, fail the disks =3D), it=B4s something like nbd (mysq=
-l) cluster
->> two disks ok, return ok others works like async write
->> on error, resync nodes/mirrors
->> i don=B4t know the name but they call somethink like isosyncronous o=
-r
->> semisyncronous, i don=B4t remember now
->>
->> 2011/3/3 Mathias Bur=E9n <mathias.buren@gmail.com>:
->>> And if md sends ok when first write is complete, then other writes =
-fail?
->>>
->>> On 3 Mar 2011 22:45, "Roberto Spadim" <roberto@spadim.com.br> wrote=
-:
->>>> hi guys, i have some questions...
->>>> how write works in raid1?
->>>> md send write to all mirrors and wait write end to return 'ok' to
->>>> filesystem?
->>>> could we send write to mirrors and return with one 'ok'? like a as=
-ync
->>>> write?
->>>>
->>>> --
->>>> Roberto Spadim
->>>> Spadim Technology / SPAEmpresarial
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>>
->>
->>
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->>
->
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
->
+> On Thu, Feb 17, 2011 at 04:50:57PM +1100, NeilBrown wrote:
+> > 
+> > Hi Andrew (and others)
+> >  I wonder if you would review the following for me and comment.
+> 
+> Please send think in this area through -fsdevel next time, thanks!
 
+Will try to remember - it is sometimes hard to get this sort of patch before
+the right audience ... I thought "block layer" rather than "file systems" :-(
 
+Thanks for finding it anyway.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> > There are two cases when we call flush_disk.
+> > In one, the device has disappeared (check_disk_change) so any
+> > data will hold becomes irrelevant.
+> > In the oter, the device has changed size (check_disk_size_change)
+> > so data we hold may be irrelevant.
+> > 
+> > In both cases it makes sense to discard any 'clean' buffers,
+> > so they will be read back from the device if needed.
+> 
+> Does it?  If the device has disappeared we can't read them back anyway.
+
+I think that is the point - return an error rather than stale data.
+
+> If the device has resized to a smaller size the same is true about
+> those buffers that have gone away, and if it has resized to a larger
+> size invalidating anything doesn't make sense at all.  I think this
+> area needs more love than a quick kill_dirty hackjob.
+
+I tend to agree.  I wasn't entirely convinced by the changelog comments on
+the original offending patch, but I couldn't convince myself there was no
+justification either, and I wanted to fix the corruption I saw - while close
+to the end of a release cycle - without introducing any new regressions.
+
+> 
+> > In the former case it makes sense to discard 'dirty' buffers
+> > as there will never be anywhere safe to write the data.  In the
+> > second case it *does*not* make sense to discard dirty buffers
+> > as that will lead to file system corruption when you simply enlarge
+> > the containing devices.
+> 
+> Doing anything like this at the buffer cache layer or inode cache layer
+> doesn't make any sense.  If a device goes away or shrinks below the
+> filesystem size the filesystem simply needs to be shut down and in te
+> former size the admin needs to start a manual repair.  Trying to do
+> any botch jobs in lower layer never works in practice.
+
+Amen.
+What I personally would really like to see is an interface for the block
+device to say to the filesystem (or more specifically: whatever has bdclaimed
+it) "I am about to resize to $X - is that OK?" and also "I have resized -
+deal with it".
+
+> 
+> For now I think the best short term fix is to simply revert commit
+> 608aeef17a91747d6303de4df5e2c2e6899a95e8
+> 
+> 	"Call flush_disk() after detecting an online resize."
+
+You may be right, but I suspect that Andrew Patterson had a real issue to
+solve which lead to submitting it, and I'd really like to understand that
+issue before I would feel confident just reverting it.
+
+Andrew:  are you out there?  Can you provide some background for your patch?
+
+Thanks,
+NeilBrown
