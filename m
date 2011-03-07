@@ -1,222 +1,166 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: [PATCH] Fix over-zealous flush_disk when changing
-	device size.
-Date: Sun, 06 Mar 2011 21:22:51 -0700
-Message-ID: <1299471771.2228.11.camel@grinch>
-References: <20110217165057.5c50e566@notabene.brown>
-	<20110303143120.GA8134@infradead.org>
-	<20110304111624.4be27aaf@notabene.brown>
-	<1299259506.2118.24.camel@grinch>
-	<20110306174755.49404c8e@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: Reshape restart questions.
+Date: Mon, 7 Mar 2011 07:54:06 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A8224BA@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D17A822106@irsmsx503.ger.corp.intel.com>
+ <20110307090152.71187c5e@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20110306174755.49404c8e@notabene.brown>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110307090152.71187c5e@notabene.brown>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, James.Bottomley@suse.de
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, 2011-03-06 at 17:47 +1100, NeilBrown wrote:
-> On Fri, 04 Mar 2011 10:25:06 -0700 Andrew Patterson <andrew.patterson@hp.com>
+
+
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Sunday, March 06, 2011 11:02 PM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: Reshape restart questions.
+> 
+> On Fri, 4 Mar 2011 15:22:45 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
 > wrote:
 > 
-> > On Fri, 2011-03-04 at 11:16 +1100, NeilBrown wrote:
-> > > On Thu, 3 Mar 2011 09:31:20 -0500 Christoph Hellwig <hch@infradead.org> wrote:
-> > > 
-> > > > On Thu, Feb 17, 2011 at 04:50:57PM +1100, NeilBrown wrote:
-> > > > > 
-> > > > > Hi Andrew (and others)
-> > > > >  I wonder if you would review the following for me and comment.
-> > > > 
-> > > > Please send think in this area through -fsdevel next time, thanks!
-> > > 
-> > > Will try to remember - it is sometimes hard to get this sort of patch before
-> > > the right audience ... I thought "block layer" rather than "file systems" :-(
-> > > 
-> > > Thanks for finding it anyway.
-> > > 
-> > > > 
-> > > > > There are two cases when we call flush_disk.
-> > > > > In one, the device has disappeared (check_disk_change) so any
-> > > > > data will hold becomes irrelevant.
-> > > > > In the oter, the device has changed size (check_disk_size_change)
-> > > > > so data we hold may be irrelevant.
-> > > > > 
-> > > > > In both cases it makes sense to discard any 'clean' buffers,
-> > > > > so they will be read back from the device if needed.
-> > > > 
-> > > > Does it?  If the device has disappeared we can't read them back anyway.
-> > > 
-> > > I think that is the point - return an error rather than stale data.
-> > > 
-> > > > If the device has resized to a smaller size the same is true about
-> > > > those buffers that have gone away, and if it has resized to a larger
-> > > > size invalidating anything doesn't make sense at all.  I think this
-> > > > area needs more love than a quick kill_dirty hackjob.
-> > > 
-> > > I tend to agree.  I wasn't entirely convinced by the changelog comments on
-> > > the original offending patch, but I couldn't convince myself there was no
-> > > justification either, and I wanted to fix the corruption I saw - while close
-> > > to the end of a release cycle - without introducing any new regressions.
-> > > 
-> > > > 
-> > > > > In the former case it makes sense to discard 'dirty' buffers
-> > > > > as there will never be anywhere safe to write the data.  In the
-> > > > > second case it *does*not* make sense to discard dirty buffers
-> > > > > as that will lead to file system corruption when you simply enlarge
-> > > > > the containing devices.
-> > > > 
-> > > > Doing anything like this at the buffer cache layer or inode cache layer
-> > > > doesn't make any sense.  If a device goes away or shrinks below the
-> > > > filesystem size the filesystem simply needs to be shut down and in te
-> > > > former size the admin needs to start a manual repair.  Trying to do
-> > > > any botch jobs in lower layer never works in practice.
-> > > 
-> > > Amen.
-> > > What I personally would really like to see is an interface for the block
-> > > device to say to the filesystem (or more specifically: whatever has bdclaimed
-> > > it) "I am about to resize to $X - is that OK?" and also "I have resized -
-> > > deal with it".
-> > > 
-> > > > 
-> > > > For now I think the best short term fix is to simply revert commit
-> > > > 608aeef17a91747d6303de4df5e2c2e6899a95e8
-> > > > 
-> > > > 	"Call flush_disk() after detecting an online resize."
-> > > 
-> > > You may be right, but I suspect that Andrew Patterson had a real issue to
-> > > solve which lead to submitting it, and I'd really like to understand that
-> > > issue before I would feel confident just reverting it.
-> > > 
-> > > Andrew:  are you out there?  Can you provide some background for your patch?
-> > 
-> > I put in the flush disk stuff at the suggestion of James Bottomley. In
-> > fact the text for the justification in 608aeef17a91747d6303 is mostly
-> > his.  The idea is to get errors reported immediately rather than waiting
-> > around for them to eventually get flushed and to make sure stale data is
-> > not kept around.  Certainly, at a minimum, not keeping stale data around
-> > seems valuable to me. 
-> > 
-> > What parts of the original justification did you think are unconvincing?
-> > Note that the flush for growing the device is really only there for the
-> > degenerate case where someone might shrink then grow a device
-> > (admittedly, the user probably deserves to get data corruption/security
-> > holes in such a case).
+> > Hi Neil,
+> >
+> > I have problem with backup file concept during assembly when array
+> reshape is in progress.
+> > There can be 2 purposes of passing backup file to mdadm for assembly:
+> > 1. restore critical section before restart from checkpoint
+> > 2. use backup file for reshape continuation
 > 
-> hi Andrew.
+> My first thought is that - for IMSM at least - I understand that the
+> plan is
+> to (eventually) use a 'backup' method which is compatible with the
+> windows
+> driver and so will not use a separate file.
+> In that case, we probably don't want to put too much effort into getting
+> management of the backup-file 100% perfect.  near-enough might be
+> good-enough...
 > 
->  One of the things that I didn't like about the change log is that it didn't
->  give clear context - what exactly is the problem it is trying to fix?
-
-Well true, but the rest of the patch set might have given the context.
-
->  When you talk about "disks" changing size (reduced radius:-?) I think first
->  of 'dm' and  'md' - yet it clearly isn't dm related as dm doesn't even use
->  that code, and if it was 'md' related I would have thought I would have
->  heard about it....
->  So presumably these are some SCSI-attached devices that do internal volume
->  management and can change the size of .... targets?  LUNs?  something like
->  that.
-
-Yes.  The idea is that you want to increase/decrease the size of the
-underlying block device (usually a FC or iSCSI LUN).  Short of a reboot,
-the OS will not detect the size changed.  I added some code that rescans
-the LUN and gets the new size and report the new size to the block
-layer.
-
->  So can these things change size without the SCSI layer immediately knowing
->  about it??  Don't you get some sort of "unit attention" or something?
+> >
+> > For first reason, it is difficult to pass backup file name in mdadm-
+> assembly-scan mode, because we cannot point array that it should be used
+> with. This is blocked in mdadm input parameters parsing.
 > 
-
-In some cases with some hardware yes.  In most, no.
-
->  The idea that the device might reduce in size and then grow again seems just
->  plain wrong. 
-
-This would usually be due to some user error.  The user may have shrunk
-the device too much, realized there error and then corrected it. I admit
-that it is pretty far-fetched.
-
->  If that is possible it could return to it's original size and
->  you would never notice? 
-
-Yes.
-
->  And if there are cases that you know you will never
->  notice, then it seems like it is the wrong solution.
->  It would have been more credible if it *only* tried to flush when the size
->  was reduced ... which you do suggest as a possibility above I think.
+> Yes.  I consider restarting a reshape, particularly with a backup file,
+> to be
+> a rare case that may well need human interaction.  So I'm happy for
+> auto-assembly modes to not support it at all.
+> 
+> > Second reason is a different case. Backup file can be used by many
+> reshapes and have to be used (even in scan mode). When reshaped is
+> single container, reshapes cannot be parallel, but in whole system this
+> cannot be guaranteed. (i.e. one reshape was run in particular system and
+> second array with reshape in progress is attached to system)
+> > Due to those facts I think that:
+> > 1. mdadm should accept backup file name for second reason
+> > 2. final backup file name has to be additionally customized. For
+> passed 'backupfilename' (i.e. bakName.bak) we can generate:
+> > 	- for native metadata: devicename_backupfilename (i.e.
+> md126_bakName.bak)
+> > 	- for external metadata: containername_backupfilename (i.e.
+> md127_bakName.bak)
+> > 3. used backup file name has to be printed out to let user know about
+> chosen name
+> 
+> I think this is making things more complicated rather than less.  Names
+> like
+> 'md126_bakName.bak' are not good as there is no guarantee that the
+> 'md126'
+> bit is stable from one restart to the next.
+> 
+> We could possibly just have a directory containing backup files and
+> mdadm
+> searches through it for a matching one, but I don't think I really like
+> that..
+> 
+> >
+> > or
+> >
+> > If mdadm.conf could be extended to specify backup file connected to
+> array (i.e. via UUID), we can give ability to connect backup file name
+> with particular array and restore data
+> > For reshape continuation even in scan mode. For this purposes grow
+> should store backup file name (connected to proper UUID) when backup
+> file handle is opened and remove it when handle is closed.
+> > Assemble can use this information. If automatic modification of
+> mdadm.conf is a problem, special reshape conf file can be used instead
+> (i.e. mdadm_reshape.conf).
+> > This file name can be also used for other volumes in particular
+> container (container operation) when first reshape is finished.
+> >
+> > Tell me what you are thinking about such idea.
+> 
+> I think I want to simply disallow auto-assembly of arrays that need a
+> backup
+> file.  Instead we should focus on implementing reshape so that a backup
+> file
+> is not needed.  i.e. use some space on the device(s).
+> 
+> >
+> >
+> > Second thing I want to signal is restoring from checkpoint '0'. Md
+> refuses to start raid5 array when reshape position is set to 0.
+> > Md gives information (raid5.c (run()):5058):
+> > 	"... reshape_position too early for auto-recovery - aborting"
+> >
+> > In md (raid5.c/run()) variables here_old == here_new == 0 (because of
+> reshape_position == 0).
+> > After normal system shut down this situation shouldn't happened (mdadm
+> should not allow for this).
+> > Fix/workaround seems to be easy (change '>=' to '>' or add '0' case of
+> reshape_new), but it is possible that I've missed something and check
+> should test something more,
+> > or this case should be treated/ignored as : it will never
+> happened/small possibility.
+> 
+> This certainly never needs to happen.
+> 
+> If no re-arrangement of data has happened - i.e. sync_max was always 0 -
+> then
+> the  reshape really hasn't started.  So we shouldn't tell the kernel
+> that the
+> array is in the middle of reshaping and it is up to '0'.  Rather we
+> should
+> tell it that the array is still the old shape, then start the array,
+> then
+> start the reshape.  So possibly sysfs_set_array should check both
+> reshape_active and reshape_progress before setting up then new shape of
+> the
+> array.
+> 
+> Alternately if some little bit of reshape has already started, then
+> allowing
+> the array to start with 'reshape_position' would be wrong.  We need to
+> load
+> dasta from backup to make sure everything is consistent, and restart
+> from the
+> correct starting point.
 > 
 > 
->  The "potential security hole" seems completely bogus.
->   If you give me permission to read something, and I do, then you remove that
->   permission, the fact that I still remember what I read is not a security
->   hole.  It is a natural fact of life
+> 
+> As you probably noticed I haven't had much time for mdadm lately.
+> However I
+> plan to spend the rest of this week (from Tuesday) on mdadm, so I'll
+> review
+> your patches then and look at sorting out some of these issues.
+> 
+> Thanks,
+> NeilBrown
 
-I think the case here might be where you add a LUN onto the space where
-the previous LUN space existed. Again, not likely.
 
-> 
->  As for the two cases: I would describe them:
->    1. planned.  The fs is already shrunk to within the new boundary so there
->       is nothing to be gained by flushing, and we could have to reload a
->       pile of data from storage which would be pointless
+You are right that I'm going to implement IMSM compatible backup method (using migration area in metadata).
+This makes me clear what has (or has not) to be done and simplifies my work also.
 
-This is the security case.
+Thank you for your answers. I'm waiting for review.
 
->    2. unplanned.  The fs is probably toast, so whether we invalidate or not
->       isn't going to make a whole lot of difference.
-
-Agreed.
-
-> 
->  So I would vote for not flushing.
-> 
->  The "not keeping stale data around" argument ... the only data that is
->  clearly stale is data that is in the block-device cache and beyond the new
->  EOF.  Most filesystems keep most data in the page cache rather than the
->  block device cache so this would just be some metadata - maybe inode tables
->  or block usage bitmaps or similar.  And caches regularly keep data around
->  that isn't actually going to be used - so keeping a bit more on the rare
->  occasion of a block-device-resize doesn't seem like an important cost.
-> 
->  Getting errors a little bit earlier in the case of an unplanned shrink is
->  possibly a credible argument.  This would be read errors only of course -
->  write errors would still arrive at the same time.  I'm not sure it would
->  really be very much earlier...maybe a bit in some cases.
-> 
->  On the whole, the arguments both for and against this change - in principle
->  - seem rather weak:  "maybe" and "possibly" rather than something concrete.
-> 
->  So given that (due to an oversight) it actually causes filesystem
->  corruption, I tend to agree with Christoph that the best approach at this
->  stage is the revert the original patch, and then review all the related code
->  and come up with a "correct" approach.
-> 
-> 
->  And just to clarify: when I first found that description "unconvincing" I
->  hadn't thought through all of these issues - I think it was just that the
->  justification seems vague rather than concrete, so it was hard to reason
->  about it.
-> 
-> 
->  Would you be uncomfortable if I asked Linus to revert both my fix and your
->  original patch??
-
-James Bottomley wanted me to put this functionality in. I have no
-problem with reverting it myself, especially if it is causing other
-problems.  I would have to say that you need to ask him (or rather, I am
-not qualified to render an opinion here).
-
-Andrew
+BR
+Adam
