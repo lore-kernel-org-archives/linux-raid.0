@@ -1,63 +1,41 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH] fix: generated udev rules does not work due to incorrect
- line format
-Date: Mon, 7 Mar 2011 09:56:48 +0000
-Message-ID: <66C59AD0932712458090B447266D638C010F8DCE0D@irsmsx504.ger.corp.intel.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [dm-devel] [PATCH] Fix over-zealous flush_disk when changing
+ device size.
+Date: Mon, 07 Mar 2011 10:46:58 -0600
+Message-ID: <1299516418.15258.4.camel@mulgrave.site>
+References: <20110217165057.5c50e566@notabene.brown>
+	 <20110303143120.GA8134@infradead.org>
+	 <20110304111624.4be27aaf@notabene.brown> <1299259506.2118.24.camel@grinch>
+	 <20110306174755.49404c8e@notabene.brown>  <1299471771.2228.11.camel@grinch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1299471771.2228.11.camel@grinch>
+Sender: linux-kernel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: NeilBrown <neilb@suse.de>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-Problem consists of missing =sign in comparison with SUBSYSTEM and
-missing new line character at the end of line. As a result incremental
-for hot-plugs of bare disks does not work.
+On Sun, 2011-03-06 at 21:22 -0700, Andrew Patterson wrote:
+> On Sun, 2011-03-06 at 17:47 +1100, NeilBrown wrote:
+> >  Would you be uncomfortable if I asked Linus to revert both my fix and your
+> >  original patch??
+> 
+> James Bottomley wanted me to put this functionality in. I have no
+> problem with reverting it myself, especially if it is causing other
+> problems.  I would have to say that you need to ask him (or rather, I am
+> not qualified to render an opinion here).
 
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- policy.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+So it seems we have a couple of problems: the first being that
+flush_disk() doesn't actually do what it says (flush the disk).  If it's
+just discarding all data, dirty or clean, then its use in the
+grow/shrink interface is definitely wrong.
 
-diff --git a/policy.c b/policy.c
-index afb640f..2a9fe5c 100644
---- a/policy.c
-+++ b/policy.c
-@@ -786,14 +786,14 @@ char *find_rule(struct rule *rule, char *rule_type)
- }
- 
- #define UDEV_RULE_FORMAT \
--"ACTION==\"add\", SUBSYSTEM=\"block\", " \
-+"ACTION==\"add\", SUBSYSTEM==\"block\", " \
- "ENV{DEVTYPE}==\"%s\", ENV{ID_PATH}==\"%s\", " \
--"RUN+=\"/sbin/mdadm --incremental $env{DEVNAME}\", "
-+"RUN+=\"/sbin/mdadm --incremental $env{DEVNAME}\""
- 
- #define UDEV_RULE_FORMAT_NOTYPE \
--"ACTION==\"add\", SUBSYSTEM=\"block\", " \
-+"ACTION==\"add\", SUBSYSTEM==\"block\", " \
- "ENV{ID_PATH}==\"%s\", " \
--"RUN+=\"/sbin/mdadm --incremental $env{DEVNAME}\", "
-+"RUN+=\"/sbin/mdadm --incremental $env{DEVNAME}\""
- 
- /* Write rule in the rule file. Use format from UDEV_RULE_FORMAT */
- int write_rule(struct rule *rule, int fd, int force_part)
-@@ -807,9 +807,9 @@ int write_rule(struct rule *rule, int fd, int force_part)
- 	if (force_part)
- 		typ = type_part;
- 	if (typ)
--		snprintf(line, sizeof(line) - 1, UDEV_RULE_FORMAT, typ, pth);
-+		snprintf(line, sizeof(line) - 1, UDEV_RULE_FORMAT "\n", typ, pth);
- 	else
--		snprintf(line, sizeof(line) - 1, UDEV_RULE_FORMAT_NOTYPE, pth);
-+		snprintf(line, sizeof(line) - 1, UDEV_RULE_FORMAT_NOTYPE "\n", pth);
- 	return write(fd, line, strlen(line)) == (int)strlen(line);
- }
- 
--- 
-1.7.1
+The idea is that before we complete the grow/shrink, we make sure that
+the device doesn't have any errors, so we want to try to write out all
+dirty buffers to make sure they still have a home.  If flush_disk()
+doesn't do that, then we need to use a different interface ... what's
+the interface to flush a disk?
 
+James
