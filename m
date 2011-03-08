@@ -1,38 +1,51 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 5/5] FIX: Compute spares_needed basing on metadata info
-Date: Tue, 08 Mar 2011 14:25:11 +0100
-Message-ID: <20110308132511.9578.81775.stgit@gklab-128-013.igk.intel.com>
-References: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH 06/14] imsm: remove unused parameters in function
+ attach_hba_to_super
+Date: Tue, 8 Mar 2011 15:20:56 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A8AEC8F@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-When metadata raid_disks information is correct for reshape working level,
-this information has to be used for spares_needed calculation.
+From 2e7fe1553a3ce71f0347aafbf8b4143ac5d47317 Mon Sep 17 00:00:00 2001
+From: Marcin Labun <marcin.labun@intel.com>
+Date: Thu, 3 Mar 2011 14:37:45 +0100
+Subject: [PATCH 06/14] imsm: remove unused parameters in function attach_hba_to_super
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
 ---
+ super-intel.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
- Grow.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index a05bcef..68962bf 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1661,7 +1661,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 	sysfs_freeze_array(info);
- 	spares_needed = max(reshape.before.data_disks,
- 			    reshape.after.data_disks)
--		+ reshape.parity - array.raid_disks;
-+		+ reshape.parity - info->array.raid_disks;
+diff --git a/super-intel.c b/super-intel.c
+index 90faf27..9f78aff 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -408,8 +408,7 @@ static struct intel_hba * find_intel_hba(struct intel_hba *hba, struct sys_dev *
+ }
  
- 	if (!force &&
- 	    info->new_level > 1 &&
+ 
+-static int attach_hba_to_super(struct intel_super *super, struct sys_dev *device,
+-			       const char *devname)
++static int attach_hba_to_super(struct intel_super *super, struct sys_dev *device)
+ {
+ 	struct intel_hba *hba;
+ 
+@@ -3695,7 +3694,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 				devname ? : "disk");
+ 			return 1;
+ 		}
+-		rv = attach_hba_to_super(super, hba_name, devname);
++		rv = attach_hba_to_super(super, hba_name);
+ 		switch (rv) {
+ 		case 2:
+ 			fprintf(stderr, Name ": %s is attached to Intel(R) %s RAID "
+-- 
+1.6.4.2
 
