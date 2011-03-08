@@ -1,86 +1,59 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 0/9] Grow_continue() - single array.
-Date: Tue, 8 Mar 2011 11:18:12 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17A823004@irsmsx503.ger.corp.intel.com>
-References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
- <20110308174317.489684f1@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/5] Make OLCE workeable
+Date: Tue, 08 Mar 2011 14:24:29 +0100
+Message-ID: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110308174317.489684f1@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
+This is first part of my comments for your latest changes on devel3-2 regarding reshape and reshape restart.
+Unfortunately those changes breaks OLCE functionality. This patch series makes OLCE workable (mdadm UT suits 12 and 13 succeed).
 
+Problems:
+1. In passing in mdinfo (array.level) raid4 for transition raid0->raid0.
+   This causes problems in takeover
+   a.Raid0 takeover doesn't occur. array.level == reshape.level == 4
+     Resolution: Decision about takeover has to be made based on real md level not info->array.level
+   b.Decision about backward takeover cannot be always taken by mdadm. mdadm can think that original level is raid4
+     Resolution: use level read from md as orig_level (not from metadata)
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Tuesday, March 08, 2011 7:43 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 0/9] Grow_continue() - single array.
-> 
-> 
-> Hi Adam,
->  I've reviewed this set of patches, applied a few of them, and
-> made some patches of my own that should achieve the result that I think
-> you
-> were aiming for.  I haven't tested them so there might still be some
-> issues...
-> 
-> Two important points.
-> 
-> 1/ I now require getinfo_super and container_content to present a
->  reshape_active array in a form that md can cope with it.  So a
->  RAID0 array that is in the middle of a reshape must appear to be
->  a RAID4 or RAID5 array.
->  I have changed super-intel to do this, but I have probably missed
->  some cases - please check that all supported migrations that cannot
->  be handled directly are handled by the new code.
-> 
->  With this in place, I have changed sysfs_set_array to set up all
->  the geometry of the array, both old and new.  I think this makes
->  a lot of things a lot cleaner.
-> 
-> 2/ I've revised how to handle the restart of a container-wide
->   migration.
->   As there is only one array in such a container that is actually
->   migrating, the mdadm which assembles it can be the one that forks
->   and managed the whole container.
->   This now happens.  The metadata informs metadata that a container-wide
->   reshape is needed by setting ->reshape_active to '2'.
-> 
-> 
-> I have added a 'freeze' call where I think it should go but I wouldn't
-> be at
-> all surprised if I got it wrong.
-> 
-> Please review the patch - which are all in my devel-3.2 branch
->     http://neil.brown.name/git?p=mdadm;a=log;h=refs/heads/devel-3.2
-> 
-> and let me know what you think.
-> 
-> Thanks,
-> NeilBrown
+2.On the begin of reshape_array() array structure is read from md (via ioctrl). Md knows nothing about raid4 working level, so spares_needed is wrongly computed
+  Resolution: use info->array.raid_disks instead array.raid_disks to compute  spares_needed.
+3.Analyse_changes() delta_parity concept doesn't match information currently metadata reports. Result of this is wrongly computed reshape.after.data_disks field.
+  Resolution: do not use delta_parity, base on information from metadata handle
+4.Defects/potential defects
+ a.delta_disks should be checked in sysfs_set_array()
+ b.array assembly problem
+reshape_active flag has to be evaluated. Existing second map doesn't means reshape always (rebuild, initialization)
 
-Hi Neil,
+I've tried to follow your idea in this series. Generally it seems ok (proved by UT). I like putting more array configuration in sysfs_set_array().
 
-Thank you for your review.
-
-I've found some problems in patches you sent, so I've decided to send my comments in 2 parts.
-	1st. Changes/workarounds needed to make OLCE workable
-	     (some workarounds, as there are 2 possible ways of changes).
-	2nd. Changes for reshape restart that I think are requires
-		(when I'll send first part I'll go with this)
-
-More I'll describe in covers or/and patch descriptions.
+Now I'm going to look at patches at the reshape restart point of view.
+I'll let you know results soon.
 
 BR
 Adam
 
 
+---
+
+Adam Kwolek (5):
+      FIX: Compute spares_needed basing on metadata info
+      FIX: Remove delta_parity concept
+      FIX: Allow for takeover
+      FIX: Set new raid disks when delta_disks is valid
+      fix: array is reassembled inactive if stopped during resync
+
+
+ Grow.c        |   22 +++++-----------------
+ super-intel.c |    5 +++--
+ sysfs.c       |    4 +++-
+ 3 files changed, 11 insertions(+), 20 deletions(-)
+
+-- 
+Signature
