@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/5] FIX: Allow for takeover
-Date: Tue, 08 Mar 2011 14:24:55 +0100
-Message-ID: <20110308132455.9578.23227.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/5] FIX: Remove delta_parity concept
+Date: Tue, 08 Mar 2011 14:25:03 +0100
+Message-ID: <20110308132503.9578.38588.stgit@gklab-128-013.igk.intel.com>
 References: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,37 +13,85 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Takeover has to occur when md reports different raid level.
-Previously it bases on information from metadata.
-Now metadata reports 'working' level as array level.
-This makes us to check it using information from md.
+When metadata reports level/raid_disks correct for level transition
+delta_parity concept is in conflict with such approach.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ Grow.c |   16 ++--------------
+ 1 files changed, 2 insertions(+), 14 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index 88c8ad7..5c5a3a3 100644
+index 5c5a3a3..a05bcef 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -1688,7 +1688,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 		goto release;
+@@ -893,10 +893,6 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 	 * when assembling an array that is undergoing reshape.
+ 	 */
+ 	int new_disks;
+-	/* delta_parity records change in number of devices
+-	 * caused by level change
+-	 */
+-	int delta_parity = 0;
+ 
+ 	/* If a new level not explicitly given, we assume no-change */
+ 	if (info->new_level == UnSet)
+@@ -1045,18 +1041,15 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 		 */
+ 		switch (info->new_level) {
+ 		case 4:
+-			delta_parity = 1;
+ 		case 0:
+ 			re->level = 4;
+ 			re->before.layout = 0;
+ 			break;
+ 		case 5:
+-			delta_parity = 1;
+ 			re->level = 5;
+ 			re->before.layout = ALGORITHM_PARITY_N;
+ 			break;
+ 		case 6:
+-			delta_parity = 2;
+ 			re->level = 6;
+ 			re->before.layout = ALGORITHM_PARITY_N;
+ 			break;
+@@ -1072,7 +1065,6 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 	case 5:
+ 		switch (info->new_level) {
+ 		case 0:
+-			delta_parity = -1;
+ 		case 4:
+ 			re->level = info->array.level;
+ 			re->before.data_disks = info->array.raid_disks - 1;
+@@ -1084,7 +1076,6 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 			re->before.layout = info->array.layout;
+ 			break;
+ 		case 6:
+-			delta_parity = 1;
+ 			re->level = 6;
+ 			re->before.data_disks = info->array.raid_disks - 1;
+ 			switch (info->array.layout) {
+@@ -1127,7 +1118,6 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 		switch (info->new_level) {
+ 		case 4:
+ 		case 5:
+-			delta_parity = -1;
+ 		case 6:
+ 			re->level = 6;
+ 			re->before.data_disks = info->array.raid_disks - 2;
+@@ -1221,11 +1211,9 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+ 		return "Impossible level change requested";
  	}
+ 	if (info->delta_disks == UnSet)
+-		info->delta_disks = delta_parity;
++		info->delta_disks = 0;
  
--	if (reshape.level != info->array.level) {
-+	if (reshape.level != array.level) {
- 		char *c = map_num(pers, reshape.level);
- 		int err;
- 		if (c == NULL)
-@@ -1708,7 +1708,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 		if (!quiet)
- 			fprintf(stderr, Name ": level of %s changed to %s\n",
- 				devname, c);	
--		orig_level = info->array.level;
-+		orig_level = array.level;
- 		sysfs_freeze_array(info);
- 
- 		if (reshape.level > 0 && st->ss->external) {
+-	re->after.data_disks = (re->before.data_disks
+-				+ info->delta_disks
+-				- delta_parity);
++	re->after.data_disks = re->before.data_disks + info->delta_disks;
+ 	switch (re->level) {
+ 	case 6: re->parity = 2; break;
+ 	case 4:
 
