@@ -1,61 +1,102 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/2] imsm: FIX: Mark checkpoint and array state clean during
-	reshape
-Date: Tue, 08 Mar 2011 08:37:47 +0100
-Message-ID: <20110308073747.8142.26184.stgit@gklab-128-013.igk.intel.com>
-References: <20110308073739.8142.87741.stgit@gklab-128-013.igk.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to be
+ clean
+Date: Tue, 8 Mar 2011 08:52:40 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A822DB0@irsmsx503.ger.corp.intel.com>
+References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
+	<20110302132927.24771.39913.stgit@gklab-128-013.igk.intel.com>
+ <20110308160743.35b85f6a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110308073739.8142.87741.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110308160743.35b85f6a@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Array state has to be managed during reshape based on consistent flag.
-To achieve this existing code will be reused. Currently existing code for
-blocks_per_unit calculation can be removed
-and existing code can be reused also.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
 
- super-intel.c |   15 ++-------------
- 1 files changed, 2 insertions(+), 13 deletions(-)
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Tuesday, March 08, 2011 6:08 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to
+> be clean
+> 
+> On Wed, 02 Mar 2011 14:29:27 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > When checkpoint is marked set volume as clean.
+> > Reshape on dirty volume cannot be restarted from checkpoint.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  super-intel.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/super-intel.c b/super-intel.c
+> > index 11972f3..04e32ae 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -5218,6 +5218,7 @@ static int imsm_set_array_state(struct
+> active_array *a, int consistent)
+> >  				    __le32_to_cpu(dev->vol.curr_migr_unit)) {
+> >  					dev->vol.curr_migr_unit =
+> >  						__cpu_to_le32(unit);
+> > +					dev->vol.dirty = 0;
+> >  					super->updates_pending++;
+> >  				}
+> >  			}
+> >
+> 
+> hi Adam,
+>  You'll need to explain this one a bit more.
+> 
+>  If the array isn't clean, then it is wrong to mark it as clean.
+>  If it is clean, then 'consistent' should be 'true' and it will
+>  be marked clean anyway.
+> 
 
-diff --git a/super-intel.c b/super-intel.c
-index c5e459f..c0bff98 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5210,19 +5210,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 		 */
- 		if (a->curr_action == reshape) {
- 			/* still reshaping, maybe update curr_migr_unit */
--			long long blocks_per_unit = blocks_per_migr_unit(dev);
--			long long unit = a->last_checkpoint;
--			if (blocks_per_unit) {
--				unit /= blocks_per_unit;
--				if (unit >
--				    __le32_to_cpu(dev->vol.curr_migr_unit)) {
--					dev->vol.curr_migr_unit =
--						__cpu_to_le32(unit);
--					dev->vol.dirty = 0;
--					super->updates_pending++;
--				}
--			}
--			return 0;
-+			goto mark_checkpoint;
- 		} else {
- 			if (a->last_checkpoint == 0 && a->prev_action == reshape) {
- 				/* for some reason we aborted the reshape.
-@@ -5299,6 +5287,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 		super->updates_pending++;
- 	}
- 
-+mark_checkpoint:
- 	/* check if we can update curr_migr_unit from resync_start, recovery_start */
- 	blocks_per_unit = blocks_per_migr_unit(dev);
- 	if (blocks_per_unit) {
+This could be true if set_array_state has possibility to execute this code in general migration case.
+During reshape after updtate curr_migr_unit set array state exits (super-intel.c: 5225 /return 0/)
 
+To achieve this it can be changed:
+1. Consistent flag should be == 1 during reshape
+monitor.c:387
+- a->container->ss->set_array_state(a, a->curr_state <= clean);
+
++ a->container->ss->set_array_state(a, a->curr_state <= active);
+
+Array state is active during reshape
+
+2. use consistent flag during reshape for imsm
+Super-intel.c: set_array_state()
+	- remove all code for a->curr_action == reshape (around line 5211)
+	- instead removed code add 'goto' to calculating blocks_per_unit at the end of this function
+ 	   This will allow for mark clear/dirty volume also
+
+I'll send 2 patch to make this description more clear.
+ 1. FIX: During reshape array is in active state 
+ 2. imsm: FIX: Mark checkpoint and array state clean during reshape
+
+
+>  Why cannot a reshape of a dirty volume be restarted from a checkpoint?
+>  I would think it would continue with the reshape and then when that
+>  finished, go back and do the resync.
+> 
+> NeilBrown
+
+If array is dirty and during reshape is not assembled due to i.e:
+super-intel.c:1792 for dirty volume info->resync_start = 0; Code for analyzing migration type is not executed.
+
+If you find my 2 patches I mention above ok, for now second case it not urgent.
+
+
+BR
+Adam
