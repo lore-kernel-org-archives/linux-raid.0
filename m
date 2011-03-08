@@ -1,207 +1,127 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH 01/14] probe_roms: allow to probe expansion ROMs using
- vendor and device id.
-Date: Tue, 8 Mar 2011 15:20:28 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17A8AEC8A@irsmsx503.ger.corp.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to be
+ clean
+Date: Wed, 9 Mar 2011 09:14:17 +1100
+Message-ID: <20110309091417.12db98f3@notabene.brown>
+References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
+	<20110302132927.24771.39913.stgit@gklab-128-013.igk.intel.com>
+	<20110308160743.35b85f6a@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D17A822DB0@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D17A822DB0@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-From fb619d78b270e0533fa3d2d57ad777f66ded4f41 Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Thu, 3 Mar 2011 13:44:37 +0100
-Subject: [PATCH 01/14] probe_roms: allow to probe expansion ROMs using vendor and device id.
+On Tue, 8 Mar 2011 08:52:40 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-Adds data offset to PCI expansion ROM Data Structure in resource
-describing Expansion ROMs. This allows AHCI OROM scanning function
-to identify AHCI OROM by device id 0x2822 and vendor id 0x8086.
+> 
+> 
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Tuesday, March 08, 2011 6:08 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > Neubauer, Wojciech
+> > Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to
+> > be clean
+> > 
+> > On Wed, 02 Mar 2011 14:29:27 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> > wrote:
+> > 
+> > > When checkpoint is marked set volume as clean.
+> > > Reshape on dirty volume cannot be restarted from checkpoint.
+> > >
+> > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > ---
+> > >
+> > >  super-intel.c |    1 +
+> > >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > >
+> > > diff --git a/super-intel.c b/super-intel.c
+> > > index 11972f3..04e32ae 100644
+> > > --- a/super-intel.c
+> > > +++ b/super-intel.c
+> > > @@ -5218,6 +5218,7 @@ static int imsm_set_array_state(struct
+> > active_array *a, int consistent)
+> > >  				    __le32_to_cpu(dev->vol.curr_migr_unit)) {
+> > >  					dev->vol.curr_migr_unit =
+> > >  						__cpu_to_le32(unit);
+> > > +					dev->vol.dirty = 0;
+> > >  					super->updates_pending++;
+> > >  				}
+> > >  			}
+> > >
+> > 
+> > hi Adam,
+> >  You'll need to explain this one a bit more.
+> > 
+> >  If the array isn't clean, then it is wrong to mark it as clean.
+> >  If it is clean, then 'consistent' should be 'true' and it will
+> >  be marked clean anyway.
+> > 
+> 
+> This could be true if set_array_state has possibility to execute this code in general migration case.
+> During reshape after updtate curr_migr_unit set array state exits (super-intel.c: 5225 /return 0/)
+> 
+> To achieve this it can be changed:
+> 1. Consistent flag should be == 1 during reshape
+> monitor.c:387
+> - a->container->ss->set_array_state(a, a->curr_state <= clean);
+> 
+> + a->container->ss->set_array_state(a, a->curr_state <= active);
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- platform-intel.c |   21 +++++++++++++++++++--
- probe_roms.c     |   29 ++++++++++++++++++++++++++---
- probe_roms.h     |    2 +-
- 3 files changed, 46 insertions(+), 6 deletions(-)
+This change doesn't make any sense at all.
+Whether the array is 'clean' or 'active', it completely independent of
+whether the array is being reshaped.
+While it is being reshaped it could sometimes be clean, and sometime
+be active, and the recorded state should reflect this.
+Say it is 'clean' (or 'consistent') when it actually isn't would be a lie.
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 3516a1b..0dc90b7 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -166,13 +166,31 @@ static int platform_has_intel_devices(void)
- 	return 0;
- }
- 
-+/*
-+ * PCI Expansion ROM Data Structure Format
-+ */
-+struct pciExpDataStructFormat {
-+	__u8  ver[4];
-+	__u16 vendorID;
-+	__u16 deviceID;
-+} __attribute__ ((packed));
-+
- static struct imsm_orom imsm_orom;
--static int scan(const void *start, const void *end)
-+static int scan(const void *start, const void *end, const void *data)
- {
- 	int offset;
- 	const struct imsm_orom *imsm_mem;
- 	int len = (end - start);
-+	struct pciExpDataStructFormat *ptr= (struct pciExpDataStructFormat *)data;
- 
-+	dprintf("ptr->vendorID: %lx __le16_to_cpu(ptr->deviceID): %lx \n",
-+		(ulong) __le16_to_cpu(ptr->vendorID),
-+		(ulong) __le16_to_cpu(ptr->deviceID));
-+
-+	if (!((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
-+	      (__le16_to_cpu(ptr->deviceID) == 0x2822)))
-+		return 0;
-+	
- 	for (offset = 0; offset < len; offset += 4) {
- 		imsm_mem = start + offset;
- 		if (memcmp(imsm_mem->signature, "$VER", 4) == 0) {
-@@ -180,7 +198,6 @@ static int scan(const void *start, const void *end)
- 			return 1;
- 		}
- 	}
--
- 	return 0;
- }
- 
-diff --git a/probe_roms.c b/probe_roms.c
-index a8e3a58..93c707c 100644
---- a/probe_roms.c
-+++ b/probe_roms.c
-@@ -20,6 +20,7 @@
-  */
- 
- #include "probe_roms.h"
-+#include "mdadm.h"
- #include <unistd.h>
- #include <signal.h>
- #include <fcntl.h>
-@@ -130,50 +131,60 @@ static void *isa_bus_to_virt(unsigned long addr)
- struct resource {
- 	unsigned long start;
- 	unsigned long end;
--	const char *name;
-+	unsigned long data;
-+  	const char *name;
- };
- 
- static struct resource system_rom_resource = {
- 	.name	= "System ROM",
- 	.start	= 0xf0000,
-+	.data   = 0,
- 	.end	= 0xfffff,
- };
- 
- static struct resource extension_rom_resource = {
- 	.name	= "Extension ROM",
- 	.start	= 0xe0000,
-+	.data   = 0,
- 	.end	= 0xeffff,
- };
- 
- static struct resource adapter_rom_resources[] = { {
- 	.name 	= "Adapter ROM",
- 	.start	= 0xc8000,
-+	.data   = 0,
- 	.end	= 0,
- }, {
- 	.name 	= "Adapter ROM",
- 	.start	= 0,
-+	.data   = 0,
- 	.end	= 0,
- }, {
- 	.name 	= "Adapter ROM",
- 	.start	= 0,
-+	.data   = 0,
- 	.end	= 0,
- }, {
- 	.name 	= "Adapter ROM",
- 	.start	= 0,
-+	.data   = 0,
- 	.end	= 0,
- }, {
- 	.name 	= "Adapter ROM",
- 	.start	= 0,
-+	.data   = 0,
- 	.end	= 0,
- }, {
- 	.name 	= "Adapter ROM",
- 	.start	= 0,
-+	.data   = 0,
- 	.end	= 0,
- } };
- 
- static struct resource video_rom_resource = {
- 	.name 	= "Video ROM",
- 	.start	= 0xc0000,
-+	.data   = 0,
- 	.end	= 0xc7fff,
- };
- 
-@@ -211,8 +222,9 @@ int scan_adapter_roms(scan_fn fn)
- 
- 		if (res->start) {
- 			found = fn(isa_bus_to_virt(res->start),
--				   isa_bus_to_virt(res->end));
--			if (found)
-+				   isa_bus_to_virt(res->end),
-+				   isa_bus_to_virt(res->data));
-+			if (found) 
- 				break;
- 		} else
- 			break;
-@@ -232,6 +244,7 @@ void probe_roms(void)
- 	unsigned long start, length, upper;
- 	unsigned char c;
- 	unsigned int i;
-+	__u16 val=0;
- 
- 	if (rom_fd < 0)
- 		return;
-@@ -284,11 +297,21 @@ void probe_roms(void)
- 		/* 0 < length <= 0x7f * 512, historically */
- 		length = c * 512;
- 
-+		/* Retrieve 16-bit pointer to PCI Data Structure (offset 18h-19h)
-+		 * The data can be within 64KB forward of the first location
-+		 * of this code image. The pointer is in little-endian order
-+		 */
-+		
-+		if (probe_address16(rom + 0x18, &val) != 0)
-+			continue;
-+		val = __le16_to_cpu(val);
-+
- 		/* but accept any length that fits if checksum okay */
- 		if (!length || start + length > upper || !romchecksum(rom, length))
- 			continue;
- 
- 		adapter_rom_resources[i].start = start;
-+		adapter_rom_resources[i].data = start + (unsigned long) val;
- 		adapter_rom_resources[i].end = start + length - 1;
- 
- 		start = adapter_rom_resources[i++].end & ~(rom_align - 1);
-diff --git a/probe_roms.h b/probe_roms.h
-index a1e291a..6d70411 100644
---- a/probe_roms.h
-+++ b/probe_roms.h
-@@ -19,6 +19,6 @@
- 
- void probe_roms_exit(void);
- int probe_roms_init(unsigned long align);
--typedef int (*scan_fn)(const void *start, const void *end);
-+typedef int (*scan_fn)(const void *start, const void *end, const void *data);
- int scan_adapter_roms(scan_fn fn);
- void probe_roms(void);
--- 
-1.6.4.2
+> 
+> Array state is active during reshape
+> 
+> 2. use consistent flag during reshape for imsm
+> Super-intel.c: set_array_state()
+> 	- remove all code for a->curr_action == reshape (around line 5211)
+> 	- instead removed code add 'goto' to calculating blocks_per_unit at the end of this function
+>  	   This will allow for mark clear/dirty volume also
+
+I like this patch - nice cleanup of the code.  I have applied it, thanks.
+
+
+
+> 
+> I'll send 2 patch to make this description more clear.
+>  1. FIX: During reshape array is in active state 
+>  2. imsm: FIX: Mark checkpoint and array state clean during reshape
+> 
+> 
+> >  Why cannot a reshape of a dirty volume be restarted from a checkpoint?
+> >  I would think it would continue with the reshape and then when that
+> >  finished, go back and do the resync.
+> > 
+> > NeilBrown
+> 
+> If array is dirty and during reshape is not assembled due to i.e:
+> super-intel.c:1792 for dirty volume info->resync_start = 0; Code for analyzing migration type is not executed.
+
+I see - that code in super-intel.c::getinfo_super_imsm_volume needs to be
+fixed.  Maybe just remove the 'else' there
+
+	if (map_to_analyse->map_state == IMSM_T_STATE_UNINITIALIZED ||
+	    dev->vol.dirty) {
+		info->resync_start = 0;
+	} else if (dev->vol.migr_state) {
+          ^^^^^
+
+Not sure though.
+
+NeilBrown
+
 
