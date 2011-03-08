@@ -1,55 +1,56 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to be
- clean
-Date: Tue, 8 Mar 2011 16:07:43 +1100
-Message-ID: <20110308160743.35b85f6a@notabene.brown>
+Subject: Re: [PATCH 0/9] Grow_continue() - single array.
+Date: Tue, 8 Mar 2011 17:43:17 +1100
+Message-ID: <20110308174317.489684f1@notabene.brown>
 References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
-	<20110302132927.24771.39913.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110302132927.24771.39913.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 02 Mar 2011 14:29:27 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> When checkpoint is marked set volume as clean.
-> Reshape on dirty volume cannot be restarted from checkpoint.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  super-intel.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 11972f3..04e32ae 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5218,6 +5218,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
->  				    __le32_to_cpu(dev->vol.curr_migr_unit)) {
->  					dev->vol.curr_migr_unit =
->  						__cpu_to_le32(unit);
-> +					dev->vol.dirty = 0;
->  					super->updates_pending++;
->  				}
->  			}
-> 
+Hi Adam,
+ I've reviewed this set of patches, applied a few of them, and
+made some patches of my own that should achieve the result that I think you
+were aiming for.  I haven't tested them so there might still be some
+issues...
 
-hi Adam,
- You'll need to explain this one a bit more.
+Two important points.
 
- If the array isn't clean, then it is wrong to mark it as clean.
- If it is clean, then 'consistent' should be 'true' and it will
- be marked clean anyway.
+1/ I now require getinfo_super and container_content to present a
+ reshape_active array in a form that md can cope with it.  So a
+ RAID0 array that is in the middle of a reshape must appear to be
+ a RAID4 or RAID5 array.
+ I have changed super-intel to do this, but I have probably missed
+ some cases - please check that all supported migrations that cannot
+ be handled directly are handled by the new code.
 
- Why cannot a reshape of a dirty volume be restarted from a checkpoint?
- I would think it would continue with the reshape and then when that
- finished, go back and do the resync.
+ With this in place, I have changed sysfs_set_array to set up all
+ the geometry of the array, both old and new.  I think this makes
+ a lot of things a lot cleaner.
 
+2/ I've revised how to handle the restart of a container-wide
+  migration.
+  As there is only one array in such a container that is actually
+  migrating, the mdadm which assembles it can be the one that forks
+  and managed the whole container.
+  This now happens.  The metadata informs metadata that a container-wide
+  reshape is needed by setting ->reshape_active to '2'.
+
+
+I have added a 'freeze' call where I think it should go but I wouldn't be at
+all surprised if I got it wrong.
+
+Please review the patch - which are all in my devel-3.2 branch
+    http://neil.brown.name/git?p=mdadm;a=log;h=refs/heads/devel-3.2
+
+and let me know what you think.
+
+Thanks,
 NeilBrown
 
