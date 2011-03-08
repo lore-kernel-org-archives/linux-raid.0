@@ -1,194 +1,247 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [dm-devel] [PATCH] Fix over-zealous flush_disk when changing
- device size.
-Date: Tue, 8 Mar 2011 11:04:53 +1100
-Message-ID: <20110308110453.0047307d@notabene.brown>
-References: <20110217165057.5c50e566@notabene.brown>
-	<20110303143120.GA8134@infradead.org>
-	<20110304111624.4be27aaf@notabene.brown>
-	<1299259506.2118.24.camel@grinch>
-	<20110306174755.49404c8e@notabene.brown>
-	<1299471771.2228.11.camel@grinch>
-	<1299516418.15258.4.camel@mulgrave.site>
-	<20110308094412.1c45b277@notabene.brown>
-	<1299538572.15955.90.camel@mulgrave.site>
+From: Christoph Anton Mitterer <calestyo@scientia.net>
+Subject: polishing up mdadm manpages: mdassemble(8), mdmon(8)
+Date: Tue, 08 Mar 2011 03:08:11 +0000
+Message-ID: <daeaad7c9ff2fa76529ad5b58994ba3e@imap.dd24.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1299538572.15955.90.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="=_785ecf8bce91d5df913e7d10e93600dd"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 07 Mar 2011 16:56:12 -0600 James Bottomley <James.Bottomley@suse.de>
-wrote:
+--=_785ecf8bce91d5df913e7d10e93600dd
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 
-> On Tue, 2011-03-08 at 09:44 +1100, NeilBrown wrote:
-> > (linux-fsdevel added - seems relevant)
-> 
-> Heh, Christoph will be pleased.
-> 
-> > On Mon, 07 Mar 2011 10:46:58 -0600 James Bottomley <James.Bottomley@suse.de>
-> > wrote:
-> > 
-> > > On Sun, 2011-03-06 at 21:22 -0700, Andrew Patterson wrote:
-> > > > On Sun, 2011-03-06 at 17:47 +1100, NeilBrown wrote:
-> > > > >  Would you be uncomfortable if I asked Linus to revert both my fix and your
-> > > > >  original patch??
-> > > > 
-> > > > James Bottomley wanted me to put this functionality in. I have no
-> > > > problem with reverting it myself, especially if it is causing other
-> > > > problems.  I would have to say that you need to ask him (or rather, I am
-> > > > not qualified to render an opinion here).
-> > > 
-> > > So it seems we have a couple of problems: the first being that
-> > > flush_disk() doesn't actually do what it says (flush the disk).  If it's
-> > > just discarding all data, dirty or clean, then its use in the
-> > > grow/shrink interface is definitely wrong.
-> > > 
-> > > The idea is that before we complete the grow/shrink, we make sure that
-> > > the device doesn't have any errors, so we want to try to write out all
-> > > dirty buffers to make sure they still have a home.  If flush_disk()
-> > > doesn't do that, then we need to use a different interface ... what's
-> > > the interface to flush a disk?
-> > > 
-> > 
-> > Hi James,
-> > 
-> > I *always* want to make sure that my device doesn't have any errors, not just
-> > when it changes size... but I'm not sure that regularly flushing out data is
-> > the right way to do it.
-> > But maybe I still misunderstand what the real point of this is.
-> 
-> I actually have no idea what you're talking about now.  Let me start at
-> the beginning:
+Hi.
 
-Thanks!
+Recently I've started to read into MD/mdadm and what started then as
+maintaining a quilt patch with several typos and so ended up in a somewhat
+"bigger" rework.
 
-> 
-> The idea behind flushing a disk on size changes is to ensure we get
-> immediate detection of screw ups. (screw ups specifically means dirty
-> data in the lost region which we can no longer write back).
-> 
-> If the device is reducing in size and the FS supports this, some data
-> migrates from the soon to be lost blocks at the end.  The point about
-> running a full page cache flush for the device after it has been shrunk
-> is supposed to be to detect a screw up (i.e. a dirty page that just lost
-> its backing store).
+- The text iself is (hopefully) largely the same, perhaps apart from some
+wording, or ordering.
+- More consistent usage of markup:
+  -bold for programs, options, files, manpage references (except in the
+SEE ALSO section) and text the is somehow set or "entered"
+  -italitcs (which is typically displayed as underlined) for any
+non-terminals.
+- Consistent writing of words like Linux, RAID, program names (which were
+previously off mixed) apart from those places where they're options (e.g.
+raid1 is still raid1 and not RAID1 for the --level option).
+- Completely rewritten the formatting of the manpage (the dozens of .B, .I
+... just to format one word made the source file really unreadable IMHO).
 
-Make sense.  So what you *really* want to do is actively tell the filesystem
-that the device is now smaller and that is should complain loudly if that is
-a problem.
-You cannot directly do that, so a second best is to tell it to flush all
-data in the hope that if there is a problem, then this has at least some
-chance of causing it to be reported.
+In mdmon(8) there were some places where changed things that could
+possibly changing the semantics:
+- mdadm --remove <container> <victim>   =>   mdadm --remove CONTAINER
+DEVICE
+- with  a metadata version string "external:<metadata name>"   =>   with a
+metadata format string "external:format"
+- .pid and .sock files   =>   PID and socket files
 
-So you don't need to purge any caches - just flush them.
+I wasn't sure about the following so didn't change it:
+- <disk>/state - faulty
+  Is <disk> a non-terminal for a device (and thus should I replace it with
+an italics "device"?
+- (for example, the metadata version has been set to "external:-dev/md127"
+instead of "external:/dev/md127")
+  Is the "version" correct here?
 
-I'm having trouble seeing the relevant of the bit about "some data migrates
-from the soon to be lost blocks at the end".
-If you have previously requested the fs to resize downwards, then I would
-expect all of this to be fully completed - maybe you are trying to detect
-bugs in the filesystem's 'shrink' function?  Maybe it isn't directly relevant
-and you are just providing it as general context ??
 
-> 
-> My original thought was that this only needed to be done on shrink, but
-> HP had some pathological case where grow was implemented as shrink
-> first, so it got done on all size changes.
+I've also started to rewrite md(4), mdadm(8) and mdadm.conf(5) manpges...
+- unifying many further writings of words like "read-only/readonly",
+"read-write/readwrite", etc. pp.
+- etc.
+but I'm not sure if/when I can finish them.
 
-I cannot see the relevance of this to the "flush caches" approach.
-If the size of the device shrinks and then grows while data is in a cache,
-and then you flush, it will simply result in random data appearing
-in the "new" part of the device, with no reason to expect errors.
 
-It could be relevant if you were purging caches as well as it makes sure
-you don't see stale data from before a shrink.
+Sorry for not sending a (easily reviewable) patch, but there were so many
+changes (in the line wrapping and so), that this did not make much sense.
+Please tell me whether you like and will apply it, so that I can continue
+with the remaining manpages.
+Anyway, if you merge them, please _really_ read them again for
+mistakes/typos I might have accidentally added...!
 
-So you seem to be saying that "purge" is important too - correct?
-
-> 
-> > As for the correct interface to flush a disk - there isn't one.
-> > One doesn't flush a storage device, one flushes a cache - to a storage
-> > device.  And there is not a 1-to-1 mapping.
-> > 
-> > A block device *is* associated with one cache - one which is used for
-> > caching accesses through /dev/XXX and also by some filesystems to cache some
-> > metadata.  You can flush this cache with sync_blockdev().  This just
-> > flushes out dirty pages in that cache, it doesn't discard clean pages.
-> > invalidate_bdev() can discard clean pages.  Call both, and get both outcomes.
-> > 
-> > If a filesystem is mounted directly on a given block_device, then it
-> > should have a valid s_bdev pointer and it is possible to find that filesystem
-> > from the block_device using get_active_super().  You could then call
-> > sync_filesystem() to flush out dirty data.  There isn't really a good
-> > interface to discard clean data. shrink_dcache_sb() does some of it, other
-> > bits of code do other bits.
-> > 
-> > Note that a block_device also can have a pointer to a super_block (bd_super).
-> > This does not seem to be widely used .... ext3 and ext4 use it so that memory
-> > pressure felt by the block-device cache can transmitted to the fs, so the
-> > fs can associate private data with the block device's cache I guess.
-> > I don't think bd_super is sufficiently persistent reference to be usable
-> > for sync_filesystems (it could race with unmount).
-> > 
-> > 
-> > But if the block device is within a dm or md device, or is an external
-> > journal for e.g. ext3, or is in some more complex relationship with a
-> > filesystem, then there is no way to request that any particular cache get
-> > flushed to the block device.  And if some user-space app has cached data
-> > for the device .... there is no way to get at that either.
-> > 
-> > If we wanted a "proper" solution for this we probably need to leverage
-> > the 'bd_claim' concept.  When a device is claimed, allow an 'operations'
-> > structure to be provided with operations like:
-> >    flush_caches  (writes out data)
-> >    purge_caches  (discards clean data)
-> >    discard_caches  (discards all data)
-> >    prepare_resize (is allowed to fail)
-> >    commit_resize
-> >    freeze_io
-> >    thaw_io
-> 
-> What makes you think we participate in the resize?  Most often we just
-> get notified.  There may or may not have been some preparation, but it's
-> mostly not something we participate in.
-
-You may not participate in the resize, but dm and md do and the
-"prepare_resize" part of the interface would be useful to them.  I agree
-that it might not be useful to SCSI devices.
-
-> 
-> > But flush_disk is definitely a wrong interface.  It has a meaningless name
-> > (as discussed above), and purges some caches while discarding others.
-> > 
-> > What do we *really* lose if we just revert that original patch?
-> 
-> Synchronous notification of errors.  If we don't try to write everything
-> back immediately after the size change, we don't see dirty pages in
-> zapped regions until the writeout/page cache management takes it into
-> its head to try to clean the pages.
-> 
-
-So if you just want synchronous errors, I think you want:
-    fsync_bdev()
-
-which calls sync_filesystem() if it can find a filesystem, else
-sync_blockdev();  (sync_filesystem itself calls sync_blockdev too).
-
-However this doesn't purge clean pages from the caches so there
-might be the stale data issue.
-
-Do you see that as a real issue?
-
-(Just a bit of clarification:  fsync_bdev flushes but does not purge.
- flush_disk purges but does not flush.  So with flush_disk there I don't
- think you will have been getting the errors you want.
- Also - fsync_bdev() takes a lot longer than flush_disk.  I hope
- revalidate_disk is only called from places where it is safe to block
- for FS writeout ... I think it is.).
 
 Thanks,
-NeilBrown
+Chris.
+--=_785ecf8bce91d5df913e7d10e93600dd
+Content-Transfer-Encoding: base64
+Content-Type: application/octet-stream; charset=UTF-8;
+ name=mdassemble.8;
+Content-Disposition: attachment;
+ filename=mdassemble.8;
+
+LlRIIE1EQVNTRU1CTEUgOCAiIiB2My4yCgoKCgouU0ggTkFNRQptZGFzc2VtYmxlIFwtIGFzc2Vt
+YmxlIE1EIGRldmljZXMKCgouU0ggU1lOT1BTSVMKXGZCbWRhc3NlbWJsZVxmUgoKCi5TSCBERVND
+UklQVElPTiAKXGZCbWRhc3NlbWJsZVxmUiBpcyBhIHRpbnkgcHJvZ3JhbSB0aGF0IGNhbiBiZSB1
+c2VkIHRvIGFzc2VtYmxlIE1EIGRldmljZXMKaW5zaWRlIGFuIGluaXRpYWwgcmFtZGlzayAoaW5p
+dHJkKSBvciBhbiBpbml0cmFtZnMuCi5icgpJdCBpcyBtZWFudCB0byByZXBsYWNlIHRoZSBpbi1r
+ZXJuZWwgYXV0b21hdGljIFJBSUQgZGV0ZWN0aW9uIGFuZCBhY3RpdmF0aW9uLgouUApJdCBjYW4g
+YmUgYnVpbHQgc3RhdGljYWxseSBhbmQgbGlua2VkIGFnYWluc3QgbGlnaHR3ZWlnaHQgbGliYyBp
+bXBsZW1lbnRhdGlvbnMKbGlrZSBcZkJrbGliY1xmUiwgXGZCdUNsaWJjXGZSIG9yIFxmQmRpZXRs
+aWJjXGZSLgoKCi5TSCBVU0FHRQpJbnZva2luZyBcZkJtZGFzc2VtYmxlXGZSIGhhcyB0aGUgc2Ft
+ZSBlZmZlY3QgYXMgaW52b2tpbmcgXGZCbWRhZG0gXC1cLWFzc2VtYmxlClwtXC1zY2FuXGZSLgou
+UApJbnZva2luZyBcZkJtZGFzc2VtYmxlXGZSIGEgc2Vjb25kIHRpbWUgd2lsbCBtYXJrIGFsbCBk
+ZWZpbmVkIGFycmF5cyBhcwoicmVhZC13cml0ZSIuCi5icgpUaGlzIGlzIHVzZWZ1bCB3aGVuIHVz
+aW5nIHRoZSBcZkJzdGFydF9yb1xmUiBwYXJhbWV0ZXIgdG8gdGhlIFxmQm1kX21vZFxmUgprZXJu
+ZWwgbW9kdWxlLgoKCi5TSCBPUFRJT05TClRoZXJlIGFyZSBubyBvcHRpb25zIHRvIFxmQm1kYXNz
+ZW1ibGVcZlIuCgoKLlNIIEZJTEVTCi5TUyAvZXRjL21kYWRtLmNvbmYKVGhpcyBmaWxlIGxpc3Rz
+IHRoZSBkZXZpY2VzIHdoaWNoIG1heSBiZSBzY2FubmVkIHRvIHNlZSBpZiB0aGV5IGNvbnRhaW4g
+TUQKc3VwZXJibG9ja3MgYW5kIGdpdmVzIGlkZW50aWZ5aW5nIGluZm9ybWF0aW9uIChlLmcuIGFu
+IFVVSUQpIGFib3V0IGtub3duIE1ECmFycmF5cy4KLlAKXGZCbWRhc3NlbWJsZVxmUiBzdXBwb3J0
+cyBhbGwgY29uZmlndXJhdGlvbiBwYXJhbWV0ZXJzIGRlZmluZWQgaW4KXGZCbWRhZG0uY29uZlxm
+UiB3aXRoIHRoZSBleGNlcHRpb24gb2YgdGhlIFxmQmF1dG89XGZSIHRhZyB3aGljaCBpcyBvbmx5
+CnN1cHBvcnRlZCBpZiBcZkJtZGFkbVxmUiB3YXMgYnVpbHQgd2l0aCBcZkJNREFTU0VNQkxFX0FV
+VE9cZlIgYmVpbmcgZGVmaW5lZC4KLlAKU2VlIHRoZSBcZkJtZGFkbS5jb25mXGZSKDUpIG1hbnBh
+Z2UgZm9yIG1vcmUgZGV0YWlscy4KCgouU0ggU0VFIEFMU08KbWRhZG0oOCksCm1kYWRtLmNvbmYo
+NSksCm1kKDQpLgo=
+--=_785ecf8bce91d5df913e7d10e93600dd
+Content-Transfer-Encoding: base64
+Content-Type: application/octet-stream; charset=UTF-8;
+ name=mdmon.8;
+Content-Disposition: attachment;
+ filename=mdmon.8;
+
+LlRIIE1ETU9OIDggIiIgdjMuMgoKCgoKLlNIIE5BTUUKbWRtb24gXC0gbW9uaXRvciBNRCBleHRl
+cm5hbCBtZXRhZGF0YSBhcnJheXMKCgouU0ggU1lOT1BTSVMKXGZCbWRtb24gXGZJW1xmQi0tYWxs
+XGZJXSBbXGZCLS10YWtlb3ZlclxmSV0gQ09OVEFJTkVSXGZSCgoKLlNIIE9WRVJWSUVXCkxpbnV4
+IDIuNi4yNyBicmluZ3MgdGhlIGFiaWxpdHkgdG8gc3VwcG9ydCBleHRlcm5hbCBtZXRhZGF0YSBh
+cnJheXMuICBFeHRlcm5hbAptZXRhZGF0YSBpbXBsaWVzIHRoYXQgdGhlIHVzZXItc3BhY2UgaGFu
+ZGxlcyBhbGwgdXBkYXRlcyB0byB0aGUgbWV0YWRhdGEuCi5QClRoZSBrZXJuZWwncyByZXNwb25z
+aWJpbGl0eSBpcyB0byBub3RpZnkgdGhlIHVzZXItc3BhY2Ugd2hlbiBhICJtZXRhZGF0YSBldmVu
+dCIKKGxpa2UgZGlzayBmYWlsdXJlcyBhbmQgY2xlYW4tdG8tZGlydHkgdHJhbnNpdGlvbnMpIG9j
+Y3Vycy4KLmJyCkluIGltcG9ydGFudCBjYXNlcyB0aGUga2VybmVsIHdhaXRzIGZvciB0aGUgdXNl
+ci1zcGFjZSB0byB0YWtlIGFjdGlvbiBvbiB0aGVzZQpub3RpZmljYXRpb25zLgoKCi5TSCBERVND
+UklQVElPTgouU1MgTWV0YWRhdGEgdXBkYXRlczoKVG8gc2VydmUgbWV0YWRhdGEgdXBkYXRlIHJl
+cXVlc3RzIGEgZGFlbW9uIChcZkJtZG1vblxmUikgaXMgaW50cm9kdWNlZC4KXGZCbWRtb25cZlIg
+aXMgdGFza2VkIHdpdGggcG9sbGluZyB0aGUgc3lzZnMgbmFtZXNwYWNlLCBsb29raW5nIGZvciBj
+aGFuZ2VzIGluClxmQmFycmF5X3N0YXRlXGZSLCBcZkJzeW5jX2FjdGlvblxmUiwgYW5kIHBlci1k
+ZXZpY2UgXGZCc3RhdGVcZlIgYXR0cmlidXRlcy4KV2hlbiBhIGNoYW5nZSBpcyBkZXRlY3RlZCBp
+dCBjYWxscyBhIHBlci1tZXRhZGF0YSB0eXBlIGhhbmRsZXIgdG8gbWFrZQptb2RpZmljYXRpb25z
+IHRvIHRoZSBtZXRhZGF0YS4KLlAKVGhlIGZvbGxvd2luZyBhY3Rpb25zIGFyZSB0YWtlbjoKLlJT
+Ci5UUAouQiBhcnJheV9zdGF0ZSBcLSBpbmFjdGl2ZQpDbGVhciB0aGUgZGlydHkgYml0IGZvciB0
+aGUgdm9sdW1lIGFuZCBsZXQgdGhlIGFycmF5IGJlIHN0b3BwZWQuCi5UUAouQiBhcnJheV9zdGF0
+ZSBcLSB3cml0ZSBwZW5kaW5nClNldCB0aGUgZGlydHkgYml0IGZvciB0aGUgYXJyYXkgYW5kIHRo
+ZW4gc2V0IFxmQmFycmF5X3N0YXRlXGZSIHRvIFxmQmFjdGl2ZVxmUi4KV3JpdGVzIGFyZSBibG9j
+a2VkIHVudGlsIHRoZSB1c2VyLXNwYWNlIHdyaXRlcyBcZkJhY3RpdmVcZlIuCi5UUAouQiBhcnJh
+eV9zdGF0ZSBcLSBhY3RpdmVcLWlkbGUKVGhlIHNhZmUgbW9kZSB0aW1lciBoYXMgZXhwaXJlZCBz
+byBzZXQgYXJyYXkgc3RhdGUgdG8gY2xlYW4gdG8gYmxvY2sgd3JpdGVzIHRvCnRoZSBhcnJheS4K
+LlRQCi5CIGFycmF5X3N0YXRlIFwtIGNsZWFuCkNsZWFyIHRoZSBkaXJ0eSBiaXQgZm9yIHRoZSB2
+b2x1bWUuCi5UUAouQiBhcnJheV9zdGF0ZSBcLSByZWFkXC1vbmx5ClRoaXMgaXMgdGhlIGluaXRp
+YWwgc3RhdGUgdGhhdCBhbGwgYXJyYXlzIHN0YXJ0IGF0LgouUlMKLlRQClxmQm1kbW9uXGZSIHRh
+a2VzIG9uZSBvZiB0aGVzZSB0aHJlZSBhY3Rpb25zOgouVFAKMS4KVHJhbnNpdGlvbiB0aGUgYXJy
+YXkgdG8gcmVhZFwtYXV0byBrZWVwaW5nIHRoZSBkaXJ0eSBiaXQgY2xlYXIgaWYgdGhlIG1ldGFk
+YXRhCmhhbmRsZXIgZGV0ZXJtaW5lcyB0aGF0IHRoZSBhcnJheSBkb2VzIG5vdCBuZWVkIHJlc3lu
+Y2luZyBvciBvdGhlciBtb2RpZmljYXRpb24uCi5UUAoyLgpUcmFuc2l0aW9uIHRoZSBhcnJheSB0
+byBhY3RpdmUgaWYgdGhlIG1ldGFkYXRhIGhhbmRsZXIgZGV0ZXJtaW5lcyBhIHJlc3luYyBvcgpz
+b21lIG90aGVyIG1hbmlwdWxhdGlvbiBpcyBuZWNlc3NhcnkuCi5UUAozLgpMZWF2ZSB0aGUgYXJy
+YXkgcmVhZFwtb25seSBpZiB0aGUgdm9sdW1lIGlzIG1hcmtlZCBub3QgdG8gYmUgbW9uaXRvcmVk
+IChmb3IKZXhhbXBsZSwgdGhlIG1ldGFkYXRhIHZlcnNpb24gaGFzIGJlZW4gc2V0IHRvICJcZkJl
+eHRlcm5hbDpcLWRldi9tZDEyN1xmUiIKaW5zdGVhZCBvZiAiXGZCZXh0ZXJuYWw6L2Rldi9tZDEy
+N1xmUiIpLgouUkUKLlRQCi5CIHN5bmNfYWN0aW9uIFwtIHJlc3luY1wtdG9cLWlkbGUKTm90aWZ5
+IHRoZSBtZXRhZGF0YSBoYW5kbGVyIHRoYXQgYSByZXN5bmMgbWF5IGhhdmUgY29tcGxldGVkLiAg
+SWYgYSByZXN5bmMKcHJvY2VzcyBoYXMgaWRsZWQgYmVmb3JlIGl0IGNvbXBsZXRlcyB0aGlzIGV2
+ZW50IGFsbG93cyB0aGUgbWV0YWRhdGEgaGFuZGxlciB0bwpjaGVja3BvaW50IHJlc3luYy4KLlRQ
+Ci5CIHN5bmNfYWN0aW9uIFwtIHJlY292ZXJcLXRvXC1pZGxlCkEgc3BhcmUgZGlzayBtYXkgaGF2
+ZSBjb21wbGV0ZWQgcmVidWlsZGluZyBzbyB0ZWxsIHRoZSBtZXRhZGF0YSBoYW5kbGVyIGFib3V0
+CnRoZSBzdGF0ZSBvZiBlYWNoIGRpc2suICBUaGlzIGlzIHRoZSBtZXRhZGF0YSBoYW5kbGVyJ3Mg
+b3Bwb3J0dW5pdHkgdG8gY2xlYXIgYW55CiJvdXRcLW9mXC1zeW5jIiBiaXRzIGFuZCBjbGVhciB0
+aGUgdm9sdW1lJ3MgZGVncmFkZWQgc3RhdHVzLiAgSWYgYSByZWNvdmVyeQpwcm9jZXNzIGhhcyBp
+ZGxlZCBiZWZvcmUgaXQgY29tcGxldGVzIHRoaXMgZXZlbnQgYWxsb3dzIHRoZSBtZXRhZGF0YSBo
+YW5kbGVyIHRvCmNoZWNrcG9pbnQgcmVjb3ZlcnkuCi5UUAouQiA8ZGlzaz4vc3RhdGUgXC0gZmF1
+bHR5CkEgZGlzayBmYWlsdXJlIGtpY2tzIG9mZiBhIHNlcmllcyBvZiBldmVudHM6Ci5icgpGaXJz
+dCBub3RpZnkgdGhlIG1ldGFkYXRhIGhhbmRsZXIgdGhhdCBhIGRpc2sgaGFzIGZhaWxlZCBhbmQg
+dGhlbiBub3RpZnkgdGhlCmtlcm5lbCB0aGF0IGl0IGNhbiB1bmJsb2NrIHdyaXRlcyB0aGF0IHdl
+cmUgZGVwZW5kZW50IG9uIHRoaXMgZGlzay4KLmJyCkFmdGVyIHVuYmxvY2tpbmcgdGhlIGtlcm5l
+bCB0aGlzIGRpc2sgaXMgc2V0IHRvIGJlIHJlbW92ZWQoKikgZnJvbSB0aGUgbWVtYmVyCmFycmF5
+LgouYnIKRmluYWxseSB0aGUgZGlzayBpcyBtYXJrZWQgYXMgZmFpbGVkIGluIGFsbCBvdGhlciBt
+ZW1iZXIgYXJyYXlzIGluIHRoZQpjb250YWluZXIuCi5SUwouSVAgKCopClRoaXMgYmVoYXZpb3Ig
+ZGlmZmVycyBzbGlnaHRseSBmcm9tIG5hdGl2ZSBNRCBhcnJheXMgd2hlcmUgcmVtb3ZhbCBpcyBy
+ZXNlcnZlZApmb3IgYSBcZkJtZGFkbSAtLXJlbW92ZVxmUiBldmVudC4gIEluIHRoZSBleHRlcm5h
+bCBtZXRhZGF0YSBjYXNlIHRoZSBjb250YWluZXIKaG9sZHMgdGhlIGZpbmFsIHJlZmVyZW5jZSBv
+biBhIGJsb2NrIGRldmljZSBhbmQgYSBcZkJtZGFkbSAtLXJlbW92ZQpcZklDT05UQUlORVIgREVW
+SUNFXGZSIGNhbGwgaXMgc3RpbGwgcmVxdWlyZWQuCi5SRQoKLlNTIENvbnRhaW5lcnM6CkV4dGVy
+bmFsIG1ldGFkYXRhIGZvcm1hdHMsIGxpa2UgRERGLCBkaWZmZXIgZnJvbSB0aGUgbmF0aXZlIE1E
+IG1ldGFkYXRhIGZvcm1hdHMKaW4gdGhhdCB0aGV5IGRlZmluZSBhIHNldCBvZiBkaXNrcyBhbmQg
+YSBzZXJpZXMgb2Ygc3ViLWFycmF5cyB3aXRoaW4gdGhvc2UKZGlza3MuICBNRCBtZXRhZGF0YSBp
+biBjb21wYXJpc29uIGRlZmluZXMgYSAxOjEgcmVsYXRpb25zaGlwIGJldHdlZW4gYSBzZXQgb2YK
+YmxvY2sgZGV2aWNlcyBhbmQgYSBSQUlEIGFycmF5LgouYnIKRm9yIGV4YW1wbGUgdG8gY3JlYXRl
+IDIgYXJyYXlzIGF0IGRpZmZlcmVudCBSQUlEIGxldmVscyBvbiBhIHNpbmdsZSBzZXQgb2YKZGlz
+a3MsIE1EIG1ldGFkYXRhIHJlcXVpcmVzIHRoZSBkaXNrcyB0byBiZSBwYXJ0aXRpb25lZCBhbmQg
+dGhlbiBlYWNoIGFycmF5IGNhbgpiZSBjcmVhdGVkIHdpdGggYSBzdWJzZXQgb2YgdGhvc2UgcGFy
+dGl0aW9ucy4KLmJyClRoZSBzdXBwb3J0ZWQgZXh0ZXJuYWwgZm9ybWF0cyBwZXJmb3JtIHRoaXMg
+ZGlzayBjYXJ2aW5nIGludGVybmFsbHkuCi5QCkNvbnRhaW5lciBkZXZpY2VzIHNpbXBseSBob2xk
+IHJlZmVyZW5jZXMgdG8gYWxsIG1lbWJlciBkaXNrcyBhbmQgYWxsb3cKdG9vbHMgbGlrZSBcZkJt
+ZG1vblxmUiB0byBkZXRlcm1pbmUgd2hpY2ggYWN0aXZlIGFycmF5cyBiZWxvbmcgdG8gd2hpY2gK
+Y29udGFpbmVyLiAgU29tZSBhcnJheSBtYW5hZ2VtZW50IGNvbW1hbmRzIChsaWtlIGRpc2sgcmVt
+b3ZhbCBvciBkaXNrIGFkZGl0aW9uKQphcmUgbm93IG9ubHkgdmFsaWQgYXQgdGhlIGNvbnRhaW5l
+ciBsZXZlbC4KLmJyCkF0dGVtcHRzIHRvIHBlcmZvcm0gdGhlc2UgYWN0aW9ucyBvbiBtZW1iZXIg
+YXJyYXlzIGFyZSBibG9ja2VkIHdpdGggZXJyb3IKbWVzc2FnZXMgbGlrZToKLklQCm1kYWRtOiBD
+YW5ub3QgcmVtb3ZlIGRpc2tzIGZyb20gYSBcJ21lbWJlclwnIGFycmF5LCBwZXJmb3JtIHRoaXMg
+b3BlcmF0aW9uIG9uCnRoZSBwYXJlbnQgY29udGFpbmVyCi5QCkNvbnRhaW5lcnMgYXJlIGlkZW50
+aWZpZWQgaW4gXGZCL3Byb2MvbWRzdGF0XGZSIHdpdGggYSBtZXRhZGF0YSBmb3JtYXQgc3RyaW5n
+CiJcZkJleHRlcm5hbDpcZklmb3JtYXRcZlIiLgouYnIKTWVtYmVyIGRldmljZXMgYXJlIGlkZW50
+aWZpZWQgYnkKIlxmQmV4dGVybmFsOi9cZkljb250YWluZXItZGV2aWNlXGZCL1xmSW1lbWJlci1p
+bmRleFxmUiIgb3IKIlxmQmV4dGVybmFsOi1cZkljb250YWluZXItZGV2aWNlXGZCL1xmSW1lbWJl
+ci1pbmRleFxmUiIgaWYgdGhlIGFycmF5IGlzIHRvCnJlbWFpbiByZWFkLW9ubHkuCgoKLlNIIE9Q
+VElPTlMKLlRQCi5JIENPTlRBSU5FUgpUaGUgY29udGFpbmVyIGRldmljZSB0byBtb25pdG9yLgou
+YnIKSXQgY2FuIGJlIGEgZnVsbCBwYXRoIGxpa2UgIlxmQi9kZXYvbWQvY29udGFpbmVyXGZSIiBv
+ciBhIHNpbXBsZSBNRCBkZXZpY2UgbmFtZQpsaWtlICJcZkJtZDEyN1xmUiIuCi5UUAouQiBcLVwt
+dGFrZW92ZXIKVGhpcyBpbnN0cnVjdHMgXGZCbWRtb25cZlIgdG8gcmVwbGFjZSBhbnkgYWN0aXZl
+IFxmQm1kbW9uXGZSIHdoaWNoIGlzIGN1cnJlbnRseQptb25pdG9yaW5nIHRoZSBhcnJheS4KLklQ
+ClRoaXMgaXMgcHJpbWFyaWx5IHVzZWQgaW4gdGhlIGxhdGUgYm9vdCBwcm9jZXNzIHRvIHJlcGxh
+Y2UgYW55IFxmQm1kbW9uXGZSIHdoaWNoCndhcyBzdGFydGVkIGZyb20gYW4gaW5pdHJhbWZzIGJl
+Zm9yZSB0aGUgcm9vdCBmaWxlc3lzdGVtIHdhcyBtb3VudGVkLiAgVGhpcwphdm9pZHMgaG9sZGlu
+ZyBhIHJlZmVyZW5jZSBvbiB0aGF0IGluaXRyYW1mcyBpbmRlZmluaXRlbHkgYW5kIGVuc3VyZXMg
+dGhhdCB0aGUKUElEIGFuZCBzb2NrZXQgZmlsZXMgdXNlZCB0byBjb21tdW5pY2F0ZSB3aXRoIFxm
+Qm1kbW9uXGZSIGFyZSBpbiBhIHN0YW5kYXJkCnBsYWNlLgouVFAKLkIgXC1cLWFsbApUaGlzIHRl
+bGxzIFxmQm1kbW9uXGZSIHRvIGZpbmQgYW55IGFjdGl2ZSBjb250YWluZXJzIGFuZCBzdGFydCBt
+b25pdG9yaW5nIGVhY2gKb2YgdGhlbSBpZiBhcHByb3ByaWF0ZS4gIFRoaXMgaXMgbm9ybWFsbHkg
+dXNlZCB3aXRoIFxmQlwtXC10YWtlb3ZlclxmUiBpbiB0aGUKbGF0ZSBib290IHByb2Nlc3MuCi5J
+UApBIHNlcGFyYXRlIFxmQm1kbW9uXGZSIHByb2Nlc3MgaXMgc3RhcnRlZCBmb3IgZWFjaCBjb250
+YWluZXIgd2l0aCB0aGUKXGZCXC1cLWFsbFxmUiBhcmd1bWVudCBiZWluZyByZXBsYWNlZCBieSB0
+aGUgbmFtZSBvZiB0aGUgcmVzcGVjdGl2ZSBjb250YWluZXIuCi5icgpUbyBhbGxvdyBmb3IgY29u
+dGFpbmVycyB3aXRoIG5hbWVzIGxvbmdlciB0aGFuIDUgY2hhcmFjdGVycyB0aGlzIGFyZ3VtZW50
+IGNhbiBiZQphcmJpdHJhcmlseSBleHRlbmRlZCwgZS5nLiB0byBcZkJcLVwtYWxsLWFjdGl2ZS1h
+cnJheXNcZlIuCi5QCk5vdGUgdGhhdCBcZkJtZG1vblxmUiBpcyBhdXRvbWF0aWNhbGx5IHN0YXJ0
+ZWQgYnkgXGZCbWRhZG1cZlIgd2hlbiBuZWVkZWQgYW5kIHNvCmRvZXMgbm90IG5lZWQgdG8gYmUg
+Y29uc2lkZXJlZCB3aGVuIHdvcmtpbmcgd2l0aCBSQUlEIGFycmF5cy4gIFRoZSBvbmx5IHRpbWVz
+IGl0CmlzIHJ1biBvdGhlciB0aGFuIGJ5IFxmQm1kYWRtXGZSIGlzIHdoZW4gdGhlIGJvb3Qgc2Ny
+aXB0cyBuZWVkIHRvIHJlc3RhcnQgaXQKYWZ0ZXIgbW91bnRpbmcgdGhlIG5ldyByb290IGZpbGVz
+eXN0ZW0uCgoKLlNIIFNUQVJUIFVQIEFORCBTSFVURE9XTgpBcyBcZkJtZG1vblxmUiBuZWVkcyB0
+byBiZSBydW5uaW5nIHdoZW5ldmVyIGFueSBmaWxlc3lzdGVtIG9uIHRoZSBtb25pdG9yZWQKZGV2
+aWNlIGlzIG1vdW50ZWQgdGhlcmUgYXJlIHNwZWNpYWwgY29uc2lkZXJhdGlvbnMgd2hlbiB0aGUg
+cm9vdCBmaWxlc3lzdGVtIGlzCm1vdW50ZWQgZnJvbSBhbiBcZkJtZG1vblxmUiBtb25pdG9yZWQg
+ZGV2aWNlLgouUApOb3RlIHRoYXQgaW4gZ2VuZXJhbCBcZkJtZG1vblxmUiBpcyBuZWVkZWQgZXZl
+biBpZiB0aGUgZmlsZXN5c3RlbSBpcyBtb3VudGVkCnJlYWQtb25seSBhcyBzb21lIGZpbGVzeXN0
+ZW1zIGNhbiBzdGlsbCB3cml0ZSB0byB0aGUgZGV2aWNlIGluIHRob3NlCmNpcmN1bXN0YW5jZXMs
+IGZvciBleGFtcGxlIHRvIHJlcGxheSBhIGpvdXJuYWwgYWZ0ZXIgYW4gdW5jbGVhbiBzaHV0ZG93
+bi4KLlAKV2hlbiB0aGUgYXJyYXkgaXMgYXNzZW1ibGVkIGJ5IHRoZSBpbml0cmFtZnMgY29kZSwg
+XGZCbWRhZG1cZlIgd2lsbAphdXRvbWF0aWNhbGx5IHN0YXJ0IFxmQm1kbW9uXGZSIGFzIHJlcXVp
+cmVkLiAgVGhpcyBtZWFucyB0aGF0IFxmQm1kbW9uXGZSIG11c3QKYmUgaW5zdGFsbGVkIHdpdGhp
+biB0aGUgaW5pdHJhbWZzIGFuZCB0aGVyZSBtdXN0IGJlIGEgd3JpdGFibGUgZmlsZXN5c3RlbQoo
+dHlwaWNhbGx5IHRtcGZzKSBpbiB3aGljaCBcZkJtZG1vblxmUiBjYW4gY3JlYXRlIGEgUElEIGFu
+ZCBzb2NrZXQgZmlsZS4KLmJyClRoZSBwYXJ0aWN1bGFyIGZpbGVzeXN0ZW0gdG8gdXNlIGlzIGdp
+dmVuIHRvIFxmQm1kbW9uXGZSIGF0IGNvbXBpbGUgdGltZSBhbmQKZGVmYXVsdHMgdG8gXGZCL2Rl
+di8ubWRhZG1cZlIuICBUaGlzIGZpbGVzeXN0ZW0gbXVzdCBwZXJzaXN0IHRocm91Z2ggdG8Kc2h1
+dGRvd24gdGltZS4KLmJyCkFmdGVyIHRoZSBmaW5hbCByb290IGZpbGVzeXN0ZW0gaGFzIGJlIGlu
+c3RhbnRpYXRlZCAodXN1YWxseSB3aXRoClxmQnBpdm90X3Jvb3RcZlIpIFxmQm1kbW9uXGZSIHNo
+b3VsZCBiZSBydW4gd2l0aCBcZkJcLVwtYWxsIFwtXC10YWtlb3ZlclxmUiBzbwp0aGF0IHRoZSBc
+ZkJtZG1vblxmUiBydW5uaW5nIGZyb20gdGhlIGluaXRyYW1mcyBjYW4gYmUgcmVwbGFjZWQgd2l0
+aCBvbmUgcnVubmluZwppbiB0aGUgbWFpbiByb290IHNvIHRoYXQgdGhlIG1lbW9yeSB1c2VkIGJ5
+IHRoZSBpbml0cmFtZnMgY2FuIGJlIHJlbGVhc2VkLgouUApBdCBzaHV0ZG93biB0aW1lLCBcZkJt
+ZG1vblxmUiBzaG91bGQgbm90IGJlIGtpbGxlZCBhbG9uZyB3aXRoIG90aGVyIHByb2Nlc3Nlcy4K
+LmJyCkFsc28sIGFzIGl0IGhvbGRzIGEgZmlsZSAob2YgdHlwZSBzb2NrZXQpIG9wZW4gaW4gXGZC
+L2RldlxmUiAoYnkgZGVmYXVsdCkgaXQKd2lsbCBub3QgYmUgcG9zc2libGUgdG8gdW5tb3VudCBc
+ZkIvZGV2XGZSIGlmIGl0IGlzIG9uIGEgc2VwYXJhdGUgZmlsZXN5c3RlbS4KCgouU0ggRVhBTVBM
+RVMKXGZCbWRtb24gXC1cLWFsbC1hY3RpdmUtYXJyYXlzIFwtXC10YWtlb3ZlclxmUgouUApBbnkg
+XGZCbWRtb25cZlIgd2hpY2ggaXMgY3VycmVudGx5IHJ1bm5pbmcgaXMga2lsbGVkIGFuZCBhIG5l
+dyBpbnN0YW5jZSBpcwpzdGFydGVkLgouYnIKVGhpcyBzaG91bGQgYmUgcnVuIGR1cmluZyBpbiB0
+aGUgYm9vdCBzZXF1ZW5jZSBpZiBhbiBpbml0cmFtZnMgd2FzIHVzZWQsIHNvIHRoYXQKYW55IFxm
+Qm1kbW9uXGZSIHJ1bm5pbmcgZnJvbSB0aGUgaW5pdHJhbWZzIHdpbGwgbm90IGhvbGQgdGhlIGlu
+aXRyYW1mcyBhY3RpdmUuCgoKLlNIIFNFRSBBTFNPCm1kYWRtKDgpLAptZCg0KS4K
+--=_785ecf8bce91d5df913e7d10e93600dd--
+
