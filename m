@@ -1,120 +1,163 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/5] Make OLCE workeable
-Date: Wed, 9 Mar 2011 11:53:12 +1100
-Message-ID: <20110309115312.37a04ad7@notabene.brown>
-References: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to be
+ clean
+Date: Wed, 9 Mar 2011 07:31:14 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A8AEF66@irsmsx503.ger.corp.intel.com>
+References: <20110302132426.24771.99191.stgit@gklab-128-013.igk.intel.com>
+	<20110302132927.24771.39913.stgit@gklab-128-013.igk.intel.com>
+	<20110308160743.35b85f6a@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D17A822DB0@irsmsx503.ger.corp.intel.com>
+ <20110309091417.12db98f3@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110309091417.12db98f3@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 08 Mar 2011 14:24:29 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> This is first part of my comments for your latest changes on devel3-2 regarding reshape and reshape restart.
-> Unfortunately those changes breaks OLCE functionality. This patch series makes OLCE workable (mdadm UT suits 12 and 13 succeed).
 
-That's really strange as the patches all look wrong.  I'll do some testing
-my self and see what I can come up with.
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Tuesday, March 08, 2011 11:14 PM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have to
+> be clean
+> 
+> On Tue, 8 Mar 2011 08:52:40 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+> wrote:
+> 
+> >
+> >
+> > > -----Original Message-----
+> > > From: NeilBrown [mailto:neilb@suse.de]
+> > > Sent: Tuesday, March 08, 2011 6:08 AM
+> > > To: Kwolek, Adam
+> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> > > Neubauer, Wojciech
+> > > Subject: Re: [PATCH 4/9] imsm: FIX: After checkpoint mark array have
+> to
+> > > be clean
+> > >
+> > > On Wed, 02 Mar 2011 14:29:27 +0100 Adam Kwolek
+> <adam.kwolek@intel.com>
+> > > wrote:
+> > >
+> > > > When checkpoint is marked set volume as clean.
+> > > > Reshape on dirty volume cannot be restarted from checkpoint.
+> > > >
+> > > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > > > ---
+> > > >
+> > > >  super-intel.c |    1 +
+> > > >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > > >
+> > > > diff --git a/super-intel.c b/super-intel.c
+> > > > index 11972f3..04e32ae 100644
+> > > > --- a/super-intel.c
+> > > > +++ b/super-intel.c
+> > > > @@ -5218,6 +5218,7 @@ static int imsm_set_array_state(struct
+> > > active_array *a, int consistent)
+> > > >  				    __le32_to_cpu(dev-
+> >vol.curr_migr_unit)) {
+> > > >  					dev->vol.curr_migr_unit =
+> > > >  						__cpu_to_le32(unit);
+> > > > +					dev->vol.dirty = 0;
+> > > >  					super->updates_pending++;
+> > > >  				}
+> > > >  			}
+> > > >
+> > >
+> > > hi Adam,
+> > >  You'll need to explain this one a bit more.
+> > >
+> > >  If the array isn't clean, then it is wrong to mark it as clean.
+> > >  If it is clean, then 'consistent' should be 'true' and it will
+> > >  be marked clean anyway.
+> > >
+> >
+> > This could be true if set_array_state has possibility to execute this
+> code in general migration case.
+> > During reshape after updtate curr_migr_unit set array state exits
+> (super-intel.c: 5225 /return 0/)
+> >
+> > To achieve this it can be changed:
+> > 1. Consistent flag should be == 1 during reshape
+> > monitor.c:387
+> > - a->container->ss->set_array_state(a, a->curr_state <= clean);
+> >
+> > + a->container->ss->set_array_state(a, a->curr_state <= active);
+> 
+> This change doesn't make any sense at all.
+> Whether the array is 'clean' or 'active', it completely independent of
+> whether the array is being reshaped.
+> While it is being reshaped it could sometimes be clean, and sometime
+> be active, and the recorded state should reflect this.
+> Say it is 'clean' (or 'consistent') when it actually isn't would be a
+> lie.
+
+During grow from some point array is always dirty, this can be not true also.
+I'll put focus on enabling assembly dirty array during reshape.
 
 > 
-> Problems:
-> 1. In passing in mdinfo (array.level) raid4 for transition raid0->raid0.
->    This causes problems in takeover
->    a.Raid0 takeover doesn't occur. array.level == reshape.level == 4
->      Resolution: Decision about takeover has to be made based on real md level not info->array.level
-
-But takeover doesn't *need* to occur.
-When we have a RAID0 array and we want to make it grow, we have to 'takeover'
-to RAID4 first.
-But when assembling an array that is in the middle of a growth we assemble
-it as a RAID4 array - so it never was a RAID0 array.  It starts out as
-RAID4.
-
->    b.Decision about backward takeover cannot be always taken by mdadm. mdadm can think that original level is raid4
->      Resolution: use level read from md as orig_level (not from metadata)
-
-I see that is a problem.   We should record '0' as the 'new_level' and
-get mdadm to make use of that information.
-
+> >
+> > Array state is active during reshape
+> >
+> > 2. use consistent flag during reshape for imsm
+> > Super-intel.c: set_array_state()
+> > 	- remove all code for a->curr_action == reshape (around line 5211)
+> > 	- instead removed code add 'goto' to calculating blocks_per_unit
+> at the end of this function
+> >  	   This will allow for mark clear/dirty volume also
 > 
-> 2.On the begin of reshape_array() array structure is read from md (via ioctrl). Md knows nothing about raid4 working level, so spares_needed is wrongly computed
->   Resolution: use info->array.raid_disks instead array.raid_disks to compute  spares_needed.
-
-md certainly should know about RAID4 working level because it is assembled
-as RAID4.... hopefully some testing will show me what you really mean.
-
-> 3.Analyse_changes() delta_parity concept doesn't match information currently metadata reports. Result of this is wrongly computed reshape.after.data_disks field.
->   Resolution: do not use delta_parity, base on information from metadata handle
-
-You cannot just remove delta_parity like that.  It is needed when we start
-a growth.  Maybe it is confusing when we restart a growth - I will look
-in to in.
-
-> 4.Defects/potential defects
->  a.delta_disks should be checked in sysfs_set_array()
-
-No it shouldn't.  If delta_disks is UnSet, then the metadata handler has
-done the wrong thing.
-
->  b.array assembly problem
-> reshape_active flag has to be evaluated. Existing second map doesn't means reshape always (rebuild, initialization)
-
-There is no problem here.  I agree with your second sentence, but that 
-code already does this.
-That first patch in your series makes *no* change to the meaning
-of the code.
-Before the patch it is 
-
-  if (condition) {
-     variable = 1;
-     stuff;
-     ...
-
-After the patch it is
-
-  variable = condition;
-  if (variable) {
-     stuff;
-     ...
-
-
-which has exactly the same effect.
-
-So I haven't applied any of these matches as none of them make any sense to
-me - sorry.
-
-NeilBrown
-
-
-
-> 
-> I've tried to follow your idea in this series. Generally it seems ok (proved by UT). I like putting more array configuration in sysfs_set_array().
-> 
-> Now I'm going to look at patches at the reshape restart point of view.
-> I'll let you know results soon.
-> 
-> BR
-> Adam
+> I like this patch - nice cleanup of the code.  I have applied it,
+> thanks.
 > 
 > 
-> ---
 > 
-> Adam Kwolek (5):
->       FIX: Compute spares_needed basing on metadata info
->       FIX: Remove delta_parity concept
->       FIX: Allow for takeover
->       FIX: Set new raid disks when delta_disks is valid
->       fix: array is reassembled inactive if stopped during resync
+> >
+> > I'll send 2 patch to make this description more clear.
+> >  1. FIX: During reshape array is in active state
+> >  2. imsm: FIX: Mark checkpoint and array state clean during reshape
+> >
+> >
+> > >  Why cannot a reshape of a dirty volume be restarted from a
+> checkpoint?
+> > >  I would think it would continue with the reshape and then when that
+> > >  finished, go back and do the resync.
+> > >
+> > > NeilBrown
+> >
+> > If array is dirty and during reshape is not assembled due to i.e:
+> > super-intel.c:1792 for dirty volume info->resync_start = 0; Code for
+> analyzing migration type is not executed.
 > 
+> I see - that code in super-intel.c::getinfo_super_imsm_volume needs to
+> be
+> fixed.  Maybe just remove the 'else' there
 > 
->  Grow.c        |   22 +++++-----------------
->  super-intel.c |    5 +++--
->  sysfs.c       |    4 +++-
->  3 files changed, 11 insertions(+), 20 deletions(-)
+> 	if (map_to_analyse->map_state == IMSM_T_STATE_UNINITIALIZED ||
+> 	    dev->vol.dirty) {
+> 		info->resync_start = 0;
+> 	} else if (dev->vol.migr_state) {
+>           ^^^^^
+> 
+> Not sure though.
+
+
+I've tried this yesterday at first shot, it is not enough.
+I'll fix it.
+
+Thanks
+Adam
+
+> 
+> NeilBrown
 > 
 
