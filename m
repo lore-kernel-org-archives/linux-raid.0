@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/9] FIX: Block reshaped array monitoring
-Date: Wed, 09 Mar 2011 14:45:45 +0100
-Message-ID: <20110309134545.8939.53720.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/9] FIX: Make expansion counter usable
+Date: Wed, 09 Mar 2011 14:45:54 +0100
+Message-ID: <20110309134554.8939.74177.stgit@gklab-128-013.igk.intel.com>
 References: <20110309134019.8939.15438.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,30 +13,40 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When array under reshape is is assembled it has be disabled from monitoring
-as soon as possible. It can accrue that this is i.e second array in container
-and mdmon is loaded already.
-Lack of blocking monitoring can cause change array state to active,
-and reshape continuation will be not possible.
+Currently whole array geometry is set in sysfs_set_array(),
+so none of disks (even for expansion) should fail during sysfs_add_disk()
+Due to this expansion counter should be used for reshaped array when
+disk slot is bigger than number of disks in array.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ Assemble.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/Assemble.c b/Assemble.c
-index 20c27eb..fe917b2 100644
+index fe917b2..0ffbbc9 100644
 --- a/Assemble.c
 +++ b/Assemble.c
-@@ -1519,6 +1519,9 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		if (sysfs_set_array(content, md_get_version(mdfd)) != 0)
- 			return 1;
- 
-+	if (content->reshape_active)
-+		block_subarray(content);
-+
- 	if (sra)
+@@ -1526,13 +1526,14 @@ int assemble_container_content(struct supertype *st, int mdfd,
  		sysfs_free(sra);
+ 
+ 	for (dev = content->devs; dev; dev = dev->next)
+-		if (sysfs_add_disk(content, dev, 1) == 0)
+-			working++;
+-		else if (errno == EEXIST)
++		if (sysfs_add_disk(content, dev, 1) == 0) {
++			if (dev->disk.raid_disk >= content->array.raid_disks &&
++			    content->reshape_active)
++				expansion++;
++			else
++				working++;
++		} else if (errno == EEXIST)
+ 			preexist++;
+-		else if (dev->disk.raid_disk >= content->array.raid_disks &&
+-			  content->reshape_active)
+-			expansion++;
+ 	if (working == 0)
+ 		return 1;/* Nothing new, don't try to start */
  
 
