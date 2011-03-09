@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/9] FIX: Make expansion counter usable
-Date: Wed, 09 Mar 2011 14:45:54 +0100
-Message-ID: <20110309134554.8939.74177.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/9] imsm: FIX: Do not clean checkpoint for active reshape
+Date: Wed, 09 Mar 2011 14:46:02 +0100
+Message-ID: <20110309134602.8939.42234.stgit@gklab-128-013.igk.intel.com>
 References: <20110309134019.8939.15438.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,40 +13,38 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Currently whole array geometry is set in sysfs_set_array(),
-so none of disks (even for expansion) should fail during sysfs_add_disk()
-Due to this expansion counter should be used for reshaped array when
-disk slot is bigger than number of disks in array.
+Smaller checkpoint can be stored when metadata is not in migration state
+(this means when there is no second map).
+Without this additional condition it can occur that during array start/stop
+sequence checkpoint was roll back to 0.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ super-intel.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index fe917b2..0ffbbc9 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1526,13 +1526,14 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		sysfs_free(sra);
- 
- 	for (dev = content->devs; dev; dev = dev->next)
--		if (sysfs_add_disk(content, dev, 1) == 0)
--			working++;
--		else if (errno == EEXIST)
-+		if (sysfs_add_disk(content, dev, 1) == 0) {
-+			if (dev->disk.raid_disk >= content->array.raid_disks &&
-+			    content->reshape_active)
-+				expansion++;
-+			else
-+				working++;
-+		} else if (errno == EEXIST)
- 			preexist++;
--		else if (dev->disk.raid_disk >= content->array.raid_disks &&
--			  content->reshape_active)
--			expansion++;
- 	if (working == 0)
- 		return 1;/* Nothing new, don't try to start */
+diff --git a/super-intel.c b/super-intel.c
+index cd409e9..4e3de8a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5335,9 +5335,15 @@ mark_checkpoint:
+ 		 */
+ 		if (units32 == units &&
+ 		    __le32_to_cpu(dev->vol.curr_migr_unit) != units32) {
+-			dprintf("imsm: mark checkpoint (%u)\n", units32);
+-			dev->vol.curr_migr_unit = __cpu_to_le32(units32);
+-			super->updates_pending++;
++			struct imsm_map *map2 = get_imsm_map(dev, 1);
++			if ((__le32_to_cpu(dev->vol.curr_migr_unit) < units32)
++			    || (map2 == NULL)) {
++				dprintf("imsm: mark checkpoint (%u)\n",
++					units32);
++				dev->vol.curr_migr_unit =
++					__cpu_to_le32(units32);
++				super->updates_pending++;
++			}
+ 		}
+ 	}
  
 
