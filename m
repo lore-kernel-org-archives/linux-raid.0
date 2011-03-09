@@ -1,70 +1,120 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 02/14] Platform-intel: support for OROM SAS and AHCI
- controller
-Date: Tue, 08 Mar 2011 15:17:37 -0800
-Message-ID: <1299626257.5920.290.camel@dwillia2-linux>
-References: <905EDD02F158D948B186911EB64DB3D17A8AEC8B@irsmsx503.ger.corp.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0/5] Make OLCE workeable
+Date: Wed, 9 Mar 2011 11:53:12 +1100
+Message-ID: <20110309115312.37a04ad7@notabene.brown>
+References: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D17A8AEC8B@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20110308132228.9578.34611.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 2011-03-08 at 07:20 -0800, Labun, Marcin wrote:
-> -static struct imsm_orom imsm_orom;
-> +static struct imsm_orom imsm_orom[SYS_DEV_MAX];
-> +static int populated_orom[SYS_DEV_MAX];
-> +
->  static int scan(const void *start, const void *end, const void *data)
->  {
->  	int offset;
->  	const struct imsm_orom *imsm_mem;
-> +	int dev;
->  	int len = (end - start);
->  	struct pciExpDataStructFormat *ptr= (struct pciExpDataStructFormat *)data;
+On Tue, 08 Mar 2011 14:24:29 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-Why add another parameter to this function?  The scan routine can simply
-look at offset 0x18 right?
- 
-> @@ -187,46 +194,85 @@ static int scan(const void *start, const void *end, const void *data)
->  		(ulong) __le16_to_cpu(ptr->vendorID),
->  		(ulong) __le16_to_cpu(ptr->deviceID));
->  
-> -	if (!((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
-> -	      (__le16_to_cpu(ptr->deviceID) == 0x2822)))
-> +	if ((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
-> +	    (__le16_to_cpu(ptr->deviceID) == 0x2822))
-> +		dev = SYS_DEV_SATA;
-> +	else if ((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
-> +		 (__le16_to_cpu(ptr->deviceID) == 0x1D60))
-> +		dev = SYS_DEV_SAS;
-> +	else
+> This is first part of my comments for your latest changes on devel3-2 regarding reshape and reshape restart.
+> Unfortunately those changes breaks OLCE functionality. This patch series makes OLCE workable (mdadm UT suits 12 and 13 succeed).
 
-Are you sure this list is sufficient?  I don't think we want to get into
-the responsibility of maintaining pci device ids in mdadm.  There are
-many ahci raid devices, and at least 14 other sas device ids that might
-match.  The orom might also be using the device list, i.e. the first id
-in the pci firmware data structure might not match the pci device in the
-system.
+That's really strange as the patches all look wrong.  I'll do some testing
+my self and see what I can come up with.
 
-The driver will always have the latest knowledge of the supported device
-ids so we can always rely on it to identify our raid controller (i.e.
-pci devices with vendor id == 0x8086 and driven by isci or ahci)
+> 
+> Problems:
+> 1. In passing in mdinfo (array.level) raid4 for transition raid0->raid0.
+>    This causes problems in takeover
+>    a.Raid0 takeover doesn't occur. array.level == reshape.level == 4
+>      Resolution: Decision about takeover has to be made based on real md level not info->array.level
 
-I recently submitted a patch to update the kernel's probe_roms interface
-[1].  It might be cleaner and more future-proof if find_imsm_orom() took
-a parameter as to which orom it should find, like pci_map_biosrom.  At
-alloc_super() time we would just find all the relevant oroms based on
-what devices are in the system, rather than blindly scanning option-rom
-space and comparing against a device id list that may get out of date.
+But takeover doesn't *need* to occur.
+When we have a RAID0 array and we want to make it grow, we have to 'takeover'
+to RAID4 first.
+But when assembling an array that is in the middle of a growth we assemble
+it as a RAID4 array - so it never was a RAID0 array.  It starts out as
+RAID4.
 
---
-Dan
+>    b.Decision about backward takeover cannot be always taken by mdadm. mdadm can think that original level is raid4
+>      Resolution: use level read from md as orig_level (not from metadata)
 
-[1]: http://marc.info/?l=linux-kernel&m=129960935312751&w=2
+I see that is a problem.   We should record '0' as the 'new_level' and
+get mdadm to make use of that information.
 
+> 
+> 2.On the begin of reshape_array() array structure is read from md (via ioctrl). Md knows nothing about raid4 working level, so spares_needed is wrongly computed
+>   Resolution: use info->array.raid_disks instead array.raid_disks to compute  spares_needed.
+
+md certainly should know about RAID4 working level because it is assembled
+as RAID4.... hopefully some testing will show me what you really mean.
+
+> 3.Analyse_changes() delta_parity concept doesn't match information currently metadata reports. Result of this is wrongly computed reshape.after.data_disks field.
+>   Resolution: do not use delta_parity, base on information from metadata handle
+
+You cannot just remove delta_parity like that.  It is needed when we start
+a growth.  Maybe it is confusing when we restart a growth - I will look
+in to in.
+
+> 4.Defects/potential defects
+>  a.delta_disks should be checked in sysfs_set_array()
+
+No it shouldn't.  If delta_disks is UnSet, then the metadata handler has
+done the wrong thing.
+
+>  b.array assembly problem
+> reshape_active flag has to be evaluated. Existing second map doesn't means reshape always (rebuild, initialization)
+
+There is no problem here.  I agree with your second sentence, but that 
+code already does this.
+That first patch in your series makes *no* change to the meaning
+of the code.
+Before the patch it is 
+
+  if (condition) {
+     variable = 1;
+     stuff;
+     ...
+
+After the patch it is
+
+  variable = condition;
+  if (variable) {
+     stuff;
+     ...
+
+
+which has exactly the same effect.
+
+So I haven't applied any of these matches as none of them make any sense to
+me - sorry.
+
+NeilBrown
+
+
+
+> 
+> I've tried to follow your idea in this series. Generally it seems ok (proved by UT). I like putting more array configuration in sysfs_set_array().
+> 
+> Now I'm going to look at patches at the reshape restart point of view.
+> I'll let you know results soon.
+> 
+> BR
+> Adam
+> 
+> 
+> ---
+> 
+> Adam Kwolek (5):
+>       FIX: Compute spares_needed basing on metadata info
+>       FIX: Remove delta_parity concept
+>       FIX: Allow for takeover
+>       FIX: Set new raid disks when delta_disks is valid
+>       fix: array is reassembled inactive if stopped during resync
+> 
+> 
+>  Grow.c        |   22 +++++-----------------
+>  super-intel.c |    5 +++--
+>  sysfs.c       |    4 +++-
+>  3 files changed, 11 insertions(+), 20 deletions(-)
+> 
 
