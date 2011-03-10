@@ -1,62 +1,88 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] FIX: Unfreeze array on success only
-Date: Thu, 10 Mar 2011 08:30:42 +0100
-Message-ID: <20110310073041.6824.46696.stgit@gklab-128-013.igk.intel.com>
+From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+Subject: RE: [PATCH] Warn the user about too small array size
+Date: Thu, 10 Mar 2011 09:40:33 +0000
+Message-ID: <BE2BFE91933D1B4089447C64486040806AB7C11F@irsmsx503.ger.corp.intel.com>
+References: <20110228050043.23112.65994.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110228050043.23112.65994.stgit@gklab-128-111.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-Unfreeze array on success only.
-rv is initialized by restart variable so we have 2 cases.
-1. regular reshape start
-	rv == restart == 0
-   this means that real error (returned by reshape) can cause leaving container frozen
-   If array is not touched by reshape it can be unfrozen
-2. During reshape restart even untouched array under reshape is left unfrozen,
-   If reshape is started do not unfreeze array on error also.
-
-This allows user for array repair action
-(mdmon will not change array state).
-
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
-
- Grow.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index d596c2d..fa6f50a 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2175,6 +2175,7 @@ int reshape_container(char *container, char *devname,
- 		      int quiet, int restart)
- {
- 	struct mdinfo *cc = NULL;
-+	int rv = restart;
- 
- 	/* component_size is not meaningful for a container,
- 	 * so pass '-1' meaning 'no change'
-@@ -2219,7 +2220,6 @@ int reshape_container(char *container, char *devname,
- 		 * will take over the reshape.
- 		 */
- 		struct mdinfo *content;
--		int rv;
- 		int fd;
- 		struct mdstat_ent *mdstat;
- 		char *adev;
-@@ -2262,7 +2262,8 @@ int reshape_container(char *container, char *devname,
- 		if (rv)
- 			break;
- 	}
--	unfreeze(st);
-+	if (!rv)
-+		unfreeze(st);
- 	sysfs_free(cc);
- 	exit(0);
- }
-
+TmVpbCwNCg0KQ291bGQgeW91IGluY2x1ZGUgYWxzbyB0aGlzIHBhdGNoLCBwbGVhc2UuDQoNClJl
+Z2FyZHMNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlk
+LW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIu
+a2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEtyenlzenRvZiBXb2pjaWsNCj4gU2VudDogTW9uZGF5
+LCBGZWJydWFyeSAyOCwgMjAxMSA2OjAxIEFNDQo+IFRvOiBuZWlsYkBzdXNlLmRlDQo+IENjOiBs
+aW51eC1yYWlkQHZnZXIua2VybmVsLm9yZzsgTmV1YmF1ZXIsIFdvamNpZWNoOyBLd29sZWssIEFk
+YW07DQo+IFdpbGxpYW1zLCBEYW4gSjsgQ2llY2hhbm93c2tpLCBFZA0KPiBTdWJqZWN0OiBbUEFU
+Q0hdIFdhcm4gdGhlIHVzZXIgYWJvdXQgdG9vIHNtYWxsIGFycmF5IHNpemUNCj4gDQo+IElmIHNp
+bmdsZS1kaXNrIFJBSUQwIG9yIFJBSUQxIGFycmF5IGlzIGNyZWF0ZWQsIHVzZXIgbWF5IHByZXNl
+cnZlIGRhdGENCj4gb24NCj4gZGlzay4gSWYgYXJyYXkgZ2l2ZW4gc2l6ZSBjb3ZlcnMgYWxsIHBh
+cnRpdGlvbnMgb24gZGlzaywgYWxsIGRhdGEgd2lsbA0KPiBiZQ0KPiBhdmFpbGFibGUgb24gY3Jl
+YXRlZCBhcnJheS4gSWYgYXJyYXkgc2l6ZSBpcyB0b28gc21hbGwgKG5vdCBjb3ZlcnMNCj4gYWxs
+IHBhcnRpdGlvbnMpLCBkYXRhIHdpbGwgYmUgbm90IGFjY2Vzc2libGUuDQo+IFRoaXMgcGF0Y2gg
+aW50cm9kdWNlcyB3YXJuaW5nIG1lc3NhZ2UgZHVyaW5nIGFycmF5IGNyZWF0aW9uIGlmIGdpdmVu
+DQo+IHNpemUNCj4gaXMgdG9vIHNtYWxsLiBVc2VyIG1heSBpbnRlcnJ1cHQgY3JlYXRpb24gcHJv
+Y2VzcyB0byBhdm9pZCBkYXRhIGxvc3MuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBLcnp5c3p0b2Yg
+V29qY2lrIDxrcnp5c3p0b2Yud29qY2lrQGludGVsLmNvbT4NCj4gLS0tDQo+ICBDcmVhdGUuYyB8
+ICAgIDcgKysrLS0tLQ0KPiAgbWRhZG0uaCAgfCAgICAyICstDQo+ICB1dGlsLmMgICB8ICAgIDkg
+KysrKysrKystDQo+ICAzIGZpbGVzIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKyksIDYgZGVsZXRp
+b25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvQ3JlYXRlLmMgYi9DcmVhdGUuYw0KPiBpbmRleCBi
+YmQyNWU1Li5mZjE4ZmY4IDEwMDY0NA0KPiAtLS0gYS9DcmVhdGUuYw0KPiArKysgYi9DcmVhdGUu
+Yw0KPiBAQCAtMTIxLDcgKzEyMSw2IEBAIGludCBDcmVhdGUoc3RydWN0IHN1cGVydHlwZSAqc3Qs
+IGNoYXIgKm1kZGV2LA0KPiAgCXVuc2lnbmVkIGxvbmcgbG9uZyBuZXdzaXplOw0KPiANCj4gIAlp
+bnQgbWFqb3JfbnVtID0gQklUTUFQX01BSk9SX0hJOw0KPiAtDQo+ICAJbWVtc2V0KCZpbmZvLCAw
+LCBzaXplb2YoaW5mbykpOw0KPiAgCWlmIChsZXZlbCA9PSBVblNldCAmJiBzdCAmJiBzdC0+c3Mt
+PmRlZmF1bHRfZ2VvbWV0cnkpDQo+ICAJCXN0LT5zcy0+ZGVmYXVsdF9nZW9tZXRyeShzdCwgJmxl
+dmVsLCBOVUxMLCBOVUxMKTsNCj4gQEAgLTM4MCwxNCArMzc5LDE0IEBAIGludCBDcmVhdGUoc3Ry
+dWN0IHN1cGVydHlwZSAqc3QsIGNoYXIgKm1kZGV2LA0KPiAgCQkJaWYgKHN0cmNtcChzdC0+c3Mt
+Pm5hbWUsICIxLngiKSA9PSAwICYmDQo+ICAJCQkgICAgc3QtPm1pbm9yX3ZlcnNpb24gPj0gMSkN
+Cj4gIAkJCQkvKiBtZXRhZGF0YSBhdCBmcm9udCAqLw0KPiAtCQkJCXdhcm4gfD0gY2hlY2tfcGFy
+dGl0aW9ucyhmZCwgZG5hbWUsIDApOw0KPiArCQkJCXdhcm4gfD0gY2hlY2tfcGFydGl0aW9ucyhm
+ZCwgZG5hbWUsIDAsIDApOw0KPiAgCQkJZWxzZSBpZiAobGV2ZWwgPT0gMSB8fCBsZXZlbCA9PSBM
+RVZFTF9DT05UQUlORVINCj4gIAkJCQkgICAgfHwgKGxldmVsID09IDAgJiYgcmFpZGRpc2tzID09
+IDEpKQ0KPiAgCQkJCS8qIHBhcnRpdGlvbnMgY291bGQgYmUgbWVhbmluZ2Z1bCAqLw0KPiAtCQkJ
+CXdhcm4gfD0gY2hlY2tfcGFydGl0aW9ucyhmZCwgZG5hbWUsDQo+IGZyZWVzaXplKjIpOw0KPiAr
+CQkJCXdhcm4gfD0gY2hlY2tfcGFydGl0aW9ucyhmZCwgZG5hbWUsIGZyZWVzaXplKjIsDQo+IHNp
+emUqMik7DQo+ICAJCQllbHNlDQo+ICAJCQkJLyogcGFydGl0aW9ucyBjYW5ub3QgYmUgbWVhbmlu
+Z2Z1bCAqLw0KPiAtCQkJCXdhcm4gfD0gY2hlY2tfcGFydGl0aW9ucyhmZCwgZG5hbWUsIDApOw0K
+PiArCQkJCXdhcm4gfD0gY2hlY2tfcGFydGl0aW9ucyhmZCwgZG5hbWUsIDAsIDApOw0KPiAgCQkJ
+aWYgKHN0cmNtcChzdC0+c3MtPm5hbWUsICIxLngiKSA9PSAwICYmDQo+ICAJCQkgICAgc3QtPm1p
+bm9yX3ZlcnNpb24gPj0gMSAmJg0KPiAgCQkJICAgIGRpZF9kZWZhdWx0ICYmDQo+IGRpZmYgLS1n
+aXQgYS9tZGFkbS5oIGIvbWRhZG0uaA0KPiBpbmRleCBhMWJlODU2Li40NzZhMmJlIDEwMDY0NA0K
+PiAtLS0gYS9tZGFkbS5oDQo+ICsrKyBiL21kYWRtLmgNCj4gQEAgLTEwNzgsNyArMTA3OCw3IEBA
+IGV4dGVybiBpbnQgcGFyc2VfbGF5b3V0X2ZhdWx0eShjaGFyICpsYXlvdXQpOw0KPiAgZXh0ZXJu
+IGludCBjaGVja19leHQyKGludCBmZCwgY2hhciAqbmFtZSk7DQo+ICBleHRlcm4gaW50IGNoZWNr
+X3JlaXNlcihpbnQgZmQsIGNoYXIgKm5hbWUpOw0KPiAgZXh0ZXJuIGludCBjaGVja19yYWlkKGlu
+dCBmZCwgY2hhciAqbmFtZSk7DQo+IC1leHRlcm4gaW50IGNoZWNrX3BhcnRpdGlvbnMoaW50IGZk
+LCBjaGFyICpkbmFtZSwgdW5zaWduZWQgbG9uZyBsb25nDQo+IGZyZWVzaXplKTsNCj4gK2V4dGVy
+biBpbnQgY2hlY2tfcGFydGl0aW9ucyhpbnQgZmQsIGNoYXIgKmRuYW1lLCB1bnNpZ25lZCBsb25n
+IGxvbmcNCj4gZnJlZXNpemUsIHVuc2lnbmVkIGxvbmcgbG9uZyBzaXplKTsNCj4gDQo+ICBleHRl
+cm4gaW50IGdldF9tZHBfbWFqb3Iodm9pZCk7DQo+ICBleHRlcm4gaW50IGRldl9vcGVuKGNoYXIg
+KmRldiwgaW50IGZsYWdzKTsNCj4gZGlmZiAtLWdpdCBhL3V0aWwuYyBiL3V0aWwuYw0KPiBpbmRl
+eCA4N2MyM2RjLi4wZjcyYjBlIDEwMDY0NA0KPiAtLS0gYS91dGlsLmMNCj4gKysrIGIvdXRpbC5j
+DQo+IEBAIC0xMzcwLDcgKzEzNzAsOCBAQCBzdGF0aWMgaW50IGdldF9sYXN0X3BhcnRpdGlvbl9l
+bmQoaW50IGZkLA0KPiB1bnNpZ25lZCBsb25nIGxvbmcgKmVuZG9mcGFydCkNCj4gIAlyZXR1cm4g
+cmV0dmFsOw0KPiAgfQ0KPiANCj4gLWludCBjaGVja19wYXJ0aXRpb25zKGludCBmZCwgY2hhciAq
+ZG5hbWUsIHVuc2lnbmVkIGxvbmcgbG9uZyBmcmVlc2l6ZSkNCj4gK2ludCBjaGVja19wYXJ0aXRp
+b25zKGludCBmZCwgY2hhciAqZG5hbWUsIHVuc2lnbmVkIGxvbmcgbG9uZyBmcmVlc2l6ZSwNCj4g
+KwkJCXVuc2lnbmVkIGxvbmcgbG9uZyBzaXplKQ0KPiAgew0KPiAgCS8qDQo+ICAJICogQ2hlY2sg
+d2hlcmUgdGhlIGxhc3QgcGFydGl0aW9uIGVuZHMNCj4gQEAgLTEzOTMsNiArMTM5NCwxMiBAQCBp
+bnQgY2hlY2tfcGFydGl0aW9ucyhpbnQgZmQsIGNoYXIgKmRuYW1lLA0KPiB1bnNpZ25lZCBsb25n
+IGxvbmcgZnJlZXNpemUpDQo+ICAJCQkJTmFtZSAiOiBtZXRhZGF0YSB3aWxsIG92ZXItd3JpdGUg
+bGFzdCBwYXJ0aXRpb24NCj4gb24gJXMuXG4iLA0KPiAgCQkJCWRuYW1lKTsNCj4gIAkJCXJldHVy
+biAxOw0KPiArCQl9IGVsc2UgaWYgKHNpemUgJiYgZW5kb2ZwYXJ0ID4gc2l6ZSkgew0KPiArCQkJ
+LyogcGFydGl0aW9ucyB3aWxsIGJlIHRydW5jYXRlZCBpbiBuZXcgZGV2aWNlICovDQo+ICsJCQlm
+cHJpbnRmKHN0ZGVyciwNCj4gKwkJCQlOYW1lICI6IGFycmF5IHNpemUgaXMgdG9vIHNtYWxsIHRv
+IGNvdmVyIGFsbA0KPiBwYXJ0aXRpb25zIG9uICVzLlxuIiwNCj4gKwkJCQlkbmFtZSk7DQo+ICsJ
+CQlyZXR1cm4gMTsNCj4gIAkJfQ0KPiAgCX0NCj4gIAlyZXR1cm4gMDsNCj4gDQo+IC0tDQo+IFRv
+IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBs
+aW51eC1yYWlkIg0KPiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZn
+ZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJu
+ZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
