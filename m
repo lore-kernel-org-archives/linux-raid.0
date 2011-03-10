@@ -1,76 +1,62 @@
-From: Albert Pauw <albert.pauw@gmail.com>
-Subject: More ddf container woes
-Date: Thu, 10 Mar 2011 09:34:53 +0100
-Message-ID: <4D788D2D.80706@gmail.com>
-References: <4D5FA5C4.8030803@gmail.com>	<4D63688E.5030501@gmail.com>	<20110223171712.09509f9e@notabene.brown>	<4D67ECA2.2020201@gmail.com> <20110303093136.586df7e7@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] FIX: Unfreeze array on success only
+Date: Thu, 10 Mar 2011 08:30:42 +0100
+Message-ID: <20110310073041.6824.46696.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110303093136.586df7e7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-  Hi Neil,
+Unfreeze array on success only.
+rv is initialized by restart variable so we have 2 cases.
+1. regular reshape start
+	rv == restart == 0
+   this means that real error (returned by reshape) can cause leaving container frozen
+   If array is not touched by reshape it can be unfrozen
+2. During reshape restart even untouched array under reshape is left unfrozen,
+   If reshape is started do not unfreeze array on error also.
 
-I found some more trouble with the ddf code, separate from the stuff I 
-mentioned before (which is still present in the version I used below).
+This allows user for array repair action
+(mdmon will not change array state).
 
-Here's what I did and found:
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-Note: Updated mdadm from the git repository up to and including the 
-commit "Manage:  be more careful about --add attempts."
+ Grow.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Used six disks, sdb - sdg out of which I created a 5-disk container, 
-leaving one disk unused for the moment:
-
-mdadm -C /dev/md127 -l container -e ddf -n 5 /dev/sd[b-f]
-
-Created two RAID sets in this container:
-
-mdadm -C /dev/md0 -l 1 -n 2 /dev/md127
-mdadm -C /dev/md1 -l 5 -n 3 /dev/md127
-
-Note: At this moment, only one mdmon is running (mdmon md127)
-
-After finishing creating both RAID sets, I fail two disks, one in each 
-RAID set:
-
-mdadm -f /dev/md0 /dev/sdb
-
-mdadm -f /dev/md1 /dev/sdd
-
-The first failed disk (sdb) is automatically removed from /dev/md0, but 
-oddly enough the disk stays marked as
-"active/Online" in the "mdadm -E /dev/md127" output, the second failed 
-disk (sdd) gets marked [F] in the RAID 5
-array, but NOT removed, only when I do a
-
-mdmon --all
-
-the failed disk in /dev/md1 is removed, this second failed disk IS 
-marked "Failed" in the "mdadm -E output".
-
-Note: Checking on the RAID arrays using "mdadm -D" they are both marked 
-as "clean, degraded".
-
-I now add a new empty clean disk (/dev/sdg) to the container, after 
-which md1 (the RAID 5 set) is immediately starting to rebuild.
-The RAID 1 set (md0), however, is set to "resync=DELAYED", very odd, 
-because I only added one disk.
-
-Looking at the output of /proc/mdstat i see that disk sdg (the new 
-spare) is actually added to both RAID
-arrays, and after finishing the rebuild of md1 the other RAID set (md0) 
-is also rebuild, using the SAME spare disk (sdg).
-
-
-Albert
-
-
-
-
-
+diff --git a/Grow.c b/Grow.c
+index d596c2d..fa6f50a 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2175,6 +2175,7 @@ int reshape_container(char *container, char *devname,
+ 		      int quiet, int restart)
+ {
+ 	struct mdinfo *cc = NULL;
++	int rv = restart;
+ 
+ 	/* component_size is not meaningful for a container,
+ 	 * so pass '-1' meaning 'no change'
+@@ -2219,7 +2220,6 @@ int reshape_container(char *container, char *devname,
+ 		 * will take over the reshape.
+ 		 */
+ 		struct mdinfo *content;
+-		int rv;
+ 		int fd;
+ 		struct mdstat_ent *mdstat;
+ 		char *adev;
+@@ -2262,7 +2262,8 @@ int reshape_container(char *container, char *devname,
+ 		if (rv)
+ 			break;
+ 	}
+-	unfreeze(st);
++	if (!rv)
++		unfreeze(st);
+ 	sysfs_free(cc);
+ 	exit(0);
+ }
 
