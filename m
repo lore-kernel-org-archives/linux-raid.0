@@ -1,62 +1,70 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 9/9] imsm : FIX: Assemble dirty array when reshape is in
- progress
-Date: Thu, 10 Mar 2011 11:39:26 +1100
-Message-ID: <20110310113926.1c85810b@notabene.brown>
-References: <20110309134019.8939.15438.stgit@gklab-128-013.igk.intel.com>
-	<20110309134642.8939.6587.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 00/14] OROM/EFI support for Intel SAS and AHCI
+ controllers in IMSM
+Date: Thu, 10 Mar 2011 11:55:06 +1100
+Message-ID: <20110310115506.5cf6616d@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D17A8AEC88@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110309134642.8939.6587.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D17A8AEC88@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 09 Mar 2011 14:46:42 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Tue, 8 Mar 2011 15:20:20 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+wrote:
 
-> During reshape for dirty volumes reshape_progress has to be calculated also.
-> To keep the same logic for array creation:
-> not setting info->resync_start = MaxSector when first condition is true,
-> resync_start is initialized by MaxSector to allow proper array initialization.
+> >From 8851572a406e938f50466a98405b10529048e766 Mon Sep 17 00:00:00 2001
+> From: Marcin Labun <marcin.labun@intel.com>
+> Date: Tue, 8 Mar 2011 15:24:09 +0100
+> Subject: [PATCH 00/14] OROM/EFI support for Intel SAS and AHCI controllers in IMSM
 > 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  super-intel.c |    7 ++++---
->  1 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 4e3de8a..38756e2 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1820,10 +1820,12 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  	info->recovery_start = MaxSector;
->  
->  	info->reshape_progress = 0;
-> +	info->resync_start = MaxSector;
->  	if (map_to_analyse->map_state == IMSM_T_STATE_UNINITIALIZED ||
->  	    dev->vol.dirty) {
->  		info->resync_start = 0;
-> -	} else if (dev->vol.migr_state) {
-> +	}
-> +	if (dev->vol.migr_state) {
->  		switch (migr_type(dev)) {
->  		case MIGR_REPAIR:
->  		case MIGR_INIT: {
-> @@ -1868,8 +1870,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  			/* we are not dirty, so... */
->  			info->resync_start = MaxSector;
->  		}
-> -	} else
-> -		info->resync_start = MaxSector;
-> +	}
->  
->  	strncpy(info->name, (char *) dev->volume, MAX_RAID_SERIAL_LEN);
->  	info->name[MAX_RAID_SERIAL_LEN] = 0;
+> IMSM metadata supports retrieving RAID capabilities for:
+> - Intel SAS controller with Legacy OROM
+> - Intel SAS controller with EFI
+> - Intel AHCI controller with Legacy OROM
+> - AHCI controller with EFI
+> IMSM Metadata handlers constrain RAID configurations to those supported EFI/OROM for Intel AHCI or SAS controller.
 
-Applied, thanks.
+I have applied all of these - though with some little fixes so that
+it compiled correctly after each commit.
 
+I admit that I don't understand much of it so I didn't review it closely.
+Hopefully internal review (e.g. from Dan) is sufficient.
+
+Thanks,
 NeilBrown
+
+
+> 
+> 
+> Marcin Labun (11):
+>   probe_roms: allow to probe expansion ROMs using vendor and device id.
+>   Platform-intel: support for OROM SAS and AHCI controller
+>   imsm: remove unused parameters in function attach_hba_to_super
+>   imsm: detail_platform_imsm displays AHCI and SAS controller
+>     information
+>   imsm: do not publish OROM/EFI unsupported arrays
+>   imsm: print-out error message when volume validation fails
+>   imsm: add maximum number of disk validation in RAID array
+>   imsm: verify that component disks are attached to the same type of
+>     HBA
+>   imsm: move code for retrieving HBA to a function
+>   imsm: introduce SAS controller support in imsm metadata handler
+>   platform_intel: support for OROM OEM capabilities
+> 
+> Przemyslaw Czarnowski (3):
+>   update of imsm_orom structure
+>   Some guid manipulation utilities has been added.
+>   read platform capabilities from EFI
+> 
+>  platform-intel.c |  221 ++++++++++++++++++++++++++++++-----
+>  platform-intel.h |   39 ++++++-
+>  probe_roms.c     |   29 ++++-
+>  probe_roms.h     |    2 +-
+>  super-intel.c    |  339 +++++++++++++++++++++++++++++++++++++-----------------
+>  5 files changed, 488 insertions(+), 142 deletions(-)
+
