@@ -1,59 +1,80 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/9] FIX: Make expansion counter usable
-Date: Thu, 10 Mar 2011 11:28:30 +1100
-Message-ID: <20110310112830.7d292125@notabene.brown>
+Subject: Re: [PATCH 4/9] imsm: FIX: Do not clean checkpoint for active
+ reshape
+Date: Thu, 10 Mar 2011 11:33:40 +1100
+Message-ID: <20110310113340.5ab9057e@notabene.brown>
 References: <20110309134019.8939.15438.stgit@gklab-128-013.igk.intel.com>
-	<20110309134554.8939.74177.stgit@gklab-128-013.igk.intel.com>
+	<20110309134602.8939.42234.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110309134554.8939.74177.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110309134602.8939.42234.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 09 Mar 2011 14:45:54 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Wed, 09 Mar 2011 14:46:02 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Currently whole array geometry is set in sysfs_set_array(),
-> so none of disks (even for expansion) should fail during sysfs_add_disk()
-> Due to this expansion counter should be used for reshaped array when
-> disk slot is bigger than number of disks in array.
+> Smaller checkpoint can be stored when metadata is not in migration state
+> (this means when there is no second map).
+> Without this additional condition it can occur that during array start/stop
+> sequence checkpoint was roll back to 0.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  Assemble.c |   13 +++++++------
->  1 files changed, 7 insertions(+), 6 deletions(-)
+>  super-intel.c |   12 +++++++++---
+>  1 files changed, 9 insertions(+), 3 deletions(-)
 > 
-> diff --git a/Assemble.c b/Assemble.c
-> index fe917b2..0ffbbc9 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
-> @@ -1526,13 +1526,14 @@ int assemble_container_content(struct supertype *st, int mdfd,
->  		sysfs_free(sra);
->  
->  	for (dev = content->devs; dev; dev = dev->next)
-> -		if (sysfs_add_disk(content, dev, 1) == 0)
-> -			working++;
-> -		else if (errno == EEXIST)
-> +		if (sysfs_add_disk(content, dev, 1) == 0) {
-> +			if (dev->disk.raid_disk >= content->array.raid_disks &&
-> +			    content->reshape_active)
-> +				expansion++;
-> +			else
-> +				working++;
-> +		} else if (errno == EEXIST)
->  			preexist++;
-> -		else if (dev->disk.raid_disk >= content->array.raid_disks &&
-> -			  content->reshape_active)
-> -			expansion++;
->  	if (working == 0)
->  		return 1;/* Nothing new, don't try to start */
+> diff --git a/super-intel.c b/super-intel.c
+> index cd409e9..4e3de8a 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5335,9 +5335,15 @@ mark_checkpoint:
+>  		 */
+>  		if (units32 == units &&
+>  		    __le32_to_cpu(dev->vol.curr_migr_unit) != units32) {
+> -			dprintf("imsm: mark checkpoint (%u)\n", units32);
+> -			dev->vol.curr_migr_unit = __cpu_to_le32(units32);
+> -			super->updates_pending++;
+> +			struct imsm_map *map2 = get_imsm_map(dev, 1);
+> +			if ((__le32_to_cpu(dev->vol.curr_migr_unit) < units32)
+> +			    || (map2 == NULL)) {
+> +				dprintf("imsm: mark checkpoint (%u)\n",
+> +					units32);
+> +				dev->vol.curr_migr_unit =
+> +					__cpu_to_le32(units32);
+> +				super->updates_pending++;
+> +			}
+>  		}
+>  	}
 >  
 > 
 
-Applied, thanks.
+Not applied.
+
+I don't really understand the change you are making here.
+
+As it seems to me that:
+  - before the patch, we only update the 'curr_migr_unit' when
+    units32 is different
+  - after the patch, we only update it if units32 is bigger, or if
+    map2==NULL (meaning this isn't a migration?).
+
+So when would units32 be smaller??  What is the important case that this
+fixes?
+
+From the comment, it seems to be to avoid 'roll back to 0'.   I don't see
+how it does that, and I don't see why that is a problem.
+
+If some reshape has happened but curr_migr_unit is 0, that just means
+that we need to replay the backed-up data and set curr_migr_unit
+accordingly (or reflect that the backed-up data has been migrated).
+So after Grow_restart has run, curr_migr_unit should never be zero.
+You will need to get update_super_imsm to understand '_reshape_progress'
+for this to work properly.
 
 NeilBrown
+
