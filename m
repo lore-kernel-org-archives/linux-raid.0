@@ -1,115 +1,76 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: polishing up mdadm manpages: mdassemble(8), mdmon(8)
-Date: Thu, 10 Mar 2011 16:18:27 +1100
-Message-ID: <20110310161827.6df62c7a@notabene.brown>
-References: <daeaad7c9ff2fa76529ad5b58994ba3e@imap.dd24.net>
+From: Albert Pauw <albert.pauw@gmail.com>
+Subject: More ddf container woes
+Date: Thu, 10 Mar 2011 09:34:53 +0100
+Message-ID: <4D788D2D.80706@gmail.com>
+References: <4D5FA5C4.8030803@gmail.com>	<4D63688E.5030501@gmail.com>	<20110223171712.09509f9e@notabene.brown>	<4D67ECA2.2020201@gmail.com> <20110303093136.586df7e7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <daeaad7c9ff2fa76529ad5b58994ba3e@imap.dd24.net>
+In-Reply-To: <20110303093136.586df7e7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Anton Mitterer <calestyo@scientia.net>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 08 Mar 2011 03:08:11 +0000 Christoph Anton Mitterer
-<calestyo@scientia.net> wrote:
+  Hi Neil,
 
-> Hi.
-> 
-> Recently I've started to read into MD/mdadm and what started then as
-> maintaining a quilt patch with several typos and so ended up in a somewhat
-> "bigger" rework.
+I found some more trouble with the ddf code, separate from the stuff I 
+mentioned before (which is still present in the version I used below).
 
-Thanks for putting this effort in...
-However just getting a new copy of the file isn't much use.
-Patches are really required.  Preferably several patches if there
-are several different sorts of changes, as I might want to accept 
-some but not others.
+Here's what I did and found:
 
-Of course I could create the patch my - it looks like you 
-start from the verison in the 3.2 release - correct?
-> 
-> - The text iself is (hopefully) largely the same, perhaps apart from some
-> wording, or ordering.
-> - More consistent usage of markup:
->   -bold for programs, options, files, manpage references (except in the
-> SEE ALSO section) and text the is somehow set or "entered"
->   -italitcs (which is typically displayed as underlined) for any
-> non-terminals.
+Note: Updated mdadm from the git repository up to and including the 
+commit "Manage:  be more careful about --add attempts."
 
-Being consistent is good, but using \fB \fI etc is not.
-Convention (as I understand it) prefers .B .I etc.
-There are a variety of programs around which convert man pages to
-other formats and I trust the ".B" tags to be handled more reliably.
+Used six disks, sdb - sdg out of which I created a 5-disk container, 
+leaving one disk unused for the moment:
 
+mdadm -C /dev/md127 -l container -e ddf -n 5 /dev/sd[b-f]
 
-> - Consistent writing of words like Linux, RAID, program names (which were
-> previously off mixed) apart from those places where they're options (e.g.
-> raid1 is still raid1 and not RAID1 for the --level option).
+Created two RAID sets in this container:
 
-A patch which just made a change like this would certainly be appreciated.
+mdadm -C /dev/md0 -l 1 -n 2 /dev/md127
+mdadm -C /dev/md1 -l 5 -n 3 /dev/md127
 
-> - Completely rewritten the formatting of the manpage (the dozens of .B, .I
-> ... just to format one word made the source file really unreadable IMHO).
-> 
-> In mdmon(8) there were some places where changed things that could
-> possibly changing the semantics:
-> - mdadm --remove <container> <victim>   =>   mdadm --remove CONTAINER
-> DEVICE
+Note: At this moment, only one mdmon is running (mdmon md127)
 
-That looks OK.
+After finishing creating both RAID sets, I fail two disks, one in each 
+RAID set:
 
-> - with  a metadata version string "external:<metadata name>"   =>   with a
-> metadata format string "external:format"
-> - .pid and .sock files   =>   PID and socket files
-> 
+mdadm -f /dev/md0 /dev/sdb
 
-Maybe... The ".pid" and ".sock" are file name extensions.  If your change
-were made (which quite possibly improves readability) it might then me
-necessary to say something explicit about extensions.
+mdadm -f /dev/md1 /dev/sdd
 
-> I wasn't sure about the following so didn't change it:
-> - <disk>/state - faulty
->   Is <disk> a non-terminal for a device (and thus should I replace it with
-> an italics "device"?
+The first failed disk (sdb) is automatically removed from /dev/md0, but 
+oddly enough the disk stays marked as
+"active/Online" in the "mdadm -E /dev/md127" output, the second failed 
+disk (sdd) gets marked [F] in the RAID 5
+array, but NOT removed, only when I do a
 
-<disk> here is a non-terminal.  Actually it probably should be
+mdmon --all
 
-  rdNN/state
-where NN is the slot number in the array.
+the failed disk in /dev/md1 is removed, this second failed disk IS 
+marked "Failed" in the "mdadm -E output".
 
-> - (for example, the metadata version has been set to "external:-dev/md127"
-> instead of "external:/dev/md127")
->   Is the "version" correct here?
+Note: Checking on the RAID arrays using "mdadm -D" they are both marked 
+as "clean, degraded".
 
-It should be "metadata_version" which is a literal file name.
+I now add a new empty clean disk (/dev/sdg) to the container, after 
+which md1 (the RAID 5 set) is immediately starting to rebuild.
+The RAID 1 set (md0), however, is set to "resync=DELAYED", very odd, 
+because I only added one disk.
 
-> 
-> 
-> I've also started to rewrite md(4), mdadm(8) and mdadm.conf(5) manpges...
-> - unifying many further writings of words like "read-only/readonly",
-> "read-write/readwrite", etc. pp.
-> - etc.
-> but I'm not sure if/when I can finish them.
-
-If you have discrete patches for each change, then feel free to send what
-you manage, whether it is finished or not.
+Looking at the output of /proc/mdstat i see that disk sdg (the new 
+spare) is actually added to both RAID
+arrays, and after finishing the rebuild of md1 the other RAID set (md0) 
+is also rebuild, using the SAME spare disk (sdg).
 
 
-> 
-> 
-> Sorry for not sending a (easily reviewable) patch, but there were so many
-> changes (in the line wrapping and so), that this did not make much sense.
-> Please tell me whether you like and will apply it, so that I can continue
-> with the remaining manpages.
-> Anyway, if you merge them, please _really_ read them again for
-> mistakes/typos I might have accidentally added...!
-> 
-> 
-> Thanks,
-> Chris.
+Albert
 
-NeilBrown
+
+
+
+
 
