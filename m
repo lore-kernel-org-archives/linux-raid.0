@@ -1,63 +1,59 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/9] FIX: Load container content for container reshape
- continuation
-Date: Thu, 10 Mar 2011 11:27:28 +1100
-Message-ID: <20110310112728.16890045@notabene.brown>
+Subject: Re: [PATCH 2/9] FIX: Block reshaped array monitoring
+Date: Thu, 10 Mar 2011 11:28:06 +1100
+Message-ID: <20110310112806.58dd84bb@notabene.brown>
 References: <20110309134019.8939.15438.stgit@gklab-128-013.igk.intel.com>
-	<20110309134537.8939.29039.stgit@gklab-128-013.igk.intel.com>
+	<20110309134545.8939.53720.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110309134537.8939.29039.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110309134545.8939.53720.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 09 Mar 2011 14:45:37 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Wed, 09 Mar 2011 14:45:45 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> st->sb is null. This is exception cause.
-> reshape_container() function expects that super block will be loaded.
+> When array under reshape is is assembled it has be disabled from monitoring
+> as soon as possible. It can accrue that this is i.e second array in container
+> and mdmon is loaded already.
+> Lack of blocking monitoring can cause change array state to active,
+> and reshape continuation will be not possible.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  Grow.c |   12 ++++++++++--
->  1 files changed, 10 insertions(+), 2 deletions(-)
+>  Assemble.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
 > 
-> diff --git a/Grow.c b/Grow.c
-> index 40cb929..e37fc57 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -3370,10 +3370,18 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
->  		fmt_devname(buf, st->container_dev);
->  		container = buf;
->  		freeze(st);
-> -		if (info->reshape_active == 2)
-> -			return reshape_container(container, NULL,
+> diff --git a/Assemble.c b/Assemble.c
+> index 20c27eb..fe917b2 100644
+> --- a/Assemble.c
+> +++ b/Assemble.c
+> @@ -1519,6 +1519,9 @@ int assemble_container_content(struct supertype *st, int mdfd,
+>  		if (sysfs_set_array(content, md_get_version(mdfd)) != 0)
+>  			return 1;
+>  
+> +	if (content->reshape_active)
+> +		block_subarray(content);
 > +
-> +		if (info->reshape_active == 2) {
-> +			int cfd = open_dev(st->container_dev);
-> +			if (cfd >= 0) {
-> +				st->ss->load_container(st, cfd, container);
-> +				close(cfd);
-> +				return reshape_container(container, NULL,
->  						 st, info, 0, backup_file,
->  						 0, 1);
-> +			}
-> +			return 1;
-> +		}
->  	}
->  	return reshape_array(container, mdfd, "array", st, info, 1,
->  			     backup_file, 0, 0, 1);
+>  	if (sra)
+>  		sysfs_free(sra);
+>  
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+
 Applied, thanks.
+
+
+I think I need to review all the 'blocking' and see if it can be tidied up,
+but this is OK for now.
 
 NeilBrown
 
