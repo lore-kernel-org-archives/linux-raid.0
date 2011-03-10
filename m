@@ -1,44 +1,46 @@
-From: hansbkk@gmail.com
-Subject: Re: Growing a raid array online with different capacity disks
-Date: Thu, 10 Mar 2011 20:51:18 +0700
-Message-ID: <AANLkTi=42cLRctc-3mHokC5FyO55=n6j3si_xm_5y+r1@mail.gmail.com>
-References: <AANLkTinpcNHZYTnhzv=61e_KAuNHm1j9dp4mQqcKOE_d@mail.gmail.com>
-	<alpine.DEB.1.10.1103101356210.7942@uplift.swm.pp.se>
-	<AANLkTikPK+GZp9p1Z6wXio6tAQneQyp_EcE2j+HA2KXo@mail.gmail.com>
-	<20110310183650.6a631c13@natsu>
+From: Christoph Anton Mitterer <calestyo@scientia.net>
+Subject: Re: polishing up mdadm manpages: mdassemble(8), mdmon(8)
+Date: Thu, 10 Mar 2011 13:57:29 +0000
+Message-ID: <a5e41cc2828ecc385314e30988be9b7d@imap.dd24.net>
+References: <daeaad7c9ff2fa76529ad5b58994ba3e@imap.dd24.net> <20110310161827.6df62c7a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110310183650.6a631c13@natsu>
+In-Reply-To: <20110310161827.6df62c7a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes the systems cited by the OP have nothing to do with RAID5, and in
-fact are proprietary - definitely as in "non-standard", and I think
-also none are open source.
-
-They do seem to have a lot of flexibility - mix and match any number
-and size of drives, toss another random-sized drive in an expand your
-capacity. Apparently particularly well-suited to hobby/soho/sme users;
-I've especially heard good things about Drobo for that market.
-
-Think of the usual reaction a corporate IT guy (used to what he calls
-"normal RAID", ie not mdadm) first hears about setting up mdadm RAID10
-on odd numbers of drives, even say 3 - like "huh??!!"
+On Thu, 10 Mar 2011 16:18:27 +1100, NeilBrown <neilb@suse.de> wrote:
+> Of course I could create the patch my - it looks like you 
+> start from the verison in the 3.2 release - correct?
+Yes.
 
 
-On Thu, Mar 10, 2011 at 8:36 PM, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Thu, 10 Mar 2011 14:24:24 +0100
-> jimbob palmer <jimbobpalmer@gmail.com> wrote:
->
->> Oh I'm not proposing it, I'm asking if mdadm can do it, like the other
->> products can.
->
-> No 'product' can 'do' a 1+1+1+3 TB RAID5, or it will not be a RAID5 but
-> something else.
->
-> --
-> With respect,
-> Roman
+> Being consistent is good, but using \fB \fI etc is not.
+> Convention (as I understand it) prefers .B .I etc.
+Is this convention? I've seen many manpages using it,.. and it seems to be
+part of the standard format?
+
+> There are a variety of programs around which convert man pages to
+> other formats and I trust the ".B" tags to be handled more reliably.
+Well if they don't handle \f* they should be fixed IMHO....
+
+Anyway,.. the reason for me arguing so strong agains .B .I etc. is that it
+really makes the (raw) manpage nearly unreadable/unmaintainable IMHO.
+Especially polishing up everything is made rather impossible so (IMHO)...
+so do you insist on this?.
+
+
+> Maybe... The ".pid" and ".sock" are file name extensions.  If your
+change
+> were made (which quite possibly improves readability) it might then me
+> necessary to say something explicit about extensions.
+Well that's up to you then,.. I don't have enough knowledge about the
+containers to do that =)
+
+
+Cheers,
+Chris.
