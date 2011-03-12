@@ -1,215 +1,96 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] platfrom_intel: find OROM based on Intel AHCI and SAS
- driver device id
-Date: Fri, 11 Mar 2011 17:00:04 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17A919051@irsmsx503.ger.corp.intel.com>
+From: Rory Jaffe <rsjaffe@gmail.com>
+Subject: RAID5 Shrinking array-size nearly killed the system
+Date: Fri, 11 Mar 2011 20:58:09 -0800
+Message-ID: <AANLkTikQ5_xm3+JKP8pR=oYO5xi6Qk1=VrSsiBkgtB6q@mail.gmail.com>
+References: <AANLkTimrq904HRZfx6RpPrVNd0EJ5AkUZtytY7TqcFYv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <AANLkTimrq904HRZfx6RpPrVNd0EJ5AkUZtytY7TqcFYv@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-This patch is answer to the Dan's proposal to NOT maintain the device ids in the mdadm code:
-> The driver will always have the latest knowledge of the supported device ids so we can always rely on it to identify our raid controller (i.e.
-> pci devices with vendor id == 0x8086 and driven by isci or ahci).
-Therefore, we get the device id from sysfs entry "device" exposed by Intel AHCI or SAS driver. The retrieved device id is compared the one in the PCI Express Data Structure.
-In consequence, the respective OROM properties can be found by mdadm when AHCI or SAS driver are loaded in the system.
-Additionally, Intel devices are retried before each OROM scan and released right after the scan.
+Using Ubuntu 10.10 mdadm v 3.2. ext4 filesystem.=C2=A0I wanted to shrin=
+k
+from 6 disks to 4. I have about 2TB of files on the disks. So, I ran
+$ sudo mdadm -G -n 4 /dev/md0
+which gave the message:
 
-I have prepared it and tested on top of your devel-3.2 branch (commit	ca6529edf6f721600386 Merge branch 'master' into devel-3.2).
+mdadm: this change will reduce the size of the array.
+=C2=A0=C2=A0 =C2=A0 =C2=A0 use --grow --array-size first to truncate ar=
+ray.
+=C2=A0=C2=A0 =C2=A0 =C2=A0 e.g. mdadm --grow /dev/md0 --array-size 5857=
+612608
 
-Thanks,
-Marcin Labun
+then ran
+$ sudo mdadm --grow /dev/md0 --array-size 5857612608
+and started testing the filesystem prior to reducing the array. I
+quickly found out that the filesystem was broken. It was broken enough
+that I couldn't even get access to commands, including sudo, mdadm,
+reboot, and ls. I had to power down the system and restart it. There
+were a number of disk errors, but managed to restart the system and it
+looks like there wasn't much damage. fstab is listed after my
+questions.
+Questions:
+1. Is there a safer way to shrink the file system prior to reducing
+the number of disks in the array?
+2. Is there a way of rearranging the files and directories to make the
+file system shrink safer?
+3. Is there something I did that caused the crash?
+Thanks-Rory
 
 
-
-From dc8efff073b4f8333ff8903cbd11159f7d779dc4 Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Fri, 11 Mar 2011 17:28:02 +0100
-Subject: [PATCH] platfrom_intel: find OROM based on Intel AHCI and SAS driver device id
-
-We use PCI device id exposed by AHCI and ISCU drivers (SAS controller)
-to find OROM version table.
-In this way there is no need to maintain AHCI and ISCU device id list
-in mdadm. The consequence is that the OROM properties can be found by mdadm when AHCI or 
-SAS drivers are loaded in the system.
-
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- platform-intel.c |   79 +++++++++++++++++++++++++++++++++++++++++-------------
- platform-intel.h |    1 +
- 2 files changed, 61 insertions(+), 19 deletions(-)
-
-diff --git a/platform-intel.c b/platform-intel.c
-index 0595382..c24dcf8 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -31,6 +31,9 @@
- #include <limits.h>
- 
- 
-+static int devpath_to_ll(const char *dev_path, const char *entry,
-+			 unsigned long long *val);
-+
- static __u16 devpath_to_vendor(const char *dev_path);
- 
- void free_sys_dev(struct sys_dev **list)
-@@ -56,6 +59,7 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 	struct sys_dev *head = NULL;
- 	struct sys_dev *list = NULL;
- 	enum sys_dev_type type;
-+	unsigned long long dev_id;
- 
- 	if (strcmp(driver, "isci") == 0)
- 		type = SYS_DEV_SAS;
-@@ -93,6 +97,9 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 		if (devpath_to_vendor(path) != 0x8086)
- 			continue;
- 
-+		if (devpath_to_ll(path, "device", &dev_id) != 0)
-+			continue;
-+
- 		/* start / add list entry */
- 		if (!head) {
- 			head = malloc(sizeof(*head));
-@@ -107,6 +114,7 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- 			break;
- 		}
- 
-+		list->dev_id = (__u16) dev_id;
- 		list->type = type;
- 		list->path = canonicalize_file_name(path);
- 		list->next = NULL;
-@@ -118,6 +126,35 @@ struct sys_dev *find_driver_devices(const char *bus, const char *driver)
- }
- 
- 
-+static struct sys_dev *intel_devices=NULL;
-+
-+static enum sys_dev_type device_type_by_id(__u16 device_id)
-+{
-+	struct sys_dev *iter;
-+
-+	for(iter = intel_devices; iter != NULL; iter = iter->next)
-+		if (iter->dev_id == device_id)
-+			return iter->type;
-+	return SYS_DEV_UNKNOWN;
-+}
-+
-+static int devpath_to_ll(const char *dev_path, const char *entry, unsigned long long *val)
-+{
-+	char path[strlen(dev_path) + strlen(entry) + 2];
-+	int fd;
-+	int n;
-+
-+	sprintf(path, "%s/%s", dev_path, entry);
-+
-+	fd = open(path, O_RDONLY);
-+	if (fd < 0)
-+		return -1;
-+	n = sysfs_fd_get_ll(fd, val);
-+	close(fd);
-+	return n;
-+}
-+
-+
- static __u16 devpath_to_vendor(const char *dev_path)
- {
- 	char path[strlen(dev_path) + strlen("/vendor") + 1];
-@@ -160,17 +197,6 @@ struct sys_dev *find_intel_devices(void)
- 	return ahci;
- }
- 
--static int platform_has_intel_devices(void)
--{
--	struct sys_dev *devices;
--	devices = find_intel_devices();
--	if (devices) {
--		free_sys_dev(&devices);
--		return 1;
--	}
--	return 0;
--}
--
- /*
-  * PCI Expansion ROM Data Structure Format */
- struct pciExpDataStructFormat {
-@@ -190,16 +216,21 @@ static int scan(const void *start, const void *end, const void *data)
- 	int len = (end - start);
- 	struct pciExpDataStructFormat *ptr= (struct pciExpDataStructFormat *)data;
- 
-+	if (data + 0x18 > end) {
-+		dprintf("cannot find pciExpDataStruct \n");
-+		return 0;
-+	}
-+	  
- 	dprintf("ptr->vendorID: %lx __le16_to_cpu(ptr->deviceID): %lx \n",
- 		(ulong) __le16_to_cpu(ptr->vendorID),
- 		(ulong) __le16_to_cpu(ptr->deviceID));
- 
--	if ((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
--	    (__le16_to_cpu(ptr->deviceID) == 0x2822))
--		dev = SYS_DEV_SATA;
--	else if ((__le16_to_cpu(ptr->vendorID) == 0x8086) &&
--		 (__le16_to_cpu(ptr->deviceID) == 0x1D60))
--		dev = SYS_DEV_SAS;
-+	if (__le16_to_cpu(ptr->vendorID) == 0x8086) {
-+		/* serach  attached intel devices by device id from OROM */
-+		dev = device_type_by_id(__le16_to_cpu(ptr->deviceID));
-+		if (dev == SYS_DEV_UNKNOWN)
-+			return 0;
-+	}
- 	else
- 		return 0;
- 
-@@ -275,7 +306,13 @@ static const struct imsm_orom *find_imsm_hba_orom(enum sys_dev_type hba_id)
- 	    check_env("IMSM_TEST_SCU_EFI"))
- 		return NULL;
- 
--	if (!platform_has_intel_devices())
-+	
-+	if (intel_devices != NULL)
-+		free_sys_dev(&intel_devices);
-+
-+	intel_devices = find_intel_devices();
-+
-+	if (intel_devices == NULL)
- 		return NULL;
- 
- 	/* scan option-rom memory looking for an imsm signature */
-@@ -286,10 +323,14 @@ static const struct imsm_orom *find_imsm_hba_orom(enum sys_dev_type hba_id)
- 	if (probe_roms_init(align) != 0)
- 		return NULL;
- 	probe_roms();
--	/* ignore result - True is returned if both are found */
-+	/* ignore return value - True is returned if both adapater roms are found */
- 	scan_adapter_roms(scan);
- 	probe_roms_exit();
- 
-+	if (intel_devices != NULL)
-+		free_sys_dev(&intel_devices);
-+	intel_devices = NULL;
-+
- 	if (populated_orom[hba_id])
- 		return &imsm_orom[hba_id];
- 	return NULL;
-diff --git a/platform-intel.h b/platform-intel.h
-index 0cba6c7..e24ae37 100644
---- a/platform-intel.h
-+++ b/platform-intel.h
-@@ -194,6 +194,7 @@ struct sys_dev {
- 	enum sys_dev_type type;
- 	char *path;
- 	char *pci_id;
-+	__u16  dev_id;
- 	struct sys_dev *next;
- };
- 
--- 
-1.6.4.2
-
+# /etc/fstab: static file system information.
+#
+# Use 'blkid -o value -s UUID' to print the universally unique identifi=
+er
+# for a device; this may be used with UUID=3D as a more robust way to n=
+ame
+# devices that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point> =C2=A0 <type> =C2=A0<options> =C2=A0 =C2=A0=
+ =C2=A0 <dump> =C2=A0<pass>
+proc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/proc =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 proc =C2=A0 =C2=A0nodev,noexec,nosuid 0 =C2=A0 =C2=A0 =C2=
+=A0 0
+# / was on /dev/md0 during installation
+UUID=3D9a978b70-e034-4d79-9e1d-237a67b553d5 / =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 ext4
+commit=3D60,errors=3Dremount-ro,usrjquota=3Daquota.user,grpjquota=3Daqu=
+ota.group,jqfmt=3Dvfsv1,barrier=3D0
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 1
+# /boot was on /dev/sdb1 during installation
+UUID=3D5beb5144-6d2f-4a73-b9e9-442355d8f529 /boot =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 ext2
+defaults =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 2
+# swap was on /dev/sda1 during installation
+UUID=3D31660a21-3f99-4ffb-81cc-501dc6ce5de7 none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+# swap was on /dev/sdc1 during installation
+UUID=3Df168588d-8b9e-45c3-b9ae-f90f66906616 none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+# swap was on /dev/sdd1 during installation
+UUID=3D05cadc48-59df-479e-b5ed-b9e9322cb905 none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+# swap was on /dev/sde1 during installation
+UUID=3D61fba94d-e6c5-4a58-b0cd-9d878b55b65c none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+# swap was on /dev/sdf1 during installation
+UUID=3D47737641-7555-4cbc-9bf6-508c9f2035bc none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+# swap was on /dev/sdg1 during installation
+UUID=3Dad06f3d6-a6ec-445a-bcfb-427fec72725b none =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 0
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
