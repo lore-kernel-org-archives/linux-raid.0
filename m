@@ -1,30 +1,61 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: high throughput storage server?
-Date: Sun, 13 Mar 2011 16:10:00 -0400
-Message-ID: <20110313201000.GA14090@infradead.org>
-References: <AANLkTik5_Zx98rSbmpgUtG82qtFObANtCcbnn-a7MXcp@mail.gmail.com>
- <AANLkTimOjQDjoDMLSd1Z88GhOXoumtaQP4TyE=VpQmvQ@mail.gmail.com>
- <20110215044434.GA9186@septictank.raw-sewage.fake>
- <4D6AC288.20101@wildgooses.com>
- <AANLkTinjPJJrUYrA=fxcau02Q+4Z67YVsJhcGxeTpAAW@mail.gmail.com>
- <4D6DC585.90304@gmail.com>
- <AANLkTi=yWhnqY_RTd8GH+fvEQfHfQ6TpWxnzpx-Fv=aj@mail.gmail.com>
- <AANLkTimB2hv8aP01JdQyOJehtkX2j=G5HtgVi6eNjmLx@mail.gmail.com>
- <AANLkTin=0PN+ovNY=rLu21-VRiy2Ffzrf69_fWsS54iN@mail.gmail.com>
+From: Asdo <asdo@shiftmail.org>
+Subject: Raid1 mismatches maybe associated to free space
+Date: Mon, 14 Mar 2011 00:18:29 +0100
+Message-ID: <4D7D50C5.6090807@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTin=0PN+ovNY=rLu21-VRiy2Ffzrf69_fWsS54iN@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Drew <drew.kay@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Btw, XFS has been used for >10GB/s throughput systems for about the last
-5 years.  The big issues is getting hardware that can reliably sustain
-it - if you have that using it with Linux and XFS is not an problem at
-all.  Note that with NUMA system you also have to thing about your
-intereconnect bandwith as a limiting factor for buffered I/O, not just
-the storage subsystem.
+Some time ago there was a discussion on how it could happen that
+sometimes people see mismatches on MD raid1.
+Some people reported to see a lot of them, especially in raid1 directly
+on partitions and without LVM on top.
+I had never seen one, but note I usually use LVM.
 
+Today I saw this happening on a machine of mine without lvm so I could
+do a test that has been on my mind for a while.
+
+Firstly, the machine is a very particular setup:
+- It boots from 2 x 4GB usb flash keys in raid1 (2-way raid1) and has no
+HDD.
+- The raid1 was directly on partitions and no LVM on it
+- The usb flash keys probably do not honour sync.
+- It had a few abrupt poweroffs in its life.
+- The MD bitmap was active, and has been active most of its life. But
+probably it experienced at least 1 abrupt poweroff with bitmap active
+and 1 abrupt poweroff with bitmap inactive.
+
+When I did the "check" today I saw 1024 mismatch_cnt.
+So I took the occasion to do a test it was on my mind for a while:
+
+dd if=/dev/zero of=fillitup bs=1M ; sync ; rm fillitup
+
+wait for it, then do again check, wait for it, and then read
+mismatch_cnt again.
+
+The mismatch_cnt was zero this time!
+This means afaiu that the mismatches were on the free space.
+
+Now quoting Goswin Von Bredelow as of 01/22/2010 07:13 PM:
+
+> There is some unknown corruption going on with raid1 that causes
+> mismatches but it is believed that it will never occur on any used
+> block. Swapping is a likely cause.
+>
+> Any swap device on the raid? Try turning that off.
+> If that doesn't help try umounting filesystems or remounting RO.
+>
+> MfG
+>         Goswin
+
+...exactly... this seemed to be my case.
+Clearly I don't know if it's always the case.
+
+So people experiencing corruption: would you also do this test and
+report? It's easy and takes little time...
+
+Thank you
