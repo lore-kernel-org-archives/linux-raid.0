@@ -1,61 +1,182 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Raid1 mismatches maybe associated to free space
-Date: Mon, 14 Mar 2011 00:18:29 +0100
-Message-ID: <4D7D50C5.6090807@shiftmail.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: mtice <mjtice@gmail.com>
+Subject: Re: Removed two drives (still valid and working) from raid-5 and need to add them back in.
+Date: Sun, 13 Mar 2011 18:14:59 -0600
+Message-ID: <5EB70557-47EB-4F81-A158-4A5157EB7E37@gmail.com>
+References: <837074B9-F2A5-471B-BAD1-6A92249095FB@gmail.com> <31419C89-14D6-405F-B838-C7E040C8FA43@gmail.com> <4D7C3968.700@turmel.org> <05223FC6-A8D4-4A5D-9CF4-27998B9ADD3F@gmail.com> <4D7C4083.2010000@turmel.org>
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D7C4083.2010000@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some time ago there was a discussion on how it could happen that
-sometimes people see mismatches on MD raid1.
-Some people reported to see a lot of them, especially in raid1 directly
-on partitions and without LVM on top.
-I had never seen one, but note I usually use LVM.
 
-Today I saw this happening on a machine of mine without lvm so I could
-do a test that has been on my mind for a while.
+On Mar 12, 2011, at 8:56 PM, Phil Turmel wrote:
 
-Firstly, the machine is a very particular setup:
-- It boots from 2 x 4GB usb flash keys in raid1 (2-way raid1) and has no
-HDD.
-- The raid1 was directly on partitions and no LVM on it
-- The usb flash keys probably do not honour sync.
-- It had a few abrupt poweroffs in its life.
-- The MD bitmap was active, and has been active most of its life. But
-probably it experienced at least 1 abrupt poweroff with bitmap active
-and 1 abrupt poweroff with bitmap inactive.
+> On 03/12/2011 10:38 PM, mtice wrote:
+>> Hi Phil, thanks for the reply.
+>> Here is the output of mdadm -E /dev/sd[cdef] 
+>> 
+>> /dev/sdc:
+>>          Magic : a92b4efc
+>>        Version : 00.90.00
+>>           UUID : 11c1cdd8:60ec9a90:2e29483d:f114274d (local to host storage)
+>>  Creation Time : Thu May 27 15:35:56 2010
+>>     Raid Level : raid5
+>>  Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+>>     Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
+>>   Raid Devices : 4
+>>  Total Devices : 5
+>> Preferred Minor : 0
+>> 
+>>    Update Time : Fri Mar 11 15:53:35 2011
+>>          State : clean
+>> Active Devices : 2
+>> Working Devices : 4
+>> Failed Devices : 2
+>>  Spare Devices : 2
+>>       Checksum : 3d3b86 - correct
+>>         Events : 43200
+>> 
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>> 
+>>      Number   Major   Minor   RaidDevice State
+>> this     3       8       32        3      active sync   /dev/sdc
+>> 
+>>   0     0       8       80        0      active sync   /dev/sdf
+>>   1     1       0        0        1      faulty removed
+>>   2     2       0        0        2      faulty removed
+>>   3     3       8       32        3      active sync   /dev/sdc
+>>   4     4       8       64        4      spare   /dev/sde
+>>   5     5       8      112        5      spare
+>> /dev/sdd:
+>>          Magic : a92b4efc
+>>        Version : 00.90.00
+>>           UUID : 11c1cdd8:60ec9a90:2e29483d:f114274d (local to host storage)
+>>  Creation Time : Thu May 27 15:35:56 2010
+>>     Raid Level : raid5
+>>  Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+>>     Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
+>>   Raid Devices : 4
+>>  Total Devices : 5
+>> Preferred Minor : 0
+>> 
+>>    Update Time : Fri Mar 11 15:53:35 2011
+>>          State : clean
+>> Active Devices : 2
+>> Working Devices : 4
+>> Failed Devices : 2
+>>  Spare Devices : 2
+>>       Checksum : 3d3bd4 - correct
+>>         Events : 43200
+>> 
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>> 
+>>      Number   Major   Minor   RaidDevice State
+>> this     5       8      112        5      spare
+>> 
+>>   0     0       8       80        0      active sync   /dev/sdf
+>>   1     1       0        0        1      faulty removed
+>>   2     2       0        0        2      faulty removed
+>>   3     3       8       32        3      active sync   /dev/sdc
+>>   4     4       8       64        4      spare   /dev/sde
+>>   5     5       8      112        5      spare
+>> /dev/sde:
+>>          Magic : a92b4efc
+>>        Version : 00.90.00
+>>           UUID : 11c1cdd8:60ec9a90:2e29483d:f114274d (local to host storage)
+>>  Creation Time : Thu May 27 15:35:56 2010
+>>     Raid Level : raid5
+>>  Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+>>     Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
+>>   Raid Devices : 4
+>>  Total Devices : 5
+>> Preferred Minor : 0
+>> 
+>>    Update Time : Fri Mar 11 15:53:35 2011
+>>          State : clean
+>> Active Devices : 2
+>> Working Devices : 4
+>> Failed Devices : 2
+>>  Spare Devices : 2
+>>       Checksum : 3d3ba2 - correct
+>>         Events : 43200
+>> 
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>> 
+>>      Number   Major   Minor   RaidDevice State
+>> this     4       8       64        4      spare   /dev/sde
+>> 
+>>   0     0       8       80        0      active sync   /dev/sdf
+>>   1     1       0        0        1      faulty removed
+>>   2     2       0        0        2      faulty removed
+>>   3     3       8       32        3      active sync   /dev/sdc
+>>   4     4       8       64        4      spare   /dev/sde
+>>   5     5       8      112        5      spare
+>> /dev/sdf:
+>>          Magic : a92b4efc
+>>        Version : 00.90.00
+>>           UUID : 11c1cdd8:60ec9a90:2e29483d:f114274d (local to host storage)
+>>  Creation Time : Thu May 27 15:35:56 2010
+>>     Raid Level : raid5
+>>  Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+>>     Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
+>>   Raid Devices : 4
+>>  Total Devices : 5
+>> Preferred Minor : 0
+>> 
+>>    Update Time : Fri Mar 11 15:53:35 2011
+>>          State : clean
+>> Active Devices : 2
+>> Working Devices : 4
+>> Failed Devices : 2
+>>  Spare Devices : 2
+>>       Checksum : 3d3bb0 - correct
+>>         Events : 43200
+>> 
+>>         Layout : left-symmetric
+>>     Chunk Size : 64K
+>> 
+>>      Number   Major   Minor   RaidDevice State
+>> this     0       8       80        0      active sync   /dev/sdf
+>> 
+>>   0     0       8       80        0      active sync   /dev/sdf
+>>   1     1       0        0        1      faulty removed
+>>   2     2       0        0        2      faulty removed
+>>   3     3       8       32        3      active sync   /dev/sdc
+>>   4     4       8       64        4      spare   /dev/sde
+>>   5     5       8      112        5      spare
+>> 
+>> 
+>> I ran mdadm --assemble --force /dev/md0 but it erred with:
+>> 
+>> mdadm: device /dev/md0 already active - cannot assemble it
+> 
+> You would have to stop the array first.  But it won't matter.  The dropped devices don't remember their role.  But you have a 50-50 chance of getting it right.  It's either:
+> 
+> mdadm --create /dev/md0 --level=5 --raid-devices=4 --assume-clean --metadata=0.90 --chunk=64k /dev/sdf /dev/sde /dev/sdd /dev/sdc
+> 
+> or with /dev/sde and /dev/sdd swapped.
+> 
+> I suggest you try it both ways, with an "fsck -n" to see which has a consistent filesystem.  Once you figure out which order is correct, do a real fsck to fix up any minor errors from the inadvertent unplug, then mount and grab a fresh backup.
+> 
+> Let us know how it turns out (I'm about to sign off for the night...).
+> 
+> Phil
 
-When I did the "check" today I saw 1024 mismatch_cnt.
-So I took the occasion to do a test it was on my mind for a while:
+That did it.  Thanks, Phil!
 
-dd if=/dev/zero of=fillitup bs=1M ; sync ; rm fillitup
+I was able to get the drives added back in with:
+ mdadm --create /dev/md0 --level=5 --raid-devices=4 --assume-clean --metadata=0.90 --chunk=64 /dev/sdf /dev/sde /dev/sdd /dev/sdc
 
-wait for it, then do again check, wait for it, and then read
-mismatch_cnt again.
+An fsck -n came back clean so I ran another fsck and mounted it up and all looks good.
 
-The mismatch_cnt was zero this time!
-This means afaiu that the mismatches were on the free space.
+Thanks for your help!
 
-Now quoting Goswin Von Bredelow as of 01/22/2010 07:13 PM:
+Matt 
 
-> There is some unknown corruption going on with raid1 that causes
-> mismatches but it is believed that it will never occur on any used
-> block. Swapping is a likely cause.
->
-> Any swap device on the raid? Try turning that off.
-> If that doesn't help try umounting filesystems or remounting RO.
->
-> MfG
->         Goswin
-
-...exactly... this seemed to be my case.
-Clearly I don't know if it's always the case.
-
-So people experiencing corruption: would you also do this test and
-report? It's easy and takes little time...
-
-Thank you
