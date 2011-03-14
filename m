@@ -1,38 +1,48 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/4] FIX: Handle has to be closed
-Date: Tue, 15 Mar 2011 14:48:40 +0100
-Message-ID: <20110315134840.32643.75551.stgit@gklab-128-013.igk.intel.com>
-References: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: Q: imsm rapid recovery volume
+Date: Mon, 14 Mar 2011 08:28:05 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D5048844B742@azsmsx504.amr.corp.intel.com>
+References: <20110314105626.GA19922@maude.comedia.it>
+ <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Roberto Spadim <roberto@spadim.com.br>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-Handle has to be closed similar to Manage.c:880
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Roberto Spadim
+> Sent: Monday, March 14, 2011 7:08 AM
+> To: linux-raid@vger.kernel.org
+> Cc: Luca Berra
+> Subject: Re: Q: imsm rapid recovery volume
+> 
+> how it works on linux? it's a block device for linux? like: /dev/sda?
+> if yes, i don't see problems using it with mdadm (software raid). but i think
+> that it's a intel hardware raid, i'm right?
+> 
+> 2011/3/14 Luca Berra <bluca@comedia.it>:
+> > Hello,
+> > i got hold of a new laptop that supports Intel Rapid Recover
+> > Technology http://www.intel.com/support/chipsets/imsm/sb/cs-
+> 026142.htm
+> > it sounds cool,
+> > does this feature work with mdadm?
+> >
+> > Thanks in advance and regards,
+> > L.
+> >
+> > --
+> > Luca Berra -- bluca@comedia.it
 
-One rule should apply to handlers passed to add_to_super().
+No this is Intel BIOS RAID. You need a kernel that's fairly recent and mdadm that supports external metadata so once again something fairly recent. Fedora supports this out of box if you want a free distro. Ubuntu does not last time I checked because grub2 doesn't seem to work properly yet with IMSM, but I know they are putting in new code to support it. 
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
-
- Manage.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/Manage.c b/Manage.c
-index f208d15..0349aa3 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -813,6 +813,7 @@ int Manage_subdevs(char *devname, int fd,
- 					close(dfd);
- 					return 1;
- 				}
-+				close(dfd);
- 			} else if (dv->re_add) {
- 				/*  this had better be raid1.
- 				 * As we are "--re-add"ing we must find a spare slot
+I have updated the RAID wiki. Please take a look here:
+https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
 
