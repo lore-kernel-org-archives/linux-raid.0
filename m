@@ -1,49 +1,51 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Q: imsm rapid recovery volume
-Date: Mon, 14 Mar 2011 11:07:32 -0300
-Message-ID: <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
-References: <20110314105626.GA19922@maude.comedia.it>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/3] UT and error case changes
+Date: Mon, 14 Mar 2011 15:09:20 +0100
+Message-ID: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110314105626.GA19922@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Luca Berra <bluca@comedia.it>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-how it works on linux? it's a block device for linux? like: /dev/sda?
-if yes, i don't see problems using it with mdadm (software raid). but
-i think that it's a intel hardware raid, i'm right?
+The following series implements 2 changes:
+1. Fix for unit tests failure.
+UT suits 12 and 13 fails, when backup file cannot be opened
+for grow operation (backup file exists already).
 
-2011/3/14 Luca Berra <bluca@comedia.it>:
-> Hello,
-> i got hold of a new laptop that supports Intel Rapid Recover Technolo=
-gy
-> http://www.intel.com/support/chipsets/imsm/sb/cs-026142.htm
-> it sounds cool,
-> does this feature work with mdadm?
->
-> Thanks in advance and regards,
-> L.
->
-> --
-> Luca Berra -- bluca@comedia.it
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+2. I've got proposal for handling/rollback metadata in error case.
+Currently in case of error external metadata can remain in reshape state.
+In some cases metadata can be automatically restored to initial state
+(i.e. metadata during  imsm container operation can be rolled back 
+when error occurs on first reshaped array before reshape is started).
+For such cases, additional superswitch function can be introduced.
+
+Metadata shouldn't be rolled back in restart case.
+I'm passing restart flag to abort function in Grow.c only, as this is general rule.
+In the same way array reshape state is checked. 
+
+This is proposal, so I've put no implementation in to imsm handler (no metadata update is created yet).
+Please let me know your opinion. If you will like it, I'll fill out gaps in imsm code.
+
+BR
+Adam
+
+---
+
+Adam Kwolek (3):
+      imsm: Add metadata abort changes handler template
+      External metadata has to be restored to initial state in error case
+      imsm: FIX: existing backup file fails unit tests
 
 
+ Grow.c                   |   26 ++++++++++++++++++++++++++
+ mdadm.h                  |   10 ++++++++++
+ super-intel.c            |   15 +++++++++++++++
+ tests/imsm-grow-template |    8 ++++++--
+ 4 files changed, 57 insertions(+), 2 deletions(-)
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Signature
