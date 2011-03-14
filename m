@@ -1,51 +1,62 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/3] UT and error case changes
-Date: Mon, 14 Mar 2011 15:09:20 +0100
-Message-ID: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/3] imsm: FIX: existing backup file fails unit tests
+Date: Mon, 14 Mar 2011 15:09:29 +0100
+Message-ID: <20110314140928.20478.77566.stgit@gklab-128-013.igk.intel.com>
+References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-The following series implements 2 changes:
-1. Fix for unit tests failure.
-UT suits 12 and 13 fails, when backup file cannot be opened
-for grow operation (backup file exists already).
+During normal test execution, backup file is deleted after test execution.
+If test is interrupted/broken, backup file can remain for next run.
+When backup file exists before unit test run, suits 12 and 13 fails.
 
-2. I've got proposal for handling/rollback metadata in error case.
-Currently in case of error external metadata can remain in reshape state.
-In some cases metadata can be automatically restored to initial state
-(i.e. metadata during  imsm container operation can be rolled back 
-when error occurs on first reshaped array before reshape is started).
-For such cases, additional superswitch function can be introduced.
+To avoid this remove backup file before grow is executed.
 
-Metadata shouldn't be rolled back in restart case.
-I'm passing restart flag to abort function in Grow.c only, as this is general rule.
-In the same way array reshape state is checked. 
-
-This is proposal, so I've put no implementation in to imsm handler (no metadata update is created yet).
-Please let me know your opinion. If you will like it, I'll fill out gaps in imsm code.
-
-BR
-Adam
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (3):
-      imsm: Add metadata abort changes handler template
-      External metadata has to be restored to initial state in error case
-      imsm: FIX: existing backup file fails unit tests
-
-
- Grow.c                   |   26 ++++++++++++++++++++++++++
- mdadm.h                  |   10 ++++++++++
- super-intel.c            |   15 +++++++++++++++
  tests/imsm-grow-template |    8 ++++++--
- 4 files changed, 57 insertions(+), 2 deletions(-)
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
--- 
-Signature
+diff --git a/tests/imsm-grow-template b/tests/imsm-grow-template
+index 7c212c4..d03752d 100644
+--- a/tests/imsm-grow-template
++++ b/tests/imsm-grow-template
+@@ -17,8 +17,10 @@ function grow_member() {
+ 	local offset=$6
+ 	local chunk=$7
+ 	local array_size=$((comps * size))
++	local backup_imsm=/tmp/backup_imsm
+ 
+-	( set -ex; mdadm --grow $member --chunk=$chunk --level=$level --backup-file=/tmp/backup_imsm )
++	rm -f $backup_imsm
++	( set -ex; mdadm --grow $member --chunk=$chunk --level=$level --backup-file=$backup_imsm )
+ 	local status=$?
+ 	if [ $negative_test -ne 0 ]; then
+ 		if [ $status -eq 0 ]; then
+@@ -71,6 +73,7 @@ done
+ 
+ imsm_check container $num_disks
+ num_disks=$((num_disks + add_to_num_disks))
++backup_imsm=/tmp/backup_imsm
+ 
+ # Grow each member or a container depending on the type of an operation
+ if [ $migration_test -ne 0 ]; then
+@@ -82,7 +85,8 @@ if [ $migration_test -ne 0 ]; then
+ 		grow_member $member1 $new_num_disks $vol1_new_num_comps $vol1_new_level $vol1_comp_size $vol1_offset $vol1_new_chunk
+ 	fi
+ else
+-	( set -x; mdadm --grow $container --raid-disks=$num_disks --backup-file=/tmp/backup_imsm )
++	rm -f $backup_imsm
++	( set -x; mdadm --grow $container --raid-disks=$num_disks --backup-file=$backup_imsm )
+ 	grow_status=$?
+ 	if [ $negative_test -ne 0 ]; then
+ 		if [ $grow_status -eq 0 ]; then
+
