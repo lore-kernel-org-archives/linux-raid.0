@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/3] imsm: FIX: existing backup file fails unit tests
-Date: Mon, 14 Mar 2011 15:09:29 +0100
-Message-ID: <20110314140928.20478.77566.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 2/3] External metadata has to be restored to initial state in
+	error case
+Date: Mon, 14 Mar 2011 15:09:38 +0100
+Message-ID: <20110314140938.20478.52557.stgit@gklab-128-013.igk.intel.com>
 References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,50 +14,91 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-During normal test execution, backup file is deleted after test execution.
-If test is interrupted/broken, backup file can remain for next run.
-When backup file exists before unit test run, suits 12 and 13 fails.
+When any error occurs in reshape_array(), mdadm should have ability
+to rollback changes. Based on metadata knowledge abort_metadata_changes()
+should decide:
+1. metadata abort is allowed?
+   In case of container operation abort can be allowed on first array only
+   It depends on metadata implementation.
+2. If rollback is possible, execute required action to prepare update.
 
-To avoid this remove backup file before grow is executed.
+Returned value is:
+ 1 if rollback succeed (send update)
+ 0 if rollback not possible (no action)
+-1 for other error
+
+Metadata handler can be called only if reshape is not started in md.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- tests/imsm-grow-template |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ Grow.c  |   26 ++++++++++++++++++++++++++
+ mdadm.h |   10 ++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
 
-diff --git a/tests/imsm-grow-template b/tests/imsm-grow-template
-index 7c212c4..d03752d 100644
---- a/tests/imsm-grow-template
-+++ b/tests/imsm-grow-template
-@@ -17,8 +17,10 @@ function grow_member() {
- 	local offset=$6
- 	local chunk=$7
- 	local array_size=$((comps * size))
-+	local backup_imsm=/tmp/backup_imsm
+diff --git a/Grow.c b/Grow.c
+index 40e693e..26fd7eb 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -594,6 +594,31 @@ static void sync_metadata(struct supertype *st)
+ 	}
+ }
  
--	( set -ex; mdadm --grow $member --chunk=$chunk --level=$level --backup-file=/tmp/backup_imsm )
-+	rm -f $backup_imsm
-+	( set -ex; mdadm --grow $member --chunk=$chunk --level=$level --backup-file=$backup_imsm )
- 	local status=$?
- 	if [ $negative_test -ne 0 ]; then
- 		if [ $status -eq 0 ]; then
-@@ -71,6 +73,7 @@ done
++static int abort_metadata_changes(struct supertype *st, struct mdinfo *sra,
++				  int restart)
++{
++	int ret_val = 0;
++	char action[40];
++
++	/* for not restarted external metadata only
++	 */
++	if (!st->ss->external || restart)
++		return ret_val;
++
++	/* check if reshape is not started in md
++	 */
++	if (sra && sysfs_get_str(sra, NULL, "sync_action", action, 40) > 0 &&
++	    strncmp(action, "reshape", 7) == 0)
++		return ret_val;
++
++	if (st->ss->abort_metadata_changes)
++		ret_val = st->ss->abort_metadata_changes(st);
++	if (ret_val > 0)
++		sync_metadata(st);
++
++	return ret_val;
++}
++
+ static int subarray_set_num(char *container, struct mdinfo *sra, char *name, int n)
+ {
+ 	/* when dealing with external metadata subarrays we need to be
+@@ -2187,6 +2212,7 @@ out:
+ 	exit(0);
  
- imsm_check container $num_disks
- num_disks=$((num_disks + add_to_num_disks))
-+backup_imsm=/tmp/backup_imsm
+ release:
++	abort_metadata_changes(st, sra, restart);
+ 	if (orig_level != UnSet && sra) {
+ 		c = map_num(pers, orig_level);
+ 		if (c && sysfs_set_str(sra, NULL, "level", c) == 0)
+diff --git a/mdadm.h b/mdadm.h
+index d3ed50a..d502b13 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -727,6 +727,16 @@ extern struct superswitch {
+ 		struct supertype *st, unsigned long blocks,
+ 		int *fds, unsigned long long *offsets,
+ 		int dests, int *destfd, unsigned long long *destoffsets);
++	/* abort_metadata_changes() will rollbacks metadata changes
++	 * in case of error.
++	 * It can be called for not restart case
++	 * and when reshape has not been started in md.
++	 * Function should return values:
++	 *    1 if abort succeed
++	 *    0 if abort not possible
++	 *   -1 for other error
++	 */
++	int (*abort_metadata_changes)(struct supertype *st);
  
- # Grow each member or a container depending on the type of an operation
- if [ $migration_test -ne 0 ]; then
-@@ -82,7 +85,8 @@ if [ $migration_test -ne 0 ]; then
- 		grow_member $member1 $new_num_disks $vol1_new_num_comps $vol1_new_level $vol1_comp_size $vol1_offset $vol1_new_chunk
- 	fi
- else
--	( set -x; mdadm --grow $container --raid-disks=$num_disks --backup-file=/tmp/backup_imsm )
-+	rm -f $backup_imsm
-+	( set -x; mdadm --grow $container --raid-disks=$num_disks --backup-file=$backup_imsm )
- 	grow_status=$?
- 	if [ $negative_test -ne 0 ]; then
- 		if [ $grow_status -eq 0 ]; then
+ /* for mdmon */
+ 	int (*open_new)(struct supertype *c, struct active_array *a,
 
