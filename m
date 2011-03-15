@@ -1,53 +1,51 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: RE: Q: imsm rapid recovery volume
-Date: Mon, 14 Mar 2011 17:27:14 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D5048844BCED@azsmsx504.amr.corp.intel.com>
-References: <20110314105626.GA19922@maude.comedia.it>
- <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
- <D010E79907AF0D4E90B603DE907837D5048844B742@azsmsx504.amr.corp.intel.com>
- <20110314191803.GA24188@maude.comedia.it>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: Periodic RebuildStarted event
+Date: Tue, 15 Mar 2011 06:16:22 +0300
+Message-ID: <AANLkTi=xz=2RG2Ob_BsCffFDki_wYcUOohB5k4YQhZ-6@mail.gmail.com>
+References: <AANLkTikA=Qe1iwLMkB3V6RLdzRU0p4PB0xmFxJ7907Ez@mail.gmail.com>
+	<AANLkTinwowg1evk44=46VO+Eni1B=G5Mr_X1r32GO5eF@mail.gmail.com>
+	<20110207234411.GA93362@cons.org>
+	<20110208112513.2b82111c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110314191803.GA24188@maude.comedia.it>
-Content-Language: en-US
+In-Reply-To: <20110208112513.2b82111c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Martin Cracauer <cracauer@cons.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Luca Berra [mailto:bluca@comedia.it]
-> Sent: Monday, March 14, 2011 12:18 PM
-> To: Jiang, Dave
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Q: imsm rapid recovery volume
-> 
-> On Mon, Mar 14, 2011 at 08:28:05AM -0700, Jiang, Dave wrote:
-> >No this is Intel BIOS RAID. You need a kernel that's fairly recent and mdadm
-> that supports external metadata so once again something fairly recent.
-> Fedora supports this out of box if you want a free distro. Ubuntu does not
-> last time I checked because grub2 doesn't seem to work properly yet with
-> IMSM, but I know they are putting in new code to support it.
-> >
-> >I have updated the RAID wiki. Please take a look here:
-> >https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
-> >
-> Dave,
-> There does not seem to be any information regarding rapid recovery on the
-> wiki.
-> Are you implying it just works?
-> I tried to set one up under windows with continuous update policy, but when
-> i rebooted under linux it looked like the recovery disk was failed.
-> I am usink kernel 2.6.36.2 and mdadm 3.1.2, raid1 on a similar config was
-> working correctly.
-> 
-> Thanks in advance and regards,
-> L.
-> 
-> --
-> Luca Berra -- bluca@comedia.it
+Hello!
 
-Linux IMSM does not support Rapid Recovery. That is a Windows IMSM feature.
+On Tue, Feb 8, 2011 at 3:25 AM, NeilBrown <neilb@suse.de> wrote:
+[snip]
+> Then start either the
+> 'next' array at the beginning, or the 'current' array at the current point
+> (write to sync_min).
+I couldn't find documentation for sync_min/sync_max sysfs params at
+least for repo cloned from
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+coolcold@coolcold:~/gits/linux-2.6.37.y$ grep -qi sync_min
+Documentation/md.txt || echo failed find docs
+failed find docs
 
+As I could understand from sources - resync_min & resync_max are
+expressed in sectors (512bytes?)  and are set to 0 & total sectors on
+device accordingly. resync_max value should be divisible by array
+chunk size (in sectors) . After setting this values, one can trugger
+"check" / "repair" into sync_action.
+
+My basic idea is to use this method to clear pending sectors from
+SMART checks and looks like this gonna work, am i right?
+
+> Then wait for however long you want, abort the check (write 'idle' to
+> 'sync_action') and find out where it got up to (read sync_min) and record
+> that for next time.
+>
+> NeilBrown
+>
+
+
+-- 
+Best regards,
+[COOLCOLD-RIPN]
