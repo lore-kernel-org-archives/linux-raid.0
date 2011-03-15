@@ -1,62 +1,47 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Doing 'echo repair >
- /sys/devices/virtual/block/md?/md/sync_action' does not result in
- mismatch_cnt of 0 on RAID-6?
-Date: Tue, 15 Mar 2011 12:13:51 +0000
-Message-ID: <20110315121351.GA7190@cthulhu.home.robinhill.me.uk>
-References: <4D7F4DF3.7010804@tuxes.nl>
+From: CoolCold <coolthecold@gmail.com>
+Subject: [PATCH] Update documentation for sync_min and sync_max entries
+Date: Tue, 15 Mar 2011 15:30:38 +0300
+Message-ID: <AANLkTinEzjxW6ZFkBWYc6UY6Pus1NoY_O+bKyCoDgC6w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D7F4DF3.7010804@tuxes.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This patch is against 2.6.37 (
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+, commit id 97b197f07d15dbcd53328e75754e2f947814c733 ) but I didn't
+notice any changes in 2.6.38 though.
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+linux/Documentation/md.txt is missing description for sync_min and
+sync_max entries.
+This patch adds description for sync_min and sync_max entries.
 
-On Tue Mar 15, 2011 at 11:30:59AM +0000, Bas van Schaik wrote:
+Signed-off-by: Roman Ovchinnikov <coolthecold@gmail.com>
+---
+ Documentation/md.txt |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-> All,
->=20
-> I'm seeing a non-zero mismatch_cnt (in fact, it's 1704) on my RAID-6
-> array consisting of 8 devices on kernel 2.6.38. After replacing some
-> hardware, I decided to trigger a MD repair by issuing:
->   echo repair > /sys/devices/virtual/block/md5/md/sync_action
->=20
-> Directly after issuing this command, the mismatch_cnt is reset to 0 and
-> MD starts checking the array. However, the mismatch_cnt increases during
-> this check - resulting in exactly the same count as seen before.
-> Shouldn't 'repair' yield a zero mismatch_cnt? I think I have seen
-> 'repair' work on other RAID-6 arrays?
->=20
-The mismatch_cnt is incremented during repair to indicate how many
-errors were repaired. If you want to be certain though, you'd need to
-re-run 'check' afterwards.
+diff --git a/Documentation/md.txt b/Documentation/md.txt
+index a81c7b4..8f8cb4f 100644
+--- a/Documentation/md.txt
++++ b/Documentation/md.txt
+@@ -552,6 +552,16 @@ also have
+      within the array where IO will be blocked.  This is currently
+      only supported for raid4/5/6.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
++   sync_min
++   sync_max
++     The two values, given as numbers of sectors, indicate a range
++     withing the array where 'check'/'repair' will operate. Must be
++     a multiple of chunk_size. When it reaches "sync_max" it will
++     pause, rather than complete.
++     You can use 'select' or 'poll' on "sync_completed" to wait for
++     that number to reach sync_max.  Then you can either increase
++     "sync_max", or can write 'idle' to "sync_action".
++
 
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iEYEARECAAYFAk1/V/4ACgkQShxCyD40xBJQrACgklZxkXCpcEB/nWriO7bjbfYx
-iIkAoNnwYdPDvgNRpnBPCxpkqW7VF1om
-=kmif
------END PGP SIGNATURE-----
-
---wRRV7LY7NUeQGEoC--
+ Each active md device may also have attributes specific to the
+ personality module that manages it.
