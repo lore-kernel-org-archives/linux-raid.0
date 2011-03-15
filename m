@@ -1,64 +1,55 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Doing 'echo repair >
- /sys/devices/virtual/block/md?/md/sync_action' does not result in
- mismatch_cnt of 0 on RAID-6?
-Date: Tue, 15 Mar 2011 14:13:42 +0000
-Message-ID: <20110315141342.GB7190@cthulhu.home.robinhill.me.uk>
-References: <4D7F4DF3.7010804@tuxes.nl>
- <20110315121351.GA7190@cthulhu.home.robinhill.me.uk>
- <4D7F6CE5.4010303@tuxes.nl>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/4] Raid0 metadata cannot be recognized
+Date: Tue, 15 Mar 2011 14:48:16 +0100
+Message-ID: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mxv5cy4qt+RJ9ypb"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D7F6CE5.4010303@tuxes.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bas van Schaik <bas@tuxes.nl>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
+Hi,
 
---mxv5cy4qt+RJ9ypb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've executed unit tests on today's devel3-2 and I've found that
+expansion cannot be executed due to fact that imsm metadata
+cannot be found after creation.
+Looking patches I've found that problem was introduced by patch:
 
-On Tue Mar 15, 2011 at 01:43:01PM +0000, Bas van Schaik wrote:
+Manage/external: for external metadata, add_to_super needs lock on container.
 
-> My other question is still standing:
-> > Furthermore, theoretically it should be possible to indicate which
-> > device in the RAID-6 array contains the inconsistent data, or am I
-> > mistaking? If so, that would certainly be a nice feature to see
-> > implemented, as it would help diagnosing problems.
-> Am I indeed correct in thinking this?
->=20
-I'm not sure. If it's a single data block that's failed then you should
-be able to, for each disk, re-generate the data using the other disks
-and the P parity, then validate against the Q parity (if it matches then
-that disk is the incorrect one). You should also be able to detect
-errors in either the P or Q parity (if one is valid for the data and the
-other isn't).  If there's multiple disks which are incorrect then I
-don't think there's any way you can tell which (or even avoid having one
-of the correct disks flagged as incorrect).
+It is due to fact that metadata is not written by monitor for raid0.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Problem is fixed by patch:
+  FIX: Write metadata when mdmon is not running
 
---mxv5cy4qt+RJ9ypb
-Content-Type: application/pgp-signature
+Other patches addresses problems/i.e. inconsistency in closing handle/
+that I've noticed during investigation.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+BR
+Adam
 
-iEYEARECAAYFAk1/dBUACgkQShxCyD40xBL1WgCgglJseN25pr3wRU5tIsqGktnB
-UCUAoKIDOwJBistgAdb2ivvWX1WHVeOR
-=9px6
------END PGP SIGNATURE-----
 
---mxv5cy4qt+RJ9ypb--
+---
+
+Adam Kwolek (4):
+      FIX: ping_monitor() usage causes memory leaks
+      FIX: Handle has to be closed
+      FIX: Write metadata when mdmon is not running
+      FIX: Ping monitor when mdmon is running only
+
+
+ Assemble.c    |    2 +-
+ Create.c      |    2 +-
+ Grow.c        |    2 +-
+ Incremental.c |   10 ++++------
+ Manage.c      |   10 +++++++++-
+ Monitor.c     |    2 +-
+ msg.c         |   14 ++++++++++++++
+ msg.h         |    1 +
+ 8 files changed, 32 insertions(+), 11 deletions(-)
+
+-- 
+Signature
