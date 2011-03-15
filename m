@@ -1,48 +1,55 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: RE: Q: imsm rapid recovery volume
-Date: Mon, 14 Mar 2011 08:28:05 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D5048844B742@azsmsx504.amr.corp.intel.com>
-References: <20110314105626.GA19922@maude.comedia.it>
- <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
+From: Alexander Dorokhine <adorokhine@datagardens.com>
+Subject: md not flushing some pages
+Date: Tue, 15 Mar 2011 10:25:13 -0600
+Message-ID: <4D7F92E9.3060405@datagardens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: Luca Berra <bluca@comedia.it>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Roberto Spadim
-> Sent: Monday, March 14, 2011 7:08 AM
-> To: linux-raid@vger.kernel.org
-> Cc: Luca Berra
-> Subject: Re: Q: imsm rapid recovery volume
-> 
-> how it works on linux? it's a block device for linux? like: /dev/sda?
-> if yes, i don't see problems using it with mdadm (software raid). but i think
-> that it's a intel hardware raid, i'm right?
-> 
-> 2011/3/14 Luca Berra <bluca@comedia.it>:
-> > Hello,
-> > i got hold of a new laptop that supports Intel Rapid Recover
-> > Technology http://www.intel.com/support/chipsets/imsm/sb/cs-
-> 026142.htm
-> > it sounds cool,
-> > does this feature work with mdadm?
-> >
-> > Thanks in advance and regards,
-> > L.
-> >
-> > --
-> > Luca Berra -- bluca@comedia.it
+Hello:
 
-No this is Intel BIOS RAID. You need a kernel that's fairly recent and mdadm that supports external metadata so once again something fairly recent. Fedora supports this out of box if you want a free distro. Ubuntu does not last time I checked because grub2 doesn't seem to work properly yet with IMSM, but I know they are putting in new code to support it. 
+We are experiencing a strange issue related to md failing to completely 
+flush its array:
 
-I have updated the RAID wiki. Please take a look here:
-https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
+md13 : active raid1 sdd[1](W) dm-0[0]
+       3145600 blocks [2/2] [UU]
+       bitmap: 1/384 pages [4KB], 4KB chunk, file: 
+/var/syntropy/bitmaps/md13bm
 
+As you can see, md13 has both endpoints connected. However, one page 
+(4KB) refuses to flush (not even overnight).
+This is md 2.6.3 on kernel 2.6.32.31. We have never seen this problem on 
+kernel 2.6.24, which is what we were using before.
+
+md seems to think it's done:
+[  985.010761] md: bind<sdd>
+[  985.021776] RAID1 conf printout:
+[  985.021782]  --- wd:1 rd:2
+[  985.021833]  disk 0, wo:0, o:1, dev:dm-0
+[  985.021837]  disk 1, wo:1, o:1, dev:sdd
+[  985.023589] md: recovery of RAID array md13
+[  985.023609] md: minimum _guaranteed_  speed: 100000 KB/sec/disk.
+[  985.023629] md: using maximum available idle IO bandwidth (but not 
+more than 200000 KB/sec) for recovery.
+[  985.023759] md: using 128k window, over a total of 3145600 blocks.
+[ 1039.515574] md: md13: recovery done.
+[ 1039.598256] RAID1 conf printout:
+[ 1039.598263]  --- wd:2 rd:2
+[ 1039.598270]  disk 0, wo:0, o:1, dev:dm-0
+[ 1039.598273]  disk 1, wo:0, o:1, dev:sdd
+
+We did find this bugreport with a similar issue: 
+https://bugzilla.redhat.com/show_bug.cgi?id=680791
+However, it mentions that the first broken kernel is 2.6.35.11, but we 
+are using the much-older 2.6.32.31.
+
+We have been able to reproduce this issue twice in a row now. Does 
+anyone know why this page is sticking around?
+
+Thanks for the advice.
+
+Alexander Dorokhine.
