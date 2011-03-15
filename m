@@ -1,139 +1,101 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Periodic RebuildStarted event
-Date: Tue, 15 Mar 2011 17:17:10 +1100
-Message-ID: <20110315171710.4c5fb7c5@notabene.brown>
-References: <AANLkTikA=Qe1iwLMkB3V6RLdzRU0p4PB0xmFxJ7907Ez@mail.gmail.com>
-	<AANLkTinwowg1evk44=46VO+Eni1B=G5Mr_X1r32GO5eF@mail.gmail.com>
-	<20110207234411.GA93362@cons.org>
-	<20110208112513.2b82111c@notabene.brown>
-	<AANLkTi=xz=2RG2Ob_BsCffFDki_wYcUOohB5k4YQhZ-6@mail.gmail.com>
-	<20110315144140.42f9c2c7@notabene.brown>
-	<AANLkTi=ZY6bpdsJuGuCrQ8CgRT=a7JyLbfSX0V-YDT4E@mail.gmail.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 0/3] UT and error case changes
+Date: Tue, 15 Mar 2011 07:28:00 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
+References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
+ <20110315085346.3bf9feb7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=ZY6bpdsJuGuCrQ8CgRT=a7JyLbfSX0V-YDT4E@mail.gmail.com>
+In-Reply-To: <20110315085346.3bf9feb7@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Martin Cracauer <cracauer@cons.org>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 15 Mar 2011 07:21:09 +0300 CoolCold <coolthecold@gmail.com> wro=
-te:
-
-> On Tue, Mar 15, 2011 at 6:41 AM, NeilBrown <neilb@suse.de> wrote:
-> > On Tue, 15 Mar 2011 06:16:22 +0300 CoolCold <coolthecold@gmail.com>=
- wrote:
-> >
-> >> Hello!
-> >>
-> >> On Tue, Feb 8, 2011 at 3:25 AM, NeilBrown <neilb@suse.de> wrote:
-> >> [snip]
-> >> > Then start either the
-> >> > 'next' array at the beginning, or the 'current' array at the cur=
-rent point
-> >> > (write to sync_min).
-> >> I couldn't find documentation for sync_min/sync_max sysfs params a=
-t
-> >> least for repo cloned from
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.=
-y.git
-> >> coolcold@coolcold:~/gits/linux-2.6.37.y$ grep -qi sync_min
-> >> Documentation/md.txt || echo failed find docs
-> >> failed find docs
-> >
-> > Yes, sorry about that.
-> May be I can help and create patch for md.txt after this thread? If
-> yes, it would be nice to get some link for proper patch providing
-> instructions, never did patches for kernel ;)
-
-Patches always welcome!!  So yes please.
-
-Have a read through SubmittingPatches in linux/Documentation
-(same directory that 'md.txt' is in).
-That should get you close enough.
-
-Thanks,
-NeilBrown
 
 
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Monday, March 14, 2011 10:54 PM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
+> Neubauer, Wojciech
+> Subject: Re: [PATCH 0/3] UT and error case changes
+> 
+> On Mon, 14 Mar 2011 15:09:20 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > The following series implements 2 changes:
+> > 1. Fix for unit tests failure.
+> > UT suits 12 and 13 fails, when backup file cannot be opened
+> > for grow operation (backup file exists already).
+> 
+> Thanks - applied.
+> 
+> 
+> >
+> > 2. I've got proposal for handling/rollback metadata in error case.
+> > Currently in case of error external metadata can remain in reshape
+> state.
+> > In some cases metadata can be automatically restored to initial state
+> > (i.e. metadata during  imsm container operation can be rolled back
+> > when error occurs on first reshaped array before reshape is started).
+> > For such cases, additional superswitch function can be introduced.
+> >
+> > Metadata shouldn't be rolled back in restart case.
+> > I'm passing restart flag to abort function in Grow.c only, as this is
+> general rule.
+> > In the same way array reshape state is checked.
+> >
+> > This is proposal, so I've put no implementation in to imsm handler (no
+> metadata update is created yet).
+> > Please let me know your opinion. If you will like it, I'll fill out
+> gaps in imsm code.
+> 
+> I'm not sure.. it sounds like it might be a good idea, but I'd like to
+> have
+> some concrete examples to help me think about it.
 
->=20
-> >
-> >>
-> >> As I could understand from sources - resync_min & resync_max are
-> >> expressed in sectors (512bytes?) =A0and are set to 0 & total secto=
-rs on
-> >> device accordingly. resync_max value should be divisible by array
-> >> chunk size (in sectors) . After setting this values, one can trugg=
-er
-> >> "check" / "repair" into sync_action.
-> >
-> > Yes - sectors (multiples of 512 bytes)
-> > Yes - 0 and a big number. =A0sync_max is actually set to MAX_LONG r=
-ather than
-> > =A0 =A0 =A0the actual total number of sectors.
-> >
-> > Yes - one can trigger 'check' or 'repair' and it will obey these li=
-mits.
-> > When it reaches 'sync_max' it will pause rather than complete. =A0Y=
-ou can
-> > use 'select' or 'poll' on "sync_completed" to wait for that number =
-to
-> > reach sync_max. =A0Then you can either increase sync_max, or can wr=
-ite
-> > "idle" to "sync_action".
-> >
-> >>
-> >> My basic idea is to use this method to clear pending sectors from
-> >> SMART checks and looks like this gonna work, am i right?
-> >>
-> >
-> > I don't know exactly what "pending sectors" are, but if they are se=
-ctors
-> > which return an error to READ and can be fixed by writing data to t=
-hem, then
-> > you are right, this should 'clear' any pending sectors.
-> Yes, i meant that kind.
-> >
-> > Of course you will need to be careful about mapping the sector numb=
-er
-> > from smart to the second number given to 'sync_min'.
-> I guess you meant "sector" not "second" here?
->=20
-> > Not only must you
-> > adjust for any partition table, but also the 'data offset' of the
-> > md array must be allowed for.
-> So, for 0.9 metadata format offset is always gonna be 0, right?
-> And if the bad thing happens - bad block with read error is found on
-> metadata section, will mdadm with --update <something> will be enough=
-t
-> to do force write?
->=20
-> >
-> > NeilBrown
-> >
-> >
-> >
-> >> > Then wait for however long you want, abort the check (write 'idl=
-e' to
-> >> > 'sync_action') and find out where it got up to (read sync_min) a=
-nd record
-> >> > that for next time.
-> >> >
-> >> > NeilBrown
-> >> >
-> >>
-> >>
-> >
-> >
->=20
->=20
->=20
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I've got this idea during correcting UT so, i.e.:
+wrong/already existing/ backup file name passed by used.
+Backup file verification/opening is when metadata is in reshape state already.
+This error causes mdadm exit at reshape position == 0. It is too early position for reshape restart.
+User has manually restore metadata information and this can be quite difficult.
+
+Metadata rollback can be possible for container operation if:
+1. external metadata case (checked in Grow.c)
+2. This is action on first array in container (check in metadata handler)
+2. md doesn't start reshape  (checked in Grow.c)
+3. Other conditions/metadata specific (checked in Grow.c)
+
+We can also pass some additional status to reshape_container() to indicate that metadata is rolled back
+and allow for container unfreeze in such case also.
+This can allow mdadm to leave array/container in state that work is started from (hopefully ;)).
+
+BR
+Adam
+
+
+> 
+> Do you have an example in mind of an error which might be detected after
+> the metadata has been updated, but before the reshape has actually
+> started,
+> and for which reverting the metadata update is likely to be useful?
+> 
+> The more general case of changing your mind just after a reshape has
+> started and asking the reshape to revert would certainly be useful, but
+> md isn't capable of that in general (yet).
+> 
+> Thanks,
+> NeilBrown
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
