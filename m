@@ -1,55 +1,44 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/4] Raid0 metadata cannot be recognized
-Date: Tue, 15 Mar 2011 14:48:16 +0100
-Message-ID: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/4] FIX: Ping monitor when mdmon is running only
+Date: Tue, 15 Mar 2011 14:48:24 +0100
+Message-ID: <20110315134824.32643.2024.stgit@gklab-128-013.igk.intel.com>
+References: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Hi,
+When raid0 is created (no other monitored raid in container),
+mdmon is not running. Ping is not necessary in such case.
 
-I've executed unit tests on today's devel3-2 and I've found that
-expansion cannot be executed due to fact that imsm metadata
-cannot be found after creation.
-Looking patches I've found that problem was introduced by patch:
-
-Manage/external: for external metadata, add_to_super needs lock on container.
-
-It is due to fact that metadata is not written by monitor for raid0.
-
-Problem is fixed by patch:
-  FIX: Write metadata when mdmon is not running
-
-Other patches addresses problems/i.e. inconsistency in closing handle/
-that I've noticed during investigation.
-
-BR
-Adam
-
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (4):
-      FIX: ping_monitor() usage causes memory leaks
-      FIX: Handle has to be closed
-      FIX: Write metadata when mdmon is not running
-      FIX: Ping monitor when mdmon is running only
+ Manage.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
+diff --git a/Manage.c b/Manage.c
+index 5996646..a032c08 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -896,7 +896,13 @@ int Manage_subdevs(char *devname, int fd,
+ 					sysfs_free(sra);
+ 					return 1;
+ 				}
+-				ping_monitor(devnum2devname(devnum));
++				if (mdmon_running(devnum)) {
++					char *cont = devnum2devname(devnum);
++					if (cont) {
++						ping_monitor(cont);
++						free(cont);
++					}
++				}
+ 				sysfs_free(sra);
+ 				close(container_fd);
+ 			} else {
 
- Assemble.c    |    2 +-
- Create.c      |    2 +-
- Grow.c        |    2 +-
- Incremental.c |   10 ++++------
- Manage.c      |   10 +++++++++-
- Monitor.c     |    2 +-
- msg.c         |   14 ++++++++++++++
- msg.h         |    1 +
- 8 files changed, 32 insertions(+), 11 deletions(-)
-
--- 
-Signature
