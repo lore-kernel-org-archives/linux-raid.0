@@ -1,145 +1,110 @@
-From: Xavier Brochard <xavier@alternatif.org>
-Subject: inactive raid after kernel 2.6.32 update
-Date: Wed, 16 Mar 2011 22:24:31 +0100
-Message-ID: <201103162224.31958.xavier@alternatif.org>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: [PATCH] fix: mdadm -Ss for external metadata don't stop
+ container
+Date: Wed, 16 Mar 2011 22:24:20 +0000
+Message-ID: <66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
+References: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
+ <20101207211611.475410d1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20101207211611.475410d1@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Hello everybody
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Tuesday, December 07, 2010 11:16 AM
+> To: Hawrylewicz Czarnowski, Przemyslaw
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed; Labun,
+> Marcin; Czarnowska, Anna
+> Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
+> container
+> 
+> On Tue, 7 Dec 2010 06:44:21 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
+> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+> 
+> > Neil,
+> >
+> > The one below is a fix for the problem we encounter quite often when we
+> try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds
+> open container device and then exits. The time that system make clean up is
+> quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened.
+> > Second resolution is to retry ioctl in mdadm after mdmon exits, but
+> closing handle is I what should be done before process exist.
+> > Take a look at the patch below:
+> >
+> > --
+> > Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its
+> device
+> > and do not close it before exit(). The period between open and release of
+> > handle is too long and md is not able stop device. Releasing handle
+> before
+> > exit does not block md.
+> >
+> > Signed-off-by: Przemyslaw Czarnowski
+> <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> 
+> I've applied this, but I'm not 100% sure it is completely safe.
+> mdmon holds the O_EXCL open to be sure that mdadm isn't creating or
+> assembling another array in the container.
+> mdadm will get an O_EXCL and then try sending a signal to mdmon.  If it
+> succeeds, it knows mdmon is still running.  But this patch might open a
+> window where mdadm can get O_EXCL, and a signal still works.
 
-I have a serious problem with software Raid10 on a Dell server. It started like 
-a corrupted file system, but I quickly thought of a harware or raid problem. 
-May be someone here can help me to understand and to properly recover my datas.
+Hi,
 
-Here's a full description of my problem. It's too long but I don't want to forget something.
+As we test new RHEL6.1 snapshots the problem described in this thread shows
+up very often. 
+As you noticed above, opening container with O_EXCL flag, blocks other
+processes to access container which is good (let us name it "case 1"). But 
+the problem is that there is always a gap between the time mdmon releases
+container handle (either by close() or exit()) and STOP_ARRAY ioctl
+invoked by mdadm, where any other process can access container device and
+block stop action (case 2).
+Right now, ioctl is started without any synchronization, what often leads to
+"busy" as mdmon asynchronously cleans up after subarrays are stopped.
+First what comes to mind is to store mdmon pid, and create loop waiting for
+mdmon to close right before ARRAY_STOP action. It will help with "case 1" but
+do not block "case 2". I have noticed that such approach helps in about 90% of
+all "busy" errors.
+To block against both cases I think that kind mdmon/mdadm/kernel
+synchronization is needed. Do you have any ideas how it can be made?
 
-The Dell server is 3 months old, with a Perc 200 controler (that is, a LSI card) 
-setup as a disk controler only for 6 sata-3 hard-drives and 1 sata-2 SSD card. 
-5 HD are members of the Raid array, one is spare.
-Each drive contains one partition
+> 
+> However I'm not certain that window wasn't already there, and this might
+> just
+> make it a bit bigger.
+> I've put a note in my to-do list to look into this more closely and figure
+> out if there is a problem, and if so, how to fix it.
+Could you please move that problem to the top of your TODOs? :)
 
-The software Raid10 is setup on 4 HD plus 1 spare. The whole hd are used, with 
-one partition as raid. LVM is setup upon raid. System is on SSD.
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> 
+> > ---
+> >  monitor.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/monitor.c b/monitor.c
+> > index 59b4181..f166bc8 100644
+> > --- a/monitor.c
+> > +++ b/monitor.c
+> > @@ -525,6 +525,7 @@ static int wait_and_act(struct supertype *container,
+> int nowait)
+> >  				remove_pidfile(container->devname);
+> >  			exit_now = 1;
+> >  			signal_manager();
+> > +			close(fd);
+> >  			exit(0);
+> >  		}
+> >  	}
 
-Here's my fstab, sdb is the SSD:
---------------------------------------------------
-# / was on /dev/sdb2 during installation
-UUID=8bb91544-89f2-476b-83e5-0e05437b7323 /               ext4    errors=remount-ro,noatime 0       1
-# /boot was on /dev/sdb1 during installation
-UUID=5aae8f66-809f-41a3-b89e-caa53ba08b46 /boot           ext3    defaults,noatime        0       2
-/dev/mapper/tout-home /home           ext4    usrquota,grpquota 0       2
-/dev/mapper/tout-sauvegarde /home/sauvegardes ext4    noatime,noexec  0       2
-/dev/mapper/tout-tmp /tmp            ext4    defaults,noatime        0       2
-/dev/mapper/tout-var /var            ext4    defaults,noatime        0       2
-/dev/mapper/tout-swap none            swap    sw              0       0
-
-The OS is ubuntu Lucid, server version, kernel is 
-Ubuntu 2.6.32-29.58-server 2.6.32.28+drm33.13
-
-Problem started after a kernel update and a reboot. I was not there.
-Someone gives me a phone call, describing a fsck problem: the system 
-wasn't able to mount some partition and ask to skip or to fsck manually. 
-I said skip and then I connected with ssh.
-
-Actually, no partition from raid/lvm was mounted except swap.
-I've run fsck on the /tmp partition, it started to fix and recover some files, 
-ending in a partially recovered FS, with lots of I/O errors in syslog. Some 
-directories were read-only, even for root. I've run a mkfs (without checking 
-blocks) to see what would happened. It works but with plenty of I/O errors 
-in syslog.
- 
-Looks like a hardware disk problem... but I was skeptical. 
-
-/proc/mdstat gives me:
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : inactive sdd1[2](S) sdg1[4](S) sdf1[3](S) sde1[1](S) sdc1[0](S)
-      2441919680 blocks
-
-A reboot on a previous kernel didn't help.
-I've run Dell utilities to test the controler card (lsi) and half of the 
-hard-drives with smart short-test. It gaves no errors.
-
-Then I've booted on System-rescue-cd (which is still running).
-I examined smart values and they looks ok.
-
-Syslog show a little mpt2sas error:
-mpt2sas0: failure at /build/buildd/linux-2.6.32/drivers/scsi/mpt2sas/mpt2sas_scsih.c:3801/_scsih_add_device()!
-but some dell support forums talk about this as a cosmetic error.
-
-Launching some mdadm commands
-%mdam -Av /dev/md0 /dev/sd[cdefg]1
-gives
-mdadm: looking for devices for /dev/md0
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm: /dev/sdc1 has no superblock - assembly aborted
-
-% mdadm --stop /dev/md0
-% mdadm -Av /dev/md0 /dev/sd[cdefg]1
-gives
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdg1 is identified as a member of /dev/md0, slot 4.
-mdadm: added /dev/sdc1 to /dev/md0 as 0
-mdadm: added /dev/sde1 to /dev/md0 as 1
-mdadm: added /dev/sdf1 to /dev/md0 as 3
-mdadm: added /dev/sdg1 to /dev/md0 as 4
-mdadm: added /dev/sdd1 to /dev/md0 as 2
-mdadm: /dev/md0 assembled from 1 drive and 1 spare - not enough to start the array.
-
-
-Launching
-%mdadm --examine /dev/sd[cdefg]1
-show 2 inverted hard-drives, sdc1 and sdd1, and a problem with sde1:
-
-/dev/sdc1
------------------
-this  1  8  49  1  active sync  /dev/sdd1
-0     0  8  33  0  active sync  /dev/sdc1
-1     1  8  49  1  active sync  /dev/sdd1
-2     2  8  65  2  active sync  /dev/sde1
-3     3  8  81  3  active sync  /dev/sdf1 
-4     4  8  97  4  spare        /dev/sdg1
-
-/dev/sdd1
----------------
-this  0  8  33  0  active sync  /dev/sdc1
-0     0  8  33  0  active sync  /dev/sdc1
-1     1  8  49  1  active sync  /dev/sdd1
-2     2  8  65  2  active sync  /dev/sde1
-3     3  8  81  3  active sync  /dev/sdf1 
-4     4  8  97  4  spare        /dev/sdg1
-
-/dev/sde1
------------------
-this  2  8  65  2  active sync  /dev/sde1
-0     0  0   0  0  removed
-1     1  0   0  1  faulty removed
-2     2  8  65  2  active sync  /dev/sde1
-3     3  0   0  3  faulty removed
-(nothing for disk #5)
-
-/dev/sdf1 and /dev/sdg1 are "normal".
-A part of this, every disk is reported as clean with correct checksum.
-
-
-Now I have some questions:
-Can you help me to understand what happened ? 
-Is it a hardware problem (lsi card or hard drive) or rather a software bug 
-that has corrupted the partitions?
-I'm not sure about the properly way to repair this, as long as I dont understand.
-
-Should I recreate missing superblock or try to reassemble the array?
-
-Thanks for any help you can provide.
-kind regards,
-Xavier
-xavier@alternatif.org 
