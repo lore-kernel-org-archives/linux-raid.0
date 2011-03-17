@@ -1,70 +1,193 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [dm-devel] [PATCH] Fix over-zealous flush_disk when changing
- device size.
-Date: Thu, 17 Mar 2011 12:28:33 +1100
-Message-ID: <20110317122833.30077397@notabene.brown>
-References: <20110217165057.5c50e566@notabene.brown>
-	<20110303143120.GA8134@infradead.org>
-	<20110304111624.4be27aaf@notabene.brown>
-	<1299259506.2118.24.camel@grinch>
-	<20110306174755.49404c8e@notabene.brown>
-	<1299471771.2228.11.camel@grinch>
-	<1299516418.15258.4.camel@mulgrave.site>
-	<20110308094412.1c45b277@notabene.brown>
-	<1299538572.15955.90.camel@mulgrave.site>
-	<20110308110453.0047307d@notabene.brown>
-	<x49pqpq95b5.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
+ container
+Date: Thu, 17 Mar 2011 13:38:02 +1100
+Message-ID: <20110317133802.34f39899@notabene.brown>
+References: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
+	<20101207211611.475410d1@notabene.brown>
+	<66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <x49pqpq95b5.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Wed, 16 Mar 2011 16:30:22 -0400 Jeff Moyer <jmoyer@redhat.com> wrote:
+On Wed, 16 Mar 2011 22:24:20 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
+<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
 
-> NeilBrown <neilb@suse.de> writes:
+> > -----Original Message-----
+> > From: Neil Brown [mailto:neilb@suse.de]
+> > Sent: Tuesday, December 07, 2010 11:16 AM
+> > To: Hawrylewicz Czarnowski, Przemyslaw
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed; Labun,
+> > Marcin; Czarnowska, Anna
+> > Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
+> > container
+> > 
+> > On Tue, 7 Dec 2010 06:44:21 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+> > 
+> > > Neil,
+> > >
+> > > The one below is a fix for the problem we encounter quite often when we
+> > try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds
+> > open container device and then exits. The time that system make clean up is
+> > quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened.
+> > > Second resolution is to retry ioctl in mdadm after mdmon exits, but
+> > closing handle is I what should be done before process exist.
+> > > Take a look at the patch below:
+> > >
+> > > --
+> > > Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its
+> > device
+> > > and do not close it before exit(). The period between open and release of
+> > > handle is too long and md is not able stop device. Releasing handle
+> > before
+> > > exit does not block md.
+> > >
+> > > Signed-off-by: Przemyslaw Czarnowski
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> > 
+> > I've applied this, but I'm not 100% sure it is completely safe.
+> > mdmon holds the O_EXCL open to be sure that mdadm isn't creating or
+> > assembling another array in the container.
+> > mdadm will get an O_EXCL and then try sending a signal to mdmon.  If it
+> > succeeds, it knows mdmon is still running.  But this patch might open a
+> > window where mdadm can get O_EXCL, and a signal still works.
 > 
-> >> Synchronous notification of errors.  If we don't try to write everything
-> >> back immediately after the size change, we don't see dirty pages in
-> >> zapped regions until the writeout/page cache management takes it into
-> >> its head to try to clean the pages.
-> >> 
-> >
-> > So if you just want synchronous errors, I think you want:
-> >     fsync_bdev()
-> >
-> > which calls sync_filesystem() if it can find a filesystem, else
-> > sync_blockdev();  (sync_filesystem itself calls sync_blockdev too).
+> Hi,
 > 
-> ... which deadlocks md.  ;-)  writeback_inodes_sb_nr is waiting for the
-> flusher thread to write back the dirty data.  The flusher thread is
-> stuck in md_write_start, here:
-> 
->         wait_event(mddev->sb_wait,
->                    !test_bit(MD_CHANGE_PENDING, &mddev->flags));
-> 
-> This is after reverting your change, and replacing the flush_disk call
-> in check_disk_size_change with a call to fsync_bdev.  I'm not familiar
-> enough with md to really suggest a way forward.  Neil?
+> As we test new RHEL6.1 snapshots the problem described in this thread shows
+> up very often. 
+> As you noticed above, opening container with O_EXCL flag, blocks other
+> processes to access container which is good (let us name it "case 1"). But 
+> the problem is that there is always a gap between the time mdmon releases
+> container handle (either by close() or exit()) and STOP_ARRAY ioctl
+> invoked by mdadm, where any other process can access container device and
+> block stop action (case 2).
+> Right now, ioctl is started without any synchronization, what often leads to
+> "busy" as mdmon asynchronously cleans up after subarrays are stopped.
+> First what comes to mind is to store mdmon pid, and create loop waiting for
+> mdmon to close right before ARRAY_STOP action. It will help with "case 1" but
+> do not block "case 2". I have noticed that such approach helps in about 90% of
+> all "busy" errors.
+> To block against both cases I think that kind mdmon/mdadm/kernel
+> synchronization is needed. Do you have any ideas how it can be made?
 
-That would be quite easy to avoid.
-Just call
-   md_write_start()
-before revalidate_disk, and
-   md_write_end()
-afterwards.
-You wouldn't have a 'bio' to pass in - but it is rather ugly requiring
-one anyway - I should fix that.
-For testing, just pass in NULL, and change
-	if (bio_data_dir(bi) != WRITE)
-		return;
-to
-	if (bi && bio_data_dir(bi) != WRITE)
-		return;
+Yes.  I think we can make use of O_EXCL, and a little bit of retry-on-failure
+to make this all more reliable.  See patch below which will appear in my
+devel-3.2 tree later today.
 
+If this doesn't fix your symptom, then it is possible I have misunderstood.
+In that case I'll get some more details and try again.
+
+> 
+> > 
+> > However I'm not certain that window wasn't already there, and this might
+> > just
+> > make it a bit bigger.
+> > I've put a note in my to-do list to look into this more closely and figure
+> > out if there is a problem, and if so, how to fix it.
+> Could you please move that problem to the top of your TODOs? :)
+
+The concern that I had was unfounded.  Because mdmon removes its pid file
+before closing the fd (and losing the O_EXCL lock), there is no race.
+
+Thanks,
 NeilBrown
+
+commit eb0af52689656f6526540ee3a72b0647e7a7b20d
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Mar 17 13:35:10 2011 +1100
+
+    --stop: separate 'is busy' test for 'did it stop properly'.
+    
+    Stopping an md array requires that there is no other user of it.
+    However with udev and udisks and such there can be transient other
+    users of md devices which can interfere with stopping the array.
+    
+    If there is a transient users, we really want "mdadm --stop" to wait a
+    little while and retry.
+    However if the array is genuinely in-use (e.g. mounted), then we
+    don't want to wait at all - we want to fail immediately.
+    
+    So before trying to stop, re-open device with O_EXCL.  If this fails
+    then the device is probably in use, so give up.
+    
+    If it succeeds, but a subsequent STOP_ARRAY fails, then it is possibly
+    a transient failure, so try again for a few seconds.
+    
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/Manage.c b/Manage.c
+index 5996646..3361269 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -208,10 +208,26 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 		struct stat stb;
+ 		struct mdinfo *mdi;
+ 		int devnum;
++		int err;
++		int count;
+ 		/* If this is an mdmon managed array, just write 'inactive'
+ 		 * to the array state and let mdmon clear up.
+ 		 */
+ 		devnum = fd2devnum(fd);
++		/* Get EXCL access first.  If this fails, then attempting
++		 * to stop is probably a bad idea.
++		 */
++		close(fd);
++		fd = open(devname, O_RDONLY|O_EXCL);
++		if (fd < 0 || fd2devnum(fd) != devnum) {
++			if (fd >= 0)
++				close(fd);
++			fprintf(stderr,
++				Name ": Cannot get exclusive access to %s:"
++				" possibly it is still in use.\n",
++				devname);
++			return 1;
++		}
+ 		mdi = sysfs_read(fd, -1, GET_LEVEL|GET_VERSION);
+ 		if (mdi &&
+ 		    mdi->array.level > 0 &&
+@@ -230,7 +246,14 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 			/* Give monitor a chance to act */
+ 			ping_monitor(mdi->text_version);
+ 
+-			fd = open(devname, O_RDONLY);
++			fd = open_dev_excl(devnum);
++			if (fd < 0) {
++				fprintf(stderr, Name
++					": failed to completely stop %s"
++					": Device is busy\n",
++					devname);
++				return 1;
++			}
+ 		} else if (mdi &&
+ 			   mdi->array.major_version == -1 &&
+ 			   mdi->array.minor_version == -2 &&
+@@ -263,7 +286,18 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 				}
+ 		}
+ 
+-		if (fd >= 0 && ioctl(fd, STOP_ARRAY, NULL)) {
++		/* As we have an O_EXCL open, any use of the device
++		 * which blocks STOP_ARRAY is probably a transient use,
++		 * so it is reasonable to retry for a while - 5 seconds.
++		 */
++		count = 25;
++		while (count && fd >= 0
++		       && (err = ioctl(fd, STOP_ARRAY, NULL)) < 0
++		       && errno == EBUSY) {
++			usleep(200000);
++			count --;
++		}
++		if (fd >= 0 && err) {
+ 			if (quiet == 0) {
+ 				fprintf(stderr, Name
+ 					": failed to stop array %s: %s\n",
 
