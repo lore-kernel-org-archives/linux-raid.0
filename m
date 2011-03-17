@@ -1,91 +1,82 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [dm-devel] [PATCH] Fix over-zealous flush_disk when changing device size.
-Date: Thu, 17 Mar 2011 13:33:38 -0400
-Message-ID: <x49ipvhslcd.fsf@segfault.boston.devel.redhat.com>
-References: <20110217165057.5c50e566@notabene.brown>
-	<20110303143120.GA8134@infradead.org>
-	<20110304111624.4be27aaf@notabene.brown>
-	<1299259506.2118.24.camel@grinch>
-	<20110306174755.49404c8e@notabene.brown>
-	<1299471771.2228.11.camel@grinch>
-	<1299516418.15258.4.camel@mulgrave.site>
-	<20110308094412.1c45b277@notabene.brown>
-	<1299538572.15955.90.camel@mulgrave.site>
-	<20110308110453.0047307d@notabene.brown>
-	<x49pqpq95b5.fsf@segfault.boston.devel.redhat.com>
-	<20110317122833.30077397@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20110317122833.30077397@notabene.brown> (NeilBrown's message of
-	"Thu, 17 Mar 2011 12:28:33 +1100")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: How to implement raid1 repair
+Date: Thu, 17 Mar 2011 13:36:51 -0400
+Message-ID: <1300382863-sup-9183@think>
+References: <4D821ED3.5050605@jan-o-sch.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+In-reply-to: <4D821ED3.5050605@jan-o-sch.net>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Josef Bacik <josef@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+Excerpts from Jan Schmidt's message of 2011-03-17 10:46:43 -0400:
+> Hello everyone,
+> 
+> Currently, btrfs has its own raid1 but no repair mechanism for bad
+> checksums or EIOs. While trying to implement such a repair mechanism,
+> several more or less general questions came up.
+> 
+> There are two different retry paths for data and metadata. (If you know
+> or don't care how btrfs handles read errors: goto questions)
 
-> On Wed, 16 Mar 2011 16:30:22 -0400 Jeff Moyer <jmoyer@redhat.com> wrote:
->
->> NeilBrown <neilb@suse.de> writes:
->> 
->> >> Synchronous notification of errors.  If we don't try to write everything
->> >> back immediately after the size change, we don't see dirty pages in
->> >> zapped regions until the writeout/page cache management takes it into
->> >> its head to try to clean the pages.
->> >> 
->> >
->> > So if you just want synchronous errors, I think you want:
->> >     fsync_bdev()
->> >
->> > which calls sync_filesystem() if it can find a filesystem, else
->> > sync_blockdev();  (sync_filesystem itself calls sync_blockdev too).
->> 
->> ... which deadlocks md.  ;-)  writeback_inodes_sb_nr is waiting for the
->> flusher thread to write back the dirty data.  The flusher thread is
->> stuck in md_write_start, here:
->> 
->>         wait_event(mddev->sb_wait,
->>                    !test_bit(MD_CHANGE_PENDING, &mddev->flags));
->> 
->> This is after reverting your change, and replacing the flush_disk call
->> in check_disk_size_change with a call to fsync_bdev.  I'm not familiar
->> enough with md to really suggest a way forward.  Neil?
->
-> That would be quite easy to avoid.
-> Just call
->    md_write_start()
-> before revalidate_disk, and
->    md_write_end()
-> afterwards.
+You should talk with Ilya, who is working on replacing failed raid drives as
+well.
 
-That does not avoid the problem (if I understood your suggestion).  You
-instead end up with the following:
+> 
+> The data path: btrfs_io_failed_hook is called for each failed bio (EIO
+> or checksum error). Currently, it does not know which mirror failed at
+> first, because normally btrfs_map_block is called with mirror_num=0,
+> leading to a path where find_live_mirror picks one of them. The error
+> recovery strategy is then to explicitly read available mirrors one after
+> the other until one succeeds. In case the very first read picked mirror
+> 1 and failed, the retry code will most likely fail at mirror 1 as well.
+> It would be nice to know which mirror was picked formerly and directly
+> try the other.
 
-INFO: task md127_raid5:2282 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-md127_raid5     D ffff88011c72d0a0  5688  2282      2 0x00000080
- ffff880118997c20 0000000000000046 ffff880100000000 0000000000000246
- 0000000000014d00 ffff88011c72cb10 ffff88011c72d0a0 ffff880118997fd8
- ffff88011c72d0a8 0000000000014d00 ffff880118996010 0000000000014d00
-Call Trace:
- [<ffffffff8138bbbd>] md_write_start+0xad/0x1d0
- [<ffffffff810801d0>] ? autoremove_wake_function+0x0/0x40
- [<ffffffffa0311558>] raid5_finish_reshape+0x98/0x1e0 [raid456]
- [<ffffffff8138a933>] reap_sync_thread+0x63/0x130
- [<ffffffff8138c8b6>] md_check_recovery+0x1f6/0x6f0
- [<ffffffffa03150ab>] raid5d+0x3b/0x610 [raid456]
- [<ffffffff810804c9>] ? prepare_to_wait+0x59/0x90
- [<ffffffff81387ee9>] md_thread+0x119/0x150
- [<ffffffff810801d0>] ? autoremove_wake_function+0x0/0x40
- [<ffffffff81387dd0>] ? md_thread+0x0/0x150
- [<ffffffff8107fb56>] kthread+0x96/0xa0
- [<ffffffff8100cc04>] kernel_thread_helper+0x4/0x10
- [<ffffffff8107fac0>] ? kthread+0x0/0xa0
- [<ffffffff8100cc00>] ? kernel_thread_helper+0x0/0x10
+Agree with Josef here, change the code to record which one was used.
+The current bio submission stuff only keeps the btrfs_multi_bio struct
+around when a given IO spans more than one disk.  But you can easily
+change it to keep the struct around for all IOs.
 
-I'll leave this to you to work out when you have time.
+> 
+> The metadata path: there is no failure hook, instead there is a loop in
+> btree_read_extent_buffer_pages, also starting off at mirror_num=0, which
+> again leaves the decision to find_live_mirror. If there is an error for
+> any page to be read, the same retry strategy is used as is in the data
+> path. This obviously might leave you alone with unreadable data
+> (consider page x is bad on mirror 1 and page x+1 is bad on mirror 2,
+> both belonging to the same extent, you lose). It would be nice to have a
+> mechanism at a lower level issuing page-sized retries. Of course,
+> knowing which mirror is bad before trying mirror 1 again is desirable as
+> well.
 
-Cheers,
-Jeff
+Currently the block size is always smaller than the stripe size.  But
+you have a good point.
+
+> 
+> questions:
+> I have a raid1 repair solution in mind (partially coded) for btrfs that
+> can be implemented quite easily. However, I have some misgivings. All of
+> the following questions would need a "yes" for my solution to stand:
+> 
+> - Is it acceptable to retry reading a block immediately after the disk
+> said it won't work? Or in case of a successful read followed by a
+> checksum error? (Which is already being done right now in btrfs.)
+
+In the initial implementation sure, but long term it's not the best.
+
+> 
+> - Is it acceptable to always write both mirrors if one is found to be
+> bad (also consider ssds)?
+
+Sorry, I'd rather not overwrite the copy we know to be good.
+
+> 
+> If either of the answers is "no", tracking where the initial read came
+> from seems inevitable. Tracking would be very easy if bios came back
+> with unmodified values in bd_bdev and bd_sector, which is not the case.
+
+-chris
