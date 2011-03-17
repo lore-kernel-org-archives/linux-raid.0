@@ -1,10 +1,10 @@
 From: Thomas =?iso-8859-1?q?Carri=E9?= <thocar@thocar.org>
 Subject: MD without LVM : should I reinstall ?
-Date: Thu, 17 Mar 2011 22:15:51 +0100
-Message-ID: <201103172215.51064.thocar@thocar.org>
+Date: Thu, 17 Mar 2011 22:36:46 +0100
+Message-ID: <201103172236.46540.thocar@thocar.org>
 Reply-To: thocar@thocar.org
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
