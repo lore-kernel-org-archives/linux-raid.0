@@ -1,110 +1,70 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: RE: [PATCH] fix: mdadm -Ss for external metadata don't stop
- container
-Date: Wed, 16 Mar 2011 22:24:20 +0000
-Message-ID: <66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
-References: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
- <20101207211611.475410d1@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [dm-devel] [PATCH] Fix over-zealous flush_disk when changing
+ device size.
+Date: Thu, 17 Mar 2011 12:28:33 +1100
+Message-ID: <20110317122833.30077397@notabene.brown>
+References: <20110217165057.5c50e566@notabene.brown>
+	<20110303143120.GA8134@infradead.org>
+	<20110304111624.4be27aaf@notabene.brown>
+	<1299259506.2118.24.camel@grinch>
+	<20110306174755.49404c8e@notabene.brown>
+	<1299471771.2228.11.camel@grinch>
+	<1299516418.15258.4.camel@mulgrave.site>
+	<20110308094412.1c45b277@notabene.brown>
+	<1299538572.15955.90.camel@mulgrave.site>
+	<20110308110453.0047307d@notabene.brown>
+	<x49pqpq95b5.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20101207211611.475410d1@notabene.brown>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <x49pqpq95b5.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Tuesday, December 07, 2010 11:16 AM
-> To: Hawrylewicz Czarnowski, Przemyslaw
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed; Labun,
-> Marcin; Czarnowska, Anna
-> Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
-> container
-> 
-> On Tue, 7 Dec 2010 06:44:21 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> 
-> > Neil,
-> >
-> > The one below is a fix for the problem we encounter quite often when we
-> try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds
-> open container device and then exits. The time that system make clean up is
-> quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened.
-> > Second resolution is to retry ioctl in mdadm after mdmon exits, but
-> closing handle is I what should be done before process exist.
-> > Take a look at the patch below:
-> >
-> > --
-> > Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its
-> device
-> > and do not close it before exit(). The period between open and release of
-> > handle is too long and md is not able stop device. Releasing handle
-> before
-> > exit does not block md.
-> >
-> > Signed-off-by: Przemyslaw Czarnowski
-> <przemyslaw.hawrylewicz.czarnowski@intel.com>
-> 
-> I've applied this, but I'm not 100% sure it is completely safe.
-> mdmon holds the O_EXCL open to be sure that mdadm isn't creating or
-> assembling another array in the container.
-> mdadm will get an O_EXCL and then try sending a signal to mdmon.  If it
-> succeeds, it knows mdmon is still running.  But this patch might open a
-> window where mdadm can get O_EXCL, and a signal still works.
+On Wed, 16 Mar 2011 16:30:22 -0400 Jeff Moyer <jmoyer@redhat.com> wrote:
 
-Hi,
-
-As we test new RHEL6.1 snapshots the problem described in this thread shows
-up very often. 
-As you noticed above, opening container with O_EXCL flag, blocks other
-processes to access container which is good (let us name it "case 1"). But 
-the problem is that there is always a gap between the time mdmon releases
-container handle (either by close() or exit()) and STOP_ARRAY ioctl
-invoked by mdadm, where any other process can access container device and
-block stop action (case 2).
-Right now, ioctl is started without any synchronization, what often leads to
-"busy" as mdmon asynchronously cleans up after subarrays are stopped.
-First what comes to mind is to store mdmon pid, and create loop waiting for
-mdmon to close right before ARRAY_STOP action. It will help with "case 1" but
-do not block "case 2". I have noticed that such approach helps in about 90% of
-all "busy" errors.
-To block against both cases I think that kind mdmon/mdadm/kernel
-synchronization is needed. Do you have any ideas how it can be made?
-
+> NeilBrown <neilb@suse.de> writes:
 > 
-> However I'm not certain that window wasn't already there, and this might
-> just
-> make it a bit bigger.
-> I've put a note in my to-do list to look into this more closely and figure
-> out if there is a problem, and if so, how to fix it.
-Could you please move that problem to the top of your TODOs? :)
-
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> 
-> > ---
-> >  monitor.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >> Synchronous notification of errors.  If we don't try to write everything
+> >> back immediately after the size change, we don't see dirty pages in
+> >> zapped regions until the writeout/page cache management takes it into
+> >> its head to try to clean the pages.
+> >> 
 > >
-> > diff --git a/monitor.c b/monitor.c
-> > index 59b4181..f166bc8 100644
-> > --- a/monitor.c
-> > +++ b/monitor.c
-> > @@ -525,6 +525,7 @@ static int wait_and_act(struct supertype *container,
-> int nowait)
-> >  				remove_pidfile(container->devname);
-> >  			exit_now = 1;
-> >  			signal_manager();
-> > +			close(fd);
-> >  			exit(0);
-> >  		}
-> >  	}
+> > So if you just want synchronous errors, I think you want:
+> >     fsync_bdev()
+> >
+> > which calls sync_filesystem() if it can find a filesystem, else
+> > sync_blockdev();  (sync_filesystem itself calls sync_blockdev too).
+> 
+> ... which deadlocks md.  ;-)  writeback_inodes_sb_nr is waiting for the
+> flusher thread to write back the dirty data.  The flusher thread is
+> stuck in md_write_start, here:
+> 
+>         wait_event(mddev->sb_wait,
+>                    !test_bit(MD_CHANGE_PENDING, &mddev->flags));
+> 
+> This is after reverting your change, and replacing the flush_disk call
+> in check_disk_size_change with a call to fsync_bdev.  I'm not familiar
+> enough with md to really suggest a way forward.  Neil?
+
+That would be quite easy to avoid.
+Just call
+   md_write_start()
+before revalidate_disk, and
+   md_write_end()
+afterwards.
+You wouldn't have a 'bio' to pass in - but it is rather ugly requiring
+one anyway - I should fix that.
+For testing, just pass in NULL, and change
+	if (bio_data_dir(bi) != WRITE)
+		return;
+to
+	if (bi && bio_data_dir(bi) != WRITE)
+		return;
+
+NeilBrown
 
