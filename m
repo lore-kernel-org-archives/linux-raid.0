@@ -1,61 +1,76 @@
-From: Jan Schmidt <list.btrfs@jan-o-sch.net>
-Subject: How to implement raid1 repair
-Date: Thu, 17 Mar 2011 15:46:43 +0100
-Message-ID: <4D821ED3.5050605@jan-o-sch.net>
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] Retry writing 'inactive' state during stopping array
+Date: Thu, 17 Mar 2011 17:34:57 +0100
+Message-ID: <20110317163457.5322.18237.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: linux-btrfs@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, Josef Bacik <josef@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Hello everyone,
+Issue observed:
+Sporadicaly stopping arrays using "mdadm -Ss" command does not succeded.
+Cause:
+Writting "inactive" to the array state not succeded- array is busy
+(accessed by udev, blkid etc.)
+Resolution:
+If writing 'inactive' fails, wait and retry again (because it is possibly
+a transient failure)
 
-Currently, btrfs has its own raid1 but no repair mechanism for bad
-checksums or EIOs. While trying to implement such a repair mechanism,
-several more or less general questions came up.
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ Manage.c |   23 ++++++++++++++++-------
+ 1 files changed, 16 insertions(+), 7 deletions(-)
 
-There are two different retry paths for data and metadata. (If you know
-or don't care how btrfs handles read errors: goto questions)
+diff --git a/Manage.c b/Manage.c
+index ed3112e..a6531f3 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -224,7 +224,9 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 				close(fd);
+ 			fprintf(stderr,
+ 				Name ": Cannot get exclusive access to %s:"
+-				" possibly it is still in use.\n",
++				"Perhaps a running "
++				"process, mounted filesystem "
++				"or active volume group?\n",
+ 				devname);
+ 			return 1;
+ 		}
+@@ -234,12 +236,18 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 		    is_subarray(mdi->text_version)) {
+ 			/* This is mdmon managed. */
+ 			close(fd);
+-			if (sysfs_set_str(mdi, NULL,
+-					  "array_state", "inactive") < 0) {
+-				if (quiet == 0)
+-					fprintf(stderr, Name
+-						": failed to stop array %s: %s\n",
+-						devname, strerror(errno));
++
++			count = 25;
++			while (count && sysfs_set_str(mdi, NULL,
++				  "array_state", "inactive") < 0
++				  && errno == EBUSY) {
++				usleep(200000);
++				count--;
++			}
++			if (!count && !quiet) {
++				fprintf(stderr, Name
++					": failed to stop array %s: %s\n",
++					devname, strerror(errno));
+ 				return 1;
+ 			}
+ 
+@@ -297,6 +305,7 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+ 			usleep(200000);
+ 			count --;
+ 		}
++
+ 		if (fd >= 0 && err) {
+ 			if (quiet == 0) {
+ 				fprintf(stderr, Name
 
-The data path: btrfs_io_failed_hook is called for each failed bio (EIO
-or checksum error). Currently, it does not know which mirror failed at
-first, because normally btrfs_map_block is called with mirror_num=0,
-leading to a path where find_live_mirror picks one of them. The error
-recovery strategy is then to explicitly read available mirrors one after
-the other until one succeeds. In case the very first read picked mirror
-1 and failed, the retry code will most likely fail at mirror 1 as well.
-It would be nice to know which mirror was picked formerly and directly
-try the other.
-
-The metadata path: there is no failure hook, instead there is a loop in
-btree_read_extent_buffer_pages, also starting off at mirror_num=0, which
-again leaves the decision to find_live_mirror. If there is an error for
-any page to be read, the same retry strategy is used as is in the data
-path. This obviously might leave you alone with unreadable data
-(consider page x is bad on mirror 1 and page x+1 is bad on mirror 2,
-both belonging to the same extent, you lose). It would be nice to have a
-mechanism at a lower level issuing page-sized retries. Of course,
-knowing which mirror is bad before trying mirror 1 again is desirable as
-well.
-
-questions:
-I have a raid1 repair solution in mind (partially coded) for btrfs that
-can be implemented quite easily. However, I have some misgivings. All of
-the following questions would need a "yes" for my solution to stand:
-
-- Is it acceptable to retry reading a block immediately after the disk
-said it won't work? Or in case of a successful read followed by a
-checksum error? (Which is already being done right now in btrfs.)
-
-- Is it acceptable to always write both mirrors if one is found to be
-bad (also consider ssds)?
-
-If either of the answers is "no", tracking where the initial read came
-from seems inevitable. Tracking would be very easy if bios came back
-with unmodified values in bd_bdev and bd_sector, which is not the case.
-
-Thanks,
-Jan
