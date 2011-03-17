@@ -1,193 +1,61 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
- container
-Date: Thu, 17 Mar 2011 13:38:02 +1100
-Message-ID: <20110317133802.34f39899@notabene.brown>
-References: <66C59AD0932712458090B447266D638C010BD52A8E@irsmsx504.ger.corp.intel.com>
-	<20101207211611.475410d1@notabene.brown>
-	<66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
+From: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Subject: How to implement raid1 repair
+Date: Thu, 17 Mar 2011 15:46:43 +0100
+Message-ID: <4D821ED3.5050605@jan-o-sch.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66C59AD0932712458090B447266D638C010FABEFEC@irsmsx504.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: linux-btrfs@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, Josef Bacik <josef@redhat.com>
 List-Id: linux-raid.ids
 
-On Wed, 16 Mar 2011 22:24:20 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+Hello everyone,
 
-> > -----Original Message-----
-> > From: Neil Brown [mailto:neilb@suse.de]
-> > Sent: Tuesday, December 07, 2010 11:16 AM
-> > To: Hawrylewicz Czarnowski, Przemyslaw
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed; Labun,
-> > Marcin; Czarnowska, Anna
-> > Subject: Re: [PATCH] fix: mdadm -Ss for external metadata don't stop
-> > container
-> > 
-> > On Tue, 7 Dec 2010 06:44:21 +0000 "Hawrylewicz Czarnowski, Przemyslaw"
-> > <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> > 
-> > > Neil,
-> > >
-> > > The one below is a fix for the problem we encounter quite often when we
-> > try to stop all arrays with mdadm -Ss. The main problem is that mdmon holds
-> > open container device and then exits. The time that system make clean up is
-> > quite long and mdadm invokes ARRAY_STOP ioctl when device is still opened.
-> > > Second resolution is to retry ioctl in mdadm after mdmon exits, but
-> > closing handle is I what should be done before process exist.
-> > > Take a look at the patch below:
-> > >
-> > > --
-> > > Sometimes (~50%) mdadm -Ss cannot stop container as mdmon opens its
-> > device
-> > > and do not close it before exit(). The period between open and release of
-> > > handle is too long and md is not able stop device. Releasing handle
-> > before
-> > > exit does not block md.
-> > >
-> > > Signed-off-by: Przemyslaw Czarnowski
-> > <przemyslaw.hawrylewicz.czarnowski@intel.com>
-> > 
-> > I've applied this, but I'm not 100% sure it is completely safe.
-> > mdmon holds the O_EXCL open to be sure that mdadm isn't creating or
-> > assembling another array in the container.
-> > mdadm will get an O_EXCL and then try sending a signal to mdmon.  If it
-> > succeeds, it knows mdmon is still running.  But this patch might open a
-> > window where mdadm can get O_EXCL, and a signal still works.
-> 
-> Hi,
-> 
-> As we test new RHEL6.1 snapshots the problem described in this thread shows
-> up very often. 
-> As you noticed above, opening container with O_EXCL flag, blocks other
-> processes to access container which is good (let us name it "case 1"). But 
-> the problem is that there is always a gap between the time mdmon releases
-> container handle (either by close() or exit()) and STOP_ARRAY ioctl
-> invoked by mdadm, where any other process can access container device and
-> block stop action (case 2).
-> Right now, ioctl is started without any synchronization, what often leads to
-> "busy" as mdmon asynchronously cleans up after subarrays are stopped.
-> First what comes to mind is to store mdmon pid, and create loop waiting for
-> mdmon to close right before ARRAY_STOP action. It will help with "case 1" but
-> do not block "case 2". I have noticed that such approach helps in about 90% of
-> all "busy" errors.
-> To block against both cases I think that kind mdmon/mdadm/kernel
-> synchronization is needed. Do you have any ideas how it can be made?
+Currently, btrfs has its own raid1 but no repair mechanism for bad
+checksums or EIOs. While trying to implement such a repair mechanism,
+several more or less general questions came up.
 
-Yes.  I think we can make use of O_EXCL, and a little bit of retry-on-failure
-to make this all more reliable.  See patch below which will appear in my
-devel-3.2 tree later today.
+There are two different retry paths for data and metadata. (If you know
+or don't care how btrfs handles read errors: goto questions)
 
-If this doesn't fix your symptom, then it is possible I have misunderstood.
-In that case I'll get some more details and try again.
+The data path: btrfs_io_failed_hook is called for each failed bio (EIO
+or checksum error). Currently, it does not know which mirror failed at
+first, because normally btrfs_map_block is called with mirror_num=0,
+leading to a path where find_live_mirror picks one of them. The error
+recovery strategy is then to explicitly read available mirrors one after
+the other until one succeeds. In case the very first read picked mirror
+1 and failed, the retry code will most likely fail at mirror 1 as well.
+It would be nice to know which mirror was picked formerly and directly
+try the other.
 
-> 
-> > 
-> > However I'm not certain that window wasn't already there, and this might
-> > just
-> > make it a bit bigger.
-> > I've put a note in my to-do list to look into this more closely and figure
-> > out if there is a problem, and if so, how to fix it.
-> Could you please move that problem to the top of your TODOs? :)
+The metadata path: there is no failure hook, instead there is a loop in
+btree_read_extent_buffer_pages, also starting off at mirror_num=0, which
+again leaves the decision to find_live_mirror. If there is an error for
+any page to be read, the same retry strategy is used as is in the data
+path. This obviously might leave you alone with unreadable data
+(consider page x is bad on mirror 1 and page x+1 is bad on mirror 2,
+both belonging to the same extent, you lose). It would be nice to have a
+mechanism at a lower level issuing page-sized retries. Of course,
+knowing which mirror is bad before trying mirror 1 again is desirable as
+well.
 
-The concern that I had was unfounded.  Because mdmon removes its pid file
-before closing the fd (and losing the O_EXCL lock), there is no race.
+questions:
+I have a raid1 repair solution in mind (partially coded) for btrfs that
+can be implemented quite easily. However, I have some misgivings. All of
+the following questions would need a "yes" for my solution to stand:
+
+- Is it acceptable to retry reading a block immediately after the disk
+said it won't work? Or in case of a successful read followed by a
+checksum error? (Which is already being done right now in btrfs.)
+
+- Is it acceptable to always write both mirrors if one is found to be
+bad (also consider ssds)?
+
+If either of the answers is "no", tracking where the initial read came
+from seems inevitable. Tracking would be very easy if bios came back
+with unmodified values in bd_bdev and bd_sector, which is not the case.
 
 Thanks,
-NeilBrown
-
-commit eb0af52689656f6526540ee3a72b0647e7a7b20d
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Mar 17 13:35:10 2011 +1100
-
-    --stop: separate 'is busy' test for 'did it stop properly'.
-    
-    Stopping an md array requires that there is no other user of it.
-    However with udev and udisks and such there can be transient other
-    users of md devices which can interfere with stopping the array.
-    
-    If there is a transient users, we really want "mdadm --stop" to wait a
-    little while and retry.
-    However if the array is genuinely in-use (e.g. mounted), then we
-    don't want to wait at all - we want to fail immediately.
-    
-    So before trying to stop, re-open device with O_EXCL.  If this fails
-    then the device is probably in use, so give up.
-    
-    If it succeeds, but a subsequent STOP_ARRAY fails, then it is possibly
-    a transient failure, so try again for a few seconds.
-    
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Manage.c b/Manage.c
-index 5996646..3361269 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -208,10 +208,26 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
- 		struct stat stb;
- 		struct mdinfo *mdi;
- 		int devnum;
-+		int err;
-+		int count;
- 		/* If this is an mdmon managed array, just write 'inactive'
- 		 * to the array state and let mdmon clear up.
- 		 */
- 		devnum = fd2devnum(fd);
-+		/* Get EXCL access first.  If this fails, then attempting
-+		 * to stop is probably a bad idea.
-+		 */
-+		close(fd);
-+		fd = open(devname, O_RDONLY|O_EXCL);
-+		if (fd < 0 || fd2devnum(fd) != devnum) {
-+			if (fd >= 0)
-+				close(fd);
-+			fprintf(stderr,
-+				Name ": Cannot get exclusive access to %s:"
-+				" possibly it is still in use.\n",
-+				devname);
-+			return 1;
-+		}
- 		mdi = sysfs_read(fd, -1, GET_LEVEL|GET_VERSION);
- 		if (mdi &&
- 		    mdi->array.level > 0 &&
-@@ -230,7 +246,14 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
- 			/* Give monitor a chance to act */
- 			ping_monitor(mdi->text_version);
- 
--			fd = open(devname, O_RDONLY);
-+			fd = open_dev_excl(devnum);
-+			if (fd < 0) {
-+				fprintf(stderr, Name
-+					": failed to completely stop %s"
-+					": Device is busy\n",
-+					devname);
-+				return 1;
-+			}
- 		} else if (mdi &&
- 			   mdi->array.major_version == -1 &&
- 			   mdi->array.minor_version == -2 &&
-@@ -263,7 +286,18 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
- 				}
- 		}
- 
--		if (fd >= 0 && ioctl(fd, STOP_ARRAY, NULL)) {
-+		/* As we have an O_EXCL open, any use of the device
-+		 * which blocks STOP_ARRAY is probably a transient use,
-+		 * so it is reasonable to retry for a while - 5 seconds.
-+		 */
-+		count = 25;
-+		while (count && fd >= 0
-+		       && (err = ioctl(fd, STOP_ARRAY, NULL)) < 0
-+		       && errno == EBUSY) {
-+			usleep(200000);
-+			count --;
-+		}
-+		if (fd >= 0 && err) {
- 			if (quiet == 0) {
- 				fprintf(stderr, Name
- 					": failed to stop array %s: %s\n",
-
+Jan
