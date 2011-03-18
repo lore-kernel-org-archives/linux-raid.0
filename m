@@ -1,139 +1,43 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: high throughput storage server?
-Date: Sat, 19 Mar 2011 09:01:01 +1100
-Message-ID: <20110319090101.1786cc2a@notabene.brown>
-References: <4D6AC288.20101@wildgooses.com>
-	<AANLkTinjPJJrUYrA=fxcau02Q+4Z67YVsJhcGxeTpAAW@mail.gmail.com>
-	<4D6DC585.90304@gmail.com>
-	<AANLkTi=yWhnqY_RTd8GH+fvEQfHfQ6TpWxnzpx-Fv=aj@mail.gmail.com>
-	<AANLkTimB2hv8aP01JdQyOJehtkX2j=G5HtgVi6eNjmLx@mail.gmail.com>
-	<AANLkTin=0PN+ovNY=rLu21-VRiy2Ffzrf69_fWsS54iN@mail.gmail.com>
-	<20110313201000.GA14090@infradead.org>
-	<4D7E0994.3020303@hardwarefreak.com>
-	<20110314124733.GA31377@infradead.org>
-	<4D835B2A.1000805@hardwarefreak.com>
-	<20110318140509.GA26226@infradead.org>
-	<4D837DAF.6060107@hardwarefreak.com>
+Subject: Re: Adaptive throttling for RAID1 background resync
+Date: Sat, 19 Mar 2011 09:11:37 +1100
+Message-ID: <20110319091137.2eda1c91@notabene.brown>
+References: <201103181549.20835.xavier@alternatif.org>
+	<10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D837DAF.6060107@hardwarefreak.com>
+In-Reply-To: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Roberto Spadim <roberto@spadim.com.br>, Drew <drew.kay@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+To: Hari Subramanian <hari@vmware.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 18 Mar 2011 10:43:43 -0500 Stan Hoeppner <stan@hardwarefreak.com>
-wrote:
+On Fri, 18 Mar 2011 13:26:52 -0700 Hari Subramanian <hari@vmware.com> wrote:
 
-> Christoph Hellwig put forth on 3/18/2011 9:05 AM:
+> I am hitting an issue when performing RAID1 resync from a replica hosted on a fast disk to one on a slow disk. When resync throughput is set at 20Mbps min and 200Mbps max and we have enough data to resync, I see the kernel running out of memory quickly (within a minute). From the crash dumps, I see that a whole lot (12,000+) of biovec-64s that are active on the slab cache.
 > 
-> Thanks for the confirmations and explanations.
+> Our guess is that MD is allowing data to be read from the fast disk at a frequency much higher than what the slow disk is able to write to. This continues for a long time (> 1 minute) in an unbounded fashion resulting in buildup of IOs that are waiting to be written to the disk. This eventually causes the machine to panic (we have panic on OOM selected)
 > 
-> > The kernel is pretty smart in placement of user and page cache data, but
-> > it can't really second guess your intention.  With the numactl tool you
-> > can help it doing the proper placement for you workload.  Note that the
-> > choice isn't always trivial - a numa system tends to have memory on
-> > multiple nodes, so you'll either have to find a good partitioning of
-> > your workload or live with off-node references.  I don't think
-> > partitioning NFS workloads is trivial, but then again I'm not a
-> > networking expert.
+> >From reading the MD and RAID1 resync code, I don't see anything that would prevent something like this from happening. So, we would like to implement something to this effect that adaptively throttles the background resync.
 > 
-> Bringing mdraid back into the fold, I'm wondering what kinda of load the
-> mdraid threads would place on a system of the caliber needed to push
-> 10GB/s NFS.
-> 
-> Neil, I spent quite a bit of time yesterday spec'ing out what I believe
+> Can someone confirm or deny these claims and also the need for a new solution. Maybe I'm missing something that already exists that would give me the adaptive throttling. We cannot make do with the static throttling (sync_speed_max and min) since that would be too difficult to get right for varying IO throughputs form the different RAID1 replicas.
 
-Addressing me directly in an email that wasn't addressed to me directly seem
-a bit ... odd.  Maybe that is just me.
+The thing you are missing that already exists is 
 
-> is the bare minimum AMD64 based hardware needed to push 10GB/s NFS.
-> This includes:
-> 
->   4 LSI 9285-8e 8port SAS 800MHz dual core PCIE x8 HBAs
->   3 NIAGARA 32714 PCIe x8 Quad Port Fiber 10 Gigabit Server Adapter
-> 
-> This gives us 32 6Gb/s SAS ports and 12 10GbE ports total, for a raw
-> hardware bandwidth of 20GB/s SAS and 15GB/s ethernet.
-> 
-> I made the assumption that RAID 10 would be the only suitable RAID level
-> due to a few reasons:
-> 
-> 1.  The workload being 50+ NFS large file reads of aggregate 10GB/s,
-> yielding a massive random IO workload at the disk head level.
-> 
-> 2.  We'll need 384 15k SAS drives to service a 10GB/s random IO load
-> 
-> 3.  We'll need multiple "small" arrays enabling multiple mdraid threads,
-> assuming a single 2.4GHz core isn't enough to handle something like 48
-> or 96 mdraid disks.
-> 
-> 4.  Rebuild times for parity raid schemes would be unacceptably high and
-> would eat all of the CPU the rebuild thread would run on
-> 
-> To get the bandwidth we need and making sure we don't run out of
-> controller chip IOPS, my calculations show we'd need 16 x 24 drive
-> mdraid 10 arrays.  Thus, ignoring all other considerations momentarily,
-> a dual AMD 6136 platform with 16 2.4GHz cores seems suitable, with one
-> mdraid thread per core, each managing a 24 drive RAID 10.  Would we then
-> want to layer a --linear array across the 16 RAID 10 arrays?  If we did
-> this, would the linear thread bottleneck instantly as it runs on only
-> one core?  How many additional memory copies (interconnect transfers)
-> are we going to be performing per mdraid thread for each block read
-> before the data is picked up by the nfsd kernel threads?
-> 
-> How much of each core's cycles will we consume with normal random read
+#define RESYNC_DEPTH 32
 
-For RAID10, the md thread plays no part in reads.  Which ever thread
-submitted the read submits it all the way down to the relevant member device.
-If the read fails the thread will come in to play.
+which is a limit places on conf->barrier, where conf->barrier is incremented
+before submitting a resync IO, and decremented after completing a resync IO.
 
-For writes, the thread is used primarily to make sure the writes are properly
-orders w.r.t. bitmap updates.  I could probably remove that requirement if a
-bitmap was not in use...
-
-> operations assuming 10GB/s of continuous aggregate throughput?  Would
-> the mdraid threads consume sufficient cycles that when combined with
-> network stack processing and interrupt processing, that 16 cores at
-> 2.4GHz would be insufficient?  If so, would bumping the two sockets up
-> to 24 cores at 2.1GHz be enough for the total workload?  Or, would we
-> need to move to a 4 socket system with 32 or 48 cores?
-> 
-> Is this possibly a situation where mdraid just isn't suitable due to the
-> CPU, memory, and interconnect bandwidth demands, making hardware RAID
-> the only real option?
-
-I'm sorry, but I don't do resource usage estimates or comparisons with
-hardware raid.  I just do software design and coding.
+So there can never be more than 32 bios per device in use for resync.
 
 
->     And if it does requires hardware RAID, would it
-> be possible to stick 16 block devices together in a --linear mdraid
-> array and maintain the 10GB/s performance?  Or, would the single
-> --linear array be processed by a single thread?  If so, would a single
-> 2.4GHz core be able to handle an mdraid --leaner thread managing 8
-> devices at 10GB/s aggregate?
-
-There is no thread for linear or RAID0.
-
-If you want to share load over a number of devices, you would normally use
-RAID0.  However if the load had a high thread count and the filesystem
-distributed IO evenly across the whole device space, then linear might work
-for you.
+12,000 active biovec-64s sounds a lot like a memory leak - something isn't
+freeing them.
+Is there some 'bio-XXX' slab with a similar count.  If there isn't, then the
+bio was released without releasing the biovec, which would be bad.
+If there is - that information would help.
 
 NeilBrown
-
-
-> 
-> Unfortunately I don't currently work in a position allowing me to test
-> such a system, and I certainly don't have the personal financial
-> resources to build it.  My rough estimate on the hardware cost is
-> $150-200K USD.  The 384 Hitachi 15k SAS 146GB drives at $250 each
-> wholesale are a little over $90k.
-> 
-> It would be really neat to have a job that allowed me to setup and test
-> such things. :)
-> 
-
