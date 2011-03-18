@@ -1,60 +1,34 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] platform_intel: support EFI SCU OEM variable
-Date: Fri, 18 Mar 2011 14:34:22 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D17AA31B27@irsmsx503.ger.corp.intel.com>
+From: Xavier Brochard <xavier@alternatif.org>
+Subject: disk order problem in a raid 10 array
+Date: Fri, 18 Mar 2011 15:49:20 +0100
+Message-ID: <201103181549.20835.xavier@alternatif.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From 0d5cf1adbe2fb966db199aef5f135d9cf8cc72b9 Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Fri, 18 Mar 2011 13:58:24 +0100
-Subject: [PATCH] platform_intel: support EFI SCU OEM variable
+Hello
 
-RstScuV and RstScuO variable names are supported.
-First try reading from RstScuV, when it fails try RstScuO.
+trying to solve my problem with a unusable raid10 array, I discovered that 
+disk order is mixed between each boot - even with live-cd.
+Here's an extract from dmesg:
+[   12.5]  sda:
+[   12.5]  sdc:
+[   12.5]  sdd:
+[   12.5]  sde: sdd1
+[   12.5]  sdf: sdc1
+[   12.5]  sda1 sda2
+[   12.5]  sdg: sde1
+[   12.5]  sdf1
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
-Tested-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- platform-intel.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+is that normal?
+could this be a sign of hardware controler problem?
+could this happen because all disks are sata-3 except 1 SSD which is sata-2?
 
-diff --git a/platform-intel.c b/platform-intel.c
-index 8003da6..64542b9 100644
---- a/platform-intel.c
-+++ b/platform-intel.c
-@@ -349,6 +349,7 @@ static const struct imsm_orom *find_imsm_hba_orom(enum sys_dev_type hba_id)
- 
- #define SYS_EFI_VAR_PATH "/sys/firmware/efi/vars"
- #define SCU_PROP "RstScuV"
-+#define SCU_PROP_OEM "RstScuO"
- #define AHCI_PROP "RstSataV"
- 
- #define VENDOR_GUID \
-@@ -393,8 +394,14 @@ const struct imsm_orom *find_imsm_efi(enum sys_dev_type hba_id)
- 		snprintf(path, PATH_MAX, "%s/%s-%s", SYS_EFI_VAR_PATH, AHCI_PROP, guid_str(buf, VENDOR_GUID));
- 
- 	dprintf("EFI VAR: path=%s\n", path);
--
--	if ((dfd = open(path, O_RDONLY)) < 0) {
-+	dfd = open(path, O_RDONLY);
-+	if ((dfd < 0) && (hba_id == SYS_DEV_SAS)) {
-+		/* check OEM parameters */
-+		snprintf(path, PATH_MAX, "%s/%s-%s", SYS_EFI_VAR_PATH, SCU_PROP_OEM, guid_str(buf, VENDOR_GUID));
-+		dfd = open(path, O_RDONLY);
-+		dprintf("EFI VAR: path=%s\n", path);
-+	}
-+	if (dfd < 0) {
- 		populated_efi[hba_id] = 0;
- 		return NULL;
- 	}
--- 
-1.6.4.2
 
+Xavier
+xavier@alternatif.org
