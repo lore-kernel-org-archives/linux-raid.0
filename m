@@ -1,141 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/4] Raid0 metadata cannot be recognized
-Date: Fri, 18 Mar 2011 12:36:25 +1100
-Message-ID: <20110318123625.0f641c3c@notabene.brown>
-References: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] Retry writing 'inactive' state during stopping array
+Date: Fri, 18 Mar 2011 12:43:15 +1100
+Message-ID: <20110318124315.14ac9813@notabene.brown>
+References: <20110317163457.5322.18237.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110315134000.32643.1818.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110317163457.5322.18237.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+On Thu, 17 Mar 2011 17:34:57 +0100 Krzysztof Wojcik
+<krzysztof.wojcik@intel.com> wrote:
 
-Sorry for the delayed reply - I've been swamped with other things.
-
-
-On Tue, 15 Mar 2011 14:48:16 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
-
-> Hi,
+> Issue observed:
+> Sporadicaly stopping arrays using "mdadm -Ss" command does not succeded.
+> Cause:
+> Writting "inactive" to the array state not succeded- array is busy
+> (accessed by udev, blkid etc.)
+> Resolution:
+> If writing 'inactive' fails, wait and retry again (because it is possibly
+> a transient failure)
 > 
-> I've executed unit tests on today's devel3-2 and I've found that
-> expansion cannot be executed due to fact that imsm metadata
-> cannot be found after creation.
-> Looking patches I've found that problem was introduced by patch:
-> 
-> Manage/external: for external metadata, add_to_super needs lock on container.
-> 
+> Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 
-Yes, I messed that up, didn't I.
-
-> It is due to fact that metadata is not written by monitor for raid0.
-> 
-> Problem is fixed by patch:
->   FIX: Write metadata when mdmon is not running
-
-That isn't quite right but does help me see where the problem is.
-See below for the patch that I have committed.
-
-> 
-> Other patches addresses problems/i.e. inconsistency in closing handle/
-> that I've noticed during investigation.
-> 
-> BR
-> Adam
-> 
-> 
-> ---
-> 
-> Adam Kwolek (4):
->       FIX: ping_monitor() usage causes memory leaks
-
-nice clean up - thanks!  Applied.
-
->       FIX: Handle has to be closed
-
-No it doesn't.  "free_super" closes this handle.  The place where I had a
-'close' was wrong.  I've removed it.
-
->       FIX: Write metadata when mdmon is not running
-
-As mentioned, I applied something which is a bit more complete.
-
->       FIX: Ping monitor when mdmon is running only
-
-I cannot see why this would be necessary.  If mdmon is not running, then
-ping_monitor will very quickly fail, so there is no need for an extra check,
-is there?
+Thanks.  Applied,
+though with a small change so that it will print an error message even if the
+error isn't EBUSY.
 
 Thanks,
 NeilBrown
 
+
+> ---
+>  Manage.c |   23 ++++++++++++++++-------
+>  1 files changed, 16 insertions(+), 7 deletions(-)
 > 
-> 
->  Assemble.c    |    2 +-
->  Create.c      |    2 +-
->  Grow.c        |    2 +-
->  Incremental.c |   10 ++++------
->  Manage.c      |   10 +++++++++-
->  Monitor.c     |    2 +-
->  msg.c         |   14 ++++++++++++++
->  msg.h         |    1 +
->  8 files changed, 32 insertions(+), 11 deletions(-)
-> 
+> diff --git a/Manage.c b/Manage.c
+> index ed3112e..a6531f3 100644
+> --- a/Manage.c
+> +++ b/Manage.c
+> @@ -224,7 +224,9 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+>  				close(fd);
+>  			fprintf(stderr,
+>  				Name ": Cannot get exclusive access to %s:"
+> -				" possibly it is still in use.\n",
+> +				"Perhaps a running "
+> +				"process, mounted filesystem "
+> +				"or active volume group?\n",
+>  				devname);
+>  			return 1;
+>  		}
+> @@ -234,12 +236,18 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+>  		    is_subarray(mdi->text_version)) {
+>  			/* This is mdmon managed. */
+>  			close(fd);
+> -			if (sysfs_set_str(mdi, NULL,
+> -					  "array_state", "inactive") < 0) {
+> -				if (quiet == 0)
+> -					fprintf(stderr, Name
+> -						": failed to stop array %s: %s\n",
+> -						devname, strerror(errno));
+> +
+> +			count = 25;
+> +			while (count && sysfs_set_str(mdi, NULL,
+> +				  "array_state", "inactive") < 0
+> +				  && errno == EBUSY) {
+> +				usleep(200000);
+> +				count--;
+> +			}
+> +			if (!count && !quiet) {
+> +				fprintf(stderr, Name
+> +					": failed to stop array %s: %s\n",
+> +					devname, strerror(errno));
+>  				return 1;
+>  			}
+>  
+> @@ -297,6 +305,7 @@ int Manage_runstop(char *devname, int fd, int runstop, int quiet)
+>  			usleep(200000);
+>  			count --;
+>  		}
+> +
+>  		if (fd >= 0 && err) {
+>  			if (quiet == 0) {
+>  				fprintf(stderr, Name
 
-
-
-commit d6221e667f55c46505125ae182051de499000ed8
-Author: NeilBrown <neilb@suse.de>
-Date:   Fri Mar 18 12:31:45 2011 +1100
-
-    Manage: fix the mess I made in earlier patch.
-    
-    When I separated the 'native metadata' case more cleanly from the
-    "external metadata" case for adding a drive, I left some 'external'
-    code in the 'native' case, and didn't copy it to the 'external' case.
-    
-    When - in the external case - we add to super, we much check for
-    mdmon first, so we know whether to do the metadata update ourselves
-    or not, then afterwards call either flush_metadata_updates (to send
-    to mdmon) or sync_metadata (to do it directly).
-    
-    Reported-by: Adam Kwolek <adam.kwolek@intel.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Manage.c b/Manage.c
-index 3361269..a679c24 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -835,9 +835,6 @@ int Manage_subdevs(char *devname, int fd,
- 				if (dv->writemostly == 1)
- 					disc.state |= 1 << MD_DISK_WRITEMOSTLY;
- 				dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
--				if (tst->ss->external &&
--				    mdmon_running(tst->container_dev))
--					tst->update_tail = &tst->updates;
- 				if (tst->ss->add_to_super(tst, &disc, dfd,
- 							  dv->devname)) {
- 					close(dfd);
-@@ -898,13 +895,18 @@ int Manage_subdevs(char *devname, int fd,
- 				}
- 
- 				dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
-+				if (mdmon_running(tst->container_dev))
-+					tst->update_tail = &tst->updates;
- 				if (tst->ss->add_to_super(tst, &disc, dfd,
- 							  dv->devname)) {
- 					close(dfd);
- 					close(container_fd);
- 					return 1;
- 				}
--				close(dfd);
-+				if (st->update_tail)
-+					flush_metadata_updates(st);
-+				else
-+					tst->ss->sync_metadata(st);
- 
- 				sra = sysfs_read(container_fd, -1, 0);
- 				if (!sra) {
