@@ -1,113 +1,61 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/3] UT and error case changes
-Date: Fri, 18 Mar 2011 13:07:04 +1100
-Message-ID: <20110318130704.082fb6e3@notabene.brown>
-References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
-	<20110315085346.3bf9feb7@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
+Subject: Re: [PATCH] Update documentation for sync_min and sync_max entries
+Date: Fri, 18 Mar 2011 13:34:41 +1100
+Message-ID: <20110318133441.3654d4a3@notabene.brown>
+References: <AANLkTinEzjxW6ZFkBWYc6UY6Pus1NoY_O+bKyCoDgC6w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <AANLkTinEzjxW6ZFkBWYc6UY6Pus1NoY_O+bKyCoDgC6w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: CoolCold <coolthecold@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 15 Mar 2011 07:28:00 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
+On Tue, 15 Mar 2011 15:30:38 +0300 CoolCold <coolthecold@gmail.com> wrote:
 
+> This patch is against 2.6.37 (
+> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
+> , commit id 97b197f07d15dbcd53328e75754e2f947814c733 ) but I didn't
+> notice any changes in 2.6.38 though.
 > 
-> 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of NeilBrown
-> > Sent: Monday, March 14, 2011 10:54 PM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> > Neubauer, Wojciech
-> > Subject: Re: [PATCH 0/3] UT and error case changes
-> > 
-> > On Mon, 14 Mar 2011 15:09:20 +0100 Adam Kwolek <adam.kwolek@intel.com>
-> > wrote:
-> > 
-> > > The following series implements 2 changes:
-> > > 1. Fix for unit tests failure.
-> > > UT suits 12 and 13 fails, when backup file cannot be opened
-> > > for grow operation (backup file exists already).
-> > 
-> > Thanks - applied.
-> > 
-> > 
-> > >
-> > > 2. I've got proposal for handling/rollback metadata in error case.
-> > > Currently in case of error external metadata can remain in reshape
-> > state.
-> > > In some cases metadata can be automatically restored to initial state
-> > > (i.e. metadata during  imsm container operation can be rolled back
-> > > when error occurs on first reshaped array before reshape is started).
-> > > For such cases, additional superswitch function can be introduced.
-> > >
-> > > Metadata shouldn't be rolled back in restart case.
-> > > I'm passing restart flag to abort function in Grow.c only, as this is
-> > general rule.
-> > > In the same way array reshape state is checked.
-> > >
-> > > This is proposal, so I've put no implementation in to imsm handler (no
-> > metadata update is created yet).
-> > > Please let me know your opinion. If you will like it, I'll fill out
-> > gaps in imsm code.
-> > 
-> > I'm not sure.. it sounds like it might be a good idea, but I'd like to
-> > have
-> > some concrete examples to help me think about it.
-> 
-> 
-> 
-> I've got this idea during correcting UT so, i.e.:
-> wrong/already existing/ backup file name passed by used.
-> Backup file verification/opening is when metadata is in reshape state already.
-> This error causes mdadm exit at reshape position == 0. It is too early position for reshape restart.
-> User has manually restore metadata information and this can be quite difficult.
-> 
-> Metadata rollback can be possible for container operation if:
-> 1. external metadata case (checked in Grow.c)
-> 2. This is action on first array in container (check in metadata handler)
-> 2. md doesn't start reshape  (checked in Grow.c)
-> 3. Other conditions/metadata specific (checked in Grow.c)
-> 
-> We can also pass some additional status to reshape_container() to indicate that metadata is rolled back
-> and allow for container unfreeze in such case also.
-> This can allow mdadm to leave array/container in state that work is started from (hopefully ;)).
-> 
-> BR
-> Adam
-> 
+> linux/Documentation/md.txt is missing description for sync_min and
+> sync_max entries.
+> This patch adds description for sync_min and sync_max entries.
 
-I think I see your point - there are some issues with some failure
-possibilities at start-up.
+Applied, thanks.
 
-We should of course do as much checking as possible before committing to the
-reshape, and I think we do.  But it is still possible that something could go
-wrong.
-
-It would probably be good to take the first backup after freezing IO, but
-before updating the metadata to show that a reshape has started.  That would
-ensure that a crash at any time will either be able to replay the backup and
-continue the reshape, or won't see the reshape at all.
-
-It might be a bit awkward to do that with the current code, I'm not sure.
-
-Another possibility is to at least write out a 'zeroed' backup file and
-arrange that when we restart and array, if the backup file is empty, then
-that is a clear sign that no reshape has started and
-->update_super("_reshape_progress") could revert the reshape.
-
-
-Longer term: I want to eventually teach md to be able to revert a reshape
-that has already started.  In that case we will need some sort of metadata
-method to record that reshape is going backwards - though it may end up
-looking like something we already have...
+It will go upsteam in due course.
 
 NeilBrown
+
+
+> 
+> Signed-off-by: Roman Ovchinnikov <coolthecold@gmail.com>
+> ---
+>  Documentation/md.txt |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/md.txt b/Documentation/md.txt
+> index a81c7b4..8f8cb4f 100644
+> --- a/Documentation/md.txt
+> +++ b/Documentation/md.txt
+> @@ -552,6 +552,16 @@ also have
+>       within the array where IO will be blocked.  This is currently
+>       only supported for raid4/5/6.
+> 
+> +   sync_min
+> +   sync_max
+> +     The two values, given as numbers of sectors, indicate a range
+> +     withing the array where 'check'/'repair' will operate. Must be
+> +     a multiple of chunk_size. When it reaches "sync_max" it will
+> +     pause, rather than complete.
+> +     You can use 'select' or 'poll' on "sync_completed" to wait for
+> +     that number to reach sync_max.  Then you can either increase
+> +     "sync_max", or can write 'idle' to "sync_action".
+> +
+> 
+>  Each active md device may also have attributes specific to the
+>  personality module that manages it.
+
