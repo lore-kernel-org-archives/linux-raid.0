@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] FIX: Add spare throws exception
-Date: Fri, 18 Mar 2011 08:51:27 +0100
-Message-ID: <20110318075126.5820.75251.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH] FIX: Add spare throws exception (v2)
+Date: Fri, 18 Mar 2011 10:08:04 +0100
+Message-ID: <20110318090804.8068.28272.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,51 +14,30 @@ List-Id: linux-raid.ids
 sync_metadata() requires st->sb to be loaded, otherwise exception is generated.
 This fails expansion, because spares cannot be added.
 
-Patch loads anchor before Manage.c reference to st->sb.
-
-NOTE: This fixes Raid5 expansion, Raid0 expansion is still broken.
+metadata update uses tst instead st pointer, it is better than
+loading anchor for st as I proposed previously.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Manage.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ Manage.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/Manage.c b/Manage.c
-index 5808557..6233257 100644
+index 5808557..217c6b6 100644
 --- a/Manage.c
 +++ b/Manage.c
-@@ -895,6 +895,7 @@ int Manage_subdevs(char *devname, int fd,
- 				int container_fd;
- 				int devnum = fd2devnum(fd);
- 				int dfd;
-+				char container[40];
- 
- 				container_fd = open_dev_excl(devnum);
- 				if (container_fd < 0) {
-@@ -904,7 +905,9 @@ int Manage_subdevs(char *devname, int fd,
- 					tst->ss->free_super(tst);
- 					return 1;
- 				}
--
-+				fmt_devname(container, st->container_dev);
-+				st->ss->load_container(st,
-+						       container_fd, container);
- 				dfd = dev_open(dv->devname, O_RDWR | O_EXCL|O_DIRECT);
- 				if (mdmon_running(tst->container_dev))
- 					tst->update_tail = &tst->updates;
-@@ -912,12 +915,14 @@ int Manage_subdevs(char *devname, int fd,
- 							  dv->devname)) {
- 					close(dfd);
+@@ -914,10 +914,10 @@ int Manage_subdevs(char *devname, int fd,
  					close(container_fd);
-+					st->ss->free_super(st);
  					return 1;
  				}
- 				if (st->update_tail)
- 					flush_metadata_updates(st);
+-				if (st->update_tail)
+-					flush_metadata_updates(st);
++				if (tst->update_tail)
++					flush_metadata_updates(tst);
  				else
- 					tst->ss->sync_metadata(st);
-+				st->ss->free_super(st);
+-					tst->ss->sync_metadata(st);
++					tst->ss->sync_metadata(tst);
  
  				sra = sysfs_read(container_fd, -1, 0);
  				if (!sra) {
