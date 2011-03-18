@@ -1,74 +1,25 @@
-From: Xavier Brochard <xavier@alternatif.org>
-Subject: Re: disk order problem in a raid 10 array
-Date: Fri, 18 Mar 2011 21:12:49 +0100
-Message-ID: <201103182112.49660.xavier@alternatif.org>
-References: <201103181549.20835.xavier@alternatif.org> <AANLkTin0L4wV3uFFhkeWPptvEddsS5ZntxVx51x2rjW_@mail.gmail.com>
+From: Hari Subramanian <hari@vmware.com>
+Subject: Adaptive throttling for RAID1 background resync
+Date: Fri, 18 Mar 2011 13:26:52 -0700
+Message-ID: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
+References: <201103181549.20835.xavier@alternatif.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin0L4wV3uFFhkeWPptvEddsS5ZntxVx51x2rjW_@mail.gmail.com>
+In-Reply-To: <201103181549.20835.xavier@alternatif.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: hansbkk@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Le vendredi 18 mars 2011 18:22:34 hansbkk@gmail.com, vous avez =E9crit =
-:
-> On Fri, Mar 18, 2011 at 9:49 PM, Xavier Brochard <xavier@alternatif.o=
-rg>=20
-wrote:
-> > disk order is mixed between each boot - even with live-cd.
-> > is that normal?
->=20
-> If nothing is changing and the order is swapping really every boot,
-> then IMO that is odd.
+I am hitting an issue when performing RAID1 resync from a replica hosted on a fast disk to one on a slow disk. When resync throughput is set at 20Mbps min and 200Mbps max and we have enough data to resync, I see the kernel running out of memory quickly (within a minute). From the crash dumps, I see that a whole lot (12,000+) of biovec-64s that are active on the slab cache.
 
-nothing has changed, except kernel minor version
+Our guess is that MD is allowing data to be read from the fast disk at a frequency much higher than what the slow disk is able to write to. This continues for a long time (> 1 minute) in an unbounded fashion resulting in buildup of IOs that are waiting to be written to the disk. This eventually causes the machine to panic (we have panic on OOM selected)
 
->=20
-> Part of my SOP is now to record both mdadm and the boot loader's
-> ordering against serial number and UUID of drives when creating an
-> array, and to put the relevant information on labels securely attache=
-d
-> to the physical drives, along with creating a map of their physical
-> location and taping that inside the case.nt
->=20
-> It's critical to know what's what in a crisis. . .
+From reading the MD and RAID1 resync code, I don't see anything that would prevent something like this from happening. So, we would like to implement something to this effect that adaptively throttles the background resync.
 
-exactly, in my case mdadm --examine output is somewhat weird as it show=
-s:
-/dev/sde1
-this     0       8       33        0      active sync   /dev/sdd1
-/dev/sdd1
-this     0       8       33        0      active sync   /dev/sdc1
-/dev/sdc1
-this     0       8       33        0      active sync   /dev/sde1
-and /dev/sdf1 as sdf1
+Can someone confirm or deny these claims and also the need for a new solution. Maybe I'm missing something that already exists that would give me the adaptive throttling. We cannot make do with the static throttling (sync_speed_max and min) since that would be too difficult to get right for varying IO throughputs form the different RAID1 replicas.
 
-I think I can believe mdadm?
-and that /proc/mdstat content comes directly from mdadm (that is with "=
-exact"
-sdc,d,e)?
-
-what trouble me is that after I removed 2 disk drive from the bay, mdad=
-m start=20
-to recover:=20
-md0 : active raid10 sdb1[1] sdc1[4] sdd1[3]
-      976767872 blocks 64K chunks 2 near-copies [4/2] [_U_U]
-      [=3D>...................]  recovery =3D  5.0% (24436736/488383936=
-)=20
-finish=3D56.2min speed=3D137513K/sec
-
-I guess that it is ok, and that it is recovering with the spare. But I =
-would=20
-like to be sure...
-
-
-Xavier
-xavier@alternatif.org - 09 54 06 16 26
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+~ Hari
