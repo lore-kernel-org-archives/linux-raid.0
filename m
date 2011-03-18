@@ -1,7 +1,7 @@
 From: Xavier Brochard <xavier@alternatif.org>
 Subject: Re: disk order problem in a raid 10 array
-Date: Fri, 18 Mar 2011 21:09:31 +0100
-Message-ID: <201103182109.31578.xavier@alternatif.org>
+Date: Fri, 18 Mar 2011 21:12:49 +0100
+Message-ID: <201103182112.49660.xavier@alternatif.org>
 References: <201103181549.20835.xavier@alternatif.org> <AANLkTin0L4wV3uFFhkeWPptvEddsS5ZntxVx51x2rjW_@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=iso-8859-1
@@ -36,7 +36,8 @@ d
 >=20
 > It's critical to know what's what in a crisis. . .
 
-mdadm --examine output is somewhat weird as it shows
+exactly, in my case mdadm --examine output is somewhat weird as it show=
+s:
 /dev/sde1
 this     0       8       33        0      active sync   /dev/sdd1
 /dev/sdd1
@@ -47,7 +48,7 @@ and /dev/sdf1 as sdf1
 
 I think I can believe mdadm?
 and that /proc/mdstat content comes directly from mdadm (that is with "=
-real"=20
+exact"
 sdc,d,e)?
 
 what trouble me is that after I removed 2 disk drive from the bay, mdad=
@@ -60,7 +61,7 @@ md0 : active raid10 sdb1[1] sdc1[4] sdd1[3]
 finish=3D56.2min speed=3D137513K/sec
 
 I guess that it is ok, and that it is recovering with the spare. But I =
-wld=20
+would=20
 like to be sure...
 
 
