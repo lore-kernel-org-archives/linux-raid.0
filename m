@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] FIX: Add spare throws exception (v2)
-Date: Fri, 18 Mar 2011 10:08:04 +0100
-Message-ID: <20110318090804.8068.28272.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH] imsm: FIX: indicate that metadada has to be written
+Date: Fri, 18 Mar 2011 10:28:22 +0100
+Message-ID: <20110318092822.12990.23679.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -11,34 +11,27 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-sync_metadata() requires st->sb to be loaded, otherwise exception is generated.
-This fails expansion, because spares cannot be added.
+During adding spare disks to raid0, spare metadata is not written.
+This is due to exit form sync_metadata() on empty updates_pending flag.
 
-metadata update uses tst instead st pointer, it is better than
-loading anchor for st as I proposed previously.
+When mdmon is absent indicate sync_metadata() to flush changes to disks.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Manage.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ super-intel.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/Manage.c b/Manage.c
-index 5808557..217c6b6 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -914,10 +914,10 @@ int Manage_subdevs(char *devname, int fd,
- 					close(container_fd);
- 					return 1;
- 				}
--				if (st->update_tail)
--					flush_metadata_updates(st);
-+				if (tst->update_tail)
-+					flush_metadata_updates(tst);
- 				else
--					tst->ss->sync_metadata(st);
-+					tst->ss->sync_metadata(tst);
+diff --git a/super-intel.c b/super-intel.c
+index 44c100b..acd7571 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -3838,6 +3838,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	} else {
+ 		dd->next = super->disks;
+ 		super->disks = dd;
++		super->updates_pending++;
+ 	}
  
- 				sra = sysfs_read(container_fd, -1, 0);
- 				if (!sra) {
+ 	return 0;
 
