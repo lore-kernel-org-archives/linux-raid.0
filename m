@@ -1,18 +1,35 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Adaptive throttling for RAID1 background resync
-Date: Fri, 18 Mar 2011 17:28:37 -0300
-Message-ID: <AANLkTimGL7kDBWSkVeDZSbc-JvnZmds-5a7UBHcv0iar@mail.gmail.com>
+From: Hari Subramanian <hari@vmware.com>
+Subject: RE: Adaptive throttling for RAID1 background resync
+Date: Fri, 18 Mar 2011 13:31:19 -0700
+Message-ID: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F540@EXCH-MBX-2.vmware.com>
 References: <201103181549.20835.xavier@alternatif.org>
 	<10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
+ <AANLkTimGL7kDBWSkVeDZSbc-JvnZmds-5a7UBHcv0iar@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
+In-Reply-To: <AANLkTimGL7kDBWSkVeDZSbc-JvnZmds-5a7UBHcv0iar@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Hari Subramanian <hari@vmware.com>
+To: Roberto Spadim <roberto@spadim.com.br>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Roberto, My use case involves both foreground and background resyncs ha=
+ppening at the same time. So, by throttling it at the block or IO queue=
+s, I would be limiting my throughout for foreground IOs as well which i=
+s undesirable.
+
+~ Hari
+
+-----Original Message-----
+=46rom: rspadim@gmail.com [mailto:rspadim@gmail.com] On Behalf Of Rober=
+to Spadim
+Sent: Friday, March 18, 2011 4:29 PM
+To: Hari Subramanian
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Adaptive throttling for RAID1 background resync
 
 maybe this could be better solved at queue linux kernel area... at
 elevators or block devices
