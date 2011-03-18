@@ -1,61 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Update documentation for sync_min and sync_max entries
-Date: Fri, 18 Mar 2011 13:34:41 +1100
-Message-ID: <20110318133441.3654d4a3@notabene.brown>
-References: <AANLkTinEzjxW6ZFkBWYc6UY6Pus1NoY_O+bKyCoDgC6w@mail.gmail.com>
+From: Lai Jiangshan <laijs@cn.fujitsu.com>
+Subject: [PATCH 13/36] md,rcu: convert call_rcu(free_conf) to kfree_rcu()
+Date: Fri, 18 Mar 2011 11:59:14 +0800
+Message-ID: <4D82D892.5000908@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinEzjxW6ZFkBWYc6UY6Pus1NoY_O+bKyCoDgC6w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@elte.hu>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Mar 2011 15:30:38 +0300 CoolCold <coolthecold@gmail.com> wrote:
-
-> This patch is against 2.6.37 (
-> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-2.6.37.y.git
-> , commit id 97b197f07d15dbcd53328e75754e2f947814c733 ) but I didn't
-> notice any changes in 2.6.38 though.
-> 
-> linux/Documentation/md.txt is missing description for sync_min and
-> sync_max entries.
-> This patch adds description for sync_min and sync_max entries.
-
-Applied, thanks.
-
-It will go upsteam in due course.
-
-NeilBrown
 
 
-> 
-> Signed-off-by: Roman Ovchinnikov <coolthecold@gmail.com>
-> ---
->  Documentation/md.txt |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Documentation/md.txt b/Documentation/md.txt
-> index a81c7b4..8f8cb4f 100644
-> --- a/Documentation/md.txt
-> +++ b/Documentation/md.txt
-> @@ -552,6 +552,16 @@ also have
->       within the array where IO will be blocked.  This is currently
->       only supported for raid4/5/6.
-> 
-> +   sync_min
-> +   sync_max
-> +     The two values, given as numbers of sectors, indicate a range
-> +     withing the array where 'check'/'repair' will operate. Must be
-> +     a multiple of chunk_size. When it reaches "sync_max" it will
-> +     pause, rather than complete.
-> +     You can use 'select' or 'poll' on "sync_completed" to wait for
-> +     that number to reach sync_max.  Then you can either increase
-> +     "sync_max", or can write 'idle' to "sync_action".
-> +
-> 
->  Each active md device may also have attributes specific to the
->  personality module that manages it.
+The rcu callback free_conf() just calls a kfree(),
+so we use kfree_rcu() instead of the call_rcu(free_conf).
 
+Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+---
+ drivers/md/linear.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 0ed7f6b..a5b9e53 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -231,12 +231,6 @@ static int linear_run (mddev_t *mddev)
+ 	return 0;
+ }
+ 
+-static void free_conf(struct rcu_head *head)
+-{
+-	linear_conf_t *conf = container_of(head, linear_conf_t, rcu);
+-	kfree(conf);
+-}
+-
+ static int linear_add(mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+ 	/* Adding a drive to a linear array allows the array to grow.
+@@ -265,7 +259,7 @@ static int linear_add(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
+ 	set_capacity(mddev->gendisk, mddev->array_sectors);
+ 	revalidate_disk(mddev->gendisk);
+-	call_rcu(&oldconf->rcu, free_conf);
++	kfree_rcu(oldconf, rcu);
+ 	return 0;
+ }
+ 
+-- 
+1.7.4
