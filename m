@@ -1,20 +1,39 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: Adaptive throttling for RAID1 background resync
-Date: Fri, 18 Mar 2011 17:36:12 -0300
-Message-ID: <AANLkTikciXvH49wgn9QFmUY+Mby5QhEKQgUJQDLBvL1r@mail.gmail.com>
+From: Hari Subramanian <hari@vmware.com>
+Subject: RE: Adaptive throttling for RAID1 background resync
+Date: Fri, 18 Mar 2011 13:54:45 -0700
+Message-ID: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F560@EXCH-MBX-2.vmware.com>
 References: <201103181549.20835.xavier@alternatif.org>
 	<10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
 	<AANLkTimGL7kDBWSkVeDZSbc-JvnZmds-5a7UBHcv0iar@mail.gmail.com>
 	<10FC03A59E498D4A90A45E4A105AD3ED02EE70F540@EXCH-MBX-2.vmware.com>
+ <AANLkTikciXvH49wgn9QFmUY+Mby5QhEKQgUJQDLBvL1r@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F540@EXCH-MBX-2.vmware.com>
+In-Reply-To: <AANLkTikciXvH49wgn9QFmUY+Mby5QhEKQgUJQDLBvL1r@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Hari Subramanian <hari@vmware.com>
+To: Roberto Spadim <roberto@spadim.com.br>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Roberto, I still think the solution you point out has the potential for=
+ throttling foreground IOs issued to MD from the filesystem as well as =
+the MD initiated background resyncs. So, I don't want to limit the IO q=
+ueues, esp since our foreground workload involves a LOT of small random=
+ IO.
+
+Thanks
+~ Hari
+
+-----Original Message-----
+=46rom: rspadim@gmail.com [mailto:rspadim@gmail.com] On Behalf Of Rober=
+to Spadim
+Sent: Friday, March 18, 2011 4:36 PM
+To: Hari Subramanian
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Adaptive throttling for RAID1 background resync
 
 hum, it=B4s not a io queue size (very big ram memory queue) problem?
 maybe getting it smaller could help?
