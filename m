@@ -1,71 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: disk order problem in a raid 10 array
-Date: Sun, 20 Mar 2011 14:53:23 +1100
-Message-ID: <20110320145323.4d949738@notabene.brown>
-References: <201103181549.20835.xavier@alternatif.org>
-	<201103190059.08093.xavier@alternatif.org>
-	<20110319124247.41bac36a@notabene.brown>
-	<201103191444.40489.xavier@alternatif.org>
+Subject: Re: [PATCH] FIX: Do not count as backup devices, spare disks used
+ for reshape
+Date: Sun, 20 Mar 2011 15:41:11 +1100
+Message-ID: <20110320154111.23c9e350@notabene.brown>
+References: <20110318105511.6462.93752.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201103191444.40489.xavier@alternatif.org>
+In-Reply-To: <20110318105511.6462.93752.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xavier Brochard <xavier@alternatif.org>
-Cc: linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Sat, 19 Mar 2011 14:44:40 +0100 Xavier Brochard <xavier@alternatif.o=
-rg>
-wrote:
+On Fri, 18 Mar 2011 11:55:12 +0100 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Le samedi 19 mars 2011 02:42:47 NeilBrown, vous avez =E9crit :
-> > I suggest you:
-> >=20
-> >   mdadm --zero /dev/sdb1
-> >=20
-> > having first double-checked that sdb1 is the devices with Events of=
- 154,
-> >=20
-> > then
-> >=20
-> >  mdadm -S /dev/md0
-> >  mdadm -As /dev/md0
-> >=20
-> >=20
-> > and let the  array rebuild the spare.
-> > Then check the data and make sure it is all good.
-> > Then add /dev/sdb1 back in as the spare
-> >   mdadm /dev/md0 --add /dev/sdb1
-> >=20
-> > and everything should be fine - providing you don't hit any hardwar=
-e errors
-> > etc.
->=20
-> It didnt work, until I've stopped the raid array:
-> mdadm --zero /dev/sdg1
-> mdadm: Couldn't open /dev/sdg1 for write - not zeroing
->=20
-> is that normal, can I continue?
->
+> Problem:
+> Reshape is run without specified backup file when all spares are used for expansion.
+> 
+> When spare disks are used for reshape, they should not be counted as backup devices.
+> Md still thinks about them as about spares until reshape will not be started.
+> mdadm should have all it in mind.
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+> 
+>  Grow.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/Grow.c b/Grow.c
+> index b639585..17c22fc 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1660,6 +1660,7 @@ static int reshape_array(char *container, int fd, char *devname,
+>  	unsigned long long array_size;
+>  	int done;
+>  	struct mdinfo *sra = NULL;
+> +	int used_spares = 0;
+>  
+>  	/* when reshaping a RAID0, the component_size might be zero.
+>  	 * So try to fix that up.
+> @@ -1793,6 +1794,7 @@ static int reshape_array(char *container, int fd, char *devname,
+>  					 * be part of the array.
+>  					 */
+>  					add_disk(fd, st, info2, d);
+> +					used_spares++;
+>  				}
+>  			}
+>  			sysfs_free(info2);
+> @@ -1956,7 +1958,7 @@ started:
+>  				Name ": %s: Cannot grow - need backup-file\n", 
+>  				devname);
+>  			goto release;
+> -		} else if (sra->array.spare_disks == 0) {
+> +		} else if (sra->array.spare_disks - used_spares == 0) {
+>  			fprintf(stderr, Name ": %s: Cannot grow - need a spare or "
+>  				"backup-file to backup critical section\n",
+>  				devname);
 
-Yes, you are right.  You need to stop the array before you zero things.
 
-So:
-=20
-   mdadm -S /dev/md0
-   mdadm --zero /dev/the-device-which-thinks-most-of-the-other-devices-=
-have-failed
-   mdadm -As /dev/md0
+This change doesn't make sense to me.
 
-That last command might need to be
-   mdadm -As /dev/md0 /dev/sdc1 /dev/sdd1 ..... list of all member devi=
-ces.
+The only time when we use a spare device as for storing the backup is (or at
+least should be) when increasing the number of devices in the array.
+In that case we only need a backup at the very beginning.
+So we use the end of a spare for the backup that happens at the every
+beginning and it all works happily.
+
+Why do you now want to count a spare used for backup as a spare to use for
+growth?
 
 NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
