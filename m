@@ -1,65 +1,96 @@
-From: Hari Subramanian <hari@vmware.com>
-Subject: RE: Adaptive throttling for RAID1 background resync
-Date: Mon, 21 Mar 2011 14:02:37 -0700
-Message-ID: <10FC03A59E498D4A90A45E4A105AD3ED02EE70F9A7@EXCH-MBX-2.vmware.com>
-References: <201103181549.20835.xavier@alternatif.org>
-	<10FC03A59E498D4A90A45E4A105AD3ED02EE70F539@EXCH-MBX-2.vmware.com>
- <20110319091137.2eda1c91@notabene.brown>
+From: A J Wyborny <ajwyborny@gmail.com>
+Subject: RAID-5 and mdadm --assemble troubleshooting
+Date: Mon, 21 Mar 2011 23:08:40 +0100
+Message-ID: <AANLkTikjFZnEoRWAiY3SsmxH6kci25iQQXogMyKTuUGF@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110319091137.2eda1c91@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi all,
 
-There are an equal number of BIOs as there are biovec-64s. But I understand why that is the case now. Turns out that some changes that were made by one of our performance engineers in the interest of increasing the performance of background resyncs when there are foreground I/Os gets in the way (or effectively neuters) the RESYNC_DEPTH throttle that exists today.
+After exhausting my efforts with google searches and linux-raid IRC
+chats, I'm reaching out to you all for some help with why I can't
+assemble a broken RAID-5 configuration. =A0My initial problem, I've
+determined, was caused by a faulty PCI-E SATA controller card. =A0I
+would constantly lose access to my mounted RAID volume (/home) at
+random times and increasingly during high write accesses. =A0In the pas=
+t
+a reboot and running "mdadm --assemble --force --scan" would solve the
+issue. =A0This time, no such luck. =A0In the process of troubleshooting=
+ I
+also fat-fingered an "mdadm --assemble" command and lost the
+superblock of my /dev/sda1 partition, which isn't helping things
+either.
 
-The gist of these changes is that:
- - We hold the barrier across the resync window to disallow foreground IOs from interrupting background resyncs and raise_barrier is not being invoked raid1 sync_request
- - We increase the resync window to 8M and resync chunk size to 256K
+The SMART status is clean on all disks.
 
-The combination of these factors caused us to have a huge number of IOs outstanding and as much as 256M of resync data pages. We are working on a fix for this. I can share a patch to MD that implements these changes if someone is interested.
+I really appreciate any thoughts/input you might have.=A0 -Adam
 
-Thanks again for your help!
-~ Hari
+Here's my setup:
 
------Original Message-----
-From: NeilBrown [mailto:neilb@suse.de] 
-Sent: Friday, March 18, 2011 6:12 PM
-To: Hari Subramanian
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Adaptive throttling for RAID1 background resync
+RAID-5 array with four 1.5TB disks (/dev/sda1, /dev/sdb1, /dev/sdd1, /d=
+ev/sde1)
+/dev/sdc is my root and swap partitions
+/dev/md0 should be mounted to /home
 
-On Fri, 18 Mar 2011 13:26:52 -0700 Hari Subramanian <hari@vmware.com> wrote:
+Results:
+root@focalor:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+unused devices: <none>
+root@focalor:~# mdadm -vv --assemble --force --scan
+mdadm: looking for devices for /dev/md0
+mdadm: cannot open device /dev/sdc1: Device or resource busy
+mdadm: /dev/sdc1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sda1
+mdadm: /dev/sda1 has wrong uuid.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: added /dev/sdd1 to /dev/md0 as 2
+mdadm: added /dev/sde1 to /dev/md0 as 3
+mdadm: added /dev/sdb1 to /dev/md0 as 1
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+root@focalor:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sdb1[1] sde1[3] sdd1[2]
+=A0 =A0 =A04395407808 blocks
 
-> I am hitting an issue when performing RAID1 resync from a replica hosted on a fast disk to one on a slow disk. When resync throughput is set at 20Mbps min and 200Mbps max and we have enough data to resync, I see the kernel running out of memory quickly (within a minute). From the crash dumps, I see that a whole lot (12,000+) of biovec-64s that are active on the slab cache.
-> 
-> Our guess is that MD is allowing data to be read from the fast disk at a frequency much higher than what the slow disk is able to write to. This continues for a long time (> 1 minute) in an unbounded fashion resulting in buildup of IOs that are waiting to be written to the disk. This eventually causes the machine to panic (we have panic on OOM selected)
-> 
-> >From reading the MD and RAID1 resync code, I don't see anything that would prevent something like this from happening. So, we would like to implement something to this effect that adaptively throttles the background resync.
-> 
-> Can someone confirm or deny these claims and also the need for a new solution. Maybe I'm missing something that already exists that would give me the adaptive throttling. We cannot make do with the static throttling (sync_speed_max and min) since that would be too difficult to get right for varying IO throughputs form the different RAID1 replicas.
+unused devices: <none>
+root@focalor:~# mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+root@focalor:~# mdadm -vv --assemble --force /dev/md0 /dev/sdb1
+/dev/sdd1 /dev/sde1
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: added /dev/sdd1 to /dev/md0 as 2
+mdadm: added /dev/sde1 to /dev/md0 as 3
+mdadm: added /dev/sdb1 to /dev/md0 as 1
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+root@focalor:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : inactive sdb1[1] sde1[3] sdd1[2]
+=A0 =A0 =A04395407808 blocks
 
-The thing you are missing that already exists is 
+unused devices: <none>
 
-#define RESYNC_DEPTH 32
+dmesg output:
+http://pastebin.com/usrzvmpn
 
-which is a limit places on conf->barrier, where conf->barrier is incremented
-before submitting a resync IO, and decremented after completing a resync IO.
-
-So there can never be more than 32 bios per device in use for resync.
-
-
-12,000 active biovec-64s sounds a lot like a memory leak - something isn't
-freeing them.
-Is there some 'bio-XXX' slab with a similar count.  If there isn't, then the
-bio was released without releasing the biovec, which would be bad.
-If there is - that information would help.
-
-NeilBrown
+mdadm -E output:
+http://pastebin.com/vnaamC75
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
