@@ -1,164 +1,125 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] RAID-6 check standalone
-Date: Mon, 21 Mar 2011 12:54:41 +0100
-Message-ID: <20110321115440.GA15635@lazy.lzy>
-References: <20110221204551.GA15675@lazy.lzy>
- <20110321140244.2314b4b4@notabene.brown>
- <20110321104007.GA15379@lazy.lzy>
- <20110321220457.29d52f5c@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: high throughput storage server?
+Date: Mon, 21 Mar 2011 09:18:57 -0500
+Message-ID: <4D875E51.50807@hardwarefreak.com>
+References: <4D7E0994.3020303@hardwarefreak.com> <20110314124733.GA31377@infradead.org> <4D835B2A.1000805@hardwarefreak.com> <20110318140509.GA26226@infradead.org> <4D837DAF.6060107@hardwarefreak.com> <20110319090101.1786cc2a@notabene.brown> <4D8559A2.6080209@hardwarefreak.com> <20110320144147.29141f04@notabene.brown> <AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com> <4D868C36.5050304@hardwarefreak.com> <20110321024452.GA23100@www2.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110321220457.29d52f5c@notabene.brown>
+In-Reply-To: <20110321024452.GA23100@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>, Roberto Spadim <roberto@spadim.com.br>, NeilBrown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-Hi Neil,
+Keld J=F8rn Simonsen put forth on 3/20/2011 9:44 PM:
 
-On Mon, Mar 21, 2011 at 10:04:57PM +1100, NeilBrown wrote:
-> On Mon, 21 Mar 2011 11:40:07 +0100 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
-> 
-> 
-> > > I have applied this patch to me git now - with some minor changes.
-> > 
-> > Thanks.
-> > 
-> > One question, I did not find the previous patch to "restripe.c",
-> > which was adding the ":offset" capability. This was in order to
-> > be able to cope with metadata 1.1 or 1.2 (offset to be determined).
-> 
-> I cannot seem to find it.  Please resend.
+> Are you then building the system yourself, and running Linux MD RAID?
 
-neither me, maybe I just forgot to send it.
+No.  These specifications meet the needs of Matt Garman's analysis
+cluster, and extend that performance from 6GB/s to 10GB/s.  Christoph's
+comments about 10GB/s throughput with XFS on large CPU count Altix 4000
+series machines from a few years ago prompted me to specify a single
+chassis multicore AMD Opteron based system that can achieve the same
+throughput at substantially lower cost.
 
-Anyway, here below is the patch:
+> Anyway, with 384 spindles and only 50 users, each user will have in
+> average 7 spindles for himself. I think much of the time this would m=
+ean=20
+> no random IO, as most users are doing large sequential reading.=20
+> Thus on average you can expect quite close to striping speed if you
+> are running RAID capable of striping.=20
 
---- cut here ---
+This is not how large scale shared RAID storage works under a
+multi-stream workload.  I thought I explained this in sufficient detail=
+=2E
+ Maybe not.
 
-diff -urN a/restripe.c b/restripe.c
---- a/restripe.c	2011-02-18 23:18:20.377740868 +0100
-+++ b/restripe.c	2011-02-18 23:30:07.589841525 +0100
-@@ -875,6 +875,14 @@
- 		exit(3);
- 	}
- 	for (i=0; i<raid_disks; i++) {
-+		char *p;
-+		p = strchr(argv[9+i], ':');
-+
-+		if(p != NULL) {
-+			*p++ = '\0';
-+			offsets[i] = atoll(p) * 512;
-+		}
-+			
- 		fds[i] = open(argv[9+i], O_RDWR);
- 		if (fds[i] < 0) {
- 			perror(argv[9+i]);
+> I am puzzled about the --linear concatenating. I think this may cause
+> the disks in the --linear array to be considered as one spindle, and =
+thus
+> no concurrent IO will be made. I may be wrong there.
 
---- cut here ---
+You are puzzled because you are not familiar with the large scale
+performance features built into the XFS filesystem.  XFS allocation
+groups automatically enable large scale parallelism on a single logical
+device comprised of multiple arrays or single disks, when configured
+correctly.  See:
 
-Thanks,
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US=
+/html/Allocation_Groups.html
 
-bye,
+The storage pool in my proposed 10GB/s NFS server system consists of 16
+RAID10 arrays comprised of 24 disks of 146GB capacity, 12 stripe
+spindles per array, 1.752TB per array, 28TB total raw.  Concatenating
+the 16 array devices with mdadm --linear creates a 28TB logical device.
+ We format it with this simple command, not having to worry about strip=
+e
+block size, stripe spindle width, stripe alignment, etc:
 
-pg
+~# mkfs.xfs -d agcount=3D64
+
+Using this method to achieve parallel scalability is simpler and less
+prone to configuration errors when compared to multi-level striping,
+which often leads to poor performance and poor space utilization.  With
+64 XFS allocation groups the kernel can read/write 4 concurrent streams
+from/to each array of 12 spindles, which should be able to handle this
+load with plenty of headroom.  This system has 32 SAS 6G channels, each
+able to carry two 300MB/s streams, 19.8GB/s aggregate, substantially
+more than our 10GB/s target.  I was going to state that we're limited t=
+o
+10.4GB/s due to the PCIe/HT bridge to the processor.  However, I just
+realized I made an error when specifying the DL585 G7 with only 2
+processors.  See [1] below for details.
+
+Using XFS in this manner allows us to avoid nested striped arrays and
+the inherent problems associated with them.  For example, in absence of
+using XFS allocation groups to get our parallelism, we could do the
+following:
+
+1.  Width 16 RAID0 stripe over width 12 RAID10 stripe
+2.  Width 16 LVM   stripe over width 12 RAID10 stripe
+
+In either case, what is the correct/optimum stripe block size for each
+level when nesting the two?  The answer is that there really aren't
+correct or optimum stripe sizes in this scenario.  Writes to the top
+level stripe will be broken into 16 chunks.  Each of these 16 chunks
+will then be broken into 12 more chunks.  You may be thinking, "Why
+don't we just create one 384 disk RAID10?  It would SCREAM with 192
+spindles!!"  There are many reasons why nobody does this, one being the
+same stripe block size issue as with nested stripes.  Extremely wide
+arrays have a plethora of problems associated with them.
+
+In summary, concatenating many relatively low stripe spindle count
+arrays, and using XFS allocation groups to achieve parallel scalability=
+,
+gives us the performance we want without the problems associated with
+other configurations.
 
 
+[1]  In order to get all 11 PCIe slots in the DL585 G7 one must use the
+4 socket model, as the additional PCIe slots of the mezzanine card
+connect to two additional SR5690 chips, each one connecting to an HT
+port on each of the two additional CPUs.  Thus, I'm re-specifying the
+DL585 G7 model to have 4 Opteron 6136 CPUs instead of two, 32 cores
+total.  The 128GB in 16 RDIMMs will be spread across all 16 memory
+channels.  Memory bandwidth thus doubles to 160GB/s and interconnect b/=
+w
+doubles to 320GB/s.  Thus, we now have up to 19.2 GB/s of available one
+way disk bandwidth as we're no longer limited by a 10.4GB/s HT/PCIe
+link.  Adding the two required CPUs may have just made this system
+capable of 15GB/s NFS throughput for less than $5000 additional cost,
+not due to the processors, but the extra IO bandwidth enabled as a
+consequence of their inclusion.  Adding another quad port 10 GbE NIC
+will take it close to 20GB/s NFS throughput.  Shame on me for not
+digging far deeper into the DL585 G7 docs.
 
-> 
-> > 
-> > > > Other item is that due to "sysfs.c" linking (see below) the
-> > > > "Makefile" needed some changes, I hope this is not a problem.
-> > > 
-> > > I have reverted most of these changes and the linking with sysfs.c isn't
-> > > needed yet.  When it is we can sort out how best to achieve it.
-> > > 
-> > > > 
-> > > > Next steps (TODO list you like) would be:
-> > > > 
-> > > > 1) Add the "sysfs.c" code in order to retrieve the HDDs info
-> > > > from the MD device. It is already linked, together with the
-> > > > whole (mdadm) universe, since it seems it cannot leave alone.
-> > > > I'll need some advice or hint on how to do use it. I checked
-> > > > "sysfs.c", but before I dig deep into it maybe better to
-> > > > have some advice (maybe just one function call will do it).
-> > > 
-> > > What exactly do you want to achieve?
-> > > 
-> > > I suspect you want to a open the md device, then
-> > > 
-> > >   info = sysfs_read(fd, -1,
-> > >   GET_LEVEL|GET_LAYOUT_GET_DISKS|GET_CHUNK|GET_DEVS|GET_OFFSET);
-> > > 
-> > > (possibly with other flags) and then extract the info you want from the data
-> > > structure returned - but I'm only guessing at what you might want.
-> > 
-> > I think this more or less correct.
-> > 
-> > I would like to pass, to "raid6check", the md device as only
-> > parameter, maybe with some start/stop position, and derive all
-> > the needed information from that.
-> > 
-> > That is, it should be: raid6check /dev/mdX start stop
-> > Or, possibly: raid6check /dev/mdX start length
-> > Or just: raid6check /dev/mdX
-> > 
-> > This means, the information that should be derived is:
-> > 
-> > 1) level, in order to confirm it is 6
-> > 2) layout
-> > 3) disk components
-> > 4) offset for each component
-> > 5) chunk size
-> > 
-> > That should be all, I guess.
-> > 
-> > Your "sysfs_read" seems to do exactly this, please confirm.
-> 
-> Yes, all that should be in there - experiment and see if you get what you
-> expect!
-> 
-> > 
-> > > > 
-> > > > 2) Add the suspend lo/hi control. Fellow John Robinson was
-> > > > suggesting to look into "Grow.c", which I did, but I guess
-> > > > the same story as 1) is valid: better to have some hint on
-> > > > where to look before wasting time.
-> > > 
-> > > This would be:
-> > > 
-> > >   sysfs_set_num(info, NULL, "suspend_lo", offset*data_disks);
-> > >   sysfs_set_num(info, NULL, "suspend_hi", (offset+chunksize)*data_disks);
-> > > 
-> > > to freeze one stripe.  Then work in there.
-> > > The addresses are addresses in the array, hence the multiplication
-> > > by data_disks (which is raid_disks - 2 for RAID6).
-> > > 
-> > > Don't hold the array suspended for too long or something might get
-> > > upset.  And allocate any memory you need first, and call
-> > >     	mlockall(MCL_CURRENT | MCL_FUTURE);
-> > > 
-> > > first to be even more safe.
-> > 
-> > Thanks for the explanation. How is, then, the "unfreeze"?
-> > Just writing (0) to both hi and lo?
-> 
-> Just make sure lo >= hi and it will unfreeze.
-> Some kernels are a bit fussy about the order of writing to these.
-> So if you just write a big number to 'lo', then the same to 'hi', you should
-> be safe.
-> 
-> 
-> NeilBrown
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Stan
 
--- 
-
-piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
