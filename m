@@ -1,33 +1,181 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: high throughput storage server?
-Date: Mon, 21 Mar 2011 12:07:45 -0500
-Message-ID: <4D8785E1.6060700@hardwarefreak.com>
-References: <4D7E0994.3020303@hardwarefreak.com>	<20110314124733.GA31377@infradead.org>	<4D835B2A.1000805@hardwarefreak.com>	<20110318140509.GA26226@infradead.org>	<4D837DAF.6060107@hardwarefreak.com>	<20110319090101.1786cc2a@notabene.brown>	<4D8559A2.6080209@hardwarefreak.com>	<20110320144147.29141f04@notabene.brown>	<AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>	<4D868C36.5050304@hardwarefreak.com>	<20110321024452.GA23100@www2.open-std.org>	<AANLkTikZ1_QmpbBV3utKZdSW_pKyHvsb8aDK1PP4Lhn3@mail.gmail.com> <AANLkTi=gByD=Xe_ik3R-YVG5tE+F_gfaM2W5KvMiROGY@mail.gmail.com>
+Date: Mon, 21 Mar 2011 14:08:20 -0300
+Message-ID: <AANLkTim391OawDZwKE25Yh+jGYqcveSOeig8baNj_AWE@mail.gmail.com>
+References: <4D7E0994.3020303@hardwarefreak.com>
+	<20110314124733.GA31377@infradead.org>
+	<4D835B2A.1000805@hardwarefreak.com>
+	<20110318140509.GA26226@infradead.org>
+	<4D837DAF.6060107@hardwarefreak.com>
+	<20110319090101.1786cc2a@notabene.brown>
+	<4D8559A2.6080209@hardwarefreak.com>
+	<20110320144147.29141f04@notabene.brown>
+	<AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>
+	<4D868C36.5050304@hardwarefreak.com>
+	<20110321024452.GA23100@www2.open-std.org>
+	<4D875E51.50807@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=gByD=Xe_ik3R-YVG5tE+F_gfaM2W5KvMiROGY@mail.gmail.com>
+In-Reply-To: <4D875E51.50807@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Mdadm <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-Roberto Spadim put forth on 3/20/2011 10:14 PM:
-> with hardware raid we don't think about this problem, but with
-> software we should consider since we run others app with software raid
-> running too
+hum, i think you have all to work with mdraid and hardware,right?
+xfs allocation groups is nice, i don=B4t know what workload it could
+accept maybe with raid0 linear this work better than stripe (i must
+test)
 
-Which is precisely why I asked Neil about this.  If you recall Neil
-stated that CPU burn shouldn't be an issue when using mdraid linear over
-16 mdraid 10 arrays in the proposed system.  As long as the kernel
-somewhat evenly distributes IO steams amongst multiple cores I'm
-inclined to agree with Neil.
+i think you know what you do =3D)
+any more doubt?
 
-Note that the application in this case, the NFS server, is threaded
-kernel code, and thus very fast and scalable across all CPUs.  By
-design, all of the performance critical code in this system runs in
-kernel space.
 
--- 
-Stan
+2011/3/21 Stan Hoeppner <stan@hardwarefreak.com>:
+> Keld J=F8rn Simonsen put forth on 3/20/2011 9:44 PM:
+>
+>> Are you then building the system yourself, and running Linux MD RAID=
+?
+>
+> No. =A0These specifications meet the needs of Matt Garman's analysis
+> cluster, and extend that performance from 6GB/s to 10GB/s. =A0Christo=
+ph's
+> comments about 10GB/s throughput with XFS on large CPU count Altix 40=
+00
+> series machines from a few years ago prompted me to specify a single
+> chassis multicore AMD Opteron based system that can achieve the same
+> throughput at substantially lower cost.
+>
+>> Anyway, with 384 spindles and only 50 users, each user will have in
+>> average 7 spindles for himself. I think much of the time this would =
+mean
+>> no random IO, as most users are doing large sequential reading.
+>> Thus on average you can expect quite close to striping speed if you
+>> are running RAID capable of striping.
+>
+> This is not how large scale shared RAID storage works under a
+> multi-stream workload. =A0I thought I explained this in sufficient de=
+tail.
+> =A0Maybe not.
+>
+>> I am puzzled about the --linear concatenating. I think this may caus=
+e
+>> the disks in the --linear array to be considered as one spindle, and=
+ thus
+>> no concurrent IO will be made. I may be wrong there.
+>
+> You are puzzled because you are not familiar with the large scale
+> performance features built into the XFS filesystem. =A0XFS allocation
+> groups automatically enable large scale parallelism on a single logic=
+al
+> device comprised of multiple arrays or single disks, when configured
+> correctly. =A0See:
+>
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-=
+US/html/Allocation_Groups.html
+>
+> The storage pool in my proposed 10GB/s NFS server system consists of =
+16
+> RAID10 arrays comprised of 24 disks of 146GB capacity, 12 stripe
+> spindles per array, 1.752TB per array, 28TB total raw. =A0Concatenati=
+ng
+> the 16 array devices with mdadm --linear creates a 28TB logical devic=
+e.
+> =A0We format it with this simple command, not having to worry about s=
+tripe
+> block size, stripe spindle width, stripe alignment, etc:
+>
+> ~# mkfs.xfs -d agcount=3D64
+>
+> Using this method to achieve parallel scalability is simpler and less
+> prone to configuration errors when compared to multi-level striping,
+> which often leads to poor performance and poor space utilization. =A0=
+With
+> 64 XFS allocation groups the kernel can read/write 4 concurrent strea=
+ms
+> from/to each array of 12 spindles, which should be able to handle thi=
+s
+> load with plenty of headroom. =A0This system has 32 SAS 6G channels, =
+each
+> able to carry two 300MB/s streams, 19.8GB/s aggregate, substantially
+> more than our 10GB/s target. =A0I was going to state that we're limit=
+ed to
+> 10.4GB/s due to the PCIe/HT bridge to the processor. =A0However, I ju=
+st
+> realized I made an error when specifying the DL585 G7 with only 2
+> processors. =A0See [1] below for details.
+>
+> Using XFS in this manner allows us to avoid nested striped arrays and
+> the inherent problems associated with them. =A0For example, in absenc=
+e of
+> using XFS allocation groups to get our parallelism, we could do the
+> following:
+>
+> 1. =A0Width 16 RAID0 stripe over width 12 RAID10 stripe
+> 2. =A0Width 16 LVM =A0 stripe over width 12 RAID10 stripe
+>
+> In either case, what is the correct/optimum stripe block size for eac=
+h
+> level when nesting the two? =A0The answer is that there really aren't
+> correct or optimum stripe sizes in this scenario. =A0Writes to the to=
+p
+> level stripe will be broken into 16 chunks. =A0Each of these 16 chunk=
+s
+> will then be broken into 12 more chunks. =A0You may be thinking, "Why
+> don't we just create one 384 disk RAID10? =A0It would SCREAM with 192
+> spindles!!" =A0There are many reasons why nobody does this, one being=
+ the
+> same stripe block size issue as with nested stripes. =A0Extremely wid=
+e
+> arrays have a plethora of problems associated with them.
+>
+> In summary, concatenating many relatively low stripe spindle count
+> arrays, and using XFS allocation groups to achieve parallel scalabili=
+ty,
+> gives us the performance we want without the problems associated with
+> other configurations.
+>
+>
+> [1] =A0In order to get all 11 PCIe slots in the DL585 G7 one must use=
+ the
+> 4 socket model, as the additional PCIe slots of the mezzanine card
+> connect to two additional SR5690 chips, each one connecting to an HT
+> port on each of the two additional CPUs. =A0Thus, I'm re-specifying t=
+he
+> DL585 G7 model to have 4 Opteron 6136 CPUs instead of two, 32 cores
+> total. =A0The 128GB in 16 RDIMMs will be spread across all 16 memory
+> channels. =A0Memory bandwidth thus doubles to 160GB/s and interconnec=
+t b/w
+> doubles to 320GB/s. =A0Thus, we now have up to 19.2 GB/s of available=
+ one
+> way disk bandwidth as we're no longer limited by a 10.4GB/s HT/PCIe
+> link. =A0Adding the two required CPUs may have just made this system
+> capable of 15GB/s NFS throughput for less than $5000 additional cost,
+> not due to the processors, but the extra IO bandwidth enabled as a
+> consequence of their inclusion. =A0Adding another quad port 10 GbE NI=
+C
+> will take it close to 20GB/s NFS throughput. =A0Shame on me for not
+> digging far deeper into the DL585 G7 docs.
+>
+> --
+> Stan
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
