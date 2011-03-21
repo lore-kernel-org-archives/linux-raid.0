@@ -1,257 +1,504 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: high throughput storage server?
-Date: Mon, 21 Mar 2011 00:14:15 -0300
-Message-ID: <AANLkTi=gByD=Xe_ik3R-YVG5tE+F_gfaM2W5KvMiROGY@mail.gmail.com>
-References: <4D7E0994.3020303@hardwarefreak.com>
-	<20110314124733.GA31377@infradead.org>
-	<4D835B2A.1000805@hardwarefreak.com>
-	<20110318140509.GA26226@infradead.org>
-	<4D837DAF.6060107@hardwarefreak.com>
-	<20110319090101.1786cc2a@notabene.brown>
-	<4D8559A2.6080209@hardwarefreak.com>
-	<20110320144147.29141f04@notabene.brown>
-	<AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>
-	<4D868C36.5050304@hardwarefreak.com>
-	<20110321024452.GA23100@www2.open-std.org>
-	<AANLkTikZ1_QmpbBV3utKZdSW_pKyHvsb8aDK1PP4Lhn3@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [PATCH] RAID-6 check standalone
+Date: Mon, 21 Mar 2011 11:40:07 +0100
+Message-ID: <20110321104007.GA15379@lazy.lzy>
+References: <20110221204551.GA15675@lazy.lzy>
+ <20110321140244.2314b4b4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikZ1_QmpbBV3utKZdSW_pKyHvsb8aDK1PP4Lhn3@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110321140244.2314b4b4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, Mdadm <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, Drew <drew.kay@gmail.com>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-with hardware raid we don't think about this problem, but with
-software we should consider since we run others app with software raid
-running too
+Hi Neil,
 
-2011/3/21 Roberto Spadim <roberto@spadim.com.br>:
-> hum, maybe with linear will have less cpu use instead stripe?
-> i never tested a array with more than 8 disks with linear, and with
-> stripe hehehe
-> anyone could help here?
->
-> 2011/3/20 Keld J=F8rn Simonsen <keld@keldix.com>:
->> On Sun, Mar 20, 2011 at 06:22:30PM -0500, Stan Hoeppner wrote:
->>> Roberto Spadim put forth on 3/20/2011 12:32 AM:
->>>
->>> > i think it's better contact ibm/dell/hp/compaq/texas/anyother and=
- talk
->>> > about the problem, post results here, this is a nice hardware que=
-stion
->>> > :)
->>>
->>> I don't need vendor assistance to design a hardware system capable =
-of
->>> the 10GB/s NFS throughput target. =A0That's relatively easy. =A0I'v=
-e already
->>> specified one possible hardware combination capable of this level o=
-f
->>> performance (see below). =A0The configuration will handle 10GB/s us=
-ing the
->>> RAID function of the LSI SAS HBAs. =A0The only question is if it ha=
-s
->>> enough individual and aggregate CPU horsepower, memory, and HT
->>> interconnect bandwidth to do the same using mdraid. =A0This is the =
-reason
->>> for my questions directed at Neil.
->>>
->>> > don't tell about software raid, just the hardware to allow this
->>> > bandwidth (10gb/s) and share files
->>>
->>> I already posted some of the minimum hardware specs earlier in this
->>> thread for the given workload I described. =A0Following is a descri=
-ption
->>> of the workload and a complete hardware specification.
->>>
->>> Target workload:
->>>
->>> 10GB/s continuous parallel NFS throughput serving 50+ NFS clients w=
-hose
->>> application performs large streaming reads. =A0At the storage array=
- level
->>> the 50+ parallel streaming reads become a random IO pattern workloa=
-d
->>> requiring a huge number of spindles due to the high seek rates.
->>>
->>> Minimum hardware requirements, based on performance and cost. =A0Ba=
-llpark
->>> guess on total cost of the hardware below is $150-250k USD. =A0We c=
-an't
->>> get the data to the clients without a network, so the specification
->>> starts with the switching hardware needed.
->>>
->>> Ethernet switches:
->>> =A0 =A0One HP A5820X-24XG-SFP+ (JC102A) 24 10 GbE SFP ports
->>> =A0 =A0 =A0 488 Gb/s backplane switching capacity
->>> =A0 =A0Five HP A5800-24G Switch (JC100A) 24 GbE ports, 4 10GbE SFP
->>> =A0 =A0 =A0 208 Gb/s backplane switching capacity
->>> =A0 =A0Maximum common MTU enabled (jumbo frame) globally
->>> =A0 =A0Connect 12 server 10 GbE ports to A5820X
->>> =A0 =A0Uplink 2 10 GbE ports from each A5800 to A5820X
->>> =A0 =A0 =A0 =A02 open 10 GbE ports left on A5820X for cluster expan=
-sion
->>> =A0 =A0 =A0 =A0or off cluster data transfers to the main network
->>> =A0 =A0Link aggregate 12 server 10 GbE ports to A5820X
->>> =A0 =A0Link aggregate each client's 2 GbE ports to A5800s
->>> =A0 =A0Aggregate client->switch bandwidth =3D 12.5 GB/s
->>> =A0 =A0Aggregate server->switch bandwidth =3D 15.0 GB/s
->>> =A0 =A0The excess server b/w of 2.5GB/s is a result of the followin=
-g:
->>> =A0 =A0 =A0 =A0Allowing headroom for an additional 10 clients or ou=
-t of cluster
->>> =A0 =A0 =A0 =A0 =A0 data transfers
->>> =A0 =A0 =A0 =A0Balancing the packet load over the 3 quad port 10 Gb=
-E server NICs
->>> =A0 =A0 =A0 =A0 =A0 regardless of how many clients are active to pr=
-event hot spots
->>> =A0 =A0 =A0 =A0 =A0 in the server memory and interconnect subsystem=
-s
->>>
->>> Server chassis
->>> =A0 =A0HP Proliant DL585 G7 with the following specifications
->>> =A0 =A0Dual AMD Opteron 6136, 16 cores @2.4GHz
->>> =A0 =A020GB/s node-node HT b/w, 160GB/s aggregate
->>> =A0 =A0128GB DDR3 1333, 16x8GB RDIMMS in 8 channels
->>> =A0 =A020GB/s/node memory bandwidth, 80GB/s aggregate
->>> =A0 =A07 PCIe x8 slots and 4 PCIe x16
->>> =A0 =A08GB/s/slot, 56 GB/s aggregate PCIe x8 bandwidth
->>>
->>> IO controllers
->>> =A0 =A04 x LSI SAS 9285-8e 8 port SAS, 800MHz dual core ROC, 1GB ca=
-che
->>> =A0 =A03 x NIAGARA 32714 PCIe x8 Quad Port Fiber 10 Gigabit Server =
-Adapter
->>>
->>> JBOD enclosures
->>> =A0 =A016 x LSI 620J 2U 24 x 2.5" bay SAS 6Gb/s, w/SAS expander
->>> =A0 =A02 SFF 8088 host and 1 expansion port per enclosure
->>> =A0 =A0384 total SAS 6GB/s 2.5" drive bays
->>> =A0 =A0Two units are daisy chained with one in each pair
->>> =A0 =A0 =A0 connecting to one of 8 HBA SFF8088 ports, for a total o=
-f
->>> =A0 =A0 =A0 32 6Gb/s SAS host connections, yielding 38.4 GB/s full =
-duplex b/w
->>>
->>> Disks drives
->>> =A0 =A0384 HITACHI Ultrastar C15K147 147GB 15000 RPM 64MB Cache 2.5=
-" SAS
->>> =A0 =A0 =A0 6Gb/s Internal Enterprise Hard Drive
->>>
->>>
->>> Note that the HBA to disk bandwidths of 19.2GB/s one way and 38.4GB=
-/s
->>> full duplex are in excess of the HBA to PCIe bandwidths, 16 and 32G=
-B/s
->>> respectively, by approximately 20%. =A0Also note that each drive ca=
-n
->>> stream reads at 160MB/s peak, yielding 61GB/s aggregate streaming r=
-ead
->>> capacity for the 384 disks. =A0This is almost 4 times the aggregate=
- one
->>> way transfer rate of the 4 PCIe x8 slots, and is 6 times our target=
- host
->>> to parallel client data rate of 10GB/s. =A0There are a few reasons =
-why
->>> this excess of capacity is built into the system:
->>>
->>> 1. =A0RAID10 is the only suitable RAID level for this type of syste=
-m with
->>> this many disks, for many reasons that have been discussed before.
->>> RAID10 instantly cuts the number of stripe spindles in two, droppin=
-g the
->>> data rate by a factor of 2, giving us 30.5GB/s potential aggregate
->>> throughput. =A0Now we're only at 3 times out target data rate.
->>>
->>> 2. =A0As a single disk drive's seek rate increases, its transfer ra=
-te
->>> decreases in relation to its single streaming read performance.
->>> Parallel streaming reads will increase seek rates as the disk head =
-must
->>> move between different regions of the disk platter.
->>>
->>> 3. =A0In relation to 2, if we assume we'll lose no more than 66% of=
- our
->>> single streaming performance with a multi stream workload, we're do=
-wn to
->>> 10.1GB/s throughput, right at our target.
->>>
->>> By using relatively small arrays of 24 drives each (12 stripe spind=
-les),
->>> concatenating (--linear) the 16 resulting arrays, and using a files=
-ystem
->>> such as XFS across the entire array with its intelligent load balan=
-cing
->>> of streams using allocation groups, we minimize disk head seeking.
->>> Doing this can in essence divide our 50 client streams across 16 ar=
-rays,
->>> with each array seeing approximately 3 of the streaming client read=
-s.
->>> Each disk should be able to easily maintain 33% of its max read rat=
-e
->>> while servicing 3 streaming reads.
->>>
->>> I hope you found this informative or interesting. =A0I enjoyed the
->>> exercise. =A0I'd been working on this system specification for quit=
-e a few
->>> days now but have been hesitant to post it due to its length, and t=
-he
->>> fact that AFAIK hardware discussion is a bit OT on this list.
->>>
->>> I hope it may be valuable to someone Google'ing for this type of
->>> information in the future.
->>>
->>> --
->>> Stan
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>
->> Are you then building the system yourself, and running Linux MD RAID=
-?
->>
->> Anyway, with 384 spindles and only 50 users, each user will have in
->> average 7 spindles for himself. I think much of the time this would =
-mean
->> no random IO, as most users are doing large sequential reading.
->> Thus on average you can expect quite close to striping speed if you
->> are running RAID capable of striping.
->>
->> I am puzzled about the --linear concatenating. I think this may caus=
-e
->> the disks in the --linear array to be considered as one spindle, and=
- thus
->> no concurrent IO will be made. I may be wrong there.
->>
->> best regards
->> Keld
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
->
->
+On Mon, Mar 21, 2011 at 02:02:44PM +1100, NeilBrown wrote:
+> On Mon, 21 Feb 2011 21:45:51 +0100 Piergiorgio Sartor
+> <piergiorgio.sartor@nexgo.de> wrote:
+> 
+> > Hi Neil,
+> > 
+> > please find attached a patch, to mdadm-3.2 base, including
+> > a standalone versione of the raid-6 check.
+> > 
+> > This is basically a re-working (and hopefully improvement)
+> > of the already implemented check in "restripe.c".
+> > 
+> > I splitted the check function into "collect" and "stats",
+> > so that the second one could be easily replaced.
+> > The API is also simplified.
+> > 
+> > The command line option are reduced, since we only level
+> > is raid-6, but the ":offset" option is included.
+> > 
+> > The output reports the block/stripe rotation, P/Q errors
+> > and the possible HDD (or unknown).
+> > 
+> > BTW, the patch applies also to the already patched "restripe.c",
+> > including the last ":offset" patch (which is not yet in git).
+> > 
+> 
+> Sorry for not replying for a month!!  I manage to lose track of this then
+> couldn't find it when I went looking, then got distracted, then....
+
+don't worry, I know how easy is to loose track of
+such items. That's why I kept (slowly) insisting.
+
+> Thanks for your patience and persistence.
+> 
+> I have applied this patch to me git now - with some minor changes.
+
+Thanks.
+
+One question, I did not find the previous patch to "restripe.c",
+which was adding the ":offset" capability. This was in order to
+be able to cope with metadata 1.1 or 1.2 (offset to be determined).
+
+> > Other item is that due to "sysfs.c" linking (see below) the
+> > "Makefile" needed some changes, I hope this is not a problem.
+> 
+> I have reverted most of these changes and the linking with sysfs.c isn't
+> needed yet.  When it is we can sort out how best to achieve it.
+> 
+> > 
+> > Next steps (TODO list you like) would be:
+> > 
+> > 1) Add the "sysfs.c" code in order to retrieve the HDDs info
+> > from the MD device. It is already linked, together with the
+> > whole (mdadm) universe, since it seems it cannot leave alone.
+> > I'll need some advice or hint on how to do use it. I checked
+> > "sysfs.c", but before I dig deep into it maybe better to
+> > have some advice (maybe just one function call will do it).
+> 
+> What exactly do you want to achieve?
+> 
+> I suspect you want to a open the md device, then
+> 
+>   info = sysfs_read(fd, -1,
+>   GET_LEVEL|GET_LAYOUT_GET_DISKS|GET_CHUNK|GET_DEVS|GET_OFFSET);
+> 
+> (possibly with other flags) and then extract the info you want from the data
+> structure returned - but I'm only guessing at what you might want.
+
+I think this more or less correct.
+
+I would like to pass, to "raid6check", the md device as only
+parameter, maybe with some start/stop position, and derive all
+the needed information from that.
+
+That is, it should be: raid6check /dev/mdX start stop
+Or, possibly: raid6check /dev/mdX start length
+Or just: raid6check /dev/mdX
+
+This means, the information that should be derived is:
+
+1) level, in order to confirm it is 6
+2) layout
+3) disk components
+4) offset for each component
+5) chunk size
+
+That should be all, I guess.
+
+Your "sysfs_read" seems to do exactly this, please confirm.
+
+> > 
+> > 2) Add the suspend lo/hi control. Fellow John Robinson was
+> > suggesting to look into "Grow.c", which I did, but I guess
+> > the same story as 1) is valid: better to have some hint on
+> > where to look before wasting time.
+> 
+> This would be:
+> 
+>   sysfs_set_num(info, NULL, "suspend_lo", offset*data_disks);
+>   sysfs_set_num(info, NULL, "suspend_hi", (offset+chunksize)*data_disks);
+> 
+> to freeze one stripe.  Then work in there.
+> The addresses are addresses in the array, hence the multiplication
+> by data_disks (which is raid_disks - 2 for RAID6).
+> 
+> Don't hold the array suspended for too long or something might get
+> upset.  And allocate any memory you need first, and call
+>     	mlockall(MCL_CURRENT | MCL_FUTURE);
+> 
+> first to be even more safe.
+
+Thanks for the explanation. How is, then, the "unfreeze"?
+Just writing (0) to both hi and lo?
+
+> > 
+> > 3) Add a repair option (future). This should have different
+> > levels, like "all", "disk", "stripe". That is, fix everything
+> > (more or less like "repair"), fix only if a disk is clearly
+> > having problems, fix each stripe which has clearly a problem
+> > (but maybe different stripes may belong to different HDDs).
+> > 
+> > So, for the point 1) and 2) would be nice to have some more
+> > detail on where to look what. Point 3) we will discuss later.
+> 
+> Agreed.
+> Hopefully the info I have provided is sufficient to help you progress.
+
+I'll ask, if I need more information.
+
+> Thanks,
+> NeilBrown
+
+Thank you,
+
+bye,
+
+pg
+
+> 
+> > 
+> > Thanks, please consider for inclusion,
+> > 
+> > bye,
+> > 
+> > pg
+> 
+> > 
+> > 
+> > diff -urN a/Makefile b/Makefile
+> > --- a/Makefile	2011-02-01 05:31:07.000000000 +0100
+> > +++ b/Makefile	2011-02-20 00:03:44.929998038 +0100
+> > @@ -98,7 +98,7 @@
+> >  MAN5DIR = $(MANDIR)/man5
+> >  MAN8DIR = $(MANDIR)/man8
+> >  
+> > -OBJS =  mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o \
+> > +OBJSX = config.o policy.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o \
+> >  	Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o \
+> >  	Incremental.o \
+> >  	mdopen.o super0.o super1.o super-ddf.o super-intel.o bitmap.o \
+> > @@ -106,6 +106,8 @@
+> >  	restripe.o sysfs.o sha1.o mapfile.o crc32.o sg_io.o msg.o \
+> >  	platform-intel.o probe_roms.o
+> >  
+> > +OBJS = mdadm.o $(OBJSX)
+> > +
+> >  SRCS =  mdadm.c config.c policy.c mdstat.c  ReadMe.c util.c Manage.c Assemble.c Build.c \
+> >  	Create.c Detail.c Examine.c Grow.c Monitor.c dlink.c Kill.c Query.c \
+> >  	Incremental.c \
+> > @@ -182,6 +184,9 @@
+> >  test_stripe : restripe.c mdadm.h
+> >  	$(CC) $(CXFLAGS) $(LDFLAGS) -o test_stripe -DMAIN restripe.c
+> >  
+> > +raid6check : raid6check.o mdadm.h $(OBJSX)
+> > +	$(CC) $(CXFLAGS) $(LDFLAGS) -o raid6check raid6check.o $(OBJSX)
+> > +
+> >  mdassemble : $(ASSEMBLE_SRCS) $(INCL)
+> >  	rm -f $(OBJS)
+> >  	$(DIET_GCC) $(ASSEMBLE_FLAGS) -o mdassemble $(ASSEMBLE_SRCS)  $(STATICSRC)
+> > @@ -265,7 +270,7 @@
+> >  	mdadm.Os mdadm.O2 mdmon.O2 \
+> >  	mdassemble mdassemble.static mdassemble.auto mdassemble.uclibc \
+> >  	mdassemble.klibc swap_super \
+> > -	init.cpio.gz mdadm.uclibc.static test_stripe mdmon \
+> > +	init.cpio.gz mdadm.uclibc.static test_stripe raid6check raid6check.o mdmon \
+> >  	mdadm.8
+> >  
+> >  dist : clean
+> > diff -urN a/raid6check.c b/raid6check.c
+> > --- a/raid6check.c	1970-01-01 01:00:00.000000000 +0100
+> > +++ b/raid6check.c	2011-02-21 21:40:27.813656214 +0100
+> > @@ -0,0 +1,263 @@
+> > +/*
+> > + * raid6check - extended consistency check for RAID-6
+> > + *
+> > + * Copyright (C) 2011 Piergiorgio Sartor
+> > + *
+> > + *
+> > + *    This program is free software; you can redistribute it and/or modify
+> > + *    it under the terms of the GNU General Public License as published by
+> > + *    the Free Software Foundation; either version 2 of the License, or
+> > + *    (at your option) any later version.
+> > + *
+> > + *    This program is distributed in the hope that it will be useful,
+> > + *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + *    GNU General Public License for more details.
+> > + *
+> > + *    You should have received a copy of the GNU General Public License
+> > + *    along with this program; if not, write to the Free Software
+> > + *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> > + *
+> > + *    Author: Piergiorgio Sartor
+> > + *    Based on "restripe.c" from "mdadm" codebase
+> > + */
+> > +
+> > +#include "mdadm.h"
+> > +#include <stdint.h>
+> > +
+> > +int geo_map(int block, unsigned long long stripe, int raid_disks,
+> > +	    int level, int layout);
+> > +void qsyndrome(uint8_t *p, uint8_t *q, uint8_t **sources, int disks, int size);
+> > +void make_tables(void);
+> > +
+> > +/* Collect per stripe consistency information */
+> > +void raid6_collect(int chunk_size, uint8_t *p, uint8_t *q,
+> > +		   char *chunkP, char *chunkQ, int *results)
+> > +{
+> > +	int i;
+> > +	int data_id;
+> > +	uint8_t Px, Qx;
+> > +	extern uint8_t raid6_gflog[];
+> > +
+> > +	for(i = 0; i < chunk_size; i++) {
+> > +		Px = (uint8_t)chunkP[i] ^ (uint8_t)p[i];
+> > +		Qx = (uint8_t)chunkQ[i] ^ (uint8_t)q[i];
+> > +
+> > +		if((Px != 0) && (Qx == 0))
+> > +			results[i] = -1;
+> > +
+> > +		if((Px == 0) && (Qx != 0))
+> > +			results[i] = -2;
+> > +
+> > +		if((Px != 0) && (Qx != 0)) {
+> > +			data_id = (raid6_gflog[Qx] - raid6_gflog[Px]);
+> > +			if(data_id < 0) data_id += 255;
+> > +			results[i] = data_id;
+> > +		}
+> > +
+> > +		if((Px == 0) && (Qx == 0))
+> > +			results[i] = -255;
+> > +	}
+> > +}
+> > +
+> > +/* Try to find out if a specific disk has problems */
+> > +int raid6_stats(int *results, int raid_disks, int chunk_size)
+> > +{
+> > +	int i;
+> > +	int curr_broken_disk = -255;
+> > +	int prev_broken_disk = -255;
+> > +	int broken_status = 0;
+> > +	
+> > +	for(i = 0; i < chunk_size; i++) {
+> > +
+> > +		if(results[i] != -255)
+> > +			curr_broken_disk = results[i];
+> > +
+> > +		if(curr_broken_disk >= raid_disks)
+> > +			broken_status = 2;
+> > +
+> > +		switch(broken_status) {
+> > +		case 0:
+> > +			if(curr_broken_disk != -255) {
+> > +				prev_broken_disk = curr_broken_disk;
+> > +				broken_status = 1;
+> > +			}
+> > +			break;
+> > +
+> > +		case 1:
+> > +			if(curr_broken_disk != prev_broken_disk)
+> > +				broken_status = 2;
+> > +			break;
+> > +
+> > +		case 2:
+> > +		default:
+> > +			curr_broken_disk = prev_broken_disk = -65535;
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> > +	return curr_broken_disk;
+> > +}
+> > +
+> > +int check_stripes(int *source, unsigned long long *offsets,
+> > +		  int raid_disks, int chunk_size, int level, int layout,
+> > +		  unsigned long long start, unsigned long long length, char *name[])
+> > +{
+> > +	/* read the data and p and q blocks, and check we got them right */
+> > +	char *stripe_buf = malloc(raid_disks * chunk_size);
+> > +	char **stripes = malloc(raid_disks * sizeof(char*));
+> > +	char **blocks = malloc(raid_disks * sizeof(char*));
+> > +	uint8_t *p = malloc(chunk_size);
+> > +	uint8_t *q = malloc(chunk_size);
+> > +	int *results = malloc(chunk_size * sizeof(int));
+> > +
+> > +	int i;
+> > +	int diskP, diskQ;
+> > +	int data_disks = raid_disks - 2;
+> > +
+> > +	extern int tables_ready;
+> > +
+> > +	if (!tables_ready)
+> > +		make_tables();
+> > +
+> > +	for ( i = 0 ; i < raid_disks ; i++)
+> > +		stripes[i] = stripe_buf + i * chunk_size;
+> > +
+> > +	while (length > 0) {
+> > +		int disk;
+> > +
+> > +		for (i = 0 ; i < raid_disks ; i++) {
+> > +			lseek64(source[i], offsets[i]+start, 0);
+> > +			read(source[i], stripes[i], chunk_size);
+> > +		}
+> > +		for (i = 0 ; i < data_disks ; i++) {
+> > +			int disk = geo_map(i, start/chunk_size, raid_disks,
+> > +					   level, layout);
+> > +			blocks[i] = stripes[disk];
+> > +			printf("%d->%d\n", i, disk);
+> > +		}
+> > +
+> > +		qsyndrome(p, q, (uint8_t**)blocks, data_disks, chunk_size);
+> > +		diskP = geo_map(-1, start/chunk_size, raid_disks,
+> > +				level, layout);
+> > +		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
+> > +			printf("P(%d) wrong at %llu\n", diskP,
+> > +			       start / chunk_size);
+> > +		}
+> > +		diskQ = geo_map(-2, start/chunk_size, raid_disks,
+> > +				level, layout);
+> > +		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
+> > +			printf("Q(%d) wrong at %llu\n", diskQ,
+> > +			       start / chunk_size);
+> > +		}
+> > +		raid6_collect(chunk_size, p, q,
+> > +			      stripes[diskP], stripes[diskQ], results);
+> > +		disk = raid6_stats(results, raid_disks, chunk_size);
+> > +
+> > +		if(disk >= -2) {
+> > +			disk = geo_map(disk, start/chunk_size, raid_disks,
+> > +				       level, layout);
+> > +		}
+> > +		if(disk >= 0) {
+> > +			printf("Possible failed disk: %d --> %s\n", disk, name[disk]);
+> > +		}
+> > +		if(disk == -65535) {
+> > +			printf("Failure detected, but disk unknown\n");
+> > +		}
+> > +
+> > +		length -= chunk_size;
+> > +		start += chunk_size;
+> > +	}
+> > +
+> > +	free(stripe_buf);
+> > +	free(stripes);
+> > +	free(blocks);
+> > +	free(p);
+> > +	free(q);
+> > +	free(results);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +unsigned long long getnum(char *str, char **err)
+> > +{
+> > +	char *e;
+> > +	unsigned long long rv = strtoull(str, &e, 10);
+> > +	if (e==str || *e) {
+> > +		*err = str;
+> > +		return 0;
+> > +	}
+> > +	return rv;
+> > +}
+> > +
+> > +int main(int argc, char *argv[])
+> > +{
+> > +	/* raid_disks chunk_size layout start length devices...
+> > +	 */
+> > +	int *fds;
+> > +	char *buf;
+> > +	unsigned long long *offsets;
+> > +	int raid_disks, chunk_size, layout;
+> > +	int level = 6;
+> > +	unsigned long long start, length;
+> > +	int i;
+> > +
+> > +	char *err = NULL;
+> > +	if (argc < 8) {
+> > +		fprintf(stderr, "Usage: raid6check raid_disks"
+> > +			" chunk_size layout start length devices...\n");
+> > +		exit(1);
+> > +	}
+> > +
+> > +	raid_disks = getnum(argv[1], &err);
+> > +	chunk_size = getnum(argv[2], &err);
+> > +	layout = getnum(argv[3], &err);
+> > +	start = getnum(argv[4], &err);
+> > +	length = getnum(argv[5], &err);
+> > +	if (err) {
+> > +		fprintf(stderr, "test_stripe: Bad number: %s\n", err);
+> > +		exit(2);
+> > +	}
+> > +	if (argc != raid_disks + 6) {
+> > +		fprintf(stderr, "test_stripe: wrong number of devices: want %d found %d\n",
+> > +			raid_disks, argc-6);
+> > +		exit(2);
+> > +	}
+> > +	fds = malloc(raid_disks * sizeof(*fds));
+> > +	offsets = malloc(raid_disks * sizeof(*offsets));
+> > +	memset(offsets, 0, raid_disks * sizeof(*offsets));
+> > +
+> > +	for (i=0; i<raid_disks; i++) {
+> > +		char *p;
+> > +		p = strchr(argv[6+i], ':');
+> > +
+> > +		if(p != NULL) {
+> > +			*p++ = '\0';
+> > +			offsets[i] = atoll(p) * 512;
+> > +		}
+> > +		fds[i] = open(argv[6+i], O_RDWR);
+> > +		if (fds[i] < 0) {
+> > +			perror(argv[6+i]);
+> > +			fprintf(stderr,"test_stripe: cannot open %s.\n", argv[6+i]);
+> > +			exit(3);
+> > +		}
+> > +	}
+> > +
+> > +	buf = malloc(raid_disks * chunk_size);
+> > +
+> > +	int rv = check_stripes(fds, offsets,
+> > +			       raid_disks, chunk_size, level, layout,
+> > +			       start, length, &argv[6]);
+> > +	if (rv != 0) {
+> > +		fprintf(stderr,
+> > +			"test_stripe: test_stripes returned %d\n", rv);
+> > +		exit(1);
+> > +	}
+> > +
+> > +	free(fds);
+> > +	free(offsets);
+> > +	free(buf);
+> > +
+> > +	exit(0);
+> > +}
+> > +
+> > diff -urN a/restripe.c b/restripe.c
+> > --- a/restripe.c	2011-02-19 22:36:29.707651642 +0100
+> > +++ b/restripe.c	2011-02-19 18:13:14.468626986 +0100
+> > @@ -33,7 +33,7 @@
+> >   *
+> >   */
+> >  
+> > -static int geo_map(int block, unsigned long long stripe, int raid_disks,
+> > +int geo_map(int block, unsigned long long stripe, int raid_disks,
+> >  		   int level, int layout)
+> >  {
+> >  	/* On the given stripe, find which disk in the array will have
+> > @@ -223,7 +223,7 @@
+> >  	}
+> >  }
+> >  
+> > -static void qsyndrome(uint8_t *p, uint8_t *q, uint8_t **sources, int disks, int size)
+> > +void qsyndrome(uint8_t *p, uint8_t *q, uint8_t **sources, int disks, int size)
+> >  {
+> >  	int d, z;
+> >  	uint8_t wq0, wp0, wd0, w10, w20;
+> > 
+> 
 > --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
->
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+-- 
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+piergiorgio
