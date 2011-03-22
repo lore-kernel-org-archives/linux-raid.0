@@ -1,69 +1,54 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] RAID-6 check standalone
-Date: Tue, 22 Mar 2011 09:59:05 +1100
-Message-ID: <20110322095905.737fb1d5@notabene.brown>
-References: <20110221204551.GA15675@lazy.lzy>
-	<20110321140244.2314b4b4@notabene.brown>
-	<20110321104007.GA15379@lazy.lzy>
-	<20110321220457.29d52f5c@notabene.brown>
-	<20110321115440.GA15635@lazy.lzy>
+Subject: Something wrong with __prep_thunderdome in super-intel.c
+Date: Tue, 22 Mar 2011 13:23:07 +1100
+Message-ID: <20110322132307.34e9bb3b@notabene.brown>
+References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
+	<20110315085346.3bf9feb7@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110321115440.GA15635@lazy.lzy>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 21 Mar 2011 12:54:41 +0100 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
 
-> Hi Neil,
-> 
-> On Mon, Mar 21, 2011 at 10:04:57PM +1100, NeilBrown wrote:
-> > On Mon, 21 Mar 2011 11:40:07 +0100 Piergiorgio Sartor
-> > <piergiorgio.sartor@nexgo.de> wrote:
-> > 
-> > 
-> > > > I have applied this patch to me git now - with some minor changes.
-> > > 
-> > > Thanks.
-> > > 
-> > > One question, I did not find the previous patch to "restripe.c",
-> > > which was adding the ":offset" capability. This was in order to
-> > > be able to cope with metadata 1.1 or 1.2 (offset to be determined).
-> > 
-> > I cannot seem to find it.  Please resend.
-> 
-> neither me, maybe I just forgot to send it.
-> 
-> Anyway, here below is the patch:
-> 
-> --- cut here ---
-> 
-> diff -urN a/restripe.c b/restripe.c
-> --- a/restripe.c	2011-02-18 23:18:20.377740868 +0100
-> +++ b/restripe.c	2011-02-18 23:30:07.589841525 +0100
-> @@ -875,6 +875,14 @@
->  		exit(3);
->  	}
->  	for (i=0; i<raid_disks; i++) {
-> +		char *p;
-> +		p = strchr(argv[9+i], ':');
-> +
-> +		if(p != NULL) {
-> +			*p++ = '\0';
-> +			offsets[i] = atoll(p) * 512;
-> +		}
-> +			
->  		fds[i] = open(argv[9+i], O_RDWR);
->  		if (fds[i] < 0) {
->  			perror(argv[9+i]);
-> 
+Hi Dan,
 
-OK, that's applied now.
-thanks,
+ I think you were the original author of imsm_thunderdome and
+ __prep_thunderdome - yes?
+
+ I found a case (thank to the test suite) where it isn't working correctly,
+
+ If I have a container with 2 devices, and the second one is failed, then
+ imsm_thunderdome returns NULL.
+
+ __prep_thunderdome sees the first and adds it to the table of superblocks.
+ Then it sees the second notices the family_num and checksum are the same, and
+ so replaces the first with the second in the table.
+
+ Then in imsm_thunderdome, d->serial is full of 'nul', so disk_list_get
+ doesn't find anything so the super_table becomes empty and nothing works.
+
+ So it could be:
+    load_and_parse_mpb is wrong for putting the nul serial in there
+    __prep_thunderdome is wrong for thinking the two are equivalent
+    imsm_thunderdome is wrong for giving up when just one device isn't found
+
+ and I really don't know which.
+
+You can easily reproduce with
+
+  ./mdadm -CR /dev/md/imsm -e imsm -n 2 /dev/loop[01]
+  ./mdadm -CR /dev/md/r1 -l1 -n2 /dev/md/imsm
+  ./mdadm /dev/md/r1 -f /dev/loop1
+  ./mdadm -E /dev/md/imsm
+
+and notice that nothing gets printed.
+If you fail loop0 instead, it works properly.
+
+Thanks,
 NeilBrown
-
