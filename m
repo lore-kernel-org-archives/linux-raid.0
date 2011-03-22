@@ -1,36 +1,98 @@
-From: "Mr.Pt. Lee" <infobank8@aol.com>
-Subject: Hello
-Date: Tue, 22 Mar 2011 04:29:52 +0100
-Message-ID: <201103220329.p2M3Ti9T026402__8083.22704765505$1300764845$gmane$org@auth3.smtp.vt.edu>
-Reply-To: <petercleejp@yahoo.cn>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: high throughput storage server?
+Date: Tue, 22 Mar 2011 09:46:58 +0000
+Message-ID: <20110322094658.GA21078@cthulhu.home.robinhill.me.uk>
+References: <20110318140509.GA26226@infradead.org>
+ <4D837DAF.6060107@hardwarefreak.com>
+ <20110319090101.1786cc2a@notabene.brown>
+ <4D8559A2.6080209@hardwarefreak.com>
+ <20110320144147.29141f04@notabene.brown>
+ <AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>
+ <4D868C36.5050304@hardwarefreak.com>
+ <20110321024452.GA23100@www2.open-std.org>
+ <4D875E51.50807@hardwarefreak.com>
+ <20110321221304.GA900@www2.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110321221304.GA900@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, Mdadm <linux-raid@vger.kernel.org>, Roberto Spadim <roberto@spadim.com.br>, NeilBrown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-Hello 
-   
-It is understandable that you might be a bit apprehensive because you do not know, but I have a lucrative business proposal of mutual interest to share with you. I got your reference in my search for someone who suits my proposed business relationship. 
-    
-I am Mr P. Lee of South Korea, happily married with children, and I am Director of Hang Seng Bank Ltd., in charge of the International Remittance Department. I have a confidential business proposal for you. I need you to assist me in implementing a business project from Hong Kong to your country. It is the transfer of large sums of money. Everything about this transaction shall be legally done without hitch. Please try to observe utmost discretion in all matters concerning this issue. 
-   
-After funds have been successfully transferred into your account, we will share in proportion to both of us agreed. I prefer you to me on my private e-mail address (petercleejp@yahoo.cn) and then after that I will give you more information about this operation. If you're interested, send me the following urgently: 
 
-1st Names and surnames 
-2nd Occupation 
-3rd Private phone number 
-4th Current contact address 
-   
-Please, if you do not want to delete this e-mail and do not hunt, because I am putting my career and life of my family at stake with this venture. Although nothing ventured nothing gained. 
-   
-Your earliest response to this letter will be appreciated. 
-    
-Sincerely, 
-   
-Mr.Pt. Lee 
-Hang Seng Bank Limited 
-Hong Kong. () Asian 
-E-mail: - petercleejp@yahoo.cn
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon Mar 21, 2011 at 11:13:04 +0100, Keld J=F8rn Simonsen wrote:
+
+> On Mon, Mar 21, 2011 at 09:18:57AM -0500, Stan Hoeppner wrote:
+> >=20
+> > > Anyway, with 384 spindles and only 50 users, each user will have in
+> > > average 7 spindles for himself. I think much of the time this would m=
+ean=20
+> > > no random IO, as most users are doing large sequential reading.=20
+> > > Thus on average you can expect quite close to striping speed if you
+> > > are running RAID capable of striping.=20
+> >=20
+> > This is not how large scale shared RAID storage works under a
+> > multi-stream workload.  I thought I explained this in sufficient detail.
+> >  Maybe not.
+>=20
+> Given that the whole array system is only lightly loaded, this is how I
+> expect it to function. Maybe you can explain why it would not be so, if
+> you think otherwise.
+>=20
+If you have more than one system accessing the array simultaneously then
+your sequential IO immediately becomes random (as it'll interleave the
+requests from the multiple systems). The more systems accessing
+simultaneously, the more random the IO becomes. Of course, there will
+still be an opportunity for some readahead, so it's not entirely random
+IO.
+
+> it is probably not the concurrency of XFS that makes the parallelism of
+> the IO. It is more likely the IO system, and that would also work for
+> other file system types, like ext4. I do not see anything in the XFS allo=
+cation
+> blocks with any knowledge of the underlying disk structure.=20
+> What the file system does is only to administer the scheduling of the
+> IO, in combination with the rest of the kernel.
+>=20
+XFS allows for splitting the single filesystem into multiple allocation
+groups. It can then allocate blocks from each group simultaneously
+without worrying about collisions. If the allocation groups are on
+separate physical spindles then (apart from the initial mapping of a
+request to an allocation group, which should be a very quick operation),
+the entire write process is parallelised.  Most filesystems have only a
+single allocation group, so the block allocation is single threaded and
+can easily become a bottleneck. It's only once the blocks are allocated
+(assuming the filesystem knows about the physical layout) that the
+writes can be parallelised. I've not looked into the details of ext4
+though, so I don't know whether it makes any moves towards parallelising
+block allocation.
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--EVF5PPMfhYS0aIcm
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEARECAAYFAk2IcBEACgkQShxCyD40xBIHwACgq/Nabna31PJwMf5mZwGLIKS0
+opAAn2wN5gmwDZl/s02fyDPDVz5zeCzN
+=o2xQ
+-----END PGP SIGNATURE-----
+
+--EVF5PPMfhYS0aIcm--
