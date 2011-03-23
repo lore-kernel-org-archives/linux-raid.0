@@ -1,75 +1,54 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: cannot examine IMSM metadata on a disk in non-IMSM compliant
- system
-Date: Wed, 23 Mar 2011 12:15:37 +1100
-Message-ID: <20110323121537.55cc741c@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D191E0AF4E@irsmsx503.ger.corp.intel.com>
+Subject: Subject:  ANNOUNCE: mdadm 3.1.5 - A tool for managing Soft RAID
+ under Linux
+Date: Wed, 23 Mar 2011 15:46:11 +1100
+Message-ID: <20110323154611.58acbb19@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D191E0AF4E@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 22 Mar 2011 16:50:10 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
-wrote:
 
-> >From 492192b1777936ccaf745aeb73f83f55c12a5a37 Mon Sep 17 00:00:00 2001
-> From: Marcin Labun <marcin.labun@intel.com>
-> Date: Tue, 22 Mar 2011 17:39:57 +0100
-> Subject: [PATCH 0/2] cannot examine IMSM metadata on a disk in non-IMSM compliant system
-> 
-> IMSM metadata handlers have following requirements:
-> - disk is attached to Intel controller (ahci or SAS)
-> - the whole disk set in one RAID volume belongs to the same controller
-> - IMSM OROM/EFI properties available
-> 
-> In non-IMSM system a user can always set IMSM_NO_PLATFORM=1, so above requirements need not to be met.
-> 
-> This series allows a user can check if there is any IMSM metadata on the disk in non-IMSM compatible system without setting IMSM_NO_PLATFORM.
-> Please take a look at my patches for this issue.
-> The patches are still under testing, only basics has been checked.
+I am pleased to announce the availability of
+   mdadm version 3.1.5
 
-I've applied these for now as it provide the basic functionality I wanted and
-looks quite simple and so unlikely to break anything.
-However I will almost certainly change it after 3.2.1 is out.
+It is available at the usual places:
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
 
-I would much rather that if the metadata handler sees metadata that is mostly
-recognises but for some reason cannot handle perfectly, then it sets a flag
-of some sort in mdinfo.
-Then 'examine' can report that flag, and 'assemble' can refuse to assemble if
-that flag is present.
-But that can wait until later.
+This is a bugfix/stability release over 3.1.4.  It contains all the
+important bugfixes found while working on 3.2 and 3.2.1.  It will be
+the last 3.1.x release - 3.2.1 is expected to be released in a few days.
 
-Thanks,
-NeilBrown
+Changes include:
+  - Fixes for v1.x metadata on big-endian machines.
+  - man page improvements
+  - Improve '--detail --export' when run on partitions of an md array.
+  - Fix regression with removing 'failed' or 'detached' devices.
+  - Fixes for "--assemble --force" in various unusual cases.
+  - Allow '-Y' to mean --export.  This was documented but not implemented.
+  - Various fixed for handling 'ddf' metadata.  This is now more reliable
+    but could benefit from more interoperability testing.
+  - Correctly list subarrays of a container in "--detail" output.
+  - Improve checks on whether the requested number of devices is supported
+    by the metadata - both for --create and --grow.
+  - Don't remove partitions from a device that is being included in an
+    array until we are fully committed to including it.
+  - Allow "--assemble --update=no-bitmap" so an array with a corrupt
+    bitmap can still be assembled.
+  - Don't all --add to succeed if it looks like a "--re-add" is probably
+    wanted, but cannot succeed.  This avoids inadvertently turning
+    devices into spares when an array is failed.
 
-
-> 
-> Thanks,
-> Marcin Labun
-> 
-> 
-> Marcin Labun (2):
->   examine: allows to examine a disk metadata on non-metadata compliant
->     systems
->   super-intel: enable loading metadata from non-IMSM compliant disks
-> 
->  Examine.c     |    2 ++
->  mdadm.h       |    6 +++++-
->  super-intel.c |   16 ++++++++++------
->  util.c        |    3 +++
->  4 files changed, 20 insertions(+), 7 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This release is believed to be stable and you should feel free to
+upgrade to 3.1.5
 
 
-
--- 
+NeilBrown 23rd March 2011
 
