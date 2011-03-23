@@ -1,135 +1,63 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID-5 and mdadm --assemble troubleshooting
-Date: Wed, 23 Mar 2011 11:04:46 +1100
-Message-ID: <20110323110446.34c241ea@notabene.brown>
-References: <AANLkTikjFZnEoRWAiY3SsmxH6kci25iQQXogMyKTuUGF@mail.gmail.com>
-	<20110322092808.31d545c6@notabene.brown>
-	<AANLkTinTa95dNBwdVqyjhd6RWJdciwPRr3=BXA-T5Hv6@mail.gmail.com>
+Subject: Re: [PATCH 1/2] man mdadm: add information for MDADM_EXPERIMENTAL
+ flag
+Date: Wed, 23 Mar 2011 12:03:42 +1100
+Message-ID: <20110323120342.682693dd@notabene.brown>
+References: <20110322114634.30235.97064.stgit@gklab-128-013.igk.intel.com>
+	<AANLkTi=dqmKeXeHH2wJUfv3wrXc5uLHVFaCnuNONvNFi@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinTa95dNBwdVqyjhd6RWJdciwPRr3=BXA-T5Hv6@mail.gmail.com>
+In-Reply-To: <AANLkTi=dqmKeXeHH2wJUfv3wrXc5uLHVFaCnuNONvNFi@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: A J Wyborny <ajwyborny@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>
+Cc: Adam Kwolek <adam.kwolek@intel.com>, linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 22 Mar 2011 17:42:33 +0100 A J Wyborny <ajwyborny@gmail.com> wr=
-ote:
+On Tue, 22 Mar 2011 13:10:06 +0000 Mathias Bur=E9n <mathias.buren@gmail=
+=2Ecom>
+wrote:
 
-> Wow, thank you so much.  I forgot to mention that I AM running mdadm
-> v3.1.4, compiled from source, after initially running the Ubuntu
-> default of 2.6.7.1.  I'm not sure why the "start_dirty_degraded" file
-> wasn't updated, but I'm glad I know about it now.
-
-I thought it was fixed in 3.1.4... apparently not quite.  Your particul=
-ar
-case was a bit unusual and slip through the tests.  I've added a fix wh=
-ich
-will be in 3.1.5 and 3.2.1.
-
-'start_dirty_degraded' is only intended to be used when arrays are
-auto-assembled by the kernel (a practice that I don't encourage).
-I suggested it's use here as a work around for the bug in mdadm rather =
-than
-the appropriate way to generally deal with your situation. It won't be =
-needed
-in future mdadm releases.
-
-Thanks,
-NeilBrown
-
-
->=20
-> My attempts to re-add /dev/sda1 to the array right away failed, but a
-> reboot took care of that problem and it's now recovering.
->=20
-> Again, I really appreciate it.
->=20
-> Adam
->=20
-> On Mon, Mar 21, 2011 at 11:28 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 21 Mar 2011 23:08:40 +0100 A J Wyborny <ajwyborny@gmail.com=
-> wrote:
+> On 22 March 2011 11:46, Adam Kwolek <adam.kwolek@intel.com> wrote:
+> > Update man for MDADM_EXPERIMENTAL flag.
 > >
-> >> Hi all,
-> >>
-> >> After exhausting my efforts with google searches and linux-raid IR=
-C
-> >> chats, I'm reaching out to you all for some help with why I can't
-> >> assemble a broken RAID-5 configuration. =A0My initial problem, I'v=
-e
-> >> determined, was caused by a faulty PCI-E SATA controller card. =A0=
-I
-> >> would constantly lose access to my mounted RAID volume (/home) at
-> >> random times and increasingly during high write accesses. =A0In th=
-e past
-> >> a reboot and running "mdadm --assemble --force --scan" would solve=
- the
-> >> issue. =A0This time, no such luck. =A0In the process of troublesho=
-oting I
-> >> also fat-fingered an "mdadm --assemble" command and lost the
-> >> superblock of my /dev/sda1 partition, which isn't helping things
-> >> either.
-> >>
-> >> The SMART status is clean on all disks.
-> >>
-> >> I really appreciate any thoughts/input you might have.=A0 -Adam
-> >>
-> >> Here's my setup:
-> >>
-> >> RAID-5 array with four 1.5TB disks (/dev/sda1, /dev/sdb1, /dev/sdd=
-1, /dev/sde1)
-> >> /dev/sdc is my root and swap partitions
-> >> /dev/md0 should be mounted to /home
-> >>
-> >> Results:
-> >> root@focalor:~# cat /proc/mdstat
-> >> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid=
-5]
-> >> [raid4] [raid10]
-> >> unused devices: <none>
-> >> root@focalor:~# mdadm -vv --assemble --force --scan
-> >> mdadm: looking for devices for /dev/md0
-> >> mdadm: cannot open device /dev/sdc1: Device or resource busy
-> >> mdadm: /dev/sdc1 has wrong uuid.
-> >> mdadm: no RAID superblock on /dev/sda1
-> >> mdadm: /dev/sda1 has wrong uuid.
-> >> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
-> >> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
-> >> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
-> >> mdadm: no uptodate device for slot 0 of /dev/md0
-> >> mdadm: added /dev/sdd1 to /dev/md0 as 2
-> >> mdadm: added /dev/sde1 to /dev/md0 as 3
-> >> mdadm: added /dev/sdb1 to /dev/md0 as 1
-> >> mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
 > >
-> > You are hitting an mdadm bug fixed in 2.6.9 by
+> > =A0mdadm.8.in | =A0 12 ++++++++++++
+> > =A01 files changed, 12 insertions(+), 0 deletions(-)
 > >
-> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D4e9a6ff778c=
-dc58dcc6897e74cf5ee1d3f73e1f7
+> > diff --git a/mdadm.8.in b/mdadm.8.in
+> > index 4b70e20..96945ae 100644
+> > --- a/mdadm.8.in
+> > +++ b/mdadm.8.in
+> > @@ -2229,6 +2229,18 @@ in a container can be converted between leve=
+ls where those levels are
+> > =A0supported by the container, and the conversion is on of those li=
+sted
+> > =A0above.
 > >
-> > What version of mdadm are you running?
-> >
-> > You can work around it by
-> > =A0echo 1 > /sys/module/md_mod/parameters/start_dirty_degraded
-> >
-> > before running the 'mdadm -A' command.
-> >
-> >
-> >> dmesg output:
-> >> http://pastebin.com/usrzvmpn
-> >>
-> >> mdadm -E output:
-> >> http://pastebin.com/vnaamC75
-> >
-> > It is OK - even encouraged - to include this content directly in th=
-e Email.
-> > That makes it easier to reference in a reply, should that be helpfu=
-l.
-> >
-> > NeilBrown
+> > +Grow functionality (e.g. expand number of raid devices) for Intel'=
+s
+> > +IMSM container format has experimental status. It is guarded by
+> > +.B MDADM_EXPERIMENTAL
+> > +environment variable. This is due to the following reasons:
+> > +
+> > +1. Native Intel's IMSM check-pointing is not fully implemented yet=
+=2E
+> > +This causes IMSM incompatibility during grow process: grew array c=
+annot
+> > +be roamed between Windows(R) and Linux systems.
+> > +
+> > +2. Interrupting grow operation is not recommended, because
+> > +for Intel's IMSM container format it is not fully tested yet.
+> > +
+> > =A0.SS SIZE CHANGES
+> > =A0Normally when an array is built the "size" is taken from the sma=
+llest
+> > =A0of the drives. =A0If all the small drives in an arrays are, one =
+at a
 > >
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-rai=
@@ -138,16 +66,91 @@ d" in
 > > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
 l
 > >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+> My small modifications (spelling?), which might not be correct.
+>=20
+>  mdadm.8.in |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index 4b70e20..96945ae 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -2229,6 +2229,18 @@ in a container can be converted between levels
+> where those levels are
+>  supported by the container, and the conversion is on of those listed
+>  above.
+>=20
+> +Grow functionality (e.g. expand a number of raid devices) for Intel'=
+s
+> +IMSM container format has an experimental status. It is guarded by t=
+he
+> +.B MDADM_EXPERIMENTAL
+> +environment variable. This is due to the following reasons:
+> +
+> +1. Native Intel's IMSM check-pointing is not fully implemented yet.
+> +This causes IMSM incompatibility during the grow process: a grown ar=
+ray cannot
+> +roam between Windows(R) and Linux systems.
+> +
+> +2. Interrupting a grow operation is not recommended, because it
+> +has not been fully tested for Intel's IMSM container format yet.
+> +
+>  .SS SIZE CHANGES
+>  Normally when an array is built the "size" is taken from the smalles=
+t
+>  of the drives.  If all the small drives in an arrays are, one at a
+
+Thanks. I included your revisions and made some more of my own :-)
+
+See below.
+
+NeilBrown
 
 
+commit ca24ddb08da4c86b60f7e049f0b0a2c30b19c95a
+Author: Adam Kwolek <adam.kwolek@intel.com>
+Date:   Wed Mar 23 11:45:03 2011 +1100
 
---=20
+    man mdadm: add information for MDADM_EXPERIMENTAL flag
+   =20
+    Update man for MDADM_EXPERIMENTAL flag.
+   =20
+    Minor revisions by Mathias Bur=E9n <mathias.buren@gmail.com> and Ne=
+il Brown.
+   =20
+    Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
+diff --git a/mdadm.8.in b/mdadm.8.in
+index 4b70e20..9537304 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -2229,6 +2229,23 @@ in a container can be converted between levels w=
+here those levels are
+ supported by the container, and the conversion is on of those listed
+ above.
+=20
++Grow functionality (e.g. expand a number of raid devices) for Intel's
++IMSM container format has an experimental status. It is guarded by the
++.B MDADM_EXPERIMENTAL
++environment variable which must be set to '1' for a GROW command to
++succeed.
++This is for the following reasons:
++
++.IP 1.
++Intel's native IMSM check-pointing is not fully implemented yet.
++This causes IMSM incompatibility during the grow process: an array
++which is growing cannot roam between Microsoft Windows(R) and Linux
++systems.
++
++.IP 2.
++Interrupting a grow operation is not recommended, because it
++has not been fully tested for Intel's IMSM container format yet.
++
+ .SS SIZE CHANGES
+ Normally when an array is built the "size" is taken from the smallest
+ of the drives.  If all the small drives in an arrays are, one at a
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
