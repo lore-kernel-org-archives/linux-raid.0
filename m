@@ -1,99 +1,155 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH 1/2] examine: allows to examine a disk metadata on
- non-metadata compliant systems
-Date: Tue, 22 Mar 2011 16:50:45 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D191E0AF50@irsmsx503.ger.corp.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID-5 and mdadm --assemble troubleshooting
+Date: Wed, 23 Mar 2011 11:04:46 +1100
+Message-ID: <20110323110446.34c241ea@notabene.brown>
+References: <AANLkTikjFZnEoRWAiY3SsmxH6kci25iQQXogMyKTuUGF@mail.gmail.com>
+	<20110322092808.31d545c6@notabene.brown>
+	<AANLkTinTa95dNBwdVqyjhd6RWJdciwPRr3=BXA-T5Hv6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <AANLkTinTa95dNBwdVqyjhd6RWJdciwPRr3=BXA-T5Hv6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: A J Wyborny <ajwyborny@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From 0f2d6c1d9d0d09ef99515b3df036878dd2b0f2aa Mon Sep 17 00:00:00 2001
-From: Marcin Labun <marcin.labun@intel.com>
-Date: Tue, 22 Mar 2011 17:21:22 +0100
-Subject: [PATCH 1/2] examine: allows to examine a disk metadata on non-metadata compliant systems
+On Tue, 22 Mar 2011 17:42:33 +0100 A J Wyborny <ajwyborny@gmail.com> wr=
+ote:
 
-Allow for loading metadata from disk attached to non-metadata compliant
-system. Affects mdadm --examine and guess_super.
+> Wow, thank you so much.  I forgot to mention that I AM running mdadm
+> v3.1.4, compiled from source, after initially running the Ubuntu
+> default of 2.6.7.1.  I'm not sure why the "start_dirty_degraded" file
+> wasn't updated, but I'm glad I know about it now.
 
-Added ignore_hw_compat in supertype to pass information to load_super
-handler. If ignore_hw_compat is set the handler should load metadata
-also from disks that do not comply with metadata requirements (i.e. disk is not
-attached to native controller, etc).
+I thought it was fixed in 3.1.4... apparently not quite.  Your particul=
+ar
+case was a bit unusual and slip through the tests.  I've added a fix wh=
+ich
+will be in 3.1.5 and 3.2.1.
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- Examine.c |    2 ++
- mdadm.h   |    6 +++++-
- util.c    |    3 +++
- 3 files changed, 10 insertions(+), 1 deletions(-)
+'start_dirty_degraded' is only intended to be used when arrays are
+auto-assembled by the kernel (a practice that I don't encourage).
+I suggested it's use here as a work around for the bug in mdadm rather =
+than
+the appropriate way to generally deal with your situation. It won't be =
+needed
+in future mdadm releases.
 
-diff --git a/Examine.c b/Examine.c
-index f949646..5d71e53 100644
---- a/Examine.c
-+++ b/Examine.c
-@@ -87,6 +87,7 @@ int Examine(struct mddev_dev *devlist, int brief, int export, int scan,
- 				st = guess_super(fd);
- 			if (st) {
- 				err = 1;
-+				st->ignore_hw_compat = 1;
- 				if (!container)
- 					err = st->ss->load_super(st, fd,
- 								 (brief||scan) ? NULL
-@@ -98,6 +99,7 @@ int Examine(struct mddev_dev *devlist, int brief, int export, int scan,
- 					if (!err)
- 						have_container = 1;
- 				}
-+				st->ignore_hw_compat = 0;
- 			} else {
- 				if (!brief) {
- 					fprintf(stderr, Name ": No md superblock detected on %s.\n", devlist->devname);
-diff --git a/mdadm.h b/mdadm.h
-index fa5af3a..8277594 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -827,7 +827,11 @@ struct supertype {
- 	int container_dev;    /* devnum of container */
- 	void *sb;
- 	void *info;
--
-+	int ignore_hw_compat; /* used to inform metadata handlers that it should ignore
-+				 HW/firmware related incompatability to load metadata.
-+				 Used when examining metadata to display content of disk
-+				 when user has no hw/firmare compatible system.
-+			      */
- 	struct metadata_update *updates;
- 	struct metadata_update **update_tail;
- 
-diff --git a/util.c b/util.c
-index 8e1b737..ef4406a 100644
---- a/util.c
-+++ b/util.c
-@@ -1196,6 +1196,7 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
- 		if (guess_type == guess_partitions && ss->add_to_super != NULL)
- 			continue;
- 		memset(st, 0, sizeof(*st));
-+		st->ignore_hw_compat = 1;
- 		rv = ss->load_super(st, fd, NULL);
- 		if (rv == 0) {
- 			struct mdinfo info;
-@@ -1211,9 +1212,11 @@ struct supertype *guess_super_type(int fd, enum guess_types guess_type)
- 	if (bestsuper != -1) {
- 		int rv;
- 		memset(st, 0, sizeof(*st));
-+		st->ignore_hw_compat = 1;
- 		rv = superlist[bestsuper]->load_super(st, fd, NULL);
- 		if (rv == 0) {
- 			superlist[bestsuper]->free_super(st);
-+			st->ignore_hw_compat = 0;
- 			return st;
- 		}
- 	}
--- 
-1.6.4.2
+Thanks,
+NeilBrown
 
+
+>=20
+> My attempts to re-add /dev/sda1 to the array right away failed, but a
+> reboot took care of that problem and it's now recovering.
+>=20
+> Again, I really appreciate it.
+>=20
+> Adam
+>=20
+> On Mon, Mar 21, 2011 at 11:28 PM, NeilBrown <neilb@suse.de> wrote:
+> > On Mon, 21 Mar 2011 23:08:40 +0100 A J Wyborny <ajwyborny@gmail.com=
+> wrote:
+> >
+> >> Hi all,
+> >>
+> >> After exhausting my efforts with google searches and linux-raid IR=
+C
+> >> chats, I'm reaching out to you all for some help with why I can't
+> >> assemble a broken RAID-5 configuration. =A0My initial problem, I'v=
+e
+> >> determined, was caused by a faulty PCI-E SATA controller card. =A0=
+I
+> >> would constantly lose access to my mounted RAID volume (/home) at
+> >> random times and increasingly during high write accesses. =A0In th=
+e past
+> >> a reboot and running "mdadm --assemble --force --scan" would solve=
+ the
+> >> issue. =A0This time, no such luck. =A0In the process of troublesho=
+oting I
+> >> also fat-fingered an "mdadm --assemble" command and lost the
+> >> superblock of my /dev/sda1 partition, which isn't helping things
+> >> either.
+> >>
+> >> The SMART status is clean on all disks.
+> >>
+> >> I really appreciate any thoughts/input you might have.=A0 -Adam
+> >>
+> >> Here's my setup:
+> >>
+> >> RAID-5 array with four 1.5TB disks (/dev/sda1, /dev/sdb1, /dev/sdd=
+1, /dev/sde1)
+> >> /dev/sdc is my root and swap partitions
+> >> /dev/md0 should be mounted to /home
+> >>
+> >> Results:
+> >> root@focalor:~# cat /proc/mdstat
+> >> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid=
+5]
+> >> [raid4] [raid10]
+> >> unused devices: <none>
+> >> root@focalor:~# mdadm -vv --assemble --force --scan
+> >> mdadm: looking for devices for /dev/md0
+> >> mdadm: cannot open device /dev/sdc1: Device or resource busy
+> >> mdadm: /dev/sdc1 has wrong uuid.
+> >> mdadm: no RAID superblock on /dev/sda1
+> >> mdadm: /dev/sda1 has wrong uuid.
+> >> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+> >> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+> >> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 1.
+> >> mdadm: no uptodate device for slot 0 of /dev/md0
+> >> mdadm: added /dev/sdd1 to /dev/md0 as 2
+> >> mdadm: added /dev/sde1 to /dev/md0 as 3
+> >> mdadm: added /dev/sdb1 to /dev/md0 as 1
+> >> mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+> >
+> > You are hitting an mdadm bug fixed in 2.6.9 by
+> >
+> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D4e9a6ff778c=
+dc58dcc6897e74cf5ee1d3f73e1f7
+> >
+> > What version of mdadm are you running?
+> >
+> > You can work around it by
+> > =A0echo 1 > /sys/module/md_mod/parameters/start_dirty_degraded
+> >
+> > before running the 'mdadm -A' command.
+> >
+> >
+> >> dmesg output:
+> >> http://pastebin.com/usrzvmpn
+> >>
+> >> mdadm -E output:
+> >> http://pastebin.com/vnaamC75
+> >
+> > It is OK - even encouraged - to include this content directly in th=
+e Email.
+> > That makes it easier to reference in a reply, should that be helpfu=
+l.
+> >
+> > NeilBrown
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+--=20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
