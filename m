@@ -1,7 +1,7 @@
 From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH 1/2] tests: use $config to store test config path
-Date: Thu, 24 Mar 2011 21:43:44 +0000
-Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A774355@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 2/2] tests: backup default config before testing
+Date: Thu, 24 Mar 2011 21:45:56 +0000
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A774356@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,106 +12,41 @@ To: "neilb@suse.de" <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-From da9aaa4cf9422ace05584f942844be95c12db9f4 Mon Sep 17 00:00:00 2001
+From 4d7c70452ca8db359fef6a9f3a420d62e67ef3cd Mon Sep 17 00:00:00 2001
 From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Thu, 24 Mar 2011 16:22:28 +0100
-Subject: [PATCH 1/2] tests: use $config to store test config path
+Date: Thu, 24 Mar 2011 16:24:57 +0100
+Subject: [PATCH 2/2] tests: backup default config before testing
 Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-We also need to tell Monitor where to look for Policy in 11spare-migration tests
+We need to have no config at all for this test so if there is one in the
+system it must be renamed for the test duration.
 
 Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 ---
- test                    |    2 ++
- tests/11spare-migration |    6 +++---
- tests/utils             |   11 +++++------
- 3 files changed, 10 insertions(+), 9 deletions(-)
+ tests/11spare-migration |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/test b/test
-index ca7643f..1aaf3c1 100755
---- a/test
-+++ b/test
-@@ -48,6 +48,8 @@ mdsize12=19988
- # ddf needs bigger devices as 32Meg is reserved!
- ddfsize=65536
- 
-+config=/tmp/mdadm.conf
-+
- cleanup() {
- 	udevadm settle
- 	$mdadm -Ssq 2> /dev/null
 diff --git a/tests/11spare-migration b/tests/11spare-migration
-index 3567883..58f1df9 100644
+index 58f1df9..6c2dc6d 100644
 --- a/tests/11spare-migration
 +++ b/tests/11spare-migration
-@@ -25,7 +25,7 @@ listfailed="yes"
- monitor(){
-        [ -z $monitorpid ] || return
-        if [ "$scan" == "yes" ]; then
--               $mdadm -F -d 1 --scan --mail root@localhost &
-+               $mdadm -F -d 1 --scan --mail root@localhost -c $config &
-                monitorpid=$!
-                return
-        fi
-@@ -44,10 +44,10 @@ monitor(){
-        done
-        if [ -n "$mddevs" ]; then
-                if [ "$verbose" != "yes" ]; then
--                       $mdadm -F -d 1 $mddevs >&2 &
-+                       $mdadm -F -d 1 $mddevs -c $config >&2 &
-                        monitorpid=$!
-                else
--                       $mdadm -F -t -d 1 $mddevs &
-+                       $mdadm -F -t -d 1 $mddevs -c $config &
-                        monitorpid=$!
-                fi
-        fi
-diff --git a/tests/utils b/tests/utils
-index ef8be4f..3acebd7 100644
---- a/tests/utils
-+++ b/tests/utils
-@@ -15,7 +15,7 @@ devices="/dev/loop[0-9] /dev/loop10 /dev/loop11 /dev/loop12"
- # uses testdsc and platform global variables
- err(){
-        echo >&2 "ERROR: $*"
--       cat /tmp/mdadm.conf >&2 || true
-+       cat $config >&2 || true
-        cat /proc/mdstat >&2
-        [ -z "$testdsc" ] || { echo >&2 $platform: $testdsc "- failed"; }
-        ps -e | grep mdadm >&2 || true
-@@ -45,7 +45,7 @@ tidyup(){
-        mdadm -Ss
-        mdadm --zero-superblock $devices || true
-        udevadm settle
--       rm -f /tmp/mdadm.conf
-+       rm -f $config
+@@ -57,6 +57,8 @@ monitor(){
+ test0()
+ {
+ dsc "Test 0: No config file, no spare should be moved"
++[ -f /etc/mdadm.conf ] && mv /etc/mdadm.conf /etc/_mdadm.conf
++[ -f $config ] && rm -f $config
+ setupdevs 0 0 1 $platform
+ setupdevs 1 3 4 $platform
+ monitor 0 1
+@@ -64,6 +66,7 @@ mdadm -a /dev/$c1 $dev2
+ mdadm --fail /dev/$v0 $dev0
+ # check that spare loop2 was not moved from container c1 to container c0
+ chksparemoved $c1 $c0 $dev2 n
++[ -f /etc/_mdadm.conf ] && mv /etc/_mdadm.conf /etc/mdadm.conf
+ tidyup
  }
  
- trap tidyup 0 1 2 3 15
-@@ -167,7 +167,6 @@ chksparemoved(){
- 
- # for domains defined through policy
- createconfig(){
--conf=/tmp/mdadm.conf
- if [ "$1" != "a" ]; then
- {
-        domain=$1
-@@ -181,12 +180,12 @@ if [ "$1" != "a" ]; then
-                echo "$echo"
-                shift
-        done
--} >> $conf
-+} >> $config
- else
- {
-        echo "DEVICES $devlist /dev/md1*"
-        mdadm -Ebs
--} >  $conf
-+} >  $config
- fi
--#[ "$verbose" != "yes" ] || cat /tmp/mdadm.conf | grep policy || true
-+#[ "$verbose" != "yes" ] || cat $config | grep policy || true
- }
 -- 
 1.7.1
 
