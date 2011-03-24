@@ -1,128 +1,162 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: high throughput storage server?
-Date: Thu, 24 Mar 2011 03:05:02 -0500
-Message-ID: <4D8AFB2E.7080203@hardwarefreak.com>
-References: <4D837DAF.6060107@hardwarefreak.com>	<20110319090101.1786cc2a@notabene.brown>	<4D8559A2.6080209@hardwarefreak.com>	<20110320144147.29141f04@notabene.brown>	<AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>	<4D868C36.5050304@hardwarefreak.com>	<20110321024452.GA23100@www2.open-std.org>	<4D875E51.50807@hardwarefreak.com>	<20110321221304.GA900@www2.open-std.org>	<20110322094658.GA21078@cthulhu.home.robinhill.me.uk>	<20110322101403.GA9329@www2.open-std.org>	<4D89B519.3020907@hardwarefreak.com> <AANLkTinONtwNh9KZKe98FL+u2GV_Fqaf1zR8eMyEDGBp@mail.gmail.com> <4D8A1D9B.7020100@gmail.com>
+Date: Thu, 24 Mar 2011 05:07:53 -0300
+Message-ID: <AANLkTin7W9XSDMrhah2j9R53J8UHm0W0YbV6A7EKVt1N@mail.gmail.com>
+References: <4D837DAF.6060107@hardwarefreak.com>
+	<20110319090101.1786cc2a@notabene.brown>
+	<4D8559A2.6080209@hardwarefreak.com>
+	<20110320144147.29141f04@notabene.brown>
+	<AANLkTi=2k2=YuZAggonLfKmRFxFd-rXvNo=xkpqWyQNU@mail.gmail.com>
+	<4D868C36.5050304@hardwarefreak.com>
+	<20110321024452.GA23100@www2.open-std.org>
+	<4D875E51.50807@hardwarefreak.com>
+	<20110321221304.GA900@www2.open-std.org>
+	<20110322094658.GA21078@cthulhu.home.robinhill.me.uk>
+	<20110322101403.GA9329@www2.open-std.org>
+	<4D89B519.3020907@hardwarefreak.com>
+	<AANLkTinONtwNh9KZKe98FL+u2GV_Fqaf1zR8eMyEDGBp@mail.gmail.com>
+	<4D8ADC00.5010709@hardwarefreak.com>
+	<20110324173343.7d0491d8@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D8A1D9B.7020100@gmail.com>
+In-Reply-To: <20110324173343.7d0491d8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>, Mdadm <linux-raid@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-Joe Landman put forth on 3/23/2011 11:19 AM:
+i will read xfs again, but check, if i'm thinking wrong or right...
 
-> MD RAID0 or RAID10 would be the sanest approach, and xfs happily does
-> talk nicely to the MD raid system, gathering the stripe information from
-> it.
+i see two ideas about raid0 (i/o rate vs many users)
 
-Surely you don't mean a straight mdraid0 over the 384 drives, I assume.
- You referring to the nested case I mentioned, yes?
+first lets think that raid0 is somethink like a harddisk firmware....
+the problem: we have many plastes/heads and just one arm.
 
-Yes, XFS does read the mdraid parameters and sets block, stripe size,
-etc, accordingly.
+a hard disk =3D many plates+many heads+ only one arm to move heads(mayb=
+e
+in future we can use many arms in only one harddisk!)
+plates=3Dmany sectors=3Dmany bits (harddisk works like NOR memories, on=
+ly
+with bits, not with bytes or pages like NAND memories, for bytes it
+must head based (stripe) or many reads (time consuming) )
 
-> The issue though is that xfs stores journals internally by default.  You
-> can change this, and in specific use cases, an external journal is
-> strongly advised.  This would be one such use case.
+firmware will use:
+raid0 stripe =3D> make group of bits from diferent plates/heads
+(1,2,3,4,5) a 'block/byte/character' unit (if you have 8heads you can
+read a byte with only one 'read all heads bits' command, and merge
+bits from head1,2,3,4,5,6,7,8 and get a byte, it can be done in
+parallel like raid0 stripe do on linux software raid, with only 1
+cycle of read)
+raid0 linear =3D> read many bits from a plate to create a 'sector' of
+bits (a 'block unit' too) this can only be done in sequential read
+(many cycles of read); wait read of bit1 to read bit2,3,4,5,6,7,8,9...
+different from stripe where you send many reads after all reads will
+merge bits to get a byte)
 
-The target workload is read heavy, very few writes.  Even if we added a
-write heavy workload to the system, with journal residing on an array
-that's seeing heavy utilization from the primary workload, with delayed
-logging enabled, this is a non issue.
+-----
+it's like a 3Ghz cpu with 1 core vs 1Ghz cpu with 3 cores, what's fast?
+if you need just 1 cycle of cpu, 3ghz is faster
+the problem with harddisk is just one: random reads.
+think about a mix of ssd and harddisks (there's some disks that have
+it! did you tried? they are nice! there's a bcache and one facebook
+linux kernel module to emulate this at o.s.) you will not have the
+random read problem, since ssd is very good for random read
+-----
+the only magics i think a filesystem can do is:
+1)online compression - think about 32MB blocks, and if read 12MB
+compressed information you can have 32MB of uncompressed information,
+if you want more information you will need to jump to sector of next
+32MB block, you could use stripe at raid0 here to allow second disk to
+be used and don't wait access time of first disk
+2)group of similar file access (i think it's what xfs call about
+allocation groups). could be done by statistics about: acesstime, read
+rate, write rate, filesize, create/delete file rate, file type
+(symbolick links, directory, files, devices, pipes, etc), metadata,
+journaling
+3)how device works: good for write, good for read, good for sequencial
+read (few arms-stripe), good for random read(ssd), good for multi task
+(many arms-linear)
+----------------
 
-Thus, this is not a case where an external log device is needed.  In
-fact, now that we have the delayed logging feature, cases where an
-external log device might be needed are very few and far between.
+reading about harddisks informations at database forums/blogs
+(intensive disk users)...
+harddisks work better with big blocks since it will get a small
+acesstime to read more information...
+read rate =3D bytes read / total time.
+total time =3D accesstime+read time.
+accesstime=3Darm positioning+disk positioning,
+read time=3Ddisk speed (7200rpm, 10krpm, 15krpm...) and sector nits per
+disk revolution for harddisks.
 
-> Though, the OP wants a very read heavy machine, and not a write heavy
-> machine.  So it makes more sense to have massive amounts of RAM for the
+thinking about this... sequencial reads are fast, random reads are slow
 
-Assuming the same files aren't being re-read, how does massive RAM
-quantity for buffer cache help?
+how to optimise random reads? read ahead, raid0 (a arm for each group o=
+f sector)
+how filesystem can optimize random reads? try to not fragment most
+access file, put they close, convert random reads use to cache
+sequencial information, use of statistic of most read, most write,
+file size, create/delete rate, etc to select betters candidates of
+futures use (preditive idea)
 
-> OP, and lots of high speed fabric (Infiniband HCA, 10-40 GbE NICs, ...).
->  However, a single system design for the OP's requirements makes very
-> little economic or practical sense.  Would be very expensive to build.
+i think it's all filesystem and raid0 could do
 
-I estimated the cost of my proposed 10GB/s NFS server at $150-250k
-including all required 10GbE switches, the works.  Did you read that
-post?  What is your definition of "very expensive"?  Compared to?
+2011/3/24 NeilBrown <neilb@suse.de>:
+> On Thu, 24 Mar 2011 00:52:00 -0500 Stan Hoeppner <stan@hardwarefreak.=
+com>
+> wrote:
+>
+>> If you write a file much smaller than the stripe size, say a 1MB fil=
+e,
+>> to the filesystem atop this wide RAID10, the file will only be strip=
+ed
+>> across 16 of the 192 spindles, with 64KB going to each stripe member=
+, 16
+>> filesystem blocks, 128 sectors. =A0I don't know about mdraid, but wi=
+th
+>> many hardware RAID striping implementations the remaining 176 disks =
+in
+>> the stripe will have zeros or nulls written for their portion of the
+>> stripe for this file that is a tiny fraction of the stripe size.
+>
+> This doesn't make any sense at all. =A0No RAID - hardware or otherwis=
+e - is
+> going to write zeros to most of the stripe like this. =A0The RAID doe=
+sn't even
+> know about the concept of a file, so it couldn't.
+> The filesystem places files in the virtual device that is the array, =
+and the
+> RAID just spreads those blocks out across the various devices.
+>
+> There will be no space wastage.
+>
+> If you have a 1MB file, then there is no way you can ever get useful =
+192-way
+> parallelism across that file. =A0Bit if you have 192 1MB files, then =
+they will
+> be spread even across your spindles some how (depending on FS and RAI=
+D level)
+> and if you have multiple concurrent accessors, they could well get cl=
+ose to
+> 192-way parallelism.
+>
+> NeilBrown
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-> And to keep this on target, MD raid could handle it.
 
-mdraid was mentioned in my system as well.  And yes, Neil seems to think
-mdraid would be fine, not a CPU hog.
 
-> Unfortunately, xfs snapshots have to be done via LVM2 right now.  My
-> memory isn't clear on this, there may be an xfs_freeze requirement for
-> the snapshot to be really valid.  e.g.
-
-Why do you say "unfortunately"?  *ALL* Linux filesystem snapshots are
-performed with a filesystem freeze implemented in the VFS layer.  The
-freeze 'was' specific to XFS.  It is such a valuable, *needed* feature
-that it was bumped into the VFS so all filesystems could take advantage
-of it.  Are you saying freezing writes to a filesystem before taking a
-snapshot is a bad thing? (/incredulous)
-
-http://en.wikipedia.org/wiki/XFS#Snapshots
-
->     xfs_freeze -f /mount/point
->     # insert your lvm snapshot command
->     xfs_freeze -u /mount/point
-> 
-> I am not sure if this is still required.
-
-It's been fully automatic since 2.6.29, for all Linux filesystems.
-Invoking an LVM snapshot automatically freezes the filesystem.
-
-> At the end of the day, it will be *far* more economical to build a
-> distributed storage cluster with a parallel file system atop it, than
-> build a single large storage unit.  
-
-I must call BS on the "far more economical" comment.  At the end of the
-day, to use your phrase, the cost of any large scale high performance
-storage system comes down to the quantity and price of the disk drives
-needed to achieve the required spindle throughput.  Whether you use a
-$20K server chassis to host the NICs, disk controllers and all the
-drives, or you used six $3000 server chassis, the costs come out roughly
-the same.  The big advantages a single chassis server has are simplicity
-of design, maintenance, and use.  The only downside is single point of
-failure, not higher cost, compared to a storage cluster.  Failures of
-complete server chassis are very rare, BTW, especially quad socket HP
-servers.
-
-If it takes 8 of your JackRabbit boxen, 384 drives, to sustain 10+GB/s
-using RAID10, maintaining that rate during a rebuild, with a load of 50+
-concurrent 200MB/s clients, we're looking at about $200K USD, correct,
-$25K per box? Your site doesn't show any pricing that I can find so I
-making an educated guess.  That cost figure is not substantially
-different than my hypothetical configuration, but mine includes $40K of
-HP 10GbE switches to connect the clients and the server at full bandwidth.
-
-> We've achieved well north of 10GB/s
-> sustained reads and writes from thousands of simultaneous processes
-> across thousands of cores (yes, with MD backed RAIDs being part of
-> this), for hundreds of GB reads/writes (well into the TB range)
-
-That's great.  Also, be honest with the fine folks on the list.  You use
-mdraid0 or linear for stitching hardware RAID arrays together, similar
-to what I mentioned.  You're not using mdraid across all 48 drives in
-your chassis.  If you are, the information on your website is incorrect
-at best, misleading at worst, as it mentions "RAID Controllers" and
-quantity per system model, 1-4 in the case of the JackRabbit.
-
-> Hardware design is very important here, as are many other features.  The
-> BOM posted here notwithstanding, very good performance starts with good
-> selection of underlying components, and a rational design.  Not all
-> designs you might see are worth the electrons used to transport them to
-> your reader.
-
-Fortunately for the readers here, such unworthy designs you mention
-aren't posted on this list.
-
--- 
-Stan
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
