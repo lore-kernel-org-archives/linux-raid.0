@@ -1,86 +1,165 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Re: why disk errors are more likely to happen on md super block area?
-Date: Fri, 25 Mar 2011 10:27:23 +0800
-Message-ID: <AANLkTikvUY1n5UYqTnK-djJvy0a_nmcTg0B8MPEfEw5T@mail.gmail.com>
-References: <AANLkTik2W3e7BaHdJ1UPxhQWHXm00NAiesUP0AejV6gp@mail.gmail.com>
-	<AANLkTi=2QK7k=exbdPgshQgBYP3tnO76gyXGqW5TCsUN@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Something wrong with __prep_thunderdome in super-intel.c
+Date: Thu, 24 Mar 2011 19:40:46 -0700
+Message-ID: <1301020846.15264.12.camel@dwillia2-linux>
+References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
+	 <20110315085346.3bf9feb7@notabene.brown>
+	 <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
+	 <20110322132307.34e9bb3b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=2QK7k=exbdPgshQgBYP3tnO76gyXGqW5TCsUN@mail.gmail.com>
+In-Reply-To: <20110322132307.34e9bb3b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
 List-Id: linux-raid.ids
 
-2011/3/24 Roberto Spadim <roberto@spadim.com.br>:
-> i think you will have no problems with location of metadata, there's
-> some versions of metadata, at start at end.. check your mdadm --creat=
-e
-> command
+On Mon, 2011-03-21 at 19:23 -0700, NeilBrown wrote:
+> Hi Dan,
+> 
+>  I think you were the original author of imsm_thunderdome and
+>  __prep_thunderdome - yes?
 
-yes, I found that option. If I choose to put metadata on the start
-area of a disk, disk's head seek time will be decreased, right?
+yes.
 
-So, is there someone in this list to tell me what is real difference
-when putting meta data on start or end of a disk?
+> 
+>  I found a case (thank to the test suite) where it isn't working correctly,
+> 
+>  If I have a container with 2 devices, and the second one is failed, then
+>  imsm_thunderdome returns NULL.
+> 
+>  __prep_thunderdome sees the first and adds it to the table of superblocks.
+>  Then it sees the second notices the family_num and checksum are the same, and
+>  so replaces the first with the second in the table.
+> 
+>  Then in imsm_thunderdome, d->serial is full of 'nul', so disk_list_get
+>  doesn't find anything so the super_table becomes empty and nothing works.
+> 
+>  So it could be:
+>     load_and_parse_mpb is wrong for putting the nul serial in there
+>     __prep_thunderdome is wrong for thinking the two are equivalent
+>     imsm_thunderdome is wrong for giving up when just one device isn't found
+> 
+>  and I really don't know which.
 
-> what information at metadata is/was wrong? can you get it? or just i/=
-o error?
-> some months ago i had two broken harddisks, the disk start to read
-> from position 0 to position X without problem, but when it get at a
-> position where disk was crashed (real crashed, the disk hit the floor=
-)
-> the array start to resync (maybe a disk report) it was a raid10 array=
-=2E
-> maybe you have problem at physical layer (disk with problem).
-> i don't know what informations md update at metadata, but i think tha=
-t
-> there's some last write counter/last write timestamp to sync what
-> mirrors is more recent in a broken array start, (this information can
-> be found with others developers in this list)
->
-> 2011/3/23 hank peng <pengxihan@gmail.com>:
->> Hi, guys:
->> I found that when disk errors happened, it is more likely to locate =
-in
->> md super block area. Kernel messages are like this:
->> end_request: I/O error, dev sda, sector 1953525000
->> md: super_written gets error=3D-5, uptodate=3D0
->> In some cases, I check if disk is really failed using 'dd' command a=
-nd
->> found that it is OK for read and write on those sectors.
->>
->> I know that md super block information is located in the end of a
->> disk, but is it related with this problem? Is it safer to put md sup=
-er
->> block in the start area of a disk?
->>
->>
->> --
->> The simplest is not all best but the best is surely the simplest!
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
->
->
->
-> --
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
->
+hmm...
 
+<context switch out of isci driver review mode>
 
+> 
+> You can easily reproduce with
+> 
+>   ./mdadm -CR /dev/md/imsm -e imsm -n 2 /dev/loop[01]
+>   ./mdadm -CR /dev/md/r1 -l1 -n2 /dev/md/imsm
+>   ./mdadm /dev/md/r1 -f /dev/loop1
+>   ./mdadm -E /dev/md/imsm
+> 
+> and notice that nothing gets printed.
+> If you fail loop0 instead, it works properly.
 
---=20
-The simplest is not all best but the best is surely the simplest!
+The first thought is that the generation number on the good device
+should be ahead of the bad, but lo and behold it isn't.  We should stop
+advancing the generation number on failed devices.  The regression that
+Krzysztof's patch somewhat addresses is that thunderdome expects that
+failed devices should at least be able to look themselves up in their
+own mpb.  Fixing up the serial number so that other devices see the
+other disk as out of date is the expectation.
+
+Stopping metadata write outs to failed devices fixes both problems.
+Krzysztof care to try the following with your recent change reverted?  I
+verified it addresses the problem above, but I have not had a chance to
+double check the orom compatibility (although I suspect it will be ok).
+This also simplifies the calling convention to mark_missing and
+mark_failure.
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+diff --git a/super-intel.c b/super-intel.c
+index 2b41e08..6a6f738 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5213,13 +5213,14 @@ static int is_resyncing(struct imsm_dev *dev)
+ }
+ 
+ /* return true if we recorded new information */
+-static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
++static int mark_failure(struct imsm_dev *dev, struct dl *dl)
+ {
+ 	__u32 ord;
+ 	int slot;
+ 	struct imsm_map *map;
+ 	char buf[MAX_RAID_SERIAL_LEN+3];
+-	unsigned int len, shift = 0;
++	struct imsm_disk *disk = &dl->disk;
++	unsigned int len, shift = 0, idx = dl->index;
+ 
+ 	/* new failures are always set in map[0] */
+ 	map = get_imsm_map(dev, 0);
+@@ -5232,6 +5233,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
+ 		return 0;
+ 
++	dl->index = -2;
+ 	sprintf(buf, "%s:0", disk->serial);
+ 	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
+ 		shift = len - MAX_RAID_SERIAL_LEN + 1;
+@@ -5244,9 +5246,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	return 1;
+ }
+ 
+-static void mark_missing(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
++static void mark_missing(struct imsm_dev *dev, struct dl *dl)
+ {
+-	mark_failure(dev, disk, idx);
++	struct imsm_disk *disk = &dl->disk;
++
++	mark_failure(dev, dl);
+ 
+ 	if (disk->scsi_id == __cpu_to_le32(~(__u32)0))
+ 		return;
+@@ -5269,7 +5273,7 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
+ 	dprintf("imsm: mark missing\n");
+ 	end_migration(dev, map_state);
+ 	for (dl = super->missing; dl; dl = dl->next)
+-		mark_missing(dev, &dl->disk, dl->index);
++		mark_missing(dev, dl);
+ 	super->updates_pending++;
+ }
+ 
+@@ -5497,7 +5501,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	struct intel_super *super = a->container->sb;
+ 	struct imsm_dev *dev = get_imsm_dev(super, inst);
+ 	struct imsm_map *map = get_imsm_map(dev, 0);
+-	struct imsm_disk *disk;
++	struct dl *dl;
+ 	int failed;
+ 	__u32 ord;
+ 	__u8 map_state;
+@@ -5512,11 +5516,11 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	dprintf("imsm: set_disk %d:%x\n", n, state);
+ 
+ 	ord = get_imsm_ord_tbl_ent(dev, n, -1);
+-	disk = get_imsm_disk(super, ord_to_idx(ord));
++	dl = get_imsm_dl_disk(super, ord_to_idx(ord));
+ 
+ 	/* check for new failures */
+ 	if (state & DS_FAULTY) {
+-		if (mark_failure(dev, disk, ord_to_idx(ord)))
++		if (mark_failure(dev, dl))
+ 			super->updates_pending++;
+ 	}
+ 
+@@ -6265,7 +6269,7 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
+ 	for (du = super->missing; du; du = du->next)
+ 		if (du->index >= 0) {
+ 			set_imsm_ord_tbl_ent(map, du->index, du->index);
+-			mark_missing(dev_new, &du->disk, du->index);
++			mark_missing(dev_new, du);
+ 		}
+ 
+ 	return 1;
+
+
