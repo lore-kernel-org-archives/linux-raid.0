@@ -1,165 +1,103 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Something wrong with __prep_thunderdome in super-intel.c
-Date: Thu, 24 Mar 2011 19:40:46 -0700
-Message-ID: <1301020846.15264.12.camel@dwillia2-linux>
-References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
-	 <20110315085346.3bf9feb7@notabene.brown>
-	 <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
-	 <20110322132307.34e9bb3b@notabene.brown>
+From: shamim <shamim_99@yahoo.com>
+Subject: grow MULTIPATH RAID
+Date: Fri, 25 Mar 2011 03:13:41 +0000 (UTC)
+Message-ID: <loom.20110325T041239-956@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110322132307.34e9bb3b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2011-03-21 at 19:23 -0700, NeilBrown wrote:
-> Hi Dan,
-> 
->  I think you were the original author of imsm_thunderdome and
->  __prep_thunderdome - yes?
+Hello Experts,
 
-yes.
+Please help me to grow MULTIPATH RAID. =20
+My problem:
+I've Linux box which have MULTIPATH RAID created on them. Now we need t=
+o remove
+those old LUN and move data onto new LUN presented to those boxes.
 
-> 
->  I found a case (thank to the test suite) where it isn't working correctly,
-> 
->  If I have a container with 2 devices, and the second one is failed, then
->  imsm_thunderdome returns NULL.
-> 
->  __prep_thunderdome sees the first and adds it to the table of superblocks.
->  Then it sees the second notices the family_num and checksum are the same, and
->  so replaces the first with the second in the table.
-> 
->  Then in imsm_thunderdome, d->serial is full of 'nul', so disk_list_get
->  doesn't find anything so the super_table becomes empty and nothing works.
-> 
->  So it could be:
->     load_and_parse_mpb is wrong for putting the nul serial in there
->     __prep_thunderdome is wrong for thinking the two are equivalent
->     imsm_thunderdome is wrong for giving up when just one device isn't found
-> 
->  and I really don't know which.
+My initially thought was to grow the  current MULTIPATH RAID (/dev/md0)=
+ and=20
+make old LUN as spare and then  failed and then remove(Is this a right
+approach?).  When I=E2=80=99m try adding new LUNs to it, they are getti=
+ng added as spare
+( as shown below).  And when I try to grow , it refuse to do so.  Below=
+ are the
+steps that I performed and error message.(Cannot reshaped!!)=20
+( I read somehwere  that we can=E2=80=99t grow MULTIPATH RAID, if it is=
+ TRUE, then what
+would be suggested solution to move data from old LUNs to new LUNs)
+Please help
+--------------------------------------------------
+=20
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Thu Mar 24 13:54:41 2011
+     Raid Level : multipath
+     Array Size : 10486016 (10.00 GiB 10.74 GB)
+   Raid Devices : 2
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-hmm...
+    Update Time : Thu Mar 24 13:54:41 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 2
 
-<context switch out of isci driver review mode>
+           UUID : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+         Events : 0.3
 
-> 
-> You can easily reproduce with
-> 
->   ./mdadm -CR /dev/md/imsm -e imsm -n 2 /dev/loop[01]
->   ./mdadm -CR /dev/md/r1 -l1 -n2 /dev/md/imsm
->   ./mdadm /dev/md/r1 -f /dev/loop1
->   ./mdadm -E /dev/md/imsm
-> 
-> and notice that nothing gets printed.
-> If you fail loop0 instead, it works properly.
+    Number   Major   Minor   RaidDevice State
+       0      65        0        0      active sync   /dev/sdq
+       1       8       96        1      active sync   /dev/sdg
+--------------------------------------------------------------------
+# mdadm /dev/md0 --add /dev/sdr /dev/sdh
+mdadm: added /dev/sdr
+mdadm: re-added /dev/sdh
 
-The first thought is that the generation number on the good device
-should be ahead of the bad, but lo and behold it isn't.  We should stop
-advancing the generation number on failed devices.  The regression that
-Krzysztof's patch somewhat addresses is that thunderdome expects that
-failed devices should at least be able to look themselves up in their
-own mpb.  Fixing up the serial number so that other devices see the
-other disk as out of date is the expectation.
+--------------------------------------------------------------------
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Thu Mar 24 13:54:41 2011
+     Raid Level : multipath
+     Array Size : 10486016 (10.00 GiB 10.74 GB)
+   Raid Devices : 2
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Stopping metadata write outs to failed devices fixes both problems.
-Krzysztof care to try the following with your recent change reverted?  I
-verified it addresses the problem above, but I have not had a chance to
-double check the orom compatibility (although I suspect it will be ok).
-This also simplifies the calling convention to mark_missing and
-mark_failure.
+    Update Time : Thu Mar 24 13:54:41 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 2
+
+           UUID : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+         Events : 0.3
+
+    Number   Major   Minor   RaidDevice State
+       0      65        0        0      active sync   /dev/sdq
+       1       8       96        1      active sync   /dev/sdg
+
+       2      65       16        -      spare   /dev/sdr
+       3       8      112        -      spare   /dev/sdh
+
+--------------------------------------------------------------------
+# mdadm --grow /dev/md0 --raid-disks=3D4
+mdadm: multipath array /dev/md0 cannot be reshaped.
+
+
 
 --
-Dan
-
-diff --git a/super-intel.c b/super-intel.c
-index 2b41e08..6a6f738 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5213,13 +5213,14 @@ static int is_resyncing(struct imsm_dev *dev)
- }
- 
- /* return true if we recorded new information */
--static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
-+static int mark_failure(struct imsm_dev *dev, struct dl *dl)
- {
- 	__u32 ord;
- 	int slot;
- 	struct imsm_map *map;
- 	char buf[MAX_RAID_SERIAL_LEN+3];
--	unsigned int len, shift = 0;
-+	struct imsm_disk *disk = &dl->disk;
-+	unsigned int len, shift = 0, idx = dl->index;
- 
- 	/* new failures are always set in map[0] */
- 	map = get_imsm_map(dev, 0);
-@@ -5232,6 +5233,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
- 		return 0;
- 
-+	dl->index = -2;
- 	sprintf(buf, "%s:0", disk->serial);
- 	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
- 		shift = len - MAX_RAID_SERIAL_LEN + 1;
-@@ -5244,9 +5246,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	return 1;
- }
- 
--static void mark_missing(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
-+static void mark_missing(struct imsm_dev *dev, struct dl *dl)
- {
--	mark_failure(dev, disk, idx);
-+	struct imsm_disk *disk = &dl->disk;
-+
-+	mark_failure(dev, dl);
- 
- 	if (disk->scsi_id == __cpu_to_le32(~(__u32)0))
- 		return;
-@@ -5269,7 +5273,7 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
- 	dprintf("imsm: mark missing\n");
- 	end_migration(dev, map_state);
- 	for (dl = super->missing; dl; dl = dl->next)
--		mark_missing(dev, &dl->disk, dl->index);
-+		mark_missing(dev, dl);
- 	super->updates_pending++;
- }
- 
-@@ -5497,7 +5501,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 	struct intel_super *super = a->container->sb;
- 	struct imsm_dev *dev = get_imsm_dev(super, inst);
- 	struct imsm_map *map = get_imsm_map(dev, 0);
--	struct imsm_disk *disk;
-+	struct dl *dl;
- 	int failed;
- 	__u32 ord;
- 	__u8 map_state;
-@@ -5512,11 +5516,11 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 	dprintf("imsm: set_disk %d:%x\n", n, state);
- 
- 	ord = get_imsm_ord_tbl_ent(dev, n, -1);
--	disk = get_imsm_disk(super, ord_to_idx(ord));
-+	dl = get_imsm_dl_disk(super, ord_to_idx(ord));
- 
- 	/* check for new failures */
- 	if (state & DS_FAULTY) {
--		if (mark_failure(dev, disk, ord_to_idx(ord)))
-+		if (mark_failure(dev, dl))
- 			super->updates_pending++;
- 	}
- 
-@@ -6265,7 +6269,7 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 	for (du = super->missing; du; du = du->next)
- 		if (du->index >= 0) {
- 			set_imsm_ord_tbl_ent(map, du->index, du->index);
--			mark_missing(dev_new, &du->disk, du->index);
-+			mark_missing(dev_new, du);
- 		}
- 
- 	return 1;
-
-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
