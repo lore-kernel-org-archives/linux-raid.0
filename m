@@ -1,30 +1,69 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Disks with 4k sectors
-Date: Sun, 27 Mar 2011 10:22:55 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1103271021191.4842@uplift.swm.pp.se>
-References: <4D8EF209.60707@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/2] tests: backup default config before testing
+Date: Mon, 28 Mar 2011 10:40:18 +1100
+Message-ID: <20110328104018.42ed6657@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A774356@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D8EF209.60707@gmail.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A774356@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Albert Pauw <albert.pauw@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Sun, 27 Mar 2011, Albert Pauw wrote:
+On Thu, 24 Mar 2011 21:45:56 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> When I would use  new disks with 4kB sectors (3 TB disks e.g.) instead of 
-> 512B with mdadm to create a RAID 1/5/6 set, are there any special things to 
-> look out for?
->
-> I would assume choosing chunk sizes of multiples of 4kB.
+> >From 4d7c70452ca8db359fef6a9f3a420d62e67ef3cd Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Thu, 24 Mar 2011 16:24:57 +0100
+> Subject: [PATCH 2/2] tests: backup default config before testing
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
+> 
+> We need to have no config at all for this test so if there is one in the
+> system it must be renamed for the test duration.
+> 
 
-If you use partitions, make sure you align correctly to 4kB.
+If you want to have no config at all, then you can
+   --config=none
+or
+   --config=/tmp/mdadm.conf
+and make /tmp/mdadm.conf an empty file.
 
-This has been discussed extensively (look in the archives), all md 
-structures are 4k aligned so if you create the raid directly on the 
-device, you get proper alignment.
+There is really no need to move /etc/mdadm.conf.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+I have changed this patch to simple make /tmp/mdamd.conf an empty file.
+
+NeilBrown
+
+
+
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> ---
+>  tests/11spare-migration |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/tests/11spare-migration b/tests/11spare-migration
+> index 58f1df9..6c2dc6d 100644
+> --- a/tests/11spare-migration
+> +++ b/tests/11spare-migration
+> @@ -57,6 +57,8 @@ monitor(){
+>  test0()
+>  {
+>  dsc "Test 0: No config file, no spare should be moved"
+> +[ -f /etc/mdadm.conf ] && mv /etc/mdadm.conf /etc/_mdadm.conf
+> +[ -f $config ] && rm -f $config
+>  setupdevs 0 0 1 $platform
+>  setupdevs 1 3 4 $platform
+>  monitor 0 1
+> @@ -64,6 +66,7 @@ mdadm -a /dev/$c1 $dev2
+>  mdadm --fail /dev/$v0 $dev0
+>  # check that spare loop2 was not moved from container c1 to container c0
+>  chksparemoved $c1 $c0 $dev2 n
+> +[ -f /etc/_mdadm.conf ] && mv /etc/_mdadm.conf /etc/mdadm.conf
+>  tidyup
+>  }
+>  
+
