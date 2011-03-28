@@ -1,83 +1,64 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Something wrong with __prep_thunderdome in super-intel.c
-Date: Mon, 28 Mar 2011 09:56:49 -0700
-Message-ID: <1301331409.5888.8.camel@dwillia2-linux>
-References: <20110314140052.20478.45664.stgit@gklab-128-013.igk.intel.com>
-	 <20110315085346.3bf9feb7@notabene.brown>
-	 <905EDD02F158D948B186911EB64DB3D17A9910DD@irsmsx503.ger.corp.intel.com>
-	 <20110322132307.34e9bb3b@notabene.brown>
-	 <1301020846.15264.12.camel@dwillia2-linux>
-	 <20110328123509.043555e7@notabene.brown>
+From: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Mon, 28 Mar 2011 21:46:08 +0200
+Message-ID: <4D90E580.7020406@intra2net.com>
+References: <201103251725.21180.thomas.jarosch@intra2net.com> <20110328075937.GB16530@htj.dyndns.org> <201103281302.20219.thomas.jarosch@intra2net.com> <201103281453.53382.thomas.jarosch@intra2net.com> <20110328155928.GB6736@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110328123509.043555e7@notabene.brown>
+In-Reply-To: <20110328155928.GB6736@htj.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Sun, 2011-03-27 at 18:35 -0700, NeilBrown wrote:
-> On Thu, 24 Mar 2011 19:40:46 -0700 Dan Williams <dan.j.williams@intel.com>
-> wrote:
+On 03/28/2011 05:59 PM, Tejun Heo wrote:
+>> Call Trace:
+>>  [<c12dc808>] mutex_unlock+0x8/0x10
+>>  [<c11c4451>] kobj_lookup+0xe1/0x140
+>>  [<c11323b0>] ? exact_match+0x0/0x10
+>>  [<c11331b8>] get_gendisk+0x98/0xb0
+>>  [<c10e85aa>] __blkdev_get+0xca/0x320
+>>  [<c10e8843>] blkdev_get+0x43/0x2c0
+>>  [<c12de75d>] ? _raw_spin_unlock+0x1d/0x20
+>>  [<c10e8b12>] blkdev_open+0x52/0x70
+>>  [<c10bb12d>] __dentry_open+0x9d/0x240
+>>  [<c10bb3c6>] nameidata_to_filp+0x66/0x80
+>>  [<c10e8ac0>] ? blkdev_open+0x0/0x70
+>>  [<c10c781f>] finish_open+0xaf/0x190
+>>  [<c10c8a24>] ? do_path_lookup+0x44/0xe0
+>>  [<c10c9920>] do_filp_open+0x210/0x6d0
+>>  [<c10672e9>] ? lock_release_non_nested+0x59/0x2f0
+>>  [<c12de75d>] ? _raw_spin_unlock+0x1d/0x20
+>>  [<c10d47d8>] ? alloc_fd+0xb8/0xf0
+>>  [<c10baf45>] do_sys_open+0x55/0xf0
+>>  [<c10bb049>] sys_open+0x29/0x40
+>>  [<c1002e9f>] sysenter_do_call+0x12/0x38
 > 
-> > <context switch out of isci driver review mode>
+> Hmmm... Weird.
 > 
-> :-)
+> * blkid seems to be looping in blkdev_open() repeatedly calling
+>   md_open() which keeps returning -ERESTARTSYS.
 > 
-[..]
-> > -	disk = get_imsm_disk(super, ord_to_idx(ord));
-> > +	dl = get_imsm_dl_disk(super, ord_to_idx(ord));
+> * It triggered softlockup.  Even with -ERESTARTSYS looping, I can't
+>   see how that would be possible.
 > 
-> This sometimes return NULL, leading to bad stuff and mdmon crashing....
-> 
-> So there is more to this than meets the eye...
+> Is this custom boot script?  If so, do you use RT priority in the
+> script?
 
-Yes, (and I chalk this up to context switch latency), setting the index
-to -2 is not correct as other paths need to be able to reference a valid
-disk index until the failed device is removed via a rebuild.
+It's a normal dracut installation with an additional custom script
+to trigger kernel raid auto detection via mdadm.
+The custom script was part of the initial post.
 
-> I'll stop trying this patch.
+I've also noticed another odd thing: On a HP Proliant ML110 G6 box,
+which is quite fast / SMP, the box brings up the software
+RAID successfully. The box is slow as hell and I can see a constant load
+on a kernel process (could be "kworker", don't remember it exactly).
+I'll try tomorrow if that is also related to the RAID subsystem
+or something else turning it into a PDP11...
 
-Ok, here is a proposed v2 on top of the latest devel-3.2, but I need to
-play with it a bit more, and figure out what the spare migration test is
-complaining about.
+Thanks for your help so far!
 
-diff --git a/super-intel.c b/super-intel.c
-index 6e12af2..e2f66aa 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3993,7 +3993,7 @@ static int write_super_imsm(struct supertype *st, int doclose)
- 
- 	/* write the mpb for disks that compose raid devices */
- 	for (d = super->disks; d ; d = d->next) {
--		if (d->index < 0)
-+		if (d->index < 0 || is_failed(&d->disk))
- 			continue;
- 		if (store_imsm_mpb(d->fd, mpb))
- 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
-@@ -5218,6 +5218,8 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	__u32 ord;
- 	int slot;
- 	struct imsm_map *map;
-+	char buf[MAX_RAID_SERIAL_LEN+3];
-+	unsigned int len, shift = 0;
- 
- 	/* new failures are always set in map[0] */
- 	map = get_imsm_map(dev, 0);
-@@ -5230,6 +5232,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
- 		return 0;
- 
-+	sprintf(buf, "%s:0", disk->serial);
-+	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
-+		shift = len - MAX_RAID_SERIAL_LEN + 1;
-+	strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SERIAL_LEN);
-+
- 	disk->status |= FAILED_DISK;
- 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
- 	if (map->failed_disk_num == 0xff)
-
-
-
+Cheers,
+Thomas
