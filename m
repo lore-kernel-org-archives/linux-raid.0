@@ -1,72 +1,91 @@
-From: Nathan Gamber <ngamber@liquidweb.com>
-Subject: corrupted 600GiB md device
-Date: Mon, 28 Mar 2011 17:09:39 -0400
-Message-ID: <4D90F913.5060105@liquidweb.com>
-Reply-To: ngamber@liquidweb.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Tue, 29 Mar 2011 10:25:03 +0200
+Message-ID: <20110329082503.GI6736@htj.dyndns.org>
+References: <201103251725.21180.thomas.jarosch@intra2net.com>
+ <20110328075937.GB16530@htj.dyndns.org>
+ <201103281302.20219.thomas.jarosch@intra2net.com>
+ <201103281453.53382.thomas.jarosch@intra2net.com>
+ <20110328155928.GB6736@htj.dyndns.org>
+ <4D90E580.7020406@intra2net.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D90E580.7020406@intra2net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hello,
+On Mon, Mar 28, 2011 at 09:46:08PM +0200, Thomas Jarosch wrote:
+> On 03/28/2011 05:59 PM, Tejun Heo wrote:
+> >> Call Trace:
+> >>  [<c12dc808>] mutex_unlock+0x8/0x10
+> >>  [<c11c4451>] kobj_lookup+0xe1/0x140
+> >>  [<c11323b0>] ? exact_match+0x0/0x10
+> >>  [<c11331b8>] get_gendisk+0x98/0xb0
+> >>  [<c10e85aa>] __blkdev_get+0xca/0x320
+> >>  [<c10e8843>] blkdev_get+0x43/0x2c0
+> >>  [<c12de75d>] ? _raw_spin_unlock+0x1d/0x20
+> >>  [<c10e8b12>] blkdev_open+0x52/0x70
+> >>  [<c10bb12d>] __dentry_open+0x9d/0x240
+> >>  [<c10bb3c6>] nameidata_to_filp+0x66/0x80
+> >>  [<c10e8ac0>] ? blkdev_open+0x0/0x70
+> >>  [<c10c781f>] finish_open+0xaf/0x190
+> >>  [<c10c8a24>] ? do_path_lookup+0x44/0xe0
+> >>  [<c10c9920>] do_filp_open+0x210/0x6d0
+> >>  [<c10672e9>] ? lock_release_non_nested+0x59/0x2f0
+> >>  [<c12de75d>] ? _raw_spin_unlock+0x1d/0x20
+> >>  [<c10d47d8>] ? alloc_fd+0xb8/0xf0
+> >>  [<c10baf45>] do_sys_open+0x55/0xf0
+> >>  [<c10bb049>] sys_open+0x29/0x40
+> >>  [<c1002e9f>] sysenter_do_call+0x12/0x38
+> > 
+> > Hmmm... Weird.
+> > 
+> > * blkid seems to be looping in blkdev_open() repeatedly calling
+> >   md_open() which keeps returning -ERESTARTSYS.
+> > 
+> > * It triggered softlockup.  Even with -ERESTARTSYS looping, I can't
+> >   see how that would be possible.
+> > 
+> > Is this custom boot script?  If so, do you use RT priority in the
+> > script?
+> 
+> It's a normal dracut installation with an additional custom script
+> to trigger kernel raid auto detection via mdadm.
+> The custom script was part of the initial post.
+> 
+> I've also noticed another odd thing: On a HP Proliant ML110 G6 box,
+> which is quite fast / SMP, the box brings up the software
+> RAID successfully. The box is slow as hell and I can see a constant load
+> on a kernel process (could be "kworker", don't remember it exactly).
+> I'll try tomorrow if that is also related to the RAID subsystem
+> or something else turning it into a PDP11...
 
-I'm trying to create a soft RAID device from a remote LVM logical volume 
-imported via iscsi and another, local logical volume. It works without 
-issue most of the time, but I've found that if I specify a 600GiB 
-partition with lvcreate, such as with 'lvcreate -L 600G -n test1 LVM' 
-that /dev/md0 is "corrupted" until the device finishes syncing. For 
-example, 'fsck /dev/md0'
+Can you please apply the following patch and see whether it resolves
+the problem and report the boot log?
 
-fsck 1.39 (29-May-2006)
-e2fsck 1.39 (29-May-2006)
-The filesystem size (according to the superblock) is 157286400 blocks
-The physical size of the device is 157286384 blocks
-Either the superblock or the partition table is likely to be corrupt!
+Thanks.
 
-And the details of the array:
-
-/dev/md0:
-         Version : 0.90
-   Creation Time : Mon Mar 28 20:56:00 2011
-      Raid Level : raid1
-      Array Size : 629145536 (600.00 GiB 644.25 GB)
-   Used Dev Size : 629145536 (600.00 GiB 644.25 GB)
-    Raid Devices : 2
-   Total Devices : 2
-Preferred Minor : 0
-     Persistence : Superblock is persistent
-
-     Update Time : Mon Mar 28 20:56:34 2011
-           State : active, resyncing
-  Active Devices : 2
-Working Devices : 2
-  Failed Devices : 0
-   Spare Devices : 0
-
-  Rebuild Status : 0% complete
-
-            UUID : da6c0776:2f3beb8f:b13b8b58:8282847d
-          Events : 0.3
-
-     Number   Major   Minor   RaidDevice State
-        0       8       32        0      active sync   /dev/sdc
-        1     253       10        1      active sync   /dev/LVM/npgtest1
-
-With RAID 1.0 metadata, fsck returns the same error, though the size of 
-the physical device varies from the filesystem by 34 blocks instead of 
-16. With 1.1 and 1.2 metadata, I get the following error instead:
-
-Couldn't find ext2 superblock, trying backup blocks...
-fsck.ext2: Bad magic number in super-block while trying to open /dev/md0
-
-I seem to only have this problem when specifying a logical volume of 
-600GiB. If I shrink the filesystem on the original volume (before 
-exporting it via iscsi) slightly, I can't reproduce this. Am I seeing 
-intended behavior? If so, what would be the appropriate way to work 
-around it?
-
--Nathan
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8b66e04..e17098b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6001,6 +6001,15 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+ 		 * bd_disk.
+ 		 */
+ 		mddev_put(mddev);
++		if (current->policy == SCHED_FIFO || current->policy == SCHED_RR) {
++			static bool once;
++			if (!once) {
++				printk("%s: md_open(): RT prio, pol=%u p=%d rt_p=%u\n",
++				       current->comm, current->policy, current->static_prio, current->rt_priority);
++				once = true;
++			}
++		}
++		msleep(10);
+ 		/* Wait until bdev->bd_disk is definitely gone */
+ 		flush_workqueue(md_misc_wq);
+ 		/* Then retry the open from the top */
