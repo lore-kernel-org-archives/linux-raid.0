@@ -1,46 +1,38 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: Network-based RAID6
-Date: Wed, 30 Mar 2011 11:20:41 +0400
-Message-ID: <AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>
-References: <20110330131157.49fd2521@natsu>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: raid6 + caviar black + mpt2sas horrific performance
+Date: Wed, 30 Mar 2011 10:08:23 +0200
+Message-ID: <20110330080823.GA9167@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110330131157.49fd2521@natsu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 30, 2011 at 11:11 AM, Roman Mamedov <rm@romanrm.ru> wrote:
-> Hello,
->
-> Let's say I have 10 machines, each having 1TB of free disk space. They
-> communicate over a gigabit network.
->
-> I would like to create a fault-tolerant array from these machines and their
-> storage, that would match RAID6 in overhead and fault resilience.
-> That is, it should provide 8 TB of usable space and tolerate a 2-member
-> failure without data loss.
->
-> Does anyone know if any of the current distributed filesystems will meet these
-> requirements? Working/stable/non-experimental level code is preferred.
->
-> The simple and obvious solution is mdadm over AoE/iSCSI, but maybe there is
-> something else built with network awareness from ground up, that would be a
-> better choice?
-Looking on your host I think you speak russian, so may be this will be
-somehow helpful for you
-http://community.livejournal.com/ru_root/2216389.html
+Hi,
 
->
-> --
-> With respect,
-> Roman
->
+I am seeing horrific performance on a Dell T610 with a LSISAS2008 (Dell
+H200) card and 8 WD1002FAEX Caviar Black 1TB configured in mdadm raid6.
 
+The LSI card is upgraded to the latest 9.00 firmware:
+http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/internal/sas9211-8i/index.html
+and the 2.6.38.2 kernel uses the newer mpt2sas driver.
 
+On the T610 this command takes 20 minutes:
 
--- 
-Best regards,
-[COOLCOLD-RIPN]
+	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  22.64s user 3.34s system 2% cpu 20:00.69 total
+
+where on a lower spec'ed Poweredge 2900 III server (LSI Logic MegaRAID
+SAS 1078 + 8 x Hitachi Ultrastar 7K1000 in mdadm raid6) it takes 22
+_seconds_:
+
+	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  16.40s user 3.22s system 86% cpu 22.773 total
+
+Besides hardware, the other difference between servers is that the
+PE2900's MegaRAID has no JBOD mode so each disk must be configured as a
+"raid0" vdisk unit. On the T610 no configuration was necessary for the
+disks to "appear" in the OS. Would configuring them as raid0 vdisks
+change anything?
+
+Thanks in advance for any suggestion,
