@@ -1,43 +1,61 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Network-based RAID6
-Date: Wed, 30 Mar 2011 08:35:04 -0500
-Message-ID: <4D933188.30003@hardwarefreak.com>
-References: <20110330131157.49fd2521@natsu>	<AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com> <20110330144944.3c87185c@natsu>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: raid6 + caviar black + mpt2sas horrific performance
+Date: Wed, 30 Mar 2011 14:42:29 +0100
+Message-ID: <20110330134228.GA14556@cthulhu.home.robinhill.me.uk>
+References: <20110330080823.GA9167@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110330144944.3c87185c@natsu>
+Content-Disposition: inline
+In-Reply-To: <20110330080823.GA9167@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roman Mamedov put forth on 3/30/2011 3:49 AM:
-> On Wed, 30 Mar 2011 11:20:41 +0400
-> CoolCold <coolthecold@gmail.com> wrote:
-> 
->> Looking on your host I think you speak russian, so may be this will be
->> somehow helpful for you
->> http://community.livejournal.com/ru_root/2216389.html
-> 
-> Thanks -- I have looked through the websites of some distributed filesystems
-> (Ceph, GlusterFS, MooseFS etc) and checked this thread too, but from what I
-> could find, all filesystems I read about so far are at most capable of RAID0 or
-> RAID1-like modes, where fault-tolerance is either not provided, or achieved
-> only by "all data is replicated across N nodes", which of course divides the
-> total usable space by N. I haven't found any FS which would do block-level
-> replication relying not on dumb copies, but on RAID5/6-like parity algorithms
-> for fault-tolerance. Maybe I missed something?
 
-You likely won't find any distributed filesystem that performs block
-level replication over the network, at least not a FOSS one.  These are
-filesystems, mind you, not distributed block device drivers.  If they
-perform any replication to afford a level of fault tolerance, it will be
-at the file level, not the block level.
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If you want true block level replication over a network, look into DRBD.
- However, it is also limited to mirroring.
+On Wed Mar 30, 2011 at 10:08:23AM +0200, Louis-David Mitterrand wrote:
 
--- 
-Stan
+> Hi,
+>=20
+> I am seeing horrific performance on a Dell T610 with a LSISAS2008 (Dell
+> H200) card and 8 WD1002FAEX Caviar Black 1TB configured in mdadm raid6.
+>=20
+> Besides hardware, the other difference between servers is that the
+> PE2900's MegaRAID has no JBOD mode so each disk must be configured as a
+> "raid0" vdisk unit. On the T610 no configuration was necessary for the
+> disks to "appear" in the OS. Would configuring them as raid0 vdisks
+> change anything?
+>=20
+Several years ago I ran into a similar issue with a SCSI RAID controller
+(may have been LSI MegaRAID, I can't recall now) and found that RAID0
+vdisks were substantially faster than running it in JBOD mode. This
+wasn't just down to the controller disabling caching/optimisations
+either - in JBOD mode the performance was well below that on a non-RAID
+controller.
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEARECAAYFAk2TM0MACgkQShxCyD40xBLbmQCcDfBwl4+2LGDCCcGvYeyh+EbK
+FpsAoNlmKfDBOTzL7FvSBb45pbMITsM6
+=HIbM
+-----END PGP SIGNATURE-----
+
+--7AUc2qLy4jB3hD7Z--
