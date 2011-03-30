@@ -1,34 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: blk_flush_plug in the MD code, was Re: [xfs-masters] linux-next:
-	manual merge of the xfs tree with Linus' tree
-Date: Wed, 30 Mar 2011 13:57:38 +0200
-Message-ID: <20110330115738.GA16484@lst.de>
-References: <20110328122148.1b48a742.sfr@canb.auug.org.au> <20110328104753.GA27327@lst.de> <20110328105348.GA27458@lst.de> <4D9069C1.4080602@fusionio.com> <20110329200813.GA9687@lst.de> <4D93177B.50505@fusionio.com>
+From: David Brown <david@westcontrol.com>
+Subject: Extendible RAID10
+Date: Wed, 30 Mar 2011 13:57:36 +0200
+Message-ID: <imv5sm$tuj$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D93177B.50505@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 30, 2011 at 01:43:55PM +0200, Jens Axboe wrote:
-> On 2011-03-29 22:08, Christoph Hellwig wrote:
-> > FYI, the blk_flush_plug call in ufs_truncate also seem to be almost
-> > certainly incorrect as it's followed by a yield.
-> > 
-> > That only leaves the RAID code as remaining modular users of it, and
-> > I suspect it really is something that shouldn't need to be exported.
-> 
-> Agree, once things have settled down we can reap the remaining and keep
-> it internal.
+RAID10 with far layout is a very nice raid level - it gives you read 
+speed like RAID0, write speed no slower than other RAID1 mirrors, and of 
+course you have the mirror redundancy.
 
-In fact I think the blk_flush_plug calls in the raid1/raid10 code can
-simply be removed without a replacement.  They are in wait_even_loops
-which schedule before/after the call so we do get the implicit context
-switch plugs there.  Even more they are generally called from the
-make_request handler, which for MD is in the loop around
-__generic_make_request and thus can't actually unplug in a sensible
-way.
+But it is not extendible - once you have made your layout, you are stuck 
+with it.  There is no way (at the moment) to migrate over to larger drives.
+
+As far as I can see, you can grow RAID1 sets to larger disks.  But you 
+can't grow RAID0 sets.  As far as I can see, there is some inconsistency 
+in the mdadm manual pages as to whether or not you can grow the size of 
+a RAID4 array.  If it is possible to grow a RAID4, then it should be 
+possible to use a degraded RAID4 (with a missing parity disk) as a RAID0.
+
+
+I'm planning a new server in the near future, and I think I'll get a 
+reasonable balance of price, performance, capacity and redundancy using 
+a 3-drive RAID10,f2 setup (with a small boot partition on each drive, 
+all three as a RAID1, so that grub will work properly).  On the main md 
+device I then have an LVM physical volume, with logical partitions for 
+different virtual machines or other data areas.  I've used such an 
+arrangement before, and been happy with it.
+
+But as an alternative solution that is expandable, I am considering 
+using LVM to do the striping.  Ignoring the boot partition for 
+simplicity, I would partition each disk into two equal parts - sda1, 
+sda2, sdb1, sdb2, sdc1 and sdc2.  Then I would form a set of RAID1 
+devices - md1 = sda1 + sdb2, md2 = sdb1 + sdc2, md3 = sdc1 + sda2.  I 
+would make an lvm physical volume on each of these md devices, and put 
+all those physical volumes into a single volume group.  Whenever I make 
+a new logical volume, I specify that it should have three stripes.
+
+If I then want to replace the disks with larger devices, it is possible 
+to add a new disk, partition it into two larger partitions, add these 
+partitions to two of the existing raids, sync, fail then remove the 
+now-redundant drive.  After three rounds, the RAID1 sets can then be 
+grown to match the new partition sizes.  Then the lvm physical volumes 
+can be grown to match the new raid sizes.
+
+
+Any opinions?  Have I missed anything here, perhaps some issues that 
+will make this arrangement slower or less efficient than a normal 
+RAID10,f2 with lvm on top?
+
+
