@@ -1,33 +1,50 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: strange problem with my raid5
-Date: Wed, 30 Mar 2011 20:34:35 +0800
-Message-ID: <AANLkTinEcLaQAdoFgbV6+UGkPYKTgBass8J8pUBQ3h_X@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: looking for advice on raid drives upgrade
+Date: Wed, 30 Mar 2011 15:14:55 +0200
+Message-ID: <imvadk$q8j$1@dough.gmane.org>
+References: <imuu5b$gaf$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <imuu5b$gaf$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,all:
-I created a raid5 array which consists of 15 disks, before recovering
-is done, a power failure event occured. After power is recovered, the
-machine box started successfully but "cat /proc/mdstat" gave no
-message, previously created raid5 was gone. I check kernel messages,
-it is as follows:
+On 30/03/2011 11:46, Vincent Schut wrote:
+> Hi all,
+>
+> one of my raid's is currently a raid5 with 4 1TB drives, which I'm going
+> to upgrade by replacing all drives with 2TB drives.
+> Main question: what is recommended:
+>
+> - offline the raid, dd(rescue) each 1TB drive onto a new 2TB one,
+> replace drives, put raid online again
+>
+> or:
+> - manually replace one drive at a time, and let the raid recover and
+> thus write the data onto the new drive?
+>
+> As far as I know all current drives are healthy; regularly SMART
+> monitoring and raid checks have not ringed any bells sofar.
+>
+> I guess offlining and dd-ing would be more secure, but I might miss
+> something and would like to hear other considerations from people more
+> experienced in this area.
+>
+> Regards,
+> Vincent Schut.
+>
 
-<snip>
-bonding: bond0: enslaving eth1 as a backup interface with a down link.
-svc: failed to register lockdv1 RPC service (errno 97).
-rpc.nfsd used greatest stack depth: 5440 bytes left
-md: md1 stopped.
-iSCSI Enterprise Target Software - version 1.4.1
-</snip>
 
-In normal case, md1 should bind its disks after printing "md: md1
-stopped", then what happened in this cituation?
-BTW, my kernel version is 2.6.31.6.
+If you've got a spare drive slot, and plenty of time, there is another 
+option that lets you keep online and redundant during the process. 
+Re-shape the array to raid 6, while adding one of the new drives.  Then 
+you can replace each drive, one at a time, letting the raid recover in 
+between.  For the last drive, you just have to remove it then reshape 
+back to raid 5 (although ideally you could buy an extra drive and keep 
+the raid 6 layout - it's worth the cost, assuming you have the drive slot).
 
+Once everything is swapped over, you grow the array to fit the new disks.
 
--- 
-The simplest is not all best but the best is surely the simplest!
