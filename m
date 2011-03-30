@@ -1,38 +1,55 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: raid6 + caviar black + mpt2sas horrific performance
-Date: Wed, 30 Mar 2011 10:08:23 +0200
-Message-ID: <20110330080823.GA9167@apartia.fr>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Network-based RAID6
+Date: Wed, 30 Mar 2011 14:49:44 +0600
+Message-ID: <20110330144944.3c87185c@natsu>
+References: <20110330131157.49fd2521@natsu>
+	<AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Mizx6BAu+d1pQjiIuH8GddO"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: CoolCold <coolthecold@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+--Sig_/Mizx6BAu+d1pQjiIuH8GddO
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I am seeing horrific performance on a Dell T610 with a LSISAS2008 (Dell
-H200) card and 8 WD1002FAEX Caviar Black 1TB configured in mdadm raid6.
+On Wed, 30 Mar 2011 11:20:41 +0400
+CoolCold <coolthecold@gmail.com> wrote:
 
-The LSI card is upgraded to the latest 9.00 firmware:
-http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/internal/sas9211-8i/index.html
-and the 2.6.38.2 kernel uses the newer mpt2sas driver.
+> Looking on your host I think you speak russian, so may be this will be
+> somehow helpful for you
+> http://community.livejournal.com/ru_root/2216389.html
 
-On the T610 this command takes 20 minutes:
+Thanks -- I have looked through the websites of some distributed filesystems
+(Ceph, GlusterFS, MooseFS etc) and checked this thread too, but from what I
+could find, all filesystems I read about so far are at most capable of RAID=
+0 or
+RAID1-like modes, where fault-tolerance is either not provided, or achieved
+only by "all data is replicated across N nodes", which of course divides the
+total usable space by N. I haven't found any FS which would do block-level
+replication relying not on dumb copies, but on RAID5/6-like parity algorith=
+ms
+for fault-tolerance. Maybe I missed something?
 
-	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  22.64s user 3.34s system 2% cpu 20:00.69 total
+--=20
+With respect,
+Roman
 
-where on a lower spec'ed Poweredge 2900 III server (LSI Logic MegaRAID
-SAS 1078 + 8 x Hitachi Ultrastar 7K1000 in mdadm raid6) it takes 22
-_seconds_:
+--Sig_/Mizx6BAu+d1pQjiIuH8GddO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  16.40s user 3.22s system 86% cpu 22.773 total
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-Besides hardware, the other difference between servers is that the
-PE2900's MegaRAID has no JBOD mode so each disk must be configured as a
-"raid0" vdisk unit. On the T610 no configuration was necessary for the
-disks to "appear" in the OS. Would configuring them as raid0 vdisks
-change anything?
+iEYEARECAAYFAk2S7qgACgkQTLKSvz+PZwhXPwCeL7MhqAuHot7oEhg08887ujJY
+JmUAoJgFhKpclT9iWSgS06kYQN84xaOt
+=VJKp
+-----END PGP SIGNATURE-----
 
-Thanks in advance for any suggestion,
+--Sig_/Mizx6BAu+d1pQjiIuH8GddO--
