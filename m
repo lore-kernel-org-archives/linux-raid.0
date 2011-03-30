@@ -1,35 +1,32 @@
-From: Vincent Schut <schut@sarvision.nl>
-Subject: looking for advice on raid drives upgrade
-Date: Wed, 30 Mar 2011 11:46:19 +0200
-Message-ID: <imuu5b$gaf$1@dough.gmane.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: looking for advice on raid drives upgrade
+Date: Wed, 30 Mar 2011 13:10:24 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1103301309100.1942@uplift.swm.pp.se>
+References: <imuu5b$gaf$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <imuu5b$gaf$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Vincent Schut <schut@sarvision.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Wed, 30 Mar 2011, Vincent Schut wrote:
 
-one of my raid's is currently a raid5 with 4 1TB drives, which I'm going 
-to upgrade by replacing all drives with 2TB drives.
-Main question: what is recommended:
+> - offline the raid, dd(rescue) each 1TB drive onto a new 2TB one, 
+> replace drives, put raid online again
 
-- offline the raid, dd(rescue) each 1TB drive onto a new 2TB one, 
-replace drives, put raid online again
+This works if you have a superblock version that stores its superblock in 
+the beginning, not the end (or if you use a partition). This is the 
+safest.
 
-or:
-- manually replace one drive at a time, and let the raid recover and 
-thus write the data onto the new drive?
+> or:
+> - manually replace one drive at a time, and let the raid recover and thus 
+> write the data onto the new drive?
 
-As far as I know all current drives are healthy; regularly SMART 
-monitoring and raid checks have not ringed any bells sofar.
+If you have a bad block anywhere on the degraded drives, you're going to 
+lose data.
 
-I guess offlining and dd-ing would be more secure, but I might miss 
-something and would like to hear other considerations from people more 
-experienced in this area.
-
-Regards,
-Vincent Schut.
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
