@@ -1,75 +1,54 @@
-From: Vincent Schut <schut@sarvision.nl>
-Subject: Re: looking for advice on raid drives upgrade
-Date: Wed, 30 Mar 2011 13:22:42 +0200
-Message-ID: <imv3q2$h48$1@dough.gmane.org>
-References: <imuu5b$gaf$1@dough.gmane.org> <alpine.DEB.2.00.1103301309100.1942@uplift.swm.pp.se>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH 1/2] Create: check for UnSet when looking at chunk
+Date: Wed, 30 Mar 2011 12:28:11 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A8EB878@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1103301309100.1942@uplift.swm.pp.se>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 03/30/2011 01:10 PM, Mikael Abrahamsson wrote:
-> On Wed, 30 Mar 2011, Vincent Schut wrote:
->
->> - offline the raid, dd(rescue) each 1TB drive onto a new 2TB one,
->> replace drives, put raid online again
->
-> This works if you have a superblock version that stores its superblock
-> in the beginning, not the end (or if you use a partition). This is the
-> safest.
+From ceb5a3431f27b5030d964567dedb0f983862b347 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Wed, 30 Mar 2011 13:21:21 +0200
+Subject: [PATCH 1/2] Create: check for UnSet when looking at chunk
+Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 
-Thanks. That is something I would not have thought about myself.
+A default chunk size of 0 gets modified to UnSet, so any location that
+checks for !chunk really needs to check for !(chunk || chunk == UnSet).
 
-according to mdadm --detail, my superblock version is 1.1:
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ Create.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-  mdadm --detail /dev/md0
-/dev/md0:
-         Version : 1.1
-   Creation Time : Fri Apr  2 11:59:08 2010
-      Raid Level : raid5
-      Array Size : 2930287104 (2794.54 GiB 3000.61 GB)
-   Used Dev Size : 976762368 (931.51 GiB 1000.20 GB)
-    Raid Devices : 4
-   Total Devices : 4
-     Persistence : Superblock is persistent
-
-     Update Time : Wed Mar 30 13:17:09 2011
-           State : clean
-  Active Devices : 4
-Working Devices : 4
-  Failed Devices : 0
-   Spare Devices : 0
-
-          Layout : left-symmetric
-      Chunk Size : 512K
-
-            Name : fransje:0  (local to host fransje)
-            UUID : 0b2e8a3c:a84a6f4e:31ed60f8:d33de960
-          Events : 319880
-
-     Number   Major   Minor   RaidDevice State
-        0       8       32        0      active sync   /dev/sdc
-        1       8       16        1      active sync   /dev/sdb
-        3       8        0        2      active sync   /dev/sda
-        4       8       48        3      active sync   /dev/sdd
-
-Version 1.1 stores the superblock at the beginning of the device, right? 
-So that would allow me to use the dd method?
-
->
->> or:
->> - manually replace one drive at a time, and let the raid recover and
->> thus write the data onto the new drive?
->
-> If you have a bad block anywhere on the degraded drives, you're going to
-> lose data.
->
-Exactly. A risk I'd like to avoid, of course.
-
-Thanks for the info!
-Vincent.
+diff --git a/Create.c b/Create.c
+index 9f34425..5709baf 100644
+--- a/Create.c
++++ b/Create.c
+@@ -266,7 +266,7 @@ int Create(struct supertype *st, char *mddev,
+ 					      &chunk, size*2, NULL, &newsize, verbose>=0))
+ 		return 1;
+ 
+-	if (chunk) {
++	if (chunk && chunk != UnSet) {
+ 		newsize &= ~(unsigned long long)(chunk*2 - 1);
+ 		size &= ~(unsigned long long)(chunk - 1);
+ 	}
+@@ -353,7 +353,7 @@ int Create(struct supertype *st, char *mddev,
+ 		}
+ 
+ 		freesize /= 2; /* convert to K */
+-		if (chunk) {
++		if (chunk && chunk != UnSet) {
+ 			/* round to chunk size */
+ 			freesize = freesize & ~(chunk-1);
+ 		}
+-- 
+1.7.1
 
