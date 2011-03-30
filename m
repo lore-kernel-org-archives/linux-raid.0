@@ -1,45 +1,85 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: looking for advice on raid drives upgrade
-Date: Wed, 30 Mar 2011 16:00:55 +0200
-Message-ID: <imvd3u$bsr$1@dough.gmane.org>
-References: <imuu5b$gaf$1@dough.gmane.org> <imvadk$q8j$1@dough.gmane.org> <4D9330CD.7090806@crc.id.au>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: Network-based RAID6
+Date: Wed, 30 Mar 2011 11:24:40 -0300
+Message-ID: <AANLkTikydoHZxYOOT6Lg1bRPTL3_npG5KgTjDgZMzesn@mail.gmail.com>
+References: <20110330131157.49fd2521@natsu>
+	<AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>
+	<20110330144944.3c87185c@natsu>
+	<4D933188.30003@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D9330CD.7090806@crc.id.au>
+In-Reply-To: <4D933188.30003@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Roman Mamedov <rm@romanrm.ru>, CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/03/2011 15:31, Steven Haigh wrote:
-> On 31/03/2011 12:14 AM, David Brown wrote:
->> If you've got a spare drive slot, and plenty of time, there is another
->> option that lets you keep online and redundant during the process.
->> Re-shape the array to raid 6, while adding one of the new drives. Then
->> you can replace each drive, one at a time, letting the raid recover in
->> between. For the last drive, you just have to remove it then reshape
->> back to raid 5 (although ideally you could buy an extra drive and keep
->> the raid 6 layout - it's worth the cost, assuming you have the drive
->> slot).
+OCFS with DRBD could work very nice in linux
+i didn't tested mdadm with ndb in a production enviroment
+DRBD have brainsplit solutions, since you will run a complex
+filesystem, i consider using working solutions, DRBD and OCFS is nice
+yes, mdadm can run under DRBD
+DRBD =3D raid1 over network
+OCFS =3D oracle filesystem (cluster filesystem)
+it works
+
+2011/3/30 Stan Hoeppner <stan@hardwarefreak.com>:
+> Roman Mamedov put forth on 3/30/2011 3:49 AM:
+>> On Wed, 30 Mar 2011 11:20:41 +0400
+>> CoolCold <coolthecold@gmail.com> wrote:
 >>
->> Once everything is swapped over, you grow the array to fit the new disks.
+>>> Looking on your host I think you speak russian, so may be this will=
+ be
+>>> somehow helpful for you
+>>> http://community.livejournal.com/ru_root/2216389.html
+>>
+>> Thanks -- I have looked through the websites of some distributed fil=
+esystems
+>> (Ceph, GlusterFS, MooseFS etc) and checked this thread too, but from=
+ what I
+>> could find, all filesystems I read about so far are at most capable =
+of RAID0 or
+>> RAID1-like modes, where fault-tolerance is either not provided, or a=
+chieved
+>> only by "all data is replicated across N nodes", which of course div=
+ides the
+>> total usable space by N. I haven't found any FS which would do block=
+-level
+>> replication relying not on dumb copies, but on RAID5/6-like parity a=
+lgorithms
+>> for fault-tolerance. Maybe I missed something?
 >
-> This makes me wonder... What is recommended as the best practice... Use
-> the entire disk or 1 partition per device? Assuming of course that you
-> won't be booting off the RAID5/6....
+> You likely won't find any distributed filesystem that performs block
+> level replication over the network, at least not a FOSS one. =A0These=
+ are
+> filesystems, mind you, not distributed block device drivers. =A0If th=
+ey
+> perform any replication to afford a level of fault tolerance, it will=
+ be
+> at the file level, not the block level.
+>
+> If you want true block level replication over a network, look into DR=
+BD.
+> =A0However, it is also limited to mirroring.
+>
+> --
+> Stan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-I think the answer depends on what you are trying to do.  If you are 
-just building a single big array, then whole devices make most sense. 
-But sometimes you want to try something more complicated (see my recent 
-thread - though no one has yet said if it is a good idea...).  You may 
-also want more than one array with different characteristics, such as 
-the balance between capacity, speed (for different uses) and redundancy. 
-  For example, you might think raid 5 is appropriate for some of your 
-data, and raid10 for other parts.  By dividing each disk into two and 
-using partitions from one half for one array, and the other half for the 
-other array, you get both areas.  Clearly you'll get a performance hit 
-if both arrays are used at the same time, but it's your choice.
 
 
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
