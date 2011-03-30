@@ -1,67 +1,51 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: raid1 boot regression in 2.6.37 [bisected]
-Date: Tue, 29 Mar 2011 09:22:01 -0300
-Message-ID: <AANLkTimKAF8NxrrFTC-LV3=dVwqucc=UJHiw_Fb9g5Na@mail.gmail.com>
-References: <201103251725.21180.thomas.jarosch@intra2net.com>
-	<4D90E580.7020406@intra2net.com>
-	<AANLkTinvf_WM+9J6hoCHkz-qjMEaXOvv20ZyVLwmMsPV@mail.gmail.com>
-	<201103291406.09405.thomas.jarosch@intra2net.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Network-based RAID6
+Date: Wed, 30 Mar 2011 13:11:57 +0600
+Message-ID: <20110330131157.49fd2521@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/dFrV2V0C60Mn4zw8vCu3.3J"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201103291406.09405.thomas.jarosch@intra2net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-it boot without problem, work with apache,mysql,softraid(md) without pr=
-oblem
-but after some time, it 'crash', many messages like
-kernel not tainted
-kernel tainted
-<0x0000fffff> messages
+--Sig_/dFrV2V0C60Mn4zw8vCu3.3J
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-and some debug information on console
-i tested with xfs,reiserfs3,ext4 and nothing changed, maybe it=B4s a
-lower layer problem: softraid, hardware module, kernel thread/process
-options, i didn=B4t diff the old and the new kernel config file, maybe
-something changed and i was sleeping, changing to old kernel solved
-the problem, i didn=B4t found performace problems, just kernel messages=
-,
-and sometimes it stop working and i must reboot
+Hello,
 
-2011/3/29 Thomas Jarosch <thomas.jarosch@intra2net.com>:
-> Hello Roberto,
->
-> On Monday, 28. March 2011 21:59:37 Roberto Spadim wrote:
->> i had some problems with hp server (the same model but G5) and new
->> intel core i7 desktops with archlinux and kernel 2.6.37, try to get =
-a
->> older kernel version, just to make your production server stable
->
-> Can you describe in more detail what kind of issue you were having?
->
-> Didn't it boot at all or was it just slow / unusable?
-> Was the issue related to md?
->
-> Cheers,
-> Thomas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Let's say I have 10 machines, each having 1TB of free disk space. They
+communicate over a gigabit network.
 
+I would like to create a fault-tolerant array from these machines and their
+storage, that would match RAID6 in overhead and fault resilience.
+That is, it should provide 8 TB of usable space and tolerate a 2-member
+failure without data loss.
 
+Does anyone know if any of the current distributed filesystems will meet th=
+ese
+requirements? Working/stable/non-experimental level code is preferred.
+
+The simple and obvious solution is mdadm over AoE/iSCSI, but maybe there is
+something else built with network awareness from ground up, that would be a
+better choice?
 
 --=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+With respect,
+Roman
+
+--Sig_/dFrV2V0C60Mn4zw8vCu3.3J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2S170ACgkQTLKSvz+PZwgGsQCbB/Q/h604SWs9juHmKA9xFgRw
+e9IAn1WC0wQnfflJDsu5KlF6a1xuhiau
+=eI6b
+-----END PGP SIGNATURE-----
+
+--Sig_/dFrV2V0C60Mn4zw8vCu3.3J--
