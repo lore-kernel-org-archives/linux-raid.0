@@ -1,50 +1,46 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: looking for advice on raid drives upgrade
-Date: Wed, 30 Mar 2011 15:14:55 +0200
-Message-ID: <imvadk$q8j$1@dough.gmane.org>
-References: <imuu5b$gaf$1@dough.gmane.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: raid6 + caviar black + mpt2sas horrific performance
+Date: Wed, 30 Mar 2011 08:20:02 -0500
+Message-ID: <4D932E02.50407@hardwarefreak.com>
+References: <20110330080823.GA9167@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <imuu5b$gaf$1@dough.gmane.org>
+In-Reply-To: <20110330080823.GA9167@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/03/2011 11:46, Vincent Schut wrote:
-> Hi all,
->
-> one of my raid's is currently a raid5 with 4 1TB drives, which I'm going
-> to upgrade by replacing all drives with 2TB drives.
-> Main question: what is recommended:
->
-> - offline the raid, dd(rescue) each 1TB drive onto a new 2TB one,
-> replace drives, put raid online again
->
-> or:
-> - manually replace one drive at a time, and let the raid recover and
-> thus write the data onto the new drive?
->
-> As far as I know all current drives are healthy; regularly SMART
-> monitoring and raid checks have not ringed any bells sofar.
->
-> I guess offlining and dd-ing would be more secure, but I might miss
-> something and would like to hear other considerations from people more
-> experienced in this area.
->
-> Regards,
-> Vincent Schut.
->
+Louis-David Mitterrand put forth on 3/30/2011 3:08 AM:
+> Hi,
+> 
+> I am seeing horrific performance on a Dell T610 with a LSISAS2008 (Dell
+> H200) card and 8 WD1002FAEX Caviar Black 1TB configured in mdadm raid6.
+> 
+> The LSI card is upgraded to the latest 9.00 firmware:
+> http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/internal/sas9211-8i/index.html
+> and the 2.6.38.2 kernel uses the newer mpt2sas driver.
+> 
+> On the T610 this command takes 20 minutes:
+> 
+> 	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  22.64s user 3.34s system 2% cpu 20:00.69 total
+> 
+> where on a lower spec'ed Poweredge 2900 III server (LSI Logic MegaRAID
+> SAS 1078 + 8 x Hitachi Ultrastar 7K1000 in mdadm raid6) it takes 22
+> _seconds_:
+> 
+> 	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  16.40s user 3.22s system 86% cpu 22.773 total
+> 
+> Besides hardware, the other difference between servers is that the
+> PE2900's MegaRAID has no JBOD mode so each disk must be configured as a
+> "raid0" vdisk unit. On the T610 no configuration was necessary for the
+> disks to "appear" in the OS. Would configuring them as raid0 vdisks
+> change anything?
 
+Changing the virtual disk configuration is a question for Dell support.
+ You haven't provided sufficient information that would allow us to
+troubleshoot your problem.  Please include relevant log and dmesg output.
 
-If you've got a spare drive slot, and plenty of time, there is another 
-option that lets you keep online and redundant during the process. 
-Re-shape the array to raid 6, while adding one of the new drives.  Then 
-you can replace each drive, one at a time, letting the raid recover in 
-between.  For the last drive, you just have to remove it then reshape 
-back to raid 5 (although ideally you could buy an extra drive and keep 
-the raid 6 layout - it's worth the cost, assuming you have the drive slot).
-
-Once everything is swapped over, you grow the array to fit the new disks.
-
+-- 
+Stan
