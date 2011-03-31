@@ -1,36 +1,34 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Network-based RAID6
-Date: Thu, 31 Mar 2011 00:35:49 -0500
-Message-ID: <4D9412B5.30203@hardwarefreak.com>
-References: <20110330131157.49fd2521@natsu>	<AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>	<20110330144944.3c87185c@natsu>	<4D933188.30003@hardwarefreak.com>	<20110330235052.3a803d35@natsu>	<4D94097A.3030909@hardwarefreak.com> <20110331111613.06079a0a@natsu>
+From: hansbkk@gmail.com
+Subject: Re: looking for advice on raid drives upgrade
+Date: Thu, 31 Mar 2011 13:54:34 +0700
+Message-ID: <BANLkTimDKBkEgt12yyowbo3-OzTiiV-BeQ@mail.gmail.com>
+References: <imuu5b$gaf$1@dough.gmane.org>
+	<alpine.DEB.2.00.1103301309100.1942@uplift.swm.pp.se>
+	<imv3q2$h48$1@dough.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110331111613.06079a0a@natsu>
+In-Reply-To: <imv3q2$h48$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
+To: Vincent Schut <schut@sarvision.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Roman Mamedov put forth on 3/31/2011 12:16 AM:
-> On Wed, 30 Mar 2011 23:56:26 -0500
-> Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> 
->> Roman Mamedov put forth on 3/30/2011 12:50 PM:
->>> So I guess a viable and interesting solution could be an mdadm stripe over
->>> two or more DRBD mirrors, effectively providing RAID10. Although that's
->>> not quite what I am looking for (RAID5/6-levels of overhead and
->>> resilience).
+On Wed, Mar 30, 2011 at 6:22 PM, Vincent Schut <schut@sarvision.nl> wrote:
+>> If you have a bad block anywhere on the degraded drives, you're going to
+>> lose data.
 >>
->> The mdraid driver sits beneath DRBD.  What you suggest above is impossible.
-> 
-> I thought DRBD presents just a regular kernel-level block device in /dev, and
-> seeing how one can create mdraid out of just any kind of block device,
-> including those provided by AoE, iSCSI, LVM, dmcrypt or even 'loop', are you
-> really sure this matters here? 
+> Exactly. A risk I'd like to avoid, of course.
 
-Do it and report your results.
+IMO you should definitely go to RAID6 with such large drives, IMO with
+a hot spare as well. The recovery process takes *so* long, it's very
+likely that a second drive will fail during that vulnerable window and
+poof. Use the money you're saving on per-GB costs these days to buy
+yourself a bit more redundancy, otherwise what's the point of using
+RAID at all eh?
 
--- 
-Stan
+Of course if the data is getting frequently archived to well-tested
+backups, or is otherwise easily replace or of little value (e.g. video
+collection) then the extra cost might not be worth it to you. Just
+don't underestimate the geometric increase in risk by going to bigger
+and bigger size drives.
