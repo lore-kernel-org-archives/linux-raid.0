@@ -1,65 +1,127 @@
-From: Vincent Schut <schut@sarvision.nl>
-Subject: Re: looking for advice on raid drives upgrade
-Date: Thu, 31 Mar 2011 10:50:55 +0200
-Message-ID: <in1f9f$47c$1@dough.gmane.org>
-References: <imuu5b$gaf$1@dough.gmane.org> <imvadk$q8j$1@dough.gmane.org>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: Re: raid6 + caviar black + mpt2sas horrific performance
+Date: Thu, 31 Mar 2011 11:32:30 +0200
+Message-ID: <20110331093229.GA20417@apartia.fr>
+References: <20110330080823.GA9167@apartia.fr>
+ <4D933435.3010709@gmail.com>
+ <20110330152011.GA6863@apartia.fr>
+ <4D93565E.3070403@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <imvadk$q8j$1@dough.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4D93565E.3070403@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/30/2011 03:14 PM, David Brown wrote:
-> On 30/03/2011 11:46, Vincent Schut wrote:
->> Hi all,
->>
->> one of my raid's is currently a raid5 with 4 1TB drives, which I'm going
->> to upgrade by replacing all drives with 2TB drives.
->> Main question: what is recommended:
->>
->> - offline the raid, dd(rescue) each 1TB drive onto a new 2TB one,
->> replace drives, put raid online again
->>
->> or:
->> - manually replace one drive at a time, and let the raid recover and
->> thus write the data onto the new drive?
->>
->> As far as I know all current drives are healthy; regularly SMART
->> monitoring and raid checks have not ringed any bells sofar.
->>
->> I guess offlining and dd-ing would be more secure, but I might miss
->> something and would like to hear other considerations from people more
->> experienced in this area.
->>
->> Regards,
->> Vincent Schut.
->>
->
->
-> If you've got a spare drive slot, and plenty of time, there is another
-> option that lets you keep online and redundant during the process.
-> Re-shape the array to raid 6, while adding one of the new drives. Then
-> you can replace each drive, one at a time, letting the raid recover in
-> between. For the last drive, you just have to remove it then reshape
-> back to raid 5 (although ideally you could buy an extra drive and keep
-> the raid 6 layout - it's worth the cost, assuming you have the drive slot).
->
-> Once everything is swapped over, you grow the array to fit the new disks.
+On Wed, Mar 30, 2011 at 12:12:14PM -0400, Joe Landman wrote:
+>=20
+> >- T610:
+> >
+> >/dev/mapper/cmd1 on / type xfs (rw,inode64,delaylog,logbsize=3D26214=
+4)
+> >
+> >- PE2900:
+> >
+> >/dev/mapper/cmd1 on / type xfs (rw,inode64,delaylog,logbsize=3D26214=
+4)
+>=20
+> Hmmm.  You are layering an LVM atop the raid?  Your raids are
+> /dev/md1.  How is /dev/mapper/cmd1 related to /dev/md1?
 
-Good thinking. I've asked for budget for one other drive and think I'll 
-go the raid6 way.
+It's a dm-crypt (luks) layer. No lvm here.
 
-Thanks for all the advice, everyone.
+> [...]
+>=20
+> >>[root@vault t]# dd if=3D/dev/md2 of=3D/dev/null bs=3D32k count=3D32=
+000
+> >
+> >- T610:
+> >
+> >32000+0 enregistrements lus
+> >32000+0 enregistrements =E9crits
+> >1048576000 octets (1,0 GB) copi=E9s, 1,70421 s, 615 MB/s
+> >
+> >- PE2900:
+> >
+> >32000+0 records in
+> >32000+0 records out
+> >1048576000 bytes (1.0 GB) copied, 2.02322 s, 518 MB/s
+>=20
+> Raw reads from the MD device.  For completeness, you should also do
+>=20
+> 	dd if=3D/dev/mapper/cmd1 of=3D/dev/null bs=3D32k count=3D32000
 
-Vincent.
+- T610:
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 0.21472 s, 4.9 GB/s
 
+- PE2900:
+
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 0.396733 s, 2.6 GB/s
+
+> and
+>=20
+> 	dd if=3D/backup/t/big.file  of=3D/dev/null bs=3D32k count=3D32000
+>=20
+> to see if there is a sudden loss of performance at some level.
+
+- T610:
+
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 0.251609 s, 4.2 GB/s
+
+- PE2900:
+
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 1.70794 s, 614 MB/s
+
+> >>[root@vault t]# dd if=3D/dev/zero of=3D/backup/t/big.file bs=3D32k =
+count=3D32000
+> >
+> >- T610:
+> >
+> >32000+0 enregistrements lus
+> >32000+0 enregistrements =E9crits
+> >1048576000 octets (1,0 GB) copi=E9s, 0,870001 s, 1,2 GB/s
+> >
+> >- PE2900:
+> >
+> >32000+0 records in
+> >32000+0 records out
+> >1048576000 bytes (1.0 GB) copied, 9.11934 s, 115 MB/s
+
+> Ahhh ...  look at that.  Cached write is very different between the
+> two.  An order of magnitude.  You could also try a direct
+> (noncached) write, using oflag=3Ddirect at the end of the line.  This
+> could be useful, though direct IO isn't terribly fast on MD raids.
+
+- T610:
+
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 316.461 s, 3.3 MB/s
+
+- PE2900:
+
+32000+0 records in
+32000+0 records out
+1048576000 bytes (1.0 GB) copied, 262.569 s, 4.0 MB/s
+
+> If we can get the other dd's indicated, we might have a better sense
+> of which layer is causing the issue.  It might not be MD.
+
+Thanks for your help,
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
