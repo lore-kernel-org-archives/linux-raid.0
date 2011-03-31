@@ -1,23 +1,30 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: Re: raid6 + caviar black + mpt2sas horrific performance
-Date: Wed, 30 Mar 2011 15:26:44 -0400
-Message-ID: <4D9383F4.6090600@cdf.toronto.edu>
-References: <20110330080823.GA9167@apartia.fr> <4D933435.3010709@gmail.com> <20110330152011.GA6863@apartia.fr>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Network-based RAID6
+Date: Wed, 30 Mar 2011 23:56:26 -0500
+Message-ID: <4D94097A.3030909@hardwarefreak.com>
+References: <20110330131157.49fd2521@natsu>	<AANLkTimGK49-XtV9CsfL90bKpb=e9tRRos7fJ50WzNHd@mail.gmail.com>	<20110330144944.3c87185c@natsu>	<4D933188.30003@hardwarefreak.com> <20110330235052.3a803d35@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110330152011.GA6863@apartia.fr>
+In-Reply-To: <20110330235052.3a803d35@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: CoolCold <coolthecold@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In case this helps focus minds, we had horrendous performance of a 30 
-1TB disk RAID10 with LVM on top of it (1MB chunks), so we ended up doing 
-RAID1 mirrors with LVM striping on top in order to alleviate it.
+Roman Mamedov put forth on 3/30/2011 12:50 PM:
+> On Wed, 30 Mar 2011 08:35:04 -0500
+> Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> 
+>> If you want true block level replication over a network, look into DRBD.
+>>  However, it is also limited to mirroring.
+> 
+> So I guess a viable and interesting solution could be an mdadm stripe over two
+> or more DRBD mirrors, effectively providing RAID10. Although that's not quite
+> what I am looking for (RAID5/6-levels of overhead and resilience).
 
-We were not in a position to try to debug why RAID10 would not play nice 
-with LVM, since deadlines were looming...
+The mdraid driver sits beneath DRBD.  What you suggest above is impossible.
 
-Cheers,
-Iordan
+-- 
+Stan
