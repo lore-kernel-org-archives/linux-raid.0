@@ -1,68 +1,242 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: Extendible RAID10
-Date: Thu, 31 Mar 2011 19:42:30 +0200
-Message-ID: <20110331174230.GA10981@www2.open-std.org>
-References: <imv5sm$tuj$1@dough.gmane.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] RAID-6 check standalone md device
+Date: Thu, 31 Mar 2011 20:53:46 +0200
+Message-ID: <20110331185346.GA5210@lazy.lzy>
+References: <20110221204551.GA15675@lazy.lzy>
+ <20110321140244.2314b4b4@notabene.brown>
+ <20110321104007.GA15379@lazy.lzy>
+ <20110321220457.29d52f5c@notabene.brown>
+ <20110321115440.GA15635@lazy.lzy>
+ <20110322095905.737fb1d5@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <imv5sm$tuj$1@dough.gmane.org>
+In-Reply-To: <20110322095905.737fb1d5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 30, 2011 at 01:57:36PM +0200, David Brown wrote:
-> RAID10 with far layout is a very nice raid level - it gives you read 
-> speed like RAID0, write speed no slower than other RAID1 mirrors, and of 
-> course you have the mirror redundancy.
-> 
-> But it is not extendible - once you have made your layout, you are stuck 
-> with it.  There is no way (at the moment) to migrate over to larger drives.
-> 
-> As far as I can see, you can grow RAID1 sets to larger disks.  But you 
-> can't grow RAID0 sets.  As far as I can see, there is some inconsistency 
-> in the mdadm manual pages as to whether or not you can grow the size of 
-> a RAID4 array.  If it is possible to grow a RAID4, then it should be 
-> possible to use a degraded RAID4 (with a missing parity disk) as a RAID0.
-> 
-> 
-> I'm planning a new server in the near future, and I think I'll get a 
-> reasonable balance of price, performance, capacity and redundancy using 
-> a 3-drive RAID10,f2 setup (with a small boot partition on each drive, 
-> all three as a RAID1, so that grub will work properly).  On the main md 
-> device I then have an LVM physical volume, with logical partitions for 
-> different virtual machines or other data areas.  I've used such an 
-> arrangement before, and been happy with it.
-> 
-> But as an alternative solution that is expandable, I am considering 
-> using LVM to do the striping.  Ignoring the boot partition for 
-> simplicity, I would partition each disk into two equal parts - sda1, 
-> sda2, sdb1, sdb2, sdc1 and sdc2.  Then I would form a set of RAID1 
-> devices - md1 = sda1 + sdb2, md2 = sdb1 + sdc2, md3 = sdc1 + sda2.  I 
-> would make an lvm physical volume on each of these md devices, and put 
-> all those physical volumes into a single volume group.  Whenever I make 
-> a new logical volume, I specify that it should have three stripes.
-> 
-> If I then want to replace the disks with larger devices, it is possible 
-> to add a new disk, partition it into two larger partitions, add these 
-> partitions to two of the existing raids, sync, fail then remove the 
-> now-redundant drive.  After three rounds, the RAID1 sets can then be 
-> grown to match the new partition sizes.  Then the lvm physical volumes 
-> can be grown to match the new raid sizes.
-> 
-> 
-> Any opinions?  Have I missed anything here, perhaps some issues that 
-> will make this arrangement slower or less efficient than a normal 
-> RAID10,f2 with lvm on top?
+Hi Neil,
 
-I am not sure RAID10,f2 works well with LVM. I believe I have seen
-reports to the contrary.
+please find below the promised patch for the
+RAID-6 check, which allows to pass only the
+MD device, start and length.
+The three parameters are mandatory.
 
-It should be possible to extend RAID10 arrays with more disks. I do not
-think it is so difficult. But I think neil does not have it on his wish
-list.
+All necessary information is collected using
+the "sysfs_read()" call.
+Furthermore, if "length" is "0", then the check
+is performed until the end of the array.
 
-best regards
-keld
+The "Makefile" needed modifications too (as done
+previously) in order to link "sysfs.c".
+
+Some checks are done, for example if the md device
+is really a RAID-6. Nevertheless I guess it is not
+bullet proof...
+
+Next patch will include the "suspend" action.
+My idea is to do it "per stripe", please let me
+know if you've some better options.
+
+bye,
+
+pg
+
+--- cut here ---
+
+diff -uNr a/Makefile b/Makefile
+--- a/Makefile	2011-03-24 04:21:58.000000000 +0100
++++ b/Makefile	2011-03-29 21:43:33.495939342 +0200
+@@ -98,7 +98,7 @@
+ MAN5DIR = $(MANDIR)/man5
+ MAN8DIR = $(MANDIR)/man8
+ 
+-OBJS =  mdadm.o config.o policy.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o \
++OBJSX = config.o policy.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o Build.o \
+ 	Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o \
+ 	Incremental.o \
+ 	mdopen.o super0.o super1.o super-ddf.o super-intel.o bitmap.o \
+@@ -106,7 +106,7 @@
+ 	restripe.o sysfs.o sha1.o mapfile.o crc32.o sg_io.o msg.o \
+ 	platform-intel.o probe_roms.o
+ 
+-OBJSX = restripe.o
++OBJS = mdadm.o $(OBJSX)
+ 
+ SRCS =  mdadm.c config.c policy.c mdstat.c  ReadMe.c util.c Manage.c Assemble.c Build.c \
+ 	Create.c Detail.c Examine.c Grow.c Monitor.c dlink.c Kill.c Query.c \
+diff -uNr a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2011-03-24 04:21:58.000000000 +0100
++++ b/raid6check.c	2011-03-31 20:44:45.820258613 +0200
+@@ -159,7 +159,7 @@
+ 				       level, layout);
+ 		}
+ 		if(disk >= 0) {
+-			printf("Possible failed disk: %d --> %s\n", disk, name[disk]);
++			printf("Possible failed disk slot: %d --> %s\n", disk, name[disk]);
+ 		}
+ 		if(disk == -65535) {
+ 			printf("Failure detected, but disk unknown\n");
+@@ -192,71 +192,121 @@
+ 
+ int main(int argc, char *argv[])
+ {
+-	/* raid_disks chunk_size layout start length devices...
+-	 */
++	/* md_device start length */
+ 	int *fds;
+ 	char *buf;
++	char **disk_name;
+ 	unsigned long long *offsets;
+ 	int raid_disks, chunk_size, layout;
+ 	int level = 6;
+ 	unsigned long long start, length;
+ 	int i;
++	int mdfd;
++	struct mdinfo *info, *comp;
++        char *err = NULL;
++	const char prg[] = "raid6check";
++
++        if (argc < 3) {
++                fprintf(stderr, "Usage: %s md_device start length\n", prg);
++                exit(1);
++        }
++
++	mdfd = open(argv[1], O_RDONLY);
++	if(mdfd < 0) {
++		perror(argv[1]);
++		fprintf(stderr,"%s: cannot open %s\n", prg, argv[1]);
++		exit(4);
++	}
++
++	info  = sysfs_read(mdfd, -1,
++		GET_LEVEL|
++		GET_LAYOUT|
++		GET_DISKS|
++		GET_COMPONENT|
++		GET_CHUNK|
++		GET_DEVS|
++		GET_OFFSET|
++		GET_SIZE);
++
++	if(info->array.level != level) {
++		fprintf(stderr, "%s: %s not a RAID-6\n", prg, argv[1]);
++		exit(5);
++	}
++
++	printf("layout: %d\n", info->array.layout);
++	printf("disks: %d\n", info->array.raid_disks);
++	printf("component size: %llu\n", info->component_size*512);
++	printf("chunk size: %d\n", info->array.chunk_size);
++	printf("\n");
++
++	comp = info->devs;
++	for(i = 0; i < info->array.raid_disks; i++) {
++		printf("disk: %d - offset: %llu - size: %llu - name: %s - slot: %d\n",
++			i, comp->data_offset, comp->component_size*512,
++			map_dev(comp->disk.major, comp->disk.minor, 0),
++			comp->disk.raid_disk);
++
++		comp = comp->next;
++	}
++	printf("\n");
++
++	close(mdfd);
++
++	raid_disks = info->array.raid_disks;
++	chunk_size = info->array.chunk_size;
++	layout = info->array.layout;
++	start = getnum(argv[2], &err);
++	length = getnum(argv[3], &err);
+ 
+-	char *err = NULL;
+-	if (argc < 8) {
+-		fprintf(stderr, "Usage: raid6check raid_disks"
+-			" chunk_size layout start length devices...\n");
+-		exit(1);
+-	}
+-
+-	raid_disks = getnum(argv[1], &err);
+-	chunk_size = getnum(argv[2], &err);
+-	layout = getnum(argv[3], &err);
+-	start = getnum(argv[4], &err);
+-	length = getnum(argv[5], &err);
+ 	if (err) {
+-		fprintf(stderr, "test_stripe: Bad number: %s\n", err);
++		fprintf(stderr, "%s: Bad number: %s\n", prg, err);
+ 		exit(2);
+ 	}
+-	if (argc != raid_disks + 6) {
+-		fprintf(stderr, "test_stripe: wrong number of devices: want %d found %d\n",
+-			raid_disks, argc-6);
+-		exit(2);
++
++	start = (start / chunk_size) * chunk_size;
++
++	if(length == 0) {
++		length = info->component_size * 512 - start;
+ 	}
++
++	disk_name = malloc(raid_disks * sizeof(*disk_name));
+ 	fds = malloc(raid_disks * sizeof(*fds));
+ 	offsets = malloc(raid_disks * sizeof(*offsets));
+ 	memset(offsets, 0, raid_disks * sizeof(*offsets));
+ 
++	comp = info->devs;
+ 	for (i=0; i<raid_disks; i++) {
+-		char *p;
+-		p = strchr(argv[6+i], ':');
+-
+-		if(p != NULL) {
+-			*p++ = '\0';
+-			offsets[i] = atoll(p) * 512;
+-		}
+-		fds[i] = open(argv[6+i], O_RDWR);
+-		if (fds[i] < 0) {
+-			perror(argv[6+i]);
+-			fprintf(stderr,"test_stripe: cannot open %s.\n", argv[6+i]);
++		int disk_slot = comp->disk.raid_disk;
++		disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
++		offsets[disk_slot] = comp->data_offset * 512;
++		fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
++		if (fds[disk_slot] < 0) {
++			perror(disk_name[disk_slot]);
++			fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
+ 			exit(3);
+ 		}
++
++		comp = comp->next;
+ 	}
+ 
+ 	buf = malloc(raid_disks * chunk_size);
+ 
+ 	int rv = check_stripes(fds, offsets,
+ 			       raid_disks, chunk_size, level, layout,
+-			       start, length, &argv[6]);
++			       start, length, disk_name);
+ 	if (rv != 0) {
+ 		fprintf(stderr,
+-			"test_stripe: test_stripes returned %d\n", rv);
++			"%s: check_stripes returned %d\n", prg, rv);
+ 		exit(1);
+ 	}
+ 
++	free(disk_name);
+ 	free(fds);
+ 	free(offsets);
+ 	free(buf);
+ 
++	for(i=0; i<raid_disks; i++)
++		close(fds[i]);
++
+ 	exit(0);
+ }
+
+--- cut here ---
+
+-- 
+
+piergiorgio
