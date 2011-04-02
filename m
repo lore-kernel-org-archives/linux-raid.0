@@ -1,35 +1,39 @@
-From: Eugene <hdejin@yahoo.com>
-Subject: mdadm 3.2.1: Segfaulting with -p
-Date: Sat, 2 Apr 2011 05:28:43 -0700 (PDT)
-Message-ID: <747613.94276.qm@web130110.mail.mud.yahoo.com>
+From: Marcus <nexuslite@gmail.com>
+Subject: Raid 5 Array
+Date: Sat, 2 Apr 2011 11:51:58 -0700
+Message-ID: <BANLkTim8620MUckc+EVCWo9FCTs=65_p8Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-/sbin/mdadm -F --scan -1 -p /etc/mdcheck.sh causes a segfault
-with 3.2.1
+I have a raid array this is the second time an upgrade seems to have
+corrupted the array.
 
-Tested on 2.6.38.2 32-bit kernel.
+I get the following message from dmesg when trying to mount the array
+[  372.822199] RAID5 conf printout:
+[  372.822202]  --- rd:3 wd:3
+[  372.822208]  disk 0, o:1, dev:md0
+[  372.822212]  disk 1, o:1, dev:sdb1
+[  372.822216]  disk 2, o:1, dev:sdc1
+[  372.822305] md2: detected capacity change from 0 to 1000210300928
+[  372.823206]  md2: p1
+[  410.783871] EXT4-fs (md2): Couldn't mount because of unsupported
+optional features (3d1fc20)
+[  412.401534] EXT4-fs (md2): Couldn't mount because of unsupported
+optional features (3d1fc20)
 
-GDB backtrace
-Program terminated with signal 11, Segmentation fault.
-#0  0xb77dba01 in __strncmp_ia32 () from /lib/libc.so.6
-(gdb) bt
-#0  0xb77dba01 in __strncmp_ia32 () from /lib/libc.so.6
-#1  0x0806d603 in add_new_arrays (mdstat=0x80c8198, statelist=0xbf862cbc, test=0, info=0xbf862cac) at Monitor.c:691
-#2  0x0806c189 in Monitor (devlist=0x0, mailaddr=0x0, alert_cmd=0xbf864cc8 "/etc/mdcheck.sh", period=1000, daemonise=0, scan=1, oneshot=1,
-    dosyslog=0, test=0, pidfile=0x0, increments=20, share=1) at Monitor.c:228
-#3  0x0804e275 in main (argc=6, argv=0xbf8632c4) at mdadm.c:1596
+I originally had a raid0 md0 with two 160GB drives, a raid0 md1 with
+250GB and md0, a raid 5 with a 1.0TB, 500GB, and md1
 
-Monitor.c line 691 is doing strncmp on a NULL pointer
-if (strncmp(mse->metadata_version, "external:", 9) == 0 &&
-                            is_subarray(mse->metadata_version+9))
-                                st->parent_dev =
+I swapped out md1 with a new 1TB drive which worked. then i dropped
+the 500GB and combined it with the 250GB drive to make a 750GB drive
 
+The error seems to come when you reintroduce drives that were
+previously in a raid array into a new raid array. This is the second
+time I have ended up with the same problem.
 
-Regards,
-Eugene
-
+Any suggestions on how to recover from this or is my only option to
+reformat everything and start again?
