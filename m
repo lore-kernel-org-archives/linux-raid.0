@@ -1,38 +1,80 @@
-From: Phil Turmel <philip@turmel.org>
+From: Dennis Grant <reccedg@gmail.com>
 Subject: Re: Mounting array at boot - works with some kernels but not others
-Date: Sun, 03 Apr 2011 13:29:23 -0400
-Message-ID: <4D98AE73.3040204@turmel.org>
-References: <BANLkTinSwLgNze-EdRB6wu1o5QYApHbLXQ@mail.gmail.com>	<4D98AAD3.2050700@turmel.org> <BANLkTimogoGPhRCq-+aT=TobByyp4fdfAA@mail.gmail.com>
+Date: Sun, 3 Apr 2011 13:32:40 -0400
+Message-ID: <BANLkTimA2wjitNzzqssqcuvRWNVJgLoEkw@mail.gmail.com>
+References: <BANLkTinSwLgNze-EdRB6wu1o5QYApHbLXQ@mail.gmail.com>
+	<4D98AAD3.2050700@turmel.org>
+	<BANLkTimogoGPhRCq-+aT=TobByyp4fdfAA@mail.gmail.com>
+	<4D98AE73.3040204@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimogoGPhRCq-+aT=TobByyp4fdfAA@mail.gmail.com>
+In-Reply-To: <4D98AE73.3040204@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dennis Grant <reccedg@gmail.com>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/03/2011 01:26 PM, Dennis Grant wrote:
-> On Sun, Apr 3, 2011 at 1:13 PM, Phil Turmel <philip@turmel.org> wrote:
-> 
->> On-list is fine.  A couple of clarifications below:
-> 
->> Please do "mdadm --examine" on the component devices /dev/sda5 and /dev/sdb5.
-> 
-> As requested:
-> 
-> sudo mdadm --examine /dev/sda
-> mdadm: No md superblock detected on /dev/sda.
-> 
-> sudo mdadm --examine /dev/sdb
-> mdadm: No md superblock detected on /dev/sdb.
+> Retry:
 
-Retry:
+Ah, I'm an idiot:
 
-mdadm --examine /dev/sda5
-mdadm --examine /dev/sdb5
+sudo mdadm --examine /dev/sda5
+/dev/sda5:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e0cc58c7:6f841366:7a44a462:94a1d56a (local to host karzai)
+  Creation Time : Sat Apr 25 08:43:26 2009
+     Raid Level : raid1
+  Used Dev Size : 769706176 (734.05 GiB 788.18 GB)
+     Array Size : 769706176 (734.05 GiB 788.18 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
 
-------------------------^
+    Update Time : Sun Apr  3 13:31:15 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : ce2583e5 - correct
+         Events : 2844822
 
-Phil
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        5        0      active sync   /dev/sda5
+
+   0     0       8        5        0      active sync   /dev/sda5
+   1     1       8       21        1      active sync   /dev/sdb5
+
+sudo mdadm --examine /dev/sdb5
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e0cc58c7:6f841366:7a44a462:94a1d56a (local to host karzai)
+  Creation Time : Sat Apr 25 08:43:26 2009
+     Raid Level : raid1
+  Used Dev Size : 769706176 (734.05 GiB 788.18 GB)
+     Array Size : 769706176 (734.05 GiB 788.18 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+
+    Update Time : Sun Apr  3 13:31:15 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : ce2583f7 - correct
+         Events : 2844822
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       21        1      active sync   /dev/sdb5
+
+   0     0       8        5        0      active sync   /dev/sda5
+   1     1       8       21        1      active sync   /dev/sdb5
+
+DG
