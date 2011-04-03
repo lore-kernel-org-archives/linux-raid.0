@@ -1,80 +1,51 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Raid 5 Array
-Date: Sun, 3 Apr 2011 23:50:49 +0600
-Message-ID: <20110403235049.5c940295@natsu>
-References: <BANLkTim8620MUckc+EVCWo9FCTs=65_p8Q@mail.gmail.com>
-	<4D977279.30107@gmail.com>
-	<BANLkTimJfUhvkpkkAH=NLJOvLL-Jotrwqg@mail.gmail.com>
-	<4D97828C.8050806@gmail.com>
-	<6158157523854459259@unknownmsgid>
-	<20110403040113.472838d4@natsu>
-	<AANLkTikJtFb0JtS1-Je9NFXn-CRc4pi7pmYFNV7v2SEg@mail.gmail.com>
-	<BANLkTi=wWAE79KOPhZ0OUWpicgcD7QNG-g@mail.gmail.com>
-	<BANLkTimRSmSu2XOfQ8yUxn5r2Tsq53LCmQ@mail.gmail.com>
-	<BANLkTikQai-ZwuEDQDinMcYi4ics_axd7Q@mail.gmail.com>
-	<20110403174900.38de17e2@notabene.brown>
-	<BANLkTi=yTeG5-E=R6wy0GZe_iyxC5_7-Fg@mail.gmail.com>
-	<20110403210138.584c796c@notabene.brown>
-	<BANLkTik7XHyOCK8SwhPTaWxQ+K=2FRowng@mail.gmail.com>
+From: Jonathan Tripathy <jonnyt@abpni.co.uk>
+Subject: Re: Raid Checks
+Date: Sun, 03 Apr 2011 20:02:49 +0100
+Message-ID: <4D98C459.40806@abpni.co.uk>
+References: <4D983064.30808@abpni.co.uk>	<4D98346F.8090502@abpni.co.uk>	<20110403210157.2c3ac83d@notabene.brown>	<4D98544E.9000107@abpni.co.uk> <20110403211937.0a6efdee@notabene.brown> <4D985A3B.8030801@abpni.co.uk> <4D9865AC.6060607@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8GEDU=ZG5umvtHIu313/Rd6"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTik7XHyOCK8SwhPTaWxQ+K=2FRowng@mail.gmail.com>
+In-Reply-To: <4D9865AC.6060607@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marcus <nexuslite@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, Roberto Spadim <roberto@spadim.com.br>, Simon Mcnair <simonmcnair@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/8GEDU=ZG5umvtHIu313/Rd6
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+> On 03/04/2011 12:30, Jonathan Tripathy wrote:
+>>>> This is what state my server is currently in:
+>>>>
+>>>> State : clean, resyncing
+>>> With mdadm 3.2.1, this will show "checking" when it is checking,
+>>> rather than "resyncing".
+>> Interesting. So during a normal "resync", I'm guessing redundancy will
+>> be lost?
+>
+> You only need a resync when you've already lost redundancy. The only 
+> normal resync is at array creation time, when mdadm will instantly 
+> create the array with no redundancy and then proceed to generate the 
+> mirror/parity information. Any other resync is only required after 
+> something else caused a loss of redundancy e.g. a disc dying or a 
+> system crash, or perhaps a drive threw up a bad sector. The check 
+> process will attempt to discover any such problems.
+Understood. If a problem is detected, would I have to involk a re-sync 
+manually (assuming that CHECK is enabled in the script)
+>
+> As Doug Ledford noted in the Red Hat Bugzilla there are times when a 
+> md RAID 1 can harmlessly end up out of sync.
+>
+>> Also, if the "checking" process finds an error, where will I
+>> find it? /var/log/messages?
+>
+> In the email the raid-check process sends you. Any errors found are 
+> not reported in detail on RHEL/CentOS 5 - I think more recent 
+> kernel/mdadm can be asked to be more verbose about the location of 
+> errors. Requesting a repair rather than a check would get the check 
+> process to automatically resync any stripes which had bad mirrors/parity.
+How do I set up emails? Is it just the monitor deamon?
+>
+> In short, it is safe to ignore a modest mismatch_cnt on RAID 1 as long 
+> as you aren't seeing disc errors, and that is what Doug Ledford's 
+> patch to raid-check does.
+>
 
-On Sun, 3 Apr 2011 10:46:23 -0700
-Marcus <nexuslite@gmail.com> wrote:
-
-> I provided you all relevant information if you payed attention to
-> sizes and the fact that I stated that I can add a new partition to the
-> device you would have realized that I have already applied grow to the
-> raid.
->=20
-> 1465159552 raid size
-> 976767808 partition size
->=20
-> See how partition is smaller than raid by about 500GB?
-
-Then why not run "cfdisk /dev/md2" (I recommend the version from "GNU fdisk=
-"),
-notice that you have a 900GB partition there and 500 GB of free space, then
-resize the partition?
-
-> nexuslite@ubuntu:~$ resize2fs -p /dev/md2p1
-> resize2fs 1.41.11 (14-Mar-2010)
-> The filesystem is already 244191952 blocks long.  Nothing to do!
->=20
-> There is the exact message resize2fs is returning. 244191968 is the
-> current end block of the partition. parted also shows 244191968 as the
-> maximum block size for a partition. There are no related dmesg because
-> it is not an error it is just undesired results.
-
-You don't seem to understand the difference between /dev/md2 and /dev/md2p1.
-And also that resize2fs will not resize md2p1, it will only amend the
-ext* filesystem so that it takes all of md2p1.
-
---=20
-With respect,
-Roman
-
---Sig_/8GEDU=ZG5umvtHIu313/Rd6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2Ys3kACgkQTLKSvz+PZwh0lACeOCQpMWiyJrexNN9uPmdow+2f
-o7UAnju3lJpRnF3do9GwSP9FYAjFxC6j
-=eCuH
------END PGP SIGNATURE-----
-
---Sig_/8GEDU=ZG5umvtHIu313/Rd6--
