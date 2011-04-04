@@ -1,100 +1,123 @@
-From: Robin Humble <robin.humble+raid@anu.edu.au>
-Subject: rhel5 raid6 corruption
-Date: Mon, 4 Apr 2011 09:59:02 -0400
-Message-ID: <20110404135902.GA20052@grizzly.cita.utoronto.ca>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: What the heck happened to my array? (No apparent data loss).
+Date: Mon, 4 Apr 2011 13:49:24 -0300
+Message-ID: <BANLkTi=prv_vzfJr2JJt3LLhdB0GFSMy4w@mail.gmail.com>
+References: <4D9876E4.6080501@fnarfbargle.com>
+	<AANLkTi=2GNYdySbCDXmaDC8-8vF8GU9V3Uoy1qByNq58@mail.gmail.com>
+	<4D995E27.3060800@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4D995E27.3060800@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+i don=B4t know but this happened with me on a hp server, with linux
+2,6,37 i changed kernel to a older release and the problem ended,
+check with neil and others md guys what=B4s the real problem
+maybe realtime module and others changes inside kernel are the
+problem, maybe not...
+just a quick solution idea: try a older kernel
 
-we are finding non-zero mismatch_cnt's and getting data corruption when
-using RHEL5/CentOS5 kernels with md raid6.
-actually, all kernels prior to 2.6.32 seem to have the bug.
+2011/4/4 Brad Campbell <lists2009@fnarfbargle.com>:
+> On 03/04/11 23:47, Roberto Spadim wrote:
+>>
+>> what kernel version? more informations about your linux box?
+>
+> The kernel version and architecture were the first 2 lines of the E-m=
+ail you
+> top posted over.
+>
+> What would you like to know about the box? It's a 6 core Phenom-II wi=
+th 16G
+> of ram. 2 LSI SAS 9240 controllers configured with 10 x 1TB SATA Driv=
+es in a
+> RAID-6(md0) & 3 x 750GB SATA drives in a RAID-5(md2).
+>
+> The boot drives are a pair of 1TB SATA drives in multiple RAID-1's us=
+ing the
+> on-board AMD chipset controller and there is a 64GB SSD on a separate=
+ PCI-E
+> Marvell 7042m Controller.
+>
+> The array in question is :
+>
+> root@srv:~# mdadm --detail /dev/md0
+> /dev/md0:
+> =A0 =A0 =A0 =A0Version : 1.2
+> =A0Creation Time : Sat Jan =A08 11:25:17 2011
+> =A0 =A0 Raid Level : raid6
+> =A0 =A0 Array Size : 7814078464 (7452.09 GiB 8001.62 GB)
+> =A0Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+> =A0 Raid Devices : 10
+> =A0Total Devices : 9
+> =A0 =A0Persistence : Superblock is persistent
+>
+> =A0 =A0Update Time : Mon Apr =A04 13:53:59 2011
+> =A0 =A0 =A0 =A0 =A0State : clean, degraded, recovering
+> =A0Active Devices : 9
+> Working Devices : 9
+> =A0Failed Devices : 0
+> =A0Spare Devices : 0
+>
+> =A0 =A0 =A0 =A0 Layout : left-symmetric
+> =A0 =A0 Chunk Size : 512K
+>
+> =A0Reshape Status : 29% complete
+> =A0New Chunksize : 64K
+>
+> =A0 =A0 =A0 =A0 =A0 Name : srv:server =A0(local to host srv)
+> =A0 =A0 =A0 =A0 =A0 UUID : d00a11d7:fe0435af:07c8d4d6:e3b8e34e
+> =A0 =A0 =A0 =A0 Events : 429198
+>
+> =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
+> =A0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 32 =A0 =A0 =A0 =A00 =A0 =A0 =A0=
+active sync =A0 /dev/sdc
+> =A0 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0176 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
+active sync =A0 /dev/sdl
+> =A0 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0192 =A0 =A0 =A0 =A02 =A0 =A0 =A0=
+active sync =A0 /dev/sdm
+> =A0 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 80 =A0 =A0 =A0 =A03 =A0 =A0 =A0=
+active sync =A0 /dev/sdf
+> =A0 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 16 =A0 =A0 =A0 =A04 =A0 =A0 =A0=
+active sync =A0 /dev/sdb
+> =A0 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 96 =A0 =A0 =A0 =A05 =A0 =A0 =A0=
+active sync =A0 /dev/sdg
+> =A0 =A0 =A0 6 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A06 =A0 =A0=
+ =A0removed
+> =A0 =A0 =A0 7 =A0 =A0 =A0 8 =A0 =A0 =A0 64 =A0 =A0 =A0 =A07 =A0 =A0 =A0=
+active sync =A0 /dev/sde
+> =A0 =A0 =A0 8 =A0 =A0 =A0 8 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A08 =A0 =A0=
+ =A0active sync =A0 /dev/sda
+> =A0 =A0 =A0 9 =A0 =A0 =A0 8 =A0 =A0 =A0112 =A0 =A0 =A0 =A09 =A0 =A0 =A0=
+active sync =A0 /dev/sdh
+> root@srv:~#
+>
+> Subsequent investigation has shown sdd has a pending reallocation and=
+ I can
+> only assume the unidentified IO error was as a result of tripping up =
+on
+> that. It still does not explain why all IO to the array froze after t=
+he
+> drive was kicked.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-the corruption only happens after we replace a failed disk, and the
-incorrect data is always on the replacement disk. i.e. the problem is
-with rebuild. mismatch_cnt is always a multiple of 8, so I suspect
-pages are going astray.
-
-hardware and disk drivers are NOT the problem as I've reproduced it on
-2 different machines with FC disks and SATA disks which have completely
-different drivers.
-
-rebuilding the raid6 very very slowly (sync_speed_max=5000) mostly
-avoids the problem. the faster the rebuild goes or the more i/o to the
-raid whilst it's rebuilding, the more likely we are to see mismatches
-afterwards.
-
-git bisecting through drivers/md/raid5.c between 2.6.31 (has mismatches)
-and .32 (no problems) says that one of these (unbisectable) commits
-fixed the issue:
-  a9b39a741a7e3b262b9f51fefb68e17b32756999  md/raid6: asynchronous handle_stripe_dirtying6
-  5599becca4bee7badf605e41fd5bcde76d51f2a4  md/raid6: asynchronous handle_stripe_fill6
-  d82dfee0ad8f240fef1b28e2258891c07da57367  md/raid6: asynchronous handle_parity_check6
-  6c0069c0ae9659e3a91b68eaed06a5c6c37f45c8  md/raid6: asynchronous handle_stripe6
-
-any ideas?
-were any "write i/o whilst rebuilding from degraded" issues fixed by
-the above patches?
-
-I was hoping to find something specific and hopefully easily
-backportable to .18, but the above looks quite major :-/
-
-which stripe flags are associated with a degraded array that's
-rebuilding and also writing data to the disk being reconstructed?
-
-any help would be very much appreciated!
-
-we have asked our hw+sw+filesystem vendor to fix the problem, but I
-suspect this will take a very long time. for a variety of reasons (not
-the least being we run modified CentOS kernels in production and don't
-have a RedHat contract) we can't ask RedHat directly.
-
-there is much more expertise on this list than with any vendor anyway :-)
 
 
-in case anyone is interested (or is seeing similar corruption and has a
-RedHat contract) below are steps to reproduce.
-
-the i/o load that reproduces the mismatch problem is 32-way IOR
-http://sourceforge.net/projects/ior-sio/ with small random direct i/o's.
-this pattern mimics a small subset of the real i/o on our filesystem.
-eg. to local ext3 ->
-  mpirun -np 32 ./IOR -a POSIX -B -w -z -F -k -Y -e -i3 -m -t4k -b 200MB -o /mnt/blah/testFile
-
-steps to reproduce are:
-  1) create a md raid6 8+2, 128k chunk, 50GB in size
-  2) format as ext3 and mount
-  3) run the above IOR infinitely in a loop
-  4) mdadm --fail a disk, --remove, then --add it back in
-  5) killall -STOP the IOR just before the md rebuild finishes
-  6) let the md rebuild finish
-  7) run a md check
-  8) if there are mismatches then exit
-  9) if no mismatches then killall -CONT IOR
-  10) goto 4)
-
-step 5) is needed because the corruption is always on the replacement
-disk. the replacement disk goes from write-only during rebuild to
-read-write when the rebuild finishes. so stopping all i/o to the raid
-just before the rebuild finishes leaves any corruption on the
-replacement disk and does not allow subsequent i/o to overwrite it,
-propagate the corruption to other disks, or otherwise hide the
-mismatches.
-
-mismatches can usually be found using the above procedure in <100
-iterations through the loop (roughly <36 hours). I've been running 2
-machines in the above loops - one to FC disks and one to SATA disks.
-so the disks and drivers are eliminated as a source of the problem.
-the slower older FC disks usually hit the mismatches before the SATA
-disks. mismatch_cnt's are always multiples of 8.
-
-cheers,
-robin
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
-Dr Robin Humble, HPC Systems Analyst, NCI National Facility
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
