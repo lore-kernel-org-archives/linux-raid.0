@@ -1,49 +1,77 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Mounting array at boot - works with some kernels but not others
-Date: Sun, 3 Apr 2011 21:20:33 +0100
-Message-ID: <BANLkTikykzE1CYQXmK06nR8f37ozxDARKA@mail.gmail.com>
-References: <BANLkTinSwLgNze-EdRB6wu1o5QYApHbLXQ@mail.gmail.com>
-	<4D98AAD3.2050700@turmel.org>
-	<BANLkTimogoGPhRCq-+aT=TobByyp4fdfAA@mail.gmail.com>
-	<4D98B136.1010803@turmel.org>
-	<BANLkTikoDDFtD+cQ=mJJbiLzCi4jnUsqdA@mail.gmail.com>
-	<4D98D3E1.5000107@turmel.org>
-	<BANLkTimuMUWJUBmW58L7BmvhtaG4rc6jdQ@mail.gmail.com>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: What the heck happened to my array? (No apparent data loss).
+Date: Mon, 04 Apr 2011 13:59:03 +0800
+Message-ID: <4D995E27.3060800@fnarfbargle.com>
+References: <4D9876E4.6080501@fnarfbargle.com> <AANLkTi=2GNYdySbCDXmaDC8-8vF8GU9V3Uoy1qByNq58@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimuMUWJUBmW58L7BmvhtaG4rc6jdQ@mail.gmail.com>
+In-Reply-To: <AANLkTi=2GNYdySbCDXmaDC8-8vF8GU9V3Uoy1qByNq58@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dennis Grant <reccedg@gmail.com>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 3 April 2011 21:17, Dennis Grant <reccedg@gmail.com> wrote:
->> I don't think you have any array problem. =C2=A0You are suffering fr=
-om one of the asynchronous device probing problems that have cropped up=
- from time to time. =C2=A0I think they've since been solved. =C2=A0Plea=
-se try some newer kernels.
->
-> Is there a way to definitively prove if that's the case?
->
-> The 32-30 is the newest kernel pushed out by Ubuntu. :(
->
-> DG
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+On 03/04/11 23:47, Roberto Spadim wrote:
+> what kernel version? more informations about your linux box?
 
-Kernel ppa to the rescue. http://kernel.ubuntu.com/~kernel-ppa/mainline=
-/
+The kernel version and architecture were the first 2 lines of the E-mail 
+you top posted over.
 
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+What would you like to know about the box? It's a 6 core Phenom-II with 
+16G of ram. 2 LSI SAS 9240 controllers configured with 10 x 1TB SATA 
+Drives in a RAID-6(md0) & 3 x 750GB SATA drives in a RAID-5(md2).
+
+The boot drives are a pair of 1TB SATA drives in multiple RAID-1's using 
+the on-board AMD chipset controller and there is a 64GB SSD on a 
+separate PCI-E Marvell 7042m Controller.
+
+The array in question is :
+
+root@srv:~# mdadm --detail /dev/md0
+/dev/md0:
+         Version : 1.2
+   Creation Time : Sat Jan  8 11:25:17 2011
+      Raid Level : raid6
+      Array Size : 7814078464 (7452.09 GiB 8001.62 GB)
+   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+    Raid Devices : 10
+   Total Devices : 9
+     Persistence : Superblock is persistent
+
+     Update Time : Mon Apr  4 13:53:59 2011
+           State : clean, degraded, recovering
+  Active Devices : 9
+Working Devices : 9
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric
+      Chunk Size : 512K
+
+  Reshape Status : 29% complete
+   New Chunksize : 64K
+
+            Name : srv:server  (local to host srv)
+            UUID : d00a11d7:fe0435af:07c8d4d6:e3b8e34e
+          Events : 429198
+
+     Number   Major   Minor   RaidDevice State
+        0       8       32        0      active sync   /dev/sdc
+        1       8      176        1      active sync   /dev/sdl
+        2       8      192        2      active sync   /dev/sdm
+        3       8       80        3      active sync   /dev/sdf
+        4       8       16        4      active sync   /dev/sdb
+        5       8       96        5      active sync   /dev/sdg
+        6       0        0        6      removed
+        7       8       64        7      active sync   /dev/sde
+        8       8        0        8      active sync   /dev/sda
+        9       8      112        9      active sync   /dev/sdh
+root@srv:~#
+
+Subsequent investigation has shown sdd has a pending reallocation and I 
+can only assume the unidentified IO error was as a result of tripping up 
+on that. It still does not explain why all IO to the array froze after 
+the drive was kicked.
+
