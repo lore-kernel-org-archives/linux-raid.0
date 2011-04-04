@@ -1,123 +1,314 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: What the heck happened to my array? (No apparent data loss).
-Date: Mon, 4 Apr 2011 13:49:24 -0300
-Message-ID: <BANLkTi=prv_vzfJr2JJt3LLhdB0GFSMy4w@mail.gmail.com>
-References: <4D9876E4.6080501@fnarfbargle.com>
-	<AANLkTi=2GNYdySbCDXmaDC8-8vF8GU9V3Uoy1qByNq58@mail.gmail.com>
-	<4D995E27.3060800@fnarfbargle.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] RAID-6 check standalone code cleanup
+Date: Mon, 4 Apr 2011 19:52:42 +0200
+Message-ID: <20110404175242.GA3411@lazy.lzy>
+References: <20110221204551.GA15675@lazy.lzy>
+ <20110321140244.2314b4b4@notabene.brown>
+ <20110321104007.GA15379@lazy.lzy>
+ <20110321220457.29d52f5c@notabene.brown>
+ <20110321115440.GA15635@lazy.lzy>
+ <20110322095905.737fb1d5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D995E27.3060800@fnarfbargle.com>
+Content-Disposition: inline
+In-Reply-To: <20110322095905.737fb1d5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-i don=B4t know but this happened with me on a hp server, with linux
-2,6,37 i changed kernel to a older release and the problem ended,
-check with neil and others md guys what=B4s the real problem
-maybe realtime module and others changes inside kernel are the
-problem, maybe not...
-just a quick solution idea: try a older kernel
+Hi Neil,
 
-2011/4/4 Brad Campbell <lists2009@fnarfbargle.com>:
-> On 03/04/11 23:47, Roberto Spadim wrote:
->>
->> what kernel version? more informations about your linux box?
->
-> The kernel version and architecture were the first 2 lines of the E-m=
-ail you
-> top posted over.
->
-> What would you like to know about the box? It's a 6 core Phenom-II wi=
-th 16G
-> of ram. 2 LSI SAS 9240 controllers configured with 10 x 1TB SATA Driv=
-es in a
-> RAID-6(md0) & 3 x 750GB SATA drives in a RAID-5(md2).
->
-> The boot drives are a pair of 1TB SATA drives in multiple RAID-1's us=
-ing the
-> on-board AMD chipset controller and there is a 64GB SSD on a separate=
- PCI-E
-> Marvell 7042m Controller.
->
-> The array in question is :
->
-> root@srv:~# mdadm --detail /dev/md0
-> /dev/md0:
-> =A0 =A0 =A0 =A0Version : 1.2
-> =A0Creation Time : Sat Jan =A08 11:25:17 2011
-> =A0 =A0 Raid Level : raid6
-> =A0 =A0 Array Size : 7814078464 (7452.09 GiB 8001.62 GB)
-> =A0Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
-> =A0 Raid Devices : 10
-> =A0Total Devices : 9
-> =A0 =A0Persistence : Superblock is persistent
->
-> =A0 =A0Update Time : Mon Apr =A04 13:53:59 2011
-> =A0 =A0 =A0 =A0 =A0State : clean, degraded, recovering
-> =A0Active Devices : 9
-> Working Devices : 9
-> =A0Failed Devices : 0
-> =A0Spare Devices : 0
->
-> =A0 =A0 =A0 =A0 Layout : left-symmetric
-> =A0 =A0 Chunk Size : 512K
->
-> =A0Reshape Status : 29% complete
-> =A0New Chunksize : 64K
->
-> =A0 =A0 =A0 =A0 =A0 Name : srv:server =A0(local to host srv)
-> =A0 =A0 =A0 =A0 =A0 UUID : d00a11d7:fe0435af:07c8d4d6:e3b8e34e
-> =A0 =A0 =A0 =A0 Events : 429198
->
-> =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
-> =A0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 32 =A0 =A0 =A0 =A00 =A0 =A0 =A0=
-active sync =A0 /dev/sdc
-> =A0 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0176 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
-active sync =A0 /dev/sdl
-> =A0 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0192 =A0 =A0 =A0 =A02 =A0 =A0 =A0=
-active sync =A0 /dev/sdm
-> =A0 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 80 =A0 =A0 =A0 =A03 =A0 =A0 =A0=
-active sync =A0 /dev/sdf
-> =A0 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 16 =A0 =A0 =A0 =A04 =A0 =A0 =A0=
-active sync =A0 /dev/sdb
-> =A0 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 96 =A0 =A0 =A0 =A05 =A0 =A0 =A0=
-active sync =A0 /dev/sdg
-> =A0 =A0 =A0 6 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A06 =A0 =A0=
- =A0removed
-> =A0 =A0 =A0 7 =A0 =A0 =A0 8 =A0 =A0 =A0 64 =A0 =A0 =A0 =A07 =A0 =A0 =A0=
-active sync =A0 /dev/sde
-> =A0 =A0 =A0 8 =A0 =A0 =A0 8 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A08 =A0 =A0=
- =A0active sync =A0 /dev/sda
-> =A0 =A0 =A0 9 =A0 =A0 =A0 8 =A0 =A0 =A0112 =A0 =A0 =A0 =A09 =A0 =A0 =A0=
-active sync =A0 /dev/sdh
-> root@srv:~#
->
-> Subsequent investigation has shown sdd has a pending reallocation and=
- I can
-> only assume the unidentified IO error was as a result of tripping up =
-on
-> that. It still does not explain why all IO to the array froze after t=
-he
-> drive was kicked.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+please find below a second patch to "raid6check.c".
+This applies on top of the previous one.
 
+Major change is code cleanup and simplification.
+Furthermore, a better error handling and a couple
+of bug fixes.
+Last but not least, the command line parameters are
+changed from "bytes" to "stripes", which is more
+convenient, I guess.
 
+If you prefer, I can send a single patch, including
+in one shot the last one and this one.
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+
+bye,
+
+pg
+
+--- cut here ---
+
+diff -uNr a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2011-03-31 20:44:45.820258613 +0200
++++ b/raid6check.c	2011-04-04 19:44:52.539745305 +0200
+@@ -114,9 +114,20 @@
+ 	int i;
+ 	int diskP, diskQ;
+ 	int data_disks = raid_disks - 2;
++	int err = 0;
+ 
+ 	extern int tables_ready;
+ 
++	if((stripe_buf == NULL) ||
++	   (stripes == NULL) ||
++	   (blocks == NULL) ||
++	   (p == NULL) ||
++	   (q == NULL) ||
++	   (results == NULL)) {
++		err = 1;
++		goto exitCheck;
++	}
++
+ 	if (!tables_ready)
+ 		make_tables();
+ 
+@@ -126,49 +137,47 @@
+ 	while (length > 0) {
+ 		int disk;
+ 
++		printf("pos --> %llu\n", start);
++
+ 		for (i = 0 ; i < raid_disks ; i++) {
+-			lseek64(source[i], offsets[i]+start, 0);
++			lseek64(source[i], offsets[i] + start * chunk_size, 0);
+ 			read(source[i], stripes[i], chunk_size);
+ 		}
+ 		for (i = 0 ; i < data_disks ; i++) {
+-			int disk = geo_map(i, start/chunk_size, raid_disks,
+-					   level, layout);
++			int disk = geo_map(i, start, raid_disks, level, layout);
+ 			blocks[i] = stripes[disk];
+ 			printf("%d->%d\n", i, disk);
+ 		}
+ 
+ 		qsyndrome(p, q, (uint8_t**)blocks, data_disks, chunk_size);
+-		diskP = geo_map(-1, start/chunk_size, raid_disks,
+-				level, layout);
++		diskP = geo_map(-1, start, raid_disks, level, layout);
+ 		if (memcmp(p, stripes[diskP], chunk_size) != 0) {
+-			printf("P(%d) wrong at %llu\n", diskP,
+-			       start / chunk_size);
++			printf("P(%d) wrong at %llu\n", diskP, start);
+ 		}
+-		diskQ = geo_map(-2, start/chunk_size, raid_disks,
+-				level, layout);
++		diskQ = geo_map(-2, start, raid_disks, level, layout);
+ 		if (memcmp(q, stripes[diskQ], chunk_size) != 0) {
+-			printf("Q(%d) wrong at %llu\n", diskQ,
+-			       start / chunk_size);
++			printf("Q(%d) wrong at %llu\n", diskQ, start);
+ 		}
+-		raid6_collect(chunk_size, p, q,
+-			      stripes[diskP], stripes[diskQ], results);
++		raid6_collect(chunk_size, p, q, stripes[diskP], stripes[diskQ], results);
+ 		disk = raid6_stats(results, raid_disks, chunk_size);
+ 
+ 		if(disk >= -2) {
+-			disk = geo_map(disk, start/chunk_size, raid_disks,
+-				       level, layout);
++			disk = geo_map(disk, start, raid_disks, level, layout);
+ 		}
+ 		if(disk >= 0) {
+-			printf("Possible failed disk slot: %d --> %s\n", disk, name[disk]);
++			printf("Error detected at %llu: possible failed disk slot: %d --> %s\n",
++				start, disk, name[disk]);
+ 		}
+ 		if(disk == -65535) {
+-			printf("Failure detected, but disk unknown\n");
++			printf("Error detected at %llu: disk slot unknown\n", start);
+ 		}
+ 
+-		length -= chunk_size;
+-		start += chunk_size;
++		length--;
++		start++;
+ 	}
+ 
++exitCheck:
++
+ 	free(stripe_buf);
+ 	free(stripes);
+ 	free(blocks);
+@@ -176,7 +185,7 @@
+ 	free(q);
+ 	free(results);
+ 
+-	return 0;
++	return err;
+ }
+ 
+ unsigned long long getnum(char *str, char **err)
+@@ -193,29 +202,40 @@
+ int main(int argc, char *argv[])
+ {
+ 	/* md_device start length */
+-	int *fds;
+-	char *buf;
+-	char **disk_name;
+-	unsigned long long *offsets;
+-	int raid_disks, chunk_size, layout;
++	int *fds = NULL;
++	char *buf = NULL;
++	char **disk_name = NULL;
++	unsigned long long *offsets = NULL;
++	int raid_disks = 0;
++	int chunk_size = 0;
++	int layout = -1;
+ 	int level = 6;
+ 	unsigned long long start, length;
+ 	int i;
+ 	int mdfd;
+ 	struct mdinfo *info, *comp;
+         char *err = NULL;
+-	const char prg[] = "raid6check";
+-
+-        if (argc < 3) {
+-                fprintf(stderr, "Usage: %s md_device start length\n", prg);
+-                exit(1);
++	int exit_err = 0;
++	int close_flag = 0;
++	char *prg = strrchr(argv[0], '/');
++
++	if (prg == NULL)
++		prg = argv[0];
++	else
++		prg++;
++
++        if (argc < 4) {
++                fprintf(stderr, "Usage: %s md_device start_stripe length_stripes\n", prg);
++                exit_err = 1;
++		goto exitHere;
+         }
+ 
+ 	mdfd = open(argv[1], O_RDONLY);
+ 	if(mdfd < 0) {
+ 		perror(argv[1]);
+ 		fprintf(stderr,"%s: cannot open %s\n", prg, argv[1]);
+-		exit(4);
++		exit_err = 2;
++		goto exitHere;
+ 	}
+ 
+ 	info  = sysfs_read(mdfd, -1,
+@@ -230,19 +250,21 @@
+ 
+ 	if(info->array.level != level) {
+ 		fprintf(stderr, "%s: %s not a RAID-6\n", prg, argv[1]);
+-		exit(5);
++		exit_err = 3;
++		goto exitHere;
+ 	}
+ 
+ 	printf("layout: %d\n", info->array.layout);
+ 	printf("disks: %d\n", info->array.raid_disks);
+-	printf("component size: %llu\n", info->component_size*512);
++	printf("component size: %llu\n", info->component_size * 512);
++	printf("total stripes: %llu\n", (info->component_size * 512) / info->array.chunk_size);
+ 	printf("chunk size: %d\n", info->array.chunk_size);
+ 	printf("\n");
+ 
+ 	comp = info->devs;
+ 	for(i = 0; i < info->array.raid_disks; i++) {
+ 		printf("disk: %d - offset: %llu - size: %llu - name: %s - slot: %d\n",
+-			i, comp->data_offset, comp->component_size*512,
++			i, comp->data_offset * 512, comp->component_size * 512,
+ 			map_dev(comp->disk.major, comp->disk.minor, 0),
+ 			comp->disk.raid_disk);
+ 
+@@ -260,19 +282,39 @@
+ 
+ 	if (err) {
+ 		fprintf(stderr, "%s: Bad number: %s\n", prg, err);
+-		exit(2);
++		exit_err = 4;
++		goto exitHere;
+ 	}
+ 
+-	start = (start / chunk_size) * chunk_size;
++	if(start > ((info->component_size * 512) / chunk_size)) {
++		start = (info->component_size * 512) / chunk_size;
++		fprintf(stderr, "%s: start beyond disks size\n", prg);
++	}
+ 
+-	if(length == 0) {
+-		length = info->component_size * 512 - start;
++	if((length == 0) ||
++	   ((length + start) > ((info->component_size * 512) / chunk_size))) {
++		length = (info->component_size * 512) / chunk_size - start;
+ 	}
+ 
+ 	disk_name = malloc(raid_disks * sizeof(*disk_name));
+ 	fds = malloc(raid_disks * sizeof(*fds));
+ 	offsets = malloc(raid_disks * sizeof(*offsets));
++	buf = malloc(raid_disks * chunk_size);
++
++	if((disk_name == NULL) ||
++	   (fds == NULL) ||
++	   (offsets == NULL) ||
++	   (buf == NULL)) {
++		fprintf(stderr, "%s: allocation fail\n", prg);
++		exit_err = 5;
++		goto exitHere;
++	} 
++
+ 	memset(offsets, 0, raid_disks * sizeof(*offsets));
++	for(i=0; i<raid_disks; i++) {	
++		fds[i] = -1;
++	}
++	close_flag = 1;
+ 
+ 	comp = info->devs;
+ 	for (i=0; i<raid_disks; i++) {
+@@ -283,21 +325,29 @@
+ 		if (fds[disk_slot] < 0) {
+ 			perror(disk_name[disk_slot]);
+ 			fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
+-			exit(3);
++			exit_err = 6;
++			goto exitHere;
+ 		}
+ 
+ 		comp = comp->next;
+ 	}
+ 
+-	buf = malloc(raid_disks * chunk_size);
+-
+ 	int rv = check_stripes(fds, offsets,
+ 			       raid_disks, chunk_size, level, layout,
+ 			       start, length, disk_name);
+ 	if (rv != 0) {
+ 		fprintf(stderr,
+ 			"%s: check_stripes returned %d\n", prg, rv);
+-		exit(1);
++		exit_err = 7;
++		goto exitHere;
++	}
++
++exitHere:
++
++	if(close_flag == 1) {
++		for(i=0; i<raid_disks; i++) {
++			close(fds[i]);
++		}
+ 	}
+ 
+ 	free(disk_name);
+@@ -305,8 +355,5 @@
+ 	free(offsets);
+ 	free(buf);
+ 
+-	for(i=0; i<raid_disks; i++)
+-		close(fds[i]);
+-
+-	exit(0);
++	exit(exit_err);
+ }
+
+--- cut here ---
+
+-- 
+
+piergiorgio
