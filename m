@@ -1,54 +1,62 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: After discarding array give chance monitor to
- remove it
-Date: Tue, 5 Apr 2011 09:32:04 +1000
-Message-ID: <20110405093204.75efadb7@notabene.brown>
-References: <20110328115648.13950.11803.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 1/2] Create: check for UnSet when looking at chunk
+Date: Tue, 5 Apr 2011 09:32:29 +1000
+Message-ID: <20110405093229.193c1585@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A8EB878@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110328115648.13950.11803.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246F012A8EB878@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 28 Mar 2011 13:56:49 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Wed, 30 Mar 2011 12:28:11 +0100 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> When raid0 expansion occurs, takeover operation is used.
-> After backward takeover monitor remains in memory.
+> >From ceb5a3431f27b5030d964567dedb0f983862b347 Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Wed, 30 Mar 2011 13:21:21 +0200
+> Subject: [PATCH 1/2] Create: check for UnSet when looking at chunk
+> Cc: linux-raid@vger.kernel.org, Williams, Dan J <dan.j.williams@intel.com>, Ciechanowski, Ed <ed.ciechanowski@intel.com>
 > 
-> This happens due to remaining just removed active array in mdmon structures.
-> If there is no other monitored arrays, mdmon has to finish his work.
+> A default chunk size of 0 gets modified to UnSet, so any location that
+> checks for !chunk really needs to check for !(chunk || chunk == UnSet).
 > 
-> Problem was introduced in patch (2011.03.22):
->     mdmon: Stop keeping track of RAID0 (and LINEAR) arrays.
-> Prior to this patch mdmon kicking occurs via replace_array() where
-> wakeup_monitor() was called.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 
-Applied - thanks.
+This and the next one both applied - thanks.
 
 NeilBrown
 
 
 > ---
+>  Create.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
->  managemon.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/managemon.c b/managemon.c
-> index 67c5951..6662f67 100644
-> --- a/managemon.c
-> +++ b/managemon.c
-> @@ -462,6 +462,7 @@ static void manage_member(struct mdstat_ent *mdstat,
->  		int level = map_name(pers, mdstat->level);
->  		if (level == 0 || level == LEVEL_LINEAR) {
->  			a->container = NULL;
-> +			wakeup_monitor();
->  			return;
+> diff --git a/Create.c b/Create.c
+> index 9f34425..5709baf 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -266,7 +266,7 @@ int Create(struct supertype *st, char *mddev,
+>  					      &chunk, size*2, NULL, &newsize, verbose>=0))
+>  		return 1;
+>  
+> -	if (chunk) {
+> +	if (chunk && chunk != UnSet) {
+>  		newsize &= ~(unsigned long long)(chunk*2 - 1);
+>  		size &= ~(unsigned long long)(chunk - 1);
+>  	}
+> @@ -353,7 +353,7 @@ int Create(struct supertype *st, char *mddev,
 >  		}
->  		else if (a->info.array.level != level && level > 0) {
+>  
+>  		freesize /= 2; /* convert to K */
+> -		if (chunk) {
+> +		if (chunk && chunk != UnSet) {
+>  			/* round to chunk size */
+>  			freesize = freesize & ~(chunk-1);
+>  		}
 
