@@ -1,32 +1,51 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] imsm: Warn user about reboot risk
-Date: Wed, 6 Apr 2011 12:41:42 +1000
-Message-ID: <20110406124142.6bb26379@notabene.brown>
-References: <20110405134609.4843.95211.stgit@gklab-128-013.igk.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Wed, 6 Apr 2011 03:16:00 -0700
+Message-ID: <20110406101600.GB4142@mtj.dyndns.org>
+References: <201103251725.21180.thomas.jarosch@intra2net.com>
+ <4D90E580.7020406@intra2net.com>
+ <20110329082503.GI6736@htj.dyndns.org>
+ <201103291153.06495.thomas.jarosch@intra2net.com>
+ <20110329100744.GK6736@htj.dyndns.org>
+ <20110405134629.664b946c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110405134609.4843.95211.stgit@gklab-128-013.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20110405134629.664b946c@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: Thomas Jarosch <thomas.jarosch@intra2net.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 05 Apr 2011 15:46:09 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
+Hey, Neil.
 
-> Current check-pointing implementation doesn't allow for interrupting reshape of boot arrays
-> due to checkpoint restore has to be done before system start.
-> There is problem with passing backup file name to array automatically mounted during boot time,
-> especially when scan mode is used.
+On Tue, Apr 05, 2011 at 01:46:29PM +1000, NeilBrown wrote:
+> After mddev_find returns the new mddev, md_open calls flush_workqueue
+> and as the work item to complete the delete has definitely been queued, it
+> should wait for that work item to complete.
 > 
-> Until IMSM check-pointing implementation will be introduced, warning about reboot risk
-> should be placed in mdadm.
+> So the next time around the retry loop in __blkdev_get the old gendisk will
+> not be found....
 > 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> Where is my logic wrong??
+>
+> To put it another way matching your description Tejun, the put path has a
+> chance to run firstly while mddev_find is waiting for the spinlock, and then
+> while flush_workqueue is waiting for the rest of the put path to complete.
 
-These three have been applied (in the master branch).
+I don't think the logic is wrong per-se.  It's more likely that the
+implemented code doesn't really follow the model described by the
+logic.
 
-Thanks,
-NeilBrown
+Probably the best way would be reproducing the problem and throwing in
+some diagnostic code to tell the sequence of events?  If work is being
+queued first but it still ends up busy looping, that would be a bug in
+flush_workqueue(), but I think it's more likely that the restart
+condition somehow triggers in an unexpected way without the work item
+queued as expected.
 
+Thanks.
+
+-- 
+tejun
