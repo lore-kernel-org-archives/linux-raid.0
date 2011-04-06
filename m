@@ -1,116 +1,32 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] RAID-6 check standalone md device
-Date: Tue, 5 Apr 2011 21:56:35 +0200
-Message-ID: <20110405195635.GA2896@lazy.lzy>
-References: <20110221204551.GA15675@lazy.lzy>
- <20110321140244.2314b4b4@notabene.brown>
- <20110321104007.GA15379@lazy.lzy>
- <20110321220457.29d52f5c@notabene.brown>
- <20110321115440.GA15635@lazy.lzy>
- <20110322095905.737fb1d5@notabene.brown>
- <20110331185346.GA5210@lazy.lzy>
- <20110405090113.5454b403@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/3] imsm: Warn user about reboot risk
+Date: Wed, 6 Apr 2011 12:41:42 +1000
+Message-ID: <20110406124142.6bb26379@notabene.brown>
+References: <20110405134609.4843.95211.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110405090113.5454b403@notabene.brown>
+In-Reply-To: <20110405134609.4843.95211.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Tue, 05 Apr 2011 15:46:09 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-On Tue, Apr 05, 2011 at 09:01:13AM +1000, NeilBrown wrote:
-> On Thu, 31 Mar 2011 20:53:46 +0200 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
+> Current check-pointing implementation doesn't allow for interrupting reshape of boot arrays
+> due to checkpoint restore has to be done before system start.
+> There is problem with passing backup file name to array automatically mounted during boot time,
+> especially when scan mode is used.
 > 
-> > Hi Neil,
-> > 
-> > please find below the promised patch for the
-> > RAID-6 check, which allows to pass only the
-> > MD device, start and length.
-> > The three parameters are mandatory.
-> > 
-> > All necessary information is collected using
-> > the "sysfs_read()" call.
-> > Furthermore, if "length" is "0", then the check
-> > is performed until the end of the array.
-> > 
-> > The "Makefile" needed modifications too (as done
-> > previously) in order to link "sysfs.c".
-> > 
-> > Some checks are done, for example if the md device
-> > is really a RAID-6. Nevertheless I guess it is not
-> > bullet proof...
-> > 
-> > Next patch will include the "suspend" action.
-> > My idea is to do it "per stripe", please let me
-> > know if you've some better options.
+> Until IMSM check-pointing implementation will be introduced, warning about reboot risk
+> should be placed in mdadm.
 > 
-> Hi,
->  I've applied this patch after some minor clean ups (indenting mostly).
->  I rearranged some code first so that we don't need to link all all of the
->  rest of mdadm - just a few 'library-style' files.
-> 
->  I'm not sure about the loop:
-> >  
-> > +	comp = info->devs;
-> >  	for (i=0; i<raid_disks; i++) {
-> > -		char *p;
-> > -		p = strchr(argv[6+i], ':');
-> > -
-> > -		if(p != NULL) {
-> > -			*p++ = '\0';
-> > -			offsets[i] = atoll(p) * 512;
-> > -		}
-> > -		fds[i] = open(argv[6+i], O_RDWR);
-> > -		if (fds[i] < 0) {
-> > -			perror(argv[6+i]);
-> > -			fprintf(stderr,"test_stripe: cannot open %s.\n", argv[6+i]);
-> > +		int disk_slot = comp->disk.raid_disk;
-> > +		disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
-> > +		offsets[disk_slot] = comp->data_offset * 512;
-> > +		fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
-> > +		if (fds[disk_slot] < 0) {
-> > +			perror(disk_name[disk_slot]);
-> > +			fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
-> >  			exit(3);
-> >  		}
-> > +
-> > +		comp = comp->next;
-> >  	}
-> 
-> 
-> The 'info->devs' list could include spare devices mixed in with the other
-> devices.  So the 'for' loop should go to the end of list list, and we should
-> ignore devices which are not active..
-> So you should probably fix this.
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-thanks for the information, that's actually very
-important.
+These three have been applied (in the master branch).
 
-I'll try to provide a fix patch in then next days.
+Thanks,
+NeilBrown
 
-> You will be able to find the applied patch in my 'master' branch shortly.
-
-Good!
-
-Thanks again,
-
-bye,
-
-pg
- 
-> Thanks,
-> NeilBrown
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-
-piergiorgio
