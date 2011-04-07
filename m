@@ -1,118 +1,171 @@
-From: Robin Humble <robin.humble+raid@anu.edu.au>
-Subject: Re: rhel5 raid6 corruption
-Date: Thu, 7 Apr 2011 03:45:05 -0400
-Message-ID: <20110407074505.GA20218@grizzly.cita.utoronto.ca>
-References: <20110404135902.GA20052@grizzly.cita.utoronto.ca>
- <20110405150022.5a31bca1@notabene.brown>
+From: sanktnelson 1 <sanktnelson@googlemail.com>
+Subject: help please - recovering from failed RAID5 rebuild
+Date: Thu, 7 Apr 2011 22:00:58 +0200
+Message-ID: <BANLkTinAmEgsbOx4k5yxCdHmM0GBWbXdBA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110405150022.5a31bca1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 05, 2011 at 03:00:22PM +1000, NeilBrown wrote:
->On Mon, 4 Apr 2011 09:59:02 -0400 Robin Humble <robin.humble+raid@anu.edu.au>
->> we are finding non-zero mismatch_cnt's and getting data corruption when
->> using RHEL5/CentOS5 kernels with md raid6.
->> actually, all kernels prior to 2.6.32 seem to have the bug.
->> 
->> the corruption only happens after we replace a failed disk, and the
->> incorrect data is always on the replacement disk. i.e. the problem is
->> with rebuild. mismatch_cnt is always a multiple of 8, so I suspect
->> pages are going astray.
-...
->> git bisecting through drivers/md/raid5.c between 2.6.31 (has mismatches)
->> and .32 (no problems) says that one of these (unbisectable) commits
->> fixed the issue:
->>   a9b39a741a7e3b262b9f51fefb68e17b32756999  md/raid6: asynchronous handle_stripe_dirtying6
->>   5599becca4bee7badf605e41fd5bcde76d51f2a4  md/raid6: asynchronous handle_stripe_fill6
->>   d82dfee0ad8f240fef1b28e2258891c07da57367  md/raid6: asynchronous handle_parity_check6
->>   6c0069c0ae9659e3a91b68eaed06a5c6c37f45c8  md/raid6: asynchronous handle_stripe6
->> 
->> any ideas?
->> were any "write i/o whilst rebuilding from degraded" issues fixed by
->> the above patches?
->
->It looks like they were, but I didn't notice at the time.
->
->If a write to a block in a stripe happens at exactly the same time as the
->recovery of a different block in that stripe - and both operations are
->combined into a single "fix up the stripe parity and write it all out"
->operation, then the block that needs to be recovered is computed but not
->written out.  oops.
->
->The following patch should fix it.  Please test and report your results.
->If they prove the fix I will submit it for the various -stable kernels.
->It looks like this bug has "always" been present :-(
+Hi all,
+I need some advice on recovering from a catastrophic RAID5 failure
+(and a possible f***-up on my part in trying to recover). I didn't
+find this covered in any of the howtos out there, so here is my
+problem:
+I was trying to rebuild my RAID5 (5 drives) after I had replaced one
+failed drive (sdc) with a fresh one. During the rebuild another drive
+(sdd) failed. so I was left with the sdc as spare (S) and sdd failed
+(F).
+first question: what should I have done at this point? I'm fairly
+certain that the error that failed sdd was a fluke, loose cable or
+something, so I wanted mdadm to just assume it was clean and retry the
+rebuild.
 
-thanks for the very quick reply!
+what I actually did was reboot the machine in the hope it would just
+restart the array in the previous degraded state, which of course it
+did not. Instead all drives except the failed sdd were reported as
+spare(S) in /proc/mdstat.
 
-however, I don't think the patch has solved the problem :-/
-I applied it to 2.6.31.14 and have got several mismatches since on both
-FC and SATA machines.
+so I tried
 
-BTW, these tests are actually fairly quick. often <10 kickout/rebuild
-loops. so just a few hours.
+root@enterprise:~# mdadm --run /dev/md0
+mdadm: failed to run array /dev/md0: Input/output error
 
-in the above when you say "block in a stripe", does that mean the whole
-128k on that disk (we have --chunk=128) might not have been written, or
-one 512byte block (or a page)?
-we don't see mismatch counts of 256 - usually 8 or 16, but I can see
-why our current testing might hide such a count. <later> ok - now I
-blank (dd zeros over) the replacement disk before putting it back into
-the raid and am seeing perhaps slightly larger typical mismatch counts
-of 16 and 32, but so far not 128k of mismatches.
+syslog showed at this point:
 
-another (potential) data point is that often position of the mismatches
-on the md device doesn't really line up with where I think the data is
-being written to. the mismatch is often near the start of the md device,
-but sometimes 50% of the way in, and sometimes 95%.
-the filesystem is <20% full, although the wildcard is that I really
-have no idea how the (sparse) files doing the 4k direct i/o are
-allocated across the filsystem, or where fs metadata and journals might
-be updating blocks either.
-seems odd though...
+Apr =A07 20:37:49 localhost kernel: [ =A0893.981851] md: kicking non-fr=
+esh
+sdd1 from array!
+Apr =A07 20:37:49 localhost kernel: [ =A0893.981864] md: unbind<sdd1>
+Apr =A07 20:37:49 localhost kernel: [ =A0893.992526] md: export_rdev(sd=
+d1)
+Apr =A07 20:37:49 localhost kernel: [ =A0893.995844] raid5: device sdb1
+operational as raid disk 3
+Apr =A07 20:37:49 localhost kernel: [ =A0893.995848] raid5: device sdf1
+operational as raid disk 4
+Apr =A07 20:37:49 localhost kernel: [ =A0893.995852] raid5: device sde1
+operational as raid disk 2
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996353] raid5: allocated 5=
+265kB for md0
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996478] 3: w=3D1 pa=3D0 pr=
+=3D5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996482] 4: w=3D2 pa=3D0 pr=
+=3D5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996485] 2: w=3D3 pa=3D0 pr=
+=3D5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996488] raid5: not enough
+operational devices for md0 (2/5 failed)
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996514] RAID5 conf printou=
+t:
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996517] =A0--- rd:5 wd:3
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996520] =A0disk 2, o:1, de=
+v:sde1
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996522] =A0disk 3, o:1, de=
+v:sdb1
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996525] =A0disk 4, o:1, de=
+v:sdf1
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996898] raid5: failed to r=
+un
+raid set md0
+Apr =A07 20:37:49 localhost kernel: [ =A0893.996901] md: pers->run() fa=
+iled ...
 
->Thanks for the report .... and for all that testing!  A git-bisect where each
->run can take 36 hours is a really test of commitment!!!
+so I figured I'd re-add sdd:
 
-:-) no worries. thanks for md and for the help!
-we've been trying to figure this out for months so a bit of testing
-isn't a problem. we first eliminated a bunch of other things
-(filesystem, drivers, firmware, ...) as possibilities. for a long time
-we didn't really believe the problem could be with md as it's so well
-tested around the world and has been very solid for us except for these
-rebuilds.
+root@enterprise:~# mdadm --re-add /dev/md0 /dev/sdd1
+mdadm: re-added /dev/sdd1
+root@enterprise:~# mdadm --run /dev/md0
+mdadm: started /dev/md0
 
-cheers,
-robin
+Apr =A07 20:44:16 localhost kernel: [ 1281.139654] md: bind<sdd1>
+Apr =A07 20:44:16 localhost mdadm[1523]: SpareActive event detected on
+md device /dev/md0, component device /dev/sdd1
+Apr =A07 20:44:32 localhost kernel: [ 1297.147581] raid5: device sdd1
+operational as raid disk 0
+Apr =A07 20:44:32 localhost kernel: [ 1297.147585] raid5: device sdb1
+operational as raid disk 3
+Apr =A07 20:44:32 localhost kernel: [ 1297.147588] raid5: device sdf1
+operational as raid disk 4
+Apr =A07 20:44:32 localhost kernel: [ 1297.147591] raid5: device sde1
+operational as raid disk 2
+Apr =A07 20:44:32 localhost kernel: [ 1297.148102] raid5: allocated 526=
+5kB for md0
+Apr =A07 20:44:32 localhost kernel: [ 1297.148704] 0: w=3D1 pa=3D0 pr=3D=
+5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:44:32 localhost kernel: [ 1297.148708] 3: w=3D2 pa=3D0 pr=3D=
+5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:44:32 localhost kernel: [ 1297.148712] 4: w=3D3 pa=3D0 pr=3D=
+5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:44:32 localhost kernel: [ 1297.148715] 2: w=3D4 pa=3D0 pr=3D=
+5 m=3D1
+a=3D2 r=3D5 op1=3D0 op2=3D0
+Apr =A07 20:44:32 localhost kernel: [ 1297.148718] raid5: raid level 5
+set md0 active with 4 out of 5 devices, algorithm 2
+Apr =A07 20:44:32 localhost kernel: [ 1297.148722] RAID5 conf printout:
+Apr =A07 20:44:32 localhost kernel: [ 1297.148725] =A0--- rd:5 wd:4
+Apr =A07 20:44:32 localhost kernel: [ 1297.148728] =A0disk 0, o:1, dev:=
+sdd1
+Apr =A07 20:44:32 localhost kernel: [ 1297.148731] =A0disk 2, o:1, dev:=
+sde1
+Apr =A07 20:44:32 localhost kernel: [ 1297.148734] =A0disk 3, o:1, dev:=
+sdb1
+Apr =A07 20:44:32 localhost kernel: [ 1297.148737] =A0disk 4, o:1, dev:=
+sdf1
+Apr =A07 20:44:32 localhost kernel: [ 1297.148779] md0: detected
+capacity change from 0 to 6001196531712
+Apr =A07 20:44:32 localhost kernel: [ 1297.149047] =A0md0:RAID5 conf pr=
+intout:
+Apr =A07 20:44:32 localhost kernel: [ 1297.149559] =A0--- rd:5 wd:4
+Apr =A07 20:44:32 localhost kernel: [ 1297.149562] =A0disk 0, o:1, dev:=
+sdd1
+Apr =A07 20:44:32 localhost kernel: [ 1297.149565] =A0disk 1, o:1, dev:=
+sdc1
+Apr =A07 20:44:32 localhost kernel: [ 1297.149568] =A0disk 2, o:1, dev:=
+sde1
+Apr =A07 20:44:32 localhost kernel: [ 1297.149570] =A0disk 3, o:1, dev:=
+sdb1
+Apr =A07 20:44:32 localhost kernel: [ 1297.149573] =A0disk 4, o:1, dev:=
+sdf1
+Apr =A07 20:44:32 localhost kernel: [ 1297.149846] md: recovery of RAID=
+ array md0
+Apr =A07 20:44:32 localhost kernel: [ 1297.149849] md: minimum
+_guaranteed_ =A0speed: 1000 KB/sec/disk.
+Apr =A07 20:44:32 localhost kernel: [ 1297.149852] md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+recovery.
+Apr =A07 20:44:32 localhost kernel: [ 1297.149858] md: using 128k
+window, over a total of 1465135872 blocks.
+Apr =A07 20:44:32 localhost kernel: [ 1297.188272] =A0unknown partition=
+ table
+Apr =A07 20:44:32 localhost mdadm[1523]: RebuildStarted event detected
+on md device /dev/md0
+
+I figured this was definitely wrong, since I still couldn't mount
+/dev/md0, so I manually failed sdc and sdd to stop any further
+destruction on my part and to go seek expert help, so here I am. Is my
+data still there or have the first few hundred MB been zeroed to
+initialize a fresh array? how do I force mdadm to assume sdd is fresh
+and give me access to the array without any writes happening to it?
+Sorry to come running to the highest authority on linuxraid here, but
+all the howtos out there are pretty thin when it comes to anything
+more complicated than creating and array and recovering from one
+failed drive.
+
+Any advice (even if it is just for doing the right thing the next
+time), is greatly appreciated.
+
+-Felix
 --
-Dr Robin Humble, HPC Systems Analyst, NCI National Facility
-
-
->NeilBrown
->
->diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
->index b8a2c5d..f8cd6ef 100644
->--- a/drivers/md/raid5.c
->+++ b/drivers/md/raid5.c
->@@ -2436,10 +2436,16 @@ static void handle_stripe_dirtying6(raid5_conf_t *conf,
-> 				BUG();
-> 			case 1:
-> 				compute_block_1(sh, r6s->failed_num[0], 0);
->+				set_bit(R5_LOCKED,
->+					&sh->dev[r6s->failed_num[0]].flags);
-> 				break;
-> 			case 2:
-> 				compute_block_2(sh, r6s->failed_num[0],
-> 						r6s->failed_num[1]);
->+				set_bit(R5_LOCKED,
->+					&sh->dev[r6s->failed_num[0]].flags);
->+				set_bit(R5_LOCKED,
->+					&sh->dev[r6s->failed_num[1]].flags);
-> 				break;
-> 			default: /* This request should have been failed? */
-> 				BUG();
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
