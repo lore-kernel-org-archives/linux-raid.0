@@ -1,57 +1,73 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: RAID6 simply does not start as /dev/md8
-Date: Fri, 8 Apr 2011 15:17:51 +0600
-Message-ID: <20110408151751.5e2b61f1@natsu>
-References: <4D9EC097.7010600@web.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
+ unresponsive
+Date: Fri, 8 Apr 2011 19:34:26 +1000
+Message-ID: <20110408193426.028b0f00@notabene.brown>
+References: <821414.38209.qm@web65101.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lLySOTH3YsnnHK+uuBiFDF/"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D9EC097.7010600@web.de>
+In-Reply-To: <821414.38209.qm@web65101.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yann Ormanns <yann-ormanns@web.de>
+To: Gavin Flower <gavinflower@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lLySOTH3YsnnHK+uuBiFDF/
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, 7 Apr 2011 18:32:04 -0700 (PDT) Gavin Flower <gavinflower@yahoo.com>
+wrote:
 
-On Fri, 08 Apr 2011 10:00:23 +0200
-Yann Ormanns <yann-ormanns@web.de> wrote:
-=20
-> So I put the following lines into /etc/mdadm.conf (I had forgot this
-> before):
-> "DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
-> ARRAY /dev/md8
-> devices=3D/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1"
+> Hi Neil,
+> 
+> My original email may have been eaten: as it did not appear on the list, nor did I get an error message back.  So perhaps there was a problem with the attached files.
+> 
+> I will resend the attachments one at a time in separate emails.
+> 
+> 
+> Cheers,
+> Gavin
+> 
+> [begin original]
+> Hi Neil,
+> 
+> Your help (or anybody else's) would be greatly appreciated, yet again
 
-After you do various changes to your mdadm.conf, don't forget to update your
-initrd. AFAIK mdadm.conf is copied into the compressed initrd image to be u=
-sed
-early at boot, and this copy has to be kept in sync with your version in /e=
-tc.
+Hi Gavin,
+ it isn't clear to me what help you want.
 
-Typically you can update initrd for all installed kernels by running someth=
-ing
-like:
+Obviously there is some sort of hardware issue - possible a drive, possibly a
+bus problem - I really don't know.
 
-  update-initramfs -k all -u
+Apart from that things look normal.
 
---=20
-With respect,
-Roman
+What exactly did you want explained?
 
---Sig_/lLySOTH3YsnnHK+uuBiFDF/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+NeilBrown
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEARECAAYFAk2e0r8ACgkQTLKSvz+PZwjuGACfV2gYQx/mjsmt2GNmcL6ts3hp
-XnsAoJWGvzskypuRH0JMgAIlBaFgI6h4
-=CQEo
------END PGP SIGNATURE-----
+> 
+> This morning, I noticed my system was extremely unresponsive, and that there were clicking sounds coming from one of my 5 hard drives.  Also that there was excessive disk I/O even for trivial things like bring up a directory window, and lots of ata3 errors being reported to the system log.  These symptoms were mostly during a raid check process.
+> 
+> Somewhere along the way, I seemed to have lost my swap partition!
+> 
+> So I did some extensive investigations, which took most of the day.  My notes were created in OpenDocument format using LibreOffice, but I have converted them to txt format for the include - but I can supply the ,odt file if requested.
+> 
+> I Have included 2 files:
+>                my notes: raid-notes-20110407a.txt
+>    selected log entries: messages-gcf-20110407-ATA
+> 
+> If there are some additional diagnostics that might prove useful, please let me know.
+> 
+> 
+> Cheers,
+> Gavin
+> [end original]
+> --
+> All Adults share the Responsibility
+> to help Raise Today's Children,
+> for they are Tomorrow's Society!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---Sig_/lLySOTH3YsnnHK+uuBiFDF/--
