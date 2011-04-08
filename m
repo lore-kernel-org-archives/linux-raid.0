@@ -1,46 +1,72 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Subject: Re: RAID6 simply does not start as /dev/md8
-Date: Fri, 08 Apr 2011 16:23:22 +0200
-Message-ID: <4D9F1A5A.1060600@grumpydevil.homelinux.org>
-References: <4D9EC097.7010600@web.de> <20110408151751.5e2b61f1@natsu> <4D9F1962.3050806@web.de>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: iostat with raid device...
+Date: Fri, 8 Apr 2011 19:05:01 -0300
+Message-ID: <BANLkTim6ANxfFoiMfHe1JOyTrtCQ-02gsw@mail.gmail.com>
+References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D9F1962.3050806@web.de>
+In-Reply-To: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yann Ormanns <yann-ormanns@web.de>
-Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid@vger.kernel.org
+To: Linux Raid Study <linuxraid.study@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/08/2011 04:19 PM, Yann Ormanns wrote:
-> Subject: Re: RAID6 simply does not start as /dev/md8
-> From: Roman Mamedov<rm@romanrm.ru>
-> To: Yann Ormanns<yann-ormanns@web.de>
-> Date: 2011-04-08 16:15 (+0600)
+another question... why md have more tps? disk elevators? sector size?
+
+2011/4/8 Linux Raid Study <linuxraid.study@gmail.com>:
+> Hello,
 >
->    
->> After you do various changes to your mdadm.conf, don't forget to update your
->> initrd. AFAIK mdadm.conf is copied into the compressed initrd image to be used
->> early at boot, and this copy has to be kept in sync with your version in /etc.
->>
->> Typically you can update initrd for all installed kernels by running something
->> like:
->>
->>    update-initramfs -k all -u
->>
->>      
-> Thank you for your quick response. I do not use an initrd - during the
-> boot process the kernel reconnects and assembles md1,md2,md3,md5,md6 and
-> md7 (these are all RAID1) without any problems. Only the assembly of the
-> RAID6 does not work at all.
+> I have a raid device /dev/md0 based on 4 devices sd[abcd].
 >
->    
-Do you have perhaps old raid metadata on the disks? Are you certain you 
-have no raid metadata on the whole disks?
-you can check with mdadm --Examine /dev/sdc
+> When I write 4GB to /dev/md0, I see following output from iostat...
+>
+> Ques:
+> Shouldn't I see write/sec to be same for all four drives? Why does
+> /dev/sdd always have higher value for =A0BlksWrtn/sec?
+> My strip size is 1MB.
+>
+> thanks for any pointers...
+>
+> avg-cpu: =A0%user =A0 %nice %system %iowait =A0%steal =A0 %idle
+> =A0 =A0 =A0 =A0 =A0 0.02 =A0 =A00.00 =A0 =A00.34 =A0 =A00.03 =A0 =A00=
+=2E00 =A0 99.61
+>
+> Device: =A0 =A0 =A0 =A0 =A0 =A0tps =A0 Blk_read/s =A0 Blk_wrtn/s =A0 =
+Blk_read =A0 Blk_wrtn
+> sda =A0 =A0 =A0 =A0 =A0 =A0 =A0 1.08 =A0 =A0 =A0 247.77 =A0 =A0 =A0 3=
+38.73 =A0 37478883 =A0 51237136
+> sda1 =A0 =A0 =A0 =A0 =A0 =A0 =A01.08 =A0 =A0 =A0 247.77 =A0 =A0 =A0 3=
+38.73 =A0 37478195 =A0 51237136
+> sdb =A0 =A0 =A0 =A0 =A0 =A0 =A0 1.08 =A0 =A0 =A0 247.73 =A0 =A0 =A0 3=
+38.78 =A0 37472990 =A0 51245712
+> sdb1 =A0 =A0 =A0 =A0 =A0 =A0 =A01.08 =A0 =A0 =A0 247.73 =A0 =A0 =A0 3=
+38.78 =A0 37472302 =A0 51245712
+> sdc =A0 =A0 =A0 =A0 =A0 =A0 =A0 1.10 =A0 =A0 =A0 247.82 =A0 =A0 =A0 3=
+38.66 =A0 37486670 =A0 51226640
+> sdc1 =A0 =A0 =A0 =A0 =A0 =A0 =A01.10 =A0 =A0 =A0 247.82 =A0 =A0 =A0 3=
+38.66 =A0 37485982 =A0 51226640
+> sdd =A0 =A0 =A0 =A0 =A0 =A0 =A0 1.09 =A0 =A0 =A0 118.46 =A0 =A0 =A0 4=
+67.97 =A0 17918510 =A0 70786576
+> sdd1 =A0 =A0 =A0 =A0 =A0 =A0 =A01.09 =A0 =A0 =A0 118.45 =A0 =A0 =A0 4=
+67.97 =A0 17917822 =A0 70786576
+> md0 =A0 =A0 =A0 =A0 =A0 =A0 =A065.60 =A0 =A0 =A0 443.79 =A0 =A0 =A010=
+02.42 =A0 67129812 =A0151629440
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-Cheers
 
 
-Rudy
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
