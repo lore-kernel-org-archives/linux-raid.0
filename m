@@ -1,44 +1,37 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] FIX: Raid0 expansion cannot be restarted (v2)
-Date: Fri, 08 Apr 2011 15:06:18 +0200
-Message-ID: <20110408130618.4967.3599.stgit@gklab-128-013.igk.intel.com>
+From: Yann Ormanns <yann-ormanns@web.de>
+Subject: Re: RAID6 simply does not start as /dev/md8
+Date: Fri, 08 Apr 2011 16:19:14 +0200
+Message-ID: <4D9F1962.3050806@web.de>
+References: <4D9EC097.7010600@web.de> <20110408151751.5e2b61f1@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110408151751.5e2b61f1@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When raid0 expansion is restarted, mdadm refuses to correctly assemble
-array because critical section cannot be restored from backup file.
-mdadm exits with information:
-	mdadm: Failed to restore critical section for reshape - sorry.
+Subject: Re: RAID6 simply does not start as /dev/md8
+From: Roman Mamedov <rm@romanrm.ru>
+To: Yann Ormanns <yann-ormanns@web.de>
+Date: 2011-04-08 16:15 (+0600)
 
-For raid0 new level is 0, current array level is 4.
-Function Grow_restart() doesn't allow for level change.
-It should be allowed for raid0, while raid4 is reshape mid-point only.
-'Native' raid0 reshape is not possible, because md doesn't support it.
+> After you do various changes to your mdadm.conf, don't forget to update your
+> initrd. AFAIK mdadm.conf is copied into the compressed initrd image to be used
+> early at boot, and this copy has to be kept in sync with your version in /etc.
+> 
+> Typically you can update initrd for all installed kernels by running something
+> like:
+> 
+>   update-initramfs -k all -u
+> 
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+Thank you for your quick response. I do not use an initrd - during the
+boot process the kernel reconnects and assembles md1,md2,md3,md5,md6 and
+md7 (these are all RAID1) without any problems. Only the assembly of the
+RAID6 does not work at all.
 
- Grow.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index d6ecde2..53d0a68 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3102,7 +3102,8 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 	unsigned long long  nstripe, ostripe;
- 	int ndata, odata;
- 
--	if (info->new_level != info->array.level)
-+	if ((info->new_level != info->array.level) &&
-+	    !((info->new_level == 0) && (info->array.level == 4)))
- 		return 1; /* Cannot handle level changes (they are instantaneous) */
- 
- 	odata = info->array.raid_disks - info->delta_disks - 1;
-
+Best regards,
+Yann
