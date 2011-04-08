@@ -1,47 +1,135 @@
-From: rob pfile <rpfile@gmail.com>
-Subject: Re: 4-disk raid5 with 2 disks going bad: best way to proceed?
-Date: Thu, 7 Apr 2011 15:15:09 -0700
-Message-ID: <242C1984-F4B5-4C34-BF4C-619875BD9CAF@gmail.com>
-References: <BC7F2D63-87DF-4402-A42B-00702098AAC4@gmail.com> <alpine.DEB.2.00.1104070916030.14027@uplift.swm.pp.se>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: What the heck happened to my array?
+Date: Fri, 08 Apr 2011 09:19:01 +0800
+Message-ID: <4D9E6285.8000006@fnarfbargle.com>
+References: <4D9876E4.6080501@fnarfbargle.com>	<AANLkTi=2GNYdySbCDXmaDC8-8vF8GU9V3Uoy1qByNq58@mail.gmail.com>	<4D995E27.3060800@fnarfbargle.com>	<BANLkTi=prv_vzfJr2JJt3LLhdB0GFSMy4w@mail.gmail.com>	<4D9A6694.4040606@fnarfbargle.com> <20110405161043.00d54901@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1104070916030.14027@uplift.swm.pp.se>
+In-Reply-To: <20110405161043.00d54901@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 05/04/11 14:10, NeilBrown wrote:
 
-On Apr 7, 2011, at 12:21 AM, Mikael Abrahamsson wrote:
+> I would suggest:
+>    copy anything that you need off, just in case - if you can.
+>
+>    Kill the mdadm that is running in the back ground.  This will mean that
+>    if the machine crashes your array will be corrupted, but you are thinking
+>    of rebuilding it any, so that isn't the end of the world.
+>    In /sys/block/md0/md
+>       cat suspend_hi>  suspend_lo
+>       cat component_size>  sync_max
+>
 
-> On Wed, 6 Apr 2011, rob pfile wrote:
-> 
->> Hi all,
->> 
->> any collective wisdom on what to do here? i've got a 4-disk raid5, and the most recent checkarray showed several bad blocks caused by uncorrectable read errors on two of the disks in the array. both disks in question show 0 reallocated sectors, but one looks like this:
-> 
-> Generally I'd recommend a "repair" as it would try to read all, if it can't read it properly, it'd recalculate from parity and as long as that write succeeded, you'd be golden.
-> 
-> To be safe, stop the array, dd_rescue the two bad drives, start the array again with the originals in the array, don't mount the filesystem, issue repair and see what happens.
-> 
-> This is one reason why I nowadays always run RAID6, then you can fail a drive and still have parity for read errors...
-> 
-> 
+root@srv:/sys/block/md0/md# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdc[0] sdd[6](S) sdl[1](S) sdh[9] sda[8] sde[7] 
+sdg[5] sdb[4] sdf[3] sdm[2]
+       7814078464 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[10/8] [U_UUUU_UUU]
+       [=================>...]  reshape = 88.2% (861696000/976759808) 
+finish=3713.3min speed=516K/sec
 
-thanks for your reply.
+md2 : active raid5 sdi[0] sdk[3] sdj[1]
+       1465146368 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] 
+[UUU]
 
-from reading a similar thread, (http://www.spinics.net/lists/raid/msg31779.html) it's stated that the "repair" command will rebuild the parity if it is thought to be wrong.  i don't think i want to risk writing parity blocks that are probably now correct and could become corrupted because of a bad data read messing up the parity... it's almost like i want something inbetween "check" and "repair" where when the disk gives a hard error on a sector, the data block containing that sector is reconstructed from the parity and then immediately written back to the disk. or does "check" already do that? i was guessing that it did not, or else the drives would probably show a few reallocated sectors.
+md6 : active raid1 sdp6[0] sdo6[1]
+       821539904 blocks [2/2] [UU]
 
-by "as long as that write succeeded you'd be golden", do you mean that re-writing the block would either reallocate the bad sector, or that perhaps the write would just succeed on the same physical sector, thus cleaning it up somehow? i think reallocating the sector would be preferable but i guess we don't have too much control over what the disk does.
+md5 : active raid1 sdp5[0] sdo5[1]
+       104864192 blocks [2/2] [UU]
 
-i guess i should clone these disks as you suggest. if dd_rescue runs without error then i suppose i can just put in the replacement disks and forget about it. if not, i could try the repair. i assume that if the repair goes horribly wrong, i could just put the clones into the array. but as above i'd worry that if corrupt parity got rewritten during the repair of the original disks that perhaps the clones would no longer match the corrupt parity. in that case i'd have to run "repair" again after putting the clones in, i assume.
+md4 : active raid1 sdp3[0] sdo3[1]
+       20980800 blocks [2/2] [UU]
 
+md3 : active raid1 sdp2[0] sdo2[1]
+       8393856 blocks [2/2] [UU]
 
-yeah, i should probably look into raid6.
+md1 : active raid1 sdp1[0] sdo1[1]
+       20980736 blocks [2/2] [UU]
 
-thanks,
+unused devices: <none>
+root@srv:/sys/block/md0/md# cat component_size > sync_max
+cat: write error: Device or resource busy
 
-rob
+root@srv:/sys/block/md0/md# cat suspend_hi suspend_lo
+13788774400
+13788774400
 
+root@srv:/sys/block/md0/md# grep . sync_*
+sync_action:reshape
+sync_completed:1723392000 / 1953519616
+sync_force_parallel:0
+sync_max:1723392000
+sync_min:0
+sync_speed:281
+sync_speed_max:200000 (system)
+sync_speed_min:200000 (local)
+
+So I killed mdadm, then did the cat suspend_hi > suspend_lo.. but as you 
+can see it won't let me change sync_max. The array above reports 
+516K/sec, but that was just on its way down to 0 on a time based 
+average. It was not moving at all.
+
+I then tried stopping the array, restarting it with mdadm 3.1.4 which 
+immediately segfaulted and left the array in state resync=DELAYED.
+
+I issued the above commands again, which succeeded this time but while 
+the array looked good, it was not resyncing :
+root@srv:/sys/block/md0/md# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdc[0] sdd[6](S) sdl[1](S) sdh[9] sda[8] sde[7] 
+sdg[5] sdb[4] sdf[3] sdm[2]
+       7814078464 blocks super 1.2 level 6, 512k chunk, algorithm 2 
+[10/8] [U_UUUU_UUU]
+       [=================>...]  reshape = 88.2% (861698048/976759808) 
+finish=30203712.0min speed=0K/sec
+
+md2 : active raid5 sdi[0] sdk[3] sdj[1]
+       1465146368 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] 
+[UUU]
+
+md6 : active raid1 sdp6[0] sdo6[1]
+       821539904 blocks [2/2] [UU]
+
+md5 : active raid1 sdp5[0] sdo5[1]
+       104864192 blocks [2/2] [UU]
+
+md4 : active raid1 sdp3[0] sdo3[1]
+       20980800 blocks [2/2] [UU]
+
+md3 : active raid1 sdp2[0] sdo2[1]
+       8393856 blocks [2/2] [UU]
+
+md1 : active raid1 sdp1[0] sdo1[1]
+       20980736 blocks [2/2] [UU]
+
+unused devices: <none>
+
+root@srv:/sys/block/md0/md# grep . sync*
+sync_action:reshape
+sync_completed:1723396096 / 1953519616
+sync_force_parallel:0
+sync_max:976759808
+sync_min:0
+sync_speed:0
+sync_speed_max:200000 (system)
+sync_speed_min:200000 (local)
+
+I stopped the array and restarted it with mdadm 3.2.1 and it continued 
+along its merry way.
+
+Not an issue, and I don't much care if it blew something up, but I 
+thought it worthy of a follow up.
+
+If there is anything you need tested while it's in this state I've got ~ 
+1000 minutes of resync time left and I'm happy to damage it if requested.
+
+Regards,
+Brad
