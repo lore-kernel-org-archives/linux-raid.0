@@ -1,38 +1,38 @@
-From: Yann Ormanns <yann-ormanns@web.de>
-Subject: Re: RAID6 simply does not start as /dev/md8
-Date: Fri, 08 Apr 2011 20:23:26 +0200
-Message-ID: <4D9F529E.20204@web.de>
-References: <4D9EC097.7010600@web.de> <20110408151751.5e2b61f1@natsu> <4D9F1962.3050806@web.de> <4D9F1A5A.1060600@grumpydevil.homelinux.org> <4D9F22A9.1030005@web.de> <4D9F2819.2030403@grumpydevil.homelinux.org>
+From: Linux Raid Study <linuxraid.study@gmail.com>
+Subject: iostat with raid device...
+Date: Fri, 8 Apr 2011 12:55:39 -0700
+Message-ID: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D9F2819.2030403@grumpydevil.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Cc: Roman Mamedov <rm@romanrm.ru>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linuxraid.study@gmail.com
 List-Id: linux-raid.ids
 
-Subject: Re: RAID6 simply does not start as /dev/md8
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-To: Yann Ormanns <yann-ormanns@web.de>
-Date: 2011-04-08 20:22 (+0200)
+Hello,
 
-> Just to humour me, the output without the partition number? so /dev/sda ?
-> 
-> Cheers,
-> 
-> 
-> Rudy
-> 
+I have a raid device /dev/md0 based on 4 devices sd[abcd].
 
-Output of "mdadm -E /dev/sd[a,b,c,d,e,f]":
-mdadm: No md superblock detected on /dev/sda.
-mdadm: No md superblock detected on /dev/sdb.
-mdadm: No md superblock detected on /dev/sdc.
-mdadm: No md superblock detected on /dev/sdd.
-mdadm: No md superblock detected on /dev/sde.
-mdadm: No md superblock detected on /dev/sdf.
+When I write 4GB to /dev/md0, I see following output from iostat...
 
-Best regards,
-Yann
+Ques:
+Shouldn't I see write/sec to be same for all four drives? Why does
+/dev/sdd always have higher value for  BlksWrtn/sec?
+My strip size is 1MB.
+
+thanks for any pointers...
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.02    0.00    0.34    0.03    0.00   99.61
+
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+sda               1.08       247.77       338.73   37478883   51237136
+sda1              1.08       247.77       338.73   37478195   51237136
+sdb               1.08       247.73       338.78   37472990   51245712
+sdb1              1.08       247.73       338.78   37472302   51245712
+sdc               1.10       247.82       338.66   37486670   51226640
+sdc1              1.10       247.82       338.66   37485982   51226640
+sdd               1.09       118.46       467.97   17918510   70786576
+sdd1              1.09       118.45       467.97   17917822   70786576
+md0              65.60       443.79      1002.42   67129812  151629440
