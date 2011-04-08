@@ -1,129 +1,114 @@
-From: Gavin Flower <gavinflower@yahoo.com>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system unresponsive
-Date: Fri, 8 Apr 2011 02:59:52 -0700 (PDT)
-Message-ID: <1215.67697.qm@web65110.mail.ac2.yahoo.com>
-References: <20110408193426.028b0f00@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: rhel5 raid6 corruption
+Date: Fri, 8 Apr 2011 20:33:45 +1000
+Message-ID: <20110408203345.5bb5d179@notabene.brown>
+References: <20110404135902.GA20052@grizzly.cita.utoronto.ca>
+	<20110405150022.5a31bca1@notabene.brown>
+	<20110407074505.GA20218@grizzly.cita.utoronto.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110408193426.028b0f00@notabene.brown>
+In-Reply-To: <20110407074505.GA20218@grizzly.cita.utoronto.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Robin Humble <robin.humble+raid@anu.edu.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 7 Apr 2011 03:45:05 -0400 Robin Humble <robin.humble+raid@anu.edu.au>
+wrote:
 
---- On Fri, 8/4/11, NeilBrown <neilb@suse.de> wrote:
+> On Tue, Apr 05, 2011 at 03:00:22PM +1000, NeilBrown wrote:
+> >On Mon, 4 Apr 2011 09:59:02 -0400 Robin Humble <robin.humble+raid@anu.edu.au>
+> >> we are finding non-zero mismatch_cnt's and getting data corruption when
+> >> using RHEL5/CentOS5 kernels with md raid6.
+> >> actually, all kernels prior to 2.6.32 seem to have the bug.
+> >> 
+> >> the corruption only happens after we replace a failed disk, and the
+> >> incorrect data is always on the replacement disk. i.e. the problem is
+> >> with rebuild. mismatch_cnt is always a multiple of 8, so I suspect
+> >> pages are going astray.
+> ...
+> >> git bisecting through drivers/md/raid5.c between 2.6.31 (has mismatches)
+> >> and .32 (no problems) says that one of these (unbisectable) commits
+> >> fixed the issue:
+> >>   a9b39a741a7e3b262b9f51fefb68e17b32756999  md/raid6: asynchronous handle_stripe_dirtying6
+> >>   5599becca4bee7badf605e41fd5bcde76d51f2a4  md/raid6: asynchronous handle_stripe_fill6
+> >>   d82dfee0ad8f240fef1b28e2258891c07da57367  md/raid6: asynchronous handle_parity_check6
+> >>   6c0069c0ae9659e3a91b68eaed06a5c6c37f45c8  md/raid6: asynchronous handle_stripe6
+> >> 
+> >> any ideas?
+> >> were any "write i/o whilst rebuilding from degraded" issues fixed by
+> >> the above patches?
+> >
+> >It looks like they were, but I didn't notice at the time.
+> >
+> >If a write to a block in a stripe happens at exactly the same time as the
+> >recovery of a different block in that stripe - and both operations are
+> >combined into a single "fix up the stripe parity and write it all out"
+> >operation, then the block that needs to be recovered is computed but not
+> >written out.  oops.
+> >
+> >The following patch should fix it.  Please test and report your results.
+> >If they prove the fix I will submit it for the various -stable kernels.
+> >It looks like this bug has "always" been present :-(
+> 
+> thanks for the very quick reply!
+> 
+> however, I don't think the patch has solved the problem :-/
+> I applied it to 2.6.31.14 and have got several mismatches since on both
+> FC and SATA machines.
 
-> From: NeilBrown <neilb@suse.de>
-> Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, s=
-ystem unresponsive
-> To: "Gavin Flower" <gavinflower@yahoo.com>
-> Cc: linux-raid@vger.kernel.org
-> Date: Friday, 8 April, 2011, 21:34
-> On Thu, 7 Apr 2011 18:32:04 -0700
-> (PDT) Gavin Flower <gavinflower@yahoo.com>
-> wrote:
->=20
-> > Hi Neil,
-> >=20
-> > My original email may have been eaten: as it did not
-> appear on the list, nor did I get an error message
-> back.=A0 So perhaps there was a problem with the attached
-> files.
-> >=20
-> > I will resend the attachments one at a time in
-> separate emails.
-> >=20
-> >=20
-> > Cheers,
-> > Gavin
-> >=20
-> > [begin original]
-> > Hi Neil,
-> >=20
-> > Your help (or anybody else's) would be greatly
-> appreciated, yet again
->=20
-> Hi Gavin,
->  it isn't clear to me what help you want.
->=20
-> Obviously there is some sort of hardware issue - possible a
-> drive, possibly a
-> bus problem - I really don't know.
->=20
-> Apart from that things look normal.
->=20
-> What exactly did you want explained?
->=20
-> NeilBrown
+That's disappointing - I was sure I had found it.  I'm tempted to ask "are
+you really sure you are running the modified kernel", but I'm sure you are.
 
-I guess I was surprised that the RAID system appeared normal and that i=
-t did not register any errors.  I was hoping to get an idea as to which=
- drive was problematic.
+> 
+> BTW, these tests are actually fairly quick. often <10 kickout/rebuild
+> loops. so just a few hours.
+> 
+> in the above when you say "block in a stripe", does that mean the whole
+> 128k on that disk (we have --chunk=128) might not have been written, or
+> one 512byte block (or a page)?
 
-I get the feeling, from your reply, that this is not specifically a RAI=
-D problem, that it just happens to affect a RAID array.
-
-I had thought that the RAID system should have been able to give me bet=
-ter diagnostics, but possibly I am being (inadvertently) unreasonable!
-
-Not sure what the significance of this mismatch is, and what I should d=
-o about it.
-# cat /sys/block/md2/md/mismatch_cnt=20
-28904=20
-#=20
+'page'. raid5 does everything in one-page (4K) per device strips.
+So mismatch count - which is measured in sectors - will always be a multiple
+of 8.
 
 
-Thanks,
-Gavin
+> we don't see mismatch counts of 256 - usually 8 or 16, but I can see
+> why our current testing might hide such a count. <later> ok - now I
+> blank (dd zeros over) the replacement disk before putting it back into
+> the raid and am seeing perhaps slightly larger typical mismatch counts
+> of 16 and 32, but so far not 128k of mismatches.
+> 
+> another (potential) data point is that often position of the mismatches
+> on the md device doesn't really line up with where I think the data is
+> being written to. the mismatch is often near the start of the md device,
+> but sometimes 50% of the way in, and sometimes 95%.
+> the filesystem is <20% full, although the wildcard is that I really
+> have no idea how the (sparse) files doing the 4k direct i/o are
+> allocated across the filsystem, or where fs metadata and journals might
+> be updating blocks either.
+> seems odd though...
 
-> >=20
-> > This morning, I noticed my system was extremely
-> unresponsive, and that there were clicking sounds coming
-> from one of my 5 hard drives.=A0 Also that there was
-> excessive disk I/O even for trivial things like bring up a
-> directory window, and lots of ata3 errors being reported to
-> the system log.=A0 These symptoms were mostly during a
-> raid check process.
-> >=20
-> > Somewhere along the way, I seemed to have lost my swap
-> partition!
-> >=20
-> > So I did some extensive investigations, which took
-> most of the day.=A0 My notes were created in OpenDocument
-> format using LibreOffice, but I have converted them to txt
-> format for the include - but I can supply the ,odt file if
-> requested.
-> >=20
-> > I Have included 2 files:
-> >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0
-> my notes: raid-notes-20110407a.txt
-> >=A0 =A0 selected log entries:
-> messages-gcf-20110407-ATA
-> >=20
-> > If there are some additional diagnostics that might
-> prove useful, please let me know.
-> >=20
-> >=20
-> > Cheers,
-> > Gavin
-> > [end original]
-> > --
-> > All Adults share the Responsibility
-> > to help Raise Today's Children,
-> > for they are Tomorrow's Society!
-> > --
-> > To unsubscribe from this list: send the line
-> "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at=A0 http://vger.kernel.org/majordomo-info.htm=
-l
->=20
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I suspect the filesystem spreads files across the whole disk, though it
+depends a lot on the details of the particular filesystem.
+
+
+> 
+> >Thanks for the report .... and for all that testing!  A git-bisect where each
+> >run can take 36 hours is a really test of commitment!!!
+> 
+> :-) no worries. thanks for md and for the help!
+> we've been trying to figure this out for months so a bit of testing
+> isn't a problem. we first eliminated a bunch of other things
+> (filesystem, drivers, firmware, ...) as possibilities. for a long time
+> we didn't really believe the problem could be with md as it's so well
+> tested around the world and has been very solid for us except for these
+> rebuilds.
+> 
+
+I'll try staring at the code a bit longer and see if anything jumps out at me.
+
+thanks,
+NeilBrown
