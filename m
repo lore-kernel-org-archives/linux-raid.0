@@ -1,62 +1,35 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: Using of RAID10,offset for faster writes
-Date: Sat, 9 Apr 2011 17:05:14 +0200
-Message-ID: <20110409150514.GA24675@www2.open-std.org>
-References: <inphu9$5kl$1@dough.gmane.org>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Couple of questions.
+Date: Sun, 10 Apr 2011 00:14:56 +0800
+Message-ID: <4DA08600.5020604@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <inphu9$5kl$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 09, 2011 at 02:03:21PM +0200, David Brown wrote:
-> During a discussion about RAID in another context (a Linux newsgroup), I 
-> began thinking about the speeds of the different RAID10 layouts for 
-> different usages.  RAID10,far is often the fastest choice for general 
-> use - you get striped reads for large reads, and access times are good 
-> because you can get the data from either disk.  The disadvantage is that 
-> writes involve a lot of extra head movement, as you need copies of the 
-> data on two widely separated areas on the each disk.  But for general 
-> use, you read a lot more often than you write, so the tradeoff is worth it.
-> 
-> In the discussion we were looking particularly at swap space on RAID. 
-> This is a usage that requires a lot of writing, especially small writes. 
->  Using the RAID10,offset layout should give you most of the benefits of 
-> RAID10,far when it comes to reading - you don't get quite as efficient 
-> block reads for large reads, but you can still do a lot of striping in 
-> the reads.  And writes will involve far less head movement, and so 
-> should complete faster.
-> 
-> Has anyone tried this, or done any benchmarking?
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1 - When adding 2 missing disks to a RAID-6 (let's say a 4 drive RAID-6 
+that was created with only 2 disks initally) why does it sync the first, 
+then sync the second rather than doing both together?
+  ie mdadm --add /dev/md0 /dev/sd[ab]
 
-Some tests indicate that the theoretical slower writing speed of
-raid10,far tends to be minimized by the elevator algoritm for the disk.
-Writes are normally just delivered to the kernel in-core buffers, and
-then every 30 secs or so flushed to the disk. The elevator orders this
-writing to minimize head movement. So there is almost no penalty for
-writes for raid10,far. 
+2 - If a drive disappears how do I remove it from an array.
+  Let's say I have a 10 drive RAID-6 that has an odd error on a disk. 
+The disk goes away (sdl), the disk comes back as sdq as md is still 
+hanging on to the name sdl. I add sdq to the array, but I can't remove 
+sdl as it physically no longer exists. udev has removed the device node 
+and mdadm can't remove it from the array as it can't tell what it was.
 
-Anyway, for swapping the paetition siz is normally quite small, say 2 to
-10 GB, and head movement is thus quite small.
+Like this :
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid6 sdq[10] sdc[0] sdd[6] sdl[1](F) sdh[9] sda[8] sde[7] 
+sdg[5] sdb[4] sdf[3] sdm[2]
+       7814078464 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[10/10] [UUUUUUUUUU]
 
-Tests show that raid10,offset does not really stripe sequential reads.
-Anyway it would be interesting to see tests on swapping on rid10,offset
-vs raid10,far. I am not sure how to test it. But it could be load times
-for eg. openoffice in a swapped state - loading a big app is one of the
-areas where you would notice the speed most in a user environment. Tht
-could be the reading test. For the writing test, one could operate with
-a rather small swap  partition, and then load a lot of big apps.
+Nothing urgent, just musings after the last weeks oddities.
 
-Best regards
-Keld
-
-
+Regards,
+Brad
