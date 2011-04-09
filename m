@@ -1,35 +1,56 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Couple of questions.
-Date: Sun, 10 Apr 2011 00:14:56 +0800
-Message-ID: <4DA08600.5020604@fnarfbargle.com>
+From: "Edward Siefker" <hatta00@fastmail.fm>
+Subject: Raid 5 to 6 grow stalled
+Date: Sat, 09 Apr 2011 09:23:52 -0700
+Message-ID: <1302366232.12096.1439264077@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-1 - When adding 2 missing disks to a RAID-6 (let's say a 4 drive RAID-6 
-that was created with only 2 disks initally) why does it sync the first, 
-then sync the second rather than doing both together?
-  ie mdadm --add /dev/md0 /dev/sd[ab]
+I have a 3 disk raid-5 array I want to convert to a 4 disk raid-6 array.
+I added the 4th disk as a spare, and thought that it would get used
+automatically when I converted it to 6, but instead it created a
+degraded
+raid 6 array.  So I removed the spare and added it back to the array to
+get it to rebuild.  It did start rebuilding, but stalled out. 
 
-2 - If a drive disappears how do I remove it from an array.
-  Let's say I have a 10 drive RAID-6 that has an odd error on a disk. 
-The disk goes away (sdl), the disk comes back as sdq as md is still 
-hanging on to the name sdl. I add sdq to the array, but I can't remove 
-sdl as it physically no longer exists. udev has removed the device node 
-and mdadm can't remove it from the array as it can't tell what it was.
+Here's some console output showing what I did:
 
-Like this :
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid6 sdq[10] sdc[0] sdd[6] sdl[1](F) sdh[9] sda[8] sde[7] 
-sdg[5] sdb[4] sdf[3] sdm[2]
-       7814078464 blocks super 1.2 level 6, 64k chunk, algorithm 2 
-[10/10] [UUUUUUUUUU]
+root@iblis:/home/hatta# mdadm --grow /dev/md2 --level 6 --raid-devices 4
+--backup-file=/mnt/sda6/yo
+mdadm level of /dev/md2 changed to raid6
+root@iblis:/home/hatta# cat /proc/mdstat
+Personalities : [raid10] [raid6] [raid5] [raid4]
+md2 : active (auto-read-only) raid6 sdd1[0] sde1[3](S) sdf1[2] sdc1[1]
+      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
 
-Nothing urgent, just musings after the last weeks oddities.
+root@iblis:/home/hatta# mdadm /dev/md2 --remove /dev/sde1
+mdadm: hot removed /dev/sde1 from /dev/md2
+root@iblis:/home/hatta# mdadm /dev/md2 --add /dev/sde1
+mdadm: re-added /dev/sde1
+root@iblis:/home/hatta# cat /proc/mdstat  
+Personalities : [raid10] [raid6] [raid5] [raid4]
+md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
+      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+      [>....................]  recovery =  0.0% (8192/1465135936)
+      finish=11899.9min speed=2048K/sec
+...
+...
+...
+md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
+      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+      [>....................]  recovery =  0.0% (8192/1465135936)
+      finish=2954174.4min speed=8K/sec
 
-Regards,
-Brad
+
+What's going on here?
+-- 
+  
+  hatta00@fastmail.fm
+
+-- 
+http://www.fastmail.fm - Does exactly what it says on the tin
+
