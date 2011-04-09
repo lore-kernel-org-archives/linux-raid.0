@@ -1,62 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: help please - recovering from failed RAID5 rebuild
-Date: Sat, 9 Apr 2011 21:29:30 +1000
-Message-ID: <20110409212930.6f4ffb28@notabene.brown>
-References: <BANLkTinAmEgsbOx4k5yxCdHmM0GBWbXdBA@mail.gmail.com>
-	<20110408220130.4830852d@notabene.brown>
-	<BANLkTimSh8f8cVihRxbKgKZq4zFv6VUmVQ@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Using of RAID10,offset for faster writes
+Date: Sat, 09 Apr 2011 14:03:21 +0200
+Message-ID: <inphu9$5kl$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimSh8f8cVihRxbKgKZq4zFv6VUmVQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: sanktnelson 1 <sanktnelson@googlemail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 9 Apr 2011 11:27:20 +0200 sanktnelson 1 <sanktnelson@googlemail=
-=2Ecom>
-wrote:
+During a discussion about RAID in another context (a Linux newsgroup), I 
+began thinking about the speeds of the different RAID10 layouts for 
+different usages.  RAID10,far is often the fastest choice for general 
+use - you get striped reads for large reads, and access times are good 
+because you can get the data from either disk.  The disadvantage is that 
+writes involve a lot of extra head movement, as you need copies of the 
+data on two widely separated areas on the each disk.  But for general 
+use, you read a lot more often than you write, so the tradeoff is worth it.
 
-> 2011/4/8 NeilBrown <neilb@suse.de>:
-> =20
-> >
-> > Maybe the best thing to do at this point is post the output of
-> > =A0mdadm -E /dev/sd[bcdef]1
-> > and I'll see if I can make sense of it.
->=20
-> Thanks for your advice! here is the output:
+In the discussion we were looking particularly at swap space on RAID. 
+This is a usage that requires a lot of writing, especially small writes. 
+  Using the RAID10,offset layout should give you most of the benefits of 
+RAID10,far when it comes to reading - you don't get quite as efficient 
+block reads for large reads, but you can still do a lot of striping in 
+the reads.  And writes will involve far less head movement, and so 
+should complete faster.
 
-It looks like it is in reasonably good shape (relatively speaking...).
+Has anyone tried this, or done any benchmarking?
 
-I would
-  mdadm -S /dev/md0
-  mdadm -Af /dev/md0 /dev/sd[bdef]1
-  fsck -nf /dev/md0
-
-and if it looks good
-  mount /dev/md0
-  copy off any data that you can that you cannot live without.
-
-Then stop the array
-  mdadm -S /dev/md0
-and copy sdd to sdc with dd-rescue
-When that completes, assemble the array with
-  mdadm -A /dev/md0 /dev/sd[bcef]1
-  fsck -nf /dev/md0
-
-and then if it looks good
-  mdadm --zero /dev/sdd1
-  mdadm /dev/md0 --add /dev/sdd1
-and with luck it will successfully rebuild sdd1 and you will have redun=
-dancy
-again.
-
-NeilBrown
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
