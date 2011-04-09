@@ -1,81 +1,60 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: tune2fs can't be used on a mounted ext4, or...?
-Date: Sun, 10 Apr 2011 03:50:05 +0600
-Message-ID: <20110410035005.64f565e3@natsu>
-References: <20110410003954.4108b9c9@natsu>
-	<14B9D41F-4D38-4F01-97E9-17E86DA578FC@dilger.ca>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Raid 5 to 6 grow stalled
+Date: Sun, 10 Apr 2011 07:30:39 +1000
+Message-ID: <20110410073039.2d9683ac@notabene.brown>
+References: <1302366232.12096.1439264077@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/n0RhOXw4KHcGWB8PQ/+hhq9"; protocol="application/pgp-signature"
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <14B9D41F-4D38-4F01-97E9-17E86DA578FC@dilger.ca>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1302366232.12096.1439264077@webmail.messagingengine.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Edward Siefker <hatta00@fastmail.fm>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/n0RhOXw4KHcGWB8PQ/+hhq9
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sat, 09 Apr 2011 09:23:52 -0700 "Edward Siefker" <hatta00@fastmail.fm>
+wrote:
 
-On Sat, 9 Apr 2011 15:30:42 -0600
-Andreas Dilger <adilger@dilger.ca> wrote:
+> I have a 3 disk raid-5 array I want to convert to a 4 disk raid-6 array.
+> I added the 4th disk as a spare, and thought that it would get used
+> automatically when I converted it to 6, but instead it created a
+> degraded
+> raid 6 array.  So I removed the spare and added it back to the array to
+> get it to rebuild.  It did start rebuilding, but stalled out. 
+> 
+> Here's some console output showing what I did:
+> 
+> root@iblis:/home/hatta# mdadm --grow /dev/md2 --level 6 --raid-devices 4
+> --backup-file=/mnt/sda6/yo
+> mdadm level of /dev/md2 changed to raid6
+> root@iblis:/home/hatta# cat /proc/mdstat
+> Personalities : [raid10] [raid6] [raid5] [raid4]
+> md2 : active (auto-read-only) raid6 sdd1[0] sde1[3](S) sdf1[2] sdc1[1]
+>       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+> 
+> root@iblis:/home/hatta# mdadm /dev/md2 --remove /dev/sde1
+> mdadm: hot removed /dev/sde1 from /dev/md2
+> root@iblis:/home/hatta# mdadm /dev/md2 --add /dev/sde1
+> mdadm: re-added /dev/sde1
+> root@iblis:/home/hatta# cat /proc/mdstat  
+> Personalities : [raid10] [raid6] [raid5] [raid4]
+> md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
+>       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+>       [>....................]  recovery =  0.0% (8192/1465135936)
+>       finish=11899.9min speed=2048K/sec
+> ...
+> ...
+> ...
+> md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
+>       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+>       [>....................]  recovery =  0.0% (8192/1465135936)
+>       finish=2954174.4min speed=8K/sec
+> 
+> 
+> What's going on here?
 
-> The online resize shouldn't take more than a few minutes, unless the disk=
- is
-> crazy busy and you are going from 16GB to 16TB or something.
+Doesn't look good..
+What version of mdadm?  What kernel?
 
-I was resizing from 4 TB to 6 TB, and during the time (okay, maybe it was j=
-ust
-an hour) I saw disk free space slowly increase at about 1 GB per couple of
-seconds. RAID6 also was in a degraded state (one disk missing), so maybe
-that's why it was slower than it should usually be.
-
-> > Then I started copying files from another array to the one on which the
-> > above operations were conducted. I did:
-> >=20
-> >  cp -Rp /mnt/array1/data/* /mnt/array2/new-data/
->=20
-> What kernel version do you have, and what version of coreutils?  Is this
-> perhaps a bleeding-edge kernel/coreutils with the "FIEMAP" bug?
-
-Kernel version 2.6.38.2, cp (GNU coreutils) 8.5.
-
-Also, what I didn't mention in my previous post, is that during that sessio=
-n I
-also had one E-Mail message which was just received by the mail client (not
-copied from another disk via cp or otherwise) truncate too. The mail client=
- is
-claws-mail and it stores individual messages on disk as regular files, a fi=
-le
-per message, and that one file was 0 bytes in size. At first I didn't think=
- it
-was related, but it looks like all disk access is/was affected, not just
-cp/coreutils.
-
-> Were the source files that had problems recently written themselves in th=
-is
-> case?
-
-Recently, as in "while on 2.6.38x kernels", or "in the past N minutes"?
-Latter - definitely not (except for that one E-Mail mentioned above), forme=
-r -
-maybe, but unlikely.
-
---=20
-With respect,
-Roman
-
---Sig_/n0RhOXw4KHcGWB8PQ/+hhq9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2g1I0ACgkQTLKSvz+PZwiCMgCcCJzksTQ58jcSNq7W6nzyq4LL
-0h4AoJfvPdqxFh0+/MvRoR9b+h8cV+wt
-=Rhf+
------END PGP SIGNATURE-----
-
---Sig_/n0RhOXw4KHcGWB8PQ/+hhq9--
+NeilBrown
