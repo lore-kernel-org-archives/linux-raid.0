@@ -1,136 +1,129 @@
-From: Linux Raid Study <linuxraid.study@gmail.com>
-Subject: Re: iostat with raid device...
-Date: Fri, 8 Apr 2011 17:40:46 -0700
-Message-ID: <BANLkTin2KP-_vy8jbmV3JB-LHHJNOEVCKw@mail.gmail.com>
-References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
-	<20110409094629.2eae2d5b@notabene.brown>
+From: Robin Humble <robin.humble+raid@anu.edu.au>
+Subject: Re: rhel5 raid6 corruption
+Date: Sat, 9 Apr 2011 00:24:42 -0400
+Message-ID: <20110409042437.GA29461@grizzly.cita.utoronto.ca>
+References: <20110404135902.GA20052@grizzly.cita.utoronto.ca>
+ <20110405150022.5a31bca1@notabene.brown>
+ <20110407074505.GA20218@grizzly.cita.utoronto.ca>
+ <20110408203345.5bb5d179@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110409094629.2eae2d5b@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20110408203345.5bb5d179@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Fri, Apr 08, 2011 at 08:33:45PM +1000, NeilBrown wrote:
+>On Thu, 7 Apr 2011 03:45:05 -0400 Robin Humble <robin.humble+raid@anu.edu.au> wrote:
+>> On Tue, Apr 05, 2011 at 03:00:22PM +1000, NeilBrown wrote:
+>> >On Mon, 4 Apr 2011 09:59:02 -0400 Robin Humble <robin.humble+raid@anu.edu.au>
+>> >> we are finding non-zero mismatch_cnt's and getting data corruption when
+>> >> using RHEL5/CentOS5 kernels with md raid6.
+>> >> actually, all kernels prior to 2.6.32 seem to have the bug.
+>> >> 
+>> >> the corruption only happens after we replace a failed disk, and the
+>> >> incorrect data is always on the replacement disk. i.e. the problem is
+>> >> with rebuild. mismatch_cnt is always a multiple of 8, so I suspect
+>> >> pages are going astray.
+>> ...
+>> >> git bisecting through drivers/md/raid5.c between 2.6.31 (has mismatches)
+>> >> and .32 (no problems) says that one of these (unbisectable) commits
+>> >> fixed the issue:
+>> >>   a9b39a741a7e3b262b9f51fefb68e17b32756999  md/raid6: asynchronous handle_stripe_dirtying6
+>> >>   5599becca4bee7badf605e41fd5bcde76d51f2a4  md/raid6: asynchronous handle_stripe_fill6
+>> >>   d82dfee0ad8f240fef1b28e2258891c07da57367  md/raid6: asynchronous handle_parity_check6
+>> >>   6c0069c0ae9659e3a91b68eaed06a5c6c37f45c8  md/raid6: asynchronous handle_stripe6
+>> >> 
+>> >> any ideas?
+>> >> were any "write i/o whilst rebuilding from degraded" issues fixed by
+>> >> the above patches?
+>> >
+>> >It looks like they were, but I didn't notice at the time.
+>> >
+>> >If a write to a block in a stripe happens at exactly the same time as the
+>> >recovery of a different block in that stripe - and both operations are
+>> >combined into a single "fix up the stripe parity and write it all out"
+>> >operation, then the block that needs to be recovered is computed but not
+>> >written out.  oops.
+>> >
+>> >The following patch should fix it.  Please test and report your results.
+>> >If they prove the fix I will submit it for the various -stable kernels.
+>> >It looks like this bug has "always" been present :-(
+>> 
+>> thanks for the very quick reply!
+>> 
+>> however, I don't think the patch has solved the problem :-/
+>> I applied it to 2.6.31.14 and have got several mismatches since on both
+>> FC and SATA machines.
+>
+>That's disappointing - I was sure I had found it.  I'm tempted to ask "are
+>you really sure you are running the modified kernel", but I'm sure you are.
 
-This is raid5. I have mounted /dev/md0 to /mnt and file system is ext4.
+yes - really running it :-)
 
-The system is newly created. Steps:
-mdadm for raid5
-mkfs.ext4 /dev/md0
-mount /dev/md0 /mnt/raid
-Export /mnt/raid to remote PC using CIFS
-Copy file from PC to the mounted drive
+so I added some pr_debug's in and around the patched switch statement
+in handle_stripe_dirtying6. it seems cases 1 or 2 in the below aren't
+executed in either of normal rebuild, or when I get mismatches. so that
+explains why fixes there didn't change anything.
 
-An update....
-I just ran the test again (without doing reformatting device) and
-noticed all 4 HDDs incremented the #ofWritesBlocks equally. This
-implies that when raid was configured first time, raid5 was trying to
-do its own stuff (recovery)...
+so I guess something in 
+        if (s->locked == 0 && rcw == 0 &&
+            !test_bit(STRIPE_BIT_DELAY, &sh->state)) {
+                if (must_compute > 0) {
 
-What I'm not sure of is if the device is newly formatted, would raid
-recovery happen? What else could explain difference in the first run
-of IO benchmark?
+is always failing?
 
+ # cat /sys/kernel/debug/dynamic_debug/control | grep handle_stripe_dirtying6
+drivers/md/raid5.c:2466 [raid456]handle_stripe_dirtying6 - "Writing stripe %llu block %d\012"
+drivers/md/raid5.c:2460 [raid456]handle_stripe_dirtying6 - "Computing parity for stripe %llu\012"
+drivers/md/raid5.c:2448 [raid456]handle_stripe_dirtying6 p "rjh - case2\012"
+drivers/md/raid5.c:2441 [raid456]handle_stripe_dirtying6 p "rjh - case1, r6s->failed_num[0] = %d, flags %lu\012"
+drivers/md/raid5.c:2433 [raid456]handle_stripe_dirtying6 - "rjh - must_compute %d, s->failed %d\012"
+drivers/md/raid5.c:2430 [raid456]handle_stripe_dirtying6 - "rjh - s->locked %d rcw %d test_bit(STRIPE_BIT_DELAY, &sh->state) %d\012"
+drivers/md/raid5.c:2421 [raid456]handle_stripe_dirtying6 - "Request delayed stripe %llu block %d for Reconstruct\012"
+drivers/md/raid5.c:2414 [raid456]handle_stripe_dirtying6 - "Read_old stripe %llu block %d for Reconstruct\012"
+drivers/md/raid5.c:2398 [raid456]handle_stripe_dirtying6 - "for sector %llu, rcw=%d, must_compute=%d\012"
+drivers/md/raid5.c:2392 [raid456]handle_stripe_dirtying6 - "raid6: must_compute: disk %d flags=%#lx\012"
 
-Thanks.
+the output is verbose if I turn on some of these. but this is short
+snippet that I guess looks ok to you?
 
-On Fri, Apr 8, 2011 at 4:46 PM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, 8 Apr 2011 12:55:39 -0700 Linux Raid Study
-> <linuxraid.study@gmail.com> wrote:
->
->> Hello,
->>
->> I have a raid device /dev/md0 based on 4 devices sd[abcd].
->
-> Would this be raid0? raid1? raid5? raid6? raid10?
-> It could make a difference.
->
->>
->> When I write 4GB to /dev/md0, I see following output from iostat...
->
-> Are you writing directly to the /dev/md0, or to a filesystem mounted
-> from /dev/md0? =C2=A0It might be easier to explain in the second case=
-, but you
-> text suggests the first case.
->
->>
->> Ques:
->> Shouldn't I see write/sec to be same for all four drives? Why does
->> /dev/sdd always have higher value for =C2=A0BlksWrtn/sec?
->> My strip size is 1MB.
->>
->> thanks for any pointers...
->>
->> avg-cpu: =C2=A0%user =C2=A0 %nice %system %iowait =C2=A0%steal =C2=A0=
- %idle
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00.02 =C2=A0 =C2=A00.00 =C2=A0=
- =C2=A00.34 =C2=A0 =C2=A00.03 =C2=A0 =C2=A00.00 =C2=A0 99.61
->>
->> Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0tps =C2=A0 Blk_read=
-/s =C2=A0 Blk_wrtn/s =C2=A0 Blk_read =C2=A0 Blk_wrtn
->> sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1.08 =C2=A0 =C2=
-=A0 =C2=A0 247.77 =C2=A0 =C2=A0 =C2=A0 338.73 =C2=A0 37478883 =C2=A0 51=
-237136
->> sda1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01.08 =C2=A0 =C2=
-=A0 =C2=A0 247.77 =C2=A0 =C2=A0 =C2=A0 338.73 =C2=A0 37478195 =C2=A0 51=
-237136
->> sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1.08 =C2=A0 =C2=
-=A0 =C2=A0 247.73 =C2=A0 =C2=A0 =C2=A0 338.78 =C2=A0 37472990 =C2=A0 51=
-245712
->> sdb1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01.08 =C2=A0 =C2=
-=A0 =C2=A0 247.73 =C2=A0 =C2=A0 =C2=A0 338.78 =C2=A0 37472302 =C2=A0 51=
-245712
->> sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1.10 =C2=A0 =C2=
-=A0 =C2=A0 247.82 =C2=A0 =C2=A0 =C2=A0 338.66 =C2=A0 37486670 =C2=A0 51=
-226640
->> sdc1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01.10 =C2=A0 =C2=
-=A0 =C2=A0 247.82 =C2=A0 =C2=A0 =C2=A0 338.66 =C2=A0 37485982 =C2=A0 51=
-226640
->> sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 1.09 =C2=A0 =C2=
-=A0 =C2=A0 118.46 =C2=A0 =C2=A0 =C2=A0 467.97 =C2=A0 17918510 =C2=A0 70=
-786576
->> sdd1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A01.09 =C2=A0 =C2=
-=A0 =C2=A0 118.45 =C2=A0 =C2=A0 =C2=A0 467.97 =C2=A0 17917822 =C2=A0 70=
-786576
->> md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A065.60 =C2=A0 =C2=
-=A0 =C2=A0 443.79 =C2=A0 =C2=A0 =C2=A01002.42 =C2=A0 67129812 =C2=A0151=
-629440
->
-> Doing the sums, for every 2 blocks written to md0 we see 3 blocks wri=
-tten to
-> some underlying device. =C2=A0That doesn't make much sense for a 4 dr=
-ive array.
-> If we assume that the extra writes to sdd were from some other source=
-, then
-> It is closer to a 3:4 ratio which suggests raid5.
-> So I'm guessing that the array is newly created and is recovering the=
- data on
-> sdd1 at the same time as you are doing the IO test.
-> This would agree with the observation that sd[abc] see a lot more rea=
-ds than
-> sdd.
->
-> I'll let you figure out the tps number.... do the math to find out th=
-e
-> average blk/t number for each device.
->
-> NeilBrown
->
->
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+raid456:for sector 6114040, rcw=0, must_compute=0
+raid456:for sector 6113904, rcw=0, must_compute=0
+raid456:for sector 11766712, rcw=0, must_compute=0
+raid456:for sector 6113912, rcw=0, must_compute=1
+raid456:for sector 6113912, rcw=0, must_compute=0
+raid456:for sector 11766712, rcw=0, must_compute=0
+raid456:for sector 11767200, rcw=0, must_compute=1
+raid456:for sector 11761952, rcw=0, must_compute=0
+raid456:for sector 11765560, rcw=0, must_compute=1
+raid456:for sector 11763064, rcw=0, must_compute=1
+
+please let me know if you'd like me to try/print something else.
+
+cheers,
+robin
+
+>> >diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+>> >index b8a2c5d..f8cd6ef 100644
+>> >--- a/drivers/md/raid5.c
+>> >+++ b/drivers/md/raid5.c
+>> >@@ -2436,10 +2436,16 @@ static void handle_stripe_dirtying6(raid5_conf_t *conf,
+>> >                               BUG();
+>> >                       case 1:
+>> >                               compute_block_1(sh, r6s->failed_num[0], 0);
+>> >+                              set_bit(R5_LOCKED,
+>> >+                                      &sh->dev[r6s->failed_num[0]].flags);
+>> >                               break;
+>> >                       case 2:
+>> >                               compute_block_2(sh, r6s->failed_num[0],
+>> >                                               r6s->failed_num[1]);
+>> >+                              set_bit(R5_LOCKED,
+>> >+                                      &sh->dev[r6s->failed_num[0]].flags);
+>> >+                              set_bit(R5_LOCKED,
+>> >+                                      &sh->dev[r6s->failed_num[1]].flags);
+>> >                               break;
+>> >                       default: /* This request should have been failed? */
+>> >                               BUG();
