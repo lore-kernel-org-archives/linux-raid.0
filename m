@@ -1,95 +1,77 @@
-From: "Edward Siefker" <hatta00@fastmail.fm>
-Subject: Re: Raid 5 to 6 grow stalled
-Date: Sat, 09 Apr 2011 09:55:49 -0700
-Message-ID: <1302368149.21170.1439272049@webmail.messagingengine.com>
-References: <1302366232.12096.1439264077@webmail.messagingengine.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: tune2fs can't be used on a mounted ext4, or...?
+Date: Sun, 10 Apr 2011 00:39:54 +0600
+Message-ID: <20110410003954.4108b9c9@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/20QR6bhndDEHP=MfT3rK8_J"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1302366232.12096.1439264077@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here's a little more info about my array.  
+--Sig_/20QR6bhndDEHP=MfT3rK8_J
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-mdadm -D /dev/md2:
+Hello,
 
-/dev/md2:
-        Version : 0.90
-  Creation Time : Wed Aug  5 22:07:37 2009
-     Raid Level : raid6
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
-    Persistence : Superblock is persistent
+Here's what happened. I reshaped my RAID5 to a RAID6 and a larger disk coun=
+t.
+Then I ran "resize2fs /dev/md0". It successfully enlarged the filesystem
+online (that took a couple of hours, I think).
 
-    Update Time : Sat Apr  9 11:49:59 2011
-          State : clean, degraded, recovering
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 1
+Since my count of disks changed, I thought I should change the array stripe
+width. Then, while still not unmounting the filesystem, I did:
 
-         Layout : left-symmetric-6
-     Chunk Size : 64K
+  tune2fs -E stripe_width=3D48 /dev/md0
 
- Rebuild Status : 0% complete
+Then I started copying files from another array to the one on which the abo=
+ve
+operations were conducted. I did:
 
-           UUID : 2a150668:a0e6267d:a6dd356e:c26679ce (local to host
-           iblis)
-         Events : 0.613692
+  cp -Rp /mnt/array1/data/* /mnt/array2/new-data/
 
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync   /dev/sdd1
-       1       8       33        1      active sync   /dev/sdc1
-       2       8       81        2      active sync   /dev/sdf1
-       4       8       65        3      spare rebuilding   /dev/sde1
+This completed successfully. No errors on the console, silence in dmesg.
 
+Then I thought I'd verify the destination, just to be sure. Luckily, I have
+checksums stored in almost every directory as .SFV files (created with "cfv=
+").
 
+And some checksums did not match. On a closer investigation, it appears like
+some files deep down in the directory tree (and with a rare occurence,
+something like one file in a thousand) were truncated during copying. E.g.
+they'd have size of 188 MB instead of 349 MB, or 128 MB instead of 170 MB.
+Some files (originally less than 1 MB in size) just had zero-length on the
+destination.
 
-mdadm -E /dev/sde1:
+Other than these truncations, there is NO corruption of data inside any of =
+the
+files. Which kinda rules out CRC-style errors in controller/disk/cable.
 
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 2a150668:a0e6267d:a6dd356e:c26679ce (local to host
-           iblis)
-  Creation Time : Wed Aug  5 22:07:37 2009
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 2
+So.. this is completely puzzling to me, and I suspect either a kernel bug, =
+or
+my mistake, and tune2fs cannot modify a mounted FS (however it did NOT show=
+ any
+warning that the FS was mounted, and if this is the case, it should've
+absolutely refused to operate on a mounted FS).
 
-    Update Time : Sat Apr  9 11:50:41 2011
-          State : clean
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : ccecf240 - correct
-         Events : 613694
+Any ideas? :)
 
-         Layout : left-symmetric-6
-     Chunk Size : 64K
+--=20
+With respect,
+Roman
 
-      Number   Major   Minor   RaidDevice State
-this     4       8       65        4      spare   /dev/sde1
+--Sig_/20QR6bhndDEHP=MfT3rK8_J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-   0     0       8       49        0      active sync   /dev/sdd1
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8       81        2      active sync   /dev/sdf1
-   3     3       0        0        3      faulty removed
-   4     4       8       65        4      spare   /dev/sde1
--- 
-  
-  hatta00@fastmail.fm
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
--- 
-http://www.fastmail.fm - IMAP accessible web-mail
+iEYEARECAAYFAk2gp/oACgkQTLKSvz+PZwi0cwCZAQVIwhKZl9xvAJLUCQ+KG2rR
+yD0An1erUfoNpowHnfeFndh4xgmCYr5f
+=fd30
+-----END PGP SIGNATURE-----
 
+--Sig_/20QR6bhndDEHP=MfT3rK8_J--
