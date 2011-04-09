@@ -1,56 +1,95 @@
 From: "Edward Siefker" <hatta00@fastmail.fm>
-Subject: Raid 5 to 6 grow stalled
-Date: Sat, 09 Apr 2011 09:23:52 -0700
-Message-ID: <1302366232.12096.1439264077@webmail.messagingengine.com>
+Subject: Re: Raid 5 to 6 grow stalled
+Date: Sat, 09 Apr 2011 09:55:49 -0700
+Message-ID: <1302368149.21170.1439272049@webmail.messagingengine.com>
+References: <1302366232.12096.1439264077@webmail.messagingengine.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1302366232.12096.1439264077@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a 3 disk raid-5 array I want to convert to a 4 disk raid-6 array.
-I added the 4th disk as a spare, and thought that it would get used
-automatically when I converted it to 6, but instead it created a
-degraded
-raid 6 array.  So I removed the spare and added it back to the array to
-get it to rebuild.  It did start rebuilding, but stalled out. 
+Here's a little more info about my array.  
 
-Here's some console output showing what I did:
+mdadm -D /dev/md2:
 
-root@iblis:/home/hatta# mdadm --grow /dev/md2 --level 6 --raid-devices 4
---backup-file=/mnt/sda6/yo
-mdadm level of /dev/md2 changed to raid6
-root@iblis:/home/hatta# cat /proc/mdstat
-Personalities : [raid10] [raid6] [raid5] [raid4]
-md2 : active (auto-read-only) raid6 sdd1[0] sde1[3](S) sdf1[2] sdc1[1]
-      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
+/dev/md2:
+        Version : 0.90
+  Creation Time : Wed Aug  5 22:07:37 2009
+     Raid Level : raid6
+     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
+  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-root@iblis:/home/hatta# mdadm /dev/md2 --remove /dev/sde1
-mdadm: hot removed /dev/sde1 from /dev/md2
-root@iblis:/home/hatta# mdadm /dev/md2 --add /dev/sde1
-mdadm: re-added /dev/sde1
-root@iblis:/home/hatta# cat /proc/mdstat  
-Personalities : [raid10] [raid6] [raid5] [raid4]
-md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
-      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
-      [>....................]  recovery =  0.0% (8192/1465135936)
-      finish=11899.9min speed=2048K/sec
-...
-...
-...
-md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
-      2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
-      [>....................]  recovery =  0.0% (8192/1465135936)
-      finish=2954174.4min speed=8K/sec
+    Update Time : Sat Apr  9 11:49:59 2011
+          State : clean, degraded, recovering
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric-6
+     Chunk Size : 64K
+
+ Rebuild Status : 0% complete
+
+           UUID : 2a150668:a0e6267d:a6dd356e:c26679ce (local to host
+           iblis)
+         Events : 0.613692
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       81        2      active sync   /dev/sdf1
+       4       8       65        3      spare rebuilding   /dev/sde1
 
 
-What's going on here?
+
+mdadm -E /dev/sde1:
+
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 2a150668:a0e6267d:a6dd356e:c26679ce (local to host
+           iblis)
+  Creation Time : Wed Aug  5 22:07:37 2009
+     Raid Level : raid6
+  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
+     Array Size : 2930271872 (2794.53 GiB 3000.60 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+
+    Update Time : Sat Apr  9 11:50:41 2011
+          State : clean
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : ccecf240 - correct
+         Events : 613694
+
+         Layout : left-symmetric-6
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8       65        4      spare   /dev/sde1
+
+   0     0       8       49        0      active sync   /dev/sdd1
+   1     1       8       33        1      active sync   /dev/sdc1
+   2     2       8       81        2      active sync   /dev/sdf1
+   3     3       0        0        3      faulty removed
+   4     4       8       65        4      spare   /dev/sde1
 -- 
   
   hatta00@fastmail.fm
 
 -- 
-http://www.fastmail.fm - Does exactly what it says on the tin
+http://www.fastmail.fm - IMAP accessible web-mail
 
