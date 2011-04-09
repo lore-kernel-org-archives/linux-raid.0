@@ -1,60 +1,52 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid 5 to 6 grow stalled
-Date: Sun, 10 Apr 2011 07:30:39 +1000
-Message-ID: <20110410073039.2d9683ac@notabene.brown>
-References: <1302366232.12096.1439264077@webmail.messagingengine.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Couple of questions.
+Date: Sun, 10 Apr 2011 05:17:28 +0600
+Message-ID: <20110410051728.59d61e1a@natsu>
+References: <4DA08600.5020604@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.Jbxa4FXAZ0GDdJsHFfGBFV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1302366232.12096.1439264077@webmail.messagingengine.com>
+In-Reply-To: <4DA08600.5020604@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Siefker <hatta00@fastmail.fm>
+To: Brad Campbell <lists2009@fnarfbargle.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 09 Apr 2011 09:23:52 -0700 "Edward Siefker" <hatta00@fastmail.fm>
-wrote:
+--Sig_/.Jbxa4FXAZ0GDdJsHFfGBFV
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> I have a 3 disk raid-5 array I want to convert to a 4 disk raid-6 array.
-> I added the 4th disk as a spare, and thought that it would get used
-> automatically when I converted it to 6, but instead it created a
-> degraded
-> raid 6 array.  So I removed the spare and added it back to the array to
-> get it to rebuild.  It did start rebuilding, but stalled out. 
-> 
-> Here's some console output showing what I did:
-> 
-> root@iblis:/home/hatta# mdadm --grow /dev/md2 --level 6 --raid-devices 4
-> --backup-file=/mnt/sda6/yo
-> mdadm level of /dev/md2 changed to raid6
-> root@iblis:/home/hatta# cat /proc/mdstat
-> Personalities : [raid10] [raid6] [raid5] [raid4]
-> md2 : active (auto-read-only) raid6 sdd1[0] sde1[3](S) sdf1[2] sdc1[1]
->       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
-> 
-> root@iblis:/home/hatta# mdadm /dev/md2 --remove /dev/sde1
-> mdadm: hot removed /dev/sde1 from /dev/md2
-> root@iblis:/home/hatta# mdadm /dev/md2 --add /dev/sde1
-> mdadm: re-added /dev/sde1
-> root@iblis:/home/hatta# cat /proc/mdstat  
-> Personalities : [raid10] [raid6] [raid5] [raid4]
-> md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
->       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
->       [>....................]  recovery =  0.0% (8192/1465135936)
->       finish=11899.9min speed=2048K/sec
-> ...
-> ...
-> ...
-> md2 : active raid6 sde1[4] sdd1[0] sdf1[2] sdc1[1]
->       2930271872 blocks level 6, 64k chunk, algorithm 18 [4/3] [UUU_]
->       [>....................]  recovery =  0.0% (8192/1465135936)
->       finish=2954174.4min speed=8K/sec
-> 
-> 
-> What's going on here?
+On Sun, 10 Apr 2011 00:14:56 +0800
+Brad Campbell <lists2009@fnarfbargle.com> wrote:
 
-Doesn't look good..
-What version of mdadm?  What kernel?
+> 2 - If a drive disappears how do I remove it from an array.
+>   Let's say I have a 10 drive RAID-6 that has an odd error on a disk.=20
+> The disk goes away (sdl), the disk comes back as sdq as md is still=20
+> hanging on to the name sdl. I add sdq to the array, but I can't remove=20
+> sdl as it physically no longer exists. udev has removed the device node=20
+> and mdadm can't remove it from the array as it can't tell what it was.
 
-NeilBrown
+Hello,
+
+See man mdadm and search for "detached". Just noticed that today while look=
+ing
+for something else.
+
+--=20
+With respect,
+Roman
+
+--Sig_/.Jbxa4FXAZ0GDdJsHFfGBFV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2g6QgACgkQTLKSvz+PZwgYsQCeKxR1ts6EyhLWDrwObbOjOBKd
+vlgAn2HUbgD4OA4jl98itvNaBgk6k8Rr
+=aQYR
+-----END PGP SIGNATURE-----
+
+--Sig_/.Jbxa4FXAZ0GDdJsHFfGBFV--
