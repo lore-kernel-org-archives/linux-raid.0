@@ -1,41 +1,25 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH][Trivial] md, raid5: Fix spelling error in comment ('Ofcourse'
- --> 'Of course').
-Date: Sun, 10 Apr 2011 18:06:17 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1104101757100.17454@swampdragon.chaosbits.net>
+From: "GET BACK TO ME IMMEDIATELY" <googleservice@terra.es>
+Subject: GET BACK TO ME IMMEDIATELY
+Date: Sun, 10 Apr 2011 19:25:50 +0000 (UTC)
+Message-ID: <20110410152334.1B9CF2A35B28__22341.4474553012$1302463550$gmane$org@mail.alsa.co.cr>
+Reply-To: <googleservice@terra.es>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Date: Fri, 29 Apr 2011 05:51:58 +0200
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, "Justin P. Mattock" <justinmattock@gmail.com>, Lucas De Marchi <lucas.demarchi@profusion.mobi>, trivial@kernel.org
 List-Id: linux-raid.ids
 
-There's a small typo in a comment in drivers/md/raid5.c - 'Of course' is 
-misspelled as 'Ofcourse'. This patch fixes the spelling error.
+Hello 
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- raid5.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I wish to ask for your consent for a partnership project that I would want both of us to execute mutually which is beneficial. However my name is Mr. Rodney Smith. Kindly get back to me to confirm the receipt of this massage so that I will give you full details of the project.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e867ee4..304b506 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3976,7 +3976,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
- 			/* spinlock is needed as reshape_progress may be
- 			 * 64bit on a 32bit platform, and so it might be
- 			 * possible to see a half-updated value
--			 * Ofcourse reshape_progress could change after
-+			 * Of course reshape_progress could change after
- 			 * the lock is dropped, so once we get a reference
- 			 * to the stripe that we think it is, we will have
- 			 * to check again.
+Send your reply to my private email at rodney_smith@ibibo.com 
 
+I am waiting for your permission.
 
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+Warm regards
+Mr. Rodney Smith
+Email:smithrodney@ibibo.com
