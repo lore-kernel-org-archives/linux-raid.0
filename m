@@ -1,84 +1,115 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Tue, 12 Apr 2011 07:14:28 +1000
-Message-ID: <20110412071428.4aa92c6e@notabene.brown>
-References: <1295659049-2688-6-git-send-email-jaxboe@fusionio.com>
-	<AANLkTin8FoXX6oqUyW+scwhadyX-TfW16_oKjvngU9-m@mail.gmail.com>
-	<20110303221353.GA10366@redhat.com>
-	<4D761E0D.8050200@fusionio.com>
-	<20110308202100.GA31744@redhat.com>
-	<4D76912C.9040705@fusionio.com>
-	<20110308220526.GA393@redhat.com>
-	<20110310005810.GA17911@redhat.com>
-	<20110405130541.6c2b5f86@notabene.brown>
-	<20110411145022.710c30e9@notabene.brown>
-	<20110411165923.GA15442@infradead.org>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Growing layered raids
+Date: Mon, 11 Apr 2011 23:44:58 +0200
+Message-ID: <invsor$qrt$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110411165923.GA15442@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 11 Apr 2011 12:59:23 -0400 "hch@infradead.org" <hch@infradead.org>
-wrote:
+Am I right in thinking that you cannot grow the size of a raid array 
+that is build on top of other arrays?
 
-> On Mon, Apr 11, 2011 at 02:50:22PM +1000, NeilBrown wrote:
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index 273d60b..903ce8d 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -2674,19 +2674,23 @@ static void flush_plug_list(struct blk_plug *plug)
-> >  	struct request_queue *q;
-> >  	unsigned long flags;
-> >  	struct request *rq;
-> > +	struct list_head head;
-> >  
-> >  	BUG_ON(plug->magic != PLUG_MAGIC);
-> >  
-> >  	if (list_empty(&plug->list))
-> >  		return;
-> > +	list_add(&head, &plug->list);
-> > +	list_del_init(&plug->list);
-> >  
-> >  	if (plug->should_sort)
-> > -		list_sort(NULL, &plug->list, plug_rq_cmp);
-> > +		list_sort(NULL, &head, plug_rq_cmp);
-> > +	plug->should_sort = 0;
-> 
-> As Jens mentioned this should be list_splice_init.  But looking over
-> flush_plug_list the code there seems strange to me.
-> 
-> What does the local_irq_save in flush_plug_list protect?  Why don't
-> we need it over the list_sort?  And do we still need it when first
-> splicing the list to a local one?
-> 
-> It's one of these cases where I'd really like to see more comments
-> explaining why the code is doing what it's doing.
+I am doing some experiments at the moment with small loopback devices 
+mapped to files on a tmpfs file system - the idea being I can play 
+around with my fake "disks" without any risk, and with resync times 
+faster than I can type.
 
-My understanding of that was that the calling requirement of
-__elv_add_request is that the queue spinlock is held and that interrupts are
-disabled.
-So rather than possible enabling and disabling interrupts several times as
-different queue are handled, the code just disabled interrupts once, and
-then just take the spinlock once for each different queue.
+My setup is like this (in case anyone wants to try it) :
 
-The whole point of the change to plugging was to take locks less often.
-Disabling interrupts less often is presumably an analogous goal.
+mount -t tmpfs tmpfs /root/loops
+dd if=/dev/zero of=/root/loops/loop1 bs=1M count=128
+dd if=/dev/zero of=/root/loops/loop2 bs=1M count=128
+dd if=/dev/zero of=/root/loops/loop3 bs=1M count=128
+dd if=/dev/zero of=/root/loops/loop4 bs=1M count=160
+dd if=/dev/zero of=/root/loops/loop5 bs=1M count=160
+dd if=/dev/zero of=/root/loops/loop6 bs=1M count=160
 
-Though I agree that a comment would help.
+losetup /dev/loop1 /root/loops/loop1
+...
+losetup /dev/loop6 /root/loops/loop6
 
-	q = NULL;
-+	/* Disable interrupts just once rather than using spin_lock_irq/sin_unlock_irq
-	 * variants
-	 */
-	local_irq_save(flags);
+This gives me 6 "disks" - 3 x 128 MB disks, and 3 x 160 MB disks.
+
+Make some single-disk "mirrors":
+
+mdadm --create /dev/md/mdpair1 --level=1 --force -n 1 /dev/loop1
+mdadm --create /dev/md/mdpair2 --level=1 --force -n 1 /dev/loop2
+mdadm --create /dev/md/mdpair3 --level=1 --force -n 1 /dev/loop3
 
 
-assuming my analysis is correct.
+Make a raid5 with no redundancy, so it's easy to see if something goes 
+horribly wrong:
 
-NeilBrown
+mdadm --create /dev/md/mdr --level=5 -n 4 /dev/md/mdpair1 
+/dev/md/mdpair2 /dev/md/mdpair3 missing
+
+
+Make and mount a file system, and put some data on it - so we can check 
+the data is still there.
+
+mkfs.ext4 /dev/md/mdr
+mkdir m
+mount /dev/md/mdr m
+cp -r /usr/share m
+
+
+At this stage, I've got a degraded raid5 with about 384MB space, in use 
+as a mounted file system.
+
+
+Now I want to swap out each of my 128 MB "disks" with 160 MB "disks".  I 
+want to do that without reducing the redundancy of the main raid (in the 
+real world, it would be raid 6 - not a degraded raid 5), and by using 
+mirror copies to minimise the strain on the other disks.
+
+Add a new disk as a "hot spare" to a pair:
+
+mdadm --add /dev/md/mdpair1 /dev/loop4
+
+Change it to being a 2-drive mirror
+
+mdadm --grow /dev/md/mdpair1 -n 2
+
+Wait for the sync to complete...
+
+Remove the small disk and change it back to a 1-drive mirror
+
+mdadm --fail /dev/md/mdpair1 /dev/loop1
+mdadm --remove /dev/md/mdpair1 /dev/loop1
+mdadm --grow /dev/md/mdpair1 -n 1 --force
+
+Now I can grow the one-disk mirror to use the whole new disk:
+
+mdadm --grow /dev/md/mdpair1 --size=max
+
+
+Repeat the procedure for the other two mdpair components.
+
+My raid5 array is build on top of these three raid1 mirrors, which have 
+now all increased from 128 MB to 160 MB (confirmed by mdadm --detail and 
+blockdev --report).
+
+But when I try to grow the raid 5 array, nothing happens:
+
+mdadm --grow /dev/md/mdr --size=max
+
+I am still getting a "component size" of 128 MB.
+
+
+If I do the same setup, but build the raid5 array directly from the 128 
+MB loopback devices, then add the 160 MB devices, then remove the 128 MB 
+devices (after appropriate resyncs, of course), then I can grow the raid 
+5 array as expected.
+
+
+Am I doing something wrong here, or is this a limitation of hierarchical 
+raid setups?
+
+
+
+
 
