@@ -1,169 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Growing layered raids
-Date: Tue, 12 Apr 2011 08:27:19 +1000
-Message-ID: <20110412082719.17fa4ffb@notabene.brown>
-References: <invsor$qrt$1@dough.gmane.org>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Mon, 11 Apr 2011 18:58:12 -0400
+Message-ID: <20110411225812.GA32310@infradead.org>
+References: <20110308202100.GA31744@redhat.com>
+ <4D76912C.9040705@fusionio.com>
+ <20110308220526.GA393@redhat.com>
+ <20110310005810.GA17911@redhat.com>
+ <20110405130541.6c2b5f86@notabene.brown>
+ <20110411145022.710c30e9@notabene.brown>
+ <4DA2C7BE.6060804@fusionio.com>
+ <20110411205928.13915719@notabene.brown>
+ <20110411215521.78c87573@notabene.brown>
+ <4DA2F02D.2000903@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <invsor$qrt$1@dough.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4DA2F02D.2000903@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: NeilBrown <neilb@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 11 Apr 2011 23:44:58 +0200 David Brown <david.brown@hesbynett.no>
-wrote:
+Looking at the patch
+(http://git.kernel.dk/?p=linux-2.6-block.git;a=commitdiff;h=761e433f3de6fb8e369af9e5c08beb86286d023f)
 
-> Am I right in thinking that you cannot grow the size of a raid array 
-> that is build on top of other arrays?
-
-Not - in general it should work just the same as building out of any other
-device.
-
-> 
-> I am doing some experiments at the moment with small loopback devices 
-> mapped to files on a tmpfs file system - the idea being I can play 
-> around with my fake "disks" without any risk, and with resync times 
-> faster than I can type.
-
-Very sensible!
-
-
-> 
-> My setup is like this (in case anyone wants to try it) :
-> 
-> mount -t tmpfs tmpfs /root/loops
-> dd if=/dev/zero of=/root/loops/loop1 bs=1M count=128
-> dd if=/dev/zero of=/root/loops/loop2 bs=1M count=128
-> dd if=/dev/zero of=/root/loops/loop3 bs=1M count=128
-> dd if=/dev/zero of=/root/loops/loop4 bs=1M count=160
-> dd if=/dev/zero of=/root/loops/loop5 bs=1M count=160
-> dd if=/dev/zero of=/root/loops/loop6 bs=1M count=160
-> 
-> losetup /dev/loop1 /root/loops/loop1
-> ...
-> losetup /dev/loop6 /root/loops/loop6
-> 
-> This gives me 6 "disks" - 3 x 128 MB disks, and 3 x 160 MB disks.
-> 
-> Make some single-disk "mirrors":
-> 
-> mdadm --create /dev/md/mdpair1 --level=1 --force -n 1 /dev/loop1
-> mdadm --create /dev/md/mdpair2 --level=1 --force -n 1 /dev/loop2
-> mdadm --create /dev/md/mdpair3 --level=1 --force -n 1 /dev/loop3
-> 
-> 
-> Make a raid5 with no redundancy, so it's easy to see if something goes 
-> horribly wrong:
-> 
-> mdadm --create /dev/md/mdr --level=5 -n 4 /dev/md/mdpair1 
-> /dev/md/mdpair2 /dev/md/mdpair3 missing
-> 
-> 
-> Make and mount a file system, and put some data on it - so we can check 
-> the data is still there.
-> 
-> mkfs.ext4 /dev/md/mdr
-> mkdir m
-> mount /dev/md/mdr m
-> cp -r /usr/share m
-> 
-> 
-> At this stage, I've got a degraded raid5 with about 384MB space, in use 
-> as a mounted file system.
-> 
-> 
-> Now I want to swap out each of my 128 MB "disks" with 160 MB "disks".  I 
-> want to do that without reducing the redundancy of the main raid (in the 
-> real world, it would be raid 6 - not a degraded raid 5), and by using 
-> mirror copies to minimise the strain on the other disks.
-> 
-> Add a new disk as a "hot spare" to a pair:
-> 
-> mdadm --add /dev/md/mdpair1 /dev/loop4
-> 
-> Change it to being a 2-drive mirror
-> 
-> mdadm --grow /dev/md/mdpair1 -n 2
-> 
-> Wait for the sync to complete...
-> 
-> Remove the small disk and change it back to a 1-drive mirror
-> 
-> mdadm --fail /dev/md/mdpair1 /dev/loop1
-> mdadm --remove /dev/md/mdpair1 /dev/loop1
-> mdadm --grow /dev/md/mdpair1 -n 1 --force
-> 
-> Now I can grow the one-disk mirror to use the whole new disk:
-> 
-> mdadm --grow /dev/md/mdpair1 --size=max
-> 
-> 
-> Repeat the procedure for the other two mdpair components.
-> 
-> My raid5 array is build on top of these three raid1 mirrors, which have 
-> now all increased from 128 MB to 160 MB (confirmed by mdadm --detail and 
-> blockdev --report).
-> 
-> But when I try to grow the raid 5 array, nothing happens:
-> 
-> mdadm --grow /dev/md/mdr --size=max
-> 
-> I am still getting a "component size" of 128 MB.
-
-You need to tell md2 that each of it's components has grown.
-If the RAID5 has metadata at the end of the device (0.90 or 1.0), then
-this array is quite unsafe.  If you stop and restart mdadm will not be able
-to find the metadata - it is in the middle of the device somewhere.
-If the metadata is at the start then you are safer, but the metadata still
-thinks it knows the size of each device.
-
-If the metadata is at the start, you can stop the array and assemble it again
-with
-    --update=devicesize
-
-then the --grow --size=max will work.
-
-If the metadata is at the end of the device, then as soon as the device
-becomes bigger, you really should
-   echo 0 > /sys/block/mdXX/md/dev-mdYY/size
-where XX is the raid5 and YY is the raid1 that you have grown.
-That tells md to re-assess the size of the device and write new metadata.
-It would be good if the kernel did this automatically but it cannot yet.
-
-You can also do this with metadata at the start of the device.
-
-Once you have told md that the size of each device has changed, then you can
-ask it to grow the array to match this new size.
-
-The next release of mdadm should do this for you.  i.e. when you run
-  --grow --size=max
-it will reset the size of each component first.
-
-
-NeilBrown
-
-
-
-> 
-> 
-> If I do the same setup, but build the raid5 array directly from the 128 
-> MB loopback devices, then add the 160 MB devices, then remove the 128 MB 
-> devices (after appropriate resyncs, of course), then I can grow the raid 
-> 5 array as expected.
-> 
-> 
-> Am I doing something wrong here, or is this a limitation of hierarchical 
-> raid setups?
-> 
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+I'm not sure it's an optimal design.  The flush callback really
+is a per-queue thing.  Why isn't it a function pointer in the request
+queue when doing the blk_run_queue call once we're done with a given
+queue before moving on to the next one?
