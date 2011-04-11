@@ -1,211 +1,58 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Mon, 11 Apr 2011 14:50:22 +1000
-Message-ID: <20110411145022.710c30e9@notabene.brown>
-References: <1295659049-2688-1-git-send-email-jaxboe@fusionio.com>
-	<1295659049-2688-6-git-send-email-jaxboe@fusionio.com>
-	<AANLkTin8FoXX6oqUyW+scwhadyX-TfW16_oKjvngU9-m@mail.gmail.com>
-	<20110303221353.GA10366@redhat.com>
-	<4D761E0D.8050200@fusionio.com>
-	<20110308202100.GA31744@redhat.com>
-	<4D76912C.9040705@fusionio.com>
-	<20110308220526.GA393@redhat.com>
-	<20110310005810.GA17911@redhat.com>
-	<20110405130541.6c2b5f86@notabene.brown>
+Subject: Re: [PATCH] FIX: Raid0 expansion cannot be restarted
+Date: Mon, 11 Apr 2011 15:01:45 +1000
+Message-ID: <20110411150145.3165bce8@notabene.brown>
+References: <20110408100545.7338.13248.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110405130541.6c2b5f86@notabene.brown>
+In-Reply-To: <20110408100545.7338.13248.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <jaxboe@fusionio.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, 5 Apr 2011 13:05:41 +1000 NeilBrown <neilb@suse.de> wrote:
+On Fri, 08 Apr 2011 12:05:45 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> On Wed, 9 Mar 2011 19:58:10 -0500 Mike Snitzer <snitzer@redhat.com> wrote:
+> When raid0 expansion is restarted, mdadm refuses to correctly assemble
+> array because critical section cannot be restored from backup file.
+> mdadm exits with information:
+> 	mdadm: Failed to restore critical section for reshape - sorry.
 > 
-> > Also, in your MD changes, you removed all calls to md_unplug() but
-> > didn't remove md_unplug().  Seems it should be removed along with the
-> > 'plug' member of 'struct mddev_t'?  Neil?
+> For raid0 new level is 0, current array level is 4.
+> Function Grow_restart() doesn't allow for level change.
+> It should be allowed for raid0, while raid4 is reshape mid-point only.
+> 'Native' raid0 reshape is not possible, because md doesn't support it.
 > 
-> I've been distracted by other things and only just managed to have a look at
-> this.
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
 > 
-> The new plugging code seems to completely ignore the needs of stacked devices
-> - or at least my needs in md.
+>  Grow.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 > 
-> For RAID1 with a write-intent-bitmap, I queue all write requests and then on
-> an unplug I update the write-intent-bitmap to mark all the relevant blocks
-> and then release the writes.
-> 
-> With the new code there is no way for an unplug event to wake up the raid1d
-> thread to start the writeout - I haven't tested it but I suspect it will just
-> hang.
-> 
-> Similarly for RAID5 I gather write bios (long before they become 'struct
-> request' which is what the plugging code understands) and on an unplug event
-> I release the writes - hopefully with enough bios per stripe so that we don't
-> need to pre-read.
-> 
-> Possibly the simplest fix would be to have a second list_head in 'struct
-> blk_plug' which contained callbacks (a function pointer a list_head in a
-> struct which is passed as an arg to the function!).
-> blk_finish_plug could then walk the list and call the call-backs.
-> It would be quite easy to hook into that.
+> diff --git a/Grow.c b/Grow.c
+> index d6ecde2..21531e0 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -3102,7 +3102,8 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
+>  	unsigned long long  nstripe, ostripe;
+>  	int ndata, odata;
+>  
+> -	if (info->new_level != info->array.level)
+> +	if ((info->new_level != info->array.level) &&
+> +	    (info->new_level != 0) && (info->array.level != 4))
+>  		return 1; /* Cannot handle level changes (they are instantaneous) */
+>  
+>  	odata = info->array.raid_disks - info->delta_disks - 1;
 
-I've implemented this and it seems to work.
-Jens:  could you please review and hopefully ack the patch below, and let
-me know if you will submit it or should I?
+Thank,.
+I changed this to simply remove that 'if' and 'return 1'.
+There really is no way we should ever see level changes at this point - if we
+think we do they are pending level changes for after a reshape so we don't
+want to give them any special attention.
 
-My testing of this combined with some other patches which cause various md
-personalities to use it shows up a bug somewhere.
+I have applied and pushed this out.
 
-The symptoms are crashes in various places in blk-core and sometimes
-elevator.c
-list_sort occurs fairly often included in the stack but not always.
-
-This patch
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 273d60b..903ce8d 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2674,19 +2674,23 @@ static void flush_plug_list(struct blk_plug *plug)
- 	struct request_queue *q;
- 	unsigned long flags;
- 	struct request *rq;
-+	struct list_head head;
- 
- 	BUG_ON(plug->magic != PLUG_MAGIC);
- 
- 	if (list_empty(&plug->list))
- 		return;
-+	list_add(&head, &plug->list);
-+	list_del_init(&plug->list);
- 
- 	if (plug->should_sort)
--		list_sort(NULL, &plug->list, plug_rq_cmp);
-+		list_sort(NULL, &head, plug_rq_cmp);
-+	plug->should_sort = 0;
- 
- 	q = NULL;
- 	local_irq_save(flags);
--	while (!list_empty(&plug->list)) {
--		rq = list_entry_rq(plug->list.next);
-+	while (!list_empty(&head)) {
-+		rq = list_entry_rq(head.next);
- 		list_del_init(&rq->queuelist);
- 		BUG_ON(!(rq->cmd_flags & REQ_ON_PLUG));
- 		BUG_ON(!rq->q);
-
-
-makes the symptom go away.  It simply moves the plug list onto a separate
-list head before sorting and processing it.
-My test was simply writing to a RAID1 with dd:
-  while true; do dd if=/dev/zero of=/dev/md0 size=4k; done
-
-Obviously all writes go to two devices so the plug list will always need
-sorting.
-
-The only explanation I can come up with is that very occasionally schedule on
-2 separate cpus calls blk_flush_plug for the same task.  I don't understand
-the scheduler nearly well enough to know if or how that can happen.
-However with this patch in place I can write to a RAID1 constantly for half
-an hour, and without it, the write rarely lasts for 3 minutes.
-
-If you want to reproduce my experiment, you can pull from
-  git://neil.brown.name/md plug-test
-to get my patches for plugging in md (which are quite ready for submission
-but seem to work), create a RAID1 using e.g.
-   mdadm -C /dev/md0 --level=1 --raid-disks=2 /dev/device1 /dev/device2
-   while true; do dd if=/dev/zero of=/dev/md0 bs=4K ; done
-
-
-Thanks,
 NeilBrown
-
-
-
-From 687b189c02276887dd7d5b87a817da9f67ed3c2c Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Thu, 7 Apr 2011 13:16:59 +1000
-Subject: [PATCH] Enhance new plugging support to support general callbacks.
-
-md/raid requires an unplug callback, but as it does not uses
-requests the current code cannot provide one.
-
-So allow arbitrary callbacks to be attached to the blk_plug.
-
-Cc: Jens Axboe <jaxboe@fusionio.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- block/blk-core.c       |   13 +++++++++++++
- include/linux/blkdev.h |    7 ++++++-
- 2 files changed, 19 insertions(+), 1 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 725091d..273d60b 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2644,6 +2644,7 @@ void blk_start_plug(struct blk_plug *plug)
- 
- 	plug->magic = PLUG_MAGIC;
- 	INIT_LIST_HEAD(&plug->list);
-+	INIT_LIST_HEAD(&plug->cb_list);
- 	plug->should_sort = 0;
- 
- 	/*
-@@ -2717,9 +2718,21 @@ static void flush_plug_list(struct blk_plug *plug)
- 	local_irq_restore(flags);
- }
- 
-+static void flush_plug_callbacks(struct blk_plug *plug)
-+{
-+	while (!list_empty(&plug->cb_list)) {
-+		struct blk_plug_cb *cb = list_first_entry(&plug->cb_list,
-+							  struct blk_plug_cb,
-+							  list);
-+		list_del(&cb->list);
-+		cb->callback(cb);
-+	}
-+}
-+
- static void __blk_finish_plug(struct task_struct *tsk, struct blk_plug *plug)
- {
- 	flush_plug_list(plug);
-+	flush_plug_callbacks(plug);
- 
- 	if (plug == tsk->plug)
- 		tsk->plug = NULL;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 32176cc..3e5e604 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -857,8 +857,13 @@ extern void blk_put_queue(struct request_queue *);
- struct blk_plug {
- 	unsigned long magic;
- 	struct list_head list;
-+	struct list_head cb_list;
- 	unsigned int should_sort;
- };
-+struct blk_plug_cb {
-+	struct list_head list;
-+	void (*callback)(struct blk_plug_cb *);
-+};
- 
- extern void blk_start_plug(struct blk_plug *);
- extern void blk_finish_plug(struct blk_plug *);
-@@ -876,7 +881,7 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
- {
- 	struct blk_plug *plug = tsk->plug;
- 
--	return plug && !list_empty(&plug->list);
-+	return plug && (!list_empty(&plug->list) || !list_empty(&plug->cb_list));
- }
- 
- /*
--- 
-1.7.3.4
 
