@@ -1,92 +1,107 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Unconventional reshape - a success story
-Date: Mon, 11 Apr 2011 16:09:46 +0600
-Message-ID: <20110411160946.60558225@natsu>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: iostat with raid device...
+Date: Mon, 11 Apr 2011 20:18:08 +1000
+Message-ID: <20110411201808.47cd19d5@notabene.brown>
+References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
+	<20110409094629.2eae2d5b@notabene.brown>
+	<BANLkTin2KP-_vy8jbmV3JB-LHHJNOEVCKw@mail.gmail.com>
+	<20110409085044.GB417@cthulhu.home.robinhill.me.uk>
+	<BANLkTim4fenro-GQchqJ0JzrcDAcJXG0UQ@mail.gmail.com>
+	<20110411092559.GA20532@cthulhu.home.robinhill.me.uk>
+	<BANLkTikYTECzE-2dCnC+jDT0wHNtgkNQ8Q@mail.gmail.com>
+	<20110411095355.GB20532@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Z6inU9k0QaTXT5CyaI9CP8E"; protocol="application/pgp-signature"
+ boundary="Sig_/3KcswC8T0vbj/pW1isbjl0z"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110411095355.GB20532@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: Linux Raid Study <linuxraid.study@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Z6inU9k0QaTXT5CyaI9CP8E
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/3KcswC8T0vbj/pW1isbjl0z
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Mon, 11 Apr 2011 10:53:55 +0100 Robin Hill <robin@robinhill.me.uk> wrote:
 
-Thought I'd share this 'trick' (if using the documented functionality can be
-called that :).
+> On Mon Apr 11, 2011 at 02:36:50AM -0700, Linux Raid Study wrote:
+> > On Mon, Apr 11, 2011 at 2:25 AM, Robin Hill <robin@robinhill.me.uk> wro=
+te:
+> > > On Mon Apr 11, 2011 at 01:32:34 -0700, Linux Raid Study wrote:
+> > >> On Sat, Apr 9, 2011 at 1:50 AM, Robin Hill <robin@robinhill.me.uk> w=
+rote:
+> > >> > On Fri Apr 08, 2011 at 05:40:46PM -0700, Linux Raid Study wrote:
+> > >> >
+> > >> >> What I'm not sure of is if the device is newly formatted, would r=
+aid
+> > >> >> recovery happen? What else could explain difference in the first =
+run
+> > >> >> of IO benchmark?
+> > >> >>
+> > >> > When an array is first created, it's created in a degraded state -=
+ this
+> > >> > is the simplest way to make it available to the user instantly. The
+> > >> > final drive(s) are then automatically rebuilt, calculating the
+> > >> > parity/data information as normal for recovering a drive.
+> > >> >
+> > >> Thanks. So, the uneven (unequal) distribution of Wrtie/Sec numbers in
+> > >> the iostat output are ok...is that correct?
+> > >>
+> > > If it hadn't completed the initial recovery, yes. =A0If it _had_ comp=
+leted
+> > > the initial recovery then I'd expect writes to be balanced (barring
+> > > any differences in hardware).
+> > >
+> > The initial recovery should normally be done during first few minutes
+> > .... this is a newly formatted disk so there isn't any user data
+> > there. So, if I run the IO benchmark after say 3-4 min of doing, I
+> > should be ok?
+> >=20
+> > mdam --create /dev/md0 --raid5....
+> > mount /dev/md0 /mnt/raid
+> > mkfs.ext4 /mnt/raid
+> >=20
+> > ...wait 3-4 min
+> >=20
+> > run IO benchmark...
+> >=20
+> > Am I correct?
+> >=20
+> No, depending on the size of the drives, the initial recovery can take
+> hours or even days. For RAID5 with N drives, it needs to read the
+> entirity of (N-1) drives, and write the entirity of the remaining drive
+> (whether there's any data or not, the initial state of the drives is
+> unknown so parity data has to be calculated for the entire array).
+>=20
+> Check /proc/mdstat and wait until the array has completed resync before
+> running any benchmarks.
 
-I needed to upgrade my 3-disk RAID5 to a 5-disk RAID6. Problem is, due to a
-lack of free space I needed to do that in stages, i.e. add one drive, gain
-additional space in the array, move some data over, then add another drive.
+or run
+  mdadm --wait /dev/md0
 
-The usual way of doing this perhaps would be to first reshape to a 4-disk
-RAID5, and only after that to a 5-disk RAID6.
+or create the array with --assume-clean.  But if the array is raid5, don't
+trust the data if a device fails:  use this only for testing.
 
-But I wanted to have this done in just one reshape. So I got the idea to
-reshape from a 3-disk RAID5 right to a degraded 5-disk RAID6 (with 4 drives
-active and one missing).
-
-On my RAID5 with 3 "active" drives and 1 newly-added "spare" drive I execut=
-ed:
-
-  mdadm --grow --level=3D6 --raid-devices=3D5 /dev/md0
-
-And indeed, this worked exactly as intended:=20
-
-/dev/md0:
-        Version : 1.2
-  Creation Time : Wed Jun  9 12:14:49 2010
-     Raid Level : raid6
-     Array Size : 3887004672 (3706.94 GiB 3980.29 GB)
-  Used Dev Size : 1943502336 (1853.47 GiB 1990.15 GB)
-   Raid Devices : 5
-  Total Devices : 4
-    Persistence : Superblock is persistent
-
-    Update Time : Fri Apr  8 11:52:03 2011
-          State : clean, degraded, recovering
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
- Reshape Status : 0% complete
-  Delta Devices : 1, (4->5)
-     New Layout : left-symmetric
-
-           Name : natsu:0  (local to host natsu)
-           UUID : 7f0c87dd:bcd14e11:7624e659:a7701e85
-         Events : 35389
-
-    Number   Major   Minor   RaidDevice State
-       0       8       35        0      active sync   /dev/sdc3
-       1       8       67        1      active sync   /dev/sde3
-       3       8       51        2      active sync   /dev/sdd3
-       4       8       99        3      spare rebuilding   /dev/sdg3
-       4       0        0        4      removed
+NeilBrown
 
 
---=20
-With respect,
-Roman
+>=20
+> Cheers,
+>     Robin
 
---Sig_/Z6inU9k0QaTXT5CyaI9CP8E
+
+--Sig_/3KcswC8T0vbj/pW1isbjl0z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Version: GnuPG v2.0.16 (GNU/Linux)
 
-iEYEARECAAYFAk2i02sACgkQTLKSvz+PZwgSrQCfQSdvGl3n2P4upMkf1Qgo6aFa
-GL0An2lT0Y5sKe2m6HvSxCy/1B5XDP5S
-=6xV/
+iD8DBQFNotVgG5fc6gV+Wb0RAhAgAJ48Sj+3DgG72ahJDpix4qzhPxOz9gCffgEg
+mKqqOtjnJGpGqG2QSUdYSeA=
+=uGHB
 -----END PGP SIGNATURE-----
 
---Sig_/Z6inU9k0QaTXT5CyaI9CP8E--
+--Sig_/3KcswC8T0vbj/pW1isbjl0z--
