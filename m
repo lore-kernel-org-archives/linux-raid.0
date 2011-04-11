@@ -1,117 +1,117 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid 5 to 6 grow stalled
-Date: Mon, 11 Apr 2011 07:52:16 +1000
-Message-ID: <20110411075216.1da3a3a0@notabene.brown>
-References: <1302366232.12096.1439264077@webmail.messagingengine.com>
-	<20110410073039.2d9683ac@notabene.brown>
-	<1302447763.8724.1439486933@webmail.messagingengine.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID6 simply does not start as /dev/md8
+Date: Sun, 10 Apr 2011 23:16:55 -0500
+Message-ID: <0E.11.05159.1B082AD4@cdptpa-omtalb.mail.rr.com>
+References: <4D9EC097.7010600@web.de>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1302447763.8724.1439486933@webmail.messagingengine.com>
+In-Reply-To: <4D9EC097.7010600@web.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Edward Siefker <hatta00@fastmail.fm>
-Cc: linux-raid@vger.kernel.org
+To: 'Yann Ormanns' <yann-ormanns@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 10 Apr 2011 08:02:43 -0700 "Edward Siefker" <hatta00@fastmail.fm>
-wrote:
-
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Yann Ormanns
+> Sent: Friday, April 08, 2011 3:00 AM
+> To: linux-raid@vger.kernel.org
+> Subject: RAID6 simply does not start as /dev/md8
 > 
-> > 
-> > Doesn't look good..
-> > What version of mdadm?  What kernel?
-> > 
-> > NeilBrown
-> > 
+> Hello everybody,
+> I've now been trying for over a week to get my RAID6 working.
+> I have set up the array by partitioning all six disks (partition type:
+
+	Why?  From your description, it sounds to me like md8 is built using
+the whole disk on all 6 drives.  If so, there's really no need to partition
+the drives.
+
+> Linux (83)) and executing "mdadm -C /dev/md8 --level=6 --raid-devices=6
+> /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1".
 > 
+> When the array had finished syncing, I rebooted. /proc/mdstat contained
+> 	md126 : inactive sde1[4](S) sdd1[3](S)
+> 	      3907025072 blocks super 1.2
 > 
+> 	md127 : inactive sdb1[1](S) sda1[0](S) sdc1[2](S) sdf1[5](S)
+> 	      7814050144 blocks super 1.2
 > 
-> root@iblis:~# mdadm --version
-> mdadm - v3.1.4 - 31st August 2010
-> root@iblis:~# uname -a
-> Linux iblis 2.6.38-2-amd64 #1 SMP Tue Mar 29 16:45:36 UTC 2011 x86_64
-> GNU/Linux
+> So I put the following lines into /etc/mdadm.conf (I had forgot this
+> before):
+> "DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+> ARRAY /dev/md8
+> devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1"
+
+You should not need the "devices=..." entry, but I would include the name
+and the UUID.  Here are the relevant parts of my mdadm.conf:
+
+# by default, scan all partitions (/proc/partitions) for MD superblocks.
+# alternatively, specify devices to scan, using wildcards if desired.
+DEVICE partitions
+
+# auto-create devices with Debian standard permissions
+CREATE owner=root group=disk mode=0660 auto=yes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+ARRAY /dev/md0 level=raid6 metadata=1.2 num-devices=14
+UUID=5ff10d73:a096195f:7a646bba:a68986ca name=RAID-Server:0
+
+ARRAY /dev/md1 level=raid1 metadata=0.90 num-devices=2
+UUID=f0a63cae:10406a7a:fa72b0ce:3d8e1057
+
+ARRAY /dev/md2 level=raid1 metadata=1.2 num-devices=2
+UUID=4b466602:fb81286c:4ad8dc5c:ad0bd065 name=RAID-Server:2
+
+ARRAY /dev/md3 level=raid1 metadata=1.2 num-devices=2
+UUID=5bc11cda:e1b4065f:fbf2fca5:8b12e0ba name=RAID-Server:3
+
+> So I rebooted again, now the array was started as follows:
 > 
-> Did you see the other post I made?  The array still
-> reports as clean, but I haven't tried to mount it yet. 
-> This array started out as a RAID1, which I changed to
-> RAID5, added a disk, reshaped, and added a spare to. 
-> This worked great and I used it for a couple weeks 
-> before deciding to go to RAID6. 
+> 	Personalities : [raid1] [raid6] [raid5] [raid4]
+> 	md8 : inactive sda1[0](S)
+> 	      1953512536 blocks super 1.2
 > 
+> I found out, that the assembly was aborted due to the error, that
+> /dev/sda1 has no superblock. It seems, as if the kernel would start the
+> array while booting the system, so mdadm is unable to assemble it
+> afterwards. If I stop and re-assemble the array, it works fine.
+
+	I had similar problems with a name conflict, but that doesn't seem
+to be the case here.
+
+> Unfortunately, I have to keep "CONFIG_MD_AUTODETECT" enabled, because /
+> and the whole system runs on a RAID1. But why does the kernel start the
+> array, although the used partition type of the disks in my RAID6 is NOT
+> "linux raid autodetect"?
+
+	Mdadm builds any arrays local to the system at boot.  Why do you
+have grief with the kernel starting the array?
+
+> I simply want to start my RAID6 as /dev/md8.
 > 
-> Looking at the output of 'mdadm -E' and 'mdadm -D'
-> (again in the other post), it looks like there's 
-> some inconsistency in the raid device for /dev/sde1.
-> -E reports it as number 4 and raid device 4. But,
-> -D says /dev/sde1 is number 4 and raid device 3.
-> Don't know if that means anything, but it's the 
-> only thing I see that looks unusual. 
+> I use mdadm-3.1.4 and linux-2.6.36-gentoo-r8. The superblocks seem to be
+> correct - "mdadm -E /dev/sd[a,b,c,d,e,f]1 | grep Name" returns
+>            Name : Atlas:8  (local to host Atlas)
+>            Name : Atlas:8  (local to host Atlas)
+>            Name : Atlas:8  (local to host Atlas)
+>            Name : Atlas:8  (local to host Atlas)
+>            Name : Atlas:8  (local to host Atlas)
+>            Name : Atlas:8  (local to host Atlas)
+> If I get this right, this array should be started as /dev/md8. However,
+> it does not. I have tried several combinations of configurations ("linux
+> raid autodetect" without using mdadm for assembly, "linux" together with
+> mdadm, and so on), but without any success.
+> Any help would be really apprectiated.
 > 
-> Since the array is clean, is it safe to mount it?
-> It's actually a luks volume, fwiw.  Thanks
+> Best regards,
+> Yann
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-That inconsistency is expected.  The v0.90 metadata isn't able to represent
-some state information that the running kernel can represent.  So when the
-metadata is written out it looks a bit different just as you noticed.
-
-Your data is safe and it is easy to make it all happy again.
-There are a couple of options...
-
-The state of your array is that it has been converted to RAID6 in a special
-layout where the Q blocks (the second parity block) are all on the last drive
-instead of spread among all the drives.
-
-mdadm then tried to start the process of converting this to a more normal
-layout but because the array was "auto-read-only" (which means you hadn't
-even tried to mount it or anything) it got confused and aborted.
-This left some sysfs settings in an unusual state.
-In particular:
-   sync_max is 16385  (sectors) so when the rebuilt started it paused at 8192K
-   suspend_hi is 65536 so any IO lower than this address will block.
-
-The simplest thing to is:
-
-   echo max > /sys/block/md0/md/sync_max
-   echo 0 > /sys/block/md0/md/suspend_hi
-
-this will allow the recovery of sde1 to complete and you will have full access
-to your data.
-This will result in the array being in the unusual layout with non-rotated Q.
-This can then be fixed with
-    mdadm --grow /dev/md0 --layout=normalise --backup=/whatever
-
-
-If you don't want to wait for both the recovery and the subsequent
-reshape you could do them both at once:
-   - issue the above two 'echo' commands.
-   - fail and remove sde1
-      mdadm /dev/md0 -f /dev/sde1
-      mdadm /dev/md0 -r /dev/sde1
-   - then freeze recovery in the array, add the device back in, and start the
-     grow, so:
-
-      echo frozen > /sys/block/md0/md/sync_action
-      mdadm /dev/md0 --add /dev/sde1
-      mdadm --grow /dev/md0 --layout=normalise --backup=/whereever
-
-You don't need to use the same backup file as before - and make sure you
-give the name of a file which doesn't exist, or mdadm will complain,
-unfreeze the array and it will start recovery - which isn't a big problem,
-just not part of the plan.
-
-
-And you did exactly the right thing to ask instead of fiddling with the
-array!!  It was in quite an unusual state and while I is unlikely you would
-have corrupted any date - waiting for a definitive answer is safest!
-
-The next version of mdadm will check for arrays that are 'auto-readonly' and
-not get confused by them.
-
-Thanks,
-NeilBrown
-
- 
