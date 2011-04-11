@@ -1,203 +1,66 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Mon, 11 Apr 2011 11:19:58 +0200
-Message-ID: <4DA2C7BE.6060804@fusionio.com>
-References: <1295659049-2688-1-git-send-email-jaxboe@fusionio.com>	<1295659049-2688-6-git-send-email-jaxboe@fusionio.com>	<AANLkTin8FoXX6oqUyW+scwhadyX-TfW16_oKjvngU9-m@mail.gmail.com>	<20110303221353.GA10366@redhat.com>	<4D761E0D.8050200@fusionio.com>	<20110308202100.GA31744@redhat.com>	<4D76912C.9040705@fusionio.com>	<20110308220526.GA393@redhat.com>	<20110310005810.GA17911@redhat.com>	<20110405130541.6c2b5f86@notabene.brown> <20110411145022.710c30e9@notabene.brown>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: iostat with raid device...
+Date: Mon, 11 Apr 2011 10:25:59 +0100
+Message-ID: <20110411092559.GA20532@cthulhu.home.robinhill.me.uk>
+References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
+ <20110409094629.2eae2d5b@notabene.brown>
+ <BANLkTin2KP-_vy8jbmV3JB-LHHJNOEVCKw@mail.gmail.com>
+ <20110409085044.GB417@cthulhu.home.robinhill.me.uk>
+ <BANLkTim4fenro-GQchqJ0JzrcDAcJXG0UQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110411145022.710c30e9@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <BANLkTim4fenro-GQchqJ0JzrcDAcJXG0UQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux Raid Study <linuxraid.study@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2011-04-11 06:50, NeilBrown wrote:
-> On Tue, 5 Apr 2011 13:05:41 +1000 NeilBrown <neilb@suse.de> wrote:
-> 
->> On Wed, 9 Mar 2011 19:58:10 -0500 Mike Snitzer <snitzer@redhat.com> wrote:
->>
->>> Also, in your MD changes, you removed all calls to md_unplug() but
->>> didn't remove md_unplug().  Seems it should be removed along with the
->>> 'plug' member of 'struct mddev_t'?  Neil?
->>
->> I've been distracted by other things and only just managed to have a look at
->> this.
->>
->> The new plugging code seems to completely ignore the needs of stacked devices
->> - or at least my needs in md.
->>
->> For RAID1 with a write-intent-bitmap, I queue all write requests and then on
->> an unplug I update the write-intent-bitmap to mark all the relevant blocks
->> and then release the writes.
->>
->> With the new code there is no way for an unplug event to wake up the raid1d
->> thread to start the writeout - I haven't tested it but I suspect it will just
->> hang.
->>
->> Similarly for RAID5 I gather write bios (long before they become 'struct
->> request' which is what the plugging code understands) and on an unplug event
->> I release the writes - hopefully with enough bios per stripe so that we don't
->> need to pre-read.
->>
->> Possibly the simplest fix would be to have a second list_head in 'struct
->> blk_plug' which contained callbacks (a function pointer a list_head in a
->> struct which is passed as an arg to the function!).
->> blk_finish_plug could then walk the list and call the call-backs.
->> It would be quite easy to hook into that.
-> 
-> I've implemented this and it seems to work.
-> Jens:  could you please review and hopefully ack the patch below, and let
-> me know if you will submit it or should I?
-> 
-> My testing of this combined with some other patches which cause various md
-> personalities to use it shows up a bug somewhere.
-> 
-> The symptoms are crashes in various places in blk-core and sometimes
-> elevator.c
-> list_sort occurs fairly often included in the stack but not always.
-> 
-> This patch
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 273d60b..903ce8d 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2674,19 +2674,23 @@ static void flush_plug_list(struct blk_plug *plug)
->  	struct request_queue *q;
->  	unsigned long flags;
->  	struct request *rq;
-> +	struct list_head head;
->  
->  	BUG_ON(plug->magic != PLUG_MAGIC);
->  
->  	if (list_empty(&plug->list))
->  		return;
-> +	list_add(&head, &plug->list);
-> +	list_del_init(&plug->list);
->  
->  	if (plug->should_sort)
-> -		list_sort(NULL, &plug->list, plug_rq_cmp);
-> +		list_sort(NULL, &head, plug_rq_cmp);
-> +	plug->should_sort = 0;
->  
->  	q = NULL;
->  	local_irq_save(flags);
-> -	while (!list_empty(&plug->list)) {
-> -		rq = list_entry_rq(plug->list.next);
-> +	while (!list_empty(&head)) {
-> +		rq = list_entry_rq(head.next);
->  		list_del_init(&rq->queuelist);
->  		BUG_ON(!(rq->cmd_flags & REQ_ON_PLUG));
->  		BUG_ON(!rq->q);
-> 
-> 
-> makes the symptom go away.  It simply moves the plug list onto a separate
-> list head before sorting and processing it.
-> My test was simply writing to a RAID1 with dd:
->   while true; do dd if=/dev/zero of=/dev/md0 size=4k; done
-> 
-> Obviously all writes go to two devices so the plug list will always need
-> sorting.
-> 
-> The only explanation I can come up with is that very occasionally schedule on
-> 2 separate cpus calls blk_flush_plug for the same task.  I don't understand
-> the scheduler nearly well enough to know if or how that can happen.
-> However with this patch in place I can write to a RAID1 constantly for half
-> an hour, and without it, the write rarely lasts for 3 minutes.
 
-Or perhaps if the request_fn blocks, that would be problematic. So the
-patch is likely a good idea even for that case.
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I'll merge it, changing it to list_splice_init() as I think that would
-be more clear.
+On Mon Apr 11, 2011 at 01:32:34 -0700, Linux Raid Study wrote:
+> On Sat, Apr 9, 2011 at 1:50 AM, Robin Hill <robin@robinhill.me.uk> wrote:
+> > On Fri Apr 08, 2011 at 05:40:46PM -0700, Linux Raid Study wrote:
+> >
+> >> What I'm not sure of is if the device is newly formatted, would raid
+> >> recovery happen? What else could explain difference in the first run
+> >> of IO benchmark?
+> >>
+> > When an array is first created, it's created in a degraded state - this
+> > is the simplest way to make it available to the user instantly. The
+> > final drive(s) are then automatically rebuilt, calculating the
+> > parity/data information as normal for recovering a drive.
+> >
+> Thanks. So, the uneven (unequal) distribution of Wrtie/Sec numbers in
+> the iostat output are ok...is that correct?
+>=20
+If it hadn't completed the initial recovery, yes.  If it _had_ completed
+the initial recovery then I'd expect writes to be balanced (barring
+any differences in hardware).
 
-> From 687b189c02276887dd7d5b87a817da9f67ed3c2c Mon Sep 17 00:00:00 2001
-> From: NeilBrown <neilb@suse.de>
-> Date: Thu, 7 Apr 2011 13:16:59 +1000
-> Subject: [PATCH] Enhance new plugging support to support general callbacks.
-> 
-> md/raid requires an unplug callback, but as it does not uses
-> requests the current code cannot provide one.
-> 
-> So allow arbitrary callbacks to be attached to the blk_plug.
-> 
-> Cc: Jens Axboe <jaxboe@fusionio.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
->  block/blk-core.c       |   13 +++++++++++++
->  include/linux/blkdev.h |    7 ++++++-
->  2 files changed, 19 insertions(+), 1 deletions(-)
-> 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 725091d..273d60b 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2644,6 +2644,7 @@ void blk_start_plug(struct blk_plug *plug)
->  
->  	plug->magic = PLUG_MAGIC;
->  	INIT_LIST_HEAD(&plug->list);
-> +	INIT_LIST_HEAD(&plug->cb_list);
->  	plug->should_sort = 0;
->  
->  	/*
-> @@ -2717,9 +2718,21 @@ static void flush_plug_list(struct blk_plug *plug)
->  	local_irq_restore(flags);
->  }
->  
-> +static void flush_plug_callbacks(struct blk_plug *plug)
-> +{
-> +	while (!list_empty(&plug->cb_list)) {
-> +		struct blk_plug_cb *cb = list_first_entry(&plug->cb_list,
-> +							  struct blk_plug_cb,
-> +							  list);
-> +		list_del(&cb->list);
-> +		cb->callback(cb);
-> +	}
-> +}
-> +
->  static void __blk_finish_plug(struct task_struct *tsk, struct blk_plug *plug)
->  {
->  	flush_plug_list(plug);
-> +	flush_plug_callbacks(plug);
->  
->  	if (plug == tsk->plug)
->  		tsk->plug = NULL;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 32176cc..3e5e604 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -857,8 +857,13 @@ extern void blk_put_queue(struct request_queue *);
->  struct blk_plug {
->  	unsigned long magic;
->  	struct list_head list;
-> +	struct list_head cb_list;
->  	unsigned int should_sort;
->  };
-> +struct blk_plug_cb {
-> +	struct list_head list;
-> +	void (*callback)(struct blk_plug_cb *);
-> +};
->  
->  extern void blk_start_plug(struct blk_plug *);
->  extern void blk_finish_plug(struct blk_plug *);
-> @@ -876,7 +881,7 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
->  {
->  	struct blk_plug *plug = tsk->plug;
->  
-> -	return plug && !list_empty(&plug->list);
-> +	return plug && (!list_empty(&plug->list) || !list_empty(&plug->cb_list));
->  }
->  
->  /*
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-Maybe I'm missing something, but why do you need those callbacks? If
-it's to use plugging yourself, perhaps we can just ensure that those
-don't get assigned in the task - so it would be have to used with care.
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature
 
-It's not that I disagree to these callbacks, I just want to ensure I
-understand why you need them.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
 
--- 
-Jens Axboe
+iEYEARECAAYFAk2iySYACgkQShxCyD40xBLsLACglIBrmwi9oYVyE35th1yyrHHn
+fisAniQalq/tZUL/jvJDPppBrj7SRk6F
+=H8aR
+-----END PGP SIGNATURE-----
+
+--J2SCkAp4GZ/dPZZf--
