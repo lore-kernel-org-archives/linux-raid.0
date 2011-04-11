@@ -1,117 +1,211 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID6 simply does not start as /dev/md8
-Date: Sun, 10 Apr 2011 23:16:55 -0500
-Message-ID: <0E.11.05159.1B082AD4@cdptpa-omtalb.mail.rr.com>
-References: <4D9EC097.7010600@web.de>
-Reply-To: <lrhorer@satx.rr.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Mon, 11 Apr 2011 14:50:22 +1000
+Message-ID: <20110411145022.710c30e9@notabene.brown>
+References: <1295659049-2688-1-git-send-email-jaxboe@fusionio.com>
+	<1295659049-2688-6-git-send-email-jaxboe@fusionio.com>
+	<AANLkTin8FoXX6oqUyW+scwhadyX-TfW16_oKjvngU9-m@mail.gmail.com>
+	<20110303221353.GA10366@redhat.com>
+	<4D761E0D.8050200@fusionio.com>
+	<20110308202100.GA31744@redhat.com>
+	<4D76912C.9040705@fusionio.com>
+	<20110308220526.GA393@redhat.com>
+	<20110310005810.GA17911@redhat.com>
+	<20110405130541.6c2b5f86@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D9EC097.7010600@web.de>
+In-Reply-To: <20110405130541.6c2b5f86@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Yann Ormanns' <yann-ormanns@web.de>, linux-raid@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <jaxboe@fusionio.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Yann Ormanns
-> Sent: Friday, April 08, 2011 3:00 AM
-> To: linux-raid@vger.kernel.org
-> Subject: RAID6 simply does not start as /dev/md8
+On Tue, 5 Apr 2011 13:05:41 +1000 NeilBrown <neilb@suse.de> wrote:
+
+> On Wed, 9 Mar 2011 19:58:10 -0500 Mike Snitzer <snitzer@redhat.com> wrote:
 > 
-> Hello everybody,
-> I've now been trying for over a week to get my RAID6 working.
-> I have set up the array by partitioning all six disks (partition type:
-
-	Why?  From your description, it sounds to me like md8 is built using
-the whole disk on all 6 drives.  If so, there's really no need to partition
-the drives.
-
-> Linux (83)) and executing "mdadm -C /dev/md8 --level=6 --raid-devices=6
-> /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1".
+> > Also, in your MD changes, you removed all calls to md_unplug() but
+> > didn't remove md_unplug().  Seems it should be removed along with the
+> > 'plug' member of 'struct mddev_t'?  Neil?
 > 
-> When the array had finished syncing, I rebooted. /proc/mdstat contained
-> 	md126 : inactive sde1[4](S) sdd1[3](S)
-> 	      3907025072 blocks super 1.2
+> I've been distracted by other things and only just managed to have a look at
+> this.
 > 
-> 	md127 : inactive sdb1[1](S) sda1[0](S) sdc1[2](S) sdf1[5](S)
-> 	      7814050144 blocks super 1.2
+> The new plugging code seems to completely ignore the needs of stacked devices
+> - or at least my needs in md.
 > 
-> So I put the following lines into /etc/mdadm.conf (I had forgot this
-> before):
-> "DEVICE /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
-> ARRAY /dev/md8
-> devices=/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1,/dev/sdf1"
-
-You should not need the "devices=..." entry, but I would include the name
-and the UUID.  Here are the relevant parts of my mdadm.conf:
-
-# by default, scan all partitions (/proc/partitions) for MD superblocks.
-# alternatively, specify devices to scan, using wildcards if desired.
-DEVICE partitions
-
-# auto-create devices with Debian standard permissions
-CREATE owner=root group=disk mode=0660 auto=yes
-
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
-
-ARRAY /dev/md0 level=raid6 metadata=1.2 num-devices=14
-UUID=5ff10d73:a096195f:7a646bba:a68986ca name=RAID-Server:0
-
-ARRAY /dev/md1 level=raid1 metadata=0.90 num-devices=2
-UUID=f0a63cae:10406a7a:fa72b0ce:3d8e1057
-
-ARRAY /dev/md2 level=raid1 metadata=1.2 num-devices=2
-UUID=4b466602:fb81286c:4ad8dc5c:ad0bd065 name=RAID-Server:2
-
-ARRAY /dev/md3 level=raid1 metadata=1.2 num-devices=2
-UUID=5bc11cda:e1b4065f:fbf2fca5:8b12e0ba name=RAID-Server:3
-
-> So I rebooted again, now the array was started as follows:
+> For RAID1 with a write-intent-bitmap, I queue all write requests and then on
+> an unplug I update the write-intent-bitmap to mark all the relevant blocks
+> and then release the writes.
 > 
-> 	Personalities : [raid1] [raid6] [raid5] [raid4]
-> 	md8 : inactive sda1[0](S)
-> 	      1953512536 blocks super 1.2
+> With the new code there is no way for an unplug event to wake up the raid1d
+> thread to start the writeout - I haven't tested it but I suspect it will just
+> hang.
 > 
-> I found out, that the assembly was aborted due to the error, that
-> /dev/sda1 has no superblock. It seems, as if the kernel would start the
-> array while booting the system, so mdadm is unable to assemble it
-> afterwards. If I stop and re-assemble the array, it works fine.
-
-	I had similar problems with a name conflict, but that doesn't seem
-to be the case here.
-
-> Unfortunately, I have to keep "CONFIG_MD_AUTODETECT" enabled, because /
-> and the whole system runs on a RAID1. But why does the kernel start the
-> array, although the used partition type of the disks in my RAID6 is NOT
-> "linux raid autodetect"?
-
-	Mdadm builds any arrays local to the system at boot.  Why do you
-have grief with the kernel starting the array?
-
-> I simply want to start my RAID6 as /dev/md8.
+> Similarly for RAID5 I gather write bios (long before they become 'struct
+> request' which is what the plugging code understands) and on an unplug event
+> I release the writes - hopefully with enough bios per stripe so that we don't
+> need to pre-read.
 > 
-> I use mdadm-3.1.4 and linux-2.6.36-gentoo-r8. The superblocks seem to be
-> correct - "mdadm -E /dev/sd[a,b,c,d,e,f]1 | grep Name" returns
->            Name : Atlas:8  (local to host Atlas)
->            Name : Atlas:8  (local to host Atlas)
->            Name : Atlas:8  (local to host Atlas)
->            Name : Atlas:8  (local to host Atlas)
->            Name : Atlas:8  (local to host Atlas)
->            Name : Atlas:8  (local to host Atlas)
-> If I get this right, this array should be started as /dev/md8. However,
-> it does not. I have tried several combinations of configurations ("linux
-> raid autodetect" without using mdadm for assembly, "linux" together with
-> mdadm, and so on), but without any success.
-> Any help would be really apprectiated.
-> 
-> Best regards,
-> Yann
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Possibly the simplest fix would be to have a second list_head in 'struct
+> blk_plug' which contained callbacks (a function pointer a list_head in a
+> struct which is passed as an arg to the function!).
+> blk_finish_plug could then walk the list and call the call-backs.
+> It would be quite easy to hook into that.
+
+I've implemented this and it seems to work.
+Jens:  could you please review and hopefully ack the patch below, and let
+me know if you will submit it or should I?
+
+My testing of this combined with some other patches which cause various md
+personalities to use it shows up a bug somewhere.
+
+The symptoms are crashes in various places in blk-core and sometimes
+elevator.c
+list_sort occurs fairly often included in the stack but not always.
+
+This patch
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 273d60b..903ce8d 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2674,19 +2674,23 @@ static void flush_plug_list(struct blk_plug *plug)
+ 	struct request_queue *q;
+ 	unsigned long flags;
+ 	struct request *rq;
++	struct list_head head;
+ 
+ 	BUG_ON(plug->magic != PLUG_MAGIC);
+ 
+ 	if (list_empty(&plug->list))
+ 		return;
++	list_add(&head, &plug->list);
++	list_del_init(&plug->list);
+ 
+ 	if (plug->should_sort)
+-		list_sort(NULL, &plug->list, plug_rq_cmp);
++		list_sort(NULL, &head, plug_rq_cmp);
++	plug->should_sort = 0;
+ 
+ 	q = NULL;
+ 	local_irq_save(flags);
+-	while (!list_empty(&plug->list)) {
+-		rq = list_entry_rq(plug->list.next);
++	while (!list_empty(&head)) {
++		rq = list_entry_rq(head.next);
+ 		list_del_init(&rq->queuelist);
+ 		BUG_ON(!(rq->cmd_flags & REQ_ON_PLUG));
+ 		BUG_ON(!rq->q);
+
+
+makes the symptom go away.  It simply moves the plug list onto a separate
+list head before sorting and processing it.
+My test was simply writing to a RAID1 with dd:
+  while true; do dd if=/dev/zero of=/dev/md0 size=4k; done
+
+Obviously all writes go to two devices so the plug list will always need
+sorting.
+
+The only explanation I can come up with is that very occasionally schedule on
+2 separate cpus calls blk_flush_plug for the same task.  I don't understand
+the scheduler nearly well enough to know if or how that can happen.
+However with this patch in place I can write to a RAID1 constantly for half
+an hour, and without it, the write rarely lasts for 3 minutes.
+
+If you want to reproduce my experiment, you can pull from
+  git://neil.brown.name/md plug-test
+to get my patches for plugging in md (which are quite ready for submission
+but seem to work), create a RAID1 using e.g.
+   mdadm -C /dev/md0 --level=1 --raid-disks=2 /dev/device1 /dev/device2
+   while true; do dd if=/dev/zero of=/dev/md0 bs=4K ; done
+
+
+Thanks,
+NeilBrown
+
+
+
+From 687b189c02276887dd7d5b87a817da9f67ed3c2c Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 7 Apr 2011 13:16:59 +1000
+Subject: [PATCH] Enhance new plugging support to support general callbacks.
+
+md/raid requires an unplug callback, but as it does not uses
+requests the current code cannot provide one.
+
+So allow arbitrary callbacks to be attached to the blk_plug.
+
+Cc: Jens Axboe <jaxboe@fusionio.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ block/blk-core.c       |   13 +++++++++++++
+ include/linux/blkdev.h |    7 ++++++-
+ 2 files changed, 19 insertions(+), 1 deletions(-)
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 725091d..273d60b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2644,6 +2644,7 @@ void blk_start_plug(struct blk_plug *plug)
+ 
+ 	plug->magic = PLUG_MAGIC;
+ 	INIT_LIST_HEAD(&plug->list);
++	INIT_LIST_HEAD(&plug->cb_list);
+ 	plug->should_sort = 0;
+ 
+ 	/*
+@@ -2717,9 +2718,21 @@ static void flush_plug_list(struct blk_plug *plug)
+ 	local_irq_restore(flags);
+ }
+ 
++static void flush_plug_callbacks(struct blk_plug *plug)
++{
++	while (!list_empty(&plug->cb_list)) {
++		struct blk_plug_cb *cb = list_first_entry(&plug->cb_list,
++							  struct blk_plug_cb,
++							  list);
++		list_del(&cb->list);
++		cb->callback(cb);
++	}
++}
++
+ static void __blk_finish_plug(struct task_struct *tsk, struct blk_plug *plug)
+ {
+ 	flush_plug_list(plug);
++	flush_plug_callbacks(plug);
+ 
+ 	if (plug == tsk->plug)
+ 		tsk->plug = NULL;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 32176cc..3e5e604 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -857,8 +857,13 @@ extern void blk_put_queue(struct request_queue *);
+ struct blk_plug {
+ 	unsigned long magic;
+ 	struct list_head list;
++	struct list_head cb_list;
+ 	unsigned int should_sort;
+ };
++struct blk_plug_cb {
++	struct list_head list;
++	void (*callback)(struct blk_plug_cb *);
++};
+ 
+ extern void blk_start_plug(struct blk_plug *);
+ extern void blk_finish_plug(struct blk_plug *);
+@@ -876,7 +881,7 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
+ {
+ 	struct blk_plug *plug = tsk->plug;
+ 
+-	return plug && !list_empty(&plug->list);
++	return plug && (!list_empty(&plug->list) || !list_empty(&plug->cb_list));
+ }
+ 
+ /*
+-- 
+1.7.3.4
 
