@@ -1,93 +1,57 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/2] FIX: Set reshape parameters for all disks belongs to new
-	array geometry
-Date: Mon, 11 Apr 2011 15:39:17 +0200
-Message-ID: <20110411133917.4917.81756.stgit@gklab-128-013.igk.intel.com>
-References: <20110411133908.4917.6842.stgit@gklab-128-013.igk.intel.com>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Mon, 11 Apr 2011 12:59:23 -0400
+Message-ID: <20110411165923.GA15442@infradead.org>
+References: <1295659049-2688-6-git-send-email-jaxboe@fusionio.com>
+ <AANLkTin8FoXX6oqUyW+scwhadyX-TfW16_oKjvngU9-m@mail.gmail.com>
+ <20110303221353.GA10366@redhat.com>
+ <4D761E0D.8050200@fusionio.com>
+ <20110308202100.GA31744@redhat.com>
+ <4D76912C.9040705@fusionio.com>
+ <20110308220526.GA393@redhat.com>
+ <20110310005810.GA17911@redhat.com>
+ <20110405130541.6c2b5f86@notabene.brown>
+ <20110411145022.710c30e9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110411133908.4917.6842.stgit@gklab-128-013.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20110411145022.710c30e9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: Mike Snitzer <snitzer@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, dm-devel@redhat.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-For external metadata mdinfo->array.raid_disks reports "old" disks geometry.
-To work in the same way as native metadata, new_disks has to be used
-instead mdinfo->array.raid_disks.
+On Mon, Apr 11, 2011 at 02:50:22PM +1000, NeilBrown wrote:
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 273d60b..903ce8d 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -2674,19 +2674,23 @@ static void flush_plug_list(struct blk_plug *plug)
+>  	struct request_queue *q;
+>  	unsigned long flags;
+>  	struct request *rq;
+> +	struct list_head head;
+>  
+>  	BUG_ON(plug->magic != PLUG_MAGIC);
+>  
+>  	if (list_empty(&plug->list))
+>  		return;
+> +	list_add(&head, &plug->list);
+> +	list_del_init(&plug->list);
+>  
+>  	if (plug->should_sort)
+> -		list_sort(NULL, &plug->list, plug_rq_cmp);
+> +		list_sort(NULL, &head, plug_rq_cmp);
+> +	plug->should_sort = 0;
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+As Jens mentioned this should be list_splice_init.  But looking over
+flush_plug_list the code there seems strange to me.
 
- Grow.c |   17 +++++++++--------
- 1 files changed, 9 insertions(+), 8 deletions(-)
+What does the local_irq_save in flush_plug_list protect?  Why don't
+we need it over the list_sort?  And do we still need it when first
+splicing the list to a local one?
 
-diff --git a/Grow.c b/Grow.c
-index 1fdee7e..a954cfd 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3097,19 +3097,20 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 		 char *backup_file, int verbose)
- {
- 	int i, j;
--	int old_disks;
-+	int old_disks, new_disks;
- 	unsigned long long *offsets;
- 	unsigned long long  nstripe, ostripe;
- 	int ndata, odata;
- 
- 	if (st->ss->external) {
- 		old_disks = info->array.raid_disks;
--		ndata = info->array.raid_disks + info->delta_disks - 1;
-+		new_disks = info->array.raid_disks + info->delta_disks;
- 	} else {
- 		old_disks = info->array.raid_disks - info->delta_disks;
--		ndata = info->array.raid_disks - 1;
-+		new_disks = info->array.raid_disks;
- 	}
- 	odata = old_disks - 1;
-+	ndata = new_disks - 1;
- 	if (info->array.level == 6) odata--; /* number of data disks */
- 	if (info->new_level == 6) ndata--;
- 
-@@ -3268,8 +3269,8 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 			goto second_fail; /* Cannot find leading superblock */
- 
- 		/* Now need the data offsets for all devices. */
--		offsets = malloc(sizeof(*offsets)*info->array.raid_disks);
--		for(j=0; j<info->array.raid_disks; j++) {
-+		offsets = malloc(sizeof(*offsets)*new_disks);
-+		for (j = 0; j < new_disks; j++) {
- 			if (fdlist[j] < 0)
- 				continue;
- 			if (st->ss->load_super(st, fdlist[j], NULL))
-@@ -3282,7 +3283,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 		printf(Name ": restoring critical section\n");
- 
- 		if (restore_stripes(fdlist, offsets,
--				    info->array.raid_disks,
-+				    new_disks,
- 				    info->new_chunk,
- 				    info->new_level,
- 				    info->new_layout,
-@@ -3298,7 +3299,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 		
- 		if (bsb.magic[15] == '2' &&
- 		    restore_stripes(fdlist, offsets,
--				    info->array.raid_disks,
-+				    new_disks,
- 				    info->new_chunk,
- 				    info->new_level,
- 				    info->new_layout,
-@@ -3354,7 +3355,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 					info->reshape_progress = p2;
- 			}
- 		}
--		for (j=0; j<info->array.raid_disks; j++) {
-+		for (j = 0; j < new_disks; j++) {
- 			if (fdlist[j] < 0) continue;
- 			if (st->ss->load_super(st, fdlist[j], NULL))
- 				continue;
+It's one of these cases where I'd really like to see more comments
+explaining why the code is doing what it's doing.
 
