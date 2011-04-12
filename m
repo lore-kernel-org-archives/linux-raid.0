@@ -1,48 +1,39 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/2] imsm: FIX: Be more patient during loading matadata
-Date: Tue, 12 Apr 2011 14:51:28 +0200
-Message-ID: <20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>
-References: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>
+From: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Tue, 12 Apr 2011 16:05:52 +0200
+Message-ID: <201104121605.52443.thomas.jarosch@intra2net.com>
+References: <201103251725.21180.thomas.jarosch@intra2net.com> <20110405134629.664b946c@notabene.brown> <20110406101600.GB4142@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110406101600.GB4142@mtj.dyndns.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Tejun Heo <tj@kernel.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sometimes occurs that metadata cannot be loaded e.g. wrong check sum
-It can happen due to metadata update racing with mdmon condition.
-If mpb loading is tried again, it is loaded successfully.
-Try to load metadata again before really giving up.
+Hello Neil,
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+On Wednesday, 6. April 2011 12:16:00 Tejun Heo wrote:
+> > To put it another way matching your description Tejun, the put path has
+> > a chance to run firstly while mddev_find is waiting for the spinlock,
+> > and then while flush_workqueue is waiting for the rest of the put path
+> > to complete.
+> 
+> I don't think the logic is wrong per-se.  It's more likely that the
+> implemented code doesn't really follow the model described by the
+> logic.
+> 
+> Probably the best way would be reproducing the problem and throwing in
+> some diagnostic code to tell the sequence of events?  If work is being
+> queued first but it still ends up busy looping, that would be a bug in
+> flush_workqueue(), but I think it's more likely that the restart
+> condition somehow triggers in an unexpected way without the work item
+> queued as expected.
 
- super-intel.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+I can test any debug patch you want, the box is in a test lab anyway.
 
-diff --git a/super-intel.c b/super-intel.c
-index dc5e34e..d23267a 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2773,8 +2773,14 @@ load_and_parse_mpb(int fd, struct intel_super *super, char *devname, int keep_fd
- 	int err;
- 
- 	err = load_imsm_mpb(fd, super, devname);
--	if (err)
--		return err;
-+	if (err) {
-+		/* try to load mpb again,
-+		 * in case of mdmon race we could have more luck...
-+		 */
-+		err = load_imsm_mpb(fd, super, devname);
-+		if (err)
-+			return err;
-+	}
- 	err = load_imsm_disk(fd, super, devname, keep_fd);
- 	if (err)
- 		return err;
-
+Best regards,
+Thomas
