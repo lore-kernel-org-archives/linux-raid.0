@@ -1,110 +1,70 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID5
-Date: Tue, 12 Apr 2011 22:53:44 +0100
-Message-ID: <BANLkTimsU88r2yGpRL+4xB1hMU9-SGHvvA@mail.gmail.com>
-References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
-	<20110412231401.5bb9065c@natsu>
-	<BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
-	<20110413002238.3f31bdeb@natsu>
-	<20110413071554.6537c52c@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Wed, 13 Apr 2011 08:44:08 +1000
+Message-ID: <20110413084408.390c7ad1@notabene.brown>
+References: <201103251725.21180.thomas.jarosch@intra2net.com>
+	<20110405134629.664b946c@notabene.brown>
+	<20110406101600.GB4142@mtj.dyndns.org>
+	<201104121605.52443.thomas.jarosch@intra2net.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110413071554.6537c52c@notabene.brown>
+In-Reply-To: <201104121605.52443.thomas.jarosch@intra2net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Roman Mamedov <rm@romanrm.ru>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12 April 2011 22:15, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 13 Apr 2011 00:22:38 +0600 Roman Mamedov <rm@romanrm.ru> wrot=
-e:
->
->> On Tue, 12 Apr 2011 18:21:13 +0100
->> Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
->>
->> > If I use --layout=3Dpreserve , what impact will that have?
->> > If I preserve the layout, what is the final result of the array
->> > compared to not preserving it?
->>
->> Neil wrote about this on his blog:
->> "It is a very similar process that can now be used to convert a RAID=
-5 to a
->> RAID6. We first change the RAID5 to RAID6 with a non-standard layout=
- that has
->> the parity blocks distributed as normal, but the Q blocks all on the=
- last
->> device (a new device). So this is RAID6 using the RAID6 driver, but =
-with a
->> non-RAID6 layout. So we "simply" change the layout and the job is do=
-ne."
->> http://neil.brown.name/blog/20090817000931
->>
->> Admittedly it is not completely clear to me what are the long-term d=
-ownsides of
->> this layout. As I understand it does fully provide the RAID6-level r=
-edundancy.
->> Perhaps just the performance will suffer a bit? Maybe someone can ex=
-plain this
->> more.
->
-> If you specify --layout=3Dpreserve, then all the 'Q' blocks will be o=
-n one disk.
-> As every write needs to update a Q block, every write will write to t=
-hat disk.
->
-> With our current RAID6 implementation that probably isn't a big cost =
-- for
-> any write, we need to either read from or write to each disk anyway.
->
-> Anyway: =C2=A0the only possible problem would be a performance proble=
-m, and I
-> really don't know what performance impact there is - if any.
->
->>
->> If anything, I think it is safe to use this layout for a while, e.g.=
- in case
->> you don't want to rebuild 'right now'. You can always change the lay=
-out to the
->> traditional one later, by issuing "--grow --layout=3Dnormalise". Or =
-perhaps if
->> you plan to add another disk soon, you can normalise it on that occa=
-sion, and
->> still gain the benefit of only one full reshape.
->
-> Note that doing a normalise by itself later will be much slower than =
-not
-> doing a preserve now.
-> Doing the normalise later when growing the the device again would be =
-just as
-> fast as no doing the preserve now.
->
-> NeilBrown
->
->
->>
->> > =C2=A0Will the array have redundancy during the rebuild of the new=
- drive?
->>
->> If you choose --layout=3Dpreserve, your array immediately becomes a =
-RAID6 with
->> one rebuilding drive. So this is the kind of redundancy you will hav=
-e during
->> that rebuild - tolerance of up to one more (among the "old" drives) =
-failure,
->> in other words, identical to what you currently have with RAID5.
->>
->
->
+On Tue, 12 Apr 2011 16:05:52 +0200 Thomas Jarosch
+<thomas.jarosch@intra2net.com> wrote:
 
-Right, so using --preserve seems like a sane and good option. Thanks
-for the info, I'll let you know what happens, HDD should arrive the
-next few days.
+> Hello Neil,
+> 
+> On Wednesday, 6. April 2011 12:16:00 Tejun Heo wrote:
+> > > To put it another way matching your description Tejun, the put path has
+> > > a chance to run firstly while mddev_find is waiting for the spinlock,
+> > > and then while flush_workqueue is waiting for the rest of the put path
+> > > to complete.
+> > 
+> > I don't think the logic is wrong per-se.  It's more likely that the
+> > implemented code doesn't really follow the model described by the
+> > logic.
+> > 
+> > Probably the best way would be reproducing the problem and throwing in
+> > some diagnostic code to tell the sequence of events?  If work is being
+> > queued first but it still ends up busy looping, that would be a bug in
+> > flush_workqueue(), but I think it's more likely that the restart
+> > condition somehow triggers in an unexpected way without the work item
+> > queued as expected.
+> 
+> I can test any debug patch you want, the box is in a test lab anyway.
+> 
+> Best regards,
+> Thomas
 
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could you try this?
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a0ccaab..07c97b1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6175,6 +6175,8 @@ static int md_open(struct block_device *bdev, fmode_t mode)
+ 	mddev_t *mddev = mddev_find(bdev->bd_dev);
+ 	int err;
+ 
++	BUG_ON(!mddev->gendisk);
++
+ 	if (mddev->gendisk != bdev->bd_disk) {
+ 		/* we are racing with mddev_put which is discarding this
+ 		 * bd_disk.
+
+
+It don't know how it could get to the state where gendisk was NULL, but it is
+the only way I can see that the looping could happen.
+
+If the BUG_ON does trigger I'll probably be able to find out why it happens.
+If it doesn't then I'll still be at a loss.
+
+NeilBrown
+
