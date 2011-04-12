@@ -1,93 +1,85 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Growing layered raids
-Date: Tue, 12 Apr 2011 10:35:53 +0200
-Message-ID: <io12tu$c9m$1@dough.gmane.org>
-References: <invsor$qrt$1@dough.gmane.org>	<20110412082719.17fa4ffb@notabene.brown>	<io0239$mu6$1@dough.gmane.org> <20110412095446.18a94107@notabene.brown>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Tue, 12 Apr 2011 10:36:30 +0200
+Message-ID: <4DA40F0E.1070903@fusionio.com>
+References: <20110411145022.710c30e9@notabene.brown> <4DA2C7BE.6060804@fusionio.com> <20110411205928.13915719@notabene.brown> <4DA2E03A.2080607@fusionio.com> <20110411212635.7959de70@notabene.brown> <4DA2E7F0.9010904@fusionio.com> <20110411220505.1028816e@notabene.brown> <4DA2F00E.6010907@fusionio.com> <20110411223623.4278fad1@notabene.brown> <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110412095446.18a94107@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110412011255.GA29236@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: NeilBrown <neilb@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/04/2011 01:54, NeilBrown wrote:
-> On Tue, 12 Apr 2011 01:15:52 +0200 David Brown<david.brown@hesbynett.no>
-> wrote:
->
-<snip>
->> Thank you for that.  It's a bit late tonight, but I will try your
->> instructions tomorrow.
->>
->> It's just occurred to me what the difference is between this case and my
->> initial testing with the raid5 array build directly on the loopback
->> devices.  In my current case, the raid5's devices haven't changed - they
->> are still the mdpairX arrays, but those devices have grown.  In the
->> previous case, I swapped out the old smaller devices for newer bigger
->> devices - which is not really the same situation.
->
-> Correct.
->
+On 2011-04-12 03:12, hch@infradead.org wrote:
+> On Mon, Apr 11, 2011 at 02:48:45PM +0200, Jens Axboe wrote:
+>> Great, once you do that and XFS kills the blk_flush_plug() calls too,
+>> then we can remove that export and make it internal only.
+> 
+> Linus pulled the tree, so they are gone now.  Btw, there's still some
+> bits in the area that confuse me:
 
-Thanks - it is /so/ much better to understand /why/ things are 
-different, and not just that they /are/ different.
+Great!
 
->>
->> Am I right in thinking that it is best to use metadata format 1.2, which
->> is at the beginning of the array?  Are there any disadvantages to this?
->
-> Yes.  1.2 is the default so presumably someone thinks it is best...
->
-> The main shortcoming with 1.2 is that with RAID1 array you cannot just use
-> one of the devices as a non-raid device, which is sometimes useful.  Of course
-> that can also be seen as a strength of 1.2 (and 1.1).
->
+>  - what's the point of the queue_sync_plugs?  It has a lot of comment
+>    that seem to pre-data the onstack plugging, but except for that
+>    it's trivial wrapper around blk_flush_plug, with an argument
+>    that is not used.
 
-Ah, hence the warning when creating the raid1 array that it might be 
-incompatible with my bootloader.  With raid1 and metadata format 0.90, 
-the bootloader can pretend the partition is just a normal partition, and 
-read from it directly.  But for other metadata formats, the bootloader 
-must know how to interpret them to be able to boot correctly (such as 
-with version 1.99 of grub, according to <http://grub.enbug.org/LVMandRAID>).
+There's really no point to it anymore. It's existance was due to the
+older revision that had to track write requests for serializaing around
+a barrier. I'll kill it, since we don't do that anymore.
 
-mvh.,
+>  - is there a good reason for the existance of __blk_flush_plug?  You'd
+>    get one additional instruction in the inlined version of
+>    blk_flush_plug when opencoding, but avoid the need for chained
+>    function calls.
+>  - Why is having a plug in blk_flush_plug marked unlikely?  Note that
+>    unlikely is the static branch prediction hint to mark the case
+>    extremly unlikely and is even used for hot/cold partitioning.  But
+>    when we call it we usually check beforehand if we actually have
+>    plugs, so it's actually likely to happen.
 
-David
+The existance and out-of-line is for the scheduler() hook. It should be
+an unlikely event to schedule with a plug held, normally the plug should
+have been explicitly unplugged before that happens.
 
+>  - what is the point of blk_finish_plug?  All callers have
+>    the plug on stack, and there's no good reason for adding the NULL
+>    check.  Note that blk_start_plug doesn't have the NULL check either.
 
+That one can probably go, I need to double check that part since some
+things changed.
 
->>
->> And how do I check the metadata format of the existing arrays - is it
->> the "version" from a "mdadm --detail" report?  (In which case, all my
->> arrays are version 1.2).
->
-> The version has (for silly historical reasons) 3 parts:
->    major . minor . patchlevel
->
-> The metadata version is the corresponding major . minor
->
-> NeilBrown
->
->
->>
->> mvh.,
->>
->> David
->>
->>
->>>
->>>>
->>>>
->>>> If I do the same setup, but build the raid5 array directly from the 128
->>>> MB loopback devices, then add the 160 MB devices, then remove the 128 MB
->>>> devices (after appropriate resyncs, of course), then I can grow the raid
->>>> 5 array as expected.
->>>>
->>>>
->>>> Am I doing something wrong here, or is this a limitation of hierarchical
->>>> raid setups?
->>>>
->>>>
->>
+>  - Why does __blk_flush_plug call __blk_finish_plug which might clear
+>    tsk->plug, just to set it back after the call? When manually inlining
+>    __blk_finish_plug ino __blk_flush_plug it looks like:
+> 
+> void __blk_flush_plug(struct task_struct *tsk, struct blk_plug *plug)
+> {
+> 	flush_plug_list(plug);
+> 	if (plug == tsk->plug)
+> 		tsk->plug = NULL;
+> 	tsk->plug = plug;
+> }
+> 
+>    it would seem much smarted to just call flush_plug_list directly.
+>    In fact it seems like the tsk->plug is not nessecary at all and
+>    all remaining __blk_flush_plug callers could be replaced with
+>    flush_plug_list.
 
+It depends on whether this was an explicit unplug (eg
+blk_finish_plug()), or whether it was an implicit event (eg on
+schedule()). If we do it on schedule(), then we retain the plug after
+the flush. Otherwise we clear it.
+
+>  - and of course the remaining issue of why io_schedule needs an
+>    expliciy blk_flush_plug when schedule() already does one in
+>    case it actually needs to schedule.
+
+Already answered in other email.
+
+-- 
+Jens Axboe
