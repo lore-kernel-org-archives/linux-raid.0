@@ -1,79 +1,64 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID5
-Date: Wed, 13 Apr 2011 00:22:38 +0600
-Message-ID: <20110413002238.3f31bdeb@natsu>
-References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
-	<20110412231401.5bb9065c@natsu>
-	<BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
+From: Linux Raid Study <linuxraid.study@gmail.com>
+Subject: Re: iostat with raid device...
+Date: Tue, 12 Apr 2011 12:36:35 -0700
+Message-ID: <BANLkTi=yz4zu-TS3BGxqfbtK5p-6neph-Q@mail.gmail.com>
+References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
+	<20110409094629.2eae2d5b@notabene.brown>
+	<BANLkTin2KP-_vy8jbmV3JB-LHHJNOEVCKw@mail.gmail.com>
+	<20110409085044.GB417@cthulhu.home.robinhill.me.uk>
+	<BANLkTim4fenro-GQchqJ0JzrcDAcJXG0UQ@mail.gmail.com>
+	<20110411092559.GA20532@cthulhu.home.robinhill.me.uk>
+	<BANLkTikYTECzE-2dCnC+jDT0wHNtgkNQ8Q@mail.gmail.com>
+	<20110411095355.GB20532@cthulhu.home.robinhill.me.uk>
+	<20110411201808.47cd19d5@notabene.brown>
+	<BANLkTinFxHPuCgxERGc88W2KmZkzU_GF9Q@mail.gmail.com>
+	<20110412125141.679baaf0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ssZLpGf_7=NkbA6H0UmdzAJ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
+In-Reply-To: <20110412125141.679baaf0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ssZLpGf_7=NkbA6H0UmdzAJ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hello Neil,
 
-On Tue, 12 Apr 2011 18:21:13 +0100
-Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
+=46or the benchmarking purpose, I've configured array of ~30GB.
+stripe_cache_size is 1024 (so 1M).
 
-> If I use --layout=3Dpreserve , what impact will that have?
-> If I preserve the layout, what is the final result of the array
-> compared to not preserving it?
+BTW, I'm using Windows copy (robocopy) utility to test perf and I
+believe block size it uses is 32kB. But since everything gets written
+thru VFS, I'm not sure how to change stripe_cache_size to get optimal
+performance with this setup...
 
-Neil wrote about this on his blog:
-"It is a very similar process that can now be used to convert a RAID5 to a
-RAID6. We first change the RAID5 to RAID6 with a non-standard layout that h=
+Thanks.
+
+On Mon, Apr 11, 2011 at 7:51 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 11 Apr 2011 18:57:34 -0700 Linux Raid Study
+> <linuxraid.study@gmail.com> wrote:
+>
+>> If I use --assume-clean in mdadm, I see performance is 10-15% lower =
 as
-the parity blocks distributed as normal, but the Q blocks all on the last
-device (a new device). So this is RAID6 using the RAID6 driver, but with a
-non-RAID6 layout. So we "simply" change the layout and the job is done."
-http://neil.brown.name/blog/20090817000931
-
-Admittedly it is not completely clear to me what are the long-term downside=
-s of
-this layout. As I understand it does fully provide the RAID6-level redundan=
-cy.
-Perhaps just the performance will suffer a bit? Maybe someone can explain t=
-his
-more.
-
-If anything, I think it is safe to use this layout for a while, e.g. in case
-you don't want to rebuild 'right now'. You can always change the layout to =
-the
-traditional one later, by issuing "--grow --layout=3Dnormalise". Or perhaps=
- if
-you plan to add another disk soon, you can normalise it on that occasion, a=
-nd
-still gain the benefit of only one full reshape.
-
->  Will the array have redundancy during the rebuild of the new drive?
-
-If you choose --layout=3Dpreserve, your array immediately becomes a RAID6 w=
-ith
-one rebuilding drive. So this is the kind of redundancy you will have during
-that rebuild - tolerance of up to one more (among the "old" drives) failure,
-in other words, identical to what you currently have with RAID5.
-
---=20
-With respect,
-Roman
-
---Sig_/ssZLpGf_7=NkbA6H0UmdzAJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2kmG4ACgkQTLKSvz+PZwh+1ACfZ5AlZg/ZQpJ48nC3llGqmPLM
-J+4Anj2ZdAkR4vXdKG59z9Z2wtm4aRPw
-=X1gx
------END PGP SIGNATURE-----
-
---Sig_/ssZLpGf_7=NkbA6H0UmdzAJ--
+>> compared to the case wherein this option is not specified. When I ru=
+n
+>> without --assume_clean, I wait until mdadm prints "recovery_done" an=
+d
+>> then run IO benchmarks...
+>>
+>> Is perf drop expected?
+>
+> No. =C2=A0And I cannot explain it.... unless the array is so tiny tha=
+t it all fits
+> in the stripe cache (typically about 1Meg).
+>
+> There really should be no difference.
+>
+> NeilBrown
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
