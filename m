@@ -1,45 +1,79 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Tue, 12 Apr 2011 19:29:29 +0200
-Message-ID: <4DA48BF9.4050304@fusionio.com>
-References: <4DA2F00E.6010907@fusionio.com> <20110411223623.4278fad1@notabene.brown> <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org> <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard> <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard> <4DA44C86.3090305@fusionio.com> <20110412133117.GE31057@dastard> <20110412165830.GC23764@infradead.org>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID5
+Date: Wed, 13 Apr 2011 00:22:38 +0600
+Message-ID: <20110413002238.3f31bdeb@natsu>
+References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
+	<20110412231401.5bb9065c@natsu>
+	<BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110412165830.GC23764@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, NeilBrown <neilb@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ssZLpGf_7=NkbA6H0UmdzAJ"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2011-04-12 18:58, hch@infradead.org wrote:
-> On Tue, Apr 12, 2011 at 11:31:17PM +1000, Dave Chinner wrote:
->> I don't think so. e.g. in the XFS allocation path we do btree block
->> readahead, then go do the real work. The real work can end up with a
->> deeper stack before blocking on locks or completions unrelated to
->> the readahead, leading to schedule() being called and an unplug
->> being issued at that point.  You might think it contrived, but if
->> you can't provide a guarantee that it can't happen then I have to
->> assume it will happen.
-> 
-> In addition to the stack issue, which is a killer to this also has
-> latency implications.  Before we could submit a synchronous metadata
-> read request inside readpage or writepage and kick it off to the disk
-> immediately, while now it won't get submitted until we block the next
-> time, i.e. have done some more work that could have been used for
-> doing I/O in the background.  With the kblockd offload not only have
-> we spent more time but at the point where we finally kick it we
-> also need another context switch.  It seem like we really need to
-> go through the filesystems and explicitly flush the plugging queue
-> for such cases.  In fact a bio flag marking things as synchronous
-> metadata reads would help, but then again we need to clean up our
-> existing bio flags first..
+--Sig_/ssZLpGf_7=NkbA6H0UmdzAJ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-I think it would be a good idea to audit the SYNC cases, and if feasible
-let that retain the 'immediate kick off' logic. If not, have some way to
-signal that at least. Essentially allow some fine grained control of
-what goes into the plug and what does not.
+On Tue, 12 Apr 2011 18:21:13 +0100
+Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
 
--- 
-Jens Axboe
+> If I use --layout=3Dpreserve , what impact will that have?
+> If I preserve the layout, what is the final result of the array
+> compared to not preserving it?
+
+Neil wrote about this on his blog:
+"It is a very similar process that can now be used to convert a RAID5 to a
+RAID6. We first change the RAID5 to RAID6 with a non-standard layout that h=
+as
+the parity blocks distributed as normal, but the Q blocks all on the last
+device (a new device). So this is RAID6 using the RAID6 driver, but with a
+non-RAID6 layout. So we "simply" change the layout and the job is done."
+http://neil.brown.name/blog/20090817000931
+
+Admittedly it is not completely clear to me what are the long-term downside=
+s of
+this layout. As I understand it does fully provide the RAID6-level redundan=
+cy.
+Perhaps just the performance will suffer a bit? Maybe someone can explain t=
+his
+more.
+
+If anything, I think it is safe to use this layout for a while, e.g. in case
+you don't want to rebuild 'right now'. You can always change the layout to =
+the
+traditional one later, by issuing "--grow --layout=3Dnormalise". Or perhaps=
+ if
+you plan to add another disk soon, you can normalise it on that occasion, a=
+nd
+still gain the benefit of only one full reshape.
+
+>  Will the array have redundancy during the rebuild of the new drive?
+
+If you choose --layout=3Dpreserve, your array immediately becomes a RAID6 w=
+ith
+one rebuilding drive. So this is the kind of redundancy you will have during
+that rebuild - tolerance of up to one more (among the "old" drives) failure,
+in other words, identical to what you currently have with RAID5.
+
+--=20
+With respect,
+Roman
+
+--Sig_/ssZLpGf_7=NkbA6H0UmdzAJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2kmG4ACgkQTLKSvz+PZwh+1ACfZ5AlZg/ZQpJ48nC3llGqmPLM
+J+4Anj2ZdAkR4vXdKG59z9Z2wtm4aRPw
+=X1gx
+-----END PGP SIGNATURE-----
+
+--Sig_/ssZLpGf_7=NkbA6H0UmdzAJ--
