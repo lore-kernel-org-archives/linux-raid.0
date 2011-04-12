@@ -1,70 +1,37 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID5
-Date: Tue, 12 Apr 2011 18:21:13 +0100
-Message-ID: <BANLkTim-iiYbza8ZZZv60ArRfXjnOuU7sg@mail.gmail.com>
-References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
-	<20110412231401.5bb9065c@natsu>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Tue, 12 Apr 2011 19:24:21 +0200
+Message-ID: <4DA48AC5.30007@fusionio.com>
+References: <20110411223623.4278fad1@notabene.brown> <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org> <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard> <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard> <4DA44C86.3090305@fusionio.com> <20110412164417.GA13890@infradead.org> <4DA482B1.5000005@fusionio.com> <20110412165455.GB23764@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110412231401.5bb9065c@natsu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110412165455.GB23764@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, NeilBrown <neilb@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12 April 2011 18:14, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Tue, 12 Apr 2011 17:56:05 +0100
-> Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
->
->> I'm approaching over 6.5TB of data, and with an array this large I'd
->> like to migrate to RAID6 for a bit more safety.
->
-> That's a great decision (and I suppose you made a typo in the subject=
-).
-> RAID5 is downright dangerous at that disk count, and with disks of th=
-at size.
->
->> I'm just checking if I
->> understand this correctly, this is how to do it:
->>
->> * Add a HDD to the array as a hot spare:
->> mdadm --manage /dev/md0 --add /dev/sdh1
->>
->> * Migrate the array to RAID6:
->> mdadm --grow /dev/md0 --raid-devices 7 --level 6
->
-> Looks correct to me...
->
-> The first command can be just "mdadm --add /dev/md0 /dev/sdh1".
->
-> If you'd rather avoid a reshape at this point, you can add
-> "--layout=3Dpreserve" to the second line. That way you will have just=
- a rebuild
-> of the new drive, instead of a full reshape.
->
-> You will also need to "--grow --bitmap=3Dnone" first (you can re-add =
-the bitmap
-> later).
->
-> --
-> With respect,
-> Roman
->
+On 2011-04-12 18:54, hch@infradead.org wrote:
+> On Tue, Apr 12, 2011 at 06:49:53PM +0200, Jens Axboe wrote:
+>> I realize that, in fact it's already safe as long as you pass in 'true'
+>> for __blk_run_queue(). Before I had rewritten it to move the running
+>> out, so that makes the trick a little difficult. This afternoon I also
+>> tested it and saw no noticable difference, but I'll probably just do it
+>> anyway as it makes sense.
+> 
+> We still need the lock for __elv_add_request, so we'll need to keep the
+> logic anyway.  But splitting out the just queue to kblockd case from
+> __blk_run_queue and giving the latter a sane prototype still sounds
+> like a good idea to me.
+> 
+> Btw, now that we don't call the request_fn directly any more and thus
+> can't block, can the unplugging be moved into the preempt notifiers?
 
-Hi,
+It was only partly the reason, there's still the notice on preempt
+(instead of schedule) and the runqueue lock problem. And if we allow
+preempt, then we need to do disable preempt around all the plug logic.
 
-Yep I mean RAID6, stupid subject line. If I use --layout=3Dpreserve ,
-what impact will that have? Will the array have redundancy during the
-rebuild of the new drive?
-If I preserve the layout, what is the final result of the array
-compared to not preserving it?
-
-Cheers,
-// Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jens Axboe
