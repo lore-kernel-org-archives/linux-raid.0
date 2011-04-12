@@ -1,64 +1,77 @@
-From: Jonathan Liu <net147@gmail.com>
-Subject: mse->metadata_version segmentation fault
-Date: Tue, 12 Apr 2011 18:38:29 +1000
-Message-ID: <4DA40F85.4060106@gmail.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Do I understand my RAID6 correctly?
+Date: Tue, 12 Apr 2011 10:39:00 +0200
+Message-ID: <4DA40FA4.80605@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060008030100020708030107"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------060008030100020708030107
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Hi,
+Today I had a drive fail in a customers server.
 
-Just wanted to post an additional patch to fix segmentation fault with 
-mdadm that was missed by eb28e119b03fd5149886ed516fa4bb006ad3602e.
+It was part of a RAID6 which seems to have rebuilt onto a spare drive now.
 
-Regards,
-Jonathan
+Right now it looks like:
 
---------------060008030100020708030107
-Content-Type: text/plain;
- name="metadata_version.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="metadata_version.patch"
+# mdadm -D /dev/md3
+/dev/md3:
+        Version : 00.90.03
+  Creation Time : Thu Dec 20 17:47:07 2007
+     Raid Level : raid6
+     Array Size : 4391334912 (4187.90 GiB 4496.73 GB)
+  Used Dev Size : 731889152 (697.98 GiB 749.45 GB)
+   Raid Devices : 8
+  Total Devices : 9
+Preferred Minor : 3
+    Persistence : Superblock is persistent
 
-From e8ed972a1d104ebda80cf253a45cd95d96357a6c Mon Sep 17 00:00:00 2001
-From: Jonathan Liu <net147@gmail.com>
-Date: Tue, 12 Apr 2011 18:28:01 +1000
-Subject: [PATCH] 0.90 array do not report the metadata type in /proc/mdstat,
- so we cannot assume that mse->metadata_version is non-NULL.
+    Update Time : Tue Apr 12 10:27:45 2011
+          State : clean
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 1
+  Spare Devices : 0
 
-So add an appropriate check.
+     Chunk Size : 64K
 
-Adds an additional check missed by commit eb28e119b03fd5149886ed516fa4bb006ad3602e.
----
- Monitor.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+           UUID : e848b637:ca2bde73:9f92f3cc:128cdbad
+         Events : 0.47127534
 
-diff --git a/Monitor.c b/Monitor.c
-index a3ea724..55aebeb 100644
---- a/Monitor.c
-+++ b/Monitor.c
-@@ -577,7 +577,8 @@ static int check_array(struct state *st, struct mdstat_ent *mdstat,
- 			info[i].major = info[i].minor = 0;
- 	}
- 
--	if (strncmp(mse->metadata_version, "external:", 9) == 0 &&
-+	if (mse->metadata_version &&
-+	    strncmp(mse->metadata_version, "external:", 9) == 0 &&
- 	    is_subarray(mse->metadata_version+9))
- 		st->parent_dev =
- 			devname2devnum(mse->metadata_version+10);
--- 
-1.7.4.4
+    Number   Major   Minor   RaidDevice State
+       0       8       33        0      active sync   /dev/sdc1
+       1       8      177        1      active sync   /dev/sdl1
+       2       8       65        2      active sync   /dev/sde1
+       3       8       81        3      active sync   /dev/sdf1
+       4       8       97        4      active sync   /dev/sdg1
+       5       8      113        5      active sync   /dev/sdh1
+       6       8      129        6      active sync   /dev/sdi1
+       7       8      145        7      active sync   /dev/sdj1
 
+       8       8      161        -      faulty spare   /dev/sdk1
 
---------------060008030100020708030107--
+My question (just to be sure):
+
+Do I understand it correctly that the system has substituted the failed
+/dev/sdk1 by a former spare drive (dunno the device name now) and that I
+now I have a valid RAID6-device with 8 drives in it?
+
+So out of the 8 drives there could fail another 2 now without losing
+data ...
+
+correct?
+
+I have to tell the customer what to do and the grade of redundancy
+available also relates to how urgent it is to get a new drive into the
+system.
+
+I assume I would remove /dev/sdk1 from md3, swap the drive, fdisk it and
+re-add sdk1 to md3 (it is failed already now, so the fail-step isn't
+necessary anymore). It would the be the new spare drive ... ?
+
+Thanks for refreshing my RAID-knowledge ;-)
+Stefan
