@@ -1,36 +1,77 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Wed, 13 Apr 2011 13:41:06 +0200
-Message-ID: <1302694866.2035.22.camel@laptop>
-References: <20110411223623.4278fad1@notabene.brown>
-	 <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org>
-	 <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard>
-	 <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard>
-	 <4DA44C86.3090305@fusionio.com> <20110412133117.GE31057@dastard>
-	 <4DA45790.2010109@fusionio.com> <20110412143452.GH31057@dastard>
-	 <20110413070827.11b2a71d@notabene.brown>
-	 <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
-	 <1302693122.2035.20.camel@laptop>  <4DA587AF.2040308@fusionio.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID6
+Date: Wed, 13 Apr 2011 12:44:48 +0100
+Message-ID: <4DA58CB0.3020109@anonymous.org.uk>
+References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DA587AF.2040308@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>, "hch@infradead.org" <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2011-04-13 at 13:23 +0200, Jens Axboe wrote:
-> We definitely only want to do it on going to sleep, not preempt events.
-> So if you are fine with this change, then lets please do that.
+(Subject line amended by me :-)
 
-Here's the Acked-by: Peter Zijlstra <a.p.zijlstra@chello.nl>, that goes
-with it ;-)
+On 12/04/2011 17:56, Mathias Bur=C3=A9n wrote:
+[...]
+> I'm approaching over 6.5TB of data, and with an array this large I'd
+> like to migrate to RAID6 for a bit more safety. I'm just checking if =
+I
+> understand this correctly, this is how to do it:
+>
+> * Add a HDD to the array as a hot spare:
+> mdadm --manage /dev/md0 --add /dev/sdh1
+>
+> * Migrate the array to RAID6:
+> mdadm --grow /dev/md0 --raid-devices 7 --level 6
 
-> Linus, I've got a few other things queued up in the area, I'll add this
-> and send them off soon. Or feel free to add this one yourself, since you
-> already did it. 
+You will need a --backup-file to do this, on another device. Since you=20
+are keeping the same number of data discs before and after the reshape,=
+=20
+the backup file will be needed throughout the reshape, so the reshape=20
+will take perhaps twice as long as a grow or shrink. If your backup-fil=
+e=20
+is on the same disc(s) as md0 is (e.g. on another partition or array=20
+made up of other partitions on the same disc(s)), it will take way=20
+longer (gazillions of seeks), so I'd recommend a separate drive or if=20
+you have one a small SSD for the backup file.
 
-Right, please send it onwards or have Linus commit it himself and I'll
-cook up a patch clarifying the rq->lock'ing mess around there.
+Doing the above with --layout=3Dpreserve will save you doing the reshap=
+e=20
+so you won't need the backup file, but there will still be an initial=20
+sync of the Q parity, and the layout will be RAID4-alike with all the Q=
+=20
+parity on one drive so it's possible its performance will be RAID4-alik=
+e=20
+too i.e. small writes never faster than the parity drive. Having said=20
+that, streamed writes can still potentially go as fast as your 5 data=20
+discs, as per your RAID5. In practice, I'd be surprised if it was faste=
+r=20
+than about twice the speed of a single drive (the same as your current=20
+RAID5), and as Neil Brown notes in his reply, RAID6 doesn't currently=20
+have the read-modify-write optimisation for small writes so small write=
+=20
+performance is liable to be even poorer than your RAID5 in either layou=
+t.
+
+You will never lose any redundancy in either of the above, but you won'=
+t=20
+gain RAID6 double redundancy until the reshape (or Q-drive sync with=20
+--layout=3Dpreserve) has completed - just the same as if you were=20
+replacing a dead drive in an existing RAID6.
+
+Hope the above helps!
+
+Cheers,
+
+John.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
