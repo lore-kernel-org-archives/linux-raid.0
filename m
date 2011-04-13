@@ -1,117 +1,124 @@
-From: Gavin Flower <gavinflower@yahoo.com>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system unresponsive
-Date: Wed, 13 Apr 2011 13:30:10 -0700 (PDT)
-Message-ID: <89602.52744.qm@web65104.mail.ac2.yahoo.com>
-References: <4DA58FD2.8040900@anonymous.org.uk>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] RAID-6 check standalone fix component list parsing
+Date: Wed, 13 Apr 2011 22:48:25 +0200
+Message-ID: <20110413204825.GA15496@lazy.lzy>
+References: <20110221204551.GA15675@lazy.lzy>
+ <20110321140244.2314b4b4@notabene.brown>
+ <20110321104007.GA15379@lazy.lzy>
+ <20110321220457.29d52f5c@notabene.brown>
+ <20110321115440.GA15635@lazy.lzy>
+ <20110322095905.737fb1d5@notabene.brown>
+ <20110404175242.GA3411@lazy.lzy>
+ <20110405091242.3427e0b1@notabene.brown>
+ <20110406180202.GA3267@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DA58FD2.8040900@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <20110406180202.GA3267@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, John Robinson <john.robinson@anonymous.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---- On Wed, 13/4/11, John Robinson <john.robinson@anonymous.org.uk> wro=
-te:
+maybe you missed the other email, anyway please
+find attached the patch to fix the parsing of
+the component list, i.e. skipping the "spare" one.
 
-> From: John Robinson <john.robinson@anonymous.org.uk>
-> Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, s=
-ystem unresponsive
-> To: "NeilBrown" <neilb@suse.de>
-> Cc: "Gavin Flower" <gavinflower@yahoo.com>, linux-raid@vger.kernel.or=
-g
-> Date: Wednesday, 13 April, 2011, 23:58
-> On 13/04/2011 12:13, NeilBrown
-> wrote:
-> > On Wed, 13 Apr 2011 11:57:24 +0100 John Robinson
-> > <john.robinson@anonymous.org.uk>=A0
-> wrote:
-> >> On 12/04/2011 22:30, Gavin Flower wrote:
-> [...]
-> >>> md0 : active raid6 sda3[0] sdb3[4] sdd3[3]
-> sdc3[5](F) sde3[1]
-> >>>=A0 =A0 =A0 =A0=A0=A010751808
-> blocks level 6, 64k chunk, algorithm 2 [5/4] [UU_UU]
-> >>=20
-> >> This one I don't get:
-> >> md0 : active raid6 sda3[0] sde3[1] sdd3[3] sdb3[4]
-> sdc3[5](F)
-> >> which ought to be UUUU_ again...
-> >>=20
-> >> Perhaps `mdadm -D /dev/md[0-2]` would make things
-> clearer...
-> >=20
-> > This is actually more horrible than you imagine.
->=20
-> It isn't really, I was asking for the mdadm -D output
-> precisely to get the list of role and slot numbers, having
-> noticed there was no slot 2 in Gavin's setup...
->=20
-> [...]
-> > As the current number is pretty much useless, I should
-> probably change it to
-> > the slot number, or an arbitrarily assigned larger
-> number for spares.
-> > This would be an incompatible change, but I very much
-> doubt anyone uses the
-> > numbers for what they actually are, so I doubt that
-> would really matter.
-> >=20
-> > It has just never really got high on my list of
-> priorities....
-> >=20
-> > Lesson:=A0 Ignore the number in [] - it doesn't
-> mean anything useful.
->=20
-> It's not useless, it reflects the order in which devices
-> were added to the array.
->=20
-> Suggestion: Don't change the number in /proc/mdstat, just
-> sort the devices by role (i.e. the same order as the UUUU_)
-> instead of device node, and show spares at the end (as per
-> your arbitrarily-assigned larger number, which this way you
-> never have to display).
->=20
-> Cheers,
->=20
-> John.
->=20
+I also added a check in case the array is degraded.
 
-The first time I saw this kind of thing: I was very worried, thinking I=
- had 2 bad drives - until I looked more closely, a few hours later.  I =
-am sure I am not the only to initially react that way.
+Thanks,
 
-=46rom a user perspective, I think that the list of drives and the [UUU=
-U_] string, should be ordered in the alphanumeric order of the logical =
-drive names. Also modify the '[...]' string to indicate spares (not hav=
-ing spares, not sure what it does now).
+pg
 
-e.g.
-/dev/sda  /dev/sdb /dev/sdc[F} /dev/sdd /dev/sde[S} /dev/sdf.
-would be reflected by:
-[aaFaSa]
-
-Not sure what the 'U' stood for. Marking actives disks with 'a' seems t=
-o make more sense to me.  The upper and lower case would make it easier=
- to see what is active and what is not.  Similarly, the RAID entries wo=
-uld be better, from a user perspective, to be sorted on name.
-
-There are probably lots of technical reasons this can't be done, but us=
-ers don't care! :-)  We just want it to look pretty, be easy to underst=
-and, and not be scary.
-
-Just my 2 pennies worth...
-
-When I put my developer hat on, I tend to feel that users rate looking =
-pretty' and 'not be scary' as being more important than 'be easy to und=
-erstand' - or perhaps, I am too cynical
+--- cut here ---
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -uNr a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2011-04-05 01:29:45.000000000 +0200
++++ b/raid6check.c	2011-04-05 22:51:32.587032612 +0200
+@@ -207,6 +207,7 @@
+ 	char **disk_name = NULL;
+ 	unsigned long long *offsets = NULL;
+ 	int raid_disks = 0;
++	int active_disks = 0;
+ 	int chunk_size = 0;
+ 	int layout = -1;
+ 	int level = 6;
+@@ -242,6 +243,7 @@
+ 			  GET_LEVEL|
+ 			  GET_LAYOUT|
+ 			  GET_DISKS|
++			  GET_DEGRADED |
+ 			  GET_COMPONENT|
+ 			  GET_CHUNK|
+ 			  GET_DEVS|
+@@ -254,6 +256,12 @@
+ 		goto exitHere;
+ 	}
+ 
++	if(info->array.failed_disks > 0) {
++		fprintf(stderr, "%s: %s degraded array\n", prg, argv[1]);
++		exit_err = 8;
++		goto exitHere;
++	}
++
+ 	printf("layout: %d\n", info->array.layout);
+ 	printf("disks: %d\n", info->array.raid_disks);
+ 	printf("component size: %llu\n", info->component_size * 512);
+@@ -262,12 +270,13 @@
+ 	printf("\n");
+ 
+ 	comp = info->devs;
+-	for(i = 0; i < info->array.raid_disks; i++) {
++	for(i = 0, active_disks = 0; active_disks < info->array.raid_disks; i++) {
+ 		printf("disk: %d - offset: %llu - size: %llu - name: %s - slot: %d\n",
+ 			i, comp->data_offset * 512, comp->component_size * 512,
+ 			map_dev(comp->disk.major, comp->disk.minor, 0),
+ 			comp->disk.raid_disk);
+-
++		if(comp->disk.raid_disk >= 0)
++			active_disks++;
+ 		comp = comp->next;
+ 	}
+ 	printf("\n");
+@@ -317,18 +326,20 @@
+ 	close_flag = 1;
+ 
+ 	comp = info->devs;
+-	for (i=0; i<raid_disks; i++) {
++	for (i=0, active_disks=0; active_disks<raid_disks; i++) {
+ 		int disk_slot = comp->disk.raid_disk;
+-		disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
+-		offsets[disk_slot] = comp->data_offset * 512;
+-		fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
+-		if (fds[disk_slot] < 0) {
+-			perror(disk_name[disk_slot]);
+-			fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
+-			exit_err = 6;
+-			goto exitHere;
++		if(disk_slot >= 0) {
++			disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
++			offsets[disk_slot] = comp->data_offset * 512;
++			fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
++			if (fds[disk_slot] < 0) {
++				perror(disk_name[disk_slot]);
++				fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
++				exit_err = 6;
++				goto exitHere;
++			}
++			active_disks++;
+ 		}
+-
+ 		comp = comp->next;
+ 	}
+ 
+--- cut here ---
+
+bye,
+
+-- 
+
+piergiorgio
