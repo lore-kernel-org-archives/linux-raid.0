@@ -1,120 +1,67 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Wed, 13 Apr 2011 09:35:36 +1000
-Message-ID: <20110412233536.GK31057@dastard>
-References: <20110411220505.1028816e@notabene.brown>
- <4DA2F00E.6010907@fusionio.com>
- <20110411223623.4278fad1@notabene.brown>
- <4DA2F8AD.1060605@fusionio.com>
- <20110412011255.GA29236@infradead.org>
- <4DA40F0E.1070903@fusionio.com>
- <20110412122248.GC31057@dastard>
- <4DA4456F.3070301@fusionio.com>
- <20110412134031.GF31057@dastard>
- <4DA4581A.4090600@fusionio.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/2] imsm: FIX: Be more patient during loading matadata
+Date: Tue, 12 Apr 2011 17:44:31 -0700
+Message-ID: <BANLkTinryn7FTdXMHx9HsMSQqpgykWW+Gg@mail.gmail.com>
+References: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>
+	<20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DA4581A.4090600@fusionio.com>
+In-Reply-To: <20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, NeilBrown <neilb@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Tue, Apr 12, 2011 at 03:48:10PM +0200, Jens Axboe wrote:
-> On 2011-04-12 15:40, Dave Chinner wrote:
-> > On Tue, Apr 12, 2011 at 02:28:31PM +0200, Jens Axboe wrote:
-> >> On 2011-04-12 14:22, Dave Chinner wrote:
-> >>> On Tue, Apr 12, 2011 at 10:36:30AM +0200, Jens Axboe wrote:
-> >>>> On 2011-04-12 03:12, hch@infradead.org wrote:
-> >>>>> On Mon, Apr 11, 2011 at 02:48:45PM +0200, Jens Axboe wrote:
-> >>>>>    function calls.
-> >>>>>  - Why is having a plug in blk_flush_plug marked unlikely?  Note that
-> >>>>>    unlikely is the static branch prediction hint to mark the case
-> >>>>>    extremly unlikely and is even used for hot/cold partitioning.  But
-> >>>>>    when we call it we usually check beforehand if we actually have
-> >>>>>    plugs, so it's actually likely to happen.
-> >>>>
-> >>>> The existance and out-of-line is for the scheduler() hook. It should be
-> >>>> an unlikely event to schedule with a plug held, normally the plug should
-> >>>> have been explicitly unplugged before that happens.
-> >>>
-> >>> Though if it does, haven't you just added a significant amount of
-> >>> depth to the worst case stack usage? I'm seeing this sort of thing
-> >>> from io_schedule():
-> >>>
-> >>>         Depth    Size   Location    (40 entries)
-> >>>         -----    ----   --------
-> >>>   0)     4256      16   mempool_alloc_slab+0x15/0x20
-> >>>   1)     4240     144   mempool_alloc+0x63/0x160
-> >>>   2)     4096      16   scsi_sg_alloc+0x4c/0x60
-> >>>   3)     4080     112   __sg_alloc_table+0x66/0x140
-> >>>   4)     3968      32   scsi_init_sgtable+0x33/0x90
-> >>>   5)     3936      48   scsi_init_io+0x31/0xc0
-> >>>   6)     3888      32   scsi_setup_fs_cmnd+0x79/0xe0
-> >>>   7)     3856     112   sd_prep_fn+0x150/0xa90
-> >>>   8)     3744      48   blk_peek_request+0x6a/0x1f0
-> >>>   9)     3696      96   scsi_request_fn+0x60/0x510
-> >>>  10)     3600      32   __blk_run_queue+0x57/0x100
-> >>>  11)     3568      80   flush_plug_list+0x133/0x1d0
-> >>>  12)     3488      32   __blk_flush_plug+0x24/0x50
-> >>>  13)     3456      32   io_schedule+0x79/0x80
-> >>>
-> >>> (This is from a page fault on ext3 that is doing page cache
-> >>> readahead and blocking on a locked buffer.)
-> > 
-> > FYI, the next step in the allocation chain adds >900 bytes to that
-> > stack:
-> > 
-> > $ cat /sys/kernel/debug/tracing/stack_trace
-> >         Depth    Size   Location    (47 entries)
-> >         -----    ----   --------
-> >   0)     5176      40   zone_statistics+0xad/0xc0
-> >   1)     5136     288   get_page_from_freelist+0x2cf/0x840
-> >   2)     4848     304   __alloc_pages_nodemask+0x121/0x930
-> >   3)     4544      48   kmem_getpages+0x62/0x160
-> >   4)     4496      96   cache_grow+0x308/0x330
-> >   5)     4400      80   cache_alloc_refill+0x21c/0x260
-> >   6)     4320      64   kmem_cache_alloc+0x1b7/0x1e0
-> >   7)     4256      16   mempool_alloc_slab+0x15/0x20
-> >   8)     4240     144   mempool_alloc+0x63/0x160
-> >   9)     4096      16   scsi_sg_alloc+0x4c/0x60
-> >  10)     4080     112   __sg_alloc_table+0x66/0x140
-> >  11)     3968      32   scsi_init_sgtable+0x33/0x90
-> >  12)     3936      48   scsi_init_io+0x31/0xc0
-> >  13)     3888      32   scsi_setup_fs_cmnd+0x79/0xe0
-> >  14)     3856     112   sd_prep_fn+0x150/0xa90
-> >  15)     3744      48   blk_peek_request+0x6a/0x1f0
-> >  16)     3696      96   scsi_request_fn+0x60/0x510
-> >  17)     3600      32   __blk_run_queue+0x57/0x100
-> >  18)     3568      80   flush_plug_list+0x133/0x1d0
-> >  19)     3488      32   __blk_flush_plug+0x24/0x50
-> >  20)     3456      32   io_schedule+0x79/0x80
-> > 
-> > That's close to 1800 bytes now, and that's not entering the reclaim
-> > path. If i get one deeper than that, I'll be sure to post it. :)
-> 
-> Do you have traces from 2.6.38, or are you just doing them now?
+On Tue, Apr 12, 2011 at 5:51 AM, Adam Kwolek <adam.kwolek@intel.com> wr=
+ote:
+> Sometimes occurs that metadata cannot be loaded e.g. wrong check sum
+> It can happen due to metadata update racing with mdmon condition.
+> If mpb loading is tried again, it is loaded successfully.
+> Try to load metadata again before really giving up.
+>
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+>
+> =A0super-intel.c | =A0 10 ++++++++--
+> =A01 files changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/super-intel.c b/super-intel.c
+> index dc5e34e..d23267a 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -2773,8 +2773,14 @@ load_and_parse_mpb(int fd, struct intel_super =
+*super, char *devname, int keep_fd
+> =A0 =A0 =A0 =A0int err;
+>
+> =A0 =A0 =A0 =A0err =3D load_imsm_mpb(fd, super, devname);
+> - =A0 =A0 =A0 if (err)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
+> + =A0 =A0 =A0 if (err) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* try to load mpb again,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* in case of mdmon race we could hav=
+e more luck...
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D load_imsm_mpb(fd, super, devnam=
+e);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (err)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
+> + =A0 =A0 =A0 }
+> =A0 =A0 =A0 =A0err =3D load_imsm_disk(fd, super, devname, keep_fd);
+> =A0 =A0 =A0 =A0if (err)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return err;
 
-I do stack checks like this all the time. I generally don't keep
-them around, just pay attention to the path and depth. ext3 is used
-for / on my test VMs, and has never shown up as the worse case stack
-usage when running xfstests. As of the block plugging code, this
-trace is the top stack user for the first ~130 tests, and often for
-the entire test run on XFS....
+This is semi-duplicates the check we already do after returning from
+load_and_parse_mpb in load_super_imsm_all.  I'm curious, are you
+hitting this path from load_super_imsm?  If the container is assembled
+we should be loading from the container, if the container is not
+available then mdmon can't be running and checksum errors are real.
 
-> The path you quote above should not go into reclaim, it's a GFP_ATOMIC
-> allocation.
-
-Right. I'm still trying to produce a trace that shows more stack
-usage in the block layer. It's random chance as to what pops up most
-of the time. However, some of the stacks that are showing up in
-2.6.39 are quite different from any I've ever seen before...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
