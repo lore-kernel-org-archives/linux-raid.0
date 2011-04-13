@@ -1,32 +1,81 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Wed, 13 Apr 2011 19:35:29 +0200
-Message-ID: <4DA5DEE1.9070803@fusionio.com>
-References: <20110411223623.4278fad1@notabene.brown> <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org> <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard> <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard> <4DA44C86.3090305@fusionio.com> <20110412133117.GE31057@dastard> <4DA45790.2010109@fusionio.com> <20110412143452.GH31057@dastard> <20110413070827.11b2a71d@notabene.brown> <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com> <1302693122.2035.20.camel@laptop> <4DA587AF.2040308@fusionio.com> <BANLkTimTGGJjXGX96LqP0YL4dcdGONFyhA@mail.gmail.com>
+From: Linux Raid Study <linuxraid.study@gmail.com>
+Subject: Re: iostat with raid device...
+Date: Wed, 13 Apr 2011 11:21:52 -0700
+Message-ID: <BANLkTiknrqo7CxGBnWamSh6U5qKY+59xqg@mail.gmail.com>
+References: <BANLkTi=6uvCsQTpCi4xLUWzx5X7o99_=5g@mail.gmail.com>
+	<20110409094629.2eae2d5b@notabene.brown>
+	<BANLkTin2KP-_vy8jbmV3JB-LHHJNOEVCKw@mail.gmail.com>
+	<20110409085044.GB417@cthulhu.home.robinhill.me.uk>
+	<BANLkTim4fenro-GQchqJ0JzrcDAcJXG0UQ@mail.gmail.com>
+	<20110411092559.GA20532@cthulhu.home.robinhill.me.uk>
+	<BANLkTikYTECzE-2dCnC+jDT0wHNtgkNQ8Q@mail.gmail.com>
+	<20110411095355.GB20532@cthulhu.home.robinhill.me.uk>
+	<20110411201808.47cd19d5@notabene.brown>
+	<BANLkTinFxHPuCgxERGc88W2KmZkzU_GF9Q@mail.gmail.com>
+	<20110412125141.679baaf0@notabene.brown>
+	<BANLkTi=yz4zu-TS3BGxqfbtK5p-6neph-Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimTGGJjXGX96LqP0YL4dcdGONFyhA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>, "hch@infradead.org" <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTi=yz4zu-TS3BGxqfbtK5p-6neph-Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2011-04-13 17:13, Linus Torvalds wrote:
-> On Wed, Apr 13, 2011 at 4:23 AM, Jens Axboe <jaxboe@fusionio.com> wrote:
+Let me reword previous email...
+
+I tried to change stripe_cache_size as following and tried values
+between 16 to 4096
+echo 512 > /sys/block/md0/md/stripe_cache_size
+
+But, I'm not seeing too much difference in performance. I'm running on
+2.6.27sh kernel.
+
+Any ideas...
+
+Thanks for your help...
+
+On Tue, Apr 12, 2011 at 12:36 PM, Linux Raid Study
+<linuxraid.study@gmail.com> wrote:
+> Hello Neil,
+>
+> For the benchmarking purpose, I've configured array of ~30GB.
+> stripe_cache_size is 1024 (so 1M).
+>
+> BTW, I'm using Windows copy (robocopy) utility to test perf and I
+> believe block size it uses is 32kB. But since everything gets written
+> thru VFS, I'm not sure how to change stripe_cache_size to get optimal
+> performance with this setup...
+>
+> Thanks.
+>
+> On Mon, Apr 11, 2011 at 7:51 PM, NeilBrown <neilb@suse.de> wrote:
+>> On Mon, 11 Apr 2011 18:57:34 -0700 Linux Raid Study
+>> <linuxraid.study@gmail.com> wrote:
 >>
->> Linus, I've got a few other things queued up in the area, I'll add this
->> and send them off soon. Or feel free to add this one yourself, since you
->> already did it.
-> 
-> Ok, I committed it with Peter's and your acks.
-
-Great, thanks.
-
-> And if you already put it in your git tree too, git will merge it.
-
-I did not, I had a feeling you'd merge this one.
-
--- 
-Jens Axboe
+>>> If I use --assume-clean in mdadm, I see performance is 10-15% lower=
+ as
+>>> compared to the case wherein this option is not specified. When I r=
+un
+>>> without --assume_clean, I wait until mdadm prints "recovery_done" a=
+nd
+>>> then run IO benchmarks...
+>>>
+>>> Is perf drop expected?
+>>
+>> No. =C2=A0And I cannot explain it.... unless the array is so tiny th=
+at it all fits
+>> in the stripe cache (typically about 1Meg).
+>>
+>> There really should be no difference.
+>>
+>> NeilBrown
+>>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
