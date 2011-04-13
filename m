@@ -1,60 +1,65 @@
-From: Roberto Spadim <roberto@spadim.com.br>
-Subject: Re: expand raid10
-Date: Wed, 13 Apr 2011 07:47:26 -0300
-Message-ID: <BANLkTi=udXzNJwK9CKtK1QEqK1PznSp_2g@mail.gmail.com>
-References: <BANLkTimFwM0m3jT4mg8ZL4VvSXkbi4pU6g@mail.gmail.com>
-	<BANLkTimqdD39TgbghGi3hK4b1gh1FmcmdQ@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
+ unresponsive
+Date: Wed, 13 Apr 2011 11:57:24 +0100
+Message-ID: <4DA58194.4070403@anonymous.org.uk>
+References: <323937.22450.qm@web65109.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimqdD39TgbghGi3hK4b1gh1FmcmdQ@mail.gmail.com>
+In-Reply-To: <323937.22450.qm@web65109.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Gavin Flower <gavinflower@yahoo.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-raid10 with other layout i could expand?
-
-2011/4/13 Mathias Bur=E9n <mathias.buren@gmail.com>:
-> On 13 April 2011 05:28, Roberto Spadim <roberto@spadim.com.br> wrote:
->> hi guys, today i have 2 disks raid10 far, with 2tb each disk/array
->> i want to expand it to 4 disks raid10 far, with 2tb each disk and 4t=
-b array
->> in other words, i will put more 2 disks of 2tb and i want more 2tb o=
-f space
+On 12/04/2011 22:30, Gavin Flower wrote:
+> --- On Fri, 8/4/11, NeilBrown<neilb@suse.de>  wrote:
+> [...]
+>> No, it was clearly a disk-drive problem.
+>> e.g.
+>> Apr  7 14:42:12 saturn kernel: [231957.756023]
+>> ata3.00: failed command: READ FPDMA QUEUED
 >>
->> could i do this with raid10 far layout? i=B4m using ext4 at filesyst=
-em
->> how could i expand ext4 filesystem?
->>
->> --
->> Roberto Spadim
->> Spadim Technology / SPAEmpresarial
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
+>> a READ command sent to a n 'ata' device failed.  i.e.
+>> disk error.
+> [...]
 >
-> No, you cannot expand RAID0.
+> Hi Neil,
 >
-> // M
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> I think it is either a drive or cable problem.
 >
+> However, I was wondering if /proc/mdstat could list drives in a more consistent manner.  The C drive has dropped out and affected all 3 RAID partitions.  A quick look at /proc/mdstat suggests that md2&  md1 have the same drive drop out [UUUU_], but a different drive for md0 [UU_UU].  In fact, the list of drives (...sda4[0] sdc4[6](F)...) is not consistent with the [UUUU_] representation even for the same mdN!
+>
+> # date ; cat /proc/mdstat
+> Wed Apr 13 08:40:09 NZST 2011
+> Personalities : [raid6] [raid5] [raid4]
+>
+> md2 : active raid6 sda4[0] sdc4[6](F) sdd4[3] sdb4[5] sde4[1]
+>        1114745856 blocks super 1.1 level 6, 512k chunk, algorithm 2 [5/4] [UUUU_]
 
+This looks correct: sorting the first line into md slot order we have:
+md2 : active raid6 sda4[0] sde4[1] sdd4[3] sdb4[5] sdc4[6](F)
+which is UUUU_
 
+> md1 : active raid6 sda2[0] sdc2[5](F) sdd2[3] sde2[2] sdb2[1]
+>        307198464 blocks level 6, 512k chunk, algorithm 2 [5/4] [UUUU_]
 
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Similarly:
+md1 : active raid6 sda2[0] sdb2[1] sde2[2] sdd2[3] sdc2[5](F)
+which is UUUU_
+
+> md0 : active raid6 sda3[0] sdb3[4] sdd3[3] sdc3[5](F) sde3[1]
+>        10751808 blocks level 6, 64k chunk, algorithm 2 [5/4] [UU_UU]
+
+This one I don't get:
+md0 : active raid6 sda3[0] sde3[1] sdd3[3] sdb3[4] sdc3[5](F)
+which ought to be UUUU_ again...
+
+Perhaps `mdadm -D /dev/md[0-2]` would make things clearer...
+
+Cheers,
+
+John.
+
