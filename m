@@ -1,66 +1,84 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 05/10] block: remove per-queue plugging
-Date: Wed, 13 Apr 2011 13:12:02 +0200
-Message-ID: <1302693122.2035.20.camel@laptop>
-References: <20110411223623.4278fad1@notabene.brown>
-	 <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org>
-	 <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard>
-	 <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard>
-	 <4DA44C86.3090305@fusionio.com> <20110412133117.GE31057@dastard>
-	 <4DA45790.2010109@fusionio.com> <20110412143452.GH31057@dastard>
-	 <20110413070827.11b2a71d@notabene.brown>
-	 <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: expand raid10
+Date: Wed, 13 Apr 2011 13:10:16 +0200
+Message-ID: <20110413111015.GA10195@www2.open-std.org>
+References: <BANLkTimFwM0m3jT4mg8ZL4VvSXkbi4pU6g@mail.gmail.com> <BANLkTimqdD39TgbghGi3hK4b1gh1FmcmdQ@mail.gmail.com> <BANLkTi=udXzNJwK9CKtK1QEqK1PznSp_2g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>, Jens Axboe <jaxboe@fusionio.com>, "hch@infradead.org" <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=udXzNJwK9CKtK1QEqK1PznSp_2g@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Mathias =?iso-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2011-04-12 at 19:23 -0700, Linus Torvalds wrote:
->  kernel/sched.c |   20 ++++++++++----------
->  1 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/kernel/sched.c b/kernel/sched.c
-> index 48013633d792..a187c3fe027b 100644
-> --- a/kernel/sched.c
-> +++ b/kernel/sched.c
-> @@ -4111,20 +4111,20 @@ need_resched:
->                                         try_to_wake_up_local(to_wakeup);
->                         }
->                         deactivate_task(rq, prev, DEQUEUE_SLEEP);
-> +
-> +                       /*
-> +                        * If we are going to sleep and we have plugged IO queued, make
-> +                        * sure to submit it to avoid deadlocks.
-> +                        */
-> +                       if (blk_needs_flush_plug(prev)) {
-> +                               raw_spin_unlock(&rq->lock);
-> +                               blk_flush_plug(prev);
-> +                               raw_spin_lock(&rq->lock);
-> +                       }
->                 }
->                 switch_count = &prev->nvcsw;
->         }
->  
-> -       /*
-> -        * If we are going to sleep and we have plugged IO queued, make
-> -        * sure to submit it to avoid deadlocks.
-> -        */
-> -       if (prev->state != TASK_RUNNING && blk_needs_flush_plug(prev)) {
-> -               raw_spin_unlock(&rq->lock);
-> -               blk_flush_plug(prev);
-> -               raw_spin_lock(&rq->lock);
-> -       }
-> -
->         pre_schedule(rq, prev);
->  
->         if (unlikely(!rq->nr_running)) 
+On Wed, Apr 13, 2011 at 07:47:26AM -0300, Roberto Spadim wrote:
+> raid10 with other layout i could expand?
 
-Right, that cures the preemption problem. The reason I suggested placing
-it where it was is that I'd like to keep all things that release
-rq->lock in the middle of schedule() in one place, but I guess we can
-cure that with some extra comments.
+My understanding is that you currently cannot expand raid10.
+but there are things in the works. Expansion of raid10,far
+was not on the list from neil, raid10,near was. But it should be fairly
+easy to expand raid10,far. You can just treat one of the copies as your
+refence data, and copy that data to the other raid0-like parts of the
+array.  I wonder if Neil thinks he could leave that as an exersize for
+me to implement... I would like  to be able to combine it with a
+reformat to a more robust layout of raid10,far that in some cases can s=
+urvive more
+than one disk failure.
+
+best regards
+keld
+
+
+> 2011/4/13 Mathias Bur=E9n <mathias.buren@gmail.com>:
+> > On 13 April 2011 05:28, Roberto Spadim <roberto@spadim.com.br> wrot=
+e:
+> >> hi guys, today i have 2 disks raid10 far, with 2tb each disk/array
+> >> i want to expand it to 4 disks raid10 far, with 2tb each disk and =
+4tb array
+> >> in other words, i will put more 2 disks of 2tb and i want more 2tb=
+ of space
+> >>
+> >> could i do this with raid10 far layout? i?m using ext4 at filesyst=
+em
+> >> how could i expand ext4 filesystem?
+> >>
+> >> --
+> >> Roberto Spadim
+> >> Spadim Technology / SPAEmpresarial
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-ra=
+id" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
+ml
+> >>
+> >
+> > No, you cannot expand RAID0.
+> >
+> > // M
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+> >
+>=20
+>=20
+>=20
+> --=20
+> Roberto Spadim
+> Spadim Technology / SPAEmpresarial
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
