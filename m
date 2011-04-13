@@ -1,67 +1,81 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/2] imsm: FIX: Be more patient during loading matadata
-Date: Tue, 12 Apr 2011 17:44:31 -0700
-Message-ID: <BANLkTinryn7FTdXMHx9HsMSQqpgykWW+Gg@mail.gmail.com>
-References: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>
-	<20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Tue, 12 Apr 2011 19:23:52 -0700
+Message-ID: <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
+References: <20110411223623.4278fad1@notabene.brown> <4DA2F8AD.1060605@fusionio.com>
+ <20110412011255.GA29236@infradead.org> <4DA40F0E.1070903@fusionio.com>
+ <20110412122248.GC31057@dastard> <4DA4456F.3070301@fusionio.com>
+ <20110412124134.GD31057@dastard> <4DA44C86.3090305@fusionio.com>
+ <20110412133117.GE31057@dastard> <4DA45790.2010109@fusionio.com>
+ <20110412143452.GH31057@dastard> <20110413070827.11b2a71d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+Content-Type: multipart/mixed; boundary=0022154012fa1cd2bd04a0c38101
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110413070827.11b2a71d@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Dave Chinner <david@fromorbit.com>, Jens Axboe <jaxboe@fusionio.com>, "hch@infradead.org" <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 12, 2011 at 5:51 AM, Adam Kwolek <adam.kwolek@intel.com> wr=
-ote:
-> Sometimes occurs that metadata cannot be loaded e.g. wrong check sum
-> It can happen due to metadata update racing with mdmon condition.
-> If mpb loading is tried again, it is loaded successfully.
-> Try to load metadata again before really giving up.
->
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->
-> =A0super-intel.c | =A0 10 ++++++++--
-> =A01 files changed, 8 insertions(+), 2 deletions(-)
->
-> diff --git a/super-intel.c b/super-intel.c
-> index dc5e34e..d23267a 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2773,8 +2773,14 @@ load_and_parse_mpb(int fd, struct intel_super =
-*super, char *devname, int keep_fd
-> =A0 =A0 =A0 =A0int err;
->
-> =A0 =A0 =A0 =A0err =3D load_imsm_mpb(fd, super, devname);
-> - =A0 =A0 =A0 if (err)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
-> + =A0 =A0 =A0 if (err) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* try to load mpb again,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* in case of mdmon race we could hav=
-e more luck...
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D load_imsm_mpb(fd, super, devnam=
-e);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (err)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return err;
-> + =A0 =A0 =A0 }
-> =A0 =A0 =A0 =A0err =3D load_imsm_disk(fd, super, devname, keep_fd);
-> =A0 =A0 =A0 =A0if (err)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return err;
+--0022154012fa1cd2bd04a0c38101
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-This is semi-duplicates the check we already do after returning from
-load_and_parse_mpb in load_super_imsm_all.  I'm curious, are you
-hitting this path from load_super_imsm?  If the container is assembled
-we should be loading from the container, if the container is not
-available then mdmon can't be running and checksum errors are real.
+On Tue, Apr 12, 2011 at 2:08 PM, NeilBrown <neilb@suse.de> wrote:
+> On Wed, 13 Apr 2011 00:34:52 +1000 Dave Chinner <david@fromorbit.com> wro=
+te:
+>>
+>> Well, not really - now taking any sleeping lock or waiting on
+>> anything can trigger a plug flush where previously you had to
+>> explicitly issue them. I'm not saying what we had is better, just
+>> that there are implicit flushes with your changes that are
+>> inherently uncontrollable...
+>
+> It's not just sleeping locks - if preempt is enabled a schedule can happe=
+n at
+> any time - at any depth. =A0I've seen a spin_unlock do it.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm. I don't think we should flush IO in the preemption path. That
+smells wrong on many levels, just one of them being the "any time, any
+depth".
+
+It also sounds really wrong from an IO pattern standpoint. The process
+is actually still running, and the IO flushing _already_ does the
+"only if it's going to sleep" test, but it actually does it _wrong_.
+The "current->state" check doesn't make sense for a preemption event,
+because it's not actually going to sleep there.
+
+So a patch like the attached (UNTESTED!) sounds like the right thing to do.
+
+Whether it makes any difference for any MD issues, who knows.. But
+considering that the unplugging already used to test for "prev->state
+!=3D TASK_RUNNING", this is absolutely the right thing to do - that old
+test was just broken.
+
+                                   Linus
+
+--0022154012fa1cd2bd04a0c38101
+Content-Type: text/x-patch; charset=US-ASCII; name="patch.diff"
+Content-Disposition: attachment; filename="patch.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gmfmyb2w0
+
+IGtlcm5lbC9zY2hlZC5jIHwgICAyMCArKysrKysrKysrLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFu
+Z2VkLCAxMCBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9rZXJu
+ZWwvc2NoZWQuYyBiL2tlcm5lbC9zY2hlZC5jCmluZGV4IDQ4MDEzNjMzZDc5Mi4uYTE4N2MzZmUw
+MjdiIDEwMDY0NAotLS0gYS9rZXJuZWwvc2NoZWQuYworKysgYi9rZXJuZWwvc2NoZWQuYwpAQCAt
+NDExMSwyMCArNDExMSwyMCBAQCBuZWVkX3Jlc2NoZWQ6CiAJCQkJCXRyeV90b193YWtlX3VwX2xv
+Y2FsKHRvX3dha2V1cCk7CiAJCQl9CiAJCQlkZWFjdGl2YXRlX3Rhc2socnEsIHByZXYsIERFUVVF
+VUVfU0xFRVApOworCisJCQkvKgorCQkJICogSWYgd2UgYXJlIGdvaW5nIHRvIHNsZWVwIGFuZCB3
+ZSBoYXZlIHBsdWdnZWQgSU8gcXVldWVkLCBtYWtlCisJCQkgKiBzdXJlIHRvIHN1Ym1pdCBpdCB0
+byBhdm9pZCBkZWFkbG9ja3MuCisJCQkgKi8KKwkJCWlmIChibGtfbmVlZHNfZmx1c2hfcGx1Zyhw
+cmV2KSkgeworCQkJCXJhd19zcGluX3VubG9jaygmcnEtPmxvY2spOworCQkJCWJsa19mbHVzaF9w
+bHVnKHByZXYpOworCQkJCXJhd19zcGluX2xvY2soJnJxLT5sb2NrKTsKKwkJCX0KIAkJfQogCQlz
+d2l0Y2hfY291bnQgPSAmcHJldi0+bnZjc3c7CiAJfQogCi0JLyoKLQkgKiBJZiB3ZSBhcmUgZ29p
+bmcgdG8gc2xlZXAgYW5kIHdlIGhhdmUgcGx1Z2dlZCBJTyBxdWV1ZWQsIG1ha2UKLQkgKiBzdXJl
+IHRvIHN1Ym1pdCBpdCB0byBhdm9pZCBkZWFkbG9ja3MuCi0JICovCi0JaWYgKHByZXYtPnN0YXRl
+ICE9IFRBU0tfUlVOTklORyAmJiBibGtfbmVlZHNfZmx1c2hfcGx1ZyhwcmV2KSkgewotCQlyYXdf
+c3Bpbl91bmxvY2soJnJxLT5sb2NrKTsKLQkJYmxrX2ZsdXNoX3BsdWcocHJldik7Ci0JCXJhd19z
+cGluX2xvY2soJnJxLT5sb2NrKTsKLQl9Ci0KIAlwcmVfc2NoZWR1bGUocnEsIHByZXYpOwogCiAJ
+aWYgKHVubGlrZWx5KCFycS0+bnJfcnVubmluZykpCg==
+--0022154012fa1cd2bd04a0c38101--
