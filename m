@@ -1,67 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
- unresponsive
-Date: Thu, 14 Apr 2011 09:09:07 +1000
-Message-ID: <20110414090907.2b32c19b@notabene.brown>
-References: <724474.42236.qm@web65102.mail.ac2.yahoo.com>
+Subject: Re: expand raid10
+Date: Thu, 14 Apr 2011 09:28:24 +1000
+Message-ID: <20110414092824.337d3874@notabene.brown>
+References: <BANLkTimFwM0m3jT4mg8ZL4VvSXkbi4pU6g@mail.gmail.com>
+	<BANLkTimqdD39TgbghGi3hK4b1gh1FmcmdQ@mail.gmail.com>
+	<BANLkTi=udXzNJwK9CKtK1QEqK1PznSp_2g@mail.gmail.com>
+	<20110413111015.GA10195@www2.open-std.org>
+	<20110413211715.286d9203@notabene.brown>
+	<20110413123413.GA10377@www2.open-std.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <724474.42236.qm@web65102.mail.ac2.yahoo.com>
+In-Reply-To: <20110413123413.GA10377@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Keld =?ISO-8859-1?B?Svhybg==?= Simonsen <keld@keldix.com>
+Cc: Roberto Spadim <roberto@spadim.com.br>, Mathias =?ISO-8859-1?B?QnVy?= =?ISO-8859-1?B?6W4=?= <mathias.buren@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 13 Apr 2011 15:24:17 -0700 (PDT) Gavin Flower <gavinflower@yaho=
-o.com>
-wrote:
+On Wed, 13 Apr 2011 14:34:14 +0200 Keld J=F8rn Simonsen <keld@keldix.co=
+m> wrote:
 
+> On Wed, Apr 13, 2011 at 09:17:15PM +1000, NeilBrown wrote:
+> > On Wed, 13 Apr 2011 13:10:16 +0200 Keld J=F8rn Simonsen <keld@keldi=
+x.com> wrote:
+> >=20
+> > > On Wed, Apr 13, 2011 at 07:47:26AM -0300, Roberto Spadim wrote:
+> > > > raid10 with other layout i could expand?
+> > >=20
+> > > My understanding is that you currently cannot expand raid10.
+> > > but there are things in the works. Expansion of raid10,far
+> > > was not on the list from neil, raid10,near was. But it should be =
+fairly
+> > > easy to expand raid10,far. You can just treat one of the copies a=
+s your
+> > > refence data, and copy that data to the other raid0-like parts of=
+ the
+> > > array.  I wonder if Neil thinks he could leave that as an exersiz=
+e for
+> > > me to implement... I would like  to be able to combine it with a
+> > > reformat to a more robust layout of raid10,far that in some cases=
+ can survive more
+> > > than one disk failure.
+> > >=20
+> >=20
+> > I'm very happy for anyone to offer to implement anything.
+> >=20
+> > I will of course require the code to be of reasonable quality befor=
+e I accept
+> > it, but I'm also happy to give helpful review comments and guidance=
+=2E
+> >=20
+> > So don't wait for permission, if you want to try implementing somet=
+hing, just
+> > do it.
+> >=20
+> > Equally if there is something that I particularly want done I won't=
+ wait for
+> > ever for someone else who says they are working on it.  But RAID10 =
+reshape is
+> > a long way from the top of my list.
 >=20
-> --- On Fri, 8/4/11, Gavin Flower <gavinflower@yahoo.com> wrote:
+> Hi Neil!
 >=20
-> > From: Gavin Flower <gavinflower@yahoo.com>
-> > Subject: RAID6 data-check took almost 2 hours, clicking sounds, sys=
-tem unresponsive
-> [...]
-> > This morning, I noticed my system was extremely
-> > unresponsive, and that there were clicking sounds coming
-> > from one of my 5 hard drives.=A0=20
-> [...]
+> Yes, that is how I understand your policy on contributions.
 >=20
-> Hi Neil,
+> Do you by RAID10 reshaping also mean RAID10 expansion?
+> In my eyes this is quite important, and something that I have wanted =
+for
+> a long time. I think it is a quite common task for many Linux MD user=
+s.
 >=20
-> When I do=20
->    badblocks -s -v /dev/sdc
-> I hear clicking sounds from the hard drive, and notice lots and lots =
-of log messages such as:
-> ata3: exception Emask 0x10 SAct 0x0 SErr 0x90200 action 0xe frozen
-> ata3: irq_stat 0x00400000, PHY RDY changed
-> ata3: SError: { Persist PHYRdyChg 10B8B }
-> ata3: hard resetting link
-> ata3: softreset failed (device not ready)
-> ata3: applying SB600 PMP SRST workaround and retrying
-> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata3.00: configured for UDMA/33
-> ata3: EH complete
->=20
-> So I assume that the clicking corresponds to the hard reset, but I'm =
-not certain of that.  Initially, I thought it might be some kind of dis=
-k head problems.  Note that smart reports no bad blocks.
->=20
->=20
-> Regards,
-> Gavin
->=20
+> best regards
+> keld
 
-This completely out side of my area of expertise.
 
-My approach to such issues is to replace bits until the issue goes away=
-, and
-the last bit I replaced goes in the bin (after suitable double-checks) =
-or
-back to the supplier.
+Yes, by 'reshaping' I mean everything included here:
+
+http://neil.brown.name/blog/20110216044002#11
+
+which includes size changes.
 
 NeilBrown
 --
