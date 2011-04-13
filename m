@@ -1,65 +1,66 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
- unresponsive
-Date: Wed, 13 Apr 2011 11:57:24 +0100
-Message-ID: <4DA58194.4070403@anonymous.org.uk>
-References: <323937.22450.qm@web65109.mail.ac2.yahoo.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Wed, 13 Apr 2011 13:12:02 +0200
+Message-ID: <1302693122.2035.20.camel@laptop>
+References: <20110411223623.4278fad1@notabene.brown>
+	 <4DA2F8AD.1060605@fusionio.com> <20110412011255.GA29236@infradead.org>
+	 <4DA40F0E.1070903@fusionio.com> <20110412122248.GC31057@dastard>
+	 <4DA4456F.3070301@fusionio.com> <20110412124134.GD31057@dastard>
+	 <4DA44C86.3090305@fusionio.com> <20110412133117.GE31057@dastard>
+	 <4DA45790.2010109@fusionio.com> <20110412143452.GH31057@dastard>
+	 <20110413070827.11b2a71d@notabene.brown>
+	 <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <323937.22450.qm@web65109.mail.ac2.yahoo.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <BANLkTikBEJa7bJJoLFU7NoiEgOjVHVG08A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: NeilBrown <neilb@suse.de>, Dave Chinner <david@fromorbit.com>, Jens Axboe <jaxboe@fusionio.com>, "hch@infradead.org" <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/04/2011 22:30, Gavin Flower wrote:
-> --- On Fri, 8/4/11, NeilBrown<neilb@suse.de>  wrote:
-> [...]
->> No, it was clearly a disk-drive problem.
->> e.g.
->> Apr  7 14:42:12 saturn kernel: [231957.756023]
->> ata3.00: failed command: READ FPDMA QUEUED
->>
->> a READ command sent to a n 'ata' device failed.  i.e.
->> disk error.
-> [...]
->
-> Hi Neil,
->
-> I think it is either a drive or cable problem.
->
-> However, I was wondering if /proc/mdstat could list drives in a more consistent manner.  The C drive has dropped out and affected all 3 RAID partitions.  A quick look at /proc/mdstat suggests that md2&  md1 have the same drive drop out [UUUU_], but a different drive for md0 [UU_UU].  In fact, the list of drives (...sda4[0] sdc4[6](F)...) is not consistent with the [UUUU_] representation even for the same mdN!
->
-> # date ; cat /proc/mdstat
-> Wed Apr 13 08:40:09 NZST 2011
-> Personalities : [raid6] [raid5] [raid4]
->
-> md2 : active raid6 sda4[0] sdc4[6](F) sdd4[3] sdb4[5] sde4[1]
->        1114745856 blocks super 1.1 level 6, 512k chunk, algorithm 2 [5/4] [UUUU_]
+On Tue, 2011-04-12 at 19:23 -0700, Linus Torvalds wrote:
+>  kernel/sched.c |   20 ++++++++++----------
+>  1 files changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/kernel/sched.c b/kernel/sched.c
+> index 48013633d792..a187c3fe027b 100644
+> --- a/kernel/sched.c
+> +++ b/kernel/sched.c
+> @@ -4111,20 +4111,20 @@ need_resched:
+>                                         try_to_wake_up_local(to_wakeup);
+>                         }
+>                         deactivate_task(rq, prev, DEQUEUE_SLEEP);
+> +
+> +                       /*
+> +                        * If we are going to sleep and we have plugged IO queued, make
+> +                        * sure to submit it to avoid deadlocks.
+> +                        */
+> +                       if (blk_needs_flush_plug(prev)) {
+> +                               raw_spin_unlock(&rq->lock);
+> +                               blk_flush_plug(prev);
+> +                               raw_spin_lock(&rq->lock);
+> +                       }
+>                 }
+>                 switch_count = &prev->nvcsw;
+>         }
+>  
+> -       /*
+> -        * If we are going to sleep and we have plugged IO queued, make
+> -        * sure to submit it to avoid deadlocks.
+> -        */
+> -       if (prev->state != TASK_RUNNING && blk_needs_flush_plug(prev)) {
+> -               raw_spin_unlock(&rq->lock);
+> -               blk_flush_plug(prev);
+> -               raw_spin_lock(&rq->lock);
+> -       }
+> -
+>         pre_schedule(rq, prev);
+>  
+>         if (unlikely(!rq->nr_running)) 
 
-This looks correct: sorting the first line into md slot order we have:
-md2 : active raid6 sda4[0] sde4[1] sdd4[3] sdb4[5] sdc4[6](F)
-which is UUUU_
-
-> md1 : active raid6 sda2[0] sdc2[5](F) sdd2[3] sde2[2] sdb2[1]
->        307198464 blocks level 6, 512k chunk, algorithm 2 [5/4] [UUUU_]
-
-Similarly:
-md1 : active raid6 sda2[0] sdb2[1] sde2[2] sdd2[3] sdc2[5](F)
-which is UUUU_
-
-> md0 : active raid6 sda3[0] sdb3[4] sdd3[3] sdc3[5](F) sde3[1]
->        10751808 blocks level 6, 64k chunk, algorithm 2 [5/4] [UU_UU]
-
-This one I don't get:
-md0 : active raid6 sda3[0] sde3[1] sdd3[3] sdb3[4] sdc3[5](F)
-which ought to be UUUU_ again...
-
-Perhaps `mdadm -D /dev/md[0-2]` would make things clearer...
-
-Cheers,
-
-John.
-
+Right, that cures the preemption problem. The reason I suggested placing
+it where it was is that I'd like to keep all things that release
+rq->lock in the middle of schedule() in one place, but I guess we can
+cure that with some extra comments.
