@@ -1,45 +1,36 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/2] imsm: FIX: Be more patient during loading matadata
-Date: Thu, 14 Apr 2011 01:36:00 -0700
-Message-ID: <4DA6B1F0.5010207@intel.com>
-References: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>	<20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>	<BANLkTinryn7FTdXMHx9HsMSQqpgykWW+Gg@mail.gmail.com>	<905EDD02F158D948B186911EB64DB3D192368340@irsmsx503.ger.corp.intel.com>	<BANLkTi=nontnQ_WKCaUWmosBDBihoDC7JA@mail.gmail.com> <20110414180846.6a71eeb9@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Any pros or cons of using full disk versus partitons?
+Date: Thu, 14 Apr 2011 12:23:52 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1104141221270.14027@uplift.swm.pp.se>
+References: <07a801cbfa12$64b8a950$2e29fbf0$@gmail.com> <20110413.132112.102552472.davem@davemloft.net> <io52j7$cg4$1@dough.gmane.org> <BANLkTi=vgVxVRomvpkX5uxSvN9Fe1cgvoQ@mail.gmail.com> <20110414181159.48a2086e@notabene.brown>
+ <20110414143007.477e6dcd@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110414180846.6a71eeb9@notabene.brown>
+In-Reply-To: <20110414143007.477e6dcd@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: NeilBrown <neilb@suse.de>, CoolCold <coolthecold@gmail.com>, David Brown <david.brown@hesbynett.no>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/14/2011 1:08 AM, NeilBrown wrote:
->> Why does this existing check:
->>
->>                 /* retry the load if we might have raced against mdmon */
->>                  if (err == 3&&  mdmon_running(devnum))
->>                          for (retry = 0; retry<  3; retry++) {
->>                                  usleep(3000);
->>                                  err = load_and_parse_mpb(dfd, s, NULL, 1);
->>                                  if (err != 3)
->>                                          break;
->>                          }
->
-> It's pretty horrible that we need to do this, isn't it?
+On Thu, 14 Apr 2011, Roman Mamedov wrote:
 
-Yes.
+> But then the 1.x+ metadata is still stored at the very end of the 
+> device, which makes it vulnerable to the HPA problem described above.
 
-> Maybe we need some way to synchronise with mdmon so we *know* if we have
-> raced or not.
-> i.e. mdmon keeps a count of the number of times it has updated the metadata.
-> We send a message to get the count, read, then get the count again.
-> The request blocks while mdmon is actually writing.
-> If the counts are different, we read again.
-> ??
+That's why I prefer v1.2 superblocks, it's stored safely away from MBR 
+overwrites, but still not at the end.
 
-Assuming we are only racing against dirty transitions maybe it is enough 
-to poll md/array_state and if it signaled while reading the metadata we 
-likely need to try again (of course with an intervening ping_monitor)?
+Quoting "man mdadm"
 
---
-Dan
+1, 1.0, 1.1, 1.2
+Use the new version-1 format superblock.  This has few 
+restrictions.  The different sub-versions store the superblock at 
+different locations on the device, either at the end (for 1.0), at the 
+start (for 1.1) or 4K from the start (for 1.2).
+
+I consider v1.0 and v1.1 as dangerous because of why you wrote, as well as 
+accidental MBR writes.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
