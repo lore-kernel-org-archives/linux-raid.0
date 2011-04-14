@@ -1,117 +1,132 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH] md: fix unchecked interruptible mutex locks
-Date: Thu, 14 Apr 2011 10:48:30 +0400
-Message-ID: <4DA698BE.70903@ispras.ru>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] RAID-6 check standalone fix component list parsing
+Date: Thu, 14 Apr 2011 17:29:46 +1000
+Message-ID: <20110414172946.287e36ee@notabene.brown>
+References: <20110221204551.GA15675@lazy.lzy>
+	<20110321140244.2314b4b4@notabene.brown>
+	<20110321104007.GA15379@lazy.lzy>
+	<20110321220457.29d52f5c@notabene.brown>
+	<20110321115440.GA15635@lazy.lzy>
+	<20110322095905.737fb1d5@notabene.brown>
+	<20110404175242.GA3411@lazy.lzy>
+	<20110405091242.3427e0b1@notabene.brown>
+	<20110406180202.GA3267@lazy.lzy>
+	<20110413204825.GA15496@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110413204825.GA15496@lazy.lzy>
+Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mddev_lock() is an alias for mutex_lock_interruptible() at the moment,
-but there are places where returned value of mddev_lock() is not checked.
+On Wed, 13 Apr 2011 22:48:25 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-The patch proposed introduces mddev_lock_interruptible(),
-which is an equivalent for old mddev_lock(), while mddev_lock()
-becomes an alias for uninterruptible mutex_lock(). 
-Calls of mddev_lock(), where the result is being checked, 
-are replaced by mddev_lock_interruptible().
-All the other calls become uninterruptible.
+> Hi Neil,
+> 
+> maybe you missed the other email, anyway please
+> find attached the patch to fix the parsing of
+> the component list, i.e. skipping the "spare" one.
+> 
+> I also added a check in case the array is degraded.
+> 
+> Thanks,
+> 
 
-Found by Linux Driver Verification project (linuxtesting.org).
+Thanks for the reminded.  I've applied this now.
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/md/md.c |   21 +++++++++++++--------
- 1 files changed, 13 insertions(+), 8 deletions(-)
+NeilBrown
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index b12b377..cc6d183 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -623,7 +623,12 @@ static mddev_t * mddev_find(dev_t unit)
- 	goto retry;
- }
 
--static inline int mddev_lock(mddev_t * mddev)
-+static inline void mddev_lock(mddev_t *mddev)
-+{
-+	return mutex_lock(&mddev->reconfig_mutex);
-+}
-+
-+static inline int __must_check mddev_lock_interruptible(mddev_t *mddev)
- {
- 	return mutex_lock_interruptible(&mddev->reconfig_mutex);
- }
-@@ -2706,7 +2711,7 @@ rdev_attr_show(struct kobject *kobj, struct
-attribute *attr, char *page)
- 	if (!entry->show)
- 		return -EIO;
+> pg
+> 
+> --- cut here ---
+> 
+> 
+> diff -uNr a/raid6check.c b/raid6check.c
+> --- a/raid6check.c	2011-04-05 01:29:45.000000000 +0200
+> +++ b/raid6check.c	2011-04-05 22:51:32.587032612 +0200
+> @@ -207,6 +207,7 @@
+>  	char **disk_name = NULL;
+>  	unsigned long long *offsets = NULL;
+>  	int raid_disks = 0;
+> +	int active_disks = 0;
+>  	int chunk_size = 0;
+>  	int layout = -1;
+>  	int level = 6;
+> @@ -242,6 +243,7 @@
+>  			  GET_LEVEL|
+>  			  GET_LAYOUT|
+>  			  GET_DISKS|
+> +			  GET_DEGRADED |
+>  			  GET_COMPONENT|
+>  			  GET_CHUNK|
+>  			  GET_DEVS|
+> @@ -254,6 +256,12 @@
+>  		goto exitHere;
+>  	}
+>  
+> +	if(info->array.failed_disks > 0) {
+> +		fprintf(stderr, "%s: %s degraded array\n", prg, argv[1]);
+> +		exit_err = 8;
+> +		goto exitHere;
+> +	}
+> +
+>  	printf("layout: %d\n", info->array.layout);
+>  	printf("disks: %d\n", info->array.raid_disks);
+>  	printf("component size: %llu\n", info->component_size * 512);
+> @@ -262,12 +270,13 @@
+>  	printf("\n");
+>  
+>  	comp = info->devs;
+> -	for(i = 0; i < info->array.raid_disks; i++) {
+> +	for(i = 0, active_disks = 0; active_disks < info->array.raid_disks; i++) {
+>  		printf("disk: %d - offset: %llu - size: %llu - name: %s - slot: %d\n",
+>  			i, comp->data_offset * 512, comp->component_size * 512,
+>  			map_dev(comp->disk.major, comp->disk.minor, 0),
+>  			comp->disk.raid_disk);
+> -
+> +		if(comp->disk.raid_disk >= 0)
+> +			active_disks++;
+>  		comp = comp->next;
+>  	}
+>  	printf("\n");
+> @@ -317,18 +326,20 @@
+>  	close_flag = 1;
+>  
+>  	comp = info->devs;
+> -	for (i=0; i<raid_disks; i++) {
+> +	for (i=0, active_disks=0; active_disks<raid_disks; i++) {
+>  		int disk_slot = comp->disk.raid_disk;
+> -		disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
+> -		offsets[disk_slot] = comp->data_offset * 512;
+> -		fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
+> -		if (fds[disk_slot] < 0) {
+> -			perror(disk_name[disk_slot]);
+> -			fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
+> -			exit_err = 6;
+> -			goto exitHere;
+> +		if(disk_slot >= 0) {
+> +			disk_name[disk_slot] = map_dev(comp->disk.major, comp->disk.minor, 0);
+> +			offsets[disk_slot] = comp->data_offset * 512;
+> +			fds[disk_slot] = open(disk_name[disk_slot], O_RDWR);
+> +			if (fds[disk_slot] < 0) {
+> +				perror(disk_name[disk_slot]);
+> +				fprintf(stderr,"%s: cannot open %s\n", prg, disk_name[disk_slot]);
+> +				exit_err = 6;
+> +				goto exitHere;
+> +			}
+> +			active_disks++;
+>  		}
+> -
+>  		comp = comp->next;
+>  	}
+>  
+> --- cut here ---
+> 
+> bye,
+> 
 
--	rv = mddev ? mddev_lock(mddev) : -EBUSY;
-+	rv = mddev ? mddev_lock_interruptible(mddev) : -EBUSY;
- 	if (!rv) {
- 		if (rdev->mddev == NULL)
- 			rv = -EBUSY;
-@@ -2730,7 +2735,7 @@ rdev_attr_store(struct kobject *kobj, struct
-attribute *attr,
- 		return -EIO;
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
--	rv = mddev ? mddev_lock(mddev): -EBUSY;
-+	rv = mddev ? mddev_lock_interruptible(mddev) : -EBUSY;
- 	if (!rv) {
- 		if (rdev->mddev == NULL)
- 			rv = -EBUSY;
-@@ -4199,7 +4204,7 @@ md_attr_show(struct kobject *kobj, struct
-attribute *attr, char *page)
-
- 	if (!entry->show)
- 		return -EIO;
--	rv = mddev_lock(mddev);
-+	rv = mddev_lock_interruptible(mddev);
- 	if (!rv) {
- 		rv = entry->show(mddev, page);
- 		mddev_unlock(mddev);
-@@ -4219,7 +4224,7 @@ md_attr_store(struct kobject *kobj, struct
-attribute *attr,
- 		return -EIO;
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
--	rv = mddev_lock(mddev);
-+	rv = mddev_lock_interruptible(mddev);
- 	if (mddev->hold_active == UNTIL_IOCTL)
- 		mddev->hold_active = 0;
- 	if (!rv) {
-@@ -4951,7 +4956,7 @@ static void autorun_devices(int part)
- 				"md: cannot allocate memory for md drive.\n");
- 			break;
- 		}
--		if (mddev_lock(mddev))
-+		if (mddev_lock_interruptible(mddev))
- 			printk(KERN_WARNING "md: %s locked, cannot run\n",
- 			       mdname(mddev));
- 		else if (mddev->raid_disks || mddev->major_version
-@@ -5771,7 +5776,7 @@ static int md_ioctl(struct block_device *bdev,
-fmode_t mode,
- 		goto abort;
- 	}
-
--	err = mddev_lock(mddev);
-+	err = mddev_lock_interruptible(mddev);
- 	if (err) {
- 		printk(KERN_INFO
- 			"md: ioctl lock interrupted, reason %d, cmd %d\n",
-@@ -6379,7 +6384,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
- 		return 0;
- 	}
-
--	if (mddev_lock(mddev) < 0)
-+	if (mddev_lock_interruptible(mddev) < 0)
- 		return -EINTR;
-
- 	if (mddev->pers || mddev->raid_disks || !list_empty(&mddev->disks)) {
--- 1.7.1
