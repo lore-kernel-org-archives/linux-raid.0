@@ -1,32 +1,45 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Resync intermittently writes to spare drives, waking them up
-Date: Thu, 14 Apr 2011 10:32:53 +0200
-Message-ID: <io6bc0$6ol$1@dough.gmane.org>
-References: <BANLkTikqAaS91n06Xw7SwWcMKik_8E0iHA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/2] imsm: FIX: Be more patient during loading matadata
+Date: Thu, 14 Apr 2011 01:36:00 -0700
+Message-ID: <4DA6B1F0.5010207@intel.com>
+References: <20110412125116.7062.36275.stgit@gklab-128-013.igk.intel.com>	<20110412125128.7062.38008.stgit@gklab-128-013.igk.intel.com>	<BANLkTinryn7FTdXMHx9HsMSQqpgykWW+Gg@mail.gmail.com>	<905EDD02F158D948B186911EB64DB3D192368340@irsmsx503.ger.corp.intel.com>	<BANLkTi=nontnQ_WKCaUWmosBDBihoDC7JA@mail.gmail.com> <20110414180846.6a71eeb9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikqAaS91n06Xw7SwWcMKik_8E0iHA@mail.gmail.com>
+In-Reply-To: <20110414180846.6a71eeb9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
 List-Id: linux-raid.ids
 
-On 13/04/2011 23:10, Rory Jaffe wrote:
-> I have a RAID5 array with 4 active devices and two spares. The spares
-> are normally in sleep mode. I ran a resync with:
+On 4/14/2011 1:08 AM, NeilBrown wrote:
+>> Why does this existing check:
+>>
+>>                 /* retry the load if we might have raced against mdmon */
+>>                  if (err == 3&&  mdmon_running(devnum))
+>>                          for (retry = 0; retry<  3; retry++) {
+>>                                  usleep(3000);
+>>                                  err = load_and_parse_mpb(dfd, s, NULL, 1);
+>>                                  if (err != 3)
+>>                                          break;
+>>                          }
 >
-> echo repair>  /sys/devices/virtual/block/md0/md/sync_action
->
-> About 20 times (evenly spaced apart) during the resync, the spares
-> were written to, waking them up. Is that behavior desired? It seems to
-> me that it's a waste--I don't know why the resync would bother with
-> the spares.
->
+> It's pretty horrible that we need to do this, isn't it?
 
-This isn't an answer to your question, but I would recommend changing to 
-a raid 6 with 5 devices and one spare.  Raid 6 gives you /much/ better 
-reliability - you can thing of it as Raid 5 + hot spare with the hot 
-spare already synchronised.
+Yes.
 
+> Maybe we need some way to synchronise with mdmon so we *know* if we have
+> raced or not.
+> i.e. mdmon keeps a count of the number of times it has updated the metadata.
+> We send a message to get the count, read, then get the count again.
+> The request blocks while mdmon is actually writing.
+> If the counts are different, we read again.
+> ??
 
+Assuming we are only racing against dirty transitions maybe it is enough 
+to poll md/array_state and if it signaled while reading the metadata we 
+likely need to try again (of course with an intervening ping_monitor)?
+
+--
+Dan
