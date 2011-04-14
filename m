@@ -1,40 +1,56 @@
-From: Phil Turmel <philip@turmel.org>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
  unresponsive
-Date: Thu, 14 Apr 2011 18:23:39 -0400
-Message-ID: <4DA773EB.5030005@turmel.org>
-References: <270234.74664.qm@web65113.mail.ac2.yahoo.com>
+Date: Fri, 15 Apr 2011 00:15:00 +0100
+Message-ID: <4DA77FF4.7030007@anonymous.org.uk>
+References: <259379.79604.qm@web65105.mail.ac2.yahoo.com> <BANLkTinttwOaDm=QK5nbUd6Vbfzwur1Lyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <270234.74664.qm@web65113.mail.ac2.yahoo.com>
+In-Reply-To: <BANLkTinttwOaDm=QK5nbUd6Vbfzwur1Lyw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+Cc: Gavin Flower <gavinflower@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/14/2011 05:12 PM, Gavin Flower wrote:
+On 14/04/2011 22:19, Mathias Bur=C3=A9n wrote:
+> On 14 April 2011 22:14, Gavin Flower<gavinflower@yahoo.com>  wrote:
+[...]
+>> Attaching OpenDocument file with full details of smart output and co=
+mparison table.
+[...]
+> sda has a value higher than 0 on reported uncorrected sectors. That's
+> enough for me to replace a drive. (heck, even if I see 1 reallocated
+> sector I'd RMA it ASAP).
 
-> 
-> Hi Phil,
-> 
-> I was under the impression that I had an adequate power supply, so I checked all 5 drives.  In fact I made a table to compare all the smart entries.  The differences I thought were significant follow later.  I have the full comparison table, and the original smart output, in an OpenDocument file - which I will attach to a separate email (in case it gets blocked/dropped or some such).
-> 
-> Note that Power_Cycle_Count is anomalous only for /dev/sdc, so would this suggest cable problems?
+I've had a look at some of my drives' SMART output, and only my Samsung=
+=20
+drives have it - one showing 57 (with zero reallocated, pending or=20
+offline sectors) and one showing 331 (zero reallocated, one pending and=
+=20
+zero offline sectors). Neither drive has ever given a read error, and I=
+=20
+do run a weekly check on my arrays which has never reported any mismatc=
+hes.
 
-No two drives are perfectly identical, so when the drive's power rail is only slightly overloaded, the least tolerant drive chokes as the voltage declines (we're talking tens of milliseconds, here).  As soon as it chokes, the extra load disappears, and the power supply recovers.  The other drives carry on.  The drive that choked resets (*Click*) in time for the block driver to try again, and the cycle repeats.
+Googling for this field doesn't give any indication that it is relevant=
+=20
+to determining whether a drive is failing, but if someone with more=20
+SMART expertise can comment I'll be quite happy to be corrected...
 
-As a test, borrow another power supply and hook just that one drive to it.  If the problem continues, the drive is toast.  If the problem goes away, look for a better power supply.  Note:  for the Barracuda with the problem, the detailed spec says the 5V load spikes on activity, not the 12V load.  So make sure the current capacity of the power supply meets your needs for both 5V & 12V (plus your motherboard).  Also check if the power supply has multiple regulators for drive power, and if you need to re-arrange the connectors to spread the load evenly amongst them.
+Having said that, all of Gavin's drives apart from sdc show non-zero=20
+reallocated sector counts, and that field definitely is one to follow=20
+when considering replacing drives.
 
-As another test, you can swap all your cables around.  If the problem is in the cables, the problem will follow the cables to the drive you moved them to.
+Cheers,
 
-> I am not sure what to make of the other discrepancies.
-> 
-> Note that sda, sdb, sdd, & sde were bought and put in at the same time, while sdc was only obtained and inserted recently.
+John.
+(Just started long self-tests on all my local drives)
 
-So sdc came from a different manufacturing batch, which is likely to have slightly different tolerances.
-
-HTH,
-
-Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
