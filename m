@@ -1,119 +1,90 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] RAID-6 check standalone code cleanup
-Date: Thu, 14 Apr 2011 17:32:27 +1000
-Message-ID: <20110414173227.75c9fede@notabene.brown>
-References: <20110221204551.GA15675@lazy.lzy>
-	<20110321140244.2314b4b4@notabene.brown>
-	<20110321104007.GA15379@lazy.lzy>
-	<20110321220457.29d52f5c@notabene.brown>
-	<20110321115440.GA15635@lazy.lzy>
-	<20110322095905.737fb1d5@notabene.brown>
-	<20110404175242.GA3411@lazy.lzy>
-	<20110405091242.3427e0b1@notabene.brown>
-	<20110406180202.GA3267@lazy.lzy>
+Subject: Re: [PATCH 1/2] FIX: In Grow_restart() array parameters are wrongly
+ used
+Date: Thu, 14 Apr 2011 17:45:30 +1000
+Message-ID: <20110414174530.4f3bba5a@notabene.brown>
+References: <20110411133908.4917.6842.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110406180202.GA3267@lazy.lzy>
+In-Reply-To: <20110411133908.4917.6842.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 6 Apr 2011 20:02:02 +0200 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+On Mon, 11 Apr 2011 15:39:08 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> Hi Neil,
+> Problem can be obvious visible when to 3-disks raid5 array 2 disks are added.
+> (added disks number + parity == old disks number)
+> Mdadm generates floating point exception and core file is generated
+> due to division by 0 (odata == 0).
 > 
-> On Tue, Apr 05, 2011 at 09:12:42AM +1000, NeilBrown wrote:
-> > On Mon, 4 Apr 2011 19:52:42 +0200 Piergiorgio Sartor
-> > <piergiorgio.sartor@nexgo.de> wrote:
-> > 
-> > > Hi Neil,
-> > > 
-> > > please find below a second patch to "raid6check.c".
-> > > This applies on top of the previous one.
-> > > 
-> > > Major change is code cleanup and simplification.
-> > > Furthermore, a better error handling and a couple
-> > > of bug fixes.
-> > > Last but not least, the command line parameters are
-> > > changed from "bytes" to "stripes", which is more
-> > > convenient, I guess.
-> > 
-> > Thanks - I've applied this.
+> During restart for external metadata, getinfo_super() returns
+> in mdinfo->array.raid_disks old disks number, that has to be increased
+> by delta_disks to receive new value. Function getinfo_super()
+> cannot return raid_disks field in different way, as array starting
+> geometry information. We are still going to final array geometry.
+> This Grow_restart() should have in mind and calculate local variables
+> in proper way.
 > 
-> please find attached very below the fix for the
-> component list scanning. Taking care, hopefully,
-> to skip/avoid spare drives.
-> Furthermore, I added also a check for degraded
-> array, which should not be checked.
-> 
-> > I'm not sure about using 'stripes', though it would be hard to argue in
-> > favour of 'bytes'.
-> > Possibly the best number to use would be 'sectors' as that is how the kernel
-> > would report an inconsistency.
-> > 
-> > Once the code settles and you work out what the expected usage pattern would
-> > be, it might then be obvious what the best number is.  i.e. try to document
-> > how it would be use and if you find yourself describing complex calculations,
-> > then change the program so it does the the calculations and you document can
-> > avoid the complexity.
-> 
-> I switched to "stripes" because the code is using theme
-> all over and because I was continuosly calculating from
-> stripe to bytes.
-> 
-> I guess you're right, later it will be possible to decided
-> which is the better unit for command line and for the
-> error reporting.
-> 
-> > > 
-> > > If you prefer, I can send a single patch, including
-> > > in one shot the last one and this one.
-> > 
-> > no, multiple patches are much better - thanks.
-> > 
-> > As for the granularity for suspend/check/fix/unsuspend, I suspect that 
-> > per-stripe would be best.
-> > A smaller size wouldn't work, and a bigger size would only be helpful if
-> > there were lots and lots of fixes needed ... which hopefully won't be the
-> > case.
-> 
-> The suspend story might be a bit more complex than
-> I was considering.
-> 
-> For example, what will happen if the user hits ctrl-c
-> while the array is suspended?
-> Maybe the signals will have to be blocked or re-routed
-> to a proper cleanup function.
-> How about kill -9?
+> This change makes Grow_restart() to interpret parameters in the same way
+> as reshape_array() did during reshape start, and it will do it in the same
+> way when it will be called from Continue_reshape().
 
-Definitely catch signals like SIGTERM SIGINT SIGQUIT.
+sorry, but I don't like this change.
+I never like having different handling for 'external' and 'non-external'.
+Sometimes it is obviously necessary, but we should avoid it if possible.
 
-There is nothing you can do about SIGKILL - if someone sends that, it is
-their own fault if things break.
+Once reshape has started, 'raid_disks' is the new number of disks, not the
+old number.
 
-> 
-> Second issue, the stripe in the array should be suspend
-> also in case the user wants a correction to happen.
-> In this situation, the suspend should include read, check
-> and write, since it will not be possible to allow some
-> other access in between the operations.
-> Could it be this is too long time for the stripe to be
-> blocked?
-> 
-> Maybe it would be simpler to require the arrays is in
-> read only mode....
-> 
-> What do you think?
-> 
+So sysfs_set_array should be changed to set raid_disks to
+    raid_disk - delta_disks
+in the first instance, then if reshape is active, to raid_disks.
 
-Certainly encouraging - in the documentation - the array to not be in active
-use while you check/fix it would be a good thing.
-But a read/check/write should not take more than a few dozen milliseconds.
-Suspending IO for that long shouldn't be a problem.
+And getinfo_super should return the 'new' number of disks.
 
+And reshape_array might need to fiddle with raid_disks before calling 
+analyse_change in the reshape_active case.
+
+So it is more changes, but I think it is a better result.
+
+Thanks,
 NeilBrown
+
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+> 
+>  Grow.c |   12 ++++++++----
+>  1 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Grow.c b/Grow.c
+> index d4308bc..1fdee7e 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -3102,13 +3102,17 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
+>  	unsigned long long  nstripe, ostripe;
+>  	int ndata, odata;
+>  
+> -	odata = info->array.raid_disks - info->delta_disks - 1;
+> +	if (st->ss->external) {
+> +		old_disks = info->array.raid_disks;
+> +		ndata = info->array.raid_disks + info->delta_disks - 1;
+> +	} else {
+> +		old_disks = info->array.raid_disks - info->delta_disks;
+> +		ndata = info->array.raid_disks - 1;
+> +	}
+> +	odata = old_disks - 1;
+>  	if (info->array.level == 6) odata--; /* number of data disks */
+> -	ndata = info->array.raid_disks - 1;
+>  	if (info->new_level == 6) ndata--;
+>  
+> -	old_disks = info->array.raid_disks - info->delta_disks;
+> -
+>  	if (info->delta_disks <= 0)
+>  		/* Didn't grow, so the backup file must have
+>  		 * been used
 
