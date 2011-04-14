@@ -1,47 +1,45 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: Recommended pci-e 1x SATA cards.
-Date: Thu, 14 Apr 2011 23:16:34 +1000
-Message-ID: <4DA6F3B2.8080402@crc.id.au>
-References: <4DA6CCFE.8020708@crc.id.au> <20110414185304.5bc1cca5@natsu>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
+ unresponsive
+Date: Thu, 14 Apr 2011 09:16:36 -0400
+Message-ID: <4DA6F3B4.7040303@turmel.org>
+References: <541553.42147.qm@web65113.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110414185304.5bc1cca5@natsu>
+In-Reply-To: <541553.42147.qm@web65113.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+To: Gavin Flower <gavinflower@yahoo.com>
+Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/04/2011 10:53 PM, Roman Mamedov wrote:
-> On Thu, 14 Apr 2011 20:31:26 +1000
-> Steven Haigh<netwiz@crc.id.au>  wrote:
->
->> Has anyone got any recommendations on cheap pci-e SATA cards that work
->> well with linux?
->
-> See this article:
->
-> "From 16 to 2 ports: Ideal SATA/SAS Controllers for ZFS&  Linux MD RAID" -
-> http://blog.zorinaq.com/?e=10
->
+Hi Gavin,
 
-That is a very nice writeup... I searched for the HighPoint Rocket 620 - 
-listed as $24.99 on NewEgg - but Australian suppliers seem to have it 
-above $100AUD. The cheapest price I found was $54AUD - and they were out 
-of stock.
+I think you might want to investigate your *power supply* ...
 
-It seems that even ebay are over the $100AUD mark for the card - however 
-I can import one from the USA for less than $40AUD. Sometimes I hate the 
-Australian technology market!
+On 04/13/2011 08:15 PM, Gavin Flower wrote:
 
---
-Steven Haigh
+[snip /]
 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+> SMART Attributes Data Structure revision number: 10
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+>   1 Raw_Read_Error_Rate     0x000f   115   099   006    Pre-fail  Always       -       87918991
+>   3 Spin_Up_Time            0x0003   099   097   000    Pre-fail  Always       -       0
+>   4 Start_Stop_Count        0x0032   085   085   020    Old_age   Always       -       16014
+>   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
+>   7 Seek_Error_Rate         0x000f   072   060   030    Pre-fail  Always       -       20251386
+>   9 Power_On_Hours          0x0032   097   097   000    Old_age   Always       -       2940
+>  10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+>  12 Power_Cycle_Count       0x0032   093   093   020    Old_age   Always       -       7999
 
-There are no great men, only great challenges that ordinary men are 
-forced by circumstances to meet. -- Admiral William Halsey
+SMOKING GUN                                                                              ^^^^
+
+I suspect your power supply is good enough to slowly spin up your drives and get them talking, but when you ask them to work hard, especially when writing, the PS voltage dips enough to reset the drive.
+
+Look up all the power consumption specs for all of your components, and add up the *peak* current requirements.  Make sure your PS can handle it.
+
+HTH,
+
+Phil
