@@ -1,99 +1,109 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: Any pros or cons of using full disk versus partitons?
-Date: Thu, 14 Apr 2011 11:57:47 +0400
-Message-ID: <BANLkTi=vgVxVRomvpkX5uxSvN9Fe1cgvoQ@mail.gmail.com>
-References: <07a801cbfa12$64b8a950$2e29fbf0$@gmail.com>
-	<20110413.132112.102552472.davem@davemloft.net>
-	<io52j7$cg4$1@dough.gmane.org>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: Re: [PATCH] md: fix unchecked interruptible mutex locks
+Date: Thu, 14 Apr 2011 11:56:57 +0400
+Message-ID: <4DA6A8C9.3060705@ispras.ru>
+References: <4DA698BE.70903@ispras.ru> <20110414170814.40f4d3eb@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <io52j7$cg4$1@dough.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110414170814.40f4d3eb@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 14, 2011 at 12:55 AM, David Brown <david.brown@hesbynett.no=
-> wrote:
-> On 13/04/11 22:21, David Miller wrote:
->>
->> From: "Matthew Tice"<mjtice@gmail.com>
->> Date: Wed, 13 Apr 2011 13:38:39 -0600
->>
->>> So of course it technically doesn't matter but are there certain
->>> (non-apparent) repercussions for choosing one over the other? =A0It=
- seems
->>> to
->>> save a couple steps by using the whole disk (not having to partitio=
-n) -
->>> but
->>> is that it? =A0One thing I'm thinking about the pros of using parti=
-tions is
->>> if
->>> all your disks (or some) are different sizes - then you can set the
->>> partition sizes the same.
->>
->> First, you sent this to "linux-raid-owner" instead of just
->> "linux-raid". =A0The former goes to me, not to the mailing list.
->>
->> I've corrected it in the CC:
->>
->> Second, to answer your question, for some disk label variants you
->> risk over-writing the disk label if you use the whole device
->> as part of your RAID volume. =A0This definitely will happen, for
->> example, with Sun disk labels.
->
-> Using whole disks in the raid will make it easier for replacing disks=
- - you
-> don't have to worry about partitioning them. =A0You can just plug the=
-m in and
-> use them. =A0If you have some sort of monitoring scripts and hot plug=
- disks,
-> you may be able to avoid any interaction at all on disk replacement.
->
-> On the other hand, using partitions gives you lots more flexibility. =
-You can
-> do things such as use a small partition on each disk to form a raid10=
- array
-> for swap, while using a bigger partition for data. =A0Or perhaps you =
-want a
-> very small partition on each disk as a wide raid1 mirror, for your /b=
-oot
-> (not that you need so much safety for /boot, but that it's easier to =
-boot
-> from a raid1 with metadata format 0.90 than from other raid types).
-Just my 2 cents: I've faced problems when newer disk was smaller than
-old disk two or three times, so using partitions now with setting some
-free space at the end - something near 80 or 100 megabytes.
+On 04/14/2011 11:08 AM, NeilBrown wrote:
+> 
+> I would mark mddev_lock as __must_check__ (or however it is spelt) and fix
+> the errors produced.
+> 
+> I think the call in md_stop_writes is the only one where an uninterruptible
+> wait is needed - I'd probaby just change that to an explicit "mutex_lock",
+> but I wouldn't be against creating "mddev_lock_uninterruptible" for that case.
+> 
 
-If your system is located on the same disks which holds useful data,
-it might be useful to split data into another mountpoint/block device
-and let system skip fs check on startup and produce booted server,
-which is helpful in case of system crash/powerloss and dirty
-fs/breaked raid. RAID assembly problems may be caused by crappy
-controller like lsi 1068e which was hanging the whole system and
-desync data writes on disks on SMART request or completely on it's
-own.
+That is fine for me, but actually I do not see a good way to fix 
+rdev_size_store as well (at least for mddev_lock(my_mddev)).
+Please find another try.
 
+Found by Linux Driver Verification project (linuxtesting.org).
 
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/md/md.c |   22 ++++++++++++++++------
+ 1 files changed, 16 insertions(+), 6 deletions(-)
 
-
-
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b12b377..4f83f16 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -623,11 +623,16 @@ static mddev_t * mddev_find(dev_t unit)
+ 	goto retry;
+ }
+ 
+-static inline int mddev_lock(mddev_t * mddev)
++static inline int __must_check mddev_lock(mddev_t *mddev)
+ {
+ 	return mutex_lock_interruptible(&mddev->reconfig_mutex);
+ }
+ 
++static inline void mddev_lock_uninterruptible(mddev_t *mddev)
++{
++	return mutex_lock(&mddev->reconfig_mutex);
++}
++
+ static inline int mddev_is_locked(mddev_t *mddev)
+ {
+ 	return mutex_is_locked(&mddev->reconfig_mutex);
+@@ -2610,13 +2615,18 @@ rdev_size_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 		 */
+ 		mddev_t *mddev;
+ 		int overlap = 0;
++		int intr = 0;
+ 		struct list_head *tmp;
+ 
+ 		mddev_unlock(my_mddev);
+ 		for_each_mddev(mddev, tmp) {
+ 			mdk_rdev_t *rdev2;
+ 
+-			mddev_lock(mddev);
++			if (mddev_lock(mddev)) {
++				mddev_put(mddev);
++				intr = 1;
++				break;
++			}
+ 			list_for_each_entry(rdev2, &mddev->disks, same_set)
+ 				if (rdev->bdev == rdev2->bdev &&
+ 				    rdev != rdev2 &&
+@@ -2632,8 +2642,8 @@ rdev_size_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 				break;
+ 			}
+ 		}
+-		mddev_lock(my_mddev);
+-		if (overlap) {
++		mddev_lock_uninterruptible(my_mddev);
++		if (overlap || intr) {
+ 			/* Someone else could have slipped in a size
+ 			 * change here, but doing so is just silly.
+ 			 * We put oldsectors back because we *know* it is
+@@ -2641,7 +2651,7 @@ rdev_size_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 			 * itself
+ 			 */
+ 			rdev->sectors = oldsectors;
+-			return -EBUSY;
++			return overlap ? -EBUSY : -EINTR;
+ 		}
+ 	}
+ 	return len;
+@@ -4748,7 +4758,7 @@ static void __md_stop_writes(mddev_t *mddev)
+ 
+ void md_stop_writes(mddev_t *mddev)
+ {
+-	mddev_lock(mddev);
++	mddev_lock_uninterruptible(mddev);
+ 	__md_stop_writes(mddev);
+ 	mddev_unlock(mddev);
+ }
+-- 
+1.7.1
