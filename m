@@ -1,56 +1,44 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
- unresponsive
-Date: Fri, 15 Apr 2011 00:15:00 +0100
-Message-ID: <4DA77FF4.7030007@anonymous.org.uk>
-References: <259379.79604.qm@web65105.mail.ac2.yahoo.com> <BANLkTinttwOaDm=QK5nbUd6Vbfzwur1Lyw@mail.gmail.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: Recommended pci-e 1x SATA cards.
+Date: Fri, 15 Apr 2011 09:50:55 +1000
+Message-ID: <4DA7885F.2080202@crc.id.au>
+References: <4DA6CCFE.8020708@crc.id.au> <20110414185304.5bc1cca5@natsu> <4DA6F3B2.8080402@crc.id.au> <4DA7513C.5020505@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTinttwOaDm=QK5nbUd6Vbfzwur1Lyw@mail.gmail.com>
+In-Reply-To: <4DA7513C.5020505@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
-Cc: Gavin Flower <gavinflower@yahoo.com>, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/04/2011 22:19, Mathias Bur=C3=A9n wrote:
-> On 14 April 2011 22:14, Gavin Flower<gavinflower@yahoo.com>  wrote:
-[...]
->> Attaching OpenDocument file with full details of smart output and co=
-mparison table.
-[...]
-> sda has a value higher than 0 on reported uncorrected sectors. That's
-> enough for me to replace a drive. (heck, even if I see 1 reallocated
-> sector I'd RMA it ASAP).
+On 15/04/2011 5:55 AM, Stan Hoeppner wrote:
+> Steven Haigh put forth on 4/14/2011 8:16 AM:
+>
+>> That is a very nice writeup... I searched for the HighPoint Rocket 620 -
+>> listed as $24.99 on NewEgg - but Australian suppliers seem to have it
+>> above $100AUD. The cheapest price I found was $54AUD - and they were out
+>> of stock.
+>
+> This is the card you should get:
+> http://www.sybausa.com/productInfo.php?iid=536
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
+>
+> It's the same Syba Sil3132 based card BackBlaze uses in their 45 drive
+> mdadm managed pods.
 
-I've had a look at some of my drives' SMART output, and only my Samsung=
-=20
-drives have it - one showing 57 (with zero reallocated, pending or=20
-offline sectors) and one showing 331 (zero reallocated, one pending and=
-=20
-zero offline sectors). Neither drive has ever given a read error, and I=
-=20
-do run a weekly check on my arrays which has never reported any mismatc=
-hes.
-
-Googling for this field doesn't give any indication that it is relevant=
-=20
-to determining whether a drive is failing, but if someone with more=20
-SMART expertise can comment I'll be quite happy to be corrected...
-
-Having said that, all of Gavin's drives apart from sdc show non-zero=20
-reallocated sector counts, and that field definitely is one to follow=20
-when considering replacing drives.
-
-Cheers,
-
-John.
-(Just started long self-tests on all my local drives)
+I did look at these, and they do seem to be what I am after - however 
+they don't seem to exist in Australia :(
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Steven Haigh
+
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
+
+There are no great men, only great challenges that ordinary men are 
+forced by circumstances to meet. -- Admiral William Halsey
+
