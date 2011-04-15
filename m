@@ -1,44 +1,31 @@
-From: Steven Haigh <netwiz@crc.id.au>
+From: Brad Campbell <lists2009@fnarfbargle.com>
 Subject: Re: Recommended pci-e 1x SATA cards.
-Date: Fri, 15 Apr 2011 09:50:55 +1000
-Message-ID: <4DA7885F.2080202@crc.id.au>
-References: <4DA6CCFE.8020708@crc.id.au> <20110414185304.5bc1cca5@natsu> <4DA6F3B2.8080402@crc.id.au> <4DA7513C.5020505@hardwarefreak.com>
+Date: Fri, 15 Apr 2011 09:54:19 +0800
+Message-ID: <4DA7A54B.2060804@fnarfbargle.com>
+References: <4DA6CCFE.8020708@crc.id.au> <20110414165433.7a7d1cdc@natsu> <4DA74CF3.2050509@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DA7513C.5020505@hardwarefreak.com>
+In-Reply-To: <4DA74CF3.2050509@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Roman Mamedov <rm@romanrm.ru>, Steven Haigh <netwiz@crc.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15/04/2011 5:55 AM, Stan Hoeppner wrote:
-> Steven Haigh put forth on 4/14/2011 8:16 AM:
+On 15/04/11 03:37, Stan Hoeppner wrote:
+> Roman Mamedov put forth on 4/14/2011 5:54 AM:
 >
->> That is a very nice writeup... I searched for the HighPoint Rocket 620 -
->> listed as $24.99 on NewEgg - but Australian suppliers seem to have it
->> above $100AUD. The cheapest price I found was $54AUD - and they were out
->> of stock.
+>> I suggest that you avoid Silicon Image 3132, they have data corruption issue
+>> (on some board designs?), triggered or amplified by transferring via both
+>> ports at the same time, at full speed.
 >
-> This is the card you should get:
-> http://www.sybausa.com/productInfo.php?iid=536
-> http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
->
-> It's the same Syba Sil3132 based card BackBlaze uses in their 45 drive
-> mdadm managed pods.
+> Stating this opinion based on a very limited number of such reports is
+> irresponsible.  If the issue is a bad PCB from a couple of vendors,
+> state the vendors and the card model and rev.  DO NOT paint the SATA
+> chip itself as BAD and something to avoid.  Case in point:
 
-I did look at these, and they do seem to be what I am after - however 
-they don't seem to exist in Australia :(
-
---
-Steven Haigh
-
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
-
-There are no great men, only great challenges that ordinary men are 
-forced by circumstances to meet. -- Admiral William Halsey
-
+Valid point. The card referenced in that thread is a generic unbranded 
+card made in China and bought off the shelf from a computer store in 
+Dubai, UAE. It has CE, FCC & C-tick marks on it but no approval numbers 
+and the only code on the device is PI43132-8X2A written under the boot rom.
