@@ -1,85 +1,59 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: single threaded parity calculation ?
-Date: Fri, 15 Apr 2011 17:28:56 -0400
-Message-ID: <4DA8B898.6010601@turmel.org>
-References: <4DA89A18.5010002@mcnair.co.uk> <4DA8B08F.20604@turmel.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Recommended pci-e 1x SATA cards.
+Date: Fri, 15 Apr 2011 16:31:08 -0500
+Message-ID: <4DA8B91C.8050005@hardwarefreak.com>
+References: <4DA6CCFE.8020708@crc.id.au>	<20110414185304.5bc1cca5@natsu>	<4DA6F3B2.8080402@crc.id.au>	<4DA7513C.5020505@hardwarefreak.com> <20110415105846.1c4ec630@natsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DA8B08F.20604@turmel.org>
+In-Reply-To: <20110415105846.1c4ec630@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: simon@mcnair.co.uk
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Steven Haigh <netwiz@crc.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A couple more thoughts...
-
-On 04/15/2011 04:54 PM, Phil Turmel wrote:
-> On 04/15/2011 03:18 PM, Simon McNair wrote:
->> Hi all,
+Roman Mamedov put forth on 4/14/2011 11:58 PM:
+> On Thu, 14 Apr 2011 14:55:40 -0500
+> Stan Hoeppner <stan@hardwarefreak.com> wrote:
 > 
->> I'm under the impression that the read speed of my 10x1TB RAID5 array
->> is limited by the 'single-threaded parity calculation' ? (I'm quoting
->> Phil Turmel on that and other linux-raid messages I've read seem to
->> confirm that terminology)  I'm running an i7 920 with irqbalance but
->> if something is single threaded or single CPU bound I'm wondering
->> what I can do to alleviate it.
+>> Steven Haigh put forth on 4/14/2011 8:16 AM:
+>>
+>>> That is a very nice writeup... I searched for the HighPoint Rocket 620 -
+>>> listed as $24.99 on NewEgg - but Australian suppliers seem to have it
+>>> above $100AUD. The cheapest price I found was $54AUD - and they were out
+>>> of stock.
+>>
+>> This is the card you should get:
+>> http://www.sybausa.com/productInfo.php?iid=536
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16815124027
+>>
+>> It's the same Syba Sil3132 based card BackBlaze uses in their 45 drive
+>> mdadm managed pods.
+>>
 > 
-> I'm not intimately familiar with the code, but I would've thought the single-threaded limitation wouldn't apply to reading from a clean array.
+> Did you read the second link you posted, specifically the Feedback section?
+> That's one more confirmation of corruption issue we discussed in this thread.
 
-I'm also curious what top has to say while you are running your tests (with the cpus shown separately).
+The overall Newegg rating for the Syba card you deride is 4/5 eggs
+across 109 reviews.  If the card was as horrible as you make it out to
+be, the rating would be 1/5 not 4/5, and people would stop buying it.
 
->> iostat reports 83MB/s for each disk, running up to 830MB/s for all 10
->> disks, but the max read speed of the array is approx 256MB/s.
-> 
-> But this means I'm probably wrong, unless your chunk size is just too small for your setup.  If I recall correctly, it was 64K.  Consider increasing it and retesting to see if it helps.
-> 
->> Would it be better to have 5 (or more) partitions on each disk,
->> create 5xraid5 arrays (each of which would in theory have a separate
->> thread) and then create a linear array over the top of them to join
->> them together ?
-> 
-> Probably not.  If you use linear on top, any given file is likely to reside in just one of the underlying raids, and will appear to operate at the same speed as you have now.  Streaming multiple files, if they reside in different underlying raids, could go faster computationally, but will suffer from extra seeks just like the plain raid5.
-> 
-> If the 83MB/s is the speed data can be pulled off the platters, a single 8ms seek displaces 664KB of data transfer.
-> 
-> If you put raid0 on top of your underlying raids, you will suffer from excess seeks all the time.
+Note that the user who posted the read corruption issue referred to a
+single application in Windows 7 where this error occurred, TeraCopy.
+It's far more likely he was up against an application or driver issue
+than a hardware issue with the Syba card.  He did not state whether a
+Windows Explorer copy would also cause the problem, nor xcopy, nor
+Robocopy, etc.
 
-I believe I've mentioned to you privately that I do create partitions across my disks, and create multiple raids.
+BTW, did you even read the BackBlaze blog I posted?  They run hundreds
+of this exact Syba 3132 card, with Linux, with mdraid, and have reported
+zero problems.  And they're using a 5:1 PMP on each 3132 port.  If these
+cards, or the 3132 were junk, as you state, surely BackBlaze would have
+run into problems in 2+ years of full production, no?
 
-Specifically:
+Again, you're taking isolated incidents and assuming they are the norm,
+when they most certainly are not.
 
-1) a small raid1 across all disks to be /boot, so any drive that ends up as the 1st BIOS drive will boot the system.
-2) a medium-sized raid10 across all disks to be an LVM group for /, /home, and /usr.  This is the workhorse.
-3) a large raid5 (or 6) across all disks to be an LVM group for media files and other bulk items.
-
-And if drive sizes are mixed,
-4) a series of LVM PVs in remaining space on each drive, combined into an LVM group containing /tmp and any other low-value volumes I might need space for.
-
-Note that all partitions #1 are idle once booted, and the partitions #3 do lots of large sequential operations.  That leaves the bulk of the IOPS for the raid10 and the non-redundant scratch space.  This setup is a compromise, of course, but I find it suitable for desktops and modest multi-purpose servers.
-
->> yes...I know this is way overthinking and also a potentially
->> dangerous to recreate, but I'm curious what the opinions are.  I
->> think I'll probably just end up buying another 1TB drive and making
->> it an 11 disk RAID6 instead.  I want maximum space, maximum speed and
->> maximum redundancy ;-).
-> 
-> Heh.  Pick any two.  :-)
-> 
-> Max Space & Speed      == raid0  w/ lots of spindles.
-> Max Space & Redundancy == raid6  w/ lots of spindles.
-> Max Speed & Redundancy == raid10 w/ lots of spindles.  
-
-Note that my preferred partitioning mixes approaches, with the bulk of the activity occurring under option 3.
-
-YMMV, and there's no single right answer.
-
-> There's a common theme there...
-> 
->> TIA :-)
-> 
-> 
-> Phil
-
-Phil
+-- 
+Stan
