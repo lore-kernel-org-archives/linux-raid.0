@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/4] FIX: Fiddle raid_disks number for external metadta
-Date: Fri, 15 Apr 2011 14:30:39 +0200
-Message-ID: <20110415123039.6601.10809.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/4] FIX: Count correctly added devices
+Date: Fri, 15 Apr 2011 14:30:56 +0200
+Message-ID: <20110415123055.6601.98856.stgit@gklab-128-013.igk.intel.com>
 References: <20110415122820.6601.48084.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,28 +13,39 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-For external metadata migration is started already.
-For native metadata migration starts when md is pushed to reshape state.
-Change raid disks to currently present in md to calculate required
-configuration change in analyse_change() and add required disks to md.
+When array is in reshape state raid_disks field contains final disks number.
+To know how many disks were added, disk.raid_disk index has to be compared
+against old disk number computed using delta_disks.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ Assemble.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 017a79d..4c221ad 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1676,6 +1676,8 @@ static int reshape_array(char *container, int fd, char *devname,
- 	if (info->reshape_active) {
- 		int new_level = info->new_level;
- 		info->new_level = UnSet;
-+		if (container)
-+			info->array.raid_disks -= info->delta_disks;
- 		msg = analyse_change(info, &reshape);
- 		info->new_level = new_level;
- 		if (!restart)
+diff --git a/Assemble.c b/Assemble.c
+index 268e248..8b05829 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1516,6 +1516,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 	int working = 0, preexist = 0;
+ 	int expansion = 0;
+ 	struct map_ent *map = NULL;
++	int old_raid_disks;
+ 
+ 	sysfs_init(content, mdfd, 0);
+ 
+@@ -1529,10 +1530,10 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 
+ 	if (sra)
+ 		sysfs_free(sra);
+-
++	old_raid_disks = content->array.raid_disks - content->delta_disks;
+ 	for (dev = content->devs; dev; dev = dev->next)
+ 		if (sysfs_add_disk(content, dev, 1) == 0) {
+-			if (dev->disk.raid_disk >= content->array.raid_disks &&
++			if (dev->disk.raid_disk >= old_raid_disks &&
+ 			    content->reshape_active)
+ 				expansion++;
+ 			else
 
