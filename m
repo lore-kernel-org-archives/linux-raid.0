@@ -1,19 +1,35 @@
-From: "LI PARK" <park1234@sify.com>
-Subject: Greetings from Hong Kong
-Date: Sat, 16 Apr 2011 04:01:01 +0200
-Message-ID: <20110416023128.18C392A85FD7@mail.alsa.co.cr>
-Reply-To: <lipark09@yahoo.com.hk>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: single threaded parity calculation ?
+Date: Sat, 16 Apr 2011 06:45:18 -0700
+Message-ID: <BANLkTims2gPKdxOo4_dd1NAnOz=CcL6yGQ@mail.gmail.com>
+References: <4DA89A18.5010002@mcnair.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DA89A18.5010002@mcnair.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
+To: simon@mcnair.co.uk
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greetings from Hong Kong
-An arab made a fixed deposit of$44,500.000.00 in my bank branch where I am a director and he died with his entire family in the war leaving behind no next of kin.
-If you choose to stand as my deceased client's next of kin and if interested,mail me at the address below:
-lipark09@yahoo.com.hk
-Yours Truly,
-Li Park
+> iostat reports 83MB/s for each disk, running up to 830MB/s for all 10 disks,
+> but the max read speed of the array is approx 256MB/s.
+
+This may be a dumb question but what motherboard & disk controllers
+are you using and how are they setup?
+
+That 256MB/s feels to me like you may be bumping up against a
+bandwidth limitation of your bus. PCI (32bit/33MHz) is limited to
+133MB/s max and PCIe(1.0/2.0) is limited to 250/500MB/s per lane. To
+sustain 830MB/s you need at least a PCIe (1.0) x4 or PCI-X 133
+controller card which are both rated for (theoretically) 1GB/s.
+
+As an aside, for read speeds on a RAID-5, the parity disk isn't used
+so theoretical maximum in this case is 9x83MB/s or 747MB/s. ;-)
+
+
+-- 
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
