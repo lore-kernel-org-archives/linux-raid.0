@@ -1,43 +1,34 @@
-From: "Willows Finance Company" <info@loan.com>
-Subject: Apply For Loan At 3%
-Date: Sun, 17 Apr 2011 14:10:09 +0200
-Message-ID: <20110417114343.M44557__6748.60059884867$1303044188$gmane$org@loan.com>
-Reply-To: terrygfinn213@w.cn
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: RAID/dmaengine violates the dma-streaming API
+Date: Sun, 17 Apr 2011 19:00:52 +0300
+Message-ID: <BANLkTinMA_U1r6K4t8UZKUr4nZBsWPSv9w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=iso-8859-2
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>, linux-raid@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-raid.ids
 
-Dear Sir/Madam,
+Hi,
+     when md uses the dma for offloading xor and memcpy operations, it
+violates the dma-mapping API.  here is the scenario I'm taking about
+(under write to degraded raid5):
+1. ops_run_prexor sends xor operation from buffers A and B, and the
+destination is A.
+2. ops_run_biodrain: sends mempcy operation from C to B.
+3. ops_run_reconstruct5: sends xor operation from A and B, and the
+destination is A again.
 
-Welcome to Willows Finance Company Limited. We Offer Private, Commercial and 
-Personal Loans with very Minimal annual Interest Rates as Low as 3% within a 
-1 year to 10years repayment duration period to any part of the world. We give 
-out loans within the range of $5,000 to $5,000,000.00 USD. Our loans are well 
-insured for maximum security is our priority.
+in step 1, the async tx maps A using dma_map_page, and in step 3, it
+maps again the same buffer. but, if the request from step 1 still
+being handled the dma engine, then we end with a case where the buffer
+mapped while it still belongs to the dma hw.
+when the arch is ARMv6/SMP mode (without io coherency), the cache
+maintenance involves read/write access to the buffers, that means, the
+second mapping above may access the buffer(with read/write) while the
+dma is writing to it!!.
 
-Interested Persons should contact us via E-mail:
+also, from performance sake, it would be great if this multiple
+mappings get avoided.
 
-Lender's Name: Mr. Terry Griffen
-Lender's Email: terrygfinn213@w.cn 
-
-BORROWERS INFORMATION
-
-Names:
-Country:
-Address:
-Age:
-Fax Number:
-Personal Number:
-Occupation:
-Sex:
-Monthly Income:
-Amount Needed:
-Loan duration:
-
-Best Regards
-Mr. Terry Griffen
-CEO/Willows Finance Company.
-Tel: + 44 702 404 7963
+saeed
