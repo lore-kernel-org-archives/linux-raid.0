@@ -1,34 +1,40 @@
-From: saeed bishara <saeed.bishara@gmail.com>
-Subject: RAID/dmaengine violates the dma-streaming API
-Date: Sun, 17 Apr 2011 19:00:52 +0300
-Message-ID: <BANLkTinMA_U1r6K4t8UZKUr4nZBsWPSv9w@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Recommended pci-e 1x SATA cards.
+Date: Sun, 17 Apr 2011 13:36:52 -0500
+Message-ID: <4DAB3344.2090502@hardwarefreak.com>
+References: <4DA6CCFE.8020708@crc.id.au>	<20110414185304.5bc1cca5@natsu>	<4DA6F3B2.8080402@crc.id.au>	<4DA7513C.5020505@hardwarefreak.com>	<20110415105846.1c4ec630@natsu>	<4DA8B91C.8050005@hardwarefreak.com> <20110416111554.09066e73@natsu> <4DA959E4.2080605@fnarfbargle.com> <4DA9FED8.2000308@hardwarefreak.com> <4DAA7E46.6040309@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DAA7E46.6040309@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>, linux-raid@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Roman Mamedov <rm@romanrm.ru>, Steven Haigh <netwiz@crc.id.au>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-     when md uses the dma for offloading xor and memcpy operations, it
-violates the dma-mapping API.  here is the scenario I'm taking about
-(under write to degraded raid5):
-1. ops_run_prexor sends xor operation from buffers A and B, and the
-destination is A.
-2. ops_run_biodrain: sends mempcy operation from C to B.
-3. ops_run_reconstruct5: sends xor operation from A and B, and the
-destination is A again.
+Brad Campbell put forth on 4/17/2011 12:44 AM:
 
-in step 1, the async tx maps A using dma_map_page, and in step 3, it
-maps again the same buffer. but, if the request from step 1 still
-being handled the dma engine, then we end with a case where the buffer
-mapped while it still belongs to the dma hw.
-when the arch is ARMv6/SMP mode (without io coherency), the cache
-maintenance involves read/write access to the buffers, that means, the
-second mapping above may access the buffer(with read/write) while the
-dma is writing to it!!.
+> Hells bells, there is even a case that Roman pointed to where the
+> precise controller you recommend as being of suitable quality
+> demonstrates the exact fault we are talking about, and you try to blame
+> the copy program or the Windows driver.
+> 
+> There appears to be an insidious flaw in these chips that only manifests
+> itself under "perfect storm" conditions, but when it does it silently
+> eats your data.
 
-also, from performance sake, it would be great if this multiple
-mappings get avoided.
+I've been in the hardware game a long time, and all the evidence I'm
+seeing WRT this silent data corruption issue points simply to QC, not a
+chip design flaw.  If the problem were a chip design flaw, we'd see far
+more widespread reporting, as millions of this chip have shipped into
+the marketplace.
 
-saeed
+The fact that the Russian with 5 cards purchased in Dubai could
+routinely demonstrate this problem with 2 of 5 identical cards, and
+never on the other 3, points directly to a board QC isue.  Again, if the
+problem were a design flaw in the IC itself, all 5 cards would have
+exhibited the problem.
+
+-- 
+Stan
