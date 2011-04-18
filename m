@@ -1,33 +1,21 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Resync intermittently writes to spare drives, waking them up
-Date: Mon, 18 Apr 2011 10:55:18 +1000
-Message-ID: <20110418105518.2ef04e47@notabene.brown>
-References: <BANLkTikqAaS91n06Xw7SwWcMKik_8E0iHA@mail.gmail.com>
+From: "Aszm" <anita.blonde@yahoo.it>
+Subject: K194
+Date: Mon, 18 Apr 2011 10:42:17 +0800
+Message-ID: <201104181042176506395@yahoo.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikqAaS91n06Xw7SwWcMKik_8E0iHA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rory Jaffe <rsjaffe@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-programming <linux-programming@linux.or.id>
 List-Id: linux-raid.ids
 
-On Wed, 13 Apr 2011 14:10:46 -0700 Rory Jaffe <rsjaffe@gmail.com> wrote:
-
-> I have a RAID5 array with 4 active devices and two spares. The spares
-> are normally in sleep mode. I ran a resync with:
-> 
-> echo repair > /sys/devices/virtual/block/md0/md/sync_action
-> 
-> About 20 times (evenly spaced apart) during the resync, the spares
-> were written to, waking them up. Is that behavior desired? It seems to
-> me that it's a waste--I don't know why the resync would bother with
-> the spares.
-
-Yes, there is room for optimisation there.  It really shouldn't write to
-those devices.  I guess I should try (again) to fix that.
-
-Thanks for the report.
-
-NeilBrown
+eWFob28uY29tMDM3NTQ0MjMyMTEwOTgxNzYNCr/Nu6ejusT6usOjujcNCrG+uavLvtPrus/X97mr
+y77S8r34z+69z7bgtcjUrdLyo6yzpMbazqrE+szhuamjug0KICAgtPotv6ot1eYtt6ItxrEgo6jS
+tc7xo6kyDQogILD8wKijutT21rXLsKGiufrLsKGitdjLsLeiXMaxoaK547jmoaLXydGvoaK74dLp
+oaK9qNb+uaSzzKGiyczGtw0Kz/rK26Gi16HL3qGiufrE2tTLyuSjrLn6vMq79dTLoaLX4sHeoaK6
+o7nYvcm/7srptci3olzGsaGjDQogICAg0tTJz7eiXMaxvvm/ycnPzfiy6dGvu/K1vbWxtdjLsL7W
+0enWpKOsy7C147TT08WjrGENCru2063AtLXn18nRr6GjtPLIxcfrwcK94qOh0OjSqsfrwfTTwyEN
+CiAgICDBqs+1yMujujEzOS0xODYzLTEzMjUgs8LPyMn6IL/Nt/5RUaO6MTI2LTQwMTctNTU0ICAN
+Cg0KLy95YWhvby5jb20udHcwMzc1NDQyMzIxMTA5ODE3Ng==
