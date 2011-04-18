@@ -1,35 +1,36 @@
-From: Jeremy Sanders <jeremy@jeremysanders.net>
-Subject: Re: GPT on MD raid
-Date: Mon, 18 Apr 2011 19:37:13 +0100
-Message-ID: <4DAC84D9.8060406@jeremysanders.net>
-References: <iohnsc$ggc$1@dough.gmane.org> <4DAC6B04.9030702@turmel.org>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Mon, 18 Apr 2011 17:23:06 -0400
+Message-ID: <20110418212306.GA21154@infradead.org>
+References: <4DA2E03A.2080607@fusionio.com>
+ <20110411212635.7959de70@notabene.brown>
+ <4DA2E7F0.9010904@fusionio.com>
+ <20110411220505.1028816e@notabene.brown>
+ <4DA2F00E.6010907@fusionio.com>
+ <20110418081922.1651474a@notabene.brown>
+ <4DABDC60.2090009@fusionio.com>
+ <20110418172551.55629fc6@notabene.brown>
+ <4DABF1EA.3070301@fusionio.com>
+ <20110418183343.036f412e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DAC6B04.9030702@turmel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110418183343.036f412e@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Jens Axboe <jaxboe@fusionio.com>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 18/04/11 17:47, Phil Turmel wrote:
-> On 04/18/2011 12:11 PM, Jeremy Sanders wrote:
->> Hi - I was thinking of using a GPT partition on top of a MD raid device. It
->> occurs to me that because GPT also puts data at the end of the device, it
->> might get confused if the raid device is resized by adding more drives, etc.
->>
->> Has anyone tried this? Should it work? How should the GPT header get moved
->> to the end of the raid device? Will parted fix it?
->
-> I've parted fix cases of this in the past, but I don't know how robust it is.
->
->> Should I ditch this idea and delve into the complexities of LVM?
->
-> Yes, in my not-entirely-humble opinion.  I suspect you'll find LVM isn't all that complex, at least if all you are trying to do is replace GPT.  And you get some serious advantages without extra effort, like non-contiguous volumes and snapshotting.
->
-> While my copy of gparted won't work with it, there are gui tools to manage LVM.  I use kvpm on my gentoo/KDE laptop.
+> NeilBrown (6):
+>       md: use new plugging interface for RAID IO.
+>       md/dm - remove remains of plug_fn callback.
+>       md - remove old plugging code.
+>       md: provide generic support for handling unplug callbacks.
+>       md: incorporate new plugging into raid5.
+>       md: fix up raid1/raid10 unplugging.
 
-Thanks for all the replies - I will look at lvm...
-
-Jeremy
+Looking over more of the unplugging left over, is there a reason to
+keep the unplug_work bits in CFQ?  They seem to rather counter the
+current scheme (and it is the last user of kblockd outside of
+blk-core.c)
