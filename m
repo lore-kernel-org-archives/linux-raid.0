@@ -1,58 +1,35 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: Jeremy Sanders <jeremy@jeremysanders.net>
 Subject: Re: GPT on MD raid
-Date: Mon, 18 Apr 2011 23:11:51 +0600
-Message-ID: <20110418231151.5ff9de82@natsu>
-References: <iohnsc$ggc$1@dough.gmane.org>
+Date: Mon, 18 Apr 2011 19:37:13 +0100
+Message-ID: <4DAC84D9.8060406@jeremysanders.net>
+References: <iohnsc$ggc$1@dough.gmane.org> <4DAC6B04.9030702@turmel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/m83AdQpyKGxvJLd.SnKg7jm"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <iohnsc$ggc$1@dough.gmane.org>
+In-Reply-To: <4DAC6B04.9030702@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeremy Sanders <jeremy@jeremysanders.net>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/m83AdQpyKGxvJLd.SnKg7jm
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 18/04/11 17:47, Phil Turmel wrote:
+> On 04/18/2011 12:11 PM, Jeremy Sanders wrote:
+>> Hi - I was thinking of using a GPT partition on top of a MD raid device. It
+>> occurs to me that because GPT also puts data at the end of the device, it
+>> might get confused if the raid device is resized by adding more drives, etc.
+>>
+>> Has anyone tried this? Should it work? How should the GPT header get moved
+>> to the end of the raid device? Will parted fix it?
+>
+> I've parted fix cases of this in the past, but I don't know how robust it is.
+>
+>> Should I ditch this idea and delve into the complexities of LVM?
+>
+> Yes, in my not-entirely-humble opinion.  I suspect you'll find LVM isn't all that complex, at least if all you are trying to do is replace GPT.  And you get some serious advantages without extra effort, like non-contiguous volumes and snapshotting.
+>
+> While my copy of gparted won't work with it, there are gui tools to manage LVM.  I use kvpm on my gentoo/KDE laptop.
 
-On Mon, 18 Apr 2011 17:11:56 +0100
-Jeremy Sanders <jeremy@jeremysanders.net> wrote:
+Thanks for all the replies - I will look at lvm...
 
-> Hi - I was thinking of using a GPT partition on top of a MD raid device. =
-It=20
-> occurs to me that because GPT also puts data at the end of the device, it=
-=20
-> might get confused if the raid device is resized by adding more drives, e=
-tc.
->=20
-> Has anyone tried this? Should it work? How should the GPT header get move=
-d=20
-> to the end of the raid device? Will parted fix it?
->=20
-> Should I ditch this idea and delve into the complexities of LVM?
-
-I'd suggest that you reconsider if you really need to partition a single
-mdraid device, or maybe it would be better to create several mdraid devices
-(on regular partitions) for different needs, possibly with differing shapes
-and settings. E.g. over the same set of disks I use three RAIDs, two small
-arrays for boot and root FS, and the rest for data.
-
---=20
-With respect,
-Roman
-
---Sig_/m83AdQpyKGxvJLd.SnKg7jm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk2scNcACgkQTLKSvz+PZwiMmACeO8rGBF3F8WS1++8MCmm5cWLk
-ORkAnjlAlUAjcAy39lNgPTlr/VltyTZx
-=K11M
------END PGP SIGNATURE-----
-
---Sig_/m83AdQpyKGxvJLd.SnKg7jm--
+Jeremy
