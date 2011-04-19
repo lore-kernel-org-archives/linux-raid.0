@@ -1,78 +1,77 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Direct disk access on IBM Server
-Date: Tue, 19 Apr 2011 15:08:35 -0500
-Message-ID: <4DADEBC3.9060404@hardwarefreak.com>
-References: <iok28i$tp6$1@dough.gmane.org>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: debian software raid1
+Date: Tue, 19 Apr 2011 22:10:14 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1104192148270.4097@unicorn.drogon.net>
+References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <iok28i$tp6$1@dough.gmane.org>
+In-Reply-To: <4DADB24F.2030300@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Brown put forth on 4/19/2011 8:21 AM:
-> I have recently got an IBM x3650 M3 server, which has a "Serveraid
-> M5014" raid controller.  Booting from a Linux CD (system rescue CD) and
-> running lspci identifies this raid controller as:
-> 
-> LSI Logic/Symbus Logic Megaraid SAS 2108 [Liberator] (rev 03)
-> 
-> The controller works fine for hardware raid - I can open its bios setup
-> utility, and set up a RAID5 (or whatever) with the disks I have.  The OS
-> then just sees a single virtual disk.
-> 
-> But I would like direct access to the sata drives - I want to set up
-> mdadm raid, under my own control.  As far as I can see, there is no way
-> to put this controller into "JBOD" or "direct access" mode of any sort.
+On Tue, 19 Apr 2011, Iordan Iordanov wrote:
 
-FYI, the ServeRAID 5014 is a good quality real hardware RAID card w/
+> There is a lot of information, but also, I suspect there is a lot of 
+> disagreement. One thing that I could not find a definitive answer on was the 
+> question of whether or not to mirror swap.
+>
+> There are articles that propose mirroring partitions independently (rather 
+> than the entire disk), and not mirroring swap, but adding two swap partitions 
+> with equal priority. On the other hand, there are people who point out that 
+> in the event where one of the disks in the mirror dies, the machine may cease 
+> to function, because a part of its "memory" will have disappeared. However, 
+> making swap part of the mirror opens a whole new can of worms. For instance, 
+> could there be a deadlock possibility (for example after a suspend/resume 
+> cycle) where mdadm is waiting for something which is swapped out onto swap 
+> which is mirrored?
+>
+> It would be nice to have a discussion among people who have experience with 
+> all of this.
 
-PCIe 2.0 x8 interface
-800 MHz LSI PowerPC RAID on Chip ASIC
-256MB DDRII cache RAM
-8 x 6Gb/s SAS ports via 2 SFF8087
-32 drives maximum, 16 drives max per virtual disk (RAID group)
+I've not been active here for a long time - mostly because as far as I'm 
+concerned Linux-Raid "just works" and it's as stable as I need it to be, 
+however this subject caught my eye, so I'll add in my 2 penneth 
+worth...
 
-If your card has the RAID6 feature key installed, mdraid will likely
-gain you little, if anything, over the card's inbuilt features.
+I've been putting swap on mirrored, and raided drives for as long as I've 
+been using the MD stuff, and that's now well over 10 years now.
 
-> Does anyone here have experience with this card, or can give me any hints?
+I do recall that there were such deadlock issues in the early days, but 
+I'm also sure these were resolved very quickly indeed. MD has certianly 
+saved my bacon when a disk has failled - and that includes swap 
+partitions.
 
-I can point you to the documentation for the 5014:
+An example - swap on a 5-drive RAID-6 system:
 
-http://www.redbooks.ibm.com/technotes/tips0054.pdf
+   cat /proc/swaps
+   Filename                                Type            Size    Used    Priority
+   /dev/md2                                partition       2987704 1720    -1
 
-ftp://ftp.software.ibm.com/systems/support/system_x_pdf/ibm_doc_sraidmr_1st-ed_5014-5015_quick-install.pdf
+and:
 
-ftp://ftp.software.ibm.com/systems/support/system_x_pdf/ibm_doc_sraidmr_1st-ed_5014-5015_user-guide.pdf
+   md2 : active raid6 sde2[4] sdd2[3] sdc2[2] sdb2[1] sda2[0]
+       2987712 blocks level 6, 64k chunk, algorithm 2 [5/5] [UUUUU]
 
+another: (RAID1 - mirrored)
 
-Dave Chinner of Red Hat, one of the lead XFS developers, runs an 8 core
-test rig with a 512MB LSI card nearly identical to this ServeRAID 5014,
-with something like 16 drives, using mdraid.  The method he had to use
-to get mdraid working was putting each drive in its own RAID0 group
-(virtual disk).  He claimed the onboard cache RAM was still enabled for
-writes, I'm not sure about reads.
+   cat /proc/swaps
+   Filename                                Type            Size    Used    Priority
+   /dev/md2                                partition       2007992 0       -1
 
-For high load parallel XFS operations--think severe multiuser
-multithreaded test workloads designed to hammer XFS and force bugs to
-surface--he stated mdraid has a performance advantage vs the onboard
-RAID ASIC.  IIRC at lower disk counts and/or medium and lower load,
-there's little or no performance difference.  I.e. the workload has to
-saturate the 800Mhz LSI RAID ASIC before you notice performance tailing off.
+and:
 
-Join the XFS mailing list and ask Dave.  I'm sure he'd be glad to give
-you pointers even if it's a bit off topic.
+   md2 : active raid1 sdb2[0] sda2[1]
+       2008000 blocks [2/2] [UU]
 
-http://oss.sgi.com/mailman/listinfo/xfs
+however just because I do it, doesn't mean it's perfect - but I can say 
+that I've never had a server panic or otherwise crash due to me having 
+swap on MD - at least not that I've been aware of. (but also note that 
+I've never used MD on a system that I'd ever suspend or hibernate, but I 
+have used MD with drive spin-down software with no ill effects!)
 
-Actually, I think it's an open list, so you should be able to simply
-send mail to xfs@oss.sgi.com and ask to be CC'd as you're not subscribed.
+I'm actually of the opinion that to NOT put swap on RAID in an otherwise 
+RAIDed system is just plain silly. Do it. You know it makes sense!
 
-Hope this information is helpful.
-
--- 
-Stan
+Gordon
