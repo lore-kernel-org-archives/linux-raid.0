@@ -1,68 +1,43 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: Re: raid6 + caviar black + mpt2sas horrific performance
-Date: Tue, 19 Apr 2011 13:04:48 +0200
-Message-ID: <20110419110443.GA12278@apartia.fr>
-References: <20110330080823.GA9167@apartia.fr>
- <4D933435.3010709@gmail.com>
- <20110330152011.GA6863@apartia.fr>
- <4D93565E.3070403@gmail.com>
+From: b2 <b2@playtime.bg>
+Subject: debian software raid1
+Date: Tue, 19 Apr 2011 15:12:46 +0300
+Message-ID: <1303215166.2809.8.camel@valio>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8hu0FB9UWYi69RhahCia"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D93565E.3070403@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 30, 2011 at 12:12:14PM -0400, Joe Landman wrote:
-> >- T610:
-> >
-> >32000+0 enregistrements lus
-> >32000+0 enregistrements =E9crits
-> >1048576000 octets (1,0 GB) copi=E9s, 0,870001 s, 1,2 GB/s
-> >
-> >- PE2900:
-> >
-> >32000+0 records in
-> >32000+0 records out
-> >1048576000 bytes (1.0 GB) copied, 9.11934 s, 115 MB/s
->=20
-> Ahhh ...  look at that.  Cached write is very different between the
-> two.  An order of magnitude.  You could also try a direct
-> (noncached) write, using oflag=3Ddirect at the end of the line.  This
-> could be useful, though direct IO isn't terribly fast on MD raids.
->=20
-> If we can get the other dd's indicated, we might have a better sense
-> of which layer is causing the issue.  It might not be MD.
 
-Hi,
+--=-8hu0FB9UWYi69RhahCia
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-=46WIW I removed a disk from the raid6 array, formatted a partition as =
-xfs
-and mounted it to test write speed on a single device:
+Hi , list=20
+i have two identical 500GB harddrives - sda & sdb. sda has already
+installed debian with root and other partitions and data on it and sdb
+had no partiotions and data on it (it is brand new). my question is :
+can i setup software raid 1 on two harddisks without loosing any data
+from sda ? just to create raid array and somehow copy partitions and
+data to it ?=20
+sorry for my lame question , just don't know how (if possible) to do it.
 
-- T610 (LSI Logic SAS2008 + 8 X WDC Caviar Black WD1002FAEX):
+--=-8hu0FB9UWYi69RhahCia
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-	ZENON:/mnt/test# time tar -xjf /usr/src/linux-2.6.37.tar.bz2=20
-	tar -xjf /usr/src/linux-2.6.37.tar.bz2  21.89s user 3.93s system 44% c=
-pu 58.115 total
-	ZENON:/mnt/test# time rm linux-2.6.37 -rf
-	rm -i linux-2.6.37 -rf  0.07s user 2.29s system 1% cpu 2:28.32 total
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-- PE2900 (MegaRAID SAS 1078 + 8 X Hitachi Ultrastar 7K1000):
+iQEcBAABAgAGBQJNrXw+AAoJEIN9/gu8BQLyE3cIAIkyDfwB7ewhRbDTXdb8zAwk
+qFZIz2PcBtPE7rt4CFEyJQU83fUJtT7k5fief9uRLXuc7C9UXJmlh3qMcwLXGdvt
+ivWOOLsElYkHhgTVTcAUKkwkFBbvbdN12gJEk1zO9CiEqbvKrhibvI4qgFk1oTwV
+8lOUku56QLsleIs7SwGM1jQcxh7epXpTbcGaozJcGhixIHNQxA3YryNvEOLxqlVZ
+0ZtlEAVaECHkiiZqhuXMMbW+60ZY9UBAxaw7RJ3+Joicbz+MTDAK5QcVUlq/u5AY
+NIMqn3p4+OEF0/PsOLJ8nMkOlgyAgLuz+DfMtCfvF/ngbuiEMTH3d8fgnCSpZzs=
+=Re2y
+-----END PGP SIGNATURE-----
 
-	PYRRHUS:/mnt/test# time tar -xjf /usr/src/linux-2.6.37.tar.bz2
-	tar -xjf /usr/src/linux-2.6.37.tar.bz2  18.00s user 3.20s system 114% =
-cpu 18.537 total
-	PYRRHUS:/mnt/test# time rm linux-2.6.37 -rf
-	rm -i linux-2.6.37 -rf  0.03s user 1.68s system 63% cpu 2.665 total
+--=-8hu0FB9UWYi69RhahCia--
 
-This would mean that the problem really lies with the controller or the
-disks, not the raid6 array.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
