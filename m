@@ -1,31 +1,28 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: debian software raid1
-Date: Wed, 20 Apr 2011 12:28:45 +0200
-Message-ID: <4DAEB55D.1010108@shiftmail.org>
-References: <1303215166.2809.8.camel@valio>
- <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com>
- <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown>
+From: "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 05/10] block: remove per-queue plugging
+Date: Wed, 20 Apr 2011 06:55:09 -0400
+Message-ID: <20110420105509.GB31203@infradead.org>
+References: <4DA2E7F0.9010904@fusionio.com>
+ <20110411220505.1028816e@notabene.brown>
+ <4DA2F00E.6010907@fusionio.com>
+ <20110418081922.1651474a@notabene.brown>
+ <4DABDC60.2090009@fusionio.com>
+ <20110418172551.55629fc6@notabene.brown>
+ <4DABF1EA.3070301@fusionio.com>
+ <20110418183343.036f412e@notabene.brown>
+ <20110418213048.GA21852@infradead.org>
+ <20110419083813.5c61aa99@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20110420085148.12ac0002@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110419083813.5c61aa99@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Iordan Iordanov <iordan@cdf.toronto.edu>, =?ISO-8859-1?Q?Mathias_Bu?= =?ISO-8859-1?Q?r=E9n?= <mathias.buren@gmail.com>, b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
+Cc: "hch@infradead.org" <hch@infradead.org>, Jens Axboe <jaxboe@fusionio.com>, Mike Snitzer <snitzer@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/20/11 00:51, NeilBrown wrote:
-> If there was such a deadlock, it would be a serious bug.   I don't believe
-> such a bug exists (but hey - I keep finding bugs in this code, when I'm not
-> busy writing new bugs, so I guess it could crash you machine and kill your
-> cat).
->
+On Tue, Apr 19, 2011 at 08:38:13AM +1000, NeilBrown wrote:
+> Is that at all close to what you are thinking?
 
-I am aware that raids 0,1,10 do not copy the buffer so I don't think 
-there is risk of deadlock...
-
-Raids 456 do copy the buffer... but the destination buffers are 
-preallocated, right?
-
-Thank you
+Yes, pretty much like that.
