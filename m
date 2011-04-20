@@ -1,98 +1,146 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: debian software raid1
-Date: Wed, 20 Apr 2011 11:12:39 +1000
-Message-ID: <20110420111239.734ae4c1@notabene.brown>
-References: <1303215166.2809.8.camel@valio>
-	<BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com>
-	<4DADB24F.2030300@cdf.toronto.edu>
-	<20110420085148.12ac0002@notabene.brown>
-	<4DAE29EA.4040306@gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Direct disk access on IBM Server
+Date: Wed, 20 Apr 2011 10:08:51 +0200
+Message-ID: <iom46s$pun$1@dough.gmane.org>
+References: <iok28i$tp6$1@dough.gmane.org>	<BANLkTi=psjvW5Lj=sr93E5caMxDAMm67JQ@mail.gmail.com>	<iok4of$eov$1@dough.gmane.org>	<BANLkTince3_8ziNUB+DYkL2Dfkmb21DAVg@mail.gmail.com>	<iok8o1$97l$1@dough.gmane.org> <BANLkTi=HPO4-n+1JEtNoTzuxCiOteJnoyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DAE29EA.4040306@gmail.com>
+In-Reply-To: <BANLkTi=HPO4-n+1JEtNoTzuxCiOteJnoyw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: Iordan Iordanov <iordan@cdf.toronto.edu>, Mathias =?ISO-8859-1?B?QnVy?= =?ISO-8859-1?B?6W4=?= <mathias.buren@gmail.com>, b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Apr 2011 20:33:46 -0400 Joe Landman <joe.landman@gmail.com> wrote:
+On 19/04/2011 17:41, Mathias Bur=C3=A9n wrote:
+> On 19 April 2011 16:12, David Brown<david@westcontrol.com>  wrote:
+>> On 19/04/2011 16:07, Mathias Bur=C3=A9n wrote:
+>>>
+>>> On 19 April 2011 15:04, David Brown<david@westcontrol.com>    wrote=
+:
+>>>>
+>>>> On 19/04/2011 15:25, Mathias Bur=C3=A9n wrote:
+>>>>>
+>>>>> On 19 April 2011 14:21, David Brown<david@westcontrol.com>      w=
+rote:
+>>>>>>
+>>>>>> I have recently got an IBM x3650 M3 server, which has a "Servera=
+id
+>>>>>> M5014"
+>>>>>> raid controller.  Booting from a Linux CD (system rescue CD) and
+>>>>>> running
+>>>>>> lspci identifies this raid controller as:
+>>>>>>
+>>>>>> LSI Logic/Symbus Logic Megaraid SAS 2108 [Liberator] (rev 03)
+>>>>>>
+>>>>>> The controller works fine for hardware raid - I can open its bio=
+s setup
+>>>>>> utility, and set up a RAID5 (or whatever) with the disks I have.=
+  The
+>>>>>> OS
+>>>>>> then just sees a single virtual disk.
+>>>>>>
+>>>>>> But I would like direct access to the sata drives - I want to se=
+t up
+>>>>>> mdadm
+>>>>>> raid, under my own control.  As far as I can see, there is no wa=
+y to
+>>>>>> put
+>>>>>> this controller into "JBOD" or "direct access" mode of any sort.
+>>>>>>
+>>>>>> Does anyone here have experience with this card, or can give me =
+any
+>>>>>> hints?
+>>>>>>
+>>>>>> The only idea I have at the moment is to put each disk within it=
+s own
+>>>>>> single-disk RAID 0 set, but then I don't get sata hot-swap
+>>>>>> functionality,
+>>>>>> SMART, hddtemp, etc.
+>>>>>>
+>>>>>> Thanks for any clues or hints,
+>>>>>>
+>>>>>> David
+>>>>>>
+>>>>>
+>>>>> Regarding SMART, could you try (after loading the appropriate
+>>>>> megaraid/megasas module) hdparm -a -d megaraid,$I /dev/sda , wher=
+e $I
+>>>>> is a number between 0 and 31 IIRC (depending on the HDD in the ar=
+ray).
+>>>>>
+>>>>
+>>>> Are you sure about the syntax for that command?  Trying that with =
+"0" for
+>>>> $I
+>>>> just gives me "megaraid,0: No such file or directory".  As far as =
+I can
+>>>> see,
+>>>> the megaraid module is loaded (lsmod shows "megaraid_sas" in the m=
+odules
+>>>> list).
+>>>>
+>>>> Thanks anyway,
+>>>>
+>>>> David
+>>>>
+>>>>
+>>>
+>>>   From the smartctl man page:
+>>>
+>>>           Under Linux , to look at SCSI/SAS disks behind LSI MegaRA=
+ID
+>>> controllers, use syntax such as:
+>>>                smartctl -a -d megaraid,2 /dev/sda
+>>>                smartctl -a -d megaraid,0 /dev/sdb
+>>>                where  in the argument megaraid,N, the integer N is =
+the
+>>> physical disk number within the MegaRAID controller.  This interfac=
+e
+>>> will also work for Dell PERC controllers.  The follow=E2=80=90
+>>>                ing /dev/XXX entry must exist:
+>>>                For PERC2/3/4 controllers: /dev/megadev0
+>>>                For PERC5/6 controllers: /dev/megaraid_sas_ioctl_nod=
+e
+>>>
+>>> Maybe you can experiment some with that. Regards,
+>>> M
+>>
+>> Ah, it was "smartctl" - you first wrote "hdparm".  I should have tho=
+ught of
+>> smartctl myself.
+>>
+>> Still no luck as yet - the smartctl on my test installation (Centos =
+5.6)
+>> doesn't seem to support megaraid devices.  But maybe that's just bec=
+ause it
+>> is an older version of smartctl - Centos 5.6 is not exactly "bleedin=
+g edge".
+>>
+>
+> Opps, sorry! I blame the medicine. You could try compile a version of
+> smartctl yourself if you have the proper packages installed.
+>
 
-> On 04/19/2011 06:51 PM, NeilBrown wrote:
-> > On Tue, 19 Apr 2011 12:03:27 -0400 Iordan Iordanov<iordan@cdf.toronto.edu>
-> 
-> [...]
-> 
-> > If there was such a deadlock, it would be a serious bug.   I don't believe
-> > such a bug exists (but hey - I keep finding bugs in this code, when I'm not
-> > busy writing new bugs, so I guess it could crash you machine and kill your
-> > cat).
-> 
-> I ran into this a few years ago (early 2.6 series, maybe 2.6.15 or so). 
->   Some sort of race condition.  Required a reset to get the machines 
-> attention.  
+The CentOs installation is only temporary.  I was doing some testing=20
+with IBM's software, which will only work on certain very specific Linu=
+x=20
+versions, such as various RHEL versions.  Since I like to use Debian on=
+=20
+servers (it's what I'm used to), I didn't fancy buying RHEL just to try=
+=20
+out the software - CentOS was a simple and convenient way to test the=20
+software.  Once I get my "real" installation in place, I can make sure =
+I=20
+have up-to-date tools.
 
-I wonder what this might have been...
-Resume from suspend when swap in on md/raid can be a bit tricky and may not
-have been well tested at that time.  You need to be able to assemble the
-RAID1 for read without writing anything.  That can be done now by setting the
-'start_ro' module parameter (echo 1
-> /sys/modules/md_mod/parameters/start_ro).
+Thanks for your help and pointers,
 
-I haven't actually tested it myself though so I cannot speak from experience.
+David
 
->               Haven't tried since.  Since we do lots of MD raid, I 
-> generally either put the swap on hardware RAID, or stripe it and 
-> sometimes hope for the best.  The latter doesn't always work.  When a 
-> drive goes pear shaped, and takes down pages with it, your machine will 
-> crash, and pretty hard at that.
-> 
-> We'll definitely try the swap atop MD RAID going forward.  I like the 
-> idea of a RAID10 for it.
-> 
-> >> It would be nice to have a discussion among people who have experience
-> >> with all of this.
-> >
-> > Definitely put swap on RAID1 if you have RAID1 at all.
-> >
-> > My personal preference with RAID1 to to have a single RAID1 (probably
-> > --metadata=1.0) across the whole devices, and partition that for root, swap,
-> > home.
-> 
-> This gets to my question, since we haven't tried this yet ... can we do 
-> whole device MD RAIDs, and boot from them?  Is there anything special we 
-> need to do in their construction (use --auto=mdp or similar)?  We'd 
-> really prefer to go this route rather than building multiple smaller 
-> RAIDs.  We can manage the latter, but the former is far easier/cleaner 
-> to handle rebuilds with.
-
-The little 'server' in my garage runs md/raid1 across two device (using 0.90
-metadata - never had any reason to convert).
-
-I seem to remember that I had to do something special to grub to get it to
-boot initially, but I also vaguely remember that after some series of updates
-(this is Debian) it seemed to get a lot easier.  My "grub.cfg" contains:
-
-menuentry 'Debian GNU/Linux, with Linux 2.6.32-5-686' --class debian --class gnu-linux --class gnu --class os {
-        insmod raid
-        insmod mdraid
-        insmod part_msdos
-        insmod ext2
-        set root='(md0,1)'
-        search --no-floppy --fs-uuid --set 03e9951f-d174-4d88-9b4c-dd7a31c0de61
-        echo    'Loading Linux 2.6.32-5-686 ...'
-        linux   /vmlinuz-2.6.32-5-686 root=UUID=6e8a3564-5588-476e-bbe5-a68c967c6c8e ro  quiet
-        echo    'Loading initial ramdisk ...'
-        initrd  /initrd.img-2.6.32-5-686
-}
-
-which was all automatically created, and it seems to "just work".
-
-So yes - you can boot for partitioned whole-device md/raid.
-You might need to use a "metadata-at-the-end" format list 0.90 or 1.0, but it
-is entirely possible that it will work for other metadata formats, I really
-don't know.  Other than that, no special options needed when creating the
-array.
-
-NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
