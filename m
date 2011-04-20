@@ -1,102 +1,67 @@
-From: NeilBrown <neilb@suse.de>
+From: Joe Landman <joe.landman@gmail.com>
 Subject: Re: debian software raid1
-Date: Wed, 20 Apr 2011 08:51:48 +1000
-Message-ID: <20110420085148.12ac0002@notabene.brown>
-References: <1303215166.2809.8.camel@valio>
-	<BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com>
-	<4DADB24F.2030300@cdf.toronto.edu>
+Date: Tue, 19 Apr 2011 20:33:46 -0400
+Message-ID: <4DAE29EA.4040306@gmail.com>
+References: <1303215166.2809.8.camel@valio>	<BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com>	<4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DADB24F.2030300@cdf.toronto.edu>
+In-Reply-To: <20110420085148.12ac0002@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iordan Iordanov <iordan@cdf.toronto.edu>
-Cc: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>, b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Iordan Iordanov <iordan@cdf.toronto.edu>, =?ISO-8859-1?Q?Mathias_Bu?= =?ISO-8859-1?Q?r=E9n?= <mathias.buren@gmail.com>, b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Apr 2011 12:03:27 -0400 Iordan Iordanov <iordan@cdf.toronto.=
-edu>
-wrote:
+On 04/19/2011 06:51 PM, NeilBrown wrote:
+> On Tue, 19 Apr 2011 12:03:27 -0400 Iordan Iordanov<iordan@cdf.toronto.edu>
 
-> Hey guys,
->=20
-> On 04/19/11 08:25, Mathias Bur=E9n wrote:
-> > http://www.debian-administration.org/articles/238
-> >
-> > Plenty of articles on the net on how to do that.
->=20
-> There is a lot of information, but also, I suspect there is a lot of=20
-> disagreement. One thing that I could not find a definitive answer on =
-was=20
-> the question of whether or not to mirror swap.
->=20
-> There are articles that propose mirroring partitions independently=20
-> (rather than the entire disk), and not mirroring swap, but adding two=
-=20
-> swap partitions with equal priority. On the other hand, there are peo=
-ple=20
-> who point out that in the event where one of the disks in the mirror=20
-> dies, the machine may cease to function, because a part of its "memor=
-y"=20
-> will have disappeared. However, making swap part of the mirror opens =
-a=20
-> whole new can of worms. For instance, could there be a deadlock=20
-> possibility (for example after a suspend/resume cycle) where mdadm is=
-=20
-> waiting for something which is swapped out onto swap which is mirrore=
-d?
+[...]
 
-If there was such a deadlock, it would be a serious bug.   I don't beli=
-eve
-such a bug exists (but hey - I keep finding bugs in this code, when I'm=
- not
-busy writing new bugs, so I guess it could crash you machine and kill y=
-our
-cat).
+> If there was such a deadlock, it would be a serious bug.   I don't believe
+> such a bug exists (but hey - I keep finding bugs in this code, when I'm not
+> busy writing new bugs, so I guess it could crash you machine and kill your
+> cat).
 
->=20
-> It would be nice to have a discussion among people who have experienc=
-e=20
-> with all of this.
+I ran into this a few years ago (early 2.6 series, maybe 2.6.15 or so). 
+  Some sort of race condition.  Required a reset to get the machines 
+attention.  Haven't tried since.  Since we do lots of MD raid, I 
+generally either put the swap on hardware RAID, or stripe it and 
+sometimes hope for the best.  The latter doesn't always work.  When a 
+drive goes pear shaped, and takes down pages with it, your machine will 
+crash, and pretty hard at that.
 
-Definitely put swap on RAID1 if you have RAID1 at all.
+We'll definitely try the swap atop MD RAID going forward.  I like the 
+idea of a RAID10 for it.
 
-My personal preference with RAID1 to to have a single RAID1 (probably
---metadata=3D1.0) across the whole devices, and partition that for root=
-, swap,
-home.
+>> It would be nice to have a discussion among people who have experience
+>> with all of this.
+>
+> Definitely put swap on RAID1 if you have RAID1 at all.
+>
+> My personal preference with RAID1 to to have a single RAID1 (probably
+> --metadata=1.0) across the whole devices, and partition that for root, swap,
+> home.
 
-Others prefer to partition the devices and run RAID1 across the partiti=
-ons
-independently.  While that is not my preference I known nothing against=
- it.
-This is the price of freedom - you have to make choices
+This gets to my question, since we haven't tried this yet ... can we do 
+whole device MD RAIDs, and boot from them?  Is there anything special we 
+need to do in their construction (use --auto=mdp or similar)?  We'd 
+really prefer to go this route rather than building multiple smaller 
+RAIDs.  We can manage the latter, but the former is far easier/cleaner 
+to handle rebuilds with.
 
-If I had a few identical drives, I would partition them each into a
-small /boot, a small swap and the rest.  I would then RAID1 all the /bo=
-ots
-together, RAID10 all the swaps, and RAID5 or RAID6 all the rest.
+Regards,
 
-The most important thing though it to create an configuration that you
-understand and are comfortable with, because you are the one who will h=
-ave to
-manage it.
-
-NeilBrown
+Joe
 
 
->=20
-> Cheers,
-> Iordan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics, Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
