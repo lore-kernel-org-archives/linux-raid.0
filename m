@@ -1,44 +1,68 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: Re: debian software raid1
-Date: Thu, 21 Apr 2011 10:50:28 -0400
-Message-ID: <4DB04434.4080505@cdf.toronto.edu>
-References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown> <4DAE29EA.4040306@gmail.com> <4DAEF2F1.8080204@cdf.toronto.edu> <20110421061545.GA15220@maude.comedia.it>
+From: John Valarti <mdadmuser@gmail.com>
+Subject: =?UTF-8?Q?Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assistan?=
+	=?UTF-8?Q?ce?=
+Date: Thu, 21 Apr 2011 12:29:32 -0600
+Message-ID: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110421061545.GA15220@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Luca,
+Hi there.
+Please pardon my lack of experience and expertise here, as this is my
+first time posting.
 
-On 04/21/11 02:15, Luca Berra wrote:
-> If someone here still believes that drives from different vendors with
-> the same nominal size have different real size please read:
-> http://www.idema.org/wp-content/plugins/download-monitor/download.php?id=1192
+Where I work there is a fairly old fileserver.
+It is running CentOS 4, kernel 2.6.9-100EL
+Recently it failed and it tries to boot, but fails part way with:
+RAID5: not enough operational device for md1 (2/4 failed).
 
-I don't think my point is invalid. If you wanted to mix SSDs and spindle 
-HDDs (for, say, write-mostly "backup" of the SSDs), quite likely your 
-drives will be of different sizes, as the SSDs frequently come in sizes 
-that are power of two's unlike the spindle drives. You could start of 
-with just one type of drive, and only then come up with the idea of 
-mixing types, etc. Probably not the best example, but one nonetheless.
+This machine has data for a number of users, and, of course it seems
+the backup has not been roperly done for a few months ( responsible
+staff member left).
+I am in the position of being teh only likely person with a chance of
+recovering the data for a few users on this machine.
+And I am certainly NOT an expert!
 
-There are other benefits to using a partition instead of the whole 
-device. For example, you could use a GPT label, which allows you to 
-label individual partitions. In an earlier post, I sent out a gpt_id 
-script and UDEV rules which insert /dev/disk/by-label/ links for you to 
-GPT-labeled partitions. We use it at the CS department of U of Toronto 
-to keep track of the physical location of disks (within iscsi target hosts).
+So, here is what I have done so far:
+On further inspection, I disconnected the drives out one at a time and
+determined which 2 are "failed".
+I pulled those out, and on another machine ran Seagate Seatest for
+Linux to test them.
+They both came out as healthy, although one apparently has a lot of
+uncommited bad sectors, or so the disk tool on a Fedora14 mchine tells
+me.
+I looked and see the layout is each of the 4 disks present have 2 partitions.
+After testing I was able to see the partitions on each disk with fdisk.
+I did not try to mount as these are simply RAID members, and I know
+there is no complete filesystem to mount on any single drive here.
 
-I think that if you are not interested in the 2nd point here, you could 
-simply use the --size option to mdadm to use less than the total 
-capacity of the drives, but apparently it doesn't work for all RAID 
-levels (RAID 10 is not listed in Debian Lenny's man-page). Somebody 
-correct me if I am wrong about this.
+First partiton on each drive is small,  /boot, and it seems to be
+RAID1 on all 4 drives.
+Those are healthy enough to get partially into a boot.
 
-Cheers!
-Iordan
+The machine still boots to the point of trying to get access to / and
+then kernel panics.
+The / and other parts are on a RAID5 made from the second partiton of
+the 4 disks.
 
+I have returned all 4 disks to the machine, and using CentOS
+install/recovery media, have teh machine up
+in rescue mode.
+At this point I believe that I need to rebuild the RAID5.
+
+I understand that I probably only get one chance to do this right, so
+I write here today
+to beg some help with this.
+ I do not lose other peoples data,
+
+Can anyone make me a suggestion?
+
+
+Thaks in advance for any help !
+
+
+
+John Valarti - under a lot of pressure..
