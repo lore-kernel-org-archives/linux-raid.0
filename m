@@ -1,87 +1,58 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: David Brown <david.brown@hesbynett.no>
 Subject: Re: Direct disk access on IBM Server
-Date: Thu, 21 Apr 2011 01:24:48 -0500
-Message-ID: <4DAFCDB0.9070609@hardwarefreak.com>
-References: <iok28i$tp6$1@dough.gmane.org> <4DADEBC3.9060404@hardwarefreak.com> <iomfkq$qqr$1@dough.gmane.org> <4DAEC627.3030904@grumpydevil.homelinux.org> <iomj0a$e5m$1@dough.gmane.org>
+Date: Thu, 21 Apr 2011 13:00:39 +0200
+Message-ID: <iop2oo$vs4$1@dough.gmane.org>
+References: <iok28i$tp6$1@dough.gmane.org>	<4DADEBC3.9060404@hardwarefreak.com>	<iomfkq$qqr$1@dough.gmane.org> <BANLkTint14TBOaBqaaXrUggeJWMPShWA8A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <iomj0a$e5m$1@dough.gmane.org>
+In-Reply-To: <BANLkTint14TBOaBqaaXrUggeJWMPShWA8A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Brown put forth on 4/20/2011 7:21 AM:
+On 21/04/11 05:50, Ryan Wagoner wrote:
+> On Wed, Apr 20, 2011 at 7:24 AM, David Brown<david@westcontrol.com>  wrote:
+>> Pros for hardware raid:
+>>
+>> + It can have battery backup (I don't have one at the moment - I have an
+>> excellent UPS for the whole system).
+>> + Rebuilds will be handled automatically by just adding new disks
+>> + The card supports online resizing and reshaping
+>> + It looks like the card supports caching with an SSD
+>> + The card supports snapshots of the virtual drives
+>
+> Unless the card allows you to enable the write cache without the
+> backup battery you will not see the real performance of the card. This
+> option is normally locked out to prevent data loss in case the system
+> crashes, power is pulled, etc. An external UPS will not protect in all
+> cases if you enable the write back cache without battery.
+>
 
-> It's true that boot loaders and software raid can be an awkward
-> combination.
-...
-> Yes, it's a few extra steps.
+The write cache is allowed without the battery, but disabled by default.
 
-More than a few. :)  With an LSI RAID card, I simply create a drive
-count X RAID5/6/10 array, set to initialize in the background, reboot
-the machine with my Linux install disk, create my partitions, install
-the OS ... done.  And I never have to worry about the bootloader
-configuration.
+I agree that even with an UPS there is still a risk - I guess that's why 
+it is disabled.  But the risk is pretty minimal for me - there is no 
+realistic chance of the power plug being pulled, for example.  Other 
+risks do exist - the power supply on the server may fail, the UPS may 
+fail, etc.  In the end there are /always/ risks - even with a battery on 
+the raid card, it won't protect against everything.  All I can do is 
+reduce the risks to a realistic minimum while keeping good performance 
+and features (and sensible cost!), and make sure I've got good backups 
+of everything.
 
-> Okay, that's good to know.  LSI raid controllers are not hard to get, so
+> I have systems with both software raid and hardware raid. If the
+> budget allows I tend to go the hardware raid route. When buying a
+> Dell, HP, etc server with hardware raid you end up with a complete
+> package. The enclosure, card, and server monitoring software make it
+> easy to manage and visually see which drive has failed.
+>
+> Ryan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-And they're the best cards overall, by far, which is why all the tier 1s
-OEM them, including IBM, Dell, HP, etc.
 
-> I am not afraid of being able to find a replacement.  What I was worried
-> about is how much setup information is stored on the disks, and how much
-> is stored in the card itself.
-
-This information is duplicated in the card NVRAM/FLASH and on all the
-drives--been this way with most RAID cards for well over a decade.
-Mylex and AMI both started doing this in the mid/late '90s.  Both are
-now divisions of LSI, both being acquired in the early 2000s.  FYI the
-LSI "MegaRAID" brand was that of AMI's motherboard and RAID card products.
-
-> Yes, the raid card I have can do RAID10.  But it can't do Linux md style
-> raid10,far - I haven't heard of hardware raid cards that support this.
-
-What difference does this make?  You already stated you're not concerned
-with performance.  The mdraid far layout isn't going to give you any
-noticeable gain with real world use anyway, only benchmarks, if that.
-
-Some advice:  determine how much disk space you need out of what you
-have.  If it's less than the capacity of two of your 4 drives, use
-hardware RAID10 and don't look back.  If you need the capacity of 3,
-then use hardware RAID 5.  You've got a nice hardware RAID card, so use it.
-
-> For most uses, raid10,far is significantly faster than standard raid10
-
-Again, what difference does this make?  You already stated performance
-isn't a requirement.  You're simply vacillating out loud at this point.
-
-> It is certainly possible to do MD raid on top of HW raid.  As an
-> example, it would be possible to put a raid1 mirror on top of a hardware
-> raid, and mirror it with a big external drive for extra safety during
-> risky operations (such as drive rebuilds on the main array).  And if I
-> had lots of disks and wanted more redundancy, then it would be possible
-> to use the hardware raid to make a set of raid1 pairs, and use md raid5
-> on top of them (I don't have enough disks for that).
-
-With 4 drives, you could create two hardware RAID 0 arrays and mirror
-the resulting devices with mdraid, or vice versa.  And you'd gain
-nothing but unnecessary complexity.
-
-What is your goal David?  To vacillate, mentally masturbate this for
-weeks with no payoff?  Or build the array and use it?
-
-> It is not possible to put an MD raid /under/ the HW raid.  I started
-> another thread recently ("Growing layered raids") with an example of
-> putting a raid 5 on top of a set of single-disk raid1 "mirrors" to allow
-> for safer expansion.
-
-I think the above answers my question.  As you appear averse to using a
-good hardware RAID card as intended, I'll send you my shipping address
-and take this problem off your hands.  Then all you have to vacillate
-about is what mdraid level to use with your now mobo connected drives.
-
--- 
-Stan
