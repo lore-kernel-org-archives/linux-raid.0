@@ -1,29 +1,57 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: mismatch_cnt and Raid6
-Date: Thu, 21 Apr 2011 14:38:38 +0100
-Message-ID: <4DB0335E.1050306@anonymous.org.uk>
-References: <4DB02A77.8000902@gmail.com> <20110421231419.1caa2f1c@notabene.brown> <4DB02F10.8020905@gmail.com>
+Date: Thu, 21 Apr 2011 19:45:15 +0600
+Message-ID: <20110421194515.719b3fa7@natsu>
+References: <4DB02A77.8000902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/U=v=UUsAn9Y+sU56X1Qi_Pn"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB02F10.8020905@gmail.com>
+In-Reply-To: <4DB02A77.8000902@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andrew Falgout <andrew.falgout@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/04/2011 14:20, Andrew Falgout wrote:
-> It takes about 23 hours per check if I don't do anything to the array,
-> so it will be a while before I can get back to you with results. But
-> thanks for the quick response.
+--Sig_/U=v=UUsAn9Y+sU56X1Qi_Pn
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It may also be instructive to look at the full output of smartctl from 
-all your drives - a short test may pass and the overall status be 
-"PASSED" even on a very sick drive. You should also look in your system 
-logs for ata errors to see which (if any) drive has given any read errors.
+On Thu, 21 Apr 2011 08:00:39 -0500
+Andrew Falgout <andrew.falgout@gmail.com> wrote:
 
-Cheers,
+> I got an error last week from a new raid6 array about a mismatch_cnt.  I=
+=20
+> did some reading online, performed a repair action on the array,=20
+> performed a check action, and checked for the mismatch_cnt again.  The=20
+> number was greatly reduced, but it was still there.  According to mdadm,=
+=20
+> everything appears to be working fine.  All the drives are passing short=
+=20
+> tests on smartctl.
+>=20
+> What is mismatch_cnt really?  Should I even be concerned about this? =20
+> The array is giving me 25-30MB/sec performance on an sshfs mount over=20
+> the network.  With a local copy I can see speeds of 50 to 60MB/sec.
 
-John.
+Hello,
 
+What kind of SATA cards/controllers do you use?
+
+--=20
+With respect,
+Roman
+
+--Sig_/U=v=UUsAn9Y+sU56X1Qi_Pn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk2wNOsACgkQTLKSvz+PZwglUACeNbMbrXeY9UBAUbXygd3yaZK+
+xwsAnjEGhiLEYzgFZvtsbue0GuPUA1O8
+=TFWD
+-----END PGP SIGNATURE-----
+
+--Sig_/U=v=UUsAn9Y+sU56X1Qi_Pn--
