@@ -1,52 +1,41 @@
-From: =?utf-8?q?=C5=81ukasz_Ole=C5=9B?= <lukasz.oles@open-e.com>
-Subject: Tuning scst windows and sw raid5
-Date: Fri, 22 Apr 2011 16:16:52 +0200
-Message-ID: <201104221616.52719.lukasz.oles@open-e.com>
+From: Chris Weiss <cweiss@gmail.com>
+Subject: Re: [Scst-devel] Tuning scst windows and sw raid5
+Date: Fri, 22 Apr 2011 09:19:48 -0500
+Message-ID: <BANLkTiktSichu5PT7LUb0nLzOe=chq3s1A@mail.gmail.com>
+References: <201104221608.50195.lukasz.oles@open-e.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201104221608.50195.lukasz.oles@open-e.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?UTF-8?B?xYF1a2FzeiBPbGXFmw==?= <lukasz.oles@open-e.com>
+Cc: scst-devel@lists.sourceforge.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Fri, Apr 22, 2011 at 9:08 AM, =C5=81ukasz Ole=C5=9B <lukasz.oles@ope=
+n-e.com> wrote:
+> Hi,
+>
+> I'm trying to tune Software Raid5, SCST and Windows Initiator to get =
+best
+> read/write performance.
 
-I'm trying to tune Software Raid5, SCST and Windows Initiator to get best 
-read/write performance.
+My first recommendation is to stick with blockio due to the raid5
+write hole possibility when using software raid.
 
-On debian based system I created raid5 from 3 disks. I added it to scst config 
-in BLOCK IO mode. Then I made some performance tests with Linux and Windows 
-initiators. On Linux I used xfs filesystem and ntfs on Windows. 
+what windows version, and if not server2008, did you align the
+partitions? (there's a 2003 and a 2008 R2)
 
-Here are test results: 
-https://spreadsheets6.google.com/spreadsheet/pub?hl=pl&hl=pl&key=0AghOYEb75PA2dGU1WUdKTl9hNDFDc3ZBdkRQeEFrR3c&output=html
+dd is going to use the initiator OS's cache, make sure your test file
+size is 2x the ram in the initiator, if not the target too.
 
-What we can see there is that on Linux  results are quite consistent. Windows 
-results are more interesting. It looks like to get better performance  NTFS 
-block size should be bigger than raid chunk size. Why it only matters on 
-Windows? But even then Windows performance is worse than on Linux.
+Also xfs is much better at dealing with large files than ntfs.  Best
+apple to apples test is going to be on raw unformated partitions
 
-If in SCST I am using FILEIO mode or instead of RAID5 RAID0 then performance 
-on both systems is comparable.   
-
-Did anyone have same results and Do you have any tips how to improve 
-performance on Windows?
-
-Software details:
-iSCSI target: Debian etch
-Windows:
-        Windows Server R2
-        test program: BST5 (http://www.nu2.nu/bst/_
-Linux:
-        Debian 6.0
-        test program: dd        
-
-I'm not sure what is the main cause of problem so I'm sending this mail to 
-SCST maillist and to linux-raid maillist.
-
-Regards,
-
+I'm not familiar with BST5.  I typically use iometer for both OS's.
 --
-Lukasz Oles
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
