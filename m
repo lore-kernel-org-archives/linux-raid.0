@@ -1,164 +1,85 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID6
-Date: Fri, 22 Apr 2011 11:05:44 +0100
-Message-ID: <BANLkTi=1niLpTqtGRK-GUW5QhQ1U=nuUuA@mail.gmail.com>
-References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
-	<4DA58CB0.3020109@anonymous.org.uk>
-	<BANLkTinAUbMdh=FE8s9Qp6QJyfgp_pvCpA@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: Server =?UTF-8?B?ZG93bi1mYWls4oCLZWQgUkFJRDUtYXNraW5nIGZvciBz?=
+ =?UTF-8?B?b21lIGFzc2lzdGFuY2U=?=
+Date: Fri, 22 Apr 2011 13:19:43 +0200
+Message-ID: <ioro8f$bmb$1@dough.gmane.org>
+References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>	<ioq2b8$3rl$1@dough.gmane.org>	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com> <BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTinAUbMdh=FE8s9Qp6QJyfgp_pvCpA@mail.gmail.com>
+In-Reply-To: <BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22 April 2011 10:39, Mathias Bur=C3=A9n <mathias.buren@gmail.com> wr=
-ote:
-> On 13 April 2011 12:44, John Robinson <john.robinson@anonymous.org.uk=
-> wrote:
->> (Subject line amended by me :-)
->>
->> On 12/04/2011 17:56, Mathias Bur=C3=A9n wrote:
->> [...]
->>>
->>> I'm approaching over 6.5TB of data, and with an array this large I'=
-d
->>> like to migrate to RAID6 for a bit more safety. I'm just checking i=
-f I
->>> understand this correctly, this is how to do it:
->>>
->>> * Add a HDD to the array as a hot spare:
->>> mdadm --manage /dev/md0 --add /dev/sdh1
->>>
->>> * Migrate the array to RAID6:
->>> mdadm --grow /dev/md0 --raid-devices 7 --level 6
->>
->> You will need a --backup-file to do this, on another device. Since y=
-ou are
->> keeping the same number of data discs before and after the reshape, =
-the
->> backup file will be needed throughout the reshape, so the reshape wi=
-ll take
->> perhaps twice as long as a grow or shrink. If your backup-file is on=
- the
->> same disc(s) as md0 is (e.g. on another partition or array made up o=
-f other
->> partitions on the same disc(s)), it will take way longer (gazillions=
- of
->> seeks), so I'd recommend a separate drive or if you have one a small=
- SSD for
->> the backup file.
->>
->> Doing the above with --layout=3Dpreserve will save you doing the res=
-hape so
->> you won't need the backup file, but there will still be an initial s=
-ync of
->> the Q parity, and the layout will be RAID4-alike with all the Q pari=
-ty on
->> one drive so it's possible its performance will be RAID4-alike too i=
-=2Ee.
->> small writes never faster than the parity drive. Having said that, s=
-treamed
->> writes can still potentially go as fast as your 5 data discs, as per=
- your
->> RAID5. In practice, I'd be surprised if it was faster than about twi=
-ce the
->> speed of a single drive (the same as your current RAID5), and as Nei=
-l Brown
->> notes in his reply, RAID6 doesn't currently have the read-modify-wri=
-te
->> optimisation for small writes so small write performance is liable t=
-o be
->> even poorer than your RAID5 in either layout.
->>
->> You will never lose any redundancy in either of the above, but you w=
-on't
->> gain RAID6 double redundancy until the reshape (or Q-drive sync with
->> --layout=3Dpreserve) has completed - just the same as if you were re=
-placing a
->> dead drive in an existing RAID6.
->>
->> Hope the above helps!
->>
->> Cheers,
->>
->> John.
->>
->>
+On 22/04/11 04:32, John Valarti wrote:
+> On Thu, Apr 21, 2011 at 1:59 PM, David Brown<david.brown@hesbynett.no>  wrote:
+> .
+>> My first thought would be to get /all/ the disks, not just the "failed"
+>> ones, out of the machine.  You want to make full images of them (with
+>> ddrescue or something similar) to files on another disk, and then work with
+>> those images.  ..
+>> Once you've got some (hopefully most) of your data recovered from the
+>> images, buy four /new/ disks to put in the machine, and work on your
+>> restore.  You don't want to reuse the failing disks, and probably the other
+>> two equally old and worn disks will be high risk too.
 >
-> Hi,
->
-> Thanks for the replies. Allright, here we go;
->
-> =C2=A0$ mdadm --grow /dev/md0 --bitmap=3Dnone
-> =C2=A0$ mdadm --manage /dev/md0 --add /dev/sde1
-> =C2=A0$ mdadm --grow /dev/md0 --verbose --layout=3Dpreserve =C2=A0--r=
-aid-devices 7
-> --level 6 --backup-file=3D/root/md-raid5-to-raid6-backupfile.bin
-> mdadm: level of /dev/md0 changed to raid6
->
-> $ cat /proc/mdstat
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 F=
-ri Apr
-> 22 10:37:44 2011
->
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid6 sde1[7] sdg1[0] sdh1[6] sdf1[5] sdc1[3] sdd1[4] sd=
-b1[1]
-> =C2=A0 =C2=A0 =C2=A09751756800 blocks super 1.2 level 6, 64k chunk, a=
-lgorithm 18
-> [7/6] [UUUUUU_]
-> =C2=A0 =C2=A0 =C2=A0[>....................] =C2=A0reshape =3D =C2=A00=
-=2E0% (224768/1950351360)
-> finish=3D8358.5min speed=3D3888K/sec
->
-> unused devices: <none>
->
-> And in dmesg:
->
->
-> =C2=A0--- level:6 rd:7 wd:6
-> =C2=A0disk 0, o:1, dev:sdg1
-> =C2=A0disk 1, o:1, dev:sdb1
-> =C2=A0disk 2, o:1, dev:sdd1
-> =C2=A0disk 3, o:1, dev:sdc1
-> =C2=A0disk 4, o:1, dev:sdf1
-> =C2=A0disk 5, o:1, dev:sdh1
-> RAID conf printout:
-> =C2=A0--- level:6 rd:7 wd:6
-> =C2=A0disk 0, o:1, dev:sdg1
-> =C2=A0disk 1, o:1, dev:sdb1
-> =C2=A0disk 2, o:1, dev:sdd1
-> =C2=A0disk 3, o:1, dev:sdc1
-> =C2=A0disk 4, o:1, dev:sdf1
-> =C2=A0disk 5, o:1, dev:sdh1
-> =C2=A0disk 6, o:1, dev:sde1
-> md: reshape of RAID array md0
-> md: minimum _guaranteed_ =C2=A0speed: 1000 KB/sec/disk.
-> md: using maximum available idle IO bandwidth (but not more than
-> 200000 KB/sec) for reshape.
-> md: using 128k window, over a total of 1950351360 blocks.
->
-> IIRC there's a way to speed up the migration, by using a larger cache
-> value somewhere, no?
->
-> Thanks,
-> Mathias
+> OK, I think I understand.
+> Does that mean I need to buy 8 disks, all the same size or bigger?
+> The originals are 250GB SATA so that should be OK, I guess.
 >
 
-Increasing stripe cache on the md device from 1027 to 32k or 16k
-didn't make a difference, still around 3800KB/s reshape. Oh well,
-we'll see if it's still alive in 5.5 days!
+The way I would handle this is to get a couple of big disks (2 TB). 
+They can be external USB drives if that's the most convenient (I have a 
+nice hot-plug USB/eSATA enclosure that I find handy for messing about 
+with temporary disks).  Put an ext4 (or xfs if you like) system on these 
+disks.
 
-Cheers,
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note that none of this need be done on the original computer - use 
+whatever is convenient.  And if you already have lots of temporary disk 
+space, you don't need to buy new disks yet.
+
+Make images of your original disks - i.e., copy the whole 250 GB disk 
+into a file on your big disk, so that you have four 250 GB files 
+"originalA.image", "originalB.image", etc.  You can probably forget 
+about the oldest dead disk - if it's been dead since 2009 there is 
+little chance of it being useful.
+
+Those "original" files are your safety copies - keep them, so that you 
+can always get back to where you started without stressing the original 
+disks any more.
+
+Then copy those files to new files "diskA.image", etc.  Attach these to 
+loop devices ("losetup /dev/loop1 diskA.image", etc.).  Then use these 
+loop devices as devices for re-assembling your raid.  I'm not going to 
+make any suggestions for that part - Neil is the expert.
+
+The point is, if you mess up you can simple go back a couple of steps 
+and re-copy your "original" image files and try again.  You loose 
+nothing but a bit of time.
+
+Once you have a re-assembled raid that looks like it contains your data, 
+you can work on the restore process.
+
+Restore is done by buying 4 new disks for the original server, setting 
+them up as a new raid5, and copying the data over.  It can be very 
+convenient to use something like a system rescue cd during this 
+operation, so that you are not trying to run from the disks while doing 
+the restore.
+
+Once you are done, you will want to check for missing data or file 
+system corruption.
+
+
+mvh.,
+
+David
+
+
+> I read some more and found out I should run mdadm --examine.
+>
+> Should I not be able to just add the one disk partition sdc2 back to the RAID?
+>
+>
+
