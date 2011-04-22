@@ -1,45 +1,148 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: debian software raid1
-Date: Fri, 22 Apr 2011 07:59:39 +0200
-Message-ID: <20110422055939.GA14247@maude.comedia.it>
-References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown> <4DAE29EA.4040306@gmail.com> <4DAEF2F1.8080204@cdf.toronto.edu> <20110421061545.GA15220@maude.comedia.it> <4DB04434.4080505@cdf.toronto.edu>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: Growing 6 HDD RAID5 to 7 HDD RAID6
+Date: Fri, 22 Apr 2011 10:39:07 +0100
+Message-ID: <BANLkTinAUbMdh=FE8s9Qp6QJyfgp_pvCpA@mail.gmail.com>
+References: <BANLkTi=yZkM464MbvEgAjEWPGrR+eieXCg@mail.gmail.com>
+	<4DA58CB0.3020109@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DB04434.4080505@cdf.toronto.edu>
+In-Reply-To: <4DA58CB0.3020109@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Apr 21, 2011 at 10:50:28AM -0400, Iordan Iordanov wrote:
-> Hi Luca,
+On 13 April 2011 12:44, John Robinson <john.robinson@anonymous.org.uk> =
+wrote:
+> (Subject line amended by me :-)
 >
-> On 04/21/11 02:15, Luca Berra wrote:
->> If someone here still believes that drives from different vendors with
->> the same nominal size have different real size please read:
->> http://www.idema.org/wp-content/plugins/download-monitor/download.php?id=1192
+> On 12/04/2011 17:56, Mathias Bur=C3=A9n wrote:
+> [...]
+>>
+>> I'm approaching over 6.5TB of data, and with an array this large I'd
+>> like to migrate to RAID6 for a bit more safety. I'm just checking if=
+ I
+>> understand this correctly, this is how to do it:
+>>
+>> * Add a HDD to the array as a hot spare:
+>> mdadm --manage /dev/md0 --add /dev/sdh1
+>>
+>> * Migrate the array to RAID6:
+>> mdadm --grow /dev/md0 --raid-devices 7 --level 6
 >
-> I don't think my point is invalid. If you wanted to mix SSDs and spindle 
-> HDDs (for, say, write-mostly "backup" of the SSDs), quite likely your 
-> drives will be of different sizes, as the SSDs frequently come in sizes 
-> that are power of two's unlike the spindle drives. You could start of with 
-> just one type of drive, and only then come up with the idea of mixing 
-> types, etc. Probably not the best example, but one nonetheless.
-no, not the best example :D
+> You will need a --backup-file to do this, on another device. Since yo=
+u are
+> keeping the same number of data discs before and after the reshape, t=
+he
+> backup file will be needed throughout the reshape, so the reshape wil=
+l take
+> perhaps twice as long as a grow or shrink. If your backup-file is on =
+the
+> same disc(s) as md0 is (e.g. on another partition or array made up of=
+ other
+> partitions on the same disc(s)), it will take way longer (gazillions =
+of
+> seeks), so I'd recommend a separate drive or if you have one a small =
+SSD for
+> the backup file.
+>
+> Doing the above with --layout=3Dpreserve will save you doing the resh=
+ape so
+> you won't need the backup file, but there will still be an initial sy=
+nc of
+> the Q parity, and the layout will be RAID4-alike with all the Q parit=
+y on
+> one drive so it's possible its performance will be RAID4-alike too i.=
+e.
+> small writes never faster than the parity drive. Having said that, st=
+reamed
+> writes can still potentially go as fast as your 5 data discs, as per =
+your
+> RAID5. In practice, I'd be surprised if it was faster than about twic=
+e the
+> speed of a single drive (the same as your current RAID5), and as Neil=
+ Brown
+> notes in his reply, RAID6 doesn't currently have the read-modify-writ=
+e
+> optimisation for small writes so small write performance is liable to=
+ be
+> even poorer than your RAID5 in either layout.
+>
+> You will never lose any redundancy in either of the above, but you wo=
+n't
+> gain RAID6 double redundancy until the reshape (or Q-drive sync with
+> --layout=3Dpreserve) has completed - just the same as if you were rep=
+lacing a
+> dead drive in an existing RAID6.
+>
+> Hope the above helps!
+>
+> Cheers,
+>
+> John.
+>
+>
 
-> There are other benefits to using a partition instead of the whole device. 
-there are both benefits and disadvantages, both lists are long enough
-without adding non-issues.
+Hi,
 
-> For example, you could use a GPT label, which allows you to label 
-> individual partitions. In an earlier post, I sent out a gpt_id script and 
-> UDEV rules which insert /dev/disk/by-label/ links for you to GPT-labeled 
-> partitions. We use it at the CS department of U of Toronto to keep track of 
-> the physical location of disks (within iscsi target hosts).
-So, if i understood correctly, you use partitions on something which is
-not a real HDD, hope you got the data alignment part correct.
+Thanks for the replies. Allright, here we go;
 
-L.
--- 
-Luca Berra -- bluca@comedia.it
+ $ mdadm --grow /dev/md0 --bitmap=3Dnone
+ $ mdadm --manage /dev/md0 --add /dev/sde1
+ $ mdadm --grow /dev/md0 --verbose --layout=3Dpreserve  --raid-devices =
+7
+--level 6 --backup-file=3D/root/md-raid5-to-raid6-backupfile.bin
+mdadm: level of /dev/md0 changed to raid6
+
+$ cat /proc/mdstat
+
+                                                             Fri Apr
+22 10:37:44 2011
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sde1[7] sdg1[0] sdh1[6] sdf1[5] sdc1[3] sdd1[4] sdb1=
+[1]
+      9751756800 blocks super 1.2 level 6, 64k chunk, algorithm 18
+[7/6] [UUUUUU_]
+      [>....................]  reshape =3D  0.0% (224768/1950351360)
+finish=3D8358.5min speed=3D3888K/sec
+
+unused devices: <none>
+
+And in dmesg:
+
+
+ --- level:6 rd:7 wd:6
+ disk 0, o:1, dev:sdg1
+ disk 1, o:1, dev:sdb1
+ disk 2, o:1, dev:sdd1
+ disk 3, o:1, dev:sdc1
+ disk 4, o:1, dev:sdf1
+ disk 5, o:1, dev:sdh1
+RAID conf printout:
+ --- level:6 rd:7 wd:6
+ disk 0, o:1, dev:sdg1
+ disk 1, o:1, dev:sdb1
+ disk 2, o:1, dev:sdd1
+ disk 3, o:1, dev:sdc1
+ disk 4, o:1, dev:sdf1
+ disk 5, o:1, dev:sdh1
+ disk 6, o:1, dev:sde1
+md: reshape of RAID array md0
+md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+md: using maximum available idle IO bandwidth (but not more than
+200000 KB/sec) for reshape.
+md: using 128k window, over a total of 1950351360 blocks.
+
+IIRC there's a way to speed up the migration, by using a larger cache
+value somewhere, no?
+
+Thanks,
+Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
