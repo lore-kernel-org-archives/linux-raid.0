@@ -1,61 +1,57 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: change from raid 5 to raid 6 interrupted
-Date: Sat, 23 Apr 2011 08:06:13 +1000
-Message-ID: <20110423080613.14189094@notabene.brown>
-References: <BANLkTikntFUK5rX1oTynY849=o-GuDL2Yg@mail.gmail.com>
-	<BANLkTikBscshav-eDHHAGWh=6iuDMj=b0w@mail.gmail.com>
-	<4DB1991D.1090902@anonymous.org.uk>
-	<BANLkTi=4i67qxZ9ymD+VpuCszPzby57d8w@mail.gmail.com>
-	<4DB19D67.1040809@anonymous.org.uk>
+Subject: Re: debian software raid1
+Date: Sat, 23 Apr 2011 08:12:53 +1000
+Message-ID: <20110423081253.0a31b027@notabene.brown>
+References: <1303215166.2809.8.camel@valio>
+	<4DB1D543.3080400@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB19D67.1040809@anonymous.org.uk>
+In-Reply-To: <4DB1D543.3080400@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Raphael =?ISO-8859-1?B?TfxsbGVy?= <rapmue@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Iordan Iordanov <iordan@cdf.toronto.edu>
+Cc: b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 22 Apr 2011 16:23:19 +0100 John Robinson
-<john.robinson@anonymous.org.uk> wrote:
+On Fri, 22 Apr 2011 15:21:39 -0400 Iordan Iordanov <iordan@cdf.toronto.edu>
+wrote:
 
-> (Please always remember to cc the list when replying; cc readded)
->=20
-> On 22/04/2011 16:09, Raphael M=FCller wrote:
-> > Ok i forgot to say, that the backup file is also gone... (my mistak=
-e)
-> >
-> > is this backup file the only option i got?
->=20
-> Without the backup file you've almost certainly lost some data. I=20
-> suspect there is a way of restarting the array and reshape without th=
-e=20
-> backup file, but I don't know what it is - you'll have to wait for a=20
-> proper guru to get back to you with an answer.
->=20
+> Hello again,
+> 
+> On 04/19/11 08:12, b2 wrote:
+> > sorry for my lame question , just don't know how (if possible) to do it.
+> 
+> After the 3rd system I had to do this on in the last 3 days, I decided 
+> to write a guide myself :). I hope it helps!
+> 
+> http://iiordanov.blogspot.com/2011/04/how-to-convert-your-single-drive-linux.html
 
-With mdadm 3.2.1 there is a new flag "--invalid-backup".  It tells mdad=
-m that
-you know that the backup file is invalid, but you want it to continue a=
-nyway
-(and risk having some corrupted data).
 
-You still need to give a backup file, but it can be a newly created emp=
-ty
-file.
 
-So:
-  # install mdadm 3.2.1
-  > /root/my-backup
-  mdadm -A /dev/mdthing --backup-file=3D/root/my-backup  \
-  --invalid-backup /dev/device1 /dev/device2 ....
+> Create the array. I decided to make a RAID10 array instead of a RAID1 array, 
+> which gives me faster sequential reads, but amounts to the same thing in terms
+> of data replication. RAID10 with two drives and "n2"
 
-should get you going again.
+This is not correct.  RAID10-n2 on 2 drives is exactly the same layout and
+very nearly the same speed as RAID1 on 2 drives.  (I say 'very nearly' only
+because the read-balancing code is a little different and might have slightly
+different results).
+
+Or have you measured these two and found an actually difference?  That would
+certainly be interesting.
+
+RAID10-f2 will give faster sequential reads at the cost of slower writes.
 
 NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+> 
+> Cheers,
+> Iordan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
