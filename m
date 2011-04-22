@@ -1,36 +1,35 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: change from raid 5 to raid 6 interrupted
-Date: Fri, 22 Apr 2011 16:23:19 +0100
-Message-ID: <4DB19D67.1040809@anonymous.org.uk>
-References: <BANLkTikntFUK5rX1oTynY849=o-GuDL2Yg@mail.gmail.com>	<BANLkTikBscshav-eDHHAGWh=6iuDMj=b0w@mail.gmail.com>	<4DB1991D.1090902@anonymous.org.uk> <BANLkTi=4i67qxZ9ymD+VpuCszPzby57d8w@mail.gmail.com>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
+Subject: Re: debian software raid1
+Date: Fri, 22 Apr 2011 15:19:57 -0400
+Message-ID: <4DB1D4DD.7070901@cdf.toronto.edu>
+References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown> <4DAE29EA.4040306@gmail.com> <4DAEF2F1.8080204@cdf.toronto.edu> <20110421061545.GA15220@maude.comedia.it> <4DB04434.4080505@cdf.toronto.edu> <20110422055939.GA14247@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=4i67qxZ9ymD+VpuCszPzby57d8w@mail.gmail.com>
+In-Reply-To: <20110422055939.GA14247@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Raphael_M=FCller?= <rapmue@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(Please always remember to cc the list when replying; cc readded)
 
-On 22/04/2011 16:09, Raphael M=FCller wrote:
-> Ok i forgot to say, that the backup file is also gone... (my mistake)
->
-> is this backup file the only option i got?
+On 04/22/11 01:59, Luca Berra wrote:
+> no, not the best example :D
 
-Without the backup file you've almost certainly lost some data. I=20
-suspect there is a way of restarting the array and reshape without the=20
-backup file, but I don't know what it is - you'll have to wait for a=20
-proper guru to get back to you with an answer.
+I don't know why I'm even bothering to reply, given your all-knowing 
+tone, but here it is anyway. Today, I was converting a system from 
+single drive to mirrored with a 2nd 80GB drive. Here is proof that there 
+are drives that both claim to be 80GB, but happen to be of different 
+capacities:
+
+sd 0:0:0:0: [sda] 156301488 512-byte logical blocks: (80.0 GB/74.5 GiB)
+sd 2:0:0:0: [sdb] 156250000 512-byte logical blocks: (80.0 GB/74.5 GiB)
+
+ > So, if i understood correctly, you use partitions on something which 
+ > isnot a real HDD, hope you got the data alignment part correct.
+
+You have misunderstood, and yes we are using partitions on real drives, 
+and indeed yes, we've got the alignment part correct.
 
 Cheers,
-
-John.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Iordan
