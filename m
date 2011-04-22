@@ -1,41 +1,61 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: debian software raid1
-Date: Fri, 22 Apr 2011 21:28:28 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1104222126230.13186@uplift.swm.pp.se>
-References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown> <4DAE29EA.4040306@gmail.com> <4DAEF2F1.8080204@cdf.toronto.edu>
- <20110421061545.GA15220@maude.comedia.it> <4DB04434.4080505@cdf.toronto.edu> <20110422055939.GA14247@maude.comedia.it> <4DB1D4DD.7070901@cdf.toronto.edu>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: change from raid 5 to raid 6 interrupted
+Date: Sat, 23 Apr 2011 08:06:13 +1000
+Message-ID: <20110423080613.14189094@notabene.brown>
+References: <BANLkTikntFUK5rX1oTynY849=o-GuDL2Yg@mail.gmail.com>
+	<BANLkTikBscshav-eDHHAGWh=6iuDMj=b0w@mail.gmail.com>
+	<4DB1991D.1090902@anonymous.org.uk>
+	<BANLkTi=4i67qxZ9ymD+VpuCszPzby57d8w@mail.gmail.com>
+	<4DB19D67.1040809@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-475235756-1303500508=:13186"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB1D4DD.7070901@cdf.toronto.edu>
+In-Reply-To: <4DB19D67.1040809@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iordan Iordanov <iordan@cdf.toronto.edu>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Raphael =?ISO-8859-1?B?TfxsbGVy?= <rapmue@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, 22 Apr 2011 16:23:19 +0100 John Robinson
+<john.robinson@anonymous.org.uk> wrote:
 
----137064504-475235756-1303500508=:13186
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+> (Please always remember to cc the list when replying; cc readded)
+>=20
+> On 22/04/2011 16:09, Raphael M=FCller wrote:
+> > Ok i forgot to say, that the backup file is also gone... (my mistak=
+e)
+> >
+> > is this backup file the only option i got?
+>=20
+> Without the backup file you've almost certainly lost some data. I=20
+> suspect there is a way of restarting the array and reshape without th=
+e=20
+> backup file, but I don't know what it is - you'll have to wait for a=20
+> proper guru to get back to you with an answer.
+>=20
 
-On Fri, 22 Apr 2011, Iordan Iordanov wrote:
+With mdadm 3.2.1 there is a new flag "--invalid-backup".  It tells mdad=
+m that
+you know that the backup file is invalid, but you want it to continue a=
+nyway
+(and risk having some corrupted data).
 
-> I don't know why I'm even bothering to reply, given your all-knowing 
-> tone, but here it is anyway. Today, I was converting a system from 
-> single drive to mirrored with a 2nd 80GB drive. Here is proof that there 
-> are drives that both claim to be 80GB, but happen to be of different 
-> capacities:
+You still need to give a backup file, but it can be a newly created emp=
+ty
+file.
 
-"At that time, 3.5” 160GB have been shipping for a while so many
-system manufacturers have already defined their own LBA counts 
-requirement. Most system
-manufacturers began to adopt the LBA1-02 implementation at or after 3.5” 
-320GB density point."
+So:
+  # install mdadm 3.2.1
+  > /root/my-backup
+  mdadm -A /dev/mdthing --backup-file=3D/root/my-backup  \
+  --invalid-backup /dev/device1 /dev/device2 ....
 
-The document never claims to be about 80GB drives.
+should get you going again.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-475235756-1303500508=:13186--
+NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
