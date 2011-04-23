@@ -1,88 +1,87 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Mdadm, udev and fakeraid?
-Date: Sat, 23 Apr 2011 18:45:51 +1000
-Message-ID: <20110423184551.7bb437de@notabene.brown>
-References: <BANLkTinp3376PV3sJWARXtFnRfoMsg44wA@mail.gmail.com>
-	<20110405162008.5f2c48fe@notabene.brown>
-	<BANLkTik+xU6K7B9Xomj6+Q-S7_n18+aQqA@mail.gmail.com>
-	<20110418103852.2ead1a69@notabene.brown>
-	<BANLkTik6qpCx-Y=DXY6U6yu0habSohyiPw@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: debian software raid1
+Date: Sat, 23 Apr 2011 14:54:31 +0200
+Message-ID: <ioui67$khp$1@dough.gmane.org>
+References: <1303215166.2809.8.camel@valio>	<4DB1D543.3080400@cdf.toronto.edu> <20110423081253.0a31b027@notabene.brown> <4DB217B2.8090904@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTik6qpCx-Y=DXY6U6yu0habSohyiPw@mail.gmail.com>
+In-Reply-To: <4DB217B2.8090904@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@gmail.com>
-Cc: Seblu <seblu@seblu.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 22 Apr 2011 19:37:40 -0700 Dan Williams <dan.j.williams@gmail.c=
-om>
-wrote:
+On 23/04/11 02:05, Iordan Iordanov wrote:
+> Hi Neil,
+>
+> On 04/22/11 18:12, NeilBrown wrote:
+>> This is not correct. RAID10-n2 on 2 drives is exactly the same layout and
+>> very nearly the same speed as RAID1 on 2 drives. (I say 'very nearly'
+>> only
+>> because the read-balancing code is a little different and might have
+>> slightly
+>> different results).
+>>
+>> Or have you measured these two and found an actually difference? That
+>> would
+>> certainly be interesting.
+>
+> The difference that I see is probably 100% due to the different read
+> balancing algorithm. When I start two dd processes reading from two
+> separate partitions on the RAID (just so there are no buffers screwing
+> up my results), with RAID1, I see less than one drive worth of
+> sequential read speed for the two dd processes combined.
+>
+> On the other hand, with RAID10 I see the two drives being utilized
+> fully, and I get one drive worth of sequential read speeds for each dd
+> process, or a total of two drives worth of read speed for the two dd
+> processes.
+>
+> The numbers were something like this:
+>
+> - Single drive speed: ~130MB/s sequential read.
+> - Two simultaneous dd sequential reads with RAID1, bs=1024k: ~40MB/s per
+> dd.
+> - Two simultaneous dd sequential reads with RAID10, bs=1024k: ~130MB/s
+> per dd.
+>
+> That's what I meant by better sequential reads, but perhaps I should try
+> to phrase it more precisely.
+>
+>> RAID10-f2 will give faster sequential reads at the cost of slower writes.
+>
+> I am not sure what RAID10-f2 on a two disk setup will look like, but I
+> like the idea of the drives being identical, and in the worst case,
+> being able to pull one drive, zero the superblock, and be left with a
+> drive with intact data, which only RAID10-n2 can give, if I am not
+> mistaken.
+>
 
-> On Sun, Apr 17, 2011 at 5:38 PM, NeilBrown <neilb@suse.de> wrote:
+Look at this to see some pictures of raid10 layouts:
+<http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10>
 
-> > As has been mentioned elsewhere, mdadm only recognised IMSM arrays =
-on
-> > machines with IMSM hardware. =A0I'm not entirely happy about this a=
-nd may well
-> > change it.
->=20
-> I have trouble answering the "least surprise" question in this area.
->=20
-> Is it more surprising to go into your BIOS, explicitly turn off raid
-> support and still see raid devices showing up?
+Raid10,far will fair worse than raid10,near when degraded.  But it will 
+still work - your data is mirrored, and you can pull a drive without 
+losing anything.
 
-Is the "RAID support has been explicitly turned off" state visible from=
- a
-running kernel? or is it indistinguishable from "platform does not have=
- RAID
-support"?
+> Just to follow up on our discussion on Grub v2 and booting from a RAID
+> device. I discovered that if I allow Grub to use UUID, occasionally, it
+> would try to mount a raw device for root instead of the RAID device.
+> Apart from the nuisance, this would probably cause mismatch_cnt to be
+> non-zero!! (heh heh). At any rate, the guide reflects how I deal with
+> that - by turning off the use of UUIDs.
+>
+> Many thanks for taking a look at the guide and sharing your thoughts!
+> Please let me know if you still think I should change that part where I
+> say that RAID10 gives me faster sequential reads, and what you would say
+> instead.
+>
+> Iordan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
->=20
-> Or is it more surprising to take a raid array from a raid enabled
-> system to raid disabled system and wonder why things won't assemble?
->=20
-> For safety I think it is better if mdadm not perform operations that
-> might be incompatible with the platform option-rom.  But if you need
-> to recover to a usb attached drive, or some other
-> platform-incompatible configuration, you can use the environment
-> variable in a pinch.
 
-There are 3 interesting cases:  create, assemble, examine.
-(grow might be interesting too, but for now it would be confusing).
-
-I am perfectly happy for 'create' to be arbitrarily hard if platform su=
-pport
-is not available.  One is unlikely to want to create an array in that c=
-ase
-anyway.
-I think 'examine' should always show whatever it can, which is the case=
- for
-3.2.1.  Possibly it should also give a warning about  any difficulty th=
-at
-might be experienced in assembling the array.
-
-Assemble in the interesting case.  The law of least surprise requires i=
-t to
-either work or give a good error message.  Your suggestion that it poss=
-ibly
-should not work in some cases seems defensible, so at least a very clea=
-r
-error message would be good.
-As for how to over-ride the default caution - I would prefer --force to
-achieve it rather than requiring an environment variable.  I would poss=
-ibly
-accept --force-platform (or similar) but I think --force should be suff=
-icient.
-
-What think you?
-
-Thanks,
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
