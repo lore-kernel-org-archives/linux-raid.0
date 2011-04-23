@@ -1,67 +1,26 @@
 From: Iordan Iordanov <iordan@cdf.toronto.edu>
 Subject: Re: debian software raid1
-Date: Fri, 22 Apr 2011 20:05:06 -0400
-Message-ID: <4DB217B2.8090904@cdf.toronto.edu>
-References: <1303215166.2809.8.camel@valio>	<4DB1D543.3080400@cdf.toronto.edu> <20110423081253.0a31b027@notabene.brown>
+Date: Fri, 22 Apr 2011 20:07:18 -0400
+Message-ID: <4DB21836.7060607@cdf.toronto.edu>
+References: <1303215166.2809.8.camel@valio> <BANLkTik7iVaUH2bn9spW2gtV-TkjLH2Qag@mail.gmail.com> <4DADB24F.2030300@cdf.toronto.edu> <20110420085148.12ac0002@notabene.brown> <4DAE29EA.4040306@gmail.com> <4DAEF2F1.8080204@cdf.toronto.edu> <20110421061545.GA15220@maude.comedia.it> <4DB04434.4080505@cdf.toronto.edu> <20110422055939.GA14247@maude.comedia.it> <4DB1D4DD.7070901@cdf.toronto.edu> <alpine.DEB.2.00.1104222126230.13186@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110423081253.0a31b027@notabene.brown>
+In-Reply-To: <alpine.DEB.2.00.1104222126230.13186@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: b2 <b2@playtime.bg>, linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi Mikael,
 
-On 04/22/11 18:12, NeilBrown wrote:
-> This is not correct.  RAID10-n2 on 2 drives is exactly the same layout and
-> very nearly the same speed as RAID1 on 2 drives.  (I say 'very nearly' only
-> because the read-balancing code is a little different and might have slightly
-> different results).
->
-> Or have you measured these two and found an actually difference?  That would
-> certainly be interesting.
+On 04/22/11 15:28, Mikael Abrahamsson wrote:
+> The document never claims to be about 80GB drives.
 
-The difference that I see is probably 100% due to the different read 
-balancing algorithm. When I start two dd processes reading from two 
-separate partitions on the RAID (just so there are no buffers screwing 
-up my results), with RAID1, I see less than one drive worth of 
-sequential read speed for the two dd processes combined.
+But the document was proffered as proof that drives from different 
+manufacturers have the same capacity, whereas I find this to not be the 
+case for smaller drives. I never claimed the document is for 80GB drives.
 
-On the other hand, with RAID10 I see the two drives being utilized 
-fully, and I get one drive worth of sequential read speeds for each dd 
-process, or a total of two drives worth of read speed for the two dd 
-processes.
-
-The numbers were something like this:
-
-- Single drive speed: ~130MB/s sequential read.
-- Two simultaneous dd sequential reads with RAID1, bs=1024k: ~40MB/s per dd.
-- Two simultaneous dd sequential reads with RAID10, bs=1024k: ~130MB/s 
-per dd.
-
-That's what I meant by better sequential reads, but perhaps I should try 
-to phrase it more precisely.
-
-> RAID10-f2 will give faster sequential reads at the cost of slower writes.
-
-I am not sure what RAID10-f2 on a two disk setup will look like, but I 
-like the idea of the drives being identical, and in the worst case, 
-being able to pull one drive, zero the superblock, and be left with a 
-drive with intact data, which only RAID10-n2 can give, if I am not mistaken.
-
-Just to follow up on our discussion on Grub v2 and booting from a RAID 
-device. I discovered that if I allow Grub to use UUID, occasionally, it 
-would try to mount a raw device for root instead of the RAID device. 
-Apart from the nuisance, this would probably cause mismatch_cnt to be 
-non-zero!! (heh heh). At any rate, the guide reflects how I deal with 
-that - by turning off the use of UUIDs.
-
-Many thanks for taking a look at the guide and sharing your thoughts! 
-Please let me know if you still think I should change that part where I 
-say that RAID10 gives me faster sequential reads, and what you would say 
-instead.
-
+Cheers,
 Iordan
