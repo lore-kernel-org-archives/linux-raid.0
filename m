@@ -1,78 +1,78 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Direct disk access on IBM Server
-Date: Sat, 23 Apr 2011 16:42:27 +0200
-Message-ID: <iouogj$h43$1@dough.gmane.org>
-References: <iok28i$tp6$1@dough.gmane.org> <4DADEBC3.9060404@hardwarefreak.com> <iomfkq$qqr$1@dough.gmane.org> <4DAEC627.3030904@grumpydevil.homelinux.org> <iomj0a$e5m$1@dough.gmane.org> <4DAFCDB0.9070609@hardwarefreak.com> <iop4s2$cjp$1@dough.gmane.org> <BANLkTi=CLD=Cd0Ngj1hXqQtz3Cb6ir4yRg@mail.gmail.com>
+From: =?ISO-8859-1?Q?Raphael_M=FCller?= <rapmue@gmail.com>
+Subject: Re: change from raid 5 to raid 6 interrupted
+Date: Sat, 23 Apr 2011 17:23:55 +0200
+Message-ID: <BANLkTi=vYT+3FQoxWjZ2VG9xgFTLXKiC0Q@mail.gmail.com>
+References: <BANLkTikntFUK5rX1oTynY849=o-GuDL2Yg@mail.gmail.com>
+	<BANLkTikBscshav-eDHHAGWh=6iuDMj=b0w@mail.gmail.com>
+	<4DB1991D.1090902@anonymous.org.uk>
+	<BANLkTi=4i67qxZ9ymD+VpuCszPzby57d8w@mail.gmail.com>
+	<4DB19D67.1040809@anonymous.org.uk>
+	<20110423080613.14189094@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=CLD=Cd0Ngj1hXqQtz3Cb6ir4yRg@mail.gmail.com>
+In-Reply-To: <20110423080613.14189094@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 23/04/11 16:05, Majed B. wrote:
-> Hello,
+Ok thank you =3DD now it works again. but at very slow speed (~4000kb/s=
+)
+normally this array brings nearly 70Mb/s.
+
+I tried different performance related stuff, like stripe_cache_size,
+readaheadbuffer but nothing could bring better performance.
+
+And i noticed that the newly added drive now is listed as spare
+rebuilding. is this normal?
+
+thanks
+
+Raphael
+
+2011/4/23 NeilBrown <neilb@suse.de>:
+> On Fri, 22 Apr 2011 16:23:19 +0100 John Robinson
+> <john.robinson@anonymous.org.uk> wrote:
 >
-> I've setup a bunch of software RAID boxes and I've had my main one
-> running at a friend's place with about 16 disks and 9TB of data.
+>> (Please always remember to cc the list when replying; cc readded)
+>>
+>> On 22/04/2011 16:09, Raphael M=FCller wrote:
+>> > Ok i forgot to say, that the backup file is also gone... (my mista=
+ke)
+>> >
+>> > is this backup file the only option i got?
+>>
+>> Without the backup file you've almost certainly lost some data. I
+>> suspect there is a way of restarting the array and reshape without t=
+he
+>> backup file, but I don't know what it is - you'll have to wait for a
+>> proper guru to get back to you with an answer.
+>>
 >
-> One time 2 disks had bad sectors and things took a bad turn. It was a
-> RAID5 array, so I had to salvage everything I could rather than losing
-> everything we had there (no backups). It took me about 3 weeks of
-> working daily for about 6 hours a day in cloning disks, recovering
-> files and validating checksums. It was not fun at all.
+> With mdadm 3.2.1 there is a new flag "--invalid-backup". =A0It tells =
+mdadm that
+> you know that the backup file is invalid, but you want it to continue=
+ anyway
+> (and risk having some corrupted data).
 >
-
-There's good reason for recommending raid6 for such large arrays!
-
-I really hope Neil (or someone else) gets the chance to implement the 
-features in the md roadmap - once md supports bad block lists, bad 
-blocks on a disk will no longer mean the whole disk is removed.  So in 
-situations like yours, unless you have bad sectors at the same place on 
-two drives, all your data will be intact - and the huge majority will 
-still be redundant, giving you time to do a simple disk replacement.
-
-> If you have critical data, I'd suggest you add a battery and an
-> sd-card/flash card to your hardware RAID array. At least if the power
-> goes off, whatever is in the cache will be written to the card and
-> later on to the disks when power is restored.
+> You still need to give a backup file, but it can be a newly created e=
+mpty
+> file.
 >
-> A UPS will not help you if your power supply decides to commit seppuku.
+> So:
+> =A0# install mdadm 3.2.1
+> =A0> /root/my-backup
+> =A0mdadm -A /dev/mdthing --backup-file=3D/root/my-backup =A0\
+> =A0--invalid-backup /dev/device1 /dev/device2 ....
 >
-
-That's true, of course.  But protecting data is always a matter of 
-minimising the risks and consequences of the more likely failures.  My 
-power supply /could/ fail, but I don't see it as a likely case.  With a 
-good UPS and some redundancy in the disks, by far the most likely cause 
-of failure is human error (someone deleting the wrong file, for 
-instance).  Still, I will be checking the price of a backup battery for 
-the server.
-
-> If you keep daily backups, or any form of backups, go ahead with
-> software RAID and keep yourself free from vendor lock.
+> should get you going again.
 >
-
-I do have daily backups - raid doesn't prevent /all/ data loss!
-
-mvh.,
-
-David
-
-
-> Regards,
+> NeilBrown
 >
-> On Thu, Apr 21, 2011 at 2:36 PM, David Brown<david.brown@hesbynett.no>  wrote:
->> On 21/04/11 08:24, Stan Hoeppner wrote:
->>>
->>> David Brown put forth on 4/20/2011 7:21 AM:
->>>
->>>> It's true that boot loaders and software raid can be an awkward
->>>> combination.
->>>
->>> ...
->>>>
->>>> Yes, it's a few extra steps.
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
