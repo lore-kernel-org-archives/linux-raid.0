@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: Server =?UTF-8?B?ZG93bi1mYWls4oCLZWQ=?= RAID5-asking for some
  assistance
-Date: Sun, 24 Apr 2011 12:54:01 +1000
-Message-ID: <20110424125401.3de3720d@notabene.brown>
+Date: Sun, 24 Apr 2011 12:58:48 +1000
+Message-ID: <20110424125848.6730999e@notabene.brown>
 References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<ioq2b8$3rl$1@dough.gmane.org>
 	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
@@ -15,173 +15,229 @@ References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>
 	<20110424075101.6763309f@notabene.brown>
 	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
+	<4DB370E1.5030602@anonymous.org.uk>
+	<BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
+	<4DB38726.2090805@anonymous.org.uk>
+	<BANLkTi=X8hzx6TNkfJnoantkzOz5Dv4dGQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
+In-Reply-To: <BANLkTi=X8hzx6TNkfJnoantkzOz5Dv4dGQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: John Valarti <mdadmuser@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 23 Apr 2011 18:07:37 -0600 John Valarti <mdadmuser@gmail.com> w=
-rote:
+On Sat, 23 Apr 2011 20:28:34 -0600 John Valarti <mdadmuser@gmail.com> wrote:
 
-> On Sat, Apr 23, 2011 at 3:51 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Sat, 23 Apr 2011 10:19:31 -0600 John Valarti <mdadmuser@gmail.co=
-m> wrote:
-> >
-> >> On Sat, Apr 23, 2011 at 2:48 AM, NeilBrown <neilb@suse.de> wrote:
-> >> >> No luck
-> >> >> Same thing:
-> >> >> "no devices found.."
-> >> >
-> >> > I'm sure it said more than just that. =A0Complete error messages=
- really are
-> >> > helpful..
-> >> >
-> >> > But the implication seems to be that /dev/sd[acd] don't exist...=
- That is
-> >> > weird.
-> >> > What does "cat /proc/partitions" show?
-> >> > If e.g. =A0sda is there but sda2 is not, does "blockdev --reread=
-pt /dev/sda"
-> >> > help?
-> >> >
-> >> > NeilBrown
-> >>
-> >> They exist.
-> >> I have physically removed the dead drive, so now the 3 remaining o=
-nes
-> >> are at sd[abc]
-> >> I have a usb thumb drive plugged in to capture outputs as needed, =
-it is sdd.
-> >> blockdev does not seem to exist on this system.
-> >>
-> >> If useful I now have some more of the same 250GB drives, and I can
-> >> plug one in to the sdb port and make partitions on it, and so on..
-> >>
-> >> For example fdisk -l shows all my partitions. I also show the outp=
-ut
-> >> you asked for proc/partitions:
-> >>
-> >> Disk /dev/sda: 251.0 GB, 251000193024 bytes
-> >> 255 heads, 63 sectors/track, 30515 cylinders
-> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-> >>
-> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
-Blocks =A0 Id =A0System
-> >> /dev/sda1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
- =A0136521 =A0 fd =A0Linux raid autodetect
-> >> /dev/sda2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
-75185 =A0 fd =A0Linux raid autodetect
-> >>
-> >> Disk /dev/sdb: 251.0 GB, 251000193024 bytes
-> >> 255 heads, 63 sectors/track, 30515 cylinders
-> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-> >>
-> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
-Blocks =A0 Id =A0System
-> >> /dev/sdb1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
- =A0136521 =A0 fd =A0Linux raid autodetect
-> >> /dev/sdb2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
-75185 =A0 fd =A0Linux raid autodetect
-> >>
-> >> Disk /dev/sdc: 251.0 GB, 251000193024 bytes
-> >> 255 heads, 63 sectors/track, 30515 cylinders
-> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-> >>
-> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
-Blocks =A0 Id =A0System
-> >> /dev/sdc1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
- =A0136521 =A0 fd =A0Linux raid autodetect
-> >> /dev/sdc2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
-75185 =A0 fd =A0Linux raid autodetect
-> >>
-> >> Disk /dev/sdd: 1039 MB, 1039663104 bytes
-> >> 255 heads, 63 sectors/track, 126 cylinders
-> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-> >>
-> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
-Blocks =A0 Id =A0System
-> >> /dev/sdd1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 127 =A0 =A0 =
-1015264+ =A0 c =A0W95 FAT32 (LBA)
-> >> Partition 1 has different physical/logical endings:
-> >> =A0 =A0 =A0phys=3D(125, 254, 63) logical=3D(126, 101, 39)
-> >> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >> major minor =A0#blocks =A0name
-> >>
-> >> =A0 =A07 =A0 =A0 0 =A0 =A0 111000 loop0
-> >> =A0 =A08 =A0 =A0 0 =A0245117376 sda
-> >> =A0 =A08 =A0 =A0 1 =A0 =A0 136521 sda1
-> >> =A0 =A08 =A0 =A0 2 =A0244975185 sda2
-> >> =A0 =A08 =A0 =A016 =A0245117376 sdb
-> >> =A0 =A08 =A0 =A017 =A0 =A0 136521 sdb1
-> >> =A0 =A08 =A0 =A018 =A0244975185 sdb2
-> >> =A0 =A08 =A0 =A032 =A0245117376 sdc
-> >> =A0 =A08 =A0 =A033 =A0 =A0 136521 sdc1
-> >> =A0 =A08 =A0 =A034 =A0244975185 sdc2
-> >> =A0 =A08 =A0 =A048 =A0 =A01015296 sdd
-> >> =A0 =A08 =A0 =A049 =A0 =A01015264 sdd1
-> >>
-> >> --
-> >> John
-> >
-> >
-> > I really cannot help you until you show me the output of "mdadm --a=
-ssemble
-> > --verbose ..." like I asked.
-> >
-> > NeilBrown
-> >
->=20
-> I really WAS NOT lying!
+> On Sat, Apr 23, 2011 at 8:12 PM, John Robinson
+> <john.robinson@anonymous.org.uk> wrote:
+> ..
+> > That was the letter v twice, not the letter w - and I didn't mean you to
+> > specify any devices, just `mdadm -Esvv` on its own.
+> 
+> Oops! sorry.
+> Here you go (sdd is my USB thumb drive):
+> 
+> mdadm: No md superblock detected on /dev/sdd1.
+> mdadm: No md superblock detected on /dev/sdd.
+> mdadm: No md superblock detected on /dev/sdc.
+> mdadm: No md superblock detected on /dev/sdb.
+> /dev/sdc2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : ddf4d448:36afa319:f0917855:03f8bbe8
+>   Creation Time : Mon May 15 16:38:05 2006
+>      Raid Level : raid5
+>   Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
+>      Array Size : 734925312 (700.88 GiB 752.56 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 1
+> 
+>     Update Time : Mon Apr 18 07:48:54 2011
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 5674ce4e - correct
+>          Events : 28580020
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        2        0      active sync   /dev/sda2
+> 
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
+>   Creation Time : Mon May 15 16:38:08 2006
+>      Raid Level : raid1
+>   Used Dev Size : 136448 (133.27 MiB 139.72 MB)
+>      Array Size : 136448 (133.27 MiB 139.72 MB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Apr 18 07:36:56 2011
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 6b5ae9fa - correct
+>          Events : 4878
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        1        0      active sync   /dev/sda1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+> /dev/sdb2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : ddf4d448:36afa319:f0917855:03f8bbe8
+>   Creation Time : Mon May 15 16:38:05 2006
+>      Raid Level : raid5
+>   Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
+>      Array Size : 734925312 (700.88 GiB 752.56 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 1
+> 
+>     Update Time : Mon Apr 18 07:48:51 2011
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 5674ce6b - correct
+>          Events : 28580018
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       34        2      active sync   /dev/sdc2
+> 
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sdb1:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
+>   Creation Time : Mon May 15 16:38:08 2006
+>      Raid Level : raid1
+>   Used Dev Size : 136448 (133.27 MiB 139.72 MB)
+>      Array Size : 136448 (133.27 MiB 139.72 MB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Apr 18 07:36:56 2011
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 6b5aea1e - correct
+>          Events : 4878
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       33        2      active sync   /dev/sdc1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+> /dev/sda2:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : ddf4d448:36afa319:f0917855:03f8bbe8
+>   Creation Time : Mon May 15 16:38:05 2006
+>      Raid Level : raid5
+>   Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
+>      Array Size : 73492531mdadm: No md superblock detected on /dev/sda.
+> mdadm: No md superblock detected on /dev/loop0.
+> 2 (700.88 GiB 752.56 GB)
+>    Raid Devices : 4
+>   Total Devices : 3
+> Preferred Minor : 1
+> 
+>     Update Time : Mon Apr 18 07:48:54 2011
+>           State : clean
+>  Active Devices : 3
+> Working Devices : 3
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : 5674ce60 - correct
+>          Events : 28580020
+> 
+>          Layout : left-symmetric
+>      Chunk Size : 256K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       18        1      active sync   /dev/sdb2
+> 
+>    0     0       8        2        0      active sync   /dev/sda2
+>    1     1       8       18        1      active sync   /dev/sdb2
+>    2     2       8       34        2      active sync   /dev/sdc2
+>    3     3       0        0        3      faulty removed
+> /dev/sda1:
+>           Magic : a92b4efc
+>         Version : 0.90.00
+>            UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
+>   Creation Time : Mon May 15 16:38:08 2006
+>      Raid Level : raid1
+>   Used Dev Size : 136448 (133.27 MiB 139.72 MB)
+>      Array Size : 136448 (133.27 MiB 139.72 MB)
+>    Raid Devices : 4
+>   Total Devices : 4
+> Preferred Minor : 0
+> 
+>     Update Time : Mon Apr 18 07:36:56 2011
+>           State : clean
+>  Active Devices : 4
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 6b5aea0c - correct
+>          Events : 4878
+> 
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       17        1      active sync   /dev/sdb1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+> 
+> 
+> >>> Please also try `mdadm --assemble --scan --verbose` and post the result.
+> mdadm: No arrays found in config file
+> 
 
-I never thought you were lying.  But you were summarising.  And when pe=
-ople
-summarise instead of giving exact messages I cannot be sure exactly wha=
-t was
-excluded.  I could guess - but the chances are that I would be wrong.
+I should have also asked for "mdadm --version".
 
->=20
-> I just did it again, and redirected output to a file
->=20
-> The file ( located on my USB stick) contains:
->=20
-> mdadm: looking for devices for /dev/md1
-> mdadm: no devices found for /dev/md1
-
-Thank you.  This is helpful.
-It implies that there mdadm didn't actually try including any devices i=
-n the
-array, which is very odd because you listed some devices on the command=
- line
-for it to try.
-So I'm a bit confused.
-
-Could you please run this set of commands exactly as given and send me =
-the
-complete output.  Maybe put them in a file and run
-  sh -x file > /path/on/usb 2>&1
+However given that above, you want to:
 
 
-cat /proc/mdstat
-mdadm --stop --verbose /dev/md1
-ls -l /dev/sd[acd]2
-mdadm -E /dev/sd[acd]2
-mdadm -Afvv /dev/md1 /dev/sd[acd]2
-cat /proc/mdstat
-dmesg | tail -100
+   mdadm --assemble --verbose --force /dev/md1 /dev/sda2 /dev/sdb2 /dev/sdc2
 
-
-Thanks,
 NeilBrown
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
