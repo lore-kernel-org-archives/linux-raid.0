@@ -1,236 +1,70 @@
-From: John Valarti <mdadmuser@gmail.com>
-Subject: =?UTF-8?Q?Re=3A_Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assi?=
-	=?UTF-8?Q?stance?=
-Date: Sat, 23 Apr 2011 20:28:34 -0600
-Message-ID: <BANLkTi=X8hzx6TNkfJnoantkzOz5Dv4dGQ@mail.gmail.com>
-References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
-	<ioq2b8$3rl$1@dough.gmane.org>
-	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
-	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
-	<20110422125734.1a68a736@notabene.brown>
-	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>
-	<20110423074411.78fef94f@notabene.brown>
-	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>
-	<20110423184824.55ee7893@notabene.brown>
-	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>
-	<20110424075101.6763309f@notabene.brown>
-	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
-	<4DB370E1.5030602@anonymous.org.uk>
-	<BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
-	<4DB38726.2090805@anonymous.org.uk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: http://raid.wiki.kernel.org/ unreachable - need to "lend" clone
+ of RAID1 HD to another machine
+Date: Sun, 24 Apr 2011 03:33:44 +0100
+Message-ID: <4DB38C08.8020406@anonymous.org.uk>
+References: <4DB38214.4080003@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB38726.2090805@anonymous.org.uk>
+In-Reply-To: <4DB38214.4080003@earthlink.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Vernon Tonnesen <jdcpa@earthlink.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 23, 2011 at 8:12 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-..
-> That was the letter v twice, not the letter w - and I didn't mean you to
-> specify any devices, just `mdadm -Esvv` on its own.
+On 24/04/2011 02:51, Vernon Tonnesen wrote:
+> I've been trying to get through without success for over an hour. Is the
+> content there mirrored somewhere?
 
-Oops! sorry.
-Here you go (sdd is my USB thumb drive):
+Google has it cached.
 
-mdadm: No md superblock detected on /dev/sdd1.
-mdadm: No md superblock detected on /dev/sdd.
-mdadm: No md superblock detected on /dev/sdc.
-mdadm: No md superblock detected on /dev/sdb.
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddf4d448:36afa319:f0917855:03f8bbe8
-  Creation Time : Mon May 15 16:38:05 2006
-     Raid Level : raid5
-  Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
-     Array Size : 734925312 (700.88 GiB 752.56 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 1
+> Is there an alternate, preferably in
+> FAQ format?
 
-    Update Time : Mon Apr 18 07:48:54 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 5674ce4e - correct
-         Events : 28580020
+There are dozens but I couldn't make any particular recommendation.
 
-         Layout : left-symmetric
-     Chunk Size : 256K
+> I have a pair of HDs partitioned with 14 identical partitions each, 7 of
+> which on each make up 1 of 2 partitions making up 7 md devices. The
+> seven md devices were originally configured through openSUSE
+> installation's YaST2. I made a clone of the whole of one HD. This clone
+> I want to attach to another machine simply to copy the files from one
+> partition's EXT3 filesystem that is a component of md7 on the original
+> machine.
+>
+> Can I just mount that partition on the other machine RO as an ordinary
+> EXT3 partition to make the copies, or does that machine need to have a
+> RAID "built" or "rebuilt" with mdadm in order to mount that disks
+> partition as a degraded array? Nothing shows up in /dev/mdstat booting
+> with it plugged in, even after copying /etc/mdadm.conf from the original
+> machine. I tried modprobe raid1, but that didn't seem to affect anything
+> I can tell. Fdisk -l /dev/sdb shows me only what I expect, a bunch of
+> 0x83 and 0xfd partitions, while fdisk -l produces none of the extra
+> output I'm used to seeing on the system with the full RAID1 running.
+>
+> Problem 2: Looking at the mdadm man page, I really don't understand the
+> distinction between build and create, or what a persistent superblock is
+> good for.
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        2        0      active sync   /dev/sda2
+A persistent superblock stores important information about the array 
+like its level, chunk size, bitmap, etc, and you use create to do this. 
+Build sets up md devices one time only.
 
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       0        0        3      faulty removed
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
-  Creation Time : Mon May 15 16:38:08 2006
-     Raid Level : raid1
-  Used Dev Size : 136448 (133.27 MiB 139.72 MB)
-     Array Size : 136448 (133.27 MiB 139.72 MB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+Use `mdadm -Evvs` to find your array members. If that finds nothing, the 
+arrays were built and not created, but I think that's unlikely with your 
+type FD partitions. If that finds metadata version 0.90 or 1.0 RAID1 
+partitions, yes you can mount them read-only directly from the 
+partitions without doing anything else - `file -s /dev/sdXp` should tell 
+you what the filesystem type is. If it's metadata 1.1 or 1.2, you can 
+start them in degraded mode with `mdadm -Avs --run` and then you should 
+find your filesystems on /dev/mdX (again, you can check). Again, mount 
+them read-only if you might want to put the disc back in the original 
+machine.
 
-    Update Time : Mon Apr 18 07:36:56 2011
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 6b5ae9fa - correct
-         Events : 4878
+As I said in another post, I'm off to bed now, but good luck!
 
+Cheers,
 
-      Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
+John.
 
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddf4d448:36afa319:f0917855:03f8bbe8
-  Creation Time : Mon May 15 16:38:05 2006
-     Raid Level : raid5
-  Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
-     Array Size : 734925312 (700.88 GiB 752.56 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Mon Apr 18 07:48:51 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 5674ce6b - correct
-         Events : 28580018
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       34        2      active sync   /dev/sdc2
-
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       0        0        3      faulty removed
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
-  Creation Time : Mon May 15 16:38:08 2006
-     Raid Level : raid1
-  Used Dev Size : 136448 (133.27 MiB 139.72 MB)
-     Array Size : 136448 (133.27 MiB 139.72 MB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Mon Apr 18 07:36:56 2011
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 6b5aea1e - correct
-         Events : 4878
-
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       33        2      active sync   /dev/sdc1
-
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddf4d448:36afa319:f0917855:03f8bbe8
-  Creation Time : Mon May 15 16:38:05 2006
-     Raid Level : raid5
-  Used Dev Size : 244975104 (233.63 GiB 250.85 GB)
-     Array Size : 73492531mdadm: No md superblock detected on /dev/sda.
-mdadm: No md superblock detected on /dev/loop0.
-2 (700.88 GiB 752.56 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Mon Apr 18 07:48:54 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 5674ce60 - correct
-         Events : 28580020
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       18        1      active sync   /dev/sdb2
-
-   0     0       8        2        0      active sync   /dev/sda2
-   1     1       8       18        1      active sync   /dev/sdb2
-   2     2       8       34        2      active sync   /dev/sdc2
-   3     3       0        0        3      faulty removed
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 79435baa:74a2b2c3:68d7e34f:d95ad478
-  Creation Time : Mon May 15 16:38:08 2006
-     Raid Level : raid1
-  Used Dev Size : 136448 (133.27 MiB 139.72 MB)
-     Array Size : 136448 (133.27 MiB 139.72 MB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Mon Apr 18 07:36:56 2011
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 6b5aea0c - correct
-         Events : 4878
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       17        1      active sync   /dev/sdb1
-
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-
-
->>> Please also try `mdadm --assemble --scan --verbose` and post the result.
-mdadm: No arrays found in config file
-
-
-Happy Easter bunny day to you..
-
-Thanks John.
-
---
-John V
