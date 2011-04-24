@@ -1,55 +1,45 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Server =?UTF-8?B?ZG93bi1mYWls4oCLZWQgUkFJRDUtYXNraW5nIGZvciBz?=
- =?UTF-8?B?b21lIGFzc2lzdGFuY2U=?=
-Date: Sun, 24 Apr 2011 03:12:54 +0100
-Message-ID: <4DB38726.2090805@anonymous.org.uk>
-References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>	<ioq2b8$3rl$1@dough.gmane.org>	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>	<20110422125734.1a68a736@notabene.brown>	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>	<20110423074411.78fef94f@notabene.brown>	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>	<20110423184824.55ee7893@notabene.brown>	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>	<20110424075101.6763309f@notabene.brown>	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>	<4DB370E1.5030602@anonymous.org.uk> <BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
+From: Vernon Tonnesen <jdcpa@earthlink.net>
+Subject: http://raid.wiki.kernel.org/ unreachable - need to mount HD clone
+ of a RAID1 HD in other system to copy some files
+Date: Sat, 23 Apr 2011 22:27:50 -0400
+Message-ID: <4DB38AA6.4070802@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Valarti <mdadmuser@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/04/2011 02:49, John Valarti wrote:
-[...]
-> This is looking gloomy now.
+http://raid.wiki.kernel.org/ has been "loading" in my browser for around 2 
+hours. Reloading doesn't help. Does it have some kind of mirror elsewhere, 
+preferably in FAQ form.
 
-No it isn't!
+I installed openSUSE to a pair of HDs identically pre-partitioned to 14 each, 
+7 of which on each were paired to make 7 md devices 0-6 by YaST2 during 
+installation.
 
-> There definitely is NO mdadm.conf
-> I checked.
-> I used "find"
+I made a whole disk clone of one of those 2 HDs while booted to a Knoppix CD. 
+I want to use the clone temporarily in another system just to copy off some 
+files.
 
-OK, that's fine - I didn't really expect there to be, unless you were 
-using an emergency shell half-way through booting, in which case if 
-there was one it might have been wrong since you've had to remove drives.
+I can't make heads or tails out of where to start. Fdisk -l /dev/sdb with the 
+clone attached to the extra system produces the expected output of 14 0x83 & 
+0xFD partitions, while simply fdisk -l fails to produce the usual extra 
+output on the original machine running the full RAID1 assortment.
 
-[...]
-> mdadm -Esvv /dev/sd[abc]2:
->    mdadm: --examine/-E cannot be given with -w
+Can the partition containing the files I want be mounted RO as an ordinary 
+EXT3 partition to make the copies? If not, where do I start? /proc/mdstat has 
+no devices listed, even after rebooting with a copy of /etc/mdadm.conf from 
+the original system. modprobe raid1 didn't accomplish anything that I can 
+tell beyond being loaded in RAM. mdadm monitor doesn't really give useful 
+clues. The man page doesn't say enough about mdadm build or create to 
+understand the distinction and whether or which I might need, nor the 
+significance of persistent superblocks that may or may not be needed.
 
-That was the letter v twice, not the letter w - and I didn't mean you to 
-specify any devices, just `mdadm -Esvv` on its own.
-
->> Please also try `mdadm --assemble --scan --verbose` and post the result.
-> HERE:
-> mdadm: /dev/sda2 not identified in config file.
-> mdadm: /dev/sdb2 not identified in config file.
-> mdadm: /dev/sdc2 not identified in config file.
-
-Again, I didn't mean you to specify any devices, just exactly `mdadm 
---assemble --scan --verbose` on its own.
-
-I'm not quite sure where you are but your timezone is -0600 while mine 
-is +0100, it's gone 3 in the morning, so I'm going to bed now. Neil 
-Brown is +1000 so it's Easter Sunday for him, which makes me think it's 
-unlikely you'll see a reply from him today/tomorrow. Just stay calm and 
-don't panic, we'll get there.
-
-Cheers,
-
-John.
+Please help!
+-- 
+The husband should fulfill his marital duty to
+his wife, and likewise the wife to her husband.
+			1 Corinthians 7:3 NIV
+VT
