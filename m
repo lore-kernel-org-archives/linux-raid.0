@@ -1,70 +1,187 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: http://raid.wiki.kernel.org/ unreachable - need to "lend" clone
- of RAID1 HD to another machine
-Date: Sun, 24 Apr 2011 03:33:44 +0100
-Message-ID: <4DB38C08.8020406@anonymous.org.uk>
-References: <4DB38214.4080003@earthlink.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Server =?UTF-8?B?ZG93bi1mYWls4oCLZWQ=?= RAID5-asking for some
+ assistance
+Date: Sun, 24 Apr 2011 12:54:01 +1000
+Message-ID: <20110424125401.3de3720d@notabene.brown>
+References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
+	<ioq2b8$3rl$1@dough.gmane.org>
+	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
+	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
+	<20110422125734.1a68a736@notabene.brown>
+	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>
+	<20110423074411.78fef94f@notabene.brown>
+	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>
+	<20110423184824.55ee7893@notabene.brown>
+	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>
+	<20110424075101.6763309f@notabene.brown>
+	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB38214.4080003@earthlink.net>
+In-Reply-To: <BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vernon Tonnesen <jdcpa@earthlink.net>
+To: John Valarti <mdadmuser@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/04/2011 02:51, Vernon Tonnesen wrote:
-> I've been trying to get through without success for over an hour. Is the
-> content there mirrored somewhere?
+On Sat, 23 Apr 2011 18:07:37 -0600 John Valarti <mdadmuser@gmail.com> w=
+rote:
 
-Google has it cached.
+> On Sat, Apr 23, 2011 at 3:51 PM, NeilBrown <neilb@suse.de> wrote:
+> > On Sat, 23 Apr 2011 10:19:31 -0600 John Valarti <mdadmuser@gmail.co=
+m> wrote:
+> >
+> >> On Sat, Apr 23, 2011 at 2:48 AM, NeilBrown <neilb@suse.de> wrote:
+> >> >> No luck
+> >> >> Same thing:
+> >> >> "no devices found.."
+> >> >
+> >> > I'm sure it said more than just that. =A0Complete error messages=
+ really are
+> >> > helpful..
+> >> >
+> >> > But the implication seems to be that /dev/sd[acd] don't exist...=
+ That is
+> >> > weird.
+> >> > What does "cat /proc/partitions" show?
+> >> > If e.g. =A0sda is there but sda2 is not, does "blockdev --reread=
+pt /dev/sda"
+> >> > help?
+> >> >
+> >> > NeilBrown
+> >>
+> >> They exist.
+> >> I have physically removed the dead drive, so now the 3 remaining o=
+nes
+> >> are at sd[abc]
+> >> I have a usb thumb drive plugged in to capture outputs as needed, =
+it is sdd.
+> >> blockdev does not seem to exist on this system.
+> >>
+> >> If useful I now have some more of the same 250GB drives, and I can
+> >> plug one in to the sdb port and make partitions on it, and so on..
+> >>
+> >> For example fdisk -l shows all my partitions. I also show the outp=
+ut
+> >> you asked for proc/partitions:
+> >>
+> >> Disk /dev/sda: 251.0 GB, 251000193024 bytes
+> >> 255 heads, 63 sectors/track, 30515 cylinders
+> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> >>
+> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
+Blocks =A0 Id =A0System
+> >> /dev/sda1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
+ =A0136521 =A0 fd =A0Linux raid autodetect
+> >> /dev/sda2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
+75185 =A0 fd =A0Linux raid autodetect
+> >>
+> >> Disk /dev/sdb: 251.0 GB, 251000193024 bytes
+> >> 255 heads, 63 sectors/track, 30515 cylinders
+> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> >>
+> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
+Blocks =A0 Id =A0System
+> >> /dev/sdb1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
+ =A0136521 =A0 fd =A0Linux raid autodetect
+> >> /dev/sdb2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
+75185 =A0 fd =A0Linux raid autodetect
+> >>
+> >> Disk /dev/sdc: 251.0 GB, 251000193024 bytes
+> >> 255 heads, 63 sectors/track, 30515 cylinders
+> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> >>
+> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
+Blocks =A0 Id =A0System
+> >> /dev/sdc1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 =A017 =A0 =A0=
+ =A0136521 =A0 fd =A0Linux raid autodetect
+> >> /dev/sdc2 =A0 =A0 =A0 =A0 =A0 =A0 =A018 =A0 =A0 =A0 30515 =A0 2449=
+75185 =A0 fd =A0Linux raid autodetect
+> >>
+> >> Disk /dev/sdd: 1039 MB, 1039663104 bytes
+> >> 255 heads, 63 sectors/track, 126 cylinders
+> >> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> >>
+> >> =A0 =A0Device Boot =A0 =A0 =A0Start =A0 =A0 =A0 =A0 End =A0 =A0 =A0=
+Blocks =A0 Id =A0System
+> >> /dev/sdd1 =A0 * =A0 =A0 =A0 =A0 =A0 1 =A0 =A0 =A0 =A0 127 =A0 =A0 =
+1015264+ =A0 c =A0W95 FAT32 (LBA)
+> >> Partition 1 has different physical/logical endings:
+> >> =A0 =A0 =A0phys=3D(125, 254, 63) logical=3D(126, 101, 39)
+> >> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> >> major minor =A0#blocks =A0name
+> >>
+> >> =A0 =A07 =A0 =A0 0 =A0 =A0 111000 loop0
+> >> =A0 =A08 =A0 =A0 0 =A0245117376 sda
+> >> =A0 =A08 =A0 =A0 1 =A0 =A0 136521 sda1
+> >> =A0 =A08 =A0 =A0 2 =A0244975185 sda2
+> >> =A0 =A08 =A0 =A016 =A0245117376 sdb
+> >> =A0 =A08 =A0 =A017 =A0 =A0 136521 sdb1
+> >> =A0 =A08 =A0 =A018 =A0244975185 sdb2
+> >> =A0 =A08 =A0 =A032 =A0245117376 sdc
+> >> =A0 =A08 =A0 =A033 =A0 =A0 136521 sdc1
+> >> =A0 =A08 =A0 =A034 =A0244975185 sdc2
+> >> =A0 =A08 =A0 =A048 =A0 =A01015296 sdd
+> >> =A0 =A08 =A0 =A049 =A0 =A01015264 sdd1
+> >>
+> >> --
+> >> John
+> >
+> >
+> > I really cannot help you until you show me the output of "mdadm --a=
+ssemble
+> > --verbose ..." like I asked.
+> >
+> > NeilBrown
+> >
+>=20
+> I really WAS NOT lying!
 
-> Is there an alternate, preferably in
-> FAQ format?
+I never thought you were lying.  But you were summarising.  And when pe=
+ople
+summarise instead of giving exact messages I cannot be sure exactly wha=
+t was
+excluded.  I could guess - but the chances are that I would be wrong.
 
-There are dozens but I couldn't make any particular recommendation.
+>=20
+> I just did it again, and redirected output to a file
+>=20
+> The file ( located on my USB stick) contains:
+>=20
+> mdadm: looking for devices for /dev/md1
+> mdadm: no devices found for /dev/md1
 
-> I have a pair of HDs partitioned with 14 identical partitions each, 7 of
-> which on each make up 1 of 2 partitions making up 7 md devices. The
-> seven md devices were originally configured through openSUSE
-> installation's YaST2. I made a clone of the whole of one HD. This clone
-> I want to attach to another machine simply to copy the files from one
-> partition's EXT3 filesystem that is a component of md7 on the original
-> machine.
->
-> Can I just mount that partition on the other machine RO as an ordinary
-> EXT3 partition to make the copies, or does that machine need to have a
-> RAID "built" or "rebuilt" with mdadm in order to mount that disks
-> partition as a degraded array? Nothing shows up in /dev/mdstat booting
-> with it plugged in, even after copying /etc/mdadm.conf from the original
-> machine. I tried modprobe raid1, but that didn't seem to affect anything
-> I can tell. Fdisk -l /dev/sdb shows me only what I expect, a bunch of
-> 0x83 and 0xfd partitions, while fdisk -l produces none of the extra
-> output I'm used to seeing on the system with the full RAID1 running.
->
-> Problem 2: Looking at the mdadm man page, I really don't understand the
-> distinction between build and create, or what a persistent superblock is
-> good for.
+Thank you.  This is helpful.
+It implies that there mdadm didn't actually try including any devices i=
+n the
+array, which is very odd because you listed some devices on the command=
+ line
+for it to try.
+So I'm a bit confused.
 
-A persistent superblock stores important information about the array 
-like its level, chunk size, bitmap, etc, and you use create to do this. 
-Build sets up md devices one time only.
+Could you please run this set of commands exactly as given and send me =
+the
+complete output.  Maybe put them in a file and run
+  sh -x file > /path/on/usb 2>&1
 
-Use `mdadm -Evvs` to find your array members. If that finds nothing, the 
-arrays were built and not created, but I think that's unlikely with your 
-type FD partitions. If that finds metadata version 0.90 or 1.0 RAID1 
-partitions, yes you can mount them read-only directly from the 
-partitions without doing anything else - `file -s /dev/sdXp` should tell 
-you what the filesystem type is. If it's metadata 1.1 or 1.2, you can 
-start them in degraded mode with `mdadm -Avs --run` and then you should 
-find your filesystems on /dev/mdX (again, you can check). Again, mount 
-them read-only if you might want to put the disc back in the original 
-machine.
 
-As I said in another post, I'm off to bed now, but good luck!
+cat /proc/mdstat
+mdadm --stop --verbose /dev/md1
+ls -l /dev/sd[acd]2
+mdadm -E /dev/sd[acd]2
+mdadm -Afvv /dev/md1 /dev/sd[acd]2
+cat /proc/mdstat
+dmesg | tail -100
 
-Cheers,
 
-John.
+Thanks,
+NeilBrown
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
