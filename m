@@ -1,8 +1,8 @@
 From: John Valarti <mdadmuser@gmail.com>
 Subject: =?UTF-8?Q?Re=3A_Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assi?=
 	=?UTF-8?Q?stance?=
-Date: Sun, 24 Apr 2011 10:04:55 -0600
-Message-ID: <BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
+Date: Sun, 24 Apr 2011 10:15:00 -0600
+Message-ID: <BANLkTinP8YYDxkQzcgFE9UVrQ551-Tv7Xw@mail.gmail.com>
 References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<ioq2b8$3rl$1@dough.gmane.org>
 	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
@@ -20,88 +20,33 @@ References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<20110424184130.1692bce5@notabene.brown>
 	<4DB41044.5020404@anonymous.org.uk>
 	<20110424222918.2bde0704@notabene.brown>
+	<BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110424222918.2bde0704@notabene.brown>
+In-Reply-To: <BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 24, 2011 at 6:29 AM, NeilBrown <neilb@suse.de> wrote:
+On Sun, Apr 24, 2011 at 10:04 AM, John Valarti <mdadmuser@gmail.com> wrote:
+..
+> WORKED!
 
-> Ahh, I see it. =A0This is a bug in there: =A0->used isn't set to zero=
- after 'dv'
-> is allocated. =A0This was fixed in 3.0. =A0I don't remember that bug.=
-=2E.
->
-> I cannot see any easy way to work around that bug.
-=2E.
-> =A0on the CentOS 5.5 rescue media. I think it's
->> time to try something more recent: John, could you try SystemRescueC=
-D
->> from http://www.sysresccd.org/ and run
->> =A0 =A0mdadm -Evvs
->> and if that shows your RAID5 members again,
->> =A0 =A0mdadm -Afvv /dev/md1
->
-> Getting a newer mdadm is definitely a good idea.
->
-> Safest to explicitly list the devices that you want
-> =A0 =A0 mdadm -Afvv /dev/md1 /dev/sd[abc]2
->
->
-> NeilBrown
+It seems I spoke a bit too soon.  sigh..
 
-OK, I have Fedora 14 install media handy, so I booted from that.
-Once at a shell:
-   mdadm --version:   3.12
+fsck ran quite a while on /dev/Main/samba
 
-mdadm -S /dev/md1
-mdadm -S /dev/md1 /dev/sd[abc]2
-WORKED!
+And then it bailed out with "an error occurred"
 
-cat/proc/mdstat
+I know this is not exactly an mdadm question at this point, but you
+folk know what you
+are doing far better than me..
 
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] [linea=
-r]
-md1 : active raid5 sdc2[0] sdb2[2] sda2[1]
-      734925312 blocks level 5, 256k chunk, algorithm 2 [4/3] [UUU_]
+It dropped me to a basic root shell.
 
-unused devices: <none>
-
-Rebooted the system, and it sees my RAID and my OS again.
-As I write it is busy running journals and fsck
-So far the only dubious part seems to be /tmp. No worry about that.
-
-So, noe the next important part:
-What to do next?
-Attach another disk bigger than the RAID and copy everything to it?
-
-Assuming yes, then what?
-Speculating a bit here:
-
-Add a new good disk and rebuild?
-After that, remove the other disk that failed and we just forced back,
-and rebuild again?
-Then work my way through the other 2 old disks and rebuild 2 more time?
-
-If yes, I could use some command line syntax to make sure I do it the
-right way..
-
-If "no" I am all ears as to what to do next.
-
-Oh, and btw:
-Thank you
-Happy Easter.
+Any suggestions what to try next?
 
 --
 John V
-In a much better mood today.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
