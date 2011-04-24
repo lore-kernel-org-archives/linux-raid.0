@@ -1,8 +1,8 @@
-From: John Valarti <mdadmuser@gmail.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
 Subject: =?UTF-8?Q?Re=3A_Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assi?=
 	=?UTF-8?Q?stance?=
-Date: Sun, 24 Apr 2011 10:15:00 -0600
-Message-ID: <BANLkTinP8YYDxkQzcgFE9UVrQ551-Tv7Xw@mail.gmail.com>
+Date: Sun, 24 Apr 2011 17:31:01 +0100
+Message-ID: <BANLkTik6rNhoUpfsnL4dcfVr9bpE4iZ3Eg@mail.gmail.com>
 References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<ioq2b8$3rl$1@dough.gmane.org>
 	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
@@ -21,32 +21,56 @@ References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
 	<4DB41044.5020404@anonymous.org.uk>
 	<20110424222918.2bde0704@notabene.brown>
 	<BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
+	<BANLkTinP8YYDxkQzcgFE9UVrQ551-Tv7Xw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
+In-Reply-To: <BANLkTinP8YYDxkQzcgFE9UVrQ551-Tv7Xw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: John Valarti <mdadmuser@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Apr 24, 2011 at 10:04 AM, John Valarti <mdadmuser@gmail.com> wrote:
-..
-> WORKED!
+On 24 April 2011 17:15, John Valarti <mdadmuser@gmail.com> wrote:
+> On Sun, Apr 24, 2011 at 10:04 AM, John Valarti <mdadmuser@gmail.com> =
+wrote:
+> ..
+>> WORKED!
+>
+> It seems I spoke a bit too soon. =C2=A0sigh..
+>
+> fsck ran quite a while on /dev/Main/samba
+>
+> And then it bailed out with "an error occurred"
+>
+> I know this is not exactly an mdadm question at this point, but you
+> folk know what you
+> are doing far better than me..
+>
+> It dropped me to a basic root shell.
+>
+> Any suggestions what to try next?
+>
+> --
+> John V
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-It seems I spoke a bit too soon.  sigh..
+Rescue all HDDs to HDD images and try to perform assembles/data rescue =
+on them.
 
-fsck ran quite a while on /dev/Main/samba
+Run fsck manually on your array HDDs, capture the output.
 
-And then it bailed out with "an error occurred"
-
-I know this is not exactly an mdadm question at this point, but you
-folk know what you
-are doing far better than me..
-
-It dropped me to a basic root shell.
-
-Any suggestions what to try next?
-
+Regards,
+// M
 --
-John V
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
