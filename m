@@ -1,62 +1,105 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Direct disk access on IBM Server
-Date: Sun, 24 Apr 2011 05:48:36 -0700
-Message-ID: <BANLkTi=SRxoMjpEHeS48eJBCt3qY8CMYqQ@mail.gmail.com>
-References: <iok28i$tp6$1@dough.gmane.org> <4DADEBC3.9060404@hardwarefreak.com>
- <iomfkq$qqr$1@dough.gmane.org> <4DAEC627.3030904@grumpydevil.homelinux.org>
- <iomj0a$e5m$1@dough.gmane.org> <4DAFCDB0.9070609@hardwarefreak.com> <iop4s2$cjp$1@dough.gmane.org>
+From: John Valarti <mdadmuser@gmail.com>
+Subject: =?UTF-8?Q?Re=3A_Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assi?=
+	=?UTF-8?Q?stance?=
+Date: Sun, 24 Apr 2011 10:04:55 -0600
+Message-ID: <BANLkTimfz_Y58yeNmF01v5ZCfCCvHc=AYQ@mail.gmail.com>
+References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
+	<ioq2b8$3rl$1@dough.gmane.org>
+	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
+	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
+	<20110422125734.1a68a736@notabene.brown>
+	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>
+	<20110423074411.78fef94f@notabene.brown>
+	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>
+	<20110423184824.55ee7893@notabene.brown>
+	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>
+	<20110424075101.6763309f@notabene.brown>
+	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
+	<20110424125401.3de3720d@notabene.brown>
+	<BANLkTi=8P75-wUBq149wiM-=XGVa2HBuvA@mail.gmail.com>
+	<20110424184130.1692bce5@notabene.brown>
+	<4DB41044.5020404@anonymous.org.uk>
+	<20110424222918.2bde0704@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <iop4s2$cjp$1@dough.gmane.org>
+In-Reply-To: <20110424222918.2bde0704@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi David,
+On Sun, Apr 24, 2011 at 6:29 AM, NeilBrown <neilb@suse.de> wrote:
 
-> My goal here is to understand my options before deciding. =C2=A0I've =
-had a bit of
-> space between getting the machine and actually having the time to put=
- it
-> into service, so I've tested a bit and thought a bit and discussed a =
-bit on
-> this mailing list. =C2=A0I'll probably go for hardware raid5 - which =
-I could have
-> done in the beginning. =C2=A0But now I know more about why that's the=
- sensible
-> choice.
+> Ahh, I see it. =A0This is a bug in there: =A0->used isn't set to zero=
+ after 'dv'
+> is allocated. =A0This was fixed in 3.0. =A0I don't remember that bug.=
+=2E.
+>
+> I cannot see any easy way to work around that bug.
+=2E.
+> =A0on the CentOS 5.5 rescue media. I think it's
+>> time to try something more recent: John, could you try SystemRescueC=
+D
+>> from http://www.sysresccd.org/ and run
+>> =A0 =A0mdadm -Evvs
+>> and if that shows your RAID5 members again,
+>> =A0 =A0mdadm -Afvv /dev/md1
+>
+> Getting a newer mdadm is definitely a good idea.
+>
+> Safest to explicitly list the devices that you want
+> =A0 =A0 mdadm -Afvv /dev/md1 /dev/sd[abc]2
+>
+>
+> NeilBrown
 
-I'm going to jump in a bit late but as an owner of several of these
-little beasts and say this. You have a skookum RAID card on there so
-use it. :) I'd also *strongly* recommend you jump for the BBU
-(Battery) if you haven't already.
+OK, I have Fedora 14 install media handy, so I booted from that.
+Once at a shell:
+   mdadm --version:   3.12
 
-This hasn't been mentioned as a consideration but one more point of
-going in favor with the HW RAID is this: You're away on vacation and a
-drive dies. Your backup admin notices and calls an IBM monkey out to
-replace the drive. He goes, finds the failed drive indicated by the
-little warning light, and replaces it. You get back to find a zero
-dollar service order on your desk. :-)
+mdadm -S /dev/md1
+mdadm -S /dev/md1 /dev/sd[abc]2
+WORKED!
 
-I don't know about your shop but that's how it'd play out in mine.
-mdadm is a great product no doubt, but to work effectively with it
-everyone involved has to understand it. If you're a one man show like
-I am, with vendors who don't really touch linux (not as much money in
-it vs M$), making your linux systems as foolproof as possible is
-important, especially when the bosses are somewhat biased against it.
+cat/proc/mdstat
 
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] [linea=
+r]
+md1 : active raid5 sdc2[0] sdb2[2] sda2[1]
+      734925312 blocks level 5, 256k chunk, algorithm 2 [4/3] [UUU_]
 
---=20
-Drew
+unused devices: <none>
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+Rebooted the system, and it sees my RAID and my OS again.
+As I write it is busy running journals and fsck
+So far the only dubious part seems to be /tmp. No worry about that.
 
-"This started out as a hobby and spun horribly out of control."
--Unknown
+So, noe the next important part:
+What to do next?
+Attach another disk bigger than the RAID and copy everything to it?
+
+Assuming yes, then what?
+Speculating a bit here:
+
+Add a new good disk and rebuild?
+After that, remove the other disk that failed and we just forced back,
+and rebuild again?
+Then work my way through the other 2 old disks and rebuild 2 more time?
+
+If yes, I could use some command line syntax to make sure I do it the
+right way..
+
+If "no" I am all ears as to what to do next.
+
+Oh, and btw:
+Thank you
+Happy Easter.
+
+--
+John V
+In a much better mood today.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
