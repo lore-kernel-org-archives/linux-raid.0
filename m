@@ -1,105 +1,55 @@
-From: John Valarti <mdadmuser@gmail.com>
-Subject: =?UTF-8?Q?Re=3A_Server_down=2Dfail=E2=80=8Bed_RAID5=2Dasking_for_some_assi?=
-	=?UTF-8?Q?stance?=
-Date: Sat, 23 Apr 2011 19:49:59 -0600
-Message-ID: <BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
-References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>
-	<ioq2b8$3rl$1@dough.gmane.org>
-	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>
-	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>
-	<20110422125734.1a68a736@notabene.brown>
-	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>
-	<20110423074411.78fef94f@notabene.brown>
-	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>
-	<20110423184824.55ee7893@notabene.brown>
-	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>
-	<20110424075101.6763309f@notabene.brown>
-	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>
-	<4DB370E1.5030602@anonymous.org.uk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Server =?UTF-8?B?ZG93bi1mYWls4oCLZWQgUkFJRDUtYXNraW5nIGZvciBz?=
+ =?UTF-8?B?b21lIGFzc2lzdGFuY2U=?=
+Date: Sun, 24 Apr 2011 03:12:54 +0100
+Message-ID: <4DB38726.2090805@anonymous.org.uk>
+References: <BANLkTi=81WTykGQ2TXaf7xGEsL-Gkf+Qrw@mail.gmail.com>	<ioq2b8$3rl$1@dough.gmane.org>	<BANLkTim18Sx6JdZO5PiAqnrakDPzy5PNJQ@mail.gmail.com>	<BANLkTimQXUvU68op8C-W4qPUQzBRzqgP+A@mail.gmail.com>	<20110422125734.1a68a736@notabene.brown>	<BANLkTin0SoBzRAear8Jt+26MnVJWouXoNA@mail.gmail.com>	<20110423074411.78fef94f@notabene.brown>	<BANLkTik_ZY4uoV3E=ua1p+tUD9g8xqQDVg@mail.gmail.com>	<20110423184824.55ee7893@notabene.brown>	<BANLkTi=sCfFFfmZTzj2g8-aDNhDqVK8e-A@mail.gmail.com>	<20110424075101.6763309f@notabene.brown>	<BANLkTimDqEWZ6843RvekRGu4Z0XvNLgOwA@mail.gmail.com>	<4DB370E1.5030602@anonymous.org.uk> <BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB370E1.5030602@anonymous.org.uk>
+In-Reply-To: <BANLkTikvevtAipmEtNEGdzG4rfVeOpbLxQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
+To: John Valarti <mdadmuser@gmail.com>
 Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 23, 2011 at 6:37 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-..
->> mdadm: looking for devices for /dev/md1
->> mdadm: no devices found for /dev/md1
->
-> If I can butt in here... presumably while the system can't assemble your
-> array, you're running from rescue media or whatever? You may not have a
-> suitable mdadm.conf in the rescue environment.
+On 24/04/2011 02:49, John Valarti wrote:
+[...]
+> This is looking gloomy now.
 
-Please feel free to "butt in" , I can use any suggestions.
-This is looking gloomy now.
+No it isn't!
 
-There definitely is NO mdadm.conf
-I checked.
-I used "find"
+> There definitely is NO mdadm.conf
+> I checked.
+> I used "find"
 
-This is rescue media. I can not boot off the system using local disk.
-I am booting with CentOS 5.5 install media with "linux rescue"
+OK, that's fine - I didn't really expect there to be, unless you were 
+using an emergency shell half-way through booting, in which case if 
+there was one it might have been wrong since you've had to remove drives.
 
-> If you haven't already posted `mdadm --examine --scan --verbose --verbose`
-> aka `mdadm -Esvv`, or at the very least `mdadm --examine --verbose
-> /dev/sd[abc][12]`, then please do.
+[...]
+> mdadm -Esvv /dev/sd[abc]2:
+>    mdadm: --examine/-E cannot be given with -w
 
-Originally there were 4 disks here. sd[abcd]
-sdb was the first and worst faulty one, so I removed it.
-We now see sd[abc]
+That was the letter v twice, not the letter w - and I didn't mean you to 
+specify any devices, just `mdadm -Esvv` on its own.
 
-HERE:
-mdadm --examine --scan --verbose --verbose /dev/sd[abc]2:
+>> Please also try `mdadm --assemble --scan --verbose` and post the result.
+> HERE:
+> mdadm: /dev/sda2 not identified in config file.
+> mdadm: /dev/sdb2 not identified in config file.
+> mdadm: /dev/sdc2 not identified in config file.
 
+Again, I didn't mean you to specify any devices, just exactly `mdadm 
+--assemble --scan --verbose` on its own.
 
-   Update Time : Mon Apr 18 07:48:54 2011
-         State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
- Spare Devices : 0
-      Checksum : 5674ce4e - correct
-        Events : 28580020
+I'm not quite sure where you are but your timezone is -0600 while mine 
+is +0100, it's gone 3 in the morning, so I'm going to bed now. Neil 
+Brown is +1000 so it's Easter Sunday for him, which makes me think it's 
+unlikely you'll see a reply from him today/tomorrow. Just stay calm and 
+don't panic, we'll get there.
 
-        Layout : left-symmetric
-    Chunk Size : 256K
+Cheers,
 
-     Number   Major   Minor   RaidDevice State
-this     0       8        2        0      active sync   /dev/sda2
-
-  0     0       8        2        0      active sync   /dev/sda2
-  1     1       8       18        1      active sync   /dev/sdb2
-  2     2       8       34        2      active sync   /dev/sdc2
-  3     3       0        0        3      faulty removed
-
-AND:
-mdadm -Esvv /dev/sd[abc]2:
-  mdadm: --examine/-E cannot be given with -w
-
-
-> Please also try `mdadm --assemble --scan --verbose` and post the result.
-HERE:
-mdadm: /dev/sda2 not identified in config file.
-mdadm: /dev/sdb2 not identified in config file.
-mdadm: /dev/sdc2 not identified in config file.
-
-
-> Another thing that occurs to me is that since you said you had CentOS 4, you
-> likely have kernel 2.6.9 and mdadm 1.12 which are very old. You might try
-> SystemRescueCD or similar to get a mdadm 3.1.x which will be much better at
-> finding and fixing any problems.
-
-The rescue media I am using for this is CentOS 5.5:
-   uname -a:
-Linux localhost.localdomain 2.6.18-238.el5 #1 SMP Thu Jan 13 15:51:15
-EST 2011 x86_64 x86_64 x86_64 GNU/Linux
-
-Hope this helps.
-
---
-John
+John.
