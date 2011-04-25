@@ -1,46 +1,58 @@
-From: Ryan Wagoner <rswagoner@gmail.com>
-Subject: Re: A few questions regarding RAID5/RAID6 recovery
-Date: Mon, 25 Apr 2011 15:51:36 -0400
-Message-ID: <BANLkTinp3ksiFDxozYNjobrcbRc8BqAh8Q@mail.gmail.com>
-References: <002001cc0370$cd40ac90$67c205b0$@priv.hu>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: High mismatch count on root device - how to best handle?
+Date: Mon, 25 Apr 2011 15:32:59 -0700
+Message-ID: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <002001cc0370$cd40ac90$67c205b0$@priv.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2011/4/25 K=C5=91v=C3=A1ri P=C3=A9ter <peter@kovari.priv.hu>:
-> Hi all,
->
-> Since this is my first post here, let me first thank all developers f=
-or their great tool. It really is a wonderfull piece of soft. ;)
->
-> I heard a lot of horror stories about the event, when a member of a r=
-aid5/6 array gets kicked off due to I/O errors, and then, after the rep=
-lacement and during the recostruction, another drive fails, and the arr=
-ay become unusable. (For raid6, add another drive to the story, and the=
- problem is the same, so let=E2=80=99s just talk about raid5 now). I wa=
-nt to prepare myself for this kind of unlucky event, and build up a str=
-ategy that I can follow once it happens. (I hope never, but...)
+I did a drive check today, first time in months, and found I have a
+high mismatch count on my RAID1 root device. What's the best way to
+handle getting this cleaned up?
 
-=46rom what I understand If you run weekly raid scrubs you will limit
-the possibility of this happening. CentOS / RedHat already have this
-scheduled. If not you can add a cron job to call check or repair. Make
-sure you replace DEV with the device.
+1) I'm running some smartctl tests as I write this.
 
-echo check > /sys/block/DEV/md/sync_action
+2) Do I just do an
 
-I have had 3 x 1TB drives in RAID 5 for the past 2.5 years. I have not
-had a drive kicked out or an error found. If an error is found, since
-it is caught early, I should have a good probability of replacing the
-failed drive without incurring another error.
+echo repair
 
-Ryan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+to md126 or do I have to boot a rescue CD before I do that?
+
+If you need more info please let me know.
+
+Thanks,
+Mark
+
+c2stable ~ # cat /sys/block/md3/md/mismatch_cnt
+0
+c2stable ~ # cat /sys/block/md6/md/mismatch_cnt
+0
+c2stable ~ # cat /sys/block/md7/md/mismatch_cnt
+0
+c2stable ~ # cat /sys/block/md126/md/mismatch_cnt
+222336
+c2stable ~ # df
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/md126            51612920  26159408  22831712  54% /
+udev                     10240       432      9808   5% /dev
+/dev/md7             389183252 144979184 224434676  40% /VirtualMachines
+shm                    6151452         0   6151452   0% /dev/shm
+c2stable ~ # cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md6 : active raid1 sdc6[2] sda6[0] sdb6[1]
+      247416933 blocks super 1.1 [3/3] [UUU]
+
+md7 : active raid6 sdc7[2] sda7[0] sdb7[1] sdd2[3] sde2[4]
+      395387904 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [UUUUU]
+
+md3 : active raid6 sdc3[2] sda3[0] sdb3[1] sdd3[3] sde3[4]
+      157305168 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5] [UUUUU]
+
+md126 : active raid1 sdc5[2] sda5[0] sdb5[1]
+      52436032 blocks [3/3] [UUU]
+
+unused devices: <none>
+c2stable ~ #
