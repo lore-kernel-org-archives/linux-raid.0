@@ -1,60 +1,91 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Direct disk access on IBM Server
-Date: Mon, 25 Apr 2011 11:42:56 +0200
-Message-ID: <ip3fn1$eo6$1@dough.gmane.org>
-References: <iok28i$tp6$1@dough.gmane.org> <4DADEBC3.9060404@hardwarefreak.com> <iomfkq$qqr$1@dough.gmane.org> <4DAEC627.3030904@grumpydevil.homelinux.org> <iomj0a$e5m$1@dough.gmane.org> <4DAFCDB0.9070609@hardwarefreak.com> <iop4s2$cjp$1@dough.gmane.org> <BANLkTi=SRxoMjpEHeS48eJBCt3qY8CMYqQ@mail.gmail.com> <ip1vgg$7e0$1@dough.gmane.org> <4DB4872A.4030900@grumpydevil.homelinux.org>
+From: =?UTF-8?B?S8WRdsOhcmkgUMOpdGVy?= <peter@kovari.priv.hu>
+Subject: A few questions regarding RAID5/RAID6 recovery
+Date: Mon, 25 Apr 2011 19:47:09 +0200
+Message-ID: <002001cc0370$cd40ac90$67c205b0$@priv.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DB4872A.4030900@grumpydevil.homelinux.org>
+Content-Language: hu
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/04/11 22:25, Rudy Zijlstra wrote:
-> On 04/24/2011 10:00 PM, David Brown wrote:
->>
->>
->> But there is also no doubt that the MegaCli command line tool is
->> absolutely terrible in comparison to mdadm. It is downright
->> user-unfriendly. I haven't bothered with the LSI gui tools - they are
->> useless on a server, where there is no place for X. The "webbios" bios
->> setup is okay, but only available when rebooting the machine - it's
->> fine for the initial setup. So the only real tool that will work over
->> a ssh session while the system is running, is MegaCli. Since it is
->> statically linked it works with any system, which is nice. But the
->> interface is painfully unclear, sadistically inconsistent, and badly
->> documented. If an emergency situation arose, I could explain mdadm and
->> dictate commands over the phone to a backup admin - there's not a
->> chance I could do that with MegaCli.
->>
-> You can run the GUI on a different machine then the raid is on. The SW
-> contains a "server" app and the X client side. The server app needs to
-> run on the actual server, the GUI can run on any network connected machine.
->
+Hi all,
 
-I may not have read all the information correctly, but it seemed to me 
-that I had the choice of installing the client only, or everything - 
-meaning installing the gui client on the server as well.  Maybe I'll 
-give it a try at some point.
+Since this is my first post here, let me first thank all developers for=
+ their great tool. It really is a wonderfull piece of soft. ;)
 
-However, realistically speaking I hope and expect that I won't need to 
-do much with the raid anyway.  It's set up, and the chances are that it 
-will continue to run for years without problems.  My aim with MegaCli 
-was that I would be able to handle something like a disk replacement, or 
-perhaps growing the raid, without taking the server offline during the 
-whole process (I don't mind a reboot or two, as long as the rebuild 
-itself can run while the server is online).  So MegaCli is good enough 
-for that.
+I heard a lot of horror stories about the event, when a member of a rai=
+d5/6 array gets kicked off due to I/O errors, and then, after the repla=
+cement and during the recostruction, another drive fails, and the array=
+ become unusable. (For raid6, add another drive to the story, and the p=
+roblem is the same, so let=E2=80=99s just talk about raid5 now). I want=
+ to prepare myself for this kind of unlucky event, and build up a strat=
+egy that I can follow once it happens. (I hope never, but...)
 
-I guess it just struck me as strange that MegaCli is so awkward.  A 
-quick google search shows I am not alone - others describe it as "the 
-most cryptic command line utility in existence" (I wouldn't go that 
-far), and that MegaRAID Storage Manager is a "java based monster that 
-nobody really wants to have on a server".  The card itself is fine - and 
-I've heard nothing but good opinions of it.  Surely a company that can 
-make such good cards could make better software to let admins work with 
-them in the way they want?
+Let=E2=80=99s assume we have a 4 drives RAID5, that has been degraded, =
+the failed drive has been replaced, then the rebuild process failed, an=
+d now we have an array with 2 good disks, one failed disk and one which=
+ is partially synchronized (the new one). And, we also have the disk ou=
+t of the array, which was originally failed. If I assume, that both of =
+the failed disks have some bad sectors but otherwise both are in an ope=
+rative condition (can be dd-ed for example), then, except the unlikely =
+event, when both disks have failed on the very same physical sector (ch=
+unk?), then theoretically the data is there and could be retrieved. So =
+my question is, can we retrieve them by using mdadm and some =E2=80=9Et=
+ricks=E2=80=9D? I think of something like this:
+
+1. I assemble (or --create --assume-clean) the array in degraded mode u=
+sing the 2 good drives, and one of the 2 failed drives which has it's b=
+ad sectors behind the point than the other failed drive.
+2. Add the new drive, let the array start rebuilding, and wait for the =
+process go beyond the point where the other failed drive has it's bad s=
+ectors.
+3. Stop/pause/??? the rebuild process. And - if possible - make a note =
+of the exact sector (chunk) where the rebuild has been paused.
+4. Assemble (or --create --assume-clean) the array again, but this time=
+ using the other failed drive,
+5. Add the new drive again, and continue to rebuild from the point wher=
+e the last rebuild has been paused. Since we are over the point where t=
+he failed disk has it's bad sectors, the rebuild should finish fine.
+6. Finally remove the failed disk and replace it with another new drive=
+=2E
+
+Can this be done using mdadm somehow?
+
+My next question is not really a question but rather a wish. In my poin=
+t of view, the above written situation is by far the biggest weekness o=
+f not just linux software raid but all other harware raid solutions tha=
+t i know of (don't know many, though). Even nowadays, when we use large=
+r and largers disks. So i'm wondering if there is any raid or raid-kind=
+ solution that - along with redundancy, - provides some automatic stipe=
+ (chunk) reallocation feature? Something like modern hard disks do with=
+ their "reallocated sectors", something like: the raid driver reserves =
+some chunks/stripes for "reallocation", and once an I/O error happens o=
+n any of the active/working chunks, then instead of kicking the disk of=
+f, it marks the stripe/chunk bad, and moves the data to one of the rese=
+rved ones, and continues (along with some warning of course). Only, if =
+writing to the reserved chunk fails, would be necessary to immediately =
+kick the member off.=20
+
+The other thing I wonder is why raid solutions (that i know of) use the=
+ "first remove the failed, then add the new" strategy instead of "add t=
+he new, I try to recover, then remove the failed" strategy. They use th=
+e former even when a spare drive is available, because -as far as i kno=
+w - they won't utilize the failed disk for rebuild. Why? By using the l=
+atter strategy, it would be a joy to recover from situations like above=
+=2E
+=20
+Thanks for your response.
+
+Best regards,
+Peter
 
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
