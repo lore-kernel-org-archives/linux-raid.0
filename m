@@ -1,52 +1,48 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Mdadm, udev and fakeraid?
-Date: Tue, 26 Apr 2011 08:06:00 +0200
-Message-ID: <20110426060600.GA24583@maude.comedia.it>
-References: <BANLkTinp3376PV3sJWARXtFnRfoMsg44wA@mail.gmail.com> <20110405162008.5f2c48fe@notabene.brown> <BANLkTik+xU6K7B9Xomj6+Q-S7_n18+aQqA@mail.gmail.com> <20110418103852.2ead1a69@notabene.brown> <BANLkTik6qpCx-Y=DXY6U6yu0habSohyiPw@mail.gmail.com> <20110423184551.7bb437de@notabene.brown>
+From: Tobias Powalowski <t.powa@gmx.de>
+Subject: mdadm 3.2.1 doesn't compile with gcc 4.6.0
+Date: Tue, 26 Apr 2011 09:00:17 +0200
+Message-ID: <201104260900.20791.t.powa@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed;
+  boundary="nextPart2127035.D4yJT9B19a";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110423184551.7bb437de@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Sat, Apr 23, 2011 at 06:45:51PM +1000, NeilBrown wrote:
->On Fri, 22 Apr 2011 19:37:40 -0700 Dan Williams <dan.j.williams@gmail.=
-com>
->wrote:
->
->> On Sun, Apr 17, 2011 at 5:38 PM, NeilBrown <neilb@suse.de> wrote:
->
->> > As has been mentioned elsewhere, mdadm only recognised IMSM arrays=
- on
->> > machines with IMSM hardware. =A0I'm not entirely happy about this =
-and may well
->> > change it.
->>=20
->> I have trouble answering the "least surprise" question in this area.
->>=20
->> Is it more surprising to go into your BIOS, explicitly turn off raid
->> support and still see raid devices showing up?
->
->Is the "RAID support has been explicitly turned off" state visible fro=
-m a
->running kernel? or is it indistinguishable from "platform does not hav=
-e RAID
->support"?
-you can try guessing, intel controllers change their pci product_id bas=
-ed on the
-mode they are set to operate in bios.
+--nextPart2127035.D4yJT9B19a
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-L.
+Hi guys,
+mdadm.c:106:6: error: variable 'auto_update_home' set but not used [-
+Werror=3Dunused-but-set-variable]
 
---=20
-Luca Berra -- bluca@comedia.it
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+any help would be much appreciated.
+thanks
+greetings
+tpowa
+=2D-=20
+Tobias Powalowski
+Archlinux Developer & Package Maintainer (tpowa)
+http://www.archlinux.org
+tpowa@archlinux.org
+
+--nextPart2127035.D4yJT9B19a
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAk22bYEACgkQ81yYyRqLOvj/mQCeLSW5G6ICJV8fGX/OKG5I646J
+GAIAn0IUHAcXlCs4TXVoiBF7ZaQiSXjv
+=zmZi
+-----END PGP SIGNATURE-----
+
+--nextPart2127035.D4yJT9B19a--
