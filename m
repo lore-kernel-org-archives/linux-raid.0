@@ -1,76 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1 boot regression in 2.6.37 [bisected]
-Date: Wed, 27 Apr 2011 20:05:13 +1000
-Message-ID: <20110427200513.5f6a79fb@notabene.brown>
-References: <201103251725.21180.thomas.jarosch@intra2net.com>
-	<201104121605.52443.thomas.jarosch@intra2net.com>
-	<20110413084408.390c7ad1@notabene.brown>
-	<201104261051.09464.thomas.jarosch@intra2net.com>
-	<20110427181714.219212ce@notabene.brown>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: RAID/dmaengine violates the dma-streaming API
+Date: Wed, 27 Apr 2011 14:42:57 +0300
+Message-ID: <BANLkTi=30Q5=TAaPcE8SXt417S6e=RaY3Q@mail.gmail.com>
+References: <BANLkTinMA_U1r6K4t8UZKUr4nZBsWPSv9w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110427181714.219212ce@notabene.brown>
+In-Reply-To: <BANLkTinMA_U1r6K4t8UZKUr4nZBsWPSv9w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-raid@vger.kernel.org
+To: Russell King <linux@arm.linux.org.uk>, Dan Williams <dan.j.williams@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-raid.ids
 
-On Wed, 27 Apr 2011 18:17:14 +1000 NeilBrown <neilb@suse.de> wrote:
+On Sun, Apr 17, 2011 at 7:00 PM, saeed bishara <saeed.bishara@gmail.com=
+> wrote:
+> Hi,
+> =C2=A0 =C2=A0 when md uses the dma for offloading xor and memcpy oper=
+ations, it
+> violates the dma-mapping API. =C2=A0here is the scenario I'm taking a=
+bout
+> (under write to degraded raid5):
+> 1. ops_run_prexor sends xor operation from buffers A and B, and the
+> destination is A.
+> 2. ops_run_biodrain: sends mempcy operation from C to B.
+> 3. ops_run_reconstruct5: sends xor operation from A and B, and the
+> destination is A again.
+>
+> in step 1, the async tx maps A using dma_map_page, and in step 3, it
+> maps again the same buffer. but, if the request from step 1 still
+> being handled the dma engine, then we end with a case where the buffe=
+r
+> mapped while it still belongs to the dma hw.
+> when the arch is ARMv6/SMP mode (without io coherency), the cache
+> maintenance involves read/write access to the buffers, that means, th=
+e
+> second mapping above may access the buffer(with read/write) while the
+> dma is writing to it!!.
+>
+Russell/Dan,
+     can you have a look into this issue? what I see here is that the
+raid stack issues dma_map_page to a buffer that still owned by DMA.
 
-> I manage to reproduce something very similar and I think I know what is
-> happening.  It appears to be fixed by this change to driver/md/md.c
-> 
-> @@ -4340,8 +4344,8 @@ static int md_alloc(dev_t dev, char *name)
->  	 * remove it now.
->  	 */
->  	disk->flags |= GENHD_FL_EXT_DEVT;
-> -	add_disk(disk);
->  	mddev->gendisk = disk;
-> +	add_disk(disk);
->  	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
->  				     &disk_to_dev(disk)->kobj, "%s", "md");
->  	if (error) {
-> 
-> 
-> However I need to think through the sequence of events in the morning and
-> make sure it all makes sense and there isn't some other race hiding in there.
-> 
-> Thanks again for the report.
-> 
+saeed
 
-On reflection over dinner, I think I should move the add_disk right to the
-end just before the mutex_unlock.
-I'm not sure it makes a big practical difference but it will be easier to
-justify.
-
-So if you could test this one instead please that would be great.
-
-The rationale is that as soon as we call add_disk, get_gendisk will return
-the disk rather than coming through to md_probe and blocking on the mutex.
-So we want everything set up properly before calling add_disk.
-
-Thanks,
-NeilBrown
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 818313e..6ab5bfb 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4340,7 +4340,6 @@ static int md_alloc(dev_t dev, char *name)
- 	 * remove it now.
- 	 */
- 	disk->flags |= GENHD_FL_EXT_DEVT;
--	add_disk(disk);
- 	mddev->gendisk = disk;
- 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
- 				     &disk_to_dev(disk)->kobj, "%s", "md");
-@@ -4357,6 +4356,7 @@ static int md_alloc(dev_t dev, char *name)
- 		printk(KERN_DEBUG "pointless warning\n");
- 
- 	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
-+	add_disk(disk);
-  abort:
- 	mutex_unlock(&disks_mutex);
- 	if (!error && mddev->kobj.sd) {
+> also, from performance sake, it would be great if this multiple
+> mappings get avoided.
+>
+> saeed
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
