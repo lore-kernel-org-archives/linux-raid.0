@@ -1,78 +1,50 @@
-From: Przemyslaw Czarnowski
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 5/5] imsm: add new chunk size to metadata update
-Date: Fri, 29 Apr 2011 00:02:22 +0200
-Message-ID: <20110428220222.19632.90319.stgit@gklab-128-081.igk.intel.com>
-References: <20110428215751.19632.5381.stgit@gklab-128-081.igk.intel.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
+ unresponsive
+Date: Thu, 28 Apr 2011 18:11:12 -0400
+Message-ID: <4DB9E600.6040508@turmel.org>
+References: <4DA773EB.5030005@turmel.org>	<327628.84887.qm@web65101.mail.ac2.yahoo.com> <20110429021118.0f247326@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110428215751.19632.5381.stgit@gklab-128-081.igk.intel.com>
+In-Reply-To: <20110429021118.0f247326@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Gavin Flower <gavinflower@yahoo.com>, =?ISO-8859-1?Q?Mathias_Bur=E9?= =?ISO-8859-1?Q?n?= <mathias.buren@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Put information about new chunk size change in to migration metadata
-update allowing simultaneous level change and re-striping.
+On 04/28/2011 04:11 PM, Roman Mamedov wrote:
+> On Thu, 28 Apr 2011 13:03:39 -0700 (PDT)
+> Gavin Flower <gavinflower@yahoo.com> wrote:
+> 
+>> A couple of days ago, my friend Mario brought over his oscilloscope and a
+>> volt meter.  The 5 volt rail was showing about 4.7 volts, typically it
+>> should be 5.2 - 5.4 (from memory of what he said), and the voltage looked
+>> shaky on the oscilloscope.  The old power supply rated at 400 Watts.  
+> 
+> 4.7V is fine, those voltages have a tolerance of +/-10%. And if you have a
+> deviation there, it is actually better for it to be to the lower side, than
+> equivalent to the higher. Reason: no heat increase.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- super-intel.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+Uh.  Close, but no.
 
-diff --git a/super-intel.c b/super-intel.c
-index d4a45d7..e3f3f19 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -354,6 +354,7 @@ struct imsm_update_reshape_migration {
- 	int subdev;
- 	int new_level;
- 	int new_layout;
-+	int new_chunksize;
- 
- 	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
- };
-@@ -6156,6 +6157,12 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
- 			id->dev = new_dev;
- 			tofree = (void **)dev;
- 
-+			/* update chunk size
-+			 */
-+			if (u->new_chunksize > 0)
-+				map->blocks_per_strip =
-+					__cpu_to_le16(u->new_chunksize * 2);
-+
- 			/* add disk
- 			 */
- 			if ((u->new_level != 5) ||
-@@ -7367,14 +7374,25 @@ static int imsm_create_metadata_update_for_migration(
- 	u->new_layout = geo->layout;
- 	u->new_raid_disks = u->old_raid_disks = geo->raid_disks;
- 	u->new_disks[0] = -1;
-+	u->new_chunksize = -1;
- 
- 	dev = get_imsm_dev(super, u->subdev);
- 	if (dev) {
- 		struct imsm_map *map;
- 
- 		map = get_imsm_map(dev, 0);
--		if (map)
-+		if (map) {
-+			int current_chunk_size =
-+				__le16_to_cpu(map->blocks_per_strip) / 2;
-+
-+			if (geo->chunksize != current_chunk_size) {
-+				u->new_chunksize = geo->chunksize / 1024;
-+				dprintf("imsm: "
-+					"chunk size change from %i to %i\n",
-+					current_chunk_size, u->new_chunksize);
-+			}
- 			previous_level = map->raid_level;
-+		}
- 	}
- 	if ((geo->level == 5) && (previous_level == 0)) {
- 		struct mdinfo *spares = NULL;
+Quoting the Seagate manual for that drive:
 
+> 2.7.3 Voltage tolerance
+> 
+> Voltage tolerance (including noise):
+>  5V +10% / -7.5%
+> 12V +10% / -10.0%
+
+So he was somewhere around 75mV above the low spec, and it was "shaky".  If his meter was rounding up to 4.7 from 4.65, he could have been as close as 25mV to the low spec.
+
+Based on the manual, the best noise tolerance will be at 5.0625V, the middle of the spec.
+
+There might be big datacenter engineers that'll trade some noise margin for heat dissipation savings.  For that drive's active power consumption, a 5% voltage reduction (half of his noise margin) will save him, at most, 28W (5 drives * 6.19W * 0.95^2).  That's a savings of $14 per year for 24/7/365 usage in my household.
+
+I'd spend the $14 for the safety margin on *my* data.  (And I do.)
+
+Regards,
+
+Phil
