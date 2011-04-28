@@ -1,110 +1,90 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: High mismatch count on root device - how to best handle?
-Date: Wed, 27 Apr 2011 21:12:30 -0400
-Message-ID: <4DB8BEFE.3020009@turmel.org>
-References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>	<4DB71F3E.3040003@turmel.org> <BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid1 boot regression in 2.6.37 [bisected]
+Date: Thu, 28 Apr 2011 11:23:28 +1000
+Message-ID: <20110428112328.07cf4578@notabene.brown>
+References: <201103251725.21180.thomas.jarosch@intra2net.com>
+	<20110427181714.219212ce@notabene.brown>
+	<20110427200513.5f6a79fb@notabene.brown>
+	<201104271700.58894.thomas.jarosch@intra2net.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>
+In-Reply-To: <201104271700.58894.thomas.jarosch@intra2net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Mark,
+On Wed, 27 Apr 2011 17:00:58 +0200 Thomas Jarosch
+<thomas.jarosch@intra2net.com> wrote:
 
-On 04/27/2011 08:38 PM, Mark Knecht wrote:
-> On Tue, Apr 26, 2011 at 12:38 PM, Phil Turmel <philip@turmel.org> wrote:
->> Hi Mark,
->>
->> On 04/26/2011 01:22 PM, Mark Knecht wrote:
->>> On Mon, Apr 25, 2011 at 6:30 PM, Mark Knecht <markknecht@gmail.com> wrote:
->> [trim /]
->>
->>> OK, I don't know exactly what I'm looking for a problem here. I ran
->>> the repair, then rebooted. Mismatch count was zero. It seemed the
->>> repair had worked.
->>>
->>> I then used the system for about 4 hours. After 4 hours I did another
->>> check and found the mismatch count had increased.
->>>
->>> What I need to get a handle on is:
->>>
->>> 1) Is this serious? (I assume yes)
->>
->> Maybe.  Are you using a file in this filesystem as swap in lieu of a dedicated swap partition?
->>
+> On Wednesday, 27. April 2011 12:05:13 NeilBrown wrote:
+> > > Thanks again for the report.
+> > 
+> > On reflection over dinner, I think I should move the add_disk right to
+> > the end just before the mutex_unlock.
+> > I'm not sure it makes a big practical difference but it will be easier to
+> > justify.
+> > 
+> > So if you could test this one instead please that would be great.
+> > 
+> > The rationale is that as soon as we call add_disk, get_gendisk will
+> > return the disk rather than coming through to md_probe and blocking on
+> > the mutex. So we want everything set up properly before calling
+> > add_disk.
 > 
-> No, swap is on 3 drives as 3 partitions. The kernel runs swap and it
-> has nothing to do with RAID other than it shares a portion of the
-> drives.
-
-OK.
-
->> I vaguely recall reading that certain code paths in the swap logic can abandon queued writes (due to the data no longer being needed by the VM), such that one or more raid members are left inconsistent.  Supposedly only affecting mirrored raid, and only for swap files/partitions.
->>
->> I don't know if this was ever fixed.  or even if anyone tried to fix it.
->>
+> Unfortunately the kernel oopses now. Attached you'll find screenshots
+> of the oops. I can bring back the serial console if needed.
 > 
-> md126 is the main 3-drive RAID1 root partition of a Gentoo install.
-> Kernel is 2.6.38-gentoo-r1 and I'm using mdadm-3.1.4.
+> I've double verified with "git diff" that I only have your
+> latest change in the tree.
 > 
-> Nothing I do with echo repair seems to stick very well. For a few
-> moments mismatch_cnt will read 0, but as far as I can tell if I do
-> another echo check then I Get another high mismatch_cnt again.
+> Hope that helps,
+> Thomas
 
-Hmmm.  Since its not swap, this would make me worry about the hardware.  Have you considered shuffling SATA port assignments to see if a pattern shows up?  Also consider moving some of the drive power load to another PS.
 
-> Once thing I'm wondering about is whether repair even works on a
-> 3-disk RAID1? I've seen threads out there that suggest it doesn't and
-> that possibly it's just bypassing the actual repair operation?
+Yes it helps, thanks.
 
-I've not heard of such.  But repair does *not* mean "pick the matching data and write to the third", but rather, "unconditionally write whatever is in the first mirror to the other two, if there's any mismatch".
+I do need to add_disk before I kobject_init_and_add the mddev object
+otherwise it will try to create something in sysfs in a non-existent
+directory.
 
-One of Neil's links explains why, but it boils down to the lack of knowledge about the order writes occurred before the interruption (or bug) that caused the mismatch.
+So the sysfs stuff needs to come last.
 
-http://neil.brown.name/blog/20100211050355
+Could you try this one please?
 
->>> 2) How do I figure out which drive(s) of the 3 is having trouble?
+Thanks,
+NeilBrown
 
-After messing with hardware (one change at a time), brute-force is next:
 
-Image the drives individually to new drives, or loop-mountable files on other storage, then assemble the copies as degraded arrays, one at a time.  For each, compute file-by-file checksums, and compare to each other and to backups or other external reference (you *do* have backups... ?).
-
-Others may have better suggestions.  I've never had to do this.
-
->> Don't know.  Failing drives usually give themselves away with warnings in dmesg, and/or ejection from the array.  There's nothing in the kernel or mdadm that'll help here.  You'd have to do three-way voting comparison of all blocks on the member partitions.
->>
->>> 3) If there is a specific drive, what is the process to swap it out?
->>
->> mdadm /dev/mdX --fail /dev/sdXY
->> mdadm /dev/mdX --remove /dev/sdXY
->>
->> (swap drives)
->>
->> mdadm /dev/mdX --add /dev/sdZY
->>
-> 
-> I will have some additional things to figure out. There are 5 drives
-> in this box with a mixture of 3-drive RAID1 & 5-drive RAID6 across
-> them. If I pull a drive then I need to ensure that all four RAIDs are
-> going to get rebuilt correctly. I suspect they will, but I'll want to
-> be careful.
-
-Paranoia is good.  Backups are better.
-
-> Still, if I haven't a clue which drive is causing the mismatch then I
-> cannot know which one to pull..
-
-This is really a file system problem, and effort are underway to solve it.  Btrfs in particular, although it is still experimental.  I'm looking forward to that status changing.
-
-> Thanks for your inputs!
-> 
-> Cheers,
-> Mark
-
-Regards,
-
-Phil
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 818313e..9f9fa54 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4335,13 +4335,15 @@ static int md_alloc(dev_t dev, char *name)
+ 	disk->fops = &md_fops;
+ 	disk->private_data = mddev;
+ 	disk->queue = mddev->queue;
++	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
+ 	/* Allow extended partitions.  This makes the
+ 	 * 'mdp' device redundant, but we can't really
+ 	 * remove it now.
+ 	 */
+ 	disk->flags |= GENHD_FL_EXT_DEVT;
+-	add_disk(disk);
+ 	mddev->gendisk = disk;
++	add_disk(disk);
++
+ 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
+ 				     &disk_to_dev(disk)->kobj, "%s", "md");
+ 	if (error) {
+@@ -4355,8 +4357,6 @@ static int md_alloc(dev_t dev, char *name)
+ 	if (mddev->kobj.sd &&
+ 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
+ 		printk(KERN_DEBUG "pointless warning\n");
+-
+-	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
+  abort:
+ 	mutex_unlock(&disks_mutex);
+ 	if (!error && mddev->kobj.sd) {
