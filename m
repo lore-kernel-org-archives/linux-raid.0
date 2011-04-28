@@ -1,83 +1,102 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: RAID/dmaengine violates the dma-streaming API
-Date: Wed, 27 Apr 2011 16:12:49 -0700
-Message-ID: <BANLkTikBoek0-138wdeqJxF+A3UiN7h-zQ@mail.gmail.com>
-References: <BANLkTinMA_U1r6K4t8UZKUr4nZBsWPSv9w@mail.gmail.com>
-	<BANLkTi=30Q5=TAaPcE8SXt417S6e=RaY3Q@mail.gmail.com>
-	<20110427202016.GX17290@n2100.arm.linux.org.uk>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: High mismatch count on root device - how to best handle?
+Date: Wed, 27 Apr 2011 17:38:29 -0700
+Message-ID: <BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>
+References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>
+	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>
+	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>
+	<4DB71F3E.3040003@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110427202016.GX17290@n2100.arm.linux.org.uk>
+In-Reply-To: <4DB71F3E.3040003@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: saeed bishara <saeed.bishara@gmail.com>, linux-raid@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 27, 2011 at 1:20 PM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Wed, Apr 27, 2011 at 02:42:57PM +0300, saeed bishara wrote:
->> On Sun, Apr 17, 2011 at 7:00 PM, saeed bishara <saeed.bishara@gmail.=
-com> wrote:
->> > Hi,
->> > =A0 =A0 when md uses the dma for offloading xor and memcpy operati=
-ons, it
->> > violates the dma-mapping API. =A0here is the scenario I'm taking a=
-bout
->> > (under write to degraded raid5):
->> > 1. ops_run_prexor sends xor operation from buffers A and B, and th=
-e
->> > destination is A.
->> > 2. ops_run_biodrain: sends mempcy operation from C to B.
->> > 3. ops_run_reconstruct5: sends xor operation from A and B, and the
->> > destination is A again.
->> >
->> > in step 1, the async tx maps A using dma_map_page, and in step 3, =
-it
->> > maps again the same buffer. but, if the request from step 1 still
->> > being handled the dma engine, then we end with a case where the bu=
-ffer
->> > mapped while it still belongs to the dma hw.
->> > when the arch is ARMv6/SMP mode (without io coherency), the cache
->> > maintenance involves read/write access to the buffers, that means,=
- the
->> > second mapping above may access the buffer(with read/write) while =
-the
->> > dma is writing to it!!.
->> >
->> Russell/Dan,
->> =A0 =A0 =A0can you have a look into this issue? what I see here is t=
-hat the
->> raid stack issues dma_map_page to a buffer that still owned by DMA.
+On Tue, Apr 26, 2011 at 12:38 PM, Phil Turmel <philip@turmel.org> wrote=
+:
+> Hi Mark,
 >
-> I already mentioned this issue to Dan, and pointed out that it's
-> a violation of the buffer ownership rules. =A0I don't remember clearl=
-y
-> what the outcome of it is, but there's not a lot which can be done at
-> architecture level about it.
+> On 04/26/2011 01:22 PM, Mark Knecht wrote:
+>> On Mon, Apr 25, 2011 at 6:30 PM, Mark Knecht <markknecht@gmail.com> =
+wrote:
+> [trim /]
 >
-> I think the buffer mapping was going to be moved upwards, to prevent
-> the multiple buffer mapping issue. =A0I don't know if patches were
-> produced though (and I don't have hardware to be able to produce and
-> test such patches against.)
+>> OK, I don't know exactly what I'm looking for a problem here. I ran
+>> the repair, then rebooted. Mismatch count was zero. It seemed the
+>> repair had worked.
+>>
+>> I then used the system for about 4 hours. After 4 hours I did anothe=
+r
+>> check and found the mismatch count had increased.
+>>
+>> What I need to get a handle on is:
+>>
+>> 1) Is this serious? (I assume yes)
+>
+> Maybe. =C2=A0Are you using a file in this filesystem as swap in lieu =
+of a dedicated swap partition?
 >
 
-This is still on my plate and is waiting for me to get out from
-underneath the isci driver effort.  I was thinking to push it all to
-md and kill the api, but then had an idea of an async_session data
-structure that could automatically marshal a chain of transfers
-between mapping domains.  The fast path would be a chain that stays
-within one mapping domain, but the infrastructure would be able to
-devolve to support pathological cases like
-dma_domain1->cpu->dma_domain2 chains.  So md would need to manipulate
-async_sessions, but it could rely on the async_tx api to handle dma
-mapping details.
+No, swap is on 3 drives as 3 partitions. The kernel runs swap and it
+has nothing to do with RAID other than it shares a portion of the
+drives.
 
-That's my 10,000 foot view at least.
+> I vaguely recall reading that certain code paths in the swap logic ca=
+n abandon queued writes (due to the data no longer being needed by the =
+VM), such that one or more raid members are left inconsistent. =C2=A0Su=
+pposedly only affecting mirrored raid, and only for swap files/partitio=
+ns.
+>
+> I don't know if this was ever fixed. =C2=A0or even if anyone tried to=
+ fix it.
+>
 
---
-Dan
+md126 is the main 3-drive RAID1 root partition of a Gentoo install.
+Kernel is 2.6.38-gentoo-r1 and I'm using mdadm-3.1.4.
+
+Nothing I do with echo repair seems to stick very well. For a few
+moments mismatch_cnt will read 0, but as far as I can tell if I do
+another echo check then I Get another high mismatch_cnt again.
+
+Once thing I'm wondering about is whether repair even works on a
+3-disk RAID1? I've seen threads out there that suggest it doesn't and
+that possibly it's just bypassing the actual repair operation?
+
+
+>> 2) How do I figure out which drive(s) of the 3 is having trouble?
+>
+> Don't know. =C2=A0Failing drives usually give themselves away with wa=
+rnings in dmesg, and/or ejection from the array. =C2=A0There's nothing =
+in the kernel or mdadm that'll help here. =C2=A0You'd have to do three-=
+way voting comparison of all blocks on the member partitions.
+>
+>> 3) If there is a specific drive, what is the process to swap it out?
+>
+> mdadm /dev/mdX --fail /dev/sdXY
+> mdadm /dev/mdX --remove /dev/sdXY
+>
+> (swap drives)
+>
+> mdadm /dev/mdX --add /dev/sdZY
+>
+
+I will have some additional things to figure out. There are 5 drives
+in this box with a mixture of 3-drive RAID1 & 5-drive RAID6 across
+them. If I pull a drive then I need to ensure that all four RAIDs are
+going to get rebuilt correctly. I suspect they will, but I'll want to
+be careful.
+
+Still, if I haven't a clue which drive is causing the mismatch then I
+cannot know which one to pull..
+
+Thanks for your inputs!
+
+Cheers,
+Mark
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
