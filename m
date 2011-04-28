@@ -1,50 +1,43 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: RAID6 data-check took almost 2 hours, clicking sounds, system
- unresponsive
-Date: Fri, 29 Apr 2011 02:11:18 +0600
-Message-ID: <20110429021118.0f247326@natsu>
-References: <4DA773EB.5030005@turmel.org>
-	<327628.84887.qm@web65101.mail.ac2.yahoo.com>
+From: Przemyslaw Czarnowski
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH 0/5] Support for IMSM raid0->raid5 migration
+Date: Thu, 28 Apr 2011 23:59:32 +0200
+Message-ID: <20110428215751.19632.5381.stgit@gklab-128-081.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ySTMAom.7xIPIOb.rPcvVWa"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <327628.84887.qm@web65101.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gavin Flower <gavinflower@yahoo.com>
-Cc: Phil Turmel <philip@turmel.org>, Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/ySTMAom.7xIPIOb.rPcvVWa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+The following series implements support for raid0->raid5 migration for IMSM
+metadata. These patches also blocks opposite direction of migration.
+Code mostly bases on patches sent to you by Adam Kwolek. I have incorporated
+your remarks and I tested it quite extensively for comformity with IMSM
+standard. I have also removed opposite direction, as it is:
+* not standarized yet,
+* the design is not settled with you,
+* generic grow routines are not compatible with change of chunk size.
 
-On Thu, 28 Apr 2011 13:03:39 -0700 (PDT)
-Gavin Flower <gavinflower@yahoo.com> wrote:
+Please do not include these patches on 'master' branch, as they are supposed
+to be a part of next minor mdadm version (ie. mdadm 3.2.3). I think good place
+for them is 'devel-3.2'. Master should be reserved just for bug/stability fixes
+for previous release.
+---
 
-> A couple of days ago, my friend Mario brought over his oscilloscope and a
-> volt meter.  The 5 volt rail was showing about 4.7 volts, typically it
-> should be 5.2 - 5.4 (from memory of what he said), and the voltage looked
-> shaky on the oscilloscope.  The old power supply rated at 400 Watts. =20
+Przemyslaw Czarnowski (5):
+      imsm: prepare update for level migrations reshape
+      imsm: fix: disable migration from raid5->raid0
+      imsm: prepare memory for level migration update
+      imsm: process update for raid level migrations
+      imsm: add new chunk size to metadata update
 
-4.7V is fine, those voltages have a tolerance of +/-10%. And if you have a
-deviation there, it is actually better for it to be to the lower side, than
-equivalent to the higher. Reason: no heat increase.
 
---=20
-With respect,
-Roman
+ super-intel.c |  343 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 333 insertions(+), 10 deletions(-)
 
---Sig_/ySTMAom.7xIPIOb.rPcvVWa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk25yeYACgkQTLKSvz+PZwhRawCglOU05ihi4rS6H7tbiZ0knh5U
-NPoAn36+EJxkaluNHDW8SrF6GkaXMaaA
-=oHKY
------END PGP SIGNATURE-----
-
---Sig_/ySTMAom.7xIPIOb.rPcvVWa--
+-- 
+Best Regards,
+Przemyslaw Czarnowski
