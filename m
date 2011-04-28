@@ -1,90 +1,43 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1 boot regression in 2.6.37 [bisected]
-Date: Thu, 28 Apr 2011 11:23:28 +1000
-Message-ID: <20110428112328.07cf4578@notabene.brown>
-References: <201103251725.21180.thomas.jarosch@intra2net.com>
-	<20110427181714.219212ce@notabene.brown>
-	<20110427200513.5f6a79fb@notabene.brown>
-	<201104271700.58894.thomas.jarosch@intra2net.com>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Re: High mismatch count on root device - how to best handle?
+Date: Thu, 28 Apr 2011 07:31:23 +0200
+Message-ID: <20110428053123.B031BD52709@gemini.denx.de>
+References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com> <BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com> <BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com> <4DB71F3E.3040003@turmel.org> <BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com> <4DB8BEFE.3020009@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201104271700.58894.thomas.jarosch@intra2net.com>
+In-reply-to: <4DB8BEFE.3020009@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 27 Apr 2011 17:00:58 +0200 Thomas Jarosch
-<thomas.jarosch@intra2net.com> wrote:
+Dear Phil Turmel,
 
-> On Wednesday, 27. April 2011 12:05:13 NeilBrown wrote:
-> > > Thanks again for the report.
-> > 
-> > On reflection over dinner, I think I should move the add_disk right to
-> > the end just before the mutex_unlock.
-> > I'm not sure it makes a big practical difference but it will be easier to
-> > justify.
-> > 
-> > So if you could test this one instead please that would be great.
-> > 
-> > The rationale is that as soon as we call add_disk, get_gendisk will
-> > return the disk rather than coming through to md_probe and blocking on
-> > the mutex. So we want everything set up properly before calling
-> > add_disk.
+In message <4DB8BEFE.3020009@turmel.org> you wrote:
 > 
-> Unfortunately the kernel oopses now. Attached you'll find screenshots
-> of the oops. I can bring back the serial console if needed.
+> Hmmm.  Since its not swap, this would make me worry about the hardware.  Have you considered shuffling SATA port assignments to see if a pattern shows up?  Also consider moving some of the drive power load to another PS.
+
+I do not think this is hardware related.  I see this behaviour on at
+least 5 different machines which show no other problems except for the
+mismatch count in the RAID 1 partitins that hold the /boot partition.
+
+> > Still, if I haven't a clue which drive is causing the mismatch then I
+> > cannot know which one to pull..
 > 
-> I've double verified with "git diff" that I only have your
-> latest change in the tree.
-> 
-> Hope that helps,
-> Thomas
+> This is really a file system problem, and effort are underway to solve it.  Btrfs in particular, although it is still experimental.  I'm looking forward to that status changing.
 
+It will probably take some time until grub can boot from a RAID1 array
+with btrfs on it...
 
-Yes it helps, thanks.
+Best regards,
 
-I do need to add_disk before I kobject_init_and_add the mddev object
-otherwise it will try to create something in sysfs in a non-existent
-directory.
+Wolfgang Denk
 
-So the sysfs stuff needs to come last.
-
-Could you try this one please?
-
-Thanks,
-NeilBrown
-
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 818313e..9f9fa54 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4335,13 +4335,15 @@ static int md_alloc(dev_t dev, char *name)
- 	disk->fops = &md_fops;
- 	disk->private_data = mddev;
- 	disk->queue = mddev->queue;
-+	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
- 	/* Allow extended partitions.  This makes the
- 	 * 'mdp' device redundant, but we can't really
- 	 * remove it now.
- 	 */
- 	disk->flags |= GENHD_FL_EXT_DEVT;
--	add_disk(disk);
- 	mddev->gendisk = disk;
-+	add_disk(disk);
-+
- 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
- 				     &disk_to_dev(disk)->kobj, "%s", "md");
- 	if (error) {
-@@ -4355,8 +4357,6 @@ static int md_alloc(dev_t dev, char *name)
- 	if (mddev->kobj.sd &&
- 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
- 		printk(KERN_DEBUG "pointless warning\n");
--
--	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
-  abort:
- 	mutex_unlock(&disks_mutex);
- 	if (!error && mddev->kobj.sd) {
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Q:  What's a light-year?
+A:  One-third less calories than a regular year.
