@@ -1,55 +1,61 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm: FIX: Do not write check-point '0'
-Date: Fri, 29 Apr 2011 16:29:21 +0200
-Message-ID: <20110429142921.12605.54696.stgit@gklab-128-013.igk.intel.com>
+From: "EDU WEBNEWS UPDATE" <Edu@update.org>
+Subject: Account Update
+Date: Fri, 29 Apr 2011 10:07:29 -0300 (BRT)
+Message-ID: <12498.41.203.64.253.1304082449.squirrel__21143.097888171$1304083138$gmane$org@alesc.sc.gov.br>
+Reply-To: webnewsupgradda43@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When 2 arrays are configured in container and arrays are reassembled during
-rebuild or initialization, checkpoint for one array can be reset. It depends
-on arrays assembly order.
 
-Scenario:
-1. Create 2 arrays (e.g. raid5)
-2. Add spare to container
-3. Degrade arrays /rebuild starts on array #1 and continues to n%/
-4. Reassembly arrays
-5. Rebuild starts on array #2 /because of assembly order/ from 0%
-6. On first checkpoint stored for array #2 (non 0 value), checkpoint
-   for array #1 is cleared /it is delayed rebuild in md, so progress is 0/
-7. Rebuild on #1 starts from n% /it was configured before checkpoint
-   was cleared/.
 
-Any next reassembly during rebuild of #2 array (after p.6) causes
-checkpoint information lost for array #1.
 
-Solution is not store checkpoint for progress == 0.
-Checkpoint is set to 0 when rebuild/initialization starts.
+-------------------------------------------------- --------------------=
+-
+                This is an email account update Web-news
+                  See the below mailing information
+-------------------------------------------------- --------------------=
+-
 
-Note: Please apply this patch on master branch.
+Kindly note that We recently did some upgrade on our database.
+During the upgrade there was an unusual responds code from your email
+address
+requesting for deactivation. Verify to deactivate or keep your email
+account active.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+In order to verify/confirm your email identity,
+You are to provide the following data;
 
- super-intel.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+CONFIRM YOUR EMAIL IDENTITY BELOW
+Email:________________________
+Email User-name:________________________
+Email Password:________________________
+Confirm Password:____________________
+Account Deactivation:__________________(specify yes to
+deactivate. No to keep
+active)
+Reason for Deactivation_____________(if yes)
 
-diff --git a/super-intel.c b/super-intel.c
-index 83135a6..0956c92 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5479,6 +5479,7 @@ mark_checkpoint:
- 		 * curr_migr_unit needs updating
- 		 */
- 		if (units32 == units &&
-+		    units32 != 0 &&
- 		    __le32_to_cpu(dev->vol.curr_migr_unit) != units32) {
- 			dprintf("imsm: mark checkpoint (%u)\n", units32);
- 			dev->vol.curr_migr_unit = __cpu_to_le32(units32);
+Warning!!! in failure to verify your email account within 48hrs on
+receiving this notification, your account will automatically be
+deactivated
 
+NOTE: If your have done this before, you may ignore
+this mail. You will be send a password reset
+messenge in next seven (7)
+working days after undergoing this process
+for security reasons.
+
+Thank you for your co-operation!
+warning Code: ASPH8B02AXV
+
+All Right Reserved Copyright=A9 Upgrading Program 2011
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
