@@ -1,107 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
-Date: Sun, 1 May 2011 08:27:17 +1000
-Message-ID: <20110501082717.5116e575@notabene.brown>
-References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: High mismatch count on root device - how to best handle?
+Date: Sat, 30 Apr 2011 15:51:36 -0700
+Message-ID: <BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
+References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>
+	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>
+	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>
+	<4DB71F3E.3040003@turmel.org>
+	<BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>
+	<4DB8BEFE.3020009@turmel.org>
+	<20110428053123.B031BD52709@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+In-Reply-To: <20110428053123.B031BD52709@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@OSS.SGI.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
+To: Wolfgang Denk <wd@denx.de>
+Cc: Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 30 Apr 2011 16:27:48 +0100 pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-wrote:
+On Wed, Apr 27, 2011 at 10:31 PM, Wolfgang Denk <wd@denx.de> wrote:
+> Dear Phil Turmel,
+>
+> In message <4DB8BEFE.3020009@turmel.org> you wrote:
+>>
+>> Hmmm. =C2=A0Since its not swap, this would make me worry about the h=
+ardware. =C2=A0Have you considered shuffling SATA port assignments to s=
+ee if a pattern shows up? =C2=A0Also consider moving some of the drive =
+power load to another PS.
+>
+> I do not think this is hardware related. =C2=A0I see this behaviour o=
+n at
+> least 5 different machines which show no other problems except for th=
+e
+> mismatch count in the RAID 1 partitins that hold the /boot partition.
+>
 
-> While I agree with BAARF.com arguments fully, I sometimes have
-> to deal with legacy systems with wide RAID6 sets (for example 16
-> drives, quite revolting) which have op-journaled filesystems on
-> them like XFS or JFS (sometimes block-journaled ext[34], but I
-> am not that interested in them for this).
-> 
-> Sometimes (but fortunately not that recently) I have had to deal
-> with small-file filesystems setup on wide-stripe RAID6 setup by
-> morons who don't understand the difference between a database
-> and a filesystem (and I have strong doubts that RAID6 is
-> remotely appropriate to databases).
-> 
-> So I'd like to figure out how much effort I should invest in
-> undoing cases of the above, that is how badly they are likely to
-> be and degrade over time (usually very badly).
-> 
-> First a couple of question purely about RAID, but indirectly
-> relevant to op-journaled filesystems:
-> 
->   * Can Linux MD do "abbreviated" read-modify-write RAID6
->     updates like for RAID5? That is where not the whole stripe
->     is read in, modified and written, but just the block to be
->     updated and the parity wblocks.
+That's interesting to me.
 
-No.  (patches welcome).
+In my case /boot is on it's own partition and not mounted when I do
+the test. There was however a RAID6 mounted at the time I was doing
+the repair on the RAID1. I tried dismounting it but that didn't change
+anything. Still got the same sort of error count.
 
-> 
->   * When reading or writing part of RAID[456] stripe for example
->     smaller than a sector, what is the minimum unit of transfer
->     with Linux MD? The full stripe, the chunk containing the
->     sector, or just the sector containing the bytes to be
->     written or updated (and potentially the parity sectors)? I
->     would expect reads to always read just the sector, but not
->     so sure about writing.
+>> > Still, if I haven't a clue which drive is causing the mismatch the=
+n I
+>> > cannot know which one to pull..
+>>
+>> This is really a file system problem, and effort are underway to sol=
+ve it. =C2=A0Btrfs in particular, although it is still experimental. =C2=
+=A0I'm looking forward to that status changing.
+>
+> It will probably take some time until grub can boot from a RAID1 arra=
+y
+> with btrfs on it...
+>
+> Best regards,
+>
+> Wolfgang Denk
 
-1 "PAGE" - normally 4K.
+Thanks for the info.
 
-
-> 
->   * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
->     Areca, 3ware), where is the documentation if any on how they
->     behave in these cases?
-> 
-> Regardless, op-journaled file system designs like JFS and XFS
-> write small records (way below a stripe set size, and usually
-> way below a chunk size) to the journal when they queue
-> operations, even if sometimes depending on design and options
-> may "batch" the journal updates (potentially breaking safety
-> semantics). Also they do small write when they dequeue the
-> operations from the journal to the actual metadata records
-> involved.
-
-The ideal config for a journalled filesystem is for put the journal on a
-separate smaller lower-latency device.  e.g. a small RAID1 pair.
-
-In a previous work place I had good results with:
-  RAID1 pair of small disks with root, swap, journal
-  Large RAID5/6 array with bulk of filesystem.
-
-I also did data journalling as it helps a lot with NFS.
-
-
-
-> 
-> How bad can this be when the journal is say internal for a
-> filesystem that is held on wide-stride RAID6 set? I suspect very
-> very bad, with apocalyptic read-modify-write storms, eating IOPS.
-> 
-> I suspect that this happens a lot with SSDs too, where the role
-> of stripe set size is played by the erase block size (often in
-> the hundreds of KBytes, and even more expensive).
-> 
-> Where are studies or even just impressions of anedoctes on how
-> bad this is?
-> 
-> Are there instrumentation tools in JFS or XFS that may allow me
-> to watch/inspect what is happening with the journal? For Linux
-> MD to see what are the rates of stripe r-m-w cases?
-
-Not that I am aware of.
-
-
-NeilBrown
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Cheers,
+Mark
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
