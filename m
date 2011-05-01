@@ -1,100 +1,83 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: High mismatch count on root device - how to best handle?
-Date: Sun, 1 May 2011 10:13:12 -0700
-Message-ID: <BANLkTi=ssw38v24QQiAL=GyVrHs_jVwYzQ@mail.gmail.com>
-References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>
-	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>
-	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>
-	<4DB71F3E.3040003@turmel.org>
-	<BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>
-	<4DB8BEFE.3020009@turmel.org>
-	<20110428053123.B031BD52709@gemini.denx.de>
-	<BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
-	<4DBD7338.4060206@fnarfbargle.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
+Date: Sun, 01 May 2011 20:32:22 +0200
+Message-ID: <ipk8vn$s9a$1@dough.gmane.org>
+References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>	<20110501082717.5116e575@notabene.brown> <19901.31958.368144.832086@tree.ty.sabi.co.UK>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DBD7338.4060206@fnarfbargle.com>
+In-Reply-To: <19901.31958.368144.832086@tree.ty.sabi.co.UK>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <lists2009@fnarfbargle.com>
-Cc: Wolfgang Denk <wd@denx.de>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux-xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Sun, May 1, 2011 at 7:50 AM, Brad Campbell <lists2009@fnarfbargle.co=
-m> wrote:
-> On 01/05/11 06:51, Mark Knecht wrote:
->>
->> On Wed, Apr 27, 2011 at 10:31 PM, Wolfgang Denk<wd@denx.de> =C2=A0wr=
-ote:
->>>
->>> Dear Phil Turmel,
->>>
->>> In message<4DB8BEFE.3020009@turmel.org> =C2=A0you wrote:
->>>>
->>>> Hmmm. =C2=A0Since its not swap, this would make me worry about the=
- hardware.
->>>> =C2=A0Have you considered shuffling SATA port assignments to see i=
-f a pattern
->>>> shows up? =C2=A0Also consider moving some of the drive power load =
-to another PS.
->>>
->>> I do not think this is hardware related. =C2=A0I see this behaviour=
- on at
->>> least 5 different machines which show no other problems except for =
-the
->>> mismatch count in the RAID 1 partitins that hold the /boot partitio=
-n.
+On 01/05/11 17:31, Peter Grandi wrote:
+> [ ... ]
 >
-> root@srv:/server# grep . /sys/block/md?/md/mismatch_cnt
-> /sys/block/md0/md/mismatch_cnt:0
-> /sys/block/md1/md/mismatch_cnt:128
-> /sys/block/md2/md/mismatch_cnt:0
-> /sys/block/md3/md/mismatch_cnt:41728
-> /sys/block/md4/md/mismatch_cnt:896
-> /sys/block/md5/md/mismatch_cnt:0
-> /sys/block/md6/md/mismatch_cnt:4352
+>>> * Can Linux MD do "abbreviated" read-modify-write RAID6
+>>> updates like for RAID5? [ ... ]
 >
-> root@srv:/server# cat /proc/mdstat | grep md[1346]
-> md6 : active raid1 sdp6[0] sdo6[1]
-> md4 : active raid1 sdp3[0] sdo3[1]
-> md3 : active raid1 sdp2[0] sdo2[1]
-> md1 : active raid1 sdp1[0] sdo1[1]
+>> No. (patches welcome).
 >
-> root@srv:/server# cat /etc/fstab | grep md[1346]
-> /dev/md1 =C2=A0 =C2=A0 =C2=A0 =C2=A0/ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 ext4 errors=3Dremount-ro,commit=3D30,noatime
-> 0 1
-> /dev/md6 =C2=A0 =C2=A0 =C2=A0 =C2=A0/raid0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0ext4 =C2=A0 =C2=A0defaults,commit=3D30,noatime =C2=A0 =C2=A0 =C2=
-=A00 1
-> /dev/md4 =C2=A0 =C2=A0 =C2=A0 =C2=A0/home =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 ext4 =C2=A0 =C2=A0defaults,commit=3D30,noatime =C2=A0 =C2=A0 =C2=
-=A00 1
-> /dev/md3 =C2=A0 =C2=A0 =C2=A0 =C2=A0none =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0swap =C2=A0 =C2=A0sw
+> Ahhhm, but let me dig a bit deeper, even if it may be implied in
+> the answer: would it be *possible*?
 >
-> I see them _all_ the time on RAID1's..
->
-> When I configured this system _years_ ago, I did not know any better,=
- so
-> it's a bit of a mish-mash.
->
-> The machine also has a 10 drive RAID-6 and a 3 drive RAID-5. The only=
- time
-> I've seen mismatches on those is when I used a SIL 3132 controller an=
-d it
-> trashed the RAID-6.
->
-> Brad
+> That is, is the double parity scheme used in MS such that it is
+> possible to "subtract" the old content of a page and "add" the
+> new content of that page to both parity pages?
 >
 
-Brad,
-   Thanks very much for sharing the data and your experiences with
-this. I'll simply ignore it on the RAID1's from now on.
+If I've understood the maths correctly, then yes it would be possible.=20
+But it would involve more calculations, and it is difficult to see wher=
+e=20
+the best balance lies between cpu demands and IO demands.  In general,=20
+calculating the Q parity block for raid6 is processor-intensive -=20
+there's a fair amount of optimisation done in the normal calculations t=
+o=20
+keep it reasonable.
 
-Cheers,
-Mark
+Basically, the first parity P is a simple calculation:
+
+P =3D D_0 + D_1 + .. + D_n-1
+
+But Q is more difficult:
+
+Q =3D D_0 + g.D_1 + g=B2.D_2 + ... + g^(n-1).D_n-1
+
+where "plus" is xor, "times" is a weird function calculated over a=20
+G(2^8) field, and g is a generator for that field.
+
+If you want to replace D_i, then you can calculate:
+
+P(new) =3D P(old) + D_i(old) + D_i(new)
+
+Q(new) =3D Q(old) + g^i.(D_i(old) + D_i(new))
+
+This means multiplying by g_i for whichever block i is being replaced.
+
+The generator and multiply operation are picked to make it relatively=20
+fast and easy to multiply by g, especially if you've got a processor=20
+that has vector operations (as most powerful cpus do).  This means that=
+=20
+the original Q calculation is fairly efficient.  But to do general=20
+multiplications by g_i is more effort, and will typically involve=20
+cache-killing lookup tables or multiple steps.
+
+
+It is probably reasonable to say that when md raid first implemented=20
+raid6, it made little sense to do these abbreviated parity calculations=
+=2E=20
+  But as processors have got faster (and wider, with more cores) while=20
+disk throughput has made slower progress, it's maybe a different=20
+balance.  So it's probably both possible and practical to do these=20
+calculations.  All it needs is someone to spend the time writing the=20
+code - and lots of people willing to test it.
+
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
