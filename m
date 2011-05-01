@@ -1,59 +1,130 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: High mismatch count on root device - how to best handle?
-Date: Sun, 01 May 2011 22:50:32 +0800
-Message-ID: <4DBD7338.4060206@fnarfbargle.com>
-References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>	<4DB71F3E.3040003@turmel.org>	<BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>	<4DB8BEFE.3020009@turmel.org>	<20110428053123.B031BD52709@gemini.denx.de> <BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
+Date: Sun, 01 May 2011 17:24:09 +0200
+Message-ID: <ipjtup$47u$1@dough.gmane.org>
+References: <19900.10868.583555.849181@tree.ty.sabi.co.UK> <20110501082717.5116e575@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
+In-Reply-To: <20110501082717.5116e575@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Wolfgang Denk <wd@denx.de>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/05/11 06:51, Mark Knecht wrote:
-> On Wed, Apr 27, 2011 at 10:31 PM, Wolfgang Denk<wd@denx.de>  wrote:
->> Dear Phil Turmel,
+On 01/05/11 00:27, NeilBrown wrote:
+> On Sat, 30 Apr 2011 16:27:48 +0100 pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+> wrote:
+>
+>> While I agree with BAARF.com arguments fully, I sometimes have
+>> to deal with legacy systems with wide RAID6 sets (for example 16
+>> drives, quite revolting) which have op-journaled filesystems on
+>> them like XFS or JFS (sometimes block-journaled ext[34], but I
+>> am not that interested in them for this).
 >>
->> In message<4DB8BEFE.3020009@turmel.org>  you wrote:
->>>
->>> Hmmm.  Since its not swap, this would make me worry about the hardware.  Have you considered shuffling SATA port assignments to see if a pattern shows up?  Also consider moving some of the drive power load to another PS.
+>> Sometimes (but fortunately not that recently) I have had to deal
+>> with small-file filesystems setup on wide-stripe RAID6 setup by
+>> morons who don't understand the difference between a database
+>> and a filesystem (and I have strong doubts that RAID6 is
+>> remotely appropriate to databases).
 >>
->> I do not think this is hardware related.  I see this behaviour on at
->> least 5 different machines which show no other problems except for the
->> mismatch count in the RAID 1 partitins that hold the /boot partition.
+>> So I'd like to figure out how much effort I should invest in
+>> undoing cases of the above, that is how badly they are likely to
+>> be and degrade over time (usually very badly).
+>>
+>> First a couple of question purely about RAID, but indirectly
+>> relevant to op-journaled filesystems:
+>>
+>>    * Can Linux MD do "abbreviated" read-modify-write RAID6
+>>      updates like for RAID5? That is where not the whole stripe
+>>      is read in, modified and written, but just the block to be
+>>      updated and the parity wblocks.
+>
+> No.  (patches welcome).
 
-root@srv:/server# grep . /sys/block/md?/md/mismatch_cnt
-/sys/block/md0/md/mismatch_cnt:0
-/sys/block/md1/md/mismatch_cnt:128
-/sys/block/md2/md/mismatch_cnt:0
-/sys/block/md3/md/mismatch_cnt:41728
-/sys/block/md4/md/mismatch_cnt:896
-/sys/block/md5/md/mismatch_cnt:0
-/sys/block/md6/md/mismatch_cnt:4352
+As far as I understand the raid6 mathematics, it shouldn't be too hard 
+to do such abbreviated updates, but that it could quickly lead to 
+complex code if you are trying to update more than a couple of blocks at 
+a time.
 
-root@srv:/server# cat /proc/mdstat | grep md[1346]
-md6 : active raid1 sdp6[0] sdo6[1]
-md4 : active raid1 sdp3[0] sdo3[1]
-md3 : active raid1 sdp2[0] sdo2[1]
-md1 : active raid1 sdp1[0] sdo1[1]
+>
+>>
+>>    * When reading or writing part of RAID[456] stripe for example
+>>      smaller than a sector, what is the minimum unit of transfer
+>>      with Linux MD? The full stripe, the chunk containing the
+>>      sector, or just the sector containing the bytes to be
+>>      written or updated (and potentially the parity sectors)? I
+>>      would expect reads to always read just the sector, but not
+>>      so sure about writing.
+>
+> 1 "PAGE" - normally 4K.
+>
+>
+>>
+>>    * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
+>>      Areca, 3ware), where is the documentation if any on how they
+>>      behave in these cases?
+>>
+>> Regardless, op-journaled file system designs like JFS and XFS
+>> write small records (way below a stripe set size, and usually
+>> way below a chunk size) to the journal when they queue
+>> operations, even if sometimes depending on design and options
+>> may "batch" the journal updates (potentially breaking safety
+>> semantics). Also they do small write when they dequeue the
+>> operations from the journal to the actual metadata records
+>> involved.
+>
+> The ideal config for a journalled filesystem is for put the journal on a
+> separate smaller lower-latency device.  e.g. a small RAID1 pair.
+>
+> In a previous work place I had good results with:
+>    RAID1 pair of small disks with root, swap, journal
+>    Large RAID5/6 array with bulk of filesystem.
+>
+> I also did data journalling as it helps a lot with NFS.
+>
 
-root@srv:/server# cat /etc/fstab | grep md[1346]
-/dev/md1        /               ext4 
-errors=remount-ro,commit=30,noatime     0 1
-/dev/md6        /raid0          ext4    defaults,commit=30,noatime      0 1
-/dev/md4        /home           ext4    defaults,commit=30,noatime      0 1
-/dev/md3        none            swap    sw
+I suppose it also makes sense to put the write-intent bitmap for md raid 
+on such a raid1 pair (typically SSD's).
 
-I see them _all_ the time on RAID1's..
+What would be very nice is a RAM-based SSD with battery backup, rather 
+than a flash disk.  These sorts of devices exist, but they are usually 
+vastly expensive because they RAM is expensive for disk-like sizes.  I'd 
+like to see physically small and cheap RAM-based SSD with 1 or 2 GB - 
+that would be ideal for file system journals, write intent bitmaps, etc.
 
-When I configured this system _years_ ago, I did not know any better, so 
-it's a bit of a mish-mash.
+>
+>
+>>
+>> How bad can this be when the journal is say internal for a
+>> filesystem that is held on wide-stride RAID6 set? I suspect very
+>> very bad, with apocalyptic read-modify-write storms, eating IOPS.
+>>
+>> I suspect that this happens a lot with SSDs too, where the role
+>> of stripe set size is played by the erase block size (often in
+>> the hundreds of KBytes, and even more expensive).
+>>
+>> Where are studies or even just impressions of anedoctes on how
+>> bad this is?
+>>
+>> Are there instrumentation tools in JFS or XFS that may allow me
+>> to watch/inspect what is happening with the journal? For Linux
+>> MD to see what are the rates of stripe r-m-w cases?
+>
+> Not that I am aware of.
+>
+>
+> NeilBrown
+>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-The machine also has a 10 drive RAID-6 and a 3 drive RAID-5. The only 
-time I've seen mismatches on those is when I used a SIL 3132 controller 
-and it trashed the RAID-6.
 
-Brad
