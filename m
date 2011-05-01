@@ -1,130 +1,59 @@
-From: David Brown <david.brown@hesbynett.no>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
-Date: Sun, 01 May 2011 17:24:09 +0200
-Message-ID: <ipjtup$47u$1@dough.gmane.org>
-References: <19900.10868.583555.849181@tree.ty.sabi.co.UK> <20110501082717.5116e575@notabene.brown>
+Date: Sun, 1 May 2011 16:31:34 +0100
+Message-ID: <19901.31958.368144.832086@tree.ty.sabi.co.UK>
+References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+	<20110501082717.5116e575@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <xfs-bounces@oss.sgi.com>
 In-Reply-To: <20110501082717.5116e575@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>, Linux fs XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-On 01/05/11 00:27, NeilBrown wrote:
-> On Sat, 30 Apr 2011 16:27:48 +0100 pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-> wrote:
->
->> While I agree with BAARF.com arguments fully, I sometimes have
->> to deal with legacy systems with wide RAID6 sets (for example 16
->> drives, quite revolting) which have op-journaled filesystems on
->> them like XFS or JFS (sometimes block-journaled ext[34], but I
->> am not that interested in them for this).
->>
->> Sometimes (but fortunately not that recently) I have had to deal
->> with small-file filesystems setup on wide-stripe RAID6 setup by
->> morons who don't understand the difference between a database
->> and a filesystem (and I have strong doubts that RAID6 is
->> remotely appropriate to databases).
->>
->> So I'd like to figure out how much effort I should invest in
->> undoing cases of the above, that is how badly they are likely to
->> be and degrade over time (usually very badly).
->>
->> First a couple of question purely about RAID, but indirectly
->> relevant to op-journaled filesystems:
->>
->>    * Can Linux MD do "abbreviated" read-modify-write RAID6
->>      updates like for RAID5? That is where not the whole stripe
->>      is read in, modified and written, but just the block to be
->>      updated and the parity wblocks.
->
-> No.  (patches welcome).
+[ ... ]
 
-As far as I understand the raid6 mathematics, it shouldn't be too hard 
-to do such abbreviated updates, but that it could quickly lead to 
-complex code if you are trying to update more than a couple of blocks at 
-a time.
+>> * Can Linux MD do "abbreviated" read-modify-write RAID6
+>> updates like for RAID5? [ ... ]
 
->
->>
->>    * When reading or writing part of RAID[456] stripe for example
->>      smaller than a sector, what is the minimum unit of transfer
->>      with Linux MD? The full stripe, the chunk containing the
->>      sector, or just the sector containing the bytes to be
->>      written or updated (and potentially the parity sectors)? I
->>      would expect reads to always read just the sector, but not
->>      so sure about writing.
->
-> 1 "PAGE" - normally 4K.
->
->
->>
->>    * What about popular HW RAID host adapter (e.g. LSI, Adaptec,
->>      Areca, 3ware), where is the documentation if any on how they
->>      behave in these cases?
->>
->> Regardless, op-journaled file system designs like JFS and XFS
->> write small records (way below a stripe set size, and usually
->> way below a chunk size) to the journal when they queue
->> operations, even if sometimes depending on design and options
->> may "batch" the journal updates (potentially breaking safety
->> semantics). Also they do small write when they dequeue the
->> operations from the journal to the actual metadata records
->> involved.
->
-> The ideal config for a journalled filesystem is for put the journal on a
-> separate smaller lower-latency device.  e.g. a small RAID1 pair.
->
+> No. (patches welcome).
+
+Ahhhm, but let me dig a bit deeper, even if it may be implied in
+the answer: would it be *possible*?
+
+That is, is the double parity scheme used in MS such that it is
+possible to "subtract" the old content of a page and "add" the
+new content of that page to both parity pages?
+
+[ ... ]
+
+> The ideal config for a journalled filesystem is for put the
+> journal on a separate smaller lower-latency device.  e.g. a
+> small RAID1 pair.
+
 > In a previous work place I had good results with:
->    RAID1 pair of small disks with root, swap, journal
->    Large RAID5/6 array with bulk of filesystem.
->
-> I also did data journalling as it helps a lot with NFS.
->
+>   RAID1 pair of small disks with root, swap, journal
+>   Large RAID5/6 array with bulk of filesystem.
 
-I suppose it also makes sense to put the write-intent bitmap for md raid 
-on such a raid1 pair (typically SSD's).
+Sound reasonable, except that I am allergic to RAID5 (except in
+two cases) and RAID6 (in general). :-), but would work equally
+well I guess with RAID10 and its delightful MD implementation.
 
-What would be very nice is a RAM-based SSD with battery backup, rather 
-than a flash disk.  These sorts of devices exist, but they are usually 
-vastly expensive because they RAM is expensive for disk-like sizes.  I'd 
-like to see physically small and cheap RAM-based SSD with 1 or 2 GB - 
-that would be ideal for file system journals, write intent bitmaps, etc.
+[ ... ]
 
->
->
->>
->> How bad can this be when the journal is say internal for a
->> filesystem that is held on wide-stride RAID6 set? I suspect very
->> very bad, with apocalyptic read-modify-write storms, eating IOPS.
->>
->> I suspect that this happens a lot with SSDs too, where the role
->> of stripe set size is played by the erase block size (often in
->> the hundreds of KBytes, and even more expensive).
->>
->> Where are studies or even just impressions of anedoctes on how
->> bad this is?
->>
->> Are there instrumentation tools in JFS or XFS that may allow me
->> to watch/inspect what is happening with the journal? For Linux
->> MD to see what are the rates of stripe r-m-w cases?
->
-> Not that I am aware of.
->
->
-> NeilBrown
->
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks for the information!
 
-
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
