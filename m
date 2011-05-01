@@ -1,62 +1,59 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: RAID6 r-m-w, op-journaled fs, SSDs
-Date: Sun, 1 May 2011 19:36:59 +1000
-Message-ID: <20110501093659.GH13542@dastard>
-References: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: High mismatch count on root device - how to best handle?
+Date: Sun, 01 May 2011 22:50:32 +0800
+Message-ID: <4DBD7338.4060206@fnarfbargle.com>
+References: <BANLkTikLN6P52tknwD0+D-+2iDUp3sF1fA@mail.gmail.com>	<BANLkTikwv-PRcwknZkMsPY6T+N0p=-uC4w@mail.gmail.com>	<BANLkTinS9=v+qHAyewRu19HgGr4iriwjkw@mail.gmail.com>	<4DB71F3E.3040003@turmel.org>	<BANLkTinpDOuTDu7fhbXNYwtvToUaCM=cmQ@mail.gmail.com>	<4DB8BEFE.3020009@turmel.org>	<20110428053123.B031BD52709@gemini.denx.de> <BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19900.10868.583555.849181@tree.ty.sabi.co.UK>
+In-Reply-To: <BANLkTikBkaWsDicptHsX3dz=RW5_bL2Z7A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>, Linux fs JFS <jfs-discussion@lists.SourceForge.net>
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Wolfgang Denk <wd@denx.de>, Phil Turmel <philip@turmel.org>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Apr 30, 2011 at 04:27:48PM +0100, Peter Grandi wrote:
-> Regardless, op-journaled file system designs like JFS and XFS
-> write small records (way below a stripe set size, and usually
-> way below a chunk size) to the journal when they queue
-> operations,
+On 01/05/11 06:51, Mark Knecht wrote:
+> On Wed, Apr 27, 2011 at 10:31 PM, Wolfgang Denk<wd@denx.de>  wrote:
+>> Dear Phil Turmel,
+>>
+>> In message<4DB8BEFE.3020009@turmel.org>  you wrote:
+>>>
+>>> Hmmm.  Since its not swap, this would make me worry about the hardware.  Have you considered shuffling SATA port assignments to see if a pattern shows up?  Also consider moving some of the drive power load to another PS.
+>>
+>> I do not think this is hardware related.  I see this behaviour on at
+>> least 5 different machines which show no other problems except for the
+>> mismatch count in the RAID 1 partitins that hold the /boot partition.
 
-XFS will write log-stripe-unit sized records to disk. If the log
-buffers are not full, it pads them. Supported log-sunit sizes are up
-to 256k.
+root@srv:/server# grep . /sys/block/md?/md/mismatch_cnt
+/sys/block/md0/md/mismatch_cnt:0
+/sys/block/md1/md/mismatch_cnt:128
+/sys/block/md2/md/mismatch_cnt:0
+/sys/block/md3/md/mismatch_cnt:41728
+/sys/block/md4/md/mismatch_cnt:896
+/sys/block/md5/md/mismatch_cnt:0
+/sys/block/md6/md/mismatch_cnt:4352
 
-> even if sometimes depending on design and options
-> may "batch" the journal updates (potentially breaking safety
-> semantics). Also they do small write when they dequeue the
-> operations from the journal to the actual metadata records
-> involved.
-> 
-> How bad can this be when the journal is say internal for a
-> filesystem that is held on wide-stride RAID6 set? I suspect very
-> very bad, with apocalyptic read-modify-write storms, eating IOPS.
+root@srv:/server# cat /proc/mdstat | grep md[1346]
+md6 : active raid1 sdp6[0] sdo6[1]
+md4 : active raid1 sdp3[0] sdo3[1]
+md3 : active raid1 sdp2[0] sdo2[1]
+md1 : active raid1 sdp1[0] sdo1[1]
 
-Not bad at all, because the journal writes are sequential, and XFS
-can have multiple log IOs in progress at once (up to 8 x 256k =
-2MB). So in general while metadata operations are in progress, XFS
-will fill full stripes with log IO and you won't get problems with
-RMW.
+root@srv:/server# cat /etc/fstab | grep md[1346]
+/dev/md1        /               ext4 
+errors=remount-ro,commit=30,noatime     0 1
+/dev/md6        /raid0          ext4    defaults,commit=30,noatime      0 1
+/dev/md4        /home           ext4    defaults,commit=30,noatime      0 1
+/dev/md3        none            swap    sw
 
-> Where are studies or even just impressions of anedoctes on how
-> bad this is?
+I see them _all_ the time on RAID1's..
 
-Just buy decent RAID hardware with a BBWC and journal IO does not
-hurt at all.
+When I configured this system _years_ ago, I did not know any better, so 
+it's a bit of a mish-mash.
 
-> Are there instrumentation tools in JFS or XFS that may allow me
-> to watch/inspect what is happening with the journal? For Linux
-> MD to see what are the rates of stripe r-m-w cases?
+The machine also has a 10 drive RAID-6 and a 3 drive RAID-5. The only 
+time I've seen mismatches on those is when I used a SIL 3132 controller 
+and it trashed the RAID-6.
 
-XFS has plenty of event tracing, including all the transaction
-reservation and commit accounting in it. And if you know what you
-are looking for, you can see all the log IO and transaction
-completion processing in the event traces, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Brad
