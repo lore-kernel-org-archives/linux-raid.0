@@ -1,99 +1,28 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Bug#624343: linux-image-2.6.38-2-amd64: frequent message "bio
- too big device md0 (248 > 240)" in kern.log
-Date: Mon, 02 May 2011 16:56:05 +0200
-Message-ID: <ipmgjl$o11$1@dough.gmane.org>
-References: <20110427161901.27049.31001.reportbug@servo.factory.finestructure.net>	<1304051980.3105.46.camel@localhost>	<8739kyf53e.fsf@servo.factory.finestructure.net>	<1304294457.2833.111.camel@localhost>	<20110502102224.7787d6bd@notabene.brown>	<ipls7b$u97$2@dough.gmane.org> <20110502200057.34806257@notabene.brown>
+From: "Peter Kovari" <peter@kovari.priv.hu>
+Subject: Question regarding --backup-file
+Date: Mon, 2 May 2011 17:13:47 +0200
+Message-ID: <000301cc08db$89293160$9b7b9420$@priv.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110502200057.34806257@notabene.brown>
+Content-Language: hu
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/05/2011 12:00, NeilBrown wrote:
-> On Mon, 02 May 2011 11:08:11 +0200 David Brown<david@westcontrol.com>  wrote:
->
->> On 02/05/2011 02:22, NeilBrown wrote:
->>> On Mon, 02 May 2011 01:00:57 +0100 Ben Hutchings<ben@decadent.org.uk>   wrote:
->>>
->>>> On Sun, 2011-05-01 at 15:06 -0700, Jameson Graef Rollins wrote:
->>>>> On Fri, 29 Apr 2011 05:39:40 +0100, Ben Hutchings<ben@decadent.org.uk>   wrote:
->>>>>> On Wed, 2011-04-27 at 09:19 -0700, Jameson Graef Rollins wrote:
->>>>>>> I run what I imagine is a fairly unusual disk setup on my laptop,
->>>>>>> consisting of:
->>>>>>>
->>>>>>>     ssd ->   raid1 ->   dm-crypt ->   lvm ->   ext4
->>>>>>>
->>>>>>> I use the raid1 as a backup.  The raid1 operates normally in degraded
->>>>>>> mode.  For backups I then hot-add a usb hdd, let the raid1 sync, and
->>>>>>> then fail/remove the external hdd.
->>>>>>
->>>>>> Well, this is not expected to work.  Possibly the hot-addition of a disk
->>>>>> with different bio restrictions should be rejected.  But I'm not sure,
->>>>>> because it is safe to do that if there is no mounted filesystem or
->>>>>> stacking device on top of the RAID.
->>>>>
->>>>> Hi, Ben.  Can you explain why this is not expected to work?  Which part
->>>>> exactly is not expected to work and why?
->>>>
->>>> Adding another type of disk controller (USB storage versus whatever the
->>>> SSD interface is) to a RAID that is already in use.
->>>
->>> Normally this practice is perfectly OK.
->>> If a filesysytem is mounted directly from an md array, then adding devices
->>> to the array at any time is fine, even if the new devices have quite
->>> different characteristics than the old.
->>>
->>> However if there is another layer in between md and the filesystem - such as
->>> dm - then there can be problem.
->>> There is no mechanism in the kernl for md to tell dm that things have
->>> changed, so dm never changes its configuration to match any change in the
->>> config of the md device.
->>>
->>
->> While I can see that there might be limitations in informing the dm
->> layer about changes to the md layer, I fail to see what changes we are
->> talking about.  If the OP were changing the size of the raid1, for
->> example, then that would be a metadata change that needed to propagate
->> up so that lvm could grow its physical volume.  But the dm layer should
->> not care if a disk is added or removed from the md raid1 set - as long
->> as the /dev/mdX device stays online and valid, it should work correctly.
->>
->
-> The changes we are talking about are "maximum supported request size" aka
-> max_sectors.
->
-> md sets max_sectors from the minimum of the max_sectors values of all
-> component devices.  Of course if a device changes its max_sectors value, md
-> won't notice.
->
-> dm sets max_sectors from the minimum of the max_sectors values of all
-> component devices.  Of course if a device changes its max_sectors value
-> after it has been included in the map, dm doesn't notice.
->
-> Every time a filesystem creates a request, it check the max_sectors of
-> the device and limits the request size accordingly.
->
-> So if I add a device to an md/raid array which has a smaller max_sectors
-> value, then the max_sectors of the md array will change, but no-one will
-> notice.
->
-> There might be a way to tell dm to re-evaluate max_sectors etc, I don't
-> know.  But even if there was having to do that would be a clumsy solution.
->
+Hi all,
 
-I've done a little more reading about max_sectors, and it seems to be 
-specific to USB.  It is also dynamically configurable through the sysfs 
-interface.  This means that the user can freely play around with the 
-value while testing throughput on a USB device.  So if the dm layer has 
-a problem with underlying devices changing their max_sectors value, then 
-anyone fiddling with max_sectors on a USB device with a dm layer and a 
-mounted filesystem is going to get in big trouble.  Since dm-crypt and 
-USB are a common combination (encrypted flash stick), surely this is a 
-serious bug in the dm code?
+I understand, that a change from RAID5 to RAID6 by adding a single disk -
+eg. keeping the number of data disks - requires a backup file throughout the
+whole reshape process. For a larger, multi-TB array this means millions of
+writes to the backup file, which - if i'm correct - means means millions of
+writes to the same physical sectors of the disk that holds the backup file.
+Is this not problematic? How many write operations can a typical drive
+tolerate nowadays? (on the same sectors)
 
+Cheers,
+Peter
 
 
