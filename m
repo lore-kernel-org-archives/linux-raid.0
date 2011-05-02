@@ -1,68 +1,52 @@
-From: Jameson Graef Rollins <jrollins@finestructure.net>
-Subject: Re: Bug#624343: linux-image-2.6.38-2-amd64: frequent message "bio too big device md0 (248 > 240)" in kern.log
-Date: Mon, 02 May 2011 09:38:05 -0700
-Message-ID: <87k4e9cb2q.fsf@servo.factory.finestructure.net>
-References: <20110427161901.27049.31001.reportbug@servo.factory.finestructure.net> <1304051980.3105.46.camel@localhost> <8739kyf53e.fsf@servo.factory.finestructure.net> <4DBE753D.20709@westcontrol.com>
+From: "Peter Kovari" <peter@kovari.priv.hu>
+Subject: RE: Question regarding --backup-file
+Date: Mon, 2 May 2011 19:39:59 +0200
+Message-ID: <001501cc08ef$f60cc620$e2265260$@priv.hu>
+References: <000301cc08db$89293160$9b7b9420$@priv.hu> <4DBECEFA.1050203@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DBE753D.20709@westcontrol.com>
+In-Reply-To: <4DBECEFA.1050203@fnarfbargle.com>
+Content-Language: hu
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, 624343@bugs.debian.org, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Transfer-Encoding: quoted-printable
+> > Hi all,
+> >
+> > I understand, that a change from RAID5 to RAID6 by adding a single disk
+-
+> > eg. keeping the number of data disks - requires a backup file throughout
+the
+> > whole reshape process. For a larger, multi-TB array this means millions
+of
+> > writes to the backup file, which - if i'm correct - means means millions
+of
+> > writes to the same physical sectors of the disk that holds the backup
+file.
+> > Is this not problematic? How many write operations can a typical drive
+> > tolerate nowadays? (on the same sectors)
 
-On Mon, 02 May 2011 11:11:25 +0200, David Brown <david@westcontrol.com> wro=
-te:
-> This is not directly related to your issues here, but it is possible to=20
-> make a 1-disk raid1 set so that you are not normally degraded.  When you=
-=20
-> want to do the backup, you can grow the raid1 set with the usb disk,=20
-> want for the resync, then fail it and remove it, then "grow" the raid1=20
-> back to 1 disk.  That way you don't feel you are always living in a=20
-> degraded state.
+> Lots, where Lots >= 1 and Lots < infinity.
 
-Hi, David.  I appreciate the concern, but I am not at all concerned
-about "living in a degraded state".  I'm far more concerned about data
-loss and the fact that this bug has seemingly revealed that some
-commonly held assumptions and uses of software raid are wrong, with
-potentially far-reaching affects.
+> I've never seen rotating media specify any form of limitation to writes. 
+> Have you?
 
-I also don't see how the setup you're describing will avoid this bug.
-If this bug is triggered by having a layer between md and the filesystem
-and then changing the raid configuration by adding or removing a disk,
-then I don't see how there's a difference between hot-adding to a
-degraded array and growing a single-disk raid1.  In fact, I would
-suspect that your suggestion would be more problematic because it
-involves *two* raid reconfigurations (grow and then shrink) rather than
-one (hot-add) to achieve the same result.  I imagine that each raid
-reconfiguration could potentially triggering the bug.  But I still don't
-have a clear understanding of what is going on here to be sure.
+No, that's why i'm asking. 
 
-jamie.
+Imho, in typical usage, write cycle counts on a certain sector may not be
+that high, even on a database server. I doubt it ever goes over a few
+hundred thousands during the life cycle of the hard disk. On the other hand,
+a single reshape on a larger array can trigger tens of millions of write
+cycles on certain sectors. Sectors do fail eventually, so I'm wondering if
+the "no limit" is truly a no limit, or manufacturers just won't state this
+info because in "normal" usage, customers will never reach that limit.
 
---=-=-=
-Content-Type: application/pgp-signature
+Btw, i'm sure SSD's are not meant to take such a pressure.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Cheers,
+Peter
 
-iQIcBAEBCAAGBQJNvt3tAAoJEO00zqvie6q89RgP/0o8ceGiiI0ChPbys/HtNtL/
-ZbNTTdM7ax6EgKeIbBPkYaEsByMWOTfEEBUOAm7plFJNTc1UstVGLRvbT0P3vxfb
-QGKhXm3+bI/uW97sggTOu89vQVnanND6q3RCNvuzgEs/0AZaEASJMLx13Vix7gCh
-7g2caJmRO9goTbW46kDQaicCOAy5x84LsGG9vPr9fwVQmILJR+JpXrAXJjOWqpxr
-8utES23mtCDZnI3XgXWHxQ0mqFICHivKg96mdwnGFGaTTZ8rOyumf1ZvNUUxZ4aA
-o/H6t0pQxi26Yu+1mRylz+Frffw1E3lP9G4wiGk1pv+IN0/TtZm/BBhDg4qIYnSd
-QKS9wJc7dKhbCRnk3m9Fqt9qYLaz92Jb0sMdZAeY4LACPevzlgf4ouTXC8FPbX7z
-pBtgq/3LoMadD++hP+ph4Q1HNCR12/sxaYZfz5r9X7AbrqS2uEZT3C7tLd03OUMP
-Kw2z2qI8Ovnye81nTNDdGRTVYBisox9t2/pTxi7yrHg2FX6zOmXe14avIJwQtQFZ
-xaDcgTqHP26GeKela0204nuRwKYomVNFiEP0fXSlh7jmh7NKA93eXBhuRhcy3MXn
-kEEvuaBkMN40lJbFpuPJz11rKs+25I4rgjjPdVNX+PX/8/ceaz13qsgMPRQSKzds
-bxDasCUqPz0Q/K6uA24J
-=DLJU
------END PGP SIGNATURE-----
---=-=-=--
+
