@@ -1,70 +1,39 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: FIX: Do not write check-point '0'
-Date: Mon, 2 May 2011 16:12:23 +1000
-Message-ID: <20110502161223.68f11b4d@notabene.brown>
-References: <20110429142921.12605.54696.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 1/5] imsm: prepare update for level migrations reshape
+Date: Mon, 2 May 2011 16:15:10 +1000
+Message-ID: <20110502161510.6a226302@notabene.brown>
+References: <20110428215751.19632.5381.stgit@gklab-128-081.igk.intel.com>
+	<20110428220005.19632.12064.stgit@gklab-128-081.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110429142921.12605.54696.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110428220005.19632.12064.stgit@gklab-128-081.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, 29 Apr 2011 16:29:21 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Fri, 29 Apr 2011 00:00:05 +0200 Przemyslaw Czarnowski
+<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
 
-> When 2 arrays are configured in container and arrays are reassembled during
-> rebuild or initialization, checkpoint for one array can be reset. It depends
-> on arrays assembly order.
-> 
-> Scenario:
-> 1. Create 2 arrays (e.g. raid5)
-> 2. Add spare to container
-> 3. Degrade arrays /rebuild starts on array #1 and continues to n%/
-> 4. Reassembly arrays
-> 5. Rebuild starts on array #2 /because of assembly order/ from 0%
-> 6. On first checkpoint stored for array #2 (non 0 value), checkpoint
->    for array #1 is cleared /it is delayed rebuild in md, so progress is 0/
-> 7. Rebuild on #1 starts from n% /it was configured before checkpoint
->    was cleared/.
-> 
-> Any next reassembly during rebuild of #2 array (after p.6) causes
-> checkpoint information lost for array #1.
-> 
-> Solution is not store checkpoint for progress == 0.
-> Checkpoint is set to 0 when rebuild/initialization starts.
-> 
-> Note: Please apply this patch on master branch.
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
+		struct intel_dev *dv;
+> @@ -7025,12 +7046,12 @@ static int imsm_create_metadata_update_for_reshape(
+>  	struct supertype *st,
+>  	struct geo_params *geo,
+>  	int old_raid_disks,
+> -	struct imsm_update_reshape **updatep)
+> +	struct imsm_update_reshape_migration **updatep)
+>  {
 
-Applied, thanks.
+Why are you changing the type of 'updatep' for
+imsm_create_metadata_update_for_reshape?
+
+The subsequent code allocated memory based on the 'imsm_update_reshape'
+structure, but then sets 'new_disk' entries based on the new structure.
+That has got to be wrong.
+
+Please review and fix this up.
 
 NeilBrown
-
-
-> 
->  super-intel.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 83135a6..0956c92 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5479,6 +5479,7 @@ mark_checkpoint:
->  		 * curr_migr_unit needs updating
->  		 */
->  		if (units32 == units &&
-> +		    units32 != 0 &&
->  		    __le32_to_cpu(dev->vol.curr_migr_unit) != units32) {
->  			dprintf("imsm: mark checkpoint (%u)\n", units32);
->  			dev->vol.curr_migr_unit = __cpu_to_le32(units32);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
