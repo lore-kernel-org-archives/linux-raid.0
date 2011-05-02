@@ -1,72 +1,108 @@
-From: Jameson Graef Rollins <jrollins@finestructure.net>
-Subject: Re: Bug#624343: linux-image-2.6.38-2-amd64: frequent message "bio too big device md0 (248 > 240)" in kern.log
-Date: Sun, 01 May 2011 18:17:06 -0700
-Message-ID: <87pqo1ewa5.fsf@servo.factory.finestructure.net>
-References: <20110427161901.27049.31001.reportbug@servo.factory.finestructure.net> <1304051980.3105.46.camel@localhost> <8739kyf53e.fsf@servo.factory.finestructure.net> <1304294457.2833.111.camel@localhost>  <4DBDFE0C.3000304@fifthhorseman.net> <1304298258.2833.125.camel@localhost>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: RE: Bug#624343: linux-image-2.6.38-2-amd64: frequent message
+ "bio too big device md0 (248 > 240)" in kern.log
+Date: Sun, 01 May 2011 22:47:55 -0400
+Message-ID: <AFE0035C8E784AF8BE3370E7D72A2595@m5>
+References: <20110427161901.27049.31001.reportbug@servo.factory.finestructure.net><1304051980.3105.46.camel@localhost><8739kyf53e.fsf@servo.factory.finestructure.net><1304294457.2833.111.camel@localhost>
+ <20110502102224.7787d6bd@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1304298258.2833.125.camel@localhost>
+In-reply-to: <20110502102224.7787d6bd@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>, Daniel Kahn Gillmor <dkg@fifthhorseman.net>
-Cc: 624343@bugs.debian.org, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>, 'Ben Hutchings' <ben@decadent.org.uk>
+Cc: 'Jameson Graef Rollins' <jrollins@finestructure.net>, 624343@bugs.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---=-=-=
-Content-Transfer-Encoding: quoted-printable
+} -----Original Message-----
+} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+} owner@vger.kernel.org] On Behalf Of NeilBrown
+} Sent: Sunday, May 01, 2011 8:22 PM
+} To: Ben Hutchings
+} Cc: Jameson Graef Rollins; 624343@bugs.debian.org; linux-
+} raid@vger.kernel.org
+} Subject: Re: Bug#624343: linux-image-2.6.38-2-amd64: frequent message "bio
+} too big device md0 (248 > 240)" in kern.log
+} 
+} On Mon, 02 May 2011 01:00:57 +0100 Ben Hutchings <ben@decadent.org.uk>
+} wrote:
+} 
+} > On Sun, 2011-05-01 at 15:06 -0700, Jameson Graef Rollins wrote:
+} > > On Fri, 29 Apr 2011 05:39:40 +0100, Ben Hutchings
+} <ben@decadent.org.uk> wrote:
+} > > > On Wed, 2011-04-27 at 09:19 -0700, Jameson Graef Rollins wrote:
+} > > > > I run what I imagine is a fairly unusual disk setup on my laptop,
+} > > > > consisting of:
+} > > > >
+} > > > >   ssd -> raid1 -> dm-crypt -> lvm -> ext4
+} > > > >
+} > > > > I use the raid1 as a backup.  The raid1 operates normally in
+} degraded
+} > > > > mode.  For backups I then hot-add a usb hdd, let the raid1 sync,
+} and
+} > > > > then fail/remove the external hdd.
+} > > >
+} > > > Well, this is not expected to work.  Possibly the hot-addition of a
+} disk
+} > > > with different bio restrictions should be rejected.  But I'm not
+} sure,
+} > > > because it is safe to do that if there is no mounted filesystem or
+} > > > stacking device on top of the RAID.
+} > >
+} > > Hi, Ben.  Can you explain why this is not expected to work?  Which
+} part
+} > > exactly is not expected to work and why?
+} >
+} > Adding another type of disk controller (USB storage versus whatever the
+} > SSD interface is) to a RAID that is already in use.
+} 
+} Normally this practice is perfectly OK.
+} If a filesysytem is mounted directly from an md array, then adding devices
+} to the array at any time is fine, even if the new devices have quite
+} different characteristics than the old.
+} 
+} However if there is another layer in between md and the filesystem - such
+} as
+} dm - then there can be problem.
+} There is no mechanism in the kernl for md to tell dm that things have
+} changed, so dm never changes its configuration to match any change in the
+} config of the md device.
+} 
+} A filesystem always queries the config of the device as it prepares the
+} request.  As this is not an 'active' query (i.e. it just looks at
+} variables, it doesn't call a function) there is no opportunity for dm to
+} then
+} query md.
+} 
+} There is a ->merge_bvec_fn which could be pushed into service.  i.e. if
+} md/raid1 defined some trivial merge_bvec_fn, then it would probably work.
+} However the actual effect of this would probably to cause every bio
+} created
+} by the filesystem to be just one PAGE in size, and this is guaranteed
+} always
+} to work.  So it could be a significant performance hit for the common
+} case.
+} 
+} We really need either:
+}  - The fs sends down arbitrarily large requests, and the lower layers
+} split
+}    them up if/when needed
+} or
+}  - A mechanism for a block device to tell the layer above that something
+} has
+}    changed.
+} 
+} But these are both fairly intrusive which unclear performance/complexity
+} implications and no one has bothered.
+} 
+} NeilBrown
 
-On Mon, 02 May 2011 02:04:18 +0100, Ben Hutchings <ben@decadent.org.uk> wro=
-te:
-> On Sun, 2011-05-01 at 20:42 -0400, Daniel Kahn Gillmor wrote:
-> So far as I'm aware, the RAID may stop working, but without loss of data
-> that's already on disk.
+Maybe mdadm should not allow a disk to be added if its characteristics are
+different enough to be an issue?  And require the --force option if the
+admin really wants to do it anyhow.
 
-What exactly does "RAID may stop working mean"?  Do you mean that this
-bug will be triggered?  The raid will refuse to do further syncs?  Or do
-you mean something else?
+Oh, and a good error message explaining the issues and risks.  :)
 
-> > How is an admin to know which I/O capabilities to check before adding a
-> > device to a RAID array?  When is it acceptable to mix I/O capabilities?
-> >  Can a RAID array which is not currently being used as a backing store
-> > for a filesystem be assembled of unlike disks?  What if it is then
-> > (later) used as a backing store for a filesystem?
-> [...]
->=20
-> I think the answers are:
-> - Not easily
-> - When the RAID does not have another device on top
+Guy
 
-This is very upsetting to me, if it's true.  It completely undermines
-all of my assumptions about how software raid works.
-
-Are you really saying that md with mixed disks is not possible/supported
-when the md device has *any* other device on top of it?  This is a in
-fact a *very* common setup.  *ALL* of my raid devices have other devices
-on top of them (lvm at least).  In fact, the debian installer supports
-putting dm and/or lvm on top of md on mixed disks.  If what you're
-saying is true then the debian installer is in big trouble.
-
-jamie.
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJNvgYSAAoJEO00zqvie6q86lAP/3LtkkpHPdE6kY9kBQVlEPb+
-iR+V58tBq4mKAzc8Lta3HfJCZMEiZoQveUJiJYuMtwsI9eo9ED5XDapme5GUocgN
-fliyUHHCwMjvwzzBwYRZxOxMPJo8VfTovf3cfJdcma3legERCb7qE3tO8daaTkSP
-9e9g5BWu0RNtHapk+IkC+TFSLMzd+q9CSLmgI1jL9+GJLjaRSj8vyTdpy9Z9PlVz
-uXUm/cv6AF5H/+lPlKvH+dUT6diuaN1eg5ixSdkeaV5t3S2ndxC4qPUsdOqiTJOn
-DbLPL+DKvYwqcvEH/muAPOxQAS/dEH8qrB1hyLRODbUvXcwGmdhr3Z8GVO7nCm1U
-pu8VfGLyZrwx2CyDYVJK6yW7BqBWT4gBWIM/zjE4yAxJQlI2YWRv/wiWUhQ7tdrZ
-Y3MdOfYegTWgRLV6nmhVvNYLA1yOiOcjLTj67PWTJG/z5LiSUY9n1l8AkdgpIHLu
-YQhHUcO01JdkPgQapZJc+U6KY2JJWjElmMc/mzEDeIFVObMBPN7xm4ehhgsYD2yV
-2QC2dJ/Vx66xvRxMv5dGALH3gqCoUs8h4CQtbUD0dFf8y2eRZjN36BA+fyRx5tBB
-TpQkDtqL50xPii41eHyDETyBARJNoDi5e8cxYa5XFePg+P0ASCfKn7DKsLDDp0kY
-qjxCc+gFIZ/WJb1WJ6Cb
-=gdgF
------END PGP SIGNATURE-----
---=-=-=--
