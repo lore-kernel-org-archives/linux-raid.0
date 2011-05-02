@@ -1,52 +1,28 @@
-From: "Peter Kovari" <peter@kovari.priv.hu>
-Subject: RE: Question regarding --backup-file
-Date: Mon, 2 May 2011 19:39:59 +0200
-Message-ID: <001501cc08ef$f60cc620$e2265260$@priv.hu>
-References: <000301cc08db$89293160$9b7b9420$@priv.hu> <4DBECEFA.1050203@fnarfbargle.com>
+From: "fibreraid@gmail.com" <fibreraid@gmail.com>
+Subject: 6-drive RAID 10 failed, cannot reactivate, need help
+Date: Mon, 2 May 2011 11:17:10 -0700
+Message-ID: <BANLkTinz6bkqM+z7ddXZTOXFqjFHsEfEHw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DBECEFA.1050203@fnarfbargle.com>
-Content-Language: hu
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > Hi all,
-> >
-> > I understand, that a change from RAID5 to RAID6 by adding a single disk
--
-> > eg. keeping the number of data disks - requires a backup file throughout
-the
-> > whole reshape process. For a larger, multi-TB array this means millions
-of
-> > writes to the backup file, which - if i'm correct - means means millions
-of
-> > writes to the same physical sectors of the disk that holds the backup
-file.
-> > Is this not problematic? How many write operations can a typical drive
-> > tolerate nowadays? (on the same sectors)
+Hi All,
 
-> Lots, where Lots >= 1 and Lots < infinity.
+I have an Ubuntu Hardy 64-bit system with mdadm 2.6.9.
 
-> I've never seen rotating media specify any form of limitation to writes. 
-> Have you?
+I have a 6-drive RAID 10 named md1. Unfortunately, there was some
+power outage and when the system came back up, it showed 2 drives as
+failed and 4 as active. I removed the two failed drives from the array
+using -r, and then added them back in using --add and --force. The
+array will not rebuild though. It simply shows now these two drives as
+spares.
 
-No, that's why i'm asking. 
+I doubt the data is actually lost since it was a sudden outage. What
+can I do from here to get mdadm to activate this array and kick off
+rebuild if needed? I'm really stuck. Thanks in advance for any help.
 
-Imho, in typical usage, write cycle counts on a certain sector may not be
-that high, even on a database server. I doubt it ever goes over a few
-hundred thousands during the life cycle of the hard disk. On the other hand,
-a single reshape on a larger array can trigger tens of millions of write
-cycles on certain sectors. Sectors do fail eventually, so I'm wondering if
-the "no limit" is truly a no limit, or manufacturers just won't state this
-info because in "normal" usage, customers will never reach that limit.
-
-Btw, i'm sure SSD's are not meant to take such a pressure.
-
-Cheers,
-Peter
-
-
+Best regards,
+Tommy
