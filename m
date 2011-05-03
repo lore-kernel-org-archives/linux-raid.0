@@ -1,70 +1,21 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Question regarding --backup-file
-Date: Mon, 02 May 2011 21:05:28 +0200
-Message-ID: <ipmv9o$kcv$1@dough.gmane.org>
-References: <000301cc08db$89293160$9b7b9420$@priv.hu> <4DBECEFA.1050203@fnarfbargle.com> <001501cc08ef$f60cc620$e2265260$@priv.hu>
+From: "Morad, Steve" <morad@amazon.com>
+Subject: Mirrored volume peformance questions
+Date: Tue, 3 May 2011 12:42:04 -0700
+Message-ID: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001501cc08ef$f60cc620$e2265260$@priv.hu>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/05/11 19:39, Peter Kovari wrote:
->>> Hi all,
->>>
->>> I understand, that a change from RAID5 to RAID6 by adding a single disk
-> -
->>> eg. keeping the number of data disks - requires a backup file throughout
-> the
->>> whole reshape process. For a larger, multi-TB array this means millions
-> of
->>> writes to the backup file, which - if i'm correct - means means millions
-> of
->>> writes to the same physical sectors of the disk that holds the backup
-> file.
->>> Is this not problematic? How many write operations can a typical drive
->>> tolerate nowadays? (on the same sectors)
->
->> Lots, where Lots>= 1 and Lots<  infinity.
->
->> I've never seen rotating media specify any form of limitation to writes.
->> Have you?
->
-> No, that's why i'm asking.
->
-> Imho, in typical usage, write cycle counts on a certain sector may not be
-> that high, even on a database server. I doubt it ever goes over a few
-> hundred thousands during the life cycle of the hard disk. On the other hand,
-> a single reshape on a larger array can trigger tens of millions of write
-> cycles on certain sectors. Sectors do fail eventually, so I'm wondering if
-> the "no limit" is truly a no limit, or manufacturers just won't state this
-> info because in "normal" usage, customers will never reach that limit.
->
-> Btw, i'm sure SSD's are not meant to take such a pressure.
->
+I have a few questions about volume mirroring performance implications.
 
-Good large SSD's can be written to continuously for /years/ before they 
-wear out.  It can be a different matter for smaller and cheapo drives, 
-but it's not an issue for good disks now.  Suppose you have a 128 GB 
-disk with SLC flash.  Each sector is good for roughly 100,000 
-erase/re-write cycles (or more, if you are kind to the disk and keep it 
-cool).  Since wear-leveling spreads the writes around the disk, you can 
-write 100,000 x 128 GB of data - at 200 MB/s continuously, that would 
-take 2 years without a pause for breath.  Even if the wear-leveling 
-isn't perfect, and even if you substitute a cheaper MLC SSD (with 10,000 
-cycles), the effort of being the backup file for a raid reshape is not 
-going to be a challenge.
+1. I'm looking for an optimal configuration to maximize read speed while protecting the data from a disk failure (e.g. for an application that primarily does reads).  For RAID 1, does the linux raid driver perform parallel read requests across all available disks?  If, for example, I set up a RAID 1 volume with 4 disks, would the OS handle concurrently reading (different) data from all 4 disks at the same time?
 
-Also, some SSD's have super-cap backed up ram caches - writes can be 
-safely buffered before being written.  If you overwrite the same sector 
-fast enough, it will never actually be written to the flash (until the 
-final write, of course).
+2. Similarly, would a RAID10 configuration give me the same (or better) read behavior across these same disks, while providing twice the storage capacity of the above configuration?
 
-For hard disks, sectors do wear out, but they tolerate a lot of writes 
-first.  And the hard disk firmware will re-locate the worn out sector 
-transparently.
-
+3. Is the raid driver smart enough to keep track of underlying volume performance history or queue lengths and make read requests appropriately? For example, if for some crazy reason a 10K disk was mirrored with a 7K disk, would the OS make more read requests to the 10K disk than to the 7K disk, or would read requests be equally distributed across both disks?
 
