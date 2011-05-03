@@ -1,52 +1,46 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: md question re: max_hw_sectors_kb
-Date: Tue, 03 May 2011 15:20:46 -0500
-Message-ID: <4DC0639E.1070707@sgi.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: Mirrored volume peformance questions
+Date: Tue, 3 May 2011 23:34:30 +0200
+Message-ID: <20110503213430.GC24265@www2.open-std.org>
+References: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com> <BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: "Morad, Steve" <morad@amazon.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Resending to linux-raid.
+On Tue, May 03, 2011 at 04:52:07PM -0300, Roberto Spadim wrote:
+> 2011/5/3 Morad, Steve <morad@amazon.com>:
+> > I have a few questions about volume mirroring performance implications.
+> >
+> 
+> > 2. Similarly, would a RAID10 configuration give me the same (or better) read behavior across these same disks, while providing twice the storage capacity of the above configuration?
+
+RAID10 and RAID1 gives the same storage capacity with the same disks.
+
+Linux MD RAID10 is actually just another way of doing raid1-like
+layouts.
 
 
-Hi Neil,
+> in md world
+> raid1+ raid0 != raid10
+> 
+> raid10 can use layouts
+> raid1 can?t
+> 
+> raid10 have diferent read_balance algorithms than raid1
+> raid10 with far layout is better optimized for sequencial read (it?s
+> like raid0 stripe)
+> raid10 with near/offset layoute are better optimized for multthread
 
-My name is Mike Reed.  I work at SGI.  I've been looking at a performance
-issue with md writes and have tracked it down to the md device not having
-a high enough initial max_hw_sectors_kb setting.
+Hmm, raid10 near, offset and far are about the same for multithread,
+according to several benchmarks. Actually the far layout has significant
+better random read performance than the near layout in some thests,
+about 25 % better speed, and about 100 % bettter speed than raid1.
 
-There is code in blk_queue_make_request() which lowers the default value
-from INT_MAX to BLK_SAFE_MAX_SECTORS, which is 255.  This is generally
-lower than all the underlying devices with which I use md.
-
-As md appears to be a stacking driver, i.e., it calls disk_stack_limits()
-for each member of a volume, it would seem reasonable for md to use the,
-INT_MAX setting for max_hw_sectors_kb instead of BLK_SAFE_MAX_SECTORS.
-
-I have tried this, and have observed that md correctly limits the md device's
-max_sectors_kb to the value of the underlying devices in my mirror volume.
-
-Is this the correct way to address this issue?
-
-Applies to linux-2.6.39-rc4.
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
-
---- drivers/md/md.c	2011-04-18 21:26:00.000000000 -0700
-+++ drivers/md/md.c.new	2011-04-21 15:53:11.452536201 -0700
-@@ -4328,6 +4328,7 @@ static int md_alloc(dev_t dev, char *nam
- 	mddev->queue->queuedata = mddev;
- 
- 	blk_queue_make_request(mddev->queue, md_make_request);
-+	blk_queue_max_sectors(mddev->queue, INT_MAX);
- 
- 	disk = alloc_disk(1 << shift);
- 	if (!disk) {
-
-
+best regards
+keld
