@@ -1,39 +1,44 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: Mirrored volume peformance questions
-Date: Wed, 4 May 2011 10:13:39 +0200
-Message-ID: <20110504081339.GB414@www2.open-std.org>
-References: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com> <BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com> <20110503213430.GC24265@www2.open-std.org> <ipqvv6$ru1$1@dough.gmane.org>
+From: Przemyslaw Czarnowski
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH 0/5] imsm support for raid0->raid5 migration
+Date: Wed, 04 May 2011 17:10:33 +0200
+Message-ID: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ipqvv6$ru1$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Wed, May 04, 2011 at 09:42:40AM +0200, David Brown wrote:
-> raid10,far is better for sequential reads - it gives better-than-raid0 
-> performance on average since it will do striped reads from the faster 
-> outer tracks.  And for multi-threaded reads, it should also be a little 
-> faster than other raid10 layouts (and raid1, which is much the same as 
-> raid10,near).  Since it prefers to get the data from the outer half, you 
-> get the benefits of short-stroking your disks - faster transfer speeds 
-> and less head movement.
-> 
-> The cost of raid10,far is greater head movement for writes - but that is 
-> not the OP's main concern.
+Migration r0->r5 once again; with a fix comming from your comment.
 
-yes, in theory this is so. But two reasons almost eliminates this in
-practice. First, the processes do not wait for completion of the IO of
-writes, the processes only deliver the data to the file buffer cache of
-the kernel, which then periodically flushes the data to the disk drives.
-Second, the flushing of the data is ordered so that the collected data
-buffers are written as much sequentially as possible to the drives.
-This goes for all Linux MD RAID1/RAID10 layouts. Given that random
-writes are random over the whole set of drives, for any mirrored
-raid1/raid10 layout, the flushing of the data is about the same.
+The following series implements support for raid0->raid5 migration for IMSM
+metadata. These patches blocks opposite direction of migration.
+Code mostly bases on patches sent to you by Adam Kwolek. I have incorporated
+your remarks and I tested it quite extensively for comformity with IMSM
+standard. I have also removed opposite direction, as it is just not supported
+right now.
 
-best regards
-keld
+Note:
+Please do not include these patches on 'master' branch, as they are supposed
+to be a part of next minor mdadm version (ie. mdadm 3.2.2). I think good place
+for it is devel-3.2. Master should be reserved just for bug/stability fixes
+for previous release.
+---
+
+Przemyslaw Czarnowski (5):
+      imsm: prepare update for level migrations reshape
+      imsm: fix: disable migration from raid5->raid0
+      imsm: prepare memory for level migration update
+      imsm: process update for raid level migrations
+      imsm: add new chunk size to metadata update
+
+
+ super-intel.c |  337 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 330 insertions(+), 7 deletions(-)
+
+-- 
+Best Regards,
+Przemyslaw Czarnowski
