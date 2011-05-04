@@ -1,75 +1,80 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Mirrored volume peformance questions
-Date: Wed, 04 May 2011 09:42:40 +0200
-Message-ID: <ipqvv6$ru1$1@dough.gmane.org>
-References: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com> <BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com> <20110503213430.GC24265@www2.open-std.org>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: mdadm raid1 read performance
+Date: Wed, 4 May 2011 04:42:25 -0300
+Message-ID: <BANLkTinbFZf=kV=3eUe2S6XNAOst_McX4w@mail.gmail.com>
+References: <BANLkTim8Ehn0fANtibg7X1cMVvOgt7CNMA@mail.gmail.com>
+	<20110504105822.21e23bc3@notabene.brown>
+	<BANLkTimzqu1C+_Z2t5m1bjduXFeRwbgssQ@mail.gmail.com>
+	<4DC0F2B6.9050708@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110503213430.GC24265@www2.open-std.org>
+In-Reply-To: <4DC0F2B6.9050708@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Drew <drew.kay@gmail.com>, NeilBrown <neilb@suse.de>, Liam Kurmos <quantum.leaf@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/05/2011 23:34, Keld J=F8rn Simonsen wrote:
-> On Tue, May 03, 2011 at 04:52:07PM -0300, Roberto Spadim wrote:
->> 2011/5/3 Morad, Steve<morad@amazon.com>:
->>> I have a few questions about volume mirroring performance
->>> implications.
->>>
+hum...
+at user program we use:
+file=3Dfopen(); var=3Dfread(file,buffer_size);fclose(file);
+
+buffer_size is the problem since it can be very small (many reads), or
+very big (small memory problem, but very nice query to optimize at
+device block level)
+if we have a big buffer_size, we can split it across disks (ssd)
+if we have a small buffer_size, we can't split it (only if readahead
+is very big)
+problem: we need memory (cache/buffer)
+
+the problem... is readahead better for ssd? or a bigger 'buffer_size'
+at user program is better?
+or... a filesystem change of 'block' size to a bigger block size, with
+this don't matter if user use a small buffer_size at fread functions,
+filesystem will always read many information at device block layer,
+what's better? others ideas?
+
+i don't know how linux kernel handle a very big fread with memory
+for example:
+fread(file,1000000); // 1MB
+will linux split the 'single' fread in many reads at block layer? each
+read with 1 block size (512byte/4096byte)?
+
+2011/5/4 Brad Campbell <lists2009@fnarfbargle.com>:
+> On 04/05/11 13:30, Drew wrote:
+>
+>> It seemed logical to me that if two disks had the same data and we
+>> were reading an arbitrary amount of data, why couldn't we split the
+>> read across both disks? That way we get the benefits of pulling from
+>> multiple disks in the read case while accepting the penalty of a wri=
+te
+>> being as slow as the slowest disk..
 >>
->>> 2. Similarly, would a RAID10 configuration give me the same (or
->>> better) read behavior across these same disks, while providing
->>> twice the storage capacity of the above configuration?
->
-> RAID10 and RAID1 gives the same storage capacity with the same
-> disks.
->
-
-Perhaps he meant a 4-drive RAID1 set?  That way reads for any data can=20
-be taken for any drive.
-
-> Linux MD RAID10 is actually just another way of doing raid1-like
-> layouts.
->
->
->> in md world raid1+ raid0 !=3D raid10
 >>
->> raid10 can use layouts raid1 can?t
->>
->> raid10 have diferent read_balance algorithms than raid1 raid10 with
->> far layout is better optimized for sequencial read (it?s like raid0
->> stripe) raid10 with near/offset layoute are better optimized for
->> multthread
 >
-> Hmm, raid10 near, offset and far are about the same for multithread,
-> according to several benchmarks. Actually the far layout has
-> significant better random read performance than the near layout in
-> some thests, about 25 % better speed, and about 100 % bettter speed
-> than raid1.
+> I would have thought as you'd be skipping alternate "stripes" on each=
+ disk
+> you minimise the benefit of a readahead buffer and get subjected to s=
+eek and
+> rotational latency on both disks. Overall you're benefit would be sli=
+m to
+> immeasurable. Now on SSD's I could see it providing some extra oomph =
+as you
+> suffer none of the mechanical latency penalties.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-raid10,far is better for sequential reads - it gives better-than-raid0=20
-performance on average since it will do striped reads from the faster=20
-outer tracks.  And for multi-threaded reads, it should also be a little=
-=20
-faster than other raid10 layouts (and raid1, which is much the same as=20
-raid10,near).  Since it prefers to get the data from the outer half, yo=
-u=20
-get the benefits of short-stroking your disks - faster transfer speeds=20
-and less head movement.
 
-The cost of raid10,far is greater head movement for writes - but that i=
-s=20
-not the OP's main concern.
 
-If I interpreted correctly that the OP is considering a 4-way mirror,=20
-then perhaps raid10,f4 is ideal - sequential reads will be taken from=20
-all drives at once (in the outer quarter of the disks), and for=20
-multi-thread reads all requested data can be found on any of the disks.
-
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
