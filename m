@@ -1,40 +1,39 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: mdadm raid1 read performance
-Date: Wed, 04 May 2011 09:48:03 +0200
-Message-ID: <ipr099$tp6$1@dough.gmane.org>
-References: <BANLkTim8Ehn0fANtibg7X1cMVvOgt7CNMA@mail.gmail.com> <20110504105822.21e23bc3@notabene.brown> <BANLkTimzqu1C+_Z2t5m1bjduXFeRwbgssQ@mail.gmail.com> <4DC0F2B6.9050708@fnarfbargle.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: Mirrored volume peformance questions
+Date: Wed, 4 May 2011 10:13:39 +0200
+Message-ID: <20110504081339.GB414@www2.open-std.org>
+References: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com> <BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com> <20110503213430.GC24265@www2.open-std.org> <ipqvv6$ru1$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DC0F2B6.9050708@fnarfbargle.com>
+Content-Disposition: inline
+In-Reply-To: <ipqvv6$ru1$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/05/2011 08:31, Brad Campbell wrote:
-> On 04/05/11 13:30, Drew wrote:
->
->> It seemed logical to me that if two disks had the same data and we
->> were reading an arbitrary amount of data, why couldn't we split the
->> read across both disks? That way we get the benefits of pulling from
->> multiple disks in the read case while accepting the penalty of a write
->> being as slow as the slowest disk..
->>
->>
->
-> I would have thought as you'd be skipping alternate "stripes" on each
-> disk you minimise the benefit of a readahead buffer and get subjected to
-> seek and rotational latency on both disks. Overall you're benefit would
-> be slim to immeasurable. Now on SSD's I could see it providing some
-> extra oomph as you suffer none of the mechanical latency penalties.
->
+On Wed, May 04, 2011 at 09:42:40AM +0200, David Brown wrote:
+> raid10,far is better for sequential reads - it gives better-than-raid0 
+> performance on average since it will do striped reads from the faster 
+> outer tracks.  And for multi-threaded reads, it should also be a little 
+> faster than other raid10 layouts (and raid1, which is much the same as 
+> raid10,near).  Since it prefers to get the data from the outer half, you 
+> get the benefits of short-stroking your disks - faster transfer speeds 
+> and less head movement.
+> 
+> The cost of raid10,far is greater head movement for writes - but that is 
+> not the OP's main concern.
 
-Even on SSD's you'd get some overhead for the skipping - each read 
-command has to be tracked by both the host software and the disk firmware.
+yes, in theory this is so. But two reasons almost eliminates this in
+practice. First, the processes do not wait for completion of the IO of
+writes, the processes only deliver the data to the file buffer cache of
+the kernel, which then periodically flushes the data to the disk drives.
+Second, the flushing of the data is ordered so that the collected data
+buffers are written as much sequentially as possible to the drives.
+This goes for all Linux MD RAID1/RAID10 layouts. Given that random
+writes are random over the whole set of drives, for any mirrored
+raid1/raid10 layout, the flushing of the data is about the same.
 
-Such splitting would have to be done on a larger scale to make it 
-efficient.  If you request a read for 2 MB, you could take the first MB 
-from the first disk and simultaneously the second MB for the second disk.
-
-
+best regards
+keld
