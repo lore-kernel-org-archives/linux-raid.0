@@ -1,78 +1,81 @@
-From: Przemyslaw Czarnowski
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 5/5] imsm: add new chunk size to metadata update
-Date: Wed, 04 May 2011 17:13:22 +0200
-Message-ID: <20110504151321.24386.96946.stgit@gklab-128-081.igk.intel.com>
-References: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
+From: Roberto Spadim <roberto@spadim.com.br>
+Subject: Re: Mirrored volume peformance questions
+Date: Wed, 4 May 2011 12:43:24 -0300
+Message-ID: <BANLkTimten+bOJpsoDERDsE2CH1MT_NQ7g@mail.gmail.com>
+References: <96B30EF4F3E17749BCFF7F1816090EDA02DCE41A87@EX-SEA31-B.ant.amazon.com>
+	<BANLkTikcVPQwFEancNbOkKvdHTwdHDb=XA@mail.gmail.com>
+	<20110503213430.GC24265@www2.open-std.org>
+	<ipqvv6$ru1$1@dough.gmane.org>
+	<20110504081339.GB414@www2.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
+In-Reply-To: <20110504081339.GB414@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
+Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Put information about new chunk size change in to migration metadata
-update allowing simultaneous level change and re-striping.
+i think that a good add to today read balance could be add disk
+acess_time (1/rpm, 0 for 'non rotational', 1 for unknow)
+head_distance * acess_time, could allow a better select of disks or
+mix of 7200/10000/15000 rpm disks
+maybe it can be read from disk information at assemble time, i don't
+know if disk speed (rpm) can be read from device block (some disks
+display information with hdparm and smartctl)
+it's not a 1000% improvement, it's 1% at high read/write load
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- super-intel.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+2011/5/4 Keld J=F8rn Simonsen <keld@keldix.com>:
+> On Wed, May 04, 2011 at 09:42:40AM +0200, David Brown wrote:
+>> raid10,far is better for sequential reads - it gives better-than-rai=
+d0
+>> performance on average since it will do striped reads from the faste=
+r
+>> outer tracks. =A0And for multi-threaded reads, it should also be a l=
+ittle
+>> faster than other raid10 layouts (and raid1, which is much the same =
+as
+>> raid10,near). =A0Since it prefers to get the data from the outer hal=
+f, you
+>> get the benefits of short-stroking your disks - faster transfer spee=
+ds
+>> and less head movement.
+>>
+>> The cost of raid10,far is greater head movement for writes - but tha=
+t is
+>> not the OP's main concern.
+>
+> yes, in theory this is so. But two reasons almost eliminates this in
+> practice. First, the processes do not wait for completion of the IO o=
+f
+> writes, the processes only deliver the data to the file buffer cache =
+of
+> the kernel, which then periodically flushes the data to the disk driv=
+es.
+> Second, the flushing of the data is ordered so that the collected dat=
+a
+> buffers are written as much sequentially as possible to the drives.
+> This goes for all Linux MD RAID1/RAID10 layouts. Given that random
+> writes are random over the whole set of drives, for any mirrored
+> raid1/raid10 layout, the flushing of the data is about the same.
+>
+> best regards
+> keld
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/super-intel.c b/super-intel.c
-index d00364f..e1e55c8 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -354,6 +354,7 @@ struct imsm_update_reshape_migration {
- 	int subdev;
- 	int new_level;
- 	int new_layout;
-+	int new_chunksize;
- 
- 	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
- };
-@@ -6156,6 +6157,12 @@ static int apply_reshape_migration_update(struct imsm_update_reshape_migration *
- 			id->dev = new_dev;
- 			tofree = (void **)dev;
- 
-+			/* update chunk size
-+			 */
-+			if (u->new_chunksize > 0)
-+				map->blocks_per_strip =
-+					__cpu_to_le16(u->new_chunksize * 2);
-+
- 			/* add disk
- 			 */
- 			if ((u->new_level != 5) ||
-@@ -7367,14 +7374,25 @@ static int imsm_create_metadata_update_for_migration(
- 	u->new_layout = geo->layout;
- 	u->new_raid_disks = u->old_raid_disks = geo->raid_disks;
- 	u->new_disks[0] = -1;
-+	u->new_chunksize = -1;
- 
- 	dev = get_imsm_dev(super, u->subdev);
- 	if (dev) {
- 		struct imsm_map *map;
- 
- 		map = get_imsm_map(dev, 0);
--		if (map)
-+		if (map) {
-+			int current_chunk_size =
-+				__le16_to_cpu(map->blocks_per_strip) / 2;
-+
-+			if (geo->chunksize != current_chunk_size) {
-+				u->new_chunksize = geo->chunksize / 1024;
-+				dprintf("imsm: "
-+					"chunk size change from %i to %i\n",
-+					current_chunk_size, u->new_chunksize);
-+			}
- 			previous_level = map->raid_level;
-+		}
- 	}
- 	if ((geo->level == 5) && (previous_level == 0)) {
- 		struct mdinfo *spares = NULL;
 
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
