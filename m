@@ -1,49 +1,95 @@
-From: Nikolay Kichukov <hijacker@oldum.net>
+From: Liam Kurmos <quantum.leaf@gmail.com>
 Subject: Re: mdadm raid1 read performance
-Date: Thu, 05 May 2011 11:06:09 +0300
-Message-ID: <4DC25A71.6090705@oldum.net>
-References: <BANLkTim8Ehn0fANtibg7X1cMVvOgt7CNMA@mail.gmail.com>	<20110504105822.21e23bc3@notabene.brown>	<BANLkTimzqu1C+_Z2t5m1bjduXFeRwbgssQ@mail.gmail.com>	<4DC0F2B6.9050708@fnarfbargle.com>	<BANLkTinbFZf=kV=3eUe2S6XNAOst_McX4w@mail.gmail.com>	<BANLkTikQTKPuY+Mg8h9ZOkJPoEQ-jGTeLg@mail.gmail.com> <20110505100610.66c93e08@natsu>
+Date: Thu, 5 May 2011 09:39:55 +0100
+Message-ID: <BANLkTi=bM6=9ZhA=yOkj3OU=tjCHueWQMQ@mail.gmail.com>
+References: <BANLkTim8Ehn0fANtibg7X1cMVvOgt7CNMA@mail.gmail.com>
+	<20110504105822.21e23bc3@notabene.brown>
+	<BANLkTimzqu1C+_Z2t5m1bjduXFeRwbgssQ@mail.gmail.com>
+	<4DC0F2B6.9050708@fnarfbargle.com>
+	<BANLkTinbFZf=kV=3eUe2S6XNAOst_McX4w@mail.gmail.com>
+	<BANLkTikQTKPuY+Mg8h9ZOkJPoEQ-jGTeLg@mail.gmail.com>
+	<20110505100610.66c93e08@natsu>
+	<4DC25A71.6090705@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110505100610.66c93e08@natsu>
+In-Reply-To: <4DC25A71.6090705@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Liam Kurmos <quantum.leaf@gmail.com>, Roberto Spadim <roberto@spadim.com.br>, Brad Campbell <lists2009@fnarfbargle.com>, Drew <drew.kay@gmail.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, May 5, 2011 at 9:06 AM, Nikolay Kichukov <hijacker@oldum.net> wrote:
+> -----BE
+> It seems like he is reading directly from the raid device and not through the filesystem. So there are no filesystem
+> caches in this way.
 
-Hi,
-It seems like he is reading directly from the raid device and not through the filesystem. So there are no filesystem
-caches in this way.
+phew!  ... i think (see below)
 
-Cheers,
-- -Nik
 
-On 05/05/2011 07:06 AM, Roman Mamedov wrote:
-> On Thu, 5 May 2011 00:08:59 +0100
-> Liam Kurmos <quantum.leaf@gmail.com> wrote:
-> 
->> in my tests i read 1GB and throw away the data.
->> dd if=/dev/md0 of=/dev/null bs=1M count=1000
-> 
-> If you have enough RAM for disk cache, on the second and further consecutive
-> invocations of this you will be reading mostly from the cache, giving you an
-> incorrect inflated result. So either don't forget to drop filesystem caches
-> between runs, or just test read performance with "hdparm -t /dev/mdX" instead.
-> 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+I installed ubuntu 11.04 on the new system last night.
+this morning i went to reconnect the old system drive (id disconnected
+it for safety)  and 'pop' a small piece of metal must have touched the
+back of the loose drive and fried the board! ... oh joy.
 
-iQEcBAEBAgAGBQJNwlpxAAoJEDFLYVOGGjgXHS0IAJAVFwR0Y0SD6G4CTaViqNCv
-32s/VCZWTZMzXiLOrY5xCGFiuqPurmGLy/+aW+HeEYShMndkZQ8H8ZHlSx5L3OoH
-SQnWS7gP5hUn2w9qamhtFk9iPWpx18ZzVqN/k9WyAWhY4Ro20G8PWI3/T4Q3+zam
-WYJ6KglllX+BuQYVhmhwB1KGVFhmpQXBXKWVrcGIB7vyGnM5K9fWLbxd6VvghZvd
-qpfrmPO2WvuqpxCS+YcZTqEg7osbzNB+W/6DMJ7BpxyUcxIEyXwBwZSUxsZe3WWo
-oTfj0XUaVc17TPfKMCyLfgm+K6f+IJfKky5e5mJyFCjesDhqFngkpilft9xNxq0=
-=qsmJ
------END PGP SIGNATURE-----
+--luckily its an old drive and i have an identical spare so im hoping
+i can swap the board and save all my work since last git commit.
+
+anyway.. this look different in 11.04. mdadm 3.1.4
+
+/dev/md0:
+ Timing buffered disk reads: 594 MB in  3.00 seconds = 197.79 MB/sec
+zoizoi@shankara:~$ sudo dd if=/dev/md0 of=/dev/null bs=1M count=1000
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1.0 GB) copied, 5.84755 s, 179 MB/s
+zoizoi@shankara:~$ sudo dd if=/dev/md0 of=/dev/null bs=1M count=1000
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1.0 GB) copied, 0.152353 s, 6.9 GB/s
+
+even though im accessing the block device directly it does look like
+im getting buffering in natty! I don't think i was in 10.10 and
+certainly wasnt getting 7GB/s
+
+raid10 f2 performance is right down vs what i got last night (i got
+470MB/s first try after creating the array so dont think there was
+buffering.
+
+my md1 raid5 was also slow again. readahead on both defaulted down to
+256 on 11.04
+
+I applied Neil's x8 fix to both md0 and md1 and now the dd test look
+much better.
+
+sudo dd if=/dev/md0 of=/dev/null bs=1M count=4000
+4000+0 records in
+4000+0 records out
+4194304000 bytes (4.2 GB) copied, 7.62018 s, 550 MB/s
+
+a little too good!
+i could see in the system monitor that i didnt have the large 4G
+buffer (i do post this test). Something i did must have reset the
+buffer. I could see a small amount of buffer in system monitor so
+maybe it was 1GB. I appreciate these are not the best test but not
+that hdparm is much worse. Once i set the 2048 sector readahead i gets
+totally unrealistic.
+
+zoizoi@shankara:~$ sudo blockdev --setra 2048 /dev/md0
+zoizoi@shankara:~$ sudo hdparm -t /dev/md0
+
+/dev/md0:
+ Timing buffered disk reads: 5294 MB in  3.00 seconds = 1762.34 MB/sec
+zoizoi@shankara:~$ sudo blockdev --setra 256 /dev/md0
+zoizoi@shankara:~$ sudo hdparm -t /dev/md0
+
+/dev/md0:
+ Timing buffered disk reads: 582 MB in  3.00 seconds = 193.78 MB/sec
+
+anyway, it looks like i'm getting good read speed now with 2048
+lookahead, ill do another dd test on reboot.
+
+
+thanks to you all for the helpful responses,
+
+Liam
