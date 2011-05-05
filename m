@@ -1,7 +1,7 @@
-From: Liam Kurmos <quantum.leaf@gmail.com>
+From: Roberto Spadim <roberto@spadim.com.br>
 Subject: Re: mdadm raid1 read performance
-Date: Thu, 5 May 2011 01:20:33 +0100
-Message-ID: <BANLkTimNxTnf2xW8hbEWK2iA6axqjnjT+A@mail.gmail.com>
+Date: Wed, 4 May 2011 21:24:06 -0300
+Message-ID: <BANLkTimdzEFBr__07PnZHHWk+NF+Wm=vgA@mail.gmail.com>
 References: <BANLkTim8Ehn0fANtibg7X1cMVvOgt7CNMA@mail.gmail.com>
 	<20110504105822.21e23bc3@notabene.brown>
 	<BANLkTimzqu1C+_Z2t5m1bjduXFeRwbgssQ@mail.gmail.com>
@@ -16,18 +16,11 @@ Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <BANLkTi=W=DNdqOBiGwbu67P1EgoEqNy+sg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Roberto Spadim <roberto@spadim.com.br>, Brad Campbell <lists2009@fnarfbargle.com>, Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
+To: Liam Kurmos <quantum.leaf@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, Brad Campbell <lists2009@fnarfbargle.com>, Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-incidentally what does the f2 layout do that it performs so much
-better than the default?
-
-Liam
-
-
-On Thu, May 5, 2011 at 1:14 AM, Liam Kurmos <quantum.leaf@gmail.com> wr=
-ote:
+2011/5/4 Liam Kurmos <quantum.leaf@gmail.com>:
 > Thanks guys!
 >
 >
@@ -88,6 +81,20 @@ ly :-)
 >>
 >
 > no need now! f2 layout is awesome.
+
+hum, you should consider you application.....
+for example, if you need a big ALTER TABLE (SQL database), that must
+be very fast to don=B4t stop your production server, you should use f2
+or raid0 ehehehe
+but if you have a stable application that you need multiuser acess,
+raid1 or n2 layout could be better
+
+backup i=B4m running with raid10 f2, or raid1+raid0, and production
+machine i=B4m using raid1 and linear to get more space
+
+don=B4t forget to align partitions if you use it
+
+
 >
 > many thanks,
 >
@@ -104,7 +111,18 @@ ly :-)
 >>>
 >>> Liam
 >>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
+
+
+
+--=20
+Roberto Spadim
+Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
