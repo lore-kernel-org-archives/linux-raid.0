@@ -1,125 +1,74 @@
-From: "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
-Subject: Problems creating MS-RAID1: "device .. not suitable for any
- style of raid array" / "Device or resource busy"
-Date: Fri, 06 May 2011 14:15:59 +0200
-Message-ID: <4DC4029F020000A100005CA7@gwsmtp1.uni-regensburg.de>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: wish for Linux MD mirrored raid types
+Date: Fri, 6 May 2011 14:33:36 +0200
+Message-ID: <20110506123336.GC22617@www2.open-std.org>
+References: <20110506071752.GA22063@www2.open-std.org> <20110506133159.30c66519@natsu> <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20110506155059.6f82cbeb@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Jonathan Tripathy <jonnyt@abpni.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello!
+On Fri, May 06, 2011 at 03:50:59PM +0600, Roman Mamedov wrote:
+> On Fri, 6 May 2011 11:41:02 +0200
+> Keld J=F8rn Simonsen <keld@keldix.com> wrote:
+>   =20
+> > > RAID1 is traditionally a mirror only setup (ok, some RAID=20
+> > > implementations may do some load-balancing of some sort). So a RA=
+ID1=20
+> > > with 4 disks is one data set copied onto 4 disks. Bandwidth is ro=
+ughly=20
+> > > the same as a single disk (ignoring any load balancing).
+> > > RAID10 is mirror and stripe. A RAID10 with 4 disks is similar to =
+a 2=20
+> > > disk RAID0 (double bandwidth with data split in half across both =
+disks),=20
+> > > but with each disk having a mirror (which brings the total up to =
+4 drives).
+> > >=20
+> > > Additionally, a RAID1 disk (at least using MD) can be accessed ju=
+st like=20
+> > > a normal disk (good for recovery etc.) however a single disk out =
+of a=20
+> > > RAID10 array is next to useless.
+> >=20
+> > I think you are demonstrating some of my points about general knowl=
+edge
+> > quite nicely. Don't worry, you are not alone.
+>=20
+> So what is your proposal: people do not know they can do X, but commo=
+nly do Y,
+> so let's rename X to Y so that both things are called Y and they 'kno=
+w how to
+> do it'?
+>=20
+> RAID10 is an established term and means "stripe of mirrors", period.
+> RAID1 means just a mirror. All the rest is just implementation detail=
+s.
+> Trying to redefine 2x2 to be 5 as some 'educational project' is defin=
+itely
+> misguided.
 
-I'm having strange trouble with SLES11 SP1 amd MD RAID1 (mdadm - v3.0.3 (mdadm-3.0.3-0.22.4), 2.6.32.36-0.5-xen):
+This is the common understanding: RAID10 means RAID1+0 - a RAID0 over
+two RAID1's. As you write. But in Linux MD, raid10 is something else.
+Something which is characterized as RAID1 in the SNIA RAID standards.
+raid10,offset is directly an implementation of one of the SNIA RAID1
+variants.
 
-I was able to create one RAID1 array, but not a second one. I have no idea what's wrong, but my guesses are:
+I am proposing that we call our raid10 layout types for RAID1 - in
+accordance with SNIA standards, and in accordance with the common
+understanding as demonstrated by you and others, even here on the
+linux-raid kernel mailing list.
 
-1) An error when using "--bitmap internal" for a 30GB disk
-2) Unsure whether the disks needs an msdos signature or a RAID partition
-3) It seems a failed attempt to create the array keeps one device busy (a reboot(!) resolves that problem for one attempt)
-
-Some output:
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: device /dev/xvdd not suitable for any style of array
-(Reboot)
-# mdadm -C -l1 -n2  /dev/md0 /dev/xvdd /dev/xvde
-mdadm: /dev/xvdd appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:00:12 2011
-Continue creating array? y
-mdadm: array /dev/md0 started.
-
-# mdadm --grow --bitmap internal /dev/md0
-mdadm: failed to set internal bitmap.
-# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: /dev/xvdd appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:38:20 2011
-mdadm: /dev/xvde appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:38:20 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdd
-mdadm: ADD_NEW_DISK for /dev/xvde failed: Device or resource busy
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: device /dev/xvdd not suitable for any style of array
-# xm reboot rksapv01
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: /dev/xvdd appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 13:26:55 2011
-mdadm: /dev/xvde appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:38:20 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdd
-mdadm: ADD_NEW_DISK for /dev/xvde failed: Device or resource busy
-
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde   
-mdadm: /dev/xvdd appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 13:37:28 2011
-mdadm: /dev/xvde appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:38:20 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdd
-mdadm: ADD_NEW_DISK for /dev/xvde failed: Device or resource busy
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: device /dev/xvdd not suitable for any style of array
-
-(At this point I filed a service request for SLES with no result until now)
-
-Trying some other disks (of varying size):
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde   
-mdadm: /dev/xvdd appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 13:37:28 2011
-mdadm: /dev/xvde appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 12:38:20 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdd
-mdadm: ADD_NEW_DISK for /dev/xvde failed: Device or resource busy
-# mdadm -C -l1 -n2 --bitmap internal /dev/md0 /dev/xvdd /dev/xvde
-mdadm: device /dev/xvdd not suitable for any style of array
-
-(another Reboot)
-# mdadm -C -l1 -n2 --bitmap internal /dev/md1 /dev/xvdf /dev/xvdg
-mdadm: /dev/xvdf appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 16:36:59 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdf
-mdadm: ADD_NEW_DISK for /dev/xvdg failed: Device or resource busy
-# mdadm -C -l1 -n2 --bitmap internal /dev/md2 /dev/xvdh /dev/xvdi
-mdadm: /dev/xvdh appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 16:37:26 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdh
-mdadm: ADD_NEW_DISK for /dev/xvdi failed: Device or resource busy
-# mdadm -C -l1 -n2 --bitmap internal /dev/md3 /dev/xvdj /dev/xvdk
-mdadm: /dev/xvdj appears to be part of a raid array:
-    level=raid1 devices=2 ctime=Wed May  4 16:37:38 2011
-Continue creating array? y
-mdadm: failed to write superblock to /dev/xvdj
-mdadm: ADD_NEW_DISK for /dev/xvdk failed: Device or resource busy
-
-Corresponding Syslog messages:
-May  4 17:18:54 rksapv01 kernel: [  231.942241] md: bind<xvdf>
-May  4 17:18:54 rksapv01 kernel: [  231.942265] md: could not bd_claim xvdg.
-May  4 17:18:54 rksapv01 kernel: [  231.942269] md: md_import_device returned
--16
-May  4 17:19:13 rksapv01 kernel: [  250.118561] md: bind<xvdh>
-May  4 17:19:13 rksapv01 kernel: [  250.118586] md: could not bd_claim xvdi.
-May  4 17:19:13 rksapv01 kernel: [  250.118590] md: md_import_device returned
--16
-May  4 17:19:27 rksapv01 kernel: [  264.505337] md: bind<xvdj>
-May  4 17:19:27 rksapv01 kernel: [  264.505365] md: could not bd_claim xvdk.
-May  4 17:19:27 rksapv01 kernel: [  264.505368] md: md_import_device returned
--16
-
-Do you understand that I'm quite frustrated? Maybe I should mention that the disks are from a FC-SAN with a 4-way multipath (multipath-tools-0.4.8-40.25.1). Also "lsof" finds no process that has the device open.
-
-Finally: I had a similar problem with SLES10 SP3 which made me quit using MD-RAID about two years ago...
-
-Regards,
-Ulrich
-P.S: I'm not subscribed to the list, so please CC: -- Thank you
-
+Best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
