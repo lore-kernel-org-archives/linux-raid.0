@@ -1,40 +1,41 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Problems creating MS-RAID1: "device .. not suitable for any style of raid array" / "Device or resource busy"
-Date: Fri, 6 May 2011 15:36:46 -0500
-Message-ID: <15.66.09483.9DB54CD4@cdptpa-omtalb.mail.rr.com>
-References: <4DC4029F020000A100005CA7@gwsmtp1.uni-regensburg.de>
-Reply-To: <lrhorer@satx.rr.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: wish for Linux MD mirrored raid types
+Date: Fri, 06 May 2011 16:43:22 -0400
+Message-ID: <4DC45D6A.5050905@meetinghouse.net>
+References: <79.BD.29443.A4A54CD4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DC4029F020000A100005CA7@gwsmtp1.uni-regensburg.de>
+In-Reply-To: <79.BD.29443.A4A54CD4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Ulrich Windl' <Ulrich.Windl@rz.uni-regensburg.de>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Ulrich Windl
-> Sent: Friday, May 06, 2011 7:16 AM
-> To: linux-raid@vger.kernel.org
-> Subject: Problems creating MS-RAID1: "device .. not suitable for any style
-> of raid array" / "Device or resource busy"
-> 
-> Hello!
-> 
-> I'm having strange trouble with SLES11 SP1 amd MD RAID1 (mdadm - v3.0.3
-> (mdadm-3.0.3-0.22.4), 2.6.32.36-0.5-xen):
-> 
-> I was able to create one RAID1 array, but not a second one. I have no idea
-> what's wrong, but my guesses are:
-> 
-> 1) An error when using "--bitmap internal" for a 30GB disk
-> 2) Unsure whether the disks needs an msdos signature or a RAID partition
+Leslie Rhorer wrote:
+> 	The bottom line, however, is that even if RAID1 is at the code level
+> just a specific implementation of RAID10, it still is a sufficiently
+> distinct operational mode to warrant its own name, setting it aside from the
+> more general RAID10 implementation.  Aside from that, when I say, "My
+> servers boot from 2 disk RAID1 arrays", everyone knows exactly what I mean
+> without my having to go into more detail about the layout.  For the most
+> part, it doesn't really matter if I happened to create the array using a
+> specific layout of RAID10.  This has its greatest importance for someone
+> inexperienced with RAID systems, who perhaps is setting up his very first
+> mirrored array with a pair of disks.  Having to try to learn all the ins and
+> outs of RAID10 layouts just to be able to create a pair (or triplet) of
+> mirrored disks is not appropriate.
+>    
 
-	It doesn't necessarily require either one.  They don't have to be
-partitioned at all, and indeed there is no fundamental reason to partition
-the drives if the entire disk is to be used for the array.  If you do need
-to partition the disk, I don't think it matters what the partition type is.
+Good points all.
+
+It is worth noting, that in this context, it's pretty silly to use a 
+fancy setup for /boot and swap space - simple RAID1 mirrored partitions 
+work just fine.  Where RAID10 is excellent is as a starting point for 
+LVM, and volumes that support virtual machines.
+
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
+
 
