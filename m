@@ -1,92 +1,178 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: wish for Linux MD mirrored raid types
-Date: Fri, 6 May 2011 20:29:39 +0200
-Message-ID: <20110506182939.GA23860@www2.open-std.org>
-References: <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu> <4DC3C804.6080200@abpni.co.uk> <iq0jv1$psl$1@dough.gmane.org> <20110506132739.GA22689@www2.open-std.org> <4DC3FF4C.5090502@meetinghouse.net> <20110506152405.GB22964@www2.open-std.org> <BANLkTik8A0szuNk2HvDqQXpY3tSAdPoUKA@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: wish for Linux MD mirrored raid types
+Date: Fri, 6 May 2011 15:30:08 -0500
+Message-ID: <79.BD.29443.A4A54CD4@cdptpa-omtalb.mail.rr.com>
+References: <20110506132739.GA22689@www2.open-std.org>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BANLkTik8A0szuNk2HvDqQXpY3tSAdPoUKA@mail.gmail.com>
+In-Reply-To: <20110506132739.GA22689@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roberto Spadim <roberto@spadim.com.br>
-Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Miles Fidelman <mfidelman@meetinghouse.net>, linux-raid@vger.kernel.org
+To: =?iso-8859-1?Q?'Keld_J=F8rn_Simonsen'?= <keld@keldix.com>, 'David Brown' <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 06, 2011 at 12:34:36PM -0300, Roberto Spadim wrote:
-> hum, i asked this question one time, the point is:
-> raid1 code is very easy
-> raid10 code is more complex
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Keld J=F8rn Simonsen
+> Sent: Friday, May 06, 2011 8:28 AM
+> To: David Brown
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: wish for Linux MD mirrored raid types
 >=20
-> easy =3D faster, less memory, less cpu
-> complex =3D faster?, more memory? more cpu?
-
-
-I think more complex -> more intelligent, more features.
-
-I think it is actually amazing what raid10 can do.
-Is raid 1 in other systems really limited to say 2 disks
-- mirrored? Then linux raid10 is much more intelligent.=20
->=20
-> check others raid system (freebsd, netbsd) and check how they do...
-
-Yes, and also HW raid. If Linux made raid10,far the default for RAID1,
-then I think Linux would compare very well with other operating systems
-and HW raid.
-
-Best regards
-keld
-
-----
-
-> 2011/5/6 Keld J=F8rn Simonsen <keld@keldix.com>:
-> > On Fri, May 06, 2011 at 10:01:48AM -0400, Miles Fidelman wrote:
-> >> Keld J=F8rn Simonsen wrote:
-> >> >>As you say, RAID10,near on four disks is pretty much identical t=
-o
-> >> >>RAID1+0 - i.e., a stripe of two normal RAID1 pairs.
-> >> >>
-> >>
-> >> I don't that's exactly right. =A0At least as I understand it:
-> >>
-> >> - RAID1+0 (and RAID0+1) nests things - you start with two sets of =
+> On Fri, May 06, 2011 at 12:54:28PM +0200, David Brown wrote:
+> > On 06/05/2011 12:05, Jonathan Tripathy wrote:
+> > >
+> > >>>>RAID1 is traditionally a mirror only setup (ok, some RAID
+> > >>>>implementations may do some load-balancing of some sort). So a =
 RAID1
-> >> mirrors, then stripe across them (or vice versa) - it's a nested s=
-et of
-> >> steps
-> >>
-> >> - md RAID10 provides both mirroring and striping, but it's a more
-> >> integrated function - (from the man page) "RAID10 provides a combi=
-nation
-> >> of RAID1 and RAID0, and sometimes known as RAID1+0. Every databloc=
-k is
-> >> duplicated some number of times, and the resulting collection of
-> >> datablocks are distributed over multiple drives." - but there isn'=
-t an
-> >> inherent nesting in the process (i.e., no two disks are copies of =
-each
-> >> other, and md RAID10 will work over odd numbers of drives)
+> > >>>>with 4 disks is one data set copied onto 4 disks. Bandwidth is
+> roughly
+> > >>>>the same as a single disk (ignoring any load balancing).
+> > >>>>RAID10 is mirror and stripe. A RAID10 with 4 disks is similar t=
+o a 2
+> > >>>>disk RAID0 (double bandwidth with data split in half across bot=
+h
+> > >>>>disks),
+> > >>>>but with each disk having a mirror (which brings the total up t=
+o 4
+> > >>>>drives).
+> > >>>>
+> > >>>>Additionally, a RAID1 disk (at least using MD) can be accessed =
+just
+> > >>>>like
+> > >>>>a normal disk (good for recovery etc.) however a single disk ou=
+t of
+> a
+> > >>>>RAID10 array is next to useless.
+> > >Just so I can sleep at night, is my understanding of RAID10 and RA=
+ID1
+> > >above correct?
+> > >
 > >
-> > Yes, you are right, RAID1+0 is nested, while Linux MD raid10 is not=
-=2E
-> > But the data layout of Linux MD RAID1+0 and Linux MD
-> > RAID10,near is almost identical.
+> > It's mostly right (assuming, of course, that /I/ am correct here...=
+).
 > >
-> > keld
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
+> > RAID1 is traditionally a two-way mirror on two disks (or possibly o=
+n two
+> > other raid sets, as in raid0+1).  So if you talk about RAID1 with 4
+> > disks, you should probably qualify it more precisely - otherwise pe=
+ople
+> > will wonder what you mean, or think it is impossible (many other RA=
+ID1
+> > solutions, hardware or software, don't support more than two-way
+> > mirrors).  /I/ would certainly say that a 4-disk RAID1 is a four-wa=
+y
+> > mirror as you described - but some people might think of a standard
+> > layout RAID1+0.
 > >
+> > As you say, RAID10,near on four disks is pretty much identical to
+> > RAID1+0 - i.e., a stripe of two normal RAID1 pairs.
+> >
+> > A single md RAID1 disk can be accessed like a normal disk, /if/ it =
+uses
+> > metadata format 0.90 which is put at the end of the drive.  If you =
+have
+> > later metadata formats that are at the beginning, then that will ca=
+use
+> > trouble if you try to view the disk without using md.  A single dis=
+k
+> > from a RAID10 is, as you say, useless without md.
+> >
+> > However, assuming your recovery PC supports md raid, then you can
+> > assembly your single RAID10 disk as a degraded RAID10 array.  After=
+ all,
+> > it wouldn't be very redundant if you only had access to your data w=
+hen
+> > all the disks were working!
 >=20
+> I agree with what David Brown says here.
 >=20
+> Just some further remarks:
 >=20
-> --=20
-> Roberto Spadim
-> Spadim Technology / SPAEmpresarial
+> You can have Linux MD raid10 arrays with only 2 disks.
+> This is different from RAID1+0 that requires at least 4 disks.
+>=20
+> You can also with Linux MD have an odd number of disk, which is
+> impossible with RAID1+0.
+>=20
+> Linux MD raid10 is a kernel driver that handles everything in
+> one module, while RAID1+0 is handled in two drivers - raid0 over raid=
+1.
+> The latter is called nested RAID, and the Linux MD raid10 is not a
+> nested RAID, while RAID1+0 is.
+>=20
+> With Linux MD raid10,near and superblock 0.90 you can also
+> boot it from old grub, lilo etc, as each partition can be seen as a n=
+ormal
+> file system.
+>=20
+> As David pointed out, "a single disk out of a RAID10 array is next to
+> useless" is not true. Linux MD RAID10 is designed to always be able t=
+o
+> hold all data intact if one disk is out. You just need Linux MD raid1=
+0
+> aware software.
+>=20
+> I apologise for being abrupt in my first answer. But the thing is tha=
+t
+> I am getting tired of explaining and correcting all these misconcepti=
+ons
+> again and again. And my proposal is an attempt to stop at least some
+> of the need for explaining, while also bringing the best practise for=
+ward
+> to
+> the users of our technology, for the benefit of the users.
+
+	I think there are several more issues at hand, here, than your
+suggestion takes into consideration.  Special Relativity, as the name
+suggests, is a special case of General Relativity, but no one, and I me=
+an
+*NO ONE* ever approaches an SR problem by applying the mechanics of GR =
+and
+letting the equations collapse along the way.  Indeed, Einstein himself
+developed SR several years before tackling the much more complex proble=
+m of
+GR, the fact all the same physical processes are involved and the fact =
+the
+postulates are identical notwithstanding.
+
+	It doesn't really much matter whether the developers decide to
+implement RAID1 as a part of the same engine that delivers RAID10, or n=
+ot.
+It also does not matter whether the admin can produce the exact same re=
+sults
+at the code execution level by implementing a specific topology of RAID=
+10 or
+not.  OTOH, however, if there are any functional or operational differe=
+nces
+between the implementation of RAID1 and an implementation of RAID10 tha=
+t
+produces the same layout, then the two are simply not the same, at all.
+Period.
+
+	The bottom line, however, is that even if RAID1 is at the code level
+just a specific implementation of RAID10, it still is a sufficiently
+distinct operational mode to warrant its own name, setting it aside fro=
+m the
+more general RAID10 implementation.  Aside from that, when I say, "My
+servers boot from 2 disk RAID1 arrays", everyone knows exactly what I m=
+ean
+without my having to go into more detail about the layout.  For the mos=
+t
+part, it doesn't really matter if I happened to create the array using =
+a
+specific layout of RAID10.  This has its greatest importance for someon=
+e
+inexperienced with RAID systems, who perhaps is setting up his very fir=
+st
+mirrored array with a pair of disks.  Having to try to learn all the in=
+s and
+outs of RAID10 layouts just to be able to create a pair (or triplet) of
+mirrored disks is not appropriate.
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
