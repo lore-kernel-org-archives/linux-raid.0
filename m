@@ -1,96 +1,62 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
 Subject: Re: mdadm raid1 read performance
-Date: Fri, 6 May 2011 23:53:39 +0200
-Message-ID: <20110506215339.GA24391@www2.open-std.org>
-References: <20110505111006.GB11441@www2.open-std.org> <89.70.16951.22664CD4@cdptpa-omtalb.mail.rr.com>
+Date: Fri, 6 May 2011 23:56:26 +0200
+Message-ID: <20110506215626.GB24391@www2.open-std.org>
+References: <4DC0A478.9010704@anonymous.org.uk> <09.95.16951.AAD54CD4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <89.70.16951.22664CD4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <09.95.16951.AAD54CD4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'Keld =?iso-8859-1?Q?J=F8rn?= Simonsen' <keld@keldix.com>, 'NeilBrown' <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: 'John Robinson' <john.robinson@anonymous.org.uk>, 'Liam Kurmos' <quantum.leaf@gmail.com>, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, May 06, 2011 at 04:20:39PM -0500, Leslie Rhorer wrote:
+On Fri, May 06, 2011 at 03:44:31PM -0500, Leslie Rhorer wrote:
+> 
+> 
 > > -----Original Message-----
 > > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Keld J=F8rn Simonsen
-> > Sent: Thursday, May 05, 2011 6:10 AM
-> > To: NeilBrown
-> > Cc: Liam Kurmos; Roberto Spadim; Brad Campbell; Drew; linux-
-> > raid@vger.kernel.org
+> > owner@vger.kernel.org] On Behalf Of John Robinson
+> > Sent: Tuesday, May 03, 2011 7:57 PM
+> > To: Liam Kurmos
+> > Cc: Linux RAID
 > > Subject: Re: mdadm raid1 read performance
-> >=20
-> > On Thu, May 05, 2011 at 09:45:38AM +1000, NeilBrown wrote:
-> > > On Thu, 5 May 2011 00:08:59 +0100 Liam Kurmos <quantum.leaf@gmail=
-=2Ecom>
-> > wrote:
+> > 
+> > On 04/05/2011 01:07, Liam Kurmos wrote:
+> > > Hi,
 > > >
-> > > > as a separate question, what should be the theoretical performa=
-nce of
-> > raid5?
+> > > I've been testing mdadm (great piece of software btw) however all my
+> > > test show that reading from raid1 is only the same speed as reading
+> > > from a single drive.
 > > >
-> > > x(N-1)
-> > >
-> > > So a 4 drive RAID5 should read at 3 time the speed of a single dr=
-ive.
-> >=20
-> > Actually, theoretically, it should be more than that for reading, m=
-ore
-> > like N minus
-> > some overhead. In a raid5 stripe of 4 disks, when reading you do no=
-t read
-> > the checksum block, and thus you should be able to have all 4 drive=
-s
-> > occupied with reading real data. Some benchmarks back this up,
-> > http://home.comcast.net/~jpiszcz/20080329-raid/
-> > http://blog.jamponi.net/2008/07/raid56-and-10-benchmarks-on-26255_1=
-0.html
-> > The latter reports a 3.44 times performance for raid5 reads with 4
-> > disks, significantly over the N-1 =3D 3.0 mark.
-> >=20
-> > For writing, you are correct with the N-1 formular.
->=20
-> 	There have been a lot of threads here about array performance, but
-> one important factor rarely mentioned in these threads is network
-> performance.  Of course, network performance is really outside the sc=
-ope of
-> this list, but I frequently see people talking about performance well=
- in
-> excess of 120MBps.  That's great, but I have to wonder if their netwo=
-rk
-> actually can make use of such speeds.  Of course, if the application
-> actually obtaining the raw data is on the machine, then network perfo=
-rmance
-> is much less of an issue.  A database search implemented directly on =
-the
-> server, for example, can use every bit of performance available to th=
-e local
-> machine.  Given that in my case the vast majority of data is squirted=
- across
-> the LAN (e.g., these are mostly file servers), anything much in exces=
-s of
-> 120MBps is irrelevant.  I mean, yeah, it=92s a rather nice feeling th=
-at my
-> RAID arrays can deliver more than 450MBps if they are ever called upo=
-n to do
-> so, but with a 1G LAN, that's not going to happen very often.  I just=
- wonder
-> how many people who complain of poor performance can really benefit a=
-ll that
-> much from increased performance?
+> > > Is this a known issue? or is there something seriously wrong with my
+> > > system? i have tried v2.8.1 and v.3.2.1 without difference and several
+> > > benchmarking methods.
+> > 
+> > This is a FAQ. Yes, this is known. No, it's not an issue, it's by design
+> > - pretty much any RAID 1 implementation will be the same because of the
+> > nature of spinning discs. md RAID 1 will serve multiple simultaneous
+> > reads from the different mirrors, giving a higher total throughput, but
+> > a single-threaded read will read from only one. If you want RAID 0
+> > sequential speed at the same time as RAID 1 mirroring, look at md RAID
+> > 10, and in particular RAID 10,f2; please see the excellent documentation
+> > and wiki for more details.
+> 
+> 	I would go so far as to say it is more than just by design.  It is
+> by the very fundamental nature of RAID1.  RAID1 is intended to be a simple
+> mirror.  Every write is sent in identical form to precisely the same logical
+> sector of all devices.  Any read can come from any device in the array.  The
+> WriteMostly specifier can help insure the best throughput in the case where
+> one of the members is inherently slower than the other members of the array,
+> and some RAID1 implementations support load balancing, but otherwise there
+> are no real operational gains in performance for a RAID1 array over a single
+> disk.
 
-10 Gbit/s connections are getting commonplace these days, at least in t=
-he
-environments that I operate in.
+SNIA defines RAID1 variants that are not so simple. And in many cases
+you really do not know the internal layout of HW RAID1. So IMHO what you say does
+not hold true.
 
-Best regards
+best regards
 keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
