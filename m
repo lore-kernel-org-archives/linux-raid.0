@@ -1,37 +1,95 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
 Subject: Re: wish for Linux MD mirrored raid types
-Date: Fri, 6 May 2011 15:26:52 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1105061525520.20305@uplift.swm.pp.se>
-References: <20110506071752.GA22063@www2.open-std.org> <20110506133159.30c66519@natsu> <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu>
- <20110506123336.GC22617@www2.open-std.org>
+Date: Fri, 6 May 2011 15:27:39 +0200
+Message-ID: <20110506132739.GA22689@www2.open-std.org>
+References: <20110506071752.GA22063@www2.open-std.org> <20110506133159.30c66519@natsu> <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu> <4DC3C804.6080200@abpni.co.uk> <iq0jv1$psl$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1932789980-1304688412=:20305"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110506123336.GC22617@www2.open-std.org>
+Content-Disposition: inline
+In-Reply-To: <iq0jv1$psl$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Keld_J=F8rn_Simonsen?= <keld@keldix.com>
-Cc: Roman Mamedov <rm@romanrm.ru>, Jonathan Tripathy <jonnyt@abpni.co.uk>, linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, May 06, 2011 at 12:54:28PM +0200, David Brown wrote:
+> On 06/05/2011 12:05, Jonathan Tripathy wrote:
+> >
+> >>>>RAID1 is traditionally a mirror only setup (ok, some RAID
+> >>>>implementations may do some load-balancing of some sort). So a RAID1
+> >>>>with 4 disks is one data set copied onto 4 disks. Bandwidth is roughly
+> >>>>the same as a single disk (ignoring any load balancing).
+> >>>>RAID10 is mirror and stripe. A RAID10 with 4 disks is similar to a 2
+> >>>>disk RAID0 (double bandwidth with data split in half across both
+> >>>>disks),
+> >>>>but with each disk having a mirror (which brings the total up to 4
+> >>>>drives).
+> >>>>
+> >>>>Additionally, a RAID1 disk (at least using MD) can be accessed just
+> >>>>like
+> >>>>a normal disk (good for recovery etc.) however a single disk out of a
+> >>>>RAID10 array is next to useless.
+> >Just so I can sleep at night, is my understanding of RAID10 and RAID1
+> >above correct?
+> >
+> 
+> It's mostly right (assuming, of course, that /I/ am correct here...).
+> 
+> RAID1 is traditionally a two-way mirror on two disks (or possibly on two 
+> other raid sets, as in raid0+1).  So if you talk about RAID1 with 4 
+> disks, you should probably qualify it more precisely - otherwise people 
+> will wonder what you mean, or think it is impossible (many other RAID1 
+> solutions, hardware or software, don't support more than two-way 
+> mirrors).  /I/ would certainly say that a 4-disk RAID1 is a four-way 
+> mirror as you described - but some people might think of a standard 
+> layout RAID1+0.
+> 
+> As you say, RAID10,near on four disks is pretty much identical to 
+> RAID1+0 - i.e., a stripe of two normal RAID1 pairs.
+> 
+> A single md RAID1 disk can be accessed like a normal disk, /if/ it uses 
+> metadata format 0.90 which is put at the end of the drive.  If you have 
+> later metadata formats that are at the beginning, then that will cause 
+> trouble if you try to view the disk without using md.  A single disk 
+> from a RAID10 is, as you say, useless without md.
+> 
+> However, assuming your recovery PC supports md raid, then you can 
+> assembly your single RAID10 disk as a degraded RAID10 array.  After all, 
+> it wouldn't be very redundant if you only had access to your data when 
+> all the disks were working!
 
----137064504-1932789980-1304688412=:20305
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
+I agree with what David Brown says here.
 
-On Fri, 6 May 2011, Keld Jørn Simonsen wrote:
+Just some further remarks:
 
-> I am proposing that we call our raid10 layout types for RAID1 - in 
-> accordance with SNIA standards, and in accordance with the common 
-> understanding as demonstrated by you and others, even here on the 
-> linux-raid kernel mailing list.
+You can have Linux MD raid10 arrays with only 2 disks. 
+This is different from RAID1+0 that requires at least 4 disks.
 
-Just so we're clear, if I create a raid1 with 4 drives I want 4 identical 
-copies of the same information, not RAID1+0.
+You can also with Linux MD have an odd number of disk, which is
+impossible with RAID1+0.
 
-How should this be handled with your suggestion?
+Linux MD raid10 is a kernel driver that handles everything in
+one module, while RAID1+0 is handled in two drivers - raid0 over raid1.
+The latter is called nested RAID, and the Linux MD raid10 is not a
+nested RAID, while RAID1+0 is.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1932789980-1304688412=:20305--
+With Linux MD raid10,near and superblock 0.90 you can also 
+boot it from old grub, lilo etc, as each partition can be seen as a normal
+file system.
+
+As David pointed out, "a single disk out of a RAID10 array is next to
+useless" is not true. Linux MD RAID10 is designed to always be able to 
+hold all data intact if one disk is out. You just need Linux MD raid10
+aware software. 
+
+I apologise for being abrupt in my first answer. But the thing is that
+I am getting tired of explaining and correcting all these misconceptions
+again and again. And my proposal is an attempt to stop at least some
+of the need for explaining, while also bringing the best practise forward to 
+the users of our technology, for the benefit of the users.
+
+best regards
+keld
+and then 
+
