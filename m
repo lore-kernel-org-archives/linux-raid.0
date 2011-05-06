@@ -1,44 +1,50 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
 Subject: Re: wish for Linux MD mirrored raid types
-Date: Fri, 6 May 2011 15:40:15 +0200
-Message-ID: <20110506134015.GB22689@www2.open-std.org>
-References: <20110506071752.GA22063@www2.open-std.org> <20110506133159.30c66519@natsu> <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu> <20110506123336.GC22617@www2.open-std.org> <alpine.DEB.2.00.1105061525520.20305@uplift.swm.pp.se>
+Date: Fri, 06 May 2011 10:01:48 -0400
+Message-ID: <4DC3FF4C.5090502@meetinghouse.net>
+References: <20110506071752.GA22063@www2.open-std.org> <20110506133159.30c66519@natsu> <20110506090345.GA22245@www2.open-std.org> <4DC3BDD9.1060300@abpni.co.uk> <20110506094102.GC22245@www2.open-std.org> <20110506155059.6f82cbeb@natsu> <4DC3C804.6080200@abpni.co.uk> <iq0jv1$psl$1@dough.gmane.org> <20110506132739.GA22689@www2.open-std.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1105061525520.20305@uplift.swm.pp.se>
+In-Reply-To: <20110506132739.GA22689@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Roman Mamedov <rm@romanrm.ru>, Jonathan Tripathy <jonnyt@abpni.co.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 06, 2011 at 03:26:52PM +0200, Mikael Abrahamsson wrote:
-> On Fri, 6 May 2011, Keld J=F8rn Simonsen wrote:
->=20
-> >I am proposing that we call our raid10 layout types for RAID1 - in=20
-> >accordance with SNIA standards, and in accordance with the common=20
-> >understanding as demonstrated by you and others, even here on the=20
-> >linux-raid kernel mailing list.
->=20
-> Just so we're clear, if I create a raid1 with 4 drives I want 4 ident=
-ical=20
-> copies of the same information, not RAID1+0.
->=20
-> How should this be handled with your suggestion?
+Keld J=F8rn Simonsen wrote:
+>> As you say, RAID10,near on four disks is pretty much identical to
+>> RAID1+0 - i.e., a stripe of two normal RAID1 pairs.
+>>     =20
 
-With parameters like the ones that we use today for raid10. Something
-like
+I don't that's exactly right.  At least as I understand it:
 
-mdadm --create /dev/md0 --level=3D1 -n 4 --layout=3Dc4 /dev/sd[abcd]1=20
+- RAID1+0 (and RAID0+1) nests things - you start with two sets of RAID1=
+=20
+mirrors, then stripe across them (or vice versa) - it's a nested set of=
+=20
+steps
 
-assuming a new layout type "classic" abbreviated as "c". "n4" could als=
-o
-do for the layout value.
+- md RAID10 provides both mirroring and striping, but it's a more=20
+integrated function - (from the man page) "RAID10 provides a combinatio=
+n=20
+of RAID1 and RAID0, and sometimes known as RAID1+0. Every datablock is=20
+duplicated some number of times, and the resulting collection of=20
+datablocks are distributed over multiple drives." - but there isn't an=20
+inherent nesting in the process (i.e., no two disks are copies of each=20
+other, and md RAID10 will work over odd numbers of drives)
 
-best regards
-keld
+Miles Fidelman
+
+
+
+
+--=20
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
+
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
