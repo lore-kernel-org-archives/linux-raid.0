@@ -1,62 +1,130 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: mdadm raid1 read performance
-Date: Fri, 6 May 2011 23:56:26 +0200
-Message-ID: <20110506215626.GB24391@www2.open-std.org>
-References: <4DC0A478.9010704@anonymous.org.uk> <09.95.16951.AAD54CD4@cdptpa-omtalb.mail.rr.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: mdadm raid1 read performance
+Date: Fri, 6 May 2011 22:17:26 -0500
+Message-ID: <F2.07.05159.1C9B4CD4@cdptpa-omtalb.mail.rr.com>
+References: <20110506215339.GA24391@www2.open-std.org>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <09.95.16951.AAD54CD4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20110506215339.GA24391@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'John Robinson' <john.robinson@anonymous.org.uk>, 'Liam Kurmos' <quantum.leaf@gmail.com>, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: =?iso-8859-1?Q?'Keld_J=F8rn_Simonsen'?= <keld@keldix.com>
+Cc: 'NeilBrown' <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 06, 2011 at 03:44:31PM -0500, Leslie Rhorer wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of John Robinson
-> > Sent: Tuesday, May 03, 2011 7:57 PM
-> > To: Liam Kurmos
-> > Cc: Linux RAID
-> > Subject: Re: mdadm raid1 read performance
-> > 
-> > On 04/05/2011 01:07, Liam Kurmos wrote:
-> > > Hi,
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Keld J=F8rn Simonsen
+> Sent: Friday, May 06, 2011 4:54 PM
+> To: Leslie Rhorer
+> Cc: 'Keld J=F8rn Simonsen'; 'NeilBrown'; linux-raid@vger.kernel.org
+> Subject: Re: mdadm raid1 read performance
+>=20
+> On Fri, May 06, 2011 at 04:20:39PM -0500, Leslie Rhorer wrote:
+> > > -----Original Message-----
+> > > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > > owner@vger.kernel.org] On Behalf Of Keld J=F8rn Simonsen
+> > > Sent: Thursday, May 05, 2011 6:10 AM
+> > > To: NeilBrown
+> > > Cc: Liam Kurmos; Roberto Spadim; Brad Campbell; Drew; linux-
+> > > raid@vger.kernel.org
+> > > Subject: Re: mdadm raid1 read performance
 > > >
-> > > I've been testing mdadm (great piece of software btw) however all my
-> > > test show that reading from raid1 is only the same speed as reading
-> > > from a single drive.
+> > > On Thu, May 05, 2011 at 09:45:38AM +1000, NeilBrown wrote:
+> > > > On Thu, 5 May 2011 00:08:59 +0100 Liam Kurmos
+> <quantum.leaf@gmail.com>
+> > > wrote:
+> > > >
+> > > > > as a separate question, what should be the theoretical perfor=
+mance
+> of
+> > > raid5?
+> > > >
+> > > > x(N-1)
+> > > >
+> > > > So a 4 drive RAID5 should read at 3 time the speed of a single
+> drive.
 > > >
-> > > Is this a known issue? or is there something seriously wrong with my
-> > > system? i have tried v2.8.1 and v.3.2.1 without difference and several
-> > > benchmarking methods.
-> > 
-> > This is a FAQ. Yes, this is known. No, it's not an issue, it's by design
-> > - pretty much any RAID 1 implementation will be the same because of the
-> > nature of spinning discs. md RAID 1 will serve multiple simultaneous
-> > reads from the different mirrors, giving a higher total throughput, but
-> > a single-threaded read will read from only one. If you want RAID 0
-> > sequential speed at the same time as RAID 1 mirroring, look at md RAID
-> > 10, and in particular RAID 10,f2; please see the excellent documentation
-> > and wiki for more details.
-> 
-> 	I would go so far as to say it is more than just by design.  It is
-> by the very fundamental nature of RAID1.  RAID1 is intended to be a simple
-> mirror.  Every write is sent in identical form to precisely the same logical
-> sector of all devices.  Any read can come from any device in the array.  The
-> WriteMostly specifier can help insure the best throughput in the case where
-> one of the members is inherently slower than the other members of the array,
-> and some RAID1 implementations support load balancing, but otherwise there
-> are no real operational gains in performance for a RAID1 array over a single
-> disk.
+> > > Actually, theoretically, it should be more than that for reading,=
+ more
+> > > like N minus
+> > > some overhead. In a raid5 stripe of 4 disks, when reading you do =
+not
+> read
+> > > the checksum block, and thus you should be able to have all 4 dri=
+ves
+> > > occupied with reading real data. Some benchmarks back this up,
+> > > http://home.comcast.net/~jpiszcz/20080329-raid/
+> > > http://blog.jamponi.net/2008/07/raid56-and-10-benchmarks-on-
+> 26255_10.html
+> > > The latter reports a 3.44 times performance for raid5 reads with =
+4
+> > > disks, significantly over the N-1 =3D 3.0 mark.
+> > >
+> > > For writing, you are correct with the N-1 formular.
+> >
+> > 	There have been a lot of threads here about array performance, but
+> > one important factor rarely mentioned in these threads is network
+> > performance.  Of course, network performance is really outside the =
+scope
+> of
+> > this list, but I frequently see people talking about performance we=
+ll in
+> > excess of 120MBps.  That's great, but I have to wonder if their net=
+work
+> > actually can make use of such speeds.  Of course, if the applicatio=
+n
+> > actually obtaining the raw data is on the machine, then network
+> performance
+> > is much less of an issue.  A database search implemented directly o=
+n the
+> > server, for example, can use every bit of performance available to =
+the
+> local
+> > machine.  Given that in my case the vast majority of data is squirt=
+ed
+> across
+> > the LAN (e.g., these are mostly file servers), anything much in exc=
+ess
+> of
+> > 120MBps is irrelevant.  I mean, yeah, it=92s a rather nice feeling =
+that my
+> > RAID arrays can deliver more than 450MBps if they are ever called u=
+pon
+> to do
+> > so, but with a 1G LAN, that's not going to happen very often.  I ju=
+st
+> wonder
+> > how many people who complain of poor performance can really benefit=
+ all
+> that
+> > much from increased performance?
+>=20
+> 10 Gbit/s connections are getting commonplace these days, at least in=
+ the
+> environments that I operate in.
 
-SNIA defines RAID1 variants that are not so simple. And in many cases
-you really do not know the internal layout of HW RAID1. So IMHO what you say does
-not hold true.
+	They are certainly not unheard-of, but I'm not sure I would call
+them, "commonplace".  They are definitely not in the majority.  I work =
+for a
+very large national telecommunications company, and most of the links w=
+e
+sell are still less than 10M.  I'm not sure we have sold any full 10G
+network links, at all, although we have certainly sold a number of 2G -=
+ 4G
+links.  Of course, WAN and SAN applications are always more expensive t=
+han
+LAN applications, so many companies have large intra-site links but
+comparatively small inter-site links.  Our customer backbone, of course=
+, is
+much, much higher than 10G, but none of our internal LAN links at any o=
+f our
+locations is more than 1G.  Most are 100M.
 
-best regards
-keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
