@@ -1,33 +1,19 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: mdadm raid1 read performance
-Date: Sat, 7 May 2011 12:58:57 +0200
-Message-ID: <20110507105857.GA32569@www2.open-std.org>
-References: <iptjde$92f$1@dough.gmane.org> <E8.69.09483.F8264CD4@cdptpa-omtalb.mail.rr.com> <iq37cu$stq$1@dough.gmane.org>
-Mime-Version: 1.0
+From: Anshuman Aggarwal <anshuman@brillgene.com>
+Subject: Convert RAID 5 to RAID 6 while reducing array size
+Date: Sun, 8 May 2011 00:55:16 +0530
+Message-ID: <34905057-B75E-4721-B6D2-7B9FA733BCA8@brillgene.com>
+Mime-Version: 1.0 (Apple Message framework v1084)
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <iq37cu$stq$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david.brown@hesbynett.no>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 07, 2011 at 12:37:18PM +0200, David Brown wrote:
-> On 06/05/11 23:05, Leslie Rhorer wrote:
-> >	These systems use so little swap space and so rarely, I'm not sure I
-> >see any benefit to RAID10,f2 for them.  Is there?
-> >
-> 
-> Obviously when you use swap rarely, it makes little difference how it is 
-> laid out on the disk.  And since it is small, there is no difference 
-> between the speed of the outer and inner tracks (for HD's - for SSD's 
-> there is obviously no difference), so you don't gain there.  raid10,f2 
-> will still be better than raid1 for larger reads from swap - but I think 
-> you would have a hard time trying to spot that effect in the real world.
+Hi,
+ I'm trying to convert a 6 device raid5 into a raid6. The 6th device was added into the Raid 5 by mistake instead of a grow operation to convert it into a RAID 6. As such the md device is not being used beyond the size that it had when it was a 5 device raid5.
 
-I think swap on raid10,f2 mostly matters on workstations, where you have 
-big apps like OpenOffice.org or firefox, and limited RAM.
+Can this be done in a single grow step by specifying the reduced size (--array-size=xx) and new layout (l=6)? 
 
-best regards
-keld
+Thanks,
+Anshu
