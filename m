@@ -1,100 +1,51 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: [PATCH] RAID-6 check standalone suspend array
-Date: Sun, 8 May 2011 20:54:08 +0200
-Message-ID: <20110508185408.GA25378@lazy.lzy>
-References: <20110221204551.GA15675@lazy.lzy>
- <20110321140244.2314b4b4@notabene.brown>
- <20110321104007.GA15379@lazy.lzy>
- <20110321220457.29d52f5c@notabene.brown>
- <20110321115440.GA15635@lazy.lzy>
- <20110322095905.737fb1d5@notabene.brown>
- <20110404175242.GA3411@lazy.lzy>
- <20110405091242.3427e0b1@notabene.brown>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: wish for Linux MD mirrored raid types
+Date: Sun, 08 May 2011 17:25:24 -0400
+Message-ID: <4DC70A44.5050101@meetinghouse.net>
+References: <20110506071752.GA22063@www2.open-std.org> <20110508181445.GB7629@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110405091242.3427e0b1@notabene.brown>
+In-Reply-To: <20110508181445.GB7629@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+Luca Berra wrote:
+> On Fri, May 06, 2011 at 09:17:52AM +0200, Keld J=F8rn Simonsen wrote:
+>> I would like linux MD raid10 functionality to be part of the Linux M=
+D
+>> RAID1 module, and be called raid1. This is in accordance with the
+> then we need rename the current raid1 functionality to 'mirror'. in
+> order to avoid further confusion.
+> besides, current raid10 does not support resizing, so the feature
+> should be added before ditching 'mirror'
+>
 
-please find below a small patch which should suspend the
-array while reading the stripes in order to perform the
-check of the RAID-6.
+The current md RAID1 does exactly what RAID1 is supposed to do.
 
-This should complete the "check" part of the SW.
-Please let me know what else could be needed (docs,
-test or else).
+The md RAID10 is a very specific, and unique approach that has=20
+similarities to, but is distinct from, RAID1+0, RAID0+1, RAID5, and RAI=
+D6.
 
-Please have a careful look at it, since I did not know
-how to test it.
+What say we leave the names alone.  Just beause one person is confused =
+is no reason to further confuse things.
 
-Thanks.
+Just one man's opinion.
 
---- cut here ---
+Miles Fidelman
 
 
-diff -uNr a/raid6check.c b/raid6check.c
---- a/raid6check.c	2011-05-07 20:35:18.693370007 +0200
-+++ b/raid6check.c	2011-05-07 21:00:07.713865939 +0200
-@@ -24,6 +24,7 @@
- 
- #include "mdadm.h"
- #include <stdint.h>
-+#include <signal.h>
- 
- int geo_map(int block, unsigned long long stripe, int raid_disks,
- 	    int level, int layout);
-@@ -99,7 +100,7 @@
- 	return curr_broken_disk;
- }
- 
--int check_stripes(int *source, unsigned long long *offsets,
-+int check_stripes(struct mdinfo *info, int *source, unsigned long long *offsets,
- 		  int raid_disks, int chunk_size, int level, int layout,
- 		  unsigned long long start, unsigned long long length, char *name[])
- {
-@@ -139,10 +140,22 @@
- 
- 		printf("pos --> %llu\n", start);
- 
-+		signal(SIGTERM, SIG_IGN);
-+		signal(SIGINT, SIG_IGN);
-+		signal(SIGQUIT, SIG_IGN);
-+		sysfs_set_num(info, NULL, "suspend_lo", start * data_disks);
-+		sysfs_set_num(info, NULL, "suspend_hi", (start + chunk_size) * data_disks);
- 		for (i = 0 ; i < raid_disks ; i++) {
- 			lseek64(source[i], offsets[i] + start * chunk_size, 0);
- 			read(source[i], stripes[i], chunk_size);
- 		}
-+		sysfs_set_num(info, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-+		sysfs_set_num(info, NULL, "suspend_hi", 0);
-+		sysfs_set_num(info, NULL, "suspend_lo", 0);
-+		signal(SIGQUIT, SIG_DFL);
-+		signal(SIGINT, SIG_DFL);
-+		signal(SIGTERM, SIG_DFL);
-+
- 		for (i = 0 ; i < data_disks ; i++) {
- 			int disk = geo_map(i, start, raid_disks, level, layout);
- 			blocks[i] = stripes[disk];
-@@ -343,7 +356,7 @@
- 		comp = comp->next;
- 	}
- 
--	int rv = check_stripes(fds, offsets,
-+	int rv = check_stripes(info, fds, offsets,
- 			       raid_disks, chunk_size, level, layout,
- 			       start, length, disk_name);
- 	if (rv != 0) {
 
---- cut here ---
+--=20
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
 
-bye,
 
--- 
-
-piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
