@@ -1,21 +1,33 @@
-From: Anshuman Aggarwal <anshuman@brillgene.com>
-Subject: Convert RAID 5 to RAID 6 while reducing array size
-Date: Sun, 8 May 2011 01:20:06 +0530
-Message-ID: <5D271CD8-AE79-441F-A6FA-AF0E5D481E4D@brillgene.com>
-References: <34905057-B75E-4721-B6D2-7B9FA733BCA8@brillgene.com>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: wish for Linux MD mirrored raid types
+Date: Sun, 8 May 2011 20:14:45 +0200
+Message-ID: <20110508181445.GB7629@maude.comedia.it>
+References: <20110506071752.GA22063@www2.open-std.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <34905057-B75E-4721-B6D2-7B9FA733BCA8@brillgene.com>
+Content-Disposition: inline
+In-Reply-To: <20110506071752.GA22063@www2.open-std.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-I'm trying to convert a 6 device raid5 into a raid6. The 6th device was added into the Raid 5 by mistake instead of a grow operation to convert it into a RAID 6. As such the md device is not being used beyond the size that it had when it was a 5 device raid5.
+On Fri, May 06, 2011 at 09:17:52AM +0200, Keld J=F8rn Simonsen wrote:
+>I would like linux MD raid10 functionality to be part of the Linux MD
+>RAID1 module, and be called raid1. This is in accordance with the
+then we need rename the current raid1 functionality to 'mirror'. in
+order to avoid further confusion.
+besides, current raid10 does not support resizing, so the feature
+should be added before ditching 'mirror'
 
-Can this be done in a single grow step by specifying the reduced size (--array-size=xx) and new layout (l=6)? 
+L.
 
-Thanks,
-Anshu
+--=20
+Luca Berra -- bluca@comedia.it
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
