@@ -1,97 +1,264 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: md question re: max_hw_sectors_kb
-Date: Mon, 09 May 2011 11:02:53 -0500
-Message-ID: <4DC8102D.5050504@sgi.com>
-References: <4DC0639E.1070707@sgi.com>	<20110506142434.11afff3e@notabene.brown> <20110506144015.3b8af3d0@notabene.brown>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: [PATCH] RAID-6 check standalone suspend array V2.0
+Date: Mon, 9 May 2011 20:43:33 +0200
+Message-ID: <20110509184333.GA28743@lazy.lzy>
+References: <20110221204551.GA15675@lazy.lzy>
+ <20110321140244.2314b4b4@notabene.brown>
+ <20110321104007.GA15379@lazy.lzy>
+ <20110321220457.29d52f5c@notabene.brown>
+ <20110321115440.GA15635@lazy.lzy>
+ <20110322095905.737fb1d5@notabene.brown>
+ <20110404175242.GA3411@lazy.lzy>
+ <20110405091242.3427e0b1@notabene.brown>
+ <20110508185408.GA25378@lazy.lzy>
+ <20110509114500.116926ba@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110506144015.3b8af3d0@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20110509114500.116926ba@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On 05/05/2011 11:40 PM, NeilBrown wrote:
-> On Fri, 6 May 2011 14:24:34 +1000 NeilBrown<neilb@suse.de>  wrote:
+On Mon, May 09, 2011 at 11:45:00AM +1000, NeilBrown wrote:
+> On Sun, 8 May 2011 20:54:08 +0200 Piergiorgio Sartor
+> <piergiorgio.sartor@nexgo.de> wrote:
 > 
->> On Tue, 03 May 2011 15:20:46 -0500 Michael Reed<mdr@sgi.com>  wrote:
->>
->>> Resending to linux-raid.
->>>
->>>
->>> Hi Neil,
->>>
->>> My name is Mike Reed.  I work at SGI.  I've been looking at a performance
->>> issue with md writes and have tracked it down to the md device not having
->>> a high enough initial max_hw_sectors_kb setting.
->>>
->>> There is code in blk_queue_make_request() which lowers the default value
->>> from INT_MAX to BLK_SAFE_MAX_SECTORS, which is 255.  This is generally
->>> lower than all the underlying devices with which I use md.
->>>
->>> As md appears to be a stacking driver, i.e., it calls disk_stack_limits()
->>> for each member of a volume, it would seem reasonable for md to use the,
->>> INT_MAX setting for max_hw_sectors_kb instead of BLK_SAFE_MAX_SECTORS.
->>>
->>> I have tried this, and have observed that md correctly limits the md device's
->>> max_sectors_kb to the value of the underlying devices in my mirror volume.
->>>
->>> Is this the correct way to address this issue?
->>>
->>> Applies to linux-2.6.39-rc4.
->>>
->>> Signed-off-by: Michael Reed<mdr@sgi.com>
->>>
->>>
->>> --- drivers/md/md.c	2011-04-18 21:26:00.000000000 -0700
->>> +++ drivers/md/md.c.new	2011-04-21 15:53:11.452536201 -0700
->>> @@ -4328,6 +4328,7 @@ static int md_alloc(dev_t dev, char *nam
->>>   	mddev->queue->queuedata = mddev;
->>>
->>>   	blk_queue_make_request(mddev->queue, md_make_request);
->>> +	blk_queue_max_sectors(mddev->queue, INT_MAX);
->>>
->>>   	disk = alloc_disk(1<<  shift);
->>>   	if (!disk) {
->>>
->>
->> Hi Mike,
->>   sorry for not responding to this earlier - it seemed to keep falling through
->>   cracks for some reason :-(
->>
->> Yes, I completely agree with your analysis and think you patch is correct and
->> useful.
->> I will queue it up for the next merge window.
->>
->> thanks,
->> NeilBrown
+> > Hi Neil,
+> > 
+> > please find below a small patch which should suspend the
+> > array while reading the stripes in order to perform the
+> > check of the RAID-6.
+> > 
+> > This should complete the "check" part of the SW.
+> > Please let me know what else could be needed (docs,
+> > test or else).
+> > 
+> > Please have a careful look at it, since I did not know
+> > how to test it.
+> > 
+> > Thanks.
+> > 
+> > --- cut here ---
+> > 
+> > 
+> > diff -uNr a/raid6check.c b/raid6check.c
+> > --- a/raid6check.c	2011-05-07 20:35:18.693370007 +0200
+> > +++ b/raid6check.c	2011-05-07 21:00:07.713865939 +0200
+> > @@ -24,6 +24,7 @@
+> >  
+> >  #include "mdadm.h"
+> >  #include <stdint.h>
+> > +#include <signal.h>
+> >  
+> >  int geo_map(int block, unsigned long long stripe, int raid_disks,
+> >  	    int level, int layout);
+> > @@ -99,7 +100,7 @@
+> >  	return curr_broken_disk;
+> >  }
+> >  
+> > -int check_stripes(int *source, unsigned long long *offsets,
+> > +int check_stripes(struct mdinfo *info, int *source, unsigned long long *offsets,
+> >  		  int raid_disks, int chunk_size, int level, int layout,
+> >  		  unsigned long long start, unsigned long long length, char *name[])
+> >  {
+> > @@ -139,10 +140,22 @@
+> >  
+> >  		printf("pos --> %llu\n", start);
+> >  
+> > +		signal(SIGTERM, SIG_IGN);
+> > +		signal(SIGINT, SIG_IGN);
+> > +		signal(SIGQUIT, SIG_IGN);
+> > +		sysfs_set_num(info, NULL, "suspend_lo", start * data_disks);
+> > +		sysfs_set_num(info, NULL, "suspend_hi", (start + chunk_size) * data_disks);
+> >  		for (i = 0 ; i < raid_disks ; i++) {
+> >  			lseek64(source[i], offsets[i] + start * chunk_size, 0);
+> >  			read(source[i], stripes[i], chunk_size);
+> >  		}
+> > +		sysfs_set_num(info, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
+> > +		sysfs_set_num(info, NULL, "suspend_hi", 0);
+> > +		sysfs_set_num(info, NULL, "suspend_lo", 0);
+> > +		signal(SIGQUIT, SIG_DFL);
+> > +		signal(SIGINT, SIG_DFL);
+> > +		signal(SIGTERM, SIG_DFL);
+> > +
+> >  		for (i = 0 ; i < data_disks ; i++) {
+> >  			int disk = geo_map(i, start, raid_disks, level, layout);
+> >  			blocks[i] = stripes[disk];
+> > @@ -343,7 +356,7 @@
+> >  		comp = comp->next;
+> >  	}
+> >  
+> > -	int rv = check_stripes(fds, offsets,
+> > +	int rv = check_stripes(info, fds, offsets,
+> >  			       raid_disks, chunk_size, level, layout,
+> >  			       start, length, disk_name);
+> >  	if (rv != 0) {
+> > 
+> > --- cut here ---
+> > 
+> > bye,
+> > 
 > 
-> ...except of course that it should be
->       blk_queue_max_hw_sectors(......)
->                     ^^
 > 
-> because blk_queue_max_sectors was renamed back in 2.6.34 :-)
+> Looks pretty good.  However:
 > 
+>  - you shouldn't blindly reset the signals to 'SIG_DFL'.  You should capture
+>    the return value from 'signal', and feed tha back in to restore the
+>    previous setting.  Alternately use 'sigblock' to just block the signal
+>    rather than ignoring it, then unblock afterwards.
+> 
+>  - When suspending IO it is safest to call
+>         mlockall(MCL_CURRENT|MCL_FUTURE);
+>    before you start.  That ensures that if the device is used for swap there
+>    is no chance of deadlocking trying to swap-out while the device is locked.
+> 
+>  - You should check the return value from sysfs_set_num and at least report
+>    any error.  If they return an error then you can know something is wrong...
+> 
+>  - Finally, I think the numbers you are giving to suspend_{lo,hi} are wrong.
+>    'start' is a number of chunks, so you should write
+>            start * chunk_size * data_disks
+>    to suspend_hi, and make a similar change to the calculation for suspend_lo.
+> 
+> 
+> Thanks,
 > NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thank you for catching that!  I've attached a corrected patch for the record.
+Hi Neil,
 
-Signed-off-by: Michael Reed<mdr@sgi.com>
+thank you so much for the code review.
 
+I modified the code in order to fix, hopefully, all the flaws.
 
---- drivers/md/md.c	2011-04-18 21:26:00.000000000 -0700
-+++ drivers/md/md.c.new	2011-05-09 10:57:16.000000000 -0700
-@@ -4328,6 +4328,7 @@ static int md_alloc(dev_t dev, char *nam
- 	mddev->queue->queuedata = mddev;
+New patch attached below.
+
+Please note that "sigblock()" cannot be used, since it is
+declared, at least on my system, as "deprecated".
+Furthermore, I noticed that "Grow.c" is not checking the
+return value of "sysfs_set_num()" while suspending the
+array, maybe you'll need to look at this.
+
+Finally, please check the new patch too, while I can
+confirm the software is doing what is supposed to do,
+I still need support in order to confirm the suspend
+and resume code.
+
+Thanks again for your help, again let me know what
+is the next expected step.
+
+bye,
+
+--- cut here ---
+
+diff -uNr a/raid6check.c b/raid6check.c
+--- a/raid6check.c	2011-05-07 20:35:18.693370007 +0200
++++ b/raid6check.c	2011-05-09 20:32:14.551695036 +0200
+@@ -24,6 +24,8 @@
  
- 	blk_queue_make_request(mddev->queue, md_make_request);
-+	blk_queue_max_hw_sectors(mddev->queue, INT_MAX);
+ #include "mdadm.h"
+ #include <stdint.h>
++#include <signal.h>
++#include <sys/mman.h>
  
- 	disk = alloc_disk(1 << shift);
- 	if (!disk) {
+ int geo_map(int block, unsigned long long stripe, int raid_disks,
+ 	    int level, int layout);
+@@ -99,7 +101,7 @@
+ 	return curr_broken_disk;
+ }
+ 
+-int check_stripes(int *source, unsigned long long *offsets,
++int check_stripes(struct mdinfo *info, int *source, unsigned long long *offsets,
+ 		  int raid_disks, int chunk_size, int level, int layout,
+ 		  unsigned long long start, unsigned long long length, char *name[])
+ {
+@@ -115,6 +117,8 @@
+ 	int diskP, diskQ;
+ 	int data_disks = raid_disks - 2;
+ 	int err = 0;
++	sighandler_t sig[3];
++	int rv;
+ 
+ 	extern int tables_ready;
+ 
+@@ -139,10 +143,35 @@
+ 
+ 		printf("pos --> %llu\n", start);
+ 
++		if(mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
++			err = 2;
++			goto exitCheck;
++		}
++		sig[0] = signal(SIGTERM, SIG_IGN);
++		sig[1] = signal(SIGINT, SIG_IGN);
++		sig[2] = signal(SIGQUIT, SIG_IGN);
++		rv = sysfs_set_num(info, NULL, "suspend_lo", start * chunk_size * data_disks);
++		rv |= sysfs_set_num(info, NULL, "suspend_hi", (start + 1) * chunk_size * data_disks);
+ 		for (i = 0 ; i < raid_disks ; i++) {
+ 			lseek64(source[i], offsets[i] + start * chunk_size, 0);
+ 			read(source[i], stripes[i], chunk_size);
+ 		}
++		rv |= sysfs_set_num(info, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
++		rv |= sysfs_set_num(info, NULL, "suspend_hi", 0);
++		rv |= sysfs_set_num(info, NULL, "suspend_lo", 0);
++		signal(SIGQUIT, sig[2]);
++		signal(SIGINT, sig[1]);
++		signal(SIGTERM, sig[0]);
++		if(munlockall() != 0) {
++			err = 3;
++			goto exitCheck;
++		}
++
++		if(rv != 0) {
++			err = rv * 256;
++			goto exitCheck;
++		}
++
+ 		for (i = 0 ; i < data_disks ; i++) {
+ 			int disk = geo_map(i, start, raid_disks, level, layout);
+ 			blocks[i] = stripes[disk];
+@@ -214,7 +243,7 @@
+ 	unsigned long long start, length;
+ 	int i;
+ 	int mdfd;
+-	struct mdinfo *info, *comp;
++	struct mdinfo *info = NULL, *comp = NULL;
+ 	char *err = NULL;
+ 	int exit_err = 0;
+ 	int close_flag = 0;
+@@ -250,6 +279,12 @@
+ 			  GET_OFFSET|
+ 			  GET_SIZE);
+ 
++	if(info == NULL) {
++		fprintf(stderr, "%s: Error reading sysfs information of %s\n", prg, argv[1]);
++		exit_err = 9;
++		goto exitHere;
++	}
++
+ 	if(info->array.level != level) {
+ 		fprintf(stderr, "%s: %s not a RAID-6\n", prg, argv[1]);
+ 		exit_err = 3;
+@@ -343,7 +378,7 @@
+ 		comp = comp->next;
+ 	}
+ 
+-	int rv = check_stripes(fds, offsets,
++	int rv = check_stripes(info, fds, offsets,
+ 			       raid_disks, chunk_size, level, layout,
+ 			       start, length, disk_name);
+ 	if (rv != 0) {
 
+--- cut here ---
 
+bye,
+
+-- 
+
+piergiorgio
