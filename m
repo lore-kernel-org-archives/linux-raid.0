@@ -1,126 +1,58 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] RAID-6 check standalone suspend array
-Date: Mon, 9 May 2011 11:45:00 +1000
-Message-ID: <20110509114500.116926ba@notabene.brown>
-References: <20110221204551.GA15675@lazy.lzy>
-	<20110321140244.2314b4b4@notabene.brown>
-	<20110321104007.GA15379@lazy.lzy>
-	<20110321220457.29d52f5c@notabene.brown>
-	<20110321115440.GA15635@lazy.lzy>
-	<20110322095905.737fb1d5@notabene.brown>
-	<20110404175242.GA3411@lazy.lzy>
-	<20110405091242.3427e0b1@notabene.brown>
-	<20110508185408.GA25378@lazy.lzy>
+Subject: Re: [PATCH 0/5] imsm support for raid0->raid5 migration
+Date: Mon, 9 May 2011 12:03:28 +1000
+Message-ID: <20110509120328.75e5b2a7@notabene.brown>
+References: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110508185408.GA25378@lazy.lzy>
+In-Reply-To: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Sun, 8 May 2011 20:54:08 +0200 Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
+On Wed, 04 May 2011 17:10:33 +0200 Przemyslaw Czarnowski
+<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
 
-> Hi Neil,
+> Migration r0->r5 once again; with a fix comming from your comment.
 > 
-> please find below a small patch which should suspend the
-> array while reading the stripes in order to perform the
-> check of the RAID-6.
+> The following series implements support for raid0->raid5 migration for IMSM
+> metadata. These patches blocks opposite direction of migration.
+> Code mostly bases on patches sent to you by Adam Kwolek. I have incorporated
+> your remarks and I tested it quite extensively for comformity with IMSM
+> standard. I have also removed opposite direction, as it is just not supported
+> right now.
 > 
-> This should complete the "check" part of the SW.
-> Please let me know what else could be needed (docs,
-> test or else).
-> 
-> Please have a careful look at it, since I did not know
-> how to test it.
-> 
-> Thanks.
-> 
-> --- cut here ---
-> 
-> 
-> diff -uNr a/raid6check.c b/raid6check.c
-> --- a/raid6check.c	2011-05-07 20:35:18.693370007 +0200
-> +++ b/raid6check.c	2011-05-07 21:00:07.713865939 +0200
-> @@ -24,6 +24,7 @@
->  
->  #include "mdadm.h"
->  #include <stdint.h>
-> +#include <signal.h>
->  
->  int geo_map(int block, unsigned long long stripe, int raid_disks,
->  	    int level, int layout);
-> @@ -99,7 +100,7 @@
->  	return curr_broken_disk;
->  }
->  
-> -int check_stripes(int *source, unsigned long long *offsets,
-> +int check_stripes(struct mdinfo *info, int *source, unsigned long long *offsets,
->  		  int raid_disks, int chunk_size, int level, int layout,
->  		  unsigned long long start, unsigned long long length, char *name[])
->  {
-> @@ -139,10 +140,22 @@
->  
->  		printf("pos --> %llu\n", start);
->  
-> +		signal(SIGTERM, SIG_IGN);
-> +		signal(SIGINT, SIG_IGN);
-> +		signal(SIGQUIT, SIG_IGN);
-> +		sysfs_set_num(info, NULL, "suspend_lo", start * data_disks);
-> +		sysfs_set_num(info, NULL, "suspend_hi", (start + chunk_size) * data_disks);
->  		for (i = 0 ; i < raid_disks ; i++) {
->  			lseek64(source[i], offsets[i] + start * chunk_size, 0);
->  			read(source[i], stripes[i], chunk_size);
->  		}
-> +		sysfs_set_num(info, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> +		sysfs_set_num(info, NULL, "suspend_hi", 0);
-> +		sysfs_set_num(info, NULL, "suspend_lo", 0);
-> +		signal(SIGQUIT, SIG_DFL);
-> +		signal(SIGINT, SIG_DFL);
-> +		signal(SIGTERM, SIG_DFL);
-> +
->  		for (i = 0 ; i < data_disks ; i++) {
->  			int disk = geo_map(i, start, raid_disks, level, layout);
->  			blocks[i] = stripes[disk];
-> @@ -343,7 +356,7 @@
->  		comp = comp->next;
->  	}
->  
-> -	int rv = check_stripes(fds, offsets,
-> +	int rv = check_stripes(info, fds, offsets,
->  			       raid_disks, chunk_size, level, layout,
->  			       start, length, disk_name);
->  	if (rv != 0) {
-> 
-> --- cut here ---
-> 
-> bye,
-> 
+> Note:
+> Please do not include these patches on 'master' branch, as they are supposed
+> to be a part of next minor mdadm version (ie. mdadm 3.2.2). I think good place
+> for it is devel-3.2. Master should be reserved just for bug/stability fixes
+> for previous release.
 
+I have applied these patches, and in fact I have applied them to 'master'
+because that if where I think they belong.  Eventually 3.2.2 will be whatever
+is on 'master' at that time.
 
-Looks pretty good.  However:
-
- - you shouldn't blindly reset the signals to 'SIG_DFL'.  You should capture
-   the return value from 'signal', and feed tha back in to restore the
-   previous setting.  Alternately use 'sigblock' to just block the signal
-   rather than ignoring it, then unblock afterwards.
-
- - When suspending IO it is safest to call
-        mlockall(MCL_CURRENT|MCL_FUTURE);
-   before you start.  That ensures that if the device is used for swap there
-   is no chance of deadlocking trying to swap-out while the device is locked.
-
- - You should check the return value from sysfs_set_num and at least report
-   any error.  If they return an error then you can know something is wrong...
-
- - Finally, I think the numbers you are giving to suspend_{lo,hi} are wrong.
-   'start' is a number of chunks, so you should write
-           start * chunk_size * data_disks
-   to suspend_hi, and make a similar change to the calculation for suspend_lo.
-
+I might create a devel-3.3 at some stage to do some brand new development,
+but these patches are just a continuation of what went into 3.2 and 3.2.1 so
+I think this is where they belong.
 
 Thanks,
 NeilBrown
+
+> ---
+> 
+> Przemyslaw Czarnowski (5):
+>       imsm: prepare update for level migrations reshape
+>       imsm: fix: disable migration from raid5->raid0
+>       imsm: prepare memory for level migration update
+>       imsm: process update for raid level migrations
+>       imsm: add new chunk size to metadata update
+> 
+> 
+>  super-intel.c |  337 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 330 insertions(+), 7 deletions(-)
+> 
+
