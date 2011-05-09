@@ -1,155 +1,97 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
 Subject: Re: wish for Linux MD mirrored raid types
-Date: Mon, 9 May 2011 21:57:09 +0200
-Message-ID: <20110509195708.GA26847@www2.open-std.org>
-References: <20110506071752.GA22063@www2.open-std.org> <20110508181445.GB7629@maude.comedia.it> <4DC70A44.5050101@meetinghouse.net> <20110509034036.GA17111@www2.open-std.org> <20110509142426.564aae2c@notabene.brown>
+Date: Mon, 9 May 2011 21:59:53 +0200
+Message-ID: <20110509195953.GB26847@www2.open-std.org>
+References: <20110506071752.GA22063@www2.open-std.org> <BANLkTikrayzREAhX5XrHda8iWeGLZFpUFg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110509142426.564aae2c@notabene.brown>
+In-Reply-To: <BANLkTikrayzREAhX5XrHda8iWeGLZFpUFg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, Miles Fidelman <mfidelman@meetinghouse.net>, linux-raid@vger.kernel.org
+To: Emmanuel Noobadmin <centos.admin@gmail.com>
+Cc: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 09, 2011 at 02:24:26PM +1000, NeilBrown wrote:
-> On Mon, 9 May 2011 05:40:36 +0200 Keld J=F8rn Simonsen <keld@keldix.c=
-om> wrote:
+On Mon, May 09, 2011 at 01:22:42PM +0800, Emmanuel Noobadmin wrote:
+> On 5/6/11, Keld J=F8rn Simonsen <keld@keldix.com> wrote:
+> > Hi List
+> >
+> > based on the recent discussion, that showed lacking knowledge
+> > on Linux MD RAID10 features, I have some thoughts:
+> >
+> > It is really hard to disseminate information on "new" features
+> > in MD RAID. RAID10 has been in the kernel since 2.6.9 - from 2004.
+> > I have tried to give info on RAID10 at a number of web pages,
+> > and still many people, even on our linux-raid list are not aware
+> > of it.
+> >
+> > Also many people are confused about Linux MD raid10 and RAID1+0.
+> >
+> > So I think we shopuld rather name things in another way.
+> >
+> > I would like linux MD raid10 functionality to be part of the Linux =
+MD
+> > RAID1 module, and be called raid1. This is in accordance with the
+> > use of the RAID1 term as standadized by SNIA. In fact the RAID10-of=
+fset
+> > layout is an implementation of a SNIA RAID specification. The RAID1=
+0-near
+> > layout is an implementation of a simple RAID layout. And the RAID10=
+-far
+> > layout is just another layout far a mirrored RAID.  So all these ty=
+pes
+> > could just be defined as different RAID1 layouts.
 >=20
-> > On Sun, May 08, 2011 at 05:25:24PM -0400, Miles Fidelman wrote:
-> > > Luca Berra wrote:
-> > > >On Fri, May 06, 2011 at 09:17:52AM +0200, Keld J=F8rn Simonsen w=
-rote:
-> > > >>I would like linux MD raid10 functionality to be part of the Li=
-nux MD
-> > > >>RAID1 module, and be called raid1. This is in accordance with t=
-he
-> > > >then we need rename the current raid1 functionality to 'mirror'.=
- in
-> > > >order to avoid further confusion.
-> > > >besides, current raid10 does not support resizing, so the featur=
+> Giving my noob's 2 cents worth although I haven't followed the
+> original discussion. As a noob,  I think doing this will just confuse
+> us more.
+>=20
+> There are plenty of existing materials around for those of us who try
+> to figure things out by googling. As it is, our (or maybe just me)
+> understanding is Linux RAID 1 is just like every other raid 1: simple
+> and straightforward, 2 drives mirroring each other.
+>=20
+> This is is also usually the level that most of us start with. If the
+> instructions are short, easy to understand and simple to implement, w=
 e
-> > > >should be added before ditching 'mirror'
-> > > >
-> > >=20
-> > > The current md RAID1 does exactly what RAID1 is supposed to do.
-> >=20
-> > I changed my mind a little.
-> >=20
-> > I think we should follow SNIA wrt. RAID1 - all that SNIA would say =
-is
-> > RAID1 we also should be able to do as RAID1 - that would include
-> > raid10-offset which directly was implemented in the Linux kernel
-> > because of the SNIA RAID1 specification. It should also include rai=
-d10-far
-> > in so far it is a raid1 type - say a raid10,f2 with only 2 disks.=20
+> usually gain confidence in using it and exploring mdraid further.
 >=20
-> I think you misread SNIA-DDF.
+> Most of us noobs are also aware that RAID 10 is more complicated and
+> there are two versions, i.e. 1+0 and 0+1. So psychologically, I had n=
+o
+> problems accepting that once I looked into it, there were much more
+> complex stuff and all these possible layouts: mdraid is cool!
 >=20
-> In DDF, arrays with a PRL (Primary RAID Level) of 1 can have an RLQ (=
-RAID
-> level qualifier) of 0 or 1.
-> RLQ =3D 0  ->  RAID1 with 2 devices
-> RLQ =3D 1  ->  RAID1 with 3 devices.
->=20
-> DDF also devices a PRL of '11' which it calls "RAID-1E" (though this =
-term
-> only appears once in the DDFv1.2 spec)
->=20
-> For PRL =3D 11  there are two options
->=20
-> RLQ =3D 0 -> Integrated Adjacent Stripe Mirroring
-> RLQ =3D 1 -> Integrated Offset Stripe Mirroring.
->=20
-> These correspond to md/raid10 "near2" and "offset2".
->=20
-> So DDF: RAID-1E  corresponds to md: RAID-10
->=20
-> So an 'E' rather than a '0'.
->=20
-> I would not be against allowing mdadm to accept "raid1e" as a synonym=
- for
-> 'raid10', and mentioning the alternate name in the documentation woul=
-d be
-> entirely appropriate.
-
-Yes, I would like that we cocument the correspondance to the SNIA DDF
-standard, and do other descriptions as you stipulate.
-
-> But RAID-1E is not RAID-1.  Nor is RAID-10.
-
-I see.
-
-By "Nor is RAID-10." you mean RAID-1+0 or linux md raid10?
-
-What is the difference between RAID-1E and Linux MD raid10?
-Linux MD raid10 has "far" layout?
-Linux MD raid10 can have more than 2 copies?
-More stuff?
-
-
-
-> >=20
-> > Then we should keep the raid10 stuff.
-> >=20
-> > > The md RAID10 is a very specific, and unique approach that has=20
-> > > similarities to, but is distinct from, RAID1+0, RAID0+1, RAID5, a=
-nd RAID6.
-> >=20
-> > Yes, Linux MD raid10 is a very distinct type. We should talk with S=
-NIA to get it
-> > recognized.
-> >=20
-> > > What say we leave the names alone.  Just beause one person is con=
-fused is=20
-> > > no reason to further confuse things.
-> >=20
-> > The confusion is not just one person. The confusion is unbelievable=
- common,=20
-> > and has proven to be very hard to eliminate. If we align with the S=
-NIA
-> > standard, and further get the standard to align with us, then we sh=
-ould
-> > have a chance in say 5 years to have reduced the confusion consider=
-ably.
->=20
-> The world is full of confusion that is hard to eliminate.
->=20
-> The problem here I think is simply people who do not educate themselv=
-es,
-> either because they cannot be bothered, or because they cannot easily=
- find
-> the materials.
->=20
-> The first is not really a fixable problem.
-> The second we can address.  Improve the already-good wiki or add more=
- text to
-> the man pages.  Have an aim that every general-information question c=
-an be
-> answered by simply posting a like or a passage from the man page.
->=20
-> That would be really worthwhile.
->=20
-> Changing names around is, I think, less valuable.
-
-It is just that I have been around on other web pages for RAID, to
-improve references to the linux-raid wiki and to correct errors in thei=
-r
-description of Linux RAID. Many - maybe most - people that write about
-Linux RAID have a number of their details wrong.  That should be expert=
+> Now, if RAID 10 was renamed to RAID 1, with the corresponding change
+> in documentation, what's going to happen for us noobs is this: "Omg,
+> why are there so many different versions and options just for raid 1?=
+"
+> and importantly "Why is this manual/wiki different from the tons of
+> other pages about using mdraid 1?" For some, this would mean mdraid i=
 s
-conveying their expert wisdom to knowledge-hungry users. An example:
-http://wiki.linuxquestions.org/wiki/RAID#RAID-10
-They claim you need 4 disks for MD raid10. Another example is the Germa=
-n
-wikipedia page on RAID - which was moderated and the moderator did not
-accept my edits. This page does not describe Linux MD raid10.=20
+> too difficult even for raid 1, mdraid is not cool! :)
+>=20
+> So newbies will get more confused/frustrated as a result.
+>=20
+> Personally, I had to spend some time figuring out (I'm noob and I'm
+> not very smart) the different layouts from the examples on wiki. This
+> is because there wasn't enough examples, at least to me, to clearly
+> show what's the difference if more/less disks were used. So for me,
+> and other noobs, it would probably help if the wiki had more examples
+> of each layout, maybe graphics to show the difference since it's
+> probably easier to see things if they were colour coded blocks rather
+> than stuff like A1 a1 A2 a2.
+>=20
+> This and perhaps more elaboration on the difference between mdraid 10
+> and normal raid 10  would probably be better to clear up confusion
+> than renaming something we might have some familiarity with, into
+> something we also already have familiarity, resulting in something
+> that contradicts existing familiarity.
 
-I think naming matters. If we could call Linux MD raid10 for raid1e
-I think much would be achieved in terms of eliminating
-misunderstandings.
+I see your point. Given Neil's input I think we should  rateher call it
+raid1e.
 
 Best regards
 keld
