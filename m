@@ -1,58 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/5] imsm support for raid0->raid5 migration
-Date: Mon, 9 May 2011 12:03:28 +1000
-Message-ID: <20110509120328.75e5b2a7@notabene.brown>
-References: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
+Subject: Re: wish for Linux MD mirrored raid types
+Date: Mon, 9 May 2011 05:40:36 +0200
+Message-ID: <20110509034036.GA17111@www2.open-std.org>
+References: <20110506071752.GA22063@www2.open-std.org> <20110508181445.GB7629@maude.comedia.it> <4DC70A44.5050101@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110504151011.24386.14976.stgit@gklab-128-081.igk.intel.com>
+Content-Disposition: inline
+In-Reply-To: <4DC70A44.5050101@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Miles Fidelman <mfidelman@meetinghouse.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 04 May 2011 17:10:33 +0200 Przemyslaw Czarnowski
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+On Sun, May 08, 2011 at 05:25:24PM -0400, Miles Fidelman wrote:
+> Luca Berra wrote:
+> >On Fri, May 06, 2011 at 09:17:52AM +0200, Keld J=F8rn Simonsen wrote=
+:
+> >>I would like linux MD raid10 functionality to be part of the Linux =
+MD
+> >>RAID1 module, and be called raid1. This is in accordance with the
+> >then we need rename the current raid1 functionality to 'mirror'. in
+> >order to avoid further confusion.
+> >besides, current raid10 does not support resizing, so the feature
+> >should be added before ditching 'mirror'
+> >
+>=20
+> The current md RAID1 does exactly what RAID1 is supposed to do.
 
-> Migration r0->r5 once again; with a fix comming from your comment.
-> 
-> The following series implements support for raid0->raid5 migration for IMSM
-> metadata. These patches blocks opposite direction of migration.
-> Code mostly bases on patches sent to you by Adam Kwolek. I have incorporated
-> your remarks and I tested it quite extensively for comformity with IMSM
-> standard. I have also removed opposite direction, as it is just not supported
-> right now.
-> 
-> Note:
-> Please do not include these patches on 'master' branch, as they are supposed
-> to be a part of next minor mdadm version (ie. mdadm 3.2.2). I think good place
-> for it is devel-3.2. Master should be reserved just for bug/stability fixes
-> for previous release.
+I changed my mind a little.
 
-I have applied these patches, and in fact I have applied them to 'master'
-because that if where I think they belong.  Eventually 3.2.2 will be whatever
-is on 'master' at that time.
+I think we should follow SNIA wrt. RAID1 - all that SNIA would say is
+RAID1 we also should be able to do as RAID1 - that would include
+raid10-offset which directly was implemented in the Linux kernel
+because of the SNIA RAID1 specification. It should also include raid10-=
+far
+in so far it is a raid1 type - say a raid10,f2 with only 2 disks.=20
 
-I might create a devel-3.3 at some stage to do some brand new development,
-but these patches are just a continuation of what went into 3.2 and 3.2.1 so
-I think this is where they belong.
+Then we should keep the raid10 stuff.
 
-Thanks,
-NeilBrown
+> The md RAID10 is a very specific, and unique approach that has=20
+> similarities to, but is distinct from, RAID1+0, RAID0+1, RAID5, and R=
+AID6.
 
-> ---
-> 
-> Przemyslaw Czarnowski (5):
->       imsm: prepare update for level migrations reshape
->       imsm: fix: disable migration from raid5->raid0
->       imsm: prepare memory for level migration update
->       imsm: process update for raid level migrations
->       imsm: add new chunk size to metadata update
-> 
-> 
->  super-intel.c |  337 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 330 insertions(+), 7 deletions(-)
-> 
+Yes, Linux MD raid10 is a very distinct type. We should talk with SNIA =
+to get it
+recognized.
 
+> What say we leave the names alone.  Just beause one person is confuse=
+d is=20
+> no reason to further confuse things.
+
+The confusion is not just one person. The confusion is unbelievable com=
+mon,=20
+and has proven to be very hard to eliminate. If we align with the SNIA
+standard, and further get the standard to align with us, then we should
+have a chance in say 5 years to have reduced the confusion considerably=
+=2E
+
+Best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
