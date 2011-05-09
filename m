@@ -1,22 +1,72 @@
-From: "Fjgq" <schryver780314@yahoo.de>
-Subject: h4HTB
-Date: Tue, 10 May 2011 06:53:46 +0800
-Message-ID: <201105100653461255866@yahoo.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: md question re: max_hw_sectors_kb
+Date: Tue, 10 May 2011 09:52:43 +1000
+Message-ID: <20110510095243.0a23874b@notabene.brown>
+References: <4DC0639E.1070707@sgi.com>
+	<yq17ha6z6tu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq17ha6z6tu.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Reed <mdr@sgi.com>, linux-raid@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-Mzg2ODUzODU4NDcxMDA2NjI1NnlhaG9vLmNvbS5jbjM4Njg1Mzg1ODQ3MTAwNjYyNTZqDQq/zbun
-o7rE+rrDo7pXDQpWsb65q8u+0+u6z9f3uavLvtLyvfjP7r3PtuC1yNSt0vKjrLOkxtrOqsT6zOG5
-qaO6DQogICC0+i2/qi3V5i23oi3GsSCjqNK1zvGjqTINCiAgsPzAqKO6xtXNqNT21rXLsKGiufrL
-sKGitdjLsLeiL8axoaK547jmoaLXydGvoaK74dLpoaK9qNb+uaSzzKGiyczGtw0Kz/rK26Gi16HL
-3qGiufrE2tTLyuSjrLn6vMq79dTLoaLX4sHeoaK6o7nYvcm/7srptci3oi/GsaGjDQogICAgNNLU
-yc+3oi/Gsb75v8nJz834sunRr7vytb21sbXYy7C+1tHp1qSjrMuwteO009PFo6w5DQq7ttOtwLS1
-59fJ0a+ho7TyyMXH68HCveKjodDo0qrH68H008MhDQogICAgwarPtcjLo7ooMTM5LTE4NjMxMzI1
-KSCzws/IyfogIL/Nt/5RUaO6KDEyNi00MDE3LTU1NCApIA0KDQovL3NvaHUuY29tMzg2ODUzODU4
-NDcxMDA2NjI1Ng==
+On Wed, 04 May 2011 13:58:05 -0400 "Martin K. Petersen"
+<martin.petersen@oracle.com> wrote:
+
+> >>>>> "Michael" == Michael Reed <mdr@sgi.com> writes:
+> 
+> Michael> There is code in blk_queue_make_request() which lowers the
+> Michael> default value from INT_MAX to BLK_SAFE_MAX_SECTORS, which is
+> Michael> 255.  This is generally lower than all the underlying devices
+> Michael> with which I use md.
+> 
+> Yeah, the SAFE value is there to appease legacy low-level drivers.
+> 
+> 
+> Michael> As md appears to be a stacking driver, i.e., it calls
+> Michael> disk_stack_limits() for each member of a volume, it would seem
+> Michael> reasonable for md to use the, INT_MAX setting for
+> Michael> max_hw_sectors_kb instead of BLK_SAFE_MAX_SECTORS.
+> 
+> Your fix is functionally correct. However, another case just popped up
+> this week where we need to distinguish between stacking driver and LLD
+> defaults. So I think we should try to handle this at the block layer
+> instead of explicitly tweaking this knob in MD.
+> 
+> I'll get this fixed up and will CC: you on the patch.
+> 
+
+What case is this?
+
+The is another problem that I am aware of with this patch - maybe it is the
+same was what you are thinking of - maybe not.
+
+If you have FS -> DM -> MD, then any change that MD makes to
+max_hw_sectors_kb will not be visible to the FS.  So adding and activating a
+hot spare with smaller max_hw_sectors_kb cause cause it to receive requests
+that are too big.
+
+With the current default of BLK_SAFE_MAX_SECTORS, that only seems to affect a
+few USB devices.  If we raise the default we could see problems happening
+more often.
+
+So we really need a propery resolution to this problem first.  i.e. A way for
+'dm' to notice when 'md' changes its parameters - or in general any stacking
+deivce to find out when an underlying device changes in any way.
+
+I would implement this by having blkdev_get{,_by_path,_by_dev} take an extra
+arg which is a pointer to a struct of functions.  In the first instance there
+would be just one which tells the claimer that something in queue.limits has
+changed.  Later we could add other calls to help with size changes.
+
+So when md adds a new device, it call disk_stack_limits to updates its
+limits, then if the bdev for the mddev is claimed with a non-NULL operations
+pointer, it calls the 'limits_have_changed' function.
+
+Thoughts?
+
+NeilBrown
