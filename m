@@ -1,100 +1,94 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5 -> RAID6 conversion, please help
-Date: Wed, 11 May 2011 13:29:35 +1000
-Message-ID: <20110511132935.0438143a@notabene.brown>
-References: <002a01cc0f68$1c851180$558f3480$@priv.hu>
-	<20110511093155.5b1a203e@notabene.brown>
-	<4DC9CCAF.9010709@crc.id.au>
-	<20110511102116.494bf0fd@notabene.brown>
-	<BANLkTimwg94Bz22q5J7FJTcuFvX4BpRECg@mail.gmail.com>
-	<20110511104730.175372fe@notabene.brown>
-	<BANLkTimYWfT_Vr7ZUnNUhOqW2JOyLHHNQQ@mail.gmail.com>
+Subject: [md PATCH 16/16] md: allow resync_start to be set while an array is
+ active.
+Date: Wed, 11 May 2011 16:30:31 +1000
+Message-ID: <20110511063031.21263.8785.stgit@notabene.brown>
+References: <20110511062743.21263.72802.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimYWfT_Vr7ZUnNUhOqW2JOyLHHNQQ@mail.gmail.com>
+In-Reply-To: <20110511062743.21263.72802.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dylan Distasio <interzone@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 10 May 2011 21:04:29 -0400 Dylan Distasio <interzone@gmail.com>=
- wrote:
+The sysfs attribute 'resync_start' (known internally as recovery_cp),
+records where a resync is up to.  A value of 0 means the array is
+not known to be in-sync at all.  A value of MaxSector means the array
+is believed to be fully in-sync.
 
-> It's possible I did use different versions but I thought I had
-> upgraded both of them right before the reshapes.  Sorry if this is an
-> elementary question, but does writing the 2nd parity block always to
-> the last drive instead of rotating it increase the odds of a total
-> loss of the array since the one specific drive always has the 2nd
-> parity block?
+When the size of member devices of an array (RAID1,RAID4/5/6) is
+increased, the array can be increased to match.  This process sets
+resync_start to the old end-of-device offset so that the new part of
+the array gets resynced.
 
-No.  The only possibly impact is a performance impact, and even that wo=
-uld be
-hard to quantify.
+However with RAID1 (and RAID6) a resync is not technically necessary
+and may be undesirable.  So it would be good if the implied resync
+after the array is resized could be avoided.
 
-The reason that parity is rotated is to avoid a 'hot disk'.  Every upda=
-te has
-to write the parity block and if they are all on one disk then every wr=
-ite
-will generate a write to that one disk.
+So: change 'resync_start' so the value can be changed while the array
+is active, and as a precaution only allow it to be changed while
+resync/recovery is 'frozen'.  Changing it once resync has started is
+not going to be useful anyway.
 
-Because of the way md implements RAID6, every write involves either a r=
-ead or
-a write to every device, so there is no real saving in rotating parity.
+This allows the array to be resized without a resync by:
+  write 'frozen' to 'sync_action'
+  write new size to 'component_size' (this will set resync_start)
+  write 'none' to 'resync_start'
+  write 'idle' to 'sync_action'.
 
-I think (but am open to being corrected) that rotating parity is only
-important for RAID6 if the code implements 'subtraction' as well as
-'addition' for the Q syndrome (which md doesn't) and if you have at lea=
-st 5
-drives, and you probably wouldn't notice until you get to 7 or more dri=
-ves.
+Also slightly improve some tests on recovery_cp when resizing
+raid1/raid5.  Now that an arbitrary value could be set we should be
+more careful in our tests.
 
-=2E.. so it might make sense to make mdadm default to converting to the=
- -6
-layout...
-You can request it with "--layout=3Dpreserve".
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+
+ drivers/md/md.c    |    2 +-
+ drivers/md/raid1.c |    2 +-
+ drivers/md/raid5.c |    3 ++-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5469ae3..aa640a8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3324,7 +3324,7 @@ resync_start_store(mddev_t *mddev, const char *buf, size_t len)
+ 	char *e;
+ 	unsigned long long n = simple_strtoull(buf, &e, 10);
+ 
+-	if (mddev->pers)
++	if (mddev->pers && !test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
+ 		return -EBUSY;
+ 	if (cmd_match(buf, "none"))
+ 		n = MaxSector;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 779abbd..5d09609 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2061,7 +2061,7 @@ static int raid1_resize(mddev_t *mddev, sector_t sectors)
+ 	set_capacity(mddev->gendisk, mddev->array_sectors);
+ 	revalidate_disk(mddev->gendisk);
+ 	if (sectors > mddev->dev_sectors &&
+-	    mddev->recovery_cp == MaxSector) {
++	    mddev->recovery_cp > mddev->dev_sectors) {
+ 		mddev->recovery_cp = mddev->dev_sectors;
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	}
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 51af7f3..34dd545 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5389,7 +5389,8 @@ static int raid5_resize(mddev_t *mddev, sector_t sectors)
+ 		return -EINVAL;
+ 	set_capacity(mddev->gendisk, mddev->array_sectors);
+ 	revalidate_disk(mddev->gendisk);
+-	if (sectors > mddev->dev_sectors && mddev->recovery_cp == MaxSector) {
++	if (sectors > mddev->dev_sectors &&
++	    mddev->recovery_cp > mddev->dev_sectors) {
+ 		mddev->recovery_cp = mddev->dev_sectors;
+ 		set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	}
 
 
->=20
-> If so, do you think normalizing would be worth the risk of something
-> going wrong with that operation?  I'm just trying to get a feel for
-> how much of a difference this makes.
-
-Not worth the risk.
-
-NeilBrown
-
-
-
->=20
->=20
-> > mdadm first converts the RAID5 to RAID6 in an instant atomic operat=
-ion which
-> > results in the "-6" layout. =A0It then starts a restriping process =
-which
-> > converts the layout.
-> >
-> > If you end up with a -6 layout then something when wrong starting t=
-he
-> > restriping process.
-> >
-> > Maybe you used different version of mdadm? =A0There have probably b=
-een bugs in
-> > some versions..
-> >
-> > NeilBrown
-> >
-> >
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
