@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 01/16] md: Fix race when creating a new md device.
-Date: Wed, 11 May 2011 16:30:30 +1000
-Message-ID: <20110511063030.21263.73208.stgit@notabene.brown>
+Subject: [md PATCH 06/16] md/multipath: discard ->working_disks in favour of
+ ->degraded
+Date: Wed, 11 May 2011 16:30:31 +1000
+Message-ID: <20110511063031.21263.25099.stgit@notabene.brown>
 References: <20110511062743.21263.72802.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,87 +13,134 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There is a race when creating an md device by opening /dev/mdXX.
-
-If two processes do this at much the same time they will follow the
-call path
-  __blkdev_get -> get_gendisk -> kobj_lookup
-
-The first will call
-  -> md_probe -> md_alloc -> add_disk -> blk_register_region
-
-and the race happens when the second gets to kobj_lookup after
-add_disk has called blk_register_region but before it returns to
-md_alloc.
-
-In the case the second will not call md_probe (as the probe is already
-done) but will get a handle on the gendisk, return to __blkdev_get
-which will then call md_open (via the ->open) pointer.
-
-As mddev->gendisk hasn't been set yet, md_open will think something is
-wrong an return with ERESTARTSYS.
-
-This can loop endlessly while the first thread makes no progress
-through add_disk.  Nothing is blocking it, but due to scheduler
-behaviour it doesn't get a turn.
-So this is essentially a live-lock.
-
-We fix this by simply moving the assignment to mddev->gendisk before
-the call the add_disk() so md_open doesn't get confused.
-Also move blk_queue_flush earlier because add_disk should be as late
-as possible.
-
-To make sure that md_open doesn't complete until md_alloc has done all
-that is needed, we take mddev->open_mutex during the last part of
-md_alloc.  md_open will wait for this.
-
-This can cause a lock-up on boot so Cc:ing for stable.
-For 2.6.36 and earlier a different patch will be needed as the
-'blk_queue_flush' call isn't there.
+conf->working_disks duplicates information already available
+in mddev->degraded.
+So remove working_disks.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
-Reported-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Cc: stable@kernel.org
 ---
 
- drivers/md/md.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/md/multipath.c |   22 +++++++++++-----------
+ drivers/md/multipath.h |    1 -
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 7d6f7f1..4a4c0f8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4347,13 +4347,19 @@ static int md_alloc(dev_t dev, char *name)
- 	disk->fops = &md_fops;
- 	disk->private_data = mddev;
- 	disk->queue = mddev->queue;
-+	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
- 	/* Allow extended partitions.  This makes the
- 	 * 'mdp' device redundant, but we can't really
- 	 * remove it now.
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index c358909..0254712 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -146,7 +146,7 @@ static void multipath_status (struct seq_file *seq, mddev_t *mddev)
+ 	int i;
+ 	
+ 	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
+-						 conf->working_disks);
++		    conf->raid_disks - mddev->degraded);
+ 	for (i = 0; i < conf->raid_disks; i++)
+ 		seq_printf (seq, "%s",
+ 			       conf->multipaths[i].rdev && 
+@@ -187,7 +187,7 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+ 	multipath_conf_t *conf = mddev->private;
+ 
+-	if (conf->working_disks <= 1) {
++	if (conf->raid_disks - mddev->degraded <= 1) {
+ 		/*
+ 		 * Uh oh, we can do nothing if this is our last path, but
+ 		 * first check if this is a queued request for a device
+@@ -205,14 +205,13 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
+ 			clear_bit(In_sync, &rdev->flags);
+ 			set_bit(Faulty, &rdev->flags);
+ 			set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-			conf->working_disks--;
+ 			mddev->degraded++;
+ 			printk(KERN_ALERT "multipath: IO failure on %s,"
+ 				" disabling IO path.\n"
+ 				"multipath: Operation continuing"
+ 				" on %d IO paths.\n",
+ 				bdevname (rdev->bdev,b),
+-				conf->working_disks);
++				conf->raid_disks - mddev->degraded);
+ 		}
+ 	}
+ }
+@@ -227,7 +226,7 @@ static void print_multipath_conf (multipath_conf_t *conf)
+ 		printk("(conf==NULL)\n");
+ 		return;
+ 	}
+-	printk(" --- wd:%d rd:%d\n", conf->working_disks,
++	printk(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+ 			 conf->raid_disks);
+ 
+ 	for (i = 0; i < conf->raid_disks; i++) {
+@@ -274,7 +273,6 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 							   PAGE_CACHE_SIZE - 1);
+ 			}
+ 
+-			conf->working_disks++;
+ 			mddev->degraded--;
+ 			rdev->raid_disk = path;
+ 			set_bit(In_sync, &rdev->flags);
+@@ -391,6 +389,7 @@ static int multipath_run (mddev_t *mddev)
+ 	int disk_idx;
+ 	struct multipath_info *disk;
+ 	mdk_rdev_t *rdev;
++	int working_disks;
+ 
+ 	if (md_check_no_bitmap(mddev))
+ 		return -EINVAL;
+@@ -424,7 +423,7 @@ static int multipath_run (mddev_t *mddev)
+ 		goto out_free_conf;
+ 	}
+ 
+-	conf->working_disks = 0;
++	working_disks = 0;
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx < 0 ||
+@@ -446,7 +445,7 @@ static int multipath_run (mddev_t *mddev)
+ 		}
+ 
+ 		if (!test_bit(Faulty, &rdev->flags))
+-			conf->working_disks++;
++			working_disks++;
+ 	}
+ 
+ 	conf->raid_disks = mddev->raid_disks;
+@@ -454,12 +453,12 @@ static int multipath_run (mddev_t *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 
+-	if (!conf->working_disks) {
++	if (!working_disks) {
+ 		printk(KERN_ERR "multipath: no operational IO paths for %s\n",
+ 			mdname(mddev));
+ 		goto out_free_conf;
+ 	}
+-	mddev->degraded = conf->raid_disks - conf->working_disks;
++	mddev->degraded = conf->raid_disks - working_disks;
+ 
+ 	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
+ 						 sizeof(struct multipath_bh));
+@@ -481,7 +480,8 @@ static int multipath_run (mddev_t *mddev)
+ 
+ 	printk(KERN_INFO 
+ 		"multipath: array %s active with %d out of %d IO paths\n",
+-		mdname(mddev), conf->working_disks, mddev->raid_disks);
++		mdname(mddev), conf->raid_disks - mddev->degraded,
++	       mddev->raid_disks);
+ 	/*
+ 	 * Ok, everything is just fine now
  	 */
- 	disk->flags |= GENHD_FL_EXT_DEVT;
--	add_disk(disk);
- 	mddev->gendisk = disk;
-+	/* As soon as we call add_disk(), another thread could get
-+	 * through to md_open, so make sure it doesn't get too far
-+	 */
-+	mutex_lock(&mddev->open_mutex);
-+	add_disk(disk);
-+
- 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
- 				     &disk_to_dev(disk)->kobj, "%s", "md");
- 	if (error) {
-@@ -4367,8 +4373,7 @@ static int md_alloc(dev_t dev, char *name)
- 	if (mddev->kobj.sd &&
- 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
- 		printk(KERN_DEBUG "pointless warning\n");
--
--	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
-+	mutex_unlock(&mddev->open_mutex);
-  abort:
- 	mutex_unlock(&disks_mutex);
- 	if (!error && mddev->kobj.sd) {
+diff --git a/drivers/md/multipath.h b/drivers/md/multipath.h
+index d1c2a8d..3c5a45e 100644
+--- a/drivers/md/multipath.h
++++ b/drivers/md/multipath.h
+@@ -9,7 +9,6 @@ struct multipath_private_data {
+ 	mddev_t			*mddev;
+ 	struct multipath_info	*multipaths;
+ 	int			raid_disks;
+-	int			working_disks;
+ 	spinlock_t		device_lock;
+ 	struct list_head	retry_list;
+ 
 
 
