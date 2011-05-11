@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 06/16] md/multipath: discard ->working_disks in favour of
- ->degraded
-Date: Wed, 11 May 2011 16:30:31 +1000
-Message-ID: <20110511063031.21263.25099.stgit@notabene.brown>
+Subject: [md PATCH 02/16] md: reject a re-add request that cannot be honoured.
+Date: Wed, 11 May 2011 16:30:30 +1000
+Message-ID: <20110511063030.21263.15426.stgit@notabene.brown>
 References: <20110511062743.21263.72802.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,134 +12,43 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-conf->working_disks duplicates information already available
-in mddev->degraded.
-So remove working_disks.
+The 'add_new_disk' ioctl can be used to add a device either as a
+spare, or as an active disk that just needs to be resynced based on
+write-intent-bitmap information (re-add)
+
+Currently if a re-add is requested but fails we add as a spare
+instead.  This makes it impossible for user-space to check for
+failure.
+
+So change to require that a re-add attempt will either succeed or
+completely fail.  User-space can then decide what to do next.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/multipath.c |   22 +++++++++++-----------
- drivers/md/multipath.h |    1 -
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/md/md.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index c358909..0254712 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -146,7 +146,7 @@ static void multipath_status (struct seq_file *seq, mddev_t *mddev)
- 	int i;
- 	
- 	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
--						 conf->working_disks);
-+		    conf->raid_disks - mddev->degraded);
- 	for (i = 0; i < conf->raid_disks; i++)
- 		seq_printf (seq, "%s",
- 			       conf->multipaths[i].rdev && 
-@@ -187,7 +187,7 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
- {
- 	multipath_conf_t *conf = mddev->private;
- 
--	if (conf->working_disks <= 1) {
-+	if (conf->raid_disks - mddev->degraded <= 1) {
- 		/*
- 		 * Uh oh, we can do nothing if this is our last path, but
- 		 * first check if this is a queued request for a device
-@@ -205,14 +205,13 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
- 			clear_bit(In_sync, &rdev->flags);
- 			set_bit(Faulty, &rdev->flags);
- 			set_bit(MD_CHANGE_DEVS, &mddev->flags);
--			conf->working_disks--;
- 			mddev->degraded++;
- 			printk(KERN_ALERT "multipath: IO failure on %s,"
- 				" disabling IO path.\n"
- 				"multipath: Operation continuing"
- 				" on %d IO paths.\n",
- 				bdevname (rdev->bdev,b),
--				conf->working_disks);
-+				conf->raid_disks - mddev->degraded);
- 		}
- 	}
- }
-@@ -227,7 +226,7 @@ static void print_multipath_conf (multipath_conf_t *conf)
- 		printk("(conf==NULL)\n");
- 		return;
- 	}
--	printk(" --- wd:%d rd:%d\n", conf->working_disks,
-+	printk(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
- 			 conf->raid_disks);
- 
- 	for (i = 0; i < conf->raid_disks; i++) {
-@@ -274,7 +273,6 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 							   PAGE_CACHE_SIZE - 1);
- 			}
- 
--			conf->working_disks++;
- 			mddev->degraded--;
- 			rdev->raid_disk = path;
- 			set_bit(In_sync, &rdev->flags);
-@@ -391,6 +389,7 @@ static int multipath_run (mddev_t *mddev)
- 	int disk_idx;
- 	struct multipath_info *disk;
- 	mdk_rdev_t *rdev;
-+	int working_disks;
- 
- 	if (md_check_no_bitmap(mddev))
- 		return -EINVAL;
-@@ -424,7 +423,7 @@ static int multipath_run (mddev_t *mddev)
- 		goto out_free_conf;
- 	}
- 
--	conf->working_disks = 0;
-+	working_disks = 0;
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
- 		disk_idx = rdev->raid_disk;
- 		if (disk_idx < 0 ||
-@@ -446,7 +445,7 @@ static int multipath_run (mddev_t *mddev)
- 		}
- 
- 		if (!test_bit(Faulty, &rdev->flags))
--			conf->working_disks++;
-+			working_disks++;
- 	}
- 
- 	conf->raid_disks = mddev->raid_disks;
-@@ -454,12 +453,12 @@ static int multipath_run (mddev_t *mddev)
- 	spin_lock_init(&conf->device_lock);
- 	INIT_LIST_HEAD(&conf->retry_list);
- 
--	if (!conf->working_disks) {
-+	if (!working_disks) {
- 		printk(KERN_ERR "multipath: no operational IO paths for %s\n",
- 			mdname(mddev));
- 		goto out_free_conf;
- 	}
--	mddev->degraded = conf->raid_disks - conf->working_disks;
-+	mddev->degraded = conf->raid_disks - working_disks;
- 
- 	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
- 						 sizeof(struct multipath_bh));
-@@ -481,7 +480,8 @@ static int multipath_run (mddev_t *mddev)
- 
- 	printk(KERN_INFO 
- 		"multipath: array %s active with %d out of %d IO paths\n",
--		mdname(mddev), conf->working_disks, mddev->raid_disks);
-+		mdname(mddev), conf->raid_disks - mddev->degraded,
-+	       mddev->raid_disks);
- 	/*
- 	 * Ok, everything is just fine now
- 	 */
-diff --git a/drivers/md/multipath.h b/drivers/md/multipath.h
-index d1c2a8d..3c5a45e 100644
---- a/drivers/md/multipath.h
-+++ b/drivers/md/multipath.h
-@@ -9,7 +9,6 @@ struct multipath_private_data {
- 	mddev_t			*mddev;
- 	struct multipath_info	*multipaths;
- 	int			raid_disks;
--	int			working_disks;
- 	spinlock_t		device_lock;
- 	struct list_head	retry_list;
- 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4a4c0f8..5469ae3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5216,6 +5216,16 @@ static int add_new_disk(mddev_t * mddev, mdu_disk_info_t *info)
+ 		} else
+ 			super_types[mddev->major_version].
+ 				validate_super(mddev, rdev);
++		if ((info->state & (1<<MD_DISK_SYNC)) &&
++		    (!test_bit(In_sync, &rdev->flags) ||
++		     rdev->raid_disk != info->raid_disk)) {
++			/* This was a hot-add request, but events doesn't
++			 * match, so reject it.
++			 */
++			export_rdev(rdev);
++			return -EINVAL;
++		}
++
+ 		if (test_bit(In_sync, &rdev->flags))
+ 			rdev->saved_raid_disk = rdev->raid_disk;
+ 		else
 
 
