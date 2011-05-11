@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 13/16] md/raid10: make more use of 'slot' in raid10d.
-Date: Wed, 11 May 2011 16:30:31 +1000
-Message-ID: <20110511063031.21263.7438.stgit@notabene.brown>
+Subject: [md PATCH 01/16] md: Fix race when creating a new md device.
+Date: Wed, 11 May 2011 16:30:30 +1000
+Message-ID: <20110511063030.21263.73208.stgit@notabene.brown>
 References: <20110511062743.21263.72802.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,48 +12,87 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now that we have a 'slot' variable, make better use of it to simplify
-some code a little.
+There is a race when creating an md device by opening /dev/mdXX.
+
+If two processes do this at much the same time they will follow the
+call path
+  __blkdev_get -> get_gendisk -> kobj_lookup
+
+The first will call
+  -> md_probe -> md_alloc -> add_disk -> blk_register_region
+
+and the race happens when the second gets to kobj_lookup after
+add_disk has called blk_register_region but before it returns to
+md_alloc.
+
+In the case the second will not call md_probe (as the probe is already
+done) but will get a handle on the gendisk, return to __blkdev_get
+which will then call md_open (via the ->open) pointer.
+
+As mddev->gendisk hasn't been set yet, md_open will think something is
+wrong an return with ERESTARTSYS.
+
+This can loop endlessly while the first thread makes no progress
+through add_disk.  Nothing is blocking it, but due to scheduler
+behaviour it doesn't get a turn.
+So this is essentially a live-lock.
+
+We fix this by simply moving the assignment to mddev->gendisk before
+the call the add_disk() so md_open doesn't get confused.
+Also move blk_queue_flush earlier because add_disk should be as late
+as possible.
+
+To make sure that md_open doesn't complete until md_alloc has done all
+that is needed, we take mddev->open_mutex during the last part of
+md_alloc.  md_open will wait for this.
+
+This can cause a lock-up on boot so Cc:ing for stable.
+For 2.6.36 and earlier a different patch will be needed as the
+'blk_queue_flush' call isn't there.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
+Reported-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Tested-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: stable@kernel.org
 ---
 
- drivers/md/raid10.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/md/md.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 8e4f469..80cc7e6 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1650,8 +1650,8 @@ static void raid10d(mddev_t *mddev)
- 			}
- 			rdev_dec_pending(conf->mirrors[mirror].rdev, mddev);
- 
--			bio = r10_bio->devs[r10_bio->read_slot].bio;
--			r10_bio->devs[r10_bio->read_slot].bio =
-+			bio = r10_bio->devs[slot].bio;
-+			r10_bio->devs[slot].bio =
- 				mddev->ro ? IO_BLOCKED : NULL;
- 			mirror = read_balance(conf, r10_bio);
- 			if (mirror == -1) {
-@@ -1665,6 +1665,7 @@ static void raid10d(mddev_t *mddev)
- 			} else {
- 				const unsigned long do_sync = (r10_bio->master_bio->bi_rw & REQ_SYNC);
- 				bio_put(bio);
-+				slot = r10_bio->read_slot;
- 				rdev = conf->mirrors[mirror].rdev;
- 				if (printk_ratelimit())
- 					printk(KERN_ERR "md/raid10:%s: %s: redirecting sector %llu to"
-@@ -1674,8 +1675,8 @@ static void raid10d(mddev_t *mddev)
- 					       (unsigned long long)r10_bio->sector);
- 				bio = bio_clone_mddev(r10_bio->master_bio,
- 						      GFP_NOIO, mddev);
--				r10_bio->devs[r10_bio->read_slot].bio = bio;
--				bio->bi_sector = r10_bio->devs[r10_bio->read_slot].addr
-+				r10_bio->devs[slot].bio = bio;
-+				bio->bi_sector = r10_bio->devs[slot].addr
- 					+ rdev->data_offset;
- 				bio->bi_bdev = rdev->bdev;
- 				bio->bi_rw = READ | do_sync;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 7d6f7f1..4a4c0f8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4347,13 +4347,19 @@ static int md_alloc(dev_t dev, char *name)
+ 	disk->fops = &md_fops;
+ 	disk->private_data = mddev;
+ 	disk->queue = mddev->queue;
++	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
+ 	/* Allow extended partitions.  This makes the
+ 	 * 'mdp' device redundant, but we can't really
+ 	 * remove it now.
+ 	 */
+ 	disk->flags |= GENHD_FL_EXT_DEVT;
+-	add_disk(disk);
+ 	mddev->gendisk = disk;
++	/* As soon as we call add_disk(), another thread could get
++	 * through to md_open, so make sure it doesn't get too far
++	 */
++	mutex_lock(&mddev->open_mutex);
++	add_disk(disk);
++
+ 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
+ 				     &disk_to_dev(disk)->kobj, "%s", "md");
+ 	if (error) {
+@@ -4367,8 +4373,7 @@ static int md_alloc(dev_t dev, char *name)
+ 	if (mddev->kobj.sd &&
+ 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
+ 		printk(KERN_DEBUG "pointless warning\n");
+-
+-	blk_queue_flush(mddev->queue, REQ_FLUSH | REQ_FUA);
++	mutex_unlock(&mddev->open_mutex);
+  abort:
+ 	mutex_unlock(&disks_mutex);
+ 	if (!error && mddev->kobj.sd) {
 
 
