@@ -1,63 +1,30 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 00/16] md patches for 2.6.40
-Date: Wed, 11 May 2011 16:30:30 +1000
-Message-ID: <20110511062743.21263.72802.stgit@notabene.brown>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Convert RAID 5 to RAID 6 while reducing array size
+Date: Wed, 11 May 2011 16:49:45 +0100
+Message-ID: <4DCAB019.3070508@anonymous.org.uk>
+References: <34905057-B75E-4721-B6D2-7B9FA733BCA8@brillgene.com> <5D271CD8-AE79-441F-A6FA-AF0E5D481E4D@brillgene.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5D271CD8-AE79-441F-A6FA-AF0E5D481E4D@brillgene.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Anshuman Aggarwal <anshuman@brillgene.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm slowly working through getting bad-block-logs working, but it
-looks like it won't be ready for 2.6.40 (so many distractions.... and
-the code is rather complex and hard to test).
+On 07/05/2011 20:50, Anshuman Aggarwal wrote:
+> Hi,
+> I'm trying to convert a 6 device raid5 into a raid6. The 6th device was added into the Raid 5 by mistake instead of a grow operation to convert it into a RAID 6. As such the md device is not being used beyond the size that it had when it was a 5 device raid5.
+>
+> Can this be done in a single grow step by specifying the reduced size (--array-size=xx) and new layout (l=6)?
 
-However while doing that coding I found several opportunities to clean
-up existing code and various bug reports have come in that need
-addressing.
+Yes it can, with mdadm 3.1.x and a suitably recent kernel. You will need 
+a backup file on another drive, the same as you did to reshape your 
+RAID5 from 5 to 6 devices. If you have grown your filesystem, you will 
+need to shrink it again BEFORE attempting the reshape.
 
-So here are that patches that I currently plan to submit for 2.6.40.
-They are all in my for-next branch so should appear in -next shortly.
+Cheers,
 
-As always, any review is most welcome.
-
-Thanks,
-NeilBrown
-
-
----
-
-NeilBrown (16):
-      md: allow resync_start to be set while an array is active.
-      md/raid10:  reformat some loops with less indenting.
-      md/raid10: remove unused variable.
-      md/raid10: make more use of 'slot' in raid10d.
-      md/raid10: some tidying up in fix_read_error
-      md/raid1: improve handling of pages allocated for write-behind.
-      md/raid1: try fix_sync_read_error before process_checks.
-      md/raid1: tidy up new functions: process_checks and fix_sync_read_error.
-      md/raid1: split out two sub-functions from sync_request_write
-      md: make error_handler functions more uniform and correct.
-      md/multipath: discard ->working_disks in favour of ->degraded
-      md/raid1: clean up read_balance.
-      md: simplify raid10 read_balance
-      md/bitmap: fix saving of events_cleared and other state.
-      md: reject a re-add request that cannot be honoured.
-      md: Fix race when creating a new md device.
-
-
- drivers/md/bitmap.c    |   10 +
- drivers/md/md.c        |   23 ++
- drivers/md/multipath.c |   60 +++---
- drivers/md/multipath.h |    1 
- drivers/md/raid1.c     |  506 ++++++++++++++++++++++++------------------------
- drivers/md/raid1.h     |    4 
- drivers/md/raid10.c    |  424 +++++++++++++++++++---------------------
- drivers/md/raid5.c     |   41 ++--
- 8 files changed, 535 insertions(+), 534 deletions(-)
-
--- 
-Signature
+John.
 
