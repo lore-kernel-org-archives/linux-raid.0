@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 09/16] md/raid1: tidy up new functions: process_checks and
- fix_sync_read_error.
-Date: Wed, 11 May 2011 16:30:31 +1000
-Message-ID: <20110511063031.21263.50682.stgit@notabene.brown>
+Subject: [md PATCH 04/16] md: simplify raid10 read_balance
+Date: Wed, 11 May 2011 16:30:30 +1000
+Message-ID: <20110511063030.21263.75346.stgit@notabene.brown>
 References: <20110511062743.21263.72802.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,256 +12,165 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-These changes are mostly cosmetic:
-
-1/ change mddev->raid_disks to conf->raid_disks because the later is
-   technically safer, though in current practice it doesn't matter in
-   this particular context.
-2/ Rearrange two for / if loops to have an early 'continue' so the
-   body of the 'if' doesn't need to be indented so much.
+raid10 read balance has two different loop for looking through
+possible devices to chose the best.
+Collapse those into one loop and generally make the code more
+readable.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c |  184 +++++++++++++++++++++++++++-------------------------
- 1 files changed, 95 insertions(+), 89 deletions(-)
+ drivers/md/raid10.c |  110 ++++++++++++++++++++-------------------------------
+ 1 files changed, 44 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 7fd7a4d..2b9e86c 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1203,6 +1203,7 @@ static int fix_sync_read_error(r1bio_t *r1_bio)
- 		int d = r1_bio->read_disk;
- 		int success = 0;
- 		mdk_rdev_t *rdev;
-+		int start;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 8e94626..8ea0aca 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -488,13 +488,19 @@ static int raid10_mergeable_bvec(struct request_queue *q,
+ static int read_balance(conf_t *conf, r10bio_t *r10_bio)
+ {
+ 	const sector_t this_sector = r10_bio->sector;
+-	int disk, slot, nslot;
++	int disk, slot;
+ 	const int sectors = r10_bio->sectors;
+-	sector_t new_distance, current_distance;
++	sector_t new_distance, best_dist;
+ 	mdk_rdev_t *rdev;
++	int do_balance;
++	int best_slot;
  
- 		if (s > (PAGE_SIZE>>9))
- 			s = PAGE_SIZE >> 9;
-@@ -1227,41 +1228,7 @@ static int fix_sync_read_error(r1bio_t *r1_bio)
- 				d = 0;
- 		} while (!success && d != r1_bio->read_disk);
- 
--		if (success) {
--			int start = d;
--			/* write it back and re-read */
--			set_bit(R1BIO_Uptodate, &r1_bio->state);
--			while (d != r1_bio->read_disk) {
--				if (d == 0)
--					d = conf->raid_disks;
--				d--;
--				if (r1_bio->bios[d]->bi_end_io != end_sync_read)
--					continue;
--				rdev = conf->mirrors[d].rdev;
--				atomic_add(s, &rdev->corrected_errors);
--				if (sync_page_io(rdev,
--						 sect,
--						 s<<9,
--						 bio->bi_io_vec[idx].bv_page,
--						 WRITE, false) == 0)
--					md_error(mddev, rdev);
--			}
--			d = start;
--			while (d != r1_bio->read_disk) {
--				if (d == 0)
--					d = conf->raid_disks;
--				d--;
--				if (r1_bio->bios[d]->bi_end_io != end_sync_read)
--					continue;
--				rdev = conf->mirrors[d].rdev;
--				if (sync_page_io(rdev,
--						 sect,
--						 s<<9,
--						 bio->bi_io_vec[idx].bv_page,
--						 READ, false) == 0)
--					md_error(mddev, rdev);
--			}
--		} else {
-+		if (!success) {
- 			char b[BDEVNAME_SIZE];
- 			/* Cannot read from anywhere, array is toast */
- 			md_error(mddev, conf->mirrors[r1_bio->read_disk].rdev);
-@@ -1274,10 +1241,47 @@ static int fix_sync_read_error(r1bio_t *r1_bio)
- 			put_buf(r1_bio);
- 			return 0;
- 		}
-+
-+		start = d;
-+		/* write it back and re-read */
-+		while (d != r1_bio->read_disk) {
-+			if (d == 0)
-+				d = conf->raid_disks;
-+			d--;
-+			if (r1_bio->bios[d]->bi_end_io != end_sync_read)
-+				continue;
-+			rdev = conf->mirrors[d].rdev;
-+			if (sync_page_io(rdev,
-+					 sect,
-+					 s<<9,
-+					 bio->bi_io_vec[idx].bv_page,
-+					 WRITE, false) == 0) {
-+				r1_bio->bios[d]->bi_end_io = NULL;
-+				rdev_dec_pending(rdev, mddev);
-+				md_error(mddev, rdev);
-+			} else
-+				atomic_add(s, &rdev->corrected_errors);
-+		}
-+		d = start;
-+		while (d != r1_bio->read_disk) {
-+			if (d == 0)
-+				d = conf->raid_disks;
-+			d--;
-+			if (r1_bio->bios[d]->bi_end_io != end_sync_read)
-+				continue;
-+			rdev = conf->mirrors[d].rdev;
-+			if (sync_page_io(rdev,
-+					 sect,
-+					 s<<9,
-+					 bio->bi_io_vec[idx].bv_page,
-+					 READ, false) == 0)
-+				md_error(mddev, rdev);
-+		}
- 		sectors -= s;
- 		sect += s;
- 		idx ++;
- 	}
-+	set_bit(R1BIO_Uptodate, &r1_bio->state);
- 	return 1;
- }
- 
-@@ -1296,7 +1300,7 @@ static int process_checks(r1bio_t *r1_bio)
- 	int i;
- 
- 	if (!test_bit(R1BIO_Uptodate, &r1_bio->state)) {
--		for (i=0; i<mddev->raid_disks; i++)
-+		for (i=0; i < conf->raid_disks; i++)
- 			if (r1_bio->bios[i]->bi_end_io == end_sync_read)
- 				md_error(mddev, conf->mirrors[i].rdev);
- 
-@@ -1304,7 +1308,7 @@ static int process_checks(r1bio_t *r1_bio)
- 		put_buf(r1_bio);
- 		return -1;
- 	}
--	for (primary=0; primary<mddev->raid_disks; primary++)
-+	for (primary = 0; primary < conf->raid_disks; primary++)
- 		if (r1_bio->bios[primary]->bi_end_io == end_sync_read &&
- 		    test_bit(BIO_UPTODATE, &r1_bio->bios[primary]->bi_flags)) {
- 			r1_bio->bios[primary]->bi_end_io = NULL;
-@@ -1312,61 +1316,63 @@ static int process_checks(r1bio_t *r1_bio)
- 			break;
- 		}
- 	r1_bio->read_disk = primary;
--	for (i=0; i<mddev->raid_disks; i++)
--		if (r1_bio->bios[i]->bi_end_io == end_sync_read) {
--			int j;
--			int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
--			struct bio *pbio = r1_bio->bios[primary];
--			struct bio *sbio = r1_bio->bios[i];
+ 	raid10_find_phys(conf, r10_bio);
+ 	rcu_read_lock();
++retry:
++	best_slot = -1;
++	best_dist = MaxSector;
++	do_balance = 1;
+ 	/*
+ 	 * Check if we can balance. We can balance on the whole
+ 	 * device if no resync is going on (recovery is ok), or below
+@@ -502,86 +508,58 @@ static int read_balance(conf_t *conf, r10bio_t *r10_bio)
+ 	 * above the resync window.
+ 	 */
+ 	if (conf->mddev->recovery_cp < MaxSector
+-	    && (this_sector + sectors >= conf->next_resync)) {
+-		/* make sure that disk is operational */
+-		slot = 0;
+-		disk = r10_bio->devs[slot].devnum;
 -
--			if (test_bit(BIO_UPTODATE, &sbio->bi_flags)) {
--				for (j = vcnt; j-- ; ) {
--					struct page *p, *s;
--					p = pbio->bi_io_vec[j].bv_page;
--					s = sbio->bi_io_vec[j].bv_page;
--					if (memcmp(page_address(p),
--						   page_address(s),
--						   PAGE_SIZE))
--						break;
--				}
--			} else
--				j = 0;
--			if (j >= 0)
--				mddev->resync_mismatches += r1_bio->sectors;
--			if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
--				      && test_bit(BIO_UPTODATE, &sbio->bi_flags))) {
--				sbio->bi_end_io = NULL;
--				rdev_dec_pending(conf->mirrors[i].rdev, mddev);
--			} else {
--				/* fixup the bio for reuse */
--				int size;
--				sbio->bi_vcnt = vcnt;
--				sbio->bi_size = r1_bio->sectors << 9;
--				sbio->bi_idx = 0;
--				sbio->bi_phys_segments = 0;
--				sbio->bi_flags &= ~(BIO_POOL_MASK - 1);
--				sbio->bi_flags |= 1 << BIO_UPTODATE;
--				sbio->bi_next = NULL;
--				sbio->bi_sector = r1_bio->sector +
--					conf->mirrors[i].rdev->data_offset;
--				sbio->bi_bdev = conf->mirrors[i].rdev->bdev;
--				size = sbio->bi_size;
--				for (j = 0; j < vcnt ; j++) {
--					struct bio_vec *bi;
--					bi = &sbio->bi_io_vec[j];
--					bi->bv_offset = 0;
--					if (size > PAGE_SIZE)
--						bi->bv_len = PAGE_SIZE;
--					else
--						bi->bv_len = size;
--					size -= PAGE_SIZE;
--					memcpy(page_address(bi->bv_page),
--					       page_address(pbio->bi_io_vec[j].bv_page),
--					       PAGE_SIZE);
--				}
-+	for (i = 0; i < conf->raid_disks; i++) {
-+		int j;
-+		int vcnt = r1_bio->sectors >> (PAGE_SHIFT- 9);
-+		struct bio *pbio = r1_bio->bios[primary];
-+		struct bio *sbio = r1_bio->bios[i];
-+		int size;
-+
-+		if (r1_bio->bios[i]->bi_end_io != end_sync_read)
-+			continue;
+-		while ((rdev = rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
+-		       r10_bio->devs[slot].bio == IO_BLOCKED ||
+-		       !test_bit(In_sync, &rdev->flags)) {
+-			slot++;
+-			if (slot == conf->copies) {
+-				slot = 0;
+-				disk = -1;
+-				break;
+-			}
+-			disk = r10_bio->devs[slot].devnum;
+-		}
+-		goto rb_out;
+-	}
+-
++	    && (this_sector + sectors >= conf->next_resync))
++		do_balance = 0;
  
-+		if (test_bit(BIO_UPTODATE, &sbio->bi_flags)) {
-+			for (j = vcnt; j-- ; ) {
-+				struct page *p, *s;
-+				p = pbio->bi_io_vec[j].bv_page;
-+				s = sbio->bi_io_vec[j].bv_page;
-+				if (memcmp(page_address(p),
-+					   page_address(s),
-+					   PAGE_SIZE))
-+					break;
- 			}
-+		} else
-+			j = 0;
-+		if (j >= 0)
-+			mddev->resync_mismatches += r1_bio->sectors;
-+		if (j < 0 || (test_bit(MD_RECOVERY_CHECK, &mddev->recovery)
-+			      && test_bit(BIO_UPTODATE, &sbio->bi_flags))) {
-+			/* No need to write to this device. */
-+			sbio->bi_end_io = NULL;
-+			rdev_dec_pending(conf->mirrors[i].rdev, mddev);
+-	/* make sure the disk is operational */
+-	slot = 0;
+-	disk = r10_bio->devs[slot].devnum;
+-	while ((rdev=rcu_dereference(conf->mirrors[disk].rdev)) == NULL ||
+-	       r10_bio->devs[slot].bio == IO_BLOCKED ||
+-	       !test_bit(In_sync, &rdev->flags)) {
+-		slot ++;
+-		if (slot == conf->copies) {
+-			disk = -1;
+-			goto rb_out;
+-		}
++	for (slot = 0; slot < conf->copies ; slot++) {
++		if (r10_bio->devs[slot].bio == IO_BLOCKED)
 +			continue;
+ 		disk = r10_bio->devs[slot].devnum;
+-	}
+-
+-
+-	current_distance = abs(r10_bio->devs[slot].addr -
+-			       conf->mirrors[disk].head_position);
+-
+-	/* Find the disk whose head is closest,
+-	 * or - for far > 1 - find the closest to partition beginning */
+-
+-	for (nslot = slot; nslot < conf->copies; nslot++) {
+-		int ndisk = r10_bio->devs[nslot].devnum;
+-
+-
+-		if ((rdev=rcu_dereference(conf->mirrors[ndisk].rdev)) == NULL ||
+-		    r10_bio->devs[nslot].bio == IO_BLOCKED ||
+-		    !test_bit(In_sync, &rdev->flags))
++		rdev = rcu_dereference(conf->mirrors[disk].rdev);
++		if (rdev == NULL)
++			continue;
++		if (!test_bit(In_sync, &rdev->flags))
+ 			continue;
+ 
++		if (!do_balance)
++			break;
++
+ 		/* This optimisation is debatable, and completely destroys
+ 		 * sequential read speed for 'far copies' arrays.  So only
+ 		 * keep it for 'near' arrays, and review those later.
+ 		 */
+-		if (conf->near_copies > 1 && !atomic_read(&rdev->nr_pending)) {
+-			disk = ndisk;
+-			slot = nslot;
++		if (conf->near_copies > 1 && !atomic_read(&rdev->nr_pending))
+ 			break;
+-		}
+ 
+ 		/* for far > 1 always use the lowest address */
+ 		if (conf->far_copies > 1)
+-			new_distance = r10_bio->devs[nslot].addr;
++			new_distance = r10_bio->devs[slot].addr;
+ 		else
+-			new_distance = abs(r10_bio->devs[nslot].addr -
+-					   conf->mirrors[ndisk].head_position);
+-		if (new_distance < current_distance) {
+-			current_distance = new_distance;
+-			disk = ndisk;
+-			slot = nslot;
++			new_distance = abs(r10_bio->devs[slot].addr -
++					   conf->mirrors[disk].head_position);
++		if (new_distance < best_dist) {
++			best_dist = new_distance;
++			best_slot = slot;
  		}
-+		/* fixup the bio for reuse */
-+		sbio->bi_vcnt = vcnt;
-+		sbio->bi_size = r1_bio->sectors << 9;
-+		sbio->bi_idx = 0;
-+		sbio->bi_phys_segments = 0;
-+		sbio->bi_flags &= ~(BIO_POOL_MASK - 1);
-+		sbio->bi_flags |= 1 << BIO_UPTODATE;
-+		sbio->bi_next = NULL;
-+		sbio->bi_sector = r1_bio->sector +
-+			conf->mirrors[i].rdev->data_offset;
-+		sbio->bi_bdev = conf->mirrors[i].rdev->bdev;
-+		size = sbio->bi_size;
-+		for (j = 0; j < vcnt ; j++) {
-+			struct bio_vec *bi;
-+			bi = &sbio->bi_io_vec[j];
-+			bi->bv_offset = 0;
-+			if (size > PAGE_SIZE)
-+				bi->bv_len = PAGE_SIZE;
-+			else
-+				bi->bv_len = size;
-+			size -= PAGE_SIZE;
-+			memcpy(page_address(bi->bv_page),
-+			       page_address(pbio->bi_io_vec[j].bv_page),
-+			       PAGE_SIZE);
+ 	}
++	if (slot == conf->copies)
++		slot = best_slot;
+ 
+-rb_out:
+-	r10_bio->read_slot = slot;
+-/*	conf->next_seq_sect = this_sector + sectors;*/
+-
+-	if (disk >= 0 && (rdev=rcu_dereference(conf->mirrors[disk].rdev))!= NULL)
+-		atomic_inc(&conf->mirrors[disk].rdev->nr_pending);
+-	else
++	if (slot >= 0) {
++		disk = r10_bio->devs[slot].devnum;
++		rdev = rcu_dereference(conf->mirrors[disk].rdev);
++		if (!rdev)
++			goto retry;
++		atomic_inc(&rdev->nr_pending);
++		if (test_bit(Faulty, &rdev->flags)) {
++			/* Cannot risk returning a device that failed
++			 * before we inc'ed nr_pending
++			 */
++			rdev_dec_pending(rdev, conf->mddev);
++			goto retry;
 +		}
-+	}
- 	return 0;
- }
++		r10_bio->read_slot = slot;
++	} else
+ 		disk = -1;
+ 	rcu_read_unlock();
  
 
 
