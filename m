@@ -1,55 +1,55 @@
-From: Tobias McNulty <tobias@caktusgroup.com>
-Subject: permanently removing a spare
-Date: Wed, 11 May 2011 21:49:35 -0400
-Message-ID: <BANLkTinbk9VMuiLNUA8VW-gE1Znbf9caWA@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: md question re: max_hw_sectors_kb
+Date: Wed, 11 May 2011 23:51:16 -0400
+Message-ID: <yq1oc38poej.fsf@sermon.lab.mkp.net>
+References: <4DC0639E.1070707@sgi.com> <yq17ha6z6tu.fsf@sermon.lab.mkp.net>
+	<20110510095243.0a23874b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110510095243.0a23874b@notabene.brown> (NeilBrown's message of
+	"Tue, 10 May 2011 09:52:43 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Reed <mdr@sgi.com>, linux-raid@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-Hi all,
+>>>>> "Neil" == NeilBrown  <neilb@suse.de> writes:
 
-After successfully converting my raid6 array to raid5, I of course
-neglected to update mdadm.conf, so the array was absent on reboot.  A
-quick mdadm --assemble brought the array back online.
+Neil,
 
-However, now I am trying to update mdadm.conf, and I hit what I think
-is this bug:
+>> Your fix is functionally correct. However, another case just popped
+>> up this week where we need to distinguish between stacking driver and
+>> LLD defaults.
 
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=610184
+Neil> What case is this?
 
-So I thought I'd try to remove the spare from my raid5 array.  I
-marked it as failed and then removed it, and the spare no longer shows
-in /proc/mdstat:
+This particular case involved the need to set different defaults for
+discard depending on whether it was a stacking or a low level driver.
 
-md0 : active raid5 sda[0] sdd[3] sdc[2] sdb[1]
-      5860543488 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-However, when I do mdadm -Es, I still see it:
+Neil> If you have FS -> DM -> MD, then any change that MD makes to
+Neil> max_hw_sectors_kb will not be visible to the FS.  So adding and
+Neil> activating a hot spare with smaller max_hw_sectors_kb cause cause
+Neil> it to receive requests that are too big.
 
-ARRAY /dev/md0 UUID=25a818ff:68f07e28:0d7656f3:2f233380
-   spares=1
+Yeah, this issue pops up occasionally. Alasdair and I were discussing it
+just a couple of weeks ago.
 
-And I still see the "error: superfluous RAID member (4 found)." error
-when running update-grub (even if I leave out the spares=1 part).
 
-Is there a way to "permanently" remove the spare "slot" from the
-array?  I tried mdadm --grow --spare-devices=0, since the man page
-arguably suggests that --spare-devices should work in grow mode, but
-running the command reports that it's not actually supported.  To the
-credit of the man page, the description of --spare-devices *does* say
-it is used in the *initial* array creation.
+Neil> So we really need a propery resolution to this problem first.
+Neil> i.e. A way for 'dm' to notice when 'md' changes its parameters -
+Neil> or in general any stacking deivce to find out when an underlying
+Neil> device changes in any way.
 
-Does what I'm trying to do make sense?  Is there a way to make the
-array forget that it ever had a spare in the first place?
+Neil> I would implement this by having blkdev_get{,_by_path,_by_dev}
+Neil> take an extra arg which is a pointer to a struct of functions.  In
+Neil> the first instance there would be just one which tells the claimer
+Neil> that something in queue.limits has changed.  Later we could add
+Neil> other calls to help with size changes.
 
-I'm a little afraid to reboot until I get this figured out.
+I agree we need a way to propagate queue limit and capacity changes up
+the stack. I'll put in on my todo list.
 
-Thank you!
-Tobias
 -- 
-Tobias McNulty, Managing Partner
-Caktus Consulting Group, LLC
-http://www.caktusgroup.com
+Martin K. Petersen	Oracle Linux Engineering
