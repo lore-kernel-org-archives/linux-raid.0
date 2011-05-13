@@ -1,8 +1,8 @@
 From: Christopher White <linux@pulseforce.com>
 Subject: Re: mdadm does not create partition devices whatsoever, "partitionable"
  functionality broken
-Date: Fri, 13 May 2011 21:49:06 +0200
-Message-ID: <4DCD8B32.9010901@pulseforce.com>
+Date: Fri, 13 May 2011 21:49:27 +0200
+Message-ID: <4DCD8B47.3050002@pulseforce.com>
 References: <4DCD4A83.8060202@pulseforce.com>	<4DCD6119.3080705@turmel.org>	<4DCD67EF.1070602@pulseforce.com>	<4DCD6B27.70402@pulseforce.com> <20110513234055.4307c536@natsu> <4DCD72AF.1070809@pulseforce.com> <4DCD75FE.8010703@turmel.org> <4DCD7E78.6050000@pulseforce.com> <4DCD800F.7080501@grumpydevil.homelinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
