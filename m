@@ -1,32 +1,54 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Growing a RAID array
-Date: Fri, 13 May 2011 11:23:13 +1000
-Message-ID: <20110513112313.54fbb717@notabene.brown>
-References: <28.92.03893.3038CCD4@cdptpa-omtalb.mail.rr.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: New device for RAID array
+Date: Fri, 13 May 2011 00:37:02 -0500
+Message-ID: <8E.76.28813.873CCCD4@cdptpa-omtalb.mail.rr.com>
+References: <20110513112119.79e67ceb@notabene.brown>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <28.92.03893.3038CCD4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20110513112119.79e67ceb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
+To: 'NeilBrown' <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 12 May 2011 20:02:01 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
-wrote:
-
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Thursday, May 12, 2011 8:21 PM
+> To: lrhorer@satx.rr.com
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: New device for RAID array
 > 
-> 	I am shortly going to be growing a 10 drive RAID6 array with two
-> additional drives.  Can this be done in a single grow operation by setting
-> n=12, or do I have to grow it 1 drive at a time?
+> On Thu, 12 May 2011 19:59:01 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
+> wrote:
 > 
+> >
+> > I read through the man page for mdadm a couple of times and did not spot
+> how
+> > to do this.  I currently have a RAID array that I need to upgrade from
+> 1T
+> > drives to 3T drives.  To accomplish this, I intend to create a larger
+> array,
+> > but with fewer spindles, and then rsync the contents of the old array to
+> the
+> > new.  Once I am done, I then want to stop the old array (/dev/md0) and
+> start
+> > up the new array under /dev/md0.  Do I have to stop the array and then
+> > re-create it with all the same parameters, except the device target?
+> 
+> For v0.90:  --update=super-minor
+> For v1.x    --update=name
 
-Experiment with loop-back devices created on modest sized files.
+	Um, it will be a 1.2 array, so I take it if the current array is
+/dev/md0, named RAID-Server:0 from /dev/sd[a-n], and the new array is
+something like /dev/md4, named RAID-Server:4 from sd[q-x], then I stop both
+arrays and enter 
 
+mdadm --assemble /dev/md0 /dev/sd[q-x] --update=name
 
-(but yes, you can grow by any number you like.  You should test the drives
-fairly heavily first, because if they both die during the reshape, you lose
-your data).
+	Correct?  Of course then I need to update /etc/mdadm/mdadm.conf and
+run `update-initrd`.
 
-NeilBrown
