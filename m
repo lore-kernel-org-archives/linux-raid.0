@@ -1,89 +1,46 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: New device for RAID array
-Date: Fri, 13 May 2011 00:59:32 -0500
-Message-ID: <FE.67.03125.EB8CCCD4@cdptpa-omtalb.mail.rr.com>
-References: <20110513155031.4ceb0686@notabene.brown>
-Reply-To: <lrhorer@satx.rr.com>
+From: Christopher White <linux@pulseforce.com>
+Subject: mdadm does not create partition devices whatsoever, "partitionable"
+ functionality broken
+Date: Fri, 13 May 2011 17:13:07 +0200
+Message-ID: <4DCD4A83.8060202@pulseforce.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110513155031.4ceb0686@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	Thanks.
+Greetings.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Friday, May 13, 2011 12:51 AM
-> To: lrhorer@satx.rr.com
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: New device for RAID array
-> 
-> On Fri, 13 May 2011 00:37:02 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
-> wrote:
-> 
-> > > -----Original Message-----
-> > > From: NeilBrown [mailto:neilb@suse.de]
-> > > Sent: Thursday, May 12, 2011 8:21 PM
-> > > To: lrhorer@satx.rr.com
-> > > Cc: linux-raid@vger.kernel.org
-> > > Subject: Re: New device for RAID array
-> > >
-> > > On Thu, 12 May 2011 19:59:01 -0500 "Leslie Rhorer"
-> <lrhorer@satx.rr.com>
-> > > wrote:
-> > >
-> > > >
-> > > > I read through the man page for mdadm a couple of times and did not
-> spot
-> > > how
-> > > > to do this.  I currently have a RAID array that I need to upgrade
-> from
-> > > 1T
-> > > > drives to 3T drives.  To accomplish this, I intend to create a
-> larger
-> > > array,
-> > > > but with fewer spindles, and then rsync the contents of the old
-> array to
-> > > the
-> > > > new.  Once I am done, I then want to stop the old array (/dev/md0)
-> and
-> > > start
-> > > > up the new array under /dev/md0.  Do I have to stop the array and
-> then
-> > > > re-create it with all the same parameters, except the device target?
-> > >
-> > > For v0.90:  --update=super-minor
-> > > For v1.x    --update=name
-> >
-> > 	Um, it will be a 1.2 array, so I take it if the current array is
-> > /dev/md0, named RAID-Server:0 from /dev/sd[a-n], and the new array is
-> > something like /dev/md4, named RAID-Server:4 from sd[q-x], then I stop
-> both
-> > arrays and enter
-> >
-> > mdadm --assemble /dev/md0 /dev/sd[q-x] --update=name
-> >
-> > 	Correct?  Of course then I need to update /etc/mdadm/mdadm.conf and
-> > run `update-initrd`.
-> 
-> Yes, though you don't really need to change the name on the array unless
-> you
-> particularly want to.  Just changing mdadm.conf is enough to get it
-> assembled
-> as the "right" place.
-> 
-> I think the command you give will store "RAID-Server:0" in the metadata
-> assuming 'hostname' or HOMEHOST in mdadm.conf is RAID-Server, but if it
-> doesn't you can experiment with explicitly setting --name and --hostname
-> on
-> the command line.
-> 
-> NeilBrown
+I have spent TEN hours trying everything other than regressing to a 
+REALLY old version. I started out on 3.1.4 and have also tried manually 
+upgrading to 3.2.1, but the bug still exists.
 
+Somewhere along the way, the "auto" partitionable flag has broken.
+
+sudo mdadm --create --level=raid5 --auto=part2 /dev/md1 --metadata=1.2 
+--raid-devices=4 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
+
+This only creates /dev/md1. It is of course possible to create one big 
+partition as /dev/md1p1 with any partitioning program, but FORGET about 
+trying to create /dev/md1p2.
+
+The problem is that the RAID array is NOT created in partitionable mode, 
+and only supports one large partition, despite ALL attempts at EVERY 
+format of the --auto option, you name it, -a part2, --auto=mdp2, 
+--auto=part2, --auto=p2, --auto=mdp, --auto=part, --auto=p, --auto=p4, 
+you name it and I've tried it!
+
+My guess is the functionality of creating partitionable arrays literally 
+DID break somewhere prior to/at version 3.1.4 which is the earliest 
+version I tried.
+
+I'm giving up and creating physical n-1 sized partitions on the source 
+disks and creating two RAID 5 arrays from those partitions instead, but 
+decided I really MUST report this bug so that other people don't bang 
+their head against the wall for ten hours of their life as well. ;-)
+
+
+Christopher
 
