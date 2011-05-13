@@ -1,81 +1,78 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Subject: Re: mdadm does not create partition devices whatsoever, "partitionable"
- functionality broken
-Date: Fri, 13 May 2011 22:00:07 +0200
-Message-ID: <4DCD8DC7.1080707@grumpydevil.homelinux.org>
-References: <4DCD4A83.8060202@pulseforce.com>	<4DCD6119.3080705@turmel.org>	<4DCD67EF.1070602@pulseforce.com>	<4DCD6B27.70402@pulseforce.com> <20110513234055.4307c536@natsu> <4DCD72AF.1070809@pulseforce.com> <4DCD75FE.8010703@turmel.org> <4DCD7E78.6050000@pulseforce.com> <4DCD800F.7080501@grumpydevil.homelinux.org> <4DCD8B32.9010901@pulseforce.com>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: /dev/md2 stopped after changing SAS controller
+Date: Fri, 13 May 2011 22:29:01 +0200
+Message-ID: <20110513202900.GA1926@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DCD8B32.9010901@pulseforce.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Christopher White <linux@pulseforce.com>
-Cc: Roman Mamedov <rm@romanrm.ru>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/13/2011 09:49 PM, Christopher White wrote:
-> On 5/13/11 9:01 PM, Rudy Zijlstra wrote:
->> Hi Chris,
->>
->>
->> I've run paritioned MD disks for several years now. I do that on 
->> systems where i use md for the system partitions. One mirror with 
->> partitions for the different system aspects. I prefer that, as it 
->> reflects best the actual physical configuration, and all partitions 
->> will be degraded at the same time when 1 disk develops a problem 
->> (which is unfortunately not the case when you partition the disk and 
->> then mirror the partitions).
->>
->> As i am a bit lazy and have only limited wish to fight with 
->> BIOS/bootloader conflicts / vagaries, these systems typically boot 
->> from the network (kernel gets loaded from the network, from there 
->> onwards all is on the local disk).
->>
->> Cheers,
->>
->>
->>
->> Rudy
-> Thank you for the information, Rudy,
->
-> Your experience of running partitioned MD arrays for years shows that 
-> it is indeed stable. The reason for wanting to skip LVM was that it's 
-> one less performance-penalty layer, one less layer to configure, one 
-> less possible point of failure, etc.
+Hi,
 
-I skip LVM cause for my usage pattern it only gives me an additional 
-management layer... an additional layer to configure
+I've been having very bad performance with an LSISAS2008 controller
+attached to 8 WD Caviar Black 1TB disks.
 
->
-> However, Phil again brings up the main fear that's been nagging me, 
-> and that is that MD's partitioning support receives less love (use) 
-> and therefore risks having bugs that go undiscovered for ages and 
-> (gasp) may even risk corrupting the data. People are just so used to 
-> LVM since MD used to be single-partition only, that 
-> LVM+single-partition MD array is far more mature and far more in use.
-MD layer and LVM layer are independently maintained. There regular use 
-together would trigger eventual bugs quicker though.
+So I swapped it out for an Apaptec RAID 6805 with the same disks and now
+my /dev/md2 won't start.
 
->
-> My main reason against LVM was the performance penalty, where I had 
-> read that it was in the 1-5% range, but I just did a new search and 
-> saw threads showing that any performance hit claim is outdated and 
-> that LVM2 is extremely efficient. In fact the CPU load didn't seem to 
-> be impacted more than 0.1% or so in the graphs I saw.
->
-> By the way, Rudy, as for your boot conflicts and the fact that you 
-> resort to running a network boot, that was only a problem in the past 
-> when bootloaders did not support software RAID. Grub2 supports GPT, MD 
-> arrays with metadata 1.2, and can fully boot from a system (with 
-> /boot) installation located on your MD array. All you'll have to do is 
-> make sure your /boot partition (and the whole system if you want to) 
-> is on a RAID 1 (mirrored) array, and that you install the Grub2 
-> bootloader on every physical disk. This means that it goes:
->
+	May 13 17:14:37 zenon kernel: md: sdh3 does not have a valid v1.2 superblock, no
+	t importing!
+	May 13 17:14:37 zenon kernel: md: md_import_device returned -22
+	May 13 17:14:37 zenon kernel: md: sda3 does not have a valid v1.2 superblock, no
+	t importing!
+	May 13 17:14:37 zenon kernel: md: md_import_device returned -22
+	May 13 17:14:37 zenon kernel: md: sdf3 does not have a valid v1.2 superblock, no
+	t importing!
 
-I know... but i happen to dislike grub2, and my network boot environment 
-is stable and well maintained.
-Grub2 is for me a step backwards. more difficult to configure, and i've 
-gone back to lilo as main bootloader.
+	Etc...
 
+Both controllers are used without any configuration. I just use the
+separate disks for soft raid.
+
+Each disk is configured thus:
+
+	Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+	255 heads, 63 sectors/track, 121601 cylinders
+	Units = cylinders of 16065 * 512 = 8225280 bytes
+	Sector size (logical/physical): 512 bytes / 512 bytes
+	I/O size (minimum/optimal): 512 bytes / 512 bytes
+	Disk identifier: 0x05022e04
+
+	   Device Boot      Start         End      Blocks   Id  System
+	/dev/sda1               1          32      257008+  fd  Linux raid autodetect
+	/dev/sda2              33       17500   140311710   fd  Linux raid autodetect
+	/dev/sda3           17501      121601   836191282+  fd  Linux raid autodetect
+
+And my raid config used to be:
+
+	Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] [faulty] 
+	md2 : active raid6 sdc3[0] sdd3[7] sdf3[6] sdb3[5] sdh3[4] sda3[3] sdg3[2] sde3[1]
+		  5017138176 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+		  bitmap: 0/7 pages [0KB], 65536KB chunk
+
+	md1 : active raid6 sdc2[0] sdd2[7] sdf2[8] sdb2[5] sdg2[4] sdh2[3] sda2[2] sde2[1]
+		  841863168 blocks super 1.2 level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+		  bitmap: 2/2 pages [8KB], 65536KB chunk
+
+	md0 : active raid1 sdc1[0] sdd1[7] sdf1[6] sdh1[5] sde1[4] sdb1[3] sda1[2] sdg1[1]
+		  256896 blocks [8/8] [UUUUUUUU]
+		  bitmap: 0/1 pages [0KB], 65536KB chunk
+
+	unused devices: <none>
+
+
+Going back to the LSISAS2008 controller makes /dev/md2 come back.
+
+Any idea why the Adaptec wont let me use /dev/md2? Going into its
+bios configuration menu I see a JBOD mode but it seems each disk has to
+be "initialized" in order to be used in that mode.
+
+Meanwhile the disks are used in "legacy" mode:
+
+	May 13 17:09:57 zenon kernel: scsi 0:0:0:0: Direct-Access     Adaptec  6805 Legacy      V1.0 PQ: 0 ANSI: 2
+
+
+Thanks,
