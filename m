@@ -1,54 +1,89 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Growing a RAID array
-Date: Fri, 13 May 2011 00:57:41 -0500
-Message-ID: <6C.05.28813.F48CCCD4@cdptpa-omtalb.mail.rr.com>
-References: <20110513112313.54fbb717@notabene.brown>
+Subject: RE: New device for RAID array
+Date: Fri, 13 May 2011 00:59:32 -0500
+Message-ID: <FE.67.03125.EB8CCCD4@cdptpa-omtalb.mail.rr.com>
+References: <20110513155031.4ceb0686@notabene.brown>
 Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110513112313.54fbb717@notabene.brown>
+In-Reply-To: <20110513155031.4ceb0686@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: 'NeilBrown' <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
+	Thanks.
 
 > -----Original Message-----
 > From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Thursday, May 12, 2011 8:23 PM
+> Sent: Friday, May 13, 2011 12:51 AM
 > To: lrhorer@satx.rr.com
 > Cc: linux-raid@vger.kernel.org
-> Subject: Re: Growing a RAID array
+> Subject: Re: New device for RAID array
 > 
-> On Thu, 12 May 2011 20:02:01 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
+> On Fri, 13 May 2011 00:37:02 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
 > wrote:
 > 
+> > > -----Original Message-----
+> > > From: NeilBrown [mailto:neilb@suse.de]
+> > > Sent: Thursday, May 12, 2011 8:21 PM
+> > > To: lrhorer@satx.rr.com
+> > > Cc: linux-raid@vger.kernel.org
+> > > Subject: Re: New device for RAID array
+> > >
+> > > On Thu, 12 May 2011 19:59:01 -0500 "Leslie Rhorer"
+> <lrhorer@satx.rr.com>
+> > > wrote:
+> > >
+> > > >
+> > > > I read through the man page for mdadm a couple of times and did not
+> spot
+> > > how
+> > > > to do this.  I currently have a RAID array that I need to upgrade
+> from
+> > > 1T
+> > > > drives to 3T drives.  To accomplish this, I intend to create a
+> larger
+> > > array,
+> > > > but with fewer spindles, and then rsync the contents of the old
+> array to
+> > > the
+> > > > new.  Once I am done, I then want to stop the old array (/dev/md0)
+> and
+> > > start
+> > > > up the new array under /dev/md0.  Do I have to stop the array and
+> then
+> > > > re-create it with all the same parameters, except the device target?
+> > >
+> > > For v0.90:  --update=super-minor
+> > > For v1.x    --update=name
 > >
-> > 	I am shortly going to be growing a 10 drive RAID6 array with two
-> > additional drives.  Can this be done in a single grow operation by
-> setting
-> > n=12, or do I have to grow it 1 drive at a time?
+> > 	Um, it will be a 1.2 array, so I take it if the current array is
+> > /dev/md0, named RAID-Server:0 from /dev/sd[a-n], and the new array is
+> > something like /dev/md4, named RAID-Server:4 from sd[q-x], then I stop
+> both
+> > arrays and enter
 > >
+> > mdadm --assemble /dev/md0 /dev/sd[q-x] --update=name
+> >
+> > 	Correct?  Of course then I need to update /etc/mdadm/mdadm.conf and
+> > run `update-initrd`.
 > 
-> Experiment with loop-back devices created on modest sized files.
+> Yes, though you don't really need to change the name on the array unless
+> you
+> particularly want to.  Just changing mdadm.conf is enough to get it
+> assembled
+> as the "right" place.
 > 
+> I think the command you give will store "RAID-Server:0" in the metadata
+> assuming 'hostname' or HOMEHOST in mdadm.conf is RAID-Server, but if it
+> doesn't you can experiment with explicitly setting --name and --hostname
+> on
+> the command line.
 > 
-> (but yes, you can grow by any number you like.  You should test the drives
-> fairly heavily first, because if they both die during the reshape, you
-> lose
-> your data).
+> NeilBrown
 
-	Actually, the "drives" won't be physical drives, but RAID0 volumes
-made of 2 drives each.  'Ugly, I know, but I really have little choice for
-the time being.  As to losing the data, this is a backup system in the first
-place, and all its data is backed up to offline storage, as well, so a loss
-of data would not be the most hideous thing ever.  All four drives have been
-operating continuously without error for over a year, having been completely
-read and written over several times, so I'm pretty confidant of their
-reliability, enough so I don't think any additional testing is worth the
-time and effort.
 
