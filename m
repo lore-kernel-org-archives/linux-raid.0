@@ -1,43 +1,55 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: Re: /dev/md2 stopped after changing SAS controller
-Date: Sat, 14 May 2011 17:18:13 +0200
-Message-ID: <20110514151812.GA3074@apartia.fr>
-References: <20110513202900.GA1926@apartia.fr>
- <4DCE99D0.1010900@hardwarefreak.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Growing a RAID array
+Date: Sat, 14 May 2011 11:44:53 -0500
+Message-ID: <CB.37.28813.081BECD4@cdptpa-omtalb.mail.rr.com>
+References: <8F.2D.17273.3159ECD4@cdptpa-omtalb.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DCE99D0.1010900@hardwarefreak.com>
+In-Reply-To: <8F.2D.17273.3159ECD4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 14, 2011 at 10:03:44AM -0500, Stan Hoeppner wrote:
-> On 5/13/2011 3:29 PM, Louis-David Mitterrand wrote:
+
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Leslie Rhorer
+> Sent: Saturday, May 14, 2011 9:44 AM
+> To: 'NeilBrown'
+> Cc: linux-raid@vger.kernel.org
+> Subject: RE: Growing a RAID array
 > 
-> > I've been having very bad performance with an LSISAS2008 controller
-> > attached to 8 WD Caviar Black 1TB disks.
+> > 10Meg devices with a 1Meg chunk size means just 10 stripes.
+> >
+> > To grow from 4 to 5 data disks it calculates that it needs to back up
+> the
+> > first 20 stripes (I think).  It sees this is more than half the device
+> and
+> > gets confused and assumes something is wrong.
+> >
+> > Try with 4k chunks, or 100Meg devices.
 > 
-> What is the nature of this 'very bad performance'?  Did you recently
-> upgrade kernel/driver and run into a regression?  If not, either the HBA
-> has developed a circuit defect, or the problem lies elsewhere, either a
-> backplane/cabling issue, or a drive going south.
+> 	Silly machine.  :-)
+> 
+> 	'Works like a champ, thanks.  No errors, and the process completes
+> in the blink of an eye.  Now if growing an array with 3T spindles were
+> only
+> that fast...
 
-The performance problem can be clearly attributed to that model of the
-LSI card because with the Adaptec card and the same cables and disks the
-problem disappears.
+	Well, this is interesting.  I was playing around a bit more, and I
+tried to start a resync.  It failed:
 
-The LSI card has always performed very poorly with all kernel versions I
-tried, including the very latest, and the with most recent firmware
-revisions from LSI. 
+RAID-Server:/RAID# echo repair > /sys/block/md6/md/sync_action
+bash: echo: write error: Device or resource busy
 
-After bricking the card while trying to change its firmware to an "IT"
-version (Initiatior Target i.e. non-raid) I had Dell send me a new one
-on warranty and the performance problem remained.
+	The device was unmounted at the time, so I mounted it and tried
+again.  This time it worked.  Is this normal behaviour?
 
-> Do you have any log entries showing problems with the LSI HBA?  Drive
-> errors?  What does smartctl tell you about each drive?
 
-No error. Just plain sloth.
 
