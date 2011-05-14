@@ -1,53 +1,48 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: /dev/md2 stopped after changing SAS controller
-Date: Sat, 14 May 2011 12:41:36 +0400
-Message-ID: <BANLkTimBcZizneKK3+32BmQXHRKgGpjckQ@mail.gmail.com>
-References: <20110513202900.GA1926@apartia.fr>
-	<20110514073347.15dae0b8@notabene.brown>
-	<20110514082159.GA306@apartia.fr>
-	<BANLkTinpJQDR=0Qnu1tS-82T=OTi37aBMQ@mail.gmail.com>
-	<20110514143613.7ec29ac4@natsu>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: mdadm does not create partition devices whatsoever, "partitionable"
+ functionality broken
+Date: Sat, 14 May 2011 12:10:56 +0200
+Message-ID: <iqlkfg$1s9$1@dough.gmane.org>
+References: <4DCD4A83.8060202@pulseforce.com>	<4DCD6119.3080705@turmel.org>	<4DCD67EF.1070602@pulseforce.com>	<4DCD6B27.70402@pulseforce.com>	<20110513234055.4307c536@natsu>	<4DCD72AF.1070809@pulseforce.com>	<4DCD75FE.8010703@turmel.org>	<4DCD7E78.6050000@pulseforce.com>	<4DCD84E1.3040704@turmel.org> <20110514013221.552dc8ef@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110514143613.7ec29ac4@natsu>
+In-Reply-To: <20110514013221.552dc8ef@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 14, 2011 at 12:36 PM, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Sat, 14 May 2011 12:27:45 +0400
-> CoolCold <coolthecold@gmail.com> wrote:
+On 13/05/11 21:32, Roman Mamedov wrote:
+> On Fri, 13 May 2011 15:22:09 -0400
+> Phil Turmel<philip@turmel.org>  wrote:
 >
->> This is just one more live example for partitions vs disks setups.
+>> I always use LVM.  While the lack of attention to MD partitions might
+>> justify that, the real reason is the sheer convenience of creating,
+>> manipulating, and deleting logical volumes on the fly.  While you may not
+>> need it *now*, when you discover that you *do* need it, you won't be able to
+>> use it.  Online resizing of any of your LVs is the killer feature.
 >
-> Well, they did use partitions, but what do you do when the new RAID controller
-> bites off a whopping 100 million bytes from the end of your disk? I use
-> partitions too, and do leave some space at the end for cases like this, but
-> what I leave is just 8 MB (enough for the Gigabyte motherboards HPA), not
-> 100+. Would you suggest setting aside 500MB, 1GB just in case?
-I've always (well, after switching to partitions) used something near
-80mb, for the last servers using ~ 160mb
-root@kappa2:~# parted /dev/cciss/c0d1 print free
-Model: Compaq Smart Array (cpqarray)
-Disk /dev/cciss/c0d1: 1000GB
-Sector size (logical/physical): 512B/512B
-Partition Table: msdos
-
-Number  Start   End     Size    Type     File system  Flags
- 1      16.4kB  1000GB  1000GB  primary
-        1000GB  1000GB  168MB            Free Space
-
-
->
-> --
-> With respect,
-> Roman
+> Can it defragment non-contiguous LVs yet?
 >
 
+What is perhaps more relevant, is can filesystems see the fragmentation 
+of the LV's?  I don't know the answer.
+
+Fragmentation of files is not a problem unless files are split into 
+/lots/ of small pieces.  The bad reputation of fragmentation has come 
+from the DOS/Windows world, where poor filesystems combined with 
+shotgun-style allocators give you much slower performance than necessary.
+
+Modern Linux filesystems have various techniques to keep fragmentation 
+to a minimum.  But (AFAIK) they make the assumption that the underlying 
+device is contiguous.  If the filesystem /knows/ that the device is in 
+bits, then it could take that into account in its allocation policy (in 
+the same way that it takes raid stripes into account).
+
+Still, you don't usually have many segments in an LV - if you want the 
+LV to be fast, you can request it to be contiguous when creating it. 
+Then you only get a fragment for each time it is grown.  It's a price 
+often worth paying for the flexibility.
 
 
--- 
-Best regards,
-[COOLCOLD-RIPN]
