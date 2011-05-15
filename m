@@ -1,48 +1,138 @@
-From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Subject: Re: /dev/md2 stopped after changing SAS controller
-Date: Sun, 15 May 2011 16:37:19 +0200
-Message-ID: <20110515143718.GA8667@apartia.fr>
-References: <20110513202900.GA1926@apartia.fr>
- <4DCE99D0.1010900@hardwarefreak.com>
- <20110514151812.GA3074@apartia.fr>
- <4DCEC7C0.80306@hardwarefreak.com>
- <20110514191532.GA15753@apartia.fr>
- <4DCF12E1.1020809@hardwarefreak.com>
- <alpine.DEB.2.00.1105150922510.20305@uplift.swm.pp.se>
- <4DCFE337.7090306@gmail.com>
+From: Glen Dragon <glen.dragon@gmail.com>
+Subject: raid5 reshape failure - restart?
+Date: Sun, 15 May 2011 13:33:28 -0400
+Message-ID: <BANLkTi=-QZaQD6itGGZeyFekb2Kq5=_1iA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DCFE337.7090306@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, May 15, 2011 at 10:29:11AM -0400, Joe Landman wrote:
-> 
-> +1 to Mikael
-> 
-> We have a number of these.  They are pretty much useless.  We *do
-> not recommend them for any purpose whatsoever*.  We got them to
-> test, and they were and are wastes of money.
-> 
-> Again, this is why making sure that the bona fides of those making
-> recommendations don't begin and end with a google search ...
-> 
-> >
-> >Buy a 1068E (3081E) based card, they've been working fine for a long time.
-> >
-> 
-> +1 on that.  We like the 3081E, and the 9211-8i for these purposes.
-> Both work quite well.
-> 
-> Again, ignore these cards, they will absorb your money and your time.
+In trying to reshape a raid5 array, I encountered some problems.
+I was trying to reshape from raid5 3->4 devices.  The reshape process
+started with seeming no problems, however i noticed in the kernel log
+a number of ata3.00: failed command: WRITE FPDMA QUEUED errors.
+In trying to determine if this was going to be bad for me, I disabled
+ncq on this device. Looking at the log, i notice around the same time
+/dev/sdd reported problems and took itself offline.
+At this point the reshape seemed to be continuing w/o issue, even
+though one of the drives was offline.. I wasn't sure that this made
+sense.
 
-Someone pointed me to ARECA non-raid controllers: 
+Shortly after, I noticed that the progress on the reshape had stalled.
+ I tried changing the stripe_cache_size from 256 to [1024|2048|4096],
+but the reshape did not resume.  top reported that the reshape process
+was using 100% of one core, and the load average was climbing into the
+50's
 
-http://www.areca.com.tw/products/sasnoneraid3g.htm
+At this point I rebooted.   The array does not start.
 
-Does anyone have good or bad experiences with these?
+Can the reshape be restarted?  I cannot figure out where the backup
+file ended up.  It does not seem to be where I thought I saved it.
 
-Thanks,
+Can I assemble this array with only the 3 original devices? Is there a
+way to recover at least some of the data on the array?  I have various
+backups, but there are some stuff that was not "critical' but would
+still be handy to not loose.
+
+Various logs that could be helpful:  md_d2 is the array in question.
+Thanks..
+--Glen
+
+# mdadm --version
+mdadm - v3.1.4 - 31st August 2010
+
+ # uname -a
+Linux palidor 2.6.36-gentoo-r5 #1 SMP Wed Mar 2 20:54:16 EST 2011
+x86_64 Intel(R) Core(TM)2 Quad CPU Q9450 @ 2.66GHz GenuineIntel
+GNU/Linux
+
+current state:
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [multipath] [raid1]
+md8 : active raid5 sdh1[0] sdg1[4] sdf1[1] sdi1[3] sde1[2]
+      5860542464 blocks level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
+
+md_d2 : inactive sdb5[1](S) sda5[0](S) sdd5[2](S) sdc5[3](S)
+      2799357952 blocks super 0.91
+
+md1 : active raid5 sdd3[2] sdb3[1] sda3[0]
+      62926336 blocks level 5, 256k chunk, algorithm 2 [3/3] [UUU]
+
+md0 : active raid1 sdb1[1] sda1[0] sdd1[2]
+      208704 blocks [3/3] [UUU]
+
+
+# mdadm -E /dev/sdb5   ([abc]) are all similiar.
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 0.91.00
+           UUID : 2803efc9:c5d2ec1e:9894605d:35c5ea6f
+  Creation Time : Sat Oct  3 11:01:02 2009
+     Raid Level : raid5
+  Used Dev Size : 699839488 (667.42 GiB 716.64 GB)
+     Array Size : 2099518464 (2002.26 GiB 2149.91 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+
+  Reshape pos'n : 62731776 (59.83 GiB 64.24 GB)
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sun May 15 11:25:21 2011
+          State : active
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : 2f2eac3a - correct
+         Events : 114069
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       21        1      active sync   /dev/sdb5
+
+   0     0       8        5        0      active sync   /dev/sda5
+   1     1       8       21        1      active sync   /dev/sdb5
+   2     2       0        0        2      faulty removed
+   3     3       8       37        3      active sync   /dev/sdc5
+
+# mdadm -E /dev/sdd5
+/dev/sdd5:
+          Magic : a92b4efc
+        Version : 0.91.00
+           UUID : 2803efc9:c5d2ec1e:9894605d:35c5ea6f
+  Creation Time : Sat Oct  3 11:01:02 2009
+     Raid Level : raid5
+  Used Dev Size : 699839488 (667.42 GiB 716.64 GB)
+     Array Size : 2099518464 (2002.26 GiB 2149.91 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+
+  Reshape pos'n : 18048768 (17.21 GiB 18.48 GB)
+  Delta Devices : 1 (3->4)
+
+    Update Time : Sun May 15 10:51:41 2011
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 29dcc275 - correct
+         Events : 113870
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       53        2      active sync   /dev/sdd5
+
+   0     0       8        5        0      active sync   /dev/sda5
+   1     1       8       21        1      active sync   /dev/sdb5
+   2     2       8       53        2      active sync   /dev/sdd5
+   3     3       8       37        3      active sync   /dev/sdc5
