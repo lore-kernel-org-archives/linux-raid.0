@@ -1,130 +1,36 @@
-From: Glen Dragon <glen.dragon@gmail.com>
-Subject: Re: raid5 reshape failure - restart?
-Date: Sun, 15 May 2011 17:45:34 -0400
-Message-ID: <BANLkTi=7oHaQYbOA+qWHHzUzP5fp6UB=9A@mail.gmail.com>
-References: <BANLkTi=-QZaQD6itGGZeyFekb2Kq5=_1iA@mail.gmail.com>
-	<20110516073702.6b6b9bb2@notabene.brown>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: /dev/md2 stopped after changing SAS controller
+Date: Sun, 15 May 2011 23:43:33 -0500
+Message-ID: <4DD0AB75.9010103@hardwarefreak.com>
+References: <20110513202900.GA1926@apartia.fr> <4DCE99D0.1010900@hardwarefreak.com> <20110514151812.GA3074@apartia.fr> <4DCEC7C0.80306@hardwarefreak.com> <20110514191532.GA15753@apartia.fr> <4DCF12E1.1020809@hardwarefreak.com> <alpine.DEB.2.00.1105150922510.20305@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110516073702.6b6b9bb2@notabene.brown>
+In-Reply-To: <alpine.DEB.2.00.1105150922510.20305@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, May 15, 2011 at 5:37 PM, NeilBrown <neilb@suse.de> wrote:
-> On Sun, 15 May 2011 13:33:28 -0400 Glen Dragon <glen.dragon@gmail.com=
-> wrote:
->
->> In trying to reshape a raid5 array, I encountered some problems.
->> I was trying to reshape from raid5 3->4 devices. =A0The reshape proc=
-ess
->> started with seeming no problems, however i noticed in the kernel lo=
-g
->> a number of ata3.00: failed command: WRITE FPDMA QUEUED errors.
->> In trying to determine if this was going to be bad for me, I disable=
-d
->> ncq on this device. Looking at the log, i notice around the same tim=
-e
->> /dev/sdd reported problems and took itself offline.
->> At this point the reshape seemed to be continuing w/o issue, even
->> though one of the drives was offline.. I wasn't sure that this made
->> sense.
+On 5/15/2011 2:26 AM, Mikael Abrahamsson wrote:
+> On Sat, 14 May 2011, Stan Hoeppner wrote:
+
+>> http://www.newegg.com/Product/Product.aspx?Item=N82E16816101358
+>> http://www.supermicro.com/manuals/other/AOC-SASLP-MV8.pdf
 >>
->> Shortly after, I noticed that the progress on the reshape had stalle=
-d.
->> =A0I tried changing the stripe_cache_size from 256 to [1024|2048|409=
-6],
->> but the reshape did not resume. =A0top reported that the reshape pro=
-cess
->> was using 100% of one core, and the load average was climbing into t=
-he
->> 50's
->>
->> At this point I rebooted. =A0 The array does not start.
->>
->> Can the reshape be restarted? =A0I cannot figure out where the backu=
-p
->> file ended up. =A0It does not seem to be where I thought I saved it.
->
-> When a reshape is increasing the size of the array the backup file is=
- only
-> needed for the first few stripes. =A0After that it is irrelevant and =
-is removed.
->
-> You should be able to simply reassemble the array and it should conti=
-nue the
-> reshape.
->
-> What happens when you =A0try:
->
-> =A0mdadm -S /dev/md_d2
-> =A0mdadm -A /dev/md_d2 /dev/sd[abc]5 -vv
->
-> Please report both the messsages from mdadm and any new message is "d=
-mesg" at
-> the time.
->
-> NeilBrown
->
+>> Simple JBOD only HBA, no fakeRAID.  Uses a Marvell 88SE6480 chip, 8
+>> SAS/SATA ports via two SFF8087.  $110 USD.  I've heard minor rumblings
+>> WRT the mvsas driver though I don't recall specifics.  The board itself
+>> is good quality, as with most things SuperMicro.
+> 
+> MINOR!??? I've had this card for 1.5 years, it still not usable (as far
+> as I can discern) as of 2.6.38. Do NOT buy it. Please stop recommending
+> this card for Linux use unless it's to your enemies.
 
- # mdadm -S /dev/md_d2
-mdadm: stopped /dev/md_d2
+Now you get the idea Mikal.  ;) If the OP is so convinced that LSI
+sucks, with ample evidence to the contrary, let him try something that
+*everyone* knows sucks.
 
-
- # mdadm -A /dev/md_d2  /dev/sd[abcd]5 -vv
-mdadm: looking for devices for /dev/md_d2
-mdadm: /dev/sda5 is identified as a member of /dev/md_d2, slot 0.
-mdadm: /dev/sdb5 is identified as a member of /dev/md_d2, slot 1.
-mdadm: /dev/sdc5 is identified as a member of /dev/md_d2, slot 3.
-mdadm: /dev/sdd5 is identified as a member of /dev/md_d2, slot 2.
-mdadm:/dev/md_d2 has an active reshape - checking if critical section
-needs to be restored
-mdadm: No backup metadata on device-3
-mdadm: added /dev/sdb5 to /dev/md_d2 as 1
-mdadm: added /dev/sdd5 to /dev/md_d2 as 2
-mdadm: added /dev/sdc5 to /dev/md_d2 as 3
-mdadm: added /dev/sda5 to /dev/md_d2 as 0
-mdadm: /dev/md_d2 assembled from 3 drives - not enough to start the
-array while not clean - consider --force.
-
- # mdadm -D /dev/md_d2
-mdadm: md device /dev/md_d2 does not appear to be active.
-
- # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [multipath] [raid1]
-md_d2 : inactive sda5[0](S) sdc5[3](S) sdd5[2](S) sdb5[1](S)
-      2799357952 blocks super 0.91
-
-md8 : active raid5 sdh1[0] sdg1[4] sdf1[1] sdi1[3] sde1[2]
-      5860542464 blocks level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
-
-md1 : active raid5 sdd3[2] sdb3[1] sda3[0]
-      62926336 blocks level 5, 256k chunk, algorithm 2 [3/3] [UUU]
-
-md0 : active raid1 sdb1[1] sda1[0] sdd1[2]
-      208704 blocks [3/3] [UUU]
-
-
-kernel log:
-md: md_d2 stopped.
-md: unbind<sda5>
-md: export_rdev(sda5)
-md: unbind<sdc5>
-md: export_rdev(sdc5)
-md: unbind<sdd5>
-md: export_rdev(sdd5)
-md: unbind<sdb5>
-md: export_rdev(sdb5)
-md: md_d2 stopped.
-md: bind<sdb5>
-md: bind<sdd5>
-md: bind<sdc5>
-md: bind<sda5>
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Stan
