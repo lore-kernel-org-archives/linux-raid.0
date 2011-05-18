@@ -1,90 +1,41 @@
-From: "Schmidt, Annemarie" <Annemarie.Schmidt@stratus.com>
-Subject: Mdadm re-add fails
-Date: Wed, 18 May 2011 10:43:47 -0400
-Message-ID: <5AA430FFE4486C448003201AC83BC85E01B03522@EXHQ.corp.stratus.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Best way to create RAID-6 for swap partition - existing one failed
+Date: Wed, 18 May 2011 17:01:53 +0200
+Message-ID: <ir0n05$s95$1@dough.gmane.org>
+References: <595104.28955.qm@web65106.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <595104.28955.qm@web65106.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On 16/05/2011 23:41, Gavin Flower wrote:
+> Hi,
+>
+> Motivation, existing RAID-6 swap partition failed.  I am thinking I
+> should recreate it in a new format, as currently it is 'Version :
+> 0.90', rather than simply rebuild it.
+>
+> So 3 questions:
+>
+> (1) What further diagnostics should I run first, if any (note I am
+> currently running badblocks on the drive that dropped out), and I
+> have put the existing diagnostic info at the end of this email
+>
+>
+> (2) What is the most appropriate RAID-6 format for a swap partition,
+> keeping same the number of drives and overall capacity.
+>
+> (3) How to convert the existing /dev/md0 to the new format.
+>
+>
 
-I have a 2 disk raid1 data array. As a result of other testing, the dev=
-ice info
-in the superblock for one of the partners, /dev/sdc2, ended up being in=
- slot 3
-of the device info array:=20
+RAID-6 is a lot of overhead for a 5-drive array.  Unless you have plans 
+to add more drives or resize it, you are going to get a lot faster 
+performance with a raid-10,far layout at little extra space cost. 
+RAID-6 is particularly slow for small writes, as the whole stripe needs 
+to be read in for an update - I think that would hit swap usage pretty hard.
 
-[root@typhon ~]# mdadm --detail /dev/md21
-/dev/md21:
-=A0=A0Version : 1.2
-=A0 Creation Time : Mon May=A0 9 11:19:43 2011
-=A0=A0Raid Level : raid1
-=A0 Array Size : 5241844 (5.00 GiB 5.37 GB)
-=A0 Used Dev Size : 5241844 (5.00 GiB 5.37 GB)
-=A0 Raid Devices : 2
-=A0 Total Devices : 2
-=A0 Persistence : Superblock is persistent
-
-=A0 Intent Bitmap : Internal
-
-=A0 Update Time : Thu May 12 15:51:50 2011
-=A0 State : active
-=A0 Active Devices : 2
-  Working Devices : 2
- =A0Failed Devices : 0
-=A0 Spare Devices : 0
-
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : typhon.mno.stratus.com:21=A0 (loc=
-al to host typhon.mno.stratus.com)
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 996d993f:baac367a:8b154ba9:43e56c=
-ff
-=A0=A0=A0=A0=A0=A0=A0=A0  Events : 687
-
-=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
--->=A0=A0=A0 3=A0=A0=A0=A0=A0 65=A0=A0=A0=A0=A0=A0 34=A0=A0=A0=A0=A0=A0=
-=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdc2
-=A0=A0=A0=A0=A0=A0  2=A0=A0=A0=A0=A0 65=A0=A0=A0=A0=A0=A0 82=A0=A0=A0=A0=
-=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdk2
-
-When I remove /dev/sdk2 and then a re-add it back in, the re-add fails:
-
->> [root@typhon ~]# mdadm /dev/md21 -f /dev/sdk2 -r /dev/sdk2
-mdadm: set /dev/sdk2 faulty in /dev/md21
-mdadm: hot removed /dev/sdk2 from /dev/md21
-
->> [root@typhon ~]# mdadm /dev/md21 -a /dev/sdk2
-mdadm: /dev/sdk2 reports being an active member for /dev/md21, but a --=
-re-add
-fails.
-mdadm: not performing --add as that would convert /dev/sdk2 in to a spa=
-re.
-mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdk2" fi=
-rst.
-
-I believe the re-add fails because the enough_fd function (util.c) is n=
-ot searching deep enough into the
-dev_info array with this line of code:
-=A0=A0 for (i=3D0; i<array.raid_disks + array.nr_disks; i++)
-
-array.raids_disk =3D 2 and array/nr_disks =3D 1, and so for this partic=
-ular md device, it is only looking at slots 0-2.=A0
-I believe the code needs to be changed to look at all possible dev_info=
- array slots, taking into account the=20
-version of the superblock (like the Detail function does (Detail.c).=A0=
-=20
-
-Do folks agree?
-
-Thanks & regards,
-Annemarie
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
