@@ -1,50 +1,36 @@
-From: NeilBrown <neilb@suse.de>
+From: Laurent CARON <lcaron@unix-scripts.info>
 Subject: Re: Unable to grow RAID 6 array
-Date: Wed, 18 May 2011 18:56:53 +1000
-Message-ID: <20110518185653.3dce0e9b@notabene.brown>
+Date: Wed, 18 May 2011 11:02:01 +0200
+Message-ID: <20110518110049.ohyahtaz@trusted.unix-scripts.info>
 References: <20110518092327.airaicao@trusted.unix-scripts.info>
-	<4DD37C24.6040307@anonymous.org.uk>
+ <4DD37C24.6040307@anonymous.org.uk>
+ <20110518185653.3dce0e9b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD37C24.6040307@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <20110518185653.3dce0e9b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Laurent CARON <lcaron@unix-scripts.info>
+To: NeilBrown <neilb@suse.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 18 May 2011 08:58:28 +0100 John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-
-> On 18/05/2011 08:31, Laurent CARON wrote:
-> > Hi,
-> >
-> > I'm basically trying to grow a RAID-6 array (5 disks).
-> >
-> > I did change the disks one by one (change, rebuild, ...).
-> >
-> > I finally did delete the last partition (the one I wanted to enlarge and
-> > recreated it with the exactly same start but different end).
-> >
-> > When I try to grow the array, I get:
-> >
-> > # mdadm --grow --size max /dev/md2
-> > mdadm: component size of /dev/md2 has been set to 732458496K
-> [...]
-> >
-> > If any of you can help me to sort this out It would be nice.
+On Wed, May 18, 2011 at 06:56:53PM +1000, NeilBrown wrote:
+> Alternately you could get this latest mdadm from 
+>    git://neil.brown.name/mdadm/
 > 
-> You need to tell mdadm the underlying devices have grown; do this by 
-> stopping the array then assembling it again with --update=devicesize. 
-> Then when you --grow --size max you will get the result you are looking for.
-> 
+> and run the "--grow --size max" command again.  It now updates the device
+> size too.
+> But John's answer is probably easiest.
 
-Alternately you could get this latest mdadm from 
-   git://neil.brown.name/mdadm/
+Hi,
 
-and run the "--grow --size max" command again.  It now updates the device
-size too.
-But John's answer is probably easiest.
+I did pull the git tree and compile mdadm.
 
-NeilBrow
+Worked as expected:
+
+# ./mdadm --grow --size max /dev/md2
+mdadm: component size of /dev/md2 has been set to 1709210112K
+
+Did then grow the fs. Many thanks.
+
