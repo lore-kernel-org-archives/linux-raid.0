@@ -1,69 +1,71 @@
-From: Gavin Flower <gavinflower@yahoo.com>
-Subject: Re: Best way to create RAID-6 for swap partition - existing one failed
-Date: Wed, 18 May 2011 13:42:04 -0700 (PDT)
-Message-ID: <811592.40689.qm@web65112.mail.ac2.yahoo.com>
-References: <4DD41713.5070407@hardwarefreak.com>
+From: likewhoa <likewhoa@weboperative.com>
+Subject: Re: Best way to create RAID-6 for swap partition - existing one
+ failed
+Date: Wed, 18 May 2011 16:59:56 -0400
+Message-ID: <1305752396.10481.3.camel@darkside>
+References: <12577.16388.qm@web65103.mail.ac2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OoKjezK1tQgUZAmWaLll"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD41713.5070407@hardwarefreak.com>
+In-Reply-To: <12577.16388.qm@web65103.mail.ac2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Gavin Flower <gavinflower@yahoo.com>
 Cc: linux-raid@vger.kernel.org, neilb@suse.de, mb@gem.win.co.nz
 List-Id: linux-raid.ids
 
---- On Thu, 19/5/11, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 
-> From: Stan Hoeppner <stan@hardwarefreak.com>
-> Subject: Re: Best way to create RAID-6 for swap partition - existing =
-one failed
-> To: "Gavin Flower" <gavinflower@yahoo.com>
-> Cc: linux-raid@vger.kernel.org, neilb@suse.de, mb@gem.win.co.nz
-> Date: Thursday, 19 May, 2011, 6:59
-[...]
-> Forget using a partition.=A0 Simply use a swap
-> file.=A0 This example creates
-> a 1GB swap file in the / filesystem.=A0 You can locate
-> it on any
-> filesystem you wish.
->=20
-> # swappoff -a
-> # dd if=3D/dev/zero of=3D/swapfile1 bs=3D1024 count=3D1048576
-> # mkswap /swapfile1
-> # swapon /swapfile1
-> # vi /etc/fstab
-> Add:
-> /swapfile1 swap swap defaults 0 0
->=20
-> and remove your old entry for the failed swap partition.
->=20
-> There is little performance difference between swap files
-> and swap
-> partitions with modern kernels.=A0 The kernel will map
-> the disk location
-> of the swap file and perform direct disk access, bypassing
-> the
-> filesystem and buffer cache.
->=20
-> --=20
-> Stan
->=20
+--=-OoKjezK1tQgUZAmWaLll
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Content-Transfer-Encoding: quoted-printable
 
-I just checked the man page for mkswap, it still recommends using a par=
-tition.
+read 'man 2 swapon' for info on the -p flag.
 
-"WARNING
-       The swap header does not touch the first block.  A boot loader o=
-r  disk label can be there, but it is not a recommended setup.  The rec=
-ommended setup is to use a separate partition for a Linux swap area."
+On Wed, 2011-05-18 at 13:32 -0700, Gavin Flower wrote:
+> --- On Thu, 19/5/11, likewhoa <likewhoa@weboperative.com> wrote:
+>=20
+> > From: likewhoa <likewhoa@weboperative.com>
+> > Subject: Re: Best way to create RAID-6 for swap partition - existing on=
+e failed
+> > To: "Gavin Flower" <gavinflower@yahoo.com>
+> > Cc: linux-raid@vger.kernel.org
+> > Date: Thursday, 19 May, 2011, 7:57
+> > Why not just let the kernel handle
+> > the stripping for you, IMO using
+> > dmraid is overkill for swap when it can all be handled by
+> > the kernel
+> > itself with 'swap -p1 /dev/sda1' for example.
+> [...]
+>=20
+> Could you please tell where to read up on that, URL or man page.  I do no=
+t know where to apply your suggestion, nor the meaning of the '-p1' option.
+>=20
+> I should have said the original problem was associated with hibernation. =
+ (I also have 2 other desk tops that don't use RAID for swap.)
+>=20
+> For now, I'll leave the swap as is - but, I will rethink how I implement =
+swap when I upgrade to Fedora 15.
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I am curious to know the tradeoffs between having a file and using a pa=
-rtition for swap.  While it may not make much difference in my current =
-situation, it might to others.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-OoKjezK1tQgUZAmWaLll
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iQEcBAABAgAGBQJN1DNMAAoJEANL4SLpFTLyYp0IALA7ALziDc/PFxEBYlXvPuqk
+ejEhBfLkLMFEUMFoF0nwErNkXMtnU/brHP9pxtA6uAde69X0PgwvQG51vryo67SR
+u4nUYCvtLxe6uR/wOLjFyBLX0cTZ9dmBiaIjv0ZN6H8KUJxlHve68C8XaevpIuE3
+N1vC5JwWregAXFfAIM5lOSfd5HPCEtJcOdArjvFqKPNuKpHWuOmhVlFmb6nC0tz5
+qluu+H0v1MgTEdY/r+d4ZXMTlxsXj8d1f542tIz1OZJQRjTf1owSeWtpbXZxpFlT
+AmVWvyPgU9aC2bGQ0EI8XWu5wNqYxZJd/oTNcS3MH7tN1GMSmR7PifANmCuVTh0=
+=/9la
+-----END PGP SIGNATURE-----
+
+--=-OoKjezK1tQgUZAmWaLll--
+
