@@ -1,53 +1,115 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Incompatibility of internal bitmap with ext4 barriers?
-Date: Tue, 17 May 2011 21:20:43 +0100
-Message-ID: <4DD2D89B.4050700@anonymous.org.uk>
-References: <BANLkTin9h+feRNWg1pWFq1t6dmBpn9keKw@mail.gmail.com>	<20110517191746.556b10fa@natsu>	<BANLkTikvZZYy9fm_sA8oAmkqim1tkbaC_A@mail.gmail.com> <20110518010020.353e5865@natsu>
+From: Laurent CARON <lcaron@unix-scripts.info>
+Subject: Unable to grow RAID 6 array
+Date: Wed, 18 May 2011 09:31:59 +0200
+Message-ID: <20110518092327.airaicao@trusted.unix-scripts.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110518010020.353e5865@natsu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Jason Tinker <jsntinker@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/05/2011 20:00, Roman Mamedov wrote:
-> On Tue, 17 May 2011 22:43:48 +0400
-> Jason Tinker<jsntinker@gmail.com>  wrote:
->
->> Do you have RAID5 over RAID0's or an ordinary RAID5? On my box
->> ordinary RAID5 works perfectly too.
->
-> Yes, I ran RAID5 of 4x2TB+(1+1TB RAID0)+(1.5+0.5TB RAID0), recently changed to
-> RAID6 though, also replaced one of the RAID0s with another 2TB drive.
->
->> If your configuration is also RAID5 over RAID0 and it works fine on
->> 2.6.38 then I'll just wait for next ubuntu lts...
->
-> I am not saying you should just give up. The logs you posted seem like
-> they can be very helpful in tracking this down. But if it is indeed a kernel
-> issue, how do you fix or even debug it it without replacing/compiling a new
-> kernel, which is exactly what you do not want to do. And if you're already
-> replacing a kernel, why not try a 2.6.38 right away, to check if your issue is
-> already solved in there (after all 2.6.32 vs 2.6.38 are eons apart BOTH
-> mdadm-wise and ext4-wise).
+Hi,
 
-I've said it before and no doubt I'll say it again, but the RHEL kernels 
-are often a lot closer to the most recent than their version numbers 
-suggest. It's a little more difficult to tell with EL6, because Red Hat 
-don't ship vanilla+patches sources any more, but their .32 series 
-includes lots of backported fixes from .38 etc.
+I'm basically trying to grow a RAID-6 array (5 disks).
 
-Jason, it's probably worth testing with vanilla .38 to see if that does 
-fix your problem, then post to Red Hat bugzilla saying so, especially as 
-it looks to me like the configuration you're trying to use ought to be a 
-supported one - then a future RHEL .32 might well include the fix.
+I did change the disks one by one (change, rebuild, ...).
 
-Cheers,
+I finally did delete the last partition (the one I wanted to enlarge and
+recreated it with the exactly same start but different end).
 
-John.
-(Not a spokesman for Red Hat, nor anyone else other than myself, and 
-sometimes not even that ;-)
+When I try to grow the array, I get: 
+
+# mdadm --grow --size max /dev/md2
+mdadm: component size of /dev/md2 has been set to 732458496K
+
+# cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] [faulty] 
+md2 : active raid6 sda3[0] sde3[4] sdd3[3] sdc3[2] sdb3[1]
+      2197375488 blocks super 1.2 level 6, 512k chunk, algorithm 2 [5/5] [UUUUU]
+
+# mdadm -E /dev/sda3
+/dev/sda3:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : 2687b3cf:4c884e3d:75aff183:342fe97d
+           Name : gw:2  (local to host gw)
+  Creation Time : Mon Apr 25 22:51:23 2011
+     Raid Level : raid6
+   Raid Devices : 5
+
+ Avail Dev Size : 1464917107 (698.53 GiB 750.04 GB)
+     Array Size : 4394750976 (2095.58 GiB 2250.11 GB)
+  Used Dev Size : 1464916992 (698.53 GiB 750.04 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 98d5d478:4a58c880:a70646d8:d3b92777
+
+    Update Time : Wed May 18 09:25:25 2011
+       Checksum : 7cbdbbb9 - correct
+         Events : 84
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAA ('A' == active, '.' == missing)
+
+# mdadm -D /dev/md2
+/dev/md2:
+        Version : 1.2
+  Creation Time : Mon Apr 25 22:51:23 2011
+     Raid Level : raid6
+     Array Size : 2197375488 (2095.58 GiB 2250.11 GB)
+  Used Dev Size : 732458496 (698.53 GiB 750.04 GB)
+   Raid Devices : 5
+  Total Devices : 5
+    Persistence : Superblock is persistent
+
+    Update Time : Wed May 18 09:26:36 2011
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : gw:2  (local to host gw)
+           UUID : 2687b3cf:4c884e3d:75aff183:342fe97d
+         Events : 84
+
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
+       2       8       35        2      active sync   /dev/sdc3
+       3       8       51        3      active sync   /dev/sdd3
+       4       8       67        4      active sync   /dev/sde3
+
+# fdisk -l /dev/sda
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x09cd117c
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1          19      152586   fd  Linux raid autodetect
+/dev/sda2              20       30414   244147837+  fd  Linux raid autodetect
+/dev/sda3           30415      243201  1709211577+  fd  Linux raid autodetect
+
+The partitions I try to use are now 1.7TB so my raid array should be
+able to grow without any trouble.
+
+Needless to say I already rebooted for the kernel to re-read the
+partition table.
+
+If any of you can help me to sort this out It would be nice.
+
+Thanks
 
