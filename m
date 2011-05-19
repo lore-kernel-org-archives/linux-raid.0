@@ -1,69 +1,77 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: check which disk is a problem
-Date: Thu, 19 May 2011 12:47:34 +0100
-Message-ID: <4DD50356.50403@anonymous.org.uk>
-References: <201105191234.39391.raid1@fuckaround.org>
+From: Ed W <lists@wildgooses.com>
+Subject: HBA Adaptor advice
+Date: Thu, 19 May 2011 13:26:49 +0100
+Message-ID: <4DD50C89.8060006@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201105191234.39391.raid1@fuckaround.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pol Hallen <raid1@fuckaround.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/05/2011 11:34, Pol Hallen wrote:
-> Hi folks :-)
->
-> I've a raid6 sw on debian stable and a problem (!):
->
-> cat /proc/mdstat
->
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid6 sdc1[0] sdf1[5] sdg1[4] sdh1[3] sdd1[1]
->        5860543744 blocks level 6, 64k chunk, algorithm 2 [6/5] [UU_UUU]
->
-> so, I think /dev/sde is corrupted disk
->
-> How identify this disk?
->
-> blkid:
->
-> /dev/sdc1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
-> /dev/sdd1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
-> /dev/sde1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
-> /dev/sdf1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
-> /dev/sdg1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
-> /dev/sdh1: UUID="9bd6372e-e2ea-b1d5-d2bd-c3cbad12f41d"
-> TYPE="linux_raid_member"
->
-> has same uuid, why?
->
-> and now how can I resolve?
+Hi, following on from a recent thread, can folks with decent multi-port
+HBA adaptors please chime in with some model numbers of known decent
+adaptors please?
 
-You can find out which discs/partitions are meant to be in the array with
-   mdadm -D /dev/md0
+The required use is to grow from currently 8 ish drives to perhaps 12-2=
+4
+drives per machine. (It partitions out as: one or more RAID6 arrays for
+data, plus a couple of backup drives)
 
-and if as it appears there's one missing you can see what state it's in with
-   mdadm -E /dev/sde1
-(or similar).
+Ideally I would like a controller with writeback cache and BBU since
+whilst this office machine is likely quite underused, for any sensible
+amount of IO (some of the other machines we might upgrade) this seems t=
+o
+give a 10-100x increase in IOPs?  For the moment it's just a nice to
+have though
 
-You should look through your logs to see if you can see what happened to 
-it. You should also check its SMART status with e.g.
-   smartctl -a /dev/sde
+I only intend to use linux software raid, so any onboard raid
+functionality is just a liability.  Budget is either low =A3100 ish for
+multi-port HBAs without cache, up to =A31000 ish for 16-24 port high
+performance cache controllers:
 
-If it's not dead or dying, you may be able to re-add it with
-   mdadm /dev/md0 --add /dev/sde1
 
-Hope this helps!
+So far I saw recommendations for:
 
-Cheers,
+- LSI 1068E (SuperMicro 3081E)  (8 port 3Gb)
+- LSI 9211-8i (8 port 6Gb)
 
-John.
+And to avoid:
+- Marvel controllers?
+- Areca with marvel controllers?
+- AOC-SASLP-MV8
 
+these any good?
+- LSI MegaRAID 9280-24i4e
+- Areca ARC-1880ix-24
+
+
+I'm completely ignorant of the current state of adaptors today:
+
+- Are there any bargains to be had in the lower end 8-24 port category
+(ie come up frequently as ebay specials and aren't locked to special
+DELL-only disks, etc?)
+
+- Cable management. Are there any backplanes for retro fitting into
+desktop chassis (5 1/4 bays say?) which take single (8087?) connectors?
+
+
+At the moment I just need to refresh our office server (10-12 disks
+including back drives) and we need something compact and quiet so
+looking for compact tower chassis options.  I'm also looking at adding
+more storage into our datacenter racks though, so interested in a
+shopping list of reliable higher performance options?
+
+Please add suggestions for good value, reliable controllers known to
+work well with linux
+
+Thanks
+
+Ed W
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
