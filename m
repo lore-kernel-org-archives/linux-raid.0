@@ -1,77 +1,52 @@
-From: Ed W <lists@wildgooses.com>
-Subject: HBA Adaptor advice
-Date: Thu, 19 May 2011 13:26:49 +0100
-Message-ID: <4DD50C89.8060006@wildgooses.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: HBA Adaptor advice
+Date: Thu, 19 May 2011 18:36:08 +0600
+Message-ID: <20110519183608.2c377538@natsu>
+References: <4DD50C89.8060006@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/cwM8rX_rfrMCiIU8W0g2DuP"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DD50C89.8060006@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ed W <lists@wildgooses.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, following on from a recent thread, can folks with decent multi-port
-HBA adaptors please chime in with some model numbers of known decent
-adaptors please?
+--Sig_/cwM8rX_rfrMCiIU8W0g2DuP
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The required use is to grow from currently 8 ish drives to perhaps 12-2=
-4
-drives per machine. (It partitions out as: one or more RAID6 arrays for
-data, plus a couple of backup drives)
+On Thu, 19 May 2011 13:26:49 +0100
+Ed W <lists@wildgooses.com> wrote:
 
-Ideally I would like a controller with writeback cache and BBU since
-whilst this office machine is likely quite underused, for any sensible
-amount of IO (some of the other machines we might upgrade) this seems t=
-o
-give a 10-100x increase in IOPs?  For the moment it's just a nice to
-have though
+> Hi, following on from a recent thread, can folks with decent multi-port
+> HBA adaptors please chime in with some model numbers of known decent
+> adaptors please?
 
-I only intend to use linux software raid, so any onboard raid
-functionality is just a liability.  Budget is either low =A3100 ish for
-multi-port HBAs without cache, up to =A31000 ish for 16-24 port high
-performance cache controllers:
+Here is a useful link for you: http://blog.zorinaq.com/?e=3D10
 
+> And to avoid:
+> - Marvel controllers?
 
-So far I saw recommendations for:
+There are two kinds (families?) of Marvell SATA chips, and those using the
+"sata_mv" module do work fine. It seems like all the complaints are directed
+at the other kind, supported via "mvsas".
 
-- LSI 1068E (SuperMicro 3081E)  (8 port 3Gb)
-- LSI 9211-8i (8 port 6Gb)
+--=20
+With respect,
+Roman
 
-And to avoid:
-- Marvel controllers?
-- Areca with marvel controllers?
-- AOC-SASLP-MV8
+--Sig_/cwM8rX_rfrMCiIU8W0g2DuP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-these any good?
-- LSI MegaRAID 9280-24i4e
-- Areca ARC-1880ix-24
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
+iEUEARECAAYFAk3VDrgACgkQTLKSvz+PZwgCnwCWPyIFRnUA/frlyVZCWsF6Rb2f
+4gCeMyYexnmAUx0pwljCJDUaUb4Wl04=
+=v5dy
+-----END PGP SIGNATURE-----
 
-I'm completely ignorant of the current state of adaptors today:
-
-- Are there any bargains to be had in the lower end 8-24 port category
-(ie come up frequently as ebay specials and aren't locked to special
-DELL-only disks, etc?)
-
-- Cable management. Are there any backplanes for retro fitting into
-desktop chassis (5 1/4 bays say?) which take single (8087?) connectors?
-
-
-At the moment I just need to refresh our office server (10-12 disks
-including back drives) and we need something compact and quiet so
-looking for compact tower chassis options.  I'm also looking at adding
-more storage into our datacenter racks though, so interested in a
-shopping list of reliable higher performance options?
-
-Please add suggestions for good value, reliable controllers known to
-work well with linux
-
-Thanks
-
-Ed W
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/cwM8rX_rfrMCiIU8W0g2DuP--
