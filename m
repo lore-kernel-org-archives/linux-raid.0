@@ -1,52 +1,54 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
 Subject: Re: HBA Adaptor advice
-Date: Thu, 19 May 2011 18:36:08 +0600
-Message-ID: <20110519183608.2c377538@natsu>
+Date: Thu, 19 May 2011 13:43:21 +0100
+Message-ID: <BANLkTikjU=Hm6SS6LMkE0CFYvuQi83tZzg@mail.gmail.com>
 References: <4DD50C89.8060006@wildgooses.com>
+	<20110519183608.2c377538@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/cwM8rX_rfrMCiIU8W0g2DuP"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD50C89.8060006@wildgooses.com>
+In-Reply-To: <20110519183608.2c377538@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ed W <lists@wildgooses.com>
-Cc: linux-raid@vger.kernel.org
+To: Roman Mamedov <rm@romanrm.ru>
+Cc: Ed W <lists@wildgooses.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/cwM8rX_rfrMCiIU8W0g2DuP
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 19 May 2011 13:36, Roman Mamedov <rm@romanrm.ru> wrote:
+> On Thu, 19 May 2011 13:26:49 +0100
+> Ed W <lists@wildgooses.com> wrote:
+>
+>> Hi, following on from a recent thread, can folks with decent multi-port
+>> HBA adaptors please chime in with some model numbers of known decent
+>> adaptors please?
+>
+> Here is a useful link for you: http://blog.zorinaq.com/?e=10
+>
+>> And to avoid:
+>> - Marvel controllers?
+>
+> There are two kinds (families?) of Marvell SATA chips, and those using the
+> "sata_mv" module do work fine. It seems like all the complaints are directed
+> at the other kind, supported via "mvsas".
+>
+> --
+> With respect,
+> Roman
+>
 
-On Thu, 19 May 2011 13:26:49 +0100
-Ed W <lists@wildgooses.com> wrote:
+I have to chime in; I do have this one:
 
-> Hi, following on from a recent thread, can folks with decent multi-port
-> HBA adaptors please chime in with some model numbers of known decent
-> adaptors please?
+05:00.0 SCSI storage controller: HighPoint Technologies, Inc.
+RocketRAID 230x 4 Port SATA-II Controller (rev 02)
 
-Here is a useful link for you: http://blog.zorinaq.com/?e=3D10
+Which uses the sata_mv module. From dmesg:
 
-> And to avoid:
-> - Marvel controllers?
+[    1.062151] sata_mv: Highpoint RocketRAID BIOS CORRUPTS DATA on all
+attached drives, regardless of if/how they are configured. BEWARE!
+[    1.062156] sata_mv: For data safety, do not use sectors 8-9 on
+"Legacy" drives, and avoid the final two gigabytes on all RocketRAID
+BIOS initialized drives.
 
-There are two kinds (families?) of Marvell SATA chips, and those using the
-"sata_mv" module do work fine. It seems like all the complaints are directed
-at the other kind, supported via "mvsas".
+So stay away from RocketRAID  :-) (I only use it as a HBA)
 
---=20
-With respect,
-Roman
-
---Sig_/cwM8rX_rfrMCiIU8W0g2DuP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEUEARECAAYFAk3VDrgACgkQTLKSvz+PZwgCnwCWPyIFRnUA/frlyVZCWsF6Rb2f
-4gCeMyYexnmAUx0pwljCJDUaUb4Wl04=
-=v5dy
------END PGP SIGNATURE-----
-
---Sig_/cwM8rX_rfrMCiIU8W0g2DuP--
+Cheers,
+/M
