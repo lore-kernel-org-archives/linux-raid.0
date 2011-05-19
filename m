@@ -1,54 +1,36 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Michael Sallaway <michael@sallaway.com>
 Subject: Re: HBA Adaptor advice
-Date: Thu, 19 May 2011 13:43:21 +0100
-Message-ID: <BANLkTikjU=Hm6SS6LMkE0CFYvuQi83tZzg@mail.gmail.com>
+Date: Fri, 20 May 2011 00:06:32 +1000
+Message-ID: <4DD523E8.7090109@sallaway.com>
 References: <4DD50C89.8060006@wildgooses.com>
-	<20110519183608.2c377538@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110519183608.2c377538@natsu>
+In-Reply-To: <4DD50C89.8060006@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Ed W <lists@wildgooses.com>, linux-raid@vger.kernel.org
+To: Ed W <lists@wildgooses.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19 May 2011 13:36, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Thu, 19 May 2011 13:26:49 +0100
-> Ed W <lists@wildgooses.com> wrote:
->
->> Hi, following on from a recent thread, can folks with decent multi-port
->> HBA adaptors please chime in with some model numbers of known decent
->> adaptors please?
->
-> Here is a useful link for you: http://blog.zorinaq.com/?e=10
->
->> And to avoid:
->> - Marvel controllers?
->
-> There are two kinds (families?) of Marvell SATA chips, and those using the
-> "sata_mv" module do work fine. It seems like all the complaints are directed
-> at the other kind, supported via "mvsas".
->
-> --
-> With respect,
-> Roman
->
 
-I have to chime in; I do have this one:
+On 19/05/2011 10:26 PM, Ed W wrote:
+> So far I saw recommendations for:
+>
+> - LSI 1068E (SuperMicro 3081E)  (8 port 3Gb)
 
-05:00.0 SCSI storage controller: HighPoint Technologies, Inc.
-RocketRAID 230x 4 Port SATA-II Controller (rev 02)
+I'm using one of these, and it's working great. It's a Supermicro 
+AOC-USASLP-L8i. I'm using all 8 ports, and another 4 drives on the 
+onboard controller.
 
-Which uses the sata_mv module. From dmesg:
-
-[    1.062151] sata_mv: Highpoint RocketRAID BIOS CORRUPTS DATA on all
-attached drives, regardless of if/how they are configured. BEWARE!
-[    1.062156] sata_mv: For data safety, do not use sectors 8-9 on
-"Legacy" drives, and avoid the final two gigabytes on all RocketRAID
-BIOS initialized drives.
-
-So stay away from RocketRAID  :-) (I only use it as a HBA)
+Note, however, that I was first running a slightly older kernel, and it 
+didn't work (bus errors, lots of weird stuff happening), so I 
+temporarily gave up on it -- I believe it was either 2.6.31 or 2.6.32 
+(Ubuntu 10.04 LTS).  However, due to a need for something else, I 
+upgraded to a 2.6.35 kernel, and it started working fine with that 
+kernel. Been using it for ~9 months perfectly fine.
 
 Cheers,
-/M
+Michael
+
+
