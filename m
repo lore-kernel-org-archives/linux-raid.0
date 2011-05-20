@@ -1,53 +1,65 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Best way to create RAID-6 for swap partition - existing one failed
-Date: Thu, 19 May 2011 22:32:31 -0500
-Message-ID: <3A.5F.03893.8C0E5DD4@cdptpa-omtalb.mail.rr.com>
-References: <4DD47FD3.2000909@hardwarefreak.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Did I make a mistake?
+Date: Fri, 20 May 2011 10:16:43 +0600
+Message-ID: <20110520101643.37dffc49@natsu>
+References: <D8.84.03893.CB5D5DD4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Kct_YYhNTD/PwnKTC+ppiBf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD47FD3.2000909@hardwarefreak.com>
+In-Reply-To: <D8.84.03893.CB5D5DD4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Stan Hoeppner' <stan@hardwarefreak.com>, 'Gavin Flower' <gavinflower@yahoo.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de, mb@gem.win.co.nz
+To: lrhorer@satx.rr.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Stan Hoeppner
-> Sent: Wednesday, May 18, 2011 9:26 PM
-> To: Gavin Flower
-> Cc: linux-raid@vger.kernel.org; neilb@suse.de; mb@gem.win.co.nz
-> Subject: Re: Best way to create RAID-6 for swap partition - existing one
-> failed
-> 
-> On 5/18/2011 7:11 PM, Gavin Flower wrote:
-> 
-> We're getting pretty OT here...
-> 
-> > What obvious thing have I done, or not done, here?
-> >
-> > What should I do now?
-> >
-> > (I am not panicking, because I can always revert back...)
-> >
-> > I tried to implement you suggestion,
-> >
-> > # swapoff -a
-> > # dd if=/dev/zero of=/swapfile1 bs=1K count=16M
-> > 16777216+0 records in
-> > 16777216+0 records out
-> > 17179869184 bytes (17 GB) copied, 119.642 s, 144 MB/s
-> > # mkswap /swapfile1
-> > Setting up swapspace version 1, size = 16777212 KiB
-> > no label, UUID=9afbf206-9a79-45b8-ad4b-148f71c440d7
-> 
-> 17GB is a bit ridiculous for swap, especially on a single user machine.
+--Sig_/Kct_YYhNTD/PwnKTC+ppiBf
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-	I once encountered an fsck that required more than 400G.  I had to
-kill the process, slot a new 500G drive, and enable swap on the new drive.
+On Thu, 19 May 2011 21:45:23 -0500
+"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
 
+> 	OK, I may have made an error, and I want to make sure before this
+> goes any further.  Yesterday I created a RAID6 volume with eight 3TB
+> members, on the same machine containing an older RAID6 array built of
+> fourteen 1G members.  Based upon my reading here and some level of
+> experience with larger stripe sizes, I decided to create the array with a
+> chunk size of 4096K.
 
+4096K is an absurdly large chunk for such RAID5/RAID6 array, I wanted to re=
+fer
+some benchmarks, but couldn't even find any that would test such a huge chu=
+nk,
+largest they test is 1024 or 2048, where the write performance already drops
+off very sharply, e.g. see:
+
+http://blog.jamponi.net/2008/07/raid56-and-10-benchmarks-on-26255_10.html
+http://louwrentius.blogspot.com/2010/05/raid-level-and-chunk-size-benchmark=
+s.html
+
+While the read performance does seem to not suffer or even increase at
+higher chunk size, the best read/write combination performance seems to be
+achieved at 64...256K chunk for RAID5/6.
+
+If you decide to persist with the current configuration, make sure you
+increase stripe_cache_size by a lot (and btw raising it if you have the
+RAM to spare is a good idea in any case).
+
+--=20
+With respect,
+Roman
+
+--Sig_/Kct_YYhNTD/PwnKTC+ppiBf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk3V6ysACgkQTLKSvz+PZwgYKwCfUVTNDxqab1wLUvCUXWddWP7y
+JMMAnjTW6P4/oqGMJTwyK/SwDZ4qoYAt
+=eALL
+-----END PGP SIGNATURE-----
+
+--Sig_/Kct_YYhNTD/PwnKTC+ppiBf--
