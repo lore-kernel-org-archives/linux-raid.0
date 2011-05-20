@@ -1,123 +1,78 @@
-From: "Schmidt, Annemarie" <Annemarie.Schmidt@stratus.com>
-Subject: md resync looping
-Date: Fri, 20 May 2011 14:51:34 -0400
-Message-ID: <5AA430FFE4486C448003201AC83BC85E01B03542@EXHQ.corp.stratus.com>
+From: Alexander <freebsd@nagilum.org>
+Subject: Re: why should I "initialize" JBOD disks?
+Date: Fri, 20 May 2011 21:08:59 +0200
+Message-ID: <20110520210859.153715dz67pr90zk@cakebox.homeunix.net>
+References: <20110520133244.GA13330@apartia.fr>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ charset=ISO-8859-2;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <20110520133244.GA13330@apartia.fr>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-On RH 6.1 system, I have a raid1 2-disk array:
+----- Message from vindex+lists-linux-raid@apartia.org ---------
+     Date: Fri, 20 May 2011 15:32:44 +0200
+     From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+  Subject: why should I "initialize" JBOD disks?
+       To: linux-raid@vger.kernel.org
 
->>[root@typhon ~]# mdadm --detail /dev/md21
-/dev/md21:
-        Version : 1.2
-  Creation Time : Thu May 19 09:15:56 2011
-   Raid Level : raid1
-   Array Size : 5241844 (5.00 GiB 5.37 GB)
-  Used Dev Size : 5241844 (5.00 GiB 5.37 GB)
-   Raid Devices : 2
-  Total Devices : 2
-   Persistence : Superblock is persistent
 
-  Intent Bitmap : Internal
-...
-    Number   Major   Minor   RaidDevice State
-       0      65       18        0      active sync   /dev/sdc2
-       1      65       50        1      active sync   /dev/sdk2
+> Hi,
+>
+> I just installed an Adaptec SAS 4805 and plugged 8 disks previously used
+> "as is" (no raid) on an LSI adapter but none are recongnized as boot
+> disk ("no bios installed").
+>
+> It seems I need to "initialize" (read: wipe) them in the Adaptec bios
+> menu before being able to use them as JBOD.
+>
+> What the fuck?!
 
-After starting I/O to the array, I pulled one of the disks. After
-getting an error from the lower level scsi driver regarding an aborted
-I/O, the array then went into a tight loop claiming to be resyncing:
+The controller puts the configuration details for the disk on the disk  
+itself. That way you can plug the disk into another port or controller  
+of the same brand and it will simply work.
 
-05-20 11:01:57 end_request: I/O error, dev sdt, sector 11457968
-05-20 11:01:57 md/raid1:md21: Disk failure on sdt2, disabling device.
-05-20 11:01:57 md/raid1:md21: Operation continuing on 1 devices.
-05-20 11:01:57 md: recovery of RAID array md21
-05-20 11:01:57 md: minimum _guaranteed_  speed: 200000 KB/sec/disk.
-05-20 11:01:57 md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-05-20 11:01:57 md: using 128k window, over a total of 5241844 blocks.
-05-20 11:01:57 md: resuming recovery of md21 from checkpoint.
-05-20 11:01:57 md: md21: recovery done.
-05-20 11:01:57 md: recovery of RAID array md21
-05-20 11:01:57 md: minimum _guaranteed_  speed: 200000 KB/sec/disk.
-05-20 11:01:57 md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-05-20 11:01:57 md: using 128k window, over a total of 5241844 blocks.
-05-20 11:01:57 md: resuming recovery of md21 from checkpoint.
-05-20 11:01:57 md: md21: recovery done.
-05-20 11:01:57 md: recovery of RAID array md21
-05-20 11:01:57 md: minimum _guaranteed_  speed: 200000 KB/sec/disk.
-05-20 11:01:57 md: using maximum available idle IO bandwidth (but not
-more than  200000 KB/sec) for recovery.
-05-20 11:01:57 md: using 128k window, over a total of 5241844 blocks.
-05-20 11:01:57 md: resuming recovery of md21 from checkpoint.
-05-20 11:01:57 md: md21: recovery done.
-05-20 11:01:57 md: recovery of RAID array md21
-05-20 11:01:57 md: minimum _guaranteed_  speed: 200000 KB/sec/disk.
-05-20 11:01:57 md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for recovery.
-05-20 11:01:57 md: using 128k window, over a total of 5241844 blocks.
-05-20 11:01:57 md: resuming recovery of md21 from checkpoint.
-05-20 11:01:57 md: md21: recovery done.
-05-20 11:01:57 md: recovery of RAID array md21
-...
-And on and on.
+> By my defintion JBOD should means "just get out of the way and let me
+> use my disks as they are".
+>
+> Does that "initlialization" mean that disks become unusable when plugged
+> to an adapter of any other brand or model?
 
-Has anyone else run into this?
+It will show as uninitialized.
 
-I see that there were changes made to the remove_and_add_spares function
-in md.c in RHEL 6.  I believe that one of these changes may be causing
-the loop, specifically the first "if" statement.  The disk that was
-pulled has been marked 'faulty' in the rdev->flags and its raid_disk
-value is >= 0.  Since it is neither In-sync nor Blocked, spares gets
-incremented and so md thinks there is a spare when in fact there is not.
-In previous revs of md.c, the only way spares got incremented was
-through the 2nd "if" statement which would not have been true in my
-case:
+> What is the underlying format of JBOD disks. Can they be read by a
+> straight, non-raid adapter?
 
- remove_and_add_spares:
-               list_for_each_entry(rdev, &mddev->disks, same_set) {
+The configuration needs to be stored somewhere on the disk. Either at  
+the beginning or at the end (or a combination of both).
+Hence I would expect the start of the disk to be shifted a bit (what  
+used to be block 0 on the disk while plugged into the RAID controller  
+will be some higher block) or the disk will "end" a bit before the  
+actual end of the disk.
+So I'm pretty sure you can dd such a disk onto another one to rescue  
+the data given the right seek offset.
+Alex.
 
-                      ***********************************
-                      if (rdev->raid_disk >= 0 &&
-                            !test_bit(In_sync, &rdev->flags) &&
-                            !test_bit(Blocked, &rdev->flags))
-                                spares++;
-                      ***********************************
+----- End message from vindex+lists-linux-raid@apartia.org -----
 
-                        if (rdev->raid_disk < 0
-                            && !test_bit(Faulty, &rdev->flags)) {
-                                rdev->recovery_offset = 0;
-                                if (mddev->pers->
-                                    hot_add_disk(mddev, rdev) == 0) {
-                                        char nm[20];
-                                        sprintf(nm, "rd%d",
-rdev->raid_disk);
-                                        if
-(sysfs_create_link(&mddev->kobj,
- 
-&rdev->kobj, nm))
-                                                /* failure here is OK
-*/;
-                                        spares++;
-                                        md_new_event(mddev);
-                                        set_bit(MD_CHANGE_DEVS,
-&mddev->flags);
-                                } else
-                                        break;
-                        }
 
-Any comments on this?
 
-Thanks,
-Annemarie
+========================================================================
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/ Mac (PPC): MacOS-X / Linux / MacOS-X #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+========================================================================
 
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
