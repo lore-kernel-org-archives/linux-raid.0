@@ -1,164 +1,117 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: Software raid, booting and bios
-Date: Fri, 20 May 2011 14:04:48 +0400
-Message-ID: <112756953.20110520140448@gmail.com>
-References: <9067914580344941270@unknownmsgid> <ir58vs$9qp$1@dough.gmane.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: HBA Adaptor advice
+Date: Fri, 20 May 2011 05:21:19 -0500
+Message-ID: <4DD6409F.9070904@hardwarefreak.com>
+References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ir58vs$9qp$1@dough.gmane.org>
+In-Reply-To: <4DD61948.8050302@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul van der Vlis <paul@vandervlis.nl>
+To: Ed W <lists@wildgooses.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2=E5, Paul.
+On 5/20/2011 2:33 AM, Ed W wrote:
+> On 20/05/2011 03:08, Andy Smith wrote:
+>> Are there actually any HBAs that have BBU without using their RAID
+>> features?
+>>
+>> I'd like to stop using hardware RAID but I can't give up the BBU and
+>> write cache.
 
-=C2=FB =EF=E8=F1=E0=EB=E8 20 =EC=E0=FF 2011 =E3., 12:33:00:
+I'm curious why you are convinced that you need BBWC, or even simply WC,
+on an HBA used for md RAID.  I'm also curious as to why you are so
+adamant about _not_ using the RAID ASIC on an HBA, given that it will
+take much greater advantage of the BBWC than md RAID will.  You may be
+interested to know:
 
-> Op 20-05-11 09:19, Simon Mcnair schreef:
->> I have not come across a pc which does not allow you to boot a
->> secondary drive before... Please can you read  the manual and triple
->> check this ?  The only possible reason I can think this would happen
->> Is that you're using an add on board and you would configure this fr=
-om
->> a secondary bios. My Dell, Asus, and all other motherboards I've had
->> over the past 10 years all allow a second device.
+1.  When BBWC is enabled, all internal drive caches must be disabled.
+    Otherwise you eliminate the design benefit of the BBU, and may as
+    well not have one.
+2.  w/md RAID on an HBA, if you have a good UPS and don't suffer
+    kernel panics, crashes, etc, you can disable barrier support in
+    your FS and you can use the drive caches.
+3.  The elevator will perform well directly on drives with large cache
 
-> You can select the "boot device priority" where you can choose about
-> devices types (DVD, harddisk, USB, network) but you can choose only o=
-ne
-> SATA disk. Study it, and you will see I am right. I've asked it to my
-> rackserver-vendor, they say: "that's always the case".
-I've  seen supermicro servers with bios allowing to set several drives
-as boot disks and without such option (like in your case).
-One      of      those      which      could      do      this     was
-http://www.supermicro.com/products/motherboard/Xeon1333/5000P/X7DB3.cfm
-if i remember things right.
+Most good higher end RAID cards have 512MB to 1GB or cache.  w/12 2TB
+drives you'll have a combined cache of 768MB, as most drives of this
+size have a 64MB cache.  So there's not much difference in total cache
+size.  And the drive firmware will usually make better decisions WRT
+cache use optimization than an upstream RAID card BIOS that has disabled
+the drive caches.
 
+For a stable system with good UPS and auto shutdown configured, BBWC is
+totally overrated.  If the system never takes a nose dive from power
+drop, and doesn't crash due to software or hardware failure, then BBWC
+is a useless $200-1000 option.  Some hardware RAID cards require a
+functional BBU before they will allow you to enable write caching.  In
+that case BBU is needed.  In most other cases it's not.
 
-> But I think I have had systems in the past, what could do it. An
-> interesting question is then: how well is it tested?  What when e.g. =
-a
-> disk boots, and then gives an I/O error? I am looking for a well-test=
-ed
-> way to solve this, and I am willing to pay for it or choose another
-> hardware vendor for it.
+If your current reasoning for wanting write cache on the HBA is
+performance, then forget about the write cache as you don't need it with
+md RAID.  If you want the BBWC combo for safety as your system isn't
+stable or you have a crappy or no UPS, then forgo md RAID and use the
+hardware RAID and BBWC combo.
 
-> With regards,
-> Paul van der Vlis.
+One last point:  If you're bargain hunting, especially if looking at
+used gear on Ebay, that mindset is antithetical to proper system
+integration, especially when talking about a RAID card BBU.  If you buy
+a use card, the first thing you muse do is chuck the BBU and order a new
+one, because the used battery can't be trusted--you have no idea how
+much life is left in it.  For you data to be safe, you need a new
+battery.  Buying a brand new card w/bundled BBU may cost you the same or
+less than a used card and a new battery from the manufacturer.
 
+The following would be a darn good fit for your md RAID office server
+setup, given your criteria, WRT the HBA, hot swap cages, drives, and
+cables.  Drop the LSI SAS HBA into a PCIe 2.0 x8 slot.  Drop the Intel
+24 port SAS expander into an x4/x8 slot, or mount it to the side or
+floor of the chassis and power it via the 4 pin Molex plug.  Connect the
+8087/8087 cable from the LSI card to the first port on the Intel SAS
+Expander.  Mount the 5 IcyDock 4 x 2.5" SAS hot swap backplane cages in
+5 x 5.25" externally accessible drive bays.  Connect each of the five
+8087 breakout cables from the remaining 5 ports on the Intel Expander to
+each of the hot swap backplanes--one cable per backplane--label which
+drive connects to which port on the Intel expander so you can properly
+identify failed drives!  Mount each Seagate Enterprise 2.5" 1TB drive in
+a tray and insert the trays into the backplanes--fill each quad bay
+before putting drives in the next bay.  After booting the machine hop
+into the LSI BIOS and configure for JBOD.  You should know how to do the
+read.
 
+This setup gives you 12 enterprise 2.5" SAS 7.2K RPM 1TB drives--not
+cheap SATA drives not fit for RAID--12TB raw total, in only three 5.25"
+bays, and drawing much less power than equivalent 3.5" drives.  You will
+have 8 free hot swap bays for future expansion, 20TB total if acquiring
+the same drives.  Controller to drive aggregate bandwidth is 2.4GB/s,
+4.8GB/s full duplex, HBA to host b/w is 4/8 GB/s, likely far more than
+you need.
 
->> Cheers
->> Simon
->>=20
->> On 20 May 2011, at 08:15, Paul van der Vlis <paul@vandervlis.nl> wro=
-te:
->>=20
->>> Op 20-05-11 09:03, Simon Mcnair schreef:
->>>> Please can you further define what you mean by 'it can become a
->>>> problem to boot' ?
->>>> Generally this is resolved by having a mbr and boot partition on e=
-ach
->>>> of your mirrored drives so that whichever you use to boot has the
->>>> pertinent information to boot the kernel and construct the raid ar=
-ray.
->>>> If you have raid 5 with 3 disks you'd have a 3 drive mirror partit=
-ion
->>>> on each disk and a raid 5 set across all three too.
->>>
->>> In the bios from my machines (Supermicro, Dell) I can select only o=
-ne
->>> drive to boot. Wenn the drive fails, no other disk is tried.
->>>
->>> I can go into the bios and change the drive when it fails, or I can
->>> exchange the disks. But I would like it, when the machine would sim=
-ple
->>> boot even when the first disk is corrupt.
->>>
->>> With regards,
->>> Paul van der Vlis.
->>>
->>>
->>>> I'm not a guru on this and can't provide much knowledge past the
->>>> theory and high level ;-)
->>>> Simon
->>>>
->>>> On 20 May 2011, at 07:55, Paul van der Vlis <paul@vandervlis.nl> w=
-rote:
->>>>
->>>>> Hello,
->>>>>
->>>>> I use software raid (mdadm). The main problem for me is that when=
- the
->>>>> drive with the MBR fails, it can become a problem to boot.
->>>>>
->>>>> When the bios would use another drive to boot when the first driv=
-e
->>>>> failes, this problem would be gone. But I don't know rackservers =
-who do
->>>>> that. Do you?
->>>>>
->>>>> Or is there maybe some kind of fake-raid card what uses mdadm to =
-solve
->>>>> this problem?
->>>>>
->>>>> Another way would be to use e.g. an USB device to boot to solve t=
-his
->>>>> problem. Any experiences with that?
->>>>>
->>>>> (hmm, I realize that netboot is an option too).
->>>>>
->>>>> With regards,
->>>>> Paul van der Vlis.
->>>>>
->>>>>
->>>>> --
->>>>> http://www.vandervlis.nl
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-r=
-aid" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
-l
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>=20
+The parts list.  Total cost from NewEgg in the US is ~$3800 with ~$3000
+of that being the 12 drives at $250 each.  The HBA + expander are only $470.
 
+Buy 1:
+http://www.lsi.com/channel/products/megaraid/sassata/9240-4i/index.html
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Buy 1:
+http://www.intel.com/Products/Server/RAID-controllers/re-res2sv240/RES2SV240-Overview.htm
 
+Buy 5:
+http://www.icydock.com/goods.php?id=114
 
+Buy 12:
+http://www.seagate.com/ww/v/index.jsp?name=st91000640ss-constellation2-6gbs-sas-1-tb-hd&vgnextoid=ff13c5b2933d9210VgnVCM1000001a48090aRCRD&vgnextchannel=f424072516d8c010VgnVCM100000dd04090aRCRD&locale=en-US&reqPage=Support#tTabContentSpecifications
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
+Buy 5 (or local equivalent):
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816116098&cm_re=cable-_-16-116-098-_-Product
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Buy 1 (or local equivalent):
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816116093&cm_re=cable-_-16-116-093-_-Product
+
+Food for thought.  Hope it's useful as I killed over an hour putting
+this together for you. :)
+
+-- 
+Stan
