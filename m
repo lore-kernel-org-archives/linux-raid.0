@@ -1,77 +1,41 @@
-From: Ed W <lists@wildgooses.com>
-Subject: Re: HBA Adaptor advice
-Date: Fri, 20 May 2011 14:21:12 +0100
-Message-ID: <4DD66AC8.60804@wildgooses.com>
-References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com> <4DD65C18.5090804@gmail.com>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: Software raid, booting and bios
+Date: Fri, 20 May 2011 14:22:57 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1105201412160.5319@unicorn.drogon.net>
+References: <9067914580344941270@unknownmsgid> <ir58vs$9qp$1@dough.gmane.org> <20110520145623.749b4781@natsu> <ir5ci1$uc6$1@dough.gmane.org> <4DD65A66.5030904@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD65C18.5090804@gmail.com>
+In-Reply-To: <4DD65A66.5030904@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joe Landman <joe.landman@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi
+On Fri, 20 May 2011, Phil Turmel wrote:
 
-> If you absolutely insist on using a large expensive RAID card as a JBOD
-> card, yeah, there are things you *can* do to keep access to the cache
-> and BBU, though they are counter-intuitive.
+> http://www.addonics.com/products/flash_memory_reader/adidecf.asp
+>
+> (Just to show what's out there.)  The embedded boards I use occasionally 
+> have the equivalent of this soldered to their motherboards.
+>
+> The best DMA capable CF cards are usually found in markets that cater to 
+> industrial designers or to professional photographers.
 
-The main issue with hardware cards is that really you need at least two
-of them... At the most inopportune moment the only single one you own
-will break and then your entire dataset becomes unavailable...
+FWIW: I've built a few systems which boot off flash, then run from SATA 
+drives - but it all depends on the motherboards. These days there are many 
+IDE (and now SATA) drives - maybe the forerunner to SSD's... e.g. I use 
+these sort of things:
 
-For sure, anyone with moderate or larger budgets, or a pool of similar
-hardware, this becomes a case of simply buying an extra one and stashing
-it.  Or at least keeping an eye on when it becomes end of line and
-unavailable to buy a new one...
+   http://linitx.com/viewcategory.php?catid=129
 
+It's easy to have root on a small flash IDE drive then the rest of the 
+system on RAID'd SATA drives. (swap, /usr, /var, /home, etc.)
 
-> First off, the LSI 920x series has a 16 port HBA.  You can look it up on
-> their site.  SAS+SATA HBA I think.  LSI likes adorning some of their
-> HBAs with some inherent RAID capability (their IR mode).  I personally
-> prefer the IT mode, but its sometimes hard/impossible to make the switch
-> (this is usually for motherboard mounted 'RAID' units). HBAs can be used
-> as RAIDs, though the performance is abysmal (c.f. PERC*, lower end LSI
-> ... which PERC are rebranded versions of, ...)
+Is that good? I don't know - but I also build lots of small embedded 
+systems (no drives) for other purposes which boot off these type of 
+devices and I've not had an issue with one failling in 5+ years...
 
-This sounds helpful, but I'm not understanding it?
+Motherboards are increasingly not coming with IDE ports though, but things 
+move on!
 
-Are you describing the reverse, ie taking a straight HBA card and asking
-it to do "hardware raid" of multiple disks?
-
-Or do you mean that performance is dismal even if you make X arrays of 1
-disk each in order to access their BB cache?
-
-Or to be really clear - can I take a cheapo PERC6 from ebay, and make it
-run 8x disks completely under linux MD Raid, with smartctl access to the
-individual disks and BB cache on the card - *with* high performance...
-(phew...)
-
-
-
-> When you do this, then use mdadm atop this.  We've found, generally, by
-> doing this, we can build much faster RAIDs than the LSI 8888 units, and
-> comparible to the 9260's in terms of performance across the same number
-> of disks, at a lower price.  E.g. mdadm and the MD RAID stack are quite
-> good.
-
-What do you think stops the MD Stack being *better* than a 9260?  Also
-in very round terms what kind of performance drop do you see from going
-to linux MD raid versus a 9260?
-
-
-> The additional cache doesn't buy you much for this arrangement. Might
-> work against you if the card CPU is slow (as most of the hardware RAID
-> chips are).
-
-Hopefully not a silly question, but surely the CPU would have to be
-extremely slow indeed not to keep up with a sorted bunch of writes that
-are being issued to spinning rust drives with multi-ms seek latencies?
-Are they really that slow..?
-
-Thanks for your very helpful feedback - much appreciated
-
-Ed W
+Gordon
