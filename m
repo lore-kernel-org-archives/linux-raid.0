@@ -1,38 +1,59 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Software raid, booting and bios
-Date: Fri, 20 May 2011 15:32:59 -0400
-Message-ID: <4DD6C1EB.1030907@turmel.org>
-References: <9067914580344941270@unknownmsgid>	<ir58vs$9qp$1@dough.gmane.org> <20110520145623.749b4781@natsu> <ir5ci1$uc6$1@dough.gmane.org> <4DD65A66.5030904@turmel.org> <ir62p0$b5o$1@dough.gmane.org>
+From: Andy Smith <andy@strugglers.net>
+Subject: Re: HBA Adaptor advice
+Date: Fri, 20 May 2011 20:01:00 +0000
+Message-ID: <20110520200100.GF4759@bitfolk.com>
+References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com> <4DD65C18.5090804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+	protocol="application/pgp-signature"; boundary="vH3HHxf962mwD/qo"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ir62p0$b5o$1@dough.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4DD65C18.5090804@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul van der Vlis <paul@vandervlis.nl>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-{do use reply-to-all on kernel.org lists... not everyone is subscribed}
 
-On 05/20/2011 11:53 AM, Paul van der Vlis wrote:
-> Op 20-05-11 14:11, Phil Turmel schreef:
->> (Just to show what's out there.)  The embedded boards I use
->> occasionally have the equivalent of this soldered to their
->> motherboards.
->>
->> The best DMA capable CF cards are usually found in markets that cater
->> to industrial designers or to professional photographers.
-> 
-> Do you think the risk of a problem with a CF card (or something like
-> that) is much lower then the risk of a problem with a harddisk?
+--vH3HHxf962mwD/qo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-the big deal is the lack of moving parts:  No spindle bearing, no head positioner gear train.  On top of that, when set up to support your boot tasks only, there's no write activity to wear it out.
+Hi Joe,
 
-> And what about booting from an USB stick?
+On Fri, May 20, 2011 at 08:18:32AM -0400, Joe Landman wrote:
+>> On 20/05/2011 03:08, Andy Smith wrote:
+>>> Are there actually any HBAs that have BBU without using their RAID
+>>> features?
+>>>
+>>> I'd like to stop using hardware RAID but I can't give up the BBU and
+>>> write cache.
+>
+> HBAs don't have BBU or write cache.  Only RAIDs do.  While you can run =
+=20
+> the RAID in JBOD mode, you effectively lose the cache (and BBU) aspect by=
+=20
+> doing so.
 
-Just as good, technically, IMHO.  If mounted internally, just as good, period.  Plugged into an external port, I'd be wary of some uninformed soul pulling it out.  CF cards look like they "belong".
+That's what I thought, thanks.
 
-I like Ed W's suggestions, as well, with the caveat that their usefulness would make them more likely to be "borrowed".  Even by yourself, in a pinch.
+It's a shame; maybe there will be disks with battery-backed cache
+one day.
 
-Phil
+Cheers,
+Andy
+
+--vH3HHxf962mwD/qo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEAREDAAYFAk3WyHwACgkQIJm2TL8VSQvhMQCgrxvve+lFYO7HsXd1SNrkISvT
+0UAAoJbgH1Bb+9Ca56GWBF1sZmJA4ZJ6
+=yS+8
+-----END PGP SIGNATURE-----
+
+--vH3HHxf962mwD/qo--
