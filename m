@@ -1,78 +1,55 @@
-From: Alexander <freebsd@nagilum.org>
-Subject: Re: why should I "initialize" JBOD disks?
-Date: Fri, 20 May 2011 21:08:59 +0200
-Message-ID: <20110520210859.153715dz67pr90zk@cakebox.homeunix.net>
-References: <20110520133244.GA13330@apartia.fr>
+From: Ed W <lists@wildgooses.com>
+Subject: Re: Software raid, booting and bios
+Date: Fri, 20 May 2011 20:13:41 +0100
+Message-ID: <4DD6BD65.7020702@wildgooses.com>
+References: <9067914580344941270@unknownmsgid> <ir58vs$9qp$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-2;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110520133244.GA13330@apartia.fr>
-Content-Disposition: inline
+In-Reply-To: <ir58vs$9qp$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+To: Paul van der Vlis <paul@vandervlis.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 20/05/2011 09:33, Paul van der Vlis wrote:
+> You can select the "boot device priority" where you can choose about
+> devices types (DVD, harddisk, USB, network) but you can choose only one
+> SATA disk. Study it, and you will see I am right. I've asked it to my
+> rackserver-vendor, they say: "that's always the case".
 
------ Message from vindex+lists-linux-raid@apartia.org ---------
-     Date: Fri, 20 May 2011 15:32:44 +0200
-     From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-  Subject: why should I "initialize" JBOD disks?
-       To: linux-raid@vger.kernel.org
+Hi, what I have done with all my supermicro servers is to buy a tiny USB
+flash drive (physically small, not capacity small) - I think what I
+bought might be one of the tiny PNY devices, not sure though
 
+The Supermicro boards have internal USB headers mounted on the
+motherboard, even with a 1U server I have plenty of room to install my
+USB on the MB (could stick them out the back of the server and cable tie
+them (or superglue them))
 
-> Hi,
->
-> I just installed an Adaptec SAS 4805 and plugged 8 disks previously used
-> "as is" (no raid) on an LSI adapter but none are recongnized as boot
-> disk ("no bios installed").
->
-> It seems I need to "initialize" (read: wipe) them in the Adaptec bios
-> menu before being able to use them as JBOD.
->
-> What the fuck?!
+Then I put SysrescueCD on my stick and setup GRUB with a bunch of boot
+options.
 
-The controller puts the configuration details for the disk on the disk  
-itself. That way you can plug the disk into another port or controller  
-of the same brand and it will simply work.
+In my case I'm under the possibly misguided apprehension that my boot
+will fail over to the spare disks if one fails. However, I can set the
+subsequent failover to be my USB stick also.  I think I have them set at
+the moment that the USB stick boots the main drives as normal, but has a
+boot menu where I can also boot the sysrescueimage if I need to (I use
+this (over IPMI) for initial system installation and serious
+maintenance, eg failed grub upgrade or similar).
 
-> By my defintion JBOD should means "just get out of the way and let me
-> use my disks as they are".
->
-> Does that "initlialization" mean that disks become unusable when plugged
-> to an adapter of any other brand or model?
+The only other option that I think the big hosting guys use is to have a
+netboot setup which boots everything and can also offer rescue images,
+etc.  Beyond my skills to setup for my meagre number of servers, but if
+you have more than a couple of machines this could be a very good solution?
 
-It will show as uninitialized.
+For my needs the USB stick option is perfect
 
-> What is the underlying format of JBOD disks. Can they be read by a
-> straight, non-raid adapter?
+Sysrescuecd suits me because all my servers are gentoo based - clearly
+it will work for other distros also, but you might want to evaluate
+other rescue distros before choosing one?
 
-The configuration needs to be stored somewhere on the disk. Either at  
-the beginning or at the end (or a combination of both).
-Hence I would expect the start of the disk to be shifted a bit (what  
-used to be block 0 on the disk while plugged into the RAID controller  
-will be some higher block) or the disk will "end" a bit before the  
-actual end of the disk.
-So I'm pretty sure you can dd such a disk onto another one to rescue  
-the data given the right seek offset.
-Alex.
+Good luck
 
------ End message from vindex+lists-linux-raid@apartia.org -----
-
-
-
-========================================================================
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/ Mac (PPC): MacOS-X / Linux / MacOS-X #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-========================================================================
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
+Ed W
