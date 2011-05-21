@@ -1,222 +1,62 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: mdadm git, -Werror=unused-but-set-variable
-Date: Sat, 21 May 2011 11:20:01 +0100
-Message-ID: <BANLkTinf5OaDXN5KMrdP5ZOCADS=zXRwnQ@mail.gmail.com>
+From: Pol Hallen <raid1@fuckaround.org>
+Subject: Performarce raid6 degraded
+Date: Sat, 21 May 2011 13:16:18 +0200
+Message-ID: <201105211316.18565.raid1@fuckaround.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The git as of today "fails" to compile on my Archlinux system:
+Hi folks, after fail of a disk on my raid6 sw I check with dd the performance 
+of raid:
 
-=3D=3D> Starting build()...
-=3D=3D> Fetching sources...
-Cloning into ./mdadm...
-remote: Counting objects: 9107, done.
-remote: Compressing objects: 100% (6096/6096), done.
-remote: Total 9107 (delta 6874), reused 3903 (delta 3004)
-Receiving objects: 100% (9107/9107), 2.46 MiB | 12 KiB/s, done.
-Resolving deltas: 100% (6874/6874), done.
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-mdadm.o mdadm.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-config.o config.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-policy.o policy.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-mdstat.o mdstat.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-ReadMe.o ReadMe.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-util.o util.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-maps.o maps.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-lib.o lib.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Manage.o Manage.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Assemble.o Assemble.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Build.o Build.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Create.o Create.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Detail.o Detail.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Examine.o Examine.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Grow.o Grow.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Monitor.o Monitor.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-dlink.o dlink.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Kill.o Kill.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Query.o Query.c
-gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
--ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
--DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
-"
--DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
--DMDMON_DIR=3D\"/dev/.mdadm\"
--DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
-o
-Incremental.o Incremental.c
-Query.c: In function =E2=80=98Query=E2=80=99:
-Query.c:38:16: error: variable =E2=80=98superrno=E2=80=99 set but not u=
-sed
-[-Werror=3Dunused-but-set-variable]
-cc1: all warnings being treated as errors
+dd if=/dev/zero of=degradedraid bs=1000024 count=100
+100+0 records in
+100+0 records out
+100002400 bytes (100 MB) copied, 288.254 s, 347 kB/s
 
-make: *** [Query.o] Error 1
-make: *** Waiting for unfinished jobs....
-=3D=3D> ERROR: A failure occurred in build().
-    Aborting...
+is it correct? only 347Kb/s on a raid6 degraded?
 
-This with gcc 4.6.0.
+mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Mon Sep 27 14:19:15 2010
+     Raid Level : raid6
+     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
+  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 6
+  Total Devices : 7
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Regards,
-/M
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    Update Time : Sat May 21 13:14:43 2011
+          State : active, degraded
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 2
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 9bd6372e:e2eab1d5:d2bdc3cb:ad12f41d
+         Events : 0.385693
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       0        0        2      removed
+       3       8       81        3      active sync   /dev/sdf1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       49        5      active sync   /dev/sdd1
+
+       6       8      145        -      faulty spare
+       7       8       33        -      faulty spare
+
+thanks!
+ 
+Pol
