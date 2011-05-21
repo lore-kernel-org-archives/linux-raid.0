@@ -1,53 +1,55 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Software raid, booting and bios
-Date: Sat, 21 May 2011 03:19:30 -0500
-Message-ID: <9A.9E.03893.C8577DD4@cdptpa-omtalb.mail.rr.com>
-References: <4DD6E293.8000503@wasp.net.au>
-Reply-To: <lrhorer@satx.rr.com>
+From: Ed W <lists@wildgooses.com>
+Subject: Re: HBA Adaptor advice
+Date: Sat, 21 May 2011 10:52:30 +0100
+Message-ID: <4DD78B5E.30300@wildgooses.com>
+References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD5FC66.5020209@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD6E293.8000503@wasp.net.au>
+In-Reply-To: <4DD5FC66.5020209@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Brad Campbell' <brad@wasp.net.au>, linux-raid@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Brad Campbell
-> Sent: Friday, May 20, 2011 4:52 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: Software raid, booting and bios
+On 20/05/2011 06:30, Stan Hoeppner wrote:
+>> Are there actually any HBAs that have BBU without using their RAID
+>> features?
 > 
-> On 21/05/11 03:32, Phil Turmel wrote:
+> AFAIK the LSI real RAID cards allow this.  To get them into a JBOD mode
+> you have to create a single drive RAID 0 of each disk and export it.  By
+> doing so the RAID firmware is actually active, though not really doing
+> anything, so you get the cache and BBU benefit of the controller.  One
+> of the XFS developers, Dave Chinner, posted this to the XFS list quite
+> some time ago when we discussed hardware vs software RAID setups.
 > 
-> > the big deal is the lack of moving parts:  No spindle bearing, no head
-> positioner gear train.
-> 
-> Sorry, this just tickled me. "gear train" ? Which decade are we talking
-> about? The last drive I saw
-> that had any form of mechanical power transfer mechanism for head
-> positioning was a 60MB RLL Seagate
-> clunker.
 
-	Yeah, the number of moving parts in a hard drive is minimal.  OTOH,
-it's not zero.
 
-> Now, to add some form of use to the thread I've been using commodity CF
-> cards in home-brew CF to ATA
-> adaptors in embedded systems for 10 years. Flash is _the_ way to go for
-> high reliability systems
-> that don't have lots of write cycles.
-> 
-> My TV box that has no on-board PXE has been booting from a 10MB USB stick
-> using loadlinux since
-> 2003. Dead reliable after ~69,000 hours power on time. I've not had a hard
-> disk last that long since
-> my old 200MB WD IDE drive (which is still running with over 100,000 hours
-> on it).
+Something I didn't consider:
 
-	Oh, we have quite a number of embedded controllers with SCSI hard
-drives that have been spinning continuously since 1992.
+When you setup most hardware raid cards to have a whole bunch of RAID0
+arrays (that are then assembled as software raid), *can* I swap that
+hardware raid card for a different make/model or even non raid HBA?
 
+If I can't do this then I don't want such a card... The entire point of
+avoiding hardware raid was simply to avoid the proprietory lockin...
+
+So, to be specific, given one of the LSI/3Ware/Areca fast hardware raid
+cards mentioned in this thread, and assuming that I have created a bunch
+of raid0 arrays, each containing 1 drive, can anyone confirm/deny if
+those single disks than then be moved to a) non raid HBA controller, b)
+another hardware raid controller as a new raid0 array
+
+I'm rather expecting that a) might be possible if the HBA can ignore the
+proprietory bit and see a raw partition, but b) seems highly unlikely
+since the new controller presumably wants to reformat the array in it's
+own format before it will use it?
+
+If neither are possible then there seems little advantage in using a
+hardware raid as a write caching HBA card (unless the card is too
+underpowered that it's a bottleneck)
+
+Thanks
+
+Ed W
