@@ -1,55 +1,222 @@
-From: Ed W <lists@wildgooses.com>
-Subject: Re: HBA Adaptor advice
-Date: Sat, 21 May 2011 10:52:30 +0100
-Message-ID: <4DD78B5E.30300@wildgooses.com>
-References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD5FC66.5020209@hardwarefreak.com>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: mdadm git, -Werror=unused-but-set-variable
+Date: Sat, 21 May 2011 11:20:01 +0100
+Message-ID: <BANLkTinf5OaDXN5KMrdP5ZOCADS=zXRwnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD5FC66.5020209@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 20/05/2011 06:30, Stan Hoeppner wrote:
->> Are there actually any HBAs that have BBU without using their RAID
->> features?
-> 
-> AFAIK the LSI real RAID cards allow this.  To get them into a JBOD mode
-> you have to create a single drive RAID 0 of each disk and export it.  By
-> doing so the RAID firmware is actually active, though not really doing
-> anything, so you get the cache and BBU benefit of the controller.  One
-> of the XFS developers, Dave Chinner, posted this to the XFS list quite
-> some time ago when we discussed hardware vs software RAID setups.
-> 
+The git as of today "fails" to compile on my Archlinux system:
 
+=3D=3D> Starting build()...
+=3D=3D> Fetching sources...
+Cloning into ./mdadm...
+remote: Counting objects: 9107, done.
+remote: Compressing objects: 100% (6096/6096), done.
+remote: Total 9107 (delta 6874), reused 3903 (delta 3004)
+Receiving objects: 100% (9107/9107), 2.46 MiB | 12 KiB/s, done.
+Resolving deltas: 100% (6874/6874), done.
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+mdadm.o mdadm.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+config.o config.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+policy.o policy.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+mdstat.o mdstat.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+ReadMe.o ReadMe.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+util.o util.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+maps.o maps.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+lib.o lib.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Manage.o Manage.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Assemble.o Assemble.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Build.o Build.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Create.o Create.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Detail.o Detail.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Examine.o Examine.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Grow.o Grow.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Monitor.o Monitor.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+dlink.o dlink.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Kill.o Kill.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Query.o Query.c
+gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+-ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+-DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.conf\=
+"
+-DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+-DMDMON_DIR=3D\"/dev/.mdadm\"
+-DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c -=
+o
+Incremental.o Incremental.c
+Query.c: In function =E2=80=98Query=E2=80=99:
+Query.c:38:16: error: variable =E2=80=98superrno=E2=80=99 set but not u=
+sed
+[-Werror=3Dunused-but-set-variable]
+cc1: all warnings being treated as errors
 
-Something I didn't consider:
+make: *** [Query.o] Error 1
+make: *** Waiting for unfinished jobs....
+=3D=3D> ERROR: A failure occurred in build().
+    Aborting...
 
-When you setup most hardware raid cards to have a whole bunch of RAID0
-arrays (that are then assembled as software raid), *can* I swap that
-hardware raid card for a different make/model or even non raid HBA?
+This with gcc 4.6.0.
 
-If I can't do this then I don't want such a card... The entire point of
-avoiding hardware raid was simply to avoid the proprietory lockin...
-
-So, to be specific, given one of the LSI/3Ware/Areca fast hardware raid
-cards mentioned in this thread, and assuming that I have created a bunch
-of raid0 arrays, each containing 1 drive, can anyone confirm/deny if
-those single disks than then be moved to a) non raid HBA controller, b)
-another hardware raid controller as a new raid0 array
-
-I'm rather expecting that a) might be possible if the HBA can ignore the
-proprietory bit and see a raw partition, but b) seems highly unlikely
-since the new controller presumably wants to reformat the array in it's
-own format before it will use it?
-
-If neither are possible then there seems little advantage in using a
-hardware raid as a write caching HBA card (unless the card is too
-underpowered that it's a bottleneck)
-
-Thanks
-
-Ed W
+Regards,
+/M
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
