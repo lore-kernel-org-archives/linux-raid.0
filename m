@@ -1,89 +1,263 @@
-From: Ed W <lists@wildgooses.com>
-Subject: Re: HBA Adaptor advice
-Date: Sat, 21 May 2011 12:54:52 +0100
-Message-ID: <4DD7A80C.8050808@wildgooses.com>
-References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com> <4DD6409F.9070904@hardwarefreak.com> <4DD79F4E.7000509@wildgooses.com> <4DD7A205.8070106@grumpydevil.homelinux.org>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm git, -Werror=unused-but-set-variable
+Date: Sat, 21 May 2011 22:27:18 +1000
+Message-ID: <20110521222718.55ac4bae@notabene.brown>
+References: <BANLkTinf5OaDXN5KMrdP5ZOCADS=zXRwnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD7A205.8070106@grumpydevil.homelinux.org>
+In-Reply-To: <BANLkTinf5OaDXN5KMrdP5ZOCADS=zXRwnQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, linux-raid@vger.kernel.org
+To: Mathias =?ISO-8859-1?B?QnVy6W4=?= <mathias.buren@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi
+On Sat, 21 May 2011 11:20:01 +0100 Mathias Bur=C3=A9n <mathias.buren@gm=
+ail.com>
+wrote:
 
-> I understand your thinking. There is one big cost not mentioned in this
-> calculation though:
-> - what is the cost if the data is lost/corrupt?
+> The git as of today "fails" to compile on my Archlinux system:
+>=20
+> =3D=3D> Starting build()...
+> =3D=3D> Fetching sources...
+> Cloning into ./mdadm...
+> remote: Counting objects: 9107, done.
+> remote: Compressing objects: 100% (6096/6096), done.
+> remote: Total 9107 (delta 6874), reused 3903 (delta 3004)
+> Receiving objects: 100% (9107/9107), 2.46 MiB | 12 KiB/s, done.
+> Resolving deltas: 100% (6874/6874), done.
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> mdadm.o mdadm.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> config.o config.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> policy.o policy.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> mdstat.o mdstat.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> ReadMe.o ReadMe.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> util.o util.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> maps.o maps.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> lib.o lib.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Manage.o Manage.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Assemble.o Assemble.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Build.o Build.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Create.o Create.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Detail.o Detail.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Examine.o Examine.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Grow.o Grow.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Monitor.o Monitor.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> dlink.o dlink.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Kill.o Kill.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Query.o Query.c
+> gcc -Wall -Werror -Wstrict-prototypes -Wextra -Wno-unused-parameter
+> -ggdb -DSendmail=3D\""/usr/sbin/sendmail -t"\"
+> -DCONFFILE=3D\"/etc/mdadm.conf\" -DCONFFILE2=3D\"/etc/mdadm/mdadm.con=
+f\"
+> -DMAP_DIR=3D\"/dev/.mdadm\" -DMAP_FILE=3D\"map\"
+> -DMDMON_DIR=3D\"/dev/.mdadm\"
+> -DFAILED_SLOTS_DIR=3D\"/dev/.mdadm/failed-slots\" -DUSE_PTHREADS   -c=
+ -o
+> Incremental.o Incremental.c
+> Query.c: In function =E2=80=98Query=E2=80=99:
+> Query.c:38:16: error: variable =E2=80=98superrno=E2=80=99 set but not=
+ used
+> [-Werror=3Dunused-but-set-variable]
+> cc1: all warnings being treated as errors
+>=20
+> make: *** [Query.o] Error 1
+> make: *** Waiting for unfinished jobs....
+> =3D=3D> ERROR: A failure occurred in build().
+>     Aborting...
+>=20
+> This with gcc 4.6.0.
+>=20
+> Regards,
+> /M
 
-I think it's fair to say that the loss of all your business data is the
-loss of your entire business?!
+Thanks for the report.
+This patch will go in in the near future.
+(The variable has been unused since 2005 !!!)
 
-That said if you are Skype you don't spend 8.5 billion on raid cards,
-instead you choose a layered approach to availability which normally
-trades speed of restore time vs cost.
+Thanks,
+NeilBrown
 
-Eg one might specify raid 6, dual mirrored servers, backed up to some
-spare disks, blueray and some offsite storage service.  This would give
-resilliance to various types of disaster without spending the entire
-budget on a fancy raid card?
-
-In fact if you go back to my question, the *entire* point is that I
-don't want the choice of card to be a point of failure, ie it's my
-specific point to purchase a card such that it can be swapped out for
-near any other card in the event of failure.
-
-> compared to that cost, how relevant is the cost of a proper card?
-
-See point above.  I don't get a strong feeling that a "proper card" is
-any more reliable and resiliant than a well chosen cheap card?  If that
-theory is correct then the ability to swap in another cheap card in the
-event of disaster is valuable and eliminates a point of failure for
-little cost?
-
-> I am getting the feeling of "penny wise, pound foolish"
-
-I don't see that your logic leads here?
-
-There is a clear definition of good/bad here.  The only acceptable
-performance is that all reads/writes are accurate and completed.  No
-data should be lost or corrupted.  Assuming that the market can be
-partitioned into good/bad cards based on the definition above, then if
-we select from only "good" cards, then price appears to only buy me
-performance, nothing else?
-
-So my question is how to choose from all the "good" cards, the best bang
-for buck.  I don't see any reason not to buy a cheaper card that
-performs well, subject to it being reliable and doesn't loose data.
-
-Does someone have a claim that dataloss is actually on a curve and that
-more expensive cards corrupt less data and cheaper cards corrupt more
-data...  That doesn't seem to fit with expectation... (I expect either
-working cards that loose nothing, or bad cards that loose some data.
-Black and white)
-
-
-> Now that mind set, of course, describes many a business....
-
-I think this is a silly line of argument.  All you can ever do is buy
-"insurance" against low probability events occuring.  Annoyingly the
-"insurance" in this scenario doesn't always pay out and so the question
-is how much to spend on orthogonal types of insurance to increase the
-chance of a payout in the case of disaster...
-
-It's always easy in the event of some disaster to point out how you
-should have bought some different type of "insurance", but equally it's
-also dead money that a business could spend to generate income...
-Balancing funding between profitable activities and insurance is a fine
-line (especially since you are insuring against infrequent events)
-
-As engineers, yes it's always easy to prefer to spend money on technical
-"insurance", but accept also that there are competing demands on where
-cash gets deployed to earn a return?
-
-Cheers
-
-Ed W
+diff --git a/Query.c b/Query.c
+index f9857d6..0b15e28 100644
+--- a/Query.c
++++ b/Query.c
+@@ -35,7 +35,7 @@ int Query(char *dev)
+ 	int fd =3D open(dev, O_RDONLY);
+ 	int vers;
+ 	int ioctlerr;
+-	int superror, superrno;
++	int superror;
+ 	struct mdinfo info;
+ 	mdu_array_info_t array;
+ 	struct supertype *st =3D NULL;
+@@ -82,10 +82,9 @@ int Query(char *dev)
+ 		       array.spare_disks, array.spare_disks=3D=3D1?"":"s");
+ 	}
+ 	st =3D guess_super(fd);
+-	if (st) {
++	if (st)
+ 		superror =3D st->ss->load_super(st, fd, dev);
+-		superrno =3D errno;
+-	} else
++	else
+ 		superror =3D -1;
+ 	close(fd);
+ 	if (superror =3D=3D 0) {
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
