@@ -1,138 +1,143 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: HBA Adaptor advice
-Date: Sat, 21 May 2011 12:37:12 -0500
-Message-ID: <38.4D.17273.348F7DD4@cdptpa-omtalb.mail.rr.com>
-References: <4DD7A80C.8050808@wildgooses.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: Ed W <lists@wildgooses.com>
+Subject: Re: Software raid, booting and bios
+Date: Sat, 21 May 2011 20:57:43 +0100
+Message-ID: <4DD81937.1050701@wildgooses.com>
+References: <9067914580344941270@unknownmsgid> <ir58vs$9qp$1@dough.gmane.org> <4DD6BD65.7020702@wildgooses.com> <4DD7EF40.1030506@vandervlis.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD7A80C.8050808@wildgooses.com>
+In-Reply-To: <4DD7EF40.1030506@vandervlis.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Ed W' <lists@wildgooses.com>, 'Rudy Zijlstra' <rudy@grumpydevil.homelinux.org>
-Cc: 'Stan Hoeppner' <stan@hardwarefreak.com>, linux-raid@vger.kernel.org
+To: Paul van der Vlis <paul@vandervlis.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Ed W
-> Sent: Saturday, May 21, 2011 6:55 AM
-> To: Rudy Zijlstra
-> Cc: Stan Hoeppner; linux-raid@vger.kernel.org
-> Subject: Re: HBA Adaptor advice
+>> The only other option that I think the big hosting guys use is to have a
+>> netboot setup which boots everything and can also offer rescue images,
+>> etc.  Beyond my skills to setup for my meagre number of servers, but if
+>> you have more than a couple of machines this could be a very good solution?
 > 
-> Hi
-> 
-> > I understand your thinking. There is one big cost not mentioned in this
-> > calculation though:
-> > - what is the cost if the data is lost/corrupt?
-> 
-> I think it's fair to say that the loss of all your business data is the
-> loss of your entire business?!
+> I don't have much machines, but I have my own IPv4 range.
+> So it is possible.
 
-	If a single device failure results in the loss of all one's business
-data, then one has done a completely incompetent job of building a data
-system.  In a properly designed system, the question is how much time and
-effort will be spent over the life of the system in recovering data, or more
-properly the cost of those resources, vs. the capital outlay for more
-expensive hardware.  If any loss of productivity for the company as a whole
-is involved with a hardware failure, then that should be taken into account,
-as well.
+You don't actually need any range to make netboot work (kind of).  Bear
+in mind I have never done this... But you arrange for netboot to boot
+from some internal server and in fact try and use your firewall to stop
+the machines being visible to the outside world during this process
+(think about various ways you can netboot to say some 192.168.x.y range
+and if required say bounce ssh off some other machine to your server in
+rescue mode (I just use the IPMI port so I don't need the machine to
+have any working network access at all)
 
-> That said if you are Skype you don't spend 8.5 billion on raid cards,
-> instead you choose a layered approach to availability which normally
-> trades speed of restore time vs cost.
+>> For my needs the USB stick option is perfect
 > 
-> Eg one might specify raid 6, dual mirrored servers, backed up to some
-> spare disks, blueray and some offsite storage service.  This would give
-> resilliance to various types of disaster without spending the entire
-> budget on a fancy raid card?
-> 
-> In fact if you go back to my question, the *entire* point is that I
-> don't want the choice of card to be a point of failure, ie it's my
-> specific point to purchase a card such that it can be swapped out for
-> near any other card in the event of failure.
-> 
-> > compared to that cost, how relevant is the cost of a proper card?
-> 
-> See point above.  I don't get a strong feeling that a "proper card" is
-> any more reliable and resiliant than a well chosen cheap card?  If that
-> theory is correct then the ability to swap in another cheap card in the
-> event of disaster is valuable and eliminates a point of failure for
-> little cost?
+> I will think about it. A little disadvantage is that it's not so easy to
+> have access to the USB stick maybe (you have to open the machine).
 
-	Well, yes, and no.  First of all, a "bad" card is often the result
-of random factors unmitigated by any process.  The most expensive card on
-Earth may have accidentally been exposed to ESD at some point in its
-existence, for example.  OTOH, an inexpensive card may not necessarily be of
-poor quality or design.  That said, I think there is a reasonable
-expectation that a higher cost card should be the result of careful
-engineering, high quality production methods, and extensive QC procedures,
-all of which may be somewhat less likely of a lower cost card.
+Why would you ever need to access the USB stick?
 
-	I think on average one may expect lower failure rates on higher cost
-devices.  The thing is, a statistical average has nothing to do with any
-given failure.  A customer does not care if he is the only client who has
-ever lost any data out of hundreds of clients.  He only cares that he has
-lost his data.
+As several other people already said - NOT being able to access it is a
+bonus.. I would recommend superglue/cable-ties if you can't put the
+stick inside the machine...
 
-> > I am getting the feeling of "penny wise, pound foolish"
+>> Sysrescuecd suits me because all my servers are gentoo based - clearly
+>> it will work for other distros also, but you might want to evaluate
+>> other rescue distros before choosing one?
 > 
-> I don't see that your logic leads here?
+> I use Debian, so I think I would choose a Debian-based rescue system.
+
+Sure - but don't get too bogged down in the source distro.  Sysrescuecd
+will have a bang up to date set of binaries, likely far newer than those
+on your live debian machine.  It's really a question of whether that's a
+benefit or liability...
+
+For any work on the machine you simply chroot into the live machine and
+then you are using all identical binaries (in fact the live machine) and
+so really all you need is a boot environment which will support your
+chosen raid/lvm/cpu architecture
+
 > 
-> There is a clear definition of good/bad here.  The only acceptable
-> performance is that all reads/writes are accurate and completed.  No
-> data should be lost or corrupted.  Assuming that the market can be
-> partitioned into good/bad cards based on the definition above, then if
-> we select from only "good" cards, then price appears to only buy me
-> performance, nothing else?
+> What still a question is for me:
+> Is it better to put /boot on such an usb-stick or only the MBR?
 
-	I would say there are exceptions, but in general, yes.  More to the
-point - and I think this is your point - relying upon quality hardware to
-prevent failures is a much poorer approach than developing a strategy that
-mitigates the impact of failures.  Put more simply, a proper backup strategy
-is a must.
+Why pick only one?
 
-> So my question is how to choose from all the "good" cards, the best bang
-> for buck.  I don't see any reason not to buy a cheaper card that
-> performs well, subject to it being reliable and doesn't loose data.
-> 
-> Does someone have a claim that dataloss is actually on a curve and that
-> more expensive cards corrupt less data and cheaper cards corrupt more
-> data...  That doesn't seem to fit with expectation... (I expect either
-> working cards that loose nothing, or bad cards that loose some data.
-> Black and white)
+I use a small raid 1 partition for /boot which mirrors across all 4
+disks in my 1U servers.  I try and install boot sectors on all drives so
+I could in theory boot off any disk
 
-	Well, yes, but there is a (fairly minor, I think) statistical
-correlation between cost and failure rates.
+Then I customise my sysrescuecd bootloader menu to
+- boot the USB stick,
+- rebuild the grub bootsector
+- Boot drive 1
+- Boot drive 2
+- ...
 
-> > Now that mind set, of course, describes many a business....
-> 
-> I think this is a silly line of argument.  All you can ever do is buy
-> "insurance" against low probability events occuring.  Annoyingly the
-> "insurance" in this scenario doesn't always pay out and so the question
-> is how much to spend on orthogonal types of insurance to increase the
-> chance of a payout in the case of disaster...
-> 
-> It's always easy in the event of some disaster to point out how you
-> should have bought some different type of "insurance", but equally it's
-> also dead money that a business could spend to generate income...
-> Balancing funding between profitable activities and insurance is a fine
-> line (especially since you are insuring against infrequent events)
-> 
-> As engineers, yes it's always easy to prefer to spend money on technical
-> "insurance", but accept also that there are competing demands on where
-> cash gets deployed to earn a return?
+For icing you could backup the /boot from the disks onto the USB stick,
+but I haven't done that since it can be easily rebuilt (it's just the
+kernel, grub boot files and grub.conf)
 
-	Well, there is a big difference between "insurance" in the ordinary
-sense, which is to say a recurring premium paid ad infinitum and a one time
-capital outlay that offers greater reliability for the indefinite future.
-In addition, depending upon the application, performance does have value.
-All that said, I agree that as long as the performance is acceptable, and as
-long as the average reliability is reasonable, the lower cost solution
-coupled with a solid backup strategy is the better choice.
 
+> Grub2 can boot from lvm/raid, and when I would have /boot on disk I can
+
+I don't see any reason to deviate from the "small raid 1 boot partition"
+idea.  Needs only grub1 and no special handling?
+
+> have an MBR on disks too (for the case the usb stick would fail).
+
+I would suggest you boot from the disks first and set your USB stick as
+the failover boot drive, and make sure it's boot menu picks to boot from
+say disk2 as the default option?  This covers you for the case that
+someone pinches disk1 and reboots the machine, but your normal process
+of maintaining the boot partition on the local disks holds
+
+The USB drive then remains read-only, so no chance to bugger it up
+accidently and you can churn out dozens for a tiny budget and re-use
+them for quite some years
+
+I can think of few downsides assuming you figure out how to make the
+blasted things boot (not always easy) and can fit them inside the server
+or similar?
+
+> But difficult for me to understand that things like the initrd comes
+> from a software raid....
+
+Just don't make the boot process complicated...
+
+I'm a ludite, I build my kernel with everything needed to boot builtin,
+therefore no initrd needed (unless you want root on an md partition
+that's not 0.90 format?).  I can't cope with rebuilding initrds and all
+that jazz...   Now you can just update bzImage to update, plus you can
+boot from any disk without treating it as raid at all (it's read only,
+so with a 0.90 raid format you can use disks individually with GRUB -
+mount them as a raid1 to modify them and they all stay in sync)
+
+Easy peasy
+
+> Another way would be make a /boot on a raid1 with 3 devices: the
+> harddisks and the USB stick.
+
+I just don't see that /boot is that precious?  You probably have the
+same info on every single other server you own (assuming you build same
+kernels on all).  Raid1 it across all your drives, then all you need is
+the "boot sector" to be copied to more than one place and you do that by
+copying it to all drives, plus having a bootable USB drive.
+
+Remember a bootable disk (say USB) can then boot the /boot partition
+from any other disk.  All you are trying to do is get to the point that
+grub (etc) is running and shows you some menu of choices (and picks
+sensible default choices) - the rest is easy
+
+I think you are probably not seeing how simple this really is?  Have a
+read through the above again if you still think you need custom USB
+sticks or some complex raid1 scenario?  It should just work very simply
+and even with limited bios options, as long as you can boot from one
+disk and one USB stick then you have a failover
+
+Good luck
+
+Ed W
