@@ -1,64 +1,72 @@
-From: Simon McNair <simonmcnair@gmail.com>
-Subject: Re: Software raid, booting and bios
-Date: Sun, 22 May 2011 07:31:48 +0100
-Message-ID: <4DD8ADD4.1050601@gmail.com>
-References: <9A.9E.03893.C8577DD4@cdptpa-omtalb.mail.rr.com>
-Reply-To: simonmcnair@gmail.com
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: HBA Adaptor advice
+Date: Sun, 22 May 2011 03:13:09 -0500
+Message-ID: <4DD8C595.6070307@hardwarefreak.com>
+References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com> <4DD65C18.5090804@gmail.com> <20110520200100.GF4759@bitfolk.com> <BANLkTimP_5HHAq3Fq2sAkasZKH85gJFtYw@mail.gmail.com> <4DD6D5DC.4010209@hardwarefreak.com> <4DD7A100.2010807@wildgooses.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9A.9E.03893.C8577DD4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <4DD7A100.2010807@wildgooses.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: paul@vandervlis.nl
-Cc: 'Brad Campbell' <brad@wasp.net.au>, linux-raid@vger.kernel.org, lrhorer@satx.rr.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I think you might want to investigate a SATA DOM (Disk on module).  My 
-Thecus 5200 uses on and it seems a neat solution.
+On 5/21/2011 6:24 AM, Ed W wrote:
+> On 20/05/2011 21:58, Stan Hoeppner wrote:
+> 
+>> As always, a good data persistence strategy starts with a good UPS.
+> 
+> I'm sure you are going to tell me that my APCs aren't good UPSs, but I
 
-eg
-http://www.innodisk.com/flashstorage-list.jsp?items_name=satadom
+In my experience APC are good UPS.  Interestingly, I have an APC
+SU1400RMNET manufactured in *1997*, powering my home office rack.  I've
+replaced the batteries 4 times, but the UPS itself is like the Energizer
+Bunny.  14 years and still going strong.
 
-Simon
+> have something like 5 APCs and 4 have failed in odd ways due to the
+> battery dying, inside of around 2 years from new.  Sure you replace the
 
-On 21/05/2011 09:19, Leslie Rhorer wrote:
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->> owner@vger.kernel.org] On Behalf Of Brad Campbell
->> Sent: Friday, May 20, 2011 4:52 PM
->> To: linux-raid@vger.kernel.org
->> Subject: Re: Software raid, booting and bios
->>
->> On 21/05/11 03:32, Phil Turmel wrote:
->>
->>> the big deal is the lack of moving parts:  No spindle bearing, no head
->> positioner gear train.
->>
->> Sorry, this just tickled me. "gear train" ? Which decade are we talking
->> about? The last drive I saw
->> that had any form of mechanical power transfer mechanism for head
->> positioning was a 60MB RLL Seagate
->> clunker.
-> 	Yeah, the number of moving parts in a hard drive is minimal.  OTOH,
-> it's not zero.
->
->> Now, to add some form of use to the thread I've been using commodity CF
->> cards in home-brew CF to ATA
->> adaptors in embedded systems for 10 years. Flash is _the_ way to go for
->> high reliability systems
->> that don't have lots of write cycles.
->>
->> My TV box that has no on-board PXE has been booting from a 10MB USB stick
->> using loadlinux since
->> 2003. Dead reliable after ~69,000 hours power on time. I've not had a hard
->> disk last that long since
->> my old 200MB WD IDE drive (which is still running with over 100,000 hours
->> on it).
-> 	Oh, we have quite a number of embedded controllers with SCSI hard
-> drives that have been spinning continuously since 1992.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Then I'd guess you're not performing proper UPS maintenance.  Once
+yearly you need to perform a deep cycle self test which can notify you
+of marginal batteries at a much earlier stage.  Your APC manual has
+instructions for performing this test, or you can download the manual
+from there site if it's been lost.
+
+All APCs inform you when the battery needs to be replaced, via front
+panel LED and via software or network notification (Email/SNMP).  But
+you don't want to wait for that.  Do the deep self test.
+
+> battery, but failure modes each time caused a sudden power failure.  In
+> nearly all cases the UPS failed before I would have had a sudden power
+> loss for other reasons...
+
+Yep.  Lack of proper UPS maintenance and monitoring.
+
+> So, I'm not convinced that UPSs dramatically raise the uptime, and where
+
+Without a UPS in Missouri USA, your servers will go down from power loss
+at *minimum* 50-100 times per year due to electrical storms, high winds,
+power line maintenance, brown outs and sags caused by all manner of
+things, truck hitting power pole, etc, etc.
+
+> they do it's in well designed, racked, datacenter environments where
+> "accidents" don't dominate the downtime risk?
+
+Doesn't matter if it's a corporate datacenter, your rack in the
+basement, or an office pedestal server.  What counts is proper design
+and installation.  It's is trivially simple in an office environment to
+route all cables in a manner that they won't be tripped over.  I'm truly
+shocked that cable tripping could be an issue for anyone in 2011, let
+alone 1999.  Get a rack cabinet and stick it in a corner.  Here, get this:
+
+http://cgi.ebay.co.uk/COMPAQ-42U-SERVER-RACK-CABINET-ENCLOSURE-/150608001643?pt=UK_Computing_Networking_SM&hash=item2310efba6b
+
+and 2 or 3 of these, since all your servers are non-rack boxes:
+
+http://cgi.ebay.co.uk/StarTech-Adjustable-Depth-Fixed-Server-Rack-Cabinet-She-/320618338412?pt=UK_Computing_ComputerComponents_Monitors&hash=item4aa657986c
+
+Problem solved.
+
+-- 
+Stan
