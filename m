@@ -1,27 +1,25 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
+From: Jim Schatzman <James.Schatzman@fulab.com>
 Subject: Re: HBA Adaptor advice
-Date: Mon, 23 May 2011 08:07:52 +0800
-Message-ID: <4DD9A558.7000802@fnarfbargle.com>
-References: <4DD50C89.8060006@wildgooses.com> <20110520020853.GC4759@bitfolk.com> <4DD61948.8050302@wildgooses.com> <4DD6409F.9070904@hardwarefreak.com> <4DD79F4E.7000509@wildgooses.com> <4DD8D1A7.1090803@hardwarefreak.com> <4DD8E0D3.1030905@fnarfbargle.com> <4DD9633E.5000101@hardwarefreak.com> <4DD99FF2.2030609@fnarfbargle.com>
+Date: Sun, 22 May 2011 20:11:54 -0600
+Message-ID: <20110523021234.1BAEAF9C03C@mail.fulab.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DD99FF2.2030609@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23/05/11 07:44, Brad Campbell wrote:
-> He used WD commodity drives on a "hardware" RAID enclosure that needed TLER. The RAID-5 kicked out 4
-> drives in a short period of time, so he power cycled it and re-initialised the array and it came up
-> fine, but blank (as it would as he re-initialised it).
->
+One more input re. using cheap drives. 
 
-Just to clarify that as it was somewhat muddled. The initial failure was on an unspecified array 
-with unspecified drives and resulted in a blank array. The backup failure was TLER related using WD 
-GP drives on a hardware array and was left unresolved.
+I have been running about 20 Western Digital "Green" and "Enterprise" drives (half are 1.5 TB and half are 2 TB) for several years in Raid-5 and Raid-6 configurations (all linux md). They are up 24x7. When they first came on the market, about 30% of my new drives failed within 3 months of operation (about equal fractions of Green and Enterprise). Overall, 50% of the drives eventually failed - 35% of the Green drives and 100% of the Enterprise drives. In the past 18 months, one has failed (an Enterprise drive). That drive was a warranty replacement for an earlier Enterprise drive failure.
 
-That's still not concrete evidence of those drives failing, it's just using the wrong tool for the 
-wrong job.
+My impression is that Western was having some quality control issues with the 2GB drives - both Green and Enterprise. This was very annoying. It appears that quality has improved. I never lost any data nor ever had to restore from backup because I was always able to replace the bad drive and rebuild the raid without difficulty that I could not get solved through this forum. 
+
+My experience suggests that the WD Enterprise class drives were an unnecessary expense, at least as far as reliability is concerned.
+
+Would I recommend cheap SATA drives for mission critical data?  Absolutely not. I wouldn't recommend  any  SATA drives. Go with the most  expensive SAS drives available. For that matter, I have loads of SCSI drives that are still going fine after 5 to 10 years of 365x24x7 operation.
+
+If you are going to build a RAID from cheap drives, expect that part of your hardware savings will be compensated for by labor costs. Run smart checks often. Also, and I cannot emphasize this enough, make certain that everything attached to the RAID is plugged into a high quality UPS. Otherwise, you are just asking for a power spike to take out multiple drives and/or the controller and to lose data.
+
+Jim
+
