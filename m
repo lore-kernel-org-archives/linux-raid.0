@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@f14.redhat.com>
-Subject: [PATCH 0 of 9] MD:  Updates for dm-raid.c support
-Date: Mon, 23 May 2011 22:05:47 -0500
-Message-ID: <201105240305.p4O35l5O029146@f14.redhat.com>
+Subject: [PATCH 3 of 9] MD:  allow analyze_sbs to fail
+Date: Mon, 23 May 2011 22:06:20 -0500
+Message-ID: <201105240306.p4O36Kvt029366@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,27 +10,54 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+Patch name: md-allow-analyze_sbs-to-fail.patch
 
-The following set of 9 patches is composed of three sets:
-1) Patches 1-6 are small updates and fixes to what is already in the kernel.
-2) Patch 7 introduces a new superblock type for device-mapper - allowing it
-to record failures and give future support for reshaping and bitmap use.
-3) Patches 8-9 provide bitmap support.  Patch 9 is necessary for transient failures,
-where the bitmap can be replayed to recover a disk that has been gone for a short
-time.  Without patch 9, raid5 will simply force a complete resync.
+Catch the case that md_run is called requiring non-existant super_types fns.
 
-The first set by itself fixes a couple issues and protects against the      
-possibility that dm-raid.c attempts to utilize super_types that may not exist.
-The addition of the second set provides a working solution that is useful to
-LVM in addition to (userspace) dm-raid.  The final set is not absolutely   
-necessary, but provides the obvious recovery speed-up.
+Other modules may call md_run (like device-mapper's, dm-raid.c), we mustn't
+assume they will always set a valid MD major_version.  This is especially true
+in the case of device-mapper, which will use a new superblock type.  If patches
+don't land in the kernel in the proper order, access will be attempted beyond
+the end of the super_types array.
 
-I have seen an issue related to the MD recovery thread starting up before the
-bitmap has been properly loaded.  This issue is not a result of this patchset,
-nor is it addressed by this patch set.  Until I find a way to fix this issue,
-the 3rd set may be problematic and we may wish to defer it until I have a 
-solution.
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
- brassow
-
+Index: linux-2.6/drivers/md/md.c
+===================================================================
+--- linux-2.6.orig/drivers/md/md.c
++++ linux-2.6/drivers/md/md.c
+@@ -2864,12 +2864,15 @@ abort_free:
+  */
+ 
+ 
+-static void analyze_sbs(mddev_t * mddev)
++static int analyze_sbs(mddev_t *mddev)
+ {
+ 	int i;
+ 	mdk_rdev_t *rdev, *freshest, *tmp;
+ 	char b[BDEVNAME_SIZE];
+ 
++	if (mddev->major_version >= ARRAY_SIZE(super_types))
++		return -EINVAL;
++
+ 	freshest = NULL;
+ 	rdev_for_each(rdev, tmp, mddev)
+ 		switch (super_types[mddev->major_version].
+@@ -2921,6 +2924,7 @@ static void analyze_sbs(mddev_t * mddev)
+ 			clear_bit(In_sync, &rdev->flags);
+ 		}
+ 	}
++	return 0;
+ }
+ 
+ /* Read a fixed-point number.
+@@ -4459,7 +4463,8 @@ int md_run(mddev_t *mddev)
+ 	if (should_read_super(mddev)) {
+ 		if (!mddev->persistent)
+ 			return -EINVAL;
+-		analyze_sbs(mddev);
++		if (analyze_sbs(mddev))
++			return -EINVAL;
+ 	}
+ 
+ 	if (mddev->level != LEVEL_NONE)
