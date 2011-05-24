@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@f14.redhat.com>
-Subject: [PATCH 3 of 9] MD:  allow analyze_sbs to fail
-Date: Mon, 23 May 2011 22:06:20 -0500
-Message-ID: <201105240306.p4O36Kvt029366@f14.redhat.com>
+Subject: [PATCH] MD:  move thread wakeups into resume
+Date: Tue, 24 May 2011 15:56:26 -0500
+Message-ID: <201105242056.p4OKuQKw011764@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,54 +10,52 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Patch name: md-allow-analyze_sbs-to-fail.patch
+Patch name: md-move-thread-wakeups-into-resume.patch
 
-Catch the case that md_run is called requiring non-existant super_types fns.
+Move personality and sync/recovery thread starting outside md_run.
 
-Other modules may call md_run (like device-mapper's, dm-raid.c), we mustn't
-assume they will always set a valid MD major_version.  This is especially true
-in the case of device-mapper, which will use a new superblock type.  If patches
-don't land in the kernel in the proper order, access will be attempted beyond
-the end of the super_types array.
+Moving the wakeup's of the personality and sync/recovery threads out of
+md_run and into do_md_run and mddev_resume solves two issues:
+1) It allows bitmap_load to be called before the sync_thread is run and
+2) when MD personalities are used by device-mapper (dm-raid.c), the start-up
+of the array is better alligned with device-mapper primatives
+(CTR/resume/suspend/DTR).  I/O - in this case, recovery operations - should
+not happen until after a resume has taken place.
 
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+RFC-by: Jonathan Brassow <jbrassow@redhat.com>
 
 Index: linux-2.6/drivers/md/md.c
 ===================================================================
 --- linux-2.6.orig/drivers/md/md.c
 +++ linux-2.6/drivers/md/md.c
-@@ -2864,12 +2864,15 @@ abort_free:
-  */
- 
- 
--static void analyze_sbs(mddev_t * mddev)
-+static int analyze_sbs(mddev_t *mddev)
- {
- 	int i;
- 	mdk_rdev_t *rdev, *freshest, *tmp;
- 	char b[BDEVNAME_SIZE];
- 
-+	if (mddev->major_version >= ARRAY_SIZE(super_types))
-+		return -EINVAL;
+@@ -351,6 +351,9 @@ void mddev_resume(mddev_t *mddev)
+ 	mddev->suspended = 0;
+ 	wake_up(&mddev->sb_wait);
+ 	mddev->pers->quiesce(mddev, 0);
 +
- 	freshest = NULL;
- 	rdev_for_each(rdev, tmp, mddev)
- 		switch (super_types[mddev->major_version].
-@@ -2921,6 +2924,7 @@ static void analyze_sbs(mddev_t * mddev)
- 			clear_bit(In_sync, &rdev->flags);
- 		}
- 	}
-+	return 0;
++	md_wakeup_thread(mddev->thread);
++	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
  }
+ EXPORT_SYMBOL_GPL(mddev_resume);
  
- /* Read a fixed-point number.
-@@ -4459,7 +4463,8 @@ int md_run(mddev_t *mddev)
- 	if (should_read_super(mddev)) {
- 		if (!mddev->persistent)
- 			return -EINVAL;
--		analyze_sbs(mddev);
-+		if (analyze_sbs(mddev))
-+			return -EINVAL;
+@@ -4948,9 +4951,6 @@ int md_run(mddev_t *mddev)
+ 	if (mddev->flags)
+ 		md_update_sb(mddev, 0);
+ 
+-	md_wakeup_thread(mddev->thread);
+-	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+-
+ 	md_new_event(mddev);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 	sysfs_notify_dirent_safe(mddev->sysfs_action);
+@@ -4971,6 +4971,10 @@ static int do_md_run(mddev_t *mddev)
+ 		bitmap_destroy(mddev);
+ 		goto out;
  	}
- 
- 	if (mddev->level != LEVEL_NONE)
++
++	md_wakeup_thread(mddev->thread);
++	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
++
+ 	set_capacity(mddev->gendisk, mddev->array_sectors);
+ 	revalidate_disk(mddev->gendisk);
+ 	mddev->changed = 1;
