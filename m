@@ -1,28 +1,43 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: disable raid autodetect at boot
-Date: Mon, 23 May 2011 17:21:21 +0400
-Message-ID: <4DDA5F51.3090501@msgid.tls.msk.ru>
-References: <BANLkTim=K8b_3jD5RAdMT6+0TYQXNAHBtg@mail.gmail.com>	<4DDA388C.2020000@msgid.tls.msk.ru> <BANLkTi=zLb7j_MvkTyQa=ifMAS+kDCkbvg@mail.gmail.com>
+From: Jonathan Brassow <jbrassow@f14.redhat.com>
+Subject: [PATCH 6 of 9] MD:  no sync IO while suspended
+Date: Mon, 23 May 2011 22:06:53 -0500
+Message-ID: <201105240306.p4O36rFK029586@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=zLb7j_MvkTyQa=ifMAS+kDCkbvg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-23.05.2011 16:50, Alexander Lyakas wrote:
-> Michael,
-> can you pls explain what do I need to look at to disable this.
+Patch name: md-no-sync-IO-while-suspended.patch
 
-> On Mon, May 23, 2011 at 1:35 PM, Michael Tokarev <mjt@tls.msk.ru> wrote:
+Disallow resync I/O while the RAID array is suspended.
 
->> This is not kernel autodetection, this is your initramfs/initrd
->> and mdadm.  Or maybe mdadm in the regular root filesystem.
+Recovery, resync, and metadata I/O should not be allowed while a device is
+suspended.
 
-You need to find out where and how mdadm is called
-on your system during bootup, and fix that place.
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-/mjt
+Index: linux-2.6/drivers/md/md.c
+===================================================================
+--- linux-2.6.orig/drivers/md/md.c
++++ linux-2.6/drivers/md/md.c
+@@ -7064,7 +7064,6 @@ void md_do_sync(mddev_t *mddev)
+ }
+ EXPORT_SYMBOL_GPL(md_do_sync);
+ 
+-
+ static int remove_and_add_spares(mddev_t *mddev)
+ {
+ 	mdk_rdev_t *rdev;
+@@ -7176,6 +7175,9 @@ static void reap_sync_thread(mddev_t *md
+  */
+ void md_check_recovery(mddev_t *mddev)
+ {
++	if (mddev->suspended)
++		return;
++
+ 	if (mddev->bitmap)
+ 		bitmap_daemon_work(mddev);
+ 
