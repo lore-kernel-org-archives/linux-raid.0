@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@f14.redhat.com>
-Subject: [PATCH 6 of 9] MD:  no sync IO while suspended
-Date: Mon, 23 May 2011 22:06:53 -0500
-Message-ID: <201105240306.p4O36rFK029586@f14.redhat.com>
+Subject: [PATCH 5 of 9] MD:  no integrity register if no gendisk
+Date: Mon, 23 May 2011 22:06:42 -0500
+Message-ID: <201105240306.p4O36g9i029513@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,34 +10,27 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Patch name: md-no-sync-IO-while-suspended.patch
+Patch name: md-no-integrity-register-if-no-gendisk.patch
 
-Disallow resync I/O while the RAID array is suspended.
+Don't attempt md_integrity_register if there is no gendisk struct available.
 
-Recovery, resync, and metadata I/O should not be allowed while a device is
-suspended.
+When MD arrays are built via device-mapper, the gendisk structure is not
+available via mddev.
 
 Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-
+ 
 Index: linux-2.6/drivers/md/md.c
 ===================================================================
 --- linux-2.6.orig/drivers/md/md.c
 +++ linux-2.6/drivers/md/md.c
-@@ -7064,7 +7064,6 @@ void md_do_sync(mddev_t *mddev)
- }
- EXPORT_SYMBOL_GPL(md_do_sync);
+@@ -1781,8 +1781,8 @@ int md_integrity_register(mddev_t *mddev
  
--
- static int remove_and_add_spares(mddev_t *mddev)
- {
- 	mdk_rdev_t *rdev;
-@@ -7176,6 +7175,9 @@ static void reap_sync_thread(mddev_t *md
-  */
- void md_check_recovery(mddev_t *mddev)
- {
-+	if (mddev->suspended)
-+		return;
-+
- 	if (mddev->bitmap)
- 		bitmap_daemon_work(mddev);
- 
+ 	if (list_empty(&mddev->disks))
+ 		return 0; /* nothing to do */
+-	if (blk_get_integrity(mddev->gendisk))
+-		return 0; /* already registered */
++	if (!mddev->gendisk || blk_get_integrity(mddev->gendisk))
++		return 0; /* shouldn't register, or already is */
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		/* skip spares and non-functional disks */
+ 		if (test_bit(Faulty, &rdev->flags))
