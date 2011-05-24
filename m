@@ -1,38 +1,49 @@
-From: retail.mdadm@gmail.com
-Subject: mdadm problem
-Date: Wed, 25 May 2011 01:05:55 +0300
-Message-ID: <BANLkTi=Jba9U3w6yWanSp6oZ17Kmccffkw@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1 of 9] MD:  possible typo
+Date: Wed, 25 May 2011 08:18:08 +1000
+Message-ID: <20110525081808.32264b34@notabene.brown>
+References: <201105240305.p4O35wmb029220@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201105240305.p4O35wmb029220@f14.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jonathan Brassow <jbrassow@f14.redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Recently I decided to upgrade my old linux based hdd enclosure:
-processor arm9
-kernel 2.6.12
-I can't update or upgrade linux or it's kernel
+On Mon, 23 May 2011 22:05:58 -0500 Jonathan Brassow <jbrassow@f14.redhat.com>
+wrote:
 
-So I tried to update HDDs:
+> Patch name: md-possible-typo.patch
+> 
+> Fix a value printed in kiB but labeled as 'blocks'.
+> 
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+> 
+> Index: linux-2.6/drivers/md/md.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/md.c
+> +++ linux-2.6/drivers/md/md.c
+> @@ -6867,7 +6867,7 @@ void md_do_sync(mddev_t *mddev)
+>  	 */
+>  	window = 32*(PAGE_SIZE/512);
+>  	printk(KERN_INFO "md: using %dk window, over a total of %llu blocks.\n",
+> -		window/2,(unsigned long long) max_sectors/2);
+> +		window/2, (unsigned long long) max_sectors);
+>  
+>  	atomic_set(&mddev->recovery_active, 0);
+>  	last_check = 0;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-When I run this command I realized that I need linear, not raid0
-mdadm -Cv /dev/md0 --level=0 -n2 /dev/sda2 /dev/sdb
 
-but when I tried to zero superblocks (I stopped md0 previously) I've
-got "Segmentation fault" error..
-Later I have connected my drives to PC and zeroed superblocks sucessfully,
-but when I connected drives back to enclosure and tried to create
-linear I've got "Segmentation fault" error again!
+"blocks" has traditionally meant "kibibytes" in md nomenclature, so this was
+"correct".
 
-And from now every time I'm trying to do something via mdadm with
-these drives I'm getting that "Segmentation fault" error!
+I'd be quite happy to change the word "blocks" to "KB" (or even "KiB") though.
 
-I haven't tried dd if=/dev/zero of=/dev/sda2 cause my hard drive have 2Tb!
-
-Here are my questions:
-1. Can mdadm damage my hard drive(s)?
-2. How to locate and zero superblocks completely? (I know that there
-are two versions of superblocks.. but I don't know which one I have)
-
-Thanks
+NeilBrown
