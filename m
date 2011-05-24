@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@f14.redhat.com>
-Subject: [PATCH 1 of 9] MD:  possible typo
-Date: Mon, 23 May 2011 22:05:58 -0500
-Message-ID: <201105240305.p4O35wmb029220@f14.redhat.com>
+Subject: [PATCH 4 of 9] MD:  analyze_sbs failure if bad superblocks
+Date: Mon, 23 May 2011 22:06:31 -0500
+Message-ID: <201105240306.p4O36Vi4029440@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,9 +10,13 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Patch name: md-possible-typo.patch
+Patch name: md-analyze_sbs-failure-if-bad-superblocks.patch
 
-Fix a value printed in kiB but labeled as 'blocks'.
+MD's superblock reader function should fail if all superblocks are bad.
+
+analyze_sbs should return -EINVAL if the 'freshest'/best superblock cannot
+be validated.  This is especially important to dm-raid.c, as it uses md_run
+at creation time to validate array transitions.
 
 Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
@@ -20,12 +24,16 @@ Index: linux-2.6/drivers/md/md.c
 ===================================================================
 --- linux-2.6.orig/drivers/md/md.c
 +++ linux-2.6/drivers/md/md.c
-@@ -6867,7 +6867,7 @@ void md_do_sync(mddev_t *mddev)
- 	 */
- 	window = 32*(PAGE_SIZE/512);
- 	printk(KERN_INFO "md: using %dk window, over a total of %llu blocks.\n",
--		window/2,(unsigned long long) max_sectors/2);
-+		window/2, (unsigned long long) max_sectors);
+@@ -2890,9 +2890,9 @@ static int analyze_sbs(mddev_t *mddev)
+ 			kick_rdev_from_array(rdev);
+ 		}
  
- 	atomic_set(&mddev->recovery_active, 0);
- 	last_check = 0;
+-
+-	super_types[mddev->major_version].
+-		validate_super(mddev, freshest);
++	/* If the freshest superblock available cannot be validated, fail. */
++	if (super_types[mddev->major_version].validate_super(mddev, freshest))
++		return -EINVAL;
+ 
+ 	i = 0;
+ 	rdev_for_each(rdev, tmp, mddev) {
