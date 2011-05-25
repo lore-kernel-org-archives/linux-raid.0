@@ -1,51 +1,49 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: Re: [PATCH 7 of 9] MD:  new sb type
-Date: Wed, 25 May 2011 09:40:06 -0500
-Message-ID: <2AE351EE-5C38-4C1B-B6A6-C9ABF5718E48@redhat.com>
-References: <201105240307.p4O374rN029659@f14.redhat.com> <20110525141645.24e8fe29@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Can not start md0 after upgrade.
+Date: Wed, 25 May 2011 09:54:32 -0500
+Message-ID: <4DDD1828.2020306@hardwarefreak.com>
+References: <201105250819.27372.johnm@advocap.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110525141645.24e8fe29@notabene.brown>
+In-Reply-To: <201105250819.27372.johnm@advocap.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: John McMonagle <johnm@advocap.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-On May 24, 2011, at 11:16 PM, NeilBrown wrote:
-
->> +	__le32 level;
->> +	__le32 new_level;
->> +
->> +	__le32 layout;
->> +	__le32 new_layout;
->> +
->> +	__le32 stripe_sectors;
->> +	__le32 new_stripe_sectors;
->> +
->> +	__le32 num_devices;    /* Number of devs in RAID, Max = 64 */
->> +	__le32 new_num_devices;
+On 5/25/2011 8:19 AM, John McMonagle wrote:
+> Just upgraded a poweredge 1850 server from Debian lenny to squeeze and can not 
+> boot with the new 2.6.32 kernel.
 > 
-> Presumably the dm table knows all this info as well and it is just here for
-> error checking - yes?
+> From lspci  have this controller:
+> SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT 
+> Dual Ultra320 SCSI (rev 08)
+> 
+> 
+> Running mdadm raid with root on md0.
+> 
+> Normally run xen but all  info is for when running without xen.
+> 
+> I can still boot with the 2.6.26 kernel but not with the new 2.6.32 kernel.
+> Under 2.6.32 it fails to start md0.
+> in the busy box console 
+> Can see all the needed partitions.
+> What was sda and sdb are now sdb and sdc that should not matter??
+> mdadm.conf is:
+> DEVICE partitions
+> CREATE owner=root group=disk mode=0660 auto=yes
+> HOMEHOST <system>
+> MAILADDR xxxxx@advocap.org
+> ARRAY /dev/md0 level=raid1 num-devices=2 
+> UUID=6f744c89:d2578f95:c150b018:d9f789b1
+> ARRAY /dev/md1 level=raid1 num-devices=2 
+> UUID=7938d59c:28a69e5e:3facbdc2:12974557
 
-Error checking, yes... but a little bit more.
+This is probably due to udev changes.  What device is now sda?
 
-If we keep this information in the superblock (instead of LVM metadata), then the act of reshaping is done like this:
-1) initial RAID device created - LVM (or some other DM utilizing manager) records necessary info to re-instantiate this device.
-2) A reshape (if LVM, 'lvconvert') is issued.  LVM will record only the information about the new RAID layout.  It will submit only this information to device-mapper (and on to MD) for further activations.
-The information in the superblock is then used to say, "ok, I see you passed in RAID6 information, but I was RAID5, so I must convert (or continue to convert)."  Any new conversions while a conversion is in process are denied.  So, it is relevant only so far as reshaping is concerned.
+Using drive UUIDs instead of /dev/sdx in your arrays should fix this.
 
-If we keep this information in the LVM metadata, the process becomes far more messy:
-1) initial RAID device created
-2) A reshape is issued.  This time LVM must record all the information for both states - requiring additions to the LVM metadata layout, which in turn require new code for parsing and assembling this information as well as the code for turning it into something device-mapper can understand.
-3) The reshape issued to device-mapper would require a new constructor, destructor, and status functions in dm-raid.c specifically for reshape scenarios.
-4) An event would have to be raised when the reshape is complete in order to inform LVM to complete the reshape action (i.e. remove the intermediate metadata and write the final metadata describing the end product). This requires new plug-ins for the 'dmeventd' daemon, and of course, new LVM code to be able to convert from the hybrid device to the final device.  And what happens if the daemon is hung, segfaulting, or just not there?  The final change-over doesn't complete.  If this is followed by a machine reboot, LVM will have no way of knowing whether the process was never begun or whether it was finished - reshape_offset doesn't help in this case.
-This is a truly horrible way to go...
-
-I've cleaned up the other items you mentioned.  Of course, depending on which way we go regarding analyze_sbs, the bulk of these super functions may be pushed into dm-raid.c.
-
- brassow
-
+-- 
+Stan
