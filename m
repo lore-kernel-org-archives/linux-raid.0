@@ -1,65 +1,51 @@
 From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: Re: [PATCH 2 of 9] MD:  should_read_superblock
-Date: Wed, 25 May 2011 09:00:19 -0500
-Message-ID: <99ECF7E7-26F0-4613-9269-2BB91EBBF54C@redhat.com>
-References: <201105240306.p4O369g2029293@f14.redhat.com> <20110525140157.497bebaf@notabene.brown>
+Subject: Re: [PATCH 7 of 9] MD:  new sb type
+Date: Wed, 25 May 2011 09:40:06 -0500
+Message-ID: <2AE351EE-5C38-4C1B-B6A6-C9ABF5718E48@redhat.com>
+References: <201105240307.p4O374rN029659@f14.redhat.com> <20110525141645.24e8fe29@notabene.brown>
 Mime-Version: 1.0 (Apple Message framework v1084)
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110525140157.497bebaf@notabene.brown>
+In-Reply-To: <20110525141645.24e8fe29@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-On May 24, 2011, at 11:01 PM, NeilBrown wrote:
+On May 24, 2011, at 11:16 PM, NeilBrown wrote:
 
-> On Mon, 23 May 2011 22:06:09 -0500 Jonathan Brassow <jbrassow@f14.redhat.com>
-> wrote:
+>> +	__le32 level;
+>> +	__le32 new_level;
+>> +
+>> +	__le32 layout;
+>> +	__le32 new_layout;
+>> +
+>> +	__le32 stripe_sectors;
+>> +	__le32 new_stripe_sectors;
+>> +
+>> +	__le32 num_devices;    /* Number of devs in RAID, Max = 64 */
+>> +	__le32 new_num_devices;
 > 
->> Patch name: md-should_read_superblock.patch
->> 
->> Add new function to determine whether MD superblocks should be read.
->> 
->> It used to be sufficient to check if mddev->raid_disks was set to determine
->> whether to read the superblock or not.  However, device-mapper (dm-raid.c)
->> sets this value before calling md_run().  Thus, we need additional mechanisms
->> for determining whether to read the superblock.  This patch adds the condition
->> that if rdev->meta_bdev is set, the superblock should be read - something that
->> only device-mapper does (and only when there are superblocks to be read/used).
->> 
->> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-> 
-> I've been feeling uncomfortable about this and have spent a while trying to
-> see if my discomfort is at all justified.  It seems that maybe it is.
-> 
-> The discomfort is really at analyze_sbs being used for dm arrays.  It is
-> really for arrays where md completely controls the metadata.  dm array are in
-> a strange intermediate situation where some metadata is controlled by
-> user-space (so md is told about some details of the array) and other metadata
-> is managed by the kernel - so md finds those bits out by itself.
-> 
-> It isn't yet entirely clear to me how to handle the half-way state best.
-> 
-> But the particular problem is that analyse_sbs can call kick_rdev_from_array.
-> This will call export_rdev which will call kobject_put(&rdev->kboj) which is
-> bad because dm-based rdevs do not get their kobj initialised.
-> 
-> So I think analyse_sbs should not be used for dm arrays.
-> Rather the code in dm-raid.c which parses the metadata_device info from the
-> constructor line should load_super.  Then before md_run is called it should
-> do the 'validate_super' step and record any failures.
-> 
-> So the only super_types method that md code would call on a dm-raid array
-> would be sync_super.
-> 
-> Does that work for you?
+> Presumably the dm table knows all this info as well and it is just here for
+> error checking - yes?
 
-That seems sensible.  It changes things up a bit though...
+Error checking, yes... but a little bit more.
 
-1) the load_super and validate_super functions would go into dm-raid.c, but stubs (returning EINVAL) would remain in md.c in order to fill-out the super_types pointers.
-2) the device-mapper superblock would have to move to a common place because it would need to be shared by the super functions in dm-raid.c and sync_super in md.c.  I'd rather not put the new superblock in md_p.h... perhaps a new file, dm-raid.h?  (You could hide the superblock entirely in dm-raid.c, but you'd have to export a function from dm-raid.c that would be called by sync_super in md.c - necessitating a dm-raid.h again.  Is this a better solution?)
+If we keep this information in the superblock (instead of LVM metadata), then the act of reshaping is done like this:
+1) initial RAID device created - LVM (or some other DM utilizing manager) records necessary info to re-instantiate this device.
+2) A reshape (if LVM, 'lvconvert') is issued.  LVM will record only the information about the new RAID layout.  It will submit only this information to device-mapper (and on to MD) for further activations.
+The information in the superblock is then used to say, "ok, I see you passed in RAID6 information, but I was RAID5, so I must convert (or continue to convert)."  Any new conversions while a conversion is in process are denied.  So, it is relevant only so far as reshaping is concerned.
+
+If we keep this information in the LVM metadata, the process becomes far more messy:
+1) initial RAID device created
+2) A reshape is issued.  This time LVM must record all the information for both states - requiring additions to the LVM metadata layout, which in turn require new code for parsing and assembling this information as well as the code for turning it into something device-mapper can understand.
+3) The reshape issued to device-mapper would require a new constructor, destructor, and status functions in dm-raid.c specifically for reshape scenarios.
+4) An event would have to be raised when the reshape is complete in order to inform LVM to complete the reshape action (i.e. remove the intermediate metadata and write the final metadata describing the end product). This requires new plug-ins for the 'dmeventd' daemon, and of course, new LVM code to be able to convert from the hybrid device to the final device.  And what happens if the daemon is hung, segfaulting, or just not there?  The final change-over doesn't complete.  If this is followed by a machine reboot, LVM will have no way of knowing whether the process was never begun or whether it was finished - reshape_offset doesn't help in this case.
+This is a truly horrible way to go...
+
+I've cleaned up the other items you mentioned.  Of course, depending on which way we go regarding analyze_sbs, the bulk of these super functions may be pushed into dm-raid.c.
 
  brassow
+
