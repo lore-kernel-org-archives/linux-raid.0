@@ -1,113 +1,87 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Storage device enumeration script
-Date: Fri, 27 May 2011 00:12:35 +0600
-Message-ID: <20110527001235.2b47572e@natsu>
-References: <4DDDC301.7090608@turmel.org>
-	<1306403130.9437.109.camel@torbjorn>
-	<4DDE3BF1.7030105@turmel.org>
-	<4DDE9213.2070508@turmel.org>
-	<20110526235415.584ae2e2@natsu>
-	<4DDE95C1.5030401@turmel.org>
+From: John McMonagle <johnm@advocap.org>
+Subject: Re: Can not start md0 after upgrade. SOLVED
+Date: Thu, 26 May 2011 13:20:08 -0500
+Message-ID: <201105261320.08844.johnm@advocap.org>
+References: <201105250819.27372.johnm@advocap.org> <201105251521.15679.johnm@advocap.org> <4DDD7B52.2060800@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/grjAWo9KDyu5JOWPPkRrSSg"; protocol="application/pgp-signature"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDE95C1.5030401@turmel.org>
+In-Reply-To: <4DDD7B52.2060800@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: =?UTF-8?B?VG9yYmrDuHJu?= Skagestad <torbjorn@itpas.no>, linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>, CoolCold <coolthecold@gmail.com>, Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/grjAWo9KDyu5JOWPPkRrSSg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wednesday, May 25, 2011 04:57:38 pm Stan Hoeppner wrote:
+> On 5/25/2011 3:21 PM, John McMonagle wrote:
+> > On Wednesday 25 May 2011 10:39:51 am Stan Hoeppner wrote:
+> >> On 5/25/2011 10:06 AM, John McMonagle wrote:
+> >>> On Wednesday, May 25, 2011 09:54:32 am Stan Hoeppner wrote:
+> >>>> On 5/25/2011 8:19 AM, John McMonagle wrote:
+> >>>>> Just upgraded a poweredge 1850 server from Debian lenny to squeeze
+> >>>>> and can not boot with the new 2.6.32 kernel.
+> >>>>> 
+> >>>>> From lspci  have this controller:
+> >>>>> SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X
+> >>>>> Fusion-MPT Dual Ultra320 SCSI (rev 08)
+> >>>>> 
+> >>>>> 
+> >>>>> Running mdadm raid with root on md0.
+> >>>>> 
+> >>>>> Normally run xen but all  info is for when running without xen.
+> >>>>> 
+> >>>>> I can still boot with the 2.6.26 kernel but not with the new 2.6.32
+> >>>>> kernel. Under 2.6.32 it fails to start md0.
+> >>>>> in the busy box console
+> >>>>> Can see all the needed partitions.
+> >>>>> What was sda and sdb are now sdb and sdc that should not matter??
+> >>>>> mdadm.conf is:
+> >>>>> DEVICE partitions
+> >>>>> CREATE owner=root group=disk mode=0660 auto=yes
+> >>>>> HOMEHOST <system>
+> >>>>> MAILADDR xxxxx@advocap.org
+> >>>>> ARRAY /dev/md0 level=raid1 num-devices=2
+> >>>>> UUID=6f744c89:d2578f95:c150b018:d9f789b1
+> >>>>> ARRAY /dev/md1 level=raid1 num-devices=2
+> >>>>> UUID=7938d59c:28a69e5e:3facbdc2:12974557
+> >>>> 
+> >>>> This is probably due to udev changes.  What device is now sda?
+> >>>> 
+> >>>> Using drive UUIDs instead of /dev/sdx in your arrays should fix this.
+> >>> 
+> >>> I think sda is a cd or virtual  cd now.
+> >>> 
+> >>> In the mdadm.conf it uses uuids and no /dev/sdx references or are you
+> >>> referring to something else?
+> >> 
+> >> How is /dev/md0 assembled in your initramfs?  You said your root
+> >> filesystem is on /dev/md0.  Thus /dev/md0 must be assembled before
+> >> /etc/mdadm.conf can be read.
+> >> 
+> >> Another way around this problem is to create persistent udev rules.  But
+> >> since this requires created one-to-one mappings between
+> >> /dev/sdx<->drive_UUID mappings, it is easy to simply have mdraid use
+> >> drive UUIDs across the board, including within initramfs.
+> > 
+> > Stan
+> > 
+> > The /etc/mdadm/mdadm.conf file is in the initramfs and is referenced by
+> > the  /scripts/local-top/mdadm script.
+> > If I run it manually it starts raid Ok and I can mount  /dev/md0
+> > I'm not sure how on gets it to complete the boot process.
+> 
+> Please show the contents of /etc/mdadm.conf, and dmesg output.
 
-On Thu, 26 May 2011 14:02:41 -0400
-Phil Turmel <philip@turmel.org> wrote:
+The problem was it was starting mdadm before the scsi driver was done 
+initializing.
 
-> Hi Roman,
->=20
-> On 05/26/2011 01:54 PM, Roman Mamedov wrote:
-> > On Thu, 26 May 2011 13:46:59 -0400
-> > Phil Turmel <philip@turmel.org> wrote:
-> >=20
-> >> if you just want the latest script:
-> >>
-> >> https://github.com/pturmel/lsdrv/raw/HEAD/lsdrv
-> >=20
-> > I already reported this earlier, but still in this version:
-> >=20
-> > Traceback (most recent call last):
-> >   File "./lsdrv", line 274, in <module>
-> >     probe_block('/sys/block/'+x)
-> >   File "./lsdrv", line 226, in probe_block
-> >     dev.phy =3D probe_device(blkpath+'/device', nodestr)
-> >   File "./lsdrv", line 193, in probe_device
-> >     vendor=3Dfileline1(devpath+'/vendor'),
-> >   File "./lsdrv", line 49, in fileline1
-> >     fh =3D open(filename, 'r')
-> > IOError: [Errno 2] No such file or directory:
-> > '/sys/devices/platform/floppy.0/vendor'
->=20
-> I used the wrong exception type.  Fix pushed.  Try again?
+Found solution at http://wiki.debian.org/InitramfsDebug
+Added kernel parameter scsi_mod.scan=sync 
 
-Now it locks up with 100% CPU load and no output, I waited for a couple of
-minutes. On Ctrl-C:
+Ran in to this years ago but forgot :-(
 
-^CTraceback (most recent call last):
-  File "./lsdrv", line 274, in <module>
-    probe_block('/sys/block/'+x)
-
-$ ls /sys/block/
-etherd!e1.5  etherd!e2.1  md0  md2  sda  sdc  sde  sdg
-etherd!e1.6  fd0          md1  md4  sdb  sdd  sdf
-
-The first two devices are actually down at this moment, maybe that's the
-reason? Still I'd expect not 100% CPU load by lsdrv, but 0% CPU and 100%
-iowait in this case.
-
-Output of the old (bash) lsdrv:
-
-Controller device @ pci0000:00/0000:00:06.0 [pata_amd]
-  IDE interface: nVidia Corporation CK804 IDE (rev f2)
-    host8: [Empty]
-    host9: [Empty]
-Controller device @ pci0000:00/0000:00:07.0 [sata_nv]
-  IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
-    host6: /dev/sdd ATA Hitachi HDS5C302 {SN: ..............}
-    host7: /dev/sde ATA WDC WD15EADS-00S {SN: ..............}
-Controller device @ pci0000:00/0000:00:08.0 [sata_nv]
-  IDE interface: nVidia Corporation CK804 Serial ATA Controller (rev f3)
-    host10: /dev/sdf ATA WDC WD20EADS-00S {SN: ..............}
-    host11: /dev/sdg ATA WDC WD20EADS-00S {SN: ..............}
-Controller device @ pci0000:00/0000:00:0d.0/0000:02:00.0 [ahci]
-  SATA controller: Marvell Technology Group Ltd. 88SE9123 PCIe SATA 6.0 Gb/s
-controller (rev 10) host4: /dev/sdc ATA Hitachi HDS5C302 {SN: .............=
-.}
-    host5: [Empty]
-Controller device @ pci0000:00/0000:00:0e.0/0000:01:00.0 [sata_mv]
-  SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-p=
-ort
-SATA-II (rev 02) host0: [Empty]
-    host1: [Empty]
-    host2: /dev/sda ATA ST31000528AS {SN: ..............}
-    host3: /dev/sdb ATA Hitachi HDS72202 {SN: ..............}
+John
 
 
---=20
-With respect,
-Roman
-
---Sig_/grjAWo9KDyu5JOWPPkRrSSg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk3emBMACgkQTLKSvz+PZwhLQQCeJoqmJ1PCyfI4P2t5fjBTwnhV
-t4QAn0TqRkcF7adkY9E71jXCbT8GvBAD
-=FbN5
------END PGP SIGNATURE-----
-
---Sig_/grjAWo9KDyu5JOWPPkRrSSg--
