@@ -1,70 +1,75 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Storage device enumeration script
-Date: Thu, 26 May 2011 04:10:51 +0100
-Message-ID: <BANLkTiky1L9fisPnxMKsceG19LbhxcF0ag@mail.gmail.com>
-References: <4DDDC301.7090608@turmel.org>
+Date: Wed, 25 May 2011 23:21:52 -0400
+Message-ID: <4DDDC750.6040600@turmel.org>
+References: <4DDDC301.7090608@turmel.org> <BANLkTiky1L9fisPnxMKsceG19LbhxcF0ag@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDDC301.7090608@turmel.org>
+In-Reply-To: <BANLkTiky1L9fisPnxMKsceG19LbhxcF0ag@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
 Cc: linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>
 List-Id: linux-raid.ids
 
-On 26 May 2011 04:03, Phil Turmel <philip@turmel.org> wrote:
-> Hi All,
->
-> Last November, I shared a shell script that helped me keep track of t=
-he specific hot-swap drives I had in the various slots of my servers. =C2=
-=A0Although encouraged by Roman and John, I declined to make a project =
-out of it.
->
-> I've since kicked it around some more, and thought a bit about suppor=
-ting more than just the SCSI subsystem. =C2=A0The latest and greatest i=
-s still built around some standard executables: =C2=A0blkid, lspci, lsu=
-sb, sginfo, and smartctl. =C2=A0The original was similar to "lsscsi", b=
-ut with controller details and device serial numbers.
->
-> New features:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Supports non-SCSI storage devices
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Describes layered block devices
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0MD raid
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0LVM
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0generic device=
- mapper
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0loop (partial)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Shows UUIDs
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Shows mountpoints
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Avoids repeating subtrees when enumerating=
- raid devices
->
-> I struggled with the last item, until I gave up on bash. =C2=A0I need=
-ed to pass data to subroutines by reference, and bash is sorely lacking=
- in that area. =C2=A0The new script is in python. =C2=A0I'm releasing t=
-his one under the GPL version 2.
->
-> Please give it a whirl.
->
-> Phil
->
+On 05/25/2011 11:10 PM, Mathias Bur=C3=A9n wrote:
+> On 26 May 2011 04:03, Phil Turmel <philip@turmel.org> wrote:
+>> Hi All,
+>>
+>> Last November, I shared a shell script that helped me keep track of =
+the specific hot-swap drives I had in the various slots of my servers. =
+ Although encouraged by Roman and John, I declined to make a project ou=
+t of it.
+>>
+>> I've since kicked it around some more, and thought a bit about suppo=
+rting more than just the SCSI subsystem.  The latest and greatest is st=
+ill built around some standard executables:  blkid, lspci, lsusb, sginf=
+o, and smartctl.  The original was similar to "lsscsi", but with contro=
+ller details and device serial numbers.
+>>
+>> New features:
+>>        Supports non-SCSI storage devices
+>>        Describes layered block devices
+>>                MD raid
+>>                LVM
+>>                generic device mapper
+>>                loop (partial)
+>>        Shows UUIDs
+>>        Shows mountpoints
+>>        Avoids repeating subtrees when enumerating raid devices
+>>
+>> I struggled with the last item, until I gave up on bash.  I needed t=
+o pass data to subroutines by reference, and bash is sorely lacking in =
+that area.  The new script is in python.  I'm releasing this one under =
+the GPL version 2.
+>>
+>> Please give it a whirl.
+>>
+>> Phil
+>>
+>=20
+> Awesome, however:
+>=20
+> $ ./lsdrv.py
+>   File "./lsdrv.py", line 301
+>     print "%s  =E2=94=94=E2=94=80Volume Group %s (%s) %s free {%s}" %=
+ (indent,
+> vg.name, ','.join([dev.name for dev in vg.PVs]), vg.free, vg.uuid)
+>                                                       ^
+> SyntaxError: invalid syntax
+>=20
+> Maybe it's a copy-paste thing from my mail that does it. Could you pu=
+t
+> it somewhere, like a pastebin?
 
-Awesome, however:
+Yeah, should have thought of that first.
 
-$ ./lsdrv.py
-  File "./lsdrv.py", line 301
-    print "%s  =E2=94=94=E2=94=80Volume Group %s (%s) %s free {%s}" % (=
-indent,
-vg.name, ','.join([dev.name for dev in vg.PVs]), vg.free, vg.uuid)
-                                                      ^
-SyntaxError: invalid syntax
+http://www.turmel.org/other/lsdrv
 
-Maybe it's a copy-paste thing from my mail that does it. Could you put
-it somewhere, like a pastebin?
+HTH,
 
-cheers,
-/M
+Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
