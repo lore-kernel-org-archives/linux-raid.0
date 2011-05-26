@@ -1,61 +1,57 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: Storage device enumeration script
-Date: Thu, 26 May 2011 10:59:56 +0100
-Message-ID: <4DDE249C.7080004@anonymous.org.uk>
+Date: Thu, 26 May 2011 07:39:29 -0400
+Message-ID: <4DDE3BF1.7030105@turmel.org>
 References: <4DDDC301.7090608@turmel.org> <1306403130.9437.109.camel@torbjorn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1306403130.9437.109.camel@torbjorn>
 Sender: linux-raid-owner@vger.kernel.org
 To: =?UTF-8?B?VG9yYmrDuHJuIFNrYWdlc3RhZA==?= <torbjorn@itpas.no>
-Cc: Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>
+Cc: linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>, CoolCold <coolthecold@gmail.com>
 List-Id: linux-raid.ids
 
-On 26/05/2011 10:45, Torbj=C3=B8rn Skagestad wrote:
-> Hi,
->
-> Great tool, thanks for sharing.
->
-> I had to add some error handling to get it to work properly.
-> Currently it runs on Ubuntu 10.04, 10.10 and 11.04.
->
-> Added the check John Robinson asked for as well.
->
-> Attached patch for those interested.
+Thanks Torbj=C3=B8rn !
 
-Thanks, Torbj=C3=B8rn!
+I tend to short the error-checking when I'm putting something together.=
+=2E.  Clearly, this script was less baked than I thought.
 
-Getting there:
+On 05/26/2011 05:45 AM, Torbj=C3=B8rn Skagestad wrote:
+> @@ -166,9 +171,12 @@
+>  	devpath =3D os.path.realpath(devpathlink)
+>  	if devpath in phydevs:
+>  		return phydevs[devpath]
+> -	phy =3D Struct(dpath=3Ddevpath, node=3Dnodestr,
+> -		vendor=3Dio.FileIO(devpath+'/vendor').read().split("\n",1)[0].stri=
+p(),
+> -		model=3Dio.FileIO(devpath+'/model').read().split("\n",1)[0].strip(=
+))
+> +	try:
+> +		phy =3D Struct(dpath=3Ddevpath, node=3Dnodestr,
+> +			vendor=3Dio.FileIO(devpath+'/vendor').read().split("\n",1)[0].str=
+ip(),
+> +			model=3Dio.FileIO(devpath+'/model').read().split("\n",1)[0].strip=
+())
+> +	except IOError:
+> +		return None
+>  	if os.path.exists(devpath+'/unique_id'):
+>  		phy.serial =3D io.FileIO(devpath+'/unique_id').read().split("\n",1=
+)[0].strip()
+>  	if not phy.serial:
 
-[root@beast lsdrv]# python2.6 lsdrv
-PCI [pata_marvell] 03:00.0 IDE interface: Marvell Technology Group Ltd.=
-=20
-88SE6121 SATA II Controller (rev b2)
-  =E2=94=94=E2=94=80scsi 0:0:0:0 HL-DT-ST DVD-RAM GH22NP20
-     =E2=94=94=E2=94=80sr0: Empty/Unknown 1.00g
-PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10=20
-=46amily) SATA AHCI Controller
-  =E2=94=9C=E2=94=80scsi 2:0:0:0 ATA Hitachi HDS72101
-  =E2=94=82  =E2=94=94=E2=94=80sda: Empty/Unknown 931.51g
-Traceback (most recent call last):
-   File "lsdrv", line 387, in <module>
-     show_blocks(" %s " % branch[0], [phy.block])
-   File "lsdrv", line 339, in show_blocks
-     show_blocks("%s %s " % (indent, branch[0]), [blockbyname[x] for x=20
-in subs])
-KeyError: 'sda1'
+This hunk will have to be done differently.  "phy" needs to be set with=
+out vendor & model if they can't be read.  I'll make a helper function =
+to read the first line of a file, or return None.
 
-Now, something's not getting picked up about sda. Looking at Mathias'=20
-"sweet" output, it's not coping with the (DOS) partition table. Another=
-=20
-variation on my kernel's /sys or still to old a Python or ...?
+On 05/26/2011 04:11 AM, CoolCold wrote:
+> May be setup some github repo for this?
+>=20
 
-Cheers,
+Yes, I'll do this later today.  Obviously needed. :(
 
-John.
+Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
