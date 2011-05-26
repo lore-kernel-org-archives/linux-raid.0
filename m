@@ -1,94 +1,87 @@
-From: =?ISO-8859-1?Q?Torbj=F8rn?= Skagestad <torbjorn@itpas.no>
-Subject: Re: Storage device enumeration script
-Date: Thu, 26 May 2011 14:05:05 +0200
-Message-ID: <1306411505.9437.130.camel@torbjorn>
-References: <4DDDC301.7090608@turmel.org>
-	 <1306403130.9437.109.camel@torbjorn> <4DDE249C.7080004@anonymous.org.uk>
-	 <4DDE3E60.3010408@turmel.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-afAwg1qHC1EGE1vh/MaI"
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: Re: [PATCH 2 of 9] MD:  should_read_superblock
+Date: Thu, 26 May 2011 09:50:05 -0500
+Message-ID: <4F57D461-6C72-4EF0-B246-9D3BEBDD3724@redhat.com>
+References: <201105240306.p4O369g2029293@f14.redhat.com> <20110525140157.497bebaf@notabene.brown> <99ECF7E7-26F0-4613-9269-2BB91EBBF54C@redhat.com> <20110526103209.4972289d@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDE3E60.3010408@turmel.org>
+In-Reply-To: <20110526103209.4972289d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-afAwg1qHC1EGE1vh/MaI
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On May 25, 2011, at 7:32 PM, NeilBrown wrote:
 
-On Thu, 2011-05-26 at 07:49 -0400, Phil Turmel wrote:
-> On 05/26/2011 05:59 AM, John Robinson wrote:
-> > On 26/05/2011 10:45, Torbj=C3=B8rn Skagestad wrote:
-> >> Hi,
-> >>
-> >> Great tool, thanks for sharing.
-> >>
-> >> I had to add some error handling to get it to work properly.
-> >> Currently it runs on Ubuntu 10.04, 10.10 and 11.04.
-> >>
-> >> Added the check John Robinson asked for as well.
-> >>
-> >> Attached patch for those interested.
-> >=20
-> > Thanks, Torbj=C3=B8rn!
-> >=20
-> > Getting there:
-> >=20
-> > [root@beast lsdrv]# python2.6 lsdrv
-> > PCI [pata_marvell] 03:00.0 IDE interface: Marvell Technology Group Ltd.=
- 88SE6121 SATA II Controller (rev b2)
-> >  =E2=94=94=E2=94=80scsi 0:0:0:0 HL-DT-ST DVD-RAM GH22NP20
-> >     =E2=94=94=E2=94=80sr0: Empty/Unknown 1.00g
-> > PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Fa=
-mily) SATA AHCI Controller
-> >  =E2=94=9C=E2=94=80scsi 2:0:0:0 ATA Hitachi HDS72101
-> >  =E2=94=82  =E2=94=94=E2=94=80sda: Empty/Unknown 931.51g
-> > Traceback (most recent call last):
-> >   File "lsdrv", line 387, in <module>
-> >     show_blocks(" %s " % branch[0], [phy.block])
-> >   File "lsdrv", line 339, in show_blocks
-> >     show_blocks("%s %s " % (indent, branch[0]), [blockbyname[x] for x i=
-n subs])
-> > KeyError: 'sda1'
-> >=20
-> > Now, something's not getting picked up about sda. Looking at Mathias' "=
-sweet" output, it's not coping with the (DOS) partition table. Another vari=
-ation on my kernel's /sys or still to old a Python or ...?
->=20
-> Hmmm.  I'll set up another CentOS VM.  If I recall correctly, that kernel=
- has the original block devices in folders named '.../block:sda1' instead o=
-f '.../block/sda1'.  I'll have to identify this in the initial sweep throug=
-h sysfs.
->=20
+> On Wed, 25 May 2011 09:00:19 -0500 Jonathan Brassow <jbrassow@redhat.com>
+> wrote:
+> 
+>> 
+>> On May 24, 2011, at 11:01 PM, NeilBrown wrote:
+>> 
+>>> On Mon, 23 May 2011 22:06:09 -0500 Jonathan Brassow <jbrassow@f14.redhat.com>
+>>> wrote:
+>>> 
+>>>> Patch name: md-should_read_superblock.patch
+>>>> 
+>>>> Add new function to determine whether MD superblocks should be read.
+>>>> 
+>>>> It used to be sufficient to check if mddev->raid_disks was set to determine
+>>>> whether to read the superblock or not.  However, device-mapper (dm-raid.c)
+>>>> sets this value before calling md_run().  Thus, we need additional mechanisms
+>>>> for determining whether to read the superblock.  This patch adds the condition
+>>>> that if rdev->meta_bdev is set, the superblock should be read - something that
+>>>> only device-mapper does (and only when there are superblocks to be read/used).
+>>>> 
+>>>> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+>>> 
+>>> I've been feeling uncomfortable about this and have spent a while trying to
+>>> see if my discomfort is at all justified.  It seems that maybe it is.
+>>> 
+>>> The discomfort is really at analyze_sbs being used for dm arrays.  It is
+>>> really for arrays where md completely controls the metadata.  dm array are in
+>>> a strange intermediate situation where some metadata is controlled by
+>>> user-space (so md is told about some details of the array) and other metadata
+>>> is managed by the kernel - so md finds those bits out by itself.
+>>> 
+>>> It isn't yet entirely clear to me how to handle the half-way state best.
+>>> 
+>>> But the particular problem is that analyse_sbs can call kick_rdev_from_array.
+>>> This will call export_rdev which will call kobject_put(&rdev->kboj) which is
+>>> bad because dm-based rdevs do not get their kobj initialised.
+>>> 
+>>> So I think analyse_sbs should not be used for dm arrays.
+>>> Rather the code in dm-raid.c which parses the metadata_device info from the
+>>> constructor line should load_super.  Then before md_run is called it should
+>>> do the 'validate_super' step and record any failures.
+>>> 
+>>> So the only super_types method that md code would call on a dm-raid array
+>>> would be sync_super.
+>>> 
+>>> Does that work for you?
+>> 
+>> That seems sensible.  It changes things up a bit though...
+>> 
+>> 1) the load_super and validate_super functions would go into dm-raid.c, but stubs (returning EINVAL) would remain in md.c in order to fill-out the super_types pointers.
+>> 2) the device-mapper superblock would have to move to a common place because it would need to be shared by the super functions in dm-raid.c and sync_super in md.c.  I'd rather not put the new superblock in md_p.h... perhaps a new file, dm-raid.h?  (You could hide the superblock entirely in dm-raid.c, but you'd have to export a function from dm-raid.c that would be called by sync_super in md.c - necessitating a dm-raid.h again.  Is this a better solution?)
+>> 
+>> brassow
+> 
+> How about we put a 'sync_super' or possibly a 'struct super_type' pointer in
+> mddev_t, and use it instead of mddev->major_version for finding operations.
+> Then all knowledge of the dm metadata  can live in dm-raid.c??
 
-For CentOS 5.4 (2.6.18-128.1.14) it is /sys/block/sda/sda[1-9]
+I was just thinking that - yes, that sounds good.
 
+I haven't thought about it too deeply yet, so I'm not sure which I like better:
+1) just sync_super ptr in mddev_t
+2) super_types in mddev_t
 
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My first impression is just sync_super, after all, the load and validate can be done within device-mapper and never need to be called by MD outside analyze_sbs and routines that add devices, right?  Perhaps we would just remove sync_super from super_types or check for mddev->sync_super before calling super_types[x].sync_super?  I'll think more about it.
 
---=20
-Torbj=C3=B8rn Skagestad
-Id=C3=A9 Til Produkt AS
-torborn@itpas.no
-
---=-afAwg1qHC1EGE1vh/MaI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAk3eQfEACgkQ4RjLWGFqSIZ99wCdFBqdaJ56Or8uMlaY/TheCo5t
-ldkAnjqsWO2Z8EpEeB3a7OMOvqkOoDjH
-=g7oO
------END PGP SIGNATURE-----
-
---=-afAwg1qHC1EGE1vh/MaI--
+thanks,
+ brassow
 
