@@ -1,110 +1,75 @@
-From: CoolCold <coolthecold@gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Storage device enumeration script
-Date: Thu, 26 May 2011 12:24:41 +0400
-Message-ID: <BANLkTik-HjxNPGON7ZEwOSKJZOBzeETeAg@mail.gmail.com>
+Date: Thu, 26 May 2011 10:27:47 +0100
+Message-ID: <4DDE1D13.2060404@anonymous.org.uk>
 References: <4DDDC301.7090608@turmel.org>
-	<BANLkTiky1L9fisPnxMKsceG19LbhxcF0ag@mail.gmail.com>
-	<4DDDC750.6040600@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDDC750.6040600@turmel.org>
+In-Reply-To: <4DDDC301.7090608@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Phil Turmel <philip@turmel.org>
-Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>
 List-Id: linux-raid.ids
 
-On Thu, May 26, 2011 at 7:21 AM, Phil Turmel <philip@turmel.org> wrote:
-> On 05/25/2011 11:10 PM, Mathias Bur=C3=A9n wrote:
->> On 26 May 2011 04:03, Phil Turmel <philip@turmel.org> wrote:
->>> Hi All,
->>>
->>> Last November, I shared a shell script that helped me keep track of=
- the specific hot-swap drives I had in the various slots of my servers.=
- =C2=A0Although encouraged by Roman and John, I declined to make a proj=
-ect out of it.
->>>
->>> I've since kicked it around some more, and thought a bit about supp=
-orting more than just the SCSI subsystem. =C2=A0The latest and greatest=
- is still built around some standard executables: =C2=A0blkid, lspci, l=
-susb, sginfo, and smartctl. =C2=A0The original was similar to "lsscsi",=
- but with controller details and device serial numbers.
->>>
->>> New features:
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Supports non-SCSI storage devices
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Describes layered block devices
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0MD raid
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0LVM
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0generic devi=
-ce mapper
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0loop (partia=
-l)
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Shows UUIDs
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Shows mountpoints
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Avoids repeating subtrees when enumerati=
-ng raid devices
->>>
->>> I struggled with the last item, until I gave up on bash. =C2=A0I ne=
-eded to pass data to subroutines by reference, and bash is sorely lacki=
-ng in that area. =C2=A0The new script is in python. =C2=A0I'm releasing=
- this one under the GPL version 2.
->>>
->>> Please give it a whirl.
->>>
->>> Phil
->>>
->>
->> Awesome, however:
->>
->> $ ./lsdrv.py
->> =C2=A0 File "./lsdrv.py", line 301
->> =C2=A0 =C2=A0 print "%s =C2=A0=E2=94=94=E2=94=80Volume Group %s (%s)=
- %s free {%s}" % (indent,
->> vg.name, ','.join([dev.name for dev in vg.PVs]), vg.free, vg.uuid)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ^
->> SyntaxError: invalid syntax
->>
->> Maybe it's a copy-paste thing from my mail that does it. Could you p=
-ut
->> it somewhere, like a pastebin?
+On 26/05/2011 04:03, Phil Turmel wrote:
+> Hi All,
 >
-> Yeah, should have thought of that first.
+> Last November, I shared a shell script that helped me keep track of the specific hot-swap drives I had in the various slots of my servers.  Although encouraged by Roman and John, I declined to make a project out of it.
 >
-> http://www.turmel.org/other/lsdrv
+> I've since kicked it around some more, and thought a bit about supporting more than just the SCSI subsystem.  The latest and greatest is still built around some standard executables:  blkid, lspci, lsusb, sginfo, and smartctl.  The original was similar to "lsscsi", but with controller details and device serial numbers.
 >
-> HTH,
+> New features:
+> 	Supports non-SCSI storage devices
+> 	Describes layered block devices
+> 		MD raid
+> 		LVM
+> 		generic device mapper
+> 		loop (partial)
+> 	Shows UUIDs
+> 	Shows mountpoints
+> 	Avoids repeating subtrees when enumerating raid devices
+>
+> I struggled with the last item, until I gave up on bash.  I needed to pass data to subroutines by reference, and bash is sorely lacking in that area.  The new script is in python.  I'm releasing this one under the GPL version 2.
+>
+> Please give it a whirl.
 
-Works in Debian Squeeze, but requires packages pciutils and sg3-utils
-to be installed.
+On CentOS 5:
 
-On Debian Lenny produces error:
-root@gamma2:/tmp# python lsdrv
+[root@beast lsdrv]# ./lsdrv
 Traceback (most recent call last):
-  File "lsdrv", line 17, in <module>
-    import os, io, re
+   File "./lsdrv", line 17, in ?
+     import os, io, re
 ImportError: No module named io
+[root@beast lsdrv]# python -V
+Python 2.4.3
 
+Maybe this is too old, so I got Python 2.6.5 from EPEL. Trying again:
 
->
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+[root@beast lsdrv]# python2.6 lsdrv
+Traceback (most recent call last):
+   File "./lsdrv", line 192, in <module>
+     for x in os.listdir(sysclassblock):
+OSError: [Errno 2] No such file or directory: '/sys/class/block/'
 
+So I changed sysclassblock to '/sys/block/' to suit EL5's 2.6.18 kernel 
+(so it might be nice ;-) if you could auto-detect which was present):
 
+[root@beast lsdrv]# python2.6 lsdrv
+Traceback (most recent call last):
+   File "lsdrv", line 198, in <module>
+     dev.phy = probe_device(sysclassblock+x+'/device', nodestr)
+   File "lsdrv", line 170, in probe_device
+     vendor=io.FileIO(devpath+'/vendor').read().split("\n",1)[0].strip(),
+   File "/usr/lib64/python2.6/io.py", line 631, in __init__
+     _fileio._FileIO.__init__(self, name, mode, closefd)
+IOError: [Errno 2] No such file or directory: 
+'/sys/devices/platform/floppy.0/vendor'
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This looks like the same error Roman had.
+
+Cheers,
+
+John.
+
