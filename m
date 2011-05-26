@@ -1,36 +1,45 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: RE: creating degraded raid1 with imsm metadata
-Date: Thu, 26 May 2011 09:40:16 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
-References: <20110526074259.GA31623@r00t3d.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Storage device enumeration script
+Date: Thu, 26 May 2011 13:46:59 -0400
+Message-ID: <4DDE9213.2070508@turmel.org>
+References: <4DDDC301.7090608@turmel.org> <1306403130.9437.109.camel@torbjorn> <4DDE3BF1.7030105@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110526074259.GA31623@r00t3d.com>
-Content-Language: en-US
+In-Reply-To: <4DDE3BF1.7030105@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: FDi <fld@r00t3d.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: =?UTF-8?B?VG9yYmrDuHJuIFNrYWdlc3RhZA==?= <torbjorn@itpas.no>
+Cc: linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>, CoolCold <coolthecold@gmail.com>, =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of FDi
-> Sent: Thursday, May 26, 2011 12:43 AM
-> To: linux-raid@vger.kernel.org
-> Subject: creating degraded raid1 with imsm metadata
-> 
-> Hello *,
-> 
-> Since Intel's Matrix Storage Manager option ROM doesn't support creating of
-> degraded arrays I was wondering if I could use mdadm to make one? I had a
-> very hard time finding documentation about how mdadm is supposed to
-> work with imsm.
-> 
-> The plan is to make a 2x1TB raid1 with one device missing and then later add
-> the other disk in once all the data has been copied to the degraded array. So
-> a typical raid1 migration scenario, which Intel oddly enough doesn't seem to
-> support with their option ROM.
+On 05/26/2011 07:39 AM, Phil Turmel wrote:
+> On 05/26/2011 04:11 AM, CoolCold wrote:
+>> May be setup some github repo for this?
+>>
+>=20
+> Yes, I'll do this later today.  Obviously needed. :(
 
-Not sure if that's possible but have you looked at the Linux RAID wiki on IMSM information?
-https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
+Done.  With part of Torbj=C3=B8rn's patch and further fixes as proper c=
+ommits.
+
+https://github.com/pturmel/lsdrv
+
+if you just want the latest script:
+
+https://github.com/pturmel/lsdrv/raw/HEAD/lsdrv
+
+Bug reports welcome. Patches, too.
+
+I'm especially interested in users with hardware raid controllers...  n=
+ot all of them expose their devices through the SCSI subsystem.  I've a=
+n older HP SmartArray here to play with, so I know it basically works. =
+ I'm interested in enumerating the physical drives hooked to these cont=
+roller subsystems.
+
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
