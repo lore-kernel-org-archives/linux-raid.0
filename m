@@ -1,55 +1,54 @@
 From: Phil Turmel <philip@turmel.org>
 Subject: Re: Storage device enumeration script
-Date: Thu, 26 May 2011 07:39:29 -0400
-Message-ID: <4DDE3BF1.7030105@turmel.org>
-References: <4DDDC301.7090608@turmel.org> <1306403130.9437.109.camel@torbjorn>
+Date: Thu, 26 May 2011 07:41:39 -0400
+Message-ID: <4DDE3C73.6010504@turmel.org>
+References: <4DDDC301.7090608@turmel.org>	<7D.22.00666.3BFEDDD4@cdptpa-omtalb.mail.rr.com> <BANLkTinKG2THYLQUK4Bo-tOamQTvLpQpqg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1306403130.9437.109.camel@torbjorn>
+In-Reply-To: <BANLkTinKG2THYLQUK4Bo-tOamQTvLpQpqg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?VG9yYmrDuHJuIFNrYWdlc3RhZA==?= <torbjorn@itpas.no>
-Cc: linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>, CoolCold <coolthecold@gmail.com>
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+Cc: lrhorer@satx.rr.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Torbj=C3=B8rn !
-
-I tend to short the error-checking when I'm putting something together.=
-=2E.  Clearly, this script was less baked than I thought.
-
-On 05/26/2011 05:45 AM, Torbj=C3=B8rn Skagestad wrote:
-> @@ -166,9 +171,12 @@
->  	devpath =3D os.path.realpath(devpathlink)
->  	if devpath in phydevs:
->  		return phydevs[devpath]
-> -	phy =3D Struct(dpath=3Ddevpath, node=3Dnodestr,
-> -		vendor=3Dio.FileIO(devpath+'/vendor').read().split("\n",1)[0].stri=
-p(),
-> -		model=3Dio.FileIO(devpath+'/model').read().split("\n",1)[0].strip(=
-))
-> +	try:
-> +		phy =3D Struct(dpath=3Ddevpath, node=3Dnodestr,
-> +			vendor=3Dio.FileIO(devpath+'/vendor').read().split("\n",1)[0].str=
-ip(),
-> +			model=3Dio.FileIO(devpath+'/model').read().split("\n",1)[0].strip=
-())
-> +	except IOError:
-> +		return None
->  	if os.path.exists(devpath+'/unique_id'):
->  		phy.serial =3D io.FileIO(devpath+'/unique_id').read().split("\n",1=
-)[0].strip()
->  	if not phy.serial:
-
-This hunk will have to be done differently.  "phy" needs to be set with=
-out vendor & model if they can't be read.  I'll make a helper function =
-to read the first line of a file, or return None.
-
-On 05/26/2011 04:11 AM, CoolCold wrote:
-> May be setup some github repo for this?
+On 05/26/2011 02:16 AM, Mathias Bur=C3=A9n wrote:
+> On 26 May 2011 07:14, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
+>>
+>>        I get an error right off the bat:
+>>
+>> Traceback (most recent call last):
+>>  File "./lsdrv.txt", line 264, in <module>
+>>    for x in runx(['pvs', '-o',
+>> 'pv_name,pv_used,pv_size,pv_uuid,vg_name,vg_size,vg_free,vg_uuid',
+>> '--noheadings', '--separator', ' ']).split("\n"):
+>>  File "./lsdrv.txt", line 50, in runx
+>>    sub =3D Popen(*args, **kwargs)
+>>  File "/usr/lib/python2.6/subprocess.py", line 623, in __init__
+>>    errread, errwrite)
+>>  File "/usr/lib/python2.6/subprocess.py", line 1141, in _execute_chi=
+ld
+>>    raise child_exception
+>> OSError: [Errno 2] No such file or directory
+>>
+>> I'm running Python 2.6.6 and mdadm 3.1.4 running on kernel 2.6.32-5-=
+amd64
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >=20
+> I get that in Ubuntu 11.04 on a laptop as well.
+>=20
+> /M
 
-Yes, I'll do this later today.  Obviously needed. :(
+Does a plain install of Ubuntu include the LVM utilities?  Can you run =
+"pvs" directly?
 
 Phil
 --
