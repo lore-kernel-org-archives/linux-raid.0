@@ -1,59 +1,55 @@
-From: Dylan Distasio <interzone@gmail.com>
-Subject: Question on md126 / md127 issues
-Date: Thu, 26 May 2011 00:10:35 -0400
-Message-ID: <BANLkTinePbV0qfs5XXy9cZQ2a7bQfO=FVQ@mail.gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Storage device enumeration script
+Date: Thu, 26 May 2011 11:25:55 +0600
+Message-ID: <20110526112555.7d2d7fdf@natsu>
+References: <4DDDC301.7090608@turmel.org>
+	<BANLkTiky1L9fisPnxMKsceG19LbhxcF0ag@mail.gmail.com>
+	<4DDDC750.6040600@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/GLf020wENWlQ8bPA_0j1Bky"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DDDC750.6040600@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Mathias =?UTF-8?B?QnVyw6lu?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org, Roman Mamedov <roman@rm.pp.ru>, John Robinson <john.robinson@anonymous.org.uk>
 List-Id: linux-raid.ids
 
-Hi all-
+--Sig_/GLf020wENWlQ8bPA_0j1Bky
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I recently created a RAID1 2 disk mdadm array /dev/md1 with 1.2
-metadata on a Ubuntu system that has 3 other mdadm arrays running on
-it.  The power went out at my house last night, and I rebooted the
-system when it came back up.
+On Wed, 25 May 2011 23:21:52 -0400
+Phil Turmel <philip@turmel.org> wrote:
 
-When it came back up, my new array was in two pieces /dev/md126 and
-/dev/md127 (with incorrect members, showing 1 active drive, 1 spare in
-each).   I rebooted again, and had what appeared to be my working
-array, but showing up under /dev/md127.  I could stop and do a --scan
-to assemble it correctly as /dev/md1, but when I rebooted again I got
-the same results with 126 and 127.  My mdadm.conf was correct.
+> Yeah, should have thought of that first.
+>=20
+> http://www.turmel.org/other/lsdrv
 
-I did some searching on my archives of this list, and found a solution
-as follows:
------------
-How to fix the '125/126/127' mdadm issue.
+Traceback (most recent call last):
+  File "/r/scripts/lsdrv", line 198, in <module>
+    dev.phy =3D probe_device(sysclassblock+x+'/device', nodestr)
+  File "/r/scripts/lsdrv", line 170, in probe_device
+    vendor=3Dio.FileIO(devpath+'/vendor').read().split("\n",1)[0].strip(),
+  File "/usr/lib/python2.6/io.py", line 631, in __init__
+    _fileio._FileIO.__init__(self, name, mode, closefd)
+IOError: [Errno 2] No such file or directory:
+'/sys/devices/platform/floppy.0/vendor'
 
-The array has '125' stored as the 'preferred minor' in the metadata.
-You can change this by assembling with --update=super-minor.
-e.g.
+--=20
+With respect,
+Roman
 
- mdadm -S /dev/md125
- mdadm -A /dev/md1 --update=super-minor
+--Sig_/GLf020wENWlQ8bPA_0j1Bky
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-it should get details of which devices to included from /etc/mdadm.conf.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-However it is possible that mdadm.conf in your initrd also the name
-as /dev/md125.
-So once you have performed the above, run mkinitrd again, reboot, and report
-what happens.
-----------------
+iEYEARECAAYFAk3d5GMACgkQTLKSvz+PZwhGJgCeLOErEoSVz7Pj5nmoAbDSzecq
+sXIAnju7CfbDxdF62Gnfza7E9VmCslhC
+=WDJP
+-----END PGP SIGNATURE-----
 
-I had to run the above commands, and then make sure I ran
-update-initramfs -v -u for it to stick after reboot.
-
-My issue is solved, but I would like to understand what the root cause
-is, and why the above solution worked.  Can someone elaborate on what
-super-minor is?  This is a home system and I had backups so I was
-comfortable trying the above, but I don't typically like running
-commands on faith I don't understand fully, especially in Linux.
-
-Can anyone shed some light on this?  I can provide further OS and
-array details if necessary, but it sounds like this issue has occurred
-for others in the past.
-
-Thanks.
+--Sig_/GLf020wENWlQ8bPA_0j1Bky--
