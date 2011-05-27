@@ -1,51 +1,72 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Storage device enumeration script
-Date: Fri, 27 May 2011 08:06:11 -0400
-Message-ID: <4DDF93B3.8060101@turmel.org>
-References: <42.A9.00666.D9CEEDD4@cdptpa-omtalb.mail.rr.com>	<4DDEED47.1040809@fnarfbargle.com> <20110527095840.427d90be@natsu>
+From: Stijn Hoop <stijn@sandcat.nl>
+Subject: race condition in md creation?
+Date: Fri, 27 May 2011 15:20:57 +0200
+Message-ID: <20110527152057.47ca7176@pclin250.win.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary="MP_/m/VuAg25iuuDK3Vgv9CwdgZ"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110527095840.427d90be@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Brad Campbell <brad@fnarfbargle.com>, lrhorer@satx.rr.com, =?ISO-8859-1?Q?=27Mathias_Bur=E9n=27?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org, =?ISO-8859-1?Q?Torbj=F8rn_Skagestad?= <torbjorn@itpas.no>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/26/2011 11:58 PM, Roman Mamedov wrote:
-> On Fri, 27 May 2011 08:16:07 +0800
-> Brad Campbell <brad@fnarfbargle.com> wrote:
->=20
->> On 27/05/11 08:13, Leslie Rhorer wrote:
->>>>
->>> 	I can't speak to Ubuntu, but Debian evidently does not.  I don't
->>> know what "pvs" is, but neither bash nor Python recognize it as a f=
-ile
->>> anywhere in the path.
->> apt-get install lvm2.
->=20
-> Sure, but lsdrv shouldn't assume lvm2 is installed or require it to b=
-e
-> installed. Not everyone uses LVM, and simply installing it automatica=
-lly adds
-> things to initramfs (PV/VG/LV detection?), which can slow down boot-u=
-p process.
+--MP_/m/VuAg25iuuDK3Vgv9CwdgZ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-With the latest contribution from Torbj=F8rn, lsdrv will now report the=
- missing utility, then continue.  If one of the devices is in fact an L=
-VM element, the block device recursion code should still show the basic=
- relationships, without the volume group details.  Testing that case wo=
-uld be appreciated.
+Hello,
 
-https://github.com/pturmel/lsdrv
+while creating a test suite for internal purposes I ran into a race
+condition where a (very small) raid array that was just created cannot
+be stopped.
 
-If you find more bugs, or have other suggestions, using the issue track=
-er and the wiki on github would minimize the chatter on linux-raid.
+mdadm --create succeeds, but the subsequent mdadm --stop reports
+'Device or resource busy'.
 
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please see the attached script for reproduction purposes, partial output
+from a run on my system (Fedora 14, kernel 2.6.35.13-91.fc14.x86_64,
+mdadm-3.1.3-0.git20100804.2.fc14.x86_64):
+
+
+5+0 records in
+5+0 records out
+5242880 bytes (5.2 MB) copied, 0.0166663 s, 315 MB/s
+5+0 records in
+5+0 records out
+5242880 bytes (5.2 MB) copied, 0.0197533 s, 265 MB/s
+mdadm: array /dev/md0 started.
+mdadm: failed to stop array /dev/md0: Device or resource busy
+Perhaps a running process, mounted filesystem or active volume group?
+failed to stop /dev/md0, sleep 1 sec then retrying one more time
+mdadm: stopped /dev/md0
+
+
+I know that this might be an artificial bug, for with real raid arrays
+people will not stop their just-created raid systems, but I figured
+somebody might be interested to find out what was actually going on. As
+I have no kernel expertise (yet! :) and I need to move on, I am only
+posting my results...
+
+BTW, I'm posting here only because I failed to google a bug tracker for
+linux-raid. If there is one, my apologies, I will gladly create a bug
+instead.
+
+HTH,
+
+--Stijn
+--MP_/m/VuAg25iuuDK3Vgv9CwdgZ
+Content-Type: application/x-shellscript
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=mdadm-bug.sh
+
+IyEvYmluL3NoCmZvciBpIGluIGBzZXEgNTBgOyBkbwoJZGQgaWY9L2Rldi96ZXJvIG9mPS90bXAv
+bWRsb29wLjAgYnM9MU0gY291bnQ9NQoJZGQgaWY9L2Rldi96ZXJvIG9mPS90bXAvbWRsb29wLjEg
+YnM9MU0gY291bnQ9NQoJbG9zZXR1cCAvZGV2L2xvb3AwIC90bXAvbWRsb29wLjAKCWxvc2V0dXAg
+L2Rldi9sb29wMSAvdG1wL21kbG9vcC4xCgltZGFkbSAtQyAtLWxldmVsPTEgLS1yYWlkLWRldmlj
+ZXM9MiAtLW1ldGFkYXRhPTAuOTAgL2Rldi9tZDAgL2Rldi9sb29wWzAxXQoJaWYgISBtZGFkbSAt
+LXN0b3AgL2Rldi9tZDA7IHRoZW4KCQllY2hvICJmYWlsZWQgdG8gc3RvcCAvZGV2L21kMCwgc2xl
+ZXAgMSBzZWMgdGhlbiByZXRyeWluZyBvbmUgbW9yZSB0aW1lIgoJCXNsZWVwIDEKCQltZGFkbSAt
+LXN0b3AgL2Rldi9tZDAgfHwgZXhpdCAxCglmaQoJbG9zZXR1cCAtZCAvZGV2L2xvb3AxCglsb3Nl
+dHVwIC1kIC9kZXYvbG9vcDAKCXJtIC90bXAvbWRsb29wLlswMV0KZG9uZQo=
+
+--MP_/m/VuAg25iuuDK3Vgv9CwdgZ--
