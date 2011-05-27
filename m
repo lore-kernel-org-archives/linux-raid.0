@@ -1,33 +1,40 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Storage device enumeration script
-Date: Fri, 27 May 2011 10:44:54 +0100
-Message-ID: <4DDF7296.6050706@anonymous.org.uk>
-References: <4DDDC301.7090608@turmel.org> <1306403130.9437.109.camel@torbjorn> <4DDE249C.7080004@anonymous.org.uk> <4DDF6B99.20602@anonymous.org.uk>
+Date: Fri, 27 May 2011 11:45:49 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1105271142110.25096@unicorn.drogon.net>
+References: <42.A9.00666.D9CEEDD4@cdptpa-omtalb.mail.rr.com> <4DDEED47.1040809@fnarfbargle.com> <20110527095840.427d90be@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDF6B99.20602@anonymous.org.uk>
+In-Reply-To: <20110527095840.427d90be@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/05/2011 10:15, John Robinson wrote:
-[...]
-> I'm not entirely sure where dev.ID_ etc are supposed to be coming
-> from, but if it's that `blkid -p -o udev /dev/block/8:0` then I'm
-> afraid CentOS 5's blkid doesn't understand the -p or -o udev options,
-> it doesn't produce any output for whole drives with partition tables,
-> and there isn't a /dev/block directory. It's blkid 1.0.0 from
-> e2fsprogs 1.39-23.el5_5.1.
->
-> If that knocks CentOS 5 support on the head then so be it...
+On Fri, 27 May 2011, Roman Mamedov wrote:
 
-Hmm, udevinfo might be of some use. Still doesn't say it's found a DOS
-partition table, but it does get you e.g. ID_FS_TYPE=linux_raid_member 
-and perhaps `file -s` will tell you there's DOS partition table (sort of).
+> On Fri, 27 May 2011 08:16:07 +0800
+> Brad Campbell <brad@fnarfbargle.com> wrote:
+>
+>> On 27/05/11 08:13, Leslie Rhorer wrote:
+>>>>
+>>> 	I can't speak to Ubuntu, but Debian evidently does not.  I don't
+>>> know what "pvs" is, but neither bash nor Python recognize it as a file
+>>> anywhere in the path.
+>> apt-get install lvm2.
+>
+> Sure, but lsdrv shouldn't assume lvm2 is installed or require it to be
+> installed. Not everyone uses LVM, and simply installing it automatically adds
+> things to initramfs (PV/VG/LV detection?), which can slow down boot-up process.
+
+As well as not using LVM, some of us don't even use udev... Or kernels 
+with modules...
+
+Can someone post the output of this utility so I can see what it's 
+actually doing?
+
+(I don't have python on all my servers either)
 
 Cheers,
 
-John.
+Gordon
