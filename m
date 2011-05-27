@@ -1,53 +1,59 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Storage device enumeration script
-Date: Fri, 27 May 2011 09:58:40 +0600
-Message-ID: <20110527095840.427d90be@natsu>
-References: <42.A9.00666.D9CEEDD4@cdptpa-omtalb.mail.rr.com>
-	<4DDEED47.1040809@fnarfbargle.com>
+Date: Fri, 27 May 2011 10:15:05 +0100
+Message-ID: <4DDF6B99.20602@anonymous.org.uk>
+References: <4DDDC301.7090608@turmel.org> <1306403130.9437.109.camel@torbjorn> <4DDE249C.7080004@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/bEreq8MRAGbCPtHpo+GiOOb"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDEED47.1040809@fnarfbargle.com>
+In-Reply-To: <4DDE249C.7080004@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brad Campbell <brad@fnarfbargle.com>
-Cc: lrhorer@satx.rr.com, 'Phil Turmel' <philip@turmel.org>, 'Mathias =?UTF-8?B?QnVyw6luJw==?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/bEreq8MRAGbCPtHpo+GiOOb
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 26/05/2011 10:59, John Robinson wrote:
+[...]
+> [root@beast lsdrv]# python2.6 lsdrv
+> PCI [pata_marvell] 03:00.0 IDE interface: Marvell Technology Group Lt=
+d.
+> 88SE6121 SATA II Controller (rev b2)
+> =E2=94=94=E2=94=80scsi 0:0:0:0 HL-DT-ST DVD-RAM GH22NP20
+> =E2=94=94=E2=94=80sr0: Empty/Unknown 1.00g
+> PCI [ahci] 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10
+> Family) SATA AHCI Controller
+> =E2=94=9C=E2=94=80scsi 2:0:0:0 ATA Hitachi HDS72101
+> =E2=94=82 =E2=94=94=E2=94=80sda: Empty/Unknown 931.51g
+> Traceback (most recent call last):
+> File "lsdrv", line 387, in <module>
+> show_blocks(" %s " % branch[0], [phy.block])
+> File "lsdrv", line 339, in show_blocks
+> show_blocks("%s %s " % (indent, branch[0]), [blockbyname[x] for x in =
+subs])
+> KeyError: 'sda1'
+>
+> Now, something's not getting picked up about sda. Looking at Mathias'
+> "sweet" output, it's not coping with the (DOS) partition table. Anoth=
+er
+> variation on my kernel's /sys or still to old a Python or ...?
 
-On Fri, 27 May 2011 08:16:07 +0800
-Brad Campbell <brad@fnarfbargle.com> wrote:
+Still seeing this. I added a print command so I can see that=20
+dev.partitions is being populated successfully. I'm not entirely sure=20
+where dev.ID_ etc are supposed to be coming from, but if it's that=20
+`blkid -p -o udev /dev/block/8:0` then I'm afraid CentOS 5's blkid=20
+doesn't understand the -p or -o udev options, it doesn't produce any=20
+output for whole drives with partition tables, and there isn't a=20
+/dev/block directory. It's blkid 1.0.0 from e2fsprogs 1.39-23.el5_5.1.
 
-> On 27/05/11 08:13, Leslie Rhorer wrote:
-> >>
-> > 	I can't speak to Ubuntu, but Debian evidently does not.  I don't
-> > know what "pvs" is, but neither bash nor Python recognize it as a file
-> > anywhere in the path.
-> apt-get install lvm2.
+If that knocks CentOS 5 support on the head then so be it...
 
-Sure, but lsdrv shouldn't assume lvm2 is installed or require it to be
-installed. Not everyone uses LVM, and simply installing it automatically ad=
-ds
-things to initramfs (PV/VG/LV detection?), which can slow down boot-up proc=
-ess.
+Cheers,
 
---=20
-With respect,
-Roman
-
---Sig_/bEreq8MRAGbCPtHpo+GiOOb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk3fIXAACgkQTLKSvz+PZwi44ACffi2ciSy0oJNWlAhubjT7TyXg
-JNQAn0g42yhVEut36SrFOcleZbY0qgS7
-=TPpE
------END PGP SIGNATURE-----
-
---Sig_/bEreq8MRAGbCPtHpo+GiOOb--
+John.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
