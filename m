@@ -1,260 +1,79 @@
-From: "Schmidt, Annemarie" <Annemarie.Schmidt@stratus.com>
-Subject: RE: Mdadm re-add fails
-Date: Fri, 27 May 2011 17:16:46 -0400
-Message-ID: <5AA430FFE4486C448003201AC83BC85E01B0357D@EXHQ.corp.stratus.com>
-References: <5AA430FFE4486C448003201AC83BC85E01B03522@EXHQ.corp.stratus.com> <20110520095133.54b44dd4@notabene.brown> <5AA430FFE4486C448003201AC83BC85E01B0353E@EXHQ.corp.stratus.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: race condition in md creation?
+Date: Sat, 28 May 2011 07:24:40 +1000
+Message-ID: <20110528072440.5bc27c1d@notabene.brown>
+References: <20110527152057.47ca7176@pclin250.win.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <5AA430FFE4486C448003201AC83BC85E01B0353E@EXHQ.corp.stratus.com>
+In-Reply-To: <20110527152057.47ca7176@pclin250.win.tue.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Stijn Hoop <stijn@sandcat.nl>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Fri, 27 May 2011 15:20:57 +0200 Stijn Hoop <stijn@sandcat.nl> wrote:
 
-I've unfortunately run into a problem with the patch to the enough_fd c=
-ode.  It does not appear to work in all cases. =20
+> Hello,
+> 
+> while creating a test suite for internal purposes I ran into a race
+> condition where a (very small) raid array that was just created cannot
+> be stopped.
+> 
+> mdadm --create succeeds, but the subsequent mdadm --stop reports
+> 'Device or resource busy'.
+> 
+> Please see the attached script for reproduction purposes, partial output
+> from a run on my system (Fedora 14, kernel 2.6.35.13-91.fc14.x86_64,
+> mdadm-3.1.3-0.git20100804.2.fc14.x86_64):
+> 
+> 
+> 5+0 records in
+> 5+0 records out
+> 5242880 bytes (5.2 MB) copied, 0.0166663 s, 315 MB/s
+> 5+0 records in
+> 5+0 records out
+> 5242880 bytes (5.2 MB) copied, 0.0197533 s, 265 MB/s
+> mdadm: array /dev/md0 started.
+> mdadm: failed to stop array /dev/md0: Device or resource busy
+> Perhaps a running process, mounted filesystem or active volume group?
+> failed to stop /dev/md0, sleep 1 sec then retrying one more time
+> mdadm: stopped /dev/md0
 
-mdadm --detail /dev/md21
-    Number   Major   Minor   RaidDevice State
-       3      65       18        0      active sync   /dev/sdc2
-       2      65       50        1      active sync   /dev/sdk2
+When a new device appears (such as  a new md array), udev springs in to
+action and examines it to see if it should do something with it.
+While udev (or some tool that it ran) is examining the md array it looks like
+it is busy so an attempt to stop it will fail.
 
+My test scripts tend to have
+   udevadm settle
+before
+   mdadm --stop
 
-Here it works when I remove /dev/sdk2
+for exactly this reason.
 
->> mdadm /dev/md21 -f /dev/sdk2 -r /dev/sdk2
-mdadm: set /dev/sdk2 faulty in /dev/md21
-mdadm: hot removed /dev/sdk2 from /dev/md21
+> 
+> 
+> I know that this might be an artificial bug, for with real raid arrays
+> people will not stop their just-created raid systems, but I figured
+> somebody might be interested to find out what was actually going on. As
+> I have no kernel expertise (yet! :) and I need to move on, I am only
+> posting my results...
+> 
+> BTW, I'm posting here only because I failed to google a bug tracker for
+> linux-raid. If there is one, my apologies, I will gladly create a bug
+> instead.
+> 
 
->> mdadm /dev/md21 -a /dev/sdk2
-mdadm: re-added /dev/sdk2
+This email list *is* the bug tracker (I'm not a big fan of bug trackers
+myself).
 
-But when I try to remove the other disk, /dev/sdc2, it doesn't:
-
->> mdadm /dev/md21 -f /dev/sdc2 -r /dev/sdc2
-mdadm: set /dev/sdc2 faulty in /dev/md21
-mdadm: hot removed /dev/sdc2 from /dev/md21
-
->> mdadm /dev/md21 -a /dev/sdc2
-mdadm: /dev/sdc2 reports being an active member for /dev/md21, but a --=
-re-add fails.
-mdadm: not performing --add as that would convert /dev/sdc2 in to a spa=
-re.
-mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdc2" fi=
-rst.
-
-
-I could get it all to work when I removed this line from the :
-
-+		array.raid_disks--;
-
->> mdadm_good_patch_minus_dec /dev/md21 -f /dev/sdk2 -r /dev/sdk2
-mdadm: set /dev/sdk2 faulty in /dev/md21
-mdadm: hot removed /dev/sdk2 from /dev/md21
-
->> mdadm_good_patch_minus_dec /dev/md21 -a /dev/sdk2
-mdadm: re-added /dev/sdk2
-
-
->> mdadm_good_patch_minus_dec /dev/md21 -f /dev/sdc2 -r /dev/sdc2
-mdadm: set /dev/sdc2 faulty in /dev/md21
-mdadm: hot removed /dev/sdc2 from /dev/md21
-
->> mdadm_good_patch_minus_dec /dev/md21 -a /dev/sdc2
-mdadm: re-added /dev/sdc2
-
-So can this line simply be removed or does the patch need to be reworke=
-d?
-
-Thanks & regards,
-Annemarie Schmidt
-
-
------Original Message-----
-=46rom: Schmidt, Annemarie=20
-Sent: Friday, May 20, 2011 1:16 PM
-To: 'NeilBrown'
-Cc: linux-raid@vger.kernel.org; Dailey, Nate
-Subject: RE: Mdadm re-add fails
-
-Neil,
-
-Yes, that worked:
-
->> [root@typhon ~]# mdadm --detail /dev/md24
-/dev/md24:
-   Version : 1.2
-  Creation Time : Fri May 20 11:42:17 2011
-  Raid Level : raid1
-  Array Size : 5241844 (5.00 GiB 5.37 GB)
-  Used Dev Size : 5241844 (5.00 GiB 5.37 GB)
-  Raid Devices : 2
-  Total Devices : 2
-  Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-  Update Time : Fri May 20 12:47:09 2011
-  State : active
-  Active Devices : 2
- Working Devices : 2
- Failed Devices : 0
- Spare Devices : 0
-
-           Name : typhon.mno.stratus.com:24  (local to host typhon.mno.=
-stratus.com)
-           UUID : 562323d9:9a7b2979:a734abf0:b3fb8f0b
-           Events : 155
-
-    Number   Major   Minor   RaidDevice State
-       3      65       22        0      active sync   /dev/sdc6
-       2      65       54        1      active sync   /dev/sdk6
-
->> [root@typhon sbin]# mdadm /dev/md24 -f /dev/sdk6 -r /dev/sdk6
-mdadm: set /dev/sdk6 faulty in /dev/md24
-mdadm: hot removed /dev/sdk6 from /dev/md24
-
-Without the fix:
----------------------
->> root@typhon sbin]# mdadm /dev/md24 -a /dev/sdk6
-mdadm: /dev/sdk6 reports being an active member for /dev/md24, but a --=
-re-add fails.
-mdadm: not performing --add as that would convert /dev/sdk6 in to a spa=
-re.
-mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdk6" fi=
-rst.
-
-With the fix:
------------------
->>  [root@typhon ~]# ./mdadm /dev/md24 -a /dev/sdk6                    =
-            =20
-mdadm: re-added /dev/sdk6
-
-Thanks very much for the assistance.
-
-Regards,
-Annemarie
-
-
------Original Message-----
-=46rom: NeilBrown [mailto:neilb@suse.de]=20
-Sent: Thursday, May 19, 2011 7:52 PM
-To: Schmidt, Annemarie
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Mdadm re-add fails
-
-On Wed, 18 May 2011 10:43:47 -0400 "Schmidt, Annemarie"
-<Annemarie.Schmidt@stratus.com> wrote:
-
-> Hi!
->=20
-> I have a 2 disk raid1 data array. As a result of other testing, the d=
-evice info
-> in the superblock for one of the partners, /dev/sdc2, ended up being =
-in slot 3
-> of the device info array:=20
->=20
-> [root@typhon ~]# mdadm --detail /dev/md21
-> /dev/md21:
-> =A0=A0Version : 1.2
-> =A0 Creation Time : Mon May=A0 9 11:19:43 2011
-> =A0=A0Raid Level : raid1
-> =A0 Array Size : 5241844 (5.00 GiB 5.37 GB)
-> =A0 Used Dev Size : 5241844 (5.00 GiB 5.37 GB)
-> =A0 Raid Devices : 2
-> =A0 Total Devices : 2
-> =A0 Persistence : Superblock is persistent
->=20
-> =A0 Intent Bitmap : Internal
->=20
-> =A0 Update Time : Thu May 12 15:51:50 2011
-> =A0 State : active
-> =A0 Active Devices : 2
->   Working Devices : 2
->  =A0Failed Devices : 0
-> =A0 Spare Devices : 0
->=20
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : typhon.mno.stratus.com:21=A0 (l=
-ocal to host typhon.mno.stratus.com)
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 996d993f:baac367a:8b154ba9:43e5=
-6cff
-> =A0=A0=A0=A0=A0=A0=A0=A0  Events : 687
->=20
-> =A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-> -->=A0=A0=A0 3=A0=A0=A0=A0=A0 65=A0=A0=A0=A0=A0=A0 34=A0=A0=A0=A0=A0=A0=
-=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdc2
-> =A0=A0=A0=A0=A0=A0  2=A0=A0=A0=A0=A0 65=A0=A0=A0=A0=A0=A0 82=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdk2
->=20
-> When I remove /dev/sdk2 and then a re-add it back in, the re-add fail=
-s:
->=20
-> >> [root@typhon ~]# mdadm /dev/md21 -f /dev/sdk2 -r /dev/sdk2
-> mdadm: set /dev/sdk2 faulty in /dev/md21
-> mdadm: hot removed /dev/sdk2 from /dev/md21
->=20
-> >> [root@typhon ~]# mdadm /dev/md21 -a /dev/sdk2
-> mdadm: /dev/sdk2 reports being an active member for /dev/md21, but a =
---re-add
-> fails.
-> mdadm: not performing --add as that would convert /dev/sdk2 in to a s=
-pare.
-> mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sdk2" =
-first.
->=20
-> I believe the re-add fails because the enough_fd function (util.c) is=
- not searching deep enough into the
-> dev_info array with this line of code:
-> =A0=A0 for (i=3D0; i<array.raid_disks + array.nr_disks; i++)
->=20
-> array.raids_disk =3D 2 and array/nr_disks =3D 1, and so for this part=
-icular md device, it is only looking at slots 0-2.=A0
-> I believe the code needs to be changed to look at all possible dev_in=
-fo array slots, taking into account the=20
-> version of the superblock (like the Detail function does (Detail.c).=A0=
-=20
->=20
-> Do folks agree?
->
-
-I do - largely.  I think there might be a better more general way to co=
-ntrol
-the loop though.
-Could you try this please?
-
-Thanks,
+Thanks for the report,
 NeilBrown
 
 
-diff --git a/util.c b/util.c
-index 1056ae4..d005e0a 100644
---- a/util.c
-+++ b/util.c
-@@ -370,10 +370,14 @@ int enough_fd(int fd)
- 	    array.raid_disks <=3D 0)
- 		return 0;
- 	avail =3D calloc(array.raid_disks, 1);
--	for (i=3D0; i<array.raid_disks + array.nr_disks; i++) {
-+	for (i=3D0; i < 1024 && array.raid_disks > 0; i++) {
- 		disk.number =3D i;
- 		if (ioctl(fd, GET_DISK_INFO, &disk) !=3D 0)
- 			continue;
-+		if (disk.major =3D=3D 0 && disk.minor =3D=3D 0)
-+			continue;
-+		array.raid_disks--;
-+
- 		if (! (disk.state & (1<<MD_DISK_SYNC)))
- 			continue;
- 		if (disk.raid_disk < 0 || disk.raid_disk >=3D array.raid_disks)
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> HTH,
+> 
+> --Stijn
