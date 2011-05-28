@@ -1,37 +1,64 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Upgrading from metadata 0.9
-Date: Sat, 28 May 2011 07:38:53 +1000
-Message-ID: <20110528073853.2b9ead34@notabene.brown>
-References: <4DDEA8AB.4090709@cfl.rr.com>
+From: Stijn Hoop <stijn@sandcat.nl>
+Subject: Re: race condition in md creation?
+Date: Sat, 28 May 2011 13:19:59 +0200
+Message-ID: <20110528131959.00002a02@unknown>
+References: <20110527152057.47ca7176@pclin250.win.tue.nl>
+	<20110528072440.5bc27c1d@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DDEA8AB.4090709@cfl.rr.com>
+In-Reply-To: <20110528072440.5bc27c1d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 26 May 2011 15:23:23 -0400 Phillip Susi <psusi@cfl.rr.com> wrote:
+Hi,
 
-> Is there a way to upgrade an existing raid array using metadata format 
-> 0.9 to a 1.x format without loosing data?
+On Sat, 28 May 2011 07:24:40 +1000
+NeilBrown <neilb@suse.de> wrote:
+> On Fri, 27 May 2011 15:20:57 +0200 Stijn Hoop <stijn@sandcat.nl>
+> wrote:
+> 
+> > Hello,
+> > 
+> > while creating a test suite for internal purposes I ran into a race
+> > condition where a (very small) raid array that was just created
+> > cannot be stopped.
+> > 
+> > mdadm --create succeeds, but the subsequent mdadm --stop reports
+> > 'Device or resource busy'.
+> > 
+> > Please see the attached script for reproduction purposes, partial
+> > output from a run on my system (Fedora 14, kernel
+> > 2.6.35.13-91.fc14.x86_64, mdadm-3.1.3-0.git20100804.2.fc14.x86_64):
+> > 
+> > 
+> > 5+0 records in
+> > 5+0 records out
+> > 5242880 bytes (5.2 MB) copied, 0.0166663 s, 315 MB/s
+> > 5+0 records in
+> > 5+0 records out
+> > 5242880 bytes (5.2 MB) copied, 0.0197533 s, 265 MB/s
+> > mdadm: array /dev/md0 started.
+> > mdadm: failed to stop array /dev/md0: Device or resource busy
+> > Perhaps a running process, mounted filesystem or active volume
+> > group? failed to stop /dev/md0, sleep 1 sec then retrying one more
+> > time mdadm: stopped /dev/md0
+> 
+> When a new device appears (such as  a new md array), udev springs in
+> to action and examines it to see if it should do something with it.
+> While udev (or some tool that it ran) is examining the md array it
+> looks like it is busy so an attempt to stop it will fail.
+> 
+> My test scripts tend to have
+>    udevadm settle
+> before
+>    mdadm --stop
+> 
+> for exactly this reason.
 
-Not really.  It is on my list of nice-to-have features for mdadm, but it is
-not near the top.
+Ah, that makes perfect sense. Thanks for the explanation!
 
-As 1.x uses less space for metadata you could simply recreate the array as
-  --metadata=1.0
-All the data would still be there.
-You should be as explicit as possible in the --create command.
-
-mdadm --create /dev/md0 --level=XX --raid-disks=YY --chunk=ZZ --size=QQ
-   --layout=LL  --assume-clean --metadata=1.0
-
-You can only convert to 1.0 metadata as 1.1 and 1.2 put the metadata  on top
-of where data currently is.
-
-
-NeilBrown
-
+--Stijn
