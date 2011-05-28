@@ -1,64 +1,62 @@
-From: Stijn Hoop <stijn@sandcat.nl>
-Subject: Re: race condition in md creation?
-Date: Sat, 28 May 2011 13:19:59 +0200
-Message-ID: <20110528131959.00002a02@unknown>
-References: <20110527152057.47ca7176@pclin250.win.tue.nl>
-	<20110528072440.5bc27c1d@notabene.brown>
+From: FDi <fld@r00t3d.com>
+Subject: Re: creating degraded raid1 with imsm metadata
+Date: Sat, 28 May 2011 20:13:54 +0300
+Message-ID: <20110528171354.GA9767@r00t3d.com>
+References: <20110526074259.GA31623@r00t3d.com> <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110528072440.5bc27c1d@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "Jiang, Dave" <dave.jiang@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Thu, May 26, 2011 at 09:40:16AM -0700, Jiang, Dave wrote:
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of FDi
+> > Sent: Thursday, May 26, 2011 12:43 AM
+> > To: linux-raid@vger.kernel.org
+> > Subject: creating degraded raid1 with imsm metadata
+> > 
+> > Hello *,
+> > 
+> > Since Intel's Matrix Storage Manager option ROM doesn't support creating of
+> > degraded arrays I was wondering if I could use mdadm to make one? I had a
+> > very hard time finding documentation about how mdadm is supposed to
+> > work with imsm.
+> > 
+> > The plan is to make a 2x1TB raid1 with one device missing and then later add
+> > the other disk in once all the data has been copied to the degraded array. So
+> > a typical raid1 migration scenario, which Intel oddly enough doesn't seem to
+> > support with their option ROM.
+> 
+> Not sure if that's possible but have you looked at the Linux RAID wiki on IMSM information?
+> https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
+I wasn't able to figure out how to do what I wanted based on the wiki,
+but after lots of googling I found the exact commands:
 
-On Sat, 28 May 2011 07:24:40 +1000
-NeilBrown <neilb@suse.de> wrote:
-> On Fri, 27 May 2011 15:20:57 +0200 Stijn Hoop <stijn@sandcat.nl>
-> wrote:
-> 
-> > Hello,
-> > 
-> > while creating a test suite for internal purposes I ran into a race
-> > condition where a (very small) raid array that was just created
-> > cannot be stopped.
-> > 
-> > mdadm --create succeeds, but the subsequent mdadm --stop reports
-> > 'Device or resource busy'.
-> > 
-> > Please see the attached script for reproduction purposes, partial
-> > output from a run on my system (Fedora 14, kernel
-> > 2.6.35.13-91.fc14.x86_64, mdadm-3.1.3-0.git20100804.2.fc14.x86_64):
-> > 
-> > 
-> > 5+0 records in
-> > 5+0 records out
-> > 5242880 bytes (5.2 MB) copied, 0.0166663 s, 315 MB/s
-> > 5+0 records in
-> > 5+0 records out
-> > 5242880 bytes (5.2 MB) copied, 0.0197533 s, 265 MB/s
-> > mdadm: array /dev/md0 started.
-> > mdadm: failed to stop array /dev/md0: Device or resource busy
-> > Perhaps a running process, mounted filesystem or active volume
-> > group? failed to stop /dev/md0, sleep 1 sec then retrying one more
-> > time mdadm: stopped /dev/md0
-> 
-> When a new device appears (such as  a new md array), udev springs in
-> to action and examines it to see if it should do something with it.
-> While udev (or some tool that it ran) is examining the md array it
-> looks like it is busy so an attempt to stop it will fail.
-> 
-> My test scripts tend to have
->    udevadm settle
-> before
->    mdadm --stop
-> 
-> for exactly this reason.
+mdadm --create --force -v -e imsm --level=container -n 1 /dev/md/imsm
+/dev/sdb
 
-Ah, that makes perfect sense. Thanks for the explanation!
+mdadm --create -v --level raid1 -n 2 /dev/md/myraid /dev/sdb missing
 
---Stijn
+However I also learned that these commands have to be done on the target
+machine while its running with RAID mode selected from BIOS. Otherwise
+you will get this warning:
+
+mdadm: imsm unable to enumerate platform support
+    array may not be compatible with hardware/firmware
+	 Continue creating array?
+
+And indeed if that warning is displayed during the create, Intel's
+option rom won't see a working array on the device. I'm kinda curious
+why is this exactly? What kind of information mdadm uses from the
+controller running in RAID mode?
+
+When I created my array on the target machine using the commands from
+above it worked correctly and Intel option rom saw the array and was
+able to boot from the MBR I installed on the array as a test. Haven't
+tested rebuilding yet.
