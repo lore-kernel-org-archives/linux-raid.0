@@ -1,62 +1,76 @@
-From: FDi <fld@r00t3d.com>
-Subject: Re: creating degraded raid1 with imsm metadata
-Date: Sat, 28 May 2011 20:13:54 +0300
-Message-ID: <20110528171354.GA9767@r00t3d.com>
-References: <20110526074259.GA31623@r00t3d.com> <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Joe Perches <joe@perches.com>
+Subject: [TRIVIAL PATCH next 00/15] treewide: Convert vmalloc/memset to vzalloc
+Date: Sat, 28 May 2011 10:36:20 -0700
+Message-ID: <cover.1306603968.git.joe@perches.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, drbd-user@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, devel@driverdev.osuosl.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-On Thu, May 26, 2011 at 09:40:16AM -0700, Jiang, Dave wrote:
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of FDi
-> > Sent: Thursday, May 26, 2011 12:43 AM
-> > To: linux-raid@vger.kernel.org
-> > Subject: creating degraded raid1 with imsm metadata
-> > 
-> > Hello *,
-> > 
-> > Since Intel's Matrix Storage Manager option ROM doesn't support creating of
-> > degraded arrays I was wondering if I could use mdadm to make one? I had a
-> > very hard time finding documentation about how mdadm is supposed to
-> > work with imsm.
-> > 
-> > The plan is to make a 2x1TB raid1 with one device missing and then later add
-> > the other disk in once all the data has been copied to the degraded array. So
-> > a typical raid1 migration scenario, which Intel oddly enough doesn't seem to
-> > support with their option ROM.
-> 
-> Not sure if that's possible but have you looked at the Linux RAID wiki on IMSM information?
-> https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
-I wasn't able to figure out how to do what I wanted based on the wiki,
-but after lots of googling I found the exact commands:
+Resubmittal of patches from November 2010 and a few new ones.
 
-mdadm --create --force -v -e imsm --level=container -n 1 /dev/md/imsm
-/dev/sdb
+Joe Perches (15):
+  s390: Convert vmalloc/memset to vzalloc
+  x86: Convert vmalloc/memset to vzalloc
+  atm: Convert vmalloc/memset to vzalloc
+  drbd: Convert vmalloc/memset to vzalloc
+  char: Convert vmalloc/memset to vzalloc
+  isdn: Convert vmalloc/memset to vzalloc
+  md: Convert vmalloc/memset to vzalloc
+  media: Convert vmalloc/memset to vzalloc
+  mtd: Convert vmalloc/memset to vzalloc
+  scsi: Convert vmalloc/memset to vzalloc
+  staging: Convert vmalloc/memset to vzalloc
+  video: Convert vmalloc/memset to vzalloc
+  fs: Convert vmalloc/memset to vzalloc
+  mm: Convert vmalloc/memset to vzalloc
+  net: Convert vmalloc/memset to vzalloc
 
-mdadm --create -v --level raid1 -n 2 /dev/md/myraid /dev/sdb missing
+ arch/s390/hypfs/hypfs_diag.c           |    3 +--
+ arch/x86/mm/pageattr-test.c            |    3 +--
+ drivers/atm/idt77252.c                 |   11 ++++++-----
+ drivers/atm/lanai.c                    |    3 +--
+ drivers/block/drbd/drbd_bitmap.c       |    5 ++---
+ drivers/char/agp/backend.c             |    3 +--
+ drivers/char/raw.c                     |    3 +--
+ drivers/isdn/i4l/isdn_common.c         |    4 ++--
+ drivers/isdn/mISDN/dsp_core.c          |    3 +--
+ drivers/isdn/mISDN/l1oip_codec.c       |    6 ++----
+ drivers/md/dm-log.c                    |    3 +--
+ drivers/md/dm-snap-persistent.c        |    3 +--
+ drivers/md/dm-table.c                  |    4 +---
+ drivers/media/video/videobuf2-dma-sg.c |    8 ++------
+ drivers/mtd/mtdswap.c                  |    3 +--
+ drivers/s390/cio/blacklist.c           |    3 +--
+ drivers/scsi/bfa/bfad.c                |    3 +--
+ drivers/scsi/bfa/bfad_debugfs.c        |    8 ++------
+ drivers/scsi/cxgbi/libcxgbi.h          |    6 ++----
+ drivers/scsi/qla2xxx/qla_attr.c        |    6 ++----
+ drivers/scsi/qla2xxx/qla_bsg.c         |    3 +--
+ drivers/scsi/scsi_debug.c              |    7 ++-----
+ drivers/staging/rts_pstor/ms.c         |    3 +--
+ drivers/staging/rts_pstor/rtsx_chip.c  |    6 ++----
+ drivers/video/arcfb.c                  |    5 ++---
+ drivers/video/broadsheetfb.c           |    4 +---
+ drivers/video/hecubafb.c               |    5 ++---
+ drivers/video/metronomefb.c            |    4 +---
+ drivers/video/xen-fbfront.c            |    3 +--
+ fs/coda/coda_linux.h                   |    5 ++---
+ fs/reiserfs/journal.c                  |    9 +++------
+ fs/reiserfs/resize.c                   |    4 +---
+ fs/xfs/linux-2.6/kmem.h                |    7 +------
+ mm/page_cgroup.c                       |    3 +--
+ net/netfilter/x_tables.c               |    5 ++---
+ net/rds/ib_cm.c                        |    6 ++----
+ 36 files changed, 57 insertions(+), 113 deletions(-)
 
-However I also learned that these commands have to be done on the target
-machine while its running with RAID mode selected from BIOS. Otherwise
-you will get this warning:
+-- 
+1.7.5.rc3.dirty
 
-mdadm: imsm unable to enumerate platform support
-    array may not be compatible with hardware/firmware
-	 Continue creating array?
-
-And indeed if that warning is displayed during the create, Intel's
-option rom won't see a working array on the device. I'm kinda curious
-why is this exactly? What kind of information mdadm uses from the
-controller running in RAID mode?
-
-When I created my array on the target machine using the commands from
-above it worked correctly and Intel option rom saw the array and was
-able to boot from the MBR I installed on the array as a test. Haven't
-tested rebuilding yet.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
