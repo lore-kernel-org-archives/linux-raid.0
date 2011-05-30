@@ -1,44 +1,74 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] md: use proper little-endian bitops
-Date: Mon, 30 May 2011 21:56:20 +0900
-Message-ID: <1306760180-4309-1-git-send-email-akinobu.mita@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+From: David Brown <david@westcontrol.com>
+Subject: Re: Optimizing small IO with md RAID
+Date: Mon, 30 May 2011 15:08:09 +0200
+Message-ID: <is04s2$2rn$1@dough.gmane.org>
+References: <BANLkTi=236kncpunzodSci-1K33u_FBkPA@mail.gmail.com> <irvuj1$rc3$1@dough.gmane.org> <4DE38628.1050201@anonymous.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DE38628.1050201@anonymous.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Using __test_and_{set,clear}_bit_le() with ignoring its return value
-can be replaced with __{set,clear}_bit_le().
+On 30/05/2011 13:57, John Robinson wrote:
+> On 30/05/2011 12:20, David Brown wrote:
+>> (This is in addition to what Stan said about filesystems, etc.)
+> [...]
+>> Try your measurements with a raid10,far setup. It costs more on data
+>> space, but should, I think, be quite a bit faster.
+>
+> I'd also be interested in what performance is like with RAID60, e.g. 4
+> 6-drive RAID6 sets, combined into one RAID0. I suggest this arrangement
+> because it gives slightly better data space (33% better than the RAID10
+> arrangement), better redundancy (if that's a consideration[1]), and
+> would keep all your stripe widths in powers of two, e.g. 64K chunk on
+> the RAID6s would give a 256K stripe width and end up with an overall
+> stripe width of 1M at the RAID0.
+>
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
----
- drivers/md/bitmap.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Power-of-two stripe widths may be better for xfs than non-power-of-two 
+widths - perhaps Stan can answer that (he seems to know lots about xfs 
+on raid).  But you have to be careful when testing and benchmarking - 
+with power-of-two stripe widths, it's easy to get great 4 MB performance 
+but terrible 5 MB performance.
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 70bd738..52fa6cf 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -856,7 +856,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
- 		if (bitmap->flags & BITMAP_HOSTENDIAN)
- 			set_bit(bit, kaddr);
- 		else
--			__test_and_set_bit_le(bit, kaddr);
-+			__set_bit_le(bit, kaddr);
- 		kunmap_atomic(kaddr, KM_USER0);
- 		PRINTK("set file bit %lu page %lu\n", bit, page->index);
- 	}
-@@ -1228,7 +1228,7 @@ void bitmap_daemon_work(mddev_t *mddev)
- 						clear_bit(file_page_offset(bitmap, j),
- 							  paddr);
- 					else
--						__test_and_clear_bit_le(file_page_offset(bitmap, j),
-+						__clear_bit_le(file_page_offset(bitmap, j),
- 							       paddr);
- 					kunmap_atomic(paddr, KM_USER0);
- 				} else
--- 
-1.7.4.4
+
+As for the redundancy of raid6 (or 60) vs. raid10, the redundancy is 
+different but not necessarily better, depending on your failure types 
+and requirements.  raid6 will tolerate any two drives failing, while 
+raid10 will tolerate up to half the drives failing as long as you don't 
+lose both halves of a pair.  Depending on the chances of a random disk 
+failing, if you have enough disks then the chances of two disks in a 
+pair failing are less than the chances of three disks in a raid6 setup 
+failing.  And raid10 suffers much less from running in degraded mode 
+than raid6, and recovery is faster and less stressful.  So which is 
+"better" depends on the user.
+
+Of course, there is no question about the differences in space 
+efficiency - that's easy to calculate.
+
+For greater paranoia, you can always go for raid15 or even raid16...
+
+> You will probably always have relatively poor small write performance
+> with any parity RAID for reasons both David and Stan already pointed
+> out, though the above might be the least worst, if you see what I mean.
+>
+> You could also try 3 8-drive RAID6s or 2 12-drive RAID6s but you'd
+> definitely have to be careful - as Stan says - with your filesystem
+> configuration because of the stripe widths, and the bigger your parity
+> RAIDs the worse your small write and degraded performance becomes.
+>
+> Cheers,
+>
+> John.
+>
+> [1] RAID6 lets you get away with sector errors while rebuilding after a
+> disc failure. In addition, as it happens, setting up this arrangement
+> with two drives on each controller for each of the RAID6s would mean you
+> could tolerate a controller failure, albeit with horrible performance
+> and you would have no redundancy left. You could configure smaller
+> RAID6s or RAID10 to tolerate a controller failure too.
+>
+
