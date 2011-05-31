@@ -1,94 +1,75 @@
-From: Joe Landman <joe.landman@gmail.com>
-Subject: Re: Optimizing small IO with md RAID
-Date: Mon, 30 May 2011 23:48:50 -0400
-Message-ID: <4DE46522.1060705@gmail.com>
-References: <BANLkTi=236kncpunzodSci-1K33u_FBkPA@mail.gmail.com>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: creating degraded raid1 with imsm metadata
+Date: Tue, 31 May 2011 07:36:42 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D504908C0B32@azsmsx504.amr.corp.intel.com>
+References: <20110526074259.GA31623@r00t3d.com>
+ <D010E79907AF0D4E90B603DE907837D50490856E0F@azsmsx504.amr.corp.intel.com>
+ <20110528171354.GA9767@r00t3d.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=236kncpunzodSci-1K33u_FBkPA@mail.gmail.com>
+In-Reply-To: <20110528171354.GA9767@r00t3d.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "fibreraid@gmail.com" <fibreraid@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: FDi <fld@r00t3d.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/30/2011 03:14 AM, fibreraid@gmail.com wrote:
-> Hi all,
->
-> I am looking to optimize md RAID performance as much as possible.
->
-> I've managed to get some rather strong large 4M IOps performance, but
-> small 4K IOps are still rather subpar, given the hardware.
+> -----Original Message-----
+> From: FDi [mailto:fld@r00t3d.com]
+> Sent: Saturday, May 28, 2011 10:14 AM
+> To: Jiang, Dave
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: creating degraded raid1 with imsm metadata
+> 
+> On Thu, May 26, 2011 at 09:40:16AM -0700, Jiang, Dave wrote:
+> > > -----Original Message-----
+> > > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > > owner@vger.kernel.org] On Behalf Of FDi
+> > > Sent: Thursday, May 26, 2011 12:43 AM
+> > > To: linux-raid@vger.kernel.org
+> > > Subject: creating degraded raid1 with imsm metadata
+> > >
+> > > Hello *,
+> > >
+> > > Since Intel's Matrix Storage Manager option ROM doesn't support
+> > > creating of degraded arrays I was wondering if I could use mdadm to
+> > > make one? I had a very hard time finding documentation about how
+> > > mdadm is supposed to work with imsm.
+> > >
+> > > The plan is to make a 2x1TB raid1 with one device missing and then
+> > > later add the other disk in once all the data has been copied to the
+> > > degraded array. So a typical raid1 migration scenario, which Intel
+> > > oddly enough doesn't seem to support with their option ROM.
+> >
+> > Not sure if that's possible but have you looked at the Linux RAID wiki on
+> IMSM information?
+> > https://raid.wiki.kernel.org/index.php/RAID_setup#External_Metadata
+> I wasn't able to figure out how to do what I wanted based on the wiki, but
+> after lots of googling I found the exact commands:
+> 
+> mdadm --create --force -v -e imsm --level=container -n 1 /dev/md/imsm
+> /dev/sdb
+> 
+> mdadm --create -v --level raid1 -n 2 /dev/md/myraid /dev/sdb missing
+> 
+> However I also learned that these commands have to be done on the target
+> machine while its running with RAID mode selected from BIOS. Otherwise
+> you will get this warning:
+> 
+> mdadm: imsm unable to enumerate platform support
+>     array may not be compatible with hardware/firmware
+> 	 Continue creating array?
+> 
+> And indeed if that warning is displayed during the create, Intel's option rom
+> won't see a working array on the device. I'm kinda curious why is this exactly?
+> What kind of information mdadm uses from the controller running in RAID
+> mode?
 
-Understand that much of what passes for realistic test cases for SSDs 
-are ... well ... not that good.  Write something other than zeros, and 
-turn off write caching on the SSDs.  Then you get similar results to 
-what you see.
-
-[...]
-
-> In each case below, the md chunk size was 64K. In RAID 5 and RAID 6,
-> one hot-spare was specified.
->
-> 	raid0 24 x SSD	raid5 23 x SSD	raid6 23 x SSD	raid0 (2 * (raid5 x 11 SSD))						
-> 4K read	179,923 IO/s	93,503 IO/s	116,866 IO/s	75,782 IO/s
-> 4K write	168,027 IO/s	108,408 IO/s	120,477 IO/s	90,954 IO/s
-
-A 4k random read/write? Or a sequential?  The 4k sequential reads/writes 
-will be merged into a larger size.
-
-A 4k write is going to result in a read-modify-write cycle for this 
-config.
-
-These results suggest a 7k IOP 4k write performance, and about 7.5k IOP 
-4k read performance.  Are these Intel drives?  These numbers are in line 
-with what I've measured for them.
-
-> 4M read	4,576.7 MB/s	4,406.7 MB/s	4,052.2 MB/s	3,566.6 MB/s
-> 4M write	3,146.8 MB/s	1,337.2 MB/s	1,259.9 MB/s	1,856.4 MB/s
->
-> Note that each individual SSD tests out as follows:
->
-> 4k read: 56,342 IO/s
-> 4k write: 33,792 IO/s
-> 4M read: 231 MB/s
-> 4M write: 130 MB/s
-
-Is write caching on in this case but not the other?
-
->
->
-> My concerns:
->
-> 1. Given the above individual SSD performance, 24 SSD's in an md array
-> is at best getting 4K read/write performance of 2-3 drives, which
-> seems very low. I would expect significantly better linear scaling.
-
-You've got lots of RMW cycles going on for the write side, I wouldn't 
-expect million IOP performance out of a system like this.
-
-
-> 2. On the other hand, 4M read/write are performing more like 10-15
-> drives, which is much better, though still seems like it could get
-> better.
-
-These controllers are often on PCIe-x8 gen 2 ports.  Thats 4GB/s maximum 
-in each direction.  After the overhead on the bus,  you get 86% of the 
-remaining bandwidth.  This is 3.4 GB/s.  So your 4+ GB/s results are 
-either the result of caching, or multiple controllers. Since I see the 
-direct=1, I am guessing multiple controllers.   Unless you have a single 
-controller in a PCIe-x16 gen 2 slot ...
-
-
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics, Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+It queries the table exported by the OROM regarding the capabilities of the OROM. Limits are checked such as chunk size, leve, number of devices and etc. This ensures that the OROM can recognize the RAID volume you created on Linux. You can also bypass the warning by doing: "export IMSM_NO_PLATFORM=1"
+ 
+> When I created my array on the target machine using the commands from
+> above it worked correctly and Intel option rom saw the array and was able to
+> boot from the MBR I installed on the array as a test. Haven't tested rebuilding
+> yet.
