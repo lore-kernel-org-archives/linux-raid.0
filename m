@@ -1,67 +1,90 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Optimizing small IO with md RAID
-Date: Mon, 30 May 2011 16:21:39 -0500
-Message-ID: <4DE40A63.5080204@hardwarefreak.com>
-References: <BANLkTi=236kncpunzodSci-1K33u_FBkPA@mail.gmail.com>	<irvuj1$rc3$1@dough.gmane.org>	<4DE38628.1050201@anonymous.org.uk>	<is04s2$2rn$1@dough.gmane.org> <BANLkTikw9cqfhHAVaxZ2T2EErroCMT5Zow@mail.gmail.com>
+From: "fibreraid@gmail.com" <fibreraid@gmail.com>
+Subject: Re: md question re: max_hw_sectors_kb
+Date: Mon, 30 May 2011 20:06:41 -0700
+Message-ID: <BANLkTikQ_9H6xYQTO=2G-O42R1oYe1o11w@mail.gmail.com>
+References: <4DC0639E.1070707@sgi.com>
+	<yq17ha6z6tu.fsf@sermon.lab.mkp.net>
+	<20110510095243.0a23874b@notabene.brown>
+	<yq1oc38poej.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikw9cqfhHAVaxZ2T2EErroCMT5Zow@mail.gmail.com>
+In-Reply-To: <yq1oc38poej.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "fibreraid@gmail.com" <fibreraid@gmail.com>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: NeilBrown <neilb@suse.de>, Michael Reed <mdr@sgi.com>, linux-raid@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-raid.ids
 
-On 5/30/2011 10:24 AM, fibreraid@gmail.com wrote:
-> Hi All,
-> 
-> I appreciate the feedback but most of it seems around File System
-> recommendations or to change to parity-less RAID, like RAID 10. In my
-> tests, there is no file system; I am testing the raw block device as I
-> want to establish best-numbers there before layering on the file
-> system.
+Hi Mike,
 
-You're not performing valid taste case.  You will always have a
-filesystem in production.  The performance of every md raid level plus
-filesystem plus hardware combination will be different, and thus they
-must be tuned together, not each in isolation, especially in the case of
-SSDs.   Case in point:  slap EXT2 on your current array setup and then
-XFS.  Test each with file based IO.  You'll see XFS has radically
-superior parallel IO performance compared to EXT2.  Tweaking the array
-setup will not yield significant EXT2 speedup for parallel IO.
+Thank you for the patch. I've tested it though on 2.6.38 and do not
+see any significant change in md RAID 5 write performance compared to
+the unpatched kernel. Can you clarify how you may have achieved a
+demonstrable improvement?
 
-Disk striping was invented 2+ decades ago to increase performance of
-slow spindles for large file reads and writes, but the performance is
-very low for small file IO due to partial stripe width operations taking
-many of your spindles out of play, decreasing parallelism.  Adding
-parity to the striping exacerbates this problem.  This is the classic
-trade off between performance and redundancy.
+-Tommy
 
-SSDs have no moving parts, and natively have extremely high IOPS and
-throughput rates, each SSD having on the order of 150x the seek rate of
-a mech drive, and 2-3x the streaming throughput rate.  Thus, striping is
-irrelevant to SSD performance, and, as you've seen, will degrade small
-file performance due to partial width writes etc.
 
-If you truly want to maximize real world performance of those 24 SSDs,
-take one of your striped RAID configurations and format it with XFS
-using the defaults.  Then run FIO with highly parallel file based IO
-tests, i.e. two to four worker threads per CPU core.  Then delete the
-array and create the linear setup I previously recommended and run the
-same tests.  When comparing the  results I think you'll begin to see why
-I recommend this setup for both highly parallel small and large file IO.
- Your large file IO numbers may be a little smaller with this setup, but
-you should be able to play with chunk size to achieve the best balance
-with both small and large file IO.
-
-Regardless of chunk size, you should still see better overall parallel
-IOPS and throughput than with striping, especially parity striping.  If
-you need redundancy and maximum parallel performance, and can afford to
-'waste' SSDs, create 12 RAID1 devices and make a linear array of the 12,
-giving XFS 12 allocation groups.  For parallel small file workloads this
-will yield better performance than RAID10 for the same cost of device
-space.  Large file parallel performance should be similar.
-
--- 
-Stan
+On Wed, May 11, 2011 at 8:51 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Neil" =3D=3D NeilBrown =A0<neilb@suse.de> writes:
+>
+> Neil,
+>
+>>> Your fix is functionally correct. However, another case just popped
+>>> up this week where we need to distinguish between stacking driver a=
+nd
+>>> LLD defaults.
+>
+> Neil> What case is this?
+>
+> This particular case involved the need to set different defaults for
+> discard depending on whether it was a stacking or a low level driver.
+>
+>
+> Neil> If you have FS -> DM -> MD, then any change that MD makes to
+> Neil> max_hw_sectors_kb will not be visible to the FS. =A0So adding a=
+nd
+> Neil> activating a hot spare with smaller max_hw_sectors_kb cause cau=
+se
+> Neil> it to receive requests that are too big.
+>
+> Yeah, this issue pops up occasionally. Alasdair and I were discussing=
+ it
+> just a couple of weeks ago.
+>
+>
+> Neil> So we really need a propery resolution to this problem first.
+> Neil> i.e. A way for 'dm' to notice when 'md' changes its parameters =
+-
+> Neil> or in general any stacking deivce to find out when an underlyin=
+g
+> Neil> device changes in any way.
+>
+> Neil> I would implement this by having blkdev_get{,_by_path,_by_dev}
+> Neil> take an extra arg which is a pointer to a struct of functions. =
+=A0In
+> Neil> the first instance there would be just one which tells the clai=
+mer
+> Neil> that something in queue.limits has changed. =A0Later we could a=
+dd
+> Neil> other calls to help with size changes.
+>
+> I agree we need a way to propagate queue limit and capacity changes u=
+p
+> the stack. I'll put in on my todo list.
+>
+> --
+> Martin K. Petersen =A0 =A0 =A0Oracle Linux Engineering
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
