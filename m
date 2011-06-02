@@ -1,107 +1,56 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: 2.6.39: raid1 check blocks jbd on other md more than 120 seconds
-Date: Thu, 2 Jun 2011 11:46:38 +0200
-Message-ID: <BANLkTimzMOo9uGjt-sDWPVBBdzSQaqVTWw@mail.gmail.com>
-References: <20110602093644.GA8620@janus>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH] md/raid1: use local list for pending write-bio in make_request()
+Date: Thu,  2 Jun 2011 21:46:27 +0900
+Message-ID: <1307018787-5749-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110602093644.GA8620@janus>
 Sender: linux-raid-owner@vger.kernel.org
-To: Frank van Maarseveen <frankvm@frankvm.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2 June 2011 11:36, Frank van Maarseveen <frankvm@frankvm.com> wrote:
-> The system runs FC14 with an (almost) stock 2.6.39 kernel, configured=
- to
-> panic if it seems to hang. That's exactly what started to happen with=
-out
-> anything being logged in the normal way except over netconsole.
->
-> /proc/mdstat:
-> Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4]
-> md3 : active raid1 sda3[0] sdb3[1]
-> =C2=A0 =C2=A0 =C2=A01885338488 blocks super 1.2 [2/2] [UU]
->
-> md1 : active raid1 sda1[0] sdb1[1]
-> =C2=A0 =C2=A0 =C2=A033555384 blocks super 1.2 [2/2] [UU]
->
-> kernel messages:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0(/etc/cron.weekly/99-raid-check kicks in)
-> Jun =C2=A02 04:04:00 janus md: data-check of RAID array md3
-> Jun =C2=A02 04:04:00 janus md: delaying data-check of md1 until md3 h=
-as finished (they share one or more physical units)
-> Jun =C2=A02 04:04:00 janus md: minimum _guaranteed_ =C2=A0speed: 1000=
- KB/sec/disk.
-> Jun =C2=A02 04:04:00 janus md: using maximum available idle IO bandwi=
-dth (but not more than 200000 KB/sec) for data-check.
-> Jun =C2=A02 04:04:00 janus md: using 128k window, over a total of 188=
-5338488 blocks.
-> Jun =C2=A02 04:55:54 janus INFO: task jbd2/md1-8:1188 blocked for mor=
-e than 120 seconds.
-> Jun =C2=A02 04:55:54 "echo 0 > /proc/sys/kernel/hung_task_timeout_sec=
-s" disables this message.
-> Jun =C2=A02 04:55:54 janus jbd2/md1-8 =C2=A0 =C2=A0 D
-> Jun =C2=A02 04:55:54 =C2=A0f5739e68
-> Jun =C2=A02 04:55:54 janus =C2=A0 =C2=A00 =C2=A01188 =C2=A0 =C2=A0 =C2=
-=A02 0x00000000
-> Jun =C2=A02 04:55:54 =C2=A0f5739e78
-> Jun =C2=A02 04:55:54 =C2=A000000046
-> Jun =C2=A02 04:55:54 =C2=A000000002
-> Jun =C2=A02 04:55:54 =C2=A0f5739e68
-> Jun =C2=A02 04:55:54 =C2=A000000000
-> Jun =C2=A02 04:55:54 =C2=A001000000
-> Jun =C2=A02 04:55:54 =C2=A0f5739e08
-> Jun =C2=A02 04:55:54 =C2=A0f6124f00
-> Jun =C2=A02 04:55:54 janus
-> Jun =C2=A02 04:55:54 =C2=A0c1999c00
-> Jun =C2=A02 04:55:54 =C2=A000000001
-> Jun =C2=A02 04:55:54 =C2=A0c1999680
-> Jun =C2=A02 04:55:54 =C2=A0c1999680
-> Jun =C2=A02 04:55:54 =C2=A000000003
-> Jun =C2=A02 04:55:54 =C2=A0f6126940
-> Jun =C2=A02 04:55:54 =C2=A0f6126ac0
-> Jun =C2=A02 04:55:54 =C2=A0f6786680
-> Jun =C2=A02 04:55:54 janus
-> Jun =C2=A02 04:55:54 =C2=A0000045d1
-> Jun =C2=A02 04:55:54 =C2=A000000000
-> Jun =C2=A02 04:55:54 =C2=A000000000
-> Jun =C2=A02 04:55:54 =C2=A057087b88
-> Jun =C2=A02 04:55:54 =C2=A0000045d1
-> Jun =C2=A02 04:55:54 =C2=A0000045d1
-> Jun =C2=A02 04:55:54 =C2=A0f6686c00
-> Jun =C2=A02 04:55:54 =C2=A0f6686c10
-> Jun =C2=A02 04:55:54 janus
-> Jun =C2=A02 04:55:54 Call Trace:
-> Jun =C2=A02 04:55:54 =C2=A0[<c103822b>] ? get_parent_ip+0xb/0x40
-> Jun =C2=A02 04:55:54 =C2=A0[<c11698a2>] jbd2_journal_commit_transacti=
-on+0x182/0x1500
-> Jun =C2=A02 04:55:54 =C2=A0[<c100249f>] ? __switch_to+0xcf/0x1c0
-> Jun =C2=A02 04:55:54 =C2=A0[<c103822b>] ? get_parent_ip+0xb/0x40
-> Jun =C2=A02 04:55:54 =C2=A0[<c162f05c>] ? schedule+0x2ac/0x730
-> Jun =C2=A02 04:55:54 =C2=A0[<c1056c90>] ? wake_up_bit+0x80/0x80
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0(reboots)
->
-> --
-> Frank
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Use local bio_list for gathering mirrored bios to reduce locking overhead.
 
-Same behavior if you lower this?
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/raid1.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Jun  2 04:04:00 janus md: using maximum available idle IO bandwidth
-(but not more than 200000 KB/sec) for data-check.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 5d096096f958..39e9f54038a8 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -707,6 +707,7 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 	const unsigned long do_flush_fua = (bio->bi_rw & (REQ_FLUSH | REQ_FUA));
+ 	mdk_rdev_t *blocked_rdev;
+ 	int plugged;
++	struct bio_list write_list;
+ 
+ 	/*
+ 	 * Register the new request and wait if the reconstruction
+@@ -801,6 +802,7 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 	plugged = mddev_check_plugged(mddev);
+ 
+ 	disks = conf->raid_disks;
++	bio_list_init(&write_list);
+  retry_write:
+ 	blocked_rdev = NULL;
+ 	rcu_read_lock();
+@@ -894,10 +896,12 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 		}
+ 
+ 		atomic_inc(&r1_bio->remaining);
+-		spin_lock_irqsave(&conf->device_lock, flags);
+-		bio_list_add(&conf->pending_bio_list, mbio);
+-		spin_unlock_irqrestore(&conf->device_lock, flags);
++		bio_list_add(&write_list, mbio);
+ 	}
++	spin_lock_irqsave(&conf->device_lock, flags);
++	bio_list_merge(&conf->pending_bio_list, &write_list);
++	spin_unlock_irqrestore(&conf->device_lock, flags);
++
+ 	r1_bio_write_done(r1_bio);
+ 
+ 	/* In case raid1d snuck in to freeze_array */
+-- 
+1.7.5.2
 
-/M
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
