@@ -1,7 +1,8 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 19/22] FIX: Enable metadata updates for raid0
-Date: Thu, 02 Jun 2011 16:50:49 +0200
-Message-ID: <20110602145049.27355.66066.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 18/22] imsm: Apply checkpoint metadata update for general
+	migration
+Date: Thu, 02 Jun 2011 16:50:41 +0200
+Message-ID: <20110602145041.27355.46160.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,37 +16,52 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-When raid0 is takeovered to degraded raid4, metadata updates has to be
-applied via mdmon (raid4 has to be monitored).
-It is not possible due to no update_tail pointer initialization
-in supertype structure.
+mdmon has to update checkpoint information in metadata during
+general migration according to received metadata update.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
- Grow.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ super-intel.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 11b2214..25be587 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1847,6 +1847,9 @@ static int reshape_array(char *container, int fd, char *devname,
- 			if (!mdmon_running(st->container_dev))
- 				start_mdmon(st->container_dev);
- 			ping_monitor(container);
-+			if (mdmon_running(st->container_dev) &&
-+			    st->update_tail == NULL)
-+				st->update_tail = &st->updates;
- 		}
- 	}
- 	/* ->reshape_super might have chosen some spares from the
-@@ -2264,6 +2267,8 @@ started:
- 					": %s: could not set level "
- 					"to %s\n", devname, c);
- 		}
-+		if (info->new_level == 0)
-+			st->update_tail = NULL;
- 	}
- out:
- 	if (forked)
+diff --git a/super-intel.c b/super-intel.c
+index fa4e15d..b6369c6 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -6920,6 +6920,24 @@ static void imsm_process_update(struct supertype *st,
+ 	mpb = super->anchor;
+ 
+ 	switch (type) {
++	case update_general_migration_checkpoint: {
++		struct intel_dev *id;
++		struct imsm_update_general_migration_checkpoint *u =
++							(void *)update->buf;
++
++		dprintf("imsm: process_update() "
++			"for update_general_migration_checkpoint called\n");
++
++		/* find device under general migration */
++		for (id = super->devlist ; id; id = id->next) {
++			if (is_gen_migration(id->dev)) {
++				id->dev->vol.curr_migr_unit =
++					__cpu_to_le32(u->curr_migr_unit);
++				super->updates_pending++;
++			}
++		}
++		break;
++	}
+ 	case update_takeover: {
+ 		struct imsm_update_takeover *u = (void *)update->buf;
+ 		if (apply_takeover_update(u, super, &update->space_list)) {
+@@ -7257,6 +7275,10 @@ static void imsm_prepare_update(struct supertype *st,
+ 	size_t len = 0;
+ 
+ 	switch (type) {
++	case update_general_migration_checkpoint:
++		dprintf("imsm: prepare_update() "
++			"for update_general_migration_checkpoint called\n");
++		break;
+ 	case update_takeover: {
+ 		struct imsm_update_takeover *u = (void *)update->buf;
+ 		if (u->direction == R0_TO_R10) {
 
