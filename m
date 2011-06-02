@@ -1,7 +1,8 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 09/22] imsm: Check if array degradation has been changed
-Date: Thu, 02 Jun 2011 16:49:26 +0200
-Message-ID: <20110602144926.27355.45518.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 11/22] imsm: Add information about migration record to mdadm
+	'-E' option
+Date: Thu, 02 Jun 2011 16:49:42 +0200
+Message-ID: <20110602144942.27355.43126.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,97 +16,84 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-Before reshaping every "migration unit", check if array is still usable.
-In failed disks number is greater than allowed degradation level, reshape
-has to be aborted.
+Add ability to display information from migration record in examine
+option.
 
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
- super-intel.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 57 insertions(+), 0 deletions(-)
+ super-intel.c |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 53 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index b4038d3..d2393c2 100644
+index db2f2b9..c40c02a 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -8310,6 +8310,53 @@ int wait_for_reshape_imsm(struct mdinfo *sra, unsigned long long to_complete,
+@@ -1035,6 +1035,57 @@ static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
+ 	       human_size(sz * 512));
  }
  
- /*******************************************************************************
-+ * Function:	check_degradation_change
-+ * Description:	Check that array hasn't become failed.
-+ * Parameters:
-+ *	info	: for sysfs access
-+ *	sources	: source disks descriptors
-+ *	degraded: previous degradation level
-+ * Returns:
-+ *	degradation level
-+ ******************************************************************************/
-+int check_degradation_change(struct mdinfo *info,
-+			     int *sources,
-+			     int degraded)
-+{
-+	unsigned long long new_degraded;
-+	sysfs_get_ll(info, NULL, "degraded", &new_degraded);
-+	if (new_degraded != (unsigned long long)degraded) {
-+		/* check each device to ensure it is still working */
-+		struct mdinfo *sd;
-+		new_degraded = 0;
-+		for (sd = info->devs ; sd ; sd = sd->next) {
-+			if (sd->disk.state & (1<<MD_DISK_FAULTY))
-+				continue;
-+			if (sd->disk.state & (1<<MD_DISK_SYNC)) {
-+				char sbuf[20];
-+				if (sysfs_get_str(info,
-+					sd, "state", sbuf, 20) < 0 ||
-+					strstr(sbuf, "faulty") ||
-+					strstr(sbuf, "in_sync") == NULL) {
-+					/* this device is dead */
-+					sd->disk.state = (1<<MD_DISK_FAULTY);
-+					if (sd->disk.raid_disk >= 0 &&
-+					    sources[sd->disk.raid_disk] >= 0) {
-+						close(sources[
-+							sd->disk.raid_disk]);
-+						sources[sd->disk.raid_disk] =
-+							-1;
-+					}
-+					new_degraded++;
-+				}
-+			}
-+		}
-+	}
++static int is_gen_migration(struct imsm_dev *dev);
 +
-+	return new_degraded;
++void examine_migr_rec_imsm(struct intel_super *super)
++{
++	struct migr_record *migr_rec = super->migr_rec;
++	struct imsm_super *mpb = super->anchor;
++	int i;
++
++	for (i = 0; i < mpb->num_raid_devs; i++) {
++		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
++		if (is_gen_migration(dev) == 0)
++				continue;
++
++		printf("\nMigration Record Information:");
++		if (super->disks->index > 1) {
++			printf(" Empty\n                              ");
++			printf("Examine one of first two disks in array\n");
++			break;
++		}
++		printf("\n                     Status : ");
++		if (__le32_to_cpu(migr_rec->rec_status) == UNIT_SRC_NORMAL)
++			printf("Normal\n");
++		else
++			printf("Contains Data\n");
++		printf("               Current Unit : %u\n",
++		       __le32_to_cpu(migr_rec->curr_migr_unit));
++		printf("                     Family : %u\n",
++		       __le32_to_cpu(migr_rec->family_num));
++		printf("                  Ascending : %u\n",
++		       __le32_to_cpu(migr_rec->ascending_migr));
++		printf("            Blocks Per Unit : %u\n",
++		       __le32_to_cpu(migr_rec->blocks_per_unit));
++		printf("       Dest. Depth Per Unit : %u\n",
++		       __le32_to_cpu(migr_rec->dest_depth_per_unit));
++		printf("        Checkpoint Area pba : %u\n",
++		       __le32_to_cpu(migr_rec->ckpt_area_pba));
++		printf("           First member lba : %u\n",
++		       __le32_to_cpu(migr_rec->dest_1st_member_lba));
++		printf("      Total Number of Units : %u\n",
++		       __le32_to_cpu(migr_rec->num_migr_units));
++		printf("             Size of volume : %u\n",
++		       __le32_to_cpu(migr_rec->post_migr_vol_cap));
++		printf("  Expansion space for LBA64 : %u\n",
++		       __le32_to_cpu(migr_rec->post_migr_vol_cap_hi));
++		printf("       Record was read from : %u\n",
++		       __le32_to_cpu(migr_rec->ckpt_read_disk_num));
++
++		break;
++	}
 +}
 +
-+/*******************************************************************************
-  * Function:	imsm_manage_reshape
-  * Description:	Function finds array under reshape and it manages reshape
-  *		process. It creates stripes backups (if required) and sets
-@@ -8353,6 +8400,7 @@ static int imsm_manage_reshape(
- 	unsigned long long start_src; /* [bytes] */
- 	unsigned long long start; /* [bytes] */
- 	unsigned long long start_buf_shift; /* [bytes] */
-+	int degraded = 0;
+ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *map);
  
- 	if (!fds || !offsets || !destfd || !destoffsets || !sra)
- 		goto abort;
-@@ -8419,6 +8467,15 @@ static int imsm_manage_reshape(
- 			* __le32_to_cpu(migr_rec->curr_migr_unit);
- 		unsigned long long border;
- 
-+		/* Check that array hasn't become failed.
-+		 */
-+		degraded = check_degradation_change(sra, fds, degraded);
-+		if (degraded > 1) {
-+			dprintf("imsm: Abort reshape due to degradation"
-+				" level (%i)\n", degraded);
-+			goto abort;
-+		}
+ static void examine_super_imsm(struct supertype *st, char *homehost)
+@@ -1114,6 +1165,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 		printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
+ 		       human_size(sz * 512));
+ 	}
 +
- 		next_step = __le32_to_cpu(migr_rec->blocks_per_unit);
++	examine_migr_rec_imsm(super);
+ }
  
- 		if ((current_position + next_step) > max_position)
+ static void brief_examine_super_imsm(struct supertype *st, int verbose)
 
