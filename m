@@ -1,8 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 18/22] imsm: Apply checkpoint metadata update for general
-	migration
-Date: Thu, 02 Jun 2011 16:50:41 +0200
-Message-ID: <20110602145041.27355.46160.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 20/22] Do not use backup file for external metadata
+Date: Thu, 02 Jun 2011 16:50:58 +0200
+Message-ID: <20110602145058.27355.14785.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,52 +15,67 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-mdmon has to update checkpoint information in metadata during
-general migration according to received metadata update.
+When external metatdata handler supports manage_reshape()
+and recover_backup() functions in super switch backup file is not required
+and can be omitted. For backup purposes metadata specific mechanisms
+are used.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
- super-intel.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+ Grow.c |   40 ++++++++++++++++++++++------------------
+ 1 files changed, 22 insertions(+), 18 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index fa4e15d..b6369c6 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -6920,6 +6920,24 @@ static void imsm_process_update(struct supertype *st,
- 	mpb = super->anchor;
- 
- 	switch (type) {
-+	case update_general_migration_checkpoint: {
-+		struct intel_dev *id;
-+		struct imsm_update_general_migration_checkpoint *u =
-+							(void *)update->buf;
-+
-+		dprintf("imsm: process_update() "
-+			"for update_general_migration_checkpoint called\n");
-+
-+		/* find device under general migration */
-+		for (id = super->devlist ; id; id = id->next) {
-+			if (is_gen_migration(id->dev)) {
-+				id->dev->vol.curr_migr_unit =
-+					__cpu_to_le32(u->curr_migr_unit);
-+				super->updates_pending++;
+diff --git a/Grow.c b/Grow.c
+index 25be587..8e67be2 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -2038,25 +2038,29 @@ started:
+ 	if (d < 0) {
+ 		goto release;
+ 	}
+-	if (backup_file == NULL) {
+-		if (reshape.after.data_disks <= reshape.before.data_disks) {
+-			fprintf(stderr,
+-				Name ": %s: Cannot grow - need backup-file\n", 
+-				devname);
+-			goto release;
+-		} else if (sra->array.spare_disks == 0) {
+-			fprintf(stderr, Name ": %s: Cannot grow - need a spare or "
+-				"backup-file to backup critical section\n",
+-				devname);
+-			goto release;
+-		}
+-	} else {
+-		if (!reshape_open_backup_file(backup_file, fd, devname,
+-					      (signed)blocks,
+-					      fdlist+d, offsets+d, restart)) {
+-			goto release;
++	if ((st->ss->manage_reshape == NULL) ||
++	    (st->ss->recover_backup == NULL)) {
++		if (backup_file == NULL) {
++			if (reshape.after.data_disks <=
++			    reshape.before.data_disks) {
++				fprintf(stderr, Name ": %s: Cannot grow - "
++					"need backup-file\n", devname);
++				goto release;
++			} else if (sra->array.spare_disks == 0) {
++				fprintf(stderr, Name ": %s: Cannot grow - "
++					"need a spare or backup-file to backup "
++					"critical section\n", devname);
++				goto release;
 +			}
-+		}
-+		break;
-+	}
- 	case update_takeover: {
- 		struct imsm_update_takeover *u = (void *)update->buf;
- 		if (apply_takeover_update(u, super, &update->space_list)) {
-@@ -7257,6 +7275,10 @@ static void imsm_prepare_update(struct supertype *st,
- 	size_t len = 0;
++		} else {
++			if (!reshape_open_backup_file(backup_file, fd, devname,
++						      (signed)blocks,
++						      fdlist+d, offsets+d,
++						      restart)) {
++				goto release;
++			}
++			d++;
+ 		}
+-		d++;
+ 	}
  
- 	switch (type) {
-+	case update_general_migration_checkpoint:
-+		dprintf("imsm: prepare_update() "
-+			"for update_general_migration_checkpoint called\n");
-+		break;
- 	case update_takeover: {
- 		struct imsm_update_takeover *u = (void *)update->buf;
- 		if (u->direction == R0_TO_R10) {
+ 	/* lastly, check that the internal stripe cache is
 
