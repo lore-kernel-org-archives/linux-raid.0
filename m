@@ -1,91 +1,31 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: About monitor raid event using poll/select
-Date: Thu, 2 Jun 2011 12:50:35 +1000
-Message-ID: <20110602125035.21113078@notabene.brown>
-References: <201106021034490930721@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201106021034490930721@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: majianpeng <majianpeng@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH 1/2] md: convert double atomic_inc() to atomic_add()
+Date: Thu,  2 Jun 2011 13:53:02 +0900
+Message-ID: <1306990383-14133-1-git-send-email-namhyung@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2 Jun 2011 10:34:52 +0800 "majianpeng" <majianpeng@gmail.com> wrote:
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/md.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-> I recently did a project which monitor raids event in system.
-> I used this way:
-> while(1){
-> 	open(/proc/mdstat);
-> 	poll();
->     do-something
-> 	close
-> }
-
-This is the wrong way to use 'poll' - no matter what sort of file descriptor
-you have.
-
-You need to open /proc/mdstat and keep it open.
-
-You then read /proc/mdstat and possibly act upon the state that you find
-there.
-Then you call 'poll'.
-When poll tells you that something has happened, you seek back to the start
-of the file and read it again.  If something has changed, you can act on that
-change.
-Then you can call 'poll' again.
-
-'poll' tells you if something has changed since the last time you read the
-file.
-When you open the file and use poll straight away it should tell you that the
-file has data ready for you.. maybe it doesn't but it should.  Because there
-is data there for you to read.
-
-NeilBrown
-
-
-
-
-
-> I wanted to monitor all events in times.Supposing events A--10s-->B---1hour---->C,do-somethings taks 30s.
-> First I must fetch the event A.But I do do-somthing using 30s,so I did not monitor event B.
-> But the interval of B and C is 1 hour,so  I only after 1 hours can detected the events B.
-> 
-> I can modified the do-something in order to reduce times.But in theory,I can omit event.
-> so I think modified kernel function mdstat_poll:
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 39b27c4..aaecc03 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -6539,8 +6539,10 @@ static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
->         /* always allow read */
->         mask = POLLIN | POLLRDNORM;
->  
-> -   if (mi->event != atomic_read(&md_event_count))
-> + if (mi->event != atomic_read(&md_event_count)){
-> +              mi->event = atomic_read(&md_event_count);
->                 mask |= POLLERR | POLLPRI;
-> + }
->         return mask;
->  }
->  user space function like this:
-> opne(/proc/mdstat)
-> while(1){
-> 	poll
->     do-something
-> }
-> close
-> 
-> 2011-06-02 
-> 
-> 
-> 
-> majianpeng 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index aa640a85bb21..f210e42a56ca 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -396,8 +396,7 @@ static void submit_flushes(struct work_struct *ws)
+ 			 * we reclaim rcu_read_lock
+ 			 */
+ 			struct bio *bi;
+-			atomic_inc(&rdev->nr_pending);
+-			atomic_inc(&rdev->nr_pending);
++			atomic_add(2, &rdev->nr_pending);
+ 			rcu_read_unlock();
+ 			bi = bio_alloc_mddev(GFP_KERNEL, 0, mddev);
+ 			bi->bi_end_io = md_end_flush;
+-- 
+1.7.5.2
