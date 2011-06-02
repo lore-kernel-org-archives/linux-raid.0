@@ -1,39 +1,56 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid1 info (not active degraded raid)
-Date: Wed, 01 Jun 2011 13:34:46 -0400
-Message-ID: <4DE67836.1060103@turmel.org>
-References: <201106011832.51688.raid2@fuckaround.org>
+From: "majianpeng" <majianpeng@gmail.com>
+Subject: About monitor raid event using poll/select
+Date: Thu, 2 Jun 2011 10:34:52 +0800
+Message-ID: <201106021034490930721@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201106011832.51688.raid2@fuckaround.org>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/01/2011 12:32 PM, Pol Hallen wrote:
-> Hi folks :-)
-> 
-> I build a raid1 with mdadm. For purpose test I disconnected a disk and raid1 
-> runs perfectly.
-> 
-> After reboot /dev/md1 (raid1) doesn't appear by cat /proc/mdstat
-> 
-> (I have also a raid6 on /dev/md0)
-> 
-> mdadm -E /dev/sdh (a disk of raid1) show me correct raid
-> 
-> How I start this raid?
+I recently did a project which monitor raids event in system.
+I used this way:
+while(1){
+	open(/proc/mdstat);
+	poll();
+    do-something
+	close
+}
+I wanted to monitor all events in times.Supposing events A--10s-->B---1hour---->C,do-somethings taks 30s.
+First I must fetch the event A.But I do do-somthing using 30s,so I did not monitor event B.
+But the interval of B and C is 1 hour,so  I only after 1 hours can detected the events B.
 
-Look at kernel parameter "md-mod.start_dirty_degraded=1"
+I can modified the do-something in order to reduce times.But in theory,I can omit event.
+so I think modified kernel function mdstat_poll:
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 39b27c4..aaecc03 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -6539,8 +6539,10 @@ static unsigned int mdstat_poll(struct file *filp, poll_table *wait)
+        /* always allow read */
+        mask = POLLIN | POLLRDNORM;
+ 
+-   if (mi->event != atomic_read(&md_event_count))
++ if (mi->event != atomic_read(&md_event_count)){
++              mi->event = atomic_read(&md_event_count);
+                mask |= POLLERR | POLLPRI;
++ }
+        return mask;
+ }
+ user space function like this:
+opne(/proc/mdstat)
+while(1){
+	poll
+    do-something
+}
+close
 
-> raid6 works so mdadm runs.
-> 
-> thanks and sorry for my bad english :-@
+2011-06-02 
 
-Your english is fine.  Your return address is not so nice.  I'm somewhat surprised it got through my spam filters.  It won't again.
 
-HTH,
 
-Phil
+majianpeng 
+
