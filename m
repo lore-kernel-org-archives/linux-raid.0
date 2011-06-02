@@ -1,7 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 05/22] imsm: check migration compatibility
-Date: Thu, 02 Jun 2011 16:48:51 +0200
-Message-ID: <20110602144851.27355.91807.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 07/22] imsm: Add wait_for_reshape_imsm() implementation
+Date: Thu, 02 Jun 2011 16:49:08 +0200
+Message-ID: <20110602144908.27355.89349.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,16 +15,10 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-Under Windows IMSM can reshape arrays in 2 directions
-(ascending and decsending).
-Under Linux one (ascending) direction is supported at this moment.
-Block loading metadata when decsending reshape is detected
+After each checkpoint mdadm should set new reshaped area and wait
+until md finishes reshape. Function wait_for_reshape_imsm() sets
+new reshape range and waits for job completion.
 
-Windows also uses optimalization area during reshaping array.
-Linux does not support it.
-The patch blocks this operation also.
-
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
@@ -32,89 +26,75 @@ Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
  1 files changed, 61 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 1f7d008..31fae1e 100644
+index 31fae1e..c395a48 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -2846,6 +2846,44 @@ struct bbm_log *__get_imsm_bbm_log(struct imsm_super *mpb)
- 	return ptr;
+@@ -8248,6 +8248,67 @@ exit_imsm_reshape_super:
+ 	return ret_val;
  }
  
 +/*******************************************************************************
-+ * Function:	check_mpb_migr_compatibility
-+ * Description:	Function checks for unsupported migration features:
-+ *		- migration optimization area (pba_of_lba0)
-+ *		- descending reshape (ascending_migr)
++ * Function:	wait_for_reshape_imsm
++ * Description:	Function writes new sync_max value and waits until
++ *		reshape process reach new position
 + * Parameters:
-+ *	super	: imsm metadata information
++ *	sra		: general array info
++ *	to_complete	: new sync_max position
++ *	ndata		: number of disks in new array's layout
 + * Returns:
-+ *	 0 : migration is compatible
-+ *	-1 : migration is not compatible
++ *	 0 : success,
++ *	 1 : there is no reshape in progress,
++ *	-1 : fail
 + ******************************************************************************/
-+int check_mpb_migr_compatibility(struct intel_super *super)
++int wait_for_reshape_imsm(struct mdinfo *sra, unsigned long long to_complete,
++			  int ndata)
 +{
-+	struct imsm_map *map0, *map1;
-+	struct migr_record *migr_rec = super->migr_rec;
-+	int i;
++	int fd = sysfs_get_fd(sra, NULL, "reshape_position");
++	unsigned long long completed;
 +
-+	for (i = 0; i < super->anchor->num_raid_devs; i++) {
-+		struct imsm_dev *dev_iter = __get_imsm_dev(super->anchor, i);
++	struct timeval timeout;
 +
-+		if (dev_iter &&
-+		    dev_iter->vol.migr_state == 1 &&
-+		    dev_iter->vol.migr_type == MIGR_GEN_MIGR) {
-+			/* This device is migrating */
-+			map0 = get_imsm_map(dev_iter, 0);
-+			map1 = get_imsm_map(dev_iter, 1);
-+			if (map0->pba_of_lba0 != map1->pba_of_lba0)
-+				/* migration optimization area was used */
-+				return -1;
-+			if (migr_rec->ascending_migr == 0
-+				&& migr_rec->dest_depth_per_unit > 0)
-+				/* descending reshape not supported yet */
-+				return -1;
++	if (fd < 0)
++		return 1;
++
++	sysfs_fd_get_ll(fd, &completed);
++
++	if (to_complete == 0) {/* reshape till the end of array */
++		sysfs_set_str(sra, NULL, "sync_max", "max");
++		to_complete = MaxSector;
++	} else {
++		if (completed > to_complete)
++			return -1;
++		if (sysfs_set_num(sra, NULL, "sync_max",
++				  to_complete / ndata) != 0) {
++			close(fd);
++			return -1;
 +		}
 +	}
++
++	timeout.tv_sec = 0;
++	timeout.tv_usec = 500000;
++	do {
++		char action[20];
++		fd_set rfds;
++		FD_ZERO(&rfds);
++		FD_SET(fd, &rfds);
++		select(fd+1, NULL, NULL, &rfds, &timeout);
++		if (sysfs_fd_get_ll(fd, &completed) < 0) {
++			close(fd);
++			return 1;
++		}
++		if (sysfs_get_str(sra, NULL, "sync_action",
++			    action, 20) > 0 &&
++			    strncmp(action, "reshape", 7) != 0)
++			continue;
++	} while (completed < to_complete);
++	close(fd);
 +	return 0;
++
 +}
 +
- static void __free_imsm(struct intel_super *super, int free_disks);
- 
- /* load_imsm_mpb - read matrix metadata
-@@ -3575,6 +3613,19 @@ static int load_super_imsm_all(struct supertype *st, int fd, void **sbp,
- 		err = 4;
- 		goto error;
- 	}
-+
-+	/* Check migration compatibility */
-+	if (check_mpb_migr_compatibility(super) != 0) {
-+		fprintf(stderr, Name ": Unsupported migration detected");
-+		if (devname)
-+			fprintf(stderr, " on %s\n", devname);
-+		else
-+			fprintf(stderr, " (IMSM).\n");
-+
-+		err = 5;
-+		goto error;
-+	}
-+
- 	err = 0;
- 
-  error:
-@@ -3657,6 +3708,16 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
- 	/* load migration record */
- 	load_imsm_migr_rec(super, NULL);
- 
-+	/* Check for unsupported migration features */
-+	if (check_mpb_migr_compatibility(super) != 0) {
-+		fprintf(stderr, Name ": Unsupported migration detected");
-+		if (devname)
-+			fprintf(stderr, " on %s\n", devname);
-+		else
-+			fprintf(stderr, " (IMSM).\n");
-+		return 3;
-+	}
-+
- 	return 0;
- }
- 
+ static int imsm_manage_reshape(
+ 	int afd, struct mdinfo *sra, struct reshape *reshape,
+ 	struct supertype *st, unsigned long stripes,
 
