@@ -1,8 +1,8 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 11/22] imsm: Add information about migration record to mdadm
-	'-E' option
-Date: Thu, 02 Jun 2011 16:49:42 +0200
-Message-ID: <20110602144942.27355.43126.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 10/22] imsm: Clear migration record when no migration in
+	progress
+Date: Thu, 02 Jun 2011 16:49:34 +0200
+Message-ID: <20110602144934.27355.23565.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,84 +16,68 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-Add ability to display information from migration record in examine
-option.
+When metadata is saved and there is no general migration in progress
+/in container/ clear migration record in container.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
- super-intel.c |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 53 insertions(+), 0 deletions(-)
+ super-intel.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index db2f2b9..c40c02a 100644
+index d2393c2..db2f2b9 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -1035,6 +1035,57 @@ static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
- 	       human_size(sz * 512));
+@@ -4254,6 +4254,8 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
+ 	return 0;
  }
  
 +static int is_gen_migration(struct imsm_dev *dev);
 +
-+void examine_migr_rec_imsm(struct intel_super *super)
-+{
-+	struct migr_record *migr_rec = super->migr_rec;
-+	struct imsm_super *mpb = super->anchor;
-+	int i;
-+
-+	for (i = 0; i < mpb->num_raid_devs; i++) {
-+		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
-+		if (is_gen_migration(dev) == 0)
-+				continue;
-+
-+		printf("\nMigration Record Information:");
-+		if (super->disks->index > 1) {
-+			printf(" Empty\n                              ");
-+			printf("Examine one of first two disks in array\n");
-+			break;
-+		}
-+		printf("\n                     Status : ");
-+		if (__le32_to_cpu(migr_rec->rec_status) == UNIT_SRC_NORMAL)
-+			printf("Normal\n");
-+		else
-+			printf("Contains Data\n");
-+		printf("               Current Unit : %u\n",
-+		       __le32_to_cpu(migr_rec->curr_migr_unit));
-+		printf("                     Family : %u\n",
-+		       __le32_to_cpu(migr_rec->family_num));
-+		printf("                  Ascending : %u\n",
-+		       __le32_to_cpu(migr_rec->ascending_migr));
-+		printf("            Blocks Per Unit : %u\n",
-+		       __le32_to_cpu(migr_rec->blocks_per_unit));
-+		printf("       Dest. Depth Per Unit : %u\n",
-+		       __le32_to_cpu(migr_rec->dest_depth_per_unit));
-+		printf("        Checkpoint Area pba : %u\n",
-+		       __le32_to_cpu(migr_rec->ckpt_area_pba));
-+		printf("           First member lba : %u\n",
-+		       __le32_to_cpu(migr_rec->dest_1st_member_lba));
-+		printf("      Total Number of Units : %u\n",
-+		       __le32_to_cpu(migr_rec->num_migr_units));
-+		printf("             Size of volume : %u\n",
-+		       __le32_to_cpu(migr_rec->post_migr_vol_cap));
-+		printf("  Expansion space for LBA64 : %u\n",
-+		       __le32_to_cpu(migr_rec->post_migr_vol_cap_hi));
-+		printf("       Record was read from : %u\n",
-+		       __le32_to_cpu(migr_rec->ckpt_read_disk_num));
-+
-+		break;
-+	}
-+}
-+
- static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *map);
+ static int write_super_imsm(struct supertype *st, int doclose)
+ {
+ 	struct intel_super *super = st->sb;
+@@ -4265,6 +4267,7 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 	int i;
+ 	__u32 mpb_size = sizeof(struct imsm_super) - sizeof(struct imsm_disk);
+ 	int num_disks = 0;
++	int clear_migration_record = 1;
  
- static void examine_super_imsm(struct supertype *st, char *homehost)
-@@ -1114,6 +1165,8 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 		printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
- 		       human_size(sz * 512));
+ 	/* 'generation' is incremented everytime the metadata is written */
+ 	generation = __le32_to_cpu(mpb->generation_num);
+@@ -4299,6 +4302,8 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 			imsm_copy_dev(dev, dev2);
+ 			mpb_size += sizeof_imsm_dev(dev, 0);
+ 		}
++		if (is_gen_migration(dev2))
++			clear_migration_record = 0;
  	}
-+
-+	examine_migr_rec_imsm(super);
- }
+ 	mpb_size += __le32_to_cpu(mpb->bbm_log_size);
+ 	mpb->mpb_size = __cpu_to_le32(mpb_size);
+@@ -4307,6 +4312,9 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 	sum = __gen_imsm_checksum(mpb);
+ 	mpb->check_sum = __cpu_to_le32(sum);
  
- static void brief_examine_super_imsm(struct supertype *st, int verbose)
++	if (clear_migration_record)
++		memset(super->migr_rec_buf, 0, 512);
++
+ 	/* write the mpb for disks that compose raid devices */
+ 	for (d = super->disks; d ; d = d->next) {
+ 		if (d->index < 0)
+@@ -4314,6 +4322,14 @@ static int write_super_imsm(struct supertype *st, int doclose)
+ 		if (store_imsm_mpb(d->fd, mpb))
+ 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
+ 				__func__, d->major, d->minor, strerror(errno));
++		if (clear_migration_record) {
++			unsigned long long dsize;
++
++			get_dev_size(d->fd, NULL, &dsize);
++			if (lseek64(d->fd, dsize - 512, SEEK_SET) >= 0) {
++				write(d->fd, super->migr_rec_buf, 512);
++			}
++		}
+ 		if (doclose) {
+ 			close(d->fd);
+ 			d->fd = -1;
 
