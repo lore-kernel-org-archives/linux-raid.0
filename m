@@ -1,88 +1,74 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] md: check ->hot_remove_disk when removing disk
-Date: Thu, 2 Jun 2011 15:53:15 +1000
-Message-ID: <20110602155315.31b01a23@notabene.brown>
-References: <1306990383-14133-1-git-send-email-namhyung@gmail.com>
-	<1306990383-14133-2-git-send-email-namhyung@gmail.com>
+From: Frank van Maarseveen <frankvm@frankvm.com>
+Subject: 2.6.39: raid1 check blocks jbd on other md more than 120 seconds
+Date: Thu, 2 Jun 2011 11:36:44 +0200
+Message-ID: <20110602093644.GA8620@janus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1306990383-14133-2-git-send-email-namhyung@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu,  2 Jun 2011 13:53:03 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+The system runs FC14 with an (almost) stock 2.6.39 kernel, configured to
+panic if it seems to hang. That's exactly what started to happen without
+anything being logged in the normal way except over netconsole.
 
-> Check pers->hot_remove_disk instead of pers->hot_add_disk in slot_store()
-> during disk removal. The linear personality only has ->hot_add_disk and
-> no ->hot_remove_disk, so that removing disk in the array resulted to
-> following kernel bug:
-> 
-> $ sudo mdadm --create /dev/md0 --level=linear --raid-devices=4 /dev/loop[0-3]
-> $ echo none | sudo tee /sys/block/md0/md/dev-loop2/slot
->  BUG: unable to handle kernel NULL pointer dereference at           (null)
->  IP: [<          (null)>]           (null)
->  PGD c9f5d067 PUD 8575a067 PMD 0
->  Oops: 0010 [#1] SMP
->  CPU 2
->  Modules linked in: linear loop bridge stp llc kvm_intel kvm asus_atk0110 sr_mod cdrom sg
-> 
->  Pid: 10450, comm: tee Not tainted 3.0.0-rc1-leonard+ #173 System manufacturer System Product Name/P5G41TD-M PRO
->  RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
->  RSP: 0018:ffff880085757df0  EFLAGS: 00010282
->  RAX: ffffffffa00168e0 RBX: ffff8800d1431800 RCX: 000000000000006e
->  RDX: 0000000000000001 RSI: 0000000000000002 RDI: ffff88008543c000
->  RBP: ffff880085757e48 R08: 0000000000000002 R09: 000000000000000a
->  R10: 0000000000000000 R11: ffff88008543c2e0 R12: 00000000ffffffff
->  R13: ffff8800b4641000 R14: 0000000000000005 R15: 0000000000000000
->  FS:  00007fe8c9e05700(0000) GS:ffff88011fa00000(0000) knlGS:0000000000000000
->  CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->  CR2: 0000000000000000 CR3: 00000000b4502000 CR4: 00000000000406e0
->  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->  DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->  Process tee (pid: 10450, threadinfo ffff880085756000, task ffff8800c9f08000)
->  Stack:
->   ffffffff8138496a ffff8800b4641000 ffff88008543c268 0000000000000000
->   ffff8800b4641000 ffff88008543c000 ffff8800d1431868 ffffffff81a78a90
->   ffff8800b4641000 ffff88008543c000 ffff8800d1431800 ffff880085757e98
->  Call Trace:
->   [<ffffffff8138496a>] ? slot_store+0xaa/0x265
->   [<ffffffff81384bae>] rdev_attr_store+0x89/0xa8
->   [<ffffffff8115a96a>] sysfs_write_file+0x108/0x144
->   [<ffffffff81106b87>] vfs_write+0xb1/0x10d
->   [<ffffffff8106e6c0>] ? trace_hardirqs_on_caller+0x111/0x135
->   [<ffffffff81106cac>] sys_write+0x4d/0x77
->   [<ffffffff814fe702>] system_call_fastpath+0x16/0x1b
->  Code:  Bad RIP value.
->  RIP  [<          (null)>]           (null)
->   RSP <ffff880085757df0>
->  CR2: 0000000000000000
->  ---[ end trace ba5fc64319a826fb ]---
-> 
-> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
-> Cc: stable@kernel.org
-> ---
->  drivers/md/md.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index f210e42a56ca..3db106b7b245 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2461,7 +2461,7 @@ slot_store(mdk_rdev_t *rdev, const char *buf, size_t len)
->  		if (rdev->raid_disk == -1)
->  			return -EEXIST;
->  		/* personality does all needed checks */
-> -		if (rdev->mddev->pers->hot_add_disk == NULL)
-> +		if (rdev->mddev->pers->hot_remove_disk == NULL)
->  			return -EINVAL;
->  		err = rdev->mddev->pers->
->  			hot_remove_disk(rdev->mddev, rdev->raid_disk);
+/proc/mdstat:
+Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] 
+md3 : active raid1 sda3[0] sdb3[1]
+      1885338488 blocks super 1.2 [2/2] [UU]
+      
+md1 : active raid1 sda1[0] sdb1[1]
+      33555384 blocks super 1.2 [2/2] [UU]
 
-Thanks.  I've applied this to my tree and will push it to Linus in due
-course.
+kernel messages:
+	(/etc/cron.weekly/99-raid-check kicks in)
+Jun  2 04:04:00 janus md: data-check of RAID array md3
+Jun  2 04:04:00 janus md: delaying data-check of md1 until md3 has finished (they share one or more physical units)
+Jun  2 04:04:00 janus md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+Jun  2 04:04:00 janus md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+Jun  2 04:04:00 janus md: using 128k window, over a total of 1885338488 blocks.
+Jun  2 04:55:54 janus INFO: task jbd2/md1-8:1188 blocked for more than 120 seconds.
+Jun  2 04:55:54 "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Jun  2 04:55:54 janus jbd2/md1-8     D
+Jun  2 04:55:54  f5739e68
+Jun  2 04:55:54 janus    0  1188      2 0x00000000
+Jun  2 04:55:54  f5739e78
+Jun  2 04:55:54  00000046
+Jun  2 04:55:54  00000002
+Jun  2 04:55:54  f5739e68
+Jun  2 04:55:54  00000000
+Jun  2 04:55:54  01000000
+Jun  2 04:55:54  f5739e08
+Jun  2 04:55:54  f6124f00
+Jun  2 04:55:54 janus
+Jun  2 04:55:54  c1999c00
+Jun  2 04:55:54  00000001
+Jun  2 04:55:54  c1999680
+Jun  2 04:55:54  c1999680
+Jun  2 04:55:54  00000003
+Jun  2 04:55:54  f6126940
+Jun  2 04:55:54  f6126ac0
+Jun  2 04:55:54  f6786680
+Jun  2 04:55:54 janus
+Jun  2 04:55:54  000045d1
+Jun  2 04:55:54  00000000
+Jun  2 04:55:54  00000000
+Jun  2 04:55:54  57087b88
+Jun  2 04:55:54  000045d1
+Jun  2 04:55:54  000045d1
+Jun  2 04:55:54  f6686c00
+Jun  2 04:55:54  f6686c10
+Jun  2 04:55:54 janus
+Jun  2 04:55:54 Call Trace:
+Jun  2 04:55:54  [<c103822b>] ? get_parent_ip+0xb/0x40
+Jun  2 04:55:54  [<c11698a2>] jbd2_journal_commit_transaction+0x182/0x1500
+Jun  2 04:55:54  [<c100249f>] ? __switch_to+0xcf/0x1c0
+Jun  2 04:55:54  [<c103822b>] ? get_parent_ip+0xb/0x40
+Jun  2 04:55:54  [<c162f05c>] ? schedule+0x2ac/0x730
+Jun  2 04:55:54  [<c1056c90>] ? wake_up_bit+0x80/0x80
+	(reboots)
 
-NeilBrown
+-- 
+Frank
