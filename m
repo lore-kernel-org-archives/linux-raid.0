@@ -1,8 +1,8 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 15/22] imsm: Disable checkpoint updating by mdmon for general
-	migration
-Date: Thu, 02 Jun 2011 16:50:16 +0200
-Message-ID: <20110602145016.27355.55829.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 16/22] imsm: Add metadata update type for general migration
+	check-pointing
+Date: Thu, 02 Jun 2011 16:50:24 +0200
+Message-ID: <20110602145024.27355.66753.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,40 +16,47 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-imsm contains 2 check-pointing mechanism. One (per array) is used for
-initialization and rebuild and second (per container) is used for general
-migration (reshape). First is controlled by mdmon, second by mdadm.
-To avoid conflicts disable mdmon checkpoints updating for general
-migration.
+There are 2 places for keeping checkpoint information:
+- metadata (per volume information used during volume
+  initialization and rebuilding).
+- migration record (per container information used during
+  migration/reshape)
+
+During reshape both checkpoints has to contains the same information.
+To do this mdadm will send metadta update with checkpoint information.
+
+Note: Checkpoint information consistence is not critical. During general
+      migration restart, information from migration record is used only.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
- super-intel.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ super-intel.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 8ebc1e4..77d6167 100644
+index 77d6167..2a11879 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -5857,6 +5857,12 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 	}
+@@ -345,7 +345,8 @@ enum imsm_update_type {
+ 	update_add_remove_disk,
+ 	update_reshape_container_disks,
+ 	update_reshape_migration,
+-	update_takeover
++	update_takeover,
++	update_general_migration_checkpoint
+ };
  
- mark_checkpoint:
-+	/* skip checkpointing for general migration,
-+	 * it is controlled in mdadm
-+	 */
-+	if (is_gen_migration(dev))
-+		goto skip_mark_checkpoint;
+ struct imsm_update_activate_spare {
+@@ -398,6 +399,11 @@ struct imsm_update_reshape_migration {
+ 	int new_disks[1]; /* new_raid_disks - old_raid_disks makedev number */
+ };
+ 
++struct imsm_update_general_migration_checkpoint {
++	enum imsm_update_type type;
++	__u32 curr_migr_unit;
++};
 +
- 	/* check if we can update curr_migr_unit from resync_start, recovery_start */
- 	blocks_per_unit = blocks_per_migr_unit(super, dev);
- 	if (blocks_per_unit) {
-@@ -5878,6 +5884,7 @@ mark_checkpoint:
- 		}
- 	}
- 
-+skip_mark_checkpoint:
- 	/* mark dirty / clean */
- 	if (dev->vol.dirty != !consistent) {
- 		dprintf("imsm: mark '%s'\n", consistent ? "clean" : "dirty");
+ struct disk_info {
+ 	__u8 serial[MAX_RAID_SERIAL_LEN];
+ };
 
