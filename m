@@ -1,7 +1,7 @@
 From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH 17/22] imsm: Prepare checkpoint update for general migration
-Date: Thu, 02 Jun 2011 16:50:33 +0200
-Message-ID: <20110602145032.27355.76208.stgit@gklab-128-111.igk.intel.com>
+Subject: [PATCH 19/22] FIX: Enable metadata updates for raid0
+Date: Thu, 02 Jun 2011 16:50:49 +0200
+Message-ID: <20110602145049.27355.66066.stgit@gklab-128-111.igk.intel.com>
 References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,103 +15,37 @@ List-Id: linux-raid.ids
 
 From: Adam Kwolek <adam.kwolek@intel.com>
 
-mdadm has to prepare checkpoint information update and send it to mdmon.
+When raid0 is takeovered to degraded raid4, metadata updates has to be
+applied via mdmon (raid4 has to be monitored).
+It is not possible due to no update_tail pointer initialization
+in supertype structure.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
- super-intel.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 67 insertions(+), 0 deletions(-)
+ Grow.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 2a11879..fa4e15d 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1953,6 +1953,51 @@ out:
- }
- 
- /*******************************************************************************
-+ * function: imsm_create_metadata_checkpoint_update
-+ * Description: It creates update for checkpoint change.
-+ * Parameters:
-+ *	super	: imsm internal array info
-+ *	u	: pointer to prepared update
-+ * Returns:
-+ *	Uptate length.
-+ *	If length is equal to 0, input pointer u contains no update
-+ ******************************************************************************/
-+static int imsm_create_metadata_checkpoint_update(
-+	struct intel_super *super,
-+	struct imsm_update_general_migration_checkpoint **u)
-+{
-+
-+	int update_memory_size = 0;
-+
-+	dprintf("imsm_create_metadata_checkpoint_update(enter)\n");
-+
-+	if (u == NULL)
-+		return 0;
-+	*u = NULL;
-+
-+	/* size of all update data without anchor */
-+	update_memory_size =
-+		sizeof(struct imsm_update_general_migration_checkpoint);
-+
-+	*u = calloc(1, update_memory_size);
-+	if (*u == NULL) {
-+		dprintf("error: cannot get memory for "
-+			"imsm_create_metadata_checkpoint_update update\n");
-+		return 0;
-+	}
-+	(*u)->type = update_general_migration_checkpoint;
-+	(*u)->curr_migr_unit = __le32_to_cpu(super->migr_rec->curr_migr_unit);
-+	dprintf("imsm_create_metadata_checkpoint_update: prepared for %u\n",
-+		(*u)->curr_migr_unit);
-+
-+	return update_memory_size;
-+}
-+
-+
-+static void imsm_update_metadata_locally(struct supertype *st,
-+					 void *buf, int len);
-+
-+/*******************************************************************************
-  * Function:	write_imsm_migr_rec
-  * Description:	Function writes imsm migration record
-  *		(at the last sector of disk)
-@@ -1970,6 +2015,8 @@ static int write_imsm_migr_rec(struct supertype *st)
- 	int fd = -1;
- 	int retval = -1;
- 	struct dl *sd;
-+	int len;
-+	struct imsm_update_general_migration_checkpoint *u;
- 
- 	for (sd = super->disks ; sd ; sd = sd->next) {
- 		/* write to 2 first slots only */
-@@ -1995,6 +2042,26 @@ static int write_imsm_migr_rec(struct supertype *st)
- 		close(fd);
- 		fd = -1;
+diff --git a/Grow.c b/Grow.c
+index 11b2214..25be587 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1847,6 +1847,9 @@ static int reshape_array(char *container, int fd, char *devname,
+ 			if (!mdmon_running(st->container_dev))
+ 				start_mdmon(st->container_dev);
+ 			ping_monitor(container);
++			if (mdmon_running(st->container_dev) &&
++			    st->update_tail == NULL)
++				st->update_tail = &st->updates;
+ 		}
  	}
-+	/* update checkpoint information in metadata */
-+	len = imsm_create_metadata_checkpoint_update(super, &u);
-+
-+	if (len <= 0) {
-+		dprintf("imsm: Cannot prepare update\n");
-+		goto out;
-+	}
-+	/* update metadata locally */
-+	imsm_update_metadata_locally(st, u, len);
-+	/* and possibly remotely */
-+	if (st->update_tail) {
-+		append_metadata_update(st, u, len);
-+		/* during reshape we do all work inside metadata handler
-+		 * manage_reshape(), so metadata update has to be triggered
-+		 * insida it
-+		 */
-+		flush_metadata_updates(st);
-+		st->update_tail = &st->updates;
-+	} else
-+		free(u);
- 
- 	retval = 0;
-  out:
+ 	/* ->reshape_super might have chosen some spares from the
+@@ -2264,6 +2267,8 @@ started:
+ 					": %s: could not set level "
+ 					"to %s\n", devname, c);
+ 		}
++		if (info->new_level == 0)
++			st->update_tail = NULL;
+ 	}
+ out:
+ 	if (forked)
 
