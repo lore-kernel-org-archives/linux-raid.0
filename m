@@ -1,194 +1,56 @@
-From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
-Subject: [PATCH 4/8] md/raid: use printk_ratelimited instead of
- printk_ratelimit
-Date: Sat, 4 Jun 2011 17:36:21 +0200
-Message-ID: <2c759de6a8afa764cfaa32e2ea99b0f0099140d7.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
-References: <cover.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
+From: Durval Menezes <durval.menezes@gmail.com>
+Subject: Fwd: Maximizing failed disk replacement on a RAID5 array
+Date: Sun, 5 Jun 2011 11:22:22 -0300
+Message-ID: <BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
+References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As per printk_ratelimit comment, it should not be used.
+Hello folks,
 
-Signed-off-by: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
----
- drivers/md/raid1.c  |   22 ++++++++++++----------
- drivers/md/raid10.c |   22 ++++++++++++----------
- drivers/md/raid5.c  |   39 +++++++++++++++++++--------------------
- 3 files changed, 43 insertions(+), 40 deletions(-)
+A few days ago, the smartd daemon running on my Lucid system at home
+(kernel 2.6.32-32-generic, mdadm 2.6.7.1) has started warning me about
+a few (less than 50 so far) offline uncorrectable and other errors on
+one of my 1.5TB HDs three-disk RAID5 array. This failing HD is still
+online (ie, hasn't been kicked off the array), at least for now.
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 5d09609..30af10e 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -35,6 +35,7 @@
- #include <linux/delay.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid1.h"
- #include "bitmap.h"
-@@ -287,10 +288,11 @@ static void raid1_end_read_request(struct bio *bio, int error)
- 		 * oops, read error:
- 		 */
- 		char b[BDEVNAME_SIZE];
--		if (printk_ratelimit())
--			printk(KERN_ERR "md/raid1:%s: %s: rescheduling sector %llu\n",
--			       mdname(conf->mddev),
--			       bdevname(conf->mirrors[mirror].rdev->bdev,b), (unsigned long long)r1_bio->sector);
-+		printk_ratelimited(KERN_ERR "md/raid1:%s: %s: "
-+				   "rescheduling sector %llu\n",
-+				   mdname(conf->mddev),
-+				   bdevname(conf->mirrors[mirror].rdev->bdev, b),
-+				   (unsigned long long)r1_bio->sector);
- 		reschedule_retry(r1_bio);
- 	}
- 
-@@ -1574,12 +1576,12 @@ static void raid1d(mddev_t *mddev)
- 						      GFP_NOIO, mddev);
- 				r1_bio->bios[r1_bio->read_disk] = bio;
- 				rdev = conf->mirrors[disk].rdev;
--				if (printk_ratelimit())
--					printk(KERN_ERR "md/raid1:%s: redirecting sector %llu to"
--					       " other mirror: %s\n",
--					       mdname(mddev),
--					       (unsigned long long)r1_bio->sector,
--					       bdevname(rdev->bdev,b));
-+				printk_ratelimited(KERN_ERR
-+						   "md/raid1:%s: redirecting sector %llu to"
-+						   " other mirror: %s\n",
-+						   mdname(mddev),
-+						   (unsigned long long)r1_bio->sector,
-+						   bdevname(rdev->bdev, b));
- 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
- 				bio->bi_bdev = rdev->bdev;
- 				bio->bi_end_io = raid1_end_read_request;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6e84668..e80475a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -22,6 +22,7 @@
- #include <linux/delay.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid10.h"
- #include "raid0.h"
-@@ -277,10 +278,11 @@ static void raid10_end_read_request(struct bio *bio, int error)
- 		 * oops, read error - keep the refcount on the rdev
- 		 */
- 		char b[BDEVNAME_SIZE];
--		if (printk_ratelimit())
--			printk(KERN_ERR "md/raid10:%s: %s: rescheduling sector %llu\n",
--			       mdname(conf->mddev),
--			       bdevname(conf->mirrors[dev].rdev->bdev,b), (unsigned long long)r10_bio->sector);
-+		printk_ratelimited(KERN_ERR
-+				   "md/raid10:%s: %s: rescheduling sector %llu\n",
-+				   mdname(conf->mddev),
-+				   bdevname(conf->mirrors[dev].rdev->bdev, b),
-+				   (unsigned long long)r10_bio->sector);
- 		reschedule_retry(r10_bio);
- 	}
- }
-@@ -1667,12 +1669,12 @@ static void raid10d(mddev_t *mddev)
- 				bio_put(bio);
- 				slot = r10_bio->read_slot;
- 				rdev = conf->mirrors[mirror].rdev;
--				if (printk_ratelimit())
--					printk(KERN_ERR "md/raid10:%s: %s: redirecting sector %llu to"
--					       " another mirror\n",
--					       mdname(mddev),
--					       bdevname(rdev->bdev,b),
--					       (unsigned long long)r10_bio->sector);
-+				printk_ratelimited(KERN_ERR
-+						   "md/raid10:%s: %s: redirecting"
-+						   "sector %llu to another mirror\n",
-+						   mdname(mddev),
-+						   bdevname(rdev->bdev, b),
-+						   (unsigned long long)r10_bio->sector);
- 				bio = bio_clone_mddev(r10_bio->master_bio,
- 						      GFP_NOIO, mddev);
- 				r10_bio->devs[slot].bio = bio;
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 346e69b..8927c26 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -51,6 +51,7 @@
- #include <linux/seq_file.h>
- #include <linux/cpu.h>
- #include <linux/slab.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid5.h"
- #include "raid0.h"
-@@ -96,8 +97,6 @@
- #define __inline__
- #endif
- 
--#define printk_rl(args...) ((void) (printk_ratelimit() && printk(args)))
--
- /*
-  * We maintain a biased count of active stripes in the bottom 16 bits of
-  * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-@@ -1587,12 +1586,12 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
- 			rdev = conf->disks[i].rdev;
--			printk_rl(KERN_INFO "md/raid:%s: read error corrected"
--				  " (%lu sectors at %llu on %s)\n",
--				  mdname(conf->mddev), STRIPE_SECTORS,
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
--				  bdevname(rdev->bdev, b));
-+			printk_ratelimited(KERN_INFO "md/raid:%s: read error corrected"
-+					   " (%lu sectors at %llu on %s)\n",
-+					   mdname(conf->mddev), STRIPE_SECTORS,
-+					   (unsigned long long)(sh->sector
-+								+ rdev->data_offset),
-+					   bdevname(rdev->bdev, b));
- 			clear_bit(R5_ReadError, &sh->dev[i].flags);
- 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
- 		}
-@@ -1606,21 +1605,21 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		atomic_inc(&rdev->read_errors);
- 		if (conf->mddev->degraded >= conf->max_degraded)
--			printk_rl(KERN_WARNING
--				  "md/raid:%s: read error not correctable "
--				  "(sector %llu on %s).\n",
--				  mdname(conf->mddev),
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
-+			printk_ratelimited(KERN_WARNING
-+					   "md/raid:%s: read error not correctable "
-+					   "(sector %llu on %s).\n",
-+					   mdname(conf->mddev),
-+					   (unsigned long long)(sh->sector
-+								+ rdev->data_offset),
- 				  bdn);
- 		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
- 			/* Oh, no!!! */
--			printk_rl(KERN_WARNING
--				  "md/raid:%s: read error NOT corrected!! "
--				  "(sector %llu on %s).\n",
--				  mdname(conf->mddev),
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
-+			printk_ratelimited(KERN_WARNING
-+					   "md/raid:%s: read error NOT corrected!! "
-+					   "(sector %llu on %s).\n",
-+					   mdname(conf->mddev),
-+					   (unsigned long long)(sh->sector
-+								+ rdev->data_offset),
- 				  bdn);
- 		else if (atomic_read(&rdev->read_errors)
- 			 > conf->max_nr_stripes)
--- 
-1.7.1
+I have another disk ready for replacement, and I'm trying to determine
+the safer (not necessarily the simpler) way of proceeding.
+
+I understand that, if I do it the "standard" way (ie, power down the
+system, remove the failing disk, add the replacement disk, then boot
+up and use "mdadm --add" to add the new disk to the array) I run the
+risk of running into unreadable sectors on one of the other two disks,
+and then my RAID5 is kaput.
+
+What I would really like to do is to be able to add the new HD to the
+array WITHOUT removing the failing HD, somehow sync it with the rest,
+and THEN remove the failing HD: that way, an eventual failed read from
+one of the two other HDs could possibly be satisfied from the failing
+HD (unless EXACTLY that same sector is also unreadable on it, which I
+find unlikely), and so avoid losing the whole array in the above case.
+
+So far, the only way I've been able to figure to do that would be to
+convert the=A0 array from RAID5 to RAID6, add the new disk, wait for th=
+e
+array to sync, remove the failing disk, and then convert the array
+back from RAID6 to RAID5 (and I'm not really sure that this is a good
+idea, or even doable).
+
+So, folks, what do you say? Is there a better way? Any gotchas in the
+RAID5->RAID6->RAID6 approach?
+
+Thanks,
+--
+=A0=A0 Durval Menezes.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
