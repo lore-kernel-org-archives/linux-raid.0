@@ -1,124 +1,335 @@
-From: Durval Menezes <durval.menezes@gmail.com>
-Subject: Re: Maximizing failed disk replacement on a RAID5 array
-Date: Mon, 6 Jun 2011 15:06:23 -0300
-Message-ID: <BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
-References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
-	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
-	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>
-	<4DECF025.9040006@fnarfbargle.com>
-	<BANLkTi=jPiXLySacVZqDkeThdG80K_HTxQ@mail.gmail.com>
-	<4DECF841.1060906@fnarfbargle.com>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: RAID5: failing an active component during spare rebuild - arrays hangs
+Date: Mon, 6 Jun 2011 21:19:40 +0300
+Message-ID: <BANLkTinr_1GcbypCpxFKPXoid4DxTKvCag@mail.gmail.com>
+References: <BANLkTikkeoCsr3-UBSPEDrYwh4jGSn=MaA@mail.gmail.com>
+	<BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
+	<20110605230014.14822hd7b50rcqww@cakebox.homeunix.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DECF841.1060906@fnarfbargle.com>
+In-Reply-To: <20110605230014.14822hd7b50rcqww@cakebox.homeunix.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Brad Campbell <brad@fnarfbargle.com>, Drew <drew.kay@gmail.com>
+To: Nagilum <nagilum@nagilum.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Brad, Drew,
+Hello,
 
-Thanks for reminding me of the hammering a RAID level conversion would=A0=
- cause.
-This is certainly a major=A0 reason to avoid the RAID5->RAID6->RAID5 ro=
-ute.
+the kernel version is:
 
-The "repair" has been running here for a few days already, with the
-server online, and ought to finish in 24 more hours. So far (thanks to
-the automatic rewrite relocation) the number of=A0 uncorrectable sector=
-s
-being reported by SMART has dropped from 40 to 20 , so it seems the
-repair is=A0 doing its job. Lets just hope the disk has enough=A0 spare
-sectors=A0 to remap all the bad sectors; if it does, a simple "dd "from
-the bad disk to=A0 its replacement ought to=A0 do the job=A0 (as you ha=
-ve
-indicated).
+root@ubuntu:~# uname -a
+Linux ubuntu 2.6.38-8-server #42-Ubuntu SMP Mon Apr 11 03:49:04 UTC
+2011 x86_64 x86_64 x86_64 GNU/Linux
 
-On the other hand, as this "dd" has to be done with the array offline,
-it will entail in some downtime (although not as much as having to
-restore the whole array from backups).... not ideal, but not too bad
-either.
+mdadm version is:
+root@ubuntu:~# mdadm -V
+mdadm - v3.1.4 - 31st August 2010
 
-In case worst comes to worst, I have an up-to-date offline backup of
-the contents of the whole array, so if something really bad happens, I
-have something to restore from.
+Examining the three array components:
 
-It would be great to have a
-"duplicate-this-bad-old-disk-into-this-shiny-new-disk"=A0 functionality=
-,
-as it would enable=A0 an almost-no-downtime disk replacement with
-minimum=A0 risk, but it seems we can't have everything... :-0 Maybe it'=
-s
-something for the wishlist?
+root@ubuntu:~# mdadm -E /dev/sd{a,b,c}
+/dev/sda:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : b5802763:fd4790dd:ee8bdeb2:2418097f
+           Name : vc:zvp_1123
+  Creation Time : Mon Jun  6 21:10:38 2011
+     Raid Level : raid5
+   Raid Devices : 3
 
-About mishaps with "dd", I think everyone=A0 who ever dealt with a
-system=A0 (not just Linux)=A0 on the level we do has sometime gone thro=
-ugh
-something similar... the last time I remember doing this was many
-years ago, before=A0 Linux existed, when me and a few friends spent a
-wonderful night installing=A0 William Jolitz ' then-new 386/BSD=A0 on a=
- HD
- (a process which *required*=A0 dd)=A0 and trashing its Windows partiti=
-ons
-(which contained the only copy of the graduation thesis of one of us,
-due in a few days).
+ Avail Dev Size : 41940992 (20.00 GiB 21.47 GB)
+     Array Size : 83879936 (40.00 GiB 42.95 GB)
+  Used Dev Size : 41939968 (20.00 GiB 21.47 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 8db90071:be80216e:09468262:1f5046b1
 
-Thanks for all the help,
---
-=A0=A0 Durval Menezes.
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Mon Jun  6 21:10:46 2011
+       Checksum : 2e424556 - correct
+         Events : 10
 
-On Mon, Jun 6, 2011 at 12:54 PM, Brad Campbell <brad@fnarfbargle.com> w=
-rote:
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : A.A ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : b5802763:fd4790dd:ee8bdeb2:2418097f
+           Name : vc:zvp_1123
+  Creation Time : Mon Jun  6 21:10:38 2011
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 41940992 (20.00 GiB 21.47 GB)
+     Array Size : 83879936 (40.00 GiB 42.95 GB)
+  Used Dev Size : 41939968 (20.00 GiB 21.47 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 9f41313b:b1aa70f8:6cf0ca2f:c6ea0a64
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Mon Jun  6 21:10:44 2011
+       Checksum : 2d23c61 - correct
+         Events : 8
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAA ('A' =3D=3D active, '.' =3D=3D missing)
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x3
+     Array UUID : b5802763:fd4790dd:ee8bdeb2:2418097f
+           Name : vc:zvp_1123
+  Creation Time : Mon Jun  6 21:10:38 2011
+     Raid Level : raid5
+   Raid Devices : 3
+
+ Avail Dev Size : 41940992 (20.00 GiB 21.47 GB)
+     Array Size : 83879936 (40.00 GiB 42.95 GB)
+  Used Dev Size : 41939968 (20.00 GiB 21.47 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 999424 sectors
+          State : active
+    Device UUID : 61189a9d:ec082cea:a3ba32fb:800fe84b
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Mon Jun  6 21:10:46 2011
+       Checksum : a47a059 - correct
+         Events : 10
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : A.A ('A' =3D=3D active, '.' =3D=3D missing)
+
+Details about the array:
+
+root@ubuntu:~#  mdadm -Q --detail /dev/md1123
+/dev/md1123:
+        Version : 1.2
+  Creation Time : Mon Jun  6 21:10:38 2011
+     Raid Level : raid5
+     Array Size : 41939968 (40.00 GiB 42.95 GB)
+  Used Dev Size : 20969984 (20.00 GiB 21.47 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Mon Jun  6 21:10:46 2011
+          State : active, FAILED
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : vc:zvp_1123
+           UUID : b5802763:fd4790dd:ee8bdeb2:2418097f
+         Events : 10
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      faulty spare rebuilding   /dev/=
+sdb
+       3       8       32        2      spare rebuilding   /dev/sdc
+
+
+Basically, the thing is that the faulty (and the rebuilding spare)
+component are not kicked out of the array, and the array is stuck in
+this state.
+
+Thanks,
+  Alex.
+
+
+2011/6/6 Nagilum <nagilum@nagilum.org>:
+> Make sure you provide all relevant details such as kernel version, md=
+adm
+> version and maybe also mdadm -E /dev/sd{a,b,c}, mdadm -Q --detail /de=
+v/md0,
+> ..
 >
-> On 06/06/11 23:37, Drew wrote:
->>>
->>> Now, if I'm off the wall and missing something blindingly obvious f=
-eel free
->>> to thump me with a clue bat (it would not be the first time).
->>>
->>> I've lost 2 arrays recently. 8TB to a dodgy controller (thanks SIL)=
-, and 2TB
->>> to complete idiocy on my part, so I know the sting of lost or corru=
-pted
->>> data.
+> ----- Message from alex.bolshoy@gmail.com ---------
+> =A0 =A0Date: Sun, 5 Jun 2011 22:41:55 +0300
+> =A0 =A0From: Alexander Lyakas <alex.bolshoy@gmail.com>
+> =A0Subject: RAID5: failing an active component during spare rebuild -=
+ arrays
+> hangs
+> =A0 =A0 =A0To: linux-raid@vger.kernel.org
+>
+>
+>> Hello everybody,
+>> I am testing a scenario, in which I create a RAID5 with three device=
+s:
+>> /dev/sd{a,b,c}. Since I don't supply --force to mdadm during creatio=
+n,
+>> it treats the array as degraded and starts rebuilding the sdc as a
+>> spare. This is as documented.
 >>
->> I think you've covered the process in more detail, including pitfall=
-s,
->> then I have. :-) Only catch is where would you find a cheap 2-3TB
->> drive right now?
->
-> I bought 10 recently for about $90 each. It's all relative, but I con=
-sider ~$45 / TB cheap.
->
->> I also know the sting of mixing stupidity and dd. ;-) A friend was
->> helping me do some complex rework with dd on one of my disks. Being
->> the n00b I followed his instructions exactly, and him being the expe=
-rt
->> (and assuming I wasn't the n00b I was back then) didn't double check
->> my work. Net result was I backed the MBR/Partition Table up using dd=
-,
->> but did so to a partition on the drive we were working on. There may
->> have been some alcohol involved (I was in University), the revised
->> data we inserted failed, and next thing you know I'm running Partiti=
-on
->> Magic (the gnu tools circa 2005 failed to detect anything) to try an=
+>> Then I do --fail on /dev/sda. I understand that at this point my dat=
+a
+>> is gone, but I think should still be able to tear down the array.
+>>
+>> Sometimes I see that /dev/sda is kicked from the array as faulty, an=
 d
->> recover the partition table. No backups obviously. ;-)
+>> /dev/sdc is also removed and marked as a spare. Then I am able to te=
+ar
+>> down the array.
+>>
+>> But sometimes, it looks like the system hits some kind of a deadlock=
+=2E
+>> mdadm --detail produces:
+>>
+>> =A0=A0=A0 Update Time : Sun Jun=A0 5 21:54:34 2011
+>> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : active, FAILED
+>> =A0Active Devices : 1
+>> Working Devices : 2
+>> =A0Failed Devices : 1
+>> =A0 Spare Devices : 1
+>>
+>> =A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+>> =A0=A0=A0=A0 Chunk Size : 512K
+>>
+>> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : ubuntu:zvp_1123
+>> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 48a15fb6:b6410bb9:a2ca173e:009=
+2032c
+>> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 67
+>>
+>> =A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
+>> =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=
+=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 faulty spare rebuilding=A0=A0 /dev/sda
+>> =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
+=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb
+>> =A0=A0=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 32=A0=A0=A0=
+=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 spare rebuilding=A0=A0 /dev/sdc
+>>
+>> So the faulty device and the spare are not kicked out of the array. =
+At
+>> this point I am unable to do anything with the array:
+>>
+>> root@ubuntu:~# sudo mdadm --stop /dev/md1123
+>> mdadm: failed to stop array /dev/md1123: Device or resource busy
+>> Perhaps a running process, mounted filesystem or active volume group=
+?
+>> root@ubuntu:~# sudo mdadm /dev/md1123 --remove /dev/sda
+>> mdadm: hot remove failed for /dev/sda: Device or resource busy
+>> root@ubuntu:~# sudo mdadm /dev/md1123 --remove /dev/sdb
+>> mdadm: hot remove failed for /dev/sdb: Device or resource busy
+>> root@ubuntu:~# sudo mdadm /dev/md1123 --remove /dev/sdc
+>> mdadm: hot remove failed for /dev/sdc: Device or resource busy
+>>
+>> This is happening on ubuntu-natty, with mdadm - v3.1.4 - 31st August=
+ 2010.
+>> Looking at some code in mdadm/Detail.c, it looks like /dev/sda has
+>> been marked only as MD_DISK_FAULTY, but has not yet been kicked out =
+of
+>> the array. The "spare" and "rebuilding" prints also result from that=
+=2E
+>>
+>> Same thing also happens (sometimes) when I manually initiate resync
+>> (by writing 'repair' to 'sync_action'), and later manually failing o=
+ne
+>> of the devices. Then I also saw messages like this in the syslog:
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350454] INFO: task
+>> md1123_resync:7993 blocked for more than 120 seconds.
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350552] "echo 0 >
+>> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350644] md1123_resync=A0=A0 =
+D
+>> 0000000000000000=A0=A0=A0=A0 0=A0 7993=A0=A0=A0=A0=A0 2 0x00000004
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350647]=A0 ffff8800b56b1cd0
+>> 0000000000000046 ffff8800b56b1fd8 ffff8800b56b0000
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350649]=A0 0000000000013d00
+>> ffff880036c09a98 ffff8800b56b1fd8 0000000000013d00
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350652]=A0 ffff8800b7f1adc0
+>> ffff880036c096e0 ffff8800b56b1cb0 ffff880036c56610
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350654] Call Trace:
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350657]=A0 [<ffffffff8149288=
+5>]
+>> md_do_sync+0xb45/0xc90
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350660]=A0 [<ffffffff8108794=
+0>] ?
+>> autoremove_wake_function+0x0/0x40
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350663]=A0 [<ffffffff8107861=
+b>] ?
+>> recalc_sigpending+0x1b/0x50
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350665]=A0 [<ffffffff8148c51=
+6>]
+>> md_thread+0x116/0x150
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350667]=A0 [<ffffffff8148c40=
+0>] ?
+>> md_thread+0x0/0x150
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350669]=A0 [<ffffffff810871f=
+6>]
+>> kthread+0x96/0xa0
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350672]=A0 [<ffffffff8100cde=
+4>]
+>> kernel_thread_helper+0x4/0x10
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350674]=A0 [<ffffffff8108716=
+0>] ?
+>> kthread+0x0/0xa0
+>> Jun=A0 5 21:42:00 ubuntu kernel: [ 2280.350676]=A0 [<ffffffff8100cde=
+0>] ?
+>> kernel_thread_helper+0x0/0x10
+>>
+>> This is pretty easy for me to reproduce.
+>>
+>> Basically, I would like to know what the user is expected to do when
+>> more than one RAID5 array component fails during rebuild/resync.
+>>
+>> Thanks,
+>> =A0 Alex.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
 >
-> Similar to my
 >
-> dd if=3D/dev/zero of=3D/dev/sdb bs=3D1M count=3D100
+> ----- End message from alex.bolshoy@gmail.com -----
 >
-> except instead of the target disk, it was to a raid array member that=
- was currently active. To its credit, ext3 and fsck managed to give me =
-most of my data back, even if I had to spend months intermittently sort=
-ing/renaming inode numbers from lost+found into files and directories.
 >
-> I'd like to claim Alcohol as a mitigating factor (hell, it gets peopl=
-e off charges in our court system all the time) but unfortunately I was=
- just stupid.
+>
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
+> # =A0 =A0_ =A0__ =A0 =A0 =A0 =A0 =A0_ __ =A0 =A0 http://www.nagilum.o=
+rg/ \n icq://69646724 #
+> # =A0 / |/ /__ ____ _(_) /_ ____ _ =A0nagilum@nagilum.org \n +4917764=
+61165 #
+> # =A0/ =A0 =A0/ _ `/ _ `/ / / // / =A0' \ =A0Amiga (68k/PPC): AOS/Net=
+BSD/Linux =A0 #
+> # /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/ =A0 Mac (PPC): MacOS-X / NetBSD /Li=
+nux #
+> # =A0 =A0 =A0 =A0 =A0 /___/ =A0 =A0 x86: FreeBSD/Linux/Solaris/Win2k =
+=A0ARM9: EPOC EV6 #
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
+>
+>
+> ----------------------------------------------------------------
+> cakebox.homeunix.net - all the machine one needs..
 >
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
