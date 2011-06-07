@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 4 of 8] MD:  move thread wakeups into resume
-Date: Tue, 07 Jun 2011 17:49:36 -0500
-Message-ID: <1307486976.31279.11.camel@f14.redhat.com>
+Subject: [PATCH 5 of 8] MD:  raid1 changes to allow use by device mapper
+Date: Tue, 07 Jun 2011 17:50:35 -0500
+Message-ID: <1307487035.31279.13.camel@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -10,52 +10,90 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Move personality and sync/recovery thread starting outside md_run.
+MD RAID1: Changes to allow RAID1 to be used by device-mapper (dm-raid.c)
 
-Moving the wakeup's of the personality and sync/recovery threads out of
-md_run and into do_md_run and mddev_resume solves two issues:
-1) It allows bitmap_load to be called before the sync_thread is run and
-2) when MD personalities are used by device-mapper (dm-raid.c), the start-up
-of the array is better alligned with device-mapper primatives
-(CTR/resume/suspend/DTR).  I/O - in this case, recovery operations - should
-not happen until after a resume has taken place.
+Added the necessary congestion function and conditionalize calls requiring an
+array 'queue' or 'gendisk'.
 
 Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-Index: linux-2.6/drivers/md/md.c
+Index: linux-2.6/drivers/md/raid1.c
 ===================================================================
---- linux-2.6.orig/drivers/md/md.c
-+++ linux-2.6/drivers/md/md.c
-@@ -351,6 +351,9 @@ void mddev_resume(mddev_t *mddev)
- 	mddev->suspended = 0;
- 	wake_up(&mddev->sb_wait);
- 	mddev->pers->quiesce(mddev, 0);
-+
-+	md_wakeup_thread(mddev->thread);
-+	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+--- linux-2.6.orig/drivers/md/raid1.c
++++ linux-2.6/drivers/md/raid1.c
+@@ -497,21 +497,19 @@ static int read_balance(conf_t *conf, r1
+ 	return best_disk;
  }
- EXPORT_SYMBOL_GPL(mddev_resume);
  
-@@ -4619,9 +4622,6 @@ int md_run(mddev_t *mddev)
- 	if (mddev->flags)
- 		md_update_sb(mddev, 0);
+-static int raid1_congested(void *data, int bits)
++int md_raid1_congested(mddev_t *mddev, int bits)
+ {
+-	mddev_t *mddev = data;
+ 	conf_t *conf = mddev->private;
+ 	int i, ret = 0;
  
--	md_wakeup_thread(mddev->thread);
--	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+-	if (mddev_congested(mddev, bits))
+-		return 1;
 -
- 	md_new_event(mddev);
- 	sysfs_notify_dirent_safe(mddev->sysfs_state);
- 	sysfs_notify_dirent_safe(mddev->sysfs_action);
-@@ -4642,6 +4642,10 @@ static int do_md_run(mddev_t *mddev)
- 		bitmap_destroy(mddev);
- 		goto out;
- 	}
+ 	rcu_read_lock();
+ 	for (i = 0; i < mddev->raid_disks; i++) {
+ 		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
+ 		if (rdev && !test_bit(Faulty, &rdev->flags)) {
+ 			struct request_queue *q = bdev_get_queue(rdev->bdev);
+ 
++			BUG_ON(!q);
 +
-+	md_wakeup_thread(mddev->thread);
-+	md_wakeup_thread(mddev->sync_thread); /* possibly kick off a reshape */
+ 			/* Note the '|| 1' - when read_balance prefers
+ 			 * non-congested targets, it can be removed
+ 			 */
+@@ -524,7 +522,15 @@ static int raid1_congested(void *data, i
+ 	rcu_read_unlock();
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(md_raid1_congested);
+ 
++static int raid1_congested(void *data, int bits)
++{
++	mddev_t *mddev = data;
 +
- 	set_capacity(mddev->gendisk, mddev->array_sectors);
- 	revalidate_disk(mddev->gendisk);
- 	mddev->changed = 1;
++	return mddev_congested(mddev, bits) ||
++		md_raid1_congested(mddev, bits);
++}
+ 
+ static void flush_pending_writes(conf_t *conf)
+ {
+@@ -1972,6 +1978,8 @@ static int run(mddev_t *mddev)
+ 		return PTR_ERR(conf);
+ 
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
++		if (!mddev->gendisk)
++			continue;
+ 		disk_stack_limits(mddev->gendisk, rdev->bdev,
+ 				  rdev->data_offset << 9);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+@@ -2013,8 +2021,10 @@ static int run(mddev_t *mddev)
+ 
+ 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
+ 
+-	mddev->queue->backing_dev_info.congested_fn = raid1_congested;
+-	mddev->queue->backing_dev_info.congested_data = mddev;
++	if (mddev->queue) {
++		mddev->queue->backing_dev_info.congested_fn = raid1_congested;
++		mddev->queue->backing_dev_info.congested_data = mddev;
++	}
+ 	return md_integrity_register(mddev);
+ }
+ 
+Index: linux-2.6/drivers/md/raid1.h
+===================================================================
+--- linux-2.6.orig/drivers/md/raid1.h
++++ linux-2.6/drivers/md/raid1.h
+@@ -126,4 +126,6 @@ struct r1bio_s {
+  */
+ #define	R1BIO_Returned 6
+ 
++extern int md_raid1_congested(mddev_t *mddev, int bits);
++
+ #endif
 
 
