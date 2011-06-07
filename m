@@ -1,51 +1,44 @@
-From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 8 of 8] MD:  raid5 do not set fullsync
-Date: Tue, 07 Jun 2011 17:52:43 -0500
-Message-ID: <1307487163.31279.18.camel@f14.redhat.com>
+From: Thomas Harold <thomas-lists@nybeta.com>
+Subject: Re: from 2x RAID1 to 1x RAID6 ?
+Date: Tue, 07 Jun 2011 19:59:34 -0400
+Message-ID: <4DEEBB66.7080802@nybeta.com>
+References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4DEE84F0.2030205@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: lists@xunil.at, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add new flag for struct mdk_rdev_s to indicate when recovery can use bitmap
+On 6/7/2011 4:07 PM, Maurice Hilarius wrote:
+> On 6/7/2011 12:12 PM, Stefan G. Weichinger wrote:
+>> Greetings, could you please advise me how to proceed?
+>>
+>> On a server I have 2 RAID1-arrays, each consisting of 2 TB-drives:
+>>
+>> ..
+>>
+>> Now I would like to move things to a more reliable RAID6 consisting of
+>> all the four TB-drives ...
+>>
+>> How to do that with minimum risk?
+>>
+>> ..
+>> Maybe I overlook a clever alternative?
+>
+> RAID 10 is as secure, and risk free, and much faster.
+> And will cause much less CPU load.
+>
 
-Device-mapper can tell if a device is in-sync, in need of partial (bitmap aided)
-recovery, or in need of complete recovery.  The raid5 code assumes that if a
-device is not in-sync, then it must undergo complete recovery - it does not
-honor the bitmap.  The flag 'RecoverByBitmap' has been introduced to force raid5
-not to set 'conf->fullsync' if the superblock routines have already determined
-that only a partial recovery is necessary.
+Well, with both a pair of RAID1 arrays and a pair of RAID-10 arrays, you 
+can lose 2 disks without losing data, but only if the right 2 disks fail.
 
-RFC-by: Jonathan Brassow <jbrassow@redhat.com>
+With RAID6, any two of the four can fail without data loss.
 
-Index: linux-2.6/drivers/md/raid5.c
-===================================================================
---- linux-2.6.orig/drivers/md/raid5.c
-+++ linux-2.6/drivers/md/raid5.c
-@@ -4858,7 +4858,7 @@ static raid5_conf_t *setup_conf(mddev_t 
- 			printk(KERN_INFO "md/raid:%s: device %s operational as raid"
- 			       " disk %d\n",
- 			       mdname(mddev), bdevname(rdev->bdev, b), raid_disk);
--		} else
-+		} else if (!test_bit(RecoverByBitmap, &rdev->flags))
- 			/* Cannot rely on bitmap to complete recovery */
- 			conf->fullsync = 1;
- 	}
-Index: linux-2.6/drivers/md/md.h
-===================================================================
---- linux-2.6.orig/drivers/md/md.h
-+++ linux-2.6/drivers/md/md.h
-@@ -77,6 +77,8 @@ struct mdk_rdev_s
- #define Blocked		8		/* An error occurred on an externally
- 					 * managed array, don't allow writes
- 					 * until it is cleared */
-+#define RecoverByBitmap 9               /* Used by device-mapper to ensure this
-+					 * device is recovered by the bitmap. */
- 	wait_queue_head_t blocked_wait;
- 
- 	int desc_nr;			/* descriptor index in the superblock */
-
-
+(I still prefer RAID-10 over RAID-6 unless space is at an absolute 
+premium.  But for a four-disk setup, net disk space is the same and it's 
+just a question of whether you want the speed of RAID-10 or the 
+reliability of RAID-6.)
