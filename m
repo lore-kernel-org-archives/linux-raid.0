@@ -1,29 +1,29 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: 2.6.39[.1]: raid1 check blocks jbd on other md more than 120 seconds
- -- workaround
-Date: Tue, 7 Jun 2011 10:24:35 +0200
-Message-ID: <20110607082435.GA2016@janus>
-References: <20110602093644.GA8620@janus>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: sector I/O error cause disk to be "faulty" in raid5
+Date: Tue, 07 Jun 2011 09:53:50 +0100
+Message-ID: <4DEDE71E.7090606@anonymous.org.uk>
+References: <BANLkTikpcH=navhOAFA2Jw+CT+rQfpOwcg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110602093644.GA8620@janus>
+In-Reply-To: <BANLkTikpcH=navhOAFA2Jw+CT+rQfpOwcg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: hank peng <pengxihan@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I did some more testing and apparently the issue can be avoided by
-choosing the deadline scheduler instead of cfq. Either configure the
-kernel with
+On 06/06/2011 14:28, hank peng wrote:
+> Hi, everybody:
+> In current raid5 implementation, if a r/w error occured at some
+> specific sectors on a disk, the disk will be labeled as "faulty".
+> Here, I want to say in most cases, this is failure indication of those
+> sectors not the whole disk. Should we make some changes to be more
+> reasonable?
 
-	CONFIG_DEFAULT_IOSCHED="deadline"
+It's already on the wishlist as a bad block map.
 
-or select the deadline I/O scheduler per device. In my case:
+Cheers,
 
-	echo deadline >/sys/block/sda/queue/scheduler
-	echo deadline >/sys/block/sdb/queue/scheduler
+John.
 
-
--- 
-Frank
