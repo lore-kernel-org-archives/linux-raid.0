@@ -1,27 +1,27 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: sector I/O error cause disk to be "faulty" in raid5
-Date: Tue, 07 Jun 2011 09:53:50 +0100
-Message-ID: <4DEDE71E.7090606@anonymous.org.uk>
-References: <BANLkTikpcH=navhOAFA2Jw+CT+rQfpOwcg@mail.gmail.com>
+Subject: Re: Maximizing failed disk replacement on a RAID5 array
+Date: Tue, 07 Jun 2011 09:52:55 +0100
+Message-ID: <4DEDE6E7.40301@anonymous.org.uk>
+References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>	<4DECF025.9040006@fnarfbargle.com>	<BANLkTi=jPiXLySacVZqDkeThdG80K_HTxQ@mail.gmail.com>	<4DECF841.1060906@fnarfbargle.com> <BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikpcH=navhOAFA2Jw+CT+rQfpOwcg@mail.gmail.com>
+In-Reply-To: <BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Durval Menezes <durval.menezes@gmail.com>
+Cc: linux-raid@vger.kernel.org, Brad Campbell <brad@fnarfbargle.com>, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-On 06/06/2011 14:28, hank peng wrote:
-> Hi, everybody:
-> In current raid5 implementation, if a r/w error occured at some
-> specific sectors on a disk, the disk will be labeled as "faulty".
-> Here, I want to say in most cases, this is failure indication of those
-> sectors not the whole disk. Should we make some changes to be more
-> reasonable?
+On 06/06/2011 19:06, Durval Menezes wrote:
+[...]
+> It would be great to have a
+> "duplicate-this-bad-old-disk-into-this-shiny-new-disk"  functionality,
+> as it would enable  an almost-no-downtime disk replacement with
+> minimum  risk, but it seems we can't have everything... :-0 Maybe it's
+> something for the wishlist?
 
-It's already on the wishlist as a bad block map.
+It's already on the wishlist, described as a hot replace.
 
 Cheers,
 
