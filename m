@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 2 of 8] MD:  no sync IO while suspended
-Date: Tue, 07 Jun 2011 17:47:49 -0500
-Message-ID: <1307486869.31279.7.camel@f14.redhat.com>
+Subject: [PATCH 3 of 8] MD:  possible typo
+Date: Tue, 07 Jun 2011 17:48:35 -0500
+Message-ID: <1307486915.31279.9.camel@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -10,10 +10,11 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Disallow resync I/O while the RAID array is suspended.
+Make message a bit clearer by s/blocks/k/
 
-Recovery, resync, and metadata I/O should not be allowed while a device is
-suspended.
+I chose 'k' vs 'kiB' or 'kB' because it is what is used earlier in the
+message.  'k' may be a bit ambigous, but I think it's better than "blocks"
+which normally means 512, but means 1024 in MD.
 
 Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
@@ -21,23 +22,16 @@ Index: linux-2.6/drivers/md/md.c
 ===================================================================
 --- linux-2.6.orig/drivers/md/md.c
 +++ linux-2.6/drivers/md/md.c
-@@ -7045,7 +7045,6 @@ void md_do_sync(mddev_t *mddev)
- }
- EXPORT_SYMBOL_GPL(md_do_sync);
+@@ -6866,8 +6866,8 @@ void md_do_sync(mddev_t *mddev)
+ 	 * Tune reconstruction:
+ 	 */
+ 	window = 32*(PAGE_SIZE/512);
+-	printk(KERN_INFO "md: using %dk window, over a total of %llu blocks.\n",
+-		window/2,(unsigned long long) max_sectors/2);
++	printk(KERN_INFO "md: using %dk window, over a total of %lluk.\n",
++		window/2, (unsigned long long)max_sectors/2);
  
--
- static int remove_and_add_spares(mddev_t *mddev)
- {
- 	mdk_rdev_t *rdev;
-@@ -7157,6 +7156,9 @@ static void reap_sync_thread(mddev_t *md
-  */
- void md_check_recovery(mddev_t *mddev)
- {
-+	if (mddev->suspended)
-+		return;
-+
- 	if (mddev->bitmap)
- 		bitmap_daemon_work(mddev);
- 
+ 	atomic_set(&mddev->recovery_active, 0);
+ 	last_check = 0;
 
 
