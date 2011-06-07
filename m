@@ -1,61 +1,44 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 2/2] md/bitmap: remove unused fields from struct bitmap
-Date: Tue,  7 Jun 2011 23:49:32 +0900
-Message-ID: <1307458172-19373-2-git-send-email-namhyung@gmail.com>
-References: <1307458172-19373-1-git-send-email-namhyung@gmail.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: from 2x RAID1 to 1x RAID6 ?
+Date: Tue, 07 Jun 2011 20:12:33 +0200
+Message-ID: <4DEE6A11.1030205@xunil.at>
+Reply-To: lists@xunil.at
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1307458172-19373-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Get rid of ->syncchunk and ->counter_bits since they're never used.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/bitmap.c |    3 ---
- drivers/md/bitmap.h |    9 ---------
- 2 files changed, 0 insertions(+), 12 deletions(-)
+Greetings, could you please advise me how to proceed?
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 8b40bd71bb4a..0e3b314917ab 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1754,9 +1754,6 @@ int bitmap_create(mddev_t *mddev)
- 	bitmap->chunks = chunks;
- 	bitmap->pages = pages;
- 	bitmap->missing_pages = pages;
--	bitmap->counter_bits = COUNTER_BITS;
--
--	bitmap->syncchunk = ~0UL;
- 
- #ifdef INJECT_FATAL_FAULT_1
- 	bitmap->bp = NULL;
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index d0aeaf46d932..0a239f5d0ca1 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -196,19 +196,10 @@ struct bitmap {
- 
- 	mddev_t *mddev; /* the md device that the bitmap is for */
- 
--	int counter_bits; /* how many bits per block counter */
--
- 	/* bitmap chunksize -- how much data does each bit represent? */
- 	unsigned long chunkshift; /* chunksize = 2^chunkshift (for bitops) */
- 	unsigned long chunks; /* total number of data chunks for the array */
- 
--	/* We hold a count on the chunk currently being synced, and drop
--	 * it when the last block is started.  If the resync is aborted
--	 * midway, we need to be able to drop that count, so we remember
--	 * the counted chunk..
--	 */
--	unsigned long syncchunk;
--
- 	__u64	events_cleared;
- 	int need_sync;
- 
--- 
-1.7.5.2
+On a server I have 2 RAID1-arrays, each consisting of 2 TB-drives:
 
+md5 : active raid1 sde1[0] sdf1[1]
+      976759936 blocks [2/2] [UU]
+
+md6 : active raid1 sdh1[1] sdg1[0]
+      976759936 blocks [2/2] [UU]
+
+
+md5 and md6 are right now physical volumes (PVs) in an LVM-volume-group.
+Nearly all the space is used right now (1.7 TB out of the ~2 TB).
+
+Now I would like to move things to a more reliable RAID6 consisting of
+all the four TB-drives ...
+
+How to do that with minimum risk?
+
+For sure it would be best to move all data aside, stop the arrays and
+build a new one ... etc
+
+Failing two drives and remove them from the RAID1s to build a new
+degraded RAID6 seems dangerous to me?
+
+Maybe I overlook a clever alternative?
+
+Suggestions welcome, thanks in advance.
+
+Stefan
