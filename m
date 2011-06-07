@@ -1,7 +1,7 @@
 From: Jonathan Brassow <jbrassow@redhat.com>
-Subject: [PATCH 5 of 8] MD:  raid1 changes to allow use by device mapper
-Date: Tue, 07 Jun 2011 17:50:35 -0500
-Message-ID: <1307487035.31279.13.camel@f14.redhat.com>
+Subject: [PATCH 6 of 8] MD:  add sync_super to mddev_t struct
+Date: Tue, 07 Jun 2011 17:51:30 -0500
+Message-ID: <1307487090.31279.15.camel@f14.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -10,90 +10,61 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-MD RAID1: Changes to allow RAID1 to be used by device-mapper (dm-raid.c)
+Add the 'sync_super' function pointer to MD array structure (struct mddev_s)
 
-Added the necessary congestion function and conditionalize calls requiring an
-array 'queue' or 'gendisk'.
+If device-mapper (dm-raid.c) is to define its own on-disk superblock and be
+able to load it, there must still be a way for MD to initiate superblock
+updates.  The simplest way to make this happen is to provide a pointer in
+the MD array structure that can be set by device-mapper (or other module)
+with a function to do this.  If the function has been set, it will be used;
+otherwise, the method with be looked up via 'super_types' as usual.
 
 Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-Index: linux-2.6/drivers/md/raid1.c
+Index: linux-2.6/drivers/md/md.c
 ===================================================================
---- linux-2.6.orig/drivers/md/raid1.c
-+++ linux-2.6/drivers/md/raid1.c
-@@ -497,21 +497,19 @@ static int read_balance(conf_t *conf, r1
- 	return best_disk;
- }
+--- linux-2.6.orig/drivers/md/md.c
++++ linux-2.6/drivers/md/md.c
+@@ -1753,6 +1753,18 @@ static struct super_type super_types[] =
+ 	},
+ };
  
--static int raid1_congested(void *data, int bits)
-+int md_raid1_congested(mddev_t *mddev, int bits)
- {
--	mddev_t *mddev = data;
- 	conf_t *conf = mddev->private;
- 	int i, ret = 0;
- 
--	if (mddev_congested(mddev, bits))
--		return 1;
--
- 	rcu_read_lock();
- 	for (i = 0; i < mddev->raid_disks; i++) {
- 		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && !test_bit(Faulty, &rdev->flags)) {
- 			struct request_queue *q = bdev_get_queue(rdev->bdev);
- 
-+			BUG_ON(!q);
-+
- 			/* Note the '|| 1' - when read_balance prefers
- 			 * non-congested targets, it can be removed
- 			 */
-@@ -524,7 +522,15 @@ static int raid1_congested(void *data, i
- 	rcu_read_unlock();
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(md_raid1_congested);
- 
-+static int raid1_congested(void *data, int bits)
++static void sync_super(mddev_t *mddev, mdk_rdev_t *rdev)
 +{
-+	mddev_t *mddev = data;
-+
-+	return mddev_congested(mddev, bits) ||
-+		md_raid1_congested(mddev, bits);
-+}
- 
- static void flush_pending_writes(conf_t *conf)
- {
-@@ -1972,6 +1978,8 @@ static int run(mddev_t *mddev)
- 		return PTR_ERR(conf);
- 
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
-+		if (!mddev->gendisk)
-+			continue;
- 		disk_stack_limits(mddev->gendisk, rdev->bdev,
- 				  rdev->data_offset << 9);
- 		/* as we don't honour merge_bvec_fn, we must never risk
-@@ -2013,8 +2021,10 @@ static int run(mddev_t *mddev)
- 
- 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
- 
--	mddev->queue->backing_dev_info.congested_fn = raid1_congested;
--	mddev->queue->backing_dev_info.congested_data = mddev;
-+	if (mddev->queue) {
-+		mddev->queue->backing_dev_info.congested_fn = raid1_congested;
-+		mddev->queue->backing_dev_info.congested_data = mddev;
++	if (mddev->sync_super) {
++		mddev->sync_super(mddev, rdev);
++		return;
 +	}
- 	return md_integrity_register(mddev);
- }
- 
-Index: linux-2.6/drivers/md/raid1.h
-===================================================================
---- linux-2.6.orig/drivers/md/raid1.h
-+++ linux-2.6/drivers/md/raid1.h
-@@ -126,4 +126,6 @@ struct r1bio_s {
-  */
- #define	R1BIO_Returned 6
- 
-+extern int md_raid1_congested(mddev_t *mddev, int bits);
 +
- #endif
++	BUG_ON(mddev->major_version >= ARRAY_SIZE(super_types));
++
++	super_types[mddev->major_version].sync_super(mddev, rdev);
++}
++
+ static int match_mddev_units(mddev_t *mddev1, mddev_t *mddev2)
+ {
+ 	mdk_rdev_t *rdev, *rdev2;
+@@ -2171,8 +2183,7 @@ static void sync_sbs(mddev_t * mddev, in
+ 			/* Don't update this superblock */
+ 			rdev->sb_loaded = 2;
+ 		} else {
+-			super_types[mddev->major_version].
+-				sync_super(mddev, rdev);
++			sync_super(mddev, rdev);
+ 			rdev->sb_loaded = 1;
+ 		}
+ 	}
+Index: linux-2.6/drivers/md/md.h
+===================================================================
+--- linux-2.6.orig/drivers/md/md.h
++++ linux-2.6/drivers/md/md.h
+@@ -330,6 +330,7 @@ struct mddev_s
+ 	atomic_t flush_pending;
+ 	struct work_struct flush_work;
+ 	struct work_struct event_work;	/* used by dm to report failure event */
++	void (*sync_super)(mddev_t *mddev, mdk_rdev_t *rdev);
+ };
+ 
+ 
 
 
