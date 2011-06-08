@@ -1,123 +1,157 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: from 2x RAID1 to 1x RAID6 ?
-Date: Wed, 08 Jun 2011 16:42:18 +0200
-Message-ID: <4DEF8A4A.1030908@xunil.at>
-References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com> <4DEEBB66.7080802@nybeta.com> <isng0m$8c9$1@dough.gmane.org> <4DEF4AC5.1090003@anonymous.org.uk> <isnj71$rap$1@dough.gmane.org> <4DEF8537.3090301@turmel.org>
-Reply-To: lists@xunil.at
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH 7 of 8 - v2] MD:  add bitmap support
+Date: Wed, 08 Jun 2011 12:59:30 -0500
+Message-ID: <1307555970.9555.9.camel@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DEF8537.3090301@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 08.06.2011 16:20, schrieb Phil Turmel:
-> Hi All,
-> 
-> On 06/08/2011 06:33 AM, David Brown wrote:
->> On 08/06/2011 12:11, John Robinson wrote:
->>> On 08/06/2011 10:38, David Brown wrote:
->>>> On 08/06/2011 01:59, Thomas Harold wrote:
->>>>> On 6/7/2011 4:07 PM, Maurice Hilarius wrote:
->>>>>> On 6/7/2011 12:12 PM, Stefan G. Weichinger wrote:
->>>>>>> Greetings, could you please advise me how to proceed?
->>>>>>> 
->>>>>>> On a server I have 2 RAID1-arrays, each consisting of 2
->>>>>>> TB-drives:
->>>>>>> 
->>>>>>> ..
->>>>>>> 
->>>>>>> Now I would like to move things to a more reliable RAID6
->>>>>>> consisting of all the four TB-drives ...
->>>>>>> 
->>>>>>> How to do that with minimum risk?
->>>>>>> 
->>>>>>> .. Maybe I overlook a clever alternative?
->>>>>> 
->>>>>> RAID 10 is as secure, and risk free, and much faster. And
->>>>>> will cause much less CPU load.
->>>>>> 
->>>>> 
->>>>> Well, with both a pair of RAID1 arrays and a pair of RAID-10
->>>>> arrays, you can lose 2 disks without losing data, but only if
->>>>> the right 2 disks fail.
->>>>> 
->>>>> With RAID6, any two of the four can fail without data loss.
->>>>> 
->>>> 
->>>> It /sounds/ like RAID6 is more reliable here because it can
->>>> always survive a second disk failure, while with RAID10 you
->>>> have only a 66% chance of surviving a second disk failure.
->>>> 
->>>> However, how often does a disk fail? What is the chance of a
->>>> random disk failure in a given space of time? And how long will
->>>> it go between one disk failing, and it being replaced and the
->>>> array rebuilt? If you figure out these numbers, you'll have the
->>>> probability of losing your RAID10 array due to the second
->>>> critical disk failing.
->>>> 
->>>> To pick some rough numbers - say you've got low reliability,
->>>> cheap disks with a 500,000 hour MTBF. If it takes you 3 days to
->>>> replace a disk (over the weekend), and 8 hours to rebuild, you
->>>> have a risk period of 80 hours. That gives you a 0.016% chance
->>>> of having the second disk failing. Even if you consider that a
->>>> rebuild is quite stressful on the critical disk, it's not a big
->>>> risk.
->>> 
->>> It's not so much that the mirror disc might fail that I'd be
->>> worried about, it's that you might find the odd sector failure
->>> during the rebuild - this is the reason why RAID5 is now so
->>> disliked, and the reasons apply similarly to RAID1 and RAID10
->>> too, even if you're only relying on one disc ('s worth of data)
->>> being perfect rather than two or more.
->> 
->> I can see that problem, but it again boils down to probabilities.
->> The chances of seeing an unrecoverable read error are very low,
->> just as with other disk errors.
-> 
-> The chances of any given unrecoverable read error are low, but during
-> the rebuild, you are going to read every sector of the remaining
-> drive in a mirror pair, or every sector of every remaining drive in a
-> degraded raid5.  On large drives, you suddenly have a probability of
-> uncorrectable error during rebuild that is orders of magnitude larger
-> than the risk of a generic drive failure (in the rebuild window).
-> 
-> Since Stefan reported that he does backups to this array, I suspect
-> the performance is less important than the redundancy.  The
-> difference in redundancy is *very* significant.
-> 
-> Here's some stats on disk failures themselves: 
-> http://www.storagemojo.com/2007/02/19/googles-disk-failure-experience/
->
->  Here's some stats on read errors during rebuild: 
-> http://storagemojo.com/2010/02/27/does-raid-6-stops-working-in-2019/
-> 
-> If I recall correctly, Google switched to exclusive use of
-> triple-disk mirrors on its production servers for this very reason.
-> (I can't find a link at the moment....)
-> 
->> The issue with RAID5 is that people often had large arrays with
->> multiple disks, and on a rebuild /every/ sector had to be read.  So
->> if you have a ten disk RAID5 and are rebuilding, you are reading
->> from all other 9 disks - you have 9 times as high a chance of
->> having an unrecoverable read error ruin your day.
->> 
->> I look forward to the day bad block lists and hot replace are ready
->> in mdraid - it will give us close to another disk's worth of
->> redundancy without the cost.  For example, if one half of your
->> raid1 mirror fails but is not totally dead (such as by having too
->> many bad blocks), during rebuild you can keep both the good and bad
->> halves in place.  Then if there is a read failure on the "good"
->> half, you can probably still get the data from the "bad" half.
-> 
-> I don't see where either of these actually help the "rebuild after
-> disk failure" situation?
+Neil, fixed power-of-two check and switched read_sb_page to just alloc_page.  Also found another
+place in bitmap.c that needs to switch to is_power_of_2, but I'll put that in another patch.
 
-phew ... thanks to all of you for your statements ...
-I have to read through all this at first ...
+ brassow
+==========
 
-;-)
+Add bitmap support to the device-mapper specific metadata area.
 
-Thanks, Stefan
+This patch allows the creation of the bitmap metadata area upon initial array
+creation via device-mapper.
+
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
+
+Index: linux-2.6/drivers/md/bitmap.c
+===================================================================
+--- linux-2.6.orig/drivers/md/bitmap.c
++++ linux-2.6/drivers/md/bitmap.c
+@@ -534,6 +534,82 @@ void bitmap_print_sb(struct bitmap *bitm
+ 	kunmap_atomic(sb, KM_USER0);
+ }
+ 
++/*
++ * bitmap_new_disk_sb
++ * @bitmap
++ *
++ * This function is somewhat the reverse of bitmap_read_sb.  bitmap_read_sb
++ * reads and verifies the on-disk bitmap superblock and populates bitmap_info.
++ * This function verifies 'bitmap_info' and populates the on-disk bitmap
++ * structure, which is to be written to disk.
++ *
++ * Returns: 0 on success, -Exxx on error
++ */
++static int bitmap_new_disk_sb(struct bitmap *bitmap)
++{
++	bitmap_super_t *sb;
++	unsigned long chunksize, daemon_sleep, write_behind;
++	int err = -EINVAL;
++
++	bitmap->sb_page = alloc_page(GFP_KERNEL);
++	if (IS_ERR(bitmap->sb_page)) {
++		err = PTR_ERR(bitmap->sb_page);
++		bitmap->sb_page = NULL;
++		return err;
++	}
++	bitmap->sb_page->index = 0;
++
++	sb = kmap_atomic(bitmap->sb_page, KM_USER0);
++
++	sb->magic = cpu_to_le32(BITMAP_MAGIC);
++	sb->version = cpu_to_le32(BITMAP_MAJOR_HI);
++
++	chunksize = bitmap->mddev->bitmap_info.chunksize;
++	BUG_ON(!chunksize);
++	if (!is_power_of_2(chunksize)) {
++		kunmap_atomic(sb, KM_USER0);
++		printk(KERN_ERR "bitmap chunksize not a power of 2\n");
++		return -EINVAL;
++	}
++	sb->chunksize = cpu_to_le32(chunksize);
++
++	daemon_sleep = bitmap->mddev->bitmap_info.daemon_sleep;
++	if (!daemon_sleep ||
++	    (daemon_sleep < 1) || (daemon_sleep > MAX_SCHEDULE_TIMEOUT)) {
++		printk(KERN_INFO "Choosing daemon_sleep default (5 sec)\n");
++		daemon_sleep = 5 * HZ;
++	}
++	sb->daemon_sleep = cpu_to_le32(daemon_sleep);
++	bitmap->mddev->bitmap_info.daemon_sleep = daemon_sleep;
++
++	/*
++	 * FIXME: write_behind for RAID1.  If not specified, what
++	 * is a good choice?  We choose COUNTER_MAX / 2 arbitrarily.
++	 */
++	write_behind = bitmap->mddev->bitmap_info.max_write_behind;
++	if (write_behind > COUNTER_MAX)
++		write_behind = COUNTER_MAX / 2;
++	sb->write_behind = cpu_to_le32(write_behind);
++	bitmap->mddev->bitmap_info.max_write_behind = write_behind;
++
++	/* keep the array size field of the bitmap superblock up to date */
++	sb->sync_size = cpu_to_le64(bitmap->mddev->resync_max_sectors);
++
++	memcpy(sb->uuid, bitmap->mddev->uuid, 16);
++
++	bitmap->flags |= BITMAP_STALE;
++	sb->state |= cpu_to_le32(BITMAP_STALE);
++	bitmap->events_cleared = bitmap->mddev->events;
++	sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
++
++	bitmap->flags |= BITMAP_HOSTENDIAN;
++	sb->version = cpu_to_le32(BITMAP_MAJOR_HOSTENDIAN);
++
++	kunmap_atomic(sb, KM_USER0);
++
++	return 0;
++}
++
+ /* read the superblock from the bitmap file and initialize some bitmap fields */
+ static int bitmap_read_sb(struct bitmap *bitmap)
+ {
+@@ -1076,8 +1152,8 @@ static int bitmap_init_from_disk(struct 
+ 	}
+ 
+ 	printk(KERN_INFO "%s: bitmap initialized from disk: "
+-		"read %lu/%lu pages, set %lu bits\n",
+-		bmname(bitmap), bitmap->file_pages, num_pages, bit_cnt);
++	       "read %lu/%lu pages, set %lu of %lu bits\n",
++	       bmname(bitmap), bitmap->file_pages, num_pages, bit_cnt, chunks);
+ 
+ 	return 0;
+ 
+@@ -1728,9 +1804,16 @@ int bitmap_create(mddev_t *mddev)
+ 		vfs_fsync(file, 1);
+ 	}
+ 	/* read superblock from bitmap file (this sets mddev->bitmap_info.chunksize) */
+-	if (!mddev->bitmap_info.external)
+-		err = bitmap_read_sb(bitmap);
+-	else {
++	if (!mddev->bitmap_info.external) {
++		/*
++		 * If 'MD_ARRAY_FIRST_USE' is set, then device-mapper is
++		 * instructing us to create a new on-disk bitmap instance.
++		 */
++		if (test_and_clear_bit(MD_ARRAY_FIRST_USE, &mddev->flags))
++			err = bitmap_new_disk_sb(bitmap);
++		else
++			err = bitmap_read_sb(bitmap);
++	} else {
+ 		err = 0;
+ 		if (mddev->bitmap_info.chunksize == 0 ||
+ 		    mddev->bitmap_info.daemon_sleep == 0)
+Index: linux-2.6/drivers/md/md.h
+===================================================================
+--- linux-2.6.orig/drivers/md/md.h
++++ linux-2.6/drivers/md/md.h
+@@ -124,6 +124,7 @@ struct mddev_s
+ #define MD_CHANGE_DEVS	0	/* Some device status has changed */
+ #define MD_CHANGE_CLEAN 1	/* transition to or from 'clean' */
+ #define MD_CHANGE_PENDING 2	/* switch from 'clean' to 'active' in progress */
++#define MD_ARRAY_FIRST_USE 3    /* First use of array, needs initialization */
+ 
+ 	int				suspended;
+ 	atomic_t			active_io;
+
+
