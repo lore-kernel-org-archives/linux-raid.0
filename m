@@ -1,74 +1,76 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH/RFC] md/raid10: optimize read_balance() for 'far copies'
- arrays
-Date: Wed, 8 Jun 2011 17:21:57 +1000
-Message-ID: <20110608172157.4d6ac2a8@notabene.brown>
-References: <1307516445-3208-1-git-send-email-namhyung@gmail.com>
+Subject: Re: [PATCH 00/22] IMSM checkpointing implementation
+Date: Wed, 8 Jun 2011 17:23:49 +1000
+Message-ID: <20110608172349.5ee242c9@notabene.brown>
+References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1307516445-3208-1-git-send-email-namhyung@gmail.com>
+In-Reply-To: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Wed,  8 Jun 2011 16:00:45 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Thu, 02 Jun 2011 16:48:08 +0200 Krzysztof Wojcik
+<krzysztof.wojcik@intel.com> wrote:
 
-> If @conf->far_offset > 0, there is only 1 stripe so that we can treat
-> the array same as 'near' arrays. Furthermore we could calculate new
-> distance from the previous position even for the real 'far' array
-> cases if the position of given disk is already in the lowest stripe.
+> IMSM for securing reshape process uses special disk area outside metadata
+> for reshaped area backup purposes. If just reshaped array area requires
+> backup, bunch of array stripes prepared for reshape is stored in to
+> Migration Copy Area. In case of reshape interruption, Option ROM during
+> restart or mdadm during reshape restart (when no reboot occurs) will
+> restore Migration Copy Area to designation array.
+> Reshape can be continued form stable array stable state.
 > 
-> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
-> ---
->  drivers/md/raid10.c |   14 +++++++++++---
->  1 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 6e846688962f..9ec4c5f8cd48 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -531,11 +531,19 @@ retry:
->  			break;
->  
->  		/* for far > 1 always use the lowest address */
-> -		if (conf->far_copies > 1)
-> -			new_distance = r10_bio->devs[slot].addr;
-> -		else
-> +		if (conf->far_copies > 1 && conf->far_offset == 0) {
-> +			if (conf->mirrors[disk].head_position < conf->stride &&
-> +			    r10_bio->devs[slot].addr < conf->stride)
-> +				/* already in the lowest stripe */
-> +				new_distance = abs(r10_bio->devs[slot].addr -
-> +						   conf->mirrors[disk].head_position);
-> +			else
-> +				new_distance = r10_bio->devs[slot].addr;
-> +		} else {
->  			new_distance = abs(r10_bio->devs[slot].addr -
->  					   conf->mirrors[disk].head_position);
-> +		}
-> +
->  		if (new_distance < best_dist) {
->  			best_dist = new_distance;
->  			best_slot = slot;
+> The following series implements IMSM checkpointing procedure.
 
+I have applied most of these patches - some with some minor fixes.  The major
+changes I have already mentioned.
 
-I agree that it still make sense to to balancing if far_offset != 0.
-However  there is absolutely no point in your change to the calculation of
-new_distance.
-You only wont new_distance to contain a distance from head position if we
-want to choose the device with the 'closest' head.  But we don't.  We want to
-choose the device were the data is closest to the start of the device.  So
-the current value for new_distance is correct.
-
-If you would like to resubmit with just the first change I'll happily apply
-the patch.
-
-If you have performed some tests and can demonstrate some cases where this
-makes something faster, and can show us the results of those tests, I would
-be even more happy!!!
+I will wait for you responses to those changes, and the other bug fixes you
+mentioned before considering a release of 3.2.2, but I would like to make
+that release in the next week or two.
 
 Thanks,
 NeilBrown
+
+> 
+> ---
+> 
+> Adam Kwolek, Krzysztof Wojcik (22):
+>       imsm: Add migration record to intel_super
+>       Support restore_stripes() from the given buffer
+>       Define dummy functions to mdmon.c
+>       imsm: Add support for copy area and backup operations
+>       imsm: check migration compatibility
+>       FIX: Initialize reshape structure
+>       imsm: Add wait_for_reshape_imsm() implementation
+>       imsm: Implement imsm_manage_reshape(), reshape workhorse
+>       imsm: Check if array degradation has been changed
+>       imsm: Clear migration record when no migration in progress
+>       imsm: Add information about migration record to mdadm '-E' option
+>       imsm: update blocks_per_migr_unit() to support migration record
+>       Add reshape restart support for external metadata
+>       imsm: Implement recover_backup_imsm() for imsm metadata
+>       imsm: Disable checkpoint updating by mdmon for general migration
+>       imsm: Add metadata update type for general migration check-pointing
+>       imsm: Prepare checkpoint update for general migration
+>       imsm: Apply checkpoint metadata update for general migration
+>       FIX: Enable metadata updates for raid0
+>       Do not use backup file for external metadata
+>       imsm: Remove user warning before reshape start
+>       imsm: Unit Tests - remove backup-file during grow command
+> 
+> 
+>  Assemble.c               |   10 
+>  Grow.c                   |   50 +-
+>  mdadm.h                  |    7 
+>  mdmon.c                  |   23 +
+>  restripe.c               |  101 +++-
+>  super-intel.c            | 1241 ++++++++++++++++++++++++++++++++++++++++++++--
+>  tests/imsm-grow-template |    5 
+>  7 files changed, 1322 insertions(+), 115 deletions(-)
+> 
+
