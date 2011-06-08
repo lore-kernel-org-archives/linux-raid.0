@@ -1,76 +1,60 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 00/22] IMSM checkpointing implementation
-Date: Wed, 8 Jun 2011 17:23:49 +1000
-Message-ID: <20110608172349.5ee242c9@notabene.brown>
-References: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: Nested RAID and booting
+Date: Wed, 8 Jun 2011 13:27:18 +0600
+Message-ID: <20110608132718.7f88bac9@natsu>
+References: <D1.7A.00666.3AE0FED4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/+3o2l8xcyhnKuX8fcpfBYx1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110602144212.27355.3706.stgit@gklab-128-111.igk.intel.com>
+In-Reply-To: <D1.7A.00666.3AE0FED4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: lrhorer@satx.rr.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 02 Jun 2011 16:48:08 +0200 Krzysztof Wojcik
-<krzysztof.wojcik@intel.com> wrote:
+--Sig_/+3o2l8xcyhnKuX8fcpfBYx1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> IMSM for securing reshape process uses special disk area outside metadata
-> for reshaped area backup purposes. If just reshaped array area requires
-> backup, bunch of array stripes prepared for reshape is stored in to
-> Migration Copy Area. In case of reshape interruption, Option ROM during
-> restart or mdadm during reshape restart (when no reboot occurs) will
-> restore Migration Copy Area to designation array.
-> Reshape can be continued form stable array stable state.
-> 
-> The following series implements IMSM checkpointing procedure.
+On Wed, 8 Jun 2011 00:54:44 -0500
+"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
 
-I have applied most of these patches - some with some minor fixes.  The major
-changes I have already mentioned.
+> Will simply putting them in the mdadm.conf file prior to the RAID6 array =
+do
+> the trick?
 
-I will wait for you responses to those changes, and the other bug fixes you
-mentioned before considering a release of 3.2.2, but I would like to make
-that release in the next week or two.
+Seems to work just fine for me.
 
-Thanks,
-NeilBrown
+Well, I also have the member array explicitly listed in a DEVICE clause,
+together with physical drives. So I am not really sure if the default
+"DEVICE partitions" would also include MD devices.
 
-> 
-> ---
-> 
-> Adam Kwolek, Krzysztof Wojcik (22):
->       imsm: Add migration record to intel_super
->       Support restore_stripes() from the given buffer
->       Define dummy functions to mdmon.c
->       imsm: Add support for copy area and backup operations
->       imsm: check migration compatibility
->       FIX: Initialize reshape structure
->       imsm: Add wait_for_reshape_imsm() implementation
->       imsm: Implement imsm_manage_reshape(), reshape workhorse
->       imsm: Check if array degradation has been changed
->       imsm: Clear migration record when no migration in progress
->       imsm: Add information about migration record to mdadm '-E' option
->       imsm: update blocks_per_migr_unit() to support migration record
->       Add reshape restart support for external metadata
->       imsm: Implement recover_backup_imsm() for imsm metadata
->       imsm: Disable checkpoint updating by mdmon for general migration
->       imsm: Add metadata update type for general migration check-pointing
->       imsm: Prepare checkpoint update for general migration
->       imsm: Apply checkpoint metadata update for general migration
->       FIX: Enable metadata updates for raid0
->       Do not use backup file for external metadata
->       imsm: Remove user warning before reshape start
->       imsm: Unit Tests - remove backup-file during grow command
-> 
-> 
->  Assemble.c               |   10 
->  Grow.c                   |   50 +-
->  mdadm.h                  |    7 
->  mdmon.c                  |   23 +
->  restripe.c               |  101 +++-
->  super-intel.c            | 1241 ++++++++++++++++++++++++++++++++++++++++++++--
->  tests/imsm-grow-template |    5 
->  7 files changed, 1322 insertions(+), 115 deletions(-)
-> 
+So in my mdadm.conf I have, roughly:=20
 
+  DEVICE /dev/disk/by-id/ata-WDC_WD20EADS-*-part*
+  DEVICE /dev/disk/by-id/ata-WDC_WD15EADS-*-part*
+  DEVICE /dev/disk/by-id/ata-Hitachi_HDS*-part*
+  DEVICE /dev/md1
+  ARRAY /dev/md1 UUID=3D...................................
+  ARRAY /dev/md0 UUID=3D...................................
+
+...where md1 is a member of md0.
+
+--=20
+With respect,
+Roman
+
+--Sig_/+3o2l8xcyhnKuX8fcpfBYx1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk3vJFYACgkQTLKSvz+PZwhcBwCfWTjHs17ISjYIvhMcrReUL7Zd
+h+sAn2XlEG+EHdbCybfl09wtd2juTuxK
+=j/4D
+-----END PGP SIGNATURE-----
+
+--Sig_/+3o2l8xcyhnKuX8fcpfBYx1--
