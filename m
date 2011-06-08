@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 06/21] imsm: FIX: Check layout for level migration
-Date: Wed, 08 Jun 2011 18:10:22 +0200
-Message-ID: <20110608161022.24327.5745.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 07/21] imsm: FIX: Use macros to data access
+Date: Wed, 08 Jun 2011 18:10:30 +0200
+Message-ID: <20110608161030.24327.49166.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,43 +13,44 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When user doesn't specify raid 5 layout for raid0->rai5 migration,
-layout structure member is uninitialized. Earlier it cannot be determined
-if it is correct or not.
-In metadata handle proper verification is placed.
+Metadata fields has to be accessed using proper macros.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- super-intel.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+ super-intel.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 2468968..3baea6a 100644
+index 3baea6a..fea7a3a 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -8278,7 +8278,6 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 	int chunk;
+@@ -1822,7 +1822,7 @@ static __u64 blocks_per_migr_unit(struct intel_super *super,
+ 		migr_chunk = migr_strip_blocks_resync(dev);
+ 		disks = imsm_num_data_members(dev, 0);
+ 		blocks_per_unit = stripes_per_unit * migr_chunk * disks;
+-		stripe = __le32_to_cpu(map->blocks_per_strip) * disks;
++		stripe = __le16_to_cpu(map->blocks_per_strip) * disks;
+ 		segment = blocks_per_unit / stripe;
+ 		block_rel = blocks_per_unit - segment * stripe;
+ 		parity_depth = parity_segment_depth(dev);
+@@ -8716,7 +8716,7 @@ static int imsm_manage_reshape(
+ 	ndata = imsm_num_data_members(dev, 0);
+ 	odata = imsm_num_data_members(dev, 1);
  
- 	getinfo_super_imsm_volume(st, &info, NULL);
--
- 	if ((geo->level != info.array.level) &&
- 	    (geo->level >= 0) &&
- 	    (geo->level != UnSet)) {
-@@ -8286,6 +8285,14 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 		case 0:
- 			if (geo->level == 5) {
- 				change = CH_MIGRATION;
-+				if (geo->layout != ALGORITHM_LEFT_ASYMMETRIC) {
-+					fprintf(stderr,
-+					Name " Error. Requested Layout "
-+					"not supported (left-asymmetric layout "
-+					"is supported only)!\n");
-+					change = -1;
-+					goto analyse_change_exit;
-+				}
- 				check_devs = 1;
- 			}
- 			if (geo->level == 10) {
+-	chunk = map_src->blocks_per_strip * 512;
++	chunk = __le16_to_cpu(map_src->blocks_per_strip) * 512;
+ 	old_data_stripe_length = odata * chunk;
+ 
+ 	migr_rec = super->migr_rec;
+@@ -8765,7 +8765,8 @@ static int imsm_manage_reshape(
+ 		if ((current_position + next_step) > max_position)
+ 			next_step = max_position - current_position;
+ 
+-		start = (map_src->pba_of_lba0 + dev->reserved_blocks +
++		start = (__le32_to_cpu(map_src->pba_of_lba0) +
++			 __le32_to_cpu(dev->reserved_blocks) +
+ 			 current_position) * 512;
+ 
+ 		/* allign reading start to old geometry */
 
