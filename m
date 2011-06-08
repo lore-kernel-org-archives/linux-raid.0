@@ -1,30 +1,43 @@
 From: "Stefan G. Weichinger" <lists@xunil.at>
 Subject: Re: from 2x RAID1 to 1x RAID6 ?
-Date: Wed, 08 Jun 2011 10:06:17 +0200
-Message-ID: <4DEF2D79.50009@xunil.at>
-References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com> <4DEEBB66.7080802@nybeta.com>
+Date: Wed, 08 Jun 2011 10:16:54 +0200
+Message-ID: <4DEF2FF6.5060300@xunil.at>
+References: <4DEE6A11.1030205@xunil.at> <4DEECD61.4030909@anonymous.org.uk>
 Reply-To: lists@xunil.at
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DEEBB66.7080802@nybeta.com>
+In-Reply-To: <4DEECD61.4030909@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Am 08.06.2011 01:59, schrieb Thomas Harold:
+Am 08.06.2011 03:16, schrieb John Robinson:
 
-> Well, with both a pair of RAID1 arrays and a pair of RAID-10 arrays, you
-> can lose 2 disks without losing data, but only if the right 2 disks fail.
-> 
-> With RAID6, any two of the four can fail without data loss.
+> There may be a clever alternative, retaining single redundancy, if
+> you don't mind buying one more disc, which I'm guessing you might do
+> soon anyway as you're already 85% full. Or if not, it won't do too
+> much harm to have a spare drive sitting on a shelf.
 
-Yes, that was my initial reason to try that.
+In fact I already have one ... but I can't use it as the 8 bays of that
+server are already fully used. I could only attach that drive
+temporarily with USB or so ...
 
-> (I still prefer RAID-10 over RAID-6 unless space is at an absolute
-> premium.  But for a four-disk setup, net disk space is the same and it's
-> just a question of whether you want the speed of RAID-10 or the
-> reliability of RAID-6.)
+> You can convert a 2-drive RAID1 to a 2-drive RAID5, then add the new 
+> drive to double the size of the array, resize the PV, then move the
+> PEs over from the other RAID1, then tear down that PV and RAID1, add
+> one or both of those drives into the RAID5 and grow it to a RAID6.
+> The only step at which you have a little less redundancy is while
+> you're running the 3-drive RAID5 (well, it's still 1 drive but
+> against 2 drives, instead of 1:1).
 
-Reliability. There are backups done to that array.
+Clever idea, yes ... but a rather long way somehow ...
+
+> On the other hand it might be easier to take a backup, which you 
+> probably ought to do anyway!
+
+Yep, I assume it will be that way: mv data aside, new array, data back
+in ...
+
+Thanks anyway, Stefan
