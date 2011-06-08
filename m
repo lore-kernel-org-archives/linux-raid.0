@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 09/21] imsm: FIX: Do not verify unused parameters
-Date: Wed, 08 Jun 2011 18:10:46 +0200
-Message-ID: <20110608161046.24327.33033.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 10/21] imsm: FIX: Do not use pba_of_lba0 for copy position
+	calculation
+Date: Wed, 08 Jun 2011 18:10:54 +0200
+Message-ID: <20110608161054.24327.30419.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,26 +14,29 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Parameters that are not used by imsm_manage_reshape() should not cause
-failure of this function.
+imsm_manage_reshape() should not shift start copy position.
+This offset is passed to manage reshape function /and it is used/
+as input parameter in offsets table already.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ super-intel.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 0d46132..437975f 100644
+index 437975f..b22c7df 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -8689,7 +8689,7 @@ static int imsm_manage_reshape(
- 	unsigned long long start_buf_shift; /* [bytes] */
- 	int degraded = 0;
+@@ -8765,9 +8765,7 @@ static int imsm_manage_reshape(
+ 		if ((current_position + next_step) > max_position)
+ 			next_step = max_position - current_position;
  
--	if (!fds || !offsets || !destfd || !destoffsets || !sra)
-+	if (!fds || !offsets || !sra)
- 		goto abort;
+-		start = (__le32_to_cpu(map_src->pba_of_lba0) +
+-			 __le32_to_cpu(dev->reserved_blocks) +
+-			 current_position) * 512;
++		start = current_position * 512;
  
- 	/* Find volume during the reshape */
+ 		/* allign reading start to old geometry */
+ 		start_buf_shift = start % old_data_stripe_length;
 
