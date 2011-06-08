@@ -1,43 +1,80 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
+From: David Brown <david@westcontrol.com>
 Subject: Re: from 2x RAID1 to 1x RAID6 ?
-Date: Wed, 08 Jun 2011 10:16:54 +0200
-Message-ID: <4DEF2FF6.5060300@xunil.at>
-References: <4DEE6A11.1030205@xunil.at> <4DEECD61.4030909@anonymous.org.uk>
-Reply-To: lists@xunil.at
+Date: Wed, 08 Jun 2011 11:38:56 +0200
+Message-ID: <isng0m$8c9$1@dough.gmane.org>
+References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com> <4DEEBB66.7080802@nybeta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DEECD61.4030909@anonymous.org.uk>
+In-Reply-To: <4DEEBB66.7080802@nybeta.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 08.06.2011 03:16, schrieb John Robinson:
+On 08/06/2011 01:59, Thomas Harold wrote:
+> On 6/7/2011 4:07 PM, Maurice Hilarius wrote:
+>> On 6/7/2011 12:12 PM, Stefan G. Weichinger wrote:
+>>> Greetings, could you please advise me how to proceed?
+>>>
+>>> On a server I have 2 RAID1-arrays, each consisting of 2 TB-drives:
+>>>
+>>> ..
+>>>
+>>> Now I would like to move things to a more reliable RAID6 consisting of
+>>> all the four TB-drives ...
+>>>
+>>> How to do that with minimum risk?
+>>>
+>>> ..
+>>> Maybe I overlook a clever alternative?
+>>
+>> RAID 10 is as secure, and risk free, and much faster.
+>> And will cause much less CPU load.
+>>
+>
+> Well, with both a pair of RAID1 arrays and a pair of RAID-10 arrays, you
+> can lose 2 disks without losing data, but only if the right 2 disks fail.
+>
+> With RAID6, any two of the four can fail without data loss.
+>
 
-> There may be a clever alternative, retaining single redundancy, if
-> you don't mind buying one more disc, which I'm guessing you might do
-> soon anyway as you're already 85% full. Or if not, it won't do too
-> much harm to have a spare drive sitting on a shelf.
+It /sounds/ like RAID6 is more reliable here because it can always 
+survive a second disk failure, while with RAID10 you have only a 66% 
+chance of surviving a second disk failure.
 
-In fact I already have one ... but I can't use it as the 8 bays of that
-server are already fully used. I could only attach that drive
-temporarily with USB or so ...
+However, how often does a disk fail?  What is the chance of a random 
+disk failure in a given space of time?  And how long will it go between 
+one disk failing, and it being replaced and the array rebuilt?  If you 
+figure out these numbers, you'll have the probability of losing your 
+RAID10 array due to the second critical disk failing.
 
-> You can convert a 2-drive RAID1 to a 2-drive RAID5, then add the new 
-> drive to double the size of the array, resize the PV, then move the
-> PEs over from the other RAID1, then tear down that PV and RAID1, add
-> one or both of those drives into the RAID5 and grow it to a RAID6.
-> The only step at which you have a little less redundancy is while
-> you're running the 3-drive RAID5 (well, it's still 1 drive but
-> against 2 drives, instead of 1:1).
+To pick some rough numbers - say you've got low reliability, cheap disks 
+with a 500,000 hour MTBF.  If it takes you 3 days to replace a disk 
+(over the weekend), and 8 hours to rebuild, you have a risk period of 80 
+hours.  That gives you a 0.016% chance of having the second disk 
+failing.  Even if you consider that a rebuild is quite stressful on the 
+critical disk, it's not a big risk.
 
-Clever idea, yes ... but a rather long way somehow ...
+Compare that to the chance of losing data through other causes (fire, 
+theft, user-error, motherboard failure, power supply problems, etc., 
+etc.) and in reality the "higher risk" of RAID10 compared to RAID6 is a 
+drop in the ocean.  RAID10 is /far/ from being the weak point in a 
+typical server.
 
-> On the other hand it might be easier to take a backup, which you 
-> probably ought to do anyway!
+And you can also take into account that the disk usage patterns on RAID6 
+are a lot more intensive and stressful on the disk than RAID10 - I would 
+expect the lifetime of a RAID10 member disk to be much higher than that 
+of a RAID6 member disk.
 
-Yep, I assume it will be that way: mv data aside, new array, data back
-in ...
+I don't have the statistics to prove it, but I am certainly happy to use 
+RAID10 rather than RAID6 for our company servers.
 
-Thanks anyway, Stefan
+Of course, I also have two backup servers on two different sites...
+
+> (I still prefer RAID-10 over RAID-6 unless space is at an absolute
+> premium. But for a four-disk setup, net disk space is the same and it's
+> just a question of whether you want the speed of RAID-10 or the
+> reliability of RAID-6.)
+
+
