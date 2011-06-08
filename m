@@ -1,49 +1,84 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 21/21] MAN: Man update for check-pointing
-Date: Wed, 08 Jun 2011 18:12:22 +0200
-Message-ID: <20110608161222.24327.36035.stgit@gklab-128-013.igk.intel.com>
-References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: (unknown)
+Date: Wed, 08 Jun 2011 16:24:40 +0200
+Message-ID: <20110608142440.139240@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+SRaid with 13 Disks crashed
+Hello,
 
- mdadm.8.in |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/mdadm.8.in b/mdadm.8.in
-index e1d5651..f549dbf 100644
---- a/mdadm.8.in
-+++ b/mdadm.8.in
-@@ -2225,8 +2225,8 @@ succeed.
- This is for the following reasons:
- 
- .IP 1.
--Intel's native IMSM check-pointing is not fully implemented yet.
--This causes IMSM incompatibility during the grow process: an array
-+Intel's native IMSM check-pointing is not fully tested yet.
-+This can causes IMSM incompatibility during the grow process: an array
- which is growing cannot roam between Microsoft Windows(R) and Linux
- systems.
- 
-@@ -2234,6 +2234,11 @@ systems.
- Interrupting a grow operation is not recommended, because it
- has not been fully tested for Intel's IMSM container format yet.
- 
-+.PP
-+Note: Intel's native checkpointing doesn't use
-+.B --backup-file
-+option and it is transparent for assembly feature.
-+
- .SS SIZE CHANGES
- Normally when an array is built the "size" is taken from the smallest
- of the drives.  If all the small drives in an arrays are, one at a
+this seems to be my last chance to get back all of my data from a sw-raid5 with 12-13 disks.
+i use debian ( 2.6.32-bpo.5-amd64) and last i wanted to grow the raid from 12 to 13 disk with a size at all of 18tb. after run mke2fs i must see that the tool on ext4 allow a maximum size of 16tb. after that i wanted to shrink the size back to 12 disk and now the raid is gone.
 
+i tried some assemble and examine things but without success.
+
+here some information:
+ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : inactive sdh[0](S) sda[13](S) sdg[12](S) sdf[11](S) sde[10](S) sdd[9](S) sdc[8](S) sdb[6](S) sdm[5](S) sdl[4](S) sdj[3](S) sdi[2](S)
+      17581661952 blocks
+
+unused devices: <none>
+
+mdadm --detail /dev/md0
+mdadm: md device /dev/md0 does not appear to be active.
+
+ mdadm --assemble --force -v /dev/md0 /dev/sdh /dev/sda /dev/sdg /dev/sdf /dev/sde /dev/sdd /dev/sdc /dev/sdb /dev/sdm /dev/sdl /dev/sdj /dev/sdi --update=super-minor /dev/sdh
+mdadm: looking for devices for /dev/md0
+mdadm: updating superblock of /dev/sdh with minor number 0
+mdadm: /dev/sdh is identified as a member of /dev/md0, slot 0.
+mdadm: updating superblock of /dev/sda with minor number 0
+mdadm: /dev/sda is identified as a member of /dev/md0, slot 13.
+mdadm: updating superblock of /dev/sdg with minor number 0
+mdadm: /dev/sdg is identified as a member of /dev/md0, slot 12.
+mdadm: updating superblock of /dev/sdf with minor number 0
+mdadm: /dev/sdf is identified as a member of /dev/md0, slot 11.
+mdadm: updating superblock of /dev/sde with minor number 0
+mdadm: /dev/sde is identified as a member of /dev/md0, slot 10.
+mdadm: updating superblock of /dev/sdd with minor number 0
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 9.
+mdadm: updating superblock of /dev/sdc with minor number 0
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 8.
+mdadm: updating superblock of /dev/sdb with minor number 0
+mdadm: /dev/sdb is identified as a member of /dev/md0, slot 6.
+mdadm: updating superblock of /dev/sdm with minor number 0
+mdadm: /dev/sdm is identified as a member of /dev/md0, slot 5.
+mdadm: updating superblock of /dev/sdl with minor number 0
+mdadm: /dev/sdl is identified as a member of /dev/md0, slot 4.
+mdadm: updating superblock of /dev/sdj with minor number 0
+mdadm: /dev/sdj is identified as a member of /dev/md0, slot 3.
+mdadm: updating superblock of /dev/sdi with minor number 0
+mdadm: /dev/sdi is identified as a member of /dev/md0, slot 2.
+mdadm: updating superblock of /dev/sdh with minor number 0
+mdadm: /dev/sdh is identified as a member of /dev/md0, slot 0.
+mdadm: no uptodate device for slot 1 of /dev/md0
+mdadm: added /dev/sdi to /dev/md0 as 2
+mdadm: added /dev/sdj to /dev/md0 as 3
+mdadm: added /dev/sdl to /dev/md0 as 4
+mdadm: added /dev/sdm to /dev/md0 as 5
+mdadm: added /dev/sdb to /dev/md0 as 6
+mdadm: no uptodate device for slot 7 of /dev/md0
+mdadm: added /dev/sdc to /dev/md0 as 8
+mdadm: added /dev/sdd to /dev/md0 as 9
+mdadm: added /dev/sde to /dev/md0 as 10
+mdadm: added /dev/sdf to /dev/md0 as 11
+mdadm: added /dev/sdg to /dev/md0 as 12
+mdadm: added /dev/sda to /dev/md0 as 13
+mdadm: added /dev/sdh to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 11 drives and 1 spare - not enough to start the array.
+
+mdadm.conf
+#old=ARRAY /dev/md0 level=raid5 num-devices=13 metadata=0.90 UUID=975d6eb2:285eed11:021df236:c2d05073
+ARRAY /dev/md0 UUID=975d6eb2:285eed11:021df236:c2d05073
+
+Hope some can help. Thx
+-- 
+Empfehlen Sie GMX DSL Ihren Freunden und Bekannten und wir
+belohnen Sie mit bis zu 50,- Euro! https://freundschaftswerbung.gmx.de
