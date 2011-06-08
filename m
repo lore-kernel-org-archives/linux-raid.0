@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 05/21] imsm: FIX: Max position could not be rounded to MB
-Date: Wed, 08 Jun 2011 18:10:14 +0200
-Message-ID: <20110608161014.24327.81807.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 06/21] imsm: FIX: Check layout for level migration
+Date: Wed, 08 Jun 2011 18:10:22 +0200
+Message-ID: <20110608161022.24327.5745.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,51 +13,43 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When rounded array size information from metadata is used for number
-of migration units calculation it can occurs that result of units
-can be smaller (-1) than required due to used (rounded) array size).
+When user doesn't specify raid 5 layout for raid0->rai5 migration,
+layout structure member is uninitialized. Earlier it cannot be determined
+if it is correct or not.
+In metadata handle proper verification is placed.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 ---
 
- super-intel.c |   12 +++---------
- 1 files changed, 3 insertions(+), 9 deletions(-)
+ super-intel.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 3afa913..2468968 100644
+index 2468968..3baea6a 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -7621,10 +7621,7 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
- 	struct imsm_map *map_dest = get_imsm_map(dev, 0);
- 	struct imsm_map *map_src = get_imsm_map(dev, 1);
- 	unsigned long long num_migr_units;
+@@ -8278,7 +8278,6 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 	int chunk;
+ 
+ 	getinfo_super_imsm_volume(st, &info, NULL);
 -
--	unsigned long long array_blocks =
--		(((unsigned long long)__le32_to_cpu(dev->size_high)) << 32) +
--		__le32_to_cpu(dev->size_low);
-+	unsigned long long array_blocks;
- 
- 	memset(migr_rec, 0, sizeof(struct migr_record));
- 	migr_rec->family_num = __cpu_to_le32(super->anchor->family_num);
-@@ -7640,7 +7637,7 @@ void init_migr_record_imsm(struct supertype *st, struct imsm_dev *dev,
- 		__cpu_to_le32(migr_rec->dest_depth_per_unit * new_data_disks);
- 	migr_rec->dest_depth_per_unit =
- 		__cpu_to_le32(migr_rec->dest_depth_per_unit);
--
-+	array_blocks = info->component_size * new_data_disks;
- 	num_migr_units =
- 		array_blocks / __le32_to_cpu(migr_rec->blocks_per_unit);
- 
-@@ -8737,10 +8734,7 @@ static int imsm_manage_reshape(
- 		goto abort;
- 	}
- 
--	max_position =
--		__le32_to_cpu(migr_rec->post_migr_vol_cap) +
--		((unsigned long long)__le32_to_cpu(
--			 migr_rec->post_migr_vol_cap_hi) << 32);
-+	max_position = sra->component_size * ndata;
- 
- 	while (__le32_to_cpu(migr_rec->curr_migr_unit) <
- 	       __le32_to_cpu(migr_rec->num_migr_units)) {
+ 	if ((geo->level != info.array.level) &&
+ 	    (geo->level >= 0) &&
+ 	    (geo->level != UnSet)) {
+@@ -8286,6 +8285,14 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 		case 0:
+ 			if (geo->level == 5) {
+ 				change = CH_MIGRATION;
++				if (geo->layout != ALGORITHM_LEFT_ASYMMETRIC) {
++					fprintf(stderr,
++					Name " Error. Requested Layout "
++					"not supported (left-asymmetric layout "
++					"is supported only)!\n");
++					change = -1;
++					goto analyse_change_exit;
++				}
+ 				check_devs = 1;
+ 			}
+ 			if (geo->level == 10) {
 
