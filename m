@@ -1,56 +1,54 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [PATCH/RFC] md/raid10: optimize read_balance() for 'far copies' arrays
-Date: Wed, 08 Jun 2011 16:42:27 +0900
-Message-ID: <877h8w93bw.fsf@gmail.com>
-References: <1307516445-3208-1-git-send-email-namhyung@gmail.com>
-	<20110608172157.4d6ac2a8@notabene.brown>
+From: Durval Menezes <durval.menezes@gmail.com>
+Subject: Re: Maximizing failed disk replacement on a RAID5 array
+Date: Wed, 8 Jun 2011 04:47:11 -0300
+Message-ID: <BANLkTi=4uHhNS7+WfcmvVSY11kDWe-e7ZQ@mail.gmail.com>
+References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
+	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
+	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>
+	<4DECF025.9040006@fnarfbargle.com>
+	<BANLkTi=jPiXLySacVZqDkeThdG80K_HTxQ@mail.gmail.com>
+	<4DECF841.1060906@fnarfbargle.com>
+	<BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
+	<BANLkTi=+2GFWRFKT0SCXRtkdn71msgDY=g@mail.gmail.com>
+	<4DEDB8B7.2070708@fnarfbargle.com>
+	<BANLkTimxsT+htp82Us9uVgSdFNgb0m4vkQ@mail.gmail.com>
+	<4DEF258A.8090600@fnarfbargle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110608172157.4d6ac2a8@notabene.brown> (NeilBrown's message of
-	"Wed, 8 Jun 2011 17:21:57 +1000")
+In-Reply-To: <4DEF258A.8090600@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Brad Campbell <brad@fnarfbargle.com>
+Cc: linux-raid@vger.kernel.org, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+Hello Brad,
 
-> On Wed,  8 Jun 2011 16:00:45 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Wed, Jun 8, 2011 at 4:32 AM, Brad Campbell <brad@fnarfbargle.com> wrote:
+> On 08/06/11 14:58, Durval Menezes wrote:
 >
->> If @conf->far_offset > 0, there is only 1 stripe so that we can treat
->> the array same as 'near' arrays. Furthermore we could calculate new
->> distance from the previous position even for the real 'far' array
->> cases if the position of given disk is already in the lowest stripe.
->> 
-> I agree that it still make sense to to balancing if far_offset != 0.
-> However  there is absolutely no point in your change to the calculation of
-> new_distance.
-> You only wont new_distance to contain a distance from head position if we
-> want to choose the device with the 'closest' head.  But we don't.  We want to
-> choose the device were the data is closest to the start of the device.  So
-> the current value for new_distance is correct.
+>> 1) can I simply skip over these sectors (using dd_rescue or multiple
+>> dd invocations) when off-line copying the old disk to the new one,
+>> trusting the RAID5 to reconstruct the data correctly from the other 2
 >
+> Noooooooooooo. As we stated early on, it you do that md will have no idea
+> that the data missing is actually missing as the drive won't return a read
+> error.
 
-Still can't understand why we choose the closest-to-the-start disk in
-case we could have possible sequencial access on other disk. Probably
-because of the lack of my understanding how md/disk works :(
+Even if a "repair" (echo "repair" >/sys/block/md1/md/sync_status,
+checking progress with "cat /proc/mdstat" and completion with "tail -f
+/var/log/messages | grep md" ) finishes with no errors?
 
+> does a repair take long on your machine? I find that a few repair runs
+> generally gets me enough re-writes to clear the dud sectors and allow an
+> offline clone.
 
-> If you would like to resubmit with just the first change I'll happily apply
-> the patch.
->
+I'm sorry if I did not make myself clear; I've already run both a
+"repair" on the RAID  (see above) and a "smart -t long" on the
+particular disk... I had about 40 bad sectors before, and now have
+just 4, but these 4 sectors persist as being marked in error... I
+think the "RAID repair" didn't touch them.
 
-OK. Will do that right soon.
-
-
-> If you have performed some tests and can demonstrate some cases where this
-> makes something faster, and can show us the results of those tests, I would
-> be even more happy!!!
->
-
-I wish I could. :) However, unfortunately, I don't have such a real system
-to test on.
-
-Thanks.
-
+Cheers,
+-- 
+  Durval.
