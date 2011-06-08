@@ -1,103 +1,36 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: from 2x RAID1 to 1x RAID6 ?
-Date: Wed, 08 Jun 2011 12:33:30 +0200
-Message-ID: <isnj71$rap$1@dough.gmane.org>
-References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com> <4DEEBB66.7080802@nybeta.com> <isng0m$8c9$1@dough.gmane.org> <4DEF4AC5.1090003@anonymous.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH] md/raid10: get rid of duplicated conditional expression
+Date: Wed,  8 Jun 2011 20:35:25 +0900
+Message-ID: <1307532925-1853-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DEF4AC5.1090003@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/06/2011 12:11, John Robinson wrote:
-> On 08/06/2011 10:38, David Brown wrote:
->> On 08/06/2011 01:59, Thomas Harold wrote:
->>> On 6/7/2011 4:07 PM, Maurice Hilarius wrote:
->>>> On 6/7/2011 12:12 PM, Stefan G. Weichinger wrote:
->>>>> Greetings, could you please advise me how to proceed?
->>>>>
->>>>> On a server I have 2 RAID1-arrays, each consisting of 2 TB-drives:
->>>>>
->>>>> ..
->>>>>
->>>>> Now I would like to move things to a more reliable RAID6 consisting of
->>>>> all the four TB-drives ...
->>>>>
->>>>> How to do that with minimum risk?
->>>>>
->>>>> ..
->>>>> Maybe I overlook a clever alternative?
->>>>
->>>> RAID 10 is as secure, and risk free, and much faster.
->>>> And will cause much less CPU load.
->>>>
->>>
->>> Well, with both a pair of RAID1 arrays and a pair of RAID-10 arrays, you
->>> can lose 2 disks without losing data, but only if the right 2 disks
->>> fail.
->>>
->>> With RAID6, any two of the four can fail without data loss.
->>>
->>
->> It /sounds/ like RAID6 is more reliable here because it can always
->> survive a second disk failure, while with RAID10 you have only a 66%
->> chance of surviving a second disk failure.
->>
->> However, how often does a disk fail? What is the chance of a random disk
->> failure in a given space of time? And how long will it go between one
->> disk failing, and it being replaced and the array rebuilt? If you figure
->> out these numbers, you'll have the probability of losing your RAID10
->> array due to the second critical disk failing.
->>
->> To pick some rough numbers - say you've got low reliability, cheap disks
->> with a 500,000 hour MTBF. If it takes you 3 days to replace a disk (over
->> the weekend), and 8 hours to rebuild, you have a risk period of 80
->> hours. That gives you a 0.016% chance of having the second disk failing.
->> Even if you consider that a rebuild is quite stressful on the critical
->> disk, it's not a big risk.
->
-> It's not so much that the mirror disc might fail that I'd be worried
-> about, it's that you might find the odd sector failure during the
-> rebuild - this is the reason why RAID5 is now so disliked, and the
-> reasons apply similarly to RAID1 and RAID10 too, even if you're only
-> relying on one disc ('s worth of data) being perfect rather than two or
-> more.
+Variable 'first' is initialized to zero and updated to @rdev->raid_disk
+only if it is greater than 0. Thus condition '>= first' always implies
+'>= 0' so the latter is not needed.
 
-I can see that problem, but it again boils down to probabilities.  The 
-chances of seeing an unrecoverable read error are very low, just as with 
-other disk errors.
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/raid10.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-The issue with RAID5 is that people often had large arrays with multiple 
-disks, and on a rebuild /every/ sector had to be read.  So if you have a 
-ten disk RAID5 and are rebuilding, you are reading from all other 9 
-disks - you have 9 times as high a chance of having an unrecoverable 
-read error ruin your day.
-
-I look forward to the day bad block lists and hot replace are ready in 
-mdraid - it will give us close to another disk's worth of redundancy 
-without the cost.  For example, if one half of your raid1 mirror fails 
-but is not totally dead (such as by having too many bad blocks), during 
-rebuild you can keep both the good and bad halves in place.  Then if 
-there is a read failure on the "good" half, you can probably still get 
-the data from the "bad" half.
-
->
-> Still, I don't have any stats to back this up...
->
-
-Statistics on these things are pretty much worthless unless you have 
-hundreds of systems deployed - either your array dies, or it does not. 
-It's like lottery tickets, but in reverse - no matter how many tickets 
-you buy, you can be confident that you won't win, despite statistics 
-that prove that /somebody/ wins each draw.
-
-So you install your RAID10 (or RAID6, if you prefer) system, and make 
-sure you keep backups.  And if you /do/ get hit by a double disk failure 
-in the wrong place, you spend the day restoring everything from the 
-backups.  When management complain that a 24 hour downtime doesn't fit 
-with their 99.99% uptime expectations, you remind them that this is 
-amortized over the next 27 years...
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index fc56bdd8c3fb..fcb86e86bc31 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1093,8 +1093,7 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	if (rdev->raid_disk >= 0)
+ 		first = last = rdev->raid_disk;
+ 
+-	if (rdev->saved_raid_disk >= 0 &&
+-	    rdev->saved_raid_disk >= first &&
++	if (rdev->saved_raid_disk >= first &&
+ 	    conf->mirrors[rdev->saved_raid_disk].rdev == NULL)
+ 		mirror = rdev->saved_raid_disk;
+ 	else
+-- 
+1.7.5.2
 
