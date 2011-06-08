@@ -1,8 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 03/21] imsm: FIX: Verify if migration record is loaded
-	correctly
-Date: Wed, 08 Jun 2011 18:09:58 +0200
-Message-ID: <20110608160958.24327.15155.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 04/21] imsm: FIX: Detect migration end during migration record
+	saving
+Date: Wed, 08 Jun 2011 18:10:06 +0200
+Message-ID: <20110608161006.24327.32399.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,70 +14,49 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Migration compatibility can be checked when general migration record
-is present.
+Checkpoint should be saved when migration is in progress only.
+End of reshape (based on passes status) should be detected and it should
+not cause abort of reshape/check-pointing/ operation.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   32 +++++++++++++++++++-------------
- 1 files changed, 19 insertions(+), 13 deletions(-)
+ super-intel.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 01ffcc8..269cb0a 100644
+index 269cb0a..3afa913 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -3038,8 +3038,8 @@ static int load_imsm_mpb(int fd, struct intel_super *super, char *devname)
- 
- 	if (lseek64(fd, dsize - (512 * 2), SEEK_SET) < 0) {
- 		if (devname)
--			fprintf(stderr,
--				Name ": Cannot seek to anchor block on %s: %s\n",
-+			fprintf(stderr, Name
-+				": Cannot seek to anchor block on %s: %s\n",
- 				devname, strerror(errno));
- 		return 1;
- 	}
-@@ -3836,16 +3836,17 @@ static int load_super_imsm(struct supertype *st, int fd, char *devname)
- 	}
- 
- 	/* load migration record */
--	load_imsm_migr_rec(super, NULL);
--
--	/* Check for unsupported migration features */
--	if (check_mpb_migr_compatibility(super) != 0) {
--		fprintf(stderr, Name ": Unsupported migration detected");
--		if (devname)
--			fprintf(stderr, " on %s\n", devname);
--		else
--			fprintf(stderr, " (IMSM).\n");
--		return 3;
-+	if (load_imsm_migr_rec(super, NULL) == 0) {
-+		/* Check for unsupported migration features */
-+		if (check_mpb_migr_compatibility(super) != 0) {
-+			fprintf(stderr,
-+				Name ": Unsupported migration detected");
-+			if (devname)
-+				fprintf(stderr, " on %s\n", devname);
-+			else
-+				fprintf(stderr, " (IMSM).\n");
-+			return 3;
-+		}
- 	}
- 
- 	return 0;
-@@ -7763,7 +7764,12 @@ abort:
+@@ -7760,6 +7760,8 @@ abort:
+  * Returns:
+  *	0: success
+  *	1: failure
++ *	2: failure, means no valid migration record
++ *		   / no general migration in progress /
+  ******************************************************************************/
  int save_checkpoint_imsm(struct supertype *st, struct mdinfo *info, int state)
  {
- 	struct intel_super *super = st->sb;
--	load_imsm_migr_rec(super, info);
-+	if (load_imsm_migr_rec(super, info) != 0) {
-+		dprintf("imsm: ERROR: Cannot read migration record "
-+			"for checkpoint save.\n");
-+		return 1;
-+	}
-+
+@@ -7771,8 +7773,8 @@ int save_checkpoint_imsm(struct supertype *st, struct mdinfo *info, int state)
+ 	}
+ 
  	if (__le32_to_cpu(super->migr_rec->blocks_per_unit) == 0) {
- 		dprintf("ERROR: blocks_per_unit = 0!!!\n");
- 		return 1;
+-		dprintf("ERROR: blocks_per_unit = 0!!!\n");
+-		return 1;
++		dprintf("imsm: no migration in progress.\n");
++		return 2;
+ 	}
+ 
+ 	super->migr_rec->curr_migr_unit =
+@@ -8842,7 +8844,9 @@ static int imsm_manage_reshape(
+ 
+ 		sra->reshape_progress = next_step;
+ 
+-		if (save_checkpoint_imsm(st, sra, UNIT_SRC_NORMAL)) {
++		if (save_checkpoint_imsm(st, sra, UNIT_SRC_NORMAL) == 1) {
++			/* ignore error == 2, this can mean end of reshape here
++			 */
+ 			dprintf("imsm: Cannot write checkpoint to "
+ 				"migration record (UNIT_SRC_NORMAL)\n");
+ 			goto abort;
 
