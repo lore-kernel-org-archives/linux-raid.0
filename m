@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/21] imsm: FIX: Use macros to data access
-Date: Wed, 08 Jun 2011 18:10:30 +0200
-Message-ID: <20110608161030.24327.49166.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 08/21] imsm: FIX: Calculate backup location based on metadata
+	information
+Date: Wed, 08 Jun 2011 18:10:38 +0200
+Message-ID: <20110608161038.24327.55588.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,44 +14,25 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Metadata fields has to be accessed using proper macros.
+Use metadata information to calculate backup write offset.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ super-intel.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 3baea6a..fea7a3a 100644
+index fea7a3a..0d46132 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -1822,7 +1822,7 @@ static __u64 blocks_per_migr_unit(struct intel_super *super,
- 		migr_chunk = migr_strip_blocks_resync(dev);
- 		disks = imsm_num_data_members(dev, 0);
- 		blocks_per_unit = stripes_per_unit * migr_chunk * disks;
--		stripe = __le32_to_cpu(map->blocks_per_strip) * disks;
-+		stripe = __le16_to_cpu(map->blocks_per_strip) * disks;
- 		segment = blocks_per_unit / stripe;
- 		block_rel = blocks_per_unit - segment * stripe;
- 		parity_depth = parity_segment_depth(dev);
-@@ -8716,7 +8716,7 @@ static int imsm_manage_reshape(
- 	ndata = imsm_num_data_members(dev, 0);
- 	odata = imsm_num_data_members(dev, 1);
+@@ -7850,7 +7850,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
  
--	chunk = map_src->blocks_per_strip * 512;
-+	chunk = __le16_to_cpu(map_src->blocks_per_strip) * 512;
- 	old_data_stripe_length = odata * chunk;
+ 	write_offset = ((unsigned long long)
+ 			__le32_to_cpu(migr_rec->dest_1st_member_lba) +
+-			info->data_offset) * 512;
++			__le32_to_cpu(map_dest->pba_of_lba0)) * 512;
  
- 	migr_rec = super->migr_rec;
-@@ -8765,7 +8765,8 @@ static int imsm_manage_reshape(
- 		if ((current_position + next_step) > max_position)
- 			next_step = max_position - current_position;
- 
--		start = (map_src->pba_of_lba0 + dev->reserved_blocks +
-+		start = (__le32_to_cpu(map_src->pba_of_lba0) +
-+			 __le32_to_cpu(dev->reserved_blocks) +
- 			 current_position) * 512;
- 
- 		/* allign reading start to old geometry */
+ 	unit_len = __le32_to_cpu(migr_rec->dest_depth_per_unit) * 512;
+ 	if (posix_memalign((void **)&buf, 512, unit_len) != 0)
 
