@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 20/21] imsm: Optimize expansion speed when no backup is
-	required
-Date: Wed, 08 Jun 2011 18:12:14 +0200
-Message-ID: <20110608161214.24327.24869.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 21/21] MAN: Man update for check-pointing
+Date: Wed, 08 Jun 2011 18:12:22 +0200
+Message-ID: <20110608161222.24327.36035.stgit@gklab-128-013.igk.intel.com>
 References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,37 +13,37 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-When no reshape backup is required (e.g. OLCE after critical section),
-check-pointing can use bigger steps than backup space allows for.
-
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ mdadm.8.in |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index fae1218..71a1189 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -8855,11 +8855,19 @@ static int imsm_manage_reshape(
- 					"migration record (UNIT_SRC_IN_CP_AREA)\n");
- 				goto abort;
- 			}
-+		} else {
-+			/* set next step to use whole border area */
-+			border /= next_step;
-+			if (border > 1)
-+				next_step *= border;
- 		}
- 		/* When data backed up, checkpoint stored,
- 		 * kick the kernel to reshape unit of data
- 		 */
- 		next_step = next_step + sra->reshape_progress;
-+		/* limit next step to array max position */
-+		if (next_step > max_position)
-+			next_step = max_position;
- 		sysfs_set_num(sra, NULL, "suspend_lo", sra->reshape_progress);
- 		sysfs_set_num(sra, NULL, "suspend_hi", next_step);
- 		sra->reshape_progress = next_step;
+diff --git a/mdadm.8.in b/mdadm.8.in
+index e1d5651..f549dbf 100644
+--- a/mdadm.8.in
++++ b/mdadm.8.in
+@@ -2225,8 +2225,8 @@ succeed.
+ This is for the following reasons:
+ 
+ .IP 1.
+-Intel's native IMSM check-pointing is not fully implemented yet.
+-This causes IMSM incompatibility during the grow process: an array
++Intel's native IMSM check-pointing is not fully tested yet.
++This can causes IMSM incompatibility during the grow process: an array
+ which is growing cannot roam between Microsoft Windows(R) and Linux
+ systems.
+ 
+@@ -2234,6 +2234,11 @@ systems.
+ Interrupting a grow operation is not recommended, because it
+ has not been fully tested for Intel's IMSM container format yet.
+ 
++.PP
++Note: Intel's native checkpointing doesn't use
++.B --backup-file
++option and it is transparent for assembly feature.
++
+ .SS SIZE CHANGES
+ Normally when an array is built the "size" is taken from the smallest
+ of the drives.  If all the small drives in an arrays are, one at a
 
