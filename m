@@ -1,70 +1,62 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH v2] md/raid10: share pages between read and write bio's during recovery
-Date: Fri, 10 Jun 2011 02:31:08 +0900
-Message-ID: <1307640668-15173-1-git-send-email-namhyung@gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Why move all map_sg/unmap_sg for slave channel to its client?
+Date: Thu, 9 Jun 2011 11:28:43 -0700
+Message-ID: <BANLkTikzDEx2netonGyhskYFtiAEAxq5XQ@mail.gmail.com>
+References: <4DF06E29.4010807@st.com>
+	<BANLkTik9kZjJs5H2kvM+xAtd_CR5NA0dDw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTik9kZjJs5H2kvM+xAtd_CR5NA0dDw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: viresh kumar <viresh.kumar@st.com>, "Koul, Vinod" <vinod.koul@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, anemo@mba.ocn.ne.jp, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, Bhupesh SHARMA <bhupesh.sharma@st.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When performing a recovery, only first 2 slots in r10_bio are in use,
-for read and write respectively. However all of pages in the write bio
-are never used and just replaced to read bio's when the read completes.
+On Thu, Jun 9, 2011 at 2:38 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
+> On Thu, Jun 9, 2011 at 8:54 AM, viresh kumar <viresh.kumar@st.com> wrote:
+>
+>> I thought map_sg/unmap_sg for slave channels will be handled according
+>> to the flags passed in prep_slave_sg(). But then i found following patch:
+>> (...)
+>> I don't have much knowledge about that discussion, but i think this should be left
+>> configurable.
+>> If the client wants to control map/unmap then it can simply pass
+>> DMA_COMPL_SKIP_DEST_UNMAP | DMA_COMPL_SKIP_SRC_UNMAP in flags. I didn't wanted to
+>> skip this in my driver and so i don't pass them.
+>
+> What if the same driver is used on many different platforms like say
+> drivers/tty/serial/amba-pl011.c, and some of the platforms using it
+> has DMA engines that does not implement mapping/unmapping of
+> the passed sglist?
+>
+> In that case I think you have to modify all drivers in drivers/dma/*
+> to do this mapping, and then you could just make it a required behaviour
+> and skip the flags altogether.
+>
+> But apparently that approach was blocked at one point so let's see
+> what the others say.
 
-Get rid of those unused pages and share read pages properly.
+My problem with automatic unmapping support is that the dma-driver
+really does not have a chance to get it right except for the trivially
+straightforward cases.  One need only look at the current bustage of
+raid5 acceleration with respect to overlapping mappings and arm v6.
+The dma-driver just knows how to perform "this" operation on "this"
+dma address.  It does not know the lifetime of the mapping, or even if
+it has the actual dma handle for unmapping versus an offset
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/raid10.c |   24 +++++++++++++-----------
- 1 files changed, 13 insertions(+), 11 deletions(-)
+For the raid case I've currently convinced myself that the raid client
+needs to get directly involved in dma mapping management, rather than
+teach all dma drivers a language of how to unmap and when.  Not only
+will this fix the overlapping, but it also eliminates the need to map
+and remap because the raid client knows the lifetime of  a stripe_head
+while the driver only knows the lifetime of a given stripe operation.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a53779ffdf89..dea73bdb99b8 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -123,7 +123,15 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	for (j = 0 ; j < nalloc; j++) {
- 		bio = r10_bio->devs[j].bio;
- 		for (i = 0; i < RESYNC_PAGES; i++) {
--			page = alloc_page(gfp_flags);
-+			if (j == 1 && !test_bit(MD_RECOVERY_SYNC,
-+						&conf->mddev->recovery)) {
-+				/* we can share bv_page's during recovery */
-+				struct bio *rbio = r10_bio->devs[0].bio;
-+				page = rbio->bi_io_vec[i].bv_page;
-+				get_page(page);
-+			} else {
-+				page = alloc_page(gfp_flags);
-+			}
- 			if (unlikely(!page))
- 				goto out_free_pages;
- 
-@@ -1360,20 +1368,14 @@ done:
- static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
- {
- 	conf_t *conf = mddev->private;
--	int i, d;
--	struct bio *bio, *wbio;
--
-+	int d;
-+	struct bio *wbio;
- 
--	/* move the pages across to the second bio
-+	/*
-+	 * share the pages with the first bio
- 	 * and submit the write request
- 	 */
--	bio = r10_bio->devs[0].bio;
- 	wbio = r10_bio->devs[1].bio;
--	for (i=0; i < wbio->bi_vcnt; i++) {
--		struct page *p = bio->bi_io_vec[i].bv_page;
--		bio->bi_io_vec[i].bv_page = wbio->bi_io_vec[i].bv_page;
--		wbio->bi_io_vec[i].bv_page = p;
--	}
- 	d = r10_bio->devs[1].devnum;
- 
- 	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
--- 
-1.7.5.2
+For slave-dma maybe there is a lot of common un-mapping logic that can
+be reused, but I think that comes from a separate smart library that
+understands the dma mapping lifetimes of a given class of clients.
+Leave the dma-drivers to just be dumb operators on anonymous dma
+addresses.
 
+--
+Dan
