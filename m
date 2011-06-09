@@ -1,43 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: [BUG?] RAID not properly assembled w/ kernel 2.6.39.x
-Date: Thu, 09 Jun 2011 10:25:39 -0400
-Message-ID: <4DF0D7E3.1050501@turmel.org>
-References: <201106091521.54769.ml_linux_raid@mortal-soul.de>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/4] IMSM Checkpointing Bug Fix Series (2)
+Date: Thu, 09 Jun 2011 18:29:01 +0200
+Message-ID: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201106091521.54769.ml_linux_raid@mortal-soul.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Dahl <ml_linux_raid@mortal-soul.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Hi Matthias,
+The following series contains 2 fixes for IMSM Checkpointing:
+        1. imsm: FIX: Disable automatic metadata rollback for broken reshape
+        2. imsm: FIX: Use function to obtain array layout
 
-On 06/09/2011 09:21 AM, Matthias Dahl wrote:
-> Hi all.
-> 
-> I tried updating to 2.6.39.1 from 2.6.38.2 and failed due to some md raid
-> issues I wasn't able to solve even after hours.   I hope someone can help
-> me out- I'd really appreciate it.
+It enables IMSM array creation:
+        1. FIX: Cannot create volume
+        2. imsm: FIX: Cannot create volume
+This fix contains 2 patches but any single patch of those 2 help.
+I think both should be placed in mdadm.
 
-[...]
+Checkpointing status:
+	- Raid0: OK
+	- Raid5: Data corruption problem when stripes are restored from backup (work in progress)
 
-> I'm sorry for this chaotic explanation but as you can see it's quite hard
-> to explain. :-(
 
-Well, you are swimming against the tide:  the kernel has been steadily losing consistent device names, for what the kernel devs feel are good and proper reasons.  The recommended alternative is to use filesystem labels, or even better, UUIDs in your fstab.  Then you can go back to no mdadm.conf file in your initramfs, and carry on.
+BR
+Adam
 
-(*I'm* not going to command the tide to stop.)
+---
 
-> Again, this works fine with any kernel prior to 2.6.39 and adding a  conf
-> to the initramfs fixes  mostly anything but the additional partition prob
-> which has me worrying that something else might be wrong.
-> 
-> Like said earlier, I'd really appreciate anyone shedding  some  light  on
-> this. Thanks a lot in advance...
+Adam Kwolek (4):
+      imsm: FIX: Disable automatic metadata rollback for broken reshape
+      imsm: FIX: Use function to obtain array layout
+      FIX: Cannot create volume
+      imsm: FIX: Cannot create volume
 
-HTH,
 
-Phil
+ Create.c      |    4 ++--
+ super-intel.c |   24 +++++++++++++++++-------
+ 2 files changed, 19 insertions(+), 9 deletions(-)
+
+-- 
+Signature
