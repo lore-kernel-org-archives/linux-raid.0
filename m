@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 3/4] imsm: FIX: Use function to obtain array layout
-Date: Thu, 09 Jun 2011 18:29:29 +0200
-Message-ID: <20110609162929.690.53762.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 4/4] imsm: FIX: Disable automatic metadata rollback for broken
+	reshape
+Date: Thu, 09 Jun 2011 18:29:39 +0200
+Message-ID: <20110609162939.690.44058.stgit@gklab-128-013.igk.intel.com>
 References: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,36 +14,43 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-Function imsm_level_to_layout() should be use to get array layout.
+mdmon cannot rollback metadata changes automatically.
+It can break reshape process in the way that in case of reshape break
+user will not be able to deal with broken reshape due to lack of information
+about reshape geometry.
+
+mdadm (process that invokes reshape) doesn't make any rollback to allow
+for user action. mdmon should not do this either unless it knows for sure
+it is save. such knowledge is not available for automatic rollback.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ super-intel.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index e094b85..8bfe40a 100644
+index 8bfe40a..5e8b834 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -7733,8 +7733,7 @@ int save_backup_imsm(struct supertype *st,
- 	if (open_backup_targets(info, new_disks, targets))
- 		goto abort;
- 
--	if (map_dest->raid_level != 0)
--		dest_layout = ALGORITHM_LEFT_ASYMMETRIC;
-+	dest_layout = imsm_level_to_layout(map_dest->raid_level);
- 	dest_chunk = __le16_to_cpu(map_dest->blocks_per_strip) * 512;
- 
- 	if (restore_stripes(targets, /* list of dest devices */
-@@ -8781,8 +8780,7 @@ static int imsm_manage_reshape(
- 	}
- 
- 	max_position = sra->component_size * ndata;
--	if (map_src->raid_level != 0)
--		source_layout = ALGORITHM_LEFT_ASYMMETRIC;
-+	source_layout = imsm_level_to_layout(map_src->raid_level);
- 
- 	while (__le32_to_cpu(migr_rec->curr_migr_unit) <
- 	       __le32_to_cpu(migr_rec->num_migr_units)) {
+@@ -5865,14 +5865,17 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		} else {
+ 			if (a->last_checkpoint == 0 && a->prev_action == reshape) {
+ 				/* for some reason we aborted the reshape.
+-				 * Better clean up
+-				 */
++				 *
++				 * disable automatic metadata rollback
++				 * user action is required to recover process
++				 *
+ 				struct imsm_map *map2 = get_imsm_map(dev, 1);
+ 				dev->vol.migr_state = 0;
+ 				dev->vol.migr_type = 0;
+ 				dev->vol.curr_migr_unit = 0;
+ 				memcpy(map, map2, sizeof_imsm_map(map2));
+ 				super->updates_pending++;
++				*/
+ 			}
+ 			if (a->last_checkpoint >= a->info.component_size) {
+ 				unsigned long long array_blocks;
 
