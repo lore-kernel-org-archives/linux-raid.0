@@ -1,139 +1,138 @@
-From: Matthias Dahl <ml_linux_raid@mortal-soul.de>
-Subject: [BUG?] RAID not properly assembled w/ kernel 2.6.39.x
-Date: Thu, 9 Jun 2011 15:21:54 +0200
-Message-ID: <201106091521.54769.ml_linux_raid@mortal-soul.de>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re:
+Date: Thu, 09 Jun 2011 09:39:19 -0400
+Message-ID: <4DF0CD07.3040401@turmel.org>
+References: <20110609121641.298530@gmx.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110609121641.298530@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dragon <Sunghost@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all.
+On 06/09/2011 08:16 AM, Dragon wrote:
+> Yes if all things get back to normal i will change to raid6. that was=
+ my idea for the future too.
+> here the result of the script:
+>=20
+> ./lsdrv
+> **Warning** The following utility(ies) failed to execute:
+>   pvs
+>   lvs
+> Some information may be missing.
+>=20
+> PCI [pata_atiixp] 00:14.1 IDE interface: ATI Technologies Inc SB700/S=
+B800 IDE Controller
+>  =C3=A2=C3=A2scsi 0:0:0:0 ATA SAMSUNG HD154UI {S1XWJ1WZ401747}
+>  =C3=A2  =C3=A2=C3=A2sda: [8:0] MD raid5 (none/13) 1.36t md0 inactive=
+ spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2     =C3=A2=C3=A2md0: [9:0] Empty/Unknown 0.00k
+>  =C3=A2=C3=A2scsi 0:0:1:0 ATA SAMSUNG HD154UI {S1XWJ1WZ405098}
+>  =C3=A2  =C3=A2=C3=A2sdb: [8:16] MD raid5 (none/13) 1.36t md0 inactiv=
+e spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 1:0:0:0 ATA SAMSUNG SV2044D {0244J1BN626842}
+>     =C3=A2=C3=A2sdc: [8:32] Partitioned (dos) 19.01g
+>        =C3=A2=C3=A2sdc1: [8:33] (ext3) 18.17g {6858fc38-9fee-4ab5-813=
+5-029f305b9198}
+>        =C3=A2  =C3=A2=C3=A2Mounted as /dev/disk/by-uuid/6858fc38-9fee=
+-4ab5-8135-029f305b9198 @ /
+>        =C3=A2=C3=A2sdc2: [8:34] Partitioned (dos) 1.00k
+>        =C3=A2=C3=A2sdc5: [8:37] (swap) 854.99m {f67c7f23-e5ac-4c05-99=
+2c-a9a494687026}
+> PCI [sata_mv] 02:00.0 SCSI storage controller: Marvell Technology Gro=
+up Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
+>  =C3=A2=C3=A2scsi 2:0:0:0 ATA SAMSUNG HD154UI {S1XWJD2Z907626}
+>  =C3=A2  =C3=A2=C3=A2sdd: [8:48] MD raid5 (none/13) 1.36t md0 inactiv=
+e spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 4:0:0:0 ATA SAMSUNG HD154UI {S1XWJ90ZA03442}
+>  =C3=A2  =C3=A2=C3=A2sde: [8:64] MD raid5 (none/13) 1.36t md0 inactiv=
+e spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 6:0:0:0 ATA SAMSUNG HD154UI {S1XWJ9AB200390}
+>  =C3=A2  =C3=A2=C3=A2sdf: [8:80] MD raid5 (none/13) 1.36t md0 inactiv=
+e spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 8:0:0:0 ATA SAMSUNG HD154UI {61833B761A63RP}
+>     =C3=A2=C3=A2sdg: [8:96] MD raid5 (none/13) 1.36t md0 inactive spa=
+re {975d6eb2-285e-ed11-021d-f236c2d05073}
+> PCI [sata_promise] 04:02.0 Mass storage controller: Promise Technolog=
+y, Inc. PDC40718 (SATA 300 TX4) (rev 02)
+>  =C3=A2=C3=A2scsi 3:0:0:0 ATA SAMSUNG HD154UI {S1XWJD5B201174}
+>  =C3=A2  =C3=A2=C3=A2sdh: [8:112] MD raid5 (none/13) 1.36t md0 inacti=
+ve spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 5:0:0:0 ATA SAMSUNG HD154UI {S1XWJ9CB201815}
+>  =C3=A2  =C3=A2=C3=A2sdi: [8:128] MD raid5 (none/13) 1.36t md0 inacti=
+ve spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 7:x:x:x [Empty]
+>  =C3=A2=C3=A2scsi 9:0:0:0 ATA SAMSUNG HD154UI {A6311B761A3XPB}
+>     =C3=A2=C3=A2sdj: [8:144] MD raid5 (none/13) 1.36t md0 inactive sp=
+are {975d6eb2-285e-ed11-021d-f236c2d05073}
+> PCI [ahci] 00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 =
+SATA Controller [IDE mode]
+>  =C3=A2=C3=A2scsi 10:0:0:0 ATA SAMSUNG HD154UI {S1XWJ1KS915803}
+>  =C3=A2  =C3=A2=C3=A2sdk: [8:160] MD raid5 (none/13) 1.36t md0 inacti=
+ve spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 11:0:0:0 ATA SAMSUNG HD154UI {S1XWJ1KS915802}
+>  =C3=A2  =C3=A2=C3=A2sdl: [8:176] MD raid5 (none/13) 1.36t md0 inacti=
+ve spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 12:0:0:0 ATA SAMSUNG HD154UI {S1XWJ1KSC08024}
+>  =C3=A2  =C3=A2=C3=A2sdm: [8:192] MD raid5 (none/13) 1.36t md0 inacti=
+ve spare {975d6eb2-285e-ed11-021d-f236c2d05073}
+>  =C3=A2=C3=A2scsi 13:0:0:0 ATA SAMSUNG HD154UI {S1XWJ1KS915804}
+>     =C3=A2=C3=A2sdn: [8:208] MD raid5 (13) 1.36t inactive {975d6eb2-2=
+85e-ed11-021d-f236c2d05073}
+>=20
 
-I tried updating to 2.6.39.1 from 2.6.38.2 and failed due to some md raid
-issues I wasn't able to solve even after hours.   I hope someone can help
-me out- I'd really appreciate it.
+Very interesting.  You've exposed a limitation of my script.  I'll have=
+ to reconsider how I extract information from members of a partially st=
+arted array.
 
-I've running two RAID1s (boot, swap) and one partitioned RAID5 (3 partitions):
+Its also clear that you are using a fast-boot kernel with parallel prob=
+ing of your scsi hosts.  That's why your device names sometimes change.
 
-dreamgate ~ # mdadm --misc -D /dev/md{0,1,_d0}
-/dev/md0:
-        Version : 0.90
-  Creation Time : Sat Aug  8 03:09:54 2009
-     Raid Level : raid1
-     Array Size : 779008 (760.88 MiB 797.70 MB)
-  Used Dev Size : 779008 (760.88 MiB 797.70 MB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+/dev/sdn is definitely the holdout, though.  Notice the "(13)" where th=
+e others are "(none/13)".
 
-    Update Time : Thu Jun  9 14:49:31 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+Before continuing, I've made the assumption that "mdadm --grow -n 12" w=
+as the last major operation attempted, and this is was put you in your =
+current predicament?  If so, and you interrupted it, did you try to ass=
+emble the array with the --backup-file option from the shrink operation=
+?  If you didn't, please stop the array, and retry the assemble (with a=
+ll 13 devices) and the --backup-file option.  Try twice, if needed, add=
+ing "--force" the second time.
 
-           UUID : c6c29c17:d2088f05:bfe78010:bc810f04
-         Events : 0.74
+If that works, sit tight until the reshape is complete.
 
-    Number   Major   Minor   RaidDevice State
-       0       8       33        0      active sync   /dev/sdc1
-       1       8        1        1      active sync   /dev/sda1
-       2       8       49        2      active sync   /dev/sdd1
-/dev/md1:
-        Version : 0.90
-  Creation Time : Sat Aug  8 03:10:33 2009
-     Raid Level : raid1
-     Array Size : 4000064 (3.81 GiB 4.10 GB)
-  Used Dev Size : 4000064 (3.81 GiB 4.10 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 1
-    Persistence : Superblock is persistent
+If that was already tried, or doesn't change the situation, here's what=
+ I recommend:
 
-    Update Time : Thu Jun  9 14:49:31 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+Stop the array: "mdadm -S /dev/md0"
 
-           UUID : f4f3dfc8:812e35f6:bfe78010:bc810f04
-         Events : 0.30
+Recreate the array "mdadm -C /dev/md0 -l 5 -n 13 -e 0.90 -c 64 --assume=
+-clean /dev/sd{k,d,l,m,a,b,e,n,f,g,h,i,j}"
 
-    Number   Major   Minor   RaidDevice State
-       0       8       34        0      active sync   /dev/sdc2
-       1       8        2        1      active sync   /dev/sda2
-       2       8       50        2      active sync   /dev/sdd2
-/dev/md_d0:
-        Version : 1.0
-  Creation Time : Sat Aug  8 03:46:31 2009
-     Raid Level : raid5
-     Array Size : 1943961088 (1853.91 GiB 1990.62 GB)
-  Used Dev Size : 971980544 (926.95 GiB 995.31 GB)
-   Raid Devices : 3
-  Total Devices : 3
-    Persistence : Superblock is persistent
+The order in {} matters! The option "--assume-clean" is vital!
 
-    Update Time : Thu Jun  9 14:49:32 2011
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+You will be warned that the members appear to be part of another array.=
+  Continue.
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Do *NOT* mount the array!
 
-           Name : localhost.localdomain:d0
-           UUID : fbbdaaca:b89e291b:784b7787:a4b65ebd
-         Events : 5080856
+Try a non-destructive fsck: "fsck -n /dev/md0"
 
-    Number   Major   Minor   RaidDevice State
-       0       8       35        0      active sync   /dev/sdc3
-       1       8        3        1      active sync   /dev/sda3
-       3       8       51        2      active sync   /dev/sdd3
+If that has a huge number of errors, stop the array, and recreate again=
+, swapping /dev/sdd and /dev/sdn, then repeat the fsck:
 
-This worked fine since day one actually. I'm using Gentoo x86_64 w/ mdadm
-3.1.5 and an initramfs created by genkernel to start the raids and  mount
-root which is on one of those RAID5 partitions.
+"mdadm -C /dev/md0 -l 5 -n 13 -e 0.90 -c 64 --assume-clean /dev/sd{k,n,=
+l,m,a,b,e,d,f,g,h,i,j}"
 
-The  initramfs  simply does a "mdadm --assemble --scan" w/o a mdadm.conf.
-This worked fine with any kernel prior to 2.6.39.x. Now whatever I do, it
-does not create the devices as usual like: /dev/md0 /dev/md1 /dev/md_d0pX
-where X is {1..3}. It suffixes the unpartitioned devices w/ "_0" which is
-due to the homehost not matching (which was never a problem) and has even
-more problems with the partitioned RAID5. Those end up as md127pX in /dev
-and localhost.localdomain:d0 in /dev/md.    And depending on what you do,
-you even get an additional partition  p4  like  when  simply  adding  the
-following mdadm.conf to the initramfs  so  there  is  no   auto-detection
-necessary:
+If you get a good, or mostly good fsck, you've found the right combinat=
+ion, and you can try the shrink operations again.
 
-ARRAY /dev/md0 level=raid1 num-devices=3 UUID=c6c29c17:d2088f05:bfe78010:bc810f04
-ARRAY /dev/md1 level=raid1 num-devices=3 UUID=f4f3dfc8:812e35f6:bfe78010:bc810f04
-ARRAY /dev/md_d0 level=raid5 metadata=1.0 auto=mdp num-devices=3 UUID=fbbdaaca:b89e291b:784b7787:a4b65ebd name=localhost.localdomain:d0
-
-I've experimented with homehost but never got to a point where everything
-was simply right again.   Setting homehost to "<ignore>" changed nothing.
-Changing it to "localhost.localdomain" fixed the problem with the  prefix
-and the suffixes but the numbering (md127 instead of md_d0) wasn't  still
-right, no partitions were created in /dev/md/ (but in /dev) and  I  ended
-up with one additional partition (4).
-
-I'm sorry for this chaotic explanation but as you can see it's quite hard
-to explain. :-(
-
-Again, this works fine with any kernel prior to 2.6.39 and adding a  conf
-to the initramfs fixes  mostly anything but the additional partition prob
-which has me worrying that something else might be wrong.
-
-Like said earlier, I'd really appreciate anyone shedding  some  light  on
-this. Thanks a lot in advance...
-
-So long,
-matthias.
+Phil
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
