@@ -1,46 +1,61 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 0/4] IMSM Checkpointing Bug Fix Series (2)
-Date: Thu, 09 Jun 2011 18:29:01 +0200
-Message-ID: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/4] imsm: FIX: Cannot create volume
+Date: Thu, 09 Jun 2011 18:29:12 +0200
+Message-ID: <20110609162912.690.5879.stgit@gklab-128-013.igk.intel.com>
+References: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-The following series contains 2 fixes for IMSM Checkpointing:
-        1. imsm: FIX: Disable automatic metadata rollback for broken reshape
-        2. imsm: FIX: Use function to obtain array layout
+getinfo_super_imsm_volume() clears entire 'info' structure before filling with new
+information. Disk number and raid_disk can be required later by caller
+but it is lost.
 
-It enables IMSM array creation:
-        1. FIX: Cannot create volume
-        2. imsm: FIX: Cannot create volume
-This fix contains 2 patches but any single patch of those 2 help.
-I think both should be placed in mdadm.
+Restore disk number information in getinfo_super_imsm_volume() call.
 
-Checkpointing status:
-	- Raid0: OK
-	- Raid5: Data corruption problem when stripes are restored from backup (work in progress)
-
-
-BR
-Adam
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (4):
-      imsm: FIX: Disable automatic metadata rollback for broken reshape
-      imsm: FIX: Use function to obtain array layout
-      FIX: Cannot create volume
-      imsm: FIX: Cannot create volume
+ super-intel.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
+diff --git a/super-intel.c b/super-intel.c
+index 5c840ec..e094b85 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2075,11 +2075,18 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	unsigned int component_size_alligment;
+ 	int map_disks = info->array.raid_disks;
+ 
+-	memset(info, 0, sizeof(*info));
+ 	if (prev_map)
+ 		map_to_analyse = prev_map;
+ 
+ 	dl = super->disks;
++	while (dl) {
++		if (dl->index == info->disk.number)
++			break;
++		dl = dl->next;
++	}
++	if (!dl)
++		dl = super->disks;
++	memset(info, 0, sizeof(*info));
+ 
+ 	info->container_member	  = super->current_vol;
+ 	info->array.raid_disks    = map->num_members;
+@@ -2147,6 +2154,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	if (dl) {
+ 		info->disk.major = dl->major;
+ 		info->disk.minor = dl->minor;
++		info->disk.number = dl->index;
++		info->disk.raid_disk = dl->index;
+ 	}
+ 
+ 	info->data_offset	  = __le32_to_cpu(map_to_analyse->pba_of_lba0);
 
- Create.c      |    4 ++--
- super-intel.c |   24 +++++++++++++++++-------
- 2 files changed, 19 insertions(+), 9 deletions(-)
-
--- 
-Signature
