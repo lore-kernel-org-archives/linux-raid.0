@@ -1,179 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Triple-parity raid6
-Date: Thu, 9 Jun 2011 22:04:38 +1000
-Message-ID: <20110609220438.26336b27@notabene.brown>
-References: <isp2g2$rf$1@dough.gmane.org>
-	<20110609114954.243e9e22@notabene.brown>
-	<isqb2o$g0s$1@dough.gmane.org>
+From: Nagilum <nagilum@nagilum.org>
+Subject: Re: Possible to use multiple disk to bypass I/O wait?
+Date: Thu, 09 Jun 2011 14:06:16 +0200
+Message-ID: <20110609140616.20962w476u7juc00@cakebox.homeunix.net>
+References: <BANLkTimFOaJoMnwid1F+ghVwkBgJi2FymQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+ charset=ISO-8859-2;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <isqb2o$g0s$1@dough.gmane.org>
+In-Reply-To: <BANLkTimFOaJoMnwid1F+ghVwkBgJi2FymQ@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
-Cc: linux-raid@vger.kernel.org
+To: Emmanuel Noobadmin <centos.admin@gmail.com>
+Cc: CentOS mailing list <centos@centos.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 09 Jun 2011 13:32:59 +0200 David Brown <david@westcontrol.com> =
-wrote:
-
-> On 09/06/2011 03:49, NeilBrown wrote:
-> > On Thu, 09 Jun 2011 02:01:06 +0200 David Brown<david.brown@hesbynet=
-t.no>
-> > wrote:
-> >
-> >> Has anyone considered triple-parity raid6 ?  As far as I can see, =
-it
-> >> should not be significantly harder than normal raid6 - either  to
-> >> implement, or for the processor at run-time.  Once you have the GF=
-(2=E2=81=B8)
-> >> field arithmetic in place for raid6, it's just a matter of making
-> >> another parity block in the same way but using a different generat=
-or:
-> >>
-> >> P =3D D_0 + D_1 + D_2 + .. + D_(n.1)
-> >> Q =3D D_0 + g.D_1 + g=C2=B2.D_2 + .. + g^(n-1).D_(n.1)
-> >> R =3D D_0 + h.D_1 + h=C2=B2.D_2 + .. + h^(n-1).D_(n.1)
-> >>
-> >> The raid6 implementation in mdraid uses g =3D 0x02 to generate the=
- second
-> >> parity (based on "The mathematics of RAID-6" - I haven't checked t=
-he
-> >> source code).  You can make a third parity using h =3D 0x04 and th=
-en get a
-> >> redundancy of 3 disks.  (Note - I haven't yet confirmed that this =
-is
-> >> valid for more than 100 data disks - I need to make my checker pro=
-gram
-> >> more efficient first.)
-> >>
-> >> Rebuilding a disk, or running in degraded mode, is just an obvious
-> >> extension to the current raid6 algorithms.  If you are missing thr=
-ee
-> >> data blocks, the maths looks hard to start with - but if you expre=
-ss the
-> >> equations as a set of linear equations and use standard matrix inv=
-ersion
-> >> techniques, it should not be hard to implement.  You only need to =
-do
-> >> this inversion once when you find that one or more disks have fail=
-ed -
-> >> then you pre-compute the multiplication tables in the same way as =
-is
-> >> done for raid6 today.
-> >>
-> >> In normal use, calculating the R parity is no more demanding than
-> >> calculating the Q parity.  And most rebuilds or degraded situation=
-s will
-> >> only involve a single disk, and the data can thus be re-constructe=
-d
-> >> using the P parity just like raid5 or two-parity raid6.
-> >>
-> >>
-> >> I'm sure there are situations where triple-parity raid6 would be
-> >> appealing - it has already been implemented in ZFS, and it is only=
- a
-> >> matter of time before two-parity raid6 has a real probability of h=
-itting
-> >> an unrecoverable read error during a rebuild.
-> >>
-> >>
-> >> And of course, there is no particular reason to stop at three pari=
-ty
-> >> blocks - the maths can easily be generalised.  1, 2, 4 and 8 can b=
-e used
-> >> as generators for quad-parity (checked up to 60 disks), and adding=
- 16
-> >> gives you quintuple parity (checked up to 30 disks) - but that's m=
-aybe
-> >> getting a bit paranoid.
-> >>
-> >>
-> >> ref.:
-> >>
-> >> <http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf>
-> >> <http://blogs.oracle.com/ahl/entry/acm_triple_parity_raid>
-> >> <http://queue.acm.org/detail.cfm?id=3D1670144>
-> >> <http://blogs.oracle.com/ahl/entry/triple_parity_raid_z>
-> >>
-> >
-> >   -ENOPATCH  :-)
-> >
-> > I have a series of patches nearly ready which removes a lot of the =
-remaining
-> > duplication in raid5.c between raid5 and raid6 paths.  So there wil=
-l be
-> > relative few places where RAID5 and RAID6 do different things - onl=
-y the
-> > places where they *must* do different things.
-> > After that, adding a new level or layout which has 'max_degraded =3D=
-=3D 3' would
-> > be quite easy.
-> > The most difficult part would be the enhancements to libraid6 to ge=
-nerate the
-> > new 'syndrome', and to handle the different recovery possibilities.
-> >
-> > So if you're not otherwise busy this weekend, a patch would be nice=
- :-)
-> >
->=20
-> I'm not going to promise any patches, but maybe I can help with the=20
-> maths.  You say the difficult part is the syndrome calculations and=20
-> recovery - I've got these bits figured out on paper and some=20
-> quick-and-dirty python test code.  On the other hand, I don't really=20
-> want to get into the md kernel code, or the mdadm code - I haven't do=
-ne=20
-> Linux kernel development before (I mostly program 8-bit microcontroll=
-ers=20
-> - when I code on Linux, I use Python), and I fear it would take me a=20
-> long time to get up to speed.
->=20
-> However, if the parity generation and recovery is neatly separated in=
-to=20
-> a libraid6 library, the whole thing becomes much more tractable from =
-my=20
-> viewpoint.  Since I am new to this, can you tell me where I should ge=
-t=20
-> the current libraid6 code?  I'm sure google will find some sources fo=
-r=20
-> me, but I'd like to make sure I start with whatever version /you/ hav=
-e.
->=20
->=20
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-You can see the current kernel code at:
-
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
-tree;f=3Dlib/raid6;h=3D970c541a452d3b9983223d74b10866902f1a47c7;hb=3DHE=
-AD
+----- Message from centos.admin@gmail.com ---------
+     Date: Thu, 9 Jun 2011 17:24:23 +0800
+     From: Emmanuel Noobadmin <centos.admin@gmail.com>
+  Subject: Possible to use multiple disk to bypass I/O wait?
+       To: CentOS mailing list <centos@centos.org>, linux-raid  
+<linux-raid@vger.kernel.org>
 
 
-int.uc is the generic C code which 'unroll.awk' processes to make vario=
-us
-versions that unroll the loops different amounts to work with CPUs with
-different numbers of registers.
-Then there is sse1, sse2, altivec which provide the same functionality =
-in
-assembler which is optimised for various processors.
+> I'm trying to resolve an I/O problem on a CentOS 5.6 server. The
+> process basically scans through Maildirs, checking for space usage and
+> quota. Because there are hundred odd user folders and several 10s of
+> thousands of small files, this sends the I/O wait % way high. The
+> server hits a very high load level and stops responding to other
+> requests until the crawl is done.
+>
+> I am wondering if I add another disk and symlink the sub-directories
+> to that, would that free up the server to respond to other requests
+> despite the wait on that disk?
 
-And 'recov' has the smarts for doing the reverse calculation when 2 dat=
-a
-blocks, or 1 data and P are missing.
+Have you tried using ionice -c 3  on the process?
 
-Even if you don't feel up to implementing everything, a start might be
-useful.  You never know when someone might jump up and offer to help.
 
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----- End message from centos.admin@gmail.com -----
+
+
+
+========================================================================
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+========================================================================
+
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
