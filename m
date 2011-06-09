@@ -1,64 +1,179 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re:
-Date: Thu, 09 Jun 2011 08:01:16 -0400
-Message-ID: <4DF0B60C.9050701@turmel.org>
-References: <20110609065059.298530@gmx.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Triple-parity raid6
+Date: Thu, 9 Jun 2011 22:04:38 +1000
+Message-ID: <20110609220438.26336b27@notabene.brown>
+References: <isp2g2$rf$1@dough.gmane.org>
+	<20110609114954.243e9e22@notabene.brown>
+	<isqb2o$g0s$1@dough.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110609065059.298530@gmx.net>
+In-Reply-To: <isqb2o$g0s$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
+To: David Brown <david@westcontrol.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Dragon,
+On Thu, 09 Jun 2011 13:32:59 +0200 David Brown <david@westcontrol.com> =
+wrote:
 
-[Fixed subject line]
+> On 09/06/2011 03:49, NeilBrown wrote:
+> > On Thu, 09 Jun 2011 02:01:06 +0200 David Brown<david.brown@hesbynet=
+t.no>
+> > wrote:
+> >
+> >> Has anyone considered triple-parity raid6 ?  As far as I can see, =
+it
+> >> should not be significantly harder than normal raid6 - either  to
+> >> implement, or for the processor at run-time.  Once you have the GF=
+(2=E2=81=B8)
+> >> field arithmetic in place for raid6, it's just a matter of making
+> >> another parity block in the same way but using a different generat=
+or:
+> >>
+> >> P =3D D_0 + D_1 + D_2 + .. + D_(n.1)
+> >> Q =3D D_0 + g.D_1 + g=C2=B2.D_2 + .. + g^(n-1).D_(n.1)
+> >> R =3D D_0 + h.D_1 + h=C2=B2.D_2 + .. + h^(n-1).D_(n.1)
+> >>
+> >> The raid6 implementation in mdraid uses g =3D 0x02 to generate the=
+ second
+> >> parity (based on "The mathematics of RAID-6" - I haven't checked t=
+he
+> >> source code).  You can make a third parity using h =3D 0x04 and th=
+en get a
+> >> redundancy of 3 disks.  (Note - I haven't yet confirmed that this =
+is
+> >> valid for more than 100 data disks - I need to make my checker pro=
+gram
+> >> more efficient first.)
+> >>
+> >> Rebuilding a disk, or running in degraded mode, is just an obvious
+> >> extension to the current raid6 algorithms.  If you are missing thr=
+ee
+> >> data blocks, the maths looks hard to start with - but if you expre=
+ss the
+> >> equations as a set of linear equations and use standard matrix inv=
+ersion
+> >> techniques, it should not be hard to implement.  You only need to =
+do
+> >> this inversion once when you find that one or more disks have fail=
+ed -
+> >> then you pre-compute the multiplication tables in the same way as =
+is
+> >> done for raid6 today.
+> >>
+> >> In normal use, calculating the R parity is no more demanding than
+> >> calculating the Q parity.  And most rebuilds or degraded situation=
+s will
+> >> only involve a single disk, and the data can thus be re-constructe=
+d
+> >> using the P parity just like raid5 or two-parity raid6.
+> >>
+> >>
+> >> I'm sure there are situations where triple-parity raid6 would be
+> >> appealing - it has already been implemented in ZFS, and it is only=
+ a
+> >> matter of time before two-parity raid6 has a real probability of h=
+itting
+> >> an unrecoverable read error during a rebuild.
+> >>
+> >>
+> >> And of course, there is no particular reason to stop at three pari=
+ty
+> >> blocks - the maths can easily be generalised.  1, 2, 4 and 8 can b=
+e used
+> >> as generators for quad-parity (checked up to 60 disks), and adding=
+ 16
+> >> gives you quintuple parity (checked up to 30 disks) - but that's m=
+aybe
+> >> getting a bit paranoid.
+> >>
+> >>
+> >> ref.:
+> >>
+> >> <http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf>
+> >> <http://blogs.oracle.com/ahl/entry/acm_triple_parity_raid>
+> >> <http://queue.acm.org/detail.cfm?id=3D1670144>
+> >> <http://blogs.oracle.com/ahl/entry/triple_parity_raid_z>
+> >>
+> >
+> >   -ENOPATCH  :-)
+> >
+> > I have a series of patches nearly ready which removes a lot of the =
+remaining
+> > duplication in raid5.c between raid5 and raid6 paths.  So there wil=
+l be
+> > relative few places where RAID5 and RAID6 do different things - onl=
+y the
+> > places where they *must* do different things.
+> > After that, adding a new level or layout which has 'max_degraded =3D=
+=3D 3' would
+> > be quite easy.
+> > The most difficult part would be the enhancements to libraid6 to ge=
+nerate the
+> > new 'syndrome', and to handle the different recovery possibilities.
+> >
+> > So if you're not otherwise busy this weekend, a patch would be nice=
+ :-)
+> >
+>=20
+> I'm not going to promise any patches, but maybe I can help with the=20
+> maths.  You say the difficult part is the syndrome calculations and=20
+> recovery - I've got these bits figured out on paper and some=20
+> quick-and-dirty python test code.  On the other hand, I don't really=20
+> want to get into the md kernel code, or the mdadm code - I haven't do=
+ne=20
+> Linux kernel development before (I mostly program 8-bit microcontroll=
+ers=20
+> - when I code on Linux, I use Python), and I fear it would take me a=20
+> long time to get up to speed.
+>=20
+> However, if the parity generation and recovery is neatly separated in=
+to=20
+> a libraid6 library, the whole thing becomes much more tractable from =
+my=20
+> viewpoint.  Since I am new to this, can you tell me where I should ge=
+t=20
+> the current libraid6 code?  I'm sure google will find some sources fo=
+r=20
+> me, but I'd like to make sure I start with whatever version /you/ hav=
+e.
+>=20
+>=20
+>=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-On 06/09/2011 02:50 AM, Dragon wrote:
-> Hi Phil,
-> i know that there is something odd with the raid, thats why i need help.
-> No i didnt scamble the report. thats what the system output. Sorry for confusing with sdo, this is my usb disk and doesnt belong to the raid. because of the size i didnt have any backup ;(
+You can see the current kernel code at:
 
-Well, we don't know yet if your data is intact.  You might get lucky.  For what its worth now, you should know that raid5 isn't considered safe for arrays this size.  When the array is running 12 disks again, you might want to consider using the 13th to change your array to raid6.
+http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
+tree;f=3Dlib/raid6;h=3D970c541a452d3b9983223d74b10866902f1a47c7;hb=3DHE=
+AD
 
-> I do not let the system run 24/7 and as i started at in the morning the sequence has changed.
 
-The SCSI driver stack in linux doesn't guarantee the order the drives get named.  And custom udev scripts could massage the names further.
+int.uc is the generic C code which 'unroll.awk' processes to make vario=
+us
+versions that unroll the loops different amounts to work with CPUs with
+different numbers of registers.
+Then there is sse1, sse2, altivec which provide the same functionality =
+in
+assembler which is optimised for various processors.
 
->  fdisk -l |grep sd
-> Disk /dev/sda: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdc: 20.4 GB, 20409532416 bytes
-> /dev/sdc1   *           1        2372    19053058+  83  Linux
-> /dev/sdc2            2373        2481      875542+   5  Extended
-> /dev/sdc5            2373        2481      875511   82  Linux swap / Solaris
-> Disk /dev/sdd: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sde: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdg: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdh: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdi: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdj: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdk: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdl: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdm: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdn: 1500.3 GB, 1500301910016 bytes
-> Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes
-> Yesterday was the system on disk sdk. now its on sdc?! the system is now and up to the evening online.
-> here the actual data of the drives again:
-[...]
-> 
-> as far as i can see, now there is no error with a missing superblock of one disk.
+And 'recov' has the smarts for doing the reverse calculation when 2 dat=
+a
+blocks, or 1 data and P are missing.
 
-Well, the superblocks indicate that the array is still configured for 13 drives, two of which are missing.  One of the missing drives has been misidentified as a spare, and the other missing drive ialso thinks it is a spare, but has not been attached.  With your most recent listing, they are /dev/sdd and /dev/sdn.
+Even if you don't feel up to implementing everything, a start might be
+useful.  You never know when someone might jump up and offer to help.
 
-> 
-> how can i download lsdrv with "wget"? Yes the way backwards by shrinking lead to the actual problem.
-
-wget https://github.com/pturmel/lsdrv/raw/master/lsdrv
-chmod +x lsdrv
-./lsdrv
-
-Phil
+NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
