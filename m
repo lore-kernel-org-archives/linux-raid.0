@@ -1,35 +1,87 @@
-From: Emmanuel Noobadmin <centos.admin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Possible to use multiple disk to bypass I/O wait?
-Date: Thu, 9 Jun 2011 17:24:23 +0800
-Message-ID: <BANLkTimFOaJoMnwid1F+ghVwkBgJi2FymQ@mail.gmail.com>
-Reply-To: CentOS mailing list <centos-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
+From: Durval Menezes <durval.menezes@gmail.com>
+Subject: Unstable speed or correct?
+Date: Thu, 9 Jun 2011 06:36:29 -0300
+Message-ID: <BANLkTinrqCiyj+Z2zTAfS9Ar8MxUTn7Khw@mail.gmail.com>
+References: <201106090909.23757.raid2@fuckaround.org>
+	<BANLkTimbhe+qmTyVWKbRt6TZ9cynmmVNRw@mail.gmail.com>
+	<201106091102.32709.raid2@fuckaround.org>
+	<BANLkTimQ854noJpPEstnaG2CvsWvXFiWoQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <centos-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
-List-Unsubscribe: <http://lists.centos.org/mailman/listinfo/centos>,
-	<mailto:centos-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.centos.org/pipermail/centos>
-List-Post: <mailto:centos-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>
-List-Help: <mailto:centos-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.centos.org/mailman/listinfo/centos>,
-	<mailto:centos-request-IFYaIzF+flcdnm+yROfE0A@public.gmane.org?subject=subscribe>
-Sender: centos-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org
-Errors-To: centos-bounces-IFYaIzF+flcdnm+yROfE0A@public.gmane.org
-To: CentOS mailing list <centos-IFYaIzF+flcdnm+yROfE0A@public.gmane.org>, linux-raid <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTimQ854noJpPEstnaG2CvsWvXFiWoQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Pol Hallen <raid2@fuckaround.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm trying to resolve an I/O problem on a CentOS 5.6 server. The
-process basically scans through Maildirs, checking for space usage and
-quota. Because there are hundred odd user folders and several 10s of
-thousands of small files, this sends the I/O wait % way high. The
-server hits a very high load level and stops responding to other
-requests until the crawl is done.
+Hello Pol.
 
-I am wondering if I add another disk and symlink the sub-directories
-to that, would that free up the server to respond to other requests
-despite the wait on that disk?
+On Thu, Jun 9, 2011 at 6:02 AM, Pol Hallen <raid2@fuckaround.org> wrote=
+:
+>
+> > What benchmark program did you use for the test? Also, was there an=
+y other
+> > programs running at the same time? Was the machine in single-user (=
+init 1)
+> > state?
+>
+> hello :-)
+>
+> dd if=3D/dev/zero of=3D/share/raid6/1Gb bs=3D1024 count=3D1000000
+> 1000000+0 records in
+> 1000000+0 records out
+> 1024000000 bytes (1.0 GB) copied, 12.1632 s, 84.2 MB/s
+>
+> dd if=3D/dev/zero of=3D/share/raid6/10Gb bs=3D1024 count=3D10000000
+> 10000000+0 records in
+> 10000000+0 records out
+> 10240000000 bytes (10 GB) copied, 142.021 s, 72.1 MB/s
 
-Alternatively, if I mdraid mirror the existing disk, would md be smart
-enough to read using the other disk while the first's tied up with the
-first process?
+The above dd's seem much more consistent than the graph.
+
+> That graphic with palimptest (gnome-disk-utility).
+
+I'm not familiar with this program (BTW, you mean "palimpsest",
+right?), and I've run it for the first time on my system (M4A785-M
+with Phenon-II X6 1055T, 4GB RAM, with 3 x ST31500541AS 1.5TB 3.5"
+5900RPM HDs plugged directly onto the motherboard's SB700 SATA
+controller, running Ubuntu Lucid Lynx 10.04.1 LTS, kernel
+2.6.32-32-generic; the 3 HDs are mounted as a RAID5 md device and
+dedicated to user data-only storage and mounted as /usr2, the root
+filesystem runs on a separate SSD disk). Here's my palimpsest graph:
+http://durval.com/felwithe_raid5_palimpsest_ro_20110609.jpg
+
+Note that it shows much less "jitter" (local variation) than your graph=
+=2E
+
+> No other applications uses raid (I'm on init 2 but samba, ftp, and ot=
+her
+> daemons are off)
+>
+> iostat not show me any activity by raid, so I think there is not prog=
+rams that
+> runs on array.
+
+This is very strange... concurrent access by other programs would
+certainly explain the variation on your graph.
+
+I would try running some other benchmark that can be run on
+single-user state to see if the variation remains. If it does, then I
+would conclude that there's something wrong (possibly on your
+hardware, like a failing disk doing retries/reseeks).
+
+Cheers,
+--
+=A0 Durval Menezes.
+
+
+>
+> thanks :-)
+>
+> Pol
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
