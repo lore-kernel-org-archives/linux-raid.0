@@ -1,165 +1,591 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 01/21] imsm: FIX: Cannot create volume
-Date: Thu, 9 Jun 2011 07:40:45 +0100
-Message-ID: <1B9446C3081EE34E9490470AD5CEC3132F530AF9@irsmsx503.ger.corp.intel.com>
-References: <20110608160222.24327.71439.stgit@gklab-128-013.igk.intel.com>
-	<20110608160941.24327.74788.stgit@gklab-128-013.igk.intel.com>
- <20110609124218.1b7f7457@notabene.brown>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: (unknown)
+Date: Thu, 09 Jun 2011 08:50:59 +0200
+Message-ID: <20110609065059.298530@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110609124218.1b7f7457@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: philip@turmel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Phil,
+i know that there is something odd with the raid, thats why i need help.
+No i didnt scamble the report. thats what the system output. Sorry for confusing with sdo, this is my usb disk and doesnt belong to the raid. because of the size i didnt have any backup ;(
 
+I do not let the system run 24/7 and as i started at in the morning the sequence has changed.
+ fdisk -l |grep sd
+Disk /dev/sda: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdc: 20.4 GB, 20409532416 bytes
+/dev/sdc1   *           1        2372    19053058+  83  Linux
+/dev/sdc2            2373        2481      875542+   5  Extended
+/dev/sdc5            2373        2481      875511   82  Linux swap / Solaris
+Disk /dev/sdd: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sde: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdg: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdh: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdi: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdj: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdk: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdl: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdm: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdn: 1500.3 GB, 1500301910016 bytes
+Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes
+Yesterday was the system on disk sdk. now its on sdc?! the system is now and up to the evening online.
+here the actual data of the drives again:
+mdadm -E /dev/sda
+/dev/sda:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Thursday, June 09, 2011 4:42 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH 01/21] imsm: FIX: Cannot create volume
-> 
-> On Wed, 08 Jun 2011 18:09:41 +0200 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > Clearing info structure causes mdadm is not able to create workable
-> volume.
-> >
-> > During volume creation info structure passed to getinfo() function
-> > contains some information already and cannot be cleared.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
-> >
-> >  super-intel.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/super-intel.c b/super-intel.c
-> > index b8d8b4e..471dbd2 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -2075,7 +2075,6 @@ static void getinfo_super_imsm_volume(struct
-> supertype *st, struct mdinfo *info,
-> >  	unsigned int component_size_alligment;
-> >  	int map_disks = info->array.raid_disks;
-> >
-> > -	memset(info, 0, sizeof(*info));
-> >  	if (prev_map)
-> >  		map_to_analyse = prev_map;
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> I'm sorry, but this is just a very silly patch.
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee4232 - correct
+         Events : 156864
 
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-You are right in your suspicions about root cause. It is link problem using 'next' field.
-(I can see this problem at this moment)
+      Number   Major   Minor   RaidDevice State
+this     4       8      176        4      active sync   /dev/sdl
 
-I'll review it and I'll make it less silly ;)
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdb
+/dev/sdb:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
 
-BR
-Adam
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee4244 - correct
+         Events : 156864
 
-> 
-> In many caches the 'info' structure is completely uninitialised, so it
-> really
-> does make sense to initialise it, which is why I added that.
-> Just removing it *must* be wrong.
-> 
-> It would be much more helpful if you had explained what the "some
-> information" was.
-> 
-> Maybe it is the '->next' field that container_content_imsm() sets before
-> calling getinfo_super_imsm_volume()?? Well that
-> getinfo_super_imsm_volume
-> doesn't use that field, so we can just move the assignment afterwards.
-> 
-> or maybe ... getinfo_super_imsm_volume uses info->disk.raid_disk, but no
-> caller ever sets that up that I can see, so that code is plainly wrong
-> (though ddf makes the same mistake so that is probably my fault).
-> I've 'fixed' them both to just report on the 'first' disk as that is no
-> worse
-> than what they currently do.
-> 
-> I that doesn't fix your problem, please explain exactly what is being
-> cleared
-> that shouldn't be.
-> 
-> NeilBrown
-> 
-> commit 9894ec0d64a9faab719d016bbbf5fbc842757df6
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Thu Jun 9 12:42:02 2011 +1000
-> 
->     Fix some fall-out from recent memset-zero for getinfo_super
-> 
->     container_content_imsm was setting info->next before calling
->     getinfo_super_imsm_container which now zeros everything.
->     So move that assignment to afterwards.
-> 
->     So both imsm and ddf were assuming info->disk.raid_disk means
->     something but it doesn't.  So fix those.
-> 
->     Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/super-ddf.c b/super-ddf.c
-> index 21a917e..3fba2eb 100644
-> --- a/super-ddf.c
-> +++ b/super-ddf.c
-> @@ -1429,9 +1429,7 @@ static void getinfo_super_ddf_bvd(struct supertype
-> *st, struct mdinfo *info, cha
->  			info->component_size = __be64_to_cpu(vc->conf.blocks);
->  	}
-> 
-> -	for (dl = ddf->dlist; dl ; dl = dl->next)
-> -		if (dl->raiddisk == info->disk.raid_disk)
-> -			break;
-> +	dl = ddf->dlist;
->  	info->disk.major = 0;
->  	info->disk.minor = 0;
->  	if (dl) {
-> diff --git a/super-intel.c b/super-intel.c
-> index b8d8b4e..6fed9eb 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2079,9 +2079,8 @@ static void getinfo_super_imsm_volume(struct
-> supertype *st, struct mdinfo *info,
->  	if (prev_map)
->  		map_to_analyse = prev_map;
-> 
-> -	for (dl = super->disks; dl; dl = dl->next)
-> -		if (dl->raiddisk == info->disk.raid_disk)
-> -			break;
-> +	dl = super->disks;
-> +
->  	info->container_member	  = super->current_vol;
->  	info->array.raid_disks    = map->num_members;
->  	info->array.level	  = get_imsm_raid_level(map_to_analyse);
-> @@ -5446,11 +5445,10 @@ static struct mdinfo
-> *container_content_imsm(struct supertype *st, char *subarra
->  				sizeof(*this));
->  			break;
->  		}
-> -		memset(this, 0, sizeof(*this));
-> -		this->next = rest;
-> 
->  		super->current_vol = i;
->  		getinfo_super_imsm_volume(st, this, NULL);
-> +		this->next = rest;
->  		for (slot = 0 ; slot <  map->num_members; slot++) {
->  			unsigned long long recovery_start;
->  			struct mdinfo *info_d;
+         Layout : left-symmetric
+     Chunk Size : 64K
 
+      Number   Major   Minor   RaidDevice State
+this     5       8      192        5      active sync   /dev/sdm
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+ mdadm -E /dev/sdd
+/dev/sdd:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee418e - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this    13       8        0       13      spare   /dev/sda
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sde
+/dev/sde:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee4196 - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8       16        6      active sync   /dev/sdb
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdf
+/dev/sdf:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41aa - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     8       8       32        8      active sync   /dev/sdc
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdg
+/dev/sdg:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41bc - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     9       8       48        9      active sync   /dev/sdd
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdh
+/dev/sdh:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41ce - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this    10       8       64       10      active sync   /dev/sde
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdi
+/dev/sdi:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41e0 - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this    11       8       80       11      active sync   /dev/sdf
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdj
+/dev/sdj:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41f2 - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this    12       8       96       12      active sync   /dev/sdg
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdk
+/dev/sdk:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41ea - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8      112        0      active sync   /dev/sdh
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdl
+/dev/sdl:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee41fe - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8      128        2      active sync   /dev/sdi
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdm
+/dev/sdm:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 23:47:53 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee4210 - correct
+         Events : 156864
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8      144        3      active sync   /dev/sdj
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8        0       13      spare   /dev/sda
+mdadm -E /dev/sdn
+/dev/sdn:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 975d6eb2:285eed11:021df236:c2d05073
+  Creation Time : Tue Oct 13 23:26:17 2009
+     Raid Level : raid5
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+     Array Size : 17581661952 (16767.18 GiB 18003.62 GB)
+   Raid Devices : 13
+  Total Devices : 12
+Preferred Minor : 0
+
+    Update Time : Fri Jun  3 22:49:22 2011
+          State : clean
+ Active Devices : 11
+Working Devices : 12
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : 1dee3313 - correct
+         Events : 156606
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this    13       8      160       13      spare   /dev/sdk
+
+   0     0       8      112        0      active sync   /dev/sdh
+   1     1       0        0        1      faulty removed
+   2     2       8      128        2      active sync   /dev/sdi
+   3     3       8      144        3      active sync   /dev/sdj
+   4     4       8      176        4      active sync   /dev/sdl
+   5     5       8      192        5      active sync   /dev/sdm
+   6     6       8       16        6      active sync   /dev/sdb
+   7     7       0        0        7      faulty removed
+   8     8       8       32        8      active sync   /dev/sdc
+   9     9       8       48        9      active sync   /dev/sdd
+  10    10       8       64       10      active sync   /dev/sde
+  11    11       8       80       11      active sync   /dev/sdf
+  12    12       8       96       12      active sync   /dev/sdg
+  13    13       8      160       13      spare   /dev/sdk
+
+as far as i can see, now there is no error with a missing superblock of one disk.
+
+how can i download lsdrv with "wget"? Yes the way backwards by shrinking lead to the actual problem.
+-- 
+Empfehlen Sie GMX DSL Ihren Freunden und Bekannten und wir
+belohnen Sie mit bis zu 50,- Euro! https://freundschaftswerbung.gmx.de
