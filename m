@@ -1,62 +1,138 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Why move all map_sg/unmap_sg for slave channel to its client?
-Date: Thu, 9 Jun 2011 11:28:43 -0700
-Message-ID: <BANLkTikzDEx2netonGyhskYFtiAEAxq5XQ@mail.gmail.com>
-References: <4DF06E29.4010807@st.com>
-	<BANLkTik9kZjJs5H2kvM+xAtd_CR5NA0dDw@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: FW: Backup Server RAID Array Event Notification
+Date: Thu, 9 Jun 2011 13:35:59 -0500
+Message-ID: <9C.33.00666.09211FD4@cdptpa-omtalb.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTik9kZjJs5H2kvM+xAtd_CR5NA0dDw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: viresh kumar <viresh.kumar@st.com>, "Koul, Vinod" <vinod.koul@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, anemo@mba.ocn.ne.jp, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, Bhupesh SHARMA <bhupesh.sharma@st.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 9, 2011 at 2:38 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
-> On Thu, Jun 9, 2011 at 8:54 AM, viresh kumar <viresh.kumar@st.com> wrote:
->
->> I thought map_sg/unmap_sg for slave channels will be handled according
->> to the flags passed in prep_slave_sg(). But then i found following patch:
->> (...)
->> I don't have much knowledge about that discussion, but i think this should be left
->> configurable.
->> If the client wants to control map/unmap then it can simply pass
->> DMA_COMPL_SKIP_DEST_UNMAP | DMA_COMPL_SKIP_SRC_UNMAP in flags. I didn't wanted to
->> skip this in my driver and so i don't pass them.
->
-> What if the same driver is used on many different platforms like say
-> drivers/tty/serial/amba-pl011.c, and some of the platforms using it
-> has DMA engines that does not implement mapping/unmapping of
-> the passed sglist?
->
-> In that case I think you have to modify all drivers in drivers/dma/*
-> to do this mapping, and then you could just make it a required behaviour
-> and skip the flags altogether.
->
-> But apparently that approach was blocked at one point so let's see
-> what the others say.
 
-My problem with automatic unmapping support is that the dma-driver
-really does not have a chance to get it right except for the trivially
-straightforward cases.  One need only look at the current bustage of
-raid5 acceleration with respect to overlapping mappings and arm v6.
-The dma-driver just knows how to perform "this" operation on "this"
-dma address.  It does not know the lifetime of the mapping, or even if
-it has the actual dma handle for unmapping versus an offset
+	After I created a pair of two member RAID1 arrays and then added
+them as members to a RAID6 array, I am now getting messages similar to the
+following, complaining of "Wrong-level" issues.  When I check the RAID6
+array, however, it is clean and both RAID1 members are still there.  When I
+check both RAID1 arrays, they show clean with no events.  I am running a
+compare between all the data on this machine and its mirror (this is a
+backup machine).  So far everything looks good.  What does this imply?  Is
+there something about which I should be worried?
 
-For the raid case I've currently convinced myself that the raid client
-needs to get directly involved in dma mapping management, rather than
-teach all dma drivers a language of how to unmap and when.  Not only
-will this fix the overlapping, but it also eliminates the need to map
-and remap because the raid client knows the lifetime of  a stripe_head
-while the driver only knows the lifetime of a given stripe operation.
+-----Original Message-----
+From: mdadm_monitor@satx.rr.com [mailto:mdadm_monitor@satx.rr.com] 
+Sent: Thursday, June 09, 2011 8:04 AM
+To: leslie.rhorer@twtelecom.com; lrhorer@satx.rr.com
+Subject: Backup Server RAID Array Event Notification
 
-For slave-dma maybe there is a lot of common un-mapping logic that can
-be reused, but I think that comes from a separate smart library that
-understands the dma mapping lifetimes of a given class of clients.
-Leave the dma-drivers to just be dumb operators on anonymous dma
-addresses.
+DeviceDisappeared /dev/md10 Wrong-Level
+<message ends>
 
---
-Dan
+From mdadm:
+Backup:~# mdadm -D /dev/md0
+
+/dev/md0:
+
+        Version : 1.2
+
+  Creation Time : Mon May 31 16:23:10 2010
+
+     Raid Level : raid6
+
+     Array Size : 14651371520 (13972.64 GiB 15003.00 GB)
+
+  Used Dev Size : 1465137152 (1397.26 GiB 1500.30 GB)
+
+   Raid Devices : 12
+  Total Devices : 12
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jun  9 13:30:54 2011
+          State : active
+ Active Devices : 12
+Working Devices : 12
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+           Name : Backup:0  (local to host Backup)
+           UUID : 431244d6:45d9635a:e88b3de5:92f30255
+         Events : 436289
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+       8       8      128        8      active sync   /dev/sdi
+      10       8      144        9      active sync   /dev/sdj
+      12       9       11       10      active sync   /dev/md11
+      11       9       10       11      active sync   /dev/md10
+Backup:~# mdadm -D /dev/md10
+/dev/md10:
+        Version : 1.2
+  Creation Time : Wed Jun  8 00:08:16 2011
+
+     Raid Level : raid0
+
+     Array Size : 1953521664 (1863.02 GiB 2000.41 GB)
+   Raid Devices : 2
+
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+
+    Update Time : Wed Jun  8 00:08:16 2011
+          State : clean
+
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 1024K
+
+           Name : Backup:10  (local to host Backup)
+           UUID : fa1ed617:d80525c4:1df692e8:0116406d
+         Events : 0
+
+    Number   Major   Minor   RaidDevice State
+       0       8      192        0      active sync   /dev/sdm
+       1       8      208        1      active sync   /dev/sdn
+Backup:~# mdadm -D /dev/md11
+/dev/md11:
+        Version : 1.2
+  Creation Time : Wed Jun  8 00:08:38 2011
+     Raid Level : raid0
+     Array Size : 1953521664 (1863.02 GiB 2000.41 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jun  8 00:08:38 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+     Chunk Size : 1024K
+
+           Name : Backup:11  (local to host Backup)
+           UUID : 1ac704ee:8f501b33:4caee409:e384eeec
+         Events : 0
+
+    Number   Major   Minor   RaidDevice State
+       0       8      224        0      active sync   /dev/sdo
+       1       8      240        1      active sync   /dev/sdp
+
+
