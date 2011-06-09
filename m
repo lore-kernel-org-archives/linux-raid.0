@@ -1,44 +1,43 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: from 2x RAID1 to 1x RAID6 ?
-Date: Thu, 09 Jun 2011 15:42:22 +0200
-Message-ID: <isqil8$1e7$1@dough.gmane.org>
-References: <4DEE6A11.1030205@xunil.at> <4DEE84F0.2030205@harddata.com> <4DEEBB66.7080802@nybeta.com> <isng0m$8c9$1@dough.gmane.org> <4DEF4AC5.1090003@anonymous.org.uk> <isnj71$rap$1@dough.gmane.org> <4DF0C81E.4020903@oldum.net>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: [BUG?] RAID not properly assembled w/ kernel 2.6.39.x
+Date: Thu, 09 Jun 2011 10:25:39 -0400
+Message-ID: <4DF0D7E3.1050501@turmel.org>
+References: <201106091521.54769.ml_linux_raid@mortal-soul.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DF0C81E.4020903@oldum.net>
+In-Reply-To: <201106091521.54769.ml_linux_raid@mortal-soul.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Matthias Dahl <ml_linux_raid@mortal-soul.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/06/2011 15:18, Nikolay Kichukov wrote:
-> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->
->
->
-> On 06/08/2011 01:33 PM, David Brown wrote:
->
->> So you install your RAID10 (or RAID6, if you prefer) system, and
->> make sure you keep backups.  And if you /do/ get hit by a double
->> disk failure in the wrong place, you spend the day restoring
->> everything from the backups.  When management complain that a 24
->> hour downtime doesn't fit with their 99.99% uptime expectations,
->> you remind them that this is amortized over the next 27 years...
->
-> Hi David,
->
-> nice one ;-) Did you actually calculate 24 hours for those 99.99%
-> within 27 years? ;-)
->
+Hi Matthias,
 
-27.4 years is 10,000 days - so you can have 99.99% uptime with a 24-hour 
-failure if you run for the rest of the 27.4 years without a hitch.  Of 
-course, by the same logic you can claim 6 nine's uptime with a week's 
-failure - as long as there are no more problems for the next 20,000 years...
+On 06/09/2011 09:21 AM, Matthias Dahl wrote:
+> Hi all.
+> 
+> I tried updating to 2.6.39.1 from 2.6.38.2 and failed due to some md raid
+> issues I wasn't able to solve even after hours.   I hope someone can help
+> me out- I'd really appreciate it.
 
-:-)
+[...]
 
+> I'm sorry for this chaotic explanation but as you can see it's quite hard
+> to explain. :-(
 
-> Cheers, - -Nik
+Well, you are swimming against the tide:  the kernel has been steadily losing consistent device names, for what the kernel devs feel are good and proper reasons.  The recommended alternative is to use filesystem labels, or even better, UUIDs in your fstab.  Then you can go back to no mdadm.conf file in your initramfs, and carry on.
 
+(*I'm* not going to command the tide to stop.)
+
+> Again, this works fine with any kernel prior to 2.6.39 and adding a  conf
+> to the initramfs fixes  mostly anything but the additional partition prob
+> which has me worrying that something else might be wrong.
+> 
+> Like said earlier, I'd really appreciate anyone shedding  some  light  on
+> this. Thanks a lot in advance...
+
+HTH,
+
+Phil
