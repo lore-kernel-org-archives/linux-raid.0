@@ -1,154 +1,109 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH/RFC] md/multipath: implement I/O balancing
-Date: Fri, 10 Jun 2011 20:32:11 +0900
-Message-ID: <1307705531-26384-1-git-send-email-namhyung@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: SRaid with 13 Disks crashed
+Date: Fri, 10 Jun 2011 07:48:44 -0400
+Message-ID: <4DF2049C.1020201@turmel.org>
+References: <20110610075257.298520@gmx.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110610075257.298520@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Dragon <Sunghost@gmx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Implement basic I/O balancing code (for read/write) for multipath
-personality. The code is based on RAID1 implementation.
+Hi Dragon,
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/multipath.c |   70 ++++++++++++++++++++++++++++++++++++++---------
- drivers/md/multipath.h |    1 +
- 2 files changed, 57 insertions(+), 14 deletions(-)
+On 06/10/2011 03:52 AM, Dragon wrote:
+> I have nothing limited. It's all i get from the bash after excecute the script. i am not aware of using a fast -boot kernel, but i saw that it comes whit kernel version 2.6.28. i think after the raid crashes i upgrade to the last kernel version, because of having the newer mdamd, ext and what ever tools to recover the raid.
 
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 3535c23af288..83c4f5105705 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -30,29 +30,58 @@
- 
- #define	NR_RESERVED_BUFS	32
- 
--
--static int multipath_map (multipath_conf_t *conf)
-+/*
-+ * This routine returns the disk from which the requested read should
-+ * be done. There is a per-array 'next expected sequential IO' sector
-+ * number - if this matches on the next IO then we use the last disk.
-+ * There is also a per-disk 'last know head position' sector that is
-+ * maintained from IRQ contexts, IO completion handlers update this
-+ * position correctly. We pick the disk whose head is closest.
-+ *
-+ * Note that 'sector' argument is for original bio whereas 'head_position'
-+ * is maintained for each rdev so we should take it into account when
-+ * calculating the distance.
-+ */
-+static int multipath_map(multipath_conf_t *conf, sector_t sector)
- {
- 	int i, disks = conf->raid_disks;
--
--	/*
--	 * Later we do read balancing on the read side 
--	 * now we use the first available disk.
--	 */
-+	int best_disk;
-+	sector_t best_dist;
- 
- 	rcu_read_lock();
-+retry:
-+	best_disk = -1;
-+	best_dist = MaxSector;
-+
- 	for (i = 0; i < disks; i++) {
-+		int dist;
- 		mdk_rdev_t *rdev = rcu_dereference(conf->multipaths[i].rdev);
-+		sector_t this_sector = sector;
-+
- 		if (rdev && test_bit(In_sync, &rdev->flags)) {
--			atomic_inc(&rdev->nr_pending);
--			rcu_read_unlock();
--			return i;
-+			this_sector += rdev->data_offset;
-+			dist = abs(this_sector - conf->multipaths[i].head_position);
-+			if (dist < best_dist) {
-+				best_dist = dist;
-+				best_disk = i;
-+			}
- 		}
- 	}
-+
-+	if (best_disk == -1) {
-+		printk(KERN_ERR "multipath_map(): no more operational IO paths?\n");
-+	} else {
-+		mdk_rdev_t *rdev;
-+
-+		rdev = rcu_dereference(conf->multipaths[best_disk].rdev);
-+		if (!rdev || !test_bit(In_sync, &rdev->flags))
-+			goto retry;
-+
-+		atomic_inc(&rdev->nr_pending);
-+	}
- 	rcu_read_unlock();
- 
--	printk(KERN_ERR "multipath_map(): no more operational IO paths?\n");
--	return (-1);
-+	return best_disk;
- }
- 
- static void multipath_reschedule_retry (struct multipath_bh *mp_bh)
-@@ -82,6 +111,17 @@ static void multipath_end_bh_io (struct multipath_bh *mp_bh, int err)
- 	mempool_free(mp_bh, conf->pool);
- }
- 
-+/*
-+ * Update disk head position estimator based on IRQ completion info.
-+ */
-+static inline void update_head_pos(int disk, struct multipath_bh *mp_bh)
-+{
-+	multipath_conf_t *conf = mp_bh->mddev->private;
-+
-+	conf->multipaths[disk].head_position =
-+		mp_bh->bio.bi_sector + (mp_bh->bio.bi_size >> 9);
-+}
-+
- static void multipath_end_request(struct bio *bio, int error)
- {
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
-@@ -89,6 +129,8 @@ static void multipath_end_request(struct bio *bio, int error)
- 	multipath_conf_t *conf = mp_bh->mddev->private;
- 	mdk_rdev_t *rdev = conf->multipaths[mp_bh->path].rdev;
- 
-+	update_head_pos(mp_bh->path, mp_bh);
-+
- 	if (uptodate)
- 		multipath_end_bh_io(mp_bh, 0);
- 	else if (!(bio->bi_rw & REQ_RAHEAD)) {
-@@ -122,7 +164,7 @@ static int multipath_make_request(mddev_t *mddev, struct bio * bio)
- 	mp_bh->master_bio = bio;
- 	mp_bh->mddev = mddev;
- 
--	mp_bh->path = multipath_map(conf);
-+	mp_bh->path = multipath_map(conf, bio->bi_sector);
- 	if (mp_bh->path < 0) {
- 		bio_endio(bio, -EIO);
- 		mempool_free(mp_bh, conf->pool);
-@@ -356,7 +398,7 @@ static void multipathd (mddev_t *mddev)
- 		bio = &mp_bh->bio;
- 		bio->bi_sector = mp_bh->master_bio->bi_sector;
- 		
--		if ((mp_bh->path = multipath_map (conf))<0) {
-+		if ((mp_bh->path = multipath_map(conf, bio->bi_sector)) < 0) {
- 			printk(KERN_ALERT "multipath: %s: unrecoverable IO read"
- 				" error for block %llu\n",
- 				bdevname(bio->bi_bdev,b),
-diff --git a/drivers/md/multipath.h b/drivers/md/multipath.h
-index 3c5a45eb5f8a..060fe2aabd97 100644
---- a/drivers/md/multipath.h
-+++ b/drivers/md/multipath.h
-@@ -3,6 +3,7 @@
- 
- struct multipath_info {
- 	mdk_rdev_t	*rdev;
-+	sector_t	head_position;
- };
- 
- struct multipath_private_data {
--- 
-1.7.5.2
+Newer kernels have the option to parallel probe.  You got a newer kernel.
+
+> Am i right to use the --backup-file option, i must have a backup file ;)? i didnt have a file.
+
+Your attempt to shrink the array from 13 back to 12 would have needed the file, and you didn't supply one.  mdadm almost certainly told you it wouldn't shrink the array.
+
+> as far as i understand your advise, to recreate the raid and the order of the disks. you choose them by the output off mdadm -E wich gave the actuall number of the disk and the variation at disk sdd and sdn is because of  both shows the same number, right? i think i understand that. but why is disk "j" the last in the order. my output say that disk sdd is number 13, but as spare for sda....?
+> here the stand after rebooting at the morning:
+
+Yes, I'm using the "RaidDevice" column to determine which drive is which.  The drive names in the far right column are the original names, before your kernel changed.  They aren't important.  To reconstruct your 13-disk array, the devices from 0 to 12 must be listed in the create command in the correct order.  Two of your devices think they are spares, reporting "RaidDevice" > 12.  They must fit into the two slots that are reported as "faulty removed".
+
+> fdisk  -l|grep sd
+> Disk /dev/sdb: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sda: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdc: 20.4 GB, 20409532416 bytes
+> /dev/sdc1   *           1        2372    19053058+  83  Linux
+> /dev/sdc2            2373        2481      875542+   5  Extended
+> /dev/sdc5            2373        2481      875511   82  Linux swap / Solaris
+> Disk /dev/sdd: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sde: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdg: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdh: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdi: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdj: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdk: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdl: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdm: 1500.3 GB, 1500301910016 bytes
+> Disk /dev/sdn: 1500.3 GB, 1500301910016 bytes
+
+[...]
+
+> ------
+> in short:
+> /dev/sda:
+> this     4       8      176        4      active sync   /dev/sdl
+> 
+> /dev/sdb:
+> this     5       8      192        5      active sync   /dev/sdm
+> 
+> /dev/sdd:
+> this    13       8        0       13      spare   /dev/sda
+> 
+> /dev/sde:
+> this     6       8       16        6      active sync   /dev/sdb
+> 
+> /dev/sdf:
+> this     8       8       32        8      active sync   /dev/sdc
+> 
+> /dev/sdg:
+> this     9       8       48        9      active sync   /dev/sdd
+> 
+> /dev/sdh:
+> this    10       8       64       10      active sync   /dev/sde
+> 
+> /dev/sdi:
+> this    11       8       80       11      active sync   /dev/sdf
+> 
+> /dev/sdj:
+> this    12       8       96       12      active sync   /dev/sdg
+> 
+> /dev/sdk:
+> this     0       8      112        0      active sync   /dev/sdh
+> 
+> /dev/sdl:     
+> this     2       8      128        2      active sync   /dev/sdi
+> 
+> /dev/sdm:         
+> this     3       8      144        3      active sync   /dev/sdj
+> 
+> /dev/sdn:      
+> this    13       8      160       13      spare   /dev/sdk
+
+Good to summarize, but ignore the names on the right.
+
+> after that i would think the order confused because no disk is the right in the first line auf the position. but i would do this:
+> 
+> mdadm -C /dev/md0 -l 5 -n 13 -e 0.90 -c 64 --assume-clean /dev/sd{k,l,m,a,b,e,?d?,f,g,h,i,j,n} 
+> or
+> mdadm -C /dev/md0 -l 5 -n 13 -e 0.90 -c 64 --assume-clean /dev/sd{k,l,m,a,b,e,?n?,f,g,h,i,j,d} 
+
+No.  The devices that know where they belong are 0,2,3,4,5,6,8,9,10,11,12.  That would be /dev/sd{k,*,l,m,a,b,e,*,f,g,h,i,j}.  The devices that report 13, /dev/sdd & /dev/sdn, must fit in to positions 1 & 7.  Two possibilities:
+
+/dev/sd{k,d,l,m,a,b,e,n,f,g,h,i,j} or /dev/sd{k,n,l,m,a,b,e,d,f,g,h,i,j}
+
+HTH,
+
+Phil
 
