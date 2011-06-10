@@ -1,104 +1,117 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: Triple-parity raid6
-Date: Fri, 10 Jun 2011 00:42:41 +0200
-Message-ID: <isri91$fo0$1@dough.gmane.org>
-References: <isp2g2$rf$1@dough.gmane.org>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Backup Server RAID Array Event Notification
+Date: Thu, 9 Jun 2011 20:10:11 -0500
+Message-ID: <34.8F.15242.4FE61FD4@cdptpa-omtalb.mail.rr.com>
+References: <20110610071441.796e5f78@notabene.brown>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <isp2g2$rf$1@dough.gmane.org>
+In-Reply-To: <20110610071441.796e5f78@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>
+Cc: 'Roman Mamedov' <rm@romanrm.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/06/11 02:01, David Brown wrote:
-> Has anyone considered triple-parity raid6 ? As far as I can see, it
-> should not be significantly harder than normal raid6 - either to
-> implement, or for the processor at run-time. Once you have the GF(2=E2=
-=81=B8)
-> field arithmetic in place for raid6, it's just a matter of making
-> another parity block in the same way but using a different generator:
->
-> P =3D D_0 + D_1 + D_2 + .. + D_(n.1)
-> Q =3D D_0 + g.D_1 + g=C2=B2.D_2 + .. + g^(n-1).D_(n.1)
-> R =3D D_0 + h.D_1 + h=C2=B2.D_2 + .. + h^(n-1).D_(n.1)
->
-> The raid6 implementation in mdraid uses g =3D 0x02 to generate the se=
-cond
-> parity (based on "The mathematics of RAID-6" - I haven't checked the
-> source code). You can make a third parity using h =3D 0x04 and then g=
-et a
-> redundancy of 3 disks. (Note - I haven't yet confirmed that this is
-> valid for more than 100 data disks - I need to make my checker progra=
-m
-> more efficient first.)
->
-> Rebuilding a disk, or running in degraded mode, is just an obvious
-> extension to the current raid6 algorithms. If you are missing three d=
-ata
-> blocks, the maths looks hard to start with - but if you express the
-> equations as a set of linear equations and use standard matrix invers=
-ion
-> techniques, it should not be hard to implement. You only need to do t=
-his
-> inversion once when you find that one or more disks have failed - the=
-n
-> you pre-compute the multiplication tables in the same way as is done =
-for
-> raid6 today.
->
-> In normal use, calculating the R parity is no more demanding than
-> calculating the Q parity. And most rebuilds or degraded situations wi=
-ll
-> only involve a single disk, and the data can thus be re-constructed
-> using the P parity just like raid5 or two-parity raid6.
->
->
-> I'm sure there are situations where triple-parity raid6 would be
-> appealing - it has already been implemented in ZFS, and it is only a
-> matter of time before two-parity raid6 has a real probability of hitt=
-ing
-> an unrecoverable read error during a rebuild.
->
->
-> And of course, there is no particular reason to stop at three parity
-> blocks - the maths can easily be generalised. 1, 2, 4 and 8 can be us=
-ed
-> as generators for quad-parity (checked up to 60 disks), and adding 16
-> gives you quintuple parity (checked up to 30 disks) - but that's mayb=
-e
-> getting a bit paranoid.
->
->
-> ref.:
->
-> <http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf>
-> <http://blogs.oracle.com/ahl/entry/acm_triple_parity_raid>
-> <http://queue.acm.org/detail.cfm?id=3D1670144>
-> <http://blogs.oracle.com/ahl/entry/triple_parity_raid_z>
->
->
-> mvh.,
->
-> David
->
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Thursday, June 09, 2011 4:15 PM
+> To: lrhorer@satx.rr.com
+> Cc: 'Roman Mamedov'; linux-raid@vger.kernel.org
+> Subject: Re: Backup Server RAID Array Event Notification
+> 
+> On Thu, 9 Jun 2011 14:01:34 -0500 "Leslie Rhorer" <lrhorer@satx.rr.com>
+> wrote:
+> 
+> > > -----Original Message-----
+> > > From: Roman Mamedov [mailto:rm@romanrm.ru]
+> > > Sent: Thursday, June 09, 2011 1:47 PM
+> > > To: lrhorer@satx.rr.com
+> > > Cc: linux-raid@vger.kernel.org
+> > > Subject: Re: Backup Server RAID Array Event Notification
+> > >
+> > > On Thu, 9 Jun 2011 13:35:59 -0500
+> > > "Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
+> > >
+> > > >
+> > > > 	After I created a pair of two member RAID1 arrays and then
+> added
+> > > > them as members to a RAID6 array, I am now getting messages similar
+> to
+> > > the
+> > > > following, complaining of "Wrong-level" issues.  When I check the
+> RAID6
+> > > > array, however, it is clean and both RAID1 members are still there.
+> > > When I
+> > > > check both RAID1 arrays, they show clean with no events.  I am
+> running a
+> > > > compare between all the data on this machine and its mirror (this is
+> a
+> > > > backup machine).  So far everything looks good.  What does this
+> imply?
+> > > Is
+> > > > there something about which I should be worried?
+> > >
+> > > You said RAID1 twice, and your mdadm --detail doesn't agree with you
+> and
+> > > says
+> > > "raid0" twice. Maybe you mistakenly used RAID1 instead of RAID0
+> somewhere
+> > > else as well, and the WrongLevel message is trying to tell you that?
+> >
+> > 	No, that was just a typo.  (OK, three typos) I meant "RAID0".  The
+> > RAID0 members are all 1T drives.  The RAID6 array is made of 1.5T
+> members.
+> > In order to use the 1T drives on the RAID6 array, I have to combine them
+> > into 2T arrays, which then can be used as members of the RAID6 array.
+> If
+> > md10 and md11 were RAID1 arrays, they would only be 1T in extent, and
+> could
+> > not be members of md0.
+> >
+> 
+> "mdadm --monitor" does not monitor RAID0 or Linear arrays.  There is
+> nothing
+> to see.  Nothing can fail, they don't rebuilt, they are really just AID,
+> not
+> RAID.
 
-Just to follow up on my numbers here - I've now checked the validity of=
-=20
-triple-parity using generators 1, 2 and 4 for up to 254 data disks=20
-(i.e., 257 disks altogether).  I've checked the validity of quad-parity=
-=20
-up to 120 disks - checking the full 253 disks will probably take the=20
-machine most of the night.  I'm sure there is some mathematical way to=20
-prove this, and it could certainly be checked more efficiently than wit=
-h=20
-a Python program - but my computer has more spare time than me!
+	Well, OK.  So why does it report anything at all?
+> 
+> So if it thinks that it was asked to monitor a RAID0 it pretends that it
+> has
+> disappeared with reason "Wrong Level".
+> So if you explicitly ask it to monitor a RAID0, it won't and it will tell
+> you
+> why.
 
+	That would make sense if I had started the monitor deamon and it had
+sent the e-mail, but the monitor has been running for nearly two days, since
+the system was rebooted.  Why send the message nearly a day after the deamon
+is started, and why send it more than once (for each array)?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	By the same token, why did it wait nearly 8 hours and then again
+more than a day and a half after the array was created to send the messages,
+instead of immediately after it was created?
+
+	This suggests I am going to be treated to a pair of spurious e-mails
+every day or so telling me the device has disappeared, when it is perfectly
+good.  After a few months of that, what happens when one of the devices
+really does disappear?  We all know what happens to the system that cries,
+"Wolf!" all the time.
+
+> If you only implicitly ask with e.g. "mdadm --monitor --scan" with a RAID0
+> listing in mdadm.conf it probably shouldn't give the message as it might
+> be confusing... but it does.
+
+	I'm not sure I follow.
+
+> Or maybe the message is just confusing and I should change it.
+> 
+> Or something.
+
+	Well that's definite.  :-)
+
