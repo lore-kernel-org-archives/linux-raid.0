@@ -1,86 +1,107 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: David Brown <david@westcontrol.com>
 Subject: Re: Triple-parity raid6
-Date: Fri, 10 Jun 2011 09:56:02 -0400
-Message-ID: <4DF22272.6080307@tmr.com>
-References: <isp2g2$rf$1@dough.gmane.org>	<20110609114954.243e9e22@notabene.brown>	<isqb2o$g0s$1@dough.gmane.org> <20110609220438.26336b27@notabene.brown>
+Date: Fri, 10 Jun 2011 16:28:09 +0200
+Message-ID: <ist9n7$khq$1@dough.gmane.org>
+References: <isp2g2$rf$1@dough.gmane.org>	<20110609114954.243e9e22@notabene.brown>	<isqb2o$g0s$1@dough.gmane.org>	<20110609220438.26336b27@notabene.brown> <87aadq5q1l.fsf@gmail.com> <isslla$o2i$1@dough.gmane.org> <4DF20C18.3030604@christoph-d.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110609220438.26336b27@notabene.brown>
+In-Reply-To: <4DF20C18.3030604@christoph-d.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Thu, 09 Jun 2011 13:32:59 +0200 David Brown<david@westcontrol.com>  wrote:
+On 10/06/2011 14:20, Christoph Dittmann wrote:
+> On 06/10/2011 10:45 AM, David Brown wrote:
+>> Making multiple parity syndromes is easy enough mathematically:
 >
->    
->> On 09/06/2011 03:49, NeilBrown wrote:
->>      
->>>
->>>    -ENOPATCH  :-)
->>>
->>> I have a series of patches nearly ready which removes a lot of the remaining
->>> duplication in raid5.c between raid5 and raid6 paths.  So there will be
->>> relative few places where RAID5 and RAID6 do different things - only the
->>> places where they *must* do different things.
->>>        
->>> After that, adding a new level or layout which has 'max_degraded == 3' would
->>> be quite easy.
->>> The most difficult part would be the enhancements to libraid6 to generate the
->>> new 'syndrome', and to handle the different recovery possibilities.
->>>
->>> So if you're not otherwise busy this weekend, a patch would be nice :-)
->>>
->>>        
->> I'm not going to promise any patches, but maybe I can help with the
->> maths.  You say the difficult part is the syndrome calculations and
->> recovery - I've got these bits figured out on paper and some
->> quick-and-dirty python test code.  On the other hand, I don't really
->> want to get into the md kernel code, or the mdadm code - I haven't done
->> Linux kernel development before (I mostly program 8-bit microcontrollers
->> - when I code on Linux, I use Python), and I fear it would take me a
->> long time to get up to speed.
->>
->> However, if the parity generation and recovery is neatly separated into
->> a libraid6 library, the whole thing becomes much more tractable from my
->> viewpoint.  Since I am new to this, can you tell me where I should get
->> the current libraid6 code?  I'm sure google will find some sources for
->> me, but I'd like to make sure I start with whatever version /you/ have.
->>      
-> You can see the current kernel code at:
+> Adam Leventhal, who wrote the double parity and triple parity code for
+> ZFS, mentioned on his blog [1] that going beyond triple parity poses
+> significant challenges if write performance should not suffer.
 >
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=tree;f=lib/raid6;h=970c541a452d3b9983223d74b10866902f1a47c7;hb=HEAD
+> In particular, it looks like a relevant math paper (originally) had a
+> flaw in the claim that quad parity and above can be implemented just
+> like triple parity.
+>
+> I don't know the implementation you were going to use, neither am I
+> knowledgeable about multi-parity in general. I only thought it might be
+> relevant to add to the current discussion that other people had issues
+> with implementing N-parity for N > 3.
 >
 >
-> int.uc is the generic C code which 'unroll.awk' processes to make various
-> versions that unroll the loops different amounts to work with CPUs with
-> different numbers of registers.
-> Then there is sse1, sse2, altivec which provide the same functionality in
-> assembler which is optimised for various processors.
->
->    
-And at some point I'm sure one of the video card vendors will provide a 
-hack to do it in
-the GPU in massively parallel fashion.
 
-> And 'recov' has the smarts for doing the reverse calculation when 2 data
-> blocks, or 1 data and P are missing.
->
-> Even if you don't feel up to implementing everything, a start might be
-> useful.  You never know when someone might jump up and offer to help.
->
->
->    
+I've looked at Adam's blog article - in fact, stumbling over it when 
+wandering around the 'net was one of my inspirations to think about 
+multi-parity raid again.
+
+But there are a few key differences between the description in the James 
+Plank papers referenced, and the implementation I've looked at.
+
+One point is that he is looking at GF(2^4), which is quickly a limiting 
+factor.  It's hard to get enough independent parity syndromes, and you 
+can get easily start to think that things won't work for larger parity.
+
+The other is the choice of factors for the syndromes.  Assuming I 
+understand the papers correctly, the first paper is suggesting this 
+arrangement (all arithmetic done in GF()):
+
+P_0 = 1^0 . d_0  +  2^0 . d_1  +  3^0 . d_2  +  4^0 . d_3
+P_1 = 1^1 . d_0  +  2^1 . d_1  +  3^1 . d_2  +  4^1 . d_3
+P_2 = 1^2 . d_0  +  2^2 . d_1  +  3^2 . d_2  +  4^2 . d_3
+P_3 = 1^3 . d_0  +  2^3 . d_1  +  3^3 . d_2  +  4^3 . d_3
+
+The second paper changes it to:
+
+P_0 = 1^0 . d_0  +  1^1 . d_1  +  1^2 . d_2  +  1^3 . d_3
+P_1 = 2^0 . d_0  +  2^1 . d_1  +  2^2 . d_2  +  2^3 . d_3
+P_2 = 3^0 . d_0  +  3^1 . d_1  +  3^2 . d_2  +  3^3 . d_3
+P_3 = 4^0 . d_0  +  4^1 . d_1  +  4^2 . d_2  +  4^3 . d_3
 
 
--- 
-Bill Davidsen<davidsen@tmr.com>
-   We are not out of the woods yet, but we know the direction and have
-taken the first step. The steps are many, but finite in number, and if
-we persevere we will reach our destination.  -me, 2010
+For the first two parity blocks, this is the same as for Linux raid6:
 
+P = d_0 + d_1 + d_2 + d_3
+Q = g^0 . d_0  +  g^1 . d_1  +  g^2 . d_2  +  g^3 . d_3
+(where g = 2)
+
+But the third (and later) lines are not good - the restoration equations 
+on multiple disk failure are not independent for all combinations of 
+failed disks.  For example, if you have 20 data disks and 3 parity 
+disks, there are 1140 different combinations of three data-disk 
+failures.  Of these, 92 combinations lead to non-independent equations 
+when you try to restore the data.
+
+
+The equations I am using are:
+
+P_0 = 1^0 . d_0  +  1^1 . d_1  +  1^2 . d_2  +  1^3 . d_3
+P_1 = 2^0 . d_0  +  2^1 . d_1  +  2^2 . d_2  +  2^3 . d_3
+P_2 = 4^0 . d_0  +  4^1 . d_1  +  4^2 . d_2  +  4^3 . d_3
+P_3 = 8^0 . d_0  +  8^1 . d_1  +  8^2 . d_2  +  8^3 . d_3
+
+P_4 would use powers of 16, etc.
+
+I have checked that the restoration equations are solvable for all 
+combinations of 3 disk failures for triple parity, and all combinations 
+of 4 disk failures for quad parity.  The restoration equations can be 
+written in matrix form and are dependent on the indexes of the failed 
+disks.  To solve them, you simply invert the matrix and this gives you a 
+linear formula for re-calculating each missing data block.  So to check 
+that the data can be restored, you need to check that the determinant of 
+this matrix is non-zero for all combinations of n-disk failures.
+
+I /believe/ these should work find for at least up to P_7 (i.e., 8 
+parity disks), but I haven't yet checked more than a few larger parity 
+modes.  Checking all 4 disk failures from 253 disks took my inefficient 
+python program about 45 minutes - to check for 8-disk failures would 
+mean finding all combinations of 8 choices for up to 249 disks.  If my 
+maths serves me right, that's 316,528,258,780,856 combinations - and for 
+each one, I'd have to find the determinant of an 8x8 matrix over 
+GF(2^8).  Fortunately, I don't think they'll be much call for 
+octal-parity RAID in the near future :-)
+
+
+Of course, all this assume that my maths is correct !
 
 
