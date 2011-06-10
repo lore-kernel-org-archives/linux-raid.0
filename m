@@ -1,75 +1,72 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: HDD reports errors while completing RAID6 array check
-Date: Fri, 10 Jun 2011 19:23:55 +0100
-Message-ID: <BANLkTinPfZeSwJ8Tckc0usXFpLHHuPSz4Q@mail.gmail.com>
-References: <BANLkTik87PZChAzgBnDM170uJHU=3Yc6Eg@mail.gmail.com>
-	<20110611000000.76ca58e7@natsu>
+From: "Dragon" <Sunghost@gmx.de>
+Subject: (unknown)
+Date: Fri, 10 Jun 2011 22:26:38 +0200
+Message-ID: <20110610202638.220520@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110611000000.76ca58e7@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: philip@turmel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10 June 2011 19:00, Roman Mamedov <rm@romanrm.ru> wrote:
-> On Fri, 10 Jun 2011 18:37:06 +0100
-> Mathias Bur=C3=A9n <mathias.buren@gmail.com> wrote:
->
->> =C2=A0 9 Power_On_Hours =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=
-=A0 090 =C2=A0 090 =C2=A0 000 =C2=A0 =C2=A0Old_age
->> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 7781
->
->
->> # 1 =C2=A0Extended offline =C2=A0 =C2=A0Completed without error =C2=A0=
- =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A06827
->> - # 2 =C2=A0Extended offline =C2=A0 =C2=A0Completed without error =C2=
-=A0 =C2=A0 =C2=A0 00%
->> 6550 =C2=A0 =C2=A0 =C2=A0 =C2=A0 - # 3 =C2=A0Extended offline =C2=A0=
- =C2=A0Completed without error
->> 00% =C2=A0 =C2=A0 =C2=A06468 =C2=A0 =C2=A0 =C2=A0 =C2=A0 - # 4 =C2=A0=
-Extended offline =C2=A0 =C2=A0Completed without
->> error =C2=A0 =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A06329 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 - # 5 =C2=A0Extended offline =C2=A0 =C2=A0Completed
->> without error =C2=A0 =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A06040 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 - # 6 =C2=A0Extended offline
->> Completed without error =C2=A0 =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A0=
-5584 =C2=A0 =C2=A0 =C2=A0 =C2=A0 - # 7 =C2=A0Extended
->> offline =C2=A0 =C2=A0Completed without error =C2=A0 =C2=A0 =C2=A0 00=
-% =C2=A0 =C2=A0 =C2=A05178 =C2=A0 =C2=A0 =C2=A0 =C2=A0 - # 8
->> Extended offline =C2=A0 =C2=A0Completed without error =C2=A0 =C2=A0 =
-=C2=A0 00% =C2=A0 =C2=A0 =C2=A04761 =C2=A0 =C2=A0 =C2=A0 =C2=A0 - #
->> 9 =C2=A0Short offline =C2=A0 =C2=A0 =C2=A0 Completed without error =C2=
-=A0 =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A02285 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 -
->> #10 =C2=A0Extended offline =C2=A0 =C2=A0Completed without error =C2=A0=
- =C2=A0 =C2=A0 00% =C2=A0 =C2=A0 =C2=A01514
->
-> I suggest that you do another "smartctl -t long" on it, the latest on=
-e was
-> done almost 1000 hours ago which is also much longer than the period =
-between
-> previous tests. Freezes on reads could be a symptom of a bad (unreada=
-ble, or
-> very slowly readable - which is worse) sector, perhaps it could be de=
-tected by
-> the SMART test. Or also do a full read of the drive directly (not thr=
-ough the
-> RAID) e.g. with "badblocks" and see if you get any I/O errors that wa=
-y.
->
-> --
-> With respect,
-> Roman
->
+"No, it must be "Used Device Size" * 11 = 16116523456.  Try it without the 'k'."
+-> was better:
+mdadm /dev/md0 --grow --array-size=16116523456
+mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Fri Jun 10 14:19:24 2011
+     Raid Level : raid5
+     Array Size : 16116523456 (15369.91 GiB 16503.32 GB)
+  Used Dev Size : 1465138496 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 13
+  Total Devices : 13
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Thanks for the suggestions, I'll start the long selftest now.
+    Update Time : Fri Jun 10 16:49:37 2011
+          State : clean
+ Active Devices : 13
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 0
 
-/M
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 8c4d8438:42aa49f9:a6d866f6:b6ea6b93 (local to host nassrv01)
+         Events : 0.2
+
+    Number   Major   Minor   RaidDevice State
+       0       8      160        0      active sync   /dev/sdk
+       1       8      208        1      active sync   /dev/sdn
+       2       8      176        2      active sync   /dev/sdl
+       3       8      192        3      active sync   /dev/sdm
+       4       8        0        4      active sync   /dev/sda
+       5       8       16        5      active sync   /dev/sdb
+       6       8       64        6      active sync   /dev/sde
+       7       8       48        7      active sync   /dev/sdd
+       8       8       80        8      active sync   /dev/sdf
+       9       8       96        9      active sync   /dev/sdg
+      10       8      112       10      active sync   /dev/sdh
+      11       8      128       11      active sync   /dev/sdi
+      12       8      144       12      active sync   /dev/sdj
+
+->fsck -n /dev/md0, was ok
+->now:mdadm /dev/md0 --grow -n 12 --backup-file=/reshape.bak
+->and after that, how become the disk out of the raid?
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+at this point i think i take the disk out of the raid, because i need the space of the disk.
+
+I need another advise of you. While the computer is actualy build with 13 disk and i will become more data in the next month and the limit of power supply connecotors is reached i am looking forward to another solution. one possibility is to build up a better computer with more sata and sas connectors and add further raid-controller-cards. an other idea is to build a kind of cluster or dfs with two and later 3,4... computer. i read something about gluster.org. do you have a tip for me or experience in this?
+-- 
+NEU: FreePhone - kostenlos mobil telefonieren!			
+Jetzt informieren: http://www.gmx.net/de/go/freephone
+
+
+-- 
+NEU: FreePhone - kostenlos mobil telefonieren!			
+Jetzt informieren: http://www.gmx.net/de/go/freephone
