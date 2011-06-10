@@ -1,39 +1,33 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/2] imsm: FIX: klocwork: passed dev pointer to
-	is_gen_migration() can be NULL
-Date: Fri, 10 Jun 2011 17:56:39 +0200
-Message-ID: <20110610155639.24539.67025.stgit@gklab-128-013.igk.intel.com>
-References: <20110610154856.24539.28960.stgit@gklab-128-013.igk.intel.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Disk upgrade
+Date: Fri, 10 Jun 2011 10:09:11 -0400
+Message-ID: <4DF22587.60509@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110610154856.24539.28960.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Pointer dev2 passed in write_super_imsm():4451 can be equal to NULL.
+I'm running out of room in a box to add drives, so I want to go to 
+larger drives. Unfortunately I have but one bay left. What I would like 
+to do is put in a single drive, create a raid-10f2 array with a missing 
+device, and copying all of the data off the existing arrays onto the 
+raid-10 array, then diddling the boot so I can get up off the new drive, 
+removing the old drives, adding another new drive and adding that to the 
+array, along with a spare, perhaps.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+Any particular problems with that plan? It leaves the existing drives 
+intact, and critical data is backup via rsync on both a removable device 
+and to network storage.
 
- super-intel.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 8dd0805..3b4010d 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5321,6 +5321,9 @@ static int update_subarray_imsm(struct supertype *st, char *subarray,
- 
- static int is_gen_migration(struct imsm_dev *dev)
- {
-+	if (dev == NULL)
-+		return 0;
-+
- 	if (!dev->vol.migr_state)
- 		return 0;
- 
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
+
+
 
