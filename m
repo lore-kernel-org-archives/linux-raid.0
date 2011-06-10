@@ -1,63 +1,68 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH/RFC] md/raid10: spread read for subordinate r10bios during recovery
-Date: Fri, 10 Jun 2011 12:31:48 +0900
-Message-ID: <1307676708-8977-1-git-send-email-namhyung@gmail.com>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+From: viresh kumar <viresh.kumar@st.com>
+Subject: Re: Why move all map_sg/unmap_sg for slave channel to its client?
+Date: Fri, 10 Jun 2011 09:11:05 +0530
+Message-ID: <4DF19251.1090100@st.com>
+References: <4DF06E29.4010807@st.com>	<BANLkTik9kZjJs5H2kvM+xAtd_CR5NA0dDw@mail.gmail.com> <BANLkTikzDEx2netonGyhskYFtiAEAxq5XQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <BANLkTikzDEx2netonGyhskYFtiAEAxq5XQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>, "Koul, Vinod" <vinod.koul@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "anemo@mba.ocn.ne.jp" <anemo@mba.ocn.ne.jp>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, Bhupesh SHARMA <bhupesh.sharma@st.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-In the current scheme, multiple read request could be directed to
-the first active disk during recovery if there are several disk
-failure at the same time. Spreading those requests on other in-sync
-disks might be helpful.
+On 06/09/2011 11:58 PM, Dan Williams wrote:
+> On Thu, Jun 9, 2011 at 2:38 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
+>> On Thu, Jun 9, 2011 at 8:54 AM, viresh kumar <viresh.kumar@st.com> wrote:
+>>
+>>> I thought map_sg/unmap_sg for slave channels will be handled according
+>>> to the flags passed in prep_slave_sg(). But then i found following patch:
+>>> (...)
+>>> I don't have much knowledge about that discussion, but i think this should be left
+>>> configurable.
+>>> If the client wants to control map/unmap then it can simply pass
+>>> DMA_COMPL_SKIP_DEST_UNMAP | DMA_COMPL_SKIP_SRC_UNMAP in flags. I didn't wanted to
+>>> skip this in my driver and so i don't pass them.
+>>
+>> What if the same driver is used on many different platforms like say
+>> drivers/tty/serial/amba-pl011.c, and some of the platforms using it
+>> has DMA engines that does not implement mapping/unmapping of
+>> the passed sglist?
+>>
+>> In that case I think you have to modify all drivers in drivers/dma/*
+>> to do this mapping, and then you could just make it a required behaviour
+>> and skip the flags altogether.
+>>
+>> But apparently that approach was blocked at one point so let's see
+>> what the others say.
+> 
+> My problem with automatic unmapping support is that the dma-driver
+> really does not have a chance to get it right except for the trivially
+> straightforward cases.  One need only look at the current bustage of
+> raid5 acceleration with respect to overlapping mappings and arm v6.
+> The dma-driver just knows how to perform "this" operation on "this"
+> dma address.  It does not know the lifetime of the mapping, or even if
+> it has the actual dma handle for unmapping versus an offset
+> 
+> For the raid case I've currently convinced myself that the raid client
+> needs to get directly involved in dma mapping management, rather than
+> teach all dma drivers a language of how to unmap and when.  Not only
+> will this fix the overlapping, but it also eliminates the need to map
+> and remap because the raid client knows the lifetime of  a stripe_head
+> while the driver only knows the lifetime of a given stripe operation.
+> 
+> For slave-dma maybe there is a lot of common un-mapping logic that can
+> be reused, but I think that comes from a separate smart library that
+> understands the dma mapping lifetimes of a given class of clients.
+> Leave the dma-drivers to just be dumb operators on anonymous dma
+> addresses.
+> 
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/raid10.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+Linus, Dan,
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index dea73bdb99b8..d0188e49f881 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1832,6 +1832,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 	if (!test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
- 		/* recovery... the complicated one */
- 		int j, k;
-+		int last_read = -1;
- 		r10_bio = NULL;
- 
- 		for (i=0 ; i<conf->raid_disks; i++) {
-@@ -1891,7 +1892,9 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 						      &sync_blocks, still_degraded);
- 
- 			for (j=0; j<conf->copies;j++) {
--				int d = r10_bio->devs[j].devnum;
-+				int c = (last_read + j + 1) % conf->copies;
-+				int d = r10_bio->devs[c].devnum;
-+
- 				if (!conf->mirrors[d].rdev ||
- 				    !test_bit(In_sync, &conf->mirrors[d].rdev->flags))
- 					continue;
-@@ -1902,13 +1905,14 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 				bio->bi_private = r10_bio;
- 				bio->bi_end_io = end_sync_read;
- 				bio->bi_rw = READ;
--				bio->bi_sector = r10_bio->devs[j].addr +
-+				bio->bi_sector = r10_bio->devs[c].addr +
- 					conf->mirrors[d].rdev->data_offset;
- 				bio->bi_bdev = conf->mirrors[d].rdev->bdev;
- 				atomic_inc(&conf->mirrors[d].rdev->nr_pending);
- 				atomic_inc(&r10_bio->remaining);
--				/* and we write to 'i' */
-+				last_read = c;
- 
-+				/* and we write to 'i' */
- 				for (k=0; k<conf->copies; k++)
- 					if (r10_bio->devs[k].devnum == i)
- 						break;
+Got it. Thanks for your replies.
+
 -- 
-1.7.5.2
-
+viresh
