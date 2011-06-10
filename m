@@ -1,34 +1,41 @@
-From: Christoph Dittmann <linux-raid@christoph-d.de>
-Subject: Re: Triple-parity raid6
-Date: Fri, 10 Jun 2011 14:20:40 +0200
-Message-ID: <4DF20C18.3030604@christoph-d.de>
-References: <isp2g2$rf$1@dough.gmane.org>	<20110609114954.243e9e22@notabene.brown>	<isqb2o$g0s$1@dough.gmane.org>	<20110609220438.26336b27@notabene.brown> <87aadq5q1l.fsf@gmail.com> <isslla$o2i$1@dough.gmane.org>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] imsm: FIX: Migration Raid0->Raid5 cannot be restarted
+	correctly
+Date: Fri, 10 Jun 2011 16:44:07 +0200
+Message-ID: <20110610144407.12333.58283.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <isslla$o2i$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On 06/10/2011 10:45 AM, David Brown wrote:
-> Making multiple parity syndromes is easy enough mathematically:
+When array raid0 is migrated to raid5, reshape cannot be continued
+correctly due to wrong array parameters settings.
+Raid disks number is set too big.
 
-Adam Leventhal, who wrote the double parity and triple parity code for 
-ZFS, mentioned on his blog [1] that going beyond triple parity poses 
-significant challenges if write performance should not suffer.
+There is no need, during raid0->raid5 migration to increase
+info->array.raid_disks, it is already set to final value using
+designation map information.
 
-In particular, it looks like a relevant math paper (originally) had a 
-flaw in the claim that quad parity and above can be implemented just 
-like triple parity.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-I don't know the implementation you were going to use, neither am I 
-knowledgeable about multi-parity in general. I only thought it might be 
-relevant to add to the current discussion that other people had issues 
-with implementing N-parity for N > 3.
+ super-intel.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
+diff --git a/super-intel.c b/super-intel.c
+index 075385a..40fd940 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2133,7 +2133,6 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 				/* conversion is happening as RAID5 */
+ 				info->array.level = 5;
+ 				info->array.layout = ALGORITHM_PARITY_N;
+-				info->array.raid_disks += 1;
+ 				info->delta_disks -= 1;
+ 				break;
+ 			default:
 
-Christoph
-
-[1] http://blogs.oracle.com/ahl/entry/triple_parity_raid_z
