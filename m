@@ -1,132 +1,160 @@
-From: Durval Menezes <durval.menezes@gmail.com>
-Subject: Re: Maximizing failed disk replacement on a RAID5 array
-Date: Sat, 11 Jun 2011 19:35:17 -0300
-Message-ID: <BANLkTimOqdb2VH26Zv=-VSJ4VYccAuv02w@mail.gmail.com>
-References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
-	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
-	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>
-	<4DECF025.9040006@fnarfbargle.com>
-	<BANLkTi=jPiXLySacVZqDkeThdG80K_HTxQ@mail.gmail.com>
-	<4DECF841.1060906@fnarfbargle.com>
-	<BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
-	<4DEDE6E7.40301@anonymous.org.uk>
-	<4DF1F117.5010604@anonymous.org.uk>
+From: jeffs_linux@123mail.org
+Subject: Why do I get different results for 'mdadm --detail' & 'mdadm --examine'
+ for the same array?
+Date: Sat, 11 Jun 2011 18:01:11 -0700
+Message-ID: <1307840471.18429.1462140465@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DF1F117.5010604@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello John,
+Hi,
 
-On Fri, Jun 10, 2011 at 7:25 AM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 07/06/2011 09:52, John Robinson wrote:
->>
->> On 06/06/2011 19:06, Durval Menezes wrote:
->> [...]
->>>
->>> It would be great to have a
->>> "duplicate-this-bad-old-disk-into-this-shiny-new-disk" functionalit=
-y,
->>> as it would enable an almost-no-downtime disk replacement with
->>> minimum risk, but it seems we can't have everything... :-0 Maybe it=
-'s
->>> something for the wishlist?
->>
->> It's already on the wishlist, described as a hot replace.
->
-> Actually I've been thinking about this. I think I'd rather the hot re=
-place
-> functionality did a normal rebuild from the still-good drives, and on=
-ly if
-> it came across a read error from those would it attempt to refer to t=
-he
-> contents of the known-to-be-failing drive (and then also attempt to r=
-epair
-> the read error on the supposedly-still-good drive that gave a read er=
-ror, as
-> already happens).
+I'm working on setting up my 1st Linux production server with RAID for
+our office.
 
-This looks like a very good idea. The old (failing) drive would be
-kept "on reserve", ready to be accessed for eventual failed sectors on
-the other old (good) drives...
+I have four drives, across which I created two arrays.
 
-> My rationale for this is as follows: if we want to hot-replace a driv=
-e
-> that's known to be failing, we should trust it less than the remainin=
-g
-> still-good drives, and treat it with kid gloves. It may be suffering =
-from
-> bit-rot. We'd rather not hit all the bad sectors on the failing drive=
-,
-> because each time we do that we send the drive into 7 seconds (or mor=
-e, for
-> cheap drives without TLER) of re-reading, plus any Linux-level re-rea=
-ding
-> there might be. Further, making the known-to-be-failing drive work ex=
-tra
-> hard (doing the equivalent of dd'ing from it while also still using i=
-t to
-> serve its contents as an array member) might make it die completely b=
-efore
-> we've finished.
+mdadm --create /dev/md0 --verbose --bitmap=interal --metadata=0.90
+--raid-devices=4 --homehost=jeffadm --name=jeffadm0 --level=raid1
+/dev/sd[abcd]1
 
-I agree completely.
+mdadm --create /dev/md1 --verbose --bitmap=interal --metadata=1.2
+--raid-devices=4 --homehost=jeffadm --name=jeffadm1 --level=raid10
+--layout=f2 --chunk=512 /dev/sd[abcd]2
 
-> What will this do for rebuild time? Well, I don't think it'll be any =
-slower.
+After letting the arrays build an so on, I check to see:
 
-I think it will actually be faster.
+fdisk -l | grep -i /dev/md | grep bytes
+	Disk /dev/md127 doesn't contain a valid partition table
+	Disk /dev/md126 doesn't contain a valid partition table
+	Disk /dev/md127: 1998.2 GB, 1998231437312 bytes
+	Disk /dev/md126: 1085 MB, 1085603840 bytes
 
-> On the one hand, you'd think that copying from one drive to another w=
-ould be
-> faster than a rebuild, because you're only reading 1 drive instead of=
- N-1,
-> but on the other, your array is going to run slowly (pretty much degr=
-aded
-> speed) anyway because you're keeping one drive in constant use readin=
-g from
-> it, and you risk it becoming much, much slower if you do run in to hu=
-ndreds
-> or thousands of read errors on the failing drive.
->
-> So overall I think hot-replace should be a normal replace with a poss=
-ible
-> second source of data/parity.
+cat /proc/mdstat
+-----------------------------------
+Personalities : [raid10] [raid0] [raid1] [raid6] [raid5] [raid4]
+[linear]
+md126 : active raid1 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+      1060160 blocks [4/4] [UUUU]
+      bitmap: 0/130 pages [0KB], 4KB chunk
 
-Your reasoning sounds good to me.
+md127 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+      1951397888 blocks super 1.2 512K chunks 2 far-copies [4/4] [UUUU]
+      bitmap: 11/466 pages [44KB], 2048KB chunk
 
-> Thoughts?
+unused devices: <none>
+-----------------------------------
 
-Only sadness that it's not implemented yet... :-)
+For assembly at boot-up I created by hand,
 
-> Yes, I know, -ENOPATCH
+cat /etc/mdadm.conf
+-----------------------------------
+DEVICE /dev/disk/by-id/ata-ST31000528AS_9VP37KJF-part1
+/dev/disk/by-id/ata-ST31000528AS_9VP18C2L-part1
+/dev/disk/by-id/ata-ST31000528AS_9VP18JXF-part1
+/dev/disk/by-id/ata-ST31000528AS_6FD23G3U-part1
 
-Exactly :-)
+DEVICE /dev/disk/by-id/ata-ST31000528AS_9VP37KJF-part2
+/dev/disk/by-id/ata-ST31000528AS_9VP18C2L-part2
+/dev/disk/by-id/ata-ST31000528AS_9VP18JXF-part2
+/dev/disk/by-id/ata-ST31000528AS_6FD23G3U-part2
 
-Cheers,
---=20
-   Durval Menezes.
+ARRAY /dev/md/0_0 level=raid1  num-devices=4 metadata=0.90
+UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+
+ARRAY /dev/md/jeffadm:jeffadm1 level=raid10 num-devices=4 metadata=1.02
+UUID=d84afb64:e6fa2b64:ff21c975:f9765431 name=name=jeffadm:jeffadm1
+-----------------------------------
+
+I installed a Linux system, across the RAID arrays.  It boots up like I
+expect.  As far as I can tell, everything seems to work ok.
 
 
->
-> Cheers,
->
-> John.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+In case it's helpful,
+
+dmesg | grep md
+[    5.312800] md: raid10 personality registered for level 10
+[    5.364552] md: raid0 personality registered for level 0
+[    5.379499] md: raid1 personality registered for level 1
+[    5.649211] md: raid6 personality registered for level 6
+[    5.649213] md: raid5 personality registered for level 5
+[    5.649214] md: raid4 personality registered for level 4
+[    8.450420] md: md127 stopped.
+[    8.461620] md: bind<sdb2>
+[    8.470479] md: bind<sdc2>
+[    8.479231] md: bind<sdd2>
+[    8.487931] md: bind<sda2>
+[    8.512436] md/raid10:md127: active with 4 out of 4 devices
+[    8.529191] created bitmap (466 pages) for device md127
+[    8.554742] md127: bitmap initialized from disk: read 30/30 pages,
+set 3952 bits
+[    8.599314] md127: detected capacity change from 0 to 1998231437312
+[    8.621493]  md127: unknown partition table
+[    9.645318] md: linear personality registered for level -1
+[   12.397689] ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xff00
+irq 14
+[   12.397690] ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xff08
+irq 15
+[   18.127526] md: md126 stopped.
+[   18.138594] md: bind<sdb1>
+[   18.147113] md: bind<sdc1>
+[   18.155444] md: bind<sdd1>
+[   18.163804] md: bind<sda1>
+[   18.172913] md/raid1:md126: active with 4 out of 4 mirrors
+[   18.186626] created bitmap (130 pages) for device md126
+[   18.201996] md126: bitmap initialized from disk: read 9/9 pages, set
+0 bits
+[   18.225079] md126: detected capacity change from 0 to 1085603840
+[   18.240775]  md126: unknown partition table
+[   20.429304] EXT4-fs (md126): mounted filesystem with ordered data
+mode. Opts: acl,user_xattr,barrier=1
+[   84.109701] EXT4-fs (md126): re-mounted. Opts:
+acl,user_xattr,barrier=1,commit=0
+
+
+Now, I'm going about characterizing the arrays, and the Volumes on them,
+so I can deal with recovery if & when it's necessary.
+
+When I "look" at the array with these two commands,
+
+mdadm --examine --scan
+	ARRAY /dev/md/jeffadm1 metadata=1.2
+	UUID=d84afb64:e6fa2b64:ff21c975:f9765431 name=jeffadm:jeffadm1
+	ARRAY /dev/md126 UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+
+mdadm --detail --scan
+	ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
+	UUID=d84afb64:e6fa2b64:ff21c975:f9765431
+	ARRAY /dev/md/0_0 metadata=0.90
+	UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+
+
+I get different results for each one.
+
+From my reading about naming in mdadm.conf, I was expecting to see:
+
+  /dev/md/0_0
+  /dev/jeffadm:jeffadm1
+
+
+Why do I get this mix of different results,
+
+	/dev/md/jeffadm1
+	/dev/md126
+
+from the "--detail" output, and
+
+	/dev/md127 metadata=1.2 name=jeffadm:jeffadm1
+	/dev/md/0_0
+
+according to the "--examine" output?
+
+Is my mdadm.conf OK?  What really should I expect to see for the names
+of my arrays?
+
+Jeff
