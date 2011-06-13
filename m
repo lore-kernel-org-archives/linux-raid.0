@@ -1,56 +1,44 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 2/3] md/raid5: fix FUA request handling in ops_run_io()
-Date: Mon, 13 Jun 2011 23:48:23 +0900
-Message-ID: <1307976504-10215-2-git-send-email-namhyung@gmail.com>
-References: <1307976504-10215-1-git-send-email-namhyung@gmail.com>
+From: Tim Blundell <tim.blundell@gmail.com>
+Subject: Re: HDD reports errors while completing RAID6 array check
+Date: Mon, 13 Jun 2011 14:30:48 -0400
+Message-ID: <4DF65758.2030405@gmail.com>
+References: <BANLkTik87PZChAzgBnDM170uJHU=3Yc6Eg@mail.gmail.com>	<20110611000000.76ca58e7@natsu>	<BANLkTinPfZeSwJ8Tckc0usXFpLHHuPSz4Q@mail.gmail.com> <BANLkTimf-P1x57KmYbunGp8UHskvjQS35A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1307976504-10215-1-git-send-email-namhyung@gmail.com>
+In-Reply-To: <BANLkTimf-P1x57KmYbunGp8UHskvjQS35A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Commit e9c7469bb4f5 ("md: implment REQ_FLUSH/FUA support")
-introduced R5_WantFUA flag and set rw to WRITE_FUA in that case.
-However remaining code still checks whether rw is exactly same
-as WRITE or not, so FUAed-write ends up with being treated as
-READ. Fix it.
 
-Cc: Tejun Heo <tj@kernel.org>
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/raid5.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On 6/11/2011 5:49 AM, Mathias Bur=C3=A9n wrote:
+> =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> Model Family:     Western Digital Caviar Green (Adv. Format) family
+> Device Model:     WDC WD20EARS-00MVWB0
+> Serial Number:    WD-WMAZ20188479
+> Firmware Version: 50.0AB50
+> User Capacity:    2,000,398,934,016 bytes
+> Device is:        In smartctl database [for details use: -P show]
+> ATA Version is:   8
+> ATA Standard is:  Exact ATA specification draft version not indicated
+> Local Time is:    Sat Jun 11 10:48:05 2011 IST
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index fa6ac70dc72f..026452bbb030 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -514,7 +514,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 		bi = &sh->dev[i].req;
- 
- 		bi->bi_rw = rw;
--		if (rw == WRITE)
-+		if (rw & WRITE)
- 			bi->bi_end_io = raid5_end_write_request;
- 		else
- 			bi->bi_end_io = raid5_end_read_request;
-@@ -548,13 +548,13 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 			bi->bi_io_vec[0].bv_offset = 0;
- 			bi->bi_size = STRIPE_SIZE;
- 			bi->bi_next = NULL;
--			if (rw == WRITE &&
-+			if (rw & WRITE &&
- 			    test_bit(R5_ReWrite, &sh->dev[i].flags))
- 				atomic_add(STRIPE_SECTORS,
- 					&rdev->corrected_errors);
- 			generic_make_request(bi);
- 		} else {
--			if (rw == WRITE)
-+			if (rw & WRITE)
- 				set_bit(STRIPE_DEGRADED, &sh->state);
- 			pr_debug("skip op %ld on disc %d for sector %llu\n",
- 				bi->bi_rw, i, (unsigned long long)sh->sector);
--- 
-1.7.5.2
+Not certain if this was mentioned. While WDC WD20EARS drives can be use=
+d=20
+in an RAID array, WD recommends using there RAID capable drives in an=20
+enterprise environment.
+I tried using same drives in a simple RAID-1 array and had serious=20
+performance issues (sync taking a week) and stalls when writing to disk=
+=2E=20
+Are you using the stock firmware on these drives?
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
