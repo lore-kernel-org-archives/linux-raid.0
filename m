@@ -1,33 +1,97 @@
-From: BENG.helpdesk@webmaster.net
-Subject: Read and get back!!
-Date: Sun, 12 Jun 2011 20:09:05 +0200
-Message-ID: <201106121819.p5CGUBfd004774@mail3.srv.ualberta.ca>
-Reply-To: kohbeng_seng@kimo.com
+From: Durval Menezes <durval.menezes@gmail.com>
+Subject: Re: Maximizing failed disk replacement on a RAID5 array
+Date: Mon, 13 Jun 2011 02:32:47 -0300
+Message-ID: <BANLkTikqs6R9r9hRAPR5b4ErLf1xr8yBpQ@mail.gmail.com>
+References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
+	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
+	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>
+	<4DECF025.9040006@fnarfbargle.com>
+	<BANLkTi=jPiXLySacVZqDkeThdG80K_HTxQ@mail.gmail.com>
+	<4DECF841.1060906@fnarfbargle.com>
+	<BANLkTikPxQvyDD3d_A6d3+GLKOLgqFJbFw@mail.gmail.com>
+	<BANLkTi=+2GFWRFKT0SCXRtkdn71msgDY=g@mail.gmail.com>
+	<4DEDB8B7.2070708@fnarfbargle.com>
+	<BANLkTimxsT+htp82Us9uVgSdFNgb0m4vkQ@mail.gmail.com>
+	<4DEF258A.8090600@fnarfbargle.com>
+	<BANLkTi=4uHhNS7+WfcmvVSY11kDWe-e7ZQ@mail.gmail.com>
+	<4DEF2B59.7090408@fnarfbargle.com>
+	<BANLkTi=BuXK4SBGR=FrEcHFC1WohNkUY7g@mail.gmail.com>
+	<4DEF7775.5020407@fnarfbargle.com>
+	<BANLkTin8dpbxWfSCG_VoOM_FMmqCkm2mJg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Description: Mail message body
+In-Reply-To: <BANLkTin8dpbxWfSCG_VoOM_FMmqCkm2mJg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Koh Beng Seng helpdesk@webmaster.net" <BENGhelpdesk@webmaster.net>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Read and get back!!
- 
-I am Mr. KOH Beng Seng Independent Non-executive Director Chairman of Bank of China Ltd, Hong Kong.
- 
-An Iraqi named Abrahem Hussein Raheem, a business man made a numbered fixed deposit of Sixty Five Million Five Hundred Thousand United State Dollars only in my branch. Upon maturity several notices was sent to him, even during the war, Five years ago (2006). Again after the war another notification was sent and still no response came from him. We later found out that Ahmed Sadoun Salih and his family had been killed during the war in Gunfire that hit their home at Mukaradeeb where his personal oil-well was.
- 
-After further investigation it was also discovered that Abrahem Hussein Raheem did not declare any next of kin in his official papers including the paper work of his bank deposit. And he also confided in me the last time he was at my office that no one except me knew of his deposit in my bank. So, Sixty Five Million Five Hundred Thousand United State Dollars is still lying in my bank and no one will ever come forward to claim it. What bothers me is that according to the laws of my country at the expiration seven years six months the funds will revert to the ownership of the Hong Kong Government if nobody applies to claim the funds.
+Hello Folks,
 
-I want to assure you that this project is real and one hundred percent risk free and does not relate to any breach of law or proceeds from drugs. It is a matter of necessity to contact you for assistance without any further investigations about your person, it is therefore necessary that you tell me a little about yourself, I hope no form of betrayal will be experienced in the course of our collaboration, I must give you my trust because this transaction is no joke and such opportunity comes once in a life time.
+On Wed, Jun 8, 2011 at 10:21 AM, Brad Campbell
+<lists2009@fnarfbargle.com> wrote:
+>
+> Best of luck, and let us know how you get on.
 
-My proposal to you is that I prepared to front you as the sole beneficiary of my deceased client so that i can instruct BANK OF CHINA to release the deposit to you as the closest surviving relation or business partner. Upon receipt of the deposit, I am prepared to share the money with you in half 50/50 percentage. If interested do send me your full names, current home address, phone number, your occupation to this email account: kohbseng@yahoo.com.hk
+Just finished the process here. To summarize, seems I've got my array
+back in a stable state.
 
-Your earliest reply will be appreciated.
+What I did:
 
-Yours Truly,
-Mr. KOH Beng Seng,
-Independent Non-Executive Director 
-Chairman of the Risk Committee, Hong Kong
-Email: kohbseng@yahoo.com.hk
+1) Got a good backup of all the data in the array (using "tar") to
+=A0=A0 removable HDs, verified it (using md5sum), and then stored these
+=A0=A0 HDs safely offline;
+
+2) Unmounted the filesystem in the array;
+
+3) inserted the replacement disk on a USB dock, partitioned it,
+=A0=A0 then added it to the array ("mdadm --add");
+=A0=A0=A0 -> Verified (via "mdadm --detail") that the replacement disk =
+was
+=A0 =A0 =A0 =A0listed on the array as a "spare";
+
+4) failed the bad disk in the array ("mdadm --fail")
+=A0=A0 -> At that point, the array immediatelly started to resync into =
+the
+=A0=A0=A0=A0=A0 replacement disk;
+
+5) Monitored the resync process via "cat /proc/mdstat": it took
+=A0=A0 roughly 11 hours (I guess because transfer speed to the replacem=
+ent
+=A0=A0 disk was limited by the USB ~40MB/s speed limit), but it signale=
+d
+=A0=A0 no errors;
+
+6) Verified that the array was really synced ("mdadm --detail") and
+=A0=A0 that there were indeed no errors during the resync (less
+=A0=A0 /var/log/messages);
+
+7) removed the bad disk logically from the array ("mdadm --remove");
+
+8) shut down the machine (init 0);
+
+9) removed the bad disk physically from the machine, ejected the
+=A0=A0 replacement disk from the USB dock, and then installed the
+=A0=A0 replacement disk inside the machine;
+
+10) turned the system on: the OS booted, assembled the array and
+=A0=A0=A0 mounted the filesystem in it with no issues;
+
+11) checked (using "md5sum -c" on the md5sum files generated during
+=A0=A0=A0 pass#1 above) that all that ON THE ARRAY was indeed correct, =
+so
+=A0=A0=A0 in the end I didn't need to restore anything from backup.
+
+Thanks for all the help, folks, and I pray we have the "hot-replace"
+functionality implemented soon... it will make for much sounder sleep
+the next time one of my disks fails... :-)
+
+Cheers,
+--
+=A0 Durval Menezes.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
