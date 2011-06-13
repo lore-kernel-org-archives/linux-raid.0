@@ -1,7 +1,7 @@
 From: Durval Menezes <durval.menezes@gmail.com>
 Subject: Re: Maximizing failed disk replacement on a RAID5 array
-Date: Mon, 13 Jun 2011 02:32:47 -0300
-Message-ID: <BANLkTikqs6R9r9hRAPR5b4ErLf1xr8yBpQ@mail.gmail.com>
+Date: Mon, 13 Jun 2011 02:56:47 -0300
+Message-ID: <BANLkTin58zxkr1GRut+kZTSe3RmAfFZbug@mail.gmail.com>
 References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
 	<BANLkTimOxCF7diZfeFgtqCBWKZVF2pxyLg@mail.gmail.com>
 	<BANLkTi=px08AWxfJJq+zNepCZM8aAsKECA@mail.gmail.com>
@@ -15,81 +15,54 @@ References: <BANLkTimBYFhjQ-sC9DhTMO+PG-Ox+A9S2Q@mail.gmail.com>
 	<4DEF258A.8090600@fnarfbargle.com>
 	<BANLkTi=4uHhNS7+WfcmvVSY11kDWe-e7ZQ@mail.gmail.com>
 	<4DEF2B59.7090408@fnarfbargle.com>
-	<BANLkTi=BuXK4SBGR=FrEcHFC1WohNkUY7g@mail.gmail.com>
-	<4DEF7775.5020407@fnarfbargle.com>
-	<BANLkTin8dpbxWfSCG_VoOM_FMmqCkm2mJg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTin8dpbxWfSCG_VoOM_FMmqCkm2mJg@mail.gmail.com>
+In-Reply-To: <4DEF2B59.7090408@fnarfbargle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Brad Campbell <lists2009@fnarfbargle.com>
+Cc: Brad Campbell <brad@fnarfbargle.com>, linux-raid@vger.kernel.org, Drew <drew.kay@gmail.com>
 List-Id: linux-raid.ids
 
-Hello Folks,
+Hello Brad, folks,
 
-On Wed, Jun 8, 2011 at 10:21 AM, Brad Campbell
-<lists2009@fnarfbargle.com> wrote:
+On Wed, Jun 8, 2011 at 4:57 AM, Brad Campbell <lists2009@fnarfbargle.co=
+m> wrote:
+> On 08/06/11 15:47, Durval Menezes wrote:
 >
-> Best of luck, and let us know how you get on.
+>> I'm sorry if I did not make myself clear; I've already run both a
+>> "repair" on the RAID =A0(see above) and a "smart -t long" on the
+>> particular disk... I had about 40 bad sectors before, and now have
+>> just 4, but these 4 sectors persist as being marked in error... I
+>> think the "RAID repair" didn't touch them.
+[...]
+> I've never had md not report a repaired sector when performing a repa=
+ir
+> operation.
 
-Just finished the process here. To summarize, seems I've got my array
-back in a stable state.
+Just to keep you posted: after I finished replacing that failing disk,
+I wrote zeroes to all its sectors (dd bs=3D16065b </dev/zero >/dev/DISK=
+)
+and then checked SMART again.
 
-What I did:
+Guess what? As expected, the 4 sectors that were being reported in
+both "Current_Pending_Sector" and "Offline_Uncorrectable" just went
+away... both counters now report a big round  "0".
 
-1) Got a good backup of all the data in the array (using "tar") to
-=A0=A0 removable HDs, verified it (using md5sum), and then stored these
-=A0=A0 HDs safely offline;
+So, it seems my hypothesis that these sectors were not being touched
+by the md "repair" was indeed correct: once they were written to, they
+ended up being automatically remapped (or at least cleaned out of the
+above counters) by the HD firmware. Also, as the array resync reported
+no errors whatsoever, it seems these sectors were simply not being
+used by md.
 
-2) Unmounted the filesystem in the array;
-
-3) inserted the replacement disk on a USB dock, partitioned it,
-=A0=A0 then added it to the array ("mdadm --add");
-=A0=A0=A0 -> Verified (via "mdadm --detail") that the replacement disk =
-was
-=A0 =A0 =A0 =A0listed on the array as a "spare";
-
-4) failed the bad disk in the array ("mdadm --fail")
-=A0=A0 -> At that point, the array immediatelly started to resync into =
-the
-=A0=A0=A0=A0=A0 replacement disk;
-
-5) Monitored the resync process via "cat /proc/mdstat": it took
-=A0=A0 roughly 11 hours (I guess because transfer speed to the replacem=
-ent
-=A0=A0 disk was limited by the USB ~40MB/s speed limit), but it signale=
-d
-=A0=A0 no errors;
-
-6) Verified that the array was really synced ("mdadm --detail") and
-=A0=A0 that there were indeed no errors during the resync (less
-=A0=A0 /var/log/messages);
-
-7) removed the bad disk logically from the array ("mdadm --remove");
-
-8) shut down the machine (init 0);
-
-9) removed the bad disk physically from the machine, ejected the
-=A0=A0 replacement disk from the USB dock, and then installed the
-=A0=A0 replacement disk inside the machine;
-
-10) turned the system on: the OS booted, assembled the array and
-=A0=A0=A0 mounted the filesystem in it with no issues;
-
-11) checked (using "md5sum -c" on the md5sum files generated during
-=A0=A0=A0 pass#1 above) that all that ON THE ARRAY was indeed correct, =
-so
-=A0=A0=A0 in the end I didn't need to restore anything from backup.
-
-Thanks for all the help, folks, and I pray we have the "hot-replace"
-functionality implemented soon... it will make for much sounder sleep
-the next time one of my disks fails... :-)
+Anyone has a good explanation to that? Inquiring minds want to know... =
+:-)
 
 Cheers,
---
-=A0 Durval Menezes.
+--=20
+   Durval Menezes.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
