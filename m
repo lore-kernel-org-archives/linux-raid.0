@@ -1,70 +1,80 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: HDD reports errors while completing RAID6 array check
-Date: Tue, 14 Jun 2011 08:15:32 +0800
-Message-ID: <4DF6A824.6070502@fnarfbargle.com>
-References: <BANLkTik87PZChAzgBnDM170uJHU=3Yc6Eg@mail.gmail.com>	<20110611000000.76ca58e7@natsu>	<BANLkTinPfZeSwJ8Tckc0usXFpLHHuPSz4Q@mail.gmail.com> <BANLkTimf-P1x57KmYbunGp8UHskvjQS35A@mail.gmail.com> <4DF65758.2030405@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/4] imsm: FIX: Cannot create volume
+Date: Tue, 14 Jun 2011 12:07:04 +1000
+Message-ID: <20110614120704.54a58bbe@notabene.brown>
+References: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
+	<20110609162912.690.5879.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4DF65758.2030405@gmail.com>
+In-Reply-To: <20110609162912.690.5879.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On 14/06/11 02:30, Tim Blundell wrote:
->
-> On 6/11/2011 5:49 AM, Mathias Bur=C3=A9n wrote:
->> =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
->> Model Family:     Western Digital Caviar Green (Adv. Format) family
->> Device Model:     WDC WD20EARS-00MVWB0
->> Serial Number:    WD-WMAZ20188479
->> Firmware Version: 50.0AB50
->> User Capacity:    2,000,398,934,016 bytes
->> Device is:        In smartctl database [for details use: -P show]
->> ATA Version is:   8
->> ATA Standard is:  Exact ATA specification draft version not indicate=
-d
->> Local Time is:    Sat Jun 11 10:48:05 2011 IST
->> SMART support is: Available - device has SMART capability.
->> SMART support is: Enabled
->
-> Not certain if this was mentioned. While WDC WD20EARS drives can be u=
-sed in an RAID array, WD=20
-> recommends using there RAID capable drives in an enterprise environme=
-nt.
-> I tried using same drives in a simple RAID-1 array and had serious pe=
-rformance issues (sync taking=20
-> a week) and stalls when writing to disk. Are you using the stock firm=
-ware on these drives?
+On Thu, 09 Jun 2011 18:29:12 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-Just a data point. I have 10 of them in a RAID-6. They are in a 6 core =
-/ 16GB box with PCIe SAS=20
-controllers (so the machine is not bandwidth starved). I hammer the liv=
-ing daylights out of them.=20
-They are quite fast for sequential access, not very fast for random IO =
-and they are pretty cool and=20
-quiet.
-I have used WDIDLE3 to turn off the idle timer to stop the heads unload=
-ing though.
+> getinfo_super_imsm_volume() clears entire 'info' structure before filling with new
+> information. Disk number and raid_disk can be required later by caller
+> but it is lost.
+> 
+> Restore disk number information in getinfo_super_imsm_volume() call.
 
-The reason WD state their consumer drives are no good in RAID applicati=
-ons is TLER. On a hardware=20
-RAID controller the drives can get kicked out of the array if they go i=
-nto a deep recovery read, but=20
-md does not suffer this issue.
+I need a better explanation than this.
 
-On SMART, it's prudent to configure smartmontools to do regular checks =
-and e-mail you if it sees an=20
-issue. I do a long every sunday and shorts every other morning and have=
- had early notification of=20
-pending issues a couple of times. Definitely worth the price of admissi=
-on.
+When is getinfo_super_imsm or getinfo_super_imsm_volume *ever* called in a
+situation where 'info' contains a meaningful value for disk.number???
+I could not find it.
+
+Alternately, explain what goes wrong with the current code (yes, I could
+probably test it myself ... but if you send a patch you should justify it).
+
+So for now this patch has not been applied.
+
+Thanks,
+NeilBrown
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+> 
+>  super-intel.c |   11 ++++++++++-
+>  1 files changed, 10 insertions(+), 1 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 5c840ec..e094b85 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -2075,11 +2075,18 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  	unsigned int component_size_alligment;
+>  	int map_disks = info->array.raid_disks;
+>  
+> -	memset(info, 0, sizeof(*info));
+>  	if (prev_map)
+>  		map_to_analyse = prev_map;
+>  
+>  	dl = super->disks;
+> +	while (dl) {
+> +		if (dl->index == info->disk.number)
+> +			break;
+> +		dl = dl->next;
+> +	}
+> +	if (!dl)
+> +		dl = super->disks;
+> +	memset(info, 0, sizeof(*info));
+>  
+>  	info->container_member	  = super->current_vol;
+>  	info->array.raid_disks    = map->num_members;
+> @@ -2147,6 +2154,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  	if (dl) {
+>  		info->disk.major = dl->major;
+>  		info->disk.minor = dl->minor;
+> +		info->disk.number = dl->index;
+> +		info->disk.raid_disk = dl->index;
+>  	}
+>  
+>  	info->data_offset	  = __le32_to_cpu(map_to_analyse->pba_of_lba0);
+
