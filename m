@@ -1,80 +1,92 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/4] imsm: FIX: Cannot create volume
-Date: Tue, 14 Jun 2011 12:07:04 +1000
-Message-ID: <20110614120704.54a58bbe@notabene.brown>
+Subject: Re: [PATCH 2/4] FIX: Cannot create volume
+Date: Tue, 14 Jun 2011 12:35:30 +1000
+Message-ID: <20110614123530.319da13a@notabene.brown>
 References: <20110609162050.690.87261.stgit@gklab-128-013.igk.intel.com>
-	<20110609162912.690.5879.stgit@gklab-128-013.igk.intel.com>
+	<20110609162921.690.90444.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110609162912.690.5879.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110609162921.690.90444.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 09 Jun 2011 18:29:12 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Thu, 09 Jun 2011 18:29:21 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
 
-> getinfo_super_imsm_volume() clears entire 'info' structure before filling with new
-> information. Disk number and raid_disk can be required later by caller
-> but it is lost.
+> getinfo_super() can clear entire 'inf' structure before filling with new
+> information. Disk number required later is lost.
 > 
-> Restore disk number information in getinfo_super_imsm_volume() call.
-
-I need a better explanation than this.
-
-When is getinfo_super_imsm or getinfo_super_imsm_volume *ever* called in a
-situation where 'info' contains a meaningful value for disk.number???
-I could not find it.
-
-Alternately, explain what goes wrong with the current code (yes, I could
-probably test it myself ... but if you send a patch you should justify it).
-
-So for now this patch has not been applied.
-
-Thanks,
-NeilBrown
-
-
+> Restore disk number information after getinfo_super() call.
 > 
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 > 
->  super-intel.c |   11 ++++++++++-
->  1 files changed, 10 insertions(+), 1 deletions(-)
+>  Create.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/super-intel.c b/super-intel.c
-> index 5c840ec..e094b85 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2075,11 +2075,18 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  	unsigned int component_size_alligment;
->  	int map_disks = info->array.raid_disks;
+> diff --git a/Create.c b/Create.c
+> index 7b4d0fe..d01dea7 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -805,7 +805,6 @@ int Create(struct supertype *st, char *mddev,
+>  			switch(pass) {
+>  			case 1:
+>  				*inf = info;
+> -
+>  				inf->disk.number = dnum;
+>  				inf->disk.raid_disk = dnum;
+>  				if (inf->disk.raid_disk < raiddisks)
+> @@ -856,12 +855,13 @@ int Create(struct supertype *st, char *mddev,
+>  					/* getinfo_super might have lost these ... */
+>  					inf->disk.major = major(stb.st_rdev);
+>  					inf->disk.minor = minor(stb.st_rdev);
+> +					inf->disk.number = dnum;
+> +					inf->disk.raid_disk = dnum;
+>  				}
+>  				break;
+>  			case 2:
+>  				inf->errors = 0;
+>  				rv = 0;
+> -
+>  				rv = add_disk(mdfd, st, &info, inf);
 >  
-> -	memset(info, 0, sizeof(*info));
->  	if (prev_map)
->  		map_to_analyse = prev_map;
->  
->  	dl = super->disks;
-> +	while (dl) {
-> +		if (dl->index == info->disk.number)
-> +			break;
-> +		dl = dl->next;
-> +	}
-> +	if (!dl)
-> +		dl = super->disks;
-> +	memset(info, 0, sizeof(*info));
->  
->  	info->container_member	  = super->current_vol;
->  	info->array.raid_disks    = map->num_members;
-> @@ -2147,6 +2154,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  	if (dl) {
->  		info->disk.major = dl->major;
->  		info->disk.minor = dl->minor;
-> +		info->disk.number = dl->index;
-> +		info->disk.raid_disk = dl->index;
->  	}
->  
->  	info->data_offset	  = __le32_to_cpu(map_to_analyse->pba_of_lba0);
+>  				if (rv) {
 
+Unfortunately this is wrong too.
+
+There should be no need to set disk.number and disk.raid_disk as the
+->getinfo_super is supposed to have set them.
+
+As the comment in mdadm.h says:
+
+	/* Extract generic details from metadata.  This could be details about
+	 * the container, or about an individual array within the container.
+	 * The determination is made either by:
+	 *   load_super being given a 'component' string.
+	 *   validate_geometry determining what to create.
+	 * The info includes both array information and device information.
+	 * The particular device should be:
+	 *   The last device added by add_to_super
+	 *   The device the metadata was loaded from by load_super
+	 * If 'map' is present, then it is an array raid_disks long
+	 * (raid_disk must already be set and correct) and it is filled
+	 * with 1 for slots that are thought to be active and 0 for slots which
+	 * appear to be failed/missing.
+	 * *info is zeroed out before data is added.
+	 */
+
+In this case, ->add_to_super was recently called so it should record state so
+that getinfo_super can return the correct information.  That is what super0
+and super1 does.
+
+It seems that this has been wrong for a long time and my recent change to
+zero the info structure showed it up.
+So I'll let the patch through so as not to hold things up unnecessarily, but
+I would really like you to see if you can fix add_to_super and getinfo_super
+so that they follow the documented behaviour.
+
+Thanks,
+NeilBrown
