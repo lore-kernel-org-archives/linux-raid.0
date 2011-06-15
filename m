@@ -1,29 +1,24 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: mark spare as active sync device?
-Date: Wed, 15 Jun 2011 12:10:26 +0200
-Message-ID: <20110615121026.f689e4b2.taeuber@bbaw.de>
+From: "Mr, K.J Robert" <jkrobert77@fubon.com>
+Subject: ***Can You Do It?***
+Date: Wed, 15 Jun 2011 12:47:10 +0100
+Message-ID: <20110615114714.385147001D8B@mwinf3432.me.freeserve.com>
+Reply-To: <jkrobert77@fm.bb>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi there,
+Greetings from Hong Kong,
 
-is it possible to mark a nearly completly synced device as active in sync?
+I find it pleasurable to request your partnership in business, I want to solicit your assistance and honesty to receive money on my behalf. The reason am contacting you is because my status would not permit me to do this alone.
 
-There was failing a device shortly before a spare drive was completely
-synced. I want to get the directory structure from the device.
+I will send you the full details and more information about myself and the funds. If interested, please reply through my alternate Email: jkrobert77@fm.bb
 
-md3 : active raid6 sdz[16] sdaf[13] sds[0] sdac[10] sdah[15] sdag[14] sdae[12] sdad [11](F) sdab[9] sdaa[17](F) sdy[6] sdx[5] sdw[4] sdv[3] sdu[2] sdt[1]
-      27349202944 blocks level 6, 64k chunk, algorithm 2 [16/13] [UUUUUUU__UU_UUUU]
-      [===================>.]  recovery = 98.3% (1921986020/1953514496) finish=25.9min speed=20244K/sec
+Sincerely Yours
+Robert
 
-/dev/sdz was the device that was inserted and is now marked as spare. Is it possible to mark sdz as active and in sync?
 
-Is there any chance to get data from this array?
 
-Thanks
-Lars
