@@ -1,32 +1,36 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH RESEND 0/5] md/raid10 changes
-Date: Wed, 15 Jun 2011 11:01:59 +0900
-Message-ID: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
+Subject: [PATCH v2 1/5] md/raid10: optimize read_balance() for 'far offset' arrays
+Date: Wed, 15 Jun 2011 11:02:00 +0900
+Message-ID: <1308103324-2375-2-git-send-email-namhyung@gmail.com>
+References: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
+If @conf->far_offset > 0, there is only 1 stripe so that we can treat
+the array same as 'near' arrays.
 
-This is a resend of my previous raid10 patches. Some of them are revised
-according to your comments and some of them are not reviewed at all.
-Please take a look.
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/raid10.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks.
-
-
-Namhyung Kim (5):
-  md/raid10: optimize read_balance() for 'far offset' arrays
-  md/raid10: get rid of duplicated conditional expression
-  md/raid10: factor out common bio handling code
-  md/raid10: share pages between read and write bio's during recovery
-  md/raid10: spread read for subordinate r10bios during recovery
-
- drivers/md/raid10.c |   83 +++++++++++++++++++++++++++-----------------------
- 1 files changed, 45 insertions(+), 38 deletions(-)
-
---
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6e846688962f..fc56bdd8c3fb 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -531,7 +531,7 @@ retry:
+ 			break;
+ 
+ 		/* for far > 1 always use the lowest address */
+-		if (conf->far_copies > 1)
++		if (conf->far_copies > 1 && conf->far_offset == 0)
+ 			new_distance = r10_bio->devs[slot].addr;
+ 		else
+ 			new_distance = abs(r10_bio->devs[slot].addr -
+-- 
 1.7.5.2
 
