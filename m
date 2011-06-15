@@ -1,74 +1,85 @@
-From: Jim Paradis <jparadis@redhat.com>
-Subject: [PATCH/RFC] Fix resync hang after surprise removal
-Date: Wed, 15 Jun 2011 12:02:15 -0400
-Message-ID: <20110615160117.31326.31562.sendpatchset@localhost.localdomain>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH v2 1/5] md/raid10: optimize read_balance() for 'far
+ offset' arrays
+Date: Thu, 16 Jun 2011 09:56:07 +1000
+Message-ID: <20110616095607.4869fbde@notabene.brown>
+References: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
+	<1308103324-2375-2-git-send-email-namhyung@gmail.com>
+	<20110615065144.GA28174@www2.open-std.org>
+	<1308140733.1358.41.camel@leonhard>
+	<87aadj9n7a.fsf@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87aadj9n7a.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jim Paradis <jparadis@redhat.com>
+To: Namhyung Kim <namhyung@gmail.com>
+Cc: Keld =?ISO-8859-1?B?Svhybg==?= Simonsen <keld@keldix.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-We ran into a situation where surprise removal of a non-boot 2-disk raid1
-array with I/O running can result in a tight loop in which md claims to be
-resyncing the array.
+On Wed, 15 Jun 2011 23:35:53 +0900 Namhyung Kim <namhyung@gmail.com> wr=
+ote:
 
-It appears that remove_add_spares() in md.c contains two sets of conditions
-used to determine if there is a spare available.  The disk that was pulled
-has been marked 'faulty' in rdev->flags and its raid_disk value is >= 0.
-Since it is neither In_Sync nor Blocked, spares gets incremented and so md
-thinks there is a spare when in fact there is not.
+> Namhyung Kim <namhyung@gmail.com> writes:
+> > 2011-06-15 (=EC=88=98), 08:51 +0200, Keld J=C3=B8rn Simonsen:
+> >> On Wed, Jun 15, 2011 at 11:02:00AM +0900, Namhyung Kim wrote:
+> >> > If @conf->far_offset > 0, there is only 1 stripe so that we can =
+treat
+> >> > the array same as 'near' arrays.
+> >>=20
+> >> does it also work with more than 2 copies - eg 3 copies?
+> >> I think the original code just takes the available data blocks wit=
+h the=20
+> >> lowest address.
+> >>=20
+> >
+> > Hi,
+> >
+> > Let me clarify this: AFAIK, 'far offset' array saves redundant data=
+ in
+> > the diagonally adjacent chunk/disk, so it could be roughly thought =
+as
+> > 'raid0' array with reduced size - just ignore redundant chunks here=
+=2E It
+> > was my mistake considering it as 'near' array. :(
+> >
+>=20
+> I'm confused again. If fo > 0 && fc > 1 && nc > 1 then it turns out t=
+o
+> a near array with reduced size, no? Does it still need to be treaded
+> as RAID0?
 
-One of my colleagues at Stratus proposed this patch, which rearranges the
-order of the tests and makes them mutually exclusive.  Running with this
-patch resolves the problem in our lab: we were able to run stress tests
-with surprise removals without incident.
+This would be a mix of near and offset.  I'm not at all sure what the "=
+best"
+read balancing approach would be.  But as I don't think anyone would ev=
+er
+actually use it, I don't think it really matters.
 
-Since neither of us is an md expert, we'd like feedback as to whether
-this patch is reasonable and whether it can be pushed upstream.
+Thanks,
+NeilBrown
 
-Jim Paradis
-Onsite Red Hat Partner Engineer
-Stratus Technologies, Inc.
 
- md.c |   17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
 
-Signed-off-by: Jim Paradis <james.paradis@stratus.com>
+>=20
+>=20
+> > Therefore, it makes more sense distributing reads over the array ba=
+sed
+> > on some criteria - here, the address of starting sector - like RAID=
+0
+> > does. Now I see that the same goes to the 'far copies' array exactl=
+y, so
+> > the original code is correct.
+> >
+> > Thanks.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4332fc2..cdc5276 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7086,10 +7086,6 @@ static int remove_and_add_spares(mddev_t *mddev)
- 
- 	if (mddev->degraded && !mddev->recovery_disabled) {
- 		list_for_each_entry(rdev, &mddev->disks, same_set) {
--			if (rdev->raid_disk >= 0 &&
--			    !test_bit(In_sync, &rdev->flags) &&
--			    !test_bit(Blocked, &rdev->flags))
--				spares++;
- 			if (rdev->raid_disk < 0
- 			    && !test_bit(Faulty, &rdev->flags)) {
- 				rdev->recovery_offset = 0;
-@@ -7100,11 +7096,18 @@ static int remove_and_add_spares(mddev_t *mddev)
- 					if (sysfs_create_link(&mddev->kobj,
- 							      &rdev->kobj, nm))
- 						/* failure here is OK */;
--					spares++;
-+						spares++;
- 					md_new_event(mddev);
- 					set_bit(MD_CHANGE_DEVS, &mddev->flags);
--				} else
--					break;
-+				}
-+			}
-+			else if (rdev->raid_disk >= 0 &&
-+			    !test_bit(In_sync, &rdev->flags) &&
-+			    !test_bit(Blocked, &rdev->flags)) {
-+				spares++;
-+			}
-+			else {
-+				break;
- 			}
- 		}
- 	}
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
