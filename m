@@ -1,7 +1,7 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 3/5] md/raid10: factor out common bio handling code
-Date: Wed, 15 Jun 2011 11:02:02 +0900
-Message-ID: <1308103324-2375-4-git-send-email-namhyung@gmail.com>
+Subject: [PATCH v2 4/5] md/raid10: share pages between read and write bio's during recovery
+Date: Wed, 15 Jun 2011 11:02:03 +0900
+Message-ID: <1308103324-2375-5-git-send-email-namhyung@gmail.com>
 References: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
@@ -10,106 +10,63 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When normal-write and sync-read/write bio completes, we should
-find out the disk number the bio belongs to. Factor those common
-code out to a separate function.
+When performing a recovery, only first 2 slots in r10_bio are in use,
+for read and write respectively. However all of pages in the write bio
+are never used and just replaced to read bio's when the read completes.
+
+Get rid of those unused pages and share read pages properly.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 ---
- drivers/md/raid10.c |   44 +++++++++++++++++++++++---------------------
- 1 files changed, 23 insertions(+), 21 deletions(-)
+ drivers/md/raid10.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index fcb86e86bc31..a53779ffdf89 100644
+index a53779ffdf89..dea73bdb99b8 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -244,6 +244,23 @@ static inline void update_head_pos(int slot, r10bio_t *r10_bio)
- 		r10_bio->devs[slot].addr + (r10_bio->sectors);
- }
+@@ -123,7 +123,15 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	for (j = 0 ; j < nalloc; j++) {
+ 		bio = r10_bio->devs[j].bio;
+ 		for (i = 0; i < RESYNC_PAGES; i++) {
+-			page = alloc_page(gfp_flags);
++			if (j == 1 && !test_bit(MD_RECOVERY_SYNC,
++						&conf->mddev->recovery)) {
++				/* we can share bv_page's during recovery */
++				struct bio *rbio = r10_bio->devs[0].bio;
++				page = rbio->bi_io_vec[i].bv_page;
++				get_page(page);
++			} else {
++				page = alloc_page(gfp_flags);
++			}
+ 			if (unlikely(!page))
+ 				goto out_free_pages;
  
-+/*
-+ * Find the disk number which triggered given bio
-+ */
-+static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio, struct bio *bio)
-+{
-+	int slot;
-+
-+	for (slot = 0; slot < conf->copies; slot++)
-+		if (r10_bio->devs[slot].bio == bio)
-+			break;
-+
-+	BUG_ON(slot == conf->copies);
-+	update_head_pos(slot, r10_bio);
-+
-+	return r10_bio->devs[slot].devnum;
-+}
-+
- static void raid10_end_read_request(struct bio *bio, int error)
+@@ -1360,20 +1368,14 @@ done:
+ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
  {
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
-@@ -289,13 +306,10 @@ static void raid10_end_write_request(struct bio *bio, int error)
- {
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
- 	r10bio_t *r10_bio = bio->bi_private;
--	int slot, dev;
-+	int dev;
- 	conf_t *conf = r10_bio->mddev->private;
- 
--	for (slot = 0; slot < conf->copies; slot++)
--		if (r10_bio->devs[slot].bio == bio)
--			break;
--	dev = r10_bio->devs[slot].devnum;
-+	dev = find_bio_disk(conf, r10_bio, bio);
- 
- 	/*
- 	 * this branch is our 'one mirror IO has finished' event handler:
-@@ -316,8 +330,6 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 		 */
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
- 
--	update_head_pos(slot, r10_bio);
--
- 	/*
- 	 *
- 	 * Let's see if all mirrored write operations have finished
-@@ -1173,14 +1185,9 @@ static void end_sync_read(struct bio *bio, int error)
- {
- 	r10bio_t *r10_bio = bio->bi_private;
- 	conf_t *conf = r10_bio->mddev->private;
--	int i,d;
-+	int d;
- 
--	for (i=0; i<conf->copies; i++)
--		if (r10_bio->devs[i].bio == bio)
--			break;
--	BUG_ON(i == conf->copies);
--	update_head_pos(i, r10_bio);
--	d = r10_bio->devs[i].devnum;
-+	d = find_bio_disk(conf, r10_bio, bio);
- 
- 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
-@@ -1211,18 +1218,13 @@ static void end_sync_write(struct bio *bio, int error)
- 	r10bio_t *r10_bio = bio->bi_private;
- 	mddev_t *mddev = r10_bio->mddev;
  	conf_t *conf = mddev->private;
--	int i,d;
-+	int d;
- 
--	for (i = 0; i < conf->copies; i++)
--		if (r10_bio->devs[i].bio == bio)
--			break;
--	d = r10_bio->devs[i].devnum;
-+	d = find_bio_disk(conf, r10_bio, bio);
- 
- 	if (!uptodate)
- 		md_error(mddev, conf->mirrors[d].rdev);
- 
--	update_head_pos(i, r10_bio);
+-	int i, d;
+-	struct bio *bio, *wbio;
 -
- 	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
- 	while (atomic_dec_and_test(&r10_bio->remaining)) {
- 		if (r10_bio->master_bio == NULL) {
++	int d;
++	struct bio *wbio;
+ 
+-	/* move the pages across to the second bio
++	/*
++	 * share the pages with the first bio
+ 	 * and submit the write request
+ 	 */
+-	bio = r10_bio->devs[0].bio;
+ 	wbio = r10_bio->devs[1].bio;
+-	for (i=0; i < wbio->bi_vcnt; i++) {
+-		struct page *p = bio->bi_io_vec[i].bv_page;
+-		bio->bi_io_vec[i].bv_page = wbio->bi_io_vec[i].bv_page;
+-		wbio->bi_io_vec[i].bv_page = p;
+-	}
+ 	d = r10_bio->devs[1].devnum;
+ 
+ 	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
 -- 
 1.7.5.2
 
