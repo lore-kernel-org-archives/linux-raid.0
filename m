@@ -1,7 +1,7 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 2/5] md/raid10: get rid of duplicated conditional expression
-Date: Wed, 15 Jun 2011 11:02:01 +0900
-Message-ID: <1308103324-2375-3-git-send-email-namhyung@gmail.com>
+Subject: [PATCH 3/5] md/raid10: factor out common bio handling code
+Date: Wed, 15 Jun 2011 11:02:02 +0900
+Message-ID: <1308103324-2375-4-git-send-email-namhyung@gmail.com>
 References: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
@@ -10,29 +10,106 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Variable 'first' is initialized to zero and updated to @rdev->raid_disk
-only if it is greater than 0. Thus condition '>= first' always implies
-'>= 0' so the latter is not needed.
+When normal-write and sync-read/write bio completes, we should
+find out the disk number the bio belongs to. Factor those common
+code out to a separate function.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 ---
- drivers/md/raid10.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/md/raid10.c |   44 +++++++++++++++++++++++---------------------
+ 1 files changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index fc56bdd8c3fb..fcb86e86bc31 100644
+index fcb86e86bc31..a53779ffdf89 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1093,8 +1093,7 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	if (rdev->raid_disk >= 0)
- 		first = last = rdev->raid_disk;
+@@ -244,6 +244,23 @@ static inline void update_head_pos(int slot, r10bio_t *r10_bio)
+ 		r10_bio->devs[slot].addr + (r10_bio->sectors);
+ }
  
--	if (rdev->saved_raid_disk >= 0 &&
--	    rdev->saved_raid_disk >= first &&
-+	if (rdev->saved_raid_disk >= first &&
- 	    conf->mirrors[rdev->saved_raid_disk].rdev == NULL)
- 		mirror = rdev->saved_raid_disk;
- 	else
++/*
++ * Find the disk number which triggered given bio
++ */
++static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio, struct bio *bio)
++{
++	int slot;
++
++	for (slot = 0; slot < conf->copies; slot++)
++		if (r10_bio->devs[slot].bio == bio)
++			break;
++
++	BUG_ON(slot == conf->copies);
++	update_head_pos(slot, r10_bio);
++
++	return r10_bio->devs[slot].devnum;
++}
++
+ static void raid10_end_read_request(struct bio *bio, int error)
+ {
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+@@ -289,13 +306,10 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ {
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+ 	r10bio_t *r10_bio = bio->bi_private;
+-	int slot, dev;
++	int dev;
+ 	conf_t *conf = r10_bio->mddev->private;
+ 
+-	for (slot = 0; slot < conf->copies; slot++)
+-		if (r10_bio->devs[slot].bio == bio)
+-			break;
+-	dev = r10_bio->devs[slot].devnum;
++	dev = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
+@@ -316,8 +330,6 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ 		 */
+ 		set_bit(R10BIO_Uptodate, &r10_bio->state);
+ 
+-	update_head_pos(slot, r10_bio);
+-
+ 	/*
+ 	 *
+ 	 * Let's see if all mirrored write operations have finished
+@@ -1173,14 +1185,9 @@ static void end_sync_read(struct bio *bio, int error)
+ {
+ 	r10bio_t *r10_bio = bio->bi_private;
+ 	conf_t *conf = r10_bio->mddev->private;
+-	int i,d;
++	int d;
+ 
+-	for (i=0; i<conf->copies; i++)
+-		if (r10_bio->devs[i].bio == bio)
+-			break;
+-	BUG_ON(i == conf->copies);
+-	update_head_pos(i, r10_bio);
+-	d = r10_bio->devs[i].devnum;
++	d = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
+ 		set_bit(R10BIO_Uptodate, &r10_bio->state);
+@@ -1211,18 +1218,13 @@ static void end_sync_write(struct bio *bio, int error)
+ 	r10bio_t *r10_bio = bio->bi_private;
+ 	mddev_t *mddev = r10_bio->mddev;
+ 	conf_t *conf = mddev->private;
+-	int i,d;
++	int d;
+ 
+-	for (i = 0; i < conf->copies; i++)
+-		if (r10_bio->devs[i].bio == bio)
+-			break;
+-	d = r10_bio->devs[i].devnum;
++	d = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	if (!uptodate)
+ 		md_error(mddev, conf->mirrors[d].rdev);
+ 
+-	update_head_pos(i, r10_bio);
+-
+ 	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
+ 	while (atomic_dec_and_test(&r10_bio->remaining)) {
+ 		if (r10_bio->master_bio == NULL) {
 -- 
 1.7.5.2
 
