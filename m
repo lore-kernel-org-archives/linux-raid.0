@@ -1,7 +1,7 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH v2 4/5] md/raid10: share pages between read and write bio's during recovery
-Date: Wed, 15 Jun 2011 11:02:03 +0900
-Message-ID: <1308103324-2375-5-git-send-email-namhyung@gmail.com>
+Subject: [PATCH 5/5] md/raid10: spread read for subordinate r10bios during recovery
+Date: Wed, 15 Jun 2011 11:02:04 +0900
+Message-ID: <1308103324-2375-6-git-send-email-namhyung@gmail.com>
 References: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1308103324-2375-1-git-send-email-namhyung@gmail.com>
@@ -10,63 +10,56 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When performing a recovery, only first 2 slots in r10_bio are in use,
-for read and write respectively. However all of pages in the write bio
-are never used and just replaced to read bio's when the read completes.
-
-Get rid of those unused pages and share read pages properly.
+In the current scheme, multiple read request could be directed to
+the first active disk during recovery if there are several disk
+failure at the same time. Spreading those requests on other in-sync
+disks might be helpful.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 ---
- drivers/md/raid10.c |   24 +++++++++++++-----------
- 1 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/md/raid10.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a53779ffdf89..dea73bdb99b8 100644
+index dea73bdb99b8..d0188e49f881 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -123,7 +123,15 @@ static void * r10buf_pool_alloc(gfp_t gfp_flags, void *data)
- 	for (j = 0 ; j < nalloc; j++) {
- 		bio = r10_bio->devs[j].bio;
- 		for (i = 0; i < RESYNC_PAGES; i++) {
--			page = alloc_page(gfp_flags);
-+			if (j == 1 && !test_bit(MD_RECOVERY_SYNC,
-+						&conf->mddev->recovery)) {
-+				/* we can share bv_page's during recovery */
-+				struct bio *rbio = r10_bio->devs[0].bio;
-+				page = rbio->bi_io_vec[i].bv_page;
-+				get_page(page);
-+			} else {
-+				page = alloc_page(gfp_flags);
-+			}
- 			if (unlikely(!page))
- 				goto out_free_pages;
+@@ -1832,6 +1832,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 	if (!test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+ 		/* recovery... the complicated one */
+ 		int j, k;
++		int last_read = -1;
+ 		r10_bio = NULL;
  
-@@ -1360,20 +1368,14 @@ done:
- static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
- {
- 	conf_t *conf = mddev->private;
--	int i, d;
--	struct bio *bio, *wbio;
--
-+	int d;
-+	struct bio *wbio;
+ 		for (i=0 ; i<conf->raid_disks; i++) {
+@@ -1891,7 +1892,9 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 						      &sync_blocks, still_degraded);
  
--	/* move the pages across to the second bio
-+	/*
-+	 * share the pages with the first bio
- 	 * and submit the write request
- 	 */
--	bio = r10_bio->devs[0].bio;
- 	wbio = r10_bio->devs[1].bio;
--	for (i=0; i < wbio->bi_vcnt; i++) {
--		struct page *p = bio->bi_io_vec[i].bv_page;
--		bio->bi_io_vec[i].bv_page = wbio->bi_io_vec[i].bv_page;
--		wbio->bi_io_vec[i].bv_page = p;
--	}
- 	d = r10_bio->devs[1].devnum;
+ 			for (j=0; j<conf->copies;j++) {
+-				int d = r10_bio->devs[j].devnum;
++				int c = (last_read + j + 1) % conf->copies;
++				int d = r10_bio->devs[c].devnum;
++
+ 				if (!conf->mirrors[d].rdev ||
+ 				    !test_bit(In_sync, &conf->mirrors[d].rdev->flags))
+ 					continue;
+@@ -1902,13 +1905,14 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = end_sync_read;
+ 				bio->bi_rw = READ;
+-				bio->bi_sector = r10_bio->devs[j].addr +
++				bio->bi_sector = r10_bio->devs[c].addr +
+ 					conf->mirrors[d].rdev->data_offset;
+ 				bio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 				atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 				atomic_inc(&r10_bio->remaining);
+-				/* and we write to 'i' */
++				last_read = c;
  
- 	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
++				/* and we write to 'i' */
+ 				for (k=0; k<conf->copies; k++)
+ 					if (r10_bio->devs[k].devnum == i)
+ 						break;
 -- 
 1.7.5.2
 
