@@ -1,77 +1,63 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH/RFC] Fix resync hang after surprise removal
-Date: Thu, 16 Jun 2011 11:36:56 +1000
-Message-ID: <20110616113656.190fef9f@notabene.brown>
-References: <20110615160117.31326.31562.sendpatchset@localhost.localdomain>
+From: jeffs_linux@123mail.org
+Subject: Re: Why do I get different results for 'mdadm --detail' & 'mdadm
+ --examine' for the same array?
+Date: Wed, 15 Jun 2011 18:47:36 -0700
+Message-ID: <1308188856.14820.1463669409@webmail.messagingengine.com>
+References: <1307840471.18429.1462140465@webmail.messagingengine.com><20110616101812.761f7397@notabene.brown><1308184754.28723.1463652469@webmail.messagingengine.com>
+ <20110616112243.22a20610@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110615160117.31326.31562.sendpatchset@localhost.localdomain>
+In-Reply-To: <20110616112243.22a20610@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Paradis <jparadis@redhat.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 15 Jun 2011 12:02:15 -0400 Jim Paradis <jparadis@redhat.com> wrote:
 
-> We ran into a situation where surprise removal of a non-boot 2-disk raid1
-> array with I/O running can result in a tight loop in which md claims to be
-> resyncing the array.
+
+On Thu, 16 Jun 2011 11:22 +1000, "NeilBrown" <neilb@suse.de> wrote:
+> > Ok.  I got beaten up for top posting once, and was told to 'keep things
+> > in order'.  Next time, though -- question first, in BOTH the title and
+> > the body.
 > 
-> It appears that remove_add_spares() in md.c contains two sets of conditions
-> used to determine if there is a spare available.  The disk that was pulled
-> has been marked 'faulty' in rdev->flags and its raid_disk value is >= 0.
-> Since it is neither In_Sync nor Blocked, spares gets incremented and so md
-> thinks there is a spare when in fact there is not.
+> :-)  You can't win, can you...
+
+Not even checkers with my son ;-)
+
+> When you use --examine, it tries to use the name that people might like.
+> When you use --detail --scan it primarily has access to the names the
+> kernel
+> likes, so it used those.
+
+Thanks for that.  Into my notes ...
+
+> > cat /dev/.mdadm/map
+> > ---------------------------------------------------------------
+> > md126 0.90 19f2b21c:e54f9e1a:be5ad16e:9754ab5e /dev/md/0_0
+> > md127 1.2 79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
+> > ---------------------------------------------------------------
+> > 
+> > mdadm --detail --scan
+> >         ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
+> >         UUID=d84afb64:e6fa2b64:ff21c975:f9765431
+> >         ARRAY /dev/md/0_0 metadata=0.90
+> >         UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
 > 
-> One of my colleagues at Stratus proposed this patch, which rearranges the
-> order of the tests and makes them mutually exclusive.  Running with this
-> patch resolves the problem in our lab: we were able to run stress tests
-> with surprise removals without incident.
+> Yes, that it weird.  I don't know how they came to be out of sync.
 > 
-> Since neither of us is an md expert, we'd like feedback as to whether
-> this patch is reasonable and whether it can be pushed upstream.
+>   mdadm --incremental --rebuild-map
+> 
+> will fix it..
 
-Hi,
- thanks for the report and the patch.
+Ok.  This is officially the first time that I'll actually try to fix
+anything on my 'production' array.
 
- However I don't think the patch really does what you want.
+I'm reading the manpage -- again! -- and see both the "--incremental"
+and "--rebuild-map" sections.  So I get what they do.
 
- The two tests are already mutually exclusive as one begins with
-      raid_disk >= 0
- and the other with
-      raid_disk < 0
- and neither change raid_disk.
+WHEN can/should I do it?  On my live running array while at runlevel 5? 
+A lower runlevel?  From a separate boot disk?
 
- The reason the patch has an effect is the 'break' that has been added.
- i.e. as soon as you find a normal working device you break out of the loop
- and stop looking for spares.
-
- I think the correct fix is simply:
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 4332fc2..91e31e2 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7088,6 +7088,7 @@ static int remove_and_add_spares(mddev_t *mddev)
- 		list_for_each_entry(rdev, &mddev->disks, same_set) {
- 			if (rdev->raid_disk >= 0 &&
- 			    !test_bit(In_sync, &rdev->flags) &&
-+			    !test_bit(Faulty, &rdev->flags) &&
- 			    !test_bit(Blocked, &rdev->flags))
- 				spares++;
- 			if (rdev->raid_disk < 0
-
-
-i.e. never consider a Faulty device to be a spare.
-
-It looks like this bug was introduced by commit dfc70645000616777
-in 2.6.26 when we allowed partially recovered devices to remain in the array
-when a different device fails.
-
-Can you please conform that this patch removes your symptom?
-
-Thanks,
-NeilBrown
-
+jeff
