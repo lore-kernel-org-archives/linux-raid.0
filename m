@@ -1,58 +1,75 @@
-From: jeffs_linux@123mail.org
-Subject: Re: Why do I get different results for 'mdadm --detail' & 'mdadm
- --examine' for the same array?
-Date: Wed, 15 Jun 2011 17:39:14 -0700
-Message-ID: <1308184754.28723.1463652469@webmail.messagingengine.com>
-References: <1307840471.18429.1462140465@webmail.messagingengine.com>
- <20110616101812.761f7397@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mark spare as active sync device?
+Date: Thu, 16 Jun 2011 10:54:23 +1000
+Message-ID: <20110616105423.6aefa0f1@notabene.brown>
+References: <20110615121026.f689e4b2.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110616101812.761f7397@notabene.brown>
+In-Reply-To: <20110615121026.f689e4b2.taeuber@bbaw.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Lars =?ISO-8859-1?B?VOR1YmVy?= <taeuber@bbaw.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 15 Jun 2011 12:10:26 +0200 Lars T=E4uber <taeuber@bbaw.de> wrot=
+e:
 
+> Hi there,
+>=20
+> is it possible to mark a nearly completly synced device as active in =
+sync?
+>=20
+> There was failing a device shortly before a spare drive was completel=
+y
+> synced. I want to get the directory structure from the device.
+>=20
+> md3 : active raid6 sdz[16] sdaf[13] sds[0] sdac[10] sdah[15] sdag[14]=
+ sdae[12] sdad [11](F) sdab[9] sdaa[17](F) sdy[6] sdx[5] sdw[4] sdv[3] =
+sdu[2] sdt[1]
+>       27349202944 blocks level 6, 64k chunk, algorithm 2 [16/13] [UUU=
+UUUU__UU_UUUU]
+>       [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.]  =
+recovery =3D 98.3% (1921986020/1953514496) finish=3D25.9min speed=3D202=
+44K/sec
+>=20
+> /dev/sdz was the device that was inserted and is now marked as spare.=
+ Is it possible to mark sdz as active and in sync?
 
-On Thu, 16 Jun 2011 10:18 +1000, "NeilBrown" <neilb@suse.de> wrote:
-> ---- cut lots of detail-----
-> It is very good to include lots of detail, but more effective you include
-> it
-> after you have asked the question, otherwise one gets bored long before
-> one
-> reaches the actual question....
+Not really.... and should you mark it as the in-sync member number 7, 8=
+, or
+11 ??
 
-Ok.  I got beaten up for top posting once, and was told to 'keep things
-in order'.  Next time, though -- question first, in BOTH the title and
-the body.
+>=20
+> Is there any chance to get data from this array?
 
-> > I get different results for each one.
-> 
-> It is just the different names that has you bothered - correct?
+Your best bet is to try to 'create' the array again using '--assume-cle=
+an'
+and putting the devices that you thing are working in the correct place=
+=2E
+e.g. something like:
 
-No, not just the names. I guess I don't know the PURPOSE of the names,
-if the names we give things aren't necessarily the ones that get used.
+ mdadm -S /dev/md3
+ mdadm -C /dev/md3 --metadata=3D0.90 --level=3D6 --algorithm=3D2 --chun=
+k=3D64 \
+   --raid-devices=3D16  --assume-clean \
+   /dev/sds /dev/sdt /dev/sdu /dev/sdv   \
+   /dev/sdw /dev/sdx /dev/sdy /dev/sdz   \
+   missing /dev/sdab /dev/sdac missing   \
+   /dev/sdae /dev/sdaf /dev/sdag /dev/sdah
 
-But more a problem are the different UUID's:.
+Then "fsck -n /dev/md3"  and see if it looks reasonably OK.
+If it doesn't, try placing /dev/sdz in place of a different 'missing'.
 
-cat /dev/.mdadm/map
----------------------------------------------------------------
-md126 0.90 19f2b21c:e54f9e1a:be5ad16e:9754ab5e /dev/md/0_0
-md127 1.2 79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
----------------------------------------------------------------
+Of course you should double check the order of devices that I have give=
+n
+here, and all the other details.
 
-mdadm --detail --scan
-        ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
-        UUID=d84afb64:e6fa2b64:ff21c975:f9765431
-        ARRAY /dev/md/0_0 metadata=0.90
-        UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+NeilBrown
 
-
-Notice that the UUIDs for /dev/md/0_0 match, but for /dev/md127 the
-don't.
-
-
-jeff
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
