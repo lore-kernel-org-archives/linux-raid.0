@@ -1,83 +1,77 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Why do I get different results for 'mdadm --detail' & 'mdadm
- --examine' for the same array?
-Date: Thu, 16 Jun 2011 11:22:43 +1000
-Message-ID: <20110616112243.22a20610@notabene.brown>
-References: <1307840471.18429.1462140465@webmail.messagingengine.com>
-	<20110616101812.761f7397@notabene.brown>
-	<1308184754.28723.1463652469@webmail.messagingengine.com>
+Subject: Re: [PATCH/RFC] Fix resync hang after surprise removal
+Date: Thu, 16 Jun 2011 11:36:56 +1000
+Message-ID: <20110616113656.190fef9f@notabene.brown>
+References: <20110615160117.31326.31562.sendpatchset@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1308184754.28723.1463652469@webmail.messagingengine.com>
+In-Reply-To: <20110615160117.31326.31562.sendpatchset@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: jeffs_linux@123mail.org
+To: Jim Paradis <jparadis@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 15 Jun 2011 17:39:14 -0700 jeffs_linux@123mail.org wrote:
+On Wed, 15 Jun 2011 12:02:15 -0400 Jim Paradis <jparadis@redhat.com> wrote:
 
+> We ran into a situation where surprise removal of a non-boot 2-disk raid1
+> array with I/O running can result in a tight loop in which md claims to be
+> resyncing the array.
 > 
+> It appears that remove_add_spares() in md.c contains two sets of conditions
+> used to determine if there is a spare available.  The disk that was pulled
+> has been marked 'faulty' in rdev->flags and its raid_disk value is >= 0.
+> Since it is neither In_Sync nor Blocked, spares gets incremented and so md
+> thinks there is a spare when in fact there is not.
 > 
-> On Thu, 16 Jun 2011 10:18 +1000, "NeilBrown" <neilb@suse.de> wrote:
-> > ---- cut lots of detail-----
-> > It is very good to include lots of detail, but more effective you include
-> > it
-> > after you have asked the question, otherwise one gets bored long before
-> > one
-> > reaches the actual question....
+> One of my colleagues at Stratus proposed this patch, which rearranges the
+> order of the tests and makes them mutually exclusive.  Running with this
+> patch resolves the problem in our lab: we were able to run stress tests
+> with surprise removals without incident.
 > 
-> Ok.  I got beaten up for top posting once, and was told to 'keep things
-> in order'.  Next time, though -- question first, in BOTH the title and
-> the body.
+> Since neither of us is an md expert, we'd like feedback as to whether
+> this patch is reasonable and whether it can be pushed upstream.
 
-:-)  You can't win, can you...
+Hi,
+ thanks for the report and the patch.
 
-> 
-> > > I get different results for each one.
-> > 
-> > It is just the different names that has you bothered - correct?
-> 
-> No, not just the names. I guess I don't know the PURPOSE of the names,
-> if the names we give things aren't necessarily the ones that get used.
+ However I don't think the patch really does what you want.
 
-Well there is the names that people like to use (/dev/md/jeffadm) and names
-that the kernel likes to use (md1, md2, md127).
+ The two tests are already mutually exclusive as one begins with
+      raid_disk >= 0
+ and the other with
+      raid_disk < 0
+ and neither change raid_disk.
 
-When you use --examine, it tries to use the name that people might like.
-When you use --detail --scan it primarily has access to the names the kernel
-likes, so it used those.
+ The reason the patch has an effect is the 'break' that has been added.
+ i.e. as soon as you find a normal working device you break out of the loop
+ and stop looking for spares.
 
-> 
-> But more a problem are the different UUID's:.
-> 
-> cat /dev/.mdadm/map
-> ---------------------------------------------------------------
-> md126 0.90 19f2b21c:e54f9e1a:be5ad16e:9754ab5e /dev/md/0_0
-> md127 1.2 79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
-> ---------------------------------------------------------------
-> 
-> mdadm --detail --scan
->         ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
->         UUID=d84afb64:e6fa2b64:ff21c975:f9765431
->         ARRAY /dev/md/0_0 metadata=0.90
->         UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+ I think the correct fix is simply:
 
-Yes, that it weird.  I don't know how they came to be out of sync.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4332fc2..91e31e2 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7088,6 +7088,7 @@ static int remove_and_add_spares(mddev_t *mddev)
+ 		list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 			if (rdev->raid_disk >= 0 &&
+ 			    !test_bit(In_sync, &rdev->flags) &&
++			    !test_bit(Faulty, &rdev->flags) &&
+ 			    !test_bit(Blocked, &rdev->flags))
+ 				spares++;
+ 			if (rdev->raid_disk < 0
 
-  mdadm --incremental --rebuild-map
 
-will fix it..
+i.e. never consider a Faulty device to be a spare.
 
+It looks like this bug was introduced by commit dfc70645000616777
+in 2.6.26 when we allowed partially recovered devices to remain in the array
+when a different device fails.
+
+Can you please conform that this patch removes your symptom?
+
+Thanks,
 NeilBrown
-
-
-> 
-> 
-> Notice that the UUIDs for /dev/md/0_0 match, but for /dev/md127 the
-> don't.
-> 
-> 
-> jeff
 
