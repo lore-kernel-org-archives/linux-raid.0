@@ -1,115 +1,64 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH] md/raid1: factor out common bio handling code
-Date: Fri, 17 Jun 2011 11:10:28 +0900
-Message-ID: <1308276628-1783-1-git-send-email-namhyung@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] gcc warnings again
+Date: Fri, 17 Jun 2011 14:42:04 +1000
+Message-ID: <20110617144204.28e651cb@notabene.brown>
+References: <20110616070510.GA8544@maude.comedia.it>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110616070510.GA8544@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Luca Berra <bluca@comedia.it>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When normal-write and sync-read/write bio completes, we should
-find out the disk number the bio belongs to. Factor those common
-code out to a separate function.
+On Thu, 16 Jun 2011 09:05:10 +0200 Luca Berra <bluca@comedia.it> wrote:
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/raid1.c |   45 ++++++++++++++++++++++++---------------------
- 1 files changed, 24 insertions(+), 21 deletions(-)
+> hello.
+> yesterday i tried rebuilding both mdadm 3.1.5 and 3.2.1 with gcc 4.6,
+> with the following CXFLAGS
+> 
+> x86:    -O2 -g -frecord-gcc-switches -Wstrict-aliasing=2 -pipe -Wformat
+> -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector
+> --param=ssp-buffer-size=4 -fomit-frame-pointer -mtune=generic
+> -march=i586 -fasynchronous-unwind-tables
+> 
+> x86_64: -O2 -g -frecord-gcc-switches -Wstrict-aliasing=2 -pipe -Wformat
+> -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fstack-protector
+> --param=ssp-buffer-size=4 -fPIC
+> 
+> i found a good number of warnings
+> unused but set variable
+> strict aliasing
+> comparison between signed and unsigned values *on 32bit*
+> 
+> for the unused variables i found fedora already had a patch which is
+> sensible enough, i did not see it reported here, so i will attach it.
+> 
+> I know -Wstrict-aliasing=2 can give false positive but those looked real
+> to me, so i fixed those.
+> 
+> looking at the gpt code in util.c i found i did not like it at all, a
+> gpt partition entry is currently 128 bytes, but the spec does not say it
+> is a fixed value, so the code that reads into a buffer with 512bytes
+> chunk expecting this to be a multiplier of part_size is imho incorrect.
+> my fix was to read each partition entry directly into a struct
+> GPT_part_entry, the advantage is that the code is very simple to read,
+> the disadvantage it is 128 reads of 128 bytes each, which is
+> sub-optimal, but i believe readahead will mitigate this a lot.
+> 
+> regards,
+> L.
+> 
+> 
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 39e9f54038a8..7a68516e55f2 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -251,6 +251,23 @@ static inline void update_head_pos(int disk, r1bio_t *r1_bio)
- 		r1_bio->sector + (r1_bio->sectors);
- }
- 
-+/*
-+ * Find the disk number which triggered given bio
-+ */
-+static int find_bio_disk(r1bio_t *r1_bio, struct bio *bio)
-+{
-+	int i;
-+
-+	for (i = 0; i < r1_bio->mddev->raid_disks; i++)
-+		if (r1_bio->bios[i] == bio)
-+			break;
-+
-+	BUG_ON(i == r1_bio->mddev->raid_disks);
-+	update_head_pos(i, r1_bio);
-+
-+	return i;
-+}
-+
- static void raid1_end_read_request(struct bio *bio, int error)
- {
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
-@@ -328,10 +345,7 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 	conf_t *conf = r1_bio->mddev->private;
- 	struct bio *to_put = NULL;
- 
--
--	for (mirror = 0; mirror < conf->raid_disks; mirror++)
--		if (r1_bio->bios[mirror] == bio)
--			break;
-+	mirror = find_bio_disk(r1_bio, bio);
- 
- 	/*
- 	 * 'one mirror IO has finished' event handler:
-@@ -355,8 +369,6 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 		 */
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
- 
--	update_head_pos(mirror, r1_bio);
--
- 	if (behind) {
- 		if (test_bit(WriteMostly, &conf->mirrors[mirror].rdev->flags))
- 			atomic_dec(&r1_bio->behind_remaining);
-@@ -1126,13 +1138,10 @@ abort:
- static void end_sync_read(struct bio *bio, int error)
- {
- 	r1bio_t *r1_bio = bio->bi_private;
--	int i;
- 
--	for (i=r1_bio->mddev->raid_disks; i--; )
--		if (r1_bio->bios[i] == bio)
--			break;
--	BUG_ON(i < 0);
--	update_head_pos(i, r1_bio);
-+	/* this will update head position of appropriate disk */
-+	find_bio_disk(r1_bio, bio);
-+
- 	/*
- 	 * we have read a block, now it needs to be re-written,
- 	 * or re-read if the read failed.
-@@ -1151,14 +1160,10 @@ static void end_sync_write(struct bio *bio, int error)
- 	r1bio_t *r1_bio = bio->bi_private;
- 	mddev_t *mddev = r1_bio->mddev;
- 	conf_t *conf = mddev->private;
--	int i;
--	int mirror=0;
-+	int mirror;
-+
-+	mirror = find_bio_disk(r1_bio, bio);
- 
--	for (i = 0; i < conf->raid_disks; i++)
--		if (r1_bio->bios[i] == bio) {
--			mirror = i;
--			break;
--		}
- 	if (!uptodate) {
- 		sector_t sync_blocks = 0;
- 		sector_t s = r1_bio->sector;
-@@ -1173,8 +1178,6 @@ static void end_sync_write(struct bio *bio, int error)
- 		md_error(mddev, conf->mirrors[mirror].rdev);
- 	}
- 
--	update_head_pos(mirror, r1_bio);
--
- 	if (atomic_dec_and_test(&r1_bio->remaining)) {
- 		sector_t s = r1_bio->sectors;
- 		put_buf(r1_bio);
--- 
-1.7.5.2
+Hi Luca,
+ thanks for these.  I have applied them all, though I made a number of
+ changes to the first patch for fixing warning - nothing major.
+
+They are just in time for 3.2.2 which is nice...
+
+Thanks,
+NeilBrown
 
