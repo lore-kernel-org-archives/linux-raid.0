@@ -1,74 +1,103 @@
-From: jeffs_linux@123mail.org
-Subject: Bug or not?  Same array reports different/transformed UUID depending on
- check-method used.
-Date: Fri, 17 Jun 2011 09:29:49 -0700
-Message-ID: <1308328189.28028.1464311105@webmail.messagingengine.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Simon Mcnair <simonmcnair@gmail.com>
+Subject: Re: Why do I get different results for 'mdadm --detail' & 'mdadm
+ --examine' for the same array?
+Date: Fri, 17 Jun 2011 23:41:15 +0100
+Message-ID: <8060836215477155901@unknownmsgid>
+References: <1307840471.18429.1462140465@webmail.messagingengine.com> <20110616101812.761f7397@notabene.brown>
+Mime-Version: 1.0 (iPhone Mail 8G4)
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110616101812.761f7397@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "jeffs_linux@123mail.org" <jeffs_linux@123mail.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I suppose I should split this into its own thread rather than burying it
-in my other.
+On the basis of this stunning review I have ordered a copy of 'The
+Traveller in Black' from amazon :-)
+You should be in sales ;-)
+Simon
 
-Question first:
+On 16 Jun 2011, at 01:18, NeilBrown <neilb@suse.de> wrote:
 
-  I have two arrays attached to my Linux box.  Two methods of checking
-  for arrays UUIDs give different results.  Why, and can I reply on
-  these arrays?
-
-Details follow:
-
-Checking with,
-
- mdadm --incremental --rebuild-map
- mdadm --detail --scan
-  ARRAY /dev/md/0_0 metadata=0.90                      
-  UUID=52f5b43c:e83f7e2a:be6ad32e:0536ab0e
-  ARRAY /dev/md127  metadata=1.2  name=jeffadm:jeffadm1
-  UUID=d47afb79:e5fa9b28:ff35c586:f2602920
-
-and,
-
- cat /dev/.mdadm/map
-  md126 0.90 52f5b43c:e83f7e2a:be6ad32e:0536ab0e /dev/md/0_0
-  md127 1.2  79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
-
-Staring at those UUIDs, I notice that one array's UUIDs match exactly
-for the two methods of checking,
-
- /dev/.mdadm/map       /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
- mdadm --detail --scan /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
-
-but the OTHER array's two UUIDs
-
- /dev/.mdadm/map       /dev/md127   79fb7ad4:289bfae5:86c535ff:202960f2
- mdadm --detail --scan /dev/md127   d47afb79:e5fa9b28:ff35c586:f2602920
-
-are 'transforms' of one another; e.g.,
-
- mdadm --detail --scan /dev/md127   d47afb79:e5fa9b28:ff35c586:f2602920
-
-                                    d4       e5
-                                      7a       fa
-                                        fb       9b
-                                          79:      28:...
-
-                                        |
-                                        |  couplet order transform
-                                        |
-
-                                          d4       e5
-                                        7a       fa
-                                      fb       9b
-                                    79:      28:      ...
-
- /dev/.mdadm/map       /dev/md127   79fb7ad4:289bfae5:86c535ff:202960f2
-
-Why are /dev/md127's UUIDs, unlike /dev/md/0_0's, reporting mis-matched
-& 'transformed'?
-
-jeff
+> On Sat, 11 Jun 2011 18:01:11 -0700 jeffs_linux@123mail.org wrote:
+>
+>> Hi,
+>>
+>> I'm working on setting up my 1st Linux production server with RAID for
+>> our office.
+>
+> ---- cut lots of detail-----
+> It is very good to include lots of detail, but more effective you include it
+> after you have asked the question, otherwise one gets bored long before one
+> reaches the actual question....
+>
+>>
+>>
+>> Now, I'm going about characterizing the arrays, and the Volumes on them,
+>> so I can deal with recovery if & when it's necessary.
+>>
+>> When I "look" at the array with these two commands,
+>>
+>> mdadm --examine --scan
+>>    ARRAY /dev/md/jeffadm1 metadata=1.2
+>>    UUID=d84afb64:e6fa2b64:ff21c975:f9765431 name=jeffadm:jeffadm1
+>>    ARRAY /dev/md126 UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+>>
+>> mdadm --detail --scan
+>>    ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
+>>    UUID=d84afb64:e6fa2b64:ff21c975:f9765431
+>>    ARRAY /dev/md/0_0 metadata=0.90
+>>    UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
+>>
+>>
+>> I get different results for each one.
+>
+> It is just the different names that has you bothered - correct?
+>
+> Names are messy things.  We pretend that everything has just one name but
+> that isn't really true (reminds me of "The Traveller in Black" ... he had
+> many names but one nature.  But I digress).
+>
+> In the two different cases the 'name' of the array is found in different ways.
+> Both are correct, they are just different.
+>
+> So unless there is some real confusion being caused, best just to move on and
+> not let it worry you..
+>
+> NeilBrown
+>
+>
+>
+>>
+>>> From my reading about naming in mdadm.conf, I was expecting to see:
+>>
+>>  /dev/md/0_0
+>>  /dev/jeffadm:jeffadm1
+>>
+>>
+>> Why do I get this mix of different results,
+>>
+>>    /dev/md/jeffadm1
+>>    /dev/md126
+>>
+>> from the "--detail" output, and
+>>
+>>    /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
+>>    /dev/md/0_0
+>>
+>> according to the "--examine" output?
+>>
+>> Is my mdadm.conf OK?  What really should I expect to see for the names
+>> of my arrays?
+>>
+>> Jeff
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
