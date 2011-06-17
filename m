@@ -1,65 +1,74 @@
-From: James Paradis <jparadis@redhat.com>
-Subject: Re: [PATCH/RFC] Fix resync hang after surprise removal
-Date: Fri, 17 Jun 2011 11:42:19 -0400 (EDT)
-Message-ID: <4770908.772445.1308325339109.JavaMail.root@zmail01.collab.prod.int.phx2.redhat.com>
-References: <20110616113656.190fef9f@notabene.brown>
+From: jeffs_linux@123mail.org
+Subject: Bug or not?  Same array reports different/transformed UUID depending on
+ check-method used.
+Date: Fri, 17 Jun 2011 09:29:49 -0700
+Message-ID: <1308328189.28028.1464311105@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110616113656.190fef9f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I suppose I should split this into its own thread rather than burying it
+in my other.
 
-> NeilBrown <neilb@suse.de> wrote:
-> Hi,
-> thanks for the report and the patch.
-> 
-> However I don't think the patch really does what you want.
-> 
-> The two tests are already mutually exclusive as one begins with
-> raid_disk >= 0
-> and the other with
-> raid_disk < 0
-> and neither change raid_disk.
-> 
-> The reason the patch has an effect is the 'break' that has been added.
-> i.e. as soon as you find a normal working device you break out of the
-> loop
-> and stop looking for spares.
-> 
-> I think the correct fix is simply:
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 4332fc2..91e31e2 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7088,6 +7088,7 @@ static int remove_and_add_spares(mddev_t *mddev)
-> list_for_each_entry(rdev, &mddev->disks, same_set) {
-> if (rdev->raid_disk >= 0 &&
-> !test_bit(In_sync, &rdev->flags) &&
-> + !test_bit(Faulty, &rdev->flags) &&
-> !test_bit(Blocked, &rdev->flags))
-> spares++;
-> if (rdev->raid_disk < 0
-> 
-> 
-> i.e. never consider a Faulty device to be a spare.
-> 
-> It looks like this bug was introduced by commit dfc70645000616777
-> in 2.6.26 when we allowed partially recovered devices to remain in the
-> array
-> when a different device fails.
-> 
-> Can you please conform that this patch removes your symptom?
-> 
-> Thanks,
-> NeilBrown
+Question first:
 
-This patch does indeed fix the problem!  Thanks!
+  I have two arrays attached to my Linux box.  Two methods of checking
+  for arrays UUIDs give different results.  Why, and can I reply on
+  these arrays?
 
---jim
+Details follow:
 
+Checking with,
+
+ mdadm --incremental --rebuild-map
+ mdadm --detail --scan
+  ARRAY /dev/md/0_0 metadata=0.90                      
+  UUID=52f5b43c:e83f7e2a:be6ad32e:0536ab0e
+  ARRAY /dev/md127  metadata=1.2  name=jeffadm:jeffadm1
+  UUID=d47afb79:e5fa9b28:ff35c586:f2602920
+
+and,
+
+ cat /dev/.mdadm/map
+  md126 0.90 52f5b43c:e83f7e2a:be6ad32e:0536ab0e /dev/md/0_0
+  md127 1.2  79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
+
+Staring at those UUIDs, I notice that one array's UUIDs match exactly
+for the two methods of checking,
+
+ /dev/.mdadm/map       /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
+ mdadm --detail --scan /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
+
+but the OTHER array's two UUIDs
+
+ /dev/.mdadm/map       /dev/md127   79fb7ad4:289bfae5:86c535ff:202960f2
+ mdadm --detail --scan /dev/md127   d47afb79:e5fa9b28:ff35c586:f2602920
+
+are 'transforms' of one another; e.g.,
+
+ mdadm --detail --scan /dev/md127   d47afb79:e5fa9b28:ff35c586:f2602920
+
+                                    d4       e5
+                                      7a       fa
+                                        fb       9b
+                                          79:      28:...
+
+                                        |
+                                        |  couplet order transform
+                                        |
+
+                                          d4       e5
+                                        7a       fa
+                                      fb       9b
+                                    79:      28:      ...
+
+ /dev/.mdadm/map       /dev/md127   79fb7ad4:289bfae5:86c535ff:202960f2
+
+Why are /dev/md127's UUIDs, unlike /dev/md/0_0's, reporting mis-matched
+& 'transformed'?
+
+jeff
