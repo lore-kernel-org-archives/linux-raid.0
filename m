@@ -1,53 +1,62 @@
-From: "Dragon" <Sunghost@gmx.de>
-Subject: (unknown)
-Date: Sat, 18 Jun 2011 22:39:54 +0200
-Message-ID: <20110618203954.129920@gmx.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: raid6 issues
+Date: Sun, 19 Jun 2011 09:01:04 +1000
+Message-ID: <20110619090104.0b8c0a51@notabene.brown>
+References: <BANLkTi=ky+t1uM0p_HhQPScG78BFxE8Hjw@mail.gmail.com>
+	<BANLkTinT48ryUV01cuveutM=mDHLzy0ggg@mail.gmail.com>
+	<BANLkTimZ28GKnq41T78NfVPg8s4d9eRkfw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTimZ28GKnq41T78NfVPg8s4d9eRkfw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: philip@turmel.org
+To: Chad Walker <chad@chad-cat-lore-eddie.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Monitor your background reshape with "cat /proc/mdstat".
+On Sat, 18 Jun 2011 12:55:12 -0700 Chad Walker <chad@chad-cat-lore-eddie.com>
+wrote:
 
-When the reshape is complete, the extra disk will be marked "spare".
+> also output from "mdadm --assemble --scan --verbose"
+> 
+> mdadm: looking for devices for /dev/md1
+> mdadm: cannot open device /dev/sdp1: Device or resource busy
+> mdadm: /dev/sdp1 has wrong uuid.
+> mdadm: cannot open device /dev/sdo1: Device or resource busy
+> mdadm: /dev/sdo1 has wrong uuid.
+> mdadm: cannot open device /dev/sdn1: Device or resource busy
+> mdadm: /dev/sdn1 has wrong uuid.
+> mdadm: cannot open device /dev/sdm1: Device or resource busy
+> mdadm: /dev/sdm1 has wrong uuid.
+> mdadm: cannot open device /dev/sdl1: Device or resource busy
+> mdadm: /dev/sdl1 has wrong uuid.
+> mdadm: cannot open device /dev/sdk1: Device or resource busy
+> mdadm: /dev/sdk1 has wrong uuid.
+> mdadm: cannot open device /dev/sdj1: Device or resource busy
+> mdadm: /dev/sdj1 has wrong uuid.
+> mdadm: cannot open device /dev/sdi1: Device or resource busy
+> mdadm: /dev/sdi1 has wrong uuid.
+> mdadm: cannot open device /dev/sdh1: Device or resource busy
+> mdadm: /dev/sdh1 has wrong uuid.
+> mdadm: cannot open device /dev/sdg1: Device or resource busy
+> mdadm: /dev/sdg1 has wrong uuid.
+> mdadm: cannot open device /dev/sdf1: Device or resource busy
+> mdadm: /dev/sdf1 has wrong uuid.
+> mdadm: cannot open device /dev/sde1: Device or resource busy
+> mdadm: /dev/sde1 has wrong uuid.
+> mdadm: cannot open device /dev/sdd1: Device or resource busy
+> mdadm: /dev/sdd1 has wrong uuid.
+> mdadm: cannot open device /dev/sdc1: Device or resource busy
+> mdadm: /dev/sdc1 has wrong uuid.
+> mdadm: cannot open device /dev/sdb1: Device or resource busy
+> mdadm: /dev/sdb1 has wrong uuid.
+> 
+> 
 
-Then you can use "mdadm --remove".
--->after a view days the reshape was done and i take the disk out of the raid -> many thx for that
+Try
 
-> at this point i think i take the disk out of the raid, because i need the space of
-the disk.
+  mdadm -Ss
+the the above --assemble with --force added.
 
-Understood, but you are living on the edge.  You have no backup, and only one drive
-of redundancy.  If one of your drives does fail, the odds of losing the whole array
-while replacing it is significant.  Your Samsung drives claim a non-recoverable read
-error rate of 1 per 1x10^15 bits.  Your eleven data disks contain 1.32x10^14 bits,
-all of which must be read during rebuild.  That means a _13%_ chance of total
-failure while replacing a failed drive.
-
-I hope your 16T of data is not terribly important to you, or is otherwise replaceable.
---> nice calculation, where do you have the data from?
---> most of it is important, i will look for a better solution
-
-> I need another advise of you. While the computer is actualy build with 13 disk and
-i will become more data in the next month and the limit of power supply
-connecotors is reached i am looking forward to another solution. one possibility
-is to build up a better computer with more sata and sas connectors and add further
-raid-controller-cards. an other idea is to build a kind of cluster or dfs with two
-and later 3,4... computer. i read something about gluster.org. do you have a tip
-for me or experience in this?
-
-Unfortunately, no.  Although I skirt the edges in my engineering work, I'm primarily
-an end-user.  Both personal and work projects have relatively modest needs.  From
-the engineering side, I do recommend you spend extra on power supplies & UPS.
-
-Phil
---> and than, ext4 max size is actually 16TB, what should i do?
---> for an end-user you have many knowledge about swraid ;)
-sunny
--- 
-NEU: FreePhone - kostenlos mobil telefonieren!			
-Jetzt informieren: http://www.gmx.net/de/go/freephone
+NeilBrown
