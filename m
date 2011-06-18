@@ -1,97 +1,61 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH] Show DELAYED, PENDING status of resync process in "--detail"
-Date: Sat, 18 Jun 2011 16:10:35 +0200
-Message-ID: <20110618141035.14426.58645.stgit@gklab-128-111.igk.intel.com>
+From: Rory Jaffe <rsjaffe@gmail.com>
+Subject: check vs repair -- mismatch count goes up in repair, zeros in check?
+Date: Sat, 18 Jun 2011 09:10:01 -0700
+Message-ID: <BANLkTikWJvVfmwiRgDPzprQsU_Jc67go0w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Initialy there is no proper translation mdstat's DEYALED/PENDING processes
-to "--detail" output.
-For example, if we have revover=DELAYED in mdstat, "--detail"
-shows "State: recovering" and "Rebuild Status = 0%".
-It was incorrect in case of process waiting on checkpoint different
-than 0%. In fact rebuild status is differnt than 0% and user is misled.
+I'm a bit confused about check vs repair.
 
-The patch fix the problem. Current "--detail" command shows
-in the exampe: "State: recovering (DELAYED)" and no information
-about precentage.
+When I run repair, mismatches are initially zero'd at the start and
+then add up as it runs through, so that at the end there is a positive
+mismatch count. Running check after that zero's them out.
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- Detail.c |   18 +++++++++---------
- mdadm.h  |    2 ++
- mdstat.c |    8 ++++----
- 3 files changed, 15 insertions(+), 13 deletions(-)
+I thought check would run through the array and identify mismatches,
+but not repair them, while repair would do the repair step as well.
+But the exhibited behavior seems to indicate the opposite.
 
-diff --git a/Detail.c b/Detail.c
-index 375189d..e9f71d8 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -372,11 +372,13 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
- 			else
- 				st = ", degraded";
- 
--			printf("          State : %s%s%s%s\n",
--			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active",
--			       st,
--			       (!e || e->percent < 0) ? "" : sync_action[e->resync],
--			       larray_size ? "": ", Not Started");
-+			printf("          State : %s%s%s%s%s%s \n",
-+			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active", st,
-+			       (!e || (e->percent < 0 && e->percent != PROCESS_PENDING &&
-+			       e->percent != PROCESS_DELAYED)) ? "" : sync_action[e->resync],
-+			       larray_size ? "": ", Not Started",
-+			       e->percent == PROCESS_DELAYED ? " (DELAYED)": "",
-+			       e->percent == PROCESS_PENDING ? " (PENDING)": "");
- 		}
- 		if (array.raid_disks)
- 			printf(" Active Devices : %d\n", array.active_disks);
-@@ -416,10 +418,8 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
- 		}
- 
- 		if (e && e->percent >= 0) {
--			printf(" Re%s Status : %d%% complete\n",
--			       (st && st->sb && info->reshape_active)?
--			          "shape":"build",
--			       e->percent);
-+			static char *sync_action[] = {"Rebuild", "Resync", "Reshape", "Check"};
-+			printf(" %s Status : %d%% complete\n", sync_action[e->resync], e->percent);
- 			is_rebuilding = 1;
- 		}
- 		free_mdstat(ms);
-diff --git a/mdadm.h b/mdadm.h
-index e075dd2..8bd0077 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -1345,3 +1345,5 @@ static inline int xasprintf(char **strp, const char *fmt, ...) {
- #define PATH_MAX	4096
- #endif
- 
-+#define PROCESS_DELAYED -2
-+#define PROCESS_PENDING -3
-diff --git a/mdstat.c b/mdstat.c
-index 3d2edad..abf6bf9 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -257,10 +257,10 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 				if (strncmp(w, "check", 5)==0)
- 					ent->resync = 3;
- 
--				if (l > 8 && strcmp(w+l-8, "=DELAYED"))
--					ent->percent = 0;
--				if (l > 8 && strcmp(w+l-8, "=PENDING"))
--					ent->percent = 0;
-+				if (l > 8 && strcmp(w+l-8, "=DELAYED") == 0)
-+					ent->percent = PROCESS_DELAYED;
-+				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
-+					ent->percent = PROCESS_PENDING;
- 			} else if (ent->percent == -1 &&
- 				   w[0] >= '0' &&
- 				   w[0] <= '9' &&
+Does the mismatch count show the current number of identified
+mismatches? Or what is it really counting?
 
+See http://pastthe.endoftheinternet.org/munin/home/ubuntunas/index.html#munin
+for an example (page up from the munin graphs--the three graphs
+immediately above track the array.
+
+
+/dev/md0:
+        Version : 1.2
+  Creation Time : Sat Apr 30 14:29:07 2011
+     Raid Level : raid6
+     Array Size : 5857609728 (5586.25 GiB 5998.19 GB)
+  Used Dev Size : 1952536576 (1862.08 GiB 1999.40 GB)
+   Raid Devices : 5
+  Total Devices : 6
+    Persistence : Superblock is persistent
+
+    Update Time : Sat Jun 18 09:08:03 2011
+          State : clean
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : ubuntunas:0  (local to host ubuntunas)
+           UUID : 9916bc94:a245d51b:ecca3480:7c612ed5
+         Events : 127
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       34        2      active sync   /dev/sdc2
+       3       8       50        3      active sync   /dev/sdd2
+       4       8       66        4      active sync   /dev/sde2
+
+       5       8       82        -      spare   /dev/sdf2
