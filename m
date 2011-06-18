@@ -1,103 +1,97 @@
-From: Simon Mcnair <simonmcnair@gmail.com>
-Subject: Re: Why do I get different results for 'mdadm --detail' & 'mdadm
- --examine' for the same array?
-Date: Fri, 17 Jun 2011 23:41:15 +0100
-Message-ID: <8060836215477155901@unknownmsgid>
-References: <1307840471.18429.1462140465@webmail.messagingengine.com> <20110616101812.761f7397@notabene.brown>
-Mime-Version: 1.0 (iPhone Mail 8G4)
-Content-Type: text/plain; charset=ISO-8859-1
+From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+Subject: [PATCH] Show DELAYED, PENDING status of resync process in "--detail"
+Date: Sat, 18 Jun 2011 16:10:35 +0200
+Message-ID: <20110618141035.14426.58645.stgit@gklab-128-111.igk.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110616101812.761f7397@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "jeffs_linux@123mail.org" <jeffs_linux@123mail.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On the basis of this stunning review I have ordered a copy of 'The
-Traveller in Black' from amazon :-)
-You should be in sales ;-)
-Simon
+Initialy there is no proper translation mdstat's DEYALED/PENDING processes
+to "--detail" output.
+For example, if we have revover=DELAYED in mdstat, "--detail"
+shows "State: recovering" and "Rebuild Status = 0%".
+It was incorrect in case of process waiting on checkpoint different
+than 0%. In fact rebuild status is differnt than 0% and user is misled.
 
-On 16 Jun 2011, at 01:18, NeilBrown <neilb@suse.de> wrote:
+The patch fix the problem. Current "--detail" command shows
+in the exampe: "State: recovering (DELAYED)" and no information
+about precentage.
 
-> On Sat, 11 Jun 2011 18:01:11 -0700 jeffs_linux@123mail.org wrote:
->
->> Hi,
->>
->> I'm working on setting up my 1st Linux production server with RAID for
->> our office.
->
-> ---- cut lots of detail-----
-> It is very good to include lots of detail, but more effective you include it
-> after you have asked the question, otherwise one gets bored long before one
-> reaches the actual question....
->
->>
->>
->> Now, I'm going about characterizing the arrays, and the Volumes on them,
->> so I can deal with recovery if & when it's necessary.
->>
->> When I "look" at the array with these two commands,
->>
->> mdadm --examine --scan
->>    ARRAY /dev/md/jeffadm1 metadata=1.2
->>    UUID=d84afb64:e6fa2b64:ff21c975:f9765431 name=jeffadm:jeffadm1
->>    ARRAY /dev/md126 UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
->>
->> mdadm --detail --scan
->>    ARRAY /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
->>    UUID=d84afb64:e6fa2b64:ff21c975:f9765431
->>    ARRAY /dev/md/0_0 metadata=0.90
->>    UUID=19f2b21c:e54f9e1a:be5ad16e:9754ab5e
->>
->>
->> I get different results for each one.
->
-> It is just the different names that has you bothered - correct?
->
-> Names are messy things.  We pretend that everything has just one name but
-> that isn't really true (reminds me of "The Traveller in Black" ... he had
-> many names but one nature.  But I digress).
->
-> In the two different cases the 'name' of the array is found in different ways.
-> Both are correct, they are just different.
->
-> So unless there is some real confusion being caused, best just to move on and
-> not let it worry you..
->
-> NeilBrown
->
->
->
->>
->>> From my reading about naming in mdadm.conf, I was expecting to see:
->>
->>  /dev/md/0_0
->>  /dev/jeffadm:jeffadm1
->>
->>
->> Why do I get this mix of different results,
->>
->>    /dev/md/jeffadm1
->>    /dev/md126
->>
->> from the "--detail" output, and
->>
->>    /dev/md127 metadata=1.2 name=jeffadm:jeffadm1
->>    /dev/md/0_0
->>
->> according to the "--examine" output?
->>
->> Is my mdadm.conf OK?  What really should I expect to see for the names
->> of my arrays?
->>
->> Jeff
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
+---
+ Detail.c |   18 +++++++++---------
+ mdadm.h  |    2 ++
+ mdstat.c |    8 ++++----
+ 3 files changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/Detail.c b/Detail.c
+index 375189d..e9f71d8 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -372,11 +372,13 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 			else
+ 				st = ", degraded";
+ 
+-			printf("          State : %s%s%s%s\n",
+-			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active",
+-			       st,
+-			       (!e || e->percent < 0) ? "" : sync_action[e->resync],
+-			       larray_size ? "": ", Not Started");
++			printf("          State : %s%s%s%s%s%s \n",
++			       (array.state&(1<<MD_SB_CLEAN))?"clean":"active", st,
++			       (!e || (e->percent < 0 && e->percent != PROCESS_PENDING &&
++			       e->percent != PROCESS_DELAYED)) ? "" : sync_action[e->resync],
++			       larray_size ? "": ", Not Started",
++			       e->percent == PROCESS_DELAYED ? " (DELAYED)": "",
++			       e->percent == PROCESS_PENDING ? " (PENDING)": "");
+ 		}
+ 		if (array.raid_disks)
+ 			printf(" Active Devices : %d\n", array.active_disks);
+@@ -416,10 +418,8 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		}
+ 
+ 		if (e && e->percent >= 0) {
+-			printf(" Re%s Status : %d%% complete\n",
+-			       (st && st->sb && info->reshape_active)?
+-			          "shape":"build",
+-			       e->percent);
++			static char *sync_action[] = {"Rebuild", "Resync", "Reshape", "Check"};
++			printf(" %s Status : %d%% complete\n", sync_action[e->resync], e->percent);
+ 			is_rebuilding = 1;
+ 		}
+ 		free_mdstat(ms);
+diff --git a/mdadm.h b/mdadm.h
+index e075dd2..8bd0077 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1345,3 +1345,5 @@ static inline int xasprintf(char **strp, const char *fmt, ...) {
+ #define PATH_MAX	4096
+ #endif
+ 
++#define PROCESS_DELAYED -2
++#define PROCESS_PENDING -3
+diff --git a/mdstat.c b/mdstat.c
+index 3d2edad..abf6bf9 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -257,10 +257,10 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+ 				if (strncmp(w, "check", 5)==0)
+ 					ent->resync = 3;
+ 
+-				if (l > 8 && strcmp(w+l-8, "=DELAYED"))
+-					ent->percent = 0;
+-				if (l > 8 && strcmp(w+l-8, "=PENDING"))
+-					ent->percent = 0;
++				if (l > 8 && strcmp(w+l-8, "=DELAYED") == 0)
++					ent->percent = PROCESS_DELAYED;
++				if (l > 8 && strcmp(w+l-8, "=PENDING") == 0)
++					ent->percent = PROCESS_PENDING;
+ 			} else if (ent->percent == -1 &&
+ 				   w[0] >= '0' &&
+ 				   w[0] <= '9' &&
+
