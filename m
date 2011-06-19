@@ -1,88 +1,62 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: check vs repair -- mismatch count goes up in repair, zeros in
- check?
-Date: Sun, 19 Jun 2011 09:23:46 +1000
-Message-ID: <20110619092346.2774cf10@notabene.brown>
-References: <BANLkTikWJvVfmwiRgDPzprQsU_Jc67go0w@mail.gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re:
+Date: Sun, 19 Jun 2011 14:40:58 -0400
+Message-ID: <4DFE42BA.1050500@turmel.org>
+References: <20110618203954.129920@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikWJvVfmwiRgDPzprQsU_Jc67go0w@mail.gmail.com>
+In-Reply-To: <20110618203954.129920@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rory Jaffe <rsjaffe@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Dragon <Sunghost@gmx.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 18 Jun 2011 09:10:01 -0700 Rory Jaffe <rsjaffe@gmail.com> wrote:
+Hi Dragon,
 
-> I'm a bit confused about check vs repair.
+On 06/18/2011 04:39 PM, Dragon wrote:
+> Monitor your background reshape with "cat /proc/mdstat".
 > 
-> When I run repair, mismatches are initially zero'd at the start and
-> then add up as it runs through, so that at the end there is a positive
-> mismatch count. Running check after that zero's them out.
+> When the reshape is complete, the extra disk will be marked "spare".
 > 
-> I thought check would run through the array and identify mismatches,
-> but not repair them, while repair would do the repair step as well.
-> But the exhibited behavior seems to indicate the opposite.
+> Then you can use "mdadm --remove".
+> -->after a view days the reshape was done and i take the disk out of the raid -> many thx for that
 
-Does it?   Why do you think that 'check' found no mismatches?  Because
-'repair' had already repaired them!
+Good to hear.
 
-Both 'check' and 'repair' report how many mismatches were found.  'check'
-doesn't repair them.  'repair' does.
+>> at this point i think i take the disk out of the raid, because i need the space of
+> the disk.
+> 
+> Understood, but you are living on the edge.  You have no backup, and only one drive
+> of redundancy.  If one of your drives does fail, the odds of losing the whole array
+> while replacing it is significant.  Your Samsung drives claim a non-recoverable read
+> error rate of 1 per 1x10^15 bits.  Your eleven data disks contain 1.32x10^14 bits,
+> all of which must be read during rebuild.  That means a _13%_ chance of total
+> failure while replacing a failed drive.
+> 
+> I hope your 16T of data is not terribly important to you, or is otherwise replaceable.
+> --> nice calculation, where do you have the data from?
+> --> most of it is important, i will look for a better solution
 
-> 
-> Does the mismatch count show the current number of identified
-> mismatches? Or what is it really counting?
+The error rate is from Samsung, for your HD154UI drives:
+http://www.samsung.com/latin_en/consumer/monitor-peripherals-printer/hard-disk-drives/internal/HD154UI/CKW/index.idx?pagetype=prd_detail&tab=specification
 
-It is really counting sectors that might not match.
-i.e. it performs the check is section larger than one sector.  When it finds
-a mismatch it just adds the number of sectors in the section to the count.
+error rate = 1 / 1*10^15 = 1x10^-15
 
-NeilBrown
+The rest comes from your setup:
+11 disks * (1465138496 * 1024) bytes/disk * 8 bits/bytes = 1.32026560152e+14
 
+% odds of failure = (data quantity * error rate) * 100%
 
-> 
-> See http://pastthe.endoftheinternet.org/munin/home/ubuntunas/index.html#munin
-> for an example (page up from the munin graphs--the three graphs
-> immediately above track the array.
-> 
-> 
-> /dev/md0:
->         Version : 1.2
->   Creation Time : Sat Apr 30 14:29:07 2011
->      Raid Level : raid6
->      Array Size : 5857609728 (5586.25 GiB 5998.19 GB)
->   Used Dev Size : 1952536576 (1862.08 GiB 1999.40 GB)
->    Raid Devices : 5
->   Total Devices : 6
->     Persistence : Superblock is persistent
-> 
->     Update Time : Sat Jun 18 09:08:03 2011
->           State : clean
->  Active Devices : 5
-> Working Devices : 6
->  Failed Devices : 0
->   Spare Devices : 1
-> 
->          Layout : left-symmetric
->      Chunk Size : 512K
-> 
->            Name : ubuntunas:0  (local to host ubuntunas)
->            UUID : 9916bc94:a245d51b:ecca3480:7c612ed5
->          Events : 127
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        2        0      active sync   /dev/sda2
->        1       8       18        1      active sync   /dev/sdb2
->        2       8       34        2      active sync   /dev/sdc2
->        3       8       50        3      active sync   /dev/sdd2
->        4       8       66        4      active sync   /dev/sde2
-> 
->        5       8       82        -      spare   /dev/sdf2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[...]
 
+> --> and than, ext4 max size is actually 16TB, what should i do?
+
+I've been playing with XFS.  The only significant maintenance drawback I've identified is that it cannot be shrunk.  Not even offline.  It's not really holding me back, though, as I tend to layer LVM on top of my raid arrays, then allocate to specific volumes.  I always hold back a substantial fraction of the space for future use of "lvextend".
+
+> --> for an end-user you have many knowledge about swraid ;)
+
+Thank you.  I was a geek before I became an engineer :) .
+
+Phil
