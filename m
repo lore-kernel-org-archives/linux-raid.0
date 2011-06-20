@@ -1,49 +1,44 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: [PATCH] mdadm --detail was incorrect for shrinking reshapes
-Date: Mon, 20 Jun 2011 09:06:55 -0700
-Message-ID: <1308586015.10185.11@hogo>
+From: Simon McNair <simonmcnair@gmail.com>
+Subject: flummoxed why I can't umount my md device.  fuser and lsof show no
+ files locked
+Date: Mon, 20 Jun 2011 18:48:40 +0100
+Message-ID: <4DFF87F8.8050202@gmail.com>
+Reply-To: simonmcnair@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid mailing list <linux-raid@vger.kernel.org>
-Cc: NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Since info->delta_disks is signed it doesn't need to be special-cased.
+hi all,
+A colleague of mine questioned the fact that I created my raid array 
+using the command 'mkfs -t ext4 -v -m .1 -b 4096 -E 
+stride=16,stripe-width=144 /dev/md0'.  He said that "When creating file 
+systems on lvm or md volumes, |mkfs.ext4| chooses an optimal geometry."
 
-This allowed my 9->8 reshape to display correctly instead of as 8->7
+I wanted to run 'mkfs.ext4 -n /dev/md0' to see what settings it would 
+choose that were different to mine but it keeps saying:
+"/dev/md0 is apparently in use by the system; will not make a filesystem 
+here!".
 
-(the "This is pretty boring" context is apparently the universe's
-opinion of my first patch!)
+I also can't stop the array using 'mdadm --stop /dev/md0' as it says 
+mdadm: failed to stop array /dev/md0: Device or resource busy.  pretty 
+much the same error occurs when trying lvchange -an /media/local/Raid
+
+I've no problem with any of this except I can't find out what process 
+has a handle on the mount and/or why.  so I can't stop/kill it.
+
+I tried lsof | grep /media/local/Raid and fuser -m /media/local/Raid to 
+no avail.  I also tried ps aux | grep Raid.  I've stopped pretty much 
+everything in init.d including samba,nfs,mediatomb,squeezebox and 
+anything I can think of that I've installed.
+
+Any advice/ideas please ?
+
+cheers
+Simon
 
 
-mdadm> git diff
-diff --git a/Detail.c b/Detail.c
-index 375189d..40806cf 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -430,12 +430,9 @@ This is pretty boring
-  			printf("  Reshape pos'n : %llu%s\n", (unsigned  
-long long) info->reshape_progress<<9,
-  			       human_size((unsigned long  
-long)info->reshape_progress<<9));
-  #endif
--			if (info->delta_disks > 0)
-+			if (info->delta_disks != 0)
-  				printf("  Delta Devices : %d,  
-(%d->%d)\n",
-  				       info->delta_disks,  
-array.raid_disks - info->delta_disks, array.raid_disks);
--			if (info->delta_disks < 0)
--				printf("  Delta Devices : %d,  
-(%d->%d)\n",
--				       info->delta_disks,  
-array.raid_disks, array.raid_disks + info->delta_disks);
-  			if (info->new_level != array.level) {
-  				char *c = map_num(pers,  
-info->new_level);
-  				printf("      New Level : %s\n",  
-c?c:"-unknown-");
+
