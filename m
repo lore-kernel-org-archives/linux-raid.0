@@ -1,62 +1,45 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re:
-Date: Sun, 19 Jun 2011 14:40:58 -0400
-Message-ID: <4DFE42BA.1050500@turmel.org>
-References: <20110618203954.129920@gmx.net>
+From: "Sandra Escandor" <sescandor@evertz.com>
+Subject: Newb question: Auto assembling of RAID10 (imsm) on boot
+Date: Mon, 20 Jun 2011 08:33:57 -0400
+Message-ID: <C70A636B101FD44999B82525C3E92AFAD36E05@otis.burlington.evertz.tv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110618203954.129920@gmx.net>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Dragon,
+Hello,
 
-On 06/18/2011 04:39 PM, Dragon wrote:
-> Monitor your background reshape with "cat /proc/mdstat".
-> 
-> When the reshape is complete, the extra disk will be marked "spare".
-> 
-> Then you can use "mdadm --remove".
-> -->after a view days the reshape was done and i take the disk out of the raid -> many thx for that
+I'm using mdadm 3.1.4 (built from source) and I have a
+/etc/mdadm/mdadm.conf with the following:
 
-Good to hear.
 
->> at this point i think i take the disk out of the raid, because i need the space of
-> the disk.
-> 
-> Understood, but you are living on the edge.  You have no backup, and only one drive
-> of redundancy.  If one of your drives does fail, the odds of losing the whole array
-> while replacing it is significant.  Your Samsung drives claim a non-recoverable read
-> error rate of 1 per 1x10^15 bits.  Your eleven data disks contain 1.32x10^14 bits,
-> all of which must be read during rebuild.  That means a _13%_ chance of total
-> failure while replacing a failed drive.
-> 
-> I hope your 16T of data is not terribly important to you, or is otherwise replaceable.
-> --> nice calculation, where do you have the data from?
-> --> most of it is important, i will look for a better solution
+HOMEHOST Volume0
 
-The error rate is from Samsung, for your HD154UI drives:
-http://www.samsung.com/latin_en/consumer/monitor-peripherals-printer/hard-disk-drives/internal/HD154UI/CKW/index.idx?pagetype=prd_detail&tab=specification
+ARRAY /dev/md/imsm_container metadata=imsm UUID=...
 
-error rate = 1 / 1*10^15 = 1x10^-15
+ARRAY /dev/md/Volume0 container=.... Member = 0 UUID=...
 
-The rest comes from your setup:
-11 disks * (1465138496 * 1024) bytes/disk * 8 bits/bytes = 1.32026560152e+14
+ 
 
-% odds of failure = (data quantity * error rate) * 100%
-
-[...]
-
-> --> and than, ext4 max size is actually 16TB, what should i do?
-
-I've been playing with XFS.  The only significant maintenance drawback I've identified is that it cannot be shrunk.  Not even offline.  It's not really holding me back, though, as I tend to layer LVM on top of my raid arrays, then allocate to specific volumes.  I always hold back a substantial fraction of the space for future use of "lvextend".
-
-> --> for an end-user you have many knowledge about swraid ;)
-
-Thank you.  I was a geek before I became an engineer :) .
-
-Phil
+And I can assemble the array on command line like so: mdadm -As.
+ 
+but, I am not too sure what I should do with the initramfs in order for
+the system to recognize that it should actually assemble the RAID when
+it boots. What I've done is the following: 
+After I changed my /etc/mdadm/mdadm.conf, I did an update-initramfs -k
+all -u.
+I did a: zcat /boot/initrd.img-2.6.35-28-generic | cpio -idv into a
+/tmp/initrd folder,
+but I didn't see a etc/mdadm/mdadm.conf under the /tmp/initrd folder
+that I created. I also restarted the server to see if I would be able to
+see /dev/md* that should be there if the RAID has been auto-assembled,
+but it didn't exist on startup. I had to assemble the array on the
+command-line...What am I missing?
+ 
+Thanks,
+Sandra
