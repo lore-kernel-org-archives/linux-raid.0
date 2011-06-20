@@ -1,45 +1,49 @@
-From: "Sandra Escandor" <sescandor@evertz.com>
-Subject: Newb question: Auto assembling of RAID10 (imsm) on boot
-Date: Mon, 20 Jun 2011 08:33:57 -0400
-Message-ID: <C70A636B101FD44999B82525C3E92AFAD36E05@otis.burlington.evertz.tv>
+From: Andrew Burgess <aab@cichlid.com>
+Subject: [PATCH] mdadm --detail was incorrect for shrinking reshapes
+Date: Mon, 20 Jun 2011 09:06:55 -0700
+Message-ID: <1308586015.10185.11@hogo>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux raid mailing list <linux-raid@vger.kernel.org>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hello,
+Since info->delta_disks is signed it doesn't need to be special-cased.
 
-I'm using mdadm 3.1.4 (built from source) and I have a
-/etc/mdadm/mdadm.conf with the following:
+This allowed my 9->8 reshape to display correctly instead of as 8->7
+
+(the "This is pretty boring" context is apparently the universe's
+opinion of my first patch!)
 
 
-HOMEHOST Volume0
-
-ARRAY /dev/md/imsm_container metadata=imsm UUID=...
-
-ARRAY /dev/md/Volume0 container=.... Member = 0 UUID=...
-
- 
-
-And I can assemble the array on command line like so: mdadm -As.
- 
-but, I am not too sure what I should do with the initramfs in order for
-the system to recognize that it should actually assemble the RAID when
-it boots. What I've done is the following: 
-After I changed my /etc/mdadm/mdadm.conf, I did an update-initramfs -k
-all -u.
-I did a: zcat /boot/initrd.img-2.6.35-28-generic | cpio -idv into a
-/tmp/initrd folder,
-but I didn't see a etc/mdadm/mdadm.conf under the /tmp/initrd folder
-that I created. I also restarted the server to see if I would be able to
-see /dev/md* that should be there if the RAID has been auto-assembled,
-but it didn't exist on startup. I had to assemble the array on the
-command-line...What am I missing?
- 
-Thanks,
-Sandra
+mdadm> git diff
+diff --git a/Detail.c b/Detail.c
+index 375189d..40806cf 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -430,12 +430,9 @@ This is pretty boring
+  			printf("  Reshape pos'n : %llu%s\n", (unsigned  
+long long) info->reshape_progress<<9,
+  			       human_size((unsigned long  
+long)info->reshape_progress<<9));
+  #endif
+-			if (info->delta_disks > 0)
++			if (info->delta_disks != 0)
+  				printf("  Delta Devices : %d,  
+(%d->%d)\n",
+  				       info->delta_disks,  
+array.raid_disks - info->delta_disks, array.raid_disks);
+-			if (info->delta_disks < 0)
+-				printf("  Delta Devices : %d,  
+(%d->%d)\n",
+-				       info->delta_disks,  
+array.raid_disks, array.raid_disks + info->delta_disks);
+  			if (info->new_level != array.level) {
+  				char *c = map_num(pers,  
+info->new_level);
+  				printf("      New Level : %s\n",  
+c?c:"-unknown-");
