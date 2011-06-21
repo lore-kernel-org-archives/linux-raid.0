@@ -1,34 +1,43 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 4/4] .gitignore: ignore mdadm.8 file
-Date: Wed, 22 Jun 2011 01:19:05 +0900
-Message-ID: <1308673145-8151-4-git-send-email-namhyung@gmail.com>
-References: <1308673145-8151-1-git-send-email-namhyung@gmail.com>
+From: maurice <mhilarius@gmail.com>
+Subject: Looking for the best way to do this
+Date: Tue, 21 Jun 2011 12:13:05 -0600
+Message-ID: <4E00DF31.2020406@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1308673145-8151-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mdadm.8 is auto-generated from mdadm.8.in, so ignore it.
+Good day, and thanks in advance for any ideas and advice.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- .gitignore |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I am working on a server.
+The server is normally in a remote location, not outside accessible by 
+network,
+and there is no easy method to do backups on it.
+It is running Fedora 14
 
-diff --git a/.gitignore b/.gitignore
-index 2503bd8..7200741 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -2,6 +2,7 @@
- /*.man
- /*-stamp
- /mdadm
-+/mdadm.8
- /mdadm.udeb
- /mdmon
- /swap_super
+It has 2 hard drives at present, and there are 5 partitions  on each.
+ From this we have 3 RAID1 md devices.
+These are for /boot, /data and /
+
+I wish to add a 3rd disk, for enhancing the safety of the data.
+There is no space to add a 4th disk.
+
+Things I thought of doing include:
+Add 3rd disk to make a 3 disk RAID1
+Make a RAID10, missing one disk.
+
+Which do you think is the better means to enhance data safety / chances 
+of surviving a hardware problem?
+One of the above, or an other configuration?
+
+And, assuming I want to preserve the existing data, what is the best way 
+to do this?
+
+
 -- 
-1.7.5.2
-
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
