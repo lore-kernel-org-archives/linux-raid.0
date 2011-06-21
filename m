@@ -1,65 +1,73 @@
-From: "Sandra Escandor" <sescandor@evertz.com>
-Subject: RE: Issues with auto assembling or RAID10 (imsm) on boot
-Date: Mon, 20 Jun 2011 16:27:49 -0400
-Message-ID: <C70A636B101FD44999B82525C3E92AFAD36F92@otis.burlington.evertz.tv>
-References: <C70A636B101FD44999B82525C3E92AFAD36F3E@otis.burlington.evertz.tv> <4DFF9C19.1080801@turmel.org> <C70A636B101FD44999B82525C3E92AFAD36F71@otis.burlington.evertz.tv> <4DFFAA85.9060402@turmel.org>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Bug or not?  Same array reports different/transformed UUID
+	depending on check-method used.
+Date: Tue, 21 Jun 2011 07:42:58 +0200
+Message-ID: <20110621054258.GA22391@maude.comedia.it>
+References: <1308328189.28028.1464311105@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <4DFFAA85.9060402@turmel.org>
+Content-Disposition: inline
+In-Reply-To: <1308328189.28028.1464311105@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, your assumption is correct that I built the mdadm package from
-source. The reason why I needed mdadm 3.1.4 (instead of the one that
-comes with Ubuntu 10.10) is because it supports the imsm metadata
-container, which I need to be able to see the same type of RAID that
-dmraid does.
+On Fri, Jun 17, 2011 at 09:29:49AM -0700, jeffs_linux@123mail.org wrote:
+>I suppose I should split this into its own thread rather than burying it
+>in my other.
+>
+>Question first:
+>
+>  I have two arrays attached to my Linux box.  Two methods of checking
+>  for arrays UUIDs give different results.  Why, and can I reply on
+>  these arrays?
+>
+>Details follow:
+>
+>Checking with,
+>
+> mdadm --incremental --rebuild-map
+I don't think this is a valid method for checking array uuid.
 
-I now have something to go on and will look into how the initscript and
-configuration files should look like for this.
+> cat /dev/.mdadm/map
+>  md126 0.90 52f5b43c:e83f7e2a:be6ad32e:0536ab0e /dev/md/0_0
+>  md127 1.2  79fb7ad4:289bfae5:86c535ff:202960f2 /dev/md127
+>
+>Staring at those UUIDs, I notice that one array's UUIDs match exactly
+>for the two methods of checking,
+>
+> /dev/.mdadm/map       /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
+> mdadm --detail --scan /dev/md/0_0  52f5b43c:e83f7e2a:be6ad32e:0536ab0e
+>
+>but the OTHER array's two UUIDs
+>
+> /dev/.mdadm/map       /dev/md127   79fb7ad4:289bfae5:86c535ff:202960f2
+> mdadm --detail --scan /dev/md127   d47afb79:e5fa9b28:ff35c586:f2602920
+>
+>are 'transforms' of one another; e.g.,
+...
+>Why are /dev/md127's UUIDs, unlike /dev/md/0_0's, reporting mis-matched
+>& 'transformed'?
+>
+mdadm internally stores an uuid as an array of four 32bit integers
+on disk it is different.
+superblock version 0 (md0_0) stores 4 32bit values in host endian order(*)
+(little-endian on x86)
+superblock version 1 (md127) stores 16 8bit values in human readable
+format (humans at least in western world countries are big endian)
 
-Thanks for your help!
-Sandra
+The map_file, on the contrary, is always read and written as 4 32bit
+values in host endian order, so on x86 machines you will find it
+swapped.
 
------Original Message-----
-From: Phil Turmel [mailto:philip@turmel.org] 
-Sent: Monday, June 20, 2011 4:16 PM
-To: Sandra Escandor
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Issues with auto assembling or RAID10 (imsm) on boot
+Summary: the mapfile is for mdadm internal use only, use mdadm commands
+(--detail, --examine) to obtain data.
 
-On 06/20/2011 03:55 PM, Sandra Escandor wrote:
-> Hi Phil,
-> 
-> Attached is the complete dmesg. The last chunk of it is where I
-manually
-> assemble the RAID after boot.
-> 
-> I just want to make sure I mention this if this is important: I built
-> this from source and then I ran make install. I couldn't see any
-> documentation that would suggest that I had to do anything else in
-/etc/
-> (such as an init script - maybe this is what I need? I don't know
-enough
-> about the inner workings of Linux just yet).
+(*) http://en.wikipedia.org/wiki/Endianness
 
-Based on the dmesg, you aren't using raid for your boot or root disks,
-so its not really an initramfs issue (or doesn't have to be).  It is
-almost certainly a missing initscript, or missing runlevel configuration
-for an initscript.  Unfortunately, I'm not terribly familiar with the
-ubuntu init system, so I can't point at anything specific to check.
 
-By mentioning building from source, I assume you mean the mdadm package?
-If so, you are probably missing the initscript and configuration files
-that ubuntu packages with mdadm to make their entire system "seamless".
-Is there something you need from the latest and greatest mdadm?
+L.
 
-Also, anyone else care to jump in?
-
-Phil
+-- 
+Luca Berra -- bluca@comedia.it
