@@ -1,63 +1,93 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Mail etiquette
-Date: Tue, 21 Jun 2011 10:46:25 -0400
-Message-ID: <4E00AEC1.9010107@cfl.rr.com>
-References: <20110618203954.129920@gmx.net>
+From: Jonathan Tripathy <jonnyt@abpni.co.uk>
+Subject: Re: Which Disks can fail?
+Date: Tue, 21 Jun 2011 16:31:49 +0100
+Message-ID: <4E00B965.1030208@abpni.co.uk>
+References: <4E007154.9030107@abpni.co.uk>	<20110621204509.6309c38f@notabene.brown>	<4E0078E9.7070208@abpni.co.uk> <20110621214225.5f65ece0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110618203954.129920@gmx.net>
+In-Reply-To: <20110621214225.5f65ece0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dragon <Sunghost@gmx.de>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You keep creating new threads with no subject when you reply.  This is 
-rude and annoying.  When replying to a message you should be using your 
-mail client's reply function, rather than start a new message and paste 
-in your quotations.  This should preserve the subject line and add the 
-proper In-Reply-To: header so that the message is properly sorted into 
-the existing thread.  If you have been using your mail client's reply 
-function instead of composing a new message, then your mail client is 
-broken so please use another one.
 
-On 6/18/2011 4:39 PM, Dragon wrote:
-> Monitor your background reshape with "cat /proc/mdstat".
+On 21/06/2011 12:42, NeilBrown wrote:
+> On Tue, 21 Jun 2011 11:56:41 +0100 Jonathan Tripathy<jonnyt@abpni.co.uk>
+> wrote:
 >
-> When the reshape is complete, the extra disk will be marked "spare".
+>> On 21/06/2011 11:45, NeilBrown wrote:
+>>> On Tue, 21 Jun 2011 11:24:20 +0100 Jonathan Tripathy<jonnyt@abpni.co.uk>
+>>> wrote:
+>>>
+>>>> Hi Everyone,
+>>>>
+>>>> Use md's "single process" RAID10 with the standard near layout (which is
+>>>> apperently the same as RAID1+0 in industry), which 2 drives could fail
+>>>> without loosing the array?
+>>>>
+>>>> This is what I have:
+>>>>
+>>>> Number   Major   Minor   RaidDevice State
+>>>>           0       8        5        0      active sync   /dev/sda5
+>>>>           1       8       21        1      active sync   /dev/sdb5
+>>>>           2       8       37        2      active sync   /dev/sdc5
+>>>>           3       8       53        3      active sync   /dev/sdd5
+>>>>
+>>>> Thanks
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> Run
+>>>
+>>>      man 4 md
+>>>
+>>>    search for "RAID10"
+>>>
+>>>    read what you find, and if it doesn't make sense, ask again.
+>>>    If it does make sense, post your answer and feel free to ask for
+>>>    confirmation.
+>>>
+>>>
+>>> NeilBrown
+>> Sorry, it still doesn't make much sense to me I'm afraid.
+>>
+>> In fact, it's confused me more - since I'm using "near", does that means
+>> that the "copy" (I'm using near=2) of a given trunk may lie on the same
+>> disk, leading to *no redundancy*??
+> Clearly I need to improve the man page...  (suggestions welcome).
 >
-> Then you can use "mdadm --remove".
-> -->after a view days the reshape was done and i take the disk out of the raid ->  many thx for that
+> How do you read it that the copies of a given chunk may lie on the same disk.
+> I read:
 >
->> at this point i think i take the disk out of the raid, because i need the space of
-> the disk.
+>         When  'near'  replicas are chosen, the multiple copies of a given chunk
+>         are laid out consecutively across the stripes of the array, so the  two
+>         copies of a datablock will likely be at the same offset on two adjacent
+>         devices.
 >
-> Understood, but you are living on the edge.  You have no backup, and only one drive
-> of redundancy.  If one of your drives does fail, the odds of losing the whole array
-> while replacing it is significant.  Your Samsung drives claim a non-recoverable read
-> error rate of 1 per 1x10^15 bits.  Your eleven data disks contain 1.32x10^14 bits,
-> all of which must be read during rebuild.  That means a _13%_ chance of total
-> failure while replacing a failed drive.
+> "laid out consecutively across the stripes of the array" might be a bit
+> obscure..  A stripe is one chunk on each device, so when chunks a laid out
+> consecutively across a stripe, they would be one chunk per device.
 >
-> I hope your 16T of data is not terribly important to you, or is otherwise replaceable.
-> -->  nice calculation, where do you have the data from?
-> -->  most of it is important, i will look for a better solution
+> Then "likely be at the same offset on two adjacent devices" should make this
+> clearer.  It is only "likely" because if you have an odd number of devices,
+> then the 2 copies of one chunk could be
+>    a/ at offset X on the last device
+>    b/ at offset X+chunk on the first device
 >
->> I need another advise of you. While the computer is actualy build with 13 disk and
-> i will become more data in the next month and the limit of power supply
-> connecotors is reached i am looking forward to another solution. one possibility
-> is to build up a better computer with more sata and sas connectors and add further
-> raid-controller-cards. an other idea is to build a kind of cluster or dfs with two
-> and later 3,4... computer. i read something about gluster.org. do you have a tip
-> for me or experience in this?
+> but in general, they are on "adjacent devices"
 >
-> Unfortunately, no.  Although I skirt the edges in my engineering work, I'm primarily
-> an end-user.  Both personal and work projects have relatively modest needs.  From
-> the engineering side, I do recommend you spend extra on power supplies&  UPS.
+> So in answer to your original question, sda5 and sdb5 will have the same
+> data, and sdc5 and sdd5 will also have the same data.
 >
-> Phil
-> -->  and than, ext4 max size is actually 16TB, what should i do?
-> -->  for an end-user you have many knowledge about swraid ;)
-> sunny
+> NeilBrown
+>
+Thanks for your help, Neil :)
 
+So, just to confirm 2 drives could fail in my array, as long as the two 
+drives weren't sda5 and sdb5, or sdc5 and sdd5. Is that correct?
+
+Thanks
