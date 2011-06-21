@@ -1,33 +1,63 @@
 From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Nested RAID and booting
-Date: Tue, 21 Jun 2011 10:28:17 -0400
-Message-ID: <4E00AA81.2030100@cfl.rr.com>
-References: <D1.7A.00666.3AE0FED4@cdptpa-omtalb.mail.rr.com>
+Subject: Mail etiquette
+Date: Tue, 21 Jun 2011 10:46:25 -0400
+Message-ID: <4E00AEC1.9010107@cfl.rr.com>
+References: <20110618203954.129920@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D1.7A.00666.3AE0FED4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20110618203954.129920@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
+To: Dragon <Sunghost@gmx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-These days most ( all? ) distributions use udev for plug and play.  When 
-the physical disks are detected, udev notices ( with blkid ) that they 
-are raid members, and runs mdadm --incremental on them.  Once they are 
-all detected, the array goes active, and udev runs blkid on the array, 
-notices that is a component, and runs mdadm --incremental on that.
+You keep creating new threads with no subject when you reply.  This is 
+rude and annoying.  When replying to a message you should be using your 
+mail client's reply function, rather than start a new message and paste 
+in your quotations.  This should preserve the subject line and add the 
+proper In-Reply-To: header so that the message is properly sorted into 
+the existing thread.  If you have been using your mail client's reply 
+function instead of composing a new message, then your mail client is 
+broken so please use another one.
 
-On 6/8/2011 1:54 AM, Leslie Rhorer wrote:
+On 6/18/2011 4:39 PM, Dragon wrote:
+> Monitor your background reshape with "cat /proc/mdstat".
 >
-> 	For financial reasons, I have had to temporarily create two members
-> of a RAID6 array by first creating a pair of RAID0 arrays from four member
-> disks.  The RAID6 array is currently re-shaping, and so far all seems well.
-> I do have a concern about what will happen when the system reboots, however.
-> In order to properly assemble the RAID6 array, the two RAID0 arrays will
-> first need to be assembled and running, correct?  How do I guarantee the two
-> RAID0 arrays will be up before mdadm attempts to assemble the RAID6 array?
-> Will simply putting them in the mdadm.conf file prior to the RAID6 array do
-> the trick?
+> When the reshape is complete, the extra disk will be marked "spare".
+>
+> Then you can use "mdadm --remove".
+> -->after a view days the reshape was done and i take the disk out of the raid ->  many thx for that
+>
+>> at this point i think i take the disk out of the raid, because i need the space of
+> the disk.
+>
+> Understood, but you are living on the edge.  You have no backup, and only one drive
+> of redundancy.  If one of your drives does fail, the odds of losing the whole array
+> while replacing it is significant.  Your Samsung drives claim a non-recoverable read
+> error rate of 1 per 1x10^15 bits.  Your eleven data disks contain 1.32x10^14 bits,
+> all of which must be read during rebuild.  That means a _13%_ chance of total
+> failure while replacing a failed drive.
+>
+> I hope your 16T of data is not terribly important to you, or is otherwise replaceable.
+> -->  nice calculation, where do you have the data from?
+> -->  most of it is important, i will look for a better solution
+>
+>> I need another advise of you. While the computer is actualy build with 13 disk and
+> i will become more data in the next month and the limit of power supply
+> connecotors is reached i am looking forward to another solution. one possibility
+> is to build up a better computer with more sata and sas connectors and add further
+> raid-controller-cards. an other idea is to build a kind of cluster or dfs with two
+> and later 3,4... computer. i read something about gluster.org. do you have a tip
+> for me or experience in this?
+>
+> Unfortunately, no.  Although I skirt the edges in my engineering work, I'm primarily
+> an end-user.  Both personal and work projects have relatively modest needs.  From
+> the engineering side, I do recommend you spend extra on power supplies&  UPS.
+>
+> Phil
+> -->  and than, ext4 max size is actually 16TB, what should i do?
+> -->  for an end-user you have many knowledge about swraid ;)
+> sunny
 
