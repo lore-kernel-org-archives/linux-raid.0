@@ -1,7 +1,7 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 1/5] md/raid5: use kmem_cache_zalloc()
-Date: Wed, 22 Jun 2011 13:50:26 +0900
-Message-ID: <1308718230-2536-2-git-send-email-namhyung@gmail.com>
+Subject: [PATCH 2/5] md/raid5: factor out dev_need_read()
+Date: Wed, 22 Jun 2011 13:50:27 +0900
+Message-ID: <1308718230-2536-3-git-send-email-namhyung@gmail.com>
 References: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
@@ -10,46 +10,60 @@ To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Replace kmem_cache_alloc + memset(,0,) to kmem_cache_zalloc.
-I think it's not harmful since @conf->slab_cache already knows
-actual size of struct stripe_head.
+Factor out common condition checking code to dev_need_read()
+in the hope that it would improve readability somewhat.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 ---
- drivers/md/raid5.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/md/raid5.c |   20 ++++++++++++--------
+ 1 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b72edf35ec54..0f71aa9a07c5 100644
+index 0f71aa9a07c5..892a95fe6e8f 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -1315,10 +1315,10 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- static int grow_one_stripe(raid5_conf_t *conf)
- {
- 	struct stripe_head *sh;
--	sh = kmem_cache_alloc(conf->slab_cache, GFP_KERNEL);
-+	sh = kmem_cache_zalloc(conf->slab_cache, GFP_KERNEL);
- 	if (!sh)
- 		return 0;
--	memset(sh, 0, sizeof(*sh) + (conf->pool_size-1)*sizeof(struct r5dev));
+@@ -2313,6 +2313,15 @@ handle_failed_stripe(raid5_conf_t *conf, struct stripe_head *sh,
+ 			md_wakeup_thread(conf->mddev->thread);
+ }
+ 
++static bool dev_need_read(struct r5dev *dev)
++{
++	if (dev->toread ||
++	    (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)))
++		return true;
 +
- 	sh->raid_conf = conf;
- 	spin_lock_init(&sh->lock);
- 	#ifdef CONFIG_MULTICORE_RAID456
-@@ -1435,12 +1435,10 @@ static int resize_stripes(raid5_conf_t *conf, int newsize)
- 		return -ENOMEM;
++	return false;
++}
++
+ /* fetch_block5 - checks the given member device to see if its data needs
+  * to be read or computed to satisfy a request.
+  *
+@@ -2328,13 +2337,9 @@ static int fetch_block5(struct stripe_head *sh, struct stripe_head_state *s,
+ 	/* is the data in this block needed, and can we get it? */
+ 	if (!test_bit(R5_LOCKED, &dev->flags) &&
+ 	    !test_bit(R5_UPTODATE, &dev->flags) &&
+-	    (dev->toread ||
+-	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
++	    (dev_need_read(dev) ||
+ 	     s->syncing || s->expanding ||
+-	     (s->failed &&
+-	      (failed_dev->toread ||
+-	       (failed_dev->towrite &&
+-		!test_bit(R5_OVERWRITE, &failed_dev->flags)))))) {
++	     (s->failed && dev_need_read(failed_dev)))) {
+ 		/* We would like to get this block, possibly by computing it,
+ 		 * otherwise read it if the backing disk is insync
+ 		 */
+@@ -2401,8 +2406,7 @@ static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
  
- 	for (i = conf->max_nr_stripes; i; i--) {
--		nsh = kmem_cache_alloc(sc, GFP_KERNEL);
-+		nsh = kmem_cache_zalloc(sc, GFP_KERNEL);
- 		if (!nsh)
- 			break;
- 
--		memset(nsh, 0, sizeof(*nsh) + (newsize-1)*sizeof(struct r5dev));
--
- 		nsh->raid_conf = conf;
- 		spin_lock_init(&nsh->lock);
- 		#ifdef CONFIG_MULTICORE_RAID456
+ 	if (!test_bit(R5_LOCKED, &dev->flags) &&
+ 	    !test_bit(R5_UPTODATE, &dev->flags) &&
+-	    (dev->toread ||
+-	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
++	    (dev_need_read(dev) ||
+ 	     s->syncing || s->expanding ||
+ 	     (s->failed >= 1 &&
+ 	      (fdev[0]->toread || s->to_write)) ||
 -- 
 1.7.5.2
 
