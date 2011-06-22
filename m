@@ -1,40 +1,31 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: reaid problem at reboot
-Date: Tue, 21 Jun 2011 23:53:37 -0400
-Message-ID: <4E016741.8080606@turmel.org>
-References: <BAY158-W207004CCDC35695F84D5B4C0510@phx.gbl>,<4E00FC8A.1050908@turmel.org> <BAY158-w388BBEAFF686EAA222B346C0510@phx.gbl>,<4E0113FE.503@turmel.org> <BAY158-w3076B56F0F37E7F3DA4866C0500@phx.gbl>,<4E0146B6.40101@turmel.org> <BAY158-w9526A91B9B67956C12924C0500@phx.gbl>,<4E0153C1.1040708@turmel.org> <BAY158-w1B10F98EB9026A0F3D50CC0500@phx.gbl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH 0/5] misc cleanups for RAID5
+Date: Wed, 22 Jun 2011 13:50:25 +0900
+Message-ID: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BAY158-w1B10F98EB9026A0F3D50CC0500@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: william L'Heureux <wil_c_will@hotmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/21/2011 11:34 PM, william L'Heureux wrote:
-> 
-> /dev/sdj1 cant be first, its /dev/sda1.
+Hello,
 
-'j' had the lvm metadata in the right spot.  It was first.  If it's not now, then your partial rebuild scrambled it.  I don't think I have any more expertise to offer at this point.
+These are assorted cleanup patches for RAID5 code.
+Please take a look. Any comments are welcomed.
 
-> My friend made a python script. take a look.
-> 
-> cat rebuild.py
+Thanks.
 
-[...]
 
-Nice to automate the search, especially with many combinations.
+Namhyung Kim (5):
+  md/raid5: use kmem_cache_zalloc()
+  md/raid5: factor out dev_need_read()
+  md/raid5: factor out dev_need_for_write()
+  md/raid5: use r5_for_each_bio()
+  md/raid5: get rid of duplicated call to bio_data_dir()
 
-> i can see the data with the combinatin below, but there is a lot of errors, sounds like a rebuild was started(beghining of the disk) then was canceled
+ drivers/md/raid5.c |  146 ++++++++++++++++++++++++++--------------------------
+ 1 files changed, 73 insertions(+), 73 deletions(-)
 
-That hurts.
+-- 
+1.7.5.2
 
-> we made a snapshot, run a e2fsck on it and im still(not now, gotta sleep) add 1 missing or 2. after the e2fsck i mount the snap, look at the data, check corruption, rince and repeat with another combination of missing and not. i rate the ones with less corruption
-> 
-> the only e2fsck working is with --->>> a,j,c,h,i,d
-
-Good luck.
-
-Phil
