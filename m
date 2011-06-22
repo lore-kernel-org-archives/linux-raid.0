@@ -1,157 +1,62 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: reaid problem at reboot
-Date: Tue, 21 Jun 2011 22:30:25 -0400
-Message-ID: <4E0153C1.1040708@turmel.org>
-References: <BAY158-W207004CCDC35695F84D5B4C0510@phx.gbl>,<4E00FC8A.1050908@turmel.org> <BAY158-w388BBEAFF686EAA222B346C0510@phx.gbl>,<4E0113FE.503@turmel.org> <BAY158-w3076B56F0F37E7F3DA4866C0500@phx.gbl>,<4E0146B6.40101@turmel.org> <BAY158-w9526A91B9B67956C12924C0500@phx.gbl>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID5: failing an active component during spare rebuild -
+ arrays hangs
+Date: Wed, 22 Jun 2011 12:54:09 +1000
+Message-ID: <20110622125409.14428883@notabene.brown>
+References: <BANLkTikkeoCsr3-UBSPEDrYwh4jGSn=MaA@mail.gmail.com>
+	<BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BAY158-w9526A91B9B67956C12924C0500@phx.gbl>
+In-Reply-To: <BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: william L'Heureux <wil_c_will@hotmail.com>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi William,
+On Sun, 5 Jun 2011 22:41:55 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-Progress!
-
-On 06/21/2011 09:50 PM, william L'Heureux wrote:
-> for x in /dev/sd[abcdefghijkm]1 ; do echo "**** $x ****" ; dd if=$x skip=2056 count=2 2>/dev/null |strings ; done
-> **** /dev/sda1 ****
-> **** /dev/sdb1 ****
-
-[...]
-
-> **** /dev/sdc1 ****
-> **** /dev/sdd1 ****
-> !HV]3$xK
-> M1N+>
-> vgRQID6  {
-> *= "RUodpI-jXin-D<
-> s-fC3R-$hjA=hQ4l-41dAaJ"
-> seqnoV
-> ctates =0["RESIZEABLE", "RE7
-> ", 2WRIDE"]
-> jags = []
-> extent_
-> ze - 81)2
-> mqx_lv = 0
-> max_pv = F
-> phisicql_v
-> 6wmes {
-> pv0 {
-> &"V5s1yI=XD3T-FXlB-VDYd-tUfo-eI#
-> -hXAfVW2
-> defice = "/dev/md1"
-> atuc = K"AL\
-> @ATABLE"]
-> flags =
-> duv_syze -V2814057984
-> pe_sta
->  = %12
-> `e_c
-> zjt = 953864
-> pv6[{
-> it = 2BzZs
-> n-uC9b-MQne-caBo-
-> Np3-)xkA=NnGeUA"
-> device = "/dev
-> stqtus0E"["ALLOCATABLE"]
-> ags0= [M
-> pize = 7814057984Z
-> e_sdart0= 5!q
-> pe_count = 95386
-> **** /dev/sde1 ****
-> **** /dev/sdf1 ****
-> **** /dev/sdg1 ****
-
-[...]
-
-> **** /dev/sdh1 ****
-> **** /dev/sdi1 ****
-> "RiodpI-jXin-
-> dAaJ"
-> seqn
-> a82j
-> SIfEABLE", "R
-> extent
-> max_pv =
-> pv0 {
-> B-jDYd-tUfo-e
-> /dev/md1"
-> ABpE"]
-> flags
-> 40      7984
-> pe_st
-> 53864
-> C9^-MQne-caBo
-> deJice = "/de
-> q82B
-> ALpOCATABLE"]
->  781405798
-> 7m!_
-> _cSunt = 9538
-> **** /dev/sdj1 ****
->  LVM2 x[5A%r0N*>
-> vgRAID60 {
-> id = "RUodpI-jXin-DEjs-fS3R-4hjA-hQ4l-41dAaJ"
-> seqno = 2
-> status = ["RESIZEABLE", "READ", "WRITE"]
-> flags = []
-> extent_size = 8192
-> max_lv = 0
-> max_pv = 0
-> physical_volumes {
-> pv0 {
-> id = "V5c1yI-XD3D-FXlB-VDYd-tUfo-eIUC-hXQfVW"
-> device = "/dev/md1"
-> status = ["ALLOCATABLE"]
-> flags = []
-> dev_size = 7814057984
-> pe_start = 512
-> pe_count = 953864
-> pv1 {
-> id = "BzZcan-uC9b-MQne-caBo-tYp3-9xkA-NnGuBE"
-> device = "/dev/md2"
-> status = ["ALLOCATABLE"]
-> flags = []
-> dev_size = 7814057984
-> pe_start = 512
-> pe_count = 953864
-> **** /dev/sdk1 ****
-
-[...]
-
-> **** /dev/sdm1 ****
+> Hello everybody,
+> I am testing a scenario, in which I create a RAID5 with three devices:
+> /dev/sd{a,b,c}. Since I don't supply --force to mdadm during creation,
+> it treats the array as degraded and starts rebuilding the sdc as a
+> spare. This is as documented.
 > 
+> Then I do --fail on /dev/sda. I understand that at this point my data
+> is gone, but I think should still be able to tear down the array.
 > 
-> for x in /dev/sd[abcdefghijkm]1 ; do echo "**** $x ****" ; dd if=$x skip=2048 count=1 2>/dev/null |hexdump -C ; done
-> **** /dev/sda1 ****
+> Sometimes I see that /dev/sda is kicked from the array as faulty, and
+> /dev/sdc is also removed and marked as a spare. Then I am able to tear
+> down the array.
+> 
+> But sometimes, it looks like the system hits some kind of a deadlock.
 
-[...]  (These weren't helpful, after all.)
+I cannot reproduce this, either on current mainline or 2.6.38.  I didn't try
+the particular Ubuntu kernel that you mentioned as I don't have any Ubuntu
+machines.
+It is unlikely that Ubuntu have broken something, but not impossible... are
+you able to compile a kernel.org kernel (preferably 2.6.39) and see if you
+can reproduce.
 
-> btw, /dev/md1 is fine 100%
+Also, can you provide a simple script that will trigger the bug reliably for
+you.
 
-Good.  That simplifies the rest.
+I did:
 
-> the drives for /dev/md0 --> 'a', 'c', 'd', 'h', 'i', 'j' 
+while : ; do mdadm -CR /dev/md0 -l5 -n3 /dev/sd[abc] ; sleep 5; mdadm /dev/md0 -f /dev/sda ; mdadm -Ss ; echo ; echo; done
 
-Based on the above, 'j' is almost certainly the first disk in md0, and I suspect 'i' is the 'P' parity drive, and 'd' is the 'Q' parity drive.
+and it has no problems at all.
 
-Stop LVM, and stop md0, then re-create (re-assembly won't fix this):
+Certainly a deadlock shouldn't be happening...
 
-mdadm --create --assume-clean /dev/md0 --raid-devices=6 --level=6 --chunk=128 /dev/sd{j,a,c,h,i,d}1
+ From the stack trace you get it looks like it is probably hanging at
 
-(You must not use the [] syntax here..., and "--assume-clean" is vital.)
+	wait_event(mddev->recovery_wait, !atomic_read(&mddev->recovery_active));
 
-restart LVM, then "fsck -n" to test.
+which suggests that so resync request started and didn't complete.  I've
+never seen a hang there before.
 
-If not yet good, shuffle 'a', 'c', & 'h'.
+NeilBrown
 
-If still not good, swap 'i' & 'd', then try the combinations of 'a', 'c', and 'h' again.
-
-Please let us know what combination, if any, works.  Absolutely do *not* attempt to mount until "fsck -n" reports no problems, or not many problems.
-
-Phil
