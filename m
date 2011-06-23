@@ -1,45 +1,62 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 5/5] md/raid5: get rid of duplicated call to bio_data_dir()
-Date: Wed, 22 Jun 2011 13:50:30 +0900
-Message-ID: <1308718230-2536-6-git-send-email-namhyung@gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0/5] misc cleanups for RAID5
+Date: Thu, 23 Jun 2011 10:55:54 +1000
+Message-ID: <20110623105554.19c5fe09@notabene.brown>
 References: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Namhyung Kim <namhyung@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In raid5::make_request(), once bio_data_dir(@bi) is detected
-it never (and couldn't) be changed. Use the result always.
+On Wed, 22 Jun 2011 13:50:25 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/raid5.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> Hello,
+> 
+> These are assorted cleanup patches for RAID5 code.
+> Please take a look. Any comments are welcomed.
+> 
+> Thanks.
+> 
+> 
+> Namhyung Kim (5):
+>   md/raid5: use kmem_cache_zalloc()
+>   md/raid5: factor out dev_need_read()
+>   md/raid5: factor out dev_need_for_write()
+>   md/raid5: use r5_for_each_bio()
+>   md/raid5: get rid of duplicated call to bio_data_dir()
+> 
+>  drivers/md/raid5.c |  146 ++++++++++++++++++++++++++--------------------------
+>  1 files changed, 73 insertions(+), 73 deletions(-)
+> 
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6b92e8549e9b..ccaa1102057d 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4016,7 +4016,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
- 				}
- 			}
- 
--			if (bio_data_dir(bi) == WRITE &&
-+			if (rw == WRITE &&
- 			    logical_sector >= mddev->suspend_lo &&
- 			    logical_sector < mddev->suspend_hi) {
- 				release_stripe(sh);
-@@ -4034,7 +4034,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
- 			}
- 
- 			if (test_bit(STRIPE_EXPANDING, &sh->state) ||
--			    !add_stripe_bio(sh, bi, dd_idx, (bi->bi_rw&RW_MASK))) {
-+			    !add_stripe_bio(sh, bi, dd_idx, rw)) {
- 				/* Stripe is busy expanding or
- 				 * add failed due to overlap.  Flush everything
- 				 * and wait a while
--- 
-1.7.5.2
+Hi,
+ thanks for these.
+
+ I have applied the first and the last.
+
+ The two "factor out" patches conflict with some much more substantial
+ refactoring I have been doing in raid5.c.  I have just pushed all of that
+ into my for-next branch:
+
+      git://neil.brown.name/md for-next
+
+ so you can use that as a basis for any further review.
+
+ The r5_for_each_bio() patch I'm not 100% sure I'm happy with, and in any
+ case it would have conflicted with my other changes too.
+ I'm not fond of macros that hide details that could be important. A
+ "for_each" macro that purely and simply walks through a list is fine.  A
+ "for_each" macro that does anything more complicated I start to have doubts
+ about...
+ However if you really do like it and want to rebase it on the for-next
+ branch I'll have another look and think harder about it.   Maybe I'll end up
+ liking it after all, but no promises.
+
+Thanks,
+NeilBrown
 
