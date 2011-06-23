@@ -1,62 +1,72 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 0/5] misc cleanups for RAID5
-Date: Thu, 23 Jun 2011 10:55:54 +1000
-Message-ID: <20110623105554.19c5fe09@notabene.brown>
-References: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Looking for the best way to do this
+Date: Wed, 22 Jun 2011 20:20:08 -0500
+Message-ID: <87.53.03893.7C4920E4@cdptpa-omtalb.mail.rr.com>
+References: <4E00DF31.2020406@gmail.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1308718230-2536-1-git-send-email-namhyung@gmail.com>
+In-Reply-To: <4E00DF31.2020406@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: 'maurice' <mhilarius@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 22 Jun 2011 13:50:25 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-> Hello,
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of maurice
+> Sent: Tuesday, June 21, 2011 1:13 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Looking for the best way to do this
 > 
-> These are assorted cleanup patches for RAID5 code.
-> Please take a look. Any comments are welcomed.
+> Good day, and thanks in advance for any ideas and advice.
 > 
-> Thanks.
+> I am working on a server.
+> The server is normally in a remote location, not outside accessible by
+> network,
+> and there is no easy method to do backups on it.
+> It is running Fedora 14
 > 
+> It has 2 hard drives at present, and there are 5 partitions  on each.
+>  From this we have 3 RAID1 md devices.
+> These are for /boot, /data and /
+
+	Presumably the fourth partition is swap, and the fifth is...?
+
+> I wish to add a 3rd disk, for enhancing the safety of the data.
+> There is no space to add a 4th disk.
 > 
-> Namhyung Kim (5):
->   md/raid5: use kmem_cache_zalloc()
->   md/raid5: factor out dev_need_read()
->   md/raid5: factor out dev_need_for_write()
->   md/raid5: use r5_for_each_bio()
->   md/raid5: get rid of duplicated call to bio_data_dir()
+> Things I thought of doing include:
+> Add 3rd disk to make a 3 disk RAID1
+
+	That's the easiest and most robust.
+
+> Make a RAID10, missing one disk.
+
+	No, I don't think I would do that.  If you need more storage, you
+could fail one drive, create a 3 drive RAID5 array with one missing, copy
+the data over from the remaining RAID1 member, and then make the remaining
+RAID1 drive into the third member for the RAID5 array.  This is a bit less
+robust than the 3 member RAID1 array, but gives you twice the storage.  If
+you don't need the extra storage, go for the 3 member RAID1.  Whatever you
+do, make an off-site backup of (at a minimum) /data.
+
+> Which do you think is the better means to enhance data safety / chances
+> of surviving a hardware problem?
+> One of the above, or an other configuration?
 > 
->  drivers/md/raid5.c |  146 ++++++++++++++++++++++++++--------------------------
->  1 files changed, 73 insertions(+), 73 deletions(-)
-> 
+> And, assuming I want to preserve the existing data, what is the best way
+> to do this?
 
-Hi,
- thanks for these.
-
- I have applied the first and the last.
-
- The two "factor out" patches conflict with some much more substantial
- refactoring I have been doing in raid5.c.  I have just pushed all of that
- into my for-next branch:
-
-      git://neil.brown.name/md for-next
-
- so you can use that as a basis for any further review.
-
- The r5_for_each_bio() patch I'm not 100% sure I'm happy with, and in any
- case it would have conflicted with my other changes too.
- I'm not fond of macros that hide details that could be important. A
- "for_each" macro that purely and simply walks through a list is fine.  A
- "for_each" macro that does anything more complicated I start to have doubts
- about...
- However if you really do like it and want to rebase it on the for-next
- branch I'll have another look and think harder about it.   Maybe I'll end up
- liking it after all, but no promises.
-
-Thanks,
-NeilBrown
+	Like I said, make your backup, and then either add a 3rd member to
+the RAID1 array or else fail 1 of the drives, create a RAID5 array with one
+missing member from the new drive and the failed drive, copy the data from
+the remaining live RAID1 drive to the RAID5 array, shut down the RAID1
+array, and add the drive to the RAID5 array.  Since this system is going to
+be bootable, you probably need to use 0.90 metadata for the /boot array.
+The rest can be 1.x.
 
