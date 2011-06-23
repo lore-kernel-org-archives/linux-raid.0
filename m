@@ -1,72 +1,57 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Looking for the best way to do this
-Date: Wed, 22 Jun 2011 20:20:08 -0500
-Message-ID: <87.53.03893.7C4920E4@cdptpa-omtalb.mail.rr.com>
-References: <4E00DF31.2020406@gmail.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 1/4] mdadm.8: change linux version 2.6.40 -> 3.0
+Date: Thu, 23 Jun 2011 11:41:22 +1000
+Message-ID: <20110623114122.716cb9cf@notabene.brown>
+References: <1308673145-8151-1-git-send-email-namhyung@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E00DF31.2020406@gmail.com>
+In-Reply-To: <1308673145-8151-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'maurice' <mhilarius@gmail.com>, linux-raid@vger.kernel.org
+To: Namhyung Kim <namhyung@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 22 Jun 2011 01:19:02 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of maurice
-> Sent: Tuesday, June 21, 2011 1:13 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Looking for the best way to do this
+> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+> ---
+>  Grow.c     |    2 +-
+>  mdadm.8.in |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> Good day, and thanks in advance for any ideas and advice.
-> 
-> I am working on a server.
-> The server is normally in a remote location, not outside accessible by
-> network,
-> and there is no easy method to do backups on it.
-> It is running Fedora 14
-> 
-> It has 2 hard drives at present, and there are 5 partitions  on each.
->  From this we have 3 RAID1 md devices.
-> These are for /boot, /data and /
+> diff --git a/Grow.c b/Grow.c
+> index 6e31b94..a4092b5 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1494,7 +1494,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+>  			goto release;
+>  		}
+>  		if (assume_clean) {
+> -			/* This will fail on kernels newer than 2.6.40 unless
+> +			/* This will fail on kernels newer than 3.0 unless
+>  			 * a backport has been arranged.
+>  			 */
+>  			if (sra == NULL ||
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index d2d7ef2..44accc0 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -706,7 +706,7 @@ facts the operator knows.
+>  When an array is resized to a larger size with
+>  .B "\-\-grow \-\-size="
+>  the new space is normally resynced in that same way that the whole
+> -array is resynced at creation.  From Linux version 2.6.40,
+> +array is resynced at creation.  From Linux version 3.0,
+>  .B \-\-assume\-clean
+>  can be used with that command to avoid the automatic resync.
+>  
 
-	Presumably the fourth partition is swap, and the fifth is...?
 
-> I wish to add a 3rd disk, for enhancing the safety of the data.
-> There is no space to add a 4th disk.
-> 
-> Things I thought of doing include:
-> Add 3rd disk to make a 3 disk RAID1
+Thanks for this and the other 3.  They are all applied and pushed out on my
+'master' branch.
 
-	That's the easiest and most robust.
-
-> Make a RAID10, missing one disk.
-
-	No, I don't think I would do that.  If you need more storage, you
-could fail one drive, create a 3 drive RAID5 array with one missing, copy
-the data over from the remaining RAID1 member, and then make the remaining
-RAID1 drive into the third member for the RAID5 array.  This is a bit less
-robust than the 3 member RAID1 array, but gives you twice the storage.  If
-you don't need the extra storage, go for the 3 member RAID1.  Whatever you
-do, make an off-site backup of (at a minimum) /data.
-
-> Which do you think is the better means to enhance data safety / chances
-> of surviving a hardware problem?
-> One of the above, or an other configuration?
-> 
-> And, assuming I want to preserve the existing data, what is the best way
-> to do this?
-
-	Like I said, make your backup, and then either add a 3rd member to
-the RAID1 array or else fail 1 of the drives, create a RAID5 array with one
-missing member from the new drive and the failed drive, copy the data from
-the remaining live RAID1 drive to the RAID5 array, shut down the RAID1
-array, and add the drive to the RAID5 array.  Since this system is going to
-be bootable, you probably need to use 0.90 metadata for the /boot array.
-The rest can be 1.x.
+Thanks,
+NeilBrown
 
