@@ -1,86 +1,47 @@
-From: "Sandra Escandor" <sescandor@evertz.com>
-Subject: RE: Issues with auto assembling or RAID10 (imsm) on boot
-Date: Thu, 23 Jun 2011 15:45:33 -0400
-Message-ID: <C70A636B101FD44999B82525C3E92AFAD374CA@otis.burlington.evertz.tv>
-References: <C70A636B101FD44999B82525C3E92AFAD36F3E@otis.burlington.evertz.tv> <4DFF9C19.1080801@turmel.org> <C70A636B101FD44999B82525C3E92AFAD36F71@otis.burlington.evertz.tv> <4DFFAA85.9060402@turmel.org> <C70A636B101FD44999B82525C3E92AFAD36F92@otis.burlington.evertz.tv>
+From: maurice <mhilarius@gmail.com>
+Subject: Re: Looking for the best way to do this
+Date: Thu, 23 Jun 2011 16:06:19 -0600
+Message-ID: <4E03B8DB.7010607@gmail.com>
+References: <4E00DF31.2020406@gmail.com> <4E03929A.8000503@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <C70A636B101FD44999B82525C3E92AFAD36F92@otis.burlington.evertz.tv>
+In-Reply-To: <4E03929A.8000503@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Iordan Iordanov <iordan@cdf.toronto.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In case anyone runs into the same issue that I was having, the answer to
-getting mdadm 3.1.4 (built from source) to boot on startup in Ubuntu
-10.10 was to create a script and place it into /etc/init.d/, then chmod
-+x the new script, then run "update-rc.d mdraidstartupscript.sh
-defaults".
+On 6/23/2011 1:23 PM, Iordan Iordanov wrote:
+> Hi Maurice,
+>
+> On 06/21/11 14:13, maurice wrote:
+>> Add 3rd disk to make a 3 disk RAID1
+>> Make a RAID10, missing one disk.
+>
+> Perhaps I misunderstand your supposition, and if I do, please correct 
+> me. RAID10 with mdadm does not require a minimum of 4 disks.
+Yes, that was my understanding.
 
-Thanks to Phil for pointing me to the right direction!
+> For example, mdadm can do RAID10 with 2 copies on 3 disks or RAID10 
+> with 3 copies on 3 disks, yielding the equivalent of RAID1 in terms of 
+> data security. It is not confined to mirroring two pairs of disks and 
+> then striping across them as is the "conventional" way of doing RAID10.
+Yes, I understand the principle.
+>
+> You can read the man-page of mdadm, where the options for "layout" of 
+> RAID10 are discussed. Pay particular attention to the end of the 
+> "--layout" option explanation.
 
-Sandra
+What I do NOT know is the following:
+A) Which is more RELIABLE: R1 with 3 disks or R10 with 3 disks.
+B) HOW to create either the 3 disk R1 or R10, assuming an existing 2 
+disk R1.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Sandra Escandor
-Sent: Monday, June 20, 2011 4:28 PM
-To: Phil Turmel
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Issues with auto assembling or RAID10 (imsm) on boot
 
-Yes, your assumption is correct that I built the mdadm package from
-source. The reason why I needed mdadm 3.1.4 (instead of the one that
-comes with Ubuntu 10.10) is because it supports the imsm metadata
-container, which I need to be able to see the same type of RAID that
-dmraid does.
 
-I now have something to go on and will look into how the initscript and
-configuration files should look like for this.
-
-Thanks for your help!
-Sandra
-
------Original Message-----
-From: Phil Turmel [mailto:philip@turmel.org] 
-Sent: Monday, June 20, 2011 4:16 PM
-To: Sandra Escandor
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Issues with auto assembling or RAID10 (imsm) on boot
-
-On 06/20/2011 03:55 PM, Sandra Escandor wrote:
-> Hi Phil,
-> 
-> Attached is the complete dmesg. The last chunk of it is where I
-manually
-> assemble the RAID after boot.
-> 
-> I just want to make sure I mention this if this is important: I built
-> this from source and then I ran make install. I couldn't see any
-> documentation that would suggest that I had to do anything else in
-/etc/
-> (such as an init script - maybe this is what I need? I don't know
-enough
-> about the inner workings of Linux just yet).
-
-Based on the dmesg, you aren't using raid for your boot or root disks,
-so its not really an initramfs issue (or doesn't have to be).  It is
-almost certainly a missing initscript, or missing runlevel configuration
-for an initscript.  Unfortunately, I'm not terribly familiar with the
-ubuntu init system, so I can't point at anything specific to check.
-
-By mentioning building from source, I assume you mean the mdadm package?
-If so, you are probably missing the initscript and configuration files
-that ubuntu packages with mdadm to make their entire system "seamless".
-Is there something you need from the latest and greatest mdadm?
-
-Also, anyone else care to jump in?
-
-Phil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
