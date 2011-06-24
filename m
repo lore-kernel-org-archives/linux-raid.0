@@ -1,51 +1,50 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 2/2] md.4: fix possible typos
-Date: Fri, 24 Jun 2011 13:26:50 +0900
-Message-ID: <1308889610-8210-2-git-send-email-namhyung@gmail.com>
-References: <1308889610-8210-1-git-send-email-namhyung@gmail.com>
+Subject: [PATCH] md/raid5: fix possible NULL pointer dereference in debug routine
+Date: Fri, 24 Jun 2011 14:04:00 +0900
+Message-ID: <1308891840-5683-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1308889610-8210-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
+
+When I ran dynamic debug, I encountered a NULL pointer dereference
+bug in add_stripe_bio(). Prior to second call to pr_debug(), @bi
+was reused in order to check whether the request is partial write
+or not, and it could lead to set @bi to NULL.
+
+Since we save original @bi pointer into local variable 'bip', use
+it instead of NULL-able @bi.
+
+Also changed confusing 'bh' to 'bi' in the first message.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 ---
- md.4 |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/md/raid5.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/md.4 b/md.4
-index 5e79639..378ecc9 100644
---- a/md.4
-+++ b/md.4
-@@ -128,7 +128,7 @@ have special-purpose uses and is supported.
- From release 2.6.28, the
- .I md
- driver supports arrays with externally managed metadata.  That is,
--the metadata is not managed by the kernel by rather by a user-space
-+the metadata is not managed by the kernel but rather by a user-space
- program which is external to the kernel.  This allows support for a
- variety of metadata formats without cluttering the kernel with lots of
- details.
-@@ -468,7 +468,7 @@ scrub starts and is incremented whenever a sector is
- found that is a mismatch.
- .I md
- normally works in units much larger than a single sector and when it
--finds a mismatch, it does not determin exactly how many actual sectors were
-+finds a mismatch, it does not determine exactly how many actual sectors were
- affected but simply adds the number of sectors in the IO unit that was
- used.  So a value of 128 could simply mean that a single 64KB check
- found an error (128 x 512bytes = 64KB).
-@@ -661,7 +661,7 @@ to this file will cause the system-wide setting to have effect.
- This is the partner of
- .B md/sync_speed_min
- and overrides
--.B /proc/sys/dev/raid/spool_limit_max
-+.B /proc/sys/dev/raid/speed_limit_max
- described below.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 82c07fb38961..c814a6075c79 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2139,7 +2139,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	int firstwrite=0;
  
- .TP
+-	pr_debug("adding bh b#%llu to stripe s#%llu\n",
++	pr_debug("adding bi b#%llu to stripe s#%llu\n",
+ 		(unsigned long long)bi->bi_sector,
+ 		(unsigned long long)sh->sector);
+ 
+@@ -2181,7 +2181,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+ 	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
+-		(unsigned long long)bi->bi_sector,
++		(unsigned long long)(*bip)->bi_sector,
+ 		(unsigned long long)sh->sector, dd_idx);
+ 
+ 	if (conf->mddev->bitmap && firstwrite) {
 -- 
 1.7.5.2
 
