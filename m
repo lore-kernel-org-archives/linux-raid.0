@@ -1,62 +1,50 @@
-From: maurice <mhilarius@gmail.com>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
 Subject: Re: Looking for the best way to do this
-Date: Fri, 24 Jun 2011 10:35:27 -0600
-Message-ID: <4E04BCCF.9000604@gmail.com>
-References: <4E00DF31.2020406@gmail.com> <4E03929A.8000503@cdf.toronto.edu> <4E03B8DB.7010607@gmail.com> <4E04B8A9.1050502@cdf.toronto.edu>
+Date: Fri, 24 Jun 2011 12:59:42 -0400
+Message-ID: <4E04C27E.7040608@cdf.toronto.edu>
+References: <4E00DF31.2020406@gmail.com> <4E03929A.8000503@cdf.toronto.edu> <4E03B8DB.7010607@gmail.com> <4E04B8A9.1050502@cdf.toronto.edu> <4E04BCCF.9000604@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E04B8A9.1050502@cdf.toronto.edu>
+In-Reply-To: <4E04BCCF.9000604@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iordan Iordanov <iordan@cdf.toronto.edu>
-Cc: maurice <mhilarius@gmail.com>, linux-raid@vger.kernel.org
+To: maurice <mhilarius@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 6/24/2011 10:17 AM, Iordan Iordanov wrote:
-> Hi Maurice,
-> ..
-> R10 has different layouts. There are two components to the layout - 
-> where the chunks are located on the different devices (near, offset, 
-> far), and number of copies of the data. The near/offset/far part of 
-> the layout does not play a role in reliability, just in performance. 
-> So, the number of copies is the only thing that matters to this 
-> discussion.
+Hi Maurice,
+
+On 06/24/11 12:35, maurice wrote:
+> Set aside (disconnect) 1 of the existing 2 disks.
+> Boot from emergency recovery media, making sure the md version is
+> relatively current ( newer than 3.0 ?)
 >
-> If you have R10 with 3 disks and 3 copies, it is equally reliable to 
-> R1 with 3 disks, as they have an equal number of copies. In both R10 
-> and R1 in this case, two disks can fail, and you still have 1 intact 
-> copy remaining.
->
- From what I read, assuming I want to optimize this for READ 
-performance, I would want "R10 far".
-As I understand this, if I wanted the R10, I could set aside one disk of 
-the R1 with my existing data,
-and use on of the old disks, along with the new one, to create the R10 ?
+> Create the R10 with the other 2 disks ( 1 old and 1 new) with 1 of the 3
+> disks missing.
+> I think I have to wipe the superblock on the disk that was formerly part
+> of the RAID1 set.
 
+I think your procedure can be made less risky by making a R10, with 
+layout f3 with *two* missing disks. Since there are *3* copies in the 
+R10, there is no problem with having just one "real" disk and two 
+missing ones. This way, you don't have to live with just one of the R1 
+disks and hope it doesn't go bad during the copy operation.
 
-I believe the way to accomplish this is as follows:
+Then, you copy the data from your old R1 to your new R10 with the two 
+missing disks. When the data is copied over, you can remove *one* of the 
+disks from the R1, zero the superblock, and add it to the R10. When the 
+rebuild is complete, and only then, zero the superblock of your last R1 
+disk, and add it to the R10.
 
-Set aside (disconnect) 1 of the existing 2 disks.
-Boot from emergency recovery media, making sure the md version is 
-relatively current ( newer than 3.0 ?)
+With this mod, your data never really lost redundancy during the entire 
+procedure (except when you remove the first disk from the R1 and move it 
+to the R10, but instead of redundancy, you have 2 copies - one on the 
+R10 and one on the R1 at that point, so it's still redundant in a way).
 
-Create the R10 with the other 2 disks ( 1 old and 1 new) with 1 of the 3 
-disks missing.
-I think I have to wipe the superblock on the disk that was formerly part 
-of the RAID1 set.
+Whether or not you use this revised procedure, write yourself a 
+step-by-step guide with all the commands (a TO-DO list), and if you 
+want, you can share it with the list if you're not confident.
 
-Reconnect the old R1 reserved disk.
-Copy the data from the single member of the old R1 to the new R10
-On the old disk of the R1 set wipe the superblock.
-Lastly add the 3rd disk to the R10 set.
-Run grub to put the boot block on all 3 of the disks.
-Assuming that this sequence is correct, what I need now is the correct 
-syntx for these steps.
-
-Or, perhaps, I have it wrong!
-
--- 
 Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
+Iordan
