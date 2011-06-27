@@ -1,62 +1,34 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: clarifying what can be done during resync
-Date: Mon, 27 Jun 2011 14:55:42 +0200
-Message-ID: <iu9unn$jib$1@dough.gmane.org>
-References: <C70A636B101FD44999B82525C3E92AFAD374BD@otis.burlington.evertz.tv> <20110627154729.521e875a@notabene.brown> <C70A636B101FD44999B82525C3E92AFAD376C7@otis.burlington.evertz.tv>
+From: Pavel Hofman <pavel.hofman@ivitera.com>
+Subject: Raid auto-assembly upon boot - device order
+Date: Mon, 27 Jun 2011 16:15:03 +0200
+Message-ID: <4E089067.8010904@ivitera.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C70A636B101FD44999B82525C3E92AFAD376C7@otis.burlington.evertz.tv>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-The whole point of raid is to minimize downtime - that means that if a 
-disk fails, you can remove it, replace it, and resync while everything 
-is running (albeit a bit slower).
+We are running a raid1 on top of two raid0's. In this specific case we
+cannot use raid10 (different device sizes etc). Upon booting, the raid1
+is always started degraded, with one of the raid0's missing. The log
+says the missing raid could not be found. However, upon booting
+/proc/mdstat lists both the two raid0s OK.
 
+I guess either the raids are assembled in wrong order (no mutual
+dependencies considered), or without letting the previously assembled
+device to "settle down". I am wondering what would be the proper way to
+fix this issue. The raids are huge (over 1TB each) and recovery takes
+many hours.
 
+Our mdadm.conf lists the raids in proper order, corresponding to their
+dependency.
 
-On 27/06/2011 14:35, Sandra Escandor wrote:
-> Thanks for clarifying, Neil. I actually came across this on someone's
-> blog explaining how they got RAID10 (with imsm metadata) up and running,
-> and he mentions that he made sure to wait until resync was done before
-> mounting. I did the same thing, thinking that maybe I might break
-> something if I didn't.
->
-> Sandra
->
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Monday, June 27, 2011 1:47 AM
-> To: Sandra Escandor
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: clarifying what can be done during resync
->
-> On Thu, 23 Jun 2011 15:38:06 -0400 "Sandra Escandor"
-> <sescandor@evertz.com>
-> wrote:
->
->> Hello,
->>
->> Just wanted to make sure if this was a myth or not: Is it true that
-> when
->> an array is in resync status, then mounting it is not at all possible?
->>
->
-> Pure myth.  Where did you hear it?
->
-> Best approach is to try .. if it is not at all possible, then it won't
-> work.
-> But in fact it does :-)
->
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks a lot for any help or suggestions.
 
+Best regards,
 
+Pavel.
