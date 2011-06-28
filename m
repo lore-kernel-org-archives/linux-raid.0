@@ -1,60 +1,66 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid5: fix possible NULL pointer dereference in
- debug routine
-Date: Tue, 28 Jun 2011 16:40:14 +1000
-Message-ID: <20110628164014.4a916b68@notabene.brown>
-References: <1308891840-5683-1-git-send-email-namhyung@gmail.com>
+Subject: Re: [smatch stuff] md/raid5: potential null deref in debug code
+Date: Tue, 28 Jun 2011 16:42:25 +1000
+Message-ID: <20110628164225.22107a37@notabene.brown>
+References: <20110624181235.GQ14591@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1308891840-5683-1-git-send-email-namhyung@gmail.com>
+In-Reply-To: <20110624181235.GQ14591@shale.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Carpenter <error27@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 24 Jun 2011 14:04:00 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Fri, 24 Jun 2011 21:12:36 +0300 Dan Carpenter <error27@gmail.com> wrote:
 
-> When I ran dynamic debug, I encountered a NULL pointer dereference
-> bug in add_stripe_bio(). Prior to second call to pr_debug(), @bi
-> was reused in order to check whether the request is partial write
-> or not, and it could lead to set @bi to NULL.
+> Hi Neil,
 > 
-> Since we save original @bi pointer into local variable 'bip', use
-> it instead of NULL-able @bi.
+> In d1b053e4de0ac33 "md/raid5: Protect some more code with
+> ->device_lock." we moved some debug code around and it upsets my
+> static checker.  Could you take a look?
 > 
-> Also changed confusing 'bh' to 'bi' in the first message.
+> drivers/md/raid5.c +2183 add_stripe_bio(47)
+> 	error: potential null derefence 'bi'.
 > 
-> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
-> ---
->  drivers/md/raid5.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+>   2168          if (forwrite) {
+>   2169                  /* check if page is covered */
+>   2170                  sector_t sector = sh->dev[dd_idx].sector;
+>   2171                  for (bi=sh->dev[dd_idx].towrite;
+>   2172                       sector < sh->dev[dd_idx].sector + STRIPE_SECTORS &&
+>   2173                               bi && bi->bi_sector <= sector;
+>                                      ^^
+> 	It looks like "bi" can be NULL at the end of this for loop.
 > 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index 82c07fb38961..c814a6075c79 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2139,7 +2139,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
->  	raid5_conf_t *conf = sh->raid_conf;
->  	int firstwrite=0;
->  
-> -	pr_debug("adding bh b#%llu to stripe s#%llu\n",
-> +	pr_debug("adding bi b#%llu to stripe s#%llu\n",
->  		(unsigned long long)bi->bi_sector,
->  		(unsigned long long)sh->sector);
->  
-> @@ -2181,7 +2181,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
->  	spin_unlock_irq(&conf->device_lock);
->  
->  	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
-> -		(unsigned long long)bi->bi_sector,
-> +		(unsigned long long)(*bip)->bi_sector,
->  		(unsigned long long)sh->sector, dd_idx);
->  
->  	if (conf->mddev->bitmap && firstwrite) {
+> 
+>   2174                       bi = r5_next_bio(bi, sh->dev[dd_idx].sector)) {
+>   2175                          if (bi->bi_sector + (bi->bi_size>>9) >= sector)
+>   2176                                  sector = bi->bi_sector + (bi->bi_size>>9);
+>   2177                  }
+>   2178                  if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
+>   2179                          set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
+>   2180          }
+>   2181          spin_unlock_irq(&conf->device_lock);
+>   2182  
+>   2183          pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
+>   2184                  (unsigned long long)bi->bi_sector,
+>                                             ^^^^^^^^^^^^^
+> 	We dereference it here.
+> 
+>   2185                  (unsigned long long)sh->sector, dd_idx);
+> 
+> regards,
+> dan carpenter
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-Applied, thanks.
+Thanks Dan,
+ as it happens I received a patch just the day before from Namhyung Kim which
+ fixes that bug - so all fixed now.
 
+Thanks,
 NeilBrown
