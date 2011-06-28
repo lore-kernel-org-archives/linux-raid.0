@@ -1,44 +1,71 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid auto-assembly upon boot - device order
-Date: Mon, 27 Jun 2011 10:47:39 -0400
-Message-ID: <4E08980B.5080002@turmel.org>
-References: <4E089067.8010904@ivitera.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: RAID5: failing an active component during spare rebuild -
+ arrays hangs
+Date: Tue, 28 Jun 2011 12:29:21 +1000
+Message-ID: <20110628122921.42480f72@notabene.brown>
+References: <BANLkTikkeoCsr3-UBSPEDrYwh4jGSn=MaA@mail.gmail.com>
+	<BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
+	<20110622125409.14428883@notabene.brown>
+	<BANLkTinijekK8Y6TTk6TYtYhv4Dn2YGQbA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E089067.8010904@ivitera.com>
+In-Reply-To: <BANLkTinijekK8Y6TTk6TYtYhv4Dn2YGQbA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pavel Hofman <pavel.hofman@ivitera.com>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Pavel,
+On Sun, 26 Jun 2011 21:13:17 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-On 06/27/2011 10:15 AM, Pavel Hofman wrote:
-> Hi,
+> Hello Neil,
+> thank you for your response. Meanwhile I have moved to stock ubuntu
+> natty 11.04, but it still happens. I have a simple script that
+> reproduces the issue for me in less than 1 minute.
+> System details:
+> Linux ubuntu 2.6.38-8-server #42-Ubuntu SMP Mon Apr 11 03:49:04 UTC
+> 2011 x86_64 x86_64 x86_64 GNU/Linux
 > 
-> We are running a raid1 on top of two raid0's. In this specific case we
-> cannot use raid10 (different device sizes etc). Upon booting, the raid1
-> is always started degraded, with one of the raid0's missing. The log
-> says the missing raid could not be found. However, upon booting
-> /proc/mdstat lists both the two raid0s OK.
+> Here is the script:
+> ##################################
+> #!/bin/bash
 > 
-> I guess either the raids are assembled in wrong order (no mutual
-> dependencies considered), or without letting the previously assembled
-> device to "settle down". I am wondering what would be the proper way to
-> fix this issue. The raids are huge (over 1TB each) and recovery takes
-> many hours.
-> 
-> Our mdadm.conf lists the raids in proper order, corresponding to their
-> dependency.
+> while true
+> do
+> 	mdadm --create /dev/md1123 --raid-devices=3 --level=5
+> --bitmap=internal --name=1123 --run --auto=md --metadata=1.2
+> --homehost=alex --verbose /dev/sda /dev/sdb /dev/sdc
+> 	sleep 6
+> 	mdadm --manage /dev/md1123 --fail /dev/sda
+> 	sleep 1
+> 	if mdadm --stop /dev/md1123
+> 	then
+> 		true
+> 	else
+> 		break
+> 	fi
+> done
+> #####################################
 
-I would first check the copy of mdadm.conf in your initramfs.  If it specifies just the raid1, you can end up in this situation.
+Thanks for the script.  Unfortunately I still cannot reproduce.
+I suspect there is some subtle race issue that is heavily dependant on the
+particular hardware you have.
 
-Most distributions have an 'update-initramfs' script or something similar which must be run after any updates to files that are needed in early boot.
+It might help if I could get stack traces of the relevant processes. i.e.
+md1123_raid5 and md1123_resync.
 
-If this is your problem, it also explains why the raid0 appears OK after booting.  The init-scripts that are available on the real root filesystem, containing the correct mdadm.conf, will assemble it.
+A previous post contained a trace of _resync, but it wouldn't hurt to get
+another one.  You can get them by
 
-HTH,
+  cat /proc/PROCESS-ID/stack
 
-Phil
+or possibly
+
+  echo w > /proc/sysrq-trigger
+
+then look in the output of 'dmesg'.
+
+Thanks,
+NeilBrown
