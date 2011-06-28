@@ -1,50 +1,31 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 3/3] md/raid10: move rdev->corrected_errors counting
-Date: Wed, 29 Jun 2011 01:47:26 +0900
-Message-ID: <1309279646-4950-4-git-send-email-namhyung@gmail.com>
-References: <1309279646-4950-1-git-send-email-namhyung@gmail.com>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Can reading a raid drive trigger all the other drives in that set?
+Date: Tue, 28 Jun 2011 09:22:05 -0700
+Message-ID: <20110628162205.GG20420@merlins.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1309279646-4950-1-git-send-email-namhyung@gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Read errors are considered to corrected if write-back and re-read
-cycle is finished without further problems. Thus moving the rdev->
-corrected_errors counting after the re-reading looks more reasonable
-IMHO.
+I have ext4 over lvm2 on a sw raid5 with 2.6.39.1
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
-For end_sync_read(), I'm not sure what should I do. But I think, at
-least, the counting should be moved to end_sync_write() and that
-might require additional field(s) in r10_bio. So I leave it as is
-for simplicity now. How do you think?
+In order to save power I have my drives spin down.
 
- drivers/md/raid10.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+When I access my filesystem mount point, I get hangs of 30sec or a bit more
+as each and every drive are woken up serially.
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 8628a62a02f0..0660bc9597d8 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1524,7 +1524,6 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 			    test_bit(In_sync, &rdev->flags)) {
- 				atomic_inc(&rdev->nr_pending);
- 				rcu_read_unlock();
--				atomic_add(s, &rdev->corrected_errors);
- 				if (sync_page_io(rdev,
- 						 r10_bio->devs[sl].addr +
- 						 sect,
-@@ -1589,6 +1588,7 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 					       (unsigned long long)(
- 						       sect + rdev->data_offset),
- 					       bdevname(rdev->bdev, b));
-+					atomic_add(s, &rdev->corrected_errors);
- 				}
- 
- 				rdev_dec_pending(rdev, mddev);
+Is there any chance to put a patch in the block layer so that when it gets a
+read on a block after a certain timeout, it just does one dummy read on all
+the other droves in parallel so that all the drives have a chance to spin
+back up at the same time and not serially?
+
+Thanks,
+Marc
 -- 
-1.7.6
-
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
