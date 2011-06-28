@@ -1,31 +1,48 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Can reading a raid drive trigger all the other drives in that set?
-Date: Tue, 28 Jun 2011 09:22:05 -0700
-Message-ID: <20110628162205.GG20420@merlins.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH 2/3] md/raid5: move rdev->corrected_errors counting
+Date: Wed, 29 Jun 2011 01:47:25 +0900
+Message-ID: <1309279646-4950-3-git-send-email-namhyung@gmail.com>
+References: <1309279646-4950-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1309279646-4950-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have ext4 over lvm2 on a sw raid5 with 2.6.39.1
+Read errors are considered to corrected if write-back and re-read
+cycle is finished without further problems. Thus moving the rdev->
+corrected_errors counting after the re-reading looks more reasonable
+IMHO.
 
-In order to save power I have my drives spin down.
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/raid5.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-When I access my filesystem mount point, I get hangs of 30sec or a bit more
-as each and every drive are woken up serially.
-
-Is there any chance to put a patch in the block layer so that when it gets a
-read on a block after a certain timeout, it just does one dummy read on all
-the other droves in parallel so that all the drives have a chance to spin
-back up at the same time and not serially?
-
-Thanks,
-Marc
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c9eb0555f321..59acc9b4deb3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -547,10 +547,6 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			bi->bi_io_vec[0].bv_offset = 0;
+ 			bi->bi_size = STRIPE_SIZE;
+ 			bi->bi_next = NULL;
+-			if ((rw & WRITE) &&
+-			    test_bit(R5_ReWrite, &sh->dev[i].flags))
+-				atomic_add(STRIPE_SECTORS,
+-					&rdev->corrected_errors);
+ 			generic_make_request(bi);
+ 		} else {
+ 			if (rw & WRITE)
+@@ -1588,6 +1584,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 					   (unsigned long long)(sh->sector
+ 								+ rdev->data_offset),
+ 					   bdevname(rdev->bdev, b));
++			atomic_add(STRIPE_SECTORS, &rdev->corrected_errors);
+ 			clear_bit(R5_ReadError, &sh->dev[i].flags);
+ 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
+ 		}
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+1.7.6
+
