@@ -1,71 +1,49 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5: failing an active component during spare rebuild -
- arrays hangs
-Date: Tue, 28 Jun 2011 12:29:21 +1000
-Message-ID: <20110628122921.42480f72@notabene.brown>
-References: <BANLkTikkeoCsr3-UBSPEDrYwh4jGSn=MaA@mail.gmail.com>
-	<BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
-	<20110622125409.14428883@notabene.brown>
-	<BANLkTinijekK8Y6TTk6TYtYhv4Dn2YGQbA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mdmon.8: fix possible typos
+Date: Tue, 28 Jun 2011 16:38:00 +1000
+Message-ID: <20110628163800.2ba5aac6@notabene.brown>
+References: <1308889610-8210-1-git-send-email-namhyung@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTinijekK8Y6TTk6TYtYhv4Dn2YGQbA@mail.gmail.com>
+In-Reply-To: <1308889610-8210-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
+To: Namhyung Kim <namhyung@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 26 Jun 2011 21:13:17 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On Fri, 24 Jun 2011 13:26:49 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-> Hello Neil,
-> thank you for your response. Meanwhile I have moved to stock ubuntu
-> natty 11.04, but it still happens. I have a simple script that
-> reproduces the issue for me in less than 1 minute.
-> System details:
-> Linux ubuntu 2.6.38-8-server #42-Ubuntu SMP Mon Apr 11 03:49:04 UTC
-> 2011 x86_64 x86_64 x86_64 GNU/Linux
+> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+> ---
+>  mdmon.8 |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> Here is the script:
-> ##################################
-> #!/bin/bash
-> 
-> while true
-> do
-> 	mdadm --create /dev/md1123 --raid-devices=3 --level=5
-> --bitmap=internal --name=1123 --run --auto=md --metadata=1.2
-> --homehost=alex --verbose /dev/sda /dev/sdb /dev/sdc
-> 	sleep 6
-> 	mdadm --manage /dev/md1123 --fail /dev/sda
-> 	sleep 1
-> 	if mdadm --stop /dev/md1123
-> 	then
-> 		true
-> 	else
-> 		break
-> 	fi
-> done
-> #####################################
+> diff --git a/mdmon.8 b/mdmon.8
+> index 7939a99..03b31b8 100644
+> --- a/mdmon.8
+> +++ b/mdmon.8
+> @@ -104,7 +104,7 @@ within those disks.  MD metadata in comparison defines a 1:1
+>  relationship between a set of block devices and a raid array.  For
+>  example to create 2 arrays at different raid levels on a single
+>  set of disks, MD metadata requires the disks be partitioned and then
+> -each array can created be created with a subset of those partitions.  The
+> +each array can be created with a subset of those partitions.  The
+>  supported external formats perform this disk carving internally.
+>  .P
+>  Container devices simply hold references to all member disks and allow
+> @@ -172,7 +172,7 @@ Note that
+>  is automatically started by
+>  .I mdadm
+>  when needed and so does not need to be considered when working with
+> -RAID arrays.  The only times it is run other that by
+> +RAID arrays.  The only times it is run other than by
+>  .I  mdadm
+>  is when the boot scripts need to restart it after mounting the new
+>  root filesystem.
 
-Thanks for the script.  Unfortunately I still cannot reproduce.
-I suspect there is some subtle race issue that is heavily dependant on the
-particular hardware you have.
 
-It might help if I could get stack traces of the relevant processes. i.e.
-md1123_raid5 and md1123_resync.
+Thanks.  I've applied both of these.
 
-A previous post contained a trace of _resync, but it wouldn't hurt to get
-another one.  You can get them by
-
-  cat /proc/PROCESS-ID/stack
-
-or possibly
-
-  echo w > /proc/sysrq-trigger
-
-then look in the output of 'dmesg'.
-
-Thanks,
 NeilBrown
