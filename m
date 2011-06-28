@@ -1,39 +1,54 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 0/3] count rdev->corrected_errors after final re-read
-Date: Wed, 29 Jun 2011 01:47:23 +0900
-Message-ID: <1309279646-4950-1-git-send-email-namhyung@gmail.com>
+From: Pavel Hofman <pavel.hofman@ivitera.com>
+Subject: Re: Raid auto-assembly upon boot - device order
+Date: Tue, 28 Jun 2011 21:18:33 +0200
+Message-ID: <4E0A2909.5030501@ivitera.com>
+References: <4E089067.8010904@ivitera.com> <4E08980B.5080002@turmel.org> <4E09AA68.2050302@ivitera.com> <4E09B50B.20306@turmel.org> <4E09C295.8040102@ivitera.com> <4E09F5A5.3020903@turmel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E09F5A5.3020903@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Dne 28.6.2011 17:39, Phil Turmel napsal(a):
+>> 
+>> It took me several years to find a reasonably fast way to
+>> offline-backup that partition with tens of millions of backuppc
+>> hardlinks :)
+> 
+> I've heard of hardlink horrors with backuppc.  I don't use it myself.
+> I prefer to use LVM on top of MD, then take compressed backups of LVM
+> snapshots.
 
-This patchset tries fix rdev->corrected_errors counting. Read errors
-are considered to corrected if write-back and re-read cycle is finished
-without further problems. Thus moving the rdev->corrected_errors
-counting after the re-reading looks more reasonable IMHO.
+One of my goals was to be able to stick the offline backup drives to any
+PC, boot from a debian netinstall CD, chroot to the mirrored root, mount
+the large data partitions, and be ready to start recovery in a
+matter of minutes. Therefore I prefer the whole filesystems mirror.
+> 
+> Mirror w/ bitmap would make 1:1 backups faster.  I understand why you
+> are doing this, but I'd be worried about filesystem integrity at the
+> point in time you disconnect the backup drive.  Have you performed
+> any tests to be sure you can recover usable data from the offline
+> copy?  If I recall correctly, an LVM snapshot operation incorporates
+> a filesystem metadata sync.
 
-For resync case in RAID10, rdev->corrected_errors are increased right
-after the first read failure. This seems need an improvement though
-it's not handled in this series.
+Yes, I am using a rather complicated automatic procedure. When the
+resyncing finishes, the script waits until backuppc finishes the
+currently running jobs (while starting new ones is disabled), shuts
+backuppc down, kills all other processes accessing the partition,
+umounts the filesystem, removes the offline drives from the md5/md6
+arrays, mounts the backup raid again, restarts the backup processes, and
+then checks the offline copy: mounts the offline drives as partition and
+tries to read a random file from it. Only after that are the offline
+drives unmounted, their array disassembled and the drives put to sleep,
+until the operator removes them from their external bays and takes away
+from the company premises.
 
-The patches are against 'for-next' branch on git://neil.brown.name/md.
+The offline drives have saved my butt several times :)
 
-Thanks.
+Regards,
 
-
-Namhyung Kim (3):
-  md/raid1: move rdev->corrected_errors counting
-  md/raid5: move rdev->corrected_errors counting
-  md/raid10: move rdev->corrected_errors counting
-
- drivers/md/raid1.c  |   17 ++++++-----------
- drivers/md/raid10.c |    2 +-
- drivers/md/raid5.c  |    5 +----
- 3 files changed, 8 insertions(+), 16 deletions(-)
-
--- 
-1.7.6
-
+Pavel.
