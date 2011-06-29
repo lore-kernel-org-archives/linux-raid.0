@@ -1,43 +1,59 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Can't start array and Negative "Used Dev Size"
-Date: Wed, 29 Jun 2011 16:18:56 +1000
-Message-ID: <20110629161856.05e35291@notabene.brown>
-References: <BANLkTincbuZrS3PuPBOgjidsR8jdyTGBRw@mail.gmail.com>
-	<20110629151825.56cb4499@notabene.brown>
-	<BANLkTimonHoSn5eoX9AB8wLJYR4SFoBd-w@mail.gmail.com>
-	<20110629153753.5279c034@notabene.brown>
-	<BANLkTi=GwnMMA2jEZbtrRh3W4Ff-C18teg@mail.gmail.com>
+From: Tom De Mulder <tdm27@cam.ac.uk>
+Subject: Re: Software RAID and TRIM
+Date: Wed, 29 Jun 2011 11:32:55 +0100 (BST)
+Message-ID: <alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="140733193388032-1471375585-1309342982=:257"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=GwnMMA2jEZbtrRh3W4Ff-C18teg@mail.gmail.com>
+In-Reply-To: <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>
+Content-ID: <alpine.OSX.2.00.1106291131540.257@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Matthews <simon.d.matthews@gmail.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-15?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 28 Jun 2011 22:59:43 -0700 Simon Matthews
-<simon.d.matthews@gmail.com> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> Neil,
->=20
->=20
->=20
-> On Tue, Jun 28, 2011 at 10:37 PM, NeilBrown <neilb@suse.de> wrote:
-> >> On Tue, Jun 28, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
-> >> > =A0mdadm -S /dev/md5
-> >> > =A0mdadm -C /dev/md5 --metadata 1.0 -l1 -n2 --assume-clean
-> >>
->=20
-> Am I correct in thinking that this should be a quick operation?
->=20
+--140733193388032-1471375585-1309342982=:257
+Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-ID: <alpine.OSX.2.00.1106291131541.257@trogdor.csi.cam.ac.uk>
 
-Yes.  Virtually instantaneous.
+On Tue, 28 Jun 2011, Mathias Bur=E9n wrote:
 
-NeilBrown
+> IIRC md can already pass TRIM down, but I think the filesystem needs
+> to know about the underlying architecture, or something, for TRIM to
+> work in RAID.
+
+Yes, it's (usually/ideally) the filesystem's job to invoke the TRIM=20
+command, and that's what ext4 can do. I have it working just fine on=20
+single drives, but for reasons of service reliability would need to get=20
+RAID to work.
+
+I tried (on an admittedly vanilla Ubuntu 2.6.38 kernel) the same on a two=
+=20
+drive RAID1 md and it definitely didn't work (the blocks didn't get marked=
+=20
+as unused and zeroed).
+
+> There's numerous discussions on this in the archives of
+> this mailing list.
+
+Given how fast things move in the world of SSDs at the moment, I wanted to=
+=20
+check if any progress was made since. :-) I don't seem to be able to find=
+=20
+any reference to this in recent kernel source commits (but I'm a complete=
+=20
+amateur when it comes to git).
+
+
+Thanks,
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tom De Mulder <tdm27@cam.ac.uk> - Cambridge University Computing Service
++44 1223 3 31843 - New Museums Site, Pembroke Street, Cambridge CB2 3QH
+-> 29/06/2011 : The Moon is Waning Crescent (18% of Full)
+--140733193388032-1471375585-1309342982=:257--
