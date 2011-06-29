@@ -1,84 +1,96 @@
-From: Roberto Spadim <roberto@spadim.com.br>
+From: David Brown <david@westcontrol.com>
 Subject: Re: Software RAID and TRIM
-Date: Wed, 29 Jun 2011 09:46:15 -0300
-Message-ID: <BANLkTi=ttUwZZ-NqxPE0QquHx0bBj4jjsA@mail.gmail.com>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>
-	<BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>
-	<alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>
-	<20110629204519.419474d2@notabene.brown>
-	<alpine.OSX.2.00.1106291206390.257@trogdor.csi.cam.ac.uk>
-	<BANLkTikcN9vy1-SeYONZkGmDTH9ikea=4Q@mail.gmail.com>
+Date: Wed, 29 Jun 2011 14:46:08 +0200
+Message-ID: <iuf6tp$bhd$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>	<BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>	<alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk> <20110629204519.419474d2@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTikcN9vy1-SeYONZkGmDTH9ikea=4Q@mail.gmail.com>
+In-Reply-To: <20110629204519.419474d2@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Scott E. Armitage" <launchpad@scott.armitage.name>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-some ideas....
-
-maybe for a test only...
-we could send trim commands on raid1 arrays only or 'raid0 linear'
-since they don=B4t stripe, this could be 'easy' to develop
-when filesystem send trim, we send it to down device (/dev/sdX99)
-there=B4s a problem of offset (for raid1) maybe some devices just work
-with 4096bytes blocks on trim command, maybe not
-we could implement and put in a beta/alpha realease to test like ext4
-guys are doing with discard command (it=B4s a user option today)
-
-
-2011/6/29 Scott E. Armitage <launchpad@scott.armitage.name>:
-> On Wed, Jun 29, 2011 at 7:10 AM, Tom De Mulder <tdm27@cam.ac.uk> wrot=
-e:
->> However, that might not necessarily be a problem; tools exist that c=
-an be run manually (slightly fsck-like) and tell the drive which blocks=
- can be erased.
+On 29/06/2011 12:45, NeilBrown wrote:
+> On Wed, 29 Jun 2011 11:32:55 +0100 (BST) Tom De Mulder<tdm27@cam.ac.u=
+k>
+> wrote:
 >
-> For RAID5/6 at least, md will still require knowledge of what stripes
-> are and are not in use by the filesystem. In the current
-> implementation, the entire array must be consistent, regardless of
-> whether or not a particular block is in use. As far as my
-> understanding goes, any level of TRIM support for parity arrays would
-> be a fundamental shift in the way md treats the array.
+>> On Tue, 28 Jun 2011, Mathias Bur=E9n wrote:
+>>
+>>> IIRC md can already pass TRIM down, but I think the filesystem need=
+s
+>>> to know about the underlying architecture, or something, for TRIM t=
+o
+>>> work in RAID.
+>>
+>> Yes, it's (usually/ideally) the filesystem's job to invoke the TRIM
+>> command, and that's what ext4 can do. I have it working just fine on
+>> single drives, but for reasons of service reliability would need to =
+get
+>> RAID to work.
+>>
+>> I tried (on an admittedly vanilla Ubuntu 2.6.38 kernel) the same on =
+a two
+>> drive RAID1 md and it definitely didn't work (the blocks didn't get =
+marked
+>> as unused and zeroed).
+>>
+>>> There's numerous discussions on this in the archives of
+>>> this mailing list.
+>>
+>> Given how fast things move in the world of SSDs at the moment, I wan=
+ted to
+>> check if any progress was made since. :-) I don't seem to be able to=
+ find
+>> any reference to this in recent kernel source commits (but I'm a com=
+plete
+>> amateur when it comes to git).
 >
-> The simplest solution I see is to do as Niel suggested, and mimic TRI=
-M
-> support at the RAID level, and pass commands down as necessary. An
-> alternative solution would be to add a second TRIM layer, where md
-> maintains a list of what is or is not in use, and once an entire
-> stripe has been discarded by the filesystem, it can send a single TRI=
-M
-> command to each member drive to drop the entire stripe contents. This
-> adds abstraction for the filesystem layer, allowing it to treat the
-> RAID array like a regular SSD, but adds significant complexity to md
-> itself.
 >
-> -Scott
+> Trim support for md is a long way down my list of interesting project=
+s (and
+> no-one else has volunteered).
 >
-> p.s. Sorry if you receive this twice; Majordomo rejected the first on=
-e
-> on HTML subpart basis.
+> It is not at all straight forward to implement.
 >
-> --
-> Scott Armitage, B.A.Sc., M.A.Sc. candidate
-> Space Flight Laboratory
-> University of Toronto Institute for Aerospace Studies
-> 4925 Dufferin Street, Toronto, Ontario, Canada, M3H 5T6
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> For stripe/parity RAID, (RAID4/5/6) it is only safe to discard full s=
+tripes at
+> a time, and the md layer would need to keep a record of which stripes=
+ had been
+> discarded so that it didn't risk trusting data (and parity) read from=
+ those
+> stripes.  So you would need some sort of bitmap of invalid stripes, a=
+nd you
+> would need the fs to discard in very large chunks for it to be useful=
+ at all.
+>
+> For copying RAID (RAID1, RAID10) you really need the same bitmap.  Th=
+ere
+> isn't the same risk of reading and trusting discarded parity, but a r=
+esync
+> which didn't know about discarded ranges would undo the discard for y=
+ou.
+>
+> So is basically requires another bitmap to be stored with the metadat=
+a, and a
+> fairly fine-grained bitmap it would need to be.  Then every read and =
+resync
+> checks the bitmap and ignores or returns 0 for discarded ranges, and =
+every
+> write needs to check and if the range was discard, clear the bit and =
+write to
+> the whole range.
+>
+> So: do-able, but definitely non-trivial.
 >
 
+Wouldn't the sync/no-sync tracking you already have planned be usable=20
+for tracking discarded areas?  Or will that not be find-grained enough=20
+for the purpose?
 
-
---=20
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
