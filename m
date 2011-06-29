@@ -1,47 +1,56 @@
-From: "Scott E. Armitage" <launchpad@scott.armitage.name>
+From: David Brown <david@westcontrol.com>
 Subject: Re: Software RAID and TRIM
-Date: Wed, 29 Jun 2011 07:48:52 -0400
-Message-ID: <BANLkTikcN9vy1-SeYONZkGmDTH9ikea=4Q@mail.gmail.com>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>
-	<BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>
-	<alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>
-	<20110629204519.419474d2@notabene.brown>
-	<alpine.OSX.2.00.1106291206390.257@trogdor.csi.cam.ac.uk>
+Date: Wed, 29 Jun 2011 14:42:12 +0200
+Message-ID: <iuf6me$9us$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.1106291206390.257@trogdor.csi.cam.ac.uk>
+In-Reply-To: <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 29, 2011 at 7:10 AM, Tom De Mulder <tdm27@cam.ac.uk> wrote:
-> However, that might not necessarily be a problem; tools exist that can be run manually (slightly fsck-like) and tell the drive which blocks can be erased.
+On 29/06/2011 12:33, Tom De Mulder wrote:
+> On 28/06/11, David Brown wrote:
+>
+>> However, AFAIUI, you are wrong about TRIM being essential for the
+>> continued high performance of SSDs. As long as your SSDs have some
+>> over-provisioning (or you only partition something like 90% of the
+>> drive), and it's got good garbage collection, then TRIM will have
+>> minimal effect.
+>
+> While you are mostly correct, over time even consumer SSDs will end up
+> in this state.
+>
 
-For RAID5/6 at least, md will still require knowledge of what stripes
-are and are not in use by the filesystem. In the current
-implementation, the entire array must be consistent, regardless of
-whether or not a particular block is in use. As far as my
-understanding goes, any level of TRIM support for parity arrays would
-be a fundamental shift in the way md treats the array.
+I don't quite follow you here - what state will consumer SSDs end up in?
 
-The simplest solution I see is to do as Niel suggested, and mimic TRIM
-support at the RAID level, and pass commands down as necessary. An
-alternative solution would be to add a second TRIM layer, where md
-maintains a list of what is or is not in use, and once an entire
-stripe has been discarded by the filesystem, it can send a single TRIM
-command to each member drive to drop the entire stripe contents. This
-adds abstraction for the filesystem layer, allowing it to treat the
-RAID array like a regular SSD, but adds significant complexity to md
-itself.
+> Maybe I should have specified--my particular aim is to try and use
+> (fairly high-end) consumer SSDs for "enterprise" server applications,
+> hence the research into RAID. Most hardware RAID controllers that I know
+> of don't pass on the TRIM command (for various reasons), so I was hoping
+> to have more luck with software RAID.
+>
+>
 
--Scott
+Now you know /why/ hardware RAID controllers don't implement TRIM!
 
-p.s. Sorry if you receive this twice; Majordomo rejected the first one
-on HTML subpart basis.
 
---
-Scott Armitage, B.A.Sc., M.A.Sc. candidate
-Space Flight Laboratory
-University of Toronto Institute for Aerospace Studies
-4925 Dufferin Street, Toronto, Ontario, Canada, M3H 5T6
+Have you tried any real-world benchmarking with realistic loads with a 
+single SSD, ext4, and TRIM on and off?  Almost every article I've seen 
+on the subject is using very synthetic benchmarks, almost always on 
+windows, few are done with current garbage-collecting SSDs.  It seems to 
+be accepted wisdom from the early days of SSDs that TRIM makes a big 
+difference - and few people challenge that with real numbers or real 
+thought, even though the internal structure of the flash has changed 
+dramatically (transparent compression, for example, gives a completely 
+different effect).
+
+Of course, if you /do/ try it yourself and can show clear figures, then 
+I'm willing to change my mind :-)  If I had a spare SSD, I'd do the 
+testing myself.
+
+
+
