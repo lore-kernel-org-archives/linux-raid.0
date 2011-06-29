@@ -1,98 +1,84 @@
-From: David Brown <david@westcontrol.com>
+From: Tom De Mulder <tdm27@cam.ac.uk>
 Subject: Re: Software RAID and TRIM
-Date: Wed, 29 Jun 2011 14:46:08 +0200
-Message-ID: <iuf6tp$bhd$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>	<BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>	<alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk> <20110629204519.419474d2@notabene.brown>
+Date: Wed, 29 Jun 2011 13:55:09 +0100 (BST)
+Message-ID: <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk> <iuf6me$9us$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="140733193388032-1400123164-1309352109=:257"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110629204519.419474d2@notabene.brown>
+In-Reply-To: <iuf6me$9us$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 29/06/2011 12:45, NeilBrown wrote:
-> On Wed, 29 Jun 2011 11:32:55 +0100 (BST) Tom De Mulder<tdm27@cam.ac.u=
-k>
-> wrote:
->
->> On Tue, 28 Jun 2011, Mathias Bur=E9n wrote:
->>
->>> IIRC md can already pass TRIM down, but I think the filesystem need=
-s
->>> to know about the underlying architecture, or something, for TRIM t=
-o
->>> work in RAID.
->>
->> Yes, it's (usually/ideally) the filesystem's job to invoke the TRIM
->> command, and that's what ext4 can do. I have it working just fine on
->> single drives, but for reasons of service reliability would need to =
-get
->> RAID to work.
->>
->> I tried (on an admittedly vanilla Ubuntu 2.6.38 kernel) the same on =
-a two
->> drive RAID1 md and it definitely didn't work (the blocks didn't get =
-marked
->> as unused and zeroed).
->>
->>> There's numerous discussions on this in the archives of
->>> this mailing list.
->>
->> Given how fast things move in the world of SSDs at the moment, I wan=
-ted to
->> check if any progress was made since. :-) I don't seem to be able to=
- find
->> any reference to this in recent kernel source commits (but I'm a com=
-plete
->> amateur when it comes to git).
->
->
-> Trim support for md is a long way down my list of interesting project=
-s (and
-> no-one else has volunteered).
->
-> It is not at all straight forward to implement.
->
-> For stripe/parity RAID, (RAID4/5/6) it is only safe to discard full s=
-tripes at
-> a time, and the md layer would need to keep a record of which stripes=
- had been
-> discarded so that it didn't risk trusting data (and parity) read from=
- those
-> stripes.  So you would need some sort of bitmap of invalid stripes, a=
-nd you
-> would need the fs to discard in very large chunks for it to be useful=
- at all.
->
-> For copying RAID (RAID1, RAID10) you really need the same bitmap.  Th=
-ere
-> isn't the same risk of reading and trusting discarded parity, but a r=
-esync
-> which didn't know about discarded ranges would undo the discard for y=
-ou.
->
-> So is basically requires another bitmap to be stored with the metadat=
-a, and a
-> fairly fine-grained bitmap it would need to be.  Then every read and =
-resync
-> checks the bitmap and ignores or returns 0 for discarded ranges, and =
-every
-> write needs to check and if the range was discard, clear the bit and =
-write to
-> the whole range.
->
-> So: do-able, but definitely non-trivial.
->
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Wouldn't the sync/no-sync tracking you already have planned be usable=20
-for tracking discarded areas?  Or will that not be find-grained enough=20
-for the purpose?
+--140733193388032-1400123164-1309352109=:257
+Content-Type: TEXT/PLAIN; format=flowed; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+
+On Wed, 29 Jun 2011, David Brown wrote:
+
+>> While you are mostly correct, over time even consumer SSDs will end up
+>> in this state.
+> I don't quite follow you here - what state will consumer SSDs end up in?
+
+Sorry, I meant to say "SSDs in typical consumer desktop machines". The=20
+state where writes are very slow.
+
+> Have you tried any real-world benchmarking with realistic loads with a si=
+ngle=20
+> SSD, ext4, and TRIM on and off?  Almost every article I've seen on the su=
+bject=20
+> is using very synthetic benchmarks, almost always on windows, few are don=
+e=20
+> with current garbage-collecting SSDs.  It seems to be accepted wisdom fro=
+m the=20
+> early days of SSDs that TRIM makes a big difference - and few people chal=
+lenge=20
+> that with real numbers or real thought, even though the internal structur=
+e of=20
+> the flash has changed dramatically (transparent compression, for example,=
+=20
+> gives a completely different effect).
+>
+> Of course, if you /do/ try it yourself and can show clear figures, then I=
+'m=20
+> willing to change my mind :-)  If I had a spare SSD, I'd do the testing=
+=20
+> myself.
+
+I have a set of 4 Intel 510 SSDs purely for testing, and I have used these=
+=20
+to simulate the kinds of workload I would expect them to experience in a=20
+server environment (focused mainly on database access). So far, those=20
+tests have focused on using single drives (ie. without RAID) on a variety=
+=20
+of controllers.
+
+Once the drives get fuller (something which does happen on servers) I do=20
+indeed see write latencies that are in the order of several seconds (I saw=
+=20
+from 1500=B5s to 6000=B5s), as the drive suddenly struggles to free entire=
+=20
+blocks, where initially latency was in the single digits.
+
+I am hoping to get my hands on some Sandforce controller-based SSDs as=20
+well, to compare, but even they show degradation as they get fuller in=20
+AnandTech's tests (and those tests seem, IME, trustworthy).
+
+My current plan is to sacrifice half the capacity by partitioning, stick 2=
+=20
+of them in md RAID1 (so, without TRIM) and over the next few days to run=20
+benchmarks over them, to see what the end result is.
+
+
+Best,
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tom De Mulder <tdm27@cam.ac.uk> - Cambridge University Computing Service
++44 1223 3 31843 - New Museums Site, Pembroke Street, Cambridge CB2 3QH
+-> 29/06/2011 : The Moon is Waning Crescent (18% of Full)
+--140733193388032-1400123164-1309352109=:257--
