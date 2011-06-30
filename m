@@ -1,128 +1,48 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Software RAID and TRIM
-Date: Thu, 30 Jun 2011 09:50:28 +0200
-Message-ID: <iuh9vg$v86$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>	<BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>	<alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>	<20110629204519.419474d2@notabene.brown>	<iuf6tp$bhd$1@dough.gmane.org> <20110630102846.610534af@notabene.brown>
+From: =?ISO-8859-15?Q?Karsten_R=F6mke?= <k.roemke@gmx.de>
+Subject: misunderstanding of spare and raid devices?
+Date: Thu, 30 Jun 2011 12:51:37 +0200
+Message-ID: <4E0C5539.4030000@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110630102846.610534af@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/06/2011 02:28, NeilBrown wrote:
-> On Wed, 29 Jun 2011 14:46:08 +0200 David Brown<david@westcontrol.com>=
-  wrote:
->
->> On 29/06/2011 12:45, NeilBrown wrote:
->>> On Wed, 29 Jun 2011 11:32:55 +0100 (BST) Tom De Mulder<tdm27@cam.ac=
-=2Euk>
->>> wrote:
->>>
->>>> On Tue, 28 Jun 2011, Mathias Bur=E9n wrote:
->>>>
->>>>> IIRC md can already pass TRIM down, but I think the filesystem ne=
-eds
->>>>> to know about the underlying architecture, or something, for TRIM=
- to
->>>>> work in RAID.
->>>>
->>>> Yes, it's (usually/ideally) the filesystem's job to invoke the TRI=
-M
->>>> command, and that's what ext4 can do. I have it working just fine =
-on
->>>> single drives, but for reasons of service reliability would need t=
-o get
->>>> RAID to work.
->>>>
->>>> I tried (on an admittedly vanilla Ubuntu 2.6.38 kernel) the same o=
-n a two
->>>> drive RAID1 md and it definitely didn't work (the blocks didn't ge=
-t marked
->>>> as unused and zeroed).
->>>>
->>>>> There's numerous discussions on this in the archives of
->>>>> this mailing list.
->>>>
->>>> Given how fast things move in the world of SSDs at the moment, I w=
-anted to
->>>> check if any progress was made since. :-) I don't seem to be able =
-to find
->>>> any reference to this in recent kernel source commits (but I'm a c=
-omplete
->>>> amateur when it comes to git).
->>>
->>>
->>> Trim support for md is a long way down my list of interesting proje=
-cts (and
->>> no-one else has volunteered).
->>>
->>> It is not at all straight forward to implement.
->>>
->>> For stripe/parity RAID, (RAID4/5/6) it is only safe to discard full=
- stripes at
->>> a time, and the md layer would need to keep a record of which strip=
-es had been
->>> discarded so that it didn't risk trusting data (and parity) read fr=
-om those
->>> stripes.  So you would need some sort of bitmap of invalid stripes,=
- and you
->>> would need the fs to discard in very large chunks for it to be usef=
-ul at all.
->>>
->>> For copying RAID (RAID1, RAID10) you really need the same bitmap.  =
-There
->>> isn't the same risk of reading and trusting discarded parity, but a=
- resync
->>> which didn't know about discarded ranges would undo the discard for=
- you.
->>>
->>> So is basically requires another bitmap to be stored with the metad=
-ata, and a
->>> fairly fine-grained bitmap it would need to be.  Then every read an=
-d resync
->>> checks the bitmap and ignores or returns 0 for discarded ranges, an=
-d every
->>> write needs to check and if the range was discard, clear the bit an=
-d write to
->>> the whole range.
->>>
->>> So: do-able, but definitely non-trivial.
->>>
->>
->> Wouldn't the sync/no-sync tracking you already have planned be usabl=
-e
->> for tracking discarded areas?  Or will that not be find-grained enou=
-gh
->> for the purpose?
->
-> That would be a necessary precursor to DISCARD support: yes.
-> DISCARD would probably require a much finer grain than I would otherw=
-ise
-> suggest but I would design the feature to allow a range of granularit=
-ies.
->
+Hello,
+I'm searching some hours / minutes to create a raid5 device with 4 disks and 1 spare:
+I tried first with the opensuse tool but no success as I want, so I tried mdadm
 
-I suppose the big win for the sync/no-sync tracking is when initialisin=
-g=20
-an array - arrays that haven't been written don't need to be in sync.=20
-But you will probably be best with a list of sync (or no-sync) areas fo=
-r=20
-that job, rather than a bitmap, as there won't be very many such blocks=
-=20
-(a few dozen, perhaps, for multiple partitions and filesystems like XFS=
-=20
-that write in different areas) and as the disk gets used, the "no-sync"=
-=20
-areas will decrease in size and number.  For DISCARD, however, you'd ge=
-t=20
-no-sync areas scattered around the disk.
+Try:
+  mdadm --create /dev/md0 --level=5 --raid-devices=4 --spare-devices=1 /dev/sda3 /dev/sdb2 /dev/sdc5 /dev/sdd5 /dev/sde5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+leads to
+Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active (auto-read-only) raid5 sdd5[5](S) sde5[4](S) sdc5[2] sdb2[1] sda3[0]
+       13759296 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+
+2 spares - I don't understand that.
+
+
+kspace9:~ # mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/sda3 /dev/sdb2 /dev/sdc5 /dev/sdd5
+leads to
+md0 : active (auto-read-only) raid5 sdd5[4](S) sdc5[2] sdb2[1] sda3[0]
+       13759296 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
+
+1 spare - but why - I expect 4 active disks and 1 spare
+
+kspace9:~ # mdadm --create /dev/md0 --level=5 --raid-devices=5 /dev/sda3 /dev/sdb2 /dev/sdc5 /dev/sdd5 /dev/sde5
+leads to
+md0 : active (auto-read-only) raid5 sde5[5](S) sdd5[3] sdc5[2] sdb2[1] sda3[0]
+       18345728 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
+
+That's what I want, but I reached it more or less by random.
+Where is my "think-error" (in german).
+
+I use
+kspace9:~ # mdadm --version
+mdadm - v3.0.3 - 22nd October 2009
+
+Any hints would be nice
+karsten
