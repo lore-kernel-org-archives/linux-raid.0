@@ -1,78 +1,56 @@
-From: Simon Matthews <simon.d.matthews@gmail.com>
-Subject: Re: Can't start array and Negative "Used Dev Size"
-Date: Wed, 29 Jun 2011 20:15:12 -0700
-Message-ID: <BANLkTi=7EUhfN5ZWRXXNyEO=r+1q5DRDVA@mail.gmail.com>
-References: <BANLkTincbuZrS3PuPBOgjidsR8jdyTGBRw@mail.gmail.com>
-	<20110629151825.56cb4499@notabene.brown>
-	<BANLkTimonHoSn5eoX9AB8wLJYR4SFoBd-w@mail.gmail.com>
-	<BANLkTin7f-8tLDoZsmyFocb9j1e1wn=4Dw@mail.gmail.com>
-	<20110630102522.3dd9579d@notabene.brown>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Software RAID and TRIM
+Date: Thu, 30 Jun 2011 07:51:01 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk> <iuf6me$9us$1@dough.gmane.org>
+ <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-533477880-1309413061=:19581"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110630102522.3dd9579d@notabene.brown>
+In-Reply-To: <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Tom De Mulder <tdm27@cam.ac.uk>
+Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Wed, Jun 29, 2011 at 5:25 PM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 29 Jun 2011 08:45:33 -0700 Simon Matthews
-> <simon.d.matthews@gmail.com> wrote:
->
->> Neil,
->>
->>
->>
->> On Tue, Jun 28, 2011 at 10:24 PM, Simon Matthews
->> <simon.d.matthews@gmail.com> wrote:
->> > Neil,
->> >
->> >
->> >
->> > On Tue, Jun 28, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
->>
->> >> =A0mdadm -S /dev/md4
->> >> =A0mdadm -A /dev/md4 /dev/sdc1 /dev/sdd1 --verbose
->> >
->> > That solved it. The array started.
->>
->> Do you have any idea why the array did not start when the system
->> booted? I also have an md6 on the same hard drives that was created =
-at
->> the same time as md4, but md6 started on the boot.
->>
->
-> Not really ... I would need to see logs to be at all confident.
->
-> Based on the very limit info I have my best guess is that something -
-> probably udev - ran
-> =A0 mdadm --incremental /dev/sdc1
->
-> but didn't run
-> =A0 mdadm --incremental /dev/sdd1
->
-> I cannot imagine why it would do that though.
->
-> This would have the effect of leaving sdc1 as a member of md4, but md=
-4 still
-> being inactive.
->
+---137064504-533477880-1309413061=:19581
+Content-Type: TEXT/PLAIN; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-The system seems to take a long time to start one of the hard drives,
-with many messages about doing resets. I am going to swap out the
-mobile rack that the drive is installed in (it is limiting it to
-1.5Gbps, instead of connecting at 3Gbps).
+On Wed, 29 Jun 2011, Tom De Mulder wrote:
 
-It still seems odd, because the other arrays that use partitions on
-that disk start up.
+> I have a set of 4 Intel 510 SSDs purely for testing, and I have used 
+> these to simulate the kinds of workload I would expect them to 
+> experience in a server environment (focused mainly on database access). 
+> So far, those tests have focused on using single drives (ie. without 
+> RAID) on a variety of controllers.
 
-Simon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From the tests I have read, the Intel 510 are actually worse than the 
+Intel X-25 G1/G2/320 models, with exactly the symptoms you're describing. 
+It's fast for linear reads and writes, but not so good for random writes, 
+especially not when it's getting full.
+
+> Once the drives get fuller (something which does happen on servers) I do 
+> indeed see write latencies that are in the order of several seconds (I 
+> saw from 1500µs to 6000µs), as the drive suddenly struggles to free 
+> entire blocks, where initially latency was in the single digits.
+
+Yeah, this is a common problem especially for older drives. A lot has 
+happened with garbage collect but the fact is still that a lot of SSD 
+vendors have too little spare area, so the recommendation you make 
+regarding leaving a large area unused is something I do as well, and it 
+works.
+
+> I am hoping to get my hands on some Sandforce controller-based SSDs as well, 
+> to compare, but even they show degradation as they get fuller in AnandTech's 
+> tests (and those tests seem, IME, trustworthy).
+
+Include the Intel 320 as well, I think it should be viable for your usage 
+pattern.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+---137064504-533477880-1309413061=:19581--
