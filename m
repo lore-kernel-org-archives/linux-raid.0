@@ -1,66 +1,119 @@
-From: =?ISO-8859-15?Q?Karsten_R=F6mke?= <k.roemke@gmx.de>
-Subject: Re:  Re: misunderstanding of spare and raid devices?
-Date: Thu, 30 Jun 2011 15:09:39 +0200
-Message-ID: <4E0C7593.7090304@gmx.de>
-References: <4E0C5539.4030000@gmx.de> <20110630105840.GA27551@cthulhu.home.robinhill.me.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH] md: get rid of unnecessary casts on page_address()
+Date: Thu, 30 Jun 2011 22:10:31 +0900
+Message-ID: <1309439431-7007-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110630105840.GA27551@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
-I suppose it works now.
-After mdadm -w /dev/md0 it starts synching.
-md0 : active raid5 sdd5[4] sde5[5](S) sdc5[2] sdb2[1] sda3[0]
-       13759296 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
-       [=3D>...................]  recovery =3D  6.2% (286656/4586432) f=
-inish=3D0.9min speed=3D71664K/sec
-thanks to both of you.
-Karsten
+page_address() returns void pointer, so the casts can be removed.
 
-Am 30.06.2011 12:58, schrieb Robin Hill:
-> On Thu Jun 30, 2011 at 12:51:37 +0200, Karsten R=F6mke wrote:
->
->> Hello,
->> I'm searching some hours / minutes to create a raid5 device with 4
->> disks and 1 spare:
->> I tried first with the opensuse tool but no success as I want, so I
->> tried mdadm
->>
->> Try:
->>    mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 --spare-de=
-vices=3D1
->>    /dev/sda3 /dev/sdb2 /dev/sdc5 /dev/sdd5 /dev/sde5
->>
->> leads to
->> Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
->> md0 : active (auto-read-only) raid5 sdd5[5](S) sde5[4](S) sdc5[2] sd=
-b2[1] sda3[0]
->>         13759296 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->>
->> 2 spares - I don't understand that.
->>
-> That's perfectly normal. The RAID5 array is created in degraded mode,
-> then recovered onto the final disk. That way it becomes available for
-> use immediately, rather than requiring all the parity to be calculate=
-d
-> before the array is ready. As it's been started in auto-read-only mod=
-e
-> (not sure why though) then it hasn't started recovery yet. Running
-> "mdadm -w /dev/md0" or mounting the array will kick it into read-writ=
-e
-> mode and start the recovery process.
->
-> HTH,
->      Robin
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/md.c |   23 +++++++++++------------
+ 1 files changed, 11 insertions(+), 12 deletions(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 91e31e260b4a..53e8d75314c3 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1025,7 +1025,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
+ 	ret = -EINVAL;
+ 
+ 	bdevname(rdev->bdev, b);
+-	sb = (mdp_super_t*)page_address(rdev->sb_page);
++	sb = page_address(rdev->sb_page);
+ 
+ 	if (sb->md_magic != MD_SB_MAGIC) {
+ 		printk(KERN_ERR "md: invalid raid superblock magic on %s\n",
+@@ -1064,7 +1064,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
+ 		ret = 1;
+ 	} else {
+ 		__u64 ev1, ev2;
+-		mdp_super_t *refsb = (mdp_super_t*)page_address(refdev->sb_page);
++		mdp_super_t *refsb = page_address(refdev->sb_page);
+ 		if (!uuid_equal(refsb, sb)) {
+ 			printk(KERN_WARNING "md: %s has different UUID to %s\n",
+ 				b, bdevname(refdev->bdev,b2));
+@@ -1099,7 +1099,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
+ static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+ 	mdp_disk_t *desc;
+-	mdp_super_t *sb = (mdp_super_t *)page_address(rdev->sb_page);
++	mdp_super_t *sb = page_address(rdev->sb_page);
+ 	__u64 ev1 = md_event(sb);
+ 
+ 	rdev->raid_disk = -1;
+@@ -1230,7 +1230,7 @@ static void super_90_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 
+ 	rdev->sb_size = MD_SB_BYTES;
+ 
+-	sb = (mdp_super_t*)page_address(rdev->sb_page);
++	sb = page_address(rdev->sb_page);
+ 
+ 	memset(sb, 0, sizeof(*sb));
+ 
+@@ -1435,7 +1435,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
+ 	if (ret) return ret;
+ 
+ 
+-	sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
++	sb = page_address(rdev->sb_page);
+ 
+ 	if (sb->magic != cpu_to_le32(MD_SB_MAGIC) ||
+ 	    sb->major_version != cpu_to_le32(1) ||
+@@ -1477,8 +1477,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
+ 		ret = 1;
+ 	} else {
+ 		__u64 ev1, ev2;
+-		struct mdp_superblock_1 *refsb = 
+-			(struct mdp_superblock_1*)page_address(refdev->sb_page);
++		struct mdp_superblock_1 *refsb = page_address(refdev->sb_page);
+ 
+ 		if (memcmp(sb->set_uuid, refsb->set_uuid, 16) != 0 ||
+ 		    sb->level != refsb->level ||
+@@ -1513,7 +1512,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
+ 
+ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+-	struct mdp_superblock_1 *sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
++	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
+ 	__u64 ev1 = le64_to_cpu(sb->events);
+ 
+ 	rdev->raid_disk = -1;
+@@ -1619,7 +1618,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	int max_dev, i;
+ 	/* make rdev->sb match mddev and rdev data. */
+ 
+-	sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
++	sb = page_address(rdev->sb_page);
+ 
+ 	sb->feature_map = 0;
+ 	sb->pad0 = 0;
+@@ -1724,7 +1723,7 @@ super_1_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+ 			num_sectors = max_sectors;
+ 		rdev->sb_start = sb_start;
+ 	}
+-	sb = (struct mdp_superblock_1 *) page_address(rdev->sb_page);
++	sb = page_address(rdev->sb_page);
+ 	sb->data_size = cpu_to_le64(num_sectors);
+ 	sb->super_offset = rdev->sb_start;
+ 	sb->sb_csum = calc_sb_1_csum(sb);
+@@ -2127,10 +2126,10 @@ static void print_rdev(mdk_rdev_t *rdev, int major_version)
+ 		printk(KERN_INFO "md: rdev superblock (MJ:%d):\n", major_version);
+ 		switch (major_version) {
+ 		case 0:
+-			print_sb_90((mdp_super_t*)page_address(rdev->sb_page));
++			print_sb_90(page_address(rdev->sb_page));
+ 			break;
+ 		case 1:
+-			print_sb_1((struct mdp_superblock_1 *)page_address(rdev->sb_page));
++			print_sb_1(page_address(rdev->sb_page));
+ 			break;
+ 		}
+ 	} else
+-- 
+1.7.6
+
