@@ -1,244 +1,167 @@
-From: Petter Reinholdtsen <pere@hungry.com>
-Subject: Help with recovering resized raid where machine crashed while PENDING
-Date: Sat, 02 Jul 2011 10:54:05 +0200
-Message-ID: <2flfwmpdpw2.fsf@login1.uio.no>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: misunderstanding of spare and raid devices? - and one question
+ more
+Date: Sat, 02 Jul 2011 11:42:02 +0200
+Message-ID: <iump5a$rei$1@dough.gmane.org>
+References: <4E0C5539.4030000@gmx.de> <4E0C5E47.5090604@anonymous.org.uk> <4E0C6CC4.3030506@turmel.org> <4E0C7196.1070307@gmx.de> <4E0C7B4B.7090404@turmel.org> <4E0C8685.3020806@gmx.de> <4E0C8BD6.1080907@turmel.org> <4E0ED816.30903@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E0ED816.30903@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 02/07/11 10:34, Karsten R=C3=B6mke wrote:
+> Hi Phil,
+> I have done some tests and appended the results, maybe they are of in=
+terest
+> for somebody. As a conclusion I would say raid5 and raid6 make in my
+> situation
+> nearly no difference.
+> Thanks to all for hints and explanation
+> Karsten
+>
 
-I could use some help with recovering a raid5.  I had two RAID5 using
-three disks.  The 1T disks were partitioned into two halves and each
-raid5 used one partition from each disk (created this way to be able
-to add my 500G disks into the raids).
+If raid6 doesn't have any noticeable performance costs compared to raid=
+5=20
+for your usage, then you should definitely use raid6 rather than raid5 =
++=20
+spare.  Think of it as raid5 + spare with the rebuild done in advance!
 
-Then I added two more disks to the setup, partitioned the same way,
-and added their partitions to the two raids and asked the raids to
-grow.  The first raid started growing and got around 60% out before
-the machine crashed and had to be rebooted.  The second raid did not
-start growing and was PENDING.  As far as I know, it was still PENDING
-when the machine crashed.  When I ran mdadm to start the second
-growing, the mdadm command hung waiting for the other grow operation
-to finish.  I ended up killing it after a few hours, hoping to
-continue the grow operation when the first raid was done growing after
-15 days.
+mvh.,
 
-After the crash and first reboot , the first raid5 is activated and
-show up as auto-read-only, and the second raid fail to assemble.  I
-did not specify a backup file when growing, as the recipe I found did
-not mention that it was smart to do.  Now I wish I had.
+David
 
-Any ideas how I can recover my raid? After reading
-<URL: https://raid.wiki.kernel.org/index.php/RAID_Recovery >, I
-suspect creating it again is the solution, but am unsure if I should
-recreate it with 3 or 5 partitions.  Trying to assembly result in this:
 
-meta:~# mdadm --assemble /dev/md3 /dev/sdd2 /dev/sde2 /dev/sdh2 /dev/sda2 /dev/sdb2
-mdadm: Failed to restore critical section for reshape, sorry.
-      Possibly you needed to specify the --backup-file
-meta:~#  
 
-How can I know which disks to use when recreating if I want to
-recreate using only three disks?  Is it the three with the active
-state?
+>
+>
+> ---------------------------------------------------------------------=
+-----------------
+>
+> first - just copy a dir with a size of 2,9 GB, it was copied once bef=
+ore
+> so I
+> think there are still data buffered?
+>
+> OLDER war im Cache? hatte Dir vorher kopiert
+> kspace9:~ # date ; cp -a /home/roemke/HHertzTex/OLDER/* /raid5/ ; dat=
+e
+> Fr 1. Jul 16:15:57 CEST 2011
+> Fr 1. Jul 16:16:26 CEST 2011
+>
+> kspace9:~ # date ; cp -a /home/roemke/HHertzTex/OLDER/* /raid6/ ; dat=
+e
+> Fr 1. Jul 16:17:27 CEST 2011
+> Fr 1. Jul 16:17:58 CEST 2011
+>
+> ---------------------------------------------------------------------=
+-----------------
+>
+> now a test with bonnie, I found this example online and the parameter=
+s
+> seems
+> senseful to me (I've never done performance tests on hd's before, so =
+I
+> searched
+> for an example)
+> bonnie, found
+> -n 0 : file creation 0
+> -u 0 : root
+> -r : memory in megabyte (calculated to 7999)
+> -s : file size calculated to 15998
+> -f : fast, skip per char IO-tests
+> -b : no write buffering
+> -d : set directory
+>
+> kspace9:~ # bonnie++ -n 0 -u 0 -r `free -m | grep 'Mem:' | awk '{prin=
+t
+> $2}'` -s $(echo "scale=3D0;`free -m | grep 'Mem:' | awk '{print $2}'`=
+*2" |
+> bc -l) -f -b -d /raid5
+> Using uid:0, gid:0.
+> Writing intelligently...done
+> Rewriting...done
+> Reading intelligently...done
+> start 'em...done...done...done...
+> Version 1.03d ------Sequential Output------ --Sequential Input- --Ran=
+dom-
+> -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP /sec %=
+CP
+> kspace9 15998M 96365 20 48302 12 149445 18 113.7 0
+> kspace9,15998M,,,96365,20,48302,12,,,149445,18,113.7,0,,,,,,,,,,,,,
+>
+> kspace9:~ # bonnie++ -n 0 -u 0 -r `free -m | grep 'Mem:' | awk '{prin=
+t
+> $2}'` -s $(echo "scale=3D0;`free -m | grep 'Mem:' | awk
+> '{print $2}'`*2" | bc -l) -f -b -d /raid6
+> Using uid:0, gid:0.
+> Writing intelligently...done
+> Rewriting...done
+> Reading intelligently...done
+> start 'em...done...done...done...
+> Version 1.03d ------Sequential Output------ --Sequential Input- --Ran=
+dom-
+> -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP /sec %=
+CP
+> kspace9 15998M 100321 22 48617 13 131651 16 120.2 1
+> kspace9,15998M,,,100321,22,48617,13,,,131651,16,120.2,1,,,,,,,,,,,,,
+>
+>
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+> results for old raid 1:
+> a test of old raid 1 which I have done unintended, because I forgot t=
+o
+> mount
+> the raid array :-)
+> mounten vergessen
+> ---------------------------------------------------------------------
+> -> vergleichsresultate :-)
+>
+> kspace9:~ # date ; cp -r /home/roemke/HHertzTex/OLDER/ /raid5/ ; date
+> Fr 1. Jul 16:07:32 CEST 2011 ^^^ not raid 5, old raid 1, forgot to mo=
+unt
+> Fr 1. Jul 16:08:39 CEST 2011
+> aehnlich (similiar)
+>
+>
+> test mit bonnie++
+> kspace9:~ # bonnie++ -n 0 -u 0 -r `free -m | grep 'Mem:' | awk '{prin=
+t
+> $2}'` -s $(echo "scale=3D0;`free -m | grep 'Mem:' | awk '{print $2}'`=
+*2" |
+> bc -l) -f -b -d /raid5 <-- not raid 5, still the older raid 1
+> Using uid:0, gid:0.
+> Writing intelligently...done
+> Rewriting...done
+> Reading intelligently...done
+> start 'em...done...done...done...
+> Version 1.03d ------Sequential Output------ --Sequential Input- --Ran=
+dom-
+> -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+> Machine Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP /sec %=
+CP
+> kspace9 15998M 62977 9 34410 9 101979 13 66.7 0
+> kspace9,15998M,,,62977,9,34410,9,,,101979,13,66.7,0,,,,,,,,,,,,,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
-This is the content of /proc/mdstat.  The md0 and md1 RAIDs can be
-ignored as they are on two different disks:
 
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md2 : active (auto-read-only) raid5 sdd1[0] sda1[4] sdb1[3] sde1[2] sdh1[1]
-      976558976 blocks super 0.91 level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-
-md1 : active raid1 sdc2[0] sdf2[1]
-      976510912 blocks [2/2] [UU]
-
-md0 : active raid1 sdc1[0] sdf1[1]
-      248896 blocks [2/2] [UU]
-
-unused devices: <none>
-
-Based on the disks used by md2, I ran "mdadm --examine
-/dev/sd[dabeh]2" to get the status of the problematic partitions:
-
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 6dcd10c1:39d083f9:e49659ac:48e50bf6
-  Creation Time : Sun Oct 26 17:29:27 2008
-     Raid Level : raid5
-  Used Dev Size : 488279488 (465.66 GiB 500.00 GB)
-     Array Size : 1953117952 (1862.64 GiB 1999.99 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 3
-
-  Reshape pos'n : 0
-  Delta Devices : 2 (3->5)
-
-    Update Time : Thu Jun 30 11:00:18 2011
-          State : active
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 3274a54b - correct
-         Events : 193913
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     4       8       98        4      active sync
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8       82        2      active sync   /dev/sdf2
-   3     3       8      114        3      active sync   /dev/sdh2
-   4     4       8       98        4      active sync
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 6dcd10c1:39d083f9:e49659ac:48e50bf6
-  Creation Time : Sun Oct 26 17:29:27 2008
-     Raid Level : raid5
-  Used Dev Size : 488279488 (465.66 GiB 500.00 GB)
-     Array Size : 1953117952 (1862.64 GiB 1999.99 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 3
-
-  Reshape pos'n : 0
-  Delta Devices : 2 (3->5)
-
-    Update Time : Thu Jun 30 11:00:18 2011
-          State : active
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 3274a559 - correct
-         Events : 193913
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8      114        3      active sync   /dev/sdh2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8       82        2      active sync   /dev/sdf2
-   3     3       8      114        3      active sync   /dev/sdh2
-   4     4       8       98        4      active sync
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 6dcd10c1:39d083f9:e49659ac:48e50bf6
-  Creation Time : Sun Oct 26 17:29:27 2008
-     Raid Level : raid5
-  Used Dev Size : 488279488 (465.66 GiB 500.00 GB)
-     Array Size : 1953117952 (1862.64 GiB 1999.99 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 3
-
-  Reshape pos'n : 0
-  Delta Devices : 2 (3->5)
-
-    Update Time : Thu Jun 30 10:59:48 2011
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 32779a4d - correct
-         Events : 193912
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       18        0      active sync   /dev/sdb2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8       82        2      active sync   /dev/sdf2
-   3     3       8      114        3      active sync   /dev/sdh2
-   4     4       8       98        4      active sync
-/dev/sde2:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 6dcd10c1:39d083f9:e49659ac:48e50bf6
-  Creation Time : Sun Oct 26 17:29:27 2008
-     Raid Level : raid5
-  Used Dev Size : 488279488 (465.66 GiB 500.00 GB)
-     Array Size : 1953117952 (1862.64 GiB 1999.99 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 3
-
-  Reshape pos'n : 0
-  Delta Devices : 2 (3->5)
-
-    Update Time : Thu Jun 30 11:00:18 2011
-          State : active
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 3274a505 - correct
-         Events : 193913
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       34        1      active sync   /dev/sdc2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8       82        2      active sync   /dev/sdf2
-   3     3       8      114        3      active sync   /dev/sdh2
-   4     4       8       98        4      active sync
-/dev/sdh2:
-          Magic : a92b4efc
-        Version : 00.91.00
-           UUID : 6dcd10c1:39d083f9:e49659ac:48e50bf6
-  Creation Time : Sun Oct 26 17:29:27 2008
-     Raid Level : raid5
-  Used Dev Size : 488279488 (465.66 GiB 500.00 GB)
-     Array Size : 1953117952 (1862.64 GiB 1999.99 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 3
-
-  Reshape pos'n : 0
-  Delta Devices : 2 (3->5)
-
-    Update Time : Thu Jun 30 10:59:48 2011
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 32779a91 - correct
-         Events : 193912
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       82        2      active sync   /dev/sdf2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8       82        2      active sync   /dev/sdf2
-   3     3       8      114        3      active sync   /dev/sdh2
-   4     4       8       98        4      active sync
-
-Happy hacking,
--- 
-Petter Reinholdtsen
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
