@@ -1,50 +1,34 @@
-From: "Scott E. Armitage" <launchpad@scott.armitage.name>
+From: Drew <drew.kay@gmail.com>
 Subject: Re: Recommended sw raid setup
-Date: Sat, 2 Jul 2011 17:25:50 -0400
-Message-ID: <CAA8Hn0e5KzgqqM6i8p3DkdZkQU=LnMiNRNNgm3=XdMeEt+YUQQ@mail.gmail.com>
+Date: Sat, 2 Jul 2011 14:30:06 -0700
+Message-ID: <CACJz6QuzTj3cmESu0eBGgq3rK3wopXZpj9m34N5ecR=uj6FvCQ@mail.gmail.com>
 References: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com>
-	<BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com>
-	<CACJz6Qv=u0-66hwOEg5AeZ2rWuw2OE10ozUKEQGTbuGn0_fgGg@mail.gmail.com>
-	<BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
+ <BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com> <CACJz6Qv=u0-66hwOEg5AeZ2rWuw2OE10ozUKEQGTbuGn0_fgGg@mail.gmail.com>
+ <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Simon Matthews <simon.d.matthews@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Jul 2, 2011 at 5:17 PM, Simon Matthews
-<simon.d.matthews@gmail.com> wrote:
-> Also, for the original question: for a home system, do you really nee=
-d
-> the uptime =A0that RAID provides? I suspect not -- in that case, put
-> your money into backups, not RAID.
+> I thought that I had read the TLER was not useful for mdraid, so that
+> enterprise drives were not really advised for mdraid. Am I wrong about
+> this?
 
-If it suits your needs, I think a RAID setup is perfectly acceptable.
-I have a RAID-5 array in my desktop computer at home. I have never had
-a drive failure, though I have simulated it to practice replacing a
-drive without loosing any data.
+TLER just shortens the firmware's error recovery from something like
+60 seconds down to 4 seconds. It's mainly useful in hardware RAID but
+I can see it being useful with mdraid in the enterprise where you
+can't afford to wait for the drive to do it's own recovery attempts.
 
-=46or myself, the reasoning was mostly to combine a bunch of drives int=
-o
-one large logical volume, which greatly reduces workflow overhead.
-That I can suffer a single drive failure and not have to resort to
-restoring from a backup is simply a nice-to-have. I still backup my
-important files to an external hard-drive on a semi-regular basis, but
-there is much less mission-critical data (photos, documents) than
-stuff that is simply annoying to lose (music and movies).
 
--S
+-- 
+Drew
 
---=20
-Scott Armitage, B.A.Sc., M.A.Sc. candidate
-Space Flight Laboratory
-University of Toronto Institute for Aerospace Studies
-4925 Dufferin Street, Toronto, Ontario, Canada, M3H 5T6
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+
+"This started out as a hobby and spun horribly out of control."
+-Unknown
