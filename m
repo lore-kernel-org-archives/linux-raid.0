@@ -1,39 +1,38 @@
-From: "Cal Leeming [Simplicity Media Ltd]"
-	<cal.leeming@simplicitymedialtd.co.uk>
-Subject: Curious problem with asynchronous RAID1 rebuild operations
-Date: Sat, 2 Jul 2011 12:07:54 +0100
-Message-ID: <CALvtuFQ_c_-8DqKGaTV6LjL0JXC=8VKPKyx5U1Be49fepLcWzg@mail.gmail.com>
+From: John Obaterspok <john.obaterspok@gmail.com>
+Subject: Recommended sw raid setup
+Date: Sat, 2 Jul 2011 13:16:19 +0200
+Message-ID: <BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com>
+References: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+Hi,
 
-I tried to rebuild/sync two RAID1 arrays at the same time, with strange=
- results.
+I've going to setup a _home_ file server to store all photos & family
+videos, work related material, DNLA streaming=A0and more.
 
-When a new drive was added into md0, it started to sync fine at
-123,000kb/sec. Whilst that was running, I also added a new drive into
-md1, and this causes both arrays sync speed to slow down to
-20,000kb/sec. I checked the=A0/proc/sys/dev/raid/speed_limit_{min|max}
-and these were both set fine.
+The server will be set to suspend when not in use for an hour or so.
 
-I removed the drive from md1, and the md0 sync went back to the normal =
-speed.
+I've been thinking about buying 3 x 3 TB SATA disks and put these in
+software RAID5 (except for a smaller boot partition on all three disks
+which will be RAID1).
 
-RAID Setup:
-md0 - 2 drives (2TB Western Digital)
-md1 - 2 drives (500GB M3 SDD)
+Any recommendation for what SATA drives to get? Should I get
+enterprise drives that support TLER (or alike), or will the greener
+low cost drives be enough, is there something in between?
 
-So my question is, does anyone know why the sync speed (on all arrays)
-slowed down to almost 6-7 times the norm, when two (or more?) sync
-operations are taking place?
+Is it better to buy 4 low cost drives in RAID1 or 3 enterprise drives i=
+n RAID5?
 
-Thanks
+Please help, I'm completely lost!
+
+--john
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
