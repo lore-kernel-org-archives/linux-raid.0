@@ -1,93 +1,53 @@
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Subject: [PATCH] imsm: FIX: getinfo_super_imsm_volume() doesn't fill all disk
-	information
-Date: Fri, 01 Jul 2011 18:34:48 +0200
-Message-ID: <20110701163448.28088.30128.stgit@gklab-128-111.igk.intel.com>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Re: Can't start array and Negative "Used Dev Size"
+Date: Fri, 1 Jul 2011 21:41:53 -0700
+Message-ID: <BANLkTinEcO0kh+WAU4xapWTqTqkB0ZR_KQ@mail.gmail.com>
+References: <BANLkTincbuZrS3PuPBOgjidsR8jdyTGBRw@mail.gmail.com>
+	<20110629151825.56cb4499@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110629151825.56cb4499@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, wojciech.neubauer@intel.com, adam.kwolek@intel.com, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Adam Kwolek <adam.kwolek@intel.com>
+Neil,
 
-Issue:
-getinfo_super_imsm_volume() clears entire 'info' structure before filling with new
-information. Disk number and raid_disk can be required later by caller
-but it is also cleared.
+On Tue, Jun 28, 2011 at 10:18 PM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 28 Jun 2011 21:29:37 -0700 Simon Matthews
+> <simon.d.matthews@gmail.com> wrote:
+>
+>> Problem 1: "Used Dev Size"
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> Note: the system is a Gentoo box, so perhaps I have missed a kernel
+>> configuration option or use flag to deal with large hard drives.
+>>
+>> A week or two ago, I resized a raid1 array using 2x3TB drives. I wen=
+t
+>
+> Oopps. =A0That array is using 0.90 metadata which can only handle up =
+to 2TB
+> devices. =A0The 'resize' code should catch that you are asking the im=
+possible,
+> but it doesn't it seems.
+>
+> You need to simply recreate the array as 1.0.
+> i.e.
+> =A0mdadm -S /dev/md5
+> =A0mdadm  -C /dev/md5 --metadata 1.0 -l1 -n2 --assume-clean
 
-Resolution:
-Patch backs up all disk information before zeroing info structure and
-restore it before function return.
-The patch aslo reverses workaround for the same problem introduced
-in commit:
+Before I do this (tomorrow), do I need to add the partitions to the com=
+mand:
 
-80e4abc99c7f5a16c56c1c4084bfad63aec03c01
-FIX: Cannot create volume
+mdadm  -C /dev/md5 --metadata 1.0 -l1 -n2 --assume-clean /dev/sdd2 /dev=
+/sdc2
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- Create.c      |    9 ---------
- super-intel.c |   13 ++++++++++++-
- 2 files changed, 12 insertions(+), 10 deletions(-)
-
-diff --git a/Create.c b/Create.c
-index 48115db..8d88aa1 100644
---- a/Create.c
-+++ b/Create.c
-@@ -856,15 +856,6 @@ int Create(struct supertype *st, char *mddev,
- 					/* getinfo_super might have lost these ... */
- 					inf->disk.major = major(stb.st_rdev);
- 					inf->disk.minor = minor(stb.st_rdev);
--					/* FIXME the following should not be needed
--					 * as getinfo_super is suppose to set
--					 * them.  However it doesn't for imsm,
--					 * so we have this hack for now
--					 */
--					if (st->ss == &super_imsm) {
--						inf->disk.number = dnum;
--						inf->disk.raid_disk = dnum;
--					}
- 				}
- 				break;
- 			case 2:
-diff --git a/super-intel.c b/super-intel.c
-index 0bddc6b..e3a693c 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2204,11 +2204,20 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	unsigned int component_size_alligment;
- 	int map_disks = info->array.raid_disks;
- 
--	memset(info, 0, sizeof(*info));
- 	if (prev_map)
- 		map_to_analyse = prev_map;
- 
-+	/* find requested (by info->disk.number) disk on the list */
- 	dl = super->disks;
-+	while (dl) {
-+		if (dl->index == info->disk.number)
-+			break;
-+		dl = dl->next;
-+	}
-+	if (!dl)
-+		dl = super->disks;
-+
-+	memset(info, 0, sizeof(*info));
- 
- 	info->container_member	  = super->current_vol;
- 	info->array.raid_disks    = map->num_members;
-@@ -2275,6 +2284,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	if (dl) {
- 		info->disk.major = dl->major;
- 		info->disk.minor = dl->minor;
-+		info->disk.number = dl->index;
-+		info->disk.raid_disk = dl->index;
- 	}
- 
- 	info->data_offset	  = __le32_to_cpu(map_to_analyse->pba_of_lba0);
-
+Simon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
