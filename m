@@ -1,7 +1,7 @@
 From: "Webmail Account Service Team Management" <webmail@email.uz.ua>
 Subject: Update Your E-mail Account Now!!!
-Date: Sat, 2 Jul 2011 09:07:17 +0300 (EEST)
-Message-ID: <11078.41.203.64.250.1309586837.squirrel@webmail.uz.ua>
+Date: Sat, 2 Jul 2011 09:22:14 +0300 (EEST)
+Message-ID: <13166.41.203.64.253.1309587734.squirrel@webmail.uz.ua>
 Reply-To: c.care_web@blumail.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
