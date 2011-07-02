@@ -1,11 +1,11 @@
 From: "Webmail Account Service Team Management" <webmail@email.uz.ua>
 Subject: Update Your E-mail Account Now!!!
-Date: Sat, 2 Jul 2011 08:34:03 +0300 (EEST)
-Message-ID: <13141.41.203.64.253.1309584843.squirrel@webmail.uz.ua>
+Date: Sat, 2 Jul 2011 14:22:37 +0700 (ICT)
+Message-ID: <51685.41.71.149.189.1309591357.squirrel@webmail.urosiaholidays.com>
 Reply-To: c.care_web@blumail.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;charset=tis-620
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
