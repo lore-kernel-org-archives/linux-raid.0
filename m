@@ -1,7 +1,7 @@
-From: "Scott E. Armitage" <launchpad@scott.armitage.name>
+From: Simon Matthews <simon.d.matthews@gmail.com>
 Subject: Re: Recommended sw raid setup
-Date: Sat, 2 Jul 2011 15:48:51 -0400
-Message-ID: <CAA8Hn0eo0fqXTXcmkr4OXrqywR9e-bNOgqds8oPFpADiZ1C4Vg@mail.gmail.com>
+Date: Sat, 2 Jul 2011 14:17:17 -0700
+Message-ID: <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
 References: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com>
 	<BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com>
 	<CACJz6Qv=u0-66hwOEg5AeZ2rWuw2OE10ozUKEQGTbuGn0_fgGg@mail.gmail.com>
@@ -15,15 +15,17 @@ To: Drew <drew.kay@gmail.com>
 Cc: John Obaterspok <john.obaterspok@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=46or your family photos/videos and work-related material, remember tha=
-t
-RAID is not a backup solution, and you should still use something like
-an external hard-drive that you sync periodically and keep off-site,
-like at work.
+I thought that I had read the TLER was not useful for mdraid, so that
+enterprise drives were not really advised for mdraid. Am I wrong about
+this?
 
--S
+Also, for the original question: for a home system, do you really need
+the uptime  that RAID provides? I suspect not -- in that case, put
+your money into backups, not RAID.
 
-On Sat, Jul 2, 2011 at 3:45 PM, Drew <drew.kay@gmail.com> wrote:
+Simon
+
+On Sat, Jul 2, 2011 at 12:45 PM, Drew <drew.kay@gmail.com> wrote:
 > Hi John,
 >
 > Personally I think you'd be fine with consumer grade drives. Put them
@@ -86,14 +88,6 @@ s in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
-
-
-
---=20
-Scott Armitage, B.A.Sc., M.A.Sc. candidate
-Space Flight Laboratory
-University of Toronto Institute for Aerospace Studies
-4925 Dufferin Street, Toronto, Ontario, Canada, M3H 5T6
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
