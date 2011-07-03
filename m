@@ -1,34 +1,33 @@
-From: Drew <drew.kay@gmail.com>
+From: Emmanuel Noobadmin <centos.admin@gmail.com>
 Subject: Re: Recommended sw raid setup
-Date: Sat, 2 Jul 2011 14:30:06 -0700
-Message-ID: <CACJz6QuzTj3cmESu0eBGgq3rK3wopXZpj9m34N5ecR=uj6FvCQ@mail.gmail.com>
+Date: Sun, 3 Jul 2011 15:46:06 +0800
+Message-ID: <CAAYorBKcqwC5o2yiC3Jftf9j_pcush-WxwXdVVVv=8q-qZw9GQ@mail.gmail.com>
 References: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com>
- <BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com> <CACJz6Qv=u0-66hwOEg5AeZ2rWuw2OE10ozUKEQGTbuGn0_fgGg@mail.gmail.com>
- <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
+	<BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com>
+In-Reply-To: <BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Matthews <simon.d.matthews@gmail.com>
+To: John Obaterspok <john.obaterspok@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I thought that I had read the TLER was not useful for mdraid, so that
-> enterprise drives were not really advised for mdraid. Am I wrong about
-> this?
+On 7/2/11, John Obaterspok <john.obaterspok@gmail.com> wrote:
+> Any recommendation for what SATA drives to get? Should I get
+> enterprise drives that support TLER (or alike), or will the greener
+> low cost drives be enough, is there something in between?
+>
+> Is it better to buy 4 low cost drives in RAID1 or 3 enterprise drives in
+> RAID5?
 
-TLER just shortens the firmware's error recovery from something like
-60 seconds down to 4 seconds. It's mainly useful in hardware RAID but
-I can see it being useful with mdraid in the enterprise where you
-can't afford to wait for the drive to do it's own recovery attempts.
+If you can afford either, I would personally recommend 4 low cost
+drives in RAID 1. Since the drives are mirror, recovery is
+straightforward and risk free. You could even put them in removable
+enclosures and do backup simply by swapping out one drive of each
+array.
 
-
--- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-"This started out as a hobby and spun horribly out of control."
--Unknown
+Try to get drives from different manufacturers. You don't want to face
+the kind of nightmares some of us had when/if there was a batch/model
+problem, RAID can't help if all your drives brick or fail at the same
+time due to the same problem.
