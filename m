@@ -1,36 +1,45 @@
-From: Tom De Mulder <tdm27@cam.ac.uk>
-Subject: Re: Software RAID and TRIM
-Date: Mon, 4 Jul 2011 10:13:24 +0100 (BST)
-Message-ID: <alpine.OSX.2.00.1107041011110.4557@trogdor.csi.cam.ac.uk>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk> <iuf6me$9us$1@dough.gmane.org> <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
- <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
+From: Petter Reinholdtsen <pere@hungry.com>
+Subject: Re: Help with recovering resized raid where machine crashed while PENDING
+Date: Mon, 4 Jul 2011 16:21:27 +0200
+Message-ID: <20110704142127.GU21845@login1.uio.no>
+References: <2flfwmpdpw2.fsf@login1.uio.no>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
+Content-Disposition: inline
+In-Reply-To: <2flfwmpdpw2.fsf@login1.uio.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 30 Jun 2011, Mikael Abrahamsson wrote:
+[Petter Reinholdtsen]
+> Any ideas how I can recover my raid? After reading
+> <URL: https://raid.wiki.kernel.org/index.php/RAID_Recovery >, I
+> suspect creating it again is the solution, but am unsure if I should
+> recreate it with 3 or 5 partitions.  Trying to assembly result in this:
 
-> From the tests I have read, the Intel 510 are actually worse than the Intel 
-> X-25 G1/G2/320 models, with exactly the symptoms you're describing. It's fast 
-> for linear reads and writes, but not so good for random writes, especially not 
-> when it's getting full.
+> 
+> meta:~# mdadm --assemble /dev/md3 /dev/sdd2 /dev/sde2 /dev/sdh2 /dev/sda2 /dev/sdb2
+> mdadm: Failed to restore critical section for reshape, sorry.
+>       Possibly you needed to specify the --backup-file
+> meta:~#  
+> 
+> How can I know which disks to use when recreating if I want to
+> recreate using only three disks?  Is it the three with the active
+> state?
 
-Yes; that's why I'm looking forward to also getting some SandForce 22xx 
-based drives (probably OCZ Vertex 3) to test.
+This is still a problem.  I got some help from JyZyXEL on #linux-raid,
+and managed to get md2 to continue its reshaping with mdadm
+--readwrite /dev/md2, but the raid that was pending its reshaping is
+still failing to assemble with the above message.
 
-> Include the Intel 320 as well, I think it should be viable for your usage 
-> pattern.
+Is this the only approach to recover?
 
-I wasn't too impressed by the Anandtech review of the 320, and (as 
-everywhere) my funds are limited. :-)
+  mdadm --create --assume-clean --level=5 --raid-devices=5 /dev/md3 /dev/sd?2
 
+Should I use --raid-devices=3 or --raid-devices=5, and if I should use
+--raid-devices=3, how do I figure which devices to use?
 
---
-Tom De Mulder <tdm27@cam.ac.uk> - Cambridge University Computing Service
-+44 1223 3 31843 - New Museums Site, Pembroke Street, Cambridge CB2 3QH
--> 04/07/2011 : The Moon is Waxing Crescent (17% of Full)
+Happy hacking,
+-- 
+Petter Reinholdtsen
