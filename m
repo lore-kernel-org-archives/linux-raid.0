@@ -1,89 +1,121 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: possible bug in md
-Date: Mon, 04 Jul 2011 12:26:14 -0400
-Message-ID: <4E11E9A6.2000606@cdf.toronto.edu>
+From: Werner Fischer <devlists@wefi.net>
+Subject: Re: Software RAID and TRIM
+Date: Mon, 04 Jul 2011 18:26:52 +0200
+Message-ID: <1309796812.2046.13.camel@werner-t410>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>
+	 <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com>
+	 <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk>
+	 <iuf6me$9us$1@dough.gmane.org>
+	 <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
+	 <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
+	 <alpine.OSX.2.00.1107041011110.4557@trogdor.csi.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.OSX.2.00.1107041011110.4557@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Tom De Mulder <tdm27@cam.ac.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi Tom,
 
-I was doing some testing with an Ubuntu 10.04 installation (Linux 
-2.6.32, so my apologies if this has been noted and dealt with already), 
-and I noticed what I think may be a bug.
+1) regarding Software RAID and TRIM:
+there is a script raid1ext4trim.sh-1.4 from Chris Caputo that does a
+TRIM for Ext4 file systems on a software RAID 1. According to the
+comments in the script it only supports RAID volumes which reside on
+complete disks (e.g. /dev/sdb and /dev/sdc), not on RAID partitions
+(e.g. /dev/sdb1 and /dev/sdc1)
+The script is shipped with hdparm, get hdparm 9.37 at
+http://sourceforge.net/projects/hdparm/ and you'll find the script in
+the subfolder hdparm-9.37/wiper/contrib/
+I have not tested the script yet, maybe I could do some tests tomorrow
 
-I had a system with RAID10, layout n2, where /dev/sda is one of the 
-devices, and the other is "missing". I wanted to add /dev/sdb to the 
-RAID10 array. Both drives are on their last legs (bad sectors and 
-stuff), and I was just doing a proof of concept for a guide I was 
-writing, so I didn't care.
+2) regarding choosing the right SSD:
+I would strongly recommend a SSD with integrated power-outage
+protection, Intel's 320 series has this inside:
+http://newsroom.intel.com/servlet/JiveServlet/download/38-4324/Intel_SSD_320_Series_Enhance_Power_Loss_Technology_Brief.pdf
+I have done some power-outage tests today, including a Vertex-3 and an
+Intel 320 series. I used diskchecker.pl from
+http://brad.livejournal.com/2116715.html
 
-Here are the relevant dmesg messages for the drives detected:
-====================================================
-ata1.00: ATA-5: IC35L040AVER07-0, ER4OA44A, max UDMA/100
-ata1.00: 80418240 sectors, multi 16: LBA
-ata1.01: ATA-6: Maxtor 94610H6, BAC51KJ0, max UDMA/100
-ata1.01: 90045648 sectors, multi 16: LBA
-====================================================
+result:
+-> for the Vertex 3 diskchecker.pl reported lost data:
+        [root@f15-ocz-vertex3 ~]# ./diskchecker.pl -s 10.10.30.199 verify testfile2
+         verifying: 0.00%
+         verifying: 1.42%
+          Error at page 52141, 0 seconds before end.
+         verifying: 6.31%
+          Error at page 83344, 0 seconds before end.
+         verifying: 11.12%
+          Error at page 163555, 0 seconds before end.
+        [...]
+        Total errors: 12
+        Histogram of seconds before end:
+             0   12
+        [root@f15-ocz-vertex3 ~]# 
+-> for the Intel 320 Series diskchecker.pl did not report data loss:
+        [root@f15-intel-320 ~]# ./diskchecker.pl -s 10.10.30.199 verify
+        testfile2 
+         verifying: 0.00%
+         verifying: 0.12%
+         [...]
+         verifying: 99.82%
+         verifying: 100.00%
+        Total errors: 0
+        [root@f15-intel-320 ~]# 
+I did the tests multiple times, I had also some runs on the Vertex 3
+without errors, but with the Intel 320 Series no single test reported an
+error.
 
-On the system, ata1.00 is an IBM drive (/dev/sda), and ata1.01 is a 
-Maxtor drive (/dev/sdb). I have RAID10 (/dev/md0) on ata1.00 (/dev/sda) 
-and one "missing" device. I added the Maxtor (ata1.01, /dev/sdb), and 
-during the sync, an error occurred on ata1.00, which is the first disk 
-of the RAID10 array (the IBM, /dev/sda). However, mdadm wrongly reports 
-that an error has occurred on the device I had just ADDED (the Maxtor):
+I did the tests with fedora 15 on the SSDs, here are the details of
+hdparm -I
 
-====================================================
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata1.00: BMDMA stat 0x65
-ata1.00: failed command: READ DMA
-ata1.00: cmd c8/00:00:00:e5:7b/00:00:00:00:00/e2 tag 0 dma 131072 in
-          res 51/40:39:c7:e5:7b/00:00:00:00:00/e2 Emask 0x9 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC }
-ata1.00: configured for UDMA/100
-ata1.01: configured for UDMA/100
-ata1: EH complete
-ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-ata1.00: BMDMA stat 0x65
-ata1.00: failed command: READ DMA
-ata1.00: cmd c8/00:00:00:e5:7b/00:00:00:00:00/e2 tag 0 dma 131072 in
-          res 51/40:39:c7:e5:7b/00:00:00:00:00/e2 Emask 0x9 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC }
-ata1.00: configured for UDMA/100
-ata1.01: configured for UDMA/100
-sd 0:0:0:0: [sda] Unhandled sense code
-sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 0:0:0:0: [sda] Sense Key : Medium Error [current] [descriptor]
-Descriptor sense data with sense descriptors (in hex):
-         72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
-         02 7b e5 c7
-sd 0:0:0:0: [sda] Add. Sense: Unrecovered read error - auto reallocate 
-failed
-sd 0:0:0:0: [sda] CDB: Read(10): 28 00 02 7b e5 00 00 01 00 00
-end_request: I/O error, dev sda, sector 41674183
-ata1: EH complete
-md: md0: recovery done.
-raid10: Disk failure on sdb, disabling device.
-raid10: Operation continuing on 1 devices.
-RAID10 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:0, o:1, dev:sda
-  disk 1, wo:1, o:0, dev:sdb
-RAID10 conf printout:
-  --- wd:1 rd:2
-  disk 0, wo:0, o:1, dev:sda
-====================================================
+OCZ Vertex 3:
+	Model Number:       OCZ-VERTEX3                             
+	Serial Number:      OCZ-OQZF2I45DYZ47T3C
+	Firmware Revision:  2.06
+	Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II Extensions, SATA Rev 2.5, SATA Rev 2.6, SATA Rev 3.0
+	[...]
+	device size with M = 1000*1000:      120034 MBytes (120 GB)
 
-The relevant lines are the ones that show the errors on ata1.00 (the 
-IBM), and then the line which reports disk failure on /dev/sdb (ata1.01):
+Intel 320 Series:
+	Model Number:       INTEL SSDSA2CW160G3                     
+	Serial Number:      CVPR112601AL160DGN  
+	Firmware Revision:  4PC10302
+	Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II Extensions, SATA Rev 2.5, SATA Rev 2.6
+	[...]
+	device size with M = 1000*1000:      160041 MBytes (160 GB)
 
-raid10: Disk failure on sdb, disabling device.
+Regards,
+Werner
 
-Sincerely,
-Iordan Iordanov
+On Mon, 2011-07-04 at 10:13 +0100, Tom De Mulder wrote:
+> On Thu, 30 Jun 2011, Mikael Abrahamsson wrote:
+> 
+> > From the tests I have read, the Intel 510 are actually worse than the Intel 
+> > X-25 G1/G2/320 models, with exactly the symptoms you're describing. It's fast 
+> > for linear reads and writes, but not so good for random writes, especially not 
+> > when it's getting full.
+> 
+> Yes; that's why I'm looking forward to also getting some SandForce 22xx 
+> based drives (probably OCZ Vertex 3) to test.
+> 
+> > Include the Intel 320 as well, I think it should be viable for your usage 
+> > pattern.
+> 
+> I wasn't too impressed by the Anandtech review of the 320, and (as 
+> everywhere) my funds are limited. :-)
+> 
+> 
+> --
+> Tom De Mulder <tdm27@cam.ac.uk> - Cambridge University Computing Service
+> +44 1223 3 31843 - New Museums Site, Pembroke Street, Cambridge CB2 3QH
+> -> 04/07/2011 : The Moon is Waxing Crescent (17% of Full)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
