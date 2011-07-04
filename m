@@ -1,27 +1,36 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Can't start array and Negative "Used Dev Size"
-Date: Mon, 4 Jul 2011 07:45:26 +0200
-Message-ID: <20110704054526.GA16555@maude.comedia.it>
-References: <BANLkTincbuZrS3PuPBOgjidsR8jdyTGBRw@mail.gmail.com> <20110629151825.56cb4499@notabene.brown> <BANLkTinEcO0kh+WAU4xapWTqTqkB0ZR_KQ@mail.gmail.com> <BANLkTi=Ek_Ro04U72o5aEo6NXmsKqmt+yw@mail.gmail.com>
+From: Tom De Mulder <tdm27@cam.ac.uk>
+Subject: Re: Software RAID and TRIM
+Date: Mon, 4 Jul 2011 10:13:24 +0100 (BST)
+Message-ID: <alpine.OSX.2.00.1107041011110.4557@trogdor.csi.cam.ac.uk>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291133060.257@trogdor.csi.cam.ac.uk> <iuf6me$9us$1@dough.gmane.org> <alpine.OSX.2.00.1106291348430.257@trogdor.csi.cam.ac.uk>
+ <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BANLkTi=Ek_Ro04U72o5aEo6NXmsKqmt+yw@mail.gmail.com>
+In-Reply-To: <alpine.DEB.2.00.1106300746460.19581@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: David Brown <david@westcontrol.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jul 01, 2011 at 11:19:31PM -0700, Simon Matthews wrote:
-> Avail Dev Size : 2925064957 (1394.78 GiB 1497.63 GB)          <<<
->     Array Size : 2925064684 (1394.78 GiB 1497.63 GB)           <<<
->how is 2925064684 equal to 1394.78 GiB?
->  Used Dev Size : 2925064684 (1394.78 GiB 1497.63 GB)        <<<
->    Data Offset : 2048 sectors
->   Super Offset : 8 sectors
+On Thu, 30 Jun 2011, Mikael Abrahamsson wrote:
 
-the numbers are in 512 bytes sectors
-L.
+> From the tests I have read, the Intel 510 are actually worse than the Intel 
+> X-25 G1/G2/320 models, with exactly the symptoms you're describing. It's fast 
+> for linear reads and writes, but not so good for random writes, especially not 
+> when it's getting full.
 
--- 
-Luca Berra -- bluca@comedia.it
+Yes; that's why I'm looking forward to also getting some SandForce 22xx 
+based drives (probably OCZ Vertex 3) to test.
+
+> Include the Intel 320 as well, I think it should be viable for your usage 
+> pattern.
+
+I wasn't too impressed by the Anandtech review of the 320, and (as 
+everywhere) my funds are limited. :-)
+
+
+--
+Tom De Mulder <tdm27@cam.ac.uk> - Cambridge University Computing Service
++44 1223 3 31843 - New Museums Site, Pembroke Street, Cambridge CB2 3QH
+-> 04/07/2011 : The Moon is Waxing Crescent (17% of Full)
