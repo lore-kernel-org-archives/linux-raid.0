@@ -1,47 +1,74 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: Recommended sw raid setup
-Date: Tue, 05 Jul 2011 08:14:55 +0200
-Message-ID: <4E12ABDF.50409@stud.tu-ilmenau.de>
-References: <BANLkTinbBu6zX-6s2NYH5BQvnaJZJYt_BA@mail.gmail.com> <BANLkTinghqiT4QbBb--X7Eh_RRWnRg_0RQ@mail.gmail.com> <CACJz6Qv=u0-66hwOEg5AeZ2rWuw2OE10ozUKEQGTbuGn0_fgGg@mail.gmail.com> <BANLkTing8Ei+najZAFXN_ib0LRmQfS8e9Q@mail.gmail.com> <CACJz6QuzTj3cmESu0eBGgq3rK3wopXZpj9m34N5ecR=uj6FvCQ@mail.gmail.com>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: "Cal Leeming [Simplicity Media Ltd]"
+	<cal.leeming@simplicitymedialtd.co.uk>
+Subject: Re: Curious problem with asynchronous RAID1 rebuild operations
+Date: Tue, 5 Jul 2011 11:52:38 +0100
+Message-ID: <CALvtuFR82Sg+M9x3NKYA0bRXvoFGvp=Gs_TuChwJ7FsRwtGSaw@mail.gmail.com>
+References: <CALvtuFQ_c_-8DqKGaTV6LjL0JXC=8VKPKyx5U1Be49fepLcWzg@mail.gmail.com>
+	<20110705103404.0ed0e9bb@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CACJz6QuzTj3cmESu0eBGgq3rK3wopXZpj9m34N5ecR=uj6FvCQ@mail.gmail.com>
+In-Reply-To: <20110705103404.0ed0e9bb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: Simon Matthews <simon.d.matthews@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 02.07.2011 23:30, schrieb Drew:
->> I thought that I had read the TLER was not useful for mdraid, so that
->> enterprise drives were not really advised for mdraid. Am I wrong about
->> this?
-> 
-> TLER just shortens the firmware's error recovery from something like
-> 60 seconds down to 4 seconds. It's mainly useful in hardware RAID but
-> I can see it being useful with mdraid in the enterprise where you
-> can't afford to wait for the drive to do it's own recovery attempts.
-> 
-> 
-This is not correct.  You may want to read the ATA8-ACS2 draft standard
-(see www.t13.org).  There you'll find: SCT-ERC
+Thanks for the reply.
 
-The internal error recovery procedure includes a vast amount of
-algorithms.  If a disk cannot read a sector and starts error recovery,
-it may take far more than a minute.
-With ERC you can tell the disk beforehand to stop processing the command
-(may it be "read" or "write") and return a "uncorrectable error" to the
-host.  Some drives (i.E. recent Hitachi Deskstar, which I do recommend!)
-do not allow you to set ERC lower than 6.5s.
+Sadly, this specific server is 150 miles away in colo, and only has a
+single on-board controller (it's a Dell R310).
 
-For a home-box I recommend adding a startup-script and a hotplug-script
-(as ERC-settings get reset to firmware defaults upon power-on) which
-uses smartmontools >=5.41 to set the read-ERC to 7s and the write ERC to
-12s.  We have good experience that this works out well in productive
-systems.
+I'd be surprised if it was controller/contention related, but I
+certainly won't rule it out.
 
-/Stefan
-P.S.: pseudo-knowledge makes important things go really badly wrong.
+Cal
+
+On Tue, Jul 5, 2011 at 1:34 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sat, 2 Jul 2011 12:07:54 +0100 "Cal Leeming [Simplicity Media Ltd]=
+"
+> <cal.leeming@simplicitymedialtd.co.uk> wrote:
+>
+>> Hi all,
+>>
+>> I tried to rebuild/sync two RAID1 arrays at the same time, with stra=
+nge results.
+>>
+>> When a new drive was added into md0, it started to sync fine at
+>> 123,000kb/sec. Whilst that was running, I also added a new drive int=
+o
+>> md1, and this causes both arrays sync speed to slow down to
+>> 20,000kb/sec. I checked the=A0/proc/sys/dev/raid/speed_limit_{min|ma=
+x}
+>> and these were both set fine.
+>>
+>> I removed the drive from md1, and the md0 sync went back to the norm=
+al speed.
+>>
+>> RAID Setup:
+>> md0 - 2 drives (2TB Western Digital)
+>> md1 - 2 drives (500GB M3 SDD)
+>>
+>> So my question is, does anyone know why the sync speed (on all array=
+s)
+>> slowed down to almost 6-7 times the norm, when two (or more?) sync
+>> operations are taking place?
+>>
+>
+> Dodgy controller? =A0I assume both arrays are on the same controller.
+>
+> Can you plug in a separate controller even if only temporarily and se=
+e what
+> happens?
+>
+> I can see how any interaction with md would have this effect.
+>
+> NeilBrown
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
