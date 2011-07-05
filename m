@@ -1,96 +1,58 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: advanced partition format, mdadm, and raw disks
-Date: Tue, 5 Jul 2011 10:30:30 +1000
-Message-ID: <20110705103030.401066f6@notabene.brown>
-References: <1309796133.2766.63.camel@baal>
+Subject: Re: Curious problem with asynchronous RAID1 rebuild operations
+Date: Tue, 5 Jul 2011 10:34:04 +1000
+Message-ID: <20110705103404.0ed0e9bb@notabene.brown>
+References: <CALvtuFQ_c_-8DqKGaTV6LjL0JXC=8VKPKyx5U1Be49fepLcWzg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1309796133.2766.63.camel@baal>
+In-Reply-To: <CALvtuFQ_c_-8DqKGaTV6LjL0JXC=8VKPKyx5U1Be49fepLcWzg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Tyler J. Wagner" <tyler@tolaris.com>
+To: "Cal Leeming [Simplicity Media Ltd]" <cal.leeming@simplicitymedialtd.co.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 04 Jul 2011 17:15:33 +0100 "Tyler J. Wagner" <tyler@tolaris.com>
-wrote:
+On Sat, 2 Jul 2011 12:07:54 +0100 "Cal Leeming [Simplicity Media Ltd]"
+<cal.leeming@simplicitymedialtd.co.uk> wrote:
 
-> Everyone,
-> 
-> I've created a RAID-10 array with mdadm. I created the array using
-> partitions /dev/sd[abcd]1, where the partition starts at sector 2048 and
-> uses the rest of the disk, as specified here:
-> 
-> http://www.ibm.com/developerworks/linux/library/l-4kb-sector-disks/index.html#tools
-> 
-> IE:
-> 1. fdisk -c -u /dev/sda
-> 2. create partition at 2048 to -0, of type fd
-> 3. repeat for all drives or clone with sfdisk
-> 4. create the array
-> 
-> mdadm -A /dev/md0 -v --raid-devices=4
-> --level=raid10 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1
-> 
-> 5. add to mdadm.conf
-> 
-> mdadm -Es >> /etc/mdadm/mdadm.conf
-> 
-> After reboot, the array worked, and I formatted it and started loading
-> it with files. Only later did I realise that at some point (perhaps 2-3
-> reboots), the partitions were gone, and the array is running on the raw
-> devices:
+> Hi all,
+>=20
+> I tried to rebuild/sync two RAID1 arrays at the same time, with stran=
+ge results.
+>=20
+> When a new drive was added into md0, it started to sync fine at
+> 123,000kb/sec. Whilst that was running, I also added a new drive into
+> md1, and this causes both arrays sync speed to slow down to
+> 20,000kb/sec. I checked the=A0/proc/sys/dev/raid/speed_limit_{min|max=
+}
+> and these were both set fine.
+>=20
+> I removed the drive from md1, and the md0 sync went back to the norma=
+l speed.
+>=20
+> RAID Setup:
+> md0 - 2 drives (2TB Western Digital)
+> md1 - 2 drives (500GB M3 SDD)
+>=20
+> So my question is, does anyone know why the sync speed (on all arrays=
+)
+> slowed down to almost 6-7 times the norm, when two (or more?) sync
+> operations are taking place?
+>=20
 
-It must has stopped using partitions before you ran 'mkfs' which then
-destroyed the partition tables.  Probably on the first reboot.
+Dodgy controller?  I assume both arrays are on the same controller.
 
-> 
-> root@venkman:/var/log/cacti# cat /proc/mdstat 
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10] 
-> md0 : active raid10 sdc[2] sda[0] sdd[3] sdb[1]
->       3907026944 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+Can you plug in a separate controller even if only temporarily and see =
+what
+happens?
 
-No "super" is mentioned here so it must be using 0.90 metadata.
-
-
->       
-> unused devices: <none>
-> 
-> fdisk shows the partition tables are gone too. I found NeilBrown's
-> comment ID #1857419, partway down this page:
-> 
-> http://www.issociate.de/board/post/463176/Superblocks.html
-> 
-> "If a partition starts a multiple of 64K from the start of the device,
-> and ends with about 64K of the end of the device, then a superblock on
-> the partition will also look like a superblock on the whole device.
-> This is one of the shortcomings of v0.90 superblocks. v1.0 doesn't
-> have this problem."
-> 
-> I used mdadm v2.6.7.1, as it comes on Ubuntu 10.10. Is this still a
-> shortcoming of superblock v1.2? Obviously I want to align to the sector
-> size, and use the entire disk.
-> 
-
-mdadm defaults to 0.90 until 3.0 when it starts defaulting to 1.2.
-
-
-> Should I just accept this and not raw devices? Will it happen again if I
-> try to start over?
-
-I'm not really sure what "this" and "it" refer to.  If it is working then
-there is no immediate need to change anything.
-If you want to make a change, be sure to back up your files.
-If you create an array again, probably use "--metadata=1.2".
+I can see how any interaction with md would have this effect.
 
 NeilBrown
 
-
-
-> 
-> Regards,
-> Tyler
-> 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
