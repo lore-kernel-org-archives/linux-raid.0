@@ -1,40 +1,38 @@
-From: Petter Reinholdtsen <pere@hungry.com>
-Subject: Re: Help with recovering resized raid where machine crashed while PENDING
-Date: Tue, 5 Jul 2011 18:24:33 +0200
-Message-ID: <20110705162433.GB18875@login1.uio.no>
-References: <2flfwmpdpw2.fsf@login1.uio.no> <20110705104923.4779e295@notabene.brown>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
+Subject: Re: possible bug in md
+Date: Tue, 05 Jul 2011 12:25:39 -0400
+Message-ID: <4E133B03.60707@cdf.toronto.edu>
+References: <4E11E9A6.2000606@cdf.toronto.edu> <20110705102419.5f2b22fa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110705104923.4779e295@notabene.brown>
+In-Reply-To: <20110705102419.5f2b22fa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[Neil Brown]
-> I probably wouldn't have helped.  It is supposed to write backup
-> stuff to the spares and if it didn't do that, it probably wouldn't
-> have written it to a file either.
+Hi Neil,
 
-Right.  Is this a bug or the way it is supposed to work?
+On 07/04/11 20:24, NeilBrown wrote:
+> This is correct in that the spare should be removed from the array as there
+> is nothing else useful that can be done.  It is possibly not ideal in that
+> the spare gets marked as 'faulty' where it isn't really.
 
-> The easiest fix for now is to recreate the array.
-> 
-> mdadm -CR /dev/md3 --metadata=0.90 -n3 -l5 -c64 /dev/sdb2 /dev/sdc2
-> /dev/sdf2 --assume-clean
->
-> should do it.
+I agree that MD is doing the right thing in stopping the sync, since 
+there is nothing else that can be done. What it should say in the kernel 
+log in this case (in my opinion anyway) is something like:
 
-Thank you.  How did you determine which devices to use and which order
-to list them in?  I've since rebooted and want to make sure I do not
-pick the wrong devices.
+raid10: Disk failure on sda, sync stopped, sdb marked faulty.
 
-> Then if that looks good, add the extra devices and grow the array
-> again.
+instead of:
 
-Will try when md2 is done growing tomorrow. :)
+raid10: Disk failure on sdb, disabling device.
 
-Happy hacking,
--- 
-Petter Reinholdtsen
+only because /dev/sdb did not actually fail! I agree this is not 
+terribly important, I was reporting only for correctness, and I know 
+you're busy :).
+
+Many thanks,
+Iordan
