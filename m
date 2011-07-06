@@ -1,7 +1,7 @@
-From: "Tyler J. Wagner" <tyler@tolaris.com>
+From: "Tyler J. Wagner" <tyler@talia.net>
 Subject: alignment of metadata 1.2 and mkfs.ext4
-Date: Wed, 06 Jul 2011 08:11:16 +0100
-Message-ID: <1309936276.11661.8.camel@baal>
+Date: Wed, 06 Jul 2011 08:10:46 +0100
+Message-ID: <1309936246.11661.7.camel@baal>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -34,10 +34,12 @@ mkfs.ext4 -E stride=16,stripe-width=32 /dev/md0
 Regards,
 Tyler
 
-
 -- 
-"The belief in immortality has always seemed cowardly to me. When very
-young I learned that all things die, and all that we wish of good must
-be won on this earth or not at all."
-   -- Anne Smedley
+Tyler J. Wagner
+Chief Technical Officer, Talia Ltd
+http://www.talia.net
+email: tyler@talia.net
+mobile: +44 790 863 1442
+office: +44 203 3181 500 x503
+fax: +44 207 631 3343
 
