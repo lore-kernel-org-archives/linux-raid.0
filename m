@@ -1,62 +1,49 @@
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: `pvmove stuck' in RH bugzilla
-Date: Wed, 6 Jul 2011 12:53:10 +0300
-Message-ID: <20110706095310.GA3225@swordfish>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: alignment of metadata 1.2 and mkfs.ext4
+Date: Wed, 6 Jul 2011 16:02:49 +0600
+Message-ID: <20110706160249.65303ced@natsu>
+References: <1309936276.11661.8.camel@baal>
+	<20110706152016.1982c6fd@natsu>
+	<1309945954.2685.2.camel@baal>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alasdair Kergon <agk@redhat.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/854hF6OWlRFeuuPt7u8fWiy"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1309945954.2685.2.camel@baal>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Tyler J. Wagner" <tyler@tolaris.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---J2SCkAp4GZ/dPZZf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--Sig_/854hF6OWlRFeuuPt7u8fWiy
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Wed, 06 Jul 2011 10:52:34 +0100
+"Tyler J. Wagner" <tyler@tolaris.com> wrote:
 
-I think we just trapped into the same trouble with pvmove as described in=
-=20
+> That is very interesting. The mdadm man page, and everything I've seen
+> online, all say "The different sub-versions store the superblock at
+> different locations on the device, either at the end (for 1.0), at the
+> start (for 1.1) or 4K from the start (for 1.2)."
 
-https://bugzilla.redhat.com/show_bug.cgi?id=3D602516
-https://bugzilla.redhat.com/show_bug.cgi?id=3D706036
-etc.
+And? The quote is about location of the mdadm superblock (metadata), not al=
+ignment or offset of user data.
 
-Comment says, that
-> I found a series of problems with pvmove which I have fixed in the upstre=
-am
-> repository.  However, I would like to wait some time to see that no unint=
-ended
-> side-effects show up before seeing the change back-ported to RHEL.  An au=
-dit
-> for similar bugs found a problem in lvremove, which I have also fixed.=20
-> lvconvert still needs to be audited.
+--=20
+With respect,
+Roman
 
-
-Alasdair, could you please point are those patches in vanilla kernel=20
-(3.0-rc*) or linux-next, or some RH internal tree?=20
-This is not critical, though I'd like to try out patches.
-
-
-Thanks,
-	Sergey
-
---J2SCkAp4GZ/dPZZf
-Content-Type: application/pgp-signature
+--Sig_/854hF6OWlRFeuuPt7u8fWiy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iJwEAQECAAYFAk4UMIYACgkQfKHnntdSXjSrNQQA1VUekaYX7C1n1u/fEuWFwNIk
-oUxXXvwja8ICVuS7/3Ofy1/ahtDh/YSxj7pN91geIRPgP1fMkxepl52R5Qvwxuky
-+dcT+qTfihWEzaho/OH3YgpzJ6/3+LC4EszPnjqfHBCNR831LbnlvqeuOOX4LTlW
-XO7kxlGxwWmtqWslpaM=
-=iwTa
+iEYEARECAAYFAk4UMskACgkQTLKSvz+PZwhxkgCgiWmmGPpZi8e+9jFYBlDZvoBr
+E9oAn1yPvX7ePfEAZhXKtNatbV6Jh2wg
+=0dgj
 -----END PGP SIGNATURE-----
 
---J2SCkAp4GZ/dPZZf--
+--Sig_/854hF6OWlRFeuuPt7u8fWiy--
