@@ -1,52 +1,45 @@
-From: Roman Mamedov <rm@romanrm.ru>
+From: "Tyler J. Wagner" <tyler@tolaris.com>
 Subject: Re: alignment of metadata 1.2 and mkfs.ext4
-Date: Wed, 6 Jul 2011 15:20:16 +0600
-Message-ID: <20110706152016.1982c6fd@natsu>
-References: <1309936276.11661.8.camel@baal>
+Date: Wed, 06 Jul 2011 10:52:34 +0100
+Message-ID: <1309945954.2685.2.camel@baal>
+References: <1309936276.11661.8.camel@baal>  <20110706152016.1982c6fd@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/L3S=jQ/G4tRG.qUA=wYD0bJ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1309936276.11661.8.camel@baal>
+In-Reply-To: <20110706152016.1982c6fd@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Tyler J. Wagner" <tyler@tolaris.com>
+To: Roman Mamedov <rm@romanrm.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/L3S=jQ/G4tRG.qUA=wYD0bJ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2011-07-06 at 15:20 +0600, Roman Mamedov wrote:
+> On Wed, 06 Jul 2011 08:11:16 +0100
+> "Tyler J. Wagner" <tyler@tolaris.com> wrote:
+> 
+> > Metadata 1.2 puts the data 4K from the start of the device/partition.
+> 
+> This is not correct. See mdadm -E /dev/sdX.
+> 
+> $ sudo mdadm -E /dev/sdc3
+> /dev/sdc3:
+> ...
+>         Version : 1.2
+> ...
+>     Data Offset : 2048 sectors
+> ...
 
-On Wed, 06 Jul 2011 08:11:16 +0100
-"Tyler J. Wagner" <tyler@tolaris.com> wrote:
+That is very interesting. The mdadm man page, and everything I've seen
+online, all say "The different sub-versions store the superblock at
+different locations on the device, either at the end (for 1.0), at the
+start (for 1.1) or 4K from the start (for 1.2)."
 
-> Metadata 1.2 puts the data 4K from the start of the device/partition.
+Regards,
+Tyler
 
-This is not correct. See mdadm -E /dev/sdX.
+-- 
+"Religion is the opiate of the masses, so long as the masses are straight. 
+However, amass a bunch of lesbians and you're going to need actual drugs."
+   -- OKCupid Blog, with apologies to Karl Marx
+      http://blog.okcupid.com/index.php/gay-sex-vs-straight-sex/
 
-$ sudo mdadm -E /dev/sdc3
-/dev/sdc3:
-...
-        Version : 1.2
-...
-    Data Offset : 2048 sectors
-...
-
-
---=20
-With respect,
-Roman
-
---Sig_/L3S=jQ/G4tRG.qUA=wYD0bJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk4UKNAACgkQTLKSvz+PZwh31gCeIAb4lZkLVKiIybcHKx3cO5fR
-psMAn2UawaIj+6gWR5jJXSjGbCSanfKZ
-=JMiW
------END PGP SIGNATURE-----
-
---Sig_/L3S=jQ/G4tRG.qUA=wYD0bJ--
