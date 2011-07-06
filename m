@@ -1,64 +1,55 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: dm-crypt over raid6 unreadable after crash
-Date: Wed, 06 Jul 2011 13:00:43 -0400
-Message-ID: <4E1494BB.9060101@turmel.org>
-References: <20110706161228.GA1491@apartia.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Milan Broz <mbroz@redhat.com>
+Subject: [PATCH] mdadm: fix build failures (ppc64)
+Date: Wed,  6 Jul 2011 21:48:00 +0200
+Message-ID: <1309981680-7714-1-git-send-email-mbroz@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110706161228.GA1491@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-kernel@apartia.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de, Milan Broz <mbroz@redhat.com>
 List-Id: linux-raid.ids
 
-Hi Louis-David,
+This patch fixes these build issues:
 
-On 07/06/2011 12:12 PM, Louis-David Mitterrand wrote:
-> Hi,
-> 
-> After a hardware crash I can no longer open a dm-crypt partition located
-> directly over a md-raid6 partition. I get this error:
-> 
-> 	root@grml ~ # cryptsetup isLuks /dev/md1 
-> 	Device /dev/md1 is not a valid LUKS device
-> 
-> It seems the LUKS header has been shifted a few bytes forward, but looks
-> otherwise fine to specialists on the dm-crypt mailing list. Normally the
-> "LUKS" signature should be at 0x00000000
-> 
-> Is there some way that the md layer could have shifted its contents?
-> 
-> Is there a way to shift it back in place?
-> 
-> Thanks,
-> 
-> 
-> Here is a hexdum of /dev/md1 done with "hd /dev/md1 | head -n 40"
-> 
-> 00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> *
-> 00100000  4c 55 4b 53 ba be 00 01  61 65 73 00 00 00 00 00  |LUKS....aes.....|
-> 00100010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> 00100020  00 00 00 00 00 00 00 00  63 62 63 2d 65 73 73 69  |........cbc-essi|
-> 00100030  76 3a 73 68 61 32 35 36  00 00 00 00 00 00 00 00  |v:sha256........|
+super-intel.c: In function 'getinfo_super_imsm_volume':
+super-intel.c:2327:4: error: format '%llu' expects argument of type 'long long
+unsigned int', but argument 3 has type '__u64' [-Werror=format]
 
-[...]
+super-intel.c: In function 'imsm_reshape_super':
+super-intel.c:8665:7: error: 'devnum' may be used uninitialized in this function [-Werror=uninitialized]
 
-The offset is precisely 1MB.  This is the default data offset for metadata types 1.1 and 1.2 (nowadays).  Metadata types 0.90 and 1.0 have a zero offset (the metadata is at the end.)
+Signed-off-by: Milan Broz <mbroz@redhat.com>
+---
+ super-intel.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-You don't say what your recovery efforts were, but I'd guess you did a "mdadm --create" somewhere in there, and didn't match the original parameters.  Or you used an older version of mdadm than was used originally, and therefore got different defaults.
-
-Another possibility is that the original array was set up on a 1MB aligned partition, and the array is now using the whole device.  This can happen with v0.90 metadata.  If so, the original partition table is obviously zeroed out now.
-
-Please share more information about what you've done so far.  Also show us the output of "mdadm -D /dev/md1" and then "mdadm -E /dev/xxx" for each of its components.
-
-The output of "lsdrv"[1] would also be useful for visualizing your setup.
-
-Regards,
-
-Phil
-
-[1] http://github.com/pturmel/lsdrv
+diff --git a/super-intel.c b/super-intel.c
+index 2ef2b3c..572b710 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2326,7 +2326,9 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 
+ 			dprintf("IMSM: General Migration checkpoint : %llu "
+ 			       "(%llu) -> read reshape progress : %llu\n",
+-				units, blocks_per_unit, info->reshape_progress);
++				(unsigned long long)units,
++				(unsigned long long)blocks_per_unit,
++				info->reshape_progress);
+ 
+ 			used_disks = imsm_num_data_members(dev, 1);
+ 			if (used_disks > 0) {
+@@ -8661,7 +8663,11 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		dprintf("imsm: info: Volume operation\n");
+ 		/* find requested device */
+ 		while (dev) {
+-			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
++			if (imsm_find_array_minor_by_subdev(dev->index,
++			    st->container_dev, &devnum) < 0) {
++				dprintf("imsm: cannot find array\n");
++				goto exit_imsm_reshape_super;
++			}
+ 			if (devnum == geo.dev_id)
+ 				break;
+ 			dev = dev->next;
+-- 
+1.7.5.4
 
