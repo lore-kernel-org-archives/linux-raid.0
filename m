@@ -1,45 +1,62 @@
-From: "Tyler J. Wagner" <tyler@tolaris.com>
-Subject: Re: alignment of metadata 1.2 and mkfs.ext4
-Date: Wed, 06 Jul 2011 10:52:34 +0100
-Message-ID: <1309945954.2685.2.camel@baal>
-References: <1309936276.11661.8.camel@baal>  <20110706152016.1982c6fd@natsu>
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: `pvmove stuck' in RH bugzilla
+Date: Wed, 6 Jul 2011 12:53:10 +0300
+Message-ID: <20110706095310.GA3225@swordfish>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110706152016.1982c6fd@natsu>
-Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alasdair Kergon <agk@redhat.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2011-07-06 at 15:20 +0600, Roman Mamedov wrote:
-> On Wed, 06 Jul 2011 08:11:16 +0100
-> "Tyler J. Wagner" <tyler@tolaris.com> wrote:
-> 
-> > Metadata 1.2 puts the data 4K from the start of the device/partition.
-> 
-> This is not correct. See mdadm -E /dev/sdX.
-> 
-> $ sudo mdadm -E /dev/sdc3
-> /dev/sdc3:
-> ...
->         Version : 1.2
-> ...
->     Data Offset : 2048 sectors
-> ...
 
-That is very interesting. The mdadm man page, and everything I've seen
-online, all say "The different sub-versions store the superblock at
-different locations on the device, either at the end (for 1.0), at the
-start (for 1.1) or 4K from the start (for 1.2)."
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Tyler
+Hello,
 
--- 
-"Religion is the opiate of the masses, so long as the masses are straight. 
-However, amass a bunch of lesbians and you're going to need actual drugs."
-   -- OKCupid Blog, with apologies to Karl Marx
-      http://blog.okcupid.com/index.php/gay-sex-vs-straight-sex/
+I think we just trapped into the same trouble with pvmove as described in=
+=20
 
+https://bugzilla.redhat.com/show_bug.cgi?id=3D602516
+https://bugzilla.redhat.com/show_bug.cgi?id=3D706036
+etc.
+
+Comment says, that
+> I found a series of problems with pvmove which I have fixed in the upstre=
+am
+> repository.  However, I would like to wait some time to see that no unint=
+ended
+> side-effects show up before seeing the change back-ported to RHEL.  An au=
+dit
+> for similar bugs found a problem in lvremove, which I have also fixed.=20
+> lvconvert still needs to be audited.
+
+
+Alasdair, could you please point are those patches in vanilla kernel=20
+(3.0-rc*) or linux-next, or some RH internal tree?=20
+This is not critical, though I'd like to try out patches.
+
+
+Thanks,
+	Sergey
+
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iJwEAQECAAYFAk4UMIYACgkQfKHnntdSXjSrNQQA1VUekaYX7C1n1u/fEuWFwNIk
+oUxXXvwja8ICVuS7/3Ofy1/ahtDh/YSxj7pN91geIRPgP1fMkxepl52R5Qvwxuky
++dcT+qTfihWEzaho/OH3YgpzJ6/3+LC4EszPnjqfHBCNR831LbnlvqeuOOX4LTlW
+XO7kxlGxwWmtqWslpaM=
+=iwTa
+-----END PGP SIGNATURE-----
+
+--J2SCkAp4GZ/dPZZf--
