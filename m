@@ -1,52 +1,57 @@
-From: "Tyler J. Wagner" <tyler@tolaris.com>
-Subject: Re: Resolving mdadm built RAID issue
-Date: Fri, 08 Jul 2011 20:22:16 +0100
-Message-ID: <1310152936.3079.5.camel@baal>
-References: <C70A636B101FD44999B82525C3E92AFAD8CB1E@otis.burlington.evertz.tv>
+From: Jan Ceuleers <jan.ceuleers@gmail.com>
+Subject: Fwd: [PATCH] md: remove ro check in md_check_recovery()
+Date: Sat, 09 Jul 2011 12:00:27 +0200
+Message-ID: <4E1826BB.7020903@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C70A636B101FD44999B82525C3E92AFAD8CB1E@otis.burlington.evertz.tv>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sandra Escandor <sescandor@evertz.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Namhyung Kim <namhyung@gmail.com>
 List-Id: linux-raid.ids
 
-On Fri, 2011-07-08 at 14:07 -0400, Sandra Escandor wrote:
-> I am trying to help someone out in the field with some RAID issues, and
-> I'm a bit stuck. The situation is that our server has an ftp server
-> storing data onto a RAID10. There was an Ethernet connection loss (looks
-> like it was during an ftp transfer) and then the RAID experienced a
-> failure. From the looks of the dmesg output below, I suspect that it
-> could be a member disk failure (perhaps they need to get a new member
-> disk?). But, even still, this shouldn't cause the RAID to become
-> completely unusable, since RAID10 should provide redundancy - a resync
-> would start automatically once a new disk is inserted, correct? 
+Forwarding to linux-raid
 
-It does appear that you've had a disk failure on /dev/sde. However, I
-can't tell from the dmesg output alone what is the current state of
-array. Please give us the output of:
+-------- Original Message --------
+Subject: 	[PATCH] md: remove ro check in md_check_recovery()
+Date: 	Thu, 7 Jul 2011 05:41:06 +0900
+From: 	Namhyung Kim <namhyung@gmail.com>
+To: 	Neil Brown <neilb@suse.de>
+CC: 	linux-raid@vger.kernel.org
 
-cat /proc/mdstat
-mdadm --detail /dev/md126
 
-Simply inserting a new disk will not resync the array. You must add the
-remove the old disk from the array, and add the new one using:
 
-mdadm --fail /dev/sde --remove /dev/sde
-(insert new disk
-mdadm --add /dev/sde
+Commit c89a8eee6154 ("Allow faulty devices to be removed from a
+readonly array.") added some work on ro array in the function,
+but it couldn't be done since we didn't allow the ro array to be
+handled from the beginning. Fix it.
 
-However, I'm guessing as to your layout. /dev/sde may not be correct if
-you've partitioned the drives. Then it would may be /dev/sde1, or sde2,
-etc.
+Signed-off-by: Namhyung Kim<namhyung@gmail.com>
+---
+  drivers/md/md.c |    3 ---
+  1 files changed, 0 insertions(+), 3 deletions(-)
 
-Regards,
-Tyler
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 53e8d75314c3..a4022e679b63 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7179,9 +7179,6 @@ void md_check_recovery(mddev_t *mddev)
+  	if (mddev->bitmap)
+  		bitmap_daemon_work(mddev);
 
+-	if (mddev->ro)
+-		return;
+-
+  	if (signal_pending(current)) {
+  		if (mddev->pers->sync_request&&  !mddev->external) {
+  			printk(KERN_INFO "md: %s in immediate safe mode\n",
 -- 
-"It is an interesting and demonstrable fact, that all children are atheists
-and were religion not inculcated into their minds, they would remain so."
-   -- Ernestine Rose
+1.7.6
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
