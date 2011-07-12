@@ -1,16 +1,150 @@
 From: "Sandra Escandor" <sescandor@evertz.com>
-Subject: mdadm 3.1.4 - hanging on cat /proc/mdstat
-Date: Mon, 11 Jul 2011 14:41:21 -0400
-Message-ID: <C70A636B101FD44999B82525C3E92AFAD8CD18@otis.burlington.evertz.tv>
+Subject: RE: mdadm 3.1.4 - hanging on cat /proc/mdstat
+Date: Tue, 12 Jul 2011 08:01:46 -0400
+Message-ID: <C70A636B101FD44999B82525C3E92AFAD8CDB4@otis.burlington.evertz.tv>
+References: <C70A636B101FD44999B82525C3E92AFAD8CD18@otis.burlington.evertz.tv>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
+In-Reply-To: <C70A636B101FD44999B82525C3E92AFAD8CD18@otis.burlington.evertz.tv>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Sorry for top-posting - I have more additional info that could shed some
+light. 
+
+One more question: If only one sata disk (western digital
+WD7500BPKT-00PK4T0) were to have this failed command and this sata disk
+belonged to a RAID10, shouldn't we be able to still use the RAID with
+the remaining disks, and not have to reboot?
+
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901003] ata3.00: exception Emask
+0x0 SAct 0x1ffc0 SErr 0x0 action 0x6 frozen
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901052] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901082] ata3.00: cmd
+61/00:30:80:37:3f/04:00:44:00:00/40 tag 6 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901083]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901163] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901183] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901207] ata3.00: cmd
+61/00:38:80:3b:3f/04:00:44:00:00/40 tag 7 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901208]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901282] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901302] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901326] ata3.00: cmd
+61/00:40:80:3f:3f/04:00:44:00:00/40 tag 8 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901327]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901400] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901420] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901444] ata3.00: cmd
+61/00:48:80:43:3f/04:00:44:00:00/40 tag 9 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901445]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901525] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901545] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901569] ata3.00: cmd
+61/00:50:80:47:3f/04:00:44:00:00/40 tag 10 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901570]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901644] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901664] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901688] ata3.00: cmd
+61/00:58:80:4b:3f/04:00:44:00:00/40 tag 11 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901689]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901763] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901783] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901807] ata3.00: cmd
+61/00:60:80:4f:3f/04:00:44:00:00/40 tag 12 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901808]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901882] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901902] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901926] ata3.00: cmd
+61/00:68:80:53:3f/04:00:44:00:00/40 tag 13 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.901927]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902000] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902020] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902044] ata3.00: cmd
+61/00:70:80:57:3f/04:00:44:00:00/40 tag 14 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902045]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902119] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902139] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902163] ata3.00: cmd
+61/00:78:80:5b:3f/04:00:44:00:00/40 tag 15 ncq 524288 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902164]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902238] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902257] ata3.00: failed command:
+WRITE FPDMA QUEUED
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902281] ata3.00: cmd
+61/10:80:70:ef:37/00:00:26:00:00/40 tag 16 ncq 8192 out
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902282]          res
+40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902356] ata3.00: status: { DRDY }
+Jul  8 14:48:06 ecs-1u kernel: [ 8200.902378] ata3: hard resetting link
+Jul  8 14:48:11 ecs-1u kernel: [ 8206.257532] ata3: link is slow to
+respond, please be patient (ready=0)
+Jul  8 14:48:16 ecs-1u kernel: [ 8210.902508] ata3: COMRESET failed
+(errno=-16)
+Jul  8 14:48:16 ecs-1u kernel: [ 8210.902535] ata3: hard resetting link
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.259007] ata3: link is slow to
+respond, please be patient (ready=0)
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.762685] ata3: SATA link up 3.0
+Gbps (SStatus 123 SControl 300)
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769012] ata3.00: configured for
+UDMA/133
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769019] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769024] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769028] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769032] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769036] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769041] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769045] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769049] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769054] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769058] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769060] ata3.00: device reported
+invalid CHS sector 0
+Jul  8 14:48:21 ecs-1u kernel: [ 8216.769078] ata3: EH complete
+
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Sandra Escandor
+Sent: Monday, July 11, 2011 2:41 PM
+To: linux-raid@vger.kernel.org
+Subject: mdadm 3.1.4 - hanging on cat /proc/mdstat 
 
 Hello all,
 
@@ -723,3 +857,7 @@ Jul 12 00:15:16 ecs-1u kernel: [301240.301494] md: ioctl lock
 interrupted, reason -4, cmd -2142762735
 Jul 12 00:17:35 ecs-1u kernel: [301379.418775] md: ioctl lock
 interrupted, reason -4, cmd -2142762735
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
