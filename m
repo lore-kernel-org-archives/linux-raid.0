@@ -1,88 +1,51 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] mdadm: fix build failures (ppc64)
-Date: Thu, 14 Jul 2011 13:59:53 +1000
-Message-ID: <20110714135953.03c539b7@notabene.brown>
-References: <1309981680-7714-1-git-send-email-mbroz@redhat.com>
+Subject: Re: possible bug in md
+Date: Thu, 14 Jul 2011 15:11:37 +1000
+Message-ID: <20110714151137.7cad2801@notabene.brown>
+References: <4E11E9A6.2000606@cdf.toronto.edu>
+	<20110705102419.5f2b22fa@notabene.brown>
+	<4E133B03.60707@cdf.toronto.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1309981680-7714-1-git-send-email-mbroz@redhat.com>
+In-Reply-To: <4E133B03.60707@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Milan Broz <mbroz@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Iordan Iordanov <iordan@cdf.toronto.edu>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed,  6 Jul 2011 21:48:00 +0200 Milan Broz <mbroz@redhat.com> wrote:
+On Tue, 05 Jul 2011 12:25:39 -0400 Iordan Iordanov <iordan@cdf.toronto.edu>
+wrote:
 
-> This patch fixes these build issues:
+> Hi Neil,
 > 
-> super-intel.c: In function 'getinfo_super_imsm_volume':
-> super-intel.c:2327:4: error: format '%llu' expects argument of type 'long long
-> unsigned int', but argument 3 has type '__u64' [-Werror=format]
-
-Thanks.  This bit looks good.
-
+> On 07/04/11 20:24, NeilBrown wrote:
+> > This is correct in that the spare should be removed from the array as there
+> > is nothing else useful that can be done.  It is possibly not ideal in that
+> > the spare gets marked as 'faulty' where it isn't really.
 > 
-> super-intel.c: In function 'imsm_reshape_super':
-> super-intel.c:8665:7: error: 'devnum' may be used uninitialized in this function [-Werror=uninitialized]
+> I agree that MD is doing the right thing in stopping the sync, since 
+> there is nothing else that can be done. What it should say in the kernel 
+> log in this case (in my opinion anyway) is something like:
+> 
+> raid10: Disk failure on sda, sync stopped, sdb marked faulty.
+> 
+> instead of:
+> 
+> raid10: Disk failure on sdb, disabling device.
+> 
+> only because /dev/sdb did not actually fail! I agree this is not 
+> terribly important, I was reporting only for correctness, and I know 
+> you're busy :).
+> 
+> Many thanks,
+> Iordan
 
-However I don't agree with your fix for this bit.  If the array isn't
-found, we should simply go around the loop again like this.
-
-@@ -8661,8 +8663,9 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
- 		dprintf("imsm: info: Volume operation\n");
- 		/* find requested device */
- 		while (dev) {
--			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
--			if (devnum == geo.dev_id)
-+			if (imsm_find_array_minor_by_subdev(
-+				    dev->index, st->container_dev, &devnum) == 0
-+			    && devnum == geo.dev_id)
- 				break;
- 			dev = dev->next;
- 		}
-
-
-So I have changed it to that and applied.
+I have made some changes to RAID10 so that it will not report that
+a device has failed when really it hasn't.  It will abort the recovery,
+ensure that another recovery doesn't automatically restart, and will
+report why the recovery was aborted.
 
 Thanks,
 NeilBrown
-
-
-
-> 
-> Signed-off-by: Milan Broz <mbroz@redhat.com>
-> ---
->  super-intel.c |   10 ++++++++--
->  1 files changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/super-intel.c b/super-intel.c
-> index 2ef2b3c..572b710 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2326,7 +2326,9 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
->  
->  			dprintf("IMSM: General Migration checkpoint : %llu "
->  			       "(%llu) -> read reshape progress : %llu\n",
-> -				units, blocks_per_unit, info->reshape_progress);
-> +				(unsigned long long)units,
-> +				(unsigned long long)blocks_per_unit,
-> +				info->reshape_progress);
->  
->  			used_disks = imsm_num_data_members(dev, 1);
->  			if (used_disks > 0) {
-> @@ -8661,7 +8663,11 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
->  		dprintf("imsm: info: Volume operation\n");
->  		/* find requested device */
->  		while (dev) {
-> -			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
-> +			if (imsm_find_array_minor_by_subdev(dev->index,
-> +			    st->container_dev, &devnum) < 0) {
-> +				dprintf("imsm: cannot find array\n");
-> +				goto exit_imsm_reshape_super;
-> +			}
->  			if (devnum == geo.dev_id)
->  				break;
->  			dev = dev->next;
-
