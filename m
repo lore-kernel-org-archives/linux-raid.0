@@ -1,57 +1,102 @@
-From: "maciej.naruszewicz" <maciej.naruszewicz@intel.com>
-Subject: [PATCH] mdadm.8: Disk coercion with IMSM metadata.
-Date: Wed, 13 Jul 2011 12:17:02 +0200
-Message-ID: <20110713101702.26642.74636.stgit@maciek.naruszewicz>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] mdadm.8: Disk coercion with IMSM metadata.
+Date: Thu, 14 Jul 2011 12:26:49 +1000
+Message-ID: <20110714122649.5bd2c91e@notabene.brown>
+References: <20110713101702.26642.74636.stgit@maciek.naruszewicz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110713101702.26642.74636.stgit@maciek.naruszewicz>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: "maciej.naruszewicz" <maciej.naruszewicz@intel.com>
 Cc: wojciech.neubauer@intel.com, adam.kwolek@intel.com, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, linux-raid@vger.kernel.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-RnJvbTogbWFjaWVqLm5hcnVzemV3aWN6IDxtYWNpZWoubmFydXN6ZXdpY3pAaW50ZWwuY29tPgoK
-QWN0dWFsIHNpemVzIG9mIGRpc2tzIGZyb20gZGlmZmVyZW50IHByb2R1Y2VycyBtYXkgdmFyeSwK
-ZXZlbiB0aG91Z2ggdGhleSBhcmUgY2xhaW1lZCB0byBoYXZlIHRoZSBzYW1lIGFtb3VudCBvZgpz
-cGFjZS4gU2luY2UgY3JlYXRpbmcgYXJyYXlzIHVzaW5nIElNU00gbWV0YWRhdGEgZG9lc24ndApz
-dXBwb3J0IHJlc2l6aW5nIGFycmF5cyB5ZXQsIHRoZXJlIG1pZ2h0IGJlIHByb2JsZW1zIHdoZW4K
-cmVwbGFjaW5nIGEgZGlzayB3aXRoIGEgc2xpZ2h0bHkgc21hbGxlciBvbmUuCgpGb3IgdGhlIHRp
-bWUgYmVpbmcsIGRpc2sgY29lcmNpb24gd2lsbCBub3QgYmUgaW1wbGVtZW50ZWQKZm9yIElNU00s
-IGhvd2V2ZXIgaXQgd291bGQgYmUgYSBnb29kIGlkZWEgdG8gaW5mb3JtIHRoZQp1c2VyIGhvdyB0
-byBkZWFsIHdpdGggaXQuIE91ciBzdWdnZXN0aW9uIGlzIHRvIG1lbnRpb24gaXQKaW4gdGhlIG1h
-bnVhbCBwYWdlIHVuZGVyIHRoZSAteiBvcHRpb24gYW5kIGFkdmlzZSB0aGUgdXNlcgp0byBjcmVh
-dGUgYXJyYXlzIHVzaW5nIGEgbGl0dGxlIGxlc3Mgc3BhY2UgdGhhbiB0aGUgZGlza3MKaGF2ZS4K
-CkFkZGl0aW9uYWxseSwgdGhlIHBhcnQgJ1RoaXMgdmFsdWUgY2FuIG5vdCBiZSB1c2VkCndpdGgg
-Q09OVEFJTkVSIG1ldGFkYXRhIHN1Y2ggYXMgRERGIGFuZCBJTVNNLicgd2FzIG5vdApjbGVhciBh
-bmQgd2FzIHJlcGxhY2VkLgoKU2lnbmVkLW9mZi1ieTogbWFjaWVqLm5hcnVzemV3aWN6IDxtYWNp
-ZWoubmFydXN6ZXdpY3pAaW50ZWwuY29tPgotLS0KIG1kYWRtLjguaW4gfCAgIDEzICsrKysrKysr
-KystLS0KIDEgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkK
-CmRpZmYgLS1naXQgYS9tZGFkbS44LmluIGIvbWRhZG0uOC5pbgppbmRleCA3ZTg5ODFlLi4yNjkw
-ZTJkIDEwMDY0NAotLS0gYS9tZGFkbS44LmluCisrKyBiL21kYWRtLjguaW4KQEAgLTQ0MCw5ICs0
-NDAsMTYgQEAgcHJvYmxlbXMgdGhlIGFycmF5IGNhbiBiZSBtYWRlIGJpZ2dlciBhZ2FpbiB3aXRo
-IG5vIGxvc3Mgd2l0aCBhbm90aGVyCiAuQiAiXC1cLWdyb3cgXC1cLXNpemU9IgogY29tbWFuZC4K
-IAotVGhpcyB2YWx1ZSBjYW4gbm90IGJlIHVzZWQgd2l0aAotLkIgQ09OVEFJTkVSCi1tZXRhZGF0
-YSBzdWNoIGFzIERERiBhbmQgSU1TTS4KK0FjdHVhbCBzaXplcyBvZiBkaXNrcyBmcm9tIGRpZmZl
-cmVudCBtYW51ZmFjdHVyZXJzIG1heSBzbGlnaHRseSBkaWZmZXIsIGV2ZW4gaWYKK3RoZXkgYXJl
-IHNhaWQgdG8gaGF2ZSB0aGUgc2FtZSBhbW91bnQgb2Ygc3BhY2UuIENoYW5naW5nIGFycmF5J3Mg
-c2l6ZSB3aXRoIHRoZSAKKy5CICJcLVwtZ3JvdyBcLVwtc2l6ZT0iCitjb21tYW5kIGlzIG5vdCBz
-dXBwb3J0ZWQgeWV0IGJ5IGV4dGVybmFsIG1ldGFkYXRhcyBzdWNoIGFzIERERiBhbmQgSU1TTS4g
-Q3JlYXRpbmcgUkFJRAorYXJyYXlzIHdpdGggdGhlCisuQiBcLXoKK29wdGlvbiBpcyBhZHZpc2Vk
-IHNvIHRoYXQgdGhlIGFycmF5J3Mgc2l6ZSBpcyBhIGJpdCBzbWFsbGVyIHRoYW4gdGhlIGFjdHVh
-bCBtYXhpbXVtCithdmFpbGFibGUgZGF0YSBkaXNrJ3Mgc2l6ZS4gT3RoZXJ3aXNlLCByZXBsYWNp
-bmcgYSBkaXNrIGluIGFuIGFycmF5IHdpdGggdGhlICdzYW1lJworZGlzayBmcm9tIGEgZGlmZmVy
-ZW50IG1hbnVmYWN0dXJlciBpcyBub3QgZ3VhcmFudGVlZCB0byBiZSBhbHdheXMgcG9zc2libGUg
-ZHVlIHRvCitkaWZmZXJlbmNlIGluIGRldmljZSBzaXplcy4gCiAKIC5UUAogLkJSIFwtWiAiLCAi
-IFwtXC1hcnJheVwtc2l6ZT0KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBz
-cC4geiBvLm8uCnogc2llZHppYmEgdyBHZGFuc2t1CnVsLiBTbG93YWNraWVnbyAxNzMKODAtMjk4
-IEdkYW5zawoKU2FkIFJlam9ub3d5IEdkYW5zayBQb2xub2MgdyBHZGFuc2t1LCAKVklJIFd5ZHpp
-YWwgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFNhZG93ZWdvLCAKbnVtZXIgS1JTIDEw
-MTg4MgoKTklQIDk1Ny0wNy01Mi0zMTYKS2FwaXRhbCB6YWtsYWRvd3kgMjAwLjAwMCB6bAoKVGhp
-cyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0
-ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkg
-cmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4g
-SWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhl
-IHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
+On Wed, 13 Jul 2011 12:17:02 +0200 "maciej.naruszewicz"
+<maciej.naruszewicz@intel.com> wrote:
+
+> From: maciej.naruszewicz <maciej.naruszewicz@intel.com>
+> 
+> Actual sizes of disks from different producers may vary,
+> even though they are claimed to have the same amount of
+> space
+
+Are you sure about this?
+
+It was my understanding that some industry association has arranged an
+agreement so that this does not happen.
+
+http://www.idema.org/wp-content/plugins/download-monitor/download.php?id=1223
+
+Do you have actual evidence that different drives from different
+manufacturers have similar but not identical sizes?
+
+NeilBrown
+
+
+
+
+>        Since creating arrays using IMSM metadata doesn't
+> support resizing arrays yet, there might be problems when
+> replacing a disk with a slightly smaller one.
+> 
+> For the time being, disk coercion will not be implemented
+> for IMSM, however it would be a good idea to inform the
+> user how to deal with it. Our suggestion is to mention it
+> in the manual page under the -z option and advise the user
+> to create arrays using a little less space than the disks
+> have.
+> 
+> Additionally, the part 'This value can not be used
+> with CONTAINER metadata such as DDF and IMSM.' was not
+> clear and was replaced.
+> 
+> Signed-off-by: maciej.naruszewicz <maciej.naruszewicz@intel.com>
+> ---
+>  mdadm.8.in |   13 ++++++++++---
+>  1 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mdadm.8.in b/mdadm.8.in
+> index 7e8981e..2690e2d 100644
+> --- a/mdadm.8.in
+> +++ b/mdadm.8.in
+> @@ -440,9 +440,16 @@ problems the array can be made bigger again with no loss with another
+>  .B "\-\-grow \-\-size="
+>  command.
+>  
+> -This value can not be used with
+> -.B CONTAINER
+> -metadata such as DDF and IMSM.
+> +Actual sizes of disks from different manufacturers may slightly differ, even if
+> +they are said to have the same amount of space. Changing array's size with the 
+> +.B "\-\-grow \-\-size="
+> +command is not supported yet by external metadatas such as DDF and IMSM. Creating RAID
+> +arrays with the
+> +.B \-z
+> +option is advised so that the array's size is a bit smaller than the actual maximum
+> +available data disk's size. Otherwise, replacing a disk in an array with the 'same'
+> +disk from a different manufacturer is not guaranteed to be always possible due to
+> +difference in device sizes. 
+>  
+>  .TP
+>  .BR \-Z ", " \-\-array\-size=
+> 
+> ---------------------------------------------------------------------
+> Intel Technology Poland sp. z o.o.
+> z siedziba w Gdansku
+> ul. Slowackiego 173
+> 80-298 Gdansk
+> 
+> Sad Rejonowy Gdansk Polnoc w Gdansku, 
+> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+> numer KRS 101882
+> 
+> NIP 957-07-52-316
+> Kapital zakladowy 200.000 zl
+> 
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
 
