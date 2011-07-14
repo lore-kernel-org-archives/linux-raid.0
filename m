@@ -1,36 +1,33 @@
-From: Iordan Iordanov <iordan@cdf.toronto.edu>
-Subject: Re: possible bug in md
-Date: Thu, 14 Jul 2011 12:17:37 -0400
-Message-ID: <4E1F16A1.3000106@cdf.toronto.edu>
-References: <4E11E9A6.2000606@cdf.toronto.edu>	<20110705102419.5f2b22fa@notabene.brown>	<4E133B03.60707@cdf.toronto.edu> <20110714151137.7cad2801@notabene.brown>
+From: Jonathan Brassow <jbrassow@redhat.com>
+Subject: [PATCH] MD: raid1 s/sysfs_notify_dirent/sysfs_notify_dirent_safe
+Date: Thu, 14 Jul 2011 15:53:49 -0500
+Message-ID: <1310676829.2246.7.camel@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110714151137.7cad2801@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+If device-mapper creates a RAID1 array that includes devices to
+be rebuilt, it will deref a NULL pointer when finished because
+sysfs is not used by device-mapper instantiated RAID devices.
 
-On 07/14/11 01:11, NeilBrown wrote:
-> I have made some changes to RAID10 so that it will not report that
-> a device has failed when really it hasn't.  It will abort the recovery,
-> ensure that another recovery doesn't automatically restart, and will
-> report why the recovery was aborted.
+Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 
-Many thanks for taking care of that!
+Index: linux-2.6/drivers/md/raid1.c
+===================================================================
+--- linux-2.6.orig/drivers/md/raid1.c
++++ linux-2.6/drivers/md/raid1.c
+@@ -1027,7 +1027,7 @@ static int raid1_spare_active(mddev_t *m
+ 		    && !test_bit(Faulty, &rdev->flags)
+ 		    && !test_and_set_bit(In_sync, &rdev->flags)) {
+ 			count++;
+-			sysfs_notify_dirent(rdev->sysfs_state);
++			sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 		}
+ 	}
+ 	spin_lock_irqsave(&conf->device_lock, flags);
 
-On a related note, do you know what would happen if on a 3-device RAID1 
-(mirror), I failed one of the drives, and triggered a rebuild onto a 
-spare, and then determined which device is the "source" for the rebuild, 
-and yanked it out (or failed it)?
 
-Would the RAID1 recover and start syncing from the next available (last 
-remaining) valid device, or will it fail? If you don't know, I will 
-conduct a test and report the result.
-
-Cheers,
-Iordan
