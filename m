@@ -1,46 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: remove ro check in md_check_recovery()
-Date: Thu, 14 Jul 2011 13:54:38 +1000
-Message-ID: <20110714135438.24e26684@notabene.brown>
-References: <1309984866-2228-1-git-send-email-namhyung@gmail.com>
+Subject: Re: [PATCH] mdadm: fix build failures (ppc64)
+Date: Thu, 14 Jul 2011 13:59:53 +1000
+Message-ID: <20110714135953.03c539b7@notabene.brown>
+References: <1309981680-7714-1-git-send-email-mbroz@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1309984866-2228-1-git-send-email-namhyung@gmail.com>
+In-Reply-To: <1309981680-7714-1-git-send-email-mbroz@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
+To: Milan Broz <mbroz@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu,  7 Jul 2011 05:41:06 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Wed,  6 Jul 2011 21:48:00 +0200 Milan Broz <mbroz@redhat.com> wrote:
 
-> Commit c89a8eee6154 ("Allow faulty devices to be removed from a
-> readonly array.") added some work on ro array in the function,
-> but it couldn't be done since we didn't allow the ro array to be
-> handled from the beginning. Fix it.
+> This patch fixes these build issues:
 > 
-> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
-> ---
->  drivers/md/md.c |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
+> super-intel.c: In function 'getinfo_super_imsm_volume':
+> super-intel.c:2327:4: error: format '%llu' expects argument of type 'long long
+> unsigned int', but argument 3 has type '__u64' [-Werror=format]
+
+Thanks.  This bit looks good.
+
 > 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 53e8d75314c3..a4022e679b63 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7179,9 +7179,6 @@ void md_check_recovery(mddev_t *mddev)
->  	if (mddev->bitmap)
->  		bitmap_daemon_work(mddev);
->  
-> -	if (mddev->ro)
-> -		return;
-> -
->  	if (signal_pending(current)) {
->  		if (mddev->pers->sync_request && !mddev->external) {
->  			printk(KERN_INFO "md: %s in immediate safe mode\n",
+> super-intel.c: In function 'imsm_reshape_super':
+> super-intel.c:8665:7: error: 'devnum' may be used uninitialized in this function [-Werror=uninitialized]
+
+However I don't agree with your fix for this bit.  If the array isn't
+found, we should simply go around the loop again like this.
+
+@@ -8661,8 +8663,9 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+ 		dprintf("imsm: info: Volume operation\n");
+ 		/* find requested device */
+ 		while (dev) {
+-			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
+-			if (devnum == geo.dev_id)
++			if (imsm_find_array_minor_by_subdev(
++				    dev->index, st->container_dev, &devnum) == 0
++			    && devnum == geo.dev_id)
+ 				break;
+ 			dev = dev->next;
+ 		}
 
 
-Applied, thanks.
+So I have changed it to that and applied.
 
+Thanks,
 NeilBrown
+
+
+
+> 
+> Signed-off-by: Milan Broz <mbroz@redhat.com>
+> ---
+>  super-intel.c |   10 ++++++++--
+>  1 files changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/super-intel.c b/super-intel.c
+> index 2ef2b3c..572b710 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -2326,7 +2326,9 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+>  
+>  			dprintf("IMSM: General Migration checkpoint : %llu "
+>  			       "(%llu) -> read reshape progress : %llu\n",
+> -				units, blocks_per_unit, info->reshape_progress);
+> +				(unsigned long long)units,
+> +				(unsigned long long)blocks_per_unit,
+> +				info->reshape_progress);
+>  
+>  			used_disks = imsm_num_data_members(dev, 1);
+>  			if (used_disks > 0) {
+> @@ -8661,7 +8663,11 @@ static int imsm_reshape_super(struct supertype *st, long long size, int level,
+>  		dprintf("imsm: info: Volume operation\n");
+>  		/* find requested device */
+>  		while (dev) {
+> -			imsm_find_array_minor_by_subdev(dev->index, st->container_dev, &devnum);
+> +			if (imsm_find_array_minor_by_subdev(dev->index,
+> +			    st->container_dev, &devnum) < 0) {
+> +				dprintf("imsm: cannot find array\n");
+> +				goto exit_imsm_reshape_super;
+> +			}
+>  			if (devnum == geo.dev_id)
+>  				break;
+>  			dev = dev->next;
+
