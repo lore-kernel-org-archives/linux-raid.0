@@ -1,81 +1,49 @@
-From: Iustin Pop <iusty@k1024.org>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: standard performance (write speed 20Mb/s)
-Date: Sun, 17 Jul 2011 15:28:33 +0200
-Message-ID: <20110717132833.GC2614@teal.hq.k1024.org>
+Date: Sun, 17 Jul 2011 17:48:22 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1107171744110.3337@unicorn.drogon.net>
 References: <201107162140.58883.raid1@fuckaround.org>
- <4E226464.2030200@hardwarefreak.com>
- <ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org>
- <4E22D167.2010905@anonymous.org.uk>
- <20110717122230.GB2614@teal.hq.k1024.org>
- <4E22DABF.1020807@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4E22DABF.1020807@anonymous.org.uk>
+In-Reply-To: <201107162140.58883.raid1@fuckaround.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jul 17, 2011 at 01:51:11PM +0100, John Robinson wrote:
-> On 17/07/2011 13:22, Iustin Pop wrote:
-> >On Sun, Jul 17, 2011 at 01:11:19PM +0100, John Robinson wrote:
-> [...]
-> >># dd if=3D/dev/zero of=3Dtest bs=3D4096 count=3D262144
-> >>262144+0 records in
-> >>262144+0 records out
-> >>1073741824 bytes (1.1 GB) copied, 2.5253 seconds, 425 MB/s
-> >>
-> >>And there's a badblocks running on another drive also on the ICH10.
-> >>
-> >>Having said that, I think mine's wrong too, I don't think my array
-> >>can really manage that much throughput. We should both be using mor=
-e
-> >>realistic benchmarking tools like bonnie++:
-> >
-> >Or simply pass the correct flags to dd =E2=80=94 like oflag=3Ddirect=
-, which will
-> >make it do non-buffered writes.
->=20
-> That's still not realistic:
->=20
-> # dd if=3D/dev/zero of=3Dtest oflag=3Ddirect bs=3D4096 count=3D262144
-> 262144+0 records in
-> 262144+0 records out
-> 1073741824 bytes (1.1 GB) copied, 117.434 seconds, 9.1 MB/s
->=20
-> Because this time we're doing a read-modify-write for every 4K
-> block, or at least a write for every 4K block.
+On Sat, 16 Jul 2011, Pol Hallen wrote:
 
-Of course :)
+> Hi folks :-)
+>
+> after assembled a new hw (xeon, ich10 controller with 5 disks of 2Tb wd -
+> radi5) I have slow write performance:
+>
+> 20Mb/s :-(((
 
-But at 4K speed, this is actually the speed of your array.
+In addition to the other comments so-far, are these drives WDC EARS 
+drives?
 
-> I can fix it up again
-> to work in stripe size amounts:
->=20
-> # dd if=3D/dev/zero of=3Dtest oflag=3Ddirect bs=3D1572864 count=3D683
-> 683+0 records in
-> 683+0 records out
-> 1074266112 bytes (1.1 GB) copied, 18.3198 seconds, 58.6 MB/s
->=20
-> But it's still not realistic because real I/O does use buffers and
+What's the output of
 
-Buffers is one thing; flushing to disk after a certain block size
-another, and that happens quite often, depending on workload.
+   hdparm -i /dev/sda
 
-> doesn't work in magic sizes, so we should be using a more realistic
-> benchmarking tool like bonnie++.
+If it's something like
 
-Honestly, I don't find bonnie++ a realistic tool. fio is a much better
-one; bonnie is quite old and inflexible.
+    Model=WDC WD20EARS-00MVWB0, FwRev=50.0AB50, SerialNo=WD-WMAZ20098633
+                  ^^^^
 
-regards,
-iustin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+then it has 4KB sectors.
+
+If so, then you'll have to make absolutely sure the partitions are aligned 
+on a 4KB boundary.
+
+What does the output of
+
+   sfdisk -d /dev/sda
+
+look like? (where /dev/sda is one of the disks on your array)
+
+The start of each partition ought to be divisible by 64 evenly for optimal 
+results.
+
+Gordon
