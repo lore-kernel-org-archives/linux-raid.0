@@ -1,49 +1,30 @@
-From: Gordon Henderson <gordon@drogon.net>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Sun, 17 Jul 2011 17:48:22 +0100 (BST)
-Message-ID: <alpine.DEB.2.00.1107171744110.3337@unicorn.drogon.net>
-References: <201107162140.58883.raid1@fuckaround.org>
+From: Lutz Vieweg <lvml@5t9.de>
+Subject: Re: Software RAID and TRIM
+Date: Sun, 17 Jul 2011 23:57:12 +0200
+Message-ID: <ivvln5$dcd$2@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <BANLkTimswAVra6qnMS4g8WRzs=dhi_f7OQ@mail.gmail.com> <alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201107162140.58883.raid1@fuckaround.org>
+In-Reply-To: <alpine.OSX.2.00.1106291119200.257@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 16 Jul 2011, Pol Hallen wrote:
+Tom De Mulder wrote:
+> Yes, it's (usually/ideally) the filesystem's job to invoke the TRIM 
+> command
 
-> Hi folks :-)
->
-> after assembled a new hw (xeon, ich10 controller with 5 disks of 2Tb wd -
-> radi5) I have slow write performance:
->
-> 20Mb/s :-(((
+Well, for us voluntarily (cron-triggered) batch-discards have shown
+to be the better option. If you leave it to the filesystem to
+trigger the discards, then you might lose write performance
+when you need it most.
 
-In addition to the other comments so-far, are these drives WDC EARS 
-drives?
+In comparison, a voluntarily triggered discard in some low-usage time
+is painless.
 
-What's the output of
+Regards,
 
-   hdparm -i /dev/sda
+Lutz Vieweg
 
-If it's something like
-
-    Model=WDC WD20EARS-00MVWB0, FwRev=50.0AB50, SerialNo=WD-WMAZ20098633
-                  ^^^^
-
-then it has 4KB sectors.
-
-If so, then you'll have to make absolutely sure the partitions are aligned 
-on a 4KB boundary.
-
-What does the output of
-
-   sfdisk -d /dev/sda
-
-look like? (where /dev/sda is one of the disks on your array)
-
-The start of each partition ought to be divisible by 64 evenly for optimal 
-results.
-
-Gordon
