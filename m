@@ -1,37 +1,41 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Sun, 17 Jul 2011 18:03:09 -0500
-Message-ID: <4E236A2D.3070307@hardwarefreak.com>
-References: <201107162140.58883.raid1@fuckaround.org>    <4E226464.2030200@hardwarefreak.com> <ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Software RAID and TRIM
+Date: Mon, 18 Jul 2011 07:14:43 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1107180711490.20159@uplift.swm.pp.se>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org>
+In-Reply-To: <4E235984.2070704@5t9.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pol Hallen <raid1@fuckaround.org>
+To: Lutz Vieweg <lvml@5t9.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/17/2011 3:12 AM, Pol Hallen wrote:
-> hello and thanks for the reply :-)
-> 
-> dd if=/dev/zero of=test bs=4096 count=262144
-> 262144+0 records in
-> 262144+0 records out
-> 1073741824 bytes (1.1 GB) copied, 31.3475 s, 34.3 MB/s
-> 
-> I've 8Gb ddr3 of ram
+On Sun, 17 Jul 2011, Lutz Vieweg wrote:
 
-Then you have multiple problems causing poor performance.  Now is the
-time for you to post your  hardware configuration, drive model
-number(s), mdadm config, and filesystem.  You should have done all of
-this in your initial post.
+> David Brown wrote:
+>> However, AFAIUI, you are wrong about TRIM being essential for the continued 
+>> high performance of SSDs.  As long as your SSDs have some over-provisioning 
+>> (or you only partition something like 90% of the drive), and it's got good 
+>> garbage collection, then TRIM will have minimal effect.
+>
+> I beg to differ.
+>
+> Of course, you can only benefit from discards if your filesystem
+> is not full (because then there is nothing to discard). But any
+> kind of "garbage collection" by the SSD itself will not have the
+> same effect, since it cannot know which blocks are in use by the
+> filesystem.
 
-You've been on this list long enough to have known of the WD Green
-sector alignment issue and avoided it, and to know better than to run
-performance tests while an array is still in its initial sync.  Thus I
-initially assumed your problem was merely the insane dd block size.
+Well, that's what you gain from only using 90% of the drive space for data 
+(be it via partition or some other means), you increase the 
+overprovisioning and thus the drive has more empty space to play with, 
+even if you fill up the FS to 100%.
+
+So yes, TRIM is nice but if you want consistant performance then you need 
+to assume that your FS is going to be 100% full anyway, so then you have 
+to limit the FS block use to 80-90% of the total drive space.
 
 -- 
-Stan
+Mikael Abrahamsson    email: swmike@swm.pp.se
