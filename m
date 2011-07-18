@@ -1,41 +1,31 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Software RAID and TRIM
-Date: Mon, 18 Jul 2011 07:14:43 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1107180711490.20159@uplift.swm.pp.se>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: standard performance (write speed 20Mb/s)
+Date: Mon, 18 Jul 2011 10:04:54 +0100
+Message-ID: <4E23F736.30601@anonymous.org.uk>
+References: <201107162140.58883.raid1@fuckaround.org> <4E226464.2030200@hardwarefreak.com> <ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org> <4E22D167.2010905@anonymous.org.uk> <20110717122230.GB2614@teal.hq.k1024.org> <4E22DABF.1020807@anonymous.org.uk> <20110717132833.GC2614@teal.hq.k1024.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E235984.2070704@5t9.de>
+In-Reply-To: <20110717132833.GC2614@teal.hq.k1024.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lutz Vieweg <lvml@5t9.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 17 Jul 2011, Lutz Vieweg wrote:
-
-> David Brown wrote:
->> However, AFAIUI, you are wrong about TRIM being essential for the continued 
->> high performance of SSDs.  As long as your SSDs have some over-provisioning 
->> (or you only partition something like 90% of the drive), and it's got good 
->> garbage collection, then TRIM will have minimal effect.
+On 17/07/2011 14:28, Iustin Pop wrote:
+> On Sun, Jul 17, 2011 at 01:51:11PM +0100, John Robinson wrote:
+[...]
+>> doesn't work in magic sizes, so we should be using a more realistic
+>> benchmarking tool like bonnie++.
 >
-> I beg to differ.
->
-> Of course, you can only benefit from discards if your filesystem
-> is not full (because then there is nothing to discard). But any
-> kind of "garbage collection" by the SSD itself will not have the
-> same effect, since it cannot know which blocks are in use by the
-> filesystem.
+> Honestly, I don't find bonnie++ a realistic tool. fio is a much better
+> one; bonnie is quite old and inflexible.
 
-Well, that's what you gain from only using 90% of the drive space for data 
-(be it via partition or some other means), you increase the 
-overprovisioning and thus the drive has more empty space to play with, 
-even if you fill up the FS to 100%.
+Ah OK, yes I agree with you there, but my general point remains: dd 
+might be OK for producing one very specific metric in some cases, but 
+that will not give a realistic impression of real use performance, so we 
+should be using a more realistic benchmarking tool.
 
-So yes, TRIM is nice but if you want consistant performance then you need 
-to assume that your FS is going to be 100% full anyway, so then you have 
-to limit the FS block use to 80-90% of the total drive space.
+Cheers,
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+John.
