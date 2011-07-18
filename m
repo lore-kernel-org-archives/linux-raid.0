@@ -1,30 +1,38 @@
 From: Tom De Mulder <tdm27@cam.ac.uk>
 Subject: Re: Software RAID and TRIM
-Date: Mon, 18 Jul 2011 11:48:49 +0100 (BST)
-Message-ID: <alpine.OSX.2.00.1107181143440.8811@xavius.local>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org>
+Date: Mon, 18 Jul 2011 11:53:59 +0100 (BST)
+Message-ID: <alpine.OSX.2.00.1107181148590.8811@xavius.local>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j012fa$6k6$1@dough.gmane.org>
+In-Reply-To: <4E235984.2070704@5t9.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 18 Jul 2011, David Brown wrote:
+On Sun, 17 Jul 2011, Lutz Vieweg wrote:
 
-First, I'd like to say that I've done more testing, and found that even 
-after very prolonged, sustained heavy use, the (Intel 510) SSDs I 
-partitioned 50/50 with half left unused didn't show any degradation in 
-performance. That's after about a week of constant writing/erasing.
+> What is really an important factor for SSD performance: The controller.
+> The same SSDs perform with significantly lower latency for us when
+> connected to SATA controller channels than when connected to SAS
+> controllers (and they perform abysmal when used as hardware-RAID
+> constituents, in comparison).
 
-> If your disks are reasonably full, then TRIM will not help much because the 
-> garbage collection will be desperately trying to piece together small bits 
-> into complete erase blocks, and your performance will drop through the floor.
+Interesting.
 
-However, it won't drop as low as it would without TRIM in the same 
-situation. But with a continuous heavy workload, even TRIM won't help, and 
-over-provisioning is the way to go.
+I think it depends a lot on the controller. On a Dell server with PERC5/i 
+RAID controller (actually made by LSI) I saw some performance degradation 
+but not enough that I'd consider it a deal-breaker for situations where I 
+really cared about the RAID functionality, more than about the loss of 
+performance. After all, the latency is still massively lower than it is 
+with spinning disk.
+
+I have a really great Areca RAID controller in a different server, but 
+unfortunately it's in use and it'll be a while before I get another one I 
+can use for testing. Given how well it does in other respects, I have high 
+hopes for it.
+
 
 Best,
 
