@@ -1,40 +1,54 @@
-From: "Tyler J. Wagner" <tyler@tolaris.com>
-Subject: Re: how to recover filesystem after clobbering array?
-Date: Tue, 19 Jul 2011 13:44:41 +0100
-Message-ID: <4E257C39.1090202@tolaris.com>
-References: <20110719104325.16112cl7f4lrzkjh@mail.sapo.pt>	<j03lp4$h72$1@dough.gmane.org> <4E255FE1.2060006@tolaris.com> <20110719120153.1529669k4o1t6v4x@mail.sapo.pt>
+From: Lutz Vieweg <lvml@5t9.de>
+Subject: Re: Software RAID and TRIM
+Date: Tue, 19 Jul 2011 15:41:53 +0200
+Message-ID: <j041j1$ttf$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110719120153.1529669k4o1t6v4x@mail.sapo.pt>
+In-Reply-To: <j03m2p$jn1$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Vasco_N=E9voa?= <vasco.nevoa@sapo.pt>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2011-07-19 12:01, Vasco N=E9voa wrote:
-> So I firmly believe the data is all there, on both disks.
-> I just need to rebuild the metadata to point to the data again someho=
-w.
-> Right?...
+On 07/19/2011 12:22 PM, David Brown wrote:
+>> Because of those effects on the block-IO-queue, the user-space
+>> work-around we implemented to discard the SSDs our RAID-1s consist of
+>> will not discard "one area on all SSDs at a time", but rather iterate
+>> first through all unused areas on one SSD, then iterate through the
+>> same list of areas on the second SSD.
+>
+> Do you take the arrays off-line during this process, or at least make
+> them read-only?
 
-Yes. Or no. Do you want to risk losing your data? Clone one of the disk=
-s
-now, then experiment with trying to re-assemble the array.
+No, we keep them online and writeable.
+
+> If not, how do you ensure that the lists are valid?
+
+The discard procedure works by..:
+
+- use SYS_fallocate to allocate the free space on the device (minus
+   some safety margin for the writes that will happen during the procedure)
+   for a temporary file (notice that with fallocate on XFS, you can
+   allocate space for a file without actually ever writing to it)
+
+- use ioctl FIEMAP to get a list of the logical blocks that were
+   allocated
+
+- use ioctl BLKDISCARD to discard these blocks
+
+- remove the temporary file
+
+Since the blocks to discard are allocated for the temporary
+file during the procedure, they will not be used otherwise.
+
+Obviously, we would still prefer using "fstrim", because then
+there would be no need for that temporary file, the "safety margin"
+and a temporary high fill level of the filesystem.
 
 Regards,
-Tyler
 
---=20
-"It is an interesting and demonstrable fact, that all children are athe=
-ists
-and were religion not inculcated into their minds, they would remain so=
-=2E"
-   -- Ernestine Rose
+Lutz Vieweg
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
