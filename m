@@ -1,69 +1,51 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Software RAID and TRIM
-Date: Tue, 19 Jul 2011 12:22:35 +0200
-Message-ID: <j03m2p$jn1$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org>
+From: "Tyler J. Wagner" <tyler@tolaris.com>
+Subject: Re: how to recover filesystem after clobbering array?
+Date: Tue, 19 Jul 2011 11:43:45 +0100
+Message-ID: <4E255FE1.2060006@tolaris.com>
+References: <20110719104325.16112cl7f4lrzkjh@mail.sapo.pt> <j03lp4$h72$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j03ipg$uqk$1@dough.gmane.org>
+In-Reply-To: <j03lp4$h72$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/07/2011 11:29, Lutz Vieweg wrote:
-> On 07/18/2011 10:18 PM, David Brown wrote:
->> You don't need to fill an erase block for writing - writes are done
->> as write blocks (I think 4K is the norm).
+On 2011-07-19 11:17, David Brown wrote:
+> Once you have got image files for each of your disks, make copies of
+> these image files to another spare disk. Keep careful notes of exactl=
+y
+> what you have done here, and which files are which. And put your
+> original disks, carefully labelled, on a shelf somewhere.
 >
-> You are right on that. Those sectors in a partially used erase block
-> that have not been written to since the last erase of the whole erase
-> block can be written to as good as sectors in completely empty erase
-> blocks.
->
->
->> My main point about TRIM being expensive is the effect it has on
->> the block IO queue, regardless of the implementation in the SSD.
->
-> Because of those effects on the block-IO-queue, the user-space
-> work-around we implemented to discard the SSDs our RAID-1s consist of
-> will not discard "one area on all SSDs at a time", but rather iterate
-> first through all unused areas on one SSD, then iterate through the
-> same list of areas on the second SSD.
->
+> Now you are in a position to attempt data recovery on your copied
+> files. If you do something wrong, you can simply re-copy the image
+> files and try again. You still have absolutely no guarantees that
+> you'll get anything back - but at least you can be sure you are not
+> going to make anything worse.
 
-Do you take the arrays off-line during this process, or at least make
-them read-only?  If not, how do you ensure that the lists are valid?
+=46ollow David's advice.
 
-> The effect of this is very much to our liking: While we can see
-> near-100%-utilization on one SSD at a time during the discards, the
-> other SSD will happily service the readers, and even the writes that
-> go to the /dev/md* device are buffered in main memory long enough
-> that we do not really see a significantly bad impact on the service.
-> (This might be different, though, if the discards were done during
-> peak-write-load times of the day.)
->
->
->> I really hope your SSD's return zeros for TRIM'ed blocks
->
-> For RAID-1, the only consequence of not doing so is just that
-> "data-check" runs may result in a > 0 mismatch_cnt. It does not
-> destroy any of your data, and as long as I have two SSDs in a RAID,
-> both of which give a non-error result when reading a sector, I would
-> have no indication of "which of the returned sector contents to
-> prefer", anyway.
->
-> (I admit that for health monitoring it is useful to have a meaningful
->  mismatch_cnt.)
->
->> and that you are sure all your TRIMs are in full raid stripes -
->> otherwise you will /seriously/ mess up your raid arrays.
->
-> Again, for RAID0/1 (even 10) I don't see why this would harm any
-> data.
->
+What was the filesystem on the array?
 
-Fair enough for RAID1.  Just don't try it with RAID5!
+Now, use testdisk, photorec, and foremost to seek through the raw image=
+s
+and extract files. The good news is, most video formats are detectable
+by these tools. All can be installed with your package manager.
 
+Regards,
+Tyler
 
+--=20
+"Offending fundamentalists isn't my goal =E2=80=93 but if it is an inev=
+itable
+side-effect of defending human rights, so be it."
+   -- Johann Hari
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
