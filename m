@@ -1,61 +1,63 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Software RAID and TRIM
-Date: Tue, 19 Jul 2011 17:06:12 +0200
-Message-ID: <j046mj$1pn$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org> <j041j1$ttf$1@dough.gmane.org>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re: data corruption after rebuild
+Date: Tue, 19 Jul 2011 21:12:40 +0600
+Message-ID: <20110719211240.2578bba6@natsu>
+References: <2073005.NH8LALaxuD@bloomfield>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/020Ahsc9DU4WJor_qKExBc6"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j041j1$ttf$1@dough.gmane.org>
+In-Reply-To: <2073005.NH8LALaxuD@bloomfield>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pavel Herrmann <morpheus.ibis@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/07/2011 15:41, Lutz Vieweg wrote:
-> On 07/19/2011 12:22 PM, David Brown wrote:
->>> Because of those effects on the block-IO-queue, the user-space
->>> work-around we implemented to discard the SSDs our RAID-1s consist of
->>> will not discard "one area on all SSDs at a time", but rather iterate
->>> first through all unused areas on one SSD, then iterate through the
->>> same list of areas on the second SSD.
->>
->> Do you take the arrays off-line during this process, or at least make
->> them read-only?
->
-> No, we keep them online and writeable.
->
->> If not, how do you ensure that the lists are valid?
->
-> The discard procedure works by..:
->
-> - use SYS_fallocate to allocate the free space on the device (minus
-> some safety margin for the writes that will happen during the procedure)
-> for a temporary file (notice that with fallocate on XFS, you can
-> allocate space for a file without actually ever writing to it)
->
-> - use ioctl FIEMAP to get a list of the logical blocks that were
-> allocated
->
-> - use ioctl BLKDISCARD to discard these blocks
->
-> - remove the temporary file
->
-> Since the blocks to discard are allocated for the temporary
-> file during the procedure, they will not be used otherwise.
->
-> Obviously, we would still prefer using "fstrim", because then
-> there would be no need for that temporary file, the "safety margin"
-> and a temporary high fill level of the filesystem.
->
-> Regards,
->
-> Lutz Vieweg
->
+--Sig_/020Ahsc9DU4WJor_qKExBc6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It certainly sounds like a safe procedure, but I can see why you feel 
-it's not quite as elegant as it could be.  You will also be "discarding" 
-blocks that have never been written (at least, not since the last 
-discard...) - is there much overhead in that?
+Hello,
 
+On Tue, 19 Jul 2011 15:55:35 +0200
+Pavel Herrmann <morpheus.ibis@gmail.com> wrote:
 
+> the problem is that the rebuilt array is corrupted. most of the data is f=
+ine,=20
+> but every several MB there is an error (which doesn't look like being cau=
+sed=20
+> by a crash), effectively invalidating all data on the drive (about 7TB, m=
+ainly=20
+> HD video)
+
+Which model of SATA controller/HBA do you use?
+
+Kernel version, mdadm version?
+
+Anything unusual in SMART reports of any of the drives (e.g. a nonzero UDMA=
+ CRC Error count)?
+
+>=20
+> I do monthly scans, so the redundancy syndromes should have been up-to-da=
+te,=20
+> the array is made of 8 disks, the setup is ext4 on lvm on mdraid
+
+Did you notice any nonzero mismatch_cnt during those scans?
+
+--=20
+With respect,
+Roman
+
+--Sig_/020Ahsc9DU4WJor_qKExBc6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk4lnugACgkQTLKSvz+PZwhp0QCeNKJ/6XQCLsSt15x+7PokBUca
+TvkAn3oe+ANvFrY+izCPlp11SqkMGoBn
+=DYQm
+-----END PGP SIGNATURE-----
+
+--Sig_/020Ahsc9DU4WJor_qKExBc6--
