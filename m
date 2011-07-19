@@ -1,54 +1,28 @@
-From: Lutz Vieweg <lvml@5t9.de>
-Subject: Re: Software RAID and TRIM
-Date: Tue, 19 Jul 2011 15:41:53 +0200
-Message-ID: <j041j1$ttf$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org>
+From: Pavel Herrmann <morpheus.ibis@gmail.com>
+Subject: data corruption after rebuild
+Date: Tue, 19 Jul 2011 15:55:35 +0200
+Message-ID: <2073005.NH8LALaxuD@bloomfield>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j03m2p$jn1$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/19/2011 12:22 PM, David Brown wrote:
->> Because of those effects on the block-IO-queue, the user-space
->> work-around we implemented to discard the SSDs our RAID-1s consist of
->> will not discard "one area on all SSDs at a time", but rather iterate
->> first through all unused areas on one SSD, then iterate through the
->> same list of areas on the second SSD.
->
-> Do you take the arrays off-line during this process, or at least make
-> them read-only?
+Hi,
 
-No, we keep them online and writeable.
+I have a big problem with mdadm, I removed a drive from my raid6, after 
+replacing it the raid started an online resync. I accidentally pushed the 
+computer and it shut down (power cord moved), and after booting it again the 
+online resync continued.
 
-> If not, how do you ensure that the lists are valid?
+the problem is that the rebuilt array is corrupted. most of the data is fine, 
+but every several MB there is an error (which doesn't look like being caused 
+by a crash), effectively invalidating all data on the drive (about 7TB, mainly 
+HD video)
 
-The discard procedure works by..:
+I do monthly scans, so the redundancy syndromes should have been up-to-date, 
+the array is made of 8 disks, the setup is ext4 on lvm on mdraid
 
-- use SYS_fallocate to allocate the free space on the device (minus
-   some safety margin for the writes that will happen during the procedure)
-   for a temporary file (notice that with fallocate on XFS, you can
-   allocate space for a file without actually ever writing to it)
-
-- use ioctl FIEMAP to get a list of the logical blocks that were
-   allocated
-
-- use ioctl BLKDISCARD to discard these blocks
-
-- remove the temporary file
-
-Since the blocks to discard are allocated for the temporary
-file during the procedure, they will not be used otherwise.
-
-Obviously, we would still prefer using "fstrim", because then
-there would be no need for that temporary file, the "safety margin"
-and a temporary high fill level of the filesystem.
-
-Regards,
-
-Lutz Vieweg
-
-
+is there anything to solve this? or at least ideas what happened?
