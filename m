@@ -1,34 +1,60 @@
-From: Pavel Herrmann <morpheus.ibis@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: data corruption after rebuild
-Date: Tue, 19 Jul 2011 19:05:39 +0200
-Message-ID: <2015932.L0f6vYYk3Y@bloomfield>
-References: <2073005.NH8LALaxuD@bloomfield> <4879002.CX4iSyfhxZ@bloomfield> <20110719224819.7aa5582d@natsu>
+Date: Tue, 19 Jul 2011 23:38:56 +0600
+Message-ID: <20110719233856.32334e5b@natsu>
+References: <2073005.NH8LALaxuD@bloomfield>
+	<20110719211240.2578bba6@natsu>
+	<8745665.3py2GtsBIG@bloomfield>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/1yR60B0yhe3dT4txqvfizAV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110719224819.7aa5582d@natsu>
+In-Reply-To: <8745665.3py2GtsBIG@bloomfield>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: Pavel Herrmann <morpheus.ibis@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday 19 of July 2011 22:48:19 Roman Mamedov wrote:
-> On Tue, 19 Jul 2011 18:35:26 +0200
-> Well, this basically tells you what you already know - a part of the data
-> you have was corrupted. In this case I think it's 3184 512-byte sectors,
-> which is about 1.6MB total.
+--Sig_/1yR60B0yhe3dT4txqvfizAV
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-the number seems too low to me, I have about 2000 video files larger than 1GB 
-on that array, and every one i tried has been corrupted enough to create 
-almost unstoppable visual artifacts in hi-def video.
+On Tue, 19 Jul 2011 18:18:56 +0200
+Pavel Herrmann <morpheus.ibis@gmail.com> wrote:
 
+> On Tuesday 19 of July 2011 21:12:40 Roman Mamedov wrote:
+> > Hello,
+> >=20
+> > On Tue, 19 Jul 2011 15:55:35 +0200
+> >=20
+> > Pavel Herrmann <morpheus.ibis@gmail.com> wrote:
+> > > the problem is that the rebuilt array is corrupted. most of the data =
+is
+> > > fine, but every several MB there is an error (which doesn't look like
+> > > being caused by a crash), effectively invalidating all data on the
+> > > drive (about 7TB, mainly HD video)
+> >=20
+> > Which model of SATA controller/HBA do you use?
+>=20
+> 4 drives on ahci (ICH10R), 4 drives on sata_mv (adaptec 1430SA)
 
-> How it got there and how to prevent that from
-> happening in the future - that's a whole different question.
+OK, one more guess - any Samsung drives, F4EG? http://sourceforge.net/apps/=
+trac/smartmontools/wiki/SamsungF4EGBadBlocks
 
-would ZFS in raidz2 mode be much better than raid6+ext4? I understand its not 
-the topic of this list, but file-level checksummed rebuild looks like a nice 
-feature
+--=20
+With respect,
+Roman
 
+--Sig_/1yR60B0yhe3dT4txqvfizAV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk4lwTAACgkQTLKSvz+PZwgaBQCgiMP447qps3/+MiO6pQ1litHc
+5TIAoIkWEbLNBp68bm2mKw3VpiRcUV1b
+=+JwA
+-----END PGP SIGNATURE-----
+
+--Sig_/1yR60B0yhe3dT4txqvfizAV--
