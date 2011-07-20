@@ -1,45 +1,72 @@
-From: Lutz Vieweg <lvml@5t9.de>
-Subject: Re: Software RAID and TRIM
-Date: Wed, 20 Jul 2011 14:25:36 +0200
-Message-ID: <j06hg0$gdv$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>	 <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de>	 <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org>	 <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org>	 <j03m2p$jn1$1@dough.gmane.org>	 <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk> <1311164022.2031.0.camel@werner-t410>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: standard performance (write speed 20Mb/s)
+Date: Wed, 20 Jul 2011 07:31:35 -0500
+Message-ID: <4E26CAA7.8030201@hardwarefreak.com>
+References: <201107181403.49563.raid1@fuckaround.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1311164022.2031.0.camel@werner-t410>
+In-Reply-To: <201107181403.49563.raid1@fuckaround.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pol Hallen <raid1@fuckaround.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/20/2011 02:13 PM, Werner Fischer wrote:
-> There is a paper from Intel "Over-provisioning an Intel=C2=AE SSD" (a=
-nalyzing
-> X25-M 160 GB Gen.2 SSDs):
-> http://cache-www.intel.com/cd/00/00/45/95/459555_459555.pdf
->
-> On page 10 of this Intel presentation they mention that a spare area
->> 27% of native capacity has diminishing returns for such an SSD:
-> http://maltiel-consulting.com/Enterprise_Data_Integrity_Increasing_En=
-durance.pdf
+On 7/18/2011 7:03 AM, Pol Hallen wrote:
+>> Then you have multiple problems causing poor performance.  Now is the
+>> time for you to post your  hardware configuration, drive model
+>> number(s), mdadm config, and filesystem.  You should have done all of
+>> this in your initial post.
+> 
+> hello and sorry for the late :-(
+> 
+> now is a resync in progress, I can't stop it. Try /usr/share/mdadm/checkarray 
+> -x md0 but nothing..
+> 
+> fs is ext3 (done less 10 days ago)
+> 
+>> You've been on this list long enough to have known of the WD Green
+>> sector alignment issue and avoided it, and to know better than to run
+>> performance tests while an array is still in its initial sync.  Thus I
+>> initially assumed your problem was merely the insane dd block size.
+> 
+> when I wrote a post there was not resync in progress..
+> 
+> tell me if you need known other things, thanks
 
-(This latter document is password protected.)
-
-The first document, though, claims almost linear benefit (regarding IOs=
-/sec)
-from much higher amounts of over-provisioning. Alas, their chart does n=
-ot extend
-into the region where saturation of the effect must occur for sure.
-
-Regards,
-
-Lutz Vieweg
+I can't see how.  You dumped the entire system.  Which is probably why
+no one has responded until now.  Never provide all this garbage.  It
+takes too long to sift through and grab the relevant bits, which is only
+this:
 
 
+> Device Model:     ST31500341AS
+> User Capacity:    1,500,301,910,016 bytes
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Device Model:     ST31500341AS
+> User Capacity:    1,500,301,910,016 bytes
+
+> Device Model:     ST3500418AS
+> User Capacity:    500,107,862,016 bytes
+
+> Device Model:     WDC WD20EARS-00MVWB0
+> User Capacity:    2,000,398,934,016 bytes
+
+> Device Model:     WDC WD20EARS-00MVWB0
+> User Capacity:    2,000,398,934,016 bytes
+
+This mishmash combo of drives, including two WD Green Advanced Format
+drives, is likely the cause of the horrible write performance.  You're
+assembling the array from partitions.  The partitions on the WD20EARS
+drives are undoubtedly not 4KB sector aligned, causing excessive
+read-modify-write cycles.  See:
+
+http://en.wikipedia.org/wiki/Advanced_Format
+
+Repartition the Green drives with proper alignment.  If you still have
+issues we'll go from there.  Note:  Having 3 dissimilar drives in an
+array is never going to be an optimally performing solution.
+
+-- 
+Stan
