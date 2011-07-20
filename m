@@ -1,61 +1,37 @@
-From: Werner Fischer <devlists@wefi.net>
+From: Lutz Vieweg <lvml@5t9.de>
 Subject: Re: Software RAID and TRIM
-Date: Wed, 20 Jul 2011 14:13:42 +0200
-Message-ID: <1311164022.2031.0.camel@werner-t410>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk>
-	 <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de>
-	 <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org>
-	 <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org>
-	 <j03m2p$jn1$1@dough.gmane.org>
-	 <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
+Date: Wed, 20 Jul 2011 14:20:08 +0200
+Message-ID: <j06h5o$ebm$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org> <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk> <j0613g$aoe$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
+In-Reply-To: <j0613g$aoe$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2011-07-19 at 15:19 +0100, Tom De Mulder wrote:
-> In case people are interested, I ran more benchmarks. The impact of T=
-RIM=20
-> on an over-provisioned drive is remarkable: a 25% performance loss wh=
-en=20
-> using Postmark.
->=20
-> Because this isn't really on-topic for the MD mailing list, I've put =
-it=20
-> somewhere else:
->=20
-> http://tdm27.wordpress.com/2011/07/19/some-solid-state-drive-benchmar=
-ks/
->=20
-> My next goal, when I have the time, is to compare different amounts o=
-f=20
-> over-provisioning.
+On 07/20/2011 09:42 AM, David Brown wrote:
+>> http://tdm27.wordpress.com/2011/07/19/some-solid-state-drive-benchmarks/
+>
+> The telling figure here, though, is that TRIM made the single drive significantly slower.
 
-There is a paper from Intel "Over-provisioning an Intel=C2=AE SSD" (ana=
-lyzing
-X25-M 160 GB Gen.2 SSDs):
-http://cache-www.intel.com/cd/00/00/45/95/459555_459555.pdf
+More precisely, online-TRIM of ext4 on Intel SSDs seems to be a bad combination.
 
-On page 10 of this Intel presentation they mention that a spare area
->27% of native capacity has diminishing returns for such an SSD:
-http://maltiel-consulting.com/Enterprise_Data_Integrity_Increasing_Endu=
-rance.pdf
+I think it's clear you cannot gain much from TRIM if you're willing to spend
+the money for 2 times overprovisioning, anyway. You can lose significantly from
+online-trim when the filesystem issues a lot of TRIM commands all the time and
+when the SSD is slow to process them.
+
+TRIM gains you an advantage with less over-provisioning, and is better
+done in batches after significant amounts of data have been written/deleted.
+
+When you try with different levels of over-provisioning, also try with
+batched discards (fstrim) between runs of your benchmark.
 
 Regards,
-Werner
 
---=20
-: Werner Fischer
-: Technology Specialist
-: Thomas-Krenn.AG | The server-experts
-: http://www.thomas-krenn.com | http://www.thomas-krenn.com/wiki
+Lutz Vieweg
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
