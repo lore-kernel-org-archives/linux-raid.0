@@ -1,44 +1,36 @@
-From: <brian.foster@emc.com>
-Subject: RE: RAID 1 using SSD and 2 HDD
-Date: Wed, 20 Jul 2011 08:59:04 -0400
-Message-ID: <24EACA6AC4B506428C92FE7C172FEF4E02084CF0@MX16A.corp.emc.com>
-References: <4E25C9BA.1060401@dodtsair.com> <20110720003235.51b3a657@natsu>
- <4E25D775.1080406@dodtsair.com>
+From: Shaun Reich <predator106@gmail.com>
+Subject: Re: Raid5 boot failure after grow
+Date: Wed, 20 Jul 2011 12:39:16 -0400
+Message-ID: <CADVynFDJO3_87ub-qfKK-0JWOB0nYK5P7=Au7fhcd+LEQkP=OA@mail.gmail.com>
+References: <CADVynFA9NffR7jMrN5HV05n9V0=SOVdyFQjvCvNP=MU+G-ur6g@mail.gmail.com>
+ <4E260E21.5020001@turmel.org>
+Reply-To: shaun.reich@kdemail.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E25D775.1080406@dodtsair.com>
-Content-Language: en-US
+In-Reply-To: <4E260E21.5020001@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: mpower@dodtsair.com, rm@romanrm.ru
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Mike Power
-> Sent: Tuesday, July 19, 2011 3:14 PM
-> To: Roman Mamedov
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: RAID 1 using SSD and 2 HDD
-> 
-> Thanks for the link.  That is the kind of thing I am looking for.
-> 
-> On 07/19/2011 11:32 AM, Roman Mamedov wrote:
-> > On Tue, 19 Jul 2011 11:15:22 -0700
-> > Mike Power<mpower@dodtsair.com>  wrote:
-> >
-> >> Is it possible to implement a RAID 1 array using two equal size HDD
-> >> and one smaller and faster SSD.  The idea being that the resulting
-> >> RAID would have the same size of the HDD while picking up the speed
-> >> benefits of the SSD.
-> > See http://bcache.evilpiepirate.org/
-> >
+Do you happen to know how to rebuild it when I can't boot into it?
+I've tried booting into a livecd, mounting the raid volume and the
+/boot, running 'dracut --mdadmconf "initramfs-$(uname -r).img" $(uname
+-r)', copying the generated initramfs into the separate /boot
+partition, and making grub try to boot it, but it simply is not
+working.
 
-Also, Roberto referred to the facebook flashcache implementation. It is based on device-mapper and last I tried bcache, probably a bit more production-worthy at the moment (though bcache looks intriguing long term, so I'd suggest to try both and draw your own conclusion):
+It seems to be because it's actually using the livecd's kernel and
+mods, which is rather unfortunate and would probably be why it is
+unable to boot. I've also tried simply doing it from the livecd (with
+the proper mdadm.conf) and then copying that file (from the livecd),
+into /boot. That at least gets me from a blank blinking cursor, to a
+message about a failed modprobe attempt for /lib/modules, prior to
+falling back to a shell.
 
-https://github.com/facebook/flashcache
+Ideas?
 
-Brian
-
+-- 
+Shaun Reich,
+KDE Software Developer (kde.org)
