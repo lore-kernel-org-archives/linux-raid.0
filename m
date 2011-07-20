@@ -1,55 +1,49 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Software RAID and TRIM
-Date: Wed, 20 Jul 2011 09:42:55 +0200
-Message-ID: <j0613g$aoe$1@dough.gmane.org>
-References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org> <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
+From: Pavel Herrmann <morpheus.ibis@gmail.com>
+Subject: Re: data corruption after rebuild
+Date: Wed, 20 Jul 2011 10:20:55 +0200
+Message-ID: <5631626.tuTAQthxQb@bloomfield>
+References: <2073005.NH8LALaxuD@bloomfield> <20110720162431.5df90f32@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
+In-Reply-To: <20110720162431.5df90f32@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/07/2011 16:19, Tom De Mulder wrote:
->
-> In case people are interested, I ran more benchmarks. The impact of TRIM
-> on an over-provisioned drive is remarkable: a 25% performance loss when
-> using Postmark.
->
-> Because this isn't really on-topic for the MD mailing list, I've put it
-> somewhere else:
->
+On Wednesday 20 of July 2011 16:24:31 you wrote:
+> My suggestion would be to remove the drive you recently added and then see
+> if the data is still corrupted.  It may not help but is probably worth a
+> try.
 
-It is a little off-topic, perhaps, but still of interest to many RAID 
-users precisely because of the myths and inaccurate data surrounding 
-TRIM.  There are too many people that think TRIM is essential to SSD's, 
-RAID doesn't support TRIM, therefore you shouldn't use RAID and SSD's 
-together.
+tried that, did not help, probably due to the finished rebuild that "repaired" 
+all the parity data
 
-> http://tdm27.wordpress.com/2011/07/19/some-solid-state-drive-benchmarks/
->
+> There was a bug prior to 2.6.32 where RAID6 could sometimes write the wrong
+> data when recovering to a spare.  It would only happen if you were accessing
+> that data at the same time as it was recovery it, and if you were unlucky.
 
-To try to explain your results - first it's easy to see why md raid1 
-with discard is a little slower than md raid1 without discard - the raid 
-layer ignores the discards, so they can't help or hinder much, and the 
-filesystem is doing a bit of extra work (sending the discards) to no 
-purpose.
+I was accessing some data (read-mostly), but now the largest undamaged file on 
+the filesystem has just under 3MB - that looks a bit suspicious, as the stripe-
+width is 6x 512K = 3M
 
-It is also easy to see why a single SSD with no discards is about the 
-same speed.  You are using RAID1 - reads and writes are not striped in 
-any way, so the speed is the same as for a single disk.  If the test 
-accessed multiple files in parallel (especially reads), you'd see faster 
-reads.
+> BTW the monthly scans that you do are primarily for finding sleeping bad
+> blocks - blocks that you cannot read.  They do check for inconsistencies in
+> the parity but only report them, it doesn't correct them.  This is because
+> automatically correcting can cause more problems than it solves.
+> 
+> When the monthly check reported inconsistencies you "should" have confirmed
+> that all the drives seem to be functioning correctly and then run a 'repair'
+> pass to fix the parity blocks up.
+> 
+> As you didn't that bad parity would have created bad data when you
+> recovered.
 
-The telling figure here, though, is that TRIM made the single drive 
-significantly slower.
+see the last part, at this point I would be perfectly OK with 72 damaged 
+blocks, as per the last scan (or even a few hundred, for that matter)
 
-> My next goal, when I have the time, is to compare different amounts of
-> over-provisioning.
->
 
-Also try using RAID10,far for your arrays.  That will work the SSD's 
-harder, and perhaps give a better comparison.
+PS: forgot to include maillist
 
