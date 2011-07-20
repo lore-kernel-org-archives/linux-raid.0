@@ -1,49 +1,28 @@
-From: Pavel Herrmann <morpheus.ibis@gmail.com>
-Subject: Re: data corruption after rebuild
-Date: Wed, 20 Jul 2011 10:20:55 +0200
-Message-ID: <5631626.tuTAQthxQb@bloomfield>
-References: <2073005.NH8LALaxuD@bloomfield> <20110720162431.5df90f32@notabene.brown>
+From: Lutz Vieweg <lvml@5t9.de>
+Subject: Re: Software RAID and TRIM
+Date: Wed, 20 Jul 2011 12:39:58 +0200
+Message-ID: <j06b9u$9aj$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org> <j041j1$ttf$1@dough.gmane.org> <j046mj$1pn$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110720162431.5df90f32@notabene.brown>
+In-Reply-To: <j046mj$1pn$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 20 of July 2011 16:24:31 you wrote:
-> My suggestion would be to remove the drive you recently added and then see
-> if the data is still corrupted.  It may not help but is probably worth a
-> try.
+On 07/19/2011 05:06 PM, David Brown wrote:
+> It certainly sounds like a safe procedure, but I can see why you feel it's not quite as elegant as
+> it could be. You will also be "discarding" blocks that have never been written (at least, not since
+> the last discard...) - is there much overhead in that?
 
-tried that, did not help, probably due to the finished rebuild that "repaired" 
-all the parity data
+Luckily the SSDs we use do not require significant time to process a discard
+on areas that were already free - e.g. discarding ~ 250G of SSD space that is
+already empty this way takes only ~ 10 seconds.
 
-> There was a bug prior to 2.6.32 where RAID6 could sometimes write the wrong
-> data when recovering to a spare.  It would only happen if you were accessing
-> that data at the same time as it was recovery it, and if you were unlucky.
+Regards,
 
-I was accessing some data (read-mostly), but now the largest undamaged file on 
-the filesystem has just under 3MB - that looks a bit suspicious, as the stripe-
-width is 6x 512K = 3M
+Lutz Vieweg
 
-> BTW the monthly scans that you do are primarily for finding sleeping bad
-> blocks - blocks that you cannot read.  They do check for inconsistencies in
-> the parity but only report them, it doesn't correct them.  This is because
-> automatically correcting can cause more problems than it solves.
-> 
-> When the monthly check reported inconsistencies you "should" have confirmed
-> that all the drives seem to be functioning correctly and then run a 'repair'
-> pass to fix the parity blocks up.
-> 
-> As you didn't that bad parity would have created bad data when you
-> recovered.
-
-see the last part, at this point I would be perfectly OK with 72 damaged 
-blocks, as per the last scan (or even a few hundred, for that matter)
-
-
-PS: forgot to include maillist
 
