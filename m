@@ -1,48 +1,51 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: Raid5 boot failure after grow
-Date: Tue, 19 Jul 2011 19:07:13 -0400
-Message-ID: <4E260E21.5020001@turmel.org>
-References: <CADVynFA9NffR7jMrN5HV05n9V0=SOVdyFQjvCvNP=MU+G-ur6g@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] MD: raid1
+ s/sysfs_notify_dirent/sysfs_notify_dirent_safe
+Date: Wed, 20 Jul 2011 11:47:37 +1000
+Message-ID: <20110720114737.7dbdf2c4@notabene.brown>
+References: <1310676829.2246.7.camel@f14.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADVynFA9NffR7jMrN5HV05n9V0=SOVdyFQjvCvNP=MU+G-ur6g@mail.gmail.com>
+In-Reply-To: <1310676829.2246.7.camel@f14.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: shaun.reich@kdemail.net
-Cc: Shaun Reich <predator106@gmail.com>, linux-raid@vger.kernel.org
+To: Jonathan Brassow <jbrassow@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/19/2011 06:43 PM, Shaun Reich wrote:
-> Hello,
+On Thu, 14 Jul 2011 15:53:49 -0500 Jonathan Brassow <jbrassow@redhat.com>
+wrote:
+
+> If device-mapper creates a RAID1 array that includes devices to
+> be rebuilt, it will deref a NULL pointer when finished because
+> sysfs is not used by device-mapper instantiated RAID devices.
 > 
-> I'm using Fedora 15 and I added an additional disk to my raid5 setup
-> and grew the array to encompass it. It all worked fine and rebuilt and
-> everything. However, now when I boot my computer I am dropped to a
-> shell, stating "dracut" (I wonder what that means). Anyways, when in
-> here I can cat /etc/mdadm.conf and it appears to be an old
-> configuration file. It lists only 3 raid devices in that
-> configuration. I now have 4.
-
-dracut is the "new" cross-distribution initramfs environment.  I'm using it in my gentoo boxes.
-
-> If I run mdadm --assemble --scan after removing the config file, it
-> will automatically find my array and all is well. But this doesn't
-> solve the fact that it doesn't boot to it.
+> Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
 > 
-> dmesg reports "no root device
-> 'block:/dev/disk/by-uuid/933ac67-98f1-481f-934e-c9af492ba28c' found"
+> Index: linux-2.6/drivers/md/raid1.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/raid1.c
+> +++ linux-2.6/drivers/md/raid1.c
+> @@ -1027,7 +1027,7 @@ static int raid1_spare_active(mddev_t *m
+>  		    && !test_bit(Faulty, &rdev->flags)
+>  		    && !test_and_set_bit(In_sync, &rdev->flags)) {
+>  			count++;
+> -			sysfs_notify_dirent(rdev->sysfs_state);
+> +			sysfs_notify_dirent_safe(rdev->sysfs_state);
+>  		}
+>  	}
+>  	spin_lock_irqsave(&conf->device_lock, flags);
 > 
-> This is particularly interesting, because blkid lists /dev/md127
-> (after I've managed to mount it), as that same UUID.
 > 
-> fyi, I use GRUB to boot to a /boot partition, which is then supposed
-> to mount the array. Is there anything obvious that I have missed? Do I
-> have to rebuild the initrd, or something like that? (since it seems
-> the fallback shell doesn't preserve any changes to /etc/mdadm.conf).
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, your initramfs needs a current copy of your mdadm.conf file, if it has any at all.
 
-HTH,
 
-Phil
+Applied, thanks.
+
+NeilBrown
+
