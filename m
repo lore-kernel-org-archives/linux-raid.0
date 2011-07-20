@@ -1,58 +1,55 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: data corruption after rebuild
-Date: Wed, 20 Jul 2011 16:24:31 +1000
-Message-ID: <20110720162431.5df90f32@notabene.brown>
-References: <2073005.NH8LALaxuD@bloomfield>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Software RAID and TRIM
+Date: Wed, 20 Jul 2011 09:42:55 +0200
+Message-ID: <j0613g$aoe$1@dough.gmane.org>
+References: <alpine.OSX.2.00.1106281628320.257@trogdor.csi.cam.ac.uk> <iud06d$ad5$1@dough.gmane.org> <4E235984.2070704@5t9.de> <j012fa$6k6$1@dough.gmane.org> <j01ssr$j1i$1@dough.gmane.org> <j024fe$4va$1@dough.gmane.org> <j03ipg$uqk$1@dough.gmane.org> <j03m2p$jn1$1@dough.gmane.org> <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2073005.NH8LALaxuD@bloomfield>
+In-Reply-To: <alpine.OSX.2.00.1107191516181.275@trogdor.csi.cam.ac.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pavel Herrmann <morpheus.ibis@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 19 Jul 2011 15:55:35 +0200 Pavel Herrmann <morpheus.ibis@gmail.com>
-wrote:
+On 19/07/2011 16:19, Tom De Mulder wrote:
+>
+> In case people are interested, I ran more benchmarks. The impact of TRIM
+> on an over-provisioned drive is remarkable: a 25% performance loss when
+> using Postmark.
+>
+> Because this isn't really on-topic for the MD mailing list, I've put it
+> somewhere else:
+>
 
-> Hi,
-> 
-> I have a big problem with mdadm, I removed a drive from my raid6, after 
-> replacing it the raid started an online resync. I accidentally pushed the 
-> computer and it shut down (power cord moved), and after booting it again the 
-> online resync continued.
-> 
-> the problem is that the rebuilt array is corrupted. most of the data is fine, 
-> but every several MB there is an error (which doesn't look like being caused 
-> by a crash), effectively invalidating all data on the drive (about 7TB, mainly 
-> HD video)
-> 
-> I do monthly scans, so the redundancy syndromes should have been up-to-date, 
-> the array is made of 8 disks, the setup is ext4 on lvm on mdraid
-> 
-> is there anything to solve this? or at least ideas what happened?
+It is a little off-topic, perhaps, but still of interest to many RAID 
+users precisely because of the myths and inaccurate data surrounding 
+TRIM.  There are too many people that think TRIM is essential to SSD's, 
+RAID doesn't support TRIM, therefore you shouldn't use RAID and SSD's 
+together.
 
-My suggestion would be to remove the drive you recently added and then see if
-the data is still corrupted.  It may not help but is probably worth a try.
+> http://tdm27.wordpress.com/2011/07/19/some-solid-state-drive-benchmarks/
+>
 
-There was a bug prior to 2.6.32 where RAID6 could sometimes write the wrong
-data when recovering to a spare.  It would only happen if you were accessing
-that data at the same time as it was recovery it, and if you were unlucky.
+To try to explain your results - first it's easy to see why md raid1 
+with discard is a little slower than md raid1 without discard - the raid 
+layer ignores the discards, so they can't help or hinder much, and the 
+filesystem is doing a bit of extra work (sending the discards) to no 
+purpose.
 
-However you are running a newer kernel so that shouldn't affect you, but you
-never know.
+It is also easy to see why a single SSD with no discards is about the 
+same speed.  You are using RAID1 - reads and writes are not striped in 
+any way, so the speed is the same as for a single disk.  If the test 
+accessed multiple files in parallel (especially reads), you'd see faster 
+reads.
 
-BTW the monthly scans that you do are primarily for finding sleeping bad
-blocks - blocks that you cannot read.  They do check for inconsistencies in
-the parity but only report them, it doesn't correct them.  This is because
-automatically correcting can cause more problems than it solves.
+The telling figure here, though, is that TRIM made the single drive 
+significantly slower.
 
-When the monthly check reported inconsistencies you "should" have confirmed
-that all the drives seem to be functioning correctly and then run a 'repair'
-pass to fix the parity blocks up.
+> My next goal, when I have the time, is to compare different amounts of
+> over-provisioning.
+>
 
-As you didn't that bad parity would have created bad data when you recovered.
+Also try using RAID10,far for your arrays.  That will work the SSD's 
+harder, and perhaps give a better comparison.
 
-
-NeilBrown
