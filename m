@@ -1,117 +1,121 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Wed, 20 Jul 2011 19:02:04 -0500
-Message-ID: <4E276C7C.9050103@hardwarefreak.com>
-References: <201107181403.49563.raid1@fuckaround.org>	<4E26CAA7.8030201@hardwarefreak.com>	<c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org> <CADNH=7HR7euaWem0tpLxJfRe0hYnRP5fwxJ6MC5vJeNf=T=PzA@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 12/36] md/raid1: store behind-write pages in bi_vecs.
+Date: Thu, 21 Jul 2011 12:58:48 +1000
+Message-ID: <20110721025848.8422.51169.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7HR7euaWem0tpLxJfRe0hYnRP5fwxJ6MC5vJeNf=T=PzA@mail.gmail.com>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
-Cc: Pol Hallen <raid1@fuckaround.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/20/2011 3:17 PM, Mathias Bur=C3=A9n wrote:
+When performing write-behind we allocate pages to store the data
+during write.
+Previously we just keep a list of pages.  Now we keep a list of
+bi_vec which includes offset and size.
+This means that the r1bio has complete information to create a new
+bio which will be needed for retrying after write errors.
 
-> FWIW this is my RAID6 setup:
->=20
-> $ sudo fdisk -l /dev/sd[b,c,d,e,f,g,h]
-> Password:
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
 
-Are these indeed advanced format drives?  You didn't provide model#s or
-manufacturer product line.  The only clue we have that they might be AF
-drives is the 2048 offset you created.  Unless I simply missed it.
+ drivers/md/raid1.c |   33 +++++++++++++++++----------------
+ drivers/md/raid1.h |    2 +-
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-> Disk /dev/sdb: 2000.4 GB, 2000398934016 bytes
-> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 sector=
-s
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x0e5b3a7a
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
-> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 sector=
-s
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x4fc36d54
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sdd: 2000.4 GB, 2000398934016 bytes
-> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 sector=
-s
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x9e716ecb
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdd1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sde: 2000.4 GB, 2000398934016 bytes
-> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 sector=
-s
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x629ab77f
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sde1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sdf: 2000.4 GB, 2000398934016 bytes
-> 123 heads, 18 sectors/track, 1764692 cylinders, total 3907029168 sect=
-ors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x3d454f20
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdf1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sdg: 2000.4 GB, 2000398934016 bytes
-> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 sector=
-s
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x918fae9f
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdg1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
->=20
-> Disk /dev/sdh: 2000.4 GB, 2000398934016 bytes
-> 123 heads, 18 sectors/track, 1764692 cylinders, total 3907029168 sect=
-ors
-> Units =3D sectors of 1 * 512 =3D 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x0ac81a1b
->=20
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdh1            2048  3907029167  1953513560   fd  Linux raid
-> autodetect
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 6e605b2..42e815d 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -327,9 +327,9 @@ static void r1_bio_write_done(r1bio_t *r1_bio)
+ 			/* free extra copy of the data pages */
+ 			int i = r1_bio->behind_page_count;
+ 			while (i--)
+-				safe_put_page(r1_bio->behind_pages[i]);
+-			kfree(r1_bio->behind_pages);
+-			r1_bio->behind_pages = NULL;
++				safe_put_page(r1_bio->behind_bvecs[i].bv_page);
++			kfree(r1_bio->behind_bvecs);
++			r1_bio->behind_bvecs = NULL;
+ 		}
+ 		/* clear the bitmap if all writes complete successfully */
+ 		bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
+@@ -748,30 +748,31 @@ static void alloc_behind_pages(struct bio *bio, r1bio_t *r1_bio)
+ {
+ 	int i;
+ 	struct bio_vec *bvec;
+-	struct page **pages = kzalloc(bio->bi_vcnt * sizeof(struct page*),
++	struct bio_vec *bvecs = kzalloc(bio->bi_vcnt * sizeof(struct bio_vec),
+ 					GFP_NOIO);
+-	if (unlikely(!pages))
++	if (unlikely(!bvecs))
+ 		return;
+ 
+ 	bio_for_each_segment(bvec, bio, i) {
+-		pages[i] = alloc_page(GFP_NOIO);
+-		if (unlikely(!pages[i]))
++		bvecs[i] = *bvec;
++		bvecs[i].bv_page = alloc_page(GFP_NOIO);
++		if (unlikely(!bvecs[i].bv_page))
+ 			goto do_sync_io;
+-		memcpy(kmap(pages[i]) + bvec->bv_offset,
+-			kmap(bvec->bv_page) + bvec->bv_offset, bvec->bv_len);
+-		kunmap(pages[i]);
++		memcpy(kmap(bvecs[i].bv_page) + bvec->bv_offset,
++		       kmap(bvec->bv_page) + bvec->bv_offset, bvec->bv_len);
++		kunmap(bvecs[i].bv_page);
+ 		kunmap(bvec->bv_page);
+ 	}
+-	r1_bio->behind_pages = pages;
++	r1_bio->behind_bvecs = bvecs;
+ 	r1_bio->behind_page_count = bio->bi_vcnt;
+ 	set_bit(R1BIO_BehindIO, &r1_bio->state);
+ 	return;
+ 
+ do_sync_io:
+ 	for (i = 0; i < bio->bi_vcnt; i++)
+-		if (pages[i])
+-			put_page(pages[i]);
+-	kfree(pages);
++		if (bvecs[i].bv_page)
++			put_page(bvecs[i].bv_page);
++	kfree(bvecs);
+ 	PRINTK("%dB behind alloc failed, doing sync I/O\n", bio->bi_size);
+ }
+ 
+@@ -1059,7 +1060,7 @@ read_again:
+ 						   &r1_bio->state));
+ 			first_clone = 0;
+ 		}
+-		if (r1_bio->behind_pages) {
++		if (r1_bio->behind_bvecs) {
+ 			struct bio_vec *bvec;
+ 			int j;
+ 
+@@ -1071,7 +1072,7 @@ read_again:
+ 			 * them all
+ 			 */
+ 			__bio_for_each_segment(bvec, mbio, j, 0)
+-				bvec->bv_page = r1_bio->behind_pages[j];
++				bvec->bv_page = r1_bio->behind_bvecs[j].bv_page;
+ 			if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
+ 				atomic_inc(&r1_bio->behind_remaining);
+ 		}
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index f81360d..b788547 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -101,7 +101,7 @@ struct r1bio_s {
+ 
+ 	struct list_head	retry_list;
+ 	/* Next two are only valid when R1BIO_BehindIO is set */
+-	struct page		**behind_pages;
++	struct bio_vec		*behind_bvecs;
+ 	int			behind_page_count;
+ 	/*
+ 	 * if the IO is in WRITE direction, then multiple bios are used.
 
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
