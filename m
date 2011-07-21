@@ -1,51 +1,45 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 26/36] md/raid10 - avoid reading from known bad blocks -
- part 3
-Date: Thu, 21 Jul 2011 12:58:50 +1000
-Message-ID: <20110721025850.8422.64849.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 24/34] md: remove ro check in md_check_recovery()
+Date: Thu, 21 Jul 2011 12:32:27 +1000
+Message-ID: <20110721023227.6728.42013.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Namhyung Kim <namhyung@gmail.com>
 List-Id: linux-raid.ids
 
-When attempting to repair a read error, don't read from
-devices with a known bad block.
+From: Namhyung Kim <namhyung@gmail.com>
 
-As we are only reading PAGE_SIZE blocks, we don't try to
-narrow down to smaller regions in the hope that only part of this
-page is bad - it isn't worth the effort.
+Commit c89a8eee6154 ("Allow faulty devices to be removed from a
+readonly array.") added some work on ro array in the function,
+but it couldn't be done since we didn't allow the ro array to be
+handled from the beginning. Fix it.
 
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/md/md.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 0dcd172..47e6959 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1594,10 +1594,15 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 0398dc4..77bd8d8 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7163,9 +7163,6 @@ void md_check_recovery(mddev_t *mddev)
+ 	if (mddev->bitmap)
+ 		bitmap_daemon_work(mddev);
  
- 		rcu_read_lock();
- 		do {
-+			sector_t first_bad;
-+			int bad_sectors;
-+
- 			d = r10_bio->devs[sl].devnum;
- 			rdev = rcu_dereference(conf->mirrors[d].rdev);
- 			if (rdev &&
--			    test_bit(In_sync, &rdev->flags)) {
-+			    test_bit(In_sync, &rdev->flags) &&
-+			    is_badblock(rdev, r10_bio->devs[sl].addr + sect, s,
-+					&first_bad, &bad_sectors) == 0) {
- 				atomic_inc(&rdev->nr_pending);
- 				rcu_read_unlock();
- 				success = sync_page_io(rdev,
+-	if (mddev->ro)
+-		return;
+-
+ 	if (signal_pending(current)) {
+ 		if (mddev->pers->sync_request && !mddev->external) {
+ 			printk(KERN_INFO "md: %s in immediate safe mode\n",
 
 
