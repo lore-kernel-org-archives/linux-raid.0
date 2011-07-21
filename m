@@ -1,210 +1,108 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 22/34] md/raid: use printk_ratelimited instead of
- printk_ratelimit
-Date: Thu, 21 Jul 2011 12:32:27 +1000
-Message-ID: <20110721023227.6728.28757.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 25/36] md/raid10: avoid reading from known bad blocks -
+ part 2
+Date: Thu, 21 Jul 2011 12:58:50 +1000
+Message-ID: <20110721025849.8422.71112.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
 List-Id: linux-raid.ids
 
-From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+When redirecting a read error to a different device, we must
+again avoid bad blocks and possibly split the request.
 
-As per printk_ratelimit comment, it should not be used.
-
-Signed-off-by: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c  |   25 +++++++++++++++----------
- drivers/md/raid10.c |   23 +++++++++++++----------
- drivers/md/raid5.c  |   47 +++++++++++++++++++++++++----------------------
- 3 files changed, 53 insertions(+), 42 deletions(-)
+ drivers/md/raid10.c |   45 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index f7431b6..d3a8f4b 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -35,6 +35,7 @@
- #include <linux/delay.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid1.h"
- #include "bitmap.h"
-@@ -287,10 +288,13 @@ static void raid1_end_read_request(struct bio *bio, int error)
- 		 * oops, read error:
- 		 */
- 		char b[BDEVNAME_SIZE];
--		if (printk_ratelimit())
--			printk(KERN_ERR "md/raid1:%s: %s: rescheduling sector %llu\n",
--			       mdname(conf->mddev),
--			       bdevname(conf->mirrors[mirror].rdev->bdev,b), (unsigned long long)r1_bio->sector);
-+		printk_ratelimited(
-+			KERN_ERR "md/raid1:%s: %s: "
-+			"rescheduling sector %llu\n",
-+			mdname(conf->mddev),
-+			bdevname(conf->mirrors[mirror].rdev->bdev,
-+				 b),
-+			(unsigned long long)r1_bio->sector);
- 		reschedule_retry(r1_bio);
- 	}
- 
-@@ -1580,12 +1584,13 @@ static void raid1d(mddev_t *mddev)
- 						      GFP_NOIO, mddev);
- 				r1_bio->bios[r1_bio->read_disk] = bio;
- 				rdev = conf->mirrors[disk].rdev;
--				if (printk_ratelimit())
--					printk(KERN_ERR "md/raid1:%s: redirecting sector %llu to"
--					       " other mirror: %s\n",
--					       mdname(mddev),
--					       (unsigned long long)r1_bio->sector,
--					       bdevname(rdev->bdev,b));
-+				printk_ratelimited(
-+					KERN_ERR
-+					"md/raid1:%s: redirecting sector %llu"
-+					" to other mirror: %s\n",
-+					mdname(mddev),
-+					(unsigned long long)r1_bio->sector,
-+					bdevname(rdev->bdev, b));
- 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
- 				bio->bi_bdev = rdev->bdev;
- 				bio->bi_end_io = raid1_end_read_request;
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 3715e22..1725ec1 100644
+index 872bf94..0dcd172 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -22,6 +22,7 @@
- #include <linux/delay.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid10.h"
- #include "raid0.h"
-@@ -301,10 +302,11 @@ static void raid10_end_read_request(struct bio *bio, int error)
- 		 * oops, read error - keep the refcount on the rdev
- 		 */
- 		char b[BDEVNAME_SIZE];
--		if (printk_ratelimit())
--			printk(KERN_ERR "md/raid10:%s: %s: rescheduling sector %llu\n",
--			       mdname(conf->mddev),
--			       bdevname(conf->mirrors[dev].rdev->bdev,b), (unsigned long long)r10_bio->sector);
-+		printk_ratelimited(KERN_ERR
-+				   "md/raid10:%s: %s: rescheduling sector %llu\n",
-+				   mdname(conf->mddev),
-+				   bdevname(conf->mirrors[dev].rdev->bdev, b),
-+				   (unsigned long long)r10_bio->sector);
- 		reschedule_retry(r10_bio);
- 	}
- }
-@@ -1669,12 +1671,13 @@ static void raid10d(mddev_t *mddev)
- 				bio_put(bio);
- 				slot = r10_bio->read_slot;
- 				rdev = conf->mirrors[mirror].rdev;
--				if (printk_ratelimit())
--					printk(KERN_ERR "md/raid10:%s: %s: redirecting sector %llu to"
--					       " another mirror\n",
--					       mdname(mddev),
--					       bdevname(rdev->bdev,b),
--					       (unsigned long long)r10_bio->sector);
-+				printk_ratelimited(
-+					KERN_ERR
-+					"md/raid10:%s: %s: redirecting"
-+					"sector %llu to another mirror\n",
-+					mdname(mddev),
-+					bdevname(rdev->bdev, b),
-+					(unsigned long long)r10_bio->sector);
- 				bio = bio_clone_mddev(r10_bio->master_bio,
- 						      GFP_NOIO, mddev);
- 				r10_bio->devs[slot].bio = bio;
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 93ee26c..b14183e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -51,6 +51,7 @@
- #include <linux/seq_file.h>
- #include <linux/cpu.h>
- #include <linux/slab.h>
-+#include <linux/ratelimit.h>
- #include "md.h"
- #include "raid5.h"
- #include "raid0.h"
-@@ -96,8 +97,6 @@
- #define __inline__
- #endif
+@@ -1746,14 +1746,15 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
+ 	rdev_dec_pending(conf->mirrors[mirror].rdev, mddev);
  
--#define printk_rl(args...) ((void) (printk_ratelimit() && printk(args)))
--
- /*
-  * We maintain a biased count of active stripes in the bottom 16 bits of
-  * bi_phys_segments, and a count of processed stripes in the upper 16 bits
-@@ -1583,12 +1582,14 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 		set_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		if (test_bit(R5_ReadError, &sh->dev[i].flags)) {
- 			rdev = conf->disks[i].rdev;
--			printk_rl(KERN_INFO "md/raid:%s: read error corrected"
--				  " (%lu sectors at %llu on %s)\n",
--				  mdname(conf->mddev), STRIPE_SECTORS,
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
--				  bdevname(rdev->bdev, b));
-+			printk_ratelimited(
-+				KERN_INFO
-+				"md/raid:%s: read error corrected"
-+				" (%lu sectors at %llu on %s)\n",
-+				mdname(conf->mddev), STRIPE_SECTORS,
-+				(unsigned long long)(sh->sector
-+						     + rdev->data_offset),
-+				bdevname(rdev->bdev, b));
- 			clear_bit(R5_ReadError, &sh->dev[i].flags);
- 			clear_bit(R5_ReWrite, &sh->dev[i].flags);
- 		}
-@@ -1602,22 +1603,24 @@ static void raid5_end_read_request(struct bio * bi, int error)
- 		clear_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		atomic_inc(&rdev->read_errors);
- 		if (conf->mddev->degraded >= conf->max_degraded)
--			printk_rl(KERN_WARNING
--				  "md/raid:%s: read error not correctable "
--				  "(sector %llu on %s).\n",
--				  mdname(conf->mddev),
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
--				  bdn);
-+			printk_ratelimited(
-+				KERN_WARNING
-+				"md/raid:%s: read error not correctable "
-+				"(sector %llu on %s).\n",
-+				mdname(conf->mddev),
-+				(unsigned long long)(sh->sector
-+						     + rdev->data_offset),
-+				bdn);
- 		else if (test_bit(R5_ReWrite, &sh->dev[i].flags))
- 			/* Oh, no!!! */
--			printk_rl(KERN_WARNING
--				  "md/raid:%s: read error NOT corrected!! "
--				  "(sector %llu on %s).\n",
--				  mdname(conf->mddev),
--				  (unsigned long long)(sh->sector
--						       + rdev->data_offset),
--				  bdn);
-+			printk_ratelimited(
-+				KERN_WARNING
-+				"md/raid:%s: read error NOT corrected!! "
-+				"(sector %llu on %s).\n",
-+				mdname(conf->mddev),
-+				(unsigned long long)(sh->sector
-+						     + rdev->data_offset),
-+				bdn);
- 		else if (atomic_read(&rdev->read_errors)
- 			 > conf->max_nr_stripes)
- 			printk(KERN_WARNING
+ 	bio = r10_bio->devs[slot].bio;
++	bdevname(bio->bi_bdev, b);
+ 	r10_bio->devs[slot].bio =
+ 		mddev->ro ? IO_BLOCKED : NULL;
++read_more:
+ 	mirror = read_balance(conf, r10_bio, &max_sectors);
+-	if (mirror == -1 || max_sectors < r10_bio->sectors) {
++	if (mirror == -1) {
+ 		printk(KERN_ALERT "md/raid10:%s: %s: unrecoverable I/O"
+ 		       " read error for block %llu\n",
+-		       mdname(mddev),
+-		       bdevname(bio->bi_bdev, b),
++		       mdname(mddev), b,
+ 		       (unsigned long long)r10_bio->sector);
+ 		raid_end_bio_io(r10_bio);
+ 		bio_put(bio);
+@@ -1761,7 +1762,8 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
+ 	}
+ 
+ 	do_sync = (r10_bio->master_bio->bi_rw & REQ_SYNC);
+-	bio_put(bio);
++	if (bio)
++		bio_put(bio);
+ 	slot = r10_bio->read_slot;
+ 	rdev = conf->mirrors[mirror].rdev;
+ 	printk_ratelimited(
+@@ -1773,6 +1775,9 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
+ 		(unsigned long long)r10_bio->sector);
+ 	bio = bio_clone_mddev(r10_bio->master_bio,
+ 			      GFP_NOIO, mddev);
++	md_trim_bio(bio,
++		    r10_bio->sector - bio->bi_sector,
++		    max_sectors);
+ 	r10_bio->devs[slot].bio = bio;
+ 	bio->bi_sector = r10_bio->devs[slot].addr
+ 		+ rdev->data_offset;
+@@ -1780,7 +1785,37 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
+ 	bio->bi_rw = READ | do_sync;
+ 	bio->bi_private = r10_bio;
+ 	bio->bi_end_io = raid10_end_read_request;
+-	generic_make_request(bio);
++	if (max_sectors < r10_bio->sectors) {
++		/* Drat - have to split this up more */
++		struct bio *mbio = r10_bio->master_bio;
++		int sectors_handled =
++			r10_bio->sector + max_sectors
++			- mbio->bi_sector;
++		r10_bio->sectors = max_sectors;
++		spin_lock_irq(&conf->device_lock);
++		if (mbio->bi_phys_segments == 0)
++			mbio->bi_phys_segments = 2;
++		else
++			mbio->bi_phys_segments++;
++		spin_lock_irq(&conf->device_lock);
++		generic_make_request(bio);
++		bio = NULL;
++
++		r10_bio = mempool_alloc(conf->r10bio_pool,
++					GFP_NOIO);
++		r10_bio->master_bio = mbio;
++		r10_bio->sectors = (mbio->bi_size >> 9)
++			- sectors_handled;
++		r10_bio->state = 0;
++		set_bit(R10BIO_ReadError,
++			&r10_bio->state);
++		r10_bio->mddev = mddev;
++		r10_bio->sector = mbio->bi_sector
++			+ sectors_handled;
++
++		goto read_more;
++	} else
++		generic_make_request(bio);
+ }
+ 
+ static void raid10d(mddev_t *mddev)
 
 
