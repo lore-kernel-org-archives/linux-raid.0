@@ -1,56 +1,51 @@
-From: Nikolay Kichukov <hijacker@oldum.net>
-Subject: Re: Raid5 boot failure after grow
-Date: Thu, 21 Jul 2011 13:06:36 +0300
-Message-ID: <4E27FA2C.9070207@oldum.net>
-References: <CADVynFA9NffR7jMrN5HV05n9V0=SOVdyFQjvCvNP=MU+G-ur6g@mail.gmail.com> <4E260E21.5020001@turmel.org> <CADVynFDJO3_87ub-qfKK-0JWOB0nYK5P7=Au7fhcd+LEQkP=OA@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 26/36] md/raid10 - avoid reading from known bad blocks -
+ part 3
+Date: Thu, 21 Jul 2011 12:58:50 +1000
+Message-ID: <20110721025850.8422.64849.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADVynFDJO3_87ub-qfKK-0JWOB0nYK5P7=Au7fhcd+LEQkP=OA@mail.gmail.com>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: shaun.reich@kdemail.net
-Cc: Shaun Reich <predator106@gmail.com>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+When attempting to repair a read error, don't read from
+devices with a known bad block.
 
-Hi,
-did you actually chroot into the grown array before updating your initramfs image?
+As we are only reading PAGE_SIZE blocks, we don't try to
+narrow down to smaller regions in the hope that only part of this
+page is bad - it isn't worth the effort.
 
-BTW what is on the raid5? Is it the / fs?
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
 
-Cheers,
-- -N
+ drivers/md/raid10.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-On 07/20/2011 07:39 PM, Shaun Reich wrote:
-> Do you happen to know how to rebuild it when I can't boot into it?
-> I've tried booting into a livecd, mounting the raid volume and the
-> /boot, running 'dracut --mdadmconf "initramfs-$(uname -r).img" $(uname
-> -r)', copying the generated initramfs into the separate /boot
-> partition, and making grub try to boot it, but it simply is not
-> working.
-> 
-> It seems to be because it's actually using the livecd's kernel and
-> mods, which is rather unfortunate and would probably be why it is
-> unable to boot. I've also tried simply doing it from the livecd (with
-> the proper mdadm.conf) and then copying that file (from the livecd),
-> into /boot. That at least gets me from a blank blinking cursor, to a
-> message about a failed modprobe attempt for /lib/modules, prior to
-> falling back to a shell.
-> 
-> Ideas?
-> 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 0dcd172..47e6959 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1594,10 +1594,15 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 
+ 		rcu_read_lock();
+ 		do {
++			sector_t first_bad;
++			int bad_sectors;
++
+ 			d = r10_bio->devs[sl].devnum;
+ 			rdev = rcu_dereference(conf->mirrors[d].rdev);
+ 			if (rdev &&
+-			    test_bit(In_sync, &rdev->flags)) {
++			    test_bit(In_sync, &rdev->flags) &&
++			    is_badblock(rdev, r10_bio->devs[sl].addr + sect, s,
++					&first_bad, &bad_sectors) == 0) {
+ 				atomic_inc(&rdev->nr_pending);
+ 				rcu_read_unlock();
+ 				success = sync_page_io(rdev,
 
-iQEcBAEBAgAGBQJOJ/osAAoJEDFLYVOGGjgXkJQH/2HSfCiRMpTqCy4EPzKEudoi
-Wa06t862E0HXJuTauHFmtRAYvFV82G7TaRxSPznSDrKsit7FTMPSdzSWGUf9JDHO
-miFSPaENdB/H6qV1FA1yYX3KcARaihAlqbDX2OcMFaLFr5krRpy8FZ8gBL453JYw
-SlYl2/UP3q8r+TuobCuy8bwWV3Xv8Iw6UO0SiYZYZAELaASRcnNnnFw+wb21VZI7
-HKItkpO6mk/UkQjgbGykSOQjLLBSFUx9MLU1FI+nOwDnlzyyb5/Jnv3zUjWhOC7K
-lBIz3Sq7E2Jp6XKqZ9kKtTxebRxMybeEsUWJ3GTwQ5HrUryywZ4uGuntP9lWcJY=
-=nxFq
------END PGP SIGNATURE-----
+
