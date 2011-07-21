@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 24/36] md/raid10: avoid reading from known bad blocks -
- part 1
-Date: Thu, 21 Jul 2011 12:58:49 +1000
-Message-ID: <20110721025849.8422.99158.stgit@notabene.brown>
+Subject: [md PATCH 35/36] md/raid10: Handle read errors during recovery better.
+Date: Thu, 21 Jul 2011 12:58:51 +1000
+Message-ID: <20110721025850.8422.98840.stgit@notabene.brown>
 References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,293 +12,254 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This patch just covers the basic read path:
- 1/ read_balance needs to check for badblocks, and return not only
-    the chosen slot, but also how many good blocks are available
-    there.
- 2/ read submission must be ready to issue multiple reads to
-    different devices as different bad blocks on different devices
-    could mean that a single large read cannot be served by any one
-    device, but can still be served by the array.
-    This requires keeping count of the number of outstanding requests
-    per bio.  This count is stored in 'bi_phys_segments'
+Currently when we get a read error during recovery, we simply abort
+the recovery.
 
-On read error we currently just fail the request if another target
-cannot handle the whole request.  Next patch refines that a bit.
+Instead, repeat the read in page-sized blocks.
+On successful reads, write to the target.
+On read errors, record a bad block on the destination,
+and only if that fails do we abort the recovery.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
+As we now retry reads we need to know where we read from.  This was in
+bi_sector but that can be changed during a read attempt.
+So store the correct from_addr and to_addr in the r10_bio for later
+access.
+
+
+Signed-off-by: NeilBrown<neilb@suse.de>
 ---
 
- drivers/md/raid10.c |  141 +++++++++++++++++++++++++++++++++++++++++++++------
- drivers/md/raid10.h |    4 +
- 2 files changed, 129 insertions(+), 16 deletions(-)
+ drivers/md/raid10.c |  154 ++++++++++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 121 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index f1b749c..872bf94 100644
+index f87c8d9..b02e384 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -191,12 +191,6 @@ static void free_r10bio(r10bio_t *r10_bio)
- {
- 	conf_t *conf = r10_bio->mddev->private;
+@@ -1141,7 +1141,7 @@ retry_write:
+ 	wake_up(&conf->wait_barrier);
  
--	/*
--	 * Wake up any possible resync thread that waits for the device
--	 * to go idle.
--	 */
--	allow_barrier(conf);
--
- 	put_all_bios(conf, r10_bio);
- 	mempool_free(r10_bio, conf->r10bio_pool);
- }
-@@ -235,9 +229,27 @@ static void reschedule_retry(r10bio_t *r10_bio)
- static void raid_end_bio_io(r10bio_t *r10_bio)
- {
- 	struct bio *bio = r10_bio->master_bio;
-+	int done;
-+	conf_t *conf = r10_bio->mddev->private;
- 
--	bio_endio(bio,
--		test_bit(R10BIO_Uptodate, &r10_bio->state) ? 0 : -EIO);
-+	if (bio->bi_phys_segments) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&conf->device_lock, flags);
-+		bio->bi_phys_segments--;
-+		done = (bio->bi_phys_segments == 0);
-+		spin_unlock_irqrestore(&conf->device_lock, flags);
-+	} else
-+		done = 1;
-+	if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
-+		clear_bit(BIO_UPTODATE, &bio->bi_flags);
-+	if (done) {
-+		bio_endio(bio, 0);
-+		/*
-+		 * Wake up any possible resync thread that waits for the device
-+		 * to go idle.
-+		 */
-+		allow_barrier(conf);
-+	}
- 	free_r10bio(r10_bio);
- }
- 
-@@ -307,6 +319,7 @@ static void raid10_end_read_request(struct bio *bio, int error)
- 				   mdname(conf->mddev),
- 				   bdevname(conf->mirrors[dev].rdev->bdev, b),
- 				   (unsigned long long)r10_bio->sector);
-+		set_bit(R10BIO_ReadError, &r10_bio->state);
- 		reschedule_retry(r10_bio);
- 	}
- }
-@@ -505,11 +518,12 @@ static int raid10_mergeable_bvec(struct request_queue *q,
-  * FIXME: possibly should rethink readbalancing and do it differently
-  * depending on near_copies / far_copies geometry.
-  */
--static int read_balance(conf_t *conf, r10bio_t *r10_bio)
-+static int read_balance(conf_t *conf, r10bio_t *r10_bio, int *max_sectors)
- {
- 	const sector_t this_sector = r10_bio->sector;
- 	int disk, slot;
--	const int sectors = r10_bio->sectors;
-+	int sectors = r10_bio->sectors;
-+	int best_good_sectors;
- 	sector_t new_distance, best_dist;
- 	mdk_rdev_t *rdev;
- 	int do_balance;
-@@ -518,8 +532,10 @@ static int read_balance(conf_t *conf, r10bio_t *r10_bio)
- 	raid10_find_phys(conf, r10_bio);
- 	rcu_read_lock();
- retry:
-+	sectors = r10_bio->sectors;
- 	best_slot = -1;
- 	best_dist = MaxSector;
-+	best_good_sectors = 0;
- 	do_balance = 1;
- 	/*
- 	 * Check if we can balance. We can balance on the whole
-@@ -532,6 +548,10 @@ retry:
- 		do_balance = 0;
- 
- 	for (slot = 0; slot < conf->copies ; slot++) {
-+		sector_t first_bad;
-+		int bad_sectors;
-+		sector_t dev_sector;
-+
- 		if (r10_bio->devs[slot].bio == IO_BLOCKED)
- 			continue;
- 		disk = r10_bio->devs[slot].devnum;
-@@ -541,6 +561,37 @@ retry:
- 		if (!test_bit(In_sync, &rdev->flags))
- 			continue;
- 
-+		dev_sector = r10_bio->devs[slot].addr;
-+		if (is_badblock(rdev, dev_sector, sectors,
-+				&first_bad, &bad_sectors)) {
-+			if (best_dist < MaxSector)
-+				/* Already have a better slot */
-+				continue;
-+			if (first_bad <= dev_sector) {
-+				/* Cannot read here.  If this is the
-+				 * 'primary' device, then we must not read
-+				 * beyond 'bad_sectors' from another device.
-+				 */
-+				bad_sectors -= (dev_sector - first_bad);
-+				if (!do_balance && sectors > bad_sectors)
-+					sectors = bad_sectors;
-+				if (best_good_sectors > sectors)
-+					best_good_sectors = sectors;
-+			} else {
-+				sector_t good_sectors =
-+					first_bad - dev_sector;
-+				if (good_sectors > best_good_sectors) {
-+					best_good_sectors = good_sectors;
-+					best_slot = slot;
-+				}
-+				if (!do_balance)
-+					/* Must read from here */
-+					break;
-+			}
-+			continue;
-+		} else
-+			best_good_sectors = sectors;
-+
- 		if (!do_balance)
- 			break;
- 
-@@ -582,6 +633,7 @@ retry:
- 	} else
- 		disk = -1;
- 	rcu_read_unlock();
-+	*max_sectors = best_good_sectors;
- 
- 	return disk;
- }
-@@ -829,12 +881,27 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 	r10_bio->sector = bio->bi_sector;
- 	r10_bio->state = 0;
- 
-+	/* We might need to issue multiple reads to different
-+	 * devices if there are bad blocks around, so we keep
-+	 * track of the number of reads in bio->bi_phys_segments.
-+	 * If this is 0, there is only one r10_bio and no locking
-+	 * will be needed when the request completes.  If it is
-+	 * non-zero, then it is the number of not-completed requests.
-+	 */
-+	bio->bi_phys_segments = 0;
-+	clear_bit(BIO_SEG_VALID, &bio->bi_flags);
-+
- 	if (rw == READ) {
- 		/*
- 		 * read balancing logic:
+ 	if (sectors_handled < (bio->bi_size >> 9)) {
+-		/* We need another r1_bio.  It has already been counted
++		/* We need another r10_bio.  It has already been counted
+ 		 * in bio->bi_phys_segments.
  		 */
--		int disk = read_balance(conf, r10_bio);
--		int slot = r10_bio->read_slot;
-+		int max_sectors;
-+		int disk;
-+		int slot;
-+
-+read_again:
-+		disk = read_balance(conf, r10_bio, &max_sectors);
-+		slot = r10_bio->read_slot;
- 		if (disk < 0) {
- 			raid_end_bio_io(r10_bio);
- 			return 0;
-@@ -842,6 +909,8 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 		mirror = conf->mirrors + disk;
- 
- 		read_bio = bio_clone_mddev(bio, GFP_NOIO, mddev);
-+		md_trim_bio(read_bio, r10_bio->sector - bio->bi_sector,
-+			    max_sectors);
- 
- 		r10_bio->devs[slot].bio = read_bio;
- 
-@@ -852,7 +921,39 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 		read_bio->bi_rw = READ | do_sync;
- 		read_bio->bi_private = r10_bio;
- 
--		generic_make_request(read_bio);
-+		if (max_sectors < r10_bio->sectors) {
-+			/* Could not read all from this device, so we will
-+			 * need another r10_bio.
-+			 */
-+			int sectors_handled;
-+
-+			sectors_handled = (r10_bio->sectors + max_sectors
-+					   - bio->bi_sector);
-+			r10_bio->sectors = max_sectors;
-+			spin_lock_irq(&conf->device_lock);
-+			if (bio->bi_phys_segments == 0)
-+				bio->bi_phys_segments = 2;
-+			else
-+				bio->bi_phys_segments++;
-+			spin_unlock(&conf->device_lock);
-+			/* Cannot call generic_make_request directly
-+			 * as that will be queued in __generic_make_request
-+			 * and subsequent mempool_alloc might block
-+			 * waiting for it.  so hand bio over to raid10d.
-+			 */
-+			reschedule_retry(r10_bio);
-+
-+			r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
-+
-+			r10_bio->master_bio = bio;
-+			r10_bio->sectors = ((bio->bi_size >> 9)
-+					    - sectors_handled);
-+			r10_bio->state = 0;
-+			r10_bio->mddev = mddev;
-+			r10_bio->sector = bio->bi_sector + sectors_handled;
-+			goto read_again;
-+		} else
-+			generic_make_request(read_bio);
- 		return 0;
+ 		r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
+@@ -1438,29 +1438,10 @@ static void end_sync_read(struct bio *bio, int error)
  	}
+ }
  
-@@ -1627,6 +1728,7 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
- 	mdk_rdev_t *rdev;
- 	char b[BDEVNAME_SIZE];
- 	unsigned long do_sync;
-+	int max_sectors;
+-static void end_sync_write(struct bio *bio, int error)
++static void end_sync_request(r10bio_t *r10_bio)
+ {
+-	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+-	r10bio_t *r10_bio = bio->bi_private;
+ 	mddev_t *mddev = r10_bio->mddev;
+-	conf_t *conf = mddev->private;
+-	int d;
+-	sector_t first_bad;
+-	int bad_sectors;
+-	int slot;
+-
+-	d = find_bio_disk(conf, r10_bio, bio, &slot);
+-
+-	if (!uptodate) {
+-		set_bit(WriteErrorSeen, &conf->mirrors[d].rdev->flags);
+-		set_bit(R10BIO_WriteError, &r10_bio->state);
+-	} else if (is_badblock(conf->mirrors[d].rdev,
+-			     r10_bio->devs[slot].addr,
+-			     r10_bio->sectors,
+-			     &first_bad, &bad_sectors))
+-		set_bit(R10BIO_MadeGood, &r10_bio->state);
  
- 	/* we got a read error. Maybe the drive is bad.  Maybe just
- 	 * the block and we can fix it.
-@@ -1646,8 +1748,8 @@ static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
- 	bio = r10_bio->devs[slot].bio;
- 	r10_bio->devs[slot].bio =
- 		mddev->ro ? IO_BLOCKED : NULL;
--	mirror = read_balance(conf, r10_bio);
--	if (mirror == -1) {
-+	mirror = read_balance(conf, r10_bio, &max_sectors);
-+	if (mirror == -1 || max_sectors < r10_bio->sectors) {
- 		printk(KERN_ALERT "md/raid10:%s: %s: unrecoverable I/O"
- 		       " read error for block %llu\n",
- 		       mdname(mddev),
-@@ -1712,8 +1814,15 @@ static void raid10d(mddev_t *mddev)
- 			sync_request_write(mddev, r10_bio);
- 		else if (test_bit(R10BIO_IsRecover, &r10_bio->state))
- 			recovery_request_write(mddev, r10_bio);
--		else
-+		else if (test_bit(R10BIO_ReadError, &r10_bio->state))
- 			handle_read_error(mddev, r10_bio);
-+		else {
-+			/* just a partial read to be scheduled from a
-+			 * separate context
-+			 */
-+			int slot = r10_bio->read_slot;
-+			generic_make_request(r10_bio->devs[slot].bio);
+-	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
+ 	while (atomic_dec_and_test(&r10_bio->remaining)) {
+ 		if (r10_bio->master_bio == NULL) {
+ 			/* the primary of several recovery bios */
+@@ -1484,6 +1465,33 @@ static void end_sync_write(struct bio *bio, int error)
+ 	}
+ }
+ 
++static void end_sync_write(struct bio *bio, int error)
++{
++	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
++	r10bio_t *r10_bio = bio->bi_private;
++	mddev_t *mddev = r10_bio->mddev;
++	conf_t *conf = mddev->private;
++	int d;
++	sector_t first_bad;
++	int bad_sectors;
++	int slot;
++
++	d = find_bio_disk(conf, r10_bio, bio, &slot);
++
++	if (!uptodate) {
++		set_bit(WriteErrorSeen, &conf->mirrors[d].rdev->flags);
++		set_bit(R10BIO_WriteError, &r10_bio->state);
++	} else if (is_badblock(conf->mirrors[d].rdev,
++			     r10_bio->devs[slot].addr,
++			     r10_bio->sectors,
++			     &first_bad, &bad_sectors))
++		set_bit(R10BIO_MadeGood, &r10_bio->state);
++
++	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
++
++	end_sync_request(r10_bio);
++}
++
+ /*
+  * Note: sync and recover and handled very differently for raid10
+  * This code is for resync.
+@@ -1600,6 +1608,84 @@ done:
+  * The second for writing.
+  *
+  */
++static void fix_recovery_read_error(r10bio_t *r10_bio)
++{
++	/* We got a read error during recovery.
++	 * We repeat the read in smaller page-sized sections.
++	 * If a read succeeds, write it to the new device or record
++	 * a bad block if we cannot.
++	 * If a read fails, record a bad block on both old and
++	 * new devices.
++	 */
++	mddev_t *mddev = r10_bio->mddev;
++	conf_t *conf = mddev->private;
++	struct bio *bio = r10_bio->devs[0].bio;
++	sector_t sect = 0;
++	int sectors = r10_bio->sectors;
++	int idx = 0;
++	int dr = r10_bio->devs[0].devnum;
++	int dw = r10_bio->devs[1].devnum;
++
++	while (sectors) {
++		int s = sectors;
++		mdk_rdev_t *rdev;
++		sector_t addr;
++		int ok;
++
++		if (s > (PAGE_SIZE>>9))
++			s = PAGE_SIZE >> 9;
++
++		rdev = conf->mirrors[dr].rdev;
++		addr = r10_bio->devs[0].addr + sect,
++		ok = sync_page_io(rdev,
++				  addr,
++				  s << 9,
++				  bio->bi_io_vec[idx].bv_page,
++				  READ, false);
++		if (ok) {
++			rdev = conf->mirrors[dw].rdev;
++			addr = r10_bio->devs[1].addr + sect;
++			ok = sync_page_io(rdev,
++					  addr,
++					  s << 9,
++					  bio->bi_io_vec[idx].bv_page,
++					  WRITE, false);
++			if (!ok)
++				set_bit(WriteErrorSeen, &rdev->flags);
 +		}
++		if (!ok) {
++			/* We don't worry if we cannot set a bad block -
++			 * it really is bad so there is no loss in not
++			 * recording it yet
++			 */
++			rdev_set_badblocks(rdev, addr, s, 0);
++
++			if (rdev != conf->mirrors[dw].rdev) {
++				/* need bad block on destination too */
++				mdk_rdev_t *rdev2 = conf->mirrors[dw].rdev;
++				addr = r10_bio->devs[1].addr + sect;
++				ok = rdev_set_badblocks(rdev2, addr, s, 0);
++				if (!ok) {
++					/* just abort the recovery */
++					printk(KERN_NOTICE
++					       "md/raid10:%s: recovery aborted"
++					       " due to read error\n",
++					       mdname(mddev));
++
++					conf->mirrors[dw].recovery_disabled
++						= mddev->recovery_disabled;
++					set_bit(MD_RECOVERY_INTR,
++						&mddev->recovery);
++					break;
++				}
++			}
++		}
++
++		sectors -= s;
++		sect += s;
++		idx++;
++	}
++}
  
- 		cond_resched();
- 		if (mddev->flags & ~(1<<MD_CHANGE_PENDING))
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index a485914..c646152 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -124,4 +124,8 @@ struct r10bio_s {
- #define	R10BIO_IsSync	1
- #define	R10BIO_IsRecover 2
- #define	R10BIO_Degraded 3
-+/* Set ReadError on bios that experience a read error
-+ * so that raid10d knows what to do with them.
-+ */
-+#define	R10BIO_ReadError 4
- #endif
+ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
+ {
+@@ -1607,6 +1693,12 @@ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
+ 	int d;
+ 	struct bio *wbio;
+ 
++	if (!test_bit(R10BIO_Uptodate, &r10_bio->state)) {
++		fix_recovery_read_error(r10_bio);
++		end_sync_request(r10_bio);
++		return;
++	}
++
+ 	/*
+ 	 * share the pages with the first bio
+ 	 * and submit the write request
+@@ -1616,16 +1708,7 @@ static void recovery_request_write(mddev_t *mddev, r10bio_t *r10_bio)
+ 
+ 	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+ 	md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
+-	if (test_bit(R10BIO_Uptodate, &r10_bio->state))
+-		generic_make_request(wbio);
+-	else {
+-		printk(KERN_NOTICE
+-		       "md/raid10:%s: recovery aborted due to read error\n",
+-		       mdname(mddev));
+-		conf->mirrors[d].recovery_disabled = mddev->recovery_disabled;
+-		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-		bio_endio(wbio, 0);
+-	}
++	generic_make_request(wbio);
+ }
+ 
+ 
+@@ -2339,6 +2422,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 			for (j=0; j<conf->copies;j++) {
+ 				int k;
+ 				int d = r10_bio->devs[j].devnum;
++				sector_t from_addr, to_addr;
+ 				mdk_rdev_t *rdev;
+ 				sector_t sector, first_bad;
+ 				int bad_sectors;
+@@ -2368,7 +2452,8 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = end_sync_read;
+ 				bio->bi_rw = READ;
+-				bio->bi_sector = r10_bio->devs[j].addr +
++				from_addr = r10_bio->devs[j].addr;
++				bio->bi_sector = from_addr +
+ 					conf->mirrors[d].rdev->data_offset;
+ 				bio->bi_bdev = conf->mirrors[d].rdev->bdev;
+ 				atomic_inc(&conf->mirrors[d].rdev->nr_pending);
+@@ -2385,12 +2470,15 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 				bio->bi_private = r10_bio;
+ 				bio->bi_end_io = end_sync_write;
+ 				bio->bi_rw = WRITE;
+-				bio->bi_sector = r10_bio->devs[k].addr +
++				to_addr = r10_bio->devs[k].addr;
++				bio->bi_sector = to_addr +
+ 					conf->mirrors[i].rdev->data_offset;
+ 				bio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 
+ 				r10_bio->devs[0].devnum = d;
++				r10_bio->devs[0].addr = from_addr;
+ 				r10_bio->devs[1].devnum = i;
++				r10_bio->devs[1].addr = to_addr;
+ 
+ 				break;
+ 			}
 
 
