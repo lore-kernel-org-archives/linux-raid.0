@@ -1,178 +1,68 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 23/36] md/raid10: Split handle_read_error out from raid10d.
-Date: Thu, 21 Jul 2011 12:58:49 +1000
-Message-ID: <20110721025849.8422.62271.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 09/34] md/raid5: move common code into handle_stripe
+Date: Thu, 21 Jul 2011 12:32:25 +1000
+Message-ID: <20110721023225.6728.48548.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-raid10d() is too big and is about to get bigger, so split
-handle_read_error() out as a separate function.
+There is common code at the start of handle_stripe5 and
+handle_stripe6.  Move it into handle_stripe.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |  123 +++++++++++++++++++++++++++------------------------
- 1 files changed, 66 insertions(+), 57 deletions(-)
+ drivers/md/raid5.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c489b5c..f1b749c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1618,21 +1618,81 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 	}
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f8275b5..dfb3d9f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3016,12 +3016,6 @@ static void handle_stripe5(struct stripe_head *sh)
+ 		 atomic_read(&sh->count), sh->pd_idx, sh->check_state,
+ 		 sh->reconstruct_state);
  
-+static void handle_read_error(mddev_t *mddev, r10bio_t *r10_bio)
-+{
-+	int slot = r10_bio->read_slot;
-+	int mirror = r10_bio->devs[slot].devnum;
-+	struct bio *bio;
-+	conf_t *conf = mddev->private;
-+	mdk_rdev_t *rdev;
-+	char b[BDEVNAME_SIZE];
-+	unsigned long do_sync;
-+
-+	/* we got a read error. Maybe the drive is bad.  Maybe just
-+	 * the block and we can fix it.
-+	 * We freeze all other IO, and try reading the block from
-+	 * other devices.  When we find one, we re-write
-+	 * and check it that fixes the read error.
-+	 * This is all done synchronously while the array is
-+	 * frozen.
-+	 */
-+	if (mddev->ro == 0) {
-+		freeze_array(conf);
-+		fix_read_error(conf, mddev, r10_bio);
-+		unfreeze_array(conf);
-+	}
-+	rdev_dec_pending(conf->mirrors[mirror].rdev, mddev);
-+
-+	bio = r10_bio->devs[slot].bio;
-+	r10_bio->devs[slot].bio =
-+		mddev->ro ? IO_BLOCKED : NULL;
-+	mirror = read_balance(conf, r10_bio);
-+	if (mirror == -1) {
-+		printk(KERN_ALERT "md/raid10:%s: %s: unrecoverable I/O"
-+		       " read error for block %llu\n",
-+		       mdname(mddev),
-+		       bdevname(bio->bi_bdev, b),
-+		       (unsigned long long)r10_bio->sector);
-+		raid_end_bio_io(r10_bio);
-+		bio_put(bio);
-+		return;
-+	}
-+
-+	do_sync = (r10_bio->master_bio->bi_rw & REQ_SYNC);
-+	bio_put(bio);
-+	slot = r10_bio->read_slot;
-+	rdev = conf->mirrors[mirror].rdev;
-+	printk_ratelimited(
-+		KERN_ERR
-+		"md/raid10:%s: %s: redirecting"
-+		"sector %llu to another mirror\n",
-+		mdname(mddev),
-+		bdevname(rdev->bdev, b),
-+		(unsigned long long)r10_bio->sector);
-+	bio = bio_clone_mddev(r10_bio->master_bio,
-+			      GFP_NOIO, mddev);
-+	r10_bio->devs[slot].bio = bio;
-+	bio->bi_sector = r10_bio->devs[slot].addr
-+		+ rdev->data_offset;
-+	bio->bi_bdev = rdev->bdev;
-+	bio->bi_rw = READ | do_sync;
-+	bio->bi_private = r10_bio;
-+	bio->bi_end_io = raid10_end_read_request;
-+	generic_make_request(bio);
-+}
-+
- static void raid10d(mddev_t *mddev)
- {
- 	r10bio_t *r10_bio;
--	struct bio *bio;
- 	unsigned long flags;
- 	conf_t *conf = mddev->private;
- 	struct list_head *head = &conf->retry_list;
--	mdk_rdev_t *rdev;
- 	struct blk_plug plug;
- 
- 	md_check_recovery(mddev);
- 
- 	blk_start_plug(&plug);
- 	for (;;) {
--		char b[BDEVNAME_SIZE];
- 
- 		flush_pending_writes(conf);
- 
-@@ -1652,60 +1712,9 @@ static void raid10d(mddev_t *mddev)
- 			sync_request_write(mddev, r10_bio);
- 		else if (test_bit(R10BIO_IsRecover, &r10_bio->state))
- 			recovery_request_write(mddev, r10_bio);
--		else {
--			int slot = r10_bio->read_slot;
--			int mirror = r10_bio->devs[slot].devnum;
--			/* we got a read error. Maybe the drive is bad.  Maybe just
--			 * the block and we can fix it.
--			 * We freeze all other IO, and try reading the block from
--			 * other devices.  When we find one, we re-write
--			 * and check it that fixes the read error.
--			 * This is all done synchronously while the array is
--			 * frozen.
--			 */
--			if (mddev->ro == 0) {
--				freeze_array(conf);
--				fix_read_error(conf, mddev, r10_bio);
--				unfreeze_array(conf);
--			}
--			rdev_dec_pending(conf->mirrors[mirror].rdev, mddev);
+-	if (test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
+-		set_bit(STRIPE_SYNCING, &sh->state);
+-		clear_bit(STRIPE_INSYNC, &sh->state);
+-	}
+-	clear_bit(STRIPE_DELAYED, &sh->state);
 -
--			bio = r10_bio->devs[slot].bio;
--			r10_bio->devs[slot].bio =
--				mddev->ro ? IO_BLOCKED : NULL;
--			mirror = read_balance(conf, r10_bio);
--			if (mirror == -1) {
--				printk(KERN_ALERT "md/raid10:%s: %s: unrecoverable I/O"
--				       " read error for block %llu\n",
--				       mdname(mddev),
--				       bdevname(bio->bi_bdev,b),
--				       (unsigned long long)r10_bio->sector);
--				raid_end_bio_io(r10_bio);
--				bio_put(bio);
--			} else {
--				const unsigned long do_sync = (r10_bio->master_bio->bi_rw & REQ_SYNC);
--				bio_put(bio);
--				slot = r10_bio->read_slot;
--				rdev = conf->mirrors[mirror].rdev;
--				printk_ratelimited(
--					KERN_ERR
--					"md/raid10:%s: %s: redirecting"
--					"sector %llu to another mirror\n",
--					mdname(mddev),
--					bdevname(rdev->bdev, b),
--					(unsigned long long)r10_bio->sector);
--				bio = bio_clone_mddev(r10_bio->master_bio,
--						      GFP_NOIO, mddev);
--				r10_bio->devs[slot].bio = bio;
--				bio->bi_sector = r10_bio->devs[slot].addr
--					+ rdev->data_offset;
--				bio->bi_bdev = rdev->bdev;
--				bio->bi_rw = READ | do_sync;
--				bio->bi_private = r10_bio;
--				bio->bi_end_io = raid10_end_read_request;
--				generic_make_request(bio);
--			}
--		}
-+		else
-+			handle_read_error(mddev, r10_bio);
+ 	s.syncing = test_bit(STRIPE_SYNCING, &sh->state);
+ 	s.expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
+@@ -3310,12 +3304,6 @@ static void handle_stripe6(struct stripe_head *sh)
+ 	       sh->check_state, sh->reconstruct_state);
+ 	memset(&s, 0, sizeof(s));
+ 
+-	if (test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
+-		set_bit(STRIPE_SYNCING, &sh->state);
+-		clear_bit(STRIPE_INSYNC, &sh->state);
+-	}
+-	clear_bit(STRIPE_DELAYED, &sh->state);
+-
+ 	s.syncing = test_bit(STRIPE_SYNCING, &sh->state);
+ 	s.expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
+ 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
+@@ -3607,6 +3595,12 @@ static void handle_stripe(struct stripe_head *sh)
+ 		return;
+ 	}
+ 
++	if (test_and_clear_bit(STRIPE_SYNC_REQUESTED, &sh->state)) {
++		set_bit(STRIPE_SYNCING, &sh->state);
++		clear_bit(STRIPE_INSYNC, &sh->state);
++	}
++	clear_bit(STRIPE_DELAYED, &sh->state);
 +
- 		cond_resched();
- 		if (mddev->flags & ~(1<<MD_CHANGE_PENDING))
- 			md_check_recovery(mddev);
+ 	if (sh->raid_conf->level == 6)
+ 		handle_stripe6(sh);
+ 	else
 
 
