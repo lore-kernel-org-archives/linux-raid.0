@@ -1,155 +1,57 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 28/36] md/raid10 record bad blocks as needed during
- recovery.
-Date: Thu, 21 Jul 2011 12:58:50 +1000
-Message-ID: <20110721025850.8422.72405.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 21/34] md: use proper little-endian bitops
+Date: Thu, 21 Jul 2011 12:32:27 +1000
+Message-ID: <20110721023227.6728.60858.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>
 List-Id: linux-raid.ids
 
-When recovering one or more devices, if all the good devices have
-bad blocks we should record a bad block on the device being rebuilt.
+From: Akinobu Mita <akinobu.mita@gmail.com>
 
-If this fails, we need to abort the recovery.
+Using __test_and_{set,clear}_bit_le() with ignoring its return value
+can be replaced with __{set,clear}_bit_le().
 
-To ensure we don't think that we aborted later than we actually did,
-we need to move the check for MD_RECOVERY_INTR earlier in md_do_sync,
-in particular before mddev->curr_resync is updated.
-
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c     |    9 ++++-----
- drivers/md/raid10.c |   40 ++++++++++++++++++++++++++++++++--------
- 2 files changed, 36 insertions(+), 13 deletions(-)
+ drivers/md/bitmap.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 90d07ab..b4e1629 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -7168,11 +7168,14 @@ void md_do_sync(mddev_t *mddev)
- 			atomic_add(sectors, &mddev->recovery_active);
- 		}
- 
-+		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
-+			break;
-+
- 		j += sectors;
- 		if (j>1) mddev->curr_resync = j;
- 		mddev->curr_mark_cnt = io_sectors;
- 		if (last_check == 0)
--			/* this is the earliers that rebuilt will be
-+			/* this is the earliest that rebuild will be
- 			 * visible in /proc/mdstat
- 			 */
- 			md_new_event(mddev);
-@@ -7181,10 +7184,6 @@ void md_do_sync(mddev_t *mddev)
- 			continue;
- 
- 		last_check = io_sectors;
--
--		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
--			break;
--
- 	repeat:
- 		if (time_after_eq(jiffies, mark[last_mark] + SYNC_MARK_STEP )) {
- 			/* step marks */
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 9bac312..7f11924 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -2005,7 +2005,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 	max_sync = RESYNC_PAGES << (PAGE_SHIFT-9);
- 	if (!test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
- 		/* recovery... the complicated one */
--		int j, k;
-+		int j;
- 		r10_bio = NULL;
- 
- 		for (i=0 ; i<conf->raid_disks; i++) {
-@@ -2013,6 +2013,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 			r10bio_t *rb2;
- 			sector_t sect;
- 			int must_sync;
-+			int any_working;
- 
- 			if (conf->mirrors[i].rdev == NULL ||
- 			    test_bit(In_sync, &conf->mirrors[i].rdev->flags)) 
-@@ -2064,7 +2065,9 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 			must_sync = bitmap_start_sync(mddev->bitmap, sect,
- 						      &sync_blocks, still_degraded);
- 
-+			any_working = 0;
- 			for (j=0; j<conf->copies;j++) {
-+				int k;
- 				int d = r10_bio->devs[j].devnum;
- 				mdk_rdev_t *rdev;
- 				sector_t sector, first_bad;
-@@ -2073,6 +2076,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 				    !test_bit(In_sync, &conf->mirrors[d].rdev->flags))
- 					continue;
- 				/* This is where we read from */
-+				any_working = 1;
- 				rdev = conf->mirrors[d].rdev;
- 				sector = r10_bio->devs[j].addr;
- 
-@@ -2121,16 +2125,35 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 				break;
- 			}
- 			if (j == conf->copies) {
--				/* Cannot recover, so abort the recovery */
-+				/* Cannot recover, so abort the recovery or
-+				 * record a bad block */
- 				put_buf(r10_bio);
- 				if (rb2)
- 					atomic_dec(&rb2->remaining);
- 				r10_bio = rb2;
--				if (!test_and_set_bit(MD_RECOVERY_INTR,
--						      &mddev->recovery))
--					printk(KERN_INFO "md/raid10:%s: insufficient "
--					       "working devices for recovery.\n",
--					       mdname(mddev));
-+				if (any_working) {
-+					/* problem is that there are bad blocks
-+					 * on other device(s)
-+					 */
-+					int k;
-+					for (k = 0; k < conf->copies; k++)
-+						if (r10_bio->devs[k].devnum == i)
-+							break;
-+					if (!rdev_set_badblocks(
-+						    conf->mirrors[i].rdev,
-+						    r10_bio->devs[k].addr,
-+						    max_sync, 0))
-+						any_working = 0;
-+				}
-+				if (!any_working)  {
-+					if (!test_and_set_bit(MD_RECOVERY_INTR,
-+							      &mddev->recovery))
-+						printk(KERN_INFO "md/raid10:%s: insufficient "
-+						       "working devices for recovery.\n",
-+						       mdname(mddev));
-+					conf->mirrors[i].recovery_disabled
-+						= mddev->recovery_disabled;
-+				}
- 				break;
- 			}
- 		}
-@@ -2290,7 +2313,8 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
- 	return sectors_skipped + nr_sectors;
-  giveup:
- 	/* There is nowhere to write, so all non-sync
--	 * drives must be failed, so try the next chunk...
-+	 * drives must be failed or in resync, all drives
-+	 * have a bad block, so try the next chunk...
- 	 */
- 	if (sector_nr + max_sync < max_sector)
- 		max_sector = sector_nr + max_sync;
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index 574b09a..39ff0ef 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -932,7 +932,7 @@ static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
+ 		if (bitmap->flags & BITMAP_HOSTENDIAN)
+ 			set_bit(bit, kaddr);
+ 		else
+-			__test_and_set_bit_le(bit, kaddr);
++			__set_bit_le(bit, kaddr);
+ 		kunmap_atomic(kaddr, KM_USER0);
+ 		PRINTK("set file bit %lu page %lu\n", bit, page->index);
+ 	}
+@@ -1304,8 +1304,10 @@ void bitmap_daemon_work(mddev_t *mddev)
+ 						clear_bit(file_page_offset(bitmap, j),
+ 							  paddr);
+ 					else
+-						__test_and_clear_bit_le(file_page_offset(bitmap, j),
+-							       paddr);
++						__clear_bit_le(
++							file_page_offset(bitmap,
++									 j),
++							paddr);
+ 					kunmap_atomic(paddr, KM_USER0);
+ 				} else
+ 					log->type->clear_region(log, j);
 
 
