@@ -1,262 +1,96 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 13/36] md/raid1: Handle write errors by updating badblock
- log.
-Date: Thu, 21 Jul 2011 12:58:48 +1000
-Message-ID: <20110721025848.8422.78654.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 07/34] md/raid5: Protect some more code with ->device_lock.
+Date: Thu, 21 Jul 2011 12:32:25 +1000
+Message-ID: <20110721023225.6728.43609.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When we get a write error (in the data area, not in metadata),
-update the badblock log rather than failing the whole device.
+Other places that change or follow dev->towrite and dev->written take
+the device_lock as well as the sh->lock.
+So it should really be held in these places too.
+Also, doing so will allow sh->lock to be discarded.
 
-As the write may well be many blocks, we trying writing each
-block individually and only log the ones which fail.
+with merged fixes by: Namhyung Kim <namhyung@gmail.com>
+
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c |  168 +++++++++++++++++++++++++++++++++++++++++++++-------
- drivers/md/raid1.h |    3 +
- 2 files changed, 147 insertions(+), 24 deletions(-)
+ drivers/md/raid5.c |   30 ++++++++++++++++--------------
+ 1 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 42e815d..0ebeec9 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -318,25 +318,34 @@ static void raid1_end_read_request(struct bio *bio, int error)
- 	rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
- }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index f2f2ab3..9985138 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -1021,10 +1021,12 @@ ops_run_biodrain(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
+ 			struct bio *wbi;
  
-+static void close_write(r1bio_t *r1_bio)
-+{
-+	/* it really is the end of this request */
-+	if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
-+		/* free extra copy of the data pages */
-+		int i = r1_bio->behind_page_count;
-+		while (i--)
-+			safe_put_page(r1_bio->behind_bvecs[i].bv_page);
-+		kfree(r1_bio->behind_bvecs);
-+		r1_bio->behind_bvecs = NULL;
-+	}
-+	/* clear the bitmap if all writes complete successfully */
-+	bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
-+			r1_bio->sectors,
-+			!test_bit(R1BIO_Degraded, &r1_bio->state),
-+			test_bit(R1BIO_BehindIO, &r1_bio->state));
-+	md_write_end(r1_bio->mddev);
-+}
-+
- static void r1_bio_write_done(r1bio_t *r1_bio)
- {
--	if (atomic_dec_and_test(&r1_bio->remaining))
--	{
--		/* it really is the end of this request */
--		if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
--			/* free extra copy of the data pages */
--			int i = r1_bio->behind_page_count;
--			while (i--)
--				safe_put_page(r1_bio->behind_bvecs[i].bv_page);
--			kfree(r1_bio->behind_bvecs);
--			r1_bio->behind_bvecs = NULL;
--		}
--		/* clear the bitmap if all writes complete successfully */
--		bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
--				r1_bio->sectors,
--				!test_bit(R1BIO_Degraded, &r1_bio->state),
--				test_bit(R1BIO_BehindIO, &r1_bio->state));
--		md_write_end(r1_bio->mddev);
-+	if (!atomic_dec_and_test(&r1_bio->remaining))
-+		return;
-+
-+	if (test_bit(R1BIO_WriteError, &r1_bio->state))
-+		reschedule_retry(r1_bio);
-+	else {
-+		close_write(r1_bio);
- 		if (test_bit(R1BIO_MadeGood, &r1_bio->state))
- 			reschedule_retry(r1_bio);
- 		else
-@@ -360,12 +369,10 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 	/*
- 	 * 'one mirror IO has finished' event handler:
- 	 */
--	r1_bio->bios[mirror] = NULL;
--	to_put = bio;
- 	if (!uptodate) {
--		md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
--		/* an I/O failed, we can't clear the bitmap */
--		set_bit(R1BIO_Degraded, &r1_bio->state);
-+		set_bit(WriteErrorSeen,
-+			&conf->mirrors[mirror].rdev->flags);
-+		set_bit(R1BIO_WriteError, &r1_bio->state);
- 	} else {
- 		/*
- 		 * Set R1BIO_Uptodate in our master bio, so that we
-@@ -380,6 +387,8 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 		sector_t first_bad;
- 		int bad_sectors;
+ 			spin_lock(&sh->lock);
++			spin_lock_irq(&sh->raid_conf->device_lock);
+ 			chosen = dev->towrite;
+ 			dev->towrite = NULL;
+ 			BUG_ON(dev->written);
+ 			wbi = dev->written = chosen;
++			spin_unlock_irq(&sh->raid_conf->device_lock);
+ 			spin_unlock(&sh->lock);
  
-+		r1_bio->bios[mirror] = NULL;
-+		to_put = bio;
- 		set_bit(R1BIO_Uptodate, &r1_bio->state);
+ 			while (wbi && wbi->bi_sector <
+@@ -2141,7 +2143,7 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	int firstwrite=0;
  
- 		/* Maybe we can clear some bad blocks. */
-@@ -1725,6 +1734,101 @@ static void fix_read_error(conf_t *conf, int read_disk,
+-	pr_debug("adding bh b#%llu to stripe s#%llu\n",
++	pr_debug("adding bi b#%llu to stripe s#%llu\n",
+ 		(unsigned long long)bi->bi_sector,
+ 		(unsigned long long)sh->sector);
+ 
+@@ -2167,19 +2169,6 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 		bi->bi_next = *bip;
+ 	*bip = bi;
+ 	bi->bi_phys_segments++;
+-	spin_unlock_irq(&conf->device_lock);
+-	spin_unlock(&sh->lock);
+-
+-	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
+-		(unsigned long long)bi->bi_sector,
+-		(unsigned long long)sh->sector, dd_idx);
+-
+-	if (conf->mddev->bitmap && firstwrite) {
+-		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
+-				  STRIPE_SECTORS, 0);
+-		sh->bm_seq = conf->seq_flush+1;
+-		set_bit(STRIPE_BIT_DELAY, &sh->state);
+-	}
+ 
+ 	if (forwrite) {
+ 		/* check if page is covered */
+@@ -2194,6 +2183,19 @@ static int add_stripe_bio(struct stripe_head *sh, struct bio *bi, int dd_idx, in
+ 		if (sector >= sh->dev[dd_idx].sector + STRIPE_SECTORS)
+ 			set_bit(R5_OVERWRITE, &sh->dev[dd_idx].flags);
  	}
- }
- 
-+static void bi_complete(struct bio *bio, int error)
-+{
-+	complete((struct completion *)bio->bi_private);
-+}
++	spin_unlock_irq(&conf->device_lock);
++	spin_unlock(&sh->lock);
 +
-+static int submit_bio_wait(int rw, struct bio *bio)
-+{
-+	struct completion event;
-+	rw |= REQ_SYNC;
++	pr_debug("added bi b#%llu to stripe s#%llu, disk %d.\n",
++		(unsigned long long)(*bip)->bi_sector,
++		(unsigned long long)sh->sector, dd_idx);
 +
-+	init_completion(&event);
-+	bio->bi_private = &event;
-+	bio->bi_end_io = bi_complete;
-+	submit_bio(rw, bio);
-+	wait_for_completion(&event);
-+
-+	return test_bit(BIO_UPTODATE, &bio->bi_flags);
-+}
-+
-+static int narrow_write_error(r1bio_t *r1_bio, int i)
-+{
-+	mddev_t *mddev = r1_bio->mddev;
-+	conf_t *conf = mddev->private;
-+	mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+	int vcnt, idx;
-+	struct bio_vec *vec;
-+
-+	/* bio has the data to be written to device 'i' where
-+	 * we just recently had a write error.
-+	 * We repeatedly clone the bio and trim down to one block,
-+	 * then try the write.  Where the write fails we record
-+	 * a bad block.
-+	 * It is conceivable that the bio doesn't exactly align with
-+	 * blocks.  We must handle this somehow.
-+	 *
-+	 * We currently own a reference on the rdev.
-+	 */
-+
-+	int block_sectors;
-+	sector_t sector;
-+	int sectors;
-+	int sect_to_write = r1_bio->sectors;
-+	int ok = 1;
-+
-+	if (rdev->badblocks.shift < 0)
-+		return 0;
-+
-+	block_sectors = 1 << rdev->badblocks.shift;
-+	sector = r1_bio->sector;
-+	sectors = ((sector + block_sectors)
-+		   & ~(sector_t)(block_sectors - 1))
-+		- sector;
-+
-+	if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
-+		vcnt = r1_bio->behind_page_count;
-+		vec = r1_bio->behind_bvecs;
-+		idx = 0;
-+		while (vec[idx].bv_page == NULL)
-+			idx++;
-+	} else {
-+		vcnt = r1_bio->master_bio->bi_vcnt;
-+		vec = r1_bio->master_bio->bi_io_vec;
-+		idx = r1_bio->master_bio->bi_idx;
++	if (conf->mddev->bitmap && firstwrite) {
++		bitmap_startwrite(conf->mddev->bitmap, sh->sector,
++				  STRIPE_SECTORS, 0);
++		sh->bm_seq = conf->seq_flush+1;
++		set_bit(STRIPE_BIT_DELAY, &sh->state);
 +	}
-+	while (sect_to_write) {
-+		struct bio *wbio;
-+		if (sectors > sect_to_write)
-+			sectors = sect_to_write;
-+		/* Write at 'sector' for 'sectors'*/
-+
-+		wbio = bio_alloc_mddev(GFP_NOIO, vcnt, mddev);
-+		memcpy(wbio->bi_io_vec, vec, vcnt * sizeof(struct bio_vec));
-+		wbio->bi_sector = r1_bio->sector;
-+		wbio->bi_rw = WRITE;
-+		wbio->bi_vcnt = vcnt;
-+		wbio->bi_size = r1_bio->sectors << 9;
-+		wbio->bi_idx = idx;
-+
-+		md_trim_bio(wbio, sector - r1_bio->sector, sectors);
-+		wbio->bi_sector += rdev->data_offset;
-+		wbio->bi_bdev = rdev->bdev;
-+		if (submit_bio_wait(WRITE, wbio) == 0)
-+			/* failure! */
-+			ok = rdev_set_badblocks(rdev, sector,
-+						sectors, 0)
-+				&& ok;
-+
-+		bio_put(wbio);
-+		sect_to_write -= sectors;
-+		sector += sectors;
-+		sectors = block_sectors;
-+	}
-+	return ok;
-+}
-+
- static void raid1d(mddev_t *mddev)
- {
- 	r1bio_t *r1_bio;
-@@ -1776,7 +1880,8 @@ static void raid1d(mddev_t *mddev)
- 				md_done_sync(mddev, s, 1);
- 			} else
- 				sync_request_write(mddev, r1_bio);
--		} else if (test_bit(R1BIO_MadeGood, &r1_bio->state)) {
-+		} else if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
-+			   test_bit(R1BIO_WriteError, &r1_bio->state)) {
- 			int m;
- 			for (m = 0; m < conf->raid_disks ; m++)
- 				if (r1_bio->bios[m] == IO_MADE_GOOD) {
-@@ -1786,7 +1891,24 @@ static void raid1d(mddev_t *mddev)
- 						r1_bio->sector,
- 						r1_bio->sectors);
- 					rdev_dec_pending(rdev, mddev);
-+				} else if (r1_bio->bios[m] != NULL) {
-+					/* This drive got a write error.  We
-+					 * need to narrow down and record
-+					 * precise write errors.
-+					 */
-+					if (!narrow_write_error(r1_bio, m)) {
-+						md_error(mddev,
-+							 conf->mirrors[m].rdev);
-+						/* an I/O failed, we can't clear
-+						 * the bitmap */
-+						set_bit(R1BIO_Degraded,
-+							&r1_bio->state);
-+					}
-+					rdev_dec_pending(conf->mirrors[m].rdev,
-+							 mddev);
- 				}
-+			if (test_bit(R1BIO_WriteError, &r1_bio->state))
-+				close_write(r1_bio);
- 			raid_end_bio_io(r1_bio);
- 		} else if (test_bit(R1BIO_ReadError, &r1_bio->state)) {
- 			int disk;
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index b788547..e0d676b 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -145,7 +145,8 @@ struct r1bio_s {
- /* If a write for this request means we can clear some
-  * known-bad-block records, we set this flag
-  */
--#define R1BIO_MadeGood 7
-+#define	R1BIO_MadeGood 7
-+#define	R1BIO_WriteError 8
+ 	return 1;
  
- extern int md_raid1_congested(mddev_t *mddev, int bits);
- 
+  overlap:
 
 
