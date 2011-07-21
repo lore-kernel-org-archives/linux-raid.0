@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 17/36] md/raid5: avoid reading from known bad blocks.
-Date: Thu, 21 Jul 2011 12:58:49 +1000
-Message-ID: <20110721025849.8422.92268.stgit@notabene.brown>
+Subject: [md PATCH 07/36] md/raid1: avoid reading known bad blocks during
+ resync
+Date: Thu, 21 Jul 2011 12:58:48 +1000
+Message-ID: <20110721025848.8422.55863.stgit@notabene.brown>
 References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,131 +13,179 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There are two times that we might read in raid5:
-1/ when a read request fits within a chunk on a single
-   working device.
-   In this case, if there is any bad block in the range of
-   the read, we simply fail the cache-bypass read and
-   perform the read though the stripe cache.
+When performing resync/etc, keep the size of the request
+small enough that it doesn't overlap any known bad blocks.
+Devices with badblocks at the start of the request are completely
+excluded.
+If there is nowhere to read from due to bad blocks, record
+a bad block on each target device.
 
-2/ when reading into the stripe cache.  In this case we
-   mark as failed any device which has a bad block in that
-   strip (1 page wide).
-   Note that we will both avoid reading and avoid writing.
-   This is correct (as we will never read from the block, there
-   is no point writing), but not optimal (as writing could 'fix'
-   the error) - that will be addressed later.
-
-If we have not seen any write errors on the device yet, we treat a bad
-block like a recent read error.  This will encourage an attempt to fix
-the read error which will either generate a write error, or will
-ensure good data is stored there.  We don't yet forget the bad block
-in that case.  That comes later.
-
-Now that we honour bad blocks when reading we can allow devices with
-bad blocks into the array.
+Now that we never read from known-bad-blocks we can allow devices with
+known-bad-blocks into a RAID1.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   46 ++++++++++++++++++++++++++++++++--------------
- 1 files changed, 32 insertions(+), 14 deletions(-)
+ drivers/md/raid1.c |   97 ++++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 75 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 7a3fb72..52bedc6 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2916,6 +2916,9 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 	spin_lock_irq(&conf->device_lock);
- 	for (i=disks; i--; ) {
- 		mdk_rdev_t *rdev;
-+		sector_t first_bad;
-+		int bad_sectors;
-+		int is_bad = 0;
- 
- 		dev = &sh->dev[i];
- 
-@@ -2952,15 +2955,32 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (dev->written)
- 			s->written++;
- 		rdev = rcu_dereference(conf->disks[i].rdev);
--		if (s->blocked_rdev == NULL &&
--		    rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
--			s->blocked_rdev = rdev;
--			atomic_inc(&rdev->nr_pending);
-+		if (rdev) {
-+			is_bad = is_badblock(rdev, sh->sector, STRIPE_SECTORS,
-+					     &first_bad, &bad_sectors);
-+			if (s->blocked_rdev == NULL
-+			    && (test_bit(Blocked, &rdev->flags)
-+				|| is_bad < 0)) {
-+				if (is_bad < 0)
-+					set_bit(BlockedBadBlocks,
-+						&rdev->flags);
-+				s->blocked_rdev = rdev;
-+				atomic_inc(&rdev->nr_pending);
-+			}
- 		}
- 		clear_bit(R5_Insync, &dev->flags);
- 		if (!rdev)
- 			/* Not in-sync */;
--		else if (test_bit(In_sync, &rdev->flags))
-+		else if (is_bad) {
-+			/* also not in-sync */
-+			if (!test_bit(WriteErrorSeen, &rdev->flags)) {
-+				/* treat as in-sync, but with a read error
-+				 * which we can now try to correct
-+				 */
-+				set_bit(R5_Insync, &dev->flags);
-+				set_bit(R5_ReadError, &dev->flags);
-+			}
-+		} else if (test_bit(In_sync, &rdev->flags))
- 			set_bit(R5_Insync, &dev->flags);
- 		else {
- 			/* in sync if before recovery_offset */
-@@ -3471,6 +3491,9 @@ static int chunk_aligned_read(mddev_t *mddev, struct bio * raid_bio)
- 	rcu_read_lock();
- 	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
- 	if (rdev && test_bit(In_sync, &rdev->flags)) {
-+		sector_t first_bad;
-+		int bad_sectors;
-+
- 		atomic_inc(&rdev->nr_pending);
- 		rcu_read_unlock();
- 		raid_bio->bi_next = (void*)rdev;
-@@ -3478,8 +3501,10 @@ static int chunk_aligned_read(mddev_t *mddev, struct bio * raid_bio)
- 		align_bi->bi_flags &= ~(1 << BIO_SEG_VALID);
- 		align_bi->bi_sector += rdev->data_offset;
- 
--		if (!bio_fits_rdev(align_bi)) {
--			/* too big in some way */
-+		if (!bio_fits_rdev(align_bi) ||
-+		    is_badblock(rdev, align_bi->bi_sector, align_bi->bi_size>>9,
-+				&first_bad, &bad_sectors)) {
-+			/* too big in some way, or has a known bad block */
- 			bio_put(align_bi);
- 			rdev_dec_pending(rdev, mddev);
- 			return 0;
-@@ -4671,10 +4696,6 @@ static int run(mddev_t *mddev)
- 	 * 0 for a fully functional array, 1 or 2 for a degraded array.
- 	 */
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
--		if (rdev->badblocks.count) {
--			printk(KERN_ERR "md/raid5: cannot handle bad blocks yet\n");
--			goto abort;
--		}
- 		if (rdev->raid_disk < 0)
- 			continue;
- 		if (test_bit(In_sync, &rdev->flags)) {
-@@ -4983,9 +5004,6 @@ static int raid5_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	int first = 0;
- 	int last = conf->raid_disks - 1;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index cc3939d..8c31c39 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1155,9 +1155,6 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	if (mddev->recovery_disabled == conf->recovery_disabled)
+ 		return -EBUSY;
  
 -	if (rdev->badblocks.count)
 -		return -EINVAL;
 -
- 	if (has_failed(conf))
- 		/* no point adding a device */
- 		return -EINVAL;
+ 	if (rdev->raid_disk >= 0)
+ 		first = last = rdev->raid_disk;
+ 
+@@ -1303,6 +1300,9 @@ static int fix_sync_read_error(r1bio_t *r1_bio)
+ 	 * We don't need to freeze the array, because being in an
+ 	 * active sync request, there is no normal IO, and
+ 	 * no overlapping syncs.
++	 * We don't need to check is_badblock() again as we
++	 * made sure that anything with a bad block in range
++	 * will have bi_end_io clear.
+ 	 */
+ 	mddev_t *mddev = r1_bio->mddev;
+ 	conf_t *conf = mddev->private;
+@@ -1792,6 +1792,8 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 	int write_targets = 0, read_targets = 0;
+ 	sector_t sync_blocks;
+ 	int still_degraded = 0;
++	int good_sectors = RESYNC_SECTORS;
++	int min_bad = 0; /* number of sectors that are bad in all devices */
+ 
+ 	if (!conf->r1buf_pool)
+ 		if (init_resync(conf))
+@@ -1879,36 +1881,89 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 
+ 		rdev = rcu_dereference(conf->mirrors[i].rdev);
+ 		if (rdev == NULL ||
+-			   test_bit(Faulty, &rdev->flags)) {
++		    test_bit(Faulty, &rdev->flags)) {
+ 			still_degraded = 1;
+-			continue;
+ 		} else if (!test_bit(In_sync, &rdev->flags)) {
+ 			bio->bi_rw = WRITE;
+ 			bio->bi_end_io = end_sync_write;
+ 			write_targets ++;
+ 		} else {
+ 			/* may need to read from here */
+-			bio->bi_rw = READ;
+-			bio->bi_end_io = end_sync_read;
+-			if (test_bit(WriteMostly, &rdev->flags)) {
+-				if (wonly < 0)
+-					wonly = i;
+-			} else {
+-				if (disk < 0)
+-					disk = i;
++			sector_t first_bad = MaxSector;
++			int bad_sectors;
++
++			if (is_badblock(rdev, sector_nr, good_sectors,
++					&first_bad, &bad_sectors)) {
++				if (first_bad > sector_nr)
++					good_sectors = first_bad - sector_nr;
++				else {
++					bad_sectors -= (sector_nr - first_bad);
++					if (min_bad == 0 ||
++					    min_bad > bad_sectors)
++						min_bad = bad_sectors;
++				}
++			}
++			if (sector_nr < first_bad) {
++				if (test_bit(WriteMostly, &rdev->flags)) {
++					if (wonly < 0)
++						wonly = i;
++				} else {
++					if (disk < 0)
++						disk = i;
++				}
++				bio->bi_rw = READ;
++				bio->bi_end_io = end_sync_read;
++				read_targets++;
+ 			}
+-			read_targets++;
+ 		}
+-		atomic_inc(&rdev->nr_pending);
+-		bio->bi_sector = sector_nr + rdev->data_offset;
+-		bio->bi_bdev = rdev->bdev;
+-		bio->bi_private = r1_bio;
++		if (bio->bi_end_io) {
++			atomic_inc(&rdev->nr_pending);
++			bio->bi_sector = sector_nr + rdev->data_offset;
++			bio->bi_bdev = rdev->bdev;
++			bio->bi_private = r1_bio;
++		}
+ 	}
+ 	rcu_read_unlock();
+ 	if (disk < 0)
+ 		disk = wonly;
+ 	r1_bio->read_disk = disk;
+ 
++	if (read_targets == 0 && min_bad > 0) {
++		/* These sectors are bad on all InSync devices, so we
++		 * need to mark them bad on all write targets
++		 */
++		int ok = 1;
++		for (i = 0 ; i < conf->raid_disks ; i++)
++			if (r1_bio->bios[i]->bi_end_io == end_sync_write) {
++				mdk_rdev_t *rdev =
++					rcu_dereference(conf->mirrors[i].rdev);
++				ok = rdev_set_badblocks(rdev, sector_nr,
++							min_bad, 0
++					) && ok;
++			}
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
++		*skipped = 1;
++		put_buf(r1_bio);
++
++		if (!ok) {
++			/* Cannot record the badblocks, so need to
++			 * abort the resync.
++			 * If there are multiple read targets, could just
++			 * fail the really bad ones ???
++			 */
++			conf->recovery_disabled = mddev->recovery_disabled;
++			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
++			return 0;
++		} else
++			return min_bad;
++
++	}
++	if (min_bad > 0 && min_bad < good_sectors) {
++		/* only resync enough to reach the next bad->good
++		 * transition */
++		good_sectors = min_bad;
++	}
++
+ 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery) && read_targets > 0)
+ 		/* extra read targets are also write targets */
+ 		write_targets += read_targets-1;
+@@ -1925,6 +1980,8 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
+ 
+ 	if (max_sector > mddev->resync_max)
+ 		max_sector = mddev->resync_max; /* Don't do IO beyond here */
++	if (max_sector > sector_nr + good_sectors)
++		max_sector = sector_nr + good_sectors;
+ 	nr_sectors = 0;
+ 	sync_blocks = 0;
+ 	do {
+@@ -2147,10 +2204,6 @@ static int run(mddev_t *mddev)
+ 			blk_queue_segment_boundary(mddev->queue,
+ 						   PAGE_CACHE_SIZE - 1);
+ 		}
+-		if (rdev->badblocks.count) {
+-			printk(KERN_ERR "md/raid1: Cannot handle bad blocks yet\n");
+-			return -EINVAL;
+-		}
+ 	}
+ 
+ 	mddev->degraded = 0;
 
 
