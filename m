@@ -1,127 +1,132 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 28/34] md: get rid of unnecessary casts on page_address()
-Date: Thu, 21 Jul 2011 12:32:28 +1000
-Message-ID: <20110721023227.6728.18390.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 36/36] md/raid10: handle further errors during
+ fix_read_error better.
+Date: Thu, 21 Jul 2011 12:58:51 +1000
+Message-ID: <20110721025851.8422.93455.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Namhyung Kim <namhyung@gmail.com>
 List-Id: linux-raid.ids
 
-From: Namhyung Kim <namhyung@gmail.com>
+If we find more read/write errors we should record a bad block before
+failing the device.
 
-page_address() returns void pointer, so the casts can be removed.
-
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c |   23 +++++++++++------------
- 1 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/md/raid10.c |   59 ++++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 44 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c7d9c6a..2a32050 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1025,7 +1025,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
- 	ret = -EINVAL;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index b02e384..9214e08 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1749,6 +1749,26 @@ static void check_decay_read_errors(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		atomic_set(&rdev->read_errors, read_errors >> hours_since_last);
+ }
  
- 	bdevname(rdev->bdev, b);
--	sb = (mdp_super_t*)page_address(rdev->sb_page);
-+	sb = page_address(rdev->sb_page);
++static int r10_sync_page_io(mdk_rdev_t *rdev, sector_t sector,
++			    int sectors, struct page *page, int rw)
++{
++	sector_t first_bad;
++	int bad_sectors;
++
++	if (is_badblock(rdev, sector, sectors, &first_bad, &bad_sectors)
++	    && (rw == READ || test_bit(WriteErrorSeen, &rdev->flags)))
++		return -1;
++	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
++		/* success */
++		return 1;
++	if (rw == WRITE)
++		set_bit(WriteErrorSeen, &rdev->flags);
++	/* need to record an error - either for the block or the device */
++	if (!rdev_set_badblocks(rdev, sector, sectors, 0))
++		md_error(rdev->mddev, rdev);
++	return 0;
++}
++
+ /*
+  * This is a kernel thread which:
+  *
+@@ -1832,9 +1852,19 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 		rcu_read_unlock();
  
- 	if (sb->md_magic != MD_SB_MAGIC) {
- 		printk(KERN_ERR "md: invalid raid superblock magic on %s\n",
-@@ -1064,7 +1064,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
- 		ret = 1;
- 	} else {
- 		__u64 ev1, ev2;
--		mdp_super_t *refsb = (mdp_super_t*)page_address(refdev->sb_page);
-+		mdp_super_t *refsb = page_address(refdev->sb_page);
- 		if (!uuid_equal(refsb, sb)) {
- 			printk(KERN_WARNING "md: %s has different UUID to %s\n",
- 				b, bdevname(refdev->bdev,b2));
-@@ -1099,7 +1099,7 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
- static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
- {
- 	mdp_disk_t *desc;
--	mdp_super_t *sb = (mdp_super_t *)page_address(rdev->sb_page);
-+	mdp_super_t *sb = page_address(rdev->sb_page);
- 	__u64 ev1 = md_event(sb);
- 
- 	rdev->raid_disk = -1;
-@@ -1230,7 +1230,7 @@ static void super_90_sync(mddev_t *mddev, mdk_rdev_t *rdev)
- 
- 	rdev->sb_size = MD_SB_BYTES;
- 
--	sb = (mdp_super_t*)page_address(rdev->sb_page);
-+	sb = page_address(rdev->sb_page);
- 
- 	memset(sb, 0, sizeof(*sb));
- 
-@@ -1435,7 +1435,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
- 	if (ret) return ret;
- 
- 
--	sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
-+	sb = page_address(rdev->sb_page);
- 
- 	if (sb->magic != cpu_to_le32(MD_SB_MAGIC) ||
- 	    sb->major_version != cpu_to_le32(1) ||
-@@ -1477,8 +1477,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
- 		ret = 1;
- 	} else {
- 		__u64 ev1, ev2;
--		struct mdp_superblock_1 *refsb = 
--			(struct mdp_superblock_1*)page_address(refdev->sb_page);
-+		struct mdp_superblock_1 *refsb = page_address(refdev->sb_page);
- 
- 		if (memcmp(sb->set_uuid, refsb->set_uuid, 16) != 0 ||
- 		    sb->level != refsb->level ||
-@@ -1513,7 +1512,7 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version)
- 
- static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
- {
--	struct mdp_superblock_1 *sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
-+	struct mdp_superblock_1 *sb = page_address(rdev->sb_page);
- 	__u64 ev1 = le64_to_cpu(sb->events);
- 
- 	rdev->raid_disk = -1;
-@@ -1619,7 +1618,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
- 	int max_dev, i;
- 	/* make rdev->sb match mddev and rdev data. */
- 
--	sb = (struct mdp_superblock_1*)page_address(rdev->sb_page);
-+	sb = page_address(rdev->sb_page);
- 
- 	sb->feature_map = 0;
- 	sb->pad0 = 0;
-@@ -1724,7 +1723,7 @@ super_1_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
- 			num_sectors = max_sectors;
- 		rdev->sb_start = sb_start;
- 	}
--	sb = (struct mdp_superblock_1 *) page_address(rdev->sb_page);
-+	sb = page_address(rdev->sb_page);
- 	sb->data_size = cpu_to_le64(num_sectors);
- 	sb->super_offset = rdev->sb_start;
- 	sb->sb_csum = calc_sb_1_csum(sb);
-@@ -2127,10 +2126,10 @@ static void print_rdev(mdk_rdev_t *rdev, int major_version)
- 		printk(KERN_INFO "md: rdev superblock (MJ:%d):\n", major_version);
- 		switch (major_version) {
- 		case 0:
--			print_sb_90((mdp_super_t*)page_address(rdev->sb_page));
-+			print_sb_90(page_address(rdev->sb_page));
- 			break;
- 		case 1:
--			print_sb_1((struct mdp_superblock_1 *)page_address(rdev->sb_page));
-+			print_sb_1(page_address(rdev->sb_page));
+ 		if (!success) {
+-			/* Cannot read from anywhere -- bye bye array */
++			/* Cannot read from anywhere, just mark the block
++			 * as bad on the first device to discourage future
++			 * reads.
++			 */
+ 			int dn = r10_bio->devs[r10_bio->read_slot].devnum;
+-			md_error(mddev, conf->mirrors[dn].rdev);
++			rdev = conf->mirrors[dn].rdev;
++
++			if (!rdev_set_badblocks(
++				    rdev,
++				    r10_bio->devs[r10_bio->read_slot].addr
++				    + sect,
++				    s, 0))
++				md_error(mddev, rdev);
  			break;
  		}
- 	} else
+ 
+@@ -1855,10 +1885,10 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 
+ 			atomic_inc(&rdev->nr_pending);
+ 			rcu_read_unlock();
+-			if (sync_page_io(rdev,
+-					 r10_bio->devs[sl].addr +
+-					 sect,
+-					 s<<9, conf->tmppage, WRITE, false)
++			if (r10_sync_page_io(rdev,
++					     r10_bio->devs[sl].addr +
++					     sect,
++					     s<<9, conf->tmppage, WRITE)
+ 			    == 0) {
+ 				/* Well, this device is dead */
+ 				printk(KERN_NOTICE
+@@ -1873,7 +1903,6 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 				       "drive\n",
+ 				       mdname(mddev),
+ 				       bdevname(rdev->bdev, b));
+-				md_error(mddev, rdev);
+ 			}
+ 			rdev_dec_pending(rdev, mddev);
+ 			rcu_read_lock();
+@@ -1893,11 +1922,12 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 
+ 			atomic_inc(&rdev->nr_pending);
+ 			rcu_read_unlock();
+-			if (sync_page_io(rdev,
+-					 r10_bio->devs[sl].addr +
+-					 sect,
+-					 s<<9, conf->tmppage,
+-					 READ, false) == 0) {
++			switch (r10_sync_page_io(rdev,
++					     r10_bio->devs[sl].addr +
++					     sect,
++					     s<<9, conf->tmppage,
++						 READ)) {
++			case 0:
+ 				/* Well, this device is dead */
+ 				printk(KERN_NOTICE
+ 				       "md/raid10:%s: unable to read back "
+@@ -1911,9 +1941,8 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 				       "drive\n",
+ 				       mdname(mddev),
+ 				       bdevname(rdev->bdev, b));
+-
+-				md_error(mddev, rdev);
+-			} else {
++				break;
++			case 1:
+ 				printk(KERN_INFO
+ 				       "md/raid10:%s: read error corrected"
+ 				       " (%d sectors at %llu on %s)\n",
 
 
