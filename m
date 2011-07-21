@@ -1,143 +1,176 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Thu, 21 Jul 2011 07:57:14 +0100
-Message-ID: <CADNH=7Hy+ww5UoDPznV6PCqn7F98_YvWgMuwJFzqinB0uqW+Vw@mail.gmail.com>
-References: <201107181403.49563.raid1@fuckaround.org>
-	<4E26CAA7.8030201@hardwarefreak.com>
-	<c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org>
-	<CADNH=7HR7euaWem0tpLxJfRe0hYnRP5fwxJ6MC5vJeNf=T=PzA@mail.gmail.com>
-	<4E276C7C.9050103@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 22/36] md/raid10: simplify/reindent some loops.
+Date: Thu, 21 Jul 2011 12:58:49 +1000
+Message-ID: <20110721025849.8422.66614.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E276C7C.9050103@hardwarefreak.com>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Pol Hallen <raid1@fuckaround.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, sorry. 5 WD20EARS and 2 Samsung 2TB
+When a loop ends with a large if, it can be neater to change the
+if to invert the condition and just 'continue'.
+Then the body of the if can be indented to a lower level.
 
-On Thursday, 21 July 2011, Stan Hoeppner <stan@hardwarefreak.com> wrote=
-:
-> On 7/20/2011 3:17 PM, Mathias Bur=C3=A9n wrote:
->
->> FWIW this is my RAID6 setup:
->>
->> $ sudo fdisk -l /dev/sd[b,c,d,e,f,g,h]
->> Password:
->
-> Are these indeed advanced format drives? =C2=A0You didn't provide mod=
-el#s or
-> manufacturer product line. =C2=A0The only clue we have that they migh=
-t be AF
-> drives is the 2048 offset you created. =C2=A0Unless I simply missed i=
-t.
->
->> Disk /dev/sdb: 2000.4 GB, 2000398934016 bytes
->> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 secto=
-rs
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x0e5b3a7a
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdb1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sdc: 2000.4 GB, 2000398934016 bytes
->> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 secto=
-rs
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x4fc36d54
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdc1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sdd: 2000.4 GB, 2000398934016 bytes
->> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 secto=
-rs
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x9e716ecb
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdd1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sde: 2000.4 GB, 2000398934016 bytes
->> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 secto=
-rs
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x629ab77f
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sde1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sdf: 2000.4 GB, 2000398934016 bytes
->> 123 heads, 18 sectors/track, 1764692 cylinders, total 3907029168 sec=
-tors
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x3d454f20
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdf1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sdg: 2000.4 GB, 2000398934016 bytes
->> 81 heads, 63 sectors/track, 765633 cylinders, total 3907029168 secto=
-rs
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x918fae9f
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdg1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->>
->> Disk /dev/sdh: 2000.4 GB, 2000398934016 bytes
->> 123 heads, 18 sectors/track, 1764692 cylinders, total 3907029168 sec=
-tors
->> Units =3D sectors of 1 * 512 =3D 512 bytes
->> Sector size (logical/physical): 512 bytes / 512 bytes
->> I/O size (minimum/optimal): 512 bytes / 512 bytes
->> Disk identifier: 0x0ac81a1b
->>
->> =C2=A0 =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
->> /dev/sdh1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A02048 =C2=A0390702=
-9167 =C2=A01953513560 =C2=A0 fd =C2=A0Linux raid
->> autodetect
->
-> --
-> Stan
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+
+ drivers/md/raid10.c |  127 ++++++++++++++++++++++++++-------------------------
+ 1 files changed, 65 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index fe6692e..c489b5c 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1533,80 +1533,83 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
+ 			sl--;
+ 			d = r10_bio->devs[sl].devnum;
+ 			rdev = rcu_dereference(conf->mirrors[d].rdev);
+-			if (rdev &&
+-			    test_bit(In_sync, &rdev->flags)) {
+-				atomic_inc(&rdev->nr_pending);
+-				rcu_read_unlock();
+-				if (sync_page_io(rdev,
+-						 r10_bio->devs[sl].addr +
+-						 sect,
+-						 s<<9, conf->tmppage, WRITE, false)
+-				    == 0) {
+-					/* Well, this device is dead */
+-					printk(KERN_NOTICE
+-					       "md/raid10:%s: read correction "
+-					       "write failed"
+-					       " (%d sectors at %llu on %s)\n",
+-					       mdname(mddev), s,
+-					       (unsigned long long)(
+-						       sect + rdev->data_offset),
+-					       bdevname(rdev->bdev, b));
+-					printk(KERN_NOTICE "md/raid10:%s: %s: failing "
+-					       "drive\n",
+-					       mdname(mddev),
+-					       bdevname(rdev->bdev, b));
+-					md_error(mddev, rdev);
+-				}
+-				rdev_dec_pending(rdev, mddev);
+-				rcu_read_lock();
++			if (!rdev ||
++			    !test_bit(In_sync, &rdev->flags))
++				continue;
++
++			atomic_inc(&rdev->nr_pending);
++			rcu_read_unlock();
++			if (sync_page_io(rdev,
++					 r10_bio->devs[sl].addr +
++					 sect,
++					 s<<9, conf->tmppage, WRITE, false)
++			    == 0) {
++				/* Well, this device is dead */
++				printk(KERN_NOTICE
++				       "md/raid10:%s: read correction "
++				       "write failed"
++				       " (%d sectors at %llu on %s)\n",
++				       mdname(mddev), s,
++				       (unsigned long long)(
++					       sect + rdev->data_offset),
++				       bdevname(rdev->bdev, b));
++				printk(KERN_NOTICE "md/raid10:%s: %s: failing "
++				       "drive\n",
++				       mdname(mddev),
++				       bdevname(rdev->bdev, b));
++				md_error(mddev, rdev);
+ 			}
++			rdev_dec_pending(rdev, mddev);
++			rcu_read_lock();
+ 		}
+ 		sl = start;
+ 		while (sl != r10_bio->read_slot) {
++			char b[BDEVNAME_SIZE];
+ 
+ 			if (sl==0)
+ 				sl = conf->copies;
+ 			sl--;
+ 			d = r10_bio->devs[sl].devnum;
+ 			rdev = rcu_dereference(conf->mirrors[d].rdev);
+-			if (rdev &&
+-			    test_bit(In_sync, &rdev->flags)) {
+-				char b[BDEVNAME_SIZE];
+-				atomic_inc(&rdev->nr_pending);
+-				rcu_read_unlock();
+-				if (sync_page_io(rdev,
+-						 r10_bio->devs[sl].addr +
+-						 sect,
+-						 s<<9, conf->tmppage,
+-						 READ, false) == 0) {
+-					/* Well, this device is dead */
+-					printk(KERN_NOTICE
+-					       "md/raid10:%s: unable to read back "
+-					       "corrected sectors"
+-					       " (%d sectors at %llu on %s)\n",
+-					       mdname(mddev), s,
+-					       (unsigned long long)(
+-						       sect + rdev->data_offset),
+-					       bdevname(rdev->bdev, b));
+-					printk(KERN_NOTICE "md/raid10:%s: %s: failing drive\n",
+-					       mdname(mddev),
+-					       bdevname(rdev->bdev, b));
+-
+-					md_error(mddev, rdev);
+-				} else {
+-					printk(KERN_INFO
+-					       "md/raid10:%s: read error corrected"
+-					       " (%d sectors at %llu on %s)\n",
+-					       mdname(mddev), s,
+-					       (unsigned long long)(
+-						       sect + rdev->data_offset),
+-					       bdevname(rdev->bdev, b));
+-					atomic_add(s, &rdev->corrected_errors);
+-				}
++			if (!rdev ||
++			    !test_bit(In_sync, &rdev->flags))
++				continue;
+ 
+-				rdev_dec_pending(rdev, mddev);
+-				rcu_read_lock();
++			atomic_inc(&rdev->nr_pending);
++			rcu_read_unlock();
++			if (sync_page_io(rdev,
++					 r10_bio->devs[sl].addr +
++					 sect,
++					 s<<9, conf->tmppage,
++					 READ, false) == 0) {
++				/* Well, this device is dead */
++				printk(KERN_NOTICE
++				       "md/raid10:%s: unable to read back "
++				       "corrected sectors"
++				       " (%d sectors at %llu on %s)\n",
++				       mdname(mddev), s,
++				       (unsigned long long)(
++					       sect + rdev->data_offset),
++				       bdevname(rdev->bdev, b));
++				printk(KERN_NOTICE "md/raid10:%s: %s: failing "
++				       "drive\n",
++				       mdname(mddev),
++				       bdevname(rdev->bdev, b));
++
++				md_error(mddev, rdev);
++			} else {
++				printk(KERN_INFO
++				       "md/raid10:%s: read error corrected"
++				       " (%d sectors at %llu on %s)\n",
++				       mdname(mddev), s,
++				       (unsigned long long)(
++					       sect + rdev->data_offset),
++				       bdevname(rdev->bdev, b));
++				atomic_add(s, &rdev->corrected_errors);
+ 			}
++
++			rdev_dec_pending(rdev, mddev);
++			rcu_read_lock();
+ 		}
+ 		rcu_read_unlock();
+ 
+
+
