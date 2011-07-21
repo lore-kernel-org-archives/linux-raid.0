@@ -1,258 +1,159 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 30/36] md/raid10: clear bad-block record when write
- succeeds.
-Date: Thu, 21 Jul 2011 12:58:50 +1000
-Message-ID: <20110721025850.8422.77943.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 17/34] md/raid5: unite handle_stripe_dirtying5 and
+ handle_stripe_dirtying6
+Date: Thu, 21 Jul 2011 12:32:26 +1000
+Message-ID: <20110721023226.6728.28082.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If we succeed in writing to a block that was recorded as
-being bad, we clear the bad-block record.
-
-This requires some delayed handling as the bad-block-list update has
-to happen in process-context.
+RAID6 is only allowed to choose 'reconstruct-write' while RAID5 is
+also allow 'read-modify-write'
+Apart from this difference, handle_stripe_dirtying[56] are nearly
+identical.  So resolve these differences and create just one function.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |  101 +++++++++++++++++++++++++++++++++++++++++++++------
- drivers/md/raid10.h |   11 ++++++
- 2 files changed, 100 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c |   77 ++++++++++++++--------------------------------------
+ 1 files changed, 21 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7dcd318..c809d3d 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -181,7 +181,7 @@ static void put_all_bios(conf_t *conf, r10bio_t *r10_bio)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index ea796a9..b1eba98 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2468,11 +2468,19 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
+ 			md_wakeup_thread(conf->mddev->thread);
+ }
  
- 	for (i = 0; i < conf->copies; i++) {
- 		struct bio **bio = & r10_bio->devs[i].bio;
--		if (*bio && *bio != IO_BLOCKED)
-+		if (!BIO_SPECIAL(*bio))
- 			bio_put(*bio);
- 		*bio = NULL;
- 	}
-@@ -267,7 +267,8 @@ static inline void update_head_pos(int slot, r10bio_t *r10_bio)
- /*
-  * Find the disk number which triggered given bio
-  */
--static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio, struct bio *bio)
-+static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio,
-+			 struct bio *bio, int *slotp)
+-static void handle_stripe_dirtying5(raid5_conf_t *conf,
+-		struct stripe_head *sh,	struct stripe_head_state *s, int disks)
++static void handle_stripe_dirtying(raid5_conf_t *conf,
++				   struct stripe_head *sh,
++				   struct stripe_head_state *s,
++				   int disks)
  {
- 	int slot;
- 
-@@ -278,6 +279,8 @@ static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio, struct bio *bio)
- 	BUG_ON(slot == conf->copies);
- 	update_head_pos(slot, r10_bio);
- 
-+	if (slotp)
-+		*slotp = slot;
- 	return r10_bio->devs[slot].devnum;
- }
- 
-@@ -329,9 +332,11 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
- 	r10bio_t *r10_bio = bio->bi_private;
- 	int dev;
-+	int dec_rdev = 1;
- 	conf_t *conf = r10_bio->mddev->private;
-+	int slot;
- 
--	dev = find_bio_disk(conf, r10_bio, bio);
-+	dev = find_bio_disk(conf, r10_bio, bio, &slot);
- 
- 	/*
- 	 * this branch is our 'one mirror IO has finished' event handler:
-@@ -340,7 +345,7 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 		md_error(r10_bio->mddev, conf->mirrors[dev].rdev);
- 		/* an I/O failed, we can't clear the bitmap */
- 		set_bit(R10BIO_Degraded, &r10_bio->state);
--	} else
-+	} else {
- 		/*
- 		 * Set R10BIO_Uptodate in our master bio, so that
- 		 * we will return a good error code for to the higher
-@@ -350,8 +355,23 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 		 * user-side. So if something waits for IO, then it will
- 		 * wait for the 'master' bio.
- 		 */
-+		sector_t first_bad;
-+		int bad_sectors;
-+
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
- 
-+		/* Maybe we can clear some bad blocks. */
-+		if (is_badblock(conf->mirrors[dev].rdev,
-+				r10_bio->devs[slot].addr,
-+				r10_bio->sectors,
-+				&first_bad, &bad_sectors)) {
-+			bio_put(bio);
-+			r10_bio->devs[slot].bio = IO_MADE_GOOD;
-+			dec_rdev = 0;
-+			set_bit(R10BIO_MadeGood, &r10_bio->state);
-+		}
-+	}
-+
- 	/*
- 	 *
- 	 * Let's see if all mirrored write operations have finished
-@@ -364,10 +384,13 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 				!test_bit(R10BIO_Degraded, &r10_bio->state),
- 				0);
- 		md_write_end(r10_bio->mddev);
--		raid_end_bio_io(r10_bio);
-+		if (test_bit(R10BIO_MadeGood, &r10_bio->state))
-+			reschedule_retry(r10_bio);
-+		else
-+			raid_end_bio_io(r10_bio);
- 	}
--
--	rdev_dec_pending(conf->mirrors[dev].rdev, conf->mddev);
-+	if (dec_rdev)
-+		rdev_dec_pending(conf->mirrors[dev].rdev, conf->mddev);
- }
- 
- 
-@@ -1382,7 +1405,7 @@ static void end_sync_read(struct bio *bio, int error)
- 	conf_t *conf = r10_bio->mddev->private;
- 	int d;
- 
--	d = find_bio_disk(conf, r10_bio, bio);
-+	d = find_bio_disk(conf, r10_bio, bio, NULL);
- 
- 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
- 		set_bit(R10BIO_Uptodate, &r10_bio->state);
-@@ -1414,23 +1437,37 @@ static void end_sync_write(struct bio *bio, int error)
- 	mddev_t *mddev = r10_bio->mddev;
- 	conf_t *conf = mddev->private;
- 	int d;
-+	sector_t first_bad;
-+	int bad_sectors;
-+	int slot;
- 
--	d = find_bio_disk(conf, r10_bio, bio);
-+	d = find_bio_disk(conf, r10_bio, bio, &slot);
- 
- 	if (!uptodate)
- 		md_error(mddev, conf->mirrors[d].rdev);
-+	else if (is_badblock(conf->mirrors[d].rdev,
-+			     r10_bio->devs[slot].addr,
-+			     r10_bio->sectors,
-+			     &first_bad, &bad_sectors))
-+		set_bit(R10BIO_MadeGood, &r10_bio->state);
- 
- 	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
- 	while (atomic_dec_and_test(&r10_bio->remaining)) {
- 		if (r10_bio->master_bio == NULL) {
- 			/* the primary of several recovery bios */
- 			sector_t s = r10_bio->sectors;
--			put_buf(r10_bio);
-+			if (test_bit(R10BIO_MadeGood, &r10_bio->state))
-+				reschedule_retry(r10_bio);
-+			else
-+				put_buf(r10_bio);
- 			md_done_sync(mddev, s, 1);
- 			break;
- 		} else {
- 			r10bio_t *r10_bio2 = (r10bio_t *)r10_bio->master_bio;
--			put_buf(r10_bio);
-+			if (test_bit(R10BIO_MadeGood, &r10_bio->state))
-+				reschedule_retry(r10_bio);
-+			else
-+				put_buf(r10_bio);
- 			r10_bio = r10_bio2;
+ 	int rmw = 0, rcw = 0, i;
+-	for (i = disks; i--; ) {
++	if (conf->max_degraded == 2) {
++		/* RAID6 requires 'rcw' in current implementation
++		 * Calculate the real rcw later - for now fake it
++		 * look like rcw is cheaper
++		 */
++		rcw = 1; rmw = 2;
++	} else for (i = disks; i--; ) {
+ 		/* would I have to read this buffer for read_modify_write */
+ 		struct r5dev *dev = &sh->dev[i];
+ 		if ((dev->towrite || i == sh->pd_idx) &&
+@@ -2519,16 +2527,19 @@ static void handle_stripe_dirtying5(raid5_conf_t *conf,
+ 				}
+ 			}
  		}
- 	}
-@@ -1901,6 +1938,44 @@ read_more:
- 		generic_make_request(bio);
+-	if (rcw <= rmw && rcw > 0)
++	if (rcw <= rmw && rcw > 0) {
+ 		/* want reconstruct write, but need to get some data */
++		rcw = 0;
+ 		for (i = disks; i--; ) {
+ 			struct r5dev *dev = &sh->dev[i];
+ 			if (!test_bit(R5_OVERWRITE, &dev->flags) &&
+-			    i != sh->pd_idx &&
++			    i != sh->pd_idx && i != sh->qd_idx &&
+ 			    !test_bit(R5_LOCKED, &dev->flags) &&
+ 			    !(test_bit(R5_UPTODATE, &dev->flags) ||
+-			    test_bit(R5_Wantcompute, &dev->flags)) &&
+-			    test_bit(R5_Insync, &dev->flags)) {
++			      test_bit(R5_Wantcompute, &dev->flags))) {
++				rcw++;
++				if (!test_bit(R5_Insync, &dev->flags))
++					continue; /* it's a failed drive */
+ 				if (
+ 				  test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+ 					pr_debug("Read_old block "
+@@ -2542,6 +2553,7 @@ static void handle_stripe_dirtying5(raid5_conf_t *conf,
+ 				}
+ 			}
+ 		}
++	}
+ 	/* now if nothing is locked, and if we have enough data,
+ 	 * we can start a write request
+ 	 */
+@@ -2558,53 +2570,6 @@ static void handle_stripe_dirtying5(raid5_conf_t *conf,
+ 		schedule_reconstruction(sh, s, rcw == 0, 0);
  }
  
-+static void handle_write_completed(conf_t *conf, r10bio_t *r10_bio)
-+{
-+	/* Some sort of write request has finished and it
-+	 * succeeded in writing where we thought there was a
-+	 * bad block.  So forget the bad block.
-+	 */
-+	int m;
-+	mdk_rdev_t *rdev;
-+
-+	if (test_bit(R10BIO_IsSync, &r10_bio->state) ||
-+	    test_bit(R10BIO_IsRecover, &r10_bio->state)) {
-+		for (m = 0; m < conf->copies; m++)
-+			if (r10_bio->devs[m].bio &&
-+			    test_bit(BIO_UPTODATE,
-+				     &r10_bio->devs[m].bio->bi_flags)) {
-+				int dev = r10_bio->devs[m].devnum;
-+				rdev = conf->mirrors[dev].rdev;
-+				rdev_clear_badblocks(
-+					rdev,
-+					r10_bio->devs[m].addr,
-+					r10_bio->sectors);
-+			}
-+		put_buf(r10_bio);
-+	} else {
-+		for (m = 0; m < conf->copies; m++)
-+			if (r10_bio->devs[m].bio == IO_MADE_GOOD) {
-+				int dev = r10_bio->devs[m].devnum;
-+				rdev = conf->mirrors[dev].rdev;
-+				rdev_clear_badblocks(
-+					rdev,
-+					r10_bio->devs[m].addr,
-+					r10_bio->sectors);
-+				rdev_dec_pending(rdev, conf->mddev);
-+			}
-+		raid_end_bio_io(r10_bio);
-+	}
-+}
-+
- static void raid10d(mddev_t *mddev)
+-static void handle_stripe_dirtying6(raid5_conf_t *conf,
+-		struct stripe_head *sh,	struct stripe_head_state *s,
+-		int disks)
+-{
+-	int rcw = 0, pd_idx = sh->pd_idx, i;
+-	int qd_idx = sh->qd_idx;
+-
+-	set_bit(STRIPE_HANDLE, &sh->state);
+-	for (i = disks; i--; ) {
+-		struct r5dev *dev = &sh->dev[i];
+-		/* check if we haven't enough data */
+-		if (!test_bit(R5_OVERWRITE, &dev->flags) &&
+-		    i != pd_idx && i != qd_idx &&
+-		    !test_bit(R5_LOCKED, &dev->flags) &&
+-		    !(test_bit(R5_UPTODATE, &dev->flags) ||
+-		      test_bit(R5_Wantcompute, &dev->flags))) {
+-			rcw++;
+-			if (!test_bit(R5_Insync, &dev->flags))
+-				continue; /* it's a failed drive */
+-
+-			if (
+-			  test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
+-				pr_debug("Read_old stripe %llu "
+-					"block %d for Reconstruct\n",
+-				     (unsigned long long)sh->sector, i);
+-				set_bit(R5_LOCKED, &dev->flags);
+-				set_bit(R5_Wantread, &dev->flags);
+-				s->locked++;
+-			} else {
+-				pr_debug("Request delayed stripe %llu "
+-					"block %d for Reconstruct\n",
+-				     (unsigned long long)sh->sector, i);
+-				set_bit(STRIPE_DELAYED, &sh->state);
+-				set_bit(STRIPE_HANDLE, &sh->state);
+-			}
+-		}
+-	}
+-	/* now if nothing is locked, and if we have enough data, we can start a
+-	 * write request
+-	 */
+-	if ((s->req_compute || !test_bit(STRIPE_COMPUTE_RUN, &sh->state)) &&
+-	    s->locked == 0 && rcw == 0 &&
+-	    !test_bit(STRIPE_BIT_DELAY, &sh->state)) {
+-		schedule_reconstruction(sh, s, 1, 0);
+-	}
+-}
+-
+ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+ 				struct stripe_head_state *s, int disks)
  {
- 	r10bio_t *r10_bio;
-@@ -1928,7 +2003,9 @@ static void raid10d(mddev_t *mddev)
+@@ -3100,7 +3065,7 @@ static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
+ 	 *    block.
+ 	 */
+ 	if (s->to_write && !sh->reconstruct_state && !sh->check_state)
+-		handle_stripe_dirtying5(conf, sh, s, disks);
++		handle_stripe_dirtying(conf, sh, s, disks);
  
- 		mddev = r10_bio->mddev;
- 		conf = mddev->private;
--		if (test_bit(R10BIO_IsSync, &r10_bio->state))
-+		if (test_bit(R10BIO_MadeGood, &r10_bio->state))
-+			handle_write_completed(conf, r10_bio);
-+		else if (test_bit(R10BIO_IsSync, &r10_bio->state))
- 			sync_request_write(mddev, r10_bio);
- 		else if (test_bit(R10BIO_IsRecover, &r10_bio->state))
- 			recovery_request_write(mddev, r10_bio);
-diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-index c646152..d8b7f9a 100644
---- a/drivers/md/raid10.h
-+++ b/drivers/md/raid10.h
-@@ -118,6 +118,13 @@ struct r10bio_s {
-  * level, we store IO_BLOCKED in the appropriate 'bios' pointer
-  */
- #define IO_BLOCKED ((struct bio*)1)
-+/* When we successfully write to a known bad-block, we need to remove the
-+ * bad-block marking which must be done from process context.  So we record
-+ * the success by setting devs[n].bio to IO_MADE_GOOD
-+ */
-+#define IO_MADE_GOOD ((struct bio *)2)
-+
-+#define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
+ 	/* maybe we need to check and possibly fix the parity for this stripe
+ 	 * Any reads will already have been scheduled, so we just see if enough
+@@ -3289,7 +3254,7 @@ static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
+ 	 *    block.
+ 	 */
+ 	if (s->to_write && !sh->reconstruct_state && !sh->check_state)
+-		handle_stripe_dirtying6(conf, sh, s, disks);
++		handle_stripe_dirtying(conf, sh, s, disks);
  
- /* bits for r10bio.state */
- #define	R10BIO_Uptodate	0
-@@ -128,4 +135,8 @@ struct r10bio_s {
-  * so that raid10d knows what to do with them.
-  */
- #define	R10BIO_ReadError 4
-+/* If a write for this request means we can clear some
-+ * known-bad-block records, we set this flag.
-+ */
-+#define	R10BIO_MadeGood 5
- #endif
+ 	/* maybe we need to check and possibly fix the parity for this stripe
+ 	 * Any reads will already have been scheduled, so we just see if enough
 
 
