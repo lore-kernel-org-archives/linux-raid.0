@@ -1,242 +1,131 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 13/34] md/raid5: Move code for finishing a reconstruction
- into handle_stripe.
-Date: Thu, 21 Jul 2011 12:32:26 +1000
-Message-ID: <20110721023226.6728.17250.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 19/36] md/raid5: write errors should be recorded as bad
+ blocks if possible.
+Date: Thu, 21 Jul 2011 12:58:49 +1000
+Message-ID: <20110721025849.8422.21745.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Prior to commit ab69ae12ceef7 the code in handle_stripe5 and
-handle_stripe6 to "Finish reconstruct operations initiated by the
-expansion process" was identical.
-That commit added an identical stanza of code to each function, but in
-different places.  That was careless.
+When a write error is detected, don't mark the device as failed
+immediately but rather record the fact for handle_stripe to deal with.
 
-The raid5 code was correct, so move that out into handle_stripe and
-remove raid6 version.
+Handle_stripe then attempts to record a bad block.  Only if that fails
+does the device get marked as faulty.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |  153 +++++++++++++++++++---------------------------------
- 1 files changed, 57 insertions(+), 96 deletions(-)
+ drivers/md/raid5.c |   33 +++++++++++++++++++++++++++++++--
+ drivers/md/raid5.h |   18 ++++++++++--------
+ 2 files changed, 41 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ce1c291..7b562fc 100644
+index c34c97d..54e89d1 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2999,7 +2999,7 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
-  *
-  */
- 
--static void handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
-+static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- {
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int disks = sh->disks, i;
-@@ -3081,7 +3081,7 @@ static void handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (s->syncing || s->expanding || s->expanded ||
- 		    s->to_write || s->written) {
- 			set_bit(STRIPE_HANDLE, &sh->state);
--			return;
-+			return 1;
- 		}
- 		/* There is nothing for the blocked_rdev to block */
- 		rdev_dec_pending(s->blocked_rdev, conf->mddev);
-@@ -3205,54 +3205,10 @@ static void handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- 			s->locked++;
- 		}
+@@ -1658,8 +1658,10 @@ static void raid5_end_write_request(struct bio *bi, int error)
+ 		return;
  	}
--
--	/* Finish reconstruct operations initiated by the expansion process */
--	if (sh->reconstruct_state == reconstruct_state_result) {
--		struct stripe_head *sh2
--			= get_active_stripe(conf, sh->sector, 1, 1, 1);
--		if (sh2 && test_bit(STRIPE_EXPAND_SOURCE, &sh2->state)) {
--			/* sh cannot be written until sh2 has been read.
--			 * so arrange for sh to be delayed a little
--			 */
--			set_bit(STRIPE_DELAYED, &sh->state);
--			set_bit(STRIPE_HANDLE, &sh->state);
--			if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
--					      &sh2->state))
--				atomic_inc(&conf->preread_active_stripes);
--			release_stripe(sh2);
--			return;
--		}
--		if (sh2)
--			release_stripe(sh2);
--
--		sh->reconstruct_state = reconstruct_state_idle;
--		clear_bit(STRIPE_EXPANDING, &sh->state);
--		for (i = conf->raid_disks; i--; ) {
--			set_bit(R5_Wantwrite, &sh->dev[i].flags);
--			set_bit(R5_LOCKED, &sh->dev[i].flags);
--			s->locked++;
--		}
--	}
--
--	if (s->expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
--	    !sh->reconstruct_state) {
--		/* Need to write out all blocks after computing parity */
--		sh->disks = conf->raid_disks;
--		stripe_set_idx(sh->sector, conf, 0, sh);
--		schedule_reconstruction(sh, s, 1, 1);
--	} else if (s->expanded && !sh->reconstruct_state && s->locked == 0) {
--		clear_bit(STRIPE_EXPAND_READY, &sh->state);
--		atomic_dec(&conf->reshape_stripes);
--		wake_up(&conf->wait_for_overlap);
--		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
--	}
--
--	if (s->expanding && s->locked == 0 &&
--	    !test_bit(STRIPE_COMPUTE_RUN, &sh->state))
--		handle_stripe_expansion(conf, sh, NULL);
-+	return 0;
- }
  
--static void handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
-+static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- {
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int disks = sh->disks;
-@@ -3335,7 +3291,7 @@ static void handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (s->syncing || s->expanding || s->expanded ||
- 		    s->to_write || s->written) {
- 			set_bit(STRIPE_HANDLE, &sh->state);
--			return;
-+			return 1;
+-	if (!uptodate)
+-		md_error(conf->mddev, conf->disks[i].rdev);
++	if (!uptodate) {
++		set_bit(WriteErrorSeen, &conf->disks[i].rdev->flags);
++		set_bit(R5_WriteError, &sh->dev[i].flags);
++	}
+ 
+ 	rdev_dec_pending(conf->disks[i].rdev, conf->mddev);
+ 	
+@@ -3031,6 +3033,14 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
+ 			if (sh->sector + STRIPE_SECTORS <= rdev->recovery_offset)
+ 				set_bit(R5_Insync, &dev->flags);
  		}
- 		/* There is nothing for the blocked_rdev to block */
- 		rdev_dec_pending(s->blocked_rdev, conf->mddev);
-@@ -3468,57 +3424,15 @@ static void handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- 				}
- 			}
- 		}
--
--	/* Finish reconstruct operations initiated by the expansion process */
--	if (sh->reconstruct_state == reconstruct_state_result) {
--		sh->reconstruct_state = reconstruct_state_idle;
--		clear_bit(STRIPE_EXPANDING, &sh->state);
--		for (i = conf->raid_disks; i--; ) {
--			set_bit(R5_Wantwrite, &sh->dev[i].flags);
--			set_bit(R5_LOCKED, &sh->dev[i].flags);
--			s->locked++;
--		}
--	}
--
--	if (s->expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
--	    !sh->reconstruct_state) {
--		struct stripe_head *sh2
--			= get_active_stripe(conf, sh->sector, 1, 1, 1);
--		if (sh2 && test_bit(STRIPE_EXPAND_SOURCE, &sh2->state)) {
--			/* sh cannot be written until sh2 has been read.
--			 * so arrange for sh to be delayed a little
--			 */
--			set_bit(STRIPE_DELAYED, &sh->state);
--			set_bit(STRIPE_HANDLE, &sh->state);
--			if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
--					      &sh2->state))
--				atomic_inc(&conf->preread_active_stripes);
--			release_stripe(sh2);
--			return;
--		}
--		if (sh2)
--			release_stripe(sh2);
--
--		/* Need to write out all blocks after computing P&Q */
--		sh->disks = conf->raid_disks;
--		stripe_set_idx(sh->sector, conf, 0, sh);
--		schedule_reconstruction(sh, s, 1, 1);
--	} else if (s->expanded && !sh->reconstruct_state && s->locked == 0) {
--		clear_bit(STRIPE_EXPAND_READY, &sh->state);
--		atomic_dec(&conf->reshape_stripes);
--		wake_up(&conf->wait_for_overlap);
--		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
--	}
--
--	if (s->expanding && s->locked == 0 &&
--	    !test_bit(STRIPE_COMPUTE_RUN, &sh->state))
--		handle_stripe_expansion(conf, sh, s);
-+	return 0;
- }
++		if (test_bit(R5_WriteError, &dev->flags)) {
++			clear_bit(R5_Insync, &dev->flags);
++			if (!test_bit(Faulty, &rdev->flags)) {
++				s->handle_bad_blocks = 1;
++				atomic_inc(&rdev->nr_pending);
++			} else
++				clear_bit(R5_WriteError, &dev->flags);
++		}
+ 		if (!test_bit(R5_Insync, &dev->flags)) {
+ 			/* The ReadError flag will just be confusing now */
+ 			clear_bit(R5_ReadError, &dev->flags);
+@@ -3086,6 +3096,11 @@ static void handle_stripe(struct stripe_head *sh)
  
- static void handle_stripe(struct stripe_head *sh)
- {
- 	struct stripe_head_state s;
-+	int done;
- 	raid5_conf_t *conf = sh->raid_conf;
-+	int i;
+ 	analyse_stripe(sh, &s);
  
- 	clear_bit(STRIPE_HANDLE, &sh->state);
- 	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
-@@ -3546,11 +3460,58 @@ static void handle_stripe(struct stripe_head *sh)
- 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
- 
- 	if (conf->level == 6)
--		handle_stripe6(sh, &s);
-+		done = handle_stripe6(sh, &s);
- 	else
--		handle_stripe5(sh, &s);
-+		done = handle_stripe5(sh, &s);
-+
-+	if (done)
++	if (s.handle_bad_blocks) {
++		set_bit(STRIPE_HANDLE, &sh->state);
 +		goto finish;
-+	/* Finish reconstruct operations initiated by the expansion process */
-+	if (sh->reconstruct_state == reconstruct_state_result) {
-+		struct stripe_head *sh2
-+			= get_active_stripe(conf, sh->sector, 1, 1, 1);
-+		if (sh2 && test_bit(STRIPE_EXPAND_SOURCE, &sh2->state)) {
-+			/* sh cannot be written until sh2 has been read.
-+			 * so arrange for sh to be delayed a little
-+			 */
-+			set_bit(STRIPE_DELAYED, &sh->state);
-+			set_bit(STRIPE_HANDLE, &sh->state);
-+			if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
-+					      &sh2->state))
-+				atomic_inc(&conf->preread_active_stripes);
-+			release_stripe(sh2);
-+			goto finish;
-+		}
-+		if (sh2)
-+			release_stripe(sh2);
-+
-+		sh->reconstruct_state = reconstruct_state_idle;
-+		clear_bit(STRIPE_EXPANDING, &sh->state);
-+		for (i = conf->raid_disks; i--; ) {
-+			set_bit(R5_Wantwrite, &sh->dev[i].flags);
-+			set_bit(R5_LOCKED, &sh->dev[i].flags);
-+			s.locked++;
-+		}
-+	}
- 
-+	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
-+	    !sh->reconstruct_state) {
-+		/* Need to write out all blocks after computing parity */
-+		sh->disks = conf->raid_disks;
-+		stripe_set_idx(sh->sector, conf, 0, sh);
-+		schedule_reconstruction(sh, &s, 1, 1);
-+	} else if (s.expanded && !sh->reconstruct_state && s.locked == 0) {
-+		clear_bit(STRIPE_EXPAND_READY, &sh->state);
-+		atomic_dec(&conf->reshape_stripes);
-+		wake_up(&conf->wait_for_overlap);
-+		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
 +	}
 +
-+	if (s.expanding && s.locked == 0 &&
-+	    !test_bit(STRIPE_COMPUTE_RUN, &sh->state))
-+		handle_stripe_expansion(conf, sh, NULL);
- 
-+finish:
- 	/* wait for this device to become unblocked */
+ 	if (unlikely(s.blocked_rdev)) {
+ 		if (s.syncing || s.expanding || s.expanded ||
+ 		    s.to_write || s.written) {
+@@ -3283,6 +3298,20 @@ finish:
  	if (unlikely(s.blocked_rdev))
  		md_wait_for_blocked_rdev(s.blocked_rdev, conf->mddev);
+ 
++	if (s.handle_bad_blocks)
++		for (i = disks; i--; ) {
++			mdk_rdev_t *rdev;
++			struct r5dev *dev = &sh->dev[i];
++			if (test_and_clear_bit(R5_WriteError, &dev->flags)) {
++				/* We own a safe reference to the rdev */
++				rdev = conf->disks[i].rdev;
++				if (!rdev_set_badblocks(rdev, sh->sector,
++							STRIPE_SECTORS, 0))
++					md_error(conf->mddev, rdev);
++				rdev_dec_pending(rdev, conf->mddev);
++			}
++		}
++
+ 	if (s.ops_request)
+ 		raid_run_ops(sh, s.ops_request);
+ 
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 719fc86..d4729f5 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -252,6 +252,7 @@ struct stripe_head_state {
+ 	struct bio *return_bi;
+ 	mdk_rdev_t *blocked_rdev;
+ 	int dec_preread_active;
++	int handle_bad_blocks;
+ };
+ 
+ /* Flags */
+@@ -267,14 +268,15 @@ struct stripe_head_state {
+ #define	R5_ReWrite	9	/* have tried to over-write the readerror */
+ 
+ #define	R5_Expanded	10	/* This block now has post-expand data */
+-#define	R5_Wantcompute	11 /* compute_block in progress treat as
+-				    * uptodate
+-				    */
+-#define	R5_Wantfill	12 /* dev->toread contains a bio that needs
+-				    * filling
+-				    */
+-#define R5_Wantdrain	13 /* dev->towrite needs to be drained */
+-#define R5_WantFUA	14	/* Write should be FUA */
++#define	R5_Wantcompute	11	/* compute_block in progress treat as
++				 * uptodate
++				 */
++#define	R5_Wantfill	12	/* dev->toread contains a bio that needs
++				 * filling
++				 */
++#define	R5_Wantdrain	13	/* dev->towrite needs to be drained */
++#define	R5_WantFUA	14	/* Write should be FUA */
++#define	R5_WriteError	15	/* got a write error - need to record it */
+ /*
+  * Write method
+  */
 
 
