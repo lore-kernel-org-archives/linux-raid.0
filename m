@@ -1,208 +1,78 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 16/34] md/raid5: unite fetch_block5 and fetch_block6
-Date: Thu, 21 Jul 2011 12:32:26 +1000
-Message-ID: <20110721023226.6728.42897.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 08/36] md: add 'write_error' flag to component devices.
+Date: Thu, 21 Jul 2011 12:58:48 +1000
+Message-ID: <20110721025848.8422.63231.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Provided that ->failed_num[1] is not a valid device number (which is
-easily achieved) fetch_block6 provides all the functionality of
-fetch_block5.
-
-So remove the latter and rename the former to simply "fetch_block".
-
-Then handle_stripe_fill5 and handle_stripe_fill6 become the same and
-can similarly be united.
+If a device has ever seen a write error, we will want to handle
+known-bad-blocks differently.
+So create an appropriate state flag and export it via sysfs.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |  107 +++++++++++-----------------------------------------
- 1 files changed, 23 insertions(+), 84 deletions(-)
+ drivers/md/md.c |   12 ++++++++++++
+ drivers/md/md.h |    3 +++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 100ac1f..ea796a9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2308,91 +2308,20 @@ handle_failed_stripe(raid5_conf_t *conf, struct stripe_head *sh,
- 			md_wakeup_thread(conf->mddev->thread);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 430bc8b..aa96ead 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2520,6 +2520,10 @@ state_show(mdk_rdev_t *rdev, char *page)
+ 		len += sprintf(page+len, "%sspare", sep);
+ 		sep = ",";
+ 	}
++	if (test_bit(WriteErrorSeen, &rdev->flags)) {
++		len += sprintf(page+len, "%swrite_error", sep);
++		sep = ",";
++	}
+ 	return len+sprintf(page+len, "\n");
  }
  
--/* fetch_block5 - checks the given member device to see if its data needs
-+/* fetch_block - checks the given member device to see if its data needs
-  * to be read or computed to satisfy a request.
-  *
-  * Returns 1 when no more member devices need to be checked, otherwise returns
-- * 0 to tell the loop in handle_stripe_fill5 to continue
-+ * 0 to tell the loop in handle_stripe_fill to continue
-  */
--static int fetch_block5(struct stripe_head *sh, struct stripe_head_state *s,
--			int disk_idx, int disks)
--{
--	struct r5dev *dev = &sh->dev[disk_idx];
--	struct r5dev *failed_dev = &sh->dev[s->failed_num[0]];
--
--	/* is the data in this block needed, and can we get it? */
--	if (!test_bit(R5_LOCKED, &dev->flags) &&
--	    !test_bit(R5_UPTODATE, &dev->flags) &&
--	    (dev->toread ||
--	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
--	     s->syncing || s->expanding ||
--	     (s->failed && failed_dev->toread) ||
--	     (s->failed && failed_dev->towrite &&
--		!test_bit(R5_OVERWRITE, &failed_dev->flags)))))) {
--		/* We would like to get this block, possibly by computing it,
--		 * otherwise read it if the backing disk is insync
--		 */
--		if ((s->uptodate == disks - 1) &&
--		    (s->failed && disk_idx == s->failed_num[0])) {
--			set_bit(STRIPE_COMPUTE_RUN, &sh->state);
--			set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
--			set_bit(R5_Wantcompute, &dev->flags);
--			sh->ops.target = disk_idx;
--			sh->ops.target2 = -1;
--			s->req_compute = 1;
--			/* Careful: from this point on 'uptodate' is in the eye
--			 * of raid_run_ops which services 'compute' operations
--			 * before writes. R5_Wantcompute flags a block that will
--			 * be R5_UPTODATE by the time it is needed for a
--			 * subsequent operation.
--			 */
--			s->uptodate++;
--			return 1; /* uptodate + compute == disks */
--		} else if (test_bit(R5_Insync, &dev->flags)) {
--			set_bit(R5_LOCKED, &dev->flags);
--			set_bit(R5_Wantread, &dev->flags);
--			s->locked++;
--			pr_debug("Reading block %d (sync=%d)\n", disk_idx,
--				s->syncing);
--		}
--	}
--
--	return 0;
--}
--
--/**
-- * handle_stripe_fill5 - read or compute data to satisfy pending requests.
-- */
--static void handle_stripe_fill5(struct stripe_head *sh,
--			struct stripe_head_state *s, int disks)
--{
--	int i;
--
--	/* look for blocks to read/compute, skip this if a compute
--	 * is already in flight, or if the stripe contents are in the
--	 * midst of changing due to a write
--	 */
--	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
--	    !sh->reconstruct_state)
--		for (i = disks; i--; )
--			if (fetch_block5(sh, s, i, disks))
--				break;
--	set_bit(STRIPE_HANDLE, &sh->state);
--}
--
--/* fetch_block6 - checks the given member device to see if its data needs
-- * to be read or computed to satisfy a request.
-- *
-- * Returns 1 when no more member devices need to be checked, otherwise returns
-- * 0 to tell the loop in handle_stripe_fill6 to continue
-- */
--static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
--			int disk_idx, int disks)
-+static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
-+		       int disk_idx, int disks)
- {
- 	struct r5dev *dev = &sh->dev[disk_idx];
- 	struct r5dev *fdev[2] = { &sh->dev[s->failed_num[0]],
- 				  &sh->dev[s->failed_num[1]] };
- 
-+	/* is the data in this block needed, and can we get it? */
- 	if (!test_bit(R5_LOCKED, &dev->flags) &&
- 	    !test_bit(R5_UPTODATE, &dev->flags) &&
- 	    (dev->toread ||
-@@ -2400,7 +2329,9 @@ static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
- 	     s->syncing || s->expanding ||
- 	     (s->failed >= 1 && fdev[0]->toread) ||
- 	     (s->failed >= 2 && fdev[1]->toread) ||
--	     (s->failed && s->to_write)) {
-+	     (sh->raid_conf->level <= 5 && s->failed && fdev[0]->towrite &&
-+	      !test_bit(R5_OVERWRITE, &fdev[0]->flags)) ||
-+	     (sh->raid_conf->level == 6 && s->failed && s->to_write))) {
- 		/* we would like to get this block, possibly by computing it,
- 		 * otherwise read it if the backing disk is insync
- 		 */
-@@ -2420,6 +2351,12 @@ static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
- 			sh->ops.target = disk_idx;
- 			sh->ops.target2 = -1; /* no 2nd target */
- 			s->req_compute = 1;
-+			/* Careful: from this point on 'uptodate' is in the eye
-+			 * of raid_run_ops which services 'compute' operations
-+			 * before writes. R5_Wantcompute flags a block that will
-+			 * be R5_UPTODATE by the time it is needed for a
-+			 * subsequent operation.
-+			 */
- 			s->uptodate++;
- 			return 1;
- 		} else if (s->uptodate == disks-2 && s->failed >= 2) {
-@@ -2460,11 +2397,11 @@ static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
- }
- 
- /**
-- * handle_stripe_fill6 - read or compute data to satisfy pending requests.
-+ * handle_stripe_fill - read or compute data to satisfy pending requests.
-  */
--static void handle_stripe_fill6(struct stripe_head *sh,
--			struct stripe_head_state *s,
--			int disks)
-+static void handle_stripe_fill(struct stripe_head *sh,
-+			       struct stripe_head_state *s,
-+			       int disks)
- {
- 	int i;
- 
-@@ -2475,7 +2412,7 @@ static void handle_stripe_fill6(struct stripe_head *sh,
- 	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
- 	    !sh->reconstruct_state)
- 		for (i = disks; i--; )
--			if (fetch_block6(sh, s, i, disks))
-+			if (fetch_block(sh, s, i, disks))
- 				break;
- 	set_bit(STRIPE_HANDLE, &sh->state);
- }
-@@ -3123,7 +3060,7 @@ static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
+@@ -2534,6 +2538,8 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 	 *  blocked - sets the Blocked flag
+ 	 *  -blocked - clears the Blocked flag
+ 	 *  insync - sets Insync providing device isn't active
++	 *  write_error - sets WriteErrorSeen
++	 *  -write_error - clears WriteErrorSeen
  	 */
- 	if (s->to_read || s->non_overwrite ||
- 	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
--		handle_stripe_fill5(sh, s, disks);
-+		handle_stripe_fill(sh, s, disks);
+ 	int err = -EINVAL;
+ 	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+@@ -2569,6 +2575,12 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 	} else if (cmd_match(buf, "insync") && rdev->raid_disk == -1) {
+ 		set_bit(In_sync, &rdev->flags);
+ 		err = 0;
++	} else if (cmd_match(buf, "write_error")) {
++		set_bit(WriteErrorSeen, &rdev->flags);
++		err = 0;
++	} else if (cmd_match(buf, "-write_error")) {
++		clear_bit(WriteErrorSeen, &rdev->flags);
++		err = 0;
+ 	}
+ 	if (!err)
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index eb11449..723c0cd 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -84,6 +84,9 @@ struct mdk_rdev_s
+ #define Blocked		8		/* An error occurred on an externally
+ 					 * managed array, don't allow writes
+ 					 * until it is cleared */
++#define WriteErrorSeen	9		/* A write error has been seen on this
++					 * device
++					 */
+ 	wait_queue_head_t blocked_wait;
  
- 	/* Now we check to see if any write operations have recently
- 	 * completed
-@@ -3314,7 +3251,7 @@ static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- 	 */
- 	if (s->to_read || s->non_overwrite || (s->to_write && s->failed) ||
- 	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
--		handle_stripe_fill6(sh, s, disks);
-+		handle_stripe_fill(sh, s, disks);
- 
- 	/* Now we check to see if any write operations have recently
- 	 * completed
-@@ -3398,6 +3335,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	s.syncing = test_bit(STRIPE_SYNCING, &sh->state);
- 	s.expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	s.expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
-+	s.failed_num[0] = -1;
-+	s.failed_num[1] = -1;
- 
- 	if (conf->level == 6)
- 		done = handle_stripe6(sh, &s);
+ 	int desc_nr;			/* descriptor index in the superblock */
 
 
