@@ -1,236 +1,379 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 18/34] md/raid5: move more common code into handle_stripe
-Date: Thu, 21 Jul 2011 12:32:26 +1000
-Message-ID: <20110721023226.6728.76228.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 16/36] md/raid1: factor several functions out or raid1d()
+Date: Thu, 21 Jul 2011 12:58:49 +1000
+Message-ID: <20110721025849.8422.88896.stgit@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Apart from 'prexor' which can only be set for RAID5, and
-'qd_idx' which can only be meaningful for RAID6, these two
-chunks of code are nearly the same.
-
-So combine them into one adding a test to call either
-handle_parity_checks5 or handle_parity_checks6 as appropriate.
+raid1d is too big with several deep branches.
+So separate them out into their own functions.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |  161 ++++++++++++++++++++--------------------------------
- 1 files changed, 61 insertions(+), 100 deletions(-)
+ drivers/md/raid1.c |  318 ++++++++++++++++++++++++++--------------------------
+ 1 files changed, 159 insertions(+), 159 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index b1eba98..ba6f892 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1756,7 +1756,7 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
- 	/*
- 	 * Select the parity disk based on the user selected algorithm.
- 	 */
--	pd_idx = qd_idx = ~0;
-+	pd_idx = qd_idx = -1;
- 	switch(conf->level) {
- 	case 4:
- 		pd_idx = data_disks;
-@@ -2904,7 +2904,6 @@ static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int disks = sh->disks, i;
- 	struct r5dev *dev;
--	int prexor;
- 
- 	/* Now to look around and see what can be done */
- 	rcu_read_lock();
-@@ -3027,56 +3026,6 @@ static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- 	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
- 		handle_stripe_fill(sh, s, disks);
- 
--	/* Now we check to see if any write operations have recently
--	 * completed
--	 */
--	prexor = 0;
--	if (sh->reconstruct_state == reconstruct_state_prexor_drain_result)
--		prexor = 1;
--	if (sh->reconstruct_state == reconstruct_state_drain_result ||
--	    sh->reconstruct_state == reconstruct_state_prexor_drain_result) {
--		sh->reconstruct_state = reconstruct_state_idle;
--
--		/* All the 'written' buffers and the parity block are ready to
--		 * be written back to disk
--		 */
--		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags));
--		for (i = disks; i--; ) {
--			dev = &sh->dev[i];
--			if (test_bit(R5_LOCKED, &dev->flags) &&
--				(i == sh->pd_idx || dev->written)) {
--				pr_debug("Writing block %d\n", i);
--				set_bit(R5_Wantwrite, &dev->flags);
--				if (prexor)
--					continue;
--				if (!test_bit(R5_Insync, &dev->flags) ||
--				    (i == sh->pd_idx && s->failed == 0))
--					set_bit(STRIPE_INSYNC, &sh->state);
--			}
--		}
--		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
--			s->dec_preread_active = 1;
--	}
--
--	/* Now to consider new write requests and what else, if anything
--	 * should be read.  We do not handle new writes when:
--	 * 1/ A 'write' operation (copy+xor) is already in flight.
--	 * 2/ A 'check' operation is in flight, as it may clobber the parity
--	 *    block.
--	 */
--	if (s->to_write && !sh->reconstruct_state && !sh->check_state)
--		handle_stripe_dirtying(conf, sh, s, disks);
--
--	/* maybe we need to check and possibly fix the parity for this stripe
--	 * Any reads will already have been scheduled, so we just see if enough
--	 * data is available.  The parity check is held off while parity
--	 * dependent operations are in flight.
--	 */
--	if (sh->check_state ||
--	    (s->syncing && s->locked == 0 &&
--	     !test_bit(STRIPE_COMPUTE_RUN, &sh->state) &&
--	     !test_bit(STRIPE_INSYNC, &sh->state)))
--		handle_parity_checks5(conf, sh, s, disks);
- 	return 0;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 08ff21a..d7518dc 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1862,21 +1862,168 @@ static int narrow_write_error(r1bio_t *r1_bio, int i)
+ 	return ok;
  }
  
-@@ -3218,54 +3167,6 @@ static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- 	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
- 		handle_stripe_fill(sh, s, disks);
- 
--	/* Now we check to see if any write operations have recently
--	 * completed
--	 */
--	if (sh->reconstruct_state == reconstruct_state_drain_result) {
--
--		sh->reconstruct_state = reconstruct_state_idle;
--		/* All the 'written' buffers and the parity blocks are ready to
--		 * be written back to disk
--		 */
--		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags));
--		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[qd_idx].flags));
--		for (i = disks; i--; ) {
--			dev = &sh->dev[i];
--			if (test_bit(R5_LOCKED, &dev->flags) &&
--			    (i == sh->pd_idx || i == qd_idx ||
--			     dev->written)) {
--				pr_debug("Writing block %d\n", i);
--				BUG_ON(!test_bit(R5_UPTODATE, &dev->flags));
--				set_bit(R5_Wantwrite, &dev->flags);
--				if (!test_bit(R5_Insync, &dev->flags) ||
--				    ((i == sh->pd_idx || i == qd_idx) &&
--				      s->failed == 0))
--					set_bit(STRIPE_INSYNC, &sh->state);
--			}
--		}
--		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
--			s->dec_preread_active = 1;
--	}
--
--	/* Now to consider new write requests and what else, if anything
--	 * should be read.  We do not handle new writes when:
--	 * 1/ A 'write' operation (copy+gen_syndrome) is already in flight.
--	 * 2/ A 'check' operation is in flight, as it may clobber the parity
--	 *    block.
--	 */
--	if (s->to_write && !sh->reconstruct_state && !sh->check_state)
--		handle_stripe_dirtying(conf, sh, s, disks);
--
--	/* maybe we need to check and possibly fix the parity for this stripe
--	 * Any reads will already have been scheduled, so we just see if enough
--	 * data is available.  The parity check is held off while parity
--	 * dependent operations are in flight.
--	 */
--	if (sh->check_state ||
--	    (s->syncing && s->locked == 0 &&
--	     !test_bit(STRIPE_COMPUTE_RUN, &sh->state) &&
--	     !test_bit(STRIPE_INSYNC, &sh->state)))
--		handle_parity_checks6(conf, sh, s, disks);
- 	return 0;
- }
- 
-@@ -3275,6 +3176,8 @@ static void handle_stripe(struct stripe_head *sh)
- 	int done;
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int i;
-+	int prexor;
-+	int disks = sh->disks;
- 
- 	clear_bit(STRIPE_HANDLE, &sh->state);
- 	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
-@@ -3311,6 +3214,64 @@ static void handle_stripe(struct stripe_head *sh)
- 	if (done)
- 		goto finish;
- 
-+	/* Now we check to see if any write operations have recently
-+	 * completed
-+	 */
-+	prexor = 0;
-+	if (sh->reconstruct_state == reconstruct_state_prexor_drain_result)
-+		prexor = 1;
-+	if (sh->reconstruct_state == reconstruct_state_drain_result ||
-+	    sh->reconstruct_state == reconstruct_state_prexor_drain_result) {
-+		sh->reconstruct_state = reconstruct_state_idle;
-+
-+		/* All the 'written' buffers and the parity block are ready to
-+		 * be written back to disk
-+		 */
-+		BUG_ON(!test_bit(R5_UPTODATE, &sh->dev[sh->pd_idx].flags));
-+		BUG_ON(sh->qd_idx >= 0 &&
-+		       !test_bit(R5_UPTODATE, &sh->dev[sh->qd_idx].flags));
-+		for (i = disks; i--; ) {
-+			struct r5dev *dev = &sh->dev[i];
-+			if (test_bit(R5_LOCKED, &dev->flags) &&
-+				(i == sh->pd_idx || i == sh->qd_idx ||
-+				 dev->written)) {
-+				pr_debug("Writing block %d\n", i);
-+				set_bit(R5_Wantwrite, &dev->flags);
-+				if (prexor)
-+					continue;
-+				if (!test_bit(R5_Insync, &dev->flags) ||
-+				    ((i == sh->pd_idx || i == sh->qd_idx)  &&
-+				     s.failed == 0))
-+					set_bit(STRIPE_INSYNC, &sh->state);
-+			}
++static void handle_sync_write_finished(conf_t *conf, r1bio_t *r1_bio)
++{
++	int m;
++	int s = r1_bio->sectors;
++	for (m = 0; m < conf->raid_disks ; m++) {
++		mdk_rdev_t *rdev = conf->mirrors[m].rdev;
++		struct bio *bio = r1_bio->bios[m];
++		if (bio->bi_end_io == NULL)
++			continue;
++		if (test_bit(BIO_UPTODATE, &bio->bi_flags) &&
++		    test_bit(R1BIO_MadeGood, &r1_bio->state)) {
++			rdev_clear_badblocks(rdev,
++					     r1_bio->sector,
++					     r1_bio->sectors);
 +		}
-+		if (test_and_clear_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
-+			s.dec_preread_active = 1;
++		if (!test_bit(BIO_UPTODATE, &bio->bi_flags) &&
++		    test_bit(R1BIO_WriteError, &r1_bio->state)) {
++			if (!rdev_set_badblocks(rdev,
++						r1_bio->sector,
++						r1_bio->sectors, 0))
++				md_error(conf->mddev, rdev);
++		}
 +	}
++	put_buf(r1_bio);
++	md_done_sync(conf->mddev, s, 1);
++}
 +
-+	/* Now to consider new write requests and what else, if anything
-+	 * should be read.  We do not handle new writes when:
-+	 * 1/ A 'write' operation (copy+xor) is already in flight.
-+	 * 2/ A 'check' operation is in flight, as it may clobber the parity
-+	 *    block.
-+	 */
-+	if (s.to_write && !sh->reconstruct_state && !sh->check_state)
-+		handle_stripe_dirtying(conf, sh, &s, disks);
++static void handle_write_finished(conf_t *conf, r1bio_t *r1_bio)
++{
++	int m;
++	for (m = 0; m < conf->raid_disks ; m++)
++		if (r1_bio->bios[m] == IO_MADE_GOOD) {
++			mdk_rdev_t *rdev = conf->mirrors[m].rdev;
++			rdev_clear_badblocks(rdev,
++					     r1_bio->sector,
++					     r1_bio->sectors);
++			rdev_dec_pending(rdev, conf->mddev);
++		} else if (r1_bio->bios[m] != NULL) {
++			/* This drive got a write error.  We need to
++			 * narrow down and record precise write
++			 * errors.
++			 */
++			if (!narrow_write_error(r1_bio, m)) {
++				md_error(conf->mddev,
++					 conf->mirrors[m].rdev);
++				/* an I/O failed, we can't clear the bitmap */
++				set_bit(R1BIO_Degraded, &r1_bio->state);
++			}
++			rdev_dec_pending(conf->mirrors[m].rdev,
++					 conf->mddev);
++		}
++	if (test_bit(R1BIO_WriteError, &r1_bio->state))
++		close_write(r1_bio);
++	raid_end_bio_io(r1_bio);
++}
 +
-+	/* maybe we need to check and possibly fix the parity for this stripe
-+	 * Any reads will already have been scheduled, so we just see if enough
-+	 * data is available.  The parity check is held off while parity
-+	 * dependent operations are in flight.
++static void handle_read_error(conf_t *conf, r1bio_t *r1_bio)
++{
++	int disk;
++	int max_sectors;
++	mddev_t *mddev = conf->mddev;
++	struct bio *bio;
++	char b[BDEVNAME_SIZE];
++	mdk_rdev_t *rdev;
++
++	clear_bit(R1BIO_ReadError, &r1_bio->state);
++	/* we got a read error. Maybe the drive is bad.  Maybe just
++	 * the block and we can fix it.
++	 * We freeze all other IO, and try reading the block from
++	 * other devices.  When we find one, we re-write
++	 * and check it that fixes the read error.
++	 * This is all done synchronously while the array is
++	 * frozen
 +	 */
-+	if (sh->check_state ||
-+	    (s.syncing && s.locked == 0 &&
-+	     !test_bit(STRIPE_COMPUTE_RUN, &sh->state) &&
-+	     !test_bit(STRIPE_INSYNC, &sh->state))) {
-+		if (conf->level == 6)
-+			handle_parity_checks6(conf, sh, &s, disks);
-+		else
-+			handle_parity_checks5(conf, sh, &s, disks);
++	if (mddev->ro == 0) {
++		freeze_array(conf);
++		fix_read_error(conf, r1_bio->read_disk,
++			       r1_bio->sector,
++			       r1_bio->sectors);
++		unfreeze_array(conf);
++	} else
++		md_error(mddev,
++			 conf->mirrors[r1_bio->read_disk].rdev);
++
++	bio = r1_bio->bios[r1_bio->read_disk];
++	bdevname(bio->bi_bdev, b);
++read_more:
++	disk = read_balance(conf, r1_bio, &max_sectors);
++	if (disk == -1) {
++		printk(KERN_ALERT "md/raid1:%s: %s: unrecoverable I/O"
++		       " read error for block %llu\n",
++		       mdname(mddev), b,
++		       (unsigned long long)r1_bio->sector);
++		raid_end_bio_io(r1_bio);
++	} else {
++		const unsigned long do_sync
++			= r1_bio->master_bio->bi_rw & REQ_SYNC;
++		if (bio) {
++			r1_bio->bios[r1_bio->read_disk] =
++				mddev->ro ? IO_BLOCKED : NULL;
++			bio_put(bio);
++		}
++		r1_bio->read_disk = disk;
++		bio = bio_clone_mddev(r1_bio->master_bio, GFP_NOIO, mddev);
++		md_trim_bio(bio,
++			    r1_bio->sector - bio->bi_sector,
++			    max_sectors);
++		r1_bio->bios[r1_bio->read_disk] = bio;
++		rdev = conf->mirrors[disk].rdev;
++		printk_ratelimited(KERN_ERR
++				   "md/raid1:%s: redirecting sector %llu"
++				   " to other mirror: %s\n",
++				   mdname(mddev),
++				   (unsigned long long)r1_bio->sector,
++				   bdevname(rdev->bdev, b));
++		bio->bi_sector = r1_bio->sector + rdev->data_offset;
++		bio->bi_bdev = rdev->bdev;
++		bio->bi_end_io = raid1_end_read_request;
++		bio->bi_rw = READ | do_sync;
++		bio->bi_private = r1_bio;
++		if (max_sectors < r1_bio->sectors) {
++			/* Drat - have to split this up more */
++			struct bio *mbio = r1_bio->master_bio;
++			int sectors_handled = (r1_bio->sector + max_sectors
++					       - mbio->bi_sector);
++			r1_bio->sectors = max_sectors;
++			spin_lock_irq(&conf->device_lock);
++			if (mbio->bi_phys_segments == 0)
++				mbio->bi_phys_segments = 2;
++			else
++				mbio->bi_phys_segments++;
++			spin_unlock_irq(&conf->device_lock);
++			generic_make_request(bio);
++			bio = NULL;
++
++			r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
++
++			r1_bio->master_bio = mbio;
++			r1_bio->sectors = (mbio->bi_size >> 9) - sectors_handled;
++			r1_bio->state = 0;
++			set_bit(R1BIO_ReadError, &r1_bio->state);
++			r1_bio->mddev = mddev;
++			r1_bio->sector = mbio->bi_sector + sectors_handled;
++
++			goto read_more;
++		} else
++			generic_make_request(bio);
 +	}
++}
++
+ static void raid1d(mddev_t *mddev)
+ {
+ 	r1bio_t *r1_bio;
+-	struct bio *bio;
+ 	unsigned long flags;
+ 	conf_t *conf = mddev->private;
+ 	struct list_head *head = &conf->retry_list;
+-	mdk_rdev_t *rdev;
+ 	struct blk_plug plug;
  
- 	if (s.syncing && s.locked == 0 && test_bit(STRIPE_INSYNC, &sh->state)) {
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
+ 	md_check_recovery(mddev);
+ 
+ 	blk_start_plug(&plug);
+ 	for (;;) {
+-		char b[BDEVNAME_SIZE];
+ 
+ 		if (atomic_read(&mddev->plug_cnt) == 0)
+ 			flush_pending_writes(conf);
+@@ -1895,168 +2042,21 @@ static void raid1d(mddev_t *mddev)
+ 		conf = mddev->private;
+ 		if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
+ 			if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
+-			    test_bit(R1BIO_WriteError, &r1_bio->state)) {
+-				int m;
+-				int s = r1_bio->sectors;
+-				for (m = 0; m < conf->raid_disks ; m++) {
+-					mdk_rdev_t *rdev
+-						= conf->mirrors[m].rdev;
+-					struct bio *bio = r1_bio->bios[m];
+-					if (bio->bi_end_io == NULL)
+-						continue;
+-					if (test_bit(BIO_UPTODATE,
+-						     &bio->bi_flags) &&
+-					    test_bit(R1BIO_MadeGood,
+-						     &r1_bio->state)) {
+-						rdev_clear_badblocks(
+-							rdev,
+-							r1_bio->sector,
+-							r1_bio->sectors);
+-					}
+-					if (!test_bit(BIO_UPTODATE,
+-						      &bio->bi_flags) &&
+-					    test_bit(R1BIO_WriteError,
+-						     &r1_bio->state)) {
+-						if (!rdev_set_badblocks(
+-							    rdev,
+-							    r1_bio->sector,
+-							    r1_bio->sectors, 0))
+-							md_error(mddev, rdev);
+-					}
+-				}
+-				put_buf(r1_bio);
+-				md_done_sync(mddev, s, 1);
+-			} else
++			    test_bit(R1BIO_WriteError, &r1_bio->state))
++				handle_sync_write_finished(conf, r1_bio);
++			else
+ 				sync_request_write(mddev, r1_bio);
+ 		} else if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
+-			   test_bit(R1BIO_WriteError, &r1_bio->state)) {
+-			int m;
+-			for (m = 0; m < conf->raid_disks ; m++)
+-				if (r1_bio->bios[m] == IO_MADE_GOOD) {
+-					rdev = conf->mirrors[m].rdev;
+-					rdev_clear_badblocks(
+-						rdev,
+-						r1_bio->sector,
+-						r1_bio->sectors);
+-					rdev_dec_pending(rdev, mddev);
+-				} else if (r1_bio->bios[m] != NULL) {
+-					/* This drive got a write error.  We
+-					 * need to narrow down and record
+-					 * precise write errors.
+-					 */
+-					if (!narrow_write_error(r1_bio, m)) {
+-						md_error(mddev,
+-							 conf->mirrors[m].rdev);
+-						/* an I/O failed, we can't clear
+-						 * the bitmap */
+-						set_bit(R1BIO_Degraded,
+-							&r1_bio->state);
+-					}
+-					rdev_dec_pending(conf->mirrors[m].rdev,
+-							 mddev);
+-				}
+-			if (test_bit(R1BIO_WriteError, &r1_bio->state))
+-				close_write(r1_bio);
+-			raid_end_bio_io(r1_bio);
+-		} else if (test_bit(R1BIO_ReadError, &r1_bio->state)) {
+-			int disk;
+-			int max_sectors;
+-
+-			clear_bit(R1BIO_ReadError, &r1_bio->state);
+-			/* we got a read error. Maybe the drive is bad.  Maybe just
+-			 * the block and we can fix it.
+-			 * We freeze all other IO, and try reading the block from
+-			 * other devices.  When we find one, we re-write
+-			 * and check it that fixes the read error.
+-			 * This is all done synchronously while the array is
+-			 * frozen
+-			 */
+-			if (mddev->ro == 0) {
+-				freeze_array(conf);
+-				fix_read_error(conf, r1_bio->read_disk,
+-					       r1_bio->sector,
+-					       r1_bio->sectors);
+-				unfreeze_array(conf);
+-			} else
+-				md_error(mddev,
+-					 conf->mirrors[r1_bio->read_disk].rdev);
+-
+-			bio = r1_bio->bios[r1_bio->read_disk];
+-			bdevname(bio->bi_bdev, b);
+-read_more:
+-			disk = read_balance(conf, r1_bio, &max_sectors);
+-			if (disk == -1) {
+-				printk(KERN_ALERT "md/raid1:%s: %s: unrecoverable I/O"
+-				       " read error for block %llu\n",
+-				       mdname(mddev), b,
+-				       (unsigned long long)r1_bio->sector);
+-				raid_end_bio_io(r1_bio);
+-			} else {
+-				const unsigned long do_sync = r1_bio->master_bio->bi_rw & REQ_SYNC;
+-				if (bio) {
+-					r1_bio->bios[r1_bio->read_disk] =
+-						mddev->ro ? IO_BLOCKED : NULL;
+-					bio_put(bio);
+-				}
+-				r1_bio->read_disk = disk;
+-				bio = bio_clone_mddev(r1_bio->master_bio,
+-						      GFP_NOIO, mddev);
+-				md_trim_bio(bio,
+-					    r1_bio->sector - bio->bi_sector,
+-					    max_sectors);
+-				r1_bio->bios[r1_bio->read_disk] = bio;
+-				rdev = conf->mirrors[disk].rdev;
+-				printk_ratelimited(
+-					KERN_ERR
+-					"md/raid1:%s: redirecting sector %llu"
+-					" to other mirror: %s\n",
+-					mdname(mddev),
+-					(unsigned long long)r1_bio->sector,
+-					bdevname(rdev->bdev, b));
+-				bio->bi_sector = r1_bio->sector + rdev->data_offset;
+-				bio->bi_bdev = rdev->bdev;
+-				bio->bi_end_io = raid1_end_read_request;
+-				bio->bi_rw = READ | do_sync;
+-				bio->bi_private = r1_bio;
+-				if (max_sectors < r1_bio->sectors) {
+-					/* Drat - have to split this up more */
+-					struct bio *mbio = r1_bio->master_bio;
+-					int sectors_handled =
+-						r1_bio->sector + max_sectors
+-						- mbio->bi_sector;
+-					r1_bio->sectors = max_sectors;
+-					spin_lock_irq(&conf->device_lock);
+-					if (mbio->bi_phys_segments == 0)
+-						mbio->bi_phys_segments = 2;
+-					else
+-						mbio->bi_phys_segments++;
+-					spin_unlock_irq(&conf->device_lock);
+-					generic_make_request(bio);
+-					bio = NULL;
+-
+-					r1_bio = mempool_alloc(conf->r1bio_pool,
+-							       GFP_NOIO);
+-
+-					r1_bio->master_bio = mbio;
+-					r1_bio->sectors = (mbio->bi_size >> 9)
+-						- sectors_handled;
+-					r1_bio->state = 0;
+-					set_bit(R1BIO_ReadError,
+-						&r1_bio->state);
+-					r1_bio->mddev = mddev;
+-					r1_bio->sector = mbio->bi_sector
+-						+ sectors_handled;
+-
+-					goto read_more;
+-				} else
+-					generic_make_request(bio);
+-			}
+-		} else {
++			   test_bit(R1BIO_WriteError, &r1_bio->state))
++			handle_write_finished(conf, r1_bio);
++		else if (test_bit(R1BIO_ReadError, &r1_bio->state))
++			handle_read_error(conf, r1_bio);
++		else
+ 			/* just a partial read to be scheduled from separate
+ 			 * context
+ 			 */
+ 			generic_make_request(r1_bio->bios[r1_bio->read_disk]);
+-		}
++
+ 		cond_resched();
+ 		if (mddev->flags & ~(1<<MD_CHANGE_PENDING))
+ 			md_check_recovery(mddev);
 
 
