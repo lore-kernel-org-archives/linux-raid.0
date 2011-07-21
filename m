@@ -1,253 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 19/34] md/raid5: move some more common code into
- handle_stripe
-Date: Thu, 21 Jul 2011 12:32:26 +1000
-Message-ID: <20110721023226.6728.58479.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+From: Nikolay Kichukov <hijacker@oldum.net>
+Subject: Re: Raid5 boot failure after grow
+Date: Thu, 21 Jul 2011 13:06:36 +0300
+Message-ID: <4E27FA2C.9070207@oldum.net>
+References: <CADVynFA9NffR7jMrN5HV05n9V0=SOVdyFQjvCvNP=MU+G-ur6g@mail.gmail.com> <4E260E21.5020001@turmel.org> <CADVynFDJO3_87ub-qfKK-0JWOB0nYK5P7=Au7fhcd+LEQkP=OA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <CADVynFDJO3_87ub-qfKK-0JWOB0nYK5P7=Au7fhcd+LEQkP=OA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: shaun.reich@kdemail.net
+Cc: Shaun Reich <predator106@gmail.com>, Phil Turmel <philip@turmel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The RAID6 version of this code is usable for RAID5 providing:
-  - we test "conf->max_degraded" rather than "2" as appropriate
-  - we make sure s->failed_num[1] is meaningful (and not '-1')
-    when s->failed > 1
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-The 'return 1' must become 'goto finish' in the new location.
+Hi,
+did you actually chroot into the grown array before updating your initramfs image?
 
-Signed-off-by: NeilBrown <neilb@suse.de>
----
+BTW what is on the raid5? Is it the / fs?
 
- drivers/md/raid5.c |  178 +++++++++++++++++++---------------------------------
- 1 files changed, 66 insertions(+), 112 deletions(-)
+Cheers,
+- -N
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ba6f892..f23848f 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2969,63 +2969,14 @@ static int handle_stripe5(struct stripe_head *sh, struct stripe_head_state *s)
- 		if (test_bit(R5_ReadError, &dev->flags))
- 			clear_bit(R5_Insync, &dev->flags);
- 		if (!test_bit(R5_Insync, &dev->flags)) {
-+			if (s->failed < 2)
-+				s->failed_num[s->failed] = i;
- 			s->failed++;
--			s->failed_num[0] = i;
- 		}
- 	}
- 	spin_unlock_irq(&conf->device_lock);
- 	rcu_read_unlock();
- 
--	if (unlikely(s->blocked_rdev)) {
--		if (s->syncing || s->expanding || s->expanded ||
--		    s->to_write || s->written) {
--			set_bit(STRIPE_HANDLE, &sh->state);
--			return 1;
--		}
--		/* There is nothing for the blocked_rdev to block */
--		rdev_dec_pending(s->blocked_rdev, conf->mddev);
--		s->blocked_rdev = NULL;
--	}
--
--	if (s->to_fill && !test_bit(STRIPE_BIOFILL_RUN, &sh->state)) {
--		set_bit(STRIPE_OP_BIOFILL, &s->ops_request);
--		set_bit(STRIPE_BIOFILL_RUN, &sh->state);
--	}
--
--	pr_debug("locked=%d uptodate=%d to_read=%d"
--		" to_write=%d failed=%d failed_num=%d\n",
--		s->locked, s->uptodate, s->to_read, s->to_write,
--		s->failed, s->failed_num[0]);
--	/* check if the array has lost two devices and, if so, some requests might
--	 * need to be failed
--	 */
--	if (s->failed > 1 && s->to_read+s->to_write+s->written)
--		handle_failed_stripe(conf, sh, s, disks, &s->return_bi);
--	if (s->failed > 1 && s->syncing) {
--		md_done_sync(conf->mddev, STRIPE_SECTORS,0);
--		clear_bit(STRIPE_SYNCING, &sh->state);
--		s->syncing = 0;
--	}
--
--	/* might be able to return some write requests if the parity block
--	 * is safe, or on a failed drive
--	 */
--	dev = &sh->dev[sh->pd_idx];
--	if (s->written &&
--	    ((test_bit(R5_Insync, &dev->flags) &&
--	      !test_bit(R5_LOCKED, &dev->flags) &&
--	      test_bit(R5_UPTODATE, &dev->flags)) ||
--	     (s->failed == 1 && s->failed_num[0] == sh->pd_idx)))
--		handle_stripe_clean_event(conf, sh, disks, &s->return_bi);
--
--	/* Now we might consider reading some blocks, either to check/generate
--	 * parity, or to satisfy requests
--	 * or to load a block that is being partially written.
--	 */
--	if (s->to_read || s->non_overwrite ||
--	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
--		handle_stripe_fill(sh, s, disks);
--
- 	return 0;
- }
- 
-@@ -3033,8 +2984,8 @@ static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- {
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int disks = sh->disks;
--	int i, pd_idx = sh->pd_idx, qd_idx = sh->qd_idx;
--	struct r5dev *dev, *pdev, *qdev;
-+	struct r5dev *dev;
-+	int i;
- 
- 	/* Now to look around and see what can be done */
- 
-@@ -3108,65 +3059,6 @@ static int handle_stripe6(struct stripe_head *sh, struct stripe_head_state *s)
- 	spin_unlock_irq(&conf->device_lock);
- 	rcu_read_unlock();
- 
--	if (unlikely(s->blocked_rdev)) {
--		if (s->syncing || s->expanding || s->expanded ||
--		    s->to_write || s->written) {
--			set_bit(STRIPE_HANDLE, &sh->state);
--			return 1;
--		}
--		/* There is nothing for the blocked_rdev to block */
--		rdev_dec_pending(s->blocked_rdev, conf->mddev);
--		s->blocked_rdev = NULL;
--	}
--
--	if (s->to_fill && !test_bit(STRIPE_BIOFILL_RUN, &sh->state)) {
--		set_bit(STRIPE_OP_BIOFILL, &s->ops_request);
--		set_bit(STRIPE_BIOFILL_RUN, &sh->state);
--	}
--
--	pr_debug("locked=%d uptodate=%d to_read=%d"
--	       " to_write=%d failed=%d failed_num=%d,%d\n",
--	       s->locked, s->uptodate, s->to_read, s->to_write, s->failed,
--	       s->failed_num[0], s->failed_num[1]);
--	/* check if the array has lost >2 devices and, if so, some requests
--	 * might need to be failed
--	 */
--	if (s->failed > 2 && s->to_read+s->to_write+s->written)
--		handle_failed_stripe(conf, sh, s, disks, &s->return_bi);
--	if (s->failed > 2 && s->syncing) {
--		md_done_sync(conf->mddev, STRIPE_SECTORS,0);
--		clear_bit(STRIPE_SYNCING, &sh->state);
--		s->syncing = 0;
--	}
--
--	/*
--	 * might be able to return some write requests if the parity blocks
--	 * are safe, or on a failed drive
--	 */
--	pdev = &sh->dev[pd_idx];
--	s->p_failed = (s->failed >= 1 && s->failed_num[0] == pd_idx)
--		|| (s->failed >= 2 && s->failed_num[1] == pd_idx);
--	qdev = &sh->dev[qd_idx];
--	s->q_failed = (s->failed >= 1 && s->failed_num[0] == qd_idx)
--		|| (s->failed >= 2 && s->failed_num[1] == qd_idx);
--
--	if (s->written &&
--	    (s->p_failed || ((test_bit(R5_Insync, &pdev->flags)
--			     && !test_bit(R5_LOCKED, &pdev->flags)
--			     && test_bit(R5_UPTODATE, &pdev->flags)))) &&
--	    (s->q_failed || ((test_bit(R5_Insync, &qdev->flags)
--			     && !test_bit(R5_LOCKED, &qdev->flags)
--			     && test_bit(R5_UPTODATE, &qdev->flags)))))
--		handle_stripe_clean_event(conf, sh, disks, &s->return_bi);
--
--	/* Now we might consider reading some blocks, either to check/generate
--	 * parity, or to satisfy requests
--	 * or to load a block that is being partially written.
--	 */
--	if (s->to_read || s->non_overwrite || (s->to_write && s->failed) ||
--	    (s->syncing && (s->uptodate + s->compute < disks)) || s->expanding)
--		handle_stripe_fill(sh, s, disks);
--
- 	return 0;
- }
- 
-@@ -3178,6 +3070,7 @@ static void handle_stripe(struct stripe_head *sh)
- 	int i;
- 	int prexor;
- 	int disks = sh->disks;
-+	struct r5dev *pdev, *qdev;
- 
- 	clear_bit(STRIPE_HANDLE, &sh->state);
- 	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
-@@ -3214,6 +3107,67 @@ static void handle_stripe(struct stripe_head *sh)
- 	if (done)
- 		goto finish;
- 
-+	if (unlikely(s.blocked_rdev)) {
-+		if (s.syncing || s.expanding || s.expanded ||
-+		    s.to_write || s.written) {
-+			set_bit(STRIPE_HANDLE, &sh->state);
-+			goto finish;
-+		}
-+		/* There is nothing for the blocked_rdev to block */
-+		rdev_dec_pending(s.blocked_rdev, conf->mddev);
-+		s.blocked_rdev = NULL;
-+	}
-+
-+	if (s.to_fill && !test_bit(STRIPE_BIOFILL_RUN, &sh->state)) {
-+		set_bit(STRIPE_OP_BIOFILL, &s.ops_request);
-+		set_bit(STRIPE_BIOFILL_RUN, &sh->state);
-+	}
-+
-+	pr_debug("locked=%d uptodate=%d to_read=%d"
-+	       " to_write=%d failed=%d failed_num=%d,%d\n",
-+	       s.locked, s.uptodate, s.to_read, s.to_write, s.failed,
-+	       s.failed_num[0], s.failed_num[1]);
-+	/* check if the array has lost >2 devices and, if so, some requests
-+	 * might need to be failed
-+	 */
-+	if (s.failed > conf->max_degraded && s.to_read+s.to_write+s.written)
-+		handle_failed_stripe(conf, sh, &s, disks, &s.return_bi);
-+	if (s.failed > conf->max_degraded && s.syncing) {
-+		md_done_sync(conf->mddev, STRIPE_SECTORS, 0);
-+		clear_bit(STRIPE_SYNCING, &sh->state);
-+		s.syncing = 0;
-+	}
-+
-+	/*
-+	 * might be able to return some write requests if the parity blocks
-+	 * are safe, or on a failed drive
-+	 */
-+	pdev = &sh->dev[sh->pd_idx];
-+	s.p_failed = (s.failed >= 1 && s.failed_num[0] == sh->pd_idx)
-+		|| (s.failed >= 2 && s.failed_num[1] == sh->pd_idx);
-+	qdev = &sh->dev[sh->qd_idx];
-+	s.q_failed = (s.failed >= 1 && s.failed_num[0] == sh->qd_idx)
-+		|| (s.failed >= 2 && s.failed_num[1] == sh->qd_idx)
-+		|| conf->level < 6;
-+
-+	if (s.written &&
-+	    (s.p_failed || ((test_bit(R5_Insync, &pdev->flags)
-+			     && !test_bit(R5_LOCKED, &pdev->flags)
-+			     && test_bit(R5_UPTODATE, &pdev->flags)))) &&
-+	    (s.q_failed || ((test_bit(R5_Insync, &qdev->flags)
-+			     && !test_bit(R5_LOCKED, &qdev->flags)
-+			     && test_bit(R5_UPTODATE, &qdev->flags)))))
-+		handle_stripe_clean_event(conf, sh, disks, &s.return_bi);
-+
-+	/* Now we might consider reading some blocks, either to check/generate
-+	 * parity, or to satisfy requests
-+	 * or to load a block that is being partially written.
-+	 */
-+	if (s.to_read || s.non_overwrite
-+	    || (conf->level == 6 && s.to_write && s.failed)
-+	    || (s.syncing && (s.uptodate + s.compute < disks)) || s.expanding)
-+		handle_stripe_fill(sh, &s, disks);
-+
- 	/* Now we check to see if any write operations have recently
- 	 * completed
- 	 */
+On 07/20/2011 07:39 PM, Shaun Reich wrote:
+> Do you happen to know how to rebuild it when I can't boot into it?
+> I've tried booting into a livecd, mounting the raid volume and the
+> /boot, running 'dracut --mdadmconf "initramfs-$(uname -r).img" $(uname
+> -r)', copying the generated initramfs into the separate /boot
+> partition, and making grub try to boot it, but it simply is not
+> working.
+> 
+> It seems to be because it's actually using the livecd's kernel and
+> mods, which is rather unfortunate and would probably be why it is
+> unable to boot. I've also tried simply doing it from the livecd (with
+> the proper mdadm.conf) and then copying that file (from the livecd),
+> into /boot. That at least gets me from a blank blinking cursor, to a
+> message about a failed modprobe attempt for /lib/modules, prior to
+> falling back to a shell.
+> 
+> Ideas?
+> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-
+iQEcBAEBAgAGBQJOJ/osAAoJEDFLYVOGGjgXkJQH/2HSfCiRMpTqCy4EPzKEudoi
+Wa06t862E0HXJuTauHFmtRAYvFV82G7TaRxSPznSDrKsit7FTMPSdzSWGUf9JDHO
+miFSPaENdB/H6qV1FA1yYX3KcARaihAlqbDX2OcMFaLFr5krRpy8FZ8gBL453JYw
+SlYl2/UP3q8r+TuobCuy8bwWV3Xv8Iw6UO0SiYZYZAELaASRcnNnnFw+wb21VZI7
+HKItkpO6mk/UkQjgbGykSOQjLLBSFUx9MLU1FI+nOwDnlzyyb5/Jnv3zUjWhOC7K
+lBIz3Sq7E2Jp6XKqZ9kKtTxebRxMybeEsUWJ3GTwQ5HrUryywZ4uGuntP9lWcJY=
+=nxFq
+-----END PGP SIGNATURE-----
