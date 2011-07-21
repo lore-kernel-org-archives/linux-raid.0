@@ -1,133 +1,100 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 25/34] md: change managed of recovery_disabled.
-Date: Thu, 21 Jul 2011 12:32:27 +1000
-Message-ID: <20110721023227.6728.61339.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+Subject: [md PATCH 00/34] md patches for 3.1 - part 1
+Date: Thu, 21 Jul 2011 12:32:24 +1000
+Message-ID: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Namhyung Kim <namhyung@gmail.com>, Akinobu Mita <akinobu.mita@gmail.com>, Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>, Jonathan Brassow <jbrassow@redhat.com>
 List-Id: linux-raid.ids
 
-If we hit a read error while recovering a mirror, we want to abort the
-recovery without necessarily failing the disk - as having a disk this
-a read error is better than not having an array at all.
+As 3.0 is fast approaching it is long past time to publish my patch
+queue for 3.1.  Much of it has been in -next for a while and while
+that enabled testing it doesn't really encourage review.
 
-Currently this is managed with a per-array flag "recovery_disabled"
-and is only implemented for RAID1.  For RAID10 we will need finer
-grained control as we might want to disable recovery for individual
-devices separately.
+So this is the first of 2 patch-bombs I will be sending which comprise
+all of the changes is (currently) plan to submit for 3.1.
 
-So push more of the decision making into the personality.
-'recovery_disabled' is now a 'cookie' which is copied when the
-personality want to disable recovery and is changed when a device is
-added to the array as this is used as a trigger to 'try recovery
-again'.
+This set is mostly ad-hoc bits and pieces.  Code clean up and minor
+bugs fixes and so forth.  Probably the strongest theme is some
+refactoring in raid5 to reduce code duplication between RAID5 and
+RAID6.  (almost) all similar code has been factored into common
+routines.
 
-This will allow RAID10 to get the control that it needs.
+All "Reviewed-by" lines gratefully accepted ... until early-ish next
+week when I will submit that code to Linus.  If anyone is keen to do
+some review, the RAID5 changes is where I would be most happy to have
+it focused.  Remember: if something doesn't look right, it probably
+isn't.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
+Some of these patches have been seen on the list already, but I
+thought it best to simply include them all for completeness.
+
+NeilBrown
+
+
 ---
 
- drivers/md/md.c    |    4 ++--
- drivers/md/md.h    |    9 ++++++---
- drivers/md/raid1.c |    7 +++++--
- drivers/md/raid1.h |    6 ++++++
- 4 files changed, 19 insertions(+), 7 deletions(-)
+Akinobu Mita (1):
+      md: use proper little-endian bitops
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 77bd8d8..c7d9c6a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1922,7 +1922,7 @@ static int bind_rdev_to_array(mdk_rdev_t * rdev, mddev_t * mddev)
- 	bd_link_disk_holder(rdev->bdev, mddev->gendisk);
- 
- 	/* May as well allow recovery to be retried once */
--	mddev->recovery_disabled = 0;
-+	mddev->recovery_disabled++;
- 
- 	return 0;
- 
-@@ -7070,7 +7070,7 @@ static int remove_and_add_spares(mddev_t *mddev)
- 			}
- 		}
- 
--	if (mddev->degraded && !mddev->recovery_disabled) {
-+	if (mddev->degraded) {
- 		list_for_each_entry(rdev, &mddev->disks, same_set) {
- 			if (rdev->raid_disk >= 0 &&
- 			    !test_bit(In_sync, &rdev->flags) &&
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 6863f72..de5455d 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -239,9 +239,12 @@ struct mddev_s
- #define	MD_RECOVERY_FROZEN	9
- 
- 	unsigned long			recovery;
--	int				recovery_disabled; /* if we detect that recovery
--							    * will always fail, set this
--							    * so we don't loop trying */
-+	/* If a RAID personality determines that recovery (of a particular
-+	 * device) will fail due to a read error on the source device, it
-+	 * takes a copy of this number and does not attempt recovery again
-+	 * until this number changes.
-+	 */
-+	int				recovery_disabled;
- 
- 	int				in_sync;	/* know to not need resync */
- 	/* 'open_mutex' avoids races between 'md_open' and 'do_md_stop', so
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 1d79a04..44069b3 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -956,7 +956,7 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
- 		 * However don't try a recovery from this drive as
- 		 * it is very likely to fail.
- 		 */
--		mddev->recovery_disabled = 1;
-+		conf->recovery_disabled = mddev->recovery_disabled;
- 		return;
- 	}
- 	if (test_and_clear_bit(In_sync, &rdev->flags)) {
-@@ -1052,6 +1052,9 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	int first = 0;
- 	int last = mddev->raid_disks - 1;
- 
-+	if (mddev->recovery_disabled == conf->recovery_disabled)
-+		return -EBUSY;
-+
- 	if (rdev->raid_disk >= 0)
- 		first = last = rdev->raid_disk;
- 
-@@ -1107,7 +1110,7 @@ static int raid1_remove_disk(mddev_t *mddev, int number)
- 		 * is not possible.
- 		 */
- 		if (!test_bit(Faulty, &rdev->flags) &&
--		    !mddev->recovery_disabled &&
-+		    mddev->recovery_disabled != conf->recovery_disabled &&
- 		    mddev->degraded < conf->raid_disks) {
- 			err = -EBUSY;
- 			goto abort;
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index e743a64..3cd18cf 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -48,6 +48,12 @@ struct r1_private_data_s {
- 					    * (fresh device added).
- 					    * Cleared when a sync completes.
- 					    */
-+	int			recovery_disabled; /* when the same as
-+						    * mddev->recovery_disabled
-+						    * we don't allow recovery
-+						    * to be attempted as we
-+						    * expect a read error
-+						    */
- 
- 	wait_queue_head_t	wait_barrier;
- 
+Christian Dietrich (1):
+      md/raid: use printk_ratelimited instead of printk_ratelimit
 
+Jonathan Brassow (2):
+      MD bitmap: Revert DM dirty log hooks
+      MD: raid1 s/sysfs_notify_dirent/sysfs_notify_dirent_safe
+
+Namhyung Kim (11):
+      md/raid10: move rdev->corrected_errors counting
+      md/raid5: move rdev->corrected_errors counting
+      md/raid1: move rdev->corrected_errors counting
+      md: get rid of unnecessary casts on page_address()
+      md: remove ro check in md_check_recovery()
+      md: introduce link/unlink_rdev() helpers
+      md/raid5: get rid of duplicated call to bio_data_dir()
+      md/raid5: use kmem_cache_zalloc()
+      md/raid10: share pages between read and write bio's during recovery
+      md/raid10: factor out common bio handling code
+      md/raid10: get rid of duplicated conditional expression
+
+NeilBrown (19):
+      md/raid5: Avoid BUG caused by multiple failures.
+      md/raid10: Improve decision on whether to fail a device with a read error.
+      md/raid10: Make use of new recovery_disabled handling
+      md: change managed of recovery_disabled.
+      md/raid5: finalise new merged handle_stripe.
+      md/raid5: move some more common code into handle_stripe
+      md/raid5: move more common code into handle_stripe
+      md/raid5: unite handle_stripe_dirtying5 and handle_stripe_dirtying6
+      md/raid5: unite fetch_block5 and fetch_block6
+      md/raid5: rearrange a test in fetch_block6.
+      md/raid5: move more code into common handle_stripe
+      md/raid5: Move code for finishing a reconstruction into handle_stripe.
+      md/raid5: move stripe_head_state and more code into handle_stripe.
+      md/raid5:  add some more fields to stripe_head_state
+      md/raid5: unify stripe_head_state and r6_state
+      md/raid5: move common code into handle_stripe
+      md/raid5: replace sh->lock with an 'active' flag.
+      md/raid5: Protect some more code with ->device_lock.
+      md/raid5: Remove use of sh->lock in sync_request
+
+
+ drivers/md/bitmap.c |  137 +++-----
+ drivers/md/bitmap.h |    5 
+ drivers/md/md.c     |   77 ++---
+ drivers/md/md.h     |   28 +-
+ drivers/md/raid1.c  |   66 ++--
+ drivers/md/raid1.h  |    6 
+ drivers/md/raid10.c |  214 +++++++------
+ drivers/md/raid10.h |    5 
+ drivers/md/raid5.c  |  832 ++++++++++++++-------------------------------------
+ drivers/md/raid5.h  |   45 +--
+ 10 files changed, 505 insertions(+), 910 deletions(-)
+
+-- 
+Signature
 
