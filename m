@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 03/36] md: don't allow arrays to contain devices with bad
- blocks.
-Date: Thu, 21 Jul 2011 12:58:47 +1000
-Message-ID: <20110721025847.8422.81361.stgit@notabene.brown>
+Subject: [md PATCH 28/36] md/raid10 record bad blocks as needed during
+ recovery.
+Date: Thu, 21 Jul 2011 12:58:50 +1000
+Message-ID: <20110721025850.8422.72405.stgit@notabene.brown>
 References: <20110721024556.8422.99443.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,97 +13,143 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As no personality understand bad block lists yet, we must
-reject any device that is known to contain bad blocks.
-As the personalities get taught, these tests can be removed.
+When recovering one or more devices, if all the good devices have
+bad blocks we should record a bad block on the device being rebuilt.
 
-This only applies to raid1/raid5/raid10.
-For linear/raid0/multipath/faulty the whole concept of bad blocks
-doesn't mean anything so there is no point adding the checks.
+If this fails, we need to abort the recovery.
+
+To ensure we don't think that we aborted later than we actually did,
+we need to move the check for MD_RECOVERY_INTR earlier in md_do_sync,
+in particular before mddev->curr_resync is updated.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c  |    7 +++++++
- drivers/md/raid10.c |    8 ++++++++
- drivers/md/raid5.c  |    7 +++++++
- 3 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/md/md.c     |    9 ++++-----
+ drivers/md/raid10.c |   40 ++++++++++++++++++++++++++++++++--------
+ 2 files changed, 36 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 3cbf0ac..8db311d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1055,6 +1055,9 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	if (mddev->recovery_disabled == conf->recovery_disabled)
- 		return -EBUSY;
- 
-+	if (rdev->badblocks.count)
-+		return -EINVAL;
-+
- 	if (rdev->raid_disk >= 0)
- 		first = last = rdev->raid_disk;
- 
-@@ -1994,6 +1997,10 @@ static int run(mddev_t *mddev)
- 			blk_queue_segment_boundary(mddev->queue,
- 						   PAGE_CACHE_SIZE - 1);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 90d07ab..b4e1629 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7168,11 +7168,14 @@ void md_do_sync(mddev_t *mddev)
+ 			atomic_add(sectors, &mddev->recovery_active);
  		}
-+		if (rdev->badblocks.count) {
-+			printk(KERN_ERR "md/raid1: Cannot handle bad blocks yet\n");
-+			return -EINVAL;
-+		}
- 	}
  
- 	mddev->degraded = 0;
++		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
++			break;
++
+ 		j += sectors;
+ 		if (j>1) mddev->curr_resync = j;
+ 		mddev->curr_mark_cnt = io_sectors;
+ 		if (last_check == 0)
+-			/* this is the earliers that rebuilt will be
++			/* this is the earliest that rebuild will be
+ 			 * visible in /proc/mdstat
+ 			 */
+ 			md_new_event(mddev);
+@@ -7181,10 +7184,6 @@ void md_do_sync(mddev_t *mddev)
+ 			continue;
+ 
+ 		last_check = io_sectors;
+-
+-		if (test_bit(MD_RECOVERY_INTR, &mddev->recovery))
+-			break;
+-
+ 	repeat:
+ 		if (time_after_eq(jiffies, mark[last_mark] + SYNC_MARK_STEP )) {
+ 			/* step marks */
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 5def27c..8aadd2f 100644
+index 9bac312..7f11924 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1101,6 +1101,9 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	int first = 0;
- 	int last = conf->raid_disks - 1;
+@@ -2005,7 +2005,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 	max_sync = RESYNC_PAGES << (PAGE_SHIFT-9);
+ 	if (!test_bit(MD_RECOVERY_SYNC, &mddev->recovery)) {
+ 		/* recovery... the complicated one */
+-		int j, k;
++		int j;
+ 		r10_bio = NULL;
  
-+	if (rdev->badblocks.count)
-+		return -EINVAL;
-+
- 	if (mddev->recovery_cp < MaxSector)
- 		/* only hot-add to in-sync arrays, as recovery is
- 		 * very different from resync
-@@ -2263,6 +2266,11 @@ static int run(mddev_t *mddev)
- 				 (conf->raid_disks / conf->near_copies));
+ 		for (i=0 ; i<conf->raid_disks; i++) {
+@@ -2013,6 +2013,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 			r10bio_t *rb2;
+ 			sector_t sect;
+ 			int must_sync;
++			int any_working;
  
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
-+
-+		if (rdev->badblocks.count) {
-+			printk(KERN_ERR "md/raid10: cannot handle bad blocks yet\n");
-+			goto out_free_conf;
-+		}
- 		disk_idx = rdev->raid_disk;
- 		if (disk_idx >= conf->raid_disks
- 		    || disk_idx < 0)
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6337768..db5d703 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4667,6 +4667,10 @@ static int run(mddev_t *mddev)
- 	 * 0 for a fully functional array, 1 or 2 for a degraded array.
+ 			if (conf->mirrors[i].rdev == NULL ||
+ 			    test_bit(In_sync, &conf->mirrors[i].rdev->flags)) 
+@@ -2064,7 +2065,9 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 			must_sync = bitmap_start_sync(mddev->bitmap, sect,
+ 						      &sync_blocks, still_degraded);
+ 
++			any_working = 0;
+ 			for (j=0; j<conf->copies;j++) {
++				int k;
+ 				int d = r10_bio->devs[j].devnum;
+ 				mdk_rdev_t *rdev;
+ 				sector_t sector, first_bad;
+@@ -2073,6 +2076,7 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 				    !test_bit(In_sync, &conf->mirrors[d].rdev->flags))
+ 					continue;
+ 				/* This is where we read from */
++				any_working = 1;
+ 				rdev = conf->mirrors[d].rdev;
+ 				sector = r10_bio->devs[j].addr;
+ 
+@@ -2121,16 +2125,35 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 				break;
+ 			}
+ 			if (j == conf->copies) {
+-				/* Cannot recover, so abort the recovery */
++				/* Cannot recover, so abort the recovery or
++				 * record a bad block */
+ 				put_buf(r10_bio);
+ 				if (rb2)
+ 					atomic_dec(&rb2->remaining);
+ 				r10_bio = rb2;
+-				if (!test_and_set_bit(MD_RECOVERY_INTR,
+-						      &mddev->recovery))
+-					printk(KERN_INFO "md/raid10:%s: insufficient "
+-					       "working devices for recovery.\n",
+-					       mdname(mddev));
++				if (any_working) {
++					/* problem is that there are bad blocks
++					 * on other device(s)
++					 */
++					int k;
++					for (k = 0; k < conf->copies; k++)
++						if (r10_bio->devs[k].devnum == i)
++							break;
++					if (!rdev_set_badblocks(
++						    conf->mirrors[i].rdev,
++						    r10_bio->devs[k].addr,
++						    max_sync, 0))
++						any_working = 0;
++				}
++				if (!any_working)  {
++					if (!test_and_set_bit(MD_RECOVERY_INTR,
++							      &mddev->recovery))
++						printk(KERN_INFO "md/raid10:%s: insufficient "
++						       "working devices for recovery.\n",
++						       mdname(mddev));
++					conf->mirrors[i].recovery_disabled
++						= mddev->recovery_disabled;
++				}
+ 				break;
+ 			}
+ 		}
+@@ -2290,7 +2313,8 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr,
+ 	return sectors_skipped + nr_sectors;
+  giveup:
+ 	/* There is nowhere to write, so all non-sync
+-	 * drives must be failed, so try the next chunk...
++	 * drives must be failed or in resync, all drives
++	 * have a bad block, so try the next chunk...
  	 */
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
-+		if (rdev->badblocks.count) {
-+			printk(KERN_ERR "md/raid5: cannot handle bad blocks yet\n");
-+			goto abort;
-+		}
- 		if (rdev->raid_disk < 0)
- 			continue;
- 		if (test_bit(In_sync, &rdev->flags)) {
-@@ -4975,6 +4979,9 @@ static int raid5_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	int first = 0;
- 	int last = conf->raid_disks - 1;
- 
-+	if (rdev->badblocks.count)
-+		return -EINVAL;
-+
- 	if (has_failed(conf))
- 		/* no point adding a device */
- 		return -EINVAL;
+ 	if (sector_nr + max_sync < max_sector)
+ 		max_sector = sector_nr + max_sync;
 
 
