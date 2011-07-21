@@ -1,330 +1,111 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 34/34] MD bitmap: Revert DM dirty log hooks
-Date: Thu, 21 Jul 2011 12:32:28 +1000
-Message-ID: <20110721023228.6728.35547.stgit@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
+From: Erwan Leroux <erwan.lerou@gmail.com>
+Subject: Re: standard performance (write speed 20Mb/s)
+Date: Thu, 21 Jul 2011 17:30:32 +0200
+Message-ID: <CAHX8RiR_7Bx_jGQijBb9rb=RW=hiFgyMqfn0QGif4mDC20FXfA@mail.gmail.com>
+References: <201107181403.49563.raid1@fuckaround.org> <4E26CAA7.8030201@hardwarefreak.com>
+ <c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org>
+ <CAHX8RiR0MV1iL_OfrVAKGjr0gj7zxtuxFSzMijSgNfKcs0Zz0Q@mail.gmail.com> <CACVpCE5mVBvqFBa7VNtGDiMKRn45Wh79gHqqnOu5vE6aeWEtgg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
+In-Reply-To: <CACVpCE5mVBvqFBa7VNtGDiMKRn45Wh79gHqqnOu5vE6aeWEtgg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Jonathan Brassow <jbrassow@redhat.com>
+To: =?ISO-8859-2?Q?Pawe=B3_Brodacki?= <pawel.brodacki@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From: Jonathan Brassow <jbrassow@redhat.com>
+It's 64 because it's the lowest sector that is a multiple of 4kB.
+sector 63 is the lowest possible
+you can see the result of that choice, using sector 64, the
+corresponding cylinder is 1, so the drive is well aligned^^
+sudo fdisk -l /dev/sda
 
-Revert most of commit e384e58549a2e9a83071ad80280c1a9053cfd84c
-  md/bitmap: prepare for storing write-intent-bitmap via dm-dirty-log.
-
-MD should not need to use DM's dirty log - we decided to use md's
-bitmaps instead.
-
-Keeping the DIV_ROUND_UP clean-ups that were part of commit
-e384e58549a2e9a83071ad80280c1a9053cfd84c, however.
-
-Signed-off-by: Jonathan Brassow <jbrassow@redhat.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
-
- drivers/md/bitmap.c |  133 ++++++++++++++++-----------------------------------
- drivers/md/bitmap.h |    5 --
- drivers/md/md.h     |    5 --
- 3 files changed, 43 insertions(+), 100 deletions(-)
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 39ff0ef..0dc6546 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -29,7 +29,6 @@
- #include "md.h"
- #include "bitmap.h"
- 
--#include <linux/dm-dirty-log.h>
- /* debug macros */
- 
- #define DEBUG 0
-@@ -775,10 +774,8 @@ static inline unsigned long file_page_offset(struct bitmap *bitmap, unsigned lon
-  * 0 or page 1
-  */
- static inline struct page *filemap_get_page(struct bitmap *bitmap,
--					unsigned long chunk)
-+					    unsigned long chunk)
- {
--	if (bitmap->filemap == NULL)
--		return NULL;
- 	if (file_page_index(bitmap, chunk) >= bitmap->file_pages)
- 		return NULL;
- 	return bitmap->filemap[file_page_index(bitmap, chunk)
-@@ -878,28 +875,19 @@ enum bitmap_page_attr {
- static inline void set_page_attr(struct bitmap *bitmap, struct page *page,
- 				enum bitmap_page_attr attr)
- {
--	if (page)
--		__set_bit((page->index<<2) + attr, bitmap->filemap_attr);
--	else
--		__set_bit(attr, &bitmap->logattrs);
-+	__set_bit((page->index<<2) + attr, bitmap->filemap_attr);
- }
- 
- static inline void clear_page_attr(struct bitmap *bitmap, struct page *page,
- 				enum bitmap_page_attr attr)
- {
--	if (page)
--		__clear_bit((page->index<<2) + attr, bitmap->filemap_attr);
--	else
--		__clear_bit(attr, &bitmap->logattrs);
-+	__clear_bit((page->index<<2) + attr, bitmap->filemap_attr);
- }
- 
- static inline unsigned long test_page_attr(struct bitmap *bitmap, struct page *page,
- 					   enum bitmap_page_attr attr)
- {
--	if (page)
--		return test_bit((page->index<<2) + attr, bitmap->filemap_attr);
--	else
--		return test_bit(attr, &bitmap->logattrs);
-+	return test_bit((page->index<<2) + attr, bitmap->filemap_attr);
- }
- 
- /*
-@@ -912,30 +900,26 @@ static inline unsigned long test_page_attr(struct bitmap *bitmap, struct page *p
- static void bitmap_file_set_bit(struct bitmap *bitmap, sector_t block)
- {
- 	unsigned long bit;
--	struct page *page = NULL;
-+	struct page *page;
- 	void *kaddr;
- 	unsigned long chunk = block >> CHUNK_BLOCK_SHIFT(bitmap);
- 
--	if (!bitmap->filemap) {
--		struct dm_dirty_log *log = bitmap->mddev->bitmap_info.log;
--		if (log)
--			log->type->mark_region(log, chunk);
--	} else {
-+	if (!bitmap->filemap)
-+		return;
- 
--		page = filemap_get_page(bitmap, chunk);
--		if (!page)
--			return;
--		bit = file_page_offset(bitmap, chunk);
-+	page = filemap_get_page(bitmap, chunk);
-+	if (!page)
-+		return;
-+	bit = file_page_offset(bitmap, chunk);
- 
--		/* set the bit */
--		kaddr = kmap_atomic(page, KM_USER0);
--		if (bitmap->flags & BITMAP_HOSTENDIAN)
--			set_bit(bit, kaddr);
--		else
--			__set_bit_le(bit, kaddr);
--		kunmap_atomic(kaddr, KM_USER0);
--		PRINTK("set file bit %lu page %lu\n", bit, page->index);
--	}
-+	/* set the bit */
-+	kaddr = kmap_atomic(page, KM_USER0);
-+	if (bitmap->flags & BITMAP_HOSTENDIAN)
-+		set_bit(bit, kaddr);
-+	else
-+		__set_bit_le(bit, kaddr);
-+	kunmap_atomic(kaddr, KM_USER0);
-+	PRINTK("set file bit %lu page %lu\n", bit, page->index);
- 	/* record page number so it gets flushed to disk when unplug occurs */
- 	set_page_attr(bitmap, page, BITMAP_PAGE_DIRTY);
- }
-@@ -952,16 +936,6 @@ void bitmap_unplug(struct bitmap *bitmap)
- 
- 	if (!bitmap)
- 		return;
--	if (!bitmap->filemap) {
--		/* Must be using a dirty_log */
--		struct dm_dirty_log *log = bitmap->mddev->bitmap_info.log;
--		dirty = test_and_clear_bit(BITMAP_PAGE_DIRTY, &bitmap->logattrs);
--		need_write = test_and_clear_bit(BITMAP_PAGE_NEEDWRITE, &bitmap->logattrs);
--		if (dirty || need_write)
--			if (log->type->flush(log))
--				bitmap->flags |= BITMAP_WRITE_ERROR;
--		goto out;
--	}
- 
- 	/* look at each page to see if there are any set bits that need to be
- 	 * flushed out to disk */
-@@ -990,7 +964,6 @@ void bitmap_unplug(struct bitmap *bitmap)
- 		else
- 			md_super_wait(bitmap->mddev);
- 	}
--out:
- 	if (bitmap->flags & BITMAP_WRITE_ERROR)
- 		bitmap_file_kick(bitmap);
- }
-@@ -1199,7 +1172,6 @@ void bitmap_daemon_work(mddev_t *mddev)
- 	struct page *page = NULL, *lastpage = NULL;
- 	sector_t blocks;
- 	void *paddr;
--	struct dm_dirty_log *log = mddev->bitmap_info.log;
- 
- 	/* Use a mutex to guard daemon_work against
- 	 * bitmap_destroy.
-@@ -1224,12 +1196,11 @@ void bitmap_daemon_work(mddev_t *mddev)
- 	spin_lock_irqsave(&bitmap->lock, flags);
- 	for (j = 0; j < bitmap->chunks; j++) {
- 		bitmap_counter_t *bmc;
--		if (!bitmap->filemap) {
--			if (!log)
--				/* error or shutdown */
--				break;
--		} else
--			page = filemap_get_page(bitmap, j);
-+		if (!bitmap->filemap)
-+			/* error or shutdown */
-+			break;
-+
-+		page = filemap_get_page(bitmap, j);
- 
- 		if (page != lastpage) {
- 			/* skip this page unless it's marked as needing cleaning */
-@@ -1298,19 +1269,16 @@ void bitmap_daemon_work(mddev_t *mddev)
- 						  -1);
- 
- 				/* clear the bit */
--				if (page) {
--					paddr = kmap_atomic(page, KM_USER0);
--					if (bitmap->flags & BITMAP_HOSTENDIAN)
--						clear_bit(file_page_offset(bitmap, j),
--							  paddr);
--					else
--						__clear_bit_le(
-+				paddr = kmap_atomic(page, KM_USER0);
-+				if (bitmap->flags & BITMAP_HOSTENDIAN)
-+					clear_bit(file_page_offset(bitmap, j),
-+						  paddr);
-+				else
-+					__clear_bit_le(
- 							file_page_offset(bitmap,
- 									 j),
- 							paddr);
--					kunmap_atomic(paddr, KM_USER0);
--				} else
--					log->type->clear_region(log, j);
-+				kunmap_atomic(paddr, KM_USER0);
- 			}
- 		} else
- 			j |= PAGE_COUNTER_MASK;
-@@ -1318,16 +1286,12 @@ void bitmap_daemon_work(mddev_t *mddev)
- 	spin_unlock_irqrestore(&bitmap->lock, flags);
- 
- 	/* now sync the final page */
--	if (lastpage != NULL || log != NULL) {
-+	if (lastpage != NULL) {
- 		spin_lock_irqsave(&bitmap->lock, flags);
- 		if (test_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE)) {
- 			clear_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
--			if (lastpage)
--				write_page(bitmap, lastpage, 0);
--			else
--				if (log->type->flush(log))
--					bitmap->flags |= BITMAP_WRITE_ERROR;
-+			write_page(bitmap, lastpage, 0);
- 		} else {
- 			set_page_attr(bitmap, lastpage, BITMAP_PAGE_NEEDWRITE);
- 			spin_unlock_irqrestore(&bitmap->lock, flags);
-@@ -1769,12 +1733,10 @@ int bitmap_create(mddev_t *mddev)
- 	BUILD_BUG_ON(sizeof(bitmap_super_t) != 256);
- 
- 	if (!file
--	    && !mddev->bitmap_info.offset
--	    && !mddev->bitmap_info.log) /* bitmap disabled, nothing to do */
-+	    && !mddev->bitmap_info.offset) /* bitmap disabled, nothing to do */
- 		return 0;
- 
- 	BUG_ON(file && mddev->bitmap_info.offset);
--	BUG_ON(mddev->bitmap_info.offset && mddev->bitmap_info.log);
- 
- 	bitmap = kzalloc(sizeof(*bitmap), GFP_KERNEL);
- 	if (!bitmap)
-@@ -1865,6 +1827,7 @@ int bitmap_create(mddev_t *mddev)
- int bitmap_load(mddev_t *mddev)
- {
- 	int err = 0;
-+	sector_t start = 0;
- 	sector_t sector = 0;
- 	struct bitmap *bitmap = mddev->bitmap;
- 
-@@ -1883,24 +1846,14 @@ int bitmap_load(mddev_t *mddev)
- 	}
- 	bitmap_close_sync(bitmap);
- 
--	if (mddev->bitmap_info.log) {
--		unsigned long i;
--		struct dm_dirty_log *log = mddev->bitmap_info.log;
--		for (i = 0; i < bitmap->chunks; i++)
--			if (!log->type->in_sync(log, i, 1))
--				bitmap_set_memory_bits(bitmap,
--						       (sector_t)i << CHUNK_BLOCK_SHIFT(bitmap),
--						       1);
--	} else {
--		sector_t start = 0;
--		if (mddev->degraded == 0
--		    || bitmap->events_cleared == mddev->events)
--			/* no need to keep dirty bits to optimise a
--			 * re-add of a missing device */
--			start = mddev->recovery_cp;
--
--		err = bitmap_init_from_disk(bitmap, start);
--	}
-+	if (mddev->degraded == 0
-+	    || bitmap->events_cleared == mddev->events)
-+		/* no need to keep dirty bits to optimise a
-+		 * re-add of a missing device */
-+		start = mddev->recovery_cp;
-+
-+	err = bitmap_init_from_disk(bitmap, start);
-+
- 	if (err)
- 		goto out;
- 
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index b2a127e..a28f2e5 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -212,10 +212,6 @@ struct bitmap {
- 	unsigned long file_pages; /* number of pages in the file */
- 	int last_page_size; /* bytes in the last page */
- 
--	unsigned long logattrs; /* used when filemap_attr doesn't exist
--				 * because we are working with a dirty_log
--				 */
--
- 	unsigned long flags;
- 
- 	int allclean;
-@@ -237,7 +233,6 @@ struct bitmap {
- 	wait_queue_head_t behind_wait;
- 
- 	struct sysfs_dirent *sysfs_can_clear;
--
- };
- 
- /* the bitmap API */
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index de5455d..7d906a9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -307,11 +307,6 @@ struct mddev_s
- 							 * hot-adding a bitmap.  It should
- 							 * eventually be settable by sysfs.
- 							 */
--		/* When md is serving under dm, it might use a
--		 * dirty_log to store the bits.
--		 */
--		struct dm_dirty_log *log;
--
- 		struct mutex		mutex;
- 		unsigned long		chunksize;
- 		unsigned long		daemon_sleep; /* how many jiffies between updates? */
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+fdisk doesn
+                 't support GPT. Use GNU Parted.
 
 
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1      243202  1953514552   fd  Linux raid auto=
+detect
+
+sudo fdisk -lu /dev/sda
+
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util
+fdisk doesn
+                 't support GPT. Use GNU Parted.
+
+
+Disk /dev/sda: 2000.4 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders, total 3907029168 sectors
+Units =3D sectors of 1 * 512 =3D 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1              64  3907029167  1953514552   fd  Linux raid auto=
+detect
+
+i think i found this setting on that page but not really sure
+http://ubuntuforums.org/showpost.php?p=3D9134230
+
+
+2011/7/21 Pawe=C5=82 Brodacki <pawel.brodacki@googlemail.com>:
+> 2011/7/21 Erwan Leroux <erwan.lerou@gmail.com>:
+>> following is how i configured advanced format drives for raid 5
+>> i created one partition on each disk
+>>
+>> fdisk -u /dev/sdX
+>> # -u change the unit displayed by fdisk to sector instead of
+>> cylinders, this way it's easier to configure
+>>
+>> # the table partition isn't really modifier until you send the w
+>> command, so if you messed up use the q to quit and restart
+>>
+>> #delete first partition of the disk, repeat until you had cleared th=
+e disk
+>> d
+>>
+>> # create a new partition
+>> n
+>>
+>> # select primary parition
+>> p
+>>
+>> #select number one (don't know if number is important, i guess it's
+>> means /dev/sdX1)
+>> 1
+>>
+>> #select first sector, here is the catch, to properly align the disk,=
+ select 64
+>> 64
+>>
+> Why do you choose 64? One physical sector (4KiB) is 8 logical sectors
+> (512 B). Would any number greater or equal to 8 and evenly divisible
+> by 8 work as well? Are you aiming to align partition start with RAID
+> chunk boundaries?
+>
+> Just curious.
+>
+> Pawe=C5=82
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
