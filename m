@@ -1,183 +1,121 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 02/36] md/bad-block-log: add sysfs interface for accessing
- bad-block-log.
-Date: Thu, 21 Jul 2011 12:58:47 +1000
-Message-ID: <20110721025847.8422.8246.stgit@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
+Subject: [md PATCH 02/34] md/raid10: factor out common bio handling code
+Date: Thu, 21 Jul 2011 12:32:24 +1000
+Message-ID: <20110721023224.6728.36785.stgit@notabene.brown>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721024556.8422.99443.stgit@notabene.brown>
+In-Reply-To: <20110721022537.6728.90204.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Namhyung Kim <namhyung@gmail.com>
 List-Id: linux-raid.ids
 
-This can show the log (providing it fits in one page) and
-allows bad blocks to be 'acknowledged' meaning that they
-have safely been recorded in metadata.
+From: Namhyung Kim <namhyung@gmail.com>
 
-Clearing bad blocks is not allowed via sysfs (except for
-code testing).  A bad block can only be cleared when
-a write to the block succeeds.
+When normal-write and sync-read/write bio completes, we should
+find out the disk number the bio belongs to. Factor those common
+code out to a separate function.
 
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 127 insertions(+), 0 deletions(-)
+ drivers/md/raid10.c |   44 +++++++++++++++++++++++---------------------
+ 1 files changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 220fadb..9324635 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2712,6 +2712,35 @@ static ssize_t recovery_start_store(mdk_rdev_t *rdev, const char *buf, size_t le
- static struct rdev_sysfs_entry rdev_recovery_start =
- __ATTR(recovery_start, S_IRUGO|S_IWUSR, recovery_start_show, recovery_start_store);
- 
-+
-+static ssize_t
-+badblocks_show(struct badblocks *bb, char *page, int unack);
-+static ssize_t
-+badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack);
-+
-+static ssize_t bb_show(mdk_rdev_t *rdev, char *page)
-+{
-+	return badblocks_show(&rdev->badblocks, page, 0);
-+}
-+static ssize_t bb_store(mdk_rdev_t *rdev, const char *page, size_t len)
-+{
-+	return badblocks_store(&rdev->badblocks, page, len, 0);
-+}
-+static struct rdev_sysfs_entry rdev_bad_blocks =
-+__ATTR(bad_blocks, S_IRUGO|S_IWUSR, bb_show, bb_store);
-+
-+
-+static ssize_t ubb_show(mdk_rdev_t *rdev, char *page)
-+{
-+	return badblocks_show(&rdev->badblocks, page, 1);
-+}
-+static ssize_t ubb_store(mdk_rdev_t *rdev, const char *page, size_t len)
-+{
-+	return badblocks_store(&rdev->badblocks, page, len, 1);
-+}
-+static struct rdev_sysfs_entry rdev_unack_bad_blocks =
-+__ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
-+
- static struct attribute *rdev_default_attrs[] = {
- 	&rdev_state.attr,
- 	&rdev_errors.attr,
-@@ -2719,6 +2748,8 @@ static struct attribute *rdev_default_attrs[] = {
- 	&rdev_offset.attr,
- 	&rdev_size.attr,
- 	&rdev_recovery_start.attr,
-+	&rdev_bad_blocks.attr,
-+	&rdev_unack_bad_blocks.attr,
- 	NULL,
- };
- static ssize_t
-@@ -7775,6 +7806,102 @@ void md_ack_all_badblocks(struct badblocks *bb)
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index d55ae12..e434f1e 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -244,6 +244,23 @@ static inline void update_head_pos(int slot, r10bio_t *r10_bio)
+ 		r10_bio->devs[slot].addr + (r10_bio->sectors);
  }
- EXPORT_SYMBOL_GPL(md_ack_all_badblocks);
  
-+/* sysfs access to bad-blocks list.
-+ * We present two files.
-+ * 'bad-blocks' lists sector numbers and lengths of ranges that
-+ *    are recorded as bad.  The list is truncated to fit within
-+ *    the one-page limit of sysfs.
-+ *    Writing "sector length" to this file adds an acknowledged
-+ *    bad block list.
-+ * 'unacknowledged-bad-blocks' lists bad blocks that have not yet
-+ *    been acknowledged.  Writing to this file adds bad blocks
-+ *    without acknowledging them.  This is largely for testing.
-+ *
++/*
++ * Find the disk number which triggered given bio
 + */
-+
-+static ssize_t
-+badblocks_show(struct badblocks *bb, char *page, int unack)
++static int find_bio_disk(conf_t *conf, r10bio_t *r10_bio, struct bio *bio)
 +{
-+	size_t len = 0;
-+	int i;
-+	u64 *p;
-+	int havelock = 0;
++	int slot;
 +
-+	if (bb->shift < 0)
-+		return 0;
++	for (slot = 0; slot < conf->copies; slot++)
++		if (r10_bio->devs[slot].bio == bio)
++			break;
 +
-+	rcu_read_lock();
-+	p = rcu_dereference(bb->active_page);
-+	if (!p) {
-+		spin_lock_irq(&bb->lock);
-+		p = bb->page;
-+		havelock = 1;
-+	}
++	BUG_ON(slot == conf->copies);
++	update_head_pos(slot, r10_bio);
 +
-+	i = 0;
-+
-+	while (len < PAGE_SIZE && i < bb->count) {
-+		sector_t s = BB_OFFSET(p[i]);
-+		unsigned int length = BB_LEN(p[i]);
-+		int ack = BB_ACK(p[i]);
-+		i++;
-+
-+		if (unack && ack)
-+			continue;
-+
-+		len += snprintf(page+len, PAGE_SIZE-len, "%llu %u\n",
-+				(unsigned long long)s << bb->shift,
-+				length << bb->shift);
-+	}
-+
-+	if (havelock)
-+		spin_unlock_irq(&bb->lock);
-+	rcu_read_unlock();
-+
-+	return len;
++	return r10_bio->devs[slot].devnum;
 +}
 +
-+#define DO_DEBUG 1
-+
-+static ssize_t
-+badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack)
-+{
-+	unsigned long long sector;
-+	int length;
-+	char newline;
-+#ifdef DO_DEBUG
-+	/* Allow clearing via sysfs *only* for testing/debugging.
-+	 * Normally only a successful write may clear a badblock
-+	 */
-+	int clear = 0;
-+	if (page[0] == '-') {
-+		clear = 1;
-+		page++;
-+	}
-+#endif /* DO_DEBUG */
-+
-+	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) {
-+	case 3:
-+		if (newline != '\n')
-+			return -EINVAL;
-+	case 2:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+#ifdef DO_DEBUG
-+	if (clear) {
-+		md_clear_badblocks(bb, sector, length);
-+		return len;
-+	}
-+#endif /* DO_DEBUG */
-+	if (md_set_badblocks(bb, sector, length, !unack))
-+		return len;
-+	else
-+		return -ENOSPC;
-+}
-+
- static int md_notify_reboot(struct notifier_block *this,
- 			    unsigned long code, void *x)
+ static void raid10_end_read_request(struct bio *bio, int error)
  {
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+@@ -289,13 +306,10 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ {
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+ 	r10bio_t *r10_bio = bio->bi_private;
+-	int slot, dev;
++	int dev;
+ 	conf_t *conf = r10_bio->mddev->private;
+ 
+-	for (slot = 0; slot < conf->copies; slot++)
+-		if (r10_bio->devs[slot].bio == bio)
+-			break;
+-	dev = r10_bio->devs[slot].devnum;
++	dev = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
+@@ -316,8 +330,6 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ 		 */
+ 		set_bit(R10BIO_Uptodate, &r10_bio->state);
+ 
+-	update_head_pos(slot, r10_bio);
+-
+ 	/*
+ 	 *
+ 	 * Let's see if all mirrored write operations have finished
+@@ -1173,14 +1185,9 @@ static void end_sync_read(struct bio *bio, int error)
+ {
+ 	r10bio_t *r10_bio = bio->bi_private;
+ 	conf_t *conf = r10_bio->mddev->private;
+-	int i,d;
++	int d;
+ 
+-	for (i=0; i<conf->copies; i++)
+-		if (r10_bio->devs[i].bio == bio)
+-			break;
+-	BUG_ON(i == conf->copies);
+-	update_head_pos(i, r10_bio);
+-	d = r10_bio->devs[i].devnum;
++	d = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	if (test_bit(BIO_UPTODATE, &bio->bi_flags))
+ 		set_bit(R10BIO_Uptodate, &r10_bio->state);
+@@ -1211,18 +1218,13 @@ static void end_sync_write(struct bio *bio, int error)
+ 	r10bio_t *r10_bio = bio->bi_private;
+ 	mddev_t *mddev = r10_bio->mddev;
+ 	conf_t *conf = mddev->private;
+-	int i,d;
++	int d;
+ 
+-	for (i = 0; i < conf->copies; i++)
+-		if (r10_bio->devs[i].bio == bio)
+-			break;
+-	d = r10_bio->devs[i].devnum;
++	d = find_bio_disk(conf, r10_bio, bio);
+ 
+ 	if (!uptodate)
+ 		md_error(mddev, conf->mirrors[d].rdev);
+ 
+-	update_head_pos(i, r10_bio);
+-
+ 	rdev_dec_pending(conf->mirrors[d].rdev, mddev);
+ 	while (atomic_dec_and_test(&r10_bio->remaining)) {
+ 		if (r10_bio->master_bio == NULL) {
 
 
