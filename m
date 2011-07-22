@@ -1,43 +1,30 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 10/34] md/raid5: unify stripe_head_state and r6_state
-Date: Fri, 22 Jul 2011 15:15:06 +1000
-Message-ID: <20110722151506.54c66e82@notabene.brown>
-References: <20110721022537.6728.90204.stgit@notabene.brown>
-	<20110721023225.6728.40355.stgit@notabene.brown>
-	<878vrqex7i.fsf@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: Confusion with setting up new RAID6 with mdadm
+Date: Fri, 22 Jul 2011 07:17:25 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1107220716060.20159@uplift.swm.pp.se>
+References: <4CE00206.4000301@geograph.co.za> <20101114195036.GA23982@maude.comedia.it> <loom.20110722T025156-876@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <878vrqex7i.fsf@gmail.com>
+In-Reply-To: <loom.20110722T025156-876@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
+To: Tanguy Herrmann <dolanor@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 22 Jul 2011 13:49:37 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Fri, 22 Jul 2011, Tanguy Herrmann wrote:
 
- 
-> > @@ -2964,7 +2964,7 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
-> >  			set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
-> >  			for (j = 0; j < conf->raid_disks; j++)
-> >  				if (j != sh2->pd_idx &&
-> > -				    (!r6s || j != sh2->qd_idx) &&
-> > +				    (r6s || j != sh2->qd_idx) &&
-> 
-> Why is this changed?
-> 
+> I've read somewhere (sorry I can't remind it) that the raid still could be
+> unaligned by using the whole disk, and so we had to create a partition aligned
+> (by using fdisk -u, then creating a partition beginning at LBA 64 at least, and
+> that would span on a length multiple of 8.
+>
+> Was it totally wrong ?
 
-No good reason that I can think of ... so must be a bug.  I'll fix it.
+No, but I don't see how using the whole disk can end up to be not 4k 
+aligned when doing your way would. Only way this would end up unaligned 
+would be if the offset jumper on the WDxxEARS drives was set, and then 
+you'd be misaligned regardless of method.
 
-In the current code, r6s is always NULL! which is also a bug.
-When you get to
-
-   md/raid5: Move code for finishing a reconstruction into handle_stripe.
-
-You'll find that the call which passed 's' in was changed to pass 'NULL' in
-when merging the RAID5 and RAID6 code.  I'll fix that too.
-
-Thanks,
-NeilBrown
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
