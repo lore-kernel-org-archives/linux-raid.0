@@ -1,61 +1,36 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: standard performance (write speed ??Mb/s) - new raid5 array
-Date: Thu, 21 Jul 2011 19:05:23 -0500
-Message-ID: <4E28BEC3.4000301@hardwarefreak.com>
-References: <201107162140.58883.raid1@fuckaround.org> <ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org> <4E236A2D.3070307@hardwarefreak.com> <201107211907.36864.raid1@fuckaround.org>
+Subject: Re: standard performance (write speed 65Mb/s)
+Date: Thu, 21 Jul 2011 19:24:12 -0500
+Message-ID: <4E28C32C.1020701@hardwarefreak.com>
+References: <201107181403.49563.raid1@fuckaround.org> <c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org> <CAHX8RiR0MV1iL_OfrVAKGjr0gj7zxtuxFSzMijSgNfKcs0Zz0Q@mail.gmail.com> <201107211957.16493.raid1@fuckaround.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201107211907.36864.raid1@fuckaround.org>
+In-Reply-To: <201107211957.16493.raid1@fuckaround.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Pol Hallen <raid1@fuckaround.org>
-Cc: linux-raid@vger.kernel.org
+Cc: Erwan Leroux <erwan.lerou@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/21/2011 12:07 PM, Pol Hallen wrote:
-> Hello again :-)
-> 
-> I removed all partitions of my disks and do:
-> 
-> dd if=/dev/zero of=/dev/sdb bs=512 count=1 for all disks..
-> 
-> next, I created a new partition (non-fs data) starting of 64 like below (for 
-> every devices)
+On 7/21/2011 12:57 PM, Pol Hallen wrote:
 
-Why did you create partitions?  The whole point of zeroing the first 512
-bytes was to *eliminate* all the partitions...
+> dd if=/dev/zero of=/dev/md0 bs=1024M count=10
+> 10+0 records in
+> 10+0 records out
+> 10737418240 bytes (11 GB) copied, 166.042 s, 64.7 MB/s
 
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1              64  3907029167  1953514552   da  Non-FS data
-> 
-> created a new raid5 array:
-> 
-> mdadm --create --verbose /dev/md0 --level=raid5 --raid-devices=5 /dev/sdb 
-> /dev/sdc /dev/sdd /dev/sde /dev/sdf
+Do you not recall that I explained in detail, not two days ago, why you
+should not use a 1GB block size when testing with dd in this manner?
+And don't do this with the raw device.  The resulting numbers, no matter
+how large or small, are irrelevant.
 
-And now you create your array without using partitions...
+*Put a filesystem on md0* and do:
 
-> cat /proc/mdstat
-> 
-> md0 : active raid5 sdf[5] sde[3] sdd[2] sdc[1] sdb[0]
->       7814051840 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/4] 
-> [UUUU_]
->       [>....................]  recovery =  0.3% (6625324/1953512960) 
-> finish=971.1min speed=33411K/sec
+~$ dd if=/dev/zero of=/some/dir/test.dd bs=4096 count=2621440
 
-You created aligned partitions on all disks, and then did not use those
-partitions...
-
-> Now, I've 5 identical disks (2Tb WD)
-> 
-> I've to wait rebuilding time after do new tests performance.
-> 
-> The procedure that I've done is correct?
-
-No, you did not.  It seems you merged bits and pieces from each array
-creation method.  The array may still function properly.  I've never
-tried what you've done here.  Maybe others have the correct answer.
+And why on earth would you bother running this test while the array is
+still building?  Again, the resulting figure is worthless to everyone.
 
 -- 
 Stan
