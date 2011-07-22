@@ -1,29 +1,23 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [md PATCH 03/36] md: don't allow arrays to contain devices with bad blocks.
-Date: Sat, 23 Jul 2011 00:47:38 +0900
-Message-ID: <87zkk648rp.fsf@gmail.com>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
-	<20110721025847.8422.81361.stgit@notabene.brown>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [dm-devel] [PATCH -next] dm: fix dm-flakey printk warning
+Date: Fri, 22 Jul 2011 17:25:38 +0100
+Message-ID: <20110722162538.GK5632@agk-dp.fab.redhat.com>
+References: <20110721165542.7748c88a1d1e0b228c7fe3fa@canb.auug.org.au> <20110721161047.8a62d89a.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721025847.8422.81361.stgit@notabene.brown> (NeilBrown's
-	message of "Thu, 21 Jul 2011 12:58:47 +1000")
+Content-Disposition: inline
+In-Reply-To: <20110721161047.8a62d89a.rdunlap@xenotime.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, dm-devel@redhat.com, akpm <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+On Thu, Jul 21, 2011 at 04:10:47PM -0700, Randy Dunlap wrote:
+> Fix printk format warning for sector_t, which can be (unsigned)
+> long or long long.
+ 
+Folded, thanks.
 
-> As no personality understand bad block lists yet, we must
-> reject any device that is known to contain bad blocks.
-> As the personalities get taught, these tests can be removed.
->
-> This only applies to raid1/raid5/raid10.
-> For linear/raid0/multipath/faulty the whole concept of bad blocks
-> doesn't mean anything so there is no point adding the checks.
->
-> Signed-off-by: NeilBrown <neilb@suse.de>
+Alasdair
 
-Reviewed-by: Namhyung Kim <namhyung@gmail.com>
