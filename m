@@ -1,49 +1,30 @@
-From: Tanguy Herrmann <dolanor@gmail.com>
-Subject: Re: Confusion with setting up new RAID6 with mdadm
-Date: Fri, 22 Jul 2011 01:08:34 +0000 (UTC)
-Message-ID: <loom.20110722T025156-876@post.gmane.org>
-References: <4CE00206.4000301@geograph.co.za> <20101114195036.GA23982@maude.comedia.it>
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: Re: [md PATCH 06/34] md/raid5: Remove use of sh->lock in sync_request
+Date: Fri, 22 Jul 2011 12:39:54 +0900
+Message-ID: <87pql3dlv9.fsf@gmail.com>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
+	<20110721023225.6728.58904.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110721023225.6728.58904.stgit@notabene.brown> (NeilBrown's
+	message of "Thu, 21 Jul 2011 12:32:25 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra <bluca <at> comedia.it> writes:
+NeilBrown <neilb@suse.de> writes:
 
-> 
-> On Sun, Nov 14, 2010 at 05:36:38PM +0200, Zoltan Szecsei wrote:
-> > *If I have to reformat the drives and redo mdadm --create, other than mdadm 
-> > stop, how can I get rid of all the /dev/md* etc etc so that when I restart 
-> > this exercise, the original bad RAID does not interfere with this new 
-> > attempt?
-> 
-> mdadm -Ss
-> mdadm --zero-superblock on each partition
-> >
-> >
-> > *Partition alignment?
-> > Is this relevant for modern HDs (I'm using 5900rpm Seagate 2TB drives)
-> for modern hdds with 4k sectors it is
-> new fdisk and/or parted should already know how to align
-> in any case, since you want to use the whole space for raid, why create
-> partitions at all, md works nicely without
+> This is the start of a series of patches to remove sh->lock.
+>
+> sync_request takes sh->lock before setting STRIPE_SYNCING to ensure
+> there is no race with testing it in handle_stripe[56].
+>
+> Instead, use a new flag STRIPE_SYNC_REQUESTED and test it early
+> in handle_stripe[56] (after getting the same lock) and perform the
+> same set/clear operations if it was set.
+>
+> Signed-off-by: NeilBrown <neilb@suse.de>
 
-Hello,
-first thank you for the interesting topic (because it fits my questions ^^) and 
-for all the participation of this community to this topic !
- 
-I've read somewhere (sorry I can't remind it) that the raid still could be 
-unaligned by using the whole disk, and so we had to create a partition aligned 
-(by using fdisk -u, then creating a partition beginning at LBA 64 at least, and 
-that would span on a length multiple of 8.
-
-Was it totally wrong ?
-
-Tanguy
-
-
-
-
+Reviewed-by: Namhyung Kim <namhyung@gmail.com>
