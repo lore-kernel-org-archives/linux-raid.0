@@ -1,40 +1,38 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: how to recover filesystem after clobbering array?
-Date: Sat, 23 Jul 2011 10:43:00 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1107231029280.20159@uplift.swm.pp.se>
-References: <20110719104325.16112cl7f4lrzkjh@mail.sapo.pt> <j03lp4$h72$1@dough.gmane.org> <4E255FE1.2060006@tolaris.com> <20110719120153.1529669k4o1t6v4x@mail.sapo.pt> <4E2A8420.5000603@sapo.pt>
+From: maurice <mhilarius@gmail.com>
+Subject: Re: mdadm striped parity RAID with Advanced Format drives
+Date: Sat, 23 Jul 2011 09:38:03 -0600
+Message-ID: <4E2AEADB.6050105@gmail.com>
+References: <201107211011.40151.polhallen@fuckaround.org> <4E27FECE.8010201@hardwarefreak.com> <alpine.DEB.2.00.1107211226540.20159@uplift.swm.pp.se> <4E280AEF.4020801@hardwarefreak.com> <4E2A40AC.8080107@gmail.com> <4E2A7409.60508@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1673026807-1311410552=:20159"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E2A8420.5000603@sapo.pt>
+In-Reply-To: <4E2A7409.60508@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Vasco_N=E9voa?= <vasco.nevoa@sapo.pt>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 7/23/2011 1:11 AM, Michael Tokarev wrote:
+> ..
+>> I have seen the case before where a drive has been "kicked out" and when
+>> you go to add it back, it is refused as "too small"
+>> Grown defects have shrunk the device.
+> This CAN NOT HAPPEN.  Drive never changes its size.
 
----137064504-1673026807-1311410552=:20159
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
+If you say so.
+   ;>}
 
-On Sat, 23 Jul 2011, Vasco Névoa wrote:
+I have seen this exact issue happen at least twice.The arrays were 
+originally built.
+After a failure they could not be rebuilt as one or more drives had 
+become too small.
+If you have an explanation for that, I am all ears..
 
-> I initially used "mdadm --create --assume-clean ..." on a level1 array 
-> of 2 disks that came from another machine. I didn't know any other way 
-> of starting an array in this situation. While this is an acceptable 
-> practice in some cases, it is better to use "--assemble" and pass the 
-> necessary info (like uuid).
+At that point it is a lot of work to recover as one needs to go and find 
+a drive that is bigger , to facilitate the recovery.
 
-In case someone finds this from the archives:
-
-mdadm --create --assume-clean is a LAST RESORT. It's to be used when 
-everything else fails. I've seen so many start doing this way too early in 
-the process and who then subsequently lost their data because of 
-superblock version and mdadm changes over time (especially when they 
-forgot --assume-clean and got the layout wrong).
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1673026807-1311410552=:20159--
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
