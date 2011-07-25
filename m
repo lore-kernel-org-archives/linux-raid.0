@@ -1,51 +1,35 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [PATCH] RAID-6 check standalone suspend array V2.0
-Date: Mon, 25 Jul 2011 20:53:13 +0200
-Message-ID: <4E2DBB99.9070906@nexgo.de>
-References: <20110321115440.GA15635@lazy.lzy> <20110322095905.737fb1d5@notabene.brown> <20110404175242.GA3411@lazy.lzy> <20110405091242.3427e0b1@notabene.brown> <20110508185408.GA25378@lazy.lzy> <20110509114500.116926ba@notabene.brown> <20110509184333.GA28743@lazy.lzy> <20110515211515.GA30260@lazy.lzy> <20110516200857.3a009a64@notabene.brown> <4E2716EF.1050509@nexgo.de> <20110722064159.GA19151@maude.comedia.it>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: mdadm striped parity RAID with Advanced Format drives
+Date: Mon, 25 Jul 2011 22:57:18 +0400
+Message-ID: <4E2DBC8E.1070706@msgid.tls.msk.ru>
+References: <201107211011.40151.polhallen@fuckaround.org> <4E27FECE.8010201@hardwarefreak.com> <alpine.DEB.2.00.1107211226540.20159@uplift.swm.pp.se> <4E280AEF.4020801@hardwarefreak.com> <4E2A40AC.8080107@gmail.com> <4E2A7409.60508@msgid.tls.msk.ru> <4E2AEADB.6050105@gmail.com> <alpine.DEB.2.00.1107231757050.20159@uplift.swm.pp.se> <4E2B0CE3.3050702@gmail.com> <4E2D2C23.9010108@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110722064159.GA19151@maude.comedia.it>
+In-Reply-To: <4E2D2C23.9010108@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: maurice <mhilarius@gmail.com>, Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Luca,
+25.07.2011 12:41, Nikolay Kichukov wrote:
+> I can confirm this has happened to me once. The drive went just a bit smaller than it was originally. Unfortunately I
+> have no evidence of this at this stage. It was real strange. Whatever I tried did not bring the same size back. It kept
+> being reported as a few sectors less.
 
-On 07/22/2011 08:41 AM, Luca Berra wrote:
-> On Wed, Jul 20, 2011 at 07:57:03PM +0200, Piergiorgio Sartor wrote:
->> Hi Neil,
->>
->> sorry for the very late answer.
->>
->> On 05/16/2011 12:08 PM, NeilBrown wrote:
->>> On Sun, 15 May 2011 23:15:15 +0200 Piergiorgio Sartor
->>>> Thanks again for your help, again let me know what
->>>> is the next expected step.
+It's possible to get smaller size at one point, by enabling HPA area
+in a drive.  I think all modern (desktop) drives support this feature.
+
+/mjt
+
+> Cheers,
+> -Nik
+> 
+> On 07/23/2011 09:03 PM, maurice wrote:
+>> On 7/23/2011 9:58 AM, Mikael Abrahamsson wrote:
+>>> ..
+>>> I'd like to see text that indicates this. I agree with the original poster that this just doesn't happen.
 >>>
->>> That all looks fine thank.  I've applied it and pushed it out.
->>>
->>> I'm not sure what you mean exactly by the 'next expected step'... 
->>
->> Well, is there anything than should be done, like
->> documentation or code cleanup?
+>> I no longer have the details at hand, as I have fixed it, and it was about 8 months ago last time I saw it.
 > 
-> I would love if you could also provide a man page
-> 
-> Regards,
-> L.
-> 
-
-is there any tool to prepare a man page or should I
-copy & modify something already existing?
-Would a "readme.txt" do the same for you?
-
-Thanks,
-
-bye,
-
--- 
-
-piergiorgio
