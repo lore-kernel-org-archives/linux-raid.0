@@ -1,63 +1,35 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: how to recover filesystem after clobbering array?
-Date: Sat, 23 Jul 2011 23:04:14 +0400
-Message-ID: <CAGqmV7q7SzQNSPLueai+nwkpL1TqxUfkB4hymEL9JWM2ES2r-w@mail.gmail.com>
-References: <20110719104325.16112cl7f4lrzkjh@mail.sapo.pt>
-	<j03lp4$h72$1@dough.gmane.org>
-	<4E255FE1.2060006@tolaris.com>
-	<20110719120153.1529669k4o1t6v4x@mail.sapo.pt>
-	<4E2A8420.5000603@sapo.pt>
-	<alpine.DEB.2.00.1107231029280.20159@uplift.swm.pp.se>
+From: =?UTF-8?Q?Pawe=C5=82_Brodacki?= <pawel.brodacki@googlemail.com>
+Subject: Re: standard performance (write speed 20Mb/s)
+Date: Mon, 25 Jul 2011 08:39:38 +0200
+Message-ID: <CACVpCE53bab08JCmxuu_tgExxT4eYZDXyL0m0Anb0_AGngfgoQ@mail.gmail.com>
+References: <201107181403.49563.raid1@fuckaround.org>
+	<4E26CAA7.8030201@hardwarefreak.com>
+	<c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org>
+	<CAHX8RiR0MV1iL_OfrVAKGjr0gj7zxtuxFSzMijSgNfKcs0Zz0Q@mail.gmail.com>
+	<CACVpCE5mVBvqFBa7VNtGDiMKRn45Wh79gHqqnOu5vE6aeWEtgg@mail.gmail.com>
+	<CAHX8RiR_7Bx_jGQijBb9rb=RW=hiFgyMqfn0QGif4mDC20FXfA@mail.gmail.com>
+	<CAHX8RiTYpBJWGFEdemYqE9BwmqoQeoyehM77yrpTY3OkanyD+g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1107231029280.20159@uplift.swm.pp.se>
+In-Reply-To: <CAHX8RiTYpBJWGFEdemYqE9BwmqoQeoyehM77yrpTY3OkanyD+g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: =?ISO-8859-1?Q?Vasco_N=E9voa?= <vasco.nevoa@sapo.pt>, linux-raid <linux-raid@vger.kernel.org>
+To: Erwan Leroux <erwan.lerou@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just to make data restoring a bit safer - one can use device mappers's
-snapshot feature as it can snapshot _any_ block device, you can create
-snapshots of say /dev/sda1 & /dev/sdb1 , then do your raid experiments
-on that snapshotted devices.
-
-More info http://www.mjmwired.net/kernel/Documentation/device-mapper/sn=
-apshot.txt
-https://www.redhat.com/archives/dm-devel/2004-July/msg00071.html
-
-2011/7/23 Mikael Abrahamsson <swmike@swm.pp.se>:
-> On Sat, 23 Jul 2011, Vasco N=E9voa wrote:
+W dniu 21 lipca 2011 17:42 u=C5=BCytkownik Erwan Leroux
+<erwan.lerou@gmail.com> napisa=C5=82:
+> I search my bookmarks to find the original source, which has some
+> benchmark to compare sector 63 and 64
+> http://linuxconfig.org/linux-wd-ears-advanced-format
 >
->> I initially used "mdadm --create --assume-clean ..." on a level1 arr=
-ay of
->> 2 disks that came from another machine. I didn't know any other way =
-of
->> starting an array in this situation. While this is an acceptable pra=
-ctice in
->> some cases, it is better to use "--assemble" and pass the necessary =
-info
->> (like uuid).
->
-> In case someone finds this from the archives:
->
-> mdadm --create --assume-clean is a LAST RESORT. It's to be used when
-> everything else fails. I've seen so many start doing this way too ear=
-ly in
-> the process and who then subsequently lost their data because of supe=
-rblock
-> version and mdadm changes over time (especially when they forgot
-> --assume-clean and got the layout wrong).
->
-> --
-> Mikael Abrahamsson =A0 =A0email: swmike@swm.pp.se
 
-
-
---=20
-Best regards,
-[COOLCOLD-RIPN]
+Thanks for the reply. I understood that the partition must start at a
+multiple of 8 512B blocks, to be properly aligned at a 4KB-sector HDD.
+I just didn't know, that you couldn't go below sector 64, e.g. to
+start a partition at sector 16.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
