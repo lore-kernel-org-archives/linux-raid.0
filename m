@@ -1,37 +1,45 @@
-From: =?UTF-8?Q?Pawe=C5=82_Brodacki?= <pawel.brodacki@googlemail.com>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Mon, 25 Jul 2011 08:39:38 +0200
-Message-ID: <CACVpCE53bab08JCmxuu_tgExxT4eYZDXyL0m0Anb0_AGngfgoQ@mail.gmail.com>
-References: <201107181403.49563.raid1@fuckaround.org>
-	<4E26CAA7.8030201@hardwarefreak.com>
-	<c5a1a83b370a0ddb063cfc828f124e6d.squirrel@fuckaround.org>
-	<CAHX8RiR0MV1iL_OfrVAKGjr0gj7zxtuxFSzMijSgNfKcs0Zz0Q@mail.gmail.com>
-	<CACVpCE5mVBvqFBa7VNtGDiMKRn45Wh79gHqqnOu5vE6aeWEtgg@mail.gmail.com>
-	<CAHX8RiR_7Bx_jGQijBb9rb=RW=hiFgyMqfn0QGif4mDC20FXfA@mail.gmail.com>
-	<CAHX8RiTYpBJWGFEdemYqE9BwmqoQeoyehM77yrpTY3OkanyD+g@mail.gmail.com>
+From: Nikolay Kichukov <hijacker@oldum.net>
+Subject: Re: mdadm striped parity RAID with Advanced Format drives
+Date: Mon, 25 Jul 2011 11:41:07 +0300
+Message-ID: <4E2D2C23.9010108@oldum.net>
+References: <201107211011.40151.polhallen@fuckaround.org> <4E27FECE.8010201@hardwarefreak.com> <alpine.DEB.2.00.1107211226540.20159@uplift.swm.pp.se> <4E280AEF.4020801@hardwarefreak.com> <4E2A40AC.8080107@gmail.com> <4E2A7409.60508@msgid.tls.msk.ru> <4E2AEADB.6050105@gmail.com> <alpine.DEB.2.00.1107231757050.20159@uplift.swm.pp.se> <4E2B0CE3.3050702@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHX8RiTYpBJWGFEdemYqE9BwmqoQeoyehM77yrpTY3OkanyD+g@mail.gmail.com>
+In-Reply-To: <4E2B0CE3.3050702@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Erwan Leroux <erwan.lerou@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: maurice <mhilarius@gmail.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-W dniu 21 lipca 2011 17:42 u=C5=BCytkownik Erwan Leroux
-<erwan.lerou@gmail.com> napisa=C5=82:
-> I search my bookmarks to find the original source, which has some
-> benchmark to compare sector 63 and 64
-> http://linuxconfig.org/linux-wd-ears-advanced-format
->
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Thanks for the reply. I understood that the partition must start at a
-multiple of 8 512B blocks, to be properly aligned at a 4KB-sector HDD.
-I just didn't know, that you couldn't go below sector 64, e.g. to
-start a partition at sector 16.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can confirm this has happened to me once. The drive went just a bit smaller than it was originally. Unfortunately I
+have no evidence of this at this stage. It was real strange. Whatever I tried did not bring the same size back. It kept
+being reported as a few sectors less.
+
+Cheers,
+- -Nik
+
+On 07/23/2011 09:03 PM, maurice wrote:
+> On 7/23/2011 9:58 AM, Mikael Abrahamsson wrote:
+>> ..
+>> I'd like to see text that indicates this. I agree with the original poster that this just doesn't happen.
+>>
+> I no longer have the details at hand, as I have fixed it, and it was about 8 months ago last time I saw it.
+> 
+> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJOLSwjAAoJEDFLYVOGGjgXnB8IANbQH6knVjEWq9+Q5XOT0R6H
+blRSxD8p2Vby6Yoh6N9kzL2rYls5yeQlqaMCSmD4ojk7qL+A6yWDXpEPd02XJlsr
+E6MlaSZK3AQMMCcegnZQkmCSbshG8t/+plqNJLq9FO4h4rEQgoa6TuyJzSBhEWkT
+QNOLqSA/84prPuGTgr7fgf7OQGnB1GEPd5uu1jxWMwbSZ4bhIOikv5/XAgiHZGuJ
+ed9lRBTMIWfwtaMnLhrjIW6UgeyJQfIC0VFEao1/ze1+WeLReErKwGm7c0meHs4v
+NgZImsUQUZOFJRwzgoXy+fVxcBGtWCUlSIQSaGyRhfARyug+2Dk2e132jVZvSfY=
+=huL0
+-----END PGP SIGNATURE-----
