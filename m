@@ -1,100 +1,103 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [md PATCH 02/36] md/bad-block-log: add sysfs interface for
- accessing bad-block-log.
-Date: Tue, 26 Jul 2011 14:17:42 +0900
-Message-ID: <1311657462.1522.3.camel@leonhard>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
-	 <20110721025847.8422.8246.stgit@notabene.brown> <874o2e5nj9.fsf@gmail.com>
-	 <20110726122927.311602fb@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] RAID-6 check standalone suspend array V2.0
+Date: Tue, 26 Jul 2011 15:25:23 +1000
+Message-ID: <20110726152523.54433754@notabene.brown>
+References: <20110321140244.2314b4b4@notabene.brown>
+	<20110321104007.GA15379@lazy.lzy>
+	<20110321220457.29d52f5c@notabene.brown>
+	<20110321115440.GA15635@lazy.lzy>
+	<20110322095905.737fb1d5@notabene.brown>
+	<20110404175242.GA3411@lazy.lzy>
+	<20110405091242.3427e0b1@notabene.brown>
+	<20110508185408.GA25378@lazy.lzy>
+	<20110509114500.116926ba@notabene.brown>
+	<20110509184333.GA28743@lazy.lzy>
+	<20110515211515.GA30260@lazy.lzy>
+	<20110516200857.3a009a64@notabene.brown>
+	<4E2716EF.1050509@nexgo.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110726122927.311602fb@notabene.brown>
+In-Reply-To: <4E2716EF.1050509@nexgo.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2011-07-26 (=ED=99=94), 12:29 +1000, NeilBrown:
-> On Sat, 23 Jul 2011 00:43:22 +0900 Namhyung Kim <namhyung@gmail.com> =
-wrote:
->=20
-> > NeilBrown <neilb@suse.de> writes:
-> >=20
-> > > This can show the log (providing it fits in one page) and
-> > > allows bad blocks to be 'acknowledged' meaning that they
-> > > have safely been recorded in metadata.
-> > >
-> > > Clearing bad blocks is not allowed via sysfs (except for
-> > > code testing).  A bad block can only be cleared when
-> > > a write to the block succeeds.
-> > >
-> > > Signed-off-by: NeilBrown <neilb@suse.de>
-> > > ---
-> > >
-> > >  drivers/md/md.c |  127 +++++++++++++++++++++++++++++++++++++++++=
-++++++++++++++
-> > >  1 files changed, 127 insertions(+), 0 deletions(-)
-> > >
->=20
-> > > +static ssize_t
-> > > +badblocks_store(struct badblocks *bb, const char *page, size_t l=
-en, int unack)
-> > > +{
-> > > +	unsigned long long sector;
-> > > +	int length;
-> > > +	char newline;
-> > > +#ifdef DO_DEBUG
-> > > +	/* Allow clearing via sysfs *only* for testing/debugging.
-> > > +	 * Normally only a successful write may clear a badblock
-> > > +	 */
-> > > +	int clear =3D 0;
-> > > +	if (page[0] =3D=3D '-') {
-> > > +		clear =3D 1;
-> > > +		page++;
-> > > +	}
-> > > +#endif /* DO_DEBUG */
-> > > +
-> > > +	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) =
-{
-> >=20
-> > What if user provides negative 'length' here? Should we check that =
-case?
-> >=20
->=20
-> good point.  I've added an appropriate test.
->=20
-> Thanks,
-> NeilBrown
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 5de0c84..9ba76c7 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -7844,6 +7844,8 @@ badblocks_store(struct badblocks *bb, const cha=
-r *page, size_t len, int unack)
->  		if (newline !=3D '\n')
->  			return -EINVAL;
->  	case 2:
-> +		if (length <=3D 0)
-> +			return -EINVAL;
->  		break;
->  	default:
->  		return -EINVAL;
+On Wed, 20 Jul 2011 19:57:03 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-Reviewed-by: Namhyung Kim <namhyung@gmail.com>
+> Hi Neil,
+> 
+> sorry for the very late answer.
+> 
+> On 05/16/2011 12:08 PM, NeilBrown wrote:
+> > On Sun, 15 May 2011 23:15:15 +0200 Piergiorgio Sartor
+> > <piergiorgio.sartor@nexgo.de> wrote:
+> > 
+> >> Hi Neil,
+> >>
+> >> reminder for the suspend patch.
+> >>
+> >> Thank you so much for the code review.
+> >>
+> >> I modified it in order to fix, hopefully, all the flaws.
+> >>
+> >> New patch attached below.
+> >>
+> >> Please note that "sigblock()" cannot be used, since it is
+> >> declared, at least on my system, as "deprecated".
+> >> Furthermore, I noticed that "Grow.c" is not checking the
+> >> return value of "sysfs_set_num()" while suspending the
+> >> array, maybe you'll need to look at this.
+> >>
+> >> Finally, please check the new patch too, while I can
+> >> confirm the software is doing what is supposed to do,
+> >> I still need support in order to confirm the suspend
+> >> and resume code.
+> >>
+> >> Thanks again for your help, again let me know what
+> >> is the next expected step.
+> > 
+> > That all looks fine thank.  I've applied it and pushed it out.
+> > 
+> > I'm not sure what you mean exactly by the 'next expected step'... 
+> 
+> Well, is there anything than should be done, like
+> documentation or code cleanup?
+> 
+> At the moment, it seems to me, the check itself it is
+> fine, maybe performance is not at best (anyone wants
+> to help, here?).
+> 
+> So, I was thinking about the "repair" process, that is
+> fixing the chunks which seem corrupted, instead of just
+> the parity.
+> 
+> Before I go that way, I would like to close pending issues,
+> if any, with the actual software.
 
-Thanks.
+Very sensible - thanks.
 
+I haven't actually used it or tested it at all so I don't know of any issues
+in that regard.
+I agree with an earlier reply that a man-page would be a good idea.
+You could start by looking at "mdadm.8.in" and basing your man page on that.
+It doesn't have to be very long - just explain what it does and how to use
+it, and maybe how to interpret the results.
+Often writing a man page is enough to flush out any serious usability issues
+- if you find it hard to explain how to use it, it is probably because it is
+hard to use :-)
 
---=20
-Regards,
-Namhyung Kim
+If you aren't familiar with the troff -man markup language don't let it worry
+you - I am happy to fix up any markup issues before including it.
 
+It might be good to create a test script too - something that can go in the
+tests/ directory would be ideal.
+e.g. create and initialise a RAID6, deliberately corrupt one block, then run
+your program an check that it reports the right thing.
+Probably corrupt a different blocks (randomly?) on each device and test that
+it reports all of the errors correctly... something like that.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
