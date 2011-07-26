@@ -1,145 +1,136 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [md PATCH 02/36] md/bad-block-log: add sysfs interface for accessing bad-block-log.
-Date: Tue, 26 Jul 2011 17:48:27 +0900
-Message-ID: <87livlxw9w.fsf@gmail.com>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
-	<20110721025847.8422.8246.stgit@notabene.brown>
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: [md PATCH 17/34] md/raid5: unite handle_stripe_dirtying5 and
+ handle_stripe_dirtying6
+Date: Tue, 26 Jul 2011 11:40:42 +0200
+Message-ID: <j0m22q$rur$1@dough.gmane.org>
+References: <20110721022537.6728.90204.stgit@notabene.brown>	<20110721023226.6728.28082.stgit@notabene.brown>	<87tyaepto6.fsf@gmail.com> <20110726115238.63fec583@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721025847.8422.8246.stgit@notabene.brown> (NeilBrown's
-	message of "Thu, 21 Jul 2011 12:58:47 +1000")
+In-Reply-To: <20110726115238.63fec583@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
-
-> This can show the log (providing it fits in one page) and
-> allows bad blocks to be 'acknowledged' meaning that they
-> have safely been recorded in metadata.
+On 26/07/11 03:52, NeilBrown wrote:
+> On Fri, 22 Jul 2011 18:10:33 +0900 Namhyung Kim<namhyung@gmail.com>  wrote:
 >
-> Clearing bad blocks is not allowed via sysfs (except for
-> code testing).  A bad block can only be cleared when
-> a write to the block succeeds.
+>> NeilBrown<neilb@suse.de>  writes:
+>>
+>>> RAID6 is only allowed to choose 'reconstruct-write' while RAID5 is
+>>> also allow 'read-modify-write'
+>>> Apart from this difference, handle_stripe_dirtying[56] are nearly
+>>> identical.  So resolve these differences and create just one function.
+>>>
+>>> Signed-off-by: NeilBrown<neilb@suse.de>
+>>
+>> Reviewed-by: Namhyung Kim<namhyung@gmail.com>
+>>
+>> BTW, here is a question:
+>>    Why RAID6 doesn't allow the read-modify-write? I don't think it is
+>>    not possible, so what prevents doing that? performance? complexity?
+>>    or it's not possible? Why? :)
 >
-> Signed-off-by: NeilBrown <neilb@suse.de>
-> ---
 >
->  drivers/md/md.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 127 insertions(+), 0 deletions(-)
+> The primary reason in my mind is that when Peter Anvin wrote this code he
+> didn't implement read-modify-write and I have never seen a need to consider
+> changing that.
 >
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 220fadb..9324635 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2712,6 +2712,35 @@ static ssize_t recovery_start_store(mdk_rdev_t *rdev, const char *buf, size_t le
->  static struct rdev_sysfs_entry rdev_recovery_start =
->  __ATTR(recovery_start, S_IRUGO|S_IWUSR, recovery_start_show, recovery_start_store);
->  
-> +
-> +static ssize_t
-> +badblocks_show(struct badblocks *bb, char *page, int unack);
-> +static ssize_t
-> +badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack);
-> +
-> +static ssize_t bb_show(mdk_rdev_t *rdev, char *page)
-> +{
-> +	return badblocks_show(&rdev->badblocks, page, 0);
-> +}
-> +static ssize_t bb_store(mdk_rdev_t *rdev, const char *page, size_t len)
-> +{
-> +	return badblocks_store(&rdev->badblocks, page, len, 0);
-> +}
-> +static struct rdev_sysfs_entry rdev_bad_blocks =
-> +__ATTR(bad_blocks, S_IRUGO|S_IWUSR, bb_show, bb_store);
-> +
-> +
-> +static ssize_t ubb_show(mdk_rdev_t *rdev, char *page)
-> +{
-> +	return badblocks_show(&rdev->badblocks, page, 1);
-> +}
-> +static ssize_t ubb_store(mdk_rdev_t *rdev, const char *page, size_t len)
-> +{
-> +	return badblocks_store(&rdev->badblocks, page, len, 1);
-> +}
-> +static struct rdev_sysfs_entry rdev_unack_bad_blocks =
-> +__ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
-> +
->  static struct attribute *rdev_default_attrs[] = {
->  	&rdev_state.attr,
->  	&rdev_errors.attr,
-> @@ -2719,6 +2748,8 @@ static struct attribute *rdev_default_attrs[] = {
->  	&rdev_offset.attr,
->  	&rdev_size.attr,
->  	&rdev_recovery_start.attr,
-> +	&rdev_bad_blocks.attr,
-> +	&rdev_unack_bad_blocks.attr,
->  	NULL,
->  };
->  static ssize_t
-> @@ -7775,6 +7806,102 @@ void md_ack_all_badblocks(struct badblocks *bb)
->  }
->  EXPORT_SYMBOL_GPL(md_ack_all_badblocks);
->  
-> +/* sysfs access to bad-blocks list.
-> + * We present two files.
-> + * 'bad-blocks' lists sector numbers and lengths of ranges that
-> + *    are recorded as bad.  The list is truncated to fit within
-> + *    the one-page limit of sysfs.
-> + *    Writing "sector length" to this file adds an acknowledged
-> + *    bad block list.
-> + * 'unacknowledged-bad-blocks' lists bad blocks that have not yet
-> + *    been acknowledged.  Writing to this file adds bad blocks
-> + *    without acknowledging them.  This is largely for testing.
-> + *
-> + */
+> You would need a largish array - at least 7 devices - before RWM could
+> possibly be a win, but some people do have arrays larger than that.
+>
+> The computation to "subtract" from the Q-syndrome might be a bit complex - I
+> don't know.
+>
 
-Empty line in comment.
+The "subtract from Q" isn't difficult in theory, but it involves more 
+cpu time than the "subtract from P".  It should be an overall win in the 
+same was as for RAID5.  However, the code would be more complex if you 
+allow for RMW on more than one block.
 
-And you might need this as well:
-(or maybe it should be located somewhere in Documentation/ABI/)
+With raid5, if you have a set of data blocks D0, D1, ..., Dn and a 
+parity block P, and you want to change Di_old to Di_new, you can do this:
 
-From 95c3f191bd0cbe6d339fced75656502b2d591fe4 Mon Sep 17 00:00:00 2001
-From: Namhyung Kim <namhyung@gmail.com>
-Date: Tue, 26 Jul 2011 17:39:52 +0900
-Subject: [PATCH] md: add documentation for bad block log
+Read Di_old and P_old
+Calculate P_new = P_old xor Di_old xor Di_new
+Write Di_new and P_new
 
-Previous patch in the bad block series added new sysfs interfaces
-([unacknowledged_]bad_blocks) for each rdev without documentation.
-Add it.
+You can easily extend this do changing several data blocks without 
+reading in the whole old stripe.  I don't know if the Linux raid5 
+implementation does that or not (I understand the theory here, but I am 
+far from an expert on the implementation).  There is no doubt a balance 
+between the speed gains of multiple-block RMW and the code complexity. 
+As long as you are changing less than half the blocks in the stripe, the 
+cpu time will be less than it would for whole stripe write.  For RMW 
+writes that are more than half a stripe, the "best" choice depends on 
+the balance between cpu time and disk bandwidth - a balance that is very 
+different on today's servers compared to those when Linux raid5 was 
+first written.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- Documentation/md.txt |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/Documentation/md.txt b/Documentation/md.txt
-index f0eee83ff78a..be88a24b8584 100644
---- a/Documentation/md.txt
-+++ b/Documentation/md.txt
-@@ -562,6 +562,20 @@ also have
-      that number to reach sync_max.  Then you can either increase
-      "sync_max", or can write 'idle' to "sync_action".
- 
-+   bad_blocks
-+     This gives the list of all known bad blocks in the form of
-+     start address and length (in sectors respectively). If output
-+     is too big to fit in a page, it will be truncated. Writing
-+     "sector length" to this file will add new acknowledged (i.e.
-+     saved to disk safely) bad blocks.
-+
-+   unacknowledged_bad_blocks
-+     This gives the list of known-but-not-yet-saved-to-disk bad
-+     blocks in the same form of 'bad_blocks'. If output is too big
-+     to fit in a page, it will be truncated. Writing to this file
-+     adds bad blocks without acknowledging them. This is largely
-+     for testing.
-+
- 
- Each active md device may also have attributes specific to the
- personality module that manages it.
--- 
-1.7.6
+
+With raid6, the procedure is similar:
+
+Read Di_old, P_old and Q_old.
+Calculate P_new = P_old xor Di_old xor Di_new
+Calculate Q_new = Q_old xor (2^i . Di_old) xor (2^i . Di_new)
+                 = Q_old xor (2^i . (Di_old xor Di_new))
+Write Di_new, P_new and Q_new
+
+The difference is simply that (Di_old xor Di_new) needs to be multiplied 
+(over the GF field - not normal multiplication) by 2^i.  You would do 
+this by repeatedly applying the multiply-by-two function that already 
+exists in the raid6 implementation.
+
+I don't know whether or not it is worth using the common subexpression 
+(Di_old xor Di_new), which turns up twice.
+
+
+
+Multi-block raid6 RMW is similar, but you have to keep track of how many 
+times you should multiply by 2.  For a general case, the code would 
+probably be too messy - it's easier to simple handle the whole stripe. 
+But the case of consecutive blocks is easier, and likely to be far more 
+common in practice.  If you want to change blocks Di through Dj, you can do:
+
+Read Di_old, D(i+1)_old, ..., Dj_old, P_old and Q_old.
+Calculate P_new = P_old xor Di_old xor Di_new
+                         xor D(i+1)_old xor D(i+1)_new
+                         ...
+                         xor Dj_old xor Dj_new
+
+
+Calculate Q_new = Q_old xor (2^i . (Di_old xor Di_new))
+                         xor (2^(i+1) . (D(i+1)_old xor D(i+1)_new))
+                         ...
+                         xor (2^j . (Dj_old xor Dj_new))
+                 = Q_old xor (2^i .
+                            (Di_old xor Di_new)
+                            xor (2^1) . (D(i+1)_old xor D(i+1)_new))
+                            xor (2^2) . (D(i+2)_old xor D(i+2)_new))
+                            ...
+                            xor (2^(j-i) . (Dj_old xor Dj_new))
+                          )
+
+Write Di_new, D(i+1)_new, ..., Dj_new, P_new and Q_new
+
+
+The algorithm above looks a little messy (ASCII emails are not the best 
+medium for mathematics), but it's not hard to see the pattern, and the 
+loops needed.  It should also be possible to merge such routines with 
+the main raid6 parity calculation functions.
+
+
+mvh.,
+
+David
+
+
+
+> Peter: maybe you have a reason that I haven't mentioned?
+>
+> Thanks,
+> NeilBrown
+>
 
