@@ -1,68 +1,42 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 01/36] md: beginnings of bad block management.
-Date: Tue, 26 Jul 2011 13:20:37 +1000
-Message-ID: <20110726132037.6156054e@notabene.brown>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
-	<20110721025847.8422.29443.stgit@notabene.brown>
-	<87r55i45rt.fsf@gmail.com>
+Subject: Re: [PATCH] Grow: fix version number in error message
+Date: Tue, 26 Jul 2011 14:31:11 +1000
+Message-ID: <20110726143111.53e4a5a6@notabene.brown>
+References: <1311050053-2831-1-git-send-email-namhyung@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r55i45rt.fsf@gmail.com>
+In-Reply-To: <1311050053-2831-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Namhyung Kim <namhyung@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 23 Jul 2011 01:52:22 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Tue, 19 Jul 2011 13:34:13 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-> NeilBrown <neilb@suse.de> writes:
+> As the conditional checks, reshape to fewer devices is supported
+> since Linux kernel 2.6.30 not 2.6.32.
 > 
-> > This the first step in allowing md to track bad-blocks per-device so
-> > that we can fail individual blocks rather than the whole device.
-> >
-> > This patch just adds a data structure for recording bad blocks, with
-> > routines to add, remove, search the list.
-> >
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> > ---
-> >
-> >  drivers/md/md.c |  457 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/md/md.h |   49 ++++++
-> >  2 files changed, 502 insertions(+), 4 deletions(-)
-> >
-
-> > @@ -2819,8 +2837,11 @@ static mdk_rdev_t *md_import_device(dev_t newdev, int super_format, int super_mi
-> >  		return ERR_PTR(-ENOMEM);
-> >  	}
-> >  
-> > -	md_rdev_init(rdev);
-> > -	if ((err = alloc_disk_sb(rdev)))
-> > +	err = md_rdev_init(rdev);
-> > +	if (err)
-> > +		goto abort_free;
-> > +	err = alloc_disk_sb(rdev);
-> > +	if (err)
-> >  		goto abort_free;
-> >  
-> >  	err = lock_rdev(rdev, newdev, super_format == -2);
+> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+> ---
+>  Grow.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> Now error path at abort_free needs to free rdev->badblocks.page
-> otherwise there will be memory leaks.
+> diff --git a/Grow.c b/Grow.c
+> index a4092b5..e4fc222 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1268,7 +1268,7 @@ char *analyse_change(struct mdinfo *info, struct reshape *re)
+>  
+>  	if (re->after.data_disks < re->before.data_disks &&
+>  	    get_linux_version() < 2006030)
+> -		return "reshape to fewer devices is not supported before 2.6.32 - sorry.";
+> +		return "reshape to fewer devices is not supported before 2.6.30 - sorry.";
+>  
+>  	re->backup_blocks = compute_backup_blocks(
+>  		info->new_chunk, info->array.chunk_size,
 
-
-Yep, I've fixed that thanks.
-
-I'll revisit when to allocate the badblocks.page in a subsequent patch.
-Then I'll push it all out to for-next and give it 48 hours for any further
-review and for me to do some more testing - particularly after the locking
-change.
-
-So I hope to push all this to Linus in about 48 hours.  Any other
-Reviewed-by:s (including any I might have missed) welcome before then.
-
-Thanks,
+applied, thanks.
 
 NeilBrown
-
