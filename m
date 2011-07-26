@@ -1,122 +1,44 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [md PATCH 09/36] md: make it easier to wait for bad blocks to be acknowledged.
-Date: Wed, 27 Jul 2011 01:04:15 +0900
-Message-ID: <87livldo5c.fsf@gmail.com>
-References: <20110721024556.8422.99443.stgit@notabene.brown>
-	<20110721025848.8422.68600.stgit@notabene.brown>
+From: Lemur Kryptering <gottail@lemurdude.com>
+Subject: Repairing a Raid-6 array
+Date: Tue, 26 Jul 2011 16:56:08 -0500 (CDT)
+Message-ID: <26253118.121311717357218.JavaMail.SYSTEM@ninja>
+References: <17603729.101311717338796.JavaMail.SYSTEM@ninja>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110721025848.8422.68600.stgit@notabene.brown> (NeilBrown's
-	message of "Thu, 21 Jul 2011 12:58:48 +1000")
+In-Reply-To: <17603729.101311717338796.JavaMail.SYSTEM@ninja>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> writes:
+Hi,
 
-> It is only safe to choose not to write to a bad block if that bad
-> block is safely recorded in metadata - i.e. if it has been
-> 'acknowledged'.
->
-> If it hasn't we need to wait for the acknowledgement.
->
-> We support that using rdev->blocked wait and
-> md_wait_for_blocked_rdev by introducing a new device flag
-> 'BlockedBadBlock'.
->
-> This flag is only advisory.
-> It is cleared whenever we acknowledge a bad block, so that a waiter
-> can re-check the particular bad blocks that it is interested it.
->
-> It should be set by a caller when they find they need to wait.
-> This (set after test) is inherently racy, but as
-> md_wait_for_blocked_rdev already has a timeout, losing the race will
-> have minimal impact.
->
-> When we clear "Blocked" was also clear "BlockedBadBlocks" incase it
-> was set incorrectly (see above race).
->
-> We also modify the way we manage 'Blocked' to fit better with the new
-> handling of 'BlockedBadBlocks' and to make it consistent between
-> externally managed and internally managed metadata.   This requires
-> that each raidXd loop checks if the metadata needs to be written and
-> triggers a write (md_check_recovery) if needed.  Otherwise a queued
-> write request might cause raidXd to wait for the metadata to write,
-> and only that thread can write it.
->
-> Before writing metadata, we set FaultRecorded for all devices that
-> are Faulty, then after writing the metadata we clear Blocked for any
-> device for which the Fault was certainly Recorded.
->
-> The 'faulty' device flag now appears in sysfs if the device is faulty
-> *or* it has unacknowledged bad blocks.  So user-space which does not
-> understand bad blocks can continue to function correctly.
-> User space which does, should not assume a device is faulty until it
-> sees the 'faulty' flag, and then sees the list of unacknowledged bad
-> blocks is empty.
->
-> Signed-off-by: NeilBrown <neilb@suse.de>
+I have an 8-disk RAID-6 array that's been online while I've been away from it physically. It looks like a few disks have dropped out of the array due to heat issues. The array uses /dev/sd{a..h}1
 
-Probably you also need this patch:
+First sde was disabled, then sdg (couple hours later), and finally, sdh (two days later).
 
-From 76320c4fdaed91f26a083a9337bb5a5503300e0e Mon Sep 17 00:00:00 2001
-From: Namhyung Kim <namhyung@gmail.com>
-Date: Wed, 27 Jul 2011 00:59:26 +0900
-Subject: [PATCH] md: update documentation for md/rdev/state sysfs interface
+sde and sdg have wildly different event counts, and sdh is relatively close to what all the other disks are at.
 
-Previous patches in the bad block series extended behavior of
-rdev's 'state' interface but lacked documentation update.
-Fix it.
+The most logical thing to do (as I see it) sounds like to force the event count on sdh, and let the array rebuild. While I'm certain this would bring the array online for me, I'm also fairly certain it would fail to rebuild completely due to the fact that sdh has a non-zero pending sector count:
+/dev/sda: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 1,1, Event count: 66858
+/dev/sdb: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 0,0, Event count: 66858
+/dev/sdc: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 0,0, Event count: 66858
+/dev/sdd: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 0,0, Event count: 66858
+/dev/sde: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 2,66, Event count: 25
+/dev/sdf: Current_Pending_Sector: 0 Offline_Uncorrectable: 0 Reallocated: 0,0, Event count: 66858
+/dev/sdg: Current_Pending_Sector: 30 Offline_Uncorrectable: 0 Reallocated: 28,12, Event count: 1921
+/dev/sdh: Current_Pending_Sector: 9 Offline_Uncorrectable: 0 Reallocated: 7,5, Event count: 66851
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- Documentation/md.txt |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+Working under the assumption that none of the disks are actually bad (but rather simply refused to function during the time they were in a hot environment, and were thus kicked from the array), I would like to simple re-add them all to the array, but would like to set precedence on what disk is trusted over another when performing a "repair" via the sync_action. My understanding is that currently, whatever drive is chosen as containing the proper information, is not chosen in any way that would lend itself to favoring the less stale drives.
 
-diff --git a/Documentation/md.txt b/Documentation/md.txt
-index 923a6bddce7c..fc94770f44ab 100644
---- a/Documentation/md.txt
-+++ b/Documentation/md.txt
-@@ -360,18 +360,20 @@ Each directory contains:
-         A file recording the current state of the device in the array
- 	which can be a comma separated list of
- 	      faulty   - device has been kicked from active use due to
--                         a detected fault
-+                         a detected fault or it has unacknowledged bad
-+                         blocks
- 	      in_sync  - device is a fully in-sync member of the array
- 	      writemostly - device will only be subject to read
- 		         requests if there are no other options.
- 			 This applies only to raid1 arrays.
--	      blocked  - device has failed, metadata is "external",
--	                 and the failure hasn't been acknowledged yet.
-+	      blocked  - device has failed, and the failure hasn't been
-+			 acknowledged yet by the metadata handler.
- 			 Writes that would write to this device if
- 			 it were not faulty are blocked.
- 	      spare    - device is working, but not a full member.
- 			 This includes spares that are in the process
- 			 of being recovered to
-+	      write_error - device has ever seen a write error.
- 	This list may grow in future.
- 	This can be written to.
- 	Writing "faulty"  simulates a failure on the device.
-@@ -379,9 +381,11 @@ Each directory contains:
- 	Writing "writemostly" sets the writemostly flag.
- 	Writing "-writemostly" clears the writemostly flag.
- 	Writing "blocked" sets the "blocked" flag.
--	Writing "-blocked" clears the "blocked" flag and allows writes
--		to complete.
-+	Writing "-blocked" clears the "blocked" flags and allows writes
-+		to complete and possibly simulates an error.
- 	Writing "in_sync" sets the in_sync flag.
-+	Writing "write_error" sets writeerrorseen flag.
-+	Writing "-write_error" clears writeerrorseen flag.
- 
- 	This file responds to select/poll. Any change to 'faulty'
- 	or 'blocked' causes an event.
--- 
-1.7.6
+So, essentially, what I'm asking for, is the ability to set the trustworthiness (freshness) of a drive so that the repair action does the right thing. If this were possible, I'd force the event count on sdh and sdg, and have mdadm only rely on sdg in the event that there was no other way to determine what data belonged in a certain place (so, at the least, those 9 pending sectors on sdh).
 
+Again, please assume none of the disks are actually bad. In essence, as if each disk had been replaced, and a "dd if=/dev/olddisk /dev/newdisk conv=sync,noerror" had been performed on each disk.
+
+Finally, on a somewhat unrelated note, I'd like to report that after I began doing the recommended "scrubbing" by sending "check" into the "sync_action", my problems with the Samsung HD103UJ disks involving pending sectors have been resolved. (I've previously posted with regard to pending sectors and CCTL/TLER/ERC, and no longer have these issues.) I've also since moved on to using Hitach 2TB HDS722020ALA330, simply for space reasons, but neither set of disks has given me trouble after I started doing this scrubbing on a weekly basis.
+
+Anyway, thank you for your time and input!
+
+Peter Zieba
+312-285-3794
