@@ -1,60 +1,68 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [md PATCH 17/34] md/raid5: unite handle_stripe_dirtying5 and handle_stripe_dirtying6
-Date: Mon, 25 Jul 2011 19:41:03 -0700
-Message-ID: <c2880169-d5be-4dc5-aaad-e0fd4f9823d1@email.android.com>
-References: <20110721022537.6728.90204.stgit@notabene.brown> <20110721023226.6728.28082.stgit@notabene.brown> <87tyaepto6.fsf@gmail.com> <20110726115238.63fec583@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [md PATCH 01/36] md: beginnings of bad block management.
+Date: Tue, 26 Jul 2011 13:20:37 +1000
+Message-ID: <20110726132037.6156054e@notabene.brown>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
+	<20110721025847.8422.29443.stgit@notabene.brown>
+	<87r55i45rt.fsf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110726115238.63fec583@notabene.brown>
+In-Reply-To: <87r55i45rt.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Namhyung Kim <namhyung@gmail.com>
+To: Namhyung Kim <namhyung@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
+On Sat, 23 Jul 2011 01:52:22 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
->On Fri, 22 Jul 2011 18:10:33 +0900 Namhyung Kim <namhyung@gmail.com>
->wrote:
->
->> NeilBrown <neilb@suse.de> writes:
->> 
->> > RAID6 is only allowed to choose 'reconstruct-write' while RAID5 is
->> > also allow 'read-modify-write'
->> > Apart from this difference, handle_stripe_dirtying[56] are nearly
->> > identical.  So resolve these differences and create just one
->function.
->> >
->> > Signed-off-by: NeilBrown <neilb@suse.de>
->> 
->> Reviewed-by: Namhyung Kim <namhyung@gmail.com>
->> 
->> BTW, here is a question:
->>   Why RAID6 doesn't allow the read-modify-write? I don't think it is
->>   not possible, so what prevents doing that? performance? complexity?
->>   or it's not possible? Why? :)
->
->
->The primary reason in my mind is that when Peter Anvin wrote this code
->he
->didn't implement read-modify-write and I have never seen a need to
->consider
->changing that.
->
->You would need a largish array - at least 7 devices - before RWM could
->possibly be a win, but some people do have arrays larger than that.
->
->The computation to "subtract" from the Q-syndrome might be a bit
->complex - I
->don't know.
->
->Peter: maybe you have a reason that I haven't mentioned?
->
->Thanks,
->NeilBrown
+> NeilBrown <neilb@suse.de> writes:
+> 
+> > This the first step in allowing md to track bad-blocks per-device so
+> > that we can fail individual blocks rather than the whole device.
+> >
+> > This patch just adds a data structure for recording bad blocks, with
+> > routines to add, remove, search the list.
+> >
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> > ---
+> >
+> >  drivers/md/md.c |  457 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  drivers/md/md.h |   49 ++++++
+> >  2 files changed, 502 insertions(+), 4 deletions(-)
+> >
 
-When I measured it it wasn't a win on my system, and it created a lot of extra complexity.  It probably would be a win with SSSE3 and lots of drives.
--- 
-Sent from my mobile phone. Please excuse my brevity and lack of formatting.
+> > @@ -2819,8 +2837,11 @@ static mdk_rdev_t *md_import_device(dev_t newdev, int super_format, int super_mi
+> >  		return ERR_PTR(-ENOMEM);
+> >  	}
+> >  
+> > -	md_rdev_init(rdev);
+> > -	if ((err = alloc_disk_sb(rdev)))
+> > +	err = md_rdev_init(rdev);
+> > +	if (err)
+> > +		goto abort_free;
+> > +	err = alloc_disk_sb(rdev);
+> > +	if (err)
+> >  		goto abort_free;
+> >  
+> >  	err = lock_rdev(rdev, newdev, super_format == -2);
+> 
+> Now error path at abort_free needs to free rdev->badblocks.page
+> otherwise there will be memory leaks.
+
+
+Yep, I've fixed that thanks.
+
+I'll revisit when to allocate the badblocks.page in a subsequent patch.
+Then I'll push it all out to for-next and give it 48 hours for any further
+review and for me to do some more testing - particularly after the locking
+change.
+
+So I hope to push all this to Linus in about 48 hours.  Any other
+Reviewed-by:s (including any I might have missed) welcome before then.
+
+Thanks,
+
+NeilBrown
+
