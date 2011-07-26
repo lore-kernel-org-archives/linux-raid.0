@@ -1,59 +1,51 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 14/34] md/raid5: move more code into common
- handle_stripe
-Date: Tue, 26 Jul 2011 11:48:42 +1000
-Message-ID: <20110726114842.7e941f22@notabene.brown>
+Subject: Re: [md PATCH 17/34] md/raid5: unite handle_stripe_dirtying5 and
+ handle_stripe_dirtying6
+Date: Tue, 26 Jul 2011 11:52:38 +1000
+Message-ID: <20110726115238.63fec583@notabene.brown>
 References: <20110721022537.6728.90204.stgit@notabene.brown>
-	<20110721023226.6728.59699.stgit@notabene.brown>
-	<87r55idb4c.fsf@gmail.com>
+	<20110721023226.6728.28082.stgit@notabene.brown>
+	<87tyaepto6.fsf@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r55idb4c.fsf@gmail.com>
+In-Reply-To: <87tyaepto6.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Namhyung Kim <namhyung@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>
 List-Id: linux-raid.ids
 
-On Fri, 22 Jul 2011 16:32:03 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Fri, 22 Jul 2011 18:10:33 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
 > NeilBrown <neilb@suse.de> writes:
 > 
-> > The difference between the RAID5 and RAID6 code here is easily
-> > resolved using conf->max_degraded.
+> > RAID6 is only allowed to choose 'reconstruct-write' while RAID5 is
+> > also allow 'read-modify-write'
+> > Apart from this difference, handle_stripe_dirtying[56] are nearly
+> > identical.  So resolve these differences and create just one function.
 > >
 > > Signed-off-by: NeilBrown <neilb@suse.de>
 > 
 > Reviewed-by: Namhyung Kim <namhyung@gmail.com>
 > 
-> and a coding style issue.
-> 
+> BTW, here is a question:
+>   Why RAID6 doesn't allow the read-modify-write? I don't think it is
+>   not possible, so what prevents doing that? performance? complexity?
+>   or it's not possible? Why? :)
 
-> > +	if (s.failed <= conf->max_degraded && !conf->mddev->ro)
-> > +		for (i = 0; i < s.failed; i++) {
-> > +			struct r5dev *dev = &sh->dev[s.failed_num[i]];
-> > +			if (test_bit(R5_ReadError, &dev->flags)
-> > +			    && !test_bit(R5_LOCKED, &dev->flags)
-> > +			    && test_bit(R5_UPTODATE, &dev->flags)
-> > +				) {
-> 
-> This line looks weird and should be combined to previous line.
-> 
-> And I slightly prefer that the logical operators are put on the
-> same line with previous conditional, so that next one can be on
-> the same column and more readable, but ...
-> 
 
-I agree that it is nice if they line up.  But I also think the "&&" is
-important and want it to stand out.  In this case the '!' would stop them
-from lining up very nicely, so I'll leave it as it is.
+The primary reason in my mind is that when Peter Anvin wrote this code he
+didn't implement read-modify-write and I have never seen a need to consider
+changing that.
 
-The thing I like about having ") {" on a separate line is that I can later
-add a condition by just adding a line - it makes the patch easier to read.
+You would need a largish array - at least 7 devices - before RWM could
+possibly be a win, but some people do have arrays larger than that.
 
-Not a bit thing maybe and I don't always structure conditions like this, but
-I think I'll leave it this time.
+The computation to "subtract" from the Q-syndrome might be a bit complex - I
+don't know.
+
+Peter: maybe you have a reason that I haven't mentioned?
 
 Thanks,
 NeilBrown
