@@ -1,117 +1,91 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: Re: [md PATCH 01/36] md: beginnings of bad block management.
-Date: Tue, 26 Jul 2011 14:17:12 +0900
-Message-ID: <1311657432.1522.2.camel@leonhard>
+Subject: Re: [md PATCH 02/36] md/bad-block-log: add sysfs interface for
+ accessing bad-block-log.
+Date: Tue, 26 Jul 2011 14:17:42 +0900
+Message-ID: <1311657462.1522.3.camel@leonhard>
 References: <20110721024556.8422.99443.stgit@notabene.brown>
-	 <20110721025847.8422.29443.stgit@notabene.brown> <878vrq5pda.fsf@gmail.com>
-	 <20110726122627.5288a3ff@notabene.brown>
+	 <20110721025847.8422.8246.stgit@notabene.brown> <874o2e5nj9.fsf@gmail.com>
+	 <20110726122927.311602fb@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110726122627.5288a3ff@notabene.brown>
+In-Reply-To: <20110726122927.311602fb@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2011-07-26 (=ED=99=94), 12:26 +1000, NeilBrown:
-> On Sat, 23 Jul 2011 00:03:45 +0900 Namhyung Kim <namhyung@gmail.com> =
+2011-07-26 (=ED=99=94), 12:29 +1000, NeilBrown:
+> On Sat, 23 Jul 2011 00:43:22 +0900 Namhyung Kim <namhyung@gmail.com> =
 wrote:
 >=20
 > > NeilBrown <neilb@suse.de> writes:
 > >=20
-> > > This the first step in allowing md to track bad-blocks per-device=
- so
-> > > that we can fail individual blocks rather than the whole device.
+> > > This can show the log (providing it fits in one page) and
+> > > allows bad blocks to be 'acknowledged' meaning that they
+> > > have safely been recorded in metadata.
 > > >
-> > > This patch just adds a data structure for recording bad blocks, w=
-ith
-> > > routines to add, remove, search the list.
+> > > Clearing bad blocks is not allowed via sysfs (except for
+> > > code testing).  A bad block can only be cleared when
+> > > a write to the block succeeds.
 > > >
 > > > Signed-off-by: NeilBrown <neilb@suse.de>
 > > > ---
 > > >
-> > >  drivers/md/md.c |  457 +++++++++++++++++++++++++++++++++++++++++=
+> > >  drivers/md/md.c |  127 +++++++++++++++++++++++++++++++++++++++++=
 ++++++++++++++
-> > >  drivers/md/md.h |   49 ++++++
-> > >  2 files changed, 502 insertions(+), 4 deletions(-)
+> > >  1 files changed, 127 insertions(+), 0 deletions(-)
 > > >
+>=20
+> > > +static ssize_t
+> > > +badblocks_store(struct badblocks *bb, const char *page, size_t l=
+en, int unack)
+> > > +{
+> > > +	unsigned long long sector;
+> > > +	int length;
+> > > +	char newline;
+> > > +#ifdef DO_DEBUG
+> > > +	/* Allow clearing via sysfs *only* for testing/debugging.
+> > > +	 * Normally only a successful write may clear a badblock
+> > > +	 */
+> > > +	int clear =3D 0;
+> > > +	if (page[0] =3D=3D '-') {
+> > > +		clear =3D 1;
+> > > +		page++;
+> > > +	}
+> > > +#endif /* DO_DEBUG */
 > > > +
-> > > +/* Bad block management.
-> > > + * We can record which blocks on each device are 'bad' and so ju=
-st
-> > > + * fail those blocks, or that stripe, rather than the whole devi=
-ce.
-> > > + * Entries in the bad-block table are 64bits wide.  This compris=
-es:
-> > > + * Length of bad-range, in sectors: 0-511 for lengths 1-512
-> > > + * Start of bad-range, sector offset, 54 bits (allows 8 exbibyte=
-s)
-> > > + *  A 'shift' can be set so that larger blocks are tracked and
-> > > + *  consequently larger devices can be covered.
-> > > + * 'Acknowledged' flag - 1 bit. - the most significant bit.
-> > > + */
-> > > +/* Locking of the bad-block table is a two-layer affair.
-> > > + * Read access through ->active_page only requires an rcu_readlo=
-ck.
-> > > + * However if ->active_page is found to be NULL, the table
-> > > + * should be accessed through ->page which requires an irq-spinl=
-ock.
-> > > + * Updating the page requires setting ->active_page to NULL,
-> > > + * synchronising with rcu, then updating ->page under the same
-> > > + * irq-spinlock.
-> > > + * We always set or clear bad blocks from process context, but
-> > > + * might look-up bad blocks from interrupt/bh context.
-> > > + *
+> > > +	switch (sscanf(page, "%llu %d%c", &sector, &length, &newline)) =
+{
 > >=20
-> > Empty line.
-> >=20
-> > If the locking is complex, it'd be better defining separate functio=
-ns to
-> > deal with it, IMHO. Please see below.
->=20
-> I too have been feeling uncomfortable about the locking and I recentl=
-y
-> realised that I really should be using a seqlock rather than trying t=
-o force
-> RCU into the mould.  So I have changed it and it is much better now. =
- Below
-> is new version.
->=20
->=20
-> > > +EXPORT_SYMBOL_GPL(rdev_set_badblocks);
-> >=20
-> > I think it would be better if all exported functions in md.c have
-> > prefixed 'md_'.
+> > What if user provides negative 'length' here? Should we check that =
+case?
 > >=20
 >=20
-> Probably good advice.  I don't think I'll change it now but maybe in =
-a
-> subsequent patch so that I change them all at once.
+> good point.  I've added an appropriate test.
 >=20
 > Thanks,
 > NeilBrown
 >=20
-> commit 0980048be17a45ae9e181ad04a549c31a499dee9
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Tue Jul 26 12:22:08 2011 +1000
->=20
->     md: beginnings of bad block management.
->    =20
->     This the first step in allowing md to track bad-blocks per-device=
- so
->     that we can fail individual blocks rather than the whole device.
->    =20
->     This patch just adds a data structure for recording bad blocks, w=
-ith
->     routines to add, remove, search the list.
->    =20
->     Signed-off-by: NeilBrown <neilb@suse.de>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 5de0c84..9ba76c7 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -7844,6 +7844,8 @@ badblocks_store(struct badblocks *bb, const cha=
+r *page, size_t len, int unack)
+>  		if (newline !=3D '\n')
+>  			return -EINVAL;
+>  	case 2:
+> +		if (length <=3D 0)
+> +			return -EINVAL;
+>  		break;
+>  	default:
+>  		return -EINVAL;
 
-with your another badblocks.page fix:
+Reviewed-by: Namhyung Kim <namhyung@gmail.com>
 
-  Reviewed-by: Namhyung Kim <namhyung@gmail.com>
+Thanks.
 
 
 --=20
