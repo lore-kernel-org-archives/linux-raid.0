@@ -1,112 +1,145 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Problems with raid after reboot.
-Date: Tue, 26 Jul 2011 09:37:20 +0100
-Message-ID: <20110726083720.GA18521@cthulhu.home.robinhill.me.uk>
-References: <CA+taBv-V7HasgHFFaLV+Ppbgv=b-6CvLLkGHh3oN+GAO0wFHxA@mail.gmail.com>
- <CA+taBv-3OxS52vLgOJiruqAnnOh8nsKtTFsPa20X1DEODdVSYA@mail.gmail.com>
- <CA+taBv_yfW_njVX4r7fpAT105fvBeVMBLbU4M+6tTDY7R1yndA@mail.gmail.com>
- <20110725212107.GA6422@cthulhu.home.robinhill.me.uk>
- <CA+taBv8+KZguxmSTe7huntdMrnvANK3VRJKLpwZjXbymJ36-Ag@mail.gmail.com>
- <CA+taBv-sqRpCQ=AzEbXGAA2JZL3F6p8wPHTsnNnJjaqyHJEnmQ@mail.gmail.com>
- <CA+taBv-TWPpnJCxWeK7D-CCG2Xi87Wj3QJ_duU1ozdowzDncqg@mail.gmail.com>
- <CA+taBv_UOKXk0Noh3T_=WYQhb+qCWy33ZmEHCnEKF3uwn7c_uQ@mail.gmail.com>
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: Re: [md PATCH 02/36] md/bad-block-log: add sysfs interface for accessing bad-block-log.
+Date: Tue, 26 Jul 2011 17:48:27 +0900
+Message-ID: <87livlxw9w.fsf@gmail.com>
+References: <20110721024556.8422.99443.stgit@notabene.brown>
+	<20110721025847.8422.8246.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zhXaljGHf11kAtnf"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+taBv_UOKXk0Noh3T_=WYQhb+qCWy33ZmEHCnEKF3uwn7c_uQ@mail.gmail.com>
+In-Reply-To: <20110721025847.8422.8246.stgit@notabene.brown> (NeilBrown's
+	message of "Thu, 21 Jul 2011 12:58:47 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthew Tice <mjtice@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown <neilb@suse.de> writes:
 
---zhXaljGHf11kAtnf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> This can show the log (providing it fits in one page) and
+> allows bad blocks to be 'acknowledged' meaning that they
+> have safely been recorded in metadata.
+>
+> Clearing bad blocks is not allowed via sysfs (except for
+> code testing).  A bad block can only be cleared when
+> a write to the block succeeds.
+>
+> Signed-off-by: NeilBrown <neilb@suse.de>
+> ---
+>
+>  drivers/md/md.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 127 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 220fadb..9324635 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -2712,6 +2712,35 @@ static ssize_t recovery_start_store(mdk_rdev_t *rdev, const char *buf, size_t le
+>  static struct rdev_sysfs_entry rdev_recovery_start =
+>  __ATTR(recovery_start, S_IRUGO|S_IWUSR, recovery_start_show, recovery_start_store);
+>  
+> +
+> +static ssize_t
+> +badblocks_show(struct badblocks *bb, char *page, int unack);
+> +static ssize_t
+> +badblocks_store(struct badblocks *bb, const char *page, size_t len, int unack);
+> +
+> +static ssize_t bb_show(mdk_rdev_t *rdev, char *page)
+> +{
+> +	return badblocks_show(&rdev->badblocks, page, 0);
+> +}
+> +static ssize_t bb_store(mdk_rdev_t *rdev, const char *page, size_t len)
+> +{
+> +	return badblocks_store(&rdev->badblocks, page, len, 0);
+> +}
+> +static struct rdev_sysfs_entry rdev_bad_blocks =
+> +__ATTR(bad_blocks, S_IRUGO|S_IWUSR, bb_show, bb_store);
+> +
+> +
+> +static ssize_t ubb_show(mdk_rdev_t *rdev, char *page)
+> +{
+> +	return badblocks_show(&rdev->badblocks, page, 1);
+> +}
+> +static ssize_t ubb_store(mdk_rdev_t *rdev, const char *page, size_t len)
+> +{
+> +	return badblocks_store(&rdev->badblocks, page, len, 1);
+> +}
+> +static struct rdev_sysfs_entry rdev_unack_bad_blocks =
+> +__ATTR(unacknowledged_bad_blocks, S_IRUGO|S_IWUSR, ubb_show, ubb_store);
+> +
+>  static struct attribute *rdev_default_attrs[] = {
+>  	&rdev_state.attr,
+>  	&rdev_errors.attr,
+> @@ -2719,6 +2748,8 @@ static struct attribute *rdev_default_attrs[] = {
+>  	&rdev_offset.attr,
+>  	&rdev_size.attr,
+>  	&rdev_recovery_start.attr,
+> +	&rdev_bad_blocks.attr,
+> +	&rdev_unack_bad_blocks.attr,
+>  	NULL,
+>  };
+>  static ssize_t
+> @@ -7775,6 +7806,102 @@ void md_ack_all_badblocks(struct badblocks *bb)
+>  }
+>  EXPORT_SYMBOL_GPL(md_ack_all_badblocks);
+>  
+> +/* sysfs access to bad-blocks list.
+> + * We present two files.
+> + * 'bad-blocks' lists sector numbers and lengths of ranges that
+> + *    are recorded as bad.  The list is truncated to fit within
+> + *    the one-page limit of sysfs.
+> + *    Writing "sector length" to this file adds an acknowledged
+> + *    bad block list.
+> + * 'unacknowledged-bad-blocks' lists bad blocks that have not yet
+> + *    been acknowledged.  Writing to this file adds bad blocks
+> + *    without acknowledging them.  This is largely for testing.
+> + *
+> + */
 
-On Mon Jul 25, 2011 at 03:55:02PM -0600, Matthew Tice wrote:
+Empty line in comment.
 
-> So now it's syncing:
-> # mdadm --detail /dev/md0
-> /dev/md0:
->         Version : 00.90
->   Creation Time : Sat Mar 12 21:22:34 2011
->      Raid Level : raid5
->      Array Size : 2197723392 (2095.91 GiB 2250.47 GB)
->   Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 0
->     Persistence : Superblock is persistent
->=20
->     Update Time : Mon Jul 25 15:52:29 2011
->           State : clean, degraded, recovering
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 1
->=20
->          Layout : left-symmetric
->      Chunk Size : 64K
->=20
->  Rebuild Status : 0% complete
->=20
->            UUID : daf06d5a:b80528b1:2e29483d:f114274d (local to host stor=
-age)
->          Events : 0.5599
->=20
->     Number   Major   Minor   RaidDevice State
->        4       8       64        0      spare rebuilding   /dev/sde
->        1       8       48        1      active sync   /dev/sdd
->        2       8       32        2      active sync   /dev/sdc
->        3       8       16        3      active sync   /dev/sdb
->=20
-> # cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10]
-> md0 : active raid5 sde[4] sdd[1] sdb[3] sdc[2]
->       2197723392 blocks level 5, 64k chunk, algorithm 2 [4/3] [_UUU]
->       [>....................]  recovery =3D  0.4% (3470464/732574464)
-> finish=3D365.0min speed=3D33284K/sec
->=20
-> unused devices: <none>
->=20
->=20
-> However, it's still failing an fsck - so does order matter when I
-> re-assemble the array?  I see conflicting answers online.
->=20
-No, order only matters if you're recreating the array (which is a
-last-ditch option for if assembly fails). The metadata on each drive
-indicates where it should be in the array, so the assembly will use that
-to order the drives.
+And you might need this as well:
+(or maybe it should be located somewhere in Documentation/ABI/)
 
-The fsck errors would look to be genuine issues with the filesystem. Was
-the array shut down cleanly before you moved it? You did have to force
-the assembly initially, which would suggest not (and could point to some
-minor corruption). I'm not sure you have much of an option other than to
-go through with a fsck & repair any issues now though (if you've got the
-space then I'd suggest imaging the array as a backup though).=20
+From 95c3f191bd0cbe6d339fced75656502b2d591fe4 Mon Sep 17 00:00:00 2001
+From: Namhyung Kim <namhyung@gmail.com>
+Date: Tue, 26 Jul 2011 17:39:52 +0900
+Subject: [PATCH] md: add documentation for bad block log
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Previous patch in the bad block series added new sysfs interfaces
+([unacknowledged_]bad_blocks) for each rdev without documentation.
+Add it.
 
---zhXaljGHf11kAtnf
-Content-Type: application/pgp-signature
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ Documentation/md.txt |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+diff --git a/Documentation/md.txt b/Documentation/md.txt
+index f0eee83ff78a..be88a24b8584 100644
+--- a/Documentation/md.txt
++++ b/Documentation/md.txt
+@@ -562,6 +562,20 @@ also have
+      that number to reach sync_max.  Then you can either increase
+      "sync_max", or can write 'idle' to "sync_action".
+ 
++   bad_blocks
++     This gives the list of all known bad blocks in the form of
++     start address and length (in sectors respectively). If output
++     is too big to fit in a page, it will be truncated. Writing
++     "sector length" to this file will add new acknowledged (i.e.
++     saved to disk safely) bad blocks.
++
++   unacknowledged_bad_blocks
++     This gives the list of known-but-not-yet-saved-to-disk bad
++     blocks in the same form of 'bad_blocks'. If output is too big
++     to fit in a page, it will be truncated. Writing to this file
++     adds bad blocks without acknowledging them. This is largely
++     for testing.
++
+ 
+ Each active md device may also have attributes specific to the
+ personality module that manages it.
+-- 
+1.7.6
 
-iEYEARECAAYFAk4ufL8ACgkQShxCyD40xBLhTACgsPLYPY91Bf4eB8mIjwgLxRqL
-1e0AnAodBOgq851d5FM5F8naJpQNgPpS
-=FepG
------END PGP SIGNATURE-----
-
---zhXaljGHf11kAtnf--
