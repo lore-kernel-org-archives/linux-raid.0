@@ -1,35 +1,56 @@
-From: Lutz Vieweg <lvml@5t9.de>
-Subject: Re: Using the new bad-block-log in md for Linux 3.1
-Date: Wed, 27 Jul 2011 15:23:14 +0200
-Message-ID: <j0p3g2$ua5$1@dough.gmane.org>
-References: <20110727141652.7511fc51@notabene.brown> <j0p0d6$aj6$1@dough.gmane.org> <4E300828.3000601@anonymous.org.uk> <j0p2g2$nmp$1@dough.gmane.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: standard performance (write speed 20Mb/s)
+Date: Wed, 27 Jul 2011 08:54:31 -0500
+Message-ID: <4E301897.4020704@hardwarefreak.com>
+References: <201107162140.58883.raid1@fuckaround.org>	<4E226464.2030200@hardwarefreak.com>	<ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org>	<4E22D167.2010905@anonymous.org.uk> <CAEUYfyMEj31Gfy9KeT4sHWyUXcB-+9ehoZoXvHSXq6yztCzVXg@mail.gmail.com> <4E2FE6C9.4070604@hardwarefreak.com> <4E2FE7DF.1020906@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j0p2g2$nmp$1@dough.gmane.org>
+In-Reply-To: <4E2FE7DF.1020906@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Simon Matthews <simon.d.matthews@gmail.com>, Pol Hallen <raid1@fuckaround.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/27/2011 03:06 PM, Lutz Vieweg wrote:
->> I don't think mdadm knows whether its constituent devices are SSDs.
->
-> In block/cfq-iosched.c I see a test that looks like this:
->> if (blk_queue_nonrot(cfqd->queue) && cfqd->hw_tag)
->> return;
+On 7/27/2011 5:26 AM, John Robinson wrote:
+> On 27/07/2011 11:22, Stan Hoeppner wrote:
+>> On 7/27/2011 12:42 AM, Simon Matthews wrote:
+>>> On Sun, Jul 17, 2011 at 5:11 AM, John Robinson
+>>> <john.robinson@anonymous.org.uk>  wrote:
+>>>
+>>>> Pretty poor. CentOS 5, Intel ICH10, md RAID 6 over 5 7200rpm 1TB
+>>>> drives,
+>>>> then LVM, then ext3:
+>>>> # dd if=/dev/zero of=test bs=4096 count=262144
+>>>> 262144+0 records in
+>>>> 262144+0 records out
+>>>> 1073741824 bytes (1.1 GB) copied, 2.5253 seconds, 425 MB/s
+>>>
+>>> What hard drive offers a sustained data rate of 425 MB/s or even half
+>>> that?
+>>
+>> 425 MB/s / 3 spindles = 142 MB/s per spindle
+>>
+>> That's not poor, it's excellent.  Which drives are these?  WD Black,
+>> Seagate, Hitachi?
+> 
+> Gentlemen, we've been round this loop before about 10 days ago. Pol's 20
+> MB/s was poor because he was testing on an array with unaligned
+> partitions and a resync was running, my 425 MB/s was a bad test because
+> it didn't use fdatasync or direct and I said dd was a bad test anyway,
+> etc etc.
 
-I just verified that indeed, /sys/block/sd*/queue/rotational contains
-0 for SSDs and 1 for magnetic disks.
+Of course the 425 number is higher than real world.  But this is the dd
+"test" method for which many post results, so the number is still
+somewhat valid for very coarse comparison purposes among systems.  A
+10GB run would have been better than 1GB obviously.
 
-One catch, though, seems to be that this attribute seems not to be
-propagated through additional block device layers, so e.g.
-a loop-device based on a SSD is, strangely, tagged as being "rotational",
-as is a device-mapper based on the SSD.
+The Linpack benchmark is very similar to dd in this regard.  It's a
+horrible measure of supercomputer performance, but it's what everyone
+uses.  It's what allows US Government labs to go to Congress with and
+say "The Chinese have passed us in the Supercomputer race.  We need more
+money to take the lead".  (And, stupidly, Congress gives them the money)
 
-So you can detect SSDs if given as underlying devices directly, only.
-
-Regards,
-
-Lutz Vieweg
-
+-- 
+Stan
