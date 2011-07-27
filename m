@@ -1,61 +1,63 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: standard performance (write speed 20Mb/s)
-Date: Wed, 27 Jul 2011 11:46:47 +0600
-Message-ID: <20110727114647.5a80b3d0@natsu>
-References: <201107162140.58883.raid1@fuckaround.org>
-	<4E226464.2030200@hardwarefreak.com>
-	<ac6850f9420970de26472b6a9dcc2a82.squirrel@fuckaround.org>
-	<4E22D167.2010905@anonymous.org.uk>
-	<CAEUYfyMEj31Gfy9KeT4sHWyUXcB-+9ehoZoXvHSXq6yztCzVXg@mail.gmail.com>
+From: keld@keldix.com
+Subject: Re: Using the new bad-block-log in md for Linux 3.1
+Date: Wed, 27 Jul 2011 08:21:10 +0200
+Message-ID: <20110727062110.GA9801@www5.open-std.org>
+References: <20110727141652.7511fc51@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GsSkgNm=PFdaiJ9pHR5TfT1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEUYfyMEj31Gfy9KeT4sHWyUXcB-+9ehoZoXvHSXq6yztCzVXg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110727141652.7511fc51@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Matthews <simon.d.matthews@gmail.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Pol Hallen <raid1@fuckaround.org>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/GsSkgNm=PFdaiJ9pHR5TfT1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jul 27, 2011 at 02:16:52PM +1000, NeilBrown wrote:
+> 
+> As mentioned earlier, Linux 3.1 will contain support for recording and
+> avoiding bad blocks on devices in md arrays.
+> 
+> These patches are currently in -next and I expect to send them to Linus
+> tomorrow.
+> 
+> Using this funcitonality requires support in mdadm.  When an array is created
+> some space needs to be reserved to store the bad block list.
+> 
+> I have just created an mdadm branch called devel-3.3 which provides initial
+> functionality.  The main patch is included inline below.
+> 
+> This only supports creating new arrays with badblock support.  It also only
+> supports 1.x metadata.
+> 
+> I hope to add support to add a bad block list to an existing 1.x array at
+> some stage, but support for 0.90 metadata is not expected to ever be added.
+> 
+> If you create an array with this mdadm it will add a bad block log - you
+> cannot turn it off (it is only 4K long so why would you want to).  Then as
+> errors occur they will cause the faulty block to be added to the log rather
+> than the device to be remove from the array.
+> If writing the new bad block list fails, then the device as a whole will fail.
+> 
+> I would very much appreciate any reports of success of failure when using
+> this new feature.  If you can make a test array using a known-faulty device
+> and can experiment with that I would particularly like to hear about any
+> experiences.
+> 
+> Thanks,
+> NeilBrown
+> 
+>  git://neil.brown.name/mdadm devel-3.3
+> 
+> http://neil.brown.name/git?p=mdadm;a=shortlog;h=refs/heads/devel-3.3
 
-On Tue, 26 Jul 2011 22:42:14 -0700
-Simon Matthews <simon.d.matthews@gmail.com> wrote:
+How is it implemented? Does the bad block get duplicated in a reserve area?
+Or are also corresponding good blocks on other sound devices also excluded?
 
-> On Sun, Jul 17, 2011 at 5:11 AM, John Robinson
-> <john.robinson@anonymous.org.uk> wrote:
->=20
-> > Pretty poor. CentOS 5, Intel ICH10, md RAID 6 over 5 7200rpm 1TB drives,
-> > then LVM, then ext3:
-> > # dd if=3D/dev/zero of=3Dtest bs=3D4096 count=3D262144
-> > 262144+0 records in
-> > 262144+0 records out
-> > 1073741824 bytes (1.1 GB) copied, 2.5253 seconds, 425 MB/s
->=20
-> What hard drive offers a sustained data rate of 425 MB/s or even half tha=
-t?
+How big a device can it handle?
 
-"md RAID 6 over 5 7200rpm 1TB drives" does? :) At least half that - easily.
+If a device fails totally and the remaining devices contain devices with
+bad blocks, will there then be lost data?
 
-But still, the result posted is very much inflated, they forgot the "conv=
-=3Dfdatasync" option, so mostly benchmarking the FS cache in RAM.
-
---=20
-With respect,
-Roman
-
---Sig_/GsSkgNm=PFdaiJ9pHR5TfT1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk4vpkgACgkQTLKSvz+PZwi1FQCeN9AS+7PL9avyzamNUr/thBbR
-zAoAnA7wpoVdpSjYKsMF+5Q/P08vkf3X
-=bLWL
------END PGP SIGNATURE-----
-
---Sig_/GsSkgNm=PFdaiJ9pHR5TfT1--
+Best regrads
+keld
