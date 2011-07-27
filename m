@@ -1,77 +1,130 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [md PATCH 02/36] md/bad-block-log: add sysfs interface for
- accessing bad-block-log.
-Date: Wed, 27 Jul 2011 11:05:46 +1000
-Message-ID: <20110727110546.204d5dcf@notabene.brown>
+Subject: Re: [md PATCH 09/36] md: make it easier to wait for bad blocks to
+ be acknowledged.
+Date: Wed, 27 Jul 2011 11:18:22 +1000
+Message-ID: <20110727111822.518dae92@notabene.brown>
 References: <20110721024556.8422.99443.stgit@notabene.brown>
-	<20110721025847.8422.8246.stgit@notabene.brown>
-	<87livlxw9w.fsf@gmail.com>
+	<20110721025848.8422.68600.stgit@notabene.brown>
+	<87livldo5c.fsf@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87livlxw9w.fsf@gmail.com>
+In-Reply-To: <87livldo5c.fsf@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Namhyung Kim <namhyung@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 26 Jul 2011 17:48:27 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
+On Wed, 27 Jul 2011 01:04:15 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-
-> Empty line in comment.
+> NeilBrown <neilb@suse.de> writes:
 > 
-> And you might need this as well:
+> > It is only safe to choose not to write to a bad block if that bad
+> > block is safely recorded in metadata - i.e. if it has been
+> > 'acknowledged'.
+> >
+> > If it hasn't we need to wait for the acknowledgement.
+> >
+> > We support that using rdev->blocked wait and
+> > md_wait_for_blocked_rdev by introducing a new device flag
+> > 'BlockedBadBlock'.
+> >
+> > This flag is only advisory.
+> > It is cleared whenever we acknowledge a bad block, so that a waiter
+> > can re-check the particular bad blocks that it is interested it.
+> >
+> > It should be set by a caller when they find they need to wait.
+> > This (set after test) is inherently racy, but as
+> > md_wait_for_blocked_rdev already has a timeout, losing the race will
+> > have minimal impact.
+> >
+> > When we clear "Blocked" was also clear "BlockedBadBlocks" incase it
+> > was set incorrectly (see above race).
+> >
+> > We also modify the way we manage 'Blocked' to fit better with the new
+> > handling of 'BlockedBadBlocks' and to make it consistent between
+> > externally managed and internally managed metadata.   This requires
+> > that each raidXd loop checks if the metadata needs to be written and
+> > triggers a write (md_check_recovery) if needed.  Otherwise a queued
+> > write request might cause raidXd to wait for the metadata to write,
+> > and only that thread can write it.
+> >
+> > Before writing metadata, we set FaultRecorded for all devices that
+> > are Faulty, then after writing the metadata we clear Blocked for any
+> > device for which the Fault was certainly Recorded.
+> >
+> > The 'faulty' device flag now appears in sysfs if the device is faulty
+> > *or* it has unacknowledged bad blocks.  So user-space which does not
+> > understand bad blocks can continue to function correctly.
+> > User space which does, should not assume a device is faulty until it
+> > sees the 'faulty' flag, and then sees the list of unacknowledged bad
+> > blocks is empty.
+> >
+> > Signed-off-by: NeilBrown <neilb@suse.de>
+> 
+> Probably you also need this patch:
+> 
+> >From 76320c4fdaed91f26a083a9337bb5a5503300e0e Mon Sep 17 00:00:00 2001
+> From: Namhyung Kim <namhyung@gmail.com>
+> Date: Wed, 27 Jul 2011 00:59:26 +0900
+> Subject: [PATCH] md: update documentation for md/rdev/state sysfs interface
+> 
+> Previous patches in the bad block series extended behavior of
+> rdev's 'state' interface but lacked documentation update.
+> Fix it.
+> 
+> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 
-Thanks.  I've added the patch.
+Applied, thanks.
 
-> (or maybe it should be located somewhere in Documentation/ABI/)
-
-Yes... maybe...  I wonder who reads that ....
-
-Thanks,
 NeilBrown
 
 
-
-> 
-> >From 95c3f191bd0cbe6d339fced75656502b2d591fe4 Mon Sep 17 00:00:00 2001
-> From: Namhyung Kim <namhyung@gmail.com>
-> Date: Tue, 26 Jul 2011 17:39:52 +0900
-> Subject: [PATCH] md: add documentation for bad block log
-> 
-> Previous patch in the bad block series added new sysfs interfaces
-> ([unacknowledged_]bad_blocks) for each rdev without documentation.
-> Add it.
-> 
-> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 > ---
->  Documentation/md.txt |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
+>  Documentation/md.txt |   14 +++++++++-----
+>  1 files changed, 9 insertions(+), 5 deletions(-)
 > 
 > diff --git a/Documentation/md.txt b/Documentation/md.txt
-> index f0eee83ff78a..be88a24b8584 100644
+> index 923a6bddce7c..fc94770f44ab 100644
 > --- a/Documentation/md.txt
 > +++ b/Documentation/md.txt
-> @@ -562,6 +562,20 @@ also have
->       that number to reach sync_max.  Then you can either increase
->       "sync_max", or can write 'idle' to "sync_action".
+> @@ -360,18 +360,20 @@ Each directory contains:
+>          A file recording the current state of the device in the array
+>  	which can be a comma separated list of
+>  	      faulty   - device has been kicked from active use due to
+> -                         a detected fault
+> +                         a detected fault or it has unacknowledged bad
+> +                         blocks
+>  	      in_sync  - device is a fully in-sync member of the array
+>  	      writemostly - device will only be subject to read
+>  		         requests if there are no other options.
+>  			 This applies only to raid1 arrays.
+> -	      blocked  - device has failed, metadata is "external",
+> -	                 and the failure hasn't been acknowledged yet.
+> +	      blocked  - device has failed, and the failure hasn't been
+> +			 acknowledged yet by the metadata handler.
+>  			 Writes that would write to this device if
+>  			 it were not faulty are blocked.
+>  	      spare    - device is working, but not a full member.
+>  			 This includes spares that are in the process
+>  			 of being recovered to
+> +	      write_error - device has ever seen a write error.
+>  	This list may grow in future.
+>  	This can be written to.
+>  	Writing "faulty"  simulates a failure on the device.
+> @@ -379,9 +381,11 @@ Each directory contains:
+>  	Writing "writemostly" sets the writemostly flag.
+>  	Writing "-writemostly" clears the writemostly flag.
+>  	Writing "blocked" sets the "blocked" flag.
+> -	Writing "-blocked" clears the "blocked" flag and allows writes
+> -		to complete.
+> +	Writing "-blocked" clears the "blocked" flags and allows writes
+> +		to complete and possibly simulates an error.
+>  	Writing "in_sync" sets the in_sync flag.
+> +	Writing "write_error" sets writeerrorseen flag.
+> +	Writing "-write_error" clears writeerrorseen flag.
 >  
-> +   bad_blocks
-> +     This gives the list of all known bad blocks in the form of
-> +     start address and length (in sectors respectively). If output
-> +     is too big to fit in a page, it will be truncated. Writing
-> +     "sector length" to this file will add new acknowledged (i.e.
-> +     saved to disk safely) bad blocks.
-> +
-> +   unacknowledged_bad_blocks
-> +     This gives the list of known-but-not-yet-saved-to-disk bad
-> +     blocks in the same form of 'bad_blocks'. If output is too big
-> +     to fit in a page, it will be truncated. Writing to this file
-> +     adds bad blocks without acknowledging them. This is largely
-> +     for testing.
-> +
->  
->  Each active md device may also have attributes specific to the
->  personality module that manages it.
+>  	This file responds to select/poll. Any change to 'faulty'
+>  	or 'blocked' causes an event.
 
