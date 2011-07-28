@@ -1,45 +1,42 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: Using the new bad-block-log in md for Linux 3.1
-Date: Thu, 28 Jul 2011 10:55:19 +0100
-Message-ID: <4E313207.1060600@anonymous.org.uk>
-References: <20110727141652.7511fc51@notabene.brown> <j0p0d6$aj6$1@dough.gmane.org> <4E300828.3000601@anonymous.org.uk> <j0p2g2$nmp$1@dough.gmane.org> <20110728065541.3e2d5cac@notabene.brown> <j0r9tp$p96$1@dough.gmane.org>
+Date: Thu, 28 Jul 2011 14:53:36 +0200
+Message-ID: <4E315BD0.7040400@ziu.info>
+References: <20110727141652.7511fc51@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j0r9tp$p96$1@dough.gmane.org>
+In-Reply-To: <20110727141652.7511fc51@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lutz Vieweg <lvml@5t9.de>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 28/07/2011 10:25, Lutz Vieweg wrote:
-> On 07/27/2011 10:55 PM, NeilBrown wrote:
-[...]
->> On failure it decides not to write to and more bad blocks on that
->> device.
+W dniu 27.07.2011 06:16, NeilBrown pisze:
 >
-> This sentence may just miss one verb, but that might be an important
-> one. Did you mean to say "on failure (of writing to a block that had
-> been marked as bad, after a re-assembly) that one block will not be
-> written to (until after the next re-assembly)"?
+> If you create an array with this mdadm it will add a bad block log - you
+> cannot turn it off (it is only 4K long so why would you want to).  Then as
+> errors occur they will cause the faulty block to be added to the log rather
+> than the device to be remove from the array.
 
-I think the typo was that he meant "any" where he wrote "and": "On 
-failure it decides not to write to any more bad blocks on that device".
+I was wondering, 4KiB is "just" 512 entries assuming these are only 
+64bit sector addresses - it's possible to imagine a failing drive with 
+lots of not reloctable (for whatever reason) adjacent sectors, that 
+could fill up the log relatively quickly (mentioned 512 entries ~ 256KiB 
+worth of data on 512b drives, just a few chunks before the drive is 
+kicked out). Though - how realistic such scenario is with modern drives, 
+is hard for me to judge.
 
-So after a re-assembly (e.g. when you boot up after fixing your power, 
-cable, controller issues) md will try writing to bad blocks again, until 
-any such writes fail, after which it will stop trying to write to bad 
-blocks on that device. By this method, md can automatically recover from 
-spurious write failures caused by temporary issues.
+Still - are there any plans to make that 4KiB size not hardcoded, also 
+perhaps along with customizable offset to the 1st chunk ?
 
-Sorry I got it wrong in the first place, by the way - I'd seen the 
-writeable sysfs entries for manipulating the bad block list, so that's 
-why I thought there was an administrative interface for clearing it, but 
-if that's only there for md/mdadm's internal use and testing, we 
-ordinary users had better leave it alone :-)
+Something of analogous functionality to lvm's options such as:
 
-Cheers,
+--metadatasize
+--dataalignment
+--dataalignmentoffset
 
-John.
+(though again, hard to judge if there's any practical use for those 
+aside exotic scenarios)
 
