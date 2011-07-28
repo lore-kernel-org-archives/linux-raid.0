@@ -1,69 +1,74 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: RAID 1 using SSD and 2 HDD
-Date: Thu, 28 Jul 2011 14:31:10 -0400
-Message-ID: <4E31AAEE.30601@redhat.com>
-References: <4E25C9BA.1060401@dodtsair.com> <20110720003235.51b3a657@natsu> <4E25D775.1080406@dodtsair.com> <24EACA6AC4B506428C92FE7C172FEF4E02084CF0@MX16A.corp.emc.com>
+Date: Thu, 28 Jul 2011 14:32:56 -0400
+Message-ID: <4E31AB58.3030206@redhat.com>
+References: <4E25C9BA.1060401@dodtsair.com> <CABYL=TppzPDszVp3cr0DnuVDAg3Hjq2dvZyP0CYEz2x3H2ZjZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24EACA6AC4B506428C92FE7C172FEF4E02084CF0@MX16A.corp.emc.com>
+In-Reply-To: <CABYL=TppzPDszVp3cr0DnuVDAg3Hjq2dvZyP0CYEz2x3H2ZjZQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: brian.foster@emc.com
-Cc: mpower@dodtsair.com, rm@romanrm.ru, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>
+Cc: Mike Power <mpower@dodtsair.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/20/2011 08:59 AM, brian.foster@emc.com wrote:
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->> owner@vger.kernel.org] On Behalf Of Mike Power
->> Sent: Tuesday, July 19, 2011 3:14 PM
->> To: Roman Mamedov
->> Cc: linux-raid@vger.kernel.org
->> Subject: Re: RAID 1 using SSD and 2 HDD
->>
->> Thanks for the link.  That is the kind of thing I am looking for.
->>
->> On 07/19/2011 11:32 AM, Roman Mamedov wrote:
->>> On Tue, 19 Jul 2011 11:15:22 -0700
->>> Mike Power<mpower@dodtsair.com>   wrote:
->>>
->>>> Is it possible to implement a RAID 1 array using two equal size HDD
->>>> and one smaller and faster SSD.  The idea being that the resulting
->>>> RAID would have the same size of the HDD while picking up the speed
->>>> benefits of the SSD.
->>> See http://bcache.evilpiepirate.org/
->>>
+On 07/19/2011 02:27 PM, Roberto Spadim wrote:
+> no this not work very fast...
+> use bcache  or other similar ssd+harddisk cache solution (facebook
+> have one solution i don=B4t remember the name)
+> mixing ssd and hdd are a big problem, since write speed is the slowes=
+t
+> (maybe ssd maybe hdd) and read speed isn=B4t very well since read in =
+ssd
+> can be non sequencial and at hdd sequencial is prefered, the read
+> balance algorithm is tuned to use the near position device, and
+> sometimes ssd isn=B4t used, or less used or more used...
+> a bigger speed can be done using a cache solution (ssd+hdd or ssd+rai=
+d1(hdd))
+> that was my test results... maybe someone have others results
+
+You needed to use write-mostly, that would have drastically altered you=
+r=20
+results.  With write-mostly and write-behind enabled on the hard drives=
+,=20
+all reads go to the SSD instead of the hard drives, and writes complete=
+=20
+as soon as the SSD says it is done and the writes to the hard drives=20
+happen in the background.
+
 >
-> Also, Roberto referred to the facebook flashcache implementation. It is based on device-mapper and last I tried bcache, probably a bit more production-worthy at the moment (though bcache looks intriguing long term, so I'd suggest to try both and draw your own conclusion):
+> 2011/7/19 Mike Power<mpower@dodtsair.com>:
+>> Is it possible to implement a RAID 1 array using two equal size HDD =
+and one
+>> smaller and faster SSD.  The idea being that the resulting RAID woul=
+d have
+>> the same size of the HDD while picking up the speed benefits of the =
+SSD.
+>>   You can do something similar today by just buying two hybrid drive=
+s and
+>> putting them in an array.  By purchasing a dedicated SSD drive for t=
+hat
+>> purpose you gain the ability of controlling the size of the SSD port=
+ion.  I
+>> was hoping the RAID array could use the SSD more as a cache then a r=
+edundant
+>> storage.
+>>
+>> Mike Power
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> https://github.com/facebook/flashcache
+>
+>
 
-Having not looked at those two, I can say that an md raid1 with two hard 
-drives and one SSD works *very* well.  It's blazing fast.  Here's how I 
-set mine up:
-
-SSD: three partitions, one for boot, one for /, and one for ~/repos 
-(which is where all my git/cvs/etc. checkouts reside)
-hard disks: four partitions, one for boot, one for /, one for /home, one 
-for ~/repos
-
-Then I created four raid1 arrays like so:
-
-mdadm -C /dev/md/boot -l1 -n3 -e1.0 --bitmap=internal --name=boot 
-/dev/sda1 --write-mostly --write-behind=128 /dev/sdb1 /dev/sdc1
-mdadm -C /dev/md/root -l1 -n3 -e1.2 --bitmap=internal --name=root 
-/dev/sda2 --write-mostly --write-behind=1024 /dev/sdb2 /dev/sdc2
-mdadm -C /dev/md/home -l1 -n2 -e1.2 --bitmap=internal --name=home 
-/dev/sdb3 /dev/sdc3
-mdadm -C /dev/md/repos -l1 -n3 -e1.2 --bitmap=internal --name=repos 
-/dev/sda4 --write-mostly --write-behind=1024 /dev/sdb4 /dev/sdc4
-
-Works for me with stellar performance.  Treats the SSD as the only 
-device that matters on the three arrays it participates in with the hard 
-drives there merely as a backing store for safety in case the SSD blows 
-chunks some day.  Obviously, if you need some other aspect of your home 
-directory to have the SSD benefit then modify to your tastes, but all my 
-scratch builds happen under ~/repos and the thing flies when compiling 
-stuff compared to how it used to be.
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
