@@ -1,48 +1,43 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: RE: RE: RAID5/6 Offload via IOATDMA
-Date: Fri, 29 Jul 2011 08:01:34 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D504CA8E8DA9@azsmsx504.amr.corp.intel.com>
-References: <1311897709275573500@businessgrade.com>
- <D010E79907AF0D4E90B603DE907837D504CA8E8CB3@azsmsx504.amr.corp.intel.com>
- <1311900497409669500@businessgrade.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: RAID 1 using SSD and 2 HDD
+Date: Fri, 29 Jul 2011 11:30:33 -0400
+Message-ID: <4E32D219.503@redhat.com>
+References: <4E25C9BA.1060401@dodtsair.com> <CABYL=TppzPDszVp3cr0DnuVDAg3Hjq2dvZyP0CYEz2x3H2ZjZQ@mail.gmail.com> <4E31AB58.3030206@redhat.com> <CABYL=To6GFBwsHi_2y6Rzgvr3LbP2Z9hUN8QjYP5Wf+vJtKsXw@mail.gmail.com> <4E32B5FE.6050001@redhat.com> <j0uhk8$k9a$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1311900497409669500@businessgrade.com>
-Content-Language: en-US
+In-Reply-To: <j0uhk8$k9a$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "eneal@businessgrade.com" <eneal@businessgrade.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: David Brown <david.brown@hesbynett.no>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Errol Neal [mailto:eneal@businessgrade.com]
-> Sent: Thursday, July 28, 2011 5:48 PM
-> To: Jiang, Dave
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: RE: RAID5/6 Offload via IOATDMA
-> 
-> On Thu, 07/28/2011 08:10 PM, "Jiang, Dave" <dave.jiang@intel.com> wrote:
-> > > -----Original Message-----
-> > > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > > owner@vger.kernel.org] On Behalf Of Errol Neal
-> > > Sent: Thursday, July 28, 2011 5:02 PM
-> > > To: linux-raid@vger.kernel.org
-> > > Subject: RAID5/6 Offload via IOATDMA
-> > >
-> > > Hi. I'm trying to get additional information about this feature. I
-> > > know that there were some patches added since 2.6.32 for more recent
-> > > xeon processors. I'm having a hard time getting specifics on the
-> > > hardware required around this.
-> > > Am I at the right list to inquire about this feature?
-> >
-> > I think this is what you are looking for:
-> > http://www.intel.com/p/en_US/embedded/hwsw/hardware/xeon-c5500-
-> c3500-3
-> > 420/overview
-> 
-> Thanks so much! So any motherboard with a 3420 chipset should have this
-> technology or is it embedded in the processor?
+On 07/29/2011 10:55 AM, David Brown wrote:
+> One thing has occurred to me while reading this thread - it seems to be
+> an assumption here that SSD's are faster than HD's. In one area - access
+> times - SSD's are very much faster. But when transferring bulk data,
+> they are not necessarily faster.
 
-You need the right processor. But of course the processor matches up with the appropriate chipset as well. 
+Not necessarily, no.  But, if you do like I did and pick your SSD 
+carefully, they are.  I specifically chose the one I did because it was 
+SATA-III with a 6MB/s link speed and it was rated for 400+MByte/s reads 
+and 210MByte/s writes.  Here's the link:
+
+http://www.newegg.com/Product/Product.aspx?Item=N82E16820233154
+
+There are even faster ones out there now.
+
+But, I was worried about the drive wearing out under the frequent 
+checkouts, builds, etc. so hence the reason I have two hard drives 
+backing it up.  When it does wear out, I'll put a new one in, add it to 
+the array, wait for resync, all done.
+
+> Certainly a pair of good hard disks in
+> RAID10,far will stream reads and writes with a similar throughput to
+> many SSD's. An ideal situation is therefore that small reads will come
+> from the SSD, but that bulk reads could come from any disk that is
+> currently idle. Enabling "write-behind" on the hard disks would still be
+> a big gain on the write latency.
+
+
