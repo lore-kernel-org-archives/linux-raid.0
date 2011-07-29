@@ -1,27 +1,41 @@
-From: maurice <mhilarius@gmail.com>
-Subject: Failures Rates Using SSD
-Date: Fri, 29 Jul 2011 10:20:49 -0600
-Message-ID: <4E32DDE1.8010907@gmail.com>
-References: <4E25C9BA.1060401@dodtsair.com>
+From: Thomas Harold <thomas-lists@nybeta.com>
+Subject: Re: data scrubbing
+Date: Fri, 29 Jul 2011 13:17:24 -0400
+Message-ID: <4E32EB24.7010909@nybeta.com>
+References: <4E327445.9080404@oldum.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E25C9BA.1060401@dodtsair.com>
+In-Reply-To: <4E327445.9080404@oldum.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Power <mpower@dodtsair.com>
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com, Roberto Spadim <roberto@spadim.com.br>
+To: Nikolay Kichukov <hijacker@oldum.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Toms Hardware have an article discussing SSD longevity
+On 7/29/2011 4:50 AM, Nikolay Kichukov wrote:
+> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
+>
+> Hi all,
+>
+> Recently on this list it was discussed it is a good practice to
+> perform data scrubbing for some raid levels. Can someone advise what
+> raid levels need that operation scheduled on a regular basis? Perhaps
+> all raid arrays that have:
+>
+> /sys/block/md*/md/sync_action
+>
+> [sync_action] property?
+>
+> For example is it good for raid1 array?
+>
 
-Bottom line is that the failure rates may be higher than most presume.
-Conclusions on last 2 pages are fascinating to read.
+Yes, we run a script every week (different arrays on different nights)
+that looks like:
 
-http://www.tomshardware.com/reviews/ssd-reliability-failure-rate,2923.html
+#!/bin/sh
 
+echo check > /sys/block/md0/md/sync_action
+mdadm --wait /dev/md0
+cat /sys/block/md0/md/mismatch_cnt
 
--- 
-Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
