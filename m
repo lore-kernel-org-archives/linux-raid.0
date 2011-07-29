@@ -1,61 +1,66 @@
-From: Nikolay Kichukov <hijacker@oldum.net>
-Subject: Re: data scrubbing
-Date: Fri, 29 Jul 2011 16:25:39 +0300
-Message-ID: <4E32B4D3.3030905@oldum.net>
-References: <4E327445.9080404@oldum.net> <alpine.DEB.2.00.1107291200580.22537@uplift.swm.pp.se>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: RAID 1 using SSD and 2 HDD
+Date: Fri, 29 Jul 2011 09:38:37 -0400
+Message-ID: <4E32B7DD.5010102@redhat.com>
+References: <4E25C9BA.1060401@dodtsair.com> <24EACA6AC4B506428C92FE7C172FEF4E02084CF0@MX16A.corp.emc.com> <4E31AAEE.30601@redhat.com> <201107290153.45227.xavier@alternatif.org> <4E327E12.30900@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig5076EEFAEB8C3AAE4A3C0BDF"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1107291200580.22537@uplift.swm.pp.se>
+In-Reply-To: <4E327E12.30900@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Xavier Brochard <xavier@alternatif.org>, brian.foster@emc.com, mpower@dodtsair.com, rm@romanrm.ru, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig5076EEFAEB8C3AAE4A3C0BDF
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On 7/29/2011 5:32 AM, John Robinson wrote:
+>> One thing you didn't said is the respective size of the SSD and HD
+>> partitions.
+>> How did you determine them?
+>=20
+> Since he's running RAID-1, the partitions on the SSD and HDDs must be
+> the same size. Note that the rest of the space on the HDDs was given to=
 
-This is a good to know!
+> /home and was not mirrored on the SSD.
 
-Just performed a check on a raid1 and got:
+Exactly.  I had a 128GB SSD, so I split it up more or less like so:
 
-Jul 29 15:37:36 hanna64 mdadm[2277]: RebuildFinished event detected on md device /dev/md1, component device  mismatches
-found: 128
+3GB to /boot (I run lots of test kernels)
+20GB to / (more than enough in almost all cases)
+90+GB to /home/dledford/repos
 
-So I presume those mismatches have now been rewritten to both disks successfully. Am I wrong there?
+The hard drives were 500GB, so once I took out the 128 or so GB that was
+mirrored to the SSD, that left another 375GB or so for the /home partitio=
+n.
 
-cat /sys/block/md1/md/mismatch_cnt
-128
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
 
 
-Cheers,
-- -Nik
+--------------enig5076EEFAEB8C3AAE4A3C0BDF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-On 07/29/2011 01:03 PM, Mikael Abrahamsson wrote:
-> On Fri, 29 Jul 2011, Nikolay Kichukov wrote:
-> 
->> For example is it good for raid1 array?
-> 
-> Yes, it's good for all raid levels that have any kind of redundancy. You want to read the information on the drives
-> regularily to make sure it can still be read, and if it can't, it can be recomputed from parity and written.
-> 
-> Otherwise not-often-read data might have an error on one drive, and then another drive fails and now when you try to
-> rebuild you don't have this data anywhere all of a sudden (RAID1 and RAID5), and you had no idea about this.
-> 
-> Scrubbing is good, do it regularily (at least monthly).
-> 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Version: GnuPG v2.0.17 (MingW32)
 Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iQEcBAEBAgAGBQJOMrTTAAoJEDFLYVOGGjgXVPoH/0WDSWUhR8LvuaSizBBbbN48
-iAWWsiA/fJr9DIO9+E1cTFXAqUOxsEY/iAJX7IVKAbS+R3/eYITHj0r6HajG3XnE
-wiqY3hoJU79aGBNOtxwAH8QeNtdGooVxL6TW0TRNFr/PFbWiBc2Aj2/aFizuqPHE
-EaYd1V02/i0wugWmGAFUAE81qG40jpuwq/B/KL18TDF8aayzj9T1PWLJh2QC3qJZ
-ugj708g34+X7yWY7C5gWYjHoX13IbyU+hbaM1Yrt7z0wLBFw+VxtNFDeWvOI/7zn
-E1c4DSmb4mAWL/CY8QlKP8oN5EkjS8o3VOz3UckkibiVqJw3X1msYZ52SY3UXeY=
-=LfWV
+iEYEARECAAYFAk4yt90ACgkQQ9aEs6Ims9gChwCfZ+pvWhUsuYcJNnLSgKPZsn0F
+WX0AoMMmzedfQv0zXKrGSLJvM/cetHK5
+=wL7S
 -----END PGP SIGNATURE-----
+
+--------------enig5076EEFAEB8C3AAE4A3C0BDF--
