@@ -1,66 +1,105 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: RAID 1 using SSD and 2 HDD
-Date: Fri, 29 Jul 2011 09:38:37 -0400
-Message-ID: <4E32B7DD.5010102@redhat.com>
-References: <4E25C9BA.1060401@dodtsair.com> <24EACA6AC4B506428C92FE7C172FEF4E02084CF0@MX16A.corp.emc.com> <4E31AAEE.30601@redhat.com> <201107290153.45227.xavier@alternatif.org> <4E327E12.30900@anonymous.org.uk>
+Date: Fri, 29 Jul 2011 09:30:38 -0400
+Message-ID: <4E32B5FE.6050001@redhat.com>
+References: <4E25C9BA.1060401@dodtsair.com> <CABYL=TppzPDszVp3cr0DnuVDAg3Hjq2dvZyP0CYEz2x3H2ZjZQ@mail.gmail.com> <4E31AB58.3030206@redhat.com> <CABYL=To6GFBwsHi_2y6Rzgvr3LbP2Z9hUN8QjYP5Wf+vJtKsXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig5076EEFAEB8C3AAE4A3C0BDF"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E327E12.30900@anonymous.org.uk>
+In-Reply-To: <CABYL=To6GFBwsHi_2y6Rzgvr3LbP2Z9hUN8QjYP5Wf+vJtKsXw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Xavier Brochard <xavier@alternatif.org>, brian.foster@emc.com, mpower@dodtsair.com, rm@romanrm.ru, linux-raid@vger.kernel.org
+To: Roberto Spadim <roberto@spadim.com.br>, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig5076EEFAEB8C3AAE4A3C0BDF
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On 7/29/2011 5:32 AM, John Robinson wrote:
->> One thing you didn't said is the respective size of the SSD and HD
->> partitions.
->> How did you determine them?
->=20
-> Since he's running RAID-1, the partitions on the SSD and HDDs must be
-> the same size. Note that the rest of the space on the HDDs was given to=
+On 7/28/2011 3:46 PM, Roberto Spadim wrote:
+> hum make some benchmarks... about 4 months ago, i tested this with
+> korn andreas and we got not astronomical speed with write behind or
+> without it do you have some benchmarks to check?
 
-> /home and was not mirrored on the SSD.
+No, not yet, but I'll make some up.  The problem here is that the
+perceived speed increase is only really visible in certain situations.
+For example, if I'm building code, and repeatedly compiling, tweaking,
+compiling, tweaking, etc., then the entire set of code ends up in page
+cache and everything is done from memory, in which case the SSD makes no
+performance difference what so ever.  Any benchmark that operates
+entirely in cache will be a useless measure here.
 
-Exactly.  I had a 128GB SSD, so I split it up more or less like so:
+The biggest area where the SSD makes a difference is in reading pages
+into page cache.  Aka, cold cache reads.  You see this immediately on
+bootup for example.  My machine boots fast enough that it makes it to a
+login prompt before the ethernet device is done negotiating link speed
+and presents a link up to the networking layer (the fact that my
+workstation is Fedora 15 and uses upstart helps with this too, but on
+another machine without an SSD and with Fedora 15 I don't get to login
+prompt before ethernet link is up).  It also effects things like the
+startup speed of both Firefox and Thunderbird.  This is where the cold
+cache performance of an SSD helps.
 
-3GB to /boot (I run lots of test kernels)
-20GB to / (more than enough in almost all cases)
-90+GB to /home/dledford/repos
+However, your question did get me started thinking and raised a few
+questions of my own (hence why I Cc:ed Neil).
 
-The hard drives were 500GB, so once I took out the 128 or so GB that was
-mirrored to the SSD, that left another 375GB or so for the /home partitio=
-n.
+In order to do writemostly, you *must* use a write bitmap.  If you use
+an internal bitmap, it exists on all devices.  Normally, bitmap sets are
+done synchronously.  My question is: when one device is an SSD, do we
+only wait on the SSD bitmap update before starting the SSD writes, or do
+we wait on all the bitmap updates to complete before starting any of the
+writes?  If the later, could that be changed?  And as a general question
+about bitmap files instead of internal bitmaps, is it even possible to
+use an external bitmap file on the root filesystem given that no other
+filesystem is mounted in order to read a bitmap file prior to the root
+filesystem going live?  It would be nice to use an external bitmap file
+on the SSD itself and skip the internal bitmap I think.
 
+As a separate issue, I think a person could probably tweak a few things
+for an SSD in the general block layer too.  I haven't played with these
+things yet, but I plan to.  Things like changing the elevator to the
+noop elevator.
 
---=20
+Now, as for the differences between using an SSD like I am versus the
+two cache type uses that were brought up.
+
+The cache type usage has the benefit that it covers all the data on the
+drives even if the SSD is smaller than the drives.  Like any cache
+though, it can only hold the most commonly/frequently used items.  If
+your list of commonly used stuff is too large for the SSD, it will start
+to suffer cache misses and loose its benefit.  On writes though it can
+be very fast because it can simply buffer the write and then return to
+the OS as though the write is complete.  However, unless the caching
+implementation waits for at least one drive to acknowledge and complete
+the write (and especially if it accepts the write but only queues it up
+for write to the drives and then waits some period of time before
+flushing the write), then this represents a single point of failure that
+could cause (possibly huge amounts of) data loss.
+
+The setup I have essentially splits the data on my filesystem according
+to what I want cached.  I want applications so I get my performance
+boost on startup.  I want my source code repos so I can compile faster
+and do things like git checkouts faster.  But I don't need any mp3s or
+video files or rarely accessed documents on the SSD, so having a
+directory in my home directory to put all my stuff I want accessed fast
+and the rest of my home directory just on hard drive works perfectly
+well.  In my usage, if the SSD fails, then I don't have to worry about
+any data loss and the machine keeps chugging along.
+
+Anyway, about the benchmarks, I'll see what I can do over the weekend.
+Today, real work beckons ;-)
+
+- -- 
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
 	      http://people.redhat.com/dledford
 
 Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig5076EEFAEB8C3AAE4A3C0BDF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.17 (MingW32)
 Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iEYEARECAAYFAk4yt90ACgkQQ9aEs6Ims9gChwCfZ+pvWhUsuYcJNnLSgKPZsn0F
-WX0AoMMmzedfQv0zXKrGSLJvM/cetHK5
-=wL7S
+iEYEARECAAYFAk4ytf4ACgkQQ9aEs6Ims9gHawCg2hM/pptUgMvY2unZiXgmgACm
+2YkAoPre0he5O/+gLNi5qZFyl9F149wg
+=6tvn
 -----END PGP SIGNATURE-----
-
---------------enig5076EEFAEB8C3AAE4A3C0BDF--
