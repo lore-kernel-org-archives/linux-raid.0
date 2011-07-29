@@ -1,21 +1,24 @@
-From: David Brown <david.brown@hesbynett.no>
+From: Beolach <beolach@gmail.com>
 Subject: Re: data scrubbing
-Date: Sat, 30 Jul 2011 00:16:55 +0200
-Message-ID: <j0vbgn$n5e$1@dough.gmane.org>
-References: <4E327445.9080404@oldum.net>	<alpine.DEB.2.00.1107291200580.22537@uplift.swm.pp.se>	<4E32B4D3.3030905@oldum.net>	<CADc_k_uV2eOpK+tNxpph3ky2J0OOf_LPF7cNK7f5fPAFpy4Dpw@mail.gmail.com> <CADNH=7EXh1JSbbJ6nzDsnva7+-Ug6YdqDrVX2aSd5ezJVzvsTQ@mail.gmail.com>
+Date: Fri, 29 Jul 2011 16:37:38 -0600
+Message-ID: <CADc_k_uDcU_=QT=PYBuowQ1EHCLTXqrnTSk68vt1BFALHxuWwA@mail.gmail.com>
+References: <4E327445.9080404@oldum.net> <alpine.DEB.2.00.1107291200580.22537@uplift.swm.pp.se>
+ <4E32B4D3.3030905@oldum.net> <CADc_k_uV2eOpK+tNxpph3ky2J0OOf_LPF7cNK7f5fPAFpy4Dpw@mail.gmail.com>
+ <CADNH=7EXh1JSbbJ6nzDsnva7+-Ug6YdqDrVX2aSd5ezJVzvsTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CADNH=7EXh1JSbbJ6nzDsnva7+-Ug6YdqDrVX2aSd5ezJVzvsTQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 29/07/11 23:51, Mathias Bur=C3=A9n wrote:
-> On 29 July 2011 21:48, Beolach<beolach@gmail.com>  wrote:
->> On Fri, Jul 29, 2011 at 07:25, Nikolay Kichukov<hijacker@oldum.net> =
+On Fri, Jul 29, 2011 at 15:51, Mathias Bur=C3=A9n <mathias.buren@gmail.=
+com> wrote:
+> On 29 July 2011 21:48, Beolach <beolach@gmail.com> wrote:
+>> On Fri, Jul 29, 2011 at 07:25, Nikolay Kichukov <hijacker@oldum.net>=
  wrote:
 >>> -----BEGIN PGP SIGNED MESSAGE-----
 >>> Hash: SHA1
@@ -27,7 +30,7 @@ On 29/07/11 23:51, Mathias Bur=C3=A9n wrote:
 >>> Just performed a check on a raid1 and got:
 >>>
 >>> Jul 29 15:37:36 hanna64 mdadm[2277]: RebuildFinished event detected=
- on md device /dev/md1, component device  mismatches
+ on md device /dev/md1, component device =C2=A0mismatches
 >>> found: 128
 >>>
 >>> So I presume those mismatches have now been rewritten to both disks=
@@ -41,21 +44,16 @@ On 29/07/11 23:51, Mathias Bur=C3=A9n wrote:
 >> That depends on if you did a "check" or a "repair" - see the SCRUBBI=
 NG
 >> AND MISMATCHES section of the md(4) man page:
->> "If  check  was used, then no action is taken to handle the mismatch=
-,
->> it is simply recorded.  If repair  was  used,  then  a  mismatch  wi=
-ll
->>   be repaired  in  the same way that resync repairs arrays."
+>> "If =C2=A0check =C2=A0was used, then no action is taken to handle th=
+e mismatch,
+>> it is simply recorded. =C2=A0If repair =C2=A0was =C2=A0used, =C2=A0t=
+hen =C2=A0a =C2=A0mismatch =C2=A0will
+>> =C2=A0be repaired =C2=A0in =C2=A0the same way that resync repairs ar=
+rays."
 >>
 >>
 >> Good luck,
 >> Beolach
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
 >
 > Sorry to chime in like this. After reading the above, is there a
 > reason why anyone shouldn't _always_ use repair instead of check on a
@@ -68,31 +66,31 @@ y
 >
 > Thanks,
 > Mathias
+>
 
-If you do a repair, then when a mismatch is found one of the disks is=20
-taken as the "bad" one, and re-created.  For raid1, the first copy is=20
-assumed correct.  For raid5/6, the data blocks are assumed correct and=20
-the parities re-created.  As Neil Brown explained on his blog, without=20
-any more information then this is as good as md raid can do.  However,=20
-it is not necessarily as good as /you/ can do.  For example, you might=20
-be able to determine which files use the blocks in the mismatched=20
-stripe, and figure out which block was bad.  Or for 3-disk raid1 you=20
-could pick the bad block as the odd one out (assuming the other two=20
-matched).  For raid6, it's possible to spot if it is a single-disk=20
-mismatch and correct that one disk (for each disk in turn, assume it is=
-=20
-missing and re-create it from the other disks using normal raid6=20
-recovery.  If the stripe is then consistent, you've fixed the mismatch)=
-=2E=20
-  However, such approaches are not necessarily the correct one.  Thus=20
-the "repair" just does the simplest and fastest correction of the=20
-mismatch, and "check" does not change the stripe in case you want to=20
-manually pick a different method.
+The primary purpose of data scrubbing a RAID is to detect & correct
+read errors on any of the member devices; both check and repair
+perform this function.  Finding (and w/ repair correcting) mismatches
+is only a secondary purpose - it is only if there are no read errors
+but the data copy or parity blocks are found to be inconsistent that a
+mismatch is reported.  In order to repair a mismatch, MD needs to
+restore consistency, by over writing the inconsistent data copy or
+parity blocks w/ the correct data.  But, because the underlying member
+devices did not return any errors, MD has no way of knowing which
+blocks are correct, and which are incorrect; when it is told to do a
+repair, it makes the assumption that the first copy in a RAID1 or
+RAID10, or the data (non-parity) blocks in RAID4/5/6 are correct, and
+corrects the mismatch based on that assumption.
 
-<http://neil.brown.name/blog/20100211050355>
-
+That assumption may or may not be correct, but MD has no way of
+determining that reliably - but the user might be able to, by using
+additional knowledge or tools, so MD gives the user the option to
+perform data scrubbing either with (repair) or without (check) MD
+correcting the mismatches using that assumption.
 
 
+I hope that answers your question,
+Beolach
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
