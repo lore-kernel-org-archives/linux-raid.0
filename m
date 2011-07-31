@@ -1,75 +1,89 @@
 From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Do I have a bad HDD?
-Date: Sun, 31 Jul 2011 19:31:40 +0100
-Message-ID: <CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
-References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com>
-	<CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com>
-	<CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com>
-	<CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com>
-	<4E359E26.2080500@truschnigg.info>
+Subject: Re: component device mismatches found: 9600
+Date: Sun, 31 Jul 2011 19:32:57 +0100
+Message-ID: <CADNH=7H0+RP7yiE01NmxncTBapsMLRt1XkqAHxZr=FEAC9Zx1A@mail.gmail.com>
+References: <4E359DC0.5090608@vorgon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E359E26.2080500@truschnigg.info>
+In-Reply-To: <4E359DC0.5090608@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Truschnigg <johannes@truschnigg.info>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 31 July 2011 19:25, Johannes Truschnigg <johannes@truschnigg.info> wrote:
-> Hi Mathias,
+On 31 July 2011 19:24, Timothy D. Lenz <tlenz@vorgon.com> wrote:
+> Looking through the logs, I found this in daemon.log.0. Is this a sig=
+n of a
+> problem? Below is the entire log:
 >
-> PLEASE don't always quote everything you've just written a few minutes
-> ago when replying to yourself. This makes these responses really, really
-> inconvenient to read.
->
-> Concerning your problem at hand: Don't panic, everything should be fine.
-> Your RAID did what it is supposed to do: protect your from a single
-> drive failure without inducing downtime. A disk has failed, and now it's
-> time to replace it, that's nothing out of the ordinary. You don't need
-> to shut down your system - RAID systems have "no service interruption in
-> case of an accident" as a design goal, and md is rather good at meeting
-> just that.
->
-> If your SATA controller supports hotplug (and if it's SATA-300, that
-> much is for certain), just unplug the old drive, replace it with a new
-> one, clone your partition table setup (if any) from an old driver to the
-> new one, have md pick up the disk and integrate it into your array, and
-> see how everything'll be taken care of automatically. md will resync the
-> array once the new disk is part of the array, and it will be smooth
-> sailing again afterwards. Just make sure you don't pull out the wrong
-> drive, but correctly identify the broken one. ;)
->
-> While the array's being worked on, you can do whatever you intended to
-> do with your seemingly healthy array from of a few hours ago - the only
-> difference it that (some) things will go slower, but that's about it.
-> The only serious problem you could run into is a second and third
-> harddrive failing while your array isn't 100% OK again yet - but even in
-> that case, you'd have a backup ready, now wouldn't you? :)
->
+> Jul =C2=A03 00:57:01 x64VDR mdadm[2003]: RebuildStarted event detecte=
+d on md
+> device /dev/md0
+> Jul =C2=A03 00:57:02 x64VDR mdadm[2003]: RebuildStarted event detecte=
+d on md
+> device /dev/md3
+> Jul =C2=A03 01:02:10 x64VDR mdadm[2003]: RebuildStarted event detecte=
+d on md
+> device /dev/md1
+> Jul =C2=A03 01:02:10 x64VDR mdadm[2003]: RebuildFinished event detect=
+ed on md
+> device /dev/md0
+> Jul =C2=A03 01:03:01 x64VDR mdadm[2003]: RebuildStarted event detecte=
+d on md
+> device /dev/md2
+> Jul =C2=A03 01:03:01 x64VDR mdadm[2003]: RebuildFinished event detect=
+ed on md
+> device /dev/md1, component device =C2=A0mismatches found: 9600
+> Jul =C2=A03 01:19:41 x64VDR mdadm[2003]: Rebuild29 event detected on =
+md device
+> /dev/md3
+> Jul =C2=A03 01:19:41 x64VDR mdadm[2003]: Rebuild21 event detected on =
+md device
+> /dev/md2
+> Jul =C2=A03 01:36:21 x64VDR mdadm[2003]: Rebuild50 event detected on =
+md device
+> /dev/md3
+> Jul =C2=A03 01:36:21 x64VDR mdadm[2003]: Rebuild41 event detected on =
+md device
+> /dev/md2
+> Jul =C2=A03 01:53:01 x64VDR mdadm[2003]: Rebuild67 event detected on =
+md device
+> /dev/md3
+> Jul =C2=A03 02:09:41 x64VDR mdadm[2003]: Rebuild83 event detected on =
+md device
+> /dev/md3
+> Jul =C2=A03 02:09:41 x64VDR mdadm[2003]: Rebuild75 event detected on =
+md device
+> /dev/md2
+> Jul =C2=A03 02:26:21 x64VDR mdadm[2003]: Rebuild88 event detected on =
+md device
+> /dev/md2
+> Jul =C2=A03 02:32:20 x64VDR mdadm[2003]: RebuildFinished event detect=
+ed on md
+> device /dev/md3
+> Jul =C2=A03 02:43:23 x64VDR mdadm[2003]: RebuildFinished event detect=
+ed on md
+> device /dev/md2
 >
 > --
-> with best regards:
-> - Johannes Truschnigg ( johannes@truschnigg.info )
->
-> www: http://johannes.truschnigg.info/
-> phone: +43 650 2 133337
-> xmpp: johannes@truschnigg.info
->
-> Please do not bother me with HTML-eMail or attachments. Thank you.
->
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
 
-Sorry about that!
+Could you post the output of:
 
-No I don't have a backup ;), perhaps it's time to get one. This isn't
-super important data, more like "nice to have".
+smartctl -a /dev/your_hdd (all HDDs used by the arrays)
+cat /proc/mdstat
+mdadm -D /dev/md(your arrays)
 
-I don't have any hotplug bays or anything like that (you'll see in a
-while after I put up the pictures) so I shut down the system to take
-the faulty HDD out.
-
-Is it wise to run a check on the array while it's degraded by 1 HDD?
-
-Thanks again,
 /Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
