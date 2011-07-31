@@ -1,42 +1,59 @@
-From: Phil Turmel <philip@turmel.org>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
 Subject: Re: Do I have a bad HDD?
-Date: Sun, 31 Jul 2011 19:42:42 -0400
-Message-ID: <4E35E872.2000704@turmel.org>
-References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com> <CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com> <CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com> <CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com> <4E359E26.2080500@truschnigg.info> <CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
+Date: Mon, 1 Aug 2011 00:56:45 +0100
+Message-ID: <CADNH=7FG4dy3dh_U4jPq1L_TkY5Do3EN9V6OpxbyBBtHPoQxDg@mail.gmail.com>
+References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com>
+	<CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com>
+	<CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com>
+	<CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com>
+	<4E359E26.2080500@truschnigg.info>
+	<CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
+	<4E35E872.2000704@turmel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
+In-Reply-To: <4E35E872.2000704@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+To: Phil Turmel <philip@turmel.org>
 Cc: Johannes Truschnigg <johannes@truschnigg.info>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Good evening Mathias,
+On 1 August 2011 00:42, Phil Turmel <philip@turmel.org> wrote:
+> Good evening Mathias,
+>
+> On 07/31/2011 02:31 PM, Mathias Bur=C3=A9n wrote:
+>
+> [trim]
+>
+>> No I don't have a backup ;), perhaps it's time to get one. This isn'=
+t
+>> super important data, more like "nice to have".
+>>
+>> I don't have any hotplug bays or anything like that (you'll see in a
+>> while after I put up the pictures) so I shut down the system to take
+>> the faulty HDD out.
+>>
+>> Is it wise to run a check on the array while it's degraded by 1 HDD?
+>
+> It shouldn't hurt your array, other than a bit of exercise. =C2=A0If =
+another
+> drive is marginal, it could conceivably "push it over the edge".
+>
+> Any positive value it has will occur anyways during the resync with t=
+he
+> replacement drive for sdh.
+>
+> I wouldn't bother running the scrub until the resync is finished.
+>
+> Phil
+>
 
-On 07/31/2011 02:31 PM, Mathias Bur=C3=A9n wrote:
 
-[trim]
+Thanks, I'll wait to scrub until I get the new HDD (hopefully within 2
+weeks). Pics of the beast here: http://stuff3.imgur.com/htpcnas
 
-> No I don't have a backup ;), perhaps it's time to get one. This isn't
-> super important data, more like "nice to have".
->=20
-> I don't have any hotplug bays or anything like that (you'll see in a
-> while after I put up the pictures) so I shut down the system to take
-> the faulty HDD out.
->=20
-> Is it wise to run a check on the array while it's degraded by 1 HDD?
-
-It shouldn't hurt your array, other than a bit of exercise.  If another
-drive is marginal, it could conceivably "push it over the edge".
-
-Any positive value it has will occur anyways during the resync with the
-replacement drive for sdh.
-
-I wouldn't bother running the scrub until the resync is finished.
-
-Phil
+/Mathias
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
