@@ -1,87 +1,42 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: component device mismatches found: 9600
-Date: Sun, 31 Jul 2011 19:32:57 +0100
-Message-ID: <CADNH=7H0+RP7yiE01NmxncTBapsMLRt1XkqAHxZr=FEAC9Zx1A@mail.gmail.com>
-References: <4E359DC0.5090608@vorgon.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Do I have a bad HDD?
+Date: Sun, 31 Jul 2011 19:42:42 -0400
+Message-ID: <4E35E872.2000704@turmel.org>
+References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com> <CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com> <CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com> <CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com> <4E359E26.2080500@truschnigg.info> <CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E359DC0.5090608@vorgon.com>
+In-Reply-To: <CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Timothy D. Lenz" <tlenz@vorgon.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+Cc: Johannes Truschnigg <johannes@truschnigg.info>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 31 July 2011 19:24, Timothy D. Lenz <tlenz@vorgon.com> wrote:
-> Looking through the logs, I found this in daemon.log.0. Is this a sig=
-n of a
-> problem? Below is the entire log:
->
-> Jul =C2=A03 00:57:01 x64VDR mdadm[2003]: RebuildStarted event detecte=
-d on md
-> device /dev/md0
-> Jul =C2=A03 00:57:02 x64VDR mdadm[2003]: RebuildStarted event detecte=
-d on md
-> device /dev/md3
-> Jul =C2=A03 01:02:10 x64VDR mdadm[2003]: RebuildStarted event detecte=
-d on md
-> device /dev/md1
-> Jul =C2=A03 01:02:10 x64VDR mdadm[2003]: RebuildFinished event detect=
-ed on md
-> device /dev/md0
-> Jul =C2=A03 01:03:01 x64VDR mdadm[2003]: RebuildStarted event detecte=
-d on md
-> device /dev/md2
-> Jul =C2=A03 01:03:01 x64VDR mdadm[2003]: RebuildFinished event detect=
-ed on md
-> device /dev/md1, component device =C2=A0mismatches found: 9600
-> Jul =C2=A03 01:19:41 x64VDR mdadm[2003]: Rebuild29 event detected on =
-md device
-> /dev/md3
-> Jul =C2=A03 01:19:41 x64VDR mdadm[2003]: Rebuild21 event detected on =
-md device
-> /dev/md2
-> Jul =C2=A03 01:36:21 x64VDR mdadm[2003]: Rebuild50 event detected on =
-md device
-> /dev/md3
-> Jul =C2=A03 01:36:21 x64VDR mdadm[2003]: Rebuild41 event detected on =
-md device
-> /dev/md2
-> Jul =C2=A03 01:53:01 x64VDR mdadm[2003]: Rebuild67 event detected on =
-md device
-> /dev/md3
-> Jul =C2=A03 02:09:41 x64VDR mdadm[2003]: Rebuild83 event detected on =
-md device
-> /dev/md3
-> Jul =C2=A03 02:09:41 x64VDR mdadm[2003]: Rebuild75 event detected on =
-md device
-> /dev/md2
-> Jul =C2=A03 02:26:21 x64VDR mdadm[2003]: Rebuild88 event detected on =
-md device
-> /dev/md2
-> Jul =C2=A03 02:32:20 x64VDR mdadm[2003]: RebuildFinished event detect=
-ed on md
-> device /dev/md3
-> Jul =C2=A03 02:43:23 x64VDR mdadm[2003]: RebuildFinished event detect=
-ed on md
-> device /dev/md2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Good evening Mathias,
 
-Could you post the output of:
+On 07/31/2011 02:31 PM, Mathias Bur=C3=A9n wrote:
 
-smartctl -a /dev/your_hdd (all HDDs used by the arrays)
-cat /proc/mdstat
-mdadm -D /dev/md(your arrays)
+[trim]
 
-/Mathias
+> No I don't have a backup ;), perhaps it's time to get one. This isn't
+> super important data, more like "nice to have".
+>=20
+> I don't have any hotplug bays or anything like that (you'll see in a
+> while after I put up the pictures) so I shut down the system to take
+> the faulty HDD out.
+>=20
+> Is it wise to run a check on the array while it's degraded by 1 HDD?
+
+It shouldn't hurt your array, other than a bit of exercise.  If another
+drive is marginal, it could conceivably "push it over the edge".
+
+Any positive value it has will occur anyways during the resync with the
+replacement drive for sdh.
+
+I wouldn't bother running the scrub until the resync is finished.
+
+Phil
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
