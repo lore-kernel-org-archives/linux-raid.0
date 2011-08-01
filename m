@@ -1,61 +1,97 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Do I have a bad HDD?
-Date: Mon, 1 Aug 2011 00:56:45 +0100
-Message-ID: <CADNH=7FG4dy3dh_U4jPq1L_TkY5Do3EN9V6OpxbyBBtHPoQxDg@mail.gmail.com>
-References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com>
-	<CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com>
-	<CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com>
-	<CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com>
-	<4E359E26.2080500@truschnigg.info>
-	<CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
-	<4E35E872.2000704@turmel.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: build warnings after merge of the moduleh tree
+Date: Mon, 1 Aug 2011 10:35:37 +1000
+Message-ID: <20110801103537.a273ddac48fc81a8f28c2f90@canb.auug.org.au>
+References: <20110729152548.17e093cb01d95077a05d4cec@canb.auug.org.au>
+	<20110731082405.GM31842@windriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E35E872.2000704@turmel.org>
+In-Reply-To: <20110731082405.GM31842@windriver.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: Johannes Truschnigg <johannes@truschnigg.info>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 1 August 2011 00:42, Phil Turmel <philip@turmel.org> wrote:
-> Good evening Mathias,
->
-> On 07/31/2011 02:31 PM, Mathias Bur=C3=A9n wrote:
->
-> [trim]
->
->> No I don't have a backup ;), perhaps it's time to get one. This isn'=
-t
->> super important data, more like "nice to have".
->>
->> I don't have any hotplug bays or anything like that (you'll see in a
->> while after I put up the pictures) so I shut down the system to take
->> the faulty HDD out.
->>
->> Is it wise to run a check on the array while it's degraded by 1 HDD?
->
-> It shouldn't hurt your array, other than a bit of exercise. =C2=A0If =
-another
-> drive is marginal, it could conceivably "push it over the edge".
->
-> Any positive value it has will occur anyways during the resync with t=
-he
-> replacement drive for sdh.
->
-> I wouldn't bother running the scrub until the resync is finished.
->
-> Phil
->
+--Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 31 Jul 2011 04:24:05 -0400 Paul Gortmaker <paul.gortmaker@windriver=
+.com> wrote:
+>
+> [linux-next: build warnings after merge of the moduleh tree] On 29/07/201=
+1 (Fri 15:25) Stephen Rothwell wrote:
+>=20
+> > Hi Paul,
+> >=20
+> > After merging the moduleh tree, today's linux-next build (x86_64
+> > allmodconfig) produced these warnings:
+> >=20
+> > drivers/md/persistent-data/dm-block-manager.c:103:1: warning: type defa=
+ults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
+> [...]
+> > drivers/md/persistent-data/dm-space-map-disk.c:634:1: warning: type def=
+aults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
+> [...]
+> > drivers/md/persistent-data/dm-btree.c:146:1: warning: type defaults to =
+'int' in declaration of 'EXPORT_SYMBOL_GPL'
+> [...]
+> > drivers/md/persistent-data/dm-btree-remove.c:569:1: warning: type defau=
+lts to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
+> >=20
+> > I have added the following patch for today:
+> >=20
+> > From: Stephen Rothwell <sfr@canb.auug.org.au>
+> > Date: Fri, 29 Jul 2011 15:16:04 +1000
+> > Subject: [PATCH] include export.h to use EXPORT_SYMBOL
+> >=20
+> > Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> > ---
+> >  drivers/md/persistent-data/dm-block-manager.c  |    1 +
+> >  drivers/md/persistent-data/dm-btree-remove.c   |    2 ++
+> >  drivers/md/persistent-data/dm-btree.c          |    1 +
+> >  drivers/md/persistent-data/dm-space-map-disk.c |    1 +
+> >  4 files changed, 5 insertions(+), 0 deletions(-)
+>=20
+> This one is a bit more interesting.  The above files (and actually their
+> parent dir) doesn't exist yet in master/HEAD.  So I can't patch them
+> yet.  And the MD maintainers can't patch in export.h usage, since they
+> won't have such a header file.
+>=20
+> If you didn't want to temporarily carry it, I can think of two things:
+> I suppose, since the one single commit that creates export.h is totally
+> standalone, and harmless/inert in itself, we could perhaps get it pulled
+> independently if it made life easier for others to align to the right
+> usage?  Or they can just patch in module.h usage and we can downgrade
+> them to export.h usage shortly thereafter.
 
-Thanks, I'll wait to scrub until I get the new HDD (hopefully within 2
-weeks). Pics of the beast here: http://stuff3.imgur.com/htpcnas
+I will carry it for now (as a merge fixup on the moduleh tree.  If the
+export.h split goes to Linus, then Neil can apply it to his tree, or
+Linus can apply it as a merge fixup ehen he merges the latter of the two
+trees (as long as someone remember to tell him).
 
-/Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAEBAgAGBQJONfTZAAoJEDMEi1NhKgbsWrkIAIUOb1KB4E8OERWU6sQyKqed
+5sRUXyDSq5/c5kkyMy5KTXHJ+vUURnZJjQqzuCYm6svP4ecnRWa2Xx3NyPFvQcd3
+fYwv9sL1A0kLUtK7MBMmsMMqHOHe7inEI0AhSjMm4BXFGWfDgWwGFF/uTGFfZjLb
+pVSZFBR9GS5ttuQD4ac+ns8byP6AWJAGWYD/srUCF7+Z+vESkhi8JqDQv6HBK1ZQ
+tKw8AUGKBkeEQIl8J3KgayfO8rhapEUqhYZbAtBjH8zd0Re2hK6VdUPWBumeA8P3
+ZE9invdNm3deCSda6AIxkIq0r0Cd2PKbFHLfELqfm0U3e8WzghYsUZoFBUIIc9w=
+=f/IF
+-----END PGP SIGNATURE-----
+
+--Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m--
