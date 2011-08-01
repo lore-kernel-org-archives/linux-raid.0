@@ -1,97 +1,106 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: build warnings after merge of the moduleh tree
-Date: Mon, 1 Aug 2011 10:35:37 +1000
-Message-ID: <20110801103537.a273ddac48fc81a8f28c2f90@canb.auug.org.au>
-References: <20110729152548.17e093cb01d95077a05d4cec@canb.auug.org.au>
-	<20110731082405.GM31842@windriver.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Assembling array with missing members
+Date: Mon, 1 Aug 2011 00:51:12 -0400
+Message-ID: <CAB1R3sjuUEVAPLgGNdnwnyHVir3bEGOT9iOSdYBz+QSs+2fhaA@mail.gmail.com>
+References: <CAB1R3siG=FOXXq5kRx5N8O7ExCiM=0ic0xakYpfKZH1FOROXoQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110731082405.GM31842@windriver.com>
+In-Reply-To: <CAB1R3siG=FOXXq5kRx5N8O7ExCiM=0ic0xakYpfKZH1FOROXoQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
+I have an old fedora server with a raid1 and raid5 array comprised of
+four disks. One of the disks just died, and in the process of trying
+to replace the disk, the server will for some reason no longer boot. I
+think it was a problem with my initrd. I've since replaced the
+defective disk (sdd) with a new one and created the fd partitions the
+same size as they were originally. Booting from a current rescue CDROM
+and trying to use mdadm to reassmble the raid5 array, and I'm having a
+problem:
 
-On Sun, 31 Jul 2011 04:24:05 -0400 Paul Gortmaker <paul.gortmaker@windriver=
-.com> wrote:
->
-> [linux-next: build warnings after merge of the moduleh tree] On 29/07/201=
-1 (Fri 15:25) Stephen Rothwell wrote:
->=20
-> > Hi Paul,
-> >=20
-> > After merging the moduleh tree, today's linux-next build (x86_64
-> > allmodconfig) produced these warnings:
-> >=20
-> > drivers/md/persistent-data/dm-block-manager.c:103:1: warning: type defa=
-ults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
-> [...]
-> > drivers/md/persistent-data/dm-space-map-disk.c:634:1: warning: type def=
-aults to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
-> [...]
-> > drivers/md/persistent-data/dm-btree.c:146:1: warning: type defaults to =
-'int' in declaration of 'EXPORT_SYMBOL_GPL'
-> [...]
-> > drivers/md/persistent-data/dm-btree-remove.c:569:1: warning: type defau=
-lts to 'int' in declaration of 'EXPORT_SYMBOL_GPL'
-> >=20
-> > I have added the following patch for today:
-> >=20
-> > From: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Date: Fri, 29 Jul 2011 15:16:04 +1000
-> > Subject: [PATCH] include export.h to use EXPORT_SYMBOL
-> >=20
-> > Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> > ---
-> >  drivers/md/persistent-data/dm-block-manager.c  |    1 +
-> >  drivers/md/persistent-data/dm-btree-remove.c   |    2 ++
-> >  drivers/md/persistent-data/dm-btree.c          |    1 +
-> >  drivers/md/persistent-data/dm-space-map-disk.c |    1 +
-> >  4 files changed, 5 insertions(+), 0 deletions(-)
->=20
-> This one is a bit more interesting.  The above files (and actually their
-> parent dir) doesn't exist yet in master/HEAD.  So I can't patch them
-> yet.  And the MD maintainers can't patch in export.h usage, since they
-> won't have such a header file.
->=20
-> If you didn't want to temporarily carry it, I can think of two things:
-> I suppose, since the one single commit that creates export.h is totally
-> standalone, and harmless/inert in itself, we could perhaps get it pulled
-> independently if it made life easier for others to align to the right
-> usage?  Or they can just patch in module.h usage and we can downgrade
-> them to export.h usage shortly thereafter.
+% mdadm --assemble --auto=3Dyes =A0/dev/md1 /dev/sd[abcd]2
+mdadm: no RAID superblock on /dev/sdd2
+mdadm: /dev/sdd2 has no superblock - assembly aborted
 
-I will carry it for now (as a merge fixup on the moduleh tree.  If the
-export.h split goes to Linus, then Neil can apply it to his tree, or
-Linus can apply it as a merge fixup ehen he merges the latter of the two
-trees (as long as someone remember to tell him).
+% cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md1 : inactive sda2[0](S) sdb2[2](S) sdc2[1](S)
+=A0 =A0 =A02928978624 blocks
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+md0 : active raid1 sda1[0] sdb1[2] sdc1[1]
+=A0 =A0 =A024000 blocks [3/3] [UUU]
 
---Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m
-Content-Type: application/pgp-signature
+It looks like the members of md1 are all (S)pares, correct?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+% cat /etc/mdadm.conf
+DEVICE /dev/sdb2 /dev/sdd2 /dev/sdc2 /dev/sda2 /dev/sdb1 /dev/sdd1
+/dev/sdc1 /dev/sda1
+ARRAY /dev/md1 level=3D5 num-devices=3D4
+devices=3D/dev/sdd2,/dev/sdc2,/dev/sdb2,/dev/sda2
 
-iQEcBAEBAgAGBQJONfTZAAoJEDMEi1NhKgbsWrkIAIUOb1KB4E8OERWU6sQyKqed
-5sRUXyDSq5/c5kkyMy5KTXHJ+vUURnZJjQqzuCYm6svP4ecnRWa2Xx3NyPFvQcd3
-fYwv9sL1A0kLUtK7MBMmsMMqHOHe7inEI0AhSjMm4BXFGWfDgWwGFF/uTGFfZjLb
-pVSZFBR9GS5ttuQD4ac+ns8byP6AWJAGWYD/srUCF7+Z+vESkhi8JqDQv6HBK1ZQ
-tKw8AUGKBkeEQIl8J3KgayfO8rhapEUqhYZbAtBjH8zd0Re2hK6VdUPWBumeA8P3
-ZE9invdNm3deCSda6AIxkIq0r0Cd2PKbFHLfELqfm0U3e8WzghYsUZoFBUIIc9w=
-=f/IF
------END PGP SIGNATURE-----
+I recreated the mdadm.conf primarily from memory, but also from some
+knowledge from mdadm:
+% mdadm -Es
+ARRAY /dev/md0 UUID=3D19fa0ce7:7733d970:be048336:6d8b5ba8
+ARRAY /dev/md1 UUID=3D912aa422:617ee3db:df65aa69:42b7599e
 
---Signature=_Mon__1_Aug_2011_10_35_37_+1000_JBJtInSUvgF70A6m--
+Here is some information from sda2 in hopes it will provide details on
+the array that will be helpful.
+
+% mdadm --examine /dev/sda2
+/dev/sda2:
+=A0 =A0 =A0 =A0 =A0Magic : a92b4efc
+=A0 =A0 =A0 =A0Version : 0.90.00
+=A0 =A0 =A0 =A0 =A0 UUID : 912aa422:617ee3db:df65aa69:42b7599e
+=A0Creation Time : Sat Jun 26 16:19:21 2010
+=A0 =A0 Raid Level : raid5
+=A0Used Dev Size : 976326208 (931.10 GiB 999.76 GB)
+=A0 =A0 Array Size : 2928978624 (2793.29 GiB 2999.27 GB)
+=A0 Raid Devices : 4
+=A0Total Devices : 4
+Preferred Minor : 1
+
+=A0 =A0Update Time : Sun Jul 31 23:24:25 2011
+=A0 =A0 =A0 =A0 =A0State : active
+=A0Active Devices : 3
+Working Devices : 3
+=A0Failed Devices : 1
+=A0Spare Devices : 0
+=A0 =A0 =A0 Checksum : 92905b9f - correct
+=A0 =A0 =A0 =A0 Events : 1041521
+
+=A0 =A0 =A0 =A0 Layout : left-symmetric
+=A0 =A0 Chunk Size : 64K
+
+=A0 =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
+this =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 =A02 =A0 =A0 =A0 =A00 =A0 =A0 =
+=A0active sync =A0 /dev/sda2
+
+=A0 0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 =A02 =A0 =A0 =A0 =A00 =A0 =A0=
+ =A0active sync =A0 /dev/sda2
+=A0 1 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 18 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
+active sync =A0 /dev/sdb2
+=A0 2 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 34 =A0 =A0 =A0 =A02 =A0 =A0 =A0=
+active sync =A0 /dev/sdc2
+=A0 3 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0 =A0=
+ =A0faulty removed
+
+I'm really not sure what to do next and obviously would like to do
+everything possible to save the array.
+
+How can I either have mdadm rebuild the array using the new disk or
+start in degraded mode so I can rescue the data? Perhaps there's
+another option?
+
+Thanks,
+Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
