@@ -1,25 +1,43 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Assembling array with missing members
-Date: Mon, 1 Aug 2011 13:17:10 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1108011316040.4709@uplift.swm.pp.se>
-References: <CAB1R3siG=FOXXq5kRx5N8O7ExCiM=0ic0xakYpfKZH1FOROXoQ@mail.gmail.com> <CAB1R3sjuUEVAPLgGNdnwnyHVir3bEGOT9iOSdYBz+QSs+2fhaA@mail.gmail.com> <4E3673C2.7070607@anonymous.org.uk> <CAB1R3siEvHsK9nYUpbe7_Z8B08cvXVX=xd-w0BVybsrO6NojBQ@mail.gmail.com>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH] fix: segfault when killing subarray of non-existent
+ container
+Date: Mon, 1 Aug 2011 16:33:06 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246F013DDEDC1B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3siEvHsK9nYUpbe7_Z8B08cvXVX=xd-w0BVybsrO6NojBQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 1 Aug 2011, Alex wrote:
+From 9c3c974e1e047caf3434f98e183e58ed3b222396 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Mon, 1 Aug 2011 17:23:33 +0200
+Subject: [PATCH] fix: segfault when killing subarray of non-existent container
 
-> I've tried this, but it complains about the system not being shut down
-> cleanly. Should I just force it?
+Negative value must be returned to indicate error in open_subarray
 
-Check so that the event count is fairly ok on all components (doesn't 
-differ too much), and then --force it. It's not that you have much choice 
-currently, but that's a good sanity check.
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ util.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/util.c b/util.c
+index 55d171a..2dec9d5 100644
+--- a/util.c
++++ b/util.c
+@@ -1369,7 +1369,7 @@ int open_subarray(char *dev, char *subarray, struct supertype *st, int quiet)
+ 		if (!quiet)
+ 			fprintf(stderr, Name ": Couldn't open %s, aborting\n",
+ 				dev);
+-		return 2;
++		return -1;
+ 	}
+ 
+ 	st->devnum = fd2devnum(fd);
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+1.7.4
+
