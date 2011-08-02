@@ -1,51 +1,34 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: component device mismatches found: 9600
-Date: Tue, 02 Aug 2011 01:35:33 +0100
-Message-ID: <4E374655.9040209@anonymous.org.uk>
-References: <4E359DC0.5090608@vorgon.com> <CADNH=7H0+RP7yiE01NmxncTBapsMLRt1XkqAHxZr=FEAC9Zx1A@mail.gmail.com> <4E370227.2070804@vorgon.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Re: Assembling array with missing members
+Date: Tue, 2 Aug 2011 00:26:05 -0400
+Message-ID: <CAB1R3sjkQmObHVJ+EReL6kPH=3yLoNp3O0t3KK7YURZknoVEKQ@mail.gmail.com>
+References: <CAB1R3siG=FOXXq5kRx5N8O7ExCiM=0ic0xakYpfKZH1FOROXoQ@mail.gmail.com>
+	<CAB1R3sjuUEVAPLgGNdnwnyHVir3bEGOT9iOSdYBz+QSs+2fhaA@mail.gmail.com>
+	<4E3673C2.7070607@anonymous.org.uk>
+	<CAB1R3siEvHsK9nYUpbe7_Z8B08cvXVX=xd-w0BVybsrO6NojBQ@mail.gmail.com>
+	<alpine.DEB.2.00.1108011316040.4709@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E370227.2070804@vorgon.com>
+In-Reply-To: <alpine.DEB.2.00.1108011316040.4709@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Timothy D. Lenz" <tlenz@vorgon.com>
-Cc: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/08/2011 20:44, Timothy D. Lenz wrote:
-> On 7/31/2011 11:32 AM, Mathias Bur=C3=A9n wrote:
->> On 31 July 2011 19:24, Timothy D. Lenz<tlenz@vorgon.com> wrote:
->>> Looking through the logs, I found this in daemon.log.0. Is this a
->>> sign of a
->>> problem? Below is the entire log:
-[...]
->>> Jul 3 01:03:01 x64VDR mdadm[2003]: RebuildFinished event detected o=
-n md
->>> device /dev/md1, component device mismatches found: 9600
-[...]
-> md1 : active raid1 sdb2[1] sda2[0]
-> 4891712 blocks [2/2] [UU]
+Hi,
 
-Hmm. Is this 5GB RAID-1 your swap partition? If so, don't worry about i=
-t=20
-- there is an oddity that mismatches can crop up on RAID-1 arrays when =
-a=20
-write is abandoned after one drive has been written but the other hasn'=
-t=20
-(I think that's the explanation), it's most often seen on swap, and it'=
-s=20
-harmless.
+>> I've tried this, but it complains about the system not being shut down
+>> cleanly. Should I just force it?
+>
+> Check so that the event count is fairly ok on all components (doesn't differ
+> too much), and then --force it. It's not that you have much choice
+> currently, but that's a good sanity check.
 
-Red Hat disabled reporting mismatches on RAID-1 because of this.
+Thanks so much for your help. I've managed to add the new disk and
+make the whole array active. Took about 6hrs at 35MB/s to sync. I'm
+now copying all 1.5TB to a remote server and will rebuild it from
+scratch.
 
-Cheers,
-
-John.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks again,
+Alex
