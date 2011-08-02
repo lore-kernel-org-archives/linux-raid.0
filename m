@@ -1,155 +1,117 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Grub-install, superblock corrupted/erased and other animals
-Date: Tue, 2 Aug 2011 16:39:07 +1000
-Message-ID: <20110802163907.29fc40b4@notabene.brown>
-References: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH] md/raid1: factor out common bio handling code
+Date: Tue,  2 Aug 2011 16:22:52 +0900
+Message-ID: <1312269772-7605-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Scheiner <blue@aquarat.za.net>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 27 Jul 2011 14:16:52 +0200 Aaron Scheiner <blue@aquarat.za.net>=
- wrote:
+When normal-write and sync-read/write bio completes, we should
+find out the disk number the bio belongs to. Factor those common
+code out to a separate function.
 
-> Hi
->=20
-> My original message was sent (and rejected) 4 days ago because it was
-> in HTML (whoops). Here's my original e-mail with updates :
->=20
-> I've got an Ubuntu machine with an mdadm RAID array on level 6.=A0The
-> RAID-6 array consists of 10 drives and has been running for about 3
-> years now. I recently upgraded the drives in the array from 1TB units
-> to 2TB units.
->=20
-> The drive on which the OS sat died a few days ago, so I installed a
-> new OS drive and then installed Ubuntu Server on it.
-> On reboot the machine hung on a black screen with a white flashing
-> cursor. So I went back into the Ubuntu Setup and installed grub to al=
-l
-> of the drives in the raid array (except two) [wow, this was such a
-> stupid move].
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/md/raid1.c |   44 ++++++++++++++++++++++++--------------------
+ 1 files changed, 24 insertions(+), 20 deletions(-)
 
-So you still have two with valid superblocks?  (or did before you start=
-ed
-re-creating).  Do you have a copy of the "mdadm --examine" of those?  I=
-t
-would be helpful.
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index d7518dc8593b..13109956edb9 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -268,6 +268,24 @@ static inline void update_head_pos(int disk, r1bio_t *r1_bio)
+ 		r1_bio->sector + (r1_bio->sectors);
+ }
+ 
++/*
++ * Find the disk number which triggered given bio
++ */
++static int find_bio_disk(r1bio_t *r1_bio, struct bio *bio)
++{
++	int mirror;
++	int raid_disks = r1_bio->mddev->raid_disks;
++
++	for (mirror = 0; mirror < raid_disks; mirror++)
++		if (r1_bio->bios[mirror] == bio)
++			break;
++
++	BUG_ON(mirror == raid_disks);
++	update_head_pos(mirror, r1_bio);
++
++	return mirror;
++}
++
+ static void raid1_end_read_request(struct bio *bio, int error)
+ {
+ 	int uptodate = test_bit(BIO_UPTODATE, &bio->bi_flags);
+@@ -361,10 +379,7 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 	conf_t *conf = r1_bio->mddev->private;
+ 	struct bio *to_put = NULL;
+ 
+-
+-	for (mirror = 0; mirror < conf->raid_disks; mirror++)
+-		if (r1_bio->bios[mirror] == bio)
+-			break;
++	mirror = find_bio_disk(r1_bio, bio);
+ 
+ 	/*
+ 	 * 'one mirror IO has finished' event handler:
+@@ -400,8 +415,6 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 		}
+ 	}
+ 
+-	update_head_pos(mirror, r1_bio);
+-
+ 	if (behind) {
+ 		if (test_bit(WriteMostly, &conf->mirrors[mirror].rdev->flags))
+ 			atomic_dec(&r1_bio->behind_remaining);
+@@ -1341,13 +1354,10 @@ abort:
+ static void end_sync_read(struct bio *bio, int error)
+ {
+ 	r1bio_t *r1_bio = bio->bi_private;
+-	int i;
+ 
+-	for (i=r1_bio->mddev->raid_disks; i--; )
+-		if (r1_bio->bios[i] == bio)
+-			break;
+-	BUG_ON(i < 0);
+-	update_head_pos(i, r1_bio);
++	/* this will call update_head_pos() */
++	find_bio_disk(r1_bio, bio);
++
+ 	/*
+ 	 * we have read a block, now it needs to be re-written,
+ 	 * or re-read if the read failed.
+@@ -1366,16 +1376,12 @@ static void end_sync_write(struct bio *bio, int error)
+ 	r1bio_t *r1_bio = bio->bi_private;
+ 	mddev_t *mddev = r1_bio->mddev;
+ 	conf_t *conf = mddev->private;
+-	int i;
+ 	int mirror=0;
+ 	sector_t first_bad;
+ 	int bad_sectors;
+ 
+-	for (i = 0; i < conf->raid_disks; i++)
+-		if (r1_bio->bios[i] == bio) {
+-			mirror = i;
+-			break;
+-		}
++	mirror = find_bio_disk(r1_bio, bio);
++
+ 	if (!uptodate) {
+ 		sector_t sync_blocks = 0;
+ 		sector_t s = r1_bio->sector;
+@@ -1401,8 +1407,6 @@ static void end_sync_write(struct bio *bio, int error)
+ 		)
+ 		set_bit(R1BIO_MadeGood, &r1_bio->state);
+ 
+-	update_head_pos(mirror, r1_bio);
+-
+ 	if (atomic_dec_and_test(&r1_bio->remaining)) {
+ 		int s = r1_bio->sectors;
+ 		if (test_bit(R1BIO_MadeGood, &r1_bio->state) ||
+-- 
+1.7.6
 
->=20
-> I then rebooted the machine and it successfully booted into Ubuntu
-> Server. I set about restoring the configuration for the raid array...
-> only to be given the message "No Superblock Found" (more or less).
-> Each element in the array was used directly by mdadm (so /dev/sda, no=
-t
-> /dev/sda1).
->=20
-> I see that the superblock is stored within the MBR region on the driv=
-e
-> (which is 512bytes from the start of the disk), which would explain
-> why the superblocks were destroyed. I haven't been able to find
-> anything regarding a backup superblock (does something like this
-> exist?).
->=20
-> I have now started using a script that tries to re-create the array b=
-y
-> running through the various permutations available... it takes roughl=
-y
-> 2.5 seconds per permutation/iteration and there are just over 40 000
-> possibilities. The script tests for a valid array by trying to mount
-> the array as read only (it's an XFS file system). I somehow doubt tha=
-t
-> it will mount even when the correct combination of disks is found.
-> [UPDATE] : It never mounted.
-
-Odd...  Possibly you have a newer mdadm which uses a different "Data
-offset".  The "mdadm --examine" of the 2 drives that didn't get corrupt=
-ed
-would help confirm that.
-
->=20
-> So... I have an idea... The array has a hole bunch of movie files on
-> it and I have exact copies of some of them on another raid array. So =
-I
-> was thinking that if I searched for the start of one of those files o=
-n
-> the scrambled array, I could work out the order of the disks by
-> searching forward until I found a change. I could then compare the
-> changed area (probably 128KB/the chunk size forward) with the file I
-> have and see where that chunk lies in the file, thereby working out
-> the order.
-> [UPDATE] : Seeing as the array never mounted, I have proceeded with
-> this idea. I took samples of the start of the video file and provided
-> them to Scalpel as needles for recovery. After two days of searching,
-> Scalpel located the starts of the various segments in the raid array
-> (I re-created the raid array with the drives in random order). I then
-> carved (using dd) 3MBs out of the raid array that contains all the
-> samples handed to scalpel originally (plus a bit more).
->=20
-> So now I have to find segments of the start of the intact file in the
-> carved out data from the raid array.
->=20
-> It would be really useful if I knew the layout of the array :
->=20
-> If the chunk size of the array is 128KB, does that mean that the file
-> I carved will be divided up into segments of contiguous data, each
-> 128KBs in length ? or does it mean that the length of contiguous data
-> will be 16KB ( 128 KB / 8 drives ) ?
-
-128KB per device, so the first alternative.
-
->=20
-> Do these segments follow on from each other without interruption or i=
-s
-> there some other data in-between (like metadata? I'm not sure where
-> that resides).
-
-That depends on how XFS lays out the data.  It will probably be mostly
-contiguous, but no guarantees.
-
-
->=20
-> Any explanation of the structure of a raid6 array would be greatly
-> appreciated, as well as any other advice (tools, tips, etc).
-
-The stripes start "Data Offset" from the beginning of the device, which=
- I
-think is 1MB with recent mdadm, but something like 64K with earlier mda=
-dm.
-
-The first few stripes are:
-
- Q  0  1  2  3  4  5  6  7  P
- 8  9 10 11 12 13 14 15  P  Q
-17 18 19 20 21 22 23  P  Q 16
-
-Where 'P' is xor parity, Q is GF parity, and N is chunk number N.  Each=
- chunk
-is 128KB (if that is your chunk size).
-
-This pattern repeats after 10 stripes.
-
-good luck,
-NeilBrown
-
-
->=20
-> Thanks :)
->=20
-> Aaron (24)
-> South Africa
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
