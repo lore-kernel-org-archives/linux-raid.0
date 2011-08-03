@@ -1,40 +1,51 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH] md: use REQ_NOIDLE flag in md_super_write()
-Date: Thu,  4 Aug 2011 00:57:57 +0900
-Message-ID: <1312387077-26617-1-git-send-email-namhyung@gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [md PATCH 08/34] md/raid5: replace sh->lock with an 'active' flag.
+Date: Wed, 3 Aug 2011 15:47:47 -0700
+Message-ID: <CAA9_cmfwBe64jpCGzTHLSXNVu=Mg_nKQwGMixEms7RiYZ7nHXw@mail.gmail.com>
+References: <20110721022537.6728.90204.stgit@notabene.brown>
+	<20110721023225.6728.96772.stgit@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110721023225.6728.96772.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Queue idling is used for the anticipation of immediate
-sequencial I/O's but md_super_write() is a kind of one-
-shot operation, coupled with md_super_wait(), so the
-idling in this case will be just a waste of time.
+On Wed, Jul 20, 2011 at 7:32 PM, NeilBrown <neilb@suse.de> wrote:
+> sh->lock is now mainly used to ensure that two threads aren't running
+> in the locked part of handle_stripe[56] at the same time.
+>
+> That can more neatly be achieved with an 'active' flag which we set
+> while running handle_stripe. =A0If we find the flag is set, we simply
+> requeue the stripe for later by setting STRIPE_HANDLE.
+>
+> For safety we take ->device_lock while examining the state of the
+> stripe and creating a summary in 'stripe_head_state / r6_state'.
+> This possibly isn't needed but as shared fields like ->toread,
+> ->towrite are checked it is safer for now at least.
+>
+> We leave the label after the old 'unlock' called "unlock" because it
+> will disappear in a few patches, so renaming seems pointless.
+>
+> This leaves the stripe 'locked' for longer as we clear STRIPE_ACTIVE
+> later, but that is not a problem.
+>
 
-Specifying REQ_NOIDLE prevents it. Instead of adding
-the flag to submit_bio() directly, use pre-defined
-macro WRITE_FLUSH_FUA.
+This removal reminds me of one thing I have wondered about, but to
+date have not found the time to measure (maybe someone might beat me
+to it if the idea is out there), is what is the overhead of all the
+atomic operations that raid5.c generates?  If we can guarantee that
+certain updates only happen under sh->lock (now STRIPE_ACTIVE) can we
+downgrade set_bit and clear_bit to their non-atomic __set_bit and
+__clear_bit versions and recover some cpu cycles?
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- drivers/md/md.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d97a62534798..8650e9a0ce7c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -848,7 +848,7 @@ void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
- 	bio->bi_end_io = super_written;
- 
- 	atomic_inc(&mddev->pending_writes);
--	submit_bio(REQ_WRITE | REQ_SYNC | REQ_FLUSH | REQ_FUA, bio);
-+	submit_bio(WRITE_FLUSH_FUA, bio);
- }
- 
- void md_super_wait(mddev_t *mddev)
--- 
-1.7.6
-
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
