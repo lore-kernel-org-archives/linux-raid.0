@@ -1,78 +1,55 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Grub-install, superblock corrupted/erased and other animals
-Date: Wed, 03 Aug 2011 02:13:18 -0500
-Message-ID: <4E38F50E.6050406@hardwarefreak.com>
-References: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
+From: Jan Vejvalka <jan.vejvalka@lfmotol.cuni.cz>
+Subject: Mdadm re-add fails
+Date: Wed, 03 Aug 2011 10:03:23 +0200
+Message-ID: <4E3900CB.6030800@lfmotol.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Scheiner <blue@aquarat.za.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 7/27/2011 7:16 AM, Aaron Scheiner wrote:
+Hi *,
 
-> The drive on which the OS sat died a few days ago, so I installed a
-> new OS drive and then installed Ubuntu Server on it.
-> On reboot the machine hung on a black screen with a white flashing
-> cursor. So I went back into the Ubuntu Setup and installed grub to all
-> of the drives in the raid array (except two) [wow, this was such a
-> stupid move].
-> 
-> I then rebooted the machine and it successfully booted into Ubuntu
-> Server. I set about restoring the configuration for the raid array...
-> only to be given the message "No Superblock Found" (more or less).
-> Each element in the array was used directly by mdadm (so /dev/sda, not
-> /dev/sda1).
-...
+   I'm using mdadm 3.1.5 from Slackware64 13.37, for RAID1.
+After running the RAID degraded for a while, I can't bring it
+back.
 
-I should have mentioned these thoughts previously, but often folks on
-this list get tired of hearing it over and over, similar to Mom saying
-"clean your room" or road signs every few miles telling you to "buckle
-up".  People get tired of it, but there's a good reason for it: to
-prevent future heartache.
+At boot, dmesg says (correctly]:
 
-Now that you're seen first hand how fragile Linux RAID can be in some
-circumstances in the hands of less than expert users, you may want to
-consider taking measures to prevent the consequences of this kind of
-thing in the future:
+md: considering sdb1 ...
+md:  adding sdb1 ...
+md:  adding sda1 ...
+md: created md1
+md: bind<sda1>
+md: bind<sdb1>
+md: running: <sdb1><sda1>
+md: kicking non-fresh sda1 from array!
+md: unbind<sda1>
+md: export_rdev(sda1)
+md/raid1:md1: active with 1 out of 3 mirrors
 
-1.  Make regular backups of your data and configuration files
-    -use flash pen drive for the config files
-    -use whatever you can afford for data files
-    -if you can't afford to backup 16TB, use DVD-R for important files
-     and sacrifice the rest
-2.  Use kernel supported hardware RAID everywhere if you can afford it
-3.  At minimum use a bootable hardware RAID card with RAID1 drives
+And when I try to:~#  mdadm --add /dev/md1 /dev/sda1 ,
+I get
+mdadm: /dev/sda1 reports being an active member for /dev/md1, but a 
+--re-add fails.
+mdadm: not performing --add as that would convert /dev/sda1 in to a spare.
+mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sda1" first.
 
-In this case #3 would have saved your bacon.  One possible Linux
-compatible solution would be the following:
+I guess that for getting the array up it doesn't make much difference
+to clear /dev/sda1 and to add it clear (does it ?), but it's a bit
+embarrassing to find this behaviour in a moreless standard situation.
 
-Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16816116075
-Qty 2:  http://www.newegg.com/Product/Product.aspx?Item=N82E16820167062
- and
-Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16817996013
- or
-Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16817986003
-to house the SSDs, depending on what free bays you have.
+There seems to be previous conversation on this topic between Annemarie
+Schmidt and Neil Brown that ends on Fri, 27 May 2011 17:16:46 -0400, 
+with Msg-Id 
+<5AA430FFE4486C448003201AC83BC85E01B0353E@xxxxxxxxxxxxxxxxxxxxx>
+(at least on http://www.spinics.net/lists/raid/thrd2.html) but I'm not
+sure which version of mdadm it concerns and what is the final action.
 
-Mirror the two Intel Enterprise SSDs with the controller and install
-Ubuntu on the RAID device.  The mainline kernel supports the 3Ware 9650
-series so it should simply work.  You'll only have 20GB but that should
-be more than plenty for a boot/root filesystem drive.  This is the least
-expensive hardware RAID1 boot setup I could piece together but at the
-same time the fastest.  This will run you ~$435-$460 USD.  I have no
-idea of cost or availability of these in the UK.  For about $20 USD more
-per drive you could use the 500GB Seagate Constellation Enterprise 2.5"
-7.2k drives:
-http://www.newegg.com/Product/Product.aspx?Item=N82E16822148711
+I'm ready to test a fix.
 
-If you must substitute, simply make sure you get an "enterprise" type
-drive/SSD as they have TLER support and other firmware features that
-allow them to play nice with real RAID cards.
+Thanks,
 
--- 
-Stan
+Jan Vejvalka
