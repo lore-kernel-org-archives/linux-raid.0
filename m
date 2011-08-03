@@ -1,46 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Grub-install, superblock corrupted/erased and other animals
-Date: Wed, 3 Aug 2011 19:20:54 +1000
-Message-ID: <20110803192054.6097d2c0@notabene.brown>
-References: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
-	<20110802163907.29fc40b4@notabene.brown>
-	<CADz4AWEWm68H4ON=+StNE8epBfbnVHnSwJo+NjfTf8-w5Bd2Ug@mail.gmail.com>
-	<20110803150108.58f5c70b@notabene.brown>
-	<CADz4AWFekPKreuiwzYBvTnbXZnDGRH7nQ1WKEaeOdn7_6M5eQg@mail.gmail.com>
+Subject: Re: Mdadm re-add fails
+Date: Wed, 3 Aug 2011 19:25:41 +1000
+Message-ID: <20110803192541.7a6e11f6@notabene.brown>
+References: <4E3900CB.6030800@lfmotol.cuni.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADz4AWFekPKreuiwzYBvTnbXZnDGRH7nQ1WKEaeOdn7_6M5eQg@mail.gmail.com>
+In-Reply-To: <4E3900CB.6030800@lfmotol.cuni.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Scheiner <blue@aquarat.za.net>
+To: Jan Vejvalka <jan.vejvalka@lfmotol.cuni.cz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 3 Aug 2011 10:59:22 +0200 Aaron Scheiner <blue@aquarat.za.net> wrote:
+On Wed, 03 Aug 2011 10:03:23 +0200 Jan Vejvalka
+<jan.vejvalka@lfmotol.cuni.cz> wrote:
 
-> mmm, learning experience :P
+> Hi *,
 > 
-> The Wikipedia page on grub says :
-> "
-> Stage 1 can load Stage 2 directly, but it's normally set up to load
-> Stage 1.5. GRUB Stage 1.5 is located in the first 30 kilobytes of hard
-> disk immediately following the MBR and before the first partition.
-> "
-> So if both stage 1 and stage 1.5 were written to the drives
-> approximately 30KBytes would have been overwritten, so 60 sectors?
+>    I'm using mdadm 3.1.5 from Slackware64 13.37, for RAID1.
+> After running the RAID degraded for a while, I can't bring it
+> back.
 > 
-> Why is the data offset by 256 bytes ? The array was created using a
-> standard create command (only specifying raid level, devices, chunk
-> size).
+> At boot, dmesg says (correctly]:
+> 
+> md: considering sdb1 ...
+> md:  adding sdb1 ...
+> md:  adding sda1 ...
+> md: created md1
+> md: bind<sda1>
+> md: bind<sdb1>
+> md: running: <sdb1><sda1>
+> md: kicking non-fresh sda1 from array!
+> md: unbind<sda1>
+> md: export_rdev(sda1)
+> md/raid1:md1: active with 1 out of 3 mirrors
+> 
+> And when I try to:~#  mdadm --add /dev/md1 /dev/sda1 ,
+> I get
+> mdadm: /dev/sda1 reports being an active member for /dev/md1, but a 
+> --re-add fails.
+> mdadm: not performing --add as that would convert /dev/sda1 in to a spare.
+> mdadm: To make this a spare, use "mdadm --zero-superblock /dev/sda1" first.
+> 
+> I guess that for getting the array up it doesn't make much difference
+> to clear /dev/sda1 and to add it clear (does it ?), but it's a bit
+> embarrassing to find this behaviour in a moreless standard situation.
 
+Do you have a write-intent bitmap?
 
-The offset is 256 sectors (64K).
+If yes, please report the output of "mdadm --examine" and "mdadm
+--examine-bitmap" of both devices.
 
-The data obviously cannot go at the start of the drive as the metadata is
-there, so it is offset from the start.
-I leave 64K to allow for various different metadata (bitmap, bad-block log,
-other ideas I might have one day).
+If no, then this is now expected behaviour.  It may be a slight inconvenience
+for you to have to "--zero-superblock" first, but I have seen numerous cases
+where people have "--add"ed devices when they shouldn't have and had the
+device turned in to a spare when they didn't want that, and so lost valuable
+information.
+
+So if there is no write-intent bitmap, the just do as the message suggests
+and have a happy array again.
 
 NeilBrown
 
