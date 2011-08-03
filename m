@@ -1,116 +1,78 @@
-From: NeilBrown <neilb@suse.de>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Grub-install, superblock corrupted/erased and other animals
-Date: Wed, 3 Aug 2011 15:01:08 +1000
-Message-ID: <20110803150108.58f5c70b@notabene.brown>
+Date: Wed, 03 Aug 2011 02:13:18 -0500
+Message-ID: <4E38F50E.6050406@hardwarefreak.com>
 References: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
-	<20110802163907.29fc40b4@notabene.brown>
-	<CADz4AWEWm68H4ON=+StNE8epBfbnVHnSwJo+NjfTf8-w5Bd2Ug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADz4AWEWm68H4ON=+StNE8epBfbnVHnSwJo+NjfTf8-w5Bd2Ug@mail.gmail.com>
+In-Reply-To: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Aaron Scheiner <blue@aquarat.za.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2 Aug 2011 18:16:56 +0200 Aaron Scheiner <blue@aquarat.za.net> wrote:
+On 7/27/2011 7:16 AM, Aaron Scheiner wrote:
 
-> Hi Neil! I mailed this list originally because of your website.
+> The drive on which the OS sat died a few days ago, so I installed a
+> new OS drive and then installed Ubuntu Server on it.
+> On reboot the machine hung on a black screen with a white flashing
+> cursor. So I went back into the Ubuntu Setup and installed grub to all
+> of the drives in the raid array (except two) [wow, this was such a
+> stupid move].
 > 
-> Thanks for the info regarding layout, it's very helpful and explains a lot.
-> 
-> I saved the output of the -E argument before zero-ing the surviving
-> superblocks :
+> I then rebooted the machine and it successfully booted into Ubuntu
+> Server. I set about restoring the configuration for the raid array...
+> only to be given the message "No Superblock Found" (more or less).
+> Each element in the array was used directly by mdadm (so /dev/sda, not
+> /dev/sda1).
+...
 
-Good !
+I should have mentioned these thoughts previously, but often folks on
+this list get tired of hearing it over and over, similar to Mom saying
+"clean your room" or road signs every few miles telling you to "buckle
+up".  People get tired of it, but there's a good reason for it: to
+prevent future heartache.
 
-> 
-> "
-> /dev/sdd:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : e4a266e5:6daac63f:ea0b6986:fb9361cc
->            Name : nasrat:0
->   Creation Time : Fri May 20 17:32:20 2011
->      Raid Level : raid6
->    Raid Devices : 10
-> 
->  Avail Dev Size : 3907028896 (1863.02 GiB 2000.40 GB)
->      Array Size : 31256213504 (14904.12 GiB 16003.18 GB)
->   Used Dev Size : 3907026688 (1863.02 GiB 2000.40 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
+Now that you're seen first hand how fragile Linux RAID can be in some
+circumstances in the hands of less than expert users, you may want to
+consider taking measures to prevent the consequences of this kind of
+thing in the future:
 
-This md superblock is 4K from the start of the device.  So installing GRUB
-must have destroyed more than the first 1 or 2 sectors... I hope it didn't
-get up to 272 sectors...
+1.  Make regular backups of your data and configuration files
+    -use flash pen drive for the config files
+    -use whatever you can afford for data files
+    -if you can't afford to backup 16TB, use DVD-R for important files
+     and sacrifice the rest
+2.  Use kernel supported hardware RAID everywhere if you can afford it
+3.  At minimum use a bootable hardware RAID card with RAID1 drives
 
-> "
-> and the second surviving superblock :
-> 
-> "/dev/sde1:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : e4a266e5:6daac63f:ea0b6986:fb9361cc
->            Name : nasrat:0
->   Creation Time : Fri May 20 17:32:20 2011
->      Raid Level : raid6
->    Raid Devices : 10
-> 
->  Avail Dev Size : 3907026688 (1863.02 GiB 2000.40 GB)
->      Array Size : 31256213504 (14904.12 GiB 16003.18 GB)
->     Data Offset : 256 sectors
->    Super Offset : 8 sectors
+In this case #3 would have saved your bacon.  One possible Linux
+compatible solution would be the following:
 
-And this one has a slightly different data offset - 256 sectors!
+Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16816116075
+Qty 2:  http://www.newegg.com/Product/Product.aspx?Item=N82E16820167062
+ and
+Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16817996013
+ or
+Qty 1:  http://www.newegg.com/Product/Product.aspx?Item=N82E16817986003
+to house the SSDs, depending on what free bays you have.
 
-So just "creating" an array on top of this set of devices will never restore
-your data as the data offsets are not all the same.
+Mirror the two Intel Enterprise SSDs with the controller and install
+Ubuntu on the RAID device.  The mainline kernel supports the 3Ware 9650
+series so it should simply work.  You'll only have 20GB but that should
+be more than plenty for a boot/root filesystem drive.  This is the least
+expensive hardware RAID1 boot setup I could piece together but at the
+same time the fastest.  This will run you ~$435-$460 USD.  I have no
+idea of cost or availability of these in the UK.  For about $20 USD more
+per drive you could use the 500GB Seagate Constellation Enterprise 2.5"
+7.2k drives:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16822148711
 
-This will be a little bit tricky ... but maybe not too tricky.
+If you must substitute, simply make sure you get an "enterprise" type
+drive/SSD as they have TLER support and other firmware features that
+allow them to play nice with real RAID cards.
 
-First we need to find the correct order and data offsets.
-
-I would get the raid6check.c code from mdadm-3.2.1.  It has changed in 3.2.2
-in a way that isn't really what you want.
-
-It can be given (among other things) a list of device and it will check if
-the RAID6 parity blocks are consistent.
-As RAID6 depends on order, this will be a good indication whether the devices
-are in the correct order or not.
-
-Read the code so we what args it needs.   Note in particular that each device
-can be accompanied by an 'offset' in sectors.  So you might list
-   /dev/sde1:256 /dev/sdd:272
-
-I just noticed:  one is a partition, the other is a whole device.  That is a
-little unusual...  be careful not to let it confuse you...
-
-So using raid6check, check the parity of the first few stripes for every
-ordering of devices, and each choice of "256" or "272" as the sector offset.
-Hopefully only one will work.
-
-The "--examine" output you provided doesn't have a "Device Role" or "Array
-Slot" line.  That is very strange!!  It should tell you at least which
-position in the array that device fills.
-
-
-It just occurred to me that partitions might have been changed on you some
-how when you installed GRUB.... probably not but it would be worth checking
-the first few hundred K for md metadata just in case it is there.
-A metadata block will start  FC 4E 2B A9  (the 'Magic' above is
-little-endian), and will container the "Name" of the array 'nasrat:0' at
-offset 32.
-
-Once we find the data we will need to convince mdadm to create an array with
-all the different data_offsets.  That will require a little bit of coding but
-is achievable.
-
-
-NeilBrown
-
-
+-- 
+Stan
