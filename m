@@ -1,48 +1,50 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] md/raid5: STRIPE_ACTIVE has lock semantics, add barriers
-Date: Wed, 03 Aug 2011 17:31:23 -0700
-Message-ID: <20110804003016.30281.26038.stgit@localhost6.localdomain6>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md: use REQ_NOIDLE flag in md_super_write()
+Date: Thu, 4 Aug 2011 14:26:39 +1000
+Message-ID: <20110804142639.6484de94@notabene.brown>
+References: <1312387077-26617-1-git-send-email-namhyung@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1312387077-26617-1-git-send-email-namhyung@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Namhyung Kim <namhyung@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-All updates that occur under STRIPE_ACTIVE should be globally visible
-when STRIPE_ACTIVE clears.  test_and_set_bit() implies a barrier, but
-clear_bit() does not.
+On Thu,  4 Aug 2011 00:57:57 +0900 Namhyung Kim <namhyung@gmail.com> wrote:
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+> Queue idling is used for the anticipation of immediate
+> sequencial I/O's but md_super_write() is a kind of one-
+> shot operation, coupled with md_super_wait(), so the
+> idling in this case will be just a waste of time.
+> 
+> Specifying REQ_NOIDLE prevents it. Instead of adding
+> the flag to submit_bio() directly, use pre-defined
+> macro WRITE_FLUSH_FUA.
+> 
+> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+> ---
+>  drivers/md/md.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index d97a62534798..8650e9a0ce7c 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -848,7 +848,7 @@ void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
+>  	bio->bi_end_io = super_written;
+>  
+>  	atomic_inc(&mddev->pending_writes);
+> -	submit_bio(REQ_WRITE | REQ_SYNC | REQ_FLUSH | REQ_FUA, bio);
+> +	submit_bio(WRITE_FLUSH_FUA, bio);
+>  }
+>  
+>  void md_super_wait(mddev_t *mddev)
 
-This at least was the guarantee we had with sh->lock...
+Applied, thanks.
 
- drivers/md/raid5.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+NeilBrown
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dbae459..bd95123 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3116,7 +3116,7 @@ static void handle_stripe(struct stripe_head *sh)
- 	struct r5dev *pdev, *qdev;
- 
- 	clear_bit(STRIPE_HANDLE, &sh->state);
--	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
-+	if (test_and_set_bit_lock(STRIPE_ACTIVE, &sh->state)) {
- 		/* already being handled, ensure it gets handled
- 		 * again when current action finishes */
- 		set_bit(STRIPE_HANDLE, &sh->state);
-@@ -3377,7 +3377,7 @@ finish:
- 
- 	return_io(s.return_bi);
- 
--	clear_bit(STRIPE_ACTIVE, &sh->state);
-+	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
- }
- 
- static void raid5_activate_delayed(raid5_conf_t *conf)
 
