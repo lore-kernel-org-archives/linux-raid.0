@@ -1,117 +1,102 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Grub-install, superblock corrupted/erased and other animals
-Date: Fri, 5 Aug 2011 22:16:25 +1000
-Message-ID: <20110805221625.762f8415@notabene.brown>
-References: <CADz4AWHJU5GGBji9uVbvGjPZCZ0CxseiPsQbssCULWxqyKvG8A@mail.gmail.com>
-	<20110802163907.29fc40b4@notabene.brown>
-	<CADz4AWEWm68H4ON=+StNE8epBfbnVHnSwJo+NjfTf8-w5Bd2Ug@mail.gmail.com>
-	<20110803150108.58f5c70b@notabene.brown>
-	<CADz4AWFekPKreuiwzYBvTnbXZnDGRH7nQ1WKEaeOdn7_6M5eQg@mail.gmail.com>
-	<20110803192054.6097d2c0@notabene.brown>
-	<CADz4AWE20OdL4VecVOrOH5X-UqdB4BA00AW33YbYEtD1z30acA@mail.gmail.com>
-	<4E3BC6B9.8050803@hardwarefreak.com>
-	<CADz4AWGrsP8tJ7U_YPa8Bs7rxUcW40-wTEtRmSykaBpQ0=V9ug@mail.gmail.com>
+From: Daniel Frey <djqfrey@gmail.com>
+Subject: mdadm forces resync every boot
+Date: Fri, 05 Aug 2011 08:05:53 -0700
+Message-ID: <4E3C06D1.6030301@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADz4AWGrsP8tJ7U_YPa8Bs7rxUcW40-wTEtRmSykaBpQ0=V9ug@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aaron Scheiner <blue@aquarat.za.net>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 5 Aug 2011 13:28:41 +0200 Aaron Scheiner <blue@aquarat.za.net> =
-wrote:
+Hi all,
 
-> "Wish I could have helped you recover the array. =A0When a patient co=
-mes
-> through emergency with 3 GSWs to the forehead and no pulse, there's
-> nothing that can be done. =A0:("
->=20
-> Quite an analogy :P . Is it really that hopeless ? And of interest
-> have you been in that situation ? I have the order of the array... so
-> it should just be a case of reconstructing it in the same way it was
-> created. Only one device was partitioned (as can be seen from the
-> dmesg logs) and that device is known.
->=20
-> Most of the array was backed up to another array, but there are some
-> photos I'd like to recover. The array doesn't need to be functional
-> any time soon (I'm happy to keep working on it for another 3 months i=
-f
-> necessary).
->=20
-> Besides, it's a good learning experience.
->=20
-> I "re-created" the array using the drive order I specified in the
-> previous e-mail, but replacing drive 9 with "missing". I then ran
-> xfs_check on the md device and it failed (as it did with every other
-> re-create attempt). I'll give your suggestion of xfs_repair -n a go :=
-)
+I've been fighting with my raid array (imsm - raid10) for several weeks
+now. I've now replaced all four drives in my array as the constant
+rebuilding caused a smart error to trip on the old drives; unfortunately
+mdadm is still resyncing the array at every boot.
 
-When you create the array, what 'data offset' does mdadm choose?
-If not the same as the original the filesystem will of course not look =
-right.
+One thing I would like to clarify is does mdadm need to disassemble the
+array before reboot. At this point, I can't tell if my system is
+currently doing this. Googling around it seems some say that this step
+is unnecessary.
 
-You might need to hack mdadm (super1.c) to set a different data_offset
+I've managed to update initramfs to 3.2.1 and the local system to 3.2.1
+but the problem still persists.
 
-NeilBrown
+The last thing my system does is remount root ro, which it does
+successfully. However, at the next start:
 
+[   12.657829] md: md127 stopped.
+[   12.660652] md: bind<sdc>
+[   12.660939] md: bind<sdb>
+[   12.661212] md: bind<sda>
+[   12.661282] md: bind<sdd>
+[   12.664972] md: md126 stopped.
+[   12.665284] md: bind<sdd>
+[   12.665383] md: bind<sdc>
+[   12.665476] md: bind<sdb>
+[   12.665568] md: bind<sda>
+[   12.669218] md/raid10:md126: not clean -- starting background
+reconstruction
+[   12.669221] md/raid10:md126: active with 4 out of 4 devices
+[   12.669241] md126: detected capacity change from 0 to 1000210432000
+[   12.678356] md: md126 switched to read-write mode.
+[   12.678390] md: resync of RAID array md126
+[   12.678393] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[   12.678395] md: using maximum available idle IO bandwidth (but not
+more than 200000 KB/sec) for resync.
+[   12.678399] md: using 128k window, over a total of 976768256 blocks.
 
+and cat /proc/mdstat shows it resyncing:
 
-> .
->=20
-> I'll have a look at the start of the md device with a hex editor and
-> see if there's anything interesting there.
->=20
-> On Fri, Aug 5, 2011 at 12:32 PM, Stan Hoeppner <stan@hardwarefreak.co=
-m> wrote:
-> > On 8/5/2011 5:04 AM, Aaron Scheiner wrote:
-> >> I followed your advice and ran a scalpel instance for every drive =
-in
-> >> the array. The scanning process finished this morning yay (and
-> >> obviously went a lot faster).
-> >
-> > Glad I could help.
-> >
-> > ...
-> >> So now the next step would have been to re-create the array and ch=
-eck
-> >
-> > Unless Neil has some hex editor (or other similar) trick up his sle=
-eve
-> > that would allow you to manually recreate the sectors you hosed
-> > installing grub..
-> >
-> >> if a file system check finds something... but because of the offse=
-ts
-> >> that probably won't work ?
-> >
-> > If you are able to use the Force to assemble the disks in the corre=
-ct
-> > order, getting the raid device back up and running, then run 'xfs_r=
-epair
-> > -n /dev/md0' to do the check. =A0The '-n' means "no modify". =A0xfs=
-_repair
-> > is better than xfs_check in many aspects. =A0They are two separate =
-code
-> > paths that serve the same function, but they behave a little differ=
-ently
-> > under the hood.
-> >
-> >> Thanks again :)
-> >
-> > Wish I could have helped you recover the array. =A0When a patient c=
-omes
-> > through emergency with 3 GSWs to the forehead and no pulse, there's
-> > nothing that can be done. =A0:(
-> >
-> > --
-> > Stan
-> >
+# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10]
+md126 : active raid10 sda[3] sdb[2] sdc[1] sdd[0]
+      976768000 blocks super external:/md127/0 64K chunks 2 near-copies
+[4/4] [UUUU]
+      [==>..................]  resync = 12.2% (119256896/976768256)
+finish=100.7min speed=141865K/sec
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+md127 : inactive sdd[3](S) sda[2](S) sdb[1](S) sdc[0](S)
+      9028 blocks super external:imsm
+
+unused devices: <none>
+
+When it resyncs it is fine until the next power down.
+
+Some other details:
+
+# mdadm --detail-platform
+       Platform : Intel(R) Matrix Storage Manager
+        Version : 9.6.0.1014
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+      Max Disks : 7
+    Max Volumes : 2
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+          Port0 : /dev/sda (WD-WCAYUJ525606)
+          Port1 : /dev/sdb (WD-WCAYUJ525636)
+          Port2 : /dev/sdc (WD-WCAYUX093587)
+          Port3 : /dev/sdd (WD-WCAYUX092774)
+          Port4 : - non-disk device (TSSTcorp CDDVDW SH-S203B) -
+          Port5 : - no device attached -
+
+# mdadm --detail --scan
+ARRAY /dev/md/imsm0 metadata=imsm UUID=ec239ccc:22b7330b:0c4808ff:82dd176b
+ARRAY /dev/md/HDD_0 container=/dev/md/imsm0 member=0
+UUID=f61f87fc:1e85f04b:59e873c5:0afdb987
+
+# ls /dev/md
+HDD_0  HDD_0p1  HDD_0p2  HDD_0p3  HDD_0p4  imsm0
+
+Everything seems to be working. Also, I can't reproduce the results in
+Windows Vista x64 (dual-boot.) When I go from linux -> Windows, Windows
+detects the array as bad and reinitializes it as well, but if I reboot
+into Windows the array survives without being marked bad.
+
+Can anyone shed some light on this? I've been bashing my head on my desk
+for too long and have run out of ideas.
+
+Dan
