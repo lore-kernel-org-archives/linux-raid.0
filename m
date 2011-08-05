@@ -1,102 +1,101 @@
-From: Daniel Frey <djqfrey@gmail.com>
-Subject: mdadm forces resync every boot
-Date: Fri, 05 Aug 2011 08:05:53 -0700
-Message-ID: <4E3C06D1.6030301@gmail.com>
+From: Stephen Muskiewicz <stephen_muskiewicz@uml.edu>
+Subject: Need help recovering RAID5 array
+Date: Fri, 5 Aug 2011 11:27:06 -0400
+Message-ID: <4E3C0BCA.9000407@uml.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hello,
 
-I've been fighting with my raid array (imsm - raid10) for several weeks
-now. I've now replaced all four drives in my array as the constant
-rebuilding caused a smart error to trip on the old drives; unfortunately
-mdadm is still resyncing the array at every boot.
+I'm hoping to figure out how I can recover a RAID5 array that suddenly 
+won't start after one of our servers took a power hit.
+I'm fairly confident that all the individual disks of the RAID are OK 
+and that I can recover my data (without having to resort to asking my 
+sysadmin to fetch the backup tapes), but despite my extensive Googling 
+and reviewing the list archives and mdadm manpage, so far nothing I've 
+tried has worked.  Hopefully I am just missing something simple.
 
-One thing I would like to clarify is does mdadm need to disassemble the
-array before reboot. At this point, I can't tell if my system is
-currently doing this. Googling around it seems some say that this step
-is unnecessary.
+Background: The server is a Sun X4500 (thumper) running CentOS 5.5.  I 
+have confirmed using the (Sun provided) "hd" utilities that all of the 
+individual disks are online and none of the device names appear to have 
+changed from before the power outage.  There are also two other RAID5 
+arrays as well as the /dev/md0 RAID1 OS mirror on the same box that did 
+come back cleanly (these have ext3 filesystems on them, the one that 
+failed to come up is just a raw partition used via iSCSI if that makes 
+any difference.)  The array that didn't come back is /dev/md/51, the 
+ones that did are /dev/md/52 and /dev/md/53.  I have confirmed that all 
+three device files do exist in /dev/md.  (/dev/md51 is also a symlink to 
+/dev/md/51, as are /dev/md52 and /dev/md53 for the working arrays).  We 
+also did quite a bit of testing on the box before we deployed the arrays 
+and haven't seen this problem before now, previously all of the arrays 
+came back online as expected.  Of course it has also been about 7 months 
+since the box has gone down but I don't think there were any major 
+changes since then.
 
-I've managed to update initramfs to 3.2.1 and the local system to 3.2.1
-but the problem still persists.
+When I boot the system (tried this twice including a hard power down 
+just to be sure), I see "mdadm: No suitable drives found for /dev/md51". 
+  Again the other 2 arrays come up just fine.  I have checked that the 
+array is listed in /etc/mdadm.conf
 
-The last thing my system does is remount root ro, which it does
-successfully. However, at the next start:
+(I will apologize for a lack of specific mdadm output in my details 
+below, the network people have conveniently (?) picked this weekend to 
+upgrade the network in our campus building and I am currently unable to 
+access the server until they are done!)
 
-[   12.657829] md: md127 stopped.
-[   12.660652] md: bind<sdc>
-[   12.660939] md: bind<sdb>
-[   12.661212] md: bind<sda>
-[   12.661282] md: bind<sdd>
-[   12.664972] md: md126 stopped.
-[   12.665284] md: bind<sdd>
-[   12.665383] md: bind<sdc>
-[   12.665476] md: bind<sdb>
-[   12.665568] md: bind<sda>
-[   12.669218] md/raid10:md126: not clean -- starting background
-reconstruction
-[   12.669221] md/raid10:md126: active with 4 out of 4 devices
-[   12.669241] md126: detected capacity change from 0 to 1000210432000
-[   12.678356] md: md126 switched to read-write mode.
-[   12.678390] md: resync of RAID array md126
-[   12.678393] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[   12.678395] md: using maximum available idle IO bandwidth (but not
-more than 200000 KB/sec) for resync.
-[   12.678399] md: using 128k window, over a total of 976768256 blocks.
+"mdadm --detail /dev/md/51" does (as expected?) display: "mdadm: md 
+device /dev/md51 does not appear to be active"
 
-and cat /proc/mdstat shows it resyncing:
+I have done an "mdadm --examine" on each of the drives in the array and 
+each one shows a state of "clean" with a status of "U" (and all of the 
+other drives in the sequence shown as "u").  The array name and UUID 
+value look good and the "update time" appears to be about when the 
+server lost power.  All the checksums read "correct" as well.  So I'm 
+confident all the individual drives are there and OK.
 
-# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10]
-md126 : active raid10 sda[3] sdb[2] sdc[1] sdd[0]
-      976768000 blocks super external:/md127/0 64K chunks 2 near-copies
-[4/4] [UUUU]
-      [==>..................]  resync = 12.2% (119256896/976768256)
-finish=100.7min speed=141865K/sec
+I do have the original mdadm command used to construct the array. 
+(There are 8 active disks in the array plus 2 spares.)  I am using 
+version 1.0 metadata with the -N arg to provide a name for each array.
+So I used this command with the assemble option (but without the -N or 
+-u) options:
 
-md127 : inactive sdd[3](S) sda[2](S) sdb[1](S) sdc[0](S)
-      9028 blocks super external:imsm
+mdadm -A /dev/md/51 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 
+/dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1
 
-unused devices: <none>
+But this just gave the "no suitable drives found" message.
 
-When it resyncs it is fine until the next power down.
+I retried the mdadm command using -N <name> and -u <UUID> options but in 
+both cases saw the same result.
 
-Some other details:
+One odd thing that I noticed was that when I ran an:
+mdadm --detail --scan
 
-# mdadm --detail-platform
-       Platform : Intel(R) Matrix Storage Manager
-        Version : 9.6.0.1014
-    RAID Levels : raid0 raid1 raid10 raid5
-    Chunk Sizes : 4k 8k 16k 32k 64k 128k
-      Max Disks : 7
-    Max Volumes : 2
- I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
-          Port0 : /dev/sda (WD-WCAYUJ525606)
-          Port1 : /dev/sdb (WD-WCAYUJ525636)
-          Port2 : /dev/sdc (WD-WCAYUX093587)
-          Port3 : /dev/sdd (WD-WCAYUX092774)
-          Port4 : - non-disk device (TSSTcorp CDDVDW SH-S203B) -
-          Port5 : - no device attached -
+The output *does* display all three arrays, but the name of the arrays 
+shows up as "ARRAY /dev/md/<arrayname>" rather than the "ARRAY 
+/dev/md/NN" that I would expect (and that is in my /etc/mdadm.conf 
+file).  Not sure if this has anything to do with the problem or not. 
+There are no /dev/md/<arrayname> device files or symlinks on the system.
 
-# mdadm --detail --scan
-ARRAY /dev/md/imsm0 metadata=imsm UUID=ec239ccc:22b7330b:0c4808ff:82dd176b
-ARRAY /dev/md/HDD_0 container=/dev/md/imsm0 member=0
-UUID=f61f87fc:1e85f04b:59e873c5:0afdb987
+I *think* my next step based on the various posts I've read would be to 
+try the same mdadm -A command with --force, but I'm a little wary of 
+that and want to make sure I actually understand what I'm doing so I 
+don't screw up the array entirely and lose all my data!  I'm not sure if 
+I should be giving it *all* of the drives as an arg, including the 
+spares or should I just pass it the active drives?  Should I use the 
+--raid-devices and/or --spare-devices options?  Anything else I should 
+include or not include?
 
-# ls /dev/md
-HDD_0  HDD_0p1  HDD_0p2  HDD_0p3  HDD_0p4  imsm0
+Thanks in advance to any advice you can provide.  I won't be able to 
+test until Monday morning but it would be great to be armed with things 
+to try so I can hopefully get back up and running soon and minimize all 
+of those "When will the network share be back up?" questions that I'm 
+already anticipating getting.
 
-Everything seems to be working. Also, I can't reproduce the results in
-Windows Vista x64 (dual-boot.) When I go from linux -> Windows, Windows
-detects the array as bad and reinitializes it as well, but if I reboot
-into Windows the array survives without being marked bad.
+Cheers,
+-steve
 
-Can anyone shed some light on this? I've been bashing my head on my desk
-for too long and have run out of ideas.
 
-Dan
