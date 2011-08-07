@@ -1,42 +1,171 @@
-From: Thomas Steinborn <thestonewell@googlemail.com>
-Subject: mdadm(IMSM): Unsupported attributes : 40000000
-Date: Sat, 6 Aug 2011 20:55:47 +0200
-Message-ID: <CACHinyGxah6Utp+ed0WKH58BO8-sOn+QX9DPCy9QGNjuDde=eQ@mail.gmail.com>
+From: Daniel Frey <djqfrey@gmail.com>
+Subject: Re: mdadm forces resync every boot
+Date: Sat, 06 Aug 2011 17:09:45 -0700
+Message-ID: <4E3DD7C9.7000100@gmail.com>
+References: <4E3C06D1.6030301@gmail.com> <CAHX8RiTFTQsrK+nprPRMC9DCZ86BLdv4yKsbo5b8RQONTNB+8g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAHX8RiTFTQsrK+nprPRMC9DCZ86BLdv4yKsbo5b8RQONTNB+8g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 08/06/11 03:18, Erwan Leroux wrote:
+> Can you post the content of /etc/mdadm/mdadm.conf ?
 
-after updating to mdadm 3.2.2 (by way of upgrading from Fedora 14 to
-15) from 3.1.5 I am no longer able to boot my IMSM raid, which I was
-able to for the last 5 years or so.
+Yep. This is my /etc/mdadm.conf:
 
-The errors I am getting are:
+ARRAY /dev/md/imsm0 metadata=imsm UUID=ec239ccc:22b7330b:0c4808ff:82dd176b
+ARRAY /dev/md/HDD_0 container=/dev/md/imsm0 member=0
+UUID=f61f87fc:1e85f04b:59e873c5:0afdb987
 
-  mdadm(IMSM): Unsupported attributes : 40000000
-  mdadm: IMSM metadata loading not allowed due to attributes incompatib=
-ility.
 
-I tracked that down to the patch at
+> 
+> I noticed that if the ARRAY line contains the name parameter, the raid
+> is not started properly
+> ARRAY /dev/md/raid metadata=1.2
+> UUID=906ce226:19afa04f:12aab3c1:f91daa96 name=Serveur:raid
 
-http://www.spinics.net/lists/raid/msg34783.html
+That doesn't seem to be the problem here.
 
-According to that patch 40000000 means=A0#define MPB_ATTRIB_NEVER_USE
-__cpu_to_le32(0x40000000). Any advice why an unused but aparently set
-attribute should stop the raid to boot?
+> 
+> you just have to remove the parameter and everything go back to normal.
+> 
+> Mayre be you're in this case, but you mentionned dual-boot, so perhaps
+> your problem is related to
 
-=46or now I am up and running with 3.1.5 but would like to keep up with
-the latest mdadm if possible.
+I've done quite a bit more testing and it's definitely mdadm.
 
-Thanks
-Thomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Starting from a clean array:
+-Booting into Windows is fine, the array is not degraded
+-Then rebooting into Windows, the array is fine not degraded
+-Then rebooting into linux, the array is OK
+-From there, rebooting into either Windows or linux the array is
+degraded and the array starts to rebuild.
+
+It's definitely mdadm causing the array to rebuild itself.
+
+I've rolled a kernel with dmraid-1.0.0-rc16 and the problem is
+completely gone.
+
+I've got two kernels on this machine now and I can boot between the
+mdadm and dmraid kernels, provided I remember to update the /etc/fstab
+before I reboot. Even now, going into the mdadm kernel the rebuilding
+issue still happens. I've not changed any of the rc scripts after
+building the dmraid kernel, stuff just worked.
+
+I'd much rather use mdadm, as dmraid was far harder to get to work for
+some reason... well, it's mostly because I am not used to building my
+own initramfs and was using one of gentoo's helpers (genkernel.) I
+managed to get the tools to use the most recent mdadm and dmraid, after
+much head-scratching.
+
+Dan
+
+> 
+> Cordialy,
+> 
+> Erwan Leroux
+> 
+> 
+
+> 
+> 2011/8/5 Daniel Frey <djqfrey@gmail.com>:
+>> Hi all,
+>>
+>> I've been fighting with my raid array (imsm - raid10) for several weeks
+>> now. I've now replaced all four drives in my array as the constant
+>> rebuilding caused a smart error to trip on the old drives; unfortunately
+>> mdadm is still resyncing the array at every boot.
+>>
+>> One thing I would like to clarify is does mdadm need to disassemble the
+>> array before reboot. At this point, I can't tell if my system is
+>> currently doing this. Googling around it seems some say that this step
+>> is unnecessary.
+>>
+>> I've managed to update initramfs to 3.2.1 and the local system to 3.2.1
+>> but the problem still persists.
+>>
+>> The last thing my system does is remount root ro, which it does
+>> successfully. However, at the next start:
+>>
+>> [   12.657829] md: md127 stopped.
+>> [   12.660652] md: bind<sdc>
+>> [   12.660939] md: bind<sdb>
+>> [   12.661212] md: bind<sda>
+>> [   12.661282] md: bind<sdd>
+>> [   12.664972] md: md126 stopped.
+>> [   12.665284] md: bind<sdd>
+>> [   12.665383] md: bind<sdc>
+>> [   12.665476] md: bind<sdb>
+>> [   12.665568] md: bind<sda>
+>> [   12.669218] md/raid10:md126: not clean -- starting background
+>> reconstruction
+>> [   12.669221] md/raid10:md126: active with 4 out of 4 devices
+>> [   12.669241] md126: detected capacity change from 0 to 1000210432000
+>> [   12.678356] md: md126 switched to read-write mode.
+>> [   12.678390] md: resync of RAID array md126
+>> [   12.678393] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+>> [   12.678395] md: using maximum available idle IO bandwidth (but not
+>> more than 200000 KB/sec) for resync.
+>> [   12.678399] md: using 128k window, over a total of 976768256 blocks.
+>>
+>> and cat /proc/mdstat shows it resyncing:
+>>
+>> # cat /proc/mdstat
+>> Personalities : [linear] [raid0] [raid1] [raid10]
+>> md126 : active raid10 sda[3] sdb[2] sdc[1] sdd[0]
+>>      976768000 blocks super external:/md127/0 64K chunks 2 near-copies
+>> [4/4] [UUUU]
+>>      [==>..................]  resync = 12.2% (119256896/976768256)
+>> finish=100.7min speed=141865K/sec
+>>
+>> md127 : inactive sdd[3](S) sda[2](S) sdb[1](S) sdc[0](S)
+>>      9028 blocks super external:imsm
+>>
+>> unused devices: <none>
+>>
+>> When it resyncs it is fine until the next power down.
+>>
+>> Some other details:
+>>
+>> # mdadm --detail-platform
+>>       Platform : Intel(R) Matrix Storage Manager
+>>        Version : 9.6.0.1014
+>>    RAID Levels : raid0 raid1 raid10 raid5
+>>    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+>>      Max Disks : 7
+>>    Max Volumes : 2
+>>  I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
+>>          Port0 : /dev/sda (WD-WCAYUJ525606)
+>>          Port1 : /dev/sdb (WD-WCAYUJ525636)
+>>          Port2 : /dev/sdc (WD-WCAYUX093587)
+>>          Port3 : /dev/sdd (WD-WCAYUX092774)
+>>          Port4 : - non-disk device (TSSTcorp CDDVDW SH-S203B) -
+>>          Port5 : - no device attached -
+>>
+>> # mdadm --detail --scan
+>> ARRAY /dev/md/imsm0 metadata=imsm UUID=ec239ccc:22b7330b:0c4808ff:82dd176b
+>> ARRAY /dev/md/HDD_0 container=/dev/md/imsm0 member=0
+>> UUID=f61f87fc:1e85f04b:59e873c5:0afdb987
+>>
+>> # ls /dev/md
+>> HDD_0  HDD_0p1  HDD_0p2  HDD_0p3  HDD_0p4  imsm0
+>>
+>> Everything seems to be working. Also, I can't reproduce the results in
+>> Windows Vista x64 (dual-boot.) When I go from linux -> Windows, Windows
+>> detects the array as bad and reinitializes it as well, but if I reboot
+>> into Windows the array survives without being marked bad.
+>>
+>> Can anyone shed some light on this? I've been bashing my head on my desk
+>> for too long and have run out of ideas.
+>>
+>> Dan
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+
