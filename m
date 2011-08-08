@@ -1,217 +1,138 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: [PATCH] RAID-6 check standalone man page
-Date: Sun, 07 Aug 2011 19:09:57 +0200
-Message-ID: <4E3EC6E5.8050303@nexgo.de>
-References: <20110321140244.2314b4b4@notabene.brown> <20110321104007.GA15379@lazy.lzy> <20110321220457.29d52f5c@notabene.brown> <20110321115440.GA15635@lazy.lzy> <20110322095905.737fb1d5@notabene.brown> <20110404175242.GA3411@lazy.lzy> <20110405091242.3427e0b1@notabene.brown> <20110508185408.GA25378@lazy.lzy> <20110509114500.116926ba@notabene.brown> <20110509184333.GA28743@lazy.lzy> <20110515211515.GA30260@lazy.lzy> <20110516200857.3a009a64@notabene.brown> <4E2716EF.1050509@nexgo.de> <20110726152523.54433754@notabene.brown>
+From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Subject: 20 drive raid-10, CentOS5.5, after reboot assemble fails - all drives
+ "non-fresh"
+Date: Sun, 07 Aug 2011 19:37:04 -0700
+Message-ID: <4E3F4BD0.5060807@aeoncomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110726152523.54433754@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 07/26/2011 07:25 AM, NeilBrown wrote:
-> On Wed, 20 Jul 2011 19:57:03 +0200 Piergiorgio Sartor
-> <piergiorgio.sartor@nexgo.de> wrote:
-> 
->> Hi Neil,
->>
->> sorry for the very late answer.
->>
->> On 05/16/2011 12:08 PM, NeilBrown wrote:
->>> On Sun, 15 May 2011 23:15:15 +0200 Piergiorgio Sartor
->>> <piergiorgio.sartor@nexgo.de> wrote:
->>>
->>>> Hi Neil,
->>>>
->>>> reminder for the suspend patch.
->>>>
->>>> Thank you so much for the code review.
->>>>
->>>> I modified it in order to fix, hopefully, all the flaws.
->>>>
->>>> New patch attached below.
->>>>
->>>> Please note that "sigblock()" cannot be used, since it is
->>>> declared, at least on my system, as "deprecated".
->>>> Furthermore, I noticed that "Grow.c" is not checking the
->>>> return value of "sysfs_set_num()" while suspending the
->>>> array, maybe you'll need to look at this.
->>>>
->>>> Finally, please check the new patch too, while I can
->>>> confirm the software is doing what is supposed to do,
->>>> I still need support in order to confirm the suspend
->>>> and resume code.
->>>>
->>>> Thanks again for your help, again let me know what
->>>> is the next expected step.
->>>
->>> That all looks fine thank.  I've applied it and pushed it out.
->>>
->>> I'm not sure what you mean exactly by the 'next expected step'... 
->>
->> Well, is there anything than should be done, like
->> documentation or code cleanup?
->>
->> At the moment, it seems to me, the check itself it is
->> fine, maybe performance is not at best (anyone wants
->> to help, here?).
->>
->> So, I was thinking about the "repair" process, that is
->> fixing the chunks which seem corrupted, instead of just
->> the parity.
->>
->> Before I go that way, I would like to close pending issues,
->> if any, with the actual software.
-> 
-> Very sensible - thanks.
-> 
-> I haven't actually used it or tested it at all so I don't know of any issues
-> in that regard.
-> I agree with an earlier reply that a man-page would be a good idea.
-> You could start by looking at "mdadm.8.in" and basing your man page on that.
-> It doesn't have to be very long - just explain what it does and how to use
-> it, and maybe how to interpret the results.
-> Often writing a man page is enough to flush out any serious usability issues
-> - if you find it hard to explain how to use it, it is probably because it is
-> hard to use :-)
-> 
-> If you aren't familiar with the troff -man markup language don't let it worry
-> you - I am happy to fix up any markup issues before including it.
-> 
-> It might be good to create a test script too - something that can go in the
-> tests/ directory would be ideal.
-> e.g. create and initialise a RAID6, deliberately corrupt one block, then run
-> your program an check that it reports the right thing.
-> Probably corrupt a different blocks (randomly?) on each device and test that
-> it reports all of the errors correctly... something like that.
-> 
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Greetings,
 
-Hi Neil,
+I have a 20 drive raid-10 that has been running well for over one year. 
+After the most recently system boot the raid will not assemble. 
+/var/log/messages shows that all of the drives are "non-fresh". 
+Examining the drives show that the raid partitions are present, the 
+superblocks have valid data and the Event ticker for the drives are 
+equal for the data drives. The spare drives have a different Event 
+ticker value.
 
-please find below a draft of the man page (as patch) for raid6check.
-Please have a look and let me know any issues (typos for sure).
+I am reluctant to try and use the --force switch with assemble until I 
+understand the problem better. There is very important data on this 
+volume and it is not backed up to my knowledge. I do not know how the 
+machine was brought down prior to this system boot.
 
-The test cases will come later.
+With all drives being "non-fresh" I can't start a partial array and then 
+re-add the remaining drives. I've unraveled some pretty messed up md 
+configs and recovered the underlying filesystem but this one has me at a 
+loss.
 
---- cut here ---
+Any advice is greatly appreciated!
 
-diff -uNr a/raid6check.8.in b/raid6check.8.in
---- a/raid6check.8.in	1970-01-01 01:00:00.000000000 +0100
-+++ b/raid6check.8.in	2011-08-07 19:04:17.352680683 +0200
-@@ -0,0 +1,101 @@
-+.\" -*- nroff -*-
-+.\" Copyright Piergiorgio Sartor and others.
-+.\"   This program is free software; you can redistribute it and/or modify
-+.\"   it under the terms of the GNU General Public License as published by
-+.\"   the Free Software Foundation; either version 2 of the License, or
-+.\"   (at your option) any later version.
-+.\" See file COPYING in distribution for details.
-+.TH RAID6CHECK 8 "" v1.0.0
-+.SH NAME
-+raid6check \- check MD RAID6 device for errors
-+.I aka
-+Linux Software RAID
-+
-+.SH SYNOPSIS
-+
-+.BI raid6check " <raid6 device> <start stripe> <number of stripes>"
-+
-+.SH DESCRIPTION
-+RAID 6 devices in which one single component drive has errors can use
-+the double parity in order to find out the component drive.
-+The "raid6check" tool checks, for each stripe, the double parity
-+consistency and, it reports mismatches and, if possible, which
-+component drive has the mismatch.
-+Since it works at stripe level, it can report different drives with
-+mismatches at different stripes.
-+
-+"raid6check" requires a non-degraded RAID 6 MD device, as first
-+parameter, a starting stripe, usually 0, and the number of stripes
-+to be checked.
-+If this third parameter is also 0, it will check the array up to
-+the end.
-+
-+"raid6check" will start printing information about the RAID 6, then
-+for each stripe, it will report the parity rotation status.
-+In case of parity mismatches, "raid6check" reports, if possible,
-+which component drive could be responsible. Otherwise it reports
-+that it is not possible to find the component drive.
-+
-+If the given MD device is not a RAID 6, "raid6check" will, of
-+course, not continue.
-+
-+If the RAID6 MD device is degraded, "raid6check" will report
-+an error and it will not proceed further.
-+
-+No write operation are performed on the array or the components.
-+Furthermore, the checked array can be online and in use during
-+the operation of "raid6check".
-+
-+.SH EXAMPLES
-+
-+.B "  raid6check /dev/md0 0 0"
-+.br
-+This will check /dev/md0 from start to end.
-+
-+.B "  raid6check /dev/md3 0 1"
-+.br
-+This will check the first stripe of /dev/md3.
-+
-+.B "  raid6check /dev/md1 1000 0"
-+.br
-+This will check /dev/md1 from stripe 1000 up to the end.
-+
-+.B "  raid6check /dev/m127 128 256"
-+.br
-+This will check 256 stripes of /dev/md127 starting from stripe 128.
-+
-+.B "  raid6check /dev/md0 0 0 | grep -i error > md0_err.log"
-+.br
-+This will check /dev/md0 completely and create a log file only
-+with errors, if any.
-+
-+.SH FILES
-+
-+"raid6check" uses directly the component drives as found in /dev.
-+Furthermore, the sysfs interface is needed in order to find out
-+the RAID 6 parameters.
-+
-+.SH BUGS
-+Negative parameters can lead to unexpected results.
-+
-+It is not clear what will happen if the RAID 6 MD device gets
-+degraded during the check.
-+
-+.PP
-+The latest version of
-+.I raid6check
-+should always be available from
-+.IP
-+.B http://www.kernel.org/pub/linux/utils/raid/mdadm/
-+.PP
-+Related man pages:
-+.PP
-+.IR mdadm (8)
-+.IR mdmon (8),
-+.IR mdadm.conf (5),
-+.IR md (4).
-+.PP
-+.IR raidtab (5),
-+.IR raid0run (8),
-+.IR raidstop (8),
-+.IR mkraid (8).
+--Jeff
 
---- cut here ---
+Below is the config file and output from mdadm examine commands:
+
+/* Config file */
+ARRAY /dev/md3 level=raid10 num-devices=20 
+UUID=e17a29e8:ec6bce5c:f13d343c:cfba4dc4
+    spares=4   
+devices=/dev/sdz1,/dev/sdy1,/dev/sdx1,/dev/sdw1,/dev/sdv1,/dev/sdu1,/dev/sdt1,/dev/sd
+s1,/dev/sdr1,/dev/sdq1,/dev/sdp1,/dev/sdo1,/dev/sdn1,/dev/sdm1,/dev/sdl1,/dev/sdk1,/dev/sdj1,/dev/s
+di1,/dev/sdh1,/dev/sdg1,/dev/sdf1,/dev/sde1,/dev/sdd1,/dev/sdc1
+
+/* mdadm -E /dev/sd[cdefghijklmnopqrstuvwxyz]1 | grep Event */
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 90
+          Events : 92
+          Events : 92
+          Events : 92
+          Events : 92
+
+/* mdadm -E /dev/sdc1 */
+/dev/sdc1:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : e17a29e8:ec6bce5c:f13d343c:cfba4dc4
+   Creation Time : Fri Sep 24 12:06:37 2010
+      Raid Level : raid10
+   Used Dev Size : 99924096 (95.30 GiB 102.32 GB)
+      Array Size : 999240960 (952.95 GiB 1023.22 GB)
+    Raid Devices : 20
+   Total Devices : 24
+Preferred Minor : 3
+
+     Update Time : Sat Aug  6 05:54:37 2011
+           State : clean
+  Active Devices : 20
+Working Devices : 24
+  Failed Devices : 0
+   Spare Devices : 4
+        Checksum : d8d97049 - correct
+          Events : 90
+
+          Layout : near=2
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     0       8       33        0      active sync   /dev/sdc1
+
+    0     0       8       33        0      active sync   /dev/sdc1
+    1     1       8       49        1      active sync   /dev/sdd1
+    2     2       8       65        2      active sync   /dev/sde1
+    3     3       8       81        3      active sync   /dev/sdf1
+    4     4       8       97        4      active sync   /dev/sdg1
+    5     5       8      113        5      active sync   /dev/sdh1
+    6     6       8      129        6      active sync   /dev/sdi1
+    7     7       8      145        7      active sync   /dev/sdj1
+    8     8       8      161        8      active sync   /dev/sdk1
+    9     9       8      177        9      active sync   /dev/sdl1
+   10    10       8      193       10      active sync   /dev/sdm1
+   11    11       8      209       11      active sync   /dev/sdn1
+   12    12       8      225       12      active sync   /dev/sdo1
+   13    13       8      241       13      active sync   /dev/sdp1
+   14    14      65        1       14      active sync   /dev/sdq1
+   15    15      65       17       15      active sync   /dev/sdr1
+   16    16      65       33       16      active sync   /dev/sds1
+   17    17      65       49       17      active sync   /dev/sdt1
+   18    18      65       65       18      active sync   /dev/sdu1
+   19    19      65       81       19      active sync   /dev/sdv1
+   20    20      65      145       20      spare   /dev/sdz1
+   21    21      65      129       21      spare   /dev/sdy1
+   22    22      65      113       22      spare   /dev/sdx1
+   23    23      65       97       23      spare   /dev/sdw1
 
 -- 
+------------------------------
+Jeff Johnson
+Manager
+Aeon Computing
 
-piergiorgio
+jeff.johnson "at" aeoncomputing.com
+www.aeoncomputing.com
+t: 858-412-3810 x101   f: 858-412-3845
+
+4905 Morena Boulevard, Suite 1313 - San Diego, CA 92117
+
