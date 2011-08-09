@@ -1,104 +1,35 @@
-From: =?ISO-8859-1?Q?Torbj=F8rn?= Skagestad <torbjorn@itpas.no>
-Subject: Re: Undestanding /proc/mdstat with raid10
-Date: Tue, 09 Aug 2011 13:27:17 +0200
-Message-ID: <1312889237.24693.15.camel@torbjorn>
-References: <4E40DE3D.2020005@gmail.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Need help recovering RAID5 array
+Date: Tue, 09 Aug 2011 07:38:51 -0400
+Message-ID: <4E411C4B.1080200@turmel.org>
+References: <4E3C0BCA.9000407@uml.edu> <20110806112910.332d450a@notabene.brown> <D32562736F94C445958A7CC900A95568265503@PORSCHE.fs.uml.edu> <20110809091214.4a830696@notabene.brown> <4E409B76.5030000@uml.edu> <20110809125549.00c56f57@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-U1kCFUbazby3OI+Z5xhe"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E40DE3D.2020005@gmail.com>
+In-Reply-To: <20110809125549.00c56f57@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sebastian Muniz <sjmuniz@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Stephen Muskiewicz <stephen_muskiewicz@uml.edu>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 08/08/2011 10:55 PM, NeilBrown wrote:
+> On Mon, 8 Aug 2011 22:29:10 -0400 Stephen Muskiewicz <stephen_muskiewicz@uml.edu> wrote:
+>> This does lead to a question: Do you recommend (and is it safe on CentOS 
+>> 5.5?) for me to use the updated (3.2.2 with your patch) version of mdadm 
+>> going forward in place of the CentOS version (2.6.9)?
+> 
+> I wouldn't kept that patch.  It was a little hack to get your array working
+> again.  I wouldn't recommend using it without expert advice...
+> 
+> Other than that ... 3.2.2 certainly fixes bug and adds features over 2.6.9,
+> but maybe it adds some bugs too...  I would say that it is safe, but probably
+> not really necessary.
+> i.e. up to you :-)
 
---=-U1kCFUbazby3OI+Z5xhe
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Let me add a reason to stick with 2.6.9:  it has different defaults for
+metadata reserved space.  If all hell breaks loose, and you find you need to
+do "mdadm --create --assume-clean" or some variant as part of your recovery
+efforts, you'll need the older version to get an identical layout.
 
-On Tue, 2011-08-09 at 04:14 -0300, Sebastian Muniz wrote:
-> Hello,
-> I have searched a lot trying to answer this.
-> I have a raid10 array on an openfiler box.
-> Personalities : [raid10]
-> md0 : active raid10 sde1[3] sdd1[2] sdc1[1] sdb1[0]
->        181760 blocks super 1.2 64K chunks 2 near-copies [4/4] [UUUU]
->=20
-> unused devices: <none>
-> Actually this is a Virtualbox machine with the same disk setup. I made 6=
-=20
-> x 100 Mbytes disks for the test.
->=20
-> How can I tell which disks are mirrored?
-That depends on the layout of your array. raid10 is not raid1+0
->=20
-> My goal is to free the two mirror disks from md0, add two more free=20
-> disks, create a new md1 raid5 array, and move the contents from md0 to md=
-1
->=20
-> Thanks in advance.
-> Sebastian
->=20
-> PS: in case it is relevant, i am adding the detailed md0 output.
->=20
-> [root@of ~]# mdadm --misc --detail /dev/md0
-> /dev/md0:
->          Version : 1.2
->    Creation Time : Tue Aug  9 03:01:14 2011
->       Raid Level : raid10
->       Array Size : 181760 (177.53 MiB 186.12 MB)
->    Used Dev Size : 90880 (88.76 MiB 93.06 MB)
->     Raid Devices : 4
->    Total Devices : 4
->      Persistence : Superblock is persistent
->=20
->      Update Time : Tue Aug  9 03:20:06 2011
->            State : clean
->   Active Devices : 4
-> Working Devices : 4
->   Failed Devices : 0
->    Spare Devices : 0
->=20
->           Layout : near=3D2
-                    ^^^^^^
-This layout is described at
-http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
-
-Assuming the info there is correct, mirrored devices are [0,1] and [2,3]
-
->       Chunk Size : 64K
->=20
->             Name : of:0  (local to host of)
->             UUID : 63b2145a:49030744:41b8f5b4:cb11bc1d
->           Events : 19
->=20
->      Number   Major   Minor   RaidDevice State
->         0       8       17        0      active sync   /dev/sdb1
->         1       8       33        1      active sync   /dev/sdc1
->         2       8       49        2      active sync   /dev/sdd1
->         3       8       65        3      active sync   /dev/sde1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---=20
-Torbj=C3=B8rn Skagestad
-Id=C3=A9 Til Produkt AS
-torborn@itpas.no
-
---=-U1kCFUbazby3OI+Z5xhe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAk5BGZUACgkQ4RjLWGFqSIbftACgs4pmH6uYBz889YWRH8xu58U4
-qjEAn0iiagODe/0C8AqaTHJ6xK/vYAMs
-=WUip
------END PGP SIGNATURE-----
-
---=-U1kCFUbazby3OI+Z5xhe--
-
+Phil
