@@ -1,157 +1,104 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: RE: mdadm(IMSM): Unsupported attributes : 40000000
-Date: Tue, 9 Aug 2011 09:36:38 +0000
-Message-ID: <B76B33F8487BA74591724C4746DFF732938F@IRSMSX102.ger.corp.intel.com>
-References: <CACHinyGxah6Utp+ed0WKH58BO8-sOn+QX9DPCy9QGNjuDde=eQ@mail.gmail.com>
- <20110809085117.5d910aed@notabene.brown>
+From: =?ISO-8859-1?Q?Torbj=F8rn?= Skagestad <torbjorn@itpas.no>
+Subject: Re: Undestanding /proc/mdstat with raid10
+Date: Tue, 09 Aug 2011 13:27:17 +0200
+Message-ID: <1312889237.24693.15.camel@torbjorn>
+References: <4E40DE3D.2020005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-U1kCFUbazby3OI+Z5xhe"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110809085117.5d910aed@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <4E40DE3D.2020005@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>, Thomas Steinborn <thestonewell@googlemail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Sebastian Muniz <sjmuniz@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
 
-In fact this bit may cause backward compatibility issue.
-It was used in old versions of IMSM metadata and for some reason was ma=
-rked as "never use".
-Skipping this bit during compatibility check is good idea.
+--=-U1kCFUbazby3OI+Z5xhe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I've checked compatibility with metadata created using dmraid and got a=
-nother issue.
-Attribute "MPB_ATTRIB_NEVER_USE2" is set in metadata created by dmraid =
-so mdadm refuse loading metadata.
-Could you add MPB_ATTRIB_NEVER_USE2 to your patch to MPB_ATTRIB_IGNORED=
- list?
-
-Regards
-Krzysztof
-
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Tuesday, August 09, 2011 12:51 AM
-> To: Thomas Steinborn
-> Cc: linux-raid@vger.kernel.org; Kwolek, Adam; Wojcik, Krzysztof;
-> Williams, Dan J
-> Subject: Re: mdadm(IMSM): Unsupported attributes : 40000000
+On Tue, 2011-08-09 at 04:14 -0300, Sebastian Muniz wrote:
+> Hello,
+> I have searched a lot trying to answer this.
+> I have a raid10 array on an openfiler box.
+> Personalities : [raid10]
+> md0 : active raid10 sde1[3] sdd1[2] sdc1[1] sdb1[0]
+>        181760 blocks super 1.2 64K chunks 2 near-copies [4/4] [UUUU]
 >=20
-> On Sat, 6 Aug 2011 20:55:47 +0200 Thomas Steinborn
-> <thestonewell@googlemail.com> wrote:
+> unused devices: <none>
+> Actually this is a Virtualbox machine with the same disk setup. I made 6=
+=20
+> x 100 Mbytes disks for the test.
 >=20
-> > Hi,
-> >
-> > after updating to mdadm 3.2.2 (by way of upgrading from Fedora 14 t=
-o
-> > 15) from 3.1.5 I am no longer able to boot my IMSM raid, which I wa=
-s
-> > able to for the last 5 years or so.
-> >
-> > The errors I am getting are:
-> >
-> >   mdadm(IMSM): Unsupported attributes : 40000000
-> >   mdadm: IMSM metadata loading not allowed due to attributes
-> incompatibility.
-> >
-> > I tracked that down to the patch at
-> >
-> > http://www.spinics.net/lists/raid/msg34783.html
-> >
-> > According to that patch 40000000 means=A0#define MPB_ATTRIB_NEVER_U=
-SE
-> > __cpu_to_le32(0x40000000). Any advice why an unused but aparently s=
-et
-> > attribute should stop the raid to boot?
-> >
-> > For now I am up and running with 3.1.5 but would like to keep up wi=
-th
-> > the latest mdadm if possible.
-> >
-> > Thanks
-> > Thomas
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> How can I tell which disks are mirrored?
+That depends on the layout of your array. raid10 is not raid1+0
 >=20
-> Thanks for the report.
->=20
-> It looks like we need something like the following.
->=20
-> Adam/Kryzysztof:  Is this patch reasonable?
->=20
-> Thanks,
-> NeilBrown
->=20
->=20
->=20
->=20
->=20
-> From 418f9b368a1200370695527d22aba8c3606172c5 Mon Sep 17 00:00:00 200=
+> My goal is to free the two mirror disks from md0, add two more free=20
+> disks, create a new md1 raid5 array, and move the contents from md0 to md=
 1
-> From: NeilBrown <neilb@suse.de>
-> Date: Tue, 9 Aug 2011 08:49:34 +1000
-> Subject: [PATCH] IMSM: allow some array attribute bits to be ignored.
 >=20
-> Some bits are not handled by mdadm, but their presence should not
-> cause failure.
-> In particular MPB_ATTRIB_NEVER_USE appears harmless.
+> Thanks in advance.
+> Sebastian
 >=20
-> Reported-by: Thomas Steinborn <thestonewell@googlemail.com>
-> Signed-off-by: NeilBrown <neilb@suse.de>
+> PS: in case it is relevant, i am adding the detailed md0 output.
 >=20
-> diff --git a/super-intel.c b/super-intel.c
-> index dcab5f9..ddf4de9 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -74,14 +74,17 @@
+> [root@of ~]# mdadm --misc --detail /dev/md0
+> /dev/md0:
+>          Version : 1.2
+>    Creation Time : Tue Aug  9 03:01:14 2011
+>       Raid Level : raid10
+>       Array Size : 181760 (177.53 MiB 186.12 MB)
+>    Used Dev Size : 90880 (88.76 MiB 93.06 MB)
+>     Raid Devices : 4
+>    Total Devices : 4
+>      Persistence : Superblock is persistent
 >=20
->  /* Define all supported attributes that have to be accepted by mdadm
->   */
-> -#define MPB_ATTRIB_SUPPORTED		MPB_ATTRIB_CHECKSUM_VERIFY | \
-> +#define MPB_ATTRIB_SUPPORTED	       (MPB_ATTRIB_CHECKSUM_VERIFY | \
->  					MPB_ATTRIB_2TB             | \
->  					MPB_ATTRIB_2TB_DISK        | \
->  					MPB_ATTRIB_RAID0           | \
->  					MPB_ATTRIB_RAID1           | \
->  					MPB_ATTRIB_RAID10          | \
->  					MPB_ATTRIB_RAID5           | \
-> -					MPB_ATTRIB_EXP_STRIPE_SIZE
-> +					MPB_ATTRIB_EXP_STRIPE_SIZE)
-> +
-> +/* Define attributes that are unused but not harmful */
-> +#define MPB_ATTRIB_IGNORED		(MPB_ATTRIB_NEVER_USE)
+>      Update Time : Tue Aug  9 03:20:06 2011
+>            State : clean
+>   Active Devices : 4
+> Working Devices : 4
+>   Failed Devices : 0
+>    Spare Devices : 0
 >=20
->  #define MPB_SECTOR_CNT 2210
->  #define IMSM_RESERVED_SECTORS 4096
-> @@ -1141,11 +1144,14 @@ void examine_migr_rec_imsm(struct intel_super
-> *super)
->  static int imsm_check_attributes(__u32 attributes)
->  {
->  	int ret_val =3D 1;
-> -	__u32 not_supported =3D (MPB_ATTRIB_SUPPORTED)^0xffffffff;
-> +	__u32 not_supported =3D MPB_ATTRIB_SUPPORTED^0xffffffff;
-> +
-> +	not_supported &=3D ~MPB_ATTRIB_IGNORED;
+>           Layout : near=3D2
+                    ^^^^^^
+This layout is described at
+http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10
+
+Assuming the info there is correct, mirrored devices are [0,1] and [2,3]
+
+>       Chunk Size : 64K
 >=20
->  	not_supported &=3D attributes;
->  	if (not_supported) {
-> -		fprintf(stderr, Name "(IMSM): Unsupported attributes :
-> %x\n", not_supported);
-> +		fprintf(stderr, Name "(IMSM): Unsupported attributes :
-> %x\n",
-> +			(unsigned)__le32_to_cpu(not_supported));
->  		if (not_supported & MPB_ATTRIB_CHECKSUM_VERIFY) {
->  			dprintf("\t\tMPB_ATTRIB_CHECKSUM_VERIFY \n");
->  			not_supported ^=3D MPB_ATTRIB_CHECKSUM_VERIFY;
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>             Name : of:0  (local to host of)
+>             UUID : 63b2145a:49030744:41b8f5b4:cb11bc1d
+>           Events : 19
+>=20
+>      Number   Major   Minor   RaidDevice State
+>         0       8       17        0      active sync   /dev/sdb1
+>         1       8       33        1      active sync   /dev/sdc1
+>         2       8       49        2      active sync   /dev/sdd1
+>         3       8       65        3      active sync   /dev/sde1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=20
+Torbj=C3=B8rn Skagestad
+Id=C3=A9 Til Produkt AS
+torborn@itpas.no
+
+--=-U1kCFUbazby3OI+Z5xhe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAk5BGZUACgkQ4RjLWGFqSIbftACgs4pmH6uYBz889YWRH8xu58U4
+qjEAn0iiagODe/0C8AqaTHJ6xK/vYAMs
+=WUip
+-----END PGP SIGNATURE-----
+
+--=-U1kCFUbazby3OI+Z5xhe--
+
