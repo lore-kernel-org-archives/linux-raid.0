@@ -1,84 +1,89 @@
-From: Daniel Frey <djqfrey@gmail.com>
-Subject: Re: mdadm forces resync every boot
-Date: Tue, 09 Aug 2011 12:34:30 -0700
-Message-ID: <4E418BC6.7080600@gmail.com>
-References: <4E3C06D1.6030301@gmail.com> <20110809093437.299036be@notabene.brown>
+From: Michal Soltys <soltys@ziu.info>
+Subject: questions regarding few corner cases of mdadm usage
+Date: Wed, 10 Aug 2011 00:12:04 +0200
+Message-ID: <4E41B0B4.2050400@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110809093437.299036be@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/08/11 16:34, NeilBrown wrote:
-> On Fri, 05 Aug 2011 08:05:53 -0700 Daniel Frey <djqfrey@gmail.com> wrote:
-> 
->> Hi all,
->>
->> I've been fighting with my raid array (imsm - raid10) for several weeks
->> now. I've now replaced all four drives in my array as the constant
->> rebuilding caused a smart error to trip on the old drives; unfortunately
->> mdadm is still resyncing the array at every boot.
->>
->> One thing I would like to clarify is does mdadm need to disassemble the
->> array before reboot. At this point, I can't tell if my system is
->> currently doing this. Googling around it seems some say that this step
->> is unnecessary.
-> 
-> With md arrays using "native" metadata you don't need to be too careful
-> shutting down.  This is probably what you found by googling.
-> 
-> With IMSM metadata it is a little easier to get it "wrong" though it should
-> normally work correctly.
-> 
-> There is a program "mdmon" which communicates with the kernel and updates the
-> metadata on the devices.
-> 
-> When there have been no writes for a little while, mdmon will notice and mark
-> the array as 'clean'.  It will then mark it 'dirty' before the first write is
-> allowed to proceed.
-> On a clean shutdown of the array it will mark that array as 'clean'.
-> 
-> But for you, the system shuts down with the array marked 'dirty'.  This
-> suggests that on your machine 'mdmon' is being killed while the array is
-> still active.
-> 
-> Presumably your root is on the IMSM RAID10 array?  When the root filesystem
-> is marked 'read only' it will probably write to the filesystem to record that
-> a fsck is not needed.  So the array will be 'dirty'.  If you then halt before
-> mdmon has a chance to mark the array 'clean' you will get exactly the result
-> you see.
+Hi
 
-That's correct, my root is on the imsm raid10 array, along with my
-dual-boot of Windows Vista. If I didn't want to boot Vista, I'd just be
-using native mdadm like I always have.
+I've been doing some tests, mostly for "what would happen if" scenarios
+of incremental / foreign metadata assembly - as I avoid those if
+possible, still a few things I noticed:
 
-> 
-> If you arrange that the shutdown script runs
->   mdadm --wait-clean --scan
-> 
-> after marking the root filesystem readonly, it will wait until all arrays are
-> recorded as 'clean'.
+1)
 
-I've done some quick poking around and I do not see anything like that.
-I'll look into it a little more and, if necessary, file a bug with the
-distro.
+With native metadata, 'mdadm -IRs' can be used to force-run partially
+assembled arrays. With external metadata (tested with ddf) though, the
+command has no effect. The subarray can be forced into degraded / active
+mode through regular 'mdadm -R' - though it also requires manual start
+of mdmon (otherwise further operations might end in D state, until the
+one is started). For example:
 
-> 
-> This should fix your problem.
-> 
-> What distro are you using?  openSUSE has this command in /etc/init.d/reboot.
+mdadm -C /dev/md/ddf0 -e ddf -n4 /dev/sd[b-e]
+mdadm -C /dev/md/test -l5 -n4 /dev/md/ddf0
+mdadm -S /dev/md/test /dev/md/ddf0
 
-I've used gentoo for as long as I can remember. I've never had an issue
-with mdadm on gentoo until I started using the imsm raid, so it's very
-possible that the above command is missing from the shutdown sequence.
+mdadm -I /dev/sdb
+mdadm -I /dev/sdc
+mdadm -I /dev/sdd
+mdadm -R /dev/md/test
 
-Thanks Neil! With this bit of information I should be able to get it
-resolved. I do have both mdadm and dmraid kernels on this machine now,
-so testing shouldn't be too hard.
+At this point, if the remaining component is added, e.g.
+mdadm -I /dev/sde
 
-> 
-> NeilBrown
+Then mdmon will have to be started, or any process trying to write will
+hang (though mdmon can be started at any moment).
+
+So in short:
+
+- shouldn't -IRs also consider foreign metadata subarrays ?
+- shouldn't mdmon be started automatically for run-forced subarrays ?
+
+2) mixing 'mdadm -I' and 'mdadm -As'
+
+If part of an array (possibly runnable) is assembled through 'mdadm -I',
+and then 'mdadm -As' is called, it will cause creation of a duplicate
+array from the remaining disks. This was true for both native and
+external metadata formats. For example:
+
+mdadm -C /dev/md/ddf0 -e ddf -n4 /dev/sd[b-e]
+mdadm -C /dev/md/test -l1 -n4 /dev/md/ddf0
+mdadm -S /dev/md/test /dev/md/ddf0
+
+mdadm -I /dev/sdb
+mdadm: container /dev/md/ddf0 now has 1 devices
+mdadm: /dev/md/test assembled with 1 devices but not started
+
+mdadm -I /dev/sdc
+mdadm: container /dev/md/ddf0 now has 2 devices
+mdadm: /dev/md/test assembled with 1 devices but not started
+
+mdadm -As
+mdadm: Container /dev/md/ddf1 has been assembled with 2 drives (out of 4)
+mdadm: /dev/md/test_0 assembled with 2 devices but not started
+
+At this point, there're 2 containers + 2 subarrays created, both of
+which can be started with 'mdadm -R' to operate independently:
+
+md124 : active raid1 sdd[1] sde[0]
+      13312 blocks super external:/md125/0 [4/2] [__UU]
+
+md125 : inactive sdd[1](S) sde[0](S)
+      65536 blocks super external:ddf
+
+md126 : active raid1 sdc[1] sdb[0]
+      13312 blocks super external:/md127/0 [4/2] [UU__]
+
+md127 : inactive sdc[1](S) sdb[0](S)
+      65536 blocks super external:ddf
+
+
+I realize that mixing normal and incremental assembly is at least asking
+for problems, though I don't know if the above results fall into "bug"
+or "don't do really weird things" scenario.
