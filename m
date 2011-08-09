@@ -1,151 +1,246 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm forces resync every boot
-Date: Tue, 9 Aug 2011 09:34:37 +1000
-Message-ID: <20110809093437.299036be@notabene.brown>
-References: <4E3C06D1.6030301@gmail.com>
+Subject: Re: [PATCH] RAID-6 check standalone man page
+Date: Tue, 9 Aug 2011 10:43:55 +1000
+Message-ID: <20110809104355.7362af84@notabene.brown>
+References: <20110321140244.2314b4b4@notabene.brown>
+	<20110321104007.GA15379@lazy.lzy>
+	<20110321220457.29d52f5c@notabene.brown>
+	<20110321115440.GA15635@lazy.lzy>
+	<20110322095905.737fb1d5@notabene.brown>
+	<20110404175242.GA3411@lazy.lzy>
+	<20110405091242.3427e0b1@notabene.brown>
+	<20110508185408.GA25378@lazy.lzy>
+	<20110509114500.116926ba@notabene.brown>
+	<20110509184333.GA28743@lazy.lzy>
+	<20110515211515.GA30260@lazy.lzy>
+	<20110516200857.3a009a64@notabene.brown>
+	<4E2716EF.1050509@nexgo.de>
+	<20110726152523.54433754@notabene.brown>
+	<4E3EC6E5.8050303@nexgo.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E3C06D1.6030301@gmail.com>
+In-Reply-To: <4E3EC6E5.8050303@nexgo.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Frey <djqfrey@gmail.com>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 05 Aug 2011 08:05:53 -0700 Daniel Frey <djqfrey@gmail.com> wrote:
+On Sun, 07 Aug 2011 19:09:57 +0200 Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
 
-> Hi all,
+> On 07/26/2011 07:25 AM, NeilBrown wrote:
+> > On Wed, 20 Jul 2011 19:57:03 +0200 Piergiorgio Sartor
+> > <piergiorgio.sartor@nexgo.de> wrote:
+> > 
+> >> Hi Neil,
+> >>
+> >> sorry for the very late answer.
+> >>
+> >> On 05/16/2011 12:08 PM, NeilBrown wrote:
+> >>> On Sun, 15 May 2011 23:15:15 +0200 Piergiorgio Sartor
+> >>> <piergiorgio.sartor@nexgo.de> wrote:
+> >>>
+> >>>> Hi Neil,
+> >>>>
+> >>>> reminder for the suspend patch.
+> >>>>
+> >>>> Thank you so much for the code review.
+> >>>>
+> >>>> I modified it in order to fix, hopefully, all the flaws.
+> >>>>
+> >>>> New patch attached below.
+> >>>>
+> >>>> Please note that "sigblock()" cannot be used, since it is
+> >>>> declared, at least on my system, as "deprecated".
+> >>>> Furthermore, I noticed that "Grow.c" is not checking the
+> >>>> return value of "sysfs_set_num()" while suspending the
+> >>>> array, maybe you'll need to look at this.
+> >>>>
+> >>>> Finally, please check the new patch too, while I can
+> >>>> confirm the software is doing what is supposed to do,
+> >>>> I still need support in order to confirm the suspend
+> >>>> and resume code.
+> >>>>
+> >>>> Thanks again for your help, again let me know what
+> >>>> is the next expected step.
+> >>>
+> >>> That all looks fine thank.  I've applied it and pushed it out.
+> >>>
+> >>> I'm not sure what you mean exactly by the 'next expected step'... 
+> >>
+> >> Well, is there anything than should be done, like
+> >> documentation or code cleanup?
+> >>
+> >> At the moment, it seems to me, the check itself it is
+> >> fine, maybe performance is not at best (anyone wants
+> >> to help, here?).
+> >>
+> >> So, I was thinking about the "repair" process, that is
+> >> fixing the chunks which seem corrupted, instead of just
+> >> the parity.
+> >>
+> >> Before I go that way, I would like to close pending issues,
+> >> if any, with the actual software.
+> > 
+> > Very sensible - thanks.
+> > 
+> > I haven't actually used it or tested it at all so I don't know of any issues
+> > in that regard.
+> > I agree with an earlier reply that a man-page would be a good idea.
+> > You could start by looking at "mdadm.8.in" and basing your man page on that.
+> > It doesn't have to be very long - just explain what it does and how to use
+> > it, and maybe how to interpret the results.
+> > Often writing a man page is enough to flush out any serious usability issues
+> > - if you find it hard to explain how to use it, it is probably because it is
+> > hard to use :-)
+> > 
+> > If you aren't familiar with the troff -man markup language don't let it worry
+> > you - I am happy to fix up any markup issues before including it.
+> > 
+> > It might be good to create a test script too - something that can go in the
+> > tests/ directory would be ideal.
+> > e.g. create and initialise a RAID6, deliberately corrupt one block, then run
+> > your program an check that it reports the right thing.
+> > Probably corrupt a different blocks (randomly?) on each device and test that
+> > it reports all of the errors correctly... something like that.
+> > 
+> > NeilBrown
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> I've been fighting with my raid array (imsm - raid10) for several weeks
-> now. I've now replaced all four drives in my array as the constant
-> rebuilding caused a smart error to trip on the old drives; unfortunately
-> mdadm is still resyncing the array at every boot.
+> Hi Neil,
 > 
-> One thing I would like to clarify is does mdadm need to disassemble the
-> array before reboot. At this point, I can't tell if my system is
-> currently doing this. Googling around it seems some say that this step
-> is unnecessary.
+> please find below a draft of the man page (as patch) for raid6check.
+> Please have a look and let me know any issues (typos for sure).
+> 
+> The test cases will come later.
+> 
+> --- cut here ---
+> 
+> diff -uNr a/raid6check.8.in b/raid6check.8.in
+> --- a/raid6check.8.in	1970-01-01 01:00:00.000000000 +0100
+> +++ b/raid6check.8.in	2011-08-07 19:04:17.352680683 +0200
+> @@ -0,0 +1,101 @@
+> +.\" -*- nroff -*-
+> +.\" Copyright Piergiorgio Sartor and others.
+> +.\"   This program is free software; you can redistribute it and/or modify
+> +.\"   it under the terms of the GNU General Public License as published by
+> +.\"   the Free Software Foundation; either version 2 of the License, or
+> +.\"   (at your option) any later version.
+> +.\" See file COPYING in distribution for details.
+> +.TH RAID6CHECK 8 "" v1.0.0
+> +.SH NAME
+> +raid6check \- check MD RAID6 device for errors
+> +.I aka
+> +Linux Software RAID
+> +
+> +.SH SYNOPSIS
+> +
+> +.BI raid6check " <raid6 device> <start stripe> <number of stripes>"
+> +
+> +.SH DESCRIPTION
+> +RAID 6 devices in which one single component drive has errors can use
+> +the double parity in order to find out the component drive.
+> +The "raid6check" tool checks, for each stripe, the double parity
+> +consistency and, it reports mismatches and, if possible, which
+> +component drive has the mismatch.
+> +Since it works at stripe level, it can report different drives with
+> +mismatches at different stripes.
+> +
+> +"raid6check" requires a non-degraded RAID 6 MD device, as first
+> +parameter, a starting stripe, usually 0, and the number of stripes
+> +to be checked.
+> +If this third parameter is also 0, it will check the array up to
+> +the end.
+> +
+> +"raid6check" will start printing information about the RAID 6, then
+> +for each stripe, it will report the parity rotation status.
+> +In case of parity mismatches, "raid6check" reports, if possible,
+> +which component drive could be responsible. Otherwise it reports
+> +that it is not possible to find the component drive.
+> +
+> +If the given MD device is not a RAID 6, "raid6check" will, of
+> +course, not continue.
+> +
+> +If the RAID6 MD device is degraded, "raid6check" will report
+> +an error and it will not proceed further.
+> +
+> +No write operation are performed on the array or the components.
+> +Furthermore, the checked array can be online and in use during
+> +the operation of "raid6check".
+> +
+> +.SH EXAMPLES
+> +
+> +.B "  raid6check /dev/md0 0 0"
+> +.br
+> +This will check /dev/md0 from start to end.
+> +
+> +.B "  raid6check /dev/md3 0 1"
+> +.br
+> +This will check the first stripe of /dev/md3.
+> +
+> +.B "  raid6check /dev/md1 1000 0"
+> +.br
+> +This will check /dev/md1 from stripe 1000 up to the end.
+> +
+> +.B "  raid6check /dev/m127 128 256"
+> +.br
+> +This will check 256 stripes of /dev/md127 starting from stripe 128.
+> +
+> +.B "  raid6check /dev/md0 0 0 | grep -i error > md0_err.log"
+> +.br
+> +This will check /dev/md0 completely and create a log file only
+> +with errors, if any.
+> +
+> +.SH FILES
+> +
+> +"raid6check" uses directly the component drives as found in /dev.
+> +Furthermore, the sysfs interface is needed in order to find out
+> +the RAID 6 parameters.
+> +
+> +.SH BUGS
+> +Negative parameters can lead to unexpected results.
+> +
+> +It is not clear what will happen if the RAID 6 MD device gets
+> +degraded during the check.
+> +
+> +.PP
+> +The latest version of
+> +.I raid6check
+> +should always be available from
+> +.IP
+> +.B http://www.kernel.org/pub/linux/utils/raid/mdadm/
+> +.PP
+> +Related man pages:
+> +.PP
+> +.IR mdadm (8)
+> +.IR mdmon (8),
+> +.IR mdadm.conf (5),
+> +.IR md (4).
+> +.PP
+> +.IR raidtab (5),
+> +.IR raid0run (8),
+> +.IR raidstop (8),
+> +.IR mkraid (8).
+> 
+> --- cut here ---
+> 
 
-With md arrays using "native" metadata you don't need to be too careful
-shutting down.  This is probably what you found by googling.
 
-With IMSM metadata it is a little easier to get it "wrong" though it should
-normally work correctly.
+Thanks.
+I've made few changes as follow - mostly "RAID 6" to "RAID6" for consistency
+with other man pages.  I've also named the file "raid6check.8" (no ".in") and
+added bits to the Makefile.
 
-There is a program "mdmon" which communicates with the kernel and updates the
-metadata on the devices.
+I was thinking that it might be good to restore the old interface as an
+option.  i.e. to be able to list some devices explicitly even though they
+aren't in an active array.  Occasionally people lose their metadata and this
+could be used to confirm if a collection of devices in a particular order
+really look like a RAID6.... Just a thought.
 
-When there have been no writes for a little while, mdmon will notice and mark
-the array as 'clean'.  It will then mark it 'dirty' before the first write is
-allowed to proceed.
-On a clean shutdown of the array it will mark that array as 'clean'.
-
-But for you, the system shuts down with the array marked 'dirty'.  This
-suggests that on your machine 'mdmon' is being killed while the array is
-still active.
-
-Presumably your root is on the IMSM RAID10 array?  When the root filesystem
-is marked 'read only' it will probably write to the filesystem to record that
-a fsck is not needed.  So the array will be 'dirty'.  If you then halt before
-mdmon has a chance to mark the array 'clean' you will get exactly the result
-you see.
-
-If you arrange that the shutdown script runs
-  mdadm --wait-clean --scan
-
-after marking the root filesystem readonly, it will wait until all arrays are
-recorded as 'clean'.
-
-This should fix your problem.
-
-What distro are you using?  openSUSE has this command in /etc/init.d/reboot.
-
+Thanks,
 NeilBrown
-
-
-
-> 
-> I've managed to update initramfs to 3.2.1 and the local system to 3.2.1
-> but the problem still persists.
-> 
-> The last thing my system does is remount root ro, which it does
-> successfully. However, at the next start:
-> 
-> [   12.657829] md: md127 stopped.
-> [   12.660652] md: bind<sdc>
-> [   12.660939] md: bind<sdb>
-> [   12.661212] md: bind<sda>
-> [   12.661282] md: bind<sdd>
-> [   12.664972] md: md126 stopped.
-> [   12.665284] md: bind<sdd>
-> [   12.665383] md: bind<sdc>
-> [   12.665476] md: bind<sdb>
-> [   12.665568] md: bind<sda>
-> [   12.669218] md/raid10:md126: not clean -- starting background
-> reconstruction
-> [   12.669221] md/raid10:md126: active with 4 out of 4 devices
-> [   12.669241] md126: detected capacity change from 0 to 1000210432000
-> [   12.678356] md: md126 switched to read-write mode.
-> [   12.678390] md: resync of RAID array md126
-> [   12.678393] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [   12.678395] md: using maximum available idle IO bandwidth (but not
-> more than 200000 KB/sec) for resync.
-> [   12.678399] md: using 128k window, over a total of 976768256 blocks.
-> 
-> and cat /proc/mdstat shows it resyncing:
-> 
-> # cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10]
-> md126 : active raid10 sda[3] sdb[2] sdc[1] sdd[0]
->       976768000 blocks super external:/md127/0 64K chunks 2 near-copies
-> [4/4] [UUUU]
->       [==>..................]  resync = 12.2% (119256896/976768256)
-> finish=100.7min speed=141865K/sec
-> 
-> md127 : inactive sdd[3](S) sda[2](S) sdb[1](S) sdc[0](S)
->       9028 blocks super external:imsm
-> 
-> unused devices: <none>
-> 
-> When it resyncs it is fine until the next power down.
-> 
-> Some other details:
-> 
-> # mdadm --detail-platform
->        Platform : Intel(R) Matrix Storage Manager
->         Version : 9.6.0.1014
->     RAID Levels : raid0 raid1 raid10 raid5
->     Chunk Sizes : 4k 8k 16k 32k 64k 128k
->       Max Disks : 7
->     Max Volumes : 2
->  I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2 (SATA)
->           Port0 : /dev/sda (WD-WCAYUJ525606)
->           Port1 : /dev/sdb (WD-WCAYUJ525636)
->           Port2 : /dev/sdc (WD-WCAYUX093587)
->           Port3 : /dev/sdd (WD-WCAYUX092774)
->           Port4 : - non-disk device (TSSTcorp CDDVDW SH-S203B) -
->           Port5 : - no device attached -
-> 
-> # mdadm --detail --scan
-> ARRAY /dev/md/imsm0 metadata=imsm UUID=ec239ccc:22b7330b:0c4808ff:82dd176b
-> ARRAY /dev/md/HDD_0 container=/dev/md/imsm0 member=0
-> UUID=f61f87fc:1e85f04b:59e873c5:0afdb987
-> 
-> # ls /dev/md
-> HDD_0  HDD_0p1  HDD_0p2  HDD_0p3  HDD_0p4  imsm0
-> 
-> Everything seems to be working. Also, I can't reproduce the results in
-> Windows Vista x64 (dual-boot.) When I go from linux -> Windows, Windows
-> detects the array as bad and reinitializes it as well, but if I reboot
-> into Windows the array survives without being marked bad.
-> 
-> Can anyone shed some light on this? I've been bashing my head on my desk
-> for too long and have run out of ideas.
-> 
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
