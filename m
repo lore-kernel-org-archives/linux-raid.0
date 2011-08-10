@@ -1,162 +1,224 @@
-From: Thomas Steinborn <thestonewell@googlemail.com>
-Subject: Re: mdadm(IMSM): Unsupported attributes : 40000000
-Date: Wed, 10 Aug 2011 11:13:47 +0200
-Message-ID: <4E424BCB.30005@googlemail.com>
-References: <CACHinyGxah6Utp+ed0WKH58BO8-sOn+QX9DPCy9QGNjuDde=eQ@mail.gmail.com> <20110809085117.5d910aed@notabene.brown> <B76B33F8487BA74591724C4746DFF732938F@IRSMSX102.ger.corp.intel.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: Linux 3.1-rc1 (nfs/pnfs and drivers/md)
+Date: Wed, 10 Aug 2011 12:23:04 -0700
+Message-ID: <20110810122304.96b8be67.rdunlap@xenotime.net>
+References: <CA+55aFwkJdyEpyNY64aAQ5ChrPZ8Kvx9iRUwy1J6_SRaxoN=zA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B76B33F8487BA74591724C4746DFF732938F@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <CA+55aFwkJdyEpyNY64aAQ5ChrPZ8Kvx9iRUwy1J6_SRaxoN=zA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Trond Myklebust <Trond.Myklebust@netapp.com>, linux-raid@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-Btw, I have a pretty old imsm controller.
-[root@pinguin ~]# mdadm --detail-platform
+When CONFIG_BLOCK is not enabled (x86_64):
 
-            Platform : Intel(R) Matrix Storage Manager
-             Version : 5.0.0.1032
-         RAID Levels : raid0 raid1 raid10
-         Chunk Sizes : 4k 8k 16k 32k 64k 128k
-           Max Disks : 4
-         Max Volumes : 2
-      I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2
-               Port0 : /dev/sda (WD-WMANK1522533)
-               Port2 : /dev/sdb (WD-WMANK1522480)
-               Port1 : - no device attached -
-               Port3 : - no device attached -
+warning: (NFS_V4_1) selects MD which has unmet direct dependencies (BLOCK)
+
+and these build errors:
+
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_submit_bio':
+fs/nfs/blocklayout/blocklayout.c:132: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:133: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:133: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:136: error: implicit declaration of function 'submit_bio'
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_alloc_init_bio':
+fs/nfs/blocklayout/blocklayout.c:148: error: implicit declaration of function 'bio_alloc'
+fs/nfs/blocklayout/blocklayout.c:148: warning: assignment makes pointer from integer without a cast
+fs/nfs/blocklayout/blocklayout.c:152: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:153: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:154: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:155: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_add_page_to_bio':
+fs/nfs/blocklayout/blocklayout.c:171: error: implicit declaration of function 'bio_add_page'
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_end_io_read':
+fs/nfs/blocklayout/blocklayout.c:192: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:193: error: 'BIO_UPTODATE' undeclared (first use in this function)
+fs/nfs/blocklayout/blocklayout.c:193: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:193: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:194: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:194: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:198: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:200: error: decrement of pointer to unknown structure
+fs/nfs/blocklayout/blocklayout.c:200: error: arithmetic on pointer to an incomplete type
+fs/nfs/blocklayout/blocklayout.c:200: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:201: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:204: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:210: error: implicit declaration of function 'bio_put'
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_end_io_write_zero':
+fs/nfs/blocklayout/blocklayout.c:355: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:356: error: 'BIO_UPTODATE' undeclared (first use in this function)
+fs/nfs/blocklayout/blocklayout.c:356: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:356: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:357: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:357: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:361: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:363: error: decrement of pointer to unknown structure
+fs/nfs/blocklayout/blocklayout.c:363: error: arithmetic on pointer to an incomplete type
+fs/nfs/blocklayout/blocklayout.c:363: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:364: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:368: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c: In function 'bl_end_io_write':
+fs/nfs/blocklayout/blocklayout.c:381: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:382: error: 'BIO_UPTODATE' undeclared (first use in this function)
+fs/nfs/blocklayout/blocklayout.c:382: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:382: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c: In function 'map_block':
+fs/nfs/blocklayout/blocklayout.c:440: error: implicit declaration of function 'set_buffer_mapped'
+fs/nfs/blocklayout/blocklayout.c:441: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:442: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:445: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c:445: error: dereferencing pointer to incomplete type
+fs/nfs/blocklayout/blocklayout.c: In function 'init_page_for_write':
+fs/nfs/blocklayout/blocklayout.c:469: error: implicit declaration of function 'alloc_page_buffers'
+fs/nfs/blocklayout/blocklayout.c:469: warning: assignment makes pointer from integer without a cast
+fs/nfs/blocklayout/blocklayout.c:477: error: implicit declaration of function 'bh_uptodate_or_lock'
+fs/nfs/blocklayout/blocklayout.c:478: error: implicit declaration of function 'bh_submit_read'
+fs/nfs/blocklayout/blocklayout.c:486: error: implicit declaration of function 'free_buffer_head'
+make[4]: *** [fs/nfs/blocklayout/blocklayout.o] Error 1
+
+In file included from include/linux/raid/pq.h:20,
+                 from lib/raid6/algos.c:19:
+include/linux/blkdev.h:1346: warning: 'struct task_struct' declared inside parameter list
+include/linux/blkdev.h:1346: warning: its scope is only this definition or declaration, which is probably not what you want
+include/linux/blkdev.h:1350: warning: 'struct task_struct' declared inside parameter list
+include/linux/blkdev.h:1355: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'blk_needs_flush_plug'
+In file included from lib/raid6/algos.c:19:
+include/linux/raid/pq.h:27: error: 'PAGE_SIZE' undeclared here (not in a function)
+include/linux/raid/pq.h:74: error: expected declaration specifiers or '...' before 'size_t'
+include/linux/raid/pq.h:113: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'raid6_gfmul'
+include/linux/raid/pq.h:114: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'raid6_gfexp'
+include/linux/raid/pq.h:115: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'raid6_gfinv'
+include/linux/raid/pq.h:116: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'raid6_gfexi'
+include/linux/raid/pq.h:119: error: expected declaration specifiers or '...' before 'size_t'
+include/linux/raid/pq.h:121: error: expected declaration specifiers or '...' before 'size_t'
+include/linux/raid/pq.h:122: error: expected declaration specifiers or '...' before 'size_t'
+lib/raid6/algos.c: In function 'raid6_select_algo':
+lib/raid6/algos.c:90: error: 'raid6_gfmul' undeclared (first use in this function)
+lib/raid6/algos.c:116: warning: passing argument 2 of '(*algo)->gen_syndrome' makes pointer from integer without a cast
+lib/raid6/algos.c:116: note: expected 'void **' but argument is of type 'long unsigned int'
+lib/raid6/algos.c:116: error: too many arguments to function '(*algo)->gen_syndrome'
+lib/raid6/algos.c: At top level:
+lib/raid6/algos.c:153: error: expected declaration specifiers or '...' before string constant
+lib/raid6/algos.c:153: warning: data definition has no type or storage class
+lib/raid6/algos.c:153: warning: type defaults to 'int' in declaration of 'MODULE_LICENSE'
+lib/raid6/algos.c:153: warning: function declaration isn't a prototype
+lib/raid6/algos.c:154: error: expected declaration specifiers or '...' before string constant
+lib/raid6/algos.c:154: warning: data definition has no type or storage class
+lib/raid6/algos.c:154: warning: type defaults to 'int' in declaration of 'MODULE_DESCRIPTION'
+lib/raid6/algos.c:154: warning: function declaration isn't a prototype
+  CC [M]  drivers/char/applicom.o
+make[3]: *** [lib/raid6/algos.o] Error 1
+
+In file included from drivers/md/linear.c:19:
+include/linux/blkdev.h:1346: warning: 'struct task_struct' declared inside parameter list
+include/linux/blkdev.h:1346: warning: its scope is only this definition or declaration, which is probably not what you want
+include/linux/blkdev.h:1350: warning: 'struct task_struct' declared inside parameter list
+include/linux/blkdev.h:1355: error: expected '=', ',', ';', 'asm' or '__attribute__' before 'blk_needs_flush_plug'
+In file included from drivers/md/linear.c:23:
+drivers/md/md.h: In function 'md_sync_acct':
+drivers/md/md.h:418: error: dereferencing pointer to incomplete type
+drivers/md/md.h: In function 'mdname':
+drivers/md/md.h:484: error: dereferencing pointer to incomplete type
+  CC [M]  net/netfilter/xt_connbytes.o
+In file included from drivers/md/linear.c:24:
+drivers/md/linear.h: At top level:
+drivers/md/linear.h:15: error: field 'rcu' has incomplete type
+drivers/md/linear.c: In function 'which_dev':
+drivers/md/linear.c:36: error: implicit declaration of function 'rcu_dereference'
+drivers/md/linear.c:36: warning: assignment makes pointer from integer without a cast
+drivers/md/linear.c: At top level:
+drivers/md/linear.c:64: warning: 'struct bvec_merge_data' declared inside parameter list
+drivers/md/linear.c: In function 'linear_mergeable_bvec':
+drivers/md/linear.c:66: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:68: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:69: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:69: error: implicit declaration of function 'get_start_sect'
+drivers/md/linear.c:69: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:71: error: implicit declaration of function 'rcu_read_lock'
+drivers/md/linear.c:74: error: implicit declaration of function 'rcu_read_unlock'
+drivers/md/linear.c:82: error: dereferencing pointer to incomplete type
+drivers/md/linear.c: In function 'linear_congested':
+drivers/md/linear.c:100: warning: assignment makes pointer from integer without a cast
+drivers/md/linear.c:103: error: implicit declaration of function 'bdev_get_queue'
+drivers/md/linear.c:103: warning: initialization makes pointer from integer without a cast
+drivers/md/linear.c:104: error: implicit declaration of function 'bdi_congested'
+drivers/md/linear.c:104: error: dereferencing pointer to incomplete type
+drivers/md/linear.c: In function 'linear_size':
+drivers/md/linear.c:117: warning: assignment makes pointer from integer without a cast
+drivers/md/linear.c: In function 'linear_conf':
+drivers/md/linear.c:158: error: implicit declaration of function 'disk_stack_limits'
+drivers/md/linear.c:164: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:165: error: implicit declaration of function 'blk_queue_max_segments'
+drivers/md/linear.c:166: error: implicit declaration of function 'blk_queue_segment_boundary'
+drivers/md/linear.c:167: error: 'PAGE_CACHE_SIZE' undeclared (first use in this function)
+drivers/md/linear.c: In function 'linear_run':
+drivers/md/linear.c:210: error: implicit declaration of function 'blk_queue_merge_bvec'
+drivers/md/linear.c:211: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:212: error: dereferencing pointer to incomplete type
+drivers/md/linear.c: In function 'linear_add':
+drivers/md/linear.c:238: warning: assignment makes pointer from integer without a cast
+drivers/md/linear.c:240: error: implicit declaration of function 'rcu_assign_pointer'
+drivers/md/linear.c:242: error: implicit declaration of function 'set_capacity'
+drivers/md/linear.c:243: error: implicit declaration of function 'revalidate_disk'
+drivers/md/linear.c:244: error: implicit declaration of function 'kfree_rcu'
+drivers/md/linear.c:244: error: 'rcu' undeclared (first use in this function)
+drivers/md/linear.c: In function 'linear_stop':
+drivers/md/linear.c:259: error: implicit declaration of function 'rcu_barrier'
+drivers/md/linear.c:260: error: implicit declaration of function 'blk_sync_queue'
+drivers/md/linear.c: In function 'linear_make_request':
+drivers/md/linear.c:272: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:272: error: 'REQ_FLUSH' undeclared (first use in this function)
+drivers/md/linear.c:278: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:282: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:282: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:284: error: 'BDEVNAME_SIZE' undeclared (first use in this function)
+drivers/md/linear.c:290: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:291: error: implicit declaration of function 'bdevname'
+drivers/md/linear.c:293: warning: format '%s' expects type 'char *', but argument 4 has type 'int'
+drivers/md/linear.c:295: error: implicit declaration of function 'bio_io_error'
+drivers/md/linear.c:284: warning: unused variable 'b'
+drivers/md/linear.c:298: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:298: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:308: error: implicit declaration of function 'bio_split'
+drivers/md/linear.c:308: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:308: warning: assignment makes pointer from integer without a cast
+drivers/md/linear.c:310: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:311: error: implicit declaration of function 'generic_make_request'
+drivers/md/linear.c:311: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:312: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:313: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:314: error: implicit declaration of function 'bio_pair_release'
+drivers/md/linear.c:318: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:319: error: dereferencing pointer to incomplete type
+drivers/md/linear.c:319: error: dereferencing pointer to incomplete type
+drivers/md/linear.c: At top level:
+drivers/md/linear.c:337: error: 'THIS_MODULE' undeclared here (not in a function)
+drivers/md/linear.c:359: error: expected declaration specifiers or '...' before string constant
+drivers/md/linear.c:359: warning: data definition has no type or storage class
+drivers/md/linear.c:359: warning: type defaults to 'int' in declaration of 'MODULE_LICENSE'
+drivers/md/linear.c:359: warning: function declaration isn't a prototype
+drivers/md/linear.c:360: error: expected declaration specifiers or '...' before string constant
+drivers/md/linear.c:360: warning: data definition has no type or storage class
+drivers/md/linear.c:360: warning: type defaults to 'int' in declaration of 'MODULE_DESCRIPTION'
+drivers/md/linear.c:360: warning: function declaration isn't a prototype
+drivers/md/linear.c:361: error: expected declaration specifiers or '...' before string constant
+drivers/md/linear.c:361: warning: data definition has no type or storage class
+drivers/md/linear.c:361: warning: type defaults to 'int' in declaration of 'MODULE_ALIAS'
+drivers/md/linear.c:361: warning: function declaration isn't a prototype
+drivers/md/linear.c:362: error: expected declaration specifiers or '...' before string constant
+drivers/md/linear.c:362: warning: data definition has no type or storage class
+drivers/md/linear.c:362: warning: type defaults to 'int' in declaration of 'MODULE_ALIAS'
+drivers/md/linear.c:362: warning: function declaration isn't a prototype
+drivers/md/linear.c:363: error: expected declaration specifiers or '...' before string constant
+drivers/md/linear.c:363: warning: data definition has no type or storage class
+drivers/md/linear.c:363: warning: type defaults to 'int' in declaration of 'MODULE_ALIAS'
+drivers/md/linear.c:363: warning: function declaration isn't a prototype
+make[3]: *** [drivers/md/linear.o] Error 1
 
 
-And indeed this was managed by dmraid before.
-
-The array itself was created by the controller BIOS and not windows or linux.
-
-HTH
-Thomas
-
-
-On 09.08.2011 11:36, Wojcik, Krzysztof wrote:
-> Neil,
->
-> In fact this bit may cause backward compatibility issue.
-> It was used in old versions of IMSM metadata and for some reason was marked as "never use".
-> Skipping this bit during compatibility check is good idea.
->
-> I've checked compatibility with metadata created using dmraid and got another issue.
-> Attribute "MPB_ATTRIB_NEVER_USE2" is set in metadata created by dmraid so mdadm refuse loading metadata.
-> Could you add MPB_ATTRIB_NEVER_USE2 to your patch to MPB_ATTRIB_IGNORED list?
->
-> Regards
-> Krzysztof
->
->> -----Original Message-----
->> From: NeilBrown [mailto:neilb@suse.de]
->> Sent: Tuesday, August 09, 2011 12:51 AM
->> To: Thomas Steinborn
->> Cc: linux-raid@vger.kernel.org; Kwolek, Adam; Wojcik, Krzysztof;
->> Williams, Dan J
->> Subject: Re: mdadm(IMSM): Unsupported attributes : 40000000
->>
->> On Sat, 6 Aug 2011 20:55:47 +0200 Thomas Steinborn
->> <thestonewell@googlemail.com>  wrote:
->>
->>> Hi,
->>>
->>> after updating to mdadm 3.2.2 (by way of upgrading from Fedora 14 to
->>> 15) from 3.1.5 I am no longer able to boot my IMSM raid, which I was
->>> able to for the last 5 years or so.
->>>
->>> The errors I am getting are:
->>>
->>>    mdadm(IMSM): Unsupported attributes : 40000000
->>>    mdadm: IMSM metadata loading not allowed due to attributes
->> incompatibility.
->>> I tracked that down to the patch at
->>>
->>> http://www.spinics.net/lists/raid/msg34783.html
->>>
->>> According to that patch 40000000 means #define MPB_ATTRIB_NEVER_USE
->>> __cpu_to_le32(0x40000000). Any advice why an unused but aparently set
->>> attribute should stop the raid to boot?
->>>
->>> For now I am up and running with 3.1.5 but would like to keep up with
->>> the latest mdadm if possible.
->>>
->>> Thanks
->>> Thomas
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid"
->> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Thanks for the report.
->>
->> It looks like we need something like the following.
->>
->> Adam/Kryzysztof:  Is this patch reasonable?
->>
->> Thanks,
->> NeilBrown
->>
->>
->>
->>
->>
->>  From 418f9b368a1200370695527d22aba8c3606172c5 Mon Sep 17 00:00:00 2001
->> From: NeilBrown<neilb@suse.de>
->> Date: Tue, 9 Aug 2011 08:49:34 +1000
->> Subject: [PATCH] IMSM: allow some array attribute bits to be ignored.
->>
->> Some bits are not handled by mdadm, but their presence should not
->> cause failure.
->> In particular MPB_ATTRIB_NEVER_USE appears harmless.
->>
->> Reported-by: Thomas Steinborn<thestonewell@googlemail.com>
->> Signed-off-by: NeilBrown<neilb@suse.de>
->>
->> diff --git a/super-intel.c b/super-intel.c
->> index dcab5f9..ddf4de9 100644
->> --- a/super-intel.c
->> +++ b/super-intel.c
->> @@ -74,14 +74,17 @@
->>
->>   /* Define all supported attributes that have to be accepted by mdadm
->>    */
->> -#define MPB_ATTRIB_SUPPORTED		MPB_ATTRIB_CHECKSUM_VERIFY | \
->> +#define MPB_ATTRIB_SUPPORTED	       (MPB_ATTRIB_CHECKSUM_VERIFY | \
->>   					MPB_ATTRIB_2TB             | \
->>   					MPB_ATTRIB_2TB_DISK        | \
->>   					MPB_ATTRIB_RAID0           | \
->>   					MPB_ATTRIB_RAID1           | \
->>   					MPB_ATTRIB_RAID10          | \
->>   					MPB_ATTRIB_RAID5           | \
->> -					MPB_ATTRIB_EXP_STRIPE_SIZE
->> +					MPB_ATTRIB_EXP_STRIPE_SIZE)
->> +
->> +/* Define attributes that are unused but not harmful */
->> +#define MPB_ATTRIB_IGNORED		(MPB_ATTRIB_NEVER_USE)
->>
->>   #define MPB_SECTOR_CNT 2210
->>   #define IMSM_RESERVED_SECTORS 4096
->> @@ -1141,11 +1144,14 @@ void examine_migr_rec_imsm(struct intel_super
->> *super)
->>   static int imsm_check_attributes(__u32 attributes)
->>   {
->>   	int ret_val = 1;
->> -	__u32 not_supported = (MPB_ATTRIB_SUPPORTED)^0xffffffff;
->> +	__u32 not_supported = MPB_ATTRIB_SUPPORTED^0xffffffff;
->> +
->> +	not_supported&= ~MPB_ATTRIB_IGNORED;
->>
->>   	not_supported&= attributes;
->>   	if (not_supported) {
->> -		fprintf(stderr, Name "(IMSM): Unsupported attributes :
->> %x\n", not_supported);
->> +		fprintf(stderr, Name "(IMSM): Unsupported attributes :
->> %x\n",
->> +			(unsigned)__le32_to_cpu(not_supported));
->>   		if (not_supported&  MPB_ATTRIB_CHECKSUM_VERIFY) {
->>   			dprintf("\t\tMPB_ATTRIB_CHECKSUM_VERIFY \n");
->>   			not_supported ^= MPB_ATTRIB_CHECKSUM_VERIFY;
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
