@@ -1,68 +1,43 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: single cpu thread performance limit?
-Date: Thu, 11 Aug 2011 17:07:18 +0100
-Message-ID: <CAACGR8ukejAuPchq-57CxodDBRvjoswZ9VNqL-peTzCgokABOQ@mail.gmail.com>
-References: <CAACGR8sSieD1MLCEnY0Wv24pHd9xpcJ=mhduwGMCqo5A5ttZpw@mail.gmail.com>
-	<CADNH=7ESorghKRedp8U3Ef9Ak45KFaDPqbmvLqwyTD_9gdpUCA@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Linux 3.1-rc1 (nfs/pnfs and drivers/md)
+Date: Thu, 11 Aug 2011 11:44:13 -0700
+Message-ID: <4E4422FD.3060706@panasas.com>
+References: <CA+55aFwkJdyEpyNY64aAQ5ChrPZ8Kvx9iRUwy1J6_SRaxoN=zA@mail.gmail.com> <20110810122304.96b8be67.rdunlap@xenotime.net> <CA+a=Yy5izxiyvW5eYiWuute9E1vXwNTj4frdzNeEwsLDrszesg@mail.gmail.com> <20110810175829.a834d80f.rdunlap@xenotime.net> <CA+55aFzcSLrhkexEn=J7BN8F3P3Vy+EAjwgGwMQPdeoYoQG+Bw@mail.gmail.com> <F19688880B763E40B28B2B462677FBF805BF0EAC8A@MX09A.corp.emc.com> <4E43AAD1.7090806@tonian.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADNH=7ESorghKRedp8U3Ef9Ak45KFaDPqbmvLqwyTD_9gdpUCA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4E43AAD1.7090806@tonian.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Benny Halevy <bhalevy@tonian.com>, Sorin Faibish <sfaibish@emc.com>, peter honeyman <honey@citi.umich.edu>
+Cc: tao.peng@emc.com, torvalds@linux-foundation.org, rdunlap@xenotime.net, bergwolf@gmail.com, Trond.Myklebust@netapp.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, "Welch, Brent" <welch@panasas.com>
 List-Id: linux-raid.ids
 
-Tried this... it results in the same :(
+On 08/11/2011 03:11 AM, Benny Halevy wrote:
+> On 2011-08-11 06:26, tao.peng@emc.com wrote:
+> 
+> My Ack, that's indeed closer to what I had queued in my tree originally and
+> follows the approach we used for the objects layout driver.
+> 
+> Benny
+> 
 
-On Thu, Aug 11, 2011 at 5:01 PM, Mathias Bur=E9n <mathias.buren@gmail.c=
-om> wrote:
-> =A011 August 2011 16:58, mark delfman <markdelfman@googlemail.com> wr=
-ote:
->> I seem to have hit a significant hard stop in MD RAID1/10 performanc=
-e
->> which seems to be linked to a single CPU thread.
->>
->> I am using extremely high speed (IOPS) internal block devices =96 8 =
-in
->> total. =A0They are capable of achieving > 1million iops.
->>
->> However if I use RAID1 / 10 then MD seems to use a single thread whi=
-ch
->> will reach 100% CPU utilisation (single core) at around 200K IOPS.
->> Limiting the entire performance to around 200K.
->>
->> If I use say 4 x RAID1 / 10=92s and a RAID0 on top =96 I see not muc=
-h
->> greater results. (although the theory seems to say I should and ther=
-e
->> are now 4 CPU threads running, it still seems to hit 4 x 100% at may=
-be
->> 350K).
->>
->> Is there any way to increase the number of threads per RAID set? Or
->> any other suggestions on configurations? =A0(I have tried every
->> permutation of R0+R1/10=92s)
->>
->> Thank you for any advice.
->>
->>
->> Mark
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
-> Maybe create separate MD RAID1 devices, then a new MD device with
-> RAID0? (instead of using mdadm RAID"10")
->
-> /M
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes but this breaks "Sorin"'s conspiracy to sneak into readhat the block
+layout driver. Because it would be selected automatically if you set
+CONFIG_NFS41.
+
+Because for some perverted reason readhat wants pNFS-Files in, with
+latest patches, but not the blocks or objects. I liked it that Blocks
+tried to state: "pNFS is with blocks as well". Even Trond agreed that
+it is logical this way.
+
+You select CONFIG_NFS41 or not. objects and blocks are a part of that,
+mandated by the protocol.
+
+(I don't know that it was "Sorin"'s Idea, I meant the block guys)
+
+I wish we can go back to the auto selection but fix the dependency
+stuff. Surly it is possible.
+
+Thanks
+Boaz
