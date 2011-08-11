@@ -1,101 +1,121 @@
-From: Benny Halevy <bhalevy-4/WYdZTkCtzQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Linux 3.1-rc1 (nfs/pnfs and drivers/md)
-Date: Thu, 11 Aug 2011 13:11:29 +0300
-Message-ID: <4E43AAD1.7090806@tonian.com>
-References: <CA+55aFwkJdyEpyNY64aAQ5ChrPZ8Kvx9iRUwy1J6_SRaxoN=zA@mail.gmail.com> <20110810122304.96b8be67.rdunlap@xenotime.net> <CA+a=Yy5izxiyvW5eYiWuute9E1vXwNTj4frdzNeEwsLDrszesg@mail.gmail.com> <20110810175829.a834d80f.rdunlap@xenotime.net> <CA+55aFzcSLrhkexEn=J7BN8F3P3Vy+EAjwgGwMQPdeoYoQG+Bw@mail.gmail.com> <F19688880B763E40B28B2B462677FBF805BF0EAC8A@MX09A.corp.emc.com>
+From: Another Sillyname <anothersname@googlemail.com>
+Subject: Couldn't remove rebuilding drive from RAID5 rebuild, now can't add
+ new drive to array?
+Date: Thu, 11 Aug 2011 14:48:29 +0100
+Message-ID: <CAOS+5GES654yyRPYkvSC-r5q+4n-vXwph33v_6Bf51xANRcnJQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <F19688880B763E40B28B2B462677FBF805BF0EAC8A-AYrsSIZi/B2B3McK65YKY9BPR1lH4CV8@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: tao.peng-mb1K0bWo544@public.gmane.org
-Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org, bergwolf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2011-08-11 06:26, tao.peng-mb1K0bWo544@public.gmane.org wrote:
-> Hi, Randy and Linus
-> 
->> -----Original Message-----
->> From: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org [mailto:linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org]
->> On Behalf Of Linus Torvalds
->> Sent: Thursday, August 11, 2011 9:10 AM
->> To: Randy Dunlap
->> Cc: Peng Tao; Trond Myklebust; linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Linux Kernel Mailing List;
->> linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> Subject: Re: Linux 3.1-rc1 (nfs/pnfs and drivers/md)
->>
->> On Wed, Aug 10, 2011 at 5:58 PM, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org> wrote:
->>>
->>> The blocklayout parts of NVS_V4_1 could depend on BLOCK.  or all of NVS_V4_1
->>> can depend on BLOCK.
->>
->> Absolutely. Replace "could" by "should".
->>
->> There's no way I'll take a patch to make NFS "select BLOCK". If the
->> block layer isn't enabled, then NFS obviously shouldn't be doing any
->> pnfs stuff.
-> I see. How about the following patch? We used to do like following for PNFS_BLOCK but it was changed during code review.
+I have a RAID5 array consisting of 4 drives that recently had a problem.
 
-My Ack, that's indeed closer to what I had queued in my tree originally and
-follows the approach we used for the objects layout driver.
+One of the drives 'removed' itself from the array and when I added it
+back it started the background rebuilding I expected, however I then
+noticed from smartctl that the drive was showing 'imminent failure'
+due to 3300+ reallocated sector errors.
 
-Benny
+At this stage I decided I wanted to pull the drive before it finished
+the rebuild and replace it.
 
-> 
-> 
-> From 833b59c1d24b43a9a4d47f777abab2cd9d041c68 Mon Sep 17 00:00:00 2001
-> From: Peng Tao <bergwolf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Date: Wed, 10 Aug 2011 18:29:21 -0400
-> Subject: [PATCH] NFS41: make PNFS_BLOCK selectable
-> 
-> PNFS_BLOCK needs BLK_DEV_DM/MD, which is not a dependency for other
-> pnfs layout drivers. Seperate it out so others can still build when
-> BLK_DEV_DM/MD is not enabled.
-> 
-> Also change select to depends on to avoid build failures.
-> 
-> Reported-by: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
-> Signed-off-by: Peng Tao <peng_tao-mb1K0bWo544@public.gmane.org>
-> ---
->  fs/nfs/Kconfig |   14 +++++++++-----
->  1 files changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/nfs/Kconfig b/fs/nfs/Kconfig
-> index be02077..0d30613 100644
-> --- a/fs/nfs/Kconfig
-> +++ b/fs/nfs/Kconfig
-> @@ -79,12 +79,9 @@ config NFS_V4_1
->  	depends on NFS_FS && NFS_V4 && EXPERIMENTAL
->  	select SUNRPC_BACKCHANNEL
->  	select PNFS_FILE_LAYOUT
-> -	select PNFS_BLOCK
-> -	select MD
-> -	select BLK_DEV_DM
->  	help
->  	  This option enables support for minor version 1 of the NFSv4 protocol
-> -	  (RFC 5661 and RFC 5663) in the kernel's NFS client.
-> +	  (RFC 5661) in the kernel's NFS client.
->  
->  	  If unsure, say N.
->  
-> @@ -92,7 +89,14 @@ config PNFS_FILE_LAYOUT
->  	tristate
->  
->  config PNFS_BLOCK
-> -	tristate
-> +	tristate "Provide support for the pNFS Block Layout Driver for NFSv4.1 pNFS (EXPERIMENTAL)"
-> +	depends on NFS_FS && NFS_V4_1 && BLK_DEV_DM
-> +	help
-> +	  Say M here if you want your pNFS client to support the Block Layout Driver
-> +	  (RFC 5663). Requires Multiple devices driver support (DM) and Device mapper
-> +	  support (BLK_DEV_DM).
-> +
-> +	  If unsure, say N.
->  
->  config PNFS_OBJLAYOUT
->  	tristate "Provide support for the pNFS Objects Layout Driver for NFSv4.1 pNFS (EXPERIMENTAL)"
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However after I stopped the array using:-
+
+mdadm --stop /dev/md126
+
+I was unable to put that drive into fail status
+
+mdadm --fail /dev/sdj1
+
+No Such Device
+
+At this stage I decided to leave the array offline till I had a
+replacement drive available to slot in.
+
+I now have the replacement drive and as I was unable to either fail or
+remove the offending drive I decided to do a physical pull of the
+drive, reboot the machine to show the drive remove and then a second
+reboot with the new blank drive available.
+
+This seems to have partially worked in that
+
+mdadm -D /dev/md126
+/dev/md126:
+        Version : 1.2
+  Creation Time : Sat Aug  6 01:24:12 2011
+     Raid Level : raid5
+  Used Dev Size : 1953512960 (1863.02 GiB 2000.40 GB)
+   Raid Devices : 4
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Aug  7 05:23:45 2011
+          State : active, degraded, Not Started
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : MY_NEW_RAID
+           UUID : herro_this_isnt_needed
+         Events : 36003
+
+    Number   Major   Minor   RaidDevice State
+       0       8      129        0      active sync   /dev/sdi1
+       1       0        0        1      removed
+       2       8      161        2      active sync   /dev/sdk1
+       3       8      177        3      active sync   /dev/sdl1
+
+Which is what I expected to see.
+
+However I cannot add the replacement drive into the array.
+
+~ >:mdadm --add /dev/md126 /dev/sdj1
+mdadm: add new device failed for /dev/sdj1 as 4: Invalid argument
+
+~ >:mdadm --add --force /dev/md126 /dev/sdj1
+mdadm: set device faulty failed for /dev/sdj1:  No such device
+
+~ >:mdadm --re-add /dev/md126 /dev/sdj1
+mdadm: --re-add for /dev/sdj1 to /dev/md126 is not possible
+
+and even more confusingly
+
+~ >:mdadm -E /dev/sdj1
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : not needed
+           Name : My_NEW_RAID
+  Creation Time : Sat Aug  6 01:24:12 2011
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 3907027053 (1863.02 GiB 2000.40 GB)
+     Array Size : 11721077760 (5589.05 GiB 6001.19 GB)
+  Used Dev Size : 3907025920 (1863.02 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : not needed
+
+    Update Time : Sun Aug  7 05:23:45 2011
+       Checksum : 6172254 - correct
+         Events : 0
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : spare
+   Array State : AAAA ('A' == active, '.' == missing)
+
+
+Could someone possibly point me in the right direction as to what I'm
+doing wrong?
+
+Thanks in advance.
