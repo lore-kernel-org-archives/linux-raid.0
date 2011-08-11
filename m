@@ -1,40 +1,29 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: single cpu thread performance limit?
-Date: Thu, 11 Aug 2011 16:58:48 +0100
-Message-ID: <CAACGR8sSieD1MLCEnY0Wv24pHd9xpcJ=mhduwGMCqo5A5ttZpw@mail.gmail.com>
+From: John Papa <John.Papa@Oracle.com>
+Subject: Re: latest version of mdadm for RedHat 5.3
+Date: Thu, 11 Aug 2011 09:00:22 -0700
+Message-ID: <4E43FC96.6020308@Oracle.com>
+References: <4E43FAA8.5050509@Oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E43FAA8.5050509@Oracle.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I seem to have hit a significant hard stop in MD RAID1/10 performance
-which seems to be linked to a single CPU thread.
+On 8/11/2011 8:52 AM, John Papa wrote:
+> Greetings,
+>
+> A customer is running RedHat 5.3 and has inquired regarding
+> the latest version of mdadm for that version of RedHat.
+>
+> I am having some difficulty responding to the customer with
+> the degree of confidence required for this production environment.
+>
+> Is mdadm version 3.2.2 compatible with RedHat version 5.3?
+>
+> Thank you in advance for considering this inquiry
 
-I am using extremely high speed (IOPS) internal block devices =96 8 in
-total.  They are capable of achieving > 1million iops.
-
-However if I use RAID1 / 10 then MD seems to use a single thread which
-will reach 100% CPU utilisation (single core) at around 200K IOPS.
-Limiting the entire performance to around 200K.
-
-If I use say 4 x RAID1 / 10=92s and a RAID0 on top =96 I see not much
-greater results. (although the theory seems to say I should and there
-are now 4 CPU threads running, it still seems to hit 4 x 100% at maybe
-350K).
-
-Is there any way to increase the number of threads per RAID set? Or
-any other suggestions on configurations?  (I have tried every
-permutation of R0+R1/10=92s)
-
-Thank you for any advice.
-
-
-Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.Papa@Oracle.com
+Oracle National Security Group
