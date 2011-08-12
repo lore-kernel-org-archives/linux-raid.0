@@ -1,64 +1,88 @@
-From: Peng Tao <bergwolf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] pnfs: Automatically select blocks & objects layouts
-Date: Fri, 12 Aug 2011 07:47:20 +0800
-Message-ID: <CA+a=Yy5dgW99H8pTokUZDTJaS_uDS_vKfUeR+i8QNcCwtdFCAQ@mail.gmail.com>
-References: <CA+55aFwkJdyEpyNY64aAQ5ChrPZ8Kvx9iRUwy1J6_SRaxoN=zA@mail.gmail.com>
- <20110810122304.96b8be67.rdunlap@xenotime.net> <CA+a=Yy5izxiyvW5eYiWuute9E1vXwNTj4frdzNeEwsLDrszesg@mail.gmail.com>
- <20110810175829.a834d80f.rdunlap@xenotime.net> <CA+55aFzcSLrhkexEn=J7BN8F3P3Vy+EAjwgGwMQPdeoYoQG+Bw@mail.gmail.com>
- <F19688880B763E40B28B2B462677FBF805BF0EAC8A@MX09A.corp.emc.com>
- <4E43AAD1.7090806@tonian.com> <4E4422FD.3060706@panasas.com>
- <4E444552.9030105@panasas.com> <20110811221305.GA8608@merit.edu>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: single cpu thread performance limit?
+Date: Thu, 11 Aug 2011 20:05:35 -0500
+Message-ID: <4E447C5F.2080204@hardwarefreak.com>
+References: <CAACGR8sSieD1MLCEnY0Wv24pHd9xpcJ=mhduwGMCqo5A5ttZpw@mail.gmail.com>	<4E44265D.3050809@hardwarefreak.com> <CAACGR8to9iybX+fJ_CGYBFgR6XtgPoqCt8kFA4mpqo4d1jEMqw@mail.gmail.com> <4E4440DB.6020804@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20110811221305.GA8608-8f4Pc2RrbJmHXe+LvDLADg@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jim Rees <rees-63aXycvo3TyHXe+LvDLADg@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Cc: Benny Halevy <bhalevy-4/WYdZTkCtzQT0dZR+AlfA@public.gmane.org>, Sorin Faibish <sfaibish-mb1K0bWo544@public.gmane.org>, peter honeyman <honey-vtMw8L3fJ9vSiEDVxGk4TQ@public.gmane.org>, tao.peng-mb1K0bWo544@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org, Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Welch, Brent" <welch-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E4440DB.6020804@hardwarefreak.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: mark delfman <markdelfman@googlemail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Fri, Aug 12, 2011 at 6:13 AM, Jim Rees <rees-63aXycvo3TyHXe+LvDLADg@public.gmane.org> wrote:
-> Boaz Harrosh wrote:
->
-> =C2=A0What about the below? based on v3.1-rc1
->
-> =C2=A0----
-> =C2=A0From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> =C2=A0Subject: [PATCH] pnfs: Automatically select blocks & objects la=
-youts
->
-> =C2=A0Just like files-layout, blocks & objects layouts are part of th=
-e
-> =C2=A0NFS 4.1 protocol and should be automatically selected if NFS_4_=
-1
-> =C2=A0is selected. The small problem is that these depend on other
-> =C2=A0Kernel support being present, while files only depends on NFS
-> =C2=A0itself.
->
-> =C2=A0This patch removes from the user choice the presence of objects
-> =C2=A0and blocks layout. But makes sure these are selected only if
-> =C2=A0the depended subsystems are present in the Kernel.
->
-> =C2=A0Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
->
-> Acked-by: Jim Rees <rees-63aXycvo3TyHXe+LvDLADg@public.gmane.org>
->
-> I think this is what we want. =C2=A0There is no point allowing the us=
-er to pick
-> and choose various layout drivers. =C2=A0If they have selected nfs4.1=
- they should
-> get all the layout drivers their kernel will support, based on the
-> dependencies.
->
-I agree automatically selecting is more reasonable.
-Acked-by: Peng Tao <peng_tao-mb1K0bWo544@public.gmane.org>
+On 8/11/2011 3:51 PM, Stan Hoeppner wrote:
+> On 8/11/2011 2:37 PM, mark delfman wrote:
+> 
+>> FS:  An FS is not really an option for this solution, so we have not
+>> tried this on this rig, but in the past the FS has degreaded the IOPS
 
+>> Whilst a R0 on top of the R1/10's does offer some increase in
+>> performance, linear does not :(
+>> LVM R0 on top of the MD R1/10's does much the same results.
+>> The limiter seems fixes on the single thread per R1/10
 
---=20
-Thanks,
--Bergwolf
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This seems to be the case.  The md processes apparently aren't threaded,
+at least not when doing mirroring/+striping.  xfsbufd, xfssyncd, and
+xfsaild are all threaded.
+
+> This might provide you some really interesting results. :)  Take your 8
+> flash devices, which are of equal size I assume, and create an md
+> --linear array  on the raw device, no partitions (we'll worry about
+> redundancy later).  Format this md device with:
+
+A concat shouldn't use nearly as much CPU as a mirror or stripe.  Though
+I don't know if one core will be enough here.  Test and see.
+
+> ~$ mkfs.xfs -d ag=8 /dev/mdX
+> 
+> Mount it with:
+> 
+> ~$ mount -o inode64,logbsize=256,noatime,nobarrier /dev/mdX /test
+> 
+> (Too bad you're running 2.6.32 instead of 2.6.35 or above, as enabling
+> the XFS delayed logging mount option would probably bump your small file
+> block IOPS to well over a million, if the hardware is actually up to it.)
+> 
+> Now, create 8 directories, say test[1-8].  XFS drives parallelism
+> through allocation groups.  Each directory will be created in a
+> different AG.  Thus, you'll end up with one directory per SSD, and any
+> files written to that directory will go that that same SSD.  Thus,
+> writing files to all 8 directories in parallel will get you near perfect
+> scaling across all disks, with files, not simply raw blocks.
+
+In actuality, since you're running up against CPU vs IOPs, it may be
+better here to create 32 or even 64 allocation groups and spread files
+evenly across them.  IIRC, each XFS file IO gets its own worker thread,
+so you'll be able to take advantage of all 16 cores in the box.  The
+kernel IO is more than sufficiently threaded.
+
+You mentioned above that using a filesystem isn't really an option.  As
+I see it, given the lack of md's lateral (parallel) scalability with
+your hardware and workload, you may want to evaluate the following ideas:
+
+1.  Upgrade to 2.6.38 or later.  There have been IO optimizations since
+2.6.32, though I'm not sure WRT the md code itself.
+
+2.  Try the XFS option.  It may or may not work in your case, but it
+will parallelize to hundreds of cores when writing hundreds of files
+concurrently.  The trick is matching your workload to it, vice versa.
+If you're writing single large files, it's likely not going to
+parallelize.  If you can't use a filesystem...
+
+3.  mdraid on your individual cores can't keep up with your SSDs, so:
+    A.  Switch to 24 SLC SATA SSDs attached to 3* 8 port LSI SAS HBAs:
+http://www.lsi.com/products/storagecomponents/Pages/LSISAS9211-8i.aspx
+        which will give you 12 mdraid1 processes instead of 4.  Use
+        cpumemsets to lock the 12 mdraid1 processes to 12 specific
+        cores, and the mdraid0 process to another core.  And disable HT.
+    B.  Swap the CPUs for higher frequency models, though it'll gain you
+        little and cost quite a bit for four 3.6GHz Xeon W5590s
+
+I'm sure you've already thought of these options, but I figured I'd get
+them in Google.
+
+-- 
+Stan
