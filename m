@@ -1,72 +1,81 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: single cpu thread performance limit?
-Date: Fri, 12 Aug 2011 16:23:58 +0200
-Message-ID: <4E45377E.8000206@shiftmail.org>
-References: <CAACGR8sSieD1MLCEnY0Wv24pHd9xpcJ=mhduwGMCqo5A5ttZpw@mail.gmail.com>
- <4E44265D.3050809@hardwarefreak.com>
- <CAACGR8v87iw9qmtfsQTiUP8QWQEZPyryBc_zZwuD_DyUxgzN8Q@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: latest version of mdadm for RedHat 5.3
+Date: Fri, 12 Aug 2011 13:31:35 -0400
+Message-ID: <4E456377.6030506@redhat.com>
+References: <4E43FAA8.5050509@Oracle.com> <4E43FC96.6020308@Oracle.com> <20110812070759.2849ba0b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigE02A6B77585767410282A67F"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <CAACGR8v87iw9qmtfsQTiUP8QWQEZPyryBc_zZwuD_DyUxgzN8Q@mail.gmail.com>
+In-Reply-To: <20110812070759.2849ba0b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: John Papa <John.Papa@Oracle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/12/11 15:23, mark delfman wrote:
-> Hi
->
-> Quick update with the XFS tests suggested (although a FS is still
-> probably not a real option at teh moment for me)
->
-> This rig only has 4 x Flash (2 MLC and 2 SLC).....  125K IOPS each for
-> MLC - 165K each for SLC.
->
-> Create linear RAID and XFS with ag=4
->
-> Mount as suggested and create 4 test folders.....
->
-> If i test individually - we get 99.9% of the IOPS (ie. 125 for first 2
-> AG's and 165 for last 2).  which is great news and means that the AG
-> does what it should.
->
-> But if a run the test over all 4, then we see it peak at aroudn 320K
-> IOPS.  Interstingly each AG = 80K IOPS and as we can see above this is
-> need not be the case, as the CPU load is not having any issues - i am
-> presuming that this could be a simple XFS limit maybe.
->
->
-> More testing with many R1's and R0's on top seem to suggest that R0 is
-> losing around 20-25% of the IOPS.  (R1 around 5%).  I have tried with
-> LVM strip and much the same.
->
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigE02A6B77585767410282A67F
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-So you report a higher speed now:  (25% overhead + 5% overhead = 30% 
-overhead = 70% remains)
-(125*2+175*2)*0.7 = 420 K
-Previously in your first post you were talking about 350K, do you confirm?
+On 8/11/2011 5:07 PM, NeilBrown wrote:
+> On Thu, 11 Aug 2011 09:00:22 -0700 John Papa <John.Papa@Oracle.com> wro=
+te:
+>=20
+>> On 8/11/2011 8:52 AM, John Papa wrote:
+>>> Greetings,
+>>>
+>>> A customer is running RedHat 5.3 and has inquired regarding
+>>> the latest version of mdadm for that version of RedHat.
+>>>
+>>> I am having some difficulty responding to the customer with
+>>> the degree of confidence required for this production environment.
+>>>
+>>> Is mdadm version 3.2.2 compatible with RedHat version 5.3?
+>>>
+>>> Thank you in advance for considering this inquiry
+>=20
+> In theory all later versions of mdadm are compatible with all kernels. =
+ Later
+> versions add features, remove bugs, and sometimes add bugs.
+>=20
+> The real question is probably "Has it been tested" or "is someone willi=
+ng to
+> provide support".   Maybe you should ask Redhat??
 
-Unfortunately I think 20% overhead for R0 or LVM is reasonable, I have 
-measured 15% for LVM in other situations.
-Your figures with 4 SSDs are not bad I'd say.
+It's a little bit more complex than that.  The mdadm package in rhel is
+responsible for boot up bring up of md raid arrays, and between rhel5
+and rhel6 we changed boot loaders, changed init scripts, changed over to
+doing udev incremental assembly, and a host of other things.  I have
+resisted the urge to put mdadm 3.x on rhel5 because it behaves
+differently and the particular quirks of mdadm 2.6 might or might not be
+relied upon by those boot scripts.  So, my latest build for rhel5 is
+mdadm-2.6.9-3.  Now, whether or not even just that much of an update
+would work with something as old as rhel5.3 with its (I'm sure) not
+updated mkinitrd or initscripts is another question.
 
-But this means that you should obtain 840K IOPS when you have all 8 SSD 
-PCIe cards installed (like in your first post).
-If possible repeat the test with LVM stripes on the big rig.
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
 
-Oh and I also wanted to ask: if you run 8 parallel tests on the big rig 
-with 8 SSDs, each test on a different SSD but all tests simultaneously, 
-without RAIDs or LVMs, are you sure you reach 1 million IOPS overall, or 
-do you max out at 600K or similar?  (600K would be the last performance 
-you measured but adjusted to remove the overheads of LVM and RAID)
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
 
 
-BTW: please note you do NOT have 16 cores, you have 8 cores if you have 
-a dual Xeon 5640. The other 8 cores you see are fake, that's 
-hyperthreading. If one core CPU occupation goes up, you will see it's 
-other twin phantom core to also go up. This makes more difficult to 
-understand the benchmarking, so you might disable hyperthreading from 
-bios if you want to understand better what's going on. Performances 
-should probably change just very little after you disable hyperthreading.
+--------------enigE02A6B77585767410282A67F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk5FY3cACgkQQ9aEs6Ims9gjMgCeJRQiIuVgJHbthrZ+eNXTbICh
+bocAoNRW/nspEqLhv91BMZMPml3MqdtB
+=HDzv
+-----END PGP SIGNATURE-----
+
+--------------enigE02A6B77585767410282A67F--
