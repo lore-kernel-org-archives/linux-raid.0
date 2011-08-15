@@ -1,66 +1,57 @@
 From: Pavel Hofman <pavel.hofman@ivitera.com>
 Subject: Re: Rotating RAID 1
-Date: Mon, 15 Aug 2011 22:21:09 +0200
-Message-ID: <4E497FB5.3030109@ivitera.com>
-References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>
+Date: Mon, 15 Aug 2011 22:42:06 +0200
+Message-ID: <4E49849E.4030604@ivitera.com>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com> <4E497FB5.3030109@ivitera.com> <CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>
+In-Reply-To: <CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: =?UTF-8?B?SsOpcsO0bWUgUG91bGlu?= <jeromepoulin@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-Dne 15.8.2011 21:56, J=C3=A9r=C3=B4me Poulin napsal(a):
-> Good evening,
+Dne 15.8.2011 22:25, J=C3=A9r=C3=B4me Poulin napsal(a):
+> On Mon, Aug 15, 2011 at 4:21 PM, Pavel Hofman <pavel.hofman@ivitera.c=
+om> wrote:
+>> Does your scenario involve using two "external" drives, being swappe=
+d
+>> each time?
 >=20
-> I'm currently working on a project in which I use md-raid RAID1 with
-> Bitmap to "clone" my data from one disk to another and I would like t=
-o
-> know if this could cause corruption:
+> Yes, exactly, 3 or more drive, one stays in place, and the others get
+> rotated off-site.
 >=20
-> The system has 2 SATA ports which are hotplug capable.
-> I created 2 partitions, 1 system (2GB), 1 data (1TB+).
-> I created to RAID1 using:
-> mdadm --create /dev/md0 --raid-devices=3D2 --bitmap=3Dinternal
-> --bitmap-chunk=3D4096 --metadata=3D1.0 /dev/sd[ab]1
-> mdadm --create /dev/md1 --raid-devices=3D2 --bitmap=3Dinternal
-> --bitmap-chunk=3D65536 --metadata=3D1.0 /dev/sd[ab]2
-> Forced sync_parallel on the system disk to be sure it rebuild first.
-> Formatted system ext3 and data ext4.
-> Both mounted using data=3Dwriteback.
+>> I am using such setup, but in order to gain the bitmap
+>> performance effects, I have to run two mirrored RAID1s, i.e. two
+>> bitmaps, each for its corresponding external disk. This setup has be=
+en
+>> working OK for a few years now.
 >=20
-> This system doesn't contain critical data but it contains backups on
-> the data partition. Once the data is in sync, I removed a disk and le=
-t
-> udev fail and remove the disk from the array, this is ArchLinux and
-> udev is set to mount the array using the incremental option, I added
-> --run to make sure it mounts even when a disk is missing. As of now,
-> eveything works as expected.
->=20
-> Then what is different about a standard RAID1, I removed sdb and
-> replaced it with a brand new disk, copied the partition template from
-> the other one and added the new disk using mdadm -a on both arrays, i=
-t
-> synced and works, then swapping the other disk back only rebuilds
-> according to the bitmap, however sometimes it appears to make a full
-> rebuild which is alright. However once, after a day of modifications
-> and weeks after setting-up this RAID, at least 100 GB, it took second=
-s
-> to rebuild and days later it appeared to have encountered corruption,
-> the kernel complained about bad extents and fsck found errors in one
-> of the file I know it had modified that day.
+> Did you script something that stops the RAID and re-assemble it? The
+> RAID must stay mounted in my case as there is live data (incremential
+> backups, so even if the last file is incomplete it is not a problem.)
 
-Does your scenario involve using two "external" drives, being swapped
-each time? I am using such setup, but in order to gain the bitmap
-performance effects, I have to run two mirrored RAID1s, i.e. two
-bitmaps, each for its corresponding external disk. This setup has been
-working OK for a few years now.
+I am working on wiki description of our backup solution. The priorities
+got re-organized recently, looks like I should finish it soon :-)
 
-Best regards,
+Yes, I have a script automatically re-assembling the array correspondin=
+g
+to the added drive and starting synchronization. There is another scrip=
+t
+checking synchronization status, run periodically from cron. When the
+arrays are synced, it waits until the currently running backup job
+finishes, shuts down the backup software (backuppc), unmounts the
+filesystem to flush, removes the external drives from the array (we run
+several external drives in raid0), does a few basic checks on the
+external copy (mounting read-only, reading a directory) and puts the
+external drives to sleep (hdparm -Y) for storing them outside of compan=
+y
+premises.
+
+Give me a few days, I will finish the wiki page and send you a link.
 
 Pavel.
 --
