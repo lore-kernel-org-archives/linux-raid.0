@@ -1,49 +1,26 @@
-From: maurice <mhilarius@gmail.com>
+From: Pavel Hofman <pavel.hofman@ivitera.com>
 Subject: Re: Rotating RAID 1
-Date: Mon, 15 Aug 2011 22:36:18 -0600
-Message-ID: <4E49F3C2.8090009@gmail.com>
-References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com> <4E497FB5.3030109@ivitera.com> <CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com> <4E49849E.4030604@ivitera.com> <20110816084251.2d8e7831@notabene.brown>
+Date: Tue, 16 Aug 2011 08:34:46 +0200
+Message-ID: <4E4A0F86.6010907@ivitera.com>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>	<4E497FB5.3030109@ivitera.com>	<CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>	<4E49849E.4030604@ivitera.com>	<20110816084251.2d8e7831@notabene.brown>	<CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com> <20110816095517.757afc07@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110816084251.2d8e7831@notabene.brown>
+In-Reply-To: <20110816095517.757afc07@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Pavel Hofman <pavel.hofman@ivitera.com>, =?ISO-8859-1?Q?J=E9r=F4me_?= =?ISO-8859-1?Q?Poulin?= <jeromepoulin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 8/15/2011 4:42 PM, NeilBrown wrote:
-> ..I'm not sure from you description whether the following describes 
-> exactly
-> what you are doing or not, but this is how I would do it.
-> As you say, you need two bitmaps.
-> So if there are 3 drives A, X, Y where A is permanent and X and Y are 
-> rotated off-site,
-> then I create two RAID1s like this:
->   mdadm -C /dev/md0 -l1 -n2 --bitmap=internal /dev/A /dev/X
->   mdadm -C /dev/md1 -l1 -n2 --bitmap=internal /dev/md0 /dev/Y
->
->   mkfs /dev/md1; mount /dev/md1 ...
->
-> Then you can remove either or both of X and Y and which each is 
-> re-added it will
-> recover just the blocks that it needs.
-> X from the bitmap of md0, Y from the bitmap of md1.
->
-> NeilBrown
+Dne 16.8.2011 01:55, NeilBrown napsal(a):
+> 
+>  Also, it doesn't have to be a linear stack.  It could be a binary tree
+>  though that might take a little more care to construct.
 
+Since our backup server being a critical resource needs redundancy
+itself, we are running two degraded RAID1s in parallel, using two
+internal drives. The two alternating external drives plug into the
+corresponding bitmap-enabled RAID1.
 
-How elegantly described.
-
-After so many instances of being told "You should not use RAID as a 
-backup device like that!"
-it is pleasant to hear you detail the "right way" to do this.
-
-Thank you very much for that Neil.
-
-
--- 
-Cheers,
-Maurice Hilarius
-eMail: /mhilarius@gmail.com/
+Pavel.
