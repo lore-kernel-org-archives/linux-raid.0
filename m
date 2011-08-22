@@ -1,110 +1,88 @@
-From: Piotr Legiecki <piotrlg@pum.edu.pl>
-Subject: Re: RAID10 failed with two disks
-Date: Mon, 22 Aug 2011 14:52:50 +0200
-Message-ID: <4E525122.7090607@pum.edu.pl>
-References: <4E5231EE.3010001@pum.edu.pl>	<20110822210903.2582bcfd@notabene.brown>	<4E5240BE.1050807@pum.edu.pl> <20110822220129.5b2928ff@notabene.brown>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: Do I have a bad HDD?
+Date: Mon, 22 Aug 2011 18:10:26 +0100
+Message-ID: <CADNH=7F6sCeavTvG0ATFCqNUgV9w0QV5RF7m8O7Ry2SAtJrOGQ@mail.gmail.com>
+References: <CADNH=7HDCwtUr-HSN7fH_GSH8jTYb-SAwmKY0ZRn3opWAhKiBQ@mail.gmail.com>
+	<CADNH=7EJ7tvw2DEsAbeuxxRO1k961RSV4axgvfRUBaKG+Q455Q@mail.gmail.com>
+	<CADNH=7EHAyk7Z7Wa72XO=p1od6AQP5aew_W5DffgLfZeCu=d-g@mail.gmail.com>
+	<CADNH=7F3CVZ6r56jFrSHoVyzOZTHCfXPE_j-Rn8powbB6BLBYQ@mail.gmail.com>
+	<4E359E26.2080500@truschnigg.info>
+	<CADNH=7FmDpRhYbXGMJ=h17x=7hKL-=Wpoydnca=VAkLGqCfSFQ@mail.gmail.com>
+	<4E35E872.2000704@turmel.org>
+	<CADNH=7FG4dy3dh_U4jPq1L_TkY5Do3EN9V6OpxbyBBtHPoQxDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110822220129.5b2928ff@notabene.brown>
+In-Reply-To: <CADNH=7FG4dy3dh_U4jPq1L_TkY5Do3EN9V6OpxbyBBtHPoQxDg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown pisze:
-> It looks like sde1 and sdf1 are unchanged since the "failure" which happened
-> shortly after 3am on Saturday.  So the data on them is probably good.
+On 1 August 2011 00:56, Mathias Bur=C3=A9n <mathias.buren@gmail.com> wr=
+ote:
+> On 1 August 2011 00:42, Phil Turmel <philip@turmel.org> wrote:
+>> Good evening Mathias,
+>>
+>> On 07/31/2011 02:31 PM, Mathias Bur=C3=A9n wrote:
+>>
+>> [trim]
+>>
+>>> No I don't have a backup ;), perhaps it's time to get one. This isn=
+'t
+>>> super important data, more like "nice to have".
+>>>
+>>> I don't have any hotplug bays or anything like that (you'll see in =
+a
+>>> while after I put up the pictures) so I shut down the system to tak=
+e
+>>> the faulty HDD out.
+>>>
+>>> Is it wise to run a check on the array while it's degraded by 1 HDD=
+?
+>>
+>> It shouldn't hurt your array, other than a bit of exercise. =C2=A0If=
+ another
+>> drive is marginal, it could conceivably "push it over the edge".
+>>
+>> Any positive value it has will occur anyways during the resync with =
+the
+>> replacement drive for sdh.
+>>
+>> I wouldn't bother running the scrub until the resync is finished.
+>>
+>> Phil
+>>
+>
+>
+> Thanks, I'll wait to scrub until I get the new HDD (hopefully within =
+2
+> weeks). Pics of the beast here: http://stuff3.imgur.com/htpcnas
+>
+> /Mathias
+>
 
-And I think so.
+New HDD received from Samsung via RMA, all went fine adding it, now
+the array is in recovery:
 
-> It looks like someone (you?) tried to create a new array on sda1 and sdb1
-> thus destroying the old metadata (but probably not the data).  I'm surprised
-> that mdadm would have let you create a RAID10 with just 2 devices...   Is
-> that what happened?  or something else?
+root@ion ~ $ mdadm --manage /dev/md0 --add /dev/sdh1
+mdadm: added /dev/sdh1
+root@ion ~ $ cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid6 sdh1[8] sdf1[5] sde1[7] sdg1[0] sdd1[4] sdb1[1] sdc1=
+[3]
+     9751756800 blocks super 1.2 level 6, 64k chunk, algorithm 2
+[7/6] [UUUUU_U]
+     [>....................]  recovery =3D  0.0% (87852/1950351360)
+finish=3D1109.9min speed=3D29284K/sec
 
-Well, its me of course ;-) I've tried to run the array. It of course 
-didn't allo me to create RAID10 on two disks only, so I have used mdadm 
---create .... missing missing parameters. But it didn't help.
+unused devices: <none>
 
+Thanks for all the help.
 
-> Anyway it looks as though if you run the command:
-> 
->   mdadm --create /dev/md4 -l10 -n4 -e 0.90 /dev/sd{a,b,e,d}1 --assume-clean
-
-Personalities : [raid1] [raid10]
-md4 : active (auto-read-only) raid10 sdf1[3] sde1[2] sdb1[1] sda1[0]
-       1953519872 blocks 64K chunks 2 near-copies [4/4] [UUUU]
-
-md3 : active raid1 sdc4[0] sdd4[1]
-       472752704 blocks [2/2] [UU]
-
-md2 : active (auto-read-only) raid1 sdc3[0] sdd3[1]
-       979840 blocks [2/2] [UU]
-
-md0 : active raid1 sdd1[0] sdc1[1]
-       9767424 blocks [2/2] [UU]
-
-md1 : active raid1 sdd2[0] sdc2[1]
-       4883648 blocks [2/2] [UU]
-
-Hura, hura, hura! ;-) Well, wonder why it didn't work for me ;-(
-
-
-> there is a reasonable change that /dev/md4 would have all your data.
-> You should then
->    fsck -fn /dev/md4
-
-fsck issued some errors
-....
-Illegal block #-1 (3126319976) in inode 14794786.  IGNORED.
-Error while iterating over blocks in inode 14794786: Illegal indirect 
-block found
-e2fsck: aborted
-
-md4 is read-only now.
-
-> to check that it is all OK.  If it is you can
->    echo check > /sys/block/md4/md/sync_action
-> to check if the mirrors are consistent.  When it finished 
->    cat /sys/block/md4/md/mismatch_cnt
-> will show '0' if all is consistent.
-> 
-> If it is not zero but a small number, you can feel safe doing
->     echo repair > /sys/block/md4/md/sync_action
-> to fix it up.
-> If it is a big number.... that would be troubling.
-
-A bit of magic as I can see. Would it not be reasonable to put those 
-commands in mdadm?
-
->> And does layout (near, far etc) influence on this rule: adjacent disk 
->> must be healthy?
-> 
-> I didn't say adjacent disks must be healthy.  Is said you cannot have
-> adjacent disks both failing.  This is not affected by near/far.
-> It is a bit more subtle than that though.  It is OK for 2nd and 3rd to both
-> fail.  But not 1st and 2nd or 3rd and 4th.
-
-I see. Just like ordinary RAID1+0. First and second pair of the disks 
-are RAID1, when both disks in that pair fail the mirror is dead.
-
-Wonder what happens when I create RAID10 on 6 disks? So we have got: 
-sda1+sdb1 = RAID1
-sdc1+sdd1 = RAID1
-sde1+sdf1 = RAID1
-Those three RAID1 are striped together in RAID0?
-And assuming each disk is 1TB, I have 3TB logical space?
-In such situation still the adjacent disks of each RAID1 both must not 
-fail.
-
-
-And I still wonder why it happened? Hardware issue (motherboard)? Or 
-kernel bug (2.6.26 - debian/lenny)?
-
-
-Thank you very nice for help.
-
-Regards
-Piotr
+/Mathias
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
