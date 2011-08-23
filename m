@@ -1,69 +1,68 @@
-From: Piotr Legiecki <piotrlg@pum.edu.pl>
-Subject: Re: RAID10 failed with two disks
-Date: Tue, 23 Aug 2011 10:35:20 +0200
-Message-ID: <4E536648.3060803@pum.edu.pl>
-References: <4E5231EE.3010001@pum.edu.pl>	<20110822210903.2582bcfd@notabene.brown>	<4E5240BE.1050807@pum.edu.pl>	<20110822220129.5b2928ff@notabene.brown>	<4E525122.7090607@pum.edu.pl> <20110823095634.398f2118@notabene.brown>
+From: Mike Viau <viaum@sheridanc.on.ca>
+Subject: Raid 5 to Raid 1 (half of the data not required)
+Date: Tue, 23 Aug 2011 19:41:11 -0400
+Message-ID: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110823095634.398f2118@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
->> Hura, hura, hura! ;-) Well, wonder why it didn't work for me ;-(
-> 
-> Looks good so far, but is you data safe?
+Hello,
 
-I think so.
-fsck has found some errors and corrected them.
-resync done
-cat /sys/block/md4/md/mismatch_cnt
-0
-Looks good.
+I am trying to convert my currently running raid 5 array into a raid 1.=
+ All the guides I can see online are for the reverse direction in which=
+ one is converting/migrating a raid 1 to raid 5. I have intentionally o=
+nly allocated exactly half of the total raid 5 size is. I would like to=
+ create the raid 1 over /dev/sdb1 and /dev/sdc1 with the data on the ra=
+id 5 running with the same drives plus /dev/sde1. Is this possible, I w=
+ish to have the data redundantly over two hard drive without the parity=
+ which is present in raid 5?
+
+Thanks for any help in advance :)
 
 
-> This is correct assuming the default layout.
-> If you asked for "--layout=n3" you would get a 3-way mirror over a1,b1,c1 and
-> d1,e1,f1 and those would be raid0-ed.
+# mdadm -D /dev/md0
+/dev/md0:
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.2
+=A0 Creation Time : Mon Dec 20 09:48:07 2010
+=A0=A0=A0=A0 Raid Level : raid5
+=A0=A0=A0=A0 Array Size : 1953517568 (1863.02 GiB 2000.40 GB)
+=A0 Used Dev Size : 976758784 (931.51 GiB 1000.20 GB)
+=A0=A0 Raid Devices : 3
+=A0 Total Devices : 3
+=A0=A0=A0 Persistence : Superblock is persistent
 
-And the question which one is the most efficient  is beyond the scope of 
-our subject I'm of course? Or maybe there is some general rule of thumb 
-for this?
+=A0=A0=A0 Update Time : Tue Aug 23 11:34:00 2011
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
+=A0Active Devices : 3
+Working Devices : 3
+=A0Failed Devices : 0
+=A0 Spare Devices : 0
 
-The more disks the faster array should be *but* the more data to mirror 
-at once when writing...
+=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+=A0=A0=A0=A0 Chunk Size : 512K
 
-Anyway my tests proved that RAID1 on two disks is *much* slower than 
-RAID10 on 4 disks. RAID10 SATA can easily compete with HP SmartAray 
-P410i/BBC SAS RAIDs (but in RAID1 only ;-)). Well, at least during 
-iozone benchmarks.
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : HOST:0=A0 (local to host HOST)
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f81=
+e9
+=A0=A0=A0=A0=A0=A0=A0=A0 Events : 55750
 
-> If you had 5 devices then you get data copied on
->   sda1+sdb1
->   sdc1+sdd1
->   sde1+sda1
->   sdb1+sdc1
->   sdde+sde1
-> 
-> so is *any* pair of adjacent devices fail, you lose data.
+=A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
+=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 17=A0=A0=A0=A0=
+=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb1
+=A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 33=A0=A0=A0=A0=
+=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdc1
+=A0=A0=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 65=A0=A0=A0=A0=
+=A0=A0=A0 2=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sde1
 
-So from safety point of view there is need for more spare disks or go 
-for RAID6.
 
-> Hard to tell without seeing kernel logs.  Almost certainly a hardware issue
-> of some sort.  Maybe a loose or bumped cable. Maybe a power supply spike.
-> Maybe a stray cosmic ray....
-
-http://pastebin.com/iapZWm0S
-
-Those 'failed' disks are connected to motherboard SATA ports. I've got 
-also Adaptec 1430 adapter with 2 free ports, maybe I should move those 
-disks there.
-
-Thank you for all the help and time put into answering my questions.
-
-Piotr
+-M
+ 		 	   		  --
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
