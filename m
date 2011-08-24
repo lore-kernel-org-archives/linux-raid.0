@@ -1,76 +1,60 @@
-From: Robin Hill <robin.hill47@ntlworld.com>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: Raid 5 to Raid 1 (half of the data not required)
-Date: Wed, 24 Aug 2011 08:34:54 +0100
-Message-ID: <20110824073454.GA1925@cthulhu.home.robinhill.me.uk>
+Date: Wed, 24 Aug 2011 09:03:55 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1108240851190.6833@unicorn.drogon.net>
 References: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
- <20110824104649.1c5696c3@notabene.brown>
- <BAY148-W29A568212EC52E4C4BC52EF110@phx.gbl>
- <20110824123938.6743e87c@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110824123938.6743e87c@notabene.brown>
+In-Reply-To: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Viau <viaum@sheridanc.on.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 23 Aug 2011, Mike Viau wrote:
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>
+> Hello,
+>
+> I am trying to convert my currently running raid 5 array into a raid 1. 
+> All the guides I can see online are for the reverse direction in which 
+> one is converting/migrating a raid 1 to raid 5. I have intentionally 
+> only allocated exactly half of the total raid 5 size is. I would like to 
+> create the raid 1 over /dev/sdb1 and /dev/sdc1 with the data on the raid 
+> 5 running with the same drives plus /dev/sde1. Is this possible, I wish 
+> to have the data redundantly over two hard drive without the parity 
+> which is present in raid 5?
 
-On Wed Aug 24, 2011 at 12:39:38 +1000, NeilBrown wrote:
+3-drive RAID5 -> 2-drive RAID1...
 
-> On Tue, 23 Aug 2011 22:18:12 -0400 Mike Viau <viaum@sheridanc.on.ca> wrot=
-e:
->=20
-> >=20
-> > I am not sure how crack-pot of a solution this would be, but could I:=
-=20
-> >=20
-> > 1/ mdadm -r /dev/md0 /dev/sde1
-> > Remove /dev/sde1 from the raid 5 array
->=20
-> Here you have lost your redundancy .... your choice I guess.
->=20
-> >=20
-> > 2/ dd if=3D/dev/zero of=3D/dev/sde1 bs=3D512 count=3D1
-> > This clears the msdos mbr and clears the partitions
-> >=20
-> > 3/ parted, fdisk or cfdisk to create a new 1TB (or less is possible as =
-well) ext4 partition on /dev/sde
-> >=20
-> > 4/ mkfs.ext4 /dev/sde1
-> >=20
-> > 5/ cp -R {mounted location of degraded /dev/md0 partition} {mounted loc=
-ation of /dev/sde1 partition}
-> > Aka backup
-> >=20
+Neils solution is interesting (and he should know :), but personally, I'd 
+probably take a much simpler approach without FS resizing, etc. so this 
+allows you to change filesystems or use something other than ext3...
 
-If you're wanting to backup, "cp -a" would be better than "cp -R",
-otherwise you lose attributes & symlinks.
+So start with taking a backup :)
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Then verify the existing RAID5 array (echo "check" > .. etc.) and wait...
 
---x+6KMIRAuhnl3hBn
-Content-Type: application/pgp-signature
+Then "break" the array by failing /dev/sdb1
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+Create a single-drive RAID1 using /dev/sdb1 and "missing"
 
-iEYEARECAAYFAk5UqZ0ACgkQShxCyD40xBIzrQCdGWxgKe6wrDryoij1qHzqxHwK
-ZjgAnAqmmivAsMgT2dflyyDtzSOXydBL
-=ef6g
------END PGP SIGNATURE-----
+mkfs the filesystem of choice on this new MD drive and mount it.
 
---x+6KMIRAuhnl3hBn--
+use cp -a (or rsync) to copy data from the raid5 array to the new raid1 
+array.
+
+stop the raid5
+
+hot-add /dev/sdc1 into the new raid1
+
+then fiddle with whatever boot options, etc. to make sure the new drive is 
+assembled at boot time, mounted, etc.
+
+This isn't as "glamorous" as Neils method involving lots of mdadm 
+commands, shrinks and grows, but sometimes it's good to keep things at 
+a simpler level?
+
+Well, it works for me, anyway!
+
+Gordon
