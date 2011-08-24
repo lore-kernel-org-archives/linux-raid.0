@@ -1,44 +1,39 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid 5 to Raid 1 (half of the data not required)
-Date: Wed, 24 Aug 2011 18:42:35 +1000
-Message-ID: <20110824184235.2a165066@notabene.brown>
-References: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
-	<alpine.DEB.2.00.1108240851190.6833@unicorn.drogon.net>
-	<alpine.DEB.2.00.1108241018180.4709@uplift.swm.pp.se>
+From: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
+Subject: mixing backup with app serving on same box
+Date: Wed, 24 Aug 2011 13:49:38 +0200
+Message-ID: <20110824114938.GA24464@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1108241018180.4709@uplift.swm.pp.se>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Gordon Henderson <gordon@drogon.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 24 Aug 2011 10:21:32 +0200 (CEST) Mikael Abrahamsson
-<swmike@swm.pp.se> wrote:
+Hi,
 
-> On Wed, 24 Aug 2011, Gordon Henderson wrote:
-> 
-> > This isn't as "glamorous" as Neils method involving lots of mdadm 
-> > commands, shrinks and grows, but sometimes it's good to keep things at a 
-> > simpler level?
-> 
-> Another way would be to add the new raid1 with missing drive to the lv, 
-> and pvmove all extents off of the existing raid5 md pv, then vgreduce away 
-> from it, stop the raid5, zero-superblock, and add one drive to add 
-> redundancy for the raid1.
-> 
-> But that has little to do with linux raid, and all to do with LVM. It also 
-> means you can do everything online since pvmove doesn't require to offline 
-> anything.
-> 
+I recently ordered a shiny Dell R510 2U server with 12x3.5" drives.
+This machine will primarily be a backup host for nightly incremental
+rsync runs of a dozen other machines.
 
-There are certainly lots of approaches. :-)
-But every approach will require either coping or shrinking the filesystem and
-as extX doesn't support online shrinking the filesystem will have to be
-effectively off-line while that shrink happens.
-(if you shrink by coping, then it could be technically on-line but it had
-better not be written to).
+Since this is a well-spec'ed box with dual CPUs, generous bandwidth and
+32G RAM I'm wondering if it could also do some medium web serving
+(mod_perl + postgres).
 
-NeilBrown
+For the main backup partition I plan in using a mdadm raid6 on 8x3T
+disks and raid6 4x1T disks for the app side.
+
+So my questions are:
+
+- is it realistic to have mix rsync processes and web serving on the
+  same host?
+
+- am I naive in thinking I can get away with it by using distinct disks
+  sets for each task?
+
+- all 12 disks being served by the same H200 controller, will the real
+  bottleneck be at the controller level?
+
+- any other consideration I should take into account?
+
+Thanks,
