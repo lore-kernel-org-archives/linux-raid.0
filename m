@@ -1,18 +1,18 @@
-From: David Brown <david@westcontrol.com>
+From: Gordon Henderson <gordon@drogon.net>
 Subject: Re: mixing backup with app serving on same box
-Date: Wed, 24 Aug 2011 14:10:21 +0200
-Message-ID: <j32q0r$9bt$1@dough.gmane.org>
+Date: Wed, 24 Aug 2011 14:14:56 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1108241404520.6833@unicorn.drogon.net>
 References: <20110824114938.GA24464@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110824114938.GA24464@apartia.fr>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/08/2011 13:49, Louis-David Mitterrand wrote:
+On Wed, 24 Aug 2011, Louis-David Mitterrand wrote:
+
 > Hi,
 >
 > I recently ordered a shiny Dell R510 2U server with 12x3.5" drives.
@@ -22,45 +22,48 @@ On 24/08/2011 13:49, Louis-David Mitterrand wrote:
 > Since this is a well-spec'ed box with dual CPUs, generous bandwidth and
 > 32G RAM I'm wondering if it could also do some medium web serving
 > (mod_perl + postgres).
->
+
+Medium?
+
+OK, so this is probably not the best place to be asking this stuff, but a 
+lot will depend on what you mean by medium, however I know of busy 
+ecommerce sites that are served on much lessser hardware than you have.
+
 > For the main backup partition I plan in using a mdadm raid6 on 8x3T
 > disks and raid6 4x1T disks for the app side.
 >
 > So my questions are:
 >
 > - is it realistic to have mix rsync processes and web serving on the
->    same host?
->
+>  same host?
+
+If the backup is mainly at night and the serving side is mainly during the 
+day, (but watch for an international audience) then why not?
+
 > - am I naive in thinking I can get away with it by using distinct disks
->    sets for each task?
->
+>  sets for each task?
+
+Seems like an OK idea to me..
+
 > - all 12 disks being served by the same H200 controller, will the real
->    bottleneck be at the controller level?
->
+>  bottleneck be at the controller level?
+
+Possibly..
+
 > - any other consideration I should take into account?
->
-> Thanks,
 
+The cost of providing separate servers...
 
-Backups are useful for several purposes.  The most common case for 
-needing a backup is user error - someone deletes the wrong file, and 
-needs a copy.  For that purpose, a backup close at hand is very useful.
+However, FWIW, I do something similar with my own hosted LAMP servers - as 
+well as an offsite backup of critical data, they each rsync to a mirror 
+overnight and as most of my physical servers are now 'hosts' for virtual 
+servers using LXC, then in-case of a total hardware failure, I can 
+actually bring-up the virtual servers on new hardware more or less right 
+away (minus the data delta since the backup of-course).
 
-The second important use case is for disaster recovery - imagine a fire 
-or theft, or the OS going bananas and eating all your data, or a 
-break-in on your webserver.  For those purposes, a backup on the main 
-machine is useless.
+Make sure you use a big chunk-size on the RAID-6, and make sure the 
+underlying filesystem can make use of it too, if possible. (The -Ostride 
+options for ext3/4 for exmaple) do take time building it and benchmarking 
+it for your chosen purpose before going live...
 
-Personally, I prefer two backup sets - one on-site (on the same machine, 
-or a nearby machine) for the first use, and one off-site for 
-emergencies.  So a backup scheme on this server is good for half your 
-backup needs.
-
-However, I'd make some more effort into separating the backup 
-functionality and the webserver functionality.  I'd strongly recommend 
-you look at openvz - it gives you lightweight virtualisation so that you 
-can keep functions like this separate without the resource costs of a 
-full virtualisation solution.
-
-
-
+Gordon
