@@ -1,131 +1,78 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid 5 to Raid 1 (half of the data not required)
-Date: Wed, 24 Aug 2011 10:46:49 +1000
-Message-ID: <20110824104649.1c5696c3@notabene.brown>
-References: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
+From: =?UTF-8?B?SsOpcsO0bWUgUG91bGlu?= <jeromepoulin@gmail.com>
+Subject: Re: Rotating RAID 1
+Date: Tue, 23 Aug 2011 22:28:31 -0400
+Message-ID: <CALJXSJpt59U1Y+Pf4CRZ+Byg7Bb1KNYaofatUDXB4ZBQN0wGvQ@mail.gmail.com>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>
+ <4E497FB5.3030109@ivitera.com> <CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>
+ <4E49849E.4030604@ivitera.com> <20110816084251.2d8e7831@notabene.brown>
+ <CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com>
+ <20110816095517.757afc07@notabene.brown> <CALJXSJqYXmvfoperm10XCLnGNA4WgMt_y7UoUSgPv3xjqScNcg@mail.gmail.com>
+ <20110823135812.62c56cee@notabene.brown> <CALJXSJq52HG_50810mS-F1sfnCKgKsCBpqus9NZ_Le_Rc70JTw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>
+In-Reply-To: <CALJXSJq52HG_50810mS-F1sfnCKgKsCBpqus9NZ_Le_Rc70JTw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Viau <viaum@sheridanc.on.ca>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 23 Aug 2011 19:41:11 -0400 Mike Viau <viaum@sheridanc.on.ca> wr=
-ote:
+On Tue, Aug 23, 2011 at 12:05 AM, J=C3=A9r=C3=B4me Poulin <jeromepoulin=
+@gmail.com> wrote:
+> On Mon, Aug 22, 2011 at 11:58 PM, NeilBrown <neilb@suse.de> wrote:
+>> So you have 8 MD RAID1s each with one missing device and the other d=
+evice is
+>> the next RAID1 down in the stack, except that last RAID1 where the o=
+ne device
+>> is a real device.
+>
 
->=20
-> Hello,
->=20
-> I am trying to convert my currently running raid 5 array into a raid =
-1. All the guides I can see online are for the reverse direction in whi=
-ch one is converting/migrating a raid 1 to raid 5. I have intentionally=
- only allocated exactly half of the total raid 5 size is. I would like =
-to create the raid 1 over /dev/sdb1 and /dev/sdc1 with the data on the =
-raid 5 running with the same drives plus /dev/sde1. Is this possible, I=
- wish to have the data redundantly over two hard drive without the pari=
-ty which is present in raid 5?
+More tests revealed nothing very consistent... however, there is a
+consistent performance degradation on our backups when using multiple
+RAID devices, backup is every 2 hours and it is really slower.
 
-Yes this is possible, though you will need a fairly new kernel (late 30=
-'s at
-least) and mdadm.
+Here are the results of bonnie++ which only show degradation of per
+char even if I know it is not really significant.
+Rewrite was going down more and more until it went back up for no
+reason, really weird unexplainable results.
+=46irst line is from raw device, sdb2, then from md device, then
+incrementally more md devices in series.
 
-And you need to be running ext3 because I think it is the only one you =
-can
-shrink.
-
-1/ umount filesystem
-2/ resize2fs /dev/md0 490G
-     This makes the array use definitely less than half the space.  It =
-is=20
-     safest to leave a bit of slack for relocated metadata or something=
-=2E
-     If you don't make this small enough some later step will fail, and=
-=20
-     you can then revert back to here and try again.
-
-3/ mdadm --grow --array-size=3D490G /dev/md0
-    This makes the array appear smaller without actually destroying any=
- data.
-4/ fsck -f /dev/md0
-    This makes sure the filesystem inside the shrunk array is still OK.
-    If there is a problem you can "mdadm --grow" to a bigger size and c=
-heck
-    again.=20
-
-Only if the above all looks ok, continue.  You can remount the filesyst=
-em at
-this stage if you want to.
-
-5/ mdadm --grow /dev/md0 --raid-disks=3D2
-
-    If you didn't make the array-size small enough, this will fail.
-    If you did it will start a 'reshape' which shuffles all the data ar=
-ound
-    so it fits (With parity) on just two devices.
-
-6/ mdadm --wait /dev/md0
-7/ mdadm --grow /dev/md0 --level=3D1
-    This instantly converts a 2-device RAID5 to a 2-device RAID1.
-8/ mdadm --grow /dev/md0 --array-size=3Dmax
-9/ resize2fs /dev/md0
-     This will grow the filesystem up to fill the available space.
-
-All done.
-
-Please report success or failure or any interesting observations.
-
-NeilBrown
-
-
->=20
-> Thanks for any help in advance :)
->=20
->=20
-> # mdadm -D /dev/md0
-> /dev/md0:
-> =A0=A0=A0=A0=A0=A0=A0 Version : 1.2
-> =A0 Creation Time : Mon Dec 20 09:48:07 2010
-> =A0=A0=A0=A0 Raid Level : raid5
-> =A0=A0=A0=A0 Array Size : 1953517568 (1863.02 GiB 2000.40 GB)
-> =A0 Used Dev Size : 976758784 (931.51 GiB 1000.20 GB)
-> =A0=A0 Raid Devices : 3
-> =A0 Total Devices : 3
-> =A0=A0=A0 Persistence : Superblock is persistent
->=20
-> =A0=A0=A0 Update Time : Tue Aug 23 11:34:00 2011
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
-> =A0Active Devices : 3
-> Working Devices : 3
-> =A0Failed Devices : 0
-> =A0 Spare Devices : 0
->=20
-> =A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
-> =A0=A0=A0=A0 Chunk Size : 512K
->=20
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : HOST:0=A0 (local to host HOST)
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 UUID : 7d8a7c68:95a230d0:0a8f6e74:4c8f=
-81e9
-> =A0=A0=A0=A0=A0=A0=A0=A0 Events : 55750
->=20
-> =A0=A0=A0 Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
-> =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 17=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb1
-> =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 33=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdc1
-> =A0=A0=A0=A0=A0=A0 3=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 65=A0=A0=A0=
-=A0=A0=A0=A0 2=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sde1
->=20
->=20
-> -M
->  		 	   		  --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- -=
+-Seeks--
+GANAS0202      300M  5547  93 76052  54 26862  34  5948  99 80050  49 1=
+75.6   2
+GANAS0202      300M  5455  92 72428  52 26787  35  5847  97 75833  49 1=
+66.3   2
+GANAS0202      300M  5401  91 71860  52 27100  35  5820  97 79219  53 1=
+56.2   2
+GANAS0202      300M  5315  90 71488  51 22472  30  5673  94 73707  51 1=
+62.5   2
+GANAS0202      300M  5159  87 67984  50 22860  31  5642  94 78829  54 1=
+38.6   2
+GANAS0202      300M  5033  85 67091  48 22189  30  5458  91 76586  55 1=
+49.3   2
+GANAS0202      300M  4904  83 65626  47 24602  34  5425  91 72349  52 1=
+12.9   2
+GANAS0202      300M  4854  82 66664  48 24937  35  5120  85 75008  56 1=
+49.1   2
+GANAS0202      300M  4732  80 66429  48 25646  37  5296  88 75137  57 1=
+45.7   2
+GANAS0202      300M  4246  71 69589  51 25112  36  5031  84 78260  61 1=
+36.2   2
+GANAS0202      300M  4253  72 70190  52 27121  40  5194  87 77648  61 1=
+07.5   2
+GANAS0202      300M  4112  69 76360  55 23852  35  4827  81 74005  59 1=
+18.9   2
+GANAS0202      300M  3987  67 62689  47 22475  33  4971  83 74315  61  =
+97.6   2
+GANAS0202      300M  3912  66 69769  51 22221  33  4979  83 74631  62 1=
+14.9   2
+GANAS0202      300M  3602  61 52773  38 25944  40  4953  83 77794  65 1=
+25.4   2
+GANAS0202      300M  3580  60 58728  43 22855  35  4680  79 74244  64 1=
+55.2   3
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
