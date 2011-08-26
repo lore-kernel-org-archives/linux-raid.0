@@ -1,154 +1,67 @@
-From: Mike Viau <viaum@sheridanc.on.ca>
-Subject: RE: Raid 5 to Raid 1 (half of the data not required)
-Date: Thu, 25 Aug 2011 20:11:46 -0400
-Message-ID: <BAY148-W430CF038E32B43F69A88C0EF130@phx.gbl>
-References: <BAY148-W51F7F3A42E515F76BB76EFEF2E0@phx.gbl>,<alpine.DEB.2.00.1108240851190.6833@unicorn.drogon.net>,<alpine.DEB.2.00.1108241018180.4709@uplift.swm.pp.se>,<20110824184235.2a165066@notabene.brown>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/9] recovering an imsm raid5 array
+Date: Thu, 25 Aug 2011 19:13:59 -0700
+Message-ID: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110824184235.2a165066@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, swmike@swm.pp.se, linux-raid@vger.kernel.org, gordon@drogon.net
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+I run imsm raid5 and raid1 arrays on my personal systems and was
+recently bit by the bug that was fixed in commit 1a2487c2 "FIX: imsm:
+OROM does not recognize degraded arrays (V2)".  In the process of
+investigating that I pulled the wrong disk and ended up in a dual
+degraded situation.
 
-> On Wed, 24 Aug 2011 18:42:35 +1000 <neilb@suse.de> wrote:
-> > On Wed, 24 Aug 2011 10:21:32 +0200 (CEST) Mikael Abrahamsson <swmik=
-e@swm.pp.se> wrote:
-> > On Wed, 24 Aug 2011, Gordon Henderson wrote:
-> >=20
-> > > This isn't as "glamorous" as Neils method involving lots of mdadm=
-=20
-> > > commands, shrinks and grows, but sometimes it's good to keep thin=
-gs at a=20
-> > > simpler level?
-> >=20
-> > Another way would be to add the new raid1 with missing drive to the=
- lv,=20
-> > and pvmove all extents off of the existing raid5 md pv, then vgredu=
-ce away=20
-> > from it, stop the raid5, zero-superblock, and add one drive to add=20
-> > redundancy for the raid1.
-> >=20
-> > But that has little to do with linux raid, and all to do with LVM. =
-It also=20
-> > means you can do everything online since pvmove doesn't require to =
-offline=20
-> > anything.
-> >=20
->=20
-> There are certainly lots of approaches. :-)
-> But every approach will require either coping or shrinking the filesy=
-stem and
-> as extX doesn't support online shrinking the filesystem will have to =
-be
-> effectively off-line while that shrink happens.
-> (if you shrink by coping, then it could be technically on-line but it=
- had
-> better not be written to).
->=20
+These patches (ordered in roughly increasing order of required review)
+are the features needed to get the array up and running again, as well
+as some random fixes spotted along the way.
 
-Wow! Thank you so much everyone for your feedback, I am truly very grat=
-eful :)=20
+The most important patch for recovery being patch7 "imsm: support
+'missing' devices at Create", allowing the mdadm raid5 recovery path of
+recreating the raid array with what one thinks are the good disks /
+order, and then  attempt to mount the filesystem to see if the guess was
+correct.
 
-Before tackling this task I plan to delete some unnecessary files to ha=
-ve less to backup, then make the all so important backup, and lastly at=
-tempt the migration. I had to remember how I decided to build up the LV=
-M on the RAID 5 array :)
+Example, create degraded raid5 with slot1 missing.
+
+mdadm --create /dev/md0 /dev/sd[ac] -n 2 -e imsm
+mdadm --create /dev/md1 /dev/sda missing /dev/sdc -n 3 -l 5
+
+However, during this process I wanted to make sure I could get back to
+the exact same metadata that was on the disks, to root cause what went
+wrong, examine the metadata offline, or backup a step if I made a
+mistake in the recovery process.  Patch9 implements --dump support, the
+fact that something like this has not been implemented already is maybe
+a clue that it is not such a great idea?  I can imagine someone messing
+up their configuration if they restored a metadata image to the wrong
+device, but if you know what you are doing it could be a useful hack.
+
+---
+
+Dan Williams (9):
+      imsm: fix max disks per array
+      imsm: fix, stop metadata updates to newly failed devices
+      imsm: fix display spares
+      sysfs: fix sysfs_disk_to_scsi_id
+      imsm: fix reserved sectors for spares
+      mdmon: fix, close spare activation race
+      imsm: support 'missing' devices at Create
+      util: allow regular files through test_partition()
+      mdadm: 'dump' support
 
 
-Model: Linux Software RAID Array (md)
-Disk /dev/md0: 2000GB
-Sector size (logical/physical): 512B/512B
-Partition Table: msdos
-
-Number=A0 Start=A0=A0 End=A0=A0=A0=A0 Size=A0=A0=A0 Type=A0=A0=A0=A0 Fi=
-le system=A0 Flags
-=A01=A0=A0=A0=A0=A0 1049kB=A0 2000GB=A0 2000GB=A0 primary=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 lvm
-
-OR
-
-=A0--- Physical volume ---
-=A0 PV Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 /dev/md0p1
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 masterVG
-=A0 PV Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1.82 TiB / not us=
-able 3.00 MiB
-=A0 Allocatable=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 yes
-=A0 PE Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 4.00 MiB
-=A0 Total PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 476932
-=A0 Free PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 261031
-=A0 Allocated PE=A0=A0=A0=A0=A0=A0=A0=A0=A0 215901
-=A0 PV UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 xiS8is-RR6D-Swre-=
-IHQN-yGY2-cNmJ-wGGBY7
-
-AND
-
-=A0 --- Volume group ---
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 masterVG
-=A0 System ID
-=A0 Format=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 lvm2
-=A0 Metadata Areas=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Metadata Sequence No=A0 4
-=A0 VG Access=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 read/write
-=A0 VG Status=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 resizable
-=A0 MAX LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Cur LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 2
-=A0 Open LV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 2
-=A0 Max PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0
-=A0 Cur PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Act PV=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 VG Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1.82 TiB
-=A0 PE Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 4.00 MiB
-=A0 Total PE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 476932
-=A0 Alloc PE / Size=A0=A0=A0=A0=A0=A0 215901 / 843.36 GiB
-=A0 Free=A0 PE / Size=A0=A0=A0=A0=A0=A0 261031 / 1019.65 GiB
-=A0 VG UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 eoZgIp-50Wb-Lrhg-=
-Sawt-rWDV-YIDy-Ez2Glr
-
-
-
-So it looks like the entire RAID 5 array is one LVM physical volume and=
- then one volume group.
-
-
-=A0 --- Logical volume ---
-=A0 LV Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 /dev/masterVG/=
-backupLV
-=A0 VG Name=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 masterVG
-=A0 LV UUID=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 wc61ER-uoNn-yn=
-XI-2v64-wpa8-ON3g-im4fo8
-=A0 LV Write Access=A0=A0=A0=A0=A0=A0=A0 read/write
-=A0 LV Status=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 available
-=A0 # open=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 2
-=A0 LV Size=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 700.00 GiB
-=A0 Current LE=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 179200
-=A0 Segments=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 1
-=A0 Allocation=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 inherit
-=A0 Read ahead sectors=A0=A0=A0=A0 auto
-=A0 - currently set to=A0=A0=A0=A0 4096
-=A0 Block device=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 254:9
-
-
-The logical volume has a size of 700.00 GB, so this is less than the 1 =
-TB size in which I plan the newly migrated RAID 1 mdadm array to be (wi=
-th two 1 TB drives). I don't think I will therefore have any need to sh=
-rink the ext4 filesystem, hopefully meaning I can complete the entire p=
-rocess over some time while keeping the data available or online.
-
-I remember that I had good reasons for using LVM, but I will have to ge=
-t reacquainted again with the commands of LVM like pv/vg/lv[move/reduce=
-]...
-
-
-Thanks again to everyone for their help :D
-
-
-
-
- 		 	   		  --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Examine.c     |   42 ++++++++++++++++
+ ReadMe.c      |    1 
+ managemon.c   |    5 ++
+ mdadm.8.in    |   13 +++++
+ mdadm.c       |   11 ++++
+ mdadm.h       |    3 +
+ super-intel.c |  146 +++++++++++++++++++++++++++++++++++++--------------------
+ sysfs.c       |   30 ++++--------
+ util.c        |    6 ++
+ 9 files changed, 182 insertions(+), 75 deletions(-)
