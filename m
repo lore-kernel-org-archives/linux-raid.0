@@ -1,75 +1,54 @@
 From: linbloke <linbloke@fastmail.fm>
-Subject: Re: IMSM Raid 5 always read only and gone after reboot
-Date: Fri, 26 Aug 2011 20:54:46 +1000
-Message-ID: <4E577B76.2000803@fastmail.fm>
-References: <CAOTVL7JLxjHgyaz0s3Ua9gsgUYHP_2b1DONzk3YNaCLfgxMBpA@mail.gmail.com>	<4E4B4075.2060400@gmail.com>	<4E553039.8010003@zarembo.de> <20110825095430.3b88d71d@notabene.brown> <4E569F75.2020306@zarembo.de>
+Subject: Re: [PATCH 0/9] recovering an imsm raid5 array
+Date: Fri, 26 Aug 2011 21:06:22 +1000
+Message-ID: <4E577E2E.2070903@fastmail.fm>
+References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E569F75.2020306@zarembo.de>
+In-Reply-To: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iwan Zarembo <iwan@zarembo.de>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On 26/08/11 5:16 AM, Iwan Zarembo wrote:
->
->> It sounds like mdmon is not being started.
->> mdmon monitors the array and performs any metadata updates required.
->>
->> The reason mktable is taking more than a second is that it tries to 
->> write to
->> the array, the kernel marks the array as 'write-pending' and waits 
->> for mdmon
->> to notice, update the metadata, and switch the array to 'active'.  
->> But mdmon
->> never does that.
->>
->> mdmon should be started by mdadm but just to check you can start it 
->> by hand:
->>
->>   /sbin/mdmon md126
->> or
->>   /sbin/mdmon --all
->>
->> If this makes it work, you need to work out why mdmon isn't being 
->> started.
->>
->> NeilBrown
->>
-> Hello NeilBrown,
-> I finally found it. I was using mdadm 3.1.4, it is in the repository 
-> of ubuntu. This version does not really support IMSM that this is the 
-> real problem. I found it because I did not have mdmon. It does not 
-> exists in this old version. So I downloaded the latest official 
-> relesae 3.2.1 and installed it via make && sudo make install. Now 
-> everything works perfectly. The array is available after reboot and 
-> the synchronization process works over BIOS and not over mdadm itself.
-> I would never found out that the version is making the trouble without 
-> your comment about mdmon. Thank you.
->
-> @Daniel,linbloke: Also a big thank you to you both. I learned a lot 
-> about raid with this problem.
+On 26/08/11 12:13 PM, Dan Williams wrote:
+
+<snip>
+> mistake in the recovery process.  Patch9 implements --dump support, the
+> fact that something like this has not been implemented already is maybe
+> a clue that it is not such a great idea?  I can imagine someone messing
+> up their configuration if they restored a metadata image to the wrong
+> device, but if you know what you are doing it could be a useful hack.
 >
 
-my advice didn't make it to the list (reply-all duh), but it was short 
-and for the record:
+I'm just a nobody mdadm user but I read nearly every word of this list 
+and read the above and thought, if Dan thinks it's a good idea, then it 
+probably is. I then read the summary of Patch 9, included below and 
+thought, this might be safer if it required a --force switch to actually 
+make the change, force usually being a sign that the user knows what 
+they are doing (;-) Perhaps without it, it could just check that foo is 
+valid (identical size) and suggest the force switch to make it so. Sorry 
+I'm not a coder that can supply a patch, this compromise to deliver the 
+functionality but with a safeguard in place occurred to me.
 
-On debian-based systems to specify which arrays are required at boot time:
+Best regards and kudos to our linux developers.
 
-try:
-dpkg-reconfigure mdadm
 
-it should ask which arrays (if any) to start on boot
 
-HTH
+   mdadm -E /dev/sda --dump=foo
 
-> Cheers,
->
-> Iwan
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Creates a sparse file image of /dev/sda named foo with a copy of the
+metadata instance found by -E.
+
+When used in the opposite direction:
+
+   mdadm -E foo --dump=/dev/sda
+
+...can restore metadata to a given block device, assuming it is
+identical size to the dump file.
+
+
+
+
