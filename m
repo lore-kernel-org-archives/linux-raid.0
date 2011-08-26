@@ -1,126 +1,332 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: RAID1, changed disk, 2nd has errors ...
-Date: Fri, 26 Aug 2011 15:08:10 +0100
-Message-ID: <20110826140810.GB13709@cthulhu.home.robinhill.me.uk>
-References: <4E5787A1.7080807@xunil.at>
- <20110826125653.GA13709@cthulhu.home.robinhill.me.uk>
- <4E57A4D5.3070004@xunil.at>
+From: Michael-John Turner <mj@mjturner.net>
+Subject: Help - power failure during RAID6 grow
+Date: Fri, 26 Aug 2011 16:18:03 +0100
+Message-ID: <20110826151803.GA7595@majestic.pimp.org.za>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dc+cDN39EJAMEtIO"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4E57A4D5.3070004@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Stefan G. Weichinger" <lists@xunil.at>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, robin.hill47@ntlworld.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi all,
 
---dc+cDN39EJAMEtIO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yesterday I added three more disks to an existing five disk mdadm RAID6
+array and left it reshaping overnight. Unfortunately, there was a power
+outage this afternoon and due to a UPS error, my server restarted.
 
-On Fri Aug 26, 2011 at 03:51:17PM +0200, Stefan G. Weichinger wrote:
+Due to a problem with my one disk chassis (containing the three new disks),
+after the reboot the new disks weren't visible, which I think caused some
+problems with the array. I've since corrected the problem with the chassis,
+but now get the following on boot:
+[   64.868206] md: md20 stopped.
+[   64.872415] md: bind<sde1>
+[   64.872585] md: bind<sdf1>
+[   64.872720] md: bind<sdg1>
+[   64.873081] md: bind<sdh1>
+[   64.873198] md: bind<sdc1>
+[   64.875280] md: bind<sdb1>
+[   64.875395] md: bind<sda1>
+[   64.875532] md: bind<sdd1>
+[   64.875544] md: kicking non-fresh sda1 from array!
+[   64.875548] md: unbind<sda1>
+[   64.880544] md: export_rdev(sda1)
+[   64.880548] md: kicking non-fresh sdb1 from array!
+[   64.880553] md: unbind<sdb1>
+[   64.892007] md: export_rdev(sdb1)
+[   64.892031] md: kicking non-fresh sdc1 from array!
+[   64.892034] md: unbind<sdc1>
+[   64.904007] md: export_rdev(sdc1)
+[   64.904823] raid5: reshape will continue
+[   64.904829] raid5: device sdd1 operational as raid disk 0
+[   64.904831] raid5: device sdh1 operational as raid disk 4
+[   64.904832] raid5: device sdg1 operational as raid disk 3
+[   64.904833] raid5: device sdf1 operational as raid disk 2
+[   64.904835] raid5: device sde1 operational as raid disk 1
+[   64.905253] raid5: allocated 8490kB for md20
+[   64.905271] 0: w=1 pa=2 pr=5 m=2 a=2 r=8 op1=0 op2=0
+[   64.905273] 4: w=2 pa=2 pr=5 m=2 a=2 r=8 op1=0 op2=0
+[   64.905275] 3: w=3 pa=2 pr=5 m=2 a=2 r=8 op1=0 op2=0
+[   64.905277] 2: w=4 pa=2 pr=5 m=2 a=2 r=8 op1=0 op2=0
+[   64.905278] 1: w=5 pa=2 pr=5 m=2 a=2 r=8 op1=0 op2=0
+[   64.905280] raid5: not enough operational devices for md20 (3/8 failed)
 
-> Am 26.08.2011 14:56, schrieb Robin Hill:
->=20
-> > This would indicate that sdb has been reset as a spare, suggesting=20
-> > that the resync failed so it has left sda alone in the array (as=20
-> > failing it would destroy the array).
->=20
-> oh my ...
->=20
-> So the array is somehow split-brain now? Some sectors good here, some
-> there??
->=20
-> Why is sda4 now flagged as (S)? Is it a spare or not?
-> I don't fully understand the current state of the array ...
->=20
-sda4 is still in the array, with some unreadable sectors. sdb4 is a
-spare because the resync failed due to unreadable sectors on sda4. You
-cannot add a disk to an array unless the data can all be read (or
-recovered if there's still enough redundancy).
+md20 is the array in question and sda1, sdb1 and sdc1 are the partitions on
+the three new disks (sd[defgh]1 are the five original members of md20,
+before the grow).
 
-> > I'd suggest stopping the array and using ddrescue to clone sda4 to=20
-> > sdb4. That'll copy everything possible, flagging up any read
-> > issues. You'll then need to run a "fsck -f" on sdb4 to clear up
-> > any filesystem damage. You may still be left with damaged/missing
-> > files, depending on where any read errors occurred. How critical
-> > this is will depend on what the filesystem is used for (and whether
-> > you have any backup).
->=20
-> I am rather scared to do so ... as I am ~50kms away from the box now,
-> and as it seems to be working fine so far (though there are currently
-> no users working with it).
->=20
-It'll work fine unless something attempts to read from any of the
-unreadable sectors on sda4. If these are not used by the filesystem
-currently, then you may never run into an issue (as they'll get remapped
-if a write error occurs when they do get used).
+I tried stopping and re-assembling by hand, but get the following:
+# mdadm --assemble /dev/md20 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+mdadm: /dev/md20 assembled from 5 drives and 1 spare - not enough to start the array.
 
-> As mentioned /dev/md2 doesn't contain a filesystem itself, but is the
-> single PV in a LVM-volumegroup.
->=20
-> This group contains 6 logical volumes ...
->=20
-> As far as I understand it might be possible to spot the defective
-> sectors and the related LV?
->=20
-A read of the relevant block device (dd if=3D/dev/xxx of=3D/dev/null) will
-result in read errors for whichever block device contains the bad
-sectors. You could also probably map the sectors reported by the kernel
-to the position on the disk to tell what LV it.
+# uname -a
+Linux majestic 2.6.32-5-amd64 #1 SMP Tue Jun 14 09:42:28 UTC 2011 x86_64 GNU/Linux
 
-> I have backups, yes ...
->=20
-In which case the absolute safest option is just to recreate whatever
-arrays, PVs, LVs, etc. on sdb4 and restore the data, ignoring whatever's
-on sda4 currently.
+# mdadm -V
+mdadm - v3.1.4 - 31st August 2010
 
-> > If that all works okay, then get sda replaced and give it a
-> > thorough badblocks and SMART test.
-> >=20
-> > I'd also advise setting up regular array checks (echo check >=20
-> > /sys/block/mdX/md/sync_action) to make sure the disks are checked=20
-> > and any unreadable blocks repaired/mapped out _before_ they're
-> > needed for recovery.
->=20
-> re-adding sda4 and starting such a check would be possible?
-> Or would a re-add damage things?
->=20
-You can't add sda4 because it's already in the array.
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4] 
+md20 : inactive sdd1[0](S) sda1[8](S) sdb1[6](S) sdc1[7](S) sdh1[4](S) sdg1[3](S) sdf1[2](S) sde1[1](S)
+      15609328616 blocks super 1.2
+The above is after attempting the manual --assemble above.
 
-> Should I shutdown the box for safety?
->=20
-For absolute safety, yes, though I don't think the risk is too high at
-the moment, and I don't think things'll get any worse in the short term.
+# mdadm --detail /dev/md20
+mdadm: md device /dev/md20 does not appear to be active.
 
-> I am really feeling unsafe now, and getting another hdd for swapping
-> will take me at least until monday.
->=20
-> (I would like to dd-rescue to another new disk to keep sdb, just in case)
->=20
-I doubt you'd be able to recover anything useful from sdb4 at the
-moment, but that's up to you.
+Help!! Should I force a re-assemble (I haven't tried that as I don't want
+to do anything risky)? mdadm -E output for all the disks pasted below.
+
+-mj
+-- 
+ Michael-John Turner
+ mj@mjturner.net      <>     http://mjturner.net/
 
 
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+#######################################################################
 
---dc+cDN39EJAMEtIO
-Content-Type: application/pgp-signature
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+ Avail Dev Size : 3902331909 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 664 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 84dc8ff5:2f9c8735:d42328fc:cc5549a8
 
-iEYEARECAAYFAk5XqMkACgkQShxCyD40xBITYACcDVXYAyJZZta4w/pbBRihAJ0O
-XZMAn0COXKudUGoxQhA7ZJ8o8BtAzkeC
-=qwfx
------END PGP SIGNATURE-----
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
 
---dc+cDN39EJAMEtIO--
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : a4a9dc2e - correct
+         Events : 0
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : spare
+   Array State : AAAAA... ('A' == active, '.' == missing)
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902331909 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 664 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 6748c837:b1e86725:edf2184d:81d55fd6
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:11:11 2011
+       Checksum : 55d90bc0 - correct
+         Events : 11174
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 6
+   Array State : AAAAAAAA ('A' == active, '.' == missing)
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902331909 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 664 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 47f47246:55da1b0e:831ab899:ac2d1eed
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:11:11 2011
+       Checksum : b0952906 - correct
+         Events : 11174
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 5
+   Array State : AAAAAAAA ('A' == active, '.' == missing)
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902332301 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : c3bc9bf5:16baaa20:811b93f7:bb61b63a
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : 1db10998 - correct
+         Events : 11184
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 0
+   Array State : AAAAA... ('A' == active, '.' == missing)
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902332301 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 3f60aea4:00a038c8:844ead69:d9591383
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : 2ec8be20 - correct
+         Events : 11184
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 1
+   Array State : AAAAA... ('A' == active, '.' == missing)
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902332301 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : b70e9161:e73c145f:2bcfe99a:c061ef73
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : a49f920d - correct
+         Events : 11184
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 2
+   Array State : AAAAA... ('A' == active, '.' == missing)
+/dev/sdg1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902332301 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : c7c739f0:d1421fdb:136e8eb7:431bd0ec
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : 44d8a975 - correct
+         Events : 11184
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 3
+   Array State : AAAAA... ('A' == active, '.' == missing)
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x4
+     Array UUID : ba21b41c:4e89d27a:be416498:12763c48
+           Name : majestic:20  (local to host majestic)
+  Creation Time : Sun Jul  4 19:54:16 2010
+     Raid Level : raid6
+   Raid Devices : 8
+
+ Avail Dev Size : 3902332301 (1860.78 GiB 1997.99 GB)
+     Array Size : 23413991424 (11164.66 GiB 11987.96 GB)
+  Used Dev Size : 3902331904 (1860.78 GiB 1997.99 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 24c8066f:b85de6c5:9382acd4:6e8b8f6e
+
+  Reshape pos'n : 3213327360 (3064.47 GiB 3290.45 GB)
+  Delta Devices : 3 (5->8)
+
+    Update Time : Fri Aug 26 14:25:13 2011
+       Checksum : 4d4a4964 - correct
+         Events : 11184
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+   Device Role : Active device 4
+   Array State : AAAAA... ('A' == active, '.' == missing)
+
+#######################################################################
+
+
