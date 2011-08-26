@@ -1,146 +1,141 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: Raid failing, which command to remove the bad drive?
-Date: Fri, 26 Aug 2011 23:45:36 +0100
-Message-ID: <CADNH=7H9bi3cswmaFoLnYKvVxds47axrKHR7qSrLP-6yn4iKGg@mail.gmail.com>
+Date: Sat, 27 Aug 2011 08:45:35 +1000
+Message-ID: <20110827084535.5e64bf5c@notabene.brown>
 References: <4E57FE4D.5080503@vorgon.com>
-	<CADNH=7GgGzhLLqYc5kSC=bMN43MK=DE1TwP7gDAeDutHCoO2kA@mail.gmail.com>
-	<4E581D7F.1080709@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E581D7F.1080709@vorgon.com>
+In-Reply-To: <4E57FE4D.5080503@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Timothy D. Lenz" <tlenz@vorgon.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-T24gMjYgQXVndXN0IDIwMTEgMjM6MjYsIFRpbW90aHkgRC4gTGVueiA8dGxlbnpAdm9yZ29uLmNv
-bT4gd3JvdGU6Cj4gdW0sIG5vLCB0aGF0IHdhcyB0aGUgZW1haWwgdGhhdCBtZGFkbSBzZW5kcyBJ
-IHRob3VnaHQuIEFuZCBpdCBzYXlzIHByb2JsZW0KPiBpcyBzZGIgaW4gZWFjaCBjYXNlLiBUaG91
-Z2ggSSB3YXMgd29uZGVyaW5nIHdoeSBlYWNoIG9uZSBzYWlkIFtVX10gaW5zdGVhZAo+IG9mIFtf
-VV0uIEhlcmUgaXMgdGhlIHNtYXJ0Y3RsIGZvciBzZGEgYW5kIGJlbG93IHRoYXQgd2lsbCBiZSBm
-b3Igc2RiCj4KPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09Cj4gdm9yZ0B4NjRWRFI6fiQgc3VkbyBzbWFydGN0bCAt
-YSAvZGV2L3NkYQo+IHNtYXJ0Y3RsIDUuNDEgMjAxMS0wNi0wOSByMzM2NSBbeDg2XzY0LWxpbnV4
-LTIuNi4zNC4yMDEwMDYxMC4xXSAobG9jYWwKPiBidWlsZCkKPiBDb3B5cmlnaHQgKEMpIDIwMDIt
-MTEgYnkgQnJ1Y2UgQWxsZW4sIGh0dHA6Ly9zbWFydG1vbnRvb2xzLnNvdXJjZWZvcmdlLm5ldAo+
-Cj4gPT09IFNUQVJUIE9GIElORk9STUFUSU9OIFNFQ1RJT04gPT09Cj4gTW9kZWwgRmFtaWx5OiDC
-oCDCoCBTZWFnYXRlIEJhcnJhY3VkYSA3MjAwLjExCj4gRGV2aWNlIE1vZGVsOiDCoCDCoCBTVDM1
-MDAzMjBBUwo+IFNlcmlhbCBOdW1iZXI6IMKgIMKgOVFNN004NlMKPiBMVSBXV04gRGV2aWNlIElk
-OiA1IDAwMGM1MCAwMTA1OWM2MzYKPiBGaXJtd2FyZSBWZXJzaW9uOiBTRDFBCj4gVXNlciBDYXBh
-Y2l0eTogwqAgwqA1MDAsMTA3LDg2MiwwMTYgYnl0ZXMgWzUwMCBHQl0KPiBTZWN0b3IgU2l6ZTog
-wqAgwqAgwqA1MTIgYnl0ZXMgbG9naWNhbC9waHlzaWNhbAo+IERldmljZSBpczogwqAgwqAgwqAg
-wqBJbiBzbWFydGN0bCBkYXRhYmFzZSBbZm9yIGRldGFpbHMgdXNlOiAtUCBzaG93XQo+IEFUQSBW
-ZXJzaW9uIGlzOiDCoCA4Cj4gQVRBIFN0YW5kYXJkIGlzOiDCoEFUQS04LUFDUyByZXZpc2lvbiA0
-Cj4gTG9jYWwgVGltZSBpczogwqAgwqBGcmkgQXVnIDI2IDE1OjIzOjQxIDIwMTEgTVNUCj4gU01B
-UlQgc3VwcG9ydCBpczogQXZhaWxhYmxlIC0gZGV2aWNlIGhhcyBTTUFSVCBjYXBhYmlsaXR5Lgo+
-IFNNQVJUIHN1cHBvcnQgaXM6IEVuYWJsZWQKPgo+ID09PSBTVEFSVCBPRiBSRUFEIFNNQVJUIERB
-VEEgU0VDVElPTiA9PT0KPiBTTUFSVCBvdmVyYWxsLWhlYWx0aCBzZWxmLWFzc2Vzc21lbnQgdGVz
-dCByZXN1bHQ6IFBBU1NFRAo+Cj4gR2VuZXJhbCBTTUFSVCBWYWx1ZXM6Cj4gT2ZmbGluZSBkYXRh
-IGNvbGxlY3Rpb24gc3RhdHVzOiDCoCgweDgyKSBPZmZsaW5lIGRhdGEgY29sbGVjdGlvbiBhY3Rp
-dml0eQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgd2FzIGNvbXBsZXRlZCB3aXRob3V0IGVycm9yLgo+IMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgQXV0byBPZmZsaW5lIERh
-dGEgQ29sbGVjdGlvbjoKPiBFbmFibGVkLgo+IFNlbGYtdGVzdCBleGVjdXRpb24gc3RhdHVzOiDC
-oCDCoCDCoCggwqAgMCkgVGhlIHByZXZpb3VzIHNlbGYtdGVzdCByb3V0aW5lCj4gY29tcGxldGVk
-Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqB3aXRob3V0IGVycm9yIG9yIG5vIHNlbGYtdGVzdCBoYXMKPiBldmVyCj4gwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBiZWVuIHJ1
-bi4KPiBUb3RhbCB0aW1lIHRvIGNvbXBsZXRlIE9mZmxpbmUKPiBkYXRhIGNvbGxlY3Rpb246IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgKCDCoDY1MCkgc2Vjb25kcy4KPiBPZmZsaW5lIGRhdGEgY29s
-bGVjdGlvbgo+IGNhcGFiaWxpdGllczogwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAoMHg3
-YikgU01BUlQgZXhlY3V0ZSBPZmZsaW5lIGltbWVkaWF0ZS4KPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEF1dG8gT2ZmbGluZSBkYXRh
-IGNvbGxlY3Rpb24gb24vb2ZmCj4gc3VwcG9ydC4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoFN1c3BlbmQgT2ZmbGluZSBjb2xsZWN0
-aW9uIHVwb24gbmV3Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqBjb21tYW5kLgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgT2ZmbGluZSBzdXJmYWNlIHNjYW4gc3VwcG9y
-dGVkLgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgU2VsZi10ZXN0IHN1cHBvcnRlZC4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoENvbnZleWFuY2UgU2VsZi10ZXN0IHN1
-cHBvcnRlZC4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoFNlbGVjdGl2ZSBTZWxmLXRlc3Qgc3VwcG9ydGVkLgo+IFNNQVJUIGNhcGFi
-aWxpdGllczogwqAgwqAgwqAgwqAgwqAgwqAoMHgwMDAzKSBTYXZlcyBTTUFSVCBkYXRhIGJlZm9y
-ZSBlbnRlcmluZwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgcG93ZXItc2F2aW5nIG1vZGUuCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBTdXBwb3J0cyBTTUFSVCBhdXRv
-IHNhdmUgdGltZXIuCj4gRXJyb3IgbG9nZ2luZyBjYXBhYmlsaXR5OiDCoCDCoCDCoCDCoCgweDAx
-KSBFcnJvciBsb2dnaW5nIHN1cHBvcnRlZC4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEdlbmVyYWwgUHVycG9zZSBMb2dnaW5nIHN1
-cHBvcnRlZC4KPiBTaG9ydCBzZWxmLXRlc3Qgcm91dGluZQo+IHJlY29tbWVuZGVkIHBvbGxpbmcg
-dGltZTogwqAgwqAgwqAgwqAoIMKgIDEpIG1pbnV0ZXMuCj4gRXh0ZW5kZWQgc2VsZi10ZXN0IHJv
-dXRpbmUKPiByZWNvbW1lbmRlZCBwb2xsaW5nIHRpbWU6IMKgIMKgIMKgIMKgKCAxMTkpIG1pbnV0
-ZXMuCj4gQ29udmV5YW5jZSBzZWxmLXRlc3Qgcm91dGluZQo+IHJlY29tbWVuZGVkIHBvbGxpbmcg
-dGltZTogwqAgwqAgwqAgwqAoIMKgIDIpIG1pbnV0ZXMuCj4gU0NUIGNhcGFiaWxpdGllczogwqAg
-wqAgwqAgwqAgwqAgwqAgwqAoMHgxMDNiKSBTQ1QgU3RhdHVzIHN1cHBvcnRlZC4KPiDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoFNDVCBF
-cnJvciBSZWNvdmVyeSBDb250cm9sIHN1cHBvcnRlZC4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoFNDVCBGZWF0dXJlIENvbnRyb2wg
-c3VwcG9ydGVkLgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgU0NUIERhdGEgVGFibGUgc3VwcG9ydGVkLgo+Cj4gU01BUlQgQXR0cmli
-dXRlcyBEYXRhIFN0cnVjdHVyZSByZXZpc2lvbiBudW1iZXI6IDEwCj4gVmVuZG9yIFNwZWNpZmlj
-IFNNQVJUIEF0dHJpYnV0ZXMgd2l0aCBUaHJlc2hvbGRzOgo+IElEIyBBVFRSSUJVVEVfTkFNRSDC
-oCDCoCDCoCDCoCDCoEZMQUcgwqAgwqAgVkFMVUUgV09SU1QgVEhSRVNIIFRZUEUgVVBEQVRFRAo+
-IMKgV0hFTl9GQUlMRUQgUkFXX1ZBTFVFCj4gwqAxIFJhd19SZWFkX0Vycm9yX1JhdGUgwqAgwqAg
-MHgwMDBmIMKgIDExNCDCoCAxMDAgwqAgMDA2IMKgIMKgUHJlLWZhaWwgQWx3YXlzCj4gLSDCoCDC
-oCDCoCA4MzMwOTc2OAo+IMKgMyBTcGluX1VwX1RpbWUgwqAgwqAgwqAgwqAgwqAgwqAweDAwMDMg
-wqAgMDk0IMKgIDA5NCDCoCAwMDAgwqAgwqBQcmUtZmFpbCBBbHdheXMKPiAtIMKgIMKgIMKgIDAK
-PiDCoDQgU3RhcnRfU3RvcF9Db3VudCDCoCDCoCDCoCDCoDB4MDAzMiDCoCAxMDAgwqAgMTAwIMKg
-IDAyMCDCoCDCoE9sZF9hZ2UgQWx3YXlzCj4gLSDCoCDCoCDCoCAxMwo+IMKgNSBSZWFsbG9jYXRl
-ZF9TZWN0b3JfQ3QgwqAgMHgwMDMzIMKgIDEwMCDCoCAxMDAgwqAgMDM2IMKgIMKgUHJlLWZhaWwg
-QWx3YXlzCj4gLSDCoCDCoCDCoCAwCj4gwqA3IFNlZWtfRXJyb3JfUmF0ZSDCoCDCoCDCoCDCoCAw
-eDAwMGYgwqAgMDcxIMKgIDA2MCDCoCAwMzAgwqAgwqBQcmUtZmFpbCBBbHdheXMKPiAtIMKgIMKg
-IMKgIDEzNTU2MDY2Cj4gwqA5IFBvd2VyX09uX0hvdXJzIMKgIMKgIMKgIMKgIMKgMHgwMDMyIMKg
-IDA5NCDCoCAwOTQgwqAgMDAwIMKgIMKgT2xkX2FnZSBBbHdheXMKPiAtIMKgIMKgIMKgIDU0MDYK
-PiDCoDEwIFNwaW5fUmV0cnlfQ291bnQgwqAgwqAgwqAgwqAweDAwMTMgwqAgMTAwIMKgIDEwMCDC
-oCAwOTcgwqAgwqBQcmUtZmFpbCBBbHdheXMKPiDCoCAtIMKgIMKgIMKgIDAKPiDCoDEyIFBvd2Vy
-X0N5Y2xlX0NvdW50IMKgIMKgIMKgIDB4MDAzMiDCoCAxMDAgwqAgMTAwIMKgIDAyMCDCoCDCoE9s
-ZF9hZ2UgQWx3YXlzCj4gLSDCoCDCoCDCoCAxMwo+IDE4NCBFbmQtdG8tRW5kX0Vycm9yIMKgIMKg
-IMKgIMKgMHgwMDMyIMKgIDEwMCDCoCAxMDAgwqAgMDk5IMKgIMKgT2xkX2FnZSDCoCBBbHdheXMK
-PiDCoCAtIMKgIMKgIMKgIDAKPiAxODcgUmVwb3J0ZWRfVW5jb3JyZWN0IMKgIMKgIMKgMHgwMDMy
-IMKgIDEwMCDCoCAxMDAgwqAgMDAwIMKgIMKgT2xkX2FnZSDCoCBBbHdheXMKPiDCoCAtIMKgIMKg
-IMKgIDAKPiAxODggQ29tbWFuZF9UaW1lb3V0IMKgIMKgIMKgIMKgIDB4MDAzMiDCoCAxMDAgwqAg
-MTAwIMKgIDAwMCDCoCDCoE9sZF9hZ2UgwqAgQWx3YXlzCj4gwqAgLSDCoCDCoCDCoCAwCj4gMTg5
-IEhpZ2hfRmx5X1dyaXRlcyDCoCDCoCDCoCDCoCAweDAwM2EgwqAgMTAwIMKgIDEwMCDCoCAwMDAg
-wqAgwqBPbGRfYWdlIMKgIEFsd2F5cwo+IMKgIC0gwqAgwqAgwqAgMAo+IDE5MCBBaXJmbG93X1Rl
-bXBlcmF0dXJlX0NlbCAweDAwMjIgwqAgMDY3IMKgIDA2NSDCoCAwNDUgwqAgwqBPbGRfYWdlIMKg
-IEFsd2F5cwo+IMKgIC0gwqAgwqAgwqAgMzMgKE1pbi9NYXggMzAvMzUpCj4gMTk0IFRlbXBlcmF0
-dXJlX0NlbHNpdXMgwqAgwqAgMHgwMDIyIMKgIDAzMyDCoCAwNDAgwqAgMDAwIMKgIMKgT2xkX2Fn
-ZSDCoCBBbHdheXMKPiDCoCAtIMKgIMKgIMKgIDMzICgwIDIxIDAgMCkKPiAxOTUgSGFyZHdhcmVf
-RUNDX1JlY292ZXJlZCDCoDB4MDAxYSDCoCAwNTggwqAgMDMzIMKgIDAwMCDCoCDCoE9sZF9hZ2Ug
-wqAgQWx3YXlzCj4gwqAgLSDCoCDCoCDCoCA4MzMwOTc2OAo+IDE5NyBDdXJyZW50X1BlbmRpbmdf
-U2VjdG9yIMKgMHgwMDEyIMKgIDEwMCDCoCAxMDAgwqAgMDAwIMKgIMKgT2xkX2FnZSDCoCBBbHdh
-eXMKPiDCoCAtIMKgIMKgIMKgIDAKPiAxOTggT2ZmbGluZV9VbmNvcnJlY3RhYmxlIMKgIDB4MDAx
-MCDCoCAxMDAgwqAgMTAwIMKgIDAwMCDCoCDCoE9sZF9hZ2UgT2ZmbGluZQo+IMKgLSDCoCDCoCDC
-oCAwCj4gMTk5IFVETUFfQ1JDX0Vycm9yX0NvdW50IMKgIMKgMHgwMDNlIMKgIDIwMCDCoCAyMDAg
-wqAgMDAwIMKgIMKgT2xkX2FnZSDCoCBBbHdheXMKPiDCoCAtIMKgIMKgIMKgIDAKPgo+IFNNQVJU
-IEVycm9yIExvZyBWZXJzaW9uOiAxCj4gTm8gRXJyb3JzIExvZ2dlZAo+Cj4gU01BUlQgU2VsZi10
-ZXN0IGxvZyBzdHJ1Y3R1cmUgcmV2aXNpb24gbnVtYmVyIDEKPiBObyBzZWxmLXRlc3RzIGhhdmUg
-YmVlbiBsb2dnZWQuIMKgW1RvIHJ1biBzZWxmLXRlc3RzLCB1c2U6IHNtYXJ0Y3RsIC10XQo+Cj4K
-PiBTTUFSVCBTZWxlY3RpdmUgc2VsZi10ZXN0IGxvZyBkYXRhIHN0cnVjdHVyZSByZXZpc2lvbiBu
-dW1iZXIgMQo+IMKgU1BBTiDCoE1JTl9MQkEgwqBNQVhfTEJBIMKgQ1VSUkVOVF9URVNUX1NUQVRV
-Uwo+IMKgIMKgMSDCoCDCoCDCoCDCoDAgwqAgwqAgwqAgwqAwIMKgTm90X3Rlc3RpbmcKPiDCoCDC
-oDIgwqAgwqAgwqAgwqAwIMKgIMKgIMKgIMKgMCDCoE5vdF90ZXN0aW5nCj4gwqAgwqAzIMKgIMKg
-IMKgIMKgMCDCoCDCoCDCoCDCoDAgwqBOb3RfdGVzdGluZwo+IMKgIMKgNCDCoCDCoCDCoCDCoDAg
-wqAgwqAgwqAgwqAwIMKgTm90X3Rlc3RpbmcKPiDCoCDCoDUgwqAgwqAgwqAgwqAwIMKgIMKgIMKg
-IMKgMCDCoE5vdF90ZXN0aW5nCj4gU2VsZWN0aXZlIHNlbGYtdGVzdCBmbGFncyAoMHgwKToKPiDC
-oEFmdGVyIHNjYW5uaW5nIHNlbGVjdGVkIHNwYW5zLCBkbyBOT1QgcmVhZC1zY2FuIHJlbWFpbmRl
-ciBvZiBkaXNrLgo+IElmIFNlbGVjdGl2ZSBzZWxmLXRlc3QgaXMgcGVuZGluZyBvbiBwb3dlci11
-cCwgcmVzdW1lIGFmdGVyIDAgbWludXRlIGRlbGF5Cj4gT24gOC8yNi8yMDExIDI6MjUgUE0sIE1h
-dGhpYXMgQnVyw6luIHdyb3RlOgo+Pgo+PiBzbWFydGN0bCAtYSAvZGV2L3NkYQo+Cj4gPT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PQo+Cj4gdm9yZ0B4NjRWRFI6fiQgc3VkbyBzbWFydGN0bCAtYSAvZGV2L3NkYgo+IHNt
-YXJ0Y3RsIDUuNDEgMjAxMS0wNi0wOSByMzM2NSBbeDg2XzY0LWxpbnV4LTIuNi4zNC4yMDEwMDYx
-MC4xXSAobG9jYWwKPiBidWlsZCkKPiBDb3B5cmlnaHQgKEMpIDIwMDItMTEgYnkgQnJ1Y2UgQWxs
-ZW4sIGh0dHA6Ly9zbWFydG1vbnRvb2xzLnNvdXJjZWZvcmdlLm5ldAo+Cj4gVmVuZG9yOiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCAvMTowOjA6MAo+IFByb2R1Y3Q6Cj4gVXNlciBDYXBhY2l0eTogwqAg
-wqAgwqAgwqA2MDAsMzMyLDU2NSw4MTMsMzkwLDQ1MCBieXRlcyBbNjAwIFBCXQo+IExvZ2ljYWwg
-YmxvY2sgc2l6ZTogwqAgNzc0ODQzOTUwIGJ5dGVzCj4gc2NzaU1vZGVQYWdlT2Zmc2V0OiByZXNw
-b25zZSBsZW5ndGggdG9vIHNob3J0LCByZXNwX2xlbj00NyBvZmZzZXQ9NTAKPiBiZF9sZW49NDYK
-Pj4+IFRlcm1pbmF0ZSBjb21tYW5kIGVhcmx5IGR1ZSB0byBiYWQgcmVzcG9uc2UgdG8gSUVDIG1v
-ZGUgcGFnZQo+IEEgbWFuZGF0b3J5IFNNQVJUIGNvbW1hbmQgZmFpbGVkOiBleGl0aW5nLiBUbyBj
-b250aW51ZSwgYWRkIG9uZSBvciBtb3JlICctVAo+IHBlcm1pc3NpdmUnIG9wdGlvbnMuCj4KCgpJ
-bmRlZWQsIHNvcnJ5LiA2MDAgUEIuLi4gd2hlcmUgZGlkIHlvdSBnZXQgdGhhdCBkcml2ZT8gOykK
-Ci9NCg==
+On Fri, 26 Aug 2011 13:13:01 -0700 "Timothy D. Lenz" <tlenz@vorgon.com> wrote:
+
+> I have 4 drives set up as 2 pairs.  The first part has 3 partitions on 
+> it and it seems 1 of those drives is failing (going to have to figure 
+> out which drive it is too so I don't pull the wrong one out of the case)
+> 
+> It's been awhile since I had to replace a drive in the array and my 
+> notes are a bit confusing. I'm not sure which I need to use to remove 
+> the drive:
+> 
+> 
+> 	sudo mdadm --manage /dev/md0 --fail /dev/sdb
+> 	sudo mdadm --manage /dev/md0 --remove /dev/sdb
+> 	sudo mdadm --manage /dev/md1 --fail /dev/sdb
+> 	sudo mdadm --manage /dev/md1 --remove /dev/sdb
+> 	sudo mdadm --manage /dev/md2 --fail /dev/sdb
+> 	sudo mdadm --manage /dev/md2 --remove /dev/sdb
+
+sdb is not a member of any of these arrays so all of these commands will fail.
+
+The partitions are members of the arrays.
+> 
+> or
+> 
+> sudo mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
+> sudo mdadm /dev/md1 --fail /dev/sdb2 --remove /dev/sdb2
+
+sd1 and sdb2 have already been marked as failed so there is little point in
+marking them as failed again.  Removing them makes sense though.
+
+
+> sudo mdadm /dev/md2 --fail /dev/sdb3 --remove /dev/sdb3
+
+sdb3 hasn't been marked as failed yet - maybe it will soon if sdb is a bit
+marginal.
+So if you want to remove sdb from the machine this the correct thing to do.
+Mark sdb3 as failed, then remove it from the array.
+
+> 
+> I'm not sure if I fail the drive partition or whole drive for each.
+
+You only fail things that aren't failed already, and you fail the thing that
+mdstat or mdadm -D tells you is a member of the array.
+
+NeilBrown
+
+
+
+> 
+> -------------------------------------
+> The mails I got are:
+> -------------------------------------
+> A Fail event had been detected on md device /dev/md0.
+> 
+> It could be related to component device /dev/sdb1.
+> 
+> Faithfully yours, etc.
+> 
+> P.S. The /proc/mdstat file currently contains the following:
+> 
+> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+> md1 : active raid1 sdb2[2](F) sda2[0]
+>        4891712 blocks [2/1] [U_]
+> 
+> md2 : active raid1 sdb3[1] sda3[0]
+>        459073344 blocks [2/2] [UU]
+> 
+> md3 : active raid1 sdd1[1] sdc1[0]
+>        488383936 blocks [2/2] [UU]
+> 
+> md0 : active raid1 sdb1[2](F) sda1[0]
+>        24418688 blocks [2/1] [U_]
+> 
+> unused devices: <none>
+> -------------------------------------
+> A Fail event had been detected on md device /dev/md1.
+> 
+> It could be related to component device /dev/sdb2.
+> 
+> Faithfully yours, etc.
+> 
+> P.S. The /proc/mdstat file currently contains the following:
+> 
+> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+> md1 : active raid1 sdb2[2](F) sda2[0]
+>        4891712 blocks [2/1] [U_]
+> 
+> md2 : active raid1 sdb3[1] sda3[0]
+>        459073344 blocks [2/2] [UU]
+> 
+> md3 : active raid1 sdd1[1] sdc1[0]
+>        488383936 blocks [2/2] [UU]
+> 
+> md0 : active raid1 sdb1[2](F) sda1[0]
+>        24418688 blocks [2/1] [U_]
+> 
+> unused devices: <none>
+> -------------------------------------
+> A Fail event had been detected on md device /dev/md2.
+> 
+> It could be related to component device /dev/sdb3.
+> 
+> Faithfully yours, etc.
+> 
+> P.S. The /proc/mdstat file currently contains the following:
+> 
+> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+> md1 : active raid1 sdb2[2](F) sda2[0]
+>        4891712 blocks [2/1] [U_]
+> 
+> md2 : active raid1 sdb3[2](F) sda3[0]
+>        459073344 blocks [2/1] [U_]
+> 
+> md3 : active raid1 sdd1[1] sdc1[0]
+>        488383936 blocks [2/2] [UU]
+> 
+> md0 : active raid1 sdb1[2](F) sda1[0]
+>        24418688 blocks [2/1] [U_]
+> 
+> unused devices: <none>
+> -------------------------------------
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
