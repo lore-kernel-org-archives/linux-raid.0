@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 1/9] imsm: fix max disks per array
-Date: Thu, 25 Aug 2011 19:14:04 -0700
-Message-ID: <20110826021404.28015.39211.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/9] imsm: fix, stop metadata updates to newly failed devices
+Date: Thu, 25 Aug 2011 19:14:09 -0700
+Message-ID: <20110826021409.28015.4084.stgit@localhost6.localdomain6>
 References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,58 +10,52 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Marcin Labun <marcin.labun@intel.com>, ed.ciechanowski@intel.com
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, Krzysztof Wojcik <krzysztof.wojcik@intel.com>, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Validate geometry is incorrectly looking at max disks support which is
-irrelevant for md/mdadm.  ->dpa (disks per array) is how many disks the
-orom will allow per volume.
+We already refrain from updating metadata on disks that are failed at
+load, need to do the same for new failures.  This also reverts b4add146
+as we *do* want to update other disks' view of the failed device as out of
+date.
 
-Also cleanup an unnecessary ->orom check, is_raid_level_supported()
-already does the right thing in the !orom case.
-
-Cc: Marcin Labun <marcin.labun@intel.com>
+Cc: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- super-intel.c |   19 +++++--------------
- 1 files changed, 5 insertions(+), 14 deletions(-)
+ super-intel.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index ddf4de9..a921cbc 100644
+index a921cbc..2f11698 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -4933,28 +4933,19 @@ static int imsm_default_chunk(const struct imsm_orom *orom)
- }
+@@ -4584,7 +4584,7 @@ static int write_super_imsm(struct supertype *st, int doclose)
  
- #define pr_vrb(fmt, arg...) (void) (verbose && fprintf(stderr, Name fmt, ##arg))
--/*
-- * validate volume parameters with OROM/EFI capabilities
-- */
- static int
- validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
- 			    int raiddisks, int *chunk, int verbose)
- {
--#if DEBUG
--	verbose = 1;
--#endif
--	/* validate container capabilities */
--	if (super->orom && raiddisks > super->orom->tds) {
--		if (verbose)
--			fprintf(stderr, Name ": %d exceeds maximum number of"
--				" platform supported disks: %d\n",
--				raiddisks, super->orom->tds);
-+	/* check/set platform and metadata limits/defaults */
-+	if (super->orom && raiddisks > super->orom->dpa) {
-+		pr_vrb(": platform supports a maximum of %d disks per array\n",
-+		       super->orom->dpa);
- 		return 0;
- 	}
+ 	/* write the mpb for disks that compose raid devices */
+ 	for (d = super->disks; d ; d = d->next) {
+-		if (d->index < 0)
++		if (d->index < 0 || is_failed(&d->disk))
+ 			continue;
+ 		if (store_imsm_mpb(d->fd, mpb))
+ 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
+@@ -5840,6 +5840,8 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	__u32 ord;
+ 	int slot;
+ 	struct imsm_map *map;
++	char buf[MAX_RAID_SERIAL_LEN+3];
++	unsigned int len, shift = 0;
  
-         /* capabilities of OROM tested - copied from validate_geometry_imsm_volume */
--	if (super->orom && (!is_raid_level_supported(super->orom, level,
--						     raiddisks))) {
-+	if (!is_raid_level_supported(super->orom, level, raiddisks)) {
- 		pr_vrb(": platform does not support raid%d with %d disk%s\n",
- 			level, raiddisks, raiddisks > 1 ? "s" : "");
+ 	/* new failures are always set in map[0] */
+ 	map = get_imsm_map(dev, 0);
+@@ -5852,6 +5854,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
  		return 0;
+ 
++	sprintf(buf, "%s:0", disk->serial);
++	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
++		shift = len - MAX_RAID_SERIAL_LEN + 1;
++	strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SERIAL_LEN);
++
+ 	disk->status |= FAILED_DISK;
+ 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
+ 	if (map->failed_disk_num == 0xff)
 
