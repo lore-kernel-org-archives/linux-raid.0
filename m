@@ -1,102 +1,72 @@
-From: Robin Hill <robin.hill47@ntlworld.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
 Subject: Re: RAID1, changed disk, 2nd has errors ...
-Date: Fri, 26 Aug 2011 13:56:53 +0100
-Message-ID: <20110826125653.GA13709@cthulhu.home.robinhill.me.uk>
-References: <4E5787A1.7080807@xunil.at>
+Date: Fri, 26 Aug 2011 15:51:17 +0200
+Message-ID: <4E57A4D5.3070004@xunil.at>
+References: <4E5787A1.7080807@xunil.at> <20110826125653.GA13709@cthulhu.home.robinhill.me.uk>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="n8g4imXOkfNTN/H1"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4E5787A1.7080807@xunil.at>
+In-Reply-To: <20110826125653.GA13709@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Stefan G. Weichinger" <lists@xunil.at>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: robin.hill47@ntlworld.com
 List-Id: linux-raid.ids
 
+Am 26.08.2011 14:56, schrieb Robin Hill:
 
---n8g4imXOkfNTN/H1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> This would indicate that sdb has been reset as a spare, suggesting 
+> that the resync failed so it has left sda alone in the array (as 
+> failing it would destroy the array).
 
-On Fri Aug 26, 2011 at 01:46:41PM +0200, Stefan G. Weichinger wrote:
+oh my ...
 
->=20
-> Please help:
->=20
-> Today I removed a defective hdd out of a RAID1-array and swapped in a
-> new hdd instead.
->=20
-> 3 arrays, to be true, md[012]
->=20
-> 0 and 1 synced fine, in the process of syncing md2 the old sda threw
-> errors (in sda4):
->=20
-> md/raid1:md2: sda: unrecoverable I/O read error for block 643686144
-> md: md2: recovery done.
->=20
-> [...]
->=20
-> md/raid1:md2: sda: unrecoverable I/O read error for block 643686272
->=20
-> ----
->=20
-> Did the system stop syncing or is "recovery done" the indication that
-> md2 was fully recovered BEFORE the system threw sda4 out of the array??
->=20
-> I hope for the second!
->=20
-I think it just indicates that it stopped attempting recovery at this
-point.
+So the array is somehow split-brain now? Some sectors good here, some
+there??
 
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sdb3[1] sda3[0]
->       13679232 blocks [2/2] [UU]
->=20
-> md2 : active raid1 sdb4[2](S) sda4[0]
->       962454080 blocks [2/1] [U_]
->=20
-> md0 : active raid1 sdb1[1] sda1[0]
->       128384 blocks [2/2] [UU]
->=20
-This would indicate that sdb has been reset as a spare, suggesting that
-the resync failed so it has left sda alone in the array (as failing it
-would destroy the array).
+Why is sda4 now flagged as (S)? Is it a spare or not?
+I don't fully understand the current state of the array ...
 
-I'd suggest stopping the array and using ddrescue to clone sda4
-to sdb4. That'll copy everything possible, flagging up any read issues.
-You'll then need to run a "fsck -f" on sdb4 to clear up any filesystem
-damage. You may still be left with damaged/missing files, depending on
-where any read errors occurred. How critical this is will depend on what
-the filesystem is used for (and whether you have any backup).
+> I'd suggest stopping the array and using ddrescue to clone sda4 to 
+> sdb4. That'll copy everything possible, flagging up any read
+> issues. You'll then need to run a "fsck -f" on sdb4 to clear up
+> any filesystem damage. You may still be left with damaged/missing
+> files, depending on where any read errors occurred. How critical
+> this is will depend on what the filesystem is used for (and whether
+> you have any backup).
 
-If that all works okay, then get sda replaced and give it a thorough
-badblocks and SMART test.
+I am rather scared to do so ... as I am ~50kms away from the box now,
+and as it seems to be working fine so far (though there are currently
+no users working with it).
 
-I'd also advise setting up regular array checks (echo check >
-/sys/block/mdX/md/sync_action) to make sure the disks are checked and
-any unreadable blocks repaired/mapped out _before_ they're needed for
-recovery.
+As mentioned /dev/md2 doesn't contain a filesystem itself, but is the
+single PV in a LVM-volumegroup.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+This group contains 6 logical volumes ...
 
---n8g4imXOkfNTN/H1
-Content-Type: application/pgp-signature
+As far as I understand it might be possible to spot the defective
+sectors and the related LV?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+I have backups, yes ...
 
-iEYEARECAAYFAk5XmBUACgkQShxCyD40xBLg+ACghEsJN57XDspV01Hc2drdzgJK
-pY0AoNzl+4zgvkqT9YH45C24NDyFM9EL
-=hxrm
------END PGP SIGNATURE-----
+> If that all works okay, then get sda replaced and give it a
+> thorough badblocks and SMART test.
+> 
+> I'd also advise setting up regular array checks (echo check > 
+> /sys/block/mdX/md/sync_action) to make sure the disks are checked 
+> and any unreadable blocks repaired/mapped out _before_ they're
+> needed for recovery.
 
---n8g4imXOkfNTN/H1--
+re-adding sda4 and starting such a check would be possible?
+Or would a re-add damage things?
+
+Should I shutdown the box for safety?
+
+I am really feeling unsafe now, and getting another hdd for swapping
+will take me at least until monday.
+
+(I would like to dd-rescue to another new disk to keep sdb, just in case)
+
+Thanks, Stefan
+
