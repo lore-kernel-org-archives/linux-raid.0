@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 3/9] imsm: fix display spares
-Date: Thu, 25 Aug 2011 19:14:14 -0700
-Message-ID: <20110826021414.28015.43618.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/9] sysfs: fix sysfs_disk_to_scsi_id
+Date: Thu, 25 Aug 2011 19:14:19 -0700
+Message-ID: <20110826021419.28015.64805.stgit@localhost6.localdomain6>
 References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,85 +13,71 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-Commit 94827db3 "imsm: add spares to --examine output." may try to
-display failed disks whose imsm_disk info is not uptodate (due to not
-being able to look itself up by serial).  The same effect can be had by
-just loosening the restriction in print_imsm_disk().
+Not sure how this ever worked, but now we just try to parse a directory
+name that looks like <host>:<bus>:<target>:<lun>.
+
+Array creation segfaults on Fedora 14 without this.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- super-intel.c |   36 +++++++++++-------------------------
- 1 files changed, 11 insertions(+), 25 deletions(-)
+ sysfs.c |   30 ++++++++++--------------------
+ 1 files changed, 10 insertions(+), 20 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 2f11698..0347183 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1059,18 +1059,20 @@ static void print_imsm_dev(struct intel_super *super,
- 	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
- }
+diff --git a/sysfs.c b/sysfs.c
+index 56813b7..2146264 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -709,9 +709,9 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+ 	/* from an open block device, try to retrieve it scsi_id */
+ 	struct stat st;
+ 	char path[256];
+-	char *c1, *c2;
+ 	DIR *dir;
+ 	struct dirent *de;
++	int host, bus, target, lun;
  
--static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
-+static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
- {
--	struct imsm_disk *disk = __get_imsm_disk(mpb, index);
- 	char str[MAX_RAID_SERIAL_LEN + 1];
- 	__u64 sz;
+ 	if (fstat(fd, &st))
+ 		return 1;
+@@ -723,32 +723,22 @@ int sysfs_disk_to_scsi_id(int fd, __u32 *id)
+ 	if (!dir)
+ 		return 1;
  
--	if (index < 0 || !disk)
-+	if (index < -1 || !disk)
- 		return;
- 
- 	printf("\n");
- 	snprintf(str, MAX_RAID_SERIAL_LEN + 1, "%s", disk->serial);
--	printf("  Disk%02d Serial : %s\n", index, str);
-+	if (index >= 0)
-+		printf("  Disk%02d Serial : %s\n", index, str);
-+	else
-+		printf("    Disk Serial : %s\n", str);
- 	printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
- 					    is_configured(disk) ? " active" : "",
- 					    is_failed(disk) ? " failed" : "");
-@@ -1254,7 +1256,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	printf("    MPB Sectors : %d\n", mpb_sectors(mpb));
- 	printf("          Disks : %d\n", mpb->num_disks);
- 	printf("   RAID Devices : %d\n", mpb->num_raid_devs);
--	print_imsm_disk(mpb, super->disks->index, reserved);
-+	print_imsm_disk(__get_imsm_disk(mpb, super->disks->index), super->disks->index, reserved);
- 	if (super->bbm_log) {
- 		struct bbm_log *log = super->bbm_log;
- 
-@@ -1279,28 +1281,12 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
- 	for (i = 0; i < mpb->num_disks; i++) {
- 		if (i == super->disks->index)
- 			continue;
--		print_imsm_disk(mpb, i, reserved);
-+		print_imsm_disk(__get_imsm_disk(mpb, i), i, reserved);
+-	de = readdir(dir);
+-	while (de) {
+-		if (strchr(de->d_name, ':'))
++	for (de = readdir(dir); de; de = readdir(dir)) {
++		int count;
++
++		if (de->d_type != DT_DIR)
++			continue;
++
++		count = sscanf(de->d_name, "%d:%d:%d:%d", &host, &bus, &target, &lun);
++		if (count == 4)
+ 			break;
+-		de = readdir(dir);
  	}
--	for (dl = super->disks ; dl; dl = dl->next) {
--		struct imsm_disk *disk;
--		char str[MAX_RAID_SERIAL_LEN + 1];
--		__u64 sz;
+ 	closedir(dir);
+ 
+ 	if (!de)
+ 		return 1;
+ 
+-	c1 = de->d_name;
+-	c2 = strchr(c1, ':');
+-	*c2 = '\0';
+-	*id = strtol(c1, NULL, 10) << 24; /* host */
+-	c1 = c2 + 1;
+-	c2 = strchr(c1, ':');
+-	*c2 = '\0';
+-	*id |= strtol(c1, NULL, 10) << 16; /* bus */
+-	c1 = c2 + 1;
+-	c2 = strchr(c1, ':');
+-	*c2 = '\0';
+-	*id |= strtol(c1, NULL, 10) << 8; /* target */
+-	c1 = c2 + 1;
+-	*id |= strtol(c1, NULL, 10); /* lun */
 -
--		if (dl->index >= 0)
--			continue;
- 
--		disk = &dl->disk;
--		printf("\n");
--		snprintf(str, MAX_RAID_SERIAL_LEN + 1, "%s", disk->serial);
--		printf("    Disk Serial : %s\n", str);
--		printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
--		       is_configured(disk) ? " active" : "",
--		       is_failed(disk) ? " failed" : "");
--		printf("             Id : %08x\n", __le32_to_cpu(disk->scsi_id));
--		sz = __le32_to_cpu(disk->total_blocks) - reserved;
--		printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
--		       human_size(sz * 512));
--	}
-+	for (dl = super->disks; dl; dl = dl->next)
-+		if (dl->index == -1)
-+			print_imsm_disk(&dl->disk, -1, reserved);
- 
- 	examine_migr_rec_imsm(super);
++	*id = (host << 24) | (bus << 16) | (target << 8) | (lun << 0);
+ 	return 0;
  }
+ 
 
