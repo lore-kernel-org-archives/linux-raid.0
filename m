@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/9] imsm: fix, stop metadata updates to newly failed devices
-Date: Thu, 25 Aug 2011 19:14:09 -0700
-Message-ID: <20110826021409.28015.4084.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/9] imsm: fix display spares
+Date: Thu, 25 Aug 2011 19:14:14 -0700
+Message-ID: <20110826021414.28015.43618.stgit@localhost6.localdomain6>
 References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,52 +10,88 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, Krzysztof Wojcik <krzysztof.wojcik@intel.com>, ed.ciechanowski@intel.com
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-We already refrain from updating metadata on disks that are failed at
-load, need to do the same for new failures.  This also reverts b4add146
-as we *do* want to update other disks' view of the failed device as out of
-date.
+Commit 94827db3 "imsm: add spares to --examine output." may try to
+display failed disks whose imsm_disk info is not uptodate (due to not
+being able to look itself up by serial).  The same effect can be had by
+just loosening the restriction in print_imsm_disk().
 
-Cc: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- super-intel.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+ super-intel.c |   36 +++++++++++-------------------------
+ 1 files changed, 11 insertions(+), 25 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index a921cbc..2f11698 100644
+index 2f11698..0347183 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -4584,7 +4584,7 @@ static int write_super_imsm(struct supertype *st, int doclose)
+@@ -1059,18 +1059,20 @@ static void print_imsm_dev(struct intel_super *super,
+ 	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
+ }
  
- 	/* write the mpb for disks that compose raid devices */
- 	for (d = super->disks; d ; d = d->next) {
--		if (d->index < 0)
-+		if (d->index < 0 || is_failed(&d->disk))
+-static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
++static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
+ {
+-	struct imsm_disk *disk = __get_imsm_disk(mpb, index);
+ 	char str[MAX_RAID_SERIAL_LEN + 1];
+ 	__u64 sz;
+ 
+-	if (index < 0 || !disk)
++	if (index < -1 || !disk)
+ 		return;
+ 
+ 	printf("\n");
+ 	snprintf(str, MAX_RAID_SERIAL_LEN + 1, "%s", disk->serial);
+-	printf("  Disk%02d Serial : %s\n", index, str);
++	if (index >= 0)
++		printf("  Disk%02d Serial : %s\n", index, str);
++	else
++		printf("    Disk Serial : %s\n", str);
+ 	printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
+ 					    is_configured(disk) ? " active" : "",
+ 					    is_failed(disk) ? " failed" : "");
+@@ -1254,7 +1256,7 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	printf("    MPB Sectors : %d\n", mpb_sectors(mpb));
+ 	printf("          Disks : %d\n", mpb->num_disks);
+ 	printf("   RAID Devices : %d\n", mpb->num_raid_devs);
+-	print_imsm_disk(mpb, super->disks->index, reserved);
++	print_imsm_disk(__get_imsm_disk(mpb, super->disks->index), super->disks->index, reserved);
+ 	if (super->bbm_log) {
+ 		struct bbm_log *log = super->bbm_log;
+ 
+@@ -1279,28 +1281,12 @@ static void examine_super_imsm(struct supertype *st, char *homehost)
+ 	for (i = 0; i < mpb->num_disks; i++) {
+ 		if (i == super->disks->index)
  			continue;
- 		if (store_imsm_mpb(d->fd, mpb))
- 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
-@@ -5840,6 +5840,8 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	__u32 ord;
- 	int slot;
- 	struct imsm_map *map;
-+	char buf[MAX_RAID_SERIAL_LEN+3];
-+	unsigned int len, shift = 0;
+-		print_imsm_disk(mpb, i, reserved);
++		print_imsm_disk(__get_imsm_disk(mpb, i), i, reserved);
+ 	}
+-	for (dl = super->disks ; dl; dl = dl->next) {
+-		struct imsm_disk *disk;
+-		char str[MAX_RAID_SERIAL_LEN + 1];
+-		__u64 sz;
+-
+-		if (dl->index >= 0)
+-			continue;
  
- 	/* new failures are always set in map[0] */
- 	map = get_imsm_map(dev, 0);
-@@ -5852,6 +5854,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
- 		return 0;
+-		disk = &dl->disk;
+-		printf("\n");
+-		snprintf(str, MAX_RAID_SERIAL_LEN + 1, "%s", disk->serial);
+-		printf("    Disk Serial : %s\n", str);
+-		printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
+-		       is_configured(disk) ? " active" : "",
+-		       is_failed(disk) ? " failed" : "");
+-		printf("             Id : %08x\n", __le32_to_cpu(disk->scsi_id));
+-		sz = __le32_to_cpu(disk->total_blocks) - reserved;
+-		printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
+-		       human_size(sz * 512));
+-	}
++	for (dl = super->disks; dl; dl = dl->next)
++		if (dl->index == -1)
++			print_imsm_disk(&dl->disk, -1, reserved);
  
-+	sprintf(buf, "%s:0", disk->serial);
-+	if ((len = strlen(buf)) >= MAX_RAID_SERIAL_LEN)
-+		shift = len - MAX_RAID_SERIAL_LEN + 1;
-+	strncpy((char *)disk->serial, &buf[shift], MAX_RAID_SERIAL_LEN);
-+
- 	disk->status |= FAILED_DISK;
- 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
- 	if (map->failed_disk_num == 0xff)
+ 	examine_migr_rec_imsm(super);
+ }
 
