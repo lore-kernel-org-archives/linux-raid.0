@@ -1,108 +1,68 @@
-From: "Timothy D. Lenz" <tlenz@vorgon.com>
-Subject: Raid failing, which command to remove the bad drive?
-Date: Fri, 26 Aug 2011 13:13:01 -0700
-Message-ID: <4E57FE4D.5080503@vorgon.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Help - power failure during RAID6 grow
+Date: Sat, 27 Aug 2011 06:51:51 +1000
+Message-ID: <20110827065151.03b2d930@notabene.brown>
+References: <20110826151803.GA7595@majestic.pimp.org.za>
+	<20110826161746.GB7595@majestic.pimp.org.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110826161746.GB7595@majestic.pimp.org.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael-John Turner <mj@mjturner.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have 4 drives set up as 2 pairs.  The first part has 3 partitions on 
-it and it seems 1 of those drives is failing (going to have to figure 
-out which drive it is too so I don't pull the wrong one out of the case)
+On Fri, 26 Aug 2011 17:17:46 +0100 Michael-John Turner <mj@mjturner.net>
+wrote:
 
-It's been awhile since I had to replace a drive in the array and my 
-notes are a bit confusing. I'm not sure which I need to use to remove 
-the drive:
+> On Fri, Aug 26, 2011 at 04:18:03PM +0100, Michael-John Turner wrote:
+> [...]
+> > I tried stopping and re-assembling by hand, but get the following:
+> > # mdadm --assemble /dev/md20 /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
+> > mdadm: /dev/md20 assembled from 5 drives and 1 spare - not enough to start the array.
+> [...]
+> 
+> A bit more info. If I try an assemble with -vv, I get the following:
+> mdadm: /dev/sdh1 is identified as a member of /dev/md20, slot 4.
+> mdadm: /dev/sdf1 is identified as a member of /dev/md20, slot 2.
+> mdadm: /dev/sdg1 is identified as a member of /dev/md20, slot 3.
+> mdadm: /dev/sde1 is identified as a member of /dev/md20, slot 1.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md20, slot 0.
+> mdadm: /dev/sdb1 is identified as a member of /dev/md20, slot 6.
+> mdadm: /dev/sdc1 is identified as a member of /dev/md20, slot 5.
+> mdadm: /dev/sda1 is identified as a member of /dev/md20, slot -1.
+> mdadm:/dev/md20 has an active reshape - checking if critical section needs to be restored
+> mdadm: too-old timestamp on backup-metadata on device-5
+> mdadm: too-old timestamp on backup-metadata on device-6
+> mdadm: too-old timestamp on backup-metadata on device-8
+> mdadm: added /dev/sde1 to /dev/md20 as 1
+> mdadm: added /dev/sdf1 to /dev/md20 as 2
+> mdadm: added /dev/sdg1 to /dev/md20 as 3
+> mdadm: added /dev/sdh1 to /dev/md20 as 4
+> mdadm: added /dev/sdc1 to /dev/md20 as 5
+> mdadm: added /dev/sdb1 to /dev/md20 as 6
+> mdadm: no uptodate device for slot 7 of /dev/md20
+> mdadm: added /dev/sda1 to /dev/md20 as -1
+> mdadm: added /dev/sdd1 to /dev/md20 as 0
+> mdadm: /dev/md20 assembled from 5 drives and 1 spare - not enough to start the array.
+> 
+> Taking the contents of my previous mail into account (with the details
+> of each array member), is it safe to do an assemble with 
+> MDADM_GROW_ALLOW_OLD=1?
+> 
+> -mj
 
+Leave sda1 out of the list - it looks too much like a spare.  Sometime must
+have reset the metadata on it.  You can live without it so do so for now.
 
-	sudo mdadm --manage /dev/md0 --fail /dev/sdb
-	sudo mdadm --manage /dev/md0 --remove /dev/sdb
-	sudo mdadm --manage /dev/md1 --fail /dev/sdb
-	sudo mdadm --manage /dev/md1 --remove /dev/sdb
-	sudo mdadm --manage /dev/md2 --fail /dev/sdb
-	sudo mdadm --manage /dev/md2 --remove /dev/sdb
+Assemble the array with the rest of the devices and give the "--force" flag
+so it will update the event counts to all be in sync.
+And do this with MDADM_GROW_ALLOW_OLD=1 set.
 
-or
+This should finish the reshape and give you a singly degraded 8 device RAID6.
 
-sudo mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
-sudo mdadm /dev/md1 --fail /dev/sdb2 --remove /dev/sdb2
-sudo mdadm /dev/md2 --fail /dev/sdb3 --remove /dev/sdb3
+Then add sda1 back in and it will recover and the array will be optimal.
 
-I'm not sure if I fail the drive partition or whole drive for each.
-
--------------------------------------
-The mails I got are:
--------------------------------------
-A Fail event had been detected on md device /dev/md0.
-
-It could be related to component device /dev/sdb1.
-
-Faithfully yours, etc.
-
-P.S. The /proc/mdstat file currently contains the following:
-
-Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
-md1 : active raid1 sdb2[2](F) sda2[0]
-       4891712 blocks [2/1] [U_]
-
-md2 : active raid1 sdb3[1] sda3[0]
-       459073344 blocks [2/2] [UU]
-
-md3 : active raid1 sdd1[1] sdc1[0]
-       488383936 blocks [2/2] [UU]
-
-md0 : active raid1 sdb1[2](F) sda1[0]
-       24418688 blocks [2/1] [U_]
-
-unused devices: <none>
--------------------------------------
-A Fail event had been detected on md device /dev/md1.
-
-It could be related to component device /dev/sdb2.
-
-Faithfully yours, etc.
-
-P.S. The /proc/mdstat file currently contains the following:
-
-Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
-md1 : active raid1 sdb2[2](F) sda2[0]
-       4891712 blocks [2/1] [U_]
-
-md2 : active raid1 sdb3[1] sda3[0]
-       459073344 blocks [2/2] [UU]
-
-md3 : active raid1 sdd1[1] sdc1[0]
-       488383936 blocks [2/2] [UU]
-
-md0 : active raid1 sdb1[2](F) sda1[0]
-       24418688 blocks [2/1] [U_]
-
-unused devices: <none>
--------------------------------------
-A Fail event had been detected on md device /dev/md2.
-
-It could be related to component device /dev/sdb3.
-
-Faithfully yours, etc.
-
-P.S. The /proc/mdstat file currently contains the following:
-
-Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
-md1 : active raid1 sdb2[2](F) sda2[0]
-       4891712 blocks [2/1] [U_]
-
-md2 : active raid1 sdb3[2](F) sda3[0]
-       459073344 blocks [2/1] [U_]
-
-md3 : active raid1 sdd1[1] sdc1[0]
-       488383936 blocks [2/2] [UU]
-
-md0 : active raid1 sdb1[2](F) sda1[0]
-       24418688 blocks [2/1] [U_]
-
-unused devices: <none>
--------------------------------------
+NeilBrown
