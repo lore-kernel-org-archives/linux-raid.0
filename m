@@ -1,86 +1,41 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
-Date: Fri, 26 Aug 2011 12:51:18 -0700
-Message-ID: <CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
-References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
-	<20110826021424.28015.2342.stgit@localhost6.localdomain6>
+From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
+Subject: Re: RAID1, changed disk, 2nd has errors ...
+Date: Fri, 26 Aug 2011 21:00:23 +0100
+Message-ID: <CADNH=7E0GEdnPSBJdwQx3kSwZzzz9mOaHqvjLfG+AJz3ts+zNQ@mail.gmail.com>
+References: <4E5787A1.7080807@xunil.at>
+	<CADNH=7HMgJ9+wCEH5i03L6UmQw2xnMopnx09z8W0nU-q6_0Dig@mail.gmail.com>
+	<4E578F4D.9050908@xunil.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110826021424.28015.2342.stgit@localhost6.localdomain6>
+In-Reply-To: <4E578F4D.9050908@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Anna Czarnowska <anna.czarnowska@intel.com>, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: lists@xunil.at
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Aug 25, 2011 at 7:14 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> Different OROMs reserve different amounts of space for the migration =
-area.
-> When activating a spare minimize the reserved space otherwise a valid=
- spare
-> can be prevented from joining an array with a migration area smaller =
-than
-> IMSM_RESERVED_SECTORS.
+On 26 August 2011 13:19, Stefan G. Weichinger <lists@xunil.at> wrote:
+> Am 26.08.2011 14:01, schrieb Mathias Bur=C3=A9n:
 >
-> This may result in an array that cannot be reshaped, but that is less
-> surprising than not being able to rebuild a degraded array.
-> imsm_reserved_sectors() already reports the minimal value which adds =
-to
-> the confusion when trying rebuild an array because mdadm -E indicates
-> that the device has enough space.
+>> Could you perhaps post the output of "smartctl -a /dev/sda" (and sdb
+>> for completeness sake) here? You can find smartctl in the
+>> smartmontools package.
 >
-> Cc: Anna Czarnowska <anna.czarnowska@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> =A0super-intel.c | =A0 11 ++++++++++-
-> =A01 files changed, 10 insertions(+), 1 deletions(-)
+> sure. sdb is the new hdd from today (as mentioned)
 >
-> diff --git a/super-intel.c b/super-intel.c
-> index 0347183..193e0d0 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -833,7 +833,16 @@ static struct extent *get_extents(struct intel_s=
-uper *super, struct dl *dl)
-> =A0 =A0 =A0 =A0struct extent *rv, *e;
-> =A0 =A0 =A0 =A0int i;
-> =A0 =A0 =A0 =A0int memberships =3D count_memberships(dl, super);
-> - =A0 =A0 =A0 __u32 reservation =3D MPB_SECTOR_CNT + IMSM_RESERVED_SE=
-CTORS;
-> + =A0 =A0 =A0 __u32 reservation;
-> +
-> + =A0 =A0 =A0 /* trim the reserved area for spares, so they can join =
-any array
-> + =A0 =A0 =A0 =A0* regardless of whether the OROM has assigned sector=
-s from the
-> + =A0 =A0 =A0 =A0* IMSM_RESERVED_SECTORS region
-> + =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 if (dl->index =3D=3D -1)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 reservation =3D MPB_SECTOR_CNT;
+> ->
+>
+(snip)
+>
+>
 
-Anna rightly points out that this could probably be safely made
-bigger.  As it stands this applies to too broad an array of disks.  I
-think a happy medium (until we can nail down the forward compatibility
-of older oroms, v8 in this case) is to detect the case where the disk
-is being activated for rebuild and if it is at least as large as one
-of the existing members truncate the reserved region to the same size
-as the other member.  That way we are at least compatible with
-whatever agent created the array in the first instance.
+=46WIW, sda is failing, looking at uncorrectable sectors and all else.
+If possible I'd mount the HDD (array) read-only, copy the contents
+somewhere else, then recreate the array from scratch using your new
+HDD and a new HDD to replace sda.
 
-But this also comes back to the problem of duplicating the array
-configuration.  It becomes difficult to make things the same size
-unless the orom version (reserved region layout) is specified.
-
---
-Dan
-
->
-> =A0 =A0 =A0 =A0rv =3D malloc(sizeof(struct extent) * (memberships + 1=
-));
-> =A0 =A0 =A0 =A0if (!rv)
->
->
+/Mathias
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
