@@ -1,48 +1,33 @@
-From: Alexander =?iso-8859-15?b?S/xobg==?= <alexander.kuehn@nagilum.de>
-Subject: Re: [PATCH 9/9] mdadm: 'dump' support
-Date: Tue, 30 Aug 2011 12:12:03 +0200
-Message-ID: <20110830121203.Horde.wvD-Spk8pphOXLdzcMjKT1A@cakebox.homeunix.net>
-References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
- <20110826021445.28015.63357.stgit@localhost6.localdomain6>
- <20110830125803.19ad660b@notabene.brown>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re: (solved) RAID1, changed disk, 2nd has errors ...
+Date: Tue, 30 Aug 2011 14:14:42 +0200
+Message-ID: <4E5CD432.8090300@xunil.at>
+References: <4E5787A1.7080807@xunil.at> <20110826125653.GA13709@cthulhu.home.robinhill.me.uk> <4E57A4D5.3070004@xunil.at> <20110826140810.GB13709@cthulhu.home.robinhill.me.uk> <4E57BEBB.2000606@xunil.at> <4E5B396D.9020609@xunil.at> <4E5B438D.8000107@xunil.at> <CADNH=7G=HFSinigdCtHbSV0iKMGB57CrgjA+Qde4xRAeW7FURQ@mail.gmail.com> <4E5B4712.90106@xunil.at> <4E5B4D12.5060604@xunil.at> <4E5BA388.3000405@xunil.at> <CADNH=7EczqKSw4n3qSkxkp_NDxbaJDJDr_PtnnpcVPONNq2ABg@mail.gmail.com>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed; DelSp=Yes
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110830125803.19ad660b@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <CADNH=7EczqKSw4n3qSkxkp_NDxbaJDJDr_PtnnpcVPONNq2ABg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: =?UTF-8?B?TWF0aGlhcyBCdXLDqW4=?= <mathias.buren@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, robin.hill47@ntlworld.com
 List-Id: linux-raid.ids
 
+Am 30.08.2011 01:40, schrieb Mathias Bur=C3=A9n:
 
-Zitat von NeilBrown <neilb@suse.de>:
+> Glad you got it working, but your drive looks like a failing drive
+> to me, because of these:
+>=20
+> 187 Reported_Uncorrect      0x0032   082   082   000    Old_age
+> Always -       18
+>=20
+> So I'd replace it ASAP.
 
-> On Thu, 25 Aug 2011 19:14:45 -0700 Dan Williams <dan.j.williams@intel.com>
-> wrote:
->
->>   mdadm -E /dev/sda --dump=foo
->>
->> Creates a sparse file image of /dev/sda named foo with a copy of the
->> metadata instance found by -E.
->>
->> When used in the opposite direction:
->>
->>   mdadm -E foo --dump=/dev/sda
->>
->> ...can restore metadata to a given block device, assuming it is
->> identical size to the dump file.
->
-> Suppose we did have a separate 'restore' function - what would it look like?
-> An option to create?
->
->   mdadm --create --restore=some-directory /dev/sda /dev/sdb
->
+As mentioned, I ordered the new disk already.
 
-Yes, from a UI perspective having separate dump/restore options is  
-better. Since there is also dump(8)/restore(8) it would also keep the  
-nomenclature.
-Otherwise I would rather name it "copy-metadata" or something as with  
-copying the user is or should be aware that the order or arguments  
-matters.
-Alex.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
