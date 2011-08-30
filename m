@@ -1,107 +1,40 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
-Date: Tue, 30 Aug 2011 12:20:36 +1000
-Message-ID: <20110830122036.357e63f0@notabene.brown>
+Subject: Re: [PATCH 7/9] imsm: support 'missing' devices at Create
+Date: Tue, 30 Aug 2011 12:26:34 +1000
+Message-ID: <20110830122634.41d69592@notabene.brown>
 References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
-	<20110826021424.28015.2342.stgit@localhost6.localdomain6>
-	<CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
+	<20110826021434.28015.93967.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
+In-Reply-To: <20110826021434.28015.93967.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, Anna Czarnowska <anna.czarnowska@intel.com>, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, Dave Jiang <dave.jiang@intel.com>, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, 26 Aug 2011 12:51:18 -0700 "Williams, Dan J"
-<dan.j.williams@intel.com> wrote:
+On Thu, 25 Aug 2011 19:14:35 -0700 Dan Williams <dan.j.williams@intel.com>
+wrote:
 
-> On Thu, Aug 25, 2011 at 7:14 PM, Dan Williams <dan.j.williams@intel.c=
-om> wrote:
-> > Different OROMs reserve different amounts of space for the migratio=
-n area.
-> > When activating a spare minimize the reserved space otherwise a val=
-id spare
-> > can be prevented from joining an array with a migration area smalle=
-r than
-> > IMSM_RESERVED_SECTORS.
-> >
-> > This may result in an array that cannot be reshaped, but that is le=
-ss
-> > surprising than not being able to rebuild a degraded array.
-> > imsm_reserved_sectors() already reports the minimal value which add=
-s to
-> > the confusion when trying rebuild an array because mdadm -E indicat=
-es
-> > that the device has enough space.
-> >
-> > Cc: Anna Czarnowska <anna.czarnowska@intel.com>
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> > =A0super-intel.c | =A0 11 ++++++++++-
-> > =A01 files changed, 10 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/super-intel.c b/super-intel.c
-> > index 0347183..193e0d0 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -833,7 +833,16 @@ static struct extent *get_extents(struct intel=
-_super *super, struct dl *dl)
-> > =A0 =A0 =A0 =A0struct extent *rv, *e;
-> > =A0 =A0 =A0 =A0int i;
-> > =A0 =A0 =A0 =A0int memberships =3D count_memberships(dl, super);
-> > - =A0 =A0 =A0 __u32 reservation =3D MPB_SECTOR_CNT + IMSM_RESERVED_=
-SECTORS;
-> > + =A0 =A0 =A0 __u32 reservation;
-> > +
-> > + =A0 =A0 =A0 /* trim the reserved area for spares, so they can joi=
-n any array
-> > + =A0 =A0 =A0 =A0* regardless of whether the OROM has assigned sect=
-ors from the
-> > + =A0 =A0 =A0 =A0* IMSM_RESERVED_SECTORS region
-> > + =A0 =A0 =A0 =A0*/
-> > + =A0 =A0 =A0 if (dl->index =3D=3D -1)
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 reservation =3D MPB_SECTOR_CNT;
->=20
-> Anna rightly points out that this could probably be safely made
-> bigger.  As it stands this applies to too broad an array of disks.  I
-> think a happy medium (until we can nail down the forward compatibilit=
-y
-> of older oroms, v8 in this case) is to detect the case where the disk
-> is being activated for rebuild and if it is at least as large as one
-> of the existing members truncate the reserved region to the same size
-> as the other member.  That way we are at least compatible with
-> whatever agent created the array in the first instance.
->=20
+> Specifying missing devices at create is very useful for array recovery.
+> 
+> For imsm create dummy disk entries at init_super_imsm time, and then use
+> them to fill in unoccupied slots in the final array (if the container is
+> unpopulated).
+> 
+> If the container is already populated (has a subarray)
+> 'missing' disks must be in reference to already recorded missing devices
+> in the metadata.
 
-I think you are saying that I can go ahead and apply this patch, but th=
-at it
-might get improved upon in the future .... I hope that is right ?
+It would appear you have also implement --assume-clean:
 
-> But this also comes back to the problem of duplicating the array
-> configuration.  It becomes difficult to make things the same size
-> unless the orom version (reserved region layout) is specified.
+> -	vol->dirty = 0;
+> +	vol->dirty = !info->state;
 
-Yes, that is occasionally a serious problem.  As metadata becomes more
-flexible it become harder to reproduce exact configuration.
+Thanks - that has been bothering me.
 
-Maybe I need a --no-default option to --create to ensure no defaults ar=
-e used.
-Then some sort of generic=20
-    --config-param foo=3Dbar
-which creates a dictionary of foo=3Dbar assignments which are used by t=
-he
-metadata to fill in any detail that they would normally fill from defau=
-lts.
+I'll update the commit-log to record this.
 
-Sounds a bit heavy-weight though...
-
+Thanks,
 NeilBrown
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
