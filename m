@@ -1,127 +1,143 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] md fixes for 3.1
-Date: Wed, 31 Aug 2011 16:45:07 +1000
-Message-ID: <20110831164507.02d6f787@notabene.brown>
+Subject: Re: dirty chunks on bitmap not clearing (RAID1)
+Date: Wed, 31 Aug 2011 17:38:42 +1000
+Message-ID: <20110831173842.44ab5b03@notabene.brown>
+References: <CAGtzr3fC8bWLa4A5eRRgjHCtgfENdx4jtaKNb53dD7NX61nf7g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGtzr3fC8bWLa4A5eRRgjHCtgfENdx4jtaKNb53dD7NX61nf7g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+To: Chris Pearson <kermit4@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 29 Aug 2011 11:30:56 -0500 Chris Pearson <kermit4@gmail.com> wrote:
 
-Hi Linus,
- please pull assorted small md fixes as follows.
+> I have the same problem.  3 chunks are always dirty.
+> 
+> I'm using 2.6.38-8-generic and mdadm - v3.1.4 - 31st August 2010
+> 
+> If that's not normal, then maybe what I've done differently is that I
+> created the array, raid 1, with one live and one missing disk, then
+> added the second one later after writing a lot of data.
+> 
+> Also, though probably not the cause, I continued writing data while it
+> was syncing, and a couple times during the syncing, both drives
+> stopped responding and I had to power off.
+> 
+> # cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10]
+> md127 : active raid1 sdd1[0] sdc1[2]
+>       1904568184 blocks super 1.2 [2/2] [UU]
+>       bitmap: 3/15 pages [12KB], 65536KB chunk
+> 
+> unused devices: <none>
+> 
+> # mdadm -X /dev/sd[dc]1
+>         Filename : /dev/sdc1
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : 43761dc5:4383cf0f:41ef2dab:43e6d74e
+>           Events : 40013
+>   Events Cleared : 40013
+>            State : OK
+>        Chunksize : 64 MB
+>           Daemon : 5s flush period
+>       Write Mode : Allow write behind, max 256
+>        Sync Size : 1904568184 (1816.34 GiB 1950.28 GB)
+>           Bitmap : 29062 bits (chunks), 3 dirty (0.0%)
+>         Filename : /dev/sdd1
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : 43761dc5:4383cf0f:41ef2dab:43e6d74e
+>           Events : 40013
+>   Events Cleared : 40013
+>            State : OK
+>        Chunksize : 64 MB
+>           Daemon : 5s flush period
+>       Write Mode : Allow write behind, max 256
+>        Sync Size : 1904568184 (1816.34 GiB 1950.28 GB)
+>           Bitmap : 29062 bits (chunks), 3 dirty (0.0%)
+
+I cannot see how this would be happening.  If any bits are set, then they
+will be cleared after 5 seconds, and then 5 seconds later the block holding
+the bits will be written out so that they will appear on disk to be cleared.
+
+I assume that if you write to the array, the 'dirty' count increases, but
+always goes back to three?
+
+And if you stop the array and start it again, the '3' stays there?
+
+If I sent you a patch to add some tracing information would you be able to
+compile a new kernel with that patch applied and see what it says?
 
 Thanks,
+
 NeilBrown
 
 
-The following changes since commit 14c62e78dc1379185515be41903c4a667efc6d54:
+> 
+> 
+> Quoting NeilBrown <neilb@suse.de>:
+> 
+> > On Thu, October 15, 2009 9:39 am, aristizb@ualberta.ca wrote:
+> >> Hello,
+> >>
+> >> I have a RAID1 with 2 LVM disks and I am running into a strange
+> >> situation where having the 2 disks connected to the array the bitmap
+> >> never clears the dirty chunks.
+> >
+> > That shouldn't happen...
+> > What versions of mdadm and the Linux kernel are you using?
+> >
+> > NeilBrown
+> >
+> >>
+> >> I am assuming also that when a RAID1 is in write-through mode, the
+> >> bitmap  indicates that all the data has made it to all the disks if
+> >> there are no dirty chunks using mdadm --examine-bitmap.
+> >>
+> >> The output of cat /proc/mdstat is:
+> >>
+> >> md2060 : active raid1 dm-5[1] dm-6[0]
+> >>        2252736 blocks [2/2] [UU]
+> >>        bitmap: 1/275 pages [12KB], 4KB chunk, file: /tmp/md2060bm
+> >>
+> >>
+> >> The output of mdadm --examine-bitmap /tmp/md2060bm is:
+> >>
+> >> Filename : md2060bm
+> >>             Magic : 6d746962
+> >>           Version : 4
+> >>              UUID : ad5fb74c:bb1c654a:087b2595:8a5d04a9
+> >>            Events : 12
+> >>    Events Cleared : 12
+> >>             State : OK
+> >>         Chunksize : 4 KB
+> >>            Daemon : 5s flush period
+> >>        Write Mode : Normal
+> >>         Sync Size : 2252736 (2.15 GiB 2.31 GB)
+> >>            Bitmap : 563184 bits (chunks), 3 dirty (0.0%)
+> >>
+> >>
+> >> Having the array under no IO, I waited 30 minutes but the dirty data
+> >> never gets clear from the bitmap, so I presume  the disks are not in
+> >> sync; but after I ran a block by block comparison of the two devices I
+> >> found that they are equal.
+> >>
+> >> The superblocks and the external bitmap tell me that all the events
+> >> are cleared, so I am confused on why the bitmap never goes to 0 dirty
+> >> chunks.
+> >>
+> >> How can I tell if the disks are in sync?
+> >>
+> >>
+> >> Thank you in advance for any help
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-  Merge branch 'x86-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/linux-2.6-tip (2011-08-23 18:09:08 -0700)
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-Namhyung Kim (1):
-      md: use REQ_NOIDLE flag in md_super_write()
-
-NeilBrown (5):
-      md: report failure if a 'set faulty' request doesn't.
-      md: ensure changes to 'write-mostly' are reflected in metadata.
-      md/linear: avoid corrupting structure while waiting for rcu_free to complete.
-      md: fix clearing of 'blocked' flag in the presence of bad blocks.
-      md/raid5: fix a hang on device failure.
-
- drivers/md/linear.h |    2 +-
- drivers/md/md.c     |   16 +++++++++++++---
- drivers/md/raid5.c  |    2 +-
- 3 files changed, 15 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/md/linear.h b/drivers/md/linear.h
-index 0ce29b6..2f2da05 100644
---- a/drivers/md/linear.h
-+++ b/drivers/md/linear.h
-@@ -10,9 +10,9 @@ typedef struct dev_info dev_info_t;
- 
- struct linear_private_data
- {
-+	struct rcu_head		rcu;
- 	sector_t		array_sectors;
- 	dev_info_t		disks[0];
--	struct rcu_head		rcu;
- };
- 
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8e221a2..3742ce8 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -848,7 +848,7 @@ void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
- 	bio->bi_end_io = super_written;
- 
- 	atomic_inc(&mddev->pending_writes);
--	submit_bio(REQ_WRITE | REQ_SYNC | REQ_FLUSH | REQ_FUA, bio);
-+	submit_bio(WRITE_FLUSH_FUA, bio);
- }
- 
- void md_super_wait(mddev_t *mddev)
-@@ -1738,6 +1738,11 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
- 	sb->level = cpu_to_le32(mddev->level);
- 	sb->layout = cpu_to_le32(mddev->layout);
- 
-+	if (test_bit(WriteMostly, &rdev->flags))
-+		sb->devflags |= WriteMostly1;
-+	else
-+		sb->devflags &= ~WriteMostly1;
-+
- 	if (mddev->bitmap && mddev->bitmap_info.file == NULL) {
- 		sb->bitmap_offset = cpu_to_le32((__u32)mddev->bitmap_info.offset);
- 		sb->feature_map = cpu_to_le32(MD_FEATURE_BITMAP_OFFSET);
-@@ -2561,7 +2566,10 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
- 	int err = -EINVAL;
- 	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
- 		md_error(rdev->mddev, rdev);
--		err = 0;
-+		if (test_bit(Faulty, &rdev->flags))
-+			err = 0;
-+		else
-+			err = -EBUSY;
- 	} else if (cmd_match(buf, "remove")) {
- 		if (rdev->raid_disk >= 0)
- 			err = -EBUSY;
-@@ -2584,7 +2592,7 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
- 		err = 0;
- 	} else if (cmd_match(buf, "-blocked")) {
- 		if (!test_bit(Faulty, &rdev->flags) &&
--		    test_bit(BlockedBadBlocks, &rdev->flags)) {
-+		    rdev->badblocks.unacked_exist) {
- 			/* metadata handler doesn't understand badblocks,
- 			 * so we need to fail the device
- 			 */
-@@ -5983,6 +5991,8 @@ static int set_disk_faulty(mddev_t *mddev, dev_t dev)
- 		return -ENODEV;
- 
- 	md_error(mddev, rdev);
-+	if (!test_bit(Faulty, &rdev->flags))
-+		return -EBUSY;
- 	return 0;
- }
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index dbae459..43709fa 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3336,7 +3336,7 @@ static void handle_stripe(struct stripe_head *sh)
- 
- finish:
- 	/* wait for this device to become unblocked */
--	if (unlikely(s.blocked_rdev))
-+	if (conf->mddev->external && unlikely(s.blocked_rdev))
- 		md_wait_for_blocked_rdev(s.blocked_rdev, conf->mddev);
- 
- 	if (s.handle_bad_blocks)
