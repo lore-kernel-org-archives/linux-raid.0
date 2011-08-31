@@ -1,143 +1,147 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: dirty chunks on bitmap not clearing (RAID1)
-Date: Wed, 31 Aug 2011 17:38:42 +1000
-Message-ID: <20110831173842.44ab5b03@notabene.brown>
-References: <CAGtzr3fC8bWLa4A5eRRgjHCtgfENdx4jtaKNb53dD7NX61nf7g@mail.gmail.com>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: possible bug - bitmap dirty pages status
+Date: Wed, 31 Aug 2011 13:05:25 +0400
+Message-ID: <CAGqmV7pjvEHaNWjuZzt+tSsUJOM28ZqDY6qUROzz8GtMGCxDow@mail.gmail.com>
+References: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGtzr3fC8bWLa4A5eRRgjHCtgfENdx4jtaKNb53dD7NX61nf7g@mail.gmail.com>
+In-Reply-To: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Pearson <kermit4@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 29 Aug 2011 11:30:56 -0500 Chris Pearson <kermit4@gmail.com> wrote:
+On Sat, Aug 27, 2011 at 1:58 PM, CoolCold <coolthecold@gmail.com> wrote=
+:
+> Hello!
+> I have raid1 array with bitmap (md3), one disk has died, been replace=
+d
+> and array resynced:
+>
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A05.986791] md: md3 stopped.
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A06.043306] raid1: raid set md3
+> active with 1 out of 2 mirrors
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A06.044378] md3: bitmap initial=
+ized
+> from disk: read 2/2 pages, set 357 bits
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A06.044442] created bitmap (22
+> pages) for device md3
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A06.070492] md3: detected capac=
+ity
+> change from 0 to 1478197903360
+> Aug 25 15:38:03 gamma2 kernel: [ =A0 =A06.070862] =A0md3: unknown par=
+tition table
+> Aug 26 19:33:33 gamma2 kernel: [100325.814179] md: md3: recovery done=
+=2E
+>
+> Now, /proc/mdstats still shows "dirty" bitmap, 16 of 22 pages:
+>
+> root@gamma2:~# cat /proc/mdstat
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> md3 : active raid1 sdc3[1] sdb3[0]
+> =A0 =A0 =A01443552640 blocks [2/2] [UU]
+> =A0 =A0 =A0bitmap: 16/22 pages [64KB], 32768KB chunk
+>
+> root@gamma2:~# mdadm -D /dev/md3
+> /dev/md3:
+> =A0 =A0 =A0 =A0Version : 00.90
+> =A0Creation Time : Wed Oct 13 03:13:52 2010
+> =A0 =A0 Raid Level : raid1
+> =A0 =A0 Array Size : 1443552640 (1376.68 GiB 1478.20 GB)
+> =A0Used Dev Size : 1443552640 (1376.68 GiB 1478.20 GB)
+> =A0 Raid Devices : 2
+> =A0Total Devices : 2
+> Preferred Minor : 3
+> =A0 =A0Persistence : Superblock is persistent
+>
+> =A0Intent Bitmap : Internal
+>
+> =A0 =A0Update Time : Sat Aug 27 13:53:57 2011
+> =A0 =A0 =A0 =A0 =A0State : active
+> =A0Active Devices : 2
+> Working Devices : 2
+> =A0Failed Devices : 0
+> =A0Spare Devices : 0
+>
+> =A0 =A0 =A0 =A0 =A0 UUID : f5a9c1da:83dd4c40:d363f6aa:3cbcebe5
+> =A0 =A0 =A0 =A0 Events : 0.1381014
+>
+> =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
+> =A0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 19 =A0 =A0 =A0 =A00 =A0 =A0 =A0=
+active sync =A0 /dev/sdb3
+> =A0 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 35 =A0 =A0 =A0 =A01 =A0 =A0 =A0=
+active sync =A0 /dev/sdc3
+>
+>
+>
+> That is strange as I can understand.
+>
+> distrib & mdadm info:
+> Debian Lenny with openvz kernel from lenny-backports.
+>
+> root@gamma2:~# cat /proc/version
+> Linux version 2.6.32-bpo.5-openvz-amd64 (Debian 2.6.32-35~bpo50+1)
+> (norbert@tretkowski.de) (gcc version 4.3.2 (Debian 4.3.2-1.1) ) #1 SM=
+P
+> Wed Jul 20 11:23:01 UTC 2011
+> root@gamma2:~# mdadm --version
+> mdadm - v2.6.7.2 - 14th November 2008
+>
+More details now:
+Array still has 16/22 dirty pages:
 
-> I have the same problem.  3 chunks are always dirty.
-> 
-> I'm using 2.6.38-8-generic and mdadm - v3.1.4 - 31st August 2010
-> 
-> If that's not normal, then maybe what I've done differently is that I
-> created the array, raid 1, with one live and one missing disk, then
-> added the second one later after writing a lot of data.
-> 
-> Also, though probably not the cause, I continued writing data while it
-> was syncing, and a couple times during the syncing, both drives
-> stopped responding and I had to power off.
-> 
-> # cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4] [raid10]
-> md127 : active raid1 sdd1[0] sdc1[2]
->       1904568184 blocks super 1.2 [2/2] [UU]
->       bitmap: 3/15 pages [12KB], 65536KB chunk
-> 
-> unused devices: <none>
-> 
-> # mdadm -X /dev/sd[dc]1
->         Filename : /dev/sdc1
->            Magic : 6d746962
->          Version : 4
->             UUID : 43761dc5:4383cf0f:41ef2dab:43e6d74e
->           Events : 40013
->   Events Cleared : 40013
->            State : OK
->        Chunksize : 64 MB
->           Daemon : 5s flush period
->       Write Mode : Allow write behind, max 256
->        Sync Size : 1904568184 (1816.34 GiB 1950.28 GB)
->           Bitmap : 29062 bits (chunks), 3 dirty (0.0%)
->         Filename : /dev/sdd1
->            Magic : 6d746962
->          Version : 4
->             UUID : 43761dc5:4383cf0f:41ef2dab:43e6d74e
->           Events : 40013
->   Events Cleared : 40013
->            State : OK
->        Chunksize : 64 MB
->           Daemon : 5s flush period
->       Write Mode : Allow write behind, max 256
->        Sync Size : 1904568184 (1816.34 GiB 1950.28 GB)
->           Bitmap : 29062 bits (chunks), 3 dirty (0.0%)
-
-I cannot see how this would be happening.  If any bits are set, then they
-will be cleared after 5 seconds, and then 5 seconds later the block holding
-the bits will be written out so that they will appear on disk to be cleared.
-
-I assume that if you write to the array, the 'dirty' count increases, but
-always goes back to three?
-
-And if you stop the array and start it again, the '3' stays there?
-
-If I sent you a patch to add some tracing information would you be able to
-compile a new kernel with that patch applied and see what it says?
-
-Thanks,
-
-NeilBrown
+root@gamma2:~# date;cat /proc/mdstat |head -n 5
+Wed Aug 31 13:04:26 MSD 2011
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+md3 : active raid1 sdc3[1] sdb3[0]
+      1443552640 blocks [2/2] [UU]
+      bitmap: 16/22 pages [64KB], 32768KB chunk
 
 
-> 
-> 
-> Quoting NeilBrown <neilb@suse.de>:
-> 
-> > On Thu, October 15, 2009 9:39 am, aristizb@ualberta.ca wrote:
-> >> Hello,
-> >>
-> >> I have a RAID1 with 2 LVM disks and I am running into a strange
-> >> situation where having the 2 disks connected to the array the bitmap
-> >> never clears the dirty chunks.
-> >
-> > That shouldn't happen...
-> > What versions of mdadm and the Linux kernel are you using?
-> >
-> > NeilBrown
-> >
-> >>
-> >> I am assuming also that when a RAID1 is in write-through mode, the
-> >> bitmap  indicates that all the data has made it to all the disks if
-> >> there are no dirty chunks using mdadm --examine-bitmap.
-> >>
-> >> The output of cat /proc/mdstat is:
-> >>
-> >> md2060 : active raid1 dm-5[1] dm-6[0]
-> >>        2252736 blocks [2/2] [UU]
-> >>        bitmap: 1/275 pages [12KB], 4KB chunk, file: /tmp/md2060bm
-> >>
-> >>
-> >> The output of mdadm --examine-bitmap /tmp/md2060bm is:
-> >>
-> >> Filename : md2060bm
-> >>             Magic : 6d746962
-> >>           Version : 4
-> >>              UUID : ad5fb74c:bb1c654a:087b2595:8a5d04a9
-> >>            Events : 12
-> >>    Events Cleared : 12
-> >>             State : OK
-> >>         Chunksize : 4 KB
-> >>            Daemon : 5s flush period
-> >>        Write Mode : Normal
-> >>         Sync Size : 2252736 (2.15 GiB 2.31 GB)
-> >>            Bitmap : 563184 bits (chunks), 3 dirty (0.0%)
-> >>
-> >>
-> >> Having the array under no IO, I waited 30 minutes but the dirty data
-> >> never gets clear from the bitmap, so I presume  the disks are not in
-> >> sync; but after I ran a block by block comparison of the two devices I
-> >> found that they are equal.
-> >>
-> >> The superblocks and the external bitmap tell me that all the events
-> >> are cleared, so I am confused on why the bitmap never goes to 0 dirty
-> >> chunks.
-> >>
-> >> How can I tell if the disks are in sync?
-> >>
-> >>
-> >> Thank you in advance for any help
+bitmap info:
+
+root@gamma2:~# mdadm --examine-bitmap /dev/sdb3
+        Filename : /dev/sdb3
+           Magic : 6d746962
+         Version : 4
+            UUID : f5a9c1da:83dd4c40:d363f6aa:3cbcebe5
+          Events : 1381014
+  Events Cleared : 1381014
+           State : OK
+       Chunksize : 32 MB
+          Daemon : 5s flush period
+      Write Mode : Normal
+       Sync Size : 1443552640 (1376.68 GiB 1478.20 GB)
+          Bitmap : 44054 bits (chunks), 189 dirty (0.4%)
+root@gamma2:~# mdadm --examine-bitmap /dev/sdc3
+        Filename : /dev/sdc3
+           Magic : 6d746962
+         Version : 4
+            UUID : f5a9c1da:83dd4c40:d363f6aa:3cbcebe5
+          Events : 1381014
+  Events Cleared : 1381014
+           State : OK
+       Chunksize : 32 MB
+          Daemon : 5s flush period
+      Write Mode : Normal
+       Sync Size : 1443552640 (1376.68 GiB 1478.20 GB)
+          Bitmap : 44054 bits (chunks), 189 dirty (0.4%)
+
+
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Best regards,
+> [COOLCOLD-RIPN]
+>
 
+
+
+--=20
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
