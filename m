@@ -1,68 +1,54 @@
 From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: raid array with 3T disks and GPT partition
-Date: Thu, 1 Sep 2011 17:58:40 +0100
-Message-ID: <20110901165840.GA22274@cthulhu.home.robinhill.me.uk>
-References: <20110901154759.GA32649@apartia.fr>
- <20110901155913.GA20825@cthulhu.home.robinhill.me.uk>
- <20110901163334.GA13347@apartia.fr>
+Subject: Re: freshly grown array shrinks after first reboot - major data loss
+Date: Thu, 1 Sep 2011 18:03:36 +0100
+Message-ID: <20110901170336.GB22274@cthulhu.home.robinhill.me.uk>
+References: <4E5FA4B5.6010407@macroscoop.nl>
+ <4E5FAEF3.60501@macroscoop.nl>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WIyZ46R2i8wDzkSu"
+	protocol="application/pgp-signature"; boundary="rJwd6BRFiFCcLxzm"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110901163334.GA13347@apartia.fr>
+In-Reply-To: <4E5FAEF3.60501@macroscoop.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---WIyZ46R2i8wDzkSu
+--rJwd6BRFiFCcLxzm
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu Sep 01, 2011 at 06:33:34PM +0200, Louis-David Mitterrand wrote:
+On Thu Sep 01, 2011 at 06:12:35PM +0200, Pim Zandbergen wrote:
 
-> On Thu, Sep 01, 2011 at 04:59:13PM +0100, Robin Hill wrote:
-> > On Thu Sep 01, 2011 at 05:47:59PM +0200, Louis-David Mitterrand wrote:
-> > >=20
-> > > I'm trying to create a raid6 array from 10x3T disks. Since disks > 2T
-> > > must use the GPT partion table I used parted to created a single
-> > > partition on each drive with the correct GPT partion type.
-> > >=20
-> > > Now how do I make sure that these partitions have the correct "raid
-> > > autodetect" (fd) id? Is it even still needed? I didn't find any way to
-> > > set that flag in (g)parted.
-> > >=20
-> > It's only needed for kernel auto-assembly (in which case you're also
-> > limited to 0.90 metadata and 2TB drives), so no, there's no need to use
-> > that. 0xDA seems to be the recommended partition type for RAID arrays
-> > nowadays - that should prevent the OS from trying to read them directly.
+> On 09/01/2011 05:28 PM, Pim Zandbergen wrote:
+> >
+> >
+> > What should I do to find the cause?
 >=20
-> Auto-assembly and metadata are not related: I regularly use 1.2 metadata
-> on non-boot partitions and they auto-assemble fine.
+> Additional information:
 >=20
-Kernel auto-assembly and metadata are related (see the description for
-the --auto-detect option in the mdadm manual page). Most distributions
-now use mdadm in an initrd for assembly, which will (of course) work
-with any metadata version.
+> Both the original 2TB drives as well as the new 3TB drives were GPT
+> formatted with partition type FD00
+>=20
+> This is information about the currently shrunk array:
+>=20
+>=20
+> # mdadm --detail  /dev/md0
+> /dev/md0:
+>          Version : 0.90
+>    Creation Time : Wed Feb  8 23:22:15 2006
+>       Raid Level : raid5
+>=20
+Looks like there's a bug somewhere. The documentation says that 0.90
+metadata doesn't support >2TB components for RAID levels 1 and above.
+If this is still correct, mdadm should have prevented you growing the
+array in the first place.
 
-> However lilo won't boot on anything other than 0.9, this I found the
-> hard way :)
->=20
-LILO (and grub) should work with 0.9 or 1.0 metadata, as both of these
-write the metadata at the end of the disk, leaving the start looking the
-same as a normal disk (for RAID-1 anyway).
-
-> Kernel auto-assembly seems quite useful and desirable to me, especially
-> when using, say, initrd to unlock dm-crypt partitions (no need to
-> configure madadm.conf in the initrd).
->=20
-Kernel auto-assembly is not recommended by the main md developer.
-
-> BTW, what is that 0xDA type?
->=20
-0xDA is "non-FS data".
+I'd suggest recreating the array with 1.x metadata instead and checking
+whether that runs into the same issue.
 
 Cheers,
     Robin
@@ -72,15 +58,15 @@ Cheers,
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---WIyZ46R2i8wDzkSu
+--rJwd6BRFiFCcLxzm
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.17 (GNU/Linux)
 
-iEYEARECAAYFAk5fub8ACgkQShxCyD40xBLezQCdHRD1jElfM2ah+X4X8/LVq6CU
-kwwAoMmbvS2boPGcvcfLYkNTE236yLSq
-=Dyi+
+iEYEARECAAYFAk5fuucACgkQShxCyD40xBJ86gCeN4O1u+LxQgCJSso/sS9h7Q+1
+nfwAnRQm3M+FmbmvHetlNbwy82pWP0Bt
+=Lg4n
 -----END PGP SIGNATURE-----
 
---WIyZ46R2i8wDzkSu--
+--rJwd6BRFiFCcLxzm--
