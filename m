@@ -1,18 +1,24 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Michael Busby <michael.a.busby@gmail.com>
 Subject: Re: Raid5 to another raid level??
-Date: Thu, 01 Sep 2011 23:34:46 +0100
-Message-ID: <4E600886.9080600@anonymous.org.uk>
-References: <CAFsPQ_-i_tdPYoT+AF76c7cKNnmt_Ah6KU8EqnYgx3BcyCYNGg@mail.gmail.com>
+Date: Thu, 1 Sep 2011 16:50:44 -0700
+Message-ID: <-7094796685559591664@unknownmsgid>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFsPQ_-i_tdPYoT+AF76c7cKNnmt_Ah6KU8EqnYgx3BcyCYNGg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Busby <michael.a.busby@gmail.com>
+To: john.robinson@anonymous.org.uk
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Will test tomorrow once back in the office, hope the 4tb sync will be
+finished by then
+
+I will report back my findings
+
+
+
+-- Sent from my HP TouchPadOn 1 Sep 2011 11:34 PM,
+<john.robinson@anonymous.org.uk> wrote:
 On 01/09/2011 22:50, Michael Busby wrote:
 > I have found the following and see that you can convert from raid4 to
 > raid0 fairly easy
@@ -28,12 +34,11 @@ On 01/09/2011 22:50, Michael Busby wrote:
 > the data from the raid5 to raid4 then add both of the original disks
 > to the raid4 the downgrade this to raid0???
 
-Off the top of my head, feeling slightly sozzled (been for a few beers), 
-this might work, but as your linked post referring to a list reply from 
-Neil Brown says, you should test first. You could use some USB sticks, 
+Off the top of my head, feeling slightly sozzled (been for a few beers),
+this might work, but as your linked post referring to a list reply from
+Neil Brown says, you should test first. You could use some USB sticks,
 or alternatively loopback devices are ideal for this kind of test.
 
 Cheers,
 
 John.
-
