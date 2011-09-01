@@ -1,54 +1,141 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: raid array with 3T disks and GPT partition
-Date: Thu, 01 Sep 2011 16:10:13 -0400
-Message-ID: <4E5FE6A5.3060301@redhat.com>
-References: <20110901154759.GA32649@apartia.fr> <20110901155913.GA20825@cthulhu.home.robinhill.me.uk> <20110901163334.GA13347@apartia.fr> <4E5FB8EC.5040801@redhat.com> <20110901192035.GA25941@apartia.fr>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
+ reports 'does not appear to be active'
+Date: Fri, 2 Sep 2011 00:18:12 +0300
+Message-ID: <CAGRgLy5nBqx_86vi5AxDdYGBkoP5GJsUHFT1STfKmTzgz45mew@mail.gmail.com>
+References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
+	<20110830072557.428fab35@notabene.brown>
+	<CAGRgLy4PCVCDuxiwC1BSo7Hj=_RNVoKdRRB_+NgkPA8+FsOy0Q@mail.gmail.com>
+	<20110831105455.04fd585e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110901192035.GA25941@apartia.fr>
+In-Reply-To: <20110831105455.04fd585e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/01/2011 03:20 PM, Louis-David Mitterrand wrote:
-> On Thu, Sep 01, 2011 at 12:55:08PM -0400, Doug Ledford wrote:
->> On 09/01/2011 12:33 PM, Louis-David Mitterrand wrote:
->>> On Thu, Sep 01, 2011 at 04:59:13PM +0100, Robin Hill wrote:
->>>> On Thu Sep 01, 2011 at 05:47:59PM +0200, Louis-David Mitterrand wrote:
->>>>>
->>>>> I'm trying to create a raid6 array from 10x3T disks. Since disks>   2T
->>>>> must use the GPT partion table I used parted to created a single
->>>>> partition on each drive with the correct GPT partion type.
->>>>>
->>>>> Now how do I make sure that these partitions have the correct "raid
->>>>> autodetect" (fd) id? Is it even still needed? I didn't find any way to
->>>>> set that flag in (g)parted.
->>>>>
->>>> It's only needed for kernel auto-assembly (in which case you're also
->>>> limited to 0.90 metadata and 2TB drives), so no, there's no need to use
->>>> that. 0xDA seems to be the recommended partition type for RAID arrays
->>>> nowadays - that should prevent the OS from trying to read them directly.
->>>
->>> Auto-assembly and metadata are not related: I regularly use 1.2 metadata
->>> on non-boot partitions and they auto-assemble fine.
->>
->> They most certainly are related.  There is kernel autoassembly, then
->> there is user space assembly that's done by udev.  They are two
->> different things.  The kernel will only autoassemble version 0.9
->> arrays, any other arrays are assembled by user space either in the
->> initramfs or later on in the boot cycle.  That you don't have to
->> manually run mdadm -As doesn't mean that the kernel autoassembly is
->> working on those arrays.
+Thank you for looking at both issues, Neil.
+
+Alex.
+
+
+On Wed, Aug 31, 2011 at 3:54 AM, NeilBrown <neilb@suse.de> wrote:
+> On Tue, 30 Aug 2011 18:18:11 +0300 Alexander Lyakas <alex.bolshoy@gma=
+il.com>
+> wrote:
 >
-> Ah, thanks for clearing that up. I thought that when mdadm was not
-> involved then is must be the kernel. Didn't realize udev was at work
-> there.
-
-Well, udev calls mdadm.  If the kernel doesn't autoassemble it, then 
-mdadm is involved at some point.  On older systems, rc.sysinit called 
-mdadm to assemble non-boot arrays, on modern systems, udev calls mdadm.
-
-
-
+>> Thanks, Neil.
+>>
+>> Although according to udev documentation: "the udev events are sent
+>> out after udev has finished its event processing, all rules have bee=
+n
+>> processed, and needed device nodes are created."
+>>
+>> Also looking at udev-worker code of udevd, the
+>> udev_monitor_send_device() call is done after all the rules have bee=
+n
+>> processed.
+>>
+>> Nevertheless, I looked at udevadm_settle.c and did some equivalent o=
+f
+>> that in my code, and it looks like the issue is resolved. Perhaps
+>> there is something md-specific here?
+>
+> I cannot see how it would be md-specific. =A0mdadm doesn't create or =
+remove
+> devices when udev is active - it leaves all that to udev.
+> If you are curious I suggest you ask the udev developers.
+>
+>>
+>> Another thing, since you are reading this thread, I wanted to ask
+>> whether you have any advice on the "RAID5: failing an active compone=
+nt
+>> during spare rebuild - arrays hangs" thread I opened some time ago.
+>> Since you were not answering, I assume there is nothing additional y=
+ou
+>> can advise about, correct? I apologize if this off-topic was
+>> inappropriate.
+>
+> It could mean that I had nothing extra to say, but it could also mean=
+ that I
+> got distracted, forgot, and never got back to it. =A0I live in a worl=
+d of
+> distractions :-(
+>
+> But a reminder never hurts - it shows that it is important to you, so=
+ that
+> makes it at least a little bit important to me. =A0I'll go back and h=
+ave a look
+> and see if I have anything useful to add.
+>
+> NeilBrown
+>
+>
+>>
+>> Thanks for the help,
+>> =A0 Alex.
+>>
+>>
+>>
+>> On Tue, Aug 30, 2011 at 12:25 AM, NeilBrown <neilb@suse.de> wrote:
+>> > On Mon, 29 Aug 2011 20:17:34 +0300 Alexander Lyakas <alex.bolshoy@=
+gmail.com>
+>> > wrote:
+>> >
+>> >> Greetings everybody,
+>> >>
+>> >> I issue
+>> >> mdadm --stop /dev/md0
+>> >> and I want to reliably determine that the MD devnode (/dev/md0) i=
+s gone.
+>> >> So I look for the udev 'remove' event for that devnode.
+>> >> However, in some cases even after I see the udev event, I issue
+>> >> mdadm --detail /dev/md0
+>> >> and I get:
+>> >> mdadm: md device /dev/md0 does not appear to be active
+>> >>
+>> >> According to Detail.c, this means that mdadm can successfully do
+>> >> open("/dev/md0") and receive a valid fd.
+>> >> But later, when issuing ioctl(fd, GET_ARRAY_INFO) it receives ENO=
+DEV
+>> >> from the kernel.
+>> >>
+>> >> Can somebody suggest an explanation for this behavior? Is there a
+>> >> reliable way to know when a MD devnode is gone?
+>> >
+>> > run "udevadm settle" after stopping /dev/md0 =A0is most likely to =
+work.
+>> >
+>> > I suspect that udev removes the node *after* you see the 'remove' =
+event.
+>> > Sometimes so soon after that you don't see the lag - sometimes a b=
+it later.
+>> >
+>> > NeilBrown
+>> >
+>> >>
+>> >> Thanks,
+>> >> =A0 Alex.
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-r=
+aid" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.h=
+tml
+>> >
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
