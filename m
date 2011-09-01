@@ -1,71 +1,86 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: possible bug - bitmap dirty pages status
-Date: Thu, 1 Sep 2011 15:40:22 +1000
-Message-ID: <20110901154022.45f54657@notabene.brown>
-References: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com>
-	<CAGqmV7pjvEHaNWjuZzt+tSsUJOM28ZqDY6qUROzz8GtMGCxDow@mail.gmail.com>
-	<CAECXXi5eo3J8PPXP5xTm-PrqazC_fkwNnjtiAGM4NtsGBMahHA@mail.gmail.com>
-	<4E5E2F7D.1010306@anonymous.org.uk>
-	<CAGqmV7p=oM_TJoBC-=he3TnJwcmbZBekq14yjiba_p90RC+0BQ@mail.gmail.com>
-	<CAECXXi7Ui6T2kti1JjA6Txft7LXR_sM1QbUkmgXj92kSXPrfCg@mail.gmail.com>
-	<CAGqmV7qKjV1QL_GgxGqmLL2BSui+HVxRo=82KHuW0oLONH1D_A@mail.gmail.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] FIX: Mdmon crashes after changing RAID level from 1 to 0
+Date: Thu, 01 Sep 2011 15:10:34 +0200
+Message-ID: <20110901131033.3034.42088.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qKjV1QL_GgxGqmLL2BSui+HVxRo=82KHuW0oLONH1D_A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Paul Clements <paul.clements@us.sios.com>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 1 Sep 2011 00:16:36 +0400 CoolCold <coolthecold@gmail.com> wrot=
-e:
+RGVzY3JpcHRpb24gb2YgdGhlIGJ1ZzoKU29tZXRpbWVzIG1kbW9uIGNyYXNoZXMgYWZ0ZXIgY2hh
+bmdpbmcgUkFJRCBsZXZlbCBmcm9tIDEgdG8gMCAodGFrZW92ZXIpLgoKQ2F1c2Ugb2YgdGhlIGJ1
+ZzoKVGhlIG1hbmFnZW1vbiBtYXJrcyBhbiBhY3RpdmVfYXJyYXkgZm9yIHJlbW92YWwgZnJvbSBt
+b25pdG9yaW5nCmJ5IGFzc2lnbmluZyBhLT5jb250YWluZXIgdG8gTlVMTCB2YWx1ZSAoaW4gdGhl
+ICJtYW5hZ2VfbWVtYmVyIiBmdW5jdGlvbikuClNvbWV0aW1lcyAoZHVyaW5nIHN0cmVzcyB0ZXN0
+KSBpdCBoYXBwZW5zIHJpZ2h0IHdoZW4gdGhlIG1vbml0b3IKaXMgaW4gdGhlICJyZWFkX2FuZF9h
+Y3QiIGZ1bmN0aW9uIGFuZCBhLT5jb250YWluZXIgcG9pbnRlciBpcyBpbiB1c2UuClRoaXMgY2F1
+c2VzIHRoZSBtb25pdG9yIGNyYXNoZXMuCgpTb2x1dGlvbjoKVGhlIGFjdGl2ZSBhcnJheSBoYXMg
+dG8gYmUgbWFya2VkIGZvciByZW1vdmFsIGluIGFub3RoZXIgd2F5CnRoYW4gc2V0dGluZyBOVUxM
+IHBvaW50ZXIgd2hlbiBpdCBjYW4gYmUgaW4gdXNlLgpBIG5ldyBmaWVsZCAidG9fcmVtb3ZlIiB3
+YXMgYWRkZWQgdG8gdGhlICJhY3RpdmVfYXJyYXkiIHN0cnVjdHVyZS4KSXQgaXMgdXNlZCBpbiB0
+aGUgbWFuYWdlbW9uIHRvIG1hcmsgYSBjb250YWluZXIgdG8gcmVtb3ZlCihpbnN0ZWFkIG9mIHRo
+ZSBvbGQgYXNzaWdtZW50OiBhLT5jb250YWluZXIgPSBOVUxMKQphbmQgbW9uaXRvciBjaGVja3Mg
+aXQgdG8gZGV0ZXJtaW5lIGlmIHRoZSBhcnJheSBzaG91bGQgYmUgcmVtb3ZlZC4KVGhlIGZpZWxk
+ICJ0b19yZW1vdmUiIHNob3VsZCBiZSBjaGVja2VkIGluIHNvbWUgb3RoZXIgcGxhY2VzCnRvIGF2
+b2lkIG1hbmFnaW5nIG9mIHRoZSBhcnJheSB3aGljaCBpcyBnb2luZyB0byBiZSByZW1vdmVkLgoK
+U2lnbmVkLW9mZi1ieTogTHVrYXN6IERvcmF1IDxsdWthc3ouZG9yYXVAaW50ZWwuY29tPgotLS0K
+IG1hbmFnZW1vbi5jIHwgICAgNCArKy0tCiBtZG1vbi5oICAgICB8ICAgIDEgKwogbW9uaXRvci5j
+ICAgfCAgICA4ICsrKystLS0tCiAzIGZpbGVzIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKSwgNiBk
+ZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9tYW5hZ2Vtb24uYyBiL21hbmFnZW1vbi5jCmluZGV4
+IGQwMjBmODIuLjllMGEzNGQgMTAwNjQ0Ci0tLSBhL21hbmFnZW1vbi5jCisrKyBiL21hbmFnZW1v
+bi5jCkBAIC00NjEsNyArNDYxLDcgQEAgc3RhdGljIHZvaWQgbWFuYWdlX21lbWJlcihzdHJ1Y3Qg
+bWRzdGF0X2VudCAqbWRzdGF0LAogCWlmIChtZHN0YXQtPmxldmVsKSB7CiAJCWludCBsZXZlbCA9
+IG1hcF9uYW1lKHBlcnMsIG1kc3RhdC0+bGV2ZWwpOwogCQlpZiAobGV2ZWwgPT0gMCB8fCBsZXZl
+bCA9PSBMRVZFTF9MSU5FQVIpIHsKLQkJCWEtPmNvbnRhaW5lciA9IE5VTEw7CisJCQlhLT50b19y
+ZW1vdmUgPSAxOwogCQkJd2FrZXVwX21vbml0b3IoKTsKIAkJCXJldHVybjsKIAkJfQpAQCAtNzM5
+LDcgKzczOSw3IEBAIHZvaWQgbWFuYWdlKHN0cnVjdCBtZHN0YXRfZW50ICptZHN0YXQsIHN0cnVj
+dCBzdXBlcnR5cGUgKmNvbnRhaW5lcikKIAkJLyogTG9va3MgbGlrZSBhIG1lbWJlciBvZiB0aGlz
+IGNvbnRhaW5lciAqLwogCQlmb3IgKGEgPSBjb250YWluZXItPmFycmF5czsgYTsgYSA9IGEtPm5l
+eHQpIHsKIAkJCWlmIChtZHN0YXQtPmRldm51bSA9PSBhLT5kZXZudW0pIHsKLQkJCQlpZiAoYS0+
+Y29udGFpbmVyKQorCQkJCWlmIChhLT5jb250YWluZXIgJiYgYS0+dG9fcmVtb3ZlID09IDApCiAJ
+CQkJCW1hbmFnZV9tZW1iZXIobWRzdGF0LCBhKTsKIAkJCQlicmVhazsKIAkJCX0KZGlmZiAtLWdp
+dCBhL21kbW9uLmggYi9tZG1vbi5oCmluZGV4IDZkMTc3NmYuLjU5ZTFiNTMgMTAwNjQ0Ci0tLSBh
+L21kbW9uLmgKKysrIGIvbWRtb24uaApAQCAtMjgsNiArMjgsNyBAQCBzdHJ1Y3QgYWN0aXZlX2Fy
+cmF5IHsKIAlzdHJ1Y3QgbWRpbmZvIGluZm87CiAJc3RydWN0IHN1cGVydHlwZSAqY29udGFpbmVy
+OwogCXN0cnVjdCBhY3RpdmVfYXJyYXkgKm5leHQsICpyZXBsYWNlczsKKwlpbnQgdG9fcmVtb3Zl
+OwogCiAJaW50IGFjdGlvbl9mZDsKIAlpbnQgcmVzeW5jX3N0YXJ0X2ZkOwpkaWZmIC0tZ2l0IGEv
+bW9uaXRvci5jIGIvbW9uaXRvci5jCmluZGV4IDdhYzU5MDcuLmIwMDJlOTAgMTAwNjQ0Ci0tLSBh
+L21vbml0b3IuYworKysgYi9tb25pdG9yLmMKQEAgLTQ3OSw3ICs0NzksNyBAQCBzdGF0aWMgdm9p
+ZCByZWNvbmNpbGVfZmFpbGVkKHN0cnVjdCBhY3RpdmVfYXJyYXkgKmFhLCBzdHJ1Y3QgbWRpbmZv
+ICpmYWlsZWQpCiAJc3RydWN0IG1kaW5mbyAqdmljdGltOwogCiAJZm9yIChhID0gYWE7IGE7IGEg
+PSBhLT5uZXh0KSB7Ci0JCWlmICghYS0+Y29udGFpbmVyKQorCQlpZiAoIWEtPmNvbnRhaW5lciB8
+fCBhLT50b19yZW1vdmUpCiAJCQljb250aW51ZTsKIAkJdmljdGltID0gZmluZF9kZXZpY2UoYSwg
+ZmFpbGVkLT5kaXNrLm1ham9yLCBmYWlsZWQtPmRpc2subWlub3IpOwogCQlpZiAoIXZpY3RpbSkK
+QEAgLTUzOSw3ICs1MzksNyBAQCBzdGF0aWMgaW50IHdhaXRfYW5kX2FjdChzdHJ1Y3Qgc3VwZXJ0
+eXBlICpjb250YWluZXIsIGludCBub3dhaXQpCiAJCS8qIG9uY2UgYW4gYXJyYXkgaGFzIGJlZW4g
+ZGVhY3RpdmF0ZWQgd2Ugd2FudCB0bwogCQkgKiBhc2sgdGhlIG1hbmFnZXIgdG8gZGlzY2FyZCBp
+dC4KIAkJICovCi0JCWlmICghYS0+Y29udGFpbmVyKSB7CisJCWlmICghYS0+Y29udGFpbmVyIHx8
+IGEtPnRvX3JlbW92ZSkgewogCQkJaWYgKGRpc2NhcmRfdGhpcykgewogCQkJCWFwID0gJigqYXAp
+LT5uZXh0OwogCQkJCWNvbnRpbnVlOwpAQCAtNjQyLDcgKzY0Miw3IEBAIHN0YXRpYyBpbnQgd2Fp
+dF9hbmRfYWN0KHN0cnVjdCBzdXBlcnR5cGUgKmNvbnRhaW5lciwgaW50IG5vd2FpdCkKIAkJCS8q
+IEZJWE1FIGNoZWNrIGlmIGRldmljZS0+c3RhdGVfZmQgbmVlZCB0byBiZSBjbGVhcmVkPyovCiAJ
+CQlzaWduYWxfbWFuYWdlcigpOwogCQl9Ci0JCWlmIChhLT5jb250YWluZXIpIHsKKwkJaWYgKGEt
+PmNvbnRhaW5lciAmJiAhYS0+dG9fcmVtb3ZlKSB7CiAJCQlpc19kaXJ0eSA9IHJlYWRfYW5kX2Fj
+dChhKTsKIAkJCXJ2IHw9IDE7CiAJCQlkaXJ0eV9hcnJheXMgKz0gaXNfZGlydHk7CkBAIC02NTcs
+NyArNjU3LDcgQEAgc3RhdGljIGludCB3YWl0X2FuZF9hY3Qoc3RydWN0IHN1cGVydHlwZSAqY29u
+dGFpbmVyLCBpbnQgbm93YWl0KQogCiAJLyogcHJvcGFnYXRlIGZhaWx1cmVzIGFjcm9zcyBjb250
+YWluZXIgbWVtYmVycyAqLwogCWZvciAoYSA9ICphYXA7IGEgOyBhID0gYS0+bmV4dCkgewotCQlp
+ZiAoIWEtPmNvbnRhaW5lcikKKwkJaWYgKCFhLT5jb250YWluZXIgfHwgYS0+dG9fcmVtb3ZlKQog
+CQkJY29udGludWU7CiAJCWZvciAobWRpID0gYS0+aW5mby5kZXZzIDsgbWRpIDsgbWRpID0gbWRp
+LT5uZXh0KQogCQkJaWYgKG1kaS0+Y3Vycl9zdGF0ZSAmIERTX0ZBVUxUWSkKCi0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LQpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBzcC4geiBvLm8uCnogc2llZHppYmEgdyBHZGFuc2t1
+CnVsLiBTbG93YWNraWVnbyAxNzMKODAtMjk4IEdkYW5zawoKU2FkIFJlam9ub3d5IEdkYW5zayBQ
+b2xub2MgdyBHZGFuc2t1LCAKVklJIFd5ZHppYWwgR29zcG9kYXJjenkgS3Jham93ZWdvIFJlamVz
+dHJ1IFNhZG93ZWdvLCAKbnVtZXIgS1JTIDEwMTg4MgoKTklQIDk1Ny0wNy01Mi0zMTYKS2FwaXRh
+bCB6YWtsYWRvd3kgMjAwLjAwMCB6bAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBt
+YXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUg
+aW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhl
+cnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJl
+Y2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMu
+Cg==
 
-> On Wed, Aug 31, 2011 at 6:08 PM, Paul Clements
-> <paul.clements@us.sios.com> wrote:
-> > On Wed, Aug 31, 2011 at 9:16 AM, CoolCold <coolthecold@gmail.com> w=
-rote:
-> >
-> >> =A0 =A0 =A0 =A0 =A0Bitmap : 44054 bits (chunks), 189 dirty (0.4%)
-> >>
-> >> And 16/22 lasts for 4 days.
-> >
-> > So if you force another resync, does it change/clear up?
-> >
-> > If you unmount/stop all activity does it change?
-> Well, this server is in production now, may be i'll be able to do
-> array stop/start later..right now i've set "cat /proc/mdstat" every
-> minute, and bitmap examine every minute, will see later is it changin=
-g
-> or not.
->=20
-
-I spent altogether too long staring at the code and I can see various t=
-hings
-that could be usefully tidied but but nothing that really explains what=
- you
-have.
-
-If there was no write activity to the array at all I can just see how t=
-hat
-last bits to be set might not get cleared, but as soon as another write
-happened all those old bits would get cleared pretty quickly.  And it s=
-eems
-unlikely that there have been no writes for over 4 days (???).
-
-I don't think having these bits here is harmful and it would be easy to=
- get
-rid of them by using "mdadm --grow" to remove and then re-add the bitma=
-p,
-but I wish I knew what caused it...
-
-I clean up the little issues I found in mainline and hope there isn't a
-larger problem luking behind all this..
-
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
