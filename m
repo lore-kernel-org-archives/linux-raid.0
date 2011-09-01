@@ -1,158 +1,44 @@
-From: "Timothy D. Lenz" <tlenz@vorgon.com>
-Subject: Re: Raid failing, which command to remove the bad drive?
-Date: Thu, 01 Sep 2011 10:51:54 -0700
-Message-ID: <4E5FC63A.1040206@vorgon.com>
-References: <4E57FE4D.5080503@vorgon.com> <20110827084535.5e64bf5c@notabene.brown>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: freshly grown array shrinks after first reboot - major data loss
+Date: Thu, 01 Sep 2011 14:17:22 -0400
+Message-ID: <4E5FCC32.6020402@redhat.com>
+References: <4E5FA4B5.6010407@macroscoop.nl> <4E5FAEF3.60501@macroscoop.nl> <4E5FB350.3040905@redhat.com> <4E5FC495.7070909@macroscoop.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110827084535.5e64bf5c@notabene.brown>
+In-Reply-To: <4E5FC495.7070909@macroscoop.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 09/01/2011 01:44 PM, Pim Zandbergen wrote:
+> On 09/01/2011 06:31 PM, Doug Ledford wrote:
+>> Why is your raid metadata using this old version? mdadm-3.2.2-6.fc15
+>> will not create this version of raid array by default. There is a
+>> reason we have updated to a new superblock.
+>
+> As you may have seen, the array was created in 2006, and has gone through
+> several similar grow procedures.
 
+Even so, one of the original limitations of the 0.90 superblock was 
+maximum usable device size.  I'm not entirely sure that growing a 0.90 
+superblock past 2TB wasn't the source of your problem and that the bug 
+that needs fixed is that mdadm should have refused to grow a 0.90 
+superblock based array beyond the 2TB limit.  Neil would have to speak 
+to that.
 
-On 8/26/2011 3:45 PM, NeilBrown wrote:
-> On Fri, 26 Aug 2011 13:13:01 -0700 "Timothy D. Lenz"<tlenz@vorgon.com>  wrote:
+>> Does this problem still occur if you use a newer superblock format
+>> (one of the version 1.x versions)?
 >
->> I have 4 drives set up as 2 pairs.  The first part has 3 partitions on
->> it and it seems 1 of those drives is failing (going to have to figure
->> out which drive it is too so I don't pull the wrong one out of the case)
->>
->> It's been awhile since I had to replace a drive in the array and my
->> notes are a bit confusing. I'm not sure which I need to use to remove
->> the drive:
->>
->>
->> 	sudo mdadm --manage /dev/md0 --fail /dev/sdb
->> 	sudo mdadm --manage /dev/md0 --remove /dev/sdb
->> 	sudo mdadm --manage /dev/md1 --fail /dev/sdb
->> 	sudo mdadm --manage /dev/md1 --remove /dev/sdb
->> 	sudo mdadm --manage /dev/md2 --fail /dev/sdb
->> 	sudo mdadm --manage /dev/md2 --remove /dev/sdb
+> I suppose not. But that would destroy the "evidence" of a possible bug.
+> For me, it's too late, but finding it could help others to prevent this
+> situation.
+> If there's anything I could do to help find it, now is the time.
 >
-> sdb is not a member of any of these arrays so all of these commands will fail.
+> If the people on this list know enough, I will proceed.
 >
-> The partitions are members of the arrays.
->>
->> or
->>
->> sudo mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
->> sudo mdadm /dev/md1 --fail /dev/sdb2 --remove /dev/sdb2
->
-> sd1 and sdb2 have already been marked as failed so there is little point in
-> marking them as failed again.  Removing them makes sense though.
->
->
->> sudo mdadm /dev/md2 --fail /dev/sdb3 --remove /dev/sdb3
->
-> sdb3 hasn't been marked as failed yet - maybe it will soon if sdb is a bit
-> marginal.
-> So if you want to remove sdb from the machine this the correct thing to do.
-> Mark sdb3 as failed, then remove it from the array.
->
->>
->> I'm not sure if I fail the drive partition or whole drive for each.
->
-> You only fail things that aren't failed already, and you fail the thing that
-> mdstat or mdadm -D tells you is a member of the array.
->
-> NeilBrown
->
->
->
->>
->> -------------------------------------
->> The mails I got are:
->> -------------------------------------
->> A Fail event had been detected on md device /dev/md0.
->>
->> It could be related to component device /dev/sdb1.
->>
->> Faithfully yours, etc.
->>
->> P.S. The /proc/mdstat file currently contains the following:
->>
->> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
->> md1 : active raid1 sdb2[2](F) sda2[0]
->>         4891712 blocks [2/1] [U_]
->>
->> md2 : active raid1 sdb3[1] sda3[0]
->>         459073344 blocks [2/2] [UU]
->>
->> md3 : active raid1 sdd1[1] sdc1[0]
->>         488383936 blocks [2/2] [UU]
->>
->> md0 : active raid1 sdb1[2](F) sda1[0]
->>         24418688 blocks [2/1] [U_]
->>
->> unused devices:<none>
->> -------------------------------------
->> A Fail event had been detected on md device /dev/md1.
->>
->> It could be related to component device /dev/sdb2.
->>
->> Faithfully yours, etc.
->>
->> P.S. The /proc/mdstat file currently contains the following:
->>
->> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
->> md1 : active raid1 sdb2[2](F) sda2[0]
->>         4891712 blocks [2/1] [U_]
->>
->> md2 : active raid1 sdb3[1] sda3[0]
->>         459073344 blocks [2/2] [UU]
->>
->> md3 : active raid1 sdd1[1] sdc1[0]
->>         488383936 blocks [2/2] [UU]
->>
->> md0 : active raid1 sdb1[2](F) sda1[0]
->>         24418688 blocks [2/1] [U_]
->>
->> unused devices:<none>
->> -------------------------------------
->> A Fail event had been detected on md device /dev/md2.
->>
->> It could be related to component device /dev/sdb3.
->>
->> Faithfully yours, etc.
->>
->> P.S. The /proc/mdstat file currently contains the following:
->>
->> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
->> md1 : active raid1 sdb2[2](F) sda2[0]
->>         4891712 blocks [2/1] [U_]
->>
->> md2 : active raid1 sdb3[2](F) sda3[0]
->>         459073344 blocks [2/1] [U_]
->>
->> md3 : active raid1 sdd1[1] sdc1[0]
->>         488383936 blocks [2/2] [UU]
->>
->> md0 : active raid1 sdb1[2](F) sda1[0]
->>         24418688 blocks [2/1] [U_]
->>
->> unused devices:<none>
->> -------------------------------------
-
-
-Got another problem. Removed the drive and tried to start it back up and 
-now get Grub Error 2. I'm not sure if when I did the mirrors if 
-something when wrong with installing grub on the second drive< or if is 
-has to do with [U_] which points to sda in that report instead of [_U].
-
-I know I pulled the correct drive. I had it labled sdb, it's the second 
-drive in the bios bootup drive check and it's the second connector on 
-the board. And when I put just it in instead of the other, I got the 
-noise again.  I think last time a drive failed it was one of these two 
-drives because I remember recopying grub.
-
-I do have another computer setup the same way, that I could put this 
-remaining drive on to get grub fixed, but it's a bit of a pain to get 
-the other computer hooked back up and I will have to dig through my 
-notes about getting grub setup without messing up the array and stuff. I 
-do know that both computers have been updated to grub 2
-
+> Thanks,
+> Pim
 
