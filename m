@@ -1,33 +1,86 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: freshly grown array shrinks after first reboot - major data loss
-Date: Fri, 02 Sep 2011 12:06:06 +0100
-Message-ID: <4E60B89E.5020806@anonymous.org.uk>
-References: <4E5FA4B5.6010407@macroscoop.nl> <4E5FAEF3.60501@macroscoop.nl> <4E5FB350.3040905@redhat.com> <4E5FC495.7070909@macroscoop.nl> <4E5FCC32.6020402@redhat.com> <4E5FD465.4000809@macroscoop.nl> <4E5FDFF6.4030200@redhat.com> <4E609FAC.6020303@macroscoop.nl>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Raid5 to another raid level??
+Date: Fri, 2 Sep 2011 22:49:38 +1000
+Message-ID: <20110902224938.74c30811@notabene.brown>
+References: <-7094796685559591664@unknownmsgid>
+	<CAFsPQ_97jNixHoYbMfxg9=FqXPWrsz_F1ZPSu1LTdGJA7N7Zcg@mail.gmail.com>
+	<20110902121959.173a1aa9@notabene.brown>
+	<CAFsPQ_8dA6B9yA4ZWZgAjZggNCBbcprAZrdHeJbPv+UvRz17mA@mail.gmail.com>
+	<20110902202235.0194d779@notabene.brown>
+	<CAFsPQ_-CfsAbqj-m3biVas0Cyv_+gkrNhHWWR_FkVNSDPB6dMg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E609FAC.6020303@macroscoop.nl>
+In-Reply-To: <CAFsPQ_-CfsAbqj-m3biVas0Cyv_+gkrNhHWWR_FkVNSDPB6dMg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
+To: Michael Busby <michael.a.busby@gmail.com>
+Cc: john.robinson@anonymous.org.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/09/2011 10:19, Pim Zandbergen wrote:
-> On 09/01/2011 09:41 PM, Doug Ledford wrote:
->>> I could file a bug on bugzilla.redhat.com if that would help.
->>
->> Feel free, it helps me track things.
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=735306
+On Fri, 2 Sep 2011 11:35:30 +0100 Michael Busby <michael.a.busby@gmail.=
+com>
+wrote:
 
-I'm not sure whether it's just the --grow that should complain, or 
-perhaps the earlier step of
-   mdadm /dev/md/array-using-0.90-metadata --add /dev/3TB
-should also complain (even if it'll work with less than 2TiB in use, it 
-ought to tell the user they won't be able to grow the array).
+> Great, will test that in a bit
+>=20
+> will mdadm 3.2.2 support converting raid4 to raid5
+>=20
+> "A RAID4 can change the number of devices or the size of individual
+> devices. It cannot be converted to RAID5 yet (though that should be
+> trivial to implement)"
 
-Cheers,
+I guess the man page needs updating.  You would need a reasonably recen=
+t
+kernel... 2.6.30 or later.  I guess that isn't so recent any more.
 
-John.
+NeilBrown
 
+
+>=20
+> On 2 September 2011 11:22, NeilBrown <neilb@suse.de> wrote:
+> > On Fri, 2 Sep 2011 10:12:32 +0100 Michael Busby <michael.a.busby@gm=
+ail.com>
+> > wrote:
+> >
+> >> Thanks Neil
+> >>
+> >> Is there anyway back from raid0 to raid4 as i know once at raid0 i
+> >> will no longer be able to add any disks, in theory i could change
+> >> echo raid0 > /sys/block/md0/md/level,but this would require adding=
+ a
+> >> missing disk to the raid4 at the same time, not sure how easy that
+> >> would be todo
+> >>
+> >
+> > Yes, you can switch from RAID0 to RAID4 in much the same way as you=
+ switch
+> > from RAID4 to RAID0.
+> > You can then freeze/add-disk/change-size/unfreeze/wait/switch-back-=
+to-RAID0
+> > to add more devices.
+> >
+> > mdadm-3.2.2 should be able to do all this for you. =A0i.e. you ask =
+it to --grow
+> > a RAID and --add some disks at the same time, and it will do all th=
+e required
+> > magic.
+> >
+> > This hasn't been tested extensively, but should work in simple case=
+s.
+> >
+> > Of course the more devices you have in a RAID0, the less reliabilit=
+y you have
+> > - but e.g. as a cache for a tape backup system a large RAID0 is fin=
+e.
+> >
+> > NeilBrown
+> >
+> >
+> >
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
