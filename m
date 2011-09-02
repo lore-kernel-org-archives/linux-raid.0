@@ -1,95 +1,197 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid5 to another raid level??
-Date: Fri, 2 Sep 2011 12:19:59 +1000
-Message-ID: <20110902121959.173a1aa9@notabene.brown>
-References: <-7094796685559591664@unknownmsgid>
-	<CAFsPQ_97jNixHoYbMfxg9=FqXPWrsz_F1ZPSu1LTdGJA7N7Zcg@mail.gmail.com>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Re: Raid failing, which command to remove the bad drive?
+Date: Thu, 1 Sep 2011 22:24:01 -0700
+Message-ID: <CAEUYfyN6nfEDwgE8_eZN48UFzaJNCN2NjBpJbeQR_G01CYCgvQ@mail.gmail.com>
+References: <4E57FE4D.5080503@vorgon.com>
+	<20110827084535.5e64bf5c@notabene.brown>
+	<4E5FC63A.1040206@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFsPQ_97jNixHoYbMfxg9=FqXPWrsz_F1ZPSu1LTdGJA7N7Zcg@mail.gmail.com>
+In-Reply-To: <4E5FC63A.1040206@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Busby <michael.a.busby@gmail.com>
-Cc: john.robinson@anonymous.org.uk, linux-raid@vger.kernel.org
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2 Sep 2011 01:54:49 +0100 Michael Busby <michael.a.busby@gmail.com>
-wrote:
+On Thu, Sep 1, 2011 at 10:51 AM, Timothy D. Lenz <tlenz@vorgon.com> wro=
+te:
+>
+>
+> On 8/26/2011 3:45 PM, NeilBrown wrote:
+>>
+>> On Fri, 26 Aug 2011 13:13:01 -0700 "Timothy D. Lenz"<tlenz@vorgon.co=
+m>
+>> =A0wrote:
+>>
+>>> I have 4 drives set up as 2 pairs. =A0The first part has 3 partitio=
+ns on
+>>> it and it seems 1 of those drives is failing (going to have to figu=
+re
+>>> out which drive it is too so I don't pull the wrong one out of the =
+case)
+>>>
+>>> It's been awhile since I had to replace a drive in the array and my
+>>> notes are a bit confusing. I'm not sure which I need to use to remo=
+ve
+>>> the drive:
+>>>
+>>>
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md0 --fail /dev/sdb
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md0 --remove /dev/sdb
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md1 --fail /dev/sdb
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md1 --remove /dev/sdb
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md2 --fail /dev/sdb
+>>> =A0 =A0 =A0 =A0sudo mdadm --manage /dev/md2 --remove /dev/sdb
+>>
+>> sdb is not a member of any of these arrays so all of these commands =
+will
+>> fail.
+>>
+>> The partitions are members of the arrays.
+>>>
+>>> or
+>>>
+>>> sudo mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
+>>> sudo mdadm /dev/md1 --fail /dev/sdb2 --remove /dev/sdb2
+>>
+>> sd1 and sdb2 have already been marked as failed so there is little p=
+oint
+>> in
+>> marking them as failed again. =A0Removing them makes sense though.
+>>
+>>
+>>> sudo mdadm /dev/md2 --fail /dev/sdb3 --remove /dev/sdb3
+>>
+>> sdb3 hasn't been marked as failed yet - maybe it will soon if sdb is=
+ a bit
+>> marginal.
+>> So if you want to remove sdb from the machine this the correct thing=
+ to
+>> do.
+>> Mark sdb3 as failed, then remove it from the array.
+>>
+>>>
+>>> I'm not sure if I fail the drive partition or whole drive for each.
+>>
+>> You only fail things that aren't failed already, and you fail the th=
+ing
+>> that
+>> mdstat or mdadm -D tells you is a member of the array.
+>>
+>> NeilBrown
+>>
+>>
+>>
+>>>
+>>> -------------------------------------
+>>> The mails I got are:
+>>> -------------------------------------
+>>> A Fail event had been detected on md device /dev/md0.
+>>>
+>>> It could be related to component device /dev/sdb1.
+>>>
+>>> Faithfully yours, etc.
+>>>
+>>> P.S. The /proc/mdstat file currently contains the following:
+>>>
+>>> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+>>> md1 : active raid1 sdb2[2](F) sda2[0]
+>>> =A0 =A0 =A0 =A04891712 blocks [2/1] [U_]
+>>>
+>>> md2 : active raid1 sdb3[1] sda3[0]
+>>> =A0 =A0 =A0 =A0459073344 blocks [2/2] [UU]
+>>>
+>>> md3 : active raid1 sdd1[1] sdc1[0]
+>>> =A0 =A0 =A0 =A0488383936 blocks [2/2] [UU]
+>>>
+>>> md0 : active raid1 sdb1[2](F) sda1[0]
+>>> =A0 =A0 =A0 =A024418688 blocks [2/1] [U_]
+>>>
+>>> unused devices:<none>
+>>> -------------------------------------
+>>> A Fail event had been detected on md device /dev/md1.
+>>>
+>>> It could be related to component device /dev/sdb2.
+>>>
+>>> Faithfully yours, etc.
+>>>
+>>> P.S. The /proc/mdstat file currently contains the following:
+>>>
+>>> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+>>> md1 : active raid1 sdb2[2](F) sda2[0]
+>>> =A0 =A0 =A0 =A04891712 blocks [2/1] [U_]
+>>>
+>>> md2 : active raid1 sdb3[1] sda3[0]
+>>> =A0 =A0 =A0 =A0459073344 blocks [2/2] [UU]
+>>>
+>>> md3 : active raid1 sdd1[1] sdc1[0]
+>>> =A0 =A0 =A0 =A0488383936 blocks [2/2] [UU]
+>>>
+>>> md0 : active raid1 sdb1[2](F) sda1[0]
+>>> =A0 =A0 =A0 =A024418688 blocks [2/1] [U_]
+>>>
+>>> unused devices:<none>
+>>> -------------------------------------
+>>> A Fail event had been detected on md device /dev/md2.
+>>>
+>>> It could be related to component device /dev/sdb3.
+>>>
+>>> Faithfully yours, etc.
+>>>
+>>> P.S. The /proc/mdstat file currently contains the following:
+>>>
+>>> Personalities : [raid1] [raid6] [raid5] [raid4] [multipath]
+>>> md1 : active raid1 sdb2[2](F) sda2[0]
+>>> =A0 =A0 =A0 =A04891712 blocks [2/1] [U_]
+>>>
+>>> md2 : active raid1 sdb3[2](F) sda3[0]
+>>> =A0 =A0 =A0 =A0459073344 blocks [2/1] [U_]
+>>>
+>>> md3 : active raid1 sdd1[1] sdc1[0]
+>>> =A0 =A0 =A0 =A0488383936 blocks [2/2] [UU]
+>>>
+>>> md0 : active raid1 sdb1[2](F) sda1[0]
+>>> =A0 =A0 =A0 =A024418688 blocks [2/1] [U_]
+>>>
+>>> unused devices:<none>
+>>> -------------------------------------
+>
+>
+> Got another problem. Removed the drive and tried to start it back up =
+and now
+> get Grub Error 2. I'm not sure if when I did the mirrors if something=
+ when
+> wrong with installing grub on the second drive< or if is has to do wi=
+th [U_]
+> which points to sda in that report instead of [_U].
+>
+> I know I pulled the correct drive. I had it labled sdb, it's the seco=
+nd
+> drive in the bios bootup drive check and it's the second connector on=
+ the
+> board. And when I put just it in instead of the other, I got the nois=
+e
+> again. =A0I think last time a drive failed it was one of these two dr=
+ives
+> because I remember recopying grub.
+>
+> I do have another computer setup the same way, that I could put this
+> remaining drive on to get grub fixed, but it's a bit of a pain to get=
+ the
+> other computer hooked back up and I will have to dig through my notes=
+ about
+> getting grub setup without messing up the array and stuff. I do know =
+that
+> both computers have been updated to grub 2
 
-> As could not sleep, have just tested and works fine...here is what i have done
-> 
-> sdd and sde are the 2 new disks
-> 
-> mdadm -C /dev/md1 -l4 -n3 -e 1.0 /dev/sdd /dev/sde missing
-> 
-> not sure if worth now using 1.2 as this seems the default setting if
-> not specified??
-> 
-> sdb and sdc are the old raid 5 disks
-> 
-> echo frozen > /sys/block/md0/md/sync_action
-> mdadm /dev/md0 --add /dev/sdb
-> mdadm --grow --force /dev/md0 --raid-disks=4
-> 
-> echo frozen > /sys/block/md0/md/sync_action
-> mdadm /dev/md0 --add /dev/sdc
-> mdadm --grow --force /dev/md0 --raid-disks=5
 
-You can do all this in one step - 3 to 5.
-
-> echo frozen > /sys/block/md0/md/sync_action
-> mdadm /dev/md0 --add /dev/sdb
-> mdadm /dev/md0 --add /dev/sdc
-> mdadm --grow --force /dev/md0 --raid-disks=5
-
-NeilBrown
-
-
-
-> 
-> echo raid0 > /sys/block/md0/md/level
-> 
-> then resize the fs...job done :)
-> 
-> 
-> 
-> On 2 September 2011 00:50, Michael Busby <michael.a.busby@gmail.com> wrote:
-> > Will test tomorrow once back in the office, hope the 4tb sync will be
-> > finished by then
-> >
-> > I will report back my findings
-> >
-> >
-> >
-> > -- Sent from my HP TouchPadOn 1 Sep 2011 11:34 PM,
-> > <john.robinson@anonymous.org.uk> wrote:
-> > On 01/09/2011 22:50, Michael Busby wrote:
-> >> I have found the following and see that you can convert from raid4 to
-> >> raid0 fairly easy
-> >>
-> >>
-> >> http://ubuntuforums.org/showpost.php?p=10412231&postcount=20
-> >>
-> >> i have a 2 disk raid5 and want to be able to convert this to raid0, i
-> >> was thinking of adding a extra 2 disk and setting them up as raid0,
-> >> moving the data over then adding the original raid5 disks to the raid0
-> >> setup, but i see that you are unable to add disk to a raid0 setup,
-> >> would it be possible to setup a raid4 with 2 disks and 1 missing, move
-> >> the data from the raid5 to raid4 then add both of the original disks
-> >> to the raid4 the downgrade this to raid0???
-> >
-> > Off the top of my head, feeling slightly sozzled (been for a few beers),
-> > this might work, but as your linked post referring to a list reply from
-> > Neil Brown says, you should test first. You could use some USB sticks,
-> > or alternatively loopback devices are ideal for this kind of test.
-> >
-> > Cheers,
-> >
-> > John.
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+How did you install Grub on the second drive? I have seen some
+instructions on the web that would not allow the system to boot if the
+first drive failed or was removed.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
