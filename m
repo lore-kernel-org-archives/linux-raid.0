@@ -1,42 +1,56 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: [PATCH] FIX: Mdmon crashes after changing RAID level from 1 to
- 0
-Date: Sat, 03 Sep 2011 12:48:00 +0200
-Message-ID: <4E6205E0.6030509@computer.org>
-References: <20110901131033.3034.42088.stgit@gklab-128-085.igk.intel.com>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Re: Raid failing, which command to remove the bad drive?
+Date: Sat, 3 Sep 2011 04:35:39 -0700
+Message-ID: <CAEUYfyPWFwyadvYC8pUTssQMpGhqEoB0aTHtM_3yb7o33M1Edw@mail.gmail.com>
+References: <4E57FE4D.5080503@vorgon.com>
+	<20110827084535.5e64bf5c@notabene.brown>
+	<4E5FC63A.1040206@vorgon.com>
+	<CAEUYfyN6nfEDwgE8_eZN48UFzaJNCN2NjBpJbeQR_G01CYCgvQ@mail.gmail.com>
+	<4E60F95C.40203@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110901131033.3034.42088.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <4E60F95C.40203@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 09/01/2011 03:10 PM, Lukasz Dorau wrote:
-> ---------------------------------------------------------------------
-> Intel Technology Poland sp. z o.o.
-> z siedziba w Gdansku
-> ul. Slowackiego 173
-> 80-298 Gdansk
+On Fri, Sep 2, 2011 at 8:42 AM, Timothy D. Lenz <tlenz@vorgon.com> wrot=
+e:
 >
-> Sad Rejonowy Gdansk Polnoc w Gdansku,
-> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,
-> numer KRS 101882
+>>
+>> How did you install Grub on the second drive? I have seen some
+>> instructions on the web that would not allow the system to boot if t=
+he
+>> first drive failed or was removed.
+>>
 >
-> NIP 957-07-52-316
-> Kapital zakladowy 200.000 zl
 >
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
-Hi Lukasz.
+> I think this is how I did it, at least it is what I had in my notes:
+>
+> grub-install /dev/sda && grub-install /dev/sdb
+>
+> And this is from my notes also. It was from an IRC chat. Don't know i=
+f it
+> was the raid channel or the grub channel:
+>
+> [14:02] <Jordan_U> Vorg: No. First, what is the output of grub-instal=
+l
+> --version?
+> [14:02] <Vorg> =A0(GNU GRUB 1.98~20100115-1)
+> [14:04] <Jordan_U> Vorg: Ok, then run "grub-install /dev/sda && grub-=
+install
+> /dev/sdb" (where sda and sdb are the members of the array)
+>
 
-I'm not a maintainer of any kind, but I think your contributions are 
-unusable because of the above footer, particularly the confidentiality 
-clause. Can you resubmit, after reconfiguring your mail setup not to 
-include this footer?
-
-Thanks, Jan
+Which is exactly my point. You installed grub on /dev/sdb such that it
+would  boot off /dev/sdb. But if /dev/sda has failed, on reboot, the
+hard drive that was /dev/sdb is now /dev/sda, but Grub is still
+looking for its files on the non-existent /dev/sdb.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
