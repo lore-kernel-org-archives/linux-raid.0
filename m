@@ -1,34 +1,47 @@
-From: Wang Sheng-Hui <shhuiw@gmail.com>
-Subject: [PATCH] trival: md_k.h should be md.h in the beginning comment of
- file md.h
-Date: Sun, 04 Sep 2011 19:13:56 +0800
-Message-ID: <4E635D74.7090808@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Michal Soltys <soltys@ziu.info>
+Subject: [PATCH 1/2] udev rules: don't incrementally autoassemble everything
+Date: Sun,  4 Sep 2011 14:42:43 +0200
+Message-ID: <1315140164-6991-2-git-send-email-soltys@ziu.info>
+References: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The patch is against 3.1-rc3.
+All native and imsm arrays were autoassembled unconditionally (excluding
+forgotten ddf containers).
 
-Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
+This caused few issues:
+
+- mdadm.conf configuration irrelevant - container or not - everything
+  was assembled as soon as any component device was found during the boot
+
+- problems with any 65-md-inc* rules often present, that also allow
+  more fine-grained control - e.g. dracut's ones allow incremental assembly
+  limited to certain uuids
+
+Signed-off-by: Michal Soltys <soltys@ziu.info>
 ---
- drivers/md/md.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ udev-md-raid.rules |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 1e586bb..4b304ad 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -1,5 +1,5 @@
- /*
--   md_k.h : kernel internal structure of the Linux MD driver
-+   md.h : kernel internal structure of the Linux MD driver
-           Copyright (C) 1996-98 Ingo Molnar, Gadi Oxman
- 	  
-    This program is free software; you can redistribute it and/or modify
+diff --git a/udev-md-raid.rules b/udev-md-raid.rules
+index c2105bc..02172de 100644
+--- a/udev-md-raid.rules
++++ b/udev-md-raid.rules
+@@ -5,10 +5,8 @@ SUBSYSTEM!="block", GOTO="md_end"
+ # handle potential components of arrays
+ ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
+ ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
+-ENV{ID_FS_TYPE}=="linux_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
+ ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
+ ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
+-ENV{ID_FS_TYPE}=="isw_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
+ 
+ # handle md arrays
+ ACTION!="add|change", GOTO="md_end"
 -- 
-1.7.1
+1.7.5.3
 
