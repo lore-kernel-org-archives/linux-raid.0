@@ -1,47 +1,41 @@
 From: Michal Soltys <soltys@ziu.info>
-Subject: [PATCH 1/2] udev rules: don't incrementally autoassemble everything
-Date: Sun,  4 Sep 2011 14:42:43 +0200
-Message-ID: <1315140164-6991-2-git-send-email-soltys@ziu.info>
-References: <1315140164-6991-1-git-send-email-soltys@ziu.info>
+Subject: [PATCH 0/2] udev rules behaviour
+Date: Sun,  4 Sep 2011 14:42:42 +0200
+Message-ID: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-All native and imsm arrays were autoassembled unconditionally (excluding
-forgotten ddf containers).
+Current udev rules installed cause autoassembly of everything that is possible
+during coldplug - due to mdadm -I calls for each matching device.
 
-This caused few issues:
+This causes two immediate problems:
 
-- mdadm.conf configuration irrelevant - container or not - everything
-  was assembled as soon as any component device was found during the boot
+- mdadm.conf kind-of rendered pointless, as the assembly of any array will be
+  attempted either way
 
-- problems with any 65-md-inc* rules often present, that also allow
-  more fine-grained control - e.g. dracut's ones allow incremental assembly
-  limited to certain uuids
+- 65-md-inc*.rules (e.g. present in dracut and different distributions)
+  offering more fine grained controls (e.g. incremental assembly limited to
+  certain uuids) are also shadowed by mdadm's default rules
 
-Signed-off-by: Michal Soltys <soltys@ziu.info>
----
- udev-md-raid.rules |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+If this is not expected behaviour, following patch removes -I calls.
+Second patch adds ddf (and any future) containers to -If calls.
 
-diff --git a/udev-md-raid.rules b/udev-md-raid.rules
-index c2105bc..02172de 100644
---- a/udev-md-raid.rules
-+++ b/udev-md-raid.rules
-@@ -5,10 +5,8 @@ SUBSYSTEM!="block", GOTO="md_end"
- # handle potential components of arrays
- ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
- ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
--ENV{ID_FS_TYPE}=="linux_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
- ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
- ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
--ENV{ID_FS_TYPE}=="isw_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
- 
- # handle md arrays
- ACTION!="add|change", GOTO="md_end"
+
+Alternatively, we could detect presence of 65-md-inc* and mdadm.conf and
+attempt assemlby only if none of those are present ? Not perfect, but
+a bit more flexible.
+
+
+Michal Soltys (2):
+  udev rules: don't incrementally autoassemble everything
+  shorten remove rules
+
+ udev-md-raid.rules |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
+
 -- 
 1.7.5.3
 
