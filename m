@@ -1,108 +1,59 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] FIX: Cannot continue reshape if incremental assembly is used
-Date: Tue, 6 Sep 2011 14:34:42 -0700
-Message-ID: <CAA9_cme3X1T+nE4+-ADHJ-MkOtywKbKmN7Gw=BngjePMK5wssg@mail.gmail.com>
-References: <20110901131839.3293.49295.stgit@gklab-128-085.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Michal Soltys <soltys@ziu.info>
+Subject: [PATCH] udev rules: add ddf, shorten checks, use $tempnode
+Date: Tue,  6 Sep 2011 23:39:13 +0200
+Message-ID: <1315345153-1673-2-git-send-email-soltys@ziu.info>
+References: <1315140164-6991-1-git-send-email-soltys@ziu.info>
+ <1315345153-1673-1-git-send-email-soltys@ziu.info>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110901131839.3293.49295.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <1315345153-1673-1-git-send-email-soltys@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 1, 2011 at 6:18 AM, Lukasz Dorau <lukasz.dorau@intel.com> w=
-rote:
-> Description of the bug:
-> Interrupted reshape cannot be continued using incremental assembly.
-> Array becomes inactive.
->
-> Cause of the bug:
-> Reshape tried to continue with insufficient number of disks
-> added by incremental assembly (tested using capacity expansion).
->
-> Solution:
-> During reshape adding disks to array should be blocked until
-> minimum required number of disks is ready to be added.
+This patch adjusts few minor details:
 
-Can you provide a script test-case to reproduce the problem?
+- add ddf to incremental assembly/removal
+- shorten the rules, with initial test for supported types
+- when accessing the device, use $tempnode
+- few more comments
 
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
-> =A0Assemble.c | =A0 39 +++++++++++++++++++++++++++++++++++++++
-> =A01 files changed, 39 insertions(+), 0 deletions(-)
->
-> diff --git a/Assemble.c b/Assemble.c
-> index 25cfec1..da43162 100644
-> --- a/Assemble.c
-> +++ b/Assemble.c
-> @@ -1531,6 +1531,45 @@ int assemble_container_content(struct supertyp=
-e *st, int mdfd,
->
-> =A0 =A0 =A0 =A0if (sra)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sysfs_free(sra);
-> + =A0 =A0 =A0 if (content->reshape_active) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 int disks_counter =3D 0;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 int required_disks;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 required_disks =3D content->array.raid_=
-disks;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* check if disks are removed */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (content->delta_disks < 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 required_disks +=3D con=
-tent->delta_disks;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Count devices available for assembla=
-tion.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 * =A0In case of incremental assemblatio=
-n during reshape
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 * =A0allow to add disks only if require=
-d minimum number of disks
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 * =A0is already collected to avoid asse=
-mblation problem.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 * =A0*/
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 for (dev =3D content->devs; dev; dev =3D=
- dev->next) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (dev->disk.raid_disk=
- >=3D 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 disks_c=
-ounter++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* allow for degradation */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 switch (content->array.level) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case 6:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 required_disks--;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case 4:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case 5:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 required_disks--;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 default:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* check now, if number of disks allows=
- for assemblation
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 * =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (disks_counter < required_disks) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (verbose >=3D 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf=
-(stderr, Name
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 ": %s not assembled with %d devices "
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 "(required disks for assemblation: %i).\n",
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 chosen_name, disks_counter,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 required_disks);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 block_subarray(content);
-> + =A0 =A0 =A0 }
+Signed-off-by: Michal Soltys <soltys@ziu.info>
+---
+ udev-md-raid.rules |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
 
-Checking that the expected number of disks is available is something
-the existing code already does, so I don't understand why we need
-another open-coded check?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/udev-md-raid.rules b/udev-md-raid.rules
+index c2105bc..f564f70 100644
+--- a/udev-md-raid.rules
++++ b/udev-md-raid.rules
+@@ -2,13 +2,19 @@
+ 
+ SUBSYSTEM!="block", GOTO="md_end"
+ 
+-# handle potential components of arrays
+-ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
+-ENV{ID_FS_TYPE}=="linux_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
+-ENV{ID_FS_TYPE}=="linux_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
+-ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}!="", ACTION=="remove", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
+-ENV{ID_FS_TYPE}=="isw_raid_member", ENV{ID_PATH}=="", ACTION=="remove", RUN+="/sbin/mdadm -If $name"
+-ENV{ID_FS_TYPE}=="isw_raid_member", ACTION=="add", RUN+="/sbin/mdadm --incremental $env{DEVNAME}"
++# handle potential components of arrays (the ones supported by md)
++ENV{ID_FS_TYPE}=="ddf_raid_member|isw_raid_member|linux_raid_member", GOTO="md_inc"
++GOTO="md_inc_skip"
++
++LABEL="md_inc"
++
++# remember you can limit what gets auto/incrementally assembled by
++# mdadm.conf(5)'s 'AUTO' and selectively whitelist using 'ARRAY'
++ACTION=="add", RUN+="/sbin/mdadm --incremental $tempnode"
++ACTION=="remove", ENV{ID_PATH}=="?*", RUN+="/sbin/mdadm -If $name --path $env{ID_PATH}"
++ACTION=="remove", ENV{ID_PATH}!="?*", RUN+="/sbin/mdadm -If $name"
++
++LABEL="md_inc_skip"
+ 
+ # handle md arrays
+ ACTION!="add|change", GOTO="md_end"
+-- 
+1.7.5.3
+
