@@ -1,38 +1,67 @@
 From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [PATCH] kill-subarray: fix, cannot kill-subarray with unsupported metadata
-Date: Tue, 6 Sep 2011 12:16:43 -0700
-Message-ID: <CABE8wwsfrdgZcHzOdTpA-EM1R8fknw7hCT1+VHGus5h-Pa-3pA@mail.gmail.com>
-References: <F9123E44003394499FDD2B17C60621D401BE07@IRSMSX101.ger.corp.intel.com>
+Subject: Re: [PATCH] Fix: Sometimes mdmon throws core dump during reshape
+Date: Tue, 6 Sep 2011 12:09:54 -0700
+Message-ID: <CABE8wwuNBOG6wcmw+TEkTNZPXGQJ63c6eLeJQz+aWQE0_S1v2g@mail.gmail.com>
+References: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9123E44003394499FDD2B17C60621D401BE07@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: NeilBrown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
 List-Id: linux-raid.ids
 
-On Mon, Sep 5, 2011 at 7:23 AM, Labun, Marcin <Marcin.Labun@intel.com> wrote:
-> Subject: [PATCH] kill-subarray: fix, cannot kill-subarray with unsupported metadata
+On Mon, Sep 5, 2011 at 3:39 AM, Adam Kwolek <adam.kwolek@intel.com> wro=
+te:
+> Problem was found during reshaping 2 volumes /raid0 and raid5/ in con=
+tainer.
+> Sometimes mdmon throws core dump due to NULL pointer exception.
 >
-> container_content retrieves volume information from disks in the container.
-> For unsupported volumes the function was not returning mdinfo. When all volumes
-> were unsupported the function was returning NULL pointer to block actions on the volumes.
+> Problem occurs in scenario:
+> - managemon: is about spare activation (degraded raid4 volume =3D=3D =
+raid0 under takeover)
+> - managemon: detect level change and signals monitor (manage_member()=
+ calls replace_array())
+> - monitor: detects transition raid4/5->raid0 and sets a->container to=
+ NULL
+> =A0 =A0 =A0 =A0 =A0 to indicate array deactivation
 
-Isn't this the purpose of ->ignore_hw_compat?
+Maybe I have lost track of the reshape implementation but I don't see
+where the monitor sets ->container to NULL during a reshape?  Do you
+mean deactivate mdmon for the array after the reshape completes?
 
-So we could do something simpler like the following instead?
+> - managemon : continues his work and tries to activate spare (a->chec=
+k_degraded is set).
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0NULL pointer is passed to metadata handler=
+ activate_spare()
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0Core dump is generated.
+>
+> To resolve this situation managemon (after monitor kick) checks again
+> a->container pointer to learn if current array is not to be deactivat=
+ed.
+[..]
+> diff --git a/managemon.c b/managemon.c
+> index d020f82..3540dac 100644
+> --- a/managemon.c
+> +++ b/managemon.c
+> @@ -475,6 +475,12 @@ static void manage_member(struct mdstat_ent *mds=
+tat,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0}
+>
+> + =A0 =A0 =A0 /* we are after monitor kick,
+> + =A0 =A0 =A0 =A0* so container field can be cleared - check it again
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (a->container =3D=3D NULL)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
 
-diff --git a/Kill.c b/Kill.c
-index b841a5b..11b27a6 100644
---- a/Kill.c
-+++ b/Kill.c
-@@ -97,7 +97,9 @@ int Kill_subarray(char *dev, char *subarray, int quiet)
-
-        memset(st, 0, sizeof(*st));
-
-+       st->ignore_hw_compat = 1;
-        fd = open_subarray(dev, subarray, st, quiet);
-+       st->ignore_hw_compat = 0;
-        if (fd < 0)
-                return 2;
+Isn't this still racy?  Because we don't wait for the monitor to run
+before proceeding.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
