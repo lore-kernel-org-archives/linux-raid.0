@@ -1,65 +1,61 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] mdadm: close parent file descriptors when starting
- mdmon.
-Date: Wed, 7 Sep 2011 12:55:38 +1000
-Message-ID: <20110907125538.0c76d3c6@notabene.brown>
-References: <20110829154949.15993.32383.stgit@gklab-128-044.igk.intel.com>
-	<20110830093157.1ae34f8c@notabene.brown>
-	<679865E03F4C71419D9847EA3AACB163021C84@IRSMSX102.ger.corp.intel.com>
+Subject: Re: [PATCH 0/2] udev rules behaviour
+Date: Wed, 7 Sep 2011 14:00:02 +1000
+Message-ID: <20110907140002.0792061c@notabene.brown>
+References: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <679865E03F4C71419D9847EA3AACB163021C84@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <1315140164-6991-1-git-send-email-soltys@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Michal Soltys <soltys@ziu.info>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Aug 2011 13:30:26 +0000 "Patelczyk, Maciej"
-<maciej.patelczyk@intel.com> wrote:
+On Sun,  4 Sep 2011 14:42:42 +0200 Michal Soltys <soltys@ziu.info> wrote:
 
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-> > Sent: Tuesday, August 30, 2011 1:32 AM
-> > To: Patelczyk, Maciej
-> > Cc: linux-raid@vger.kernel.org
-> > Subject: Re: [PATCH] mdadm: close parent file descriptors when starting
-> > mdmon.
-> > 
-> > On Mon, 29 Aug 2011 17:49:49 +0200 Maciej Patelczyk
-> > <maciej.patelczyk@intel.com> wrote:
-> > 
-> > > When mdadm is invoked by fork-and-exec it inherits all open file
-> > > descriptors and when mdadm forks to exec mdmon those file descriptors
-> > > are passed to mdmon. Mdmon closes only first 97 fd and that in some
-> > > cases is not enough.
-> > 
-> > Can you describe and actual can when it is not enough?  Maybe there is
-> > some
-> > other problem where mdadm is not closing things as it should.
->  
-> There is one:
-> CIM Server (Sfcbd - Small Footprint CIM Broker) -> registered provider 
-> -> intermediate library -> mdadm -> mdmon
+> Current udev rules installed cause autoassembly of everything that is possible
+> during coldplug - due to mdadm -I calls for each matching device.
 > 
-> We register provider in Sfcbd which brings some functionality to cim server.
-> It uses our library which calls mdadm (popen). Later mdadm is calling mdmon
-> (fork&exec).
+> This causes two immediate problems:
 > 
-> The problem is that Sfcbd is a server and it has more than 100 files opened.
-> Open files handles are passed down to mdadm (popen behavior) and here we have
-> a problem.
+> - mdadm.conf kind-of rendered pointless, as the assembly of any array will be
+>   attempted either way
+> 
+> - 65-md-inc*.rules (e.g. present in dracut and different distributions)
+>   offering more fine grained controls (e.g. incremental assembly limited to
+>   certain uuids) are also shadowed by mdadm's default rules
+> 
+> If this is not expected behaviour, following patch removes -I calls.
+> Second patch adds ddf (and any future) containers to -If calls.
+> 
+> 
+> Alternatively, we could detect presence of 65-md-inc* and mdadm.conf and
+> attempt assemlby only if none of those are present ? Not perfect, but
+> a bit more flexible.
+> 
 
-This is a problem with Sfcbd, or with your library.  You shouldn't allow
-these file descriptor to get through to mdadm.
-Ideally they should all be marked 'close on exec'.
-Probably the easiest though is for your library to not use popen directly but
-to write your own which closes all extra fds between fork and exec.
+hi Michal,
+ thanks for raising this.
 
-I really do now want mdadm to have to close fds that someone else opened
-(except 0,1, and 2).
+I find it unfortunate that someone would ship an md-specific rules file
+without even discussing it with me or on this list.  That can easily lead to
+inconsistent or suboptimal behaviour.
 
+It isn't entirely true that calling "mdadm -I" on all devices makes
+mdadm.conf pointless.
+If you put "auto -all" in mdadm.conf it will disable all auto-assembly and
+will only assemble arrays that are explicitly listed in mdadm.conf.
+
+So I'm not really sure what that problem is here.
+
+Can you give me an example of a situation that cannot be handled with the
+mdadm udev rules as they are?
+
+I like your "shorten remove rules" patch and will apply that.
+
+Thanks,
 NeilBrown
 
 
