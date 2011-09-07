@@ -1,145 +1,107 @@
-From: Michael Busby <michael.a.busby@gmail.com>
-Subject: Re: Raid5 to another raid level??
-Date: Wed, 7 Sep 2011 09:26:26 -0700
-Message-ID: <-7602537176266265843@unknownmsgid>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] FIX: Cannot continue reshape if incremental assembly is
+ used
+Date: Wed, 7 Sep 2011 13:21:27 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB020100@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: john.robinson@anonymous.org.uk, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-Thanks for taking the time to respond, I am now running a 4 disk raid5
-soon to be upgraded to a 8 disk raid6
-
-
-
--- Sent from my HP TouchPadOn 7 Sep 2011 02:08, <neilb@suse.de> wrote:
-On Fri, 2 Sep 2011 14:11:57 +0100 Michael Busby <michael.a.busby@gmail.=
-com>
-wrote:
-
-> I am using the 3.0.0 kernel so that should not be a issue, have just
-> upgraded mdadm on my box to 3.2.2 from 3.1.4
->
-> would i be right in thinking that to get from raid0 to raid5 i would
-> first have to change from raid0 to raid4 and add the extra disk for
-> parity, once i am at this level i would need a command to get the
-> parity data striped over the raid5 and not in a single disk like raid=
-4
-> or maybe there is a way to go from raid0 direct to raid5 by adding th=
-e
-> extra disk and then having the parity data created and spread over th=
-e
-> disks....
-
-(I vaguely recall already replying to this but find no evidence - apolo=
-gies
-if this is a duplicate).
-
-RAID0 to RAID5 does happen in two stages but only one rebuild is needed=
-=2E
-mdadm should make it all 'just work'.
-i.e.
-  mdadm -G /dev/md0 -l 5 --raid-devices=3D4 --add /dev/sdf \
-  --backup-file=3D/root/md0-backup
-
-This will:
-   - convert the array from RAID0 to RAID5 in a 'parity-last' layout, w=
-hich
-     is really the same thing as RAID4.
-   - 'freeze' recovery
-   - add /dev/sdf as a spare
-   - request a reshape to change the layout from 'parity-last' to
-     'left-symetric'
-   - 'unfreeze' recovery
-
-Then the kernel will notice that a reshape is needed and allowed, will =
-add
-the spare and start reshaping the array and creating parity at the same=
- time.
-
-So you don't need an intermediate state of a complete RAID4 - a degrade=
-d
-RAID4 is sufficient and handled automatically.
-
-NeilBrown
-
-
->
-> On 2 September 2011 13:49, NeilBrown <neilb@suse.de> wrote:
-> > On Fri, 2 Sep 2011 11:35:30 +0100 Michael Busby <michael.a.busby@gm=
-ail.com>
-> > wrote:
+On Wed, Sep 07, 2011 4:38 AM Neil Brown <neilb@suse.de> wrote:
+> 
+> On Tue, 6 Sep 2011 14:34:42 -0700 Dan Williams <dan.j.williams@intel.com>
+> wrote:
+> 
+> > On Thu, Sep 1, 2011 at 6:18 AM, Lukasz Dorau <lukasz.dorau@intel.com>
+> wrote:
+> > > Description of the bug:
+> > > Interrupted reshape cannot be continued using incremental assembly.
+> > > Array becomes inactive.
+> > >
+> > > Cause of the bug:
+> > > Reshape tried to continue with insufficient number of disks
+> > > added by incremental assembly (tested using capacity expansion).
+> > >
+> > > Solution:
+> > > During reshape adding disks to array should be blocked until
+> > > minimum required number of disks is ready to be added.
 > >
-> >> Great, will test that in a bit
-> >>
-> >> will mdadm 3.2.2 support converting raid4 to raid5
-> >>
-> >> "A RAID4 can change the number of devices or the size of individua=
-l
-> >> devices. It cannot be converted to RAID5 yet (though that should b=
-e
-> >> trivial to implement)"
-> >
-> > I guess the man page needs updating. =A0You would need a reasonably=
- recent
-> > kernel... 2.6.30 or later. =A0I guess that isn't so recent any more=
-=2E
-> >
-> > NeilBrown
-> >
-> >
-> >>
-> >> On 2 September 2011 11:22, NeilBrown <neilb@suse.de> wrote:
-> >> > On Fri, 2 Sep 2011 10:12:32 +0100 Michael Busby <michael.a.busby=
-@gmail.com>
-> >> > wrote:
-> >> >
-> >> >> Thanks Neil
-> >> >>
-> >> >> Is there anyway back from raid0 to raid4 as i know once at raid=
-0 i
-> >> >> will no longer be able to add any disks, in theory i could chan=
-ge
-> >> >> echo raid0 > /sys/block/md0/md/level,but this would require add=
-ing a
-> >> >> missing disk to the raid4 at the same time, not sure how easy t=
-hat
-> >> >> would be todo
-> >> >>
-> >> >
-> >> > Yes, you can switch from RAID0 to RAID4 in much the same way as =
-you switch
-> >> > from RAID4 to RAID0.
-> >> > You can then freeze/add-disk/change-size/unfreeze/wait/switch-ba=
-ck-to-RAID0
-> >> > to add more devices.
-> >> >
-> >> > mdadm-3.2.2 should be able to do all this for you. =A0i.e. you a=
-sk it to --grow
-> >> > a RAID and --add some disks at the same time, and it will do all=
- the required
-> >> > magic.
-> >> >
-> >> > This hasn't been tested extensively, but should work in simple c=
-ases.
-> >> >
-> >> > Of course the more devices you have in a RAID0, the less reliabi=
-lity you have
-> >> > - but e.g. as a cache for a tape backup system a large RAID0 is =
-fine.
-> >> >
-> >> > NeilBrown
-> >> >
-> >> >
-> >> >
-> >
-> >
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Can you provide a script test-case to reproduce the problem?
+> 
+> I can:
+> 
+> mdadm -C /dev/md/imsm -e imsm -n 4 /dev/sd[abcd]
+> mdadm -C /dev/md/r5 -n3 -l5 /dev/md/imsm -z 2000000
+> mdadm --wait /dev/md/r5
+> mdadm -G /dev/md/imsm -n4
+> sleep 10
+> mdadm -Ss
+> mdadm -I /dev/sda
+> mdadm -I /dev/sdb
+> mdadm -I /dev/sdc
+> 
+> array is started and reshape continues.
+> 
+> The problem is that container_content reports that array.working_disks is 3
+> rather than 4.
+> 'working_disks' should be the number of disks int the array that were working
+> last time
+> the array was assembled.
+> However the imsm code only counts devices that can currently be found.
+> I'm not familiar enough with the IMSM metadata to fix this.
+> However by looking at the metadata on just one device in an array it should be
+> possible
+> to work out how many were working last time, and report that count.
+> 
+
+Neil, please consider the following script test-case (not 4 but 5 drives finally in the array):
+
+mdadm -C /dev/md/imsm -e imsm -n 5 /dev/sd[abcde]
+mdadm -C /dev/md/r5 -n3 -l5 /dev/md/imsm -z 2000000
+mdadm --wait /dev/md/r5
+mdadm -G /dev/md/imsm -n5
+sleep 10
+mdadm -Ss
+mdadm -I /dev/sda
+mdadm -I /dev/sdb
+mdadm -I /dev/sdc
+# array is not started and reshape does not continue!
+mdadm -I /dev/sdd
+
+and now array is started and reshape continues - the minimum required number of disks is added to array already.
+
+So the question is:  when mdadm should start the array using incremental assembly?:
+1) when minimum required number of disks is added and (degraded) array can be started or
+2) when all disks that were working last time the array was assembled are added. 
+
+If the second is true, there is another question: when to decide to give up waiting for non-present disks that can be (e.g.) removed meanwhile by user?
+
+What do you suggest?
+
+Regards,
+Lukasz 
+
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
