@@ -1,147 +1,91 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: Mdmon crashes after changing RAID level from 1 to
- 0
-Date: Wed, 7 Sep 2011 12:41:31 +1000
-Message-ID: <20110907124131.0f38dd20@notabene.brown>
-References: <20110901131033.3034.42088.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: [PATCH] FIX: Prevent using null list pointer
+Date: Wed, 7 Sep 2011 12:46:12 +1000
+Message-ID: <20110907124612.23f90c4b@notabene.brown>
+References: <20110901132836.3509.94391.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110901131033.3034.42088.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <20110901132836.3509.94391.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Lukasz Dorau <lukasz.dorau@intel.com>
 Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 01 Sep 2011 15:10:34 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+On Thu, 01 Sep 2011 15:28:36 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
 wrote:
 
-> Description of the bug:
-> Sometimes mdmon crashes after changing RAID level from 1 to 0 (takeover).
-> 
-> Cause of the bug:
-> The managemon marks an active_array for removal from monitoring
-> by assigning a->container to NULL value (in the "manage_member" function).
-> Sometimes (during stress test) it happens right when the monitor
-> is in the "read_and_act" function and a->container pointer is in use.
-> This causes the monitor crashes.
-> 
-> Solution:
-> The active array has to be marked for removal in another way
-> than setting NULL pointer when it can be in use.
-> A new field "to_remove" was added to the "active_array" structure.
-> It is used in the managemon to mark a container to remove
-> (instead of the old assigment: a->container = NULL)
-> and monitor checks it to determine if the array should be removed.
-> The field "to_remove" should be checked in some other places
-> to avoid managing of the array which is going to be removed.
+> When not all attributes are supported (attributes incompatibility)
+> function container_content_imsm returns NULL pointer.
+> In this case mdadm should immediately exit with error to prevent
+> using null "list" pointer.
 > 
 > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  Incremental.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Incremental.c b/Incremental.c
+> index 951c2a0..deace7d 100644
+> --- a/Incremental.c
+> +++ b/Incremental.c
+> @@ -1460,6 +1460,11 @@ static int Incremental_container(struct supertype *st, char *devname,
+>  		trustworthy = FOREIGN;
+>  
+>  	list = st->ss->container_content(st, NULL);
+> +	if (!list) {
+> +		fprintf(stderr, Name ": Cannot get container content. "
+> +				"Array cannot be assembled.\n");
+> +		return 2;
+> +	}
+>  	if (map_lock(&map))
+>  		fprintf(stderr, Name ": failed to get exclusive lock on "
+>  			"mapfile\n");
+> 
 
-Thanks.
+Thanks for the patch.
+I'll like to handle NULL a bit differently though - see below.
 
-I have applied this - despite the ridiculous disclaimer at the bottom :-)
-
+Thanks,
 NeilBrown
 
+commit 75c2df6509391e28257d696815bddb854a8c4a94
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Sep 7 12:45:24 2011 +1000
 
-> ---
->  managemon.c |    4 ++--
->  mdmon.h     |    1 +
->  monitor.c   |    8 ++++----
->  3 files changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff --git a/managemon.c b/managemon.c
-> index d020f82..9e0a34d 100644
-> --- a/managemon.c
-> +++ b/managemon.c
-> @@ -461,7 +461,7 @@ static void manage_member(struct mdstat_ent *mdstat,
->  	if (mdstat->level) {
->  		int level = map_name(pers, mdstat->level);
->  		if (level == 0 || level == LEVEL_LINEAR) {
-> -			a->container = NULL;
-> +			a->to_remove = 1;
->  			wakeup_monitor();
->  			return;
->  		}
-> @@ -739,7 +739,7 @@ void manage(struct mdstat_ent *mdstat, struct supertype *container)
->  		/* Looks like a member of this container */
->  		for (a = container->arrays; a; a = a->next) {
->  			if (mdstat->devnum == a->devnum) {
-> -				if (a->container)
-> +				if (a->container && a->to_remove == 0)
->  					manage_member(mdstat, a);
->  				break;
->  			}
-> diff --git a/mdmon.h b/mdmon.h
-> index 6d1776f..59e1b53 100644
-> --- a/mdmon.h
-> +++ b/mdmon.h
-> @@ -28,6 +28,7 @@ struct active_array {
->  	struct mdinfo info;
->  	struct supertype *container;
->  	struct active_array *next, *replaces;
-> +	int to_remove;
->  
->  	int action_fd;
->  	int resync_start_fd;
-> diff --git a/monitor.c b/monitor.c
-> index 7ac5907..b002e90 100644
-> --- a/monitor.c
-> +++ b/monitor.c
-> @@ -479,7 +479,7 @@ static void reconcile_failed(struct active_array *aa, struct mdinfo *failed)
->  	struct mdinfo *victim;
->  
->  	for (a = aa; a; a = a->next) {
-> -		if (!a->container)
-> +		if (!a->container || a->to_remove)
->  			continue;
->  		victim = find_device(a, failed->disk.major, failed->disk.minor);
->  		if (!victim)
-> @@ -539,7 +539,7 @@ static int wait_and_act(struct supertype *container, int nowait)
->  		/* once an array has been deactivated we want to
->  		 * ask the manager to discard it.
->  		 */
-> -		if (!a->container) {
-> +		if (!a->container || a->to_remove) {
->  			if (discard_this) {
->  				ap = &(*ap)->next;
->  				continue;
-> @@ -642,7 +642,7 @@ static int wait_and_act(struct supertype *container, int nowait)
->  			/* FIXME check if device->state_fd need to be cleared?*/
->  			signal_manager();
->  		}
-> -		if (a->container) {
-> +		if (a->container && !a->to_remove) {
->  			is_dirty = read_and_act(a);
->  			rv |= 1;
->  			dirty_arrays += is_dirty;
-> @@ -657,7 +657,7 @@ static int wait_and_act(struct supertype *container, int nowait)
->  
->  	/* propagate failures across container members */
->  	for (a = *aap; a ; a = a->next) {
-> -		if (!a->container)
-> +		if (!a->container || a->to_remove)
->  			continue;
->  		for (mdi = a->info.devs ; mdi ; mdi = mdi->next)
->  			if (mdi->curr_state & DS_FAULTY)
-> 
-> ---------------------------------------------------------------------
-> Intel Technology Poland sp. z o.o.
-> z siedziba w Gdansku
-> ul. Slowackiego 173
-> 80-298 Gdansk
-> 
-> Sad Rejonowy Gdansk Polnoc w Gdansku, 
-> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
-> numer KRS 101882
-> 
-> NIP 957-07-52-316
-> Kapital zakladowy 200.000 zl
-> 
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
+    FIX: Prevent using null list pointer
+    
+    When not all attributes are supported (attributes incompatibility)
+    function container_content_imsm returns NULL pointer.
+    We need to cope with a NULL list better.
+    
+    Reported-by: Lukasz Dorau <lukasz.dorau@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
+diff --git a/Incremental.c b/Incremental.c
+index 951c2a0..09cdd9b 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -1464,7 +1464,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 		fprintf(stderr, Name ": failed to get exclusive lock on "
+ 			"mapfile\n");
+ 	/* do not assemble arrays that might have bad blocks */
+-	if (list->array.state & (1<<MD_SB_BBM_ERRORS)) {
++	if (list && list->array.state & (1<<MD_SB_BBM_ERRORS)) {
+ 		fprintf(stderr, Name ": BBM log found in metadata. "
+ 					"Cannot activate array(s).\n");
+ 		/* free container data and exit */
+diff --git a/policy.c b/policy.c
+index ebb1481..2bbbac8 100644
+--- a/policy.c
++++ b/policy.c
+@@ -678,6 +678,8 @@ struct domainlist *domain_from_array(struct mdinfo *mdi, const char *metadata)
+ {
+ 	struct domainlist *domlist = NULL;
+ 
++	if (!mdi)
++		return NULL;
+ 	for (mdi = mdi->devs ; mdi ; mdi = mdi->next)
+ 		domainlist_add_dev(&domlist, makedev(mdi->disk.major,
+ 						     mdi->disk.minor),
