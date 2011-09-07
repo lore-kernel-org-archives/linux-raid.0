@@ -1,91 +1,65 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: Prevent using null list pointer
-Date: Wed, 7 Sep 2011 12:46:12 +1000
-Message-ID: <20110907124612.23f90c4b@notabene.brown>
-References: <20110901132836.3509.94391.stgit@gklab-128-085.igk.intel.com>
+Subject: Re: [PATCH] mdadm: close parent file descriptors when starting
+ mdmon.
+Date: Wed, 7 Sep 2011 12:55:38 +1000
+Message-ID: <20110907125538.0c76d3c6@notabene.brown>
+References: <20110829154949.15993.32383.stgit@gklab-128-044.igk.intel.com>
+	<20110830093157.1ae34f8c@notabene.brown>
+	<679865E03F4C71419D9847EA3AACB163021C84@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110901132836.3509.94391.stgit@gklab-128-085.igk.intel.com>
+In-Reply-To: <679865E03F4C71419D9847EA3AACB163021C84@IRSMSX102.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: "Patelczyk, Maciej" <maciej.patelczyk@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 01 Sep 2011 15:28:36 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+On Tue, 30 Aug 2011 13:30:26 +0000 "Patelczyk, Maciej"
+<maciej.patelczyk@intel.com> wrote:
 
-> When not all attributes are supported (attributes incompatibility)
-> function container_content_imsm returns NULL pointer.
-> In this case mdadm should immediately exit with error to prevent
-> using null "list" pointer.
-> 
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  Incremental.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Incremental.c b/Incremental.c
-> index 951c2a0..deace7d 100644
-> --- a/Incremental.c
-> +++ b/Incremental.c
-> @@ -1460,6 +1460,11 @@ static int Incremental_container(struct supertype *st, char *devname,
->  		trustworthy = FOREIGN;
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Tuesday, August 30, 2011 1:32 AM
+> > To: Patelczyk, Maciej
+> > Cc: linux-raid@vger.kernel.org
+> > Subject: Re: [PATCH] mdadm: close parent file descriptors when starting
+> > mdmon.
+> > 
+> > On Mon, 29 Aug 2011 17:49:49 +0200 Maciej Patelczyk
+> > <maciej.patelczyk@intel.com> wrote:
+> > 
+> > > When mdadm is invoked by fork-and-exec it inherits all open file
+> > > descriptors and when mdadm forks to exec mdmon those file descriptors
+> > > are passed to mdmon. Mdmon closes only first 97 fd and that in some
+> > > cases is not enough.
+> > 
+> > Can you describe and actual can when it is not enough?  Maybe there is
+> > some
+> > other problem where mdadm is not closing things as it should.
 >  
->  	list = st->ss->container_content(st, NULL);
-> +	if (!list) {
-> +		fprintf(stderr, Name ": Cannot get container content. "
-> +				"Array cannot be assembled.\n");
-> +		return 2;
-> +	}
->  	if (map_lock(&map))
->  		fprintf(stderr, Name ": failed to get exclusive lock on "
->  			"mapfile\n");
+> There is one:
+> CIM Server (Sfcbd - Small Footprint CIM Broker) -> registered provider 
+> -> intermediate library -> mdadm -> mdmon
 > 
+> We register provider in Sfcbd which brings some functionality to cim server.
+> It uses our library which calls mdadm (popen). Later mdadm is calling mdmon
+> (fork&exec).
+> 
+> The problem is that Sfcbd is a server and it has more than 100 files opened.
+> Open files handles are passed down to mdadm (popen behavior) and here we have
+> a problem.
 
-Thanks for the patch.
-I'll like to handle NULL a bit differently though - see below.
+This is a problem with Sfcbd, or with your library.  You shouldn't allow
+these file descriptor to get through to mdadm.
+Ideally they should all be marked 'close on exec'.
+Probably the easiest though is for your library to not use popen directly but
+to write your own which closes all extra fds between fork and exec.
 
-Thanks,
+I really do now want mdadm to have to close fds that someone else opened
+(except 0,1, and 2).
+
 NeilBrown
 
-commit 75c2df6509391e28257d696815bddb854a8c4a94
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed Sep 7 12:45:24 2011 +1000
 
-    FIX: Prevent using null list pointer
-    
-    When not all attributes are supported (attributes incompatibility)
-    function container_content_imsm returns NULL pointer.
-    We need to cope with a NULL list better.
-    
-    Reported-by: Lukasz Dorau <lukasz.dorau@intel.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/Incremental.c b/Incremental.c
-index 951c2a0..09cdd9b 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1464,7 +1464,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 		fprintf(stderr, Name ": failed to get exclusive lock on "
- 			"mapfile\n");
- 	/* do not assemble arrays that might have bad blocks */
--	if (list->array.state & (1<<MD_SB_BBM_ERRORS)) {
-+	if (list && list->array.state & (1<<MD_SB_BBM_ERRORS)) {
- 		fprintf(stderr, Name ": BBM log found in metadata. "
- 					"Cannot activate array(s).\n");
- 		/* free container data and exit */
-diff --git a/policy.c b/policy.c
-index ebb1481..2bbbac8 100644
---- a/policy.c
-+++ b/policy.c
-@@ -678,6 +678,8 @@ struct domainlist *domain_from_array(struct mdinfo *mdi, const char *metadata)
- {
- 	struct domainlist *domlist = NULL;
- 
-+	if (!mdi)
-+		return NULL;
- 	for (mdi = mdi->devs ; mdi ; mdi = mdi->next)
- 		domainlist_add_dev(&domlist, makedev(mdi->disk.major,
- 						     mdi->disk.minor),
