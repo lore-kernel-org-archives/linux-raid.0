@@ -1,94 +1,45 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] Fix: Sometimes mdmon throws core dump during reshape
-Date: Wed, 7 Sep 2011 06:25:33 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A0175BB@IRSMSX101.ger.corp.intel.com>
-References: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
- <CABE8wwuNBOG6wcmw+TEkTNZPXGQJ63c6eLeJQz+aWQE0_S1v2g@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Q: imsm rapid recovery volume
+Date: Wed, 7 Sep 2011 16:27:00 +1000
+Message-ID: <20110907162700.76a9afe4@notabene.brown>
+References: <20110314105626.GA19922@maude.comedia.it>
+	<AANLkTinzwY7CgOE2gjBUsBgKT0MTREgeYZXFDLf3BPEz@mail.gmail.com>
+	<D010E79907AF0D4E90B603DE907837D5048844B742@azsmsx504.amr.corp.intel.com>
+	<20110314191803.GA24188@maude.comedia.it>
+	<D010E79907AF0D4E90B603DE907837D5048844BCED@azsmsx504.amr.corp.intel.com>
+	<20110907060206.GB10582@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwuNBOG6wcmw+TEkTNZPXGQJ63c6eLeJQz+aWQE0_S1v2g@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <20110907060206.GB10582@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>
+To: Luca Berra <bluca@comedia.it>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, 7 Sep 2011 08:02:06 +0200 Luca Berra <bluca@comedia.it> wrote:
+
+> On Mon, Mar 14, 2011 at 05:27:14PM -0700, Jiang, Dave wrote:
+> >Linux IMSM does not support Rapid Recovery. That is a Windows IMSM feature.
+> 
+> Sorry for necromancy.
+> 
+> Is there any plan to implement this feature in mdadm,
+> or any reason not to?
+
+The core functionality is available for native md via bitmaps are re-add.
+But you have to manage it yourself.
+
+I know of know plans to add any support for this functionality with IMSM
+metadata - the current focus seems to be getting the bugs out of OnLine
+Capacity Expansion.
+
+NeilBrown
 
 
-> -----Original Message-----
-> From: Williams, Dan J [mailto:dan.j.williams@intel.com]
-> Sent: Tuesday, September 06, 2011 9:10 PM
-> To: Kwolek, Adam
-> Cc: neilb@suse.de; linux-raid@vger.kernel.org; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH] Fix: Sometimes mdmon throws core dump during
-> reshape
->=20
-> On Mon, Sep 5, 2011 at 3:39 AM, Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> > Problem was found during reshaping 2 volumes /raid0 and raid5/ in
-> container.
-> > Sometimes mdmon throws core dump due to NULL pointer exception.
-> >
-> > Problem occurs in scenario:
-> > - managemon: is about spare activation (degraded raid4 volume =3D=3D=
- raid0
-> under takeover)
-> > - managemon: detect level change and signals monitor (manage_member=
-()
-> calls replace_array())
-> > - monitor: detects transition raid4/5->raid0 and sets a->container =
-to
-> NULL
-> > =A0 =A0 =A0 =A0 =A0 to indicate array deactivation
->=20
-> Maybe I have lost track of the reshape implementation but I don't see
-> where the monitor sets ->container to NULL during a reshape?  Do you
-> mean deactivate mdmon for the array after the reshape completes?
->=20
-> > - managemon : continues his work and tries to activate spare (a-
-> >check_degraded is set).
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0NULL pointer is passed to metadata handl=
-er
-> activate_spare()
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0Core dump is generated.
-> >
-> > To resolve this situation managemon (after monitor kick) checks aga=
-in
-> > a->container pointer to learn if current array is not to be
-> deactivated.
+> 
+> Thanks in advance and regards,
+> L.
+> 
 
-Yes, when takeover is used. From one hand mdmon tries to resolve takeov=
-ered raid0 degradation "problem"
-and backward takeover occurs meanwhile.
-
-BR
-Adam
-
-> [..]
-> > diff --git a/managemon.c b/managemon.c
-> > index d020f82..3540dac 100644
-> > --- a/managemon.c
-> > +++ b/managemon.c
-> > @@ -475,6 +475,12 @@ static void manage_member(struct mdstat_ent
-> *mdstat,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> > =A0 =A0 =A0 =A0}
-> >
-> > + =A0 =A0 =A0 /* we are after monitor kick,
-> > + =A0 =A0 =A0 =A0* so container field can be cleared - check it aga=
-in
-> > + =A0 =A0 =A0 =A0*/
-> > + =A0 =A0 =A0 if (a->container =3D=3D NULL)
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
-> > +
->=20
-> Isn't this still racy?  Because we don't wait for the monitor to run
-> before proceeding.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
