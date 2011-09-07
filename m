@@ -1,109 +1,145 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] Fix: Sometimes mdmon throws core dump during reshape
-Date: Wed, 7 Sep 2011 06:36:12 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A0175F4@IRSMSX101.ger.corp.intel.com>
-References: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
- <20110907140759.6ed12d4d@notabene.brown>
+From: Michael Busby <michael.a.busby@gmail.com>
+Subject: Re: Raid5 to another raid level??
+Date: Wed, 7 Sep 2011 09:26:26 -0700
+Message-ID: <-7602537176266265843@unknownmsgid>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110907140759.6ed12d4d@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
+To: neilb@suse.de
+Cc: john.robinson@anonymous.org.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks for taking the time to respond, I am now running a 4 disk raid5
+soon to be upgraded to a 8 disk raid6
 
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, September 07, 2011 6:08 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed;
-> Neubauer, Wojciech
-> Subject: Re: [PATCH] Fix: Sometimes mdmon throws core dump during
-> reshape
-> 
-> On Mon, 05 Sep 2011 12:39:55 +0200 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > Problem was found during reshaping 2 volumes /raid0 and raid5/ in
-> container.
-> > Sometimes mdmon throws core dump due to NULL pointer exception.
+
+-- Sent from my HP TouchPadOn 7 Sep 2011 02:08, <neilb@suse.de> wrote:
+On Fri, 2 Sep 2011 14:11:57 +0100 Michael Busby <michael.a.busby@gmail.=
+com>
+wrote:
+
+> I am using the 3.0.0 kernel so that should not be a issue, have just
+> upgraded mdadm on my box to 3.2.2 from 3.1.4
+>
+> would i be right in thinking that to get from raid0 to raid5 i would
+> first have to change from raid0 to raid4 and add the extra disk for
+> parity, once i am at this level i would need a command to get the
+> parity data striped over the raid5 and not in a single disk like raid=
+4
+> or maybe there is a way to go from raid0 direct to raid5 by adding th=
+e
+> extra disk and then having the parity data created and spread over th=
+e
+> disks....
+
+(I vaguely recall already replying to this but find no evidence - apolo=
+gies
+if this is a duplicate).
+
+RAID0 to RAID5 does happen in two stages but only one rebuild is needed=
+=2E
+mdadm should make it all 'just work'.
+i.e.
+  mdadm -G /dev/md0 -l 5 --raid-devices=3D4 --add /dev/sdf \
+  --backup-file=3D/root/md0-backup
+
+This will:
+   - convert the array from RAID0 to RAID5 in a 'parity-last' layout, w=
+hich
+     is really the same thing as RAID4.
+   - 'freeze' recovery
+   - add /dev/sdf as a spare
+   - request a reshape to change the layout from 'parity-last' to
+     'left-symetric'
+   - 'unfreeze' recovery
+
+Then the kernel will notice that a reshape is needed and allowed, will =
+add
+the spare and start reshaping the array and creating parity at the same=
+ time.
+
+So you don't need an intermediate state of a complete RAID4 - a degrade=
+d
+RAID4 is sufficient and handled automatically.
+
+NeilBrown
+
+
+>
+> On 2 September 2011 13:49, NeilBrown <neilb@suse.de> wrote:
+> > On Fri, 2 Sep 2011 11:35:30 +0100 Michael Busby <michael.a.busby@gm=
+ail.com>
+> > wrote:
 > >
-> > Problem occurs in scenario:
-> > - managemon: is about spare activation (degraded raid4 volume == raid0
-> under takeover)
-> > - managemon: detect level change and signals monitor (manage_member()
-> calls replace_array())
-> > - monitor: detects transition raid4/5->raid0 and sets a->container to
-> NULL
-> >            to indicate array deactivation
-> > - managemon : continues his work and tries to activate spare (a-
-> >check_degraded is set).
-> >               NULL pointer is passed to metadata handler
-> activate_spare()
-> >               Core dump is generated.
+> >> Great, will test that in a bit
+> >>
+> >> will mdadm 3.2.2 support converting raid4 to raid5
+> >>
+> >> "A RAID4 can change the number of devices or the size of individua=
+l
+> >> devices. It cannot be converted to RAID5 yet (though that should b=
+e
+> >> trivial to implement)"
 > >
-> > To resolve this situation managemon (after monitor kick) checks again
-> > a->container pointer to learn if current array is not to be
-> deactivated.
-> 
-> This looks like it might be the same bug as is fixed by
->      Lukasz Dorau <lukasz.dorau@intel.com>
-> in
->   Subject: [PATCH] FIX: Mdmon crashes after changing RAID level from 1
-> to 0
-> 
-> Does that look likely?
-> 
-> Thanks,
-> NeilBrown
-
-It is very rarely problem and I had got single reproduction only with applied patch pointed by you.
-To completely solve this problem using Lukasze's patch only, new array monitoring deactivation
-should be extended to every case. Container field should never be used for deactivation task.
-
-Do you prefer such approach?
-
-
-BR
-Adam
-
-
-> 
-> 
+> > I guess the man page needs updating. =A0You would need a reasonably=
+ recent
+> > kernel... 2.6.30 or later. =A0I guess that isn't so recent any more=
+=2E
 > >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
+> > NeilBrown
 > >
-> >  managemon.c |    6 ++++++
-> >  1 files changed, 6 insertions(+), 0 deletions(-)
 > >
-> > diff --git a/managemon.c b/managemon.c
-> > index d020f82..3540dac 100644
-> > --- a/managemon.c
-> > +++ b/managemon.c
-> > @@ -475,6 +475,12 @@ static void manage_member(struct mdstat_ent
-> *mdstat,
-> >  		}
-> >  	}
+> >>
+> >> On 2 September 2011 11:22, NeilBrown <neilb@suse.de> wrote:
+> >> > On Fri, 2 Sep 2011 10:12:32 +0100 Michael Busby <michael.a.busby=
+@gmail.com>
+> >> > wrote:
+> >> >
+> >> >> Thanks Neil
+> >> >>
+> >> >> Is there anyway back from raid0 to raid4 as i know once at raid=
+0 i
+> >> >> will no longer be able to add any disks, in theory i could chan=
+ge
+> >> >> echo raid0 > /sys/block/md0/md/level,but this would require add=
+ing a
+> >> >> missing disk to the raid4 at the same time, not sure how easy t=
+hat
+> >> >> would be todo
+> >> >>
+> >> >
+> >> > Yes, you can switch from RAID0 to RAID4 in much the same way as =
+you switch
+> >> > from RAID4 to RAID0.
+> >> > You can then freeze/add-disk/change-size/unfreeze/wait/switch-ba=
+ck-to-RAID0
+> >> > to add more devices.
+> >> >
+> >> > mdadm-3.2.2 should be able to do all this for you. =A0i.e. you a=
+sk it to --grow
+> >> > a RAID and --add some disks at the same time, and it will do all=
+ the required
+> >> > magic.
+> >> >
+> >> > This hasn't been tested extensively, but should work in simple c=
+ases.
+> >> >
+> >> > Of course the more devices you have in a RAID0, the less reliabi=
+lity you have
+> >> > - but e.g. as a cache for a tape backup system a large RAID0 is =
+fine.
+> >> >
+> >> > NeilBrown
+> >> >
+> >> >
+> >> >
 > >
-> > +	/* we are after monitor kick,
-> > +	 * so container field can be cleared - check it again
-> > +	 */
-> > +	if (a->container == NULL)
-> > +		return;
-> > +
-> >  	/* We don't check the array while any update is pending, as it
-> >  	 * might container a change (such as a spare assignment) which
-> >  	 * could affect our decisions.
 > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
