@@ -1,149 +1,59 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Raid5 to another raid level??
-Date: Wed, 7 Sep 2011 11:07:56 +1000
-Message-ID: <20110907110756.788ca4b8@notabene.brown>
-References: <-7094796685559591664@unknownmsgid>
-	<CAFsPQ_97jNixHoYbMfxg9=FqXPWrsz_F1ZPSu1LTdGJA7N7Zcg@mail.gmail.com>
-	<20110902121959.173a1aa9@notabene.brown>
-	<CAFsPQ_8dA6B9yA4ZWZgAjZggNCBbcprAZrdHeJbPv+UvRz17mA@mail.gmail.com>
-	<20110902202235.0194d779@notabene.brown>
-	<CAFsPQ_-CfsAbqj-m3biVas0Cyv_+gkrNhHWWR_FkVNSDPB6dMg@mail.gmail.com>
-	<20110902224938.74c30811@notabene.brown>
-	<CAFsPQ__91WvzJ1Xd1cnExkdQKVaPEHfdzrfm2RQPWSQfR-Ve=w@mail.gmail.com>
+Subject: Re: [PATCH] FIX: Cannot continue reshape if incremental assembly is
+ used
+Date: Wed, 7 Sep 2011 12:37:59 +1000
+Message-ID: <20110907123759.3b4106bb@notabene.brown>
+References: <20110901131839.3293.49295.stgit@gklab-128-085.igk.intel.com>
+	<CAA9_cme3X1T+nE4+-ADHJ-MkOtywKbKmN7Gw=BngjePMK5wssg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFsPQ__91WvzJ1Xd1cnExkdQKVaPEHfdzrfm2RQPWSQfR-Ve=w@mail.gmail.com>
+In-Reply-To: <CAA9_cme3X1T+nE4+-ADHJ-MkOtywKbKmN7Gw=BngjePMK5wssg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Busby <michael.a.busby@gmail.com>
-Cc: john.robinson@anonymous.org.uk, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Lukasz Dorau <lukasz.dorau@intel.com>, linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Fri, 2 Sep 2011 14:11:57 +0100 Michael Busby <michael.a.busby@gmail.=
-com>
+On Tue, 6 Sep 2011 14:34:42 -0700 Dan Williams <dan.j.williams@intel.com>
 wrote:
 
-> I am using the 3.0.0 kernel so that should not be a issue, have just
-> upgraded mdadm on my box to 3.2.2 from 3.1.4
->=20
-> would i be right in thinking that to get from raid0 to raid5 i would
-> first have to change from raid0 to raid4 and add the extra disk for
-> parity, once i am at this level i would need a command to get the
-> parity data striped over the raid5 and not in a single disk like raid=
-4
-> or maybe there is a way to go from raid0 direct to raid5 by adding th=
-e
-> extra disk and then having the parity data created and spread over th=
-e
-> disks....
+> On Thu, Sep 1, 2011 at 6:18 AM, Lukasz Dorau <lukasz.dorau@intel.com> wrote:
+> > Description of the bug:
+> > Interrupted reshape cannot be continued using incremental assembly.
+> > Array becomes inactive.
+> >
+> > Cause of the bug:
+> > Reshape tried to continue with insufficient number of disks
+> > added by incremental assembly (tested using capacity expansion).
+> >
+> > Solution:
+> > During reshape adding disks to array should be blocked until
+> > minimum required number of disks is ready to be added.
+> 
+> Can you provide a script test-case to reproduce the problem?
 
-(I vaguely recall already replying to this but find no evidence - apolo=
-gies
-if this is a duplicate).
+I can:
 
-RAID0 to RAID5 does happen in two stages but only one rebuild is needed=
-=2E
-mdadm should make it all 'just work'.
-i.e.
-  mdadm -G /dev/md0 -l 5 --raid-devices=3D4 --add /dev/sdf \
-  --backup-file=3D/root/md0-backup
+mdadm -C /dev/md/imsm -e imsm -n 4 /dev/sd[abcd]
+mdadm -C /dev/md/r5 -n3 -l5 /dev/md/imsm -z 2000000
+mdadm --wait /dev/md/r5
+mdadm -G /dev/md/imsm -n4
+sleep 10
+mdadm -Ss
+mdadm -I /dev/sda
+mdadm -I /dev/sdb
+mdadm -I /dev/sdc
 
-This will:
-   - convert the array from RAID0 to RAID5 in a 'parity-last' layout, w=
-hich
-     is really the same thing as RAID4.
-   - 'freeze' recovery
-   - add /dev/sdf as a spare
-   - request a reshape to change the layout from 'parity-last' to
-     'left-symetric'
-   - 'unfreeze' recovery
+array is started and reshape continues.
 
-Then the kernel will notice that a reshape is needed and allowed, will =
-add
-the spare and start reshaping the array and creating parity at the same=
- time.
-
-So you don't need an intermediate state of a complete RAID4 - a degrade=
-d
-RAID4 is sufficient and handled automatically.
+The problem is that container_content reports that array.working_disks is 3 rather than 4.
+'working_disks' should be the number of disks int the array that were working last time
+the array was assembled.
+However the imsm code only counts devices that can currently be found.
+I'm not familiar enough with the IMSM metadata to fix this.
+However by looking at the metadata on just one device in an array it should be possible
+to work out how many were working last time, and report that count.
 
 NeilBrown
 
-
->=20
-> On 2 September 2011 13:49, NeilBrown <neilb@suse.de> wrote:
-> > On Fri, 2 Sep 2011 11:35:30 +0100 Michael Busby <michael.a.busby@gm=
-ail.com>
-> > wrote:
-> >
-> >> Great, will test that in a bit
-> >>
-> >> will mdadm 3.2.2 support converting raid4 to raid5
-> >>
-> >> "A RAID4 can change the number of devices or the size of individua=
-l
-> >> devices. It cannot be converted to RAID5 yet (though that should b=
-e
-> >> trivial to implement)"
-> >
-> > I guess the man page needs updating. =A0You would need a reasonably=
- recent
-> > kernel... 2.6.30 or later. =A0I guess that isn't so recent any more=
-=2E
-> >
-> > NeilBrown
-> >
-> >
-> >>
-> >> On 2 September 2011 11:22, NeilBrown <neilb@suse.de> wrote:
-> >> > On Fri, 2 Sep 2011 10:12:32 +0100 Michael Busby <michael.a.busby=
-@gmail.com>
-> >> > wrote:
-> >> >
-> >> >> Thanks Neil
-> >> >>
-> >> >> Is there anyway back from raid0 to raid4 as i know once at raid=
-0 i
-> >> >> will no longer be able to add any disks, in theory i could chan=
-ge
-> >> >> echo raid0 > /sys/block/md0/md/level,but this would require add=
-ing a
-> >> >> missing disk to the raid4 at the same time, not sure how easy t=
-hat
-> >> >> would be todo
-> >> >>
-> >> >
-> >> > Yes, you can switch from RAID0 to RAID4 in much the same way as =
-you switch
-> >> > from RAID4 to RAID0.
-> >> > You can then freeze/add-disk/change-size/unfreeze/wait/switch-ba=
-ck-to-RAID0
-> >> > to add more devices.
-> >> >
-> >> > mdadm-3.2.2 should be able to do all this for you. =A0i.e. you a=
-sk it to --grow
-> >> > a RAID and --add some disks at the same time, and it will do all=
- the required
-> >> > magic.
-> >> >
-> >> > This hasn't been tested extensively, but should work in simple c=
-ases.
-> >> >
-> >> > Of course the more devices you have in a RAID0, the less reliabi=
-lity you have
-> >> > - but e.g. as a cache for a tape backup system a large RAID0 is =
-fine.
-> >> >
-> >> > NeilBrown
-> >> >
-> >> >
-> >> >
-> >
-> >
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
