@@ -1,73 +1,39 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fix: Sometimes mdmon throws core dump during reshape
-Date: Wed, 7 Sep 2011 14:07:59 +1000
-Message-ID: <20110907140759.6ed12d4d@notabene.brown>
-References: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] fix: segfault when killing subarray of non-existent
+ container
+Date: Wed, 7 Sep 2011 14:10:15 +1000
+Message-ID: <20110907141015.2e3148f2@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246F013DDEDC1B@irsmsx504.ger.corp.intel.com>
+	<CAA9_cme=M22x5nrb4OddR_RxhOC-sarF6GuECZx9E4SLp-+XjQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110905103955.4372.52448.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <CAA9_cme=M22x5nrb4OddR_RxhOC-sarF6GuECZx9E4SLp-+XjQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com, wojciech.neubauer@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Czarnowska, Anna" <anna.czarnowska@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 05 Sep 2011 12:39:55 +0200 Adam Kwolek <adam.kwolek@intel.com> wrote:
+On Fri, 5 Aug 2011 14:44:45 -0700 Dan Williams <dan.j.williams@intel.com>
+wrote:
 
-> Problem was found during reshaping 2 volumes /raid0 and raid5/ in container.
-> Sometimes mdmon throws core dump due to NULL pointer exception.
+> On Mon, Aug 1, 2011 at 8:33 AM, Czarnowska, Anna
+> <anna.czarnowska@intel.com> wrote:
+> > From 9c3c974e1e047caf3434f98e183e58ed3b222396 Mon Sep 17 00:00:00 2001
+> > From: Anna Czarnowska <anna.czarnowska@intel.com>
+> > Date: Mon, 1 Aug 2011 17:23:33 +0200
+> > Subject: [PATCH] fix: segfault when killing subarray of non-existent container
+> >
+> > Negative value must be returned to indicate error in open_subarray
+> >
+> > Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
 > 
-> Problem occurs in scenario:
-> - managemon: is about spare activation (degraded raid4 volume == raid0 under takeover)
-> - managemon: detect level change and signals monitor (manage_member() calls replace_array())
-> - monitor: detects transition raid4/5->raid0 and sets a->container to NULL
->            to indicate array deactivation
-> - managemon : continues his work and tries to activate spare (a->check_degraded is set).
->               NULL pointer is passed to metadata handler activate_spare()
->               Core dump is generated.
-> 
-> To resolve this situation managemon (after monitor kick) checks again
-> a->container pointer to learn if current array is not to be deactivated.
+> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 
-This looks like it might be the same bug as is fixed by
-     Lukasz Dorau <lukasz.dorau@intel.com>
-in
-  Subject: [PATCH] FIX: Mdmon crashes after changing RAID level from 1 to 0
 
-Does that look likely?
+Thanks,
+I have - somewhat belatedly - applied this now.
 
 Thanks,
 NeilBrown
-
-
-> 
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
-> 
->  managemon.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/managemon.c b/managemon.c
-> index d020f82..3540dac 100644
-> --- a/managemon.c
-> +++ b/managemon.c
-> @@ -475,6 +475,12 @@ static void manage_member(struct mdstat_ent *mdstat,
->  		}
->  	}
->  
-> +	/* we are after monitor kick,
-> +	 * so container field can be cleared - check it again
-> +	 */
-> +	if (a->container == NULL)
-> +		return;
-> +
->  	/* We don't check the array while any update is pending, as it
->  	 * might container a change (such as a spare assignment) which
->  	 * could affect our decisions.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
