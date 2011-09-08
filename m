@@ -1,49 +1,24 @@
-From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
-Subject: Re: freshly grown array shrinks after first reboot - major data loss
-Date: Thu, 08 Sep 2011 15:44:26 +0200
-Message-ID: <4E68C6BA.7020807@macroscoop.nl>
-References: <4E5FA4B5.6010407@macroscoop.nl> <4E5FAEF3.60501@macroscoop.nl> <4E5FB350.3040905@redhat.com> <4E5FC495.7070909@macroscoop.nl> <4E5FCC32.6020402@redhat.com> <20110908111049.08988921@notabene.brown>
+From: Shwety <shweta0232@gmail.com>
+Subject: store a block device information in =?utf-8?b?c2JfaW5mbw==?= struct of ext4 file system
+Date: Thu, 8 Sep 2011 20:14:28 +0000 (UTC)
+Message-ID: <loom.20110908T220701-321@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110908111049.08988921@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+I have created an img file and mounted it with ext4 file system.
+I want to store its information in sb_info str of ext4 file system ext4.h header 
+file. 
+actually i am trying to separately store metadata and the data.For doing 
+that i have created an img file and formatted this partition with ext4. 
+I need to store this partitions information in the ext4_sb_info struct.I am not 
+sure about 
+how to modify the code as i am new to this file system. 
 
 
-On 8-9-2011 3:10, NeilBrown wrote:
-> So your data*should*  have been back exactly as it was.  I am at a loss to
-> explain why it is not.
-The array contained an LVM VG that would not activate until grown back.
-After growing back,
-- one ext4 LV was perfectly intact
-- one other could be fsck'd back to life without any damage
-- a third one could be fsck'd back with leaving some stuff in lost+found
-- three others were beyond repair.
-
-The VG was as old as the array itself; the LV's were pretty fragmented.
-
-It looked like the ext4 superblocks were shifted. I could see the superblock
-with hexdump, but mount would not. fsck first had to repair the superblock
-before anything else.
-
-So my report that data was "wiped" by the sync process was incorrect.
-
-> You ask for 'max' and it just says 'max' to the kernel.
-> The kernel needs to do the testing - and currently it doesn't.
-I hope/assume this is no problem for my newly created array.
->
-> Thanks for your report, and my apologies for your loss.
-No need to apologize ; the limitation was documented, and I could have
-upgraded the metadata without data loss, had I waited longer for advice.
-And I did have off-site backups for the important stuff.
-
-I'm just reporting this so others may be spared this experience.
-
-Thanks,
-Pim
 
