@@ -1,107 +1,139 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] kill-subarray: fix, cannot kill-subarray with unsupported metadata
-Date: Wed, 7 Sep 2011 17:16:42 -0700
-Message-ID: <CAA9_cmeB_NPE6w0aD0dhyEHi_ZJ8nexNzHgxbw42d29Odp2RWw@mail.gmail.com>
-References: <F9123E44003394499FDD2B17C60621D401BE07@IRSMSX101.ger.corp.intel.com>
-	<CABE8wwsfrdgZcHzOdTpA-EM1R8fknw7hCT1+VHGus5h-Pa-3pA@mail.gmail.com>
-	<20110907143111.499ae36e@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: freshly grown array shrinks after first reboot - major data
+ loss
+Date: Thu, 8 Sep 2011 11:10:49 +1000
+Message-ID: <20110908111049.08988921@notabene.brown>
+References: <4E5FA4B5.6010407@macroscoop.nl>
+	<4E5FAEF3.60501@macroscoop.nl>
+	<4E5FB350.3040905@redhat.com>
+	<4E5FC495.7070909@macroscoop.nl>
+	<4E5FCC32.6020402@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110907143111.499ae36e@notabene.brown>
+In-Reply-To: <4E5FCC32.6020402@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Doug Ledford <dledford@redhat.com>, Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 6, 2011 at 9:31 PM, NeilBrown <neilb@suse.de> wrote:
-> On Tue, 6 Sep 2011 12:16:43 -0700 "Williams, Dan J"
-> <dan.j.williams@intel.com> wrote:
->
->> On Mon, Sep 5, 2011 at 7:23 AM, Labun, Marcin <Marcin.Labun@intel.co=
-m> wrote:
->> > Subject: [PATCH] kill-subarray: fix, cannot kill-subarray with uns=
-upported metadata
->> >
->> > container_content retrieves volume information from disks in the c=
-ontainer.
->> > For unsupported volumes the function was not returning mdinfo. Whe=
-n all volumes
->> > were unsupported the function was returning NULL pointer to block =
-actions on the volumes.
->>
->> Isn't this the purpose of ->ignore_hw_compat?
->>
->> So we could do something simpler like the following instead?
->>
->> diff --git a/Kill.c b/Kill.c
->> index b841a5b..11b27a6 100644
->> --- a/Kill.c
->> +++ b/Kill.c
->> @@ -97,7 +97,9 @@ int Kill_subarray(char *dev, char *subarray, int q=
-uiet)
->>
->> =A0 =A0 =A0 =A0 memset(st, 0, sizeof(*st));
->>
->> + =A0 =A0 =A0 st->ignore_hw_compat =3D 1;
->> =A0 =A0 =A0 =A0 fd =3D open_subarray(dev, subarray, st, quiet);
->> + =A0 =A0 =A0 st->ignore_hw_compat =3D 0;
->> =A0 =A0 =A0 =A0 if (fd < 0)
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 2;
->
-> While that is a *much* nicer patch, I don't think it will actually ad=
-dress
-> the problem.
-> You would at least need container_content_imsm to ignore
-> imsm_check_attributes if ->ignore_hw_compat was set.
->
-> However I think things are getting a bit messy here and need to be cl=
-eaned up.
->
-> Marcin's patch has the advantage that it treats the existence of a ba=
-d block
-> log and incompatible attributes in much the same way.
-> However I don't like:
-> =A0- the increase in number of magic flag bits
-> =A0- the editing of the list of arrays returned by container_content
-> =A0- the error messages being printed by super-intel.c
->
-> I think I would like:
-> =A0- container_content always returns info about all arrays, so Exami=
-ne and
-> =A0 Kill can work properly
-> =A0- it sets a single flags (MD_SB_INVALID??) to say that the array c=
-annot be
-> =A0 assembled or manipulated, and maybe stored a message string in th=
-e 'info'
-> =A0 so that common code can print it when it choses to ignore an arra=
-y
-> =A0- common code checks and ignores MD_SB_INVALID arrays as needed ra=
-ther than
-> =A0 having them be removed from the list.
->
-> Reasonable??
+On Thu, 01 Sep 2011 14:17:22 -0400 Doug Ledford <dledford@redhat.com> wrote:
 
-Yes, it would be nice to have a unified interface for reporting
-"please, don't assemble this because: foo" while also giving as much
-other info about the configuration as possible.
+> On 09/01/2011 01:44 PM, Pim Zandbergen wrote:
+> > On 09/01/2011 06:31 PM, Doug Ledford wrote:
+> >> Why is your raid metadata using this old version? mdadm-3.2.2-6.fc15
+> >> will not create this version of raid array by default. There is a
+> >> reason we have updated to a new superblock.
+> >
+> > As you may have seen, the array was created in 2006, and has gone through
+> > several similar grow procedures.
+> 
+> Even so, one of the original limitations of the 0.90 superblock was 
+> maximum usable device size.  I'm not entirely sure that growing a 0.90 
+> superblock past 2TB wasn't the source of your problem and that the bug 
+> that needs fixed is that mdadm should have refused to grow a 0.90 
+> superblock based array beyond the 2TB limit.  Neil would have to speak 
+> to that.
 
-Where foo is:
-"configuration crosses hardware domain boundary"
-"platform/metadata is using feature X that mdadm does not support"
-"raid array cannot be assembled without potentially exposing corrupted =
-data"
+I finally had time to look into this problem.
+I'm ashamed to say there is a serious bug here that I should have found and
+fixed some time ago, but didn't look problem.  However I don't understand why
+you lost any data.
 
-Then --force can uniformly override those concerns, probably for
-"Create" operations as well, but --force already has other meanings
-there.
+The 0.90 metadata uses an unsigned 32bit number to record the number of
+kilobytes used per device.  This should allow devices up to 4TB.  I don't
+know where the "2TB" came from.  Maybe I thought something was signed? or
+maybe I just didn't think.
 
-The ->ignore_hw_compat approach had the small beneficial side effect
-of whitelisting approved usages of potentially invalid information,
-but it should be no big deal to ensure those all get covered.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+However in 2.6.29 a bug was introduced in the handling of the count.
+It is best to keep everything in the same units and the preferred units for
+devices seems to be 512byte sectors so we changed md to record the available
+size on a device in sectors.  So for 0.90 metadata this is:
+
+   rdev->sectors = sb->size * 2;
+
+Do you see the bug?  It will multiple size (a u32) by 2 before casting it to
+a sector_t, so we lose the high bit.   This should have been
+   rdev->sectors = ((sector_t)sb->size)*2;
+and will be after I submit a patch.
+
+However this should not lead to any data corruption.  When you reassemble the
+array after reboot it will be 2TB per device smaller than it should be
+(which is exactly what we see: 18003551059968-4809411526656 == 2*10^40*(7-1))
+so some data will be missing.  But when you increase the size again it will
+check the parity of the "new" space but as that is all correct it will not
+change anything.
+So your data *should* have been back exactly as it was.  I am at a loss to
+explain why it is not.
+
+I will add a test to mdadm to discourage you from adding 4+TB devices to 0.90
+metadata, or 2+TB devices for 3.0 and earlier kernels.
+
+I might also add a test to discourage growing an array beyond 2TB on kernels
+before 3.1.  That is more awkward as mdadm doesn't really know how big you
+are growing it to.  You ask for 'max' and it just says 'max' to the kernel.
+The kernel needs to do the testing - and currently it doesn't.
+
+Anyway the following patch will be on its way to Linus in a day or two.
+Thanks for your report, and my apologies for your loss.
+
+NeilBrown
+
+From 24e9c8d1a620159df73f9b4a545cae668b6285ef Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 8 Sep 2011 10:54:34 +1000
+Subject: [PATCH] md: Fix handling for devices from 2TB to 4TB in 0.90 metadata.
+
+0.90 metadata uses an unsigned 32bit number to count the number of
+kilobytes used from each device.
+This should allow up to 4TB per device.
+However we multiply this by 2 (to get sectors) before casting to a
+larger type, so sizes above 2TB get truncated.
+
+Also we allow rdev->sectors to be larger than 4TB, so it is possible
+for the array to be resized larger than the metadata can handle.
+So make sure rdev->sectors never exceeds 4TB when 0.90 metadata is in
+used.
+
+Reported-by: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 3742ce8..63f71cc 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1138,8 +1138,11 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_version
+ 			ret = 0;
+ 	}
+ 	rdev->sectors = rdev->sb_start;
++	/* Limit to 4TB as metadata cannot record more than that */
++	if (rdev->sectors >= (2ULL << 32))
++		rdev->sectors = (2ULL << 32) - 2;
+ 
+-	if (rdev->sectors < sb->size * 2 && sb->level > 1)
++	if (rdev->sectors < ((sector_t)sb->size) * 2 && sb->level > 1)
+ 		/* "this cannot possibly happen" ... */
+ 		ret = -EINVAL;
+ 
+@@ -1173,7 +1176,7 @@ static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		mddev->clevel[0] = 0;
+ 		mddev->layout = sb->layout;
+ 		mddev->raid_disks = sb->raid_disks;
+-		mddev->dev_sectors = sb->size * 2;
++		mddev->dev_sectors = ((sector_t)sb->size) * 2;
+ 		mddev->events = ev1;
+ 		mddev->bitmap_info.offset = 0;
+ 		mddev->bitmap_info.default_offset = MD_SB_BYTES >> 9;
+@@ -1415,6 +1418,11 @@ super_90_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+ 	rdev->sb_start = calc_dev_sboffset(rdev);
+ 	if (!num_sectors || num_sectors > rdev->sb_start)
+ 		num_sectors = rdev->sb_start;
++	/* Limit to 4TB as metadata cannot record more than that.
++	 * 4TB == 2^32 KB, or 2*2^32 sectors.
++	 */
++	if (num_sectors >= (2ULL << 32))
++		num_sectors = (2ULL << 32) - 2;
+ 	md_super_write(rdev->mddev, rdev, rdev->sb_start, rdev->sb_size,
+ 		       rdev->sb_page);
+ 	md_super_wait(rdev->mddev);
