@@ -1,106 +1,49 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] FIX: Cannot continue reshape if incremental assembly is
- used
-Date: Thu, 8 Sep 2011 08:26:53 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB02034E@IRSMSX101.ger.corp.intel.com>
-References: <20110901131839.3293.49295.stgit@gklab-128-085.igk.intel.com>
-	<CAA9_cme3X1T+nE4+-ADHJ-MkOtywKbKmN7Gw=BngjePMK5wssg@mail.gmail.com>
- <20110907123759.3b4106bb@notabene.brown>
+From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Subject: Re: freshly grown array shrinks after first reboot - major data loss
+Date: Thu, 08 Sep 2011 15:44:26 +0200
+Message-ID: <4E68C6BA.7020807@macroscoop.nl>
+References: <4E5FA4B5.6010407@macroscoop.nl> <4E5FAEF3.60501@macroscoop.nl> <4E5FB350.3040905@redhat.com> <4E5FC495.7070909@macroscoop.nl> <4E5FCC32.6020402@redhat.com> <20110908111049.08988921@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110907123759.3b4106bb@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <20110908111049.08988921@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 07, 2011 4:38 AM Neil Brown <neilb@suse.de> wrote:
-> 
-> On Tue, 6 Sep 2011 14:34:42 -0700 Dan Williams <dan.j.williams@intel.com>
-> wrote:
-> 
-> > On Thu, Sep 1, 2011 at 6:18 AM, Lukasz Dorau <lukasz.dorau@intel.com>
-> wrote:
-> > > Description of the bug:
-> > > Interrupted reshape cannot be continued using incremental assembly.
-> > > Array becomes inactive.
-> > >
-> > > Cause of the bug:
-> > > Reshape tried to continue with insufficient number of disks
-> > > added by incremental assembly (tested using capacity expansion).
-> > >
-> > > Solution:
-> > > During reshape adding disks to array should be blocked until
-> > > minimum required number of disks is ready to be added.
-> >
-> > Can you provide a script test-case to reproduce the problem?
-> 
-
-The patch originally was intended to fix the following issue:
-
-export MDADM_EXPERIMENTAL=1
-mdadm -C /dev/md/imsm0 -amd -e imsm -n 2 /dev/sda /dev/sdb -R
-mdadm -C /dev/md/raid1-0 -amd -l1  --size 5G -n 2 /dev/sda /dev/sdb -R 
-mdadm --wait /dev/md/raid1-0 
-mdadm /dev/md/imsm0 --add /dev/sdc
-mdadm /dev/md/imsm0 --add /dev/sdd
-mdadm -G /dev/md/raid1-0 -l0 
-mdadm -G /dev/md/imsm0 -n 4 
-sleep 5
-mdadm -Ss
-mdadm -I /dev/sda
-mdadm -I /dev/sdb
-# At this moment mdadm tries to start array and continue reshape,
-# however there is insufficient number of disks, so it fails
-# (not enough operational devices - failed to run raid set)
-# - see syslog below.
-mdadm -I /dev/sdc
-# array is not started and reshape does not continue
-mdadm -I /dev/sdd
-# array is not started and reshape does not continue
 
 
-### syslog:
-kernel: md: bind<sda>
-kernel: md: bind<sdb>
-kernel: md: bind<sda>
-kernel: md: bind<sdb>
-kernel: bio: create slab <bio-1> at 1
-kernel: md/raid:md126: reshape will continue
-kernel: md/raid:md126: device sdb operational as raid disk 0
-kernel: md/raid:md126: device sda operational as raid disk 1
-kernel: md/raid:md126: allocated 5334kB
-kernel: md/raid:md126: not enough operational devices (3/5 failed)
-kernel: md/raid:md126: failed to run raid set.
-kernel: md: pers->run() failed ...
-kernel: md: bind<sdc>
-kernel: md: bind<sdd>
-kernel: md: bind<sdd>
-kernel: md: bind<sdc>
-kernel: md: export_rdev(sda)
-kernel: md: export_rdev(sdb)
+On 8-9-2011 3:10, NeilBrown wrote:
+> So your data*should*  have been back exactly as it was.  I am at a loss to
+> explain why it is not.
+The array contained an LVM VG that would not activate until grown back.
+After growing back,
+- one ext4 LV was perfectly intact
+- one other could be fsck'd back to life without any damage
+- a third one could be fsck'd back with leaving some stuff in lost+found
+- three others were beyond repair.
 
-Regards,
-Lukasz 
+The VG was as old as the array itself; the LV's were pretty fragmented.
 
----------------------------------------------------------------------
-Intel Technology Poland sp. z o.o.
-z siedziba w Gdansku
-ul. Slowackiego 173
-80-298 Gdansk
+It looked like the ext4 superblocks were shifted. I could see the superblock
+with hexdump, but mount would not. fsck first had to repair the superblock
+before anything else.
 
-Sad Rejonowy Gdansk Polnoc w Gdansku, 
-VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
-numer KRS 101882
+So my report that data was "wiped" by the sync process was incorrect.
 
-NIP 957-07-52-316
-Kapital zakladowy 200.000 zl
+> You ask for 'max' and it just says 'max' to the kernel.
+> The kernel needs to do the testing - and currently it doesn't.
+I hope/assume this is no problem for my newly created array.
+>
+> Thanks for your report, and my apologies for your loss.
+No need to apologize ; the limitation was documented, and I could have
+upgraded the metadata without data loss, had I waited longer for advice.
+And I did have off-site backups for the important stuff.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+I'm just reporting this so others may be spared this experience.
+
+Thanks,
+Pim
 
