@@ -1,54 +1,72 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: Bootable Raid-1
-Date: Fri, 9 Sep 2011 12:59:01 +0400
-Message-ID: <976829848.20110909125901@gmail.com>
-References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com> <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Best strategy to incrementally replace smaller HDDs
+Date: Fri, 09 Sep 2011 12:48:01 +0200
+Message-ID: <1315565285.2291.25.camel@michal-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-McANE+GaDtAgVgMlO7t3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 2, 2011 at 9:44 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
-te:
 
-Resending because 1st letter was not delivered.
+--=-McANE+GaDtAgVgMlO7t3
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-<snip>
->>
->> grub2 work with raid1 boot partition and rootfs over mdadm raid1
->> i tested today (03:00 AM) on my ubuntu desktop
->
-> =A0 =A0 =A0 =A0There wasn't really any question about that. =A0I've b=
-een running
-> RAID1 boots under GRUB2 for months. =A0Prior to that, it was RAID1 un=
-der GRUB
-> legacy. =A0RAID1 under GRUB legacy takes some finagling. =A0Under GRU=
-B2 it
-> should be straightforward as long as the partitioning is correct and =
-one
-> employs a 0.90 superblock for the /boot array.
->
-Guys, basing on your experience, can you tell us, how does Grub2 react
-on degraded raid? Does it respect md's point of view which disk is bad
-and which is not? Does it cooperate well with mdadm in general?
+Hi all, given the configuration below:
+      * 8 x 1TB HDDs
+      * 2 x 2TB HDDs
 
-Grub legacy was way easy, just setup on disk & read that disk, no raid
-knowledge, no problems. I guess grub2 can be configured in that manner
-too, but as it has raid/lvm/whatever support, may be give it a try...
+On which I currently have:
+      * (10 x 1TB) RAID6 - persistent storage
+      * (2 x 1TB) system / temporary storage etc.
 
-I've got Debian Squeeze servers with grub2, without any mirroing, so
-converting them into RAID1 system, wanna make it right.
+I want to replace the 1TB drives for 2TB ones on an as-needed basis,
+what strategy would you recommend?
 
+     1. If I moved to 2TB RAID6 members (using RAID0 on the 1TB drives),
+        I would need to replace two of the drives just to match current
+        capacity. Each next 2TB drive would get me 1TB additional
+        capacity (but actually I'd need to replace two to gain
+        anything). That sounds to be most future-proof, but most
+        expensive.
+     2. If I moved to 2TB RAID5 members, that would reduce redundancy
+        but replacing just two would gain me 2TB capacity. Most of the
+        above still applies.
+     3. If I kept to 1TB RAID6 (two on the 2TB drives), I would reduce
+        the redundancy to just one drive if it was the 2TB drive that
+        failed, but each new drive would gain me 1TB capacity and I only
+        need to replace one-by-one. This sounds like the cheapest, but
+        worst possible approach.
+
+So, am I missing something? What do you think?
 --=20
-Best regards,
-[COOLCOLD-RIPN]
+Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-McANE+GaDtAgVgMlO7t3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJOae7hAAoJEGnv7NPGHSZFpM0QAJyydq2ISQTIrdVk2lvkWys8
+k+YERjAU6AJsXxMmGKYuOfQDswfRe7aiq/+0qVy3NQhrQlGCUtaYL4Cm6TJcWnEf
+MYrpPlcJdf/fv4+K+mKXWoyJJ32qokhlO1It1OpndeynNX7gJzeUp0QllVbh34vE
+VmBpBU4J9nV9x+w4V995I+y0NV1CJsX35LF1siT6XEnyzBdoumwQpZbNdZLOtnzx
+Ib1sCTN78KJ2I6o+q1vfj/NLdSCzs5wXHRgZ1Xq51TUMo+ibX84MtiOuT/Y6vnsV
+ycMd6JM8/OzOkl7PgI+2y9Qqrackr+ZiYIUpXilzzv6r+VMcG8EgrSDga3YxyCaX
+wlE51VPtY9NaULYgdmM57Ld+tCPylQNELAhrbH8lddkjTMtYFuVQuNmA0sSftDai
+zfGKrdcyV9sbNBEOgD7VswfjHwrNcMV/plzd7NlaMw4+sSnOQzSTilGUsaDPVoP8
+ku17eQdWGsv67QTnIR6c6FvdgvfGU9htMMc65AXGyUpqampT9wWJ1C5olRoYm0Yo
+i7aoZdN6XKgZRUttb/j3wOaysYGdrn8QQvnexxK4ooJ4qKYTgQOJp9nV8KwF74ow
+TOUFh36WhBlMBoMeMnhvSoOCdZVPeDmgu+elp+aODZd+dCUXKuqVxENYGe7hfhXX
+QmDwsCAE7rzSqWQv+T3R
+=NEbE
+-----END PGP SIGNATURE-----
+
+--=-McANE+GaDtAgVgMlO7t3--
+
