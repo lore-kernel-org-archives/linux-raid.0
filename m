@@ -1,133 +1,46 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: Best strategy to incrementally replace smaller HDDs
-Date: Fri, 09 Sep 2011 16:20:20 +0200
-Message-ID: <1315578025.14468.18.camel@michal-laptop>
-References: <1315565285.2291.25.camel@michal-laptop>
-	 <20110909131351.GA25347@cthulhu.home.robinhill.me.uk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: freshly grown array shrinks after first reboot - major data loss
+Date: Fri, 09 Sep 2011 15:30:52 -0400
+Message-ID: <4E6A696C.20901@tmr.com>
+References: <4E5FA4B5.6010407@macroscoop.nl> <4E5FAEF3.60501@macroscoop.nl> <4E5FB350.3040905@redhat.com> <4E5FC495.7070909@macroscoop.nl> <4E5FCC32.6020402@redhat.com> <4E5FD465.4000809@macroscoop.nl> <4E5FDFF6.4030200@redhat.com> <4E609FAC.6020303@macroscoop.nl> <4E60B89E.5020806@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-mH7/mfCPlN9BsdfrxIC7"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110909131351.GA25347@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4E60B89E.5020806@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Pim Zandbergen <P.Zandbergen@macroscoop.nl>, Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+John Robinson wrote:
+> On 02/09/2011 10:19, Pim Zandbergen wrote:
+>> On 09/01/2011 09:41 PM, Doug Ledford wrote:
+>>>> I could file a bug on bugzilla.redhat.com if that would help.
+>>>
+>>> Feel free, it helps me track things.
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=735306
+>
+> I'm not sure whether it's just the --grow that should complain, or 
+> perhaps the earlier step of
+>   mdadm /dev/md/array-using-0.90-metadata --add /dev/3TB
+> should also complain (even if it'll work with less than 2TiB in use, 
+> it ought to tell the user they won't be able to grow the array).
+>
+Perhaps Neil can confirm, but the limitation seems to be using 2TB as an 
+array member size, I am reasonably sure that if you had partitioned the 
+drives into two 1.5TB partitions you could have created the array just fine.
 
---=-mH7/mfCPlN9BsdfrxIC7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Note that this is just a speculation, not a suggestion to allow using 
+0.90 metadata, and I do realize that this array was created in the dark 
+ages, not being created new.
 
-Dnia 2011-09-09, pi=C4=85 o godzinie 14:13 +0100, Robin Hill pisze:
-> On Fri Sep 09, 2011 at 12:48:01PM +0200, Micha=C5=82 Sawicz wrote:
->=20
-> > Hi all, given the configuration below:
-> >       * 8 x 1TB HDDs
-> >       * 2 x 2TB HDDs
-> >=20
-> From what you cover below, it sounds like you're limited to 10 drives in
-> total. Is this the case?
-In the long run - yes, but I can have more temporarily. It's just a
-physical issue, not controller issue.
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
 
-> > On which I currently have:
-> >       * (10 x 1TB) RAID6 - persistent storage
-> >       * (2 x 1TB) system / temporary storage etc.
-> >=20
-> > I want to replace the 1TB drives for 2TB ones on an as-needed basis,
-> > what strategy would you recommend?
-> >=20
-> >      1. If I moved to 2TB RAID6 members (using RAID0 on the 1TB drives)=
-,
-> >         I would need to replace two of the drives just to match current
-> >         capacity. Each next 2TB drive would get me 1TB additional
-> >         capacity (but actually I'd need to replace two to gain
-> >         anything). That sounds to be most future-proof, but most
-> >         expensive.
-> >      2. If I moved to 2TB RAID5 members, that would reduce redundancy
-> >         but replacing just two would gain me 2TB capacity. Most of the
-> >         above still applies.
->=20
-> So, for both of these, you're planning on changing to:
->     * (2 x 1TB) system
->     * (2 x 2TB) + (3 x 1+1TB) persistent storage
-Actually no, currently I'm planning to go:
-      * (2 x 1TB) system,
-      * (4 x 2TB) + (2 x 1+1TB)
 
-So that's 8TB in RAID6, 10TB in RAID5. I already have 8TB and the only
-way is up. With RAID6 I'd have to replace at least 4x1TB for 3x2TB
-initially (one less drive total).
-
-> This gives you 6TB persistent storage in RAID6, or 8TB in RAID5. As you
-> say, replacing 2 1TB drives for 2TB drives (or adding a 2TB drive, if
-> possible) would give you 8TB in RAID6 again.
->=20
-> You'll also need to do a backup, rebuild & restore for either of these
-> solutions.
-As I mentioned in my previous reply to David, I'm planning to
-shrink/grow as needed.
-
-> In either case, replacing a single drive (assuming you're limited in
-> total drive count) would not gain any capacity, whereas a pair of drive
-> replacements would give you a 2TB increase.
->=20
-> I'd steer clear of RAID5 with 2TB drives - rebuilding a 2TB drive will
-> present a very large window for total array failure.
-Yeah, that's why I switched to RAID6 in the first place...
-
-> >      3. If I kept to 1TB RAID6 (two on the 2TB drives), I would reduce
-> >         the redundancy to just one drive if it was the 2TB drive that
-> >         failed, but each new drive would gain me 1TB capacity and I onl=
-y
-> >         need to replace one-by-one. This sounds like the cheapest, but
-> >         worst possible approach.
-> >=20
-> Losing a single 2TB drive would lose 2 partitions, wiping out all
-> redundancy. You're only needing to rebuild 1TB before you're back to
-> partial redundancy though, so you're less prone to read failures than
-> with RAID5 above. A second 2TB drive failure during recovery of either
-> partition will cause total array failure though.
->=20
-> Replacing a single 1TB drive would gain you 1TB in space.
->=20
-> There's also no need to do a complete wipe & restore - you can just
-> replace the drive and recover onto the new one.
->=20
-> Performance will be worse (particularly during recovery) as you're
-> always seeking between the two partitions.
->=20
-> Personally, I'd go with RAID6 on 2TB partitions. It is more expensive,
-> but I think the performance and redundancy benefits outweigh the costs.
-That's the direction I'm leaning to as well.
-
-Thanks a lot for the comments!
---=20
-Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
-
---=-mH7/mfCPlN9BsdfrxIC7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJOaiCkAAoJEGnv7NPGHSZFNOAQAK0ON40k6dADMoYxdAnXuW8v
-aAqYuZAi1+nGdHTWdIO38/VOUkcGViVGVKyGehPBZvg5g+8jYI2Q5++ETcRfid/7
-lEVrSNno3AxeBTqPtv8u+tfhuPBOZ+Y4NVD8+Z5pW2RhVKZw25PSul+EpsczC/Y4
-KCmCKQK7CiGhH1KF8OHa8h+rYwTVZuyH/IR6pnq4R6kyf6Nj50ez2OXdXwfdekL/
-6hCUSeSMNpB1z/yF5gUOzAiLzmiAg5UDG8Zf5xbzmKLBPsS5GBRl6hv/VOszpOaI
-RjLlsN9qOLUGhG1UBwF/clUkkULixegJKbBKD3He4j/LzD0+ThqFcZZQpBOaiPUj
-nXG3fRTm+ldIQvFCAgLUNl0kplZZK4j499sD/8O6uNZhMoafBcxB6Z5LWluPgu+3
-gBNIPMYxOc834h00rRdOh39/DVfcOtqSPPXE+FQE0vpbCXT5nI4EWSATZQDWN+65
-WPGNEn23ilAKb7mQh30XvEfHd9VGOt0843UmeOcKdiaiUgH4qxn81vZD4y8F1pft
-MrjGa+6qWYqn+52kGCCwvx8KpaQpjwFsGKoF9zkOidrwtzwpcVuPY316tpUysRME
-MSt24nccxoCxX2XqKd2kT1W3wiG1lXmXjRcqJUdiXPA+M2vZnwkByMZKAXrbvugF
-rq6rOqy0drycVL+Jsi+z
-=+mGN
------END PGP SIGNATURE-----
-
---=-mH7/mfCPlN9BsdfrxIC7--
 
