@@ -1,73 +1,39 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid failing, which command to remove the bad drive?
-Date: Fri, 09 Sep 2011 18:01:30 -0400
-Message-ID: <4E6A8CBA.8040901@tmr.com>
-References: <4E57FE4D.5080503@vorgon.com>	<20110827084535.5e64bf5c@notabene.brown>	<4E5FC63A.1040206@vorgon.com>	<CAEUYfyN6nfEDwgE8_eZN48UFzaJNCN2NjBpJbeQR_G01CYCgvQ@mail.gmail.com>	<4E60F95C.40203@vorgon.com>	<CAEUYfyPWFwyadvYC8pUTssQMpGhqEoB0aTHtM_3yb7o33M1Edw@mail.gmail.com>	<20110903121723.GA6123@cthulhu.home.robinhill.me.uk>	<CAEUYfyNPAeeZ=hjaefNYv=uQmgLViCyxqaNnLujp6Ru4+8q32g@mail.gmail.com> <CAEUYfyMCH-Pys9Q+tkDNFKbX-ks+Zm4psZ7zvkkdEkzK4nqyfg@mail.gmail.com>
+Subject: Re: Rotating RAID 1
+Date: Fri, 09 Sep 2011 18:28:56 -0400
+Message-ID: <4E6A9328.6070801@tmr.com>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>	<4E497FB5.3030109@ivitera.com>	<CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>	<4E49849E.4030604@ivitera.com>	<20110816084251.2d8e7831@notabene.brown>	<CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com> <20110816095517.757afc07@notabene.brown> <4E4A0F86.6010907@ivitera.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAEUYfyMCH-Pys9Q+tkDNFKbX-ks+Zm4psZ7zvkkdEkzK4nqyfg@mail.gmail.com>
+In-Reply-To: <4E4A0F86.6010907@ivitera.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Matthews <simon.d.matthews@gmail.com>
-Cc: "Timothy D. Lenz" <tlenz@vorgon.com>, linux-raid@vger.kernel.org
+To: Pavel Hofman <pavel.hofman@ivitera.com>
+Cc: NeilBrown <neilb@suse.de>, =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Simon Matthews wrote:
-> On Sat, Sep 3, 2011 at 10:03 AM, Simon Matthews
-> <simon.d.matthews@gmail.com>  wrote:
+Pavel Hofman wrote:
+> Dne 16.8.2011 01:55, NeilBrown napsal(a):
 >    
->> On Sat, Sep 3, 2011 at 5:17 AM, Robin Hill<robin@robinhill.me.uk>  wrote:
+>>   Also, it doesn't have to be a linear stack.  It could be a binary tree
+>>   though that might take a little more care to construct.
 >>      
->>> On Sat Sep 03, 2011 at 04:35:39 -0700, Simon Matthews wrote:
->>>
->>>        
->>>> On Fri, Sep 2, 2011 at 8:42 AM, Timothy D. Lenz<tlenz@vorgon.com>  wrote:
->>>>          
->>>>>            
->>>>>> How did you install Grub on the second drive? I have seen some
->>>>>> instructions on the web that would not allow the system to boot if the
->>>>>> first drive failed or was removed.
->>>>>>
->>>>>>              
->>>>>
->>>>> I think this is how I did it, at least it is what I had in my notes:
->>>>>
->>>>> grub-install /dev/sda&&  grub-install /dev/sdb
->>>>>
->>>>> And this is from my notes also. It was from an IRC chat. Don't know if it
->>>>> was the raid channel or the grub channel:
->>>>>
->>>>> [14:02]<Jordan_U>  Vorg: No. First, what is the output of grub-install
->>>>> --version?
->>>>> [14:02]<Vorg>    (GNU GRUB 1.98~20100115-1)
->>>>> [14:04]<Jordan_U>  Vorg: Ok, then run "grub-install /dev/sda&&  grub-install
->>>>> /dev/sdb" (where sda and sdb are the members of the array)
->>>>>
->>>>>            
->>>> Which is exactly my point. You installed grub on /dev/sdb such that it
->>>> would  boot off /dev/sdb. But if /dev/sda has failed, on reboot, the
->>>> hard drive that was /dev/sdb is now /dev/sda, but Grub is still
->>>> looking for its files on the non-existent /dev/sdb.
->>>>
->>>>          
->>> The way I do it is to run grub, then for each drive do:
->>>     device (hd0) /dev/sdX
->>>     root (hd0,0)
->>>     setup (hd0)
->>>
->>> That should set up each drive to boot up as the first drive.
->>>
->>>        
->> How about (after installing grub on /dev/sda):
->> dd if=/dev/sda of=/dev/sdb bs=466 count=1
->>      
-> ooops, that should be bs=446, NOT bs=466
+> Since our backup server being a critical resource needs redundancy
+> itself, we are running two degraded RAID1s in parallel, using two
+> internal drives. The two alternating external drives plug into the
+> corresponding bitmap-enabled RAID1.
 >    
 
-Which is why you use grub commands, because a typo can wipe out your 
-drive. May or may not have in this case, but there's no reason to do 
-stuff like that.
+I wonder if you could use a four device raid1 here, two drives 
+permanently installed and two being added one at a time to the array. 
+That gives you internal redundancy and recent backups as well.
+
+I'm still a bit puzzled about the idea of rsync being too much CPU 
+overhead, but I'll pass on that. The issue I have had with raid1 for a 
+backup is that the data isn't always in a logical useful state when you 
+do physical backup. Do thing with scripts and hope you always run the 
+right one.
 
 -- 
 Bill Davidsen<davidsen@tmr.com>
