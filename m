@@ -1,41 +1,44 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Bootable Raid-1
-Date: Fri, 09 Sep 2011 15:09:52 -0400
-Message-ID: <4E6A6480.1060407@tmr.com>
-References: <8B.08.07087.360784D4@cdptpa-omtalb.mail.rr.com> <4D487CA4.2030502@faccat.br>
+Subject: Re: Raid failing, which command to remove the bad drive?
+Date: Fri, 09 Sep 2011 17:54:38 -0400
+Message-ID: <4E6A8B1E.7050102@tmr.com>
+References: <4E57FE4D.5080503@vorgon.com> <20110827084535.5e64bf5c@notabene.brown> <4E5FC63A.1040206@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D487CA4.2030502@faccat.br>
+In-Reply-To: <4E5FC63A.1040206@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: naira@faccat.br
-Cc: lrhorer@satx.rr.com, linux-raid@vger.kernel.org
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Naira Kaieski wrote:
-> Hi,
+Timothy D. Lenz wrote:
 >
-> My metadata is 0.90...
 >
-> My Partitions:
-> /dev/sda1               1         122      979933+  fd  Linux raid 
-> autodetect
-> /dev/sda2   *         123         134       96390   fd  Linux raid 
-> autodetect
-> /dev/sda3             135       19457   155211997+  fd  Linux raid 
-> autodetect
+> On 8/26/2011 3:45 PM, NeilBrown wrote:
+>
+> Got another problem. Removed the drive and tried to start it back up 
+> and now get Grub Error 2. I'm not sure if when I did the mirrors if 
+> something when wrong with installing grub on the second drive< or if 
+> is has to do with [U_] which points to sda in that report instead of 
+> [_U].
+>
+> I know I pulled the correct drive. I had it labled sdb, it's the 
+> second drive in the bios bootup drive check and it's the second 
+> connector on the board. And when I put just it in instead of the 
+> other, I got the noise again.  I think last time a drive failed it was 
+> one of these two drives because I remember recopying grub.
+>
+> I do have another computer setup the same way, that I could put this 
+> remaining drive on to get grub fixed, but it's a bit of a pain to get 
+> the other computer hooked back up and I will have to dig through my 
+> notes about getting grub setup without messing up the array and stuff. 
+> I do know that both computers have been updated to grub 2
+>
+I like to check the table of device names vs. make/model/serno before 
+going to far. I get the out of blkdevtrk to be sure.
 
-When you use RAID1 you can do it one of two ways, as a while drive array 
-or as a series of arrays based on partitions. Some versions of GRUB will 
-only understand 0.90 metadata, so at least the boot partition should use 
-that. In addition, if you don't have the whole drive raid, you really 
-should be sure you have written a useful boot sector to each drive. 
-Other than that I can't think of any particular issues you might have.
-
-Depending on your distribution you may have to create a new boot image 
-using mkinitrd or whatever your distribution has decided is better. If 
-you change your setup after install this is often needed.
 
 -- 
 Bill Davidsen<davidsen@tmr.com>
