@@ -1,44 +1,54 @@
-From: hansbkk@gmail.com
+From: CoolCold <coolthecold@gmail.com>
 Subject: Re: Bootable Raid-1
-Date: Fri, 9 Sep 2011 12:17:40 +0700
-Message-ID: <CAAEZYjyzYOCAMm1Tzs4gi6N=utdwKCUrPSr202-9MwOybu8LLA@mail.gmail.com>
-References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com>
-	<60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
-	<CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
+Date: Fri, 9 Sep 2011 12:59:01 +0400
+Message-ID: <976829848.20110909125901@gmail.com>
+References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com> <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
+In-Reply-To: <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Sep 9, 2011 at 3:28 AM, CoolCold <coolthecold@gmail.com> wrote:
-> how does Grub2 react on degraded raid? Does it respect md's point of view which disk is bad and which is not? Does it cooperate well with mdadm in general?
+On Wed, Feb 2, 2011 at 9:44 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
+te:
 
-Without being able to answer that specific question (my guesses: "very
-well", "most likely" and "it better" 8-)
+Resending because 1st letter was not delivered.
 
-What I do is use a relatively small (and possibly slower) physical
-hard drive for boot purposes, which doesn't contain any important
-data. Easy enough to keep a RAID1 member on a shelf or offsite for
-disaster recovery, image it or whatever.
+<snip>
+>>
+>> grub2 work with raid1 boot partition and rootfs over mdadm raid1
+>> i tested today (03:00 AM) on my ubuntu desktop
+>
+> =A0 =A0 =A0 =A0There wasn't really any question about that. =A0I've b=
+een running
+> RAID1 boots under GRUB2 for months. =A0Prior to that, it was RAID1 un=
+der GRUB
+> legacy. =A0RAID1 under GRUB legacy takes some finagling. =A0Under GRU=
+B2 it
+> should be straightforward as long as the partitioning is correct and =
+one
+> employs a 0.90 superblock for the /boot array.
+>
+Guys, basing on your experience, can you tell us, how does Grub2 react
+on degraded raid? Does it respect md's point of view which disk is bad
+and which is not? Does it cooperate well with mdadm in general?
 
-The arrays that keep important userland data are on completely
-separate (in my case RAID6) arrays, and wouldn't have anything to do
-with the boot process. In fact they are easily moved from one host to
-another as needed - many hosts run in VMs anyway.
+Grub legacy was way easy, just setup on disk & read that disk, no raid
+knowledge, no problems. I guess grub2 can be configured in that manner
+too, but as it has raid/lvm/whatever support, may be give it a try...
 
-Such a principle can be implemented even in simpler/smaller
-environments with very little added cost.
+I've got Debian Squeeze servers with grub2, without any mirroing, so
+converting them into RAID1 system, wanna make it right.
 
-I'd advise playing/learning with a couple scratch drives, perhaps
-using a recent debian or ubuntu LiveCD. Don't use any GUI tools, just
-follow the local man and online resources.
+--=20
+Best regards,
+[COOLCOLD-RIPN]
 
-The new tool strives to be user-friendly and idiot-proof, and
-therefore inevitably is more complex if you actually want to
-understand the internal details of what its doing. But it's not rocket
-science, maybe a half-day's worth of research and testing and you'll
-be a GRUB2 guru. . .
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
