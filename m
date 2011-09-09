@@ -1,109 +1,110 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
 Subject: Re: Best strategy to incrementally replace smaller HDDs
-Date: Fri, 9 Sep 2011 14:13:51 +0100
-Message-ID: <20110909131351.GA25347@cthulhu.home.robinhill.me.uk>
+Date: Fri, 09 Sep 2011 16:12:36 +0200
+Message-ID: <1315577572.14468.11.camel@michal-laptop>
 References: <1315565285.2291.25.camel@michal-laptop>
+	 <j4d19g$1r4$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="X1bOJ3K7DJ5YkBrT"
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-zeZJsAMiTGEAhi+i1KZZ"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1315565285.2291.25.camel@michal-laptop>
+In-Reply-To: <j4d19g$1r4$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?utf-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+To: David Brown <david@westcontrol.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---X1bOJ3K7DJ5YkBrT
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+--=-zeZJsAMiTGEAhi+i1KZZ
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri Sep 09, 2011 at 12:48:01PM +0200, Micha=C5=82 Sawicz wrote:
-
-> Hi all, given the configuration below:
->       * 8 x 1TB HDDs
->       * 2 x 2TB HDDs
+Dnia 2011-09-09, pi=C4=85 o godzinie 14:34 +0200, David Brown pisze:
+> On 09/09/2011 12:48, Micha=C5=82 Sawicz wrote:
+> > Hi all, given the configuration below:
+> >        * 8 x 1TB HDDs
+> >        * 2 x 2TB HDDs
+> >
+> > On which I currently have:
+> >        * (10 x 1TB) RAID6 - persistent storage
+> >        * (2 x 1TB) system / temporary storage etc.
+> >
 >=20
-=46rom what you cover below, it sounds like you're limited to 10 drives in
-total. Is this the case?
+> By this do you mean that you have 8 x 1TB drives with a 1 TB partition=
+=20
+> on each, and 2 x 2T drives with 2 x 1TB partition on each?  So that the=
+=20
+> two big disks are shared with both raids?
+Yes, that wasn't like that before, but that's a result of exchanging two
+1TB drives to 2TB ones.=20
 
-> On which I currently have:
->       * (10 x 1TB) RAID6 - persistent storage
->       * (2 x 1TB) system / temporary storage etc.
+> > I want to replace the 1TB drives for 2TB ones on an as-needed basis,
+> > what strategy would you recommend?
 >=20
-> I want to replace the 1TB drives for 2TB ones on an as-needed basis,
-> what strategy would you recommend?
->=20
->      1. If I moved to 2TB RAID6 members (using RAID0 on the 1TB drives),
->         I would need to replace two of the drives just to match current
->         capacity. Each next 2TB drive would get me 1TB additional
->         capacity (but actually I'd need to replace two to gain
->         anything). That sounds to be most future-proof, but most
->         expensive.
->      2. If I moved to 2TB RAID5 members, that would reduce redundancy
->         but replacing just two would gain me 2TB capacity. Most of the
->         above still applies.
+> This sounds like you are thinking that you can replace a single disk in=
+=20
+> your RAID6 array and get more storage - changing 10 x 1 TB raid6 =3D 8TB=
+=20
+> into 9 x 1TB + 1 x 2TB raid6 =3D 9 TB.  It doesn't work like that.  You=
+=20
+> will have to replace /all/ your 1 TB devices with 2 TB devices (and move=
+=20
+> the second raid off the two existing 2TB devices) - all members of the=
+=20
+> raid6 must be the same size.
+Actually no, I know how RAIDs work, so the three schemes I described
+below account for that.
 
-So, for both of these, you're planning on changing to:
-    * (2 x 1TB) system
-    * (2 x 2TB) + (3 x 1+1TB) persistent storage
+> To help you plan your upgrades, it is also useful to know your=20
+> partitioning scheme (for example, do you use LVM?), whether you have the=
+=20
+> space to put lots more drives in the system or must do it one drive at a=
+=20
+> time, whether you can take the system off-line during the process, and=
+=20
+> whether you need to do the upgrade quickly or can spend a week or so at=
+=20
+> it (some of these are conflicting requirements).
+No LVM here. The most important - big RAID6 - is a single partition. The
+remaining 2 x 1TB on the big drives are split into RAID1 for boot,
+RAID10 for root, RAID0 for temporary storage and swap space. I can
+temporarily put more drives in there. I can take it off-line for some
+periods and I can do the upgrade over an extended period of time.=20
 
-This gives you 6TB persistent storage in RAID6, or 8TB in RAID5. As you
-say, replacing 2 1TB drives for 2TB drives (or adding a 2TB drive, if
-possible) would give you 8TB in RAID6 again.
+> Before you think about upgrading, however, make sure you have a solid=20
+> backup.  Then make sure you have a backup of that backup - and a plan=20
+> for how to restore everything if something goes horribly wrong.
+Yeah... I plan to rely on RAID's redundancy by moving data around,
+growing / shrinking the filesystems and then shuffling the HDDs. I know
+that's asking for trouble, but I haven't yet found a place to rent 8TBs
+of storage for a week... And that's worked for me in the past, btw.
+Twice, even, IIRC.
 
-You'll also need to do a backup, rebuild & restore for either of these
-solutions.
-
-In either case, replacing a single drive (assuming you're limited in
-total drive count) would not gain any capacity, whereas a pair of drive
-replacements would give you a 2TB increase.
-
-I'd steer clear of RAID5 with 2TB drives - rebuilding a 2TB drive will
-present a very large window for total array failure.
-
->      3. If I kept to 1TB RAID6 (two on the 2TB drives), I would reduce
->         the redundancy to just one drive if it was the 2TB drive that
->         failed, but each new drive would gain me 1TB capacity and I only
->         need to replace one-by-one. This sounds like the cheapest, but
->         worst possible approach.
->=20
-Losing a single 2TB drive would lose 2 partitions, wiping out all
-redundancy. You're only needing to rebuild 1TB before you're back to
-partial redundancy though, so you're less prone to read failures than
-with RAID5 above. A second 2TB drive failure during recovery of either
-partition will cause total array failure though.
-
-Replacing a single 1TB drive would gain you 1TB in space.
-
-There's also no need to do a complete wipe & restore - you can just
-replace the drive and recover onto the new one.
-
-Performance will be worse (particularly during recovery) as you're
-always seeking between the two partitions.
-
-Personally, I'd go with RAID6 on 2TB partitions. It is more expensive,
-but I think the performance and redundancy benefits outweigh the costs.
-
-Cheers,
-    Robin
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
 
---X1bOJ3K7DJ5YkBrT
-Content-Type: application/pgp-signature
+--=-zeZJsAMiTGEAhi+i1KZZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEARECAAYFAk5qEQ8ACgkQShxCyD40xBLN5wCcCP8wce9XCISDBqz9mcnQeS2q
-NAwAoLVOD0tkQzK9RZoiX8jYNqNchK1u
-=NuYa
+iQIcBAABAgAGBQJOah7UAAoJEGnv7NPGHSZFr4gP/R1SMqdQ5tvAIoaAvfiiUTUh
+t+63PUdaooAe6fncGEnQ56jDf0CwnbexQugaFE1OctWHzvzBK1sDAqabg7Kr3Nu8
+HWpUVI3ELKdDep3dS0GXkvX1C3STuHY+uZYPSjr3Wl/9K+Gc8r8huHcMbwXaANK7
+D5c1GmmGjf/XpONl+gzkHVl+v0XEBjm2HtTBmhZ6jniAsRkymFl5m6j5JwM/W3SJ
+LweygFetcigarVPwyaFsieB4zyksL8aaBscBsL4XhhcDI7FUq4Ur5wrXo3Dv0zU6
+8B1jP0k1CQM37twuuxdHxcW9Uu9DSC28O/C9SdnX4xe1RgcWjsveolZecLL6up3X
+haSYSDl+vy5JAKQOSyYZAtjV9FtgJiJcBF5owFcmlI/h4H75swOj+X5WrGpbU4RX
+bNEig6v0Ihwo1W4dcyK6ggH02LL8h2iLImaCUSn3npqwLvSJPN2gAObrC5Zvd1pG
+nYxEzOHmWfWoXOHLQhkSM4GtIEf6plyxh5kMylnMTTiBaEsE0YFvbvRb0nTMa885
+7pt8BR2W9GsgeHA6lTG7l0sJUaFkf+mhRnnEOr4IBPA3XPBY6fAhGw3Jrfurg1vc
+a9A+Y9d1wBPfK7ziKcsRjZXshgKjuyrRO3LRzooS+WsXd5dKzUeI0nbvAT7kRkxZ
+v7ZGK5jsTjpA6WghLUim
+=km5Q
 -----END PGP SIGNATURE-----
 
---X1bOJ3K7DJ5YkBrT--
+--=-zeZJsAMiTGEAhi+i1KZZ--
+
