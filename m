@@ -1,44 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULL REQUEST] more md fixes for 3.1
-Date: Sat, 10 Sep 2011 17:33:20 +1000
-Message-ID: <20110910173320.3e62bea0@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Bootable Raid-1
+Date: Sat, 10 Sep 2011 12:56:00 -0500
+Message-ID: <AB.31.01343.0B4AB6E4@cdptpa-omtalb.mail.rr.com>
+References: <CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Pim Zandbergen <P.Zandbergen@macroscoop.nl>, Bruno Wolff III <bruno@wolff.to>, Wu Fengguang <fengguang.wu@intel.com>, Christoph Hellwig <hch@lst.de>, Hugh Dickins <hughd@google.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: 'CoolCold' <coolthecold@gmail.com>
+Cc: 'Roberto Spadim' <roberto@spadim.com.br>, hansbkk@gmail.com, naira@faccat.br, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Linus, 
- a few more little fixes for md for 3.1
- One is not in md code but is triggered by md.
- one is a minor fix needed to prepare for the next
- one fixed a bug introduced in 3.1
- last is a longer standing bug which is cc:ed to stable.
 
-Thanks,
-NeilBrown
+> -----Original Message-----
+> From: CoolCold [mailto:coolthecold@gmail.com]
+> Sent: Thursday, September 08, 2011 3:29 PM
+> To: lrhorer@satx.rr.com
+> Cc: Roberto Spadim; hansbkk@gmail.com; naira@faccat.br; linux-
+> raid@vger.kernel.org
+> Subject: Re: Bootable Raid-1
+>=20
+> On Wed, Feb 2, 2011 at 9:44 PM, Leslie Rhorer <lrhorer@satx.rr.com> w=
+rote:
+> <snip>
+> >>
+> >> grub2 work with raid1 boot partition and rootfs over mdadm raid1
+> >> i tested today (03:00 AM) on my ubuntu desktop
+> >
+> > =A0 =A0 =A0 =A0There wasn't really any question about that. =A0I've=
+ been running
+> > RAID1 boots under GRUB2 for months. =A0Prior to that, it was RAID1 =
+under
+> GRUB
+> > legacy. =A0RAID1 under GRUB legacy takes some finagling. =A0Under G=
+RUB2 it
+> > should be straightforward as long as the partitioning is correct an=
+d one
+> > employs a 0.90 superblock for the /boot array.
+> >
+> Guys, basing on your experience, can you tell us, how does Grub2 reac=
+t
+> on degraded raid? Does it respect md's point of view which disk is ba=
+d
+> and which is not? Does it cooperate well with mdadm in general?
 
+	I can't say from experience.  Presumably it will.
 
+> Grub legacy was way easy, just setup on disk & read that disk, no rai=
+d
+> knowledge, no problems. I guess grub2 can be configured in that manne=
+r
+> too, but as it has raid/lvm/whatever support, may be give it a try...
+>=20
+> I've got Debian Squeeze servers with grub2, without any mirroing, so
+> converting them into RAID1 system, wanna make it right.
 
-The following changes since commit ddf28352b80c86754a6424e3a61e8bdf9213b3c7:
+	That conversion shouldn't be difficult.  Going from legacy GRUB
+RAID1 to GRUB2 RAID1 was a bit of a challenge.
 
-  Linux 3.1-rc5 (2011-09-04 15:45:10 -0700)
-
-are available in the git repository at:
-  git://neil.brown.name/md for-linus
-
-NeilBrown (4):
-      Avoid dereferencing a 'request_queue' after last close.
-      md/raid10: unify handling of write completion.
-      md/raid1,10: Remove use-after-free bug in make_request.
-      md: Fix handling for devices from 2TB to 4TB in 0.90 metadata.
-
- drivers/md/md.c     |   12 ++++++++++--
- drivers/md/raid1.c  |   14 +++++++++-----
- drivers/md/raid10.c |   47 ++++++++++++++++++++++++-----------------------
- fs/block_dev.c      |    7 +++++--
- 4 files changed, 48 insertions(+), 32 deletions(-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
