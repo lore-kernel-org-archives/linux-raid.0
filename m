@@ -1,68 +1,55 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Bootable Raid-1
-Date: Sat, 10 Sep 2011 12:56:00 -0500
-Message-ID: <AB.31.01343.0B4AB6E4@cdptpa-omtalb.mail.rr.com>
-References: <CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Converting RAID1 to RAID5
+Date: Sat, 10 Sep 2011 23:38:09 -0400
+Message-ID: <CAB1R3si_QAtOwfzmYkrUz=+xPO7zSMoZEpO5+oEdXvbUnR1zzw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGqmV7qRQ-6-dpTt5pywugtchFF4NtA5sNvVhBCOirpGhdgWiQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'CoolCold' <coolthecold@gmail.com>
-Cc: 'Roberto Spadim' <roberto@spadim.com.br>, hansbkk@gmail.com, naira@faccat.br, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
+I have a a few two-disk RAID1 partitions that I'd like to convert to
+three-disk RAID5 partitions using fedora15 with ext4. I've read a few
+docs online, but none that are authoritative or current. Some even say
+to zero the superblock first, which doesn't sound safe at all.
 
+The partitions were created using v1.0 with mdadm-3.2.2:
 
-> -----Original Message-----
-> From: CoolCold [mailto:coolthecold@gmail.com]
-> Sent: Thursday, September 08, 2011 3:29 PM
-> To: lrhorer@satx.rr.com
-> Cc: Roberto Spadim; hansbkk@gmail.com; naira@faccat.br; linux-
-> raid@vger.kernel.org
-> Subject: Re: Bootable Raid-1
->=20
-> On Wed, Feb 2, 2011 at 9:44 PM, Leslie Rhorer <lrhorer@satx.rr.com> w=
-rote:
-> <snip>
-> >>
-> >> grub2 work with raid1 boot partition and rootfs over mdadm raid1
-> >> i tested today (03:00 AM) on my ubuntu desktop
-> >
-> > =A0 =A0 =A0 =A0There wasn't really any question about that. =A0I've=
- been running
-> > RAID1 boots under GRUB2 for months. =A0Prior to that, it was RAID1 =
-under
-> GRUB
-> > legacy. =A0RAID1 under GRUB legacy takes some finagling. =A0Under G=
-RUB2 it
-> > should be straightforward as long as the partitioning is correct an=
-d one
-> > employs a 0.90 superblock for the /boot array.
-> >
-> Guys, basing on your experience, can you tell us, how does Grub2 reac=
-t
-> on degraded raid? Does it respect md's point of view which disk is ba=
-d
-> and which is not? Does it cooperate well with mdadm in general?
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.0
+  Creation Time : Sat Jan  1 13:07:37 2011
+     Raid Level : raid1
+     Array Size : 511988 (500.07 MiB 524.28 MB)
+  Used Dev Size : 511988 (500.07 MiB 524.28 MB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-	I can't say from experience.  Presumably it will.
+    Update Time : Sat Sep 10 23:11:23 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-> Grub legacy was way easy, just setup on disk & read that disk, no rai=
-d
-> knowledge, no problems. I guess grub2 can be configured in that manne=
-r
-> too, but as it has raid/lvm/whatever support, may be give it a try...
->=20
-> I've got Debian Squeeze servers with grub2, without any mirroing, so
-> converting them into RAID1 system, wanna make it right.
+           Name : localhost.localdomain:0
+           UUID : a7af0eec:2bf1bb46:a6afa7a4:6e61d731
+         Events : 181
 
-	That conversion shouldn't be difficult.  Going from legacy GRUB
-RAID1 to GRUB2 RAID1 was a bit of a challenge.
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I've read the man page, and it seems to indicate to use the --grow
+option, but it's still a little unclear. I've read that the arrays
+should be stopped first, but the man page seems to indicate it should
+be performed on a running array.
+
+Is the general process to first convert the RAID1 to a two-disk RAID5,
+then --add the third disk?
+
+Thanks,
+Alex
