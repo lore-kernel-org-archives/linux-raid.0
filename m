@@ -1,78 +1,39 @@
-From: Alex <mysqlstudent@gmail.com>
-Subject: Re: Converting RAID1 to RAID5
-Date: Sun, 11 Sep 2011 11:40:57 -0400
-Message-ID: <CAB1R3sgXWSCO+=GZf2aY9ktnDuHhauz132O4FN1ZTSbMcthakw@mail.gmail.com>
-References: <CAB1R3si_QAtOwfzmYkrUz=+xPO7zSMoZEpO5+oEdXvbUnR1zzw@mail.gmail.com>
-	<20110911055703.73deb44d@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: raid array with 3T disks and GPT partition
+Date: Sun, 11 Sep 2011 12:59:20 -0400
+Message-ID: <4E6CE8E8.7030606@tmr.com>
+References: <20110901154759.GA32649@apartia.fr> <20110901155913.GA20825@cthulhu.home.robinhill.me.uk> <20110901163334.GA13347@apartia.fr> <4E5FB8EC.5040801@redhat.com> <4E5FD973.4000208@grumpydevil.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110911055703.73deb44d@notabene.brown>
+In-Reply-To: <4E5FD973.4000208@grumpydevil.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Rudy Zijlstra wrote:
+>
+>>> However lilo won't boot on anything other than 0.9, this I found the
+>>> hard way :)
+>>
+>> Lilo should be able to boot on version 1.0 arrays too.  It's just 
+>> version 1.1 and 1.2 arrays that kill lilo.  But, then again, lilo is 
+>> so long since dead that one has to wonder why you are still using it.
+>>
+> At least lilo has an understandable way of working. grub2 is just.... 
+> a big pain in the *ass as far as i am concerned.
 
->> I have a a few two-disk RAID1 partitions that I'd like to convert to
->> three-disk RAID5 partitions using fedora15 with ext4. I've read a fe=
-w
->> docs online, but none that are authoritative or current. Some even s=
-ay
->> to zero the superblock first, which doesn't sound safe at all.
-=2E..
->> Is the general process to first convert the RAID1 to a two-disk RAID=
-5,
->> then --add the third disk?
->
-> I strongly suggest that you create a couple of loop-back devices and
-> experiment.
-> ie.
->
-> =A0for i in 0 1 2
-> =A0do
-> =A0 =A0dd if=3D/dev/zero of=3D/tmp/file$i bs=3D1M count=3D100
-> =A0 =A0losetup /dev/loop$i /tmp/file$i
-> =A0done
->
-> =A0mdadm -C /dev/md0 -l1 -n2 -e 1.0 /dev/loop0 /dev/loop1
-> =A0mkfs /dev/md0
-> =A0mount /dev/md0 /mnt
-> =A0cp -r /lib /mnt
->
-> =A0then try some things. e.g.
->
-> =A0mdadm /dev/md0 --add /dev/loop2
-> =A0mdadm --grow /dev/md0 --level=3D5 --raid-devices=3D3
->
-> =A0Try failing a device during the reshape. =A0Check if the data is s=
-till OK.
-> =A0Try it as two separate steps and see if it makes a difference.
->
-> Experimenting will give you a lot more confidence than any mount of
-> authoritative statements about what it should do.
+I would say that grub seems easier to use than grub2. Haven't used lilo 
+since I got off Slackware, and it has an annoying limit of 19 bootable 
+kernels.
 
-Yes, definitely. I have an understanding now of what needs to be done,
-and am comfortable with mdadm, just not this procedure. I've followed
-your steps and they worked successfully.
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
 
-I just wasn't sure from my reading whether this was a supported
-procedure, or whether there were still experimental steps required.
 
-> There was once a tool called raidreconf which would reshape an array =
-while it
-> is offline. =A0That isn't supported anymore.
 
-Yes, I came across that as well, but sounds like it's just not
-necessary any longer because it's so well supported in mdadm itself,
-correct?
-
-Thanks,
-Alex
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
