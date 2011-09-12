@@ -1,161 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/2] block: refactor generic_make_request
-Date: Mon, 12 Sep 2011 09:42:02 -0400
-Message-ID: <20110912134202.GA22953@infradead.org>
-References: <20110911145053.GA28996@infradead.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Rotating RAID 1
+Date: Mon, 12 Sep 2011 10:20:34 -0400
+Message-ID: <4E6E1532.6080700@tmr.com>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>	<4E497FB5.3030109@ivitera.com>	<CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>	<4E49849E.4030604@ivitera.com>	<20110816084251.2d8e7831@notabene.brown>	<CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com> <20110816095517.757afc07@notabene.brown> <4E4A0F86.6010907@ivitera.com> <4E6A9328.6070801@tmr.com> <4E6D0A37.2000900@ivitera.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110911145053.GA28996@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E6D0A37.2000900@ivitera.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Pavel Hofman <pavel.hofman@ivitera.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Move all the checks performed on a bio into a new helper, and call it as
-soon as bio is submitted even if it is a re-submission from ->make_request.
+Pavel Hofman wrote:
+> Dne 10.9.2011 00:28, Bill Davidsen napsal(a):
+>    
+>> Pavel Hofman wrote:
+>>      
+>>> Dne 16.8.2011 01:55, NeilBrown napsal(a):
+>>>
+>>>        
+>>>>    Also, it doesn't have to be a linear stack.  It could be a binary tree
+>>>>    though that might take a little more care to construct.
+>>>>
+>>>>          
+>>> Since our backup server being a critical resource needs redundancy
+>>> itself, we are running two degraded RAID1s in parallel, using two
+>>> internal drives. The two alternating external drives plug into the
+>>> corresponding bitmap-enabled RAID1.
+>>>
+>>>        
+>> I wonder if you could use a four device raid1 here, two drives
+>> permanently installed and two being added one at a time to the array.
+>> That gives you internal redundancy and recent backups as well.
+>>      
+> I am not sure you could employ the write-intent bitmap then. And the
+> bitmap makes the backup considerably faster.
+>    
 
-We explicitly mark the new helper as beeing non-inlined as the stack
-usage for printing the block device name in the failure case is quite
-high and this a patch where we have to be extremely conservative about
-stack usage.
+With --bitmap=internal you should have all of the information you need 
+to do fast recovery, but I may misunderstand internal bitmap and 
+possibly incremental build. What I proposed was creating the array as 
+dev1 dev2 dev3 missing, then dev3 or dev4 could be added and brought up 
+to current independently because they would be separate devices.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+-- 
+Bill Davidsen<davidsen@tmr.com>
+   We are not out of the woods yet, but we know the direction and have
+taken the first step. The steps are many, but finite in number, and if
+we persevere we will reach our destination.  -me, 2010
 
-Index: linux-2.6/block/blk-core.c
-===================================================================
---- linux-2.6.orig/block/blk-core.c	2011-09-08 12:07:09.943065855 +0200
-+++ linux-2.6/block/blk-core.c	2011-09-08 12:08:23.463277870 +0200
-@@ -1412,31 +1412,8 @@ static inline int bio_check_eod(struct b
- 	return 0;
- }
- 
--/**
-- * generic_make_request - hand a buffer to its device driver for I/O
-- * @bio:  The bio describing the location in memory and on the device.
-- *
-- * generic_make_request() is used to make I/O requests of block
-- * devices. It is passed a &struct bio, which describes the I/O that needs
-- * to be done.
-- *
-- * generic_make_request() does not return any status.  The
-- * success/failure status of the request, along with notification of
-- * completion, is delivered asynchronously through the bio->bi_end_io
-- * function described (one day) else where.
-- *
-- * The caller of generic_make_request must make sure that bi_io_vec
-- * are set to describe the memory buffer, and that bi_dev and bi_sector are
-- * set to describe the device address, and the
-- * bi_end_io and optionally bi_private are set to describe how
-- * completion notification should be signaled.
-- *
-- * generic_make_request and the drivers it calls may use bi_next if this
-- * bio happens to be merged with someone else, and may change bi_dev and
-- * bi_sector for remaps as it sees fit.  So the values of these fields
-- * should NOT be depended on after the call to generic_make_request.
-- */
--static inline void __generic_make_request(struct bio *bio)
-+static noinline_for_stack bool
-+generic_make_request_checks(struct bio *bio)
- {
- 	struct request_queue *q;
- 	int nr_sectors = bio_sectors(bio);
-@@ -1515,35 +1492,62 @@ static inline void __generic_make_reques
- 
- 	/* if bio = NULL, bio has been throttled and will be submitted later. */
- 	if (!bio)
--		return;
-+		return false;
-+
- 	trace_block_bio_queue(q, bio);
--	q->make_request_fn(q, bio);
--	return;
-+	return true;
- 
- end_io:
- 	bio_endio(bio, err);
-+	return false;
- }
- 
--/*
-- * We only want one ->make_request_fn to be active at a time,
-- * else stack usage with stacked devices could be a problem.
-- * So use current->bio_list to keep a list of requests
-- * submited by a make_request_fn function.
-- * current->bio_list is also used as a flag to say if
-- * generic_make_request is currently active in this task or not.
-- * If it is NULL, then no make_request is active.  If it is non-NULL,
-- * then a make_request is active, and new requests should be added
-- * at the tail
-+/**
-+ * generic_make_request - hand a buffer to its device driver for I/O
-+ * @bio:  The bio describing the location in memory and on the device.
-+ *
-+ * generic_make_request() is used to make I/O requests of block
-+ * devices. It is passed a &struct bio, which describes the I/O that needs
-+ * to be done.
-+ *
-+ * generic_make_request() does not return any status.  The
-+ * success/failure status of the request, along with notification of
-+ * completion, is delivered asynchronously through the bio->bi_end_io
-+ * function described (one day) else where.
-+ *
-+ * The caller of generic_make_request must make sure that bi_io_vec
-+ * are set to describe the memory buffer, and that bi_dev and bi_sector are
-+ * set to describe the device address, and the
-+ * bi_end_io and optionally bi_private are set to describe how
-+ * completion notification should be signaled.
-+ *
-+ * generic_make_request and the drivers it calls may use bi_next if this
-+ * bio happens to be merged with someone else, and may resubmit the bio to
-+ * a lower device by calling into generic_make_request recursively, which
-+ * means the bio should NOT be touched after the call to ->make_request_fn.
-  */
- void generic_make_request(struct bio *bio)
- {
- 	struct bio_list bio_list_on_stack;
- 
-+	if (!generic_make_request_checks(bio))
-+		return;
-+
-+	/*
-+	 * We only want one ->make_request_fn to be active at a time, else
-+	 * stack usage with stacked devices could be a problem.  So use
-+	 * current->bio_list to keep a list of requests submited by a
-+	 * make_request_fn function.  current->bio_list is also used as a
-+	 * flag to say if generic_make_request is currently active in this
-+	 * task or not.  If it is NULL, then no make_request is active.  If
-+	 * it is non-NULL, then a make_request is active, and new requests
-+	 * should be added at the tail
-+	 */
- 	if (current->bio_list) {
--		/* make_request is active */
- 		bio_list_add(current->bio_list, bio);
- 		return;
- 	}
-+
- 	/* following loop may be a bit non-obvious, and so deserves some
- 	 * explanation.
- 	 * Before entering the loop, bio->bi_next is NULL (as all callers
-@@ -1557,16 +1561,15 @@ void generic_make_request(struct bio *bi
- 	 * from the top.  In this case we really did just take the bio
- 	 * of the top of the list (no pretending) and so remove it from
- 	 * bio_list, and call into __generic_make_request again.
--	 *
--	 * The loop was structured like this to make only one call to
--	 * __generic_make_request (which is important as it is large and
--	 * inlined) and to keep the structure simple.
- 	 */
- 	BUG_ON(bio->bi_next);
- 	bio_list_init(&bio_list_on_stack);
- 	current->bio_list = &bio_list_on_stack;
- 	do {
--		__generic_make_request(bio);
-+		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
-+
-+		q->make_request_fn(q, bio);
-+
- 		bio = bio_list_pop(current->bio_list);
- 	} while (bio);
- 	current->bio_list = NULL; /* deactivate */
+
+
