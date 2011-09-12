@@ -1,95 +1,41 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] block: remove support for bio remapping from
- ->make_request
-Date: Mon, 12 Sep 2011 05:25:08 +0200
-Message-ID: <20110912052508.6b59b5ac@notabene.brown>
-References: <20110911145053.GA28996@infradead.org>
-	<20110911145129.GA29504@infradead.org>
+Subject: Re: mdadm/Monitor.c - never removes MD devices from statelist
+Date: Mon, 12 Sep 2011 05:36:46 +0200
+Message-ID: <20110912053646.5eb0b55d@notabene.brown>
+References: <CAGRgLy4=mq_py=Qr+Mk8MOvXY1fbwgeEmEr1kAcmiwHQfCZweg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110911145129.GA29504@infradead.org>
+In-Reply-To: <CAGRgLy4=mq_py=Qr+Mk8MOvXY1fbwgeEmEr1kAcmiwHQfCZweg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 11 Sep 2011 10:51:29 -0400 Christoph Hellwig <hch@infradead.org>
+On Sun, 11 Sep 2011 21:32:12 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> There is very little benefit in allowing to let a ->make_request instance update
-> the bios device and sector and loop around it in __generic_make_request when
-> we can archive the same through calling generic_make_request from the driver
-> and letting the loop in generic_make_request handle it.
-
-Completely agree - I like this change!
-
+> Hi everybody,
+> looking at the code of Monitor.c and doing some tests with it, I see
+> that it is capable of detecting new arrays, when they appear in
+> /proc/mdstat (if --scan is given). However, once array is added to
+> 'statelist', it is never removed from there. Is this intentional?
+> Perhaps only if --scan is given, and device disappears from
+> /proc/mdstat, then it should be removed from monitoring, otherwise it
+> could stick there forever, even though the array has been gone long
+> time ago. And if it appears again, it will be picked up anyways.
 > 
-> Note that various drivers got the return value from ->make_request and returned
-> non-zero values for errors.
 
-:-(
+You are right - arrays are never removed.
 
-A diff-stat would have been nice... I think I've found all 'my' files though.
+Is that a problem?  Probably not, though I guess you could probably create
+a scenario where there were lots of inactive devices cluttering memory.
 
+Is it worth fixing?  I don't know - it depends on how intrusive the patch is.
+We would only want to remove arrays with ->err set if 'scan' was set, but
+when it is, it possible makes sense.
 
+Want to try creating a patch?
 
-> Index: linux-2.6/drivers/md/faulty.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/md/faulty.c	2011-09-08 12:01:53.000000000 +0200
-> +++ linux-2.6/drivers/md/faulty.c	2011-09-08 12:05:58.602773802 +0200
-> @@ -169,7 +169,7 @@ static void add_sector(conf_t *conf, sec
->  		conf->nfaults = n+1;
->  }
->  
-> -static int make_request(mddev_t *mddev, struct bio *bio)
-> +static void make_request(mddev_t *mddev, struct bio *bio)
->  {
->  	conf_t *conf = mddev->private;
->  	int failit = 0;
-> @@ -181,7 +181,7 @@ static int make_request(mddev_t *mddev,
->  			 * just fail immediately
->  			 */
->  			bio_endio(bio, -EIO);
-> -			return 0;
-> +			return;
->  		}
->  
->  		if (check_sector(conf, bio->bi_sector, bio->bi_sector+(bio->bi_size>>9),
-> @@ -214,12 +214,11 @@ static int make_request(mddev_t *mddev,
->  		b->bi_bdev = conf->rdev->bdev;
->  		b->bi_private = bio;
->  		b->bi_end_io = faulty_fail;
-> -		generic_make_request(b);
-> -		return 0;
->  	} else {
->  		bio->bi_bdev = conf->rdev->bdev;
-> -		return 1;
->  	}
-> +
-> +	generic_make_request(b);
->  }
-
-If the 'else' branch was taken, we need to generic_make_request(bio).
-And 'b' isn't even declared at this level.
-So at the end of the 'then' branch, add
-        bio = b;
-and make the final call
-        generic_make_request(bio);
-
-
-Changes to these files:
-> Index: linux-2.6/drivers/md/linear.c
-> Index: linux-2.6/drivers/md/multipath.c
-> Index: linux-2.6/drivers/md/raid0.c
-> Index: linux-2.6/drivers/md/raid1.c
-> Index: linux-2.6/drivers/md/raid10.c
-> Index: linux-2.6/drivers/md/raid5.c
-> Index: linux-2.6/drivers/md/md.h
-> Index: linux-2.6/drivers/md/md.c
-
-Acked-by: NeilBrown <neilb@suse.de>
-
-Thanks,
 NeilBrown
