@@ -1,7 +1,7 @@
-From: Andriano <chief000@gmail.com>
+From: Roman Mamedov <rm@romanrm.ru>
 Subject: Re: RAID6 issues
-Date: Tue, 13 Sep 2011 19:05:41 +1000
-Message-ID: <CAGZH0-fYrC91=kBMxO3FKKtY0Zmnx4D4+-DD43cbHVNhc2pp3A@mail.gmail.com>
+Date: Tue, 13 Sep 2011 16:29:51 +0600
+Message-ID: <20110913162951.6b4297db@natsu>
 References: <CAGZH0-dz9y5=vH7PQr8VRy15i1WsuAxKjPPpmx8-1UqCaJnRxg@mail.gmail.com>
 	<20110913082511.3c34dec9@notabene.brown>
 	<CAGZH0-fEU+NTdAF1AWcU6SnyBPYgd51zjizaiZT_toV=k4EDFg@mail.gmail.com>
@@ -11,67 +11,57 @@ References: <CAGZH0-dz9y5=vH7PQr8VRy15i1WsuAxKjPPpmx8-1UqCaJnRxg@mail.gmail.com>
 	<CAGZH0-f+e80W36VMZMHrTakTxUHO2nppO9xHSTmHh6QV_Mo2Fg@mail.gmail.com>
 	<20110913144424.64348c41@natsu>
 	<CAGZH0-eAynK17a-B=x-pKHXpN8K+tDNb7cOYqa3M1ThhyvB=4g@mail.gmail.com>
+	<CAGZH0-fYrC91=kBMxO3FKKtY0Zmnx4D4+-DD43cbHVNhc2pp3A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/hy0di3LOsiWFpt4noF4qajf"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGZH0-eAynK17a-B=x-pKHXpN8K+tDNb7cOYqa3M1ThhyvB=4g@mail.gmail.com>
+In-Reply-To: <CAGZH0-fYrC91=kBMxO3FKKtY0Zmnx4D4+-DD43cbHVNhc2pp3A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <rm@romanrm.ru>
+To: Andriano <chief000@gmail.com>
 Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 13, 2011 at 6:57 PM, Andriano <chief000@gmail.com> wrote:
-> On Tue, Sep 13, 2011 at 6:44 PM, Roman Mamedov <rm@romanrm.ru> wrote:
->> On Tue, 13 Sep 2011 17:51:56 +1000
->> Andriano <chief000@gmail.com> wrote:
->>
->>> Apparently you're right
->>> blockdev --getsz /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg
->>> /dev/sdh /dev/sdi /dev/sdj /dev/sdk
->>> 3907027055
->>> 3907027055
->>> 3907029168
->>> 3907029168
->>> 3907029168
->>> 3907029168
->>> 3907027055
->>> 3907029168
->>> 3907029168
->>> 3907029168
->>>
->>> sdb, sdc and sdh - are smaller and they are problem disks
->>>
->>> So what would be a solution to fix this issue?
->>
->> You mentioned you use Gigabyte EP35C-DS3 motherboard. Gigabyte BIOSes are known to cut off about 1 MByte or so from the end of HDDs (on the onboard controller, and maybe just the one on Port 0), setting an HPA area and storing a copy of the BIOS there. That's known as "(Virtual) Dual/Triple/Quad BIOS". Google for "gigabyte bios hpa" and you'll find a lot of reports about this problem. You can check if you can disable that "feature" in BIOS setup, but older boards did not have such option.
->>
->> To restore the native capacity of the drives you can use "hdparm -N" (see its man page), while disks are on the non-onboard controller.
->>
->> In the future, create your RAID from partitions, and leave 8-10 MB of space in the end of each disk for cases like these.
->>
->> --
->> With respect,
->> Roman
->>
->
-> Roman,
->
-> Looks like you have pointed to the source of the problem. The option
-> to backup BIOS has been enabled.
-> Is "hdparm -N" going to affect superblock or data integrity of these
-> disks? Or has that backup already done the damage?
->
-> thanks
->
-> Andrew
->
+--Sig_/hy0di3LOsiWFpt4noF4qajf
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 13 Sep 2011 19:05:41 +1000
+Andriano <chief000@gmail.com> wrote:
 
-Connected one of the offenders to HBA port, and hdparm outputs this:
+> Connected one of the offenders to HBA port, and hdparm outputs this:
+>=20
+> #hdparm -N /dev/sdh
+>=20
+> /dev/sdh:
+>  max sectors   =3D 3907027055/14715056(18446744073321613488?), HPA
+> setting seems invalid (buggy kernel device driver?)
 
-#hdparm -N /dev/sdh
+You could just try "hdparm -N p3907029168" (capacity of the 'larger' disks)=
+, but that could fail if the device driver is indeed buggy.
 
-/dev/sdh:
- max sectors   = 3907027055/14715056(18446744073321613488?), HPA
-setting seems invalid (buggy kernel device driver?)
+Another possible course of action would be to try that on some other contro=
+ller.
+For example on your motherboard you have two violet ports, http://www.gigab=
+yte.ru/products/upload/products/1470/100a.jpg
+those are managed by the JMicron JMB363 controller, try plugging the disks =
+which need HPA to be removed to those ports, AFAIR that JMicron controller =
+works with "hdparm -N" just fine.
+
+--=20
+With respect,
+Roman
+
+--Sig_/hy0di3LOsiWFpt4noF4qajf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk5vMJ8ACgkQTLKSvz+PZwiojwCfQFqG5p8VPiJ+yt3XIoKeqSUU
+hM0An0VioNnw572LI/MQFBkvUI+dsB38
+=JKgy
+-----END PGP SIGNATURE-----
+
+--Sig_/hy0di3LOsiWFpt4noF4qajf--
