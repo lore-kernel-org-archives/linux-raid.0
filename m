@@ -1,87 +1,120 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID6 issues
-Date: Tue, 13 Sep 2011 16:24:39 +0200
-Message-ID: <0h38mb5jy62f9is5ggxrwnx9.1315923879365@email.android.com>
+From: Johannes Truschnigg <johannes@truschnigg.info>
+Subject: Re: What just happened to my disks/RAID5 array?
+Date: Tue, 13 Sep 2011 20:56:42 +0200
+Message-ID: <4E6FA76A.90206@truschnigg.info>
+References: <4E6F13F7.6070507@truschnigg.info> <4E6F4091.7050206@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed;
+ boundary="------------050200070105030901050506"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E6F4091.7050206@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andriano <chief000@gmail.com>, Roman Mamedov <rm@romanrm.ru>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-KHN0dXBpZCBhbmRyb2lkIG1haWwgY2xpZW50IGluc2lzdHMgb24gdG9wLXBvc3RpbmcgLSBzb3Jy
-eSkKTm8uICBZb3UgY2Fubm90IChlYXNpbHkpIGdldCB0aGF0IGRldmljZSB0byBiZSBhbiBhY3Rp
-dmUgbWVtYmVyIG9mCnRoZSBhcnJheSBhZ2FpbiwgYW5kIGl0IGFsbW9zdCBjZXJ0YWlubHkgd291
-bGRuJ3QgaGVscCBhbnl3YXkuCgpJdCB3b3VsZCBvbmx5IGhlbHAgaWYgdGhlIGRhdGEgeW91IHdh
-bnQgaXMgb24gdGhlIGRldmljZSwgYW5kIHRoZQpwYXJpdHkgYmxvY2tzIHRoYXQgYXJlIGJlaW5n
-IHVzZWQgdG8gcmVjcmVhdGUgaXQgYXJlIGNvcnJ1cHQuCkkgdGhpbmsgaXQgdmVyeSB1bmxpa2Vs
-eSB0aGF0IHRoZXkgYXJlIGNvcnJ1cHQgYnV0IHRoZSBkYXRhIGlzbid0LgoKVGhlIHByb2JsZW0g
-c2VlbXMgdG8gYmUgdGhhdCB0aGUgam91cm5hbCBzdXBlcmJsb2NrIGlzIGJhZC4gIFRoYXQgc2Vl
-bXMKdG8gc3VnZ2VzdCB0aGF0IG11Y2ggb2YgdGhlIHJlc3Qgb2YgdGhlIGZpbGVzeXN0ZW0gaXMg
-T0suCkkgd291bGQgc3VnZ2VzdCB5b3UgImZzY2sgLW4gLWYiIHRoZSBkZXZpY2UgYW5kIHNlZSBo
-b3cgbXVjaCBpdCB3YW50cwp0byAnZml4Jy4gIElmIGl0IGlzIGp1c3QgYSBmZXcgdGhpbmdzLCBJ
-IHdvdWxkIGp1c3QgbGV0IGZzY2sgZml4IGl0IHVwIGZvciB5b3UuCgpJZiB0aGVyZSBhcmUgcGFn
-ZXMgYW5kIHBhZ2VzIG9mIGVycm9ycyAtIHRoZW4geW91IGhhdmUgYmlnZ2VyIHByb2JsZW1zLgoK
-TmVpbEJyb3duCgoKQW5kcmlhbm8gPGNoaWVmMDAwQGdtYWlsLmNvbT4gd3JvdGU6Cgo+U3RpbGwg
-dHJ5aW5nIHRvIGdldCB0aGUgYXJyYXkgYmFjayB1cC4KPgo+U3RhdHVzOiBDbGVhbiwgZGVncmFk
-ZWQgd2l0aCA5IG91dCBvZiAxMCBkaXNrcy4KPk9uZSBkaXNrIC0gcmVtb3ZlZCBhcyBub24tZnJl
-c2guCj4KPmFzIGEgcmVzdWx0IHR3byBvZiBMVnMgY291bGQgbm90IGJlIG1vdW50ZWQ6Cj4KPm1v
-dW50OiB3cm9uZyBmcyB0eXBlLCBiYWQgb3B0aW9uLCBiYWQgc3VwZXJibG9jayBvbiAvZGV2L21h
-cHBlci92ZzAtbHYxLAo+ICAgICAgbWlzc2luZyBjb2RlcGFnZSBvciBoZWxwZXIgcHJvZ3JhbSwg
-b3Igb3RoZXIgZXJyb3IKPiAgICAgIEluIHNvbWUgY2FzZXMgdXNlZnVsIGluZm8gaXMgZm91bmQg
-aW4gc3lzbG9nIC0gdHJ5Cj4gICAgICBkbWVzZyB8IHRhaWwgIG9yIHNvCj4KPm1vdW50OiB3cm9u
-ZyBmcyB0eXBlLCBiYWQgb3B0aW9uLCBiYWQgc3VwZXJibG9jayBvbiAvZGV2L21hcHBlci92ZzAt
-bHYyLAo+ICAgICAgbWlzc2luZyBjb2RlcGFnZSBvciBoZWxwZXIgcHJvZ3JhbSwgb3Igb3RoZXIg
-ZXJyb3IKPiAgICAgIEluIHNvbWUgY2FzZXMgdXNlZnVsIGluZm8gaXMgZm91bmQgaW4gc3lzbG9n
-IC0gdHJ5Cj4gICAgICBkbWVzZyB8IHRhaWwgIG9yIHNvCj4KPlsgMzM1Ny4wMDY4MzNdIEpCRDog
-bm8gdmFsaWQgam91cm5hbCBzdXBlcmJsb2NrIGZvdW5kCj5bIDMzNTcuMDA2ODM3XSBFWFQ0LWZz
-IChkbS0xKTogZXJyb3IgbG9hZGluZyBqb3VybmFsCj5bIDMzNTcuMDIyNjAzXSBKQkQ6IG5vIHZh
-bGlkIGpvdXJuYWwgc3VwZXJibG9jayBmb3VuZAo+WyAzMzU3LjAyMjYwNl0gRVhUNC1mcyAoZG0t
-Mik6IGVycm9yIGxvYWRpbmcgam91cm5hbAo+Cj4KPgo+QXBwYXJlbnRseSB0aGVyZSBpcyBhIHBy
-b2JsZW0gd2l0aCByZS1hZGRpbmcgbm9uLWZyZXNoIGRpc2sgYmFjayB0byB0aGUgYXJyYXkuCj4K
-PiNtZGFkbSAtYSAtdiAvZGV2L21kMCAvZGV2L3NkZgo+bWRhZG06IC9kZXYvc2RmIHJlcG9ydHMg
-YmVpbmcgYW4gYWN0aXZlIG1lbWJlciBmb3IgL2Rldi9tZDAsIGJ1dCBhCj4tLXJlLWFkZCBmYWls
-cy4KPm1kYWRtOiBub3QgcGVyZm9ybWluZyAtLWFkZCBhcyB0aGF0IHdvdWxkIGNvbnZlcnQgL2Rl
-di9zZGYgaW4gdG8gYSBzcGFyZS4KPm1kYWRtOiBUbyBtYWtlIHRoaXMgYSBzcGFyZSwgdXNlICJt
-ZGFkbSAtLXplcm8tc3VwZXJibG9jayAvZGV2L3NkZiIgZmlyc3QuCj4KPlF1ZXN0aW9uOiBJcyB0
-aGVyZSBhIHdheSB0byByZXN5bmMgdGhlIGFycmF5IHVzaW5nIHRoYXQgbm9uLWZyZXNoCj5kaXNr
-LCBhcyBpdCBtYXkgY29udGFpbiBibG9ja3MgbmVlZGVkIGJ5IHRoZXNlIExWcy4KPkF0IHRoaXMg
-c3RhZ2UgSSBkb24ndCByZWFsbHkgd2FudCB0byBhZGQgdGhpcyBkaXNrIGFzIGEgc3BhcmUuCj4K
-PkFueSBzdWdnZXN0aW9ucyBwbGVhc2U/Cj4KPgo+dGhhbmtzCj4KPk9uIFR1ZSwgU2VwIDEzLCAy
-MDExIGF0IDg6NDQgUE0sIEFuZHJpYW5vIDxjaGllZjAwMEBnbWFpbC5jb20+IHdyb3RlOgo+PiBU
-aGFua3MgZXZlcnlvbmUsIGxvb2tzIGxpa2UgdGhlIHByb2JsZW0gaXMgc29sdmVkLgo+Pgo+PiBG
-b3IgYmVuZWZpdCBvZiBvdGhlcnMgd2hvIG1heSBleHBlcmllbmNlIHNhbWUgaXNzdWUsIGhlcmUg
-aXMgd2hhdCBJJ3ZlIGRvbmU6Cj4+Cj4+IC0gdXBncmFkZWQgZmlybXdhcmUgb24gU1QzMjAwMDU0
-MkFTIGRpc2tzIC0gZnJvbSBDQzM0IHRvIENDMzUuIEl0IG11c3QKPj4gYmUgZG9uZSB1c2luZyBv
-bmJvYXJkIFNBVEEgaW4gTmF0aXZlIElERSAobm90IFJBSUQvQUhDSSkgbW9kZS4KPj4gQWZ0ZXIg
-cmVjb25uZWN0aW5nIHRoZW0gYmFjayB0byBIQkEsIHNpemUgb2Ygb25lIG9mIHRoZSBvZmZlbmRl
-cnMgZml4ZWQgaXRzZWxmIQo+Pgo+PiAtIHJhbiBoZHBhcm0gLU4gcDM5MDcwMjkxNjggL2Rldi9z
-ZHggY29tbWFuZCBvbiBvdGhlciB0d28gZGlza3MgYW5kIGl0Cj4+IHdvcmtlZCAocHJvYmFibHkg
-aXQgd29ya3Mgc3RyYWlnaHQgYWZ0ZXIgcmVib290KQo+PiBOb3cgbWRhZG0gLUQgc2hvd3MgdGhl
-IGFycmF5IGFzIGNsZWFuLCBkZWdyYWRlZCB3aXRoIG9uZSBkaXNrIGtpY2tlZAo+PiBvdXQsIHdo
-aWNoIGlzIGFub3RoZXIgc3RvcnkgOikKPj4KPj4gbm93IG5lZWQgdG8gcmVzeW5jIGFycmF5IGFu
-ZCByZXN0b3JlIHR3byBMVnMgd2hpY2ggaGFzbid0IG1vdW50ZWQgOigKPj4KPj4gT24gVHVlLCBT
-ZXAgMTMsIDIwMTEgYXQgODoyOSBQTSwgUm9tYW4gTWFtZWRvdiA8cm1Acm9tYW5ybS5ydT4gd3Jv
-dGU6Cj4+PiBPbiBUdWUsIDEzIFNlcCAyMDExIDE5OjA1OjQxICsxMDAwCj4+PiBBbmRyaWFubyA8
-Y2hpZWYwMDBAZ21haWwuY29tPiB3cm90ZToKPj4+Cj4+Pj4gQ29ubmVjdGVkIG9uZSBvZiB0aGUg
-b2ZmZW5kZXJzIHRvIEhCQSBwb3J0LCBhbmQgaGRwYXJtIG91dHB1dHMgdGhpczoKPj4+Pgo+Pj4+
-ICNoZHBhcm0gLU4gL2Rldi9zZGgKPj4+Pgo+Pj4+IC9kZXYvc2RoOgo+Pj4+IMKgbWF4IHNlY3Rv
-cnMgwqAgPSAzOTA3MDI3MDU1LzE0NzE1MDU2KDE4NDQ2NzQ0MDczMzIxNjEzNDg4PyksIEhQQQo+
-Pj4+IHNldHRpbmcgc2VlbXMgaW52YWxpZCAoYnVnZ3kga2VybmVsIGRldmljZSBkcml2ZXI/KQo+
-Pj4KPj4+IFlvdSBjb3VsZCBqdXN0IHRyeSAiaGRwYXJtIC1OIHAzOTA3MDI5MTY4IiAoY2FwYWNp
-dHkgb2YgdGhlICdsYXJnZXInIGRpc2tzKSwgYnV0IHRoYXQgY291bGQgZmFpbCBpZiB0aGUgZGV2
-aWNlIGRyaXZlciBpcyBpbmRlZWQgYnVnZ3kuCj4+Pgo+Pj4gQW5vdGhlciBwb3NzaWJsZSBjb3Vy
-c2Ugb2YgYWN0aW9uIHdvdWxkIGJlIHRvIHRyeSB0aGF0IG9uIHNvbWUgb3RoZXIgY29udHJvbGxl
-ci4KPj4+IEZvciBleGFtcGxlIG9uIHlvdXIgbW90aGVyYm9hcmQgeW91IGhhdmUgdHdvIHZpb2xl
-dCBwb3J0cywgaHR0cDovL3d3dy5naWdhYnl0ZS5ydS9wcm9kdWN0cy91cGxvYWQvcHJvZHVjdHMv
-MTQ3MC8xMDBhLmpwZwo+Pj4gdGhvc2UgYXJlIG1hbmFnZWQgYnkgdGhlIEpNaWNyb24gSk1CMzYz
-IGNvbnRyb2xsZXIsIHRyeSBwbHVnZ2luZyB0aGUgZGlza3Mgd2hpY2ggbmVlZCBIUEEgdG8gYmUg
-cmVtb3ZlZCB0byB0aG9zZSBwb3J0cywgQUZBSVIgdGhhdCBKTWljcm9uIGNvbnRyb2xsZXIgd29y
-a3Mgd2l0aCAiaGRwYXJtIC1OIiBqdXN0IGZpbmUuCj4+Pgo+Pj4gLS0KPj4+IFdpdGggcmVzcGVj
-dCwKPj4+IFJvbWFuCj4+Pgo+Pgo+LS0KPlRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBz
-ZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbgo+dGhlIGJvZHkgb2YgYSBt
-ZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPk1vcmUgbWFqb3Jkb21vIGluZm8g
-YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo=
+This is a multi-part message in MIME format.
+--------------050200070105030901050506
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
+Hi Phil,
+
+first of all, thanks for replying and providing both technical and moral
+support ;) As it turned out today, I won't be able to get my hands on
+the box for at least another 12 hours, so I can only speculate what 
+happened (at the physical/hardware level, that is) still.
+
+On 09/13/2011 01:37 PM, Phil Turmel wrote:
+> Simultaneous failure of that many devices strains credulity, so I
+> doubt you've lost your array.  One possible variant of "2" would be a
+> failed drive that draws enough current to drop the voltage to its
+> sibling drives.
+
+All the drives are located in seperate hot-swap trays with a full,
+unoccupied 5.25" slot in between them. If my appartment wasn't set on
+fire with half the drives roasting in it, I think bad cooling can be 
+ruled out - the drives never went over 40°C even with all case fans 
+turned off.
+
+The controller seems alive still - lsdrv (output attached) lists the
+kernel still having registered some of the component devices.
+
+> Since some drives are still "alive", they'll have newer event counts
+>  than the devices that went offline.  When you fix the root cause,
+> you may need to use "--assemble --force" to get mdadm to restart your
+> array.
+
+I see - I don't have the interim storage capacity to dump the drives
+before trying to do so - is there any advice you can offer to do this
+assembly procedure in the safest way possible?
+
+> The output of "lsdrv" [1] would be helpful in offering more specific
+>  advice, along with "mdadm -D" of the array and "mdadm -E" of all of
+>  its components (when you get them back).
+
+I will provide the components' info asap.
+
+Thanks very much for sharing your input and expertise!
+
+-- 
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
+
+www: http://johannes.truschnigg.info/
+phone: +43 650 2 133337
+xmpp: johannes@truschnigg.info
+
+Please do not bother me with HTML-eMail or attachments. Thank you.
+
+--------------050200070105030901050506
+Content-Type: text/plain;
+ name="lsdrv.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="lsdrv.txt"
+
+UENJIFtwYXRhX2FtZF0gMDA6MDYuMCBJREUgaW50ZXJmYWNlOiBuVmlkaWEgQ29ycG9yYXRp
+b24gTUNQNzhTIFtHZUZvcmNlIDgyMDBdIElERSAocmV2IGExKQog4pSc4pSAc2NzaSAwOjA6
+MDowIEFUQSBUUkFOU0NFTkQgezIwMDkwNjI1X0Q0MEQ1MUJCfQog4pSCICDilJTilIBzZGE6
+IFs4OjBdIFBhcnRpdGlvbmVkIChkb3MpIDEuODdnCiDilIIgICAgIOKUlOKUgHNkYTE6IFs4
+OjFdIChleHQyKSAxLjg3ZyAnVklSVFVFJyB7ZmY1ODZiY2QtYjFmZC00YzA4LWEwZWEtMDhl
+MmUxYzdiOGY5fQog4pSCICAgICAgICDilJzilIBNb3VudGVkIGFzIC9kZXYvcm9vdCBAIC8K
+IOKUgiAgICAgICAg4pSU4pSATW91bnRlZCBhcyAvZGV2L3Jvb3QgQCAvc3J2L3dlYi92aXJ0
+dWUKIOKUlOKUgHNjc2kgMTp4Ong6eCBbRW1wdHldClBDSSBbYWhjaV0gMDA6MDkuMCBTQVRB
+IGNvbnRyb2xsZXI6IG5WaWRpYSBDb3Jwb3JhdGlvbiBNQ1A3OFMgW0dlRm9yY2UgODIwMF0g
+QUhDSSBDb250cm9sbGVyIChyZXYgYTIpCiDilJzilIBzY3NpIDI6eDp4OnggW0VtcHR5XQog
+4pSc4pSAc2NzaSAzOng6eDp4IFtFbXB0eV0KIOKUlOKUgHNjc2kgNzp4Ong6eCBbRW1wdHld
+Ck90aGVyIEJsb2NrIERldmljZXMKIOKUnOKUgGRtLTA6IFsyNTM6MF0gKGV4dDQpIDUuNDZ0
+ICdNQUlOX1NUT1JBR0UnIHthZmYzM2YyYS0xZGFjLTQ3ZTUtYTllZC0wNWUyNGQzYmRhMTV9
+CiDilIIgIOKUnOKUgE1vdW50ZWQgYXMgL2Rldi9tYXBwZXIvVkdfU1RPUkFHRS1MVl9NQUlO
+IEAgL21lZGlhL3ZpcnR1ZV9tYWluCiDilIIgIOKUlOKUgE1vdW50ZWQgYXMgL2Rldi9tYXBw
+ZXIvVkdfU1RPUkFHRS1MVl9NQUlOIEAgL3Nydi9maWxlcwog4pSc4pSAbWQwOiBbOTowXSBF
+bXB0eS9Vbmtub3duIDUuNDZ0Cgo=
+--------------050200070105030901050506
+Content-Type: text/plain;
+ name="md0-examine.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="md0-examine.txt"
+
+L2Rldi9tZDA6CiAgICAgICAgVmVyc2lvbiA6IDEuMgogIENyZWF0aW9uIFRpbWUgOiBUdWUg
+RGVjIDIxIDEwOjI1OjMyIDIwMTAKICAgICBSYWlkIExldmVsIDogcmFpZDUKICAgICBBcnJh
+eSBTaXplIDogNTg2MDU0ODYwOCAoNTU4OS4wNSBHaUIgNjAwMS4yMCBHQikKICBVc2VkIERl
+diBTaXplIDogMTQ2NTEzNzE1MiAoMTM5Ny4yNiBHaUIgMTUwMC4zMCBHQikKICAgUmFpZCBE
+ZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiAzCiAgICBQZXJzaXN0ZW5jZSA6IFN1cGVy
+YmxvY2sgaXMgcGVyc2lzdGVudAoKICBJbnRlbnQgQml0bWFwIDogSW50ZXJuYWwKCiAgICBV
+cGRhdGUgVGltZSA6IFR1ZSBTZXAgMTMgMTA6MTU6NDkgMjAxMQogICAgICAgICAgU3RhdGUg
+OiBhY3RpdmUsIEZBSUxFRAogQWN0aXZlIERldmljZXMgOiAwCldvcmtpbmcgRGV2aWNlcyA6
+IDAKIEZhaWxlZCBEZXZpY2VzIDogMwogIFNwYXJlIERldmljZXMgOiAwCgogICAgICAgICBM
+YXlvdXQgOiBsZWZ0LXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiA1MTJLCgogICAgTnVt
+YmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKICAgICAgIDAgICAgICAg
+MCAgICAgICAgMCAgICAgICAgMCAgICAgIHJlbW92ZWQKICAgICAgIDEgICAgICAgMCAgICAg
+ICAgMCAgICAgICAgMSAgICAgIHJlbW92ZWQKICAgICAgIDIgICAgICAgMCAgICAgICAgMCAg
+ICAgICAgMiAgICAgIHJlbW92ZWQKICAgICAgIDMgICAgICAgMCAgICAgICAgMCAgICAgICAg
+MyAgICAgIHJlbW92ZWQKICAgICAgIDQgICAgICAgMCAgICAgICAgMCAgICAgICAgNCAgICAg
+IHJlbW92ZWQKCiAgICAgICAxICAgICAgIDggICAgICAgNjQgICAgICAgIC0gICAgICBmYXVs
+dHkgc3BhcmUKICAgICAgIDIgICAgICAgOCAgICAgICA0OCAgICAgICAgLSAgICAgIGZhdWx0
+eSBzcGFyZQogICAgICAgNSAgICAgICA4ICAgICAgIDgwICAgICAgICAtICAgICAgZmF1bHR5
+IHNwYXJlCg==
+--------------050200070105030901050506--
