@@ -1,76 +1,72 @@
-From: "Timothy D. Lenz" <tlenz@vorgon.com>
-Subject: Re: Raid failing, which command to remove the bad drive?
-Date: Mon, 12 Sep 2011 13:56:10 -0700
-Message-ID: <4E6E71EA.1060900@vorgon.com>
-References: <4E57FE4D.5080503@vorgon.com>	<20110827084535.5e64bf5c@notabene.brown>	<4E5FC63A.1040206@vorgon.com>	<CAEUYfyN6nfEDwgE8_eZN48UFzaJNCN2NjBpJbeQR_G01CYCgvQ@mail.gmail.com>	<4E60F95C.40203@vorgon.com>	<CAEUYfyPWFwyadvYC8pUTssQMpGhqEoB0aTHtM_3yb7o33M1Edw@mail.gmail.com>	<20110903121723.GA6123@cthulhu.home.robinhill.me.uk>	<CAEUYfyNPAeeZ=hjaefNYv=uQmgLViCyxqaNnLujp6Ru4+8q32g@mail.gmail.com> <CAEUYfyMCH-Pys9Q+tkDNFKbX-ks+Zm4psZ7zvkkdEkzK4nqyfg@mail.gmail.com> <4E6A8CBA.8040901@tmr.com>
+From: Andriano <chief000@gmail.com>
+Subject: RAID6 issues
+Date: Tue, 13 Sep 2011 16:14:51 +1000
+Message-ID: <CAGZH0-dz9y5=vH7PQr8VRy15i1WsuAxKjPPpmx8-1UqCaJnRxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E6A8CBA.8040901@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hello Linux-RAID mailing list,
+
+I have an issue with my RAID6 array.
+Here goes a short description of the system:
+
+opensuse 11.4
+Linux 3.0.4-2-desktop #1 SMP PREEMPT Wed Aug 31 09:30:44 UTC 2011
+(a432f18) x86_64 x86_64 x86_64 GNU/Linux
+Gigabyte EP35C-DS3 motherboard with 8 SATA ports + SuperMicro
+AOC-SASLP-MV8 based on Marvel 6480, firmware updated to 3.1.0.21
+running mdadm 3.2.2, single array consists of 10 2T disks, 8 of them
+connected to the HBA, 2 - motherboard ports
+
+I had some issues with one of the onboard connected disks, so tried to
+plug it to different ports, just to eliminate possibly faulty port.
+After reboot, suddenly other drives got kicked out from the array.
+Re-assembling them gives weird errors.
+
+--- some output ---
+[3:0:0:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdb
+[5:0:0:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdc
+[8:0:0:0]    disk    ATA      ST32000542AS     CC34  /dev/sdd
+[8:0:1:0]    disk    ATA      ST32000542AS     CC34  /dev/sde
+[8:0:2:0]    disk    ATA      ST32000542AS     CC34  /dev/sdf
+[8:0:3:0]    disk    ATA      ST32000542AS     CC34  /dev/sdg
+[8:0:4:0]    disk    ATA      ST32000542AS     CC34  /dev/sdh
+[8:0:5:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdi
+[8:0:6:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdj
+[8:0:7:0]    disk    ATA      ST2000DL003-9VT1 CC32  /dev/sdk
+
+#more /etc/mdadm.conf
+DEVICE partitions
+ARRAY /dev/md0 level=raid6 UUID=82ac7386:a854194d:81b795d1:76c9c9ff
+
+#mdadm --assemble --force --scan /dev/md0
+mdadm: failed to add /dev/sdc to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdb to /dev/md0: Invalid argument
+mdadm: failed to add /dev/sdh to /dev/md0: Invalid argument
+mdadm: /dev/md0 assembled from 7 drives - not enough to start the array.
+
+dmesg:
+[ 8215.651860] md: sdc does not have a valid v1.2 superblock, not importing!
+[ 8215.651865] md: md_import_device returned -22
+[ 8215.652384] md: sdb does not have a valid v1.2 superblock, not importing!
+[ 8215.652388] md: md_import_device returned -22
+[ 8215.653177] md: sdh does not have a valid v1.2 superblock, not importing!
+[ 8215.653182] md: md_import_device returned -22
+
+mdadm -E /dev/sd[b..k] gives exactly the same Magic number and Array
+UUID for every disk, all checksums are correct,
+the only difference is -  Avail Dev Size : 3907028896 is the same for
+9 disks, and 3907028864 for sdc
+
+mdadm --assemble --force --update summaries /dev/sd.. - didn't improve anything
 
 
-On 9/9/2011 3:01 PM, Bill Davidsen wrote:
-> Simon Matthews wrote:
->> On Sat, Sep 3, 2011 at 10:03 AM, Simon Matthews
->> <simon.d.matthews@gmail.com> wrote:
->>> On Sat, Sep 3, 2011 at 5:17 AM, Robin Hill<robin@robinhill.me.uk> wrote:
->>>> On Sat Sep 03, 2011 at 04:35:39 -0700, Simon Matthews wrote:
->>>>
->>>>> On Fri, Sep 2, 2011 at 8:42 AM, Timothy D. Lenz<tlenz@vorgon.com>
->>>>> wrote:
->>>>>>> How did you install Grub on the second drive? I have seen some
->>>>>>> instructions on the web that would not allow the system to boot
->>>>>>> if the
->>>>>>> first drive failed or was removed.
->>>>>>>
->>>>>>
->>>>>> I think this is how I did it, at least it is what I had in my notes:
->>>>>>
->>>>>> grub-install /dev/sda&& grub-install /dev/sdb
->>>>>>
->>>>>> And this is from my notes also. It was from an IRC chat. Don't
->>>>>> know if it
->>>>>> was the raid channel or the grub channel:
->>>>>>
->>>>>> [14:02]<Jordan_U> Vorg: No. First, what is the output of grub-install
->>>>>> --version?
->>>>>> [14:02]<Vorg> (GNU GRUB 1.98~20100115-1)
->>>>>> [14:04]<Jordan_U> Vorg: Ok, then run "grub-install /dev/sda&&
->>>>>> grub-install
->>>>>> /dev/sdb" (where sda and sdb are the members of the array)
->>>>>>
->>>>> Which is exactly my point. You installed grub on /dev/sdb such that it
->>>>> would boot off /dev/sdb. But if /dev/sda has failed, on reboot, the
->>>>> hard drive that was /dev/sdb is now /dev/sda, but Grub is still
->>>>> looking for its files on the non-existent /dev/sdb.
->>>>>
->>>> The way I do it is to run grub, then for each drive do:
->>>> device (hd0) /dev/sdX
->>>> root (hd0,0)
->>>> setup (hd0)
->>>>
->>>> That should set up each drive to boot up as the first drive.
->>>>
->>> How about (after installing grub on /dev/sda):
->>> dd if=/dev/sda of=/dev/sdb bs=466 count=1
->> ooops, that should be bs=446, NOT bs=466
->
-> Which is why you use grub commands, because a typo can wipe out your
-> drive. May or may not have in this case, but there's no reason to do
-> stuff like that.
->
+I would really appreciate if someone could point me to the right direction.
 
-Found the problem:
+thanks
 
-[13:06] <Jordan_U> Vorg: That error is from grub legacy.
-[13:08] <Jordan_U> Vorg: Grub2 doesn't use error numbers. "grub error 2" 
-is from grub legacy.
-
-I had updated the boot drives to the new Grub. Checked in bios and it 
-was set to boot from SATA 3, then SATA 4 AND THEN SATA 1 :(. The second 
-pair are data drives and where never ment to have grub.
+Andrew
