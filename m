@@ -1,51 +1,69 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: What just happened to my disks/RAID5 array?
-Date: Wed, 14 Sep 2011 07:41:37 -0400
-Message-ID: <4E7092F1.5010209@turmel.org>
-References: <4E6F13F7.6070507@truschnigg.info> <4E6F4091.7050206@turmel.org> <4E6FA76A.90206@truschnigg.info>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/2] block: export __make_request
+Date: Wed, 14 Sep 2011 20:17:53 +0300
+Message-ID: <4E70E1C1.8040907@panasas.com>
+References: <20110911145053.GA28996@infradead.org> <4E6DD7F0.8020903@kernel.dk> <20110912122507.GA12229@infradead.org> <4E6DFA8C.3030400@kernel.dk> <20110912133826.GA22548@infradead.org> <4E6E49BE.6020005@kernel.dk> <20110913211911.GA13894@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E6FA76A.90206@truschnigg.info>
+In-Reply-To: <20110913211911.GA13894@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Truschnigg <johannes@truschnigg.info>
-Cc: linux-raid@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, nab@linux-iscsi.org, ryanh@us.ibm.com
 List-Id: linux-raid.ids
 
-Good Morning Johannes,
+On 9/14/2011 12:19 AM, Christoph Hellwig wrote:
+> On Mon, Sep 12, 2011 at 08:04:46PM +0200, Jens Axboe wrote:
+>>> I really hate naming things different from the method they are
+>>> implementing.  I've tried to figure out what the point of the
+>>> old blk_make_request is - why would we not go through
+>>> generic_make_request for this?
+>>>
+>>> Boaz, any idea?
+>>
+>> I tend to agree, we could rename the existing blk_make_request(). It
+>> could be blk_make_request_from_bio() or something like that, since
+>> that's what it does.
+>
+> It should at very least be renamed.  But I still can't figure out what
+> it is for exactly.
+>
+> There are three users:
+>
+>   (1) virtio_blk::virtblk_get_id():
+> 	This looks like it really should just use blk_rq_map_kern.
+>   (2) osd_initiator::_make_request():
+> 	This one looks like it should just use the same scheme as
+> 	sg_io(), as it's doing the same thing.
 
-Sorry about the delay...  worked late yesterday.
+Good god what sg_io? That broken pointr+length from user-mode that sg.c
+and bsg.c are using? no can do it's not user-mode pointers, and it's not
+pointer+length it's pages pointers of a bio. The only other structure
+that could carry the same information is struct sg, but we work very 
+hard to get rid of this contraption. (scsi_execute_async or something 
+that it was)
 
-On 09/13/2011 02:56 PM, Johannes Truschnigg wrote:
-> The controller seems alive still - lsdrv (output attached) lists the
-> kernel still having registered some of the component devices.
+blk_make_request() was made to be the parallel of __make_request, to be
+used from filesystem level users. But with two differences.
+1. Mainly support for none-FS BLOCK_PC requests
+2. Also support chained bios. (was added later)
 
-Actually, it doesn't.  None of the /dev/md0 components are present.  Ditto for the "mdadm -D" report.
+>   (3) target_core_pscsi::__pscsi_map_SG():
+> 	Same as (2).
+>
 
-There's also insufficient open controller ports shown in lsdrv to account for the five missing raid drives.  That strongly suggests that you've been using an add-on controller or port multiplier, and that controller has died.  A complete dmesg (from boot) would provide the details of the missing controller.  At least ports "scsi 4:x:x:x", "scsi 5:x:x:x", and "scsi 6:x:x:x" must have existed from boot, as they were interleaved with 2, 3, and 7.
+There is no better suitable structure in current Kernel to carry a list
+of pages, with optional offset and length, then bio struct. Given a bio
+at hand. how do you make a block request out of it? (If it's not an 
+FS_PC type IO?)
 
->> Since some drives are still "alive", they'll have newer event counts
->>  than the devices that went offline.  When you fix the root cause,
->> you may need to use "--assemble --force" to get mdadm to restart your
->> array.
-> 
-> I see - I don't have the interim storage capacity to dump the drives
-> before trying to do so - is there any advice you can offer to do this
-> assembly procedure in the safest way possible?
+As I remember target_core had their own pages-linked-list structure, and
+how do you make a request out of that? again best at hand is bio.
 
-"--assemble" is safe in all known cases.  Use it first.  With the whole controller gone, you probably have consistent event counts after all, and --assemble should just work.  "--assemble --force" is somewhat less safe, but I wouldn't hesitate to use it in a situation where the drives truly dropped out together.  You'll likely find some problems with fsck if files were actively being written when the array dropped out, but the vast majority of your filesystem(s) should be safe.
+bio is for a long time a page-pointers-carrier-structure and is out of 
+private block-level use. The filesystem level is full of it.
 
-Other procedures are progressively less safe.  I prefer to not offer specifics until you've hooked your drives back up, and generated fresh "lsdrv" and "mdadm" reports.
+Thanks
+Boaz
 
->> The output of "lsdrv" [1] would be helpful in offering more specific
->>  advice, along with "mdadm -D" of the array and "mdadm -E" of all of
->>  its components (when you get them back).
-> 
-> I will provide the components' info asap.
-> 
-> Thanks very much for sharing your input and expertise!
-
-You're welcome.
-
-Phil
