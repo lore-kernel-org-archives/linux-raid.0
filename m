@@ -1,46 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] block: export __make_request
-Date: Tue, 13 Sep 2011 17:19:11 -0400
-Message-ID: <20110913211911.GA13894@infradead.org>
-References: <20110911145053.GA28996@infradead.org>
- <4E6DD7F0.8020903@kernel.dk>
- <20110912122507.GA12229@infradead.org>
- <4E6DFA8C.3030400@kernel.dk>
- <20110912133826.GA22548@infradead.org>
- <4E6E49BE.6020005@kernel.dk>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: What just happened to my disks/RAID5 array?
+Date: Wed, 14 Sep 2011 07:41:37 -0400
+Message-ID: <4E7092F1.5010209@turmel.org>
+References: <4E6F13F7.6070507@truschnigg.info> <4E6F4091.7050206@turmel.org> <4E6FA76A.90206@truschnigg.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4E6E49BE.6020005@kernel.dk>
+In-Reply-To: <4E6FA76A.90206@truschnigg.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org, bharrosh@panasas.com, nab@linux-iscsi.org, ryanh@us.ibm.com
+To: Johannes Truschnigg <johannes@truschnigg.info>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 12, 2011 at 08:04:46PM +0200, Jens Axboe wrote:
-> > I really hate naming things different from the method they are
-> > implementing.  I've tried to figure out what the point of the
-> > old blk_make_request is - why would we not go through
-> > generic_make_request for this?
-> > 
-> > Boaz, any idea?
+Good Morning Johannes,
+
+Sorry about the delay...  worked late yesterday.
+
+On 09/13/2011 02:56 PM, Johannes Truschnigg wrote:
+> The controller seems alive still - lsdrv (output attached) lists the
+> kernel still having registered some of the component devices.
+
+Actually, it doesn't.  None of the /dev/md0 components are present.  Ditto for the "mdadm -D" report.
+
+There's also insufficient open controller ports shown in lsdrv to account for the five missing raid drives.  That strongly suggests that you've been using an add-on controller or port multiplier, and that controller has died.  A complete dmesg (from boot) would provide the details of the missing controller.  At least ports "scsi 4:x:x:x", "scsi 5:x:x:x", and "scsi 6:x:x:x" must have existed from boot, as they were interleaved with 2, 3, and 7.
+
+>> Since some drives are still "alive", they'll have newer event counts
+>>  than the devices that went offline.  When you fix the root cause,
+>> you may need to use "--assemble --force" to get mdadm to restart your
+>> array.
 > 
-> I tend to agree, we could rename the existing blk_make_request(). It
-> could be blk_make_request_from_bio() or something like that, since
-> that's what it does.
+> I see - I don't have the interim storage capacity to dump the drives
+> before trying to do so - is there any advice you can offer to do this
+> assembly procedure in the safest way possible?
 
-It should at very least be renamed.  But I still can't figure out what
-it is for exactly.
+"--assemble" is safe in all known cases.  Use it first.  With the whole controller gone, you probably have consistent event counts after all, and --assemble should just work.  "--assemble --force" is somewhat less safe, but I wouldn't hesitate to use it in a situation where the drives truly dropped out together.  You'll likely find some problems with fsck if files were actively being written when the array dropped out, but the vast majority of your filesystem(s) should be safe.
 
-There are three users:
+Other procedures are progressively less safe.  I prefer to not offer specifics until you've hooked your drives back up, and generated fresh "lsdrv" and "mdadm" reports.
 
- (1) virtio_blk::virtblk_get_id():
-	This looks like it really should just use blk_rq_map_kern.
- (2) osd_initiator::_make_request():
-	This one looks like it should just use the same scheme as
-	sg_io(), as it's doing the same thing.
- (3) target_core_pscsi::__pscsi_map_SG():
-	Same as (2).
+>> The output of "lsdrv" [1] would be helpful in offering more specific
+>>  advice, along with "mdadm -D" of the array and "mdadm -E" of all of
+>>  its components (when you get them back).
+> 
+> I will provide the components' info asap.
+> 
+> Thanks very much for sharing your input and expertise!
 
+You're welcome.
 
+Phil
