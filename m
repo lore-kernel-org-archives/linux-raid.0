@@ -1,119 +1,104 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] imsm: FIX: Spare disk has wrong serial after takeover
-Date: Thu, 15 Sep 2011 18:38:39 +0200
-Message-ID: <20110915163839.5674.99218.stgit@gklab-128-013.igk.intel.com>
+From: Robert L Mathews <lists@tigertech.com>
+Subject: Re: Bootable Raid-1
+Date: Thu, 15 Sep 2011 12:33:45 -0700
+Message-ID: <4E725319.7080809@tigertech.com>
+References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com> <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com> <976829848.20110909125901@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <976829848.20110909125901@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Takeover marks disk as failed and adds to serial ':0' string and then
-turns it in to spare. This causes that when new spare is about to be used,
-it cannot be found due to different disk serial number.
+>> RAID1 under GRUB legacy takes some finagling.  Under GRUB2 it
+>> should be straightforward as long as the partitioning is correct and one
+>> employs a 0.90 superblock for the /boot array.
 
-Restore disk serial number to avoid this problem.
+I'm using three-disk RAID-1 arrays ("it's not paranoia when they really 
+are out to get you") with Debian squeeze and grub-pc.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+My strategy:
 
- super-intel.c |   46 ++++++++++++++++++++++++++++++++++++----------
- 1 files changed, 36 insertions(+), 10 deletions(-)
+  * Use version 1.0 metadata (0.9 is also okay; 1.1 and 1.2 aren't
+    because the partition no longer looks identical to a non-RAID
+    partition as far as grub is concerned).
+  * Have a small (512 MB) separate ext3 /boot partition.
+  * Wait until the new /boot partition fully syncs before messing
+    with the MBR on the additional disks.
+  * After it syncs, add the grub record to the other two disks with
+    "grub-install /dev/sdb" and "grub-install /dev/sdc".
 
-diff --git a/super-intel.c b/super-intel.c
-index a78d723..f1c924f 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -4407,6 +4407,37 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
- 	return 0;
- }
- 
-+/* mark_spare()
-+ *   Function marks disk as spare and restores disk serial
-+ *   in case it was previously marked as failed by takeover operation
-+ * reruns:
-+ *   -1 : critical error
-+ *    0 : disk is marked as spare but serial is not set
-+ *    1 : success
-+ */
-+int mark_spare(struct dl *disk)
-+{
-+	__u8 serial[MAX_RAID_SERIAL_LEN];
-+	int ret_val = -1;
-+
-+	if (!disk)
-+		return ret_val;
-+
-+	ret_val = 0;
-+	if (!imsm_read_serial(disk->fd, NULL, serial)) {
-+		/* Restore disk serial number, because takeover marks disk
-+		 * as failed and adds to serial ':0' before it becomes
-+		 * a spare disk.
-+		 */
-+		serialcpy(disk->serial, serial);
-+		serialcpy(disk->disk.serial, serial);
-+		ret_val = 1;
-+	}
-+	disk->disk.status = SPARE_DISK;
-+	disk->index = -1;
-+
-+	return ret_val;
-+}
- 
- static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 			     int fd, char *devname)
-@@ -4444,7 +4475,6 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	memset(dd, 0, sizeof(*dd));
- 	dd->major = major(stb.st_rdev);
- 	dd->minor = minor(stb.st_rdev);
--	dd->index = -1;
- 	dd->devname = devname ? strdup(devname) : NULL;
- 	dd->fd = fd;
- 	dd->e = NULL;
-@@ -4461,7 +4491,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
- 	size /= 512;
- 	serialcpy(dd->disk.serial, dd->serial);
- 	dd->disk.total_blocks = __cpu_to_le32(size);
--	dd->disk.status = SPARE_DISK;
-+	mark_spare(dd);
- 	if (sysfs_disk_to_scsi_id(fd, &id) == 0)
- 		dd->disk.scsi_id = __cpu_to_le32(id);
- 	else
-@@ -4504,9 +4534,8 @@ static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk)
- 	memset(dd, 0, sizeof(*dd));
- 	dd->major = dk->major;
- 	dd->minor = dk->minor;
--	dd->index = -1;
- 	dd->fd = -1;
--	dd->disk.status = SPARE_DISK;
-+	mark_spare(dd);
- 	dd->action = DISK_REMOVE;
- 
- 	dd->next = super->disk_mgmt_list;
-@@ -5424,10 +5453,8 @@ static int kill_subarray_imsm(struct supertype *st)
- 		struct dl *d;
- 
- 		for (d = super->disks; d; d = d->next)
--			if (d->index > -2) {
--				d->index = -1;
--				d->disk.status = SPARE_DISK;
--			}
-+			if (d->index > -2)
-+				mark_spare(d);
- 	}
- 
- 	super->updates_pending++;
-@@ -7011,8 +7038,7 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 					if (du->index > idx)
- 						du->index--;
- 				/* mark as spare disk */
--				dm->disk.status = SPARE_DISK;
--				dm->index = -1;
-+				mark_spare(dm);
- 			}
- 		}
- 		/* update map */
+This definitely works correctly in that I can remove any one or two of 
+the disks and it boots properly with the RAID degraded, just as it should.
 
+What I haven't been able to fully test is how it copes with one of the 
+disks being present but non-working. For example, a potential problem is 
+that the MBR on /dev/sda is readable, but the /dev/sda1 "/boot" 
+partition is not readable due to sector read errors. I assume that in 
+that case, the boot will fail. Our disaster plan to deal with that 
+situation is to physically pull /dev/sda out of the machine.
+
+As an aside, using "grub-install" on the additional disks is much 
+simpler than what I used to do under grub-legacy, which was something like:
+
+  # grub
+  grub> device (hd0) /dev/sdb
+  grub> root (hd0,0)
+  grub> setup (hd0)
+
+The reason I did that for years instead of using "grub-install" was due 
+to a belief that the "grub-install" method somehow made grub always rely 
+on the original, physical /dev/sda drive even if it booted from the MBR 
+of a different one. I'm not sure if this was ever true, but if it was, 
+it doesn't seem to be true any more, at least on the hardware I'm using. 
+Perhaps the fact that grub-pc now recognizes the /boot partition by file 
+system UUID (which is the same across all members of the array) helps it 
+find any of them that are working.
+
+
+ > Guys, basing on your experience, can you tell us, how does Grub2 react
+ > on degraded raid? Does it respect md's point of view which disk is bad
+ > and which is not? Does it cooperate well with mdadm in general?
+
+Keep in mind that grub is booting the system before the RAID array 
+starts. It wouldn't know anything about arrays (degraded or otherwise) 
+at boot time. It simply picks a single disk partition to start using the 
+files from. This is why booting from RAID only works with RAID 1, where 
+the RAIDed partitions can appear identical to non-RAID partitions.
+
+For that reason, you want the metadata to be either 0.90 or 1.0 so that 
+the partition looks like a normal, non-RAID ext3 /boot partition to grub 
+(the beginning of the partition is the same). Your goal is to  make sure 
+that your system would be bootable even if you didn't assemble the RAID 
+array. That's possible because the file system UUIDs listed in the 
+/boot/grub/grub.cfg file will match the file system UUIDs shown on the 
+raw, non-mdadm output of "dumpe2fs /dev/sda1", etc.
+
+For example, on one of my servers, grub.cfg contains:
+
+  search --no-floppy --fs-uuid --set 0fa13d65-7e83-4e87-a348-52f77a51b3d5
+
+And that UUID is the same one I see from:
+
+  dumpe2fs /dev/sda1 | grep UUID
+  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
+
+  dumpe2fs /dev/sdb1 | grep UUID
+  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
+
+  dumpe2fs /dev/sdc1 | grep UUID
+  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
+
+Of course, mdadm was the magical thing that originally made an identical 
+file system exist on all three of those partitions, but the point is 
+that grub doesn't know or care about that: it simply searches for the 
+matching UUID of the file system, finds it on a single one of the 
+physical disks, and uses it without any RAID/mdadm stuff being involved 
+at all. It wouldn't know if it had somehow found a degraded copy -- 
+hence my philosophy of "if /dev/sda is messed up, it's better to just 
+pull it out and rely on grub RAID 1 booting from a different physical disk".
+
+-- 
+Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
