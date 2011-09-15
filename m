@@ -1,104 +1,76 @@
-From: Robert L Mathews <lists@tigertech.com>
-Subject: Re: Bootable Raid-1
-Date: Thu, 15 Sep 2011 12:33:45 -0700
-Message-ID: <4E725319.7080809@tigertech.com>
-References: <AANLkTikBM=BQ7Q3W7zX5o59i9DzDgqHMQvnxQoeXip6M@mail.gmail.com> <60.01.07087.808994D4@cdptpa-omtalb.mail.rr.com> <976829848.20110909125901@gmail.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Re: Converting RAID1 to RAID5
+Date: Thu, 15 Sep 2011 19:50:08 -0400
+Message-ID: <CAB1R3siia=7u0fa=9Z02kXANW6z=KzRD2Fqfz9+e6=1Q5F9HPw@mail.gmail.com>
+References: <CAB1R3si_QAtOwfzmYkrUz=+xPO7zSMoZEpO5+oEdXvbUnR1zzw@mail.gmail.com>
+	<20110911055703.73deb44d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <976829848.20110909125901@gmail.com>
+In-Reply-To: <20110911055703.73deb44d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> RAID1 under GRUB legacy takes some finagling.  Under GRUB2 it
->> should be straightforward as long as the partitioning is correct and one
->> employs a 0.90 superblock for the /boot array.
+Hi,
 
-I'm using three-disk RAID-1 arrays ("it's not paranoia when they really 
-are out to get you") with Debian squeeze and grub-pc.
+Last week you were helping me with trying to convert a RAID1 volume to
+RAID5. I've put together a server to test, and have made some
+progress, but have a few questions.
 
-My strategy:
+> =A0then try some things. e.g.
+>
+> =A0mdadm /dev/md0 --add /dev/loop2
+> =A0mdadm --grow /dev/md0 --level=3D5 --raid-devices=3D3
+>
+> =A0Try failing a device during the reshape. =A0Check if the data is s=
+till OK.
+> =A0Try it as two separate steps and see if it makes a difference.
 
-  * Use version 1.0 metadata (0.9 is also okay; 1.1 and 1.2 aren't
-    because the partition no longer looks identical to a non-RAID
-    partition as far as grub is concerned).
-  * Have a small (512 MB) separate ext3 /boot partition.
-  * Wait until the new /boot partition fully syncs before messing
-    with the MBR on the additional disks.
-  * After it syncs, add the grub record to the other two disks with
-    "grub-install /dev/sdb" and "grub-install /dev/sdc".
+I partitioned a third disk in the same way as the other two, and
+successfully added them to their existing respective volumes as
+spares.
 
-This definitely works correctly in that I can remove any one or two of 
-the disks and it boots properly with the RAID degraded, just as it should.
+I was able to grow md0, which is mounted on /boot, and it resynced it
+and successfully converted it to RAID5.
 
-What I haven't been able to fully test is how it copes with one of the 
-disks being present but non-working. For example, a potential problem is 
-that the MBR on /dev/sda is readable, but the /dev/sda1 "/boot" 
-partition is not readable due to sector read errors. I assume that in 
-that case, the boot will fail. Our disaster plan to deal with that 
-situation is to physically pull /dev/sda out of the machine.
+When I try to grow the other two partitions (/ and /home), it fails
+with device busy:
 
-As an aside, using "grub-install" on the additional disks is much 
-simpler than what I used to do under grub-legacy, which was something like:
+# mdadm --grow /dev/md2 --level=3D5 --raid-devices=3D3
+mdadm: level of /dev/md2 changed to raid5
+mdadm: Need to backup 128K of critical section..
+mdadm: Cannot set device shape for /dev/md2: Device or resource busy
+       Bitmap must be removed before shape can be changed
+mdadm: aborting level change
 
-  # grub
-  grub> device (hd0) /dev/sdb
-  grub> root (hd0,0)
-  grub> setup (hd0)
+# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md2 : active raid1 sdc3[2](S) sda3[0] sdb3[1]
+      186366908 blocks super 1.1 [2/2] [UU]
+      bitmap: 1/2 pages [4KB], 65536KB chunk
 
-The reason I did that for years instead of using "grub-install" was due 
-to a belief that the "grub-install" method somehow made grub always rely 
-on the original, physical /dev/sda drive even if it booted from the MBR 
-of a different one. I'm not sure if this was ever true, but if it was, 
-it doesn't seem to be true any more, at least on the hardware I'm using. 
-Perhaps the fact that grub-pc now recognizes the /boot partition by file 
-system UUID (which is the same across all members of the array) helps it 
-find any of them that are working.
+md1 : active raid1 sdc2[2](S) sda2[0] sdb2[1]
+      51198908 blocks super 1.1 [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
 
+md0 : active raid5 sdc1[2] sda1[0] sdb1[1]
+      1023976 blocks super 1.0 level 5, 4k chunk, algorithm 2 [3/3] [UU=
+U]
 
- > Guys, basing on your experience, can you tell us, how does Grub2 react
- > on degraded raid? Does it respect md's point of view which disk is bad
- > and which is not? Does it cooperate well with mdadm in general?
+unused devices: <none>
 
-Keep in mind that grub is booting the system before the RAID array 
-starts. It wouldn't know anything about arrays (degraded or otherwise) 
-at boot time. It simply picks a single disk partition to start using the 
-files from. This is why booting from RAID only works with RAID 1, where 
-the RAIDed partitions can appear identical to non-RAID partitions.
+/dev/md2 (/home) isn't mounted.
 
-For that reason, you want the metadata to be either 0.90 or 1.0 so that 
-the partition looks like a normal, non-RAID ext3 /boot partition to grub 
-(the beginning of the partition is the same). Your goal is to  make sure 
-that your system would be bootable even if you didn't assemble the RAID 
-array. That's possible because the file system UUIDs listed in the 
-/boot/grub/grub.cfg file will match the file system UUIDs shown on the 
-raw, non-mdadm output of "dumpe2fs /dev/sda1", etc.
+When the conversion to RAID5 is complete, how can I regenerate the
+mdadm.conf to properly reflect the change?
 
-For example, on one of my servers, grub.cfg contains:
-
-  search --no-floppy --fs-uuid --set 0fa13d65-7e83-4e87-a348-52f77a51b3d5
-
-And that UUID is the same one I see from:
-
-  dumpe2fs /dev/sda1 | grep UUID
-  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
-
-  dumpe2fs /dev/sdb1 | grep UUID
-  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
-
-  dumpe2fs /dev/sdc1 | grep UUID
-  Filesystem UUID:          0fa13d65-7e83-4e87-a348-52f77a51b3d5
-
-Of course, mdadm was the magical thing that originally made an identical 
-file system exist on all three of those partitions, but the point is 
-that grub doesn't know or care about that: it simply searches for the 
-matching UUID of the file system, finds it on a single one of the 
-physical disks, and uses it without any RAID/mdadm stuff being involved 
-at all. It wouldn't know if it had somehow found a degraded copy -- 
-hence my philosophy of "if /dev/sda is messed up, it's better to just 
-pull it out and rely on grub RAID 1 booting from a different physical disk".
-
--- 
-Robert L Mathews, Tiger Technologies, http://www.tigertech.net/
+Thanks,
+Alex
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
