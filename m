@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 02/14] Stop container reshape while using initramfs
-Date: Fri, 16 Sep 2011 13:54:02 +0200
-Message-ID: <20110916115402.5201.39634.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 03/14] FIX: Do not unblock array accidentally
+Date: Fri, 16 Sep 2011 13:54:09 +0200
+Message-ID: <20110916115409.5201.37690.stgit@gklab-128-013.igk.intel.com>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,31 +13,38 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-When first array in container is set for later reshape mdadm
-has exit for remaining container operations. Do not wait for
-current reshape finalization as it will be performed manually later.
+When sysfs_set_array() function is called, it tests if array
+can be configured using sysfs. Setting metadata_version entry
+can accidentally unblock mdmon when array is under reshape.
+To avoid this, blocking character '-' is checked and if is is set,
+it is used for array test.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ sysfs.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 420177c..cec32d7 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -2435,6 +2435,12 @@ int reshape_container(char *container, char *devname,
- 				   content, force, NULL,
- 				   backup_file, quiet, 1, restart);
- 		close(fd);
-+
-+		if (initramfs_is_in_use() == INITRAMFS_IS_IN_USE) {
-+			sysfs_free(cc);
-+			exit(0);
+diff --git a/sysfs.c b/sysfs.c
+index 2146264..903202d 100644
+--- a/sysfs.c
++++ b/sysfs.c
+@@ -541,7 +541,17 @@ int sysfs_set_array(struct mdinfo *info, int vers)
+ 	ver[0] = 0;
+ 	if (info->array.major_version == -1 &&
+ 	    info->array.minor_version == -2) {
++		char buf[1024];
+ 		strcat(strcpy(ver, "external:"), info->text_version);
++		if (sysfs_get_str(info, NULL, "metadata_version",
++						  buf, 1024) > 0) {
++			/* Testing string should not affect
++			 * monitor blocking functionality
++			 * Set blocking character if present in sysfs already
++			 */
++			if (buf[9] == '-')
++				ver[9] = '-';
 +		}
-+
- 		restart = 0;
- 		if (rv)
- 			break;
+ 
+ 		if ((vers % 100) < 2 ||
+ 		    sysfs_set_str(info, NULL, "metadata_version",
 
