@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 10/14] Perform restore backup for reshape continuation
-Date: Fri, 16 Sep 2011 13:55:03 +0200
-Message-ID: <20110916115503.5201.11096.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 11/14] Add possibility to restart reshape for native metadata
+Date: Fri, 16 Sep 2011 13:55:10 +0200
+Message-ID: <20110916115510.5201.47643.stgit@gklab-128-013.igk.intel.com>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,53 +13,48 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-It can happen that reshape is broken by different reason than reboot.
-this means that on reshape continuation start we cannot be sure
-that critical section has been restored already.
+When mdadm services native metadata, check-pointing functions
+can lost file system context in the same way as for external metadata.
 
-Restore data from checkpoint before reshape continuation to avoid
-data corruption.
+This patch adds native metadata continuation support.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
+ Grow.c |   15 +++++++++------
+ 1 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index 0b96f7a..da8b72d 100644
+index da8b72d..fa22382 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -3652,6 +3652,9 @@ int Grow_continue_command(char *devname, int fd,
- 	char container[20];
- 	int cfd = -1;
- 	int fd2 = -1;
-+	int spares;
-+	int working_disks;
-+	struct mdinfo *dev;
+@@ -3646,6 +3646,7 @@ int Grow_continue_command(char *devname, int fd,
+ 	int ret_val = 0;
+ 	struct supertype *st = NULL;
+ 	struct mdinfo *content = NULL;
++	struct mdinfo array;
+ 	char *subarray = NULL;
+ 	struct mdinfo *cc = NULL;
+ 	struct mdstat_ent *mdstat = NULL;
+@@ -3669,12 +3670,14 @@ int Grow_continue_command(char *devname, int fd,
+ 	dprintf("Grow continue is run for ");
+ 	if (st->ss->external == 0) {
+ 		dprintf("native array (%s)\n", devname);
+-		/* FIXME : temporary just exit
+-		 * for native metadata case
+-		 */
+-		st->ss->free_super(st);
+-		free(subarray);
+-		exit(0);
++		if (ioctl(fd, GET_ARRAY_INFO, &array) < 0) {
++			fprintf(stderr, Name ": %s is not an active md array -"
++				" aborting\n", devname);
++			ret_val = 1;
++			goto Grow_continue_command_exit;
++		}
++		content = &array;
++		sysfs_init(content, fd, st->devnum);
+ 	} else {
+ 		int container_dev;
  
- 	dprintf("Grow continue from command line called for %s\n",
- 		devname);
-@@ -3753,7 +3756,20 @@ int Grow_continue_command(char *devname, int fd,
- 
- 	/* continue reshape
- 	 */
--	ret_val = Grow_continue(fd, st, content, backup_file);
-+	dev = content->devs;
-+	spares = 0;
-+	working_disks = 0;
-+	while (dev) {
-+		if (dev->disk.raid_disk == -1)
-+			spares++;
-+		else
-+			working_disks++;
-+		dev = dev->next;
-+	}
-+	ret_val = restore_backup(st, content, working_disks, spares,
-+				 backup_file, verbose);
-+	if (!ret_val)
-+		ret_val = Grow_continue(fd, st, content, backup_file);
- 
- Grow_continue_command_exit:
- 	if (fd2 > -1)
 
