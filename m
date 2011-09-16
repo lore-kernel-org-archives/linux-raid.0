@@ -1,104 +1,101 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Converting RAID1 to RAID5
-Date: Fri, 16 Sep 2011 05:57:27 +0200
-Message-ID: <20110916055727.2cd356cc@notabene.brown>
-References: <CAB1R3si_QAtOwfzmYkrUz=+xPO7zSMoZEpO5+oEdXvbUnR1zzw@mail.gmail.com>
-	<20110911055703.73deb44d@notabene.brown>
-	<CAB1R3siia=7u0fa=9Z02kXANW6z=KzRD2Fqfz9+e6=1Q5F9HPw@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 00/14] Series short description
+Date: Fri, 16 Sep 2011 13:53:46 +0200
+Message-ID: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/z=2/ByZYsDTWEBhqQ.D9fmq"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3siia=7u0fa=9Z02kXANW6z=KzRD2Fqfz9+e6=1Q5F9HPw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
---Sig_/z=2/ByZYsDTWEBhqQ.D9fmq
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+This patch series (14) implements manual reshape restart/continuation
+in the following scenario:
 
-On Thu, 15 Sep 2011 19:50:08 -0400 Alex <mysqlstudent@gmail.com> wrote:
+1. Condition:
+   During system boot mdadm finds array under reshape that should be
+   assembled. This happens while initramfs is mounted
+   (before file system pivot)
 
-> Hi,
->=20
-> Last week you were helping me with trying to convert a RAID1 volume to
-> RAID5. I've put together a server to test, and have made some
-> progress, but have a few questions.
->=20
-> > =A0then try some things. e.g.
-> >
-> > =A0mdadm /dev/md0 --add /dev/loop2
-> > =A0mdadm --grow /dev/md0 --level=3D5 --raid-devices=3D3
-> >
-> > =A0Try failing a device during the reshape. =A0Check if the data is sti=
-ll OK.
-> > =A0Try it as two separate steps and see if it makes a difference.
->=20
-> I partitioned a third disk in the same way as the other two, and
-> successfully added them to their existing respective volumes as
-> spares.
->=20
-> I was able to grow md0, which is mounted on /boot, and it resynced it
-> and successfully converted it to RAID5.
->=20
-> When I try to grow the other two partitions (/ and /home), it fails
-> with device busy:
->=20
-> # mdadm --grow /dev/md2 --level=3D5 --raid-devices=3D3
-> mdadm: level of /dev/md2 changed to raid5
-> mdadm: Need to backup 128K of critical section..
-> mdadm: Cannot set device shape for /dev/md2: Device or resource busy
->        Bitmap must be removed before shape can be changed
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> mdadm: aborting level change
->=20
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md2 : active raid1 sdc3[2](S) sda3[0] sdb3[1]
->       186366908 blocks super 1.1 [2/2] [UU]
->       bitmap: 1/2 pages [4KB], 65536KB chunk
->=20
-> md1 : active raid1 sdc2[2](S) sda2[0] sdb2[1]
->       51198908 blocks super 1.1 [2/2] [UU]
->       bitmap: 1/1 pages [4KB], 65536KB chunk
+2. Scenario:
+ a) Assembly procedure assembles array and runs reshape continuation
+    procedure (as usual). Reshape procedure continues reshape and during
+    file system pivot lost file system context and cannot control process
+    using check-pointing
+    To avoid this now reshape procedure detects that initramfs is mounted
+    (before pivot) and reshape critical section is restored and array
+    is prepared for reshape only. At this point mdadm finishes his work
+    for this array and array is fully functional/accessible now.
 
-You need to remove those bitmaps first.  Put them back after the reshape
-completes.
-(mdadm --grow --bitmap=3Dnone ; mdadm --grow --bitmap=3Dinternal)
+        0001-Stop-array-reshape-when-mounted-initramfs-is-detecte.patch
+        0002-Stop-container-reshape-while-using-initramfs.patch
+        0003-FIX-Do-not-unblock-array-accidentally.patch
+        0007-FIX-Memory-leak-during-Assembly.patch
 
->=20
-> md0 : active raid5 sdc1[2] sda1[0] sdb1[1]
->       1023976 blocks super 1.0 level 5, 4k chunk, algorithm 2 [3/3] [UUU]
->=20
-> unused devices: <none>
->=20
-> /dev/md2 (/home) isn't mounted.
->=20
-> When the conversion to RAID5 is complete, how can I regenerate the
-> mdadm.conf to properly reflect the change?
+ b) Afters system boot user manually can invoke reshape continuation.
+    New mdadm option '--continue' for grow command was added.
+    This allows for reshape continuation. mdadm for reshape continuation
+    uses parameters read from metadata. Command line can looks as follows:
 
-I would use an editor.
-The output of "mdadm -Ds" could be a helpful guide.
+      mdadm -G --continue device_name [--backup-file=file_name]
 
-NeilBrown
-
->=20
-> Thanks,
-> Alex
+      where:
+          device_name : device that reshape should be continued on
+                        e.g. /dev/md/container_name or /dev/md/raid_name
+          backup-file : optional parameter required when backup-file 
+                        was use previously for reshape execution
 
 
---Sig_/z=2/ByZYsDTWEBhqQ.D9fmq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+    For external metadata mdadm takes carry for metadata compatibility
+    e.g. container operation can be continued on array device /and oposit/.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
+       0004-Add-continue-option-to-grow-command.patch
+       0005-Add-Grow_continue_command.patch
+       0006-Check-and-run-mdmon.patch
+       0007-FIX-Memory-leak-during-Assembly.patch
+       0008-Check-if-reshape-can-be-restarted.patch
+       0009-Move-restore-backup-code-to-function.patch
+       0010-Perform-restore-backup-for-reshape-continuation.patch
+       0011-Add-possibility-to-restart-reshape-for-native-metada.patch
+       0012-Early-reshape-backup-verification.patch
+       0013-Check-if-md-allows-to-control-reshape.patch
 
-iD8DBQFOcsksG5fc6gV+Wb0RAjV+AJ0Xxi72eed6WEBtUYzaUKz6eOoEiwCfbOvu
-wQpNTx6HyruK8qVVhmHkbMc=
-=IhTe
------END PGP SIGNATURE-----
+3. man update:
+   The last patch provides madam's man update for '--continue' grow option
+       0014-Manual-update-for-continue-option.patch
+BR
+Adam
 
---Sig_/z=2/ByZYsDTWEBhqQ.D9fmq--
+---
+
+Adam Kwolek (14):
+      Manual update for --continue option
+      Check if md allows to control reshape
+      Early reshape backup verification
+      Add possibility to restart reshape for native metadata
+      Perform restore backup for reshape continuation
+      Move restore backup code to function
+      Check if reshape can be restarted
+      FIX: Memory leak during Assembly
+      Check and run mdmon
+      Add Grow_continue_command
+      Add continue option to grow command
+      FIX: Do not unblock array accidentally
+      Stop container reshape while using initramfs
+      Stop array reshape when mounted initramfs is detected
+
+
+ Assemble.c |   39 +-------
+ Grow.c     |  290 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ ReadMe.c   |    1 
+ mdadm.8.in |   24 +++++
+ mdadm.c    |   24 +++++
+ mdadm.h    |   14 +++
+ sysfs.c    |   10 ++
+ util.c     |   59 ++++++++++++
+ 8 files changed, 419 insertions(+), 42 deletions(-)
+
+-- 
+Signature
