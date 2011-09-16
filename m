@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/14] FIX: Memory leak during Assembly
-Date: Fri, 16 Sep 2011 13:54:40 +0200
-Message-ID: <20110916115440.5201.42062.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 08/14] Check if reshape can be restarted
+Date: Fri, 16 Sep 2011 13:54:48 +0200
+Message-ID: <20110916115448.5201.56575.stgit@gklab-128-013.igk.intel.com>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,25 +13,46 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-For fdlist pointer allocated in assemble_container_content() function,
-free() is never called. This patch fixes this memory leak.
+When reshape was invoked during initramfs start-up stage
+array is pushed in to reshape state already, so read only
+state cannot be set again. To verify if reshape continuation should
+be allowed sync_action sysfs key is tested and number of existing mdadm
+instances is checked again.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ Grow.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 25cfec1..66d2ee4 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1584,6 +1584,7 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 				if (fdlist[spare] >= 0)
- 					close(fdlist[spare]);
- 			}
-+			free(fdlist);
- 			if (err) {
- 				fprintf(stderr, Name ": Failed to restore critical"
- 					" section for reshape - sorry.\n");
+diff --git a/Grow.c b/Grow.c
+index 4d2c361..b331287 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -3714,8 +3714,23 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+ 	int err;
+ 
+ 	err = sysfs_set_str(info, NULL, "array_state", "readonly");
+-	if (err)
+-		return err;
++	if (err) {
++		/* check if array is set in to reshape stare,
++		 * and current mdadm instance is the only one
++		 */
++		if ((sysfs_get_str(info, NULL, "sync_action",
++				   buf, 40) == 8) &&
++		    (count_mdadms() == 1)) {
++			dprintf("Warning: Grow_continue() cannot set array in"
++				"to read only state [sync_action is %s].",
++				buf);
++			if (strncmp(buf, "reshape", 7))
++				return err;
++			dprintf("Allow to continue.\n");
++		} else
++			return err;
++	}
++
+ 	if (st->ss->external) {
+ 		fmt_devname(buf, st->container_dev);
+ 		container = buf;
 
