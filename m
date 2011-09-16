@@ -1,101 +1,132 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 00/14] Series short description
-Date: Fri, 16 Sep 2011 13:53:46 +0200
-Message-ID: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 01/14] Stop array reshape when mounted initramfs is detected
+Date: Fri, 16 Sep 2011 13:53:54 +0200
+Message-ID: <20110916115354.5201.38688.stgit@gklab-128-013.igk.intel.com>
+References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-This patch series (14) implements manual reshape restart/continuation
-in the following scenario:
+During remounting file system from initramfs to real one,
+mdadm is not able to continue reshape procedure due to lost
+filesystem context.
+To avoid this mdadm detects mounted initramfs and performs
+critical section restore only. Array is set for later
+reshape continuation.
 
-1. Condition:
-   During system boot mdadm finds array under reshape that should be
-   assembled. This happens while initramfs is mounted
-   (before file system pivot)
+Reshape continuation will be possible to invoking manually,
+using '--continue' option.
 
-2. Scenario:
- a) Assembly procedure assembles array and runs reshape continuation
-    procedure (as usual). Reshape procedure continues reshape and during
-    file system pivot lost file system context and cannot control process
-    using check-pointing
-    To avoid this now reshape procedure detects that initramfs is mounted
-    (before pivot) and reshape critical section is restored and array
-    is prepared for reshape only. At this point mdadm finishes his work
-    for this array and array is fully functional/accessible now.
-
-        0001-Stop-array-reshape-when-mounted-initramfs-is-detecte.patch
-        0002-Stop-container-reshape-while-using-initramfs.patch
-        0003-FIX-Do-not-unblock-array-accidentally.patch
-        0007-FIX-Memory-leak-during-Assembly.patch
-
- b) Afters system boot user manually can invoke reshape continuation.
-    New mdadm option '--continue' for grow command was added.
-    This allows for reshape continuation. mdadm for reshape continuation
-    uses parameters read from metadata. Command line can looks as follows:
-
-      mdadm -G --continue device_name [--backup-file=file_name]
-
-      where:
-          device_name : device that reshape should be continued on
-                        e.g. /dev/md/container_name or /dev/md/raid_name
-          backup-file : optional parameter required when backup-file 
-                        was use previously for reshape execution
-
-
-    For external metadata mdadm takes carry for metadata compatibility
-    e.g. container operation can be continued on array device /and oposit/.
-
-       0004-Add-continue-option-to-grow-command.patch
-       0005-Add-Grow_continue_command.patch
-       0006-Check-and-run-mdmon.patch
-       0007-FIX-Memory-leak-during-Assembly.patch
-       0008-Check-if-reshape-can-be-restarted.patch
-       0009-Move-restore-backup-code-to-function.patch
-       0010-Perform-restore-backup-for-reshape-continuation.patch
-       0011-Add-possibility-to-restart-reshape-for-native-metada.patch
-       0012-Early-reshape-backup-verification.patch
-       0013-Check-if-md-allows-to-control-reshape.patch
-
-3. man update:
-   The last patch provides madam's man update for '--continue' grow option
-       0014-Manual-update-for-continue-option.patch
-BR
-Adam
-
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
-Adam Kwolek (14):
-      Manual update for --continue option
-      Check if md allows to control reshape
-      Early reshape backup verification
-      Add possibility to restart reshape for native metadata
-      Perform restore backup for reshape continuation
-      Move restore backup code to function
-      Check if reshape can be restarted
-      FIX: Memory leak during Assembly
-      Check and run mdmon
-      Add Grow_continue_command
-      Add continue option to grow command
-      FIX: Do not unblock array accidentally
-      Stop container reshape while using initramfs
-      Stop array reshape when mounted initramfs is detected
+ Grow.c  |   25 +++++++++++++++++++++++--
+ mdadm.h |    4 ++++
+ util.c  |   22 ++++++++++++++++++++++
+ 3 files changed, 49 insertions(+), 2 deletions(-)
 
+diff --git a/Grow.c b/Grow.c
+index 17d14b6..420177c 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -635,10 +635,21 @@ static int subarray_set_num(char *container, struct mdinfo *sra, char *name, int
+ 	return rc;
+ }
+ 
++/* possible return values:
++ * 0 : success
++ * -1: error
++ * INITRAMFS_IS_IN_USE: continue reshape later
++ */
+ int start_reshape(struct mdinfo *sra, int already_running)
+ {
+ 	int err;
+-	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
++
++	/* do not block array as we not continue reshape this time
++	 */
++	if (initramfs_is_in_use() == INITRAMFS_NOT_USED)
++		sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
++	else
++		sysfs_set_num(sra, NULL, "suspend_lo", 0);
+ 	err = sysfs_set_num(sra, NULL, "suspend_hi", 0);
+ 	err = err ?: sysfs_set_num(sra, NULL, "suspend_lo", 0);
+ 	if (!already_running)
+@@ -2190,6 +2201,14 @@ started:
+ 	}
+ 	if (restart)
+ 		sysfs_set_str(sra, NULL, "array_state", "active");
++	if (initramfs_is_in_use() == INITRAMFS_IS_IN_USE) {
++		free(fdlist);
++		free(offsets);
++		sysfs_free(sra);
++		fprintf(stderr, Name ": Reshape has to be continued "
++			"when root fileststem will be mounted\n");
++		return 1;
++	}
+ 
+ 	/* Now we just need to kick off the reshape and watch, while
+ 	 * handling backups of the data...
+@@ -2357,7 +2376,9 @@ int reshape_container(char *container, char *devname,
+ 		unfreeze(st);
+ 		return 1;
+ 	default: /* parent */
+-		printf(Name ": multi-array reshape continues in background\n");
++		if (initramfs_is_in_use() == INITRAMFS_NOT_USED)
++			printf(Name ": multi-array reshape continues "
++			       "in background\n");
+ 		return 0;
+ 	case 0: /* child */
+ 		break;
+diff --git a/mdadm.h b/mdadm.h
+index d616966..9035e67 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -1161,6 +1161,10 @@ extern char *human_size(long long bytes);
+ extern char *human_size_brief(long long bytes);
+ extern void print_r10_layout(int layout);
+ 
++extern int initramfs_is_in_use(void);
++#define INITRAMFS_IS_IN_USE		1
++#define INITRAMFS_NOT_USED		0
++
+ #define NoMdDev (1<<23)
+ extern int find_free_devnum(int use_partitions);
+ 
+diff --git a/util.c b/util.c
+index 0ea7e0d..7186f3f 100644
+--- a/util.c
++++ b/util.c
+@@ -1768,3 +1768,25 @@ struct mdinfo *container_choose_spares(struct supertype *st,
+ 	}
+ 	return disks;
+ }
++
++int initramfs_is_in_use(void)
++{
++	int ret_val;
++	struct stat sts;
++
++	/* /init
++	 *	common script for many Linux distribution
++	 * /sysboot
++	 *	is specific for RH
++	 * /mkinitrd.config
++	 *	is specific for SLES
++	 */
++	if ((stat("/init", &sts) == -1) ||
++	    ((stat("/sysroot", &sts) == -1) &&
++	     (stat("/mkinitrd.config", &sts) == -1)))
++		ret_val = INITRAMFS_NOT_USED;
++	else
++		ret_val = INITRAMFS_IS_IN_USE;
++
++	return ret_val;
++}
 
- Assemble.c |   39 +-------
- Grow.c     |  290 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- ReadMe.c   |    1 
- mdadm.8.in |   24 +++++
- mdadm.c    |   24 +++++
- mdadm.h    |   14 +++
- sysfs.c    |   10 ++
- util.c     |   59 ++++++++++++
- 8 files changed, 419 insertions(+), 42 deletions(-)
-
--- 
-Signature
