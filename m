@@ -1,66 +1,63 @@
-From: David Brown <david.brown@hesbynett.no>
-Subject: Re: additional feature for linear
-Date: Sat, 17 Sep 2011 17:47:37 +0200
-Message-ID: <j52fep$jj2$1@dough.gmane.org>
-References: <CAC_HdUr9DHt9uQGj=zJcgGvTknckfhyykDBX11XgX+wgOhHQUg@mail.gmail.com>	<6385457414268580907@unknownmsgid> <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
+From: Mike Hartman <mike@hartmanipulation.com>
+Subject: RAID showing all devices as spares after partial unplug
+Date: Sat, 17 Sep 2011 16:39:23 -0400
+Message-ID: <CAB=7dhn6+QDrYReDcxTViqe6rxgkxaHeWNQ7PCUq3S3F-Qgyqg@mail.gmail.com>
+References: <CAB=7dhk0AV1dKL2cngt1eZXJwCVrfixfLE5z=J1i-7tqdL-6QA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
+In-Reply-To: <CAB=7dhk0AV1dKL2cngt1eZXJwCVrfixfLE5z=J1i-7tqdL-6QA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/09/11 17:32, Henti Smith wrote:
-> On Sat, Sep 17, 2011 at 5:20 PM, J=E9r=F4me Poulin<jeromepoulin@gmail=
-=2Ecom>  wrote:
->> On 2011-09-17, at 03:14, Henti Smith<henti@geekware.co.za>  wrote:
->>
->>> Would it not be possible to add functions to linear mode to mark th=
-is
->>> missing chunks as "bad blacks" and let the FS deal with it as such.
->>
->> Linux RAID can already deal with such a problem IIRC but if the
->> filesystem superblock is missing or directory entries, you ain't goi=
-ng
->> no where. This kind of feature would require filesystem knowledge of
->> where the RAID split the device and would be better suited to a FS
->> like BTRFS which mirror superblock and metadata without any Linux
->> RAID.
->
-> Hi J=E9r=F4me
->
-> Thanks for the reply. I though BTRFS would be a good option as well,
-> but they don't seem to understand what I'm looking for :)
->
-> I have found a fuse base FS that seems to do this, so will play with =
-that.
->
-> It's called http://romanrm.ru/en/mhddfs and seems to do what I need i=
-t
-> to do so will test :)
->
-> Thanks again for replying.
->
-> Henti
+I have 11 drives in a RAID 6 array. 6 are plugged into one esata
+enclosure, the other 4 are in another. These esata cables are prone to
+loosening when I'm working on nearby hardware.
 
+If that happens and I start the host up, big chunks of the array are
+missing and things could get ugly. Thus I cooked up a custom startup
+script that verifies each device is present before starting the array
+with
 
-That looks like an interesting idea, and would be particularly useful i=
-f=20
-you've already got several disks with filesystems and want to join them=
-=20
-together.  However, I would never consider it for a /new/ setup.  The=20
-price of disk space is so low that I never again expect to set up a=20
-computer without raid, unless it is a laptop with only space for one=20
-disk, or a machine using some nameless inferior operating system that=20
-doesn't support proper raid.  Certainly if you are thinking of putting=20
-three disks in a machine then raid10,far would be the natural choice, o=
-r=20
-raid5 if you want a little more space for your pennies.
+mdadm --assemble --no-degraded -u 4fd7659f:12044eff:ba25240d:
+de22249d /dev/md3
 
+So I thought I was covered. In case something got unplugged I would
+see the array failing to start at boot and I could shut down, fix the
+cables and try again. However, I hit a new scenario today where one of
+the plugs was loosened while everything was turned on.
 
+The good news is that there should have been no activity on the array
+when this happened, particularly write activity. It's a big media
+partition and sees much less writing then reading. I'm also the only
+one that uses it and I know I wasn't transferring anything. The system
+also seems to have immediately marked the filesystem read-only,
+because I discovered the issue when I went to write to it later and
+got a "read-only filesystem" error. So I believe the state of the
+drives should be the same - nothing should be out of sync.
+
+However, I shut the system down, fixed the cables and brought it back
+up. All the devices are detected by my script and it tries to start
+the array with the command I posted above, but I've ended up with
+this:
+
+md0 : inactive sdn1[1](S) sdj1[9](S) sdm1[10](S) sdl1[11](S)
+sdk1[12](S) md3p1[8](S) sdc1[6](S) sdd1[5](S) md1p1[4](S) sdf1[3](S)
+sdh1[0](S)
+=A0=A0=A0=A0=A0 16113893731 blocks super 1.2
+
+Instead of all coming back up, or still showing the unplugged drives
+missing, everything is a spare? I'm suitably disturbed.
+
+It seems to me that if the data on the drives still reflects the
+last-good data from the array (and since no writing was going on it
+should) then this is just a matter of some metadata getting messed up
+and it should be fixable. Can someone please walk me through the
+commands to do that?
+
+Mike
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
