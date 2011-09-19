@@ -1,161 +1,149 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: FIX: Spare disk has wrong serial after takeover
-Date: Mon, 19 Sep 2011 13:22:32 +1000
-Message-ID: <20110919132232.5b4de2a8@notabene.brown>
-References: <20110915163839.5674.99218.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] Fix serious memory leak
+Date: Mon, 19 Sep 2011 13:27:22 +1000
+Message-ID: <20110919132722.04d35708@notabene.brown>
+References: <20110916111913.20840.13403.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Q1qZs6lG0D_/XW1OIcDfs=."; protocol="application/pgp-signature"
+ boundary="Sig_/h=_NNOX8K8rBu4FWkephqge"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110915163839.5674.99218.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110916111913.20840.13403.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, Dan Williams <dan.j.williams@intel.com>
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/Q1qZs6lG0D_/XW1OIcDfs=.
+--Sig_/h=_NNOX8K8rBu4FWkephqge
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 15 Sep 2011 18:38:39 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
+On Fri, 16 Sep 2011 13:19:14 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> Takeover marks disk as failed and adds to serial ':0' string and then
-> turns it in to spare. This causes that when new spare is about to be used,
-> it cannot be found due to different disk serial number.
+> During reshape function restore_stripes is called periodically
+> and every time the buffer stripe_buf (of size raid_disks*chunk_size)
+> is allocated but is not freed. It happens also upon successful completion.
+> In case of huge arrays it can lead to the seizure of the entire
+> system memory (even of the order of gigabytes).
 >=20
-> Restore disk serial number to avoid this problem.
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 
-This looks believeable, and I really like the fact that you have factored o=
-ut
-'mark_spare' as a separate function rather having something open-coded at
-various points.
+Thanks.
 
-I can't really say if it is 'right' as I don't understand all the details of
-exactly how serial numbers are supposed to work.
-So I'll apply it and hope than Dan will speak up if he sees any problems.
+I changed that patch a bit:
+ - There were two places that freed everything and returned.  I changed the
+   first one to just set 'rv' and 'goto' the last one.
+ - You set 'rv =3D 0' twice.  Once is enough.  I removed the first one.
 
 Thanks,
+
 NeilBrown
 
 
 > ---
+>  restripe.c |   43 +++++++++++++++++++++++++++++++------------
+>  1 files changed, 31 insertions(+), 12 deletions(-)
 >=20
->  super-intel.c |   46 ++++++++++++++++++++++++++++++++++++----------
->  1 files changed, 36 insertions(+), 10 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index a78d723..f1c924f 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -4407,6 +4407,37 @@ static int add_to_super_imsm_volume(struct superty=
-pe *st, mdu_disk_info_t *dk,
->  	return 0;
+> diff --git a/restripe.c b/restripe.c
+> index 9c83e2e..7cabbd0 100644
+> --- a/restripe.c
+> +++ b/restripe.c
+> @@ -687,6 +687,7 @@ int restore_stripes(int *dest, unsigned long long *of=
+fsets,
+>  	char **stripes =3D malloc(raid_disks * sizeof(char*));
+>  	char **blocks =3D malloc(raid_disks * sizeof(char*));
+>  	int i;
+> +	int rv =3D 0;
+> =20
+>  	int data_disks =3D raid_disks - (level =3D=3D 0 ? 0 : level <=3D 5 ? 1 =
+: 2);
+> =20
+> @@ -717,20 +718,26 @@ int restore_stripes(int *dest, unsigned long long *=
+offsets,
+>  		unsigned long long offset;
+>  		int disk, qdisk;
+>  		int syndrome_disks;
+> -		if (length < len)
+> -			return -3;
+> +		if (length < len) {
+> +			rv =3D -3;
+> +			goto abort;
+> +		}
+>  		for (i =3D 0; i < data_disks; i++) {
+>  			int disk =3D geo_map(i, start/chunk_size/data_disks,
+>  					   raid_disks, level, layout);
+>  			if (src_buf =3D=3D NULL) {
+>  				/* read from file */
+> -				if (lseek64(source,
+> -					read_offset, 0) !=3D (off64_t)read_offset)
+> -					return -1;
+> +				if (lseek64(source, read_offset, 0) !=3D
+> +					 (off64_t)read_offset) {
+> +					rv =3D -1;
+> +					goto abort;
+> +				}
+>  				if (read(source,
+>  					 stripes[disk],
+> -					 chunk_size) !=3D chunk_size)
+> -					return -1;
+> +					 chunk_size) !=3D chunk_size) {
+> +					rv =3D -1;
+> +					goto abort;
+> +				}
+>  			} else {
+>  				/* read from input buffer */
+>  				memcpy(stripes[disk],
+> @@ -782,15 +789,27 @@ int restore_stripes(int *dest, unsigned long long *=
+offsets,
+>  		}
+>  		for (i=3D0; i < raid_disks ; i++)
+>  			if (dest[i] >=3D 0) {
+> -				if (lseek64(dest[i], offsets[i]+offset, 0) < 0)
+> -					return -1;
+> -				if (write(dest[i], stripes[i], chunk_size) !=3D chunk_size)
+> -					return -1;
+> +				if (lseek64(dest[i],
+> +					 offsets[i]+offset, 0) < 0) {
+> +					rv =3D -1;
+> +					goto abort;
+> +				}
+> +				if (write(dest[i], stripes[i],
+> +					 chunk_size) !=3D chunk_size) {
+> +					rv =3D -1;
+> +					goto abort;
+> +				}
+>  			}
+>  		length -=3D len;
+>  		start +=3D len;
+>  	}
+> -	return 0;
+> +	rv =3D 0;
+> +
+> +abort:
+> +	free(stripe_buf);
+> +	free(stripes);
+> +	free(blocks);
+> +	return rv;
 >  }
 > =20
-> +/* mark_spare()
-> + *   Function marks disk as spare and restores disk serial
-> + *   in case it was previously marked as failed by takeover operation
-> + * reruns:
-> + *   -1 : critical error
-> + *    0 : disk is marked as spare but serial is not set
-> + *    1 : success
-> + */
-> +int mark_spare(struct dl *disk)
-> +{
-> +	__u8 serial[MAX_RAID_SERIAL_LEN];
-> +	int ret_val =3D -1;
-> +
-> +	if (!disk)
-> +		return ret_val;
-> +
-> +	ret_val =3D 0;
-> +	if (!imsm_read_serial(disk->fd, NULL, serial)) {
-> +		/* Restore disk serial number, because takeover marks disk
-> +		 * as failed and adds to serial ':0' before it becomes
-> +		 * a spare disk.
-> +		 */
-> +		serialcpy(disk->serial, serial);
-> +		serialcpy(disk->disk.serial, serial);
-> +		ret_val =3D 1;
-> +	}
-> +	disk->disk.status =3D SPARE_DISK;
-> +	disk->index =3D -1;
-> +
-> +	return ret_val;
-> +}
-> =20
->  static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
->  			     int fd, char *devname)
-> @@ -4444,7 +4475,6 @@ static int add_to_super_imsm(struct supertype *st, =
-mdu_disk_info_t *dk,
->  	memset(dd, 0, sizeof(*dd));
->  	dd->major =3D major(stb.st_rdev);
->  	dd->minor =3D minor(stb.st_rdev);
-> -	dd->index =3D -1;
->  	dd->devname =3D devname ? strdup(devname) : NULL;
->  	dd->fd =3D fd;
->  	dd->e =3D NULL;
-> @@ -4461,7 +4491,7 @@ static int add_to_super_imsm(struct supertype *st, =
-mdu_disk_info_t *dk,
->  	size /=3D 512;
->  	serialcpy(dd->disk.serial, dd->serial);
->  	dd->disk.total_blocks =3D __cpu_to_le32(size);
-> -	dd->disk.status =3D SPARE_DISK;
-> +	mark_spare(dd);
->  	if (sysfs_disk_to_scsi_id(fd, &id) =3D=3D 0)
->  		dd->disk.scsi_id =3D __cpu_to_le32(id);
->  	else
-> @@ -4504,9 +4534,8 @@ static int remove_from_super_imsm(struct supertype =
-*st, mdu_disk_info_t *dk)
->  	memset(dd, 0, sizeof(*dd));
->  	dd->major =3D dk->major;
->  	dd->minor =3D dk->minor;
-> -	dd->index =3D -1;
->  	dd->fd =3D -1;
-> -	dd->disk.status =3D SPARE_DISK;
-> +	mark_spare(dd);
->  	dd->action =3D DISK_REMOVE;
-> =20
->  	dd->next =3D super->disk_mgmt_list;
-> @@ -5424,10 +5453,8 @@ static int kill_subarray_imsm(struct supertype *st)
->  		struct dl *d;
-> =20
->  		for (d =3D super->disks; d; d =3D d->next)
-> -			if (d->index > -2) {
-> -				d->index =3D -1;
-> -				d->disk.status =3D SPARE_DISK;
-> -			}
-> +			if (d->index > -2)
-> +				mark_spare(d);
->  	}
-> =20
->  	super->updates_pending++;
-> @@ -7011,8 +7038,7 @@ static int apply_takeover_update(struct imsm_update=
-_takeover *u,
->  					if (du->index > idx)
->  						du->index--;
->  				/* mark as spare disk */
-> -				dm->disk.status =3D SPARE_DISK;
-> -				dm->index =3D -1;
-> +				mark_spare(dm);
->  			}
->  		}
->  		/* update map */
+>  #ifdef MAIN
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/Q1qZs6lG0D_/XW1OIcDfs=.
+--Sig_/h=_NNOX8K8rBu4FWkephqge
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOdrV4G5fc6gV+Wb0RAsjLAJ9DWpL3mDNWIzSNMtz5b3fxit0AjQCgn2+s
-ialwzY8rbdioeMQsBry7I8U=
-=1E7q
+iD8DBQFOdraaG5fc6gV+Wb0RAhaKAJ0eZ6TutANU1Dh+6QG52W4kLQP+fACgsyGP
+F9WdyYCfQ1+XVK8Qevm4X0c=
+=b7Hp
 -----END PGP SIGNATURE-----
 
---Sig_/Q1qZs6lG0D_/XW1OIcDfs=.--
+--Sig_/h=_NNOX8K8rBu4FWkephqge--
