@@ -1,189 +1,211 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 01/14] Stop array reshape when mounted initramfs is
- detected
-Date: Mon, 19 Sep 2011 11:14:35 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A023D73@IRSMSX101.ger.corp.intel.com>
-References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
-	<20110916115354.5201.38688.stgit@gklab-128-013.igk.intel.com>
- <20110919204220.2a2418a5@notabene.brown>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: [PATCH 5/9] imsm: fix reserved sectors for spares
+Date: Mon, 19 Sep 2011 12:57:48 +0000
+Message-ID: <3F8F31A3BFD1664EAB894D1BD6AF32B9024C2A@IRSMSX102.ger.corp.intel.com>
+References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
+	<20110826021424.28015.2342.stgit@localhost6.localdomain6>
+	<CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
+	<20110830122036.357e63f0@notabene.brown>
+ <CABE8wwv3Uk1pY_D5aAh49+aaoKi9cwwqv6YoqSHGgjw30iQbOg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110919204220.2a2418a5@notabene.brown>
+In-Reply-To: <CABE8wwv3Uk1pY_D5aAh49+aaoKi9cwwqv6YoqSHGgjw30iQbOg@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
-
+The patch below makes a better decision as to the size of required rese=
+rvation.
 
 > -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Monday, September 19, 2011 12:42 PM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
-> Subject: Re: [PATCH 01/14] Stop array reshape when mounted initramfs is
-> detected
-> 
-> On Fri, 16 Sep 2011 13:53:54 +0200 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > During remounting file system from initramfs to real one, mdadm is not
-> > able to continue reshape procedure due to lost filesystem context.
-> > To avoid this mdadm detects mounted initramfs and performs critical
-> > section restore only. Array is set for later reshape continuation.
+> From: Williams, Dan J [mailto:dan.j.williams@intel.com]
+> Sent: Tuesday, September 06, 2011 10:43 PM
+> To: NeilBrown
+> Cc: linux-raid@vger.kernel.org; Czarnowska, Anna; Labun, Marcin;
+> Ciechanowski, Ed
+> Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
+>=20
+> On Mon, Aug 29, 2011 at 7:20 PM, NeilBrown <neilb@suse.de> wrote:
+> >> Anna rightly points out that this could probably be safely made
+> >> bigger. =A0As it stands this applies to too broad an array of disk=
+s.
+> =A0I
+> >> think a happy medium (until we can nail down the forward
+> compatibility
+> >> of older oroms, v8 in this case) is to detect the case where the
+> disk
+> >> is being activated for rebuild and if it is at least as large as o=
+ne
+> >> of the existing members truncate the reserved region to the same
+> size
+> >> as the other member. =A0That way we are at least compatible with
+> >> whatever agent created the array in the first instance.
+> >>
 > >
-> > Reshape continuation will be possible to invoking manually, using
-> > '--continue' option.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> > ---
-> >
-> >  Grow.c  |   25 +++++++++++++++++++++++--
-> >  mdadm.h |    4 ++++
-> >  util.c  |   22 ++++++++++++++++++++++
-> >  3 files changed, 49 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/Grow.c b/Grow.c
-> > index 17d14b6..420177c 100644
-> > --- a/Grow.c
-> > +++ b/Grow.c
-> > @@ -635,10 +635,21 @@ static int subarray_set_num(char *container,
-> struct mdinfo *sra, char *name, int
-> >  	return rc;
-> >  }
-> >
-> > +/* possible return values:
-> > + * 0 : success
-> > + * -1: error
-> > + * INITRAMFS_IS_IN_USE: continue reshape later  */
-> >  int start_reshape(struct mdinfo *sra, int already_running)  {
-> >  	int err;
-> > -	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> > +
-> > +	/* do not block array as we not continue reshape this time
-> > +	 */
-> > +	if (initramfs_is_in_use() == INITRAMFS_NOT_USED)
-> > +		sysfs_set_num(sra, NULL, "suspend_lo",
-> 0x7FFFFFFFFFFFFFFFULL);
-> > +	else
-> > +		sysfs_set_num(sra, NULL, "suspend_lo", 0);
-> >  	err = sysfs_set_num(sra, NULL, "suspend_hi", 0);
-> >  	err = err ?: sysfs_set_num(sra, NULL, "suspend_lo", 0);
-> >  	if (!already_running)
-> > @@ -2190,6 +2201,14 @@ started:
-> >  	}
-> >  	if (restart)
-> >  		sysfs_set_str(sra, NULL, "array_state", "active");
-> > +	if (initramfs_is_in_use() == INITRAMFS_IS_IN_USE) {
-> > +		free(fdlist);
-> > +		free(offsets);
-> > +		sysfs_free(sra);
-> > +		fprintf(stderr, Name ": Reshape has to be continued "
-> > +			"when root fileststem will be mounted\n");
-> > +		return 1;
-> > +	}
-> >
-> >  	/* Now we just need to kick off the reshape and watch, while
-> >  	 * handling backups of the data...
-> > @@ -2357,7 +2376,9 @@ int reshape_container(char *container, char
-> *devname,
-> >  		unfreeze(st);
-> >  		return 1;
-> >  	default: /* parent */
-> > -		printf(Name ": multi-array reshape continues in
-> background\n");
-> > +		if (initramfs_is_in_use() == INITRAMFS_NOT_USED)
-> > +			printf(Name ": multi-array reshape continues "
-> > +			       "in background\n");
-> >  		return 0;
-> >  	case 0: /* child */
-> >  		break;
-> > diff --git a/mdadm.h b/mdadm.h
-> > index d616966..9035e67 100644
-> > --- a/mdadm.h
-> > +++ b/mdadm.h
-> > @@ -1161,6 +1161,10 @@ extern char *human_size(long long bytes);
-> > extern char *human_size_brief(long long bytes);  extern void
-> > print_r10_layout(int layout);
-> >
-> > +extern int initramfs_is_in_use(void);
-> > +#define INITRAMFS_IS_IN_USE		1
-> > +#define INITRAMFS_NOT_USED		0
-> > +
-> >  #define NoMdDev (1<<23)
-> >  extern int find_free_devnum(int use_partitions);
-> >
-> > diff --git a/util.c b/util.c
-> > index 0ea7e0d..7186f3f 100644
-> > --- a/util.c
-> > +++ b/util.c
-> > @@ -1768,3 +1768,25 @@ struct mdinfo *container_choose_spares(struct
-> supertype *st,
-> >  	}
-> >  	return disks;
-> >  }
-> > +
-> > +int initramfs_is_in_use(void)
-> > +{
-> > +	int ret_val;
-> > +	struct stat sts;
-> > +
-> > +	/* /init
-> > +	 *	common script for many Linux distribution
-> > +	 * /sysboot
-> > +	 *	is specific for RH
-> > +	 * /mkinitrd.config
-> > +	 *	is specific for SLES
-> > +	 */
-> > +	if ((stat("/init", &sts) == -1) ||
-> > +	    ((stat("/sysroot", &sts) == -1) &&
-> > +	     (stat("/mkinitrd.config", &sts) == -1)))
-> > +		ret_val = INITRAMFS_NOT_USED;
-> > +	else
-> > +		ret_val = INITRAMFS_IS_IN_USE;
-> > +
-> > +	return ret_val;
-> > +}
-> >
-> 
-> Hi,
->  I meant to look through this today but didn't manage to get to it.
-> 
-> However an easy comment is that this initramfs_is_in_use is not
-> acceptable.
-> You are measuring symptoms and not the cause.
-> 
-> Unfortunately it isn't really easy to measure "Is someone likely to want
-> to replace the current root filesystem with a different one soon".
-> 
-> In the first instance I think this should be implemented as a command
-> line
-> option:  --freeze-reshape maybe.  It is understood with --assemble to
-> mean that any reshape should not be continued.
-> It should be possible to get that into the mdadm flags during initrd but
-> not in the root filesystem.
-> 
-> The second patch looks like it should be combined with the first.
-> 
-> The rest seems OK at a first glance but I'll need to review it more
-> carefully.
-> 
-> Thanks,
-> NeilBrown
+> > I think you are saying that I can go ahead and apply this patch, bu=
+t
+> that it
+> > might get improved upon in the future .... I hope that is right ?
+>=20
+> Yes, this may have corrected things too far in the other direction,
+> but is less surprising than what we had before.
 
-Thank you for the first part of the review.
+=46rom bf5c919219d9947a0eba1ce2b450c8f663291f48 Mon Sep 17 00:00:00 200=
+1
+=46rom: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Mon, 19 Sep 2011 13:41:46 +0200
+Subject: [PATCH] Calculate reservation for a spare based on active disk=
+s in container
 
-I was worry about file system detection I've made, and you confirms my doubts.
-I like your idea about another option for reshape freeze at the early boot stage.
-I'll include it in second approach.
+New function to calculate minimum reservation to expect from a spare
+is introduced.
 
-I'm waiting for rest of your review.
-When I'll get it, I'll prepare updated fix.
+The required amount of space at the end of the disk depends on what we
+plan to do with the spare and what array we want to use it in.
+=46or creating new subarray in an empty container the full reservation =
+of
+MPB_SECTOR_COUNT + IMSM_RESERVED_SECTORS is required.
 
-BR
-Adam
+=46or recovery or OLCE on a volume using new metadata format at least
+MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION is required.
+The additional space for migration optimization included in
+IMSM_RESERVED_SECTORS is not necessary and is not reserved by some orom=
+s.
 
+MPB_SECTOR_CNT alone is not sufficient as it does not include the
+reservation at the end of subarray.
+
+However if the real reservation on active disks is smaller than this
+(when the array uses old metadata format) we should use the real value.
+This will allow OLCE and recovery to start on the spare even if the vol=
+ume
+doesn't have the reservation we normally use for new volumes.
+
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ super-intel.c |   56 +++++++++++++++++++++++++++++++++++++++++++++++++=
++++++--
+ 1 files changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index f1c924f..8dad03c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -88,6 +88,7 @@
+=20
+ #define MPB_SECTOR_CNT 2210
+ #define IMSM_RESERVED_SECTORS 4096
++#define NUM_BLOCKS_DIRTY_STRIPE_REGION 2056
+ #define SECT_PER_MB_SHIFT 11
+=20
+ /* Disk configuration info. */
+@@ -827,6 +828,8 @@ static int count_memberships(struct dl *dl, struct =
+intel_super *super)
+ 	return memberships;
+ }
+=20
++static __u32 imsm_min_reserved_sectors(struct intel_super *super);
++
+ static struct extent *get_extents(struct intel_super *super, struct dl=
+ *dl)
+ {
+ 	/* find a list of used extents on the given physical device */
+@@ -840,7 +843,7 @@ static struct extent *get_extents(struct intel_supe=
+r *super, struct dl *dl)
+ 	 * IMSM_RESERVED_SECTORS region
+ 	 */
+ 	if (dl->index =3D=3D -1)
+-		reservation =3D MPB_SECTOR_CNT;
++		reservation =3D imsm_min_reserved_sectors(super);
+ 	else
+ 		reservation =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
+=20
+@@ -933,6 +936,51 @@ static int is_failed(struct imsm_disk *disk)
+ 	return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
+ }
+=20
++/* try to determine how much space is reserved for metadata from
++ * the last get_extents() entry on the smallest active disk,
++ * otherwise fallback to the default
++ */
++static __u32 imsm_min_reserved_sectors(struct intel_super *super)
++{
++	struct extent *e;
++	int i;
++	__u32 min_active, remainder;
++	__u32 rv =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
++	struct dl *dl, *dl_min =3D NULL;
++
++	if (!super)
++		return rv;
++
++	min_active =3D 0;
++	for (dl =3D super->disks; dl; dl =3D dl->next) {
++		if (dl->index < 0)
++			continue;
++		if (dl->disk.total_blocks < min_active || min_active =3D=3D 0) {
++			dl_min =3D dl;
++			min_active =3D dl->disk.total_blocks;
++		}
++	}
++	if (!dl_min)
++		return rv;
++
++	/* find last lba used by subarrays on the smallest active disk */
++	e =3D get_extents(super, dl_min);
++	if (!e)
++		return rv;
++	for (i =3D 0; e[i].size; i++)
++		continue;
++
++	remainder =3D min_active - e[i].start;
++	free(e);
++
++	/* to give priority to recovery we should not require full
++	   IMSM_RESERVED_SECTORS from the spare */
++	rv =3D MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION;
++
++	/* if real reservation is smaller use that value */
++	return  (remainder < rv) ? remainder : rv;
++}
++
+ /* Return minimum size of a spare that can be used in this array*/
+ static unsigned long long min_acceptable_spare_size_imsm(struct supert=
+ype *st)
+ {
+@@ -941,6 +989,7 @@ static unsigned long long min_acceptable_spare_size=
+_imsm(struct supertype *st)
+ 	struct extent *e;
+ 	int i;
+ 	unsigned long long rv =3D 0;
++	__u32 reservation;
+=20
+ 	if (!super)
+ 		return rv;
+@@ -958,9 +1007,12 @@ static unsigned long long min_acceptable_spare_si=
+ze_imsm(struct supertype *st)
+ 		continue;
+ 	if (i > 0)
+ 		rv =3D e[i-1].start + e[i-1].size;
++	reservation =3D __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
+ 	free(e);
++
+ 	/* add the amount of space needed for metadata */
+-	rv =3D rv + MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
++	rv =3D rv + imsm_min_reserved_sectors(super);
++
+ 	return rv * 512;
+ }
+=20
+--=20
+1.7.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
