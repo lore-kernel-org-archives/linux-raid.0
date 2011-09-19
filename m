@@ -1,61 +1,156 @@
-From: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Subject: [PATCH 3/3] Create: Incorrect message when creating a volume with
-	explicit md dev name
-Date: Mon, 19 Sep 2011 18:52:45 +0200
-Message-ID: <20110919165245.9239.28871.stgit@gklab-128-192.igk.intel.com>
-References: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [Patch mdadm-3.2.2] Fix readding of a readwrite drive into a writemostly array
+Date: Mon, 19 Sep 2011 12:25:45 -0400 (EDT)
+Message-ID: <fb19f0cd-2ada-4ff8-9442-a7ec017125d3@zmail05.collab.prod.int.phx2.redhat.com>
+References: <20110919130731.5f11259d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
+In-Reply-To: <20110919130731.5f11259d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-QXBwZWFycyB3aGVuIG9uZSBhdHRlbXB0cyB0byBjcmVhdGUgUkFJRCAxIHZvbHVtZSBvbiAyIGRp
-c2tzIHdpdGhpbiBhCmNvbnRhaW5lciB3aXRoIGFuIGV4aXN0aW5nIFJBSUQgNSB2b2x1bWUgb24g
-MyBkaXNrcyBhbmQgc3BlY2lmaWVzIHRoZQptZCBkZXZpY2UgZXhwbGljaXRseSAoZS5nLiAvZGV2
-L21kMTI3KS4gSW5zdGVhZCBvZiBzYXlpbmcgdGhhdCBzdWNoIHZvbHVtZQpjYW5ub3QgYmUgY3Jl
-YXRlZCBpdCBzYXlzIHRoYXQgdGhlIGRldmljZXMgaGF2ZSBpbnN1ZmZpY2llbnQgc2l6ZS4KClNp
-Z25lZC1vZmYtYnk6IEx1a2FzeiBPcmxvd3NraSA8bHVrYXN6Lm9ybG93c2tpQGludGVsLmNvbT4K
-LS0tCiBDcmVhdGUuYyAgICAgIHwgICAgOCArKysrKystLQogc3VwZXItaW50ZWwuYyB8ICAgMTAg
-KysrKysrKy0tLQogMiBmaWxlcyBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9u
-cygtKQoKZGlmZiAtLWdpdCBhL0NyZWF0ZS5jIGIvQ3JlYXRlLmMKaW5kZXggNDdlNWZjOC4uYmFh
-ZGQ5ZiAxMDA2NDQKLS0tIGEvQ3JlYXRlLmMKKysrIGIvQ3JlYXRlLmMKQEAgLTI2Miw5ICsyNjIs
-MTMgQEAgaW50IENyZWF0ZShzdHJ1Y3Qgc3VwZXJ0eXBlICpzdCwgY2hhciAqbWRkZXYsCiAJaWYg
-KHNpemUgJiYgY2h1bmsgJiYgY2h1bmsgIT0gVW5TZXQpCiAJCXNpemUgJj0gfih1bnNpZ25lZCBs
-b25nIGxvbmcpKGNodW5rIC0gMSk7CiAJbmV3c2l6ZSA9IHNpemUgKiAyOwotCWlmIChzdCAmJiAh
-IHN0LT5zcy0+dmFsaWRhdGVfZ2VvbWV0cnkoc3QsIGxldmVsLCBsYXlvdXQsIHJhaWRkaXNrcywK
-LQkJCQkJICAgICAgJmNodW5rLCBzaXplKjIsIE5VTEwsICZuZXdzaXplLCB2ZXJib3NlPj0wKSkK
-KwlpZiAoc3QgJiYgIQorCQlzdC0+c3MtPnZhbGlkYXRlX2dlb21ldHJ5KAorCQkJCXN0LCBsZXZl
-bCwgbGF5b3V0LCByYWlkZGlza3MsICZjaHVuaywKKwkJCQlzaXplKjIsIE5VTEwsICZuZXdzaXpl
-LCB2ZXJib3NlID49IDApKSB7CisJCWZwcmludGYoc3RkZXJyLCBOYW1lICI6IGNyZWF0ZSBhYm9y
-dGVkLlxuIik7CiAJCXJldHVybiAxOworCX0KIAogCWlmIChjaHVuayAmJiBjaHVuayAhPSBVblNl
-dCkgewogCQluZXdzaXplICY9IH4odW5zaWduZWQgbG9uZyBsb25nKShjaHVuayoyIC0gMSk7CmRp
-ZmYgLS1naXQgYS9zdXBlci1pbnRlbC5jIGIvc3VwZXItaW50ZWwuYwppbmRleCA2MTY4NTNiLi41
-MTg3NGFlIDEwMDY0NAotLS0gYS9zdXBlci1pbnRlbC5jCisrKyBiL3N1cGVyLWludGVsLmMKQEAg
-LTUyMjMsOSArNTIyMywxMyBAQCBzdGF0aWMgaW50IHJlc2VydmVfc3BhY2Uoc3RydWN0IHN1cGVy
-dHlwZSAqc3QsIGludCByYWlkZGlza3MsCiAJCS8qIGNodW5rIGlzIGluIEsgKi8KIAkJbWluc2l6
-ZSA9IGNodW5rICogMjsKIAotCWlmIChjbnQgPCByYWlkZGlza3MgfHwKLQkgICAgKHN1cGVyLT5v
-cm9tICYmIHVzZWQgJiYgdXNlZCAhPSByYWlkZGlza3MpIHx8Ci0JICAgIG1heHNpemUgPCBtaW5z
-aXplIHx8CisJaWYgKGNudCA8IHJhaWRkaXNrcyB8fCAoc3VwZXItPm9yb20gJiYgdXNlZCAmJiB1
-c2VkICE9IHJhaWRkaXNrcykpIHsKKwkJZnByaW50ZihzdGRlcnIsIE5hbWUgIjogdGhlIG9wdGlv
-bi1yb20gcmVxdWlyZXMgYWxsICIKKwkJCSJtZW1iZXIgZGlza3MgdG8gYmUgYSBtZW1iZXIgb2Yg
-YWxsIHZvbHVtZXMuXG4iKTsKKwkJcmV0dXJuIDA7CisJfQorCisJaWYgKG1heHNpemUgPCBtaW5z
-aXplIHx8CiAJICAgIG1heHNpemUgPT0gMCkgewogCQlmcHJpbnRmKHN0ZGVyciwgTmFtZSAiOiBu
-b3QgZW5vdWdoIGRldmljZXMgd2l0aCBzcGFjZSB0byBjcmVhdGUgYXJyYXkuXG4iKTsKIAkJcmV0
-dXJuIDA7IC8qIE5vIGVub3VnaCBmcmVlIHNwYWNlcyBsYXJnZSBlbm91Z2ggKi8KCi0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBzcC4geiBvLm8uCnogc2llZHppYmEgdyBHZGFu
-c2t1CnVsLiBTbG93YWNraWVnbyAxNzMKODAtMjk4IEdkYW5zawoKU2FkIFJlam9ub3d5IEdkYW5z
-ayBQb2xub2MgdyBHZGFuc2t1LCAKVklJIFd5ZHppYWwgR29zcG9kYXJjenkgS3Jham93ZWdvIFJl
-amVzdHJ1IFNhZG93ZWdvLCAKbnVtZXIgS1JTIDEwMTg4MgoKTklQIDk1Ny0wNy01Mi0zMTYKS2Fw
-aXRhbCB6YWtsYWRvd3kgMjAwLjAwMCB6bAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50
-cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0
-aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBv
-dGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
-CnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
-ZXMuCg==
+I don't deny the need to refactor, but at the time I wrote it I was in "fix the problem" mode, not "clean up the code" mode ;-)
 
+----- Original Message -----
+> On Wed, 27 Jul 2011 14:34:37 -0400 Doug Ledford <dledford@redhat.com>
+> wrote:
+> 
+> > If you create a two drive raid1 array with one device writemostly,
+> > then
+> > fail the readwrite drive, when you add a new device, it will get
+> > the
+> > writemostly bit copied out of the remaining device's superblock
+> > into
+> > it's own.  You can then remove the new drive and readd it as
+> > readwrite,
+> > which will work for the readd, but it leaves the stale WriteMostly1
+> > bit
+> > in devflags resulting in the device going back to writemostly on
+> > the
+> > next assembly.
+> > 
+> > The fix is to make sure that A) when we readd a device and we might
+> > have
+> > filled the st->sb info from a running device instead of the device
+> > being
+> > readded, then clear/set the WriteMostly1 bit in the super1 struct
+> > in
+> > addition to setting the disk state (ditto for super0, but slightly
+> > different mechanism) and B) when adding a clean device to an array
+> > (when
+> > we most certainly did copy the superblock info from an existing
+> > device),
+> > then clear any writemostly bits.
+> > 
+> > Signed-off-by: Doug Ledford <dledford@redhat.com>
+> 
+> Applied - thanks.
+> 
+> This function really needs to be refactored though - some of that
+> indenting
+> is WAY too deep!!
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> 
+> diff -up mdadm-3.2.2/Manage.c.writemostly mdadm-3.2.2/Manage.c
+> --- mdadm-3.2.2/Manage.c.writemostly	2011-06-13 22:50:01.000000000
+> -0400
+> +++ mdadm-3.2.2/Manage.c	2011-07-27 14:12:18.629889841 -0400
+> @@ -741,11 +741,24 @@ int Manage_subdevs(char *devname, int fd
+>  						remove_partitions(tfd);
+>  						close(tfd);
+>  						tfd = -1;
+> -						if (update) {
+> +						if (update || dv->writemostly > 0) {
+>  							int rv = -1;
+>  							tfd = dev_open(dv->devname, O_RDWR);
+> +							if (tfd < 0) {
+> +								fprintf(stderr, Name ": failed to open %s for"
+> +									" superblock update during re-add\n", dv->devname);
+> +								return 1;
+> +							}
+>  
+> -							if (tfd >= 0)
+> +							if (dv->writemostly == 1)
+> +								rv = st->ss->update_super(
+> +									st, NULL, "writemostly",
+> +									devname, verbose, 0, NULL);
+> +							if (dv->writemostly == 2)
+> +								rv = st->ss->update_super(
+> +									st, NULL, "readwrite",
+> +									devname, verbose, 0, NULL);
+> +							if (update)
+>  								rv = st->ss->update_super(
+>  									st, NULL, update,
+>  									devname, verbose, 0, NULL);
+> diff -up mdadm-3.2.2/mdadm.h.writemostly mdadm-3.2.2/mdadm.h
+> --- mdadm-3.2.2/mdadm.h.writemostly	2011-07-27 14:12:28.800779575
+> -0400
+> +++ mdadm-3.2.2/mdadm.h	2011-07-27 14:04:34.669932148 -0400
+> @@ -646,6 +646,8 @@ extern struct superswitch {
+>  	 *   linear-grow-new - add a new device to a linear array, but
+>  	 don't
+>  	 *                   change the size: so superblock still matches
+>  	 *   linear-grow-update - now change the size of the array.
+> +	 *   writemostly - set the WriteMostly1 bit in the superblock
+> devflags
+> +	 *   readwrite - clear the WriteMostly1 bit in the superblock
+> devflags
+>  	 */
+>  	int (*update_super)(struct supertype *st, struct mdinfo *info,
+>  			    char *update,
+> diff -up mdadm-3.2.2/super0.c.writemostly mdadm-3.2.2/super0.c
+> --- mdadm-3.2.2/super0.c.writemostly	2011-06-17 01:15:50.000000000
+> -0400
+> +++ mdadm-3.2.2/super0.c	2011-07-27 14:12:18.655889559 -0400
+> @@ -570,6 +570,10 @@ static int update_super0(struct supertyp
+>  		sb->state &= ~(1<<MD_SB_BITMAP_PRESENT);
+>  	} else if (strcmp(update, "_reshape_progress")==0)
+>  		sb->reshape_position = info->reshape_progress;
+> +	else if (strcmp(update, "writemostly")==0)
+> +		sb->state |= (1<<MD_DISK_WRITEMOSTLY);
+> +	else if (strcmp(update, "readwrite")==0)
+> +		sb->state &= ~(1<<MD_DISK_WRITEMOSTLY);
+>  	else
+>  		rv = -1;
+>  
+> @@ -688,6 +692,8 @@ static int add_to_super0(struct supertyp
+>  	dk->minor = dinfo->minor;
+>  	dk->raid_disk = dinfo->raid_disk;
+>  	dk->state = dinfo->state;
+> +	/* In case our source disk was writemostly, don't copy that bit */
+> +	dk->state &= ~(1<<MD_DISK_WRITEMOSTLY);
+>  
+>  	sb->this_disk = sb->disks[dinfo->number];
+>  	sb->sb_csum = calc_sb0_csum(sb);
+> diff -up mdadm-3.2.2/super1.c.writemostly mdadm-3.2.2/super1.c
+> --- mdadm-3.2.2/super1.c.writemostly	2011-06-17 01:15:50.000000000
+> -0400
+> +++ mdadm-3.2.2/super1.c	2011-07-27 14:12:18.656889548 -0400
+> @@ -803,6 +803,10 @@ static int update_super1(struct supertyp
+>  		       __le64_to_cpu(sb->data_size));
+>  	} else if (strcmp(update, "_reshape_progress")==0)
+>  		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
+> +	else if (strcmp(update, "writemostly")==0)
+> +		sb->devflags |= WriteMostly1;
+> +	else if (strcmp(update, "readwrite")==0)
+> +		sb->devflags &= ~WriteMostly1;
+>  	else
+>  		rv = -1;
+>  
+> @@ -923,6 +927,7 @@ static int add_to_super1(struct supertyp
+>  		sb->max_dev = __cpu_to_le32(dk->number+1);
+>  
+>  	sb->dev_number = __cpu_to_le32(dk->number);
+> +	sb->devflags = 0; /* don't copy another disks flags */
+>  	sb->sb_csum = calc_sb_1_csum(sb);
+>  
+>  	dip = (struct devinfo **)&st->info;
+> 
