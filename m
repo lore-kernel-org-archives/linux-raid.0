@@ -1,106 +1,85 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Need pointers to shrinking an array
-Date: Mon, 19 Sep 2011 09:17:07 +1000
-Message-ID: <20110919091707.76dfa073@notabene.brown>
-References: <1316357406.15583.7.camel@michal-laptop>
+Subject: Re: [Patch mdadm-3.2.2] Fix the fix for the readd bug
+Date: Mon, 19 Sep 2011 13:06:23 +1000
+Message-ID: <20110919130623.28c29250@notabene.brown>
+References: <4E30594B.9030306@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wZgpiUMdUha3o.ZfnCVeY0s"; protocol="application/pgp-signature"
+ boundary="Sig_/OVUfIGYWhf.XjtF2vIl0h2H"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1316357406.15583.7.camel@michal-laptop>
+In-Reply-To: <4E30594B.9030306@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgg==?= Sawicz <michal@sawicz.net>
+To: Doug Ledford <dledford@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wZgpiUMdUha3o.ZfnCVeY0s
-Content-Type: text/plain; charset=UTF-8
+--Sig_/OVUfIGYWhf.XjtF2vIl0h2H
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 18 Sep 2011 16:50:00 +0200 Micha=C5=82 Sawicz <michal@sawicz.net> w=
-rote:
+On Wed, 27 Jul 2011 14:30:35 -0400 Doug Ledford <dledford@redhat.com> wrote:
 
-> Hi again,
+> The readd bug fix didn't work due to a faulty test.  We need to check=20
+> raid_disks to get an upper bound of the found slots to check since=20
+> nr_disks only counts good disks and we could have faulty or spares that=20
+> aren't counted but amount to an occupied slot.
 >=20
-> Given an array with --examine like so:
-> > /dev/sdf1:
-> >           Magic : a92b4efc
-> >         Version : 1.1
-> >     Feature Map : 0x0
-> >      Array UUID : 9ce41f94:7489a7f2:6897e4b5:269c8b3b
-> >            Name : media:2  (local to host media)
-> >   Creation Time : Sun Jan 24 22:32:58 2010
-> >      Raid Level : raid6
-> >    Raid Devices : 10
-> >=20
-> > Avail Dev Size : 1953519738 (931.51 GiB 1000.20 GB)
-> >      Array Size : 15628156928 (7452.09 GiB 8001.62 GB)
-> >   Used Dev Size : 1953519616 (931.51 GiB 1000.20 GB)
-> >     Data Offset : 264 sectors
-> >    Super Offset : 0 sectors
-> >           State : clean
-> >     Device UUID : 97945e4f:9f439aec:951cb289:47862ad7
-> >=20
-> >     Update Time : Sun Sep 18 16:31:52 2011
-> >        Checksum : 4da159ea - correct
-> >          Events : 4381317
-> >=20
-> >          Layout : left-symmetric
-> >      Chunk Size : 256K
-> >=20
-> >    Device Role : Active device 7
-> >    Array State : AAAAAAAAAA ('A' =3D=3D active, '.' =3D=3D missing)
->=20
-> On it, a resized filesystem:
-> > Filesystem           1K-blocks      Used Available Use% Mounted on
-> > /dev/md2             1982282708 1970782580  11500128 100% /mnt/store.tmp
->=20
-> I now need to shrink the array to as few drives as possible. I know
-> `mdadm --grow --array-size=3Dx` will let me check if the resulting FS is
-> still fine. Is x in Kibibytes, same as for --size? What's the best way
-> of determining x?=20
+> Signed-off-by: Doug Ledford <dledford@redhat.com>
 
-Yes, x is in Kibibytes, though 'M' and 'G' suffixes are allowed for Mebibyt=
-es
-and Gibibytes.
+Sorry for late review.
 
-If you try the reshape without setting --array-size first, it will tell you
-exactly what --array-size command you need to run.
+I don't agree with this patch.
+'nr_disks' is exactly the number of devices in the mddev->disks list in the
+kernel.   get_array_info() counts them.  This includes failed and spare
+devices.
 
->=20
-> Then, a `mdadm --grow --raid-devices=3Dy` will let me reduce the number of
-> drives used. Is there a way to tell _which_ drives are to be active and
-> which - spares in the resulting array?
+When GET_DISK_INFO is used, these devices will return a meaningful
+major/minor and all others will return '0' for major and minor.
+So the code should work as is.
 
-It will use the first y devices.  i.e. those with a "Device Role : Active
-device N' number of 0..y-1.
-
-
->=20
-> Is there anything else I should know?
-
-backups are good.
-loose cables are bad.
-Testing on loop-back devices can help increase your confidence.
-
-But you probably know that already.
-
-The really important thing is to perform proper tests after the --array-size
-change to ensure that your data is still all visible.  And 'fsck' and a
-'mount' should do that.  But you seem to know that already too.
-
+Do you remember if you had a case where this failed?  Can you describe it?
+Can you reproduce it?
+Thanks,
 NeilBrown
 
---Sig_/wZgpiUMdUha3o.ZfnCVeY0s
+
+--- mdadm-3.2.2/util.c.readd	2011-06-17 01:15:50.000000000 -0400
++++ mdadm-3.2.2/util.c	2011-07-18 14:43:40.776150946 -0400
+@@ -364,19 +364,21 @@ int enough_fd(int fd)
+ 	struct mdu_disk_info_s disk;
+ 	int avail_disks =3D 0;
+ 	int i;
++	int raid_disks;
+ 	char *avail;
+=20
+ 	if (ioctl(fd, GET_ARRAY_INFO, &array) !=3D 0 ||
+ 	    array.raid_disks <=3D 0)
+ 		return 0;
+ 	avail =3D calloc(array.raid_disks, 1);
+-	for (i=3D0; i < 1024 && array.nr_disks > 0; i++) {
++	raid_disks =3D array.raid_disks;
++	for (i=3D0; i < 1024 && raid_disks > 0; i++) {
+ 		disk.number =3D i;
+ 		if (ioctl(fd, GET_DISK_INFO, &disk) !=3D 0)
+ 			continue;
+ 		if (disk.major =3D=3D 0 && disk.minor =3D=3D 0)
+ 			continue;
+-		array.nr_disks--;
++		raid_disks--;
+=20
+ 		if (! (disk.state & (1<<MD_DISK_SYNC)))
+ 			continue;
+
+--Sig_/OVUfIGYWhf.XjtF2vIl0h2H
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOdnvzG5fc6gV+Wb0RAqgbAKCbRiApsYspuNZLl99Vd3CUTAdqmwCeOlR9
-Nb+56I4tYp2mt67RrX1PLzk=
-=OqxN
+iD8DBQFOdrGvG5fc6gV+Wb0RAkRIAKCfxnWbnKOPkxlS5mmb2jCnSg16lwCfditJ
+X6D7ax3M5tVyIrKB+Lxr90Y=
+=bXOZ
 -----END PGP SIGNATURE-----
 
---Sig_/wZgpiUMdUha3o.ZfnCVeY0s--
+--Sig_/OVUfIGYWhf.XjtF2vIl0h2H--
