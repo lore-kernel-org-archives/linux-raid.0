@@ -1,77 +1,44 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] FIX: Cannot continue reshape if incremental assembly is
- used
-Date: Mon, 19 Sep 2011 16:40:57 +1000
-Message-ID: <20110919164057.1ddc79db@notabene.brown>
-References: <D9FFE20C522965449E182ACE73889AEB020100@IRSMSX101.ger.corp.intel.com>
-	<CABE8wwsRYSD=zUGJbhAtRFqGL+WPPP4Sy85ExsvSxog6k1JymQ@mail.gmail.com>
-	<20110908112633.25a982b0@notabene.brown>
-	<CABE8wwuheLbPA8JCJ0pw_nNOsWBWowHmLZ+piUOHXYcoFRtuHA@mail.gmail.com>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: [PATCH] udev rules: use $tempnode, check for supported types,
+ comments
+Date: Mon, 19 Sep 2011 09:23:01 +0200
+Message-ID: <4E76EDD5.4000605@ziu.info>
+References: <1315140164-6991-1-git-send-email-soltys@ziu.info> <1315466708-5431-1-git-send-email-soltys@ziu.info> <1315466708-5431-2-git-send-email-soltys@ziu.info> <20110919131250.070a5002@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fdG.T77/vwWYnWf+lY+Kzqh"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwuheLbPA8JCJ0pw_nNOsWBWowHmLZ+piUOHXYcoFRtuHA@mail.gmail.com>
+In-Reply-To: <20110919131250.070a5002@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Dorau, Lukasz" <lukasz.dorau@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/fdG.T77/vwWYnWf+lY+Kzqh
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+W dniu 19.09.2011 05:12, NeilBrown pisze:
+> 
+> Thanks.
+> I've applied this... though I must admit that I don't really like all the
+> GOTOs - but that is really the fault of udev I expect.
+> 
 
-On Wed, 7 Sep 2011 21:42:28 -0700 "Williams, Dan J"
-<dan.j.williams@intel.com> wrote:
+Yes, well - the alternative is a single bit longer line such as:
 
-> On Sep 7, 2011 6:26 PM, "NeilBrown" <neilb@suse.de> wrote:
-> >
-> > On Wed, 7 Sep 2011 18:11:12 -0700 "Williams, Dan J"
-> > <dan.j.williams@intel.com> wrote:
-> >
-> > > On Wed, Sep 7, 2011 at 6:21 AM, Dorau, Lukasz <lukasz.dorau@intel.com>
-> wrote:
-> > > Hmm, this might just be cribbed from the initial DDF implementation,
-> > > should be straightforward to reuse the count we use for
-> > > container_enough, but I'm not seeing where Incremental uses
-> > > working_disks for external arrays...
-> >
-> > Assemble.c: assemble_container_content()
-> > ....
-> >        if (runstop > 0 ||
-> >                 (working + preexist + expansion) >=3D
-> >                        content->array.working_disks) {
-> > ....
-> >
->=20
-> ...so now i'd like to kill ->container_enough, because similar to the
-> MD_SB_INVALID suggestion it's probably better to let ->container_content
-> flag the true state rather than some sideband "don't call
-> ->container_content yet" mechanism.
+ENV{ID_FS_TYPE}!="ddf_raid_member", ENV{ID_FS_TYPE}!="isw_raid_member", ENV{ID_FS_TYPE}!="linux_raid_member", GOTO="md_inc_skip"
 
-(catching up on some old mail).
+I thought the version with one more goto was more readable in the end,
+though I also have my doubts about the choice.
 
-I would be happy with that.
 
-I don't exactly object to ->container_enough as it is conceivable that the
-container knows something about the whole that you cannot deduce from the
-member arrays.
-But we definitely to want working_disks to be accurate so that we don't just
-trust container_enough.
+> What was the rational for changing
+>     ==""
+> to
+>     !="?*"
+> 
+> ??
+> 
 
-Thanks,
-NeilBrown
+Actually none, just happened during the rewrite (both alternatives 
+are functionally identical) - I guess I'm more used to "?*" checks 
+for "is / isn't defined", so I didn't pay attention for it to be 
+exact like before.
 
---Sig_/fdG.T77/vwWYnWf+lY+Kzqh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOduP5G5fc6gV+Wb0RAs1ZAKCzAwXSdsz+dtrqEfMDXkVKMrGMaACguCX+
-v/Z7xXOh9dI4M9r2TLttqeA=
-=NTq0
------END PGP SIGNATURE-----
-
---Sig_/fdG.T77/vwWYnWf+lY+Kzqh--
