@@ -1,157 +1,70 @@
-From: Jim Schatzman <james.schatzman@futurelabusa.com>
-Subject: Re: RAID1 with MBR and GPT fails to auto-assemble during boot
-Date: Mon, 19 Sep 2011 18:28:05 -0600
-Message-ID: <20110920002808.C0308581F7A@mail.futurelabusa.com>
-References: <CAC_HdUr9DHt9uQGj=zJcgGvTknckfhyykDBX11XgX+wgOhHQUg@mail.gmail.com>
- <6385457414268580907@unknownmsgid>
- <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
- <j52fep$jj2$1@dough.gmane.org>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: RAID showing all devices as spares after partial unplug
+Date: Tue, 20 Sep 2011 00:33:05 -0400
+Message-ID: <4E781781.8060106@turmel.org>
+References: <CAB=7dhk0AV1dKL2cngt1eZXJwCVrfixfLE5z=J1i-7tqdL-6QA@mail.gmail.com> <CAB=7dhn6+QDrYReDcxTViqe6rxgkxaHeWNQ7PCUq3S3F-Qgyqg@mail.gmail.com> <CAB=7dhmFQ=Rtagj2j_22cnoS0A2yoKvJgaTM+ZiqDBqhPRooDQ@mail.gmail.com> <20110918011749.98312581F7A@mail.futurelabusa.com> <CAB=7dh=PymkpqRLTWiNzD-+n=XwEWnPN8nQwXg1=UmiJmZ1b1w@mail.gmail.com> <20110918025839.85C86581F7C@mail.futurelabusa.com> <CAB=7dhmBDRFYnmoUJjEB2SfyQe8sB+WjC7AkK080iSRwA4RTzg@mail.gmail.com> <CAB=7dh=9UcEWJjLbOvPLu1Ubij0X4i6+SQ-6L9VE5gHLvcJVcw@mail.gmail.com> <CAB=7dh=xshrAfZzSaekPL0kJe0M2mKbOaupaFyeWVC6SnkT6=g@mail.gmail.com> <4E75F0DC.3010206@turmel.org> <CAB=7dh=9cx2sVAAZMhU_fFcDkzUFJS+cR6YLsT-Jjfg=oeZaRQ@mail.gmail.com> <4E7619CF.6060707@turmel.org> <20110920010054.8DFFE581F7A@mail.futurelabusa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j52fep$jj2$1@dough.gmane.org>
-References: <CAC_HdUr9DHt9uQGj=zJcgGvTknckfhyykDBX11XgX+wgOhHQUg@mail.gmail.com>
- <6385457414268580907@unknownmsgid>
- <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
- <j52fep$jj2$1@dough.gmane.org>
+In-Reply-To: <20110920010054.8DFFE581F7A@mail.futurelabusa.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jim Schatzman <james.schatzman@futurelabusa.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have a RAID1 array with 2 partitions. One partition is on an MBR drive and one is on a GPT drive.
+[added the list CC: back.  Please use reply-to-all on kernel.org lists.]
 
-When I reboot, only the MBR drive has been assembled.
+On 09/19/2011 09:00 PM, Jim Schatzman wrote:
+> Thanks to all. Some notes
+> 
+> 1) I have never gotten "mdadm --assemble --force" to work as desired.
+> Having tried this on the 6-8 occasions when I have temporarily
+> disconnected some drives, all that I have seen is that the
+> temporarily-disconnect drives/partitions get added as spares and
+> that's not helpful, as far as I can see. I'll have to try it the next
+> time and see if it works.
 
-Using
+Seems to be dependent on dirty status of the array (write in progress).  Also, you should ensure the array is stopped before assembling after reconnecting.
 
-mdadm /dev/md1 --add /dev/sdc1
+> 2) Thanks for reminding me about the --assume-clean with "mdadm
+> --create" option. Very important.  My bad for forgetting it.
+> 
+> 3) This is the first time I have heard that it is possible to get
+> mdadm/md to ignore the event counts in the metadata via environmental
+> variable. Can someone please provide the details?
 
-mdadm reports that the drive is "readded" and syncing proceeds without difficulty. Reboot, and the array again
-shows up with only one drive.
+I was mistaken...  The variable I was thinking of only applies to interrupted --grow operations: "MDADM_GROW_ALLOW_OLD".
 
-This array contains an LVM containing the system partition.  mdadm.conf contains
---------------------------------------------------------
-#
-# PLEASE DO NOT MODIFY THIS CONFIGURATION FILE!
-#   This configuration file was auto-generated
-#   by Openfiler. Please do not modify it.
-#
-# Generated at: Sun Nov 1 19:28:17 MST 2009
-#
+> I freely acknowledge that forcing mdadm to do something abnormal
+> risks losing data. My situation, like Mike's, has always (knock on
+> wood) been when the array was up but idle. Two slightly different
+> cases are (1) drives are disconnected when the system is up; (2)
+> drives are disconnected when the system is powered down and then
+> rebooted. Both situations have always occurred when enough drives are
+> offlined that the array cannot function and gets stopped
+> automatically. Both situations have always resulted in
+> drives/partitions being marked as "spare" if the subsequent assembly
+> is done without "--no-degraded".
 
-DEVICE partitions
-ARRAY /dev/md8 UUID=066bd3ee:b35a0f59:d111a4d2:91b551e6
-ARRAY /dev/md7 UUID=8245e0c8:aeb40213:7d63f449:7e79d5c0
-ARRAY /dev/md6 UUID=78d87cc4:4e8dfa53:6da2eef9:a1dfa4c3
-ARRAY /dev/md5 UUID=b282fd35:d6ce1cb8:9747d521:9d1e8e97
-ARRAY /dev/md1 UUID=21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
-PROGRAM /opt/openfiler/bin/mdalert 
---------------------------------------------------------------
+Neil has already responded that this needs looking at.  The key will be the recognition of multiple simultaneous failures as not really a drive problem, triggering some form of alternate recovery.
 
-dmesg shows
+> Following Mike's procedure of removing the arrays from
+> /etc/mdadm.conf and always assembling with "--no-degraded", the
+> problem is eliminated in the case that drives are unplugged during
+> power-off. However, if the drives are unplugged while the system is
+> up, then I still have to jump through hoops (i.e., mdadm --create
+> --assume-clean) to get the arrays back up. I haven't tried "mdadm
+> --assemble --force" for several versions of md/mdadm, so maybe things
+> have changed?
 
-[    5.415275] md: Autodetecting RAID arrays.
-[    5.415509] md: Scanned 1 and added 1 devices.
-[    5.415514] md: autorun ...
-[    5.415519] md: considering sda1 ...
-[    5.415535] md:  adding sda1 ...
-[    5.415541] md: created md1
-[    5.415546] md: bind<sda1>
-[    5.415572] md: running: <sda1>
-[    5.416220] raid1: raid set md1 active with 1 out of 2 mirrors
-[    5.416395] md: ... autorun DONE.
-[    5.416861] md: Autodetecting RAID arrays.
-[    5.416867] md: Scanned 0 and added 0 devices.
-[    5.416872] md: autorun ...
-[    5.416876] md: ... autorun DONE.
-[    5.417349] md: Autodetecting RAID arrays.
-[    5.417357] md: Scanned 0 and added 0 devices.
-[    5.417362] md: autorun ...
-[    5.417365] md: ... autorun DONE.
-[    5.417829] md: Autodetecting RAID arrays.
-[    5.417836] md: Scanned 0 and added 0 devices.
-[    5.417840] md: autorun ...
-[    5.417844] md: ... autorun DONE.
-[    5.418296] md: Autodetecting RAID arrays.
-[    5.418303] md: Scanned 0 and added 0 devices.
-[    5.418307] md: autorun ...
-[    5.418311] md: ... autorun DONE.
+--assemble --force will always be at least as safe as --create --assume-clean.  Since it honors the recorded role numbers, it reduces the chance of a typo letting a create happen with devices in the wrong order.  Device naming on boot can vary, especially with recent kernels that are capable of simultaneous probing.  Using the original metadata really helps in this case.  It also helps when the mdadm version has changed substantially since the array was created.
 
+> For me, the fundamental problem has been the very insecure nature of
+> eSata connectors. Poor design, in my opinion. The same kind of thing
+> could occur, though, with an external enclosure if the power to the
+> enclosure is lost.
 
-Later on, it assembles /dev/md5 to /dev/md8 without difficulty, even though one of the disk partitions from each is on the GPT drive.
+Indeed.  I haven't experienced the issue, though, as my arrays are all internal.  (so far...)
 
-This is Openfiler with kernel 2.6.29.6 and mdadm version 2.6.4.
-
-Previously, when /dev/sdc was partitioned MBR, there was no problem with assembling the RAID1 array.
-
-Output of mdadm -E for /dev/sda1 and /dev/sdc1 is
-
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : 21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
-  Creation Time : Sat Oct 31 14:27:53 2009
-     Raid Level : raid1
-  Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
-     Array Size : 9767424 (9.31 GiB 10.00 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Mon Sep 19 18:22:14 2011
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 148e96a2 - correct
-         Events : 0.6224
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8        1        0      active sync   /dev/sda1
-
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       33        1      active sync   /dev/sdc1
-
-
-
-
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 00.90.03
-           UUID : 21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
-  Creation Time : Sat Oct 31 14:27:53 2009
-     Raid Level : raid1
-  Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
-     Array Size : 9767424 (9.31 GiB 10.00 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Mon Sep 19 18:24:14 2011
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 148e973c - correct
-         Events : 0.6224
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       33        1      active sync   /dev/sdc1
-
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       33        1      active sync   /dev/sdc1
-
-
-Why does Linux fail to auto-assemble /dev/md1 during boot and how do I fix the problem?
-
-
-Thanks!
-
-Jim
-
-
-
+Phil.
