@@ -1,156 +1,157 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Patch mdadm-3.2.2] Fix readding of a readwrite drive into a writemostly array
-Date: Mon, 19 Sep 2011 12:25:45 -0400 (EDT)
-Message-ID: <fb19f0cd-2ada-4ff8-9442-a7ec017125d3@zmail05.collab.prod.int.phx2.redhat.com>
-References: <20110919130731.5f11259d@notabene.brown>
+From: Jim Schatzman <james.schatzman@futurelabusa.com>
+Subject: Re: RAID1 with MBR and GPT fails to auto-assemble during boot
+Date: Mon, 19 Sep 2011 18:28:05 -0600
+Message-ID: <20110920002808.C0308581F7A@mail.futurelabusa.com>
+References: <CAC_HdUr9DHt9uQGj=zJcgGvTknckfhyykDBX11XgX+wgOhHQUg@mail.gmail.com>
+ <6385457414268580907@unknownmsgid>
+ <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
+ <j52fep$jj2$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110919130731.5f11259d@notabene.brown>
+In-Reply-To: <j52fep$jj2$1@dough.gmane.org>
+References: <CAC_HdUr9DHt9uQGj=zJcgGvTknckfhyykDBX11XgX+wgOhHQUg@mail.gmail.com>
+ <6385457414268580907@unknownmsgid>
+ <CAC_HdUrFADb1G-5cos4foKohv8B=B0-pA=O8nbGnSX4z7mWcKg@mail.gmail.com>
+ <j52fep$jj2$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I don't deny the need to refactor, but at the time I wrote it I was in "fix the problem" mode, not "clean up the code" mode ;-)
+I have a RAID1 array with 2 partitions. One partition is on an MBR drive and one is on a GPT drive.
 
------ Original Message -----
-> On Wed, 27 Jul 2011 14:34:37 -0400 Doug Ledford <dledford@redhat.com>
-> wrote:
-> 
-> > If you create a two drive raid1 array with one device writemostly,
-> > then
-> > fail the readwrite drive, when you add a new device, it will get
-> > the
-> > writemostly bit copied out of the remaining device's superblock
-> > into
-> > it's own.  You can then remove the new drive and readd it as
-> > readwrite,
-> > which will work for the readd, but it leaves the stale WriteMostly1
-> > bit
-> > in devflags resulting in the device going back to writemostly on
-> > the
-> > next assembly.
-> > 
-> > The fix is to make sure that A) when we readd a device and we might
-> > have
-> > filled the st->sb info from a running device instead of the device
-> > being
-> > readded, then clear/set the WriteMostly1 bit in the super1 struct
-> > in
-> > addition to setting the disk state (ditto for super0, but slightly
-> > different mechanism) and B) when adding a clean device to an array
-> > (when
-> > we most certainly did copy the superblock info from an existing
-> > device),
-> > then clear any writemostly bits.
-> > 
-> > Signed-off-by: Doug Ledford <dledford@redhat.com>
-> 
-> Applied - thanks.
-> 
-> This function really needs to be refactored though - some of that
-> indenting
-> is WAY too deep!!
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> 
-> diff -up mdadm-3.2.2/Manage.c.writemostly mdadm-3.2.2/Manage.c
-> --- mdadm-3.2.2/Manage.c.writemostly	2011-06-13 22:50:01.000000000
-> -0400
-> +++ mdadm-3.2.2/Manage.c	2011-07-27 14:12:18.629889841 -0400
-> @@ -741,11 +741,24 @@ int Manage_subdevs(char *devname, int fd
->  						remove_partitions(tfd);
->  						close(tfd);
->  						tfd = -1;
-> -						if (update) {
-> +						if (update || dv->writemostly > 0) {
->  							int rv = -1;
->  							tfd = dev_open(dv->devname, O_RDWR);
-> +							if (tfd < 0) {
-> +								fprintf(stderr, Name ": failed to open %s for"
-> +									" superblock update during re-add\n", dv->devname);
-> +								return 1;
-> +							}
->  
-> -							if (tfd >= 0)
-> +							if (dv->writemostly == 1)
-> +								rv = st->ss->update_super(
-> +									st, NULL, "writemostly",
-> +									devname, verbose, 0, NULL);
-> +							if (dv->writemostly == 2)
-> +								rv = st->ss->update_super(
-> +									st, NULL, "readwrite",
-> +									devname, verbose, 0, NULL);
-> +							if (update)
->  								rv = st->ss->update_super(
->  									st, NULL, update,
->  									devname, verbose, 0, NULL);
-> diff -up mdadm-3.2.2/mdadm.h.writemostly mdadm-3.2.2/mdadm.h
-> --- mdadm-3.2.2/mdadm.h.writemostly	2011-07-27 14:12:28.800779575
-> -0400
-> +++ mdadm-3.2.2/mdadm.h	2011-07-27 14:04:34.669932148 -0400
-> @@ -646,6 +646,8 @@ extern struct superswitch {
->  	 *   linear-grow-new - add a new device to a linear array, but
->  	 don't
->  	 *                   change the size: so superblock still matches
->  	 *   linear-grow-update - now change the size of the array.
-> +	 *   writemostly - set the WriteMostly1 bit in the superblock
-> devflags
-> +	 *   readwrite - clear the WriteMostly1 bit in the superblock
-> devflags
->  	 */
->  	int (*update_super)(struct supertype *st, struct mdinfo *info,
->  			    char *update,
-> diff -up mdadm-3.2.2/super0.c.writemostly mdadm-3.2.2/super0.c
-> --- mdadm-3.2.2/super0.c.writemostly	2011-06-17 01:15:50.000000000
-> -0400
-> +++ mdadm-3.2.2/super0.c	2011-07-27 14:12:18.655889559 -0400
-> @@ -570,6 +570,10 @@ static int update_super0(struct supertyp
->  		sb->state &= ~(1<<MD_SB_BITMAP_PRESENT);
->  	} else if (strcmp(update, "_reshape_progress")==0)
->  		sb->reshape_position = info->reshape_progress;
-> +	else if (strcmp(update, "writemostly")==0)
-> +		sb->state |= (1<<MD_DISK_WRITEMOSTLY);
-> +	else if (strcmp(update, "readwrite")==0)
-> +		sb->state &= ~(1<<MD_DISK_WRITEMOSTLY);
->  	else
->  		rv = -1;
->  
-> @@ -688,6 +692,8 @@ static int add_to_super0(struct supertyp
->  	dk->minor = dinfo->minor;
->  	dk->raid_disk = dinfo->raid_disk;
->  	dk->state = dinfo->state;
-> +	/* In case our source disk was writemostly, don't copy that bit */
-> +	dk->state &= ~(1<<MD_DISK_WRITEMOSTLY);
->  
->  	sb->this_disk = sb->disks[dinfo->number];
->  	sb->sb_csum = calc_sb0_csum(sb);
-> diff -up mdadm-3.2.2/super1.c.writemostly mdadm-3.2.2/super1.c
-> --- mdadm-3.2.2/super1.c.writemostly	2011-06-17 01:15:50.000000000
-> -0400
-> +++ mdadm-3.2.2/super1.c	2011-07-27 14:12:18.656889548 -0400
-> @@ -803,6 +803,10 @@ static int update_super1(struct supertyp
->  		       __le64_to_cpu(sb->data_size));
->  	} else if (strcmp(update, "_reshape_progress")==0)
->  		sb->reshape_position = __cpu_to_le64(info->reshape_progress);
-> +	else if (strcmp(update, "writemostly")==0)
-> +		sb->devflags |= WriteMostly1;
-> +	else if (strcmp(update, "readwrite")==0)
-> +		sb->devflags &= ~WriteMostly1;
->  	else
->  		rv = -1;
->  
-> @@ -923,6 +927,7 @@ static int add_to_super1(struct supertyp
->  		sb->max_dev = __cpu_to_le32(dk->number+1);
->  
->  	sb->dev_number = __cpu_to_le32(dk->number);
-> +	sb->devflags = 0; /* don't copy another disks flags */
->  	sb->sb_csum = calc_sb_1_csum(sb);
->  
->  	dip = (struct devinfo **)&st->info;
-> 
+When I reboot, only the MBR drive has been assembled.
+
+Using
+
+mdadm /dev/md1 --add /dev/sdc1
+
+mdadm reports that the drive is "readded" and syncing proceeds without difficulty. Reboot, and the array again
+shows up with only one drive.
+
+This array contains an LVM containing the system partition.  mdadm.conf contains
+--------------------------------------------------------
+#
+# PLEASE DO NOT MODIFY THIS CONFIGURATION FILE!
+#   This configuration file was auto-generated
+#   by Openfiler. Please do not modify it.
+#
+# Generated at: Sun Nov 1 19:28:17 MST 2009
+#
+
+DEVICE partitions
+ARRAY /dev/md8 UUID=066bd3ee:b35a0f59:d111a4d2:91b551e6
+ARRAY /dev/md7 UUID=8245e0c8:aeb40213:7d63f449:7e79d5c0
+ARRAY /dev/md6 UUID=78d87cc4:4e8dfa53:6da2eef9:a1dfa4c3
+ARRAY /dev/md5 UUID=b282fd35:d6ce1cb8:9747d521:9d1e8e97
+ARRAY /dev/md1 UUID=21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
+PROGRAM /opt/openfiler/bin/mdalert 
+--------------------------------------------------------------
+
+dmesg shows
+
+[    5.415275] md: Autodetecting RAID arrays.
+[    5.415509] md: Scanned 1 and added 1 devices.
+[    5.415514] md: autorun ...
+[    5.415519] md: considering sda1 ...
+[    5.415535] md:  adding sda1 ...
+[    5.415541] md: created md1
+[    5.415546] md: bind<sda1>
+[    5.415572] md: running: <sda1>
+[    5.416220] raid1: raid set md1 active with 1 out of 2 mirrors
+[    5.416395] md: ... autorun DONE.
+[    5.416861] md: Autodetecting RAID arrays.
+[    5.416867] md: Scanned 0 and added 0 devices.
+[    5.416872] md: autorun ...
+[    5.416876] md: ... autorun DONE.
+[    5.417349] md: Autodetecting RAID arrays.
+[    5.417357] md: Scanned 0 and added 0 devices.
+[    5.417362] md: autorun ...
+[    5.417365] md: ... autorun DONE.
+[    5.417829] md: Autodetecting RAID arrays.
+[    5.417836] md: Scanned 0 and added 0 devices.
+[    5.417840] md: autorun ...
+[    5.417844] md: ... autorun DONE.
+[    5.418296] md: Autodetecting RAID arrays.
+[    5.418303] md: Scanned 0 and added 0 devices.
+[    5.418307] md: autorun ...
+[    5.418311] md: ... autorun DONE.
+
+
+Later on, it assembles /dev/md5 to /dev/md8 without difficulty, even though one of the disk partitions from each is on the GPT drive.
+
+This is Openfiler with kernel 2.6.29.6 and mdadm version 2.6.4.
+
+Previously, when /dev/sdc was partitioned MBR, there was no problem with assembling the RAID1 array.
+
+Output of mdadm -E for /dev/sda1 and /dev/sdc1 is
+
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : 21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
+  Creation Time : Sat Oct 31 14:27:53 2009
+     Raid Level : raid1
+  Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
+     Array Size : 9767424 (9.31 GiB 10.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+
+    Update Time : Mon Sep 19 18:22:14 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 148e96a2 - correct
+         Events : 0.6224
+
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       33        1      active sync   /dev/sdc1
+
+
+
+
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.03
+           UUID : 21b91d6f:e97bf1e3:ef6fdcec:d6c4a58e
+  Creation Time : Sat Oct 31 14:27:53 2009
+     Raid Level : raid1
+  Used Dev Size : 9767424 (9.31 GiB 10.00 GB)
+     Array Size : 9767424 (9.31 GiB 10.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+
+    Update Time : Mon Sep 19 18:24:14 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 148e973c - correct
+         Events : 0.6224
+
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       33        1      active sync   /dev/sdc1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       33        1      active sync   /dev/sdc1
+
+
+Why does Linux fail to auto-assemble /dev/md1 during boot and how do I fix the problem?
+
+
+Thanks!
+
+Jim
+
+
+
