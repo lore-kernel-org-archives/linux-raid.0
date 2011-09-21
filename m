@@ -1,179 +1,224 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] Fixed: Part of output missing during RAID creation
-Date: Wed, 21 Sep 2011 14:40:14 +1000
-Message-ID: <20110921144014.4f2aa20f@notabene.brown>
-References: <20110920151841.25886.80030.stgit@gklab-128-192.igk.intel.com>
-	<20110920152127.25886.75665.stgit@gklab-128-192.igk.intel.com>
+Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
+Date: Wed, 21 Sep 2011 14:45:23 +1000
+Message-ID: <20110921144523.481205c6@notabene.brown>
+References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
+	<20110826021424.28015.2342.stgit@localhost6.localdomain6>
+	<CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
+	<20110830122036.357e63f0@notabene.brown>
+	<CABE8wwv3Uk1pY_D5aAh49+aaoKi9cwwqv6YoqSHGgjw30iQbOg@mail.gmail.com>
+	<3F8F31A3BFD1664EAB894D1BD6AF32B9024C2A@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SrM+du3TX3Za_L5dNiGJN3K"; protocol="application/pgp-signature"
+ boundary="Sig_/iBL6qLwcB48CLW7GajmIx63"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110920152127.25886.75665.stgit@gklab-128-192.igk.intel.com>
+In-Reply-To: <3F8F31A3BFD1664EAB894D1BD6AF32B9024C2A@IRSMSX102.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/SrM+du3TX3Za_L5dNiGJN3K
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/iBL6qLwcB48CLW7GajmIx63
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 20 Sep 2011 17:21:27 +0200 Lukasz Orlowski
-<lukasz.orlowski@intel.com> wrote:
+On Mon, 19 Sep 2011 12:57:48 +0000 "Czarnowska, Anna"
+<anna.czarnowska@intel.com> wrote:
 
-> Having a container created consisting of 2 disks, when one tried to create
-> two volumes of the same RAID level, after attempt of creating the second
-> one, part of the message was missing:
->=20
-> #mdadm -C /dev/md/imsm0 -amd -e imsm -n 2 /dev/sda /dev/sdb -R
-> #mdadm -C /dev/md/MyVolume1 -amd -l0 -c128 -n 2 /dev/sda /dev/sdb -R
-> #mdadm -C /dev/md/MyVolume2 -amd -l0 -c128 -n 2 /dev/sda /dev/sdb -R
->=20
-> After calling the last command, the output was:
-> mdadm: create aborted
->=20
-> Now it's:
-> mdadm: device /dev/sdb not suitable for this style of array
-> mdadm: create aborted
->=20
-> Removed a piece of code attempting to exclusively open a file just to
-> check whether it's possible. The reason is that that check was performed
-> when it was already determined that a volume cannot be created. Put
-> a prompt about the device not being suitable instead.
->=20
-> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
-> ---
->  Create.c |   12 ++++--------
->  1 files changed, 4 insertions(+), 8 deletions(-)
->=20
-> diff --git a/Create.c b/Create.c
-> index baadd9f..b5d35e8 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -349,14 +349,10 @@ int Create(struct supertype *st, char *mddev,
->  			}
-> =20
->  			if (!st) {
-> -				int dfd =3D open(dname, O_RDONLY|O_EXCL);
-> -				if (dfd >=3D 0) {
-> -					fprintf(stderr,
-> -						Name ": device %s not suitable"
-> -						" for any style of array\n",
-> -						dname);
-> -					close(dfd);
-> -				}
-> +				fprintf(stderr,
-> +					Name ": device %s not suitable"
-> +					" for this style of array\n",
-> +					dname);
->  				fail =3D 1;
->  				break;
->  			}
->=20
+> The patch below makes a better decision as to the size of required reserv=
+ation.
 
-I think I get what you are trying to do here, but I don't like the approach.
-The problem is that validate_geometry should be reporting errors but it is
-told not to.
-
-I have just committed the following patch.  See if it helps.
+I've applied this, thanks.
 
 NeilBrown
 
 
-=46rom ecbd9e8160e9de9cc28ad869d303506b1dc69715 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 21 Sep 2011 14:39:01 +1000
-Subject: [PATCH] Create: improve messages from validate_geometry.
+>=20
+> > -----Original Message-----
+> > From: Williams, Dan J [mailto:dan.j.williams@intel.com]
+> > Sent: Tuesday, September 06, 2011 10:43 PM
+> > To: NeilBrown
+> > Cc: linux-raid@vger.kernel.org; Czarnowska, Anna; Labun, Marcin;
+> > Ciechanowski, Ed
+> > Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
+> >=20
+> > On Mon, Aug 29, 2011 at 7:20 PM, NeilBrown <neilb@suse.de> wrote:
+> > >> Anna rightly points out that this could probably be safely made
+> > >> bigger. =A0As it stands this applies to too broad an array of disks.
+> > =A0I
+> > >> think a happy medium (until we can nail down the forward
+> > compatibility
+> > >> of older oroms, v8 in this case) is to detect the case where the
+> > disk
+> > >> is being activated for rebuild and if it is at least as large as one
+> > >> of the existing members truncate the reserved region to the same
+> > size
+> > >> as the other member. =A0That way we are at least compatible with
+> > >> whatever agent created the array in the first instance.
+> > >>
+> > >
+> > > I think you are saying that I can go ahead and apply this patch, but
+> > that it
+> > > might get improved upon in the future .... I hope that is right ?
+> >=20
+> > Yes, this may have corrected things too far in the other direction,
+> > but is less surprising than what we had before.
+>=20
+> >From bf5c919219d9947a0eba1ce2b450c8f663291f48 Mon Sep 17 00:00:00 2001
+> From: Anna Czarnowska <anna.czarnowska@intel.com>
+> Date: Mon, 19 Sep 2011 13:41:46 +0200
+> Subject: [PATCH] Calculate reservation for a spare based on active disks =
+in container
+>=20
+> New function to calculate minimum reservation to expect from a spare
+> is introduced.
+>=20
+> The required amount of space at the end of the disk depends on what we
+> plan to do with the spare and what array we want to use it in.
+> For creating new subarray in an empty container the full reservation of
+> MPB_SECTOR_COUNT + IMSM_RESERVED_SECTORS is required.
+>=20
+> For recovery or OLCE on a volume using new metadata format at least
+> MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION is required.
+> The additional space for migration optimization included in
+> IMSM_RESERVED_SECTORS is not necessary and is not reserved by some oroms.
+>=20
+> MPB_SECTOR_CNT alone is not sufficient as it does not include the
+> reservation at the end of subarray.
+>=20
+> However if the real reservation on active disks is smaller than this
+> (when the array uses old metadata format) we should use the real value.
+> This will allow OLCE and recovery to start on the spare even if the volume
+> doesn't have the reservation we normally use for new volumes.
+>=20
+> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+> ---
+>  super-intel.c |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++=
++++--
+>  1 files changed, 54 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/super-intel.c b/super-intel.c
+> index f1c924f..8dad03c 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -88,6 +88,7 @@
+> =20
+>  #define MPB_SECTOR_CNT 2210
+>  #define IMSM_RESERVED_SECTORS 4096
+> +#define NUM_BLOCKS_DIRTY_STRIPE_REGION 2056
+>  #define SECT_PER_MB_SHIFT 11
+> =20
+>  /* Disk configuration info. */
+> @@ -827,6 +828,8 @@ static int count_memberships(struct dl *dl, struct in=
+tel_super *super)
+>  	return memberships;
+>  }
+> =20
+> +static __u32 imsm_min_reserved_sectors(struct intel_super *super);
+> +
+>  static struct extent *get_extents(struct intel_super *super, struct dl *=
+dl)
+>  {
+>  	/* find a list of used extents on the given physical device */
+> @@ -840,7 +843,7 @@ static struct extent *get_extents(struct intel_super =
+*super, struct dl *dl)
+>  	 * IMSM_RESERVED_SECTORS region
+>  	 */
+>  	if (dl->index =3D=3D -1)
+> -		reservation =3D MPB_SECTOR_CNT;
+> +		reservation =3D imsm_min_reserved_sectors(super);
+>  	else
+>  		reservation =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
+> =20
+> @@ -933,6 +936,51 @@ static int is_failed(struct imsm_disk *disk)
+>  	return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
+>  }
+> =20
+> +/* try to determine how much space is reserved for metadata from
+> + * the last get_extents() entry on the smallest active disk,
+> + * otherwise fallback to the default
+> + */
+> +static __u32 imsm_min_reserved_sectors(struct intel_super *super)
+> +{
+> +	struct extent *e;
+> +	int i;
+> +	__u32 min_active, remainder;
+> +	__u32 rv =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
+> +	struct dl *dl, *dl_min =3D NULL;
+> +
+> +	if (!super)
+> +		return rv;
+> +
+> +	min_active =3D 0;
+> +	for (dl =3D super->disks; dl; dl =3D dl->next) {
+> +		if (dl->index < 0)
+> +			continue;
+> +		if (dl->disk.total_blocks < min_active || min_active =3D=3D 0) {
+> +			dl_min =3D dl;
+> +			min_active =3D dl->disk.total_blocks;
+> +		}
+> +	}
+> +	if (!dl_min)
+> +		return rv;
+> +
+> +	/* find last lba used by subarrays on the smallest active disk */
+> +	e =3D get_extents(super, dl_min);
+> +	if (!e)
+> +		return rv;
+> +	for (i =3D 0; e[i].size; i++)
+> +		continue;
+> +
+> +	remainder =3D min_active - e[i].start;
+> +	free(e);
+> +
+> +	/* to give priority to recovery we should not require full
+> +	   IMSM_RESERVED_SECTORS from the spare */
+> +	rv =3D MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION;
+> +
+> +	/* if real reservation is smaller use that value */
+> +	return  (remainder < rv) ? remainder : rv;
+> +}
+> +
+>  /* Return minimum size of a spare that can be used in this array*/
+>  static unsigned long long min_acceptable_spare_size_imsm(struct supertyp=
+e *st)
+>  {
+> @@ -941,6 +989,7 @@ static unsigned long long min_acceptable_spare_size_i=
+msm(struct supertype *st)
+>  	struct extent *e;
+>  	int i;
+>  	unsigned long long rv =3D 0;
+> +	__u32 reservation;
+> =20
+>  	if (!super)
+>  		return rv;
+> @@ -958,9 +1007,12 @@ static unsigned long long min_acceptable_spare_size=
+_imsm(struct supertype *st)
+>  		continue;
+>  	if (i > 0)
+>  		rv =3D e[i-1].start + e[i-1].size;
+> +	reservation =3D __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
+>  	free(e);
+> +
+>  	/* add the amount of space needed for metadata */
+> -	rv =3D rv + MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
+> +	rv =3D rv + imsm_min_reserved_sectors(super);
+> +
+>  	return rv * 512;
+>  }
+> =20
 
-When validate_geometry finds that we haven't committed to
-a metadata yet and that the subdev is a member of 'our'
-container, it needs to report any errors it finds as Create()
-cannot report them effectively.
 
-So make a slight change to the semantics of the 'verbose' flag
-and allow validate_geometry to report if it printed any error
-messages.
-
-Signed-off-by: NeilBrown  <neilb@suse.de>
-
-diff --git a/Create.c b/Create.c
-index 8d88aa1..79564c5 100644
---- a/Create.c
-+++ b/Create.c
-@@ -332,15 +332,25 @@ int Create(struct supertype *st, char *mddev,
- 			char *name =3D "default";
- 			for(i=3D0; !st && superlist[i]; i++) {
- 				st =3D superlist[i]->match_metadata_desc(name);
-+				if (!st)
-+					continue;
- 				if (do_default_layout)
- 					layout =3D default_layout(st, level, verbose);
--				if (st && !st->ss->validate_geometry
--					    	(st, level, layout, raiddisks,
--						 &chunk, size*2, dname, &freesize,
--						 verbose > 0)) {
-+				switch (st->ss->validate_geometry(
-+						st, level, layout, raiddisks,
-+						&chunk, size*2, dname, &freesize,
-+						verbose > 0)) {
-+				case -1: /* Not valid, message printed, and not
-+					  * worth checking any further */
-+					exit(2);
-+					break;
-+				case 0: /* Geometry not valid */
- 					free(st);
- 					st =3D NULL;
- 					chunk =3D do_default_chunk ? UnSet : chunk;
-+					break;
-+				case 1:	/* All happy */
-+					break;
- 				}
- 			}
-=20
-diff --git a/mdadm.h b/mdadm.h
-index bd3063b..8dd37d9 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -702,6 +702,12 @@ extern struct superswitch {
- 	 * inter-device dependencies, it should record sufficient details
- 	 * so these can be validated.
- 	 * Both 'size' and '*freesize' are in sectors.  chunk is KiB.
-+	 * Return value is:
-+	 *  1: everything is OK
-+	 *  0: not OK for some reason - if 'verbose', then error was reported.
-+	 * -1: st->sb was NULL, 'subdev' is a member of a container of this
-+	 *     types, but array is not acceptable for some reason
-+	 *     message was reported even if verbose is 0.
- 	 */
- 	int (*validate_geometry)(struct supertype *st, int level, int layout,
- 				 int raiddisks,
-diff --git a/super-intel.c b/super-intel.c
-index e57d18f..e9d9af8 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5369,7 +5369,8 @@ static int validate_geometry_imsm(struct supertype *s=
-t, int level, int layout,
- 			return validate_geometry_imsm_volume(st, level, layout,
- 							     raiddisks, chunk,
- 							     size, dev,
--							     freesize, verbose);
-+							     freesize, 1)
-+				? 1 : -1;
- 		}
- 	}
-=20
-
-
---Sig_/SrM+du3TX3Za_L5dNiGJN3K
+--Sig_/iBL6qLwcB48CLW7GajmIx63
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOeWquG5fc6gV+Wb0RAjTKAKDKMf88Pcp1GZzzJez2gT4nsNsAiwCgwPig
-SE7FL/AJ2oerj3tho7hGyJo=
-=I+gj
+iD8DBQFOeWvjG5fc6gV+Wb0RAp1sAJ0cxMyKFWUQQeKsucJ5xGCyE6P6FACfX66X
+aj0+5STTwmZ1G6+4WFGz0Ls=
+=vV0v
 -----END PGP SIGNATURE-----
 
---Sig_/SrM+du3TX3Za_L5dNiGJN3K--
+--Sig_/iBL6qLwcB48CLW7GajmIx63--
