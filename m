@@ -1,53 +1,82 @@
-From: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Subject: [PATCH] Fixed: Part of output missing during RAID creation
-Date: Tue, 20 Sep 2011 17:21:27 +0200
-Message-ID: <20110920152127.25886.75665.stgit@gklab-128-192.igk.intel.com>
-References: <20110920151841.25886.80030.stgit@gklab-128-192.igk.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 03/14] FIX: Do not unblock array accidentally
+Date: Wed, 21 Sep 2011 12:19:27 +1000
+Message-ID: <20110921121927.59a97037@notabene.brown>
+References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
+	<20110916115409.5201.37690.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/oI.MeND65t.Kh.3ljUu9qXB"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110920151841.25886.80030.stgit@gklab-128-192.igk.intel.com>
+In-Reply-To: <20110916115409.5201.37690.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-SGF2aW5nIGEgY29udGFpbmVyIGNyZWF0ZWQgY29uc2lzdGluZyBvZiAyIGRpc2tzLCB3aGVuIG9u
-ZSB0cmllZCB0byBjcmVhdGUKdHdvIHZvbHVtZXMgb2YgdGhlIHNhbWUgUkFJRCBsZXZlbCwgYWZ0
-ZXIgYXR0ZW1wdCBvZiBjcmVhdGluZyB0aGUgc2Vjb25kCm9uZSwgcGFydCBvZiB0aGUgbWVzc2Fn
-ZSB3YXMgbWlzc2luZzoKCiNtZGFkbSAtQyAvZGV2L21kL2ltc20wIC1hbWQgLWUgaW1zbSAtbiAy
-IC9kZXYvc2RhIC9kZXYvc2RiIC1SCiNtZGFkbSAtQyAvZGV2L21kL015Vm9sdW1lMSAtYW1kIC1s
-MCAtYzEyOCAtbiAyIC9kZXYvc2RhIC9kZXYvc2RiIC1SCiNtZGFkbSAtQyAvZGV2L21kL015Vm9s
-dW1lMiAtYW1kIC1sMCAtYzEyOCAtbiAyIC9kZXYvc2RhIC9kZXYvc2RiIC1SCgpBZnRlciBjYWxs
-aW5nIHRoZSBsYXN0IGNvbW1hbmQsIHRoZSBvdXRwdXQgd2FzOgptZGFkbTogY3JlYXRlIGFib3J0
-ZWQKCk5vdyBpdCdzOgptZGFkbTogZGV2aWNlIC9kZXYvc2RiIG5vdCBzdWl0YWJsZSBmb3IgdGhp
-cyBzdHlsZSBvZiBhcnJheQptZGFkbTogY3JlYXRlIGFib3J0ZWQKClJlbW92ZWQgYSBwaWVjZSBv
-ZiBjb2RlIGF0dGVtcHRpbmcgdG8gZXhjbHVzaXZlbHkgb3BlbiBhIGZpbGUganVzdCB0bwpjaGVj
-ayB3aGV0aGVyIGl0J3MgcG9zc2libGUuIFRoZSByZWFzb24gaXMgdGhhdCB0aGF0IGNoZWNrIHdh
-cyBwZXJmb3JtZWQKd2hlbiBpdCB3YXMgYWxyZWFkeSBkZXRlcm1pbmVkIHRoYXQgYSB2b2x1bWUg
-Y2Fubm90IGJlIGNyZWF0ZWQuIFB1dAphIHByb21wdCBhYm91dCB0aGUgZGV2aWNlIG5vdCBiZWlu
-ZyBzdWl0YWJsZSBpbnN0ZWFkLgoKU2lnbmVkLW9mZi1ieTogTHVrYXN6IE9ybG93c2tpIDxsdWth
-c3oub3Jsb3dza2lAaW50ZWwuY29tPgotLS0KIENyZWF0ZS5jIHwgICAxMiArKysrLS0tLS0tLS0K
-IDEgZmlsZXMgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQoKZGlmZiAt
-LWdpdCBhL0NyZWF0ZS5jIGIvQ3JlYXRlLmMKaW5kZXggYmFhZGQ5Zi4uYjVkMzVlOCAxMDA2NDQK
-LS0tIGEvQ3JlYXRlLmMKKysrIGIvQ3JlYXRlLmMKQEAgLTM0OSwxNCArMzQ5LDEwIEBAIGludCBD
-cmVhdGUoc3RydWN0IHN1cGVydHlwZSAqc3QsIGNoYXIgKm1kZGV2LAogCQkJfQogCiAJCQlpZiAo
-IXN0KSB7Ci0JCQkJaW50IGRmZCA9IG9wZW4oZG5hbWUsIE9fUkRPTkxZfE9fRVhDTCk7Ci0JCQkJ
-aWYgKGRmZCA+PSAwKSB7Ci0JCQkJCWZwcmludGYoc3RkZXJyLAotCQkJCQkJTmFtZSAiOiBkZXZp
-Y2UgJXMgbm90IHN1aXRhYmxlIgotCQkJCQkJIiBmb3IgYW55IHN0eWxlIG9mIGFycmF5XG4iLAot
-CQkJCQkJZG5hbWUpOwotCQkJCQljbG9zZShkZmQpOwotCQkJCX0KKwkJCQlmcHJpbnRmKHN0ZGVy
-ciwKKwkJCQkJTmFtZSAiOiBkZXZpY2UgJXMgbm90IHN1aXRhYmxlIgorCQkJCQkiIGZvciB0aGlz
-IHN0eWxlIG9mIGFycmF5XG4iLAorCQkJCQlkbmFtZSk7CiAJCQkJZmFpbCA9IDE7CiAJCQkJYnJl
-YWs7CiAJCQl9CgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50ZWwgVGVjaG5vbG9neSBQb2xhbmQgc3AuIHogby5v
-Lgp6IHNpZWR6aWJhIHcgR2RhbnNrdQp1bC4gU2xvd2Fja2llZ28gMTczCjgwLTI5OCBHZGFuc2sK
-ClNhZCBSZWpvbm93eSBHZGFuc2sgUG9sbm9jIHcgR2RhbnNrdSwgClZJSSBXeWR6aWFsIEdvc3Bv
-ZGFyY3p5IEtyYWpvd2VnbyBSZWplc3RydSBTYWRvd2VnbywgCm51bWVyIEtSUyAxMDE4ODIKCk5J
-UCA5NTctMDctNTItMzE2CkthcGl0YWwgemFrbGFkb3d5IDIwMC4wMDAgemwKClRoaXMgZS1tYWls
-IGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZv
-cgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBv
-ciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBh
-cmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIg
-YW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
+--Sig_/oI.MeND65t.Kh.3ljUu9qXB
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 16 Sep 2011 13:54:09 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
+
+> When sysfs_set_array() function is called, it tests if array
+> can be configured using sysfs. Setting metadata_version entry
+> can accidentally unblock mdmon when array is under reshape.
+> To avoid this, blocking character '-' is checked and if is is set,
+> it is used for array test.
+>=20
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+>=20
+>  sysfs.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/sysfs.c b/sysfs.c
+> index 2146264..903202d 100644
+> --- a/sysfs.c
+> +++ b/sysfs.c
+> @@ -541,7 +541,17 @@ int sysfs_set_array(struct mdinfo *info, int vers)
+>  	ver[0] =3D 0;
+>  	if (info->array.major_version =3D=3D -1 &&
+>  	    info->array.minor_version =3D=3D -2) {
+> +		char buf[1024];
+>  		strcat(strcpy(ver, "external:"), info->text_version);
+> +		if (sysfs_get_str(info, NULL, "metadata_version",
+> +						  buf, 1024) > 0) {
+> +			/* Testing string should not affect
+> +			 * monitor blocking functionality
+> +			 * Set blocking character if present in sysfs already
+> +			 */
+> +			if (buf[9] =3D=3D '-')
+> +				ver[9] =3D '-';
+> +		}
+> =20
+>  		if ((vers % 100) < 2 ||
+>  		    sysfs_set_str(info, NULL, "metadata_version",
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I have applied this patch, though I rewrote the comment a bit.
+
+thanks,
+NeilBrown
+
+
+--Sig_/oI.MeND65t.Kh.3ljUu9qXB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iD8DBQFOeUmwG5fc6gV+Wb0RAgp/AJ9vHljilApwpV/jEN74EQwLNTw3xgCgyFvj
+bdTfOZffFhVQazBgXiWatqE=
+=L2B9
+-----END PGP SIGNATURE-----
+
+--Sig_/oI.MeND65t.Kh.3ljUu9qXB--
