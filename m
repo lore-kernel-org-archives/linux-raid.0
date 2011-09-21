@@ -1,189 +1,87 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 04/14] Add continue option to grow command
-Date: Wed, 21 Sep 2011 07:47:13 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A03254A@IRSMSX101.ger.corp.intel.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 13/14] Check if md allows to control reshape
+Date: Wed, 21 Sep 2011 17:51:14 +1000
+Message-ID: <20110921175114.0dc9042b@notabene.brown>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
-	<20110916115417.5201.51789.stgit@gklab-128-013.igk.intel.com>
- <20110921122207.0f3e65b3@notabene.brown>
+	<20110916115525.5201.42756.stgit@gklab-128-013.igk.intel.com>
+	<20110921123338.6ede25bc@notabene.brown>
+	<79556383A0E1384DB3A3903742AAC04A0324E2@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/A8G+.wEp41ygAn6r..hF715"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110921122207.0f3e65b3@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <79556383A0E1384DB3A3903742AAC04A0324E2@IRSMSX101.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
 List-Id: linux-raid.ids
 
+--Sig_/A8G+.wEp41ygAn6r..hF715
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 21 Sep 2011 07:31:48 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
+wrote:
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, September 21, 2011 4:22 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
-> Subject: Re: [PATCH 04/14] Add continue option to grow command
-> 
-> On Fri, 16 Sep 2011 13:54:17 +0200 Adam Kwolek <adam.kwolek@intel.com>
-> wrote:
-> 
-> > To allow for reshape continuation, 'continue' option is added to grow
-> > command. It is not possible to check, if any existing mdadm instance
-> > is going to take ownership on blocked md array or it is
-> > orphaned/interrupted reshape.
-> > To resolve this problem grow command with continue option, is allowed
-> > when current mdadm instance is only one in the system.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> 
-> Checking how many instances of mdadm are running is definitely wrong.
-> What are you trying to guard against here?
+>=20
+>=20
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Wednesday, September 21, 2011 4:34 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
+> > Subject: Re: [PATCH 13/14] Check if md allows to control reshape
+> >=20
+> > On Fri, 16 Sep 2011 13:55:25 +0200 Adam Kwolek <adam.kwolek@intel.com>
+> > wrote:
+> >=20
+> > > It can happen that there is no mdadm in memory and 'max' was already
+> > > set to sync_max. Such array cannot be put under check pointing control
+> > > again.
+> >=20
+> > Again I don't understand what you are trying to guard against.
+> > If resync_max is 'max', then the kernel is allowed to fun reshape to
+> > completion without any help from mdadm.  If mdadm needs to monitor
+> > things it always sets resync_max to a smaller value.
+> >=20
+> > Confused.
+>=20
+> In my opinion running reshape continuation on array that is allowed to fr=
+eely reshape to the end
+> is race condition (another mdadm or user via sysfs manage this array alre=
+ady).
+> We can tell nothing about restart point (read from metadata) when md runs=
+ with reshape already.
+> I think we should not allow to attach mdadm to such reshape process.
+>=20
+> I think this guard is required.
+>=20
 
+I see what your point is now.  I was just a bit confused by the message that
+is printed which seems to say something different.
 
-Double reshape '--continue' command execution.
+If we need to guard something here, we need to guard against a lot more than
+just sync_max =3D=3D "max".  We need to guard against another mdadm process
+monitoring the array (the extra .pid file I mentioned) and also if sync_max
+has any value larger than what we would expect from the metadata.
 
+So a test that rejects an attempt to continue reshape on an array where
+sync_max is not the correct value makes sense.  Just testing for "max"
+doesn't.
 
-> 
-> If we do need locking to prevent two processes trying to manage an array at
-> the same time, I would suggest creating a 'pid' file
-> - /var/run/mdadm-reshape-mdXXX.pid
-> or something like that.
+Thanks,
+NeilBrown
 
+--Sig_/A8G+.wEp41ygAn6r..hF715
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-OK, I'll think about this.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-BR
-Adam
+iD8DBQFOeZdyG5fc6gV+Wb0RAhfFAKC3xdLPF3IA2zFzWEDbJSbFBtIJ0wCg0kUH
+SDwc0kkz0SeudcrPmnBJTvo=
+=lnZS
+-----END PGP SIGNATURE-----
 
-> 
-> NeilBrown
-> 
-> 
-> > ---
-> >
-> >  ReadMe.c |    1 +
-> >  mdadm.c  |   17 ++++++++++++++++-
-> >  mdadm.h  |    2 ++
-> >  util.c   |   37 +++++++++++++++++++++++++++++++++++++
-> >  4 files changed, 56 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/ReadMe.c b/ReadMe.c
-> > index b658841..f0dc0d9 100644
-> > --- a/ReadMe.c
-> > +++ b/ReadMe.c
-> > @@ -190,6 +190,7 @@ struct option long_options[] = {
-> >      {"backup-file", 1,0, BackupFile},
-> >      {"invalid-backup",0,0,InvalidBackup},
-> >      {"array-size", 1, 0, 'Z'},
-> > +    {"continue", 0, 0, Continue},
-> >
-> >      /* For Incremental */
-> >      {"rebuild-map", 0, 0, RebuildMapOpt}, diff --git a/mdadm.c
-> > b/mdadm.c index 4b817ab..f30534a 100644
-> > --- a/mdadm.c
-> > +++ b/mdadm.c
-> > @@ -74,6 +74,7 @@ int main(int argc, char *argv[])
-> >  	int export = 0;
-> >  	int assume_clean = 0;
-> >  	char *symlinks = NULL;
-> > +	int grow_continue = 0;
-> >  	/* autof indicates whether and how to create device node.
-> >  	 * bottom 3 bits are style.  Rest (when shifted) are number of parts
-> >  	 * 0  - unset
-> > @@ -988,7 +989,21 @@ int main(int argc, char *argv[])
-> >  			}
-> >  			backup_file = optarg;
-> >  			continue;
-> > -
-> > +		case O(GROW, Continue):
-> > +			/* Continuer broken grow
-> > +			 * To be sure that continuation is allowed check
-> > +			 * if there is only one (current) mdadm instance
-> > +			 */
-> > +			grow_continue = count_mdadms();
-> > +			fprintf(stderr, Name ": %i mdadm instance(s)
-> found\n",
-> > +				grow_continue);
-> > +			if (grow_continue != 1) {
-> > +				fprintf(stderr, Name ": Grow continuation "
-> > +					"requires single mdadm instance "
-> > +					"running.\n");
-> > +				exit(2);
-> > +			}
-> > +			continue;
-> >  		case O(ASSEMBLE, InvalidBackup):
-> >  			/* Acknowledge that the backupfile is invalid, but ask
-> >  			 * to continue anyway
-> > diff --git a/mdadm.h b/mdadm.h
-> > index 9035e67..7e3a618 100644
-> > --- a/mdadm.h
-> > +++ b/mdadm.h
-> > @@ -313,6 +313,7 @@ enum special_options {
-> >  	RebuildMapOpt,
-> >  	InvalidBackup,
-> >  	UdevRules,
-> > +	Continue,
-> >  };
-> >
-> >  /* structures read from config file */ @@ -1162,6 +1163,7 @@ extern
-> > char *human_size_brief(long long bytes);  extern void
-> > print_r10_layout(int layout);
-> >
-> >  extern int initramfs_is_in_use(void);
-> > +extern int count_mdadms(void);
-> >  #define INITRAMFS_IS_IN_USE		1
-> >  #define INITRAMFS_NOT_USED		0
-> >
-> > diff --git a/util.c b/util.c
-> > index 7186f3f..5077c2f 100644
-> > --- a/util.c
-> > +++ b/util.c
-> > @@ -1790,3 +1790,40 @@ int initramfs_is_in_use(void)
-> >
-> >  	return ret_val;
-> >  }
-> > +
-> > +int count_mdadms(void)
-> > +{
-> > +	int ret_val = 0;
-> > +	DIR *dirp;
-> > +	struct dirent *d_entry;
-> > +	int fd;
-> > +
-> > +	dirp = opendir("/proc");
-> > +	if (!dirp)
-> > +		return -1;
-> > +
-> > +	while ((d_entry = readdir(dirp)) != NULL) {
-> > +		char p[PATH_MAX];
-> > +
-> > +		if (!strcmp(d_entry->d_name, ".") ||
-> > +			!strcmp(d_entry->d_name, "..") ||
-> > +			!strcmp(d_entry->d_name, "self"))
-> > +			continue;
-> > +		errno = 0;
-> > +		fd = (int)strtol(d_entry->d_name, NULL, 10);
-> > +		if (errno)
-> > +			continue;
-> > +		sprintf(p, "/proc/%s/cmdline", d_entry->d_name);
-> > +		fd = open(p, O_RDONLY);
-> > +		if (fd < 0)
-> > +			continue;
-> > +		if (read(fd, p, PATH_MAX) > 0) {
-> > +			if (strcmp(p, "mdadm") == 0)
-> > +				ret_val++;
-> > +		}
-> > +		close(fd);
-> > +	}
-> > +	closedir(dirp);
-> > +
-> > +	return ret_val;
-> > +}
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
-
+--Sig_/A8G+.wEp41ygAn6r..hF715--
