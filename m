@@ -1,15 +1,15 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 12/14] Early reshape backup verification
-Date: Wed, 21 Sep 2011 07:33:15 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A0324FC@IRSMSX101.ger.corp.intel.com>
+Subject: RE: [PATCH 10/14] Perform restore backup for reshape continuation
+Date: Wed, 21 Sep 2011 07:35:21 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A032516@IRSMSX101.ger.corp.intel.com>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
-	<20110916115518.5201.5649.stgit@gklab-128-013.igk.intel.com>
- <20110921123120.5021dd84@notabene.brown>
+	<20110916115503.5201.11096.stgit@gklab-128-013.igk.intel.com>
+ <20110921122956.6786fc86@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110921123120.5021dd84@notabene.brown>
+In-Reply-To: <20110921122956.6786fc86@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
@@ -19,76 +19,83 @@ List-Id: linux-raid.ids
 
 
 > -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Wednesday, September 21, 2011 4:31 AM
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Wednesday, September 21, 2011 4:30 AM
 > To: Kwolek, Adam
 > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
-> Subject: Re: [PATCH 12/14] Early reshape backup verification
+> Subject: Re: [PATCH 10/14] Perform restore backup for reshape continuation
 > 
-> On Fri, 16 Sep 2011 13:55:18 +0200 Adam Kwolek <adam.kwolek@intel.com>
+> On Fri, 16 Sep 2011 13:55:03 +0200 Adam Kwolek <adam.kwolek@intel.com>
 > wrote:
 > 
-> > Ever reshape needs to backup its critical section. For this purposes
-> > backup file or external metadata mechanisms can be used.
+> > It can happen that reshape is broken by different reason than reboot.
+> > this means that on reshape continuation start we cannot be sure that
+> > critical section has been restored already.
 > 
-> This is not correct.
+> I don't think this is true.
+> 
+> If the array is running, then the critical section must have been restored.
+> Anything else is simply wrong.
+> 
+> What scenario are you thinking of here?
 
-You are right.
+You are right. If array is assembled backup is restored already.
 
 BR
 Adam
 
-
-> For internal metadata the critical section can be stored on a spare device, and
-> this is preferred where possible.
 > 
-> So it is not the case that you must have a backup_file for non-external data.
-> 
+> Thanks,
 > NeilBrown
 > 
 > 
 > >
-> > Add verification if backup file or metadata mechanisms can have chance
-> > to restore data form backup.
-> > For native metadata existence of passed (from command line) backup
-> > file is checked. For external metadta manage_reshape() and
-> > recover_backup() are tested for this purposes.
+> > Restore data from checkpoint before reshape continuation to avoid data
+> > corruption.
 > >
 > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > > ---
 > >
-> >  Grow.c |   12 ++++++++++++
-> >  1 files changed, 12 insertions(+), 0 deletions(-)
+> >  Grow.c |   18 +++++++++++++++++-
+> >  1 files changed, 17 insertions(+), 1 deletions(-)
 > >
 > > diff --git a/Grow.c b/Grow.c
-> > index fa22382..d54b8a8 100644
+> > index 0b96f7a..da8b72d 100644
 > > --- a/Grow.c
 > > +++ b/Grow.c
-> > @@ -3667,6 +3667,18 @@ int Grow_continue_command(char *devname,
+> > @@ -3652,6 +3652,9 @@ int Grow_continue_command(char *devname,
 > int fd,
-> >  			devname);
-> >  		return 1;
-> >  	}
-> > +
-> > +	/* request backup file
-> > +	 * when no metadta specific backup action is defined
-> > +	 */
-> > +	if ((backup_file == NULL) &&
-> > +	    ((st->ss->manage_reshape == NULL) ||
-> > +	     (st->ss->recover_backup == NULL))) {
-> > +		fprintf(stderr, Name ": Please provide backup file "
-> > +			"for reshape continuation.\n");
-> > +		return 1;
-> > +	}
-> > +
-> >  	dprintf("Grow continue is run for ");
-> >  	if (st->ss->external == 0) {
-> >  		dprintf("native array (%s)\n", devname);
+> >  	char container[20];
+> >  	int cfd = -1;
+> >  	int fd2 = -1;
+> > +	int spares;
+> > +	int working_disks;
+> > +	struct mdinfo *dev;
 > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org More
-> majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+> >  	dprintf("Grow continue from command line called for %s\n",
+> >  		devname);
+> > @@ -3753,7 +3756,20 @@ int Grow_continue_command(char *devname,
+> int
+> > fd,
+> >
+> >  	/* continue reshape
+> >  	 */
+> > -	ret_val = Grow_continue(fd, st, content, backup_file);
+> > +	dev = content->devs;
+> > +	spares = 0;
+> > +	working_disks = 0;
+> > +	while (dev) {
+> > +		if (dev->disk.raid_disk == -1)
+> > +			spares++;
+> > +		else
+> > +			working_disks++;
+> > +		dev = dev->next;
+> > +	}
+> > +	ret_val = restore_backup(st, content, working_disks, spares,
+> > +				 backup_file, verbose);
+> > +	if (!ret_val)
+> > +		ret_val = Grow_continue(fd, st, content, backup_file);
+> >
+> >  Grow_continue_command_exit:
+> >  	if (fd2 > -1)
 
