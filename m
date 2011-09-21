@@ -1,120 +1,73 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/3] Create: Unnecessary prompt about device being busy
-Date: Wed, 21 Sep 2011 13:36:15 +1000
-Message-ID: <20110921133615.05d336ee@notabene.brown>
-References: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
-	<20110919165238.9239.1701.stgit@gklab-128-192.igk.intel.com>
+From: Brendan Hide <brendan@swiftspirit.co.za>
+Subject: making a hot spare ... hot
+Date: Wed, 21 Sep 2011 05:30:17 +0200
+Message-ID: <4E795A49.1060000@swiftspirit.co.za>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mHd.mVU__ZsQrkN+YBe9USY"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110919165238.9239.1701.stgit@gklab-128-192.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/mHd.mVU__ZsQrkN+YBe9USY
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi all
 
-On Mon, 19 Sep 2011 18:52:38 +0200 Lukasz Orlowski
-<lukasz.orlowski@intel.com> wrote:
+To the point: When a disk is designated as a hot spare, would it be of 
+benefit to spread copies of data chunks from the other disks onto the 
+hot spare even before a failure? Has this been tried before?
 
-> Should the geometry validation fail, mdadm exits with error code 2 if the
-> style of metadata is not explicitly set to imsm. Prior to that however it
-> attempts to exclusively open a device block file. If it succeeds it says
-> that the device is not suitable for any kind of array, otherwise it just
-> says that the device is busy. The file opened is not closed afterwards.
->=20
-> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
+If its not already being done, it'd have a small positive consequence 
+for performance as well as data integrity, with relatively little to no 
+negative consequences. Benefits would diminish the larger the array, 
+much like the performance difference between raid3 and raid5. Read 
+speeds would theoretically increase and write speeds should not decrease 
+except in the case of poor hardware.
 
-I'm confused.  What exactly is the problem here?
+Given a 6-disk raid5 (5 "data" disks + 1 spare) array, a re-sync will 
+start at 25% progress from the moment a disk gets dropped out of the 
+array. The theoretical max read speed will also increase by 16% by 
+reading from 6 disks instead of 5. The cons will be that, when writing, 
+an extra write will need to occur to the "spare" disk. Though this 
+shouldn't have any performance penalties on modern hardware I can still 
+see it as being a concern.
 
-If geometry validation fails, we need to exit because there is nothing usef=
-ul
-we can do.
-We simply check if the problem is that the device is already in use, or if =
-it
-is an unusable device and report that.  Then exit.
-Seeing we are about the exit there is point closing the file.
+I suspect something like this might have been suggested before - but I 
+haven't been able to find any reference to something along these lines 
+online. I'll welcome any discussion or links to relevant information.
 
-What is the scenario when you get incorrect behaviour?
+Thanks.
 
-NeilBrown
+Key:
+0-F: Data Chunks
+P: Parity
 
+Layout of standard RAID5 + 1 standard spare
 
-> ---
->  Create.c |   18 +++++++++---------
->  1 files changed, 9 insertions(+), 9 deletions(-)
->=20
-> diff --git a/Create.c b/Create.c
-> index 8d88aa1..47e5fc8 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -346,15 +346,15 @@ int Create(struct supertype *st, char *mddev,
-> =20
->  			if (!st) {
->  				int dfd =3D open(dname, O_RDONLY|O_EXCL);
-> -				if (dfd < 0) {
-> -					fprintf(stderr, Name ": cannot open %s: %s\n",
-> -						dname, strerror(errno));
-> -					exit(2);
-> +				if (dfd >=3D 0) {
-> +					fprintf(stderr,
-> +						Name ": device %s not suitable"
-> +						" for any style of array\n",
-> +						dname);
-> +					close(dfd);
->  				}
-> -				fprintf(stderr, Name ": device %s not suitable "
-> -					"for any style of array\n",
-> -					dname);
-> -				exit(2);
-> +				fail =3D 1;
-> +				break;
->  			}
->  			if (st->ss !=3D &super0 ||
->  			    st->minor_version !=3D 90)
-> @@ -443,7 +443,7 @@ int Create(struct supertype *st, char *mddev,
->  			close(fd);
->  		}
->  	}
-> -	if (raiddisks + sparedisks > st->max_devs) {
-> +	if (st && raiddisks + sparedisks > st->max_devs) {
->  		fprintf(stderr, Name ": Too many devices:"
->  			" %s metadata only supports %d\n",
->  			st->ss->name, st->max_devs);
->=20
-> ---------------------------------------------------------------------
-> Intel Technology Poland sp. z o.o.
-> z siedziba w Gdansku
-> ul. Slowackiego 173
-> 80-298 Gdansk
->=20
-> Sad Rejonowy Gdansk Polnoc w Gdansku,=20
-> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,=20
-> numer KRS 101882
->=20
-> NIP 957-07-52-316
-> Kapital zakladowy 200.000 zl
->=20
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
+Disk0: 048C
+Disk1: 159P
+Disk2: 26PD
+Disk3: 3PAE
+Disk4: P7BF
+Disk5: Spare (empty)
 
+Chunks read per read "cycle": 5
+Time to read all 16 data chunks: 4 cycles
 
---Sig_/mHd.mVU__ZsQrkN+YBe9USY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Layout of standard RAID5 + 1 "hot" spare:
+Disk0: 048C
+Disk1: 159P
+Disk2: 26PD
+Disk3: 3PAE
+Disk4: P7BF
+Disk5: 05AF
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Chunks read per "cycle": 6
+Time to read all 16 data chunks: 3 cycles
 
-iD8DBQFOeVuvG5fc6gV+Wb0RAgAQAJ4rWql5wRmqEAky+60ibhHAR7OHPwCdFRdl
-FZXVtzzfRzKkyTvI0CMU4as=
-=dJ9H
------END PGP SIGNATURE-----
+-- 
+__________
+Brendan Hide
+Mobile: brendan.cell@swiftspirit.co.za (plain text only please)
+Web Africa - Internet Business Solutions
+http://www.webafrica.co.za/?AFF1E97
 
---Sig_/mHd.mVU__ZsQrkN+YBe9USY--
