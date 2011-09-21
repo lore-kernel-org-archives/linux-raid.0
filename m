@@ -1,123 +1,98 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] Create: Incorrect message when creating a volume
- with explicit md dev name
-Date: Wed, 21 Sep 2011 13:48:20 +1000
-Message-ID: <20110921134820.24593401@notabene.brown>
-References: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
-	<20110919165245.9239.28871.stgit@gklab-128-192.igk.intel.com>
+Subject: Re: making a hot spare ... hot
+Date: Wed, 21 Sep 2011 14:05:51 +1000
+Message-ID: <20110921140551.31828ea9@notabene.brown>
+References: <4E795A49.1060000@swiftspirit.co.za>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/4oq_rHz8qWWBv+CgHiZUzu5"; protocol="application/pgp-signature"
+ boundary="Sig_/b_1Bh_Wgp3P6z0fC124/7L="; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110919165245.9239.28871.stgit@gklab-128-192.igk.intel.com>
+In-Reply-To: <4E795A49.1060000@swiftspirit.co.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Orlowski <lukasz.orlowski@intel.com>
+To: Brendan Hide <brendan@swiftspirit.co.za>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/4oq_rHz8qWWBv+CgHiZUzu5
+--Sig_/b_1Bh_Wgp3P6z0fC124/7L=
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Sep 2011 18:52:45 +0200 Lukasz Orlowski
-<lukasz.orlowski@intel.com> wrote:
+On Wed, 21 Sep 2011 05:30:17 +0200 Brendan Hide <brendan@swiftspirit.co.za>
+wrote:
 
-> Appears when one attempts to create RAID 1 volume on 2 disks within a
-> container with an existing RAID 5 volume on 3 disks and specifies the
-> md device explicitly (e.g. /dev/md127). Instead of saying that such volume
-> cannot be created it says that the devices have insufficient size.
+> Hi all
+>=20
+> To the point: When a disk is designated as a hot spare, would it be of=20
+> benefit to spread copies of data chunks from the other disks onto the=20
+> hot spare even before a failure? Has this been tried before?
+>=20
+> If its not already being done, it'd have a small positive consequence=20
+> for performance as well as data integrity, with relatively little to no=20
+> negative consequences. Benefits would diminish the larger the array,=20
+> much like the performance difference between raid3 and raid5. Read=20
+> speeds would theoretically increase and write speeds should not decrease=
+=20
+> except in the case of poor hardware.
+>=20
+> Given a 6-disk raid5 (5 "data" disks + 1 spare) array, a re-sync will=20
+> start at 25% progress from the moment a disk gets dropped out of the=20
+> array. The theoretical max read speed will also increase by 16% by=20
+> reading from 6 disks instead of 5. The cons will be that, when writing,=20
+> an extra write will need to occur to the "spare" disk. Though this=20
+> shouldn't have any performance penalties on modern hardware I can still=20
+> see it as being a concern.
+>=20
+> I suspect something like this might have been suggested before - but I=20
+> haven't been able to find any reference to something along these lines=20
+> online. I'll welcome any discussion or links to relevant information.
+>=20
+> Thanks.
+>=20
+> Key:
+> 0-F: Data Chunks
+> P: Parity
+>=20
+> Layout of standard RAID5 + 1 standard spare
+>=20
+> Disk0: 048C
+> Disk1: 159P
+> Disk2: 26PD
+> Disk3: 3PAE
+> Disk4: P7BF
+> Disk5: Spare (empty)
+>=20
+> Chunks read per read "cycle": 5
+> Time to read all 16 data chunks: 4 cycles
+>=20
+> Layout of standard RAID5 + 1 "hot" spare:
+> Disk0: 048C
+> Disk1: 159P
+> Disk2: 26PD
+> Disk3: 3PAE
+> Disk4: P7BF
+> Disk5: 05AF
+>=20
+> Chunks read per "cycle": 6
+> Time to read all 16 data chunks: 3 cycles
+>=20
 
-I cannot reproduce this and I don't really understand what problem you are
-trying to solve (seems to be happening a lot today :-(  )
+I see what you are getting at, but I doubt the value justifies the extra
+complexity.
+If you want more redundancy and have a spare device - use RAID6.
 
-Could you give me a simple list of commands that produce undesirable result=
-s?
-
-Thanks,
 NeilBrown
 
 
-
->=20
-> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
-> ---
->  Create.c      |    8 ++++++--
->  super-intel.c |   10 +++++++---
->  2 files changed, 13 insertions(+), 5 deletions(-)
->=20
-> diff --git a/Create.c b/Create.c
-> index 47e5fc8..baadd9f 100644
-> --- a/Create.c
-> +++ b/Create.c
-> @@ -262,9 +262,13 @@ int Create(struct supertype *st, char *mddev,
->  	if (size && chunk && chunk !=3D UnSet)
->  		size &=3D ~(unsigned long long)(chunk - 1);
->  	newsize =3D size * 2;
-> -	if (st && ! st->ss->validate_geometry(st, level, layout, raiddisks,
-> -					      &chunk, size*2, NULL, &newsize, verbose>=3D0))
-> +	if (st && !
-> +		st->ss->validate_geometry(
-> +				st, level, layout, raiddisks, &chunk,
-> +				size*2, NULL, &newsize, verbose >=3D 0)) {
-> +		fprintf(stderr, Name ": create aborted.\n");
->  		return 1;
-> +	}
-> =20
->  	if (chunk && chunk !=3D UnSet) {
->  		newsize &=3D ~(unsigned long long)(chunk*2 - 1);
-> diff --git a/super-intel.c b/super-intel.c
-> index 616853b..51874ae 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5223,9 +5223,13 @@ static int reserve_space(struct supertype *st, int=
- raiddisks,
->  		/* chunk is in K */
->  		minsize =3D chunk * 2;
-> =20
-> -	if (cnt < raiddisks ||
-> -	    (super->orom && used && used !=3D raiddisks) ||
-> -	    maxsize < minsize ||
-> +	if (cnt < raiddisks || (super->orom && used && used !=3D raiddisks)) {
-> +		fprintf(stderr, Name ": the option-rom requires all "
-> +			"member disks to be a member of all volumes.\n");
-> +		return 0;
-> +	}
-> +
-> +	if (maxsize < minsize ||
->  	    maxsize =3D=3D 0) {
->  		fprintf(stderr, Name ": not enough devices with space to create array.=
-\n");
->  		return 0; /* No enough free spaces large enough */
->=20
-> ---------------------------------------------------------------------
-> Intel Technology Poland sp. z o.o.
-> z siedziba w Gdansku
-> ul. Slowackiego 173
-> 80-298 Gdansk
->=20
-> Sad Rejonowy Gdansk Polnoc w Gdansku,=20
-> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,=20
-> numer KRS 101882
->=20
-> NIP 957-07-52-316
-> Kapital zakladowy 200.000 zl
->=20
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
-
-
---Sig_/4oq_rHz8qWWBv+CgHiZUzu5
+--Sig_/b_1Bh_Wgp3P6z0fC124/7L=
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOeV6EG5fc6gV+Wb0RAuNRAKC5hGfbr0WZrblQiEfbUDK3cK+VSACcCeNl
-adGa25kaQ36qu+sORoyxKj4=
-=A8XF
+iD8DBQFOeWKfG5fc6gV+Wb0RAvgrAJwPo7ruZhYI5tTwIqYr0G/QrERCWACeM6bY
+/3aUF12afup2ALUXgmwQvXE=
+=vfTh
 -----END PGP SIGNATURE-----
 
---Sig_/4oq_rHz8qWWBv+CgHiZUzu5--
+--Sig_/b_1Bh_Wgp3P6z0fC124/7L=--
