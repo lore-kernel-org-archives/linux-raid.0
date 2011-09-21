@@ -1,72 +1,111 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: making a hot spare ... hot
-Date: Wed, 21 Sep 2011 09:18:24 +0200
-Message-ID: <j5c38q$sjq$1@dough.gmane.org>
-References: <4E795A49.1060000@swiftspirit.co.za> <20110921140551.31828ea9@notabene.brown> <4E798B3B.5050004@swiftspirit.co.za>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH 13/14] Check if md allows to control reshape
+Date: Wed, 21 Sep 2011 07:31:48 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A0324E2@IRSMSX101.ger.corp.intel.com>
+References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
+	<20110916115525.5201.42756.stgit@gklab-128-013.igk.intel.com>
+ <20110921123338.6ede25bc@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E798B3B.5050004@swiftspirit.co.za>
+In-Reply-To: <20110921123338.6ede25bc@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
 List-Id: linux-raid.ids
 
-On 21/09/2011 08:59, Brendan Hide wrote:
-> On 2011/09/21 06:05 AM, NeilBrown wrote:
->> On Wed, 21 Sep 2011 05:30:17 +0200 Brendan
->> Hide<brendan@swiftspirit.co.za>
->> wrote:
->>
->>> Hi all
->>>
->>> To the point: When a disk is designated as a hot spare, would it be of
->>> benefit to spread copies of data chunks from the other disks onto the
->>> hot spare even before a failure? Has this been tried before?
->> I see what you are getting at, but I doubt the value justifies the extra
->> complexity.
->> If you want more redundancy and have a spare device - use RAID6.
->>
->> NeilBrown
-> That makes sense then that there's no point in a hot spare when you're
-> using RAID5 - as you say, rather use RAID6. This concept could be used
-> on top of a RAID6 too. However, I also see what you mean by the
-> complexity issue.
->
 
-Correct - there /is/ no point in using a hot spare with RAID5 when you 
-can use RAID6 (unless you have several RAID5 arrays with a shared hot 
-spare).  There are a few types of access that are a little faster with 
-RAID5 plus spare than with RAID6, but other accesses that are faster 
-with the RAID6 (since you have an extra spindle to read from).
 
-And if you are thinking of RAID6 + hot spare, then one day I hope that 
-triple parity RAID6 will be supported by mdadm - it will be less 
-complicated than this method.  (I've almost finished a paper explaining 
-the maths of triple parity raid - I just have to tidy up the examples a 
-bit.)
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Wednesday, September 21, 2011 4:34 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
+> Subject: Re: [PATCH 13/14] Check if md allows to control reshape
+> 
+> On Fri, 16 Sep 2011 13:55:25 +0200 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
+> 
+> > It can happen that there is no mdadm in memory and 'max' was already
+> > set to sync_max. Such array cannot be put under check pointing control
+> > again.
+> 
+> Again I don't understand what you are trying to guard against.
+> If resync_max is 'max', then the kernel is allowed to fun reshape to
+> completion without any help from mdadm.  If mdadm needs to monitor
+> things it always sets resync_max to a smaller value.
+> 
+> Confused.
 
-There is one potential improvement to hot spares that is already on 
-Neil's "things to do" list - Hot Replace.  The idea there is that when 
-you have a disk that is feeling poorly, but not completely dead, then 
-data will be copied from it to the replacement device before the dying 
-device is removed.
+In my opinion running reshape continuation on array that is allowed to freely reshape to the end
+is race condition (another mdadm or user via sysfs manage this array already).
+We can tell nothing about restart point (read from metadata) when md runs with reshape already.
+I think we should not allow to attach mdadm to such reshape process.
 
-> There's diminishing benefits when you have lots of disks and, with fewer
-> disks, you're better off having a bigger RAID6. Given a typical RAID6 (8
-> disks-worth of capacity), the potential improvements are still
-> *relatively* significant, but much less than the numbers given
-> previously. Maximum potential numbers:
-> read speed improvement: 9.09%
-> sync progress at disk fail-time before any pro-active sync work starts:
-> 12.5%
->
-> In my books, any trickery that improves integrity is a good thing but,
-> until I have time to hack around in mdadm code (not likely at the
-> moment), I guess I'll leave it to whoever else who thinks these numbers
-> are worth it. :)
->
-> Thanks, all.
->
+I think this guard is required.
 
+BR
+Adam 
+
+> 
+> NeilBrown
+> 
+> 
+> >
+> > Verify such situation and refuse to control array in such condition.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> > ---
+> >
+> >  Grow.c |   19 +++++++++++++++++++
+> >  1 files changed, 19 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/Grow.c b/Grow.c
+> > index d54b8a8..04e6679 100644
+> > --- a/Grow.c
+> > +++ b/Grow.c
+> > @@ -3656,6 +3656,7 @@ int Grow_continue_command(char *devname,
+> int fd,
+> >  	int spares;
+> >  	int working_disks;
+> >  	struct mdinfo *dev;
+> > +	char buf[40];
+> >
+> >  	dprintf("Grow continue from command line called for %s\n",
+> >  		devname);
+> > @@ -3769,6 +3770,24 @@ int Grow_continue_command(char *devname,
+> int fd,
+> >  		}
+> >  	}
+> >
+> > +	/* verify that array under reshape is stopped
+> > +	 */
+> > +	ret_val = sysfs_get_str(content, NULL, "sync_max", buf, 40);
+> > +	if (ret_val <= 0) {
+> > +		fprintf(stderr, Name
+> > +			": cannot open verify reshape progress for %s
+> (%i)\n",
+> > +			content->sys_name, ret_val);
+> > +		ret_val = 1;
+> > +		goto Grow_continue_command_exit;
+> > +	}
+> > +	dprintf(Name ": Read sync_max sysfs entry is: %s\n", buf);
+> > +	if (strncmp(buf, "max", 3) == 0) {
+> > +		fprintf(stderr, Name ": md is not allowed to finish reshape "
+> > +			"wihout mdadm assistance.\n");
+> > +		ret_val = 1;
+> > +		goto Grow_continue_command_exit;
+> > +	}
+> > +
+> >  	/* continue reshape
+> >  	 */
+> >  	dev = content->devs;
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in the body of a message to majordomo@vger.kernel.org More
+> majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
 
