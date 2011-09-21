@@ -1,73 +1,123 @@
-From: Brendan Hide <brendan@swiftspirit.co.za>
-Subject: making a hot spare ... hot
-Date: Wed, 21 Sep 2011 05:30:17 +0200
-Message-ID: <4E795A49.1060000@swiftspirit.co.za>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 3/3] Create: Incorrect message when creating a volume
+ with explicit md dev name
+Date: Wed, 21 Sep 2011 13:48:20 +1000
+Message-ID: <20110921134820.24593401@notabene.brown>
+References: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
+	<20110919165245.9239.28871.stgit@gklab-128-192.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/4oq_rHz8qWWBv+CgHiZUzu5"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110919165245.9239.28871.stgit@gklab-128-192.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Lukasz Orlowski <lukasz.orlowski@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all
+--Sig_/4oq_rHz8qWWBv+CgHiZUzu5
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-To the point: When a disk is designated as a hot spare, would it be of 
-benefit to spread copies of data chunks from the other disks onto the 
-hot spare even before a failure? Has this been tried before?
+On Mon, 19 Sep 2011 18:52:45 +0200 Lukasz Orlowski
+<lukasz.orlowski@intel.com> wrote:
 
-If its not already being done, it'd have a small positive consequence 
-for performance as well as data integrity, with relatively little to no 
-negative consequences. Benefits would diminish the larger the array, 
-much like the performance difference between raid3 and raid5. Read 
-speeds would theoretically increase and write speeds should not decrease 
-except in the case of poor hardware.
+> Appears when one attempts to create RAID 1 volume on 2 disks within a
+> container with an existing RAID 5 volume on 3 disks and specifies the
+> md device explicitly (e.g. /dev/md127). Instead of saying that such volume
+> cannot be created it says that the devices have insufficient size.
 
-Given a 6-disk raid5 (5 "data" disks + 1 spare) array, a re-sync will 
-start at 25% progress from the moment a disk gets dropped out of the 
-array. The theoretical max read speed will also increase by 16% by 
-reading from 6 disks instead of 5. The cons will be that, when writing, 
-an extra write will need to occur to the "spare" disk. Though this 
-shouldn't have any performance penalties on modern hardware I can still 
-see it as being a concern.
+I cannot reproduce this and I don't really understand what problem you are
+trying to solve (seems to be happening a lot today :-(  )
 
-I suspect something like this might have been suggested before - but I 
-haven't been able to find any reference to something along these lines 
-online. I'll welcome any discussion or links to relevant information.
+Could you give me a simple list of commands that produce undesirable result=
+s?
 
-Thanks.
+Thanks,
+NeilBrown
 
-Key:
-0-F: Data Chunks
-P: Parity
 
-Layout of standard RAID5 + 1 standard spare
 
-Disk0: 048C
-Disk1: 159P
-Disk2: 26PD
-Disk3: 3PAE
-Disk4: P7BF
-Disk5: Spare (empty)
+>=20
+> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
+> ---
+>  Create.c      |    8 ++++++--
+>  super-intel.c |   10 +++++++---
+>  2 files changed, 13 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/Create.c b/Create.c
+> index 47e5fc8..baadd9f 100644
+> --- a/Create.c
+> +++ b/Create.c
+> @@ -262,9 +262,13 @@ int Create(struct supertype *st, char *mddev,
+>  	if (size && chunk && chunk !=3D UnSet)
+>  		size &=3D ~(unsigned long long)(chunk - 1);
+>  	newsize =3D size * 2;
+> -	if (st && ! st->ss->validate_geometry(st, level, layout, raiddisks,
+> -					      &chunk, size*2, NULL, &newsize, verbose>=3D0))
+> +	if (st && !
+> +		st->ss->validate_geometry(
+> +				st, level, layout, raiddisks, &chunk,
+> +				size*2, NULL, &newsize, verbose >=3D 0)) {
+> +		fprintf(stderr, Name ": create aborted.\n");
+>  		return 1;
+> +	}
+> =20
+>  	if (chunk && chunk !=3D UnSet) {
+>  		newsize &=3D ~(unsigned long long)(chunk*2 - 1);
+> diff --git a/super-intel.c b/super-intel.c
+> index 616853b..51874ae 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5223,9 +5223,13 @@ static int reserve_space(struct supertype *st, int=
+ raiddisks,
+>  		/* chunk is in K */
+>  		minsize =3D chunk * 2;
+> =20
+> -	if (cnt < raiddisks ||
+> -	    (super->orom && used && used !=3D raiddisks) ||
+> -	    maxsize < minsize ||
+> +	if (cnt < raiddisks || (super->orom && used && used !=3D raiddisks)) {
+> +		fprintf(stderr, Name ": the option-rom requires all "
+> +			"member disks to be a member of all volumes.\n");
+> +		return 0;
+> +	}
+> +
+> +	if (maxsize < minsize ||
+>  	    maxsize =3D=3D 0) {
+>  		fprintf(stderr, Name ": not enough devices with space to create array.=
+\n");
+>  		return 0; /* No enough free spaces large enough */
+>=20
+> ---------------------------------------------------------------------
+> Intel Technology Poland sp. z o.o.
+> z siedziba w Gdansku
+> ul. Slowackiego 173
+> 80-298 Gdansk
+>=20
+> Sad Rejonowy Gdansk Polnoc w Gdansku,=20
+> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,=20
+> numer KRS 101882
+>=20
+> NIP 957-07-52-316
+> Kapital zakladowy 200.000 zl
+>=20
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
 
-Chunks read per read "cycle": 5
-Time to read all 16 data chunks: 4 cycles
 
-Layout of standard RAID5 + 1 "hot" spare:
-Disk0: 048C
-Disk1: 159P
-Disk2: 26PD
-Disk3: 3PAE
-Disk4: P7BF
-Disk5: 05AF
+--Sig_/4oq_rHz8qWWBv+CgHiZUzu5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Chunks read per "cycle": 6
-Time to read all 16 data chunks: 3 cycles
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
--- 
-__________
-Brendan Hide
-Mobile: brendan.cell@swiftspirit.co.za (plain text only please)
-Web Africa - Internet Business Solutions
-http://www.webafrica.co.za/?AFF1E97
+iD8DBQFOeV6EG5fc6gV+Wb0RAuNRAKC5hGfbr0WZrblQiEfbUDK3cK+VSACcCeNl
+adGa25kaQ36qu+sORoyxKj4=
+=A8XF
+-----END PGP SIGNATURE-----
 
+--Sig_/4oq_rHz8qWWBv+CgHiZUzu5--
