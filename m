@@ -1,126 +1,55 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] Create: Allow to create two volumes of different
- sizes within one container
-Date: Wed, 21 Sep 2011 16:55:00 +1000
-Message-ID: <20110921165500.2df0b15e@notabene.brown>
-References: <20110919165220.9239.2939.stgit@gklab-128-192.igk.intel.com>
-	<20110919165230.9239.4775.stgit@gklab-128-192.igk.intel.com>
-	<20110921133123.05d03613@notabene.brown>
-	<CAA9_cmdkRFqUzj3rdOmNWhTBg=8Wk+LEoaPozawdjQvF0YGb7g@mail.gmail.com>
+From: Brendan Hide <brendan@swiftspirit.co.za>
+Subject: Re: making a hot spare ... hot
+Date: Wed, 21 Sep 2011 08:59:07 +0200
+Message-ID: <4E798B3B.5050004@swiftspirit.co.za>
+References: <4E795A49.1060000@swiftspirit.co.za> <20110921140551.31828ea9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/fzn.N8lhnWxzDvMpghclHyh"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmdkRFqUzj3rdOmNWhTBg=8Wk+LEoaPozawdjQvF0YGb7g@mail.gmail.com>
+In-Reply-To: <20110921140551.31828ea9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Lukasz Orlowski <lukasz.orlowski@intel.com>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/fzn.N8lhnWxzDvMpghclHyh
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 2011/09/21 06:05 AM, NeilBrown wrote:
+> On Wed, 21 Sep 2011 05:30:17 +0200 Brendan Hide<brendan@swiftspirit.co.za>
+> wrote:
+>
+>> Hi all
+>>
+>> To the point: When a disk is designated as a hot spare, would it be of
+>> benefit to spread copies of data chunks from the other disks onto the
+>> hot spare even before a failure? Has this been tried before?
+> I see what you are getting at, but I doubt the value justifies the extra
+> complexity.
+> If you want more redundancy and have a spare device - use RAID6.
+>
+> NeilBrown
+That makes sense then that there's no point in a hot spare when you're 
+using RAID5 - as you say, rather use RAID6. This concept could be used 
+on top of a RAID6 too. However, I also see what you mean by the 
+complexity issue.
 
-On Tue, 20 Sep 2011 23:31:03 -0700 Dan Williams <dan.j.williams@intel.com>
-wrote:
+There's diminishing benefits when you have lots of disks and, with fewer 
+disks, you're better off having a bigger RAID6. Given a typical RAID6 (8 
+disks-worth of capacity), the potential improvements are still 
+*relatively* significant, but much less than the numbers given 
+previously. Maximum potential numbers:
+read speed improvement: 9.09%
+sync progress at disk fail-time before any pro-active sync work starts: 
+12.5%
 
-> On Tue, Sep 20, 2011 at 8:31 PM, NeilBrown <neilb@suse.de> wrote:
-> > On Mon, 19 Sep 2011 18:52:31 +0200 Lukasz Orlowski
-> > <lukasz.orlowski@intel.com> wrote:
-> >
-> >> Allows to create RAID 5 volume on 3 disks and then RAID 1 volume on 2
-> >> disks withing the same container.
-> >>
-> >> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
-> >> ---
-> >> =A0super-intel.c | =A0 =A06 ++++++
-> >> =A01 files changed, 6 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/super-intel.c b/super-intel.c
-> >> index a78d723..616853b 100644
-> >> --- a/super-intel.c
-> >> +++ b/super-intel.c
-> >> @@ -5041,6 +5041,12 @@ static int validate_geometry_imsm_volume(struct=
- supertype *st, int level,
-> >> =A0 =A0 =A0 if (!super)
-> >> =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >>
-> >> + =A0 =A0 if (mpb->num_raid_devs > 0 && mpb->num_disks !=3D raiddisks)=
- {
-> >> + =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": the option-rom requi=
-res all "
-> >> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "member disks to be a member=
- of all volumes.\n");
-> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >> + =A0 =A0 }
-> >> +
-> >> =A0 =A0 =A0 if (!validate_geometry_imsm_orom(super, level, layout, rai=
-ddisks, chunk, verbose)) {
-> >> =A0 =A0 =A0 =A0 =A0 =A0 =A0 fprintf(stderr, Name ": RAID gemetry valid=
-ation failed. "
-> >> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "Cannot proceed with the a=
-ction(s).\n");
-> >>
-> >
-> > This patch doesn't make sense.
-> >
-> > Firstly the description seems backwards. =A0The purpose of this patch s=
-eems to
-> > disallow the creation of two volumes with different numbers of devices,=
- but
-> > the description seems to say that it allows it. =A0But that is a small =
-point.
-> >
-> > ->num_disks is the number of devices in the container including spares.=
- =A0This
-> > patch would allow the first array in a container to have fewer devices =
-than
-> > the container with the rest being spares. =A0However the second array w=
-ould have
-> > to have the same number of devices as the container - even if this is m=
-ore
-> > than the first array.
-> >
-> > Presumably what you really want to do is:
-> > =A0if num_raid_devs > 0, then find the relevant imsm_map, and then chec=
-k if
-> > =A0 =A0 map->num_members =3D=3D raiddisks
-> > =A0and fail if they are not equal.
-> >
->=20
-> Yeah, the changelog is backwards, and this breaks tests/08imsm-overlap
-> because it does not honor IMSM_NO_PLATFORM.  How about the attached?
+In my books, any trickery that improves integrity is a good thing but, 
+until I have time to hack around in mdadm code (not likely at the 
+moment), I guess I'll leave it to whoever else who thinks these numbers 
+are worth it. :)
 
-Better (though text/plain attachments are preferred over
-application/octet-stream....)
+Thanks, all.
 
-However there still seems to be confusion over num_disks versus num_members.
+-- 
+Brendan Hide
 
-You compare num_disks to raiddisks but my understanding is that num_disks c=
-an
-include spares while raiddisks definitely doesn't.  Am I confused or are yo=
-u?
+http://swiftspirit.co.za/
 
-NeilBrown
-
-
->=20
-> Lukasz, please copy me on patch submissions.
->=20
-> Thanks,
-> Dan
-
-
---Sig_/fzn.N8lhnWxzDvMpghclHyh
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOeYpEG5fc6gV+Wb0RAjX/AJsEO21UlnY3gn6QIkM3pM9nHx12QQCfR111
-f1jkm+I15tLkLmceptD7ZYY=
-=CKtq
------END PGP SIGNATURE-----
-
---Sig_/fzn.N8lhnWxzDvMpghclHyh--
