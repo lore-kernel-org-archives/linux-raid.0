@@ -1,15 +1,15 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 10/14] Perform restore backup for reshape continuation
-Date: Wed, 21 Sep 2011 07:35:21 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A032516@IRSMSX101.ger.corp.intel.com>
+Subject: RE: [PATCH 08/14] Check if reshape can be restarted
+Date: Wed, 21 Sep 2011 07:45:31 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A03253E@IRSMSX101.ger.corp.intel.com>
 References: <20110916115229.5201.42794.stgit@gklab-128-013.igk.intel.com>
-	<20110916115503.5201.11096.stgit@gklab-128-013.igk.intel.com>
- <20110921122956.6786fc86@notabene.brown>
+	<20110916115448.5201.56575.stgit@gklab-128-013.igk.intel.com>
+ <20110921122734.338d6f59@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110921122956.6786fc86@notabene.brown>
+In-Reply-To: <20110921122734.338d6f59@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
@@ -19,83 +19,95 @@ List-Id: linux-raid.ids
 
 
 > -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Wednesday, September 21, 2011 4:30 AM
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Wednesday, September 21, 2011 4:28 AM
 > To: Kwolek, Adam
 > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin
-> Subject: Re: [PATCH 10/14] Perform restore backup for reshape continuation
+> Subject: Re: [PATCH 08/14] Check if reshape can be restarted
 > 
-> On Fri, 16 Sep 2011 13:55:03 +0200 Adam Kwolek <adam.kwolek@intel.com>
+> On Fri, 16 Sep 2011 13:54:48 +0200 Adam Kwolek <adam.kwolek@intel.com>
 > wrote:
 > 
-> > It can happen that reshape is broken by different reason than reboot.
-> > this means that on reshape continuation start we cannot be sure that
-> > critical section has been restored already.
+> > When reshape was invoked during initramfs start-up stage array is
+> > pushed in to reshape state already, so read only state cannot be set
+> > again. To verify if reshape continuation should be allowed sync_action
+> > sysfs key is tested and number of existing mdadm instances is checked
+> > again.
+> >
+> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > 
-> I don't think this is true.
+> Again, it is not at all clear to me what you are trying to protect against here...
 > 
-> If the array is running, then the critical section must have been restored.
-> Anything else is simply wrong.
+> The "set_str ... readonly" is going to need to be changed.
 > 
-> What scenario are you thinking of here?
+> In the normal case, this is where the array is activated, but it is activated
+> read-only to ensure no reshape automatically starts.
+> 
+> In the --continue case it is already running and reshape is suspended, so
+> there is no need to set it to readonly when Grow_continue is called from
+> Grow_continue_command.
 
-You are right. If array is assembled backup is restored already.
 
+This is exactly the case.
+
+We have 2 continuation possibilities,  when Grow_continue() is called: 
+
+1. Assembly when  array is set to readonly state and this activates it.
+
+2. grow --continue. Reshape is continued and array is already in reshape state,
+     It is not possible to set readonly state again, this is why sync_action is checked
+     For "reshape" to allow continuation for run.
+    Conjunction with count_mdadms() /the single mdadm instance/ guards any potential race conditions.
+       
 BR
 Adam
 
 > 
-> Thanks,
 > NeilBrown
 > 
 > 
-> >
-> > Restore data from checkpoint before reshape continuation to avoid data
-> > corruption.
-> >
-> > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > > ---
 > >
-> >  Grow.c |   18 +++++++++++++++++-
-> >  1 files changed, 17 insertions(+), 1 deletions(-)
+> >  Grow.c |   19 +++++++++++++++++--
+> >  1 files changed, 17 insertions(+), 2 deletions(-)
 > >
 > > diff --git a/Grow.c b/Grow.c
-> > index 0b96f7a..da8b72d 100644
+> > index 4d2c361..b331287 100644
 > > --- a/Grow.c
 > > +++ b/Grow.c
-> > @@ -3652,6 +3652,9 @@ int Grow_continue_command(char *devname,
-> int fd,
-> >  	char container[20];
-> >  	int cfd = -1;
-> >  	int fd2 = -1;
-> > +	int spares;
-> > +	int working_disks;
-> > +	struct mdinfo *dev;
+> > @@ -3714,8 +3714,23 @@ int Grow_continue(int mdfd, struct supertype
+> *st, struct mdinfo *info,
+> >  	int err;
 > >
-> >  	dprintf("Grow continue from command line called for %s\n",
-> >  		devname);
-> > @@ -3753,7 +3756,20 @@ int Grow_continue_command(char *devname,
-> int
-> > fd,
-> >
-> >  	/* continue reshape
-> >  	 */
-> > -	ret_val = Grow_continue(fd, st, content, backup_file);
-> > +	dev = content->devs;
-> > +	spares = 0;
-> > +	working_disks = 0;
-> > +	while (dev) {
-> > +		if (dev->disk.raid_disk == -1)
-> > +			spares++;
-> > +		else
-> > +			working_disks++;
-> > +		dev = dev->next;
+> >  	err = sysfs_set_str(info, NULL, "array_state", "readonly");
+> > -	if (err)
+> > -		return err;
+> > +	if (err) {
+> > +		/* check if array is set in to reshape stare,
+> > +		 * and current mdadm instance is the only one
+> > +		 */
+> > +		if ((sysfs_get_str(info, NULL, "sync_action",
+> > +				   buf, 40) == 8) &&
+> > +		    (count_mdadms() == 1)) {
+> > +			dprintf("Warning: Grow_continue() cannot set array
+> in"
+> > +				"to read only state [sync_action is %s].",
+> > +				buf);
+> > +			if (strncmp(buf, "reshape", 7))
+> > +				return err;
+> > +			dprintf("Allow to continue.\n");
+> > +		} else
+> > +			return err;
 > > +	}
-> > +	ret_val = restore_backup(st, content, working_disks, spares,
-> > +				 backup_file, verbose);
-> > +	if (!ret_val)
-> > +		ret_val = Grow_continue(fd, st, content, backup_file);
+> > +
+> >  	if (st->ss->external) {
+> >  		fmt_devname(buf, st->container_dev);
+> >  		container = buf;
 > >
-> >  Grow_continue_command_exit:
-> >  	if (fd2 > -1)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in the body of a message to majordomo@vger.kernel.org More
+> majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
 
