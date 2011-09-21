@@ -1,224 +1,142 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
-Date: Wed, 21 Sep 2011 14:45:23 +1000
-Message-ID: <20110921144523.481205c6@notabene.brown>
-References: <20110826020908.28015.52384.stgit@localhost6.localdomain6>
-	<20110826021424.28015.2342.stgit@localhost6.localdomain6>
-	<CABE8wwv08oPwU4maaBULCoy993v=uhGny0_gTWFdYHDsoYLvEg@mail.gmail.com>
-	<20110830122036.357e63f0@notabene.brown>
-	<CABE8wwv3Uk1pY_D5aAh49+aaoKi9cwwqv6YoqSHGgjw30iQbOg@mail.gmail.com>
-	<3F8F31A3BFD1664EAB894D1BD6AF32B9024C2A@IRSMSX102.ger.corp.intel.com>
+Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
+ reports 'does not appear to be active'
+Date: Wed, 21 Sep 2011 15:03:23 +1000
+Message-ID: <20110921150323.0ef402c9@notabene.brown>
+References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
+	<20110830072557.428fab35@notabene.brown>
+	<CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iBL6qLwcB48CLW7GajmIx63"; protocol="application/pgp-signature"
+ boundary="Sig_/pBTLdAJz+fbWKqxW_DW6v5R"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F8F31A3BFD1664EAB894D1BD6AF32B9024C2A@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/iBL6qLwcB48CLW7GajmIx63
+--Sig_/pBTLdAJz+fbWKqxW_DW6v5R
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 19 Sep 2011 12:57:48 +0000 "Czarnowska, Anna"
-<anna.czarnowska@intel.com> wrote:
+On Tue, 13 Sep 2011 11:49:12 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-> The patch below makes a better decision as to the size of required reserv=
-ation.
+> Hello Neil,
+> I am sorry for opening this again, but I am convinced now that I don't
+> understand what's going on:)
+>=20
+> Basically, I see that GET_ARRAY_INFO can also return ENODEV in case
+> the device in the kernel exists, but "we are not initialized yet":
+> /* if we are not initialised yet, only ADD_NEW_DISK, STOP_ARRAY,
+>  * RUN_ARRAY, and GET_ and SET_BITMAP_FILE are allowed */
+> if ((!mddev->raid_disks && !mddev->external)
+>     && cmd !=3D ADD_NEW_DISK && cmd !=3D STOP_ARRAY
+>     && cmd !=3D RUN_ARRAY && cmd !=3D SET_BITMAP_FILE
+>     && cmd !=3D GET_BITMAP_FILE) {
+> 	err =3D -ENODEV;
+> 	goto abort_unlock;
+>=20
+> I thought that ENODEV means that the device in the kernel does not
+> exist, although I am not this familiar with the kernel sources (yet)
+> to verify that.
+>=20
+> Basically, I just wanted to know whether there is a reliable way to
+> determine whether the kernel MD device exists or no. (Obviously,
+> success to open a devnode from user space is not enough).
+>=20
+> Thanks,
+>   Alex.
 
-I've applied this, thanks.
+What exactly do you mean by "the kernel MD device exists" ??
+
+When you open a device-special-file for an md device (major =3D=3D 9) it
+automatically creates an inactive array.  You can then fill in the details
+and activate it, or explicitly deactivate it.  If you do that it will
+disappear.
+
+Opening the devnode is enough to check that the device exists, because it
+creates the device and then you know that it exists.
+If you want to know if it already exists - whether inactive or not - look
+in /proc/mdstat or /sys/block/md*.
+If you want to know if it already exists and is active, look in /proc/mdsta=
+t,
+or open the device and use GET_ARRAY_INFO, or look in /sys/block/md*
+and look at the device size. or maybe /sys/block/mdXX/md/raid_disks.
+
+It depends on why you are asking.
 
 NeilBrown
 
 
+
 >=20
-> > -----Original Message-----
-> > From: Williams, Dan J [mailto:dan.j.williams@intel.com]
-> > Sent: Tuesday, September 06, 2011 10:43 PM
-> > To: NeilBrown
-> > Cc: linux-raid@vger.kernel.org; Czarnowska, Anna; Labun, Marcin;
-> > Ciechanowski, Ed
-> > Subject: Re: [PATCH 5/9] imsm: fix reserved sectors for spares
-> >=20
-> > On Mon, Aug 29, 2011 at 7:20 PM, NeilBrown <neilb@suse.de> wrote:
-> > >> Anna rightly points out that this could probably be safely made
-> > >> bigger. =A0As it stands this applies to too broad an array of disks.
-> > =A0I
-> > >> think a happy medium (until we can nail down the forward
-> > compatibility
-> > >> of older oroms, v8 in this case) is to detect the case where the
-> > disk
-> > >> is being activated for rebuild and if it is at least as large as one
-> > >> of the existing members truncate the reserved region to the same
-> > size
-> > >> as the other member. =A0That way we are at least compatible with
-> > >> whatever agent created the array in the first instance.
-> > >>
-> > >
-> > > I think you are saying that I can go ahead and apply this patch, but
-> > that it
-> > > might get improved upon in the future .... I hope that is right ?
-> >=20
-> > Yes, this may have corrected things too far in the other direction,
-> > but is less surprising than what we had before.
 >=20
-> >From bf5c919219d9947a0eba1ce2b450c8f663291f48 Mon Sep 17 00:00:00 2001
-> From: Anna Czarnowska <anna.czarnowska@intel.com>
-> Date: Mon, 19 Sep 2011 13:41:46 +0200
-> Subject: [PATCH] Calculate reservation for a spare based on active disks =
-in container
 >=20
-> New function to calculate minimum reservation to expect from a spare
-> is introduced.
 >=20
-> The required amount of space at the end of the disk depends on what we
-> plan to do with the spare and what array we want to use it in.
-> For creating new subarray in an empty container the full reservation of
-> MPB_SECTOR_COUNT + IMSM_RESERVED_SECTORS is required.
 >=20
-> For recovery or OLCE on a volume using new metadata format at least
-> MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION is required.
-> The additional space for migration optimization included in
-> IMSM_RESERVED_SECTORS is not necessary and is not reserved by some oroms.
 >=20
-> MPB_SECTOR_CNT alone is not sufficient as it does not include the
-> reservation at the end of subarray.
 >=20
-> However if the real reservation on active disks is smaller than this
-> (when the array uses old metadata format) we should use the real value.
-> This will allow OLCE and recovery to start on the spare even if the volume
-> doesn't have the reservation we normally use for new volumes.
->=20
-> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> ---
->  super-intel.c |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++=
-+++--
->  1 files changed, 54 insertions(+), 2 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index f1c924f..8dad03c 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -88,6 +88,7 @@
-> =20
->  #define MPB_SECTOR_CNT 2210
->  #define IMSM_RESERVED_SECTORS 4096
-> +#define NUM_BLOCKS_DIRTY_STRIPE_REGION 2056
->  #define SECT_PER_MB_SHIFT 11
-> =20
->  /* Disk configuration info. */
-> @@ -827,6 +828,8 @@ static int count_memberships(struct dl *dl, struct in=
-tel_super *super)
->  	return memberships;
->  }
-> =20
-> +static __u32 imsm_min_reserved_sectors(struct intel_super *super);
-> +
->  static struct extent *get_extents(struct intel_super *super, struct dl *=
-dl)
->  {
->  	/* find a list of used extents on the given physical device */
-> @@ -840,7 +843,7 @@ static struct extent *get_extents(struct intel_super =
-*super, struct dl *dl)
->  	 * IMSM_RESERVED_SECTORS region
->  	 */
->  	if (dl->index =3D=3D -1)
-> -		reservation =3D MPB_SECTOR_CNT;
-> +		reservation =3D imsm_min_reserved_sectors(super);
->  	else
->  		reservation =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
-> =20
-> @@ -933,6 +936,51 @@ static int is_failed(struct imsm_disk *disk)
->  	return (disk->status & FAILED_DISK) =3D=3D FAILED_DISK;
->  }
-> =20
-> +/* try to determine how much space is reserved for metadata from
-> + * the last get_extents() entry on the smallest active disk,
-> + * otherwise fallback to the default
-> + */
-> +static __u32 imsm_min_reserved_sectors(struct intel_super *super)
-> +{
-> +	struct extent *e;
-> +	int i;
-> +	__u32 min_active, remainder;
-> +	__u32 rv =3D MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
-> +	struct dl *dl, *dl_min =3D NULL;
-> +
-> +	if (!super)
-> +		return rv;
-> +
-> +	min_active =3D 0;
-> +	for (dl =3D super->disks; dl; dl =3D dl->next) {
-> +		if (dl->index < 0)
-> +			continue;
-> +		if (dl->disk.total_blocks < min_active || min_active =3D=3D 0) {
-> +			dl_min =3D dl;
-> +			min_active =3D dl->disk.total_blocks;
-> +		}
-> +	}
-> +	if (!dl_min)
-> +		return rv;
-> +
-> +	/* find last lba used by subarrays on the smallest active disk */
-> +	e =3D get_extents(super, dl_min);
-> +	if (!e)
-> +		return rv;
-> +	for (i =3D 0; e[i].size; i++)
-> +		continue;
-> +
-> +	remainder =3D min_active - e[i].start;
-> +	free(e);
-> +
-> +	/* to give priority to recovery we should not require full
-> +	   IMSM_RESERVED_SECTORS from the spare */
-> +	rv =3D MPB_SECTOR_CNT + NUM_BLOCKS_DIRTY_STRIPE_REGION;
-> +
-> +	/* if real reservation is smaller use that value */
-> +	return  (remainder < rv) ? remainder : rv;
-> +}
-> +
->  /* Return minimum size of a spare that can be used in this array*/
->  static unsigned long long min_acceptable_spare_size_imsm(struct supertyp=
-e *st)
->  {
-> @@ -941,6 +989,7 @@ static unsigned long long min_acceptable_spare_size_i=
-msm(struct supertype *st)
->  	struct extent *e;
->  	int i;
->  	unsigned long long rv =3D 0;
-> +	__u32 reservation;
-> =20
->  	if (!super)
->  		return rv;
-> @@ -958,9 +1007,12 @@ static unsigned long long min_acceptable_spare_size=
-_imsm(struct supertype *st)
->  		continue;
->  	if (i > 0)
->  		rv =3D e[i-1].start + e[i-1].size;
-> +	reservation =3D __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
->  	free(e);
-> +
->  	/* add the amount of space needed for metadata */
-> -	rv =3D rv + MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
-> +	rv =3D rv + imsm_min_reserved_sectors(super);
-> +
->  	return rv * 512;
->  }
-> =20
+> On Tue, Aug 30, 2011 at 12:25 AM, NeilBrown <neilb@suse.de> wrote:
+> > On Mon, 29 Aug 2011 20:17:34 +0300 Alexander Lyakas <alex.bolshoy@gmail=
+.com>
+> > wrote:
+> >
+> >> Greetings everybody,
+> >>
+> >> I issue
+> >> mdadm --stop /dev/md0
+> >> and I want to reliably determine that the MD devnode (/dev/md0) is gon=
+e.
+> >> So I look for the udev 'remove' event for that devnode.
+> >> However, in some cases even after I see the udev event, I issue
+> >> mdadm --detail /dev/md0
+> >> and I get:
+> >> mdadm: md device /dev/md0 does not appear to be active
+> >>
+> >> According to Detail.c, this means that mdadm can successfully do
+> >> open("/dev/md0") and receive a valid fd.
+> >> But later, when issuing ioctl(fd, GET_ARRAY_INFO) it receives ENODEV
+> >> from the kernel.
+> >>
+> >> Can somebody suggest an explanation for this behavior? Is there a
+> >> reliable way to know when a MD devnode is gone?
+> >
+> > run "udevadm settle" after stopping /dev/md0 =A0is most likely to work.
+> >
+> > I suspect that udev removes the node *after* you see the 'remove' event.
+> > Sometimes so soon after that you don't see the lag - sometimes a bit la=
+ter.
+> >
+> > NeilBrown
+> >
+> >>
+> >> Thanks,
+> >> =A0 Alex.
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
+in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/iBL6qLwcB48CLW7GajmIx63
+--Sig_/pBTLdAJz+fbWKqxW_DW6v5R
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOeWvjG5fc6gV+Wb0RAp1sAJ0cxMyKFWUQQeKsucJ5xGCyE6P6FACfX66X
-aj0+5STTwmZ1G6+4WFGz0Ls=
-=vV0v
+iD8DBQFOeXAbG5fc6gV+Wb0RAlk5AJ9MIzhfZeYoACvopdjXUzI96InD5gCgtbOi
+sLCU7BkZTDlx54b5sbWM8a8=
+=uiWF
 -----END PGP SIGNATURE-----
 
---Sig_/iBL6qLwcB48CLW7GajmIx63--
+--Sig_/pBTLdAJz+fbWKqxW_DW6v5R--
