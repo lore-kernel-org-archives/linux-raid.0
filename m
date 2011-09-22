@@ -1,84 +1,80 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Changed the SATA ports of two disks in RAID10 and raid
- disappeared
-Date: Thu, 22 Sep 2011 16:40:06 +1000
-Message-ID: <20110922164006.763ef4c7@notabene.brown>
-References: <4E774458.3070107@pum.edu.pl>
-	<4E7AD258.2040201@pum.edu.pl>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] FIX: restore_backup() throws core dump
+Date: Thu, 22 Sep 2011 17:20:25 +0200
+Message-ID: <20110922152025.30753.54985.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/HObfh=jJ/XJ/_8tctnJy_mq"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7AD258.2040201@pum.edu.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piotr Legiecki <piotrlg@pum.edu.pl>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/HObfh=jJ/XJ/_8tctnJy_mq
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+1. restore_backup() throws core dump during releasing fdlist.
+Loop for closing handlers checks next_spare variable,
+but iterates disk_count.
 
-On Thu, 22 Sep 2011 08:14:48 +0200 Piotr Legiecki <piotrlg@pum.edu.pl> wrot=
-e:
+2. fdlist initialization/close is corrected to initialize/close
+   whole array
 
-> Piotr Legiecki pisze:
-> > Hi
-> >=20
-> > I have RAID10 with 4 disks. Two of them are connected to 3ware PCIe 4=20
-> > ports SATA controler and the other two on the motherboard SATA ports. I=
-=20
-> > wanted to reconnect those two disks connected to motherboard to 3ware c=
-ard.
-> >=20
-> ...
->=20
-> >=20
-> > So two questions are important now.
-> > 1. How to run this array (safely) again on old ports
->=20
-> Well, that was easy, I have just assembled the array again.
->=20
-> > 2. How to change the ports to new ones? In a proper way.
->=20
-> Hm, no answer here... still I don't want to repeat my errors.
+3. next_spare is replaced by spares
 
-Find out why the new ports make the devices look slightly smaller and
-un-break them.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
+ Grow.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
->=20
-> >=20
-> > The other thing bothers me o bit. Why there is
-> > mdadm: metadata format 00.90 unknown, ignored. warnig? AFAIR it was=20
-> > almost from the beggining of my md arrays on this computer.
->=20
-> Solution?
+diff --git a/Grow.c b/Grow.c
+index b7234e4..4a25165 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -38,7 +38,7 @@
+ int restore_backup(struct supertype *st,
+ 		   struct mdinfo *content,
+ 		   int working_disks,
+-		   int next_spare,
++		   int spares,
+ 		   char *backup_file,
+ 		   int verbose)
+ {
+@@ -46,7 +46,7 @@ int restore_backup(struct supertype *st,
+ 	int *fdlist;
+ 	struct mdinfo *dev;
+ 	int err;
+-	int disk_count = next_spare + working_disks;
++	int disk_count = working_disks + spares;
+ 
+ 	dprintf("Called restore_backup()\n");
+ 	fdlist = malloc(sizeof(int) * disk_count);
+@@ -55,7 +55,7 @@ int restore_backup(struct supertype *st,
+ 			Name ": cannot allocate memory for disk list\n");
+ 		return 1;
+ 	}
+-	for (i = 0; i < next_spare; i++)
++	for (i = 0; i < disk_count; i++)
+ 		fdlist[i] = -1;
+ 	for (dev = content->devs; dev; dev = dev->next) {
+ 		char buf[22];
+@@ -68,16 +68,16 @@ int restore_backup(struct supertype *st,
+ 		if (dev->disk.raid_disk >= 0)
+ 			fdlist[dev->disk.raid_disk] = fd;
+ 		else
+-			fdlist[next_spare++] = fd;
++			fdlist[working_disks++] = fd;
+ 	}
+ 
+ 	if (st->ss->external && st->ss->recover_backup)
+ 		err = st->ss->recover_backup(st, content);
+ 	else
+-		err = Grow_restart(st, content, fdlist, next_spare,
++		err = Grow_restart(st, content, fdlist, working_disks,
+ 				   backup_file, verbose > 0);
+ 
+-	while (next_spare > 0) {
++	while (disk_count > 0) {
+ 		disk_count--;
+ 		if (fdlist[disk_count] >= 0)
+ 			close(fdlist[disk_count]);
 
-Somewhere in /etc/mdadm.conf you have "00.90" where you really want "0.90".
-More recent versions of mdadm are more forgiving.
-
-NeilBrown
-
-
->=20
-> P.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/HObfh=jJ/XJ/_8tctnJy_mq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOethGG5fc6gV+Wb0RAlnQAKDXb4HlQwkvT86BZ76sgxZfRH3GfACg0gVV
-laY06+9qBmvKZYSekSeU2/M=
-=8sRk
------END PGP SIGNATURE-----
-
---Sig_/HObfh=jJ/XJ/_8tctnJy_mq--
