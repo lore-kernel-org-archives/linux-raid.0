@@ -1,75 +1,136 @@
 From: Thomas Fjellstrom <thomas@fjellstrom.ca>
 Subject: Re: potentially lost largeish raid5 array..
-Date: Fri, 23 Sep 2011 01:37:04 -0600
-Message-ID: <201109230137.04843.thomas@fjellstrom.ca>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109222310.28684.tfjellstrom@shaw.ca> <j5hbc3$rh4$1@dough.gmane.org>
+Date: Fri, 23 Sep 2011 02:09:36 -0600
+Message-ID: <201109230209.36209.thomas@fjellstrom.ca>
+References: <201109221950.36910.tfjellstrom@shaw.ca> <20110923151108.08c1199f@notabene.brown> <201109222322.57040.tfjellstrom@shaw.ca>
 Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j5hbc3$rh4$1@dough.gmane.org>
+In-Reply-To: <201109222322.57040.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On September 23, 2011, David Brown wrote:
-> On 23/09/2011 07:10, Thomas Fjellstrom wrote:
-> > On September 22, 2011, Roman Mamedov wrote:
-> >> On Thu, 22 Sep 2011 22:49:12 -0600
-> >> 
-> >> Thomas Fjellstrom<tfjellstrom@shaw.ca>  wrote:
-> >>> Now I guess the question is, how to get that last drive back in? would:
-> >>> 
-> >>> mdadm --re-add /dev/md1 /dev/sdi
-> >>> 
-> >>> work?
-> >> 
-> >> It should, or at least it will not harm anything, but keep in mind that
-> >> simply trying to continue using the array (raid5 with a largeish member
-> >> count) on a flaky controller card is akin to playing with fire.
+On September 22, 2011, Thomas Fjellstrom wrote:
+> On September 22, 2011, NeilBrown wrote:
+> > On Thu, 22 Sep 2011 22:49:12 -0600 Thomas Fjellstrom
+> > <tfjellstrom@shaw.ca>
 > > 
-> > Yeah, I think I won't be using the 3.0 kernel after tonight. At least the
-> > older kernel's would just lock up the card and not cause md to boot the
-> > disks one at a time.
+> > wrote:
+> > > On September 22, 2011, NeilBrown wrote:
+> > > > On Thu, 22 Sep 2011 19:50:36 -0600 Thomas Fjellstrom
+> > > > <tfjellstrom@shaw.ca>
+> > > > 
+> > > > wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > I've been struggling with a SAS card recently that has had poor
+> > > > > driver support for a long time, and tonight its decided to kick
+> > > > > every drive in the array one after the other. Now mdstat shows:
+> > > > > 
+> > > > > md1 : active raid5 sdf[0](F) sdh[7](F) sdi[6](F) sdj[5](F)
+> > > > > sde[3](F) sdd[2](F) sdg[1](F)
+> > > > > 
+> > > > >       5860574208 blocks super 1.1 level 5, 512k chunk, algorithm 2
+> > > > >       [7/0]
+> > > > > 
+> > > > > [_______]
+> > > > > 
+> > > > >       bitmap: 3/8 pages [12KB], 65536KB chunk
+> > > > > 
+> > > > > Does the fact that I'm using a bitmap save my rear here? Or am I
+> > > > > hosed? If I'm not hosed, is there a way I can recover the array
+> > > > > without rebooting? maybe just a --stop and a --assemble ? If that
+> > > > > won't work, will a reboot be ok?
+> > > > > 
+> > > > > I'd really prefer not to have lost all of my data. Please tell me
+> > > > > (please) that it is possible to recover the array. All but sdi are
+> > > > > still visible in /dev (I may be able to get it back via hotplug
+> > > > > maybe, but it'd get sdk or something).
+> > > > 
+> > > > mdadm --stop /dev/md1
+> > > > 
+> > > > mdadm --examine /dev/sd[fhijedg]
+> > > > mdadm --assemble --verbose /dev/md1 /dev/sd[fhijedg]
+> > > > 
+> > > > Report all output.
+> > > > 
+> > > > NeilBrown
+> > > 
+> > > Hi, thanks for the help. Seems the SAS card/driver is in a funky state
+> > > at the moment. the --stop worked*. but --examine just gives "no md
+> > > superblock detected", and dmesg reports io errors for all drives.
 > > 
-> > I /really really/ wish the driver for this card was more stable, but you
-> > deal with what you've got (in my case a $100 2 port SAS/8 port SATA
-> > card). I've been rather lucky so far it seems, I hope my luck keeps up
-> > long enough for either the driver to stabilize, me to get a new card, or
-> > at the very least, to get a third drive for my backup array, so if the
-> > main array does go down, I have a recent daily sync.
+> > > I've just reloaded the driver, and things seem to have come back:
+> > That's good!!
+> > 
+> > > root@boris:~# mdadm --examine /dev/sd[fhijedg]
+> > 
+> > ....
+> > 
+> > sd1 has a slightly older event count than the others - Update time is
+> > 1:13 older.  So it presumably died first.
+> > 
+> > > root@boris:~# mdadm --assemble --verbose /dev/md1 /dev/sd[fhijedg]
+> > > mdadm: looking for devices for /dev/md1
+> > > mdadm: /dev/sdd is identified as a member of /dev/md1, slot 2.
+> > > mdadm: /dev/sde is identified as a member of /dev/md1, slot 3.
+> > > mdadm: /dev/sdf is identified as a member of /dev/md1, slot 0.
+> > > mdadm: /dev/sdg is identified as a member of /dev/md1, slot 1.
+> > > mdadm: /dev/sdh is identified as a member of /dev/md1, slot 6.
+> > > mdadm: /dev/sdi is identified as a member of /dev/md1, slot 5.
+> > > mdadm: /dev/sdj is identified as a member of /dev/md1, slot 4.
+> > > mdadm: added /dev/sdg to /dev/md1 as 1
+> > > mdadm: added /dev/sdd to /dev/md1 as 2
+> > > mdadm: added /dev/sde to /dev/md1 as 3
+> > > mdadm: added /dev/sdj to /dev/md1 as 4
+> > > mdadm: added /dev/sdi to /dev/md1 as 5
+> > > mdadm: added /dev/sdh to /dev/md1 as 6
+> > > mdadm: added /dev/sdf to /dev/md1 as 0
+> > > mdadm: /dev/md1 has been started with 6 drives (out of 7).
+> > > 
+> > > 
+> > > Now I guess the question is, how to get that last drive back in? would:
+> > > 
+> > > mdadm --re-add /dev/md1 /dev/sdi
+> > > 
+> > > work?
+> > 
+> > re-add should work, yes.  It will use the bitmap info to only update the
+> > blocks that need updating - presumably not many.
+> > It might be interesting to run
+> > 
+> >   mdadm -X /dev/sdf
+> > 
+> > first to see what the bitmap looks like - how many dirty bits and what
+> > the event counts are.
 > 
-> My own (limited) experience with SAS is that you /don't/ get what you
-> pay for.  I had a SAS drive on a server (actually a firewall) as the
-> server salesman had persuaded me that it was more reliable than SATA,
-> and therefore a good choice for a critical machine.  The SAS controller
-> card died recently.  I replaced it with two SATA drives connected
-> directly to the motherboard, with md raid - much more reliable and much
-> cheaper (and faster too).
+> root@boris:~# mdadm -X /dev/sdf
+>         Filename : /dev/sdf
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : 7d0e9847:ec3a4a46:32b60a80:06d0ee1c
+>           Events : 1241766
+>   Events Cleared : 1241740
+>            State : OK
+>        Chunksize : 64 MB
+>           Daemon : 5s flush period
+>       Write Mode : Normal
+>        Sync Size : 976762368 (931.51 GiB 1000.20 GB)
+>           Bitmap : 14905 bits (chunks), 18 dirty (0.1%)
+> 
+> > But yes: --re-add should make it all happy.
+> 
+> Very nice. I was quite upset there for a bit. Had to take a walk ;D
 
-Well the driver for this card is known to be rather dodgy, especially with 
-SATA disks. At one point it was panicking on SATA hotplug, would randomly kick 
-one or more drives, the entire card would randomly lock up, and there were 
-random long'ish pauses during access. It's a heck of a lot better now than it 
-was 2 years ago. Except that those problems never caused the array to fall 
-apart like it did today. I guess since the card /didn't/ lock up, md was able 
-to notice that the drives were gone, and subsequently failed the disks.
+I forgot to say, but: Thank you very much :) for the help, and your tireless 
+work on md.
 
-I am worried about sdi though. the bay light on it is flickering a bit, and I 
-think its the only one thats been kicked out lately (other than tonight). 
-Maybe it is causing the card to behave worse than it would if nothing else was 
-bad. Usually though, the card would lock up after the first boot, so a reboot 
-was needed to get the card back in shape, then the array would resync (if 
-needed), and the bitmap would make the resync only take a few minutes (20m the 
-last time I think).
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > NeilBrown
 
 
 -- 
