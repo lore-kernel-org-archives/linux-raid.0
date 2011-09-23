@@ -1,132 +1,49 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+From: David Brown <david@westcontrol.com>
 Subject: Re: potentially lost largeish raid5 array..
-Date: Thu, 22 Sep 2011 23:22:56 -0600
-Message-ID: <201109222322.57040.tfjellstrom@shaw.ca>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109222249.12892.tfjellstrom@shaw.ca> <20110923151108.08c1199f@notabene.brown>
+Date: Fri, 23 Sep 2011 09:06:35 +0200
+Message-ID: <j5hbc3$rh4$1@dough.gmane.org>
+References: <201109221950.36910.tfjellstrom@shaw.ca> <201109222249.12892.tfjellstrom@shaw.ca> <20110923105834.71fc7c78@natsu> <201109222310.28684.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110923151108.08c1199f@notabene.brown>
+In-Reply-To: <201109222310.28684.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On September 22, 2011, NeilBrown wrote:
-> On Thu, 22 Sep 2011 22:49:12 -0600 Thomas Fjellstrom <tfjellstrom@shaw.ca>
-> 
-> wrote:
-> > On September 22, 2011, NeilBrown wrote:
-> > > On Thu, 22 Sep 2011 19:50:36 -0600 Thomas Fjellstrom
-> > > <tfjellstrom@shaw.ca>
-> > > 
-> > > wrote:
-> > > > Hi,
-> > > > 
-> > > > I've been struggling with a SAS card recently that has had poor
-> > > > driver support for a long time, and tonight its decided to kick
-> > > > every drive in the array one after the other. Now mdstat shows:
-> > > > 
-> > > > md1 : active raid5 sdf[0](F) sdh[7](F) sdi[6](F) sdj[5](F) sde[3](F)
-> > > > sdd[2](F) sdg[1](F)
-> > > > 
-> > > >       5860574208 blocks super 1.1 level 5, 512k chunk, algorithm 2
-> > > >       [7/0]
-> > > > 
-> > > > [_______]
-> > > > 
-> > > >       bitmap: 3/8 pages [12KB], 65536KB chunk
-> > > > 
-> > > > Does the fact that I'm using a bitmap save my rear here? Or am I
-> > > > hosed? If I'm not hosed, is there a way I can recover the array
-> > > > without rebooting? maybe just a --stop and a --assemble ? If that
-> > > > won't work, will a reboot be ok?
-> > > > 
-> > > > I'd really prefer not to have lost all of my data. Please tell me
-> > > > (please) that it is possible to recover the array. All but sdi are
-> > > > still visible in /dev (I may be able to get it back via hotplug
-> > > > maybe, but it'd get sdk or something).
-> > > 
-> > > mdadm --stop /dev/md1
-> > > 
-> > > mdadm --examine /dev/sd[fhijedg]
-> > > mdadm --assemble --verbose /dev/md1 /dev/sd[fhijedg]
-> > > 
-> > > Report all output.
-> > > 
-> > > NeilBrown
-> > 
-> > Hi, thanks for the help. Seems the SAS card/driver is in a funky state at
-> > the moment. the --stop worked*. but --examine just gives "no md
-> > superblock detected", and dmesg reports io errors for all drives.
-> 
-> > I've just reloaded the driver, and things seem to have come back:
-> That's good!!
-> 
-> > root@boris:~# mdadm --examine /dev/sd[fhijedg]
-> 
-> ....
-> 
-> sd1 has a slightly older event count than the others - Update time is 1:13
-> older.  So it presumably died first.
-> 
-> > root@boris:~# mdadm --assemble --verbose /dev/md1 /dev/sd[fhijedg]
-> > mdadm: looking for devices for /dev/md1
-> > mdadm: /dev/sdd is identified as a member of /dev/md1, slot 2.
-> > mdadm: /dev/sde is identified as a member of /dev/md1, slot 3.
-> > mdadm: /dev/sdf is identified as a member of /dev/md1, slot 0.
-> > mdadm: /dev/sdg is identified as a member of /dev/md1, slot 1.
-> > mdadm: /dev/sdh is identified as a member of /dev/md1, slot 6.
-> > mdadm: /dev/sdi is identified as a member of /dev/md1, slot 5.
-> > mdadm: /dev/sdj is identified as a member of /dev/md1, slot 4.
-> > mdadm: added /dev/sdg to /dev/md1 as 1
-> > mdadm: added /dev/sdd to /dev/md1 as 2
-> > mdadm: added /dev/sde to /dev/md1 as 3
-> > mdadm: added /dev/sdj to /dev/md1 as 4
-> > mdadm: added /dev/sdi to /dev/md1 as 5
-> > mdadm: added /dev/sdh to /dev/md1 as 6
-> > mdadm: added /dev/sdf to /dev/md1 as 0
-> > mdadm: /dev/md1 has been started with 6 drives (out of 7).
-> > 
-> > 
-> > Now I guess the question is, how to get that last drive back in? would:
-> > 
-> > mdadm --re-add /dev/md1 /dev/sdi
-> > 
-> > work?
-> 
-> re-add should work, yes.  It will use the bitmap info to only update the
-> blocks that need updating - presumably not many.
-> It might be interesting to run
->   mdadm -X /dev/sdf
-> 
-> first to see what the bitmap looks like - how many dirty bits and what the
-> event counts are.
+On 23/09/2011 07:10, Thomas Fjellstrom wrote:
+> On September 22, 2011, Roman Mamedov wrote:
+>> On Thu, 22 Sep 2011 22:49:12 -0600
+>>
+>> Thomas Fjellstrom<tfjellstrom@shaw.ca>  wrote:
+>>> Now I guess the question is, how to get that last drive back in? would:
+>>>
+>>> mdadm --re-add /dev/md1 /dev/sdi
+>>>
+>>> work?
+>>
+>> It should, or at least it will not harm anything, but keep in mind that
+>> simply trying to continue using the array (raid5 with a largeish member
+>> count) on a flaky controller card is akin to playing with fire.
+>
+> Yeah, I think I won't be using the 3.0 kernel after tonight. At least the
+> older kernel's would just lock up the card and not cause md to boot the disks
+> one at a time.
+>
+> I /really really/ wish the driver for this card was more stable, but you deal
+> with what you've got (in my case a $100 2 port SAS/8 port SATA card). I've
+> been rather lucky so far it seems, I hope my luck keeps up long enough for
+> either the driver to stabilize, me to get a new card, or at the very least, to
+> get a third drive for my backup array, so if the main array does go down, I
+> have a recent daily sync.
+>
 
-root@boris:~# mdadm -X /dev/sdf
-        Filename : /dev/sdf
-           Magic : 6d746962
-         Version : 4
-            UUID : 7d0e9847:ec3a4a46:32b60a80:06d0ee1c
-          Events : 1241766
-  Events Cleared : 1241740
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 18 dirty (0.1%)
+My own (limited) experience with SAS is that you /don't/ get what you 
+pay for.  I had a SAS drive on a server (actually a firewall) as the 
+server salesman had persuaded me that it was more reliable than SATA, 
+and therefore a good choice for a critical machine.  The SAS controller 
+card died recently.  I replaced it with two SATA drives connected 
+directly to the motherboard, with md raid - much more reliable and much 
+cheaper (and faster too).
 
- 
-> But yes: --re-add should make it all happy.
-
-Very nice. I was quite upset there for a bit. Had to take a walk ;D
-
-> NeilBrown
-
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
