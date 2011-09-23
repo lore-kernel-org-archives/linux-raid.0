@@ -1,42 +1,183 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Fri, 23 Sep 2011 10:26:53 -0600
-Message-ID: <201109231026.53770.thomas@fjellstrom.ca>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109230209.36209.thomas@fjellstrom.ca> <20110923191539.110b7be1@notabene.brown>
-Reply-To: thomas@fjellstrom.ca
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
+ reports 'does not appear to be active'
+Date: Fri, 23 Sep 2011 22:24:08 +0300
+Message-ID: <CAGRgLy7fKegKw6j-36o0uchTF35F4hT8NvujW4ghb5av-onCGQ@mail.gmail.com>
+References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
+	<20110830072557.428fab35@notabene.brown>
+	<CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
+	<20110921150323.0ef402c9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110923191539.110b7be1@notabene.brown>
+In-Reply-To: <20110921150323.0ef402c9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On September 23, 2011, NeilBrown wrote:
-> On Fri, 23 Sep 2011 02:09:36 -0600 Thomas Fjellstrom <thomas@fjellstrom.ca>
-> 
+Thank you, Neil, for answering.
+I'm not sure that understand all of this, because my knowledge of
+Linux user-kernel interaction is, unfortunately, not sufficient. In
+the future, I hope to know more.
+=46or example, I don't understand, how opening a "/dev/mdXX" can create
+a device in the kernel, if the devnode "/dev/mdXX" does not exist. In
+that case, I actually fail to open it with ENOENT.
+
+But what I did is actually similar to what you advised:
+- if I fail to open the devnode with ENOENT, I know (?) that the
+device does not exist
+- otherwise, I do GET_ARRAY_INFO
+- if it returns ok, then I go ahead and do GET_DISK_INFOs to get the
+disks information
+- otherwise if it returns ENODEV, I close the fd and then I read /proc/=
+mdstat
+- if the md is there, then I know it's inactive array (and I have to
+--stop it and reassemble or do incremental assembly)
+- if the md is not there, then I know that it really does not exist
+(this is the case when md deletion happened but the devnode did not
+disappear yet)
+
+Does it sound right? It passes stress testing pretty well.
+
+By the way, I understand that /proc/mdstat can be only of 4K size...so
+if I have many arrays, I should probably switch to look at
+/sys/block....
+
+Thanks,
+  Alex.
+
+
+
+
+
+
+On Wed, Sep 21, 2011 at 8:03 AM, NeilBrown <neilb@suse.de> wrote:
+>
+> On Tue, 13 Sep 2011 11:49:12 +0300 Alexander Lyakas <alex.bolshoy@gma=
+il.com>
 > wrote:
-> > I forgot to say, but: Thank you very much :) for the help, and your
-> > tireless work on md.
-> 
-> You've very welcome .... but I felt I needed to respond to that word
-> "tireless".
-> The truth is that I am getting rather tired of md .... if anyone knows
-> anyone who wants to get into kernel development and is wondering where to
-> start - please consider whispering 'the md driver' in their ear.  Plenty
-> to do, great mentoring possibilities, and competent linux kernel engineers
-> with good experience are unlikely to have much trouble finding a job ;-)
-> 
+>
+> > Hello Neil,
+> > I am sorry for opening this again, but I am convinced now that I do=
+n't
+> > understand what's going on:)
+> >
+> > Basically, I see that GET_ARRAY_INFO can also return ENODEV in case
+> > the device in the kernel exists, but "we are not initialized yet":
+> > /* if we are not initialised yet, only ADD_NEW_DISK, STOP_ARRAY,
+> > =A0* RUN_ARRAY, and GET_ and SET_BITMAP_FILE are allowed */
+> > if ((!mddev->raid_disks && !mddev->external)
+> > =A0 =A0 && cmd !=3D ADD_NEW_DISK && cmd !=3D STOP_ARRAY
+> > =A0 =A0 && cmd !=3D RUN_ARRAY && cmd !=3D SET_BITMAP_FILE
+> > =A0 =A0 && cmd !=3D GET_BITMAP_FILE) {
+> > =A0 =A0 =A0 err =3D -ENODEV;
+> > =A0 =A0 =A0 goto abort_unlock;
+> >
+> > I thought that ENODEV means that the device in the kernel does not
+> > exist, although I am not this familiar with the kernel sources (yet=
+)
+> > to verify that.
+> >
+> > Basically, I just wanted to know whether there is a reliable way to
+> > determine whether the kernel MD device exists or no. (Obviously,
+> > success to open a devnode from user space is not enough).
+> >
+> > Thanks,
+> > =A0 Alex.
+>
+> What exactly do you mean by "the kernel MD device exists" ??
+>
+> When you open a device-special-file for an md device (major =3D=3D 9)=
+ it
+> automatically creates an inactive array. =A0You can then fill in the =
+details
+> and activate it, or explicitly deactivate it. =A0If you do that it wi=
+ll
+> disappear.
+>
+> Opening the devnode is enough to check that the device exists, becaus=
+e it
+> creates the device and then you know that it exists.
+> If you want to know if it already exists - whether inactive or not - =
+look
+> in /proc/mdstat or /sys/block/md*.
+> If you want to know if it already exists and is active, look in /proc=
+/mdstat,
+> or open the device and use GET_ARRAY_INFO, or look in /sys/block/md*
+> and look at the device size. or maybe /sys/block/mdXX/md/raid_disks.
+>
+> It depends on why you are asking.
+>
 > NeilBrown
-
-Very tempting. How much work do you think it would be to add in full raid10 
-reshape support? ;D (not that I'm volunteering, I don't think I could 
-comprehend a lot of the raid code, at least not at this point in time  
-(extenuating circumstances)).
-
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+>
+>
+>
+> >
+> >
+> >
+> >
+> >
+> >
+> >
+> > On Tue, Aug 30, 2011 at 12:25 AM, NeilBrown <neilb@suse.de> wrote:
+> > > On Mon, 29 Aug 2011 20:17:34 +0300 Alexander Lyakas <alex.bolshoy=
+@gmail.com>
+> > > wrote:
+> > >
+> > >> Greetings everybody,
+> > >>
+> > >> I issue
+> > >> mdadm --stop /dev/md0
+> > >> and I want to reliably determine that the MD devnode (/dev/md0) =
+is gone.
+> > >> So I look for the udev 'remove' event for that devnode.
+> > >> However, in some cases even after I see the udev event, I issue
+> > >> mdadm --detail /dev/md0
+> > >> and I get:
+> > >> mdadm: md device /dev/md0 does not appear to be active
+> > >>
+> > >> According to Detail.c, this means that mdadm can successfully do
+> > >> open("/dev/md0") and receive a valid fd.
+> > >> But later, when issuing ioctl(fd, GET_ARRAY_INFO) it receives EN=
+ODEV
+> > >> from the kernel.
+> > >>
+> > >> Can somebody suggest an explanation for this behavior? Is there =
+a
+> > >> reliable way to know when a MD devnode is gone?
+> > >
+> > > run "udevadm settle" after stopping /dev/md0 =A0is most likely to=
+ work.
+> > >
+> > > I suspect that udev removes the node *after* you see the 'remove'=
+ event.
+> > > Sometimes so soon after that you don't see the lag - sometimes a =
+bit later.
+> > >
+> > > NeilBrown
+> > >
+> > >>
+> > >> Thanks,
+> > >> =A0 Alex.
+> > >> --
+> > >> To unsubscribe from this list: send the line "unsubscribe linux-=
+raid" in
+> > >> the body of a message to majordomo@vger.kernel.org
+> > >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.=
+html
+> > >
+> > >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
