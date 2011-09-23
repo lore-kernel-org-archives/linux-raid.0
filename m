@@ -1,57 +1,70 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Fri, 23 Sep 2011 19:15:39 +1000
-Message-ID: <20110923191539.110b7be1@notabene.brown>
-References: <201109221950.36910.tfjellstrom@shaw.ca>
-	<20110923151108.08c1199f@notabene.brown>
-	<201109222322.57040.tfjellstrom@shaw.ca>
-	<201109230209.36209.thomas@fjellstrom.ca>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/29M8Wa/9gv5GbakGVQkFk=b"; protocol="application/pgp-signature"
+From: "Daniel P. Berrange" <berrange@redhat.com>
+Subject: [PATCH] md: don't delay reboot by 1 second if no MD devices exist
+Date: Fri, 23 Sep 2011 10:40:45 +0100
+Message-ID: <1316770845-18171-1-git-send-email-berrange@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201109230209.36209.thomas@fjellstrom.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, "Daniel P. Berrange" <berrange@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/29M8Wa/9gv5GbakGVQkFk=b
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: "Daniel P. Berrange" <berrange@redhat.com>
 
-On Fri, 23 Sep 2011 02:09:36 -0600 Thomas Fjellstrom <thomas@fjellstrom.ca>
-wrote:
->=20
-> I forgot to say, but: Thank you very much :) for the help, and your tirel=
-ess=20
-> work on md.
->=20
+The md_notify_reboot() method includes a call to mdelay(1000),
+to deal with "exotic SCSI devices" which are too volatile on
+reboot. The delay is unconditional. Even if the machine does
+not have any block devices, let alone MD devices, the kernel
+shutdown sequence is slowed down.
 
+1 second does not matter much with physical hardware, but with
+certain virtualization use cases any wasted time in the bootup
+& shutdown sequence counts for alot.
 
-You've very welcome .... but I felt I needed to respond to that word
-"tireless".
-The truth is that I am getting rather tired of md .... if anyone knows anyo=
-ne
-who wants to get into kernel development and is wondering where to start -
-please consider whispering 'the md driver' in their ear.  Plenty to do, gre=
-at
-mentoring possibilities, and competent linux kernel engineers with good
-experience are unlikely to have much trouble finding a job ;-)
+* drivers/md/md.c: md_notify_reboot() - only impose a delay if
+  there was at least one MD device to be stopped during reboot
 
-NeilBrown
+Signed-off-by: Daniel P. Berrange <berrange@redhat.com>
+---
+ drivers/md/md.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5404b22..ef7ad8d 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -8059,12 +8059,13 @@ static int md_notify_reboot(struct notifier_block *this,
+ {
+ 	struct list_head *tmp;
+ 	mddev_t *mddev;
++	int need_delay = 0;
+ 
+ 	if ((code == SYS_DOWN) || (code == SYS_HALT) || (code == SYS_POWER_OFF)) {
+ 
+ 		printk(KERN_INFO "md: stopping all md devices.\n");
+ 
+-		for_each_mddev(mddev, tmp)
++		for_each_mddev(mddev, tmp) {
+ 			if (mddev_trylock(mddev)) {
+ 				/* Force a switch to readonly even array
+ 				 * appears to still be in use.  Hence
+@@ -8073,13 +8074,16 @@ static int md_notify_reboot(struct notifier_block *this,
+ 				md_set_readonly(mddev, 100);
+ 				mddev_unlock(mddev);
+ 			}
++			need_delay = 1;
++		}
+ 		/*
+ 		 * certain more exotic SCSI devices are known to be
+ 		 * volatile wrt too early system reboots. While the
+ 		 * right place to handle this issue is the given
+ 		 * driver, we do want to have a safe RAID driver ...
+ 		 */
+-		mdelay(1000*1);
++		if (need_delay)
++			mdelay(1000*1);
+ 	}
+ 	return NOTIFY_DONE;
+ }
+-- 
+1.7.6.2
 
---Sig_/29M8Wa/9gv5GbakGVQkFk=b
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOfE47G5fc6gV+Wb0RAuTIAKDGsCgXifyj3VAdymwmn3KcVqB+vwCaAsu5
-YL2bEhuBYiEV8ZMl99xjvjg=
-=86LK
------END PGP SIGNATURE-----
-
---Sig_/29M8Wa/9gv5GbakGVQkFk=b--
