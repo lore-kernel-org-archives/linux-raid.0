@@ -1,81 +1,129 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
 Subject: Re: potentially lost largeish raid5 array..
-Date: Sat, 24 Sep 2011 11:38:52 -0500
-Message-ID: <4E7E079C.4020802@hardwarefreak.com>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231022.59437.tfjellstrom@shaw.ca> <4E7D152C.9080704@hardwarefreak.com> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org>
-Reply-To: stan@hardwarefreak.com
+Date: Sat, 24 Sep 2011 11:48:49 -0600
+Message-ID: <201109241148.49433.tfjellstrom@shaw.ca>
+References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j5ksf5$oam$1@dough.gmane.org>
+In-Reply-To: <4E7DCA66.4000705@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: stan@hardwarefreak.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/24/2011 10:16 AM, David Brown wrote:
-> On 24/09/2011 14:17, Stan Hoeppner wrote:
->> On 9/23/2011 7:11 PM, Thomas Fjellstrom wrote:
->>> On September 23, 2011, Stan Hoeppner wrote:
->>
->>>> When properly configured XFS will achieve near spindle throughput.
->>>> Recent versions of mkfs.xfs read the mdraid configuration and configure
->>>> the filesystem automatically for sw, swidth, number of allocation
->>>> groups, etc. Thus you should get max performance out of the gate.
->>>
->>> What happens when you add a drive and reshape? Is it enough just to
->>> tweak the
->>> mount options?
->>
->> When you change the number of effective spindles with a reshape, and
->> thus the stripe width and stripe size, you definitely should add the
->> appropriate XFS mount options and values to reflect this. Performance
->> will be less than optimal if you don't.
->>
->> If you use a linear concat under XFS you never have to worry about the
->> above situation. It has many other advantages over a striped array and
->> better performance for many workloads, especially multi user general
->> file serving and maildir storage--workloads with lots of concurrent IO.
->> If you 'need' maximum single stream performance for large files, a
->> striped array is obviously better. Most applications however don't need
->> large single stream performance.
->>
->
-> If you use a linear concatenation of drives for XFS, is it not correct
-> that you want one allocation group per drive (or per raid set, if you
-> are concatenating a bunch of raid sets)?
+On September 24, 2011, Stan Hoeppner wrote:
+> On 9/23/2011 7:11 PM, Thomas Fjellstrom wrote:
+> > On September 23, 2011, Stan Hoeppner wrote:
+> >> On 9/23/2011 11:22 AM, Thomas Fjellstrom wrote:
+> >>> I'd love to switch, but I didn't really have the money for the card
+> >>> then, and now I have less money. I suppose if I ebayed this card
+> >>> first, and then bought a new one that would work out, but yeah, It
+> >>> will have to wait a bit (things are VERY tight right now).
+> >> 
+> >> Which is why you purchased the cheapest SAS card on the market at that
+> >> time. :)
+> >> 
+> >>> So this Intel card, looks like a good option, but how much faster is
+> >>> it? I get 500MB/s read off this SASLP. Probably a bit more now that
+> >>> there's 7 drives in the array. Off of XFS, it gets at least 200MB/s
+> >>> read (the discrepancy between raw and over xfs really bugs me,
+> >>> something there can't be right can it?).
+> >> 
+> >> When properly configured XFS will achieve near spindle throughput.
+> >> Recent versions of mkfs.xfs read the mdraid configuration and configure
+> >> the filesystem automatically for sw, swidth, number of allocation
+> >> groups, etc.  Thus you should get max performance out of the gate.
+> > 
+> > What happens when you add a drive and reshape? Is it enough just to tweak
+> > the mount options?
+> 
+> When you change the number of effective spindles with a reshape, and
+> thus the stripe width and stripe size, you definitely should add the
+> appropriate XFS mount options and values to reflect this.  Performance
+> will be less than optimal if you don't.
+> 
+> If you use a linear concat under XFS you never have to worry about the
+> above situation.  It has many other advantages over a striped array and
+> better performance for many workloads, especially multi user general
+> file serving and maildir storage--workloads with lots of concurrent IO.
+>   If you 'need' maximum single stream performance for large files, a
+> striped array is obviously better.  Most applications however don't need
+> large single stream performance.
+> 
+> >> If you really would like to fix this, you'll need to post on the XFS
+> >> list.  Much more data will be required than simply stating "it's slower
+> >> by x than 'raw' read".  This will include your mdadm config, testing
+> >> methodology, and xfs_info output at minimum.  There is no simple "check
+> >> this box" mega solution with XFS.
+> > 
+> > I tweaked a crap load of settings before settling on what I have. Its
+> > reasonable, a balance between raw throughput and directory
+> > access/modification performance. Read performance atm isn't as bad as I
+> > remember, about 423MB/s according to bonnie++. Write performance is
+> > 153MB/s which seems a tad low to me, but still not horrible. Faster than
+> > I generally need at any given time.
+> 
+> That low write performance is probably due to barriers to some degree.
+> Disabling barriers could yield a sizable increase in write performance
+> for some workloads, especially portions of synthetic benchies.  Using an
+> external log journal device could help as well.  Keep in mind we're
+> talking about numbers generated by synthetic benchmarks.  Making such
+> changes may not help your actual application workload much, if at all.
 
-Yes.  Normally with a linear concat you would make X number of RAID1 
-mirrors via mdraid or hardware RAID, then concat them with mdadm 
---linear or LVM.  Then mkfs.xfs -d ag=X ...
+Yeah, I'm not too terribly concerned about synthetic benchmarks. Performance 
+for what I use it for is pretty good.
 
-Currently XFS has a 1TB limit for allocation groups.  If you use 2TB 
-drives you'll get 2 AGs per effective spindle instead of one.  With some 
-'borderline' workloads this may hinder performance.  It depends on how 
-many top level directories you have in the filesystem and your 
-concurrency to them.
+This array sees a few uses, like p2p, media streaming, rsnapshot backups, and 
+an apt mirror. It also used to store the disk images for several VMs as well. 
+I've since moved them off to two separate 500G drives in RAID1.
 
-> If you then add another drive
-> or raid set, can you grow XFS with another allocation group?
+What I was concerned about is that I can have my backups going, apt-mirror 
+doing its thing, and streaming one or more media files (say a 1080p video or 
+two) all at the same time and get /no/ stutter in the movie playback.
 
-XFS creates more allocation groups automatically as part of the grow 
-operation.  If you have a linear concat setup you'll obviously wan to 
-control this manually to maintain the same number of AGs per effective 
-spindle.
+> Given your HBA and the notoriously flaky kernel driver for it, you'd be
+> asking for severe pain if you disabled barriers.  If you had a rock
+> stable system and a good working UPS you could probably run ok with
+> barriers disabled, but it's always risky without a BBWC RAID card.  If
+> you want to increase benchy write performance I'd first try an external
+> log device since SATA disks are cheap.  You'll want to mirror two disks
+> for the log, of course.  A couple of 2.5" 160GB 7.2k drives would fit
+> the bill and will run about $100 USD total.
 
-Always remember that the key to linear concat performance with XFS is 
-directory level parallelism.  If you have lots of top level directories 
-in your filesystem and high concurrent access (home dirs, maildir, etc) 
-it will typically work better than a striped array.  If you have few 
-directories and low concurrency, are streaming large files, etc, stick 
-with a striped array.
+If bcache ever gets support for adding a cache to an existing device, I've 
+been thinking about using a 30G Virtex SSD as a cache for the big array, and 
+could set some space aside on it for the xfs log.
 
-Also note that a linear concat will only give increased performance with 
-XFS, again for appropriate worklods.  Using a linear concat with EXT3/4 
-will give you the performance of a single spindle regardless of the 
-total number of disks used.  So one should stick with striped arrays for 
-EXT3/4.
+> >>> Thank you for the suggestion though, I will have to book mark that
+> >>> link.
+> >> 
+> >> You're welcome.
+> >> 
+> >> You can't find a better value for an 8 port SAS or SATA solution that
+> >> actually works well with Linux.  Not to my knowledge anyway.  You could
+> >> buy two PCIe x1 4 port Marvell based SATA only cards for $20-30 less
+> >> maybe, but would be limited to 500MB/s raw unidirectional PCIe b/w vs
+> >> 2GB/s with an x4 card, have less features, eat two slots, etc.  That
+> >> would be more reliable than what you have now though.  The Marvell SATA
+> >> driver in Linux is much more solid that the SAS driver, from what I've
+> >> read anyway.  I've never used/owned any Marvell based cards.  If I go
+> >> cheap I go Silicon Image.  It's too bad they don't have a 4 port PCIe
+> >> ASIC in their line up.  The only 4 port chip they have is PCI based.
+> >> Addonics sells a Silicon Image expander, but the total cost for a 2 port
+> >> card and two expanders is quite a bit higher than the better Intel
+> >> single card solution.
+> > 
+> > I appreciate the tips. That intel/LSI card seems like the best bet.
+> 
+> It's hard to beat for 8 ports at that price point.  And it's an Intel
+> card with LSI ASIC, not some cheapo Rosewill or Syba card with a
+> Marvell, SI, JMicron, etc.
+
+Oh man don't get me started on JMicron...
 
 -- 
-Stan
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
