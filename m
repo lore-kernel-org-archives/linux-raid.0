@@ -1,92 +1,45 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Sun, 25 Sep 2011 15:03:44 +0200
-Message-ID: <j5n921$9oj$1@dough.gmane.org>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231022.59437.tfjellstrom@shaw.ca> <4E7D152C.9080704@hardwarefreak.com> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org> <4E7E079C.4020802@hardwarefreak.com>
+From: Phil Turmel <philip@turmel.org>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Sun, 25 Sep 2011 09:15:40 -0400
+Message-ID: <4E7F297C.9070403@turmel.org>
+References: <4E7EDE58.3000804@yazzy.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7E079C.4020802@hardwarefreak.com>
+In-Reply-To: <4E7EDE58.3000804@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: lists@yazzy.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/09/2011 18:38, Stan Hoeppner wrote:
-> On 9/24/2011 10:16 AM, David Brown wrote:
->> On 24/09/2011 14:17, Stan Hoeppner wrote:
->>> On 9/23/2011 7:11 PM, Thomas Fjellstrom wrote:
->>>> On September 23, 2011, Stan Hoeppner wrote:
->>>
->>>>> When properly configured XFS will achieve near spindle throughput.
->>>>> Recent versions of mkfs.xfs read the mdraid configuration and
->>>>> configure
->>>>> the filesystem automatically for sw, swidth, number of allocation
->>>>> groups, etc. Thus you should get max performance out of the gate.
->>>>
->>>> What happens when you add a drive and reshape? Is it enough just to
->>>> tweak the
->>>> mount options?
->>>
->>> When you change the number of effective spindles with a reshape, and
->>> thus the stripe width and stripe size, you definitely should add the
->>> appropriate XFS mount options and values to reflect this. Performance
->>> will be less than optimal if you don't.
->>>
->>> If you use a linear concat under XFS you never have to worry about the
->>> above situation. It has many other advantages over a striped array and
->>> better performance for many workloads, especially multi user general
->>> file serving and maildir storage--workloads with lots of concurrent IO.
->>> If you 'need' maximum single stream performance for large files, a
->>> striped array is obviously better. Most applications however don't need
->>> large single stream performance.
->>>
->>
->> If you use a linear concatenation of drives for XFS, is it not correct
->> that you want one allocation group per drive (or per raid set, if you
->> are concatenating a bunch of raid sets)?
->
-> Yes. Normally with a linear concat you would make X number of RAID1
-> mirrors via mdraid or hardware RAID, then concat them with mdadm
-> --linear or LVM. Then mkfs.xfs -d ag=X ...
->
-> Currently XFS has a 1TB limit for allocation groups. If you use 2TB
-> drives you'll get 2 AGs per effective spindle instead of one. With some
-> 'borderline' workloads this may hinder performance. It depends on how
-> many top level directories you have in the filesystem and your
-> concurrency to them.
->
->> If you then add another drive
->> or raid set, can you grow XFS with another allocation group?
->
-> XFS creates more allocation groups automatically as part of the grow
-> operation. If you have a linear concat setup you'll obviously wan to
-> control this manually to maintain the same number of AGs per effective
-> spindle.
->
-> Always remember that the key to linear concat performance with XFS is
-> directory level parallelism. If you have lots of top level directories
-> in your filesystem and high concurrent access (home dirs, maildir, etc)
-> it will typically work better than a striped array. If you have few
-> directories and low concurrency, are streaming large files, etc, stick
-> with a striped array.
->
+On 09/25/2011 03:55 AM, Marcin M. Jessa wrote:
+> Hi guys.
+> 
+> 
+> I have a RAID 6 setup with 5 2TB drives on Debian Wheezy [1] & [2].
+> Yesterday 3 of the drives failed working leaving the RAID setup broken.
+> Following [5] I managed to start the array and make it resync.
+> The problem I'm facing now is I cannot access any of the LVM partitions [3] I have on top of my md0. Fdisk says the disk doesn't contain a valid partition table [4].
+> I tried to run fsck on the lvm devices without luck.
+> Has any of you a suggestion, a method I could use to access my data please?
 
-I understand the point about linear concat and allocation groups being a 
-good solution when you have multiple parallel accesses to different 
-files, rather than streamed access to a few large files.
+[trim /]
 
-But you seem to be suggesting here that accesses to different files 
-within the same top-level directory will be put in the same allocation 
-group - is that correct?  That strikes me as very limiting - it is far 
-from uncommon for most accesses to be under one or two top-level 
-directories.
+> [5]: http://en.wikipedia.org/wiki/Mdadm#Recovering_from_a_loss_of_raid_superblock
 
-> Also note that a linear concat will only give increased performance with
-> XFS, again for appropriate worklods. Using a linear concat with EXT3/4
-> will give you the performance of a single spindle regardless of the
-> total number of disks used. So one should stick with striped arrays for
-> EXT3/4.
->
+These instructions are horrible!  If you make the slightest mistake, your data is completely hosed.
 
+If first asks for your "mdadm -E" reports from the drives, but it has you filter them through a grep that throws away important information.  (Did you keep that report?)
 
+Next, it has you wipe the superblocks on the array members, destroying all possibility of future forensics.
+
+Then, it has you re-create the array, but omits "--assume-clean", so the array rebuilds.  With the slightest mistake in superblock type, chunk size, layout, alignment, data offset, or device order, the rebuild will trash your data.  Default values for some of those have changed in mdadm from version to version, so a naive "--create" command has a good chance of getting something wrong.
+
+There is no mention of attempting "--assemble --force" with your original superblocks, which is the correct first step in this situation.  And it nearly always works.
+
+I'm sorry, Marcin, but you shouldn't expect to get your data back.  Per your "mdadm -D" report, the rebuild was already 63% done, so the destruction of your data is certainly complete now.
+
+Regards,
+
+Phil
