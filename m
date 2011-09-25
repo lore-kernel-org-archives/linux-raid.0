@@ -1,117 +1,179 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Sun, 25 Sep 2011 09:39:32 -0500
-Message-ID: <4E7F3D24.5050300@hardwarefreak.com>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231022.59437.tfjellstrom@shaw.ca> <4E7D152C.9080704@hardwarefreak.com> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org> <4E7E079C.4020802@hardwarefreak.com> <j5n921$9oj$1@dough.gmane.org>
-Reply-To: stan@hardwarefreak.com
+From: "Marcin M. Jessa" <lists@yazzy.org>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Sun, 25 Sep 2011 16:41:00 +0200
+Message-ID: <4E7F3D7C.3060705@yazzy.org>
+References: <4E7EDE58.3000804@yazzy.org> <4E7F297C.9070403@turmel.org>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j5n921$9oj$1@dough.gmane.org>
+In-Reply-To: <4E7F297C.9070403@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/25/2011 8:03 AM, David Brown wrote:
-> On 24/09/2011 18:38, Stan Hoeppner wrote:
->> On 9/24/2011 10:16 AM, David Brown wrote:
->>> On 24/09/2011 14:17, Stan Hoeppner wrote:
->>>> On 9/23/2011 7:11 PM, Thomas Fjellstrom wrote:
->>>>> On September 23, 2011, Stan Hoeppner wrote:
->>>>
->>>>>> When properly configured XFS will achieve near spindle throughput.
->>>>>> Recent versions of mkfs.xfs read the mdraid configuration and
->>>>>> configure
->>>>>> the filesystem automatically for sw, swidth, number of allocation
->>>>>> groups, etc. Thus you should get max performance out of the gate.
->>>>>
->>>>> What happens when you add a drive and reshape? Is it enough just to
->>>>> tweak the
->>>>> mount options?
->>>>
->>>> When you change the number of effective spindles with a reshape, and
->>>> thus the stripe width and stripe size, you definitely should add the
->>>> appropriate XFS mount options and values to reflect this. Performance
->>>> will be less than optimal if you don't.
->>>>
->>>> If you use a linear concat under XFS you never have to worry about the
->>>> above situation. It has many other advantages over a striped array and
->>>> better performance for many workloads, especially multi user general
->>>> file serving and maildir storage--workloads with lots of concurrent IO.
->>>> If you 'need' maximum single stream performance for large files, a
->>>> striped array is obviously better. Most applications however don't need
->>>> large single stream performance.
->>>>
->>>
->>> If you use a linear concatenation of drives for XFS, is it not correct
->>> that you want one allocation group per drive (or per raid set, if you
->>> are concatenating a bunch of raid sets)?
->>
->> Yes. Normally with a linear concat you would make X number of RAID1
->> mirrors via mdraid or hardware RAID, then concat them with mdadm
->> --linear or LVM. Then mkfs.xfs -d ag=X ...
->>
->> Currently XFS has a 1TB limit for allocation groups. If you use 2TB
->> drives you'll get 2 AGs per effective spindle instead of one. With some
->> 'borderline' workloads this may hinder performance. It depends on how
->> many top level directories you have in the filesystem and your
->> concurrency to them.
->>
->>> If you then add another drive
->>> or raid set, can you grow XFS with another allocation group?
->>
->> XFS creates more allocation groups automatically as part of the grow
->> operation. If you have a linear concat setup you'll obviously wan to
->> control this manually to maintain the same number of AGs per effective
->> spindle.
->>
->> Always remember that the key to linear concat performance with XFS is
->> directory level parallelism. If you have lots of top level directories
->> in your filesystem and high concurrent access (home dirs, maildir, etc)
->> it will typically work better than a striped array. If you have few
->> directories and low concurrency, are streaming large files, etc, stick
->> with a striped array.
->>
->
-> I understand the point about linear concat and allocation groups being a
-> good solution when you have multiple parallel accesses to different
-> files, rather than streamed access to a few large files.
+On 9/25/11 3:15 PM, Phil Turmel wrote:
 
-Not just different files, but files in different top level directories.
 
-> But you seem to be suggesting here that accesses to different files
-> within the same top-level directory will be put in the same allocation
-> group - is that correct?
+> I'm sorry, Marcin, but you shouldn't expect to get your data back.  Per your "mdadm -D" report, the rebuild was already 63% done, so the destruction of your data is certainly complete now.
 
-When you create a top level directory on an XFS filesystem it is 
-physically created in one of the on disk allocation groups.  When you 
-create another directory it is physically created in the next allocation 
-group, and so on, until it wraps back to the first AG.  This is why XFS 
-can derive parallelism from a linear concat and no other filesystem can. 
-  Performance is rarely perfectly symmetrical, as the workload dictates 
-the file, and thus physical IO, access patterns.
+What I don't understand is I still have the LVM info. It's just the LVs 
+don't have partition table stored anymore:
 
-But, with maildir and similar workloads, the odds are very high that 
-you'll achieve good directory level parallelism because each mailbox is 
-in a different directory.  I've previously discussed the many other 
-reasons why XFS on a linear concat beats the stuffing out of anything on 
-a striped array for a maildir workload so I won't repeat all that here.
+# pvdisplay
+     Logging initialised at Sun Sep 25 16:38:43 2011
+     Set umask from 0022 to 0077
+     Scanning for physical volume names
+   --- Physical volume ---
+   PV Name               /dev/md0
+   VG Name               fridge
+   PV Size               5.46 TiB / not usable 3.00 MiB
+   Allocatable           yes
+   PE Size               4.00 MiB
+   Total PE              1430793
+   Free PE               102153
+   Allocated PE          1328640
+   PV UUID               Ubx1OW-jCyN-Vcy2-4p2W-L6Qb-u6W8-cVkrE4
 
-> That strikes me as very limiting - it is far
-> from uncommon for most accesses to be under one or two top-level
-> directories.
+# vgdisplay
+     Logging initialised at Sun Sep 25 16:40:12 2011
+     Set umask from 0022 to 0077
+     Finding all volume groups
+     Finding volume group "fridge"
+   --- Volume group ---
+   VG Name               fridge
+   System ID
+   Format                lvm2
+   Metadata Areas        1
+   Metadata Sequence No  33
+   VG Access             read/write
+   VG Status             resizable
+   MAX LV                0
+   Cur LV                7
+   Open LV               0
+   Max PV                0
+   Cur PV                1
+   Act PV                1
+   VG Size               5.46 TiB
+   PE Size               4.00 MiB
+   Total PE              1430793
+   Alloc PE / Size       1328640 / 5.07 TiB
+   Free  PE / Size       102153 / 399.04 GiB
+   VG UUID               ZD2fsN-dFq4-PcMB-owRh-WxGs-ciK8-PPwPbd
 
-By design or ignorance?  What application workload?  What are the IOPS 
-and bandwidth needs of this workload you describe?  Again, read the 
-paragraph below, which you apparently skipped the first time.
+# lvdisplay
+     Logging initialised at Sun Sep 25 16:40:30 2011
+     Set umask from 0022 to 0077
+     Finding all logical volumes
+   --- Logical volume ---
+   LV Name                /dev/fridge/storage
+   VG Name                fridge
+   LV UUID                kIhbSq-hePX-UIVv-uuiP-iK6w-djcz-iQ3cEI
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                4.88 TiB
+   Current LE             1280000
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:0
 
->> Also note that a linear concat will only give increased performance with
->> XFS, again for appropriate worklods. Using a linear concat with EXT3/4
->> will give you the performance of a single spindle regardless of the
->> total number of disks used. So one should stick with striped arrays for
->> EXT3/4.
+   --- Logical volume ---
+   LV Name                /dev/fridge/webstorage
+   VG Name                fridge
+   LV UUID                PuCGo1-LkRa-doEI-n8qU-mqS3-20Cw-SICWPk
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                100.00 GiB
+   Current LE             25600
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:1
+
+   --- Logical volume ---
+   LV Name                /dev/fridge/mailstorage
+   VG Name                fridge
+   LV UUID                538TGs-fRYt-VT1n-r8jE-Uvv3-nNXl-Cf8ojP
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                30.00 GiB
+   Current LE             7680
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:2
+
+   --- Logical volume ---
+   LV Name                /dev/fridge/web01
+   VG Name                fridge
+   LV UUID                NsABmI-ok5I-GCaE-yGV6-Dqp6-Qedz-jVDS6Y
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                10.00 GiB
+   Current LE             2560
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:3
+
+   --- Logical volume ---
+   LV Name                /dev/fridge/db01
+   VG Name                fridge
+   LV UUID                qa88nB-MqX8-25YN-MEqf-ln81-vNtP-w2yVMW
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                10.00 GiB
+   Current LE             2560
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:4
+
+   --- Logical volume ---
+   LV Name                /dev/fridge/mail01
+   VG Name                fridge
+   LV UUID                qxUbLd-SaDq-wCwd-Z5M6-2llk-8SJh-vTlruR
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                10.00 GiB
+   Current LE             2560
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:5
+
+   --- Logical volume ---
+   LV Name                /dev/fridge/win8
+   VG Name                fridge
+   LV UUID                TPsBeN-Nj2o-w1mt-pkS8-d9zu-wCMm-vRv3e7
+   LV Write Access        read/write
+   LV Status              available
+   # open                 0
+   LV Size                30.00 GiB
+   Current LE             7680
+   Segments               1
+   Allocation             inherit
+   Read ahead sectors     auto
+   - currently set to     6144
+   Block device           253:6
+
+
 
 -- 
-Stan
+
+Marcin M. Jessa
