@@ -1,75 +1,149 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Green drives and RAID arrays with partity
-Date: Sun, 25 Sep 2011 09:54:28 -0500
-Message-ID: <4E7F40A4.6040704@hardwarefreak.com>
-References: <4E7F0A31.4070001@yazzy.org> <4E7F13E8.4080606@hardwarefreak.com> <4E7F3A80.7010308@yazzy.org>
-Reply-To: stan@hardwarefreak.com
+From: David Brown <david.brown@hesbynett.no>
+Subject: Re: potentially lost largeish raid5 array..
+Date: Sun, 25 Sep 2011 17:18:21 +0200
+Message-ID: <j5ngnt$ms1$1@dough.gmane.org>
+References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231022.59437.tfjellstrom@shaw.ca> <4E7D152C.9080704@hardwarefreak.com> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org> <4E7E079C.4020802@hardwarefreak.com> <j5n921$9oj$1@dough.gmane.org> <4E7F3D24.5050300@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7F3A80.7010308@yazzy.org>
+In-Reply-To: <4E7F3D24.5050300@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/25/2011 9:28 AM, Marcin M. Jessa wrote:
-> On 9/25/11 1:43 PM, Stan Hoeppner wrote:
->
-> [...]
->
+On 25/09/11 16:39, Stan Hoeppner wrote:
+> On 9/25/2011 8:03 AM, David Brown wrote:
+>> On 24/09/2011 18:38, Stan Hoeppner wrote:
+>>> On 9/24/2011 10:16 AM, David Brown wrote:
+>>>> On 24/09/2011 14:17, Stan Hoeppner wrote:
+>>>>> On 9/23/2011 7:11 PM, Thomas Fjellstrom wrote:
+>>>>>> On September 23, 2011, Stan Hoeppner wrote:
+>>>>>
+>>>>>>> When properly configured XFS will achieve near spindle throughput.
+>>>>>>> Recent versions of mkfs.xfs read the mdraid configuration and
+>>>>>>> configure
+>>>>>>> the filesystem automatically for sw, swidth, number of allocation
+>>>>>>> groups, etc. Thus you should get max performance out of the gate.
+>>>>>>
+>>>>>> What happens when you add a drive and reshape? Is it enough just to
+>>>>>> tweak the
+>>>>>> mount options?
+>>>>>
+>>>>> When you change the number of effective spindles with a reshape, and
+>>>>> thus the stripe width and stripe size, you definitely should add the
+>>>>> appropriate XFS mount options and values to reflect this. Performance
+>>>>> will be less than optimal if you don't.
+>>>>>
+>>>>> If you use a linear concat under XFS you never have to worry about the
+>>>>> above situation. It has many other advantages over a striped array and
+>>>>> better performance for many workloads, especially multi user general
+>>>>> file serving and maildir storage--workloads with lots of concurrent
+>>>>> IO.
+>>>>> If you 'need' maximum single stream performance for large files, a
+>>>>> striped array is obviously better. Most applications however don't
+>>>>> need
+>>>>> large single stream performance.
+>>>>>
+>>>>
+>>>> If you use a linear concatenation of drives for XFS, is it not correct
+>>>> that you want one allocation group per drive (or per raid set, if you
+>>>> are concatenating a bunch of raid sets)?
+>>>
+>>> Yes. Normally with a linear concat you would make X number of RAID1
+>>> mirrors via mdraid or hardware RAID, then concat them with mdadm
+>>> --linear or LVM. Then mkfs.xfs -d ag=X ...
+>>>
+>>> Currently XFS has a 1TB limit for allocation groups. If you use 2TB
+>>> drives you'll get 2 AGs per effective spindle instead of one. With some
+>>> 'borderline' workloads this may hinder performance. It depends on how
+>>> many top level directories you have in the filesystem and your
+>>> concurrency to them.
+>>>
+>>>> If you then add another drive
+>>>> or raid set, can you grow XFS with another allocation group?
+>>>
+>>> XFS creates more allocation groups automatically as part of the grow
+>>> operation. If you have a linear concat setup you'll obviously wan to
+>>> control this manually to maintain the same number of AGs per effective
+>>> spindle.
+>>>
+>>> Always remember that the key to linear concat performance with XFS is
+>>> directory level parallelism. If you have lots of top level directories
+>>> in your filesystem and high concurrent access (home dirs, maildir, etc)
+>>> it will typically work better than a striped array. If you have few
+>>> directories and low concurrency, are streaming large files, etc, stick
+>>> with a striped array.
+>>>
 >>
->> When you have a problem such as yours, and you ask for help on this, or
->> any other Linux kernel list, it's a really good idea to post all of the
->> relevant information up front. Why? Because most often when drives drop
->> out of arrays it is not because a disk failed or the disk has buggy
->> firmware. It's most often because of problems elsewhere in the storage
->> stack, either hardware or software.
+>> I understand the point about linear concat and allocation groups being a
+>> good solution when you have multiple parallel accesses to different
+>> files, rather than streamed access to a few large files.
 >
-> I wasn't sure which information I should attach and I did not want to
-> spam the list. I was hoping someone would tell me if some of the
-> relevant information was missing so I could send it when needed.
-> Could you please tell me what kind of data was missing?
+> Not just different files, but files in different top level directories.
 >
->> Crappy HBAs and/or drivers, loose or dislodged cable connectors, and
->> crappy active/passive backplanes are the primary movers when it comes to
->> good drives dropping out of arrays.
+>> But you seem to be suggesting here that accesses to different files
+>> within the same top-level directory will be put in the same allocation
+>> group - is that correct?
 >
-> In my case I don't use any HW Raid.
-> My motherboard is a MSI 870A-G54 -
-> http://www.msi.com/product/mb/870A-G54.html and I only use SATA and
-> software RAID.
+> When you create a top level directory on an XFS filesystem it is
+> physically created in one of the on disk allocation groups. When you
+> create another directory it is physically created in the next allocation
+> group, and so on, until it wraps back to the first AG. This is why XFS
+> can derive parallelism from a linear concat and no other filesystem can.
+> Performance is rarely perfectly symmetrical, as the workload dictates
+> the file, and thus physical IO, access patterns.
 >
->> Again, I implore you to investigate all other portions of your storage
->> stack before blowing money on drives, which may not be the cause of your
->> problem.
+> But, with maildir and similar workloads, the odds are very high that
+> you'll achieve good directory level parallelism because each mailbox is
+> in a different directory. I've previously discussed the many other
+> reasons why XFS on a linear concat beats the stuffing out of anything on
+> a striped array for a maildir workload so I won't repeat all that here.
 >
-> It's really hard to find the source of the failure.
-> My first assumption was the drives, since I have 5 more (different) HDs
-> connected to the board, two in RAID 1 (ATA drives) and they all work
-> flawlessly.
-> Reading feedbacks from all the people complaining about the same issue
-> with the SEAGATE drives as I have I automatically assumed there is a
-> problems with these particular disks.
+>> That strikes me as very limiting - it is far
+>> from uncommon for most accesses to be under one or two top-level
+>> directories.
+>
+> By design or ignorance? What application workload? What are the IOPS and
+> bandwidth needs of this workload you describe? Again, read the paragraph
+> below, which you apparently skipped the first time.
+>
 
-Are the drives screwed into the case's internal drive cage?  Directly 
-connected to the motherboard SATA ports with cables?  Or, do you have 
-the drives mounted in any kind of SATA hot/cold swap cage?  The cheap 
-ones of these are notorious for causing exactly the kind of drop outs 
-you've experienced.  Post a link to your case and any drive related 
-peripherals.
+Perhaps I am not expressing myself very clearly.  I don't mean to sound 
+patronising by spelling it out like this - I just want to be sure I'm 
+getting an answer to the question in my mind (assuming, of course, you 
+have time and inclination to help me - you've certainly been very 
+helpful and informative so far!).
 
-Did you suffer a power event?  I.e. a sag, brown out?  Is the system 
-connected to a good quality working UPS?
+Suppose you have an xfs filesystem with 10 allocation groups, mounted on 
+/mnt.  You make a directory /mnt/a.  That gets created in allocation 
+group 1.  You make a second directory /mnt/b.  That gets created in 
+allocation group 2.  Any files you put in /mnt/a go in allocation group 
+1, and any files in /mnt/b go in allocation group 2.  Am I right so far?
 
-Something else you should always mention:  How long did it all "just 
-work" before having problems?  A few hours?  Days?  Weeks?  Months?  Had 
-you made any hardware changes to the system recently before the failure 
-event?  If so what?  Did you upgrade your kernel/drivers recently, or 
-any software in the storage stack?  Is the PSU flaky?  How old is it?  A 
-flaky PSU can drop drives out of arrays like hot potatoes when there is 
-heavy access and thus heavy current draw.
+Then you create directories /mnt/a/a1 and /mnt/a/a2.  Do these also go 
+in allocation group 1, or do they go in groups 3 and 4?  Similarly, do 
+files inside them go in group 1 or in groups 3 and 4?
 
--- 
-Stan
+To take an example that is quite relevant to me, consider a mail server 
+handling two domains.  You have (for example) /var/mail/domain1 and 
+/var/mail/domain2, with each user having a directory within either 
+domain1 or domain2.  What I would like to know, is if the xfs filesystem 
+is mounted on /var/mail, then are the user directories spread across the 
+allocation groups, or are all of domain1 users in one group and all of 
+domain2 users in another group?  If it is the former, then xfs on a 
+linear concat would scale beautifully - if it is the later, then it 
+would be pretty terrible scaling.
+
+>>> Also note that a linear concat will only give increased performance with
+>>> XFS, again for appropriate worklods. Using a linear concat with EXT3/4
+>>> will give you the performance of a single spindle regardless of the
+>>> total number of disks used. So one should stick with striped arrays for
+>>> EXT3/4.
+>
+
+I understand this, which is why I didn't comment earlier.  I am aware 
+that only XFS can utilise the parts of a linear concat to improve 
+performance - my questions were about the circumstances in which XFS can 
+utilise the multiple allocation groups.
+
