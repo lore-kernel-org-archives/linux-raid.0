@@ -1,179 +1,92 @@
-From: "Marcin M. Jessa" <lists@yazzy.org>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Sun, 25 Sep 2011 16:41:00 +0200
-Message-ID: <4E7F3D7C.3060705@yazzy.org>
-References: <4E7EDE58.3000804@yazzy.org> <4E7F297C.9070403@turmel.org>
-Reply-To: lists@yazzy.org
+From: Joe Landman <landman@scalableinformatics.com>
+Subject: Re: Green drives and RAID arrays with partity
+Date: Sun, 25 Sep 2011 10:41:02 -0400
+Message-ID: <4E7F3D7E.4070205@scalableinformatics.com>
+References: <4E7F0A31.4070001@yazzy.org>
+Reply-To: landman@scalableinformatics.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7F297C.9070403@turmel.org>
+In-Reply-To: <4E7F0A31.4070001@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
+To: lists@yazzy.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/25/11 3:15 PM, Phil Turmel wrote:
+On 09/25/2011 07:02 AM, Marcin M. Jessa wrote:
+> Hi guys.
+>
+> I was wondering if it's safe to use so called green drives in RAID 5 =
+or
+> RAID 6 with md?
+
+You might need to turn off TLER and their power spin-down features, but=
+=20
+in general, they *should* work ok.  Modulo any firmware issues (staring=
+=20
+intently at WD).  We don't use Western Digital drives anymore due to ..=
+=2E=20
+er ... profound high failure rates we've observed in the field.  These=20
+may or may not be connected to "greenness".  They are definitely=20
+connected to buggy firmware (this is on enterprise and consumer drives,=
+=20
+used across a fairly wide swath of use cases).
+
+Your mileage may vary (e.g. you might have different experiences).  We=20
+wouldn't recommend them.
+
+> Drive such as Seagate Barracuda=AE Green 2TB ST2000DL003 or Western
+> Digital Caviar=AE Green=99 2TB WD20EARX have TLER off and reading mis=
+c
+> forums I understand that it would be a good idea to buy drives with t=
+hat
+> option available.
+
+TLER and the power spindown option are good things to be able to turn=20
+off.  Otherwise you need to have a way for the MD device to deal with a=
+=20
+spun-down set of drives.  I am not sure support is there for this right=
+=20
+now ... I could be wrong, I've just not seen it.
+
+This said, spinning up and down drives is actually more stressful for=20
+the electronics and motor.  Better to leave them in one state whenever=20
+possible.  I can't remember the study I saw on this, but about a year=20
+ago I saw a quietly published correlation between drive failures and=20
+number of spinup/spindown cycles.  My memory might be off on it, so fee=
+l=20
+free to look for yourself (and don't rely upon my likely faulty memory)=
+=2E
+
+> On the other hand some people claim that Linux/Solaris/BSD based
+> software RAID may be able to work just fine with these drives.
+
+If the drives don't try to be "smart" and do "smart things" (powerdown,=
+=20
+unlimited Herculean error recovery, massive sector remapping that takes=
+=20
+it out of service for more than 60 seconds), yeah, they should "just=20
+work".  If you have a barrel full of these drives and need to use them,=
+=20
+by all means, just turn off the "smart" features.
+
+OTOH, if you are buying new drives, steer clear of them.
 
 
-> I'm sorry, Marcin, but you shouldn't expect to get your data back.  Per your "mdadm -D" report, the rebuild was already 63% done, so the destruction of your data is certainly complete now.
-
-What I don't understand is I still have the LVM info. It's just the LVs 
-don't have partition table stored anymore:
-
-# pvdisplay
-     Logging initialised at Sun Sep 25 16:38:43 2011
-     Set umask from 0022 to 0077
-     Scanning for physical volume names
-   --- Physical volume ---
-   PV Name               /dev/md0
-   VG Name               fridge
-   PV Size               5.46 TiB / not usable 3.00 MiB
-   Allocatable           yes
-   PE Size               4.00 MiB
-   Total PE              1430793
-   Free PE               102153
-   Allocated PE          1328640
-   PV UUID               Ubx1OW-jCyN-Vcy2-4p2W-L6Qb-u6W8-cVkrE4
-
-# vgdisplay
-     Logging initialised at Sun Sep 25 16:40:12 2011
-     Set umask from 0022 to 0077
-     Finding all volume groups
-     Finding volume group "fridge"
-   --- Volume group ---
-   VG Name               fridge
-   System ID
-   Format                lvm2
-   Metadata Areas        1
-   Metadata Sequence No  33
-   VG Access             read/write
-   VG Status             resizable
-   MAX LV                0
-   Cur LV                7
-   Open LV               0
-   Max PV                0
-   Cur PV                1
-   Act PV                1
-   VG Size               5.46 TiB
-   PE Size               4.00 MiB
-   Total PE              1430793
-   Alloc PE / Size       1328640 / 5.07 TiB
-   Free  PE / Size       102153 / 399.04 GiB
-   VG UUID               ZD2fsN-dFq4-PcMB-owRh-WxGs-ciK8-PPwPbd
-
-# lvdisplay
-     Logging initialised at Sun Sep 25 16:40:30 2011
-     Set umask from 0022 to 0077
-     Finding all logical volumes
-   --- Logical volume ---
-   LV Name                /dev/fridge/storage
-   VG Name                fridge
-   LV UUID                kIhbSq-hePX-UIVv-uuiP-iK6w-djcz-iQ3cEI
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                4.88 TiB
-   Current LE             1280000
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:0
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/webstorage
-   VG Name                fridge
-   LV UUID                PuCGo1-LkRa-doEI-n8qU-mqS3-20Cw-SICWPk
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                100.00 GiB
-   Current LE             25600
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:1
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/mailstorage
-   VG Name                fridge
-   LV UUID                538TGs-fRYt-VT1n-r8jE-Uvv3-nNXl-Cf8ojP
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                30.00 GiB
-   Current LE             7680
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:2
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/web01
-   VG Name                fridge
-   LV UUID                NsABmI-ok5I-GCaE-yGV6-Dqp6-Qedz-jVDS6Y
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                10.00 GiB
-   Current LE             2560
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:3
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/db01
-   VG Name                fridge
-   LV UUID                qa88nB-MqX8-25YN-MEqf-ln81-vNtP-w2yVMW
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                10.00 GiB
-   Current LE             2560
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:4
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/mail01
-   VG Name                fridge
-   LV UUID                qxUbLd-SaDq-wCwd-Z5M6-2llk-8SJh-vTlruR
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                10.00 GiB
-   Current LE             2560
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:5
-
-   --- Logical volume ---
-   LV Name                /dev/fridge/win8
-   VG Name                fridge
-   LV UUID                TPsBeN-Nj2o-w1mt-pkS8-d9zu-wCMm-vRv3e7
-   LV Write Access        read/write
-   LV Status              available
-   # open                 0
-   LV Size                30.00 GiB
-   Current LE             7680
-   Segments               1
-   Allocation             inherit
-   Read ahead sectors     auto
-   - currently set to     6144
-   Block device           253:6
-
-
-
--- 
-
-Marcin M. Jessa
+--=20
+Joseph Landman, Ph.D
+=46ounder and CEO
+Scalable Informatics, Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
