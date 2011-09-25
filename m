@@ -1,76 +1,81 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Mon, 26 Sep 2011 08:18:53 +1000
-Message-ID: <20110926081853.2819622b@notabene.brown>
-References: <4E7EDE58.3000804@yazzy.org>
-	<20110926074002.6399de56@notabene.brown>
-	<4E7FA3E8.5010603@yazzy.org>
+From: "Marcin M. Jessa" <lists@yazzy.org>
+Subject: Re: Green drives and RAID arrays with partity
+Date: Mon, 26 Sep 2011 00:21:10 +0200
+Message-ID: <4E7FA956.9000501@yazzy.org>
+References: <4E7F0A31.4070001@yazzy.org> <4E7F13E8.4080606@hardwarefreak.com> <4E7F3A80.7010308@yazzy.org> <4E7F40A4.6040704@hardwarefreak.com>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ij.dpnpon67OB1kJE.6KsRL"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7FA3E8.5010603@yazzy.org>
+In-Reply-To: <4E7F40A4.6040704@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
+To: stan@hardwarefreak.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/ij.dpnpon67OB1kJE.6KsRL
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 9/25/11 4:54 PM, Stan Hoeppner wrote:
 
-On Sun, 25 Sep 2011 23:58:00 +0200 "Marcin M. Jessa" <lists@yazzy.org> wrot=
-e:
+> Are the drives screwed into the case's internal drive cage?
+Yes.
 
-> On 9/25/11 11:40 PM, NeilBrown wrote:
->=20
-> [...]
->=20
-> > You wouldn't expect an LV to contain a partition table.  You would expe=
-ct it
-> > to contain a filesystem.
->=20
-> Yes, there is still data available on the LVs.
-> I actually managed to grab some files from one of the LVs using=20
-> foremost. But foremost is limited and creates it's own directory=20
-> hierarchy with file names being changed.
->=20
-> > What does
-> >     fsck -f -n /dev/fridge/storage
-> >
-> > show??
->=20
-> # fsck -f -n /dev/fridge/storage
-> fsck from util-linux 2.19.1
-> e2fsck 1.42-WIP (02-Jul-2011)
-> fsck.ext2: Superblock invalid, trying backup blocks...
-> fsck.ext2: Bad magic number in super-block while trying to open=20
-> /dev/mapper/fridge-storage
->=20
-> The superblock could not be read or does not describe a correct ext2
-> filesystem.  If the device is valid and it really contains an ext2
-> filesystem (and not swap or ufs or something else), then the superblock
-> is corrupt, and you might try running e2fsck with an alternate superblock:
->      e2fsck -b 8193 <device>
->=20
->=20
+>Directly
+> connected to the motherboard SATA ports with cables?
 
-Do you remember what filesystem you had on 'storage'?  Was it ext3 or ext4 =
-or
-xfs or something else?
+Yes. I've 6 SATA3 ports on the motherboard and the drives are connected 
+directly.
 
-NeilBrown
+>Or, do you have the
+> drives mounted in any kind of SATA hot/cold swap cage? The cheap ones of
+> these are notorious for causing exactly the kind of drop outs you've
+> experienced. Post a link to your case and any drive related peripherals.
 
---Sig_/ij.dpnpon67OB1kJE.6KsRL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+I don't have a hot/cold swap cage. This is my case: 
+http://www.fractal-design.com/?view=product&category=2&prod=54
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+> Did you suffer a power event? I.e. a sag, brown out?
 
-iD8DBQFOf6jNG5fc6gV+Wb0RAr3UAKCXmBL54suqR1NeSczJLFJIDaU7IACfYeH0
-215WHs5BgW6CIMvJq10SqAU=
-=Qgwt
------END PGP SIGNATURE-----
+No, nothing like that.
 
---Sig_/ij.dpnpon67OB1kJE.6KsRL--
+>Is the system
+> connected to a good quality working UPS?
+
+It is connected to an UPS but not an expensive one.
+
+> Something else you should always mention: How long did it all "just
+> work" before having problems? A few hours? Days? Weeks? Months?
+
+Two of the drives were falling out of the array pretty often.
+My motherboard has a built in RAID controller which I do not use.
+To begin with the BIOS settings were set to recognize drives as IDE 
+resulting in two of the drives connected to SATA 1 and SATA 2 ports were 
+failing and dropping off the array.
+They would show as UDMA/100 drives whereas the other drives were showing as
+SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+ATA-8: ST2000DL003-9VT166, CC32, max UDMA/133
+I changed this BIOS setting and all the drives have been recognized as 
+the same with the same speed.
+I also bought new SATA cables for the failing drives, specifically for 
+SATA 3. That did not help and the drives kept on failing (maybe once a 
+week?). These 2 drives always failed at about the same time.
+
+Shortly after a 3rd. drive failed leaving me with a broken Raid array.
+
+>Had you
+> made any hardware changes to the system recently before the failure
+> event?
+No, there were no changes.
+
+If so what? Did you upgrade your kernel/drivers recently, or any
+> software in the storage stack? Is the PSU flaky? How old is it? A flaky
+> PSU can drop drives out of arrays like hot potatoes when there is heavy
+> access and thus heavy current draw.
+
+The PSU should be fine. I pulled it off a working server which had been 
+stable for long time.
+
+
+
+-- 
+
+Marcin M. Jessa
