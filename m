@@ -1,88 +1,56 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Sun, 25 Sep 2011 19:37:47 +1000
-Message-ID: <20110925193747.074d965b@notabene.brown>
-References: <201109221950.36910.tfjellstrom@shaw.ca>
-	<201109230209.36209.thomas@fjellstrom.ca>
-	<20110923191539.110b7be1@notabene.brown>
-	<201109231026.53770.thomas@fjellstrom.ca>
+From: "Marcin M. Jessa" <lists@yazzy.org>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Sun, 25 Sep 2011 12:07:02 +0200
+Message-ID: <4E7EFD46.6050605@yazzy.org>
+References: <4E7EDE58.3000804@yazzy.org> <4E7EE8BD.2090301@hardwarefreak.com>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qyvdUz7gHFu4V9XVuHEYh1d"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201109231026.53770.thomas@fjellstrom.ca>
+In-Reply-To: <4E7EE8BD.2090301@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
+To: stan@hardwarefreak.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/qyvdUz7gHFu4V9XVuHEYh1d
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 9/25/11 10:39 AM, Stan Hoeppner wrote:
+> On 9/25/2011 2:55 AM, Marcin M. Jessa wrote:
+>> Hi guys.
+>>
+>>
+>> I have a RAID 6 setup with 5 2TB drives on Debian Wheezy [1] & [2].
+>> Yesterday 3 of the drives failed working leaving the RAID setup broken.
+>
+> What was the hardware event that caused this situation? Did you lose
+> power to, or kick the data cable out of a 3-bay eSATA enclosure? Do you
+> have a bad 3 in 1 hot swap cage? A flaky HBA/driver?
+>
+> You need to identify the cause and fix it permanently or this will
+> likely happen again and again.
+>
 
-On Fri, 23 Sep 2011 10:26:53 -0600 Thomas Fjellstrom <thomas@fjellstrom.ca>
-wrote:
+The problem is the Seagate drives. Searching for issues with my
+drives I found many people are complaining about the same problems as I 
+have - drives failing randomly - [1-4].
+I just ordered WD drives to replace the Seagate ones one by one in the 
+array. I will return the Seagate HDs to the shop.
+Right now my main concern is to get the data back from the LVM 
+partitions and back it up...
+The worst thing is the 3 drives failed so unexpectedly and fast I didn't 
+even have a chance to set up a backup solution.
+Any help would be greatly appreciated.
 
-> On September 23, 2011, NeilBrown wrote:
-> > On Fri, 23 Sep 2011 02:09:36 -0600 Thomas Fjellstrom <thomas@fjellstrom=
-.ca>
-> >=20
-> > wrote:
-> > > I forgot to say, but: Thank you very much :) for the help, and your
-> > > tireless work on md.
-> >=20
-> > You've very welcome .... but I felt I needed to respond to that word
-> > "tireless".
-> > The truth is that I am getting rather tired of md .... if anyone knows
-> > anyone who wants to get into kernel development and is wondering where =
-to
-> > start - please consider whispering 'the md driver' in their ear.  Plenty
-> > to do, great mentoring possibilities, and competent linux kernel engine=
-ers
-> > with good experience are unlikely to have much trouble finding a job ;-)
-> >=20
-> > NeilBrown
->=20
-> Very tempting. How much work do you think it would be to add in full raid=
-10=20
-> reshape support? ;D (not that I'm volunteering, I don't think I could=20
-> comprehend a lot of the raid code, at least not at this point in time =20
-> (extenuating circumstances)).
->=20
 
-RAID10 reshape is more complicated than RAID5/6 reshape because there are
-more options - more combinations.
 
-So you would probably implement a subset of possible reshapes.  And then
-maybe implement another subset.
+[1]: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625922
+[2]: 
+http://forums.seagate.com/t5/Barracuda-XT-Barracuda-Barracuda/ST2000DL003-Barracuda-Green-not-detected-at-BIOS/td-p/87154/page/7
+[3]: http://www.readynas.com/forum/viewtopic.php?f=65&t=51496&p=306494
+[4]: http://forum.qnap.com/viewtopic.php?f=182&t=39893&start=30
 
-Providing you have:
-  - a clear understanding of the intermediate state and a way to record
-    that state in the metadata
-  - a way to tell if a given block is in the 'old' layout or the 'new' layo=
-ut
-    or 'being reshaped'
-  - somewhere in memory to store all the blocks that are 'being reshaped'
 
-it should be fairly easy.  RAID5/6 has a stripe-cache so the last point is
-trivial.  Handling that in RAID10 is probably the biggest single part of the
-task.
 
-So: not a trivial task, but not an enormous task either.... which doesn't
-narrow it down very much I guess.
+-- 
 
-NeilBrown
-
---Sig_/qyvdUz7gHFu4V9XVuHEYh1d
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOfvZrG5fc6gV+Wb0RAiGRAJ9GzrX5bP5InkXXkxSMyJdB2G/gGQCgt8mm
-HHwRi3QavxIOxC/kFLJET20=
-=9dBp
------END PGP SIGNATURE-----
-
---Sig_/qyvdUz7gHFu4V9XVuHEYh1d--
+Marcin M. Jessa
