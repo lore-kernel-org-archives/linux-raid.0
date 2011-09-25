@@ -1,299 +1,219 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Sun, 25 Sep 2011 20:10:25 +1000
-Message-ID: <20110925201025.53bc87f7@notabene.brown>
-References: <201109221950.36910.tfjellstrom@shaw.ca>
-	<20110923151108.08c1199f@notabene.brown>
-	<201109222322.57040.tfjellstrom@shaw.ca>
-	<201109230209.36209.thomas@fjellstrom.ca>
-	<20110923191539.110b7be1@notabene.brown>
-	<4E7E5266.5040205@shiftmail.org>
+Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
+ reports 'does not appear to be active'
+Date: Sun, 25 Sep 2011 20:15:10 +1000
+Message-ID: <20110925201510.24e0f468@notabene.brown>
+References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
+	<20110830072557.428fab35@notabene.brown>
+	<CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
+	<20110921150323.0ef402c9@notabene.brown>
+	<CAGRgLy7fKegKw6j-36o0uchTF35F4hT8NvujW4ghb5av-onCGQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RTV.FQZ/8GWv3kScDrb0Bx="; protocol="application/pgp-signature"
+ boundary="Sig_/yhhRG7Xiw4qEMEtuGv5vhy4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7E5266.5040205@shiftmail.org>
+In-Reply-To: <CAGRgLy7fKegKw6j-36o0uchTF35F4hT8NvujW4ghb5av-onCGQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aapo Laine <aapo.laine@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/RTV.FQZ/8GWv3kScDrb0Bx=
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/yhhRG7Xiw4qEMEtuGv5vhy4
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 24 Sep 2011 23:57:58 +0200 Aapo Laine <aapo.laine@shiftmail.org>
+On Fri, 23 Sep 2011 22:24:08 +0300 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> On 09/23/11 11:15, NeilBrown wrote:
-> > On Fri, 23 Sep 2011 02:09:36 -0600 Thomas Fjellstrom<thomas@fjellstrom.=
-ca>
-> > wrote:
-> >> I forgot to say, but: Thank you very much :) for the help, and your ti=
-reless
-> >> work on md.
-> >>
-> >
-> > You've very welcome .... but I felt I needed to respond to that word
-> > "tireless".
-> > The truth is that I am getting rather tired of md .... if anyone knows =
-anyone
-> > who wants to get into kernel development and is wondering where to star=
-t -
-> > please consider whispering 'the md driver' in their ear.  Plenty to do,=
- great
-> > mentoring possibilities, and competent linux kernel engineers with good
-> > experience are unlikely to have much trouble finding a job ;-)
-> >
-> > NeilBrown
->=20
-> Whoa this is shocking news!
+> Thank you, Neil, for answering.
+> I'm not sure that understand all of this, because my knowledge of
+> Linux user-kernel interaction is, unfortunately, not sufficient. In
+> the future, I hope to know more.
+> For example, I don't understand, how opening a "/dev/mdXX" can create
+> a device in the kernel, if the devnode "/dev/mdXX" does not exist. In
+> that case, I actually fail to open it with ENOENT.
 
-Hopefully not too shocking...  I'm not planning on leaving md any time soon.
-I do still enjoy working on it.
-But it certainly isn't as fresh and new as it was 10 years again.  It would
-probably do both me and md a lot of good to have someone with new enthusiasm
-and new perspectives...
+/dev/mdXX is a "device special file".  It is not the device itself.
+You can think of it like a symbolic link.
+The "real" name for the device is something like "block device with major 9
+and minor X"  That thing can exist quite independently of whether
+the /dev/mdXX thing exists.  Just like a file may or may not exist
+independently of whether some sym-link to it exists.
+
+When the device (block,9,XX) appears, udev is told and it should create
+things in /dev.  when the device disappears, udev is told and it should
+remove the /dev entry.  But there can be races, and other things might
+sometimes add or remove /dev entries (though they shouldn't).  So the
+existence of something in /dev isn't a guarantee that it really exists.
 
 
 >=20
-> Firstly then, thank you so much for your excellent work up to now. Linux=
-=20
-> has what I believe to be the best software raid of all operating systems=
-=20
-> thanks to you. Excellent in both features, and reliability i.e. quality=20
-> of code.
+> But what I did is actually similar to what you advised:
+> - if I fail to open the devnode with ENOENT, I know (?) that the
+> device does not exist
+> - otherwise, I do GET_ARRAY_INFO
+> - if it returns ok, then I go ahead and do GET_DISK_INFOs to get the
+> disks information
+> - otherwise if it returns ENODEV, I close the fd and then I read /proc/md=
+stat
+> - if the md is there, then I know it's inactive array (and I have to
+> --stop it and reassemble or do incremental assembly)
+> - if the md is not there, then I know that it really does not exist
+> (this is the case when md deletion happened but the devnode did not
+> disappear yet)
 >=20
-> And also the support through the list was great. I found so many=20
-> problems solved already just by looking at the archives... so many=20
-> people with their arse saved by you.
->=20
-> I think everybody here is sorry to see you willing to go.
->=20
-> Now the bad news... Regarding the MD takeover, there I think I see a=20
-> problem...
-> The MD code is very tersely commented, compared to its complexity!
+> Does it sound right? It passes stress testing pretty well.
 
-That is certainly true, but seems to be true across much of the kernel, and
-probably most code in general (though I'm sure such a comment will lead to
-people wanting to tell me their favourite exceptions ... so I'll start with
-"TeX").
-
-This is one of the reasons I offered "mentoring" to any likely candidate.
-
-
+Yes, that sounds right.
 
 >=20
-> - there is not much explanation of overall strategies, or the structure=20
-> of code. Also the flow of data between the functions is not much=20
-> explained most of the times.
->=20
-> - It's not obvious to me what is the entry point for kernel processes=20
-> related to MD arrays, how are they triggered and where do they run...=20
-> E.g. in the past I tried to understand how did resync work, but I=20
-> couldn't. I thought there was a kernel process controlling resync=20
-> advancement, but I couldn't really find the boundaries of code inside=20
-> which it was executing.
+> By the way, I understand that /proc/mdstat can be only of 4K size...so
+> if I have many arrays, I should probably switch to look at
+> /sys/block....
 
-md_do_sync() is the heart of the resync process.  it calls into the
-personality's sync_request() function.
+Correct.
 
-The kernel thread is started by md_check_recovery() if it appears to be
-needed.  md_check_recovery() is regularly run by each personality's main
-controlling thread.
-
->=20
-> - it's not clear what the various functions do or in what occasion they=20
-> are called. Except from their own name, most of them have no comments=20
-> just before the definition.
-
-How about this:
- - you identify some functions for which the purpose or use isn't clear
- - I'll explain to you when/how/why they are used
- - You create a patch which adds comments which explains it all
- - I'll apply that patch.
-
-deal??
-
->=20
-> - the algoritms within the functions are very long and complex, but only=
-=20
-> rarely they are explained by comments. I am now seeing pieces having 5=20
-> levels of if's nested one inside the other, and there are almost no=20
-> comments.
-
-I feel your pain.   I really should factor out the deeply nested levels into
-separate functions.  Sometimes I have done that but there is plenty more do
-to.  Again, I would be much more motivated to do this if I were working with
-someone who would be directly helped by it.  So if you identify specific
-problems, it'll be a lot easier for me to help fix them.
-
-
->=20
-> - last but not least, variables have very short names, and for most of=20
-> them, it is not explained what they mean. This is mostly for local=20
-> variables, but sometimes even for the structs which go into metadata=20
-> e.g. in struct r1_private_data_s most members do not have an=20
-> explanation. This is pretty serious, to me at least, for understanding=20
-> the code.
-
-Does this help?
-
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index e0d676b..feb44ad 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -28,42 +28,67 @@ struct r1_private_data_s {
- 	mddev_t			*mddev;
- 	mirror_info_t		*mirrors;
- 	int			raid_disks;
-+
-+	/* When choose the best device for a read (read_balance())
-+	 * we try to keep sequential reads one the same device
-+	 * using 'last_used' and 'next_seq_sect'
-+	 */
- 	int			last_used;
- 	sector_t		next_seq_sect;
-+	/* During resync, read_balancing is only allowed on the part
-+	 * of the array that has been resynced.  'next_resync' tells us
-+	 * where that is.
-+	 */
-+	sector_t		next_resync;
-+
- 	spinlock_t		device_lock;
-=20
-+	/* list of 'r1bio_t' that need to be processed by raid1d, whether
-+	 * to retry a read, writeout a resync or recovery block, or
-+	 * anything else.
-+	 */
- 	struct list_head	retry_list;
--	/* queue pending writes and submit them on unplug */
--	struct bio_list		pending_bio_list;
-=20
--	/* for use when syncing mirrors: */
-+	/* queue pending writes to be submitted on unplug */
-+	struct bio_list		pending_bio_list;
-=20
-+	/* for use when syncing mirrors:
-+	 * We don't allow both normal IO and resync/recovery IO at
-+	 * the same time - resync/recovery can only happen when there
-+	 * is no other IO.  So when either is active, the other has to wait.
-+	 * See more details description in raid1.c near raise_barrier().
-+	 */
-+	wait_queue_head_t	wait_barrier;
- 	spinlock_t		resync_lock;
- 	int			nr_pending;
- 	int			nr_waiting;
- 	int			nr_queued;
- 	int			barrier;
--	sector_t		next_resync;
--	int			fullsync;  /* set to 1 if a full sync is needed,
--					    * (fresh device added).
--					    * Cleared when a sync completes.
--					    */
--	int			recovery_disabled; /* when the same as
--						    * mddev->recovery_disabled
--						    * we don't allow recovery
--						    * to be attempted as we
--						    * expect a read error
--						    */
-=20
--	wait_queue_head_t	wait_barrier;
-+	/* Set to 1 if a full sync is needed, (fresh device added).
-+	 * Cleared when a sync completes.
-+	 */
-+	int			fullsync
-=20
--	struct pool_info	*poolinfo;
-+	/* When the same as mddev->recovery_disabled we don't allow
-+	 * recovery to be attempted as we expect a read error.
-+	 */
-+	int			recovery_disabled;
-=20
--	struct page		*tmppage;
-=20
-+	/* poolinfo contains information about the content of the
-+	 * mempools - it changes when the array grows or shrinks
-+	 */
-+	struct pool_info	*poolinfo;
- 	mempool_t *r1bio_pool;
- 	mempool_t *r1buf_pool;
-=20
-+	/* temporary buffer to synchronous IO when attempting to repair
-+	 * a read error.
-+	 */
-+	struct page		*tmppage;
-+
-+
- 	/* When taking over an array from a different personality, we store
- 	 * the new thread here until we fully activate the array.
- 	 */
-
->=20
-> - ... maybe more I can't think of right now ...
->=20
-> Your code is of excellent quality, as I wrote, I wish there were more=20
-> programmers like you, but if you now want to leave, THEN I start to be=20
-> worried! Would you please comment it (much) more before leaving? Fully=20
-> understanding your code I think is going to take other people a lot of=20
-> time otherwise, and you might not find a replacement easily and/or s/he=20
-> might do mistakes.
-
-I'm not planning on leaving - not for quite some time anyway.
-But I know the code so well that it is hard to see which bits need
-documenting, and what sort of documentation would really help.
-I would love it if you (or anyone) would review the code and point to parts
-that particularly need improvement.
-
-
->=20
-> There were times in the past when I had ideas and I wanted to contribute=
-=20
-> code, but when I looked inside MD and tried to understand where should I=
-=20
-> put my changes, I realized I wasn't able to understand what current code=
-=20
-> was doing. Maybe I am not a good enough C programmer, but I was able to=20
-> change things in other occasions.
-
-Don't be afraid to ask... But sometimes you do need a bit of persistence
-though. :-)  Not always easy to find time for that.
-
-
->=20
->=20
-> I hope you won't get these critiques bad...
-
-Not at all.
-
-> and thanks for all your efforts, really, in the name of, I think, everybo=
-dy.
-> Aapo L.
-
-Thanks for your valuable feedback.
-Being able to see problems is of significant value.  One of the reasons that
-I pay close attention to this list is because it shows me where the problems
-with md and mdadm are.  People often try things that I would never even dre=
-am
-of trying (because I know they won't work).  See this helps me know where t=
-he
-code and be improved - either so what they try does work, or so it fails mo=
-re
-gracefully and helpfully.
-
-Thanks,
 NeilBrown
 
---Sig_/RTV.FQZ/8GWv3kScDrb0Bx=
+
+>=20
+> Thanks,
+>   Alex.
+>=20
+>=20
+>=20
+>=20
+>=20
+>=20
+> On Wed, Sep 21, 2011 at 8:03 AM, NeilBrown <neilb@suse.de> wrote:
+> >
+> > On Tue, 13 Sep 2011 11:49:12 +0300 Alexander Lyakas <alex.bolshoy@gmail=
+.com>
+> > wrote:
+> >
+> > > Hello Neil,
+> > > I am sorry for opening this again, but I am convinced now that I don't
+> > > understand what's going on:)
+> > >
+> > > Basically, I see that GET_ARRAY_INFO can also return ENODEV in case
+> > > the device in the kernel exists, but "we are not initialized yet":
+> > > /* if we are not initialised yet, only ADD_NEW_DISK, STOP_ARRAY,
+> > > =A0* RUN_ARRAY, and GET_ and SET_BITMAP_FILE are allowed */
+> > > if ((!mddev->raid_disks && !mddev->external)
+> > > =A0 =A0 && cmd !=3D ADD_NEW_DISK && cmd !=3D STOP_ARRAY
+> > > =A0 =A0 && cmd !=3D RUN_ARRAY && cmd !=3D SET_BITMAP_FILE
+> > > =A0 =A0 && cmd !=3D GET_BITMAP_FILE) {
+> > > =A0 =A0 =A0 err =3D -ENODEV;
+> > > =A0 =A0 =A0 goto abort_unlock;
+> > >
+> > > I thought that ENODEV means that the device in the kernel does not
+> > > exist, although I am not this familiar with the kernel sources (yet)
+> > > to verify that.
+> > >
+> > > Basically, I just wanted to know whether there is a reliable way to
+> > > determine whether the kernel MD device exists or no. (Obviously,
+> > > success to open a devnode from user space is not enough).
+> > >
+> > > Thanks,
+> > > =A0 Alex.
+> >
+> > What exactly do you mean by "the kernel MD device exists" ??
+> >
+> > When you open a device-special-file for an md device (major =3D=3D 9) it
+> > automatically creates an inactive array. =A0You can then fill in the de=
+tails
+> > and activate it, or explicitly deactivate it. =A0If you do that it will
+> > disappear.
+> >
+> > Opening the devnode is enough to check that the device exists, because =
+it
+> > creates the device and then you know that it exists.
+> > If you want to know if it already exists - whether inactive or not - lo=
+ok
+> > in /proc/mdstat or /sys/block/md*.
+> > If you want to know if it already exists and is active, look in /proc/m=
+dstat,
+> > or open the device and use GET_ARRAY_INFO, or look in /sys/block/md*
+> > and look at the device size. or maybe /sys/block/mdXX/md/raid_disks.
+> >
+> > It depends on why you are asking.
+> >
+> > NeilBrown
+> >
+> >
+> >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > > On Tue, Aug 30, 2011 at 12:25 AM, NeilBrown <neilb@suse.de> wrote:
+> > > > On Mon, 29 Aug 2011 20:17:34 +0300 Alexander Lyakas <alex.bolshoy@g=
+mail.com>
+> > > > wrote:
+> > > >
+> > > >> Greetings everybody,
+> > > >>
+> > > >> I issue
+> > > >> mdadm --stop /dev/md0
+> > > >> and I want to reliably determine that the MD devnode (/dev/md0) is=
+ gone.
+> > > >> So I look for the udev 'remove' event for that devnode.
+> > > >> However, in some cases even after I see the udev event, I issue
+> > > >> mdadm --detail /dev/md0
+> > > >> and I get:
+> > > >> mdadm: md device /dev/md0 does not appear to be active
+> > > >>
+> > > >> According to Detail.c, this means that mdadm can successfully do
+> > > >> open("/dev/md0") and receive a valid fd.
+> > > >> But later, when issuing ioctl(fd, GET_ARRAY_INFO) it receives ENOD=
+EV
+> > > >> from the kernel.
+> > > >>
+> > > >> Can somebody suggest an explanation for this behavior? Is there a
+> > > >> reliable way to know when a MD devnode is gone?
+> > > >
+> > > > run "udevadm settle" after stopping /dev/md0 =A0is most likely to w=
+ork.
+> > > >
+> > > > I suspect that udev removes the node *after* you see the 'remove' e=
+vent.
+> > > > Sometimes so soon after that you don't see the lag - sometimes a bi=
+t later.
+> > > >
+> > > > NeilBrown
+> > > >
+> > > >>
+> > > >> Thanks,
+> > > >> =A0 Alex.
+> > > >> --
+> > > >> To unsubscribe from this list: send the line "unsubscribe linux-ra=
+id" in
+> > > >> the body of a message to majordomo@vger.kernel.org
+> > > >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
+ml
+> > > >
+> > > >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> >
+
+
+--Sig_/yhhRG7Xiw4qEMEtuGv5vhy4
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOfv4RG5fc6gV+Wb0RAmu2AJ45eaEcwdoE/iICar3iEcCuVLd40ACgj9A1
-tQCAhfrSo0//oOuG/4UKaoc=
-=Soyx
+iD8DBQFOfv8uG5fc6gV+Wb0RAlJdAJ9mjR7leOsodxWYV71vwrxHQCgmRQCggBlm
+km8GGvboD6ywOcgqgPcMr14=
+=ddqj
 -----END PGP SIGNATURE-----
 
---Sig_/RTV.FQZ/8GWv3kScDrb0Bx=--
+--Sig_/yhhRG7Xiw4qEMEtuGv5vhy4--
