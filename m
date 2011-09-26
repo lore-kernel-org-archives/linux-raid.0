@@ -1,33 +1,56 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: potentially lost largeish raid5 array..
-Date: Mon, 26 Sep 2011 08:08:26 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1109260807520.13829@uplift.swm.pp.se>
-References: <201109221950.36910.tfjellstrom@shaw.ca> <201109222249.12892.tfjellstrom@shaw.ca> <20110923105834.71fc7c78@natsu> <201109222310.28684.tfjellstrom@shaw.ca> <4E7C81E0.1040707@hardwarefreak.com> <4E7F6DCC.10605@tigertech.com>
+From: Roman Mamedov <rm@romanrm.ru>
+Subject: Re:
+Date: Mon, 26 Sep 2011 13:03:51 +0600
+Message-ID: <20110926130351.63adc330@natsu>
+References: <09f356fa46129bd08dd45752c0f736de.squirrel@www.maxstr.com>
+	<20110926145248.6ffc5f02@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/B.kaW=U+UMXGE/_sGoLBNEa"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E7F6DCC.10605@tigertech.com>
+In-Reply-To: <20110926145248.6ffc5f02@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robert L Mathews <lists@tigertech.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: kenn@kenn.us, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 25 Sep 2011, Robert L Mathews wrote:
+--Sig_/B.kaW=U+UMXGE/_sGoLBNEa
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> Solve your problem with a 50% more $$ LSI SAS1068E based Intel 8 port PCIe 
->> x4 SAS/SATA HBA, which uses the mptsas driver:
->> http://www.newegg.com/Product/Product.aspx?Item=N82E16816117157
->
-> When this card is used in JBOD mode, is the on-disk format identical to a 
-> standard disk that's not plugged into a RAID card?
+On Mon, 26 Sep 2011 14:52:48 +1000
+NeilBrown <neilb@suse.de> wrote:
 
-Yes.
+> On Sun, 25 Sep 2011 21:23:31 -0700 "Kenn" <kenn@kenn.us> wrote:
+>=20
+> > I have a raid5 array that had a drive drop out, and resilvered the wrong
+> > drive when I put it back in, corrupting and destroying the raid.  I
+> > stopped the array at less than 1% resilvering and I'm in the process of
+> > making a dd-copy of the drive to recover the files.
+>=20
+> I don't know what you mean by "resilvered".
 
-> In other words, if the card fails, is it possible to take the disks and 
-> connect them directly to any non-RAID SATA/SAS motherboard? Or would you need 
-> a replacement card to read the data?
+At first I thought the initial poster just invented some peculiar funny wor=
+d of his own, but it looks like it's from the ZFS circles:
+https://encrypted.google.com/search?q=3Dresilver+zfs
+@Kenn; you probably mean 'resync' or 'rebuild', but no one ever calls those=
+ processes 'resilver' here, you'll get no google results and blank/unknowin=
+g/funny looks from people when using that term in relation to mdadm.
 
-Yes.
+--=20
+With respect,
+Roman
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+--Sig_/B.kaW=U+UMXGE/_sGoLBNEa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk6AI9cACgkQTLKSvz+PZwhdhgCeMEDJMGiLYk5tldhV1RtwGCjH
+xwQAmwS+YmGJzn20k04TpRd9ahSJxNoX
+=HjY1
+-----END PGP SIGNATURE-----
+
+--Sig_/B.kaW=U+UMXGE/_sGoLBNEa--
