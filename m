@@ -1,56 +1,31 @@
-From: "Kenn" <kenn@kenn.us>
-Subject: Re:
-Date: Mon, 26 Sep 2011 16:23:17 -0700
-Message-ID: <f4da446ee714e17899d9657c8a4da9f2.squirrel@www.maxstr.com>
-References: <09f356fa46129bd08dd45752c0f736de.squirrel@www.maxstr.com>
-    <20110926145248.6ffc5f02@notabene.brown>
-    <20110926130351.63adc330@natsu>
-Reply-To: kenn@kenn.us
+From: Krzysztof Adamski <k@adamski.org>
+Subject: Re: potentially lost largeish raid5 array..
+Date: Mon, 26 Sep 2011 19:28:15 -0400
+Message-ID: <1317079695.27455.1.camel@oxygen.netxsys.com>
+References: <201109221950.36910.tfjellstrom@shaw.ca>
+	 <201109231022.59437.tfjellstrom@shaw.ca>
+	 <4E7D152C.9080704@hardwarefreak.com>
+	 <201109231811.08061.tfjellstrom@shaw.ca>
+	 <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org>
+	 <4E7E079C.4020802@hardwarefreak.com> <j5n921$9oj$1@dough.gmane.org>
+	 <4E7F3D24.5050300@hardwarefreak.com> <j5ngnt$ms1$1@dough.gmane.org>
+	 <4E7FC042.7040109@hardwarefreak.com> <j5plld$fa1$1@dough.gmane.org>
+	 <4E80D815.9080005@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110926130351.63adc330@natsu>
+In-Reply-To: <4E80D815.9080005@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, rm@romanrm.ru
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Mon, 26 Sep 2011 14:52:48 +1000
-> NeilBrown <neilb@suse.de> wrote:
->
->> On Sun, 25 Sep 2011 21:23:31 -0700 "Kenn" <kenn@kenn.us> wrote:
->>
->> > I have a raid5 array that had a drive drop out, and resilvered the
->> wrong
->> > drive when I put it back in, corrupting and destroying the raid.  I
->> > stopped the array at less than 1% resilvering and I'm in the process
->> of
->> > making a dd-copy of the drive to recover the files.
->>
->> I don't know what you mean by "resilvered".
->
-> At first I thought the initial poster just invented some peculiar funny
-> word of his own, but it looks like it's from the ZFS circles:
-> https://encrypted.google.com/search?q=resilver+zfs
-> @Kenn; you probably mean 'resync' or 'rebuild', but no one ever calls
-> those processes 'resilver' here, you'll get no google results and
-> blank/unknowing/funny looks from people when using that term in relation
-> to mdadm.
+On Mon, 2011-09-26 at 14:52 -0500, Stan Hoeppner wrote:
+> Coincidentally, recent versions of mkfs.xfs will read the mdadm
+> config 
+> and build the filesystem correctly, automatically, on top of striped
+> md 
+> raid arrays.
 
-Good point, I am a very old unix user and my RAID terminology hasn't been
-properly updated since college.  Resilver is mentioned here in wikipedia
-for disk mirroring http://en.wikipedia.org/wiki/Disk_mirroring and I've
-always used the word but it's not in the RAID page and I'll switch to
-"rebuilding".
-
-Thanks,
-Kenn
-
-
->
-> --
-> With respect,
-> Roman
->
-
+If I have LVM on top of RAID6, will mkfs.xfs read the mdadm config?
 
