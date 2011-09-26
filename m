@@ -1,37 +1,50 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] imsm: fix: stopped resync does not continue after
-	auto-assemblation
-Date: Mon, 26 Sep 2011 14:54:47 +0200
-Message-ID: <20110926125446.14365.9519.stgit@gklab-128-085.igk.intel.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Green drives and RAID arrays with partity
+Date: Mon, 26 Sep 2011 08:03:04 -0500
+Message-ID: <4E807808.4020008@hardwarefreak.com>
+References: <4E7F0A31.4070001@yazzy.org> <4E7F13E8.4080606@hardwarefreak.com> <4E7F3A80.7010308@yazzy.org> <4E7F40A4.6040704@hardwarefreak.com> <4E7FA956.9000501@yazzy.org> <4E7FC40E.5080606@hardwarefreak.com> <4E7FC4E7.7010101@yazzy.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E7FC4E7.7010101@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: lists@yazzy.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Resync stopped with "mdadm -Ss" command does not continue
-after issuing "mdadm -As" command.
+On 9/25/2011 7:18 PM, Marcin M. Jessa wrote:
+> On 9/26/11 2:15 AM, Stan Hoeppner wrote:
+>> On 9/25/2011 5:21 PM, Marcin M. Jessa wrote:
+>>
+>>> My motherboard has a built in RAID controller which I do not use.
+>>
+>> What make/model is the mobo?
+>
+> My motherboard is a MSI 870A-G54 -
+> http://www.msi.com/product/mb/870A-G54.html
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- super-intel.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+The AMD SB850 is a relatively new Southbridge chip, SATA3 AHCI at that. 
+  Are you using AHCI mode?  I'd take a deep look in demsg output and in 
+/var/log/kern.log for any errors relating to SATA, AHCI, mdraid, etc.
 
-diff --git a/super-intel.c b/super-intel.c
-index ed522ae..95627d1 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -2267,7 +2267,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
- 	info->custom_array_size   = __le32_to_cpu(dev->size_high);
- 	info->custom_array_size   <<= 32;
- 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
--	if (prev_map && map->map_state == prev_map->map_state) {
-+	if (prev_map && map->map_state == prev_map->map_state &&
-+			(migr_type(dev) == MIGR_GEN_MIGR)) {
- 		info->reshape_active = 1;
- 		info->new_level = get_imsm_raid_level(map);
- 		info->new_layout = imsm_level_to_layout(info->new_level);
+Quite often when drives are kicked offline it is a result of timeouts 
+and/or other errors on the SATA channels.  The log information may help 
+narrow down the cause, whether a Southbridge problem, driver problem, 
+mode setting problem, drive firmware problem, etc.
+
+For instance, the SB850 has 6 SATA3 ports.  If the drives are SATA2, and 
+something is buggy in firmware on either end, there could be a link 
+speed negotiation problem causing problems.  Manually forcing the link 
+speed to SATA2 may help in such a situation.  You may also want to try 
+using native SATA/IDE mode instead of AHCI if you're currently using 
+AHCI.  If not, you may want to try AHCI mode.
+
+Regardless, find the errors in your logs and post them to the linux-ide 
+list for help.
+
+-- 
+Stan
+
 
