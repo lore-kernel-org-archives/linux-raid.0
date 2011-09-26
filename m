@@ -1,713 +1,248 @@
-From: "Kenn" <kenn@kenn.us>
-Subject: Re:
-Date: Mon, 26 Sep 2011 11:04:14 -0700
-Message-ID: <33a40b3d7b23e719d77e6d091064c285.squirrel@www.maxstr.com>
-References: <09f356fa46129bd08dd45752c0f736de.squirrel@www.maxstr.com>
-    <20110926145248.6ffc5f02@notabene.brown>
-    <c3985537eaf1fc639fa8bfb7c8d0aa21.squirrel@www.maxstr.com>
-    <20110926180401.29b9a6bd@notabene.brown>
-Reply-To: kenn@kenn.us
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: potentially lost largeish raid5 array..
+Date: Mon, 26 Sep 2011 14:52:53 -0500
+Message-ID: <4E80D815.9080005@hardwarefreak.com>
+References: <201109221950.36910.tfjellstrom@shaw.ca> <201109231022.59437.tfjellstrom@shaw.ca> <4E7D152C.9080704@hardwarefreak.com> <201109231811.08061.tfjellstrom@shaw.ca> <4E7DCA66.4000705@hardwarefreak.com> <j5ksf5$oam$1@dough.gmane.org> <4E7E079C.4020802@hardwarefreak.com> <j5n921$9oj$1@dough.gmane.org> <4E7F3D24.5050300@hardwarefreak.com> <j5ngnt$ms1$1@dough.gmane.org> <4E7FC042.7040109@hardwarefreak.com> <j5plld$fa1$1@dough.gmane.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110926180401.29b9a6bd@notabene.brown>
+In-Reply-To: <j5plld$fa1$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: neilb@suse.de
+To: David Brown <david@westcontrol.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Mon, 26 Sep 2011 00:42:23 -0700 "Kenn" <kenn@kenn.us> wrote:
+On 9/26/2011 5:51 AM, David Brown wrote:
+> On 26/09/2011 01:58, Stan Hoeppner wrote:
+>> On 9/25/2011 10:18 AM, David Brown wrote:
+>>> On 25/09/11 16:39, Stan Hoeppner wrote:
+>>>> On 9/25/2011 8:03 AM, David Brown wrote:
 >
->> Replying.  I realize and I apologize I didn't create a subject.  I hope
->> this doesn't confuse majordomo.
->>
->> > On Sun, 25 Sep 2011 21:23:31 -0700 "Kenn" <kenn@kenn.us> wrote:
->> >
->> >> I have a raid5 array that had a drive drop out, and resilvered the
->> wrong
->> >> drive when I put it back in, corrupting and destroying the raid.  I
->> >> stopped the array at less than 1% resilvering and I'm in the process
->> of
->> >> making a dd-copy of the drive to recover the files.
->> >
->> > I don't know what you mean by "resilvered".
->>
->> Resilvering -- Rebuilding the array.  Lesser used term, sorry!
->
-> I see..
->
-> I guess that looking-glass mirrors have a silver backing and when it
-> becomes
-> tarnished you might re-silver the mirror to make it better again.
-> So the name works as a poor pun for RAID1.  But I don't see how it applies
-> to RAID5....
-> No matter.
->
-> Basically you have messed up badly.
-> Recreating arrays should only be done as a last-ditch attempt to get data
-> back, and preferably with expert advice...
->
-> When you created the array with all devices present it effectively started
-> copying the corruption that you had deliberately (why??) placed on device
-> 2
-> (sde) onto device 4 (counting from 0).
-> So now you have two devices that are corrupt in the early blocks.
-> There is not much you can do to fix that.
->
-> There is some chance that 'fsck' could find a backup superblock somewhere
-> and
-> try to put the pieces back together.  But the 'mkfs' probably made a
-> substantial mess of important data structures so I don't consider you
-> chances
-> very high.
-> Keeping sde out and just working with the remaining 4 is certainly your
-> best
-> bet.
->
-> What made you think it would be a good idea to re-create the array when
-> all
-> you wanted to do was trigger a resync/recovery??
->
-> NeilBrown
+> (Sorry for getting so off-topic here - if it is bothering anyone, please
+> say and I will stop. Also Stan, you have been extremely helpful, but if
+> you feel you've given enough free support to an ignorant user, I fully
+> understand it. But every answer leads me to new questions, and I hope
+> that others in this mailing list will also find some of the information
+> useful.)
 
-Originally I had failed & removed sde from the array and then added it
-back in, but no resilvering happened, it was just placed as raid device #
-5 as an active (faulty?) spare, no rebuilding.  So I thought I'd have to
-recreate the array to get it to rebuild.
+I don't mind at all.  I love 'talking shop' WRT storage architecture and 
+XFS.  Others might though as we're very far OT at this point.  The 
+proper place for this discussion in the XFS mailing list.  There are 
+folks there far more knowledgeable than me and could thus answer your 
+questions more thoroughly, and correct me if I make an error.
 
-Because my sde disk was only questionably healthy, if the problem was the
-loose cable, I wanted to test the sde disk by having a complete rebuild
-put onto it.   I was confident in all the other drives because when I
-mounted the array without sde, I ran a complete md5sum scan and
-everything's checksum was correct.  So I wanted to force a complete
-rebuilding of the array on sde and the --zero-superblock was supposed to
-render sde "new" to the array to force the rebuild onto sde.  I just did
-the fsck and mkfs for good measure instead of spending the time of using
-dd to zero every byte on the drive.  At the time because I thought if
---zero-superblock went wrong, md would reject a blank drive as a data
-source for rebuilding and prevent resilvering.
+<snip for brevity>
 
-So that brings up another point -- I've been reading through your blog,
-and I acknowledge your thoughts on not having much benefit to checksums on
-every block (http://neil.brown.name/blog/20110227114201), but sometimes
-people like to having that extra lock on their door even though it takes
-more effort to go in and out of their home.  In my five-drive array, if
-the last five words were the checksums of the blocks on every drive, the
-checksums off each drive could vote on trusting the blocks of every other
-drive during the rebuild process, and prevent an idiot (me) from killing
-his data.  It would force wasteful sectors on the drive, perhaps harm
-performance by squeezing 2+n bytes out of each sector, but if someone
-wants to protect their data as much as possible, it would be a welcome
-option where performance is not a priority.
+> I've heard there are some differences between XFS running under 32-bit
+> and 64-bit kernels. It's probably fair to say that any modern system big
+> enough to be looking at scaling across a raid linear concat would be
+> running on a 64-bit system, and using appropriate make.xfs and mount
+> options for 64-bit systems. But it's helpful of you to point this out.
 
-Also, the checksums do provide some protection: first, against against
-partial media failure, which is a major flaw in raid 456 design according
-to http://www.miracleas.com/BAARF/RAID5_versus_RAID10.txt , and checksum
-voting could protect against the Atomicity/write-in-place flaw outlined in
-http://en.wikipedia.org/wiki/RAID#Problems_with_RAID .
+It's not that straightforward.  The default XFS layout for a 64bit Linux 
+system is inode32, not inode64 (at least up to 2011).  This is for 
+compatibility.  There is apparently still some commercial and FOSS 
+backup software in production that doesn't cope with 64 bit inodes.  And 
+IIRC some time ago there was also an issue with the Linux NFS and other 
+code not understanding 64 bit inodes.  Christoph is in a better position 
+to discuss this than I am as he is an XFS dev.
 
-What do you think?
+>> With only two top level directories you're not going to achieve good
+>> parallelism on an XFS linear concat. Modern delivery agents, dovecot for
+>> example, allow you to store each user mail directory independently,
+>> anywhere you choose, so this isn't a problem. Simply create a top level
+>> directory for every mailbox, something like:
+>>
+>> /var/mail/domain1.%user/
+>> /var/mail/domain2.%user/
 
-Kenn
-
+> Yes, that is indeed possible with dovecot.
 >
->
->>
->> >
->> >>
->> >> (1) Is there anything diagnostic I can contribute to add more
->> >> wrong-drive-resilvering protection to mdadm?  I have the command
->> history
->> >> showing everything I did, I have the five drives available for
->> reading
->> >> sectors, I haven't touched anything yet.
->> >
->> > Yes, report the command history, and any relevant kernel logs, and the
->> > output
->> > of "mdadm --examine" on all relevant devices.
->> >
->> > NeilBrown
->>
->> Awesome!  I hope this is useful.  It's really long, so I edited down the
->> logs and command history to what I thought were the important bits.  If
->> you want more, I can post unedited versions, please let me know.
->>
->> ### Command History ###
->>
->> # The start of the sequence, removing sde from array
->> mdadm --examine /dev/sde
->> mdadm --detail /dev/md3
->> cat /proc/mdstat
->> mdadm /dev/md3 --remove /dev/sde1
->> mdadm /dev/md3 --remove /dev/sde
->> mdadm /dev/md3 --fail /dev/sde1
->> cat /proc/mdstat
->> mdadm --examine /dev/sde1
->> fdisk -l | grep 750
->> mdadm --examine /dev/sde1
->> mdadm --remove /dev/sde
->> mdadm /dev/md3 --remove /dev/sde
->> mdadm /dev/md3 --fail /dev/sde
->> fdisk /dev/sde
->> ls
->> vi /var/log/syslog
->> reboot
->> vi /var/log/syslog
->> reboot
->> mdadm --detail /dev/md3
->> mdadm --examine /dev/sde1
->> # Wiping sde
->> fdisk /dev/sde
->> newfs -t ext3 /dev/sde1
->> mkfs -t ext3 /dev/sde1
->> mkfs -t ext3 /dev/sde2
->> fdisk /dev/sde
->> mdadm --stop /dev/md3
->> # Putting sde back into array
->> mdadm --examine /dev/sde
->> mdadm --help
->> mdadm --misc --help
->> mdadm --zero-superblock /dev/sde
->> mdadm --query /dev/sde
->> mdadm --examine /dev/sde
->> mdadm --detail /dev/sde
->> mdadm --detail /dev/sde1
->> fdisk /dev/sde
->> mdadm --assemble --no-degraded /dev/md3  /dev/hde1 /dev/hdi1 /dev/sde1
->> /dev/hdk1 /dev/hdg1
->> cat /proc/mdstat
->> mdadm --stop /dev/md3
->> mdadm --create /dev/md3 --level=5 --raid-devices=5  /dev/hde1 /dev/hdi1
->> missing /dev/hdk1 /dev/hdg1
->> mount -o ro /raid53
->> ls /raid53
->> umount /raid53
->> mdadm --stop /dev/md3
->> # The command that did the bad rebuild
->> mdadm --create /dev/md3 --level=5 --raid-devices=5  /dev/hde1 /dev/hdi1
->> /dev/sde1 /dev/hdk1 /dev/hdg1
->> cat /proc/mdstat
->> mdadm --examine /dev/md3
->> mdadm --query /dev/md3
->> mdadm --detail /dev/md3
->> mount /raid53
->> mdadm --stop /dev/md3
->> # Trying to get the corrupted disk back up
->> mdadm --create /dev/md3 --level=5 --raid-devices=5  /dev/hde1 /dev/hdi1
->> missing /dev/hdk1 /dev/hdg1
->> cat /proc/mdstat
->> mount /raid53
->> fsck -n /dev/md3
->>
->>
->>
->> ### KERNEL LOGS ###
->>
->> # Me messing around with fdisk and mdadm creating new partitions to wipe
->> out sde
->> Sep 22 15:56:39 teresa kernel: [ 7897.778204] sd 5:0:0:0: [sde]
->> 1465149168
->> 512-byte hardware sectors (750156 MB)
->> Sep 22 15:56:39 teresa kernel: [ 7897.778204] sd 5:0:0:0: [sde] Write
->> Protect is off
->> Sep 22 15:56:39 teresa kernel: [ 7897.778204] sd 5:0:0:0: [sde] Mode
->> Sense: 00 3a 00 00
->> Sep 22 15:56:39 teresa kernel: [ 7897.778204] sd 5:0:0:0: [sde] Write
->> cache: enabled, read cache: enabled, doesn't support DPO or FUA
->> Sep 22 15:56:39 teresa kernel: [ 7897.778204]  sde: sde1 sde2
->> Sep 22 15:56:41 teresa kernel: [ 7899.848026] sd 5:0:0:0: [sde]
->> 1465149168
->> 512-byte hardware sectors (750156 MB)
->> Sep 22 15:56:41 teresa kernel: [ 7899.848026] sd 5:0:0:0: [sde] Write
->> Protect is off
->> Sep 22 15:56:41 teresa kernel: [ 7899.848026] sd 5:0:0:0: [sde] Mode
->> Sense: 00 3a 00 00
->> Sep 22 15:56:41 teresa kernel: [ 7899.848026] sd 5:0:0:0: [sde] Write
->> cache: enabled, read cache: enabled, doesn't support DPO or FUA
->> Sep 22 15:56:41 teresa kernel: [ 7899.848026]  sde: sde1 sde2
->> Sep 22 16:01:49 teresa kernel: [ 8207.733821] sd 5:0:0:0: [sde]
->> 1465149168
->> 512-byte hardware sectors (750156 MB)
->> Sep 22 16:01:49 teresa kernel: [ 8207.733919] sd 5:0:0:0: [sde] Write
->> Protect is off
->> Sep 22 16:01:49 teresa kernel: [ 8207.733943] sd 5:0:0:0: [sde] Mode
->> Sense: 00 3a 00 00
->> Sep 22 16:01:49 teresa kernel: [ 8207.734039] sd 5:0:0:0: [sde] Write
->> cache: enabled, read cache: enabled, doesn't support DPO or FUA
->> Sep 22 16:01:49 teresa kernel: [ 8207.734083]  sde: sde1
->> Sep 22 16:01:51 teresa kernel: [ 8209.777260] sd 5:0:0:0: [sde]
->> 1465149168
->> 512-byte hardware sectors (750156 MB)
->> Sep 22 16:01:51 teresa kernel: [ 8209.777260] sd 5:0:0:0: [sde] Write
->> Protect is off
->> Sep 22 16:01:51 teresa kernel: [ 8209.777260] sd 5:0:0:0: [sde] Mode
->> Sense: 00 3a 00 00
->> Sep 22 16:01:51 teresa kernel: [ 8209.777260] sd 5:0:0:0: [sde] Write
->> cache: enabled, read cache: enabled, doesn't support DPO or FUA
->> Sep 22 16:01:51 teresa kernel: [ 8209.777260]  sde: sde1
->> Sep 22 16:02:09 teresa mdadm[2694]: DeviceDisappeared event detected on
->> md
->> device /dev/md3
->> Sep 22 16:02:09 teresa kernel: [ 8227.781860] md: md3 stopped.
->> Sep 22 16:02:09 teresa kernel: [ 8227.781908] md: unbind<hde1>
->> Sep 22 16:02:09 teresa kernel: [ 8227.781937] md: export_rdev(hde1)
->> Sep 22 16:02:09 teresa kernel: [ 8227.782261] md: unbind<hdg1>
->> Sep 22 16:02:09 teresa kernel: [ 8227.782292] md: export_rdev(hdg1)
->> Sep 22 16:02:09 teresa kernel: [ 8227.782561] md: unbind<hdk1>
->> Sep 22 16:02:09 teresa kernel: [ 8227.782590] md: export_rdev(hdk1)
->> Sep 22 16:02:09 teresa kernel: [ 8227.782855] md: unbind<hdi1>
->> Sep 22 16:02:09 teresa kernel: [ 8227.782885] md: export_rdev(hdi1)
->> Sep 22 16:15:32 teresa smartd[2657]: Device: /dev/hda, Failed SMART
->> usage
->> Attribute: 194 Temperature_Celsius.
->> Sep 22 16:15:33 teresa smartd[2657]: Device: /dev/hdk, SMART Usage
->> Attribute: 194 Temperature_Celsius changed from 110 to 111
->> Sep 22 16:15:33 teresa smartd[2657]: Device: /dev/sdb, SMART Usage
->> Attribute: 194 Temperature_Celsius changed from 113 to 116
->> Sep 22 16:15:33 teresa smartd[2657]: Device: /dev/sdc, SMART Usage
->> Attribute: 190 Airflow_Temperature_Cel changed from 52 to 51
->> Sep 22 16:17:01 teresa /USR/SBIN/CRON[2965]: (root) CMD (   cd / &&
->> run-parts --report /etc/cron.hourly)
->> Sep 22 16:18:42 teresa kernel: [ 9220.400915] md: md3 stopped.
->> Sep 22 16:18:42 teresa kernel: [ 9220.411525] md: bind<hdi1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.411884] md: bind<sde1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.412577] md: bind<hdk1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.413162] md: bind<hdg1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.413750] md: bind<hde1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.413855] md: kicking non-fresh sde1
->> from array!
->> Sep 22 16:18:42 teresa kernel: [ 9220.413887] md: unbind<sde1>
->> Sep 22 16:18:42 teresa kernel: [ 9220.413915] md: export_rdev(sde1)
->> Sep 22 16:18:42 teresa kernel: [ 9220.477393] raid5: device hde1
->> operational as raid disk 0
->> Sep 22 16:18:42 teresa kernel: [ 9220.477420] raid5: device hdg1
->> operational as raid disk 4
->> Sep 22 16:18:42 teresa kernel: [ 9220.477438] raid5: device hdk1
->> operational as raid disk 3
->> Sep 22 16:18:42 teresa kernel: [ 9220.477456] raid5: device hdi1
->> operational as raid disk 1
->> Sep 22 16:18:42 teresa kernel: [ 9220.478236] raid5: allocated 5252kB
->> for md3
->> Sep 22 16:18:42 teresa kernel: [ 9220.478265] raid5: raid level 5 set
->> md3
->> active with 4 out of 5 devices, algorithm 2
->> Sep 22 16:18:42 teresa kernel: [ 9220.478294] RAID5 conf printout:
->> Sep 22 16:18:42 teresa kernel: [ 9220.478309]  --- rd:5 wd:4
->> Sep 22 16:18:42 teresa kernel: [ 9220.478324]  disk 0, o:1, dev:hde1
->> Sep 22 16:18:42 teresa kernel: [ 9220.478339]  disk 1, o:1, dev:hdi1
->> Sep 22 16:18:42 teresa kernel: [ 9220.478354]  disk 3, o:1, dev:hdk1
->> Sep 22 16:18:42 teresa kernel: [ 9220.478369]  disk 4, o:1, dev:hdg1
->> # Me stopping md3
->> Sep 22 16:18:53 teresa mdadm[2694]: DeviceDisappeared event detected on
->> md
->> device /dev/md3
->> Sep 22 16:18:53 teresa kernel: [ 9231.572348] md: md3 stopped.
->> Sep 22 16:18:53 teresa kernel: [ 9231.572394] md: unbind<hde1>
->> Sep 22 16:18:53 teresa kernel: [ 9231.572423] md: export_rdev(hde1)
->> Sep 22 16:18:53 teresa kernel: [ 9231.572728] md: unbind<hdg1>
->> Sep 22 16:18:53 teresa kernel: [ 9231.572758] md: export_rdev(hdg1)
->> Sep 22 16:18:53 teresa kernel: [ 9231.572988] md: unbind<hdk1>
->> Sep 22 16:18:53 teresa kernel: [ 9231.573015] md: export_rdev(hdk1)
->> Sep 22 16:18:53 teresa kernel: [ 9231.573243] md: unbind<hdi1>
->> Sep 22 16:18:53 teresa kernel: [ 9231.573270] md: export_rdev(hdi1)
->> # Me creating md3 with sde1 missing
->> Sep 22 16:19:51 teresa kernel: [ 9289.621646] md: bind<hde1>
->> Sep 22 16:19:51 teresa kernel: [ 9289.665268] md: bind<hdi1>
->> Sep 22 16:19:51 teresa kernel: [ 9289.695676] md: bind<hdk1>
->> Sep 22 16:19:51 teresa kernel: [ 9289.726906] md: bind<hdg1>
->> Sep 22 16:19:51 teresa kernel: [ 9289.809030] raid5: device hdg1
->> operational as raid disk 4
->> Sep 22 16:19:51 teresa kernel: [ 9289.809057] raid5: device hdk1
->> operational as raid disk 3
->> Sep 22 16:19:51 teresa kernel: [ 9289.809075] raid5: device hdi1
->> operational as raid disk 1
->> Sep 22 16:19:51 teresa kernel: [ 9289.809093] raid5: device hde1
->> operational as raid disk 0
->> Sep 22 16:19:51 teresa kernel: [ 9289.809821] raid5: allocated 5252kB
->> for md3
->> Sep 22 16:19:51 teresa kernel: [ 9289.809850] raid5: raid level 5 set
->> md3
->> active with 4 out of 5 devices, algorithm 2
->> Sep 22 16:19:51 teresa kernel: [ 9289.809877] RAID5 conf printout:
->> Sep 22 16:19:51 teresa kernel: [ 9289.809891]  --- rd:5 wd:4
->> Sep 22 16:19:51 teresa kernel: [ 9289.809907]  disk 0, o:1, dev:hde1
->> Sep 22 16:19:51 teresa kernel: [ 9289.809922]  disk 1, o:1, dev:hdi1
->> Sep 22 16:19:51 teresa kernel: [ 9289.809937]  disk 3, o:1, dev:hdk1
->> Sep 22 16:19:51 teresa kernel: [ 9289.809953]  disk 4, o:1, dev:hdg1
->> Sep 22 16:20:20 teresa kernel: [ 9318.486512] kjournald starting.
->> Commit
->> interval 5 seconds
->> Sep 22 16:20:20 teresa kernel: [ 9318.486512] EXT3-fs: mounted
->> filesystem
->> with ordered data mode.
->> # Me stopping md3 again
->> Sep 22 16:20:42 teresa mdadm[2694]: DeviceDisappeared event detected on
->> md
->> device /dev/md3
->> Sep 22 16:20:42 teresa kernel: [ 9340.300590] md: md3 stopped.
->> Sep 22 16:20:42 teresa kernel: [ 9340.300639] md: unbind<hdg1>
->> Sep 22 16:20:42 teresa kernel: [ 9340.300668] md: export_rdev(hdg1)
->> Sep 22 16:20:42 teresa kernel: [ 9340.300921] md: unbind<hdk1>
->> Sep 22 16:20:42 teresa kernel: [ 9340.300950] md: export_rdev(hdk1)
->> Sep 22 16:20:42 teresa kernel: [ 9340.301183] md: unbind<hdi1>
->> Sep 22 16:20:42 teresa kernel: [ 9340.301211] md: export_rdev(hdi1)
->> Sep 22 16:20:42 teresa kernel: [ 9340.301438] md: unbind<hde1>
->> Sep 22 16:20:42 teresa kernel: [ 9340.301465] md: export_rdev(hde1)
->> # This is me doing the fatal create, that recovers the wrong disk
->> Sep 22 16:21:39 teresa kernel: [ 9397.609864] md: bind<hde1>
->> Sep 22 16:21:39 teresa kernel: [ 9397.652426] md: bind<hdi1>
->> Sep 22 16:21:39 teresa kernel: [ 9397.673203] md: bind<sde1>
->> Sep 22 16:21:39 teresa kernel: [ 9397.699373] md: bind<hdk1>
->> Sep 22 16:21:39 teresa kernel: [ 9397.739372] md: bind<hdg1>
->> Sep 22 16:21:39 teresa kernel: [ 9397.801729] raid5: device hdk1
->> operational as raid disk 3
->> Sep 22 16:21:39 teresa kernel: [ 9397.801756] raid5: device sde1
->> operational as raid disk 2
->> Sep 22 16:21:39 teresa kernel: [ 9397.801774] raid5: device hdi1
->> operational as raid disk 1
->> Sep 22 16:21:39 teresa kernel: [ 9397.801793] raid5: device hde1
->> operational as raid disk 0
->> Sep 22 16:21:39 teresa kernel: [ 9397.802531] raid5: allocated 5252kB
->> for md3
->> Sep 22 16:21:39 teresa kernel: [ 9397.802559] raid5: raid level 5 set
->> md3
->> active with 4 out of 5 devices, algorithm 2
->> Sep 22 16:21:39 teresa kernel: [ 9397.802586] RAID5 conf printout:
->> Sep 22 16:21:39 teresa kernel: [ 9397.802600]  --- rd:5 wd:4
->> Sep 22 16:21:39 teresa kernel: [ 9397.802615]  disk 0, o:1, dev:hde1
->> Sep 22 16:21:39 teresa kernel: [ 9397.802631]  disk 1, o:1, dev:hdi1
->> Sep 22 16:21:39 teresa kernel: [ 9397.802646]  disk 2, o:1, dev:sde1
->> Sep 22 16:21:39 teresa kernel: [ 9397.802661]  disk 3, o:1, dev:hdk1
->> Sep 22 16:21:39 teresa kernel: [ 9397.838429] RAID5 conf printout:
->> Sep 22 16:21:39 teresa kernel: [ 9397.838454]  --- rd:5 wd:4
->> Sep 22 16:21:39 teresa kernel: [ 9397.838471]  disk 0, o:1, dev:hde1
->> Sep 22 16:21:39 teresa kernel: [ 9397.838486]  disk 1, o:1, dev:hdi1
->> Sep 22 16:21:39 teresa kernel: [ 9397.838502]  disk 2, o:1, dev:sde1
->> Sep 22 16:21:39 teresa kernel: [ 9397.838518]  disk 3, o:1, dev:hdk1
->> Sep 22 16:21:39 teresa kernel: [ 9397.838533]  disk 4, o:1, dev:hdg1
->> Sep 22 16:21:39 teresa mdadm[2694]: RebuildStarted event detected on md
->> device /dev/md3
->> Sep 22 16:21:39 teresa kernel: [ 9397.841822] md: recovery of RAID array
->> md3
->> Sep 22 16:21:39 teresa kernel: [ 9397.841848] md: minimum _guaranteed_
->> speed: 1000 KB/sec/disk.
->> Sep 22 16:21:39 teresa kernel: [ 9397.841868] md: using maximum
->> available
->> idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
->> Sep 22 16:21:39 teresa kernel: [ 9397.841908] md: using 128k window,
->> over
->> a total of 732571904 blocks.
->> Sep 22 16:22:33 teresa kernel: [ 9451.640192] EXT3-fs error (device
->> md3):
->> ext3_check_descriptors: Block bitmap for group 3968 not in group (block
->> 0)!
->> Sep 22 16:22:33 teresa kernel: [ 9451.750241] EXT3-fs: group descriptors
->> corrupted!
->> Sep 22 16:22:39 teresa kernel: [ 9458.079151] md: md_do_sync() got
->> signal
->> ... exiting
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: md3 stopped.
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: unbind<hdg1>
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: export_rdev(hdg1)
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: unbind<hdk1>
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: export_rdev(hdk1)
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: unbind<sde1>
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: export_rdev(sde1)
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: unbind<hdi1>
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: export_rdev(hdi1)
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: unbind<hde1>
->> Sep 22 16:22:39 teresa kernel: [ 9458.114590] md: export_rdev(hde1)
->> Sep 22 16:22:39 teresa mdadm[2694]: DeviceDisappeared event detected on
->> md
->> device /dev/md3
->> # Me trying to recreate md3 without sde
->> Sep 22 16:23:50 teresa kernel: [ 9529.065477] md: bind<hde1>
->> Sep 22 16:23:50 teresa kernel: [ 9529.107767] md: bind<hdi1>
->> Sep 22 16:23:50 teresa kernel: [ 9529.137743] md: bind<hdk1>
->> Sep 22 16:23:50 teresa kernel: [ 9529.177990] md: bind<hdg1>
->> Sep 22 16:23:51 teresa mdadm[2694]: RebuildFinished event detected on md
->> device /dev/md3
->> Sep 22 16:23:51 teresa kernel: [ 9529.240814] raid5: device hdg1
->> operational as raid disk 4
->> Sep 22 16:23:51 teresa kernel: [ 9529.241734] raid5: device hdk1
->> operational as raid disk 3
->> Sep 22 16:23:51 teresa kernel: [ 9529.241752] raid5: device hdi1
->> operational as raid disk 1
->> Sep 22 16:23:51 teresa kernel: [ 9529.241770] raid5: device hde1
->> operational as raid disk 0
->> Sep 22 16:23:51 teresa kernel: [ 9529.242520] raid5: allocated 5252kB
->> for md3
->> Sep 22 16:23:51 teresa kernel: [ 9529.242547] raid5: raid level 5 set
->> md3
->> active with 4 out of 5 devices, algorithm 2
->> Sep 22 16:23:51 teresa kernel: [ 9529.242574] RAID5 conf printout:
->> Sep 22 16:23:51 teresa kernel: [ 9529.242588]  --- rd:5 wd:4
->> Sep 22 16:23:51 teresa kernel: [ 9529.242603]  disk 0, o:1, dev:hde1
->> Sep 22 16:23:51 teresa kernel: [ 9529.242618]  disk 1, o:1, dev:hdi1
->> Sep 22 16:23:51 teresa kernel: [ 9529.242633]  disk 3, o:1, dev:hdk1
->> Sep 22 16:23:51 teresa kernel: [ 9529.242649]  disk 4, o:1, dev:hdg1
->> # And me trying a fsck -n or a mount
->> Sep 22 16:24:07 teresa kernel: [ 9545.326343] EXT3-fs error (device
->> md3):
->> ext3_check_descriptors: Block bitmap for group 3968 not in group (block
->> 0)!
->> Sep 22 16:24:07 teresa kernel: [ 9545.369071] EXT3-fs: group descriptors
->> corrupted!
->>
->>
->> ### EXAMINES OF PARTITIONS ###
->>
->> === --examine /dev/hde1 ===
->> /dev/hde1:
->>           Magic : a92b4efc
->>         Version : 00.90.00
->>            UUID : ed1e6357:74e32684:47f7b12e:9c2b2218 (local to host
->> teresa)
->>   Creation Time : Thu Sep 22 16:23:50 2011
->>      Raid Level : raid5
->>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->>    Raid Devices : 5
->>   Total Devices : 4
->> Preferred Minor : 3
->>
->>     Update Time : Sun Sep 25 22:11:22 2011
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 1
->>   Spare Devices : 0
->>        Checksum : b7f6a3c0 - correct
->>          Events : 10
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>       Number   Major   Minor   RaidDevice State
->> this     0      33        1        0      active sync   /dev/hde1
->>
->>    0     0      33        1        0      active sync   /dev/hde1
->>    1     1      56        1        1      active sync   /dev/hdi1
->>    2     2       0        0        2      faulty removed
->>    3     3      57        1        3      active sync   /dev/hdk1
->>    4     4      34        1        4      active sync   /dev/hdg1
->>
->> === --examine /dev/hdi1 ===
->> /dev/hdi1:
->>           Magic : a92b4efc
->>         Version : 00.90.00
->>            UUID : ed1e6357:74e32684:47f7b12e:9c2b2218 (local to host
->> teresa)
->>   Creation Time : Thu Sep 22 16:23:50 2011
->>      Raid Level : raid5
->>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->>    Raid Devices : 5
->>   Total Devices : 4
->> Preferred Minor : 3
->>
->>     Update Time : Sun Sep 25 22:11:22 2011
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 1
->>   Spare Devices : 0
->>        Checksum : b7f6a3d9 - correct
->>          Events : 10
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>       Number   Major   Minor   RaidDevice State
->> this     1      56        1        1      active sync   /dev/hdi1
->>
->>    0     0      33        1        0      active sync   /dev/hde1
->>    1     1      56        1        1      active sync   /dev/hdi1
->>    2     2       0        0        2      faulty removed
->>    3     3      57        1        3      active sync   /dev/hdk1
->>    4     4      34        1        4      active sync   /dev/hdg1
->>
->> === --examine /dev/sde1 ===
->> /dev/sde1:
->>           Magic : a92b4efc
->>         Version : 00.90.00
->>            UUID : e6e3df36:1195239f:47f7b12e:9c2b2218 (local to host
->> teresa)
->>   Creation Time : Thu Sep 22 16:21:39 2011
->>      Raid Level : raid5
->>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->>    Raid Devices : 5
->>   Total Devices : 5
->> Preferred Minor : 3
->>
->>     Update Time : Thu Sep 22 16:22:39 2011
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 5
->>  Failed Devices : 1
->>   Spare Devices : 1
->>        Checksum : 4e69d679 - correct
->>          Events : 8
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>       Number   Major   Minor   RaidDevice State
->> this     2       8       65        2      active sync   /dev/sde1
->>
->>    0     0      33        1        0      active sync   /dev/hde1
->>    1     1      56        1        1      active sync   /dev/hdi1
->>    2     2       8       65        2      active sync   /dev/sde1
->>    3     3      57        1        3      active sync   /dev/hdk1
->>    4     4       0        0        4      faulty removed
->>    5     5      34        1        5      spare   /dev/hdg1
->>
->> === --examine /dev/hdk1 ===
->> /dev/hdk1:
->>           Magic : a92b4efc
->>         Version : 00.90.00
->>            UUID : ed1e6357:74e32684:47f7b12e:9c2b2218 (local to host
->> teresa)
->>   Creation Time : Thu Sep 22 16:23:50 2011
->>      Raid Level : raid5
->>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->>    Raid Devices : 5
->>   Total Devices : 4
->> Preferred Minor : 3
->>
->>     Update Time : Sun Sep 25 22:11:22 2011
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 1
->>   Spare Devices : 0
->>        Checksum : b7f6a3de - correct
->>          Events : 10
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>       Number   Major   Minor   RaidDevice State
->> this     3      57        1        3      active sync   /dev/hdk1
->>
->>    0     0      33        1        0      active sync   /dev/hde1
->>    1     1      56        1        1      active sync   /dev/hdi1
->>    2     2       0        0        2      faulty removed
->>    3     3      57        1        3      active sync   /dev/hdk1
->>    4     4      34        1        4      active sync   /dev/hdg1
->>
->> === --examine /dev/hdg1 ===
->> /dev/hdg1:
->>           Magic : a92b4efc
->>         Version : 00.90.00
->>            UUID : ed1e6357:74e32684:47f7b12e:9c2b2218 (local to host
->> teresa)
->>   Creation Time : Thu Sep 22 16:23:50 2011
->>      Raid Level : raid5
->>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->>    Raid Devices : 5
->>   Total Devices : 4
->> Preferred Minor : 3
->>
->>     Update Time : Sun Sep 25 22:11:22 2011
->>           State : clean
->>  Active Devices : 4
->> Working Devices : 4
->>  Failed Devices : 1
->>   Spare Devices : 0
->>        Checksum : b7f6a3c9 - correct
->>          Events : 10
->>
->>          Layout : left-symmetric
->>      Chunk Size : 64K
->>
->>       Number   Major   Minor   RaidDevice State
->> this     4      34        1        4      active sync   /dev/hdg1
->>
->>    0     0      33        1        0      active sync   /dev/hde1
->>    1     1      56        1        1      active sync   /dev/hdi1
->>    2     2       0        0        2      faulty removed
->>    3     3      57        1        3      active sync   /dev/hdk1
->>    4     4      34        1        4      active sync   /dev/hdg1
->>
->>
->>
->>
->> >
->> >
->> >>
->> >> (2) Can I suggest improvements into resilvering?  Can I contribute
->> code
->> >> to
->> >> implement them?  Such as resilver from the end of the drive back to
->> the
->> >> front, so if you notice the wrong drive resilvering, you can stop and
->> >> not
->> >> lose the MBR and the directory format structure that's stored in the
->> >> first
->> >> few sectors?  I'd also like to take a look at adding a raid mode
->> where
->> >> there's checksum in every stripe block so the system can detect
->> >> corrupted
->> >> disks and not resilver.  I'd also like to add a raid option where a
->> >> resilvering need will be reported by email and needs to be started
->> >> manually.  All to prevent what happened to me from happening again.
->> >>
->> >> Thanks for your time.
->> >>
->> >> Kenn Frank
->> >>
->> >> P.S.  Setup:
->> >>
->> >> # uname -a
->> >> Linux teresa 2.6.26-2-686 #1 SMP Sat Jun 11 14:54:10 UTC 2011 i686
->> >> GNU/Linux
->> >>
->> >> # mdadm --version
->> >> mdadm - v2.6.7.2 - 14th November 2008
->> >>
->> >> # mdadm --detail /dev/md3
->> >> /dev/md3:
->> >>         Version : 00.90
->> >>   Creation Time : Thu Sep 22 16:23:50 2011
->> >>      Raid Level : raid5
->> >>      Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
->> >>   Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
->> >>    Raid Devices : 5
->> >>   Total Devices : 4
->> >> Preferred Minor : 3
->> >>     Persistence : Superblock is persistent
->> >>
->> >>     Update Time : Thu Sep 22 20:19:09 2011
->> >>           State : clean, degraded
->> >>  Active Devices : 4
->> >> Working Devices : 4
->> >>  Failed Devices : 0
->> >>   Spare Devices : 0
->> >>
->> >>          Layout : left-symmetric
->> >>      Chunk Size : 64K
->> >>
->> >>            UUID : ed1e6357:74e32684:47f7b12e:9c2b2218 (local to host
->> >> teresa)
->> >>          Events : 0.6
->> >>
->> >>     Number   Major   Minor   RaidDevice State
->> >>        0      33        1        0      active sync   /dev/hde1
->> >>        1      56        1        1      active sync   /dev/hdi1
->> >>        2       0        0        2      removed
->> >>        3      57        1        3      active sync   /dev/hdk1
->> >>        4      34        1        4      active sync   /dev/hdg1
->> >>
->> >>
->> >
->> >
->>
->
->
+> To my mind, it is an unfortunate limitation that it is only top-level
+> directories that are spread across allocation groups, rather than all
+> directories. It means the directory structure needs to be changed to
+> suit the filesystem.
 
+That's because you don't yet fully understand how all this XFS goodness 
+works.  Recall my comments about architecting the storage stack to 
+optimize the performance of a specific workload?  Using an XFS+linear 
+concat setup is a tradeoff, just like anything else.  To get maximum 
+performance you may need to trade some directory layout complexity for 
+that performance.  If you don't want that complexity, simply go with a 
+plain striped array and use any directory layout you wish.
 
+Striped arrays don't rely on directory or AG placement for performance 
+as does a linear concat array.  However, because of the nature of a 
+striped array, you'll simply get less performance with the specific 
+workloads I've mentioned.  This is because you will often generate many 
+physical IOs to the spindles per filesystem operation.  With the linear 
+concat each filesystem IO generates one physical IO to one spindle. 
+Thus with a highly concurrent workload you get more real file IOPS than 
+with a striped array before the disks hit their head seek limit.  There 
+are other factors as well, such as latency.  Block latency will usually 
+be lower with a linear concat than with a striped array.
+
+I think what you're failing to fully understand is the serious level of 
+flexibility that XFS provides, and the resulting complexity of 
+understanding required by the sysop.  Other Linux filesystem offer zero 
+flexibility WRT optimizing for the underlying hardware layout.  Because 
+of XFS' architecture one can tailor its performance characteristics to 
+many different physical storage architectures, including standard 
+striped arrays, linear concats, a combination of the two, etc, and 
+specific workloads.  Again, an XFS+linear concat is a specific 
+configuration of XFS and the underlying storage, tailored to a specific 
+type of workload.
+
+> In some cases, such as a dovecot mail server,
+> that's not a big issue. But in other cases it could be - it is a
+> somewhat artificial restraint in the way you organise your directories.
+
+No, it's not a limitation, but a unique capability.  See above.
+
+> Of course, scaling across top-level directories is much better than no
+> scaling at all - and I'm sure the XFS developers have good reason for
+> organising the allocation groups in this way.
+
+> You have certainly answered my question now - many thanks. Now I am
+> clear how I need to organise directories in order to take advantage of
+> allocation groups.
+
+Again, this directory layout strategy only applies when using a linear 
+concat.  It's not necessary with XFS atop a striped array.  And it's 
+only a good fit for high concurrency high IOPS workloads.
+
+> Even though I don't have any filesystems planned that
+> will be big enough to justify linear concats,
+
+A linear concat can be as small as 2 disks, even 2 partitions, 4 with 
+redundancy (2 mirror pairs).  Maybe you meant workload here instead of 
+filesystem?
+
+> spreading data across
+> allocation groups will spread the load across kernel threads and
+> therefore across processor cores, so it is important to understand it.
+
+While this is true, and great engineering, it's only relevant on systems 
+doing large concurrent/continuous IO, as in multiple GB/s, given the 
+power of today's CPUs.
+
+The XFS allocation strategy is brilliant, and simply beats the stuffing 
+out of all the other current Linux filesystems.  It's time for me to 
+stop answering your questions, and time for you to read:
+
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide//tmp/en-US/html/index.html
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/index.html
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Labs/tmp/en-US/html/index.html
+
+If you have further questions after digesting these valuable resources, 
+please post them on the xfs mailing list:
+
+http://oss.sgi.com/mailman/listinfo/xfs
+
+Myself and others would be happy to respond.
+
+>> The large file case is transactional database specific, and careful
+>> planning and layout of the disks and filesystem are needed. In this case
+>> we span a single large database file over multiple small allocation
+>> groups. Transactional DB systems typically write only a few hundred
+>> bytes per record. Consider a large retailer point of sale application.
+>> With a striped array you would suffer the read-modify-write penalty when
+>> updating records. With a linear concat you simply directly update a
+>> single 4KB block.
+
+> When you are doing that, you would then use a large number of allocation
+> groups - is that correct?
+
+Not necessarily.  It's a balancing act.  And it's a rather complicated 
+setup.  To thoroughly answer this question will take far more list space 
+and time than I have available.  And given your questions the maildir 
+example prompted, you'll have far more if I try to explain this setup.
+
+Please read the docs I mentioned above.  They won't directly answer this 
+question, but will allow you to answer it yourself after you digest the 
+information.
+
+> References I have seen on the internet seem to be in two minds about
+> whether you should have many or a few allocation groups. On the one
+> hand, multiple groups let you do more things in parallel - on the other
+
+More parallelism only to an extent.  Disks are very slow.  Once you have 
+enough AGs for your workload to saturate your drive head actuators, 
+additional AGs simply create a drag on performance due to excess head 
+seeking amongst all your AGs.  Again, it's a balancing act.
+
+> hand, each group means more memory and overhead needed to keep track of
+> inode tables, etc.
+
+This is irrelevant.  The impact of these things is infinitely small 
+compared to the physical disk overhead caused by too many AGs.
+
+> Certainly I see the point of having an allocation
+> group per part of the linear concat (or a multiple of the number of
+> parts), and I can see the point of having at least as many groups as you
+> have processor cores, but is there any point in having more groups than
+> that?
+
+You should be realizing about now why most people call tuning XFS a 
+"Black art". ;)  Read the docs about allocation groups.
+
+> I have read on the net about a size limitation of 4GB per group,
+
+You're read in the wrong place, read old docs.  The current AG size 
+limit is 1TB, has been for quite some time.  It will be bumped up some 
+time in the future as disk sizes increase.  The next limit will likely 
+be 4TB.
+
+> which would mean using more groups on a big system, but I get the
+> impression that this was a 32-bit limitation and that on a 64-bit system
+
+The AG size limit has nothing to do with the system instruction width. 
+It is an 'arbitrary' fixed size.
+
+> the limit is 1 TB per group. Assuming a workload with lots of parallel
+> IO rather than large streams, are there any guidelines as to ideal
+> numbers of groups? Or is it better just to say that if you want the last
+> 10% out of a big system, you need to test it and benchmark it yourself
+> with a realistic test workload?
+
+There are no general guidelines here, but for the mkfs.xfs defaults. 
+Coincidentally, recent versions of mkfs.xfs will read the mdadm config 
+and build the filesystem correctly, automatically, on top of striped md 
+raid arrays.
+
+Other than that, there are no general guidelines, and especially none 
+for a linear concat.  The reason is that all storage hardware acts a 
+little bit differently and each host/storage combo may require different 
+XFS optimizations for peak performance.  Pre-production testing is 
+*always* a good idea, and not just for XFS. :)
+
+Unless or until one finds that the mkfs.xfs defaults aren't yielding the 
+required performance, it's best not to peek under the hood, as you're 
+going to get dirty once you dive in to tune the engine. ;)
+
+>> XFS is extremely flexible and powerful. It can be tailored to yield
+>> maximum performance for just about any workload with sufficient
+>> concurrency.
+
+> I have also read that JFS uses allocation groups - have you any idea how
+> these compare to XFS, and whether it scales in the same way?
+
+I've never used JFS.  AIUI it staggers along like a zombie, with one dev 
+barely maintaining it today.  It seems there hasn't been real active 
+Linux JFS code work for about 7 years, since 2004, only a handful of 
+commits, all bug fixes IIRC.  The tools package appears to have received 
+slightly more attention.
+
+XFS sees regular commits to both experimental and stable trees, both bug 
+fixes and new features, with at least a dozen or so devs banging on it 
+at a given time.  I believe there is at least one Red Hat employee 
+working on XFS full time, or nearly so.  Christoph is a kernel dev who 
+works on XFS, and could give you a more accurate head count.  Christoph?
+
+BTW, this is my last post on this subject.  It must move to the XFS 
+list, or die.
+
+-- 
+Stan
