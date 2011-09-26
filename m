@@ -1,54 +1,37 @@
-From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Subject: [PATCH] remove unused variable
-Date: Mon, 26 Sep 2011 12:37:22 +0000
-Message-ID: <3F8F31A3BFD1664EAB894D1BD6AF32B902FEE1@IRSMSX102.ger.corp.intel.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] imsm: fix: stopped resync does not continue after
+	auto-assemblation
+Date: Mon, 26 Sep 2011 14:54:47 +0200
+Message-ID: <20110926125446.14365.9519.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-From ccbe8fd4b762d88184c0fea61abb966cf8c99cc9 Mon Sep 17 00:00:00 2001
-From: Anna Czarnowska <anna.czarnowska@intel.com>
-Date: Mon, 26 Sep 2011 11:54:04 +0200
-Subject: [PATCH] remove unused variable
+Resync stopped with "mdadm -Ss" command does not continue
+after issuing "mdadm -As" command.
 
-reservation is calculated below in imsm_min_reserved_sectors()
-so this variable is not needed
-
-Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 ---
- super-intel.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ super-intel.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 07d47b5..75b432d 100644
+index ed522ae..95627d1 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -988,9 +988,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
- 	struct dl *dl;
- 	struct extent *e;
- 	int i;
- 	unsigned long long rv = 0;
--	__u32 reservation;
- 
- 	if (!super)
- 		return rv;
- 	/* find first active disk in array */
-@@ -1006,9 +1005,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
- 	for (i = 0; e[i].size; i++)
- 		continue;
- 	if (i > 0)
- 		rv = e[i-1].start + e[i-1].size;
--	reservation = __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
- 	free(e);
- 
- 	/* add the amount of space needed for metadata */
- 	rv = rv + imsm_min_reserved_sectors(super);
--- 
-1.7.4
+@@ -2267,7 +2267,8 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	info->custom_array_size   = __le32_to_cpu(dev->size_high);
+ 	info->custom_array_size   <<= 32;
+ 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
+-	if (prev_map && map->map_state == prev_map->map_state) {
++	if (prev_map && map->map_state == prev_map->map_state &&
++			(migr_type(dev) == MIGR_GEN_MIGR)) {
+ 		info->reshape_active = 1;
+ 		info->new_level = get_imsm_raid_level(map);
+ 		info->new_layout = imsm_level_to_layout(info->new_level);
 
