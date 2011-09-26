@@ -1,61 +1,54 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Mon, 26 Sep 2011 21:10:10 +1000
-Message-ID: <20110926211010.27f82a5e@notabene.brown>
-References: <4E7EDE58.3000804@yazzy.org>
-	<20110926074002.6399de56@notabene.brown>
-	<4E7FA3E8.5010603@yazzy.org>
-	<20110926081853.2819622b@notabene.brown>
-	<4E804062.3020700@yazzy.org>
-	<20110926193130.6377f5b9@notabene.brown>
-	<4E8059AC.4060703@yazzy.org>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH] remove unused variable
+Date: Mon, 26 Sep 2011 12:37:22 +0000
+Message-ID: <3F8F31A3BFD1664EAB894D1BD6AF32B902FEE1@IRSMSX102.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Qprdqb7GqtxpudBGxxv=RdX"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E8059AC.4060703@yazzy.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/Qprdqb7GqtxpudBGxxv=RdX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From ccbe8fd4b762d88184c0fea61abb966cf8c99cc9 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Mon, 26 Sep 2011 11:54:04 +0200
+Subject: [PATCH] remove unused variable
 
-On Mon, 26 Sep 2011 12:53:32 +0200 "Marcin M. Jessa" <lists@yazzy.org> wrot=
-e:
+reservation is calculated below in imsm_min_reserved_sectors()
+so this variable is not needed
 
-> On 9/26/11 11:31 AM, NeilBrown wrote:
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ super-intel.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-> > Nothing else I can suggest - sorry.
->=20
-> Would it be worth a shot to use parted, create msdos label and then make=
-=20
-> a partition with a ext file system on top of it and run fsck?
->=20
+diff --git a/super-intel.c b/super-intel.c
+index 07d47b5..75b432d 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -988,9 +988,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
+ 	struct dl *dl;
+ 	struct extent *e;
+ 	int i;
+ 	unsigned long long rv = 0;
+-	__u32 reservation;
+ 
+ 	if (!super)
+ 		return rv;
+ 	/* find first active disk in array */
+@@ -1006,9 +1005,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
+ 	for (i = 0; e[i].size; i++)
+ 		continue;
+ 	if (i > 0)
+ 		rv = e[i-1].start + e[i-1].size;
+-	reservation = __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
+ 	free(e);
+ 
+ 	/* add the amount of space needed for metadata */
+ 	rv = rv + imsm_min_reserved_sectors(super);
+-- 
+1.7.4
 
-I cannot imagine how doing that would actually improve your situation at
-all.  It sounds like you are just corrupting things more.  But maybe I don't
-understand what you are trying to do.
-
-I really wouldn't write anything to any device until you had found out where
-the data you want is.   However as I cannot suggest how to find the data (I
-really think it is beyond repair - sorry) there is still nothing I can
-suggest.
-
-NeilBrown
-
---Sig_/Qprdqb7GqtxpudBGxxv=RdX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOgF2SG5fc6gV+Wb0RAgAEAKCW7x2v3bl3EOeWCpuw2MrmCv+y2QCgqjg+
-7a1XmkPUUKph0dYnGYXUIcA=
-=2m3q
------END PGP SIGNATURE-----
-
---Sig_/Qprdqb7GqtxpudBGxxv=RdX--
