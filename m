@@ -1,32 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: examining the layout of an existing raid device?
-Date: Mon, 26 Sep 2011 06:45:59 -0400
-Message-ID: <20110926104559.GA20448@infradead.org>
-References: <20110926101824.GA30509@infradead.org>
- <20110926203248.7ff8303f@notabene.brown>
+From: "Marcin M. Jessa" <lists@yazzy.org>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Mon, 26 Sep 2011 12:53:32 +0200
+Message-ID: <4E8059AC.4060703@yazzy.org>
+References: <4E7EDE58.3000804@yazzy.org> <20110926074002.6399de56@notabene.brown> <4E7FA3E8.5010603@yazzy.org> <20110926081853.2819622b@notabene.brown> <4E804062.3020700@yazzy.org> <20110926193130.6377f5b9@notabene.brown>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110926203248.7ff8303f@notabene.brown>
+In-Reply-To: <20110926193130.6377f5b9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Sep 26, 2011 at 08:32:48PM +1000, NeilBrown wrote:
-> On Mon, 26 Sep 2011 06:18:24 -0400 Christoph Hellwig <hch@infradead.org>
-> wrote:
-> 
-> > Maybe I'm just stupid, but is there a way to figure out the exact
-> > geometry (e.g. pretty print of the superblock) for an existing array
-> > somehow?  I couldn't find anything in the mdadm man page for it.
-> 
-> mdadm -E /dev/sda
-> 
-> will print the metadata on device /dev/sda which describes the array that it
-> is a member of.
+On 9/26/11 11:31 AM, NeilBrown wrote:
+> On Mon, 26 Sep 2011 11:05:38 +0200 "Marcin M. Jessa"<lists@yazzy.org>  wrote:
+>
+>> On 9/26/11 12:18 AM, NeilBrown wrote:
+>>
+>>> Do you remember what filesystem you had on 'storage'?  Was it ext3 or ext4 or
+>>> xfs or something else?
+>>
+>> You're giving me some hope here and then silence :)
+>> Why did you ask about the file system? Should I run fsck on the LV ?
+>>
+>>
+>>
+>
+> You already did run fsck on the LV.  It basically said that it didn't
+> recognise the filesystem at all.
+> I asked in case maybe it was XFS in which case a different tool would be
+> required.
+> But you said it was EXT4, so the fsck.ext2 which you used should have worked
+> if anything would.
+>
+> It is certainly odd that the LVM info is all consistent, but the filesystem
+> info has disappear.  It could be that you have the chunksize or device order
+> wrong and so it is looking for the filesystem info at the wrong place.
+>
+> Nothing else I can suggest - sorry.
 
-Ok, that includes the information I was looking for, including the
-chunk size, and layout.
+Would it be worth a shot to use parted, create msdos label and then make 
+a partition with a ext file system on top of it and run fsck?
 
+
+
+-- 
+
+Marcin M. Jessa
