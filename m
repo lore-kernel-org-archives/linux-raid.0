@@ -1,183 +1,98 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: Best strategy to incrementally replace smaller HDDs [success
- story]
-Date: Tue, 27 Sep 2011 10:37:48 +0200
-Message-ID: <1317112668.2758.43.camel@michal-laptop>
-References: <1315565285.2291.25.camel@michal-laptop>
-	 <20110909131351.GA25347@cthulhu.home.robinhill.me.uk>
-	 <1315578025.14468.18.camel@michal-laptop>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Recovering from a Bad Resilver / Rebuild
+Date: Tue, 27 Sep 2011 11:27:43 +0200
+Message-ID: <j5s52m$8fc$1@dough.gmane.org>
+References: <09f356fa46129bd08dd45752c0f736de.squirrel@www.maxstr.com>    <20110926145248.6ffc5f02@notabene.brown>    <20110926130351.63adc330@natsu> <ab6d59c609b0240ecf50257d0931cb1d.squirrel@www.maxstr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-p6p61j9fxM4kK0CBInvv"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1315578025.14468.18.camel@michal-laptop>
+In-Reply-To: <ab6d59c609b0240ecf50257d0931cb1d.squirrel@www.maxstr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 27/09/2011 01:46, Kenn wrote:
+>>> On Mon, 26 Sep 2011 14:52:48 +1000
+>>> NeilBrown<neilb@suse.de>  wrote:
+>>>
+>>> On Sun, 25 Sep 2011 21:23:31 -0700 "Kenn"<kenn@kenn.us>  wrote:
+>>>
+>>> So that brings up another point -- I've been reading through your blog,
+>>> and I acknowledge your thoughts on not having much benefit to checksums on
+>>> every block (http://neil.brown.name/blog/20110227114201), but sometimes
+>>> people like to having that extra lock on their door even though it takes
+>>> more effort to go in and out of their home.  In my five-drive array, if
+>>> the last five words were the checksums of the blocks on every drive, the
+>>> checksums off each drive could vote on trusting the blocks of every other
+>>> drive during the rebuild process, and prevent an idiot (me) from killing
+>>> his data.  It would force wasteful sectors on the drive, perhaps harm
+>>> performance by squeezing 2+n bytes out of each sector, but if someone
+>>> wants to protect their data as much as possible, it would be a welcome
+>>> option where performance is not a priority.
+>>>
+>>> Also, the checksums do provide some protection: first, against against
+>>> partial media failure, which is a major flaw in raid 456 design according
+>>> to http://www.miracleas.com/BAARF/RAID5_versus_RAID10.txt , and checksum
+>>> voting could protect against the Atomicity/write-in-place flaw outlined in
+>>> http://en.wikipedia.org/wiki/RAID#Problems_with_RAID .
+>>>
+>>> What do you think?
+>>>
+>>> Kenn
+>> On Sun, 26 Sep 2011 19:56:50 -0700 "David Brown"
+> <david.brown@hesbynett.no>  wrote:
+>>
+>> /raid/ protects against partial media flaws.  If one disk in a raid5
+>> stripe has a bad sector, that sector will be ignored and the missing
+>> data will be re-created from the other disks using the raid recovery
+>> algorithm.  If you want to have such protection even when doing a resync
+>> (as many people do), then use raid6 - it has two parity blocks.
+>>
+>> As Neil points out in his blog, it is impossible to fully recover from a
+>> failure part way through a write - checksum voting or majority voting
+>> /may/ give you the right answer, but it may not.  If you need protection
+>> against that, you have to have filesystem level control (data logging
+>> and journalling as well as metafile journalling), or perhaps use raid
+>> systems with battery backed write caches.
+>
+>  From what I understand of basic RAID theory, the "If one disk in a raid5
+> stripe has a bad sector," is the part that's based on too much faith in
+> the hardware.  RAID trusts the hardware to send it errors when there are
+> read failures, and it's helpless when the drive reads garbage without an
+> error and returns it as a good read.  During a rebuild this will destroy a
+> good array.  This is the argument against RAID in the articles I listed,
+> and why checksums in the blocks would be helpful as they get around this
+> blind spot.  And they give early warning on reads that something is dying.
+>   Having each block's checksums in all the other blocks in the stripe lets
+> md detect a previously failed atomic write and give another early warning.
+>
+> I think for people coming from the "can't be too safe" mindset, these
+> checksums would be welcome, and basically, anyone who signs up for RAID5/6
+> already is choosing safety over performance.
+>
 
---=-p6p61j9fxM4kK0CBInvv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I think you have to be very clear on the difference between 
+/unrecoverable/ read errors and /undetected/ read errors.  Unrecoverable 
+read errors means the disk controller has seen more bit errors on the 
+disk surface than it is able to correct.  These are not a problem for 
+raid, because the disk controller returns an error message - the raid 
+system then re-creates the missing data from the rest of the stripe. 
+This is one of the main reasons for using raid in the first place.  It 
+/is/ a problem if such an URE occurs while you are already resyncing a 
+missing disk - and is therefore a major motivation behind raid6 (and 
+also Neil's "hotsync" plans).
 
-Thanks again for all the pointers, I will now describe my workflow that
-got me going with the new drives!
+/Undetected/ read errors are when the disk controller reads errors from 
+the disk surface, and the incorrect data passes the disk's RS and CRC 
+checksums.  The chances of this happening are absurdly small unless 
+there are faults in the drive electronics or firmware (in which case all 
+bets are off anyway).  Higher level checksums are one way to detect such 
+errors, as is regular data scrubbing.
 
-I'll try and do some ASCII-art [=3D=3D=3D used space, --- space (not drives=
-)
-used for parity].
-
-
-1. initial situation
-   -----------------
-    ~~1TB~~
-sda |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdb |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdc |=3D=3D=3D=3D=3D|
-sdd |=3D=3D=3D=3D=3D|
-sde |=3D=3D=3D=3D=3D|
-sdf |=3D=3D=3D=3D=3D|
-sdg |=3D=3D=3D=3D=3D|
-sdh |=3D=3D=3D=3D=3D|
-sdi |-----|
-sdj |-----|
-
-md1       |=3D=3D=3D=3D=3D|             -  2 x 1TB RAID0 =3D=3D 2TB
-md2 |=3D=3D=3D=3D=3D|                   - 10 x 1TB RAID6 =3D=3D 8TB
-
-
-2. added 4 x 2TB drives
-   --------------------
-sdk             |           |
-sdl             |           |
-sdm             |           |
-sdn             |-----------|
-
-md3             |           | -  5 x 2TB RAID6 =3D=3D 6TB (degraded)
-
-
-3. moved part of md2 data onto md3
-   ----------------------------------
-sda |     =3D=3D=3D=3D=3D=3D|
-sdb |     =3D=3D=3D=3D=3D=3D|
-sdc |=3D=3D=3D=3D=3D|
-sdd |=3D=3D=3D=3D=3D|
-sde |=3D    |
-sdf |     |
-sdg |     |
-sdh |     |
-sdi |-----|
-sdj |-----|
-sdk             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdl             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdm             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdn             |-----------|
-
-md1       |=3D=3D=3D=3D=3D|             -  2 x 1TB RAID0 =3D=3D 2TB
-md2 |=3D=3D   |                   - 10 x 1TB RAID6 =3D=3D 8TB
-md3             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D| -  5 x 2TB RAID6 =3D=3D=
- 6TB (degraded)
-
-
-4. shrunk and removed drives from md2
-   ----------------------------------
-sda |     =3D=3D=3D=3D=3D=3D|
-sdb |     =3D=3D=3D=3D=3D=3D|
-sdc |=3D=3D=3D=3D=3D|
-sdd |=3D=3D=3D=3D=3D|
-sde |=3D    |
-sdf |-----|
-sdg                         |     |
-sdh                         |     |
-sdi                         |     |
-sdj                         |     |
-sdk             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdl             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdm             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdn             |-----------|
-
-md1       |=3D=3D=3D=3D=3D|             -  2 x 1TB RAID0 =3D=3D 2TB
-md2 |=3D=3D=3D=3D |                   -  5 x 1TB RAID6 =3D=3D 3TB (degraded=
-)
-md3             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D| -  5 x 2TB RAID6 =3D=3D=
- 6TB (degraded)
-
-
-5. new arrays to free the old 2TB drives
-   and create an additional member for md4
-   ---------------------------------------
-sda             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdb             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdc |=3D=3D=3D=3D=3D|
-sdd |=3D=3D=3D=3D=3D|
-sde |=3D    |
-sdf |-----|
-sdg       |=3D=3D=3D=3D=3D|
-sdh       |=3D=3D=3D=3D=3D|
-sdi             |=3D=3D=3D=3D=3D|
-sdj                   |=3D=3D=3D=3D=3D|
-sdk             |           |
-sdl             |           |
-sdm             |-----------|
-sdn             |-----------|
-
-md4             |           | -  4 x 1TB RAID10 =3D=3D 2TB (degraded)
-md1       |=3D=3D=3D=3D=3D|             -  2 x 1TB RAID0 =3D=3D 2TB
-md2 |=3D=3D=3D=3D |                   -  5 x 1TB RAID6 =3D=3D 3TB (degraded=
-)
-md3             |=3D=3D=3D=3D=3D=3D=3D    | -  7 x 2TB RAID6 =3D=3D 10TB
-
-
-6. Moved rest of the data from md2,
-   dropped it and replaced a disk in md4
-   -------------------------------------
-sda             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdb             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdc             |=3D=3D=3D=3D=3D|
-sdg       |=3D=3D=3D=3D=3D|
-sdh       |=3D=3D=3D=3D=3D|
-sdj                   |=3D=3D=3D=3D=3D|
-sdk             |=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D|
-sdl             |           |
-sdm             |-----------|
-sdn             |-----------|
-
-md4             |           | -  4 x 1TB RAID10 =3D=3D 2TB (degraded)
-md1       |=3D=3D=3D=3D=3D|             -  2 x 1TB RAID0 =3D=3D 2TB
-md3             |=3D=3D=3D=3D=3D=3D=3D=3D=3D  | -  7 x 2TB RAID6 =3D=3D 10T=
-B
-
-
-And it only took two weeks! ;)
-
-And again, thanks for all the pointers I got on the list, it all
-happened without any data loss.
---=20
-Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
-
---=-p6p61j9fxM4kK0CBInvv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJOgYtcAAoJEGnv7NPGHSZFgYEQAI5be5Ov0BYQvR6+FdJJny8M
-10TemC95FmGL7NPuA1taYSMiynTncFgUH8gb6lnmTSQ6JDuOm3ec52fecmppSIY3
-sY+id924JAl8LCBiEYTbcHmHQl7EdxhAm2LaALxhxjpnib5qVT5Ph6cmgDEYR9Al
-uPE/bl05zmnLQdPh5QGokI7nvQBvCVeLW6G/r2cdYAt/4nLrKiJ5mpyTNSSG1EDs
-vZdN43ibTio4bjyarcRbUtjgrp8D+z3JwHPlR4uam7Rt79kYOoFT0pNjiXeTqb7B
-U65lkFZy/+Kv5uQeZ2ZhjCT+btAQ9iq7feX/iaqR5/qaPwaHLbpUz+MtW95HfJbG
-UETJTkSMJcTNh7DOjtp12jLh00soD3GZE9oH0vnpHhjTfZxU2uqHD547Yqsn50aA
-kNL7ncu1MVRljzKe6s8SPd0oqqsTm86oKbUkTXLSiDPqBNtjGiTCSCtjkXFzyo52
-iykymokhSjiOYm0gvFNByguyvAYqsumrYyas+GiOsgbZhBf9gNhS7BrN8ayfVIem
-zcqQGjLiSUaIGhVQWe6xZC46eUVWBjbmrMB0Z4a23sG7kjSC7Ufkz3105aKLecBp
-COpNYoHCwHIIyQ58b318EANQwwa0bKThFulrjSZK10LTCmJPFnAkvTV0Nn47wi9J
-zp47Vsze6LdZlt/R/kEE
-=JoZD
------END PGP SIGNATURE-----
-
---=-p6p61j9fxM4kK0CBInvv--
+It is correct that there is always a chance of incorrect data getting 
+through somewhere with undetected read errors.  I don't have any figures 
+on me, but I suspect that before these are a realistic worry then you 
+have bigger concerns about memory bit errors going undetected despite 
+ECC ram, and undetected network errors despite Ethernet and IP checksums.
 
