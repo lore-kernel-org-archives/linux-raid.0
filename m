@@ -1,48 +1,78 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: RAID6 issues
-Date: Tue, 27 Sep 2011 15:04:02 -0600
-Message-ID: <201109271504.02642.thomas@fjellstrom.ca>
-References: <CAGZH0-dz9y5=vH7PQr8VRy15i1WsuAxKjPPpmx8-1UqCaJnRxg@mail.gmail.com> <201109271246.10137.thomas@fjellstrom.ca> <4E822079.9020901@hardwarefreak.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Wed, 28 Sep 2011 09:13:35 +1000
+Message-ID: <20110928091335.1df35f8e@notabene.brown>
+References: <4E7EDE58.3000804@yazzy.org>
+	<20110926074002.6399de56@notabene.brown>
+	<4E7FA3E8.5010603@yazzy.org>
+	<20110926081853.2819622b@notabene.brown>
+	<4E804062.3020700@yazzy.org>
+	<20110926193130.6377f5b9@notabene.brown>
+	<4E82203A.60507@yazzy.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/kxTjlraYe+XxiVmE4qI9Fci"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E822079.9020901@hardwarefreak.com>
+In-Reply-To: <4E82203A.60507@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Andriano <chief000@gmail.com>, linux-raid@vger.kernel.org
+To: lists@yazzy.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> >On 9/27/2011 1:46 PM, Thomas Fjellstrom wrote:
+--Sig_/kxTjlraYe+XxiVmE4qI9Fci
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
->> Stan Hoeppner suggested the LSI SAS1068E card, which looks to be very nice.
->> Only slightly more expensive than the SASLP and well supported under linux.
->>
->> I'll hopefully be getting my hands on a LSI 9210-8i soon. Shortly there-
-after
->> I'll be selling my SASLP.
->
-> The 9210-8i is a newer generation card using the SAS2008 chip.  IOPS 
-> potential is over double that of the 1068E cards, 320M vs 140M, and 
-> you'll have support for drives larger than 2TB.  It also supports SATA3 
-> link speed whereas the 1068E chips only support SATA2.  It has a PCIe x8 
-> 2.0 interface for 8GB/s b/w, whereas the 1068E has a PCIe x8 1.0 
-> interface for only 4GB/s.
->
-> In short, it's has quite a bit more capability than the 1068E based cards.
+On Tue, 27 Sep 2011 21:12:58 +0200 "Marcin M. Jessa" <lists@yazzy.org> wrot=
+e:
+
+> On 9/26/11 11:31 AM, NeilBrown wrote:
+> > On Mon, 26 Sep 2011 11:05:38 +0200 "Marcin M. Jessa"<lists@yazzy.org>  =
+wrote:
+> >
+> >> On 9/26/11 12:18 AM, NeilBrown wrote:
+> >>
+> >>> Do you remember what filesystem you had on 'storage'?  Was it ext3 or=
+ ext4 or
+> >>> xfs or something else?
+> >>
+> >> You're giving me some hope here and then silence :)
+> >> Why did you ask about the file system? Should I run fsck on the LV ?
+> >>
+> >>
+> >>
+> >
+> > You already did run fsck on the LV.  It basically said that it didn't
+> > recognise the filesystem at all.
+> > I asked in case maybe it was XFS in which case a different tool would be
+> > required.
+>=20
+> Looks like I didn't remember correctly. I ran testdisk and it reported=20
+> the file system to be XFS. What would you suggest now Neil?
+>=20
+>=20
+
+Presumably
+   xfs_check /dev/fridge/storage
+
+and then maybe
+   xfs_repair /dev/fridge/storage
+
+but I have no experience with XFS - I'm just reading man pages.
+
+NeilBrown
 
 
-Yeah, i was impressed by the claimed specs. I bet if i knew how much it sells 
-for, i'd be shocked. I did a little searching but didn't have much luck.
+--Sig_/kxTjlraYe+XxiVmE4qI9Fci
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> -- 
-> Stan
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-p.s. Sory for the duplicate Stan, I couldn't figure out how to disable html on 
-my android mail client, and linux-raid bounced it.
+iD8DBQFOglifG5fc6gV+Wb0RAtc+AKC90q667dcXREefcHQSc3b3f/UDEACfX+pK
+vfj8fmXwiUIZ0rizvSc9zwQ=
+=Wltc
+-----END PGP SIGNATURE-----
 
---
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+--Sig_/kxTjlraYe+XxiVmE4qI9Fci--
