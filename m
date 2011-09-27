@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/8] Add continue option to grow command
-Date: Tue, 27 Sep 2011 14:04:48 +0200
-Message-ID: <20110927120448.4890.78828.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 1/8] Do not continue reshape during initrd phase
+Date: Tue, 27 Sep 2011 14:04:39 +0200
+Message-ID: <20110927120439.4890.75281.stgit@gklab-128-013.igk.intel.com>
 References: <20110927115845.4890.49289.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,256 +13,448 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-To allow for reshape continuation '--continue' option is added
-to grow command.
-Function that will be executed in grow-continue case doesn't require
-information about reshape geometry. All required information are read
-from metadata.
-For external metadata reshape can be run for monitored array/container
-only. In case when array/container is not monitored run mdmon for it.
+During initrd phase continuing reshape will cause file system context
+lost. This blocks ability to control reshape using checkpoints.
+
+To avoid this, during initrd phase assemble has to be executed with
+'--freeze-reshape' option. This causes that mdadm restores reshape
+critical section only.
+
+Reshape can be continued later after system full boot.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c   |  132 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- ReadMe.c |    1 
- mdadm.c  |   14 ++++++-
- mdadm.h  |    6 +++
- 4 files changed, 151 insertions(+), 2 deletions(-)
+ Assemble.c    |   12 +++++++-----
+ Grow.c        |   52 ++++++++++++++++++++++++++++++++++++++--------------
+ Incremental.c |   16 ++++++++++------
+ ReadMe.c      |    1 +
+ mdadm.c       |   33 ++++++++++++++++++++++++---------
+ mdadm.h       |   18 ++++++++++++++----
+ 6 files changed, 94 insertions(+), 38 deletions(-)
 
+diff --git a/Assemble.c b/Assemble.c
+index c6aad20..afca38e 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -138,7 +138,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 	     char *backup_file, int invalid_backup,
+ 	     int readonly, int runstop,
+ 	     char *update, char *homehost, int require_homehost,
+-	     int verbose, int force)
++	     int verbose, int force, int freeze_reshape)
+ {
+ 	/*
+ 	 * The task of Assemble is to find a collection of
+@@ -697,7 +697,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 		int err;
+ 		err = assemble_container_content(st, mdfd, content, runstop,
+ 						 chosen_name, verbose,
+-						 backup_file);
++						 backup_file, freeze_reshape);
+ 		close(mdfd);
+ 		return err;
+ 	}
+@@ -1344,7 +1344,8 @@ int Assemble(struct supertype *st, char *mddev,
+ #ifndef MDASSEMBLE
+ 			if (content->reshape_active &&
+ 			    content->delta_disks <= 0)
+-				rv = Grow_continue(mdfd, st, content, backup_file);
++				rv = Grow_continue(mdfd, st, content,
++						   backup_file, freeze_reshape);
+ 			else
+ #endif
+ 				rv = ioctl(mdfd, RUN_ARRAY, NULL);
+@@ -1511,7 +1512,7 @@ int Assemble(struct supertype *st, char *mddev,
+ int assemble_container_content(struct supertype *st, int mdfd,
+ 			       struct mdinfo *content, int runstop,
+ 			       char *chosen_name, int verbose,
+-			       char *backup_file)
++			       char *backup_file, int freeze_reshape)
+ {
+ 	struct mdinfo *dev, *sra;
+ 	int working = 0, preexist = 0;
+@@ -1560,7 +1561,8 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 					   spare, backup_file, verbose) == 1)
+ 				return 1;
+ 
+-			err = Grow_continue(mdfd, st, content, backup_file);
++			err = Grow_continue(mdfd, st, content, backup_file,
++					    freeze_reshape);
+ 		} else switch(content->array.level) {
+ 		case LEVEL_LINEAR:
+ 		case LEVEL_MULTIPATH:
 diff --git a/Grow.c b/Grow.c
-index 4509488..768fc86 100644
+index 4a25165..4509488 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -3636,6 +3636,138 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 	return 1;
+@@ -696,10 +696,16 @@ static int subarray_set_num(char *container, struct mdinfo *sra, char *name, int
+ 	return rc;
  }
  
-+int Grow_continue_command(char *devname, int fd,
-+			  char *backup_file, int verbose)
-+{
-+	int ret_val = 0;
-+	struct supertype *st = NULL;
-+	struct mdinfo *content = NULL;
-+	struct mdinfo array;
-+	char *subarray = NULL;
-+	struct mdinfo *cc = NULL;
-+	struct mdstat_ent *mdstat = NULL;
-+	char buf[40];
-+	int cfd = -1;
-+	int fd2 = -1;
+-int start_reshape(struct mdinfo *sra, int already_running)
++int start_reshape(struct mdinfo *sra, int already_running, int freeze_reshape)
+ {
+ 	int err;
+-	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
 +
-+	dprintf("Grow continue from command line called for %s\n",
-+		devname);
-+
-+	st = super_by_fd(fd, &subarray);
-+	if (!st || !st->ss) {
-+		fprintf(stderr,
-+			Name ": Unable to determine metadata format for %s\n",
-+			devname);
++	/* do not block array as we not continue reshape this time
++	 */
++	if (freeze_reshape == FREEZE_RESHAPE_NONE)
++		sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
++	else
++		sysfs_set_num(sra, NULL, "suspend_lo", 0);
+ 	err = sysfs_set_num(sra, NULL, "suspend_hi", 0);
+ 	err = err ?: sysfs_set_num(sra, NULL, "suspend_lo", 0);
+ 	if (!already_running)
+@@ -1344,13 +1350,13 @@ static int reshape_array(char *container, int fd, char *devname,
+ 			 struct supertype *st, struct mdinfo *info,
+ 			 int force, struct mddev_dev *devlist,
+ 			 char *backup_file, int quiet, int forked,
+-			 int restart);
++			 int restart, int freeze_reshape);
+ static int reshape_container(char *container, char *devname,
+ 			     struct supertype *st, 
+ 			     struct mdinfo *info,
+ 			     int force,
+ 			     char *backup_file,
+-			     int quiet, int restart);
++			     int quiet, int restart, int freeze_reshape);
+ 
+ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		 long long size,
+@@ -1761,7 +1767,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		 * performed at the level of the container
+ 		 */
+ 		rv = reshape_container(container, devname, st, &info,
+-				       force, backup_file, quiet, 0);
++				       force, backup_file, quiet, 0, 0);
+ 		frozen = 0;
+ 	} else {
+ 		/* get spare devices from external metadata
+@@ -1789,7 +1795,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		}
+ 		sync_metadata(st);
+ 		rv = reshape_array(container, fd, devname, st, &info, force,
+-				   devlist, backup_file, quiet, 0, 0);
++				   devlist, backup_file, quiet, 0, 0, 0);
+ 		frozen = 0;
+ 	}
+ release:
+@@ -1802,7 +1808,7 @@ static int reshape_array(char *container, int fd, char *devname,
+ 			 struct supertype *st, struct mdinfo *info,
+ 			 int force, struct mddev_dev *devlist,
+ 			 char *backup_file, int quiet, int forked,
+-			 int restart)
++			 int restart, int freeze_reshape)
+ {
+ 	struct reshape reshape;
+ 	int spares_needed;
+@@ -2241,7 +2247,7 @@ started:
+ 		}
+ 	}
+ 
+-	err = start_reshape(sra, restart);
++	err = start_reshape(sra, restart, freeze_reshape);
+ 	if (err) {
+ 		fprintf(stderr, 
+ 			Name ": Cannot %s reshape for %s\n",
+@@ -2251,6 +2257,15 @@ started:
+ 	}
+ 	if (restart)
+ 		sysfs_set_str(sra, NULL, "array_state", "active");
++	if (freeze_reshape == FREEZE_RESHAPE_ASSEMBLY) {
++		free(fdlist);
++		free(offsets);
++		sysfs_free(sra);
++		fprintf(stderr, Name ": Reshape has to be continued from"
++			" location %llu when root fileststem will be mounted\n",
++			sra->reshape_progress);
 +		return 1;
 +	}
-+	dprintf("Grow continue is run for ");
-+	if (st->ss->external == 0) {
-+		dprintf("native array (%s)\n", devname);
-+		if (ioctl(fd, GET_ARRAY_INFO, &array) < 0) {
-+			fprintf(stderr, Name ": %s is not an active md array -"
-+				" aborting\n", devname);
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+		content = &array;
-+		sysfs_init(content, fd, st->devnum);
-+	} else {
-+		int container_dev;
-+
-+		if (subarray) {
-+			dprintf("subarray (%s)\n", subarray);
-+			container_dev = st->container_dev;
-+			cfd = open_dev_excl(st->container_dev);
-+		} else {
-+			container_dev = st->devnum;
-+			close(fd);
-+			cfd = open_dev_excl(st->devnum);
-+			dprintf("container (%i)\n", container_dev);
-+			fd = cfd;
-+		}
-+		if (cfd < 0) {
-+			fprintf(stderr, Name ": Unable to open container "
-+				"for %s\n", devname);
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+		fmt_devname(buf, container_dev);
-+
-+		/* find in container array under reshape
-+		 */
-+		ret_val = st->ss->load_container(st, cfd, NULL);
-+		if (ret_val) {
-+			fprintf(stderr,
-+				Name ": Cannot read superblock for %s\n",
-+				devname);
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+
-+		cc = st->ss->container_content(st, NULL);
-+		for (content = cc; content ; content = content->next) {
-+			char *array;
-+
-+			if (content->reshape_active == 0)
-+				continue;
-+
-+			array = strchr(content->text_version+1, '/')+1;
-+			mdstat = mdstat_by_subdev(array, container_dev);
-+			if (!mdstat)
-+				continue;
-+			break;
-+		}
-+		if (!content) {
-+			fprintf(stderr,
-+				Name ": Unable to determine reshaped "
-+				"array for %s\n", devname);
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+		fd2 = open_dev(mdstat->devnum);
-+		if (fd2 < 0) {
-+			fprintf(stderr, Name ": cannot open (md%i)\n",
-+				mdstat->devnum);
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+
-+		sysfs_init(content, fd2, mdstat->devnum);
-+
-+		/* start mdmon in case it is not run
-+		 */
-+		if (!mdmon_running(container_dev))
-+			start_mdmon(container_dev);
-+		ping_monitor(buf);
-+
-+		if (mdmon_running(container_dev))
-+			st->update_tail = &st->updates;
-+		else {
-+			fprintf(stderr, Name ":  No mdmon found. "
-+				"Grow cannot continue.\n");
-+			ret_val = 1;
-+			goto Grow_continue_command_exit;
-+		}
-+	}
-+
-+	/* continue reshape
-+	 */
-+	ret_val = Grow_continue(fd, st, content, backup_file,
-+				FREEZE_RESHAPE_NONE);
-+
-+Grow_continue_command_exit:
-+	if (fd2 > -1)
-+		close(fd2);
-+	if (cfd > -1)
-+		close(cfd);
-+	st->ss->free_super(st);
-+	free_mdstat(mdstat);
-+	sysfs_free(cc);
-+	free(subarray);
-+
-+	return ret_val;
-+}
-+
- int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
- 		  char *backup_file, int freeze_reshape)
+ 
+ 	/* Now we just need to kick off the reshape and watch, while
+ 	 * handling backups of the data...
+@@ -2389,7 +2404,7 @@ int reshape_container(char *container, char *devname,
+ 		      struct mdinfo *info,
+ 		      int force,
+ 		      char *backup_file,
+-		      int quiet, int restart)
++		      int quiet, int restart, int freeze_reshape)
  {
+ 	struct mdinfo *cc = NULL;
+ 	int rv = restart;
+@@ -2418,7 +2433,9 @@ int reshape_container(char *container, char *devname,
+ 		unfreeze(st);
+ 		return 1;
+ 	default: /* parent */
+-		printf(Name ": multi-array reshape continues in background\n");
++		if (freeze_reshape == FREEZE_RESHAPE_NONE)
++			printf(Name ": multi-array reshape continues"
++			       "in background\n");
+ 		return 0;
+ 	case 0: /* child */
+ 		break;
+@@ -2473,8 +2490,15 @@ int reshape_container(char *container, char *devname,
+ 
+ 		rv = reshape_array(container, fd, adev, st,
+ 				   content, force, NULL,
+-				   backup_file, quiet, 1, restart);
++				   backup_file, quiet, 1, restart,
++				   freeze_reshape);
+ 		close(fd);
++
++		if (freeze_reshape) {
++			sysfs_free(cc);
++			exit(0);
++		}
++
+ 		restart = 0;
+ 		if (rv)
+ 			break;
+@@ -3613,7 +3637,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
+ }
+ 
+ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+-		  char *backup_file)
++		  char *backup_file, int freeze_reshape)
+ {
+ 	char buf[40];
+ 	char *container = NULL;
+@@ -3640,9 +3664,9 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+ 			close(cfd);
+ 			return reshape_container(container, NULL,
+ 						 st, info, 0, backup_file,
+-						 0, 1);
++						 0, 1, freeze_reshape);
+ 		}
+ 	}
+ 	return reshape_array(container, mdfd, "array", st, info, 1,
+-			     NULL, backup_file, 0, 0, 1);
++			     NULL, backup_file, 0, 0, 1, freeze_reshape);
+ }
+diff --git a/Incremental.c b/Incremental.c
+index 791ad85..571d45d 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -44,7 +44,8 @@ static int try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 
+ static int Incremental_container(struct supertype *st, char *devname,
+ 				 char *homehost,
+-				 int verbose, int runstop, int autof);
++				 int verbose, int runstop, int autof,
++				 int freeze_reshape);
+ 
+ static struct mddev_ident *search_mdstat(struct supertype *st,
+ 					   struct mdinfo *info,
+@@ -53,7 +54,7 @@ static struct mddev_ident *search_mdstat(struct supertype *st,
+ 
+ int Incremental(char *devname, int verbose, int runstop,
+ 		struct supertype *st, char *homehost, int require_homehost,
+-		int autof)
++		int autof, int freeze_reshape)
+ {
+ 	/* Add this device to an array, creating the array if necessary
+ 	 * and starting the array if sensible or - if runstop>0 - if possible.
+@@ -140,7 +141,8 @@ int Incremental(char *devname, int verbose, int runstop,
+ 		close(dfd);
+ 		if (!rv && st->ss->container_content)
+ 			return Incremental_container(st, devname, homehost,
+-						     verbose, runstop, autof);
++						     verbose, runstop, autof,
++						     freeze_reshape);
+ 
+ 		fprintf(stderr, Name ": %s is not part of an md array.\n",
+ 			devname);
+@@ -450,7 +452,8 @@ int Incremental(char *devname, int verbose, int runstop,
+ 		close(mdfd);
+ 		sysfs_free(sra);
+ 		rv = Incremental(chosen_name, verbose, runstop,
+-				 NULL, homehost, require_homehost, autof);
++				 NULL, homehost, require_homehost, autof,
++				 freeze_reshape);
+ 		if (rv == 1)
+ 			/* Don't fail the whole -I if a subarray didn't
+ 			 * have enough devices to start yet
+@@ -1416,7 +1419,7 @@ static char *container2devname(char *devname)
+ 
+ static int Incremental_container(struct supertype *st, char *devname,
+ 				 char *homehost, int verbose,
+-				 int runstop, int autof)
++				 int runstop, int autof, int freeze_reshape)
+ {
+ 	/* Collect the contents of this container and for each
+ 	 * array, choose a device name and assemble the array.
+@@ -1551,7 +1554,8 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 		}
+ 
+ 		assemble_container_content(st, mdfd, ra, runstop,
+-					   chosen_name, verbose, NULL);
++					   chosen_name, verbose, NULL,
++					   freeze_reshape);
+ 		close(mdfd);
+ 	}
+ 
 diff --git a/ReadMe.c b/ReadMe.c
-index 89dd7af..25426d3 100644
+index b658841..89dd7af 100644
 --- a/ReadMe.c
 +++ b/ReadMe.c
-@@ -191,6 +191,7 @@ struct option long_options[] = {
-     {"backup-file", 1,0, BackupFile},
-     {"invalid-backup",0,0,InvalidBackup},
-     {"array-size", 1, 0, 'Z'},
-+    {"continue", 0, 0, Continue},
+@@ -153,6 +153,7 @@ struct option long_options[] = {
+     {"scan",      0, 0, 's'},
+     {"force",	  0, 0, Force},
+     {"update",	  1, 0, 'U'},
++    {"freeze-reshape", 0, 0, FreezeReshape},
  
-     /* For Incremental */
-     {"rebuild-map", 0, 0, RebuildMapOpt},
+     /* Management */
+     {"add",       0, 0, Add},
 diff --git a/mdadm.c b/mdadm.c
-index 18ca2ee..9fe09ea 100644
+index 1533510..18ca2ee 100644
 --- a/mdadm.c
 +++ b/mdadm.c
-@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
- 	int export = 0;
- 	int assume_clean = 0;
- 	char *symlinks = NULL;
-+	int grow_continue = FREEZE_RESHAPE_NONE;
- 	/* autof indicates whether and how to create device node.
- 	 * bottom 3 bits are style.  Rest (when shifted) are number of parts
- 	 * 0  - unset
-@@ -995,7 +996,11 @@ int main(int argc, char *argv[])
- 			}
- 			backup_file = optarg;
+@@ -112,6 +112,8 @@ int main(int argc, char *argv[])
+ 
+ 	int mdfd = -1;
+ 
++	int freeze_reshape = FREEZE_RESHAPE_NONE;
++
+ 	srandom(time(0) ^ getpid());
+ 
+ 	ident.uuid_set=0;
+@@ -612,8 +614,12 @@ int main(int argc, char *argv[])
+ 		case O(MANAGE,Force): /* add device which is too large */
+ 			force=1;
  			continue;
 -
-+		case O(GROW, Continue):
-+			/* Continuer broken grow
-+			 */
-+			grow_continue = FREEZE_RESHAPE_CONTINUE;
+ 			/* now for the Assemble options */
++		case O(ASSEMBLE, FreezeReshape):   /* Freeze reshape during
++						    * initrd phase */
++		case O(INCREMENTAL, FreezeReshape):
++			freeze_reshape = FREEZE_RESHAPE_ASSEMBLY;
 +			continue;
- 		case O(ASSEMBLE, InvalidBackup):
- 			/* Acknowledge that the backupfile is invalid, but ask
- 			 * to continue anyway
-@@ -1649,7 +1654,12 @@ int main(int argc, char *argv[])
- 				delay = DEFAULT_BITMAP_DELAY;
- 			rv = Grow_addbitmap(devlist->devname, mdfd, bitmap_file,
- 					    bitmap_chunk, delay, write_behind, force);
--		} else if (size >= 0 || raiddisks != 0 || layout_str != NULL
-+		} else if (grow_continue) {
-+			rv = Grow_continue_command(devlist->devname,
-+						   mdfd, backup_file,
-+						   verbose);
-+			break;
-+		} else	if (size >= 0 || raiddisks != 0 || layout_str != NULL
- 			   || chunk != 0 || level != UnSet) {
- 			rv = Grow_reshape(devlist->devname, mdfd, quiet, backup_file,
- 					  size, level, layout_str, chunk, raiddisks,
+ 		case O(CREATE,'u'): /* uuid of array */
+ 		case O(ASSEMBLE,'u'): /* uuid of array */
+ 			if (ident.uuid_set) {
+@@ -1228,14 +1234,16 @@ int main(int argc, char *argv[])
+ 					       NULL, backup_file, invalid_backup,
+ 					       readonly, runstop, update,
+ 					       homehost, require_homehost,
+-					       verbose-quiet, force);
++					       verbose-quiet, force,
++					       freeze_reshape);
+ 			}
+ 		} else if (!scan)
+ 			rv = Assemble(ss, devlist->devname, &ident,
+ 				      devlist->next, backup_file, invalid_backup,
+ 				      readonly, runstop, update,
+ 				      homehost, require_homehost,
+-				      verbose-quiet, force);
++				      verbose-quiet, force,
++				      freeze_reshape);
+ 		else if (devs_found>0) {
+ 			if (update && devs_found > 1) {
+ 				fprintf(stderr, Name ": can only update a single array at a time\n");
+@@ -1259,7 +1267,8 @@ int main(int argc, char *argv[])
+ 					       NULL, backup_file, invalid_backup,
+ 					       readonly, runstop, update,
+ 					       homehost, require_homehost,
+-					       verbose-quiet, force);
++					       verbose-quiet, force,
++					       freeze_reshape);
+ 			}
+ 		} else {
+ 			struct mddev_ident *a, *array_list =  conf_get_ident(NULL);
+@@ -1300,7 +1309,8 @@ int main(int argc, char *argv[])
+ 						     NULL, NULL, 0,
+ 						     readonly, runstop, NULL,
+ 						     homehost, require_homehost,
+-						     verbose-quiet, force);
++						     verbose-quiet, force,
++						     freeze_reshape);
+ 					if (r == 0) {
+ 						a->assembled = 1;
+ 						successes++;
+@@ -1325,9 +1335,13 @@ int main(int argc, char *argv[])
+ 						rv2 = Assemble(ss, NULL,
+ 							       &ident,
+ 							       devlist, NULL, 0,
+-							       readonly, runstop, NULL,
+-							       homehost, require_homehost,
+-							       verbose-quiet, force);
++							       readonly,
++							       runstop, NULL,
++							       homehost,
++							       require_homehost,
++							       verbose-quiet,
++							       force,
++							       freeze_reshape);
+ 						if (rv2==0) {
+ 							cnt++;
+ 							acnt++;
+@@ -1681,7 +1695,8 @@ int main(int argc, char *argv[])
+ 		else
+ 			rv = Incremental(devlist->devname, verbose-quiet,
+ 					 runstop, ss, homehost,
+-					 require_homehost, autof);
++					 require_homehost, autof,
++					 freeze_reshape);
+ 		break;
+ 	case AUTODETECT:
+ 		autodetect();
 diff --git a/mdadm.h b/mdadm.h
-index 073deb9..8f3e786 100644
+index 8dd37d9..073deb9 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -314,6 +314,7 @@ enum special_options {
+@@ -313,6 +313,7 @@ enum special_options {
+ 	RebuildMapOpt,
  	InvalidBackup,
  	UdevRules,
- 	FreezeReshape,
-+	Continue,
++	FreezeReshape,
  };
  
  /* structures read from config file */
-@@ -1037,9 +1038,11 @@ extern int Grow_continue(int mdfd, struct supertype *st,
- /* define stages for freeze assembly feature
-  * FREEZE_RESHAPE_NONE     : disabled
-  * FREEZE_RESHAPE_ASSEMBLY : assemby phase
-+ * FREEZE_RESHAPE_CONTINUE : grow continue phase
-  */
- #define FREEZE_RESHAPE_NONE		0
- #define FREEZE_RESHAPE_ASSEMBLY		1
-+#define FREEZE_RESHAPE_CONTINUE		2
- 
+@@ -1030,7 +1031,16 @@ extern int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ extern int Grow_restart(struct supertype *st, struct mdinfo *info,
+ 			int *fdlist, int cnt, char *backup_file, int verbose);
+ extern int Grow_continue(int mdfd, struct supertype *st,
+-			 struct mdinfo *info, char *backup_file);
++			 struct mdinfo *info, char *backup_file,
++			 int freeze_reshape);
++
++/* define stages for freeze assembly feature
++ * FREEZE_RESHAPE_NONE     : disabled
++ * FREEZE_RESHAPE_ASSEMBLY : assemby phase
++ */
++#define FREEZE_RESHAPE_NONE		0
++#define FREEZE_RESHAPE_ASSEMBLY		1
++
  extern int restore_backup(struct supertype *st,
  			  struct mdinfo *content,
-@@ -1047,6 +1050,8 @@ extern int restore_backup(struct supertype *st,
- 			  int spares,
- 			  char *backup_file,
- 			  int verbose);
-+extern int Grow_continue_command(char *devname, int fd,
-+				 char *backup_file, int verbose);
+ 			  int working_disks,
+@@ -1044,7 +1054,7 @@ extern int Assemble(struct supertype *st, char *mddev,
+ 		    char *backup_file, int invalid_backup,
+ 		    int readonly, int runstop,
+ 		    char *update, char *homehost, int require_homehost,
+-		    int verbose, int force);
++		    int verbose, int force, int freeze_reshape);
  
- extern int Assemble(struct supertype *st, char *mddev,
- 		    struct mddev_ident *ident,
-@@ -1185,6 +1190,7 @@ extern char *human_size(long long bytes);
- extern char *human_size_brief(long long bytes);
- extern void print_r10_layout(int layout);
+ extern int Build(char *mddev, int chunk, int level, int layout,
+ 		 int raiddisks, struct mddev_dev *devlist, int assume_clean,
+@@ -1078,7 +1088,7 @@ extern int WaitClean(char *dev, int sock, int verbose);
  
-+
- #define NoMdDev (1<<23)
- extern int find_free_devnum(int use_partitions);
- 
+ extern int Incremental(char *devname, int verbose, int runstop,
+ 		       struct supertype *st, char *homehost, int require_homehost,
+-		       int autof);
++		       int autof, int freeze_reshape);
+ extern void RebuildMap(void);
+ extern int IncrementalScan(int verbose);
+ extern int IncrementalRemove(char *devname, char *path, int verbose);
+@@ -1157,7 +1167,7 @@ extern void append_metadata_update(struct supertype *st, void *buf, int len);
+ extern int assemble_container_content(struct supertype *st, int mdfd,
+ 				      struct mdinfo *content, int runstop,
+ 				      char *chosen_name, int verbose,
+-				      char *backup_file);
++				      char *backup_file, int freeze_reshape);
+ extern struct mdinfo *container_choose_spares(struct supertype *st,
+ 					      unsigned long long min_size,
+ 					      struct domainlist *domlist,
 
