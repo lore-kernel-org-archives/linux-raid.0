@@ -1,51 +1,33 @@
-From: "Marcin M. Jessa" <lists@yazzy.org>
-Subject: Re: Creating an md with 3TB drives.
-Date: Wed, 28 Sep 2011 17:09:00 +0200
-Message-ID: <4E83388C.9010308@yazzy.org>
-References: <4E82D53F.3050409@yazzy.org> <20110928182302.39cfd4b0@notabene.brown> <4E82DB7D.4050104@yazzy.org> <j5umop$6sr$1@dough.gmane.org>
-Reply-To: lists@yazzy.org
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Wed, 28 Sep 2011 11:12:08 -0500
+Message-ID: <4E834758.2090508@hardwarefreak.com>
+References: <4E7EDE58.3000804@yazzy.org> <20110926074002.6399de56@notabene.brown> <4E7FA3E8.5010603@yazzy.org> <20110926081853.2819622b@notabene.brown> <4E804062.3020700@yazzy.org> <20110926193130.6377f5b9@notabene.brown> <4E82203A.60507@yazzy.org> <20110928091335.1df35f8e@notabene.brown> <4E828B92.40502@hardwarefreak.com> <4E82C862.8000705@yazzy.org>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j5umop$6sr$1@dough.gmane.org>
+In-Reply-To: <4E82C862.8000705@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Brown <david@westcontrol.com>
+To: lists@yazzy.org
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9/28/11 10:43 AM, David Brown wrote:
-> On 28/09/2011 10:31, Marcin M. Jessa wrote:
->> On 9/28/11 10:23 AM, NeilBrown wrote:
->> [...]
->>
->>>>
->>>> Then I used fdisk to change the partition type to Linux raid auto
->>>
->>> You can do that if you like but it will have no effect. The "raid auto"
->>> partition type only means anything on MBR partitions. You don't need
->>> to, so
->>> don't bother.
->>
->> Thanks Neil.
->> Not using fdisk worked like a charm.
->>
+On 9/28/2011 2:10 AM, Marcin M. Jessa wrote:
+> On 9/28/11 4:50 AM, Stan Hoeppner wrote:
 >
-> Using fdisk probably resulted in the disks going over to MBR rather than
-> GPT, and thus you have a 2TB limit.
+>> Reading the thread, and the many like it over the past months/years, may
+>> yield a clue as to why you wish to move on to something other than Linux
+>> RAID...
 >
-> By the way, you should probably try the parted again and fix the
-> alignment issue (rather than just "ignoring" it) - it will make a /big/
-> difference.
+> :) I will give it another chance.
+> In case of failure FreeBSD and ZFS would be another option.
 
-In terms of speed?
-This RAID array is temporarily just so I can back up/restore my broken 
-5x2TB RAID6 but it would be interesting to know what to do.
-I was running
-  # parted -a optimal /dev/sdd
-which was suppose to fix that warning but it didn't.
-
+I was responding to Neil's exhaustion with mdadm.  I was speculating 
+that help threads such as yours may be a contributing factor, 
+requesting/requiring Neil to become Superman many times per month to try 
+to save some OP's bacon.
 
 -- 
-
-Marcin M. Jessa
+Stan
