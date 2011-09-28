@@ -1,39 +1,61 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Wed, 28 Sep 2011 09:51:25 +0200
-Message-ID: <j5ujma$k50$1@dough.gmane.org>
-References: <4E7EDE58.3000804@yazzy.org> <20110926074002.6399de56@notabene.brown> <4E7FA3E8.5010603@yazzy.org> <20110926081853.2819622b@notabene.brown> <4E804062.3020700@yazzy.org> <20110926193130.6377f5b9@notabene.brown> <4E82203A.60507@yazzy.org> <20110928091335.1df35f8e@notabene.brown> <4E828B92.40502@hardwarefreak.com> <4E82C862.8000705@yazzy.org>
+From: "Marcin M. Jessa" <lists@yazzy.org>
+Subject: Creating an md with 3TB drives.
+Date: Wed, 28 Sep 2011 10:05:19 +0200
+Message-ID: <4E82D53F.3050409@yazzy.org>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E82C862.8000705@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 28/09/2011 09:10, Marcin M. Jessa wrote:
-> On 9/28/11 4:50 AM, Stan Hoeppner wrote:
->
->> Reading the thread, and the many like it over the past months/years, may
->> yield a clue as to why you wish to move on to something other than Linux
->> RAID...
->
-> :) I will give it another chance.
-> In case of failure FreeBSD and ZFS would be another option.
->
->
-
-Don't forget that in the face of 3 disk drives that suddenly decide to 
-play silly buggers, /no/ raid system will cope well.  You are not having 
-a problem because of Linux software raid problems - your problem is due 
-to bad hardware.  If you had a similar situation with a hardware raid 
-system, it is quite unlikely that you would have had any chance of 
-recovering your raid.  What spoiled your chances of recovery here is the 
-unfortunate bad advice you found on a website - but that won't happen 
-again, since you now know to post here before trying anything!
-
-The key lesson to take away from this experience is to set up a backup 
-solution /before/ disaster strikes :-)
+Hi guys.
 
 
+I have two 3TB drives and I want to set them up as RAID0.
+The problem is I can't use all of the space on them.
+I only get 4TB of the 6 in total.
+
+What I tried was:
+# parted /dev/sde
+GNU Parted 2.3
+Using /dev/sde
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted)  mklabel gpt
+Warning: The existing disk label on /dev/sde will be destroyed and all 
+data on this disk will be lost. Do you want
+to continue?
+Yes/No? yes
+(parted) mkpart primary 0 -0
+Warning: The resulting partition is not properly aligned for best 
+performance.
+Ignore/Cancel? ignore
+(parted) print
+Model: ATA Hitachi HDS72303 (scsi)
+Disk /dev/sde: 3001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name     Flags
+  1      17.4kB  3001GB  3001GB               primary
+
+(parted) quit
+
+Then I used fdisk to change the partition type to Linux raid auto
+
+Finally I ran
+mdadm --create /dev/md2 --level=0 --raid-devices=2 /dev/sdd1 /dev/sde1
+
+but mdadm -QD /dev/md2 shows 2TBs are gone.
+Array Size : 4294964224 (4096.00 GiB 4398.04 GB)
+
+What to do in this case? How can I a 6TB raid array ?
+
+
+
+
+-- 
+
+Marcin M. Jessa
