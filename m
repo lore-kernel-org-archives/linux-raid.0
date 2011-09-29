@@ -1,69 +1,79 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH] fix: correct unlocking of map file
-Date: Thu, 29 Sep 2011 09:55:20 +0200
-Message-ID: <20110929075520.5470.28705.stgit@gklab-128-085.igk.intel.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: Recovery of failed RAID 6 and LVM
+Date: Thu, 29 Sep 2011 11:03:09 +0200
+Message-ID: <j61ceo$rt2$1@dough.gmane.org>
+References: <4E7EDE58.3000804@yazzy.org> <20110926074002.6399de56@notabene.brown> <4E7FA3E8.5010603@yazzy.org> <20110926081853.2819622b@notabene.brown> <4E804062.3020700@yazzy.org> <20110926193130.6377f5b9@notabene.brown> <4E82203A.60507@yazzy.org> <20110928091335.1df35f8e@notabene.brown> <4E828B92.40502@hardwarefreak.com> <4E82C862.8000705@yazzy.org> <4E834758.2090508@hardwarefreak.com> <20110929094910.2c44ff8a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20110929094910.2c44ff8a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-1. Three missing map_unlock() calls were added.
-2. Map file's lock must be released by an explicit LOCK_UN operation,
-   because duplicated (e.g. created by fork()) descriptors
-   inherit the lock. As a result child process which inherits open
-   descriptors with lock can block another process of mdadm.
+On 29/09/2011 01:49, NeilBrown wrote:
+> On Wed, 28 Sep 2011 11:12:08 -0500 Stan Hoeppner<stan@hardwarefreak.com>
+> wrote:
+>
+>> On 9/28/2011 2:10 AM, Marcin M. Jessa wrote:
+>>> On 9/28/11 4:50 AM, Stan Hoeppner wrote:
+>>>
+>>>> Reading the thread, and the many like it over the past months/years, may
+>>>> yield a clue as to why you wish to move on to something other than Linux
+>>>> RAID...
+>>>
+>>> :) I will give it another chance.
+>>> In case of failure FreeBSD and ZFS would be another option.
+>>
+>> I was responding to Neil's exhaustion with mdadm.  I was speculating
+>> that help threads such as yours may be a contributing factor,
+>> requesting/requiring Neil to become Superman many times per month to try
+>> to save some OP's bacon.
+>>
+>
+> No, I don't really think they are a factor - though thanks for thinking
+> about it.
+>
+> Obviously not all "help threads" end with a good result but quite a few do
+> and one has to take the rough with the smooth.
+> And each help thread is a potential learning experience.  If I see patterns
+> of failure recurring it will guide and motivate me to improve md or mdadm to
+> make that failure mode less likely.
+>
+> I think it is simply that it isn't new any more.  I first started
+> contributing to md early in 2000, and 11 years is a long time.  Not as long
+> as Mr Torvalds has works on Linux of course, but Linux is a lot bigger than
+> md so there is more room to be interested.
+> There have been many highlights over that time, but the ones that stick in my
+> memory is when others have contributed in significant ways.  I really value
+> that, whether it is code, or review or documentation, or making a wiki or
+> answering mailing lists questions before I do, or even putting extra time in
+> to reproduce a bug so we can drill down to the cause.
+>
+> I figure that appearing competent capable and in control isn't going to
+> attract new blood - new blood wants wide open frontiers with lots of
+> opportunity (I started in md when it was essentially unmaintained - I know
+> the attraction).  So I just want to say that there is certainly room and
+> opportunity over here.
+>
+> I'm not about to drop md, but I would love an apprentice or two (or 3 or 4)
+> and would aim to provide the same mix of independence and oversight as Linus
+> does.
+>
+> NeilBrown
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- Incremental.c |    3 +++
- mapfile.c     |    4 ++++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+One challenge for getting apprentices in this particular area is the 
+hardware costs.  For someone to be able to really help you out in 
+development and serious testing of md, they are going to need access to 
+a machine with plenty of disks, preferably with hotplug bays and with a 
+mix of hdds and ssds.  That's going to out of reach for many potential 
+assistants - it is hard enough finding someone with the required talent, 
+interest and time to spend on md/mdadm.  Finding people with money - 
+especially people using md raid professionally - should be a lot easier. 
+  So if there is anyone out there who is willing and able to contribute 
+seriously to md/mdadm, but is hindered by lack of hardware, then I for 
+one would be willing to contribute to a fund to help out.
 
-diff --git a/Incremental.c b/Incremental.c
-index 571d45d..b90089b 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -1472,6 +1472,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 					"Cannot activate array(s).\n");
- 		/* free container data and exit */
- 		sysfs_free(list);
-+		map_unlock(&map);
- 		return 2;
- 	}
- 
-@@ -1535,6 +1536,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 					fprintf(stderr, Name ": array %s/%s is "
- 						"explicitly ignored by mdadm.conf\n",
- 						match->container, match->member);
-+				map_unlock(&map);
- 				return 2;
- 			}
- 			if (match)
-@@ -1550,6 +1552,7 @@ static int Incremental_container(struct supertype *st, char *devname,
- 		if (mdfd < 0) {
- 			fprintf(stderr, Name ": failed to open %s: %s.\n",
- 				chosen_name, strerror(errno));
-+			map_unlock(&map);
- 			return 2;
- 		}
- 
-diff --git a/mapfile.c b/mapfile.c
-index ff1e973..98c0780 100644
---- a/mapfile.c
-+++ b/mapfile.c
-@@ -149,6 +149,10 @@ int map_lock(struct map_ent **melp)
- void map_unlock(struct map_ent **melp)
- {
- 	if (lf) {
-+		/* lock must be released by an explicit LOCK_UN operation
-+		 * because duplicated descriptors inherit the lock
-+		 */
-+		flock(fileno(lf), LOCK_UN);
- 		/* must unlink before closing the file,
- 		 * as only the owner of the lock may
- 		 * unlink the file
+
 
