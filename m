@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 2/3] FIX: Block array monitoring if any array is under reshape
-	in container
-Date: Thu, 29 Sep 2011 17:53:45 +0200
-Message-ID: <20110929155345.22854.96027.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 3/3] FIX: Remove error message during reshape restart (v2)
+Date: Thu, 29 Sep 2011 17:53:54 +0200
+Message-ID: <20110929155353.22854.5948.stgit@gklab-128-013.igk.intel.com>
 References: <20110929154756.22854.13187.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -23,175 +22,129 @@ To block whole container during reshape we have 2 cases:
   1. first assembled array is not reshaped and second is under reshape
   2. first assembled array not reshaped and second is not under reshape
 
-This patch addresses first case.
-  If current array is under reshape, block it. Second not reshaped array
-  will be blocked if container has any blocked array.
+This patch addresses second case.
+  First assembled array is not reshaped and not blocked. Second reshaped
+  array is under reshape and it is blocked. When all reshaped array
+  parameters are verified and set in reshape continue freeze_container()
+  function block all other present in container and not blocked array(s).
+
+This call to freeze_container() serves for native metadata case also.
+
+This patch replaces its previous version that hides error message only.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Assemble.c |   19 +++++++++++++++++--
- Grow.c     |   28 ++++++++++++++++++++++++++++
- mdadm.h    |    2 ++
- msg.c      |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- msg.h      |    1 +
- 5 files changed, 100 insertions(+), 2 deletions(-)
+ Grow.c |   18 +++++++++---------
+ msg.c  |   10 +++++++---
+ msg.h  |    2 +-
+ 3 files changed, 17 insertions(+), 13 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index c6aad20..59ce650 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1526,8 +1526,23 @@ int assemble_container_content(struct supertype *st, int mdfd,
- 		if (sysfs_set_array(content, md_get_version(mdfd)) != 0)
- 			return 1;
- 
--	if (content->reshape_active)
--		block_subarray(content);
-+
-+	if (st->ss->external) {
-+		if (content->reshape_active) {
-+			/* Current array in container is under reshape
-+			 * block it from monitoring
-+			 */
-+			block_subarray(content);
-+		} else {
-+			/* If any previously assembled array is under reshape
-+			 * currently assembled array have to be blocked before
-+			 * array activation also.
-+			 * Check if any array in container is blocked
-+			 * and do the same for this one.
-+			 */
-+			block_array_if_any_is_blocked(st, content);
-+		}
-+	}
- 
- 	if (sra)
- 		sysfs_free(sra);
 diff --git a/Grow.c b/Grow.c
-index 4a25165..3e13c8f 100644
+index 3e13c8f..8f75ab8 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -539,6 +539,34 @@ static int check_idle(struct supertype *st)
- 	return is_idle;
+@@ -566,8 +566,7 @@ int block_array_if_any_is_blocked(struct supertype *st, struct mdinfo *content)
+ 	return 1;
  }
  
-+/* Block currently assembed array if any array in container
-+ * is blocked.
-+ * Function has to be used during container assembly
-+ * to make sure that all arrays in container are blocked
-+ * if one is under reshape.
-+ * This restores situation when reshape is started when
-+ * all container components are blocked.
-+ */
-+int block_array_if_any_is_blocked(struct supertype *st, struct mdinfo *content)
-+{
-+	int container_dev = (st->container_dev != NoMdDev
-+			     ? st->container_dev : st->devnum);
-+	char buf[1024];
-+
-+	fmt_devname(buf, container_dev);
-+
-+	if (check_blocked_monitor(buf) > 0) {
-+		if (sysfs_get_str(content, NULL, "metadata_version",
-+				  buf, 1024) > 0) {
-+			buf[9] = '-';
-+			sysfs_set_str(content, NULL, "metadata_version", buf);
-+		}
-+	}
-+
-+	return 1;
-+}
-+
-+
- static int freeze_container(struct supertype *st)
+-
+-static int freeze_container(struct supertype *st)
++static int freeze_container(struct supertype *st, int restart)
  {
  	int container_dev = (st->container_dev != NoMdDev
-diff --git a/mdadm.h b/mdadm.h
-index 8dd37d9..d0ffd4d 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -477,6 +477,8 @@ extern int sysfs_add_disk(struct mdinfo *sra, struct mdinfo *sd, int resume);
- extern int sysfs_disk_to_scsi_id(int fd, __u32 *id);
- extern int sysfs_unique_holder(int devnum, long rdev);
- extern int sysfs_freeze_array(struct mdinfo *sra);
-+extern int block_array_if_any_is_blocked(struct supertype *st,
-+					 struct mdinfo *content);
- extern int load_sys(char *path, char *buf);
- extern int reshape_prepare_fdlist(char *devname,
- 				  struct mdinfo *sra,
-diff --git a/msg.c b/msg.c
-index 98d6d13..f903afb 100644
---- a/msg.c
-+++ b/msg.c
-@@ -424,6 +424,58 @@ int block_monitor(char *container, const int freeze)
- 	return rv;
+ 			     ? st->container_dev : st->devnum);
+@@ -575,11 +574,12 @@ static int freeze_container(struct supertype *st)
+ 
+ 	if (!check_idle(st))
+ 		return -1;
+-	
++
+ 	fmt_devname(container, container_dev);
+ 
+-	if (block_monitor(container, 1)) {
+-		fprintf(stderr, Name ": failed to freeze container\n");
++	if (block_monitor(container, 1, restart)) {
++		if (!restart)
++			fprintf(stderr, Name ": failed to freeze container\n");
+ 		return -2;
+ 	}
+ 
+@@ -597,7 +597,7 @@ static void unfreeze_container(struct supertype *st)
+ 	unblock_monitor(container, 1);
  }
  
-+/* Function checks if any container member or container itself
-+ * is blocked (mdmon is blocked).
-+ * It can occur that during assembly process first array in container
-+ * is under reshape, this means that any activated array
-+ * has to be blocked also, to keep whole container blocked
-+ * Returns:
-+ * -1: error
-+ *  0: not blocked
-+ *  1: something is blocked
-+ */
-+int check_blocked_monitor(char *container)
-+{
-+	struct mdstat_ent *ent, *e;
-+	struct mdinfo *sra = NULL;
-+	int rv = 0;
-+
-+	if (check_mdmon_version(container))
-+		return -1;
-+
-+	ent = mdstat_read(0, 0);
-+	if (!ent) {
-+		fprintf(stderr, Name
-+			": failed to read /proc/mdstat while checking"
-+			" if mdmon is disabled\n");
-+		return -1;
-+	}
-+
-+	/* check if any container member is frozen */
-+	for (e = ent; e; e = e->next) {
-+		if (!is_container_member(e, container))
-+			continue;
-+		sysfs_free(sra);
-+		sra = sysfs_read(-1, e->devnum, GET_VERSION);
-+		if (!sra) {
-+			fprintf(stderr, Name
-+				": failed to read sysfs for subarray%s\n",
-+				to_subarray(e, container));
-+			break;
-+		}
-+		/* check frozen state */
-+		if (sra->text_version[0] == '-') {
-+			rv = 1;
-+			break;
-+		}
-+	 }
-+
-+	sysfs_free(sra);
-+	free_mdstat(ent);
-+
-+	return rv;
-+}
-+
- void unblock_monitor(char *container, const int unfreeze)
+-static int freeze(struct supertype *st)
++static int freeze(struct supertype *st, int restart)
  {
- 	struct mdstat_ent *ent, *e;
+ 	/* Try to freeze resync/rebuild on this array/container.
+ 	 * Return -1 if the array is busy,
+@@ -606,7 +606,7 @@ static int freeze(struct supertype *st)
+ 	 * return 1 if it worked.
+ 	 */
+ 	if (st->ss->external)
+-		return freeze_container(st);
++		return freeze_container(st, restart);
+ 	else {
+ 		struct mdinfo *sra = sysfs_read(-1, st->devnum, GET_VERSION);
+ 		int err;
+@@ -1522,7 +1522,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 			devname);
+ 		return 1;
+ 	}
+-	frozen = freeze(st);
++	frozen = freeze(st, 0);
+ 	if (frozen < -1) {
+ 		/* freeze() already spewed the reason */
+ 		return 1;
+@@ -3653,7 +3653,7 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+ 	if (st->ss->external) {
+ 		fmt_devname(buf, st->container_dev);
+ 		container = buf;
+-		freeze(st);
++		freeze(st, 1);
+ 
+ 		if (!mdmon_running(st->container_dev))
+ 			start_mdmon(st->container_dev);
+diff --git a/msg.c b/msg.c
+index f903afb..48a5bc3 100644
+--- a/msg.c
++++ b/msg.c
+@@ -334,7 +334,7 @@ int check_mdmon_version(char *container)
+  * As older versions of mdmon (which might run from initrd) don't understand
+  * this, we first check that the running mdmon is new enough.
+  */
+-int block_monitor(char *container, const int freeze)
++int block_monitor(char *container, const int freeze, const int restart)
+ {
+ 	struct mdstat_ent *ent, *e, *e2;
+ 	struct mdinfo *sra = NULL;
+@@ -364,8 +364,12 @@ int block_monitor(char *container, const int freeze)
+ 			break;
+ 		}
+ 		/* can't reshape an array that we can't monitor */
+-		if (sra->text_version[0] == '-')
+-			break;
++		if (sra->text_version[0] == '-') {
++			if (restart)
++				continue;
++			else
++				break;
++		}
+ 
+ 		if (freeze && sysfs_freeze_array(sra) < 1)
+ 			break;
 diff --git a/msg.h b/msg.h
-index c6d037d..fb5815e 100644
+index fb5815e..15aef2a 100644
 --- a/msg.h
 +++ b/msg.h
-@@ -32,6 +32,7 @@ extern int block_subarray(struct mdinfo *sra);
+@@ -30,7 +30,7 @@ extern int ping_monitor(char *devname);
+ extern int ping_monitor_by_id(int devnum);
+ extern int block_subarray(struct mdinfo *sra);
  extern int unblock_subarray(struct mdinfo *sra, const int unfreeze);
- extern int block_monitor(char *container, const int freeze);
+-extern int block_monitor(char *container, const int freeze);
++extern int block_monitor(char *container, const int freeze, const int restart);
  extern void unblock_monitor(char *container, const int unfreeze);
-+extern int check_blocked_monitor(char *container);
+ extern int check_blocked_monitor(char *container);
  extern int fping_monitor(int sock);
- extern int ping_manager(char *devname);
- 
 
