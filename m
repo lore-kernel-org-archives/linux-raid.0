@@ -1,52 +1,69 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: error injection
-Date: Thu, 29 Sep 2011 12:12:26 +1000
-Message-ID: <20110929121226.72d2a0e1@notabene.brown>
-References: <CAJD3hpWbkSGeiWDgYHP3ewnw7akoEY-ydoRJKLxwcp8+up5zKw@mail.gmail.com>
-	<20110929091128.1488f267@notabene.brown>
-	<CAJD3hpUNkLDRGQxNuo6m7=OQjBu3uc5xV7Fzy-XLvrUFHQJbiw@mail.gmail.com>
-	<20110929110836.1dc9944d@notabene.brown>
-	<CAJD3hpU5YE5S93tDV1iK3_YReESh5NDnX877YMWc4JMMQkaN0A@mail.gmail.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] fix: correct unlocking of map file
+Date: Thu, 29 Sep 2011 09:55:20 +0200
+Message-ID: <20110929075520.5470.28705.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/BcsNVUd+dpG6M/L3DkhTyoX"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJD3hpU5YE5S93tDV1iK3_YReESh5NDnX877YMWc4JMMQkaN0A@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jojy Varghese <jojy.varghese@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/BcsNVUd+dpG6M/L3DkhTyoX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+1. Three missing map_unlock() calls were added.
+2. Map file's lock must be released by an explicit LOCK_UN operation,
+   because duplicated (e.g. created by fork()) descriptors
+   inherit the lock. As a result child process which inherits open
+   descriptors with lock can block another process of mdadm.
 
-On Wed, 28 Sep 2011 19:06:17 -0700 Jojy Varghese <jojy.varghese@gmail.com>
-wrote:
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ Incremental.c |    3 +++
+ mapfile.c     |    4 ++++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-> Thanks Neil. Also, is there any way to find the current fault blocks bein=
-g set?
->=20
+diff --git a/Incremental.c b/Incremental.c
+index 571d45d..b90089b 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -1472,6 +1472,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 					"Cannot activate array(s).\n");
+ 		/* free container data and exit */
+ 		sysfs_free(list);
++		map_unlock(&map);
+ 		return 2;
+ 	}
+ 
+@@ -1535,6 +1536,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 					fprintf(stderr, Name ": array %s/%s is "
+ 						"explicitly ignored by mdadm.conf\n",
+ 						match->container, match->member);
++				map_unlock(&map);
+ 				return 2;
+ 			}
+ 			if (match)
+@@ -1550,6 +1552,7 @@ static int Incremental_container(struct supertype *st, char *devname,
+ 		if (mdfd < 0) {
+ 			fprintf(stderr, Name ": failed to open %s: %s.\n",
+ 				chosen_name, strerror(errno));
++			map_unlock(&map);
+ 			return 2;
+ 		}
+ 
+diff --git a/mapfile.c b/mapfile.c
+index ff1e973..98c0780 100644
+--- a/mapfile.c
++++ b/mapfile.c
+@@ -149,6 +149,10 @@ int map_lock(struct map_ent **melp)
+ void map_unlock(struct map_ent **melp)
+ {
+ 	if (lf) {
++		/* lock must be released by an explicit LOCK_UN operation
++		 * because duplicated descriptors inherit the lock
++		 */
++		flock(fileno(lf), LOCK_UN);
+ 		/* must unlink before closing the file,
+ 		 * as only the owner of the lock may
+ 		 * unlink the file
 
-No.  All you can get is what is shown in "/proc/mdstat".
-
-It wouldn't be too hard to add something to /proc/mdstat or /sys/.... to sh=
-ow
-that information.
-
-NeilBrown
-
-
---Sig_/BcsNVUd+dpG6M/L3DkhTyoX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOg9QKG5fc6gV+Wb0RAsAGAKDHpnlM+cdCLfAKgj9kCtvGQqhWJACdHtET
-AuGVx1ZkzZry3Df/l6jleyQ=
-=qrR+
------END PGP SIGNATURE-----
-
---Sig_/BcsNVUd+dpG6M/L3DkhTyoX--
