@@ -1,83 +1,105 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Fri, 30 Sep 2011 15:47:06 -0600
-Message-ID: <201109301547.06930.thomas@fjellstrom.ca>
-References: <4E7EDE58.3000804@yazzy.org> <20110928091335.1df35f8e@notabene.brown> <4E862024.9090306@yazzy.org>
-Reply-To: thomas@fjellstrom.ca
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm - level change from raid 1 to raid 5
+Date: Sat, 1 Oct 2011 08:02:50 +1000
+Message-ID: <20111001080250.65dc83bd@notabene.brown>
+References: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/JsE=ft.A8Np5yZKjFIhhFkG"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E862024.9090306@yazzy.org>
+In-Reply-To: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Dominique <dcouot@hotmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On September 30, 2011, Marcin M. Jessa wrote:
-> On 9/28/11 1:13 AM, NeilBrown wrote:
-> > On Tue, 27 Sep 2011 21:12:58 +0200 "Marcin M. Jessa"<lists@yazzy.org>  
-wrote:
-> >> On 9/26/11 11:31 AM, NeilBrown wrote:
-> >>> On Mon, 26 Sep 2011 11:05:38 +0200 "Marcin M. Jessa"<lists@yazzy.org>   
-wrote:
-> >>>> On 9/26/11 12:18 AM, NeilBrown wrote:
-> >>>>> Do you remember what filesystem you had on 'storage'?  Was it ext3 or
-> >>>>> ext4 or xfs or something else?
-> >>>> 
-> >>>> You're giving me some hope here and then silence :)
-> >>>> Why did you ask about the file system? Should I run fsck on the LV ?
-> >>> 
-> >>> You already did run fsck on the LV.  It basically said that it didn't
-> >>> recognise the filesystem at all.
-> >>> I asked in case maybe it was XFS in which case a different tool would
-> >>> be required.
-> >> 
-> >> Looks like I didn't remember correctly. I ran testdisk and it reported
-> >> the file system to be XFS. What would you suggest now Neil?
-> > 
-> > Presumably
-> > 
-> >     xfs_check /dev/fridge/storage
-> > 
-> > and then maybe
-> > 
-> >     xfs_repair /dev/fridge/storage
-> > 
-> > but I have no experience with XFS - I'm just reading man pages.
-> 
-> That didn't work so I decided to give photorec a spin and so far it
-> could find and recover lots of files [1].
-> Why the heck is photorec able to do so but the normal file system fixing
-> tools are just useless?
+--Sig_/JsE=ft.A8Np5yZKjFIhhFkG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 30 Sep 2011 20:31:37 +0200 Dominique <dcouot@hotmail.com> wrote:
+
+> Hi,
+>=20
+> Using Ubuntu 11.10 server , I am testing RAID level changes through=20
+> MDADM. The objective is to migrate RAID 1 (1+ HDD) environment to RAID 5=
+=20
+> (3+ HDD) without data loss.
+> In order to make as simple as possible, I started in a VM environment=20
+> (Virtual Box).
+
+Very sensible!!
 
 
-The file system metadata was trashed, and photorec looks at the data only, 
-looking for file headers and trying to pull out contiguous files.
+>=20
+> Initial Setup:
+> U11.10 + 2 HDD (20GB) in Raid 1 -> no problem
+> The setup is made with 3 RAID 1 partition on each disk (swap (2GB), boot=
+=20
+> (500MB), and root (17,5GB)). I understand that this will allow to=20
+> eventually grow to a RAID 5 configuration (in Ubuntu) and maintain boot=20
+> on a RAID construct (swap and boot would remain on RAID 1, while root=20
+> would migrate to RAID 5).
+>=20
+> Increment number of disks:
+> add 3 HDD to the setup -> no problem
+> increase the RAID 1 from 2 HDD to 5 HDD -> no problem, all disks added=20
+> and synchronized
 
-> 
-> [1]:
-> Disk /dev/dm-0 - 5368 GB / 5000 GiB (RO)
-> Partition Start End Size in sectors
-> No partition 0 10485759999 10485760000 [Whole disk]
-> 
-> 
-> Pass 2 - Reading sector 1506591634/10485760000, 843 files found
-> Elapsed time 10h16m59s - Estimated time for achievement 61h17m10
-> txt: 445 recovered
-> exe: 198 recovered
-> mpg: 62 recovered
-> swf: 33 recovered
-> tx?: 33 recovered
-> gif: 25 recovered
-> gpg: 19 recovered
-> bmp: 5 recovered
-> gz: 4 recovered
-> riff: 4 recovered
-> others: 15 recovered
+This is the bit you don't want.  Skip that step and it should work.
 
 
--- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+>=20
+> root@ubuntu:~# cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]=20
+> [raid4] [raid10]
+> md2 : active raid1 sda3[0] sde3[4] sdb3[1] sdc3[2] sdd3[3]
+>        18528184 blocks super 1.2 [5/5] [UUUUU]
+>=20
+> md1 : active raid1 sda2[0] sde2[4] sdb2[1] sdd2[3] sdc2[2]
+>        488436 blocks super 1.2 [5/5] [UUUUU]
+>=20
+> md0 : active raid1 sdb1[1] sde1[4] sda1[0] sdc1[2] sdd1[3]
+>        1950708 blocks super 1.2 [5/5] [UUUUU]
+>=20
+>=20
+> Change Level:
+> That's where the problem occurs:
+> I initially tried 3 different approaches for md2 (the root partition)
+>=20
+>      1. Normal boot
+>=20
+>      mdadm /dev/md2 --grow --level=3D5
+>=20
+>      Not working: 'Could not set level to raid 5'. I suppose this is=20
+> because the partition is in use. Makes sense.
+
+Nope.  This is because md won't change a 5-device RAID1 to RAID5.  It will
+only change a 2-device RAID1 to RAID5.  This is trivial to do because a
+2-device RAID1 and a 2-device RAID5 have data in exactly the same places.
+Then you can change your 2-device RAID5 to a 5-device RAID5 - which takes a
+while but this can all be done while the partition is in use.
+
+i.e. if you start with a RAID1 with 2 active devices and 3 spares and issue
+the command
+    mdadm /dev/md2 --grow --level=3D5 --raid-disks=3D5
+
+it will convert to RAID5 and then start reshaping out to include all 5 disk=
+s.
+
+
+NeilBrown
+
+--Sig_/JsE=ft.A8Np5yZKjFIhhFkG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iD8DBQFOhjyPG5fc6gV+Wb0RApt9AJ9OyE/cKcuItJ/fvCUI+sY/3fDEAACghSbM
+oV6JdfAxAoKB++Twy1wOBws=
+=1/4J
+-----END PGP SIGNATURE-----
+
+--Sig_/JsE=ft.A8Np5yZKjFIhhFkG--
