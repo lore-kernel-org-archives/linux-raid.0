@@ -1,38 +1,47 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+From: Andre Noll <maan@systemlinux.org>
 Subject: Re: Safely swapping a disk in a RAID456
-Date: Fri, 30 Sep 2011 18:06:57 +0200
-Message-ID: <4E85E921.1020808@grumpydevil.homelinux.org>
+Date: Fri, 30 Sep 2011 18:28:11 +0200
+Message-ID: <20110930162811.GE30935@systemlinux.org>
 References: <20110930154217.GA11732@albatross.gern.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="IDYEmSnFhs3mNXr+"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20110930154217.GA11732@albatross.gern.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
 
-On 09/30/2011 05:42 PM, martin f krafft wrote:
-> Dear list,
->
-> I would like to swap out a drive in a RAID6 (4 drives), but ideally
-> without letting the RAID degrade. I was thinking that it should be
-> possible to declare the new disk a copy of the old one, let it sync,
-> then remove the old one and let the new one take over, but MD does
-> not seem to support that.
-If you can stop the array it can be done. Otherwise you will have to 
-degrade it while replacing
+--IDYEmSnFhs3mNXr+
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Replacing without degrade:
-- stop the raid
-- do a dd from old disk to new disk
-- replace the disk
-- re-start the raid
+On Fri, Sep 30, 17:42, martin f krafft wrote:
+> Does anyone have any ideas?
 
-Cheers,
+Create a 2-disk Raid1 (with external metadata) containing the disk
+you'd like to replace and the replacement disk.
 
+And yes, it would be great if md provided an easier way to do this.
 
-Rudy
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
+--IDYEmSnFhs3mNXr+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk6F7hsACgkQWto1QDEAkw99ZgCZAQdgl3F4Zwial5jkFjMlJIue
+RBEAnRIHH1bA3bG61C3SZTlLR9VBO/ir
+=b1I3
+-----END PGP SIGNATURE-----
+
+--IDYEmSnFhs3mNXr+--
