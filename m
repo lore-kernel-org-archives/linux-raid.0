@@ -1,60 +1,39 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Thu, 29 Sep 2011 17:18:45 -0700
-Message-ID: <CABE8wwt_3DjPqFg5Gm064Gi5OMFFYjuQ9ToAjS+-TYOX+M2ZCw@mail.gmail.com>
-References: <4E7EDE58.3000804@yazzy.org>
-	<20110926074002.6399de56@notabene.brown>
-	<4E7FA3E8.5010603@yazzy.org>
-	<20110926081853.2819622b@notabene.brown>
-	<4E804062.3020700@yazzy.org>
-	<20110926193130.6377f5b9@notabene.brown>
-	<4E82203A.60507@yazzy.org>
-	<20110928091335.1df35f8e@notabene.brown>
-	<4E828B92.40502@hardwarefreak.com>
-	<4E82C862.8000705@yazzy.org>
-	<4E834758.2090508@hardwarefreak.com>
-	<20110929094910.2c44ff8a@notabene.brown>
-	<CAA9_cmfYPoZVZhm9f+5W5bbTA+1Utb5K=FnZv_=ni8x0=R=Wbg@mail.gmail.com>
-	<20110930090720.57534d81@notabene.brown>
+From: Kai Stian Olstad <kai.stian.olstad@gmail.com>
+Subject: Re: RAID1 question
+Date: Fri, 30 Sep 2011 08:15:27 +0200
+Message-ID: <4E855E7F.3000800@gmail.com>
+References: <20110929183457.GA19871@electro-mechanical.com> <20110929192611.GA23316@cthulhu.home.robinhill.me.uk> <20110929193705.GE19871@electro-mechanical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110930090720.57534d81@notabene.brown>
+In-Reply-To: <20110929193705.GE19871@electro-mechanical.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: stan@hardwarefreak.com, lists@yazzy.org, linux-raid@vger.kernel.org
+To: William Thompson <wt@electro-mechanical.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 29, 2011 at 4:07 PM, NeilBrown <neilb@suse.de> wrote:
->> What if as a starting point we could get a Patchwork queue hosted
->> somewhere so you could at least start formally delegating incoming
->> patches for an apprentice to disposition?
->
-> I don't know much about Patchwork ... what sort of value does it add?
+On 29. sep. 2011 21:37, William Thompson wrote:
+> On Thu, Sep 29, 2011 at 08:26:11PM +0100, Robin Hill wrote:
+>> On Thu Sep 29, 2011 at 02:34:57PM -0400, William Thompson wrote:
+>>
+>>> Please keep me in the CC.  I am not on the list.
+>>>
+>>> If I have a RAID1 of 2 disks and I decide to move them to another computer
+>>> and recreate the raid, does it really need to do the initial recovery?
+>>>
+>> You don't need to recreate the raid at all, just reassemble it. You may
+>> want to update the homehost though, otherwise it will (IIRC) auto
+>> assemble to md_126 (or so) instead of md0.
+> 
+> The reason I asked this was because a mirrored pair that I currently have is
+> 0.90 version and I was going to use 1.0
 
-It just makes things more transparent.  It allows a submitter to have
-a web interface to view the state of a patch: accepted, rejected,
-under review.  Allows a maintainer or a group of maintainers to see
-the backlog and assign (delegate) patches between them.  It also
-automates the collection of Acked-by, Reviewed-by, etc tags.
+You'll find information about going from 0.90 to 1.0 in the archive,
+take a look at these links:
+http://thread.gmane.org/gmane.linux.raid/34014/focus=34029
+http://thread.gmane.org/gmane.linux.raid/34424/focus=34441
 
-> But I don't think much of the idea of delegation. =A0I don't see a th=
-riving
-> developer community full of people who want work delegated to them.
 
-So I only meant "delegate" in the Patchwork parlance to make "who is
-merging this md/mdadm patch" clear as the apprentice ramps up.  But
-this is probably too much mechanics.
-
-It simply sounds like you want a similar situation like what happened
-with git.  I.e. a "Junio" to take over but you'll still be around to
-course correct and send patches.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kai Stian Olstad
