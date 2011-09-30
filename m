@@ -1,54 +1,96 @@
-From: Andre Noll <maan@systemlinux.org>
+From: John Robinson <john.robinson@yuiop.co.uk>
 Subject: Re: Safely swapping a disk in a RAID456
-Date: Fri, 30 Sep 2011 19:07:10 +0200
-Message-ID: <20110930170710.GF30935@systemlinux.org>
+Date: Fri, 30 Sep 2011 19:02:29 +0100
+Message-ID: <4E860435.5040902@yuiop.co.uk>
 References: <20110930154217.GA11732@albatross.gern.madduck.net>
- <4E85E921.1020808@grumpydevil.homelinux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XuV1QlJbYrcVoo+x"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4E85E921.1020808@grumpydevil.homelinux.org>
+In-Reply-To: <20110930154217.GA11732@albatross.gern.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 30/09/2011 16:42, martin f krafft wrote:
+> Dear list,
+>
+> I would like to swap out a drive in a RAID6 (4 drives), but ideally
+> without letting the RAID degrade. I was thinking that it should be
+> possible to declare the new disc a copy of the old one, let it sync,
+> then remove the old one and let the new one take over, but MD does
+> not seem to support that.
 
---XuV1QlJbYrcVoo+x
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Not yet, but it's in the roadmap as a hot-replace. In the mean time, yo=
+u=20
+can do something very similar by hand with almost no lost of redundancy=
+,=20
+if your RAID456 has a bitmap.
 
-On Fri, Sep 30, 18:06, Rudy Zijlstra wrote:
-> Replacing without degrade:
-> - stop the raid
-> - do a dd from old disk to new disk
-> - replace the disk
-> - re-start the raid
+> Next, I thought that I could add the new disc as a spare, grow the
+> array to 5 discs, and somehow shrink it back to 4 again, but of
+> course that does not work either, since 4=E2=86=925 is a reshape, and=
+ there
+> seems to be no way to control which disc to remove from the RAID6 on
+> a shrink (making it a spare), without degrading the array in the
+> process.
 
-This works but the array needs to be stopped during the dd, which may take a
-long time. Creating a raid1 first allows you to restart the raid456 immedia=
-tely
-after the raid1 has been started, no need to wait for the initialization to
-complete.
+Doing a shrink while specifying which drive to remove is also on the=20
+roadmap, I believe. But doing huge reshapes like this are not the way=20
+forward for a hot-replace.
 
-Andre
+> Does anyone have any ideas? This should not be so hard=E2=80=A6
+
+I'd be glad to hear of any "real" RAID card that made it easier, or eve=
+n=20
+possible.
+
+Something along the lines of:
+
+# briefly remove your disc from the array
+mdadm --manage /dev/md_raid456 --remove /dev/the_disc_i_want_to_remove
+# make a temp raid1 with only the one disc, using build so metadata is
+# only in RAM and nothing is written to the disc
+mdadm --build /dev/md_temp_raid1 --level 1=20
+/dev/the_disc_i_want_to_remove missing
+# now re-add something which looks identical to your original disc,
+# but is actually a single-sided mirror, back into the array
+# the above can all be done very quickly so your raid456 only runs
+# without a drive for seconds
+mdadm --manage /dev/md_raid456 --re-add /dev/md_temp_raid1
+# now get md to make a mirror (copy) to the new disc
+mdadm --manage /dev/md_temp_raid1 --add /dev/the_new_disc
+# wait for it to finish, or just wait for it yourself
+mdadm --wait /dev/md_temp_raid1
+# and switch back again: remove the temporary raid1
+mdadm --manage /dev/md_raid456 --remove /dev/md_temp_raid1
+# stop it so the new disc becomes available again
+mdadm --stop /dev/md_temp_raid1
+# and put the new disc which is now a complete copy of the old one
+# back in to the array
+mdadm --manage /dev/md_raid456 --re-add /dev/the_new_disc
+# and you're done
+
+This is all fine if your old disc has no faulty sectors. If it does=20
+have, you need more help from someone much more clued-up than me=20
+(because it is already possible to do partial rebuilds by manipulating=20
+/sys), or mdadm's roadmap feature of hot-replace, which will do the=20
+above and also automatically perform partial rebuilds from the rest of=20
+the array when the old disc has bad sectors.
+
+Hope this helps.
+
+Cheers,
+
+John.
+
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---XuV1QlJbYrcVoo+x
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk6F9z4ACgkQWto1QDEAkw/yMQCgqtlBKjSfm1Y64mD2pvYj4FZO
-KbQAnR8lpQvER26H24CDtAEwxN4zdw6c
-=bX6K
------END PGP SIGNATURE-----
-
---XuV1QlJbYrcVoo+x--
+John Robinson, yuiop IT services
+0131 557 9577 / 07771 784 058
+46/12 Broughton Road, Edinburgh EH7 4EE
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
