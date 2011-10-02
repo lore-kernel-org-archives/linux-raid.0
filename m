@@ -1,84 +1,137 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 2/2] imsm: Do not mark resync during reshape
-Date: Mon, 3 Oct 2011 10:31:57 +1100
-Message-ID: <20111003103157.76dc2714@notabene.brown>
-References: <20110929154250.22094.48754.stgit@gklab-128-013.igk.intel.com>
-	<20110929154545.22094.64680.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH 1/3] Move code to check_mdmon_version() function
+Date: Mon, 3 Oct 2011 10:45:56 +1100
+Message-ID: <20111003104556.4b640532@notabene.brown>
+References: <20110929154756.22854.13187.stgit@gklab-128-013.igk.intel.com>
+	<20110929155336.22854.2583.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/e1TConmB+cTWKChoyhvbj0A"; protocol="application/pgp-signature"
+ boundary="Sig_/r_ZwJ6_RJw+WcI2.MPPk4X."; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110929154545.22094.64680.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110929155336.22854.2583.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/e1TConmB+cTWKChoyhvbj0A
+--Sig_/r_ZwJ6_RJw+WcI2.MPPk4X.
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 29 Sep 2011 17:45:45 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
+On Thu, 29 Sep 2011 17:53:36 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
 e:
 
-> During reshape, resync/rebuild in the same container is not possible
-> due to fact that all arrays in container has to share the same disks set.
->=20
-> Block new resync/rebuild process initialization and setting resync_start
-> to 0 while any reshape in container is active. This avoids breaking
-> container reshape and doesn't allow for starting multiple processes
-> /resync/rebuild and reshape/ at the same time in md.
+> Move code to function for code reuse.
 >=20
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->=20
->  super-intel.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 5504c17..4c546ac 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2375,8 +2375,9 @@ static void getinfo_super_imsm_volume(struct supert=
-ype *st, struct mdinfo *info,
-> =20
->  	info->reshape_progress =3D 0;
->  	info->resync_start =3D MaxSector;
-> -	if (map_to_analyse->map_state =3D=3D IMSM_T_STATE_UNINITIALIZED ||
-> -	    dev->vol.dirty) {
-> +	if ((map_to_analyse->map_state =3D=3D IMSM_T_STATE_UNINITIALIZED ||
-> +	    dev->vol.dirty) &&
-> +	    imsm_reshape_blocks_arrays_changes(super) =3D=3D 0) {
->  		info->resync_start =3D 0;
->  	}
->  	if (dev->vol.migr_state) {
-> @@ -6232,7 +6233,8 @@ static int imsm_set_array_state(struct active_array=
- *a, int consistent)
->  			super->updates_pending++;
->  			a->last_checkpoint =3D 0;
->  		}
-> -	} else if (!is_resyncing(dev) && !failed) {
-> +	} else if ((!is_resyncing(dev) && !failed) &&
-> +		   (imsm_reshape_blocks_arrays_changes(super) =3D=3D 0)) {
->  		/* mark the start of the init process if nothing is failed */
->  		dprintf("imsm: mark resync start\n");
->  		if (map->map_state =3D=3D IMSM_T_STATE_UNINITIALIZED)
 
-Applied.  Thanks,
+Applied, thanks.
+
+though it might be better for "check_mdmon_version" also took a version
+number to compare against.
 
 NeilBrown
 
+> ---
+>=20
+>  msg.c |   59 ++++++++++++++++++++++++++++++++++++-----------------------
+>  1 files changed, 36 insertions(+), 23 deletions(-)
+>=20
+> diff --git a/msg.c b/msg.c
+> index a10c930..98d6d13 100644
+> --- a/msg.c
+> +++ b/msg.c
+> @@ -281,6 +281,40 @@ int block_subarray(struct mdinfo *sra)
+> =20
+>  	return rc;
+>  }
+> +
+> +/* check mdmon version if it supports
+> + * array blocking mechanism
+> + */
+> +int check_mdmon_version(char *container)
+> +{
+> +	char *version =3D NULL;
+> +	int devnum =3D devname2devnum(container);
+> +
+> +	if (!mdmon_running(devnum)) {
+> +		/* if mdmon is not active we assume that any instance that is
+> +		 * later started will match the current mdadm version, if this
+> +		 * assumption is violated we may inadvertantly rebuild an array
+> +		 * that was meant for reshape, or start rebuild on a spare that
+> +		 * was to be moved to another container
+> +		 */
+> +		/* pass */;
+> +	} else {
+> +		int ver;
+> +
+> +		version =3D ping_monitor_version(container);
+> +		ver =3D version ? mdadm_version(version) : -1;
+> +		free(version);
+> +		if (ver < 3002000) {
+> +			fprintf(stderr, Name
+> +				": mdmon instance for %s cannot be disabled\n",
+> +				container);
+> +			return -1;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /**
+>   * block_monitor - prevent mdmon spare assignment
+>   * @container - container to block
+> @@ -302,34 +336,13 @@ int block_subarray(struct mdinfo *sra)
+>   */
+>  int block_monitor(char *container, const int freeze)
+>  {
+> -	int devnum =3D devname2devnum(container);
+>  	struct mdstat_ent *ent, *e, *e2;
+>  	struct mdinfo *sra =3D NULL;
+> -	char *version =3D NULL;
+>  	char buf[64];
+>  	int rv =3D 0;
+> =20
+> -	if (!mdmon_running(devnum)) {
+> -		/* if mdmon is not active we assume that any instance that is
+> -		 * later started will match the current mdadm version, if this
+> -		 * assumption is violated we may inadvertantly rebuild an array
+> -		 * that was meant for reshape, or start rebuild on a spare that
+> -		 * was to be moved to another container
+> -		 */
+> -		/* pass */;
+> -	} else {
+> -		int ver;
+> -
+> -		version =3D ping_monitor_version(container);
+> -		ver =3D version ? mdadm_version(version) : -1;
+> -		free(version);
+> -		if (ver < 3002000) {
+> -			fprintf(stderr, Name
+> -				": mdmon instance for %s cannot be disabled\n",
+> -				container);
+> -			return -1;
+> -		}
+> -	}
+> +	if (check_mdmon_version(container))
+> +		return -1;
+> =20
+>  	ent =3D mdstat_read(0, 0);
+>  	if (!ent) {
 
---Sig_/e1TConmB+cTWKChoyhvbj0A
+
+
+--Sig_/r_ZwJ6_RJw+WcI2.MPPk4X.
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOiPRtG5fc6gV+Wb0RAtU8AKCCCh7iktyN7JI5oSGAir1iJ3ku8QCfdUAd
-R7Xx7Q1KaYCHRGLDCPXktlA=
-=FHph
+iD8DBQFOiPe0G5fc6gV+Wb0RAqLHAKDW+mI+oIdUdHH2S2NuWU9cn3qh6QCfczuE
+G/eAlVgdLQGh8DCasNnFLg4=
+=y30n
 -----END PGP SIGNATURE-----
 
---Sig_/e1TConmB+cTWKChoyhvbj0A--
+--Sig_/r_ZwJ6_RJw+WcI2.MPPk4X.--
