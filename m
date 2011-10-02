@@ -1,126 +1,98 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 4/8] Set correct reshape restart position
-Date: Mon, 3 Oct 2011 09:56:49 +1100
-Message-ID: <20111003095649.0d033943@notabene.brown>
+Subject: Re: [PATCH 5/8] Move code to get_data_disks() function
+Date: Mon, 3 Oct 2011 09:58:29 +1100
+Message-ID: <20111003095829.0ffbac67@notabene.brown>
 References: <20110927115845.4890.49289.stgit@gklab-128-013.igk.intel.com>
-	<20110927120505.4890.95696.stgit@gklab-128-013.igk.intel.com>
+	<20110927120513.4890.6242.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/cTHn6kssom1hbjWOGcfsszw"; protocol="application/pgp-signature"
+ boundary="Sig_/8A5Y9r6UffNxPLUctGWVcxY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110927120505.4890.95696.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20110927120513.4890.6242.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/cTHn6kssom1hbjWOGcfsszw
+--Sig_/8A5Y9r6UffNxPLUctGWVcxY
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 27 Sep 2011 14:05:05 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
+On Tue, 27 Sep 2011 14:05:13 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
 e:
 
-> During initrd stage when, when array is assembled with '--freeze-reshape'
-> option and before stopping reshape, reshape position has to be set to read
-> from metadata checkpoint.
-> This will allow later for restart point verification and user will be able
-> to see in mdstat information about reshape process instead resync when
-> reshape position is set to 0.
+> Move code to function for code reuse.
 >=20
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 
-Hi,
- I think that this patch makes start_reshape rather messy and confusing.
-I am tempted to say not do do this at all, and maybe fix the kernel so that
-is reports better information.
+Applied, thanks.
 
-However it might be reasonable to do something like this in mdadm.  If so
-I would like it to go in the  "if (freeze_reshape)" branch in
-reshape_array(), and just explicitly set "sync_max".  There should be no ne=
-ed
-to set sync_min - is there?
-
-Thanks,
 NeilBrown
+
 
 
 > ---
 >=20
->  Grow.c |   26 +++++++++++++++-----------
->  1 files changed, 15 insertions(+), 11 deletions(-)
+>  mdadm.h |    1 +
+>  util.c  |   10 ++++++++--
+>  2 files changed, 9 insertions(+), 2 deletions(-)
 >=20
-> diff --git a/Grow.c b/Grow.c
-> index d9c2817..afe4c72 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -696,21 +696,24 @@ static int subarray_set_num(char *container, struct=
- mdinfo *sra, char *name, int
->  	return rc;
+> diff --git a/mdadm.h b/mdadm.h
+> index 8f3e786..4bbf660 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1165,6 +1165,7 @@ extern unsigned long long get_component_size(int fd=
+);
+>  extern void remove_partitions(int fd);
+>  extern int test_partition(int fd);
+>  extern int test_partition_from_id(dev_t id);
+> +extern int get_data_disks(int level, int layout, int raid_disks);
+>  extern unsigned long long calc_array_size(int level, int raid_disks, int=
+ layout,
+>  				   int chunksize, unsigned long long devsize);
+>  extern int flush_metadata_updates(struct supertype *st);
+> diff --git a/util.c b/util.c
+> index 0ea7e0d..50c98c1 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -703,6 +703,12 @@ void print_r10_layout(int layout)
+>  unsigned long long calc_array_size(int level, int raid_disks, int layout,
+>  				   int chunksize, unsigned long long devsize)
+>  {
+> +	devsize &=3D ~(unsigned long long)((chunksize>>9)-1);
+> +	return get_data_disks(level, layout, raid_disks) * devsize;
+> +}
+> +
+> +int get_data_disks(int level, int layout, int raid_disks)
+> +{
+>  	int data_disks =3D 0;
+>  	switch (level) {
+>  	case 0: data_disks =3D raid_disks; break;
+> @@ -713,8 +719,8 @@ unsigned long long calc_array_size(int level, int rai=
+d_disks, int layout,
+>  	case 10: data_disks =3D raid_disks / (layout & 255) / ((layout>>8)&255);
+>  		break;
+>  	}
+> -	devsize &=3D ~(unsigned long long)((chunksize>>9)-1);
+> -	return data_disks * devsize;
+> +
+> +	return data_disks;
 >  }
 > =20
-> -int start_reshape(struct mdinfo *sra, int already_running, int freeze_re=
-shape)
-> +int start_reshape(struct mdinfo *sra, int already_running,
-> +		  int freeze_reshape, int data_disks)
->  {
->  	int err;
-> +	unsigned long long position_to_set =3D 0;
-> +	unsigned long long sync_max_to_set;
-> =20
->  	/* do not block array as we not continue reshape this time
->  	 */
-> -	if (freeze_reshape =3D=3D FREEZE_RESHAPE_NONE)
-> -		sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> -	else
-> -		sysfs_set_num(sra, NULL, "suspend_lo", 0);
-> -	err =3D sysfs_set_num(sra, NULL, "suspend_hi", 0);
-> -	err =3D err ?: sysfs_set_num(sra, NULL, "suspend_lo", 0);
-> +	if (freeze_reshape !=3D FREEZE_RESHAPE_NONE)
-> +		position_to_set =3D sra->reshape_progress;
-> +	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> +	err =3D sysfs_set_num(sra, NULL, "suspend_hi", position_to_set);
-> +	err =3D err ?: sysfs_set_num(sra, NULL, "suspend_lo", position_to_set);
-> +	sync_max_to_set =3D position_to_set / data_disks;
->  	if (!already_running)
-> -		sysfs_set_num(sra, NULL, "sync_min", 0);
-> -	err =3D err ?: sysfs_set_num(sra, NULL, "sync_max", 0);
-> +		sysfs_set_num(sra, NULL, "sync_min", sync_max_to_set);
-> +	err =3D err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
->  	if (!already_running)
->  		err =3D err ?: sysfs_set_str(sra, NULL, "sync_action", "reshape");
-> =20
-> @@ -2247,7 +2250,8 @@ started:
->  		}
->  	}
-> =20
-> -	err =3D start_reshape(sra, restart, freeze_reshape);
-> +	err =3D start_reshape(sra, restart, freeze_reshape,
-> +			   info->array.raid_disks - reshape.parity);
->  	if (err) {
->  		fprintf(stderr,=20
->  			Name ": Cannot %s reshape for %s\n",
-> @@ -3753,7 +3757,7 @@ int Grow_continue_command(char *devname, int fd,
->  	/* continue reshape
->  	 */
->  	ret_val =3D Grow_continue(fd, st, content, backup_file,
-> -				FREEZE_RESHAPE_NONE);
-> +				FREEZE_RESHAPE_CONTINUE);
-> =20
->  Grow_continue_command_exit:
->  	if (fd2 > -1)
+>  #if !defined(MDASSEMBLE) || defined(MDASSEMBLE) && defined(MDASSEMBLE_AU=
+TO)
 
 
---Sig_/cTHn6kssom1hbjWOGcfsszw
+--Sig_/8A5Y9r6UffNxPLUctGWVcxY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOiOwxG5fc6gV+Wb0RAijwAJ9xtpyLmp4QihcgUQ9+O5CYPr5teQCgmzsG
-cHXoyv8sirFJSs8lfUHsEPA=
-=pQVh
+iD8DBQFOiOyVG5fc6gV+Wb0RAhvFAKCKOJfGRcZKzAS0ntCsk1nNp+zbUgCfSook
+ANc5WSlnWKt/o3lt4bD0DHE=
+=G+Rh
 -----END PGP SIGNATURE-----
 
---Sig_/cTHn6kssom1hbjWOGcfsszw--
+--Sig_/8A5Y9r6UffNxPLUctGWVcxY--
