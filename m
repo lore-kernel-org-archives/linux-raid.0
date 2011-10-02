@@ -1,169 +1,74 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm - level change from raid 1 to raid 5
-Date: Mon, 3 Oct 2011 07:50:41 +1100
-Message-ID: <20111003075041.188ff3ff@notabene.brown>
-References: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>
-	<20111001080250.65dc83bd@notabene.brown>
-	<BLU0-SMTP1299BD19297F8D4A02E6D13C9F50@phx.gbl>
+Subject: Re: [mdadm PATCH] Fix small memory leak
+Date: Mon, 3 Oct 2011 08:31:27 +1100
+Message-ID: <20111003083127.039bc0fe@notabene.brown>
+References: <4E88BF65.2010500@intra2net.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Y+ph9vH_DDdNiMTkgiXb9Ur"; protocol="application/pgp-signature"
+ boundary="Sig_/J8fyedvHsN7D2dhjWDGRl.s"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP1299BD19297F8D4A02E6D13C9F50@phx.gbl>
+In-Reply-To: <4E88BF65.2010500@intra2net.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dominique <dcouot@hotmail.com>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Y+ph9vH_DDdNiMTkgiXb9Ur
+--Sig_/J8fyedvHsN7D2dhjWDGRl.s
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2 Oct 2011 16:24:48 +0200 Dominique <dcouot@hotmail.com> wrote:
+On Sun, 02 Oct 2011 21:45:41 +0200 Thomas Jarosch
+<thomas.jarosch@intra2net.com> wrote:
 
-> Hi Neil,
+> Credit goes to cppcheck.
 >=20
-> Thanks for the Info, I'll try a new series of VM tomorrow.
+> Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+> ---
+>  policy.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
 >=20
-> I do have a question though. I thought that RAID5 required 3 HDD not 2.=20
-> Hence I am a bit puzzled by your last comment....
-> "Nope. This is because md won't change a 5-device RAID1 to RAID5. It=20
-> will only change a 2-device RAID1 to RAID5. This is trivial to do=20
-> because a 2-device RAID1 and a 2-device RAID5 have data in exactly the=20
-> same places. " Or do I grow to a 3HDD RAID5 config with a 'missing' HDD.
-
-It is a common misunderstanding that RAID5 requires 3 drives, not 2.
-2 is a perfectly good number of drives for RAID5.  On each stripe, on drive
-holds the data, and the other drive holds the 'xor' of all the data blocks
-with zero which results in exactly the data ( 0 xor D =3D=3D D).
-So a 2-drive RAID5 is nearly identical to a 2-drive RAID1, thus it is seen =
-as
-pointless and not considered to be a RAID5  (just as a triangle is not
-considered to be a real quadrilateral, just because one of the 4 sides is of
-length '0'!).
-Some RAID5 implementations rule out 2-drive RAID5 for just this reason.
-However 'md' is not so small-minded.
-2-drive RAID5s are great for testing ... I used to have graphs showing
-throughput for 2,3,4,5,6,7,8 drives - the '2' made a nice addition.
-And 2-drive RAID5s are very useful for converting RAID1 to RAID5.  First
-convert a 2-drive RAID1 to a 2-drive RAID5, then change the number of drives
-in the RAID5.
-
-
-RAID6 should really work with only 3 drives, but md is not so enlightened.
-When hpa wrote the code he set the lower limit to 4 drives.  I would like to
-make it 3, but I would have to check that 3 really does work and I haven't
-done that yet.
+> diff --git a/policy.c b/policy.c
+> index 2bbbac8..4a6ef82 100644
+> --- a/policy.c
+> +++ b/policy.c
+> @@ -757,8 +757,10 @@ int policy_check_path(struct mdinfo *disk, struct ma=
+p_ent *array)
+> =20
+>  	snprintf(path, PATH_MAX, FAILED_SLOTS_DIR "/%s", id_path);
+>  	f =3D fopen(path, "r");
+> -	if (!f)
+> +	if (!f) {
+> +		free(id_path);
+>  		return 0;
+> +	}
+> =20
+>  	rv =3D fscanf(f, " %s %x:%x:%x:%x\n",
+>  		    array->metadata,
+> @@ -767,6 +769,7 @@ int policy_check_path(struct mdinfo *disk, struct map=
+_ent *array)
+>  		    array->uuid+2,
+>  		    array->uuid+3);
+>  	fclose(f);
+> +	free(id_path);
+>  	return rv =3D=3D 5;
+>  }
+> =20
 
 
->=20
-> I understand the 2HDD to 5HDD growth, but not how to make the other one.=
-=20
-> Since I cant test it right know, I'll both tomorrow.
-
-You really don't need too think to much - just do it.
-You have a 2 drive RAID1.  You want to make a 5 drive RAID5, simply add 3
-drives with
-   mdadm /dev/md2 --add /dev/first /dev/second /dev/third
-
-then ask mdadm to change it for you:
-   mdadm --grow /dev/md2 --level=3D5 --raid-disks=3D5
-
-and mdadm will do the right thing.
-(Not that I want to discourage you from thinking, but sometimes experimenti=
-ng
-is about trying this that you don't think should work..)
+applied.  Thanks.
 
 NeilBrown
 
->=20
-> Dom
->=20
->=20
-> On 01/10/2011 00:02, NeilBrown wrote:
-> > On Fri, 30 Sep 2011 20:31:37 +0200 Dominique<dcouot@hotmail.com>  wrote:
-> >
-> >> Hi,
-> >>
-> >> Using Ubuntu 11.10 server , I am testing RAID level changes through
-> >> MDADM. The objective is to migrate RAID 1 (1+ HDD) environment to RAID=
- 5
-> >> (3+ HDD) without data loss.
-> >> In order to make as simple as possible, I started in a VM environment
-> >> (Virtual Box).
-> > Very sensible!!
-> >
-> >
-> >> Initial Setup:
-> >> U11.10 + 2 HDD (20GB) in Raid 1 ->  no problem
-> >> The setup is made with 3 RAID 1 partition on each disk (swap (2GB), bo=
-ot
-> >> (500MB), and root (17,5GB)). I understand that this will allow to
-> >> eventually grow to a RAID 5 configuration (in Ubuntu) and maintain boot
-> >> on a RAID construct (swap and boot would remain on RAID 1, while root
-> >> would migrate to RAID 5).
-> >>
-> >> Increment number of disks:
-> >> add 3 HDD to the setup ->  no problem
-> >> increase the RAID 1 from 2 HDD to 5 HDD ->  no problem, all disks added
-> >> and synchronized
-> > This is the bit you don't want.  Skip that step and it should work.
-> >
-> >
-> >> root@ubuntu:~# cat /proc/mdstat
-> >> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> >> [raid4] [raid10]
-> >> md2 : active raid1 sda3[0] sde3[4] sdb3[1] sdc3[2] sdd3[3]
-> >>         18528184 blocks super 1.2 [5/5] [UUUUU]
-> >>
-> >> md1 : active raid1 sda2[0] sde2[4] sdb2[1] sdd2[3] sdc2[2]
-> >>         488436 blocks super 1.2 [5/5] [UUUUU]
-> >>
-> >> md0 : active raid1 sdb1[1] sde1[4] sda1[0] sdc1[2] sdd1[3]
-> >>         1950708 blocks super 1.2 [5/5] [UUUUU]
-> >>
-> >>
-> >> Change Level:
-> >> That's where the problem occurs:
-> >> I initially tried 3 different approaches for md2 (the root partition)
-> >>
-> >>       1. Normal boot
-> >>
-> >>       mdadm /dev/md2 --grow --level=3D5
-> >>
-> >>       Not working: 'Could not set level to raid 5'. I suppose this is
-> >> because the partition is in use. Makes sense.
-> > Nope.  This is because md won't change a 5-device RAID1 to RAID5.  It w=
-ill
-> > only change a 2-device RAID1 to RAID5.  This is trivial to do because a
-> > 2-device RAID1 and a 2-device RAID5 have data in exactly the same place=
-s.
-> > Then you can change your 2-device RAID5 to a 5-device RAID5 - which tak=
-es a
-> > while but this can all be done while the partition is in use.
-> >
-> > i.e. if you start with a RAID1 with 2 active devices and 3 spares and i=
-ssue
-> > the command
-> >      mdadm /dev/md2 --grow --level=3D5 --raid-disks=3D5
-> >
-> > it will convert to RAID5 and then start reshaping out to include all 5 =
-disks.
-> >
-> >
-> > NeilBrown
-
-
---Sig_/Y+ph9vH_DDdNiMTkgiXb9Ur
+--Sig_/J8fyedvHsN7D2dhjWDGRl.s
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOiM6hG5fc6gV+Wb0RAga6AJ9EFk25M5gCflY2qlQgcrdfJxwvKACfc2e6
-LZErmdss72fFEpDllKnW88M=
-=8jJ9
+iD8DBQFOiNgvG5fc6gV+Wb0RAjKlAKCrUdwnh+B5gNKomblesz9c5XNt3gCfaD4t
+5dweZ+sWis0HPWrPjMkFuzo=
+=dNVl
 -----END PGP SIGNATURE-----
 
---Sig_/Y+ph9vH_DDdNiMTkgiXb9Ur--
+--Sig_/J8fyedvHsN7D2dhjWDGRl.s--
