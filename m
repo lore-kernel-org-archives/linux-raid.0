@@ -1,69 +1,51 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: How to stress test an RAID 6 array?
-Date: Mon, 3 Oct 2011 15:03:00 +0100
-Message-ID: <CADNH=7HXvqFVLZQQ7Yrq0STmiZGDVPCMsqv4t9yMRSiFS934XA@mail.gmail.com>
-References: <4E89B81D.5000800@yazzy.org>
-	<CADNH=7E9n-uj-xNPq-DuYgfJ+Js9b4bWn_QyeDJ8O+ka4GjLiQ@mail.gmail.com>
-	<4E89BF73.8020604@yazzy.org>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH 0/4] Fix freezing multiple arrays in container during assembly
+	(2)
+Date: Mon, 03 Oct 2011 18:13:30 +0200
+Message-ID: <20111003160839.18410.33275.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E89BF73.8020604@yazzy.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-On 3 October 2011 14:58, Marcin M. Jessa <lists@yazzy.org> wrote:
-> On 10/3/11 3:39 PM, Mathias Bur=C3=A9n wrote:
->
->> I would run badblocks on the md0 device. (increase number of blocks =
-to
->> check at a time until you use all your available RAM)
->> After that I'd run dd.
->
-> Any particular options you would give to dd ?
->
->> I would also check the SMART data on all
->> drives
->
-> What's strange SMART always says all the drives are healthy.
-> All of failures started with dmesg saying:
-> =C2=A0exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> =C2=A0ata9.00: failed command: FLUSH CACHE EXT
-> =C2=A0ata9.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-> =C2=A0res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> =C2=A0ata9.00: status: { DRDY }
->
-> That "exception Emask" part pointed me to misc threads where people
-> mentioned bugs in the Linux kernel.
->
-> A reboot would somehow reset the drives and they would always be work=
-ing
-> fine again and I could always resync the array until the next time wh=
-en a
-> drive would get kicked off.
->
->> and the health of the controller.
->
-> How can I run a check on that within Linux?
->
->
->
-> --
->
-> Marcin M. Jessa
->
+The following series corrects freezing reshaped array in container during
+assembly while other arrays are present.
 
-Can you post the smartctl -a -T permissive (etc) output on a pastebin
-somewhere, for all HDDs?
+The goal of the patches is to get entire assembled container (all arrays inside)
+to be blocked from monitoring when reshape is in progress /exactly as when
+reshape is initialized from mdadm command line/.
 
-What controller are you using?
+This time, freezing decision is taken based upon information from metadata,
+not /sysfs entries. For this purpose recovery_blocked field is added to mdinfo.
 
-/M
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Note: First patch in this series for mdadm throwing core file problem
+      is resent as reminder.
+
+BR
+Adam
+
+---
+
+Adam Kwolek (4):
+      Remove freeze() call from Grow_continue()
+      imsm: Fill recovery_blocked field present in mdinfo
+      Add recovery blocked field to mdinfo
+      FIX: restore_backup() throws core dump
+
+
+ Assemble.c    |    2 +-
+ Grow.c        |   13 ++++++-------
+ mdadm.h       |    7 +++++++
+ super-ddf.c   |    2 ++
+ super-intel.c |    6 ++++--
+ super0.c      |    2 ++
+ super1.c      |    2 ++
+ 7 files changed, 24 insertions(+), 10 deletions(-)
+
+-- 
+Signature
