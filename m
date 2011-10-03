@@ -1,189 +1,150 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] FIX: Remove error message during reshape restart
- (v2)
-Date: Mon, 3 Oct 2011 10:57:15 +1100
-Message-ID: <20111003105715.3a44923a@notabene.brown>
-References: <20110929154756.22854.13187.stgit@gklab-128-013.igk.intel.com>
-	<20110929155353.22854.5948.stgit@gklab-128-013.igk.intel.com>
+From: Dominique <dcouot@hotmail.com>
+Subject: Re: mdadm - level change from raid 1 to raid 5
+Date: Mon, 3 Oct 2011 10:53:50 +0200
+Message-ID: <BLU0-SMTP22900A6C32A672C1C40BF7CC9FA0@phx.gbl>
+References: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>	<20111001080250.65dc83bd@notabene.brown>	<BLU0-SMTP1299BD19297F8D4A02E6D13C9F50@phx.gbl> <20111003075041.188ff3ff@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0p8TyACR9Ikv3VbWDm5_S_e"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110929155353.22854.5948.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20111003075041.188ff3ff@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/0p8TyACR9Ikv3VbWDm5_S_e
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Neil,
 
-On Thu, 29 Sep 2011 17:53:54 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
-
-> When reshape is started in container on single array, all other container
-> members are blocked from monitoring also. After container reassembly
-> we have to construct the same situation.
-> Currently array under reshape is blocked only.
->=20
-> To block whole container during reshape we have 2 cases:
->   1. first assembled array is not reshaped and second is under reshape
->   2. first assembled array not reshaped and second is not under reshape
->=20
-> This patch addresses second case.
->   First assembled array is not reshaped and not blocked. Second reshaped
->   array is under reshape and it is blocked. When all reshaped array
->   parameters are verified and set in reshape continue freeze_container()
->   function block all other present in container and not blocked array(s).
->=20
-> This call to freeze_container() serves for native metadata case also.
->=20
-> This patch replaces its previous version that hides error message only.
-
-I won't apply this one just now as it relates to the previous patch that I
-want changed.
-If you still think this is appropriate, please resubmit with the other fixe=
-s.
+Followed your advice an tried a few things... RAID5 with 2HDD, seems to 
+work well. After growing all arrays, I've got my 3 arrays working (2 
+RAID1 and 1 RAID5), and I can boot. But I have one last question since 
+the raid.wiki.kernel.org server seems to be down.
+What about chunk size. I let it go with default values - 8k (for not 
+setting it before the --grow command). What is the optimal size...Is 
+there a nice math formula to define its optimal size ? And can it be 
+changed once the array is build ?
 
 Thanks,
 
-NeilBrown
+Dom
 
-
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->=20
->  Grow.c |   18 +++++++++---------
->  msg.c  |   10 +++++++---
->  msg.h  |    2 +-
->  3 files changed, 17 insertions(+), 13 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 3e13c8f..8f75ab8 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -566,8 +566,7 @@ int block_array_if_any_is_blocked(struct supertype *s=
-t, struct mdinfo *content)
->  	return 1;
->  }
-> =20
-> -
-> -static int freeze_container(struct supertype *st)
-> +static int freeze_container(struct supertype *st, int restart)
->  {
->  	int container_dev =3D (st->container_dev !=3D NoMdDev
->  			     ? st->container_dev : st->devnum);
-> @@ -575,11 +574,12 @@ static int freeze_container(struct supertype *st)
-> =20
->  	if (!check_idle(st))
->  		return -1;
-> -=09
-> +
->  	fmt_devname(container, container_dev);
-> =20
-> -	if (block_monitor(container, 1)) {
-> -		fprintf(stderr, Name ": failed to freeze container\n");
-> +	if (block_monitor(container, 1, restart)) {
-> +		if (!restart)
-> +			fprintf(stderr, Name ": failed to freeze container\n");
->  		return -2;
->  	}
-> =20
-> @@ -597,7 +597,7 @@ static void unfreeze_container(struct supertype *st)
->  	unblock_monitor(container, 1);
->  }
-> =20
-> -static int freeze(struct supertype *st)
-> +static int freeze(struct supertype *st, int restart)
->  {
->  	/* Try to freeze resync/rebuild on this array/container.
->  	 * Return -1 if the array is busy,
-> @@ -606,7 +606,7 @@ static int freeze(struct supertype *st)
->  	 * return 1 if it worked.
->  	 */
->  	if (st->ss->external)
-> -		return freeze_container(st);
-> +		return freeze_container(st, restart);
->  	else {
->  		struct mdinfo *sra =3D sysfs_read(-1, st->devnum, GET_VERSION);
->  		int err;
-> @@ -1522,7 +1522,7 @@ int Grow_reshape(char *devname, int fd, int quiet, =
-char *backup_file,
->  			devname);
->  		return 1;
->  	}
-> -	frozen =3D freeze(st);
-> +	frozen =3D freeze(st, 0);
->  	if (frozen < -1) {
->  		/* freeze() already spewed the reason */
->  		return 1;
-> @@ -3653,7 +3653,7 @@ int Grow_continue(int mdfd, struct supertype *st, s=
-truct mdinfo *info,
->  	if (st->ss->external) {
->  		fmt_devname(buf, st->container_dev);
->  		container =3D buf;
-> -		freeze(st);
-> +		freeze(st, 1);
-> =20
->  		if (!mdmon_running(st->container_dev))
->  			start_mdmon(st->container_dev);
-> diff --git a/msg.c b/msg.c
-> index f903afb..48a5bc3 100644
-> --- a/msg.c
-> +++ b/msg.c
-> @@ -334,7 +334,7 @@ int check_mdmon_version(char *container)
->   * As older versions of mdmon (which might run from initrd) don't unders=
-tand
->   * this, we first check that the running mdmon is new enough.
->   */
-> -int block_monitor(char *container, const int freeze)
-> +int block_monitor(char *container, const int freeze, const int restart)
->  {
->  	struct mdstat_ent *ent, *e, *e2;
->  	struct mdinfo *sra =3D NULL;
-> @@ -364,8 +364,12 @@ int block_monitor(char *container, const int freeze)
->  			break;
->  		}
->  		/* can't reshape an array that we can't monitor */
-> -		if (sra->text_version[0] =3D=3D '-')
-> -			break;
-> +		if (sra->text_version[0] =3D=3D '-') {
-> +			if (restart)
-> +				continue;
-> +			else
-> +				break;
-> +		}
-> =20
->  		if (freeze && sysfs_freeze_array(sra) < 1)
->  			break;
-> diff --git a/msg.h b/msg.h
-> index fb5815e..15aef2a 100644
-> --- a/msg.h
-> +++ b/msg.h
-> @@ -30,7 +30,7 @@ extern int ping_monitor(char *devname);
->  extern int ping_monitor_by_id(int devnum);
->  extern int block_subarray(struct mdinfo *sra);
->  extern int unblock_subarray(struct mdinfo *sra, const int unfreeze);
-> -extern int block_monitor(char *container, const int freeze);
-> +extern int block_monitor(char *container, const int freeze, const int re=
-start);
->  extern void unblock_monitor(char *container, const int unfreeze);
->  extern int check_blocked_monitor(char *container);
->  extern int fping_monitor(int sock);
-
-
---Sig_/0p8TyACR9Ikv3VbWDm5_S_e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iD8DBQFOiPpbG5fc6gV+Wb0RAv2JAKCPg5bup5in3tweh71E6Su2WjrbzwCggB9t
-83N5ST+mtCF/LrwtOICE9dE=
-=X88M
------END PGP SIGNATURE-----
-
---Sig_/0p8TyACR9Ikv3VbWDm5_S_e--
+On 02/10/2011 22:50, NeilBrown wrote:
+> On Sun, 2 Oct 2011 16:24:48 +0200 Dominique<dcouot@hotmail.com>  wrote:
+>
+>> Hi Neil,
+>>
+>> Thanks for the Info, I'll try a new series of VM tomorrow.
+>>
+>> I do have a question though. I thought that RAID5 required 3 HDD not 2.
+>> Hence I am a bit puzzled by your last comment....
+>> "Nope. This is because md won't change a 5-device RAID1 to RAID5. It
+>> will only change a 2-device RAID1 to RAID5. This is trivial to do
+>> because a 2-device RAID1 and a 2-device RAID5 have data in exactly the
+>> same places. " Or do I grow to a 3HDD RAID5 config with a 'missing' HDD.
+> It is a common misunderstanding that RAID5 requires 3 drives, not 2.
+> 2 is a perfectly good number of drives for RAID5.  On each stripe, on drive
+> holds the data, and the other drive holds the 'xor' of all the data blocks
+> with zero which results in exactly the data ( 0 xor D == D).
+> So a 2-drive RAID5 is nearly identical to a 2-drive RAID1, thus it is seen as
+> pointless and not considered to be a RAID5  (just as a triangle is not
+> considered to be a real quadrilateral, just because one of the 4 sides is of
+> length '0'!).
+> Some RAID5 implementations rule out 2-drive RAID5 for just this reason.
+> However 'md' is not so small-minded.
+> 2-drive RAID5s are great for testing ... I used to have graphs showing
+> throughput for 2,3,4,5,6,7,8 drives - the '2' made a nice addition.
+> And 2-drive RAID5s are very useful for converting RAID1 to RAID5.  First
+> convert a 2-drive RAID1 to a 2-drive RAID5, then change the number of drives
+> in the RAID5.
+>
+>
+> RAID6 should really work with only 3 drives, but md is not so enlightened.
+> When hpa wrote the code he set the lower limit to 4 drives.  I would like to
+> make it 3, but I would have to check that 3 really does work and I haven't
+> done that yet.
+>
+>
+>> I understand the 2HDD to 5HDD growth, but not how to make the other one.
+>> Since I cant test it right know, I'll both tomorrow.
+> You really don't need too think to much - just do it.
+> You have a 2 drive RAID1.  You want to make a 5 drive RAID5, simply add 3
+> drives with
+>     mdadm /dev/md2 --add /dev/first /dev/second /dev/third
+>
+> then ask mdadm to change it for you:
+>     mdadm --grow /dev/md2 --level=5 --raid-disks=5
+>
+> and mdadm will do the right thing.
+> (Not that I want to discourage you from thinking, but sometimes experimenting
+> is about trying this that you don't think should work..)
+>
+> NeilBrown
+>
+>> Dom
+>>
+>>
+>> On 01/10/2011 00:02, NeilBrown wrote:
+>>> On Fri, 30 Sep 2011 20:31:37 +0200 Dominique<dcouot@hotmail.com>   wrote:
+>>>
+>>>> Hi,
+>>>>
+>>>> Using Ubuntu 11.10 server , I am testing RAID level changes through
+>>>> MDADM. The objective is to migrate RAID 1 (1+ HDD) environment to RAID 5
+>>>> (3+ HDD) without data loss.
+>>>> In order to make as simple as possible, I started in a VM environment
+>>>> (Virtual Box).
+>>> Very sensible!!
+>>>
+>>>
+>>>> Initial Setup:
+>>>> U11.10 + 2 HDD (20GB) in Raid 1 ->   no problem
+>>>> The setup is made with 3 RAID 1 partition on each disk (swap (2GB), boot
+>>>> (500MB), and root (17,5GB)). I understand that this will allow to
+>>>> eventually grow to a RAID 5 configuration (in Ubuntu) and maintain boot
+>>>> on a RAID construct (swap and boot would remain on RAID 1, while root
+>>>> would migrate to RAID 5).
+>>>>
+>>>> Increment number of disks:
+>>>> add 3 HDD to the setup ->   no problem
+>>>> increase the RAID 1 from 2 HDD to 5 HDD ->   no problem, all disks added
+>>>> and synchronized
+>>> This is the bit you don't want.  Skip that step and it should work.
+>>>
+>>>
+>>>> root@ubuntu:~# cat /proc/mdstat
+>>>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+>>>> [raid4] [raid10]
+>>>> md2 : active raid1 sda3[0] sde3[4] sdb3[1] sdc3[2] sdd3[3]
+>>>>          18528184 blocks super 1.2 [5/5] [UUUUU]
+>>>>
+>>>> md1 : active raid1 sda2[0] sde2[4] sdb2[1] sdd2[3] sdc2[2]
+>>>>          488436 blocks super 1.2 [5/5] [UUUUU]
+>>>>
+>>>> md0 : active raid1 sdb1[1] sde1[4] sda1[0] sdc1[2] sdd1[3]
+>>>>          1950708 blocks super 1.2 [5/5] [UUUUU]
+>>>>
+>>>>
+>>>> Change Level:
+>>>> That's where the problem occurs:
+>>>> I initially tried 3 different approaches for md2 (the root partition)
+>>>>
+>>>>        1. Normal boot
+>>>>
+>>>>        mdadm /dev/md2 --grow --level=5
+>>>>
+>>>>        Not working: 'Could not set level to raid 5'. I suppose this is
+>>>> because the partition is in use. Makes sense.
+>>> Nope.  This is because md won't change a 5-device RAID1 to RAID5.  It will
+>>> only change a 2-device RAID1 to RAID5.  This is trivial to do because a
+>>> 2-device RAID1 and a 2-device RAID5 have data in exactly the same places.
+>>> Then you can change your 2-device RAID5 to a 5-device RAID5 - which takes a
+>>> while but this can all be done while the partition is in use.
+>>>
+>>> i.e. if you start with a RAID1 with 2 active devices and 3 spares and issue
+>>> the command
+>>>       mdadm /dev/md2 --grow --level=5 --raid-disks=5
+>>>
+>>> it will convert to RAID5 and then start reshaping out to include all 5 disks.
+>>>
+>>>
+>>> NeilBrown
