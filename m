@@ -1,51 +1,107 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: "Marcin M. Jessa" <lists@yazzy.org>
 Subject: Re: How to stress test an RAID 6 array?
-Date: Mon, 03 Oct 2011 23:42:11 -0500
-Message-ID: <4E8A8EA3.1070405@hardwarefreak.com>
-References: <4E89B81D.5000800@yazzy.org> <CADNH=7E9n-uj-xNPq-DuYgfJ+Js9b4bWn_QyeDJ8O+ka4GjLiQ@mail.gmail.com> <4E89BF73.8020604@yazzy.org> <CADNH=7HXvqFVLZQQ7Yrq0STmiZGDVPCMsqv4t9yMRSiFS934XA@mail.gmail.com> <4E89C445.1080406@yazzy.org> <CADNH=7HHBaieZMj=a8s45reEwBLKqBVaZFgnVnB_gcX0p4nS-w@mail.gmail.com> <4E89D21F.2040904@yazzy.org>
-Reply-To: stan@hardwarefreak.com
+Date: Tue, 04 Oct 2011 10:37:43 +0200
+Message-ID: <4E8AC5D7.8070405@yazzy.org>
+References: <4E89B81D.5000800@yazzy.org> <CADNH=7E9n-uj-xNPq-DuYgfJ+Js9b4bWn_QyeDJ8O+ka4GjLiQ@mail.gmail.com> <4E89BF73.8020604@yazzy.org> <4E8A83FD.3060805@hardwarefreak.com>
+Reply-To: lists@yazzy.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E89D21F.2040904@yazzy.org>
+In-Reply-To: <4E8A83FD.3060805@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lists@yazzy.org
+To: stan@hardwarefreak.com
 Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/3/2011 10:17 AM, Marcin M. Jessa wrote:
-> On 10/3/11 4:29 PM, Mathias Bur=E9n wrote:
->=20
->>  From what I can tell the HDDs themselves seem to be healthy. Perhap=
-s
->> using the latest kernel is a step in the right direction?
->=20
-> It should be new enough...
-> # uname -a
-> Linux odin 3.0.0-1-amd64 #1 SMP Sat Aug 27 16:21:11 UTC 2011 x86_64
-> GNU/Linux
+On 10/4/11 5:56 AM, Stan Hoeppner wrote:
+> On 10/3/2011 8:58 AM, Marcin M. Jessa wrote:
+>
+>>   exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>
+> This line is not important ^^^
+>
+>>   ata9.00: failed command: FLUSH CACHE EXT
+>
+> THIS one is:^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+>> That "exception Emask" part pointed me to misc threads where people
+>> mentioned bugs in the Linux kernel.
+>
+> According to your dmesg output the kernel believes the drives are not
+> completing the ATA6 (and later) FLUSH_CACHE_EXT command.  hdparm will
+> confirm your drives drives do support it.  FLUSH_CACHE_EXT is sent to a
+> drive to force data in the cache to hit the platters.  This is done for
+> data consistency and to prevent filesystem corruption due to power
+> outages, system crashes, and the like.
+>
+> What you need to figure out is why the apparent flush command faliures
+> are occurring.  The cause will likely be a kernel/driver issue, a
+> motherboard/sata controller issue, a PSU issue, or a drive issue.
 
-This is your 2nd (or 3rd) thread topic covering a single problem, IIRC.
- This makes it difficult for us to keep track of the information you've
-given.
+I was testing the ARRAY again yesterday running multiple I/O intensive 
+processes:
+- installing two KVM guests at the same time
+- running iozone -a -Rb output.xls
+- 3 simultaneous dd processes writing to an LV on top of the array with 
+various block sizes, i.e: dd if=/dev/zero of=file2 bs=8k count=1024000
+- fio tests as suggested by Joseph Landman in a different post in the 
+thread.
 
-Could you please give us a coherent timeline of the system's problems, =
-i.e.:
+It never failed.
+I updated the BIOS to the latest version before running new tests and 
+replace the SATA cables. It may have helped.
+I also noticed the CPU was slightly overclocked from 3.0GHz to 3.2GHz.
+Do you think it could affect the RAID on heavy CPU loads?
 
-1.  Kernel version and distro you were using when problem surfaced
-2.  All other kernel version you've used since
-3.  Which (if not all) kernel versions suffer this problem
-4.  Is there a newer BIOS available for that MSI mobo?
-5.  If so, have you installed it?
+> The few instances of this FLUSH_CACHE_EXT error I located seemed to
+> center somewhere around kernel 2.6.34.  IIRC those experiencing this
+> issue on FC and Ubuntu instantly fixed it with a distro upgrade.
+>
+> Thus, upgrade your kernel to 2.6.38.8 or later.
 
-Please provide the model number of the Seagate drives in question.  I
-can't seem to find it in your posts.
+My kernel is pretty new:
+# uname -a
+Linux odin 3.0.0-1-amd64 #1 SMP Sat Aug 27 16:21:11 UTC 2011 x86_64
+GNU/Linux
 
---=20
-Stan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>If that doesn't fix it,
+> disable the write caches on your array member drives (a very good idea
+> with non BBU RAID anyway).  The proper/preferred way to do this may vary
+> amongst distros.  Adding a boot script containing something like the
+> following to the appropriate /etc/rc.x directory should do the trick on
+> all distros:
+>
+> #!/bin/sh
+> hdparm -W0 /dev/sda
+> hdparm -W0 /dev/sdb
+> hdparm -W0 /dev/sdc
+> hdparm -W0 /dev/sdd
+> hdparm -W0 /dev/sde
+
+Thanks. The problem is device names change across reboots. The RAID 
+members can start at /dev/sdg or /dev/sda, you never know.
+I should probably replace that with UUIDs.
+BTW, would it be recommended to disable write caches for devices which 
+are members of RAID 1 or not members of any RAID ?
+
+
+> Reboot.  Confirm the write caches are disabled with something like this:
+>
+> #!/bin/bash
+> for i in {a..e}
+> do
+>      echo -n "sd$i:  "
+>      hdparm -i /dev/sd$i|grep -i writecache|awk '{ print $2 }'
+> done
+>
+> If neither of these suggestions fixes the problem then you may need to
+> start replacing or adding hardware.  At that point I'd recommend
+> dropping an LSI SAS 9211-8i into your free PCIe x16 slot.
+
+Thanks a lot for your help Stan.
+
+
+-- 
+
+Marcin M. Jessa
