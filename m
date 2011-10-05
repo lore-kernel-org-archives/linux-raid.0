@@ -1,22 +1,35 @@
-From: Jim Schatzman <james.schatzman@futurelabusa.com>
-Subject: Appropriate kernel group for IDE/ATA/SAS/SATA issues?
-Date: Tue, 04 Oct 2011 22:25:26 -0600
-Message-ID: <20111005042534.29590581FAC@mail.futurelabusa.com>
+From: "linux-raid" <linux-raid@watkins-home.com>
+Subject: Does Linux support Intel Smart Response Technology?
+Date: Tue, 04 Oct 2011 23:30:24 -0400
+Message-ID: <08e801cc830f$212f2e30$638d8a90$@watkins-home.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+References: 
+In-reply-to: 
+Content-language: en-us
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Group-
+I know this is not the correct place to ask, but I hope someone here will
+know.
 
-Sorry for a slightly off-topic question. I have built a number of systems recently with an unraided SSD system drive and data on software SATA RAID. Unfortunately, I have noticed that the currently Linux IDE/ATA/SAS/SATA  drivers don't seem to handle SSD drives well. What is  worse, once the kernel starts "detecting" errors with the SSD, it starts making bad adjustments to the SATA RAID devices, such as changing link speeds of RAID devices, even when the RAID devices and SSD are on completely separate controllers. Also, the kernel appears to get confused sometimes and decide that, say ata9 is having problems when it is actually ata3 (after properly accounting for the kernel's multiple different ways of numbering the same devices).
+Does Linux support the Intel Smart Response Technology?
 
-Although the problem impacts my software RAIDs, it does not appear to be a RAID problem. Which is the right kernel news group to corresponding with about this kind of issue?
+I am building a new computer and will have two 2TB disks and a 64 or 120 GB
+SSD.  I am hoping to use the SSD cache feature.  I think I would configure a
+bios RAID with 1 disk and the SSD as a cache, then use Linux to mirror that
+with the second 2TB disk using the write mostly feature of MD.  But would it
+be better to create a bios RAID1 with both disks and the ssd cache?
 
-Thanks-
+If I can't use that feature, does anyone have any tips on using two 2TB
+disks and 1 SSD?  The best I can figure is to create a 3 way mirror using
+all disks and set the hard disks to write mostly, and putting the OS and
+/home on the 3 way mirror(s) then a 2 way mirror with the remaining space
+for non-OS stuff (home movies, pictures, iso, whatever).
 
-Jim
- 
+Thanks for any help,
+Guy
 
