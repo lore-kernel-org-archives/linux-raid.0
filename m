@@ -1,102 +1,83 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] Set correct reshape restart position
-Date: Wed, 5 Oct 2011 14:17:19 +1100
-Message-ID: <20111005141719.4dcde7f6@notabene.brown>
-References: <20111004155129.27434.81564.stgit@gklab-128-013.igk.intel.com>
-	<20111004155404.27434.89339.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] imsm: fix: correct adding and activation of spare disks
+Date: Wed, 5 Oct 2011 14:19:14 +1100
+Message-ID: <20111005141914.1b64aa62@notabene.brown>
+References: <20111004145654.25974.12262.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/QDO8DBm07T6IePVrrLSbgxe"; protocol="application/pgp-signature"
+ boundary="Sig_/OoJyYum5r1WuLwcwc9dTZeV"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111004155404.27434.89339.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20111004145654.25974.12262.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/QDO8DBm07T6IePVrrLSbgxe
+--Sig_/OoJyYum5r1WuLwcwc9dTZeV
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 04 Oct 2011 17:54:04 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
-e:
+On Tue, 04 Oct 2011 16:56:54 +0200 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> This patch version is simplified compared to previous one.
-> There is no use of freeze_reshape flag in start_reshape(). It is assumed
-> that for reshape starting condition reshape_progress field contains
-> 0 value /correct start position/. For reshape restart case, it contains
-> correct restart position. This approach doesn't make start_reshape()
-> difficult to read/manage and /imho/ kernel changes to change mdstat
-> reporting behavior are not necessary.
+> During activation of spare disks, only one of all available
+> spare disks can be activated at this moment.
+> It causes that for example during take-over from
+> RAID0 with 2 disks to RAID10, only one of two spare disks
+> is taken for recovery and a degraded RAID10 array
+> with only 3 of 4 working disks is created.
+> It has been fixed by adding more than one of all available
+> spare disks and saving them in additional_test_list
+> which is passed to imsm_add_spare().
 >=20
-> Setting correct position allows user to see it in the mdstat during
-> reshape restart and reshape process is not reported as resync.
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+> ---
+>  super-intel.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/super-intel.c b/super-intel.c
+> index 7de207a..3185e91 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -6672,9 +6672,9 @@ static struct mdinfo *imsm_activate_spare(struct ac=
+tive_array *a,
+>  		 */
+>  		dl =3D imsm_readd(super, i, a);
+>  		if (!dl)
+> -			dl =3D imsm_add_spare(super, i, a, 0, NULL);
+> +			dl =3D imsm_add_spare(super, i, a, 0, rv);
+>  		if (!dl)
+> -			dl =3D imsm_add_spare(super, i, a, 1, NULL);
+> +			dl =3D imsm_add_spare(super, i, a, 1, rv);
+>  		if (!dl)
+>  			continue;
+>  =20
+> @@ -6711,8 +6711,6 @@ static struct mdinfo *imsm_activate_spare(struct ac=
+tive_array *a,
+>  		num_spares++;
+>  		dprintf("%x:%x to be %d at %llu\n", dl->major, dl->minor,
+>  			i, di->data_offset);
+> -
+> -		break;
+>  	}
+> =20
+>  	if (!rv)
 
-Applied, thanks.
+
+applied, thanks,
 
 NeilBrown
 
-
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->=20
->  Grow.c |   17 +++++++++++------
->  1 files changed, 11 insertions(+), 6 deletions(-)
->=20
-> diff --git a/Grow.c b/Grow.c
-> index 076375a..44505b3 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -696,15 +696,19 @@ static int subarray_set_num(char *container, struct=
- mdinfo *sra, char *name, int
->  	return rc;
->  }
-> =20
-> -int start_reshape(struct mdinfo *sra, int already_running)
-> +int start_reshape(struct mdinfo *sra, int already_running, int data_disk=
-s)
->  {
->  	int err;
-> +	unsigned long long sync_max_to_set;
-> +
->  	sysfs_set_num(sra, NULL, "suspend_lo", 0x7FFFFFFFFFFFFFFFULL);
-> -	err =3D sysfs_set_num(sra, NULL, "suspend_hi", 0);
-> -	err =3D err ?: sysfs_set_num(sra, NULL, "suspend_lo", 0);
-> +	err =3D sysfs_set_num(sra, NULL, "suspend_hi", sra->reshape_progress);
-> +	err =3D err ?: sysfs_set_num(sra, NULL, "suspend_lo",
-> +				   sra->reshape_progress);
-> +	sync_max_to_set =3D sra->reshape_progress / data_disks;
->  	if (!already_running)
-> -		sysfs_set_num(sra, NULL, "sync_min", 0);
-> -	err =3D err ?: sysfs_set_num(sra, NULL, "sync_max", 0);
-> +		sysfs_set_num(sra, NULL, "sync_min", sync_max_to_set);
-> +	err =3D err ?: sysfs_set_num(sra, NULL, "sync_max", sync_max_to_set);
->  	if (!already_running)
->  		err =3D err ?: sysfs_set_str(sra, NULL, "sync_action", "reshape");
-> =20
-> @@ -2241,7 +2245,8 @@ started:
->  		}
->  	}
-> =20
-> -	err =3D start_reshape(sra, restart);
-> +	err =3D start_reshape(sra, restart,
-> +			    info->array.raid_disks - reshape.parity);
->  	if (err) {
->  		fprintf(stderr,=20
->  			Name ": Cannot %s reshape for %s\n",
-
-
---Sig_/QDO8DBm07T6IePVrrLSbgxe
+--Sig_/OoJyYum5r1WuLwcwc9dTZeV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOi8w/G5fc6gV+Wb0RAiGlAKCKXbkyKpTLby0NOkhrDGSp4ZLNnACgjzG6
-qSZ2G8oVobtzA2PBsaXtCUg=
-=7le1
+iD8DBQFOi8yyG5fc6gV+Wb0RAs4lAJ9HQNa2ghJj1DYAEL8ozAroDJEqzQCeI4eU
+tAKGf88HtHV7Y955IpfJZ3c=
+=SL/x
 -----END PGP SIGNATURE-----
 
---Sig_/QDO8DBm07T6IePVrrLSbgxe--
+--Sig_/OoJyYum5r1WuLwcwc9dTZeV--
