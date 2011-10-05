@@ -1,275 +1,294 @@
-From: Support <support@lsi.com>
-Subject: RE: MD sets failing under heavy load in a DRBD/Pacemaker Cluster
- (115893302)
-Date: Tue, 4 Oct 2011 13:25:22 -0400
-Message-ID: <0D63DF7EF1ECC54F8072B9C6DE07BE0B04BB442D55@palmail03.lsi.com>
-References: <CAKFseUPKzcEx94axosagf9wnMJfhr8TRvu3BUm4vDESj9Z_Dgg@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: mdadm - level change from raid 1 to raid 5
+Date: Wed, 5 Oct 2011 12:18:14 +1100
+Message-ID: <20111005121814.184f880f@notabene.brown>
+References: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>
+	<20111001080250.65dc83bd@notabene.brown>
+	<BLU0-SMTP1299BD19297F8D4A02E6D13C9F50@phx.gbl>
+	<20111003075041.188ff3ff@notabene.brown>
+	<BLU0-SMTP22900A6C32A672C1C40BF7CC9FA0@phx.gbl>
+	<20111003210744.45e637d7@notabene.brown>
+	<BLU0-SMTP2333DCB3FF0B31A1F4A3D99C9FA0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/W2kIOwuog+FK6uw3Srs4IGK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAKFseUPKzcEx94axosagf9wnMJfhr8TRvu3BUm4vDESj9Z_Dgg@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <BLU0-SMTP2333DCB3FF0B31A1F4A3D99C9FA0@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>, General Linux-HA mailing list <linux-ha@lists.linux-ha.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Dominique <dcouot@hotmail.com>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Caspar,
+--Sig_/W2kIOwuog+FK6uw3Srs4IGK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It is difficult to say what the issue is for sure. If you can run a uti=
-lity we have, lsiget, it will collect logs and I will be able to see wh=
-at is causing errors from the controller standpoint.
+On Mon, 3 Oct 2011 12:52:37 +0200 Dominique <dcouot@hotmail.com> wrote:
 
-You can download the utility from the link below. Run the batch file an=
-d send the zip file back.
-http://kb.lsi.com/KnowledgebaseArticle12278.aspx?Keywords=3Dlinux+lsige=
-t
+> Well,...
+> I thought I was not that stupid.
+> But it seems I need more explanation/help. I just tried to change the=20
+> chunk size, but I got the weirdest answer of all:"mdadm: component size=20
+> 18919352 is not a multiple of chunksize 32k".
+> 18919352 is indeed not a multiple of 32 or any other multiple of 8 for=20
+> that matter (up to 1024, after that I gave up). So what did I do wrong=20
+> in my setup.
 
+When you convert a RAID1 to a RAID5 the RAID5 needs to have a chunk size th=
+at
+exactly divides the size of the RAID1 - as a RAID5 needs to be a whole numb=
+er
+of stripes, so each device must be a whole number of chunks.
 
-Regards,
+md tries for a 64K chunk size, but repeatedly halves it until the chunk size
+divides into the device size.  Thus you got 8K chunks - the largest power of
+2 that divides 18919352.
 
-Drew Cohen
-Technical Support Engineer
-Global Support Services
+If you want to use a larger chunk size you will need to make your array
+slightly smaller first.
+  mdadm /dev/md2 --size=3D18918912
+will shrink it to a multiple of 512K.  If the filesystem is bigger than that
+(likely) you will need to shrink it first
+  resize2fs /dev/md2 18918912
 
-LSI Corporation
-4165 Shakleford Road
-Norcross, GA 30093
-Phone: 1-800-633-4545
-Email: support@lsi.com
+should do it, if it is ext2,3,4.
 
+Then you can change the chunk size to something bigger.
 
+I probably need to document that better, and provide a way to give an initi=
+al
+chunk size of the RAID5....
 
-
------Original Message-----
-=46rom: smit.caspar@gmail.com [mailto:smit.caspar@gmail.com] On Behalf =
-Of Caspar Smit
-Sent: Tuesday, October 04, 2011 8:01 AM
-To: General Linux-HA mailing list; linux-scsi@vger.kernel.org; drbd-use=
-r@lists.linbit.com; iscsitarget-devel@lists.sourceforge.net; Support; l=
-inux-raid@vger.kernel.org
-Subject: MD sets failing under heavy load in a DRBD/Pacemaker Cluster
-
-Hi all,
-
-We are having a major problem with one of our clusters.
-
-Here's a description of the setup:
-
-2 supermicro servers containing the following hardware:
-
-Chassis: SC846E1-R1200B
-Mainboard: X8DTH-6F rev 2.01 (onboard LSI2008 controller disabled throu=
-gh jumper)
-CPU: Intel Xeon E5606 @ 2.13Ghz, 4 cores
-Memory: 4x KVR1333D3D4R9S/4G (16Gb)
-Backplane: SAS846EL1 rev 1.1
-Ethernet: 2x Intel Pro/1000 PT Quad Port Low Profile SAS/SATA Controlle=
-r: LSI 3081E-R (P20, BIOS: 6.34.00.00, Firmware 1.32.00.00-IT) SAS/SATA=
- JBOD Controller: LSI 3801E (P20, BIOS: 6.34.00.00, Firmware
-1.32.00.00-IT)
-OS Disk: 30Gb SSD
-Harddisks: 24x Western Digital 2TB 7200RPM RE4-GP (WD2002FYPS)
-
-Both machines have debian lenny 5 installed, here are the versions of t=
-he packages involved:
-
-drbd/heartbeat/pacemaker are installed from the backports repository.
-
-linux-image-2.6.26-2-amd64   2.6.26-26lenny3
-mdadm                                2.6.7.2-3
-drbd8-2.6.26-2-amd64           2:8.3.7-1~bpo50+1+2.6.26-26lenny3
-drbd8-source                        2:8.3.7-1~bpo50+1
-drbd8-utils                            2:8.3.7-1~bpo50+1
-heartbeat                             1:3.0.3-2~bpo50+1
-pacemaker                           1.0.9.1+hg15626-1~bpo50+1
-iscsitarget                            1.4.20.2 (compiled from tar.gz)
+NeilBrown
 
 
-We created 4 MD sets out of the 24 harddisks (/dev/md0 through /dev/md3=
-)
+>=20
+> To be clear is what I did this morning:
+> 1. Setup a new VM with 5HDD (20G each) under Ubuntu 11.10 server
+> 2. Setup a RAID1 with 2 HDD (3 spares) md0 2GB (swap), md1 100 MB=20
+> (boot), md2 the rest (root)
+> 3. Convert md2 from RAID1 to Raid5
+> mdadm --grow /dev/md2 --level=3D5
+> 4. Copied the content of sda to sdc, sdd and sde by doing
+> sfdisk -d /dev/sda | sfdisk /dev/sdc --force (and so on for sdd and sde)
+> 5. Then added and extended the various arrays
+> mdadm --add /dev/md0 /dev/sdc1 /dev/sdd1 /dev/sde1
+> mdadm --add /dev/md1 /dev/sdc2 /dev/sdd2 /dev/sde2
+> mdadm --add /dev/md2 /dev/sdc3 /dev/sdd3 /dev/sde3
+> mdadm --grow /dev/md0 --raid-devices=3D5
+> mdadm --grow /dev/md1 --raid-devices=3D5
+> mdadm --grow /dev/md2 --raid-devices=3D5
+> on that last one, I got "mdadm: Need to backup 32K of critical section.."
+> but a cat /proc/mdstat showed all arrays being reshaped without problems.
+> At the end, a simple reboot and all was in order.
+> So any idea where I went wrong ?
+>=20
+> Dom
+>=20
+>=20
+> On 03/10/2011 12:07, NeilBrown wrote:
+>=20
+> > On Mon, 3 Oct 2011 10:53:50 +0200 Dominique<dcouot@hotmail.com>  wrote:
+> >
+> >> Hi Neil,
+> >>
+> >> Followed your advice an tried a few things... RAID5 with 2HDD, seems to
+> >> work well. After growing all arrays, I've got my 3 arrays working (2
+> >> RAID1 and 1 RAID5), and I can boot. But I have one last question since
+> >> the raid.wiki.kernel.org server seems to be down.
+> >> What about chunk size. I let it go with default values - 8k (for not
+> >> setting it before the --grow command). What is the optimal size...Is
+> >> there a nice math formula to define its optimal size ? And can it be
+> >> changed once the array is build ?
+> > The default for chunksize should be 512K I thought..
+> > I once saw a mathematical formula, but it was a function of the number =
+of
+> > concurrent accesses and the average IO size - I think.
+> >
+> > Big is good for large streaming requests.  Smaller is good for lots of =
+random
+> > IO.  Only way to know for sure is to measure your workload on different=
+ sizes.
+> >
+> > You can change it once the array is build, but it is a very slow operat=
+ion as
+> > it has to move every block on every disk to somewhere else.
+> >
+> >   mdadm -G /dev/md2 --chunk=3D32
+> >
+> > NeilBrown
+> >
+> >
+> >
+> >> Thanks,
+> >>
+> >> Dom
+> >>
+> >> On 02/10/2011 22:50, NeilBrown wrote:
+> >>> On Sun, 2 Oct 2011 16:24:48 +0200 Dominique<dcouot@hotmail.com>   wro=
+te:
+> >>>
+> >>>> Hi Neil,
+> >>>>
+> >>>> Thanks for the Info, I'll try a new series of VM tomorrow.
+> >>>>
+> >>>> I do have a question though. I thought that RAID5 required 3 HDD not=
+ 2.
+> >>>> Hence I am a bit puzzled by your last comment....
+> >>>> "Nope. This is because md won't change a 5-device RAID1 to RAID5. It
+> >>>> will only change a 2-device RAID1 to RAID5. This is trivial to do
+> >>>> because a 2-device RAID1 and a 2-device RAID5 have data in exactly t=
+he
+> >>>> same places. " Or do I grow to a 3HDD RAID5 config with a 'missing' =
+HDD.
+> >>> It is a common misunderstanding that RAID5 requires 3 drives, not 2.
+> >>> 2 is a perfectly good number of drives for RAID5.  On each stripe, on=
+ drive
+> >>> holds the data, and the other drive holds the 'xor' of all the data b=
+locks
+> >>> with zero which results in exactly the data ( 0 xor D =3D=3D D).
+> >>> So a 2-drive RAID5 is nearly identical to a 2-drive RAID1, thus it is=
+ seen as
+> >>> pointless and not considered to be a RAID5  (just as a triangle is not
+> >>> considered to be a real quadrilateral, just because one of the 4 side=
+s is of
+> >>> length '0'!).
+> >>> Some RAID5 implementations rule out 2-drive RAID5 for just this reaso=
+n.
+> >>> However 'md' is not so small-minded.
+> >>> 2-drive RAID5s are great for testing ... I used to have graphs showing
+> >>> throughput for 2,3,4,5,6,7,8 drives - the '2' made a nice addition.
+> >>> And 2-drive RAID5s are very useful for converting RAID1 to RAID5.  Fi=
+rst
+> >>> convert a 2-drive RAID1 to a 2-drive RAID5, then change the number of=
+ drives
+> >>> in the RAID5.
+> >>>
+> >>>
+> >>> RAID6 should really work with only 3 drives, but md is not so enlight=
+ened.
+> >>> When hpa wrote the code he set the lower limit to 4 drives.  I would =
+like to
+> >>> make it 3, but I would have to check that 3 really does work and I ha=
+ven't
+> >>> done that yet.
+> >>>
+> >>>
+> >>>> I understand the 2HDD to 5HDD growth, but not how to make the other =
+one.
+> >>>> Since I cant test it right know, I'll both tomorrow.
+> >>> You really don't need too think to much - just do it.
+> >>> You have a 2 drive RAID1.  You want to make a 5 drive RAID5, simply a=
+dd 3
+> >>> drives with
+> >>>      mdadm /dev/md2 --add /dev/first /dev/second /dev/third
+> >>>
+> >>> then ask mdadm to change it for you:
+> >>>      mdadm --grow /dev/md2 --level=3D5 --raid-disks=3D5
+> >>>
+> >>> and mdadm will do the right thing.
+> >>> (Not that I want to discourage you from thinking, but sometimes exper=
+imenting
+> >>> is about trying this that you don't think should work..)
+> >>>
+> >>> NeilBrown
+> >>>
+> >>>> Dom
+> >>>>
+> >>>>
+> >>>> On 01/10/2011 00:02, NeilBrown wrote:
+> >>>>> On Fri, 30 Sep 2011 20:31:37 +0200 Dominique<dcouot@hotmail.com>   =
+ wrote:
+> >>>>>
+> >>>>>> Hi,
+> >>>>>>
+> >>>>>> Using Ubuntu 11.10 server , I am testing RAID level changes through
+> >>>>>> MDADM. The objective is to migrate RAID 1 (1+ HDD) environment to =
+RAID 5
+> >>>>>> (3+ HDD) without data loss.
+> >>>>>> In order to make as simple as possible, I started in a VM environm=
+ent
+> >>>>>> (Virtual Box).
+> >>>>> Very sensible!!
+> >>>>>
+> >>>>>
+> >>>>>> Initial Setup:
+> >>>>>> U11.10 + 2 HDD (20GB) in Raid 1 ->    no problem
+> >>>>>> The setup is made with 3 RAID 1 partition on each disk (swap (2GB)=
+, boot
+> >>>>>> (500MB), and root (17,5GB)). I understand that this will allow to
+> >>>>>> eventually grow to a RAID 5 configuration (in Ubuntu) and maintain=
+ boot
+> >>>>>> on a RAID construct (swap and boot would remain on RAID 1, while r=
+oot
+> >>>>>> would migrate to RAID 5).
+> >>>>>>
+> >>>>>> Increment number of disks:
+> >>>>>> add 3 HDD to the setup ->    no problem
+> >>>>>> increase the RAID 1 from 2 HDD to 5 HDD ->    no problem, all disk=
+s added
+> >>>>>> and synchronized
+> >>>>> This is the bit you don't want.  Skip that step and it should work.
+> >>>>>
+> >>>>>
+> >>>>>> root@ubuntu:~# cat /proc/mdstat
+> >>>>>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid=
+5]
+> >>>>>> [raid4] [raid10]
+> >>>>>> md2 : active raid1 sda3[0] sde3[4] sdb3[1] sdc3[2] sdd3[3]
+> >>>>>>           18528184 blocks super 1.2 [5/5] [UUUUU]
+> >>>>>>
+> >>>>>> md1 : active raid1 sda2[0] sde2[4] sdb2[1] sdd2[3] sdc2[2]
+> >>>>>>           488436 blocks super 1.2 [5/5] [UUUUU]
+> >>>>>>
+> >>>>>> md0 : active raid1 sdb1[1] sde1[4] sda1[0] sdc1[2] sdd1[3]
+> >>>>>>           1950708 blocks super 1.2 [5/5] [UUUUU]
+> >>>>>>
+> >>>>>>
+> >>>>>> Change Level:
+> >>>>>> That's where the problem occurs:
+> >>>>>> I initially tried 3 different approaches for md2 (the root partiti=
+on)
+> >>>>>>
+> >>>>>>         1. Normal boot
+> >>>>>>
+> >>>>>>         mdadm /dev/md2 --grow --level=3D5
+> >>>>>>
+> >>>>>>         Not working: 'Could not set level to raid 5'. I suppose th=
+is is
+> >>>>>> because the partition is in use. Makes sense.
+> >>>>> Nope.  This is because md won't change a 5-device RAID1 to RAID5.  =
+It will
+> >>>>> only change a 2-device RAID1 to RAID5.  This is trivial to do becau=
+se a
+> >>>>> 2-device RAID1 and a 2-device RAID5 have data in exactly the same p=
+laces.
+> >>>>> Then you can change your 2-device RAID5 to a 5-device RAID5 - which=
+ takes a
+> >>>>> while but this can all be done while the partition is in use.
+> >>>>>
+> >>>>> i.e. if you start with a RAID1 with 2 active devices and 3 spares a=
+nd issue
+> >>>>> the command
+> >>>>>        mdadm /dev/md2 --grow --level=3D5 --raid-disks=3D5
+> >>>>>
+> >>>>> it will convert to RAID5 and then start reshaping out to include al=
+l 5 disks.
+> >>>>>
+> >>>>>
+> >>>>> NeilBrown
 
-Each is a RAID5 of 5 disks and 1 hotspare (8TB netto per MD), metadata =
-version of the MD sets is 0.90
 
-=46or each MD we created a DRBD device to the second node. (/dev/drbd4 =
-through /dev/drbd7) (0 through 3 were used by disks from a JBOD which w=
-as disconnected, read below) (see attached drbd.conf.txt, these are the=
- individual *.res files combined)
+--Sig_/W2kIOwuog+FK6uw3Srs4IGK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Each drbd device has its own dedicated 1GbE NIC port.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-Each drbd device is then exported through iSCSI using iet in pacemaker =
-(see attached crm-config.txt for the full pacemaker config)
+iD8DBQFOi7BWG5fc6gV+Wb0RAjraAJ4w/txY55DXdsz9G5QvUF+RhVdEeQCg0Ctl
+Wp2v7qbzwwUerz8EBkMac+g=
+=kan2
+-----END PGP SIGNATURE-----
 
-
-Now for the symptoms we are having:
-
-After a number of days (sometimes weeks) the disks from the MD sets sta=
-rt failing subsequently.
-
-See the attached syslog.txt for details but here are the main entries:
-
-It starts with:
-
-Oct  2 11:01:59 node03 kernel: [7370143.421999] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptbase_reply Oct  2 11:01:59 node03 kernel: [7370143.435220] m=
-ptbase: ioc0:
-LogInfo(0x31181000): Originator=3D{PL}, Code=3D{IO Cancelled Due to Rec=
-ieve Error}, SubCode(0x1000) cb_idx mptbase_reply Oct  2 11:01:59 node0=
-3 kernel: [7370143.442141] mptbase: ioc0:
-LogInfo(0x31112000): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x2000)=
- cb_idx mptbase_reply Oct  2 11:01:59 node03 kernel: [7370143.442783] e=
-nd_request: I/O error, dev sdf, sector 3907028992 Oct  2 11:01:59 node0=
-3 kernel: [7370143.442783] md: super_written gets error=3D-5, uptodate=3D=
-0 Oct  2 11:01:59 node03 kernel: [7370143.442783] raid5: Disk failure o=
-n sdf, disabling device.
-Oct  2 11:01:59 node03 kernel: [7370143.442783] raid5: Operation contin=
-uing on 4 devices.
-Oct  2 11:01:59 node03 kernel: [7370143.442820] end_request: I/O error,=
- dev sdb, sector 3907028992 Oct  2 11:01:59 node03 kernel: [7370143.442=
-820] md: super_written gets error=3D-5, uptodate=3D0 Oct  2 11:01:59 no=
-de03 kernel: [7370143.442820] raid5: Disk failure on sdb, disabling dev=
-ice.
-Oct  2 11:01:59 node03 kernel: [7370143.442820] raid5: Operation contin=
-uing on 3 devices.
-Oct  2 11:01:59 node03 kernel: [7370143.442820] end_request: I/O error,=
- dev sdd, sector 3907028992 Oct  2 11:01:59 node03 kernel: [7370143.442=
-820] md: super_written gets error=3D-5, uptodate=3D0 Oct  2 11:01:59 no=
-de03 kernel: [7370143.442820] raid5: Disk failure on sdd, disabling dev=
-ice.
-Oct  2 11:01:59 node03 kernel: [7370143.442820] raid5: Operation contin=
-uing on 2 devices.
-Oct  2 11:01:59 node03 kernel: [7370143.470791] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptbase_reply <snip> Oct  2 11:02:00 node03 kernel: [7370143.96=
-8976] Buffer I/O error on device drbd4, logical block 1651581030 Oct  2=
- 11:02:00 node03 kernel: [7370143.969056] block drbd4: p write: error=3D=
--5 Oct  2 11:02:00 node03 kernel: [7370143.969126] block drbd4: Local W=
-RITE failed sec=3D21013680s size=3D4096 Oct  2 11:02:00 node03 kernel: =
-[7370143.969203] block drbd4: disk( UpToDate -> Failed ) Oct  2 11:02:0=
-0 node03 kernel: [7370143.969276] block drbd4: Local IO failed in __req=
-_mod.Detaching...
-Oct  2 11:02:00 node03 kernel: [7370143.969492] block drbd4: disk( Fail=
-ed -> Diskless ) Oct  2 11:02:00 node03 kernel: [7370143.969492] block =
-drbd4: Notified peer that my disk is broken.
-Oct  2 11:02:00 node03 kernel: [7370143.970120] block drbd4: Should hav=
-e called drbd_al_complete_io(, 21013680), but my Disk seems to have fai=
-led :( Oct  2 11:02:00 node03 kernel: [7370144.003730] iscsi_trgt:
-fileio_make_request(63) I/O error 4096, -5 Oct  2 11:02:00 node03 kerne=
-l: [7370144.004931] iscsi_trgt:
-fileio_make_request(63) I/O error 4096, -5 Oct  2 11:02:00 node03 kerne=
-l: [7370144.006820] iscsi_trgt:
-fileio_make_request(63) I/O error 4096, -5 Oct  2 11:02:01 node03 kerne=
-l: [7370144.849344] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptscsih_io_done Oct  2 11:02:01 node03 kernel: [7370144.849451=
-] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptscsih_io_done Oct  2 11:02:01 node03 kernel: [7370144.849709=
-] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptscsih_io_done Oct  2 11:02:01 node03 kernel: [7370144.849814=
-] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptscsih_io_done Oct  2 11:02:01 node03 kernel: [7370144.850077=
-] mptbase: ioc0:
-LogInfo(0x31110b00): Originator=3D{PL}, Code=3D{Reset}, SubCode(0x0b00)=
- cb_idx mptscsih_io_done <snip> Oct  2 11:02:07 node03 kernel: [7370150=
-=2E918849] mptbase: ioc0: WARNING
-- IOC is in FAULT state (7810h)!!!
-Oct  2 11:02:07 node03 kernel: [7370150.918929] mptbase: ioc0: WARNING
-- Issuing HardReset from mpt_fault_reset_work!!
-Oct  2 11:02:07 node03 kernel: [7370150.919027] mptbase: ioc0:
-Initiating recovery
-Oct  2 11:02:07 node03 kernel: [7370150.919098] mptbase: ioc0: WARNING
-- IOC is in FAULT state!!!
-Oct  2 11:02:07 node03 kernel: [7370150.919171] mptbase: ioc0: WARNING
--            FAULT code =3D 7810h
-Oct  2 11:02:10 node03 kernel: [7370154.041934] mptbase: ioc0:
-Recovered from IOC FAULT
-Oct  2 11:02:16 node03 cib: [5734]: WARN: send_ipc_message: IPC Channel=
- to 23559 is not connected Oct  2 11:02:21 node03 iSCSITarget[9060]: [9=
-069]: WARNING:
-Configuration parameter "portals" is not supported by the iSCSI impleme=
-ntation and will be ignored.
-Oct  2 11:02:22 node03 kernel: [7370166.353087] mptbase: ioc0: WARNING
-- mpt_fault_reset_work: HardReset: success
-
-
-This results in 3 MD's were all disks are failed [_____] and 1 MD survi=
-ves that is rebuilding with its spare.
-3 drbd devices are Diskless/UpToDate and the survivor is UpToDate/UpToD=
-ate The weird thing of this all is that there is always 1 MD set that "=
-survives" the FAULT state of the controller!
-Luckily DRBD redirects all read/writes to the second node so there is n=
-o downtime.
-
-
-Our findings:
-
-1) It seems to only happen on heavy load
-
-2) It seems to only happen when DRBD is connected (we didn't have any f=
-ailing MD's yet when DRBD was not connected luckily!)
-
-3) It seems to only happen on the primary node
-
-4) It does not look like a hardware problem because there is always one=
- MD that survives this, if this was hardware related I would expect ALL=
- disks/MD's too fail.
- Furthermore the disks are not broken because we can assemble the array=
- again after it happened and they resync just fine.
-
-5) I see that there is a new kernel version (2.6.26-27) available and i=
-f i look at the changelog it has a fair number of fixes related to MD, =
-although the symptoms we are seeing are different from the described fi=
-xes it could be related. Can anyone tell if these issues are related to=
- the fixes in the newest kernel image?
-
-6) In the past we had a Dell MD1000 JBOD connected to the LSI 3801E con=
-troller on both nodes and had the same problem when every disk (only fr=
-om the JBOD) failed so we disconnected the JBOD. The controller stayed =
-inside the server.
-
-
-Things we tried so far:
-
-1) We switched the LSI 3081E-R controller with another but to no avail =
-(and we have another identical cluster suffering from this problem)
-
-2) In stead of the stock lenny mptsas driver (version v3.04.06) we used=
- the latest official LSI mptsas driver (v4.26.00.00) from the LSI websi=
-te using KB article 16387 (kb.lsi.com/KnowledgebaseArticle16387.aspx). =
-Still to no avail, it happens with that driver too.
-
-
-Things that might be related:
-
-1) We are using the deadline IO scheduler as recommended by IETD.
-
-2) We are suspecting that the LSI 3801E controller might interfere with=
- the LSI 3081E-R so we are planning to remove the unused LSI 3801E cont=
-rollers.
-Is there a known issue when both controllers are used in the same machi=
-ne? They have the same firmware/bios version. The linux driver
-(mptsas) is also the same for both controllers.
-
-Kind regards,
-
-Caspar Smit
-Systemengineer
-True Bit Resources B.V.
-Amp=E8restraat 13E
-1446 TP=A0 Purmerend
-
-T: +31(0)299 410 475
-=46: +31(0)299 410 476
-@: c.smit@truebit.nl
-W: www.truebit.nl
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/W2kIOwuog+FK6uw3Srs4IGK--
