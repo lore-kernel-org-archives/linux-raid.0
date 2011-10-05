@@ -1,61 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Recovery of failed RAID 6 and LVM
-Date: Wed, 5 Oct 2011 13:15:30 +1100
-Message-ID: <20111005131530.1899e20f@notabene.brown>
-References: <4E7EDE58.3000804@yazzy.org>
-	<20110926074002.6399de56@notabene.brown>
-	<4E7FA3E8.5010603@yazzy.org>
-	<20110926081853.2819622b@notabene.brown>
-	<4E804062.3020700@yazzy.org>
-	<20110926193130.6377f5b9@notabene.brown>
-	<4E82203A.60507@yazzy.org>
-	<20110928091335.1df35f8e@notabene.brown>
-	<4E828B92.40502@hardwarefreak.com>
-	<4E82C862.8000705@yazzy.org>
-	<4E834758.2090508@hardwarefreak.com>
-	<20110929094910.2c44ff8a@notabene.brown>
-	<CAA9_cmfYPoZVZhm9f+5W5bbTA+1Utb5K=FnZv_=ni8x0=R=Wbg@mail.gmail.com>
-	<20110930090720.57534d81@notabene.brown>
-	<CABE8wwt_3DjPqFg5Gm064Gi5OMFFYjuQ9ToAjS+-TYOX+M2ZCw@mail.gmail.com>
+Subject: Re: [PATCH 1/4] FIX: restore_backup() throws core dump
+Date: Wed, 5 Oct 2011 13:30:36 +1100
+Message-ID: <20111005133036.2107c993@notabene.brown>
+References: <20111003160839.18410.33275.stgit@gklab-128-013.igk.intel.com>
+	<20111003161338.18410.79083.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/V3t2TztuR6HN8yPS_pR195l"; protocol="application/pgp-signature"
+ boundary="Sig_/c66YG.GkDRsVBXTdZV_ggyQ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwt_3DjPqFg5Gm064Gi5OMFFYjuQ9ToAjS+-TYOX+M2ZCw@mail.gmail.com>
+In-Reply-To: <20111003161338.18410.79083.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: stan@hardwarefreak.com, lists@yazzy.org, linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/V3t2TztuR6HN8yPS_pR195l
+--Sig_/c66YG.GkDRsVBXTdZV_ggyQ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 29 Sep 2011 17:18:45 -0700 "Williams, Dan J"
-<dan.j.williams@intel.com> wrote:
+On Mon, 03 Oct 2011 18:13:38 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
+> 1. restore_backup() throws core dump during releasing fdlist.
+> Loop for closing handlers checks next_spare variable,
+> but iterates disk_count.
 
-> It simply sounds like you want a similar situation like what happened
-> with git.  I.e. a "Junio" to take over but you'll still be around to
-> course correct and send patches.
+The best way to fix this is simply to just fix this.. See below.
 
-That isn't necessary in the first instance.  It could possibly (hopefully)
-reach that stage, but taking over as maintainer is a big ask and not
-something to be expected in a hurry.
-I'm happy to start small.
+>=20
+> 2. fdlist initialization/close is corrected to initialize/close
+>    whole allocated array
+
+This is unnecessary.
+
+>=20
+> 3. next_spare variable name is replaced by spares
+
+But the variable doesn't contain a count of the number of spares.  It conta=
+ins
+the number of the next spare...
 
 NeilBrown
 
---Sig_/V3t2TztuR6HN8yPS_pR195l
+commit cc7f63e55319b5c372af20ce528e7e7230746d92
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Oct 5 13:29:16 2011 +1100
+
+    restore_backup() throws core dump
+   =20
+    restore_backup() throws core dump during releasing fdlist.
+    Loop for closing handlers checks next_spare variable,
+    but iterates disk_count.
+   =20
+    Reported-by: Adam Kwolek <adam.kwolek@intel.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/Grow.c b/Grow.c
+index de177d8..9fa2d6b 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -78,9 +78,9 @@ int restore_backup(struct supertype *st,
+ 				   backup_file, verbose > 0);
+=20
+ 	while (next_spare > 0) {
+-		disk_count--;
+-		if (fdlist[disk_count] >=3D 0)
+-			close(fdlist[disk_count]);
++		next_spare--;
++		if (fdlist[next_spare] >=3D 0)
++			close(fdlist[next_spare]);
+ 	}
+ 	free(fdlist);
+ 	if (err) {
+
+--Sig_/c66YG.GkDRsVBXTdZV_ggyQ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOi73CG5fc6gV+Wb0RAs7NAJ95iafQQ1mjHoZ5L/UtOQ99166F1QCeNZ0D
-d32Zu1iabjc322erlAKJ0mA=
-=f3z8
+iD8DBQFOi8FMG5fc6gV+Wb0RAisxAJ0QOpwacg7WGCia6c6tG1ti6EV/swCdEhv8
+zpTGT+PPQBVBC8s+nuRRnBo=
+=/GBB
 -----END PGP SIGNATURE-----
 
---Sig_/V3t2TztuR6HN8yPS_pR195l--
+--Sig_/c66YG.GkDRsVBXTdZV_ggyQ--
