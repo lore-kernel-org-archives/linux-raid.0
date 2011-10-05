@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: potentially lost largeish raid5 array..
-Date: Wed, 5 Oct 2011 13:06:46 +1100
-Message-ID: <20111005130646.75d95181@notabene.brown>
+Date: Wed, 5 Oct 2011 13:13:16 +1100
+Message-ID: <20111005131316.27314c0b@notabene.brown>
 References: <201109221950.36910.tfjellstrom@shaw.ca>
 	<20110923151108.08c1199f@notabene.brown>
 	<201109222322.57040.tfjellstrom@shaw.ca>
@@ -10,98 +10,82 @@ References: <201109221950.36910.tfjellstrom@shaw.ca>
 	<4E7E5266.5040205@shiftmail.org>
 	<20110925201025.53bc87f7@notabene.brown>
 	<4E87A06E.6080109@shiftmail.org>
+	<4E8898C4.8060803@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.QLO8lz8fh3YKTeB3dOZxlL"; protocol="application/pgp-signature"
+ boundary="Sig_/__ph/H+_uQ.U4Cizdjmob8e"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E87A06E.6080109@shiftmail.org>
+In-Reply-To: <4E8898C4.8060803@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Aapo Laine <aapo.laine@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: Kristleifur =?ISO-8859-1?B?RGHwYXNvbg==?= <kristleifur@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/.QLO8lz8fh3YKTeB3dOZxlL
+--Sig_/__ph/H+_uQ.U4Cizdjmob8e
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 02 Oct 2011 01:21:18 +0200 Aapo Laine <aapo.laine@shiftmail.org>
+On Sun, 02 Oct 2011 19:00:52 +0200 Aapo Laine <aapo.laine@shiftmail.org>
 wrote:
 
-> >> - it's not clear what the various functions do or in what occasion they
-> >> are called. Except from their own name, most of them have no comments
-> >> just before the definition.
-> > How about this:
-> >   - you identify some functions for which the purpose or use isn't clear
-> >   - I'll explain to you when/how/why they are used
-> >   - You create a patch which adds comments which explains it all
-> >   - I'll apply that patch.
-> >
-> > deal??
+> On 10/02/11 01:21, Aapo Laine wrote:
+> > Actually we could even open a new mailing list or maybe there is=20
+> > something better in web 2.0, like a wiki, for these MD code=20
+> > explanations. Explanations in a wiki can be longer, there can be user=20
+> > discussions, and such lines of comments do not need to be pushed as=20
+> > far as Linus.
 >=20
-> I would never dare to commit your comments back to you with my name, not=
-=20
-> even if you ask me to do so :-)
+> Sorry, I wrote this before reading other replies. Kristleifur already=20
+> proposed what might be optimal, that is, GitHub
 
-There is absolutely nothing wrong with taking someones work, adding value,
-and contributing it.  You would obviously give credit to the original autho=
-r.
-This is was open/free licensing is all about.
+Anyone who wants to is welcome to create a kernel tree on github, apply
+patches, and send me pull requests. To just email me patches.
+However the patches arrive I will need to review them at least until I have
+enough experience with the person to have good reason to trust their patche=
+s.
+Typically the extent of review will drop as a history of good patches grows
+until I just pull any that looks vaguely credible.
 
-There is a big difference between an answer to a question and piece of clear
-coherent documentation.  The later can certainly use text from the former,
-but it also involves thinking about what documentation is needed, where to
-put it, how to present it etc.  There is real value in doing that.
+I don't think we need any new infrastructure to allow this.  We just need
+people with an interest to create and submit patches.
 
+If someone says "I've created some patches but they aren't getting into
+mainline because ...." of some reason, maybe because I keep ignoring them or
+losing them in mail inbox or something, then it might be time to look at
+technology solutions to make it easier for new contributors to get patches
+in.  But until those new contributors are trying there isn't much point
+making it easier for them.
 
->=20
-> But thanks for offering to explain the things.
-> If you do this on the mailing list everybody is going to read that and=20
-> this will be useful to everybody.
->=20
-> Actually we could even open a new mailing list or maybe there is=20
-> something better in web 2.0, like a wiki, for these MD code=20
-> explanations. Explanations in a wiki can be longer, there can be user=20
-> discussions, and such lines of comments do not need to be pushed as far=20
-> as Linus.
-
- http://raid.wiki.kernel.org
-
-might be an appropriate place ... once kernel.org is fully functional again.
-
-One of the problems with documentation is that it quickly goes out of date.
-The best chance of keeping it up-to-date is to have it in the source tree
-with the code.
->=20
-> >> - last but not least, variables have very short names, and for most of
-> >> them, it is not explained what they mean. This is mostly for local
-> >> variables, but sometimes even for the structs which go into metadata
-> >> e.g. in struct r1_private_data_s most members do not have an
-> >> explanation. This is pretty serious, to me at least, for understanding
-> >> the code.
-> > Does this help?
-> >
-> > diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-....
->=20
-> YES!
-> thanks
-
-I've added that patch to my queue - it should go through in the next merge
-window.
-
+Thanks,
 NeilBrown
 
 
---Sig_/.QLO8lz8fh3YKTeB3dOZxlL
+
+>=20
+> > I think concentrating all code explanation requests, discussions,=20
+> > and/or at least the answers, onto something like a wiki could prevent=20
+> > double-questions. Unfortunately I know nothing about wikis or other=20
+> > web 2.0 technologies. Maybe someone in this ML can suggest a solution?
+>=20
+> Ditto
+>=20
+> +1 on the github
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/__ph/H+_uQ.U4Cizdjmob8e
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOi7u2G5fc6gV+Wb0RAooxAKCr0qccw2VoMiA4I88yeBmqASmMygCaAsNx
-UlhG1a5Umyoje+S4FRXeQ5s=
-=ZBEd
+iD8DBQFOi708G5fc6gV+Wb0RApxIAJ9fJqsp97haz+H0HI6hTdjT/V0WiwCeMGEV
+7KlY1vAkPm/6w+oARmKKI1k=
+=EgH7
 -----END PGP SIGNATURE-----
 
---Sig_/.QLO8lz8fh3YKTeB3dOZxlL--
+--Sig_/__ph/H+_uQ.U4Cizdjmob8e--
