@@ -1,57 +1,22 @@
-From: Roman Mamedov <rm@romanrm.ru>
-Subject: Re: Does Linux support Intel Smart Response Technology?
-Date: Wed, 5 Oct 2011 10:22:03 +0600
-Message-ID: <20111005102203.27b61a20@natsu>
-References: <08c701cc830b$91ed7900$b5c86b00$@Watkins-home.com>
+From: Jim Schatzman <james.schatzman@futurelabusa.com>
+Subject: Appropriate kernel group for IDE/ATA/SAS/SATA issues?
+Date: Tue, 04 Oct 2011 22:25:26 -0600
+Message-ID: <20111005042534.29590581FAC@mail.futurelabusa.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AjR9FFEnq39BKf=G_ScTs4o"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <08c701cc830b$91ed7900$b5c86b00$@Watkins-home.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy Watkins <Guy@watkins-home.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/AjR9FFEnq39BKf=G_ScTs4o
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Group-
 
-On Tue, 04 Oct 2011 23:04:55 -0400
-"Guy Watkins" <Guy@watkins-home.com> wrote:
+Sorry for a slightly off-topic question. I have built a number of systems recently with an unraided SSD system drive and data on software SATA RAID. Unfortunately, I have noticed that the currently Linux IDE/ATA/SAS/SATA  drivers don't seem to handle SSD drives well. What is  worse, once the kernel starts "detecting" errors with the SSD, it starts making bad adjustments to the SATA RAID devices, such as changing link speeds of RAID devices, even when the RAID devices and SSD are on completely separate controllers. Also, the kernel appears to get confused sometimes and decide that, say ata9 is having problems when it is actually ata3 (after properly accounting for the kernel's multiple different ways of numbering the same devices).
 
-> Does Linux support the Intel Smart Response Technology?
+Although the problem impacts my software RAIDs, it does not appear to be a RAID problem. Which is the right kernel news group to corresponding with about this kind of issue?
 
-Why not start with a brief summary of WTF is "Intel Smart Response Technolo=
-gy".
+Thanks-
 
-> I am building a new computer and will have two 2TB disks and a 64 or 120 =
-GB
-> SSD.  I am hoping to use the SSD cache feature.  I think I would configur=
-e a
-> bios RAID with 1 disk and the SSD as a cache, then use Linux to mirror th=
-at
-> with the second 2TB disk using the write mostly feature of MD.  But would=
- it
-> be better to create a bios RAID1 with both disks and the ssd cache?
+Jim
+ 
 
-If you are looking to use SSD as a cache to HDDs, check out bcache
-http://bcache.evilpiepirate.org/
-
---=20
-With respect,
-Roman
-
---Sig_/AjR9FFEnq39BKf=G_ScTs4o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk6L22sACgkQTLKSvz+PZwgDuACff93byCqoHSRsV7EuQtp91Q35
-RqwAmwdjl6yJ7aomD1057aIqh8RGzjCz
-=dCRq
------END PGP SIGNATURE-----
-
---Sig_/AjR9FFEnq39BKf=G_ScTs4o--
