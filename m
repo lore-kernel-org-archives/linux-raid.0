@@ -1,294 +1,107 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm - level change from raid 1 to raid 5
-Date: Wed, 5 Oct 2011 12:18:14 +1100
-Message-ID: <20111005121814.184f880f@notabene.brown>
-References: <BLU0-SMTP4116DC38F2741F78CA7020C9F70@phx.gbl>
-	<20111001080250.65dc83bd@notabene.brown>
-	<BLU0-SMTP1299BD19297F8D4A02E6D13C9F50@phx.gbl>
-	<20111003075041.188ff3ff@notabene.brown>
-	<BLU0-SMTP22900A6C32A672C1C40BF7CC9FA0@phx.gbl>
-	<20111003210744.45e637d7@notabene.brown>
-	<BLU0-SMTP2333DCB3FF0B31A1F4A3D99C9FA0@phx.gbl>
+Subject: Re: potentially lost largeish raid5 array..
+Date: Wed, 5 Oct 2011 13:06:46 +1100
+Message-ID: <20111005130646.75d95181@notabene.brown>
+References: <201109221950.36910.tfjellstrom@shaw.ca>
+	<20110923151108.08c1199f@notabene.brown>
+	<201109222322.57040.tfjellstrom@shaw.ca>
+	<201109230209.36209.thomas@fjellstrom.ca>
+	<20110923191539.110b7be1@notabene.brown>
+	<4E7E5266.5040205@shiftmail.org>
+	<20110925201025.53bc87f7@notabene.brown>
+	<4E87A06E.6080109@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/W2kIOwuog+FK6uw3Srs4IGK"; protocol="application/pgp-signature"
+ boundary="Sig_/.QLO8lz8fh3YKTeB3dOZxlL"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP2333DCB3FF0B31A1F4A3D99C9FA0@phx.gbl>
+In-Reply-To: <4E87A06E.6080109@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dominique <dcouot@hotmail.com>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: Aapo Laine <aapo.laine@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/W2kIOwuog+FK6uw3Srs4IGK
+--Sig_/.QLO8lz8fh3YKTeB3dOZxlL
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 3 Oct 2011 12:52:37 +0200 Dominique <dcouot@hotmail.com> wrote:
+On Sun, 02 Oct 2011 01:21:18 +0200 Aapo Laine <aapo.laine@shiftmail.org>
+wrote:
 
-> Well,...
-> I thought I was not that stupid.
-> But it seems I need more explanation/help. I just tried to change the=20
-> chunk size, but I got the weirdest answer of all:"mdadm: component size=20
-> 18919352 is not a multiple of chunksize 32k".
-> 18919352 is indeed not a multiple of 32 or any other multiple of 8 for=20
-> that matter (up to 1024, after that I gave up). So what did I do wrong=20
-> in my setup.
+> >> - it's not clear what the various functions do or in what occasion they
+> >> are called. Except from their own name, most of them have no comments
+> >> just before the definition.
+> > How about this:
+> >   - you identify some functions for which the purpose or use isn't clear
+> >   - I'll explain to you when/how/why they are used
+> >   - You create a patch which adds comments which explains it all
+> >   - I'll apply that patch.
+> >
+> > deal??
+>=20
+> I would never dare to commit your comments back to you with my name, not=
+=20
+> even if you ask me to do so :-)
 
-When you convert a RAID1 to a RAID5 the RAID5 needs to have a chunk size th=
-at
-exactly divides the size of the RAID1 - as a RAID5 needs to be a whole numb=
-er
-of stripes, so each device must be a whole number of chunks.
+There is absolutely nothing wrong with taking someones work, adding value,
+and contributing it.  You would obviously give credit to the original autho=
+r.
+This is was open/free licensing is all about.
 
-md tries for a 64K chunk size, but repeatedly halves it until the chunk size
-divides into the device size.  Thus you got 8K chunks - the largest power of
-2 that divides 18919352.
+There is a big difference between an answer to a question and piece of clear
+coherent documentation.  The later can certainly use text from the former,
+but it also involves thinking about what documentation is needed, where to
+put it, how to present it etc.  There is real value in doing that.
 
-If you want to use a larger chunk size you will need to make your array
-slightly smaller first.
-  mdadm /dev/md2 --size=3D18918912
-will shrink it to a multiple of 512K.  If the filesystem is bigger than that
-(likely) you will need to shrink it first
-  resize2fs /dev/md2 18918912
 
-should do it, if it is ext2,3,4.
+>=20
+> But thanks for offering to explain the things.
+> If you do this on the mailing list everybody is going to read that and=20
+> this will be useful to everybody.
+>=20
+> Actually we could even open a new mailing list or maybe there is=20
+> something better in web 2.0, like a wiki, for these MD code=20
+> explanations. Explanations in a wiki can be longer, there can be user=20
+> discussions, and such lines of comments do not need to be pushed as far=20
+> as Linus.
 
-Then you can change the chunk size to something bigger.
+ http://raid.wiki.kernel.org
 
-I probably need to document that better, and provide a way to give an initi=
-al
-chunk size of the RAID5....
+might be an appropriate place ... once kernel.org is fully functional again.
+
+One of the problems with documentation is that it quickly goes out of date.
+The best chance of keeping it up-to-date is to have it in the source tree
+with the code.
+>=20
+> >> - last but not least, variables have very short names, and for most of
+> >> them, it is not explained what they mean. This is mostly for local
+> >> variables, but sometimes even for the structs which go into metadata
+> >> e.g. in struct r1_private_data_s most members do not have an
+> >> explanation. This is pretty serious, to me at least, for understanding
+> >> the code.
+> > Does this help?
+> >
+> > diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+....
+>=20
+> YES!
+> thanks
+
+I've added that patch to my queue - it should go through in the next merge
+window.
 
 NeilBrown
 
 
->=20
-> To be clear is what I did this morning:
-> 1. Setup a new VM with 5HDD (20G each) under Ubuntu 11.10 server
-> 2. Setup a RAID1 with 2 HDD (3 spares) md0 2GB (swap), md1 100 MB=20
-> (boot), md2 the rest (root)
-> 3. Convert md2 from RAID1 to Raid5
-> mdadm --grow /dev/md2 --level=3D5
-> 4. Copied the content of sda to sdc, sdd and sde by doing
-> sfdisk -d /dev/sda | sfdisk /dev/sdc --force (and so on for sdd and sde)
-> 5. Then added and extended the various arrays
-> mdadm --add /dev/md0 /dev/sdc1 /dev/sdd1 /dev/sde1
-> mdadm --add /dev/md1 /dev/sdc2 /dev/sdd2 /dev/sde2
-> mdadm --add /dev/md2 /dev/sdc3 /dev/sdd3 /dev/sde3
-> mdadm --grow /dev/md0 --raid-devices=3D5
-> mdadm --grow /dev/md1 --raid-devices=3D5
-> mdadm --grow /dev/md2 --raid-devices=3D5
-> on that last one, I got "mdadm: Need to backup 32K of critical section.."
-> but a cat /proc/mdstat showed all arrays being reshaped without problems.
-> At the end, a simple reboot and all was in order.
-> So any idea where I went wrong ?
->=20
-> Dom
->=20
->=20
-> On 03/10/2011 12:07, NeilBrown wrote:
->=20
-> > On Mon, 3 Oct 2011 10:53:50 +0200 Dominique<dcouot@hotmail.com>  wrote:
-> >
-> >> Hi Neil,
-> >>
-> >> Followed your advice an tried a few things... RAID5 with 2HDD, seems to
-> >> work well. After growing all arrays, I've got my 3 arrays working (2
-> >> RAID1 and 1 RAID5), and I can boot. But I have one last question since
-> >> the raid.wiki.kernel.org server seems to be down.
-> >> What about chunk size. I let it go with default values - 8k (for not
-> >> setting it before the --grow command). What is the optimal size...Is
-> >> there a nice math formula to define its optimal size ? And can it be
-> >> changed once the array is build ?
-> > The default for chunksize should be 512K I thought..
-> > I once saw a mathematical formula, but it was a function of the number =
-of
-> > concurrent accesses and the average IO size - I think.
-> >
-> > Big is good for large streaming requests.  Smaller is good for lots of =
-random
-> > IO.  Only way to know for sure is to measure your workload on different=
- sizes.
-> >
-> > You can change it once the array is build, but it is a very slow operat=
-ion as
-> > it has to move every block on every disk to somewhere else.
-> >
-> >   mdadm -G /dev/md2 --chunk=3D32
-> >
-> > NeilBrown
-> >
-> >
-> >
-> >> Thanks,
-> >>
-> >> Dom
-> >>
-> >> On 02/10/2011 22:50, NeilBrown wrote:
-> >>> On Sun, 2 Oct 2011 16:24:48 +0200 Dominique<dcouot@hotmail.com>   wro=
-te:
-> >>>
-> >>>> Hi Neil,
-> >>>>
-> >>>> Thanks for the Info, I'll try a new series of VM tomorrow.
-> >>>>
-> >>>> I do have a question though. I thought that RAID5 required 3 HDD not=
- 2.
-> >>>> Hence I am a bit puzzled by your last comment....
-> >>>> "Nope. This is because md won't change a 5-device RAID1 to RAID5. It
-> >>>> will only change a 2-device RAID1 to RAID5. This is trivial to do
-> >>>> because a 2-device RAID1 and a 2-device RAID5 have data in exactly t=
-he
-> >>>> same places. " Or do I grow to a 3HDD RAID5 config with a 'missing' =
-HDD.
-> >>> It is a common misunderstanding that RAID5 requires 3 drives, not 2.
-> >>> 2 is a perfectly good number of drives for RAID5.  On each stripe, on=
- drive
-> >>> holds the data, and the other drive holds the 'xor' of all the data b=
-locks
-> >>> with zero which results in exactly the data ( 0 xor D =3D=3D D).
-> >>> So a 2-drive RAID5 is nearly identical to a 2-drive RAID1, thus it is=
- seen as
-> >>> pointless and not considered to be a RAID5  (just as a triangle is not
-> >>> considered to be a real quadrilateral, just because one of the 4 side=
-s is of
-> >>> length '0'!).
-> >>> Some RAID5 implementations rule out 2-drive RAID5 for just this reaso=
-n.
-> >>> However 'md' is not so small-minded.
-> >>> 2-drive RAID5s are great for testing ... I used to have graphs showing
-> >>> throughput for 2,3,4,5,6,7,8 drives - the '2' made a nice addition.
-> >>> And 2-drive RAID5s are very useful for converting RAID1 to RAID5.  Fi=
-rst
-> >>> convert a 2-drive RAID1 to a 2-drive RAID5, then change the number of=
- drives
-> >>> in the RAID5.
-> >>>
-> >>>
-> >>> RAID6 should really work with only 3 drives, but md is not so enlight=
-ened.
-> >>> When hpa wrote the code he set the lower limit to 4 drives.  I would =
-like to
-> >>> make it 3, but I would have to check that 3 really does work and I ha=
-ven't
-> >>> done that yet.
-> >>>
-> >>>
-> >>>> I understand the 2HDD to 5HDD growth, but not how to make the other =
-one.
-> >>>> Since I cant test it right know, I'll both tomorrow.
-> >>> You really don't need too think to much - just do it.
-> >>> You have a 2 drive RAID1.  You want to make a 5 drive RAID5, simply a=
-dd 3
-> >>> drives with
-> >>>      mdadm /dev/md2 --add /dev/first /dev/second /dev/third
-> >>>
-> >>> then ask mdadm to change it for you:
-> >>>      mdadm --grow /dev/md2 --level=3D5 --raid-disks=3D5
-> >>>
-> >>> and mdadm will do the right thing.
-> >>> (Not that I want to discourage you from thinking, but sometimes exper=
-imenting
-> >>> is about trying this that you don't think should work..)
-> >>>
-> >>> NeilBrown
-> >>>
-> >>>> Dom
-> >>>>
-> >>>>
-> >>>> On 01/10/2011 00:02, NeilBrown wrote:
-> >>>>> On Fri, 30 Sep 2011 20:31:37 +0200 Dominique<dcouot@hotmail.com>   =
- wrote:
-> >>>>>
-> >>>>>> Hi,
-> >>>>>>
-> >>>>>> Using Ubuntu 11.10 server , I am testing RAID level changes through
-> >>>>>> MDADM. The objective is to migrate RAID 1 (1+ HDD) environment to =
-RAID 5
-> >>>>>> (3+ HDD) without data loss.
-> >>>>>> In order to make as simple as possible, I started in a VM environm=
-ent
-> >>>>>> (Virtual Box).
-> >>>>> Very sensible!!
-> >>>>>
-> >>>>>
-> >>>>>> Initial Setup:
-> >>>>>> U11.10 + 2 HDD (20GB) in Raid 1 ->    no problem
-> >>>>>> The setup is made with 3 RAID 1 partition on each disk (swap (2GB)=
-, boot
-> >>>>>> (500MB), and root (17,5GB)). I understand that this will allow to
-> >>>>>> eventually grow to a RAID 5 configuration (in Ubuntu) and maintain=
- boot
-> >>>>>> on a RAID construct (swap and boot would remain on RAID 1, while r=
-oot
-> >>>>>> would migrate to RAID 5).
-> >>>>>>
-> >>>>>> Increment number of disks:
-> >>>>>> add 3 HDD to the setup ->    no problem
-> >>>>>> increase the RAID 1 from 2 HDD to 5 HDD ->    no problem, all disk=
-s added
-> >>>>>> and synchronized
-> >>>>> This is the bit you don't want.  Skip that step and it should work.
-> >>>>>
-> >>>>>
-> >>>>>> root@ubuntu:~# cat /proc/mdstat
-> >>>>>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid=
-5]
-> >>>>>> [raid4] [raid10]
-> >>>>>> md2 : active raid1 sda3[0] sde3[4] sdb3[1] sdc3[2] sdd3[3]
-> >>>>>>           18528184 blocks super 1.2 [5/5] [UUUUU]
-> >>>>>>
-> >>>>>> md1 : active raid1 sda2[0] sde2[4] sdb2[1] sdd2[3] sdc2[2]
-> >>>>>>           488436 blocks super 1.2 [5/5] [UUUUU]
-> >>>>>>
-> >>>>>> md0 : active raid1 sdb1[1] sde1[4] sda1[0] sdc1[2] sdd1[3]
-> >>>>>>           1950708 blocks super 1.2 [5/5] [UUUUU]
-> >>>>>>
-> >>>>>>
-> >>>>>> Change Level:
-> >>>>>> That's where the problem occurs:
-> >>>>>> I initially tried 3 different approaches for md2 (the root partiti=
-on)
-> >>>>>>
-> >>>>>>         1. Normal boot
-> >>>>>>
-> >>>>>>         mdadm /dev/md2 --grow --level=3D5
-> >>>>>>
-> >>>>>>         Not working: 'Could not set level to raid 5'. I suppose th=
-is is
-> >>>>>> because the partition is in use. Makes sense.
-> >>>>> Nope.  This is because md won't change a 5-device RAID1 to RAID5.  =
-It will
-> >>>>> only change a 2-device RAID1 to RAID5.  This is trivial to do becau=
-se a
-> >>>>> 2-device RAID1 and a 2-device RAID5 have data in exactly the same p=
-laces.
-> >>>>> Then you can change your 2-device RAID5 to a 5-device RAID5 - which=
- takes a
-> >>>>> while but this can all be done while the partition is in use.
-> >>>>>
-> >>>>> i.e. if you start with a RAID1 with 2 active devices and 3 spares a=
-nd issue
-> >>>>> the command
-> >>>>>        mdadm /dev/md2 --grow --level=3D5 --raid-disks=3D5
-> >>>>>
-> >>>>> it will convert to RAID5 and then start reshaping out to include al=
-l 5 disks.
-> >>>>>
-> >>>>>
-> >>>>> NeilBrown
-
-
---Sig_/W2kIOwuog+FK6uw3Srs4IGK
+--Sig_/.QLO8lz8fh3YKTeB3dOZxlL
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iD8DBQFOi7BWG5fc6gV+Wb0RAjraAJ4w/txY55DXdsz9G5QvUF+RhVdEeQCg0Ctl
-Wp2v7qbzwwUerz8EBkMac+g=
-=kan2
+iD8DBQFOi7u2G5fc6gV+Wb0RAooxAKCr0qccw2VoMiA4I88yeBmqASmMygCaAsNx
+UlhG1a5Umyoje+S4FRXeQ5s=
+=ZBEd
 -----END PGP SIGNATURE-----
 
---Sig_/W2kIOwuog+FK6uw3Srs4IGK--
+--Sig_/.QLO8lz8fh3YKTeB3dOZxlL--
