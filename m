@@ -1,73 +1,122 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [PULLREQUEST] md bugfix for 3.1
-Date: Thu, 6 Oct 2011 16:18:19 +1100
-Message-ID: <20111006161819.543e98ce@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] Always run Grow_continue() for started array.
+Date: Thu, 06 Oct 2011 11:13:22 +0200
+Message-ID: <20111006091322.10706.43240.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.bsfETT7NGpbVNsVHx.B5fG"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/.bsfETT7NGpbVNsVHx.B5fG
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+So far there were 2 reshape continuation cases:
+ 1. array is started /e.g. reshape was already invoked during initrd
+                      start-up stage using "--freeze-reshape" option/
+ 2. array is not started yet /"normal" assembling array under reshape case/
 
+This patch narrows continuation cases in to single one. To do this
+array should be started /set readonly in to array_state/ before calling
+Grow_continue() function.
 
-Hi Linus,
- please pull this one patch which fixes a race in md thread wakeup at the
- same time as shutdown.  This is also a case where it isn't a race but a
- definite "will try to wake up a non-existent thread" when trying to start
- RAID10 that doesn't have enough working disks.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
- This is tagged for -stable.
+ Assemble.c |   17 +++++++++++++----
+ Grow.c     |   43 +++++++++++++++++++------------------------
+ 2 files changed, 32 insertions(+), 28 deletions(-)
 
-Thanks,
-NeilBrown
+diff --git a/Assemble.c b/Assemble.c
+index 285eeee..2000dd0 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1343,10 +1343,14 @@ int Assemble(struct supertype *st, char *mddev,
+ 			int rv;
+ #ifndef MDASSEMBLE
+ 			if (content->reshape_active &&
+-			    content->delta_disks <= 0)
+-				rv = Grow_continue(mdfd, st, content,
+-						   backup_file, freeze_reshape);
+-			else
++			    content->delta_disks <= 0) {
++				rv = sysfs_set_str(content, NULL,
++						   "array_state", "readonly");
++				if (rv == 0)
++					rv = Grow_continue(mdfd, st, content,
++							   backup_file,
++							   freeze_reshape);
++			} else
+ #endif
+ 				rv = ioctl(mdfd, RUN_ARRAY, NULL);
+ 			if (rv == 0) {
+@@ -1561,6 +1565,11 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 					   spare, backup_file, verbose) == 1)
+ 				return 1;
+ 
++			err = sysfs_set_str(content, NULL,
++					    "array_state", "readonly");
++			if (err)
++				return 1;
++
+ 			if (st->ss->external) {
+ 				if (!mdmon_running(st->container_dev))
+ 					start_mdmon(st->container_dev);
+diff --git a/Grow.c b/Grow.c
+index 6f86987..4f8b9d7 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -3802,33 +3802,28 @@ Grow_continue_command_exit:
+ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+ 		  char *backup_file, int freeze_reshape)
+ {
+-	char buf[40];
+-	char *container = NULL;
+-	int err;
++	int ret_val = 2;
++
++	if (!info->reshape_active)
++		return ret_val;
+ 
+-	err = sysfs_set_str(info, NULL, "array_state", "readonly");
+-	if (err)
+-		return err;
+ 	if (st->ss->external) {
+-		fmt_devname(buf, st->container_dev);
+-		container = buf;
++		char container[40];
++		int cfd = open_dev(st->container_dev);
+ 
+-		if (!mdmon_running(st->container_dev))
+-			start_mdmon(st->container_dev);
+-		ping_monitor_by_id(st->container_dev);
++		if (cfd < 0)
++			return 1;
+ 
++		fmt_devname(container, st->container_dev);
++		st->ss->load_container(st, cfd, container);
++		close(cfd);
++		ret_val = reshape_container(container, NULL,
++					    st, info, 0, backup_file,
++					    0, 1, freeze_reshape);
++	} else
++		ret_val = reshape_array(NULL, mdfd, "array", st, info, 1,
++					NULL, backup_file, 0, 0, 1,
++					freeze_reshape);
+ 
+-		if (info->reshape_active == 2) {
+-			int cfd = open_dev(st->container_dev);
+-			if (cfd < 0)
+-				return 1;
+-			st->ss->load_container(st, cfd, container);
+-			close(cfd);
+-			return reshape_container(container, NULL,
+-						 st, info, 0, backup_file,
+-						 0, 1, freeze_reshape);
+-		}
+-	}
+-	return reshape_array(container, mdfd, "array", st, info, 1,
+-			     NULL, backup_file, 0, 0, 1, freeze_reshape);
++	return ret_val;
+ }
 
-
-The following changes since commit 976d167615b64e14bc1491ca51d424e2ba9a5e84:
-
-  Linux 3.1-rc9 (2011-10-04 18:11:50 -0700)
-
-are available in the git repository at:
-  git://neil.brown.name/md/ for-linus
-
-  last commit being 01f96c0a9922cd9919baf9d16febdf7016177a12
-
-NeilBrown (1):
-      md: Avoid waking up a thread after it has been freed.
-
- drivers/md/md.c        |   22 +++++++++++++++++++---
- drivers/md/md.h        |    2 +-
- drivers/md/multipath.c |    3 +--
- drivers/md/raid1.c     |    3 +--
- drivers/md/raid10.c    |    5 ++---
- drivers/md/raid5.c     |    6 ++----
- 6 files changed, 26 insertions(+), 15 deletions(-)
-
---Sig_/.bsfETT7NGpbVNsVHx.B5fG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTo06Gznsnt1WYoG5AQKvbxAAvzpO46HTx8XtQaKXdioMcI4GFaEzDsfy
-+h9GHKKQX6B39Fmf1FTK5daxmnAz18rAsCYoqV9xmxeGdhj+OWrhze53NvzdVXV4
-nVVZnCKm814fpM3OmFe67VXf1C4c/g036TVtnlNroeKhjJzXxl/ge/j1cqY/4IGX
-ylGuvZsaEEMefyFUuQiSjWjhXS2YL4QWlXIhbyHQV87RZv2+izMv2oGWZPPUmAp4
-JociarHvgJ5PjrGBmoYun9qaP2DweFFz4bCI2VRFISWPxv/Ty96lmqaLim+wa8Rg
-V+DCo0uT/lMONbFX8121Z7kakzR4QVsKgZM8a/SBCjDjN/3qEx7UqJJ0+eFbCRYu
-hyLm5B0XvbwKkiSb8ARGwY+dJXYQzehlqTjT73PHgfE7eCtuYUPRh169sFmzWYpV
-H4OHi5nrA/bARo1YccpmjKe5XoinFcqocuneS4XEdZD1EVUua8Avl8rZu0jvNAKp
-Li/h8D8lRh3gEy9s5scPEf7raddalTh6Br1WcLJY5w8pMcOtL1P9dOr0369qGzSf
-f3c+itXvEC3CQgu+J1QpvEP8OK+ncJLaRWIvAV+/tTgKjIE8HwafObKu38Uzfiek
-FtKqC0PZS3PY/T44p51gSFtu8zzROPwZHoaxgrRwn0jwY5ndA6ZMfuKmkM8SWl5C
-mOUaGkoPS5s=
-=uf2X
------END PGP SIGNATURE-----
-
---Sig_/.bsfETT7NGpbVNsVHx.B5fG--
