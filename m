@@ -1,43 +1,40 @@
-From: Jes.Sorensen@redhat.com
-Subject: [PATCH] GCC compile fix: remove calculation of unused variable 'reservation'
-Date: Thu,  6 Oct 2011 16:43:51 +0200
-Message-ID: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
+From: "Andrei E. Warkentin" <andrey.warkentin@gmail.com>
+Subject: Clarification behind md 1.0 superblock resync_offset and recovery_offset?
+Date: Thu, 6 Oct 2011 14:48:28 -0400
+Message-ID: <CANz0V+7gGjK8BfatVdLXJdJ-6Okcmx6P_32jjzxgihmV_JqsoQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi group,
 
-gcc 4.6.1 doesn't like calculating a variable that then isn't
-used. Remove it.
+This is my first time posting on this mailing list. I've tried looking
+in the archives, but didn't find what I was looking for. I am trying
+to understand how the synchronization code in MD driver works, and I
+am unsure about the exact relation between resync_offset
+and recovery_offset for the 1.X SB format.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- super-intel.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+sb->resync_offset sets mddev->recovery_cp, which is the last sector
+synchronized/recovered when md_do_sync exits, and isn't
+used for recovery if a bitmap is used.
 
-diff --git a/super-intel.c b/super-intel.c
-index ce067a2..33f23c9 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -989,7 +989,6 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
- 	struct extent *e;
- 	int i;
- 	unsigned long long rv = 0;
--	__u32 reservation;
- 
- 	if (!super)
- 		return rv;
-@@ -1007,7 +1006,6 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
- 		continue;
- 	if (i > 0)
- 		rv = e[i-1].start + e[i-1].size;
--	reservation = __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
- 	free(e);
- 
- 	/* add the amount of space needed for metadata */
+sb->recovery_offset sets rdev->recovery_offset, which seemingly is a
+per-member-device recovery_cp, but updated at a finer granularity,
+right?
+
+I think my confusion might be stemming from a misunderstandig behind
+what RECOVERY and SYNC implies. I thought that RECOVERY
+means metadata cleanup, while RESYNC is actual syncing of data to
+spares (or re-added previously faulty disks), but then why is there a
+recovery offset? Why isn't a resync offset sufficient?
+
+I'd be willing to submit a few documentation patches just to others
+have an easier time of reading MD code :-).
+
+Thank you,
 -- 
-1.7.6.4
-
+A
