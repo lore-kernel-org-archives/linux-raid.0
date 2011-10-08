@@ -1,33 +1,77 @@
-From: =?UTF-8?B?SsOpcsO0bWUgUG91bGlu?= <jeromepoulin@gmail.com>
-Subject: Re: BUG: spinlock lockup while performing FS operations and detected
- stalls on CPUs / tasks.
-Date: Sat, 8 Oct 2011 09:36:42 -0400
-Message-ID: <5617831734450003872@unknownmsgid>
-References: <4E8FE4E5.9040606@russia.ru>
-Mime-Version: 1.0 (iPhone Mail 8J2)
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4E8FE4E5.9040606@russia.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?UTF-8?B?0JLQsNC70LXRgNC40Lk=?= <paramonov@russia.ru>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "duaneg@dghda.com" <duaneg@dghda.com>, Alexander Beregalov <a.beregalov@gmail.com>
+From: Gordon Henderson <gordon@drogon.net>
+Subject: Re: How to stress test an RAID 6 array?
+Date: Sat, 8 Oct 2011 15:44:12 +0100 (BST)
+Message-ID: <alpine.DEB.2.00.1110081516550.9066@unicorn.drogon.net>
+References: <4E89B81D.5000800@yazzy.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4E89B81D.5000800@yazzy.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As soon as smart says there are ANY problem, the disk IS going bad and
-will have serious problem soon enough. Especially READ DMA errors
-which mean it reallocate sectors. Consumer level disk try to hide
-problems as hard as they can until the disk finally fail. Try ddrescue
-from disk to /dev/null to check for speed, I guess it is slow.
+On Mon, 3 Oct 2011, Marcin M. Jessa wrote:
 
-Envoy=C3=A9 de mon appareil mobile.
+> Now I would like to stress test the array and see whether it would fail again 
+> or not. What would be the best way to do that?
 
-J=C3=A9r=C3=B4me Poulin
-Solutions G.A.
+Once upon a time I used to write test & diagnostic software for some 
+custom designed (and rather big at the time) systems... One of the early 
+things I learned was that no-matter what tests I thought of, some end-user 
+would find some code that triggered some weird border-case that the test 
+software would fail to find, so ... It's going to vary, depending on 
+exactly what you're trying to test...
 
-On 2011-10-08, at 01:52, =D0=92=D0=B0=D0=BB=D0=B5=D1=80=D0=B8=D0=B9 <pa=
-ramonov@russia.ru> wrote:
+However, a soak-test I apply to all my servers goes as follows:
 
-> So, this IDE drive has non-critical SMART errors listed at end of mes=
-sage by command smartctl --all /dev/sde. It is unclear how this might a=
-ffect the command dd.
+1. create a file of 2 x RAM size:
+
+   dd if=/dev/urandom of=testfile00 bs=1M count=8192 # 8GB file, 4GB RAM
+
+2. copy this file to another file and copy that to another, etc.
+
+   cp -a testfile00 testfile01
+   cp -a testfile01 testfile02
+
+and so on. (obivously in a loop) Do this until the disk is full. (Use a 
+file double RAM size to hopefully eliminate the effects of any Linux 
+FS/block cache/buffering)
+
+Compare md5checksums of testfile00 and testfileXX.
+
+Using non blocking IO (dd with i/o flag=nonblock) might put more stress on 
+the system by trying to overlap reads and writes, but I've not checked.
+
+My aim here is to see if there have been any bit-errors during the disk 
+fill operation - however it won't tell me where the error happened, nor 
+what caused the error - memory, pci bus, sata cable, or something 
+undetected by the disk. With multi-disk arrays, hopefully it'll be writing 
+over all drives at once, but only reading from the active (non 
+parity/mirror) drives.
+
+(Is there some MD options that might force it to read all the drives all 
+the time and do the parity check while in 'normal' use? Sure it might slow 
+it down, but for soaktesting, it might be handy...)
+
+I used to test memory like this way back in some old processors that had a 
+block-move instruction - it ran the address/data bus as fast as it could 
+which was a good test - my thoughts are that it's hopefully doing someting 
+similar here... You could treat it like memory and put different patterns 
+in the first block - all zeros, all ones, alternating ones and zeros, etc. 
+depending on how you think the transfers are worst over the various buses 
+- e.g. alternating 1010 might be bad on a serial bus, but will present the 
+same patterns over a parallel bus, so if the bus is 8-bits wide, then 
+alternating 0xFF, 0x00 (or (0xAA, 0x55) might be better - who knows.
+
+I do know it takes a long time on todays very big disks )-:
+
+My full soak test involves doing a Linux kernel compile at the same time 
+as doing the above (in a loop - make -jX bzImage ; make clean ; repeat - X 
+= numCpus), and doing some large FTPs to & from the box to make the 
+network hardware work at the same time.
+
+You can always throw in a burnMMX or burnBX at the same time for good 
+measure...
+
+Gordon
