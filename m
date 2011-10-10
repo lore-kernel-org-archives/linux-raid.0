@@ -1,68 +1,108 @@
-From: Miles Fidelman <mfidelman@meetinghouse.net>
-Subject: configuration questions & advice
-Date: Mon, 10 Oct 2011 11:13:04 -0400
-Message-ID: <4E930B80.7030505@meetinghouse.net>
-References: <4E93078B.5080306@meetinghouse.net>
+From: maurice <mhilarius@gmail.com>
+Subject: Re: Odd booting problem
+Date: Mon, 10 Oct 2011 10:02:00 -0600
+Message-ID: <4E9316F8.7040800@gmail.com>
+References: <4E8F8C63.1080600@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E93078B.5080306@meetinghouse.net>
+In-Reply-To: <4E8F8C63.1080600@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Good morning,
 
-Hi,
+I am top and bottom posting this reply to myself, so as to satisfy the 
+tastes of each camp:
 
-I have a small cluster that I use to host a collection of Xen virtual
-machines.  I just expanded from 2 nodes to 4 nodes and am looking for
-some advice re. configuring a storage subsystem.
+I just tried using only one of the disks, and NOT as md RAID devices.
+This works perfectly.
+Which, at least to my eyes, implies there is some interaction with mdadm 
+that is causing the
+failure of dracut and of booting.
 
-The current (2-node) configuration is simple:
-- 4 disks per node
-- md-based raid10 on each node (separate devices for /boot / swap /<one big storage pool for VMs>
-- lvm on the VM storage pool, pairs of logical volumes (/ swap) for each VM
-- DRBD to replicate (some) volumes between the two nodes
-- (some) VMs set up for auto-failover on node failure (pacemaker, etc.)
-
-In moving to 4 nodes, I'd like to add some flexibility to move VMs
-across all 4 nodes, but... that requires using something other than DRBD
-to replicate volumes.  I'm thinking of something with the following
-characteristics:
-
-- 4-node storage cluster (4 drives per node, total of 16 drives in the
-storage pool)
-- 4-node VM cluster
-- using the SAME 4 nodes for both
-- note: I've got 4 gigE ports to play with on each box (plan on using 2
-for outside access, 2 for storage/heartbeat networking)
-
-I'm thinking of moving to a cluster filesystem (in particular GlusterFS
-seems to fit the bill), but it strikes me that an alternative would be to:
-
-- mount all my drives via iSCSI
--- or use RAID10 on each node for /boot / swap, mount the rest of each drive as iSCSI
-- build an md RAID10 storage pool that spans all 16 drives across all 4 nodes
-- run LVM and build logical volumes on top of that
-- build VM migration/failover on top of that (locking, concurrency control, etc.)
-
-Any thoughts re:
-- does this make any sense at all?
-if so:
-- management tools that might make this easier
-- clustering layer to manage locking and such?
-
-Thanks very much for any advice and suggestions,
-
-Miles Fidelman
+Is there anyone here interested in helping me with this?
 
 
+
+
+>
+> An odd problem, and hopefully someone reading this can tell me what to 
+> do differently:
+>
+> I am converting a machine from a single disk to one with 2 disks and 4 
+> md RAIDs.
+>
+> I do not know how much detail people might like, so I will keep it as 
+> terse as possible to start:
+> Original install CentOS 6.0, with all updates.
+> XC86_64 kernel
+>
+> mdadm v3.2.2
+>
+> I have added the second physical disk, and duplicated the partition 
+> table from the existing system disk
+> created 4 md RAID1s, to be used for /boot, /, /var, and /home
+> All were created with the second part missing:
+> mdadm --create /dev/md0 --metadata=0.90 --level=1 --raid-disks=2 
+> /dev/sda1 missing
+> mdadm --create /dev/md1 --level=1 --raid-disks=2 /dev/sda2 missing
+> mdadm --create /dev/md2 --level=1 --raid-disks=2 /dev/sda5 missing
+> mdadm --create /dev/md3 --level=1 --raid-disks=2 /dev/sda6 missing
+>
+> System is booting on GRUB 0.97.
+> Therefore I made the md0 ( /boot) with 0.90
+> And then made md1, md2 and md3 with 1.2
+>
+> Everything looks good in /proc/mdstat
+> I made file systems ( ext for boot and ext for others) , then copied 
+> over all data from original disk.
+>
+> Created the mdadm.conf file:
+> mdadm --detail --scan > /etc/mdadm.conf
+>
+> I used dracut to rebuild the initramfs with the new mdadm.conf:
+>
+> dracut --mdadmconf --force /boot/initramfs-$(uname -r).img $(uname -r)
+> This completed uneventfully.
+>
+> Edited /etc/fstab and rebooted.
+> Now I have all my filesystems on the md devices with no complaints.
+>
+> Ran grub and installed on the new disk :
+> root (hd0,0)
+> setup (hd0)
+> Completed successfully
+>
+> Next, rebooted again, and this time manually edited the grub command 
+> line to change
+> from root=/dev/sdb2  to root=/dev/md1
+>
+> And here it gets funny:
+>
+> Boots a bit, then I see:
+>
+> dracut Warning: No root device "block: /dev/md1" found.
+>
+> And a few seconds later we get a kernel panic.
+>
+Good morning,
+
+I am top and bottom posting this reply to myself, so as to satisfy the 
+tastes of each camp:
+
+I just tried using only one of the disks, and NOT as md RAID devices.
+This works perfectly.
+Which, at least to my eyes, implies there is some interaction with mdadm 
+that is causing the
+failure of dracut and of booting.
+
+Is there anyone here interested in helping me with this?
 
 
 -- 
-In theory, there is no difference between theory and practice.
-In<fnord>   practice, there is.   .... Yogi Berra
-
-
-
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
