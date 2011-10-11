@@ -1,27 +1,34 @@
-From: Miles Fidelman <mfidelman@meetinghouse.net>
-Subject: Re: md RAID10 questions
-Date: Mon, 10 Oct 2011 18:50:24 -0400
-Message-ID: <4E9376B0.3080209@meetinghouse.net>
-References: <4E93657F.1090500@meetinghouse.net> <20111010221547.GA30555@www5.open-std.org>
+From: maurice <mhilarius@gmail.com>
+Subject: Re: Odd booting problem
+Date: Mon, 10 Oct 2011 20:12:59 -0600
+Message-ID: <4E93A62B.3070509@gmail.com>
+References: <4E8F8C63.1080600@gmail.com> <4E9316F8.7040800@gmail.com> <20111010171936.E9DF8581FD6@mail.futurelabusa.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111010221547.GA30555@www5.open-std.org>
+In-Reply-To: <20111010171936.E9DF8581FD6@mail.futurelabusa.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Jim Schatzman <james.schatzman@futurelabusa.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-keld@keldix.com wrote:
-> there was some bencmarks on our wiki, but it is gone because kernel.org is down.
+On 10/10/2011 11:19 AM, Jim Schatzman wrote:
+> Maurice-
 >
-> Any ideas how to remedy the wiki problem?
+> I am not an expert, but I have observed that initrd/initramfs/dracut is fairly stupid, and can't handle what would seem like benign changes to the operating evironment. For example, if you install a linux kernel on a system where the / filesystem is on an LVM volume, then you move the / filesystem to a raw partition, change the grub boot commands and /etc/fstab appropriately, initrd/initramfs still fails with an "/bin/lvm exited abnormally with error 5" message. It does not seem to me that there is any reason that initrd/initramfs should care what return code lvm returns as long as it can mount the / filesystem. It also messes about with raids, generally unnecessarily.
+> ..
 >
-Been wondering about that.  It's been a while now.  Sigh...
+> Good luck!
+>
+> Jim
+>
 
+Thanks Jim,
+
+I will try some of your suggestions.
 
 -- 
-In theory, there is no difference between theory and practice.
-In<fnord>  practice, there is.   .... Yogi Berra
-
-
+Cheers,
+Maurice Hilarius
+eMail: /mhilarius@gmail.com/
