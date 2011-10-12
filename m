@@ -1,56 +1,93 @@
-From: "Peter W. Morreale" <morreale@sgi.com>
-Subject: Re: some general md raid questions
-Date: Wed, 12 Oct 2011 13:33:34 -0600
-Message-ID: <1318448014.6598.76.camel@hermosa.site>
-References: <1318430825.6598.68.camel@hermosa.site>
-	 <ps0hm8xas5.ln2@goaway.wombat.san-francisco.ca.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Andrei Warkentin <andreiw@vmware.com>
+Subject: [RFC] MD: Restart an interrupted incremental recovery.
+Date: Wed, 12 Oct 2011 15:41:35 -0400
+Message-ID: <1318448495-8981-1-git-send-email-andreiw@vmware.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ps0hm8xas5.ln2@goaway.wombat.san-francisco.ca.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keith Keller <kkeller-usenet@wombat.san-francisco.ca.us>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Andrei Warkentin <andreiw@vmware.com>, Neil Brown <neilb@suse.de>, Andrei Warkentin <andrey.warkentin@gmail.com>
 List-Id: linux-raid.ids
 
-On Wed, 2011-10-12 at 10:55 -0700, Keith Keller wrote: 
-> On 2011-10-12, Peter W. Morreale <morreale@sgi.com> wrote:
-> >
-> > Assuming I have two or more jbods attached to the machine, how can I
-> > determine which disks are associated with which paths?  (Yes, sorry, I
-> > realize this is a general discovery question and not specific to
-> > raid :-)
-> 
-> Not positive this is what you want, but you can look at the udevinfo
-> tool:
+If an incremental recovery was interrupted, a subsequent
+re-add will result in a full recovery, even though an
+incremental should be possible.
 
-DOH!  Of course, I can look at the PCI addressing. 
+This patch handles 99% of possible interruptions of an
+incremental recovery (it doesn't handle I/O failure
+that occurs immediately after the hot_add_disk(), which
+causes the added rdev to become a spare).
 
-Thanks,
--PWM
+Cc: Neil Brown <neilb@suse.de>
+Signed-off-by: Andrei Warkentin <andrey.warkentin@gmail.com>
+---
+ drivers/md/md.c           |   28 +++++++++++++++++++++++++---
+ include/linux/raid/md_p.h |    6 +++++-
+ 2 files changed, 30 insertions(+), 4 deletions(-)
 
-
-> 
-> # udevinfo -q all -n sdc1
-> P: /block/sdc/sdc1
-> N: sdc1
-> S: disk/by-id/scsi-1AMCC_A367495389E5F400123E-part1
-> S: disk/by-path/pci-0000:01:03.0-scsi-0:0:1:0-part1
-> E: ID_VENDOR=AMCC
-> E: ID_MODEL=9550SX-16M_DISK
-> E: ID_REVISION=3.02
-> E: ID_SERIAL=1AMCC_A367495389E5F400123E
-> E: ID_TYPE=disk
-> E: ID_BUS=scsi
-> E: ID_PATH=pci-0000:01:03.0-scsi-0:0:1:0
-> 
-> I hope someone else can answer your other questions; I've just started
-> using mdraid myself.  I have played with the speed_limit parameters, but
-> haven't noticed a huge difference (likely because they aren't good
-> disks, not a fault with md).
-> 
-> --keith
-> 
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5404b22..8002e02 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1701,10 +1701,27 @@ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 			break;
+ 		default:
+ 			if ((le32_to_cpu(sb->feature_map) &
+-			     MD_FEATURE_RECOVERY_OFFSET))
+-				rdev->recovery_offset = le64_to_cpu(sb->recovery_offset);
+-			else
++			     MD_FEATURE_IN_INCREMENTAL)) {
++				/* This rdev had been in an incremental
++				 * recovery, which was interrupted, and
++				 * can be restarted. Note that we specifically
++				 * ignore recovery_offset, as I/O to the degraded
++				 * array could have modified data in sectors
++				 * below the recovery offset.
++				 */
++				char b[BDEVNAME_SIZE];
+ 				set_bit(In_sync, &rdev->flags);
++				printk(KERN_NOTICE
++				       "md: restarting interrupted incremental resync on %s\n",
++				       bdevname(rdev->bdev, b));
++			} else {
++				if ((le32_to_cpu(sb->feature_map) &
++				     MD_FEATURE_RECOVERY_OFFSET))
++					rdev->recovery_offset =
++						le64_to_cpu(sb->recovery_offset);
++				else
++					set_bit(In_sync, &rdev->flags);
++			}
+ 			rdev->raid_disk = role;
+ 			break;
+ 		}
+@@ -1738,6 +1755,11 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	else
+ 		sb->resync_offset = cpu_to_le64(0);
+ 
++	if (mddev->bitmap && rdev->saved_raid_disk != -1)
++		sb->feature_map |= cpu_to_le32(MD_FEATURE_IN_INCREMENTAL);
++	else
++		sb->feature_map &= ~cpu_to_le32(MD_FEATURE_IN_INCREMENTAL);
++
+ 	sb->cnt_corrected_read = cpu_to_le32(atomic_read(&rdev->corrected_errors));
+ 
+ 	sb->raid_disks = cpu_to_le32(mddev->raid_disks);
+diff --git a/include/linux/raid/md_p.h b/include/linux/raid/md_p.h
+index 9e65d9e..8a17446 100644
+--- a/include/linux/raid/md_p.h
++++ b/include/linux/raid/md_p.h
+@@ -277,7 +277,11 @@ struct mdp_superblock_1 {
+ 					   */
+ #define	MD_FEATURE_RESHAPE_ACTIVE	4
+ #define	MD_FEATURE_BAD_BLOCKS		8 /* badblock list is not empty */
++#define	MD_FEATURE_IN_INCREMENTAL	16 /* set on disks undergoing incremental
++					    * recovery, so that an interrupted
++					    * incremental recovery may be restarted
++					    */
+ 
+-#define	MD_FEATURE_ALL			(1|2|4|8)
++#define	MD_FEATURE_ALL			(1|2|4|8|16)
+ 
+ #endif 
+-- 
+1.7.4.1
 
