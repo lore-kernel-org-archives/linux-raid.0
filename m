@@ -1,99 +1,89 @@
-From: Andrei Warkentin <andreiw@vmware.com>
-Subject: [RFC] MD: Allow restarting an interrupted incremental recovery.
-Date: Wed, 12 Oct 2011 19:05:33 -0400
-Message-ID: <1318460733-886-1-git-send-email-andreiw@vmware.com>
-References: <CANz0V+7ZGKvyznbU_5d2cQm2XL=Wf9B8+HwZZ9KeZSfuawtyOg@mail.gmail.com>
+From: Kevin W Monroe <kwmonroe@linux.vnet.ibm.com>
+Subject: mdadm --grow on raid1 returns nonzero
+Date: Wed, 12 Oct 2011 18:27:46 -0500
+Message-ID: <4E962272.8020003@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CANz0V+7ZGKvyznbU_5d2cQm2XL=Wf9B8+HwZZ9KeZSfuawtyOg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Andrei Warkentin <andreiw@vmware.com>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-If an incremental recovery was interrupted, a subsequent
-re-add will result in a full recovery, even though an
-incremental should be possible (seen with raid1).
+Hi folks,
 
-Solve this problem by not updating the superblock on the
-recovering device until array is not degraded any longer.
+I'm trying to grow a raid1 array of 2 loop devices as a test. I created 
+the array and successfully grew it, but mdadm --grow exits with a 
+non-zero return code (1). I see the following in Grow.c's analyse_change():
 
-Cc: Neil Brown <neilb@suse.de>
-Signed-off-by: Andrei Warkentin <andreiw@vmware.com>
----
- drivers/md/md.c |   19 +++++++++++++------
- drivers/md/md.h |    6 ++++++
- 2 files changed, 19 insertions(+), 6 deletions(-)
+if (info->new_level == 1) {
+     if (info->delta_disks == UnSet)
+         /* Don't know what to do */
+         return "no change requested for Growing RAID1";
+     re->level = 1;
+     re->backup_blocks = 0;
+     re->parity = 0;
+     return NULL;
+}
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5404b22..153b3c6 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2444,9 +2444,12 @@ repeat:
- 			continue; /* no noise on spare devices */
- 		if (test_bit(Faulty, &rdev->flags))
- 			dprintk("(skipping faulty ");
-+		else if (test_bit(InIncremental, &rdev->flags))
-+			dprintk("(skipping incremental s/r ");
- 
- 		dprintk("%s ", bdevname(rdev->bdev,b));
--		if (!test_bit(Faulty, &rdev->flags)) {
-+		if (!test_bit(Faulty, &rdev->flags) &&
-+		    !test_bit(InIncremental, &rdev->flags)) {
- 			md_super_write(mddev,rdev,
- 				       rdev->sb_start, rdev->sb_size,
- 				       rdev->sb_page);
-@@ -5490,9 +5493,10 @@ static int add_new_disk(mddev_t * mddev, mdu_disk_info_t *info)
- 			return -EINVAL;
- 		}
- 
--		if (test_bit(In_sync, &rdev->flags))
-+		if (test_bit(In_sync, &rdev->flags)) {
- 			rdev->saved_raid_disk = rdev->raid_disk;
--		else
-+			set_bit(InIncremental, &rdev->flags);
-+		} else
- 			rdev->saved_raid_disk = -1;
- 
- 		clear_bit(In_sync, &rdev->flags); /* just to be sure */
-@@ -7353,15 +7357,18 @@ static void reap_sync_thread(mddev_t *mddev)
- 	if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
- 	    mddev->pers->finish_reshape)
- 		mddev->pers->finish_reshape(mddev);
--	md_update_sb(mddev, 1);
- 
- 	/* if array is no-longer degraded, then any saved_raid_disk
--	 * information must be scrapped
-+	 * information must be scrapped, and superblock for
-+	 * incrementally recovered device written out.
- 	 */
- 	if (!mddev->degraded)
--		list_for_each_entry(rdev, &mddev->disks, same_set)
-+		list_for_each_entry(rdev, &mddev->disks, same_set) {
- 			rdev->saved_raid_disk = -1;
-+			clear_bit(InIncremental, &rdev->flags);
-+		}
- 
-+	md_update_sb(mddev, 1);
- 	clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
- 	clear_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 1e586bb..5e5399a 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -104,6 +104,12 @@ struct mdk_rdev_s
- 					 * accurately as possible is good, but
- 					 * not absolutely critical.
- 					 */
-+#define InIncremental	12		/* Device is undergoing incremental
-+					 * recovery, hence its superblock
-+					 * is not written out until the recovery
-+					 * ends, allowing the later to be
-+					 * restared if interrupted.
-+					 */
- 	wait_queue_head_t blocked_wait;
- 
- 	int desc_nr;			/* descriptor index in the superblock */
+So my situation happens because info->delta_disks is UnSet. Is growing a 
+raid1 array on the same underlying devices not a valid use case? Here's 
+my setup/results:
+
+[root@test-lpar01 ~]# mdadm --version
+mdadm - v3.2.1 - 28th March 2011
+
+[root@test-lpar01 ~]# dd if=/dev/zero of=1 bs=1024 count=10000
+10000+0 records in
+10000+0 records out
+10240000 bytes (10 MB) copied, 0.341808 s, 30.0 MB/s
+[root@test-lpar01 ~]# dd if=/dev/zero of=2 bs=1024 count=10000
+10000+0 records in
+10000+0 records out
+10240000 bytes (10 MB) copied, 0.351076 s, 29.2 MB/s
+
+[root@test-lpar01 ~]# losetup --show -f 1
+/dev/loop0
+[root@test-lpar01 ~]# losetup --show -f 2
+/dev/loop1
+
+[root@test-lpar01 ~]# mdadm -Cv /dev/md0 -l1 -n2 -z 5000 /dev/loop0 
+/dev/loop1
+mdadm: Note: this array has metadata at the start and
+     may not be suitable as a boot device.  If you plan to
+     store '/boot' on this device please ensure that
+     your boot-loader understands md/v1.x metadata, or use
+     --metadata=0.90
+mdadm: largest drive (/dev/loop0) exceeds size (5000K) by more than 1%
+Continue creating array? y
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+
+[root@test-lpar01 ~]# cat /proc/mdstat
+Personalities : [raid0] [raid1]
+md0 : active raid1 loop1[1] loop0[0]
+       5000 blocks super 1.2 [2/2] [UU]
+
+unused devices: <none>
+
+[root@test-lpar01 ~]# mdadm --grow -z 7500 /dev/md0
+mdadm: component size of /dev/md0 has been set to 7500K
+mdadm: no change requested for Growing RAID1
+
+[root@test-lpar01 ~]# echo $?
+1
+
+[root@test-lpar01 ~]# cat /proc/mdstat
+Personalities : [raid0] [raid1]
+md0 : active raid1 loop1[1] loop0[0]
+       7500 blocks super 1.2 [2/2] [UU]
+
+unused devices: <none>
+
+
+You can see the array has grown, so I'm curious if the message "no 
+change requested for Growing RAID1" from analyse_change should really be 
+returned. Thanks,
 -- 
-1.7.4.1
+Kevin Monroe
 
