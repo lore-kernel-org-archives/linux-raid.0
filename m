@@ -1,85 +1,72 @@
-From: Phil Turmel <philip@turmel.org>
+From: Johannes Moos <jmoos@gmx.de>
 Subject: Re: Data recovery from linear array (Intel SS4000-E)
-Date: Sat, 15 Oct 2011 12:34:36 -0400
-Message-ID: <4E99B61C.40704@turmel.org>
-References: <4E972C82.1020605@gmx.de> <4E97539D.8040007@turmel.org> <4E985902.1070606@gmx.de> <4E98ECC1.8080403@turmel.org> <4E998037.50204@gmx.de>
+Date: Sun, 16 Oct 2011 17:49:22 +0200
+Message-ID: <4E9AFD02.9070600@gmx.de>
+References: <4E972C82.1020605@gmx.de> <4E97539D.8040007@turmel.org> <4E985902.1070606@gmx.de> <4E98ECC1.8080403@turmel.org> <4E998037.50204@gmx.de> <4E99B61C.40704@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4E998037.50204@gmx.de>
+In-Reply-To: <4E99B61C.40704@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Johannes Moos <jmoos@gmx.de>
+To: Phil Turmel <philip@turmel.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Johannes,
+Hi Phil,
 
-On 10/15/2011 08:44 AM, Johannes Moos wrote:
-> Hi Phil,
-> here's my current status:
-> 
-> root@ThinkPad /media/Backup/NAS # mdadm --zero-superblock /dev/loop{0,1,3}
-> 
-> root@ThinkPad /media/Backup/NAS # mdadm --create --chunk=64 --metadata=0.90 --level=linear -n 4 /dev/md0 /dev/loop{0,1,2,3}
-> mdadm: partition table exists on /dev/loop0 but will be lost or
->        meaningless after creating array
-> Continue creating array? n
-> mdadm: create aborted.
-> 
-> I answered 'no' and checked the loop devices with disktype:
+I recreated the Array and it started.
 
-Caution is good.
+> As you can see, the partition table corresponds to the size of the 
+> combined devices. Metadata type 0.90 is at the end of each member, so 
+> the first sector of loop0 will become the first sector of md0. 
 
-> root@ThinkPad /media/Backup/NAS # disktype /dev/loop{0,1,2,3}
-> 
-> --- /dev/loop0
-> Block device, size 297.7 GiB (319668830208 bytes)
-> DOS/MBR partition map
-> Partition 1: 7.844 MiB (8224768 bytes, 16064 sectors from 1)
->   Type 0x77 (Unknown)
-> Partition 2: 1.490 TiB (1638736625152 bytes, 3200657471 sectors from 16065)
->   Type 0x88 (Unknown)
-> 
-> --- /dev/loop1
-> Block device, size 297.7 GiB (319668830208 bytes)
-> 
-> --- /dev/loop2
-> Block device, size 465.4 GiB (499703758848 bytes)
-> Blank disk/medium
-> 
-> --- /dev/loop3
-> Block device, size 465.4 GiB (499703758848 bytes)
-> 
-> 
-> fdisk output:
-> 
-> root@ThinkPad /usr/src/linux # fdisk -l /dev/loop0
-> 
-> Disk /dev/loop0: 319.7 GB, 319668830208 bytes
-> 255 heads, 63 sectors/track, 38864 cylinders, total 624353184 sectors
-> Units = sectors of 1 * 512 = 512 bytes
-> Sector size (logical/physical): 512 bytes / 512 bytes
-> I/O size (minimum/optimal): 512 bytes / 512 bytes
-> Disk identifier: 0x00000000
-> 
->       Device Boot      Start         End      Blocks   Id  System
-> /dev/loop0p1               1       16064        8032   77  Unknown
-> /dev/loop0p2           16065  3200673535  1600328735+  88  Linux plaintext
+Right, /dev/md0 now looks exactly the same as /dev/loop0:
 
-As you can see, the partition table corresponds to the size of the combined devices.  Metadata type 0.90 is at the end of each member, so the first sector of loop0 will become the first sector of md0.
+root@ThinkPad /media/Backup/NAS # fdisk -l /dev/md0
+Disk /dev/md0: 1638.7 GB, 1638744850432 bytes
+255 heads, 63 sectors/track, 199232 cylinders, total 3200673536 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
 
-> After examining /dev/loop0 with hexdump I found LVM on there as well:
+     Device Boot      Start         End      Blocks   Id  System
+/dev/md0p1               1       16064        8032   77  Unknown
+/dev/md0p2           16065  3200673535  1600328735+  88  Linux plaintext
 
-The LVM PV should be recognized by udev as soon as the array is started.
+>>  From what I read in a forum it's possible to mount the XFS partition 
+>> with an offset, in my case that would be 00ae0000 (last line in 
+>> hexdump).
+> Shouldn't be necessary.  I expect your LV w/ XFS to show up properly.
 
-> From what I read in a forum it's possible to mount the XFS partition with an offset, in my case that would be 00ae0000 (last line in hexdump).
-> But the guy in the forum had no problem assembling his array, so I have to proceed with that first.
+Nothing happened, so I tried as described in the forum post I mentioned 
+(about a pretty much identical NAS and so LVM):
 
-Shouldn't be necessary.  I expect your LV w/ XFS to show up properly.
+root@ThinkPad /media/Backup/NAS # hexdump -C /dev/md0 | head -n 150 | 
+grep XFSB
+00ae0000  58 46 53 42 00 00 10 00  00 00 00 00 00 04 00 00  
+|XFSB............|
 
-> Just wanted to make sure that it's OK to answer 'yes' and let mdadm do its job?
+Offset for XFS-Partition is 00ae0000, that's 11403264 in decimal, so I 
+tried (read only):
 
-Yes.
+root@ThinkPad /media/Backup/NAS # losetup -r -o 11403264 /dev/loop4 
+/dev/md0
 
-Phil
+and then I got:
+
+root@ThinkPad /media/Backup/NAS # disktype /dev/loop4
+--- /dev/loop4
+Block device, size 1.490 TiB (1638733447168 bytes)
+XFS file system, version 4
+   Volume name ""
+   UUID 705BF11E-8F69-1CDA-8727-00004868BBE3 (DCE, v1)
+   Volume size 1 GiB (1073741824 bytes, 262144 blocks of 4 KiB)
+
+Small progress, but volume size only 1 GiB?
+I didn't ran xfs_check or xfs_repair so far because there's probably a 
+better way to do it :)
+
+Best regards,
+Johannes Moos
