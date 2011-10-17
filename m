@@ -1,33 +1,38 @@
-From: Dan McGee <dpmcgee@gmail.com>
-Subject: [PATCH] lib/raid6: Fix filename emitted in generated code
-Date: Mon, 17 Oct 2011 15:29:08 -0500
-Message-ID: <1318883348-29961-1-git-send-email-dpmcgee@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/1] IMSM do not assume prev + current map in same state means reshape
+Date: Mon, 17 Oct 2011 22:40:14 +0200
+Message-ID: <1318884015-14749-1-git-send-email-Jes.Sorensen@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>
+Cc: neilb@suse.de, dledford@redhat.com, lukasz.dorau@intel.com, adam.kwolek@intel.com, Marcin.Labun@intel.com
 List-Id: linux-raid.ids
 
-The files were renamed in commit cc4589ebf; fix the name in the file
-itself.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Dan McGee <dpmcgee@gmail.com>
----
- lib/raid6/int.uc |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi,
 
-diff --git a/lib/raid6/int.uc b/lib/raid6/int.uc
-index d1e276a..5b50f8d 100644
---- a/lib/raid6/int.uc
-+++ b/lib/raid6/int.uc
-@@ -11,7 +11,7 @@
-  * ----------------------------------------------------------------------- */
- 
- /*
-- * raid6int$#.c
-+ * int$#.c
-  *
-  * $#-way unrolled portable integer math RAID-6 instruction set
-  *
+I believe there is a bug in the current IMSM code. It makes the
+assumption that if the state of the previous map and the current map
+are the same, it means we are trying to reshape the array. However if
+you have a large array and just installed on it, and it was still
+resyncing when you rebooted, it will come up in the same state and
+'mdadm -Aa' will fail with an error that it is lacking a resync file.
+
+This is what prevents an update Fedora 15 system from booting, such as
+https://bugzilla.redhat.com/show_bug.cgi?id=736387
+
+If I am missing something here, I'd appreciate to hear about it.
+
+Thanks,
+Jes
+
+Jes Sorensen (1):
+  IMSM only run reshape if number of disks has changed
+
+ super-intel.c |   13 ++++---------
+ 1 files changed, 4 insertions(+), 9 deletions(-)
+
 -- 
-1.7.7
+1.7.6.4
+
