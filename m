@@ -1,75 +1,40 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm r/w operations without TEMP_FAILURE_RETRY()
-Date: Tue, 18 Oct 2011 20:30:16 +1100
-Message-ID: <20111018203016.4536708f@notabene.brown>
-References: <2AC2FDB9F3686F48962B2B65E2040CCC3D155FA0@irsmsx503.ger.corp.intel.com>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH] fix: imsm: prevent segfault in mark_failure
+Date: Tue, 18 Oct 2011 15:04:15 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB0411C4@IRSMSX101.ger.corp.intel.com>
+References: <20111018074448.4114.43297.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/hU8=U0b.VnDcmwRkGwIYt3X"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2AC2FDB9F3686F48962B2B65E2040CCC3D155FA0@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20111018074448.4114.43297.stgit@gklab-128-085.igk.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/hU8=U0b.VnDcmwRkGwIYt3X
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 18 Oct 2011 10:16:41 +0100 "Orlowski, Lukasz"
-<lukasz.orlowski@intel.com> wrote:
-
-> Hi,
->=20
-> I was going through mdadm code and got to realize that r/w operations are=
- invoked without TEMP_FAILURE_RETRY() macro, which protects from unexpected=
- operation termination, case SIGINT is thrown. According to my knowledge it=
-s POSIX best-practice to call the r/w operations within that macro, lest so=
-me sporadic unexpected behaviors occur.
->=20
-> Any particular reason for not using it?
-
-I've never heard of TEMP_FAILURE_RETRY.
-
-And having looked in to it I would certainly try to avoid using it.
-
-If the SA_RESTART flag is set with sigaction() then it should be totally
-unnecessary.
-
-mdadm doesn't use signals much - only in mdmon.
-It probably would make sense to set SA_RESTART when setting up those signal=
-s.
-
-But SIGINT is not a problem because mdadm doesn't catch it.  If SIGINT was
-set, mdadm would simply exit.  Whatever operation was happening at the time
-wouldn't see a TEMP_FAILURE that is worth RETRYing.  Rather the whole proce=
-ss
-would die.
-
-Thanks,
-NeilBrown
-
---Sig_/hU8=U0b.VnDcmwRkGwIYt3X
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTp1HNjnsnt1WYoG5AQLSKA/9F1wYJUdplDgV78pstunvvoxhPa1Jm1OT
-fHWbFr/B0kPWl++e1fdDrjGLgeXWp/nrj5IY8F0RgJRElbo/5XYoFpE2x6790rAx
-255XePUW8pUNvTDoDqJTbHx68qlfHGS4wTNTDss3Vdms/kF5Z56z99R0gUuXD9Oi
-lQo0GnK3AVbrvrfJMYl5m0smGaFS2NKbK/1qRKxMYPl+bO9+DA6Yywu/opWm6/wo
-X5zjl5F981BX9t7r1K+jF7bem0LhSY8KsNIOQI2uJYM2532Q9qq+xLKQtmBc9U3f
-Xz8cvwvs5+bWphx81m50Qc9OurG+8iDObmK5kU6rpbNDMJLNO6xH06O67opjXILY
-NFs1bglbcJ7/+vrzwy/UqlK3LK27b8ZvyZNuNiN6qHdrIsNhNhG9VW5vDDdsvZO5
-KUuuAh14GgsSXImRuULQAS6WOTMhz1wLwgX0DtQTROjbPAnnvoBuJBa/ekdmVjzp
-ddLGrCVv4QKHjODjPy/QeAUoqnVqmtGZ13xwOGWoFzipPkF6Aw9LnCsai9om3+pH
-kqgNc9vMxlijrp4ZYAYGKzNm6556Hjz010Hm7IcLIJMbG2A4ToJUDWXJb5xfsGPp
-0fwsIAEU5vw39vzk3LERG7kdV5hXE/zwIRhlYfLBmk+9nCH9TVfhs8ilngklm0PO
-Zua/nzMAQuk=
-=RD5l
------END PGP SIGNATURE-----
-
---Sig_/hU8=U0b.VnDcmwRkGwIYt3X--
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIEx1a2FzeiBEb3JhdQ0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDE4
+LCAyMDExIDk6NDUgQU0NCj4gVG86IG5laWxiQHN1c2UuZGUNCj4gQ2M6IGxpbnV4LXJhaWRAdmdl
+ci5rZXJuZWwub3JnOyBMYWJ1biwgTWFyY2luOyBDaWVjaGFub3dza2ksIEVkDQo+IFN1YmplY3Q6
+IFtQQVRDSF0gZml4OiBpbXNtOiBwcmV2ZW50IHNlZ2ZhdWx0IGluIG1hcmtfZmFpbHVyZQ0KPiAN
+Cj4gVXNpbmcgYW4gYXJyYXkgb2YgY2hhcnMgd2l0aG91dCB0cmFpbGluZyAnXDAwMCcgYXMgYSBw
+YXJhbWV0ZXINCj4gaW4gc3ByaW50ZigpIGZ1bmN0aW9uIGNhbiBjYXVzZSBzZWdmYXVsdC4gVGhl
+IHNucHJpbnRmKCkgZnVuY3Rpb24NCj4gc2hvdWxkIGJlIHVzZWQgaW5zdGVhZC4NCj4gDQo+IFNp
+Z25lZC1vZmYtYnk6IEx1a2FzeiBEb3JhdSA8bHVrYXN6LmRvcmF1QGludGVsLmNvbT4NCj4gLS0t
+DQo+ICBzdXBlci1pbnRlbC5jIHwgICAgMiArLQ0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAxIGluc2Vy
+dGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvc3VwZXItaW50ZWwu
+YyBiL3N1cGVyLWludGVsLmMNCj4gaW5kZXggYWYwNjY2MC4uNjk2Y2ZmMyAxMDA2NDQNCj4gLS0t
+IGEvc3VwZXItaW50ZWwuYw0KPiArKysgYi9zdXBlci1pbnRlbC5jDQo+IEBAIC02MDE1LDcgKzYw
+MTUsNyBAQCBzdGF0aWMgaW50IG1hcmtfZmFpbHVyZShzdHJ1Y3QgaW1zbV9kZXYgKmRldiwgc3Ry
+dWN0DQo+IGltc21fZGlzayAqZGlzaywgaW50IGlkeCkNCj4gIAlpZiAoaXNfZmFpbGVkKGRpc2sp
+ICYmIChvcmQgJiBJTVNNX09SRF9SRUJVSUxEKSkNCj4gIAkJcmV0dXJuIDA7DQo+IA0KPiAtCXNw
+cmludGYoYnVmLCAiJXM6MCIsIGRpc2stPnNlcmlhbCk7DQo+ICsJc25wcmludGYoYnVmLCBNQVhf
+UkFJRF9TRVJJQUxfTEVOLCAiJXM6MCIsIGRpc2stPnNlcmlhbCk7DQo+ICAJaWYgKChsZW4gPSBz
+dHJsZW4oYnVmKSkgPj0gTUFYX1JBSURfU0VSSUFMX0xFTikNCj4gIAkJc2hpZnQgPSBsZW4gLSBN
+QVhfUkFJRF9TRVJJQUxfTEVOICsgMTsNCj4gIAlzdHJuY3B5KChjaGFyICopZGlzay0+c2VyaWFs
+LCAmYnVmW3NoaWZ0XSwgTUFYX1JBSURfU0VSSUFMX0xFTik7DQo+DQoNClRoZXJlIGlzIGEgc3R1
+cGlkIG1pc3Rha2UgaW4gdGhpcyBwYXRjaC4NCkkgd2lsbCBjb3JyZWN0IGl0IGFuZCBzZW5kIHRo
+ZSByaWdodCB2ZXJzaW9uIHNvb24uDQoNClJlZ2FyZHMsDQpMdWthc3ogRG9yYXUNCg0K
