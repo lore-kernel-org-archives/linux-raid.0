@@ -1,40 +1,62 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] fix: imsm: prevent segfault in mark_failure
-Date: Tue, 18 Oct 2011 15:04:15 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB0411C4@IRSMSX101.ger.corp.intel.com>
-References: <20111018074448.4114.43297.stgit@gklab-128-085.igk.intel.com>
+From: Andrei Warkentin <awarkentin@vmware.com>
+Subject: Re: [PATCH] MD: Allow restarting an interrupted incremental
+ recovery.
+Date: Tue, 18 Oct 2011 10:07:24 -0700 (PDT)
+Message-ID: <486504952.50696.1318957644567.JavaMail.root@zimbra-prod-mbox-2.vmware.com>
+References: <20111018122239.72685887@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111018074448.4114.43297.stgit@gklab-128-085.igk.intel.com>
-Content-Language: en-US
+In-Reply-To: <20111018122239.72685887@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Andrei Warkentin <andreiw@vmware.com>
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEx1a2FzeiBEb3JhdQ0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDE4
-LCAyMDExIDk6NDUgQU0NCj4gVG86IG5laWxiQHN1c2UuZGUNCj4gQ2M6IGxpbnV4LXJhaWRAdmdl
-ci5rZXJuZWwub3JnOyBMYWJ1biwgTWFyY2luOyBDaWVjaGFub3dza2ksIEVkDQo+IFN1YmplY3Q6
-IFtQQVRDSF0gZml4OiBpbXNtOiBwcmV2ZW50IHNlZ2ZhdWx0IGluIG1hcmtfZmFpbHVyZQ0KPiAN
-Cj4gVXNpbmcgYW4gYXJyYXkgb2YgY2hhcnMgd2l0aG91dCB0cmFpbGluZyAnXDAwMCcgYXMgYSBw
-YXJhbWV0ZXINCj4gaW4gc3ByaW50ZigpIGZ1bmN0aW9uIGNhbiBjYXVzZSBzZWdmYXVsdC4gVGhl
-IHNucHJpbnRmKCkgZnVuY3Rpb24NCj4gc2hvdWxkIGJlIHVzZWQgaW5zdGVhZC4NCj4gDQo+IFNp
-Z25lZC1vZmYtYnk6IEx1a2FzeiBEb3JhdSA8bHVrYXN6LmRvcmF1QGludGVsLmNvbT4NCj4gLS0t
-DQo+ICBzdXBlci1pbnRlbC5jIHwgICAgMiArLQ0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAxIGluc2Vy
-dGlvbnMoKyksIDEgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvc3VwZXItaW50ZWwu
-YyBiL3N1cGVyLWludGVsLmMNCj4gaW5kZXggYWYwNjY2MC4uNjk2Y2ZmMyAxMDA2NDQNCj4gLS0t
-IGEvc3VwZXItaW50ZWwuYw0KPiArKysgYi9zdXBlci1pbnRlbC5jDQo+IEBAIC02MDE1LDcgKzYw
-MTUsNyBAQCBzdGF0aWMgaW50IG1hcmtfZmFpbHVyZShzdHJ1Y3QgaW1zbV9kZXYgKmRldiwgc3Ry
-dWN0DQo+IGltc21fZGlzayAqZGlzaywgaW50IGlkeCkNCj4gIAlpZiAoaXNfZmFpbGVkKGRpc2sp
-ICYmIChvcmQgJiBJTVNNX09SRF9SRUJVSUxEKSkNCj4gIAkJcmV0dXJuIDA7DQo+IA0KPiAtCXNw
-cmludGYoYnVmLCAiJXM6MCIsIGRpc2stPnNlcmlhbCk7DQo+ICsJc25wcmludGYoYnVmLCBNQVhf
-UkFJRF9TRVJJQUxfTEVOLCAiJXM6MCIsIGRpc2stPnNlcmlhbCk7DQo+ICAJaWYgKChsZW4gPSBz
-dHJsZW4oYnVmKSkgPj0gTUFYX1JBSURfU0VSSUFMX0xFTikNCj4gIAkJc2hpZnQgPSBsZW4gLSBN
-QVhfUkFJRF9TRVJJQUxfTEVOICsgMTsNCj4gIAlzdHJuY3B5KChjaGFyICopZGlzay0+c2VyaWFs
-LCAmYnVmW3NoaWZ0XSwgTUFYX1JBSURfU0VSSUFMX0xFTik7DQo+DQoNClRoZXJlIGlzIGEgc3R1
-cGlkIG1pc3Rha2UgaW4gdGhpcyBwYXRjaC4NCkkgd2lsbCBjb3JyZWN0IGl0IGFuZCBzZW5kIHRo
-ZSByaWdodCB2ZXJzaW9uIHNvb24uDQoNClJlZ2FyZHMsDQpMdWthc3ogRG9yYXUNCg0K
+Hi Neil,
+
+----- Original Message -----
+> From: "NeilBrown" <neilb@suse.de>
+> To: "Andrei Warkentin" <andreiw@vmware.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Monday, October 17, 2011 9:22:39 PM
+> Subject: Re: [PATCH] MD: Allow restarting an interrupted incremental recovery.
+> 
+> On Mon, 17 Oct 2011 19:22:11 -0400 Andrei Warkentin
+> <andreiw@vmware.com>
+> wrote:
+> 
+> > If an incremental recovery was interrupted, a subsequent
+> > re-add will result in a full recovery, even though an
+> > incremental should be possible (seen with raid1).
+> > 
+> > Solve this problem by not updating the superblock on the
+> > recovering device until array is not degraded any longer.
+> > 
+> > Cc: Neil Brown <neilb@suse.de>
+> > Signed-off-by: Andrei Warkentin <andreiw@vmware.com>
+> > ---
+
+> Thanks.  I've applied this and pushed it to my for-next branch.
+> 
+> My current HEAD use pr_debug instead of dprintk so I fixed that.
+> 
+> Also I realised that clearing saved_raid_disk when an array is not
+> degraded
+> is no longer enough.  We also need to clear it when the device
+> becomes
+> In_sync.
+> Consider a 3-drive RAID1 with two drives missing.  You add back one
+> of them
+> and when it is recovered it needs saved_raid_disk cleared so that the
+> superblock gets written out.
+> 
+> So below is what I applied.
+> 
+
+Wouldn't all drives being In_sync imply the array is not degraded - i.e. can the
+check for a degraded array be omitted then, at all? I.e. if after the resync the
+In_sync bit is set - drop saved_raid_role.
+
+A
