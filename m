@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 1/3] Remove race for starting container devices.
-Date: Thu, 20 Oct 2011 12:06:16 +0200
-Message-ID: <1319105178-7697-2-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 3/3] Hold the map lock while performing Assemble to avoid races with udev
+Date: Thu, 20 Oct 2011 12:06:18 +0200
+Message-ID: <1319105178-7697-4-git-send-email-Jes.Sorensen@redhat.com>
 References: <1319105178-7697-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1319105178-7697-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -12,81 +12,42 @@ List-Id: linux-raid.ids
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This moves the lock handling out of Incremental_container() and relies
-on the caller holding the lock. This prevents conflict with a
-follow-on mdadm comment which may try and launch the device in
-parallel.
-
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Incremental.c |   26 ++++++++++++++------------
- 1 files changed, 14 insertions(+), 12 deletions(-)
+ mdadm.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/Incremental.c b/Incremental.c
-index b90089b..4a5e568 100644
---- a/Incremental.c
-+++ b/Incremental.c
-@@ -139,10 +139,16 @@ int Incremental(char *devname, int verbose, int runstop,
- 			rv = st->ss->load_container(st, dfd, NULL);
- 
- 		close(dfd);
--		if (!rv && st->ss->container_content)
--			return Incremental_container(st, devname, homehost,
--						     verbose, runstop, autof,
--						     freeze_reshape);
-+		if (!rv && st->ss->container_content) {
+diff --git a/mdadm.c b/mdadm.c
+index ebf1c46..56de7b7 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -1279,6 +1279,7 @@ int main(int argc, char *argv[])
+ 		} else {
+ 			struct mddev_ident *a, *array_list =  conf_get_ident(NULL);
+ 			struct mddev_dev *devlist = conf_get_devs();
++			struct map_ent *map = NULL;
+ 			int cnt = 0;
+ 			int failures, successes;
+ 			if (devlist == NULL) {
+@@ -1298,6 +1299,10 @@ int main(int argc, char *argv[])
+ 				if (a->autof == 0)
+ 					a->autof = autof;
+ 			}
 +			if (map_lock(&map))
-+				fprintf(stderr, Name ": failed to get "
-+					"exclusive lock on mapfile\n");
-+			rv = Incremental_container(st, devname, homehost,
-+						   verbose, runstop, autof,
-+						   freeze_reshape);
++				fprintf(stderr, Name " %s: failed to get "
++					"exclusive lock on mapfile\n",
++					__func__);
+ 			do {
+ 				failures = 0;
+ 				successes = 0;
+@@ -1364,6 +1369,7 @@ int main(int argc, char *argv[])
+ 				fprintf(stderr, Name ": No arrays found in config file\n");
+ 				rv = 1;
+ 			}
 +			map_unlock(&map);
-+			return rv;
-+		}
- 
- 		fprintf(stderr, Name ": %s is not part of an md array.\n",
- 			devname);
-@@ -440,7 +446,6 @@ int Incremental(char *devname, int verbose, int runstop,
- 	if (info.array.level == LEVEL_CONTAINER) {
- 		int devnum = devnum; /* defined and used iff ->external */
- 		/* Try to assemble within the container */
--		map_unlock(&map);
- 		sysfs_uevent(&info, "change");
- 		if (verbose >= 0)
- 			fprintf(stderr, Name
-@@ -451,9 +456,10 @@ int Incremental(char *devname, int verbose, int runstop,
- 			devnum = fd2devnum(mdfd);
- 		close(mdfd);
- 		sysfs_free(sra);
--		rv = Incremental(chosen_name, verbose, runstop,
--				 NULL, homehost, require_homehost, autof,
--				 freeze_reshape);
-+		rv = Incremental_container(st, chosen_name, homehost,
-+					   verbose, runstop, autof,
-+					   freeze_reshape);
-+		map_unlock(&map);
- 		if (rv == 1)
- 			/* Don't fail the whole -I if a subarray didn't
- 			 * have enough devices to start yet
-@@ -1463,9 +1469,6 @@ static int Incremental_container(struct supertype *st, char *devname,
- 		trustworthy = FOREIGN;
- 
- 	list = st->ss->container_content(st, NULL);
--	if (map_lock(&map))
--		fprintf(stderr, Name ": failed to get exclusive lock on "
--			"mapfile\n");
- 	/* do not assemble arrays that might have bad blocks */
- 	if (list && list->array.state & (1<<MD_SB_BBM_ERRORS)) {
- 		fprintf(stderr, Name ": BBM log found in metadata. "
-@@ -1607,7 +1610,6 @@ static int Incremental_container(struct supertype *st, char *devname,
- 			close(sfd);
- 	}
- 	domain_free(domains);
--	map_unlock(&map);
- 	return 0;
- }
- 
+ 		}
+ 		break;
+ 	case BUILD:
 -- 
 1.7.6.4
 
