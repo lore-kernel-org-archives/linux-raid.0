@@ -1,45 +1,51 @@
-From: Yathindra <ydev@cs.utah.edu>
-Subject: Re: mdadm help
-Date: Wed, 19 Oct 2011 21:12:03 -0600
-Message-ID: <4E9F9183.1040809@cs.utah.edu>
-References: <4E9F8C37.1060706@cs.utah.edu> <20111020140315.716d9c2e@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 0/3] Fix mdadm vs udev race in Incremental and Assemble
+Date: Thu, 20 Oct 2011 12:06:15 +0200
+Message-ID: <1319105178-7697-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111020140315.716d9c2e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, lukasz.dorau@intel.com, adam.kwolek@intel.com, dledford@redhat.com
 List-Id: linux-raid.ids
 
-Thanks Neil.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-On 10/19/2011 9:03 PM, NeilBrown wrote:
-> On Wed, 19 Oct 2011 20:49:27 -0600 Yathindra<ydev@cs.utah.edu>  wrote:
->
->> Hi,
->>
->> I'm trying to use the faulty personality of mdadm tool to inject various
->> disk failure patterns
->> such as medium errors, unresponsive disk etc.
->>
->> I'm wondering if there is an option to delay commands to get an
->> unresponsive behavior.
-> No, there is no way to get a delay.  You either get a success or a failure.
->
->> Also, does rt (readtransient) and wt (writetransient) fault options act
->> as medium errors.
-> They simple report an error.  The linux block layer doesn't distinguish
-> reliably amongst different types or errors (or it didn't last time I checked).
->
-> NeilBrown
->
->
->> Thanks,
->> Yathi
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi,
+
+This patch set fixes the problem with mdadm racing udev during during
+incremental or regular assembly of IMSM raids. This set fixes a bug in
+the initial patch I posted earlier, and adds the locking to Assemble()
+which I didn't have in the first round.
+
+There are three patches to the set:
+1) Hold the lock while running Incremental_container() to avoid udev
+   (or someone else like a boot script) kicking off an additional
+   mdadm instance to try and assemble the container in parallel.
+2) Don't send udev a 'change' event to handle incremental assembly
+   since we are about to do it ourselves anyway.
+3) Hold the lock during Assemble() again to avoid udev kicking in
+   behind our backs.
+
+With these patches in place, I can no longer reproduce the case I was
+seeing on Fedora 16 Beta where an array would not come up correctly.
+
+Patches are on top of Neil's current git repository.
+
+Comments?
+
+Cheers,
+Jes
+
+
+Jes Sorensen (3):
+  Remove race for starting container devices.
+  Don't tell sysfs to launch the container as we are doing it ourselves
+  Hold the map lock while performing Assemble to avoid races with udev
+
+ Incremental.c |   27 ++++++++++++++-------------
+ mdadm.c       |    6 ++++++
+ 2 files changed, 20 insertions(+), 13 deletions(-)
+
+-- 
+1.7.6.4
 
