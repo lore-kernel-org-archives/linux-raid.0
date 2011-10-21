@@ -1,60 +1,142 @@
-From: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Subject: [PATCH 2/2] imsm: fix: Fixes metadata after migration from Raid 0 to
-	Raid 10
-Date: Fri, 21 Oct 2011 09:47:44 +0200
-Message-ID: <20111021074744.14969.36824.stgit@gklab-128-192.igk.intel.com>
-References: <20111021074643.14969.22068.stgit@gklab-128-192.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Andrew <andyukguy@gmail.com>
+Subject: mdadm "Used Dev Size" on 3TB drives
+Date: Fri, 21 Oct 2011 11:18:58 +0100
+Message-ID: <1C43E501-9252-4502-BAC7-0C67C15DC68E@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v1084)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111021074643.14969.22068.stgit@gklab-128-192.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, dan.j.williams@intel.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-RnJvbTogcm9vdCA8cm9vdEBna2xhYi0xMjgtMTkyLmlnay5pbnRlbC5jb20+CgpBZnRlciBtaWdy
-YXRpb24gZnJvbSBSYWlkIDAgdG8gUmFpZCAxMCwgdGhlIG1ldGFkYXRhIGlzIGluY29ycmVjdCwK
-bGVhdmluZyBvbmUgbWlycm9yIGRpc2sgbWFya2VkIGFzIHNwYXJlIGFuZCBvbmUgbWlzc2luZyBk
-aXNrIGFzIGEgbWVtYmVyCm9mIHRoZSBhcnJheS4KVGhlIHJlYXNvbiBpcyB0aGF0IHRoZSBtZXRh
-ZGF0YSB1cGRhdGUgY29kZSBmb3Igc3BhcmUgYWN0aXZhdGlvbgpwcm9jZWR1cmUgdGFrZXMgaW50
-byBhY2NvdW50IG9uZSBzcGFyZSBkaXNrIG9ubHksIG5vdCBjaGVja2luZwp0aGUgZm9sbG93aW5n
-IG9uZXMuCgpTaWduZWQtb2ZmLWJ5OiBMdWthc3ogT3Jsb3dza2kgPGx1a2Fzei5vcmxvd3NraUBp
-bnRlbC5jb20+Ci0tLQogc3VwZXItaW50ZWwuYyB8ICAgMTggKysrKysrKysrKysrKysrLS0tCiAx
-IGZpbGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvc3VwZXItaW50ZWwuYyBiL3N1cGVyLWludGVsLmMKaW5kZXggYzY2OTEzNS4uZGJhYzUw
-YSAxMDA2NDQKLS0tIGEvc3VwZXItaW50ZWwuYworKysgYi9zdXBlci1pbnRlbC5jCkBAIC02OTk0
-LDggKzY5OTQsMTUgQEAgc3RhdGljIGludCBhcHBseV91cGRhdGVfYWN0aXZhdGVfc3BhcmUoc3Ry
-dWN0IGltc21fdXBkYXRlX2FjdGl2YXRlX3NwYXJlICp1LAogCXN0cnVjdCBkbCAqZGw7CiAJdW5z
-aWduZWQgaW50IGZvdW5kOwogCWludCBmYWlsZWQ7Ci0JaW50IHZpY3RpbSA9IGdldF9pbXNtX2Rp
-c2tfaWR4KGRldiwgdS0+c2xvdCwgLTEpOworCWludCB2aWN0aW07CiAJaW50IGk7CisJaW50IHNl
-Y29uZF9tYXBfY3JlYXRlZCA9IDA7CisKKwlmb3IgKDsgdTsgdSA9IHUtPm5leHQpIHsKKwkJdmlj
-dGltID0gZ2V0X2ltc21fZGlza19pZHgoZGV2LCB1LT5zbG90LCAtMSk7CisKKwkJaWYgKHZpY3Rp
-bSA8IDApCisJCQlyZXR1cm4gMDsKIAogCQlmb3IgKGRsID0gc3VwZXItPmRpc2tzOyBkbDsgZGwg
-PSBkbC0+bmV4dCkKIAkJCWlmIChkbCA9PSB1LT5kbCkKQEAgLTcwMzIsOCArNzAzOSwxMiBAQCBz
-dGF0aWMgaW50IGFwcGx5X3VwZGF0ZV9hY3RpdmF0ZV9zcGFyZShzdHJ1Y3QgaW1zbV91cGRhdGVf
-YWN0aXZhdGVfc3BhcmUgKnUsCiAKIAkJLyogbWFyayByZWJ1aWxkICovCiAJCXRvX3N0YXRlID0g
-aW1zbV9jaGVja19kZWdyYWRlZChzdXBlciwgZGV2LCBmYWlsZWQpOwotCQltYXAtPm1hcF9zdGF0
-ZSA9IElNU01fVF9TVEFURV9ERUdSQURFRDsKLQkJbWlncmF0ZShkZXYsIHN1cGVyLCB0b19zdGF0
-ZSwgTUlHUl9SRUJVSUxEKTsKKwkJaWYgKCFzZWNvbmRfbWFwX2NyZWF0ZWQpIHsKKwkJCXNlY29u
-ZF9tYXBfY3JlYXRlZCA9IDE7CisJCQltYXAtPm1hcF9zdGF0ZSA9IElNU01fVF9TVEFURV9ERUdS
-QURFRDsKKwkJCW1pZ3JhdGUoZGV2LCBzdXBlciwgdG9fc3RhdGUsIE1JR1JfUkVCVUlMRCk7CisJ
-CX0gZWxzZQorCQkJbWFwLT5tYXBfc3RhdGUgPSB0b19zdGF0ZTsKIAkJbWlncl9tYXAgPSBnZXRf
-aW1zbV9tYXAoZGV2LCAxKTsKIAkJc2V0X2ltc21fb3JkX3RibF9lbnQobWFwLCB1LT5zbG90LCBk
-bC0+aW5kZXgpOwogCQlzZXRfaW1zbV9vcmRfdGJsX2VudChtaWdyX21hcCwgdS0+c2xvdCwKQEAg
-LTcwNzksNiArNzA5MCw3IEBAIHN0YXRpYyBpbnQgYXBwbHlfdXBkYXRlX2FjdGl2YXRlX3NwYXJl
-KHN0cnVjdCBpbXNtX3VwZGF0ZV9hY3RpdmF0ZV9zcGFyZSAqdSwKIAkJCQkJCWJyZWFrOwogCQkJ
-aW1zbV9kZWxldGUoc3VwZXIsIGRscCwgdmljdGltKTsKIAkJfQorCX0KIAogCXJldHVybiAxOwog
-fQoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tCkludGVsIFRlY2hub2xvZ3kgUG9sYW5kIHNwLiB6IG8uby4KeiBzaWVk
-emliYSB3IEdkYW5za3UKdWwuIFNsb3dhY2tpZWdvIDE3Mwo4MC0yOTggR2RhbnNrCgpTYWQgUmVq
-b25vd3kgR2RhbnNrIFBvbG5vYyB3IEdkYW5za3UsIApWSUkgV3lkemlhbCBHb3Nwb2RhcmN6eSBL
-cmFqb3dlZ28gUmVqZXN0cnUgU2Fkb3dlZ28sIApudW1lciBLUlMgMTAxODgyCgpOSVAgOTU3LTA3
-LTUyLTMxNgpLYXBpdGFsIHpha2xhZG93eSAyMDAuMDAwIHpsCgpUaGlzIGUtbWFpbCBhbmQgYW55
-IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNv
-bGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJp
-YnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0
-aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxl
-dGUgYWxsIGNvcGllcy4K
+Hi,
 
+A fresh installation of mdadm in a raid1 profile on 2x3TB drives is reporting as follows:
+
+/dev/md1:
+        Version : 01.00
+  Creation Time : Fri Oct 21 01:03:57 2011
+     Raid Level : raid1
+     Array Size : 2930147192 (2794.41 GiB 3000.47 GB)
+  Used Dev Size : 5860294384 (5588.81 GiB 6000.94 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Oct 21 10:40:09 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : 1
+           UUID : 639ae43a:c079a412:3a0be350:72ff20be
+         Events : 46
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+
+While everything looks in order I've not seen Used Dev Size report double the disk size before on a mdadm raid1 array. Indeed on the /boot partition (md0) on the same drives it doesn't:
+
+/dev/md0:
+        Version : 00.90
+  Creation Time : Fri Oct 21 01:03:40 2011
+     Raid Level : raid1
+     Array Size : 115648 (112.96 MiB 118.42 MB)
+  Used Dev Size : 115648 (112.96 MiB 118.42 MB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Fri Oct 21 06:53:22 2011
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : e4d1bc12:51cd306a:de6491bb:b01e719b
+         Events : 0.18
+
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       19        1      active sync   /dev/sdb3
+
+and on other arrays on different servers it doesn't for any partition. The only thing I can see is that (oddly) the version number of mdadm changes between the md0 and md1 array. Is this simply a bug in v01.00 or should I be worried about the array's functionality and integrity?
+
+Further info:
+
+Model: ATA Hitachi HDS72303 (scsi)
+Disk /dev/sda: 3001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name  Flags
+ 1      1049kB  3146kB  2097kB                     bios_grub
+ 3      3146kB  122MB   118MB   ext3               raid
+ 2      122MB   3001GB  3000GB  ext4               raid
+
+Model: ATA Hitachi HDS72303 (scsi)
+Disk /dev/sdb: 3001GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name  Flags
+ 1      1049kB  3146kB  2097kB                     bios_grub
+ 3      3146kB  122MB   118MB   ext3               raid
+ 2      122MB   3001GB  3000GB  ext4               raid
+
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 639ae43a:c079a412:3a0be350:72ff20be
+           Name : 1
+  Creation Time : Fri Oct 21 01:03:57 2011
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 5860294384 (2794.41 GiB 3000.47 GB)
+     Array Size : 5860294384 (2794.41 GiB 3000.47 GB)
+   Super Offset : 5860294640 sectors
+          State : clean
+    Device UUID : 0ed46f31:1b100aa1:e2933dd4:f93716c1
+
+    Update Time : Fri Oct 21 11:17:42 2011
+       Checksum : 22b01b3e - correct
+         Events : 46
+
+
+    Array Slot : 0 (0, 1)
+   Array State : Uu
+
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 639ae43a:c079a412:3a0be350:72ff20be
+           Name : 1
+  Creation Time : Fri Oct 21 01:03:57 2011
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 5860294384 (2794.41 GiB 3000.47 GB)
+     Array Size : 5860294384 (2794.41 GiB 3000.47 GB)
+   Super Offset : 5860294640 sectors
+          State : clean
+    Device UUID : f992deee:76530588:337f82d3:b18e523e
+
+    Update Time : Fri Oct 21 11:17:42 2011
+       Checksum : 439b5f8e - correct
+         Events : 46
+
+
+    Array Slot : 1 (0, 1)
+   Array State : uU
+
+Thanks.
