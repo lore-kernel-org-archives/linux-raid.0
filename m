@@ -1,8 +1,8 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
+From: NeilBrown <neilb@suse.de>
 Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
  reports 'does not appear to be active'
-Date: Sun, 23 Oct 2011 11:03:14 +0200
-Message-ID: <CAGRgLy5mJ=WcnMiApw8+0AZ+AR=Hb72RdgEMCoVsN+5Vp=_CTg@mail.gmail.com>
+Date: Mon, 24 Oct 2011 09:55:30 +1100
+Message-ID: <20111024095530.4536414b@notabene.brown>
 References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
 	<20110830072557.428fab35@notabene.brown>
 	<CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
@@ -13,120 +13,58 @@ References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
 	<20111012144531.7479596a@notabene.brown>
 	<CAGRgLy5rkhfqnYHTt89f8QkigYPHDFdcciP2ZQp1tkcYq2wqNg@mail.gmail.com>
 	<20111020105623.7f8038c9@notabene.brown>
+	<CAGRgLy5mJ=WcnMiApw8+0AZ+AR=Hb72RdgEMCoVsN+5Vp=_CTg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/Qjvp0TMX5cC.T9JQ4sE79oI"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111020105623.7f8038c9@notabene.brown>
+In-Reply-To: <CAGRgLy5mJ=WcnMiApw8+0AZ+AR=Hb72RdgEMCoVsN+5Vp=_CTg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks, Neil.
-To end this long email thread: what is "more important": update time
-or event count? Or perhaps they are updated simultaneously?
+--Sig_/Qjvp0TMX5cC.T9JQ4sE79oI
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-  Alex.
+On Sun, 23 Oct 2011 11:03:14 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
+> Thanks, Neil.
+> To end this long email thread: what is "more important": update time
+> or event count? Or perhaps they are updated simultaneously?
+>=20
 
+They are updated simultaneously.
 
-On Thu, Oct 20, 2011 at 1:56 AM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 19 Oct 2011 14:01:16 +0200 Alexander Lyakas <alex.bolshoy@gma=
-il.com>
-> wrote:
->
->> Thanks, Neil.
->> I experimented with --force switch, and I saw that when using this
->> switch it is possible to start the array, even though I am sure that
->> the data will be corrupted. Such as selecting stale drives (which ha=
-ve
->> been replaced previously etc.)
->> Can I have some indication that it is "relatively safe" to start the
->> array with --force?
->> For example, in the case of "dirty degraded", perhaps it might be
->> relatively safe.
->>
->> What should I look at? The output of --examine? Or something else?
->
-> Yes, look at the output of examine. =A0Look particularly at update ti=
-me and
-> event counts, but also at RAID raid level etc and the role in the arr=
-ay
-> played by each device.
->
-> Then choose the set of devices that you should are most likely to hav=
-e
-> current data and given them to "mdadm --assemble --force".
->
-> Obviously if one device hasn't been updated for months, that is proba=
-bly a
-> bad choice, while if one device is only a few minutes behind the othe=
-rs, then
-> that is probably a good choice.
->
-> Normally there isn't much choice to be made, and the answer will be o=
-bvious.
-> But if you let devices fail and leave them lying around, or don't rep=
-lace
-> them, then that can cause problems.
->
-> If you need to use --force =A0there might be some corruption. =A0Or t=
-here might
-> be none. =A0And there could be a lot. =A0But mdadm has know way of kn=
-owing.
-> Usually mdadm will do the best that is possible, but it cannot know h=
-ow good
-> that is.
->
-> NeilBrown
->
->
->
->>
->> Thanks,
->> =A0 Alex.
->>
->>
->> On Wed, Oct 12, 2011 at 5:45 AM, NeilBrown <neilb@suse.de> wrote:
->> > On Tue, 11 Oct 2011 15:11:47 +0200 Alexander Lyakas <alex.bolshoy@=
-gmail.com>
->> > wrote:
->> >
->> >> Hello Neil,
->> >> can you please confirm for me something?
->> >> In case the array is FAILED (when your enough() function returns =
-0) -
->> >> for example, after simultaneous failure of all drives - then the =
-only
->> >> option to try to recover such array is to do:
->> >> mdadm --stop
->> >> and then attempt
->> >> mdadm --assemble
->> >>
->> >> correct?
->> >
->> > Yes, though you will probably want a --force as well.
->> >
->> >>
->> >> I did not see any other option to recover such array Incremental
->> >> assemble doesn't work in that case, it simply adds back the drive=
-s as
->> >> spares.
->> >
->> > In recent version of mdadm it shouldn't add them as spare. =A0It s=
-hould say
->> > that it cannot add it and give up.
->> >
->> > NeilBrown
->> >
->> >
->> >
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There is no sense that one is more important than the other, but if you know
+something about the recent history of the array, then combining that
+knowledge with these details might provide you with more precise information
+of some sort.
+
+NeilBrown
+
+--Sig_/Qjvp0TMX5cC.T9JQ4sE79oI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTqSbZznsnt1WYoG5AQLrZhAAi+EqYUCp050zWVe32uA49aKCthuRRGfQ
+tWtFYLxY/GhgIAu0s7CyMnrdZmY7gYjdyt2R6ssm1WiMv0gfi+XItmXXLwNsxB5E
+Gp5Hr0KefDtDyqi7Pv335/HLlGGKNStXbiRBFS0G9+uBtnr2jYlE8rUywKdLN4gi
+BOLydUv+hoHrM//dZB4i4IDx1IGeO7oRFNzFL6awsf6G9+DHpPRjvp2GhkGqmw9D
+Jsk/ij1JWvRu9R/46t2omNxdodcPDQ36zw5fKg8R5bhC1NyBiQHvBJaqmxKDe8h1
+4R1BgjfFTBUYYFroz8pswYd1eUiFB3IUSMbz/NJIotUhCEsTJ+GuK9fU1bAew/yx
+Ewxlu14x1QMKMV7gJkvhhk2P4XvbfVf1hpPFlixFvoiRkitHKWFXXcZe+wwhtVgA
+OL0UxfiE8F4UPODwqqHA+HmpHV3ago64jc94gJY4Pu3m14NpIZjHIQUk+iqXXuZa
+9uYLh751eN9VPlX686C41jcms8A/fBukMTlHY7FGvzstrhlnVy085QAH8hv06Kye
+Ln2jY9pyX2kJh75UZoYDeXOGdhL9Q2Qp5eVN9IlFxyS935uhpY4Eqizluk4Nnu4l
+SUAx7FEV1RqgodMZO0wBcQi8r0rDuGxZJWo4Jg2/XEFWE7x6vURJPRT1770z9elP
+3XvqvgbVv0c=
+=MT7i
+-----END PGP SIGNATURE-----
+
+--Sig_/Qjvp0TMX5cC.T9JQ4sE79oI--
