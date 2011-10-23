@@ -1,88 +1,132 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
-Date: Sun, 23 Oct 2011 01:00:36 -0700
-Message-ID: <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
-References: <20101204121413.GC11336@mother.pipebreaker.pl>
-	<AANLkTi=nTSdHc55f08G9sdEK6u8eXp276VOTHHr0jmXT@mail.gmail.com>
-	<20110125034434.GC7046@tango.0pointer.de>
-	<AANLkTik189VTXYpzLFqP=MNBg=Nx-Yq6BOKURtiby++B@mail.gmail.com>
-	<20110125042814.GA9727@tango.0pointer.de>
-	<AANLkTik7dd5SHkuBVrS6LLDR9v57GsFjjxDKQKPp-YVL@mail.gmail.com>
-	<20110208094843.GD11446@tango.0pointer.de>
-	<AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
-	<20110208110730.GF23157@tango.0pointer.de>
-	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
-	<20110208172822.GC21847@tango.0pointer.de>
+From: Alexander Lyakas <alex.bolshoy@gmail.com>
+Subject: Re: MD devnode still present after 'remove' udev event, and mdadm
+ reports 'does not appear to be active'
+Date: Sun, 23 Oct 2011 11:03:14 +0200
+Message-ID: <CAGRgLy5mJ=WcnMiApw8+0AZ+AR=Hb72RdgEMCoVsN+5Vp=_CTg@mail.gmail.com>
+References: <CAGRgLy4K-sFpeHhu_f+7-F8Fa_L1OP7ki0X-_9858BbBQrnWOA@mail.gmail.com>
+	<20110830072557.428fab35@notabene.brown>
+	<CAGRgLy5D+yZJArP9Y=x6N5NnozckQnyF7eaLFo8hgbBxPwzn4w@mail.gmail.com>
+	<20110921150323.0ef402c9@notabene.brown>
+	<CAGRgLy7fKegKw6j-36o0uchTF35F4hT8NvujW4ghb5av-onCGQ@mail.gmail.com>
+	<20110925201510.24e0f468@notabene.brown>
+	<CAGRgLy6Ew-mDK-u+Gz9Ae8gKzjC+qJBxM_=Xm6x=VBJBPeOaeg@mail.gmail.com>
+	<20111012144531.7479596a@notabene.brown>
+	<CAGRgLy5rkhfqnYHTt89f8QkigYPHDFdcciP2ZQp1tkcYq2wqNg@mail.gmail.com>
+	<20111020105623.7f8038c9@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110208172822.GC21847@tango.0pointer.de>
+In-Reply-To: <20111020105623.7f8038c9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennart Poettering <lennart@poettering.net>
-Cc: Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 8, 2011 at 9:28 AM, Lennart Poettering
-<lennart@poettering.net> wrote:
-> On Tue, 08.02.11 16:54, Andrey Borzenkov (arvidjaar@mail.ru) wrote:
+Thanks, Neil.
+To end this long email thread: what is "more important": update time
+or event count? Or perhaps they are updated simultaneously?
+
+Thanks,
+  Alex.
+
+
+
+On Thu, Oct 20, 2011 at 1:56 AM, NeilBrown <neilb@suse.de> wrote:
+> On Wed, 19 Oct 2011 14:01:16 +0200 Alexander Lyakas <alex.bolshoy@gma=
+il.com>
+> wrote:
 >
->> >> a) mdmon is perfectly capable of restarting, it is already used to
->> >> take over mdmon launched in initrd. The problem is to know when to
->> >> restart - i.e. when respective libraries are changed. This is a job
->> >> for package management in distribution. It is already employed for
->> >> glibc, systemd and some others and can just as well be employed for
->> >> mdmon. And this is totally unrelated to systemd :)
+>> Thanks, Neil.
+>> I experimented with --force switch, and I saw that when using this
+>> switch it is possible to start the array, even though I am sure that
+>> the data will be corrupted. Such as selecting stale drives (which ha=
+ve
+>> been replaced previously etc.)
+>> Can I have some indication that it is "relatively safe" to start the
+>> array with --force?
+>> For example, in the case of "dirty degraded", perhaps it might be
+>> relatively safe.
+>>
+>> What should I look at? The output of --examine? Or something else?
+>
+> Yes, look at the output of examine. =A0Look particularly at update ti=
+me and
+> event counts, but also at RAID raid level etc and the role in the arr=
+ay
+> played by each device.
+>
+> Then choose the set of devices that you should are most likely to hav=
+e
+> current data and given them to "mdadm --assemble --force".
+>
+> Obviously if one device hasn't been updated for months, that is proba=
+bly a
+> bad choice, while if one device is only a few minutes behind the othe=
+rs, then
+> that is probably a good choice.
+>
+> Normally there isn't much choice to be made, and the answer will be o=
+bvious.
+> But if you let devices fail and leave them lying around, or don't rep=
+lace
+> them, then that can cause problems.
+>
+> If you need to use --force =A0there might be some corruption. =A0Or t=
+here might
+> be none. =A0And there could be a lot. =A0But mdadm has know way of kn=
+owing.
+> Usually mdadm will do the best that is possible, but it cannot know h=
+ow good
+> that is.
+>
+> NeilBrown
+>
+>
+>
+>>
+>> Thanks,
+>> =A0 Alex.
+>>
+>>
+>> On Wed, Oct 12, 2011 at 5:45 AM, NeilBrown <neilb@suse.de> wrote:
+>> > On Tue, 11 Oct 2011 15:11:47 +0200 Alexander Lyakas <alex.bolshoy@=
+gmail.com>
+>> > wrote:
 >> >
->> > Really, you are sying there is a synchronous way to make mdmon reexec
->> > itself? How does that work?
+>> >> Hello Neil,
+>> >> can you please confirm for me something?
+>> >> In case the array is FAILED (when your enough() function returns =
+0) -
+>> >> for example, after simultaneous failure of all drives - then the =
+only
+>> >> option to try to recover such array is to do:
+>> >> mdadm --stop
+>> >> and then attempt
+>> >> mdadm --assemble
+>> >>
+>> >> correct?
 >> >
->>
->> I am not sure whether it qualifies as synchronous, but "mdmon
->> --takeover" will kill any existing mdmon for this and start monitoring
->> itself.
->
-> I wonder if this is really fully synchronous, i.e. that a) there is no
-> point in time where mdmon is not running during this restart and b) the
-> mdmom --takeover command returns when the new daemon is fully up, and
-> not right-away.
->
->> > Well, the root file systems cannot be unmounted, only remounted.
+>> > Yes, though you will probably want a --force as well.
 >> >
->> > So, is there a way to invoke mdmon so that it flushes all metadata
->> > changes to disk and immediately terminates then this should be all we
->> > need for a clean solution. We'd then shutdown the normal instances of
->> > mdmon down like any other daemon and simply invoke this metadata
->> > flushing command as part of late shutdown.
->>
->>
->> Hmm ... it looks like you just need to
->>
->> start mdmon
->> do mdadm --wait-clean
->>
->> After this you can kill mdmon again (assuming decide is no more in
->> use).
+>> >>
+>> >> I did not see any other option to recover such array Incremental
+>> >> assemble doesn't work in that case, it simply adds back the drive=
+s as
+>> >> spares.
+>> >
+>> > In recent version of mdadm it shouldn't add them as spare. =A0It s=
+hould say
+>> > that it cannot add it and give up.
+>> >
+>> > NeilBrown
+>> >
+>> >
+>> >
 >
 >
-> Well, it would be nice if the md utils would offer something doing this
-> without spawning multiple processes and killing them again.
->
-
-/me wonders why his raid5 resyncs every boot on Fedora 15 and has
-found this old thread.
-
-I'm tempted to:
-
-1/ teach ignore_proc() to scan for pid files in /dev/md/ (MDMON_DIR on Fedora)
-2/ arrange for mdadm --wait-clean --scan to be called after all
-filesytems have been mounted read only
-
-...but a few things strike me.  This does not seem to be what was
-being proposed above.  Systemd does not treat dm devices like a
-service and takes care to shut them down explicitly (but in that case
-there is an api that it can call).  Is it time for a libmd.so,  so
-systemd can invoke the "--wait-clean --scan" process itself?  Probably
-simpler to just SIGTERM mdmon and wait for it.
-
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
