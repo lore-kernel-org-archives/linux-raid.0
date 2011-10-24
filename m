@@ -1,156 +1,96 @@
-From: Michael Busby <michael.a.busby@gmail.com>
-Subject: Re: Converting from Raid 5 to 6
-Date: Mon, 24 Oct 2011 21:47:19 +0100
-Message-ID: <CAFsPQ_-9BU_x_VKJSThTNhmQrcYZaoyJTfWgyGKVjhtEVe5-oA@mail.gmail.com>
-References: <CAFsPQ_85omy81WkxKkFg+OCGmdD7A+UtyKo64qMLZBBVKpbBDw@mail.gmail.com>
-	<CADNH=7H90HX58zh8mSH54FdFgh46umEscj89t372PZjj9DnHtg@mail.gmail.com>
-	<CAFsPQ__G3j3CbMDJyYO7BaJrxnPi=MAZFiRfgbruzMhiCVQYag@mail.gmail.com>
-	<20111025071443.4c497656@notabene.brown>
-	<CAFsPQ_9UBtLJX_5KZSVxiQfM7+mBnU1=8P_nNLmUKo7vHcQypQ@mail.gmail.com>
-	<20111025073908.6d754588@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Bad block management - which mdadm?
+Date: Tue, 25 Oct 2011 09:46:16 +1100
+Message-ID: <20111025094616.78384241@notabene.brown>
+References: <201110242212.14934.a.miskiewicz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/vK4xy.i/I7_Puwc+UDTv2Op"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111025073908.6d754588@notabene.brown>
+In-Reply-To: <201110242212.14934.a.miskiewicz@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Arkadiusz =?utf-8?B?TWnFm2tpZXdpY3o=?= <a.miskiewicz@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was sure i added the device before, but when rebooted the system it
-has seemed to lose the extra drive and i had already restarted the
-grow command with out checking the disk was there, so more than likely
-a mistake by me
+--Sig_/vK4xy.i/I7_Puwc+UDTv2Op
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 24 Oct 2011 22:12:14 +0200 Arkadiusz Mi=C5=9Bkiewicz
+<a.miskiewicz@gmail.com> wrote:
+
+>=20
+> kernelnewbies.org reports such feature for 3.1 kernel
+>=20
+> 1.9. Software RAID: Bad block management
+> The MD layer (aka "Multiple Devices", aka software raid) has gained bad b=
+lock=20
+> management support: bad blocks will be added to a list, and the system wi=
+ll=20
+> try not to use them. This feature requires an updated mdadm version.
+>=20
+> Which mdadm supports that?
+>=20
+
+mdadm-3.3 will support bad block management.
+However it is not released yet.
+
+You can get current code from
+
+   git://neil.brown.name/mdadm  devel-3.3
 
 
+It isn't released yet because
 
-On 24 October 2011 21:39, NeilBrown <neilb@suse.de> wrote:
-> On Mon, 24 Oct 2011 21:19:22 +0100 Michael Busby <michael.a.busby@gma=
-il.com>
-> wrote:
->
->> Ok thanks, i have 1 small issue, when added the extra disk its been
->> maked as spare, is this normal?
->>
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md0 : active raid6 sde[0] sdg[6](S) sda[4] sdb[3] sdd[2] sdc[1]
->> =A0 =A0 =A0 7814055936 blocks super 1.0 level 6, 512k chunk, algorit=
-hm 18
->> [6/5] [UUUUU_]
->> =A0 =A0 =A0 [>....................] =A0reshape =3D =A03.0% (59244544=
-/1953513984)
->> finish=3D11122.8min speed=3D2837K/sec
->>
->
-> It looks like the extra drive was added after you started the grow.
->
-> So it is still a spare.
-> Once the grow finishes you will have a singly-degraded RAID6.
-> Then it will immediately start recovering the missing device to the s=
-pare.
->
-> Did you add the extra drive after starting the grow - or before??
->
-> NeilBrown
->
->
+  1/ I haven't found/made time to work on mdadm and integrate support
+     properly.
+  2/ The kernel isn't really quite read for full support.
+
+If you have a bad block list, then a write error will not fail the drive but
+will record the location of the write error.
+This might be what you want.  But if you have a hot-spare available it might
+not be what you want - the current kernel code will never use a hot spare
+until a drive fails really badly.
+
+What it *should* do is "hot-replace".  i.e. recover the data on to a spare
+without first removing the device with the bad block.  But the hot-replace
+code isn't ready yet.
+
+I expect hot-replace to be in linux-3.3 (for RAID4/5/6 at least) and I hope=
+ to
+release mdadm-3.3 before then with full support for bad blocks and hot
+replace.
+
+For now if you use the devel-3.3 code to create a new array it will place a
+bad-block-log on the array and the kernel will use that bad block log to
+record failed blocks rather than failing the whole device.
+If you want a device to be failed, you might have to explicitly do that
+yourself with "mdadm /dev/mdX --fail /dev/sdY"
+
+NeilBrown
 
 
->
->>
->>
->>
->> On 24 October 2011 21:14, NeilBrown <neilb@suse.de> wrote:
->> > On Mon, 24 Oct 2011 17:03:46 +0100 Michael Busby <michael.a.busby@=
-gmail.com>
->> > wrote:
->> >
->> >> should the speed be very slow when doing this progress, its a lot
->> >> slower than a normal grow
->> >
->> > Yes.
->> > The array is being reshaped in-place. =A0i.e. data is being read f=
-rom part of
->> > the array, rearranged, and written back to the same part of the ar=
-ray.
->> > As you can imagine, this is risky - a crash will leave an inconsis=
-tent state.
->> > Hence the backup file. =A0Everything in the array is first written=
- to the
->> > backup file, then back to the array. =A0So it is slow.
->> >
->> > A "normal" grow is writing to somewhere where there is no valid da=
-ta, so it
->> > doesn't need the backup.
->> >
->> > I do have a plan to make this faster.... but I have lots of plans =
-and little
->> > time.
->> >
->> > NeilBrown
->> >
->> >
->> >
->> >
->> >>
->> >> reshape =3D =A01.2% (25006080/1953513984) finish=3D12481.8min spe=
-ed=3D2574K/sec
->> >>
->> >> On 24 October 2011 15:11, Mathias Bur=E9n <mathias.buren@gmail.co=
-m> wrote:
->> >> > On 24 October 2011 14:11, Michael Busby <michael.a.busby@gmail.=
-com> wrote:
->> >> >> At the moment i have a raid5 setup with 5 disks, i am looking=A0=
-to add a
->> >> >> 6th disk and change from raid 5 to raid 6
->> >> >>
->> >> >> having looked at Neil's site i have found the following comman=
-d, and
->> >> >> just want to double check this is still the recommend way of
->> >> >> converting
->> >> >>
->> >> >> mdadm --grow /dev/md0 --level=3D6 --raid-disks=3D6 --backup-fi=
-le=3D/home/md.backup
->> >> >>
->> >> >> also would i need to add the extra disk before or after the co=
-mmand?
->> >> >>
->> >> >> cheers
->> >> >> --
->> >> >> To unsubscribe from this list: send the line "unsubscribe linu=
-x-raid" in
->> >> >> the body of a message to majordomo@vger.kernel.org
->> >> >> More majordomo info at =A0http://vger.kernel.org/majordomo-inf=
-o.html
->> >> >>
->> >> >
->> >> > Hi,
->> >> >
->> >> > I grew my 6 disk RAID5 to a 7 disk RAID6. First, add the drive.=
- Then
->> >> > partition it as required. Then add the drive to the array (I th=
-ink
->> >> > it'll become a spare?). Then you can grow it.
->> >> >
->> >> > Make sure you're using the latest mdadm tools available.
->> >> >
->> >> > Regards,
->> >> > Mathias
->> >> >
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-r=
-aid" in
->> >> the body of a message to majordomo@vger.kernel.org
->> >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.h=
-tml
->> >
->> >
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/vK4xy.i/I7_Puwc+UDTv2Op
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTqXqvTnsnt1WYoG5AQLbjg//av4lHbnZL0MvuG6Ay+TuZb0EoX3jFm41
+AcYLneCVo0Hk9TEkzGZ55QC9JIxszkSVy8V6JNnywb3NYXRLVi30t3Zmqr54kWJ2
+cy0ketwg0lRcufJpzwbxp6WfSDF7qo2ZQ5aOELxOlGXOSrIJomnzyszlVJzyLVf5
+u28Gv9xMa2G/aubMLsljUw+8dNVjACfX4jPORlS4U+nnKVYYuwV3s0zUiCWx+jAZ
+ah8ayvTTwZ2iYjG1gv2qF1Vf4L1syjvTYx1DvhNwwR9EMMFXg6g5IQCsqlZZs9j8
+jHkk2hJ955ehN7IpiwknIjH/Fa+KyM5VxVYSg4LfLCgB2+3kOqxbMYULuZCdsoph
+I8O55XWO+6CU7UWolJ90WGglO2othc6GLlh3w29Yjq6hGI6zfAmZWaxOEHc2b25n
+32ScHvXjWO8LDLhzooYT0ff5AC+3UjL7RC2MGTSo2REXWduwboLD8SepL99fUeZB
+YmX+pE6uO3i8o4F7ROoUhTpda2hm7yvI2wTZf4dIowFUcmnAtuseJl0v/oZiIRoy
+d2uP/hE4Qd5JXbwJpqhfO5WXn5nCcq4cgib0Qj+P1xrgzXimt2UCgeZhzoayDkRa
+7fjYvCGNBRpHCOG3IsNGh0f7rPBWELJtGuPugyStGxnZk3K7PrwHgG2gN+/o2bZs
+T/pZbe2labg=
+=Vi1i
+-----END PGP SIGNATURE-----
+
+--Sig_/vK4xy.i/I7_Puwc+UDTv2Op--
