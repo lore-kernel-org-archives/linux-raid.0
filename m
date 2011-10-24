@@ -1,27 +1,31 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
-Date: Mon, 24 Oct 2011 10:04:59 +0200
-Message-ID: <201110241005.00072.thomas.jarosch@intra2net.com>
-References: <20101204121413.GC11336@mother.pipebreaker.pl> <20110208172822.GC21847@tango.0pointer.de> <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+From: Michael Busby <michael.a.busby@gmail.com>
+Subject: Converting from Raid 5 to 6
+Date: Mon, 24 Oct 2011 14:11:34 +0100
+Message-ID: <CAFsPQ_85omy81WkxKkFg+OCGmdD7A+UtyKo64qMLZBBVKpbBDw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Lennart Poettering <lennart@poettering.net>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org, NeilBrown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday, 23. October 2011 10:00:36 Dan Williams wrote:
-> Is it time for a libmd.so, so systemd can invoke the "--wait-clean --scan"
-> process itself?  Probably simpler to just SIGTERM mdmon and wait for it.
+At the moment i have a raid5 setup with 5 disks, i am looking=A0to add =
+a
+6th disk and change from raid 5 to raid 6
 
-The mdadm code makes good use of non-reentrant functions like ctime(), 
-readdir() and others. Luckily systemd is single threaded.
+having looked at Neil's site i have found the following command, and
+just want to double check this is still the recommend way of
+converting
 
-If we provide a "public" interface, that would need fixing though.
+mdadm --grow /dev/md0 --level=3D6 --raid-disks=3D6 --backup-file=3D/hom=
+e/md.backup
 
-Cheers,
-Thomas
+also would i need to add the extra disk before or after the command?
+
+cheers
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
