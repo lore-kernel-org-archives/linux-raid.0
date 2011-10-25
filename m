@@ -1,154 +1,369 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
- by user
-Date: Tue, 25 Oct 2011 12:40:50 +1100
-Message-ID: <20111025124050.397c6546@notabene.brown>
-References: <20101204121413.GC11336@mother.pipebreaker.pl>
-	<AANLkTi=nTSdHc55f08G9sdEK6u8eXp276VOTHHr0jmXT@mail.gmail.com>
-	<20110125034434.GC7046@tango.0pointer.de>
-	<AANLkTik189VTXYpzLFqP=MNBg=Nx-Yq6BOKURtiby++B@mail.gmail.com>
-	<20110125042814.GA9727@tango.0pointer.de>
-	<AANLkTik7dd5SHkuBVrS6LLDR9v57GsFjjxDKQKPp-YVL@mail.gmail.com>
-	<20110208094843.GD11446@tango.0pointer.de>
-	<AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
-	<20110208110730.GF23157@tango.0pointer.de>
-	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
-	<20110208172822.GC21847@tango.0pointer.de>
-	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+From: linbloke <linbloke@fastmail.fm>
+Subject: Re: Rotating RAID 1
+Date: Tue, 25 Oct 2011 18:34:57 +1100
+Message-ID: <4EA666A1.9000904@fastmail.fm>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com> <4E497FB5.3030109@ivitera.com> <CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com> <4E49849E.4030604@ivitera.com> <20110816084251.2d8e7831@notabene.brown> <CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com> <20110816095517.757afc07@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/3T5yF6.eoU+80zVpVbOKoWu"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+In-Reply-To: <20110816095517.757afc07@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Lennart Poettering <lennart@poettering.net>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>, Pavel Hofman <pavel.hofman@ivitera.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/3T5yF6.eoU+80zVpVbOKoWu
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 16/08/11 9:55 AM, NeilBrown wrote:
+> On Mon, 15 Aug 2011 19:32:04 -0400 J=E9r=F4me Poulin<jeromepoulin@gma=
+il.com>
+> wrote:
+>
+>> On Mon, Aug 15, 2011 at 6:42 PM, NeilBrown<neilb@suse.de>  wrote:
+>>> So if there are 3 drives A, X, Y where A is permanent and X and Y a=
+re rotated
+>>> off-site, then I create two RAID1s like this:
+>>>
+>>>
+>>> mdadm -C /dev/md0 -l1 -n2 --bitmap=3Dinternal /dev/A /dev/X
+>>> mdadm -C /dev/md1 -l1 -n2 --bitmap=3Dinternal /dev/md0 /dev/Y
+>> That seems nice for 2 disks, but adding another one later would be a
+>> mess. Is there any way to play with slots number manually to make it
+>> appear as an always degraded RAID ? I can't plug all the disks at on=
+ce
+>> because of the maximum of 2 ports.
+> Yes, add another one later would be difficult.  But if you know up-fr=
+ont that
+> you will want three off-site devices it is easy.
+>
+> You could
+>
+>   mdadm -C /dev/md0 -l1 -n2 -b internal /dev/A missing
+>   mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 missing
+>   mdadm -C /dev/md2 -l1 -n2 -b internal /dev/md1 missing
+>   mdadm -C /dev/md3 -l1 -n2 -b internal /dev/md2 missing
+>
+>   mkfs /dev/md3 ; mount ..
+>
+>   So you now have 4 "missing" devices.  Each time you plug in a devic=
+e that
+>   hasn't been in an array before, explicitly add it to the array that=
+ you want
+>   it to be a part of and let it recover.
+>   When you plug in a device that was previously plugged in, just "mda=
+dm
+>   -I /dev/XX" and it will automatically be added and recover based on=
+ the
+>   bitmap.
+>
+>   You can have as many or as few of the transient drives plugged in a=
+t any
+>   time as you like.
+>
+>   There is a cost here of course.  Every write potentially needs to u=
+pdate
+>   every bitmap, so the more bitmaps, the more overhead in updating th=
+em.  So
+>   don't create more than you need.
+>
+>   Also, it doesn't have to be a linear stack.  It could be a binary t=
+ree
+>   though that might take a little more care to construct.  Then when =
+an
+>   adjacent pair of leafs are both off-site, their bitmap would not ne=
+ed
+>   updating.
+>
+> NeilBrown
 
-On Sun, 23 Oct 2011 01:00:36 -0700 Dan Williams <dan.j.williams@intel.com>
-wrote:
+Hi Neil, J=E9r=F4me and Pavel,
 
-> On Tue, Feb 8, 2011 at 9:28 AM, Lennart Poettering
-> <lennart@poettering.net> wrote:
-> > On Tue, 08.02.11 16:54, Andrey Borzenkov (arvidjaar@mail.ru) wrote:
-> >
-> >> >> a) mdmon is perfectly capable of restarting, it is already used to
-> >> >> take over mdmon launched in initrd. The problem is to know when to
-> >> >> restart - i.e. when respective libraries are changed. This is a job
-> >> >> for package management in distribution. It is already employed for
-> >> >> glibc, systemd and some others and can just as well be employed for
-> >> >> mdmon. And this is totally unrelated to systemd :)
-> >> >
-> >> > Really, you are sying there is a synchronous way to make mdmon reexec
-> >> > itself? How does that work?
-> >> >
-> >>
-> >> I am not sure whether it qualifies as synchronous, but "mdmon
-> >> --takeover" will kill any existing mdmon for this and start monitoring
-> >> itself.
-> >
-> > I wonder if this is really fully synchronous, i.e. that a) there is no
-> > point in time where mdmon is not running during this restart and b) the
-> > mdmom --takeover command returns when the new daemon is fully up, and
-> > not right-away.
-> >
-> >> > Well, the root file systems cannot be unmounted, only remounted.
-> >> >
-> >> > So, is there a way to invoke mdmon so that it flushes all metadata
-> >> > changes to disk and immediately terminates then this should be all we
-> >> > need for a clean solution. We'd then shutdown the normal instances of
-> >> > mdmon down like any other daemon and simply invoke this metadata
-> >> > flushing command as part of late shutdown.
-> >>
-> >>
-> >> Hmm ... it looks like you just need to
-> >>
-> >> start mdmon
-> >> do mdadm --wait-clean
-> >>
-> >> After this you can kill mdmon again (assuming decide is no more in
-> >> use).
-> >
-> >
-> > Well, it would be nice if the md utils would offer something doing this
-> > without spawning multiple processes and killing them again.
-> >
->=20
-> /me wonders why his raid5 resyncs every boot on Fedora 15 and has
-> found this old thread.
->=20
-> I'm tempted to:
->=20
-> 1/ teach ignore_proc() to scan for pid files in /dev/md/ (MDMON_DIR on Fe=
-dora)
-> 2/ arrange for mdadm --wait-clean --scan to be called after all
-> filesytems have been mounted read only
->=20
-> ...but a few things strike me.  This does not seem to be what was
-> being proposed above.  Systemd does not treat dm devices like a
-> service and takes care to shut them down explicitly (but in that case
-> there is an api that it can call).  Is it time for a libmd.so,  so
-> systemd can invoke the "--wait-clean --scan" process itself?  Probably
-> simpler to just SIGTERM mdmon and wait for it.
->=20
-> --
-> Dan
+I'm in the process of testing the solution described above and have bee=
+n=20
+successful at those steps (I now have sync'd devices that I have failed=
+=20
+and removed from their respective arrays - the "backups"). I can add ne=
+w=20
+devices and also incrementally re-add the devices back to their=20
+respective arrays and all my tests show this process works well. The=20
+point which I'm now trying to resolve is how to create a new array from=
+=20
+one of the off-site components - ie, the restore from backup test.
+Below are the steps I've taken to implement and verify each step, you=20
+can skip to the bottom section "Restore from off-site backup" to get to=
+=20
+the point if you like. When the wiki is back up, I'll post this process=
+=20
+there for others who are looking for mdadm based offline backups. Any=20
+corrections gratefully appreciated.
 
-Hi Dan,
-  could you please explain in a bit more detail exactly what you think it is
-  that is going wrong for you?
+Based on the example above, for a target setup of 7 off-site devices=20
+synced to a two device RAID1, my test setup for a is:
 
-  I don't think it is anything like the original problem, as I don't think
-  you are starting array manually.
+RAID Array    Online Device    Off-site device
+md100    sdc         sdd
+md101    md100    sde
+md102    md101    sdf
+md103    md102    sdg
+md104    md103    sdh
+md105    md104    sdi
+md106    md105    sdj
 
-  I think your problem is that 'mdmon' is being killed too early at shutdow=
-n.
-  Clear we need to get whatever-kills-user-processes to skip mdmon - maybe =
-by
-  writing the pid to some magic file that 'ignore_proc' already knows about?
+root@deb6dev:~# uname -a
+Linux deb6dev 2.6.32-5-686 #1 SMP Tue Mar 8 21:36:00 UTC 2011 i686 GNU/=
+Linux
+root@deb6dev:~# mdadm -V
+mdadm - v3.1.4 - 31st August 2010
+root@deb6dev:~# cat /etc/debian_version
+6.0.1
 
-  Ultimately we probably want to get udev to start mdmon for us and have
-  mdadm notice and not start it itself.
-  We also need to get udev to notice arrays that are being reshaped and to
-  start the mdadm which montiors the reshape so that mdadm doesn't have to
-  fork it itself.
+Create the nested arrays
+---------------------
+root@deb6dev:~# mdadm -C /dev/md100 -l1 -n2 -b internal -e 1.2 /dev/sdc=
+=20
+missing
+mdadm: array /dev/md100 started.
+root@deb6dev:~# mdadm -C /dev/md101 -l1 -n2 -b internal -e 1.2=20
+/dev/md100 missing
+mdadm: array /dev/md101 started.
+root@deb6dev:~# mdadm -C /dev/md102 -l1 -n2 -b internal -e 1.2=20
+/dev/md101 missing
+mdadm: array /dev/md102 started.
+root@deb6dev:~# mdadm -C /dev/md103 -l1 -n2 -b internal -e 1.2=20
+/dev/md102 missing
+mdadm: array /dev/md103 started.
+root@deb6dev:~# mdadm -C /dev/md104 -l1 -n2 -b internal -e 1.2=20
+/dev/md103 missing
+mdadm: array /dev/md104 started.
+root@deb6dev:~# mdadm -C /dev/md105 -l1 -n2 -b internal -e 1.2=20
+/dev/md104 missing
+mdadm: array /dev/md105 started.
+root@deb6dev:~# mdadm -C /dev/md106 -l1 -n2 -b internal -e 1.2=20
+/dev/md105 missing
+mdadm: array /dev/md106 started.
 
-  That should fix the original problem, but I don't think it addresses your
-  problem at all.
+root@deb6dev:~# cat /proc/mdstat
+Personalities : [raid1]
+md106 : active (auto-read-only) raid1 md105[0]
+       51116 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
-  I don't have a Fedora install so I cannot hunt around to see what is
-  happening.
+md105 : active raid1 md104[0]
+       51128 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
-  I don't like the idea for a 'libmd.so' at all - certainly not until the
-  problem is properly understood and other solutions (like running
-  scripts) prove ineffective.
+md104 : active raid1 md103[0]
+       51140 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
-NeilBrown
+md103 : active raid1 md102[0]
+       51152 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
---Sig_/3T5yF6.eoU+80zVpVbOKoWu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+md102 : active raid1 md101[0]
+       51164 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+md101 : active raid1 md100[0]
+       51176 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
-iQIVAwUBTqYTqDnsnt1WYoG5AQKByw//f/wmMD75otrvOM2lSNs5ocKN6yq9EGj9
-w6zIPz28rbS3bIqbWcWyUKDA0UNta6D+AoSwZD5XQhj4iqEnw/ttL0gNve//L4Uw
-OrFIuuVl26/NyPF/+GytkycVR3ZUR8KtR5qfBW0LE/XGiaTXX7QMtsyslTStNhlu
-0y6j/2yPj18IGbiliGrZDYC4AOoZgRPSnl1ZJghxvlebDHp7LYobO5QZwDVpGNip
-JNZnqwBMscoyN6jrZKCA4ho9j7XfLyaAY4A6IXjc5wumsPIizfWF9ggc5YXel6z0
-77fNMk+x1oX9raF637TM576y09GxTS2NRdNSPlm32i5CnAf1NPpzoE9D1X2O5azx
-6PGUfS2QjtfP5bc4oI+rm7SO0X41wvYNsQWfobZ4PS3s6YtA0akKTojsGvrvVXH3
-hf8x5NY5uq6XM6J8NOXGj7R2689Kdgua7eFzW8nHQZNeLENdlh701MgavMHI5soz
-XRi/MgXtglyThvji4zZGhfj4SwoTmnctecofpPYPyi5FWmFwJ1EeWoUM2q9g9i6o
-81UH1dmGEm9wFTsWWzQmNJrygF+xwibmr8ia3fnJ+ip5N75+GxiixiPk1qSpPvgH
-KWsGetufQuORPMZx8Ffph0OziuH1fiAl4j3hMstsKKzvU2Ac8zVDZE64BN/dlAGh
-OQv2xleY4GY=
-=XTlx
------END PGP SIGNATURE-----
+md100 : active raid1 sdc[0]
+       51188 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
 
---Sig_/3T5yF6.eoU+80zVpVbOKoWu--
+unused devices: <none>
+
+Create and mount a filesystem
+--------------------------
+root@deb6dev:~# mkfs.ext3 /dev/md106
+<<successful mkfs output snipped>>
+root@deb6dev:~# mount -t ext3 /dev/md106 /mnt/backup
+root@deb6dev:~# df | grep backup
+/dev/md106               49490      4923     42012  11% /mnt/backup
+
+Plug in a device that hasn't been in an array before
+-------------------------------------------
+root@deb6dev:~# mdadm -vv /dev/md100 --add /dev/sdd
+mdadm: added /dev/sdd
+root@deb6dev:~# cat /proc/mdstat
+Personalities : [raid1]
+md106 : active raid1 md105[0]
+       51116 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md105 : active raid1 md104[0]
+       51128 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md104 : active raid1 md103[0]
+       51140 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md103 : active raid1 md102[0]
+       51152 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md102 : active raid1 md101[0]
+       51164 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md101 : active raid1 md100[0]
+       51176 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md100 : active raid1 sdd[2] sdc[0]
+       51188 blocks super 1.2 [2/2] [UU]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+
+Write to the array
+---------------
+root@deb6dev:~# dd if=3D/dev/urandom of=3Da.blob bs=3D1M count=3D20
+20+0 records in
+20+0 records out
+20971520 bytes (21 MB) copied, 5.05528 s, 4.1 MB/s
+root@deb6dev:~# dd if=3D/dev/urandom of=3Db.blob bs=3D1M count=3D10
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 2.59361 s, 4.0 MB/s
+root@deb6dev:~# dd if=3D/dev/urandom of=3Dc.blob bs=3D1M count=3D5
+5+0 records in
+5+0 records out
+5242880 bytes (5.2 MB) copied, 1.35619 s, 3.9 MB/s
+root@deb6dev:~# md5sum *blob > md5sums.txt
+root@deb6dev:~# ls -l
+total 35844
+-rw-r--r-- 1 root root 20971520 Oct 25 15:57 a.blob
+-rw-r--r-- 1 root root 10485760 Oct 25 15:57 b.blob
+-rw-r--r-- 1 root root  5242880 Oct 25 15:57 c.blob
+-rw-r--r-- 1 root root      123 Oct 25 15:57 md5sums.txt
+root@deb6dev:~# cp *blob /mnt/backup
+root@deb6dev:~# ls -l /mnt/backup
+total 35995
+-rw-r--r-- 1 root root 20971520 Oct 25 15:58 a.blob
+-rw-r--r-- 1 root root 10485760 Oct 25 15:58 b.blob
+-rw-r--r-- 1 root root  5242880 Oct 25 15:58 c.blob
+drwx------ 2 root root    12288 Oct 25 15:27 lost+found
+root@deb6dev:~# df | grep backup
+/dev/md106               49490     40906      6029  88% /mnt/backup
+root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+md100 : active raid1 sdd[2] sdc[0]
+       51188 blocks super 1.2 [2/2] [UU]
+       bitmap: 0/1 pages [0KB], 65536KB chunk
+
+Data written and array devices in sync (bitmap 0/1)
+
+=46ail and remove device
+-------------------
+root@deb6dev:~# sync
+root@deb6dev:~# mdadm -vv /dev/md100 --fail /dev/sdd --remove /dev/sdd
+mdadm: set /dev/sdd faulty in /dev/md100
+mdadm: hot removed /dev/sdd from /dev/md100
+root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+md100 : active raid1 sdc[0]
+       51188 blocks super 1.2 [2/1] [U_]
+       bitmap: 0/1 pages [0KB], 65536KB chunk
+
+Device may now be unplugged
+
+
+Write to the array again
+--------------------
+root@deb6dev:~# rm /mnt/backup/b.blob
+root@deb6dev:~# ls -l /mnt/backup
+total 25714
+-rw-r--r-- 1 root root 20971520 Oct 25 15:58 a.blob
+-rw-r--r-- 1 root root  5242880 Oct 25 15:58 c.blob
+drwx------ 2 root root    12288 Oct 25 15:27 lost+found
+root@deb6dev:~# df | grep backup
+/dev/md106               49490     30625     16310  66% /mnt/backup
+root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+md100 : active raid1 sdc[0]
+       51188 blocks super 1.2 [2/1] [U_]
+       bitmap: 1/1 pages [4KB], 65536KB chunk
+
+bitmap 1/1 shows array is not in sync (we know it's due to the writes=20
+pending for the device we previously failed)
+
+Plug in a device that was previously plugged in
+----------------------------------------
+root@deb6dev:~# mdadm -vv -I /dev/sdd --run
+mdadm: UUID differs from /dev/md/0.
+mdadm: UUID differs from /dev/md/1.
+mdadm: /dev/sdd attached to /dev/md100 which is already active.
+root@deb6dev:~# sync
+root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+md100 : active raid1 sdd[2] sdc[0]
+       51188 blocks super 1.2 [2/2] [UU]
+       bitmap: 0/1 pages [0KB], 65536KB chunk
+
+Device reconnected [UU] and in sync (bitmap 0/1)
+
+Restore from off-site device
+------------------------
+Remove device from array
+root@deb6dev:~# mdadm -vv /dev/md100 --fail /dev/sdd --remove /dev/sdd
+mdadm: set /dev/sdd faulty in /dev/md100
+mdadm: hot removed /dev/sdd from /dev/md100
+root@deb6dev:~# mdadm -Ev /dev/sdd
+/dev/sdd:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 4c957fac:d7dbc792:b642daf0:d22e313e
+            Name : deb6dev:100  (local to host deb6dev)
+   Creation Time : Tue Oct 25 15:22:19 2011
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 102376 (50.00 MiB 52.42 MB)
+      Array Size : 102376 (50.00 MiB 52.42 MB)
+     Data Offset : 24 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 381f453f:5a97f1f6:bb5098bb:8c071a95
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Tue Oct 25 17:27:53 2011
+        Checksum : acbcee5f - correct
+          Events : 250
+
+
+    Device Role : Active device 1
+    Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+
+Assemble a new array from off-site component:
+root@deb6dev:~# mdadm -vv -A /dev/md200 --run /dev/sdd
+mdadm: looking for devices for /dev/md200
+mdadm: /dev/sdd is identified as a member of /dev/md200, slot 1.
+mdadm: no uptodate device for slot 0 of /dev/md200
+mdadm: added /dev/sdd to /dev/md200 as 1
+mdadm: /dev/md200 has been started with 1 drive (out of 2).
+root@deb6dev:~#
+
+Check file-system on new array
+root@deb6dev:~# fsck.ext3 -f -n /dev/md200
+e2fsck 1.41.12 (17-May-2010)
+fsck.ext3: Superblock invalid, trying backup blocks...
+fsck.ext3: Bad magic number in super-block while trying to open /dev/md=
+200
+
+The superblock could not be read or does not describe a correct ext2
+filesystem.  If the device is valid and it really contains an ext2
+filesystem (and not swap or ufs or something else), then the superblock
+is corrupt, and you might try running e2fsck with an alternate superblo=
+ck:
+     e2fsck -b 8193 <device>
+
+
+How do I use these devices in a new array?
+
+Kind regards and thanks for your help,
+Josh
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
