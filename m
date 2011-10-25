@@ -1,96 +1,154 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Bad block management - which mdadm?
-Date: Tue, 25 Oct 2011 09:46:16 +1100
-Message-ID: <20111025094616.78384241@notabene.brown>
-References: <201110242212.14934.a.miskiewicz@gmail.com>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+ by user
+Date: Tue, 25 Oct 2011 12:40:50 +1100
+Message-ID: <20111025124050.397c6546@notabene.brown>
+References: <20101204121413.GC11336@mother.pipebreaker.pl>
+	<AANLkTi=nTSdHc55f08G9sdEK6u8eXp276VOTHHr0jmXT@mail.gmail.com>
+	<20110125034434.GC7046@tango.0pointer.de>
+	<AANLkTik189VTXYpzLFqP=MNBg=Nx-Yq6BOKURtiby++B@mail.gmail.com>
+	<20110125042814.GA9727@tango.0pointer.de>
+	<AANLkTik7dd5SHkuBVrS6LLDR9v57GsFjjxDKQKPp-YVL@mail.gmail.com>
+	<20110208094843.GD11446@tango.0pointer.de>
+	<AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
+	<20110208110730.GF23157@tango.0pointer.de>
+	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
+	<20110208172822.GC21847@tango.0pointer.de>
+	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vK4xy.i/I7_Puwc+UDTv2Op"; protocol="application/pgp-signature"
+ boundary="Sig_/3T5yF6.eoU+80zVpVbOKoWu"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201110242212.14934.a.miskiewicz@gmail.com>
+In-Reply-To: <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arkadiusz =?utf-8?B?TWnFm2tpZXdpY3o=?= <a.miskiewicz@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Lennart Poettering <lennart@poettering.net>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/vK4xy.i/I7_Puwc+UDTv2Op
-Content-Type: text/plain; charset=utf-8
+--Sig_/3T5yF6.eoU+80zVpVbOKoWu
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 24 Oct 2011 22:12:14 +0200 Arkadiusz Mi=C5=9Bkiewicz
-<a.miskiewicz@gmail.com> wrote:
+On Sun, 23 Oct 2011 01:00:36 -0700 Dan Williams <dan.j.williams@intel.com>
+wrote:
 
+> On Tue, Feb 8, 2011 at 9:28 AM, Lennart Poettering
+> <lennart@poettering.net> wrote:
+> > On Tue, 08.02.11 16:54, Andrey Borzenkov (arvidjaar@mail.ru) wrote:
+> >
+> >> >> a) mdmon is perfectly capable of restarting, it is already used to
+> >> >> take over mdmon launched in initrd. The problem is to know when to
+> >> >> restart - i.e. when respective libraries are changed. This is a job
+> >> >> for package management in distribution. It is already employed for
+> >> >> glibc, systemd and some others and can just as well be employed for
+> >> >> mdmon. And this is totally unrelated to systemd :)
+> >> >
+> >> > Really, you are sying there is a synchronous way to make mdmon reexec
+> >> > itself? How does that work?
+> >> >
+> >>
+> >> I am not sure whether it qualifies as synchronous, but "mdmon
+> >> --takeover" will kill any existing mdmon for this and start monitoring
+> >> itself.
+> >
+> > I wonder if this is really fully synchronous, i.e. that a) there is no
+> > point in time where mdmon is not running during this restart and b) the
+> > mdmom --takeover command returns when the new daemon is fully up, and
+> > not right-away.
+> >
+> >> > Well, the root file systems cannot be unmounted, only remounted.
+> >> >
+> >> > So, is there a way to invoke mdmon so that it flushes all metadata
+> >> > changes to disk and immediately terminates then this should be all we
+> >> > need for a clean solution. We'd then shutdown the normal instances of
+> >> > mdmon down like any other daemon and simply invoke this metadata
+> >> > flushing command as part of late shutdown.
+> >>
+> >>
+> >> Hmm ... it looks like you just need to
+> >>
+> >> start mdmon
+> >> do mdadm --wait-clean
+> >>
+> >> After this you can kill mdmon again (assuming decide is no more in
+> >> use).
+> >
+> >
+> > Well, it would be nice if the md utils would offer something doing this
+> > without spawning multiple processes and killing them again.
+> >
 >=20
-> kernelnewbies.org reports such feature for 3.1 kernel
+> /me wonders why his raid5 resyncs every boot on Fedora 15 and has
+> found this old thread.
 >=20
-> 1.9. Software RAID: Bad block management
-> The MD layer (aka "Multiple Devices", aka software raid) has gained bad b=
-lock=20
-> management support: bad blocks will be added to a list, and the system wi=
-ll=20
-> try not to use them. This feature requires an updated mdadm version.
+> I'm tempted to:
 >=20
-> Which mdadm supports that?
+> 1/ teach ignore_proc() to scan for pid files in /dev/md/ (MDMON_DIR on Fe=
+dora)
+> 2/ arrange for mdadm --wait-clean --scan to be called after all
+> filesytems have been mounted read only
 >=20
+> ...but a few things strike me.  This does not seem to be what was
+> being proposed above.  Systemd does not treat dm devices like a
+> service and takes care to shut them down explicitly (but in that case
+> there is an api that it can call).  Is it time for a libmd.so,  so
+> systemd can invoke the "--wait-clean --scan" process itself?  Probably
+> simpler to just SIGTERM mdmon and wait for it.
+>=20
+> --
+> Dan
 
-mdadm-3.3 will support bad block management.
-However it is not released yet.
+Hi Dan,
+  could you please explain in a bit more detail exactly what you think it is
+  that is going wrong for you?
 
-You can get current code from
+  I don't think it is anything like the original problem, as I don't think
+  you are starting array manually.
 
-   git://neil.brown.name/mdadm  devel-3.3
+  I think your problem is that 'mdmon' is being killed too early at shutdow=
+n.
+  Clear we need to get whatever-kills-user-processes to skip mdmon - maybe =
+by
+  writing the pid to some magic file that 'ignore_proc' already knows about?
 
+  Ultimately we probably want to get udev to start mdmon for us and have
+  mdadm notice and not start it itself.
+  We also need to get udev to notice arrays that are being reshaped and to
+  start the mdadm which montiors the reshape so that mdadm doesn't have to
+  fork it itself.
 
-It isn't released yet because
+  That should fix the original problem, but I don't think it addresses your
+  problem at all.
 
-  1/ I haven't found/made time to work on mdadm and integrate support
-     properly.
-  2/ The kernel isn't really quite read for full support.
+  I don't have a Fedora install so I cannot hunt around to see what is
+  happening.
 
-If you have a bad block list, then a write error will not fail the drive but
-will record the location of the write error.
-This might be what you want.  But if you have a hot-spare available it might
-not be what you want - the current kernel code will never use a hot spare
-until a drive fails really badly.
-
-What it *should* do is "hot-replace".  i.e. recover the data on to a spare
-without first removing the device with the bad block.  But the hot-replace
-code isn't ready yet.
-
-I expect hot-replace to be in linux-3.3 (for RAID4/5/6 at least) and I hope=
- to
-release mdadm-3.3 before then with full support for bad blocks and hot
-replace.
-
-For now if you use the devel-3.3 code to create a new array it will place a
-bad-block-log on the array and the kernel will use that bad block log to
-record failed blocks rather than failing the whole device.
-If you want a device to be failed, you might have to explicitly do that
-yourself with "mdadm /dev/mdX --fail /dev/sdY"
+  I don't like the idea for a 'libmd.so' at all - certainly not until the
+  problem is properly understood and other solutions (like running
+  scripts) prove ineffective.
 
 NeilBrown
 
-
---Sig_/vK4xy.i/I7_Puwc+UDTv2Op
+--Sig_/3T5yF6.eoU+80zVpVbOKoWu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTqXqvTnsnt1WYoG5AQLbjg//av4lHbnZL0MvuG6Ay+TuZb0EoX3jFm41
-AcYLneCVo0Hk9TEkzGZ55QC9JIxszkSVy8V6JNnywb3NYXRLVi30t3Zmqr54kWJ2
-cy0ketwg0lRcufJpzwbxp6WfSDF7qo2ZQ5aOELxOlGXOSrIJomnzyszlVJzyLVf5
-u28Gv9xMa2G/aubMLsljUw+8dNVjACfX4jPORlS4U+nnKVYYuwV3s0zUiCWx+jAZ
-ah8ayvTTwZ2iYjG1gv2qF1Vf4L1syjvTYx1DvhNwwR9EMMFXg6g5IQCsqlZZs9j8
-jHkk2hJ955ehN7IpiwknIjH/Fa+KyM5VxVYSg4LfLCgB2+3kOqxbMYULuZCdsoph
-I8O55XWO+6CU7UWolJ90WGglO2othc6GLlh3w29Yjq6hGI6zfAmZWaxOEHc2b25n
-32ScHvXjWO8LDLhzooYT0ff5AC+3UjL7RC2MGTSo2REXWduwboLD8SepL99fUeZB
-YmX+pE6uO3i8o4F7ROoUhTpda2hm7yvI2wTZf4dIowFUcmnAtuseJl0v/oZiIRoy
-d2uP/hE4Qd5JXbwJpqhfO5WXn5nCcq4cgib0Qj+P1xrgzXimt2UCgeZhzoayDkRa
-7fjYvCGNBRpHCOG3IsNGh0f7rPBWELJtGuPugyStGxnZk3K7PrwHgG2gN+/o2bZs
-T/pZbe2labg=
-=Vi1i
+iQIVAwUBTqYTqDnsnt1WYoG5AQKByw//f/wmMD75otrvOM2lSNs5ocKN6yq9EGj9
+w6zIPz28rbS3bIqbWcWyUKDA0UNta6D+AoSwZD5XQhj4iqEnw/ttL0gNve//L4Uw
+OrFIuuVl26/NyPF/+GytkycVR3ZUR8KtR5qfBW0LE/XGiaTXX7QMtsyslTStNhlu
+0y6j/2yPj18IGbiliGrZDYC4AOoZgRPSnl1ZJghxvlebDHp7LYobO5QZwDVpGNip
+JNZnqwBMscoyN6jrZKCA4ho9j7XfLyaAY4A6IXjc5wumsPIizfWF9ggc5YXel6z0
+77fNMk+x1oX9raF637TM576y09GxTS2NRdNSPlm32i5CnAf1NPpzoE9D1X2O5azx
+6PGUfS2QjtfP5bc4oI+rm7SO0X41wvYNsQWfobZ4PS3s6YtA0akKTojsGvrvVXH3
+hf8x5NY5uq6XM6J8NOXGj7R2689Kdgua7eFzW8nHQZNeLENdlh701MgavMHI5soz
+XRi/MgXtglyThvji4zZGhfj4SwoTmnctecofpPYPyi5FWmFwJ1EeWoUM2q9g9i6o
+81UH1dmGEm9wFTsWWzQmNJrygF+xwibmr8ia3fnJ+ip5N75+GxiixiPk1qSpPvgH
+KWsGetufQuORPMZx8Ffph0OziuH1fiAl4j3hMstsKKzvU2Ac8zVDZE64BN/dlAGh
+OQv2xleY4GY=
+=XTlx
 -----END PGP SIGNATURE-----
 
---Sig_/vK4xy.i/I7_Puwc+UDTv2Op--
+--Sig_/3T5yF6.eoU+80zVpVbOKoWu--
