@@ -1,132 +1,400 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: mdadm r/w operations without TEMP_FAILURE_RETRY()
-Date: Wed, 26 Oct 2011 08:28:43 +1100
-Message-ID: <20111026082843.7087a263@notabene.brown>
-References: <2AC2FDB9F3686F48962B2B65E2040CCC3D155FA0@irsmsx503.ger.corp.intel.com>
-	<20111018203016.4536708f@notabene.brown>
-	<4EA6F210.7040701@ziu.info>
+Subject: Re: Rotating RAID 1
+Date: Wed, 26 Oct 2011 08:47:53 +1100
+Message-ID: <20111026084753.1db251b2@notabene.brown>
+References: <CALJXSJq6bDoWhSY3jQa8scpMo4QzHPzUvVPnHbox=xXYPm877w@mail.gmail.com>
+	<4E497FB5.3030109@ivitera.com>
+	<CALJXSJoexP9XKMqJSnJ7VFKu_6+j_k8b18G=KAtF8nEOuW6ytw@mail.gmail.com>
+	<4E49849E.4030604@ivitera.com>
+	<20110816084251.2d8e7831@notabene.brown>
+	<CALJXSJqVD9ibB9LAM7jU5aJFbyEssCuf2QMai+K=8xk6=pfRew@mail.gmail.com>
+	<20110816095517.757afc07@notabene.brown>
+	<4EA666A1.9000904@fastmail.fm>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/f_+x2Vs2Oal=mht1OpMlsDy"; protocol="application/pgp-signature"
+ boundary="Sig_/UXVGG7ER5Y4Q3sVchOq3NHr"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EA6F210.7040701@ziu.info>
+In-Reply-To: <4EA666A1.9000904@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>
-Cc: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linbloke <linbloke@fastmail.fm>
+Cc: =?ISO-8859-1?B?Suly9G1l?= Poulin <jeromepoulin@gmail.com>, Pavel Hofman <pavel.hofman@ivitera.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/f_+x2Vs2Oal=mht1OpMlsDy
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/UXVGG7ER5Y4Q3sVchOq3NHr
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 25 Oct 2011 19:29:52 +0200 Michal Soltys <soltys@ziu.info> wrote:
+On Tue, 25 Oct 2011 18:34:57 +1100 linbloke <linbloke@fastmail.fm> wrote:
 
-> On 11-10-18 11:30, NeilBrown wrote:
-> > On Tue, 18 Oct 2011 10:16:41 +0100 "Orlowski, Lukasz"
-> > <lukasz.orlowski@intel.com>  wrote:
+> On 16/08/11 9:55 AM, NeilBrown wrote:
+> > On Mon, 15 Aug 2011 19:32:04 -0400 J=E9r=F4me Poulin<jeromepoulin@gmail=
+.com>
+> > wrote:
 > >
-> >> Hi,
-> >>
-> >> I was going through mdadm code and got to realize that r/w
-> >> operations are invoked without TEMP_FAILURE_RETRY() macro, which
-> >> protects from unexpected operation termination, case SIGINT is
-> >> thrown. According to my knowledge its POSIX best-practice to call
-> >> the r/w operations within that macro, lest some sporadic unexpected
-> >> behaviors occur.
-> >>
-> >> Any particular reason for not using it?
+> >> On Mon, Aug 15, 2011 at 6:42 PM, NeilBrown<neilb@suse.de>  wrote:
+> >>> So if there are 3 drives A, X, Y where A is permanent and X and Y are=
+ rotated
+> >>> off-site, then I create two RAID1s like this:
+> >>>
+> >>>
+> >>> mdadm -C /dev/md0 -l1 -n2 --bitmap=3Dinternal /dev/A /dev/X
+> >>> mdadm -C /dev/md1 -l1 -n2 --bitmap=3Dinternal /dev/md0 /dev/Y
+> >> That seems nice for 2 disks, but adding another one later would be a
+> >> mess. Is there any way to play with slots number manually to make it
+> >> appear as an always degraded RAID ? I can't plug all the disks at once
+> >> because of the maximum of 2 ports.
+> > Yes, add another one later would be difficult.  But if you know up-fron=
+t that
+> > you will want three off-site devices it is easy.
 > >
-> > I've never heard of TEMP_FAILURE_RETRY.
+> > You could
 > >
-> > And having looked in to it I would certainly try to avoid using it.
+> >   mdadm -C /dev/md0 -l1 -n2 -b internal /dev/A missing
+> >   mdadm -C /dev/md1 -l1 -n2 -b internal /dev/md0 missing
+> >   mdadm -C /dev/md2 -l1 -n2 -b internal /dev/md1 missing
+> >   mdadm -C /dev/md3 -l1 -n2 -b internal /dev/md2 missing
 > >
+> >   mkfs /dev/md3 ; mount ..
+> >
+> >   So you now have 4 "missing" devices.  Each time you plug in a device =
+that
+> >   hasn't been in an array before, explicitly add it to the array that y=
+ou want
+> >   it to be a part of and let it recover.
+> >   When you plug in a device that was previously plugged in, just "mdadm
+> >   -I /dev/XX" and it will automatically be added and recover based on t=
+he
+> >   bitmap.
+> >
+> >   You can have as many or as few of the transient drives plugged in at =
+any
+> >   time as you like.
+> >
+> >   There is a cost here of course.  Every write potentially needs to upd=
+ate
+> >   every bitmap, so the more bitmaps, the more overhead in updating them=
+.  So
+> >   don't create more than you need.
+> >
+> >   Also, it doesn't have to be a linear stack.  It could be a binary tree
+> >   though that might take a little more care to construct.  Then when an
+> >   adjacent pair of leafs are both off-site, their bitmap would not need
+> >   updating.
+> >
+> > NeilBrown
 >=20
-> As this grabbed my attention ..
+> Hi Neil, J=E9r=F4me and Pavel,
 >=20
-> that macro is just a shortcut to something along the:
->=20
-> do {
-> 	ret =3D read/write/etc.( ... );
-> } while (ret < 0 && errno =3D=3D EINTR);
->=20
-> which has always been the proper way to handle such situations=20
-> (recollecting Stevens books, glibc reference manual, or any other solid=20
-> source). Why avoid using it ? Costs nothing, and guarantees we won't run=
+> I'm in the process of testing the solution described above and have been=
 =20
-> into some corner case.
-
-It is ugly and often unnecessary.
-Ugliness without virtue is a real cost.
-
-
->=20
-> > If the SA_RESTART flag is set with sigaction() then it should be
-> > totally unnecessary.
-> >
->=20
-> signals(7) has pretty large list of when it can or cannot happen, and
-> when it will always happen regardless of SA_RESTART. And it would be=20
-> quite different list when other unix vendors are considered (which=20
-> doesn't of course apply to mdadm case, it being only linux specific).=20
-> There're also not ignorable stop signals (and under some cases they will=
+> successful at those steps (I now have sync'd devices that I have failed=20
+> and removed from their respective arrays - the "backups"). I can add new=
 =20
-> end with EINTR as well).
+> devices and also incrementally re-add the devices back to their=20
+> respective arrays and all my tests show this process works well. The=20
+> point which I'm now trying to resolve is how to create a new array from=20
+> one of the off-site components - ie, the restore from backup test.
+> Below are the steps I've taken to implement and verify each step, you=20
+> can skip to the bottom section "Restore from off-site backup" to get to=20
+> the point if you like. When the wiki is back up, I'll post this process=20
+> there for others who are looking for mdadm based offline backups. Any=20
+> corrections gratefully appreciated.
 >=20
-> And it's not only SIGINT (as the original mail could suggest), any not=20
-> ignored signal can cause it.
+> Based on the example above, for a target setup of 7 off-site devices=20
+> synced to a two device RAID1, my test setup for a is:
+>=20
+> RAID Array    Online Device    Off-site device
+> md100    sdc         sdd
+> md101    md100    sde
+> md102    md101    sdf
+> md103    md102    sdg
+> md104    md103    sdh
+> md105    md104    sdi
+> md106    md105    sdj
+>=20
+> root@deb6dev:~# uname -a
+> Linux deb6dev 2.6.32-5-686 #1 SMP Tue Mar 8 21:36:00 UTC 2011 i686 GNU/Li=
+nux
+> root@deb6dev:~# mdadm -V
+> mdadm - v3.1.4 - 31st August 2010
+> root@deb6dev:~# cat /etc/debian_version
+> 6.0.1
+>=20
+> Create the nested arrays
+> ---------------------
+> root@deb6dev:~# mdadm -C /dev/md100 -l1 -n2 -b internal -e 1.2 /dev/sdc=20
+> missing
+> mdadm: array /dev/md100 started.
+> root@deb6dev:~# mdadm -C /dev/md101 -l1 -n2 -b internal -e 1.2=20
+> /dev/md100 missing
+> mdadm: array /dev/md101 started.
+> root@deb6dev:~# mdadm -C /dev/md102 -l1 -n2 -b internal -e 1.2=20
+> /dev/md101 missing
+> mdadm: array /dev/md102 started.
+> root@deb6dev:~# mdadm -C /dev/md103 -l1 -n2 -b internal -e 1.2=20
+> /dev/md102 missing
+> mdadm: array /dev/md103 started.
+> root@deb6dev:~# mdadm -C /dev/md104 -l1 -n2 -b internal -e 1.2=20
+> /dev/md103 missing
+> mdadm: array /dev/md104 started.
+> root@deb6dev:~# mdadm -C /dev/md105 -l1 -n2 -b internal -e 1.2=20
+> /dev/md104 missing
+> mdadm: array /dev/md105 started.
+> root@deb6dev:~# mdadm -C /dev/md106 -l1 -n2 -b internal -e 1.2=20
+> /dev/md105 missing
+> mdadm: array /dev/md106 started.
+>=20
+> root@deb6dev:~# cat /proc/mdstat
+> Personalities : [raid1]
+> md106 : active (auto-read-only) raid1 md105[0]
+>        51116 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md105 : active raid1 md104[0]
+>        51128 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md104 : active raid1 md103[0]
+>        51140 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md103 : active raid1 md102[0]
+>        51152 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md102 : active raid1 md101[0]
+>        51164 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md101 : active raid1 md100[0]
+>        51176 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md100 : active raid1 sdc[0]
+>        51188 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> unused devices: <none>
+>=20
+> Create and mount a filesystem
+> --------------------------
+> root@deb6dev:~# mkfs.ext3 /dev/md106
+> <<successful mkfs output snipped>>
+> root@deb6dev:~# mount -t ext3 /dev/md106 /mnt/backup
+> root@deb6dev:~# df | grep backup
+> /dev/md106               49490      4923     42012  11% /mnt/backup
+>=20
+> Plug in a device that hasn't been in an array before
+> -------------------------------------------
+> root@deb6dev:~# mdadm -vv /dev/md100 --add /dev/sdd
+> mdadm: added /dev/sdd
+> root@deb6dev:~# cat /proc/mdstat
+> Personalities : [raid1]
+> md106 : active raid1 md105[0]
+>        51116 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md105 : active raid1 md104[0]
+>        51128 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md104 : active raid1 md103[0]
+>        51140 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md103 : active raid1 md102[0]
+>        51152 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md102 : active raid1 md101[0]
+>        51164 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md101 : active raid1 md100[0]
+>        51176 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> md100 : active raid1 sdd[2] sdc[0]
+>        51188 blocks super 1.2 [2/2] [UU]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+>=20
+> Write to the array
+> ---------------
+> root@deb6dev:~# dd if=3D/dev/urandom of=3Da.blob bs=3D1M count=3D20
+> 20+0 records in
+> 20+0 records out
+> 20971520 bytes (21 MB) copied, 5.05528 s, 4.1 MB/s
+> root@deb6dev:~# dd if=3D/dev/urandom of=3Db.blob bs=3D1M count=3D10
+> 10+0 records in
+> 10+0 records out
+> 10485760 bytes (10 MB) copied, 2.59361 s, 4.0 MB/s
+> root@deb6dev:~# dd if=3D/dev/urandom of=3Dc.blob bs=3D1M count=3D5
+> 5+0 records in
+> 5+0 records out
+> 5242880 bytes (5.2 MB) copied, 1.35619 s, 3.9 MB/s
+> root@deb6dev:~# md5sum *blob > md5sums.txt
+> root@deb6dev:~# ls -l
+> total 35844
+> -rw-r--r-- 1 root root 20971520 Oct 25 15:57 a.blob
+> -rw-r--r-- 1 root root 10485760 Oct 25 15:57 b.blob
+> -rw-r--r-- 1 root root  5242880 Oct 25 15:57 c.blob
+> -rw-r--r-- 1 root root      123 Oct 25 15:57 md5sums.txt
+> root@deb6dev:~# cp *blob /mnt/backup
+> root@deb6dev:~# ls -l /mnt/backup
+> total 35995
+> -rw-r--r-- 1 root root 20971520 Oct 25 15:58 a.blob
+> -rw-r--r-- 1 root root 10485760 Oct 25 15:58 b.blob
+> -rw-r--r-- 1 root root  5242880 Oct 25 15:58 c.blob
+> drwx------ 2 root root    12288 Oct 25 15:27 lost+found
+> root@deb6dev:~# df | grep backup
+> /dev/md106               49490     40906      6029  88% /mnt/backup
+> root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+> md100 : active raid1 sdd[2] sdc[0]
+>        51188 blocks super 1.2 [2/2] [UU]
+>        bitmap: 0/1 pages [0KB], 65536KB chunk
+>=20
+> Data written and array devices in sync (bitmap 0/1)
+>=20
+> Fail and remove device
+> -------------------
+> root@deb6dev:~# sync
+> root@deb6dev:~# mdadm -vv /dev/md100 --fail /dev/sdd --remove /dev/sdd
+> mdadm: set /dev/sdd faulty in /dev/md100
+> mdadm: hot removed /dev/sdd from /dev/md100
+> root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+> md100 : active raid1 sdc[0]
+>        51188 blocks super 1.2 [2/1] [U_]
+>        bitmap: 0/1 pages [0KB], 65536KB chunk
+>=20
+> Device may now be unplugged
+>=20
+>=20
+> Write to the array again
+> --------------------
+> root@deb6dev:~# rm /mnt/backup/b.blob
+> root@deb6dev:~# ls -l /mnt/backup
+> total 25714
+> -rw-r--r-- 1 root root 20971520 Oct 25 15:58 a.blob
+> -rw-r--r-- 1 root root  5242880 Oct 25 15:58 c.blob
+> drwx------ 2 root root    12288 Oct 25 15:27 lost+found
+> root@deb6dev:~# df | grep backup
+> /dev/md106               49490     30625     16310  66% /mnt/backup
+> root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+> md100 : active raid1 sdc[0]
+>        51188 blocks super 1.2 [2/1] [U_]
+>        bitmap: 1/1 pages [4KB], 65536KB chunk
+>=20
+> bitmap 1/1 shows array is not in sync (we know it's due to the writes=20
+> pending for the device we previously failed)
+>=20
+> Plug in a device that was previously plugged in
+> ----------------------------------------
+> root@deb6dev:~# mdadm -vv -I /dev/sdd --run
+> mdadm: UUID differs from /dev/md/0.
+> mdadm: UUID differs from /dev/md/1.
+> mdadm: /dev/sdd attached to /dev/md100 which is already active.
+> root@deb6dev:~# sync
+> root@deb6dev:~# cat /proc/mdstat | grep -A 3 '^md100'
+> md100 : active raid1 sdd[2] sdc[0]
+>        51188 blocks super 1.2 [2/2] [UU]
+>        bitmap: 0/1 pages [0KB], 65536KB chunk
+>=20
+> Device reconnected [UU] and in sync (bitmap 0/1)
+>=20
+> Restore from off-site device
+> ------------------------
+> Remove device from array
+> root@deb6dev:~# mdadm -vv /dev/md100 --fail /dev/sdd --remove /dev/sdd
+> mdadm: set /dev/sdd faulty in /dev/md100
+> mdadm: hot removed /dev/sdd from /dev/md100
+> root@deb6dev:~# mdadm -Ev /dev/sdd
+> /dev/sdd:
+>            Magic : a92b4efc
+>          Version : 1.2
+>      Feature Map : 0x1
+>       Array UUID : 4c957fac:d7dbc792:b642daf0:d22e313e
+>             Name : deb6dev:100  (local to host deb6dev)
+>    Creation Time : Tue Oct 25 15:22:19 2011
+>       Raid Level : raid1
+>     Raid Devices : 2
+>=20
+>   Avail Dev Size : 102376 (50.00 MiB 52.42 MB)
+>       Array Size : 102376 (50.00 MiB 52.42 MB)
+>      Data Offset : 24 sectors
+>     Super Offset : 8 sectors
+>            State : clean
+>      Device UUID : 381f453f:5a97f1f6:bb5098bb:8c071a95
+>=20
+> Internal Bitmap : 8 sectors from superblock
+>      Update Time : Tue Oct 25 17:27:53 2011
+>         Checksum : acbcee5f - correct
+>           Events : 250
+>=20
+>=20
+>     Device Role : Active device 1
+>     Array State : AA ('A' =3D=3D active, '.' =3D=3D missing)
+>=20
+> Assemble a new array from off-site component:
+> root@deb6dev:~# mdadm -vv -A /dev/md200 --run /dev/sdd
+> mdadm: looking for devices for /dev/md200
+> mdadm: /dev/sdd is identified as a member of /dev/md200, slot 1.
+> mdadm: no uptodate device for slot 0 of /dev/md200
+> mdadm: added /dev/sdd to /dev/md200 as 1
+> mdadm: /dev/md200 has been started with 1 drive (out of 2).
+> root@deb6dev:~#
+>=20
+> Check file-system on new array
+> root@deb6dev:~# fsck.ext3 -f -n /dev/md200
+> e2fsck 1.41.12 (17-May-2010)
+> fsck.ext3: Superblock invalid, trying backup blocks...
+> fsck.ext3: Bad magic number in super-block while trying to open /dev/md200
+>=20
+> The superblock could not be read or does not describe a correct ext2
+> filesystem.  If the device is valid and it really contains an ext2
+> filesystem (and not swap or ufs or something else), then the superblock
+> is corrupt, and you might try running e2fsck with an alternate superblock:
+>      e2fsck -b 8193 <device>
+>=20
+>=20
+> How do I use these devices in a new array?
+>=20
 
-Yes, SA_RESTART isn't really a panacea.  SIGSTOP cannot be ignored or block=
-ed
-and can have the same effect.
+You need to also assemble md201 md202 md203 md204 md205 md206
+and the fsck/mount md206
+Each of these is made by assembling the single previous md20X array.
 
-However this only affects system calls that can block (in an interruptible
-'S' state, not a non-interruptible 'D' state), and then only if they cannot
-complete without returning a valid partial result.
+mdadm -A /dev/md201 --run /dev/md200
+mdadm -A /dev/md202 --run /dev/md201
+....
+mdadm -A /dev/md206 --run /dev/md205
 
-There are very few places where mdadm makes such a system calls.
+All the rest of your description looks good!
 
-Some of the ioctl calls on md devices technically behave like this, but are
-very unlikely to block in practise and if they do then I probably want them
-to fail.
-
-The 'select' calls in msg.c probably should check for EINTR and try again,
-but in that case there is already an error check and a loop and I would just
-add
-  if (rv < 0 && errno =3D=3D EINTR)
-	continue;
-
-rather than add the macro.
-
-So it is certainly worth auditing the code for places where EINTR might be
-returned (and being careful in the first place), but blindly applying
-TEMP_FAILURE_RETRY() is (in my opinion) wrong.
-In a well written program I would expect any place which might return EINTR
-to be a place which could also return other errors that suggest a retry is
-needed, and the EINTR checking should  just be included with the other
-checking.
-
+Thanks,
 NeilBrown
 
---Sig_/f_+x2Vs2Oal=mht1OpMlsDy
+
+--Sig_/UXVGG7ER5Y4Q3sVchOq3NHr
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTqcqCznsnt1WYoG5AQKFMQ//YTsN6Zj/LtVMiOg99NI/E0Zlr4zvk4r0
-b+2LBVbqy2fGu9rQC0zfB6rFJomFUKHHw4AZIBSVZr9voCunwiB2Y3DLoSLn2ZUh
-5blbQwhCBHUOv1c0S0obeICUrv2YNn9tclRRNu7oRqFAoq2FPZ352Uf3ZCgjro2P
-mBEwRJgLBuV3zPv2TmsgTjPqJhO3+Ww1mtoMwm5CUxfSzPgrxDvnNakNppGY4dqK
-uRFWeTm8O17+iJmrsWkZvbkCJUSetlOjmSR7jNYI9F0Siu4nhvd517rT4ZkPd40Y
-doR4Oz4higdEpXaGyJbFmyuWmh5R6JUbonz7SL7zZa6yZahbSc221ADA0H9gwPyx
-cRVpL7SRKu0A2g1FueC6ZlfWbsCBOmSTAXGBEnemyVFjEShaHE08Q5S/riaGWitJ
-fqHH25c+jbDSldN/zngYysYQxaa2pnuJAuU1AtIIO9mhY/TKmGbNs05sUydzaLD+
-6fBqKEqUfBNP2on6VAT3RBLYhGpjf6ylULQvrY/ijg+Aw/YSedjk3jHfZynglct3
-MyQRzgPBOiDpOUA9vzAELmpuyBY/daEyE2wV/fa1KJhz+LS7tziNsvqLY5GKmuT5
-3AsO9bSrF+BXKGoyrezg1/E1Jk482hOVDefx62PqmYGeLbjdFQ64Ucopt5bg5bOF
-koyZCAqo190=
-=oULj
+iQIVAwUBTqcuiTnsnt1WYoG5AQL6Pw/9E8GoLYAEsf0jFzAS4OSpr02Tl+0iqThM
+V9xvHaNAjhkGL9k/U+3WTTeuA+tduJvg3E9Er/JqcoMIJ0FyDMedXy9L4TCYAP7O
+6NVOh06NKXaJQNXWPPQXxpOgnzOXl6V5mkfh3adLd93NtYIfNItjJrUVCahZI1yy
+1MoRnXOTqzfupv2tQ4Y96aKCTVv06/pHmaO22idUc1tEagNzQBZencQZ68BD9w7e
+/Q5zwiVpPM8orboA9mb7f4lsMbwALl77WZuwiSNmFICRUTBc68jCoS0cEQZ2EoCW
+1Xf0cZ7ieY4wZbY4Twn71QoUg9FgCxtVrPvzCloHghJcsKojogZDPRisMWsbaw/Q
+9h9bG2946L8OnTtTYKqq5htaXOF7eNml+qLlZoNCwDGio2MkQhQrR9GGEm4xIOew
+OHghHOqyrnQntEh3NCF5lViU/EwGC/vJV3bVWY3XL6EqDH1BVvnytWHg9LbT1RLP
+kTTLIt4EztnWTjHMaKQStVIcoJamdQwvlfeLUScQLQOp1gCFWUa842hWN9aU+Fhg
+yeyvS7IEfAHNXHfsB6k297iuMHW7yFjYJ5WiElcrzTC8KHuILosTU+FUF5AP4EwV
+b9dlblGGTezoezVQPsrQJA3gw3iYoual/y3fjJj+7Zsv9JRXRBTgosVSiPLcaYZA
+ZbRNU673c1M=
+=QgOv
 -----END PGP SIGNATURE-----
 
---Sig_/f_+x2Vs2Oal=mht1OpMlsDy--
+--Sig_/UXVGG7ER5Y4Q3sVchOq3NHr--
