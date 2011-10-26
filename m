@@ -1,47 +1,89 @@
-From: "Peter W. Morreale" <morreale@sgi.com>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Wed, 26 Oct 2011 07:57:53 -0600
-Message-ID: <1319637473.16865.19.camel@hermosa.site>
-References: <20111026014240.21110.28487.stgit@notabene.brown>
-	 <j88a5v$cnd$1@dough.gmane.org>  <4EA7CC82.7000000@anonymous.org.uk>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] FIX: Close unused handle in child process during reshape
+	restart
+Date: Wed, 26 Oct 2011 18:16:55 +0200
+Message-ID: <20111026161654.13887.42747.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EA7CC82.7000000@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-On Wed, 2011-10-26 at 10:01 +0100, John Robinson wrote: 
-> On 26/10/2011 07:38, David Brown wrote:
-> > On 26/10/2011 03:43, NeilBrown wrote:
-> >> The following series - on top of my for-linus branch which should
-> >> appear in
-> >> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6. This is almost
-> >> certainly the most requested feature over the last few years.
-> >
-> > Fantastic news - well done, and thanks for all your work (and to the
-> > other md developers too, of course).
-> 
-> Seconded! This is doubleplusgood!
+When array reshape (e.g. raid0->raid5 migration) is restarted during
+array assembly, file system placed on this array cannot be mounted until
+reshape is finished due to "busy" error.
 
-+1.  Thank you Neil and everyone else.
+This is caused when reshape is executed on array for external metadata
+and array handle is cloned /forked/ to child process environment but not
+closed.
 
-Will be testing shortly....
+Handle can't be closed before executing Grow_continue() because it is
+used later in code.
 
-Best
--PWM
+Close unused handle in child process /reshape_container()/.
+It is similar to close fd handle in reshape_array() before calling
+manage_reshape()/child_monitor() in Grow.c:2290.
 
-> 
-> Cheers,
-> 
-> John.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
+ Grow.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/Grow.c b/Grow.c
+index 0e4dd10..93a69fd 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1350,6 +1350,7 @@ static int reshape_array(char *container, int fd, char *devname,
+ 			 char *backup_file, int quiet, int forked,
+ 			 int restart, int freeze_reshape);
+ static int reshape_container(char *container, char *devname,
++			     int mdfd,
+ 			     struct supertype *st, 
+ 			     struct mdinfo *info,
+ 			     int force,
+@@ -1768,7 +1769,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		 * number of devices (On-Line Capacity Expansion) must be
+ 		 * performed at the level of the container
+ 		 */
+-		rv = reshape_container(container, devname, st, &info,
++		rv = reshape_container(container, devname, -1, st, &info,
+ 				       force, backup_file, quiet, 0, 0);
+ 		frozen = 0;
+ 	} else {
+@@ -2403,7 +2404,10 @@ release:
+ 	return 1;
+ }
+ 
++/* mdfd handle is passed to be closed in child process (after fork).
++ */
+ int reshape_container(char *container, char *devname,
++		      int mdfd,
+ 		      struct supertype *st, 
+ 		      struct mdinfo *info,
+ 		      int force,
+@@ -2446,6 +2450,11 @@ int reshape_container(char *container, char *devname,
+ 		break;
+ 	}
+ 
++	/* close unused handle in child process
++	 */
++	if (mdfd > -1)
++		close(mdfd);
++
+ 	while(1) {
+ 		/* For each member array with reshape_active,
+ 		 * we need to perform the reshape.
+@@ -3821,7 +3830,7 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
+ 		fmt_devname(container, st->container_dev);
+ 		st->ss->load_container(st, cfd, container);
+ 		close(cfd);
+-		ret_val = reshape_container(container, NULL,
++		ret_val = reshape_container(container, NULL, mdfd,
+ 					    st, info, 0, backup_file,
+ 					    0, 1, freeze_reshape);
+ 	} else
 
