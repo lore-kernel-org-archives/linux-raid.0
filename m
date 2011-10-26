@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 06/16] md/raid5: allow each slot to have an extra
- replacement device
+Subject: [md PATCH 07/16] md/raid5: raid5.h cleanup
 Date: Wed, 26 Oct 2011 12:43:01 +1100
-Message-ID: <20111026014301.21110.82947.stgit@notabene.brown>
+Message-ID: <20111026014301.21110.19740.stgit@notabene.brown>
 References: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,144 +12,74 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Just enhance data structures to record a second device per slot to be
-used as a 'replacement' device, replacing the original.
-We also have a second bio in each slot in each stripe_head.  This will
-only be used when writing to the array - we need to write to both the
-original and the replacement at the same time, so will need two bios.
-
-For now, only try using the replacement drive for aligned-reads.
-In this case, we prefer the replacement if it has been recovered far
-enough, otherwise use the original.
-
-This includes a small enhancement.  Previously we would only do
-aligned reads if the target device was fully recovered.  Now we also
-do them if it has recovered far enough.
+Remove some #defines that are no longer used, and replace some
+others with an enum.
+And remove an unused field.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   15 ++++++++++++--
- drivers/md/raid5.h |   57 ++++++++++++++++++++++++++++++----------------------
- 2 files changed, 46 insertions(+), 26 deletions(-)
+ drivers/md/raid5.h |   27 +++++++++------------------
+ 1 files changed, 9 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 27056d3..e6d10df 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3573,6 +3573,7 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 	int dd_idx;
- 	struct bio* align_bi;
- 	struct md_rdev *rdev;
-+	sector_t end_sector;
- 
- 	if (!in_chunk_boundary(mddev, raid_bio)) {
- 		pr_debug("chunk_aligned_read : non aligned\n");
-@@ -3597,9 +3598,19 @@ static int chunk_aligned_read(struct mddev *mddev, struct bio * raid_bio)
- 						    0,
- 						    &dd_idx, NULL);
- 
-+	end_sector = align_bi->bi_sector + (align_bi->bi_size >>9);
- 	rcu_read_lock();
--	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
--	if (rdev && test_bit(In_sync, &rdev->flags)) {
-+	rdev = rcu_dereference(conf->disks[dd_idx].replacement);
-+	if (!rdev || test_bit(Faulty, &rdev->flags) ||
-+	    rdev->recovery_offset < end_sector) {
-+		rdev = rcu_dereference(conf->disks[dd_idx].rdev);
-+		if (rdev &&
-+		    (test_bit(Faulty, &rdev->flags) ||
-+		    !(test_bit(In_sync, &rdev->flags) ||
-+		      rdev->recovery_offset >= end_sector)))
-+			rdev = NULL;
-+	}
-+	if (rdev) {
- 		sector_t first_bad;
- 		int bad_sectors;
- 
 diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index e10c553..43106f0 100644
+index 43106f0..4cfd801 100644
 --- a/drivers/md/raid5.h
 +++ b/drivers/md/raid5.h
-@@ -226,8 +226,11 @@ struct stripe_head {
- 		#endif
- 	} ops;
- 	struct r5dev {
--		struct bio	req;
--		struct bio_vec	vec;
-+		/* rreq and rvec are used for the replacement device when
-+		 * writing data to both devices.
-+		 */
-+		struct bio	req, rreq;
-+		struct bio_vec	vec, rvec;
- 		struct page	*page;
- 		struct bio	*toread, *read, *towrite, *written;
- 		sector_t	sector;			/* sector of this page */
-@@ -252,29 +255,35 @@ struct stripe_head_state {
- 	int handle_bad_blocks;
+@@ -27,7 +27,7 @@
+  * The possible state transitions are:
+  *
+  *  Empty -> Want   - on read or write to get old data for  parity calc
+- *  Empty -> Dirty  - on compute_parity to satisfy write/sync request.(RECONSTRUCT_WRITE)
++ *  Empty -> Dirty  - on compute_parity to satisfy write/sync request.
+  *  Empty -> Clean  - on compute_block when computing a block for failed drive
+  *  Want  -> Empty  - on failed read
+  *  Want  -> Clean  - on successful completion of read request
+@@ -284,15 +284,6 @@ enum r5dev_flags {
+ 	R5_MadeGoodRepl,/* A bad block on the replacement device has been
+ 			 * fixed by writing to it */
  };
+-/*
+- * Write method
+- */
+-#define RECONSTRUCT_WRITE	1
+-#define READ_MODIFY_WRITE	2
+-/* not a write method, but a compute_parity mode */
+-#define	CHECK_PARITY		3
+-/* Additional compute_parity mode -- updates the parity w/o LOCKING */
+-#define UPDATE_PARITY		4
  
--/* Flags */
--#define	R5_UPTODATE	0	/* page contains current data */
--#define	R5_LOCKED	1	/* IO has been submitted on "req" */
--#define	R5_OVERWRITE	2	/* towrite covers whole page */
-+/* Flags for struct r5dev.flags */
-+enum r5dev_flags {
-+	R5_UPTODATE,	/* page contains current data */
-+	R5_LOCKED,	/* IO has been submitted on "req" */
-+	R5_OVERWRITE,	/* towrite covers whole page */
- /* and some that are internal to handle_stripe */
--#define	R5_Insync	3	/* rdev && rdev->in_sync at start */
--#define	R5_Wantread	4	/* want to schedule a read */
--#define	R5_Wantwrite	5
--#define	R5_Overlap	7	/* There is a pending overlapping request on this block */
--#define	R5_ReadError	8	/* seen a read error here recently */
--#define	R5_ReWrite	9	/* have tried to over-write the readerror */
-+	R5_Insync,	/* rdev && rdev->in_sync at start */
-+	R5_Wantread,	/* want to schedule a read */
-+	R5_Wantwrite,
-+	R5_Overlap,	/* There is a pending overlapping request
-+			 * on this block */
-+	R5_ReadError,	/* seen a read error here recently */
-+	R5_ReWrite,	/* have tried to over-write the readerror */
- 
--#define	R5_Expanded	10	/* This block now has post-expand data */
--#define	R5_Wantcompute	11	/* compute_block in progress treat as
--				 * uptodate
--				 */
--#define	R5_Wantfill	12	/* dev->toread contains a bio that needs
--				 * filling
--				 */
--#define	R5_Wantdrain	13	/* dev->towrite needs to be drained */
--#define	R5_WantFUA	14	/* Write should be FUA */
--#define	R5_WriteError	15	/* got a write error - need to record it */
--#define	R5_MadeGood	16	/* A bad block has been fixed by writing to it*/
-+	R5_Expanded,	/* This block now has post-expand data */
-+	R5_Wantcompute,	/* compute_block in progress treat as
-+			 * uptodate
-+			 */
-+	R5_Wantfill,	/* dev->toread contains a bio that needs
-+			 * filling
-+			 */
-+	R5_Wantdrain,	/* dev->towrite needs to be drained */
-+	R5_WantFUA,	/* Write should be FUA */
-+	R5_WriteError,	/* got a write error - need to record it */
-+	R5_MadeGood,	/* A bad block has been fixed by writing to it */
-+	R5_ReadRepl,	/* Will/did read from replacement rather than orig */
-+	R5_MadeGoodRepl,/* A bad block on the replacement device has been
-+			 * fixed by writing to it */
+ /*
+  * Stripe state
+@@ -320,13 +311,14 @@ enum {
+ /*
+  * Operation request flags
+  */
+-#define STRIPE_OP_BIOFILL	0
+-#define STRIPE_OP_COMPUTE_BLK	1
+-#define STRIPE_OP_PREXOR	2
+-#define STRIPE_OP_BIODRAIN	3
+-#define STRIPE_OP_RECONSTRUCT	4
+-#define STRIPE_OP_CHECK	5
+-
++enum {
++	STRIPE_OP_BIOFILL,
++	STRIPE_OP_COMPUTE_BLK,
++	STRIPE_OP_PREXOR,
++	STRIPE_OP_BIODRAIN,
++	STRIPE_OP_RECONSTRUCT,
++	STRIPE_OP_CHECK,
 +};
  /*
-  * Write method
-  */
-@@ -344,7 +353,7 @@ enum {
- 
- 
- struct disk_info {
--	struct md_rdev	*rdev;
-+	struct md_rdev	*rdev, *replacement;
- };
- 
+  * Plugging:
+  *
+@@ -359,7 +351,6 @@ struct disk_info {
  struct r5conf {
+ 	struct hlist_head	*stripe_hashtbl;
+ 	struct mddev		*mddev;
+-	struct disk_info	*spare;
+ 	int			chunk_sectors;
+ 	int			level, algorithm;
+ 	int			max_degraded;
 
 
