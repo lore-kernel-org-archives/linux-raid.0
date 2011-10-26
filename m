@@ -1,34 +1,47 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH] GCC compile fix: remove calculation of unused variable
- 'reservation'
-Date: Wed, 26 Oct 2011 14:51:36 +0200
-Message-ID: <4EA80258.70302@redhat.com>
-References: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
+From: "Peter W. Morreale" <morreale@sgi.com>
+Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Wed, 26 Oct 2011 07:57:53 -0600
+Message-ID: <1319637473.16865.19.camel@hermosa.site>
+References: <20111026014240.21110.28487.stgit@notabene.brown>
+	 <j88a5v$cnd$1@dough.gmane.org>  <4EA7CC82.7000000@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <4EA7CC82.7000000@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On 10/06/11 16:43, Jes.Sorensen@redhat.com wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Wed, 2011-10-26 at 10:01 +0100, John Robinson wrote: 
+> On 26/10/2011 07:38, David Brown wrote:
+> > On 26/10/2011 03:43, NeilBrown wrote:
+> >> The following series - on top of my for-linus branch which should
+> >> appear in
+> >> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6. This is almost
+> >> certainly the most requested feature over the last few years.
+> >
+> > Fantastic news - well done, and thanks for all your work (and to the
+> > other md developers too, of course).
 > 
-> gcc 4.6.1 doesn't like calculating a variable that then isn't
-> used. Remove it.
+> Seconded! This is doubleplusgood!
+
++1.  Thank you Neil and everyone else.
+
+Will be testing shortly....
+
+Best
+-PWM
+
 > 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  super-intel.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
+> Cheers,
+> 
+> John.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Neil,
 
-Any chance you could reply this one? It still seems to be an issue with
-the latest git tree.
-
-Thanks,
-Jes
