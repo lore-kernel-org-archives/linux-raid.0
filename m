@@ -1,115 +1,70 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Subject: [md PATCH 01/16] md: refine interpretation of "hold_active ==
+ UNTIL_IOCTL".
 Date: Wed, 26 Oct 2011 12:43:00 +1100
-Message-ID: <20111026014240.21110.28487.stgit@notabene.brown>
+Message-ID: <20111026014300.21110.77494.stgit@notabene.brown>
+References: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20111026014240.21110.28487.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The following series - on top of my for-linus branch which should appear in
-3.2-rc1 eventually - implements hot-replace for RAID4/5/6.  This is almost
-certainly the most requested feature over the last few years.
-The whole series can be pulled from my md-devel branch:
-   git://neil.brown.name/md md-devel
-(please don't do a full clone, it is not a very fast link).
+We like md devices to disappear when they really are not needed.
+However it is not possible to tell from the current state whether it
+is needed or not.  We can only tell from recent history of changes.
 
-There is currently no mdadm support, but you can test it out and
-experiment without mdadm.
+In particular immediately after we create an md device it looks very
+similar to immediately after we have finished with it.
 
-In order to activate hot-replace you need to mark the device as
-'replaceable'.
-This happens automatically when a write error is recorded in a
-bad-block log (if you happen to have one).
-It can be achieved manually by
-   echo replaceable > /sys/block/mdXX/md/dev-YYY/state
+So we always preserve a newly created md device until something
+significant happens.  This state is stored in 'hold_active'.
 
-This makes YYY, in XX, replaceable.
+The normal case is to keep it until an ioctl happens, as that will
+normally either activate it, or explicitly de-activate it.  If it
+doesn't then it was probably created by mistake and it is now time to
+get rid of it.
 
-If md notices that there is a replaceable drive and a spare it will
-attach the spare to the replaceable drive and mark it as a
-'replacement'.
-This word appears in the 'state' file and as (R) in /proc/mdstat.
+We can also modify an array via sysfs (instead of via ioctl) and we
+currently treat any change via sysfs like an ioctl as a sign that if
+it now isn't more active, it should be destroyed.
+However this is not appropriate as changes made via sysfs are more
+gradual so we should look for a more definitive change.
 
-md will then copy data from the replaceable drive to the replacement.
-If there is a bad block on the replaceable drive, it will get the data
-from elsewhere.  This looks like a "recovery" operation.
+So this patch only clears 'hold_active' from UNTIL_IOCTL to clear when
+the array_state is changed via sysfs.  Other changes via sysfs
+are ignored.
 
-When the replacement completes the replaceable device will be marked
-as Failed and will be disconnected from the array (i.e. the 'slot'
-will be set to 'none') and the replacement drive will take up full
-possession of that slot.
-
-It is not possible to assemble an array with replacement with mdadm.
-To do this by hand:
-
-  mknod /dev/md27 b 9 27
-  < /dev/md27
-  cd /sys/block/md27/md
-  echo 1.2 > metadata_version
-  echo 8:1 > new_dev
-  echo 8:17 > new_dev
-   ...
-  echo active > array_state
-
-Replace '27' by the md number you want.  Replace 1.2 by the metadata
-version number (must be 1.x for some x).  Replace 8:1, 8:17 etc
-by the major:minor numbers of each device in the array.
-
-Yes: this is clumsy.  But they you aren't doing this on live data -
-only on test devices to experiment.
-
-You can still assemble the array without the replacement using mdadm.
-Just list all the drives except the replacement in the --assemble
-command.
-Also once the replacement operation completes you can of course stop
-and assemble the new array with old mdadm.
-
-I hope to submit this together with support for RAID10 (and maybe some
-minimal support for RAID1) for Linux-3.3. By the time it comes out
-mdadm-3.3 should exist will full support for hot-replace.
-
-Review and testing is very welcome, be please do not try it on live
-data.
-
-NeilBrown
-
-
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
-NeilBrown (16):
-      md/raid5: Mark device replaceable when we see a write error.
-      md/raid5: If there is a spare and a replaceable device, start replacement.
-      md/raid5: recognise replacements when assembling array.
-      md/raid5: handle activation of replacement device when recovery completes.
-      md/raid5:  detect and handle replacements during recovery.
-      md/raid5: writes should get directed to replacement as well as original.
-      md/raid5: allow removal for failed replacement devices.
-      md/raid5: preferentially read from replacement device if possible.
-      md/raid5: remove redundant bio initialisations.
-      md/raid5: raid5.h cleanup
-      md/raid5: allow each slot to have an extra replacement device
-      md: create externally visible flags for supporting hot-replace.
-      md: change hot_remove_disk to take an rdev rather than a number.
-      md: remove test for duplicate device when setting slot number.
-      md: take after reference to mddev during sysfs access.
-      md: refine interpretation of "hold_active == UNTIL_IOCTL".
+ drivers/md/md.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 266e82e..fd68243 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3791,6 +3791,8 @@ array_state_store(struct mddev *mddev, const char *buf, size_t len)
+ 	if (err)
+ 		return err;
+ 	else {
++		if (mddev->hold_active == UNTIL_IOCTL)
++			mddev->hold_active = 0;
+ 		sysfs_notify_dirent_safe(mddev->sysfs_state);
+ 		return len;
+ 	}
+@@ -4511,8 +4513,6 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 	rv = mddev_lock(mddev);
+-	if (mddev->hold_active == UNTIL_IOCTL)
+-		mddev->hold_active = 0;
+ 	if (!rv) {
+ 		rv = entry->store(mddev, page, length);
+ 		mddev_unlock(mddev);
 
- Documentation/md.txt      |   22 ++
- drivers/md/md.c           |  132 ++++++++++---
- drivers/md/md.h           |   82 +++++---
- drivers/md/multipath.c    |    7 -
- drivers/md/raid1.c        |    7 -
- drivers/md/raid10.c       |    7 -
- drivers/md/raid5.c        |  462 +++++++++++++++++++++++++++++++++++----------
- drivers/md/raid5.h        |   98 +++++-----
- include/linux/raid/md_p.h |    7 -
- 9 files changed, 599 insertions(+), 225 deletions(-)
-
--- 
-Signature
 
