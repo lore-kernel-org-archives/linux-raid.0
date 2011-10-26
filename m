@@ -1,52 +1,47 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Question about mdadm commit d6508f0cfb60edf07b36f1532eae4d9cddf7178b
- "be more careful about add attempts"
-Date: Wed, 26 Oct 2011 19:02:37 +0200
-Message-ID: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@arcor.de>
+Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Wed, 26 Oct 2011 19:27:20 +0200
+Message-ID: <20111026172720.GA2819@lazy.lzy>
+References: <20111026014240.21110.28487.stgit@notabene.brown>
+ <j88a5v$cnd$1@dough.gmane.org>
+ <4EA7CC82.7000000@anonymous.org.uk>
+ <1319637473.16865.19.camel@hermosa.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1319637473.16865.19.camel@hermosa.site>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Peter W. Morreale" <morreale@sgi.com>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Greetings everybody,
-I have a question about the following code in Manage.c:Manage_subdevs()
+On Wed, Oct 26, 2011 at 07:57:53AM -0600, Peter W. Morreale wrote:
+> On Wed, 2011-10-26 at 10:01 +0100, John Robinson wrote: 
+> > On 26/10/2011 07:38, David Brown wrote:
+> > > On 26/10/2011 03:43, NeilBrown wrote:
+> > >> The following series - on top of my for-linus branch which should
+> > >> appear in
+> > >> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6. This is almost
+> > >> certainly the most requested feature over the last few years.
+> > >
+> > > Fantastic news - well done, and thanks for all your work (and to the
+> > > other md developers too, of course).
+> > 
+> > Seconded! This is doubleplusgood!
+> 
+> +1.  Thank you Neil and everyone else.
+> 
+> Will be testing shortly....
 
-disc.number = mdi.disk.number;
-if (ioctl(fd, GET_DISK_INFO, &disc) != 0
-    || disc.major != 0 || disc.minor != 0
-    || !enough_fd(fd))
-    goto skip_re_add;
++1, me too!!!
 
-I do not underatand why the checks: disc.major != 0 || disc.minor != 0
-are required. This basically means that the kernel already has an
-rdev->desc_nr equal to disc.number. But why fail the re-add procedure?
+This is really great news!
 
-Let's say that enough_fd() returns true, and we go ahead an issue
-ioctl(ADD_NEW_DISK). In this case, according to the kernel code in
-add_new_disk(), it will not even look at info->number. It will
-initialize rdev->desc_nr to -1, and will allocate a free desc_nr for
-the rdev later.
+Thanks Neil,
 
-Doing this with mdadm 3.1.4, where this check is not present, actually
-succeeds. I understand that this code was added for cases when
-enough_fd() returns false, which sounds perfectly fine to protect
-from.
+bye,
 
-I was thinking that this code should actually check something like:
-if (ioctl(fd, GET_DISK_INFO, &disc) != 0
-    || disk.raid_disk != mdi.disk.raid_disk
-    || !enough_fd(fd))
-    goto skip_re_add;
+-- 
 
-That is to check that the slot that was being occupied by the drive we
-are trying to add, is already occupied by a different drive (need also
-to cover cases of raid_disk <0, raid_disk >= raid_disks etc...) and
-not the desc_nr, which does not have any persistent meaning.
-
-Perhaps there are some compatibility issues with old kernels? Or
-special considerations for ... containers? non-persistent arrays?
-
-Thanks!
-Alex.
+piergiorgio
