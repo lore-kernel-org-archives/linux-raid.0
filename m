@@ -1,11 +1,10 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 16/16] md/raid5: Mark device replaceable when we see a
- write error.
-Date: Wed, 26 Oct 2011 12:43:02 +1100
-Message-ID: <20111026014302.21110.22612.stgit@notabene.brown>
+From: David Brown <david@westcontrol.com>
+Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Wed, 26 Oct 2011 08:38:00 +0200
+Message-ID: <j88a5v$cnd$1@dough.gmane.org>
 References: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20111026014240.21110.28487.stgit@notabene.brown>
@@ -13,31 +12,25 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Now that Replaceable drives are replaced cleanly, mark a drive
-as replaceable when we see a write error.  It might get failed soon so
-the Replaceable flag is irrelevant, but if the write error is recorded
-in the bad block log, we still want to activate any spare that might
-be available.
+On 26/10/2011 03:43, NeilBrown wrote:
+> The following series - on top of my for-linus branch which should appear in
+> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6.  This is almost
+> certainly the most requested feature over the last few years.
 
-Signed-off-by:  NeilBrown <neilb@suse.de>
----
+Fantastic news - well done, and thanks for all your work (and to the 
+other md developers too, of course).
 
- drivers/md/raid5.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+> I hope to submit this together with support for RAID10 (and maybe some
+> minimal support for RAID1) for Linux-3.3. By the time it comes out
+> mdadm-3.3 should exist will full support for hot-replace.
+>
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3f55bef..0ec48d0 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1782,6 +1782,9 @@ static void raid5_end_write_request(struct bio *bi, int error)
- 		if (!uptodate) {
- 			set_bit(WriteErrorSeen, &rdev->flags);
- 			set_bit(R5_WriteError, &sh->dev[i].flags);
-+			if (!test_and_set_bit(Replaceable, &rdev->flags))
-+				set_bit(MD_RECOVERY_NEEDED,
-+					&rdev->mddev->recovery);
- 		} else if (is_badblock(rdev, sh->sector,
- 				       STRIPE_SECTORS,
- 				       &first_bad, &bad_sectors))
+Hot-replace for RAID1 is surely just a normal "add", a resync, a "fail", 
+and a "remove"?  So support here should be mainly about the consistency, 
+such as supporting the same "replaceable" tag.  RAID10, I imagine, would 
+be more complicated.
 
+mvh.,
+
+David
 
