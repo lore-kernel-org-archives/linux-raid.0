@@ -1,30 +1,34 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Wed, 26 Oct 2011 10:01:54 +0100
-Message-ID: <4EA7CC82.7000000@anonymous.org.uk>
-References: <20111026014240.21110.28487.stgit@notabene.brown> <j88a5v$cnd$1@dough.gmane.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] GCC compile fix: remove calculation of unused variable
+ 'reservation'
+Date: Wed, 26 Oct 2011 14:51:36 +0200
+Message-ID: <4EA80258.70302@redhat.com>
+References: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j88a5v$cnd$1@dough.gmane.org>
+In-Reply-To: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/10/2011 07:38, David Brown wrote:
-> On 26/10/2011 03:43, NeilBrown wrote:
->> The following series - on top of my for-linus branch which should
->> appear in
->> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6. This is almost
->> certainly the most requested feature over the last few years.
->
-> Fantastic news - well done, and thanks for all your work (and to the
-> other md developers too, of course).
+On 10/06/11 16:43, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> gcc 4.6.1 doesn't like calculating a variable that then isn't
+> used. Remove it.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> ---
+>  super-intel.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
 
-Seconded! This is doubleplusgood!
+Neil,
 
-Cheers,
+Any chance you could reply this one? It still seems to be an issue with
+the latest git tree.
 
-John.
-
+Thanks,
+Jes
