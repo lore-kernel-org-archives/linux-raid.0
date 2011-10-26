@@ -1,144 +1,115 @@
 From: NeilBrown <neilb@suse.de>
-Subject: PULL REQUEST md updates for 3.2
-Date: Wed, 26 Oct 2011 11:00:14 +1100
-Message-ID: <20111026110014.0a04aae8@notabene.brown>
+Subject: [md PATCH 00/16] hot-replace support for RAID4/5/6
+Date: Wed, 26 Oct 2011 12:43:00 +1100
+Message-ID: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/xFmqhZ9Q0GHjWr2BU.so6a+"; protocol="application/pgp-signature"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/xFmqhZ9Q0GHjWr2BU.so6a+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+The following series - on top of my for-linus branch which should appear in
+3.2-rc1 eventually - implements hot-replace for RAID4/5/6.  This is almost
+certainly the most requested feature over the last few years.
+The whole series can be pulled from my md-devel branch:
+   git://neil.brown.name/md md-devel
+(please don't do a full clone, it is not a very fast link).
 
+There is currently no mdadm support, but you can test it out and
+experiment without mdadm.
 
-Hi Linus,
- please pull following md updates for 3.2
- Most of them are just code cleanups and minor bug fixes.
- There is one fix for a RAID5 bug which could lead to data corruption
- due to reading old data from a device that is marked as faulty.  It is a
- small race as the drive is normally removed from consideration very soon
- after being marked faulty.  This patch is flagged for inclusion in -stable.
- It is commit 355840e7a7e56bb.
+In order to activate hot-replace you need to mark the device as
+'replaceable'.
+This happens automatically when a write error is recorded in a
+bad-block log (if you happen to have one).
+It can be achieved manually by
+   echo replaceable > /sys/block/mdXX/md/dev-YYY/state
 
- This series conflicts with the patch
-    block: remove support for bio remapping from ->make_request
- from  Christoph Hellwig in the block tree.
- That patch changes 'make_request' functions to return void.  I have patches
- which change the types of args to some of those functions from a typedef to
- a 'struct XXX'.
- The conflict is fairly easy to resolve ("wiggle" does it perfectly), or you
- could pull my "for-next" branch (85d7a4e56fbe09c1) instead which includes
- block-3.1 and resolves the conflict.
+This makes YYY, in XX, replaceable.
 
-Thanks,
+If md notices that there is a replaceable drive and a spare it will
+attach the spare to the replaceable drive and mark it as a
+'replacement'.
+This word appears in the 'state' file and as (R) in /proc/mdstat.
+
+md will then copy data from the replaceable drive to the replacement.
+If there is a bad block on the replaceable drive, it will get the data
+from elsewhere.  This looks like a "recovery" operation.
+
+When the replacement completes the replaceable device will be marked
+as Failed and will be disconnected from the array (i.e. the 'slot'
+will be set to 'none') and the replacement drive will take up full
+possession of that slot.
+
+It is not possible to assemble an array with replacement with mdadm.
+To do this by hand:
+
+  mknod /dev/md27 b 9 27
+  < /dev/md27
+  cd /sys/block/md27/md
+  echo 1.2 > metadata_version
+  echo 8:1 > new_dev
+  echo 8:17 > new_dev
+   ...
+  echo active > array_state
+
+Replace '27' by the md number you want.  Replace 1.2 by the metadata
+version number (must be 1.x for some x).  Replace 8:1, 8:17 etc
+by the major:minor numbers of each device in the array.
+
+Yes: this is clumsy.  But they you aren't doing this on live data -
+only on test devices to experiment.
+
+You can still assemble the array without the replacement using mdadm.
+Just list all the drives except the replacement in the --assemble
+command.
+Also once the replacement operation completes you can of course stop
+and assemble the new array with old mdadm.
+
+I hope to submit this together with support for RAID10 (and maybe some
+minimal support for RAID1) for Linux-3.3. By the time it comes out
+mdadm-3.3 should exist will full support for hot-replace.
+
+Review and testing is very welcome, be please do not try it on live
+data.
+
 NeilBrown
 
 
-The following changes since commit c3b92c8787367a8bb53d57d9789b558f1295cc96:
+---
 
-  Linux 3.1 (2011-10-24 09:10:05 +0200)
+NeilBrown (16):
+      md/raid5: Mark device replaceable when we see a write error.
+      md/raid5: If there is a spare and a replaceable device, start replacement.
+      md/raid5: recognise replacements when assembling array.
+      md/raid5: handle activation of replacement device when recovery completes.
+      md/raid5:  detect and handle replacements during recovery.
+      md/raid5: writes should get directed to replacement as well as original.
+      md/raid5: allow removal for failed replacement devices.
+      md/raid5: preferentially read from replacement device if possible.
+      md/raid5: remove redundant bio initialisations.
+      md/raid5: raid5.h cleanup
+      md/raid5: allow each slot to have an extra replacement device
+      md: create externally visible flags for supporting hot-replace.
+      md: change hot_remove_disk to take an rdev rather than a number.
+      md: remove test for duplicate device when setting slot number.
+      md: take after reference to mddev during sysfs access.
+      md: refine interpretation of "hold_active == UNTIL_IOCTL".
 
-are available in the git repository at:
-  git://neil.brown.name/md for-linus
 
-  last commit being e5a0ad6c13bc9c02f6e8cdc6242c1c30e5b98a7a
+ Documentation/md.txt      |   22 ++
+ drivers/md/md.c           |  132 ++++++++++---
+ drivers/md/md.h           |   82 +++++---
+ drivers/md/multipath.c    |    7 -
+ drivers/md/raid1.c        |    7 -
+ drivers/md/raid10.c       |    7 -
+ drivers/md/raid5.c        |  462 +++++++++++++++++++++++++++++++++++----------
+ drivers/md/raid5.h        |   98 +++++-----
+ include/linux/raid/md_p.h |    7 -
+ 9 files changed, 599 insertions(+), 225 deletions(-)
 
-Andrei Warkentin (1):
-      MD: Allow restarting an interrupted incremental recovery.
+-- 
+Signature
 
-Chris Dunlop (1):
-      md.c: trivial comment fix
-
-Dan McGee (1):
-      lib/raid6: Fix filename emitted in generated code
-
-Daniel P. Berrange (1):
-      md: don't delay reboot by 1 second if no MD devices exist
-
-Namhyung Kim (1):
-      md/raid1: factor out common bio handling code
-
-NeilBrown (28):
-      md/bitmap: rename and tidy up BITMAP_PAGE_CLEAN
-      md/bitmap: improve handling of 'allclean'.
-      md/raid1:  add documentation to r1_private_data_s data structure.
-      md/raid5: remove pointless NULL test.
-      md/raid1/ avoid bio search in end_sync_read()
-      md/raid5: convert to macros into inline functions.
-      md: remove some old DEBUGging code.
-      md: remove PRINTK and dprintk debugging and use pr_debug
-      md/raid0: convert some printks to pr_debug.
-      md: removing typedefs:  mdk_rdev_t -> struct md_rdev
-      md: remove typedefs: mddev_t -> struct mddev
-      md: remove typedefs: mdk_thread_t -> struct md_thread
-      md: remove typedefs: r10bio_t -> struct r10bio and r1bio_t -> struct =
-r1bio
-      md: remove typedefs: mirror_info_t -> struct mirror_info
-      md/linear: remove typedefs: dev_info_t -> struct dev_info
-      md/faulty: remove typedef: conf_t -> struct faulty_conf
-      md/linear: typedef removal: linear_conf_t -> struct linear_conf
-      md/multipath: typedef removal: multipath_conf_t -> struct mpconf
-      md/raid0: typedef removal: raid0_conf_t -> struct r0conf
-      md/raid10: typedef removal: conf_t -> struct r10conf
-      md/raid1: typedef removal: conf_t -> struct r1conf
-      md/raid5: typedef removal: raid5_conf_t -> struct r5conf
-      md/bitmap remove fault injection options.
-      md: rename "mdk_personality" to "md_personality"
-      md: add proper write-congestion reporting to RAID1 and RAID10.
-      md: clear In_sync bit on devices added to an active array.
-      md/raid5: fix bug that could result in reads from a failed device.
-      md: Fix some bugs in recovery_disabled handling.
-
-Wang Sheng-Hui (1):
-      trival: md_k.h should be md.h in the beginning comment of file md.h
-
- drivers/md/bitmap.c    |  188 ++++++---------
- drivers/md/bitmap.h    |   12 +-
- drivers/md/dm-raid.c   |   28 +-
- drivers/md/faulty.c    |   38 ++--
- drivers/md/linear.c    |   46 ++--
- drivers/md/linear.h    |   12 +-
- drivers/md/md.c        |  631 ++++++++++++++++++++++++--------------------=
-----
- drivers/md/md.h        |  151 ++++++------
- drivers/md/multipath.c |   64 +++---
- drivers/md/multipath.h |   10 +-
- drivers/md/raid0.c     |  191 +++++++--------
- drivers/md/raid0.h     |   10 +-
- drivers/md/raid1.c     |  335 ++++++++++++++------------
- drivers/md/raid1.h     |   85 ++++---
- drivers/md/raid10.c    |  280 ++++++++++++----------
- drivers/md/raid10.h    |   22 +-
- drivers/md/raid5.c     |  363 ++++++++++++----------------
- drivers/md/raid5.h     |   20 +-
- lib/raid6/int.uc       |    2 +-
- 19 files changed, 1216 insertions(+), 1272 deletions(-)
-
---Sig_/xFmqhZ9Q0GHjWr2BU.so6a+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTqdNlTnsnt1WYoG5AQI24Q/9F7xGHPDfsZ9lDXIA14q+/3bX5SgPNn0H
-WSQsNExtZQbmMbawDCK69/CKX7wxeFSNpCeHPixNMgufyaMivS8nlOwzzVnTZF9O
-oT6nukakiNHjQJ5ZBNbHhp5njqtj17i6By36TYv0veif1QFlcug320V5AQm+CmjA
-7LoXRUjysItuag28Zn6pSW2Pp0W5ney3+jOji7l8j/QuqzdjhbkTGvG/JcLITLoo
-7n1lpcMx0WUIP20C/0IoWKq0smApzAcCLPC2u7bjqgriU9uCP6+PLmkwCX3417Kc
-wXgmiG3V7gGyewYiUOGB/yxtGBrDBIcX3u6+sSh7m8+IjhHLgrPl/rhKM2+yQBAx
-cWC4hUCgTXdZBmnjgLO698LUaDBg/1x82xSqPY5ypJ+1/HboDV5DWWIpK02FLRDz
-wxSJyrBucyVbYO7OExnQYoU7JHVtdVbtaWPBvKYwl1AwmlmJupPO5mbyqwKlGmH4
-abhLPf02eCz+ddkhgahmhdQHQ7KNDLLi/4qTAygMLM8Xzi/lWxcF/XfwB3e2yevZ
-0BE2pdSDLTEP8yBAfD3p5rBd7fxu2SxrZCg42MjnM1Hvxzl7xgjTAOb/r2tRoRsl
-WB1SHRnrcuKjk01tuwyQKIPHR0YRji/yUABDOZfqSc/hWL+wrJy0PH/q1BVZ79Ma
-G6xnPPtbyBc=
-=PP42
------END PGP SIGNATURE-----
-
---Sig_/xFmqhZ9Q0GHjWr2BU.so6a+--
