@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 02/16] md: take after reference to mddev during sysfs
- access.
+Subject: [md PATCH 03/16] md: remove test for duplicate device when setting
+ slot number.
 Date: Wed, 26 Oct 2011 12:43:00 +1100
-Message-ID: <20111026014300.21110.60661.stgit@notabene.brown>
+Message-ID: <20111026014300.21110.97985.stgit@notabene.brown>
 References: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,92 +13,47 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When we are accessing an mddev via sysfs we know that the
-mddev cannot disappear because it has an embedded kobj which
-is refcounted by sysfs.
-And we also take the mddev_lock.
-However this is not enough.
+When setting the slot number on a device in an active array we
+currently check that the number is not already in use.
+We then call into the personality's hot_add_disk function
+which performs the same test and returns the same error.
 
-The final mddev_put could have been called and the
-mddev_delayed_delete is waiting for sysfs to let go so it can destroy
-the kobj and mddev.
-In this state there are a lot of changes that should not be attempted.
+Thus the common test is not needed.
 
-To to guard against this we:
- - initialise mddev->all_mddevs in on last put so the state can be
-   easily detected.
- - in md_attr_show and md_attr_store, check ->all_mddevs under
-   all_mddevs_lock and mddev_get the mddev if it still appears to
-   be active.
+As we will shortly be changing some personalities to allow duplicates
+in some cases (to support hot-replace), the common test will become
+inconvenient.
 
-This means that if we get to sysfs as the mddev is being deleted we
-will get -EBUSY.
-
-rdev_attr_store and rdev_attr_show are similar but already have
-sufficient protection.  They check that rdev->mddev still points to
-mddev after taking mddev_lock.  As this is cleared  before delayed
-removal which can only be requested under the mddev_lock, this
-ensure the rdev and mddev are still alive.
+So remove the common test.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c |   19 ++++++++++++++++++-
- 1 files changed, 18 insertions(+), 1 deletions(-)
+ drivers/md/md.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index fd68243..5905526 100644
+index 5905526..5164856 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -573,7 +573,7 @@ static void mddev_put(struct mddev *mddev)
- 	    mddev->ctime == 0 && !mddev->hold_active) {
- 		/* Array is not configured at all, and not held active,
- 		 * so destroy it */
--		list_del(&mddev->all_mddevs);
-+		list_del_init(&mddev->all_mddevs);
- 		bs = mddev->bio_set;
- 		mddev->bio_set = NULL;
- 		if (mddev->gendisk) {
-@@ -4492,11 +4492,20 @@ md_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
+@@ -2699,7 +2699,6 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 		set_bit(MD_RECOVERY_NEEDED, &rdev->mddev->recovery);
+ 		md_wakeup_thread(rdev->mddev->thread);
+ 	} else if (rdev->mddev->pers) {
+-		struct md_rdev *rdev2;
+ 		/* Activating a spare .. or possibly reactivating
+ 		 * if we ever get bitmaps working here.
+ 		 */
+@@ -2713,10 +2712,6 @@ slot_store(struct md_rdev *rdev, const char *buf, size_t len)
+ 		if (rdev->mddev->pers->hot_add_disk == NULL)
+ 			return -EINVAL;
  
- 	if (!entry->show)
- 		return -EIO;
-+	spin_lock(&all_mddevs_lock);
-+	if (list_empty(&mddev->all_mddevs)) {
-+		spin_unlock(&all_mddevs_lock);
-+		return -EBUSY;
-+	}
-+	mddev_get(mddev);
-+	spin_unlock(&all_mddevs_lock);
-+
- 	rv = mddev_lock(mddev);
- 	if (!rv) {
- 		rv = entry->show(mddev, page);
- 		mddev_unlock(mddev);
- 	}
-+	mddev_put(mddev);
- 	return rv;
- }
- 
-@@ -4512,11 +4521,19 @@ md_attr_store(struct kobject *kobj, struct attribute *attr,
- 		return -EIO;
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
-+	spin_lock(&all_mddevs_lock);
-+	if (list_empty(&mddev->all_mddevs)) {
-+		spin_unlock(&all_mddevs_lock);
-+		return -EBUSY;
-+	}
-+	mddev_get(mddev);
-+	spin_unlock(&all_mddevs_lock);
- 	rv = mddev_lock(mddev);
- 	if (!rv) {
- 		rv = entry->store(mddev, page, length);
- 		mddev_unlock(mddev);
- 	}
-+	mddev_put(mddev);
- 	return rv;
- }
- 
+-		list_for_each_entry(rdev2, &rdev->mddev->disks, same_set)
+-			if (rdev2->raid_disk == slot)
+-				return -EEXIST;
+-
+ 		if (slot >= rdev->mddev->raid_disks &&
+ 		    slot >= rdev->mddev->raid_disks + rdev->mddev->delta_disks)
+ 			return -ENOSPC;
 
 
