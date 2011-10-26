@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 12/16] md/raid5: detect and handle replacements during
- recovery.
+Subject: [md PATCH 13/16] md/raid5: handle activation of replacement device
+ when recovery completes.
 Date: Wed, 26 Oct 2011 12:43:01 +1100
-Message-ID: <20111026014301.21110.42894.stgit@notabene.brown>
+Message-ID: <20111026014301.21110.35196.stgit@notabene.brown>
 References: <20111026014240.21110.28487.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,326 +13,157 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-During recovery we want to write to the replacement but not
-the original.  So we have two new flags
- - R5_NeedReplace if this stripe has a replacement that needs to
-   be written at some state
- - R5_WantReplace if NeedReplace, and the data is available, and
-   a 'sync' has been requested on this stripe.
+When recovery completes - as reported by a call to ->spare_active,
+we clear In_sync on the original and set it on the replacement.
 
-We also distinguish between 'sync and replace' which need to read
-all other devices, and 'replace' which only needs to read the
-devices being replaced.
+Then when the original gets removed we move the replacement from
+'replacement' to 'rdev'.
+
+This could race with other code that is looking at these pointers,
+so we use memory barriers and careful ordering to ensure that
+a reader might see one device twice, but never no devices.
+Then the readers guard against using both devices, which could
+only happen when writing.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |  120 +++++++++++++++++++++++++++++++++++++++-------------
- drivers/md/raid5.h |   13 +++++-
- 2 files changed, 103 insertions(+), 30 deletions(-)
+ drivers/md/raid5.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 61 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 4ba4b8c..08f388c 100644
+index 08f388c..6c22f09 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -491,6 +491,7 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 
- 	for (i = disks; i--; ) {
- 		int rw;
-+		int replace_only = 0;
- 		struct bio *bi, *rbi;
- 		struct md_rdev *rdev, *rrdev = NULL;
- 		if (test_and_clear_bit(R5_Wantwrite, &sh->dev[i].flags)) {
-@@ -500,7 +501,10 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 				rw = WRITE;
- 		} else if (test_and_clear_bit(R5_Wantread, &sh->dev[i].flags))
- 			rw = READ;
--		else
-+		else if (test_and_clear_bit(R5_WantReplace, &sh->dev[i].flags)) {
-+			rw = WRITE;
-+			replace_only = 1;
-+		} else
- 			continue;
- 
- 		bi = &sh->dev[i].req;
-@@ -516,10 +520,15 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+@@ -519,13 +519,21 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			bi->bi_end_io = raid5_end_read_request;
  
  		rcu_read_lock();
- 		rdev = rcu_dereference(conf->disks[i].rdev);
--		if (rw & WRITE)
--			rrdev = rcu_dereference(conf->disks[i].replacement);
--		else if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
--			rdev = rcu_dereference(conf->disks[i].replacement);
-+		rrdev = rcu_dereference(conf->disks[i].replacement);
-+		if (rw & WRITE) {
-+			if (replace_only)
-+				rdev = NULL;
-+		} else {
-+			if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
-+				rdev = rrdev;
+-		rdev = rcu_dereference(conf->disks[i].rdev);
+ 		rrdev = rcu_dereference(conf->disks[i].replacement);
++		smp_mb(); /* Ensure that if rrdev is NULL, rdev won't be */
++		rdev = rcu_dereference(conf->disks[i].rdev);
++		if (!rdev) {
++			rdev = rrdev;
 +			rrdev = NULL;
 +		}
- 
- 		if (rdev && test_bit(Faulty, &rdev->flags))
- 			rdev = NULL;
-@@ -563,7 +572,8 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 		if (rw & WRITE) {
+ 			if (replace_only)
+ 				rdev = NULL;
++			if (rdev == rrdev)
++				/* We raced and saw duplicates */
++				rrdev = NULL;
+ 		} else {
+-			if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
++			if (test_bit(R5_ReadRepl, &sh->dev[i].flags) && rrdev)
+ 				rdev = rrdev;
+ 			rrdev = NULL;
  		}
+@@ -1627,7 +1635,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 	int disks = sh->disks, i;
+ 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
+ 	char b[BDEVNAME_SIZE];
+-	struct md_rdev *rdev;
++	struct md_rdev *rdev = NULL;
  
- 		if (rdev) {
--			if (s->syncing || s->expanding || s->expanded)
-+			if (s->syncing || s->expanding || s->expanded
-+			    || s->replacing)
- 				md_sync_acct(rdev->bdev, STRIPE_SECTORS);
  
- 			set_bit(STRIPE_IO_STARTED, &sh->state);
-@@ -585,7 +595,8 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
- 			generic_make_request(bi);
- 		}
- 		if (rrdev) {
--			if (s->syncing || s->expanding || s->expanded)
-+			if (s->syncing || s->expanding || s->expanded
-+			    || s->replacing)
- 				md_sync_acct(rrdev->bdev, STRIPE_SECTORS);
- 
- 			set_bit(STRIPE_IO_STARTED, &sh->state);
-@@ -2431,8 +2442,9 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	md_done_sync(conf->mddev, STRIPE_SECTORS, 0);
- 	clear_bit(STRIPE_SYNCING, &sh->state);
- 	s->syncing = 0;
-+	s->replacing = 0;
- 	/* There is nothing more to do for sync/check/repair.
--	 * For recover we need to record a bad block on all
-+	 * For recover/replace we need to record a bad block on all
- 	 * non-sync devices, or abort the recovery
- 	 */
- 	if (!test_bit(MD_RECOVERY_RECOVER, &conf->mddev->recovery))
-@@ -2442,12 +2454,18 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	 */
- 	for (i = 0; i < conf->raid_disks; i++) {
- 		struct md_rdev *rdev = conf->disks[i].rdev;
--		if (!rdev
--		    || test_bit(Faulty, &rdev->flags)
--		    || test_bit(In_sync, &rdev->flags))
--			continue;
--		if (!rdev_set_badblocks(rdev, sh->sector,
--					STRIPE_SECTORS, 0))
-+		if (rdev
-+		    && !test_bit(Faulty, &rdev->flags)
-+		    && !test_bit(In_sync, &rdev->flags)
-+		    && !rdev_set_badblocks(rdev, sh->sector,
-+					   STRIPE_SECTORS, 0))
-+			abort = 1;
-+		rdev = conf->disks[i].replacement;
-+		if (rdev
-+		    && !test_bit(Faulty, &rdev->flags)
-+		    && !test_bit(In_sync, &rdev->flags)
-+		    && !rdev_set_badblocks(rdev, sh->sector,
-+					   STRIPE_SECTORS, 0))
- 			abort = 1;
+ 	for (i=0 ; i<disks; i++)
+@@ -1642,8 +1650,13 @@ static void raid5_end_read_request(struct bio * bi, int error)
+ 		return;
  	}
- 	if (abort) {
-@@ -2456,6 +2474,21 @@ handle_failed_sync(struct r5conf *conf, struct stripe_head *sh,
- 	}
- }
- 
-+static int want_replace(struct stripe_head *sh, int disk_idx)
-+{
-+	struct md_rdev *rdev;
-+	int rv = 0;
-+	/* Doing recovery so rcu locking not required */
-+	rdev = sh->raid_conf->disks[disk_idx].replacement;
-+	if (rdev &&
-+	    !test_bit(Faulty, &rdev->flags) &&
-+	    !test_bit(In_sync, &rdev->flags) &&
-+	    rdev->recovery_offset <= sh->sector)
-+		rv = 1;
-+
-+	return rv;
-+}
-+
- /* fetch_block - checks the given member device to see if its data needs
-  * to be read or computed to satisfy a request.
-  *
-@@ -2475,6 +2508,7 @@ static int fetch_block(struct stripe_head *sh, struct stripe_head_state *s,
- 	    (dev->toread ||
- 	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
- 	     s->syncing || s->expanding ||
-+	     (s->replacing && want_replace(sh, disk_idx)) ||
- 	     (s->failed >= 1 && fdev[0]->toread) ||
- 	     (s->failed >= 2 && fdev[1]->toread) ||
- 	     (sh->raid_conf->level <= 5 && s->failed && fdev[0]->towrite &&
-@@ -3028,22 +3062,18 @@ static void handle_stripe_expansion(struct r5conf *conf, struct stripe_head *sh)
- 	}
- }
- 
--
- /*
-  * handle_stripe - do things to a stripe.
-  *
-- * We lock the stripe and then examine the state of various bits
-- * to see what needs to be done.
-+ * We lock the stripe by setting STRIPE_ACTIVE and then examine the
-+ * state of various bits to see what needs to be done.
-  * Possible results:
-- *    return some read request which now have data
-- *    return some write requests which are safely on disc
-+ *    return some read requests which now have data
-+ *    return some write requests which are safely on storage
-  *    schedule a read on some buffers
-  *    schedule a write of some buffers
-  *    return confirmation of parity correctness
-  *
-- * buffers are taken off read_list or write_list, and bh_cache buffers
-- * get BH_Lock set before the stripe lock is released.
-- *
-  */
- 
- static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
-@@ -3052,10 +3082,10 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 	int disks = sh->disks;
- 	struct r5dev *dev;
- 	int i;
-+	int do_recovery = 0;
- 
- 	memset(s, 0, sizeof(*s));
- 
--	s->syncing = test_bit(STRIPE_SYNCING, &sh->state);
- 	s->expanding = test_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	s->expanded = test_bit(STRIPE_EXPAND_READY, &sh->state);
- 	s->failed_num[0] = -1;
-@@ -3073,7 +3103,7 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 		dev = &sh->dev[i];
- 
- 		pr_debug("check %d: state 0x%lx read %p write %p written %p\n",
--			i, dev->flags, dev->toread, dev->towrite, dev->written);
-+			 i, dev->flags, dev->toread, dev->towrite, dev->written);
- 		/* maybe we can reply to a read
- 		 *
- 		 * new wantfill requests are only permitted while
-@@ -3114,6 +3144,8 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 				 &first_bad, &bad_sectors))
- 			set_bit(R5_ReadRepl, &dev->flags);
- 		else {
-+			if (rdev)
-+				set_bit(R5_NeedReplace, &dev->flags);
- 			rdev = rcu_dereference(conf->disks[i].rdev);
- 			clear_bit(R5_ReadRepl, &dev->flags);
- 		}
-@@ -3193,9 +3225,25 @@ static void analyse_stripe(struct stripe_head *sh, struct stripe_head_state *s)
- 			if (s->failed < 2)
- 				s->failed_num[s->failed] = i;
- 			s->failed++;
-+			if (rdev && !test_bit(Faulty, &rdev->flags))
-+				do_recovery = 1;
- 		}
- 	}
- 	spin_unlock_irq(&conf->device_lock);
-+	if (test_bit(STRIPE_SYNCING, &sh->state)) {
-+		/* If there is a failed device being replaced,
-+		 *     we must be recovering.
-+		 * else if we are after recovery_cp, we must be syncing
-+		 * else we can only be replacing
-+		 * sync and recovery both need to read all devices, and so
-+		 * use the same flag.
+ 	if (test_bit(R5_ReadRepl, &sh->dev[i].flags))
++		/* If replacement finished while this request was outstanding,
++		 * 'replacement' might be NULL already.
++		 * In that case it moved down to 'rdev'.
++		 * rdev is not removed until all requests are finished.
 +		 */
-+		if (do_recovery ||
-+		    sh->sector >= conf->mddev->recovery_cp)
-+			s->syncing = 1;
-+		else
-+			s->replacing = 1;
-+	}
- 	rcu_read_unlock();
- }
+ 		rdev = conf->disks[i].replacement;
+-	else
++	if (!rdev)
+ 		rdev = conf->disks[i].rdev;
  
-@@ -3237,7 +3285,7 @@ static void handle_stripe(struct stripe_head *sh)
- 
- 	if (unlikely(s.blocked_rdev)) {
- 		if (s.syncing || s.expanding || s.expanded ||
--		    s.to_write || s.written) {
-+		    s.replacing || s.to_write || s.written) {
- 			set_bit(STRIPE_HANDLE, &sh->state);
- 			goto finish;
+ 	if (uptodate) {
+@@ -1740,7 +1753,13 @@ static void raid5_end_write_request(struct bio *bi, int error)
  		}
-@@ -3260,7 +3308,7 @@ static void handle_stripe(struct stripe_head *sh)
- 	 */
- 	if (s.failed > conf->max_degraded && s.to_read+s.to_write+s.written)
- 		handle_failed_stripe(conf, sh, &s, disks, &s.return_bi);
--	if (s.failed > conf->max_degraded && s.syncing)
-+	if (s.failed > conf->max_degraded && s.syncing + s.replacing)
- 		handle_failed_sync(conf, sh, &s);
- 
- 	/*
-@@ -3290,7 +3338,9 @@ static void handle_stripe(struct stripe_head *sh)
- 	 */
- 	if (s.to_read || s.non_overwrite
- 	    || (conf->level == 6 && s.to_write && s.failed)
--	    || (s.syncing && (s.uptodate + s.compute < disks)) || s.expanding)
-+	    || (s.syncing && (s.uptodate + s.compute < disks))
-+	    || s.replacing
-+	    || s.expanding)
- 		handle_stripe_fill(sh, &s, disks);
- 
- 	/* Now we check to see if any write operations have recently
-@@ -3352,7 +3402,20 @@ static void handle_stripe(struct stripe_head *sh)
- 			handle_parity_checks5(conf, sh, &s, disks);
+ 		if (bi == &sh->dev[i].rreq) {
+ 			rdev = conf->disks[i].replacement;
+-			replacement = 1;
++			if (rdev)
++				replacement = 1;
++			else
++				/* rdev was removed and 'replacement'
++				 * replaced it.
++				 */
++				rdev = conf->disks[i].rdev;
+ 			break;
+ 		}
  	}
+@@ -3515,6 +3534,9 @@ finish:
+ 			}
+ 			if (test_and_clear_bit(R5_MadeGoodRepl, &dev->flags)) {
+ 				rdev = conf->disks[i].replacement;
++				if (!rdev)
++					/* rdev have been moved down */
++					rdev = conf->disks[i].rdev;
+ 				rdev_clear_badblocks(rdev, sh->sector,
+ 						     STRIPE_SECTORS);
+ 				rdev_dec_pending(rdev, conf->mddev);
+@@ -5183,7 +5205,25 @@ static int raid5_spare_active(struct mddev *mddev)
  
--	if (s.syncing && s.locked == 0 && test_bit(STRIPE_INSYNC, &sh->state)) {
-+	if (s.replacing && s.locked == 0
-+	    && !test_bit(STRIPE_INSYNC, &sh->state)) {
-+		/* Write out to replacement devices where possible */
-+		for (i = 0; i < conf->raid_disks; i++)
-+			if (test_bit(R5_UPTODATE, &sh->dev[i].flags) &&
-+			    test_bit(R5_NeedReplace, &sh->dev[i].flags)) {
-+				set_bit(R5_WantReplace, &sh->dev[i].flags);
-+				set_bit(R5_LOCKED, &sh->dev[i].flags);
-+				s.locked++;
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		tmp = conf->disks + i;
+-		if (tmp->rdev
++		if (tmp->replacement
++		    && tmp->replacement->recovery_offset == MaxSector
++		    && !test_bit(Faulty, &tmp->replacement->flags)
++		    && !test_and_set_bit(In_sync, &tmp->replacement->flags)) {
++			/* Replacement has just become active. */
++			if (!tmp->rdev
++			    || !test_and_clear_bit(In_sync, &tmp->rdev->flags))
++				count++;
++			if (tmp->rdev) {
++				/* Replaced device not technically faulty,
++				 * but we need to be sure it gets removed
++				 * and never re-added.
++				 */
++				set_bit(Faulty, &tmp->rdev->flags);
++				sysfs_notify_dirent_safe(
++					tmp->rdev->sysfs_state);
 +			}
-+		set_bit(STRIPE_INSYNC, &sh->state);
-+	}
-+	if ((s.syncing || s.replacing) && s.locked == 0 &&
-+	    test_bit(STRIPE_INSYNC, &sh->state)) {
- 		md_done_sync(conf->mddev, STRIPE_SECTORS, 1);
- 		clear_bit(STRIPE_SYNCING, &sh->state);
- 	}
-@@ -4243,7 +4306,6 @@ static inline sector_t sync_request(struct mddev *mddev, sector_t sector_nr, int
- 		return sync_blocks * STRIPE_SECTORS; /* keep things rounded to whole stripes */
- 	}
++			sysfs_notify_dirent_safe(tmp->replacement->sysfs_state);
++		} else if (tmp->rdev
+ 		    && tmp->rdev->recovery_offset == MaxSector
+ 		    && !test_bit(Faulty, &tmp->rdev->flags)
+ 		    && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+@@ -5229,6 +5269,7 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	if (!test_bit(Faulty, &rdev->flags) &&
+ 	    mddev->recovery_disabled != conf->recovery_disabled &&
+ 	    !has_failed(conf) &&
++	    (!p->replacement || p->replacement == rdev) &&
+ 	    number < conf->raid_disks) {
+ 		err = -EBUSY;
+ 		goto abort;
+@@ -5239,7 +5280,20 @@ static int raid5_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		/* lost the race, try later */
+ 		err = -EBUSY;
+ 		*rdevp = rdev;
+-	}
++	} else if (p->replacement) {
++		/* We must have just cleared 'rdev' */
++		p->rdev = p->replacement;
++		clear_bit(Replacement, &p->replacement->flags);
++		smp_mb(); /* Make sure other CPUs may see both as identical
++			   * but will never see neither - if they are careful
++			   */
++		p->replacement = NULL;
++		clear_bit(Replaceable, &rdev->flags);
++	} else
++		/* We might have just removed the Replacement as faulty-
++		 * clear the bit just in case
++		 */
++		clear_bit(Replaceable, &rdev->flags);
+ abort:
  
--
- 	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
- 
- 	sh = get_active_stripe(conf, sector_nr, 0, 1, 0);
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index f6faaa1..8d8e139 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -242,7 +242,13 @@ struct stripe_head {
-  *     for handle_stripe.
-  */
- struct stripe_head_state {
--	int syncing, expanding, expanded;
-+	/* 'syncing' means that we need to read all devices, either
-+	 * to check/correct parity, or to reconstruct a missing device.
-+	 * 'replacing' means we are replacing one or more drives and
-+	 * the source is valid at this point so we don't need to
-+	 * read all devices, just the replacement targets.
-+	 */
-+	int syncing, expanding, expanded, replacing;
- 	int locked, uptodate, to_read, to_write, failed, written;
- 	int to_fill, compute, req_compute, non_overwrite;
- 	int failed_num[2];
-@@ -284,6 +290,11 @@ enum r5dev_flags {
- 	R5_ReadRepl,	/* Will/did read from replacement rather than orig */
- 	R5_MadeGoodRepl,/* A bad block on the replacement device has been
- 			 * fixed by writing to it */
-+	R5_NeedReplace,	/* This device has a replacement which is not
-+			 * up-to-date at this stripe. */
-+	R5_WantReplace, /* We need to update the replacement, we have read
-+			 * data in, and now is a good time to write it out.
-+			 */
- };
- 
- /*
+ 	print_raid5_conf(conf);
 
 
