@@ -1,104 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Question about mdadm commit
- d6508f0cfb60edf07b36f1532eae4d9cddf7178b "be more careful about add
- attempts"
-Date: Thu, 27 Oct 2011 08:51:25 +1100
-Message-ID: <20111027085125.747691a9@notabene.brown>
-References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: with raid-6 any writes access all disks
+Date: Thu, 27 Oct 2011 00:30:23 +0200
+Message-ID: <4EA889FF.90002@zytor.com>
+References: <CAGtzr3c65BXDfWZq4ejKwCZv7hPZmdCpvQP17RgFS-Vrn2YF5Q@mail.gmail.com> <20111027082331.01e1fc7a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/rasso5/OV1KtieC+CNXnMuL"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+In-Reply-To: <20111027082331.01e1fc7a@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Chris Pearson <kermit4@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/rasso5/OV1KtieC+CNXnMuL
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On Wed, 26 Oct 2011 19:02:37 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
-wrote:
+On 10/26/2011 11:23 PM, NeilBrown wrote:
+> On Wed, 26 Oct 2011 16:01:19 -0500 Chris Pearson
+> <kermit4@gmail.com> wrote:
+> 
+>> In 2.6.39.1, any writes to a raid-6 array cause all disks to be 
+>> accessed.  Though I don't understand the math behind raid-6, I
+>> have tested on LSI cards that it is possible to only access 3
+>> disks.
+> 
+> You are correct.  md/raid6 doesn't do the required maths.
+> 
+> i.e.  it always adds all data together to calculate the parity. It
+> never subtracts old data from the parity, then add new data.
+> 
+> This was a decision made by the original implementer (hpa) and
+> no-one has offered code to change it.
+> 
+> (yes, I review and accept patches :-)
+> 
 
-> Greetings everybody,
-> I have a question about the following code in Manage.c:Manage_subdevs()
->=20
-> disc.number =3D mdi.disk.number;
-> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
->     || disc.major !=3D 0 || disc.minor !=3D 0
->     || !enough_fd(fd))
->     goto skip_re_add;
->=20
-> I do not underatand why the checks: disc.major !=3D 0 || disc.minor !=3D 0
-> are required. This basically means that the kernel already has an
-> rdev->desc_nr equal to disc.number. But why fail the re-add procedure?
->=20
-> Let's say that enough_fd() returns true, and we go ahead an issue
-> ioctl(ADD_NEW_DISK). In this case, according to the kernel code in
-> add_new_disk(), it will not even look at info->number. It will
-> initialize rdev->desc_nr to -1, and will allocate a free desc_nr for
-> the rdev later.
->=20
-> Doing this with mdadm 3.1.4, where this check is not present, actually
-> succeeds. I understand that this code was added for cases when
-> enough_fd() returns false, which sounds perfectly fine to protect
-> from.
->=20
-> I was thinking that this code should actually check something like:
-> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
->     || disk.raid_disk !=3D mdi.disk.raid_disk
->     || !enough_fd(fd))
->     goto skip_re_add;
->=20
-> That is to check that the slot that was being occupied by the drive we
-> are trying to add, is already occupied by a different drive (need also
-> to cover cases of raid_disk <0, raid_disk >=3D raid_disks etc...) and
-> not the desc_nr, which does not have any persistent meaning.
->=20
-> Perhaps there are some compatibility issues with old kernels? Or
-> special considerations for ... containers? non-persistent arrays?
+This was based on benchmarks at the time that indicated that
+performance suffered more than it helped.  However, since then CPUs
+have gotten much faster whereas disks haven't.  There was also the
+issue of getting something working reliably first.
 
-The point of this code is to make --re-add fail unless mdadm is certain that
-the kernel will accept the re-add, rather than turn the device into a spare.
+Getting a set of hardware acceleration routines for arbitrary GF
+multiplies (as is possible with SSSE3) might change that tradeoff
+dramatically.
 
-If a device already exists with the same disk.number, a re-add cannot
-succeed, so mdadm doesn't even try.
+	-hpa
 
-When you say in 3.1.4 it "actually succeeds" - what succeeds?  Does it re-a=
-dd
-the device to the array, or does it turn the device into a spare?
-I particularly do not want --re-add to turn a device into a spare because
-people sometimes use it in cases where it cannot work, their device gets
-turned into a spare, and they lose information that could have been used to
-reconstruct the array.
-
-That that make sense?
-
-NeilBrown
-
-
---Sig_/rasso5/OV1KtieC+CNXnMuL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iQIVAwUBTqiA3Tnsnt1WYoG5AQJipg//fp8nQKQHA1mRinvHZwXR6fpEACi+NEh1
-syk2Fc2y3xlgBp3GIsL4TNxemAxxxWzFVyJjy9ycGm2xsPo5RsfnO6i6MDMwfyvv
-vW8Uh+rrpnz095IlcLHD5RYvj7obYgVqHfIn2YHU+xLC0WDKGRlgXjRkThD8srq3
-oP3MIOh1uMgZxAEFBOKWnNESZFuovkFpWZbTnN/e1Qf+uM/z1+3wqIzYjDebGKsR
-wSj+4Hu+/ltN1xEBtJuok9X4L2Owu+uyVpgm925uKCqCULqvIWYOya/28TRGOTGY
-fvNCZOeWxFrUFH0HYTm/9NQfO7BDCBrIwfhggzQHInnw5vV0WBgPK+6Q+8utRNS1
-Kd1MuOY6myo3Hac0gAATrmwgFG9Q3EL+St4OlgDPLA66IelzAZia+v3+44PXb/oG
-ZSogEKfADy0jfT6SptQK67c7YPT0MUG583CAZVIm7dhDpw+PYP9SfWgvzhjLKu/q
-J66rPywvPt6Ely/nCPsY2xeejYf6Oz+wFXinTumylbg1fTE7cRacNAvZK3nR5f4F
-nKUwxuOKrlxJ5vgQjUGEFbRO7/BsGawTqrCyb1yCdov+H0LBV05wH8Guqd21xVFv
-gsyuB9f7jiQ+8kI1SM8zZpcG0CuTcHHwoHCYYdDmFll4cta/IN+LEot4rx1Gl5KP
-ASYE5lTsT08=
-=QaIj
+iQIcBAEBAgAGBQJOqIn1AAoJEL2gYIVJO6zkKX0QAKCNUaxXnA22+e/Xas2G1M2z
+5EXKvMxJqFeDojGkQ5H0cFW+CoU5h93EY3WaVGWz9IW9fiWnMGaIoPszYcKzw3Hr
+OkCyzytvLpeJK/sgPX3+/o2K8ZbNFWIJopdUnZivhWvPqyWFDwvquIv1Pgyj0RQc
+74nPs03m4EV1zMrCgv34/JpQatiabBBSvMXzNs1kWLbQfUHr2SLMMGML02utakMb
+w74FdBfLaZpWlXC+Lu3G6i97+Xv8LZ9+4Z5Iqj2jVf3JjriBLOT02nChuauJ1c5y
+DL6vLmPedxJ3GTKUNb4fcwLOwDW1a1TqQl4QU+kytL25Ico1uXvXgjwgmO/JssfV
+z26+NEPOeMfth7+f6tIIOKxnIYTrCvs3p5L66TJ3h7LaHg8M3f6wtq6nmXdavc5P
+rwTdYKe5WlO3e8vooWExts+yWcjMufQA3gopkrLJF3gPFVYZaAlEeIIudxU11ofa
+b+akxIvUSze7Dqvt6GmggIP+AaAwBGNSMMEYx7XyHJqFjm6rCaUjeo1eUmDUpVbX
+o9rSQT3x8lgOs2yh9jNuBZtD1unXEbhXCK+nhB+UKMcKE43rxP+WztJNVG4Dkn6k
+pjnO3MnivlrU3WjUlZ6tEzzoxsKbYr2oSzWBM8dKGFKg9eMr+v81sSfF9HETh2ia
+lBcAujjR/lgnSpdKk93U
+=GHON
 -----END PGP SIGNATURE-----
-
---Sig_/rasso5/OV1KtieC+CNXnMuL--
