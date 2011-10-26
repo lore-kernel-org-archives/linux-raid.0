@@ -1,89 +1,58 @@
-From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH] FIX: Close unused handle in child process during reshape
-	restart
-Date: Wed, 26 Oct 2011 18:16:55 +0200
-Message-ID: <20111026161654.13887.42747.stgit@gklab-128-013.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 00/13] Add missing handling of malloc() failure
+Date: Wed, 26 Oct 2011 17:30:13 +0200
+Message-ID: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When array reshape (e.g. raid0->raid5 migration) is restarted during
-array assembly, file system placed on this array cannot be mounted until
-reshape is finished due to "busy" error.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This is caused when reshape is executed on array for external metadata
-and array handle is cloned /forked/ to child process environment but not
-closed.
+Hi,
 
-Handle can't be closed before executing Grow_continue() because it is
-used later in code.
+I cam across a couple of these last week while I was chasing the
+assemble problem of IMSM raids, so I started going through the code to
+fix up some more of these.
 
-Close unused handle in child process /reshape_container()/.
-It is similar to close fd handle in reshape_array() before calling
-manage_reshape()/child_monitor() in Grow.c:2290.
+This is just low hanging fruit, and there is more to be done, but at
+least it's a few fixes.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
----
+Cheers,
+Jes
 
- Grow.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 0e4dd10..93a69fd 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -1350,6 +1350,7 @@ static int reshape_array(char *container, int fd, char *devname,
- 			 char *backup_file, int quiet, int forked,
- 			 int restart, int freeze_reshape);
- static int reshape_container(char *container, char *devname,
-+			     int mdfd,
- 			     struct supertype *st, 
- 			     struct mdinfo *info,
- 			     int force,
-@@ -1768,7 +1769,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		 * number of devices (On-Line Capacity Expansion) must be
- 		 * performed at the level of the container
- 		 */
--		rv = reshape_container(container, devname, st, &info,
-+		rv = reshape_container(container, devname, -1, st, &info,
- 				       force, backup_file, quiet, 0, 0);
- 		frozen = 0;
- 	} else {
-@@ -2403,7 +2404,10 @@ release:
- 	return 1;
- }
- 
-+/* mdfd handle is passed to be closed in child process (after fork).
-+ */
- int reshape_container(char *container, char *devname,
-+		      int mdfd,
- 		      struct supertype *st, 
- 		      struct mdinfo *info,
- 		      int force,
-@@ -2446,6 +2450,11 @@ int reshape_container(char *container, char *devname,
- 		break;
- 	}
- 
-+	/* close unused handle in child process
-+	 */
-+	if (mdfd > -1)
-+		close(mdfd);
-+
- 	while(1) {
- 		/* For each member array with reshape_active,
- 		 * we need to perform the reshape.
-@@ -3821,7 +3830,7 @@ int Grow_continue(int mdfd, struct supertype *st, struct mdinfo *info,
- 		fmt_devname(container, st->container_dev);
- 		st->ss->load_container(st, cfd, container);
- 		close(cfd);
--		ret_val = reshape_container(container, NULL,
-+		ret_val = reshape_container(container, NULL, mdfd,
- 					    st, info, 0, backup_file,
- 					    0, 1, freeze_reshape);
- 	} else
+Jes Sorensen (13):
+  count_active() catch malloc() failure
+  Catch malloc() failures
+  Try to catch malloc() failures in Assemble.c
+  Attempt to catch malloc() failure in Detail.c
+  Handle malloc() failure in Examine.c
+  Handle malloc() errors in Manage.c
+  Fix malloc() failure handling in Monitor.c
+  Handle malloc() failures in devline()
+  Fix malloc handling in dlink.c
+  Handle malloc() failure in Grow.c
+  Handle malloc() failure in mdopen.c
+  Handle malloc() failure in mdstat.c
+  Catch malloc() failure
+
+ Assemble.c    |   37 ++++++++++++++++++++-
+ Detail.c      |   22 +++++++++++++
+ Examine.c     |    5 +++
+ Grow.c        |    7 ++++
+ Incremental.c |    4 ++
+ Manage.c      |   13 ++++++-
+ Monitor.c     |    7 ++++
+ config.c      |   99 ++++++++++++++++++++++++++++++++++++++++++---------------
+ dlink.c       |    6 ++-
+ mdopen.c      |    6 +++
+ mdstat.c      |    5 +++
+ policy.c      |    5 +++
+ util.c        |   19 +++++++++--
+ 13 files changed, 200 insertions(+), 35 deletions(-)
+
+-- 
+1.7.6.4
 
