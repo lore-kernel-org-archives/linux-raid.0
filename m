@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 10/13] Handle malloc() failure in Grow.c
-Date: Wed, 26 Oct 2011 17:30:23 +0200
-Message-ID: <1319643026-11501-11-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 05/13] Handle malloc() failure in Examine.c
+Date: Wed, 26 Oct 2011 17:30:18 +0200
+Message-ID: <1319643026-11501-6-git-send-email-Jes.Sorensen@redhat.com>
 References: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,34 +14,25 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Grow.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ Examine.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 0e4dd10..eef95ed 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3111,6 +3111,8 @@ static void validate(int afd, int bfd, unsigned long long offset)
- 			abuflen = len;
- 			abuf = malloc(abuflen);
- 			bbuf = malloc(abuflen);
-+			if (!abuf || !bbuf)
-+				fail("out of memory");
- 		}
- 
- 		lseek64(bfd, offset+__le64_to_cpu(bsb2.devstart2)*512, 0);
-@@ -3501,6 +3503,11 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 
- 		/* Now need the data offsets for all devices. */
- 		offsets = malloc(sizeof(*offsets)*info->array.raid_disks);
-+		if (!offsets) {
-+			fprintf(stderr, Name ": %s unable to allocate memory\n",
-+				__func__);
-+			return -ENOMEM;
-+		}
- 		for(j=0; j<info->array.raid_disks; j++) {
- 			if (fdlist[j] < 0)
- 				continue;
+diff --git a/Examine.c b/Examine.c
+index 5d71e53..74b5f80 100644
+--- a/Examine.c
++++ b/Examine.c
+@@ -131,6 +131,11 @@ int Examine(struct mddev_dev *devlist, int brief, int export, int scan,
+ 			}
+ 			if (!ap) {
+ 				ap = malloc(sizeof(*ap));
++				if (!ap) {
++					fprintf(stderr, Name ": %s unable to "
++						"allocate memory\n", __func__);
++					return -ENOMEM;
++				}
+ 				ap->devs = dl_head();
+ 				ap->next = arrays;
+ 				ap->spares = 0;
 -- 
 1.7.6.4
 
