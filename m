@@ -1,159 +1,298 @@
-From: "Peter W. Morreale" <morreale@sgi.com>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Thu, 27 Oct 2011 11:10:34 -0600
-Message-ID: <1319735434.3930.34.camel@hermosa.site>
-References: <20111026014240.21110.28487.stgit@notabene.brown>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Auto-assembling RAID6 over RAID0?
+Date: Thu, 27 Oct 2011 14:27:59 -0400
+Message-ID: <1319740079.26486.7.camel@michal-laptop.sawicz.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-Lp43dwS/rVK7my2IQMPh"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111026014240.21110.28487.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2011-10-26 at 12:43 +1100, NeilBrown wrote: 
-> The following series - on top of my for-linus branch which should appear in
-> 3.2-rc1 eventually - implements hot-replace for RAID4/5/6.  This is almost
-> certainly the most requested feature over the last few years.
-> The whole series can be pulled from my md-devel branch:
->    git://neil.brown.name/md md-devel
-> (please don't do a full clone, it is not a very fast link).
-> 
-> There is currently no mdadm support, but you can test it out and
-> experiment without mdadm.
-> 
-> In order to activate hot-replace you need to mark the device as
-> 'replaceable'.
-> This happens automatically when a write error is recorded in a
-> bad-block log (if you happen to have one).
-> It can be achieved manually by
->    echo replaceable > /sys/block/mdXX/md/dev-YYY/state
-> 
-> This makes YYY, in XX, replaceable.
-> 
-> If md notices that there is a replaceable drive and a spare it will
-> attach the spare to the replaceable drive and mark it as a
-> 'replacement'.
-> This word appears in the 'state' file and as (R) in /proc/mdstat.
-> 
-> md will then copy data from the replaceable drive to the replacement.
-> If there is a bad block on the replaceable drive, it will get the data
-> from elsewhere.  This looks like a "recovery" operation.
-> 
-> When the replacement completes the replaceable device will be marked
-> as Failed and will be disconnected from the array (i.e. the 'slot'
-> will be set to 'none') and the replacement drive will take up full
-> possession of that slot.
 
-Neil,
-
-Seems to work quite well.  Note I have not yet performed a data
-consistency check, just the mechanics of 'replacing' an existing
-drive.  
-
-I see in the code that a recovery is kicked immediately after changing
-the state of a drive.  One question is whether it will be possible to
-mark multiple drives for replacement, then invoke the recovery one time,
-replacing all disks marked in a single pass?
-
-Right now, it changing state on multiple drives kicks off sequential
-recoveries.  For larger disks (3TB/etc), recovery takes a long time and
-there is a non-zero performance hit on the live array.
-
-There are two common use cases to think about.  First being an array
-disk replacement to (say) larger disks.  Second being a new array in use
-for a period of time where the disks are approaching end-of-life, and
-multiple disks are showing signs of possible failure.  So we want to
-replace a number of them at one time and incur the performance hit one
-time. 
-
-I see where the code limits a recovery to one sync at a time, would it
-be possible to extend this to multiple concurrent replacements?
-
-What would it take to enable this?
-
-Thanks again for this effort, this is terrific. 
-
-Best,
--PWM
+--=-Lp43dwS/rVK7my2IQMPh
+Content-Type: multipart/mixed; boundary="=-a94R/grPyrxDs5DHnqeW"
 
 
-> 
-> It is not possible to assemble an array with replacement with mdadm.
-> To do this by hand:
-> 
->   mknod /dev/md27 b 9 27
->   < /dev/md27
->   cd /sys/block/md27/md
->   echo 1.2 > metadata_version
->   echo 8:1 > new_dev
->   echo 8:17 > new_dev
->    ...
->   echo active > array_state
-> 
-> Replace '27' by the md number you want.  Replace 1.2 by the metadata
-> version number (must be 1.x for some x).  Replace 8:1, 8:17 etc
-> by the major:minor numbers of each device in the array.
-> 
-> Yes: this is clumsy.  But they you aren't doing this on live data -
-> only on test devices to experiment.
-> 
-> You can still assemble the array without the replacement using mdadm.
-> Just list all the drives except the replacement in the --assemble
-> command.
-> Also once the replacement operation completes you can of course stop
-> and assemble the new array with old mdadm.
-> 
-> I hope to submit this together with support for RAID10 (and maybe some
-> minimal support for RAID1) for Linux-3.3. By the time it comes out
-> mdadm-3.3 should exist will full support for hot-replace.
-> 
-> Review and testing is very welcome, be please do not try it on live
-> data.
-> 
-> NeilBrown
-> 
-> 
-> ---
-> 
-> NeilBrown (16):
->       md/raid5: Mark device replaceable when we see a write error.
->       md/raid5: If there is a spare and a replaceable device, start replacement.
->       md/raid5: recognise replacements when assembling array.
->       md/raid5: handle activation of replacement device when recovery completes.
->       md/raid5:  detect and handle replacements during recovery.
->       md/raid5: writes should get directed to replacement as well as original.
->       md/raid5: allow removal for failed replacement devices.
->       md/raid5: preferentially read from replacement device if possible.
->       md/raid5: remove redundant bio initialisations.
->       md/raid5: raid5.h cleanup
->       md/raid5: allow each slot to have an extra replacement device
->       md: create externally visible flags for supporting hot-replace.
->       md: change hot_remove_disk to take an rdev rather than a number.
->       md: remove test for duplicate device when setting slot number.
->       md: take after reference to mddev during sysfs access.
->       md: refine interpretation of "hold_active == UNTIL_IOCTL".
-> 
-> 
->  Documentation/md.txt      |   22 ++
->  drivers/md/md.c           |  132 ++++++++++---
->  drivers/md/md.h           |   82 +++++---
->  drivers/md/multipath.c    |    7 -
->  drivers/md/raid1.c        |    7 -
->  drivers/md/raid10.c       |    7 -
->  drivers/md/raid5.c        |  462 +++++++++++++++++++++++++++++++++++----------
->  drivers/md/raid5.h        |   98 +++++-----
->  include/linux/raid/md_p.h |    7 -
->  9 files changed, 599 insertions(+), 225 deletions(-)
-> 
-> -- 
-> Signature
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-a94R/grPyrxDs5DHnqeW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi,
+
+I have a RAID6, one member of which is a RAID0 (see attached --examine
+output). During boot the arrays don't get assembled properly. As soon as
+the RAID0 is assembled, it seems it gets added to a separate
+single-member array (as spare, btw...) and then when the RAID6 is
+supposed to assemble, it's missing that member (shouldn't it start
+anyway, btw?). I'm on gentoo, so I can have two separate mdadm.conf
+files - one for the initramfs, the other for real root. Both are listed
+below.
+
+Does anyone have any pointers on how to configure stuff for that array
+to assemble properly automagically? Without the mdadm.confs at all, if
+possible?
+
+/etc/mdadm-boot.conf:
+> ARRAY /dev/md124 UUID=3D47ffcb36:cf06cacc:462a36bb:f8f383a4
+> ARRAY /dev/md127 UUID=3De2d1cc5f:561339ef:c44c77eb:7ee19756
+> ARRAY /dev/md/root metadata=3D1.2
+> UUID=3D2c9eac29:89fb6c84:43dc5e7f:2677af98 name=3Dmedia:root
+
+/etc/mdadm.conf:
+> ARRAY /dev/md/substore metadata=3D1.2
+> UUID=3De4cbf6b5:dda6f29c:76971fde:d826f1b3 name=3Dsysresccd:substore
+> ARRAY /dev/md/live metadata=3D1.2
+> UUID=3Db3432e2b:4c9979f3:b6e959e7:74cffa8a name=3Dmedia:live
+> ARRAY /dev/md/store metadata=3D1.2
+> UUID=3Dff9e032c:446ed0bd:fc9473f3:f8e090ed name=3Dmedia:store
+
+Cheers,
+--=20
+Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
+
+--=-a94R/grPyrxDs5DHnqeW
+Content-Disposition: attachment; filename="examines.txt"
+Content-Type: text/plain; name="examines.txt"; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+L2Rldi9zZGExOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6
+IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiBmZjllMDMyYzo0
+NDZlZDBiZDpmYzk0NzNmMzpmOGUwOTBlZA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6c3RvcmUg
+IChsb2NhbCB0byBob3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAxMyAyMToz
+Njo0MyAyMDExDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNw0K
+DQogQXZhaWwgRGV2IFNpemUgOiAzOTA3MDI0ODk2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQ0K
+ICAgICBBcnJheSBTaXplIDogMTk1MzUxMTkzNjAgKDkzMTUuMDcgR2lCIDEwMDAxLjk4IEdCKQ0K
+ICBVc2VkIERldiBTaXplIDogMzkwNzAyMzg3MiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikNCiAg
+ICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3Jz
+DQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICBEZXZpY2UgVVVJRCA6IGI3NWI2YjRmOjkw
+MmQzZTE2OjY5M2IzNzI1OmVjNDQyY2JkDQoNCiAgICBVcGRhdGUgVGltZSA6IFRodSBPY3QgMjcg
+MjA6MTE6NTAgMjAxMQ0KICAgICAgIENoZWNrc3VtIDogOTRjMmYzMjAgLSBjb3JyZWN0DQogICAg
+ICAgICBFdmVudHMgOiAyMjUzODQNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMN
+CiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNl
+IDMNCiAgIEFycmF5IFN0YXRlIDogQUFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3Np
+bmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGIxOg0KICAgICAgICAgIE1h
+Z2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDog
+MHgwDQogICAgIEFycmF5IFVVSUQgOiBlNGNiZjZiNTpkZGE2ZjI5Yzo3Njk3MWZkZTpkODI2ZjFi
+Mw0KICAgICAgICAgICBOYW1lIDogc3lzcmVzY2NkOnN1YnN0b3JlDQogIENyZWF0aW9uIFRpbWUg
+OiBTYXQgT2N0IDIyIDEwOjI4OjQ3IDIwMTENCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQwDQogICBS
+YWlkIERldmljZXMgOiAyDQoNCiBBdmFpbCBEZXYgU2l6ZSA6IDE5NTM1MTc5NTQgKDkzMS41MSBH
+aUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIg
+T2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBV
+VUlEIDogMWNlMTYzOWQ6ZTQxNTFhMjE6NjU0Mjk2ZWI6YWVlOTJhMGYNCg0KICAgIFVwZGF0ZSBU
+aW1lIDogU2F0IE9jdCAyMiAxMDoyODo0NyAyMDExDQogICAgICAgQ2hlY2tzdW0gOiAxM2Q5ZmZj
+MSAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDANCg0KICAgICBDaHVuayBTaXplIDogNTEy
+Sw0KDQogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMA0KICAgQXJyYXkgU3RhdGUgOiBB
+QSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09
+PT0NCg0KL2Rldi9zZGMxOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVy
+c2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiBmZjll
+MDMyYzo0NDZlZDBiZDpmYzk0NzNmMzpmOGUwOTBlZA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6
+c3RvcmUgIChsb2NhbCB0byBob3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAx
+MyAyMTozNjo0MyAyMDExDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2Vz
+IDogNw0KDQogQXZhaWwgRGV2IFNpemUgOiAzOTA3MDI0ODk2ICgxODYzLjAxIEdpQiAyMDAwLjQw
+IEdCKQ0KICAgICBBcnJheSBTaXplIDogMTk1MzUxMTkzNjAgKDkzMTUuMDcgR2lCIDEwMDAxLjk4
+IEdCKQ0KICBVc2VkIERldiBTaXplIDogMzkwNzAyMzg3MiAoMTg2My4wMSBHaUIgMjAwMC40MCBH
+QikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBz
+ZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICBEZXZpY2UgVVVJRCA6IDU0OWFh
+MjFiOmQ0MjQ0NjMxOmU3MWFkNGJkOmNiYjliNWNlDQoNCiAgICBVcGRhdGUgVGltZSA6IFRodSBP
+Y3QgMjcgMjA6MTE6NTAgMjAxMQ0KICAgICAgIENoZWNrc3VtIDogMjYyODdkNWUgLSBjb3JyZWN0
+DQogICAgICAgICBFdmVudHMgOiAyMjUzODQNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1t
+ZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUg
+ZGV2aWNlIDINCiAgIEFycmF5IFN0YXRlIDogQUFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09
+IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGQxOg0KICAgICAg
+ICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUg
+TWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiBlNGNiZjZiNTpkZGE2ZjI5Yzo3Njk3MWZkZTpk
+ODI2ZjFiMw0KICAgICAgICAgICBOYW1lIDogc3lzcmVzY2NkOnN1YnN0b3JlDQogIENyZWF0aW9u
+IFRpbWUgOiBTYXQgT2N0IDIyIDEwOjI4OjQ3IDIwMTENCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQw
+DQogICBSYWlkIERldmljZXMgOiAyDQoNCiBBdmFpbCBEZXYgU2l6ZSA6IDE5NTM1MTc5NTQgKDkz
+MS41MSBHaUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAg
+U3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERl
+dmljZSBVVUlEIDogNzkxZDBlNzE6YjM1MGNkZWY6ZjY1ZWYzYTU6YTI3NTc0ZDgNCg0KICAgIFVw
+ZGF0ZSBUaW1lIDogU2F0IE9jdCAyMiAxMDoyODo0NyAyMDExDQogICAgICAgQ2hlY2tzdW0gOiAz
+OWRlMWY3NCAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6IDANCg0KICAgICBDaHVuayBTaXpl
+IDogNTEySw0KDQogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMQ0KICAgQXJyYXkgU3Rh
+dGUgOiBBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09
+PT09PT09PT0NCg0KbWRhZG06IE5vIG1kIHN1cGVyYmxvY2sgZGV0ZWN0ZWQgb24gL2Rldi9zZGUx
+Lg0KDQo9PT09PT09PT09PT09PT09PT09PT09DQoNCi9kZXYvc2RlMjoNCiAgICAgICAgICBNYWdp
+YyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAwLjkwLjAwDQogICAgICAgICAgIFVVSUQg
+OiA0N2ZmY2IzNjpjZjA2Y2FjYzo0NjJhMzZiYjpmOGYzODNhNCAobG9jYWwgdG8gaG9zdCBtZWRp
+YSkNCiAgQ3JlYXRpb24gVGltZSA6IFdlZCBTZXAgMjEgMDg6MjY6MTYgMjAxMQ0KICAgICBSYWlk
+IExldmVsIDogcmFpZDENCiAgVXNlZCBEZXYgU2l6ZSA6IDEyOTk4NCAoMTI2Ljk2IE1pQiAxMzMu
+MTAgTUIpDQogICAgIEFycmF5IFNpemUgOiAxMjk5ODQgKDEyNi45NiBNaUIgMTMzLjEwIE1CKQ0K
+ICAgUmFpZCBEZXZpY2VzIDogMg0KICBUb3RhbCBEZXZpY2VzIDogMg0KUHJlZmVycmVkIE1pbm9y
+IDogMTI0DQoNCiAgICBVcGRhdGUgVGltZSA6IFNhdCBPY3QgMjIgMTE6MDA6MDggMjAxMQ0KICAg
+ICAgICAgIFN0YXRlIDogY2xlYW4NCiBBY3RpdmUgRGV2aWNlcyA6IDINCldvcmtpbmcgRGV2aWNl
+cyA6IDINCiBGYWlsZWQgRGV2aWNlcyA6IDANCiAgU3BhcmUgRGV2aWNlcyA6IDANCiAgICAgICBD
+aGVja3N1bSA6IDljNmRhNmM2IC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMTgNCg0KDQog
+ICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQ0KdGhpcyAgICAg
+MCAgICAgICA4ICAgICAgIDY2ICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZTIN
+Cg0KICAgMCAgICAgMCAgICAgICA4ICAgICAgIDY2ICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMg
+ICAvZGV2L3NkZTINCiAgIDEgICAgIDEgICAgICAgOCAgICAgICA4MiAgICAgICAgMSAgICAgIGFj
+dGl2ZSBzeW5jICAgL2Rldi9zZGYyDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9z
+ZGUzOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0K
+ICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiAyYzllYWMyOTo4OWZiNmM4
+NDo0M2RjNWU3ZjoyNjc3YWY5OA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6cm9vdCAgKGxvY2Fs
+IHRvIGhvc3QgbWVkaWEpDQogIENyZWF0aW9uIFRpbWUgOiBXZWQgU2VwIDIxIDA4OjU3OjQxIDIw
+MTENCiAgICAgUmFpZCBMZXZlbCA6IHJhaWQxMA0KICAgUmFpZCBEZXZpY2VzIDogMg0KDQogQXZh
+aWwgRGV2IFNpemUgOiA2MjkxMjUxMiAoMzAuMDAgR2lCIDMyLjIxIEdCKQ0KICAgICBBcnJheSBT
+aXplIDogNjI5MTA0NjQgKDMwLjAwIEdpQiAzMi4yMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDYy
+OTEwNDY0ICgzMC4wMCBHaUIgMzIuMjEgR0IpDQogICAgRGF0YSBPZmZzZXQgOiAyMDQ4IHNlY3Rv
+cnMNCiAgIFN1cGVyIE9mZnNldCA6IDggc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDogY2xlYW4N
+CiAgICBEZXZpY2UgVVVJRCA6IGU3ZDMwZWYzOjVjMWRhNTE5OjVkYzJhODI3OmJmZjVhMTliDQoN
+CiAgICBVcGRhdGUgVGltZSA6IFRodSBPY3QgMjcgMjA6MTk6MjkgMjAxMQ0KICAgICAgIENoZWNr
+c3VtIDogYmMwZTFjNTUgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiA0NQ0KDQogICAgICAg
+ICBMYXlvdXQgOiBmYXI9Mg0KICAgICBDaHVuayBTaXplIDogNTEySw0KDQogICBEZXZpY2UgUm9s
+ZSA6IEFjdGl2ZSBkZXZpY2UgMA0KICAgQXJyYXkgU3RhdGUgOiBBQSAoJ0EnID09IGFjdGl2ZSwg
+Jy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KbWRhZG06IE5vIG1k
+IHN1cGVyYmxvY2sgZGV0ZWN0ZWQgb24gL2Rldi9zZGU0Lg0KDQo9PT09PT09PT09PT09PT09PT09
+PT09DQoNCi9kZXYvc2RlNToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZl
+cnNpb24gOiAxLjINCiAgICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogYjM0
+MzJlMmI6NGM5OTc5ZjM6YjZlOTU5ZTc6NzRjZmZhOGENCiAgICAgICAgICAgTmFtZSA6IG1lZGlh
+OmxpdmUgIChsb2NhbCB0byBob3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAy
+MCAyMTowMTowMSAyMDExDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkMA0KICAgUmFpZCBEZXZpY2Vz
+IDogMg0KDQogQXZhaWwgRGV2IFNpemUgOiAxODg4MjQ3MTgzICg5MDAuMzkgR2lCIDk2Ni43OCBH
+QikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBz
+ZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogN2FkYzYy
+ZDc6YTc5MTQyMTM6MzFjZmE2YjI6OGI1MTc1MzMNCg0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIFNl
+cCAyMCAyMTowMTowMSAyMDExDQogICAgICAgQ2hlY2tzdW0gOiBlYjM5YWE0MCAtIGNvcnJlY3QN
+CiAgICAgICAgIEV2ZW50cyA6IDANCg0KICAgICBDaHVuayBTaXplIDogNTEySw0KDQogICBEZXZp
+Y2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2UgMA0KICAgQXJyYXkgU3RhdGUgOiBBQSAoJ0EnID09IGFj
+dGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KbWRhZG06
+IE5vIG1kIHN1cGVyYmxvY2sgZGV0ZWN0ZWQgb24gL2Rldi9zZGYxLg0KDQo9PT09PT09PT09PT09
+PT09PT09PT09DQoNCi9kZXYvc2RmMjoNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAg
+ICAgIFZlcnNpb24gOiAwLjkwLjAwDQogICAgICAgICAgIFVVSUQgOiA0N2ZmY2IzNjpjZjA2Y2Fj
+Yzo0NjJhMzZiYjpmOGYzODNhNCAobG9jYWwgdG8gaG9zdCBtZWRpYSkNCiAgQ3JlYXRpb24gVGlt
+ZSA6IFdlZCBTZXAgMjEgMDg6MjY6MTYgMjAxMQ0KICAgICBSYWlkIExldmVsIDogcmFpZDENCiAg
+VXNlZCBEZXYgU2l6ZSA6IDEyOTk4NCAoMTI2Ljk2IE1pQiAxMzMuMTAgTUIpDQogICAgIEFycmF5
+IFNpemUgOiAxMjk5ODQgKDEyNi45NiBNaUIgMTMzLjEwIE1CKQ0KICAgUmFpZCBEZXZpY2VzIDog
+Mg0KICBUb3RhbCBEZXZpY2VzIDogMg0KUHJlZmVycmVkIE1pbm9yIDogMTI0DQoNCiAgICBVcGRh
+dGUgVGltZSA6IFNhdCBPY3QgMjIgMTE6MDA6MDggMjAxMQ0KICAgICAgICAgIFN0YXRlIDogY2xl
+YW4NCiBBY3RpdmUgRGV2aWNlcyA6IDINCldvcmtpbmcgRGV2aWNlcyA6IDINCiBGYWlsZWQgRGV2
+aWNlcyA6IDANCiAgU3BhcmUgRGV2aWNlcyA6IDANCiAgICAgICBDaGVja3N1bSA6IDljNmRhNmQ4
+IC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogMTgNCg0KDQogICAgICBOdW1iZXIgICBNYWpv
+ciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQ0KdGhpcyAgICAgMSAgICAgICA4ICAgICAgIDgy
+ICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZjINCg0KICAgMCAgICAgMCAgICAg
+ICA4ICAgICAgIDY2ICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZTINCiAgIDEg
+ICAgIDEgICAgICAgOCAgICAgICA4MiAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
+ZGYyDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGYzOg0KICAgICAgICAgIE1h
+Z2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDog
+MHgwDQogICAgIEFycmF5IFVVSUQgOiAyYzllYWMyOTo4OWZiNmM4NDo0M2RjNWU3ZjoyNjc3YWY5
+OA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6cm9vdCAgKGxvY2FsIHRvIGhvc3QgbWVkaWEpDQog
+IENyZWF0aW9uIFRpbWUgOiBXZWQgU2VwIDIxIDA4OjU3OjQxIDIwMTENCiAgICAgUmFpZCBMZXZl
+bCA6IHJhaWQxMA0KICAgUmFpZCBEZXZpY2VzIDogMg0KDQogQXZhaWwgRGV2IFNpemUgOiA2Mjkx
+MjUxMiAoMzAuMDAgR2lCIDMyLjIxIEdCKQ0KICAgICBBcnJheSBTaXplIDogNjI5MTA0NjQgKDMw
+LjAwIEdpQiAzMi4yMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDYyOTEwNDY0ICgzMC4wMCBHaUIg
+MzIuMjEgR0IpDQogICAgRGF0YSBPZmZzZXQgOiAyMDQ4IHNlY3RvcnMNCiAgIFN1cGVyIE9mZnNl
+dCA6IDggc2VjdG9ycw0KICAgICAgICAgIFN0YXRlIDogY2xlYW4NCiAgICBEZXZpY2UgVVVJRCA6
+IDFkMjcyNmQ1OjRhMGMzYzViOjU5N2IzZDUzOjY3NDFjMDJmDQoNCiAgICBVcGRhdGUgVGltZSA6
+IFRodSBPY3QgMjcgMjA6MTk6MjkgMjAxMQ0KICAgICAgIENoZWNrc3VtIDogOWY2ZjYzMWUgLSBj
+b3JyZWN0DQogICAgICAgICBFdmVudHMgOiA0NQ0KDQogICAgICAgICBMYXlvdXQgOiBmYXI9Mg0K
+ICAgICBDaHVuayBTaXplIDogNTEySw0KDQogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBkZXZpY2Ug
+MQ0KICAgQXJyYXkgU3RhdGUgOiBBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoN
+Cj09PT09PT09PT09PT09PT09PT09PT0NCg0KbWRhZG06IE5vIG1kIHN1cGVyYmxvY2sgZGV0ZWN0
+ZWQgb24gL2Rldi9zZGY0Lg0KDQo9PT09PT09PT09PT09PT09PT09PT09DQoNCi9kZXYvc2RmNToN
+CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjINCiAgICBG
+ZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogYjM0MzJlMmI6NGM5OTc5ZjM6YjZl
+OTU5ZTc6NzRjZmZhOGENCiAgICAgICAgICAgTmFtZSA6IG1lZGlhOmxpdmUgIChsb2NhbCB0byBo
+b3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAyMCAyMTowMTowMSAyMDExDQog
+ICAgIFJhaWQgTGV2ZWwgOiByYWlkMA0KICAgUmFpZCBEZXZpY2VzIDogMg0KDQogQXZhaWwgRGV2
+IFNpemUgOiAxODg4MjQ3MTgzICg5MDAuMzkgR2lCIDk2Ni43OCBHQikNCiAgICBEYXRhIE9mZnNl
+dCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAg
+U3RhdGUgOiBjbGVhbg0KICAgIERldmljZSBVVUlEIDogNjY4YmQ4ZGM6NWQwZGFmMzM6ZTgwNGM3
+ZWQ6ZWY2MzE1MGYNCg0KICAgIFVwZGF0ZSBUaW1lIDogVHVlIFNlcCAyMCAyMTowMTowMSAyMDEx
+DQogICAgICAgQ2hlY2tzdW0gOiAyN2RjMWNmZiAtIGNvcnJlY3QNCiAgICAgICAgIEV2ZW50cyA6
+IDANCg0KICAgICBDaHVuayBTaXplIDogNTEySw0KDQogICBEZXZpY2UgUm9sZSA6IEFjdGl2ZSBk
+ZXZpY2UgMQ0KICAgQXJyYXkgU3RhdGUgOiBBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3Np
+bmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGcxOg0KICAgICAgICAgIE1h
+Z2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDog
+MHgwDQogICAgIEFycmF5IFVVSUQgOiBmZjllMDMyYzo0NDZlZDBiZDpmYzk0NzNmMzpmOGUwOTBl
+ZA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6c3RvcmUgIChsb2NhbCB0byBob3N0IG1lZGlhKQ0K
+ICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAxMyAyMTozNjo0MyAyMDExDQogICAgIFJhaWQgTGV2
+ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNw0KDQogQXZhaWwgRGV2IFNpemUgOiAzOTA3
+MDI0ODk2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQ0KICAgICBBcnJheSBTaXplIDogMTk1MzUx
+MTkzNjAgKDkzMTUuMDcgR2lCIDEwMDAxLjk4IEdCKQ0KICBVc2VkIERldiBTaXplIDogMzkwNzAy
+Mzg3MiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2Vj
+dG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBhY3Rp
+dmUNCiAgICBEZXZpY2UgVVVJRCA6IGU3NzZmMzUzOmRmODg1MWFmOjQwOWIwOGE2OjU4NGNlOTJk
+DQoNCiAgICBVcGRhdGUgVGltZSA6IFRodSBPY3QgMjcgMjA6MTE6NTAgMjAxMQ0KICAgICAgIENo
+ZWNrc3VtIDogMjNlY2QwZTUgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAyMjUzODQNCg0K
+ICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksN
+Cg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDQNCiAgIEFycmF5IFN0YXRlIDogQUFB
+QUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09
+PT09PT0NCg0KL2Rldi9zZGgxOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAg
+VmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiBm
+ZjllMDMyYzo0NDZlZDBiZDpmYzk0NzNmMzpmOGUwOTBlZA0KICAgICAgICAgICBOYW1lIDogbWVk
+aWE6c3RvcmUgIChsb2NhbCB0byBob3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNl
+cCAxMyAyMTozNjo0MyAyMDExDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZp
+Y2VzIDogNw0KDQogQXZhaWwgRGV2IFNpemUgOiAzOTA3MDI0ODk2ICgxODYzLjAxIEdpQiAyMDAw
+LjQwIEdCKQ0KICAgICBBcnJheSBTaXplIDogMTk1MzUxMTkzNjAgKDkzMTUuMDcgR2lCIDEwMDAx
+Ljk4IEdCKQ0KICBVc2VkIERldiBTaXplIDogMzkwNzAyMzg3MiAoMTg2My4wMSBHaUIgMjAwMC40
+MCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDog
+OCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICBEZXZpY2UgVVVJRCA6IDRi
+Y2VlOGUyOjcwOTQxOWI2OmZiZWIzYThlOjVjOWJiNjhhDQoNCiAgICBVcGRhdGUgVGltZSA6IFRo
+dSBPY3QgMjcgMjA6MTE6NTAgMjAxMQ0KICAgICAgIENoZWNrc3VtIDogZmVhOWQzOTQgLSBjb3Jy
+ZWN0DQogICAgICAgICBFdmVudHMgOiAyMjUzODQNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1z
+eW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3Rp
+dmUgZGV2aWNlIDANCiAgIEFycmF5IFN0YXRlIDogQUFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4n
+ID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGkxOg0KICAg
+ICAgICAgIE1hZ2ljIDogYTkyYjRlZmMNCiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1
+cmUgTWFwIDogMHgwDQogICAgIEFycmF5IFVVSUQgOiBmZjllMDMyYzo0NDZlZDBiZDpmYzk0NzNm
+MzpmOGUwOTBlZA0KICAgICAgICAgICBOYW1lIDogbWVkaWE6c3RvcmUgIChsb2NhbCB0byBob3N0
+IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1lIDogVHVlIFNlcCAxMyAyMTozNjo0MyAyMDExDQogICAg
+IFJhaWQgTGV2ZWwgOiByYWlkNg0KICAgUmFpZCBEZXZpY2VzIDogNw0KDQogQXZhaWwgRGV2IFNp
+emUgOiAzOTA3MDI0ODk2ICgxODYzLjAxIEdpQiAyMDAwLjQwIEdCKQ0KICAgICBBcnJheSBTaXpl
+IDogMTk1MzUxMTkzNjAgKDkzMTUuMDcgR2lCIDEwMDAxLjk4IEdCKQ0KICBVc2VkIERldiBTaXpl
+IDogMzkwNzAyMzg3MiAoMTg2My4wMSBHaUIgMjAwMC40MCBHQikNCiAgICBEYXRhIE9mZnNldCA6
+IDIwNDggc2VjdG9ycw0KICAgU3VwZXIgT2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3Rh
+dGUgOiBhY3RpdmUNCiAgICBEZXZpY2UgVVVJRCA6IGFkZTgwYjQ3OjhhNTRlZWRkOjU1MzYzYzhh
+OjdjNzdiNDhjDQoNCiAgICBVcGRhdGUgVGltZSA6IFRodSBPY3QgMjcgMjA6MTE6NTAgMjAxMQ0K
+ICAgICAgIENoZWNrc3VtIDogODhhMGQ0OTAgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAy
+MjUzODQNCg0KICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6
+ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDYNCiAgIEFycmF5IFN0
+YXRlIDogQUFBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09
+PT09PT09PT09PT09PT0NCg0KL2Rldi9zZGoxOg0KICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMN
+CiAgICAgICAgVmVyc2lvbiA6IDEuMg0KICAgIEZlYXR1cmUgTWFwIDogMHgwDQogICAgIEFycmF5
+IFVVSUQgOiBmZjllMDMyYzo0NDZlZDBiZDpmYzk0NzNmMzpmOGUwOTBlZA0KICAgICAgICAgICBO
+YW1lIDogbWVkaWE6c3RvcmUgIChsb2NhbCB0byBob3N0IG1lZGlhKQ0KICBDcmVhdGlvbiBUaW1l
+IDogVHVlIFNlcCAxMyAyMTozNjo0MyAyMDExDQogICAgIFJhaWQgTGV2ZWwgOiByYWlkNg0KICAg
+UmFpZCBEZXZpY2VzIDogNw0KDQogQXZhaWwgRGV2IFNpemUgOiAzOTA3MDI0ODk2ICgxODYzLjAx
+IEdpQiAyMDAwLjQwIEdCKQ0KICAgICBBcnJheSBTaXplIDogMTk1MzUxMTkzNjAgKDkzMTUuMDcg
+R2lCIDEwMDAxLjk4IEdCKQ0KICBVc2VkIERldiBTaXplIDogMzkwNzAyMzg3MiAoMTg2My4wMSBH
+aUIgMjAwMC40MCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDIwNDggc2VjdG9ycw0KICAgU3VwZXIg
+T2Zmc2V0IDogOCBzZWN0b3JzDQogICAgICAgICAgU3RhdGUgOiBhY3RpdmUNCiAgICBEZXZpY2Ug
+VVVJRCA6IDFmZjFlOTQ2OmU3ODUwNTZhOjljOTdlZDhhOjM0NDRkZmJiDQoNCiAgICBVcGRhdGUg
+VGltZSA6IFRodSBPY3QgMjcgMjA6MTE6NTAgMjAxMQ0KICAgICAgIENoZWNrc3VtIDogNDQ3MjNj
+NTkgLSBjb3JyZWN0DQogICAgICAgICBFdmVudHMgOiAyMjUzODQNCg0KICAgICAgICAgTGF5b3V0
+IDogbGVmdC1zeW1tZXRyaWMNCiAgICAgQ2h1bmsgU2l6ZSA6IDUxMksNCg0KICAgRGV2aWNlIFJv
+bGUgOiBBY3RpdmUgZGV2aWNlIDENCiAgIEFycmF5IFN0YXRlIDogQUFBQUFBQSAoJ0EnID09IGFj
+dGl2ZSwgJy4nID09IG1pc3NpbmcpDQoNCj09PT09PT09PT09PT09PT09PT09PT0NCg0K
+
+
+--=-a94R/grPyrxDs5DHnqeW--
+
+--=-Lp43dwS/rVK7my2IQMPh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAABAgAGBQJOqaKvAAoJEGnv7NPGHSZF0dsQANXjqbnifKGPX911JpH3i6aw
+15F25hbWW4bTeQZ9WfyonaDPt+XhR12qzh4/mzadwitr8DbvQ1qE+sOCh8gJfgvl
+tqBLS4sicPTYsCm54pyfRfmE+GAl8gebXn0ZByivZ6+XQ75IjxNu/ijPyx/zPpy3
+wCxmk3HwhEwcesLHMWOw8JPBnFF+Qu3kvVzjhyxe8BdeAPzwoPHB5pagBuflsJU7
+u66+S2nxiJw9+1OaNihY/bmU33S0qbklomdWhNRRLfkTh0LiLBFyj+LCJJRYKX7G
+asElauDjtSk7LxXDOwidcmHpwp3OtPl2AkYt+KCik9bT1l62n3pyRKzdSEqsYKxE
+bhGjiYF3L4gqToboefwuxG1000Q/2c7lTgUkX/RDwkrEEHXXG8hLzjUOvrEMhkoN
+i1xQQ+Hy3FCgdL7sWzIjx7LRmEgDNkA3RFzTgjzh/xn6aeuvMSMzUIwTN5Dl4RoD
+CaPATZQGyWE42FL7pDc8V3dCkiAPIyLNciTobYbrAcuJvyGQc0mxjN4paVRsQuUg
+kD7G7pfq1mQ3AL+4eWVkVzbBf/d1acfPYkjH00C5fs3SftuCef0gZFsCpbTlMNs5
+XeqJAcN/VBKTYvfWpT9slo2sbxv9t0Ppj4HzC3kTAzStNi/cyeFxmWq+8azEUmc/
+XXr2b0ksSefebAgPNx0m
+=/V9e
+-----END PGP SIGNATURE-----
+
+--=-Lp43dwS/rVK7my2IQMPh--
 
