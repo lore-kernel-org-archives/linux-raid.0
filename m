@@ -1,155 +1,139 @@
-From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: Question about mdadm commit d6508f0cfb60edf07b36f1532eae4d9cddf7178b
- "be more careful about add attempts"
-Date: Thu, 27 Oct 2011 11:10:54 +0200
-Message-ID: <CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
-References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
-	<20111027085125.747691a9@notabene.brown>
+From: David Brown <david@westcontrol.com>
+Subject: Re: with raid-6 any writes access all disks
+Date: Thu, 27 Oct 2011 11:29:55 +0200
+Message-ID: <4EA92493.1060107@westcontrol.com>
+References: <CAGtzr3c65BXDfWZq4ejKwCZv7hPZmdCpvQP17RgFS-Vrn2YF5Q@mail.gmail.com> <20111027082331.01e1fc7a@notabene.brown> <4EA889FF.90002@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111027085125.747691a9@notabene.brown>
+In-Reply-To: <4EA889FF.90002@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>, Chris Pearson <kermit4@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil,
-it makes perfect sense not to turn a device into a spare inadvertently.
-
-However, with mdadm 3.1.4 under gdb, I tried the following:
-- I had a raid6 with 4 drives (sda/b/c/d), their "desc_nr" in the
-kernel were respectively (according to GET_DISK_INFO): 0,1,2,3.
-- I failed the two last drives (c & d) via mdadm and removed them from =
-the array
-- I wiped the superblock on drive d.
-- I added the drive d back to the array
-So now the array had the following setup:
-sda: disc_nr=3D0, raid_disk=3D0
-sdb: disc_nr=3D1, raid_disk=3D1
-sdd: disc_nr=3D4, raid_disk=3D2
-So sdd was added to the array into slot 2, and received disc_nr=3D4
-
-- Now I asked to re-add drive sdc back to array. In gdb I followed the
-re-add flow, to the place where it fills the mdu_disk_info_t structure
-from the superblock read from sdc. It put there the following content:
-disc.major =3D ...
-disc.minor =3D ...
-disc.number =3D 2
-disc.raid_disk =3D 2 (because previously this drive was in slot 2)
-disc.state =3D ...
-
-Now in gdb I changed disc.number to 4 (to match the desc_nr of sdd).
-And then issued ADD_NEW_DISK. It succeeded, and the sdc drive received
-disc_nr=3D2 (while it was asking for 4). Of course, it could not have
-received the same raid_disk, because this raid_disk was already
-occupied by sdd. So it was added as a spare.
-
-But you are saying:
-> If a device already exists with the same disk.number, a re-add cannot
-> succeed, so mdadm doesn't even try.
-while in my case it succeeded (while it actually did "add" and not "re-=
-add").
-
-That's why I was thinking it makes more sense to check disc.raid_disk
-and not disc.number in this check. Since disc.number is not the
-drive's role within the array (right?), it is simply a position of the
-drive in the list of all drives.
-So if you check raid_disk, and see that this raid slot is already
-occupied, then, naturally, the drive will be converted to spare, which
-we want to avoid.
-
-And the enough_fd() check protects us from adding a spare to a failed
-array (like you mentioned to me previously).
-
-What am I missing?
-
-Thanks,
-  Alex.
-
-
-
-
-
-
-
-On Wed, Oct 26, 2011 at 11:51 PM, NeilBrown <neilb@suse.de> wrote:
-> On Wed, 26 Oct 2011 19:02:37 +0200 Alexander Lyakas <alex.bolshoy@gma=
-il.com>
-> wrote:
+On 27/10/2011 00:30, H. Peter Anvin wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 >
->> Greetings everybody,
->> I have a question about the following code in Manage.c:Manage_subdev=
-s()
+> On 10/26/2011 11:23 PM, NeilBrown wrote:
+>> On Wed, 26 Oct 2011 16:01:19 -0500 Chris Pearson
+>> <kermit4@gmail.com>  wrote:
 >>
->> disc.number =3D mdi.disk.number;
->> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
->> =A0 =A0 || disc.major !=3D 0 || disc.minor !=3D 0
->> =A0 =A0 || !enough_fd(fd))
->> =A0 =A0 goto skip_re_add;
+>>> In 2.6.39.1, any writes to a raid-6 array cause all disks to be
+>>> accessed.  Though I don't understand the math behind raid-6, I
+>>> have tested on LSI cards that it is possible to only access 3
+>>> disks.
 >>
->> I do not underatand why the checks: disc.major !=3D 0 || disc.minor =
-!=3D 0
->> are required. This basically means that the kernel already has an
->> rdev->desc_nr equal to disc.number. But why fail the re-add procedur=
-e?
+>> You are correct.  md/raid6 doesn't do the required maths.
 >>
->> Let's say that enough_fd() returns true, and we go ahead an issue
->> ioctl(ADD_NEW_DISK). In this case, according to the kernel code in
->> add_new_disk(), it will not even look at info->number. It will
->> initialize rdev->desc_nr to -1, and will allocate a free desc_nr for
->> the rdev later.
+>> i.e.  it always adds all data together to calculate the parity. It
+>> never subtracts old data from the parity, then add new data.
 >>
->> Doing this with mdadm 3.1.4, where this check is not present, actual=
-ly
->> succeeds. I understand that this code was added for cases when
->> enough_fd() returns false, which sounds perfectly fine to protect
->> from.
+>> This was a decision made by the original implementer (hpa) and
+>> no-one has offered code to change it.
 >>
->> I was thinking that this code should actually check something like:
->> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
->> =A0 =A0 || disk.raid_disk !=3D mdi.disk.raid_disk
->> =A0 =A0 || !enough_fd(fd))
->> =A0 =A0 goto skip_re_add;
+>> (yes, I review and accept patches :-)
 >>
->> That is to check that the slot that was being occupied by the drive =
-we
->> are trying to add, is already occupied by a different drive (need al=
-so
->> to cover cases of raid_disk <0, raid_disk >=3D raid_disks etc...) an=
-d
->> not the desc_nr, which does not have any persistent meaning.
->>
->> Perhaps there are some compatibility issues with old kernels? Or
->> special considerations for ... containers? non-persistent arrays?
 >
-> The point of this code is to make --re-add fail unless mdadm is certa=
-in that
-> the kernel will accept the re-add, rather than turn the device into a=
- spare.
+> This was based on benchmarks at the time that indicated that
+> performance suffered more than it helped.  However, since then CPUs
+> have gotten much faster whereas disks haven't.  There was also the
+> issue of getting something working reliably first.
 >
-> If a device already exists with the same disk.number, a re-add cannot
-> succeed, so mdadm doesn't even try.
+> Getting a set of hardware acceleration routines for arbitrary GF
+> multiplies (as is possible with SSSE3) might change that tradeoff
+> dramatically.
 >
-> When you say in 3.1.4 it "actually succeeds" - what succeeds? =A0Does=
- it re-add
-> the device to the array, or does it turn the device into a spare?
-> I particularly do not want --re-add to turn a device into a spare bec=
-ause
-> people sometimes use it in cases where it cannot work, their device g=
-ets
-> turned into a spare, and they lose information that could have been u=
-sed to
-> reconstruct the array.
+> 	-hpa
 >
-> That that make sense?
->
-> NeilBrown
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+I can add a little of the theory here (HPA knows it, of course, but 
+others might not).  I'm not well versed in the implementation, however.
+
+
+With RAID5, writes to a single data disk are handled by RMW code, 
+writing to the data disk and the parity disk.  The parity is calculated as:
+
+P = D0 + D1 + D2 + .. + Dn
+
+So if Di is to be written, you can use:
+
+P_new = P_old - Di_old + Di_new
+
+Since "-" is the same as "+" (in raid calculations over GF(2^8)), and is 
+just "xor", that's easy to calculate.
+
+As far as I know, the RAID5 code implements this as a special case.  If 
+more than one data disk in the stripe needs to be changed, the whole 
+stripe is re-written.
+
+It would be possible to do RMW writes for more than one data disk 
+without writing the whole stripe, but I suspect the overall speed gains 
+would be small - I can imagine that small (single disk) writes happen a 
+lot, but writes that affect more than one data disk without affecting 
+most of the stripe would be rarer.
+
+
+
+RAID6 is more complicated.  The parity calculations are:
+
+P = D0 + D1 + D2 + .. + Dn
+Q = D0 + 2.D1 + 2^2.D2 + .. + 2^(n-1).Dn
+
+(All adds, multiplies and powers being done over GF(2^8).)
+
+
+If you want to re-write Di, you have to calculate:
+
+P_new = P_old - Di_old + Di_new
+Q_new = Q_old - 2^(i-1).Di_old + 2^(i-1).Di_new
+
+The P_new calculation is the same as for RAID5.
+
+Q_new can be simplified to:
+
+Q_new = Q_old + 2^(i-1) . (Di_old + Di_new)
+
+
+"Multiplying" by 2 is relatively speaking quite time-consuming in 
+GF(2^8).  "Multiplying" by 2^(i-1) can be done by either pre-calculating 
+a multiply table, or using a loop to repeatedly multiply by 2.
+
+When RAID6 was originally implemented in md, cpus were slower and disks 
+faster (relatively speaking).  And of course simple, correct code is far 
+more important than faster, riskier code.  Because of the way the 
+standard Q calculation is implemented (using Horner's rule), the 
+re-calculation of the whole of Q doesn't take much longer than the 
+worst-case Q_new calculation (when it is the last disk changed), once 
+you have the other disks read in (which takes disk time and real time, 
+but not cpu time).  Thus the choice was to always re-write the whole stripe.
+
+However, since then, we have faster cpus, slower disks (relatively 
+speaking), more disks in arrays, more SIMD cpu instructions, and better 
+compilers.  This means the balance has changed, and implementing RMW in 
+RAID6 would almost certainly speed up small writes, as well as reducing 
+the wear on the disks.
+
+I don't know what compiler versions are typically used to compile the 
+kernel, but from gcc 4.4 onwards there is a "target" function attribute 
+that can be used to change the target cpu for a function.  What this 
+means is that the C code can be written once, and multiple versions of 
+it can be compiled with features such as "sse", "see4", "altivec", 
+"neon", etc.  And newer versions of the compiler are getting better at 
+using these cpu features automatically.  It should therefore be 
+practical to get high-speed code suited to the particular cpu you are 
+running on, without needing hand-written SSE/Altivec assembly code. 
+That would save a lot of time and effort on writing, testing and 
+maintenance.
+
+
+That's the theory, anyway - in case anyone has the time and ability to 
+implement it!
+
+
+
+
+
+
+
