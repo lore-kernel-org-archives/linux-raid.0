@@ -1,114 +1,136 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 00/13] Add missing handling of malloc() failure
-Date: Thu, 27 Oct 2011 15:49:26 +1100
-Message-ID: <20111027154926.4d5e8fef@notabene.brown>
-References: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH] FIX: Close unused handle in child process during
+ reshape restart
+Date: Thu, 27 Oct 2011 15:50:48 +1100
+Message-ID: <20111027155048.719e8daf@notabene.brown>
+References: <20111026161654.13887.42747.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/qDTjhgz.Q_Gav378DX2yOfX"; protocol="application/pgp-signature"
+ boundary="Sig_/iGySwj08CEsY2.gNSn_Y6Ri"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <20111026161654.13887.42747.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jes.Sorensen@redhat.com
-Cc: linux-raid@vger.kernel.org
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/qDTjhgz.Q_Gav378DX2yOfX
+--Sig_/iGySwj08CEsY2.gNSn_Y6Ri
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 26 Oct 2011 17:30:13 +0200 Jes.Sorensen@redhat.com wrote:
+On Wed, 26 Oct 2011 18:16:55 +0200 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> When array reshape (e.g. raid0->raid5 migration) is restarted during
+> array assembly, file system placed on this array cannot be mounted until
+> reshape is finished due to "busy" error.
 >=20
-> Hi,
+> This is caused when reshape is executed on array for external metadata
+> and array handle is cloned /forked/ to child process environment but not
+> closed.
 >=20
-> I cam across a couple of these last week while I was chasing the
-> assemble problem of IMSM raids, so I started going through the code to
-> fix up some more of these.
+> Handle can't be closed before executing Grow_continue() because it is
+> used later in code.
 >=20
-> This is just low hanging fruit, and there is more to be done, but at
-> least it's a few fixes.
+> Close unused handle in child process /reshape_container()/.
+> It is similar to close fd handle in reshape_array() before calling
+> manage_reshape()/child_monitor() in Grow.c:2290.
+>=20
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+> ---
+>=20
+>  Grow.c |   13 +++++++++++--
+>  1 files changed, 11 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/Grow.c b/Grow.c
+> index 0e4dd10..93a69fd 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -1350,6 +1350,7 @@ static int reshape_array(char *container, int fd, c=
+har *devname,
+>  			 char *backup_file, int quiet, int forked,
+>  			 int restart, int freeze_reshape);
+>  static int reshape_container(char *container, char *devname,
+> +			     int mdfd,
+>  			     struct supertype *st,=20
+>  			     struct mdinfo *info,
+>  			     int force,
+> @@ -1768,7 +1769,7 @@ int Grow_reshape(char *devname, int fd, int quiet, =
+char *backup_file,
+>  		 * number of devices (On-Line Capacity Expansion) must be
+>  		 * performed at the level of the container
+>  		 */
+> -		rv =3D reshape_container(container, devname, st, &info,
+> +		rv =3D reshape_container(container, devname, -1, st, &info,
+>  				       force, backup_file, quiet, 0, 0);
+>  		frozen =3D 0;
+>  	} else {
+> @@ -2403,7 +2404,10 @@ release:
+>  	return 1;
+>  }
+> =20
+> +/* mdfd handle is passed to be closed in child process (after fork).
+> + */
+>  int reshape_container(char *container, char *devname,
+> +		      int mdfd,
+>  		      struct supertype *st,=20
+>  		      struct mdinfo *info,
+>  		      int force,
+> @@ -2446,6 +2450,11 @@ int reshape_container(char *container, char *devna=
+me,
+>  		break;
+>  	}
+> =20
+> +	/* close unused handle in child process
+> +	 */
+> +	if (mdfd > -1)
+> +		close(mdfd);
+> +
+>  	while(1) {
+>  		/* For each member array with reshape_active,
+>  		 * we need to perform the reshape.
+> @@ -3821,7 +3830,7 @@ int Grow_continue(int mdfd, struct supertype *st, s=
+truct mdinfo *info,
+>  		fmt_devname(container, st->container_dev);
+>  		st->ss->load_container(st, cfd, container);
+>  		close(cfd);
+> -		ret_val =3D reshape_container(container, NULL,
+> +		ret_val =3D reshape_container(container, NULL, mdfd,
+>  					    st, info, 0, backup_file,
+>  					    0, 1, freeze_reshape);
+>  	} else
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hi,
 
- I'm not at all sure this sort of thing is worth it.
- There is no guarantee that the memory is actually there when malloc returns
- non-NULL.  You might only get a page mapped when you access the memory, and
- equally the failure could happen at that time.
 
- If there is something genuinely useful that can be done when malloc fails,
- the it might make sense, but just printing a message an exiting seems
- pointless.
+Applied, thanks.
 
- If we were to go that route, I would probably want to use a #define to
- replace everything with a wrapper (xmalloc??) that printed a message and
- failed.
-
- Do you have a strong reason to add these checks?
-
-Thanks,
 NeilBrown
 
-
->=20
-> Cheers,
-> Jes
->=20
->=20
-> Jes Sorensen (13):
->   count_active() catch malloc() failure
->   Catch malloc() failures
->   Try to catch malloc() failures in Assemble.c
->   Attempt to catch malloc() failure in Detail.c
->   Handle malloc() failure in Examine.c
->   Handle malloc() errors in Manage.c
->   Fix malloc() failure handling in Monitor.c
->   Handle malloc() failures in devline()
->   Fix malloc handling in dlink.c
->   Handle malloc() failure in Grow.c
->   Handle malloc() failure in mdopen.c
->   Handle malloc() failure in mdstat.c
->   Catch malloc() failure
->=20
->  Assemble.c    |   37 ++++++++++++++++++++-
->  Detail.c      |   22 +++++++++++++
->  Examine.c     |    5 +++
->  Grow.c        |    7 ++++
->  Incremental.c |    4 ++
->  Manage.c      |   13 ++++++-
->  Monitor.c     |    7 ++++
->  config.c      |   99 ++++++++++++++++++++++++++++++++++++++++++---------=
-------
->  dlink.c       |    6 ++-
->  mdopen.c      |    6 +++
->  mdstat.c      |    5 +++
->  policy.c      |    5 +++
->  util.c        |   19 +++++++++--
->  13 files changed, 200 insertions(+), 35 deletions(-)
->=20
-
-
---Sig_/qDTjhgz.Q_Gav378DX2yOfX
+--Sig_/iGySwj08CEsY2.gNSn_Y6Ri
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTqji1znsnt1WYoG5AQIhvg/+M3TMJwz3k+QIAWxhk3CHwR/4EIZSOD4P
-LwLvEdcsyFYtxK02fY9gfWXJYE5elKP3mlrtAQGE6AALtR6FfEFuBnPA5o7mDztB
-pokjol+MgkP9hU2OMGAlGLySDfVdBnH7a0KAPT95VNqih7jVpVTgQcVSaVDhL3sr
-zNv22ccvX5+YTyYiFpGMmYSjgc23Ikft6DV0QiBkWrW0nH/yWn6fiPhAjMujhy79
-yG4BoTvZwHR2T6JOzk2IcGtYq5OplJLeXSYoet6Ydmao1KAAGsCEoCxk59fhJ6iX
-5AmFU27gcCABmWb069SpEFNrepX3xAjc1cYGLJiuv/NHBBzM2gET5LdtcDzYCKN1
-hfXzaMqagdO4E9bAXUZK8YANYLriPyQwfBPGQffwsLhIWGeXHmm4PuyyB+aOkGDE
-UlDCgiaAQ8MU3GMEM51hkaf7GFdgSR05eRDeZN/RttS3Rp0prKtJvpm6FI1NuGhL
-mWltmyDS3yCvMxnV0Hn9kWho+S3cdvVqfwwBgCzeES6GkmZjkymCf6AAo0iofGjJ
-5niWf4jxHbRowZn2xrU3ra8y5+I1O5tvuXK5wdNXXg4FnQN0j5yBndK61KbWhpl+
-MQAzh3wiskX/tnXYCXrhFDL1HX2j2zX7EOsgk+vdQV5MPyh3z3oykOsIo+a81Hq3
-jJkOq/MnQDY=
-=icCa
+iQIVAwUBTqjjKDnsnt1WYoG5AQJh7hAAtd0vL8HfcuvlSLFSTz5XPZZpOhgi49II
+EQiU0shNI/Ro2OA8SqwBr2XWCnN4+jGYVDjrf4SYCtwJ/4GoyPqTgk97pSUaLgND
+fgstPQTFJD8hDTbjuwp9RVA5ayt2m4TiGqbXZ5Jo0P8+fQ7xQiKO62Oj4RS8uTWW
+rFoSA0ZMebgGvsLk6W62oqhTNw6wbTh2czi1AslMlbl8J1ZIQyyvpoEfrXQSMNYC
+ALzcO0Ja2mdeBncEhZ4+vfxHLYvruz/yxv+9DrN11H92ISL/9FzhurmB0TrTAI5B
+TTM1lfYHP0PRkg8Wz5Rlxq0Ps/SzE0eeNwBeawjsr5PKVF9av1BAbj8jW6Wj5Vgn
+eNr69MSWmGK0rtNqeUX9Z7pjQxI0ZPxUZWoUsC542naSBuE3yDiKtR60/kqZ1Ajl
+8Kh4yzp0MDU+nxsF8U7JWDrWKUU+QAdDqGx1q1UoO8AgmlA166yOzOMSu69TCFJu
+8p9v7xrOd3okzkefcNrzS0Y5lwZw9O2YTY+p+y1OLHgQHAIpovE8U+8A4UODYZPW
+4gO45JbfEP74YzO/rsOaXqUI9IFEELvIpltzf2n6tg73N1UhWYWTYNsquCFacY41
+rcys2WEma1sVoNzHaqzyjOthYXhg56NCaxJqkGhpESYIJJr6iUqITWY60TLVnUHd
+mZx6sGNLR5A=
+=Q9N6
 -----END PGP SIGNATURE-----
 
---Sig_/qDTjhgz.Q_Gav378DX2yOfX--
+--Sig_/iGySwj08CEsY2.gNSn_Y6Ri--
