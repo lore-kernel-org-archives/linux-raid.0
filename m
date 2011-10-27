@@ -1,69 +1,142 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 00/13] Add missing handling of malloc() failure
-Date: Thu, 27 Oct 2011 09:39:41 +0200
-Message-ID: <4EA90ABD.40003@redhat.com>
-References: <1319643026-11501-1-git-send-email-Jes.Sorensen@redhat.com> <20111027154926.4d5e8fef@notabene.brown>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: RE: [PATCH] GCC compile fix: remove calculation of unused variable
+ 'reservation'
+Date: Thu, 27 Oct 2011 07:46:10 +0000
+Message-ID: <3F8F31A3BFD1664EAB894D1BD6AF32B9044259@IRSMSX102.ger.corp.intel.com>
+References: <1317912231-26625-1-git-send-email-Jes.Sorensen@redhat.com>
+	<4EA80258.70302@redhat.com> <20111027153308.7e6cbe48@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_002_3F8F31A3BFD1664EAB894D1BD6AF32B9044259IRSMSX102gercorpi_"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111027154926.4d5e8fef@notabene.brown>
+In-Reply-To: <20111027153308.7e6cbe48@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/27/11 06:49, NeilBrown wrote:
->> Hi,
->> > 
->> > I cam across a couple of these last week while I was chasing the
->> > assemble problem of IMSM raids, so I started going through the code to
->> > fix up some more of these.
->> > 
->> > This is just low hanging fruit, and there is more to be done, but at
->> > least it's a few fixes.
-> Hi,
-> 
->  I'm not at all sure this sort of thing is worth it.
->  There is no guarantee that the memory is actually there when malloc returns
->  non-NULL.  You might only get a page mapped when you access the memory, and
->  equally the failure could happen at that time.
-> 
->  If there is something genuinely useful that can be done when malloc fails,
->  the it might make sense, but just printing a message an exiting seems
->  pointless.
-> 
->  If we were to go that route, I would probably want to use a #define to
->  replace everything with a wrapper (xmalloc??) that printed a message and
->  failed.
-> 
->  Do you have a strong reason to add these checks?
+--_002_3F8F31A3BFD1664EAB894D1BD6AF32B9044259IRSMSX102gercorpi_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Neil,
+I have sent a patch removing the unused variable a while ago.
+It must have been overlooked.
+Regards
+Anna
 
-There are a couple of reasons for this. You are right that things could
-happen during touching the page at first, but in general malloc() is
-supposed to fail if the system is unable to provide the pages.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Thursday, October 27, 2011 6:33 AM
+> To: Jes Sorensen
+> Cc: linux-raid@vger.kernel.org; Czarnowska, Anna
+> Subject: Re: [PATCH] GCC compile fix: remove calculation of unused
+> variable 'reservation'
+>=20
+> On Wed, 26 Oct 2011 14:51:36 +0200 Jes Sorensen
+> <Jes.Sorensen@redhat.com>
+> wrote:
+>=20
+> > On 10/06/11 16:43, Jes.Sorensen@redhat.com wrote:
+> > > From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> > >
+> > > gcc 4.6.1 doesn't like calculating a variable that then isn't
+> > > used. Remove it.
+> > >
+> > > Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> > > ---
+> > >  super-intel.c |    2 --
+> > >  1 files changed, 0 insertions(+), 2 deletions(-)
+> >
+> > Neil,
+> >
+> > Any chance you could reply this one? It still seems to be an issue
+> with
+> > the latest git tree.
+> >
+> > Thanks,
+> > Jes
+>=20
+> Yeah - sorry. I wanted to check that it really should be removed and
+> there
+> wasn't some other bug hiding - but I looks like it is simply
+> unnecessary.
+> Hopefully Anna will correct me if I'm wrong...
+>=20
+> I''ve applied your patch.
+>=20
+> Thanks,
+> NeilBrown
 
-The main reason why I think this is worth doing is for support reasons.
-While in most cases these cases will never fail, I much prefer a user to
-find out of memory messages in their log files or on the terminal, than
-having them report a segfault which we need to investigate the reason
-of. Having better error messages in place should reduce the cost of this.
 
-Second, there are cases where malloc() fails where I think we really
-need to try and unwind, rather than possibly leaving raid or metadata in
-an inconsistent state. Passing errors back should help with this.
+--_002_3F8F31A3BFD1664EAB894D1BD6AF32B9044259IRSMSX102gercorpi_
+Content-Type: message/rfc822
+Content-Disposition: attachment;
+	creation-date="Thu, 27 Oct 2011 07:46:09 GMT";
+	modification-date="Thu, 27 Oct 2011 07:46:09 GMT"
 
-Third I think it is good practice not to leave error codes unchecked. In
-the cases where I let the code exit() on error, I was pretty much
-following the precedence in the same function I added the check to. I
-don't think it is ideal, but I do think it is a starting point.
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+To: 'NeilBrown' <neilb@suse.de>
+CC: "'linux-raid@vger.kernel.org'" <linux-raid@vger.kernel.org>, "Williams,
+ Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>,
+	"Grabowski, Grzegorz" <grzegorz.grabowski@intel.com>
+Subject: [PATCH] remove unused variable
+Thread-Topic: [PATCH] remove unused variable
+Thread-Index: Acx8SQleaJj2RVQUSjeAK+Xap7yweQ==
+Date: Mon, 26 Sep 2011 12:37:22 +0000
+Message-ID: <3F8F31A3BFD1664EAB894D1BD6AF32B902FEE1@IRSMSX102.ger.corp.intel.com>
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-Exchange-Organization-SCL: -1
+X-MS-TNEF-Correlator: 
+x-ms-exchange-organization-originalclientipaddress: 163.33.239.180
+x-ms-exchange-organization-originalserveripaddress: 163.33.3.155
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 
-Some of the bits in my patchset could definitely handle the errors
-better, but I still don't know all the code that well, so I think it is
-a start. Getting error handling consistent across the board is a big
-project and I don't think it is realistic to do it all in one go.
+From ccbe8fd4b762d88184c0fea61abb966cf8c99cc9 Mon Sep 17 00:00:00 2001
+From: Anna Czarnowska <anna.czarnowska@intel.com>
+Date: Mon, 26 Sep 2011 11:54:04 +0200
+Subject: [PATCH] remove unused variable
 
-Cheers,
-Jes
+reservation is calculated below in imsm_min_reserved_sectors()
+so this variable is not needed
+
+Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
+---
+ super-intel.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/super-intel.c b/super-intel.c
+index 07d47b5..75b432d 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -988,9 +988,8 @@ static unsigned long long min_acceptable_spare_size_ims=
+m(struct supertype *st)
+ 	struct dl *dl;
+ 	struct extent *e;
+ 	int i;
+ 	unsigned long long rv =3D 0;
+-	__u32 reservation;
+=20
+ 	if (!super)
+ 		return rv;
+ 	/* find first active disk in array */
+@@ -1006,9 +1005,8 @@ static unsigned long long min_acceptable_spare_size_i=
+msm(struct supertype *st)
+ 	for (i =3D 0; e[i].size; i++)
+ 		continue;
+ 	if (i > 0)
+ 		rv =3D e[i-1].start + e[i-1].size;
+-	reservation =3D __le32_to_cpu(dl->disk.total_blocks) - e[i].start;
+ 	free(e);
+=20
+ 	/* add the amount of space needed for metadata */
+ 	rv =3D rv + imsm_min_reserved_sectors(super);
+--=20
+1.7.4
+
+
+--_002_3F8F31A3BFD1664EAB894D1BD6AF32B9044259IRSMSX102gercorpi_--
