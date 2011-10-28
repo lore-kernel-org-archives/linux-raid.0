@@ -1,196 +1,209 @@
-From: "Peter W. Morreale" <morreale@sgi.com>
-Subject: Re: [md PATCH 00/16] hot-replace support for RAID4/5/6
-Date: Thu, 27 Oct 2011 14:53:20 -0600
-Message-ID: <1319748800.14224.2.camel@hermosa.site>
-References: <20111026014240.21110.28487.stgit@notabene.brown>
-	 <1319735434.3930.34.camel@hermosa.site>
-	 <20111028074445.7ecfa029@notabene.brown>
+From: Ryan Castellucci <ryan.castellucci+linux-raid@gmail.com>
+Subject: Re: Lost mdadm RAID6 array and tried everything, hoping for any other
+ suggestions you may have
+Date: Thu, 27 Oct 2011 17:08:25 -0700
+Message-ID: <CAO+W5hpzvzrkhVoV_nyTgN4WKUcRTUEMGk5oJ8YtZX1OTgP0wQ@mail.gmail.com>
+References: <4E7BB186.1010104@pobox.com> <20110923143053.6a9c5a9e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111028074445.7ecfa029@notabene.brown>
+In-Reply-To: <20110923143053.6a9c5a9e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: Eduard Rozenberg <eduardr@pobox.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2011-10-28 at 07:44 +1100, NeilBrown wrote: 
-> On Thu, 27 Oct 2011 11:10:34 -0600 "Peter W. Morreale" <morreale@sgi.com>
-> wrote:
-> 
-> > On Wed, 2011-10-26 at 12:43 +1100, NeilBrown wrote: 
-> > > The following series - on top of my for-linus branch which should appear in
-> > > 3.2-rc1 eventually - implements hot-replace for RAID4/5/6.  This is almost
-> > > certainly the most requested feature over the last few years.
-> > > The whole series can be pulled from my md-devel branch:
-> > >    git://neil.brown.name/md md-devel
-> > > (please don't do a full clone, it is not a very fast link).
-> > > 
-> > > There is currently no mdadm support, but you can test it out and
-> > > experiment without mdadm.
-> > > 
-> > > In order to activate hot-replace you need to mark the device as
-> > > 'replaceable'.
-> > > This happens automatically when a write error is recorded in a
-> > > bad-block log (if you happen to have one).
-> > > It can be achieved manually by
-> > >    echo replaceable > /sys/block/mdXX/md/dev-YYY/state
-> > > 
-> > > This makes YYY, in XX, replaceable.
-> > > 
-> > > If md notices that there is a replaceable drive and a spare it will
-> > > attach the spare to the replaceable drive and mark it as a
-> > > 'replacement'.
-> > > This word appears in the 'state' file and as (R) in /proc/mdstat.
-> > > 
-> > > md will then copy data from the replaceable drive to the replacement.
-> > > If there is a bad block on the replaceable drive, it will get the data
-> > > from elsewhere.  This looks like a "recovery" operation.
-> > > 
-> > > When the replacement completes the replaceable device will be marked
-> > > as Failed and will be disconnected from the array (i.e. the 'slot'
-> > > will be set to 'none') and the replacement drive will take up full
-> > > possession of that slot.
-> > 
-> > Neil,
-> > 
-> > Seems to work quite well.  Note I have not yet performed a data
-> > consistency check, just the mechanics of 'replacing' an existing
-> > drive.  
-> > 
-> > I see in the code that a recovery is kicked immediately after changing
-> > the state of a drive.  One question is whether it will be possible to
-> > mark multiple drives for replacement, then invoke the recovery one time,
-> > replacing all disks marked in a single pass?
-> > 
-> > Right now, it changing state on multiple drives kicks off sequential
-> > recoveries.  For larger disks (3TB/etc), recovery takes a long time and
-> > there is a non-zero performance hit on the live array.
-> > 
-> > There are two common use cases to think about.  First being an array
-> > disk replacement to (say) larger disks.  Second being a new array in use
-> > for a period of time where the disks are approaching end-of-life, and
-> > multiple disks are showing signs of possible failure.  So we want to
-> > replace a number of them at one time and incur the performance hit one
-> > time. 
-> > 
-> > I see where the code limits a recovery to one sync at a time, would it
-> > be possible to extend this to multiple concurrent replacements?
-> > 
-> > What would it take to enable this?
-> 
-> echo frozen > /sys/block/mdX/md/sync_action
-> for i in /sys/block/mdX/md/dev-*/state
-> do echo replaceable > $i
-> done
-> echo repair > /sys/block/mdX/md/sync_action
-> 
-> should do it.  You certainly should be able to replace several devices at the
-> same time using this approach, though I haven't tried it.
+=46WIW, I've had the exact issue - four of eight drives going offline
+due to a loose cable.  If you force an assemble using --force --assume
+clean, then force an array re-sync, you should be able to mount the
+filesystem.
 
-No worries, I will and will let you know...
+Re-creating the array has probably done horrible things to your data
+due to the partial resync, but I would expect partial recovery (of the
+data not overwritten) to still be possible by brute forcing the disk
+layout with repeated creates with the --assume-clean flag.  If
+possible, buy another eight hard drives and clone the originals to
+them, then try recovering from the clones.
 
-Awesome.  I'm only at about 10% of understanding the code at this point.
-Investigating 'frozen' was on the list... 
+I'm not sure if you'll be able to do anything other than use a carving
+tool to get your files back.
 
-Thx
--PWM
+-Ryan
 
-
-> 
-> (hmmm... it probably shouldn't accept a 'replaceable' flag on spares - I'll
-> make a note of that).
-> 
-> > 
-> > Thanks again for this effort, this is terrific. 
-> 
-> Thanks.
-> 
+On Thu, Sep 22, 2011 at 9:30 PM, NeilBrown <neilb@suse.de> wrote:
+>
+> Did you keep the "mdadm -E" output from before you started recreating=
+ the
+> array?
+> If not, you are probably out of luck.
+>
+> When you create a RAID5 array it will write to all the superblocks, a=
+nd will
+> write over everything on the last device listed - basically treating =
+it as a
+> spare while the rest is a degraded array, and rebuilding the spare.
+>
+> So the first n-1 drives are probably largely untouched ... unless you=
+ changed
+> the order of devices when you created.
+>
+> The superblock will be somewhere on the first drive. =A0Maybe you can=
+ find it.
+> That will at least tell you the data offset...
+>
+> Best advice: =A0As soon as something happens that you don't understan=
+d - ask
+> for help. =A0Once you don't understand what you are doing, anything y=
+ou do will
+> probably make it worse.
+> Also : keep records of everything.
+>
 > NeilBrown
-> 
-> 
-> > 
-> > Best,
-> > -PWM
-> > 
-> > 
-> > > 
-> > > It is not possible to assemble an array with replacement with mdadm.
-> > > To do this by hand:
-> > > 
-> > >   mknod /dev/md27 b 9 27
-> > >   < /dev/md27
-> > >   cd /sys/block/md27/md
-> > >   echo 1.2 > metadata_version
-> > >   echo 8:1 > new_dev
-> > >   echo 8:17 > new_dev
-> > >    ...
-> > >   echo active > array_state
-> > > 
-> > > Replace '27' by the md number you want.  Replace 1.2 by the metadata
-> > > version number (must be 1.x for some x).  Replace 8:1, 8:17 etc
-> > > by the major:minor numbers of each device in the array.
-> > > 
-> > > Yes: this is clumsy.  But they you aren't doing this on live data -
-> > > only on test devices to experiment.
-> > > 
-> > > You can still assemble the array without the replacement using mdadm.
-> > > Just list all the drives except the replacement in the --assemble
-> > > command.
-> > > Also once the replacement operation completes you can of course stop
-> > > and assemble the new array with old mdadm.
-> > > 
-> > > I hope to submit this together with support for RAID10 (and maybe some
-> > > minimal support for RAID1) for Linux-3.3. By the time it comes out
-> > > mdadm-3.3 should exist will full support for hot-replace.
-> > > 
-> > > Review and testing is very welcome, be please do not try it on live
-> > > data.
-> > > 
-> > > NeilBrown
-> > > 
-> > > 
-> > > ---
-> > > 
-> > > NeilBrown (16):
-> > >       md/raid5: Mark device replaceable when we see a write error.
-> > >       md/raid5: If there is a spare and a replaceable device, start replacement.
-> > >       md/raid5: recognise replacements when assembling array.
-> > >       md/raid5: handle activation of replacement device when recovery completes.
-> > >       md/raid5:  detect and handle replacements during recovery.
-> > >       md/raid5: writes should get directed to replacement as well as original.
-> > >       md/raid5: allow removal for failed replacement devices.
-> > >       md/raid5: preferentially read from replacement device if possible.
-> > >       md/raid5: remove redundant bio initialisations.
-> > >       md/raid5: raid5.h cleanup
-> > >       md/raid5: allow each slot to have an extra replacement device
-> > >       md: create externally visible flags for supporting hot-replace.
-> > >       md: change hot_remove_disk to take an rdev rather than a number.
-> > >       md: remove test for duplicate device when setting slot number.
-> > >       md: take after reference to mddev during sysfs access.
-> > >       md: refine interpretation of "hold_active == UNTIL_IOCTL".
-> > > 
-> > > 
-> > >  Documentation/md.txt      |   22 ++
-> > >  drivers/md/md.c           |  132 ++++++++++---
-> > >  drivers/md/md.h           |   82 +++++---
-> > >  drivers/md/multipath.c    |    7 -
-> > >  drivers/md/raid1.c        |    7 -
-> > >  drivers/md/raid10.c       |    7 -
-> > >  drivers/md/raid5.c        |  462 +++++++++++++++++++++++++++++++++++----------
-> > >  drivers/md/raid5.h        |   98 +++++-----
-> > >  include/linux/raid/md_p.h |    7 -
-> > >  9 files changed, 599 insertions(+), 225 deletions(-)
-> > > 
-> > > -- 
-> > > Signature
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
+>
+>
+>
+> On Thu, 22 Sep 2011 15:07:02 -0700 Eduard Rozenberg <eduardr@pobox.co=
+m> wrote:
+>
+>> Hello,
+>>
+>> I've had very good luck with mdadm RAID1 over the years and it's rea=
+lly
+>> helped out.
+>> More recently I got a bit more adventurous and tried out RAID6, but
+>> after my recent
+>> experience with it I'm considering writing my take on "RAID6 conside=
+red
+>> dangerous" :)
+>>
+>> Quick summary:
+>>
+>> * Slackware 64 13.37, Linux 2.6.37.6, on Shuttle XPC 4gb ram
+>>
+>> * RAID6 array, 8 active drives in a chassis connected via 2 esata ca=
+bles
+>> to a shuttle pc,
+>> =A0 =A0 12TB total, worked fine for several months. Esata controller=
+ w/port
+>> multiplier support.
+>>
+>> * Couple of days back, noticed array was down, with second half of t=
+he
+>> drives shown as
+>> =A0 =A0 down. Assumption - 1 cable or esata controller port hickuped=
+, taking
+>> 4 drives out of the array,
+>> =A0 =A0 or something happened due to the hot temps that day
+>>
+>> * /proc/mdstat showed (S) next to some (or all, can't remember) of t=
+he
+>> drives in the array -
+>> =A0 =A0 I think that means spare, but I had no spares defined for th=
+e array
+>> so it seemed weird
+>>
+>> * Rebooted machine and checked smartctl status, all 8 drives in chas=
+sis
+>> showed OK status,
+>> =A0 =A0 and they were all accessible using gdisk and fd00 partitions
+>> appeared fine.
+>>
+>> * Tried to reassemble normally, then with force, nothing happened - =
+no
+>> errors, array just
+>> =A0 =A0 didn't come up. Did not try --assume-clean (to my regret). M=
+aybe
+>> would have worked,
+>> =A0 =A0 will never know.
+>>
+>> * Took some internet advice and tried --create to recreate the array=
+,
+>> however I forgot which
+>> =A0 =A0 chunk size I used so I tried several times with different ch=
+unk
+>> sizes (some resync took place
+>> =A0 =A0 each time). Could not find any info on Internet about whethe=
+r the
+>> resyncs blew away my data.
+>>
+>> * After each mdadm array recreate, tried to mount the array but fail=
+ed
+>> with missing superblock
+>>
+>> * dd'd a few gb's from the array and tried to grep text in a failed
+>> attempt to determine chunk size
+>>
+>> * Tried testdisk utility to attempt to locate file system structures
+>> after recreating array with various
+>> =A0 =A0 chunk sizes, didn't let utility finish but it didn't seem to=
+ be
+>> doing anything useful
+>>
+>> * R-Studio - tried using it, didn't seem it would do anything useful=
+ for me
+>>
+>> At this point the key questions I'm aware of:
+>>
+>> * Did recreating array with various chunk sizes blow away my data/fi=
+le
+>> system structures
+>> =A0 =A0(I did not use --assume-clean when recreating array)
+>>
+>> * If the data is still ok, is there a way to determine the chunk siz=
+e
+>> that was used? I'm hoping
+>> =A0 =A0 the metadata version and bitmap options used would not affec=
+t being
+>> able to recover
+>> =A0 =A0 the array, because I don't remember which metadata and bitma=
+p
+>> options I used if any.
+>>
+>> * Given the correct chunk size, if I recreate the array, is there so=
+me
+>> way to convince mount to
+>> =A0 =A0 mount the array, or some way of fixing the ext4 structure, o=
+r any
+>> other way to get the data of
+>> =A0 =A0 the array other than the file carving utilities that dump ev=
+erything
+>> in a bunch of random
+>> =A0 =A0 directories.
+>>
+>> I'm well aware RAID !=3D backups and I had a backup but it was a few
+>> months old unfortunately.
+>> I didn't expect at all this failure mode of having half the disks
+>> disappear and having the array
+>> be so hard to recover. Most of the Internet information is focused o=
+n
+>> array creation and mgmt,
+>> and I found precious little information on recovery, some of which w=
+as
+>> wrong and dangerous.
+>> At this point I do consider RAID6 to be dangerous and will avoid it
+>> where possible. It just makes
+>> recovery so much harder when the file system and data is broken up i=
+nto
+>> little pieces.
+>>
+>> Thanks in advance for any tips.
+>>
+>> Regards,
+>> --Ed
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
 
 
+
+--=20
+Ryan Castellucci http://ryanc.org/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
