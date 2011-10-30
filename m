@@ -1,222 +1,204 @@
-From: Michael Busby <michael.a.busby@gmail.com>
-Subject: Re: Unable to restart reshape
-Date: Sun, 30 Oct 2011 22:15:43 +0000
-Message-ID: <CAFsPQ__+ofSpEy57Ly_u_NkCf94BJ49+_mcqWb7SPMnaSdQyMA@mail.gmail.com>
-References: <CAFsPQ_-EdKXHjwodOnqt3TSJFS73Wgv0EXXe81nriBFJU5DV2w@mail.gmail.com>
-	<CAFsPQ_9Bg=pJpbtyKF2G4oT2p6QHZhZ3gm-ZLQhG3yDjwDoSTQ@mail.gmail.com>
-	<CAFsPQ__+n+Y8G6TUH1+6zYxaxd2AK+--N6FnRw8rQx-BRJA0ag@mail.gmail.com>
-	<CAFsPQ_9DQ26S7ePcruN+M0H3RZiFnQK34u4W25WLDPZ48+6f-A@mail.gmail.com>
-	<CAFsPQ__MtwQvgiJ+BsZg0sGky6GstbHEHneuzs86zSKNfrt8CA@mail.gmail.com>
-	<20111030230215.Horde.zF2Mdpk8pphOrclnrmpTWiA@cakebox.homeunix.net>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Question about mdadm commit
+ d6508f0cfb60edf07b36f1532eae4d9cddf7178b "be more careful about add
+ attempts"
+Date: Mon, 31 Oct 2011 10:16:49 +1100
+Message-ID: <20111031101649.657a1ab3@notabene.brown>
+References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+	<20111027085125.747691a9@notabene.brown>
+	<CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/p1_ENJ7YUaB0PbDE6e+2X4P"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111030230215.Horde.zF2Mdpk8pphOrclnrmpTWiA@cakebox.homeunix.net>
+In-Reply-To: <CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Alexander_K=FChn?= <alexander.kuehn@nagilum.de>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>>> I have a system the was doing a reshape from RAID5 to 6, the sys=
-tem
->>>>>> had to be powered off this morning and moved, upon restarting th=
-e
->>>>>> server i issued the following command to continue the reshape
->>>>>>
->>>>>> =A0mdadm -A /dev/md0 --backup-file=3D/home/md.backup
->>>>>>
->>>>>> i get back to following error
->>>>>>
->>>>>> mdadm: Failed to restore critical section for reshape, sorry.
->>>>>>
->>>>>> any idea why?
->>>>>>
->>>>>> before shutting down cat /proc/mdstat showed
->>>>>>
->>>>>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [ra=
-id5]
->>>>>> [raid4] [raid10]
->>>>>> md0 : active raid6 sdf[0] sdb[6](S) sda[4] sdc[3] sde[2] sdd[1]
->>>>>> =A0 =A0 7814055936 blocks super 1.0 level 6, 512k chunk, algorit=
-hm 18
->>>>>> [6/5] [UUUUU_]
->>>>>> =A0 =A0 [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>......] =A0r=
-eshape =3D 70.8% (1384415232/1953513984)
->>>>>> finish=3D3658.6min speed=3D2592K/sec
->>>>>>
->>>>>> but now it shows
->>>>>>
->>>>>> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [ra=
-id5]
->>>>>> [raid4] [raid10]
->>>>>> md0 : inactive sdc[3] sdb[6](S) sde[2] sdd[1] sdf[0]
->>>>>> =A0 =A0 =A09767572240 blocks super 1.0
->>>>>>
->>>>>> i am totally confused, it seems to have lost a drive from the ra=
-id,
->>>>>> and the number of blocks is incorrect
->>>>>>
->>>>>
->>>>> issuing the following
->>>>>
->>>>> =A0mdadm -Avv --backup-file=3D/home/md.backup /dev/md0
->>>>>
->>>>> returns
->>>>>
->>>>>
->>>>> mdadm: looking for devices for /dev/md0
->>>>> mdadm: cannot open device /dev/sda5: Device or resource busy
->>>>> mdadm: /dev/sda5 has wrong uuid.
->>>>> mdadm: no RAID superblock on /dev/sda2
->>>>> mdadm: /dev/sda2 has wrong uuid.
->>>>> mdadm: cannot open device /dev/sda1: Device or resource busy
->>>>> mdadm: /dev/sda1 has wrong uuid.
->>>>> mdadm: cannot open device /dev/sda: Device or resource busy
->>>>> mdadm: /dev/sda has wrong uuid.
->>>>> mdadm: /dev/sdg is identified as a member of /dev/md0, slot -1.
->>>>> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 4.
->>>>> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 2.
->>>>> mdadm: /dev/sde is identified as a member of /dev/md0, slot 0.
->>>>> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 1.
->>>>> mdadm: /dev/sdb is identified as a member of /dev/md0, slot 3.
->>>>> mdadm:/dev/md0 has an active reshape - checking if critical secti=
-on
->>>>> needs to be restored
->>>>> mdadm: backup-metadata found on /home/md.backup but is not needed
->>>>> mdadm: Failed to find backup of critical section
->>>>> mdadm: Failed to restore critical section for reshape, sorry.
->>>>>
->>>>
->>>> seem the above was trying at use the wrong disks to assemble, so u=
-sing
->>>> the following
->>>>
->>>> mdadm -Avv /dev/md0 --backup-file=3D/home/md.backup /dev/sd[abcdef=
-]
->>>>
->>>> =A0mdadm: looking for devices for /dev/md0
->>>> mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
->>>> mdadm: /dev/sdb is identified as a member of /dev/md0, slot -1.
->>>> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
->>>> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 1.
->>>> mdadm: /dev/sde is identified as a member of /dev/md0, slot 2.
->>>> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
->>>> mdadm:/dev/md0 has an active reshape - checking if critical sectio=
-n
->>>> needs to be restored
->>>> mdadm: backup-metadata found on /home/md.backup but is not needed
->>>> mdadm: Failed to find backup of critical section
->>>> mdadm: Failed to restore critical section for reshape, sorry.
->>>>
->>>
->>> have now upgraded to mdadm 3.2.2
->>>
->>> and get a little more info
->>>
->>> mdadm -Avv /dev/md0 --backup-file=3D/home/md.backup /dev/sd[abcdef]
->>>
->>> mdadm: looking for devices for /dev/md0
->>> mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
->>> mdadm: /dev/sdb is identified as a member of /dev/md0, slot -1.
->>> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
->>> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 1.
->>> mdadm: /dev/sde is identified as a member of /dev/md0, slot 2.
->>> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
->>> mdadm: device 6 in /dev/md0 has wrong state in superblock, but /dev=
-/sdb
->>> seems ok
->>> mdadm:/dev/md0 has an active reshape - checking if critical section
->>> needs to be restored
->>> mdadm: backup-metadata found on /home/md.backup but is not needed
->>> mdadm: Failed to find backup of critical section
->>> mdadm: Failed to restore critical section for reshape, sorry.
->>>
->>
->>
->> Ok, i dont know if this is the right thing to have done
->>
->> ~# mdadm -Avv --force /dev/md0 --backup-file=3D/home/md.backup
->> /dev/sd[abcdef]
->>
->> mdadm: looking for devices for /dev/md0
->> mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
->> mdadm: /dev/sdb is identified as a member of /dev/md0, slot -1.
->> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
->> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 1.
->> mdadm: /dev/sde is identified as a member of /dev/md0, slot 2.
->> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
->> mdadm: clearing FAULTY flag for device 1 in /dev/md0 for /dev/sdb
->> mdadm: Marking array /dev/md0 as 'clean'
->> mdadm:/dev/md0 has an active reshape - checking if critical section
->> needs to be restored
->> mdadm: backup-metadata found on /home/md.backup but is not needed
->> mdadm: Failed to find backup of critical section
->> mdadm: Failed to restore critical section for reshape, sorry.
->>
->>
->> ~# mdadm -Avv /dev/md0 --backup-file=3D/home/md.backup /dev/sd[abcde=
-f]
->>
->> mdadm: looking for devices for /dev/md0
->> mdadm: /dev/sda is identified as a member of /dev/md0, slot 4.
->> mdadm: /dev/sdb is identified as a member of /dev/md0, slot -1.
->> mdadm: /dev/sdc is identified as a member of /dev/md0, slot 3.
->> mdadm: /dev/sdd is identified as a member of /dev/md0, slot 1.
->> mdadm: /dev/sde is identified as a member of /dev/md0, slot 2.
->> mdadm: /dev/sdf is identified as a member of /dev/md0, slot 0.
->> mdadm:/dev/md0 has an active reshape - checking if critical section
->> needs to be restored
->> mdadm: restoring critical section
->> mdadm: added /dev/sdd to /dev/md0 as 1
->> mdadm: added /dev/sde to /dev/md0 as 2
->> mdadm: added /dev/sdc to /dev/md0 as 3
->> mdadm: added /dev/sda to /dev/md0 as 4
->> mdadm: no uptodate device for slot 5 of /dev/md0
->> mdadm: added /dev/sdb to /dev/md0 as -1
->> mdadm: added /dev/sdf to /dev/md0 as 0
->> mdadm: /dev/md0 has been started with 4 drives (out of 6) and 1 spar=
-e.
->>
->> ~# cat /proc/mdstat
->>
->> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
->> [raid4] [raid10]
->> md0 : active raid6 sdf[0] sdb[6](S) sdc[3] sde[2] sdd[1]
->> =A0 =A0 =A07814055936 blocks super 1.0 level 6, 512k chunk, algorith=
-m 18
->> [6/4] [UUUU__]
->> =A0 =A0 =A0[=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>......] =A0re=
-shape =3D 74.3% (1452929024/1953513984)
->> finish=3D2545.2min speed=3D3276K/sec
->>
->> unused devices: <none>
->>
->> so looks like its carrying on now but with 4 disks and a spare, mayb=
-e
->> i can add the other disk once the reshape has finished
->
-> It generally helps to include/examine "mdadm -E /dev/sdX" of all devi=
-ces
-> involved in your mail(s) and also "mdadm -Q --detail /dev/md0".
-> After the reshape is done it will automatically rebuild using the spa=
-re.
-> Then you can have a close look which of your devices arent used, clea=
-r the
-> metadate from the device and add it as well to regain full redundancy=
-=2E
-> You'll have plenty hours of fun watching /proc/mdstat. ;)
-> Alex.
->
+--Sig_/p1_ENJ7YUaB0PbDE6e+2X4P
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the response Alex, the reshape has got about 2400mins left
-to run and no idea how long the rebuild will take..
+On Thu, 27 Oct 2011 11:10:54 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-I will check out those commands once i am back up and running, i am
-fairly new to mdadm so still finding out all the useful commands when
-trouble shooting issues, thanks for pointing these out to me
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hello Neil,
+> it makes perfect sense not to turn a device into a spare inadvertently.
+>=20
+> However, with mdadm 3.1.4 under gdb, I tried the following:
+> - I had a raid6 with 4 drives (sda/b/c/d), their "desc_nr" in the
+> kernel were respectively (according to GET_DISK_INFO): 0,1,2,3.
+> - I failed the two last drives (c & d) via mdadm and removed them from th=
+e array
+> - I wiped the superblock on drive d.
+> - I added the drive d back to the array
+> So now the array had the following setup:
+> sda: disc_nr=3D0, raid_disk=3D0
+> sdb: disc_nr=3D1, raid_disk=3D1
+> sdd: disc_nr=3D4, raid_disk=3D2
+> So sdd was added to the array into slot 2, and received disc_nr=3D4
+>=20
+> - Now I asked to re-add drive sdc back to array. In gdb I followed the
+> re-add flow, to the place where it fills the mdu_disk_info_t structure
+> from the superblock read from sdc. It put there the following content:
+> disc.major =3D ...
+> disc.minor =3D ...
+> disc.number =3D 2
+> disc.raid_disk =3D 2 (because previously this drive was in slot 2)
+> disc.state =3D ...
+>=20
+> Now in gdb I changed disc.number to 4 (to match the desc_nr of sdd).
+> And then issued ADD_NEW_DISK. It succeeded, and the sdc drive received
+> disc_nr=3D2 (while it was asking for 4). Of course, it could not have
+> received the same raid_disk, because this raid_disk was already
+> occupied by sdd. So it was added as a spare.
+>=20
+> But you are saying:
+> > If a device already exists with the same disk.number, a re-add cannot
+> > succeed, so mdadm doesn't even try.
+> while in my case it succeeded (while it actually did "add" and not "re-ad=
+d").
+
+We seem to be using word differently.
+If I ask mdadm to do a "re-add" and it does an "add", then I consider that =
+to
+be "failure", however you seem to consider it to be a "success".
+
+That seems to be the source of confusion.
+
+
+>=20
+> That's why I was thinking it makes more sense to check disc.raid_disk
+> and not disc.number in this check. Since disc.number is not the
+> drive's role within the array (right?), it is simply a position of the
+> drive in the list of all drives.
+> So if you check raid_disk, and see that this raid slot is already
+> occupied, then, naturally, the drive will be converted to spare, which
+> we want to avoid.
+
+It may well be appropriate to check raid_disk as well, yes.  It isn't so ea=
+sy
+though which is maybe why I didn't.
+
+With 0.90 metadata, the disc.number is the same as disc.raid_disk for active
+devices.  That might be another reason for the code being the way that it i=
+s.
+
+Thanks,
+NeilBrown
+
+
+
+>=20
+> And the enough_fd() check protects us from adding a spare to a failed
+> array (like you mentioned to me previously).
+>=20
+> What am I missing?
+>=20
+> Thanks,
+>   Alex.
+>=20
+>=20
+>=20
+>=20
+>=20
+>=20
+>=20
+> On Wed, Oct 26, 2011 at 11:51 PM, NeilBrown <neilb@suse.de> wrote:
+> > On Wed, 26 Oct 2011 19:02:37 +0200 Alexander Lyakas <alex.bolshoy@gmail=
+.com>
+> > wrote:
+> >
+> >> Greetings everybody,
+> >> I have a question about the following code in Manage.c:Manage_subdevs()
+> >>
+> >> disc.number =3D mdi.disk.number;
+> >> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
+> >> =A0 =A0 || disc.major !=3D 0 || disc.minor !=3D 0
+> >> =A0 =A0 || !enough_fd(fd))
+> >> =A0 =A0 goto skip_re_add;
+> >>
+> >> I do not underatand why the checks: disc.major !=3D 0 || disc.minor !=
+=3D 0
+> >> are required. This basically means that the kernel already has an
+> >> rdev->desc_nr equal to disc.number. But why fail the re-add procedure?
+> >>
+> >> Let's say that enough_fd() returns true, and we go ahead an issue
+> >> ioctl(ADD_NEW_DISK). In this case, according to the kernel code in
+> >> add_new_disk(), it will not even look at info->number. It will
+> >> initialize rdev->desc_nr to -1, and will allocate a free desc_nr for
+> >> the rdev later.
+> >>
+> >> Doing this with mdadm 3.1.4, where this check is not present, actually
+> >> succeeds. I understand that this code was added for cases when
+> >> enough_fd() returns false, which sounds perfectly fine to protect
+> >> from.
+> >>
+> >> I was thinking that this code should actually check something like:
+> >> if (ioctl(fd, GET_DISK_INFO, &disc) !=3D 0
+> >> =A0 =A0 || disk.raid_disk !=3D mdi.disk.raid_disk
+> >> =A0 =A0 || !enough_fd(fd))
+> >> =A0 =A0 goto skip_re_add;
+> >>
+> >> That is to check that the slot that was being occupied by the drive we
+> >> are trying to add, is already occupied by a different drive (need also
+> >> to cover cases of raid_disk <0, raid_disk >=3D raid_disks etc...) and
+> >> not the desc_nr, which does not have any persistent meaning.
+> >>
+> >> Perhaps there are some compatibility issues with old kernels? Or
+> >> special considerations for ... containers? non-persistent arrays?
+> >
+> > The point of this code is to make --re-add fail unless mdadm is certain=
+ that
+> > the kernel will accept the re-add, rather than turn the device into a s=
+pare.
+> >
+> > If a device already exists with the same disk.number, a re-add cannot
+> > succeed, so mdadm doesn't even try.
+> >
+> > When you say in 3.1.4 it "actually succeeds" - what succeeds? =A0Does i=
+t re-add
+> > the device to the array, or does it turn the device into a spare?
+> > I particularly do not want --re-add to turn a device into a spare becau=
+se
+> > people sometimes use it in cases where it cannot work, their device gets
+> > turned into a spare, and they lose information that could have been use=
+d to
+> > reconstruct the array.
+> >
+> > That that make sense?
+> >
+> > NeilBrown
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/p1_ENJ7YUaB0PbDE6e+2X4P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTq3a4Tnsnt1WYoG5AQJpGg//bnoCglZP29kz1kMfsZD3iLFR2OYAtREq
+Naqm6aa4y7KqQa6X0mOPOvK0+mv7JhflZH2/QCrCh13Hfy401L+g/ar/e9jAlBR1
+XXbZcMjQ95qNhuzIgYkac8Ttt5+PrY+tD3lFpPtDT/r4xPJX3TjW3EjCbyAAsc20
+7x/zz+eV7VICvis5ILYjOye2hZUddilf9F6bG9PJhiUokvIH9G4xbK9mhS5nBzVX
+2h8+pRQspl1OAYK8OCyajmomT9Xu+dNVfFXBtS96s4+hU6TNYQjH6AoqpAExG0Hf
+fQYV577pK4AInHGeGRct12uRseQ0yLvEk0jWi1nC++xJWQ/hGTZ/ACDmP6ERyxAW
+7ooUze9WGdPzlgrTEhSaOxeCwKKHjotGWEUAs7BGFtm9DCjNSnNacyQOirpoAVBN
+BDmmjvrEyZi0HP7RHe1WllaCEOTE2HJqvVPlqiGG7SVoMViB3FNzKc6ZH5iBR4JS
+brDqE2UgMu8IBpjXINnVRAC+svPo1/pbUzGd7gnRS1xFk1qKYn93YBoOLeug5tTJ
+RTo4n/pexzyQQ5wTS9OJwmbwImXZImzafrjprboeehYegQQ670qKzLeexjmzDE/u
+fI4B1bstAFgOFNPIVPfh7CwGBdeF/ULo4zOIrTPWBnlcXF2jCMeGTWaC45nG4BDk
+x22a3IbhEOA=
+=0rA0
+-----END PGP SIGNATURE-----
+
+--Sig_/p1_ENJ7YUaB0PbDE6e+2X4P--
