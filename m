@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 09/11] policy_add(): Add missing va_end()
-Date: Mon, 31 Oct 2011 15:02:37 +0100
-Message-ID: <1320069759-13361-10-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 10/11] Write_rules(): Avoid stack corruption if using extremely long udev pathname
+Date: Mon, 31 Oct 2011 15:02:38 +0100
+Message-ID: <1320069759-13361-11-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,21 +14,23 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- policy.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ policy.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/policy.c b/policy.c
-index 7959c97..1114286 100644
+index 1114286..cd260c6 100644
 --- a/policy.c
 +++ b/policy.c
-@@ -510,6 +510,7 @@ void policy_add(char *type, ...)
- 	}
- 	pr->next = config_rules;
- 	config_rules = pr;
-+	va_end(ap);
- }
+@@ -883,7 +883,8 @@ int Write_rules(char *rule_name)
+        char udev_rule_file[PATH_MAX];
  
- void policy_free(void)
+        if (rule_name) {
+-	       strcpy(udev_rule_file, rule_name);
++	       strncpy(udev_rule_file, rule_name, sizeof(udev_rule_file) - 6);
++	       udev_rule_file[sizeof(udev_rule_file) - 6] = '\0';
+ 	       strcat(udev_rule_file, ".temp");
+                fd = creat(udev_rule_file,
+                           S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 -- 
 1.7.6.4
 
