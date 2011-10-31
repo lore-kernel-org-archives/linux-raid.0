@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 06/11] Fix memory leak
-Date: Mon, 31 Oct 2011 15:02:34 +0100
-Message-ID: <1320069759-13361-7-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/11] Add missing return in case of trying to grow sub-array
+Date: Mon, 31 Oct 2011 15:02:35 +0100
+Message-ID: <1320069759-13361-8-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,25 +14,21 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- super-gpt.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ Grow.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/super-gpt.c b/super-gpt.c
-index 6f852aa..b8c9aae 100644
---- a/super-gpt.c
-+++ b/super-gpt.c
-@@ -179,8 +179,10 @@ static struct supertype *match_metadata_desc(char *arg)
+diff --git a/Grow.c b/Grow.c
+index 05350dd..4ac24a1 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -134,6 +134,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
+ 		fprintf(stderr, Name ": Cannot grow linear sub-arrays yet\n");
+ 		free(subarray);
+ 		free(st);
++		return 1;
+ 	}
  
- 	if (!st)
- 		return st;
--	if (strcmp(arg, "gpt") != 0)
-+	if (strcmp(arg, "gpt") != 0) {
-+		free(st);
- 		return NULL;
-+	}
- 
- 	st->ss = &gpt;
- 	st->info = NULL;
+ 	nfd = open(newdev, O_RDWR|O_EXCL|O_DIRECT);
 -- 
 1.7.6.4
 
