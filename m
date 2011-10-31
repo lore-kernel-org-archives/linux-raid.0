@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 04/11] Fix memory leak of 'st3' in array_try_spare()
-Date: Mon, 31 Oct 2011 15:02:32 +0100
-Message-ID: <1320069759-13361-5-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 05/11] partition_try_spare() use closedir() to release DIR * returned by opendir()
+Date: Mon, 31 Oct 2011 15:02:33 +0100
+Message-ID: <1320069759-13361-6-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,25 +14,22 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Incremental.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ Incremental.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
 diff --git a/Incremental.c b/Incremental.c
-index 98a3a74..7e345c5 100644
+index 7e345c5..cc50a79 100644
 --- a/Incremental.c
 +++ b/Incremental.c
-@@ -956,8 +956,10 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
- 			 * to obtain minimum spare size */
- 			struct supertype *st3 = dup_super(st2);
- 			int mdfd = open_dev(mp->devnum);
--			if (!mdfd)
-+			if (!mdfd) {
-+				free(st3);
- 				goto next;
-+			}
- 			if (st3->ss->load_container &&
- 			    !st3->ss->load_container(st3, mdfd, mp->path)) {
- 				component_size = st3->ss->min_acceptable_spare_size(st3);
+@@ -1199,6 +1199,8 @@ static int partition_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 			close(fd);
+ 	}
+ 
++	closedir(dir);
++
+ 	if (!chosen)
+ 		return 1;
+ 
 -- 
 1.7.6.4
 
