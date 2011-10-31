@@ -1,109 +1,109 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] kill-subarray: fix, IMSM cannot kill-subarray with
- unsupported metadata
-Date: Mon, 31 Oct 2011 11:31:51 +1100
-Message-ID: <20111031113151.64f566b1@notabene.brown>
-References: <F9123E44003394499FDD2B17C60621D4043755@IRSMSX101.ger.corp.intel.com>
+Subject: PULL REQUEST - serious md/RAID10 bug in 3.1 when activating a
+ hot-spare.
+Date: Mon, 31 Oct 2011 13:08:59 +1100
+Message-ID: <20111031130859.121d5620@notabene.brown>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/bSD9IuSD1dQafakHiki/2Ud"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9123E44003394499FDD2B17C60621D4043755@IRSMSX101.ger.corp.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>
+ boundary="Sig_/nxzPJl3EIPvjtbe=aRQZlEu"; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, linux RAID <linux-raid@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/bSD9IuSD1dQafakHiki/2Ud
+--Sig_/nxzPJl3EIPvjtbe=aRQZlEu
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 28 Oct 2011 14:46:57 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
-wrote:
 
-> Hi Neil,
-> Please review modified patch in response for your comments.
-> I have introduced two flags, one for activation blocking, second for cont=
-ainer wide reshapes
-> Blocking:
-> - some arrays in container are blocked, the others can be activated and r=
-eshaped,
-> - some arrays are blocked, others can be activated but container wide res=
-haped is blocked for all.
->=20
-> Thanks,
-> Marcin Labun
+Hi Linus et al,
 
-Thanks.  This looks mostly OK.
-I have applied it -  with a number of formatting improvements and the remov=
-al
-for a debugging printf :-)
+ I just discovered a fairly serious flaw that I introduced into 3.1 - detai=
+ls
+ below.
 
-However this bit looks wrong:
+ Anyone running RAID10 with 3.1 is advised to either apply this patch or
+ revert an earlier kernel as soon as possible.  In the mean time, remove any
+ hot spares from an RAID10 array.
 
-> +/*
-> + * helper routine to check metadata reshape avalability
-> + * 1. Do not "grow" arrays with volume activation blocked
-> + * 2. do not reshape containers with container reshape blocked
-> + *
-> + * IN:
-> + *	subarray - array name or NULL for container wide reshape
-> + *	content - md device info from container_content
-> + * OUT:
-> + *	0 - block reshape
-> + */
-> +static int check_reshape(char *subarray, struct mdinfo *content)
-> +{
-> +	char *ep;
-> +	unsigned int idx;
-> +	printf("subarray: %s\n", subarray);
-> +
-> +=09
-> +	if (!subarray) {
-> +		if (content->array.state & (1<<MD_SB_BLOCK_CONTAINER_RESHAPE))
-> +			return 0;
-> +	}
-> +	else {
-> +		/* do not "grow" arrays with volume activation blocked */
-> +		idx =3D strtoul(subarray, &ep, 10);
-> +		if ((*ep =3D=3D '\0') && (content->container_member =3D=3D (int) idx) =
-&&
-> +		    (content->array.state & (1<<MD_SB_BLOCK_VOLUME)))
-> +			return 0;
-> +	}
-> +	 =20
-> +	return 1;
-> +}
-
-Grow.c shouldn't be doing a 'strtoul' here.  The subarray string belongs to
-the metadata handler, mdadm core code shouldn't interpret it at all.
-
-What exactly is the point of that bit of code?
-
-Thanks,
 NeilBrown
 
 
---Sig_/bSD9IuSD1dQafakHiki/2Ud
+The following changes since commit d890fa2b0586b6177b119643ff66932127d58afa:
+
+  md: Fix some bugs in recovery_disabled handling. (2011-10-26 11:54:39 +11=
+00)
+
+are available in the git repository at:
+  git://neil.brown.name/md for-linus
+
+  last commit being 7fcc7c8acf0fba44d19a713207af7e58267c1179
+
+NeilBrown (1):
+      md/raid10:  Fix bug when activating a hot-spare.
+
+ drivers/md/raid10.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+
+
+commit 7fcc7c8acf0fba44d19a713207af7e58267c1179
+Author: NeilBrown <neilb@suse.de>
+Date:   Mon Oct 31 12:59:44 2011 +1100
+
+    md/raid10:  Fix bug when activating a hot-spare.
+   =20
+    This is a fairly serious bug in RAID10.
+   =20
+    When a RAID10 array is degraded and a hot-spare is activated, the
+    spare does not take up the empty slot, but rather replaces the first
+    working device.
+    This is likely to make the array non-functional.   It would normally
+    be possible to recover the data, but that would need care and is not
+    guaranteed.
+   =20
+    This bug was introduced in commit
+       2bb77736ae5dca0a189829fbb7379d43364a9dac
+    which first appeared in 3.1.
+   =20
+    Cc: stable@kernel.org
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 132c18e..c025a82 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1355,7 +1355,7 @@ static int raid10_add_disk(struct mddev *mddev, struc=
+t md_rdev *rdev)
+ 		struct mirror_info *p =3D &conf->mirrors[mirror];
+ 		if (p->recovery_disabled =3D=3D mddev->recovery_disabled)
+ 			continue;
+-		if (!p->rdev)
++		if (p->rdev)
+ 			continue;
+=20
+ 		disk_stack_limits(mddev->gendisk, rdev->bdev,
+
+--Sig_/nxzPJl3EIPvjtbe=aRQZlEu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTq3sfDnsnt1WYoG5AQJuAA//Rn4BKOPkwE6gjK39jJK0do4ajrV5my/f
-MjsknhrR5qNM0VM9+4IHZJAFWMU3Hz59T9MAkVmSe72z4oJYwa8HOwvrKteFANtm
-TtTuvtxp1ODx1iRU7+7hRMpvXcaJtIE1nTy687u6/dD1XeV2SNTwmCnn02YCVdOs
-wM2N46WfsuI17hd0Tt8K33AY93WnRWD+YvclLv7Sg+uOsIbcVy+2tqw0YSHyrNyV
-Wg49ITVl3+0WnSeItRjrIj+J7KjK1PBJsLOv8R5LFH6g9bnQ8H4860lGy4VpYY0B
-woj3Y5LogShZukI/pR/aSdyQTcPYvodT/W4TCt2wvl90OadBZA/0s4hkQ+qmZtpJ
-Pd3uk3wgUeYSikGB8nk/bKqnNuhCISO3ajO4VIqXy4NH1GGrRB6ZaaBmz/+wRiWj
-Z3bH0fLYAuXC+mhwRDJmuFya680rb2iEaismC9RgkcGWmRbacpFBggpSwS5w79qU
-C5Os+3xg61WYRCfntrinzVnjk6aQJkHHqw6ZoQshJOHT+2h3Ir7sUcgzLQqMoEHO
-UdHB6Kj6dJwqItKjnjdfb7dQRgWlwaAy6Sa9nEzi1zA2d0hUGY2AfqmKA1H7UhR2
-Vu6ZLrq35C9/Z8JbeblKyz3YXr7JlvxQu32+qx7isRUay7cTgrBZzkX99hVxz/g1
-71lDusXNfgA=
-=T/SN
+iQIVAwUBTq4DPDnsnt1WYoG5AQIuihAAkZiSy+m2tK21mI9VP0beUV3j8NaI/Do8
+n7hNYshzjRq8CR/8cLmUzYN2U2yaD515+ezDO9fEjG/hiiB4MllUClqEhmXYBgmP
+Kojxl8kKCjpGdYsAZhkzQkQGpaxotxD8fqvrKYQvMMXaCLUrB9XVD88YTONmvbEZ
+tIdyinfEzj02QPfi4rTiE3QHgNkPbhGxfSJ6eMeAqTW0Ve1PMRejapZ//UoJYbj+
+yNqMpUn3i2h0UTB2vl4bMlcdgwV4mTHn90AgmGL7Salm1c6yKyvgjrMhOCv8lvIZ
+jqzqfOUT0fXgNkEejIvYIPQC7+tzAxgwyhC+lvxPC55PPJ6YwmKKUw7OW0E4xyie
+ifQN7jS2LbsWeUpak55pqMGdCJmteBU3LFzaw7wzAO12D/ZpAYmSmmFY1cuwWjEO
+xVB+8lvvEruY+7BzVkvmigq2Fh/iKDD26hdHAh0wi6V5fIKy/z1zLcqj4pUSjGWU
+8W7pYWNe0GggPdis//VP/K54c2+gwvtY5WogdM8LVxgwfHg69kpu/Mp7QQAY98b+
+yFmgPkErHnKitEm5W6HU5KM9LxpPMsDEENiglLDuvK1IVmWOExtyzscW8fDh6t22
+97hDHTxMg0JZ70E0YS1h3q2FDcQ/RMZgZXsuvQ2ZRvMEq4/ZflTGmSJOQSRnLofG
+v84wm+yR6bs=
+=g5Dl
 -----END PGP SIGNATURE-----
 
---Sig_/bSD9IuSD1dQafakHiki/2Ud--
+--Sig_/nxzPJl3EIPvjtbe=aRQZlEu--
