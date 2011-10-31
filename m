@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 02/11] Fix memory leak
-Date: Mon, 31 Oct 2011 15:02:30 +0100
-Message-ID: <1320069759-13361-3-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 01/11] Fix memory leaks in reshape_array()
+Date: Mon, 31 Oct 2011 15:02:29 +0100
+Message-ID: <1320069759-13361-2-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320069759-13361-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,21 +14,74 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Assemble.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ Grow.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index ac1115d..4ded58c 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -1375,6 +1375,7 @@ int Assemble(struct supertype *st, char *mddev,
- 							sysfs_set_num(sra, NULL,
- 								      "stripe_cache_size",
- 								      (4 * content->array.chunk_size / 4096) + 1);
-+						sysfs_free(sra);
- 					}
- 				}
- 				if (okcnt < (unsigned)content->array.raid_disks) {
+diff --git a/Grow.c b/Grow.c
+index 08581d2..05350dd 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1882,8 +1882,8 @@ static int reshape_array(char *container, int fd, char *devname,
+ 	struct mddev_dev *dv;
+ 	int added_disks;
+ 
+-	int *fdlist;
+-	unsigned long long *offsets;
++	int *fdlist = NULL;
++	unsigned long long *offsets = NULL;
+ 	int d;
+ 	int nrdisks;
+ 	int err;
+@@ -2339,6 +2339,9 @@ started:
+ 		abort_reshape(sra);
+ 		goto release;
+ 	default:
++		free(fdlist);
++		free(offsets);
++		sysfs_free(sra);
+ 		return 0;
+ 	case 0:
+ 		map_fork();
+@@ -2366,6 +2369,9 @@ started:
+ 			d - odisks, fdlist+odisks,
+ 			offsets+odisks);
+ 
++	free(fdlist);
++	free(offsets);
++
+ 	if (backup_file && done)
+ 		unlink(backup_file);
+ 	if (!done) {
+@@ -2381,6 +2387,7 @@ started:
+ 		/* no need to wait for the reshape to finish as
+ 		 * there is nothing more to do.
+ 		 */
++		sysfs_free(sra);
+ 		exit(0);
+ 	}
+ 	wait_reshape(sra);
+@@ -2445,17 +2452,21 @@ started:
+ 			st->update_tail = NULL;
+ 	}
+ out:
++	sysfs_free(sra);
+ 	if (forked)
+ 		return 0;
+ 	unfreeze(st);
+ 	exit(0);
+ 
+ release:
++	free(fdlist);
++	free(offsets);
+ 	if (orig_level != UnSet && sra) {
+ 		c = map_num(pers, orig_level);
+ 		if (c && sysfs_set_str(sra, NULL, "level", c) == 0)
+ 			fprintf(stderr, Name ": aborting level change\n");
+ 	}
++	sysfs_free(sra);
+ 	if (!forked)
+ 		unfreeze(st);
+ 	return 1;
 -- 
 1.7.6.4
 
