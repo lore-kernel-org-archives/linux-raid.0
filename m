@@ -1,125 +1,57 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 19/19] make_parts(): Avoid false positive security warning
-Date: Tue, 01 Nov 2011 21:30:12 +0100
-Message-ID: <4EB056D4.1040402@redhat.com>
-References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com> <1320160175-18976-20-git-send-email-Jes.Sorensen@redhat.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: possibly silly question (raid failover)
+Date: Tue, 01 Nov 2011 17:32:17 -0400
+Message-ID: <4EB06561.8090706@meetinghouse.net>
+References: <4EAF3F78.5060900@meetinghouse.net> <j8odkj$46h$1@dough.gmane.org> <4EAFEE95.6070608@meetinghouse.net> <4EAFF636.6060904@anonymous.org.uk> <j8p0g3$9r4$1@dough.gmane.org> <4EB052E6.4050400@meetinghouse.net> <20111101212023.GA20565@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040905070206030400020104"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1320160175-18976-20-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <20111101212023.GA20565@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dledford@redhat.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------040905070206030400020104
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Robin Hill wrote:
+> On Tue Nov 01, 2011 at 04:13:26 -0400, Miles Fidelman wrote:
+>
+>> David Brown wrote:
+>>> No, md RAID10 does /not/ offer more redundancy than RAID1.  You are
+>>> right that md RAID10 offers more than RAID1 (or traditional RAID0 over
+>>> RAID1 sets) - but it is a convenience and performance benefit, not a
+>>> redundancy benefit.  In particular, it lets you build RAID10 from any
+>>> number of disks, not just two.  And it lets you stripe over all disks,
+>>> improving performance for some loads (though not /all/ loads - if you
+>>> have lots of concurrent small reads, you may be faster using plain
+>>> RAID1).
+>> wasn't suggesting that it does - just that it does things differently
+>> than normal raid 1+0 - for example, by doing mirroring and striping as a
+>> unitary operation, it works across odd number of drives - it also (I
+>> think) allows for more than 2 copies of a block (not completely clear
+>> how many copies of a block would be made if you specified a 16 drive
+>> array) - sort of what I'm wondering here
+>>
+> By default it'll make 2 copies, regardless how many devices are in the
+> array. You can specify how many copies you want though, so -n3 will give
+> you a near configuration with 3 copies, -n4 for four copies, etc.
+>
+>
+cool, so with 16 drives, and say -n6 or -n8, and a far configuration - 
+that gives a pretty good level of resistance to multi-disk failures, as 
+well as an entire node failure (taking out 4 drives)
 
-On 11/01/11 16:09, Jes.Sorensen@redhat.com wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> S_ISBLK() and S_ISLNK() are mutually exclusive. By swapping the checks
-> round and testing S_ISBLK() first, we avoid having to silence the
-> compiler for uninitialized variable usage, and avoid a warning from
-> security checking tools.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+which then leaves the question of whether the md driver, itself, can be 
+failed over from one node to another
 
-Looking at this one again, I realized it doesn't solve the real problem.
-In particular if /dev/md64 already exists as a symlink and /dev/md64p1
-exists as a device node, we end up comparing against random stack data.
+Thanks!
 
-Please discard the previous patch and use this one instead.
+Miles
 
-Sorry for the noise.
 
-Cheers,
-Jes
 
---------------040905070206030400020104
-Content-Type: text/x-patch;
- name="0019-make_parts-Fix-case-of-comparing-against-uninitializ.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0019-make_parts-Fix-case-of-comparing-against-uninitializ.pa";
- filename*1="tch"
 
-From a6411e70a8074d13f9ad0af6d68a6d8bb550c317 Mon Sep 17 00:00:00 2001
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Date: Tue, 1 Nov 2011 14:53:37 +0100
-Subject: [PATCH 19/19] make_parts(): Fix case of comparing against
- uninitialized variables
-
-Silencing gcc's warning of uninitialized variables was hiding a bug
-where if we have /dev/md64 as a symlink, and /dev/md64p1 was a real
-device node.
-
-In this case major_num and minor_num would not get populated, but we
-end up comparing against them because the stat for md64p1 succeeds.
-
-Instead of using the int foo = foo trick, change the code to set
-set the variables to invalid values so comparisons will fail.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- mdopen.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/mdopen.c b/mdopen.c
-index 555ab84..eac1c1f 100644
---- a/mdopen.c
-+++ b/mdopen.c
-@@ -38,9 +38,9 @@ void make_parts(char *dev, int cnt)
- 	 * else that of dev
- 	 */
- 	struct stat stb;
--	int major_num = major_num; /* quiet gcc -Os unitialized warning */
--	int minor_num = minor_num; /* quiet gcc -Os unitialized warning */
--	int odig = odig; /* quiet gcc -Os unitialized warning */
-+	int major_num;
-+	int minor_num;
-+	int odig;
- 	int i;
- 	int nlen = strlen(dev) + 20;
- 	char *name;
-@@ -53,23 +53,26 @@ void make_parts(char *dev, int cnt)
- 	if (lstat(dev, &stb)!= 0)
- 		return;
- 
--	if (S_ISLNK(stb.st_mode)) {
-+	if (S_ISBLK(stb.st_mode)) {
-+		major_num = major(stb.st_rdev);
-+		minor_num = minor(stb.st_rdev);
-+		odig = -1;
-+	} else if (S_ISLNK(stb.st_mode)) {
- 		int len = readlink(dev, orig, sizeof(orig));
- 		if (len < 0 || len > 1000)
- 			return;
- 		orig[len] = 0;
- 		odig = isdigit(orig[len-1]);
--	} else if (S_ISBLK(stb.st_mode)) {
--		major_num = major(stb.st_rdev);
--		minor_num = minor(stb.st_rdev);
-+		major_num = -1;
-+		minor_num = -1;
- 	} else
--		   return;
-+		return;
- 	name = malloc(nlen);
- 	for (i=1; i <= cnt ; i++) {
- 		struct stat stb2;
- 		snprintf(name, nlen, "%s%s%d", dev, dig?"p":"", i);
- 		if (stat(name, &stb2)==0) {
--			if (!S_ISBLK(stb2.st_mode))
-+			if (!S_ISBLK(stb2.st_mode) || !S_ISBLK(stb.st_mode))
- 				continue;
- 			if (stb2.st_rdev == makedev(major_num, minor_num+i))
- 				continue;
 -- 
-1.7.6.4
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
 
 
---------------040905070206030400020104--
