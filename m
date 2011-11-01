@@ -1,63 +1,43 @@
-From: Johannes Truschnigg <johannes@truschnigg.info>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
 Subject: Re: possibly silly question (raid failover)
-Date: Tue, 1 Nov 2011 09:26:59 +0000
-Message-ID: <20111101092659.GA12805@vault>
-References: <4EAF3F78.5060900@meetinghouse.net>
+Date: Tue, 01 Nov 2011 09:02:52 -0400
+Message-ID: <4EAFEDFC.8090001@meetinghouse.net>
+References: <4EAF3F78.5060900@meetinghouse.net> <20111101092659.GA12805@vault>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4EAF3F78.5060900@meetinghouse.net>
+In-Reply-To: <20111101092659.GA12805@vault>
 Sender: linux-raid-owner@vger.kernel.org
-To: Miles Fidelman <mfidelman@meetinghouse.net>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Johannes Truschnigg wrote:
+> Hi Miles,
+>
+> On Mon, Oct 31, 2011 at 08:38:16PM -0400, Miles Fidelman wrote:
+>> Hi Folks,
+>>
+>> I've been exploring various ways to build a "poor man's high
+>> availability cluster."  Currently I'm running two nodes, using raid
+>> on each box, running DRBD across the boxes, and running Xen virtual
+>> machines on top of that.
+>> [...]
+> while I do note that I don't answer your question at hand, I'm still inclined
+> to ask if you do know Ganeti (http://code.google.com/p/ganeti/) yet? It offers
+> pretty much everything you seem to want to have.
 
---h31gzZEtNLTqOjlF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Actually I do know Ganeti, and it does NOT come close to what I'm 
+suggesting:
+- it supports migration but not auto-failover
+- DRBD is the only mechanism it provides for replicating data across 
+nodes - which limits migration to a 2-node pair
 
-Hi Miles,
 
-On Mon, Oct 31, 2011 at 08:38:16PM -0400, Miles Fidelman wrote:
-> Hi Folks,
->=20
-> I've been exploring various ways to build a "poor man's high
-> availability cluster."  Currently I'm running two nodes, using raid
-> on each box, running DRBD across the boxes, and running Xen virtual
-> machines on top of that.
-> [...]
 
-while I do note that I don't answer your question at hand, I'm still inclin=
-ed
-to ask if you do know Ganeti (http://code.google.com/p/ganeti/) yet? It off=
-ers
-pretty much everything you seem to want to have.
 
---=20
-with best regards:
-- Johannes Truschnigg ( johannes@truschnigg.info )
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
 
-www:   http://johannes.truschnigg.info/
-phone: +43 650 2 133337
-xmpp:  johannes@truschnigg.info
 
-Please do not bother me with HTML-eMail or attachments. Thank you.
-
---h31gzZEtNLTqOjlF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk6vu2MACgkQnnUApj8OcoIvpACfSX1sIjGgfHsWBAuRodE8XTor
-T3QAnAnlSgHiX3OOjbvSstDJ8RG5g2XX
-=KmbY
------END PGP SIGNATURE-----
-
---h31gzZEtNLTqOjlF--
