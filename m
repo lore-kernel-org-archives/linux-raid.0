@@ -1,65 +1,68 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PANIC] : kernel BUG at drivers/md/raid5.c:2756!
-Date: Tue, 1 Nov 2011 17:29:46 +1100
-Message-ID: <20111101172946.1bf765f4@notabene.brown>
-References: <CAE0An6cvpqD8oPiHr2CAb753hC=47BYErOwAxaXoeHOYPaVznA@mail.gmail.com>
-	<20111101163931.4d85e330@notabene.brown>
-	<CAE0An6em5crdkSJOLHSB85fQ95Br5HRmu3pa-E4O10X5y7vr9g@mail.gmail.com>
+From: David Brown <david@westcontrol.com>
+Subject: Re: possibly silly question (raid failover)
+Date: Tue, 01 Nov 2011 10:14:43 +0100
+Message-ID: <j8odkj$46h$1@dough.gmane.org>
+References: <4EAF3F78.5060900@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/o1O+VrKQIT1kZZ/JgZUV+DS"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAE0An6em5crdkSJOLHSB85fQ95Br5HRmu3pa-E4O10X5y7vr9g@mail.gmail.com>
+In-Reply-To: <4EAF3F78.5060900@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Manish Katiyar <mkatiyar@gmail.com>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/o1O+VrKQIT1kZZ/JgZUV+DS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 01/11/2011 01:38, Miles Fidelman wrote:
+> Hi Folks,
+>
+> I've been exploring various ways to build a "poor man's high
+> availability cluster." Currently I'm running two nodes, using raid on
+> each box, running DRBD across the boxes, and running Xen virtual
+> machines on top of that.
+>
+> I now have two brand new servers - for a total of four nodes - each with
+> four large drives, and four gigE ports.
+>
+> Between the configuration of the systems, and rack space limitations,
+> I'm trying to use each server for both storage and processing - and been
+> looking at various options for building a cluster file system across all
+> 16 drives, that supports VM migration/failover across all for nodes, and
+> that's resistant to both single-drive failures, and to losing an entire
+> server (and it's 4 drives), and maybe even losing two servers (8 drives).
+>
+> The approach that looks most interesting is Sheepdog - but it's both
+> tied to KVM rather than Xen, and a bit immature.
+>
+> But it lead me to wonder if something like this might make sense:
+> - mount each drive using AoE
+> - run md RAID 10 across all 16 drives one one node
+> - mount the resulting md device using AoE
+> - if the node running the md device fails, use pacemaker/crm to
+> auto-start an md device on another node, re-assemble and republish the
+> array
+> - resulting in a 16-drive raid10 array that's accessible from all nodes
+>
+> Or is this just silly and/or wrongheaded?
+>
+> Miles Fidelman
+>
 
-On Mon, 31 Oct 2011 23:09:04 -0700 Manish Katiyar <mkatiyar@gmail.com> wrot=
-e:
+One thing to watch out for when making high-availability systems and 
+using RAID1 (or RAID10), is that RAID1 only tolerates a single failure 
+in the worst case.  If you have built your disk image spread across 
+different machines with two-copy RAID1, and a server goes down, then the 
+rest then becomes vulnerable to a single disk failure (or a single 
+unrecoverable read error).
 
-> > I think you were quite unlucky to hit this and that you will find it ha=
-rd to
-> > reproduce. :-(
->=20
-> Well, its always reproducible on my ubuntu when I run that script.
->=20
+It's a different matter if you are building a 4-way mirror from the four 
+servers, of course.
 
-Excellent!!   That means you can reliably see if the patch fixes it. :-)
+Alternatively, each server could have its four disks set up as a 3+1 
+local raid5.  Then you combine them all from different machines using 
+raid10 (or possibly just raid1 - depending on your usage patterns, that 
+may be faster).  That gives you an extra safety margin on disk problems.
 
-I guess I was thinking of 'real' devices which are slower than XOR.  You we=
-re
-using loop back device on files in /tmp which are presumably always in memo=
-ry.
-I guess it would be a lot easier to hit in that case.
+But the key issue is to consider what might fail, and what the 
+consequences of that failure are - including the consequences for 
+additional failures.
 
-Thanks,
-NeilBrown
-
---Sig_/o1O+VrKQIT1kZZ/JgZUV+DS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTq+R2jnsnt1WYoG5AQI0lA/9EKt+Y/+iSq5+wNWhWxsuoK4vFiE5CvSL
-mlBcUywz/3g5DvGrNW+D5SVGCvWyLv2BLL3Skd5rT1Fo8rzWzQiOUv03A+OmjA3h
-RTD6HwWsblWUJ5ZvrSm5m+VRInL6/eP5XyGneacZNTa0mzEZWXdwSvLHZG3Ktsys
-SXhdQ2E2mNAVvGAn8pwJG6d8c2vSaoUAt2JUXWjJKfUcu+LN2W5QvzPbxq42hitK
-wD5rXOYHWyUsUcDOSAFqdfuugUGw8ha7YVCW6pVEtzJnEZpQmBkeVXn5Hfn/xQot
-62pYuTmBgkePUS0Q92D34FUr0RqzS5HnsybqxDzIquAv0epuuXCTiFoSzj1T4UNa
-8NNa0vTLMDLpHih8tFfCQLkxE/07mjK4C7InnYemJKSw4swEGjs7pKZGPjZDQ5Aj
-7vIlB2lRN/nT/hx2dLTzYQIrqJ8IirFSKMSmhkSwICAl6lw66VQBIBAy05i+Xdqr
-NiAva5PkI+Zf9Tnm2JHtMtPY1F4iPaU8zHmp5tyqQEtuCPccjCXMQrkLwHjW3HIp
-Gdh0F9/UaMvSv6mpPFJiZAd38DPuRPOcUq9OmzybDFa4Q9u0tGh85hueNf5nxi3Q
-yFLctf6V2FJsDBJV7yTpKy7wiOyPjtSwZiZMA1R/8Bxi9o/TlR6g8JNFrjKROKqD
-MQBeC+ibaJY=
-=tnEm
------END PGP SIGNATURE-----
-
---Sig_/o1O+VrKQIT1kZZ/JgZUV+DS--
