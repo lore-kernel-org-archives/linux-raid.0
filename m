@@ -1,68 +1,63 @@
-From: David Brown <david@westcontrol.com>
+From: Johannes Truschnigg <johannes@truschnigg.info>
 Subject: Re: possibly silly question (raid failover)
-Date: Tue, 01 Nov 2011 10:14:43 +0100
-Message-ID: <j8odkj$46h$1@dough.gmane.org>
+Date: Tue, 1 Nov 2011 09:26:59 +0000
+Message-ID: <20111101092659.GA12805@vault>
 References: <4EAF3F78.5060900@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <4EAF3F78.5060900@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Miles Fidelman <mfidelman@meetinghouse.net>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 01/11/2011 01:38, Miles Fidelman wrote:
+
+--h31gzZEtNLTqOjlF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Miles,
+
+On Mon, Oct 31, 2011 at 08:38:16PM -0400, Miles Fidelman wrote:
 > Hi Folks,
->
+>=20
 > I've been exploring various ways to build a "poor man's high
-> availability cluster." Currently I'm running two nodes, using raid on
-> each box, running DRBD across the boxes, and running Xen virtual
+> availability cluster."  Currently I'm running two nodes, using raid
+> on each box, running DRBD across the boxes, and running Xen virtual
 > machines on top of that.
->
-> I now have two brand new servers - for a total of four nodes - each with
-> four large drives, and four gigE ports.
->
-> Between the configuration of the systems, and rack space limitations,
-> I'm trying to use each server for both storage and processing - and been
-> looking at various options for building a cluster file system across all
-> 16 drives, that supports VM migration/failover across all for nodes, and
-> that's resistant to both single-drive failures, and to losing an entire
-> server (and it's 4 drives), and maybe even losing two servers (8 drives).
->
-> The approach that looks most interesting is Sheepdog - but it's both
-> tied to KVM rather than Xen, and a bit immature.
->
-> But it lead me to wonder if something like this might make sense:
-> - mount each drive using AoE
-> - run md RAID 10 across all 16 drives one one node
-> - mount the resulting md device using AoE
-> - if the node running the md device fails, use pacemaker/crm to
-> auto-start an md device on another node, re-assemble and republish the
-> array
-> - resulting in a 16-drive raid10 array that's accessible from all nodes
->
-> Or is this just silly and/or wrongheaded?
->
-> Miles Fidelman
->
+> [...]
 
-One thing to watch out for when making high-availability systems and 
-using RAID1 (or RAID10), is that RAID1 only tolerates a single failure 
-in the worst case.  If you have built your disk image spread across 
-different machines with two-copy RAID1, and a server goes down, then the 
-rest then becomes vulnerable to a single disk failure (or a single 
-unrecoverable read error).
+while I do note that I don't answer your question at hand, I'm still inclin=
+ed
+to ask if you do know Ganeti (http://code.google.com/p/ganeti/) yet? It off=
+ers
+pretty much everything you seem to want to have.
 
-It's a different matter if you are building a 4-way mirror from the four 
-servers, of course.
+--=20
+with best regards:
+- Johannes Truschnigg ( johannes@truschnigg.info )
 
-Alternatively, each server could have its four disks set up as a 3+1 
-local raid5.  Then you combine them all from different machines using 
-raid10 (or possibly just raid1 - depending on your usage patterns, that 
-may be faster).  That gives you an extra safety margin on disk problems.
+www:   http://johannes.truschnigg.info/
+phone: +43 650 2 133337
+xmpp:  johannes@truschnigg.info
 
-But the key issue is to consider what might fail, and what the 
-consequences of that failure are - including the consequences for 
-additional failures.
+Please do not bother me with HTML-eMail or attachments. Thank you.
 
+--h31gzZEtNLTqOjlF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk6vu2MACgkQnnUApj8OcoIvpACfSX1sIjGgfHsWBAuRodE8XTor
+T3QAnAnlSgHiX3OOjbvSstDJ8RG5g2XX
+=KmbY
+-----END PGP SIGNATURE-----
+
+--h31gzZEtNLTqOjlF--
