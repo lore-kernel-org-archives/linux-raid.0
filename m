@@ -1,23 +1,32 @@
-From: Manish Katiyar <mkatiyar@gmail.com>
-Subject: Re: [PANIC] : kernel BUG at drivers/md/raid5.c:2756!
-Date: Mon, 31 Oct 2011 23:09:04 -0700
-Message-ID: <CAE0An6em5crdkSJOLHSB85fQ95Br5HRmu3pa-E4O10X5y7vr9g@mail.gmail.com>
-References: <CAE0An6cvpqD8oPiHr2CAb753hC=47BYErOwAxaXoeHOYPaVznA@mail.gmail.com>
- <20111101163931.4d85e330@notabene.brown>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 1/3] conf_match(): Remove dead code
+Date: Tue, 01 Nov 2011 07:22:45 +0100
+Message-ID: <4EAF9035.30407@redhat.com>
+References: <1320069234-13112-1-git-send-email-Jes.Sorensen@redhat.com>	<1320069234-13112-2-git-send-email-Jes.Sorensen@redhat.com> <20111101133331.21d4ebae@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111101163931.4d85e330@notabene.brown>
+In-Reply-To: <20111101133331.21d4ebae@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
-> I think you were quite unlucky to hit this and that you will find it hard to
-> reproduce. :-(
+On 11/01/11 03:33, NeilBrown wrote:
+> Hi Jes,
+>  thanks for these 3 patches.
+>  In each case I chose to remove different code :-)
+> 
+>  In this case search_mdstat was nearly identical to conf_match, but uses the
+>  bits you removed.  So I unified the two.
+> 
+>  For the 'Kill' fix, I removed a different test on 'force' so that the printf
+>  that you removed could not actually be reached.
 
-Well, its always reproducible on my ubuntu when I run that script.
+That is great! There are times where I am not quite sure what the
+original intention of the code was, so I am just glad the patches is
+proving to be of use :)
 
--- 
-Thanks -
-Manish
+Cheers,
+Jes
