@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 04/19] sysfs_unique_holder(): Check read() return value before using as buffer index
-Date: Tue,  1 Nov 2011 16:09:20 +0100
-Message-ID: <1320160175-18976-5-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 01/19] Grow_Add_device(): dev_open() return a negative fd on error
+Date: Tue,  1 Nov 2011 16:09:17 +0100
+Message-ID: <1320160175-18976-2-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,22 +14,22 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- sysfs.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ Grow.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/sysfs.c b/sysfs.c
-index 05f0118..10e1597 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -804,6 +804,8 @@ int sysfs_unique_holder(int devnum, long rdev)
+diff --git a/Grow.c b/Grow.c
+index b80f202..9ee22e0 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -174,7 +174,7 @@ int Grow_Add_device(char *devname, int fd, char *newdev)
+ 			return 1;
  		}
- 		n = read(fd, buf, sizeof(buf)-1);
- 		close(fd);
-+		if (n < 0)
-+			continue;
- 		buf[n] = 0;
- 		if (sscanf(buf, "%d:%d%c", &mj, &mn, &c) != 3 ||
- 		    c != '\n') {
+ 		fd2 = dev_open(dv, O_RDWR);
+-		if (!fd2) {
++		if (fd2 < 0) {
+ 			fprintf(stderr, Name ": cannot open device file %s\n", dv);
+ 			close(nfd);
+ 			free(st);
 -- 
 1.7.6.4
 
