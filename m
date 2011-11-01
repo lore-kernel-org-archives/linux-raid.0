@@ -1,11 +1,11 @@
-From: NeilBrown <neilb@suse.de>
+From: Paul Menzel <pm.debian@googlemail.com>
 Subject: Re: [md PATCH 1/1] add display of hours remaining to finish resync
-Date: Wed, 2 Nov 2011 10:32:46 +1100
-Message-ID: <20111102103246.3f7a9a31@notabene.brown>
+Date: Wed, 02 Nov 2011 00:35:10 +0100
+Message-ID: <1320190510.27731.22.camel@mattotaupa>
 References: <1320184427.6471.70.camel@oxygen.netxsys.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/F_XQmaXCzP0HLlTpICUIwe9"; protocol="application/pgp-signature"
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-B/WnjF3iHT+yTVZOB3Ld"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320184427.6471.70.camel@oxygen.netxsys.com>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,49 +13,40 @@ To: Krzysztof Adamski <k@adamski.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/F_XQmaXCzP0HLlTpICUIwe9
-Content-Type: text/plain; charset=US-ASCII
+
+--=-B/WnjF3iHT+yTVZOB3Ld
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 01 Nov 2011 17:53:47 -0400 Krzysztof Adamski <k@adamski.org> wrote:
+Dear Krzysztof,
 
+
+Am Dienstag, den 01.11.2011, 17:53 -0400 schrieb Krzysztof Adamski:
 > This is my first patch, so please be gentle.
 
-Always.
+thank you for your patch. The line above does not belong to the commit
+message. You can put that below the commit message after =C2=BB---=C2=AB or=
+ on top
+and separate the patch using =C2=BB--- 8< ----=C2=AB. (See `git help am` fo=
+r more
+information.
 
->=20
 > This patch adds the display of the number of hours till the completion
 > of resync of an array in the /proc/mdstat display.
 >=20
 > Example: [>....................]  resync =3D  3.3% (98633240/2928311808)
 > finish=3D1026.1min (17h) speed=3D45957K/sec
-
-Thanks.
-While I can see the attraction of this I am always cautious of making
-unnecessary changes to /proc/mdstat.
-It is very likely that people have ad-hoc scripts and programs which parse
-the output and do something with it.
-While I think it is unlikely that the change you have suggested will break
-any such script, I cannot be at all sure that it won't break one.
-And I really don't like breaking things.
-
-There certainly is value in having a way to see at a glance the over-all
-status of md.  Currently that is
-    watch cat /proc/mdstat
-(I run that whenever I am testing).
-However if we want to improve it, I think it would be best to write a
-separate program that gathers data from there /proc/mdstat
-and/or /sys/block/md*/md/  and presents nicely-formatted output.
-
-mdtop??
-
-Thanks,
-NeilBrown
-
 >=20
 > Signed-off-by: Krzysztof Adamski <k@adamski.org>
 >=20
 > # diff -Naru drivers/md/md.c-orig  drivers/md/md.c
+
+It would be easier if you used `git commit` and for example
+
+    git format-patch -1 -s
+
+and then sent it using `git send-email` or your MUA (see below).
+
 > --- drivers/md/md.c-orig        2011-10-25 01:11:12.000000000 -0400
 > +++ drivers/md/md.c     2011-11-01 17:37:35.000000000 -0400
 > @@ -6351,8 +6351,8 @@
@@ -64,42 +55,50 @@ NeilBrown
 > =20
 > -       seq_printf(seq, " finish=3D%lu.%lumin", (unsigned long)rt / 60,
 > -                  ((unsigned long)rt % 60)/6);
-> +       seq_printf(seq, " finish=3D%lu.%lumin (%luh)", (unsigned long)rt /
+> +       seq_printf(seq, " finish=3D%lu.%lumin (%luh)", (unsigned long)rt =
+/
 > 60,
 > +                  ((unsigned long)rt % 60)/6, (unsigned long)rt / 60 /
 > 60);
+
+Unfortunately your mailer mangled the patch. You should choose pre
+formatted, so automatic line breaks do not happen, which prevent the
+application of the patch.
+
 > =20
 >         seq_printf(seq, " speed=3D%ldK/sec", db/2/dt);
 >  }
->=20
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Please resend this patch as v2.
+
+    git format-patch --subject-prefix=3D"PATCH v2"
+
+I am not sure if it should be a reply to the same thread or a new
+message.
+
+You can add the following line to the the commit message.
+
+Reviewed-by: Paul Menzel <paulepanter@users.sourceforge.net>
+
+(Different address on purpose.)
 
 
---Sig_/F_XQmaXCzP0HLlTpICUIwe9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Thanks,
+
+Paul
+
+--=-B/WnjF3iHT+yTVZOB3Ld
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIVAwUBTrCBnjnsnt1WYoG5AQJkkRAAsttrku5PPE324FTTe5rI8eAklLoLudFb
-7NzOzBL3/o1hq9qrDYo/9y96NAMlYOWvYHRTflXajy63L8AZepzTRz5T1yBgB09U
-Zpwmtup5OLA7d3pavwlpHZ5MRk/lxXbtU5cVGZfzyaf3WeYTCDD1dGoV4wdNodQA
-+JJg0wWDfpLJy1dJrW+G00MMmy1gPt/xJz7gihDTlDlJGgJWYd0eMSuf6e7fTJmR
-VtnR49r3HpwpchNdpIh4UPb9U+CuhACd3CbIo56Q5kqgukkxc10aCOQ7prBl+7xL
-Pt+HIYKooBo5dWm/g9rk4tVygYmBt748zu29FkFzwt/4GsKNckeE84UtLzl/unu5
-nt0AKgok7I6C/RdyyVaQttvAHKk3piSLmdg7jbYPKwlUGghB1CiA1j25X7uWC/Rg
-/w7pWpkX+VsNP8PhAav9u6y9OocBwLudRBWMw+czllp8uEEFxas+5a68FYus2gZC
-YO8jJuQC8B8Hz1mUW1rU08ocnympx1/l4e93s74rxQmNVrQA5TLcVwtNTZOxTnmQ
-XBiXVTN34Meas31VVnKZUpTOgtAvkz6sc47hQVZSKEXqzaQrmyPkBNLaVNTUUMtR
-aSzrbWJwq+8eqG29dxpFtmEzBhWg6IeCmdOaH/kf6wID7df6THIXFPsh7P7EH+Cw
-Znsz34K/9a4=
-=exzw
+iEUEABECAAYFAk6wgi4ACgkQPX1aK2wOHVgj6QCeKU0ruv0c93LZqBl5u3UVqwfH
+3X4AliwiLbS42fK3JbF1ffrr2izahFQ=
+=OE+2
 -----END PGP SIGNATURE-----
 
---Sig_/F_XQmaXCzP0HLlTpICUIwe9--
+--=-B/WnjF3iHT+yTVZOB3Ld--
+
