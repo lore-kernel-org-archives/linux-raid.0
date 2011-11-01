@@ -1,40 +1,40 @@
 From: Miles Fidelman <mfidelman@meetinghouse.net>
 Subject: Re: possibly silly question (raid failover)
-Date: Tue, 01 Nov 2011 09:02:52 -0400
-Message-ID: <4EAFEDFC.8090001@meetinghouse.net>
-References: <4EAF3F78.5060900@meetinghouse.net> <20111101092659.GA12805@vault>
+Date: Tue, 01 Nov 2011 09:05:25 -0400
+Message-ID: <4EAFEE95.6070608@meetinghouse.net>
+References: <4EAF3F78.5060900@meetinghouse.net> <j8odkj$46h$1@dough.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111101092659.GA12805@vault>
+In-Reply-To: <j8odkj$46h$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Johannes Truschnigg wrote:
-> Hi Miles,
+David Brown wrote:
 >
-> On Mon, Oct 31, 2011 at 08:38:16PM -0400, Miles Fidelman wrote:
->> Hi Folks,
->>
->> I've been exploring various ways to build a "poor man's high
->> availability cluster."  Currently I'm running two nodes, using raid
->> on each box, running DRBD across the boxes, and running Xen virtual
->> machines on top of that.
->> [...]
-> while I do note that I don't answer your question at hand, I'm still inclined
-> to ask if you do know Ganeti (http://code.google.com/p/ganeti/) yet? It offers
-> pretty much everything you seem to want to have.
+> One thing to watch out for when making high-availability systems and 
+> using RAID1 (or RAID10), is that RAID1 only tolerates a single failure 
+> in the worst case.  If you have built your disk image spread across 
+> different machines with two-copy RAID1, and a server goes down, then 
+> the rest then becomes vulnerable to a single disk failure (or a single 
+> unrecoverable read error).
+>
+> It's a different matter if you are building a 4-way mirror from the 
+> four servers, of course.
+>
 
-Actually I do know Ganeti, and it does NOT come close to what I'm 
-suggesting:
-- it supports migration but not auto-failover
-- DRBD is the only mechanism it provides for replicating data across 
-nodes - which limits migration to a 2-node pair
+Just a nit here: I'm looking at "md RAID10" which behaves quite 
+differently that conventional RAID10.  Rather than striping and raiding 
+as separate operations, it does both as a unitary operation - 
+essentially spreading n copies of each block across m disks.  Rather 
+clever that way.
 
+Hence my thought about a 16-disk md RAID10 array - which offers lots of 
+redundancy.
 
-
+Miles
 
 -- 
 In theory, there is no difference between theory and practice.
