@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 18/19] validate_geometry_imsm_volume(): Avoid NULL pointer dereference
-Date: Tue,  1 Nov 2011 16:09:34 +0100
-Message-ID: <1320160175-18976-19-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 17/19] bitmap_fd_read(): fix memory leak
+Date: Tue,  1 Nov 2011 16:09:33 +0100
+Message-ID: <1320160175-18976-18-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,31 +14,37 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- super-intel.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ bitmap.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 34a4b34..0193fe7 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5139,7 +5139,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- {
- 	struct stat stb;
- 	struct intel_super *super = st->sb;
--	struct imsm_super *mpb = super->anchor;
-+	struct imsm_super *mpb;
- 	struct dl *dl;
- 	unsigned long long pos = 0;
- 	unsigned long long maxsize;
-@@ -5150,6 +5150,8 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 	if (!super)
- 		return 0;
+diff --git a/bitmap.c b/bitmap.c
+index 2e1ecda..d02f16e 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -147,6 +147,7 @@ bitmap_info_t *bitmap_fd_read(int fd, int brief)
+ 		fprintf(stderr, Name ": failed to allocate %zd bytes\n",
+ 				sizeof(*info));
+ #endif
++		free(buf);
+ 		return NULL;
+ 	}
  
-+	mpb = super->anchor;
-+
- 	if (mpb->num_raid_devs > 0 && mpb->num_disks != raiddisks) {
- 		fprintf(stderr, Name ": the option-rom requires all "
- 			"member disks to be a member of all volumes.\n");
+@@ -154,6 +155,7 @@ bitmap_info_t *bitmap_fd_read(int fd, int brief)
+ 		fprintf(stderr, Name ": failed to read superblock of bitmap "
+ 			"file: %s\n", strerror(errno));
+ 		free(info);
++		free(buf);
+ 		return NULL;
+ 	}
+ 	memcpy(&info->sb, buf, sizeof(info->sb));
+@@ -198,6 +200,7 @@ bitmap_info_t *bitmap_fd_read(int fd, int brief)
+ 		total_bits = read_bits;
+ 	}
+ out:
++	free(buf);
+ 	info->total_bits = total_bits;
+ 	info->dirty_bits = dirty_bits;
+ 	return info;
 -- 
 1.7.6.4
 
