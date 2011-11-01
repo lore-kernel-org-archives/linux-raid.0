@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 10/19] Grow_reshape(): Fix another 'sra' leak
-Date: Tue,  1 Nov 2011 16:09:26 +0100
-Message-ID: <1320160175-18976-11-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/19] Grow_restart(): free() offsets after use
+Date: Tue,  1 Nov 2011 16:09:23 +0100
+Message-ID: <1320160175-18976-8-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -18,30 +18,29 @@ Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
  1 files changed, 3 insertions(+), 0 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index af61fc3..29a9126 100644
+index 93a1fba..af61fc3 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -1535,10 +1535,12 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 	frozen = freeze(st);
- 	if (frozen < -1) {
- 		/* freeze() already spewed the reason */
-+		sysfs_free(sra);
- 		return 1;
- 	} else if (frozen < 0) {
- 		fprintf(stderr, Name ": %s is performing resync/recovery and cannot"
- 			" be reshaped\n", devname);
-+		sysfs_free(sra);
- 		return 1;
- 	}
+@@ -3578,6 +3578,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
+ 			if (verbose)
+ 				fprintf(stderr, Name ": Error restoring backup from %s\n",
+ 					devname);
++			free(offsets);
+ 			return 1;
+ 		}
+ 		
+@@ -3595,9 +3596,11 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
+ 			if (verbose)
+ 				fprintf(stderr, Name ": Error restoring second backup from %s\n",
+ 					devname);
++			free(offsets);
+ 			return 1;
+ 		}
  
-@@ -1835,6 +1837,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		frozen = 0;
- 	}
- release:
-+	sysfs_free(sra);
- 	if (frozen > 0)
- 		unfreeze(st);
- 	return rv;
++		free(offsets);
+ 
+ 		/* Ok, so the data is restored. Let's update those superblocks. */
+ 
 -- 
 1.7.6.4
 
