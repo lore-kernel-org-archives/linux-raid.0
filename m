@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 07/19] Grow_restart(): free() offsets after use
-Date: Tue,  1 Nov 2011 16:09:23 +0100
-Message-ID: <1320160175-18976-8-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 06/19] assemble_container_content(): fix memory leak
+Date: Tue,  1 Nov 2011 16:09:22 +0100
+Message-ID: <1320160175-18976-7-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,33 +14,26 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Grow.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ Assemble.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 93a1fba..af61fc3 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3578,6 +3578,7 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 			if (verbose)
- 				fprintf(stderr, Name ": Error restoring backup from %s\n",
- 					devname);
-+			free(offsets);
+diff --git a/Assemble.c b/Assemble.c
+index 4ded58c..05710f5 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -1527,8 +1527,11 @@ int assemble_container_content(struct supertype *st, int mdfd,
+ 
+ 	sra = sysfs_read(mdfd, 0, GET_VERSION);
+ 	if (sra == NULL || strcmp(sra->text_version, content->text_version) != 0)
+-		if (sysfs_set_array(content, md_get_version(mdfd)) != 0)
++		if (sysfs_set_array(content, md_get_version(mdfd)) != 0) {
++			if (sra)
++				sysfs_free(sra);
  			return 1;
- 		}
- 		
-@@ -3595,9 +3596,11 @@ int Grow_restart(struct supertype *st, struct mdinfo *info, int *fdlist, int cnt
- 			if (verbose)
- 				fprintf(stderr, Name ": Error restoring second backup from %s\n",
- 					devname);
-+			free(offsets);
- 			return 1;
- 		}
++		}
  
-+		free(offsets);
- 
- 		/* Ok, so the data is restored. Let's update those superblocks. */
- 
+ 	if (st->ss->external && content->recovery_blocked)
+ 		block_subarray(content);
 -- 
 1.7.6.4
 
