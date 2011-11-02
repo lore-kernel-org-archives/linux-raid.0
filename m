@@ -1,49 +1,55 @@
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: Re: [PATCH 00/19] More fixes for resource leaks and warnings
-Date: Wed, 02 Nov 2011 15:39:28 +0100
-Message-ID: <4EB15620.7090100@redhat.com>
-References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com> <20111102112530.2fd3cb7f@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jes.Sorensen@redhat.com
+Subject: [PATCH 00/12] More leak and NULL pointer dereference fixes
+Date: Wed,  2 Nov 2011 15:42:05 +0100
+Message-ID: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111102112530.2fd3cb7f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
-On 11/02/11 01:25, NeilBrown wrote:
-> Thanks Jes.
-> I've applied all of these - using the second version of patch 19.
-> 
-> I'm not normally very fussed about freeing and closing things shortly before
-> the process is going to exit anyway, but I'm not against it.  And some of
-> your patches were for other leaks.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Hi Neil,
+Hi,
 
-I totally agree here. The main reason for applying those fixes is to
-reduce the S/N ratio from the checking tools.
+As promised, here is another batch of fixes for small memory leaks,
+use of invalid file descriptors and NULL pointer dereferences.
 
-With my latest with these patches applied run I got about 65 warnings
-whereas I am getting around 105 in the version of mdadm that is in
-Fedora 16. Some of these are definitely false positives, but I have
-another set of patches with real fixes coming your way shortly.
-
->> This is the bulk of these for now. Please notice that I haven't
->> touched super-ddf.c at all, and that is probably the single biggest
->> offender. Also note that I haven't addressed a number of warnings in
->> sysfs.c where we know for sure that files aren't bigger than a given
->> size. The tool obviously doesn't know this, so it spews warnings when
->> we strcpy() content we just read. While the code per-ce is probably
->> safe, we may want to switch to strncpy() just to reduce the noise
->> ratio?
-> 
-> Maybe.  I hate strncpy because it doesn't reliably nul-terminate but I'm
-> happy to make the code 'safer' as long as we avoid making it ugly.
-
-I couldn't agree more - it is such a mess :(
+The coverity output is starting to look a lot better by now :)
 
 Cheers,
 Jes
+
+
+Jes Sorensen (12):
+  mdadm: add missing break for UpdateSubarray
+  ping_monitor(): check file descriptor is valid before using and
+    closing it
+  mdstat_read(): Check return value of dup() before using file
+    descriptor
+  get_component_size(): Check read() return value for error before
+    using it
+  array_try_spare(): open_dev() returns -1 on error, not zero
+  disk_init_and_add(): Fail if opening sysfs file descriptors fail
+  close_aa(): Verify file descriptors are valid before trying to close
+    them
+  ahci_enumerate_ports(): Don't close fd that failed to open
+  unblock_monitor(): Check sra is valid before dereferencing
+  Manage_ro(): Check pointer rather than dereferencing it
+  fd2devname(): Don't dereference NULL pointer
+  match_metadata_desc(): Fix memory leak
+
+ Incremental.c |    2 +-
+ Manage.c      |    2 +-
+ managemon.c   |   21 ++++++++++++++++-----
+ mdadm.c       |    1 +
+ mdstat.c      |    7 ++++++-
+ msg.c         |   11 +++++++++--
+ super-intel.c |    8 +++++---
+ super-mbr.c   |    7 ++++---
+ sysfs.c       |    2 +-
+ 9 files changed, 44 insertions(+), 17 deletions(-)
+
+-- 
+1.7.6.4
+
