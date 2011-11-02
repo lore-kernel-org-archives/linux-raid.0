@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 04/12] get_component_size(): Check read() return value for error before using it
-Date: Wed,  2 Nov 2011 15:42:09 +0100
-Message-ID: <1320244937-9739-5-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 08/12] ahci_enumerate_ports(): Don't close fd that failed to open
+Date: Wed,  2 Nov 2011 15:42:13 +0100
+Message-ID: <1320244937-9739-9-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,22 +14,23 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- sysfs.c |    2 +-
+ super-intel.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/sysfs.c b/sysfs.c
-index 10e1597..d501792 100644
---- a/sysfs.c
-+++ b/sysfs.c
-@@ -387,7 +387,7 @@ unsigned long long get_component_size(int fd)
- 		return 0;
- 	n = read(fd, fname, sizeof(fname));
- 	close(fd);
--	if (n == sizeof(fname))
-+	if (n < 0 || n == sizeof(fname))
- 		return 0;
- 	fname[n] = 0;
- 	return strtoull(fname, NULL, 10) * 2;
+diff --git a/super-intel.c b/super-intel.c
+index 0193fe7..b583b35 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1572,8 +1572,8 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
+ 				printf(" (%.*s)\n", MAX_RAID_SERIAL_LEN, buf);
+ 			else
+ 				printf(" ()\n");
++			close(fd);
+ 		}
+-		close(fd);
+ 		free(path);
+ 		path = NULL;
+ 	}
 -- 
 1.7.6.4
 
