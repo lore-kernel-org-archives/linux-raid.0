@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 10/17] md/raid10: If there is a spare and a replaceable
- device, start replacement.
+Subject: [md PATCH 11/17] md/raid1: Replace use of mddev->raid_disks with
+ conf->raid_disks.
 Date: Wed, 02 Nov 2011 16:25:44 +1100
-Message-ID: <20111102052544.17566.73807.stgit@notabene.brown>
+Message-ID: <20111102052544.17566.93951.stgit@notabene.brown>
 References: <20111102051851.17566.52748.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,95 +13,50 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When attempting to add a spare to a RAID10 array, also consider
-adding it as a replacement for a replaceable device.
+In general mddev->raid_disks can change unexpectedly while
+conf->raid_disks will only change in a very controlled way.  So change
+some uses of one to the other.
+
+The use of mddev->raid_disks will not cause actually problems but
+this way is more consistent and safer in the long term.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |   40 ++++++++++++++++++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 4 deletions(-)
+ drivers/md/raid1.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 15e3f73..5993615 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -418,6 +418,9 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 			md_error(rdev->mddev, rdev);
- 		else {
- 			set_bit(WriteErrorSeen,	&rdev->flags);
-+			if (!test_and_set_bit(Replaceable, &rdev->flags))
-+				set_bit(MD_RECOVERY_NEEDED,
-+					&rdev->mddev->recovery);
- 			set_bit(R10BIO_WriteError, &r10_bio->state);
- 			dec_rdev = 0;
- 		}
-@@ -1483,8 +1486,25 @@ static int raid10_add_disk(struct mddev *mddev, struct md_rdev *rdev)
- 		struct mirror_info *p = &conf->mirrors[mirror];
- 		if (p->recovery_disabled == mddev->recovery_disabled)
- 			continue;
--		if (p->rdev)
--			continue;
-+		if (p->rdev) {
-+			if (!test_bit(Replaceable, &p->rdev->flags) ||
-+			    p->replacement != NULL)
-+				continue;
-+			clear_bit(In_sync, &rdev->flags);
-+			set_bit(Replacement, &rdev->flags);
-+			rdev->raid_disk = mirror;
-+			err = 0;
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset << 9);
-+			if (rdev->bdev->bd_disk->queue->merge_bvec_fn) {
-+				blk_queue_max_segments(mddev->queue, 1);
-+				blk_queue_segment_boundary(mddev->queue,
-+							   PAGE_CACHE_SIZE - 1);
-+			}
-+			conf->fullsync = 1;
-+			rcu_assign_pointer(p->replacement, rdev);
-+			break;
-+		}
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a52979b..74d4ce5 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -276,7 +276,8 @@ static inline void update_head_pos(int disk, struct r1bio *r1_bio)
+ static int find_bio_disk(struct r1bio *r1_bio, struct bio *bio)
+ {
+ 	int mirror;
+-	int raid_disks = r1_bio->mddev->raid_disks;
++	struct r1conf *conf = r1_bio->mddev->private;
++	int raid_disks = conf->raid_disks;
  
- 		disk_stack_limits(mddev->gendisk, rdev->bdev,
- 				  rdev->data_offset << 9);
-@@ -1660,6 +1680,9 @@ static void end_sync_write(struct bio *bio, int error)
- 			md_error(mddev, rdev);
- 		else {
- 			set_bit(WriteErrorSeen, &rdev->flags);
-+			if (!test_and_set_bit(Replaceable, &rdev->flags))
-+				set_bit(MD_RECOVERY_NEEDED,
-+					&rdev->mddev->recovery);
- 			set_bit(R10BIO_WriteError, &r10_bio->state);
- 		}
- 	} else if (is_badblock(rdev,
-@@ -1854,8 +1877,13 @@ static void fix_recovery_read_error(struct r10bio *r10_bio)
- 					  s << 9,
- 					  bio->bi_io_vec[idx].bv_page,
- 					  WRITE, false);
--			if (!ok)
-+			if (!ok) {
- 				set_bit(WriteErrorSeen, &rdev->flags);
-+				if (!test_and_set_bit(Replaceable,
-+						      &rdev->flags))
-+					set_bit(MD_RECOVERY_NEEDED,
-+						&rdev->mddev->recovery);
-+			}
- 		}
- 		if (!ok) {
- 			/* We don't worry if we cannot set a bad block -
-@@ -1973,8 +2001,12 @@ static int r10_sync_page_io(struct md_rdev *rdev, sector_t sector,
- 	if (sync_page_io(rdev, sector, sectors << 9, page, rw, false))
- 		/* success */
+ 	for (mirror = 0; mirror < raid_disks; mirror++)
+ 		if (r1_bio->bios[mirror] == bio)
+@@ -608,7 +609,7 @@ int md_raid1_congested(struct mddev *mddev, int bits)
  		return 1;
--	if (rw == WRITE)
-+	if (rw == WRITE) {
- 		set_bit(WriteErrorSeen, &rdev->flags);
-+		if (!test_and_set_bit(Replaceable, &rdev->flags))
-+			set_bit(MD_RECOVERY_NEEDED,
-+				&rdev->mddev->recovery);
-+	}
- 	/* need to record an error - either for the block or the device */
- 	if (!rdev_set_badblocks(rdev, sector, sectors, 0))
- 		md_error(rdev->mddev, rdev);
+ 
+ 	rcu_read_lock();
+-	for (i = 0; i < mddev->raid_disks; i++) {
++	for (i = 0; i < conf->raid_disks; i++) {
+ 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[i].rdev);
+ 		if (rdev && !test_bit(Faulty, &rdev->flags)) {
+ 			struct request_queue *q = bdev_get_queue(rdev->bdev);
+@@ -1287,7 +1288,7 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	int mirror = 0;
+ 	struct mirror_info *p;
+ 	int first = 0;
+-	int last = mddev->raid_disks - 1;
++	int last = conf->raid_disks - 1;
+ 
+ 	if (mddev->recovery_disabled == conf->recovery_disabled)
+ 		return -EBUSY;
 
 
