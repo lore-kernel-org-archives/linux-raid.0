@@ -1,104 +1,49 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
-Date: Wed, 2 Nov 2011 15:33:29 +0100
-Message-ID: <CAPXgP12RsaFeGK+dQ2hwFjQawhN+QDn1+K8t6jkJ-XSRyautJw@mail.gmail.com>
-References: <20110208094843.GD11446@tango.0pointer.de> <AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
- <20110208110730.GF23157@tango.0pointer.de> <AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
- <20110208172822.GC21847@tango.0pointer.de> <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
- <20111031110613.GA1402@tango.0pointer.de> <20111102114416.7879b77f@notabene.brown>
- <20111102011615.GA5289@tango.0pointer.de> <20111102130334.09c3ab51@notabene.brown>
- <20111102133223.GC5119@tango.0pointer.de>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: [PATCH 00/19] More fixes for resource leaks and warnings
+Date: Wed, 02 Nov 2011 15:39:28 +0100
+Message-ID: <4EB15620.7090100@redhat.com>
+References: <1320160175-18976-1-git-send-email-Jes.Sorensen@redhat.com> <20111102112530.2fd3cb7f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111102133223.GC5119@tango.0pointer.de>
+In-Reply-To: <20111102112530.2fd3cb7f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennart Poettering <lennart@poettering.net>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, systemd-devel@lists.freedesktop.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Nov 2, 2011 at 14:32, Lennart Poettering <lennart@poettering.ne=
-t> wrote:
-> On Wed, 02.11.11 13:03, NeilBrown (neilb@suse.de) wrote:
->
->> > I'd really prefer if we could somehow make it something that isn't
->> > special and we could just shutdown
->>
->> It must remain running until the array that it manages is read-only =
-and will
->> never be written to again. =C2=A0Then it can be shutdown gracefully.
->> It may be awkward to shut it down gracefully at the moment - I'm not=
- sure. =C2=A0I
->> can certainly fix that.
->
-> The big thing is that if things are done that way you'll always have =
-the
-> chicken and egg problem: you really need to shut down mdmon before
-> unmounting root, but currently you require us to do it in the other
-> order too.
+On 11/02/11 01:25, NeilBrown wrote:
+> Thanks Jes.
+> I've applied all of these - using the second version of patch 19.
+> 
+> I'm not normally very fussed about freeing and closing things shortly before
+> the process is going to exit anyway, but I'm not against it.  And some of
+> your patches were for other leaks.
 
-Yeah, that's just madness.
+Hi Neil,
 
-I talked to Harald, and the currently preferred idea is the version
-where we start mdmon in the initramfs and never touch it again, and it
-runs until the initramfs unmounts the rootfs and shuts down the box.
+I totally agree here. The main reason for applying those fixes is to
+reduce the S/N ratio from the checking tools.
 
-In that picture, the mdmon process is conceptually more like a kernel
-thread than a userspace process. It can not be updated, can not be
-restarted. The only way to update it is to rebuild initramfs and
-reboot the box.
+With my latest with these patches applied run I got about 65 warnings
+whereas I am getting around 105 in the version of mdadm that is in
+Fedora 16. Some of these are definitely false positives, but I have
+another set of patches with real fixes coming your way shortly.
 
->> Each instance of mdmon manages a set of arrays and must remain runni=
-ng
->> until all of those arrays are readonly (or shut down). =C2=A0This al=
-lows it to
->> record that all writes have completed and mark the array as 'clean' =
-so a
->> resync isn't needed at next boot.
->
-> Why doesn't the kernel do that on its own?
+>> This is the bulk of these for now. Please notice that I haven't
+>> touched super-ddf.c at all, and that is probably the single biggest
+>> offender. Also note that I haven't addressed a number of warnings in
+>> sysfs.c where we know for sure that files aren't bigger than a given
+>> size. The tool obviously doesn't know this, so it spews warnings when
+>> we strcpy() content we just read. While the code per-ce is probably
+>> safe, we may want to switch to strncpy() just to reduce the noise
+>> ratio?
+> 
+> Maybe.  I hate strncpy because it doesn't reliably nul-terminate but I'm
+> happy to make the code 'safer' as long as we avoid making it ugly.
 
-Because somebody was naive enough to think that userspace can tear
-down the base it lives on, which in reality is just a total mess in
-the real world. :)
+I couldn't agree more - it is such a mess :(
 
->> True. =C2=A0A version upgrade would need to stash the binary in /run=
-=2E
->> It might be better to go the 'remount-readonly - then stop mdmon'
->> route.
->
-> It is not sufficient to stash the binary in /run, you'd also need to
-> include your own libc and in fact every single other library or file =
-you
-> use.
-
-I don't think any of these update games in a running system make much
-sense in the end.
-
->> I guess it still needs to be able to differentiate processes that ar=
-e holding
->> write-access to the filesystem and so need to be killed, from proces=
-ses are
->> only holding read-access and so can be permitted to remain.
-
-> But again, I believe the right solution is to fix mdmon to make it
-> something that can be shut down normally at any time. That might mean
-> that some of its code has to move to the kernel, but otherwise you'll
-> always have this chicken and egg problem, and you cannot fix it prope=
-rly.
-
-That would be the ideal solution. Having the roofs depending on a
-tools that runs off the rootfs just asks for serious trouble. If all
-that can't move to the kernel, the initramfs-only solution with the
-above mentioned constrains, seems like the best option.
-
-People who like to put their rootfs on a userspace managed raid device
-just get what they asked for. :)
-
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Jes
