@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 02/12] ping_monitor(): check file descriptor is valid before using and closing it
-Date: Wed,  2 Nov 2011 15:42:07 +0100
-Message-ID: <1320244937-9739-3-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 03/12] mdstat_read(): Check return value of dup() before using file descriptor
+Date: Wed,  2 Nov 2011 15:42:08 +0100
+Message-ID: <1320244937-9739-4-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,30 +14,30 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- msg.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ mdstat.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/msg.c b/msg.c
-index 98d6d13..87d3b8d 100644
---- a/msg.c
-+++ b/msg.c
-@@ -207,9 +207,14 @@ int fping_monitor(int sfd)
- int ping_monitor(char *devname)
- {
- 	int sfd = connect_monitor(devname);
--	int err = fping_monitor(sfd);
-+	int err;
-+
-+	if (sfd >= 0) {
-+		err = fping_monitor(sfd);
-+		close(sfd);
-+	} else
-+		err = -1;
+diff --git a/mdstat.c b/mdstat.c
+index abf6bf9..6ead24c 100644
+--- a/mdstat.c
++++ b/mdstat.c
+@@ -131,10 +131,15 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+ 	FILE *f;
+ 	struct mdstat_ent *all, *rv, **end, **insert_here;
+ 	char *line;
++	int fd;
  
--	close(sfd);
- 	return err;
- }
- 
+ 	if (hold && mdstat_fd != -1) {
+ 		lseek(mdstat_fd, 0L, 0);
+-		f = fdopen(dup(mdstat_fd), "r");
++		fd = dup(mdstat_fd);
++		if (fd >= 0)
++			f = fdopen(fd, "r");
++		else
++			return NULL;
+ 	} else
+ 		f = fopen("/proc/mdstat", "r");
+ 	if (f == NULL)
 -- 
 1.7.6.4
 
