@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 07/12] close_aa(): Verify file descriptors are valid before trying to close them
-Date: Wed,  2 Nov 2011 15:42:12 +0100
-Message-ID: <1320244937-9739-8-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 11/12] fd2devname(): Don't dereference NULL pointer
+Date: Wed,  2 Nov 2011 15:42:16 +0100
+Message-ID: <1320244937-9739-12-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,35 +14,26 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- managemon.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
+ super-intel.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index fceaeb9..cde0d8b 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -117,11 +117,16 @@ static void close_aa(struct active_array *aa)
- 		close(d->state_fd);
- 	}
- 
--	close(aa->action_fd);
--	close(aa->info.state_fd);
--	close(aa->resync_start_fd);
--	close(aa->metadata_fd);
--	close(aa->sync_completed_fd);
-+	if (aa->action_fd >= 0)
-+		close(aa->action_fd);
-+	if (aa->info.state_fd >= 0)
-+		close(aa->info.state_fd);
-+	if (aa->resync_start_fd >= 0)
-+		close(aa->resync_start_fd);
-+	if (aa->metadata_fd >= 0)
-+		close(aa->metadata_fd);
-+	if (aa->sync_completed_fd >= 0)
-+		close(aa->sync_completed_fd);
+diff --git a/super-intel.c b/super-intel.c
+index b583b35..f776be9 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2868,8 +2868,10 @@ static void fd2devname(int fd, char *name)
+ 	
+ 	dname[rv] = '\0';
+ 	nm = strrchr(dname, '/');
+-	nm++;
+-	snprintf(name, MAX_RAID_SERIAL_LEN, "/dev/%s", nm);
++	if (nm) {
++		nm++;
++		snprintf(name, MAX_RAID_SERIAL_LEN, "/dev/%s", nm);
++	}
  }
  
- static void free_aa(struct active_array *aa)
+ extern int scsi_get_serial(int fd, void *buf, size_t buf_len);
 -- 
 1.7.6.4
 
