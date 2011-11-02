@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 14/17] md/raid1: handle activation of replacement device
- when recovery completes.
+Subject: [md PATCH 15/17] md/raid1: recognise replacements when assembling
+ arrays.
 Date: Wed, 02 Nov 2011 16:25:44 +1100
-Message-ID: <20111102052544.17566.55646.stgit@notabene.brown>
+Message-ID: <20111102052544.17566.9533.stgit@notabene.brown>
 References: <20111102051851.17566.52748.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,70 +13,78 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When recovery completes ->spare_active is called.
-This checks if the replacement is ready and if so it fails
-the original.
+If a Replacement is seen, file it as such.
+
+If we see two replacements (or two normal devices) for the one slot,
+abort.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid1.c |   36 +++++++++++++++++++++++++++++++++---
- 1 files changed, 33 insertions(+), 3 deletions(-)
+ drivers/md/raid1.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index eac9a1d..5307e73 100644
+index 5307e73..01cf420 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -1265,6 +1265,25 @@ static int raid1_spare_active(struct mddev *mddev)
- 	 */
- 	for (i = 0; i < conf->raid_disks; i++) {
- 		struct md_rdev *rdev = conf->mirrors[i].rdev;
-+		struct md_rdev *repl = conf->mirrors[conf->raid_disks + i].rdev;
-+		if (repl
-+		    && repl->recovery_offset == MaxSector
-+		    && !test_bit(Faulty, &repl->flags)
-+		    && !test_and_set_bit(In_sync, &repl->flags)) {
-+			/* replacement has just become active */
-+			if (!rdev ||
-+			    !test_and_clear_bit(In_sync, &rdev->flags))
-+				count++;
-+			if (rdev) {
-+				/* Replaced device not technically
-+				 * faulty, but we need to be sure
-+				 * it gets removed and never re-added
+@@ -2453,14 +2453,20 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 
+ 	conf->poolinfo->mddev = mddev;
+ 
++	err = -EINVAL;
+ 	spin_lock_init(&conf->device_lock);
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		int disk_idx = rdev->raid_disk;
+ 		if (disk_idx >= mddev->raid_disks
+ 		    || disk_idx < 0)
+ 			continue;
+-		disk = conf->mirrors + disk_idx;
++		if (test_bit(Replacement, &rdev->flags))
++			disk = conf->mirrors + conf->raid_disks + disk_idx;
++		else
++			disk = conf->mirrors + disk_idx;
+ 
++		if (disk->rdev)
++			goto abort;
+ 		disk->rdev = rdev;
+ 
+ 		disk->head_position = 0;
+@@ -2476,11 +2482,27 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	conf->pending_count = 0;
+ 	conf->recovery_disabled = mddev->recovery_disabled - 1;
+ 
++	err = -EIO;
+ 	conf->last_used = -1;
+ 	for (i = 0; i < conf->raid_disks * 2; i++) {
+ 
+ 		disk = conf->mirrors + i;
+ 
++		if (i < conf->raid_disks &&
++		    disk[conf->raid_disks].rdev) {
++			/* This slot has a replacement. */
++			if (!disk->rdev) {
++				/* No original, just make the replacement
++				 * a recovering spare
 +				 */
-+				set_bit(Faulty, &rdev->flags);
-+				sysfs_notify_dirent_safe(
-+					rdev->sysfs_state);
-+			}
++				disk->rdev =
++					disk[conf->raid_disks].rdev;
++				disk[conf->raid_disks].rdev = NULL;
++			} else if (!test_bit(In_sync, &disk->rdev->flags))
++				/* Original is not in_sync - bad */
++				goto abort;
 +		}
- 		if (rdev
- 		    && !test_bit(Faulty, &rdev->flags)
- 		    && !test_and_set_bit(In_sync, &rdev->flags)) {
-@@ -1362,10 +1381,21 @@ static int raid1_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
- 			err = -EBUSY;
- 			p->rdev = rdev;
- 			goto abort;
--		} else {
--			clear_bit(Replacement, &rdev->flags);
-+		} else if (conf->mirrors[conf->raid_disks + number].rdev) {
-+			/* We just removed a device that is being replaced.
-+			 * Move down the replacement.  We drain all IO before
-+			 * doing this to avoid confusion.
-+			 */
-+			struct md_rdev *repl =
-+				conf->mirrors[conf->raid_disks + number].rdev;
-+			raise_barrier(conf);
-+			clear_bit(Replacement, &repl->flags);
-+			p->rdev = repl;
-+			conf->mirrors[conf->raid_disks + number].rdev = NULL;
-+			lower_barrier(conf);
-+			clear_bit(Replaceable, &rdev->flags);
-+		} else
- 			clear_bit(Replaceable, &rdev->flags);
--		}
- 		err = md_integrity_register(mddev);
++
+ 		if (!disk->rdev ||
+ 		    !test_bit(In_sync, &disk->rdev->flags)) {
+ 			disk->head_position = 0;
+@@ -2494,7 +2516,6 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 			conf->last_used = i;
  	}
- abort:
+ 
+-	err = -EIO;
+ 	if (conf->last_used < 0) {
+ 		printk(KERN_ERR "md/raid1:%s: no operational mirrors\n",
+ 		       mdname(mddev));
 
 
