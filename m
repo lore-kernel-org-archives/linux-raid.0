@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 09/12] unblock_monitor(): Check sra is valid before dereferencing
-Date: Wed,  2 Nov 2011 15:42:14 +0100
-Message-ID: <1320244937-9739-10-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 10/12] Manage_ro(): Check pointer rather than dereferencing it
+Date: Wed,  2 Nov 2011 15:42:15 +0100
+Message-ID: <1320244937-9739-11-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,22 +14,22 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- msg.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ Manage.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/msg.c b/msg.c
-index 87d3b8d..dc780b3 100644
---- a/msg.c
-+++ b/msg.c
-@@ -448,6 +448,8 @@ void unblock_monitor(char *container, const int unfreeze)
- 			continue;
- 		sysfs_free(sra);
- 		sra = sysfs_read(-1, e->devnum, GET_VERSION|GET_LEVEL);
-+		if (!sra)
-+			continue;
- 		if (sra->array.level > 0)
- 			to_ping++;
- 		if (unblock_subarray(sra, unfreeze))
+diff --git a/Manage.c b/Manage.c
+index d5110a7..d9775de 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -86,7 +86,7 @@ int Manage_ro(char *devname, int fd, int readonly)
+ 			sysfs_set_str(mdi, NULL, "metadata_version", vers);
+ 
+ 			cp = strchr(vers+10, '/');
+-			if (*cp)
++			if (cp)
+ 				*cp = 0;
+ 			ping_monitor(vers+10);
+ 			if (mdi->array.level <= 0)
 -- 
 1.7.6.4
 
