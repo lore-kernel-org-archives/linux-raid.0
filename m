@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 10/12] Manage_ro(): Check pointer rather than dereferencing it
-Date: Wed,  2 Nov 2011 15:42:15 +0100
-Message-ID: <1320244937-9739-11-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 06/12] disk_init_and_add(): Fail if opening sysfs file descriptors fail
+Date: Wed,  2 Nov 2011 15:42:11 +0100
+Message-ID: <1320244937-9739-7-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,22 +14,27 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Manage.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ managemon.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/Manage.c b/Manage.c
-index d5110a7..d9775de 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -86,7 +86,7 @@ int Manage_ro(char *devname, int fd, int readonly)
- 			sysfs_set_str(mdi, NULL, "metadata_version", vers);
+diff --git a/managemon.c b/managemon.c
+index 9e0a34d..fceaeb9 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -409,7 +409,13 @@ static int disk_init_and_add(struct mdinfo *disk, struct mdinfo *clone,
  
- 			cp = strchr(vers+10, '/');
--			if (*cp)
-+			if (cp)
- 				*cp = 0;
- 			ping_monitor(vers+10);
- 			if (mdi->array.level <= 0)
+ 	*disk = *clone;
+ 	disk->recovery_fd = sysfs_open(aa->devnum, disk->sys_name, "recovery_start");
++	if (disk->recovery_fd < 0)
++		return -1;
+ 	disk->state_fd = sysfs_open(aa->devnum, disk->sys_name, "state");
++	if (disk->state_fd < 0) {
++		close(disk->recovery_fd);
++		return -1;
++	}
+ 	disk->prev_state = read_dev_state(disk->state_fd);
+ 	disk->curr_state = disk->prev_state;
+ 	disk->next = aa->info.devs;
 -- 
 1.7.6.4
 
