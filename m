@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 01/12] mdadm: add missing break for UpdateSubarray
-Date: Wed,  2 Nov 2011 15:42:06 +0100
-Message-ID: <1320244937-9739-2-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 02/12] ping_monitor(): check file descriptor is valid before using and closing it
+Date: Wed,  2 Nov 2011 15:42:07 +0100
+Message-ID: <1320244937-9739-3-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,21 +14,30 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- mdadm.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ msg.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/mdadm.c b/mdadm.c
-index 56de7b7..2fe12e7 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
- 				}
- 				subarray = optarg;
- 			}
-+			break;
- 		case UdevRules:
- 		case 'K': if (!mode) newmode = MISC; break;
- 		case NoSharing: newmode = MONITOR; break;
+diff --git a/msg.c b/msg.c
+index 98d6d13..87d3b8d 100644
+--- a/msg.c
++++ b/msg.c
+@@ -207,9 +207,14 @@ int fping_monitor(int sfd)
+ int ping_monitor(char *devname)
+ {
+ 	int sfd = connect_monitor(devname);
+-	int err = fping_monitor(sfd);
++	int err;
++
++	if (sfd >= 0) {
++		err = fping_monitor(sfd);
++		close(sfd);
++	} else
++		err = -1;
+ 
+-	close(sfd);
+ 	return err;
+ }
+ 
 -- 
 1.7.6.4
 
