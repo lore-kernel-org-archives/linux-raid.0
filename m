@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 06/12] disk_init_and_add(): Fail if opening sysfs file descriptors fail
-Date: Wed,  2 Nov 2011 15:42:11 +0100
-Message-ID: <1320244937-9739-7-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/12] close_aa(): Verify file descriptors are valid before trying to close them
+Date: Wed,  2 Nov 2011 15:42:12 +0100
+Message-ID: <1320244937-9739-8-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,27 +14,35 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- managemon.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ managemon.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/managemon.c b/managemon.c
-index 9e0a34d..fceaeb9 100644
+index fceaeb9..cde0d8b 100644
 --- a/managemon.c
 +++ b/managemon.c
-@@ -409,7 +409,13 @@ static int disk_init_and_add(struct mdinfo *disk, struct mdinfo *clone,
+@@ -117,11 +117,16 @@ static void close_aa(struct active_array *aa)
+ 		close(d->state_fd);
+ 	}
  
- 	*disk = *clone;
- 	disk->recovery_fd = sysfs_open(aa->devnum, disk->sys_name, "recovery_start");
-+	if (disk->recovery_fd < 0)
-+		return -1;
- 	disk->state_fd = sysfs_open(aa->devnum, disk->sys_name, "state");
-+	if (disk->state_fd < 0) {
-+		close(disk->recovery_fd);
-+		return -1;
-+	}
- 	disk->prev_state = read_dev_state(disk->state_fd);
- 	disk->curr_state = disk->prev_state;
- 	disk->next = aa->info.devs;
+-	close(aa->action_fd);
+-	close(aa->info.state_fd);
+-	close(aa->resync_start_fd);
+-	close(aa->metadata_fd);
+-	close(aa->sync_completed_fd);
++	if (aa->action_fd >= 0)
++		close(aa->action_fd);
++	if (aa->info.state_fd >= 0)
++		close(aa->info.state_fd);
++	if (aa->resync_start_fd >= 0)
++		close(aa->resync_start_fd);
++	if (aa->metadata_fd >= 0)
++		close(aa->metadata_fd);
++	if (aa->sync_completed_fd >= 0)
++		close(aa->sync_completed_fd);
+ }
+ 
+ static void free_aa(struct active_array *aa)
 -- 
 1.7.6.4
 
