@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 08/12] ahci_enumerate_ports(): Don't close fd that failed to open
-Date: Wed,  2 Nov 2011 15:42:13 +0100
-Message-ID: <1320244937-9739-9-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 09/12] unblock_monitor(): Check sra is valid before dereferencing
+Date: Wed,  2 Nov 2011 15:42:14 +0100
+Message-ID: <1320244937-9739-10-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,23 +14,22 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- super-intel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ msg.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 0193fe7..b583b35 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1572,8 +1572,8 @@ static int ahci_enumerate_ports(const char *hba_path, int port_count, int host_b
- 				printf(" (%.*s)\n", MAX_RAID_SERIAL_LEN, buf);
- 			else
- 				printf(" ()\n");
-+			close(fd);
- 		}
--		close(fd);
- 		free(path);
- 		path = NULL;
- 	}
+diff --git a/msg.c b/msg.c
+index 87d3b8d..dc780b3 100644
+--- a/msg.c
++++ b/msg.c
+@@ -448,6 +448,8 @@ void unblock_monitor(char *container, const int unfreeze)
+ 			continue;
+ 		sysfs_free(sra);
+ 		sra = sysfs_read(-1, e->devnum, GET_VERSION|GET_LEVEL);
++		if (!sra)
++			continue;
+ 		if (sra->array.level > 0)
+ 			to_ping++;
+ 		if (unblock_subarray(sra, unfreeze))
 -- 
 1.7.6.4
 
