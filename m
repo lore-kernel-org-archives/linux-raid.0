@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 07/17] md/raid10: handle recovery of replacement devices.
+Subject: [md PATCH 08/17] md/raid10: Allow replacement device to be replace
+ old drive.
 Date: Wed, 02 Nov 2011 16:25:44 +1100
-Message-ID: <20111102052544.17566.75014.stgit@notabene.brown>
+Message-ID: <20111102052544.17566.55334.stgit@notabene.brown>
 References: <20111102051851.17566.52748.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,176 +13,174 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If there is a replacement device, then recover to it,
-reading from any drives - maybe the one being replaced, maybe not.
+When recovery finish and spare_active is called, check for a
+replace that might have just become fully synced and mark it
+as such, marking the original as failed.
+
+Then when the original is removed, move the replacement into
+its position.
+
+This means that 'replacement' and spontaneously become NULL in some
+situations.  Make sure we check for those.
+It also means that 'rdev' and 'replacement' could appear to be
+identical - check for that too.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |   98 ++++++++++++++++++++++++++++++++++++---------------
- 1 files changed, 70 insertions(+), 28 deletions(-)
+ drivers/md/raid10.c |   72 +++++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 61 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index a2341ca..89de485 100644
+index 89de485..fd28f03 100644
 --- a/drivers/md/raid10.c
 +++ b/drivers/md/raid10.c
-@@ -1857,12 +1857,20 @@ static void recovery_request_write(struct mddev *mddev, struct r10bio *r10_bio)
- 	 * share the pages with the first bio
- 	 * and submit the write request
+@@ -396,14 +396,17 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ 	int dec_rdev = 1;
+ 	struct r10conf *conf = r10_bio->mddev->private;
+ 	int slot, repl;
+-	struct md_rdev *rdev;
++	struct md_rdev *rdev = NULL;
+ 
+ 	dev = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+ 
+ 	if (repl)
+ 		rdev = conf->mirrors[dev].replacement;
+-	else
++	if (!rdev) {
++		smp_rmb();
++		repl = 0;
+ 		rdev = conf->mirrors[dev].rdev;
++	}
+ 	/*
+ 	 * this branch is our 'one mirror IO has finished' event handler:
  	 */
--	wbio = r10_bio->devs[1].bio;
- 	d = r10_bio->devs[1].devnum;
--
--	atomic_inc(&conf->mirrors[d].rdev->nr_pending);
--	md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
--	generic_make_request(wbio);
-+	wbio = r10_bio->devs[1].bio;
-+	if (wbio->bi_end_io) {
-+		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
-+		md_sync_acct(conf->mirrors[d].rdev->bdev, wbio->bi_size >> 9);
-+		generic_make_request(wbio);
-+	}
-+	wbio = r10_bio->devs[1].repl_bio;
-+	if (wbio && wbio->bi_end_io) {
-+		atomic_inc(&conf->mirrors[d].replacement->nr_pending);
-+		md_sync_acct(conf->mirrors[d].replacement->bdev,
-+			     wbio->bi_size >> 9);
-+		generic_make_request(wbio);
-+	}
- }
- 
- 
-@@ -2592,23 +2600,30 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
- 			sector_t sect;
- 			int must_sync;
- 			int any_working;
-+			struct mirror_info *mirror = &conf->mirrors[i];
- 
--			if (conf->mirrors[i].rdev == NULL ||
--			    test_bit(In_sync, &conf->mirrors[i].rdev->flags)) 
-+			if ((mirror->rdev == NULL ||
-+			     test_bit(In_sync, &mirror->rdev->flags))
-+			    &&
-+			    (mirror->replacement == NULL ||
-+			     test_bit(Faulty,
-+				      &mirror->replacement->flags)))
- 				continue;
- 
- 			still_degraded = 0;
- 			/* want to reconstruct this device */
- 			rb2 = r10_bio;
- 			sect = raid10_find_virt(conf, sector_nr, i);
--			/* Unless we are doing a full sync, we only need
--			 * to recover the block if it is set in the bitmap
-+			/* Unless we are doing a full sync, or a replacement
-+			 * we only need to recover the block if it is set in
-+			 * the bitmap
- 			 */
- 			must_sync = bitmap_start_sync(mddev->bitmap, sect,
- 						      &sync_blocks, 1);
- 			if (sync_blocks < max_sync)
- 				max_sync = sync_blocks;
- 			if (!must_sync &&
-+			    mirror->replacement == NULL &&
- 			    !conf->fullsync) {
- 				/* yep, skip the sync_blocks here, but don't assume
- 				 * that there will never be anything to do here
-@@ -2678,33 +2693,52 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
- 				bio->bi_end_io = end_sync_read;
- 				bio->bi_rw = READ;
- 				from_addr = r10_bio->devs[j].addr;
--				bio->bi_sector = from_addr +
--					conf->mirrors[d].rdev->data_offset;
--				bio->bi_bdev = conf->mirrors[d].rdev->bdev;
--				atomic_inc(&conf->mirrors[d].rdev->nr_pending);
--				atomic_inc(&r10_bio->remaining);
--				/* and we write to 'i' */
-+				bio->bi_sector = from_addr + rdev->data_offset;
-+				bio->bi_bdev = rdev->bdev;
-+				atomic_inc(&rdev->nr_pending);
-+				/* and we write to 'i' (if not in_sync) */
- 
- 				for (k=0; k<conf->copies; k++)
- 					if (r10_bio->devs[k].devnum == i)
- 						break;
- 				BUG_ON(k == conf->copies);
--				bio = r10_bio->devs[1].bio;
--				bio->bi_next = biolist;
--				biolist = bio;
--				bio->bi_private = r10_bio;
--				bio->bi_end_io = end_sync_write;
--				bio->bi_rw = WRITE;
- 				to_addr = r10_bio->devs[k].addr;
--				bio->bi_sector = to_addr +
--					conf->mirrors[i].rdev->data_offset;
--				bio->bi_bdev = conf->mirrors[i].rdev->bdev;
--
- 				r10_bio->devs[0].devnum = d;
- 				r10_bio->devs[0].addr = from_addr;
- 				r10_bio->devs[1].devnum = i;
- 				r10_bio->devs[1].addr = to_addr;
- 
-+				rdev = mirror->rdev;
-+				if (!test_bit(In_sync, &rdev->flags)) {
-+					bio = r10_bio->devs[1].bio;
-+					bio->bi_next = biolist;
-+					biolist = bio;
-+					bio->bi_private = r10_bio;
-+					bio->bi_end_io = end_sync_write;
-+					bio->bi_rw = WRITE;
-+					bio->bi_sector = to_addr
-+						+ rdev->data_offset;
-+					bio->bi_bdev = rdev->bdev;
-+					atomic_inc(&r10_bio->remaining);
-+				} else
-+					r10_bio->devs[1].bio->bi_end_io = NULL;
-+
-+				/* and maybe write to replacement */
-+				bio = r10_bio->devs[1].repl_bio;
-+				if (bio)
-+					bio->bi_end_io = NULL;
-+				rdev = mirror->replacement;
-+				if (rdev == NULL ||
-+				    test_bit(Faulty, &rdev->flags))
-+					break;
-+				bio->bi_next = biolist;
-+				biolist = bio;
-+				bio->bi_private = r10_bio;
-+				bio->bi_end_io = end_sync_write;
-+				bio->bi_rw = WRITE;
-+				bio->bi_sector = to_addr + rdev->data_offset;
-+				bio->bi_bdev = rdev->bdev;
-+				atomic_inc(&r10_bio->remaining);
- 				break;
+@@ -1090,6 +1093,8 @@ retry_write:
+ 		struct md_rdev *rdev = rcu_dereference(conf->mirrors[d].rdev);
+ 		struct md_rdev *rrdev = rcu_dereference(
+ 			conf->mirrors[d].replacement);
++		if (rdev == rrdev)
++			rrdev = NULL;
+ 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
+ 			atomic_inc(&rdev->nr_pending);
+ 			blocked_rdev = rdev;
+@@ -1171,9 +1176,15 @@ retry_write:
+ 				rdev_dec_pending(conf->mirrors[d].rdev, mddev);
  			}
- 			if (j == conf->copies) {
-@@ -2722,8 +2756,16 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
- 					for (k = 0; k < conf->copies; k++)
- 						if (r10_bio->devs[k].devnum == i)
- 							break;
--					if (!rdev_set_badblocks(
--						    conf->mirrors[i].rdev,
-+					if (!test_bit(In_sync,
-+						      &mirror->rdev->flags)
-+					    && !rdev_set_badblocks(
-+						    mirror->rdev,
-+						    r10_bio->devs[k].addr,
-+						    max_sync, 0))
-+						any_working = 0;
-+					if (mirror->replacement &&
-+					    !rdev_set_badblocks(
-+						    mirror->replacement,
- 						    r10_bio->devs[k].addr,
- 						    max_sync, 0))
- 						any_working = 0;
-@@ -2734,7 +2776,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
- 						printk(KERN_INFO "md/raid10:%s: insufficient "
- 						       "working devices for recovery.\n",
- 						       mdname(mddev));
--					conf->mirrors[i].recovery_disabled
-+					mirror->recovery_disabled
- 						= mddev->recovery_disabled;
- 				}
- 				break;
+ 			if (r10_bio->devs[j].repl_bio) {
++				struct md_rdev *rdev;
+ 				d = r10_bio->devs[j].devnum;
+-				rdev_dec_pending(
+-					conf->mirrors[d].replacement, mddev);
++				rdev = conf->mirrors[d].replacement;
++				if (!rdev) {
++					/* Race with remove_disk */
++					smp_mb();
++					rdev = conf->mirrors[d].rdev;
++				}
++				rdev_dec_pending(rdev, mddev);
+ 			}
+ 		}
+ 		allow_barrier(conf);
+@@ -1231,6 +1242,10 @@ retry_write:
+ 			    max_sectors);
+ 		r10_bio->devs[i].repl_bio = mbio;
+ 
++		/* We are actively writing to the original device
++		 * so it cannot disappear, so the replacement cannot
++		 * become NULL here
++		 */
+ 		mbio->bi_sector	= (r10_bio->devs[i].addr+
+ 				   conf->mirrors[d].replacement->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[d].replacement->bdev;
+@@ -1406,9 +1421,27 @@ static int raid10_spare_active(struct mddev *mddev)
+ 	 */
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		tmp = conf->mirrors + i;
+-		if (tmp->rdev
+-		    && !test_bit(Faulty, &tmp->rdev->flags)
+-		    && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
++		if (tmp->replacement
++		    && tmp->replacement->recovery_offset == MaxSector
++		    && !test_bit(Faulty, &tmp->replacement->flags)
++		    && !test_and_set_bit(In_sync, &tmp->replacement->flags)) {
++			/* Replacement has just become active */
++			if (!tmp->rdev
++			    || !test_and_clear_bit(In_sync, &tmp->rdev->flags))
++				count++;
++			if (tmp->rdev) {
++				/* Replaced device not technically faulty,
++				 * but we need to be sure it gets removed
++				 * and never re-added.
++				 */
++				set_bit(Faulty, &tmp->rdev->flags);
++				sysfs_notify_dirent_safe(
++					tmp->rdev->sysfs_state);
++			}
++			sysfs_notify_dirent_safe(tmp->replacement->sysfs_state);
++		} else if (tmp->rdev
++			   && !test_bit(Faulty, &tmp->rdev->flags)
++			   && !test_and_set_bit(In_sync, &tmp->rdev->flags)) {
+ 			count++;
+ 			sysfs_notify_dirent(tmp->rdev->sysfs_state);
+ 		}
+@@ -1508,6 +1541,7 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 	 */
+ 	if (!test_bit(Faulty, &rdev->flags) &&
+ 	    mddev->recovery_disabled != p->recovery_disabled &&
++	    (!p->replacement || p->replacement == rdev) &&
+ 	    enough(conf, -1)) {
+ 		err = -EBUSY;
+ 		goto abort;
+@@ -1519,7 +1553,21 @@ static int raid10_remove_disk(struct mddev *mddev, struct md_rdev *rdev)
+ 		err = -EBUSY;
+ 		*rdevp = rdev;
+ 		goto abort;
+-	}
++	} else if (p->replacement) {
++		/* We must have just cleared 'rdev' */
++		p->rdev = p->replacement;
++		clear_bit(Replacement, &p->replacement->flags);
++		smp_mb(); /* Make sure other CPUs may see both as identical
++			   * but will never see neither -- if they are careful.
++			   */
++		p->replacement = NULL;
++		clear_bit(Replaceable, &rdev->flags);
++	} else
++		/* We might have just remove the Replacement as faulty
++		 * Clear the flag just in case
++		 */
++		clear_bit(Replaceable, &rdev->flags);
++
+ 	err = md_integrity_register(mddev);
+ 
+ abort:
+@@ -1597,13 +1645,15 @@ static void end_sync_write(struct bio *bio, int error)
+ 	int bad_sectors;
+ 	int slot;
+ 	int repl;
+-	struct md_rdev *rdev;
++	struct md_rdev *rdev = NULL;
+ 
+ 	d = find_bio_disk(conf, r10_bio, bio, &slot, &repl);
+ 	if (repl)
+ 		rdev = conf->mirrors[d].replacement;
+-	else
++	if (!rdev) {
++		smp_mb();
+ 		rdev = conf->mirrors[d].rdev;
++	}
+ 
+ 	if (!uptodate) {
+ 		if (repl)
+@@ -2370,7 +2420,7 @@ static void handle_write_completed(struct r10conf *conf, struct r10bio *r10_bio)
+ 			}
+ 			bio = r10_bio->devs[m].repl_bio;
+ 			rdev = conf->mirrors[dev].replacement;
+-			if (bio == IO_MADE_GOOD) {
++			if (rdev && bio == IO_MADE_GOOD) {
+ 				rdev_clear_badblocks(
+ 					rdev,
+ 					r10_bio->devs[m].addr,
 
 
