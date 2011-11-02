@@ -1,84 +1,104 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
-Date: Wed, 2 Nov 2011 20:51:59 +0100
-Message-ID: <CAPXgP110ptkjWw3DP5t7YRx2mj+2GtkX0z5CrFZ4fZ3+BuYMYA@mail.gmail.com>
-References: <20110208094843.GD11446@tango.0pointer.de> <AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
- <20110208110730.GF23157@tango.0pointer.de> <AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
- <20110208172822.GC21847@tango.0pointer.de> <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
- <20111031110613.GA1402@tango.0pointer.de> <20111102114416.7879b77f@notabene.brown>
- <20111102011615.GA5289@tango.0pointer.de> <20111102130334.09c3ab51@notabene.brown>
- <20111102133223.GC5119@tango.0pointer.de> <CAPXgP12RsaFeGK+dQ2hwFjQawhN+QDn1+K8t6jkJ-XSRyautJw@mail.gmail.com>
- <CABE8wwt623R1bvFuUe_HuKXevnY9vTC8e5gkCK5rFyg8UrJy7g@mail.gmail.com>
- <CAPXgP137YTTOMxvAAbH3vrWw5aWvkBQUtK903teYgib8=E=8Xw@mail.gmail.com> <CABE8wwuRgWng=+WUotb2kqtQZU8=xmn8cZtiUy9hnj3mMgM_gQ@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 00/12] More leak and NULL pointer dereference fixes
+Date: Thu, 3 Nov 2011 08:12:51 +1100
+Message-ID: <20111103081251.517d462a@notabene.brown>
+References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/qLht=2IXncVV8kHtx.OeycM"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwuRgWng=+WUotb2kqtQZU8=xmn8cZtiUy9hnj3mMgM_gQ@mail.gmail.com>
+In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Lennart Poettering <lennart@poettering.net>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, Andrey Borzenkov <arvidjaar@mail.ru>, systemd-devel@lists.freedesktop.org
+To: Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, dledford@redhat.com
 List-Id: linux-raid.ids
 
-On Wed, Nov 2, 2011 at 20:31, Williams, Dan J <dan.j.williams@intel.com=
-> wrote:
-> On Wed, Nov 2, 2011 at 11:49 AM, Kay Sievers <kay.sievers@vrfy.org> w=
-rote:
->> On Wed, Nov 2, 2011 at 19:16, Williams, Dan J <dan.j.williams@intel.=
-com> wrote:
->>> On Wed, Nov 2, 2011 at 7:33 AM, Kay Sievers <kay.sievers@vrfy.org> =
-wrote:
->>>> People who like to put their rootfs on a userspace managed raid de=
-vice
->>>> just get what they asked for. :)
->>>
->>> Proper care and feeding of mdmon and userspace managed block device=
-s /
->>> filesystems is a solvable problem. =C2=A0To me the ":)" runs the ri=
-sk of
->>> implying we don't think we can get this right.
->>
->> It implied that I think it is totally insane what you guys try to
->> accomplish. Managing the rootfs blockdev with tools contained in the
->> rootfs itself is just crazy. No smiley this time.
->>
->
-> Yes, much clearer. =C2=A0Which is why the "never let mdmon run from a=
-n fs
-> it is managing" is better than the current dance that was implemented
-> to address the need to drop initramfs memory and get around a lack of
-> having a filesystem (like /run) that persisted from early boot. =C2=A0=
-But
-> we now run back into the problem of pinning initramfs memory. =C2=A0D=
-oes
-> systemd already expect that the full initramfs sticks around to handl=
-e
-> shutdown? =C2=A0If so then we have come full circle and don't really =
-need
-> the "mdmon --takeover" functionality versus just letting the
-> initramfs-mdmon handle their entire lifetime of the rootfs blockdev.
+--Sig_/qLht=2IXncVV8kHtx.OeycM
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-It all depends on the initramfs implementation. Systemd is not
-involved here and has no knowledge about what was left behind, it just
-checks if there is binary in /run provided by initramfs, and then it
-calls this binary instead of just bringing down the box itself.
+On Wed,  2 Nov 2011 15:42:05 +0100 Jes.Sorensen@redhat.com wrote:
 
-So far only dracut implements this shutdown logic, which is just a
-go-back-to initramfs and disassemble/shut down everything that was
-assembled before the initramfs started the real init.
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>=20
+> Hi,
+>=20
+> As promised, here is another batch of fixes for small memory leaks,
+> use of invalid file descriptors and NULL pointer dereferences.
+>=20
+> The coverity output is starting to look a lot better by now :)
+>=20
+> Cheers,
+> Jes
 
-I wouldn't be surprised if we see more of these use cases from
-subsystems which put their rootfs on something that needs to be
-managed from userspace.
+Thanks.
 
-The pinned memory for the tools in initramfs that stay around in tmpfs
-is probably the price to pay for these kinds of setups of the rootfs,
-when subsystems want to avoid adding the needed logic to the kernel to
-safely shut down the rootfs.
 
-Kay
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+>=20
+> Jes Sorensen (12):
+>   mdadm: add missing break for UpdateSubarray
+
+This was wasn't correct.  The code was actually doing  the right thing.
+But I agree that it looked wrong so I rearranged the code a bit to make it
+(hopefully) less confusing.
+
+All the rest applied.
+
+thanks,
+NeilBrown
+
+
+
+>   ping_monitor(): check file descriptor is valid before using and
+>     closing it
+>   mdstat_read(): Check return value of dup() before using file
+>     descriptor
+>   get_component_size(): Check read() return value for error before
+>     using it
+>   array_try_spare(): open_dev() returns -1 on error, not zero
+>   disk_init_and_add(): Fail if opening sysfs file descriptors fail
+>   close_aa(): Verify file descriptors are valid before trying to close
+>     them
+>   ahci_enumerate_ports(): Don't close fd that failed to open
+>   unblock_monitor(): Check sra is valid before dereferencing
+>   Manage_ro(): Check pointer rather than dereferencing it
+>   fd2devname(): Don't dereference NULL pointer
+>   match_metadata_desc(): Fix memory leak
+>=20
+>  Incremental.c |    2 +-
+>  Manage.c      |    2 +-
+>  managemon.c   |   21 ++++++++++++++++-----
+>  mdadm.c       |    1 +
+>  mdstat.c      |    7 ++++++-
+>  msg.c         |   11 +++++++++--
+>  super-intel.c |    8 +++++---
+>  super-mbr.c   |    7 ++++---
+>  sysfs.c       |    2 +-
+>  9 files changed, 44 insertions(+), 17 deletions(-)
+>=20
+
+
+--Sig_/qLht=2IXncVV8kHtx.OeycM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTrGyWjnsnt1WYoG5AQLxyhAAk+fADHB3x30EqesKcuW1VJTLKEfo6SeT
+makM72j3rrAv3aeduvgDPU2h8BQwE6q7Cjp0kboY4Zh7CWQBSVuSgWfeQD4VyXFK
+9QtVxSXR6bvDqg/jWeXliSknQdk+0yrgbKBsnnIWRErIl8FFXJfjl2g0TxhG/Mvb
+0/aK7ZfrndDPHs3jgewckF/tCzVdE7SxYJoXM84tpQpwpvAzuF9taKF4du6ZdOkB
+5nbX0bgpqNUgAwmMmQnORWR9bl8JGsN42cLAq/N0p4++26t7HeJKEj7+5tWBrFQP
+hih7tPjFj/D+83F5gmihq/hqQjaBkJ9yspA5IPcziIM2OBtSSEk/fNozMEUX+eN+
+4OgoR0G9kXfJ4+tBcqYCwIvc14z6dIQuQeakTN/SFc4JvzY5zLYeXGQkLYebnZZy
+0IQ58oa+r2+yRc2zQ5U+rVCjKoIdNp4kSInd1PNHYrEngQVlu+xjCAUo8jHJhuXi
+x99DKC16SYpbbHsTS4N8UkQMTQGNdsIlvXnTv3Yj0wZgo5A0zFJ3Ci7D5CPJySPM
+tlYUNX2XfNiyxSq+aDU3wKQV8q3qekGBi7jN/1WPLTCJRh3p9/Aya84OoPu4m4fy
+b7HCLtY8D5VLHNDJA8Fd8+QMBWlScUj7r6yK1VYl46cKx7N5Eu2jkyQQF9AakLpF
+MMm0cANAfgc=
+=kbJJ
+-----END PGP SIGNATURE-----
+
+--Sig_/qLht=2IXncVV8kHtx.OeycM--
