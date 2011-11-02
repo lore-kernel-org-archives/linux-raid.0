@@ -1,101 +1,128 @@
-From: David Brown <david@westcontrol.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
 Subject: Re: possibly silly question (raid failover)
-Date: Wed, 02 Nov 2011 12:27:59 +0100
-Message-ID: <j8r9qj$h4f$1@dough.gmane.org>
-References: <4EAF3F78.5060900@meetinghouse.net> <j8odkj$46h$1@dough.gmane.org> <4EAFEE95.6070608@meetinghouse.net> <4EAFF636.6060904@anonymous.org.uk> <j8p0g3$9r4$1@dough.gmane.org> <4EB052E6.4050400@meetinghouse.net> <20111101221539.GA1319@www5.open-std.org> <20111102092526.50b410b1@notabene.brown> <20111102013756.GA10763@www5.open-std.org> <20111102124816.33a55447@notabene.brown> <20111102070221.GA24797@www5.open-std.org>
+Date: Wed, 02 Nov 2011 09:17:48 -0400
+Message-ID: <4EB142FC.4060506@meetinghouse.net>
+References: <4EAF3F78.5060900@meetinghouse.net> <4EB0E613.1040503@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111102070221.GA24797@www5.open-std.org>
+In-Reply-To: <4EB0E613.1040503@hardwarefreak.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 02/11/2011 08:02, keld@keldix.com wrote:
-> On Wed, Nov 02, 2011 at 12:48:16PM +1100, NeilBrown wrote:
->> On Wed, 2 Nov 2011 02:37:56 +0100 keld@keldix.com wrote:
+Stan,
+
+Stan Hoeppner wrote:
+> On 10/31/2011 7:38 PM, Miles Fidelman wrote:
+>> Hi Folks,
 >>
->>> On Wed, Nov 02, 2011 at 09:25:26AM +1100, NeilBrown wrote:
->>>> On Tue, 1 Nov 2011 23:15:39 +0100 keld@keldix.com wrote:
->>>>
->>>>> On Tue, Nov 01, 2011 at 04:13:26PM -0400, Miles Fidelman wrote:
->>>>>> David Brown wrote:
->>>>>>>
->>>>>>> No, md RAID10 does /not/ offer more redundancy than RAID1.  You are
->>>>>>> right that md RAID10 offers more than RAID1 (or traditional RAID0 over
->>>>>>> RAID1 sets) - but it is a convenience and performance benefit, not a
->>>>>>> redundancy benefit.  In particular, it lets you build RAID10 from any
->>>>>>> number of disks, not just two.  And it lets you stripe over all disks,
->>>>>>> improving performance for some loads (though not /all/ loads - if you
->>>>>>> have lots of concurrent small reads, you may be faster using plain
->>>>>>> RAID1).
->>>>>
->>>>> In fact raid10 mas a bit less redundancy than raid1+0.
->>>>> It is as far as I know built as raid0+1 with a disk layout
->>>>> where you can only loose eg 1 out of 4 disks, while raid1+0
->>>>> in some cases can loose 2 disks out of 4.
->>>>
->>>> With md/raid10 you can in some case lose 2 out of 4 disks and survive, just
->>>> like raid1+0.
->>>
->>> OK, in which cases, and when is this not the case?
->>>
->>> best regards
->>> keld
+>> I've been exploring various ways to build a "poor man's high
+>> availability cluster."
+> Overall advice:  Don't attempt to reinvent the wheel.
+>
+> Building such a thing is normally a means to end, not an end itself.  If
+> your goal is supporting an actual workload and not simply the above,
+> there are a number of good options readily available.
+well, normally I'd agree with you, but...
+
+- we're both an R&D organization and a (small, but aspiring) provider of 
+hosted services - so experimenting with infrastructure is part of the 
+actual work -- and part of where I'd like to head is an environment 
+that's built out of commodity boxes configured in a way that scales out 
+(Sheepdog is really the model I have in mind)
+
+- I'd sure like to find something that does what we need:
+-- we're using DRBD/Pacemaker/etc. - but that's sort of brittle and only 
+supports pair-wise migration/failover
+-- if Sheepdog was a little more mature, and supported Xen, it would be 
+exactly what I'm looking for
+-- Xen over the newest release of GlustFS is starting to look attractive
+-- some of the single system image projects (OpenMosix, Kerrighed) would 
+be attractive if the projects were alive
+>> Currently I'm running two nodes, using raid on
+>> each box, running DRBD across the boxes, and running Xen virtual
+>> machines on top of that.
 >>
->> "just like raid1+0"
+>> I now have two brand new servers - for a total of four nodes - each with
+>> four large drives, and four gigE ports.
+> A good option in this case would be to simply take the 8 new drives and
+> add 4 each to the existing servers, expanding existing md RAID devices
+> and filesystems where appropriate.  Then setup NFS cluster services and
+> export the appropriate filesystems to the two new servers.  This keeps
+> your overall complexity low, reliability and performance high, and
+> yields a setup many are familiar with if you need troubleshooting
+> assistance in the future.  This is a widely used architecture and has
+> been for many years.
+
+unfortunately, we're currently trying to make do with 4U of rackspace, 
+and 4 1U servers, each of which holds 4 drives, can't quite move the 
+disks around the way you're talking about -- unfortunately, the older 
+boxes don't have hardware virtualization support or I'd seriously 
+consider migrating to KVM and Sheepdog -- if Sheepdog were just a bit 
+more mature, I'd seriously consider simply replacing the older boxes
+
+>> The approach that looks most interesting is Sheepdog - but it's both
+>> tied to KVM rather than Xen, and a bit immature.
+> Interesting disclaimer for an open source project, specifically the 2nd
+> half of the statement:
 >
-> No, that is not the case AFAIK. Eg the layout of raid10,f2 with 4 disks is
-> "just like raid0+1".
+> "There is no guarantee that this software will be included in future
+> software releases, and it probably will not be included."
+
+Yeah, but it seems to have some traction and support, and the OpenStack 
+community seems to be looking at it seriously.
+
+Having said that, it's things like that that are pushing me toward 
+GlusterFS (doesn't hurt that Red Hat just purchased Gluster and seems to 
+be putting some serious resources into it).
 >
+>> But it lead me to wonder if something like this might make sense:
+>> - mount each drive using AoE
+>> - run md RAID 10 across all 16 drives one one node
+>> - mount the resulting md device using AoE
+>> - if the node running the md device fails, use pacemaker/crm to
+>> auto-start an md device on another node, re-assemble and republish the
+>> array
+>> - resulting in a 16-drive raid10 array that's accessible from all nodes
+> The level of complexity here is too high for a production architecture.
+>   In addition, doing something like this puts you way out in uncharted
+> waters, where you will have few, if any, peers to assist in time of
+> need.  When (not if) something breaks in an unexpected way, how quickly
+> will you be able to troubleshoot and resolve a problem in such a complex
+> architecture?
 
-And raid0+1 can also survive two disk failures in some cases.
+Understood.  This path is somewhat more of a matter of curiosity.  AoE 
+is pretty mature, and there does seem to be a RAID resource agent for 
+CRM - so some of the pieces exist.  Seems like the pieces would fit 
+together - so I was wondering if anybody had actually tried it.
+> If I were doing such a setup to fit your stated needs, I'd spend 
+> ~$10-15K USD on a low/midrange iSCSI SAN box with 2GB cache dual 
+> controllers/PSUs and 16 x 500GB SATA drives. I'd create a single RAID6 
+> array of 14 drives with two standby spares, yielding 7TB of space for 
+> carving up LUNS. Carve and export the LUNS you need to each node's 
+> dual/quad NIC MACs with multipathing setup on each node, and format 
+> the LUNs with GFS2. All nodes now have access to all storage you 
+> assign. With such a setup you can easily add future nodes. It's not 
+> complex, it is a well understood architecture, and relatively 
+> straightforward to troubleshoot. Now, if that solution is out of your 
+> price range, I think the redundant cluster NFS server architecture is 
+> in your immediate future. It's in essence free, and it will give you 
+> everything you need, in spite of the fact that the "node symmetry" 
+> isn't what you apparently envision as "optimal" for a cluster. 
 
-It boils down to this - if you have a two-way mirror (RAID1, RAID10, 
-RAID1+0, RAID0+1), then you can keep losing disks unless you lose both 
-copies of part of your data.
+Hmm... if I were spending real money, and had more rack space to put 
+things in, I'd probably do something more like a small OpenStack 
+configuration, but that's me.
 
-Look at the layout diagrams on 
-<http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10> 
-for the four drive cases.  You can lose disk 1 and 3, or disk 2 and 4, 
-in either the "near 2" or the "far 2" cases.  But if you lose disks 1 
-and 2, or disks 3 and 4, your data is gone:
+Thanks for your comments.  Lots of food for thought!
 
-RAID10,n2, or RAID1+0 (stripe of mirrors) :
-
-Good array        Lost 1+3 (OK)    Lost 1+2 (Dead)
-A1 A1 A2 A2       x A1 x A2        x x A2 A2
-A3 A3 A4 A4       x A3 x A4        x x A4 A4
-A5 A5 A6 A6       x A5 x A6        x x A6 A6
-A7 A7 A8 A8       x A7 x A8        x x A8 A8
-
-
-RAID10,f2 :
-
-Good array        Lost 1+3 (OK)    Lost 1+2 (Dead)
-A1 A2 A3 A4       x A2 x A4        x x A3 A4
-A5 A6 A7 A8       x A6 x A8        x x A7 A8
-....
-A4 A1 A2 A3       x A1 x A3        x x A2 A3
-A8 A5 A6 A7       x A5 x A7        x x A6 A7
+Miles
 
 
-RAID10,02 :
-
-Good array        Lost 1+3 (OK)    Lost 1+2 (Dead)
-A1 A2 A3 A4       x A2 x A4        x x A3 A4
-A4 A1 A2 A3       x A1 x A3        x x A2 A3
-A5 A6 A7 A8       x A6 x A8        x x A7 A8
-A8 A5 A6 A7       x A5 x A7        x x A6 A7
-
-RAID0+1 (mirror of stripes) :
-
-Good array        Lost 1+3 (Dead)  Lost 1+2 (OK)
-A1 A2 A1 A2       x A2 x A2        x x A1 A2
-A3 A4 A3 A4       x A4 x A4        x x A3 A4
-A5 A6 A5 A6       x A6 x A6        x x A5 A6
-A7 A8 A7 A8       x A8 x A8        x x A7 A8
-
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
 
 
