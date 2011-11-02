@@ -1,7 +1,7 @@
 From: Jes.Sorensen@redhat.com
-Subject: [PATCH 03/12] mdstat_read(): Check return value of dup() before using file descriptor
-Date: Wed,  2 Nov 2011 15:42:08 +0100
-Message-ID: <1320244937-9739-4-git-send-email-Jes.Sorensen@redhat.com>
+Subject: [PATCH 05/12] array_try_spare(): open_dev() returns -1 on error, not zero
+Date: Wed,  2 Nov 2011 15:42:10 +0100
+Message-ID: <1320244937-9739-6-git-send-email-Jes.Sorensen@redhat.com>
 References: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1320244937-9739-1-git-send-email-Jes.Sorensen@redhat.com>
@@ -14,30 +14,22 @@ From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- mdstat.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ Incremental.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/mdstat.c b/mdstat.c
-index abf6bf9..6ead24c 100644
---- a/mdstat.c
-+++ b/mdstat.c
-@@ -131,10 +131,15 @@ struct mdstat_ent *mdstat_read(int hold, int start)
- 	FILE *f;
- 	struct mdstat_ent *all, *rv, **end, **insert_here;
- 	char *line;
-+	int fd;
- 
- 	if (hold && mdstat_fd != -1) {
- 		lseek(mdstat_fd, 0L, 0);
--		f = fdopen(dup(mdstat_fd), "r");
-+		fd = dup(mdstat_fd);
-+		if (fd >= 0)
-+			f = fdopen(fd, "r");
-+		else
-+			return NULL;
- 	} else
- 		f = fopen("/proc/mdstat", "r");
- 	if (f == NULL)
+diff --git a/Incremental.c b/Incremental.c
+index c2c9051..d3724a4 100644
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -884,7 +884,7 @@ static int array_try_spare(char *devname, int *dfdp, struct dev_policy *pol,
+ 			 * to obtain minimum spare size */
+ 			struct supertype *st3 = dup_super(st2);
+ 			int mdfd = open_dev(mp->devnum);
+-			if (!mdfd) {
++			if (mdfd < 0) {
+ 				free(st3);
+ 				goto next;
+ 			}
 -- 
 1.7.6.4
 
