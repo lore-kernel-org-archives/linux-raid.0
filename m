@@ -1,62 +1,56 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Impending failure?
-Date: Fri, 04 Nov 2011 18:05:53 +0000
-Message-ID: <4EB42981.5080708@anonymous.org.uk>
-References: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
+From: Manish Katiyar <mkatiyar@gmail.com>
+Subject: Re: [PANIC] : kernel BUG at drivers/md/raid5.c:2756!
+Date: Fri, 4 Nov 2011 11:25:41 -0700
+Message-ID: <CAE0An6eSxFBYbHj7M=k4YDJdUv3oP8Y3_Sc3BB7K2RKix0W-yw@mail.gmail.com>
+References: <CAE0An6cvpqD8oPiHr2CAb753hC=47BYErOwAxaXoeHOYPaVznA@mail.gmail.com>
+ <20111101163931.4d85e330@notabene.brown> <CAE0An6em5crdkSJOLHSB85fQ95Br5HRmu3pa-E4O10X5y7vr9g@mail.gmail.com>
+ <20111101172946.1bf765f4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
+In-Reply-To: <20111101172946.1bf765f4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On 04/11/2011 13:53, Alex wrote:
-> Hi,
-> I have a fedora15 system with two 80GB SATA disks using RAID1
-[...]
-> I believe the boot sector is installed on sda, which is also the bad
-> disk. If I remove the disk to replace it, I'm concerned the system
-> will no longer boot.
+On Mon, Oct 31, 2011 at 11:29 PM, NeilBrown <neilb@suse.de> wrote:
+> On Mon, 31 Oct 2011 23:09:04 -0700 Manish Katiyar <mkatiyar@gmail.com=
+> wrote:
 >
-> Can you point me to instructions on the best way to replace a disk?
+>> > I think you were quite unlucky to hit this and that you will find =
+it hard to
+>> > reproduce. :-(
+>>
+>> Well, its always reproducible on my ubuntu when I run that script.
+>>
+>
+> Excellent!! =A0 That means you can reliably see if the patch fixes it=
+=2E :-)
 
-If you used Fedora's installer to set up the md RAIDs in the first 
-place, you will be able to boot off the second drive, as the Fedora 
-installer will have installed grub on it as well. You would have to tell 
-your BIOS to boot from it though.
+Sorry for the late reply. Yes it fixes it for me.
 
-If you've room in the case and spare SATA ports for a third drive (with 
-which to replace the failing drive), put it in and assuming it appears 
-as sdc I'd do the switcheroo by growing the array to three drives then 
-shrinking it again, something like this (all off the top of my head, so 
-check it first by looking at the man page, which will help you 
-understand what's going on anyway):
 
-# sfdisk -d /dev/sda
-Note down where sda1 starts. It will likely be either 63 or 2048.
-# dd if=/dev/sda of=/dev/sdc bs=512 count=<howevermanyitwas>
-This will copy the partition table and boot code.
-# blockdev --rereadpt /dev/sdc
-# mdadm /dev/md0 --add /dev/sdc1
-# mdadm /dev/md1 --add /dev/sdc2
-# mdadm --grow /dev/md0 -n3
-# mdadm --grow /dev/md1 -n3
-Wait for this to finish, either by looking at /proc/mdstat from time to 
-time, or using mdadm --wait /dev/md1. This gives you a three-way mirror. 
-It's possible this process will cause sda to fail, but that's OK. Next 
-we want to remove the duff drive:
-# mdadm /dev/md0 --fail /dev/sda1 --remove /dev/sda1
-# mdadm /dev/md1 --fail /dev/sda2 --remove /dev/sda2
-# mdadm --grow /dev/md0 -n2
-# mdadm --grow /dev/md1 -n2
 
-Now you can shut down again, and install the new drive in the place of 
-the original failing drive.
+>
+> I guess I was thinking of 'real' devices which are slower than XOR. =A0=
+You were
+> using loop back device on files in /tmp which are presumably always i=
+n memory.
+> I guess it would be a lot easier to hit in that case.
+>
+> Thanks,
+> NeilBrown
+>
 
-Cheers,
 
-John.
 
+--=20
+Thanks -
+Manish
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
