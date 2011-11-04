@@ -1,75 +1,67 @@
-From: =?UTF-8?Q?Mathias_Bur=C3=A9n?= <mathias.buren@gmail.com>
-Subject: Re: Impending failure?
-Date: Fri, 4 Nov 2011 13:57:35 +0000
-Message-ID: <CADNH=7G7PoZxecGCbMuKohoov6TC-GyYgyCaryHaikp4oss3qw@mail.gmail.com>
-References: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] imsm: fix: add support for OLCE and migration to
+	imsm_count_failed
+Date: Fri, 04 Nov 2011 14:52:14 +0100
+Message-ID: <20111104135214.13558.65725.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On 4 November 2011 13:53, Alex <mysqlstudent@gmail.com> wrote:
-> Hi,
-> I have a fedora15 system with two 80GB SATA disks using RAID1 and hav=
-e
-> the following messages in syslog:
->
-> Nov =C2=A04 07:43:11 mail smartd[2001]: Device: /dev/sda [SAT], 2 Off=
-line
-> uncorrectable sectors
-> Nov =C2=A04 08:13:11 mail smartd[2001]: Device: /dev/sda [SAT], 2 Cur=
-rently
-> unreadable (pending) sectors
->
-> "smartctl --all /dev/sda" does show that errors did occur at some
-> point in the past, but it doesn't seem to be affecting the RAID:
->
-> # cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sda2[0] sdb2[1]
-> =C2=A0 =C2=A0 =C2=A074750908 blocks super 1.1 [2/2] [UU]
-> =C2=A0 =C2=A0 =C2=A0bitmap: 1/1 pages [4KB], 65536KB chunk
->
-> md0 : active raid1 sda1[0] sdb1[1]
-> =C2=A0 =C2=A0 =C2=A0511988 blocks super 1.0 [2/2] [UU]
->
-> unused devices: <none>
->
-> Perhaps the bad sectors haven't been accessed, which is why the RAID
-> still appears to be intact?
->
-> Do I need to verify the RAID integrity in some way? Force a rebuild?
->
-> I believe the boot sector is installed on sda, which is also the bad
-> disk. If I remove the disk to replace it, I'm concerned the system
-> will no longer boot.
->
-> Can you point me to instructions on the best way to replace a disk?
->
-> Thanks,
-> Alex
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+The problem occurs when array under OLCE (from 3 to 6 disks)
+is assembled incrementally. Mdadm tries to start array
+just after adding the third disk (this is equal to the number of disks
+before the start of reshape). It does not succeed,
+the volume does not assembly correctly.
 
-Hi,
+The function counting failed disks (imsm_count_failed())
+was fixed for migration case. Now all disk members in both maps
+are checked when failed disks are counted correctly.
 
-Basically, if uncorrectable sectors >0 or pending sectors >0 the drive
-is failing. So replace ASAP :)
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ super-intel.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-Regards,
-Mathias
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/super-intel.c b/super-intel.c
+index f776be9..215679d 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5943,6 +5943,7 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev)
+ 	struct imsm_disk *disk;
+ 	struct imsm_map *map = get_imsm_map(dev, 0);
+ 	struct imsm_map *prev = get_imsm_map(dev, dev->vol.migr_state);
++	struct imsm_map *map_for_loop;
+ 	__u32 ord;
+ 	int idx;
+ 
+@@ -5951,13 +5952,18 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev)
+ 	 * map[0].  So we look through all the disks we started with and
+ 	 * see if any failures are still present, or if any new ones
+ 	 * have arrived
+-	 *
+-	 * FIXME add support for online capacity expansion and
+-	 * raid-level-migration
+ 	 */
+-	for (i = 0; i < prev->num_members; i++) {
+-		ord = __le32_to_cpu(prev->disk_ord_tbl[i]);
+-		ord |= __le32_to_cpu(map->disk_ord_tbl[i]);
++	map_for_loop = prev;
++	if (is_gen_migration(dev))
++		if (prev && (map->num_members > prev->num_members))
++			map_for_loop = map;
++
++	for (i = 0; i < map_for_loop->num_members; i++) {
++		ord = 0;
++		if (i < prev->num_members)
++			ord |= __le32_to_cpu(prev->disk_ord_tbl[i]);
++		if (i < map->num_members)
++			ord |= __le32_to_cpu(map->disk_ord_tbl[i]);
+ 		idx = ord_to_idx(ord);
+ 
+ 		disk = get_imsm_disk(super, idx);
+
