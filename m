@@ -1,69 +1,47 @@
-From: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Subject: [PATCH] fix: Allowed to assemble 2 volumes with the same names from
-	config file.
-Date: Fri, 04 Nov 2011 09:51:48 +0100
-Message-ID: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: Impending failure?
+Date: Fri, 4 Nov 2011 09:53:54 -0400
+Message-ID: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-bWRhZG0gYWxsb3dlcyB0byBhc3NlbWJsZSAyIHZvbHVtZXMgd2l0aCB0aGUgc2FtZSBuYW1lcyBi
-YXNlZCBvbiB0aGUKY29uZmlnIGZpbGUuIFRoZSBpc3N1ZSBpcyBmaXhlZCBieSBpdGVyYXRpbmcg
-b3ZlciB0aGUgbGlzdCBvZiBtZCBkZXZpY2UKaWRlbnRpZmllcnMgYW5kIGNvbXBhcmluZyB0aGUg
-bmFtZXMgb2YgbWQgZGV2aWNlcyBhZ2FpbnN0IGVhY2ggb3RoZXIsCmRldGVjdGluZyBpZGVudGlj
-YWwgbmFtZXMgYW5kIGJsb2NraW5nIHRoZSBhc3NlbWJseSBzaG91bGQgdGhlIHNhbWUgbmFtZXMK
-YmUgZm91bmQuCk5vdyBoYXZpbmcgZGV0ZWN0ZWQgZHVwbGljYXRlIG5hbWVzLCBtZGFkbSB0ZXJt
-aW5hdGVzIHdpdGhvdXQgYXNzZW1ibGluZwp0aGUgY29udGFpbmVyLCBkaXNwbGF5aW5nIGFwcHJv
-cHJpYXRlIHByb21wdC4KClNpZ25lZC1vZmYtYnk6IEx1a2FzeiBPcmxvd3NraSA8bHVrYXN6Lm9y
-bG93c2tpQGludGVsLmNvbT4KLS0tCiBjb25maWcuYyB8ICAgMjUgKysrKysrKysrKysrKysrKysr
-KysrKysrKwogbWRhZG0uYyAgfCAgICA3ICsrKysrKysKIG1kYWRtLmggIHwgICAgMSArCiAzIGZp
-bGVzIGNoYW5nZWQsIDMzIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
-IGEvY29uZmlnLmMgYi9jb25maWcuYwppbmRleCBjMGE2YmFhLi45YjMzN2ViIDEwMDY0NAotLS0g
-YS9jb25maWcuYworKysgYi9jb25maWcuYwpAQCAtMTA4OCwzICsxMDg4LDI4IEBAIHN0cnVjdCBt
-ZGRldl9pZGVudCAqY29uZl9tYXRjaChzdHJ1Y3QgbWRpbmZvICppbmZvLCBzdHJ1Y3Qgc3VwZXJ0
-eXBlICpzdCkKIAl9CiAJcmV0dXJuIG1hdGNoOwogfQorCitpbnQgY29uZl92ZXJpZnlfZGV2bmFt
-ZXMoc3RydWN0IG1kZGV2X2lkZW50ICphcnJheV9saXN0KQoreworCXN0cnVjdCBtZGRldl9pZGVu
-dCAqYTEsICphMjsKKworCWZvciAoYTEgPSBhcnJheV9saXN0OyBhMTsgYTEgPSBhMS0+bmV4dCkg
-eworCQlpZiAoIWExLT5kZXZuYW1lKQorCQkJY29udGludWU7CisJCWZvciAoYTIgPSBhMS0+bmV4
-dDsgYTI7IGEyID0gYTItPm5leHQpIHsKKwkJCWlmICghYTItPmRldm5hbWUpCisJCQkJY29udGlu
-dWU7CisJCQlpZiAoIXN0cmNtcChhMS0+ZGV2bmFtZSwgYTItPmRldm5hbWUpKSB7CisJCQkJZnBy
-aW50ZihzdGRlcnIsCisJCQkJCU5hbWUgIjogRGV2aWNlcyAleDoleDoleDoleCBhbmQgIgorCQkJ
-CQkiJXg6JXg6JXg6JXggaGF2ZSB0aGUgc2FtZSBuYW1lOiAlc1xuIiwKKwkJCQkJYTEtPnV1aWRb
-MF0sIGExLT51dWlkWzFdLCBhMS0+dXVpZFsyXSwKKwkJCQkJYTEtPnV1aWRbM10sIGEyLT51dWlk
-WzBdLCBhMi0+dXVpZFsxXSwKKwkJCQkJYTItPnV1aWRbMl0sIGEyLT51dWlkWzNdLCBhMS0+ZGV2
-bmFtZSk7CisJCQkJcmV0dXJuIDE7CisJCQl9CisJCX0KKwl9CisKKwlyZXR1cm4gMDsKK30KZGlm
-ZiAtLWdpdCBhL21kYWRtLmMgYi9tZGFkbS5jCmluZGV4IDU2ZGU3YjcuLmViZjRjNGQgMTAwNjQ0
-Ci0tLSBhL21kYWRtLmMKKysrIGIvbWRhZG0uYwpAQCAtMTI4Miw2ICsxMjgyLDEzIEBAIGludCBt
-YWluKGludCBhcmdjLCBjaGFyICphcmd2W10pCiAJCQlzdHJ1Y3QgbWFwX2VudCAqbWFwID0gTlVM
-TDsKIAkJCWludCBjbnQgPSAwOwogCQkJaW50IGZhaWx1cmVzLCBzdWNjZXNzZXM7CisKKwkJCWlm
-IChjb25mX3ZlcmlmeV9kZXZuYW1lcyhhcnJheV9saXN0KSkgeworCQkJCWZwcmludGYoc3RkZXJy
-LCBOYW1lCisJCQkJCSI6IER1cGxpY2F0ZSBNRCBkZXZpY2UgbmFtZXMgaW4gIgorCQkJCQkiY29u
-ZiBmaWxlIHdlcmUgZm91bmQuXG4iKTsKKwkJCQlleGl0KDEpOworCQkJfQogCQkJaWYgKGRldmxp
-c3QgPT0gTlVMTCkgewogCQkJCWZwcmludGYoc3RkZXJyLCBOYW1lICI6IE5vIGRldmljZXMgbGlz
-dGVkIGluIGNvbmYgZmlsZSB3ZXJlIGZvdW5kLlxuIik7CiAJCQkJZXhpdCgxKTsKZGlmZiAtLWdp
-dCBhL21kYWRtLmggYi9tZGFkbS5oCmluZGV4IDZkYmM1ZWEuLmJmZjQ1NGYgMTAwNjQ0Ci0tLSBh
-L21kYWRtLmgKKysrIGIvbWRhZG0uaApAQCAtMTE0NSw2ICsxMTQ1LDcgQEAgZXh0ZXJuIGNoYXIg
-KmNvbmZfZ2V0X2hvbWVob3N0KGludCAqcmVxdWlyZV9ob21laG9zdHApOwogZXh0ZXJuIGNoYXIg
-KmNvbmZfbGluZShGSUxFICpmaWxlKTsKIGV4dGVybiBjaGFyICpjb25mX3dvcmQoRklMRSAqZmls
-ZSwgaW50IGFsbG93X2tleSk7CiBleHRlcm4gaW50IGNvbmZfbmFtZV9pc19mcmVlKGNoYXIgKm5h
-bWUpOworZXh0ZXJuIGludCBjb25mX3ZlcmlmeV9kZXZuYW1lcyhzdHJ1Y3QgbWRkZXZfaWRlbnQg
-KmFycmF5X2xpc3QpOwogZXh0ZXJuIGludCBkZXZuYW1lX21hdGNoZXMoY2hhciAqbmFtZSwgY2hh
-ciAqbWF0Y2gpOwogZXh0ZXJuIHN0cnVjdCBtZGRldl9pZGVudCAqY29uZl9tYXRjaChzdHJ1Y3Qg
-bWRpbmZvICppbmZvLCBzdHJ1Y3Qgc3VwZXJ0eXBlICpzdCk7CiBleHRlcm4gaW50IGV4cGVyaW1l
-bnRhbCh2b2lkKTsKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBzcC4geiBv
-Lm8uCnogc2llZHppYmEgdyBHZGFuc2t1CnVsLiBTbG93YWNraWVnbyAxNzMKODAtMjk4IEdkYW5z
-awoKU2FkIFJlam9ub3d5IEdkYW5zayBQb2xub2MgdyBHZGFuc2t1LCAKVklJIFd5ZHppYWwgR29z
-cG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFNhZG93ZWdvLCAKbnVtZXIgS1JTIDEwMTg4MgoK
-TklQIDk1Ny0wNy01Mi0zMTYKS2FwaXRhbCB6YWtsYWRvd3kgMjAwLjAwMCB6bAoKVGhpcyBlLW1h
-aWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwg
-Zm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3
-IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91
-IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRl
-ciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
+Hi,
+I have a fedora15 system with two 80GB SATA disks using RAID1 and have
+the following messages in syslog:
 
+Nov  4 07:43:11 mail smartd[2001]: Device: /dev/sda [SAT], 2 Offline
+uncorrectable sectors
+Nov  4 08:13:11 mail smartd[2001]: Device: /dev/sda [SAT], 2 Currently
+unreadable (pending) sectors
+
+"smartctl --all /dev/sda" does show that errors did occur at some
+point in the past, but it doesn't seem to be affecting the RAID:
+
+# cat /proc/mdstat
+Personalities : [raid1]
+md1 : active raid1 sda2[0] sdb2[1]
+      74750908 blocks super 1.1 [2/2] [UU]
+      bitmap: 1/1 pages [4KB], 65536KB chunk
+
+md0 : active raid1 sda1[0] sdb1[1]
+      511988 blocks super 1.0 [2/2] [UU]
+
+unused devices: <none>
+
+Perhaps the bad sectors haven't been accessed, which is why the RAID
+still appears to be intact?
+
+Do I need to verify the RAID integrity in some way? Force a rebuild?
+
+I believe the boot sector is installed on sda, which is also the bad
+disk. If I remove the disk to replace it, I'm concerned the system
+will no longer boot.
+
+Can you point me to instructions on the best way to replace a disk?
+
+Thanks,
+Alex
