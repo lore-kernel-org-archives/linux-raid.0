@@ -1,40 +1,54 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
 Subject: Re: Impending failure?
-Date: Fri, 4 Nov 2011 15:59:24 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1111041557210.19721@uplift.swm.pp.se>
-References: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com> <CADNH=7G7PoZxecGCbMuKohoov6TC-GyYgyCaryHaikp4oss3qw@mail.gmail.com> <CALJXSJouyQxMcV_CKGUiU-QkzDor2FTW25uGFyy-jDLnppnoAg@mail.gmail.com>
- <CALJXSJrZziXeJa5q20KHTaM3rw3c1KU=L_pU2hLJ=km-Kh1fbQ@mail.gmail.com>
+Date: Fri, 4 Nov 2011 09:09:05 -0600
+Message-ID: <201111040909.06005.thomas@fjellstrom.ca>
+References: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com> <CALJXSJouyQxMcV_CKGUiU-QkzDor2FTW25uGFyy-jDLnppnoAg@mail.gmail.com> <CALJXSJrZziXeJa5q20KHTaM3rw3c1KU=L_pU2hLJ=km-Kh1fbQ@mail.gmail.com>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-1205728986-1320418764=:19721"
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <CALJXSJrZziXeJa5q20KHTaM3rw3c1KU=L_pU2hLJ=km-Kh1fbQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>
+To: =?utf-8?q?J=C3=A9r=C3=B4me_Poulin?= <jeromepoulin@gmail.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----137064504-1205728986-1320418764=:19721
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Fri, 4 Nov 2011, Jérôme Poulin wrote:
-
+On November 4, 2011, J=C3=A9r=C3=B4me Poulin wrote:
+> On Fri, Nov 4, 2011 at 9:57 AM, Mathias Bur=C3=A9n <mathias.buren@gma=
+il.com>=20
+wrote:
+> > Basically, if uncorrectable sectors >0 or pending sectors >0 the dr=
+ive
+> > is failing. So replace ASAP :)
+>=20
 > Exactly, with the new drives, they try to hide errors as much as they
 > can, as soon as SMART shows anything suspect, READ DMA failures,
-> pending sectors, offline uncorrectable sectors, or any tests fail, the
+> pending sectors, offline uncorrectable sectors, or any tests fail, th=
+e
 > disk is going to die soon.
 
-Pending sectors (READ ERROR) is not as bad as equivalent write errors.
+Maybe I was just lucky, but I had an uncorrectable sector error at one =
+point,=20
+and ran a dd write on the drive, and SMART reported the sectors were=20
+corrected. It wouldn't do it with a read, but a full write worked. The =
+drive=20
+worked for quite some time after that. I might still have it, but I can=
+'t=20
+remember which drive that was (I've had a lot).
 
-A 2TB drive has a bit error rate meaning it'll be according to spec if it 
-throws you a read error very 6 times you read all data from it.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-So saying read errors and pending sectors are a strong indication of 
-impending doom is an exaggeration.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-1205728986-1320418764=:19721--
+--=20
+Thomas Fjellstrom
+thomas@fjellstrom.ca
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
