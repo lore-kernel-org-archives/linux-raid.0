@@ -1,53 +1,32 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: =?UTF-8?B?SsOpcsO0bWUgUG91bGlu?= <jeromepoulin@gmail.com>
 Subject: Re: Impending failure?
-Date: Fri, 4 Nov 2011 15:33:42 +0100 (CET)
-Message-ID: <alpine.DEB.2.00.1111041529150.19721@uplift.swm.pp.se>
+Date: Fri, 4 Nov 2011 10:45:28 -0400
+Message-ID: <CALJXSJrZziXeJa5q20KHTaM3rw3c1KU=L_pU2hLJ=km-Kh1fbQ@mail.gmail.com>
 References: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
+	<CADNH=7G7PoZxecGCbMuKohoov6TC-GyYgyCaryHaikp4oss3qw@mail.gmail.com>
+	<CALJXSJouyQxMcV_CKGUiU-QkzDor2FTW25uGFyy-jDLnppnoAg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-221118457-1320417222=:19721"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAB1R3sh8=9imi41OTXRjf2ScoB=9WLZLHqL-WECOSyDuixVzrg@mail.gmail.com>
+In-Reply-To: <CALJXSJouyQxMcV_CKGUiU-QkzDor2FTW25uGFyy-jDLnppnoAg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alex <mysqlstudent@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Fri, Nov 4, 2011 at 9:57 AM, Mathias Bur=C3=A9n <mathias.buren@gmail=
+=2Ecom> wrote:
+>
+> Basically, if uncorrectable sectors >0 or pending sectors >0 the driv=
+e
+> is failing. So replace ASAP :)
 
----137064504-221118457-1320417222=:19721
-Content-Type: TEXT/PLAIN; format=flowed; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
-
-On Fri, 4 Nov 2011, Alex wrote:
-
-> Can you point me to instructions on the best way to replace a disk?
-
-First run "repair" on the array, hopefully it'll notice the unreadable 
-blocks and re-write them.
-
-echo repair >> /sys/block/md0/md/sync_action
-
-Also make sure your OS does regular scrubs of the raid, usually this is 
-done by monthly runs of checkarray, this is an example from Ubuntu:
-
-:/etc/cron.d$ cat mdadm
-#
-# cron.d/mdadm -- schedules periodic redundancy checks of MD devices
-#
-# Copyright © martin f. krafft <madduck@madduck.net>
-# distributed under the terms of the Artistic Licence 2.0
-#
-
-# By default, run at 00:57 on every Sunday, but do nothing unless the day 
-of
-# the month is less than or equal to 7. Thus, only run on the first Sunday 
-of
-# each month. crontab(5) sucks, unfortunately, in this regard; therefore 
-this
-# hack (see #380425).
-57 0 * * 0 root if [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le 7 ]; then /usr/share/mdadm/checkarray --cron --all --idle --quiet; fi
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-221118457-1320417222=:19721--
+Exactly, with the new drives, they try to hide errors as much as they
+can, as soon as SMART shows anything suspect, READ DMA failures,
+pending sectors, offline uncorrectable sectors, or any tests fail, the
+disk is going to die soon.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
