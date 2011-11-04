@@ -1,178 +1,69 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: RE: [PATCH] kill-subarray: fix, IMSM cannot kill-subarray with
- unsupported metadata
-Date: Thu, 3 Nov 2011 15:23:03 +0000
-Message-ID: <F9123E44003394499FDD2B17C60621D4044D82@IRSMSX101.ger.corp.intel.com>
-References: <F9123E44003394499FDD2B17C60621D4043755@IRSMSX101.ger.corp.intel.com>
-	<20111031113151.64f566b1@notabene.brown>
-	<F9123E44003394499FDD2B17C60621D4043D80@IRSMSX101.ger.corp.intel.com>
- <20111101154807.0cf42aa5@notabene.brown>
+From: Lukasz Orlowski <lukasz.orlowski@intel.com>
+Subject: [PATCH] fix: Allowed to assemble 2 volumes with the same names from
+	config file.
+Date: Fri, 04 Nov 2011 09:51:48 +0100
+Message-ID: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111101154807.0cf42aa5@notabene.brown>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil,
-This is OK. 
-However, reshape_container (called from Grow_continue_command) ignores info that is chosen by subarray string given by user.
-Therefore, all container's arrays are possibly grown (including those we want to block)
-So we need to patch Grow_continue, so it performs grow on the array that user requested, not all arrays that are in the reshape process.
-Thanks,
-Marcin
+bWRhZG0gYWxsb3dlcyB0byBhc3NlbWJsZSAyIHZvbHVtZXMgd2l0aCB0aGUgc2FtZSBuYW1lcyBi
+YXNlZCBvbiB0aGUKY29uZmlnIGZpbGUuIFRoZSBpc3N1ZSBpcyBmaXhlZCBieSBpdGVyYXRpbmcg
+b3ZlciB0aGUgbGlzdCBvZiBtZCBkZXZpY2UKaWRlbnRpZmllcnMgYW5kIGNvbXBhcmluZyB0aGUg
+bmFtZXMgb2YgbWQgZGV2aWNlcyBhZ2FpbnN0IGVhY2ggb3RoZXIsCmRldGVjdGluZyBpZGVudGlj
+YWwgbmFtZXMgYW5kIGJsb2NraW5nIHRoZSBhc3NlbWJseSBzaG91bGQgdGhlIHNhbWUgbmFtZXMK
+YmUgZm91bmQuCk5vdyBoYXZpbmcgZGV0ZWN0ZWQgZHVwbGljYXRlIG5hbWVzLCBtZGFkbSB0ZXJt
+aW5hdGVzIHdpdGhvdXQgYXNzZW1ibGluZwp0aGUgY29udGFpbmVyLCBkaXNwbGF5aW5nIGFwcHJv
+cHJpYXRlIHByb21wdC4KClNpZ25lZC1vZmYtYnk6IEx1a2FzeiBPcmxvd3NraSA8bHVrYXN6Lm9y
+bG93c2tpQGludGVsLmNvbT4KLS0tCiBjb25maWcuYyB8ICAgMjUgKysrKysrKysrKysrKysrKysr
+KysrKysrKwogbWRhZG0uYyAgfCAgICA3ICsrKysrKysKIG1kYWRtLmggIHwgICAgMSArCiAzIGZp
+bGVzIGNoYW5nZWQsIDMzIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
+IGEvY29uZmlnLmMgYi9jb25maWcuYwppbmRleCBjMGE2YmFhLi45YjMzN2ViIDEwMDY0NAotLS0g
+YS9jb25maWcuYworKysgYi9jb25maWcuYwpAQCAtMTA4OCwzICsxMDg4LDI4IEBAIHN0cnVjdCBt
+ZGRldl9pZGVudCAqY29uZl9tYXRjaChzdHJ1Y3QgbWRpbmZvICppbmZvLCBzdHJ1Y3Qgc3VwZXJ0
+eXBlICpzdCkKIAl9CiAJcmV0dXJuIG1hdGNoOwogfQorCitpbnQgY29uZl92ZXJpZnlfZGV2bmFt
+ZXMoc3RydWN0IG1kZGV2X2lkZW50ICphcnJheV9saXN0KQoreworCXN0cnVjdCBtZGRldl9pZGVu
+dCAqYTEsICphMjsKKworCWZvciAoYTEgPSBhcnJheV9saXN0OyBhMTsgYTEgPSBhMS0+bmV4dCkg
+eworCQlpZiAoIWExLT5kZXZuYW1lKQorCQkJY29udGludWU7CisJCWZvciAoYTIgPSBhMS0+bmV4
+dDsgYTI7IGEyID0gYTItPm5leHQpIHsKKwkJCWlmICghYTItPmRldm5hbWUpCisJCQkJY29udGlu
+dWU7CisJCQlpZiAoIXN0cmNtcChhMS0+ZGV2bmFtZSwgYTItPmRldm5hbWUpKSB7CisJCQkJZnBy
+aW50ZihzdGRlcnIsCisJCQkJCU5hbWUgIjogRGV2aWNlcyAleDoleDoleDoleCBhbmQgIgorCQkJ
+CQkiJXg6JXg6JXg6JXggaGF2ZSB0aGUgc2FtZSBuYW1lOiAlc1xuIiwKKwkJCQkJYTEtPnV1aWRb
+MF0sIGExLT51dWlkWzFdLCBhMS0+dXVpZFsyXSwKKwkJCQkJYTEtPnV1aWRbM10sIGEyLT51dWlk
+WzBdLCBhMi0+dXVpZFsxXSwKKwkJCQkJYTItPnV1aWRbMl0sIGEyLT51dWlkWzNdLCBhMS0+ZGV2
+bmFtZSk7CisJCQkJcmV0dXJuIDE7CisJCQl9CisJCX0KKwl9CisKKwlyZXR1cm4gMDsKK30KZGlm
+ZiAtLWdpdCBhL21kYWRtLmMgYi9tZGFkbS5jCmluZGV4IDU2ZGU3YjcuLmViZjRjNGQgMTAwNjQ0
+Ci0tLSBhL21kYWRtLmMKKysrIGIvbWRhZG0uYwpAQCAtMTI4Miw2ICsxMjgyLDEzIEBAIGludCBt
+YWluKGludCBhcmdjLCBjaGFyICphcmd2W10pCiAJCQlzdHJ1Y3QgbWFwX2VudCAqbWFwID0gTlVM
+TDsKIAkJCWludCBjbnQgPSAwOwogCQkJaW50IGZhaWx1cmVzLCBzdWNjZXNzZXM7CisKKwkJCWlm
+IChjb25mX3ZlcmlmeV9kZXZuYW1lcyhhcnJheV9saXN0KSkgeworCQkJCWZwcmludGYoc3RkZXJy
+LCBOYW1lCisJCQkJCSI6IER1cGxpY2F0ZSBNRCBkZXZpY2UgbmFtZXMgaW4gIgorCQkJCQkiY29u
+ZiBmaWxlIHdlcmUgZm91bmQuXG4iKTsKKwkJCQlleGl0KDEpOworCQkJfQogCQkJaWYgKGRldmxp
+c3QgPT0gTlVMTCkgewogCQkJCWZwcmludGYoc3RkZXJyLCBOYW1lICI6IE5vIGRldmljZXMgbGlz
+dGVkIGluIGNvbmYgZmlsZSB3ZXJlIGZvdW5kLlxuIik7CiAJCQkJZXhpdCgxKTsKZGlmZiAtLWdp
+dCBhL21kYWRtLmggYi9tZGFkbS5oCmluZGV4IDZkYmM1ZWEuLmJmZjQ1NGYgMTAwNjQ0Ci0tLSBh
+L21kYWRtLmgKKysrIGIvbWRhZG0uaApAQCAtMTE0NSw2ICsxMTQ1LDcgQEAgZXh0ZXJuIGNoYXIg
+KmNvbmZfZ2V0X2hvbWVob3N0KGludCAqcmVxdWlyZV9ob21laG9zdHApOwogZXh0ZXJuIGNoYXIg
+KmNvbmZfbGluZShGSUxFICpmaWxlKTsKIGV4dGVybiBjaGFyICpjb25mX3dvcmQoRklMRSAqZmls
+ZSwgaW50IGFsbG93X2tleSk7CiBleHRlcm4gaW50IGNvbmZfbmFtZV9pc19mcmVlKGNoYXIgKm5h
+bWUpOworZXh0ZXJuIGludCBjb25mX3ZlcmlmeV9kZXZuYW1lcyhzdHJ1Y3QgbWRkZXZfaWRlbnQg
+KmFycmF5X2xpc3QpOwogZXh0ZXJuIGludCBkZXZuYW1lX21hdGNoZXMoY2hhciAqbmFtZSwgY2hh
+ciAqbWF0Y2gpOwogZXh0ZXJuIHN0cnVjdCBtZGRldl9pZGVudCAqY29uZl9tYXRjaChzdHJ1Y3Qg
+bWRpbmZvICppbmZvLCBzdHJ1Y3Qgc3VwZXJ0eXBlICpzdCk7CiBleHRlcm4gaW50IGV4cGVyaW1l
+bnRhbCh2b2lkKTsKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBUZWNobm9sb2d5IFBvbGFuZCBzcC4geiBv
+Lm8uCnogc2llZHppYmEgdyBHZGFuc2t1CnVsLiBTbG93YWNraWVnbyAxNzMKODAtMjk4IEdkYW5z
+awoKU2FkIFJlam9ub3d5IEdkYW5zayBQb2xub2MgdyBHZGFuc2t1LCAKVklJIFd5ZHppYWwgR29z
+cG9kYXJjenkgS3Jham93ZWdvIFJlamVzdHJ1IFNhZG93ZWdvLCAKbnVtZXIgS1JTIDEwMTg4MgoK
+TklQIDk1Ny0wNy01Mi0zMTYKS2FwaXRhbCB6YWtsYWRvd3kgMjAwLjAwMCB6bAoKVGhpcyBlLW1h
+aWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwg
+Zm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3
+IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91
+IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRl
+ciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
 
-
-
-> I have changed the code to do what I think it should.  Please review
-> patch below.
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> commit 446894ea8db17a2dfc740f81d58190c5ac8167d5
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Tue Nov 1 15:45:46 2011 +1100
-> 
->     Grow: fix check_reshape and open_code it.
-> 
->     check_reshape should not try to parse the subarray string - only
->     metadata handlers are allowed to do that.
-> 
->     The common code and only interpret a subarray string by passing it
-> to
->     "container_content" which will then return only the member for that
->     subarray.
-> 
->     So remove check_reshape and place similar logic explicitly at the
-> two
->     call-sites.  They are different enough that it is probably clearer
-> to
->     have explicit code.
-> 
->     Signed-off-by: NeilBrown <neilb@suse.de>
-> 
-> diff --git a/Grow.c b/Grow.c
-> index 598fd59..8df4ac4 100644
-> --- a/Grow.c
-> +++ b/Grow.c
-> @@ -1358,36 +1358,6 @@ static int reshape_container(char *container,
-> char *devname,
->  			     char *backup_file,
->  			     int quiet, int restart, int freeze_reshape);
-> 
-> -/*
-> - * helper routine to check metadata reshape avalability
-> - * 1. Do not "grow" arrays with volume activation blocked
-> - * 2. do not reshape containers with container reshape blocked
-> - *
-> - * IN:
-> - *	subarray - array name or NULL for container wide reshape
-> - *	content - md device info from container_content
-> - * OUT:
-> - *	0 - block reshape
-> - */
-> -static int check_reshape(char *subarray, struct mdinfo *content) -{
-> -	char *ep;
-> -	unsigned int idx;
-> -
-> -	if (!subarray) {
-> -		if (content->array.state &
-> (1<<MD_SB_BLOCK_CONTAINER_RESHAPE))
-> -			return 0;
-> -	} else {
-> -		/* do not "grow" arrays with volume activation blocked */
-> -		idx = strtoul(subarray, &ep, 10);
-> -		if (*ep == '\0'
-> -		    && content->container_member == (int) idx
-> -		    && (content->array.state & (1<<MD_SB_BLOCK_VOLUME)))
-> -			return 0;
-> -	}
-> -	return 1;
-> -}
-> -
->  int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
->  		 long long size,
->  		 int level, char *layout_str, int chunksize, int
-> raid_disks, @@ -1505,12 +1475,16 @@ int Grow_reshape(char *devname, int
-> fd, int quiet, char *backup_file,
-> 
->  			cc = st->ss->container_content(st, subarray);
->  			for (content = cc; content ; content = content->next)
-> {
-> -				int allow_reshape;
-> +				int allow_reshape = 1;
-> 
->  				/* check if reshape is allowed based on
-> metadata
->  				 * indications stored in content.array.status
->  				 */
-> -				allow_reshape = check_reshape(subarray,
-> content);
-> +				if (content->array.state &
-> (1<<MD_SB_BLOCK_VOLUME))
-> +					allow_reshape = 0;
-> +				if (content->array.state
-> +				    & (1<<MD_SB_BLOCK_CONTAINER_RESHAPE))
-> +					allow_reshape = 0;
->  				if (!allow_reshape) {
->  					fprintf(stderr, Name
->  						" cannot reshape arrays in"
-> @@ -3788,10 +3762,10 @@ int Grow_continue_command(char *devname, int
-> fd,
->  			goto Grow_continue_command_exit;
->  		}
-> 
-> -		cc = st->ss->container_content(st, NULL);
-> +		cc = st->ss->container_content(st, subarray);
->  		for (content = cc; content ; content = content->next) {
->  			char *array;
-> -			int allow_reshape;
-> +			int allow_reshape = 1;
-> 
->  			if (content->reshape_active == 0)
->  				continue;
-> @@ -3800,10 +3774,14 @@ int Grow_continue_command(char *devname, int
-> fd,
->  			 * content->reshape_active state, therefore we
->  			 * need to check_reshape based on
->  			 * reshape_active and subarray name
-> -			*/
-> -			allow_reshape =
-> -			  check_reshape((content->reshape_active ==
-> CONTAINER_RESHAPE)? NULL : subarray,
-> -					content);
-> +			 */
-> +			if (content->array.state & (1<<MD_SB_BLOCK_VOLUME))
-> +				allow_reshape = 0;
-> +			if (content->reshape_active == CONTAINER_RESHAPE &&
-> +			    (content->array.state
-> +			     & (1<<MD_SB_BLOCK_CONTAINER_RESHAPE)))
-> +				allow_reshape = 0;
-> +
->  			if (!allow_reshape) {
->  				fprintf(stderr, Name
->  					": cannot continue reshape of an array"
-> diff --git a/super-intel.c b/super-intel.c index 1caee70..34a4b34
-> 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -5759,8 +5759,8 @@ static struct mdinfo
-> *container_content_imsm(struct supertype *st, char *subarra
->  						 map->num_members, /* raid disks */
->  						 &chunk,
->  						 1 /* verbose */)) {
-> -			fprintf(stderr, Name ": IMSM RAID gemetry validation
-> failed. "
-> -				"Array %s activation is blocked.\n",
-> +			fprintf(stderr, Name ": IMSM RAID geometry
-> validation"
-> +				" failed.  Array %s activation is blocked.\n",
->  				dev->volume);
->  			this->array.state |=
->  			  (1<<MD_SB_BLOCK_CONTAINER_RESHAPE) |
