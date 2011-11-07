@@ -1,119 +1,96 @@
-From: Lennart Poettering <lennart@poettering.net>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
-    by user
-Date: Mon, 7 Nov 2011 13:00:49 +0100
-Message-ID: <20111107120048.GD25130@tango.0pointer.de>
-References: <20110208110730.GF23157@tango.0pointer.de>
- <AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
- <20110208172822.GC21847@tango.0pointer.de>
- <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
- <20111031110613.GA1402@tango.0pointer.de>
- <20111102114416.7879b77f@notabene.brown>
- <20111102011615.GA5289@tango.0pointer.de>
- <20111102130334.09c3ab51@notabene.brown>
- <20111102133223.GC5119@tango.0pointer.de>
- <20111107135241.64ae261d@notabene.brown>
+From: Martijn <mailinglist@mindconnect.nl>
+Subject: All kinds of things on RAID/mdadm
+Date: Mon, 07 Nov 2011 13:46:56 +0100
+Message-ID: <4EB7D340.80009@mindconnect.nl>
+Reply-To: mailinglist@mindconnect.nl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111107135241.64ae261d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 07.11.11 13:52, NeilBrown (neilb@suse.de) wrote:
+Dear readers, perhaps Neil and/or fellow mdadm developers,
 
-> > Why doesn't the kernel do that on its own?
-> 
-> Because the kernel doesn't know about the format of the metadata that
-> describes the array.
+Over the last couple of weeks, I've been spending quite some time with 
+mdadm and looking at a good way to use RAID on Linux for one of our 
+servers. My colleagues (friends) and me are designing a new software 
+platform for our company service, and RAID is an important base layer in 
+the system.
 
-Yupp, my suggestion would be to change that. 
+To give you some context: our company was started not only to provide 
+paid services, but also for learning purposes. We where all students 
+when we started our company over nine years ago, and we still like to 
+learn things related to all kinds of (IT) subjects. In that same 
+direction, because we want to learn, we fancy a certain kind of 
+'thoroughness' when creating and documenting something. At least, when 
+we're given the time to do that, such as in this case.
 
-> > What we do right now is this:
-> > 
-> > kill_all_processes();
-> > do {
-> >      umount_all_file_systems_we_can();
-> >      read_only_mount_all_remaining_file_systems();
-> > } while (we_had_some_success_with_that());
-> > jump_into_initrd();
-> > 
-> > As long as mdmon references a file from the root disk we cannot umount
-> > it, so the loop wouldn't be effective.
-> 
-> What exactly is "kill_all_processes()"?   is it SIGTERM or SIGKILL or both
-> with a gap or ???
+Our current platform was set up early in 2005, when a colleague and I 
+spent an evening finding out if we *really* couldn't just mirror full 
+/dev/hda with /dev/hdb ;-) After reading it wasn't possible many, many 
+times, we ended up manually copying partition tables from hda to hdb 
+(eek!), mirroring partitions instead of drives (huh?), using some LVM 
+(every time you think you know how it works, it's different), installing 
+grub on both drives ("will this work on failover?"), and.. it worked.
 
-SIGTERM followed by SIGKILL after 5s if the programs do not react to
-that in time. But note that this logic only applies to processes which
-for some reason managed to escape systemd's usual cgroup-based killing
-logic. Normal services are hence already killed at that time, and only
-processes which moved themselves out of any cgroup or for which the
-service files disabled killing might survive to this point.
+I really slept bad after that though: we needed the reliability cheap, 
+but it was so different from what I had imagined upfront and knew from 
+hardware RAID. The extra complexity was a big deal for me too. Bigger 
+than necessary I think. But I wanted to be more sure I could wrap my 
+head around a problem if someone would call me in the middle of the 
+night to fix it.
 
-> I assume a SIGKILL.  I don't mind a SIGTERM and it could be useful to
-> expedite mdmon cleaning up.
-> 
-> However there is an important piece missing.  When you remount,ro a
-> filesystem, the block device doesn't get told so it thinks it is still open
-> read/write.  So md cannot tell mdmon that the array is now read-only
-> It would make a lot of sense for mdmon to exit after receiving a SIGTERM as
-> soon as the device is marked read-only.  But it just doesn't know.
+So this time around, I choose to be more thorough on the important 
+aspects and one of those aspects is: recovery and what to do if 
+something is wrong. While mdadm is a tool that's pretty clear in it's 
+usage, supported by a good manual, I've come accross some things I 
+cannot document to my full satisfaction after reading the manual. 
+raid.wiki.kernel.org is down as well, and ironically the contents aren't 
+'mirrored' anywhere. Google Cache may have it, but I can't find it: the 
+results are littered with non-important meta pages from the wiki.
+I also quickly searched through the mdadm code, but didn't see comments 
+that cleared up my questions.
 
-As mentioned by Kay, you can get notifications for this by poll()ing on
-/proc/self/mountinfo. Note again however, that we kill first, and only
-then try to unmount/remount.
+Searching for possible states of an array, I discovered that there are 
+all sorts of combinations for states. The basics are clean, degraded and 
+dirty. But what does 'clean, no-errors' mean? And 'dirty, no-errors'? 
+Searching through the code, I even found a point where a label 'Dirty 
+State' could be listed as 'clean'. Is it a good idea to add a list with 
+explainations of possible states, basic and exotic, to the manual? Much 
+in the same way all monitor events are listed. I can imagine not 
+everyone knowing the difference between dirty and degraded for example. 
+It's a basic thing that is skipped in most cases.
 
-> We can probably fix that, but that doesn't really help for now.
-> 
-> I think I would like:
-> 
->  - add to the above loop "stop any virtual devices that we can".
->    Exactly how to do that if /proc and /sys are already unmounted
->    is unclear.  Is one or both of these kept around somewhere?
+Perhaps the same could be done for individual disk states. Of course we 
+all know "active sync", and based on what I've seen elsewhere the states 
+"removed", "spare" and "faulty spare" exist. But having a list of all 
+possible states would help prepare documentation for the things we 
+really don't want to happen. Takes off the pressure a bit :-)
 
-/proc and /sys are not unmounted in this loop. Being virtual API fs we
-exclude them from this logic and leave them around until the initrd
-unmounts them if it wants to.
+I'm not voting for mdadm to become a tool that even babies can use to 
+create their arrays, but with this info others may be able to act with 
+confidence based on their own knowledge, instead of search for articles 
+on the web that happen to list the state of the array they're searching 
+for. A lot of those articles do not teach anything. They just make you 
+brainlessly copy and paste commands and fill in the character device 
+files. Some of them are just plain wrong and may result in data being lost.
+I also vote on articles giving partitionable devices a good kick over 
+using partitions for RAID, but that's outside the scope of this post ;-)
 
-Actually, in the loop above there are three more steps: in each
-iteration we also try to detach all swap devices, all loopback devices
-and all DM devices. We probably could add a similar operation for MD
-devices here too. But note that this loop is more of a last-resort
-thing, and normally shouldn't do much.
+Where do you think that important things, such as to 'how to organize 
+failover' and questions like 'do I benifit from putting swap on a RAID 
+char. device', should be documented? Is it the currently unreachable 
+raid.wiki.kernel.org? Would it be better to provide the info that leads 
+to the answers in the mdadm manual so that it is always available?
 
->  - allow processes to be marked some way so they get SIGTERM but not
->    SIGKILL.  I'm happy adding magic char to argv[0].
+Are there any sources you would recommend reading if someone is 
+interested in how mdadm/software-RAID 'works'? I'm not sure if RAID has 
+an actual spec somewhere on which mdadm is based.
 
-Note that you can configure how you are killed relatively flexibly in
-the service files and that the loop pointed out above is only this last
-resort thing which is applied to all processes/mount points/... which
-stick around after this normal shutdown.
+Looking forward to your replies and maybe a conversation leading to 
+improvement where necessary :-)
 
-Here's another attempt in explaining how this works:
-
-<snip>
-terminate_all_mount_and_service_units();
-kill_all_remaining_processes();
-do {
-     umount_all_remaining_file_systems_we_can();
-     read_only_mount_all_remaining_file_systems();
-     detach_all_remaining_loop_devices();
-     detach_all_remaining_swap_devices();
-     detach_all_remaining_dm_devices();
-} while (we_had_some_success_with_that());
-jump_into_initrd();
-</snip>
-
-You have relatively flexible control of the first step in this code. The
-second step is then the hammer that tries to fix up what this step
-didn't accomplish. My suggestion to check argv[0][0] was to avoid the
-hammer.
-
-Lennart
-
--- 
-Lennart Poettering - Red Hat, Inc.
+Kind regards,
+Martijn
