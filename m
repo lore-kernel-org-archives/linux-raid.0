@@ -1,103 +1,88 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/2] FIX: mdmon doesn't start
-Date: Mon, 7 Nov 2011 11:46:16 +1100
-Message-ID: <20111107114616.580d7b0f@notabene.brown>
+Subject: Re: [PATCH 2/2] FIX: Do not continue container reshape when mdmon
+ is absent
+Date: Mon, 7 Nov 2011 11:47:13 +1100
+Message-ID: <20111107114713.622fee19@notabene.brown>
 References: <20111103165532.8864.80753.stgit@gklab-128-013.igk.intel.com>
+	<20111103165541.8864.66189.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Uw64r0aEA1qGkLfkUj3KEn7"; protocol="application/pgp-signature"
+ boundary="Sig_/U9HgQvbvmYa+beegOxcT4jJ"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111103165532.8864.80753.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20111103165541.8864.66189.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com, Jes.Sorensen@redhat.com
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/Uw64r0aEA1qGkLfkUj3KEn7
+--Sig_/U9HgQvbvmYa+beegOxcT4jJ
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 03 Nov 2011 17:55:33 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+On Thu, 03 Nov 2011 17:55:41 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
 e:
 
-> When array is not clean dismounted directory /dev/.mdadm is not cleaned u=
-p.
-> On array re-assembly read pid is not valid and it is not possible
-> to connect to monitor. This causes mdmon to exit and array remains
-> not monitored.
-> Problem is introduced by fix:
->    mdmon(): Error out if failing to connect to victim monitor
->    819c158866f466075a1c719f0dc496deb2fb3814
+> When mdmon is absent metadata is not updated, and container_reshape()
+> can fall in to endless loop. This can cause user data corruption.
 >=20
-> This is critical for container reshape when mdmon is should finish reshap=
-e.
-> when reshape is not finished, array is reshaped again by mdadm.
+> In case when mdmon is absent do not continue container reshape process.
 >=20
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 >=20
->  mdmon.c |   15 ++++++++++-----
->  1 files changed, 10 insertions(+), 5 deletions(-)
+>  Grow.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
 >=20
-> diff --git a/mdmon.c b/mdmon.c
-> index bdcda0e..5ac7cd6 100644
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -458,11 +458,16 @@ static int mdmon(char *devname, int devnum, int mus=
-t_fork, int takeover)
-> =20
->  	victim =3D mdmon_pid(container->devnum);
->  	if (victim >=3D 0) {
-> -		victim_sock =3D connect_monitor(container->devname);
-> -		if (victim_sock < 0) {
-> -			fprintf(stderr, "mdmon: %s unable to connect monitor\n",
-> -				container->devname);
-> -			exit(3);
-> +		/* It is possible that mdmon that wrote pid file was killed.
-> +		 * check if read pid is valid/mdmon is running
-> +		 */
-> +		if (mdmon_running(victim)) {
-> +			victim_sock =3D connect_monitor(container->devname);
-> +			if (victim_sock < 0) {
-> +				fprintf(stderr, "mdmon: %s unable to connect "
-> +					"monitor\n", container->devname);
-> +				exit(3);
-> +			}
->  		}
+> diff --git a/Grow.c b/Grow.c
+> index e7fd7c4..184a973 100644
+> --- a/Grow.c
+> +++ b/Grow.c
+> @@ -2562,6 +2562,12 @@ int reshape_container(char *container, char *devna=
+me,
+>  		restart =3D 0;
+>  		if (rv)
+>  			break;
+> +		rv =3D !mdmon_running(devname2devnum(container));
+> +		if (rv) {
+> +			printf(Name ": Mdmon is not found. "
+> +			       "Cannot continue container reshape.\n");
+> +			break;
+> +		}
 >  	}
-> =20
+>  	if (!rv)
+>  		unfreeze(st);
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks for the patch.
-I decided to revert the patch that originally caused the problem instead - =
-it
-really isn't needed.
-I then added a patch to make sure we never use victim_sock when it is -1.
-The places were we might have used it we not dangerous at all, but it is
-cleaner to check.
 
-Thanks,
+Applied-  thanks.
+
 NeilBrown
 
---Sig_/Uw64r0aEA1qGkLfkUj3KEn7
+
+--Sig_/U9HgQvbvmYa+beegOxcT4jJ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTrcqWDnsnt1WYoG5AQL9fxAAoIkWYZbxFQ2V2Y7enF0h+EPuy2XrDixG
-5DFnUEqoqFNkpzl6rky2eWsm4sf8E1XWYL53FFAXMPxPMBAvJ/i2i2eF8SVAxnUd
-OfDa3z4USZAidSjoFkZ0KB1noSl8kJo7JHuZeQupQ29iVj7HD047pVg8k7/Ht2kY
-HzlU8jjcwdsw0pyjnHpZ/kHApE3ZEQPV9XyE2xsAHhfOnXY3sC+e+GwOAW1SZvTU
-ouyXBYW4REbtLdz4WnFK07YT8DoQ2FELxxmDipHXG0kLMn0XpgcyQ1XT4pid3o/E
-OOs7ii0e0VMZKZajig+Dq22TE/hrTlC9tRWJB4j1KM4XmYK8K65sgMfK4wxLC0lJ
-KOzABLAWeOwuaA17CidoKZa7g/FdfMctmynuIqIk6RdUzvd5XNPobPqjwomuETbI
-uZQ1oM3D2lxMcOlPzttU1568No9bXWF+zMy1ok8bFx2dm0a9LgksDWShddwnc+Ep
-da8qKxY8t5lwhCjTA/VeHtr9krvAsEx/PrrRHNe1Dm5Ik+ct4w8YJraBz7dce44e
-BTkpjQLrhEOk4oobilXM6pE2txpkmGAY6KozIrV3Ayb5g/98RKmVo7NdN0GlwSoF
-h/bYB2Gk7dVOfH2dN4YSR0sH98MyIopncczgsl54H7LeEuN88uqJ4ihB61G6ThQr
-WKQaIDrfua0=
-=CsKB
+iQIVAwUBTrcqkTnsnt1WYoG5AQJYLg/+MpZP1oeYorH8Mx4J6JDv3ZFZYIPzs9Fp
+I66Z5ovGRxbFVHYkU2ZoRKv4pwvgBUQx1Ab8GsULxdSrvmJV9dW0rvZMksujXUe8
+0wd83vzqAjmM0EBsjVxqIgVGiYEURt0qjlCtxOtXw8fJvzic56SHBh+yMdkgcdKF
+CvC+2uorJg6bLgZ5N4crE4os5owQqyDNoXB6YAh7PjgbUsQGAmS2Y+8pGoqohe+b
+tjXGgvqduUIJZ0H0Ewz1weUUA0ZSAQ68yrKz+ibqKPVlU6hADpGz85Bs0t61WNDj
+608kBFgMiK6cOM6hYNt7kDsMnwqpZ2sfGkavg60b2G5kd3veL6lDWHZMRVQDFHf4
+BpVbWiqsGyfv2jwfjkR3YasEgQUCV+1iIrpUr0F9JfRCiUKutAgxgaXc870/j+mG
+083kNP+f7eEdLsk7xC3vdxc0rVCZRNV9gCczMULNr6IPrjaznQjTY2ho+Ytuw/wE
+UQ+Zm1yR/xb0r5fiyyKMUHLh8GzdZQO1RMqJ5v42/Xdz27QEdDeD48mnyOkkIG2n
+h2nYfKfjOCcmlgRMrwWqV/0X7DVCiLggDXr+bhrlLAJELsK1m0aVzmCu2hSZwN+A
+bdxlxlNdd3ZqCm4R3gdtTxxOY3rHiP82nZO5hgmvQtKaAZr7g89tWZYeiTY55dz/
+WUvAUM1hT4k=
+=3Cw5
 -----END PGP SIGNATURE-----
 
---Sig_/Uw64r0aEA1qGkLfkUj3KEn7--
+--Sig_/U9HgQvbvmYa+beegOxcT4jJ--
