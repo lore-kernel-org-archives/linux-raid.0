@@ -1,144 +1,106 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] fix: Allowed to assemble 2 volumes with the same names
- from config file.
-Date: Mon, 7 Nov 2011 12:22:46 +1100
-Message-ID: <20111107122246.6f50387b@notabene.brown>
-References: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
+Subject: Re: [PATCH] imsm: fix: add support for OLCE and migration to
+ imsm_count_failed
+Date: Mon, 7 Nov 2011 12:30:27 +1100
+Message-ID: <20111107123027.04b9925a@notabene.brown>
+References: <20111104135214.13558.65725.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/eCIzStGUP1iLlS.2J9X7GXv"; protocol="application/pgp-signature"
+ boundary="Sig_/aXPomFMiKjUm1.8G4H43KV7"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
+In-Reply-To: <20111104135214.13558.65725.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Orlowski <lukasz.orlowski@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
---Sig_/eCIzStGUP1iLlS.2J9X7GXv
+--Sig_/aXPomFMiKjUm1.8G4H43KV7
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 04 Nov 2011 09:51:48 +0100 Lukasz Orlowski
-<lukasz.orlowski@intel.com> wrote:
+On Fri, 04 Nov 2011 14:52:14 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
+wrote:
 
-> mdadm allowes to assemble 2 volumes with the same names based on the
-> config file. The issue is fixed by iterating over the list of md device
-> identifiers and comparing the names of md devices against each other,
-> detecting identical names and blocking the assembly should the same names
-> be found.
-> Now having detected duplicate names, mdadm terminates without assembling
-> the container, displaying appropriate prompt.
+> The problem occurs when array under OLCE (from 3 to 6 disks)
+> is assembled incrementally. Mdadm tries to start array
+> just after adding the third disk (this is equal to the number of disks
+> before the start of reshape). It does not succeed,
+> the volume does not assembly correctly.
 >=20
-> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
+> The function counting failed disks (imsm_count_failed())
+> was fixed for migration case. Now all disk members in both maps
+> are checked when failed disks are counted correctly.
+>=20
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 > ---
->  config.c |   25 +++++++++++++++++++++++++
->  mdadm.c  |    7 +++++++
->  mdadm.h  |    1 +
->  3 files changed, 33 insertions(+), 0 deletions(-)
+>  super-intel.c |   18 ++++++++++++------
+>  1 files changed, 12 insertions(+), 6 deletions(-)
 >=20
-> diff --git a/config.c b/config.c
-> index c0a6baa..9b337eb 100644
-> --- a/config.c
-> +++ b/config.c
-> @@ -1088,3 +1088,28 @@ struct mddev_ident *conf_match(struct mdinfo *info=
-, struct supertype *st)
->  	}
->  	return match;
->  }
+> diff --git a/super-intel.c b/super-intel.c
+> index f776be9..215679d 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -5943,6 +5943,7 @@ static int imsm_count_failed(struct intel_super *su=
+per, struct imsm_dev *dev)
+>  	struct imsm_disk *disk;
+>  	struct imsm_map *map =3D get_imsm_map(dev, 0);
+>  	struct imsm_map *prev =3D get_imsm_map(dev, dev->vol.migr_state);
+> +	struct imsm_map *map_for_loop;
+>  	__u32 ord;
+>  	int idx;
+> =20
+> @@ -5951,13 +5952,18 @@ static int imsm_count_failed(struct intel_super *=
+super, struct imsm_dev *dev)
+>  	 * map[0].  So we look through all the disks we started with and
+>  	 * see if any failures are still present, or if any new ones
+>  	 * have arrived
+> -	 *
+> -	 * FIXME add support for online capacity expansion and
+> -	 * raid-level-migration
+>  	 */
+> -	for (i =3D 0; i < prev->num_members; i++) {
+> -		ord =3D __le32_to_cpu(prev->disk_ord_tbl[i]);
+> -		ord |=3D __le32_to_cpu(map->disk_ord_tbl[i]);
+> +	map_for_loop =3D prev;
+> +	if (is_gen_migration(dev))
+> +		if (prev && (map->num_members > prev->num_members))
+> +			map_for_loop =3D map;
 > +
-> +int conf_verify_devnames(struct mddev_ident *array_list)
-> +{
-> +	struct mddev_ident *a1, *a2;
-> +
-> +	for (a1 =3D array_list; a1; a1 =3D a1->next) {
-> +		if (!a1->devname)
-> +			continue;
-> +		for (a2 =3D a1->next; a2; a2 =3D a2->next) {
-> +			if (!a2->devname)
-> +				continue;
-> +			if (!strcmp(a1->devname, a2->devname)) {
-> +				fprintf(stderr,
-> +					Name ": Devices %x:%x:%x:%x and "
-> +					"%x:%x:%x:%x have the same name: %s\n",
-> +					a1->uuid[0], a1->uuid[1], a1->uuid[2],
-> +					a1->uuid[3], a2->uuid[0], a2->uuid[1],
-> +					a2->uuid[2], a2->uuid[3], a1->devname);
-> +				return 1;
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/mdadm.c b/mdadm.c
-> index 56de7b7..ebf4c4d 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1282,6 +1282,13 @@ int main(int argc, char *argv[])
->  			struct map_ent *map =3D NULL;
->  			int cnt =3D 0;
->  			int failures, successes;
-> +
-> +			if (conf_verify_devnames(array_list)) {
-> +				fprintf(stderr, Name
-> +					": Duplicate MD device names in "
-> +					"conf file were found.\n");
-> +				exit(1);
-> +			}
->  			if (devlist =3D=3D NULL) {
->  				fprintf(stderr, Name ": No devices listed in conf file were found.\n=
-");
->  				exit(1);
-> diff --git a/mdadm.h b/mdadm.h
-> index 6dbc5ea..bff454f 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1145,6 +1145,7 @@ extern char *conf_get_homehost(int *require_homehos=
-tp);
->  extern char *conf_line(FILE *file);
->  extern char *conf_word(FILE *file, int allow_key);
->  extern int conf_name_is_free(char *name);
-> +extern int conf_verify_devnames(struct mddev_ident *array_list);
->  extern int devname_matches(char *name, char *match);
->  extern struct mddev_ident *conf_match(struct mdinfo *info, struct supert=
-ype *st);
->  extern int experimental(void);
->=20
+> +	for (i =3D 0; i < map_for_loop->num_members; i++) {
+> +		ord =3D 0;
+> +		if (i < prev->num_members)
+> +			ord |=3D __le32_to_cpu(prev->disk_ord_tbl[i]);
+> +		if (i < map->num_members)
+> +			ord |=3D __le32_to_cpu(map->disk_ord_tbl[i]);
+>  		idx =3D ord_to_idx(ord);
+> =20
+>  		disk =3D get_imsm_disk(super, idx);
 
-Thanks.
-I've applied this patch, though with a few changes.
 
-1/ I personally despise the "!strcmp()" usage.  It seems to be saying "not"
-   but it is actually saying "is equal".  I always write
-       strcmp(a,c) =3D=3D 0
-   or !=3D or < or whatever comparison is wanted.
-2/ You assume that both names have a uuid but that may not be correct.  You
-   need to check 'uuid_set'.
+applied - thanks.
 
-Thanks,
 NeilBrown
 
-
---Sig_/eCIzStGUP1iLlS.2J9X7GXv
+--Sig_/aXPomFMiKjUm1.8G4H43KV7
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTrcy5jnsnt1WYoG5AQKlhA/8C7NXijpupTyFL0DLtx8tSUPiYGDWyc2j
-kN8GYNTZQBadp3lT9IYqGwFyCWgn96mz3uHjDFU8xFzAjnIm2OUJ71+WPokH026f
-BeoIpdj999TvOZVyxEnUcA4RwUcmziialKNnfQ8Qf0nW5EjFwWQWaiPhCBStlwmP
-oItRMbhU8yor1B21MYKtMBoIH0b95xly5vJKV6rTSWAPxk+3k+NWY2FY/o1FKMZX
-PqM/1DFhW1/gdQJxRRYLuKOQOuWlD1Day4uhzA1oGOjZ04Dixh39qe94Utl2jsL9
-73rlLgM++3/gBVcWAxLShYCcju9qBtP3gx1HroqEYkkUGD6i8phz5qeq1aiXZIwz
-g/C8XiV1tVIP2+TCGajcgcqYYO5eyWkTLvyJnsvQt4jBCDS+Qc9pTS4RMISqoV5y
-oyhqHL48x3BgqKhGPnzj3IwZBPoopFyBeaTbmjyForTWv7LSH9bozW3tshCIyX1u
-Dx9khsYHz1aqgu6SiPSANnldjiVvdHsgDDUR0UsmS3qg20GTfyAcDERMVZ7sqons
-CD8g+8JGHPIf3kO++n24dif6450qavIXrSt2D9Zr7DU+fhGHmdX8JD8BSHTxXNvG
-qp+M67Q5r2qkVcx0/RsEbf0a0xPRc721tmbjPTi/BqOHRcz0mq6FNxE0QAk44ZU0
-k13dDcluzaI=
-=yjIq
+iQIVAwUBTrc0sznsnt1WYoG5AQIXQg/+LCp6Ty6FuF/rCiZlUGb7Mkji3ewg7BUA
+Ifc90DWZqWh0ZPqyumIERyPDD4ThwcWMNh/yvhLQa3n+pl8xNJJ2sLwd6Vln0no8
+CvU2K1IBwruEe3ngwE+LI2E1+nxMmvqT0ZnqBJBYDK86BERL6nHBtIcqKOWieF0u
+mmA6juAw9k+QgUn64hn4ywRO6OEv37+ohGNdKS/4fvMxjzDVwPBTH6kw6ihwtSrO
+BXiEl7wtI50Q83vRE28sioBUzCs30JzNVF9D48ZNTiGjxmRTo82352MNVLX3gtqo
+mLJJNO+5y4ceKa5dkLcAiF+dEfNoUHcAVWeF8CoUFiEYFDKjEoHMcMrnDtixLjy5
+gGYjhuG2Odwbow2KLF/bFBSFYNbkNzmDD96WOYPXPeV0iOYOpgO6KFRlgETZc/yo
+YEhSyTvle+IyRhWmDc5TY0b19wNYqraHdvhhaCAymV1ufc64e48b/NMN6SoSaSrj
+oXbuIFcSanqzlT7zGRKyd0t/8lPXOMtOYdUxQDblsGJfxF9qy7BTWHv5MzRrWYFJ
+NnCBEEp6F1HC8pzvdPkCOYFUyKFyk90u44kq4ofa+Fbp9oWDE3YYtWxNnAEUrrK8
+czF1l/cJUT5Eat8IQw1MZP7upf8DLkogl6BrkTEiFaPchkRidN1qWx7J1/XcKip4
+YO/lQgR2MQ0=
+=1vXP
 -----END PGP SIGNATURE-----
 
---Sig_/eCIzStGUP1iLlS.2J9X7GXv--
+--Sig_/aXPomFMiKjUm1.8G4H43KV7--
