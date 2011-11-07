@@ -1,93 +1,189 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
- by user
-Date: Mon, 7 Nov 2011 15:30:37 +1100
-Message-ID: <20111107153037.50627ff6@notabene.brown>
-References: <20110208094843.GD11446@tango.0pointer.de>
-	<AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
-	<20110208110730.GF23157@tango.0pointer.de>
-	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
-	<20110208172822.GC21847@tango.0pointer.de>
-	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
-	<20111031110613.GA1402@tango.0pointer.de>
-	<20111102114416.7879b77f@notabene.brown>
-	<20111102011615.GA5289@tango.0pointer.de>
-	<20111102130334.09c3ab51@notabene.brown>
-	<20111102133223.GC5119@tango.0pointer.de>
-	<20111107135241.64ae261d@notabene.brown>
-	<CAPXgP115f-QezrxM4wZJ5EPJ=YGBAG7rcRtKNayD5mMO3UkjcQ@mail.gmail.com>
+From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Subject: Error when compiling drivers/md/dm-bufio.c
+Date: Mon, 7 Nov 2011 09:22:31 +0100
+Message-ID: <20111107082231.GB18221@smp.if.uj.edu.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/RJQKRanrRjpSaZKooge48WC"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAPXgP115f-QezrxM4wZJ5EPJ=YGBAG7rcRtKNayD5mMO3UkjcQ@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Lennart Poettering <lennart@poettering.net>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, systemd-devel@lists.freedesktop.org
+To: Neil Brown <neilb@suse.de>
+Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, Mikulas Patocka <mpatocka@redhat.com>, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
---Sig_/RJQKRanrRjpSaZKooge48WC
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 7 Nov 2011 04:42:54 +0100 Kay Sievers <kay.sievers@vrfy.org> wrote:
-
-> On Mon, Nov 7, 2011 at 03:52, NeilBrown <neilb@suse.de> wrote:
->=20
-> > However there is an important piece missing. =A0When you remount,ro a
-> > filesystem, the block device doesn't get told so it thinks it is still =
-open
-> > read/write. =A0So md cannot tell mdmon that the array is now read-only
->=20
-> That ro/rw flag is visible in /proc/self/mountinfo, shouldn't it be
-> possible for mdmon to poll() that file and let the kernel wake stuff
-> up when the ro/rw flag changes, like we do for the usual mount changes
-> already?
->=20
-> Kay
-
-The ro/rw flag for file systems is in /proc/self/mountinfo.
-
-However I want the ro/rw flag for the block device.
-A block device can be partitioned so it might have multiple filesystems on =
-it.
-and it might have swap too.
-or a dm table or another md device or an open file descriptor or ....
-
-Yes, I could maybe parse various different files and try to work out what is
-going on.  But the kernel can easily *know* what is going on.
-
-Making this work "perfectly" would require md dropping its write-access to
-member devices when the last write-access to the top level device goes.  And
-the same for dm and loop and .....
-
-But just filesystems would go a long way to catching the common cases
-correctly.
-
-Thanks,
-NeilBrown
+I just got error on todays Linus' tree
 
 
---Sig_/RJQKRanrRjpSaZKooge48WC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+  CC [M]  drivers/md/dm-bufio.o
+drivers/md/dm-bufio.c:988:1: warning: data definition has no type or st=
+orage class [enabled by default]
+drivers/md/dm-bufio.c:988:1: warning: type defaults to =E2=80=98int=E2=80=
+=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplicit-i=
+nt]
+drivers/md/dm-bufio.c:988:1: warning: parameter names (without types) i=
+n function declaration [enabled by default]
+drivers/md/dm-bufio.c:997:1: warning: data definition has no type or st=
+orage class [enabled by default]
+drivers/md/dm-bufio.c:997:1: warning: type defaults to =E2=80=98int=E2=80=
+=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplicit-i=
+nt]
+drivers/md/dm-bufio.c:997:1: warning: parameter names (without types) i=
+n function declaration [enabled by default]
+drivers/md/dm-bufio.c:1006:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1006:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1006:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1036:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1036:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1036:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1049:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1049:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1049:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1059:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1059:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1059:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1135:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1135:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1135:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1158:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1158:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1158:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1232:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1232:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1232:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1238:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1238:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1238:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1245:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1245:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1245:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1251:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1251:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1251:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1257:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1257:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1257:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1263:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1263:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1263:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1269:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1269:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1269:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1489:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1489:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1489:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1534:1: warning: data definition has no type or s=
+torage class [enabled by default]
+drivers/md/dm-bufio.c:1534:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
+drivers/md/dm-bufio.c:1534:1: warning: parameter names (without types) =
+in function declaration [enabled by default]
+drivers/md/dm-bufio.c:1676:63: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1677:40: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1679:55: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98uint=E2=80=99
+drivers/md/dm-bufio.c:1680:35: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1682:67: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1683:40: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1685:79: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1686:46: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1688:87: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1689:50: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1691:73: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1692:43: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1694:73: error: expected =E2=80=98)=E2=80=99 befo=
+re =E2=80=98ulong=E2=80=99
+drivers/md/dm-bufio.c:1695:43: error: expected =E2=80=98)=E2=80=99 befo=
+re string constant
+drivers/md/dm-bufio.c:1697:15: error: expected declaration specifiers o=
+r =E2=80=98...=E2=80=99 before string constant
+drivers/md/dm-bufio.c:1698:20: error: expected declaration specifiers o=
+r =E2=80=98...=E2=80=99 before string constant
+drivers/md/dm-bufio.c:1699:16: error: expected declaration specifiers o=
+r =E2=80=98...=E2=80=99 before string constant
+make[2]: *** [drivers/md/dm-bufio.o] B=C5=82=C4=85d 1
+make[1]: *** [drivers/md] B=C5=82=C4=85d 2
+make: *** [drivers] B=C5=82=C4=85d 2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+COde is new, so it probably new bug not regression.
 
-iQIVAwUBTrde7Tnsnt1WYoG5AQLdag/7BfzQgpM2oY0iLp7OF3v5LUGD88NiJHyG
-JMxR+yYUtaJbSbdCc9Ac0MlpS+RUBy15HpNnyzFOMjSf9RcKUM3YQnWSa9abOius
-8lXhLpYRSPr8gdt36qidVgwgsfJusfnQrxm8sLFXrPsR8NULRscEMGw4YjU/SKho
-do9iLY6E6ok3ecJtaidothHU/lHFazrbHuzseIOz3mK7SMWo7WDQi6+mrQNB+IJt
-wjy1/33P22iaef7GbCwTfPWSCfcln/Bhdp1OfYtCTEXZSD3d/9cbe+HLb2xUwIkG
-fI4UiIT0m2AGiuTJB29ijSag4G4iOz3RDz8X/NmvVX+QhyhqFAHMzBT+lCJnik6q
-uEubjdLVe22/Pfpn6JbITt8M4pCHEG2x9C3u/vnaYJxM/tgy2t8mbZ8HDuad7AC8
-ysv+mrQsspkn6BxkYslk2KymtFI8Yh1Aars6lJRNAcSnN8KHiLk80ht4D0ri6mLk
-F7ki2uSlSpfZ/xRhpRv6MSk56MVSrBt3MZCJvRQAt4yDlRL1pEvt26K/BaptqJHQ
-kZbVzEwMfS2LlvFrVEJkMdccCh7jN/9cjpw/ksPF9WRzhyRnFMYLZVPMjFM5DbUs
-WENPdQG+jLGCCdRXlFV8mJGo5wQPcSLtupgzAiqPXS31N05UGb2KjBOlfFTUESCg
-PP6QlSqWGOY=
-=CIXX
------END PGP SIGNATURE-----
+Regards,
+Witek
 
---Sig_/RJQKRanrRjpSaZKooge48WC--
+
+
+--=20
+Witold Baryluk
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
