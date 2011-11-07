@@ -1,76 +1,94 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] kill-subarray: fix, IMSM cannot kill-subarray with
- unsupported metadata
-Date: Mon, 7 Nov 2011 12:34:11 +1100
-Message-ID: <20111107123411.3751cd50@notabene.brown>
-References: <F9123E44003394499FDD2B17C60621D4043755@IRSMSX101.ger.corp.intel.com>
-	<20111031113151.64f566b1@notabene.brown>
-	<F9123E44003394499FDD2B17C60621D4043D80@IRSMSX101.ger.corp.intel.com>
-	<20111101154807.0cf42aa5@notabene.brown>
-	<F9123E44003394499FDD2B17C60621D4044D82@IRSMSX101.ger.corp.intel.com>
+Subject: Re: [PATCH] md/raid5: STRIPE_ACTIVE has lock semantics, add
+ barriers
+Date: Mon, 7 Nov 2011 12:39:01 +1100
+Message-ID: <20111107123901.252eaab8@notabene.brown>
+References: <20110804003016.30281.26038.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/wrIVnvdc5sesFSUr4l7eFqt"; protocol="application/pgp-signature"
+ boundary="Sig_/.LIldSZt.R8LKKX9aIWqPx1"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9123E44003394499FDD2B17C60621D4044D82@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <20110804003016.30281.26038.stgit@localhost6.localdomain6>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Kwolek, Adam" <adam.kwolek@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/wrIVnvdc5sesFSUr4l7eFqt
+--Sig_/.LIldSZt.R8LKKX9aIWqPx1
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 3 Nov 2011 15:23:03 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
+On Wed, 03 Aug 2011 17:31:23 -0700 Dan Williams <dan.j.williams@intel.com>
 wrote:
 
-> Hi Neil,
-> This is OK.=20
-> However, reshape_container (called from Grow_continue_command) ignores in=
-fo that is chosen by subarray string given by user.
-> Therefore, all container's arrays are possibly grown (including those we =
-want to block)
-> So we need to patch Grow_continue, so it performs grow on the array that =
-user requested, not all arrays that are in the reshape process.
-> Thanks,
-> Marcin
+> All updates that occur under STRIPE_ACTIVE should be globally visible
+> when STRIPE_ACTIVE clears.  test_and_set_bit() implies a barrier, but
+> clear_bit() does not.
 >=20
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>=20
+> This at least was the guarantee we had with sh->lock...
+>=20
+>  drivers/md/raid5.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index dbae459..bd95123 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -3116,7 +3116,7 @@ static void handle_stripe(struct stripe_head *sh)
+>  	struct r5dev *pdev, *qdev;
+> =20
+>  	clear_bit(STRIPE_HANDLE, &sh->state);
+> -	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
+> +	if (test_and_set_bit_lock(STRIPE_ACTIVE, &sh->state)) {
+>  		/* already being handled, ensure it gets handled
+>  		 * again when current action finishes */
+>  		set_bit(STRIPE_HANDLE, &sh->state);
+> @@ -3377,7 +3377,7 @@ finish:
+> =20
+>  	return_io(s.return_bi);
+> =20
+> -	clear_bit(STRIPE_ACTIVE, &sh->state);
+> +	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
+>  }
+> =20
+>  static void raid5_activate_delayed(raid5_conf_t *conf)
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I don't think I understand...
 
-When continuing a grow the user shouldn't need to specify which subarray
-needs to be continued.  That information is in the metadata.
-So use just says "--grow --continue" and mdadm looks at the container to see
-which arrays are in the middle of a reshape and continues those.
-If one of them is such that the next array must be reshaped when this one
-completes, that should just happen automatically too.
+sorry for missing this before...
+I makes perfect sense.  I've applied it and should send it upstream shortly.
 
-??
-
+Thanks,
 NeilBrown
 
 
---Sig_/wrIVnvdc5sesFSUr4l7eFqt
+--Sig_/.LIldSZt.R8LKKX9aIWqPx1
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTrc1kznsnt1WYoG5AQKKJQ/+LFVEvbln5Gt+iv9pvqA5K+LpPbUdEUNn
-5Mm76AUoK3KidTXnoFzLLAU0wKhBO2medz6vt1e2PjSq9qA2Vngz0uqP+jpSGnbu
-uUvZ3QNht7McH7gzJPPyR0pstMHB6uUU3UUL6iQNeyCiPE4jEwUjffK/tTc3Q60u
-2gObyjOVA+wEcKvv6sd75DHW0wXYZu6O1gF37tRl01LS4XnwWzRlaaMn9tEAe5I5
-oF4pmmtHoEtTCo1HgbrFqIRDUsUhVVdZdd0Kdy4jBcbuqd9RZZ4QzxQJi1+ffRm+
-Nt5Gh0h9C5kVL/m4NNXGVWMzgzcBed9wSHP9xz2Nnf+e/JtaSeUjqL8ZOB3IMFAT
-x8jO9pfgvo/j82RgsN9s0UPxCMZogmgdEgOyQNh15X9fjeDHD+VB/xTAyOjgjf0V
-P/6ApvDA/7Nw4ZkGUjwE6UGGoXfKnrtcF9DTLqX+2mRvc7v8I149JXvVp3SKJWxp
-ar9pOt9XEnK57jZKY58OA4eWcLA4Xg4SnHb7dHh/5KMQmc85M9oMLOtbN5h2Sutv
-u5xC1022f+bpZbBhgV05gcFwMmNeBCbPLteKc6zQeIZ5hu3oTTc3tZH1PkO9/Zzo
-jns4/jTH5mrjfO1EJv58vTBIrNCqFVcWjhGEJ7uhzpZdemViPqi9Qjtp1D+rJrDd
-rF2eELQJ5c4=
-=zRMA
+iQIVAwUBTrc2tTnsnt1WYoG5AQIUtBAAwd5qvGVFc+qO9tM/PEHbQTLAME5X6W4C
+awrZi5fdbLPF/T2lbdBLVn6k6xEVHZ/o6L6dAUy8N/ZDeegtJKYeP0n59p56dvo7
+rLbRP6CCBKd+cpcZYWCQsD2wb0x4AxAUP6zRNi+2+Ar5wKMwIsp3EaD7Ppt+NHE7
+vTOQtaUtRAgqZ4KvCXN4QQSHsujf2983pDNEp8BERpbdhEUBn+ve6l1F1vxJ6XoS
+HQ0isq3IAh92qjBAUA/4ZXNExs2U0xqTYgPPZdyxoqilBf654PWlL2PNos9odjgF
+fr1c+s28EdR74mClPkae2kVgOs+7htxdGNHf7X1yBPBVyFJWEthqPXPufxoV/c8t
+nNW4RYahVsaeYBsAypRJlRcDJODNE09vZIsTu9OGx9+yc+jwtj1L4SZ289linjiE
+/i0Mtn9FbCPOsNlGk0UrMQX9zSe8bC8IL0yZkctb9gS8GA8/Qhl2ASleRc+NRRXu
+ljj3uAbCLK0TodsqAVw3T0D5ptN40xhTJYSZ8Vsv6g4l5EQVJRSWp5ZYHVyj++RX
+51pOBzOnViL0qlns/QdrYCQ/4NnLcaeo9JzNYr47GQDHfr9BwH8JsHI0gW6JjPoQ
+GwWlfprjLqvaZkDSNYU9UN/c4RH5d00ENm00x+XIA1bsvASsv7cJnK3ZhqbP0AU4
+dl9x7VuSQ7A=
+=KeoB
 -----END PGP SIGNATURE-----
 
---Sig_/wrIVnvdc5sesFSUr4l7eFqt--
+--Sig_/.LIldSZt.R8LKKX9aIWqPx1--
