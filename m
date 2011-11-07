@@ -1,25 +1,40 @@
-From: Danilo Godec <danilo.godec@agenda.si>
-Subject: Special drives for Linux Raid?
-Date: Mon, 07 Nov 2011 14:29:07 +0100
-Message-ID: <4EB7DD23.9090907@agenda.si>
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [dm-devel] Error when compiling drivers/md/dm-bufio.c
+Date: Mon, 7 Nov 2011 13:46:01 +0000
+Message-ID: <20111107134601.GH12886@agk-dp.fab.redhat.com>
+References: <20111107082231.GB18221@smp.if.uj.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111107082231.GB18221@smp.if.uj.edu.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, dm-devel@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-Some manufacturers make 'special' versions of drives for RAID (WD RE4, 
-Seagate SE, ...). Apparently the main difference is in error handling, 
-where normal 'desktop' drives try hard to recover an error (up to 
-several minutes) while RAID drives give up quickly (few seconds) so that 
-the RAID controller can take over.
+On Mon, Nov 07, 2011 at 09:22:31AM +0100, Witold Baryluk wrote:
+> I just got error on todays Linus' tree
+>   CC [M]  drivers/md/dm-bufio.o
+> drivers/md/dm-bufio.c:988:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
+t-int]
 
-Are there any other known and significant differences?
+Probably related to this merge:
+  commit 32aaeffbd4a7457bf2f7448b33b5946ff2a960eb
+  Merge branch 'modsplit-Oct31_2011' of git://git.kernel.org/pub/scm/li=
+nux/ker
 
-Is usage of these special drives recommended with Linux md?
+Previously module.h was included via another header file.
+Now, bufio.c needs an explicit
 
+#include <linux/module.h>
 
-  Thanks, Danilo
+Alasdair
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
