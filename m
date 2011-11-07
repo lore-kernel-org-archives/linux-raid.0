@@ -1,94 +1,121 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md/raid5: STRIPE_ACTIVE has lock semantics, add
- barriers
-Date: Mon, 7 Nov 2011 12:39:01 +1100
-Message-ID: <20111107123901.252eaab8@notabene.brown>
-References: <20110804003016.30281.26038.stgit@localhost6.localdomain6>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+   by user
+Date: Mon, 7 Nov 2011 13:52:41 +1100
+Message-ID: <20111107135241.64ae261d@notabene.brown>
+References: <20110208094843.GD11446@tango.0pointer.de>
+	<AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com>
+	<20110208110730.GF23157@tango.0pointer.de>
+	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
+	<20110208172822.GC21847@tango.0pointer.de>
+	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+	<20111031110613.GA1402@tango.0pointer.de>
+	<20111102114416.7879b77f@notabene.brown>
+	<20111102011615.GA5289@tango.0pointer.de>
+	<20111102130334.09c3ab51@notabene.brown>
+	<20111102133223.GC5119@tango.0pointer.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.LIldSZt.R8LKKX9aIWqPx1"; protocol="application/pgp-signature"
+ boundary="Sig_/X=z5o5vctQnUyJdGchuKmm_"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20110804003016.30281.26038.stgit@localhost6.localdomain6>
+In-Reply-To: <20111102133223.GC5119@tango.0pointer.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: Lennart Poettering <lennart@poettering.net>
+Cc: Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.LIldSZt.R8LKKX9aIWqPx1
+--Sig_/X=z5o5vctQnUyJdGchuKmm_
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 03 Aug 2011 17:31:23 -0700 Dan Williams <dan.j.williams@intel.com>
+On Wed, 2 Nov 2011 14:32:25 +0100 Lennart Poettering <lennart@poettering.ne=
+t>
 wrote:
 
-> All updates that occur under STRIPE_ACTIVE should be globally visible
-> when STRIPE_ACTIVE clears.  test_and_set_bit() implies a barrier, but
-> clear_bit() does not.
->=20
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->=20
-> This at least was the guarantee we had with sh->lock...
->=20
->  drivers/md/raid5.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index dbae459..bd95123 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -3116,7 +3116,7 @@ static void handle_stripe(struct stripe_head *sh)
->  	struct r5dev *pdev, *qdev;
-> =20
->  	clear_bit(STRIPE_HANDLE, &sh->state);
-> -	if (test_and_set_bit(STRIPE_ACTIVE, &sh->state)) {
-> +	if (test_and_set_bit_lock(STRIPE_ACTIVE, &sh->state)) {
->  		/* already being handled, ensure it gets handled
->  		 * again when current action finishes */
->  		set_bit(STRIPE_HANDLE, &sh->state);
-> @@ -3377,7 +3377,7 @@ finish:
-> =20
->  	return_io(s.return_bi);
-> =20
-> -	clear_bit(STRIPE_ACTIVE, &sh->state);
-> +	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
->  }
-> =20
->  static void raid5_activate_delayed(raid5_conf_t *conf)
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On Wed, 02.11.11 13:03, NeilBrown (neilb@suse.de) wrote:
 
+> > Each instance of mdmon manages a set of arrays and must remain running
+> > until all of those arrays are readonly (or shut down).  This allows it =
+to
+> > record that all writes have completed and mark the array as 'clean' so a
+> > resync isn't needed at next boot.
+>=20
+> Why doesn't the kernel do that on its own?
 
-sorry for missing this before...
-I makes perfect sense.  I've applied it and should send it upstream shortly.
+Because the kernel doesn't know about the format of the metadata that
+describes the array.
+
+> >=20
+> > You couldn't just do the equivalent of
+> >   fuser -k /some/filesystem
+> >   umount /some/filesystem
+> >=20
+> > iterating over filesystems with '/' last?
+> >
+> > Then anything that only uses the /run filesystem will survive.
+>=20
+> What we do right now is this:
+>=20
+> kill_all_processes();
+> do {
+>      umount_all_file_systems_we_can();
+>      read_only_mount_all_remaining_file_systems();
+> } while (we_had_some_success_with_that());
+> jump_into_initrd();
+>=20
+> As long as mdmon references a file from the root disk we cannot umount
+> it, so the loop wouldn't be effective.
+
+What exactly is "kill_all_processes()"?   is it SIGTERM or SIGKILL or both
+with a gap or ???
+
+I assume a SIGKILL.  I don't mind a SIGTERM and it could be useful to
+expedite mdmon cleaning up.
+
+However there is an important piece missing.  When you remount,ro a
+filesystem, the block device doesn't get told so it thinks it is still open
+read/write.  So md cannot tell mdmon that the array is now read-only
+It would make a lot of sense for mdmon to exit after receiving a SIGTERM as
+soon as the device is marked read-only.  But it just doesn't know.
+
+We can probably fix that, but that doesn't really help for now.
+
+I think I would like:
+
+ - add to the above loop "stop any virtual devices that we can".
+   Exactly how to do that if /proc and /sys are already unmounted
+   is unclear.  Is one or both of these kept around somewhere?
+
+ - allow processes to be marked some way so they get SIGTERM but not
+   SIGKILL.  I'm happy adding magic char to argv[0].
+
+We should be able to make it work with those changes - if they are possible.
 
 Thanks,
+
 NeilBrown
 
 
---Sig_/.LIldSZt.R8LKKX9aIWqPx1
+--Sig_/X=z5o5vctQnUyJdGchuKmm_
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTrc2tTnsnt1WYoG5AQIUtBAAwd5qvGVFc+qO9tM/PEHbQTLAME5X6W4C
-awrZi5fdbLPF/T2lbdBLVn6k6xEVHZ/o6L6dAUy8N/ZDeegtJKYeP0n59p56dvo7
-rLbRP6CCBKd+cpcZYWCQsD2wb0x4AxAUP6zRNi+2+Ar5wKMwIsp3EaD7Ppt+NHE7
-vTOQtaUtRAgqZ4KvCXN4QQSHsujf2983pDNEp8BERpbdhEUBn+ve6l1F1vxJ6XoS
-HQ0isq3IAh92qjBAUA/4ZXNExs2U0xqTYgPPZdyxoqilBf654PWlL2PNos9odjgF
-fr1c+s28EdR74mClPkae2kVgOs+7htxdGNHf7X1yBPBVyFJWEthqPXPufxoV/c8t
-nNW4RYahVsaeYBsAypRJlRcDJODNE09vZIsTu9OGx9+yc+jwtj1L4SZ289linjiE
-/i0Mtn9FbCPOsNlGk0UrMQX9zSe8bC8IL0yZkctb9gS8GA8/Qhl2ASleRc+NRRXu
-ljj3uAbCLK0TodsqAVw3T0D5ptN40xhTJYSZ8Vsv6g4l5EQVJRSWp5ZYHVyj++RX
-51pOBzOnViL0qlns/QdrYCQ/4NnLcaeo9JzNYr47GQDHfr9BwH8JsHI0gW6JjPoQ
-GwWlfprjLqvaZkDSNYU9UN/c4RH5d00ENm00x+XIA1bsvASsv7cJnK3ZhqbP0AU4
-dl9x7VuSQ7A=
-=KeoB
+iQIVAwUBTrdH+jnsnt1WYoG5AQJ/fRAAnmWAYBVmp4U/H3kMFX1i1RZDe0a6J0O/
+4u5KbT9YUyekvNfRW8PqckAO9semiUWAVuJHnm9uJA/1KjtUZBh2UygvJkerPSRV
+jx6bWTt7iGbUtd8FhEV300Y/jkQ1y+QB/30TEVjvT145kZ69wDabqC33oWzcPi07
+K36xh3+MOxSEj/bsSSMG5nDS/VyRlzwkRE5ddmIOcRtbrrqiBN93P65+w99KLtJS
+JsbrQAWgsTjTaDP6UL414BLAMiakFNJd/E24ZTAgDnWwoPrrKKB5F9bD5U/AKmY5
+rQS+DKQT4Usv8fGQUk9H8zfDWhW1Hqhlf6arj1OXckJ9DgxG45GlnS2st8fXU5aG
+W8Va/tY5IfxOPt4Ze5QFJMiK4NbF57nepZTPShlKOgbIGzzmq5iQn9gHoi/Wz8zH
+kX6a+rW+NnDeoyDFkuPSuwUYcSHLRxtN3zKIjdYLR4TiqCFwcXfv8SJJtW0xMz4n
+KlYXzee8d0vWf9k0XfRnyZclJlAbRUwz1GQrwdqqzSlHmPO59NHKzly/ca6r4CWi
+vTTo0oXaWvc3GeQAn/UhDMfw+T9uBjG27AgwrT1kHGSezcaySK5XoEpW8BHmwCe2
+zGZ+yDKT4bnQuh1RctKHclpAt/TW0axqXzTYAF4pq0cwZ652UQMoaSpXTdL2iLT4
+lDyl+R++7B0=
+=HBHZ
 -----END PGP SIGNATURE-----
 
---Sig_/.LIldSZt.R8LKKX9aIWqPx1--
+--Sig_/X=z5o5vctQnUyJdGchuKmm_--
