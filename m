@@ -1,187 +1,155 @@
-From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Subject: Error when compiling drivers/md/dm-bufio.c
-Date: Mon, 7 Nov 2011 09:22:31 +0100
-Message-ID: <20111107082231.GB18221@smp.if.uj.edu.pl>
+From: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>
+Subject: RE: [PATCH] fix: Allowed to assemble 2 volumes with the same names
+ from config file.
+Date: Mon, 7 Nov 2011 08:34:16 +0000
+Message-ID: <2AC2FDB9F3686F48962B2B65E2040CCC3D2C6FFE@irsmsx503.ger.corp.intel.com>
+References: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
+ <20111107122246.6f50387b@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20111107122246.6f50387b@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: dm-devel@redhat.com, linux-raid@vger.kernel.org, Mikulas Patocka <mpatocka@redhat.com>, Alasdair G Kergon <agk@redhat.com>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-I just got error on todays Linus' tree
+Thanks for the feedback. I'll keep this in mind, while producing my nex=
+t patches.
 
+Pozdrawiam / Regards,
+=A3ukasz Or=B3owski
 
-  CC [M]  drivers/md/dm-bufio.o
-drivers/md/dm-bufio.c:988:1: warning: data definition has no type or st=
-orage class [enabled by default]
-drivers/md/dm-bufio.c:988:1: warning: type defaults to =E2=80=98int=E2=80=
-=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplicit-i=
-nt]
-drivers/md/dm-bufio.c:988:1: warning: parameter names (without types) i=
-n function declaration [enabled by default]
-drivers/md/dm-bufio.c:997:1: warning: data definition has no type or st=
-orage class [enabled by default]
-drivers/md/dm-bufio.c:997:1: warning: type defaults to =E2=80=98int=E2=80=
-=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplicit-i=
-nt]
-drivers/md/dm-bufio.c:997:1: warning: parameter names (without types) i=
-n function declaration [enabled by default]
-drivers/md/dm-bufio.c:1006:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1006:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1006:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1036:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1036:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1036:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1049:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1049:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1049:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1059:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1059:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1059:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1135:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1135:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1135:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1158:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1158:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1158:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1232:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1232:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1232:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1238:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1238:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1238:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1245:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1245:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1245:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1251:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1251:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1251:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1257:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1257:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1257:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1263:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1263:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1263:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1269:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1269:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1269:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1489:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1489:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1489:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1534:1: warning: data definition has no type or s=
-torage class [enabled by default]
-drivers/md/dm-bufio.c:1534:1: warning: type defaults to =E2=80=98int=E2=
-=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplici=
-t-int]
-drivers/md/dm-bufio.c:1534:1: warning: parameter names (without types) =
-in function declaration [enabled by default]
-drivers/md/dm-bufio.c:1676:63: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1677:40: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1679:55: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98uint=E2=80=99
-drivers/md/dm-bufio.c:1680:35: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1682:67: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1683:40: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1685:79: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1686:46: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1688:87: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1689:50: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1691:73: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1692:43: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1694:73: error: expected =E2=80=98)=E2=80=99 befo=
-re =E2=80=98ulong=E2=80=99
-drivers/md/dm-bufio.c:1695:43: error: expected =E2=80=98)=E2=80=99 befo=
-re string constant
-drivers/md/dm-bufio.c:1697:15: error: expected declaration specifiers o=
-r =E2=80=98...=E2=80=99 before string constant
-drivers/md/dm-bufio.c:1698:20: error: expected declaration specifiers o=
-r =E2=80=98...=E2=80=99 before string constant
-drivers/md/dm-bufio.c:1699:16: error: expected declaration specifiers o=
-r =E2=80=98...=E2=80=99 before string constant
-make[2]: *** [drivers/md/dm-bufio.o] B=C5=82=C4=85d 1
-make[1]: *** [drivers/md] B=C5=82=C4=85d 2
-make: *** [drivers] B=C5=82=C4=85d 2
+-----Original Message-----
+=46rom: NeilBrown [mailto:neilb@suse.de]=20
+Sent: Monday, November 07, 2011 2:23 AM
+To: Orlowski, Lukasz
+Cc: linux-raid@vger.kernel.org; Williams, Dan J
+Subject: Re: [PATCH] fix: Allowed to assemble 2 volumes with the same n=
+ames from config file.
 
-COde is new, so it probably new bug not regression.
+On Fri, 04 Nov 2011 09:51:48 +0100 Lukasz Orlowski <lukasz.orlowski@int=
+el.com> wrote:
 
-Regards,
-Witek
+> mdadm allowes to assemble 2 volumes with the same names based on the=20
+> config file. The issue is fixed by iterating over the list of md=20
+> device identifiers and comparing the names of md devices against each=
+=20
+> other, detecting identical names and blocking the assembly should the=
+=20
+> same names be found.
+> Now having detected duplicate names, mdadm terminates without=20
+> assembling the container, displaying appropriate prompt.
+>=20
+> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
+> ---
+>  config.c |   25 +++++++++++++++++++++++++
+>  mdadm.c  |    7 +++++++
+>  mdadm.h  |    1 +
+>  3 files changed, 33 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/config.c b/config.c
+> index c0a6baa..9b337eb 100644
+> --- a/config.c
+> +++ b/config.c
+> @@ -1088,3 +1088,28 @@ struct mddev_ident *conf_match(struct mdinfo *=
+info, struct supertype *st)
+>  	}
+>  	return match;
+>  }
+> +
+> +int conf_verify_devnames(struct mddev_ident *array_list) {
+> +	struct mddev_ident *a1, *a2;
+> +
+> +	for (a1 =3D array_list; a1; a1 =3D a1->next) {
+> +		if (!a1->devname)
+> +			continue;
+> +		for (a2 =3D a1->next; a2; a2 =3D a2->next) {
+> +			if (!a2->devname)
+> +				continue;
+> +			if (!strcmp(a1->devname, a2->devname)) {
+> +				fprintf(stderr,
+> +					Name ": Devices %x:%x:%x:%x and "
+> +					"%x:%x:%x:%x have the same name: %s\n",
+> +					a1->uuid[0], a1->uuid[1], a1->uuid[2],
+> +					a1->uuid[3], a2->uuid[0], a2->uuid[1],
+> +					a2->uuid[2], a2->uuid[3], a1->devname);
+> +				return 1;
+> +			}
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> diff --git a/mdadm.c b/mdadm.c
+> index 56de7b7..ebf4c4d 100644
+> --- a/mdadm.c
+> +++ b/mdadm.c
+> @@ -1282,6 +1282,13 @@ int main(int argc, char *argv[])
+>  			struct map_ent *map =3D NULL;
+>  			int cnt =3D 0;
+>  			int failures, successes;
+> +
+> +			if (conf_verify_devnames(array_list)) {
+> +				fprintf(stderr, Name
+> +					": Duplicate MD device names in "
+> +					"conf file were found.\n");
+> +				exit(1);
+> +			}
+>  			if (devlist =3D=3D NULL) {
+>  				fprintf(stderr, Name ": No devices listed in conf file were foun=
+d.\n");
+>  				exit(1);
+> diff --git a/mdadm.h b/mdadm.h
+> index 6dbc5ea..bff454f 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -1145,6 +1145,7 @@ extern char *conf_get_homehost(int=20
+> *require_homehostp);  extern char *conf_line(FILE *file);  extern cha=
+r=20
+> *conf_word(FILE *file, int allow_key);  extern int=20
+> conf_name_is_free(char *name);
+> +extern int conf_verify_devnames(struct mddev_ident *array_list);
+>  extern int devname_matches(char *name, char *match);  extern struct=20
+> mddev_ident *conf_match(struct mdinfo *info, struct supertype *st); =20
+> extern int experimental(void);
+>=20
 
+Thanks.
+I've applied this patch, though with a few changes.
 
+1/ I personally despise the "!strcmp()" usage.  It seems to be saying "=
+not"
+   but it is actually saying "is equal".  I always write
+       strcmp(a,c) =3D=3D 0
+   or !=3D or < or whatever comparison is wanted.
+2/ You assume that both names have a uuid but that may not be correct. =
+ You
+   need to check 'uuid_set'.
 
---=20
-Witold Baryluk
+Thanks,
+NeilBrown
+
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
+
+Sad Rejonowy Gdansk Polnoc w Gdansku,=20
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,=20
+numer KRS 101882
+
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
