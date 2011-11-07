@@ -1,121 +1,116 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: Error when compiling drivers/md/dm-bufio.c
-Date: Mon, 7 Nov 2011 19:00:03 +0000
-Message-ID: <20111107190002.GB4396@agk-dp.fab.redhat.com>
-References: <20111107082231.GB18221@smp.if.uj.edu.pl>
-	<20111107134601.GH12886@agk-dp.fab.redhat.com>
-	<Pine.LNX.4.64.1111071035380.5814@hs20-bc2-1.build.redhat.com>
-	<CA+55aFwejLwfY6A9o2yx1YPJMD4a5grD6ttmoG1AsFdEcGZWcw@mail.gmail.com>
-	<20111107163215.GF18221@smp.if.uj.edu.pl>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
+Date: Mon, 7 Nov 2011 11:09:19 -0800
+Message-ID: <CABE8wwug4-gMLA4rd6FXgV3db2XiwUcfsXp6fC=NipKg333n-g@mail.gmail.com>
+References: <20110208110730.GF23157@tango.0pointer.de>
+	<AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
+	<20110208172822.GC21847@tango.0pointer.de>
+	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+	<20111031110613.GA1402@tango.0pointer.de>
+	<20111102114416.7879b77f@notabene.brown>
+	<20111102011615.GA5289@tango.0pointer.de>
+	<20111102130334.09c3ab51@notabene.brown>
+	<20111102133223.GC5119@tango.0pointer.de>
+	<20111107135241.64ae261d@notabene.brown>
+	<20111107120048.GD25130@tango.0pointer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20111107163215.GF18221@smp.if.uj.edu.pl>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20111107120048.GD25130@tango.0pointer.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Lennart Poettering <lennart@poettering.net>
+Cc: NeilBrown <neilb@suse.de>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 07, 2011 at 05:32:15PM +0100, Witold Baryluk wrote:
-> Update patch atached.
- 
-More module.h files can now be export.h I think, so try this version:
-http://git.kernel.org/?p=linux/kernel/git/agk/linux-dm.git;a=patch;h=bef30d3d2059b80b8994ad6a9db8612518ea7a10
+On Mon, Nov 7, 2011 at 4:00 AM, Lennart Poettering
+<lennart@poettering.net> wrote:
+> On Mon, 07.11.11 13:52, NeilBrown (neilb@suse.de) wrote:
+>
+>> > Why doesn't the kernel do that on its own?
+>>
+>> Because the kernel doesn't know about the format of the metadata tha=
+t
+>> describes the array.
+>
+> Yupp, my suggestion would be to change that.
 
-commit bef30d3d2059b80b8994ad6a9db8612518ea7a10
-Author: Alasdair G Kergon <agk@redhat.com>
-Date:   Mon Nov 7 18:45:18 2011 +0000
+It's quite a bit of idiosyncratic code that needs to be duplicated in
+kernel space and userspace (since userspace always needs to know how
+to parse the metadata for array assembly).  All to record a dirty bit
+that flips at most every 5 seconds, or a disk failure event which is
+even less frequent.  Throw in policy constraints like restricting
+which block devices can become part of the raid set.  Rinse and repeat
+for every possible metadata format.
 
-    dm: fix module export includes
-    
-    Fix the use of export.h and module.h in new thin provisioning code.
-    
-    Signed-off-by: Alasdair G Kergon <agk@redhat.com>
+[..]
+>> What exactly is "kill_all_processes()"? =A0 is it SIGTERM or SIGKILL=
+ or both
+>> with a gap or ???
+>
+> SIGTERM followed by SIGKILL after 5s if the programs do not react to
+> that in time. But note that this logic only applies to processes whic=
+h
+> for some reason managed to escape systemd's usual cgroup-based killin=
+g
+> logic. Normal services are hence already killed at that time, and onl=
+y
+> processes which moved themselves out of any cgroup or for which the
+> service files disabled killing might survive to this point.
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index cb24666..6919d50 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -10,6 +10,7 @@
- 
- #include <linux/device-mapper.h>
- #include <linux/dm-io.h>
-+#include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
- #include <linux/version.h>
-diff --git a/drivers/md/persistent-data/dm-btree-remove.c b/drivers/md/persistent-data/dm-btree-remove.c
-index 65fd85e..023fbc2 100644
---- a/drivers/md/persistent-data/dm-btree-remove.c
-+++ b/drivers/md/persistent-data/dm-btree-remove.c
-@@ -8,7 +8,7 @@
- #include "dm-btree-internal.h"
- #include "dm-transaction-manager.h"
- 
--#include <linux/module.h>
-+#include <linux/export.h>
- 
- /*
-  * Removing an entry from a btree
-diff --git a/drivers/md/persistent-data/dm-btree.c b/drivers/md/persistent-data/dm-btree.c
-index e0638be..bd1e7ff 100644
---- a/drivers/md/persistent-data/dm-btree.c
-+++ b/drivers/md/persistent-data/dm-btree.c
-@@ -8,7 +8,7 @@
- #include "dm-space-map.h"
- #include "dm-transaction-manager.h"
- 
--#include <linux/module.h>
-+#include <linux/export.h>
- #include <linux/device-mapper.h>
- 
- #define DM_MSG_PREFIX "btree"
-diff --git a/drivers/md/persistent-data/dm-space-map-checker.c b/drivers/md/persistent-data/dm-space-map-checker.c
-index bb44a93..4bbc7d5 100644
---- a/drivers/md/persistent-data/dm-space-map-checker.c
-+++ b/drivers/md/persistent-data/dm-space-map-checker.c
-@@ -6,6 +6,7 @@
- 
- #include "dm-space-map-checker.h"
- 
-+#include <linux/export.h>
- #include <linux/device-mapper.h>
- 
- #ifdef CONFIG_DM_DEBUG_SPACE_MAPS
-diff --git a/drivers/md/persistent-data/dm-space-map-disk.c b/drivers/md/persistent-data/dm-space-map-disk.c
-index aeff785..fc469ba 100644
---- a/drivers/md/persistent-data/dm-space-map-disk.c
-+++ b/drivers/md/persistent-data/dm-space-map-disk.c
-@@ -12,7 +12,7 @@
- 
- #include <linux/list.h>
- #include <linux/slab.h>
--#include <linux/module.h>
-+#include <linux/export.h>
- #include <linux/device-mapper.h>
- 
- #define DM_MSG_PREFIX "space map disk"
-diff --git a/drivers/md/persistent-data/dm-transaction-manager.c b/drivers/md/persistent-data/dm-transaction-manager.c
-index 728e89a..6f8d387 100644
---- a/drivers/md/persistent-data/dm-transaction-manager.c
-+++ b/drivers/md/persistent-data/dm-transaction-manager.c
-@@ -10,7 +10,7 @@
- #include "dm-space-map-metadata.h"
- #include "dm-persistent-data-internal.h"
- 
--#include <linux/module.h>
-+#include <linux/export.h>
- #include <linux/slab.h>
- #include <linux/device-mapper.h>
- 
+So I think mdmon should always try to escape itself from cgroup based
+killing.  It follows the lifespan of the array, and if the array is
+not stopped by the cgroup exit (or the array lifespan is not
+controlled in a service file), then mdmon must keep running.
+
+[..]
+>
+> Here's another attempt in explaining how this works:
+>
+> <snip>
+> terminate_all_mount_and_service_units();
+> kill_all_remaining_processes();
+> do {
+> =A0 =A0 umount_all_remaining_file_systems_we_can();
+> =A0 =A0 read_only_mount_all_remaining_file_systems();
+> =A0 =A0 detach_all_remaining_loop_devices();
+> =A0 =A0 detach_all_remaining_swap_devices();
+> =A0 =A0 detach_all_remaining_dm_devices();
+
+So I've started putting together a md_detach_all() routine that will
+attempt to stop all md devices (via sysfs).  Where all mdmon instances
+have missed the initial killall with the argv '@' flagging.
+
+Like the dm implementation it will address all but the root md device.
+
+> } while (we_had_some_success_with_that());
+> jump_into_initrd();
+
+The final act of the initramfs is then "mdadm --wait-clean --scan" to
+communicate with the rootfs-blockdev-mdmon to be sure the metadata has
+been marked clean.  All other mdmon instances should have exited
+naturally when their md devices stopped, but the "--wait-clean --scan"
+will have ensured shutdown can progress safely.
+
+> You have relatively flexible control of the first step in this code. =
+The
+> second step is then the hammer that tries to fix up what this step
+> didn't accomplish. My suggestion to check argv[0][0] was to avoid the
+> hammer.
+
+I notice that if the rootfs is on a dm or md device systemd/shutdown
+will always fall through to ultimate_send_signal() which will not
+discriminate against processes flagged with '@'.  Since we aren't
+stopping the root md device I wonder if ultimate_send_signal() should
+also ignore flagged processes, or whether the failure to stop the root
+device is to be expected and let shutdown skip ultimate_send_signal()
+if the only remaining work is shutting down the rootfs-blockdev.  I'm
+leaning towards the latter.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
