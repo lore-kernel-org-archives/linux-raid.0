@@ -1,36 +1,122 @@
-From: Alex Besogonov <alex.besogonov@gmail.com>
-Subject: Re: Working TRIM for md RAID
-Date: Mon, 7 Nov 2011 15:15:57 -0500
-Message-ID: <CA+4wGE6np=4t4=vCUUaQSYGVYuagst2wZvW+4zB4HYtctJ7a4g@mail.gmail.com>
-References: <CA+4wGE4VwodRhzi4FQ0+32Vd9UmjVt-xy34t-uBRxsGbVkdkZg@mail.gmail.com>
-	<CAHtT9Rs27b3uA3S2JCPa1QvC4qMnhBtAZKOrCw4GNPB4dOt4YQ@mail.gmail.com>
+From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Subject: Re: [dm-devel] Error when compiling drivers/md/dm-bufio.c
+Date: Mon, 7 Nov 2011 21:27:57 +0100
+Message-ID: <20111107202757.GG18221@smp.if.uj.edu.pl>
+References: <20111107082231.GB18221@smp.if.uj.edu.pl>
+ <20111107134601.GH12886@agk-dp.fab.redhat.com>
+ <Pine.LNX.4.64.1111071035380.5814@hs20-bc2-1.build.redhat.com>
+ <CA+55aFwejLwfY6A9o2yx1YPJMD4a5grD6ttmoG1AsFdEcGZWcw@mail.gmail.com>
+ <20111107163215.GF18221@smp.if.uj.edu.pl>
+ <20111107190002.GB4396@agk-dp.fab.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAHtT9Rs27b3uA3S2JCPa1QvC4qMnhBtAZKOrCw4GNPB4dOt4YQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20111107190002.GB4396@agk-dp.fab.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Mikulas Patocka <mpatocka@redhat.com>, Alasdair G Kergon <agk@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, dm-
 List-Id: linux-raid.ids
 
-On Mon, Nov 7, 2011 at 2:54 PM, David Rees <drees76@gmail.com> wrote:
->> Since it calls TRIM on raw devices there is a possibility of really bad data
->> corruption bugs. So there's test/test.sh script which try to test mdtrim by
->> creating MD array on a single SSD drive, filling it up with random data and
->> then TRIMing empty space. So far, it works for me but it would be great to
->> have more test results.
->> You can get it here: https://github.com/Cyberax/mdtrim
-> Nice - I'll have to give this a shot - have you found that SSDs
-> generally "zero" out the trimmed space so that the mismatch_cnts stay
-> in sync?
-Modern drives generally do. You can check it by running "hdparm -I /dev/sda"
-and checking that "Deterministic read ZEROs after TRIM" is on.
+On 11-07 19:00, Alasdair G Kergon wrote:
+> On Mon, Nov 07, 2011 at 05:32:15PM +0100, Witold Baryluk wrote:
+> > Update patch atached.
+>  
+> More module.h files can now be export.h I think, so try this version:
+> http://git.kernel.org/?p=linux/kernel/git/agk/linux-dm.git;a=patch;h=bef30d3d2059b80b8994ad6a9db8612518ea7a10
+> 
+> commit bef30d3d2059b80b8994ad6a9db8612518ea7a10
+> Author: Alasdair G Kergon <agk@redhat.com>
+> Date:   Mon Nov 7 18:45:18 2011 +0000
+> 
+>     dm: fix module export includes
+>     
+>     Fix the use of export.h and module.h in new thin provisioning code.
+>     
+>     Signed-off-by: Alasdair G Kergon <agk@redhat.com>
+> 
+> diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
+> index cb24666..6919d50 100644
+> --- a/drivers/md/dm-bufio.c
+> +++ b/drivers/md/dm-bufio.c
+> @@ -10,6 +10,7 @@
+>  
+>  #include <linux/device-mapper.h>
+>  #include <linux/dm-io.h>
+> +#include <linux/module.h>
+>  #include <linux/slab.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/version.h>
+> diff --git a/drivers/md/persistent-data/dm-btree-remove.c b/drivers/md/persistent-data/dm-btree-remove.c
+> index 65fd85e..023fbc2 100644
+> --- a/drivers/md/persistent-data/dm-btree-remove.c
+> +++ b/drivers/md/persistent-data/dm-btree-remove.c
+> @@ -8,7 +8,7 @@
+>  #include "dm-btree-internal.h"
+>  #include "dm-transaction-manager.h"
+>  
+> -#include <linux/module.h>
+> +#include <linux/export.h>
+>  
+>  /*
+>   * Removing an entry from a btree
+> diff --git a/drivers/md/persistent-data/dm-btree.c b/drivers/md/persistent-data/dm-btree.c
+> index e0638be..bd1e7ff 100644
+> --- a/drivers/md/persistent-data/dm-btree.c
+> +++ b/drivers/md/persistent-data/dm-btree.c
+> @@ -8,7 +8,7 @@
+>  #include "dm-space-map.h"
+>  #include "dm-transaction-manager.h"
+>  
+> -#include <linux/module.h>
+> +#include <linux/export.h>
+>  #include <linux/device-mapper.h>
+>  
+>  #define DM_MSG_PREFIX "btree"
+> diff --git a/drivers/md/persistent-data/dm-space-map-checker.c b/drivers/md/persistent-data/dm-space-map-checker.c
+> index bb44a93..4bbc7d5 100644
+> --- a/drivers/md/persistent-data/dm-space-map-checker.c
+> +++ b/drivers/md/persistent-data/dm-space-map-checker.c
+> @@ -6,6 +6,7 @@
+>  
+>  #include "dm-space-map-checker.h"
+>  
+> +#include <linux/export.h>
+>  #include <linux/device-mapper.h>
+>  
+>  #ifdef CONFIG_DM_DEBUG_SPACE_MAPS
+> diff --git a/drivers/md/persistent-data/dm-space-map-disk.c b/drivers/md/persistent-data/dm-space-map-disk.c
+> index aeff785..fc469ba 100644
+> --- a/drivers/md/persistent-data/dm-space-map-disk.c
+> +++ b/drivers/md/persistent-data/dm-space-map-disk.c
+> @@ -12,7 +12,7 @@
+>  
+>  #include <linux/list.h>
+>  #include <linux/slab.h>
+> -#include <linux/module.h>
+> +#include <linux/export.h>
+>  #include <linux/device-mapper.h>
+>  
+>  #define DM_MSG_PREFIX "space map disk"
+> diff --git a/drivers/md/persistent-data/dm-transaction-manager.c b/drivers/md/persistent-data/dm-transaction-manager.c
+> index 728e89a..6f8d387 100644
+> --- a/drivers/md/persistent-data/dm-transaction-manager.c
+> +++ b/drivers/md/persistent-data/dm-transaction-manager.c
+> @@ -10,7 +10,7 @@
+>  #include "dm-space-map-metadata.h"
+>  #include "dm-persistent-data-internal.h"
+>  
+> -#include <linux/module.h>
+> +#include <linux/export.h>
+>  #include <linux/slab.h>
+>  #include <linux/device-mapper.h>
+>  
 
-> I had worked on modifying the raid1ext4trim.sh to run on MD1 arrays,
-> but was never brave enough to test it on live data yet and don't have
-> spare SSDs to use for testing.
-I've actually used our spare drive on production server to do testing. You can
-create MD array on /dev/sda1 and /dev/sda2 :) The test script actually does
-exactly that.
+All files affected by patch compiles cleanly.
 
-I'm working on RAID0 support, should be ready soon.
+    Tested-by: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+
+Thanks.
+
+-- 
+Witold Baryluk
