@@ -1,81 +1,75 @@
-From: David Brown <david@westcontrol.com>
-Subject: Re: Special drives for Linux Raid?
-Date: Mon, 07 Nov 2011 15:57:49 +0100
-Message-ID: <j98s0f$a0f$1@dough.gmane.org>
-References: <4EB7DD23.9090907@agenda.si> <4EB7E1F8.7060803@meetinghouse.net>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [dm-devel] Error when compiling drivers/md/dm-bufio.c
+Date: Mon, 7 Nov 2011 10:36:34 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.1111071035380.5814@hs20-bc2-1.build.redhat.com>
+References: <20111107082231.GB18221@smp.if.uj.edu.pl>
+ <20111107134601.GH12886@agk-dp.fab.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="168436252-658836247-1320680194=:5814"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EB7E1F8.7060803@meetinghouse.net>
+In-Reply-To: <20111107134601.GH12886@agk-dp.fab.redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Witold Baryluk <baryluk@smp.if.uj.edu.pl>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Alasdair G Kergon <agk@redhat.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On 07/11/2011 14:49, Miles Fidelman wrote:
-> Danilo Godec wrote:
->> Some manufacturers make 'special' versions of drives for RAID (WD RE4,
->> Seagate SE, ...). Apparently the main difference is in error handling,
->> where normal 'desktop' drives try hard to recover an error (up to
->> several minutes) while RAID drives give up quickly (few seconds) so
->> that the RAID controller can take over.
->>
-> not so much "special" as "different"
->
-> the term to look for is "enterprise"
->
-> you've identified the key distinction:
->
-> - desktop drives assume that they have the only copy of your data, the
-> on-board processor tries very hard to read and re-read until it returns
-> your data ---- the result is that everything slows down
->
-> - if you have a raid array, you want a failing disk to give up and
-> return, very quickly, so that the data can be read from a different drive
->
-> I learned this the hard way, when I had a server that just slowed way
-> down to the point that it took 10 seconds or more to echo a keystroke.
-> It took me a long time to figure out what was going on - and some rather
-> painful false starts (trashed the o/s).
->
-> One important thing I discovered: the md RAID driver does NOT consider a
-> long time delay as a signal to fail a drive out of an array. It's a
-> really good idea to run mdstat and keep an eye on your drives. If Raw
-> Reed Error goes above 0, start paying attention.
->
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-As far as I know (and I hope I'll be corrected quickly if I'm wrong), 
-when a drive fails to read from a sector, it will be considered a 
-"failed" drive by the raid controller or software raid, and kicked out 
-of the array.  The exception is the latest versions of md raid which 
-support bad block lists.
-
-If you are using a "raid" drive, which only re-tries for a couple of 
-seconds, then a read failure will quickly return an error.  This limits 
-the worst-case delay when reading from a failing drive.  But it also 
-means that the drive won't try as hard as it can, and the drive will be 
-kicked out of the array earlier.
-
-With a "desktop" drive, worst case delays can be much longer, but you 
-have a higher chance of getting your data off the disk.  That's always a 
-good thing, even with raid.
-
-If you use a hardware raid controller that requires "raid" drives, then 
-long re-reads on a "desktop" drive will cause timeouts, and the drive 
-will be kicked out of the array.
+--168436252-658836247-1320680194=:5814
+Content-Type: TEXT/PLAIN; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
 
-I don't believe it is very common to have long re-reads even with 
-desktop drives - more commonly, the drive will either correct small 
-errors quickly, or will have serious failures.  But obviously the 
-situation does occur.
 
-If you need to put limits on the worst-case read performance, then 
-"raid" drives are the only way to go.  If not, then I would think 
-"desktop" drives are a better choice in most cases.  Also note that 
-since "desktop" drives are half the cost of "raid" drives, if you have 
-the space in your system you can buy twice as many for the same price. 
-That means better performance and/or better redundancy and/or more space 
-and/or better value for money.
+On Mon, 7 Nov 2011, Alasdair G Kergon wrote:
 
+> On Mon, Nov 07, 2011 at 09:22:31AM +0100, Witold Baryluk wrote:
+> > I just got error on todays Linus' tree
+> >   CC [M]  drivers/md/dm-bufio.o
+> > drivers/md/dm-bufio.c:988:1: warning: type defaults to =E2=80=98int=E2=
+=80=99 in declaration of =E2=80=98EXPORT_SYMBOL_GPL=E2=80=99 [-Wimplicit-in=
+t]
+>=20
+> Probably related to this merge:
+>   commit 32aaeffbd4a7457bf2f7448b33b5946ff2a960eb
+>   Merge branch 'modsplit-Oct31_2011' of git://git.kernel.org/pub/scm/linu=
+x/ker
+>=20
+> Previously module.h was included via another header file.
+> Now, bufio.c needs an explicit
+>=20
+> #include <linux/module.h>
+>=20
+> Alasdair
+>=20
 
+Yes, apply this patch:
+
+dm-bufio: Include <linux/module.h>
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
+---
+ drivers/md/dm-bufio.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+Index: linux-2.6-compile/drivers/md/dm-bufio.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6-compile.orig/drivers/md/dm-bufio.c=092011-11-07 16:31:34.0000=
+00000 +0100
++++ linux-2.6-compile/drivers/md/dm-bufio.c=092011-11-07 16:31:41.000000000=
+ +0100
+@@ -8,6 +8,7 @@
+=20
+ #include "dm-bufio.h"
+=20
++#include <linux/module.h>
+ #include <linux/device-mapper.h>
+ #include <linux/dm-io.h>
+ #include <linux/slab.h>
+
+Mikulas
+--168436252-658836247-1320680194=:5814--
