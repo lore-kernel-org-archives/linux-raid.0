@@ -1,157 +1,119 @@
-From: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>
-Subject: RE: [PATCH] fix: Allowed to assemble 2 volumes with the same names
- from config file.
-Date: Mon, 7 Nov 2011 08:34:16 +0000
-Message-ID: <2AC2FDB9F3686F48962B2B65E2040CCC3D2C6FFE@irsmsx503.ger.corp.intel.com>
-References: <20111104085148.12168.60370.stgit@gklab-128-192.igk.intel.com>
- <20111107122246.6f50387b@notabene.brown>
+From: Lennart Poettering <lennart@poettering.net>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+    by user
+Date: Mon, 7 Nov 2011 13:00:49 +0100
+Message-ID: <20111107120048.GD25130@tango.0pointer.de>
+References: <20110208110730.GF23157@tango.0pointer.de>
+ <AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com>
+ <20110208172822.GC21847@tango.0pointer.de>
+ <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+ <20111031110613.GA1402@tango.0pointer.de>
+ <20111102114416.7879b77f@notabene.brown>
+ <20111102011615.GA5289@tango.0pointer.de>
+ <20111102130334.09c3ab51@notabene.brown>
+ <20111102133223.GC5119@tango.0pointer.de>
+ <20111107135241.64ae261d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111107122246.6f50387b@notabene.brown>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20111107135241.64ae261d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the feedback. I'll keep this in mind, while producing my nex=
-t patches.
+On Mon, 07.11.11 13:52, NeilBrown (neilb@suse.de) wrote:
 
-Pozdrawiam / Regards,
-=A3ukasz Or=B3owski
+> > Why doesn't the kernel do that on its own?
+> 
+> Because the kernel doesn't know about the format of the metadata that
+> describes the array.
 
------Original Message-----
-=46rom: NeilBrown [mailto:neilb@suse.de]=20
-Sent: Monday, November 07, 2011 2:23 AM
-To: Orlowski, Lukasz
-Cc: linux-raid@vger.kernel.org; Williams, Dan J
-Subject: Re: [PATCH] fix: Allowed to assemble 2 volumes with the same n=
-ames from config file.
+Yupp, my suggestion would be to change that. 
 
-On Fri, 04 Nov 2011 09:51:48 +0100 Lukasz Orlowski <lukasz.orlowski@int=
-el.com> wrote:
+> > What we do right now is this:
+> > 
+> > kill_all_processes();
+> > do {
+> >      umount_all_file_systems_we_can();
+> >      read_only_mount_all_remaining_file_systems();
+> > } while (we_had_some_success_with_that());
+> > jump_into_initrd();
+> > 
+> > As long as mdmon references a file from the root disk we cannot umount
+> > it, so the loop wouldn't be effective.
+> 
+> What exactly is "kill_all_processes()"?   is it SIGTERM or SIGKILL or both
+> with a gap or ???
 
-> mdadm allowes to assemble 2 volumes with the same names based on the=20
-> config file. The issue is fixed by iterating over the list of md=20
-> device identifiers and comparing the names of md devices against each=
-=20
-> other, detecting identical names and blocking the assembly should the=
-=20
-> same names be found.
-> Now having detected duplicate names, mdadm terminates without=20
-> assembling the container, displaying appropriate prompt.
->=20
-> Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
-> ---
->  config.c |   25 +++++++++++++++++++++++++
->  mdadm.c  |    7 +++++++
->  mdadm.h  |    1 +
->  3 files changed, 33 insertions(+), 0 deletions(-)
->=20
-> diff --git a/config.c b/config.c
-> index c0a6baa..9b337eb 100644
-> --- a/config.c
-> +++ b/config.c
-> @@ -1088,3 +1088,28 @@ struct mddev_ident *conf_match(struct mdinfo *=
-info, struct supertype *st)
->  	}
->  	return match;
->  }
-> +
-> +int conf_verify_devnames(struct mddev_ident *array_list) {
-> +	struct mddev_ident *a1, *a2;
-> +
-> +	for (a1 =3D array_list; a1; a1 =3D a1->next) {
-> +		if (!a1->devname)
-> +			continue;
-> +		for (a2 =3D a1->next; a2; a2 =3D a2->next) {
-> +			if (!a2->devname)
-> +				continue;
-> +			if (!strcmp(a1->devname, a2->devname)) {
-> +				fprintf(stderr,
-> +					Name ": Devices %x:%x:%x:%x and "
-> +					"%x:%x:%x:%x have the same name: %s\n",
-> +					a1->uuid[0], a1->uuid[1], a1->uuid[2],
-> +					a1->uuid[3], a2->uuid[0], a2->uuid[1],
-> +					a2->uuid[2], a2->uuid[3], a1->devname);
-> +				return 1;
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> diff --git a/mdadm.c b/mdadm.c
-> index 56de7b7..ebf4c4d 100644
-> --- a/mdadm.c
-> +++ b/mdadm.c
-> @@ -1282,6 +1282,13 @@ int main(int argc, char *argv[])
->  			struct map_ent *map =3D NULL;
->  			int cnt =3D 0;
->  			int failures, successes;
-> +
-> +			if (conf_verify_devnames(array_list)) {
-> +				fprintf(stderr, Name
-> +					": Duplicate MD device names in "
-> +					"conf file were found.\n");
-> +				exit(1);
-> +			}
->  			if (devlist =3D=3D NULL) {
->  				fprintf(stderr, Name ": No devices listed in conf file were foun=
-d.\n");
->  				exit(1);
-> diff --git a/mdadm.h b/mdadm.h
-> index 6dbc5ea..bff454f 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -1145,6 +1145,7 @@ extern char *conf_get_homehost(int=20
-> *require_homehostp);  extern char *conf_line(FILE *file);  extern cha=
-r=20
-> *conf_word(FILE *file, int allow_key);  extern int=20
-> conf_name_is_free(char *name);
-> +extern int conf_verify_devnames(struct mddev_ident *array_list);
->  extern int devname_matches(char *name, char *match);  extern struct=20
-> mddev_ident *conf_match(struct mdinfo *info, struct supertype *st); =20
-> extern int experimental(void);
->=20
+SIGTERM followed by SIGKILL after 5s if the programs do not react to
+that in time. But note that this logic only applies to processes which
+for some reason managed to escape systemd's usual cgroup-based killing
+logic. Normal services are hence already killed at that time, and only
+processes which moved themselves out of any cgroup or for which the
+service files disabled killing might survive to this point.
 
-Thanks.
-I've applied this patch, though with a few changes.
+> I assume a SIGKILL.  I don't mind a SIGTERM and it could be useful to
+> expedite mdmon cleaning up.
+> 
+> However there is an important piece missing.  When you remount,ro a
+> filesystem, the block device doesn't get told so it thinks it is still open
+> read/write.  So md cannot tell mdmon that the array is now read-only
+> It would make a lot of sense for mdmon to exit after receiving a SIGTERM as
+> soon as the device is marked read-only.  But it just doesn't know.
 
-1/ I personally despise the "!strcmp()" usage.  It seems to be saying "=
-not"
-   but it is actually saying "is equal".  I always write
-       strcmp(a,c) =3D=3D 0
-   or !=3D or < or whatever comparison is wanted.
-2/ You assume that both names have a uuid but that may not be correct. =
- You
-   need to check 'uuid_set'.
+As mentioned by Kay, you can get notifications for this by poll()ing on
+/proc/self/mountinfo. Note again however, that we kill first, and only
+then try to unmount/remount.
 
-Thanks,
-NeilBrown
+> We can probably fix that, but that doesn't really help for now.
+> 
+> I think I would like:
+> 
+>  - add to the above loop "stop any virtual devices that we can".
+>    Exactly how to do that if /proc and /sys are already unmounted
+>    is unclear.  Is one or both of these kept around somewhere?
 
----------------------------------------------------------------------
-Intel Technology Poland sp. z o.o.
-z siedziba w Gdansku
-ul. Slowackiego 173
-80-298 Gdansk
+/proc and /sys are not unmounted in this loop. Being virtual API fs we
+exclude them from this logic and leave them around until the initrd
+unmounts them if it wants to.
 
-Sad Rejonowy Gdansk Polnoc w Gdansku,=20
-VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,=20
-numer KRS 101882
+Actually, in the loop above there are three more steps: in each
+iteration we also try to detach all swap devices, all loopback devices
+and all DM devices. We probably could add a similar operation for MD
+devices here too. But note that this loop is more of a last-resort
+thing, and normally shouldn't do much.
 
-NIP 957-07-52-316
-Kapital zakladowy 200.000 zl
+>  - allow processes to be marked some way so they get SIGTERM but not
+>    SIGKILL.  I'm happy adding magic char to argv[0].
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Note that you can configure how you are killed relatively flexibly in
+the service files and that the loop pointed out above is only this last
+resort thing which is applied to all processes/mount points/... which
+stick around after this normal shutdown.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here's another attempt in explaining how this works:
+
+<snip>
+terminate_all_mount_and_service_units();
+kill_all_remaining_processes();
+do {
+     umount_all_remaining_file_systems_we_can();
+     read_only_mount_all_remaining_file_systems();
+     detach_all_remaining_loop_devices();
+     detach_all_remaining_swap_devices();
+     detach_all_remaining_dm_devices();
+} while (we_had_some_success_with_that());
+jump_into_initrd();
+</snip>
+
+You have relatively flexible control of the first step in this code. The
+second step is then the hammer that tries to fix up what this step
+didn't accomplish. My suggestion to check argv[0][0] was to avoid the
+hammer.
+
+Lennart
+
+-- 
+Lennart Poettering - Red Hat, Inc.
