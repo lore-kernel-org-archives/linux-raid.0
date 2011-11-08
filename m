@@ -1,57 +1,49 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
- by user
-Date: Tue, 08 Nov 2011 01:11:53 +0100
-Message-ID: <4EB873C9.5020900@ziu.info>
-References: <20110208094843.GD11446@tango.0pointer.de> <AANLkTi=rFoqBwKdd0B3Xx6JrGdJdut0a2r=wFh0oSx73@mail.gmail.com> <20110208110730.GF23157@tango.0pointer.de> <AANLkTinmO9gsJcwr+0bGGuVJfF2dyM5rDJqqSkmh_hqs@mail.gmail.com> <20110208172822.GC21847@tango.0pointer.de> <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com> <20111031110613.GA1402@tango.0pointer.de> <20111102114416.7879b77f@notabene.brown> <20111102011615.GA5289@tango.0pointer.de> <20111102130334.09c3ab51@notabene.brown> <20111102133223.GC5119@tango.0pointer.de>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: mdraid write performance in different kernels up to 3.0, 3.0 shows
+ huge improvement
+Date: Tue, 8 Nov 2011 10:28:57 +0100 (CET)
+Message-ID: <alpine.DEB.2.00.1111081019010.19721@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111102133223.GC5119@tango.0pointer.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Lennart Poettering <lennart@poettering.net>
-Cc: NeilBrown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-mm@kvack.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11-11-02 14:32, Lennart Poettering wrote:
-> What we do right now is this:
->
-> kill_all_processes();
-> do {
->       umount_all_file_systems_we_can();
->       read_only_mount_all_remaining_file_systems();
-> } while (we_had_some_success_with_that());
-> jump_into_initrd();
->
-> As long as mdmon references a file from the root disk we cannot umount
-> it, so the loop wouldn't be effective.
->
 
-I've peeked into systemd, and from what I can see, it /only/ jumps back 
-to initramfs (prepare_new_root() and pivot_to_new_root()) if shutdown 
-"binary" is present on initramfs. And whenever mdmon is still running or 
-not, is not in any way determinent for pivot_root(2) call to succeed (or 
-... ?).
+Hello.
 
-If /run/initramfs/shutdown is not present, then systemd just do the 
-things the old way as far as I can see - it doesn't even attempt to 
-pivot. And if it doesn't, the it can't umount the root (being itself 
-tied to it) ?
+I have been running mdraid->cryptsetup/LUKS->lvm->xfs on Ubuntu AMD64 with 
+RAID5 and now RAID6 for quite some time, dating back to 2.6.27. Around 
+2.6.32 I saw quite a bit of regression in write performance (probably the 
+implementation of barriers), 2.6.35 was acceptable, 2.6.38 was really 
+really bad, and 3.0 is like a rocket. Best of them all.
 
-So essentially, if systemd execs /shutdown (after pivoting to 
-/run/initramfs) - then it's dracut's modules.d/99shutdown, which itself 
-sources hooks from other modules to do the rest of cleaning job. And 
-that should take care of all the remaining stuff (including terminating 
-mdmon in graceful way, and then umounting /oldroot). Either way - pretty 
-simple to add the necessary functionality to dracut.
+I'm talking about 10-20x in different in write performance on my workload, 
+in combination with the older kernels throwing me page allocation failures 
+when the write load gets high, and also quite often the machine would just 
+freeze up and had to be rebooted.
 
-So wouldn't simply a systemd's cgroup named say - immortals - with mdmon 
-(by default) in it suffice ? Pivot back as usual, leave mdmon alive, let 
-the dracut (or anything else used for initramfs) do the rest of the job 
-(properly).
+With 2.6.38 I was down to 6-10 megabyte/s write speed, whereas 3.0 seem to 
+give me 100+ megabyte/s with the exact same workload, I've seen up to 150 
+megabyte/s writes at good times. This is on a box with AES-NI, so the 
+crypto is not the limiting factor.
 
+I have from time to time sent out an email regarding my page allocation 
+failures, but never really got any takers on trying to fault find it, my 
+tickets with ubuntu also never got any real attention. I haven't really 
+pushed it super hard with 3.0, but I've thrown loads at it that would make 
+2.6.38 lock up.
 
-p.s.
-Sorry if I missed something obvious, it was a quick and late peek over 
-systemd's shutdown.c.
+Just wanted to send in this success report that this finally seem to have 
+seen some really nice improvements!
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
