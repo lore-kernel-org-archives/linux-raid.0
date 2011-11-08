@@ -1,56 +1,92 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: Auto-assembling RAID6 over RAID0?
-Date: Tue, 08 Nov 2011 12:37:47 +0100
-Message-ID: <1320752267.20154.3.camel@michal-laptop.sawicz.net>
-References: <1319740079.26486.7.camel@michal-laptop.sawicz.net>
+From: Lennart Poettering <lennart@poettering.net>
+Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually
+ by user
+Date: Tue, 8 Nov 2011 15:43:37 +0100
+Message-ID: <20111108144336.GA12609@tango.0pointer.de>
+References: <20110208172822.GC21847@tango.0pointer.de>
+ <CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
+ <20111031110613.GA1402@tango.0pointer.de>
+ <20111102114416.7879b77f@notabene.brown>
+ <20111102011615.GA5289@tango.0pointer.de>
+ <20111102130334.09c3ab51@notabene.brown>
+ <20111102133223.GC5119@tango.0pointer.de>
+ <20111107135241.64ae261d@notabene.brown>
+ <20111107120048.GD25130@tango.0pointer.de>
+ <CABE8wwug4-gMLA4rd6FXgV3db2XiwUcfsXp6fC=NipKg333n-g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-B56702cctKNGkd11Hwxm"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1319740079.26486.7.camel@michal-laptop.sawicz.net>
+Content-Disposition: inline
+In-Reply-To: <CABE8wwug4-gMLA4rd6FXgV3db2XiwUcfsXp6fC=NipKg333n-g@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 07.11.11 11:09, Williams, Dan J (dan.j.williams@intel.com) wrot=
+e:
 
---=-B56702cctKNGkd11Hwxm
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> >> What exactly is "kill_all_processes()"? =A0 is it SIGTERM or SIGKI=
+LL or both
+> >> with a gap or ???
+> >
+> > SIGTERM followed by SIGKILL after 5s if the programs do not react t=
+o
+> > that in time. But note that this logic only applies to processes wh=
+ich
+> > for some reason managed to escape systemd's usual cgroup-based kill=
+ing
+> > logic. Normal services are hence already killed at that time, and o=
+nly
+> > processes which moved themselves out of any cgroup or for which the
+> > service files disabled killing might survive to this point.
+>=20
+> So I think mdmon should always try to escape itself from cgroup based
+> killing.  It follows the lifespan of the array, and if the array is
+> not stopped by the cgroup exit (or the array lifespan is not
+> controlled in a service file), then mdmon must keep running.
 
-Dnia 2011-10-27, czw o godzinie 14:27 -0400, Micha=C5=82 Sawicz pisze:
-> Does anyone have any pointers on how to configure stuff for that array
-> to assemble properly automagically? Without the mdadm.confs at all, if
-> possible?
+Well, I think when it gets killed by the cgroup-based killer then it
+should try to tear down its MD device.
 
-Sorry for bumping, but I can't believe nobody on this list has comments
-on the issue?
+In the mdmon service file use SendSIGKILL=3Dno to disable sending of
+SIGKILL after the initial SIGTERM. With KillSignal=3D you chan choose t=
+he
+signal you first want to be killed with, if you don't want it to be
+SIGTERM. With KillMode=3D you can choose whether only the main process =
+of
+the service, all processes of the service, or no processes of the
+service shall be killed. With TimeoutSec=3D you can set the timeout
+between the SIGTERM and the SIGKILL. See systemd.service(5) for more
+information.
 
-Regards,
+> > You have relatively flexible control of the first step in this code=
+=2E The
+> > second step is then the hammer that tries to fix up what this step
+> > didn't accomplish. My suggestion to check argv[0][0] was to avoid t=
+he
+> > hammer.
+>=20
+> I notice that if the rootfs is on a dm or md device systemd/shutdown
+> will always fall through to ultimate_send_signal() which will not
+> discriminate against processes flagged with '@'.  Since we aren't
+> stopping the root md device I wonder if ultimate_send_signal() should
+> also ignore flagged processes, or whether the failure to stop the roo=
+t
+> device is to be expected and let shutdown skip ultimate_send_signal()
+> if the only remaining work is shutting down the rootfs-blockdev.  I'm
+> leaning towards the latter.
+
+The idea was to skip processes flgged with '@' in both the
+ultimate_send_signal() and send_signal() calls.
+
+Lennart
+
 --=20
-Micha=C5=82 (Saviq) Sawicz <michal@sawicz.net>
-
---=-B56702cctKNGkd11Hwxm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJOuRSLAAoJEGnv7NPGHSZFzAgP/3HbMRLw+0UzG47RQ7QtRuwI
-pv+FjC3JSJrRZIFMEzOpbI4b5td95X8uMrcedd42x6Rs8I1Q0MCr1KBh3mmJbs9R
-yGsH2JZNJ1LGj693MyHmPwI0ZREmrsdABw6wsL9qdRhcj/zrbn4qMrHA5Am/BUG+
-WT/PzNMv+VCFk0ZlrIyS7Dyx4bcNoBtbJkT4QrxgLs4o73E0BXMRoRnKwGWuKUUv
-z4FHK10blJO+pbi+LKm8ud3a0DRm4kGkKITShrKACiYkpC4VFs0WD5YNFZWH9L5r
-ZcAOhEkuAe8iGG1Q7Wpj4e0ruBFRIXlhaBVXtkvTYMlFGXA1LIwRC1PxmzR6uF52
-liNJT63xihxmMNrGlq19QBx8YIxBNfPa+s2D+nxLsWHhTAwArU1zt8RqAzUtyCV8
-C7JTAsOLml+qf6PabTCrDIyw7I5JtzRAx5+mEl0VJhb7QyLMTXN6CXR8I+0e6QyW
-YpluTbAfnzaLBrpYXtzNanJzAggHX3GGhxzhPKlFW44CvxUTEaz0wAKc4RWg2OxC
-4vlsPzcg3CIuVbP0884UiLOtv91AqQQXvC6nwciMuZCjtS4SzQpCbHPb4zL0zSkF
-4roVa3C8T6ArPTXGIgUx7RH8du3pGIl2BvLc2XUAybrHc0WsOCoJxNOgcBAgQQKT
-bcxvcEiW9UpK6pnTVowH
-=cslc
------END PGP SIGNATURE-----
-
---=-B56702cctKNGkd11Hwxm--
-
+Lennart Poettering - Red Hat, Inc.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
