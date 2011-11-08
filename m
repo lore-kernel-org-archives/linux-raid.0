@@ -1,70 +1,112 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [systemd-devel] systemd kills mdmon if it was started manually by user
-Date: Tue, 8 Nov 2011 15:27:00 -0800
-Message-ID: <CABE8wwusk82RX-61YjMQabf9N9t_rUb4KjGq+GM+7HV028iJpg@mail.gmail.com>
-References: <20110208172822.GC21847@tango.0pointer.de>
-	<CAA9_cmfhUyenz2B1=wDsUtKcrj-5uOURproUemje37bPpM4-Qw@mail.gmail.com>
-	<20111031110613.GA1402@tango.0pointer.de>
-	<20111102114416.7879b77f@notabene.brown>
-	<20111102011615.GA5289@tango.0pointer.de>
-	<20111102130334.09c3ab51@notabene.brown>
-	<20111102133223.GC5119@tango.0pointer.de>
-	<20111107135241.64ae261d@notabene.brown>
-	<20111107120048.GD25130@tango.0pointer.de>
-	<CABE8wwug4-gMLA4rd6FXgV3db2XiwUcfsXp6fC=NipKg333n-g@mail.gmail.com>
-	<20111108144336.GA12609@tango.0pointer.de>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Question about mdadm commit
+ d6508f0cfb60edf07b36f1532eae4d9cddf7178b "be more careful about add
+ attempts"
+Date: Wed, 9 Nov 2011 10:41:28 +1100
+Message-ID: <20111109104128.7b6f098f@notabene.brown>
+References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+	<20111027085125.747691a9@notabene.brown>
+	<CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
+	<20111031101649.657a1ab3@notabene.brown>
+	<CAGRgLy7G_M=FtdZ9mmDvxxN52+AF+L=0+OaEP=dK7Z+Z5YBYKw@mail.gmail.com>
+	<20111031201933.314d130f@notabene.brown>
+	<CAGRgLy5zkfy2bfrJnC_eKQ_-VAcdaKCyeSounjZ3FjBb83T0mQ@mail.gmail.com>
+	<20111102095204.024dc6b2@notabene.brown>
+	<CAGRgLy5WaOAg2R0FW1=cPgn+sK+PA_=T=GrLj+KWb5HVxbndzQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/=Xz6OdM47zKUWoSibtulSl/"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111108144336.GA12609@tango.0pointer.de>
+In-Reply-To: <CAGRgLy5WaOAg2R0FW1=cPgn+sK+PA_=T=GrLj+KWb5HVxbndzQ@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lennart Poettering <lennart@poettering.net>
-Cc: NeilBrown <neilb@suse.de>, Andrey Borzenkov <arvidjaar@mail.ru>, Tomasz Torcz <tomek@pipebreaker.pl>, systemd-devel@lists.freedesktop.org, linux-raid@vger.kernel.org
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Nov 8, 2011 at 6:43 AM, Lennart Poettering
-<lennart@poettering.net> wrote:
-> On Mon, 07.11.11 11:09, Williams, Dan J (dan.j.williams@intel.com) wr=
-ote:
->> So I think mdmon should always try to escape itself from cgroup base=
-d
->> killing. =A0It follows the lifespan of the array, and if the array i=
-s
->> not stopped by the cgroup exit (or the array lifespan is not
->> controlled in a service file), then mdmon must keep running.
->
-> Well, I think when it gets killed by the cgroup-based killer then it
-> should try to tear down its MD device.
+--Sig_/=Xz6OdM47zKUWoSibtulSl/
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-We can easily fall off the complexity cliff trying to tear down the MD
-device because it can be pinned by a mounted filesystem or being
-claimed anywhere in an arbitrary stack of DM or MD devices.  I did not
-think cgroup exit would umount() filesystems?
+On Tue, 8 Nov 2011 18:23:49 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+wrote:
 
-[..]
->> I notice that if the rootfs is on a dm or md device systemd/shutdown
->> will always fall through to ultimate_send_signal() which will not
->> discriminate against processes flagged with '@'. =A0Since we aren't
->> stopping the root md device I wonder if ultimate_send_signal() shoul=
-d
->> also ignore flagged processes, or whether the failure to stop the ro=
-ot
->> device is to be expected and let shutdown skip ultimate_send_signal(=
-)
->> if the only remaining work is shutting down the rootfs-blockdev. =A0=
-I'm
->> leaning towards the latter.
->
-> The idea was to skip processes flgged with '@' in both the
-> ultimate_send_signal() and send_signal() calls.
+> Hi Neil,
+>=20
+> 1)
+> after looking at this more I see the following: on ADD_NEW_DISK
+> sequence (to a running array, not during assembly) in the kernel, the
+> desc_nr is loaded from the superblock of the disk to be added in
+> super_1_load():
+> 	if (sb->level =3D=3D cpu_to_le32(LEVEL_MULTIPATH))
+> 		rdev->desc_nr =3D -1;
+> 	else
+> 		rdev->desc_nr =3D le32_to_cpu(sb->dev_number);
+> And later, in bind_rdev_to_array() it is indeed checked that desc_nr is u=
+nique.
+>=20
+> However, at least for 1.2 arrays, I believe this is too restrictive,
+> don't you think? If the raid slot (not desc_nr) of the device being
+> re-added is *not occupied* yet, can't we just select a free desc_nr
+> for the new disk on that path?
+> Or perhaps, mdadm on the re-add path can select a free desc_nr
+> (disc.number) for it (just as it does for --add), after ensuring that
+> the slot is not occupied yet? Where it is better to do it?
+> Otherwise, the re-add fails, while it can perfectly succeed (only pick
+> a different desc_nr).
 
-Ok, that makes it easier.
+I think I see what you are saying.
+However my question is: is this really an issue.
+Is there a credible sequence of events that results in the current code mak=
+es
+an undesirable decision?  Of course I do not count deliberately editing the
+metadata as part of a credible sequence of events.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>=20
+> 2)
+> About your suggestion of setting the In_sync flag via sysfs, I think
+> it's too dangerous to blindly set it, so I am not going to do it. Let
+> the kernel look at event count and decide.
+>=20
+> 3)
+> So it looks like at present, my best way to add (not re-add) a disk
+> into a specific slot is the following:
+> - borrow some code from mdadm to initialize the superblock of the new
+> disk, as belonging to this array (init_super).
+> - use the sysfs to do what you suggested before:
+> echo frozen > sync_action
+> echo $major:$minor > new_dev
+> echo $slot > dev-$DEVNAME/slot
+> echo idle > sync_action
+>=20
+> Does this makes sense?
+
+Yes it does.
+
+NeilBrown
+
+
+
+--Sig_/=Xz6OdM47zKUWoSibtulSl/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQIVAwUBTrm+KDnsnt1WYoG5AQIJ5xAAnz/EH+pScGDVlaSNBahOoZaPZv/DgFBZ
+qe/fRGAvfsBzfXPdLM3luNH9puQCNdkOMMvXpa9fgTbuiBnRlTMXYbV+Elczd9+J
+tFN9aREfhv+m9HNgdS/UekjvjVSqNeK6G3Qu40JULZ06d1/EZHT38/wOiw/iznU7
+CWc0TaqUoIsqhdJ2sKtzGZyzjjBhSdWD0q05WK5qLTmP+uipQ3Glj5HPu+4BQvBl
+7KljEi1AKQSNweimZ/6jKVfNr8HYoEPJ+WIvLN0VYjsWF7dy9H3mRRxmVoe5VBBm
+1K0a1pkdcPf81iEHsPMyx0UhdMUik6ka3jWLFfQ6vsbxudSmiHiAtL1RfQIuR5nU
+1AYkaqlkvDlgrw6jYCSfVNINnbCC5vEiVRsiBBDvQi3jn3A2fYwNoGrQAYR2WPSE
+8kjl4R4n4IqCSKpff2rPQQ37dJ/KFgJPxQGaDwALkMc3XH/tKW3mvWR0+cIFdGWo
+9Pcv4+lew1GeAafP3XozTzV1XRnMvRkWvws3ENG6iYADrsi8Pbz0xz7nrlx34nfy
+ZXD9PKULkHZLWwvtmG/T/BMpQunpUe2jvqw4IhZRflt+iw6YNiYS364RhipLjuqc
+oS+LU1hSoZxrL8K24AFg6mAKT2ItXSFaUAwMf3pfD/JWT7U/JdTkfYvICXpbwvGI
+VReBKOGwWr0=
+=lI8d
+-----END PGP SIGNATURE-----
+
+--Sig_/=Xz6OdM47zKUWoSibtulSl/--
