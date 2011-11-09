@@ -1,59 +1,133 @@
-From: "Hardy Flor" <Flor@ptbl-gmbh.de>
-Subject: mini change of raid5.c
-Date: Wed, 09 Nov 2011 11:05:01 +0100
-Message-ID: <4EBA5E5D0200004000001B21@ptbl-mail.dnsalias.net>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH] imsm: control number of active imsm volumes in the system
+Date: Wed, 9 Nov 2011 11:11:37 +0000
+Message-ID: <F9123E44003394499FDD2B17C60621D404EB0C@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=__Part91BE685D.1__="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is a MIME message. If you are reading this text, you may want to 
-consider changing to a mail reader or gateway that understands how to 
-properly handle MIME multipart messages.
+From: Marcin Labun <Marcin.Labun@intel.com>
+Subject: [PATCH] imsm: control number of active imsm volumes in the system
 
---=__Part91BE685D.1__=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+IMSM supports maximum supported volumes in the system according to OROM defined value.
+Block creation and activation of volume if number of active volumes is greater then OROM defined maximum.
 
-Hello Mr Brown,
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+---
+ super-intel.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 64 insertions(+), 3 deletions(-)
 
-can you please transmit this small change to the file raid5.c? There is
-thus a rapid repair of a raid6 possible, using only the defective areas
-must be checked. This change writes only the error position in the log
-during the function "check".
+diff --git a/super-intel.c b/super-intel.c
+index e4d71e7..eb76e95 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -531,6 +531,7 @@ static int attach_hba_to_super(struct intel_super *super, struct sys_dev *device
+ 	return 1;
+ }
+ 
++
+ static struct sys_dev* find_disk_attached_hba(int fd, const char *devname)
+ {
+ 	struct sys_dev *list, *elem, *prev;
+@@ -1665,8 +1666,9 @@ static void print_imsm_capability(const struct imsm_orom *orom)
+ 	       imsm_orom_has_chunk(orom, 1024*16) ? " 16M" : "",
+ 	       imsm_orom_has_chunk(orom, 1024*32) ? " 32M" : "",
+ 	       imsm_orom_has_chunk(orom, 1024*64) ? " 64M" : "");
+-	printf("      Max Disks : %d\n", orom->tds);
+-	printf("    Max Volumes : %d\n", orom->vpa);
++	printf("    Max Disks                 : %d\n", orom->tds);
++	printf("    Max Volumes per array     : %d\n", orom->vpa);
++	printf("    Max Volumes per controller: %d\n", orom->vphba);
+ 	return;
+ }
+ 
+@@ -5089,11 +5091,61 @@ static int imsm_default_chunk(const struct imsm_orom *orom)
+ 	return min(512, (1 << fs));
+ }
+ 
++static int count_external_arrays_by_format(char *name, char* hba, int verbose)
++{
++	struct mdstat_ent *mdstat = mdstat_read(0, 0);
++	struct mdstat_ent *memb = NULL;
++	struct mdstat_ent *vol = NULL;
++	int fd = -1;
++	int count = 0;
++	struct dev_member *dev = NULL;
++	char *path = NULL;
++	int num = 0;
++
++	for (memb = mdstat ; memb ; memb = memb->next) {
++		if (memb->metadata_version &&
++		    strncmp(memb->metadata_version, "external:", 9) == 0  &&
++		    (strcmp(&mdstat->metadata_version[9], name) == 0) &&
++		    !is_subarray(memb->metadata_version+9) &&
++		    memb->members) {
++			dev = memb->members;
++			fd = -1;
++			while(dev && (fd < 0)) {
++				path = malloc(strlen(dev->name) + strlen("/dev/") + 1);
++				if (path) {
++					num = sprintf(path, "%s%s", "/dev/", dev->name);
++					if (num > 0)
++						fd = open(path, O_RDONLY, 0);
++					if ((num <= 0) || (fd < 0)) {
++						if (verbose)
++							fprintf(stderr, Name ": Cannot open %s: %s\n",
++								dev->name, strerror(errno));
++					}
++					free(path);
++				}
++				dev = dev->next;
++			}
++			if ((fd >= 0) && disk_attached_to_hba(fd, hba)) {
++				for (vol = mdstat ; vol ; vol = vol->next) {
++					if (vol->metadata_version &&
++					    is_container_member(vol, memb->dev))
++						count++;
++				}
++			}
++			if (fd >= 0)
++				close(fd);
++		}
++	}
++	free_mdstat(mdstat);
++	return count;
++}
++
+ #define pr_vrb(fmt, arg...) (void) (verbose && fprintf(stderr, Name fmt, ##arg))
+ static int
+ validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
+ 			    int raiddisks, int *chunk, int verbose)
+ {
++	int count = 0;
+ 	/* check/set platform and metadata limits/defaults */
+ 	if (super->orom && raiddisks > super->orom->dpa) {
+ 		pr_vrb(": platform supports a maximum of %d disks per array\n",
+@@ -5101,7 +5153,16 @@ validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
+ 		return 0;
+ 	}
+ 
+-        /* capabilities of OROM tested - copied from validate_geometry_imsm_volume */
++	if (super->orom) {
++		count = count_external_arrays_by_format("imsm", super->hba->path, verbose);
++		if (super->orom->vphba <= count) {
++			pr_vrb(":  platform does not support more then %d raid volumes.\n",
++			       super->orom->vphba);
++			return 0;
++		}
++	}
++
++	/* capabilities of OROM tested - copied from validate_geometry_imsm_volume */
+ 	if (!is_raid_level_supported(super->orom, level, raiddisks)) {
+ 		pr_vrb(": platform does not support raid%d with %d disk%s\n",
+ 			level, raiddisks, raiddisks > 1 ? "s" : "");
+-- 
+1.7.1
 
-Kind regards
 
-Hardy Flor
-
---=__Part91BE685D.1__=
-Content-Type: application/octet-stream; name="raid5.c.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="raid5.c.diff"
-
-LS0tIHJhaWQ1LmMub3JnCTIwMTEtMDgtMjkgMjI6NTY6MzAuMDAwMDAwMDAwICswMjAwCisrKyBy
-YWlkNS5jCTIwMTEtMTEtMDkgMTA6NDM6NDUuMDAwMDAwMDAwICswMTAwCkBAIC0yNzM4LDYgKzI3
-MzgsMTEgQEAKIAkJCSAqLwogCQkJc2V0X2JpdChTVFJJUEVfSU5TWU5DLCAmc2gtPnN0YXRlKTsK
-IAkJZWxzZSB7CisJCQlwcmludGsoS0VSTl9XQVJOSU5HCisJCQkgICAgICAgIm1kL3JhaWQ6JXM6
-IG1pc21hdGNoIChsZXZlbCAlZCkgd2l0aCAlZCBkaXNrcywgJWx1IHNlY3RvcnMgQCAlbGx1IFAt
-RGlzazolZCBRLURpc2s6JWRcbiIsCisJCQkgICAgICAgbWRuYW1lKGNvbmYtPm1kZGV2KSwgY29u
-Zi0+bGV2ZWwsCisJCQkgICAgICAgY29uZi0+cmFpZF9kaXNrcywgU1RSSVBFX1NFQ1RPUlMsICh1
-bnNpZ25lZCBsb25nIGxvbmcpIHNoLT5zZWN0b3IsCisJCQkgICAgICAgc2gtPnBkX2lkeCwgc2gt
-PnFkX2lkeCk7CiAJCQljb25mLT5tZGRldi0+cmVzeW5jX21pc21hdGNoZXMgKz0gU1RSSVBFX1NF
-Q1RPUlM7CiAJCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllfQ0hFQ0ssICZjb25mLT5tZGRldi0+
-cmVjb3ZlcnkpKQogCQkJCS8qIGRvbid0IHRyeSB0byByZXBhaXIhISAqLwpAQCAtMjg5MCw2ICsy
-ODk1LDExIEBACiAJCQkJICovCiAJCQl9CiAJCX0gZWxzZSB7CisJCQlwcmludGsoS0VSTl9XQVJO
-SU5HCisJCQkgICAgICAgIm1kL3JhaWQ6JXM6IG1pc21hdGNoIChsZXZlbCAlZCkgd2l0aCAlZCBk
-aXNrcywgJWx1IHNlY3RvcnMgQCAlbGx1IFAtRGlzazolZCBRLURpc2s6JWRcbiIsCisJCQkgICAg
-ICAgbWRuYW1lKGNvbmYtPm1kZGV2KSwgY29uZi0+bGV2ZWwsCisJCQkgICAgICAgY29uZi0+cmFp
-ZF9kaXNrcywgU1RSSVBFX1NFQ1RPUlMsICh1bnNpZ25lZCBsb25nIGxvbmcpIHNoLT5zZWN0b3Is
-CisJCQkgICAgICAgc2gtPnBkX2lkeCwgc2gtPnFkX2lkeCk7CiAJCQljb25mLT5tZGRldi0+cmVz
-eW5jX21pc21hdGNoZXMgKz0gU1RSSVBFX1NFQ1RPUlM7CiAJCQlpZiAodGVzdF9iaXQoTURfUkVD
-T1ZFUllfQ0hFQ0ssICZjb25mLT5tZGRldi0+cmVjb3ZlcnkpKQogCQkJCS8qIGRvbid0IHRyeSB0
-byByZXBhaXIhISAqLwo=
-
---=__Part91BE685D.1__=--
