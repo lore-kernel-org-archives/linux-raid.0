@@ -1,65 +1,59 @@
-From: NeilBrown <neilb@suse.de>
-Subject: PULL REQUEST - md bugfixes for 3.2-rc
-Date: Wed, 9 Nov 2011 11:44:05 +1100
-Message-ID: <20111109114405.3be330b0@notabene.brown>
+From: "Hardy Flor" <Flor@ptbl-gmbh.de>
+Subject: mini change of raid5.c
+Date: Wed, 09 Nov 2011 11:05:01 +0100
+Message-ID: <4EBA5E5D0200004000001B21@ptbl-mail.dnsalias.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lQNOjratqd+_s=5TDC2ZU+D"; protocol="application/pgp-signature"
+Content-Type: multipart/mixed; boundary="=__Part91BE685D.1__="
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux RAID <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lQNOjratqd+_s=5TDC2ZU+D
+This is a MIME message. If you are reading this text, you may want to 
+consider changing to a mail reader or gateway that understands how to 
+properly handle MIME multipart messages.
+
+--=__Part91BE685D.1__=
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Hi Linus,
- a couple of new bugfixes for md.
+Hello Mr Brown,
 
-Thanks,
-NeilBrown
+can you please transmit this small change to the file raid5.c? There is
+thus a rapid repair of a raid6 possible, using only the defective areas
+must be checked. This change writes only the error position in the log
+during the function "check".
 
+Kind regards
 
-The following changes since commit 1ea6b8f48918282bdca0b32a34095504ee65bab5:
+Hardy Flor
 
-  Linux 3.2-rc1 (2011-11-07 16:16:02 -0800)
+--=__Part91BE685D.1__=
+Content-Type: application/octet-stream; name="raid5.c.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="raid5.c.diff"
 
-are available in the git repository at:
-  git://neil.brown.name/md for-linus
+LS0tIHJhaWQ1LmMub3JnCTIwMTEtMDgtMjkgMjI6NTY6MzAuMDAwMDAwMDAwICswMjAwCisrKyBy
+YWlkNS5jCTIwMTEtMTEtMDkgMTA6NDM6NDUuMDAwMDAwMDAwICswMTAwCkBAIC0yNzM4LDYgKzI3
+MzgsMTEgQEAKIAkJCSAqLwogCQkJc2V0X2JpdChTVFJJUEVfSU5TWU5DLCAmc2gtPnN0YXRlKTsK
+IAkJZWxzZSB7CisJCQlwcmludGsoS0VSTl9XQVJOSU5HCisJCQkgICAgICAgIm1kL3JhaWQ6JXM6
+IG1pc21hdGNoIChsZXZlbCAlZCkgd2l0aCAlZCBkaXNrcywgJWx1IHNlY3RvcnMgQCAlbGx1IFAt
+RGlzazolZCBRLURpc2s6JWRcbiIsCisJCQkgICAgICAgbWRuYW1lKGNvbmYtPm1kZGV2KSwgY29u
+Zi0+bGV2ZWwsCisJCQkgICAgICAgY29uZi0+cmFpZF9kaXNrcywgU1RSSVBFX1NFQ1RPUlMsICh1
+bnNpZ25lZCBsb25nIGxvbmcpIHNoLT5zZWN0b3IsCisJCQkgICAgICAgc2gtPnBkX2lkeCwgc2gt
+PnFkX2lkeCk7CiAJCQljb25mLT5tZGRldi0+cmVzeW5jX21pc21hdGNoZXMgKz0gU1RSSVBFX1NF
+Q1RPUlM7CiAJCQlpZiAodGVzdF9iaXQoTURfUkVDT1ZFUllfQ0hFQ0ssICZjb25mLT5tZGRldi0+
+cmVjb3ZlcnkpKQogCQkJCS8qIGRvbid0IHRyeSB0byByZXBhaXIhISAqLwpAQCAtMjg5MCw2ICsy
+ODk1LDExIEBACiAJCQkJICovCiAJCQl9CiAJCX0gZWxzZSB7CisJCQlwcmludGsoS0VSTl9XQVJO
+SU5HCisJCQkgICAgICAgIm1kL3JhaWQ6JXM6IG1pc21hdGNoIChsZXZlbCAlZCkgd2l0aCAlZCBk
+aXNrcywgJWx1IHNlY3RvcnMgQCAlbGx1IFAtRGlzazolZCBRLURpc2s6JWRcbiIsCisJCQkgICAg
+ICAgbWRuYW1lKGNvbmYtPm1kZGV2KSwgY29uZi0+bGV2ZWwsCisJCQkgICAgICAgY29uZi0+cmFp
+ZF9kaXNrcywgU1RSSVBFX1NFQ1RPUlMsICh1bnNpZ25lZCBsb25nIGxvbmcpIHNoLT5zZWN0b3Is
+CisJCQkgICAgICAgc2gtPnBkX2lkeCwgc2gtPnFkX2lkeCk7CiAJCQljb25mLT5tZGRldi0+cmVz
+eW5jX21pc21hdGNoZXMgKz0gU1RSSVBFX1NFQ1RPUlM7CiAJCQlpZiAodGVzdF9iaXQoTURfUkVD
+T1ZFUllfQ0hFQ0ssICZjb25mLT5tZGRldi0+cmVjb3ZlcnkpKQogCQkJCS8qIGRvbid0IHRyeSB0
+byByZXBhaXIhISAqLwo=
 
-  last commit being e15ce4ccc5cab3c590d2443a50b6de01e9b38b32
-
-Dan Williams (1):
-      md/raid5: STRIPE_ACTIVE has lock semantics, add barriers
-
-NeilBrown (1):
-      md/raid5: abort any pending parity operations when array fails.
-
- drivers/md/raid5.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
-
---Sig_/lQNOjratqd+_s=5TDC2ZU+D
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTrnM2znsnt1WYoG5AQLYEw/+K04kjxaubXBHZFDwbYF1qz8LIk19oOtI
-zB3oK7FwQ12JcvknjL1iymPv++MEgKc9arLUu491GFKOgwCedZ/d/GDELGFJsMT6
-L9hWzr99YdElJNBWeuq8VzP+ZNNbksDkF6SDYt/PlDeUrmtTaG0n63NIrfhurzQs
-f5Hx9GMY386Uqy/yanaurzHqVj0qdlTaIeGSRflWfqIhUAykwsDxWPZZCWmH6RjE
-AE1BEAfay15IQYSlT5VUVJcdR3VLNdK1GCXh0cLJFjPoR0M5GTsw48IY+1F8DOST
-rldHLYdAtEc3aisPYnLrEsLFp8F2/eRxUkSH9iRh3IEfkO26SG2vLOoUG0vdcLc/
-kA7njL9TVcbWweBFM0cEMa1vE/6kbmwicd3TcxAmzab1H7anyX9q4AKHrYXRPBv9
-vOb3Aqrayu9XeaKzh3gntY1rP2OboLUIpRDVx6s5DTUiVyDzyCuMvPrPXv/RwPJ+
-tY9zdVH2J27vpUvsG4FJE2BF6zrN34fSBQ7RnkMN1+kDgT04RXZ/VOvACSGYer+T
-9W2QnWJotVwZpaWZ0P2H3X4EAFejcG70yfClVGcw0VUanoQCBT3BFGiAo2TxGMCL
-Se8hPYhAA1rvfj8SJRkEFeaLaNdCsHOtI5UhB0cOGsKMuizxz/DZtlqHWf0LSk2O
-G4nVpG7hQtw=
-=H5CU
------END PGP SIGNATURE-----
-
---Sig_/lQNOjratqd+_s=5TDC2ZU+D--
+--=__Part91BE685D.1__=--
