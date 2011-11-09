@@ -1,38 +1,54 @@
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: All kinds of things on RAID/mdadm
-Date: Wed, 09 Nov 2011 10:50:40 -0800
-Message-ID: <0luqo8x8bq.ln2@goaway.wombat.san-francisco.ca.us>
-References: <4EB7D340.80009@mindconnect.nl>
- <4EB7D7A9.6080300@meetinghouse.net>
+From: William Colls <william.colls@rogers.com>
+Subject: Re: Raid Problem - Unknown File System Type
+Date: Wed, 09 Nov 2011 14:57:18 -0500
+Message-ID: <4EBADB1E.1070700@rogers.com>
+References: <4EBAA68B.6090906@rogers.com> <20111109163933.GA26630@cthulhu.home.robinhill.me.uk> <4EBAB47C.5070002@rogers.com> <4EBACC88.8070403@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4EBACC88.8070403@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 2011-11-07, Miles Fidelman <mfidelman@meetinghouse.net> wrote:
+On 11/09/2011 01:55 PM, Phil Turmel wrote:
+> Hi William,
 >
-> I'd like to echo this.  The unavailability of raid.wiki.kernel.org (as 
-> well as the rest of *.wiki.kernel.org) is a rather critical outage.
+> On 11/09/2011 12:12 PM, William Colls wrote:
+> [...]
+>
+>> I thought, at the time, that I needed to do the create so that the /dev/md0 device would be created properly (new machine had no raid before).
+>
+> That's the "--auto" option, which has sane defaults.
+>
+> [...]
+>
+>> No output from the original setup.
+>
+>> From what you've described so far, a likely possibility is that the original raid 1 was using metadata version 1.1 or 1.2, which put the superblock near the beginning of the disks.  The default "--create" metadata in that old version of mdadm is 0.9, as you can see in your reports.
+>
+> If so, you've likely only lost a tiny bit of data at the end of the volumes where the 0.90 superblock has been written.  (I'm also going to assume that the two disks were in-sync in old box before you moved them, so the re-sync wouldn't do any harm.)
+>
+> A dump of the first 8K of your drives might be helpful here.
+>
+> dd if=/dev/sdb count=16 2>/dev/null |hexdump -C
+>
+> dd if=/dev/sdc count=16 2>/dev/null |hexdump -C
+>
+> Regards,
+>
+> Phil
+>
 
-As of this morning, raid.wiki.kernel.org seems to be back.
+Did the dumps to text files. diff shows no difference between the files. 
+Should I be looking for anything particular? There are sections which 
+seem to have data, and several blocks that are all zeros, but I don't 
+see any particular patterns, and only a very few obvious text strings.
 
-I've been looking it over, from the standpoint of a month-long user of
-mdraid, and have found some minor points I'd like to change.  Is there
-an accepted process for making modifications, or can anyone simply
-create an account and update the wiki?  (In particular, the
-Reconstruction page talks about powering down a system, but should also
-mention hot-swap as an alternative; also, it mentions raidhotadd, which
-IIRC is no longer part of the md tools; I believe mdadm /dev/mdX --add
-/dev/sdXX is now the correct syntax?)
-
---keith
-
-
+Thanks for your interest and help.
 
 -- 
-kkeller@wombat.san-francisco.ca.us
-
-
+I know you believe that you understand what you think I said, but I am 
+not sure that you realize that what you heard was not what I ment.
