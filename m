@@ -1,133 +1,111 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] imsm: control number of active imsm volumes in the system
-Date: Wed, 9 Nov 2011 11:11:37 +0000
-Message-ID: <F9123E44003394499FDD2B17C60621D404EB0C@IRSMSX101.ger.corp.intel.com>
+From: William Colls <william.colls@rogers.com>
+Subject: Raid Problem - Unknown File System Type
+Date: Wed, 09 Nov 2011 11:12:59 -0500
+Message-ID: <4EBAA68B.6090906@rogers.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Marcin Labun <Marcin.Labun@intel.com>
-Subject: [PATCH] imsm: control number of active imsm volumes in the system
 
-IMSM supports maximum supported volumes in the system according to OROM defined value.
-Block creation and activation of volume if number of active volumes is greater then OROM defined maximum.
+Environment
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- super-intel.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 64 insertions(+), 3 deletions(-)
+Kubuntu Linux 10.04.3 LTS
+mdadm 2.6.7.1-1ubuntu15
 
-diff --git a/super-intel.c b/super-intel.c
-index e4d71e7..eb76e95 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -531,6 +531,7 @@ static int attach_hba_to_super(struct intel_super *super, struct sys_dev *device
- 	return 1;
- }
- 
-+
- static struct sys_dev* find_disk_attached_hba(int fd, const char *devname)
- {
- 	struct sys_dev *list, *elem, *prev;
-@@ -1665,8 +1666,9 @@ static void print_imsm_capability(const struct imsm_orom *orom)
- 	       imsm_orom_has_chunk(orom, 1024*16) ? " 16M" : "",
- 	       imsm_orom_has_chunk(orom, 1024*32) ? " 32M" : "",
- 	       imsm_orom_has_chunk(orom, 1024*64) ? " 64M" : "");
--	printf("      Max Disks : %d\n", orom->tds);
--	printf("    Max Volumes : %d\n", orom->vpa);
-+	printf("    Max Disks                 : %d\n", orom->tds);
-+	printf("    Max Volumes per array     : %d\n", orom->vpa);
-+	printf("    Max Volumes per controller: %d\n", orom->vphba);
- 	return;
- }
- 
-@@ -5089,11 +5091,61 @@ static int imsm_default_chunk(const struct imsm_orom *orom)
- 	return min(512, (1 << fs));
- }
- 
-+static int count_external_arrays_by_format(char *name, char* hba, int verbose)
-+{
-+	struct mdstat_ent *mdstat = mdstat_read(0, 0);
-+	struct mdstat_ent *memb = NULL;
-+	struct mdstat_ent *vol = NULL;
-+	int fd = -1;
-+	int count = 0;
-+	struct dev_member *dev = NULL;
-+	char *path = NULL;
-+	int num = 0;
-+
-+	for (memb = mdstat ; memb ; memb = memb->next) {
-+		if (memb->metadata_version &&
-+		    strncmp(memb->metadata_version, "external:", 9) == 0  &&
-+		    (strcmp(&mdstat->metadata_version[9], name) == 0) &&
-+		    !is_subarray(memb->metadata_version+9) &&
-+		    memb->members) {
-+			dev = memb->members;
-+			fd = -1;
-+			while(dev && (fd < 0)) {
-+				path = malloc(strlen(dev->name) + strlen("/dev/") + 1);
-+				if (path) {
-+					num = sprintf(path, "%s%s", "/dev/", dev->name);
-+					if (num > 0)
-+						fd = open(path, O_RDONLY, 0);
-+					if ((num <= 0) || (fd < 0)) {
-+						if (verbose)
-+							fprintf(stderr, Name ": Cannot open %s: %s\n",
-+								dev->name, strerror(errno));
-+					}
-+					free(path);
-+				}
-+				dev = dev->next;
-+			}
-+			if ((fd >= 0) && disk_attached_to_hba(fd, hba)) {
-+				for (vol = mdstat ; vol ; vol = vol->next) {
-+					if (vol->metadata_version &&
-+					    is_container_member(vol, memb->dev))
-+						count++;
-+				}
-+			}
-+			if (fd >= 0)
-+				close(fd);
-+		}
-+	}
-+	free_mdstat(mdstat);
-+	return count;
-+}
-+
- #define pr_vrb(fmt, arg...) (void) (verbose && fprintf(stderr, Name fmt, ##arg))
- static int
- validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
- 			    int raiddisks, int *chunk, int verbose)
- {
-+	int count = 0;
- 	/* check/set platform and metadata limits/defaults */
- 	if (super->orom && raiddisks > super->orom->dpa) {
- 		pr_vrb(": platform supports a maximum of %d disks per array\n",
-@@ -5101,7 +5153,16 @@ validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
- 		return 0;
- 	}
- 
--        /* capabilities of OROM tested - copied from validate_geometry_imsm_volume */
-+	if (super->orom) {
-+		count = count_external_arrays_by_format("imsm", super->hba->path, verbose);
-+		if (super->orom->vphba <= count) {
-+			pr_vrb(":  platform does not support more then %d raid volumes.\n",
-+			       super->orom->vphba);
-+			return 0;
-+		}
-+	}
-+
-+	/* capabilities of OROM tested - copied from validate_geometry_imsm_volume */
- 	if (!is_raid_level_supported(super->orom, level, raiddisks)) {
- 		pr_vrb(": platform does not support raid%d with %d disk%s\n",
- 			level, raiddisks, raiddisks > 1 ? "s" : "");
+I have two identical disks that were in a raid configuration in another 
+machine (also running 10.04). I removed them from the old machine, 
+mounted them in a new machine, booted up, and at a terminal prompt as 
+root issued
+
+mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+
+The configuration in the old machine was raid 1.
+
+I checked the contents of /proc/mdstat and it confirmed that md0 was 
+indeed running, with 2 devices, as expected. But it also said it was 
+resyncing the disks, which I didn't expect.
+
+When the reync completed, I was unable to mount /dev/md0p1. Specifying 
+-t ext3 in the mount command gives the error message "wrong fs, bad 
+option, bad superblock on /dev/md0p1". Trying mount with no -t gives the 
+error "unknown file type linux_raid_member". Looking at the disks with 
+Gparted, confims that the system sees the disks, but the filesystem 
+shows as unknown.
+
+The output from mdamd --detail /dev/sdb
+
+/dev/sdb:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 1443e74d:f63f16ab:d527ef8c:7225e0b0
+   Creation Time : Tue Nov  8 13:14:48 2011
+      Raid Level : raid1
+   Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+      Array Size : 732574464 (698.64 GiB 750.16 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+
+     Update Time : Tue Nov  8 16:05:42 2011
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : c4195c85 - correct
+          Events : 34
+
+
+       Number   Major   Minor   RaidDevice State
+this     0       8       16        0      active sync   /dev/sdb
+
+    0     0       8       16        0      active sync   /dev/sdb
+    1     1       8       32        1      active sync   /dev/sdc
+
+--- end of output
+
+Output from mdadm --examine /dev/sdc
+
+/dev/sdc:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 1443e74d:f63f16ab:d527ef8c:7225e0b0
+   Creation Time : Tue Nov  8 13:14:48 2011
+      Raid Level : raid1
+   Used Dev Size : 732574464 (698.64 GiB 750.16 GB)
+      Array Size : 732574464 (698.64 GiB 750.16 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 0
+
+     Update Time : Tue Nov  8 16:05:42 2011
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : c4195c97 - correct
+          Events : 34
+
+
+       Number   Major   Minor   RaidDevice State
+this     1       8       32        1      active sync   /dev/sdc
+
+    0     0       8       16        0      active sync   /dev/sdb
+    1     1       8       32        1      active sync   /dev/sdc
+
+---- end of output
+
+So - am I truly up the creek without a paddle? Is there any way to 
+recover this array? I have backups of most of it, but it will take a 
+while to find and restore. And for sure something will be lost.
+
+Thanks for your time.
+
 -- 
-1.7.1
-
-
+I know you believe that you understand what you think I said, but I am 
+not sure that you realize that what you heard was not what I ment.
