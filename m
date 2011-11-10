@@ -1,92 +1,81 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: unable to recover RAID 5 due to bad block
-Date: Fri, 11 Nov 2011 07:09:20 +1100
-Message-ID: <20111111070920.0d80e284@notabene.brown>
+Date: Fri, 11 Nov 2011 07:11:42 +1100
+Message-ID: <20111111071142.383f10f0@notabene.brown>
 References: <4EBBF60F.4030606@northfolk.ca>
 	<20111110172003.Horde.byVZeZk8pphOu-mzTQXxKL8@cakebox.homeunix.net>
 	<4EBC00E6.3030404@northfolk.ca>
-	<20111110180234.Horde.Q0tycZk8pphOvAOqm3rzJ2A@cakebox.homeunix.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/NE2=hjpO2Gbkwv_hXklzt8U"; protocol="application/pgp-signature"
+ boundary="Sig_/oHoZn67ThgNJS3uz0kTFd0I"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111110180234.Horde.Q0tycZk8pphOvAOqm3rzJ2A@cakebox.homeunix.net>
+In-Reply-To: <4EBC00E6.3030404@northfolk.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander =?ISO-8859-1?B?S/xobg==?= <alexander.kuehn@nagilum.de>
-Cc: Chris Purves <chris@northfolk.ca>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, jeromepoulin@gmail.com
+To: Chris Purves <chris@northfolk.ca>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Alexander =?ISO-8859-1?B?S/xobg==?= <alexander.kuehn@nagilum.de>, jeromepoulin@gmail.com
 List-Id: linux-raid.ids
 
---Sig_/NE2=hjpO2Gbkwv_hXklzt8U
+--Sig_/oHoZn67ThgNJS3uz0kTFd0I
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 10 Nov 2011 18:02:34 +0100 Alexander K=FChn
-<alexander.kuehn@nagilum.de> wrote:
+On Thu, 10 Nov 2011 12:50:46 -0400 Chris Purves <chris@northfolk.ca> wrote:
 
-> Try --re-add.
+> On 2011-11-10 12:20, Alexander K=FChn wrote:
+> > ddrescue to the rescue!
+> > Get a another new disk, then ddrescue the one with the read error to th=
+e new disk.
+> > Assemble the array using the new disk instead of the one with the read =
+error.
+> > You will loose the blocks that can't be read of course.
+> > And in the future do run raid check/scrubbing at regular intervals. ;)
+>=20
+> I have tried this already.  After cloning the disk with errors, I replace=
+d it with the clone and tried to re-start the array using
+>=20
+> mdadm --assemble --force /dev/md1
+>=20
+> mdadm assigned the new disk as a spare and said there were only three dis=
+ks to start the array and so couldn't start it.
+>=20
+> After I clone the disk with the error, how precisely should I re-start th=
+e array?
+>=20
+>=20
 
-Nope.  That doesn't make any sense at all.
+This should have worked.  So presumably some unstated requirement wasn't me=
+t.
+
+Give details.  Names of devices, sizes of devices, "mdadm --examine" of
+device.  Are you using partitions or whole disk ....
+
+The best assemble command would be:
+  mdadm --assemble /dev/md1 -vv ...list...of.devices..you...want.it.to.incl=
+ude.=20
+
 
 NeilBrown
 
-
->=20
->=20
-> Zitat von Chris Purves <chris@northfolk.ca>:
->=20
-> > On 2011-11-10 12:20, Alexander K=FChn wrote:
-> >> ddrescue to the rescue!
-> >> Get a another new disk, then ddrescue the one with the read error =20
-> >> to the new disk.
-> >> Assemble the array using the new disk instead of the one with the =20
-> >> read error.
-> >> You will loose the blocks that can't be read of course.
-> >> And in the future do run raid check/scrubbing at regular intervals. ;)
-> >
-> > I have tried this already.  After cloning the disk with errors, I =20
-> > replaced it with the clone and tried to re-start the array using
-> >
-> > mdadm --assemble --force /dev/md1
-> >
-> > mdadm assigned the new disk as a spare and said there were only =20
-> > three disks to start the array and so couldn't start it.
-> >
-> > After I clone the disk with the error, how precisely should I =20
-> > re-start the array?
-> >
-> >
-> > --=20
-> > Chris Purves
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---Sig_/NE2=hjpO2Gbkwv_hXklzt8U
+--Sig_/oHoZn67ThgNJS3uz0kTFd0I
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTrwvcDnsnt1WYoG5AQJ6gw//YK0rHlUf2pSi6jtNgoAlaezyKAooFMyR
-MjssfiCBlRLglwF1qNRFvQFqQY4l/IlFMNFm3fX90Py2Apn9m7KkFkeW5ey18+BY
-Cvhalxa22OkME+Zy6RpZqvvS18P7oSbtBU5JU3bzd6b6a8abPiBfxTpr3xW1b0aW
-O+DfK04Vw3lMq7scL6A/zgWc1A7a6X6PY66nmL81m4aQgYp1GDSqVgUfHz2iQxfy
-yE2dvhczGU+OKI8B547KtRngN+NWaLIHSMvuFeSXleAe3oU+zVL3WUythxdBXbUh
-D2qcmb/I68snFsZfFUwhStsGbAJqXyiStOqcFwLiFjO/gVKPXN2htn846JRBqDW8
-Y63GO55MgwV3RDhetHpszlDG6EHbV/nN+I7Z+ebyhTxxV9dH1eiqsK4/jQA2ZW36
-9yBN9tTPeuef5SVs5YItPLgazGnG5jbh8C29s9dPs7mk9fwEwakXjC+nNbWqe+Tz
-D6aEdVLj1bLOQcMvKg92o8JnEjcun9GCkTDg9DBYVVn75m1aSwu99BooH+RtJ2Vv
-1cuMZAI0fWcUDdQ0HEhwyGeCwMdUYm73NVwaNIsBErxT3VfUUNEt+SaWfmdo7icb
-EisAqPf0kubCo2xACABgUIpmVaQvHCjwiF94j8iZvOxcrgQ4Hi3aEl6oHs2X1GRs
-YfxTF7KU8ZI=
-=rPkj
+iQIVAwUBTrwv/jnsnt1WYoG5AQIB5Q/+MVT34tuE7s7QpVJu6TL/GFmY9QZCfQpb
+uwETJqsj+uf4wPs4jJVoGHb88u5U9DgQouiQX5DEjllx0FPbUaH9qfGIJHr2k5IJ
+Sn2DzQ+qROaZZpJW8sHE1kFmoqa2tcTsciGg+SX/uRXeHOkihCULcVxSuXtYCNAx
+VQmcYJsPeT+Z7LKO53quDkonJTccouqzheFvZBsaQMxP260cWfetTvPav/PVy1Do
+9wxIIrrDqHgq2AQwKbCj1k48gI66EpE0uMJgjHGest/gDccNPo6Bm17s5EhMGnXn
+j1rxUNxXY7XOu0UN2eHw2OEoTKM2YODxcVaa+tsVgS0+8i/MqFZ1tSstMMEiQMqp
+5rL6yDhC8PkwjWiPmJi0KSA9+5VuBkJUS2JAX7oYwlUMRGtEGd4ghLdxkJdsHQZX
+7Jvsz+fdVFD0YiKpcZn5pXLvaXmps0ZcL8w0OOgs1e8lleKw7rXoZDQ7IAN0Y+Jb
+svVfu0Fp8EgMyhO+f9hU7k8IZFV+xjuGcw4eh/0shQV9DcjQCtYD/KqAjo17+Kub
+mmoWgUiLva5g6YnY0l7f9Qa1FJG+DD1wYqSAbVLRJjea/EOSu6ybJLgaG+aoMoqf
+j5+2Kzz7LBb7fymENr4mWQrEdF51Bf1tCC3atiiHLusQUkWvLG8ap1d6zCkdbRcs
+7YPVBsGEqfg=
+=6H6e
 -----END PGP SIGNATURE-----
 
---Sig_/NE2=hjpO2Gbkwv_hXklzt8U--
+--Sig_/oHoZn67ThgNJS3uz0kTFd0I--
