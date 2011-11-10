@@ -1,64 +1,89 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: RE: [PATCH] imsm: fix: Allowed to create 2 volumes with total size
- less	then maximum.
-Date: Thu, 10 Nov 2011 13:30:32 +0000
-Message-ID: <F9123E44003394499FDD2B17C60621D40500CC@IRSMSX101.ger.corp.intel.com>
-References: <20111110105154.19327.77169.stgit@gklab-128-192.igk.intel.com>
+From: William Colls <william.colls@rogers.com>
+Subject: Re: Raid Problem - Unknown File System Type
+Date: Thu, 10 Nov 2011 10:23:44 -0500
+Message-ID: <4EBBEC80.9040709@rogers.com>
+References: <4EBAA68B.6090906@rogers.com> <20111109163933.GA26630@cthulhu.home.robinhill.me.uk> <4EBAB47C.5070002@rogers.com> <4EBACC88.8070403@turmel.org> <4EBADB1E.1070700@rogers.com> <4EBADD07.5030109@turmel.org> <4EBAE90F.2030104@rogers.com> <4EBAF46C.2030001@turmel.org> <4EBB46A5.8080305@rogers.com> <4EBB4B95.6040309@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111110105154.19327.77169.stgit@gklab-128-192.igk.intel.com>
-Content-Language: en-US
+In-Reply-To: <4EBB4B95.6040309@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>
-Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Phil Turmel <philip@turmel.org>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-UHJvYmFibHkgaXQgd291bGQgYmUgbW9yZSBjb252ZW5pZW50IHRvIHNldCB0aGUgb25seSBwb3Nz
-aWJsZSBzaXplIGFuZCBjcmVhdGUgYSB2b2x1bWUgd2l0aCBhIHdhcm5pbmcuDQpNYXJjaW4NCg0K
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXJhaWQtb3duZXJA
-dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC0NCj4gb3duZXJAdmdlci5rZXJuZWwu
-b3JnXSBPbiBCZWhhbGYgT2YgTHVrYXN6IE9ybG93c2tpDQo+IFNlbnQ6IFRodXJzZGF5LCBOb3Zl
-bWJlciAxMCwgMjAxMSAxMTo1MiBBTQ0KPiBUbzogbmVpbGJAc3VzZS5kZQ0KPiBDYzogbGludXgt
-cmFpZEB2Z2VyLmtlcm5lbC5vcmc7IFdpbGxpYW1zLCBEYW4gSg0KPiBTdWJqZWN0OiBbUEFUQ0hd
-IGltc206IGZpeDogQWxsb3dlZCB0byBjcmVhdGUgMiB2b2x1bWVzIHdpdGggdG90YWwgc2l6ZQ0K
-PiBsZXNzIHRoZW4gbWF4aW11bS4NCj4gDQo+IG1kYWRtIGFsbG93cyB0byBjcmVhdGUgc2Vjb25k
-IHZvbHVtZSBvbiB0aGUgc2FtZSBkaXNrIHNldCwgd2hvc2Ugc2l6ZQ0KPiBpcw0KPiBsZXNzIHRo
-ZW4gdGhlIGZyZWUgc3BhY2UgbGVmdCBpbiB0aGUgY29udGFpbmVyICh3aXRoIElNU01fTk9fUExB
-VEZPUk0NCj4gdW5kZWZpbmVkIG9yIHNldCB0byAwKS4gVGhpcyBpcyBhbiBPUk9NIGNvbXBhdGli
-aWxpdHkgaXNzdWUuDQo+IEl0IGlzIGZpeGVkIGJ5IHZlcmlmeWluZyB3aGV0aGVyIElNU01fTk9f
-UExBVEZPUk0gaXMgc2V0IGFuZCBmb3INCj4gdGhlIHNlY29uZCB2b2x1bWUgY3JlYXRpb24gc2Nl
-bmFyaW8sIHJlcXVlc3RlZCBzaXplIGlzIHZlcmlmaWVkIGFnYWluc3QNCj4gcmVtYWluaW5nIGF2
-YWlsYWJsZSBzcGFjZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEx1a2FzeiBPcmxvd3NraSA8bHVr
-YXN6Lm9ybG93c2tpQGludGVsLmNvbT4NCj4gLS0tDQo+ICBzdXBlci1pbnRlbC5jIHwgICAgOSAr
-KysrKysrKysNCj4gIDEgZmlsZXMgY2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9u
-cygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL3N1cGVyLWludGVsLmMgYi9zdXBlci1pbnRlbC5jDQo+
-IGluZGV4IDIxNTY3OWQuLjRlYmVlNzggMTAwNjQ0DQo+IC0tLSBhL3N1cGVyLWludGVsLmMNCj4g
-KysrIGIvc3VwZXItaW50ZWwuYw0KPiBAQCAtNTI3Niw2ICs1Mjc2LDE1IEBAIHN0YXRpYyBpbnQg
-dmFsaWRhdGVfZ2VvbWV0cnlfaW1zbV92b2x1bWUoc3RydWN0DQo+IHN1cGVydHlwZSAqc3QsIGlu
-dCBsZXZlbCwNCj4gIAkJCWkgKz0gZGwtPmV4dGVudF9jbnQ7DQo+IA0KPiAgCW1heHNpemUgPSBt
-ZXJnZV9leHRlbnRzKHN1cGVyLCBpKTsNCj4gKw0KPiArCWlmICghY2hlY2tfZW52KCJJTVNNX05P
-X1BMQVRGT1JNIikgJiYNCj4gKwkJbXBiLT5udW1fcmFpZF9kZXZzID4gMCAmJiBzaXplICYmIHNp
-emUgIT0gbWF4c2l6ZSkgew0KPiArCQlmcHJpbnRmKHN0ZGVyciwgTmFtZSAiOiBhdHRlbXB0aW5n
-IHRvIGNyZWF0ZSBhIHNlY29uZCAiDQo+ICsJCQkidm9sdW1lIHdpdGggc2l6ZSBsZXNzIHRoZW4g
-cmVtYWluaW5nIHNwYWNlLiAiDQo+ICsJCQkiQWJvcnRpbmcuLi5cbiIpOw0KPiArCQlyZXR1cm4g
-MDsNCj4gKwl9DQo+ICsNCj4gIAlpZiAobWF4c2l6ZSA8IHNpemUgfHwgbWF4c2l6ZSA9PSAwKSB7
-DQo+ICAJCWlmICh2ZXJib3NlKQ0KPiAgCQkJZnByaW50ZihzdGRlcnIsIE5hbWUgIjogbm90IGVu
-b3VnaCBzcGFjZSBhZnRlciBtZXJnZQ0KPiAoJWxsdSA8ICVsbHUpXG4iLA0KPiANCj4gLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tDQo+IEludGVsIFRlY2hub2xvZ3kgUG9sYW5kIHNwLiB6IG8uby4NCj4geiBzaWVkemli
-YSB3IEdkYW5za3UNCj4gdWwuIFNsb3dhY2tpZWdvIDE3Mw0KPiA4MC0yOTggR2RhbnNrDQo+IA0K
-PiBTYWQgUmVqb25vd3kgR2RhbnNrIFBvbG5vYyB3IEdkYW5za3UsDQo+IFZJSSBXeWR6aWFsIEdv
-c3BvZGFyY3p5IEtyYWpvd2VnbyBSZWplc3RydSBTYWRvd2VnbywNCj4gbnVtZXIgS1JTIDEwMTg4
-Mg0KPiANCj4gTklQIDk1Ny0wNy01Mi0zMTYNCj4gS2FwaXRhbCB6YWtsYWRvd3kgMjAwLjAwMCB6
-bA0KPiANCj4gVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25m
-aWRlbnRpYWwgbWF0ZXJpYWwgZm9yDQo+IHRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVj
-aXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbg0KPiBieSBvdGhlcnMgaXMgc3Ry
-aWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkDQo+IHJlY2lwaWVu
-dCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuDQo+IE7v
-v73vv73vv73vv73vv71y77+977+9ee+/ve+/ve+/vWLvv71Y77+977+9x6d277+9Xu+/vSneunsu
-bu+/vSvvv73vv73vv73vv71777+977+977+977+977+9e2F577+9HcqH2pnvv70sag3vv73vv71m
-77+977+977+9aO+/ve+/ve+/vXrvv70e77+9d++/ve+/ve+/vQ0KPiANCj4g77+977+977+9ajor
-du+/ve+/ve+/vXfvv71q77+9be+/ve+/ve+/ve+/vQ3vv73vv73vv73vv716Wivvv73vv73vv73v
-v73vv73domoi77+977+9Ie+/vWkNCg==
+On 11/09/2011 10:57 PM, Phil Turmel wrote:
+
+[....]
+
+>>> lsdrv
+>>
+>> **Warning** The following utility(ies) failed to execute:
+>>    sginfo
+>>    pvs
+>>    lvs
+>> Some information may be missing.
+>
+> Missing pvs and lvs means LVM is not installed.  Do you recall if the array was mounted directly?
+
+the array was mounted as follows
+
+mount -t ext3 /dev/md0p1 /opt/share
+
+LVM was not installed on the old system, nor is it installed on the new 
+machine
+
+> [....]
+
+> Please show a hexdump of the first 8k of /dev/md0p1.  That should give us a signature to hunt down.
+
+00000000  fa b8 00 10 8e d0 bc 00  b0 b8 00 00 8e d8 8e c0 
+|................|
+00000010  fb be 00 7c bf 00 06 b9  00 02 f3 a4 ea 21 06 00 
+|...|.........!..|
+00000020  00 be be 07 38 04 75 0b  83 c6 10 81 fe fe 07 75 
+|....8.u........u|
+00000030  f3 eb 16 b4 02 b0 01 bb  00 7c b2 80 8a 74 01 8b 
+|.........|...t..|
+00000040  4c 02 cd 13 ea 00 7c 00  00 eb fe 00 00 00 00 00 
+|L.....|.........|
+00000050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+*
+000001b0  00 00 00 00 00 00 00 00  17 29 06 00 00 00 00 01 
+|.........)......|
+000001c0  01 00 83 fe ff ff 3f 00  00 00 01 14 54 57 00 00 
+|......?.....TW..|
+000001d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+*
+000001f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 aa 
+|..............U.|
+00000200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 
+|................|
+*
+00002000
+
+
+> In the meantime, consider installing some FS support packages:
+>
+> xfsprogs
+> reiserfsprogs
+> jfsutils
+> btrfs-tools
+> udftools
+> lvm2
+>
+>
+> Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+-- 
+I know you believe that you understand what you think I said, but I am 
+not sure that you realize that what you heard was not what I ment.
