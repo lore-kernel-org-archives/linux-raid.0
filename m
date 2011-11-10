@@ -1,72 +1,63 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Raid Problem - Unknown File System Type
-Date: Thu, 10 Nov 2011 08:53:36 +0000
-Message-ID: <20111110085336.GA3639@cthulhu.home.robinhill.me.uk>
-References: <4EBAA68B.6090906@rogers.com>
- <20111109163933.GA26630@cthulhu.home.robinhill.me.uk>
- <4EBAB47C.5070002@rogers.com>
- <4EBACC88.8070403@turmel.org>
- <4EBADB1E.1070700@rogers.com>
- <4EBADD07.5030109@turmel.org>
- <4EBAE90F.2030104@rogers.com>
- <4EBAF46C.2030001@turmel.org>
- <4EBB46A5.8080305@rogers.com>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: RE: [PATCH] kill-subarray: fix, IMSM cannot kill-subarray with
+ unsupported metadata
+Date: Thu, 10 Nov 2011 10:00:33 +0000
+Message-ID: <F9123E44003394499FDD2B17C60621D404EF31@IRSMSX101.ger.corp.intel.com>
+References: <F9123E44003394499FDD2B17C60621D4043755@IRSMSX101.ger.corp.intel.com>
+	<20111031113151.64f566b1@notabene.brown>
+	<F9123E44003394499FDD2B17C60621D4043D80@IRSMSX101.ger.corp.intel.com>
+	<20111101154807.0cf42aa5@notabene.brown>
+	<F9123E44003394499FDD2B17C60621D4044D82@IRSMSX101.ger.corp.intel.com>
+ <20111107123411.3751cd50@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4EBB46A5.8080305@rogers.com>
+In-Reply-To: <20111107123411.3751cd50@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: William Colls <william.colls@rogers.com>
+To: NeilBrown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil,
+I will be back with that subject with a patch (or an explanation ;)).
+Marcin Labun
 
---cWoXeonUoKmBZSoM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Wed Nov 09, 2011 at 10:36:05PM -0500, William Colls wrote:
-
-> [ .... ]
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Monday, November 07, 2011 2:34 AM
+> To: Labun, Marcin
+> Cc: linux-raid@vger.kernel.org; Kwolek, Adam
+> Subject: Re: [PATCH] kill-subarray: fix, IMSM cannot kill-subarray with
+> unsupported metadata
+> 
+> On Thu, 3 Nov 2011 15:23:03 +0000 "Labun, Marcin"
+> <Marcin.Labun@intel.com>
+> wrote:
+> 
+> > Hi Neil,
+> > This is OK.
+> > However, reshape_container (called from Grow_continue_command)
+> ignores info that is chosen by subarray string given by user.
+> > Therefore, all container's arrays are possibly grown (including those
+> > we want to block) So we need to patch Grow_continue, so it performs
+> grow on the array that user requested, not all arrays that are in the
+> reshape process.
+> > Thanks,
+> > Marcin
 > >
-> > OK. So that wasn't it.  GRUB is in the first sector, with a MBR
-> > partition table identifying a single 750G partition starting at
-> > sector 63.
->=20
-> The array was not bootable in its original configuration, so I am=20
-> surprised that GRUB would be on the disk, but the single partition of=20
-> 750G is correct.
->=20
-If the disk is partitioned then did you actually want the array made up
-of the partitions rather than the whole disk? In which case stopping the
-array and recreating using the partitions may be all that's needed:
-    mdadm -S /dev/md0
-    mdadm --create /dev/md0 --level=3D1 --raid-devices=3D2 /dev/sdb1
-    /dev/sdc1 --assume-clean
+> 
+> I don't think I understand...
+> 
+> When continuing a grow the user shouldn't need to specify which
+> subarray needs to be continued.  That information is in the metadata.
+> So use just says "--grow --continue" and mdadm looks at the container
+> to see which arrays are in the middle of a reshape and continues those.
+> If one of them is such that the next array must be reshaped when this
+> one completes, that should just happen automatically too.
+> 
+> ??
+> 
+> NeilBrown
 
-That could cause further damage if that's not how it should be set up,
-so I'd recommend thinking hard before running it!
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---cWoXeonUoKmBZSoM
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iEYEARECAAYFAk67kRAACgkQShxCyD40xBImPgCbBgQMbsVLMZLpPKOvqfuViTbW
-v/0An1w5PXjUWkp1fnbG2qWKuMB6cKli
-=AY8A
------END PGP SIGNATURE-----
-
---cWoXeonUoKmBZSoM--
