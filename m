@@ -1,192 +1,373 @@
-From: William Colls <william.colls@rogers.com>
-Subject: Re: Raid Problem - Unknown File System Type
-Date: Wed, 09 Nov 2011 22:36:05 -0500
-Message-ID: <4EBB46A5.8080305@rogers.com>
-References: <4EBAA68B.6090906@rogers.com> <20111109163933.GA26630@cthulhu.home.robinhill.me.uk> <4EBAB47C.5070002@rogers.com> <4EBACC88.8070403@turmel.org> <4EBADB1E.1070700@rogers.com> <4EBADD07.5030109@turmel.org> <4EBAE90F.2030104@rogers.com> <4EBAF46C.2030001@turmel.org>
+From: Blair Strater <me@r000t.com>
+Subject: Intel RAID problems
+Date: Wed, 9 Nov 2011 23:26:04 -0600
+Message-ID: <CAGUTeF1qgu86YHXUQ3VGtQYM1akzXkrmuybRq-hPn-cM5+TL7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EBAF46C.2030001@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ .... ]
->
-> OK. So that wasn't it.  GRUB is in the first sector, with a MBR parti=
-tion table identifying a single 750G partition starting at sector 63.
+Hello,
 
-The array was not bootable in its original configuration, so I am=20
-surprised that GRUB would be on the disk, but the single partition of=20
-750G is correct.
+In Windows, I created a RAID-5 array on my Intel Matrix Storage
+Manager compatible chipset. Across 5 500GB drives, I made a volume
+named VIDEODATA. It finished initializing on Windows and is currently
+in a Migrate state that will take a total of 36 to complete (so if
+that's the problem I'll just blow up the array and make a new one
+which will only take 12 hours to initialize).
 
-> So something else is wrong.  Maybe your kernel is different, and just=
- doesn't have the module for the FS.  Or one of the BIOSes messes with =
-the apparent disk capacity.  Or something else is interfering.
->
-> Please show:
->
-> cat /proc/filesystems >
+The array works fine in Windows but it will not work in Linux (Ubuntu
+11.10 x64) under mdadm or dmraid. dmraid just creates a mapper that
+claims to have no partitions (an obvious lie), is reported as 2TB when
+the array is actually 1.8TB, and is generally useless.
 
-nodev   sysfs
-nodev   rootfs
-nodev   bdev
-nodev   proc
-nodev   cgroup
-nodev   cpuset
-nodev   tmpfs
-nodev   devtmpfs
-nodev   debugfs
-nodev   securityfs
-odev   sockfs
-nodev   pipefs
-nodev   anon_inodefs
-nodev   inotifyfs
-nodev   devpts
-         ext3
-         ext2
-         ext4
-nodev   ramfs
-nodev   hugetlbfs
-nodev   ecryptfs
-nodev   fuse
-         fuseblk
-nodev   fusectl
-nodev   mqueue
-         vfat
-         iso9660
+I tried to start the array in mdadm (after uninstalling dmraid and
+rebooting) but it thinks the array contains 5 spares. In 'disk
+utility', RAID array /dev/md127 is listed as "Not running, partially
+assembled".
 
-> cat /proc/partitions
+I'm very confused as to how to continue at this point.
 
-major minor  #blocks  name
+Here is some output someone told me the list would want:
 
-    8        0  312571224 sda
-    8        1  306929664 sda1
-    8        2          1 sda2
-    8        5    5639168 sda5
-    8       16  732574584 sdb
-    8       32  732574584 sdc
-    9        0  732574464 md0
-  259        0  732572001 md0p1
-
-> fdisk -l
-
-Disk /dev/sda: 320.1 GB, 320072933376 bytes
-255 heads, 63 sectors/track, 38913 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x000b9f04
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1       38212   306929664   83  Linux
-/dev/sda2           38212       38914     5639169    5  Extended
-/dev/sda5           38212       38914     5639168   82  Linux swap / So=
-laris
-
-Disk /dev/sdb: 750.2 GB, 750156374016 bytes
-255 heads, 63 sectors/track, 91201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x000bb73e
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *           1       91201   732572001   83  Linux
-
-Disk /dev/sdc: 750.2 GB, 750156374016 bytes
-255 heads, 63 sectors/track, 91201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x000bb73e
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1   *           1       91201   732572001   83  Linux
-
-Disk /dev/md0: 750.2 GB, 750156251136 bytes
-255 heads, 63 sectors/track, 91201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x000bb73e
-
-     Device Boot      Start         End      Blocks   Id  System
-/dev/md0p1   *           1       91201   732572001   83  Linux
-
-> lsdrv
-
-**Warning** The following utility(ies) failed to execute:
-   sginfo
-   pvs
-   lvs
-Some information may be missing.
-
-PCI [pata_atiixp] 00:14.1 IDE interface: ATI Technologies Inc SB600 IDE
-  =E2=94=9C=E2=94=80scsi 0:0:0:0 ATA WDC WD3200AAJB-0
-  =E2=94=82  =E2=94=94=E2=94=80sda: [8:0] Empty/Unknown 298.09g
-  =E2=94=82     =E2=94=9C=E2=94=80sda1: [8:1] Empty/Unknown 292.71g
-  =E2=94=82     =E2=94=82  =E2=94=94=E2=94=80Mounted as=20
-/dev/disk/by-uuid/0a85841d-6b71-43ba-8558-3f86dce72359 @ /
-  =E2=94=82     =E2=94=9C=E2=94=80sda2: [8:2] Empty/Unknown 1.00k
-  =E2=94=82     =E2=94=94=E2=94=80sda5: [8:5] Empty/Unknown 5.38g
-  =E2=94=94=E2=94=80scsi 1:x:x:x [Empty]
-PCI [ahci] 00:12.0 SATA controller: ATI Technologies Inc SB600=20
-Non-Raid-5 SATA
-  =E2=94=9C=E2=94=80scsi 2:0:0:0 ATA WDC WD7500AAKS-0
-  =E2=94=82  =E2=94=94=E2=94=80sdb: [8:16] Empty/Unknown 698.64g
-  =E2=94=82     =E2=94=94=E2=94=80md0: [9:0] Empty/Unknown 698.64g
-  =E2=94=82        =E2=94=94=E2=94=80md0p1: [259:0] Empty/Unknown 698.6=
-4g
-  =E2=94=9C=E2=94=80scsi 3:0:0:0 ASUS DRW-24B1ST   a {B2D0CL124266}
-  =E2=94=82  =E2=94=94=E2=94=80sr0: [11:0] Empty/Unknown 1.00g
-  =E2=94=9C=E2=94=80scsi 4:0:0:0 ATA WDC WD7500AAKS-0
-  =E2=94=82  =E2=94=94=E2=94=80sdc: [8:32] Empty/Unknown 698.64g
-  =E2=94=94=E2=94=80scsi 5:x:x:x [Empty]
-Other Block Devices
-  =E2=94=9C=E2=94=80ram0: [1:0] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram1: [1:1] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram2: [1:2] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram3: [1:3] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram4: [1:4] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram5: [1:5] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram6: [1:6] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram7: [1:7] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram8: [1:8] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram9: [1:9] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram10: [1:10] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram11: [1:11] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram12: [1:12] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram13: [1:13] Empty/Unknown 64.00m
-  =E2=94=9C=E2=94=80ram14: [1:14] Empty/Unknown 64.00m
-  =E2=94=94=E2=94=80ram15: [1:15] Empty/Unknown 64.00m
-
-> ... and repeat on the old system if at all possible.  Preferably with=
- one of the disks plugged back into it.
-
-The old system is not available
-=2E
-> a complete dmesg from the old system could also be useful.
->
-> You can get lsdrv from: http://github.com/pturmel/lsdrv
->
-> Phil
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+r000t@editsuite-linux:~$ sudo mdadm -Q /dev/md/imsm0
+/dev/md/imsm0: 0.00KiB (null) 0 devices, 5 spares. Use mdadm --detail
+for more detail.
 
 
---=20
-I know you believe that you understand what you think I said, but I am=20
-not sure that you realize that what you heard was not what I ment.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+r000t@editsuite-linux:~$ sudo mdadm --detail-platform
+       Platform : Intel(R) Matrix Storage Manager
+        Version : 5.6.2.1002
+    RAID Levels : raid0 raid1 raid10 raid5
+    Chunk Sizes : 4k 8k 16k 32k 64k 128k
+      Max Disks : 6
+    Max Volumes : 2
+ I/O Controller : /sys/devices/pci0000:00/0000:00:1f.2
+          Port0 : /dev/sda (GTA400P6G02A8A)
+          Port1 : /dev/sdb (GTA400P6G03HKA)
+          Port2 : /dev/sdc (9QG2M7BR)
+          Port3 : /dev/sdd (9QG2NHD6)
+          Port4 : /dev/sde (9QG2SD30)
+          Port5 : /dev/sdf (6VPFRLN5)
+
+
+
+r000t@editsuite-linux:~$ sudo mdadm -Asvv
+mdadm: looking for devices for further assembly
+mdadm: no RAID superblock on /dev/sdf6
+mdadm: /dev/sdf6 has wrong uuid.
+mdadm: cannot open device /dev/sdf5: Device or resource busy
+mdadm: /dev/sdf5 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf2
+mdadm: /dev/sdf2 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf1
+mdadm: /dev/sdf1 has wrong uuid.
+mdadm: cannot open device /dev/sdf: Device or resource busy
+mdadm: /dev/sdf has wrong uuid.
+mdadm: cannot open device /dev/sde: Device or resource busy
+mdadm: /dev/sde has wrong uuid.
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm: /dev/sdd has wrong uuid.
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm: /dev/sdc has wrong uuid.
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: /dev/sdb has wrong uuid.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: /dev/sda has wrong uuid.
+mdadm: looking for devices for /dev/md/VIDEODATA
+mdadm: no recogniseable superblock on /dev/sdf6
+mdadm/dev/sdf6 is not a container, and one is required.
+mdadm: cannot open device /dev/sdf5: Device or resource busy
+mdadm/dev/sdf5 is not a container, and one is required.
+mdadm: no recogniseable superblock on /dev/sdf2
+mdadm/dev/sdf2 is not a container, and one is required.
+mdadm: no recogniseable superblock on /dev/sdf1
+mdadm/dev/sdf1 is not a container, and one is required.
+mdadm: cannot open device /dev/sdf: Device or resource busy
+mdadm/dev/sdf is not a container, and one is required.
+mdadm: cannot open device /dev/sde: Device or resource busy
+mdadm/dev/sde is not a container, and one is required.
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm/dev/sdd is not a container, and one is required.
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm/dev/sdc is not a container, and one is required.
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm/dev/sdb is not a container, and one is required.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm/dev/sda is not a container, and one is required.
+r000t@editsuite-linux:~$
+
+
+r000t@editsuite-linux:~$ sudo mdadm -E /dev/sda /dev/sdb /dev/sdc
+/dev/sdd /dev/sde
+[sudo] password for r000t:
+/dev/sda:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.04
+    Orig Family : 00000000
+         Family : 07da212a
+     Generation : 00000221
+           UUID : a26d8bae:238c5fe7:ca705d0b:06559902
+       Checksum : 92cd3ca7 correct
+    MPB Sectors : 2
+          Disks : 5
+   RAID Devices : 1
+
+  Disk00 Serial : GTA400P6G02A8A
+          State : active
+             Id : 00000000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+[VIDEODATA]:
+           UUID : 0fde6e5c:22bb0f3f:c8808bf6:0e51ed62
+     RAID Level : 5
+        Members : 5
+          Slots : [UUUUU]
+      This Slot : 0
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 976748808 (465.75 GiB 500.10 GB)
+  Sector Offset : 3840
+    Num Stripes : 7630848
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : general migration
+      Map State : normal <-- normal
+     Checkpoint : 7238714 (0)
+    Dirty State : clean
+
+  Disk01 Serial : GTA400P6G03HKA
+          State : active
+             Id : 00010000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk02 Serial : 9QG2M7BR
+          State : active
+             Id : 00020000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk03 Serial : 9QG2NHD6
+          State : active
+             Id : 00030000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk04 Serial : 9QG2SD30
+          State : active
+             Id : 00040000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+/dev/sdb:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.04
+    Orig Family : 00000000
+         Family : 07da212a
+     Generation : 00000221
+           UUID : a26d8bae:238c5fe7:ca705d0b:06559902
+       Checksum : 92cd3ca7 correct
+    MPB Sectors : 2
+          Disks : 5
+   RAID Devices : 1
+
+  Disk01 Serial : GTA400P6G03HKA
+          State : active
+             Id : 00010000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+[VIDEODATA]:
+           UUID : 0fde6e5c:22bb0f3f:c8808bf6:0e51ed62
+     RAID Level : 5
+        Members : 5
+          Slots : [UUUUU]
+      This Slot : 1
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 976748808 (465.75 GiB 500.10 GB)
+  Sector Offset : 3840
+    Num Stripes : 7630848
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : general migration
+      Map State : normal <-- normal
+     Checkpoint : 7238714 (0)
+    Dirty State : clean
+
+  Disk00 Serial : GTA400P6G02A8A
+          State : active
+             Id : 00000000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk02 Serial : 9QG2M7BR
+          State : active
+             Id : 00020000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk03 Serial : 9QG2NHD6
+          State : active
+             Id : 00030000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk04 Serial : 9QG2SD30
+          State : active
+             Id : 00040000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+/dev/sdc:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.04
+    Orig Family : 00000000
+         Family : 07da212a
+     Generation : 00000221
+           UUID : a26d8bae:238c5fe7:ca705d0b:06559902
+       Checksum : 92cd3ca7 correct
+    MPB Sectors : 2
+          Disks : 5
+   RAID Devices : 1
+
+  Disk02 Serial : 9QG2M7BR
+          State : active
+             Id : 00020000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+[VIDEODATA]:
+           UUID : 0fde6e5c:22bb0f3f:c8808bf6:0e51ed62
+     RAID Level : 5
+        Members : 5
+          Slots : [UUUUU]
+      This Slot : 2
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 976748808 (465.75 GiB 500.10 GB)
+  Sector Offset : 3840
+    Num Stripes : 7630848
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : general migration
+      Map State : normal <-- normal
+     Checkpoint : 7238714 (0)
+    Dirty State : clean
+
+  Disk00 Serial : GTA400P6G02A8A
+          State : active
+             Id : 00000000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk01 Serial : GTA400P6G03HKA
+          State : active
+             Id : 00010000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk03 Serial : 9QG2NHD6
+          State : active
+             Id : 00030000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk04 Serial : 9QG2SD30
+          State : active
+             Id : 00040000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+/dev/sdd:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.04
+    Orig Family : 00000000
+         Family : 07da212a
+     Generation : 00000221
+           UUID : a26d8bae:238c5fe7:ca705d0b:06559902
+       Checksum : 92cd3ca7 correct
+    MPB Sectors : 2
+          Disks : 5
+   RAID Devices : 1
+
+  Disk03 Serial : 9QG2NHD6
+          State : active
+             Id : 00030000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+[VIDEODATA]:
+           UUID : 0fde6e5c:22bb0f3f:c8808bf6:0e51ed62
+     RAID Level : 5
+        Members : 5
+          Slots : [UUUUU]
+      This Slot : 3
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 976748808 (465.75 GiB 500.10 GB)
+  Sector Offset : 3840
+    Num Stripes : 7630848
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : general migration
+      Map State : normal <-- normal
+     Checkpoint : 7238714 (0)
+    Dirty State : clean
+
+  Disk00 Serial : GTA400P6G02A8A
+          State : active
+             Id : 00000000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk01 Serial : GTA400P6G03HKA
+          State : active
+             Id : 00010000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk02 Serial : 9QG2M7BR
+          State : active
+             Id : 00020000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk04 Serial : 9QG2SD30
+          State : active
+             Id : 00040000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+/dev/sde:
+          Magic : Intel Raid ISM Cfg Sig.
+        Version : 1.2.04
+    Orig Family : 00000000
+         Family : 07da212a
+     Generation : 00000221
+           UUID : a26d8bae:238c5fe7:ca705d0b:06559902
+       Checksum : 92cd3ca7 correct
+    MPB Sectors : 2
+          Disks : 5
+   RAID Devices : 1
+
+  Disk04 Serial : 9QG2SD30
+          State : active
+             Id : 00040000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+[VIDEODATA]:
+           UUID : 0fde6e5c:22bb0f3f:c8808bf6:0e51ed62
+     RAID Level : 5
+        Members : 5
+          Slots : [UUUUU]
+      This Slot : 4
+     Array Size : 3906994176 (1863.00 GiB 2000.38 GB)
+   Per Dev Size : 976748808 (465.75 GiB 500.10 GB)
+  Sector Offset : 3840
+    Num Stripes : 7630848
+     Chunk Size : 64 KiB
+       Reserved : 0
+  Migrate State : general migration
+      Map State : normal <-- normal
+     Checkpoint : 7238714 (0)
+    Dirty State : clean
+
+  Disk00 Serial : GTA400P6G02A8A
+          State : active
+             Id : 00000000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk01 Serial : GTA400P6G03HKA
+          State : active
+             Id : 00010000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk02 Serial : 9QG2M7BR
+          State : active
+             Id : 00020000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+  Disk03 Serial : 9QG2NHD6
+          State : active
+             Id : 00030000
+    Usable Size : 976768654 (465.76 GiB 500.11 GB)
+
+Thanks in advance for any help you guys may be able to provide.
