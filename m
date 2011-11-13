@@ -1,77 +1,55 @@
-From: Chris Purves <chris@northfolk.ca>
-Subject: Re: unable to recover RAID 5 due to bad block [solved]
-Date: Thu, 10 Nov 2011 20:15:20 -0400
-Message-ID: <4EBC6918.9010405@northfolk.ca>
-References: <4EBBF60F.4030606@northfolk.ca> <20111110172003.Horde.byVZeZk8pphOu-mzTQXxKL8@cakebox.homeunix.net> <4EBC00E6.3030404@northfolk.ca> <20111111071142.383f10f0@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Travis Brown <teb@jetcom.org>
+Subject: raid 5 to raid 6 reshape gone bad
+Date: Sat, 12 Nov 2011 21:56:56 -0500
+Message-ID: <E427BB45-7AA7-422C-AAFE-9778286BF64C@jetcom.org>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111111071142.383f10f0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: NeilBrown <neilb@suse.de>, =?ISO-8859-1?Q?Alexander_K=FChn?= <alexander.kuehn@nagilum.de>, jeromepoulin@gmail.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2011-11-10 16:11, NeilBrown wrote:
-> On Thu, 10 Nov 2011 12:50:46 -0400 Chris Purves<chris@northfolk.ca>  =
-wrote:
->
->> On 2011-11-10 12:20, Alexander K=FChn wrote:
->>> ddrescue to the rescue!
->>> Get a another new disk, then ddrescue the one with the read error t=
-o the new disk.
->>> Assemble the array using the new disk instead of the one with the r=
-ead error.
->>> You will loose the blocks that can't be read of course.
->>> And in the future do run raid check/scrubbing at regular intervals.=
- ;)
->>
->> I have tried this already.  After cloning the disk with errors, I re=
-placed it with the clone and tried to re-start the array using
->>
->> mdadm --assemble --force /dev/md1
->>
->> mdadm assigned the new disk as a spare and said there were only thre=
-e disks to start the array and so couldn't start it.
->>
->> After I clone the disk with the error, how precisely should I re-sta=
-rt the array?
->>
->>
->
-> This should have worked.  So presumably some unstated requirement was=
-n't met.
->
-> Give details.  Names of devices, sizes of devices, "mdadm --examine" =
-of
-> device.  Are you using partitions or whole disk ....
->
-> The best assemble command would be:
->    mdadm --assemble /dev/md1 -vv ...list...of.devices..you...want.it.=
-to.include.
->
->
-> NeilBrown
+I was reshaping my 5 drive raid 5 with spare to a raid 6 array when the drive I was using for my backup went offline.  If that's not murphy's law, I don't know what is.  The array is still up and usable, but I'm afraid to reboot or doing anything to it, really.  Suggestions on getting this thing back to usable are very welcome. 
 
-After ddrescue finished, I unplugged the disk with the bad sector (all =
-4 KB worth), and ran mdadm --assemble --force.
+Thanks,
+Travis
 
-This time the array started up with four disks (three old, one new).  I=
-'m not sure why it didn't work the previous time; I must have done some=
-thing differently.
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md126 : active raid6 sde3[0] sdf3[3] sdb3[1] sdd3[4] sdc3[2]
+      5856728064 blocks super 0.91 level 6, 512k chunk, algorithm 18 [5/4] [UUUU_]
+      [>....................]  reshape =  0.9% (19267584/1952242688) finish=623878.3min speed=51K/sec
 
-In any case, it's working now.  Thanks to everyone for your assistance.=
-  It was a big help knowing that replacing the damaged disk with a clon=
-e should work.  It saved me a lot of hassle restoring from backup.  Now=
- I just need to add a fifth disk and I'll be back to normal.
+/dev/md126:
+        Version : 0.91
+  Creation Time : Wed Nov 10 20:19:03 2010
+     Raid Level : raid6
+     Array Size : 5856728064 (5585.41 GiB 5997.29 GB)
+  Used Dev Size : 1952242688 (1861.80 GiB 1999.10 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 126
+    Persistence : Superblock is persistent
 
+    Update Time : Sat Nov 12 21:55:46 2011
+          State : clean, degraded, recovering
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 1
 
---=20
-Chris Purves
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+         Layout : left-symmetric-6
+     Chunk Size : 512K
+
+ Reshape Status : 0% complete
+     New Layout : left-symmetric
+
+           UUID : 3fd8b303:7727aa3b:c5d110f2:f9137e1d
+         Events : 0.124051
+
+    Number   Major   Minor   RaidDevice State
+       0       8       67        0      active sync   /dev/sde3
+       1       8       19        1      active sync   /dev/sdb3
+       2       8       35        2      active sync   /dev/sdc3
+       3       8       83        3      active sync   /dev/sdf3
+       4       8       51        4      spare rebuilding   /dev/sdd3
