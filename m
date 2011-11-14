@@ -1,82 +1,423 @@
-From: William Colls <william.colls@rogers.com>
-Subject: Re: Raid Problem - Unknown File System Type
-Date: Mon, 14 Nov 2011 10:01:31 -0500
-Message-ID: <4EC12D4B.3050407@rogers.com>
-References: <4EBAA68B.6090906@rogers.com> <20111109163933.GA26630@cthulhu.home.robinhill.me.uk> <4EBAB47C.5070002@rogers.com> <4EBACC88.8070403@turmel.org> <4EBADB1E.1070700@rogers.com> <4EBADD07.5030109@turmel.org> <4EBAE90F.2030104@rogers.com> <4EBAF46C.2030001@turmel.org> <4EBB46A5.8080305@rogers.com> <4EBB4B95.6040309@turmel.org> <4EBBEC80.9040709@rogers.com> <4EBBF26B.1090309@turmel.org> <4EBBF7E3.9030803@yuiop.co.uk> <4EBBFC9A.4030103@turmel.org>
+From: linbloke <linbloke@fastmail.fm>
+Subject: Re: possible bug - bitmap dirty pages status
+Date: Tue, 15 Nov 2011 10:11:51 +1100
+Message-ID: <4EC1A037.4080406@fastmail.fm>
+References: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com> <CAGqmV7pjvEHaNWjuZzt+tSsUJOM28ZqDY6qUROzz8GtMGCxDow@mail.gmail.com> <CAECXXi5eo3J8PPXP5xTm-PrqazC_fkwNnjtiAGM4NtsGBMahHA@mail.gmail.com> <4E5E2F7D.1010306@anonymous.org.uk> <CAGqmV7p=oM_TJoBC-=he3TnJwcmbZBekq14yjiba_p90RC+0BQ@mail.gmail.com> <CAECXXi7Ui6T2kti1JjA6Txft7LXR_sM1QbUkmgXj92kSXPrfCg@mail.gmail.com> <CAGqmV7qKjV1QL_GgxGqmLL2BSui+HVxRo=82KHuW0oLONH1D_A@mail.gmail.com> <20110901154022.45f54657@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EBBFC9A.4030103@turmel.org>
+In-Reply-To: <20110901154022.45f54657@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phil Turmel <philip@turmel.org>
-Cc: John Robinson <john.robinson@yuiop.co.uk>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: CoolCold <coolthecold@gmail.com>, Paul Clements <paul.clements@us.sios.com>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-First let ma apologise for the long silence. I wanted to take a "minute" 
-to think carefully about how to proceed to maximize my chances of 
-getting a good out come.
-
-Having said that, the outcome was all that I could have hoped for and 
-more. I have recovered the array, and all the data seems to be complete 
-and in tact. Thank you all most sincerely for you thoughtful and helpful 
-replies. Without your interest, I would have lost everything. Again 
-thank you for all your assistance. Once again, the open source community 
-shows itself to be the greatest place to be in the computer world, and I 
-feel privilaged to be able to stand at the edge, and try to be part of it.
-
-Thanks all.
-
-On 11/10/2011 11:32 AM, Phil Turmel wrote:
-> On 11/10/2011 11:12 AM, John Robinson wrote:
->> On 10/11/2011 15:48, Phil Turmel wrote:
->>> On 11/10/2011 10:23 AM, William Colls wrote: [...]
->>>> the array was mounted as follows
+On 1/09/11 3:40 PM, NeilBrown wrote:
+> On Thu, 1 Sep 2011 00:16:36 +0400 CoolCold<coolthecold@gmail.com>  wrote:
+>
+>> On Wed, Aug 31, 2011 at 6:08 PM, Paul Clements
+>> <paul.clements@us.sios.com>  wrote:
+>>> On Wed, Aug 31, 2011 at 9:16 AM, CoolCold<coolthecold@gmail.com>  wrote:
+>>>
+>>>>           Bitmap : 44054 bits (chunks), 189 dirty (0.4%)
 >>>>
->>>> mount -t ext3 /dev/md0p1 /opt/share
->>>>
->>>> LVM was not installed on the old system, nor is it installed on
->>>> the new machine
->> [...]
->>> If none of this works, I'm out of ideas.  You'd probably want to
->>> ask for more help on the linux-ext4 mailing list.
+>>>> And 16/22 lasts for 4 days.
+>>> So if you force another resync, does it change/clear up?
+>>>
+>>> If you unmount/stop all activity does it change?
+>> Well, this server is in production now, may be i'll be able to do
+>> array stop/start later..right now i've set "cat /proc/mdstat" every
+>> minute, and bitmap examine every minute, will see later is it changing
+>> or not.
 >>
->> The only thing that occurs to me is the possibility that both the md
->> device was made from partitions, not whole drives, and the md device
->> was itself partitioned. I wouldn't know quite how to go about
->> checking though.
+> I spent altogether too long staring at the code and I can see various things
+> that could be usefully tidied but but nothing that really explains what you
+> have.
 >
-> Great call!  I just looked back at the hexdump, and sure enough, there's a nested MBR there.  It's missing a bootloader, which threw me off, but there is a single partition defined.
+> If there was no write activity to the array at all I can just see how that
+> last bits to be set might not get cleared, but as soon as another write
+> happened all those old bits would get cleared pretty quickly.  And it seems
+> unlikely that there have been no writes for over 4 days (???).
 >
-> William, you can thank John.
+> I don't think having these bits here is harmful and it would be easy to get
+> rid of them by using "mdadm --grow" to remove and then re-add the bitmap,
+> but I wish I knew what caused it...
 >
-> Here's what you need to do:
+> I clean up the little issues I found in mainline and hope there isn't a
+> larger problem luking behind all this..
 >
-> mdadm --stop /dev/md0
-> mdadm --zero-superblock /dev/sd[bc]
->
-> partx -a /dev/sdb
-> partx -a /dev/sdc
->
-> cat /proc/partitions
-> (to verify that /dev/sda1 and /dev/sdb1 are present)
->
-> mdadm --create --assume-clean /dev/md0 --level=1 -n 2 /dev/sda1 /dev/sdb1
->
-> cat /proc/partitions
-> (to verify that /dev/md0p1 is present)
->
-> mount ....
->
-> If you want to minimize the chance of mdadm getting confused again, you probably want v1.x metadata.  (But not just yet.  Get your data back, first.)  It includes offset information that avoids the ambiguity when v0.90 metadata is on the last partition of a disk.  Otherwise, you need to set up mdadm.conf to exclude /dev/sdb and /dev/sdc from consideration, and make sure that ends up in your initramfs.
->
-> Also, your partitions, both the outer and the nested, start with sector 63.  This is bad for performance on modern drives, as most big ones have physical 4k sectors.  After you make your backup, I suggest you recreate your entire setup from scratch, making sure alignment is appropriate, and switching to v1.1 or v1.2 metadata.
->
-> Phil
->
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message tomajordomo@vger.kernel.org
+> More majordomo info athttp://vger.kernel.org/majordomo-info.html
+Hello,
+
+Sorry for bumping this thread but I couldn't find any resolution 
+post-dated. I'm seeing the same thing with SLES11 SP1. No matter how 
+long I wait or how often I sync(8), the number of dirty bitmap pages 
+does not reduce to zero - 52 has become the new zero for this array 
+(md101). I've tried writing more data to prod the sync  - the result was 
+an increase in the dirty page count (53/465) and then return to the base 
+count (52/465) after 5seconds. I haven't tried removing the bitmaps and 
+am a little reluctant to unless this would help to diagnose the bug.
+
+This array is part of a nested array set as mentioned in another mail 
+list thread with the Subject: Rotating RAID 1. Another thing happening 
+with this array is that the top array (md106), the one with the 
+filesystem on it, has the file system exported via NFS to a dozen or so 
+other systems. There has been no activity on this array for at least a 
+couple of minutes.
+
+I certainly don't feel comfortable that I have created a mirror of the 
+component devices. Can I expect the devices to actually be in sync at 
+this point?
+
+Thanks,
+
+Josh
+
+wynyard:~ # mdadm -V
+mdadm - v3.0.3 - 22nd October 2009
+wynyard:~ # uname -a
+Linux wynyard 2.6.32.36-0.5-xen #1 SMP 2011-04-14 10:12:31 +0200 x86_64 
+x86_64 x86_64 GNU/Linux
+wynyard:~ #
 
 
--- 
-I know you believe that you understand what you think I said, but I am 
-not sure that you realize that what you heard was not what I meant.
+
+Info with disks A and B connected:
+======================
+
+wynyard:~ # cat /proc/mdstat
+Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4] [linear]
+md106 : active raid1 md105[0]
+       1948836134 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md105 : active raid1 md104[0]
+       1948836270 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md104 : active raid1 md103[0]
+       1948836406 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md103 : active raid1 md102[0]
+       1948836542 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md102 : active raid1 md101[0]
+       1948836678 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md101 : active raid1 md100[0]
+       1948836814 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md100 : active raid1 sdm1[0] sdl1[1]
+       1948836950 blocks super 1.2 [2/2] [UU]
+       bitmap: 2/465 pages [8KB], 2048KB chunk
+
+wynyard:~ # mdadm -Dvv /dev/md100
+/dev/md100:
+         Version : 1.02
+   Creation Time : Thu Oct 27 13:38:09 2011
+      Raid Level : raid1
+      Array Size : 1948836950 (1858.56 GiB 1995.61 GB)
+   Used Dev Size : 1948836950 (1858.56 GiB 1995.61 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Mon Nov 14 16:39:56 2011
+           State : active
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : wynyard:h001r006  (local to host wynyard)
+            UUID : 0996cae3:fc585bc5:64443402:bf1bef33
+          Events : 8694
+
+     Number   Major   Minor   RaidDevice State
+        0       8      193        0      active sync   /dev/sdm1
+        1       8      177        1      active sync   /dev/sdl1
+
+wynyard:~ # mdadm -Evv /dev/sd[ml]1
+/dev/sdl1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 0996cae3:fc585bc5:64443402:bf1bef33
+            Name : wynyard:h001r006  (local to host wynyard)
+   Creation Time : Thu Oct 27 13:38:09 2011
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 3897673900 (1858.56 GiB 1995.61 GB)
+      Array Size : 3897673900 (1858.56 GiB 1995.61 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 5d5bf5ef:e17923ec:0e6e683a:e27f4470
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Mon Nov 14 16:52:12 2011
+        Checksum : 987bd49d - correct
+          Events : 8694
+
+
+    Device Role : Active device 1
+    Array State : AA ('A' == active, '.' == missing)
+/dev/sdm1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 0996cae3:fc585bc5:64443402:bf1bef33
+            Name : wynyard:h001r006  (local to host wynyard)
+   Creation Time : Thu Oct 27 13:38:09 2011
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 3897673900 (1858.56 GiB 1995.61 GB)
+      Array Size : 3897673900 (1858.56 GiB 1995.61 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 59bc1fed:426ef5e6:cf840334:4e95eb5b
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Mon Nov 14 16:52:12 2011
+        Checksum : 75ba5626 - correct
+          Events : 8694
+
+
+    Device Role : Active device 0
+    Array State : AA ('A' == active, '.' == missing)
+
+Disk B failed and removed with mdadm and physically. Disk C inserted, 
+partition table written and then added to array:
+======================================
+Nov 14 17:08:50 wynyard kernel: [1122597.943932] raid1: Disk failure on 
+sdl1, disabling device.
+Nov 14 17:08:50 wynyard kernel: [1122597.943934] raid1: Operation 
+continuing on 1 devices.
+Nov 14 17:08:50 wynyard kernel: [1122597.989996] RAID1 conf printout:
+Nov 14 17:08:50 wynyard kernel: [1122597.989999]  --- wd:1 rd:2
+Nov 14 17:08:50 wynyard kernel: [1122597.990002]  disk 0, wo:0, o:1, 
+dev:sdm1
+Nov 14 17:08:50 wynyard kernel: [1122597.990005]  disk 1, wo:1, o:0, 
+dev:sdl1
+Nov 14 17:08:50 wynyard kernel: [1122598.008913] RAID1 conf printout:
+Nov 14 17:08:50 wynyard kernel: [1122598.008917]  --- wd:1 rd:2
+Nov 14 17:08:50 wynyard kernel: [1122598.008921]  disk 0, wo:0, o:1, 
+dev:sdm1
+Nov 14 17:08:50 wynyard kernel: [1122598.008949] md: unbind<sdl1>
+Nov 14 17:08:50 wynyard kernel: [1122598.056909] md: export_rdev(sdl1)
+Nov 14 17:09:43 wynyard kernel: [1122651.587010] 3w-9xxx: scsi6: AEN: 
+WARNING (0x04:0x0019): Drive removed:port=8.
+Nov 14 17:10:03 wynyard kernel: [1122671.723726] 3w-9xxx: scsi6: AEN: 
+ERROR (0x04:0x001E): Unit inoperable:unit=8.
+Nov 14 17:11:33 wynyard kernel: [1122761.729297] 3w-9xxx: scsi6: AEN: 
+INFO (0x04:0x001A): Drive inserted:port=8.
+Nov 14 17:13:44 wynyard kernel: [1122892.474990] 3w-9xxx: scsi6: AEN: 
+INFO (0x04:0x001F): Unit operational:unit=8.
+Nov 14 17:19:36 wynyard kernel: [1123244.535530]  sdl: unknown partition 
+table
+Nov 14 17:19:40 wynyard kernel: [1123248.384154]  sdl: sdl1
+Nov 14 17:24:18 wynyard kernel: [1123526.292861] md: bind<sdl1>
+Nov 14 17:24:19 wynyard kernel: [1123526.904213] RAID1 conf printout:
+Nov 14 17:24:19 wynyard kernel: [1123526.904217]  --- wd:1 rd:2
+Nov 14 17:24:19 wynyard kernel: [1123526.904221]  disk 0, wo:0, o:1, 
+dev:md100
+Nov 14 17:24:19 wynyard kernel: [1123526.904224]  disk 1, wo:1, o:1, 
+dev:sdl1
+Nov 14 17:24:19 wynyard kernel: [1123526.904362] md: recovery of RAID 
+array md101
+Nov 14 17:24:19 wynyard kernel: [1123526.904367] md: minimum 
+_guaranteed_  speed: 1000 KB/sec/disk.
+Nov 14 17:24:19 wynyard kernel: [1123526.904370] md: using maximum 
+available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Nov 14 17:24:19 wynyard kernel: [1123526.904376] md: using 128k window, 
+over a total of 1948836814 blocks.
+Nov 15 00:32:07 wynyard kernel: [1149195.478735] md: md101: recovery done.
+Nov 15 00:32:07 wynyard kernel: [1149195.599964] RAID1 conf printout:
+Nov 15 00:32:07 wynyard kernel: [1149195.599967]  --- wd:2 rd:2
+Nov 15 00:32:07 wynyard kernel: [1149195.599971]  disk 0, wo:0, o:1, 
+dev:md100
+Nov 15 00:32:07 wynyard kernel: [1149195.599975]  disk 1, wo:0, o:1, 
+dev:sdl1
+
+Write data to filesystem on md106. Then idle:
+
+wynyard:~ # iostat 5 /dev/md106 | grep md106
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+md106           156.35         0.05      1249.25      54878 1473980720
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+md106             0.00         0.00         0.00          0          0
+
+
+Info with disks A and C connected:
+======================
+wynyard:~ # cat /proc/mdstat
+Personalities : [raid1] [raid0] [raid10] [raid6] [raid5] [raid4] [linear]
+md106 : active raid1 md105[0]
+       1948836134 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md105 : active raid1 md104[0]
+       1948836270 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md104 : active raid1 md103[0]
+       1948836406 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md103 : active raid1 md102[0]
+       1948836542 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md102 : active raid1 md101[0]
+       1948836678 blocks super 1.2 [2/1] [U_]
+       bitmap: 465/465 pages [1860KB], 2048KB chunk
+
+md101 : active raid1 sdl1[2] md100[0]
+       1948836814 blocks super 1.2 [2/2] [UU]
+       bitmap: 52/465 pages [208KB], 2048KB chunk
+
+md100 : active raid1 sdm1[0]
+       1948836950 blocks super 1.2 [2/1] [U_]
+       bitmap: 26/465 pages [104KB], 2048KB chunk
+
+
+wynyard:~ # mdadm -Dvv /dev/md101
+/dev/md101:
+         Version : 1.02
+   Creation Time : Thu Oct 27 13:39:18 2011
+      Raid Level : raid1
+      Array Size : 1948836814 (1858.56 GiB 1995.61 GB)
+   Used Dev Size : 1948836814 (1858.56 GiB 1995.61 GB)
+    Raid Devices : 2
+   Total Devices : 2
+     Persistence : Superblock is persistent
+
+   Intent Bitmap : Internal
+
+     Update Time : Tue Nov 15 09:07:25 2011
+           State : active
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+
+            Name : wynyard:h001r007  (local to host wynyard)
+            UUID : 8846dfde:ab7e2902:4a37165d:c7269466
+          Events : 53486
+
+     Number   Major   Minor   RaidDevice State
+        0       9      100        0      active sync   /dev/md100
+        2       8      177        1      active sync   /dev/sdl1
+
+wynyard:~ # mdadm -Evv /dev/md100 /dev/sdl1
+/dev/md100:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 8846dfde:ab7e2902:4a37165d:c7269466
+            Name : wynyard:h001r007  (local to host wynyard)
+   Creation Time : Thu Oct 27 13:39:18 2011
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 3897673628 (1858.56 GiB 1995.61 GB)
+      Array Size : 3897673628 (1858.56 GiB 1995.61 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : d806cfd5:d641043e:70b32b6b:082c730b
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Tue Nov 15 09:07:48 2011
+        Checksum : 628f9f77 - correct
+          Events : 53486
+
+
+    Device Role : Active device 0
+    Array State : AA ('A' == active, '.' == missing)
+/dev/sdl1:
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x1
+      Array UUID : 8846dfde:ab7e2902:4a37165d:c7269466
+            Name : wynyard:h001r007  (local to host wynyard)
+   Creation Time : Thu Oct 27 13:39:18 2011
+      Raid Level : raid1
+    Raid Devices : 2
+
+  Avail Dev Size : 3897673900 (1858.56 GiB 1995.61 GB)
+      Array Size : 3897673628 (1858.56 GiB 1995.61 GB)
+   Used Dev Size : 3897673628 (1858.56 GiB 1995.61 GB)
+     Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+     Device UUID : 4689d883:19bbaa1f:584c89fc:7fafd176
+
+Internal Bitmap : 8 sectors from superblock
+     Update Time : Tue Nov 15 09:07:48 2011
+        Checksum : eefbb899 - correct
+          Events : 53486
+
+
+    Device Role : spare
+    Array State : AA ('A' == active, '.' == missing)
+
+wynyard:~ # mdadm -vv --examine-bitmap /dev/md100 /dev/sdl1
+         Filename : /dev/md100
+            Magic : 6d746962
+          Version : 4
+             UUID : 8846dfde:ab7e2902:4a37165d:c7269466
+           Events : 53486
+   Events Cleared : 0
+            State : OK
+        Chunksize : 2 MB
+           Daemon : 5s flush period
+       Write Mode : Normal
+        Sync Size : 1948836814 (1858.56 GiB 1995.61 GB)
+           Bitmap : 951581 bits (chunks), 29902 dirty (3.1%)
+         Filename : /dev/sdl1
+            Magic : 6d746962
+          Version : 4
+             UUID : 8846dfde:ab7e2902:4a37165d:c7269466
+           Events : 53486
+   Events Cleared : 0
+            State : OK
+        Chunksize : 2 MB
+           Daemon : 5s flush period
+       Write Mode : Normal
+        Sync Size : 1948836814 (1858.56 GiB 1995.61 GB)
+           Bitmap : 951581 bits (chunks), 29902 dirty (3.1%)
+
+
