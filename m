@@ -1,138 +1,241 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: fix: Allowed to create 2 volumes with total size
- less	then maximum.
-Date: Mon, 14 Nov 2011 16:43:11 +1100
-Message-ID: <20111114164311.2df2f269@notabene.brown>
-References: <20111110105154.19327.77169.stgit@gklab-128-192.igk.intel.com>
-	<F9123E44003394499FDD2B17C60621D40500CC@IRSMSX101.ger.corp.intel.com>
+Subject: Re: raid 5 to raid 6 reshape gone bad
+Date: Mon, 14 Nov 2011 17:07:23 +1100
+Message-ID: <20111114170723.13111cc8@notabene.brown>
+References: <E427BB45-7AA7-422C-AAFE-9778286BF64C@jetcom.org>
+	<20111113143504.7b1f75b1@notabene.brown>
+	<30AB4A6F-B40A-43BB-80E5-FDAC2AE2FF97@jetcom.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/nTzEogdXk8EqVYlkPCO_69R"; protocol="application/pgp-signature"
+ boundary="Sig_/s7llxf2PgdU7Xdd70aYU8jk"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F9123E44003394499FDD2B17C60621D40500CC@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <30AB4A6F-B40A-43BB-80E5-FDAC2AE2FF97@jetcom.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: "Orlowski, Lukasz" <lukasz.orlowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: Travis Brown <teb@jetcom.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/nTzEogdXk8EqVYlkPCO_69R
-Content-Type: text/plain; charset=utf-8
+--Sig_/s7llxf2PgdU7Xdd70aYU8jk
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 10 Nov 2011 13:30:32 +0000 "Labun, Marcin" <Marcin.Labun@intel.com>
-wrote:
+On Sun, 13 Nov 2011 09:53:52 -0500 Travis Brown <teb@jetcom.org> wrote:
 
-> Probably it would be more convenient to set the only possible size and cr=
-eate a volume with a warning.
-> Marcin
+> So I have the RAID rebuilding and the the output of /proc/mdstat look ok =
+(I think):
+>=20
+> root@bravo:~# cat /proc/mdstat=20
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [rai=
+d4] [raid10]=20
+> md126 : active raid6 sde3[0] sdd3[4] sdf3[3] sdb3[1]
+>       5856728064 blocks super 0.91 level 6, 512k chunk, algorithm 18 [5/3=
+] [UU_U_]
+>       [>....................]  reshape =3D  2.0% (39448064/1952242688) fi=
+nish=3D7375.5min speed=3D4321K/sec
+>      =20
+> md11 : active raid6 sde2[0] sdb2[1] sdd2[4] sdc2[2] sdf2[3]
+>       3180672 blocks level 6, 64k chunk, algorithm 2 [5/5] [UUUUU]
+>      =20
+> md10 : active raid1 sde1[0] sdb1[1] sdd1[4] sdf1[3] sdc1[2]
+>       208704 blocks [5/5] [UUUUU]
+>      =20
+> unused devices: <none>
+>=20
+>=20
+>=20
+> But mdadm --detail /dev/md126 now shows I have a drive removed:
 
-I disagree.  This code only applies if the user has explicitly requested a
-particular size.  If that request cannot be fulfilled, it shouldn't be
-attempted at all.
+That is unfortunate.  It looks like sdc3 didn't make it back into the array
+when you re-assembled it.  I wonder why not?   Any kernel logs from when you
+started the array.
 
-I have applied the original patch.
+Your RAID6 is now double-degraded so another failure would be bad.  Should =
+be
+unlikely though.
+As soon as the reshape finished you need to see about adding sdc3 back in to
+the array so that it rebuilds.  The rebuild will be a lot faster than the
+reshape is.
 
-Thanks,
+Best thing to do now is to just leave it reshaping.  However if there are
+some really important files that you could conveniently back up, now might =
+be
+a good time, just in case.
+
 NeilBrown
 
 
->=20
->=20
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Lukasz Orlowski
-> > Sent: Thursday, November 10, 2011 11:52 AM
-> > To: neilb@suse.de
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J
-> > Subject: [PATCH] imsm: fix: Allowed to create 2 volumes with total size
-> > less then maximum.
-> >=20
-> > mdadm allows to create second volume on the same disk set, whose size
-> > is
-> > less then the free space left in the container (with IMSM_NO_PLATFORM
-> > undefined or set to 0). This is an OROM compatibility issue.
-> > It is fixed by verifying whether IMSM_NO_PLATFORM is set and for
-> > the second volume creation scenario, requested size is verified against
-> > remaining available space.
-> >=20
-> > Signed-off-by: Lukasz Orlowski <lukasz.orlowski@intel.com>
-> > ---
-> >  super-intel.c |    9 +++++++++
-> >  1 files changed, 9 insertions(+), 0 deletions(-)
-> >=20
-> > diff --git a/super-intel.c b/super-intel.c
-> > index 215679d..4ebee78 100644
-> > --- a/super-intel.c
-> > +++ b/super-intel.c
-> > @@ -5276,6 +5276,15 @@ static int validate_geometry_imsm_volume(struct
-> > supertype *st, int level,
-> >  			i +=3D dl->extent_cnt;
-> >=20
-> >  	maxsize =3D merge_extents(super, i);
-> > +
-> > +	if (!check_env("IMSM_NO_PLATFORM") &&
-> > +		mpb->num_raid_devs > 0 && size && size !=3D maxsize) {
-> > +		fprintf(stderr, Name ": attempting to create a second "
-> > +			"volume with size less then remaining space. "
-> > +			"Aborting...\n");
-> > +		return 0;
-> > +	}
-> > +
-> >  	if (maxsize < size || maxsize =3D=3D 0) {
-> >  		if (verbose)
-> >  			fprintf(stderr, Name ": not enough space after merge
-> > (%llu < %llu)\n",
-> >=20
-> > ---------------------------------------------------------------------
-> > Intel Technology Poland sp. z o.o.
-> > z siedziba w Gdansku
-> > ul. Slowackiego 173
-> > 80-298 Gdansk
-> >=20
-> > Sad Rejonowy Gdansk Polnoc w Gdansku,
-> > VII Wydzial Gospodarczy Krajowego Rejestru Sadowego,
-> > numer KRS 101882
-> >=20
-> > NIP 957-07-52-316
-> > Kapital zakladowy 200.000 zl
-> >=20
-> > This e-mail and any attachments may contain confidential material for
-> > the sole use of the intended recipient(s). Any review or distribution
-> > by others is strictly prohibited. If you are not the intended
-> > recipient, please contact the sender and delete all copies.
-> > N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
-=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
-=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=EF=
-=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=0D=
-=EF=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BDz=
-=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD
-> >=20
-> > =EF=BF=BD=EF=BF=BD=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=
-=EF=BF=BDm=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=0D=EF=BF=BD=EF=BF=BD=EF=BF=
-=BD=EF=BF=BDzZ+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=
-=BD=EF=BF=BD!=EF=BF=BDi
 
 
---Sig_/nTzEogdXk8EqVYlkPCO_69R
+>=20
+> /dev/md126:
+>         Version : 0.91
+>   Creation Time : Wed Nov 10 20:19:03 2010
+>      Raid Level : raid6
+>      Array Size : 5856728064 (5585.41 GiB 5997.29 GB)
+>   Used Dev Size : 1952242688 (1861.80 GiB 1999.10 GB)
+>    Raid Devices : 5
+>   Total Devices : 4
+> Preferred Minor : 126
+>     Persistence : Superblock is persistent
+>=20
+>     Update Time : Sun Nov 13 09:50:52 2011
+>           State : active, degraded, recovering
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 0
+>   Spare Devices : 1
+>=20
+>          Layout : left-symmetric-6
+>      Chunk Size : 512K
+>=20
+>  Reshape Status : 2% complete
+>      New Layout : left-symmetric
+>=20
+>            UUID : 3fd8b303:7727aa3b:c5d110f2:f9137e1d
+>          Events : 0.172355
+>=20
+>     Number   Major   Minor   RaidDevice State
+>        0       8       67        0      active sync   /dev/sde3
+>        1       8       19        1      active sync   /dev/sdb3
+>        2       0        0        2      removed
+>        3       8       83        3      active sync   /dev/sdf3
+>        4       8       51        4      spare rebuilding   /dev/sdd3
+>=20
+> Is that expected?
+>=20
+> Thanks again. I am pretty confident all my data is there, and I do have a=
+ (1-day old) backup of the important stuff, but the other 2.5TB of stuff is=
+n't really /that/ important, but I don't want to have to explain to the wif=
+e why all her favorite episodes of NCIS that she recorded are gone :)
+>=20
+> Thanks,
+> Travis
+>=20
+> On Nov 12, 2011, at 10:35 PM, NeilBrown wrote:
+>=20
+> > On Sat, 12 Nov 2011 21:56:56 -0500 Travis Brown <teb@jetcom.org> wrote:
+> >=20
+> >> I was reshaping my 5 drive raid 5 with spare to a raid 6 array when th=
+e drive I was using for my backup went offline.  If that's not murphy's law=
+, I don't know what is.  The array is still up and usable, but I'm afraid t=
+o reboot or doing anything to it, really.  Suggestions on getting this thin=
+g back to usable are very welcome.=20
+> >>=20
+> >> Thanks,
+> >> Travis
+> >>=20
+> >> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [=
+raid4] [raid10]=20
+> >> md126 : active raid6 sde3[0] sdf3[3] sdb3[1] sdd3[4] sdc3[2]
+> >>      5856728064 blocks super 0.91 level 6, 512k chunk, algorithm 18 [5=
+/4] [UUUU_]
+> >>      [>....................]  reshape =3D  0.9% (19267584/1952242688) =
+finish=3D623878.3min speed=3D51K/sec
+> >=20
+> > 1/ Don't Panic. =20
+> >   You seem to have achieved this step quite effectively - congratulatio=
+ns.
+> >=20
+> > 2/ Stop the array cleanly.  Not having a backup will only cause possible
+> >   corruption if the machine crashes while the reshape is happening.  The
+> >   reshape has stopped so there is no chance for corruption.  But you st=
+ill
+> >   need to cleanly stop the array.
+> >   (A subsequent version of mdadm may allow you to continue the reshape
+> >   without the stop/restart step, but we aren't there yet).
+> >=20
+> > 3/ Make sure you have a version of mdadm which is at least 3.2.   I wou=
+ld
+> >   suggest the latest:3.2.2.  You particularly need the --invalid-backup
+> >   flag.
+> >=20
+> > 4/ Reassemble the array with e.g.
+> >=20
+> >    mdadm --assemble /dev/md126 --backup=3D/some/file  \
+> >    --invalid-backup /dev/sd[bcdef]3
+> >=20
+> >=20
+> >   The  backup file does not need to exist (I think).  Maybe create an e=
+mpty
+> >   file and use that just to be safe.
+> >   The "--invalid-backup" flag says to mdadm "Yes, I know the backup fil=
+e is
+> >   currently invalid and you cannot restore anything from it.  I happen =
+to
+> >   know that there is no need to restore anything because I did a clean
+> >   shutdown.  Just use the backup file for making new backups as you con=
+tinue
+> >   the reshape".
+> >=20
+> > NeilBrown
+> >=20
+> >=20
+> >>=20
+> >> /dev/md126:
+> >>        Version : 0.91
+> >>  Creation Time : Wed Nov 10 20:19:03 2010
+> >>     Raid Level : raid6
+> >>     Array Size : 5856728064 (5585.41 GiB 5997.29 GB)
+> >>  Used Dev Size : 1952242688 (1861.80 GiB 1999.10 GB)
+> >>   Raid Devices : 5
+> >>  Total Devices : 5
+> >> Preferred Minor : 126
+> >>    Persistence : Superblock is persistent
+> >>=20
+> >>    Update Time : Sat Nov 12 21:55:46 2011
+> >>          State : clean, degraded, recovering
+> >> Active Devices : 4
+> >> Working Devices : 5
+> >> Failed Devices : 0
+> >>  Spare Devices : 1
+> >>=20
+> >>         Layout : left-symmetric-6
+> >>     Chunk Size : 512K
+> >>=20
+> >> Reshape Status : 0% complete
+> >>     New Layout : left-symmetric
+> >>=20
+> >>           UUID : 3fd8b303:7727aa3b:c5d110f2:f9137e1d
+> >>         Events : 0.124051
+> >>=20
+> >>    Number   Major   Minor   RaidDevice State
+> >>       0       8       67        0      active sync   /dev/sde3
+> >>       1       8       19        1      active sync   /dev/sdb3
+> >>       2       8       35        2      active sync   /dev/sdc3
+> >>       3       8       83        3      active sync   /dev/sdf3
+> >>       4       8       51        4      spare rebuilding   /dev/sdd3--
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" =
+in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/s7llxf2PgdU7Xdd70aYU8jk
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsCqejnsnt1WYoG5AQIMkRAAtdVz6br6lkJzQqybuCMF0mWIw9HugWZ7
-yZ0eEqFg6/+c5Q0CIAYcC9jAkISYsq9N+5sgQ4ot6623JkO5wHnLgOHbIZ+BUw52
-11F7tQvIusRb4JZJYgTSlcn9vU1grog67wxaxpQNSKup6gApO8c2952/P/Rm6fB7
-XoAXCpaMi5611gZ8Mybe+N7Rj9PggBH0jdmC2UTVbtAHfDnEpdHTH1XUPbSA2Vtx
-QuP90sJjiKY8P1hfLnUXtYvTssNdp9xfzbJMatEEuJbV4MLwA1WStexiIc3t5RJM
-w8l4MJp6MbT8DAhsguJrDxomBniufcFhLtsxuok5sqSPSGDr30B7PKPuM+IWbpJY
-8bS/S+Y7R0rEz7GnEbnqV8JUOqCJ0QXxCeHbfzpgxH+zinXA7xKmXnZwu3f9JGWH
-5XB9aoWNGuAH4tEdOUwiB044qirV80Qj29ANqlMQA4Tcol0LXwEnmuieHZeuGy29
-QLLvDswNlfGOgQtnExyE24z8oCiy6fOM9cLUg5wsXynT6RZyRSBDb9yC3x1NdiWM
-9ia+eVnNgUCUXl9p9Ogup+OpKYBT9OPYErDLEUN10LyVDxZlkZK9JpDSsAldXdyN
-6ZW47/zg3WoB0WWqYkMgIlyAQi0nqucYOB36XxIZGYZbmGiB7AZvvzkPomDULcX+
-hI5F79ZQjR8=
-=6Y5F
+iQIVAwUBTsCwGznsnt1WYoG5AQJQ5hAAt39L8izcDpyedgCD+io6ykIRjeUOIK9y
+JRaknrBnnHHbAcg2G6Fr7nJ2auaTAVctIaKlTptiFHBAIJFBzJXQyKxpyrN88VYp
+qg3PQeduP6lbl8SJm+DFjSIhjxBbxPx6Zr8ACTF6BRoZSkDDehM4BHVX8kXg0CU0
+THJ3CTe+gKn+dcNkefpnPWlC1Vj2IyXBDo2B0P3ha0g4/8yzcgw8zfMeAMwZRijR
+Tb5bSTKdoNbYtjfGWNnEi7JblVnbT+J7l6QLUYoGZim2xQ7Kr0vZICXzMRTVpfPP
+BHWPHcDAiPhDOPZrRlFhmvNwllUNO/MR2SWpbSGOmduCiFds9sW3HjC82VraY1yk
+rbFtlcZ4/UwQEaI2mbR0ru8pau1tYZ3ocTi0ADoJAKfBL+P0sRFDLp1xkO0s6gt7
+pg02FnOuJbSGQB2NmwG/93l7xdwvkm/f8IEGvS5S4CUuJ3L4AsiW9SihxWuFU/5/
+Hc7Iwh+Z04cQ4pLQJn1l8+bFH9em3C9Nu+BJneDZs/U0Cv+A8NsbVV6wZ2WiRbIP
+zsWBwvVlapkYQXv9GOXKzHMAEGljsYnw295Og1NIuM0BOQI0WglKLKPP7qC2Y33q
+Wr9lJwFsrRhq0gta4xxyxmIvLhDq7AIIzNYqL+yw8Skwe7VOQsa2d+0r+qkudAEG
+/oJBtEo+vNw=
+=7fiQ
 -----END PGP SIGNATURE-----
 
---Sig_/nTzEogdXk8EqVYlkPCO_69R--
+--Sig_/s7llxf2PgdU7Xdd70aYU8jk--
