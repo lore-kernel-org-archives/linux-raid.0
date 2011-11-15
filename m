@@ -1,113 +1,85 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] imsm: platform capabilities are not validated during level
- migration
-Date: Tue, 15 Nov 2011 13:49:36 +0000
-Message-ID: <F9123E44003394499FDD2B17C60621D405E476@IRSMSX101.ger.corp.intel.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Reshape 3-drive RAID1 into 3-drive RAID-5
+Date: Tue, 15 Nov 2011 07:13:23 -0800
+Message-ID: <CAK2H+ed1M=_N5rW5Y72Cm0_74ii=-9dCMsB7xJR4FGMST4rCjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Subject: [PATCH] imsm: platform capabilities are not validated during level migration
+Hi all,
+   I have an existing 3-drive RAID-1 (md6) that I use as a short term
+backup device for a 5-drive RAID-6 (md7) on this machine. The _only_
+purpose of this internal backup RAID-1 is to protect against a
+fat-finger 'oops' event when using VMWare or Virtualbox VMs on md7.
+Real data backups happen over the network to other machines but that's
+slow and only gets done about once a week. With this local storage I
+can do it in just a few minutes every day.
 
-Migration from RAID0 to RAID5 should be blocked on the system without
-support for RAID5. No platform validation was performed in RAID
-level migrations: verification for all level migrations added.
+   I recently reshaped the RAID-6 from a 5-drive RAID-1and now it's
+larger than this local backup so I can't get everything backed up any
+more. I.e. - I need /dev/md6 large enough to back up /dev/md7. With 3
+existing 235GB partitions I believe the RAID-5 will be about 470GB
+when complete and therefore large enough to hold my 400GB RAID-6 data.
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- super-intel.c |   35 +++++++++++++++++++----------------
- 1 files changed, 19 insertions(+), 16 deletions(-)
+   I would like to verify that the right commands to do this would be:
 
-diff --git a/super-intel.c b/super-intel.c
-index f776be9..b64aa7a 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5385,7 +5385,11 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 	}
- 	
- 	if (!dev) {
--		if (st->sb && freesize) {
-+		if (st->sb) {
-+			if (!validate_geometry_imsm_orom(st->sb, level, layout,
-+							 raiddisks, chunk,
-+							 verbose))
-+				return 0;
- 			/* we are being asked to automatically layout a
- 			 * new volume based on the current contents of
- 			 * the container.  If the the parameters can be
-@@ -5394,12 +5398,9 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
- 			 * created.  add_to_super and getinfo_super
- 			 * detect when autolayout is in progress.
- 			 */
--			if (!validate_geometry_imsm_orom(st->sb, level, layout,
--							 raiddisks, chunk,
--							 verbose))
--				return 0;
--			return reserve_space(st, raiddisks, size,
--					     chunk?*chunk:0, freesize);
-+			if (freesize)
-+				return reserve_space(st, raiddisks, size,
-+						     chunk?*chunk:0, freesize);
- 		}
- 		return 1;
- 	}
-@@ -8664,6 +8665,8 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 	int change = -1;
- 	int check_devs = 0;
- 	int chunk;
-+	int devNumChange=0;
-+	int layout = -1;
- 
- 	getinfo_super_imsm_volume(st, &info, NULL);
- 	if ((geo->level != info.array.level) &&
-@@ -8681,23 +8684,23 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 					change = -1;
- 					goto analyse_change_exit;
- 				}
-+				layout =  geo->layout;
- 				check_devs = 1;
--			}
--			if (geo->level == 10) {
-+				devNumChange = 1; /* parity disk added */
-+			} else if (geo->level == 10) {
- 				change = CH_TAKEOVER;
- 				check_devs = 1;
-+				devNumChange = 2; /* two mirrors added */
-+				layout = 0x102; /* imsm supported layout */
- 			}
- 			break;
- 		case 1:
--			if (geo->level == 0) {
--				change = CH_TAKEOVER;
--				check_devs = 1;
--			}
--			break;
- 		case 10:
- 			if (geo->level == 0) {
- 				change = CH_TAKEOVER;
- 				check_devs = 1;
-+				devNumChange = -(geo->raid_disks/2);
-+				layout = 0; /* imsm raid0 layout */ 
- 			}
- 			break;
- 		}
-@@ -8744,8 +8747,8 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
- 	chunk = geo->chunksize / 1024;
- 	if (!validate_geometry_imsm(st,
- 				    geo->level,
--				    geo->layout,
--				    geo->raid_disks,
-+				    layout,
-+				    geo->raid_disks + devNumChange,
- 				    &chunk,
- 				    geo->size,
- 				    0, 0, 1))
--- 
-1.7.1
+umount /dev/md6
+mdadm --stop /dev/md6
+mdadm --create /dev/md6 --level=5 --raid-devices=3 /dev/sda6 /dev/sdb6 /dev/sdc6
 
+   If these commands are wrong or anyone thinks there are other things
+I should be doing at this time please speak up as I'm interested.
+
+   The data that's currently on the backup is not terribly important
+but if possible I'd like to keep it through this process unless doing
+so makes things more difficult. The time it takes to do this reshape
+is not terribly important to me.
+
+Thanks,
+Mark
+
+
+c2stable ~ # cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
+[raid4]
+md6 : active raid1 sdc6[2] sdb6[1] sda6[0]
+      247416933 blocks super 1.1 [3/3] [UUU]
+
+md7 : active raid6 sdc7[2] sdb7[1] sda7[0] sdd2[3] sde2[4]
+      395387904 blocks super 1.2 level 6, 16k chunk, algorithm 2 [5/5]
+[UUUUU]
+
+unused devices: <none>
+c2stable ~ #
+
+
+c2stable ~ # mdadm -D /dev/md6
+/dev/md6:
+        Version : 1.1
+  Creation Time : Thu Apr 15 10:45:35 2010
+     Raid Level : raid1
+     Array Size : 247416933 (235.96 GiB 253.35 GB)
+  Used Dev Size : 247416933 (235.96 GiB 253.35 GB)
+   Raid Devices : 3
+  Total Devices : 3
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Nov 15 06:20:06 2011
+          State : clean
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : c2stable:6  (local to host c2stable)
+           UUID : 249c7331:a8203540:c8f3b020:fb30a66b
+         Events : 1034
+
+    Number   Major   Minor   RaidDevice State
+       0       8        6        0      active sync   /dev/sda6
+       1       8       22        1      active sync   /dev/sdb6
+       2       8       38        2      active sync   /dev/sdc6
+c2stable ~ #
