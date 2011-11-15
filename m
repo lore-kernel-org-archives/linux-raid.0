@@ -1,87 +1,65 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: fix: correct checking newly missing disks
-Date: Tue, 15 Nov 2011 15:43:50 +1100
-Message-ID: <20111115154350.19ae1de2@notabene.brown>
-References: <20111114145252.21148.62905.stgit@gklab-128-085.igk.intel.com>
+From: Hank Barta <hbarta@gmail.com>
+Subject: raid startup on a live CD?
+Date: Mon, 14 Nov 2011 22:56:40 -0600
+Message-ID: <CABTDG88XS6HeGbhj1=iApvsFfifbdjLrO-eoJ4TxNcEcNoyRQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/B3qZHoSJKI3Tz.iOEA54dBm"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111114145252.21148.62905.stgit@gklab-128-085.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/B3qZHoSJKI3Tz.iOEA54dBm
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi folks,
+On occasion I boot a live CD and need to have the md RAID devices
+running. Ordinarily (with Ubuntu live CDs) I find that I need to
+install the mdadm package after booting the live CD. At that point my
+recollection is that the RAID devices get started by the scripts that
+perform the installation (and probably run the startup scripts that
+are in /etc/init.d/...)
 
-On Mon, 14 Nov 2011 15:52:52 +0100 Lukasz Dorau <lukasz.dorau@intel.com>
-wrote:
+Earlier today I did this with a distro that is derived from Debian and
+under development. I was happy to see that 'mdadm' was already
+installed. (I had asked for this in fact.) But then I started
+encountering difficulties. The /proc/mdstat file existed but listed no
+RAID personalities and none of my devices were started. I tried 'mdadm
+--assemble -scan' which reported no errors but did not improve the
+situation. I manually loaded the raid0 and raid1 modules (which caused
+the personalities to be listed in /prod/mdstat) and pulled in other
+raid related kernel modules. However 'mdadm --assemble -scan' still
+did not start my devices. I thrashed around a bit before finding a
+command that probed drives and listed the md devices and their UUIDs.
+I was then able to start them using 'mdadm --assemble /dev/md<n>
+--uuid <UUID>' individually for the RAID devices I wanted to start.
 
-> The problem occurs when RAID10 array under rebuild
-> (after one disk fails) is assembled incrementally.
-> Mdadm tries to start array just after adding the third disk
-> and the volume is assembled incorrectly (in degraded state).
->=20
-> The cause is that container_enough depends on
-> newly missing disks which are checked incorrectly now.
-> They should be checked using always the first map.
->=20
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  super-intel.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/super-intel.c b/super-intel.c
-> index 4ebee78..511a32a 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -2529,13 +2529,13 @@ static void getinfo_super_imsm(struct supertype *=
-st, struct mdinfo *info, char *
-> =20
->  		failed =3D imsm_count_failed(super, dev);
->  		state =3D imsm_check_degraded(super, dev, failed);
-> -		map =3D get_imsm_map(dev, dev->vol.migr_state);
-> +		map =3D get_imsm_map(dev, 0);
-> =20
->  		/* any newly missing disks?
->  		 * (catches single-degraded vs double-degraded)
->  		 */
->  		for (j =3D 0; j < map->num_members; j++) {
-> -			__u32 ord =3D get_imsm_ord_tbl_ent(dev, i, -1);
-> +			__u32 ord =3D get_imsm_ord_tbl_ent(dev, i, 0);
->  			__u32 idx =3D ord_to_idx(ord);
-> =20
->  			if (!(ord & IMSM_ORD_REBUILD) &&
+I'd like to report back to the person working on this distro the
+difficulties I had with the RAID and beyond that, I'd like to provide
+the information that they need to set up RAID so it just works (like
+on a normal boot) if possible and desirable.
 
-Applied,
-thanks,
+First... Are there reasons that other live CDs I've used have not set
+up RAID? Live CDs by their nature are somewhat lightweight so if
+adding mdadm uses significant resources perhaps it is best left as a
+manual operation.
 
-NeilBrown
+Is there something I overlooked in getting it started in this
+particular situation?
 
+Where should I be looking for documentation that would help
+configuring RAID on a Live CD? I did some searching and the most
+promising thing I found was
+https://raid.wiki.kernel.org/articles/r/a/i/RAID_Boot_bac9.html which
+directs me to a text file in the kernel source tree.
+(http://lxr.linux.no/#linux+v3.1.1/Documentation/filesystems/ramfs-rootfs-initramfs.txt)
+And that points to other documentation. I'd appreciate pointers to
+documentation that is particularly relevant to md RAID form a live CD.
 
---Sig_/B3qZHoSJKI3Tz.iOEA54dBm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+many thanks,
+hank
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTsHuETnsnt1WYoG5AQLAYQ/+K2B6OWxdAigouLaWkaKqciIHRNeCLnNw
-wofETW92qlT04XXn7w7wY/A6SJEk0US5lQP6E1dsVnBRtulJ4Y9eh3vKzIXsTVSG
-jS0J3fDAF01e+fN1S7bGCnPTbmYJpWMmfV7ytFd63iR81nwPwZZFNfamKpWIJIos
-H0F7rKL75ExYHxB0Lo3Nn4UP+NM4M8VI/kodsK1fDmqFvZyrwNUp3u2kWmIXGaY/
-zkKk22aHiTjWhCweZCFQ+y+uCRgjJV3DKZRfN5C0VceRuT6jvOqynffQZ2y7BhBu
-HRvp6BC9RVC4RN17n8cJ8cqBxuP9xSLUu+JSGtINNoOmnoJksMbv7BzXOV9Rf90D
-RUwcZc5+thdGPNUlA56ODXVjrGwsvMiFZ0j6pAnoxFjFfzMlUV/1I7ozblWfwn8F
-ywGd04XMkXdKs3R1UOB/3pAL5uhmT8IvLhoQ5bANjsbHqd21cbC5M4NwPy7fTi5K
-sFqKJsfWZiU41fK3rLOY13p3Hvr1H9wu4kwCVvieww5+9N1mpfuaWiqCNoDiac2j
-i7UiZT4PopFqi4etBibZN/d7hag7PKiqSdvfdWGSWCWOnJRdp9g7vxiuiPlYKdiH
-2ueYsX7N5SXS1R13+1p8J4p8fA9bWMN8SMq959U/LJTkNOV7/688XSBNIX6Al44J
-2xbmcvKhm/M=
-=2r2s
------END PGP SIGNATURE-----
-
---Sig_/B3qZHoSJKI3Tz.iOEA54dBm--
+--
+'03 BMW F650CS - hers
+'98 Dakar K12RS - "BABY K" grew up.
+'93 R100R w/ Velorex 700 (MBD starts...)
+'95 Miata - "OUR LC"
+polish visor: apply squashed bugs, rinse, repeat
+Beautiful Sunny Winfield, Illinois
