@@ -1,89 +1,113 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md/raid10: handle recovery of replacement devices.
-Date: Tue, 15 Nov 2011 17:58:02 +1100
-Message-ID: <20111115175802.498875b3@notabene.brown>
-References: <20111115063239.GA30827@elgon.mountain>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH] imsm: platform capabilities are not validated during level
+ migration
+Date: Tue, 15 Nov 2011 13:49:36 +0000
+Message-ID: <F9123E44003394499FDD2B17C60621D405E476@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/0CJqcBq_ygU/X7NitZEvcSg"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111115063239.GA30827@elgon.mountain>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/0CJqcBq_ygU/X7NitZEvcSg
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Subject: [PATCH] imsm: platform capabilities are not validated during level migration
 
-On Tue, 15 Nov 2011 09:32:39 +0300 Dan Carpenter <dan.carpenter@oracle.com>
-wrote:
+Migration from RAID0 to RAID5 should be blocked on the system without
+support for RAID5. No platform validation was performed in RAID
+level migrations: verification for all level migrations added.
 
-> Hello NeilBrown,
->=20
-> This is a semi-automatic email about new static checker warnings.
->=20
-> The patch e1f6cbf7e1b0: "md/raid10: handle recovery of replacement=20
-> devices." from Nov 9, 2011, leads to the following Smatch complaint:
->=20
-> drivers/md/raid10.c +2814 sync_request()
-> 	 error: we previously assumed 'bio' could be null (see line 2808)
->=20
-> drivers/md/raid10.c
->   2807					bio =3D r10_bio->devs[1].repl_bio;
->   2808					if (bio)
->                                             ^^^
-> check.
->=20
->   2809						bio->bi_end_io =3D NULL;
->   2810					rdev =3D mirror->replacement;
->   2811					if (rdev =3D=3D NULL ||
->   2812					    test_bit(Faulty, &rdev->flags))
->   2813						break;
->   2814					bio->bi_next =3D biolist;
->                                         ^^^^^^^^^^^^
-> unconditional dereference.
->=20
->   2815					biolist =3D bio;
->   2816					bio->bi_private =3D r10_bio;
->=20
-> regards,
-> dan carpenter
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+---
+ super-intel.c |   35 +++++++++++++++++++----------------
+ 1 files changed, 19 insertions(+), 16 deletions(-)
 
+diff --git a/super-intel.c b/super-intel.c
+index f776be9..b64aa7a 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5385,7 +5385,11 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 	}
+ 	
+ 	if (!dev) {
+-		if (st->sb && freesize) {
++		if (st->sb) {
++			if (!validate_geometry_imsm_orom(st->sb, level, layout,
++							 raiddisks, chunk,
++							 verbose))
++				return 0;
+ 			/* we are being asked to automatically layout a
+ 			 * new volume based on the current contents of
+ 			 * the container.  If the the parameters can be
+@@ -5394,12 +5398,9 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 			 * created.  add_to_super and getinfo_super
+ 			 * detect when autolayout is in progress.
+ 			 */
+-			if (!validate_geometry_imsm_orom(st->sb, level, layout,
+-							 raiddisks, chunk,
+-							 verbose))
+-				return 0;
+-			return reserve_space(st, raiddisks, size,
+-					     chunk?*chunk:0, freesize);
++			if (freesize)
++				return reserve_space(st, raiddisks, size,
++						     chunk?*chunk:0, freesize);
+ 		}
+ 		return 1;
+ 	}
+@@ -8664,6 +8665,8 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 	int change = -1;
+ 	int check_devs = 0;
+ 	int chunk;
++	int devNumChange=0;
++	int layout = -1;
+ 
+ 	getinfo_super_imsm_volume(st, &info, NULL);
+ 	if ((geo->level != info.array.level) &&
+@@ -8681,23 +8684,23 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 					change = -1;
+ 					goto analyse_change_exit;
+ 				}
++				layout =  geo->layout;
+ 				check_devs = 1;
+-			}
+-			if (geo->level == 10) {
++				devNumChange = 1; /* parity disk added */
++			} else if (geo->level == 10) {
+ 				change = CH_TAKEOVER;
+ 				check_devs = 1;
++				devNumChange = 2; /* two mirrors added */
++				layout = 0x102; /* imsm supported layout */
+ 			}
+ 			break;
+ 		case 1:
+-			if (geo->level == 0) {
+-				change = CH_TAKEOVER;
+-				check_devs = 1;
+-			}
+-			break;
+ 		case 10:
+ 			if (geo->level == 0) {
+ 				change = CH_TAKEOVER;
+ 				check_devs = 1;
++				devNumChange = -(geo->raid_disks/2);
++				layout = 0; /* imsm raid0 layout */ 
+ 			}
+ 			break;
+ 		}
+@@ -8744,8 +8747,8 @@ enum imsm_reshape_type imsm_analyze_change(struct supertype *st,
+ 	chunk = geo->chunksize / 1024;
+ 	if (!validate_geometry_imsm(st,
+ 				    geo->level,
+-				    geo->layout,
+-				    geo->raid_disks,
++				    layout,
++				    geo->raid_disks + devNumChange,
+ 				    &chunk,
+ 				    geo->size,
+ 				    0, 0, 1))
+-- 
+1.7.1
 
-Thanks.
-
-I happen to know that if mirror->replacement is not NULL, then
-conf->have_replacement is true, so r10buf_pool_alloc will have allocated
-[1].repl_bio so if we get to 2814, bio will definitely be non-NULL.
-
-Still, it wouldn't hurt to add a test for 'bio' to keep match happy, and put
-in a big comment to keep reviewers happy.  I'll consider doing that.
-
-Thanks,
-NeilBrown
-
---Sig_/0CJqcBq_ygU/X7NitZEvcSg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIUAwUBTsINgDnsnt1WYoG5AQLizg/40Qok9N7t1l2nihiCmUAc6WVigrqKkDC0
-fvEmxm9tq1FSJmGEm5An/YHWV+/Nhk5aV2b/N83mOhmrhUPQQan5nZ12OvrrlvM2
-gfUXsgi2rwgRkSWugbkCOie3HTeWcFj3vd+E3QmG5cIo7I7jVXZOyRdgwT18Ouo9
-eRxFTTYRiUnVj70U7ZwfYUIFw0D6ZfW8U1ZANvVuW3MC4ll9jFIbOrR5NWg+Ss0Y
-u0+jvipvGSW1te6ZNU4Wj//n0hlcaElmOcT+SsYxuYuuRl5HTCkuAr48aJ4Hg2ue
-u04CNIyFFCcm+OLEH27ip4x+w6w1OtWbh6+3sO2ghVHSb4xmsobd58c+1JFzt60g
-tcUIWjDYJLPPAXodgqIFcnDaDenMaxRCzyPSoxC/pmJEmrcmKLvwGnd/w+IXz1uQ
-WFDlVALnb7xsbtWH79RTDArXA1z5N037gysLdDcAmfAPvUHuVtRLNQQW6Wn0vTWh
-4sxWuAXzE4BQbOmUy4FHR9m4J7K91+feLuLmGLxRw0WJ7f80wB6okhOHDR8Z4Dnm
-KCofjvhoDJsGd3Bl7jzLv10F41Nsy4D+SK1w3eW2HFEtb5QFeMx15Tr1ouDjgkaF
-pZJj16mzYA2NgYZiRjwU49peh5BfbAt1g2jWNY/r8gmrH90c7lhH/RsNDDktsXlZ
-303avLIM0A==
-=3fSn
------END PGP SIGNATURE-----
-
---Sig_/0CJqcBq_ygU/X7NitZEvcSg--
