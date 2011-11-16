@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
 Subject: Re: possible bug - bitmap dirty pages status
-Date: Wed, 16 Nov 2011 13:30:45 +1100
-Message-ID: <20111116133045.2528310b@notabene.brown>
+Date: Wed, 16 Nov 2011 14:07:07 +1100
+Message-ID: <20111116140707.162d07e2@notabene.brown>
 References: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com>
 	<CAGqmV7pjvEHaNWjuZzt+tSsUJOM28ZqDY6qUROzz8GtMGCxDow@mail.gmail.com>
 	<CAECXXi5eo3J8PPXP5xTm-PrqazC_fkwNnjtiAGM4NtsGBMahHA@mail.gmail.com>
@@ -11,91 +11,81 @@ References: <CAGqmV7oKNSj2UjEKyqwE2qKrTj9Gj5-OZxwUAVw+uMh1TTRXuA@mail.gmail.com>
 	<CAGqmV7qKjV1QL_GgxGqmLL2BSui+HVxRo=82KHuW0oLONH1D_A@mail.gmail.com>
 	<20110901154022.45f54657@notabene.brown>
 	<4EC1A037.4080406@fastmail.fm>
+	<CAGqmV7qpQBHLcJ9J9cP1zDw6kp6aLcaCMneFYEgcPOu7doXSMA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/c/8MNG+EY3s7SOfnL7vem8y"; protocol="application/pgp-signature"
+ boundary="Sig_/jiLtPvMdPfkon+B4dgJihR4"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EC1A037.4080406@fastmail.fm>
+In-Reply-To: <CAGqmV7qpQBHLcJ9J9cP1zDw6kp6aLcaCMneFYEgcPOu7doXSMA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linbloke <linbloke@fastmail.fm>
-Cc: CoolCold <coolthecold@gmail.com>, Paul Clements <paul.clements@us.sios.com>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: CoolCold <coolthecold@gmail.com>
+Cc: linbloke <linbloke@fastmail.fm>, Paul Clements <paul.clements@us.sios.com>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/c/8MNG+EY3s7SOfnL7vem8y
+--Sig_/jiLtPvMdPfkon+B4dgJihR4
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 15 Nov 2011 10:11:51 +1100 linbloke <linbloke@fastmail.fm> wrote:
-> Hello,
+On Wed, 16 Nov 2011 03:13:51 +0400 CoolCold <coolthecold@gmail.com> wrote:
+
+> As I promised I was collecting data, but forgot to return to that
+> problem, bumping thread returned me to that state ;)
+> So, data was collected for almost the month - from 31 August to 26 Septem=
+ber:
+> root@gamma2:/root# grep -A 1 dirty component_examine.txt |head
+>           Bitmap : 44054 bits (chunks), 190 dirty (0.4%)
+> Wed Aug 31 17:32:16 MSD 2011
 >=20
-> Sorry for bumping this thread but I couldn't find any resolution=20
-> post-dated. I'm seeing the same thing with SLES11 SP1. No matter how=20
-> long I wait or how often I sync(8), the number of dirty bitmap pages=20
-> does not reduce to zero - 52 has become the new zero for this array=20
-> (md101). I've tried writing more data to prod the sync  - the result was=
-=20
-> an increase in the dirty page count (53/465) and then return to the base=
-=20
-> count (52/465) after 5seconds. I haven't tried removing the bitmaps and=20
-> am a little reluctant to unless this would help to diagnose the bug.
+> root@gamma2:/root# grep -A 1 dirty component_examine.txt |tail -n 2
+>           Bitmap : 44054 bits (chunks), 1 dirty (0.0%)
+> Mon Sep 26 00:28:33 MSD 2011
 >=20
-> This array is part of a nested array set as mentioned in another mail=20
-> list thread with the Subject: Rotating RAID 1. Another thing happening=20
-> with this array is that the top array (md106), the one with the=20
-> filesystem on it, has the file system exported via NFS to a dozen or so=20
-> other systems. There has been no activity on this array for at least a=20
-> couple of minutes.
+> As i can understand from that dump, it was bitmap examination (-X key)
+> of component /dev/sdc3 of raid /dev/md3.
+> Decreasing happend, though after some increase on 23 of September, and
+> first decrease to 0 happened on 24 of September (line number 436418).
 >=20
-> I certainly don't feel comfortable that I have created a mirror of the=20
-> component devices. Can I expect the devices to actually be in sync at=20
-> this point?
+> So almost for month, dirty count was no decreasing!
+> I'm attaching that log, may be it will help somehow.
 
-Hi,
- thanks for the report.
- I can understand your discomfort.  Unfortunately I haven't been able to
- discover with any confidence what the problem is, so I cannot completely
- relieve that discomfort.  I have found another possible issue - a race that
- could cause md to forget that it needs to clean out a page of the bitmap.
- I could imagine that causing 1 or maybe 2 pages to be stuck, but I don't
- think it can explain 52.
+Thanks a lot.
+Any idea what happened at on Fri Sep 23??
+Between 6:23am and midnight the number of dirty bits dropped from 180 to 2.
 
- Can can check if you actually have a mirror by:
-    echo check > /sys/block/md101/md/sync_action
- then wait for that to finish and check ..../mismatch_cnt.
- I'm quite confident that will report 0.  I strongly suspect the problem is
- that we forget to clear pages or bits, not that we forget to use them duri=
-ng
- recovery.
+This does seem to suggest that md is just losing track of some of the pages
+of bits and once they are modified again md remembers to flush them and wri=
+te
+them out - which is a fairly safe way to fail.
 
- So don't think that keeping the bitmaps will help in diagnosing the
- problem.   We I need is a sequence of events that is likely to produce the
- problem, and I realise that is hard to come by.
+The one issue I have found is that set_page_attr uses a non-atomic __set_bit
+because it should always be called under a spinlock.  But bitmap_write_all()
+- which is called when a spare is added - calls it without the spinlock so
+that could corrupt some of the bits.
 
- Sorry that I cannot be more helpful yet.
-
+Thanks,
 NeilBrown
 
 
---Sig_/c/8MNG+EY3s7SOfnL7vem8y
+--Sig_/jiLtPvMdPfkon+B4dgJihR4
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsMgWznsnt1WYoG5AQL2ZA//XKpDs60q7lt4tx05TAHXedX1lxcXzAFd
-tY+n/mLdpapcIA3kC1UrcDRbSX1rmJ1hCbC46vu6TEk6AP3CcUmpfyN4QdUBvkXy
-G4PyJMrs4l79OFQL4gu7B1UWiluF6TfYpy6uHgI0FJwutAzVL++PspNagQECfCln
-0WK5dM5EGIFmfKZ42jKQB1dg2d53X3Kj5qqjQ8ZDl/Yq32pFw+x8rGrhXJffxHhD
-OYYwwUUjxlflyjiPbcWiwrrs5bwwiMFrF0aXwvcxgMYuYt8gudVK5kHCkzyt2B4M
-/xEJNeRfFkJ08YL2u147Dtqr3MP6ioUw9skNNDtX8faxD2zdz+A62TfhqlbuVx/f
-jAAxkWqL147U9YrXaVz5HQZrG9FKCT9tYF4X6ssbGLyQ4B3F2fx/U+yzhwfY4o1N
-zz1IRNnj2E/rGQBQWdilVRRUrILaKZFHF73YKJNfSBrLtEntO+dBnUT6LKvzibP8
-DV9eC0Txgs4eQuiGGIgrI90uNMGXYe8o2ZVzCqmufce8pYku41BzvhxKWAJBwMFX
-0986GChG7IpDEjBVu5Djr2UblNElf2HIkRbnMPtyb2dJhhXNdayaLii4dqYKhzaE
-Csjtlw8kNQPXThxYbxT4ztdkKkZZzLZejBqYdaRWjLKEQUHUPxm5EXVuvTv5Jf6d
-LY0RVZpZtPQ=
-=75B9
+iQIVAwUBTsMo2znsnt1WYoG5AQK81RAAp/xNDlUiDsrE4jAOxx7GzpaMJxT6RU61
+n4Zvn02ldlHild8/fQPNn3DIei2hstPkMpHh0bbzsnywAIEJC9WN7oYHXxNO3u17
+T5myeGC8Ugugbudy36Yay+jtKSpAVJxfys1ghbIuSraVyx08dBL/wZeiLOVNWlvR
+IBMumqMP+921BAHNPLAYtLuRyUEVrWn30nZpJL9gHxQ0SRbtVeUYUSPHtOBklcux
+gMZUCKgotrjz5L2SN6yMPhW4z5ia6irt1elR0XP28X0PN2PV7D3Q8ToEL+ZPbAi3
+PQd5rnkXOxX0zGiJgYQSonjipLiINx+UJDzQogJPxqJwucvRd4U7pu0EZMj65ZMZ
+qECtGOmj7OS2XYAY1C2LR080OClVsv7AYbPbQYsf8nAvrj5oSYAF4ojJzBVlOGcz
+GQGNO50QyCxFabO9ldj7SndqoHsmoW+bKkYfwJPi+nIIk0wpP6CAnBHXAa/fJO4b
+rP0VaxqG1WBM/H4rKPp1/VU94tyxB//bLuVNa9CuHdNjExRLB3W0C5cFv9k4JGGU
+NuNWBxs2yKEZlA4jCg3/G0it7aJGjCeRLyW5oNpVe4KroUXFi6nmjZCEDwb1UfQP
+7fnyQjnHDxcd76eZV1Fpl7uInKcS3DcAQHijJbFDU2vyWsSdDbsbRu6CjTMzpxKl
+zXlwQU+la28=
+=QsYd
 -----END PGP SIGNATURE-----
 
---Sig_/c/8MNG+EY3s7SOfnL7vem8y--
+--Sig_/jiLtPvMdPfkon+B4dgJihR4--
