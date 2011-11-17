@@ -1,112 +1,80 @@
 From: Alexander Lyakas <alex.bolshoy@gmail.com>
-Subject: Re: Question about mdadm commit d6508f0cfb60edf07b36f1532eae4d9cddf7178b
- "be more careful about add attempts"
-Date: Thu, 17 Nov 2011 13:13:20 +0200
-Message-ID: <CAGRgLy49X7KUMdY8hj-99Z46vfzvSnB6LhNZpsN5XedjTdBu1Q@mail.gmail.com>
-References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
-	<20111027085125.747691a9@notabene.brown>
-	<CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
-	<20111031101649.657a1ab3@notabene.brown>
-	<CAGRgLy7G_M=FtdZ9mmDvxxN52+AF+L=0+OaEP=dK7Z+Z5YBYKw@mail.gmail.com>
-	<20111031201933.314d130f@notabene.brown>
-	<CAGRgLy5zkfy2bfrJnC_eKQ_-VAcdaKCyeSounjZ3FjBb83T0mQ@mail.gmail.com>
-	<20111102095204.024dc6b2@notabene.brown>
-	<CAGRgLy5WaOAg2R0FW1=cPgn+sK+PA_=T=GrLj+KWb5HVxbndzQ@mail.gmail.com>
-	<20111109104128.7b6f098f@notabene.brown>
+Subject: [PATCH] mdadm trivial: Print more detailed error messages on re-add failure
+Date: Thu, 17 Nov 2011 16:47:34 +0200
+Message-ID: <CAGRgLy4sj348bUtmszf0dRUsLa+ocbzCzdirFkeE5nAdNR=Q8w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111109104128.7b6f098f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Hello Neil,
+I realize this patch is very trivial, but I want also to see how this
+process of submitting patches works.
+I produced this patch on top of commit
+945f0fcd0179210ae5b72006c3621a73cc6e9205 (Release mdadm-3.1.5). Do I
+need to merge it on top of the latest commit and re-submit?
 
->> However, at least for 1.2 arrays, I believe this is too restrictive,
->> don't you think? If the raid slot (not desc_nr) of the device being
->> re-added is *not occupied* yet, can't we just select a free desc_nr
->> for the new disk on that path?
->> Or perhaps, mdadm on the re-add path can select a free desc_nr
->> (disc.number) for it (just as it does for --add), after ensuring tha=
-t
->> the slot is not occupied yet? Where it is better to do it?
->> Otherwise, the re-add fails, while it can perfectly succeed (only pi=
-ck
->> a different desc_nr).
->
-> I think I see what you are saying.
-> However my question is: is this really an issue.
-> Is there a credible sequence of events that results in the current co=
-de makes
-> an undesirable decision? =A0Of course I do not count deliberately edi=
-ting the
-> metadata as part of a credible sequence of events.
+From 3ab91e5cac373af9c177c2cf129a259a50e936ae Mon Sep 17 00:00:00 2001
+From: Alex Lyakas <alex@zadarastorage.com>
+Date: Thu, 17 Nov 2011 16:39:27 +0200
+Subject: [PATCH] Print more detailed error messages on re-add failure.
 
-Consider this scenario, in which the code refuses to re-add a drive:
+---
+ Manage.c |   23 ++++++++++++++++++++---
+ 1 files changed, 20 insertions(+), 3 deletions(-)
+ mode change 100644 => 100755 Manage.c
 
-Step 1:
-- I created a raid1 array with 3 drives: A,B,C (and their desc_nr=3D0,1=
-,2)
-- I failed drives B and C, and removed them from the array, and
-totally forgot about them for the rest of the scenario.
-- I added to the array two new drives: D and E, and waited for the
-resync to complete. The array now has the following structure:
-A: descr_nr=3D0
-D: desc_nr=3D3 (was selected during the "add" path in mdadm, as expecte=
-d)
-E: desc_nr=3D4 (was selected during the "add" path in mdadm, as expecte=
-d)
-
-Step 2:
-- I failed drives D and E, and removed them from the array. The E
-drive is not used for the rest of the scenario, so we can forget about
-it.
-
-I wrote some data to the array. At this point, the array bitmap is
-dirty, and will not be cleared, since the array is degraded.
-
-Step 3:
-- I added one new drive (last one, I promise!) to the array - drive F,
-and waited for it to resync. The array now has the following
-structure:
-A: descr_nr=3D0
-=46: desc_nr=3D3
-
-So F took desc_nr of D drive (desc_nr=3D3). This is expected according
-to mdadm code.
-
-Event counters at this point:
-A and F: events=3D149, events_cleared=3D0
-D: events=3D109
-
-Step 4:
-At this point, mdadm refuses to re-add the drive D to the array,
-because its desc_nr is already taken (I verified that via gdb). On the
-other hand, if we would have simply picked a fresh desc_nr for D, then
-it could be re-added I believe, because:
-- slots are not important for raid1 (D's slot was taken actually by F).
-- it should pass the check for bitmap-based resync (events in D' sb >=3D
-events_cleared of the array)
-
-Do you agree with this, or perhaps I missed something?
-
-Additional notes:
-- of course, such scenario is relevant only for arrays with more than
-single redundancy, so it's not relevant for raid5
-- to simulate such scenario for raid6, need at step 3 to add the new
-drive to the slot, which is not the slot of the drive we're going to
-re-add in step4 (otherwise, it takes the D's slot, and then we really
-cannot re-add). This can be done as we discussed earlier.
-
-What do you think?
-
-Thanks,
-Alex.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Manage.c b/Manage.c
+old mode 100644
+new mode 100755
+index 3502175..fc635f7
+--- a/Manage.c
++++ b/Manage.c
+@@ -707,10 +707,21 @@ int Manage_subdevs(char *devname, int fd,
+ 						 * make sure kernel will accept it though.
+ 						 */
+ 						disc.number = mdi.disk.number;
+-						if (ioctl(fd, GET_DISK_INFO, &disc) != 0
+-						    || disc.major != 0 || disc.minor != 0
+-						    || !enough_fd(fd))
++						if (ioctl(fd, GET_DISK_INFO, &disc) != 0) {
++							fprintf(stderr, Name ": GET_DISK_INFO failed for %s: %s\n",
++								    devname, strerror(errno));
+ 							goto skip_re_add;
++						}
++						if (disc.major != 0 || disc.minor != 0) {
++							fprintf(stderr, Name ": descriptor index of %s(%d) is already
+occupied\n",
++								    add_dev, mdi.disk.number);
++							goto skip_re_add;
++						}
++						if (!enough_fd(fd)) {
++							fprintf(stderr, Name ": %s is FAILED, cannot re-add in this
+state\n", devname);
++							goto skip_re_add;
++						}
++
+ 						disc.major = major(stb.st_rdev);
+ 						disc.minor = minor(stb.st_rdev);
+ 						disc.number = mdi.disk.number;
+@@ -738,8 +749,14 @@ int Manage_subdevs(char *devname, int fd,
+ 								continue;
+ 							return 1;
+ 						}
++						fprintf(stderr, Name ": add new device failed for %s: %s\n",
++							add_dev, strerror(errno));
++
+ 					skip_re_add:
+ 						re_add_failed = 1;
++					} else {
++						fprintf(stderr,
++							Name ": %s is in wrong state or has wrong array UUID; cannot
+re-add\n", add_dev);
+ 					}
+ 				}
+ 				if (add_dev != dv->devname) {
+-- 
+1.7.4.1
