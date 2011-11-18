@@ -1,101 +1,67 @@
-From: Danilo Godec <danilo.godec@agenda.si>
-Subject: Re: MD RAID1 weirdness *SOLVED*
-Date: Fri, 18 Nov 2011 09:06:06 +0100
-Message-ID: <4EC611EE.6070402@agenda.si>
-References: <4EC60D1A.5030808@agenda.si>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] imsm: fix: correct printing value of blocks per migration unit
+Date: Fri, 18 Nov 2011 15:28:36 +0100
+Message-ID: <20111118142836.12499.22937.stgit@gklab-128-085.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4EC60D1A.5030808@agenda.si>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+The value of blocks per migration unit is not printed correctly
+when the metadata's content is examined using -E option on disks
+without present migration record. (Migration record is present only
+on 2 first disks in array due to IMSM compatibility restrictions.)
 
-While I couldn't find out how or why this happened, I did find the way 
-to 'repair':
+Printing the value of blocks per migration unit was corrected.
+It is printed as N/A (Not Available) for disks
+without the migration record.
 
-> |mdadm --grow -n X /dev/md1|
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ super-intel.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-Where 'X'  is the actual number of devices in my array.
-
-    Regards, Danilo
-
-
-
-
-
-
-
-On 11/18/2011 08:45 AM, Danilo Godec wrote:
-> I have three hard drives in my machine and on installation, I 
-> configured two 3-partition RAID1 arrays for /boot and /. The third 
-> array is a RAID3 and this one is OK.
->
-> Somehow both RAID1 arrays are now 'degraded' with three devices active 
-> and one 'removed':
->
->> /dev/md0:
->>         Version : 1.0
->>   Creation Time : Mon May 23 11:33:58 2011
->>      Raid Level : raid1
->>      Array Size : 530100 (517.76 MiB 542.82 MB)
->>   Used Dev Size : 530100 (517.76 MiB 542.82 MB)
->>    Raid Devices : 4
->>   Total Devices : 3
->>     Persistence : Superblock is persistent
->>
->>   Intent Bitmap : Internal
->>
->>     Update Time : Fri Nov 18 08:36:11 2011
->>           State : active, degraded
->>  Active Devices : 3
->> Working Devices : 3
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>            Name : linux:0
->>            UUID : be28253b:04ef7513:53ddc8e4:4417a480
->>          Events : 751
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       33        0      active sync   /dev/sdc1
->>        1       0        0        1      removed
->>        2       8        1        2      active sync   /dev/sda1
->>        3       8       17        3      active sync   /dev/sdb1
->
->> /dev/md2:
->>         Version : 1.0
->>   Creation Time : Mon May 23 11:34:06 2011
->>      Raid Level : raid1
->>      Array Size : 41945640 (40.00 GiB 42.95 GB)
->>   Used Dev Size : 41945640 (40.00 GiB 42.95 GB)
->>    Raid Devices : 4
->>   Total Devices : 3
->>     Persistence : Superblock is persistent
->>
->>   Intent Bitmap : Internal
->>
->>     Update Time : Fri Nov 18 08:43:32 2011
->>           State : active, degraded
->>  Active Devices : 3
->> Working Devices : 3
->>  Failed Devices : 0
->>   Spare Devices : 0
->>
->>            Name : linux:2
->>            UUID : 3889bec9:12aa98b3:81df75b8:c87832bc
->>          Events : 66961
->>
->>     Number   Major   Minor   RaidDevice State
->>        0       8       35        0      active sync   /dev/sdc3
->>        1       0        0        1      removed
->>        2       8        3        2      active sync   /dev/sda3
->>        3       8       19        3      active sync   /dev/sdb3
->
-> Can this be resolved without re-creating the array?
->
->
->   Danilo
+diff --git a/super-intel.c b/super-intel.c
+index 2d9444e..360c4cc 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1018,6 +1018,8 @@ static unsigned long long min_acceptable_spare_size_imsm(struct supertype *st)
+ static __u64 blocks_per_migr_unit(struct intel_super *super,
+ 				  struct imsm_dev *dev);
+ 
++static int is_gen_migration(struct imsm_dev *dev);
++
+ static void print_imsm_dev(struct intel_super *super,
+ 			   struct imsm_dev *dev,
+ 			   char *uuid,
+@@ -1110,9 +1112,13 @@ static void print_imsm_dev(struct intel_super *super,
+ 		struct imsm_map *map = get_imsm_map(dev, 1);
+ 
+ 		printf(" <-- %s", map_state_str[map->map_state]);
+-		printf("\n     Checkpoint : %u (%llu)",
+-		       __le32_to_cpu(dev->vol.curr_migr_unit),
+-		       (unsigned long long)blocks_per_migr_unit(super, dev));
++		printf("\n     Checkpoint : %u ",
++			   __le32_to_cpu(dev->vol.curr_migr_unit));
++		if ((is_gen_migration(dev)) && (super->disks->index > 1))
++			printf("(N/A)");
++		else
++			printf("(%llu)", (unsigned long long)
++				   blocks_per_migr_unit(super, dev));
+ 	}
+ 	printf("\n");
+ 	printf("    Dirty State : %s\n", dev->vol.dirty ? "dirty" : "clean");
+@@ -1141,8 +1147,6 @@ static void print_imsm_disk(struct imsm_disk *disk, int index, __u32 reserved)
+ 	       human_size(sz * 512));
+ }
+ 
+-static int is_gen_migration(struct imsm_dev *dev);
+-
+ void examine_migr_rec_imsm(struct intel_super *super)
+ {
+ 	struct migr_record *migr_rec = super->migr_rec;
 
