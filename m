@@ -1,135 +1,154 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1d crash at boot
-Date: Mon, 21 Nov 2011 12:37:29 +1100
-Message-ID: <20111121123729.47c72c3b@notabene.brown>
-References: <20111119134139.GA30570@rere.qmqm.pl>
+Subject: Re: Is it possible to change the wait time before a drive is
+ concidered failed?
+Date: Mon, 21 Nov 2011 12:58:06 +1100
+Message-ID: <20111121125806.316a58e0@notabene.brown>
+References: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/z+bvV5j_g4l2krbjQwvQwZP"; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20111119134139.GA30570@rere.qmqm.pl>
-Sender: linux-scsi-owner@vger.kernel.org
-To: =?iso-8859-2?B?TWljaGGzIE1pcm9zs2F3?= <mirq-linux@rere.qmqm.pl>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+ boundary="Sig_/w+s+XLrBa.w3xaGXBHdR4.O"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl>
+Sender: linux-raid-owner@vger.kernel.org
+To: wilsonjonathan <piercing_male@hotmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/z+bvV5j_g4l2krbjQwvQwZP
-Content-Type: text/plain; charset=iso-8859-2
+--Sig_/w+s+XLrBa.w3xaGXBHdR4.O
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
+On Sun, 20 Nov 2011 18:41:44 +0000 wilsonjonathan <piercing_male@hotmail.co=
+m>
+wrote:
 
-Thank for the report.
-However as this crash is clearly in the SCSI layer it makes sense to report=
-ed
-it to linux-scsi - so I have cc:ed this reply there.
+> I realise that what I am attempting is not very standard in terms of
+> raid, however this is my logic and reasoning...
+>=20
+> I am setting up a home server that while on 24/7 will only be in use
+> when either myself (linux) or my son (windows) are using it, so usage
+> will vary and power concerns (Electricity in the UK is extortionately
+> priced!) and longevity are important.
+>=20
+> My set up in theory is the following using GPT partitioning.
+>=20
+> >sda 6 partitions
+> >>free space     1MiB
+> >>sda1 bios_boot 1MiB
+> >>sda2 /boot     200MiB  raid1  md2
+> >>sda3 /         8GiB    raid1  md3
+> >>sda4 *swap     9GiB    (will be "raided" using pri=3D1)
+> >>sda5 /download 40GiB   raid10 md4
+> >>sda6 /thecube  ~950Gib raid6  md5
+> >>free space     ~20MiB
+> >
+> >sdb same as sda
+> >
+> >sdc 1 partition
+> >>free space     enough space to place sdc6 the same start as sda6
+> >>sdc6 /thecube  same as sda6
+> >>free space
+> >
+> >sd[df] same as sdc
+>=20
+> The reason for partitioning this way is that all w.i.p. or downloads,
+> torrents, etc. will first go into /download and once complete will be
+> moved into /thecube for long term read only storage
+>=20
+> As /thecube is going to be used less often than sd[ab] it would be
+> advantages to have sd[df] power down and when the system is not in use
+> at all have sd[ab] also power down.
+>=20
+> This should increase the lifespan of the drives... and yes I do know
+> that drives are more likely to fail when powering up, but I also have
+> real life evidence when I used to work on AS/400s that they fail on
+> power up if they have hardly ever been turned off more often than if
+> they have regular power off/on cycles :-)
+>=20
+> I may even look at suspend to ram and magic packets if the system is not
+> accessed in say 1 hour, although this is less likely to be implemented!
+>=20
+> Ok so that=E2=80=99s the reasoning behind the question.
+>=20
+>=20
+>=20
+> I do have a couple of related questions...
+>=20
+> I have already done some testing by setting up sd[ab] for md[2-4] but
+> with no file systems on top, and then pulling sdb and then putting it
+> back in.
+>=20
+> q1, why does -add throw up the message : not performing --add, re-add
+> failed, zero superblock...
+
+Because some people seem to use "--add" when they mean "--re-add" and that
+can cause data loss.  So to be safe, if want want to discard all the data on
+a device and add it as a true spare, you now need to --zero-superblock
+first.  Hopefully that isn't too much of a burden.
+
+>=20
+> q2, I setup md4 as a raid10 far 2, and I may not be understanding raid10
+> here; when I zero the superblock to add it as I did with the other raids
+> which worked ok, for some reason it causes sda4 to drop out and kills
+> the whole md4 raid.
+
+You must be running linux-3.1.  It has a bug with exactly this behaviour.
+It should be fixed in the latest -stable release.  Upstream commit=20
+   7fcc7c8acf0fba44d19a713207af7e58267c1179
+fixes it.
+
+
+>=20
+> q3, Is it preferable to have a write intent bitmap, and if so should I
+> put it in the meta-data as opposed to a file.
+
+A write intent bitmap can make writes a little slower but makes resync after
+a crash much master.  You get to choose which you want.
+It is much more convenient in the internal metadata.  Having the bitmap in =
+an
+external file and reduce the performance cost a bit (if the file is on a
+separate device).
+I would only recommend a separate file if you have an asymmetric mirror with
+one leg (the slow leg) marked write-mostly.  You don't really want the bitm=
+ap
+on that device, so put it somewhere else.
 
 NeilBrown
 
 
-On Sat, 19 Nov 2011 14:41:39 +0100 Micha=B3 Miros=B3aw <mirq-linux@rere.qmq=
-m.pl>
-wrote:
-
-> I get following BUG_ON tripped while booting, before rootfs is mounted by
-> Debian's initrd. This started to happen for kernels since sometime
-> during 3.1-rcX.
->=20
-> [    6.246170] ------------[ cut here ]------------
-> [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/drivers/scsi/scsi=
-_lib.c:1153!
-> [    6.246347] invalid opcode: 0000 [#1] PREEMPT SMP
-> [    6.246558] CPU 5
-> [    6.246614] Modules linked in: usb_storage uas firewire_ohci firewire_=
-core crc_itu_t xhci_hcd [last unloaded: scsi_wait_scan]
-> [    6.247131]
-> [    6.247194] Pid: 288, comm: md1_raid1 Not tainted 3.2.0-rc2mq+ #5 Syst=
-em manufacturer System Product Name/P8Z68-V PRO
-> [    6.247422] RIP: 0010:[<ffffffff812443a1>]  [<ffffffff812443a1>] scsi_=
-setup_fs_cmnd+0x45/0x83
-> [    6.247563] RSP: 0018:ffff8804140d1bd0  EFLAGS: 00010046
-> [    6.247634] RAX: 0000000000000000 RBX: ffff88041d463800 RCX: 00000000f=
-fffffff
-> [    6.247710] RDX: 00000000ffffffff RSI: ffff8804142fd600 RDI: ffff88041=
-d463800
-> [    6.247785] RBP: ffff8804142fd600 R08: 00000000ffffffff R09: 000000000=
-0017a00
-> [    6.247861] R10: ffff88041d464000 R11: ffff88041d464000 R12: 000000000=
-0000800
-> [    6.247936] R13: 0000000000000001 R14: ffff88041d463800 R15: 000000000=
-0000000
-> [    6.248013] FS:  0000000000000000(0000) GS:ffff88042fb40000(0000) knlG=
-S:0000000000000000
-> [    6.248104] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [    6.248176] CR2: 000000000042b200 CR3: 0000000001605000 CR4: 000000000=
-00406e0
-> [    6.248252] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000=
-0000000
-> [    6.248328] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 000000000=
-0000400
-> [    6.248404] Process md1_raid1 (pid: 288, threadinfo ffff8804140d0000, =
-task ffff88041539a4c0)
-> [    6.248495] Stack:
-> [    6.248557]  0000000000000000 ffff8804142fd600 ffff8804142fd600 ffffff=
-ff8124a9be
-> [    6.248819]  ffff8804142fe3a0 ffff8804142fd600 ffff88041d463848 ffffff=
-ff811a5d67
-> [    6.249084]  ffff8804142fe3a0 ffff880415452400 ffff8804156f0000 000000=
-00fffffa2b
-> [    6.249346] Call Trace:
-> [    6.249414]  [<ffffffff8124a9be>] ? sd_prep_fn+0x2cd/0xb72
-> [    6.249490]  [<ffffffff811a5d67>] ? cfq_dispatch_requests+0x6f2/0x82c
-> [    6.249567]  [<ffffffff8119a168>] ? blk_peek_request+0xc8/0x1bf
-> [    6.249638]  [<ffffffff81243d83>] ? scsi_request_fn+0x64/0x406
-> [    6.249708]  [<ffffffff8119a526>] ? blk_flush_plug_list+0x186/0x1b7
-> [    6.249780]  [<ffffffff8119a562>] ? blk_finish_plug+0xb/0x2a
-> [    6.249849]  [<ffffffff812a400f>] ? raid1d+0x91/0xb22
-> [    6.249919]  [<ffffffff81031729>] ? get_parent_ip+0x9/0x1b
-> [    6.249990]  [<ffffffff813a5c9e>] ? sub_preempt_count+0x83/0x94
-> [    6.250060]  [<ffffffff813a202a>] ? schedule+0x73f/0x772
-> [    6.250129]  [<ffffffff813a5d49>] ? add_preempt_count+0x9a/0x9c
-> [    6.250199]  [<ffffffff813a330b>] ? _raw_spin_lock_irqsave+0x13/0x31
-> [    6.250271]  [<ffffffff812a9bb4>] ? md_thread+0xfe/0x11c
-> [    6.250340]  [<ffffffff8104f6c6>] ? add_wait_queue+0x3c/0x3c
-> [    6.250410]  [<ffffffff812a9ab6>] ? signal_pending+0x17/0x17
-> [    6.250479]  [<ffffffff8104f045>] ? kthread+0x76/0x7e
-> [    6.250548]  [<ffffffff813a8c34>] ? kernel_thread_helper+0x4/0x10
-> [    6.250618]  [<ffffffff8104efcf>] ? kthread_worker_fn+0x139/0x139
-> [    6.250688]  [<ffffffff813a8c30>] ? gs_change+0xb/0xb
-> [    6.250754] Code: 85 c0 74 1d 48 8b 00 48 85 c0 74 15 48 8b 40 50 48 8=
-5 c0 74 0c 48 89 ee 48 89 df ff d0 85 c0 75 44 66 83 bd d0 00 00 00 00 75 0=
-2 <0f> 0b 48 89 ee 48 89 df e8 b6 e9 ff ff 48 85 c0 48 89 c2 74 20
-> [    6.253544] RIP  [<ffffffff812443a1>] scsi_setup_fs_cmnd+0x45/0x83
-> [    6.253658]  RSP <ffff8804140d1bd0>
-> [    6.253722] ---[ end trace 533b0b5008dd7cee ]---
-> [    6.253788] note: md1_raid1[288] exited with preempt_count 1
->=20
-> I'm attaching dmesg log I could catch with netcosole (there's some part m=
-issing).
->=20
-> Best Regards,
-> Micha=B3 Miros=B3aw
 
 
---Sig_/z+bvV5j_g4l2krbjQwvQwZP
+>=20
+> Thanks in advance.
+>=20
+> Jon.
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--Sig_/w+s+XLrBa.w3xaGXBHdR4.O
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsmrWTnsnt1WYoG5AQJKRw/+KOjSvgLrMgb5CwZlJp1UisB0UXNvT8HB
-DoZsVPM7OOPig47rnu/3G2cV/j02SE0fsqx89mtLKPD/O85EMZb4lpnFdHmCY72c
-6g0ZDZArwJ6RVrUqDXzVaBTmcSeI25VCxYXpKJTuxo5f4hh6iLhV0ID3cRo+Vqqt
-MLo1DWpcCa9LbCpJ5+05Oqu2TEjvCRI4r+H9fDJdPRSr9UoxkDkJbniBliMG1tYa
-kC38EuuiM4wmPFYGMqeomcxvchsA0+60ImXTGpl79pv2r5ZdlzSvzQsTpOuZPEHE
-IZ5WP9+bj07Ipg1X1rf1IdN3W8FM6V7cDKB4B+VmusbyCx8QYBhjUBvwVNsHciMc
-9nZqq38h+TJVTjkCJxpeMtomiYddP9e3g6pCRl6vUzV/H3qQWCVr+xWOKZ31932y
-JEy3rkYel7VSp5ikdaFCOn1M1Hf8o7g4gcNmkKjcp+MzHTDQU3Kua6TK7/6yXsVz
-dHThElK85ks3EXv51uJOaxnk3Cke1qeiIzo6rCADCWaEIjZ4kF9efUcUiUXcG8a6
-8A/5Z3wB9JFu/8xxJeZncJRPWxSI6WQOyXHtL++6gjy3t95k+FQcxC/Z8HuN1JH7
-UGsnOkvnqc3Wr3vBxFJ0VAvzVrZOxbRF3ili8Rba+QFeRAk6mLoHgiLxtr9zTDZ3
-Xknrs8jb6B0=
-=U81Z
+iQIVAwUBTsmwLjnsnt1WYoG5AQKy7RAAhQDDCdG4uTMb9Gb167OyFzrp2uGgnHO7
+b1Nx/ymqK7qVKYQA2C5yoxHMBnx9r5euFBExirQCRZJu0b0mH6s/xPJSkPS/wm8k
+eTOJVEOKKFrp++ULmQ/ewNy8Uy+lehNu2qxxSJ+32KYV4APUNEFjQAgkctIy29tz
+zRiwP0rvcx1Su07lCjiSmhqqpMiwW28Gpu89V2J+Cmcqdo6K4gEPTLTMnBNpjS1e
+WU8OU8oodTwiK0WM3GYregXN/n4qwU9jTdHoXfZNXFXr0mkVmxzTeSsHMh1I2ffB
+GtGAofshy543CMhMdMqNM1166SlDU2t9Vob/iHkQBk+uuBYwYjQ4HywdNJ5k7C9v
+w8L5Fo0oUqhzik8C9Tm2SSmG2EJNAwzQYCXg7MWb0ne//X8Q8gyckIWplAUDpjsw
+fPMg0T6Z4rToc9DjUoRVN9rsPsXnEaxFQE+3iqU+R6Ri4NZLXs8Ct53QJD/RCYJT
+HwIFrJ5URJ4TTg6b1y/b5+YhMTENQqwuIg0VyboZ98JnmLJ6fpgEZx6ZShtZbsVH
+gIZAgsv8nEEVyoa1BvqdGbXIComZHPAYD2pfNKnY6jiTkjTHE/ltt0LnokHBMabq
+sJK/vcG8dIr5SupATzoiAKl15HxhZCDr6kz+4zErZyfB51KBNksxE7rtpw/x+Q3t
+/vlsZSuO004=
+=SXnk
 -----END PGP SIGNATURE-----
 
---Sig_/z+bvV5j_g4l2krbjQwvQwZP--
+--Sig_/w+s+XLrBa.w3xaGXBHdR4.O--
