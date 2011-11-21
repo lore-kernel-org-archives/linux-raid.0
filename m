@@ -1,91 +1,140 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1d crash at boot
-Date: Mon, 21 Nov 2011 19:27:45 +1100
-Message-ID: <20111121192745.2c9ac9c0@notabene.brown>
-References: <20111119134139.GA30570@rere.qmqm.pl>
-	<20111121123729.47c72c3b@notabene.brown>
-	<1321859070.3654.7.camel@dabdike>
+From: Bruce Stenning <b.stenning@indigovision.com>
+Subject: RE: BUG_ON triggered in worker_enter_idle, after power failure
+ caused potential RAID corruption (kernel 2.6.39.4)
+Date: Mon, 21 Nov 2011 09:30:51 +0000
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D9AEC6006@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/4p.xI2ptl=K..UwKBhAsPQ8"; protocol="application/pgp-signature"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1321859070.3654.7.camel@dabdike>
-Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/4p.xI2ptl=K..UwKBhAsPQ8
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+> Has anyone seen similar problems with RAID issues triggering this or similar
+> BUG_ON statements in workqueue?  I have done some extensive web searching and
+> delving through the latest git repositories, but have not found anything that
+> stands out so far.
 
-On Mon, 21 Nov 2011 08:04:30 +0100 James Bottomley
-<James.Bottomley@HansenPartnership.com> wrote:
+I've reproduced the problem a few times and the various different failures are
+suggesting some sort of kernel memory corruption when handling a a RAID that
+is in an inconsistent state.  Below are two partial logs show a null pointer
+dereference (looks like execution jumped into the weeds) and another kernel
+BUG_ON, this time in sched.c.
 
-> On Mon, 2011-11-21 at 12:37 +1100, NeilBrown wrote:
-> > Thank for the report.
-> > However as this crash is clearly in the SCSI layer it makes sense to re=
-ported
-> > it to linux-scsi - so I have cc:ed this reply there.
-> >=20
-> > NeilBrown
-> >=20
-> >=20
-> > On Sat, 19 Nov 2011 14:41:39 +0100 Micha=C5=82 Miros=C5=82aw <mirq-linu=
-x@rere.qmqm.pl>
-> > wrote:
-> >=20
-> > > I get following BUG_ON tripped while booting, before rootfs is mounte=
-d by
-> > > Debian's initrd. This started to happen for kernels since sometime
-> > > during 3.1-rcX.
-> > >=20
-> > > [    6.246170] ------------[ cut here ]------------
-> > > [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/drivers/scsi/=
-scsi_lib.c:1153!
->=20
-> I can tell you what it is:
->=20
->         /*
->          * Filesystem requests must transfer data.
->          */
->         BUG_ON(!req->nr_phys_segments);
->=20
-> But the fault is in the layer above SCSI.  It means something sent a
-> request with REQ_TYPE_FS but no actual data attached ... this is
-> supposed to be impossible, hence the bug on.
->=20
-> James
->=20
+Regards,
 
-Thanks.... that sounds strangely familiar, but I cannot be sure and google
-doesn't help.
+Bruce.
 
-Micha=C5=82: what are you using on the RAID1 - some filesystem (which one)o=
-r swap or something else?
 
-NeilBrown
+---snip
+md1: unknown partition table
+Unable to handle kernel NULL pointer dereference at virtual address 00000004
+pgd = c0004000
+[00000004] *pgd=00000000
+Internal error: Oops: 817 [#1] PREEMPT
+last sysfs file: /sys/devices/virtual/block/md2/md/stripe_cache_size
+Modules linked in: raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy raid1 raid0 md_mod raid_class sata_mv lm90 sd_mod ext4 crc16 ext3 mbcache jbd2 jbd nfs lockd sunrpc af_packet bonding e1000 softdog rtc_m41t11 vp8xx_reset i2c_iop3xx
+CPU: 0    Not tainted  (2.6.39.4-iv-dev+ #1)
+pc : [<c0053f2c>]    lr : [<c01f4530>]    psr: 60000093
+sp : dd751fb0  ip : 00000000  fp : 00000000
+r10: c0256338  r9 : 00000009  r8 : c0256338
+r7 : c0256338  r6 : c0282be0  r5 : dd750000  r4 : dd7f07e0
+r3 : df8cdea0  r2 : 00000000  r1 : df8ff820  r0 : de45ae20
+Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+Control: 0400397f  Table: 1acf8018  DAC: 00000035
+Process kworker/0:2 (pid: 1108, stack limit = 0xdd750270)
+Stack: (0xdd751fb0 to 0xdd752000)
+1fa0:                                     df82df30 dd7f07e0 c0053e3c 00000013
+1fc0: 00000000 00000000 00000000 c0057640 00000000 00000000 dd7f07e0 00000000
+1fe0: dd751fe0 dd751fe0 df82df30 c00575c4 c0030714 c0030714 00000000 00000000
+Function entered at [<c0053f2c>] from [<c0057640>] -- at worker_thread
+Function entered at [<c0057640>] from [<c0030714>] -- at kthread
+Code: e5983014 e2433001 e5883014 e894000c (e5823004)
+---[ end trace 6e6694822fa0d216 ]---
+note: kworker/0:2[1108] exited with preempt_count 1
+Unable to handle kernel paging request at virtual address fffffffc
+pgd = c0004000
+[fffffffc] *pgd=1fffe821, *pte=00000000, *ppte=00000000
+Internal error: Oops: 17 [#2] PREEMPT
+last sysfs file: /sys/devices/virtual/block/md2/md/stripe_cache_size
+Modules linked in: raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy raid1 raid0 md_mod raid_class sata_mv lm90 sd_mod ext4 crc16 ext3 mbcache jbd2 jbd nfs lockd sunrpc af_packet bonding e1000 softdog rtc_m41t11 vp8xx_reset i2c_iop3xx
+CPU: 0    Tainted: G      D      (2.6.39.4-iv-dev+ #1)
+pc : [<c00577b8>]    lr : [<c00541bc>]    psr: 00000093
+sp : dd751dd0  ip : de43b2e0  fp : dd751df4
+r10: de43b3b4  r9 : de43b2d8  r8 : de43b430
+r7 : df813d60  r6 : c0254c30  r5 : de43b2e0  r4 : 00000000
+r3 : 00000000  r2 : c0259c48  r1 : 00000000  r0 : de43b2e0
+Flags: nzcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 0400397f  Table: 1acf8018  DAC: 00000015
+Process kworker/0:2 (pid: 1108, stack limit = 0xdd750270)
+Stack: (0xdd751dd0 to 0xdd752000)
+1dc0:                                     dd750000 c01f4278 de43b2e0 ffffffff
+1de0: dd750000 df813d60 de43b3b4 de43b3b4 00000001 c00432b0 c020505b dd751dfc
+1e00: dd751dfc de43b3fc dd751e1c dd750000 dd751e6a 00000035 00000000 c0053f2c
+1e20: c0205063 00000000 c020505b c0032950 dd750270 0000000b 65000001 33383935
+---snip
 
---Sig_/4p.xI2ptl=K..UwKBhAsPQ8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+---snip
+kernel BUG at kernel/sched.c:2560!
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+pgd = c0004000
+[00000000] *pgd=00000000
+Internal error: Oops: 817 [#1] PREEMPT
+last sysfs file: /sys/devices/virtual/block/md2/md/stripe_cache_size
+Modules linked in: raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy raid1 raid0 md_mod raid_class sata_mv lm90 sd_mod ext4 crc16 ext3 mbcache jbd2 jbd nfs lockd sunrpc af_packet bonding e1000 softdog rtc_m41t11 vp8xx_reset i2c_iop3xx
+CPU: 0    Not tainted  (2.6.39.4-iv-dev+ #1)
+pc : [<c0032458>]    lr : [<c0032454>]    psr: 60000093
+sp : df867ef0  ip : c0261a08  fp : df867f14
+r10: c0289324  r9 : 00000000  r8 : df8ff970
+r7 : df8ff820  r6 : c0254c30  r5 : df8ff820  r4 : df866000
+r3 : 00000000  r2 : df867ee4  r1 : c0204f47  r0 : 00000029
+Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+Control: 0400397f  Table: 1ae08018  DAC: 00000035
+Process kworker/0:1 (pid: 154, stack limit = 0xdf866270)
+Stack: (0xdf867ef0 to 0xdf868000)
+7ee0:                                     df8ff820 c01f43fc ffff97e3 df866000
+7f00: ffff97e1 c0281b80 00002098 c0289324 c016bc98 c01f4ef8 c02822a4 c02822a4
+7f20: ffff97e3 c0281b80 c0049c64 df8ff820 ffffffff a0000013 df867f5c defb4000
+7f40: 00000000 00000002 defb40a4 c004a2e4 207007e0 c015915c defb4060 defb4000
+7f60: defb53b0 c016bd98 df8cdea0 df8a6400 df8a6405 00000000 defb4060 00000009
+7f80: 00000088 c0053494 df8a6405 df8cdea0 df866000 c0282be0 c0256338 df8cdeb0
+7fa0: 00000009 c0256338 00000000 c0054020 df82df30 df8cdea0 c0053e3c 00000013
+7fc0: 00000000 00000000 00000000 c0057640 00000000 00000000 df8cdea0 00000000
+7fe0: df867fe0 df867fe0 df82df30 c00575c4 c0030714 c0030714 828a84ba 3db86028
+Function entered at [<c0032458>] from [<c01f43fc>] -- at __bug
+Function entered at [<c01f43fc>] from [<c01f4ef8>] -- at schedule
+Function entered at [<c01f4ef8>] from [<c004a2e4>] -- at schedule_timeout
+Function entered at [<c004a2e4>] from [<c015915c>] -- at msleep
+Function entered at [<c015915c>] from [<c016bd98>] -- at ata_msleep
+Function entered at [<c016bd98>] from [<c0053494>] -- at ata_sff_pio_task
+Function entered at [<c0053494>] from [<c0054020>] -- at process_one_work
+Function entered at [<c0054020>] from [<c0057640>] -- at worker_thread
+Function entered at [<c0057640>] from [<c0030714>] -- at kthread
+Code: e59f0010 e1a01003 eb0700d6 e3a03000 (e5833000)
+---[ end trace 6e6694822fa0d216 ]---
+note: kworker/0:1[154] exited with preempt_count 2
+Unable to handle kernel paging request at virtual address fffffffc
+pgd = c0004000
+[fffffffc] *pgd=1fffe821, *pte=00000000, *ppte=00000000
+Internal error: Oops: 17 [#2] PREEMPT
+last sysfs file: /sys/devices/virtual/block/md2/md/stripe_cache_size
+Modules linked in: raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy raid1 raid0 md_mod raid_class sata_mv lm90 sd_mod ext4 crc16 ext3 mbcache jbd2 jbd nfs lockd sunrpc af_packet bonding e1000 softdog rtc_m41t11 vp8xx_reset i2c_iop3xx
+CPU: 0    Tainted: G      D      (2.6.39.4-iv-dev+ #1)
+pc : [<c00577b8>]    lr : [<c00541bc>]    psr: 00000093
+sp : df867d10  ip : 00000005  fp : df867d34
+r10: df8ff8f4  r9 : df8ff818  r8 : df8ff970
+r7 : df813d60  r6 : c0254c30  r5 : df8ff820  r4 : 00000000
+r3 : 00000000  r2 : 00000001  r1 : 00000000  r0 : df8ff820
+Flags: nzcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 0400397f  Table: 1ae08018  DAC: 00000015
+Process kworker/0:1 (pid: 154, stack limit = 0xdf866270)
+Stack: (0xdf867d10 to 0xdf868000)
+7d00:                                     df866000 c01f4278 df8ff820 ffffffff
+7d20: df866000 df813d60 df8ff8f4 df8ff8f4 00000001 c00432b0 c020505b df867d3c
+7d40: df867d3c df8ff93c df867d5c df866000 df867daa 00000035 00000000 c0032458
+---snip
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsoLhznsnt1WYoG5AQLvQw//aTZbZAz95nqtj55SKROPV2y3bcL2oaew
-NFv+dYcKXbBW59J9Ram3preopfvV2IcRJAXYrZiLp9p5GhXTjxpLCVORnJpl+OrE
-oYzlzXDJvQXm/4zpXOx8jN5xTd8nzCpDaix9z0BiSEjjwOmAOgdNliYIXWklfG3q
-AEAxFq2RUQXYf+ONTDc0hVU6BB6qdszIR1W/lPKnka7zoP9JOdPfM7sKXAKBbPag
-rBdE+/sn5pLzz6dV4eQjBDzt6+JCpm0vpfVZMaaSVxhgluzeYaSwwlFuYwwXm7Yq
-L0eozHrxvzqKncA4juCyl60K+FkBueTg37GM9c86tE6BYd58HASX0vpLCszqSwoB
-+2sR/4ipgNPZec0mG/Xr1LxhE+oLVpH0LHDmLz1K3lhqQ+qt4QgRYCa3+rzsG9+e
-bmaW4+noe8qF+EMeeIOv7bqhjDE3KXa8bl1maG61Ue6gyuLTZqaTSJHtesJaDfG8
-vGzccamZst8lymd0bL0mtvzLjkemmLXl8b7dw1Wv4f2pAM5uAz+VCG6EJcTY1l9x
-ckQW5O61RIUSkYCNkkNcIbNCMRU9knjX/levmqUoUSPWvitkhizZ6DJLiYlhTbVN
-O8F6P/IwpxvH5dBPOAw6tJxBZutW0ur+WECUiF9pO4Mu28Wn2H5upYHv6aXb1gfU
-sl24ONbmUsc=
-=B5YB
------END PGP SIGNATURE-----
-
---Sig_/4p.xI2ptl=K..UwKBhAsPQ8--
+Latest News at: http://www.indigovision.com/index.php/en/news.html
