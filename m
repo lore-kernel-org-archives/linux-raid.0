@@ -1,154 +1,155 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Is it possible to change the wait time before a drive is
- concidered failed?
-Date: Mon, 21 Nov 2011 12:58:06 +1100
-Message-ID: <20111121125806.316a58e0@notabene.brown>
-References: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl>
+Subject: Re: Question about mdadm commit
+ d6508f0cfb60edf07b36f1532eae4d9cddf7178b "be more careful about add
+ attempts"
+Date: Mon, 21 Nov 2011 13:44:29 +1100
+Message-ID: <20111121134429.7a6f46cc@notabene.brown>
+References: <CAGRgLy6Q9Qq8TeykEseXX45goi4kS8wOwrUOo1+tNZyxdyFHkw@mail.gmail.com>
+	<20111027085125.747691a9@notabene.brown>
+	<CAGRgLy7biNy4Tj9wXhBosjC4QNy7dXC2aoimu7ezGqdL82Axxg@mail.gmail.com>
+	<20111031101649.657a1ab3@notabene.brown>
+	<CAGRgLy7G_M=FtdZ9mmDvxxN52+AF+L=0+OaEP=dK7Z+Z5YBYKw@mail.gmail.com>
+	<20111031201933.314d130f@notabene.brown>
+	<CAGRgLy5zkfy2bfrJnC_eKQ_-VAcdaKCyeSounjZ3FjBb83T0mQ@mail.gmail.com>
+	<20111102095204.024dc6b2@notabene.brown>
+	<CAGRgLy5WaOAg2R0FW1=cPgn+sK+PA_=T=GrLj+KWb5HVxbndzQ@mail.gmail.com>
+	<20111109104128.7b6f098f@notabene.brown>
+	<CAGRgLy49X7KUMdY8hj-99Z46vfzvSnB6LhNZpsN5XedjTdBu1Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/w+s+XLrBa.w3xaGXBHdR4.O"; protocol="application/pgp-signature"
+ boundary="Sig_/0H11oZR8MgnlD/0+TdDewLE"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl>
+In-Reply-To: <CAGRgLy49X7KUMdY8hj-99Z46vfzvSnB6LhNZpsN5XedjTdBu1Q@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: wilsonjonathan <piercing_male@hotmail.com>
+To: Alexander Lyakas <alex.bolshoy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/w+s+XLrBa.w3xaGXBHdR4.O
-Content-Type: text/plain; charset=UTF-8
+--Sig_/0H11oZR8MgnlD/0+TdDewLE
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 20 Nov 2011 18:41:44 +0000 wilsonjonathan <piercing_male@hotmail.co=
-m>
+On Thu, 17 Nov 2011 13:13:20 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
 wrote:
 
-> I realise that what I am attempting is not very standard in terms of
-> raid, however this is my logic and reasoning...
+> Hello Neil,
 >=20
-> I am setting up a home server that while on 24/7 will only be in use
-> when either myself (linux) or my son (windows) are using it, so usage
-> will vary and power concerns (Electricity in the UK is extortionately
-> priced!) and longevity are important.
->=20
-> My set up in theory is the following using GPT partitioning.
->=20
-> >sda 6 partitions
-> >>free space     1MiB
-> >>sda1 bios_boot 1MiB
-> >>sda2 /boot     200MiB  raid1  md2
-> >>sda3 /         8GiB    raid1  md3
-> >>sda4 *swap     9GiB    (will be "raided" using pri=3D1)
-> >>sda5 /download 40GiB   raid10 md4
-> >>sda6 /thecube  ~950Gib raid6  md5
-> >>free space     ~20MiB
+> >> However, at least for 1.2 arrays, I believe this is too restrictive,
+> >> don't you think? If the raid slot (not desc_nr) of the device being
+> >> re-added is *not occupied* yet, can't we just select a free desc_nr
+> >> for the new disk on that path?
+> >> Or perhaps, mdadm on the re-add path can select a free desc_nr
+> >> (disc.number) for it (just as it does for --add), after ensuring that
+> >> the slot is not occupied yet? Where it is better to do it?
+> >> Otherwise, the re-add fails, while it can perfectly succeed (only pick
+> >> a different desc_nr).
 > >
-> >sdb same as sda
-> >
-> >sdc 1 partition
-> >>free space     enough space to place sdc6 the same start as sda6
-> >>sdc6 /thecube  same as sda6
-> >>free space
-> >
-> >sd[df] same as sdc
+> > I think I see what you are saying.
+> > However my question is: is this really an issue.
+> > Is there a credible sequence of events that results in the current code=
+ makes
+> > an undesirable decision? =A0Of course I do not count deliberately editi=
+ng the
+> > metadata as part of a credible sequence of events.
 >=20
-> The reason for partitioning this way is that all w.i.p. or downloads,
-> torrents, etc. will first go into /download and once complete will be
-> moved into /thecube for long term read only storage
+> Consider this scenario, in which the code refuses to re-add a drive:
 >=20
-> As /thecube is going to be used less often than sd[ab] it would be
-> advantages to have sd[df] power down and when the system is not in use
-> at all have sd[ab] also power down.
+> Step 1:
+> - I created a raid1 array with 3 drives: A,B,C (and their desc_nr=3D0,1,2)
+> - I failed drives B and C, and removed them from the array, and
+> totally forgot about them for the rest of the scenario.
+> - I added to the array two new drives: D and E, and waited for the
+> resync to complete. The array now has the following structure:
+> A: descr_nr=3D0
+> D: desc_nr=3D3 (was selected during the "add" path in mdadm, as expected)
+> E: desc_nr=3D4 (was selected during the "add" path in mdadm, as expected)
 >=20
-> This should increase the lifespan of the drives... and yes I do know
-> that drives are more likely to fail when powering up, but I also have
-> real life evidence when I used to work on AS/400s that they fail on
-> power up if they have hardly ever been turned off more often than if
-> they have regular power off/on cycles :-)
+> Step 2:
+> - I failed drives D and E, and removed them from the array. The E
+> drive is not used for the rest of the scenario, so we can forget about
+> it.
 >=20
-> I may even look at suspend to ram and magic packets if the system is not
-> accessed in say 1 hour, although this is less likely to be implemented!
+> I wrote some data to the array. At this point, the array bitmap is
+> dirty, and will not be cleared, since the array is degraded.
 >=20
-> Ok so that=E2=80=99s the reasoning behind the question.
+> Step 3:
+> - I added one new drive (last one, I promise!) to the array - drive F,
+> and waited for it to resync. The array now has the following
+> structure:
+> A: descr_nr=3D0
+> F: desc_nr=3D3
 >=20
+> So F took desc_nr of D drive (desc_nr=3D3). This is expected according
+> to mdadm code.
 >=20
+> Event counters at this point:
+> A and F: events=3D149, events_cleared=3D0
+> D: events=3D109
 >=20
-> I do have a couple of related questions...
+> Step 4:
+> At this point, mdadm refuses to re-add the drive D to the array,
+> because its desc_nr is already taken (I verified that via gdb). On the
+> other hand, if we would have simply picked a fresh desc_nr for D, then
+> it could be re-added I believe, because:
+> - slots are not important for raid1 (D's slot was taken actually by F).
+> - it should pass the check for bitmap-based resync (events in D' sb >=3D
+> events_cleared of the array)
 >=20
-> I have already done some testing by setting up sd[ab] for md[2-4] but
-> with no file systems on top, and then pulling sdb and then putting it
-> back in.
+> Do you agree with this, or perhaps I missed something?
 >=20
-> q1, why does -add throw up the message : not performing --add, re-add
-> failed, zero superblock...
+> Additional notes:
+> - of course, such scenario is relevant only for arrays with more than
+> single redundancy, so it's not relevant for raid5
+> - to simulate such scenario for raid6, need at step 3 to add the new
+> drive to the slot, which is not the slot of the drive we're going to
+> re-add in step4 (otherwise, it takes the D's slot, and then we really
+> cannot re-add). This can be done as we discussed earlier.
+>=20
+> What do you think?
 
-Because some people seem to use "--add" when they mean "--re-add" and that
-can cause data loss.  So to be safe, if want want to discard all the data on
-a device and add it as a true spare, you now need to --zero-superblock
-first.  Hopefully that isn't too much of a burden.
+I think some of the details in your steps aren't really right, but I do see
+the point you are making.
+If you keep the array degraded, the events_cleared will not be updated so a=
+ny
+old array member can safely be re-added.
 
->=20
-> q2, I setup md4 as a raid10 far 2, and I may not be understanding raid10
-> here; when I zero the superblock to add it as I did with the other raids
-> which worked ok, for some reason it causes sda4 to drop out and kills
-> the whole md4 raid.
+I'll have a look and see how best to fix the code.
 
-You must be running linux-3.1.  It has a bug with exactly this behaviour.
-It should be fixed in the latest -stable release.  Upstream commit=20
-   7fcc7c8acf0fba44d19a713207af7e58267c1179
-fixes it.
-
-
->=20
-> q3, Is it preferable to have a write intent bitmap, and if so should I
-> put it in the meta-data as opposed to a file.
-
-A write intent bitmap can make writes a little slower but makes resync after
-a crash much master.  You get to choose which you want.
-It is much more convenient in the internal metadata.  Having the bitmap in =
-an
-external file and reduce the performance cost a bit (if the file is on a
-separate device).
-I would only recommend a separate file if you have an asymmetric mirror with
-one leg (the slow leg) marked write-mostly.  You don't really want the bitm=
-ap
-on that device, so put it somewhere else.
+Thanks.
 
 NeilBrown
 
 
 
-
 >=20
-> Thanks in advance.
->=20
-> Jon.
->=20
+> Thanks,
+> Alex.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---Sig_/w+s+XLrBa.w3xaGXBHdR4.O
+--Sig_/0H11oZR8MgnlD/0+TdDewLE
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsmwLjnsnt1WYoG5AQKy7RAAhQDDCdG4uTMb9Gb167OyFzrp2uGgnHO7
-b1Nx/ymqK7qVKYQA2C5yoxHMBnx9r5euFBExirQCRZJu0b0mH6s/xPJSkPS/wm8k
-eTOJVEOKKFrp++ULmQ/ewNy8Uy+lehNu2qxxSJ+32KYV4APUNEFjQAgkctIy29tz
-zRiwP0rvcx1Su07lCjiSmhqqpMiwW28Gpu89V2J+Cmcqdo6K4gEPTLTMnBNpjS1e
-WU8OU8oodTwiK0WM3GYregXN/n4qwU9jTdHoXfZNXFXr0mkVmxzTeSsHMh1I2ffB
-GtGAofshy543CMhMdMqNM1166SlDU2t9Vob/iHkQBk+uuBYwYjQ4HywdNJ5k7C9v
-w8L5Fo0oUqhzik8C9Tm2SSmG2EJNAwzQYCXg7MWb0ne//X8Q8gyckIWplAUDpjsw
-fPMg0T6Z4rToc9DjUoRVN9rsPsXnEaxFQE+3iqU+R6Ri4NZLXs8Ct53QJD/RCYJT
-HwIFrJ5URJ4TTg6b1y/b5+YhMTENQqwuIg0VyboZ98JnmLJ6fpgEZx6ZShtZbsVH
-gIZAgsv8nEEVyoa1BvqdGbXIComZHPAYD2pfNKnY6jiTkjTHE/ltt0LnokHBMabq
-sJK/vcG8dIr5SupATzoiAKl15HxhZCDr6kz+4zErZyfB51KBNksxE7rtpw/x+Q3t
-/vlsZSuO004=
-=SXnk
+iQIVAwUBTsm7DTnsnt1WYoG5AQLRlxAAt+zyEXrHjFzEAsftm5ssAa0/zSPO0LuO
+lpwEd+RdN9FF7MdkSRK9kx2zpvBjmTRl7OIR7Pw+50liyHS1UVlGzfkSJg27rzP4
+RGbSjxT2Y0P9IZLA8LDi13dRD5Dj9q9055O1v1yQitOo5vUSXCqBcyhox3SkaEOZ
+2SqqH9ShrNcG+n6uTtZChAZScHtLCN5mJ+Wc/GGdzuuAdYcOoeSw3Tz3SJ/Nxs+E
+srtn8jqH2SYiKv8tRakrLi68KzGTn3mySWcxUhtY4Yzaalm2vXmAsbh9vrxRO6vN
+uD5f8+fOsshCSbdeuqh8McsoX1wedWSe1GNHgbpmMte1554Jj6juZJlIehj7Hm/U
+DQ3DGIRChghbULKOD1yiqaqXWb9oOWvMRnPHgC7jonPzfU9KxssYg2ZFGlpbcBdc
+Q3AInsMPTQLVGvELiHpJAsxYww10kx8zsj+WfE/mPF5Ul7EPc2VPShSiLwykfygL
+1T7Pny5x7v69h+mnW8xgib8RQMMKstqTxIYIokIi/3K4hUrCaeOLuiFJdsWjzZd2
+yU3Uy8bzf4UVZHv8mFoRrpyial/cKsamUOlqdYwkDVbh/dLnYj8KDjO2dlUvP6Ld
+gzJn/dRmk9FaBB6Mh1vbngPhNupM4Eb2opVLS3piG92H4ilzCSTq2Oz6IpjLjSvI
+DMz55kRdK40=
+=+G8a
 -----END PGP SIGNATURE-----
 
---Sig_/w+s+XLrBa.w3xaGXBHdR4.O--
+--Sig_/0H11oZR8MgnlD/0+TdDewLE--
