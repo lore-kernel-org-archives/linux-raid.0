@@ -1,90 +1,93 @@
-From: wilsonjonathan <piercing_male@hotmail.com>
-Subject: Re: Is it possible to change the wait time before a drive is
- concidered failed?
-Date: Tue, 22 Nov 2011 15:59:14 +0000
-Message-ID: <BLU0-SMTP121C59F841CDA9046FA14ED98C80@phx.gbl>
-References: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl>
-	 <20111121125806.316a58e0@notabene.brown>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Disk identity crisis on RAID10 recovery (3.1.0)
+Date: Wed, 23 Nov 2011 07:00:39 +1100
+Message-ID: <20111123070039.707de7cd@notabene.brown>
+References: <4ECB7649.6080505@dentonet.pl>
+	<20111122221522.3f525fc6@notabene.brown>
+	<4ECB940C.6010707@dentonet.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/6T91o0R7.icvBZwidn_ZO_h"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111121125806.316a58e0@notabene.brown>
+In-Reply-To: <4ECB940C.6010707@dentonet.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: krzepecki@dentonet.pl
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Having looked more indepth I think the answer to my first question may
-be resolved by increasing the wait time in the individual sd* devices as
-if I read it correctly soft raid doesn't have or use a time out value
-(unless it does both have and use the value under the md* device) but
-instead just waits until an individual device times out. 
+--Sig_/6T91o0R7.icvBZwidn_ZO_h
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-If thats the case then I may just increase the time out of the sd*'s to
-60 seconds from 30 seconds which should be more than enough time to
-allow a drive to wind up and start to give back data.
+On Tue, 22 Nov 2011 13:22:36 +0100 Konrad Rzepecki <krzepecki@dentonet.pl>
+wrote:
+
+> W dniu 22.11.2011 12:15, NeilBrown pisze:
+> > You can probably get your data back... but really you should have=20
+> > asked for
+> > help as soon as strange things started happening!
+>=20
+> Possibly, but I don't like to bother others when I don't need to. And in=
+=20
+> the beginning
+> I didn't connect this behavior whit kernel but with some hardware disk=20
+> issues.
+>=20
+> Moreover reporting bugs on list is hmm... inconvenient. Please, back=20
+> Bugzilla
+> online ASAP.
+
+Personally, I *much* prefer email.   I do normally respond to things on
+bugzilla (When bugzilla is working) but I don't like to.
+
+>=20
+> > If you have all important data backed up then just upgrade to 3.1.2=20
+> > and make
+> > the array again  from scratch.
+>=20
+> Probably this is best way...
+>=20
+> > If you want to try to recover the array please report that output of=20
+> > "mdadm
+> > --examine" on all of the devices.
+>=20
+> ...but I paste output of this commands below. If some of system survive,=
+=20
+> I can
+> make it up faster. Of course, if it isn't to complicated or take too much=
+ of
+> your time to describe it.
+
+As you've managed to get it going on a previous kernel I won't spend any ti=
+me
+on this.
+
+Glad you have a satisfactory resolution (and sorry than 3.1 is broken :-( )
+
+NeilBrown
 
 
-Thanks for the helpful replies... 
 
-> > 
-> > I do have a couple of related questions...
-> > 
-> > I have already done some testing by setting up sd[ab] for md[2-4] but
-> > with no file systems on top, and then pulling sdb and then putting it
-> > back in.
-> > 
-> > q1, why does -add throw up the message : not performing --add, re-add
-> > failed, zero superblock...
-> 
-> Because some people seem to use "--add" when they mean "--re-add" and that
-> can cause data loss.  So to be safe, if want want to discard all the data on
-> a device and add it as a true spare, you now need to --zero-superblock
-> first.  Hopefully that isn't too much of a burden.
+--Sig_/6T91o0R7.icvBZwidn_ZO_h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Thats what I thought was strange, as no data had changed (no file
-system) after getting the above message when I tried --re-add I expected
-it to add it back in and re-sync, but again it told me I couldn't so I
-had to zero the supper block.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-> 
-> > 
-> > q2, I setup md4 as a raid10 far 2, and I may not be understanding raid10
-> > here; when I zero the superblock to add it as I did with the other raids
-> > which worked ok, for some reason it causes sda4 to drop out and kills
-> > the whole md4 raid.
-> 
-> You must be running linux-3.1.  It has a bug with exactly this behaviour.
-> It should be fixed in the latest -stable release.  Upstream commit 
->    7fcc7c8acf0fba44d19a713207af7e58267c1179
-> fixes it.
+iQIVAwUBTsv/Zznsnt1WYoG5AQJKUg/5ARDVKgADOVjyTP3MCRjAwtxvSoaF+XUD
+5ZC4ioctyav2HO0aACIpETiXBKnbWDNNKr7/47sEEmxirJKnq6N5NyDCFKPCgrYd
+UhPG8FEVBKfnCnI796iWERUEFEOW6rbt8Q+oJjZfcyjo9I0+xIoOa3HUWN4Ez5kX
+lxHIIxxpaKHm/zTWiX+Odkpwz9ff0LpXsJmeTaw282j6llOXAM43K3QTQJQQztjV
+QKazwQtqnTKcdlCHpUtI9GPzMo28rR+3rwdW0kpgxDxOWXya2ZkxVJrKskXq1CXD
+xjeaqIUJ+DSoDkQ63UFjb2Keyf00SEpvlO8OnXJndc45AQ2qx4zRcsG0xnimZEhg
+Ul+ei+tqH+c/0mlATOkTOF4C5WntwKX/qQ5w1PCLWPdMqXb3Hst3XnicnxlhI841
+mKCtta5WtOQ2sALMEnrnKx6l0k9dIs2D0bLG3OQUJuwzFRRyFk7doO4EAlInNxUU
+cujHBkapJko32cg2X/JmY0GKMAS3hIxrYW85tInFyG6t1O9p5ggxXOOBwPWUOoU9
+VNwu++REUoZ2r7KnuAL+uDuz1mjfIVpgbyzO2+vgia04IjZ1Py2/CDmJqw+370KZ
+YdOfQ6TG/RGxTtMpU8U6SAW6CFr1vWFjutKUKCGOD80y1ogPR0E2jmdigxH3ExdC
+95gqKiGG++U=
+=bPLr
+-----END PGP SIGNATURE-----
 
-Thanks for that... I'm currently running an older kernel now as I'm
-installing debian squeeze to further test the raids with a running
-system (as opposed to off a live cd) 
-
-> 
-> 
-> > 
-> > q3, Is it preferable to have a write intent bitmap, and if so should I
-> > put it in the meta-data as opposed to a file.
-> 
-> A write intent bitmap can make writes a little slower but makes resync after
-> a crash much master.  You get to choose which you want.
-> It is much more convenient in the internal metadata.  Having the bitmap in an
-> external file and reduce the performance cost a bit (if the file is on a
-> separate device).
-> I would only recommend a separate file if you have an asymmetric mirror with
-> one leg (the slow leg) marked write-mostly.  You don't really want the bitmap
-> on that device, so put it somewhere else.
-
-I will use the intent as you describe as the speed hit isn't a problem
-for my use-case.
-
-> 
-> NeilBrown
-> 
-
-Jon
-
+--Sig_/6T91o0R7.icvBZwidn_ZO_h--
