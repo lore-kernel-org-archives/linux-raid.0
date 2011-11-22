@@ -1,166 +1,330 @@
-From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-Subject: Re: raid1d crash at boot
-Date: Tue, 22 Nov 2011 13:10:41 +0100
-Message-ID: <20111122121041.GB16579@rere.qmqm.pl>
-References: <20111119134139.GA30570@rere.qmqm.pl>
- <20111121123729.47c72c3b@notabene.brown>
- <1321859070.3654.7.camel@dabdike>
- <20111121192745.2c9ac9c0@notabene.brown>
- <20111122005037.GA7801@rere.qmqm.pl>
- <20111122122657.69b14108@notabene.brown>
- <20111122120337.GA16579@rere.qmqm.pl>
+From: Konrad Rzepecki <krzepecki@dentonet.pl>
+Subject: Re: Disk identity crisis on RAID10 recovery (3.1.0)
+Date: Tue, 22 Nov 2011 13:22:36 +0100
+Message-ID: <4ECB940C.6010707@dentonet.pl>
+References: <4ECB7649.6080505@dentonet.pl> <20111122221522.3f525fc6@notabene.brown>
+Reply-To: krzepecki@dentonet.pl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111122120337.GA16579@rere.qmqm.pl>
-Sender: linux-scsi-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20111122221522.3f525fc6@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Tue, Nov 22, 2011 at 01:03:37PM +0100, Micha=B3 Miros=B3aw wrote:
-> On Tue, Nov 22, 2011 at 12:26:57PM +1100, NeilBrown wrote:
-> > On Tue, 22 Nov 2011 01:50:37 +0100 Micha=B3 Miros=B3aw <mirq-linux@=
-rere.qmqm.pl>
-> > wrote:
-> >=20
-> > > On Mon, Nov 21, 2011 at 07:27:45PM +1100, NeilBrown wrote:
-> > > > On Mon, 21 Nov 2011 08:04:30 +0100 James Bottomley
-> > > > <James.Bottomley@HansenPartnership.com> wrote:
-> > > > > On Mon, 2011-11-21 at 12:37 +1100, NeilBrown wrote:
-> > > > > > Thank for the report.
-> > > > > > However as this crash is clearly in the SCSI layer it makes=
- sense to reported
-> > > > > > it to linux-scsi - so I have cc:ed this reply there.
-> > > > > >=20
-> > > > > > On Sat, 19 Nov 2011 14:41:39 +0100 Micha=B3 Miros=B3aw <mir=
-q-linux@rere.qmqm.pl>
-> > > > > > wrote:
-> > > > > > > I get following BUG_ON tripped while booting, before root=
-fs is mounted by
-> > > > > > > Debian's initrd. This started to happen for kernels since=
- sometime
-> > > > > > > during 3.1-rcX.
-> > > > > > >=20
-> > > > > > > [    6.246170] ------------[ cut here ]------------
-> > > > > > > [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/d=
-rivers/scsi/scsi_lib.c:1153!
-> > > > >=20
-> > > > > I can tell you what it is:
-> > > > >=20
-> > > > >         /*
-> > > > >          * Filesystem requests must transfer data.
-> > > > >          */
-> > > > >         BUG_ON(!req->nr_phys_segments);
-> > > > >=20
-> > > > > But the fault is in the layer above SCSI.  It means something=
- sent a
-> > > > > request with REQ_TYPE_FS but no actual data attached ... this=
- is
-> > > > > supposed to be impossible, hence the bug on.
-> > > >=20
-> > > > Thanks.... that sounds strangely familiar, but I cannot be sure=
- and google
-> > > > doesn't help.
-> > > >=20
-> > > > Micha=B3: what are you using on the RAID1 - some filesystem (wh=
-ich one)or swap or something else?
-> > >=20
-> > > The whole stack is: ext4 over lvm over dm-crypt over md-raid1 ove=
-r SATA
-> > > drives.  The boot doesn't survive to the point where the initrd s=
-cript asks
-> > > for md-crypt's key password.
-> > >
-> >=20
-> > That gives us lots of room for pointing the finger of blame, doesn'=
-t it?
-> > I think it is -> his problem. :-)
-> >=20
-> > From the md part of the stack trace it looks most like a write requ=
-est.  It
-> > could be a retried read, but that is extremely unlike that early in=
- boot.
-> >=20
-> > So presumably it is some sort of zero-length REQ_FLUSH or something=
- like that.
-> > md/raid1 will just pass those unchanged down.=20
-> > My guess is that ext4 is generating this and something in the stack=
- is
-> > stripping the REQ_FLUSH .... though why it even tries before asking=
- for a
-> > password is beyond me.
->=20
-> I pointed finger at md because when dm-crypt is not yet set up
-> then only thing working is the array.  All filesystems need the
-> dm-crypt mapping first.
->=20
-> From the dmesg on 3.0, I see that NCQ is enabled but FUA is not:
->=20
-> [    2.269487] ata1: SATA max UDMA/133 abar m2048@0xfbd25000 port 0xf=
-bd25100 irq 64
-> [    2.588395] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.588979] ata1.00: ATA-8: KINGSTON SV100S264G, D110225a, max UDM=
-A/100
-> [    2.589037] ata1.00: 125045424 sectors, multi 16: LBA48 NCQ (depth=
- 31/32), AA
-> [    2.589321] ata1.00: configured for UDMA/100
-> [    2.589440] scsi 1:0:0:0: Direct-Access     ATA      KINGSTON SV10=
-0S2 D110 PQ: 0 ANSI: 5
-> [    2.631113] sd 1:0:0:0: [sda] 125045424 512-byte logical blocks: (=
-64.0 GB/59.6 GiB)
-> [    2.631265] sd 1:0:0:0: [sda] Write Protect is off
-> [    2.631267] sd 1:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [    2.631296] sd 1:0:0:0: [sda] Write cache: enabled, read cache: en=
-abled, doesn't support DPO or FUA
-> [    2.632119] sd 1:0:0:0: [sda] Attached SCSI disk
->=20
-> [    2.269557] ata2: SATA max UDMA/133 abar m2048@0xfbd25000 port 0xf=
-bd25180 irq 64
-> [    2.588916] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.628336] ata2.00: ATA-8: ST9500420AS, 0002SDM1, max UDMA/133
-> [    2.628396] ata2.00: 976773168 sectors, multi 16: LBA48 NCQ (depth=
- 31/32)
-> [    2.630143] ata2.00: configured for UDMA/133
-> [    2.630238] scsi 2:0:0:0: Direct-Access     ATA      ST9500420AS  =
-    0002 PQ: 0 ANSI: 5
-> [    2.631236] sd 2:0:0:0: [sdb] 976773168 512-byte logical blocks: (=
-500 GB/465 GiB)
-> [    2.631792] sd 2:0:0:0: [sdb] Write Protect is off
-> [    2.632031] sd 2:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> [    2.632050] sd 2:0:0:0: [sdb] Write cache: enabled, read cache: en=
-abled, doesn't support DPO or FUA
-> [    2.636038] sd 2:0:0:0: [sdb] Attached SCSI disk
->=20
-> There's two RAID1 array on both of the disks, and one more RAID1 (wit=
-h second
-> leg missing) on sdb.
+W dniu 22.11.2011 12:15, NeilBrown pisze:
+> You can probably get your data back... but really you should have 
+> asked for
+> help as soon as strange things started happening!
 
-I just remembered that the sdb leg of the main array has write-mostly f=
-lag
-set. I checked /proc/mdstat from running system and it turns out that n=
-ow
-I have both legs marked so. Does this ring a bell?
+Possibly, but I don't like to bother others when I don't need to. And in 
+the beginning
+I didn't connect this behavior whit kernel but with some hardware disk 
+issues.
 
-cat /proc/mdstat
-Personalities : [raid1]
-md2 : active (auto-read-only) raid1 sdb3[0]
-      425862712 blocks super 1.2 [2/1] [U_]
+Moreover reporting bugs on list is hmm... inconvenient. Please, back 
+Bugzilla
+online ASAP.
 
-md1 : active raid1 sda2[3](W) sdb2[2](W)
-      62396688 blocks super 1.2 [2/2] [UU]
+> If you have all important data backed up then just upgrade to 3.1.2 
+> and make
+> the array again  from scratch.
 
-md0 : active raid1 sda1[0] sdb1[1]
-      123892 blocks super 1.2 [2/2] [UU]
+Probably this is best way...
 
-unused devices: <none>
+> If you want to try to recover the array please report that output of 
+> "mdadm
+> --examine" on all of the devices.
 
-Best Regards,
-Micha=B3 Miros=B3aw
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+...but I paste output of this commands below. If some of system survive, 
+I can
+make it up faster. Of course, if it isn't to complicated or take too much of
+your time to describe it.
+
+mdadm --examine /dev/sda2
+/dev/sda2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423abc - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     0       8        2        0      active sync   /dev/sda2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+sdb - is back, but this is new empty one.
+
+
+mdadm --examine /dev/sdc2
+/dev/sdc2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423ae6 - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     8       8       34        8      spare   /dev/sdc2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+mdadm --examine /dev/sdd2
+/dev/sdd2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423af2 - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     3       8       50        3      active sync   /dev/sdd2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+mdadm --examine /dev/sde2
+/dev/sde2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423b04 - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     4       8       66        4      active sync   /dev/sde2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+mdadm --examine /dev/sdf2
+/dev/sdf2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423b16 - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     5       8       82        5      active sync   /dev/sdf2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+mdadm --examine /dev/sdg2
+/dev/sdg2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423b28 - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     6       8       98        6      active sync   /dev/sdg2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+
+
+mdadm --examine /dev/sdh2
+/dev/sdh2:
+           Magic : a92b4efc
+         Version : 0.90.00
+            UUID : 0f01ef9e:ab0117cf:3d186b3c:53958f34 (local to host 
+(none))
+   Creation Time : Wed Aug 17 09:34:04 2011
+      Raid Level : raid10
+   Used Dev Size : 1463946752 (1396.13 GiB 1499.08 GB)
+      Array Size : 5855787008 (5584.51 GiB 5996.33 GB)
+    Raid Devices : 8
+   Total Devices : 7
+Preferred Minor : 1
+
+     Update Time : Tue Nov 22 11:43:58 2011
+           State : clean
+  Active Devices : 6
+Working Devices : 7
+  Failed Devices : 2
+   Spare Devices : 1
+        Checksum : e8423b3a - correct
+          Events : 155878
+
+          Layout : near=2
+      Chunk Size : 512K
+
+       Number   Major   Minor   RaidDevice State
+this     7       8      114        7      active sync   /dev/sdh2
+
+    0     0       8        2        0      active sync   /dev/sda2
+    1     1       0        0        1      faulty removed
+    2     2       0        0        2      faulty removed
+    3     3       8       50        3      active sync   /dev/sdd2
+    4     4       8       66        4      active sync   /dev/sde2
+    5     5       8       82        5      active sync   /dev/sdf2
+    6     6       8       98        6      active sync   /dev/sdg2
+    7     7       8      114        7      active sync   /dev/sdh2
+    8     8       8       34        8      spare   /dev/sdc2
+
+-- 
+    Konrad Rzepecki
