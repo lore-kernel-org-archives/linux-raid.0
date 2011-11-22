@@ -1,93 +1,71 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: Disk identity crisis on RAID10 recovery (3.1.0)
-Date: Wed, 23 Nov 2011 07:00:39 +1100
-Message-ID: <20111123070039.707de7cd@notabene.brown>
-References: <4ECB7649.6080505@dentonet.pl>
-	<20111122221522.3f525fc6@notabene.brown>
-	<4ECB940C.6010707@dentonet.pl>
+From: Gavin Whitehead <gavin@alabastercranium.demon.co.uk>
+Subject: partition based raid1 and multi boot Ubuntu/Xubuntu
+Date: Tue, 22 Nov 2011 22:23:00 +0000
+Message-ID: <4ECC20C4.6050504@alabastercranium.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/6T91o0R7.icvBZwidn_ZO_h"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4ECB940C.6010707@dentonet.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: krzepecki@dentonet.pl
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/6T91o0R7.icvBZwidn_ZO_h
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm not sure if this is a GRUB2 problem or a RAID/MD issue but here goes...
 
-On Tue, 22 Nov 2011 13:22:36 +0100 Konrad Rzepecki <krzepecki@dentonet.pl>
-wrote:
+I want to set up a machine that will boot two Linux installations using 
+raid 1 partitions and Windows XP on a single partition.
 
-> W dniu 22.11.2011 12:15, NeilBrown pisze:
-> > You can probably get your data back... but really you should have=20
-> > asked for
-> > help as soon as strange things started happening!
->=20
-> Possibly, but I don't like to bother others when I don't need to. And in=
-=20
-> the beginning
-> I didn't connect this behavior whit kernel but with some hardware disk=20
-> issues.
->=20
-> Moreover reporting bugs on list is hmm... inconvenient. Please, back=20
-> Bugzilla
-> online ASAP.
+I have two identical disks partitioned as follows
 
-Personally, I *much* prefer email.   I do normally respond to things on
-bugzilla (When bugzilla is working) but I don't like to.
+$ cat /proc/partitions
+major minor  #blocks  name
 
->=20
-> > If you have all important data backed up then just upgrade to 3.1.2=20
-> > and make
-> > the array again  from scratch.
->=20
-> Probably this is best way...
->=20
-> > If you want to try to recover the array please report that output of=20
-> > "mdadm
-> > --examine" on all of the devices.
->=20
-> ...but I paste output of this commands below. If some of system survive,=
-=20
-> I can
-> make it up faster. Of course, if it isn't to complicated or take too much=
- of
-> your time to describe it.
+    8        0  244198584 sda
+    8        1   30720000 sda1
+    8        2   30720000 sda2
+    8        3   40960000 sda3
+    8        4          1 sda4
+    8        5    4194304 sda5
+    8        6  137601024 sda6
+    8       16  244198584 sdb
+    8       17   30720000 sdb1
+    8       18   30720000 sdb2
+    8       19   40960000 sdb3
+    8       20          1 sdb4
+    8       21    4194304 sdb5
+    8       22  137601024 sdb6
 
-As you've managed to get it going on a previous kernel I won't spend any ti=
-me
-on this.
+I installed WinXP first in sda3.
 
-Glad you have a satisfactory resolution (and sorry than 3.1 is broken :-( )
+I then installed Ubuntu 11.04 from the Alternate CD and created some 
+raid1 devices
+     md0        sda1 sdb1    /
+     md1        sda5 sdb5    swap
+     md2        sda6 sdb6    /home
 
-NeilBrown
+I set the boot flag on sda1 and sdb1.
+This worked a treat.  I could boot in to either Ubuntu 11.04 to WinXP.  
+I tested the RAID1 (power down, unplug a disk, power up, power down, 
+replug the disk, power up,  use 'mdadm --add' to rebuild the array).  
+Brilliant.
 
+Then I installed Xubuntu 11.10 from the Alternate CD.  For this install 
+I created one new raid1 device (md3) and reused md1 and md2
+     md3        sda2 sdb2    /
+     md1        sda5 sdb5    swap
+     md2        sda6 sdb6    /home
 
+I set the boot flag on sda2 and sdb2.
 
---Sig_/6T91o0R7.icvBZwidn_ZO_h
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+After the install had completed and grub2 had built the grub.cfg I only 
+had my new Xubuntu 11.10 in the boot menu.  The Xubuntu 11.10 install 
+works perfectly (and I can boot in to Win XP) but I can't boot in to the 
+Ubuntu 11.04 installation.  I've re-run 'update-grub' but it doesn't 
+find the other installation.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+If I run 'sudo mount /dev/md0 /mnt' I can access the Ubuntu 11.04 files.
 
-iQIVAwUBTsv/Zznsnt1WYoG5AQJKUg/5ARDVKgADOVjyTP3MCRjAwtxvSoaF+XUD
-5ZC4ioctyav2HO0aACIpETiXBKnbWDNNKr7/47sEEmxirJKnq6N5NyDCFKPCgrYd
-UhPG8FEVBKfnCnI796iWERUEFEOW6rbt8Q+oJjZfcyjo9I0+xIoOa3HUWN4Ez5kX
-lxHIIxxpaKHm/zTWiX+Odkpwz9ff0LpXsJmeTaw282j6llOXAM43K3QTQJQQztjV
-QKazwQtqnTKcdlCHpUtI9GPzMo28rR+3rwdW0kpgxDxOWXya2ZkxVJrKskXq1CXD
-xjeaqIUJ+DSoDkQ63UFjb2Keyf00SEpvlO8OnXJndc45AQ2qx4zRcsG0xnimZEhg
-Ul+ei+tqH+c/0mlATOkTOF4C5WntwKX/qQ5w1PCLWPdMqXb3Hst3XnicnxlhI841
-mKCtta5WtOQ2sALMEnrnKx6l0k9dIs2D0bLG3OQUJuwzFRRyFk7doO4EAlInNxUU
-cujHBkapJko32cg2X/JmY0GKMAS3hIxrYW85tInFyG6t1O9p5ggxXOOBwPWUOoU9
-VNwu++REUoZ2r7KnuAL+uDuz1mjfIVpgbyzO2+vgia04IjZ1Py2/CDmJqw+370KZ
-YdOfQ6TG/RGxTtMpU8U6SAW6CFr1vWFjutKUKCGOD80y1ogPR0E2jmdigxH3ExdC
-95gqKiGG++U=
-=bPLr
------END PGP SIGNATURE-----
+Is my intended configuration (tri-boot with two raid1, partition based, 
+Linux installations and XP on a single parition) unachievable?
 
---Sig_/6T91o0R7.icvBZwidn_ZO_h--
+Gav
