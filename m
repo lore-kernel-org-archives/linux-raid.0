@@ -1,131 +1,168 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: raid1d crash at boot
-Date: Tue, 22 Nov 2011 12:26:57 +1100
-Message-ID: <20111122122657.69b14108@notabene.brown>
-References: <20111119134139.GA30570@rere.qmqm.pl>
-	<20111121123729.47c72c3b@notabene.brown>
-	<1321859070.3654.7.camel@dabdike>
-	<20111121192745.2c9ac9c0@notabene.brown>
-	<20111122005037.GA7801@rere.qmqm.pl>
+From: Konrad Rzepecki <krzepecki@dentonet.pl>
+Subject: Disk identity crisis on RAID10 recovery (3.1.0)
+Date: Tue, 22 Nov 2011 11:15:37 +0100
+Message-ID: <4ECB7649.6080505@dentonet.pl>
+Reply-To: krzepecki@dentonet.pl
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.as93/mOnvgsVpe/wFCWs=Q"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111122005037.GA7801@rere.qmqm.pl>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?iso-8859-2?B?TWljaGGzIE1pcm9zs2F3?= <mirq-linux@rere.qmqm.pl>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.as93/mOnvgsVpe/wFCWs=Q
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: quoted-printable
+    Hi
 
-On Tue, 22 Nov 2011 01:50:37 +0100 Micha=B3 Miros=B3aw <mirq-linux@rere.qmq=
-m.pl>
-wrote:
-
-> On Mon, Nov 21, 2011 at 07:27:45PM +1100, NeilBrown wrote:
-> > On Mon, 21 Nov 2011 08:04:30 +0100 James Bottomley
-> > <James.Bottomley@HansenPartnership.com> wrote:
-> > > On Mon, 2011-11-21 at 12:37 +1100, NeilBrown wrote:
-> > > > Thank for the report.
-> > > > However as this crash is clearly in the SCSI layer it makes sense t=
-o reported
-> > > > it to linux-scsi - so I have cc:ed this reply there.
-> > > >=20
-> > > > On Sat, 19 Nov 2011 14:41:39 +0100 Micha=B3 Miros=B3aw <mirq-linux@=
-rere.qmqm.pl>
-> > > > wrote:
-> > > > > I get following BUG_ON tripped while booting, before rootfs is mo=
-unted by
-> > > > > Debian's initrd. This started to happen for kernels since sometime
-> > > > > during 3.1-rcX.
-> > > > >=20
-> > > > > [    6.246170] ------------[ cut here ]------------
-> > > > > [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/drivers/s=
-csi/scsi_lib.c:1153!
-> > >=20
-> > > I can tell you what it is:
-> > >=20
-> > >         /*
-> > >          * Filesystem requests must transfer data.
-> > >          */
-> > >         BUG_ON(!req->nr_phys_segments);
-> > >=20
-> > > But the fault is in the layer above SCSI.  It means something sent a
-> > > request with REQ_TYPE_FS but no actual data attached ... this is
-> > > supposed to be impossible, hence the bug on.
-> >=20
-> > Thanks.... that sounds strangely familiar, but I cannot be sure and goo=
-gle
-> > doesn't help.
-> >=20
-> > Micha=B3: what are you using on the RAID1 - some filesystem (which one)=
-or swap or something else?
->=20
-> The whole stack is: ext4 over lvm over dm-crypt over md-raid1 over SATA
-> drives.  The boot doesn't survive to the point where the initrd script as=
-ks
-> for md-crypt's key password.
->
-
-That gives us lots of room for pointing the finger of blame, doesn't it?
-I think it is -> his problem. :-)
-
-=46rom the md part of the stack trace it looks most like a write request.  It
-could be a retried read, but that is extremely unlike that early in boot.
-
-So presumably it is some sort of zero-length REQ_FLUSH or something like th=
-at.
-md/raid1 will just pass those unchanged down.=20
-My guess is that ext4 is generating this and something in the stack is
-stripping the REQ_FLUSH .... though why it even tries before asking for a
-password is beyond me.
-
-Maybe someone of dm-devel can help?
-
-If not we might need to try a debugging patch like this:
+My system is Slackware-current x86_64 with 3.1.0 kernel
+Gigabyte GA-880GA-UD3H/GA-880GA-UD3H Mainboard
+8 x Seagate ST1500DL003-9VT16L 1.5TB disks
+ext4 on LVM on RAID10
 
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index f43c8a5..59cb2ad 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1560,7 +1560,7 @@ generic_make_request_checks(struct bio *bio)
- 			goto end_io;
- 		}
- 	}
--
-+	WARN_ON(((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) && nr_sectors =3D=3D 0);
- 	if ((bio->bi_rw & REQ_DISCARD) &&
- 	    (!blk_queue_discard(q) ||
- 	     ((bio->bi_rw & REQ_SECURE) &&
+
+I have 8 devices RADI10 (2 near) and huge problem with its recovery.
+
+It contain partitions from sda2 to sdh2 in this order.
+
+Some days ago i found that sdc2 is inactive from some reason [UU_UUUUU], 
+so I decided to readd (zero, add) it to the RAID since smart shows no 
+problems at it. RAID begin to resync but device status looks strange 
+[_U_UUUUU]. I ignore this then, but after resync raid still have 
+incomplete status [UU_UUUUU]. I try to do it again but, system claims 
+that sdc2 is busy - so I restart machine. This lead me to BIG problem. 
+System did not stand up. It claims that superblock on sda2 and sdc2 are 
+this same. So I zero sdc2 and reboot. In that moment BIOS smart check 
+found that sdb disk is failing. System starts up but /var partition 
+occurs broken beyond repair. I think then that this sdb failure cause 
+/var crash, but I doubt in it now. I fail and remove sdb2 and have 
+following status raid [U__UUUUU].
+
+Broken sdb is now removed so it cause device renaming, so strange 
+working sdc2 become now sdb2, and so on.
+
+I recover, all important data and try to fix raid further. So I try to 
+zero and add sdb2 (previously sdc2) again. This was big mistake. It was 
+add as spare but raid status starts looks that [___UUUUU]. In this 
+moment filesystems begins to failing. Removing it (sdb2) from array not 
+help. After restart no filesystem are mounted. When I disconnect this 
+sdb drive and reset, even raid doesn't stand up it claims that it have 5 
+working and 1 spare device.
+
+Now I have there only very limited initrd busysbox system so I cannot 
+provide detailed logs. Only thing I have is dmesg left on my xterm:
+
+[    3.916469] md: md1 stopped.
+[    3.918847] md: bind<sdc2>
+[    3.920380] md: bind<sdd2>
+[    3.921886] md: bind<sde2>
+[    3.923158] md: bind<sdf2>
+[    3.924603] md: bind<sdg2>
+[    3.926060] md: bind<sda2>
+[    3.927876] md/raid10:md1: active with 6 out of 8 devices
+[    3.928958] md1: detected capacity change from 0 to 5996325896192
+[    3.932456]  md1: unknown partition table
+[249638.274101] md: bind<sdb2>
+[249638.309805] RAID10 conf printout:
+[249638.309807]  --- wd:6 rd:8
+[249638.309814]  disk 0, wo:1, o:1, dev:sdb2
+[249638.309816]  disk 3, wo:0, o:1, dev:sdc2
+[249638.309817]  disk 4, wo:0, o:1, dev:sdd2
+[249638.309818]  disk 5, wo:0, o:1, dev:sde2
+[249638.309820]  disk 6, wo:0, o:1, dev:sdf2
+[249638.309821]  disk 7, wo:0, o:1, dev:sdg2
+[249638.309826] ------------[ cut here ]------------
+[249638.309831] WARNING: at fs/sysfs/dir.c:455 sysfs_add_one+0x8c/0xa1()
+[249638.309832] Hardware name: GA-880GA-UD3H
+[249638.309834] sysfs: cannot create duplicate filename 
+'/devices/virtual/block/md1/md/rd0'
+[249638.309835] Modules linked in: it87_wdt it87 hwmon_vid k10temp
+[249638.309840] Pid: 1126, comm: md1_raid10 Not tainted 3.1.0-Slackware #1
+[249638.309841] Call Trace:
+[249638.309845]  [<ffffffff81030852>] ? warn_slowpath_common+0x78/0x8c
+[249638.309848]  [<ffffffff81030907>] ? warn_slowpath_fmt+0x45/0x4a
+[249638.309850]  [<ffffffff8110929d>] ? sysfs_add_one+0x8c/0xa1
+[249638.309857]  [<ffffffff8110997f>] ? sysfs_do_create_link+0xef/0x187
+[249638.309860]  [<ffffffff812155d2>] ? sprintf+0x43/0x48
+[249638.309863]  [<ffffffff813b4a49>] ? sysfs_link_rdev+0x36/0x3f
+[249638.309866]  [<ffffffff813b007a>] ? raid10_add_disk+0x145/0x151
+[249638.309869]  [<ffffffff813baf9d>] ? md_check_recovery+0x3af/0x502
+[249638.309871]  [<ffffffff813b0c86>] ? raid10d+0x27/0x8f4
+[249638.309874]  [<ffffffff81025a4e>] ? need_resched+0x1a/0x23
+[249638.309877]  [<ffffffff814dd795>] ? __schedule+0x5b2/0x5c9
+[249638.309879]  [<ffffffff814ddc84>] ? schedule_timeout+0x1d/0xce
+[249638.309882]  [<ffffffff814deadc>] ? _raw_spin_lock_irqsave+0x9/0x1f
+[249638.309884]  [<ffffffff813b8506>] ? md_thread+0xfa/0x118
+[249638.309887]  [<ffffffff81046793>] ? wake_up_bit+0x23/0x23
+[249638.309889]  [<ffffffff813b840c>] ? md_rdev_init+0xef/0xef
+[249638.309891]  [<ffffffff813b840c>] ? md_rdev_init+0xef/0xef
+[249638.309893]  [<ffffffff8104637c>] ? kthread+0x7a/0x82
+[249638.309896]  [<ffffffff814e07f4>] ? kernel_thread_helper+0x4/0x10
+[249638.309898]  [<ffffffff81046302>] ? kthread_worker_fn+0x135/0x135
+[249638.309900]  [<ffffffff814e07f0>] ? gs_change+0xb/0xb
+[249638.309902] ---[ end trace 71d9cf6e5c21d5f2 ]---
+[249638.309938] md: recovery of RAID array md1
+[249638.309941] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[249638.309943] md: using maximum available idle IO bandwidth (but not 
+more than 200000 KB/sec) for recovery.
+[249638.309947] md: using 128k window, over a total of 1463946752k.
+[249638.310044] md/raid10:md1: insufficient working devices for recovery.
+[249638.310110] md: md1: recovery done.
+[249638.544763] RAID10 conf printout:
+[249638.544765]  --- wd:6 rd:8
+[249638.544767]  disk 0, wo:1, o:1, dev:sdb2
+[249638.544768]  disk 3, wo:0, o:1, dev:sdc2
+[249638.544770]  disk 4, wo:0, o:1, dev:sdd2
+[249638.544771]  disk 5, wo:0, o:1, dev:sde2
+[249638.544772]  disk 6, wo:0, o:1, dev:sdf2
+[249638.544773]  disk 7, wo:0, o:1, dev:sdg2
+[249638.552051] RAID10 conf printout:
+[249638.552053]  --- wd:6 rd:8
+[249638.552055]  disk 3, wo:0, o:1, dev:sdc2
+[249638.552056]  disk 4, wo:0, o:1, dev:sdd2
+[249638.552057]  disk 5, wo:0, o:1, dev:sde2
+[249638.552058]  disk 6, wo:0, o:1, dev:sdf2
+[249638.552060]  disk 7, wo:0, o:1, dev:sdg2
+[249702.798860] ------------[ cut here ]------------
+[249702.798865] WARNING: at fs/buffer.c:1150 mark_buffer_dirty+0x25/0x80()
+[249702.798867] Hardware name: GA-880GA-UD3H
+[249702.798868] Modules linked in: it87_wdt it87 hwmon_vid k10temp
+[249702.798873] Pid: 1530, comm: jbd2/dm-5-8 Tainted: G        W 
+3.1.0-Slackware #1
+[249702.798874] Call Trace:
+[249702.798879]  [<ffffffff81030852>] ? warn_slowpath_common+0x78/0x8c
+[249702.798881]  [<ffffffff810d80c7>] ? mark_buffer_dirty+0x25/0x80
+[249702.798884]  [<ffffffff8116bd81>] ? 
+__jbd2_journal_unfile_buffer+0x9/0x1a
+[249702.798887]  [<ffffffff8116e628>] ? 
+jbd2_journal_commit_transaction+0xbb6/0xe3a
+[249702.798891]  [<ffffffff8103a8c6>] ? lock_timer_base.clone.23+0x25/0x4c
+[249702.798893]  [<ffffffff81170dab>] ? kjournald2+0xc0/0x20d
+[249702.798896]  [<ffffffff81046793>] ? wake_up_bit+0x23/0x23
+[249702.798898]  [<ffffffff81170ceb>] ? commit_timeout+0xd/0xd
+[249702.798900]  [<ffffffff81170ceb>] ? commit_timeout+0xd/0xd
+[249702.798902]  [<ffffffff8104637c>] ? kthread+0x7a/0x82
+[249702.798904]  [<ffffffff814e07f4>] ? kernel_thread_helper+0x4/0x10
+[249702.798907]  [<ffffffff81046302>] ? kthread_worker_fn+0x135/0x135
+[249702.798909]  [<ffffffff814e07f0>] ? gs_change+0xb/0xb
+[249702.798910] ---[ end trace 71d9cf6e5c21d5f3 ]---
+[250297.275053] md/raid10:md1: Disk failure on sdb2, disabling device.
+[250297.275054] md/raid10:md1: Operation continuing on 6 devices.
+[250350.689633] md: unbind<sdb2>
+[250350.705066] md: export_rdev(sdb2)
+
+I've deleted from it ext4 and lvm i/o errors.
 
 
-NeilBrown
+All this leads me to conclusion that from some strange reason drive sdb 
+(named earlier sdc) when added shadows sda. It seems zeroing sdb 
+superblock have no effect on this issue.
+
+Probaly this is not controller error because smartctl shows different 
+data on both devices. Also other RAID1 (md0: sda1 - sdh1) behaves correctly.
+
+Similar problem described Brad Campbell in "2 drive RAID10 rebuild 
+issue" on 14 Oct.
 
 
---Sig_/.as93/mOnvgsVpe/wFCWs=Q
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTsr6YTnsnt1WYoG5AQIugg//TyyofYSNuKQMcOUdOy7ncYpxVf7bTzPO
-9vl575Ab5KHzql8bGbNnDnGXDr09nTCLt/y4IO3AfP26k77t6rIKIZI0v0Fp9v7p
-xu8EdjkMrtoIOHUJboqfefprH4c4l+QxAQ/ulQMDSlDRLqKGpoyWtO7VioM1GC1B
-178b9rYlN1ZGpHZ/YyHb2vjJHOA6MceO+tiMe8GbO7Y+ZRCyhf+rCEYqfzIql+W2
-9KnXbpCEY/TuBa8b4DpMvHOzPW/5Jj9d/ztEeuQ6CONpr1yrcLm54rafRCQpxCc1
-+FJZA6fIxxfRRxKg5glNkU8Y/8QXIE74hL/DjYUEdwHAMAgdkRoQDpzAHDCr0FXn
-Kv5WwdS44b+J5gnS3BrGy8/k9NlyCCKaqF+MRXBQ8BoVGv5de3dzngqWb14kHCR2
-MPgKBHL3+IPxP3lG47GUAS5DiCELnxLx8Y5nwXXBJiMmn2lK2dtpFGSyvRHezBHL
-vijnpEQkOpVjhpbUUY9aqJ82+3eDnOKV0LKMlUyzqs7x0zQsyUm63On8miinCr5k
-/r0JItjfulGUyksoxUCd9tYi6wW6ijXtX8OE5+q7adz17rwDK6OtMcD3Djq7/HvD
-MrIOIpjGiNACSfuhKsUCbE/PL2mttgypqrWIn7Sj3CH8InF3y12N1PfS9U3cc+md
-cnROanK92j8=
-=6zXV
------END PGP SIGNATURE-----
-
---Sig_/.as93/mOnvgsVpe/wFCWs=Q--
+-- 
+    Konrad Rzepecki
