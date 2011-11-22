@@ -1,72 +1,60 @@
-From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-Subject: Re: raid1d crash at boot
-Date: Tue, 22 Nov 2011 01:50:37 +0100
-Message-ID: <20111122005037.GA7801@rere.qmqm.pl>
-References: <20111119134139.GA30570@rere.qmqm.pl>
- <20111121123729.47c72c3b@notabene.brown>
- <1321859070.3654.7.camel@dabdike>
- <20111121192745.2c9ac9c0@notabene.brown>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: Question about raid 10 and raid 1+0 setup
+Date: Tue, 22 Nov 2011 06:09:09 +0000 (GMT)
+Message-ID: <alpine.LRH.2.02.1111220604580.12841@diagnostix.dwd.de>
+References: <alpine.LRH.2.02.1111212017400.25957@diagnostix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111121192745.2c9ac9c0@notabene.brown>
+In-Reply-To: <alpine.LRH.2.02.1111212017400.25957@diagnostix.dwd.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Nov 21, 2011 at 07:27:45PM +1100, NeilBrown wrote:
-> On Mon, 21 Nov 2011 08:04:30 +0100 James Bottomley
-> <James.Bottomley@HansenPartnership.com> wrote:
-> > On Mon, 2011-11-21 at 12:37 +1100, NeilBrown wrote:
-> > > Thank for the report.
-> > > However as this crash is clearly in the SCSI layer it makes sense=
- to reported
-> > > it to linux-scsi - so I have cc:ed this reply there.
-> > >=20
-> > > On Sat, 19 Nov 2011 14:41:39 +0100 Micha=B3 Miros=B3aw <mirq-linu=
-x@rere.qmqm.pl>
-> > > wrote:
-> > > > I get following BUG_ON tripped while booting, before rootfs is =
-mounted by
-> > > > Debian's initrd. This started to happen for kernels since somet=
-ime
-> > > > during 3.1-rcX.
-> > > >=20
-> > > > [    6.246170] ------------[ cut here ]------------
-> > > > [    6.246246] kernel BUG at /mnt/src-tmp/jaja/git/qmqm/drivers=
-/scsi/scsi_lib.c:1153!
-> >=20
-> > I can tell you what it is:
-> >=20
-> >         /*
-> >          * Filesystem requests must transfer data.
-> >          */
-> >         BUG_ON(!req->nr_phys_segments);
-> >=20
-> > But the fault is in the layer above SCSI.  It means something sent =
-a
-> > request with REQ_TYPE_FS but no actual data attached ... this is
-> > supposed to be impossible, hence the bug on.
->=20
-> Thanks.... that sounds strangely familiar, but I cannot be sure and g=
-oogle
-> doesn't help.
->=20
-> Micha=B3: what are you using on the RAID1 - some filesystem (which on=
-e)or swap or something else?
+On Mon, 21 Nov 2011, Holger Kiehl wrote:
 
-The whole stack is: ext4 over lvm over dm-crypt over md-raid1 over SATA
-drives.  The boot doesn't survive to the point where the initrd script =
-asks
-for md-crypt's key password.
+> Hello,
+>
+> I have a system with two separate controllers and each controller has
+> 8 disk connected to it, so the disk are numbered as follows:
+>
+>    controller 1   sd[abcdefgh]
+>    controller 2   sd[ijklmnop]
+>
+> Now I would like to setup a raid 10 from 7 disk from each controller.
+> The first disk on each controller (sda and sdi) is used for some other
+> purpose. How does one set it up, so that if for example controller 1
+> fails, the array is still working? Does the following command achieve
+> what I want:
+>
+> mdadm -C /dev/md3 -l10 -n14 --metadata=1.1 --layout=n2 
+> /dev/sd[bkcldmenfogphj]1
+>
+> If yes, what happens for example if say disk sdc fails and is replaced
+> after one day? Will it keep the order so always one controller can
+> break.
+>
+> I tried setting this up using Raid 1+0 as follows:
+>
+>  First creating the Raid 1
+>    mdadm -C /dev/md3 -l1 -n2 --metadata=1.1 /dev/sd[bj]1
+>    mdadm -C /dev/md4 -l1 -n2 --metadata=1.1 /dev/sd[ck]1
+>    mdadm -C /dev/md5 -l1 -n2 --metadata=1.1 /dev/sd[dl]1
+>    mdadm -C /dev/md6 -l1 -n2 --metadata=1.1 /dev/sd[em]1
+>    mdadm -C /dev/md7 -l1 -n2 --metadata=1.1 /dev/sd[fn]1
+>    mdadm -C /dev/md8 -l1 -n2 --metadata=1.1 /dev/sd[go]1
+>    mdadm -C /dev/md9 -l1 -n2 --metadata=1.1 /dev/sd[hp]1
+>
+>  Then comes the Raid 0
+>    mdadm -C /dev/md10 -l 0 -n 7 --metadata=1.1 /dev/md[3456789]
+>
+> This works fine only that I do not manage to set this under
+> scientific linux 6.1 up so it comes up after a reboot. Only the
+> Raid 1's will be there after a reboot, not the Raid 0 on top.
+> Any idea what I am doing wrong?
+>
+Sorry, but I forgot to mention that scientific linux 6.1 uses mdadm 3.2.1
+and kernel 2.6.32-131.17.1
 
-Best Regards,
-Micha=B3 Miros=B3aw
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Holger
