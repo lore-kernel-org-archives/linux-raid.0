@@ -1,43 +1,46 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: md metadata nightmare
-Date: Tue, 22 Nov 2011 22:50:52 -0500
-Message-ID: <4ECC6D9C.8050009@turmel.org>
-References: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com> <20111123114743.1085889e@notabene.brown>
+From: Konrad Rzepecki <krzepecki@dentonet.pl>
+Subject: [OT] Re: Disk identity crisis on RAID10 recovery (3.1.0)
+Date: Wed, 23 Nov 2011 08:25:45 +0100
+Message-ID: <4ECC9FF9.3000701@dentonet.pl>
+References: <4ECB7649.6080505@dentonet.pl> <20111122221522.3f525fc6@notabene.brown> <4ECB940C.6010707@dentonet.pl> <20111123070039.707de7cd@notabene.brown>
+Reply-To: krzepecki@dentonet.pl
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111123114743.1085889e@notabene.brown>
+In-Reply-To: <20111123070039.707de7cd@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Kenneth Emerson <kenneth.emerson@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi Ken,
+W dniu 22.11.2011 21:00, NeilBrown pisze:
+> On Tue, 22 Nov 2011 13:22:36 +0100 Konrad Rzepecki<krzepecki@dentonet.pl>
+> wrote:
+>
+>> W dniu 22.11.2011 12:15, NeilBrown pisze:
+>>> You can probably get your data back... but really you should have
+>>> asked for
+>>> help as soon as strange things started happening!
+>>
+>> Possibly, but I don't like to bother others when I don't need to. And in
+>> the beginning
+>> I didn't connect this behavior whit kernel but with some hardware disk
+>> issues.
+>>
+>> Moreover reporting bugs on list is hmm... inconvenient. Please, back
+>> Bugzilla
+>> online ASAP.
+>
+> Personally, I *much* prefer email.   I do normally respond to things on
+> bugzilla (When bugzilla is working) but I don't like to.
 
-On 11/22/2011 07:47 PM, NeilBrown wrote:
-> On Tue, 22 Nov 2011 18:05:21 -0600 Kenneth Emerson
-[...]
-> Assuming nothing has changed since the "--detail" output you provided, you
-> should:
-> 
->  mdadm -S /dev/md3
->  mdadm -C /dev/md3 --metadata=1.0 --chunk=64k --level=6 --raid-devices=5 \
->       missing /dev/sdb4 /dev/sdc4 /dev/sda4 /dev/sdd4 \
->       --assume-clean
-> 
-> The order of the disks is import.  You should compare it with the output
-> of "mdadm --detail" before you start to ensure that it is correct and I have
-> made any typos.  You should of course check the rest as well.
-> After doing this (and possibly before) you should 'fsck' to ensure the
-> transition was successful.  If anything goes wrong, ask before risking
-> further breakage.
 
-A word of warning...  the shell notation /dev/sd[bcad]4, which you might be
-tempted to type in the above command line, *will* *not* *work*.  Bash reorders
-the [bcad] to [abcd], dropping nonexistent names.  You might know this, and
-not be burned, but others on the list have been.  Use {b,c,a,d} to stay safe.
+This is developer point of view. But for "simple" user, subscribe to 
+each subsystem list that he/she found bug is, as I wrote before, 
+inconvenient.
 
-HTH,
+But this is not right place to discus this, so EOT for me.
 
-Phil
+-- 
+    Konrad Rzepecki
