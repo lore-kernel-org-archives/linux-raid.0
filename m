@@ -1,38 +1,54 @@
-From: =?iso-8859-1?Q?=22Ramon_Sch=F6nborn=22?= <RSchoenborn@gmx.net>
-Subject: Re: md device io request split
-Date: Wed, 23 Nov 2011 14:22:16 +0100
-Message-ID: <20111123132216.162860@gmx.net>
-References: <20111122093634.105520@gmx.net>
- <20111123133124.2042c1f4@notabene.brown>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: [PATCH] imsm: fix, check all volumes state in Grow_continue function
+Date: Wed, 23 Nov 2011 15:26:01 +0000
+Message-ID: <F9123E44003394499FDD2B17C60621D40604F1@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111123133124.2042c1f4@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: "neilb@suse.de" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=20
-> RAID1 will only limit requests to 4K if the device beneath it is
-> non-contiguous - e.g. a striped array or LVM arrangement were consecu=
-tive
-> blocks might be on different devices.
+The Grow_continue grows all volumes in the container that are in container
+reshape state, therefore we  need to check blocking bits
+of all volumes in container, not just the one that is pointed by the command
+line argument.
 
-how does it know if a device is non-contiguous? Is there a way to have =
-a dm device "marked" like that or force md to use bigger requests?
-Lets assume a host with about 20 raid1 devices consisting of dm-devices=
- with the mentioned overhead - do you think that not splitting the requ=
-ests could lead to a noticeable performance improvement?
+Signed-off-by: Marcin Labun <marcin.labun@intel.com>
+---
+ Grow.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-Thanx for your help,
-Ramon Sch=C3=B6nborn
---=20
-Empfehlen Sie GMX DSL Ihren Freunden und Bekannten und wir
-belohnen Sie mit bis zu 50,- Euro! https://freundschaftswerbung.gmx.de
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Grow.c b/Grow.c
+index e7fd7c4..65aa851 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -3769,18 +3769,19 @@ int Grow_continue_command(char *devname, int fd,
+ 			goto Grow_continue_command_exit;
+ 		}
+ 
+-		cc = st->ss->container_content(st, subarray);
++		cc = st->ss->container_content(st, NULL);
+ 		for (content = cc; content ; content = content->next) {
+ 			char *array;
+ 			int allow_reshape = 1;
+ 
+ 			if (content->reshape_active == 0)
+ 				continue;
+-			/* The decision about array or container wide
+-			 * reshape is taken in Grow_continue based
+-			 * content->reshape_active state, therefore we
+-			 * need to check_reshape based on
+-			 * reshape_active and subarray name
++			/* The Grow_continue grows all volumes
++			 * in the container that are in container
++			 * reshape state, 
++			 * therefore we  need to check blocking bits
++			 * of all volumes in container, not just the 
++			 * one that is pointed by command line argument.
+ 			 */
+ 			if (content->array.state & (1<<MD_SB_BLOCK_VOLUME))
+ 				allow_reshape = 0;
