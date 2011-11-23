@@ -1,54 +1,75 @@
-From: "Labun, Marcin" <Marcin.Labun@intel.com>
-Subject: [PATCH] imsm: fix, check all volumes state in Grow_continue function
-Date: Wed, 23 Nov 2011 15:26:01 +0000
-Message-ID: <F9123E44003394499FDD2B17C60621D40604F1@IRSMSX101.ger.corp.intel.com>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: md metadata nightmare
+Date: Wed, 23 Nov 2011 19:35:45 +0400
+Message-ID: <CAGqmV7oOMKQ1Tj+6dcHN2GQujbpWUavJxT9rqyM-7W_2a-Ci4A@mail.gmail.com>
+References: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com>
+	<20111123114743.1085889e@notabene.brown>
+	<4ECC6D9C.8050009@turmel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <4ECC6D9C.8050009@turmel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Phil Turmel <philip@turmel.org>
+Cc: NeilBrown <neilb@suse.de>, Kenneth Emerson <kenneth.emerson@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The Grow_continue grows all volumes in the container that are in container
-reshape state, therefore we  need to check blocking bits
-of all volumes in container, not just the one that is pointed by the command
-line argument.
+On Wed, Nov 23, 2011 at 7:50 AM, Phil Turmel <philip@turmel.org> wrote:
+> Hi Ken,
+>
+> On 11/22/2011 07:47 PM, NeilBrown wrote:
+>> On Tue, 22 Nov 2011 18:05:21 -0600 Kenneth Emerson
+> [...]
+>> Assuming nothing has changed since the "--detail" output you provide=
+d, you
+>> should:
+>>
+>> =A0mdadm -S /dev/md3
+>> =A0mdadm -C /dev/md3 --metadata=3D1.0 --chunk=3D64k --level=3D6 --ra=
+id-devices=3D5 \
+>> =A0 =A0 =A0 missing /dev/sdb4 /dev/sdc4 /dev/sda4 /dev/sdd4 \
+>> =A0 =A0 =A0 --assume-clean
+>>
+>> The order of the disks is import. =A0You should compare it with the =
+output
+>> of "mdadm --detail" before you start to ensure that it is correct an=
+d I have
+>> made any typos. =A0You should of course check the rest as well.
+>> After doing this (and possibly before) you should 'fsck' to ensure t=
+he
+>> transition was successful. =A0If anything goes wrong, ask before ris=
+king
+>> further breakage.
+>
 
-Signed-off-by: Marcin Labun <marcin.labun@intel.com>
----
- Grow.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+> A word of warning... =A0the shell notation /dev/sd[bcad]4, which you =
+might be
+> tempted to type in the above command line, *will* *not* *work*. =A0Ba=
+sh reorders
+> the [bcad] to [abcd], dropping nonexistent names. =A0You might know t=
+his, and
+> not be burned, but others on the list have been. =A0Use {b,c,a,d} to =
+stay safe.
+Thanks, may be you saved my data in future uses ;)
+>
+> HTH,
+>
+> Phil
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/Grow.c b/Grow.c
-index e7fd7c4..65aa851 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -3769,18 +3769,19 @@ int Grow_continue_command(char *devname, int fd,
- 			goto Grow_continue_command_exit;
- 		}
- 
--		cc = st->ss->container_content(st, subarray);
-+		cc = st->ss->container_content(st, NULL);
- 		for (content = cc; content ; content = content->next) {
- 			char *array;
- 			int allow_reshape = 1;
- 
- 			if (content->reshape_active == 0)
- 				continue;
--			/* The decision about array or container wide
--			 * reshape is taken in Grow_continue based
--			 * content->reshape_active state, therefore we
--			 * need to check_reshape based on
--			 * reshape_active and subarray name
-+			/* The Grow_continue grows all volumes
-+			 * in the container that are in container
-+			 * reshape state, 
-+			 * therefore we  need to check blocking bits
-+			 * of all volumes in container, not just the 
-+			 * one that is pointed by command line argument.
- 			 */
- 			if (content->array.state & (1<<MD_SB_BLOCK_VOLUME))
- 				allow_reshape = 0;
+
+
+--=20
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
