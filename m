@@ -1,82 +1,93 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md device io request split
-Date: Thu, 24 Nov 2011 06:30:51 +1100
-Message-ID: <20111124063051.33cdad37@notabene.brown>
-References: <20111122093634.105520@gmx.net>
-	<20111123133124.2042c1f4@notabene.brown>
-	<20111123132216.162860@gmx.net>
+From: Gavin Whitehead <gavin@alabastercranium.demon.co.uk>
+Subject: Re: partition based raid1 and multi boot Ubuntu/Xubuntu
+Date: Wed, 23 Nov 2011 21:04:20 +0000
+Message-ID: <4ECD5FD4.3040801@alabastercranium.demon.co.uk>
+References: <4ECC20C4.6050504@alabastercranium.demon.co.uk> <20111123094516.16d73e97@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/yOj.FKrBE/3vRxDlRer.=sn"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111123132216.162860@gmx.net>
+In-Reply-To: <20111123094516.16d73e97@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ramon =?ISO-8859-1?B?U2No9m5ib3Ju?= <RSchoenborn@gmx.net>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/yOj.FKrBE/3vRxDlRer.=sn
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 22/11/2011 22:45, NeilBrown wrote:
+> On Tue, 22 Nov 2011 22:23:00 +0000 Gavin Whitehead
+> <gavin@alabastercranium.demon.co.uk>  wrote:
+>
+>> I'm not sure if this is a GRUB2 problem or a RAID/MD issue but here goes...
+>>
+>> I want to set up a machine that will boot two Linux installations using
+>> raid 1 partitions and Windows XP on a single partition.
+>>
+>> I have two identical disks partitioned as follows
+>>
+>> $ cat /proc/partitions
+>> major minor  #blocks  name
+>>
+>>      8        0  244198584 sda
+>>      8        1   30720000 sda1
+>>      8        2   30720000 sda2
+>>      8        3   40960000 sda3
+>>      8        4          1 sda4
+>>      8        5    4194304 sda5
+>>      8        6  137601024 sda6
+>>      8       16  244198584 sdb
+>>      8       17   30720000 sdb1
+>>      8       18   30720000 sdb2
+>>      8       19   40960000 sdb3
+>>      8       20          1 sdb4
+>>      8       21    4194304 sdb5
+>>      8       22  137601024 sdb6
+>>
+>> I installed WinXP first in sda3.
+>>
+>> I then installed Ubuntu 11.04 from the Alternate CD and created some
+>> raid1 devices
+>>       md0        sda1 sdb1    /
+>>       md1        sda5 sdb5    swap
+>>       md2        sda6 sdb6    /home
+>>
+>> I set the boot flag on sda1 and sdb1.
+>> This worked a treat.  I could boot in to either Ubuntu 11.04 to WinXP.
+>> I tested the RAID1 (power down, unplug a disk, power up, power down,
+>> replug the disk, power up,  use 'mdadm --add' to rebuild the array).
+>> Brilliant.
+>>
+>> Then I installed Xubuntu 11.10 from the Alternate CD.  For this install
+>> I created one new raid1 device (md3) and reused md1 and md2
+>>       md3        sda2 sdb2    /
+>>       md1        sda5 sdb5    swap
+>>       md2        sda6 sdb6    /home
+>>
+>> I set the boot flag on sda2 and sdb2.
+>>
+>> After the install had completed and grub2 had built the grub.cfg I only
+>> had my new Xubuntu 11.10 in the boot menu.  The Xubuntu 11.10 install
+>> works perfectly (and I can boot in to Win XP) but I can't boot in to the
+>> Ubuntu 11.04 installation.  I've re-run 'update-grub' but it doesn't
+>> find the other installation.
+>>
+>> If I run 'sudo mount /dev/md0 /mnt' I can access the Ubuntu 11.04 files.
+>>
+>> Is my intended configuration (tri-boot with two raid1, partition based,
+>> Linux installations and XP on a single parition) unachievable?
+>>
+> I would just dive into grub.cfg with an editor and make it work.
+>
+> These wonderful "automatically make a config file for you tools" certainly
+> have a place, but there is a reason that config files are plain text files
+> and that reason is emacs (or possible vim).
+>
+> NeilBrown
 
-On Wed, 23 Nov 2011 14:22:16 +0100 "Ramon Sch=F6nborn" <RSchoenborn@gmx.net>
-wrote:
+Doh.  Obvious really, but thanks for suggesting it.
+I have tried it and it works.
 
-> =20
-> > RAID1 will only limit requests to 4K if the device beneath it is
-> > non-contiguous - e.g. a striped array or LVM arrangement were consecuti=
-ve
-> > blocks might be on different devices.
->=20
-> how does it know if a device is non-contiguous? Is there a way to have a =
-dm device "marked" like that or force md to use bigger requests?
-> Lets assume a host with about 20 raid1 devices consisting of dm-devices w=
-ith the mentioned overhead - do you think that not splitting the requests c=
-ould lead to a noticeable performance improvement?
->=20
-> Thanx for your help,
-> Ramon Sch=F6nborn
+Now back to DR testing...
 
-If the device provide a "merge_bvec_fn", then it is assumed to not be
-contiguous.
-dm always sets this on its devices.
+Thanks,
 
-I really have no idea what sort of overhead this creates.  You would need to
-test it.
-I assume you are using dm simply as a partitioning tool with a single linear
-mapping per device.
-If this is the case it should be safe for testing to remove the line
-
-	blk_queue_merge_bvec(md->queue, dm_merge_bvec);
-
-from drivers/md/dm.c and see how that change performance.  If you have any =
-dm
-targets more simple than a single linear mapping with will almost certainly
-cause IO failure at some point so this should only be used for testing.
-
-NeilBrown
-
-
---Sig_/yOj.FKrBE/3vRxDlRer.=sn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTs1J8Tnsnt1WYoG5AQJY3Q/+P+QVQlYCT2dIDKnrkDQ5SbMJI/UKW/JH
-isyMV7tYSxqQKCj0igcEHX9zz12T/W9FczZsdZnTlJCuwRN2WzVU90mFdc0XpESc
-aEAar3Ufd+8yB1qkMzc+k+tXtY4x83vWehu6AaAi+f4Bph7dMEptK8hkfSf42SQR
-oR+k45Fd3zBEpBdCcP9Of8bo4DCFn5cBrzKml07hQ3fLUUMeDAuNbK1NEZBZSPF4
-6xE86QrnbNk3nJ5tMONoWHVB4sjMhc1BptANIf53EjVqE/RkIvhv1aYPMynzCnYI
-+aZU7fgP82FB8wvaEpN1cao1cqaOynaGUH/GgERLXxtO2RKaegBpwJGnsh8+1JBu
-OJnSGTGMCF57d1yLns92v/Gwkl2xQA1RlY1GGqp2Mk8C5iOJQCUzmSpFRcLckeUP
-wfjDWHDttHxYCn0Yrzh+Jd7pFmD5EVkN/j/hsAVIAzEypmRvHZpbkXzV9V1YKXVJ
-AnZyIhLbEO3u3z5P7qwpAMYa13DVj7l+YPJzHlCTQd14B7ceeVPX+Zcg/0kOvJTR
-pbVF8rZMxvX0fqpi+IMyJUviNDn296r3VOfbMx/V33jmy9bnbMriSKEEDRrRI9Ej
-Bu0/Xz8FJkt2bX9+pziy/6mJpLJG+DYM0kp6P8J6zHo+MpmwLBbfCpG3wKMwMjO3
-hKR+9T6yr7A=
-=DgOn
------END PGP SIGNATURE-----
-
---Sig_/yOj.FKrBE/3vRxDlRer.=sn--
+Gav
