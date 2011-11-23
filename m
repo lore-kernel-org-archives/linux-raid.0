@@ -1,123 +1,96 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: md metadata nightmare
-Date: Wed, 23 Nov 2011 11:47:43 +1100
-Message-ID: <20111123114743.1085889e@notabene.brown>
-References: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com>
+Subject: Re: md device io request split
+Date: Wed, 23 Nov 2011 13:31:24 +1100
+Message-ID: <20111123133124.2042c1f4@notabene.brown>
+References: <20111122093634.105520@gmx.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/lFOpKUR.IHbHgbS6aauUZ_h"; protocol="application/pgp-signature"
+ boundary="Sig_/p_+oU2Wvnwl.KymSz+S6KUC"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com>
+In-Reply-To: <20111122093634.105520@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kenneth Emerson <kenneth.emerson@gmail.com>
+To: Ramon =?ISO-8859-1?B?U2No9m5ib3Ju?= <RSchoenborn@gmx.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/lFOpKUR.IHbHgbS6aauUZ_h
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/p_+oU2Wvnwl.KymSz+S6KUC
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 22 Nov 2011 18:05:21 -0600 Kenneth Emerson
-<kenneth.emerson@gmail.com> wrote:
+On Tue, 22 Nov 2011 10:36:34 +0100 "Ramon Sch=F6nborn" <RSchoenborn@gmx.net>
+wrote:
 
-> NOTE: I have set the linux-raid flag on all of the partitions in the
-> GPT. I think I have read in the linux-raid archives that this is not
-> recommended. Could this have had an affect on what transpired?
-
-Net recommended, but also totally ineffective.  The Linux-RAID partition ty=
-pe
-is only recognised in MS-DOS partition tables.
-
+> Hi,
 >=20
-> So my question is:
+> could someone help me understand why md splits io requests in 4k blocks?
+> iostat says:
+> Device:	rrqm/s	wrqm/s	r/s	w/s	rMB/s	wMB/s	avgrq-sz	avgqu-sz	await	svctm	%=
+util			=09
+> ...
+> dm-71	4.00	5895.00	31.00	7538.00	0.14	52.54	14.25	94.69	16041	0.13	96.00
+> dm-96	2.00	5883.00	18.00	7670.00	0.07	52.95	14.13	104.84	13.69	0.12	96.00
+> md17	0.00	0.00	48.00	13234.00	0.19	51.70	8.00	0.00	0.00	0.00	0.00
 >=20
-> Is there a way, short of backing up the data, completely rebuilding
-> the arrays, and restoring the data (a real PIA) to rewrite the
-> metadata given the existing array configurations in the running
-> system?  Also, is there an explanation as to why the metadata seems so
-> screwed up that the arrays cannot be assembled automatically by the
-> kernel?
+> md17 is a raid1 with members "dm-71" and "dm-96". IO was generated with s=
+omething like "dd if=3D/dev/zero bs=3D100k of=3D/dev/md17".
+> According to "avgrq-sz", the average size of the requests is 8 times 512b=
+, i.e. 4k.
+> I used kernel 3.0.7 and verified the results with a raid5 and older kerne=
+l version (2.6.32) too.
+> Why do i bother about this at all?
+> The io requests in my case come from a virtual machine, where the request=
+s have been merged in a virtual device. Afterwards the requests are split a=
+t md-level (vm host) and later merged again (at dm-71/dm-96). This seems to=
+ be an avoidable overhead, isn't it?
 
-There appear to be two problems here.  Both could be resolved by converting=
- to
-v1.0 metadata.  But there are other approaches.  And converting to v1.0 is
-not trivial (not enough developers to work on all the tasks!).
+Reads to a RAID5 device should be as large as the chunk size.
 
-One problem is the final partition on at least some of your disks is at a 6=
-4K
-alignment.  This means that the superblock looks valid for both the whole
-device and for the partition.
-You can confirm this by running
-  mdadm --examine /dev/sda
-  mdadm --examine /dev/sda4
+Writes will always be 4K as they go through the stripe cache which uses 4K
+blocks.
+These 4K requests should be combined into large requests by the
+elevator/scheduler at a lower level so the device should see largish writes.
 
-(ditto for b,c,d,e,...)
+Writing to a RAID5 is always going to be costly due to the need to compute
+and write parity, so it isn't clear to me that this is a place were
+optimisation is appropriate.
 
-The "sdX4" should show a superblock.  The 'sdX' should not.
-I think it will show exactly the same superblock.  It could show a different
-superblock... that would be interesting.
 
-If I am correct here then you can "fix" this by changing mdadm.conf to read:
-
-DEVICES /dev/sda? /dev/sdb? /dev/sdc? /dev/sdd? /dev/sde?
-or=20
-DEVICES /dev/sd[abcde][1-4]
-
-or similar.  i.e. tell it to ignore the whole devices.
-
-The other problem is that v0.90 metadata isn't good with very large devices.
-It has 32bits to record kilobytes per device.
-This show allow 4TB per device but due to a bug (relating to sign bits) it
-only works well with 2TB per device.  This bug was introduced in 2.6.29 and
-removed in 3.1.
-
-So if you can run a 3.1.2 kernel, that would be best.
-
-You could convert to v1.0 if you want.  You only need to do this for the la=
-st
-partition (sdX4).
-
-Assuming nothing has changed since the "--detail" output you provided, you
-should:
-
- mdadm -S /dev/md3
- mdadm -C /dev/md3 --metadata=3D1.0 --chunk=3D64k --level=3D6 --raid-device=
-s=3D5 \
-      missing /dev/sdb4 /dev/sdc4 /dev/sda4 /dev/sdd4 \
-      --assume-clean
-
-The order of the disks is import.  You should compare it with the output
-of "mdadm --detail" before you start to ensure that it is correct and I have
-made any typos.  You should of course check the rest as well.
-After doing this (and possibly before) you should 'fsck' to ensure the
-transition was successful.  If anything goes wrong, ask before risking
-further breakage.
-
-Good luck.
+RAID1 will only limit requests to 4K if the device beneath it is
+non-contiguous - e.g. a striped array or LVM arrangement were consecutive
+blocks might be on different devices.
+Because of the way request splitting is managed in the block layer, RAID1 is
+only allowed to send down a request that will be sure to fit on a single
+device.  As different devices in the RAID1 could have different alignments =
+it
+would be very complex to track exactly how each request must be split at the
+top of the stack so as to fit all the way down, and I think it is impossible
+to do it in a race-free way.
+So if this might be the case, RAID1 insists on only receiving 1-page reques=
+ts
+because it knows they are always allowed to be passed down.
 
 NeilBrown
 
-
---Sig_/lFOpKUR.IHbHgbS6aauUZ_h
+--Sig_/p_+oU2Wvnwl.KymSz+S6KUC
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTsxCujnsnt1WYoG5AQJvQBAAthynDR5z3i4hl8W06nPDtUxOLTF/Ks84
-nNBqvnOhBP1EQVps7+QZ3U1+M2jcFH0QumozcWcHBOMJv/xhu5Ndydd1CfMWlPWq
-7J0V4kWf2+WxxL9DXkncAjqgxWZ6w5hgHzKJWrYws+LHPpVaa3yTJEVrjVmh5i3q
-U1HwUBdrXhVdeN4Br724X+SEX26WEL/HQ4GFnz985aFqDMA5j9lLW8kDqnpjlpkX
-nNLGKTkICEEjp/CxQmJUxSEICYx/AFAAK0oRBAcfkEBhMX6/8W2ZFAeJbdhJq5P6
-O1JiLmY+bivSMshBU2qJMfJEQoThujRvc0gHGg2ULc/pdtwAsZHpnwEjNsTyeNiC
-3Z5/vS9eK3WLyXRrY22/iPEB2RGSEkvh0jw4roaJDpq6Yv5jLolh3NBtPuVWyQPw
-JDYA02vEGE42uE8vYavPvgwVqYZlRj6B3/wDN2zHJoCrLRRvH/+931iQsdbx+T5D
-iEW5RDsSvyzSKO5LnwsryyAffEFyYo8MlRgq06Ab2Qr9T42DlGE96PBv1aSgiCs0
-7Hi+Bfa0wskedxWoMQJZdA6ashIonSfYOvd9cf+85xqhrB9EFpLg0YlvmP6AEzPr
-XGkDh2S86dClUiz3WSB0qOHNn6UXxNQuGXO1vZPYanHiJX8BYzAPl1/C9CuE8JMo
-FiE9/k7ENAQ=
-=Rv+r
+iQIVAwUBTsxa/Dnsnt1WYoG5AQJNPg/+OMI8ngTjWRWxWeGlBxiaADXZpqOYOFvb
+8odFqD+kDts0ozczEq93MbpE+EHqDCaQpLNgQs6jTjZEfWXyGwXAFBmrHYF/z5Q/
+af8S1td8qfkFVROGN0fej0yu7jocnBsudyOtizuC9jI/GTp9FRmz4PytwT85Ucin
+XVo7L7QVZnmVzUSiuY5UhRDWHBWHDQnEuVXjucC3Fa7XBz4858KyX0oH/rqnjS3I
+zBgno4UGQpmE+huA/snK/fqMcOw6x5V+iIfLwuElw3irOxRGxGMyEQkMeNu/jVQX
+hPWq30elW0hHMGnwZn55+T20TN0PH6+BoNpHD16cZy7N+XwF6YAKgCWu3PjTgQ40
+10bduxkkqt8U6d14nOOCp9kstuGJUq2PW9QIcM/p0wahybLImcZbq+2cckUlFJSY
+Qkh1opqSllbtfk0rZFD9U6CxG1XKrLCCPu4mqx8VWQPogVDNLP4SM/UBiZ2BqCwJ
+qi5274/QituuwaVIhnshX+Ppomo4SITHQcKGXAFUm5P4ZU/8QX6LilvqfPmMnqJD
+hSvtHpMpH0+bVyneseeFxxJd/j0kAzS9M9KinRxpCt7bcR1QN1FkxfF6zMaFjGpD
+UH6DhcNxXrr7xwGc8JY1tZyDwdl15WCpukIGbTf2qCyvH1U+HI7Kk/393It0Yc4Z
+7hA6X5JVduE=
+=Gl1B
 -----END PGP SIGNATURE-----
 
---Sig_/lFOpKUR.IHbHgbS6aauUZ_h--
+--Sig_/p_+oU2Wvnwl.KymSz+S6KUC--
