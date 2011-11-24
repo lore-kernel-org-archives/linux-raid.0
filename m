@@ -1,86 +1,53 @@
-From: Paul Menzel <pm.debian@googlemail.com>
-Subject: Re: [PATCH] md: Add ability for disable bad block management
-Date: Thu, 24 Nov 2011 13:23:12 +0100
-Message-ID: <1322137392.3391.29.camel@mattotaupa>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [PATCH] md: Add ability for disable bad block management
+Date: Thu, 24 Nov 2011 12:28:53 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A054292@IRSMSX101.ger.corp.intel.com>
 References: <20111124121953.5509.28118.stgit@gklab-128-013.igk.intel.com>
+ <1322137392.3391.29.camel@mattotaupa>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-ohWixq1424uEBgaA8d2M"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111124121953.5509.28118.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <1322137392.3391.29.camel@mattotaupa>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Adam Kwolek <adam.kwolek@intel.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
+To: Paul Menzel <pm.debian@googlemail.com>
+Cc: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-
---=-ohWixq1424uEBgaA8d2M
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Dear Adam,
-
-
-Am Donnerstag, den 24.11.2011, 13:19 +0100 schrieb Adam Kwolek:
-> When external metadata doesn't support BBM, mdadm cannot answer correctly
-> for BBM requests. It causes reshape process being stopped.
->=20
-> Add ability for external metadata /mdadm/ to disable BBM via sysfs.
-> md will ignore bad blocks as it is for metadata v0.90.
->=20
-> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
-> ---
->=20
->  drivers/md/md.c |   11 ++++++++++-
->  1 files changed, 10 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 266e82e..6591108 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -2935,7 +2935,16 @@ static ssize_t bb_show(struct md_rdev *rdev, char =
-*page)
->  }
->  static ssize_t bb_store(struct md_rdev *rdev, const char *page, size_t l=
-en)
->  {
-> -	int rv =3D badblocks_store(&rdev->badblocks, page, len, 0);
-> +	int rv;
-> +
-> +	/* disable bad blocks managment
-
-manag*e*ment
-
-> +	 */
-> +	if (strstr(page, "disable") =3D=3D page) {
-> +		bb->shift =3D -1;
-> +		return len;
-> +	}
-> +
-> +	rv =3D badblocks_store(&rdev->badblocks, page, len, 0);
->  	/* Maybe that ack was all we needed */
->  	if (test_and_clear_bit(BlockedBadBlocks, &rdev->flags))
->  		wake_up(&rdev->blocked_wait);
-
-Also this seems to collide with PATCH 11/11, does not it?
-
-
-Thanks,
-
-Paul
-
---=-ohWixq1424uEBgaA8d2M
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAk7ONzAACgkQPX1aK2wOHVhY5QCfUNrE+tnsIfHc4xAgaATIyKRg
-mcEAniMWMSMxCMDDTV9eBJnZC5TgzkPU
-=3AD3
------END PGP SIGNATURE-----
-
---=-ohWixq1424uEBgaA8d2M--
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUGF1bCBNZW56ZWwgW21h
+aWx0bzpwbS5kZWJpYW5AZ29vZ2xlbWFpbC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBOb3ZlbWJl
+ciAyNCwgMjAxMSAxOjIzIFBNDQo+IFRvOiBLd29sZWssIEFkYW0NCj4gQ2M6IG5laWxiQHN1c2Uu
+ZGU7IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnOyBDaWVjaGFub3dza2ksIEVkOyBMYWJ1biwN
+Cj4gTWFyY2luOyBXaWxsaWFtcywgRGFuIEoNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gbWQ6IEFk
+ZCBhYmlsaXR5IGZvciBkaXNhYmxlIGJhZCBibG9jayBtYW5hZ2VtZW50DQo+IA0KPiBEZWFyIEFk
+YW0sDQo+IA0KPiANCj4gQW0gRG9ubmVyc3RhZywgZGVuIDI0LjExLjIwMTEsIDEzOjE5ICswMTAw
+IHNjaHJpZWIgQWRhbSBLd29sZWs6DQo+ID4gV2hlbiBleHRlcm5hbCBtZXRhZGF0YSBkb2Vzbid0
+IHN1cHBvcnQgQkJNLCBtZGFkbSBjYW5ub3QgYW5zd2VyDQo+ID4gY29ycmVjdGx5IGZvciBCQk0g
+cmVxdWVzdHMuIEl0IGNhdXNlcyByZXNoYXBlIHByb2Nlc3MgYmVpbmcgc3RvcHBlZC4NCj4gPg0K
+PiA+IEFkZCBhYmlsaXR5IGZvciBleHRlcm5hbCBtZXRhZGF0YSAvbWRhZG0vIHRvIGRpc2FibGUg
+QkJNIHZpYSBzeXNmcy4NCj4gPiBtZCB3aWxsIGlnbm9yZSBiYWQgYmxvY2tzIGFzIGl0IGlzIGZv
+ciBtZXRhZGF0YSB2MC45MC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEFkYW0gS3dvbGVrIDxh
+ZGFtLmt3b2xla0BpbnRlbC5jb20+DQo+ID4gLS0tDQo+ID4NCj4gPiAgZHJpdmVycy9tZC9tZC5j
+IHwgICAxMSArKysrKysrKysrLQ0KPiA+ICAxIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMo
+KyksIDEgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9tZC9tZC5j
+IGIvZHJpdmVycy9tZC9tZC5jIGluZGV4IDI2NmU4MmUuLjY1OTExMDgNCj4gPiAxMDA2NDQNCj4g
+PiAtLS0gYS9kcml2ZXJzL21kL21kLmMNCj4gPiArKysgYi9kcml2ZXJzL21kL21kLmMNCj4gPiBA
+QCAtMjkzNSw3ICsyOTM1LDE2IEBAIHN0YXRpYyBzc2l6ZV90IGJiX3Nob3coc3RydWN0IG1kX3Jk
+ZXYgKnJkZXYsDQo+ID4gY2hhciAqcGFnZSkgIH0gIHN0YXRpYyBzc2l6ZV90IGJiX3N0b3JlKHN0
+cnVjdCBtZF9yZGV2ICpyZGV2LCBjb25zdA0KPiA+IGNoYXIgKnBhZ2UsIHNpemVfdCBsZW4pICB7
+DQo+ID4gLQlpbnQgcnYgPSBiYWRibG9ja3Nfc3RvcmUoJnJkZXYtPmJhZGJsb2NrcywgcGFnZSwg
+bGVuLCAwKTsNCj4gPiArCWludCBydjsNCj4gPiArDQo+ID4gKwkvKiBkaXNhYmxlIGJhZCBibG9j
+a3MgbWFuYWdtZW50DQo+IA0KPiBtYW5hZyplKm1lbnQNCj4gDQo+ID4gKwkgKi8NCj4gPiArCWlm
+IChzdHJzdHIocGFnZSwgImRpc2FibGUiKSA9PSBwYWdlKSB7DQo+ID4gKwkJYmItPnNoaWZ0ID0g
+LTE7DQo+ID4gKwkJcmV0dXJuIGxlbjsNCj4gPiArCX0NCj4gPiArDQo+ID4gKwlydiA9IGJhZGJs
+b2Nrc19zdG9yZSgmcmRldi0+YmFkYmxvY2tzLCBwYWdlLCBsZW4sIDApOw0KPiA+ICAJLyogTWF5
+YmUgdGhhdCBhY2sgd2FzIGFsbCB3ZSBuZWVkZWQgKi8NCj4gPiAgCWlmICh0ZXN0X2FuZF9jbGVh
+cl9iaXQoQmxvY2tlZEJhZEJsb2NrcywgJnJkZXYtPmZsYWdzKSkNCj4gPiAgCQl3YWtlX3VwKCZy
+ZGV2LT5ibG9ja2VkX3dhaXQpOw0KPiANCj4gQWxzbyB0aGlzIHNlZW1zIHRvIGNvbGxpZGUgd2l0
+aCBQQVRDSCAxMS8xMSwgZG9lcyBub3QgaXQ/DQo+IA0KPiANCj4gVGhhbmtzLA0KPiANCj4gUGF1
+bA0KDQpJbiBteSBvcGluaW9uIGl0IGRvZXNuJ3QuDQpQYXRjaCAxMS8xMSBpbiBtZGFkbSBhbGxv
+d3MgZm9yIGRpc2FibGluZyBCQk0gcGVyIHJkZXYgYnkgc2V0dGluZyAnZGlzYWJsZScgd29yZCBp
+biBzeXNmcy4NClRoaXMgcGF0Y2ggaW50ZXJwcmV0cyBpbiBtZCB0aGlzIGFjdGlvbiBhbmQgZGlz
+YWJsZXMgQkJNIChwZXIgcmRldiBhbHNvKSAuDQoNCkRvIHlvdSBhZ3JlZT8NCg0KQlINCkFkYW0N
+Cg0KDQoNCg==
