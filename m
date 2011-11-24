@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 07/11] imsm: FIX: Manage second map state on array degradation
-Date: Thu, 24 Nov 2011 13:18:05 +0100
-Message-ID: <20111124121805.5254.3350.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 09/11] imsm: FIX: Check maximum allowed degradation level in
+	open_backup_targets()
+Date: Thu, 24 Nov 2011 13:18:21 +0100
+Message-ID: <20111124121821.5254.95759.stgit@gklab-128-013.igk.intel.com>
 References: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,209 +14,167 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-When degradation during migration occurs second map state is not set
-to degraded value (map are updated correctly).
+Any degradation during opening any backup device can causes error
+and array assembly failure.
 
-Correct second map state according to it's degradation level.
+Allow for degradation during opening backup devices.
+This allows for degraded array assembly.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   76 ++++++++++++++++++++++++++++++++++++++++++++-------------
- 1 files changed, 58 insertions(+), 18 deletions(-)
+ super-intel.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 files changed, 90 insertions(+), 7 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index ccd9883..147de36 100644
+index 3e7cfb4..e2b3c05 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -106,6 +106,11 @@ struct imsm_disk {
- 	__u32 filler[IMSM_DISK_FILLERS]; /* 0xF4 - 0x107 MPB_DISK_FILLERS for future expansion */
- };
- 
-+/* map selector for map managment
-+ */
-+#define MAP_0		2
-+#define MAP_1		4
-+
- /* RAID map configuration infos. */
- struct imsm_map {
- 	__u32 pba_of_lba0;	/* start address of partition */
-@@ -662,7 +667,9 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- {
- 	/* A device can have 2 maps if it is in the middle of a migration.
- 	 * If second_map is:
-+	 *    MAP_0 and
- 	 *    0   - we return the first map
-+	 *    MAP_1 and
- 	 *    1   - we return the second map if it exists, else NULL
- 	 *   -1   - we return the second map if it exists, else the first
- 	 *   -2   - we return longer map /excluding uninitialized state/
-@@ -674,8 +681,10 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- 		map2 = (void *)map + sizeof_imsm_map(map);
- 
- 	switch (second_map) {
-+	case MAP_0:
- 	case 0:
- 		break;
-+	case MAP_1:
- 	case 1:
- 		map = map2;
- 		break;
-@@ -2485,8 +2494,28 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+@@ -8020,6 +8020,75 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
  	}
  }
- 
--static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev, int failed);
--static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev);
-+static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
-+				int failed, int look_in_map);
+ #endif /* MDASSEMBLE */
 +
-+static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev,
-+			     int look_in_map);
-+
-+static void manage_second_map(struct intel_super *super, struct imsm_dev *dev)
++static void close_targets(int *targets, int new_disks)
 +{
-+	if (is_gen_migration(dev)) {
-+		int failed;
-+		__u8 map_state;
-+		struct imsm_map *map2 = get_imsm_map(dev, MAP_1);
++	int i;
 +
-+		failed = imsm_count_failed(super, dev, MAP_1);
-+		map_state = imsm_check_degraded(super, dev, failed,
-+						MAP_1);
-+		if (map2->map_state != map_state) {
-+			map2->map_state = map_state;
-+			super->updates_pending++;
++	if (!targets)
++		return;
++
++	for (i = 0; i < new_disks; i++) {
++		if (targets[i] >= 0) {
++			close(targets[i]);
++			targets[i] = -1;
 +		}
 +	}
 +}
- 
- static struct imsm_disk *get_imsm_missing(struct intel_super *super, __u8 index)
- {
-@@ -2547,8 +2576,8 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info, char *
- 		struct imsm_map *map;
- 		__u8 state;
- 
--		failed = imsm_count_failed(super, dev);
--		state = imsm_check_degraded(super, dev, failed);
-+		failed = imsm_count_failed(super, dev, MAP_0);
-+		state = imsm_check_degraded(super, dev, failed, MAP_0);
- 		map = get_imsm_map(dev, 0);
- 
- 		/* any newly missing disks?
-@@ -5914,9 +5943,12 @@ static struct mdinfo *container_content_imsm(struct supertype *st, char *subarra
- }
- 
- 
--static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev, int failed)
-+static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
-+				int failed, int look_in_map)
- {
--	struct imsm_map *map = get_imsm_map(dev, 0);
-+	struct imsm_map *map;
 +
-+	map = get_imsm_map(dev, look_in_map);
- 
- 	if (!failed)
- 		return map->map_state == IMSM_T_STATE_UNINITIALIZED ? 
-@@ -5980,7 +6012,8 @@ static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
- 	return map->map_state;
- }
- 
--static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev)
-+static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev,
-+			     int look_in_map)
++static int imsm_get_allowed_degradation(int level, int raid_disks,
++					struct intel_super *super,
++					struct imsm_dev *dev)
++{
++	switch (level) {
++	case 10:{
++		int ret_val = 0;
++		struct imsm_map *map;
++		int i;
++
++		ret_val = raid_disks/2;
++		/* check map if all disks pairs not failed
++		 * in both maps
++		 */
++		map = get_imsm_map(dev, 0);
++		for (i = 0; i < ret_val; i++) {
++			int degradation = 0;
++			if (get_imsm_disk(super, i) == NULL)
++				degradation++;
++			if (get_imsm_disk(super, i + 1) == NULL)
++				degradation++;
++			if (degradation == 2)
++				return 0;
++		}
++		map = get_imsm_map(dev, 1);
++		/* if there is no second map
++		 * result can be returned
++		 */
++		if (map == NULL)
++			return ret_val;
++		/* check degradation in second map
++		 */
++		for (i = 0; i < ret_val; i++) {
++			int degradation = 0;
++		if (get_imsm_disk(super, i) == NULL)
++				degradation++;
++			if (get_imsm_disk(super, i + 1) == NULL)
++				degradation++;
++			if (degradation == 2)
++				return 0;
++		}
++		return ret_val;
++	}
++	case 5:
++		return 1;
++	case 6:
++		return 2;
++	default:
++		return 0;
++	}
++}
++
++
+ /*******************************************************************************
+  * Function:	open_backup_targets
+  * Description:	Function opens file descriptors for all devices given in
+@@ -8028,14 +8097,18 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, unsigned ind
+  *	info		: general array info
+  *	raid_disks	: number of disks
+  *	raid_fds	: table of device's file descriptors
++ *	super		: intel super for raid10 degradation check
++ *	dev		: intel device for raid10 degradation check
+  * Returns:
+  *	 0 : success
+  *	-1 : fail
+  ******************************************************************************/
+-int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds)
++int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds,
++			struct intel_super *super, struct imsm_dev *dev)
  {
+ 	struct mdinfo *sd;
  	int i;
- 	int failed = 0;
-@@ -5999,14 +6032,15 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev)
- 	 */
- 	map_for_loop = prev;
- 	if (is_gen_migration(dev))
--		if (prev && (map->num_members > prev->num_members))
-+		if (prev &&
-+		    (map->num_members > prev->num_members))
- 			map_for_loop = map;
++	int opened = 0;
  
- 	for (i = 0; i < map_for_loop->num_members; i++) {
- 		ord = 0;
--		if (i < prev->num_members)
-+		if ((look_in_map & MAP_1) && (i < prev->num_members))
- 			ord |= __le32_to_cpu(prev->disk_ord_tbl[i]);
--		if (i < map->num_members)
-+		if ((look_in_map & MAP_0) && (i < map->num_members))
- 			ord |= __le32_to_cpu(map->disk_ord_tbl[i]);
- 		idx = ord_to_idx(ord);
- 
-@@ -6216,8 +6250,8 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 	struct intel_super *super = a->container->sb;
- 	struct imsm_dev *dev = get_imsm_dev(super, inst);
- 	struct imsm_map *map = get_imsm_map(dev, 0);
--	int failed = imsm_count_failed(super, dev);
--	__u8 map_state = imsm_check_degraded(super, dev, failed);
-+	int failed = imsm_count_failed(super, dev, MAP_0);
-+	__u8 map_state = imsm_check_degraded(super, dev, failed, MAP_0);
- 	__u32 blocks_per_unit;
- 
- 	if (dev->vol.migr_state &&
-@@ -6391,8 +6425,8 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 		super->updates_pending++;
+ 	for (i = 0; i < raid_disks; i++)
+ 		raid_fds[i] = -1;
+@@ -8057,8 +8130,19 @@ int open_backup_targets(struct mdinfo *info, int raid_disks, int *raid_fds)
+ 		raid_fds[sd->disk.raid_disk] = dev_open(dn, O_RDWR);
+ 		if (raid_fds[sd->disk.raid_disk] < 0) {
+ 			fprintf(stderr, "cannot open component\n");
+-			return -1;
++			continue;
+ 		}
++		opened++;
++	}
++	/* check if maximum array degradation level is not exceeded
++	*/
++	if ((raid_disks - opened) >
++			imsm_get_allowed_degradation(info->new_level,
++						     raid_disks,
++						     super, dev)) {
++		fprintf(stderr, "Not enough disks can be opened.\n");
++		close_targets(raid_fds, raid_disks);
++		return -2;
+ 	}
+ 	return 0;
+ }
+@@ -8191,7 +8275,8 @@ int save_backup_imsm(struct supertype *st,
+ 		target_offsets[i] -= start/data_disks;
  	}
  
--	failed = imsm_count_failed(super, dev);
--	map_state = imsm_check_degraded(super, dev, failed);
-+	failed = imsm_count_failed(super, dev, MAP_0);
-+	map_state = imsm_check_degraded(super, dev, failed, MAP_0);
+-	if (open_backup_targets(info, new_disks, targets))
++	if (open_backup_targets(info, new_disks, targets,
++				super, dev))
+ 		goto abort;
  
- 	/* check if recovery complete, newly degraded, or failed */
- 	if (map_state == IMSM_T_STATE_NORMAL && is_rebuilding(dev)) {
-@@ -6429,6 +6463,8 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 			dprintf("degraded\n");
- 			if (a->last_checkpoint >= a->info.component_size)
- 				end_migration(dev, map_state);
-+			else
-+				manage_second_map(super, dev);
- 		break;
- 		default:
- 			dprintf("failed\n");
-@@ -6625,7 +6661,8 @@ static int imsm_rebuild_allowed(struct supertype *cont, int dev_idx, int failed)
+ 	dest_layout = imsm_level_to_layout(map_dest->raid_level);
+@@ -8217,9 +8302,7 @@ int save_backup_imsm(struct supertype *st,
  
- 	dev2 = get_imsm_dev(cont->sb, dev_idx);
- 	if (dev2) {
--		state = imsm_check_degraded(cont->sb, dev2, failed);
-+		state = imsm_check_degraded(cont->sb, dev2, failed,
-+					    MAP_0);
- 		if (state == IMSM_T_STATE_FAILED) {
- 			map = get_imsm_map(dev2, 0);
- 			if (!map)
-@@ -6702,7 +6739,8 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 		 */
- 		return NULL;
+ abort:
+ 	if (targets) {
+-		for (i = 0; i < new_disks; i++)
+-			if (targets[i] >= 0)
+-				close(targets[i]);
++		close_targets(targets, new_disks);
+ 		free(targets);
+ 	}
+ 	free(target_offsets);
+@@ -8348,7 +8431,7 @@ int recover_backup_imsm(struct supertype *st, struct mdinfo *info)
+ 	if (!targets)
+ 		goto abort;
  
--	if (imsm_check_degraded(super, dev, failed) != IMSM_T_STATE_DEGRADED)
-+	if (imsm_check_degraded(super, dev, failed, MAP_0) !=
-+			IMSM_T_STATE_DEGRADED)
- 		return NULL;
- 
- 	/*
-@@ -7109,7 +7147,8 @@ static int apply_update_activate_spare(struct imsm_update_activate_spare *u,
- 		disk->status &= ~SPARE_DISK;
- 
- 		/* mark rebuild */
--		to_state = imsm_check_degraded(super, dev, failed);
-+		to_state = imsm_check_degraded(super, dev, failed,
-+					       MAP_0);
- 		if (!second_map_created) {
- 			second_map_created = 1;
- 			map->map_state = IMSM_T_STATE_DEGRADED;
-@@ -7294,7 +7333,8 @@ static int apply_takeover_update(struct imsm_update_takeover *u,
- 
- 	if (u->direction == R10_TO_R0) {
- 		/* Number of failed disks must be half of initial disk number */
--		if (imsm_count_failed(super, dev) != (map->num_members / 2))
-+		if (imsm_count_failed(super, dev, MAP_0) !=
-+				(map->num_members / 2))
- 			return 0;
- 
- 		/* iterate through devices to mark removed disks as spare */
+-	if (open_backup_targets(info, new_disks, targets)) {
++	if (open_backup_targets(info, new_disks, targets, super, id->dev)) {
+ 		fprintf(stderr,
+ 			Name ": Cannot open devices belongs to array.\n");
+ 		goto abort;
 
