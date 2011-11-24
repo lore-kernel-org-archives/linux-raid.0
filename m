@@ -1,42 +1,104 @@
-From: Dominique <dcouot@hotmail.com>
-Subject: Ubuntu mdadm Raid and EFI
-Date: Thu, 24 Nov 2011 15:09:23 +0100
-Message-ID: <BLU0-SMTP47112CA111EE95226BAE366C9CE0@phx.gbl>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: Is it possible to change the wait time before a drive is concidered failed?
+Date: Thu, 24 Nov 2011 09:11:37 -0700
+Message-ID: <201111240911.38075.thomas@fjellstrom.ca>
+References: <BLU0-SMTP264257376293BB9DBCEB7B798CA0@phx.gbl> <20111121125806.316a58e0@notabene.brown> <BLU0-SMTP121C59F841CDA9046FA14ED98C80@phx.gbl>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BLU0-SMTP121C59F841CDA9046FA14ED98C80@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: wilsonjonathan <piercing_male@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On November 22, 2011, wilsonjonathan wrote:
+> Having looked more indepth I think the answer to my first question may
+> be resolved by increasing the wait time in the individual sd* devices as
+> if I read it correctly soft raid doesn't have or use a time out value
+> (unless it does both have and use the value under the md* device) but
+> instead just waits until an individual device times out.
+> 
+> If thats the case then I may just increase the time out of the sd*'s to
+> 60 seconds from 30 seconds which should be more than enough time to
+> allow a drive to wind up and start to give back data.
+> 
+> 
+> Thanks for the helpful replies...
+> 
+> > > I do have a couple of related questions...
+> > > 
+> > > I have already done some testing by setting up sd[ab] for md[2-4] but
+> > > with no file systems on top, and then pulling sdb and then putting it
+> > > back in.
+> > > 
+> > > q1, why does -add throw up the message : not performing --add, re-add
+> > > failed, zero superblock...
+> > 
+> > Because some people seem to use "--add" when they mean "--re-add" and
+> > that can cause data loss.  So to be safe, if want want to discard all
+> > the data on a device and add it as a true spare, you now need to
+> > --zero-superblock first.  Hopefully that isn't too much of a burden.
+> 
+> Thats what I thought was strange, as no data had changed (no file
+> system) after getting the above message when I tried --re-add I expected
+> it to add it back in and re-sync, but again it told me I couldn't so I
+> had to zero the supper block.
+> 
+> > > q2, I setup md4 as a raid10 far 2, and I may not be understanding
+> > > raid10 here; when I zero the superblock to add it as I did with the
+> > > other raids which worked ok, for some reason it causes sda4 to drop
+> > > out and kills the whole md4 raid.
+> > 
+> > You must be running linux-3.1.  It has a bug with exactly this behaviour.
+> > It should be fixed in the latest -stable release.  Upstream commit
+> > 
+> >    7fcc7c8acf0fba44d19a713207af7e58267c1179
+> > 
+> > fixes it.
+> 
+> Thanks for that... I'm currently running an older kernel now as I'm
+> installing debian squeeze to further test the raids with a running
+> system (as opposed to off a live cd)
+> 
+> > > q3, Is it preferable to have a write intent bitmap, and if so should I
+> > > put it in the meta-data as opposed to a file.
+> > 
+> > A write intent bitmap can make writes a little slower but makes resync
+> > after a crash much master.  You get to choose which you want.
+> > It is much more convenient in the internal metadata.  Having the bitmap
+> > in an external file and reduce the performance cost a bit (if the file
+> > is on a separate device).
+> > I would only recommend a separate file if you have an asymmetric mirror
+> > with one leg (the slow leg) marked write-mostly.  You don't really want
+> > the bitmap on that device, so put it somewhere else.
+> 
+> I will use the intent as you describe as the speed hit isn't a problem
+> for my use-case.
 
-After testing mdadm on virtual machines, I bought new hardware, as I 
-thought I was ready... Well think again.
+Good call :) I started using the write-intent bitmap, and I can say I'll 
+likely never go back to not using one. When there is a problem, you will 
+appreciate the decision. Instead of it taking days or weeks to rebuild/resync, 
+it takes a few minutes. And rebuilding is usually the point when a failure is 
+going to happen, which is the absolute worst time, as losing a disk when 
+degraded is pretty bad on many setups (raid0, raid1, raid5, some raid10's I 
+think...).
 
-My HW setup is as follow:
-Asus MB P8H67-I (with a Corei5 CPU)
-8 GB Memory
-6 x 3 TB WD HDD (AHCI mode in the BIOS)
-OS: Ubuntu 11.04 x64 Server
+And I really don't notice the speed hit. I still get a few hundred MB/s at the 
+very least off my 7 disk raid5.
 
-My intended SW setup  is as follow:
-md1 /boot on RAID1 6 HDD (250 MB x6)
-md2 /swap on RAID1 6 HDD (32 GB x6)
-md3 / on RAID5 6 HDD (3 TB x6)
+> > NeilBrown
+> 
+> Jon
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-First thing first, I followed the usual setup process, with one 
-surprise, the boot flag did not hold in the md1 setup. Not a show 
-stopper at this step.
-When trying to write the GRUB2 information I got stuck with the 
-impossility to write the information.
-Obviously I could not boot from the HDD after restart.
 
-I then realized that this MB uses a BIOS EFI.
-Since that's pretty new stuff for the PC world (not on the MAC side 
-though), I am wondering how to mix EFI with RAID... ?
-
-Any help will be more than welcome.
-
-Dominique
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
