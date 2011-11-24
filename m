@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 04/11] imsm: FIX: Finalize degraded migration
-Date: Thu, 24 Nov 2011 13:17:42 +0100
-Message-ID: <20111124121742.5254.87669.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 05/11] imsm: FIX: Remove single map state limitation in getinfo
+Date: Thu, 24 Nov 2011 13:17:50 +0100
+Message-ID: <20111124121750.5254.73420.stgit@gklab-128-013.igk.intel.com>
 References: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,53 +13,33 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Currently mdadm for IMSM can finalize not-degraded migration only.
-Add support for IMSM  for migration finalization when array
-are is degraded state.
+It can occur that degradation during migration occurs on disks that are not
+present in both maps /e.g. degradation on just added disk during OLCE/.
+This can cause that maps will be in different states (one will be in degraded
+and second in normal state). In such situation getinfo_super_imsm_volume()
+will not return migration information.
+
+Remove single state limitation in both maps to allow migration information
+retrieving.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   24 ++++++++++++++----------
- 1 files changed, 14 insertions(+), 10 deletions(-)
+ super-intel.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 7587c8c..a3ca78a 100644
+index a3ca78a..0fc907d 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6417,20 +6417,24 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 		a->last_checkpoint = 0;
- 	} else if (is_gen_migration(dev)) {
- 		dprintf("imsm: Detected General Migration in state: ");
--		if (map_state == IMSM_T_STATE_NORMAL) {
--			end_migration(dev, map_state);
-+
-+		switch (map_state) {
-+		case IMSM_T_STATE_NORMAL:
-+			dprintf("normal\n");
-+			if (a->last_checkpoint >= a->info.component_size)
-+				end_migration(dev, map_state);
- 			map = get_imsm_map(dev, 0);
- 			map->failed_disk_num = ~0;
--			dprintf("normal\n");
--		} else {
--			if (map_state == IMSM_T_STATE_DEGRADED) {
--				printf("degraded\n");
-+		break;
-+		case IMSM_T_STATE_DEGRADED:
-+			dprintf("degraded\n");
-+			if (a->last_checkpoint >= a->info.component_size)
- 				end_migration(dev, map_state);
--			} else {
--				dprintf("failed\n");
--			}
--			map->map_state = map_state;
-+		break;
-+		default:
-+			dprintf("failed\n");
- 		}
-+		map->map_state = map_state;
- 		super->updates_pending++;
- 	}
- }
+@@ -2314,8 +2314,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info,
+ 	info->custom_array_size   |= __le32_to_cpu(dev->size_low);
+ 	info->recovery_blocked = imsm_reshape_blocks_arrays_changes(st->sb);
+ 
+-	if (prev_map && map->map_state == prev_map->map_state &&
+-	    (migr_type(dev) == MIGR_GEN_MIGR)) {
++	if (is_gen_migration(dev)) {
+ 		info->reshape_active = 1;
+ 		info->new_level = get_imsm_raid_level(map);
+ 		info->new_layout = imsm_level_to_layout(info->new_level);
 
