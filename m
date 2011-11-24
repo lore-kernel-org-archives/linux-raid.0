@@ -1,84 +1,54 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 01/11] imsm: FIX: Return longer map for failure setting
-Date: Thu, 24 Nov 2011 13:17:18 +0100
-Message-ID: <20111124121718.5254.16301.stgit@gklab-128-013.igk.intel.com>
-References: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 00/11] Degradation during reshape
+Date: Thu, 24 Nov 2011 13:17:10 +0100
+Message-ID: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-When 2 maps are present, IMSM can use shorter map for setting disk
-in to degraded state. It can happen that degraded disk can be not present
-in shorter map.
-We should use longer map for setting disk in to degraded state.
+The following series implements support for array degradation during reshape.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+Series mostly fixes problems in handling degradation during reshape 
+in imsm metadata .
+
+Main common problem that last patch resolves is is lack of BBM support.
+md on disk failure reports BBM event to user space and waits for an answer.
+The side effect of this action is stopping reshape process. The last patch
+/together with md patch sent separately/ allows for disabling BBM mechanism.
+This is similar as native metadata v0.9 works.
+
+BR
+Adam
+
 ---
 
- super-intel.c |   35 ++++++++++++++++++++++++++---------
- 1 files changed, 26 insertions(+), 9 deletions(-)
+Adam Kwolek (11):
+      Disable BBM when it is not supported
+      imsm: FIX: Check maximum allowed degradation level in recover_backup_imsm()
+      imsm: FIX: Check maximum allowed degradation level in open_backup_targets()
+      imsm: FIX: Function rework - imsm_count_failed()
+      imsm: FIX: Manage second map state on array degradation
+      imsm: FIX: Restore critical section on degraded array
+      imsm: FIX: Remove single map state limitation in getinfo
+      imsm: FIX: Finalize degraded migration
+      imsm: FIX: Do not end migration when missing drive is handled
+      imsm: FIX: Mark both maps on degradation while migrating
+      imsm: FIX: Return longer map for failure setting
 
-diff --git a/super-intel.c b/super-intel.c
-index a0672bf..5f2c4a2 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -665,18 +665,35 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- 	 *    0   - we return the first map
- 	 *    1   - we return the second map if it exists, else NULL
- 	 *   -1   - we return the second map if it exists, else the first
-+	 *   -2   - we return longer map /excluding uninitialized state/
- 	 */
- 	struct imsm_map *map = &dev->vol.map[0];
-+	void *map2 = NULL;
- 
--	if (second_map == 1 && !dev->vol.migr_state)
--		return NULL;
--	else if (second_map == 1 ||
--		 (second_map < 0 && dev->vol.migr_state)) {
--		void *ptr = map;
-+	if (dev->vol.migr_state)
-+		map2 = (void *)map + sizeof_imsm_map(map);
- 
--		return ptr + sizeof_imsm_map(map);
--	} else
--		return map;
-+	switch (second_map) {
-+	case 0:
-+		break;
-+	case 1:
-+		map = map2;
-+		break;
-+	case -1:
-+		if (map2)
-+			map = map2;
-+		break;
-+	case -2:
-+		if (map2 &&
-+		    (((struct imsm_map *)map2)->num_members > map->num_members)
-+		    && (((struct imsm_map *)map2)->map_state !=
-+						   IMSM_T_STATE_UNINITIALIZED))
-+			map = map2;
-+		break;
-+	default:
-+		map = NULL;
-+	}
-+	return map;
- 
- }
- 
-@@ -6343,7 +6360,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
- 
- 	dprintf("imsm: set_disk %d:%x\n", n, state);
- 
--	ord = get_imsm_ord_tbl_ent(dev, n, -1);
-+	ord = get_imsm_ord_tbl_ent(dev, n, -2);
- 	disk = get_imsm_disk(super, ord_to_idx(ord));
- 
- 	/* check for new failures */
 
+ Assemble.c    |    2 
+ Manage.c      |    3 -
+ managemon.c   |    3 -
+ mdadm.h       |    4 +
+ super-intel.c |  323 +++++++++++++++++++++++++++++++++++++++++++++------------
+ sysfs.c       |    7 +
+ util.c        |    2 
+ 7 files changed, 268 insertions(+), 76 deletions(-)
+
+-- 
+Signature
