@@ -1,59 +1,41 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Ubuntu mdadm Raid and EFI
-Date: Mon, 28 Nov 2011 14:07:06 +0000
-Message-ID: <4ED3958A.9090909@anonymous.org.uk>
-References: <BLU0-SMTP47112CA111EE95226BAE366C9CE0@phx.gbl> <BLU0-SMTP1700793E8A96042A5B235CDC9CE0@phx.gbl>
+From: wilsonjonathan <piercing_male@hotmail.com>
+Subject: linear raid, is partial recovery possible?
+Date: Mon, 28 Nov 2011 20:06:35 +0000
+Message-ID: <BLU0-SMTP248DE7134BCABFEB83181BD98B20@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP1700793E8A96042A5B235CDC9CE0@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dominique <dcouot@hotmail.com>
-Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 24/11/2011 16:11, Dominique wrote:
-> Ok, nothing like writing a mail to get intuition for the next steps..
->
-> First I simplified the initial setup.
-> RAID1 for everyone, and only two HDD to start. I'll convert and expand
-> at a later stage.
-> I also added an EFI partition ('bootgrup' if I remember well). I did
-> that on both disk.
-> Reboot and voila, it boots.
->
-> But this kind of negates the RAID1 /boot logic. If the first disk fail,
-> then what ? No EFI, no boot ?
-> How - if possible - do you configure EFI to boot from RAID1 across xHDD
-> to allow boot in degraded mode ?
+Quick question regarding linear raid.
 
-I haven't used EFI/GPT at all yet, but I imagine the same as the 
-old-fashioned MBR technique: install the boot loader separately on all 
-the devices you might need to boot from. The CentOS and Fedora 
-installers automatically do this for you with MBR and presumably with 
-GPT as well if you configure /boot to be a md RAID-1 i.e. they put grub 
-on all the drives making up /boot, and I would have thought the Ubuntu 
-installer would as well, but you can do it by hand if you have to. Just 
-replicate whatever's on sda to sdb, sdc etc.
+If a disk fails on a linear raid I understand how the raid is
+non-recoverable, as a whole, as it has lost a chunk of data.
 
-Then when your first hard disc fails and you reboot, the BIOS will boot 
-the first hard disc it finds, which will be your second hard disc, and 
-all will be lovely. This doesn't work if your first hard disc is still 
-visible but unreadable, but that's always been the problem, and you need 
-BIOS RAID support (e.g. Intel IMSM) to cope with it.
+However is it possible to recover the data from the non-failed portion
+of the raid as I assume linear works by starting at one end of the array
+and slowly progresses to the other?
 
-And a quick suggestion: use RAID 10 for your swap partition, it'll be 
-faster than RAID 1. Since you want to be able to survive 2 disc 
-failures, you probably ought to use layout raid10,f3.
+Or perhaps it is dependent on the file system on the array, eg. ext
+works by trying to place files distant to each other to help reduce the
+possibility of fragmentation?
 
-Hope this helps.
+Perhaps the filesystem meta data, or some portion, may span between two
+physical drives which would corrupt its table?
 
-Cheers,
+And obviously if a file spans two disks it would be missing part of its
+data?
 
-John.
+Does the raid underlying a file system do its own things, re-space,
+physical data layout, etc; or does/can a file system impact on the
+workings of an array?
 
--- 
-John Robinson, yuiop IT services
-0131 557 9577 / 07771 784 058
-46/12 Broughton Road, Edinburgh EH7 4EE
+The more I look into software raid the more fasinated I become with it
+and its inner workings. While its way beyond me in some of the maths and
+the fact I am un-proficient in C it has really caught my intrigue, and
+all because I wanted to set up a small home server ;-)
+
+
