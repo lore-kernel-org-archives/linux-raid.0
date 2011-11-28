@@ -1,55 +1,40 @@
-From: Cong Wang <amwang@redhat.com>
-Subject: [UPDATED PATCH 57/62] dm: remove the second argument of k[un]map_atomic()
-Date: Mon, 28 Nov 2011 15:50:12 +0800
-Message-ID: <1322466612-10919-1-git-send-email-amwang@redhat.com>
-References: <1322371662-26166-58-git-send-email-amwang@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1322371662-26166-58-git-send-email-amwang@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, Cong Wang <amwang@redhat.com>, Neil Brown <neilb@suse.de>, dm-devel@redhat.com, linux-raid@vger.kernel.org
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: Re: Ubuntu mdadm Raid and EFI
+Date: Mon, 28 Nov 2011 10:44:20 +0100
+Message-ID: <4ED357F4.3050605@redhat.com>
+References: <BLU0-SMTP47112CA111EE95226BAE366C9CE0@phx.gbl> <BLU0-SMTP1700793E8A96042A5B235CDC9CE0@phx.gbl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BLU0-SMTP1700793E8A96042A5B235CDC9CE0@phx.gbl>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dominique <dcouot@hotmail.com>
+Cc: linux-raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 11/24/11 17:11, Dominique wrote:
+> Ok, nothing like writing a mail to get intuition for the next steps..
+> 
+> First I simplified the initial setup.
+> RAID1 for everyone, and only two HDD to start. I'll convert and expand
+> at a later stage.
+> I also added an EFI partition ('bootgrup' if I remember well). I did
+> that on both disk.
+> Reboot and voila, it boots.
+> 
+> But this kind of negates the RAID1 /boot logic. If the first disk fail,
+> then what ? No EFI, no boot ?
+> How - if possible - do you configure EFI to boot from RAID1 across xHDD
+> to allow boot in degraded mode ?
 
-Acked-by: Milan Broz <mbroz@redhat.com>
-Signed-off-by: Cong Wang <amwang@redhat.com>
+Depends on how you create your raid - if you use IMSM raid, you can put
+the EFI partition on the raid1 device as well. Given you have a
+motherboard with an i5 processor, I would expect it to have support for
+IMSM raid.
 
----
- drivers/md/dm-crypt.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Check the BIOS settings for the drives - if you flip them from AHCI to
+raid mode you ought to be able to do it this way.
 
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 8c2a000..db6b516 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -590,9 +590,9 @@ static int crypt_iv_lmk_gen(struct crypt_config *cc, u8 *iv,
- 	int r = 0;
- 
- 	if (bio_data_dir(dmreq->ctx->bio_in) == WRITE) {
--		src = kmap_atomic(sg_page(&dmreq->sg_in), KM_USER0);
-+		src = kmap_atomic(sg_page(&dmreq->sg_in));
- 		r = crypt_iv_lmk_one(cc, iv, dmreq, src + dmreq->sg_in.offset);
--		kunmap_atomic(src, KM_USER0);
-+		kunmap_atomic(src);
- 	} else
- 		memset(iv, 0, cc->iv_size);
- 
-@@ -608,14 +608,14 @@ static int crypt_iv_lmk_post(struct crypt_config *cc, u8 *iv,
- 	if (bio_data_dir(dmreq->ctx->bio_in) == WRITE)
- 		return 0;
- 
--	dst = kmap_atomic(sg_page(&dmreq->sg_out), KM_USER0);
-+	dst = kmap_atomic(sg_page(&dmreq->sg_out));
- 	r = crypt_iv_lmk_one(cc, iv, dmreq, dst + dmreq->sg_out.offset);
- 
- 	/* Tweak the first block of plaintext sector */
- 	if (!r)
- 		crypto_xor(dst + dmreq->sg_out.offset, iv, cc->iv_size);
- 
--	kunmap_atomic(dst, KM_USER0);
-+	kunmap_atomic(dst);
- 	return r;
- }
- 
--- 
-1.7.4.4
+Cheers,
+Jes
