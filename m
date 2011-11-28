@@ -1,46 +1,32 @@
 From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: linear raid, is partial recovery possible?
-Date: Mon, 28 Nov 2011 16:00:57 -0600
-Message-ID: <4ED40499.3060903@hardwarefreak.com>
-References: <BLU0-SMTP248DE7134BCABFEB83181BD98B20@phx.gbl>
+Date: Mon, 28 Nov 2011 16:08:13 -0600
+Message-ID: <4ED4064D.2060907@hardwarefreak.com>
+References: <BLU0-SMTP248DE7134BCABFEB83181BD98B20@phx.gbl> <20111128205100.GA8900@cthulhu.home.robinhill.me.uk>
 Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP248DE7134BCABFEB83181BD98B20@phx.gbl>
+In-Reply-To: <20111128205100.GA8900@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: wilsonjonathan <piercing_male@hotmail.com>
-Cc: linux-raid@vger.kernel.org
+To: wilsonjonathan <piercing_male@hotmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/28/2011 2:06 PM, wilsonjonathan wrote:
+On 11/28/2011 2:51 PM, Robin Hill wrote:
 
-> Or perhaps it is dependent on the file system on the array, 
+> Well, I'd recommend against using linear RAID anyway. There's no
+> redundancy at all, and no performance benefits. You'd be better off
+> using the separate disks as separate filesystems.
 
-It is.
+Yes.  Linear arrays have limited use in very specific scenarios.
+Normally one would only use a linear array that consists of hardware or
+software RAID constituent devices, such as the example in my previous email.
 
-> eg. ext
-> works by trying to place files distant to each other to help reduce the
-> possibility of fragmentation?
-
-That's not relevant.  What is relevant is where the filesystem metadata
-is stored, if any of it was lost when the disk died, and if the
-filesystem can recover itself with a repair operation.
-
-I know of one such recovery of a 60TB XFS filesystem residing on a combo
-mdraid linear array over 5 hardware RAID6 arrays, after 1 of the 5
-constituent arrays suffered complete failure.  xfs_repair deleted the
-entries from directory structure whose files were missing, allowing
-normal access to all other files.  This was an extremely lucky outcome
-in this case and was only possible due to the specific on disk metadata
-layout of this individual filesystem. XFS would likely not be able to
-recover from such a failure in all cases.
-
-You're using EXT of some flavor.  I suggest you read everything you can
-about the EXT version involved here, ask on the respective mailing list.
-
-Good luck.
+At minimum a linear array should be composed of multiple mirrored drives
+(RAID1).  As Robin mentioned, if you can't do redundancy for some
+reason, simply format each disk with your favorite filesystem and mount
+those filesystems somewhere in your UNIX directory tree.
 
 -- 
 Stan
