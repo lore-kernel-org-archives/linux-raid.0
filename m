@@ -1,77 +1,58 @@
-From: John Gehring <john.gehring@gmail.com>
-Subject: RAID6 - repeated hot-pulls issue
-Date: Fri, 2 Dec 2011 09:34:40 -0700
-Message-ID: <CALwOXvL6avy3f76TcpMdMxqObCRY-SphRErjo-j1=iun-etBpA@mail.gmail.com>
+From: Vincent Pelletier <plr.vincent@gmail.com>
+Subject: Spin down
+Date: Sat, 3 Dec 2011 12:23:37 +0100
+Message-ID: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I am having trouble with a hot-pull scenario.
+Hi.
 
-- linux 2.6.38.8
-- LSI 2008 sas
-- RAID6 via md
-- 8 drives (2 TB each)
+Short system description:
+up-to-date Debian sid, used on a NAS-ish machine (iscsi with
+open-iscsi's kernel module, nfs, dnsmask for netboot), ext4 FS over
+RAID1 on both system partition and exported data partitions.
 
-Suspect sequence:
+I would like disks containing raid arrays to spin down, but there are
+periodic disk writes which prevent this.
+They do not show up in iotop (although it does show a write activity
+in the topmost line).
+Enabling /proc/sys/vm/block_dump generates the following output:
 
-1 - Create Raid6 array using all 8 drives (/dev/md1). Each drive is
-partitioned identically with two partitions. The second partition of
-each drive is used for the raid set. The size of the partition varies,
-but I have been using a 4GB partition for testing in order to have
-quick re-sync times.
-2 - Wait for raid re-sync to complete.
-3 - Start read-only IO against /dev/md1 via following command:=A0 dd
-if=3D/dev/md1 of=3D/dev/null bs=3D1=A0 This step insures that pulled dr=
-ives
-are detected by the md.
-4 - Physically pull a drive from the array.
-5 - Verify that the md has removed the drive/device from the array.
-mdadm --detail /dev/md1 should show it as faulty and removed from the
-array.
-6 - Remove the device from the raid array:=A0 mdadm /dev/md1 -r /dev/sd=
-[?]2
-7 - Re-insert the drive back into the slot.
-8 - Take a look at dmesg to see what device name has been assigned.
-Typically has the same letter assigned as before.
-9 - Add the drive back into the raid array: mdadm /dev/md1 -a
-/dev/sd[?]2=A0=A0 Now some folks might say that I should use --re-add, =
-but
-the mdadm documentation states that re-add will be used anyway if the
-system detects that a drive has been 're-inserted'. Additionally, the
-mdadm response to this command shows that an 'add' or 'readd' was
-executed depending on the state of the disk inserted.
---All is apparently going fine at this point. The add command succeeds
-and cat /proc/mdstat shows the re-sync in progress and it eventually
-finishes.
---Now for the interesting part.
-10 - Verify that the dd command is still running.
-11 - Pull the same drive again.
+<7>[  918.078079] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
+<7>[  918.078169] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
+<7>[  918.092124] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
+<7>[  918.092184] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
+<7>[  918.292627] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
+<7>[  918.292714] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
+<7>[  918.308500] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
+<7>[  918.308588] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
+<7>[  923.113309] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
+<7>[  923.113397] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
+<7>[  923.129330] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
+<7>[  923.129388] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
+<7>[  923.332489] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
+<7>[  923.332545] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
+<7>[  923.348507] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
+<7>[  923.348595] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
 
-This time, the device is not removed from the array, although it is
-marked as faulty in the /proc/mdstat report.
+Note the 5-seconds pause between each half of this output.
+Block 8 seems to be the md superblock (dixit hexdump + description of
+md superblock), and "mdadm --examine" shows the "Update time" is being
+increased.
+Those arrays are in clean state, no synchronisation is happening and
+no checking that I know of (I would expect a lot of disk activity).
 
-In mdadm --detail /dev/md1, the device is still in the raid set and is
-marked as "faulty spare rebuilding". I have not found a command that
-will remove drive from the raid set at this point. There were a couple
-of instances/tests where after 10+ minutes, the device came out of the
-array and was simply marked faulty, at which point I could add a new
-drive, but that has been the exception. Usually, it remains in the
-'faulty spare rebuilding' mode.
+Is there any reason why those writes are happening ?
+I can imagine a mechanism like filesystem superblock periodic
+flushing, but AFAIK it only happens when changes are happening (even
+if they are not flushed themselves), and I would expect the same to
+happen here.
+Is there any knob to control those writes ?
 
-I don't understand why there is different behavior the second time the
-drive is pulled. I tried zeroing out both partitions on the drive,
-re-partitioning, mdadm --zero-superblock, but still the same behavior.
-If I pull a drive and replace it, I am able to do a subsequent pull of
-the new drive without trouble, albeit only once.
-
-Comments? Suggestions? I'm glad to provide more info.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+-- 
+Vincent Pelletier
