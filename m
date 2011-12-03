@@ -1,58 +1,58 @@
-From: Vincent Pelletier <plr.vincent@gmail.com>
-Subject: Spin down
-Date: Sat, 3 Dec 2011 12:23:37 +0100
-Message-ID: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
+From: Kenneth Emerson <kenneth.emerson@gmail.com>
+Subject: md metadata nightmare
+Date: Sat, 3 Dec 2011 11:02:24 -0600
+Message-ID: <CADzwnhXq5KKO5chdVVODbJH7_HMHFxa0uOa7dBgoNWzS72RGXw@mail.gmail.com>
+References: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com>
+	<20111123114743.1085889e@notabene.brown>
+	<CADzwnhUJ7HbZH9yqa6x9sHFLo8Vg=1k_SyzvZyq2=iQ5YRLhZQ@mail.gmail.com>
+	<20111124093637.0c3bb2eb@notabene.brown>
+	<CADzwnhXuW7ShBNGf+kqnZYrtRnWMPSRDWzb2h4Gt69Cih0-yGA@mail.gmail.com>
+	<CADzwnhUmHACPJA+c23AeRs3AW_ExuAUQST9jew_=5U1xdMqEFA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <CADzwnhUmHACPJA+c23AeRs3AW_ExuAUQST9jew_=5U1xdMqEFA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi.
+> > I will do this conversion; but I will backup my data as best I can =
+first,
+> > just in case.
+> > I still have the 5 1TB drives and my data should fit on there, just=
+ a PIA
+> > to do it.
+> > (Ahh, that's what weekends are for, right?)
+> > After the RAID6 is repaired and running OK, I believe I will rebuil=
+d the 2
+> > RAID1 arrays
+> > as that will be an easy project (since I have 5 copies of everythin=
+g) which
+> > will get rid of
+> > all vestiges of previous raid arrays. =A0Do I need to anything spec=
+ial other
+> > than zeroing
+> > the superblocks (--zero-superblock)? =A0Also, shouldn't I do that o=
+n the
+> > RAID6 array before
+> > doing the create or is that done automagically?
+>
+> It is done automatically. =A0When you use "--create", mdadm will zero=
+ any
+> superblocks it finds of any format that it recognises, then write the=
+ new
+> metadata it wants.
+>
+I am still waiting for my replacement Hitachi drive. My RAID6
+configuration is made up of a total of 5 drives and I am currently
+running degraded (missing one drive). =A0Can I recreate this raid set,
+changing the metadata version missing one drive or should I just be
+patient and wait for the replacement to arrive?
 
-Short system description:
-up-to-date Debian sid, used on a NAS-ish machine (iscsi with
-open-iscsi's kernel module, nfs, dnsmask for netboot), ext4 FS over
-RAID1 on both system partition and exported data partitions.
-
-I would like disks containing raid arrays to spin down, but there are
-periodic disk writes which prevent this.
-They do not show up in iotop (although it does show a write activity
-in the topmost line).
-Enabling /proc/sys/vm/block_dump generates the following output:
-
-<7>[  918.078079] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-<7>[  918.078169] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-<7>[  918.092124] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-<7>[  918.092184] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-<7>[  918.292627] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-<7>[  918.292714] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-<7>[  918.308500] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-<7>[  918.308588] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-<7>[  923.113309] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-<7>[  923.113397] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-<7>[  923.129330] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-<7>[  923.129388] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-<7>[  923.332489] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-<7>[  923.332545] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-<7>[  923.348507] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-<7>[  923.348595] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-
-Note the 5-seconds pause between each half of this output.
-Block 8 seems to be the md superblock (dixit hexdump + description of
-md superblock), and "mdadm --examine" shows the "Update time" is being
-increased.
-Those arrays are in clean state, no synchronisation is happening and
-no checking that I know of (I would expect a lot of disk activity).
-
-Is there any reason why those writes are happening ?
-I can imagine a mechanism like filesystem superblock periodic
-flushing, but AFAIK it only happens when changes are happening (even
-if they are not flushed themselves), and I would expect the same to
-happen here.
-Is there any knob to control those writes ?
-
-Regards,
--- 
-Vincent Pelletier
+-- Ken Emerson
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
