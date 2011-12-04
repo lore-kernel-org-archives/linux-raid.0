@@ -1,105 +1,43 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: Is this stupid?
-Date: Sun, 4 Dec 2011 16:28:25 -0600
-Message-ID: <D4.5D.10364.904FBDE4@cdptpa-omtalb.mail.rr.com>
+From: Borg Onion <borg.onion@gmail.com>
+Subject: RAID1 round robin read support in md?
+Date: Sun, 4 Dec 2011 15:31:30 -0800
+Message-ID: <CAAs5ODuHAE=K-nbd=YuMq-FL33x-22TM2cnmBHud9mEhwuJFOw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0440_01CCB2A1.BF65F270"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
+Hello,
 
-------=_NextPart_000_0440_01CCB2A1.BF65F270
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Is it possible to implement round-robin read support for raid1.c in
+md?  I sure would appreciate the extra speed given my RAID1x3SSD
+setup.  A possible algorithm might go like this:
 
-I have a system - one that is not expandable - that has relatively limited
-RAM, comparatively speaking, and must boot from a usb stick.  The system
-hosts a RAID array, but one cannot assume the RAID array is available when
-the system boots.  IOW, I want to be able to take down the RAID array for
-maintenance, possibly booting the system with no array created, at all.
+1) Given the RAID1 drives are enumerated 0,1,2
+2) For each read request, call an atomic increment
+3) mod the returned value with # of drives (3)
+4) Use the modulus result as the drive # to read from for this operation
 
-On the other hand, USB sticks have a limited number of writes available
-before they fail, so I don't want the system to be thrashing the flash drive
-any more than necessary.  At this time,  I have /var/run, /var/log,
-/var/lock, and /tmp mounted as tmpfs file systems.  What I propose is to run
-an init script that checks to see if the array is mounted, and if so appends
-files in the aforementioned directories to existing directories on the array
-and then remounts and binds the directories on the array.  The stop call in
-the script will reverse the process so the system can shutdown or so I can
-take the array offline after booting for maintenance.  Is this unwise?  Am I
-missing something crucial that might cause the system to blow up?
+Part of implementation might look like this:
 
-------=_NextPart_000_0440_01CCB2A1.BF65F270
-Content-Type: application/ms-tnef;
-	name="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="winmail.dat"
+uint32_t get_next_read_drive(uint32_t num_drives)
+{
+        static uint32_t op_count;
 
-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
-iVAAkHxQHQ8JaiB9AHogAAMA3j+fTgAAAwAJWQMAAAALAAGACCAGAAAAAADAAAAAAAAARgAAAAAD
-hQAAAAAAAAMAA4AIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAPgAggBgAAAAAAwAAAAAAA
-AEYAAAAABoUAAAAAAAADABCACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAEAAEoAIIAYAAAAA
-AMAAAAAAAABGAAAAAGCFAAAAcJpKMgAAAAsAGYAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAA
-AwAcgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALADSACCAGAAAAAADAAAAAAAAARgAAAACC
-hQAAAAAAAAsAHw4BAAAAAgH4DwEAAAAQAAAA9z9u3oOOKkqz3RROjP9aRAIB+g8BAAAAEAAAAPc/
-bt6DjipKs90UToz/WkQDAP4PBQAAAAMADTT9PwUAAwAPNP0/BQACARQ0AQAAABAAAABOSVRB+b+4
-AQCqADfZbgAAAgF/AAEAAAAxAAAAMDAwMDAwMDBGNzNGNkVERTgzOEUyQTRBQjNERDE0NEU4Q0ZG
-NUE0NDg0NjMzQzAwAAAAAAMABhAonaFaAwAHEH4DAAADABAQAAAAAAMAERAAAAAAHgAIEAEAAABl
-AAAASUhBVkVBU1lTVEVNLU9ORVRIQVRJU05PVEVYUEFOREFCTEUtVEhBVEhBU1JFTEFUSVZFTFlM
-SU1JVEVEUkFNLENPTVBBUkFUSVZFTFlTUEVBS0lORyxBTkRNVVNUQk9PVEZSTwAAAAB6tA==
+        return __sync_fetch_and_add(&op_count, 1) % num_drives;
+}
 
-------=_NextPart_000_0440_01CCB2A1.BF65F270--
+I'm making the assumption that the md code is multi-threaded.  This
+implementation won't work on all platforms, others might have to do
+some locking.  The num_drives and drive list enumeration is assumed to
+exclude write-mostly devices.  Temporary balancing fairness errors
+from the num_drives variable changing value (adding or removing of
+drives) should be innocuous given these are just read ops on mirrored
+data.
 
+Thoughts?
+
+--
+Borg Onion
