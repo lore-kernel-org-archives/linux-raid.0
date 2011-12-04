@@ -1,80 +1,105 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: md metadata nightmare
-Date: Mon, 5 Dec 2011 06:39:26 +1100
-Message-ID: <20111205063926.3d42cd1e@notabene.brown>
-References: <CADzwnhXWvkVC13ZEJj8L0O6PLXLS6uhoBXqoLp67YwmeU60sQQ@mail.gmail.com>
-	<20111123114743.1085889e@notabene.brown>
-	<CADzwnhUJ7HbZH9yqa6x9sHFLo8Vg=1k_SyzvZyq2=iQ5YRLhZQ@mail.gmail.com>
-	<20111124093637.0c3bb2eb@notabene.brown>
-	<CADzwnhXuW7ShBNGf+kqnZYrtRnWMPSRDWzb2h4Gt69Cih0-yGA@mail.gmail.com>
-	<20111204061122.5bb5de4b@notabene.brown>
-	<CADzwnhW+o69Dum10biobv8r093uUa+LABv71Jdg+obOt5Ev6+A@mail.gmail.com>
-	<BLU0-SMTP331AF211B9C3D0D1799003C98B40@phx.gbl>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Is this stupid?
+Date: Sun, 4 Dec 2011 16:28:25 -0600
+Message-ID: <D4.5D.10364.904FBDE4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/zj2hsv98o=dzpjmCSUXoSzy"; protocol="application/pgp-signature"
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0440_01CCB2A1.BF65F270"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BLU0-SMTP331AF211B9C3D0D1799003C98B40@phx.gbl>
 Sender: linux-raid-owner@vger.kernel.org
-To: wilsonjonathan <piercing_male@hotmail.com>
-Cc: Kenneth Emerson <kenneth.emerson@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/zj2hsv98o=dzpjmCSUXoSzy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
 
-On Sun, 4 Dec 2011 17:31:06 +0000 wilsonjonathan <piercing_male@hotmail.com>
-wrote:
+------=_NextPart_000_0440_01CCB2A1.BF65F270
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
->=20
-> > So I finished my backup and attempted to recreate the array using:
-> >=20
-> > root@mythtv:/home/ken# mdadm -C /dev/md3 --metadata=3D1.0 --chunk=3D64k
-> > --level=3D6 --raid-devices=3D5 missing /dev/sdb4 /dev/sdc4 /dev/sda4
-> > /dev/sdd4 --assume-clean
-> >=20
-> > and received the error:
-> >=20
-> > mdadm: invalid chunk/rounding value: 64k
-> >=20
-> > What do I do now?
->=20
-> Omit the "k" only M or G are allowed as the default is to assume K
->=20
+I have a system - one that is not expandable - that has relatively limited
+RAM, comparatively speaking, and must boot from a usb stick.  The system
+hosts a RAID array, but one cannot assume the RAID array is available when
+the system boots.  IOW, I want to be able to take down the RAID array for
+maintenance, possibly booting the system with no array created, at all.
 
-Not strictly accurate.  'K' is allowed, though not 'k'.  But the default is
-definitely 'K', so with
+On the other hand, USB sticks have a limited number of writes available
+before they fail, so I don't want the system to be thrashing the flash drive
+any more than necessary.  At this time,  I have /var/run, /var/log,
+/var/lock, and /tmp mounted as tmpfs file systems.  What I propose is to run
+an init script that checks to see if the array is mounted, and if so appends
+files in the aforementioned directories to existing directories on the array
+and then remounts and binds the directories on the array.  The stop call in
+the script will reverse the process so the system can shutdown or so I can
+take the array offline after booting for maintenance.  Is this unwise?  Am I
+missing something crucial that might cause the system to blow up?
 
-  --chunk=3D64
-or
-  --chunk-64K
+------=_NextPart_000_0440_01CCB2A1.BF65F270
+Content-Type: application/ms-tnef;
+	name="winmail.dat"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="winmail.dat"
 
-should work.
+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
+iVAAkHxQHQ8JaiB9AHogAAMA3j+fTgAAAwAJWQMAAAALAAGACCAGAAAAAADAAAAAAAAARgAAAAAD
+hQAAAAAAAAMAA4AIIAYAAAAAAMAAAAAAAABGAAAAABCFAAAAAAAACwAPgAggBgAAAAAAwAAAAAAA
+AEYAAAAABoUAAAAAAAADABCACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAEAAEoAIIAYAAAAA
+AMAAAAAAAABGAAAAAGCFAAAAcJpKMgAAAAsAGYAIIAYAAAAAAMAAAAAAAABGAAAAAA6FAAAAAAAA
+AwAcgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALADSACCAGAAAAAADAAAAAAAAARgAAAACC
+hQAAAAAAAAsAHw4BAAAAAgH4DwEAAAAQAAAA9z9u3oOOKkqz3RROjP9aRAIB+g8BAAAAEAAAAPc/
+bt6DjipKs90UToz/WkQDAP4PBQAAAAMADTT9PwUAAwAPNP0/BQACARQ0AQAAABAAAABOSVRB+b+4
+AQCqADfZbgAAAgF/AAEAAAAxAAAAMDAwMDAwMDBGNzNGNkVERTgzOEUyQTRBQjNERDE0NEU4Q0ZG
+NUE0NDg0NjMzQzAwAAAAAAMABhAonaFaAwAHEH4DAAADABAQAAAAAAMAERAAAAAAHgAIEAEAAABl
+AAAASUhBVkVBU1lTVEVNLU9ORVRIQVRJU05PVEVYUEFOREFCTEUtVEhBVEhBU1JFTEFUSVZFTFlM
+SU1JVEVEUkFNLENPTVBBUkFUSVZFTFlTUEVBS0lORyxBTkRNVVNUQk9PVEZSTwAAAAB6tA==
 
-Thanks,
-NeilBrown
+------=_NextPart_000_0440_01CCB2A1.BF65F270--
 
---Sig_/zj2hsv98o=dzpjmCSUXoSzy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQIVAwUBTtvMcznsnt1WYoG5AQLoCg/9G4jKdRZmwbLAa/evYNCEMirOMTSyD2Kh
-Kj2KWqF15zRSscWTecDGDiwp8XJ3j6AExGUdagXvb/RI3QDx/2b+cLcPuHjX32Ph
-jQINtgaZoMJwXA6AC5FZFyWY4AhO0sKEJaDYKsR2147kWr7r4431jhdn2RRfs1OF
-TcJ9Ki6E6mMfnvG69nDnMyAVWrSDKQsc0QzJugmyMOP26Td8b21pA5TeLTE0M1Hr
-VmdIXvj2dgTfuU7jlYAhDh65xxKxvPGecmKhg+BvntE9yvx+4P7Zevr7TLqwo4CF
-jAHxTW4KIm7EgHEEEXHIpm42q8Yq4aPeM+k+q5iYO50fzY2uZEPfpL9XEsvvgwgT
-eAcxKGPuMdtansgGWYjBIlUioFrP6fsiCNiRSciOcclZvw1bbKqJiPfHdtkGw7Kz
-W5VnFjy8+uF4VeNyWUpU5/l2qjqS3s2lN5jw7hmKyJpZfuCcgx3yP2uJmPq912SN
-TCSqXGkz0p/B7ixhLj6DHdMmoFQOjtdiIAMZ/iUL1OkpMCY8qhQT2pCV+71ZtMPo
-I6kX7ib5yxP6z4wrDlwvNMgbYKRZVm5ACwgeznTJjD8bqHiQ0swo+R3YBCEb+fEG
-Wq/M2WtTSoCM45KZJLqE5RxmA83xe+nhz/LBhyVgeClxvPVgwYbcKcSvOdys+FeB
-YzkO1MO6Vqw=
-=CSE3
------END PGP SIGNATURE-----
-
---Sig_/zj2hsv98o=dzpjmCSUXoSzy--
