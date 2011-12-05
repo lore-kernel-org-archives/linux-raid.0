@@ -1,59 +1,45 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Is this stupid?
-Date: Mon, 5 Dec 2011 02:01:10 -0600
-Message-ID: <CD.9B.23309.74A7CDE4@cdptpa-omtalb.mail.rr.com>
-References: <CAFx4rwRzUM3kh5vTmqoiH84s7kGD54cjqGAcrdhRxYEm03NVsw@mail.gmail.com>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] imsm: FIX: Just created redundant array is not in
+	uninitialized state
+Date: Mon, 05 Dec 2011 09:26:52 +0100
+Message-ID: <20111205082652.18395.98414.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAFx4rwRzUM3kh5vTmqoiH84s7kGD54cjqGAcrdhRxYEm03NVsw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: doug@easyco.com
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
+When redundant array (e.g. raid5) is created metadata shows it is in
+normal state. Initialization process is showed in metadata as rebuild from normal
+to normal state. Redundant array should be initially in uninitialized state
+before it's initialization.
 
+Add code to put array in uninitialized state upon array creation.
 
-> -----Original Message-----
-> From: dougdumitruredirect@gmail.com [mailto:dougdumitruredirect@gmail.com]
-> On Behalf Of Doug Dumitru
-> Sent: Monday, December 05, 2011 12:18 AM
-> To: Leslie Rhorer
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Is this stupid?
-> 
-> Mr. Rhorer,
-> 
-> Don't work too hard over-thinking this in terms of wearing the stick
-> out.  Current USB sticks are built with dirt cheap, often three bits
-> per cell flash with lousy endurance and minimal wear leveling.  Even
-> so, if you have an 8GB stick that writes at 5 MB/sec and 600
-> endurance, it still takes 11 days of 100% busy writes to kill it.
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-I'm thinking more like 3 years or so.
+ super-intel.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-> The real issue with booting from a USB stick (and the same rules apply
-> to CF cards), is that some operations like syslogd sync writes can
-> take forever and then some.
-
-Yeah, that seems to be the main concern, along with the fact there is more
-than one asynchronous process doing the writing.
-
-> One other trick is to either use a more "flash friendly" file system,
-
-Such as?  Of course both tmpfs and the hard drive are both 100% flash
-friendly, which is the point.
-
-> or at least turn off atime tracking.
-
-Yeah, I've done that.  The writes to /var/log, /var/run, /var/lock, and /tmp
-are 100% flash friendly at the moment.  They just aren't RAM friendly.  Of
-course, with 512M of real memory and 512M of RAID array based swap, maybe
-I'm just being a mother hen.  At the moment, only 71M of RAM is in use, and
-none on the RAID array.  With the Ethernet interfaces set to use static IPs,
-rsyslog is hardly putting out anything at all.  I have logrotate running
-every hour, and all the logs limited to rather small sizes.  The biggest
-offender is SAMBA, who has over 500K of files open in /var/run.
+diff --git a/super-intel.c b/super-intel.c
+index a0672bf..b8abea0 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -4289,7 +4289,11 @@ static int init_super_imsm_volume(struct supertype *st, mdu_array_info_t *info,
+ 	map->blocks_per_member = __cpu_to_le32(info_to_blocks_per_member(info));
+ 	map->blocks_per_strip = __cpu_to_le16(info_to_blocks_per_strip(info));
+ 	map->failed_disk_num = ~0;
+-	map->map_state = info->failed_disks ? IMSM_T_STATE_DEGRADED : IMSM_T_STATE_NORMAL;
++	if (info->level > 0)
++		map->map_state = IMSM_T_STATE_UNINITIALIZED;
++	else
++		map->map_state = info->failed_disks ? IMSM_T_STATE_FAILED :
++						      IMSM_T_STATE_NORMAL;
+ 	map->ddf = 1;
+ 
+ 	if (info->level == 1 && info->raid_disks > 2) {
 
