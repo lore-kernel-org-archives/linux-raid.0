@@ -1,51 +1,59 @@
-From: Vincent Pelletier <plr.vincent@gmail.com>
-Subject: Re: Spin down
-Date: Mon, 5 Dec 2011 08:49:03 +0100
-Message-ID: <CAF78GY0u89KvZhEZQ64GxWeDpBCT6cdAJ+xaGm=z7O_2gKTYTA@mail.gmail.com>
-References: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
-	<20111205171115.044b1705@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Is this stupid?
+Date: Mon, 5 Dec 2011 02:01:10 -0600
+Message-ID: <CD.9B.23309.74A7CDE4@cdptpa-omtalb.mail.rr.com>
+References: <CAFx4rwRzUM3kh5vTmqoiH84s7kGD54cjqGAcrdhRxYEm03NVsw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111205171115.044b1705@notabene.brown>
+In-Reply-To: <CAFx4rwRzUM3kh5vTmqoiH84s7kGD54cjqGAcrdhRxYEm03NVsw@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: doug@easyco.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 5, 2011 at 7:11 AM, NeilBrown <neilb@suse.de> wrote:
-> 5 seconds suggests a bitmap update. =A0Do you have an internal bitmap=
-?
 
-I don't, but I enabled it on those arrays before with default delay.
-I then removed it when I suspected (with help of block_dump) it to
-cause spin-ups, and I noticed an improvement. Recently, the machine
-was restarted (once on 3.0 kernel, and again to update to 3.1), and
-after both restarts those 5s periodic writes occurred.
 
-> Then try adding it back with a longer delay
-> =A0mdadm --grow /dev/md0 --bitmap=3Dinternal --delay=3D60
+> -----Original Message-----
+> From: dougdumitruredirect@gmail.com [mailto:dougdumitruredirect@gmail.com]
+> On Behalf Of Doug Dumitru
+> Sent: Monday, December 05, 2011 12:18 AM
+> To: Leslie Rhorer
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: Is this stupid?
+> 
+> Mr. Rhorer,
+> 
+> Don't work too hard over-thinking this in terms of wearing the stick
+> out.  Current USB sticks are built with dirt cheap, often three bits
+> per cell flash with lousy endurance and minimal wear leveling.  Even
+> so, if you have an 8GB stick that writes at 5 MB/sec and 600
+> endurance, it still takes 11 days of 100% busy writes to kill it.
 
-Adding bitmaps on both arrays (md0 and md1), 5s periodic writes disappe=
-ar.
-Removing bitmaps seems to preserve the improvement.
+I'm thinking more like 3 years or so.
 
-Could the delay setting have survived on-disk and be used when
-initializing the array, but cleared when mdadm later disables bitmap
-usage ?
+> The real issue with booting from a USB stick (and the same rules apply
+> to CF cards), is that some operations like syslogd sync writes can
+> take forever and then some.
 
-> What kernel version are you running?
+Yeah, that seems to be the main concern, along with the fact there is more
+than one asynchronous process doing the writing.
 
-3.1.4, according to dpkg:
-ii  linux-image-3.1.0-1-amd64                   3.1.4-1
-                     Linux 3.1 for 64-bit PCs
+> One other trick is to either use a more "flash friendly" file system,
 
-Regards,
---=20
-Vincent Pelletier
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Such as?  Of course both tmpfs and the hard drive are both 100% flash
+friendly, which is the point.
+
+> or at least turn off atime tracking.
+
+Yeah, I've done that.  The writes to /var/log, /var/run, /var/lock, and /tmp
+are 100% flash friendly at the moment.  They just aren't RAM friendly.  Of
+course, with 512M of real memory and 512M of RAID array based swap, maybe
+I'm just being a mother hen.  At the moment, only 71M of RAM is in use, and
+none on the RAID array.  With the Ethernet interfaces set to use static IPs,
+rsyslog is hardly putting out anything at all.  I have logrotate running
+every hour, and all the logs limited to rather small sizes.  The biggest
+offender is SAMBA, who has over 500K of files open in /var/run.
+
