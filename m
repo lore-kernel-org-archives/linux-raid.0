@@ -1,104 +1,120 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: Spin down
-Date: Mon, 5 Dec 2011 17:11:15 +1100
-Message-ID: <20111205171115.044b1705@notabene.brown>
-References: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
+Subject: Re: RAID6 - repeated hot-pulls issue
+Date: Mon, 5 Dec 2011 17:15:40 +1100
+Message-ID: <20111205171540.4fe659e2@notabene.brown>
+References: <CALwOXvL6avy3f76TcpMdMxqObCRY-SphRErjo-j1=iun-etBpA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2.eG2wmg.ty+12li=M/AApe"; protocol="application/pgp-signature"
+ boundary="Sig_/GLthw8zXgR+y=LqoEdzTiX+"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
+In-Reply-To: <CALwOXvL6avy3f76TcpMdMxqObCRY-SphRErjo-j1=iun-etBpA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vincent Pelletier <plr.vincent@gmail.com>
+To: John Gehring <john.gehring@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/2.eG2wmg.ty+12li=M/AApe
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/GLthw8zXgR+y=LqoEdzTiX+
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 3 Dec 2011 12:23:37 +0100 Vincent Pelletier <plr.vincent@gmail.com>
-wrote:
+On Fri, 2 Dec 2011 09:34:40 -0700 John Gehring <john.gehring@gmail.com> wro=
+te:
 
-> Hi.
+> I am having trouble with a hot-pull scenario.
 >=20
-> Short system description:
-> up-to-date Debian sid, used on a NAS-ish machine (iscsi with
-> open-iscsi's kernel module, nfs, dnsmask for netboot), ext4 FS over
-> RAID1 on both system partition and exported data partitions.
+> - linux 2.6.38.8
+> - LSI 2008 sas
+> - RAID6 via md
+> - 8 drives (2 TB each)
 >=20
-> I would like disks containing raid arrays to spin down, but there are
-> periodic disk writes which prevent this.
-> They do not show up in iotop (although it does show a write activity
-> in the topmost line).
-> Enabling /proc/sys/vm/block_dump generates the following output:
+> Suspect sequence:
 >=20
-> <7>[  918.078079] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-> <7>[  918.078169] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-> <7>[  918.092124] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-> <7>[  918.092184] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-> <7>[  918.292627] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-> <7>[  918.292714] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-> <7>[  918.308500] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-> <7>[  918.308588] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-> <7>[  923.113309] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-> <7>[  923.113397] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-> <7>[  923.129330] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-> <7>[  923.129388] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
-> <7>[  923.332489] md0_raid1(304): WRITE block 8 on sda1 (2 sectors)
-> <7>[  923.332545] md0_raid1(304): WRITE block 8 on sdc1 (2 sectors)
-> <7>[  923.348507] md1_raid1(311): WRITE block 8 on sda5 (2 sectors)
-> <7>[  923.348595] md1_raid1(311): WRITE block 8 on sdc5 (2 sectors)
+> 1 - Create Raid6 array using all 8 drives (/dev/md1). Each drive is
+> partitioned identically with two partitions. The second partition of
+> each drive is used for the raid set. The size of the partition varies,
+> but I have been using a 4GB partition for testing in order to have
+> quick re-sync times.
+> 2 - Wait for raid re-sync to complete.
+> 3 - Start read-only IO against /dev/md1 via following command:=A0 dd
+> if=3D/dev/md1 of=3D/dev/null bs=3D1=A0 This step insures that pulled driv=
+es
+> are detected by the md.
+> 4 - Physically pull a drive from the array.
+> 5 - Verify that the md has removed the drive/device from the array.
+> mdadm --detail /dev/md1 should show it as faulty and removed from the
+> array.
+> 6 - Remove the device from the raid array:=A0 mdadm /dev/md1 -r /dev/sd[?=
+]2
+> 7 - Re-insert the drive back into the slot.
+> 8 - Take a look at dmesg to see what device name has been assigned.
+> Typically has the same letter assigned as before.
+> 9 - Add the drive back into the raid array: mdadm /dev/md1 -a
+> /dev/sd[?]2=A0=A0 Now some folks might say that I should use --re-add, but
+> the mdadm documentation states that re-add will be used anyway if the
+> system detects that a drive has been 're-inserted'. Additionally, the
+> mdadm response to this command shows that an 'add' or 'readd' was
+> executed depending on the state of the disk inserted.
+> --All is apparently going fine at this point. The add command succeeds
+> and cat /proc/mdstat shows the re-sync in progress and it eventually
+> finishes.
+> --Now for the interesting part.
+> 10 - Verify that the dd command is still running.
+> 11 - Pull the same drive again.
 >=20
-> Note the 5-seconds pause between each half of this output.
-> Block 8 seems to be the md superblock (dixit hexdump + description of
-> md superblock), and "mdadm --examine" shows the "Update time" is being
-> increased.
-> Those arrays are in clean state, no synchronisation is happening and
-> no checking that I know of (I would expect a lot of disk activity).
+> This time, the device is not removed from the array, although it is
+> marked as faulty in the /proc/mdstat report.
 >=20
-> Is there any reason why those writes are happening ?
-> I can imagine a mechanism like filesystem superblock periodic
-> flushing, but AFAIK it only happens when changes are happening (even
-> if they are not flushed themselves), and I would expect the same to
-> happen here.
-> Is there any knob to control those writes ?
+> In mdadm --detail /dev/md1, the device is still in the raid set and is
+> marked as "faulty spare rebuilding". I have not found a command that
+> will remove drive from the raid set at this point. There were a couple
+> of instances/tests where after 10+ minutes, the device came out of the
+> array and was simply marked faulty, at which point I could add a new
+> drive, but that has been the exception. Usually, it remains in the
+> 'faulty spare rebuilding' mode.
 >=20
-> Regards,
+> I don't understand why there is different behavior the second time the
+> drive is pulled. I tried zeroing out both partitions on the drive,
+> re-partitioning, mdadm --zero-superblock, but still the same behavior.
+> If I pull a drive and replace it, I am able to do a subsequent pull of
+> the new drive without trouble, albeit only once.
+>=20
+> Comments? Suggestions? I'm glad to provide more info.
+>
 
-5 seconds suggests a bitmap update.  Do you have an internal bitmap?
+Yes, strange.
 
-Try to remove it
-   mdadm --grow /dev/md0 --bitmap=3Dnone
+The only think that should stop you being able to remove the device is if
+there are outstanding IO requests.
 
-and see if they stop.
-Then try adding it back with a longer delay
-  mdadm --grow /dev/md0 --bitmap=3Dinternal --delay=3D60
+Maybe the driver is being slow in aborting requests the second time.  Could
+be a driver bug on the LSI.
 
-What kernel version are you running?
+You could try using blktrace to watch all the requests and make sure every
+request that starts also completes....
 
 NeilBrown
 
---Sig_/2.eG2wmg.ty+12li=M/AApe
+
+--Sig_/GLthw8zXgR+y=LqoEdzTiX+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTtxggznsnt1WYoG5AQJeaA/9GDOUk0cPrTQ31bfpSVhqI5NuuO2igS+G
-W9nnAbe4kp9Tekik2VMTRGRrfBlOLYHNN5VeiUbIfvoY+OE6MZVVIw0ZisMTOQEg
-6dPMgW8ggPncgptlbOLa/V+gSm+qKIq4W9JHSOspVK2QpHC8XF5arpoocK/FSi8Y
-/ssKM+O+fWSX15XgFaV21MN/y2lo/+S69aWDaxQOEAYXh5D9Ni7u5RvFA6P5x4bS
-Ql3sQ/3Jz+ti8d6GwXT6pn+BseJevjUZe7E7jlpMFNjaNKp4zcK7IZNn88cYV7pG
-cDHVDSmDIoAUG63uQA2gic0R3TaLi9+EcbffytofS4qCJq8Sq1DLlDZmGmjoazlQ
-oay/VvI+v+DgzJMpdokyJdrLTtftnQ7K89uuTgi0HGMfhBJlQvIK2dl6izoIY2Al
-QfnlSnzymFW3cZe3otuqoWlA3Jzc8zLhBs1TVgeuARZocZQwGENeSYuxBr/6N3Qr
-itmPgfNjf75pfyyykDQ6asaRV5r92Zt3U1zoYpXy7WLKY3oyy0uYqbgXlYJHV7J2
-JIDZJZoBbupAI6ugjnFDmKgitVIWGU4XxoF1e2NGt8HQVeZgf4YdnNxcOVKBCEtj
-AFDV9IlKr6BYNziTPNcktX9Rgpp8bD3qlqsfB3FqPLc1iv+8ITZSQ006toU4RuxR
-iIQcuJjqRxs=
-=zSEU
+iQIVAwUBTtxhjDnsnt1WYoG5AQIYZRAArOtV6qaRAGgEucGuWRsFboLSOapMbiU4
+JVLlfPALXgXi+em7rsmRkfqHe3uTK763Yi66YWBQuytiffM8MEIMrdy4jyAu7V37
+qhqMDJlUe7VG7b0f3ql4EkKKX2b6FnSC5BcC+eYJS5RzsnRURSC9o21ny6bgS84a
+EsZ9AdVF4I7QwSn9bjDZu67pq07Qp7jF0PzvDagWqd6Pt5c1j8VdUMjLno1fnD84
+3FmvF2PFB4cuZ0xgyeEZ2QrNCc4KG1mgGAfrDnI9EF3VRWkA8NwsIqYNpD4igx4P
+NDALxhiKeQwmWku7xhTDPMqG5JJDv1FXBWJyMX8tjofHB1bjVFGKfU9aFFdC04N5
+ZHm948pAU18a0Cl6QG+gO5ywBIvXouO+eQlztFm2sVMLjWP5+meTvG6t2ULF7Yfu
+rQcI6J97UqN0yixWvXvrPHjccGCSffO47l/Z8BRHDE3cbHuDXPiQ6vZzVBa4Dusv
+Wf9eXU0Kd/Dl8Z3/9Y13OrHMv2JpByO/qfGxxM79n/WvRPQcM1qjZZsT82k41rWD
+INxD9fV5eneGo0Lk4UUDy6hZD0RWA2uV6G4Wo8cRxufWCYzC4LAfKf5bCMrN+u4+
+6cW60yjhQjjfeBSLlw++zxgNApJvfpVRB0pc5RXUKJ4WTzKIIkGxFUG99fuzC63x
+tKuzqMuEyGs=
+=Jrj5
 -----END PGP SIGNATURE-----
 
---Sig_/2.eG2wmg.ty+12li=M/AApe--
+--Sig_/GLthw8zXgR+y=LqoEdzTiX+--
