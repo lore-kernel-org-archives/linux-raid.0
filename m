@@ -1,64 +1,51 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Is this stupid?
-Date: Mon, 5 Dec 2011 01:42:37 -0600
-Message-ID: <89.AE.23309.EE57CDE4@cdptpa-omtalb.mail.rr.com>
-References: <20111205170114.49cf7437@notabene.brown>
+From: Vincent Pelletier <plr.vincent@gmail.com>
+Subject: Re: Spin down
+Date: Mon, 5 Dec 2011 08:49:03 +0100
+Message-ID: <CAF78GY0u89KvZhEZQ64GxWeDpBCT6cdAJ+xaGm=z7O_2gKTYTA@mail.gmail.com>
+References: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
+	<20111205171115.044b1705@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111205170114.49cf7437@notabene.brown>
+In-Reply-To: <20111205171115.044b1705@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Dec 5, 2011 at 7:11 AM, NeilBrown <neilb@suse.de> wrote:
+> 5 seconds suggests a bitmap update. =A0Do you have an internal bitmap=
+?
 
+I don't, but I enabled it on those arrays before with default delay.
+I then removed it when I suspected (with help of block_dump) it to
+cause spin-ups, and I noticed an improvement. Recently, the machine
+was restarted (once on 3.0 kernel, and again to update to 3.1), and
+after both restarts those 5s periodic writes occurred.
 
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Monday, December 05, 2011 12:01 AM
-> To: Leslie Rhorer
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Is this stupid?
-> 
-> On Sun, 4 Dec 2011 16:28:25 -0600 "Leslie Rhorer" <lrhorer@satx.rr.com>
-> wrote:
-> 
-> > I have a system - one that is not expandable - that has relatively
-> limited
-> > RAM, comparatively speaking, and must boot from a usb stick.  The system
-> > hosts a RAID array, but one cannot assume the RAID array is available
-> when
-> > the system boots.  IOW, I want to be able to take down the RAID array
-> for
-> > maintenance, possibly booting the system with no array created, at all.
-> >
-> > On the other hand, USB sticks have a limited number of writes available
-> > before they fail, so I don't want the system to be thrashing the flash
-> drive
-> > any more than necessary.  At this time,  I have /var/run, /var/log,
-> > /var/lock, and /tmp mounted as tmpfs file systems.  What I propose is to
-> run
-> > an init script that checks to see if the array is mounted, and if so
-> appends
-> > files in the aforementioned directories to existing directories on the
-> array
-> > and then remounts and binds the directories on the array.  The stop call
-> in
-> > the script will reverse the process so the system can shutdown or so I
-> can
-> > take the array offline after booting for maintenance.  Is this unwise?
-> Am I
-> > missing something crucial that might cause the system to blow up?
-> 
-> Sounds reasonably sane.
-> 
-> After the bind mount you would need to make sure any process with a file
-> open in one of those directories re-opens the file.  So you might want to
-> restart syslogd.
+> Then try adding it back with a longer delay
+> =A0mdadm --grow /dev/md0 --bitmap=3Dinternal --delay=3D60
 
-Yeah, I was intending to do that, along with any other processes that
-require it.  'Basically do the same thing that logrotate does.
+Adding bitmaps on both arrays (md0 and md1), 5s periodic writes disappe=
+ar.
+Removing bitmaps seems to preserve the improvement.
 
+Could the delay setting have survived on-disk and be used when
+initializing the array, but cleared when mdadm later disables bitmap
+usage ?
+
+> What kernel version are you running?
+
+3.1.4, according to dpkg:
+ii  linux-image-3.1.0-1-amd64                   3.1.4-1
+                     Linux 3.1 for 64-bit PCs
+
+Regards,
+--=20
+Vincent Pelletier
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
