@@ -1,89 +1,76 @@
-From: Doug Dumitru <doug@easyco.com>
-Subject: Re: RAID1 round robin read support in md?
-Date: Sun, 4 Dec 2011 21:53:26 -0800
-Message-ID: <CAFx4rwRKUvVaJtCv=+qurYp9C7V5iJKn0MhO-aJFsB3Fs5VjEw@mail.gmail.com>
-References: <CAAs5ODuHAE=K-nbd=YuMq-FL33x-22TM2cnmBHud9mEhwuJFOw@mail.gmail.com>
-	<CALFpzo48C2-HHgw=iOefdHaAUCwEJfjoiXjq=Ngv62a-0yEpcQ@mail.gmail.com>
-	<CAAs5ODv01LE6HRZjteYYsaMF5stTNv-8pdK9JDP18u4QeNGUOQ@mail.gmail.com>
-	<CALFpzo7WqkXNF9DcCNJn_D1ZP=Jgpb85u6H=5_KPONQMy7FpYQ@mail.gmail.com>
-	<CAAs5ODtObyOaSebofD-Kf2HcYU_7zRv0+oUmWPnnzU=gYn24Ug@mail.gmail.com>
-Reply-To: doug@easyco.com
+From: NeilBrown <neilb@suse.de>
+Subject: Re: Is this stupid?
+Date: Mon, 5 Dec 2011 17:01:14 +1100
+Message-ID: <20111205170114.49cf7437@notabene.brown>
+References: <D4.5D.10364.904FBDE4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/PFTGFnrT7ME0zez0/O7B+cs"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAAs5ODtObyOaSebofD-Kf2HcYU_7zRv0+oUmWPnnzU=gYn24Ug@mail.gmail.com>
+In-Reply-To: <D4.5D.10364.904FBDE4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Borg Onion <borg.onion@gmail.com>
-Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What you are seeing is very SSD specific.
+--Sig_/PFTGFnrT7ME0zez0/O7B+cs
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-With rotating media, it is very important to intentionally stay on one
-disk even if it leaves other mirrors quiet.  Rotating disks do "in the
-drive" read-ahead and take advantage of the heads being on the correct
-track, so streaming straight-line reads are efficient.
+On Sun, 4 Dec 2011 16:28:25 -0600 "Leslie Rhorer" <lrhorer@satx.rr.com> wro=
+te:
 
-With SSDs in an array, things are very different.  Drives don't really
-read ahead at all (actually they do, but this is more of a side effect
-of error correction than performance tuning, and the lengths are
-short).  If your application is spitting out 4MB read requests, they
-get cut into 512K (1024 sector) bio calls, and sent to a single drive
-if they are linear.  Because the code is optimized for HDDs, future
-linear calls should go to the same drive because an HDD is very likely
-to have at least some of the read sectors in the read-ahead cache.
+> I have a system - one that is not expandable - that has relatively limited
+> RAM, comparatively speaking, and must boot from a usb stick.  The system
+> hosts a RAID array, but one cannot assume the RAID array is available when
+> the system boots.  IOW, I want to be able to take down the RAID array for
+> maintenance, possibly booting the system with no array created, at all.
+>=20
+> On the other hand, USB sticks have a limited number of writes available
+> before they fail, so I don't want the system to be thrashing the flash dr=
+ive
+> any more than necessary.  At this time,  I have /var/run, /var/log,
+> /var/lock, and /tmp mounted as tmpfs file systems.  What I propose is to =
+run
+> an init script that checks to see if the array is mounted, and if so appe=
+nds
+> files in the aforementioned directories to existing directories on the ar=
+ray
+> and then remounts and binds the directories on the array.  The stop call =
+in
+> the script will reverse the process so the system can shutdown or so I can
+> take the array offline after booting for maintenance.  Is this unwise?  A=
+m I
+> missing something crucial that might cause the system to blow up?
 
-A different algorithm for SSDs would be better, but one concern is
-that this might slow down short read requests in a multi-threaded
-environment.  Actually managing a mix intelligently is probably best
-started with a Google literature search for SSD scheduling papers.  I
-suspect that UCSD's super-computing department might have done some
-work in this area.
+Sounds reasonably sane.
 
-With the same data available from two drives, for low thread count
-applications, it might be better to actually cut up the inbound
-requests into even smaller chunks, and send them in parallel to the
-drives.  A quick test on a Crucial C300 shows the following transfer
-rates at different block sizes.
+After the bind mount you would need to make sure any process with a file
+open in one of those directories re-opens the file.  So you might want to
+restart syslogd.
 
-512K  319 MB/sec
-256K  299 MB/sec
-128K  298 MB/sec
-64K  287 MB/sec
-32K  275 MB/sec
+NeilBrown
 
-This is with a single 'dd' process and 'iflag=direct' bypassing linux
-read-ahead and buffer caching.  The test was only a second long or so,
-so the noise could be quite high.  Also, C300s may behave very
-differently with this workload than other drives, so you have to test
-each type of disk.
+--Sig_/PFTGFnrT7ME0zez0/O7B+cs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-What this implies is that if the md raid-1 layer "were to be" SSD
-aware, it should consider cutting up long requests and keeping all
-drives busy.  The logic would be something like:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
-* If any request is >= 32K, split it into 'n' parts', and issue them
-in parallel.
+iQIVAwUBTtxeKjnsnt1WYoG5AQKLMA//YXnia+IchksnWb7ZgNsj52EUNV39k87C
+8rKYYqc+YwYkWw54aSC0+QFH+lj8dt2tX1iTB7VKAqz07MlsTmlQgvOJi8qopenK
+cpzXszXCUFhPoV18yA0SfRYJzPFPE7S6KOXIwWgLtPjf0ZfJLtnNYESYwctoxMFj
+j8tpJeH9jFFrh6NNY0l/5IHZI/vkrLXDEhqaL3+w3ngnRHhQqt6Pl9QRS3XrUFbc
+Vo4DbzykWec0n3pOAcfxcx4kl3lscQvEgvBc4dJi3Fyb7OLiFG2/zBRV1axIe+go
+twWywrOVz3HOW13bGLGRYBIjp/vUaae39D6cHelxldwu61gKU6OQkpng8GXsIiLh
+oVG7Uh5wAXiI/Vw+mDqN2u11VxRssOPx/Ve2+vH1Umcd5SGKv/u2oOKiUeDz865g
+z3mXwErRXV6UwieD1jN0iJe/cNjgjzB2YD6/+WY+cczXAwS/IiCeUKZy8ZlzCPR0
+fmUJqHWj137WkWTUMoiWkUNK/oZbYFdLdYU766KuB2BsnOCnzI8LzTf/DYg0brNI
+SXewNCFdXLVQO8KxaV5WvcavoNzMrYNq2AEZCIwNEOfNBkj0CK+eDAlVpxYX/i+9
+ZjvlxPQsKCRbPdyoFtKqpp1QZDHNr8jxXpz3/PDeSHpZY6PX3CgnskGoD6ktTFAJ
+yXZaCSGlmXE=
+=lBnf
+-----END PGP SIGNATURE-----
 
-This would be best implemented "down low" in the md stack.
-Unfortunately, the queuing where requests are collated, happens below
-md completely (I think), so there is no easy point to insert this.
-
-The idea of round-robin scheduling the requests is probably a little
-off-base.  The important part is, with SSDs, to cut up the requests
-into smaller sizes, and push them in parallel.  A round-robin might
-trick the scheduler into this sometimes, but is probably only an
-edge-case solution.
-
-This same logic applies to raid-0, raid-5/6, and raid-10 arrays.  With
-HDDs is is often more efficient to keep the stripe size large so that
-individual in-drive read-ahead is exploited.  With SSDs, smaller
-stripes are often better (at least on reads) because it tends to keep
-all of the drive busy.
-
-Now it is important to note that this discussion is 100% about reads.
-SSD writes are a much more complicated animal.
-
---
-Doug Dumitru
-EasyCo LLC
+--Sig_/PFTGFnrT7ME0zez0/O7B+cs--
