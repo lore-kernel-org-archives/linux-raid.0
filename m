@@ -1,92 +1,87 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: fix: does not allow to use invalid chunk size
-Date: Tue, 6 Dec 2011 11:56:13 +1100
-Message-ID: <20111206115613.77736d93@notabene.brown>
-References: <20111125121204.662.4111.stgit@linux.site>
+Subject: Re: [PATCH] imsm: FIX: Just created redundant array is not in
+ uninitialized state
+Date: Tue, 6 Dec 2011 11:56:36 +1100
+Message-ID: <20111206115636.1282d44e@notabene.brown>
+References: <20111205082652.18395.98414.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/a6/1=gnqRT/LpUNdB0FlqGK"; protocol="application/pgp-signature"
+ boundary="Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111125121204.662.4111.stgit@linux.site>
+In-Reply-To: <20111205082652.18395.98414.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, marcin.labun@intel.com, ed.ciechanowski@intel.com
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/a6/1=gnqRT/LpUNdB0FlqGK
+--Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 25 Nov 2011 13:12:04 +0100 Przemyslaw Czarnowski
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
+On Mon, 05 Dec 2011 09:26:52 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
-> Only least significant bit of chunk size provided by user has been used
-> in test with OROM capabilities. This way user could pass value which is
-> not a power of 2.
+> When redundant array (e.g. raid5) is created metadata shows it is in
+> normal state. Initialization process is showed in metadata as rebuild fro=
+m normal
+> to normal state. Redundant array should be initially in uninitialized sta=
+te
+> before it's initialization.
 >=20
-> Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@i=
-ntel.com>
+> Add code to put array in uninitialized state upon array creation.
+>=20
+> Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
->  platform-intel.h |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
 >=20
-> diff --git a/platform-intel.h b/platform-intel.h
-> index 6c094d7..99450ba 100644
-> --- a/platform-intel.h
-> +++ b/platform-intel.h
-> @@ -124,11 +124,13 @@ static inline int imsm_orom_has_raid5(const struct =
-imsm_orom *orom)
->  static inline int imsm_orom_has_chunk(const struct imsm_orom *orom, int =
-chunk)
->  {
->  	int fs =3D ffs(chunk);
-> +	int orom_chunk_bit;
+>  super-intel.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/super-intel.c b/super-intel.c
+> index a0672bf..b8abea0 100644
+> --- a/super-intel.c
+> +++ b/super-intel.c
+> @@ -4289,7 +4289,11 @@ static int init_super_imsm_volume(struct supertype=
+ *st, mdu_array_info_t *info,
+>  	map->blocks_per_member =3D __cpu_to_le32(info_to_blocks_per_member(info=
+));
+>  	map->blocks_per_strip =3D __cpu_to_le16(info_to_blocks_per_strip(info));
+>  	map->failed_disk_num =3D ~0;
+> -	map->map_state =3D info->failed_disks ? IMSM_T_STATE_DEGRADED : IMSM_T_=
+STATE_NORMAL;
+> +	if (info->level > 0)
+> +		map->map_state =3D IMSM_T_STATE_UNINITIALIZED;
+> +	else
+> +		map->map_state =3D info->failed_disks ? IMSM_T_STATE_FAILED :
+> +						      IMSM_T_STATE_NORMAL;
+>  	map->ddf =3D 1;
 > =20
->  	if (!fs)
->  		return 0;
->  	fs--; /* bit num to bit index */
-> -	return !!(orom->sss & (1 << (fs - 1)));
-> +	orom_chunk_bit =3D (orom->sss & (1 << (fs - 1)));
-> +	return orom_chunk_bit && 1 << orom_chunk_bit =3D=3D chunk;
->  }
-> =20
-> =20
+>  	if (info->level =3D=3D 1 && info->raid_disks > 2) {
 
-applied, thanks.
-
-However it feels a bit clumsy, though maybe that is just me.
-I would use a separate explicit test for "is a power of 2".
-ie.
-
-  if (chunk & (chunk-1))
-        return 0; /* not a power of 2 */
-  fs =3D ffs(chunk);
-  return !!(orom->sss & (1 << (fs-2)));
-
-or something like that.
+Applied, thanks.
 
 NeilBrown
 
---Sig_/a6/1=gnqRT/LpUNdB0FlqGK
+
+--Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTt1oLTnsnt1WYoG5AQICmA/7Byquul/ccboa8gZQH8SFo+2sQua1wjam
-jqjtuNg+gqpXCkeIR/D61PWE8U3BYN62Nw/mpVjkp88k1pQsjBWvd9DvRCj+mCj5
-F/15SQZ0ivP5TbDBjIJdL2ooRWlux3/u3n2XEEWmvOyRqAQpgC3XVxnPiJNcU+ge
-rgN9f18kX1qeFOr2AdmOyVzhN9ZvCgyO0qmJVzz2k+bez9iogD+GqXS6hke0z5LC
-JvTzOzfSgrsMC9nmhF0XevbGrPBM8K8n5e8stFrqZncebt75SPrhDT09d1a/OX2n
-VDAExLG/qbx64EWi0BlR0VehEqKYIZiG/z8PCfS9ydj1YqUqOPPF1b9OWPphGUMZ
-3QOAH2Lyr6GGH0kraC8HUNCclkWGuDuFOPZprxzRMFpFet5iHjQLmed0SZFXpNlh
-kXcz0WesLvX3jx8Jio2ZfGHLkHb5QIuOFoe41bCZJKL7ltZZGveBf4knxoB5n/HY
-CN13LTtFew3cInKL0t5wLM/OcgoHhPVahGthHhFr46apvn2fxC0qrh+/pZRE0PLT
-STBa2vBrB856uJYUWLG8cllLE5XSn/CRsBPBmfzoT9sSApEljE7IVwfeba94ww7i
-1V111UhFLGuu4h19QDmZGxhO91NwVPRi1YwCyfSd+Q2MOr4uvp6Xci5F2hRoWNPE
-3BZI2tQ6kWw=
-=R7r7
+iQIVAwUBTt1oRDnsnt1WYoG5AQLdpw/+N24b6a2Kh8u8fGNFvi1RS6oCHSgjRdO1
+nq/TTVKEyOGJ0yTp9DHDR5W1/DOyWQLx2saltiWjZekJLrVnp62aw9sjTIO+OPQe
+imNlysbFzwve7a4m5AhzNAry1k5NTH2DMbyC3nXQ7n6OnSlbLKW2SQlOXiDyVmUI
+cobga4dMesjZoe5cfOxLi6crvOxDO2z8eIZr74/AZXdmUOg9HtrvsrWG3J5E70+F
+4OAqYzeN5OjDc1vf12sfs9wWAgI3IEdJrrbAjcFGj2eRP6kH4IDBWlq5nsxkDz4G
+cW4PGpquY65WAsp45+4KWzrw0Rm2R5akFebNvtsNBQYQ7Y0erQqf7uETKtkBZSPe
+Iuke6kRS+7i6uhBxW+Bgc4DcDQhc9qmsnbJefkWb/z78aFrXER2U/PMb63iuJhxo
+We+khrNO966CiXPTwaiOCnVjp0nvaSgZKgTMcTTxbxmRU4M3DAfZeWN6+vxjF00s
+qPbvPfhc9ODsiGyaTBopfZVfNMqOvEWM/jyqSK2hIVkU3kU50tIWvNtzvmoGHqNB
+z3RP1W4DZFWu3CpVrIT2I8boQ3/qQLFSvT1FPS1lzg7nygmW1vnQZfqHNouEpnrw
+NFpzhC8qULKGEUdw/seWp34JzMGHn4hall8MZTSJxXOKj/dCrj/7EwDaSsOpTSqY
+h/JryhMXtng=
+=RKA/
 -----END PGP SIGNATURE-----
 
---Sig_/a6/1=gnqRT/LpUNdB0FlqGK--
+--Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha--
