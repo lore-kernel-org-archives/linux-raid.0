@@ -1,87 +1,113 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: FIX: Just created redundant array is not in
- uninitialized state
-Date: Tue, 6 Dec 2011 11:56:36 +1100
-Message-ID: <20111206115636.1282d44e@notabene.brown>
-References: <20111205082652.18395.98414.stgit@gklab-128-013.igk.intel.com>
+Subject: Re: [PATCH] FIX: resolve make everything compilation error
+Date: Tue, 6 Dec 2011 11:56:59 +1100
+Message-ID: <20111206115659.1ea5448e@notabene.brown>
+References: <20111205120816.30466.14434.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha"; protocol="application/pgp-signature"
+ boundary="Sig_/2mZ_ZR6.kDYHx6bmoRVlXbx"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111205082652.18395.98414.stgit@gklab-128-013.igk.intel.com>
+In-Reply-To: <20111205120816.30466.14434.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Adam Kwolek <adam.kwolek@intel.com>
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha
+--Sig_/2mZ_ZR6.kDYHx6bmoRVlXbx
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 05 Dec 2011 09:26:52 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+On Mon, 05 Dec 2011 13:08:16 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
 e:
 
-> When redundant array (e.g. raid5) is created metadata shows it is in
-> normal state. Initialization process is showed in metadata as rebuild fro=
-m normal
-> to normal state. Redundant array should be initially in uninitialized sta=
-te
-> before it's initialization.
+> When mdadm is compiled using e.g. 'everything' option, mdasseble
+> compilation is broken.
 >=20
-> Add code to put array in uninitialized state upon array creation.
+> Change code to enable mdasseble compilation
 >=20
 > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > ---
 >=20
->  super-intel.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
+>  mdassemble.c  |    2 +-
+>  super-intel.c |    6 +++---
+>  2 files changed, 4 insertions(+), 4 deletions(-)
 >=20
+> diff --git a/mdassemble.c b/mdassemble.c
+> index 66e480a..f5bc746 100644
+> --- a/mdassemble.c
+> +++ b/mdassemble.c
+> @@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
+>  			rv |=3D Assemble(array_list->st, array_list->devname,
+>  				       array_list, NULL, NULL, 0,
+>  				       readonly, runstop, NULL, NULL, 0,
+> -				       verbose, force);
+> +				       verbose, force, 1);
+>  		}
+>  	return rv;
+>  }
 > diff --git a/super-intel.c b/super-intel.c
-> index a0672bf..b8abea0 100644
+> index a0672bf..82eba7b 100644
 > --- a/super-intel.c
 > +++ b/super-intel.c
-> @@ -4289,7 +4289,11 @@ static int init_super_imsm_volume(struct supertype=
- *st, mdu_array_info_t *info,
->  	map->blocks_per_member =3D __cpu_to_le32(info_to_blocks_per_member(info=
-));
->  	map->blocks_per_strip =3D __cpu_to_le16(info_to_blocks_per_strip(info));
->  	map->failed_disk_num =3D ~0;
-> -	map->map_state =3D info->failed_disks ? IMSM_T_STATE_DEGRADED : IMSM_T_=
-STATE_NORMAL;
-> +	if (info->level > 0)
-> +		map->map_state =3D IMSM_T_STATE_UNINITIALIZED;
-> +	else
-> +		map->map_state =3D info->failed_disks ? IMSM_T_STATE_FAILED :
-> +						      IMSM_T_STATE_NORMAL;
->  	map->ddf =3D 1;
+> @@ -1014,12 +1014,12 @@ static unsigned long long min_acceptable_spare_si=
+ze_imsm(struct supertype *st)
+>  	return rv * 512;
+>  }
 > =20
->  	if (info->level =3D=3D 1 && info->raid_disks > 2) {
+> +static int is_gen_migration(struct imsm_dev *dev);
+> +
+>  #ifndef MDASSEMBLE
+>  static __u64 blocks_per_migr_unit(struct intel_super *super,
+>  				  struct imsm_dev *dev);
+> =20
+> -static int is_gen_migration(struct imsm_dev *dev);
+> -
+>  static void print_imsm_dev(struct intel_super *super,
+>  			   struct imsm_dev *dev,
+>  			   char *uuid,
+> @@ -5618,6 +5618,7 @@ static int update_subarray_imsm(struct supertype *s=
+t, char *subarray,
+> =20
+>  	return 0;
+>  }
+> +#endif /* MDASSEMBLE */
+> =20
+>  static int is_gen_migration(struct imsm_dev *dev)
+>  {
+> @@ -5632,7 +5633,6 @@ static int is_gen_migration(struct imsm_dev *dev)
+> =20
+>  	return 0;
+>  }
+> -#endif /* MDASSEMBLE */
+> =20
+>  static int is_rebuilding(struct imsm_dev *dev)
+>  {
 
-Applied, thanks.
+
+Applied.  Thanks for testing "make everything" !
 
 NeilBrown
 
-
---Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha
+--Sig_/2mZ_ZR6.kDYHx6bmoRVlXbx
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTt1oRDnsnt1WYoG5AQLdpw/+N24b6a2Kh8u8fGNFvi1RS6oCHSgjRdO1
-nq/TTVKEyOGJ0yTp9DHDR5W1/DOyWQLx2saltiWjZekJLrVnp62aw9sjTIO+OPQe
-imNlysbFzwve7a4m5AhzNAry1k5NTH2DMbyC3nXQ7n6OnSlbLKW2SQlOXiDyVmUI
-cobga4dMesjZoe5cfOxLi6crvOxDO2z8eIZr74/AZXdmUOg9HtrvsrWG3J5E70+F
-4OAqYzeN5OjDc1vf12sfs9wWAgI3IEdJrrbAjcFGj2eRP6kH4IDBWlq5nsxkDz4G
-cW4PGpquY65WAsp45+4KWzrw0Rm2R5akFebNvtsNBQYQ7Y0erQqf7uETKtkBZSPe
-Iuke6kRS+7i6uhBxW+Bgc4DcDQhc9qmsnbJefkWb/z78aFrXER2U/PMb63iuJhxo
-We+khrNO966CiXPTwaiOCnVjp0nvaSgZKgTMcTTxbxmRU4M3DAfZeWN6+vxjF00s
-qPbvPfhc9ODsiGyaTBopfZVfNMqOvEWM/jyqSK2hIVkU3kU50tIWvNtzvmoGHqNB
-z3RP1W4DZFWu3CpVrIT2I8boQ3/qQLFSvT1FPS1lzg7nygmW1vnQZfqHNouEpnrw
-NFpzhC8qULKGEUdw/seWp34JzMGHn4hall8MZTSJxXOKj/dCrj/7EwDaSsOpTSqY
-h/JryhMXtng=
-=RKA/
+iQIVAwUBTt1oWznsnt1WYoG5AQKUFQ/+PLBpEbjdWcBY0qzxce1FVdZ8DcuOABWM
+/lROkDJu72CfpYdHFDMRFRIx5r6Yv9q9CNlqEngMH6kqJSOc9P27Wl99y/fc+4lA
+aJNicyubOi9VSPFiOO9pkU2Y6ZASdaGV9TtTOIiy8vAKaDOGP1F5NS8FqP+AYwzv
+PjyuubHYrDjT91FU4ZA7rkf1tSdkMXvJjWez4pmI+hrddUVfVmsk9uJZO3WCaEaf
+lK7I1Bx2NtC67zj+squ6tKM9VwjGtneJAnyoQMoVmEjHyMItPduxxynC9U5pz60G
+i+52lfqRNyAyehJVU/OiQ/uHstbmKRGJKQII98DZsMQK9OcqK3LAH3epsRtadaQQ
+bxw936Dh2o3Hq+JREbiBk5xFiWtWLLzFNK9zQ68MFu+h01pgv7lJZj1aAcB4psC0
+FRfyM8gRDktJirrIDQTes5jx+n/fvXTIABqO1M9pY9+17ANMGWkWARIVaQjecReo
+CiGbqP74W/6InfzQhidRwNwfhA8fKZex8J1OxJux5bLDrDe2lps2lQKbpFbH2VHU
+8OTli1vTtWcAEKUqLvlr5pvM4J1229IwUUAvuD50JcoBjG5TAZhJlhaZBdvbeZjz
+mBz02zgpBDGZyAPzAqklDDI0wMa5pWsAU2gqQ60frLYRUK7O+9u03q1S8JfM0sLn
+iz+jV5yGoSM=
+=vmfp
 -----END PGP SIGNATURE-----
 
---Sig_/2B1e=sHpL0zJ7lcKPeQO8Ha--
+--Sig_/2mZ_ZR6.kDYHx6bmoRVlXbx--
