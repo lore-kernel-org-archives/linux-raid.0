@@ -1,72 +1,117 @@
-From: Phil Turmel <philip@turmel.org>
-Subject: Re: need a little help rebuilding a raid 10
-Date: Tue, 06 Dec 2011 09:52:11 -0500
-Message-ID: <4EDE2C1B.8000008@turmel.org>
-References: <CAGpXXZKdbs+Y3qNHnVmFGB3sKE5R7viRajrVM+udUqoDgsA0yg@mail.gmail.com> <CAGpXXZKWB7qpRtWK7GuohuF-OOuAGQ_tSODCnLCouS+Z-SWZDA@mail.gmail.com>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: [PATCH] imsm: fix: does not allow to use invalid chunk size
+Date: Tue, 6 Dec 2011 15:49:48 +0000
+Message-ID: <74AAB12B538EC94087A0D16AFDFC24F405507F@IRSMSX102.ger.corp.intel.com>
+References: <20111125121204.662.4111.stgit@linux.site>
+ <20111206115613.77736d93@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGpXXZKWB7qpRtWK7GuohuF-OOuAGQ_tSODCnLCouS+Z-SWZDA@mail.gmail.com>
+In-Reply-To: <20111206115613.77736d93@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Hi Greg,
-
-On 12/06/2011 09:11 AM, Greg Freemyer wrote:
-> Hmm...
+> -----Original Message-----
+> From: NeilBrown [mailto:neilb@suse.de]
+> Sent: Tuesday, December 06, 2011 1:56 AM
+> To: Hawrylewicz Czarnowski, Przemyslaw
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Labun, Marcin;
+> Ciechanowski, Ed
+> Subject: Re: [PATCH] imsm: fix: does not allow to use invalid chunk size
 > 
-> My rebuild failed.  At first glance I had both a failed drive and a failed slot?
+> On Fri, 25 Nov 2011 13:12:04 +0100 Przemyslaw Czarnowski
+> <przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
 > 
-> What I don't understand is I have I/O errors in /var/log/messages from
-> when the rebuild failed over night.
-
-Something in your system is untrustworthy.
-
-> But this morning, hdparm --read-sector is reading the "bad" sectors fine.
-
-What does smartctl say about your drives (all of them)?
-
-> I already tried replacing the drive and the replacement drive also
-> reported media errors during the rebuild, that's why I came to believe
-> I had a bad slot.
+> > Only least significant bit of chunk size provided by user has been
+> > used in test with OROM capabilities. This way user could pass value
+> > which is not a power of 2.
+> >
+> > Signed-off-by: Przemyslaw Czarnowski
+> > <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> > ---
+> >  platform-intel.h |    4 +++-
+> >  1 files changed, 3 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/platform-intel.h b/platform-intel.h index
+> > 6c094d7..99450ba 100644
+> > --- a/platform-intel.h
+> > +++ b/platform-intel.h
+> > @@ -124,11 +124,13 @@ static inline int imsm_orom_has_raid5(const
+> > struct imsm_orom *orom)  static inline int imsm_orom_has_chunk(const
+> > struct imsm_orom *orom, int chunk)  {
+> >  	int fs = ffs(chunk);
+> > +	int orom_chunk_bit;
+> >
+> >  	if (!fs)
+> >  		return 0;
+> >  	fs--; /* bit num to bit index */
+> > -	return !!(orom->sss & (1 << (fs - 1)));
+> > +	orom_chunk_bit = (orom->sss & (1 << (fs - 1)));
+> > +	return orom_chunk_bit && 1 << orom_chunk_bit == chunk;
+> >  }
+> >
+> >
 > 
-> Now I have non-repeatable media errors.
+> applied, thanks.
 > 
-> fyi: I have the problem drive connected via eSata now, so it's a
-> different controller totally than where it was when the failure first
-> occurred.
+> However it feels a bit clumsy, though maybe that is just me.
+> I would use a separate explicit test for "is a power of 2".
+> ie.
+> 
+>   if (chunk & (chunk-1))
+>         return 0; /* not a power of 2 */
+>   fs = ffs(chunk);
+>   return !!(orom->sss & (1 << (fs-2)));
+> 
+You're right,
 
-Are the errors in /var/log/messages only from that drive?  If so, then that
-drive is probably toast.
+Please get the one from the bottom of this email then... It is based on your input (~90%) so sign it up and ship:)
+Moreover previous one is not the right one I wanted to send out...
 
-> Any thoughts?
+--
+Best Regards,
+Przemyslaw Hawrylewicz-Czarnowski
 
-Your prior e-mail said that you re-created the array.  I didn't see that you
-had definitively nailed down the problem at that point, so it probably wasn't
-a good idea.  In particular, it destroys all prior metadata on the array
-members.  If you didn't keep the output of "mdadm -E" for each drive, that
-information is now lost.
+> or something like that.
+> 
+> NeilBrown
 
-In general, "--create" is a last resort, and only to be used for recovery
-when you have absolute confidence you understand the layout (mdadm -E
-printouts of the original array).  "--assemble --force" is the proper step
-after "--assemble" fails.
+-- 
+Subject: [PATCH] fix: imsm: validate strip size - tuned up
 
-I would completely scrub the questionable drive with random data, run a long
-smartctl test on it, and replace it if it reports any re-allocated sectors at
-that point.
+Neil's proposal seems more reasonable and shows what is really going on
+here.
 
-I would also run long smartctl tests on the other drives, looking for pending
-sectors or re-allocated sectors.  If any, I would plan on replacements for
-them as well, and would try to validate the content of your files.  You do
-have a backup to compare against, after all.
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ platform-intel.h |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-If you are running a Debian-based distro, and the array contains your rootfs,
-you might find "debsums" useful.
-
-HTH,
-
-Phil
+diff --git a/platform-intel.h b/platform-intel.h
+index 99450ba..c997f1b 100644
+--- a/platform-intel.h
++++ b/platform-intel.h
+@@ -124,13 +124,12 @@ static inline int imsm_orom_has_raid5(const struct imsm_orom *orom)
+ static inline int imsm_orom_has_chunk(const struct imsm_orom *orom, int chunk)
+ {
+        int fs = ffs(chunk);
+-       int orom_chunk_bit;
+-
+        if (!fs)
+                return 0;
+        fs--; /* bit num to bit index */
+-       orom_chunk_bit = (orom->sss & (1 << (fs - 1)));
+-       return orom_chunk_bit && 1 << orom_chunk_bit == chunk;
++       if (chunk & (chunk-1))
++               return 0; /* not a power of 2 */
++       return !!(orom->sss & (1 << (fs - 1)));
+ }
+ 
+ 
+-- 
+1.7.7
