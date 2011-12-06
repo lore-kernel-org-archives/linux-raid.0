@@ -1,82 +1,72 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Phil Turmel <philip@turmel.org>
 Subject: Re: need a little help rebuilding a raid 10
-Date: Tue, 6 Dec 2011 14:39:28 +0000
-Message-ID: <20111206143927.GB16489@cthulhu.home.robinhill.me.uk>
-References: <CAGpXXZKdbs+Y3qNHnVmFGB3sKE5R7viRajrVM+udUqoDgsA0yg@mail.gmail.com>
- <CAGpXXZKWB7qpRtWK7GuohuF-OOuAGQ_tSODCnLCouS+Z-SWZDA@mail.gmail.com>
+Date: Tue, 06 Dec 2011 09:52:11 -0500
+Message-ID: <4EDE2C1B.8000008@turmel.org>
+References: <CAGpXXZKdbs+Y3qNHnVmFGB3sKE5R7viRajrVM+udUqoDgsA0yg@mail.gmail.com> <CAGpXXZKWB7qpRtWK7GuohuF-OOuAGQ_tSODCnLCouS+Z-SWZDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tsOsTdHNUZQcU9Ye"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <CAGpXXZKWB7qpRtWK7GuohuF-OOuAGQ_tSODCnLCouS+Z-SWZDA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Greg Freemyer <greg.freemyer@gmail.com>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Greg,
 
---tsOsTdHNUZQcU9Ye
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue Dec 06, 2011 at 09:11:24AM -0500, Greg Freemyer wrote:
-
+On 12/06/2011 09:11 AM, Greg Freemyer wrote:
 > Hmm...
->=20
-> My rebuild failed.  At first glance I had both a failed drive and a faile=
-d slot?
->=20
+> 
+> My rebuild failed.  At first glance I had both a failed drive and a failed slot?
+> 
 > What I don't understand is I have I/O errors in /var/log/messages from
 > when the rebuild failed over night.
->=20
+
+Something in your system is untrustworthy.
+
 > But this morning, hdparm --read-sector is reading the "bad" sectors fine.
->=20
+
+What does smartctl say about your drives (all of them)?
+
 > I already tried replacing the drive and the replacement drive also
 > reported media errors during the rebuild, that's why I came to believe
 > I had a bad slot.
->=20
+> 
 > Now I have non-repeatable media errors.
->=20
+> 
 > fyi: I have the problem drive connected via eSata now, so it's a
 > different controller totally than where it was when the failure first
 > occurred.
->=20
+
+Are the errors in /var/log/messages only from that drive?  If so, then that
+drive is probably toast.
+
 > Any thoughts?
->=20
-Last time I had this sort of issue, it was down to the motherboard.
-Somewhere between the drives and the CPU, one or more of the chipsets
-were causing issues (I actually had the same issue on multiple
-motherboards, though I think using the same/similar onboard SATA
-controllers). Single drive tests worked fine - it was only when
-hammering the entire array that it would get a write error and fail a
-random drive. I've since bought a proper SAS/SATA PCIe card (Intel
-RS2WC080) and have had no issues since.
 
-The other things I can think of that may cause this type of issue are a
-flaky PSU, or physical shock to the server chassis (even relatively
-small movements can cause read/write slowdowns/errors - there's a video
-clip online of someone just shouting in front of a rack and causing the
-transfer speed to drop off dramatically).
+Your prior e-mail said that you re-created the array.  I didn't see that you
+had definitively nailed down the problem at that point, so it probably wasn't
+a good idea.  In particular, it destroys all prior metadata on the array
+members.  If you didn't keep the output of "mdadm -E" for each drive, that
+information is now lost.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+In general, "--create" is a last resort, and only to be used for recovery
+when you have absolute confidence you understand the layout (mdadm -E
+printouts of the original array).  "--assemble --force" is the proper step
+after "--assemble" fails.
 
---tsOsTdHNUZQcU9Ye
-Content-Type: application/pgp-signature
+I would completely scrub the questionable drive with random data, run a long
+smartctl test on it, and replace it if it reports any re-allocated sectors at
+that point.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+I would also run long smartctl tests on the other drives, looking for pending
+sectors or re-allocated sectors.  If any, I would plan on replacements for
+them as well, and would try to validate the content of your files.  You do
+have a backup to compare against, after all.
 
-iEYEARECAAYFAk7eKR8ACgkQShxCyD40xBK5lwCdE0EEyoJYGiuFYEvMYjOsM6Cm
-eSIAoIaTGIY6ub2ZLw+RXpcQjzYaASFi
-=4I7l
------END PGP SIGNATURE-----
+If you are running a Debian-based distro, and the array contains your rootfs,
+you might find "debsums" useful.
 
---tsOsTdHNUZQcU9Ye--
+HTH,
+
+Phil
