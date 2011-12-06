@@ -1,102 +1,122 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: do not fail load_container when first 2 disks are
- missing
-Date: Tue, 6 Dec 2011 11:08:09 +1100
-Message-ID: <20111206110809.00828921@notabene.brown>
-References: <3F8F31A3BFD1664EAB894D1BD6AF32B9053871@IRSMSX102.ger.corp.intel.com>
+Subject: Re: [PATCH 00/11] Degradation during reshape
+Date: Tue, 6 Dec 2011 11:53:38 +1100
+Message-ID: <20111206115338.2032996c@notabene.brown>
+References: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/jUFyLEYl6frI7AoleCqN0/M"; protocol="application/pgp-signature"
+ boundary="Sig_/VLg6sb2D53Qt6jLH7TmXr4f"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3F8F31A3BFD1664EAB894D1BD6AF32B9053871@IRSMSX102.ger.corp.intel.com>
+In-Reply-To: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Adam Kwolek <adam.kwolek@intel.com>
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
---Sig_/jUFyLEYl6frI7AoleCqN0/M
+--Sig_/VLg6sb2D53Qt6jLH7TmXr4f
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 24 Nov 2011 11:24:16 +0000 "Czarnowska, Anna"
-<anna.czarnowska@intel.com> wrote:
+On Thu, 24 Nov 2011 13:17:10 +0100 Adam Kwolek <adam.kwolek@intel.com> wrot=
+e:
 
-> Failure to find migration record should not fail the whole load_container.
-> It causes that degraded raid10 with first 2 disks missing cannot be assem=
-bled.
+> The following series implements support for array degradation during resh=
+ape.
 >=20
-> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com>
-> ---
->  super-intel.c |   10 ++--------
->  1 files changed, 2 insertions(+), 8 deletions(-)
+> Series mostly fixes problems in handling degradation during reshape=20
+> in imsm metadata .
 >=20
-> diff --git a/super-intel.c b/super-intel.c
-> index a0672bf..21147c2 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -3953,15 +3953,9 @@ static int load_super_imsm_all(struct supertype *s=
-t, int fd, void **sbp,
->  		goto error;
->  	}
-> =20
-> -	/* load migration record */
-> -	err =3D load_imsm_migr_rec(super, NULL);
-> -	if (err) {
-> -		err =3D 4;
-> -		goto error;
-> -	}
-> -
->  	/* Check migration compatibility */
-> -	if (check_mpb_migr_compatibility(super) !=3D 0) {
-> +	if (load_imsm_migr_rec(super, NULL) =3D=3D 0 &&
-> +	    check_mpb_migr_compatibility(super) !=3D 0) {
->  		fprintf(stderr, Name ": Unsupported migration detected");
->  		if (devname)
->  			fprintf(stderr, " on %s\n", devname);
+> Main common problem that last patch resolves is is lack of BBM support.
+> md on disk failure reports BBM event to user space and waits for an answe=
+r.
+> The side effect of this action is stopping reshape process. The last patch
+> /together with md patch sent separately/ allows for disabling BBM mechani=
+sm.
+> This is similar as native metadata v0.9 works.
+>=20
+> BR
+> Adam
+>=20
+>
 
-Sorry for the long delay in replying.  The last two weeks have held lots of
-interruptions and distractions.
+Sorry for the long delay in getting to these - I've been busy :-(
 
-There are two things about this that don't make sense to me.  Perhaps you c=
-an
-clarify.
+>=20
+> Adam Kwolek (11):
+>       Disable BBM when it is not supported
 
-Firstly, imsm raid10 only supports a 4-device layout with the first two
-devices effectively mirrors, same for the second two, and data striped over
-the 2 pairs.  i.e. an 'n2' layout on 4 devices.
-So if the first 2 disks are missing, then you have lost half your data and =
+Not applied as discussed separately.  I'll follow up on this issue separate=
+ly.
+
+>       imsm: FIX: Check maximum allowed degradation level in recover_backu=
+p_imsm()
+>       imsm: FIX: Check maximum allowed degradation level in open_backup_t=
+argets()
+>       imsm: FIX: Function rework - imsm_count_failed()
+
+These 3 applied.
+
+>       imsm: FIX: Manage second map state on array degradation
+
+I've applied this, but I don't like the fact that you have used '2' and '4'
+for MAP_0 and MAP_1.
+I see that you use '&' to test a bit and you wanted separate bits, but I
+don't see any place where "look_in_map" could have multiple bits set.
+So why not MAP_0=3D=3D0 and MAP_1=3D=3D1 and use e.g. "look_in_map =3D=3D M=
+AP_0".
+
+I'm quite happy with defining the symbolic named (MAP_0 and MAP_1),
+just confused by the values chosen.
+
+Could you please explain the logic, or fix it up with a new patch?  Thanks.
+
+>       imsm: FIX: Restore critical section on degraded array
+>       imsm: FIX: Remove single map state limitation in getinfo
+>       imsm: FIX: Finalize degraded migration
+>       imsm: FIX: Do not end migration when missing drive is handled
+
+These 4 applied.
+
+>       imsm: FIX: Mark both maps on degradation while migrating
+
+applied, but I think mark_failure might still be wrong.
+What if the device that fails is in MAP_1 but not in MAP_0?  I don't think =
 it
-would be wrong to successfully assemble the array.
+gets marked as failed in that case.
 
-Secondly, if the migration record is missing, then presumably you do not kn=
-ow
-the full state of the array so again - assembling the array would be wrong.
+>       imsm: FIX: Return longer map for failure setting
 
-So I cannot see how this patch can be correct.  If it is, please explain.
+I changed the type of 'map2' from 'void *' to 'struct imsm_map *', and appl=
+ied the result.
 
-Thanks,
+Thanks.
+
+BTW if you want these in SLES11-SP2 I'll need a request through bugzilla.
+Just one is enough, not one for every patch.
+
 NeilBrown
 
---Sig_/jUFyLEYl6frI7AoleCqN0/M
+
+--Sig_/VLg6sb2D53Qt6jLH7TmXr4f
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTt1c7jnsnt1WYoG5AQL6ABAAn5q6X24BC+Dp74P3Mv7vz/yRr/V2zg+a
-e01qTebY6wHmQgRwlSh0GcwRhE7bYBlv1dPnPUDZIe+XUaQGT0idsvqE+IWzw3VE
-nayhpd1v4Ew14yajpglALPBb+bAoHQFB9D5vtE/pMIP9WatcMcPJOoqwjHkkhjex
-vTeSPC7LBJSVKdl9tIyWvX1bhJ0cvt9Ho8QNw18luQtlCVMuzU2HtO5o0tJ6DcXS
-JGh12ki5jeYmoG7GU5vYnrckOPWE4n/PkKzQm1IhkhuxC8IOJftaykcDUPGM7aoT
-qx5Y6+lZDw9UmF1N386kb04mQrGxR5cj76HluaBjznwM0BdBs2HCz+lkIY31JanH
-9f1UTCVbKbUUs99tHAyINo6bTYparAWvBmQUeYNUGPtDrq3AsWUqkfhacs52bTJo
-o2kTswu1G9SsMIQQXJq4qvJZhGN/kRCnoGmQBVKp1/Q/QsEddqpYonB8bUXfQC1P
-FggzvBg9+myYkvnka2rhybJAAWJSRXbyQ8obyu1ngt8r4HEU36BMPHR0hSh7pib0
-fKJ89qYiXdDDKSb5iXZBD/QND1DY4Jqd8Wr/04fdpNMFtY91+6cY7oiW2Sbg0x2q
-IszzXicquk4Kr0IPcd5bctJOVpT4z7iR9P1b+7enPt5QrsWdq549+RpW/n6pLzxQ
-LJ+NNkx1Jd0=
-=hc8o
+iQIVAwUBTt1nkjnsnt1WYoG5AQLzAhAAofD4W9kWdgaoaPGBhsKjtKjSX1OGRY12
+RDCNRo6wtWKkO6QnvndO5fjH/l2t5UbLe+Tjmao6pk53MFNtP47o153TMWlkuTQK
+e8jb4vpSfXePQAIVUl6tY9jEvUVhpkkM10kh9c24NX0c9ELJ7/E2faQoPFQf3p8+
+jYf7zM7chrkxZHHyugtum94G88GJQQOnEseT4XzOavdh478qYe82A+FxLaGbb9uK
+PgL4ylrl1kMB7PSZddKrGDMm1uB3xt3SEUBo+UR66Ml3xQ+8pIaSswhdoMFKcDdC
+b/H106TN1DfhMBvIb1kpwCkK/WKjcm2E8WB0ulC1996u60MLXEjtBwnonGSuXY0Z
+49EM2m+0xVgcmKXt+44d2UWJ+rhthpt3vR2xQfAN4TIJNp5MP/hFNsqyXEMA03sO
+F7fYnxwxYN927dCIjTXIvnRiR+UhHBmh5tviQ/g2NDsSPF9wEOhJ+3y6YXHKUfan
+JYstOjsIX73RCMkbfinBPUX+uT8Z3bm0cYLrrz04F3RdB8+mJvNdn1emPbOMcrLe
+hezFBtcfh81mLPozoAh9TmqW+zVKIR8sxMWH3vQUhHwtNArmNMY+KUYq4pjYlf7a
+TkQc9VubpVpdZbJ0eRsWIOKxlX2bqT/7HZQ7tSXXI9uyRpiYuC7iVUGxEmzLCY4y
+O+g19YeHh6U=
+=UJie
 -----END PGP SIGNATURE-----
 
---Sig_/jUFyLEYl6frI7AoleCqN0/M--
+--Sig_/VLg6sb2D53Qt6jLH7TmXr4f--
