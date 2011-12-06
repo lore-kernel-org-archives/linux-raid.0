@@ -1,99 +1,93 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] imsm: fix: correct checking newly missing disks
-Date: Tue, 6 Dec 2011 12:10:25 +1100
-Message-ID: <20111206121025.1e20e55a@notabene.brown>
-References: <20111114145252.21148.62905.stgit@gklab-128-085.igk.intel.com>
-	<CAA9_cmccLh=zYnqkpdhjkYZQQK26oUN4xqiMyycYHoLSr19zKg@mail.gmail.com>
-	<D9FFE20C522965449E182ACE73889AEB052370@IRSMSX101.ger.corp.intel.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: need a little help rebuilding a raid 10
+Date: Mon, 5 Dec 2011 21:05:40 -0500
+Message-ID: <CAGpXXZKdbs+Y3qNHnVmFGB3sKE5R7viRajrVM+udUqoDgsA0yg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/l_JT32wSm42=1OdnTayZKY="; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D9FFE20C522965449E182ACE73889AEB052370@IRSMSX101.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/l_JT32wSm42=1OdnTayZKY=
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+All,
 
-On Thu, 1 Dec 2011 14:23:16 +0000 "Dorau, Lukasz" <lukasz.dorau@intel.com>
-wrote:
-> > > diff --git a/super-intel.c b/super-intel.c
-> > > index 4ebee78..511a32a 100644
-> > > --- a/super-intel.c
-> > > +++ b/super-intel.c
-> > > @@ -2529,13 +2529,13 @@ static void getinfo_super_imsm(struct superty=
-pe
-> > *st, struct mdinfo *info, char *
-> > >
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0failed =3D imsm_count_failed(super, de=
-v);
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0state =3D imsm_check_degraded(super, d=
-ev, failed);
-> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 map =3D get_imsm_map(dev, dev->vol.migr=
-_state);
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 map =3D get_imsm_map(dev, 0);
-> > >
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* any newly missing disks?
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * (catches single-degraded vs double-=
-degraded)
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0for (j =3D 0; j < map->num_members; j+=
-+) {
-> > > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __u32 ord =3D get_imsm_=
-ord_tbl_ent(dev, i, -1);
-> > > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __u32 ord =3D get_imsm_=
-ord_tbl_ent(dev, i, 0);
-> >=20
-> > This looks wrong.  I noticed this when looking over Przemyslaw's patch =
-[1].
-> >=20
-> > map[0] always contains the destination state of the migration so the
-> > most reliable source for looking for out of sync disks is map[1].
-> >=20
->=20
-> I am convinced that the patch is good.=20
-> We are looking for information what was the state of array during migrati=
-on (before it was stopped), so we have to use map[0].
-> map[1] contains information about the state of array before migration, wh=
-ich we do not need.
->=20
-> Regards,
-> Lukasz
+I have a raid10 that failed recently due to a failed drive slot.  The
+drive is good from what I can tell.  In theory it is rebuilding now.
 
-Hi,
- do we have agreement on this?  Dan - do you stand by your original concern
- or have you seen the light :-)
+1) Once the current recovery process finishes, are there any commands
+I can (should) issue to make sure the array is consistent.  I'm afraid
+my mirror halves won't really be in sync.
 
-The patch is in, but I'd like to be sure it is right and to be honest I
-haven't followed the dance of the maps too closely...
+2) If I want to pause the recovery and do some production real, can I
+do that?  How?
 
-Thanks,
-NeilBrown
+=3D=3D details
 
---Sig_/l_JT32wSm42=1OdnTayZKY=
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Not sure why but each of the members dropped one by one until the
+raid10 went offline.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+I likely did something wrong by now, but I currently have it in this st=
+ate:
 
-iQIVAwUBTt1rgTnsnt1WYoG5AQLTkw/9EQYIrwIC6FRwkD5uySbnAv4iqmMe5i6E
-xPLYqdBL1aDasSfFSSgwPHRzYR/1cLZjKDvzRhTpPHJ70tdIpyJmOr9ZmGT0zE+w
-ykPc7qxaFUi2KVqQY5qboV94Ic/E0KWRDcA5o1WefDfGVLl4h2Hh4wHlh4PMKMVO
-3t2y4mPDar+UcInnSFxABkJsRZB0m9CkGC7MOeaWgS/UJ5LS+wP6ExIYH58/lbbQ
-+mjxUwkyLQlxQirPAhBO4tV2pko4d7w1vBDMDHHCJ/gV7wzQXHwYs0Iac/oXR2UN
-jk+ifJu+Yp2+XE1S15mBiPh9oMavuT3n9fXReBsx1ATTuB86QmvtFYiLN2kDGjPD
-UmBTQ3A6owNbnf9q5jGwTD33OR2G+NkDrwhQtxy8Se20KldWNx6ZoKd9ySVl2ynU
-waztDpIhl3SOAJue/nxMYLH5syraxzCAmeNfhB/jRD+eIMDBUABqM53hz0Y3bsYL
-Y22D9/jbBcvvoXcfHNBLb+ggDR83yjqow7I3kW7E02qY0TGTF17RQZ5MjWrZy/uf
-Rqpz91gEy9wiITKuXy+SzHohtT224/8sZUfiIbcG/Olb8QbZj2dmiPBZ356ufzbn
-hYHX0BHzOG3Ci4F6Ox2kBqjB+hmHimsvikmKJKQg+Mcl6bmoN40ST2VMHKyc8wUv
-DynJpZX3+Xo=
-=uYtZ
------END PGP SIGNATURE-----
+md127 : active raid10 sdb5[4] sda5[0] sdc3[5] sdd3[2]
+      923517952 blocks super 1.2 512K chunks 2 near-copies [4/3] [UUU_]
+      [>....................]  recovery =3D  0.8% (4117760/461758976)
+finish=3D1373.3min speed=3D5553K/sec
 
---Sig_/l_JT32wSm42=1OdnTayZKY=--
+(it used to be md2.  No idea where md127 came from.  There are only 4
+md's on the machine.)
+
+It's currently providing a usable volume I think.  I just rebooted the
+machine and the filesystem looks good at first glance.
+
+The recovery looks very slow to me, but maybe I still have hardware iss=
+ues.
+
+The first 2 members forming a raid 1 immediately after being told
+makes since to me.  I don't understand how the 3rd member got sync'ed
+up so fast.  It seemed to be instantaneous and I don't think it was in
+sync.
+
+Originally it was a raid10 with
+sda5 mirrored to sdb5
+sdc3 mirrored to sdd3
+(or so I believe)
+
+Immediately after the failure I had nothing, so I did:
+# mdadm --stop /dev/md2
+
+# mdadm --create /dev/md2 -v --assume-clean --level=3Draid10
+--raid-devices=3D4 /dev/sda5 missing /dev/sdd3 missing
+
+(or similar, my sdX names have been changing as this event progresses.
+These names are based on what I see in mdstat.)
+
+I ran that way for a day, which is why I really don't think either of
+the missing mirror halves should have immediately sync'ed.
+
+Anyway, I have a backup but I prefer not to use it if it can be
+avoided.  (the machine is in sporadic production, for an hour or two
+at a time, and going offline for a day to recreate it from scratch
+does not sound like fun.)
+
+
+Thanks
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+CNN/TruTV Aired Forensic Imaging Demo -
+=A0=A0 http://insession.blogs.cnn.com/2010/03/23/how-computer-evidence-=
+gets-retrieved/
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
