@@ -1,106 +1,98 @@
 From: NeilBrown <neilb@suse.de>
-Subject: Re: RAID5: failing an active component during spare rebuild -
- arrays hangs
-Date: Tue, 6 Dec 2011 14:16:08 +1100
-Message-ID: <20111206141608.0cca224a@notabene.brown>
-References: <BANLkTikkeoCsr3-UBSPEDrYwh4jGSn=MaA@mail.gmail.com>
-	<BANLkTinwr9UE_B+MSXfbE2nAv0wLrTvhXg@mail.gmail.com>
-	<20110622125409.14428883@notabene.brown>
-	<BANLkTinijekK8Y6TTk6TYtYhv4Dn2YGQbA@mail.gmail.com>
-	<20110628122921.42480f72@notabene.brown>
-	<CAGRgLy5uK5As96j2Tprfrx+qNhYqvFiVUEnOJ+3AAwpPMHCDYg@mail.gmail.com>
-	<CAGRgLy5huVzdA8q6V887Ay384kJ4ywgst6dEGgYuRg9+SxHB0A@mail.gmail.com>
-	<20110831124646.21be9e25@notabene.brown>
-	<CAGRgLy62uavK+9qosizaOey1Utz6STC+2fvOVqEbmi0HZbrQtw@mail.gmail.com>
+Subject: Re: Spin down
+Date: Tue, 6 Dec 2011 15:39:23 +1100
+Message-ID: <20111206153923.203df175@notabene.brown>
+References: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com>
+	<20111205171115.044b1705@notabene.brown>
+	<CAF78GY0u89KvZhEZQ64GxWeDpBCT6cdAJ+xaGm=z7O_2gKTYTA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/WPdWqobpjA4DvMuWS+T/n04"; protocol="application/pgp-signature"
+ boundary="Sig_/I2Ad1EATPscEuHxfn90QJFY"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy62uavK+9qosizaOey1Utz6STC+2fvOVqEbmi0HZbrQtw@mail.gmail.com>
+In-Reply-To: <CAF78GY0u89KvZhEZQ64GxWeDpBCT6cdAJ+xaGm=z7O_2gKTYTA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
+To: Vincent Pelletier <plr.vincent@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/WPdWqobpjA4DvMuWS+T/n04
-Content-Type: text/plain; charset=US-ASCII
+--Sig_/I2Ad1EATPscEuHxfn90QJFY
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 27 Nov 2011 11:56:17 +0200 Alexander Lyakas <alex.bolshoy@gmail.com>
+On Mon, 5 Dec 2011 08:49:03 +0100 Vincent Pelletier <plr.vincent@gmail.com>
 wrote:
 
-> Hello Neil,
-> we have compiled the natty kernel with dynamic debugging enabled for
-> raid456, and reproduced the problem.
-> The kernel log is available at
-> https://docs.google.com/open?id=3D0B9rmyUifdvMLMzk1YjYwZDUtYzhhYi00MDRlLT=
-kzYjItMDM0Y2ZhZmU3ZDRk
+> On Mon, Dec 5, 2011 at 7:11 AM, NeilBrown <neilb@suse.de> wrote:
+> > 5 seconds suggests a bitmap update. =A0Do you have an internal bitmap?
 >=20
-> Some more information:
-> - array was created at Nov 27 11:28:03
-> - manual drive failure was issued at 11:28:09
+> I don't, but I enabled it on those arrays before with default delay.
+> I then removed it when I suspected (with help of block_dump) it to
+> cause spin-ups, and I noticed an improvement. Recently, the machine
+> was restarted (once on 3.0 kernel, and again to update to 3.1), and
+> after both restarts those 5s periodic writes occurred.
 >=20
-> Please let me know if you need any additional information.
+> > Then try adding it back with a longer delay
+> > =A0mdadm --grow /dev/md0 --bitmap=3Dinternal --delay=3D60
 >=20
+> Adding bitmaps on both arrays (md0 and md1), 5s periodic writes disappear.
+> Removing bitmaps seems to preserve the improvement.
+>=20
+> Could the delay setting have survived on-disk and be used when
+> initializing the array, but cleared when mdadm later disables bitmap
+> usage ?
+>=20
+> > What kernel version are you running?
+>=20
+> 3.1.4, according to dpkg:
+> ii  linux-image-3.1.0-1-amd64                   3.1.4-1
+>                      Linux 3.1 for 64-bit PCs
+>=20
+> Regards,
 
-Hi,
- sorry for the long delay, I've had a lot of distractions this past week.
 
-I looks like you are hitting the bug fixed by upstream commit
-    355840e7a7e56bb2834fd3b0da64da5465f8aeaa
+Hmm... I cannot reproduce this which makes it harder.
 
-The symptoms are slightly different to those described in that commit but I=
-'m
-sure the root problem is the same.
+Can you enable dynamic debugging on md?
+Make sure CONFIG_DYNAMIC_DEBUG is set, mount debugfs on /sys/kernel/debug a=
+nd
 
-That patch doesn't apply to 2.6.38 though.
-Use this one.
+ echo module md_mod +p > /sys/kernel/debug/dynamic_debug/control
+
+then look for extra messages in the kernel logs, starting "md:" most likely.
+
+You'll almost certainly see something like
+
+[ 1851.559629] md: waking up MD thread md0_raid1.
+[ 1851.625819] md: updating md0 RAID superblock on device (in sync 1)
+[ 1851.656878] md: (write) sdb's sb offset: 8
+[ 1851.656915] md: (write) sda's sb offset: 8
+
+
+every 5 seconds.  If you could confirm that and report if there is anything
+else reported that might help.
 
 NeilBrown
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 78536fd..8144126 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3086,7 +3086,7 @@ static void handle_stripe5(struct stripe_head *sh)
- 			/* Not in-sync */;
- 		else if (test_bit(In_sync, &rdev->flags))
- 			set_bit(R5_Insync, &dev->flags);
--		else {
-+		else if (!test_bit(Faulty, &rdev->flags)) {
- 			/* could be in-sync depending on recovery/reshape status */
- 			if (sh->sector + STRIPE_SECTORS <=3D rdev->recovery_offset)
- 				set_bit(R5_Insync, &dev->flags);
-@@ -3377,7 +3377,7 @@ static void handle_stripe6(struct stripe_head *sh)
- 			/* Not in-sync */;
- 		else if (test_bit(In_sync, &rdev->flags))
- 			set_bit(R5_Insync, &dev->flags);
--		else {
-+		else if (!test_bit(Faulty, &rdev->flags)) {
- 			/* in sync if before recovery_offset */
- 			if (sh->sector + STRIPE_SECTORS <=3D rdev->recovery_offset)
- 				set_bit(R5_Insync, &dev->flags);
-
---Sig_/WPdWqobpjA4DvMuWS+T/n04
+--Sig_/I2Ad1EATPscEuHxfn90QJFY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTt2I+Dnsnt1WYoG5AQJ1TA/+IqBPBHIBc5Jbiv7yhOZk1NEBZAk3bQxv
-C1UlcHT+W7zeHMZwf1oKuXy3FIptjtamshhg7nDY3Z2WxLV1pGazxsUYcCcdK47A
-C/q7kIqd1Xo6tN11xSJRMe0UIweqwEa79G83k70UctMYOIkOC61kQzL99+nUzsY2
-Q6LUvSoCaKgl1H6qM1wAH5VDIj/sV1/dVNZ4GK4otpzyFZAk2E3j6CKQEMneudOd
-WiH0q5zCt0uLdlPME/wBTgAGrzWSV39zm7xSOo1Laagy7vriRhkqxMJvmLD+dRYg
-6zBcDzj2qqMKg9QA2RKIsy9ARDGG/vZqUSXxAXaOYfnNtGlDYR8dcbwB8hZTLttO
-7neAVlzrS2geQ6bkTrUPNSmM1UtjsWaja7K7+dC2ML4TK/+D4+Jvvbwm4iV4WXCz
-H8NXrFEZmVF+RIVzmtPh04MCNcsb9hzVu5d1V8kbKIC+UhJ4xQFTEWrBuc47IYn+
-7LBoH34k/tWJ9HaVkKE8TBSC4KPavjQsjOGviZfpdbiBlzr6iKeQitc6QXKT/hMJ
-1d9h8DnkWYnncGauaTFlYMEcpMTVR9dG835VQ2PuZJClwdIjJgzWqgcBnn8oO3Sq
-nF6zrwh7tgCCyZffHsy++kMN1QKkEuvpYlzpSz8EspPxgkRdLrJO5jK1xW5qy+qB
-wN4Zf+PVxf4=
-=Fi7t
+iQIVAwUBTt2chTnsnt1WYoG5AQJu1w//R9eX/VHvp2JzhMRV022qAUsnuW6R+Nh1
+gICn6WDLuy7OG/Yf8L9405PQ7+yEYGzELBWPY3Dbz2nvQEz8tNFWO5vQxKwHlLik
+ikU63vozdnlGtlXuzV2WV2JlQ+U9AYMUrw+Ie25gxCQx8ZHhJJusjKEZpiXCs+2v
+gLC7huwVoc0Ld0lAqQPkeMgD2DRb1baiYN/AixAkASDO+ep9FYTG9mmUY1FZPS4K
+v+2QQtY7OFXYiRPOpmeqODONTrYjC4E0wC5Z4VonEADCvPeR3988xR+JHMMu/911
+tBpZBZWlAlkGeUX4asEpuDd9gMQG4iwBH3fJtgPLbSQr8VyKV0HzO3B089wApyxp
+x9sOgXC22Y5Z9CbIUwgChX4DhtAF9jdbZIjm9a43jMiHnCmTU+ZB2rUnbkGKhH7S
+JyfU8WHYWLYE/AGgZuHlfadXBeL5N8W1Aq1Yj02n/jZO9YZqUl9dS+hpWEeu0e8v
+QM2Kq3sZYOeOSN6HIaGuIeVAR+Elt28Shr6yt9H33xVCNKzlhJwXGoAkDNVs2Pml
+2eR+ZD5w90xiE+AH931V0yhSHtdXI1O4G97MKuT1o99iUekny0scd3l6h69AJiWc
+shNLK4O8WHnNh1Ob0wagEOU1nfg8WqPpgUBelP0ERJXs82iLV0JgGMqHbFuCBLuJ
+eFPg2G27Oao=
+=5MW8
 -----END PGP SIGNATURE-----
 
---Sig_/WPdWqobpjA4DvMuWS+T/n04--
+--Sig_/I2Ad1EATPscEuHxfn90QJFY--
