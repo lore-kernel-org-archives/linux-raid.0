@@ -1,86 +1,174 @@
-From: NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Possible changes to bio cloning and some related stuff
-Date: Tue, 6 Dec 2011 16:36:28 +1100
-Message-ID: <20111206163628.7ab8545f@notabene.brown>
-References: <20111206051101.GA8171@dhcp-172-18-216-138.mtv.corp.google.com>
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH] md: Add ability for disable bad block management
+Date: Tue, 6 Dec 2011 17:05:25 +1100
+Message-ID: <20111206170525.1f4e32ab@notabene.brown>
+References: <20111124121953.5509.28118.stgit@gklab-128-013.igk.intel.com>
+	<20111130111403.7efd3875@notabene.brown>
+	<79556383A0E1384DB3A3903742AAC04A054C28@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/dKV8au/ohyohmTKAjzl5iD8"; protocol="application/pgp-signature"
-Return-path: <linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111206051101.GA8171-RcKxWJ4Cfj3IzGYXcIpNmNLIRw13R84JkQQo+JxHRPFibQn6LdNjmg@public.gmane.org>
-Sender: linux-bcache-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: tejun-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+ boundary="Sig_/Oml7C/vMHvFRhQyWcHQ0HkY"; protocol="application/pgp-signature"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <79556383A0E1384DB3A3903742AAC04A054C28@IRSMSX101.ger.corp.intel.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/dKV8au/ohyohmTKAjzl5iD8
+--Sig_/Oml7C/vMHvFRhQyWcHQ0HkY
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 5 Dec 2011 21:11:01 -0800 Kent Overstreet <koverstreet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Wed, 30 Nov 2011 08:17:32 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
 wrote:
 
-> So, I finally got around to debugging various bcache on md issues, and I
-> ran into a rather sticky problem:
 >=20
-> bio_alloc() can fail if nr_iovecs > BIO_MAX_PAGES. That itself is not a
-> problem, but then when a bio is cloned it's always done by cloning the
-> _entire_ original bio vec, from 0 to max_vecs - not the range from
-> bi_idx to bi_vcnt.
 >=20
-> Basically, whenever bcache generates some io internally it uses a single
-> bio to describe the entire io - regardless of whether or not the bio
-> would be too big for the underlying device; it then splits the bio as
-> many times as need be when it's actually submitted.
+> > -----Original Message-----
+> > From: NeilBrown [mailto:neilb@suse.de]
+> > Sent: Wednesday, November 30, 2011 1:14 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Willia=
+ms,
+> > Dan J
+> > Subject: Re: [PATCH] md: Add ability for disable bad block management
+> >=20
+> > On Thu, 24 Nov 2011 13:19:53 +0100 Adam Kwolek
+> > <adam.kwolek@intel.com> wrote:
+> >=20
+> > > When external metadata doesn't support BBM, mdadm cannot answer
+> > > correctly for BBM requests. It causes reshape process being stopped.
+> > >
+> > > Add ability for external metadata /mdadm/ to disable BBM via sysfs.
+> > > md will ignore bad blocks as it is for metadata v0.90.
+> >=20
+> > This should not be necessary.
+> >=20
+> > The intention is that a device with a bad block looks exactly like a de=
+vice with
+> > a failed device.  i.e. 'faulty' and 'blocked' appear in the 'state'
+> > file.
+> >=20
+> > If the metadata doesn't support a bad-block list, it will record that t=
+he device
+> > has failed and will unblock the device.  At that point the failure is f=
+orced.
+> > If the metadata does support a bad block list it will just record the b=
+ad blocks
+> > and acknowledge them, and the unblock the device.  At that point the de=
+vice
+> > won't be failed, the 'faulty' state will disappear, and it will continu=
+e to be
+> > used with the known bad blocks.
+> >=20
+> > What exactly is going wrong that makes you think you need this patch?
 >=20
-> This works beautifully for dumb drivers - I'm actually planning on
-> making my code generic and integrating it with the block layer so that
-> the same approach could be easily used by other code that generates
-> bios, it would allow a _lot_ of code to be deleted from the kernel.
+>=20
+> When degradation occurs during migration BBM is signaled to mdmon and mdm=
+on /monitor.c/ tries to mark disk  '-blocked'
+> This operation fails. Momon goes in to loop, and nothing can be done /I c=
+annot make it using sysfs/ to signal or remove device.
+> In sysfs device is present in /sys/block/mdXXX/md but entry /sys/block/md=
+XXX/md/dev-sdX/~block is missing /disk was pulled out/.
 
-Sounds promising.
 
->=20
-> But for stacking drivers, the mere existence of a bio with max_vecs >
-> BIO_MAX_PAGES breaks things, regardless of how many pages are actually
-> being used in this bio.
->=20
-> So, IMO __bio_clone(), bio_clone_mddev(), and whatever other code ought
-> to be changed to only copy bi_idx to bi_vcnt from the original bio -
-> it'd make it consistent with how bios are used elsewhere. Thoughts? The
-> actual patches should be trivial, it'll mostly just be a matter of
-> grepping around and finding everything, I think.
+I've found a couple of issues.  I'm not sure if they completely explain what
+you are seeing.  Could you please test with these two fixes and tell me the
+results?
 
-I'm not against this.  There are a few places where md assumes there is a 1=
--1
-mapping between original and cloned bios.  It probably wouldn't be too hard
-to find those and adjust them to your new scheme.
+Firstly, I find that writing "-blocked" succeeds (no error returned) but the
+"blocked" flag does not get cleared, which is certainly confusing.
 
-So if you write patches I'll help make sure they work on md.
+This is fixed by:
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4adcbb4..7258dc1 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2562,7 +2562,8 @@ state_show(struct md_rdev *rdev, char *page)
+ 		sep =3D ",";
+ 	}
+ 	if (test_bit(Blocked, &rdev->flags) ||
+-	    rdev->badblocks.unacked_exist) {
++	    (rdev->badblocks.unacked_exist
++	     && !test_bit(Faulty, &rdev->flags))) {
+ 		len +=3D sprintf(page+len, "%sblocked", sep);
+ 		sep =3D ",";
+ 	}
+
+
+Secondly mdmon writes "-blocked" even when the "blocked" flag is not set.
+This succeeds so state_store() calls
+		sysfs_notify_dirent_safe(rdev->sysfs_state);
+
+so mdmon/monitor.c is woken up to go around the loop again and it writes
+"-blocked" again and so it continues in a loop.
+
+This is fixed by:
+
+diff --git a/monitor.c b/monitor.c
+index b002e90..29bde18 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -339,7 +339,8 @@ static int read_and_act(struct active_array *a)
+ 			a->container->ss->set_disk(a, mdi->disk.raid_disk,
+ 						   mdi->curr_state);
+ 			check_degraded =3D 1;
+-			mdi->next_state |=3D DS_UNBLOCK;
++			if (mdi->curr_state & DS_BLOCKED)
++				mdi->next_state |=3D DS_UNBLOCK;
+ 			if (a->curr_state =3D=3D read_auto) {
+ 				a->container->ss->set_array_state(a, 0);
+ 				a->next_state =3D active;
+
+
+Finally, when a badblock is added to the list we don't currently notify
+rdev->sysfs_state so mdmon doesn't notice straight away and so is delayed in
+taking action.  It will only notice when a write blocks.
+
+This is fixed by:
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 4adcbb4..9cc7983 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -7940,6 +7941,7 @@ int rdev_set_badblocks(struct md_rdev *rdev, sector_t=
+ s, int sectors,
+ 				  s + rdev->data_offset, sectors, acknowledged);
+ 	if (rv) {
+ 		/* Make sure they get written out promptly */
++		sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 		set_bit(MD_CHANGE_CLEAN, &rdev->mddev->flags);
+ 		md_wakeup_thread(rdev->mddev->thread);
+ 	}
+
+
+With these 3 changes in place I get substantially improved behaviour on my
+simple test (just doing resync, not reshape).
 
 Thanks,
 NeilBrown
 
---Sig_/dKV8au/ohyohmTKAjzl5iD8
+--Sig_/Oml7C/vMHvFRhQyWcHQ0HkY
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTt2p3Dnsnt1WYoG5AQIAxRAAhbnamCNN23v05BW09oDPLR1vV1JTCq/3
-g9AHEJzv8Ipn1PT6QHAJ7oS7HiJyHRQF2DmHqVv/egIHzqR/rSUb3CtR9zxmMHUc
-bvlgS7lO6ncwQwEzocCtVfZxBHeq8Y/eRiwJO/DiVS24M8oNmI1bx3rGYiGkYfNN
-OqDIUEr6VUtymHSYQsLCu4e59mbOv1q8a9fuIOjWauTfeX6DTeJ7w0pLGVWtXk0Z
-nQ2uixpcp3vQ6ccJ9WUk0rgIrb++5f+avBnMrpYMuK864nZ8oc9ewVATcJG87xTW
-yPQDnqoZTtpc33upFLyesk37Rg2+nZzXvVKHQWDeNLAQtrajLE/n5vOMPBvLiHBn
-Lw+RNQgdX9yTKh7MFxf7AeviqVZwc2AwbjySHLGxIAeA9cWvnR7aKsEGRl9UEN9y
-W2MLKGHcUQw03NX50PbbsNy8rRgLIEo+kmh3l5dG8Wi+43zsDs1LuXeYknB5M4p5
-JKoAC8PJ2axip8wqRq1JMg5D8mtM1GtA1BicDt2b3CofwlfUf6SLXu1v2ZOgl+2O
-i6LJm3J7LkoqJj28EOcLBVg6JBidsOKTaZji/DmcP+1baCMeDFydDY1FM4oJpdSD
-lzPTRE2KVJWkJpZEf6axAe4dmOWENt/MShB6BOpzc0xXfCLIUBbXq8E6BCficRwZ
-w2tw85W28x0=
-=0gxG
+iQIVAwUBTt2wpTnsnt1WYoG5AQJjhhAAvLH7ro3bA+fw6A7rsmd1YgBBIA3Mv6vI
+br2jNTZK7F7S3zLLR4FNckiOR9ssVqWFo4pmGcpTwUmuThii/nDTCagYvDYDKE0t
+ZibFig8p/k9YfmsBnzPZTifv6ULCJyX2imcI4ALiAavpYDn7ul97bTHGJyYUbG/B
+Iy6rAEqlFXhhMOlmWaee1zVyLsV60ZY/AO6j8gcUldBm12hB9IhUJSrjP4dSOqan
+CVOLB+Xu8EDX6nPPB07A+2tL2arLj0AYs8w+22ALaoZBhXlgyGOtaz8bZMPt83XM
+9mG/+o4Rj6sL0SVlru1xrciA7T8YRWT8mTu9dh9glwws/SCRFSfFuHZrUuukrKgr
+Brb2nGOPU7AHHexfrhe155b+p5UDfmPQFxZ7EerBXd7XMemOtN/R4KQ4GXLkIutt
+GxjqwLKH0JmVUizsqbPKSVrFsLmArQc4NtBqlz88a50mB9iUVl7VQ3mYPzMZe/yV
+X/BUO6mPSc/y4QmAqufZfYhdy4suYfcW1WqWKpwU5ChP5lZQ2K2+4THxNxRj8ehk
+Werwp87PsArNwiWtkKGXkEEECNVWqaTvV6mgOmxc7XrLLVx6baMH4YISBQmbx9I8
+5eu/TtVXJ8BT8sQtf8AkdAKpCkQDXx+JGfQhHaclT4eyL3qRYeNmWR9hr7ZZrp4m
+J5yjL7mHKdk=
+=7zpU
 -----END PGP SIGNATURE-----
 
---Sig_/dKV8au/ohyohmTKAjzl5iD8--
+--Sig_/Oml7C/vMHvFRhQyWcHQ0HkY--
