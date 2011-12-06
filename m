@@ -1,122 +1,60 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH 00/11] Degradation during reshape
-Date: Tue, 6 Dec 2011 08:03:55 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A055871@IRSMSX101.ger.corp.intel.com>
-References: <20111124121516.5254.48774.stgit@gklab-128-013.igk.intel.com>
- <20111206115338.2032996c@notabene.brown>
+From: Vincent Pelletier <plr.vincent@gmail.com>
+Subject: Re: Spin down
+Date: Tue, 6 Dec 2011 09:21:44 +0100
+Message-ID: <201112060921.45058.plr.vincent@gmail.com>
+References: <CAF78GY0YdJ0c0WWpyDnnzitAec_7VZZnEsP_n_UHuec5JmVAng@mail.gmail.com> <CAF78GY0u89KvZhEZQ64GxWeDpBCT6cdAJ+xaGm=z7O_2gKTYTA@mail.gmail.com> <20111206153923.203df175@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111206115338.2032996c@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <20111206153923.203df175@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, kobras@linux.de
 List-Id: linux-raid.ids
 
+Le mardi 06 d=E9cembre 2011 05:39:23, NeilBrown a =E9crit :
+> Hmm... I cannot reproduce this which makes it harder.
 
+Rebooting on a CONFIG_DYNAMIC_DEBUG-enabled kernel and ssh'ing soon eno=
+ugh, I=20
+think I found the culprit: noflushd process.
+(cc'ing its author)
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of NeilBrown
-> Sent: Tuesday, December 06, 2011 1:54 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams,
-> Dan J
-> Subject: Re: [PATCH 00/11] Degradation during reshape
-> 
-> On Thu, 24 Nov 2011 13:17:10 +0100 Adam Kwolek
-> <adam.kwolek@intel.com> wrote:
-> 
-> > The following series implements support for array degradation during
-> reshape.
-> >
-> > Series mostly fixes problems in handling degradation during reshape in
-> > imsm metadata .
-> >
-> > Main common problem that last patch resolves is is lack of BBM support.
-> > md on disk failure reports BBM event to user space and waits for an
-> answer.
-> > The side effect of this action is stopping reshape process. The last
-> > patch /together with md patch sent separately/ allows for disabling BBM
-> mechanism.
-> > This is similar as native metadata v0.9 works.
-> >
-> > BR
-> > Adam
-> >
-> >
-> 
-> Sorry for the long delay in getting to these - I've been busy :-(
-> 
-> >
-> > Adam Kwolek (11):
-> >       Disable BBM when it is not supported
-> 
-> Not applied as discussed separately.  I'll follow up on this issue separately.
-> 
-> >       imsm: FIX: Check maximum allowed degradation level in
-> recover_backup_imsm()
-> >       imsm: FIX: Check maximum allowed degradation level in
-> open_backup_targets()
-> >       imsm: FIX: Function rework - imsm_count_failed()
-> 
-> These 3 applied.
-> 
-> >       imsm: FIX: Manage second map state on array degradation
-> 
-> I've applied this, but I don't like the fact that you have used '2' and '4'
-> for MAP_0 and MAP_1.
-> I see that you use '&' to test a bit and you wanted separate bits, but I don't
-> see any place where "look_in_map" could have multiple bits set.
-> So why not MAP_0==0 and MAP_1==1 and use e.g. "look_in_map ==
-> MAP_0".
-> 
-> I'm quite happy with defining the symbolic named (MAP_0 and MAP_1), just
-> confused by the values chosen.
-> 
-> Could you please explain the logic, or fix it up with a new patch?  Thanks.
+<noflushd intro>
+noflushd is a nice daemon helping suspending disks by tracking disk *re=
+ad*=20
+activity. When enough time has passed without reads, it disables automa=
+ted=20
+flushing (echo 0 > /proc/sys/vm/dirty_writeback_centisecs) and takes ov=
+er=20
+flushing for individual block devices (only flushing spinning devices).
+This way, there is no extra delay in writes when disk spins, and only a=
+n=20
+explicit flush (or read) will cause disk to spin up.
+</noflushd intro>
 
-Using 'bits' gives ability to test in both maps at a time. 
-Now I've got this series a 'little' reworked so I try to remove it.
+I enabled block_trace to see if the problem was still here, and there w=
+as no=20
+activity for 10+ seconds. Then I saw traces for noflushd process, and=20
+previously-reported writes started ticking every 5s. 5s is the default =
+(at=20
+least, on my machine) writeback period, so it's what noflushd uses when=
+ taking=20
+over per-device flushing.
+I stopped noflushd process, and tada, problem solved.
 
-> 
-> >       imsm: FIX: Restore critical section on degraded array
-> >       imsm: FIX: Remove single map state limitation in getinfo
-> >       imsm: FIX: Finalize degraded migration
-> >       imsm: FIX: Do not end migration when missing drive is handled
-> 
-> These 4 applied.
-> 
-> >       imsm: FIX: Mark both maps on degradation while migrating
-> 
-> applied, but I think mark_failure might still be wrong.
-> What if the device that fails is in MAP_1 but not in MAP_0?  I don't think it
-> gets marked as failed in that case.
+=46WIW, noflushd does individual flushes by opening bock device for wri=
+te, and=20
+fsync()'ing it.
 
-Currently there is not disk replace functionality, so this case is not possible.
-If something is failed in MAP_1 this means that it is marked as failed in MAP_0 already
-Or it is rebuild of this failed disk, but I'll think about preparing it for the future.
+Sorry for the noise.
 
-
-
-> 
-> >       imsm: FIX: Return longer map for failure setting
-> 
-> I changed the type of 'map2' from 'void *' to 'struct imsm_map *', and
-> applied the result.
-> 
-> Thanks.
-> 
-> BTW if you want these in SLES11-SP2 I'll need a request through bugzilla.
-> Just one is enough, not one for every patch.
-
-It will be nice:) I'll do this when whole solution will be in place.
-
-BR
-Adam
-
-> 
-> NeilBrown
-
+Regards,
+--=20
+Vincent Pelletier
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
