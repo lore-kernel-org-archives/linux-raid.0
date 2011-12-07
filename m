@@ -1,7 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 1/9] imsm: FIX: Remove longer map request
-Date: Wed, 07 Dec 2011 13:57:43 +0100
-Message-ID: <20111207125743.25279.10593.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 2/9] imsm: FIX: Correct ords merging in end_migration()
+Date: Wed, 07 Dec 2011 13:57:51 +0100
+Message-ID: <20111207125751.25279.30422.stgit@gklab-128-013.igk.intel.com>
 References: <20111207125549.25279.43741.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,54 +13,114 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-We shouldn't use longer map. mdadm should know what map is accessed
-at the moment.
+Ord's merging should occur when rebuild finishes and final state is other
+than expected only /additional failures occur during rebuild/.
+Exclude array initialization.
+Merging ords on migration finish should never happen.
+Any failure during migration should be immediately placed in first
+/current/ map, so no merge is necessary.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   15 +++------------
- 1 files changed, 3 insertions(+), 12 deletions(-)
+ super-intel.c |   45 +++++++++++++++++++++++++++++----------------
+ 1 files changed, 29 insertions(+), 16 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 21aa516..9b3d6be 100644
+index 9b3d6be..8f075e0 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -667,12 +667,9 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
+@@ -3128,7 +3128,8 @@ static void migrate(struct imsm_dev *dev, struct intel_super *super,
+ 	src->map_state = to_state;
+ }
+ 
+-static void end_migration(struct imsm_dev *dev, __u8 map_state)
++static void end_migration(struct imsm_dev *dev, struct intel_super *super,
++			  __u8 map_state)
  {
- 	/* A device can have 2 maps if it is in the middle of a migration.
- 	 * If second_map is:
--	 *    MAP_0 or
--	 *    0   - we return the first map
--	 *    MAP_1 or
--	 *    1   - we return the second map if it exists, else NULL
-+	 *    MAP_0 or 0   - we return the first map
-+	 *    MAP_1 or 1   - we return the second map if it exists, else NULL
- 	 *   -1   - we return the second map if it exists, else the first
--	 *   -2   - we return longer map /excluding uninitialized state/
+ 	struct imsm_map *map = get_imsm_map(dev, 0);
+ 	struct imsm_map *prev = get_imsm_map(dev, dev->vol.migr_state);
+@@ -3139,16 +3140,28 @@ static void end_migration(struct imsm_dev *dev, __u8 map_state)
+ 	 *
+ 	 * FIXME add support for raid-level-migration
  	 */
- 	struct imsm_map *map = &dev->vol.map[0];
- 	struct imsm_map *map2 = NULL;
-@@ -692,12 +689,6 @@ struct imsm_map *get_imsm_map(struct imsm_dev *dev, int second_map)
- 		if (map2)
- 			map = map2;
- 		break;
--	case -2:
--		if (map2
--		    && map2->map_state != IMSM_T_STATE_UNINITIALIZED
--		    && map2->num_members > map->num_members)
--			map = map2;
--		break;
- 	default:
- 		map = NULL;
- 	}
-@@ -6421,7 +6412,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+-	for (i = 0; i < prev->num_members; i++)
+-		for (j = 0; j < map->num_members; j++)
+-			/* during online capacity expansion
+-			 * disks position can be changed if takeover is used
+-			 */
+-			if (ord_to_idx(map->disk_ord_tbl[j]) ==
+-			    ord_to_idx(prev->disk_ord_tbl[i])) {
+-				map->disk_ord_tbl[j] |= prev->disk_ord_tbl[i];
+-				break;
+-			}
++	if ((map_state != map->map_state) && (is_gen_migration(dev) == 0) &&
++		(prev->map_state != IMSM_T_STATE_UNINITIALIZED)) {
++		/* when final map state is other than expected
++		 * merge maps (not for migration)
++		 */
++		int failed;
++
++		for (i = 0; i < prev->num_members; i++)
++			for (j = 0; j < map->num_members; j++)
++				/* during online capacity expansion
++				 * disks position can be changed
++				 * if takeover is used
++				 */
++				if (ord_to_idx(map->disk_ord_tbl[j]) ==
++				    ord_to_idx(prev->disk_ord_tbl[i])) {
++					map->disk_ord_tbl[j] |=
++						prev->disk_ord_tbl[i];
++					break;
++				}
++		failed = imsm_count_failed(super, dev, MAP_0);
++		map_state = imsm_check_degraded(super, dev, failed, MAP_0);
++	}
  
- 	dprintf("imsm: set_disk %d:%x\n", n, state);
+ 	dev->vol.migr_state = 0;
+ 	set_migr_type(dev, 0);
+@@ -6335,7 +6348,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 		 */
+ 		if (is_resyncing(dev)) {
+ 			dprintf("imsm: mark resync done\n");
+-			end_migration(dev, map_state);
++			end_migration(dev, super, map_state);
+ 			super->updates_pending++;
+ 			a->last_checkpoint = 0;
+ 		}
+@@ -6434,7 +6447,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
  
--	ord = get_imsm_ord_tbl_ent(dev, n, -2);
-+	ord = get_imsm_ord_tbl_ent(dev, n, 0);
- 	disk = get_imsm_disk(super, ord_to_idx(ord));
- 
- 	/* check for new failures */
+ 	/* check if recovery complete, newly degraded, or failed */
+ 	if (map_state == IMSM_T_STATE_NORMAL && is_rebuilding(dev)) {
+-		end_migration(dev, map_state);
++		end_migration(dev, super, map_state);
+ 		map = get_imsm_map(dev, 0);
+ 		map->failed_disk_num = ~0;
+ 		super->updates_pending++;
+@@ -6449,7 +6462,7 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	} else if (map_state == IMSM_T_STATE_FAILED &&
+ 		   map->map_state != map_state) {
+ 		dprintf("imsm: mark failed\n");
+-		end_migration(dev, map_state);
++		end_migration(dev, super, map_state);
+ 		super->updates_pending++;
+ 		a->last_checkpoint = 0;
+ 	} else if (is_gen_migration(dev)) {
+@@ -6459,14 +6472,14 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 		case IMSM_T_STATE_NORMAL:
+ 			dprintf("normal\n");
+ 			if (a->last_checkpoint >= a->info.component_size)
+-				end_migration(dev, map_state);
++				end_migration(dev, super, map_state);
+ 			map = get_imsm_map(dev, 0);
+ 			map->failed_disk_num = ~0;
+ 			break;
+ 		case IMSM_T_STATE_DEGRADED:
+ 			dprintf("degraded\n");
+ 			if (a->last_checkpoint >= a->info.component_size)
+-				end_migration(dev, map_state);
++				end_migration(dev, super, map_state);
+ 			else
+ 				manage_second_map(super, dev);
+ 			break;
 
