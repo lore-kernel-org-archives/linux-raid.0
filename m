@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 4/9] imsm: FIX: Do not allow spare activation during rebuild
-Date: Wed, 07 Dec 2011 13:58:07 +0100
-Message-ID: <20111207125807.25279.79685.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 5/9] imsm: FIX: Add array map state transition for failures
+	during initialization
+Date: Wed, 07 Dec 2011 13:58:15 +0100
+Message-ID: <20111207125814.25279.17592.stgit@gklab-128-013.igk.intel.com>
 References: <20111207125549.25279.43741.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,32 +14,56 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Do not allow for spare device activation while rebuild is in progress,
-when additional degradation occur.
+During initialization disk failure can occur also. Add code for such case
+in imsm_set_disk() to support such event.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ super-intel.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index c6509af..973b22f 100644
+index 973b22f..217a196 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6784,6 +6784,14 @@ static struct mdinfo *imsm_activate_spare(struct active_array *a,
- 	if (imsm_reshape_blocks_arrays_changes(super))
- 			return NULL;
+@@ -5718,6 +5718,25 @@ static int is_rebuilding(struct imsm_dev *dev)
+ 		return 0;
+ }
  
-+	/* Cannot activate another spare if rebuild is in progress already
-+	 */
-+	if (is_rebuilding(dev)) {
-+		dprintf("imsm: No spare activation allowed. "
-+			"Rebuild in progress already.\n");
-+		return NULL;
-+	}
++static int is_initializing(struct imsm_dev *dev)
++{
++	struct imsm_map *migr_map;
 +
- 	if (a->info.array.level == 4)
- 		/* No repair for takeovered array
- 		 * imsm doesn't support raid4
++	if (!dev->vol.migr_state)
++		return 0;
++
++	if (migr_type(dev) != MIGR_INIT)
++		return 0;
++
++	migr_map = get_imsm_map(dev, 1);
++
++	if (migr_map->map_state == IMSM_T_STATE_UNINITIALIZED)
++		return 1;
++
++	return 0;
++
++}
++
+ static void update_recovery_start(struct intel_super *super,
+ 					struct imsm_dev *dev,
+ 					struct mdinfo *array)
+@@ -6501,6 +6520,12 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 			super->updates_pending++;
+ 			break;
+ 		}
++		if (is_initializing(dev)) {
++			dprintf("while initialization.");
++			map->map_state = map_state;
++			super->updates_pending++;
++			break;
++		}
+ 	break;
+ 	case IMSM_T_STATE_FAILED: /* transition to failed state */
+ 		dprintf("failed: ");
 
