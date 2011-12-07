@@ -1,8 +1,7 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 7/9] imsm: FIX: Finish rebuild and initialization when missing
-	drive is handled
-Date: Wed, 07 Dec 2011 13:58:30 +0100
-Message-ID: <20111207125830.25279.30709.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 8/9] imsm: FIX: Check correct slots on disk failure
+Date: Wed, 07 Dec 2011 13:58:38 +0100
+Message-ID: <20111207125838.25279.47090.stgit@gklab-128-013.igk.intel.com>
 References: <20111207125549.25279.43741.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,39 +13,51 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-When missing device is handled for rebuild or initialization
-end_migration() should be called to merge ords in case additional
-degradation.
-
-I've removed this call to end_migration() as it was called
-for migration also.
+When changes are made to 2nd map, slot in second map should be tested
+instead first one /as change will be applied to second map).
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ super-intel.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index de07f66..9689fdd 100644
+index 9689fdd..7f9c64f 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6192,6 +6192,17 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
- 		return;
- 
- 	dprintf("imsm: mark missing\n");
-+	/* end process for initialization and rebuild only
-+	 */
-+	if (is_gen_migration(dev) == 0) {
-+		__u8 map_state;
-+		int failed;
+@@ -4522,14 +4522,16 @@ static int add_to_super_imsm_volume(struct supertype *st, mdu_disk_info_t *dk,
+ 			set_imsm_ord_tbl_ent(map, slot, df->index | IMSM_ORD_REBUILD);
+ 			if (is_gen_migration(dev)) {
+ 				struct imsm_map *map2 = get_imsm_map(dev, 1);
+-				if (slot < map2->num_members) {
++				int slot2 = get_imsm_disk_slot(map2, df->index);
++				if ((slot2 < map2->num_members) &&
++				    (slot2 >= 0)) {
+ 					__u32 ord2 = get_imsm_ord_tbl_ent(dev,
+-									  slot,
++									  slot2,
+ 									  1);
+ 					if ((unsigned)df->index ==
+ 							       ord_to_idx(ord2))
+ 						set_imsm_ord_tbl_ent(map2,
+-							slot,
++							slot2,
+ 							df->index |
+ 							IMSM_ORD_REBUILD);
+ 				}
+@@ -6164,8 +6166,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 	 */
+ 	if (dev->vol.migr_state) {
+ 		struct imsm_map *map2 = get_imsm_map(dev, 1);
+-		if (slot < map2->num_members)
+-			set_imsm_ord_tbl_ent(map2, slot,
++		int slot2 = get_imsm_disk_slot(map2, idx);
 +
-+		failed = imsm_count_failed(super, dev, MAP_0);
-+		map_state = imsm_check_degraded(super, dev, failed, MAP_0);
-+
-+		end_migration(dev, super, map_state);
-+	}
- 	for (dl = super->missing; dl; dl = dl->next)
- 		mark_missing(dev, &dl->disk, dl->index);
- 	super->updates_pending++;
++		if ((slot2 < map2->num_members) &&
++		    (slot2 >= 0))
++			set_imsm_ord_tbl_ent(map2, slot2,
+ 					     idx | IMSM_ORD_REBUILD);
+ 	}
+ 	if (map->failed_disk_num == 0xff)
 
