@@ -1,7 +1,8 @@
 From: Adam Kwolek <adam.kwolek@intel.com>
-Subject: [PATCH 6/9] imsm: FIX: Mark failure for rebuild
-Date: Wed, 07 Dec 2011 13:58:22 +0100
-Message-ID: <20111207125822.25279.14182.stgit@gklab-128-013.igk.intel.com>
+Subject: [PATCH 7/9] imsm: FIX: Finish rebuild and initialization when missing
+	drive is handled
+Date: Wed, 07 Dec 2011 13:58:30 +0100
+Message-ID: <20111207125830.25279.30709.stgit@gklab-128-013.igk.intel.com>
 References: <20111207125549.25279.43741.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,30 +14,39 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Allow for marking failures in second map during rebuild and initialization
-also (not during migration only)
+When missing device is handled for rebuild or initialization
+end_migration() should be called to merge ords in case additional
+degradation.
+
+I've removed this call to end_migration() as it was called
+for migration also.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ super-intel.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 217a196..de07f66 100644
+index de07f66..9689fdd 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -6158,7 +6158,11 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+@@ -6192,6 +6192,17 @@ static void handle_missing(struct intel_super *super, struct imsm_dev *dev)
+ 		return;
  
- 	disk->status |= FAILED_DISK;
- 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
--	if (is_gen_migration(dev)) {
-+	/* mark failures in second map if second map exists and this disk
-+	 * in this slot.
-+	 * This is valid for migration, initialization and rebuild
+ 	dprintf("imsm: mark missing\n");
++	/* end process for initialization and rebuild only
 +	 */
-+	if (dev->vol.migr_state) {
- 		struct imsm_map *map2 = get_imsm_map(dev, 1);
- 		if (slot < map2->num_members)
- 			set_imsm_ord_tbl_ent(map2, slot,
++	if (is_gen_migration(dev) == 0) {
++		__u8 map_state;
++		int failed;
++
++		failed = imsm_count_failed(super, dev, MAP_0);
++		map_state = imsm_check_degraded(super, dev, failed, MAP_0);
++
++		end_migration(dev, super, map_state);
++	}
+ 	for (dl = super->missing; dl; dl = dl->next)
+ 		mark_missing(dev, &dl->disk, dl->index);
+ 	super->updates_pending++;
 
