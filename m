@@ -1,184 +1,145 @@
-From: =?UTF-8?B?WXVjb25nIFN1biAo5Y+26Zuo6aOeKQ==?= <sunyucong@gmail.com>
-Subject: Re: Raid10 and page cache
-Date: Wed, 7 Dec 2011 15:37:30 -0800
-Message-ID: <CAJygYd1+cVGeRwZXq_WLZr89Q9GX_yPEDvFBuagSG4D9neyoqQ@mail.gmail.com>
-References: <CAJygYd16PWfKe8fK-b150N46CEwzBUqJn1N6dfsGR4yyTgGbTQ@mail.gmail.com>
- <CAJygYd3ofkHp9huD_Q1xoKVb_Q2LTDAnFHf-n+8xyG7ug3wC_Q@mail.gmail.com>
- <20111207092625.7140c5dc@notabene.brown> <CAJygYd3fM+wtnU0HkN7s7o=FPizbPNPET2A21jxWk-BJZgdFbA@mail.gmail.com>
- <20111207120133.70ca294c@notabene.brown> <CAJygYd3j5HwGyZ7rTKZj5dr=cXDOpy3jK=6AyOVKJY0PX3bdtA@mail.gmail.com>
- <20111207152853.42594fc9@notabene.brown> <CAJygYd0UeJ04KOZJLkjO1KoBf6t0Ko_jyCw=HerCtehgkG5DUQ@mail.gmail.com>
- <20111207161003.0aa181d8@notabene.brown> <CAJygYd1WgqMYTzvXKKWR9_=Osqd=BPFud20FHXsDz1ag37uJ=g@mail.gmail.com>
- <CAJygYd2by45xJs-RV_v0S8Hd8B1Dk9DP6B+L6MmX=_Va-5Qsvw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Eli Morris <ermorris@ucsc.edu>
+Subject: Re: 4 out of 16 drives show up as 'removed'
+Date: Wed, 7 Dec 2011 15:42:34 -0800
+Message-ID: <0226125C-C6D8-42E6-9772-509A7AA4B8C8@ucsc.edu>
+References: <F0C8A2FE-8E5E-4683-BBF8-8E6B6A831635@ucsc.edu> <20111208075709.587ac227@notabene.brown> <654BF752-029F-444F-A4AB-68C3CEA7F8D5@ucsc.edu> <20111208091651.2a56dd5b@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAJygYd2by45xJs-RV_v0S8Hd8B1Dk9DP6B+L6MmX=_Va-5Qsvw@mail.gmail.com>
+In-Reply-To: <20111208091651.2a56dd5b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil, I can't compile latest MD against 2.6.32,  and that commit can't
-be patched into 2.6.32 directly either, can you help me on this?
 
-Cheers.
+On Dec 7, 2011, at 2:16 PM, NeilBrown wrote:
 
-2011/12/7 Yucong Sun (=D2=B6=D3=EA=B7=C9) <sunyucong@gmail.com>:
-> So, I re-read the kernel code again,  it looks like backdev.cc is
-> doing the correct thing by calling writeback with WB_NO_SYNC, it all
-> looks good, but I don't understand why it would appear read saturated
-> on my system.
->
-> However I think your commit would definitely make things better,
-> Ideally I think make write only use available bandwidth like sync
-> does, and automatically adjusting.
->
-> 2011/12/6 Yucong Sun (=D2=B6=D3=EA=B7=C9) <sunyucong@gmail.com>:
->> Ok, still, during that time, no read is being finished.
->>
->> I'm on  Linux vstore-1 2.6.32-35-server #78-Ubuntu SMP Tue Oct 11
->> 16:26:12 UTC 2011 x86_64 GNU/Linux
->> do you know which kernel version has that commit ? 2.6.35 ?
->>
->> I think the root cause is that, whenever dirty_background_bytes is
->> reached,  kernel flush thread [flush:254:0] wakes up and cause
->> md_raid10_d0 to go into state D, which cause everything to hang a
->> while, I guess maybe the flush thread is calling fsync() after the
->> write? That's hard to believe, but can actually explain the symptom.
->>
->> BTW I don't think limiting batch write to 1024 would solve the
->> problem, I am actually doing it now because I have to set
->> dirty_background_bytes to 4M which is exactly 1024 write every secon=
-d
->> or so.
->>
->> Cheers.
->>
->> On Tue, Dec 6, 2011 at 9:10 PM, NeilBrown <neilb@suse.de> wrote:
->>> On Tue, 6 Dec 2011 20:50:48 -0800 Yucong Sun (=D2=B6=D3=EA=B7=C9) <=
-sunyucong@gmail.com>
->>> wrote:
->>>
->>>> I'm not sure whether it is what I mean,  to illustrate my problem =
-let
->>>> me put iostat -x -d 1 output  as below
->>>>
->>>> Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s
->>>> avgrq-sz avgqu-sz   await  svctm  %util
->>>> sdb               0.00     0.00  163.00    1.00  1304.00     8.00
->>>> 8.00     0.26    1.59   1.59  26.00
->>>> sdc               0.00     0.00   93.00    1.00   744.00     8.00
->>>> 8.00     0.24    2.55   2.45  23.00
->>>> sde               0.00     0.00   56.00    1.00   448.00     8.00
->>>> 8.00     0.22    3.86 3.86 22.00
->>>> sdd               0.00     0.00   88.00    1.00   704.00     8.00
->>>> 8.00     0.18    2.02 2.02 18.00
->>>> md_d0             0.00     0.00  401.00    0.00  3208.00     0.00
->>>> 8.00     0.00    0.00   0.00   0.00
->>>>
->>>> =3D=3D> this is normal operation, because of page cache, there's o=
-nly read
->>>> being submitted to the MD device.
->>>>
->>>> Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s
->>>> avgrq-sz avgqu-sz   await  svctm  %util
->>>> sda               0.00     0.00    0.00    0.00     0.00     0.00
->>>> 0.00     0.00    0.00   0.00   0.00
->>>> sdb               0.00  1714.00    4.00  277.00    32.00 14810.00
->>>> 52.82    34.04  105.05   2.92  82.00
->>>> sdc               0.00  1685.00   12.00  270.00    96.00 14122.00
->>>> 50.42    42.56  131.03   3.09  87.00
->>>> sde               0.00  1385.00    8.00  261.00    64.00 12426.00
->>>> 46.43    29.76   99.44   3.35  90.00
->>>> sdd               0.00  1350.00    8.00  228.00    64.00 10682.00
->>>> 45.53    40.93  133.56   3.69  87.00
->>>> md_d0             0.00     0.00   32.00 16446.00   256.00 131568.0=
-0
->>>>  8.00     0.00    0.00   0.00   0.00
->>>>
->>>> =3D=3D> Huge page flush kick in, note the read requests is saturat=
-ed on MD device.
->>>>
->>>> Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s
->>>> avgrq-sz avgqu-sz   await  svctm  %util
->>>> sda               0.00     0.00    0.00    0.00     0.00     0.00
->>>> 0.00     0.00    0.00   0.00   0.00
->>>> sdb               0.00  1542.00    4.00  264.00    32.00 11760.00
->>>> 44.00    66.58  230.22   3.73 100.00
->>>> sdc               0.00  1185.00    0.00  272.00     0.00  9672.00
->>>> 35.56    63.40  215.88   3.68 100.00
->>>> sde               0.00  1352.00    0.00  298.00     0.00 12488.00
->>>> 41.91    35.56  126.34   3.36 100.00
->>>> sdd               0.00   996.00    0.00  294.00     0.00 10120.00
->>>> 34.42    76.79  270.37   3.40 100.00
->>>> md_d0             0.00     0.00    4.00    0.00    32.00     0.00
->>>> 8.00     0.00    0.00   0.00   0.00
->>>>
->>>> =3D=3D> Huge page flush still working,  no read is being done.
->>>>
->>>> This is the problem , when page flush kick in, MD appears to refus=
-e
->>>> incoming read,  all under laying device is tuned to deadline sched=
-uler
->>>> and tuned to favor read, still, it don't work since MD simply don'=
-t
->>>> submit new read to the underlying device.
->>>
->>> The counters are update when a request completes, not when it is su=
-bmitted,
->>> so you cannot tell from this data if md is submitting the read requ=
-ests or
->>> not.
->>>
->>> What kernel are you working with?  If it doesn't contain the commit
->>> identified below can you try with that and see if it makes a differ=
-ence?
->>>
->>> Thanks,
+> On Wed, 7 Dec 2011 14:00:00 -0800 Eli Morris <ermorris@ucsc.edu> wrote:
+> 
+>> 
+>> On Dec 7, 2011, at 12:57 PM, NeilBrown wrote:
+>> 
+>>> On Wed, 7 Dec 2011 12:42:26 -0800 Eli Morris <ermorris@ucsc.edu> wrote:
+>>> 
+>>>> Hi All,
+>>>> 
+>>>> I thought maybe someone could help me out. I have a 16 disk software RAID that we use for backup. This is at least the second time this happened- all at once, four of the drives report as 'removed' when none of them actually were. These drives also disappeared from the 'lsscsi' list until I restarted the disk expansion chassis where they live. 
+>>>> 
+>>>> These are the dreaded Caviar Green drives. We bought 16 of them as an upgrade for a hardware RAID originally, because the tech from that company said they would work fine. After running them for a while, four drives dropped out of that array. So I put them in the software RAID expansion chassis they are in now, thinking I might have better luck. In this configuration, this happened once before. That time, the drives looked to all have significant numbers of bad sectors, so I got those ones replaced and thought that that might have been the problem all along. Now it has happened again. So I have two fairly predictable questions and I'm hoping someone might be able to offer a suggestion:
+>>>> 
+>>>> 1) Any ideas on how to get this array working again without starting from scratch? It's all backup data, so it's not do or die, but it is also 30 TB and I really don't want to rebuild the whole thing again from scratch.
+>>> 
+>>> 1/ Stop the array
+>>>   mdadm -S /dev/md5
+>>> 
+>>> 2/ Make sure you can read all of the devices
+>>> 
+>>>   mdadm -E /dev/some-device
+>>> 
+>>> 3/ When you are confident that the hardware is actually working, reassemble
+>>>  the array with --force
+>>> 
+>>>   mdadm -A /dev/md5 --force /dev/sd[a-o]1
+>>> (or whatever gets you a list of devices.)
+>>> 
+>>>> 
+>>>> I tried the re-add command and the error was something like 'not allowed'
+>>>> 
+>>>> 2) Any idea on how to stop this from happening again? I was thinking of playing with the disk timeout in the OS (not the one on the drive firmware). 
+>>> 
+>>> Cannot help there, sorry - and you really should solve this issue before you
+>>> put the array back together or it'll just all happen again.
+>>> 
 >>> NeilBrown
->>>
->>>
->>>
->>>>
->>>> 2011/12/6 NeilBrown <neilb@suse.de>:
->>>> > On Tue, 6 Dec 2011 20:04:33 -0800 Yucong Sun (=D2=B6=D3=EA=B7=C9=
-) <sunyucong@gmail.com>
->>>> > wrote:
->>>> >
->>>> >> The problem with using page-flush as a write cache here is that=
- write
->>>> >> to MD don't go through IO scheduler, which is a very big proble=
-m,
->>>> >> because when flush thread decide to write to MD,  it's impossib=
-le to
->>>> >> control the write speed, or prioritize them with read, every re=
-quests
->>>> >> basically is a fifo,  and when flush size is big, no read can b=
-e
->>>> >> served.
->>>> >>
->>>> >
->>>> > I'm not sure I understand....
->>>> >
->>>> > Requests don't go through an IO scheduler before they hit md, bu=
-t they do
->>>> > after md sends them on down, so they can be re-ordered there.
->>>> >
->>>> > There was a bug where raid10 would allow an arbitrary number of =
-writes to
->>>> > queue up so that flushing code didn't know when to stop.
->>>> >
->>>> > This was fixed by
->>>> >   commit 34db0cd60f8a1f4ab73d118a8be3797c20388223
->>>> >
->>>> > nearly 2 months ago :-)
->>>> >
->>>> > NeilBrown
->>>> >
->>>
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> 
+>>>> 
+>>>> If anyway can help, I'd greatly appreciate it, because, at this point, I have no idea what to do about this mess. 
+>>>> 
+>>>> Thanks!
+>>>> 
+>>>> Eli
+>>>> 
+>>>> 
+>>>> [root@stratus ~]# mdadm --detail /dev/md5
+>>>> /dev/md5:
+>>>>       Version : 1.2
+>>>> Creation Time : Wed Oct 12 16:32:41 2011
+>>>>    Raid Level : raid5
+>>>> Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+>>>>  Raid Devices : 16
+>>>> Total Devices : 13
+>>>>   Persistence : Superblock is persistent
+>>>> 
+>>>>   Update Time : Mon Dec  5 12:52:46 2011
+>>>>         State : active, FAILED, Not Started
+>>>> Active Devices : 12
+>>>> Working Devices : 13
+>>>> Failed Devices : 0
+>>>> Spare Devices : 1
+>>>> 
+>>>>        Layout : left-symmetric
+>>>>    Chunk Size : 512K
+>>>> 
+>>>>          Name : stratus.pmc.ucsc.edu:5  (local to host stratus.pmc.ucsc.edu)
+>>>>          UUID : 3189ca06:ccf973d0:7ef41366:98a75a32
+>>>>        Events : 32
+>>>> 
+>>>>   Number   Major   Minor   RaidDevice State
+>>>>      0       8        1        0      active sync   /dev/sda1
+>>>>      1       0        0        1      removed
+>>>>      2       8       33        2      active sync   /dev/sdc1
+>>>>      3       8       49        3      active sync   /dev/sdd1
+>>>>      4       8       65        4      active sync   /dev/sde1
+>>>>      5       8       81        5      active sync   /dev/sdf1
+>>>>      6       8       97        6      active sync   /dev/sdg1
+>>>>      7       8      113        7      active sync   /dev/sdh1
+>>>>      8       0        0        8      removed
+>>>>      9       8      145        9      active sync   /dev/sdj1
+>>>>     10       8      161       10      active sync   /dev/sdk1
+>>>>     11       8      177       11      active sync   /dev/sdl1
+>>>>     12       8      193       12      active sync   /dev/sdm1
+>>>>     13       8      209       13      active sync   /dev/sdn1
+>>>>     14       0        0       14      removed
+>>>>     15       0        0       15      removed
+>>>> 
+>>>>     16       8      225        -      spare   /dev/sdo1
+>>>> [root@stratus ~]# 
+>>>> 
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> 
+>> 
+>> Hi Neil,
+>> 
+>> Thanks. I gave it a try and I think I got close to getting it back. Maybe. Here is the output from one of the drives that showed up as 'removed' below. It looks OK to me, but I'm not really sure what trouble signs to look for. After stopping the array, I tried to reconstruct it, and here is what I got below. I don't know why the drives would be busy. Short of rebooting, which I can't do at the moment, is there a way to check why they are busy and force them to stop? I don't have them mounted or anything. Or do you think that means the hardware is not responding properly?
+>> 
+>> Thanks,
+>> 
+>> Eli
+>> 
+>> mdadm -A /dev/md5 --force /dev/sda1 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1 /dev/sdi1 /dev/sdj1 /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 /dev/sdp1
+>> mdadm: failed to add /dev/sdo1 to /dev/md5: Device or resource busy
+>> mdadm: failed to add /dev/sdp1 to /dev/md5: Device or resource busy
+>> mdadm: /dev/md5 assembled from 12 drives and 2 spares - not enough to start the array.
+> 
+> This means that the device is busy....
+> Maybe it got attach to another md array.  What is in /proc/mdstat.  Maybe you
+> have to stop something else.
+> 
+> NeilBrown
+
+
+I can't imagine what would be using it though. It was being used as part of this RAID set, so it's not going to be mounted somewhere else.
+
+[root@stratus ~]# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] 
+unused devices: <none>
+
+thanks,
+
+Eli
+
