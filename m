@@ -1,480 +1,168 @@
-From: =?UTF-8?B?WXVjb25nIFN1biAo5Y+26Zuo6aOeKQ==?= <sunyucong@gmail.com>
-Subject: Re: Raid10 and page cache
-Date: Wed, 7 Dec 2011 22:31:51 -0800
-Message-ID: <CAJygYd3h8dshbeP3Rd_osSOu0j3Xp1THUdz+NEtDXzLxLEAnVw@mail.gmail.com>
-References: <CAJygYd16PWfKe8fK-b150N46CEwzBUqJn1N6dfsGR4yyTgGbTQ@mail.gmail.com>
- <CAJygYd3ofkHp9huD_Q1xoKVb_Q2LTDAnFHf-n+8xyG7ug3wC_Q@mail.gmail.com>
- <20111207092625.7140c5dc@notabene.brown> <CAJygYd3fM+wtnU0HkN7s7o=FPizbPNPET2A21jxWk-BJZgdFbA@mail.gmail.com>
- <20111207120133.70ca294c@notabene.brown> <CAJygYd3j5HwGyZ7rTKZj5dr=cXDOpy3jK=6AyOVKJY0PX3bdtA@mail.gmail.com>
- <20111207152853.42594fc9@notabene.brown> <CAJygYd0UeJ04KOZJLkjO1KoBf6t0Ko_jyCw=HerCtehgkG5DUQ@mail.gmail.com>
- <20111207161003.0aa181d8@notabene.brown> <CAJygYd1WgqMYTzvXKKWR9_=Osqd=BPFud20FHXsDz1ag37uJ=g@mail.gmail.com>
- <CAJygYd2by45xJs-RV_v0S8Hd8B1Dk9DP6B+L6MmX=_Va-5Qsvw@mail.gmail.com>
- <CAJygYd1+cVGeRwZXq_WLZr89Q9GX_yPEDvFBuagSG4D9neyoqQ@mail.gmail.com> <20111208111009.6ca1ca19@notabene.brown>
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] imsm: FIX: Limit migration record operation by disk slot not
+	by index
+Date: Thu, 08 Dec 2011 09:46:56 +0100
+Message-ID: <20111208084655.7455.66462.stgit@gklab-128-013.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111208111009.6ca1ca19@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-sadly the patch didn't help ,
+imsm should store migration record in to 2 first disks in array.
+This should be evaluated based on disk slots, not on disks index.
+It is not guaranteed that indexes are equal to slots.
 
-sadly, the patch didn't help at all, see following
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
+ super-intel.c |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 files changed, 77 insertions(+), 6 deletions(-)
 
-Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
-r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
-avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
-sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
-=A0 0.00
-0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
-sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A02042.00=
- =C2=A0 =C2=A00.00 =C2=A0345.00 =C2=A0 =C2=A0 0.00 64112.00
-185.83 =C2=A0 =C2=A093.13 =C2=A0 93.36 =C2=A0 2.12 =C2=A073.00
-sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A01704.00=
- =C2=A0 =C2=A07.00 =C2=A0156.00 =C2=A0 =C2=A056.00 12496.00
-77.01 =C2=A0 =C2=A095.71 =C2=A0146.20 =C2=A0 3.62 =C2=A059.00
-sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A01518.00=
- =C2=A0 16.00 =C2=A0185.00 =C2=A0 128.00 =C2=A09936.00
-50.07 =C2=A0 =C2=A098.20 =C2=A0157.41 =C2=A0 3.13 =C2=A063.00
-sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 222.00 =C2=A01997.00 =C2=A0=
-194.00 =C2=A0189.00 51568.00 16488.00
-177.69 =C2=A0 =C2=A081.54 =C2=A0 99.09 =C2=A0 2.25 =C2=A086.00
-md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 37.00 4096.00 =C2=A0 296.00 32768.00
-8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
+diff --git a/super-intel.c b/super-intel.c
+index cea314c..4918f42 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1129,7 +1129,7 @@ static void print_imsm_dev(struct intel_super *super,
+ 		printf(" <-- %s", map_state_str[map->map_state]);
+ 		printf("\n     Checkpoint : %u ",
+ 			   __le32_to_cpu(dev->vol.curr_migr_unit));
+-		if ((is_gen_migration(dev)) && (super->disks->index > 1))
++		if ((is_gen_migration(dev)) && ((slot > 1) || (slot < 0)))
+ 			printf("(N/A)");
+ 		else
+ 			printf("(%llu)", (unsigned long long)
+@@ -1170,11 +1170,19 @@ void examine_migr_rec_imsm(struct intel_super *super)
+ 
+ 	for (i = 0; i < mpb->num_raid_devs; i++) {
+ 		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
++		struct imsm_map *map;
++		int slot;
++
+ 		if (is_gen_migration(dev) == 0)
+ 				continue;
+ 
+ 		printf("\nMigration Record Information:");
+-		if (super->disks->index > 1) {
++
++		/* map under migration */
++		map = get_imsm_map(dev, MAP_1);
++		if (map)
++			slot = get_imsm_disk_slot(map, super->disks->index);
++		if ((map == NULL) || (slot > 1) || (slot < 0)) {
+ 			printf(" Empty\n                              ");
+ 			printf("Examine one of first two disks in array\n");
+ 			break;
+@@ -2082,6 +2090,19 @@ out:
+ 	return ret_val;
+ }
+ 
++static struct imsm_dev *imsm_get_device_during_migration(
++	struct intel_super *super)
++{
++
++	struct intel_dev *dv;
++
++	for (dv = super->devlist; dv; dv = dv->next) {
++		if (is_gen_migration(dv->dev))
++			return dv->dev;
++	}
++	return NULL;
++}
++
+ /*******************************************************************************
+  * Function:	load_imsm_migr_rec
+  * Description:	Function reads imsm migration record (it is stored at the last
+@@ -2100,13 +2121,31 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	char nm[30];
+ 	int retval = -1;
+ 	int fd = -1;
++	struct imsm_dev *dev;
++	struct imsm_map *map = NULL;
++	int slot;
++
++	/* find map under migration */
++	dev = imsm_get_device_during_migration(super);
++	/* nothing to load,no migration in progress?
++	*/
++	if (dev == NULL)
++		return 0;
++	map = get_imsm_map(dev, MAP_1);
+ 
+ 	if (info) {
+ 		for (sd = info->devs ; sd ; sd = sd->next) {
++			/* skip spare and failed disks
++			 */
++			if (sd->disk.raid_disk < 0)
++				continue;
+ 			/* read only from one of the first two slots */
+-			if ((sd->disk.raid_disk > 1) ||
+-			    (sd->disk.raid_disk < 0))
++			if (map)
++				slot = get_imsm_disk_slot(map,
++							  sd->disk.raid_disk);
++			if ((map == NULL) || (slot > 1) || (slot < 0))
+ 				continue;
++
+ 			sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+ 			fd = dev_open(nm, O_RDONLY);
+ 			if (fd >= 0)
+@@ -2115,8 +2154,14 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	}
+ 	if (fd < 0) {
+ 		for (dl = super->disks; dl; dl = dl->next) {
++			/* skip spare and failed disks
++			*/
++			if (dl->index < 0)
++				continue;
+ 			/* read only from one of the first two slots */
+-			if (dl->index > 1)
++			if (map)
++				slot = get_imsm_disk_slot(map, dl->index);
++			if ((map == NULL) || (slot > 1) || (slot < 0))
+ 				continue;
+ 			sprintf(nm, "%d:%d", dl->major, dl->minor);
+ 			fd = dev_open(nm, O_RDONLY);
+@@ -2200,11 +2245,37 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 	struct dl *sd;
+ 	int len;
+ 	struct imsm_update_general_migration_checkpoint *u;
++	struct imsm_dev *dev;
++	struct imsm_map *map = NULL;
++
++	/* find map under migration */
++	dev = imsm_get_device_during_migration(super);
++	/* if no migration, write buffer anyway to clear migr_record
++	 * on disk based on first available device
++	*/
++	if (dev == NULL) {
++		int vol;
++
++		if (super->current_vol >= 0)
++			vol = super->current_vol;
++		else
++			vol = 0;
++		dev = get_imsm_dev(super, super->current_vol);
++	}
++	map = get_imsm_map(dev, MAP_X);
+ 
+ 	for (sd = super->disks ; sd ; sd = sd->next) {
++		int slot;
++
++		/* skip failed and spare devices */
++		if (sd->index < 0)
++			continue;
+ 		/* write to 2 first slots only */
+-		if ((sd->index < 0) || (sd->index > 1))
++		if (map)
++			slot = get_imsm_disk_slot(map, sd->index);
++		if ((map == NULL) || (slot > 1) || (slot < 0))
+ 			continue;
++
+ 		sprintf(nm, "%d:%d", sd->major, sd->minor);
+ 		fd = dev_open(nm, O_RDWR);
+ 		if (fd < 0)
 
-
-Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
-r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
-avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
-sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
-=A0 0.00
-0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
-sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 150.00=
- =C2=A0 =C2=A00.00 =C2=A0194.00 =C2=A0 =C2=A0 0.00 33336.00
-171.84 =C2=A0 =C2=A034.91 =C2=A0492.84 =C2=A0 4.59 =C2=A089.00
-sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A00.00 =C2=A0138.00 =C2=A0 =C2=A0 0.00 =C2=A03488.00
-25.28 =C2=A0 =C2=A032.68 =C2=A0757.75 =C2=A0 4.06 =C2=A056.00
-sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A03.00 =C2=A0127.00 =C2=A0 =C2=A024.00 =C2=A04704.00
-36.37 =C2=A0 =C2=A033.68 =C2=A0771.08 =C2=A0 4.54 =C2=A059.00
-sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 222.00 =C2=A0 =C2=A0 0.00=
- =C2=A0 90.00 =C2=A0 84.00 39936.00 =C2=A01672.00
-239.13 =C2=A0 =C2=A023.73 =C2=A0386.90 =C2=A0 4.08 =C2=A071.00
-md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A02.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A016.00 =C2=A0 =C2=
-=A0 0.00
-8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
-
-
-Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
-r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
-avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
-sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
-=A0 0.00
-0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
-sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 235.00=
- =C2=A0 =C2=A00.00 =C2=A0188.00 =C2=A0 =C2=A0 0.00 54024.00
-287.36 =C2=A0 =C2=A0 0.49 =C2=A0 =C2=A03.78 =C2=A0 1.65 =C2=A031.00
-sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 27.00 =C2=A0 =C2=A00.00 =C2=A0 216.00 =C2=A0 =C2=A0 0.00
-8.00 =C2=A0 =C2=A0 0.15 =C2=A0 =C2=A05.56 =C2=A0 5.56 =C2=A015.00
-sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0 46.00 =C2=A0 =C2=A00.00 =C2=A0 368.00 =C2=A0 =C2=A0 0.00
-8.00 =C2=A0 =C2=A0 0.32 =C2=A0 =C2=A06.52 =C2=A0 6.96 =C2=A032.00
-sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 165.00 =C2=A0 =C2=A0 0.00=
- =C2=A0200.00 =C2=A0 =C2=A00.00 43480.00 =C2=A0 =C2=A0 0.00
-217.40 =C2=A0 =C2=A0=C2=A07.63 =C2=A0 38.15 =C2=A0 2.00=C2=A0=C2=A040.0=
-0
-md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
- 0.00 =C2=A0101.00 =C2=A0 =C2=A00.00 =C2=A0 808.00 =C2=A0 =C2=A0 0.00
-8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
-
-I poked around and found this,=C2=A0when big flush comes in ,
-
-Every 1.0s: cat /sys/block/sdb/stat /sys/block/sdc/stat
-/sys/block/sdd/stat /sys/block/sde/stat /sys/block/md0/stat
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0Wed Dec =C2=A07 22:26:14 2011
-
-=C2=A0 =C2=A0 =C2=A0 32 =C2=A0 =C2=A0 =C2=A0 10 =C2=A0 =C2=A0 =C2=A0336=
- =C2=A0 =C2=A0 =C2=A0270 =C2=A02792623 =C2=A05501730 783168880
-254952160 =C2=A0 =C2=A0 =C2=A0284 =C2=A04815060 255014270
-=C2=A02993481 =C2=A02222268 499586400 94384090 =C2=A0 493165 =C2=A01842=
-192 18671608
-271311440 =C2=A0 =C2=A0 =C2=A0290 =C2=A09942910 365758660
-=C2=A0 691727 =C2=A0 =C2=A0 =C2=A0 19 =C2=A05533896 =C2=A01507300 =C2=A0=
- 501261 =C2=A01838497 18706544
-276987570 =C2=A0 =C2=A0 =C2=A0262 =C2=A03254420 278552760
-=C2=A01458797 =C2=A01404948 281875858 49664210 =C2=A0 483386 =C2=A01841=
-832 18588928
-256627020 =C2=A0 =C2=A0 =C2=A0259 =C2=A04997270 306348180
-=C2=A02797538 =C2=A0 =C2=A0 =C2=A0 =C2=A00 22380058 =C2=A0 =C2=A0 =C2=A0=
- =C2=A00 =C2=A04652939 =C2=A0 =C2=A0 =C2=A0 =C2=A00 37223512
-0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0=
- =C2=A0 =C2=A00
-
-Every downstream disk have a Huge in-flight IO jump, where it is
-usually just 0 or 1 the whole time.  The kernel document says this is
-don't include queued IO, so I think the problem is because IO
-scheduler issued too many requests to the device , without throttling
-read/write,  that basically saturated the disk, so no other read can
-be scheduled, do you knwo why this would happen to me?
-
-Here's my relevenat scheduler tweak:
-
-for disk in /sys/block/sd[bcde]
-do
-        echo "changing $disk scheduler"
-        echo "deadline" > $disk/queue/scheduler
-
-        echo "changing $disk nr_reqests to 4096"
-        echo 4096 > $disk/queue/nr_requests
-
-        echo "setra to 0"
-        echo 0 > $disk/queue/read_ahead_kb
-
-        echo "tweaking deadline io"
-        echo 32 > $disk/queue/iosched/fifo_batch
-        echo 30 > $disk/queue/iosched/read_expire
-        echo 20000 > $disk/queue/iosched/write_expire
-        echo 256 > $disk/queue/iosched/writes_starved
-done
-
-echo 0 > /sys/block/md0/queue/read_ahead_kb
-
-My workload profile is 100% random 8K IO.
-
-Come to think of it, the problem is mostly IO scheduling issue, does
-nr_requests mean anything to MD? it's not possible to adjust it
-either, was that the reason that MD can't accept more reads?
-On Wed, Dec 7, 2011 at 4:10 PM, NeilBrown <neilb@suse.de> wrote:
->
-> On Wed, 7 Dec 2011 15:37:30 -0800 Yucong Sun (=E5=8F=B6=E9=9B=A8=E9=A3=
-=9E) <sunyucong@gmail.com>
-> wrote:
->
-> > Neil, I can't compile latest MD against 2.6.32, =C2=A0and that comm=
-it can't
-> > be patched into 2.6.32 directly either, can you help me on this?
-> >
->
-> This should do it.
->
-> NeilBrown
->
-> commit ef54b7cf955dc3b7d33248e8591b1a00b4fa998c
-> Author: NeilBrown <neilb@suse.de>
-> Date: =C2=A0 Tue Oct 11 16:50:01 2011 +1100
->
-> =C2=A0 =C2=A0md: add proper write-congestion reporting to RAID1 and R=
-AID10.
->
-> =C2=A0 =C2=A0RAID1 and RAID10 handle write requests by queuing them f=
-or handling by
-> =C2=A0 =C2=A0a separate thread. =C2=A0This is because when a write-in=
-tent-bitmap is
-> =C2=A0 =C2=A0active we might need to update the bitmap first, so it i=
-s good to
-> =C2=A0 =C2=A0queue a lot of writes, then do one big bitmap update for=
- them all.
->
-> =C2=A0 =C2=A0However writeback request devices to appear to be conges=
-ted after a
-> =C2=A0 =C2=A0while so it can make some guesstimate of throughput. =C2=
-=A0The infinite
-> =C2=A0 =C2=A0queue defeats that (note that RAID5 has already has a fi=
-nite queue so
-> =C2=A0 =C2=A0it doesn't suffer from this problem).
->
-> =C2=A0 =C2=A0So impose a limit on the number of pending write request=
-s. =C2=A0By default
-> =C2=A0 =C2=A0it is 1024 which seems to be generally suitable. =C2=A0M=
-ake it configurable
-> =C2=A0 =C2=A0via module option just in case someone finds a regressio=
-n.
->
-> =C2=A0 =C2=A0Signed-off-by: NeilBrown <neilb@suse.de>
->
-> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-> index e07ce2e..fe7ae3c 100644
-> --- a/drivers/md/raid1.c
-> +++ b/drivers/md/raid1.c
-> @@ -50,6 +50,11 @@
-> =C2=A0*/
-> =C2=A0#define =C2=A0 =C2=A0 =C2=A0 =C2=A0NR_RAID1_BIOS 256
->
-> +/* When there are this many requests queue to be written by
-> + * the raid1 thread, we become 'congested' to provide back-pressure
-> + * for writeback.
-> + */
-> +static int max_queued_requests =3D 1024;
->
-> =C2=A0static void unplug_slaves(mddev_t *mddev);
->
-> @@ -576,7 +581,8 @@ static int raid1_congested(void *data, int bits)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0conf_t *conf =3D mddev->private;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, ret =3D 0;
->
-> - =C2=A0 =C2=A0 =C2=A0 if (mddev_congested(mddev, bits))
-> + =C2=A0 =C2=A0 =C2=A0 if (mddev_congested(mddev, bits) &&
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_count >=3D max_que=
-ued_requests)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 1;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0rcu_read_lock();
-> @@ -613,10 +619,12 @@ static int flush_pending_writes(conf_t *conf)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bi=
-o;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio =3D bio_li=
-st_get(&conf->pending_bio_list);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_remove_plu=
-g(conf->mddev->queue);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_coun=
-t =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_ir=
-q(&conf->device_lock);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* flush any p=
-ending bitmap writes to
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * disk before=
- proceeding w/ I/O */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bitmap_unplug(=
-conf->mddev->bitmap);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wake_up(&conf->wai=
-t_barrier);
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0while (bio) { =
-/* submit pending writes */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0struct bio *next =3D bio->bi_next;
-> @@ -789,6 +797,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int cpu;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bool do_barriers;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0mdk_rdev_t *blocked_rdev;
-> + =C2=A0 =C2=A0 =C2=A0 int cnt =3D 0;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Register the new request and wait if th=
-e reconstruction
-> @@ -864,6 +873,11 @@ static int make_request(struct request_queue *q,=
- struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * WRITE:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
-> + =C2=A0 =C2=A0 =C2=A0 if (conf->pending_count >=3D max_queued_reques=
-ts) {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 md_wakeup_thread(m=
-ddev->thread);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wait_event(conf->w=
-ait_barrier,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0conf->pending_count < max_queued_requests);
-> + =C2=A0 =C2=A0 =C2=A0 }
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* first select target devices under spinl=
-ock and
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * inc refcount on their rdev. =C2=A0Recor=
-d them by setting
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bios[x] to bio
-> @@ -970,6 +984,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_inc(&r1=
-_bio->remaining);
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_add(&=
-bl, mbio);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 cnt++;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0kfree(behind_pages); /* the behind pages a=
-re attached to the bios now */
->
-> @@ -978,6 +993,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irqsave(&conf->device_lock, flag=
-s);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_merge(&conf->pending_bio_list, &b=
-l);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&bl);
-> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count +=3D cnt;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_plug_device(mddev->queue);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irqrestore(&conf->device_lock,=
- flags);
-> @@ -2021,7 +2037,7 @@ static int run(mddev_t *mddev)
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&conf->pending_bio_list);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&conf->flushing_bio_list);
-> -
-> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count =3D 0;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0mddev->degraded =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0for (i =3D 0; i < conf->raid_disks; i++) {
-> @@ -2317,3 +2333,5 @@ MODULE_LICENSE("GPL");
-> =C2=A0MODULE_ALIAS("md-personality-3"); /* RAID1 */
-> =C2=A0MODULE_ALIAS("md-raid1");
-> =C2=A0MODULE_ALIAS("md-level-1");
-> +
-> +module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
-> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-> index e87b84d..520288c 100644
-> --- a/drivers/md/raid1.h
-> +++ b/drivers/md/raid1.h
-> @@ -38,6 +38,7 @@ struct r1_private_data_s {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* queue of writes that have been unplugge=
-d */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- flushing_bio_list;
->
-> + =C2=A0 =C2=A0 =C2=A0 int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 pending_count;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* for use when syncing mirrors: */
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spinlock_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0resync_lock;
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index c2cb7b8..4c7d9b5 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -59,6 +59,11 @@ static void unplug_slaves(mddev_t *mddev);
->
-> =C2=A0static void allow_barrier(conf_t *conf);
-> =C2=A0static void lower_barrier(conf_t *conf);
-> +/* When there are this many requests queue to be written by
-> + * the raid10 thread, we become 'congested' to provide back-pressure
-> + * for writeback.
-> + */
-> +static int max_queued_requests =3D 1024;
->
-> =C2=A0static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
-> =C2=A0{
-> @@ -631,6 +636,10 @@ static int raid10_congested(void *data, int bits=
-)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0conf_t *conf =3D mddev->private;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, ret =3D 0;
->
-> + =C2=A0 =C2=A0 =C2=A0 if ((bits & (1 << BDI_async_congested)) &&
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_count >=3D max_que=
-ued_requests)
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 1;
-> +
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (mddev_congested(mddev, bits))
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 1;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0rcu_read_lock();
-> @@ -660,10 +669,12 @@ static int flush_pending_writes(conf_t *conf)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bi=
-o;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio =3D bio_li=
-st_get(&conf->pending_bio_list);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_remove_plu=
-g(conf->mddev->queue);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_coun=
-t =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_ir=
-q(&conf->device_lock);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* flush any p=
-ending bitmap writes to disk
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * before proc=
-eeding w/ I/O */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bitmap_unplug(=
-conf->mddev->bitmap);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wake_up(&conf->wai=
-t_barrier);
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0while (bio) { =
-/* submit pending writes */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0struct bio *next =3D bio->bi_next;
-> @@ -802,6 +813,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list bl;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long flags;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0mdk_rdev_t *blocked_rdev;
-> + =C2=A0 =C2=A0 =C2=A0 int cnt =3D 0;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(bio_rw_flagged(bio, BIO_RW_BA=
-RRIER))) {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_endio(bio,=
- -EOPNOTSUPP);
-> @@ -894,6 +906,11 @@ static int make_request(struct request_queue *q,=
- struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * WRITE:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
-> + =C2=A0 =C2=A0 =C2=A0 if (conf->pending_count >=3D max_queued_reques=
-ts) {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 md_wakeup_thread(m=
-ddev->thread);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wait_event(conf->w=
-ait_barrier,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0conf->pending_count < max_queued_requests);
-> + =C2=A0 =C2=A0 =C2=A0 }
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* first select target devices under rcu_l=
-ock and
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * inc refcount on their rdev. =C2=A0Recor=
-d them by setting
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bios[x] to bio
-> @@ -957,6 +974,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_inc(&r1=
-0_bio->remaining);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_add(&=
-bl, mbio);
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 cnt++
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(!atomic_read(&r10_bio->remain=
-ing))) {
-> @@ -970,6 +988,7 @@ static int make_request(struct request_queue *q, =
-struct bio * bio)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irqsave(&conf->device_lock, flag=
-s);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_merge(&conf->pending_bio_list, &b=
-l);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_plug_device(mddev->queue);
-> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count +=3D cnt;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irqrestore(&conf->device_lock,=
- flags);
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* In case raid10d snuck in to freeze_arra=
-y */
-> @@ -2318,3 +2337,5 @@ MODULE_LICENSE("GPL");
-> =C2=A0MODULE_ALIAS("md-personality-9"); /* RAID10 */
-> =C2=A0MODULE_ALIAS("md-raid10");
-> =C2=A0MODULE_ALIAS("md-level-10");
-> +
-> +module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
-> diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
-> index 59cd1ef..e6e1613 100644
-> --- a/drivers/md/raid10.h
-> +++ b/drivers/md/raid10.h
-> @@ -39,7 +39,7 @@ struct r10_private_data_s {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct list_head =C2=A0 =C2=A0 =C2=A0 =C2=A0=
-retry_list;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* queue pending writes and submit them on=
- unplug */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- pending_bio_list;
-> -
-> + =C2=A0 =C2=A0 =C2=A0 int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 pending_count;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spinlock_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0resync_lock;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int nr_pending;
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
