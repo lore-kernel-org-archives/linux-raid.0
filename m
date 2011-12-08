@@ -1,172 +1,480 @@
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH] md: Add ability for disable bad block management
-Date: Thu, 8 Dec 2011 15:02:22 +1100
-Message-ID: <20111208150222.2ce2ac16@notabene.brown>
-References: <20111124121953.5509.28118.stgit@gklab-128-013.igk.intel.com>
-	<20111130111403.7efd3875@notabene.brown>
-	<79556383A0E1384DB3A3903742AAC04A054C28@IRSMSX101.ger.corp.intel.com>
-	<20111206170525.1f4e32ab@notabene.brown>
-	<79556383A0E1384DB3A3903742AAC04A055919@IRSMSX101.ger.corp.intel.com>
-	<20111207125255.51382e59@notabene.brown>
-	<79556383A0E1384DB3A3903742AAC04A055D88@IRSMSX101.ger.corp.intel.com>
+From: =?UTF-8?B?WXVjb25nIFN1biAo5Y+26Zuo6aOeKQ==?= <sunyucong@gmail.com>
+Subject: Re: Raid10 and page cache
+Date: Wed, 7 Dec 2011 22:31:51 -0800
+Message-ID: <CAJygYd3h8dshbeP3Rd_osSOu0j3Xp1THUdz+NEtDXzLxLEAnVw@mail.gmail.com>
+References: <CAJygYd16PWfKe8fK-b150N46CEwzBUqJn1N6dfsGR4yyTgGbTQ@mail.gmail.com>
+ <CAJygYd3ofkHp9huD_Q1xoKVb_Q2LTDAnFHf-n+8xyG7ug3wC_Q@mail.gmail.com>
+ <20111207092625.7140c5dc@notabene.brown> <CAJygYd3fM+wtnU0HkN7s7o=FPizbPNPET2A21jxWk-BJZgdFbA@mail.gmail.com>
+ <20111207120133.70ca294c@notabene.brown> <CAJygYd3j5HwGyZ7rTKZj5dr=cXDOpy3jK=6AyOVKJY0PX3bdtA@mail.gmail.com>
+ <20111207152853.42594fc9@notabene.brown> <CAJygYd0UeJ04KOZJLkjO1KoBf6t0Ko_jyCw=HerCtehgkG5DUQ@mail.gmail.com>
+ <20111207161003.0aa181d8@notabene.brown> <CAJygYd1WgqMYTzvXKKWR9_=Osqd=BPFud20FHXsDz1ag37uJ=g@mail.gmail.com>
+ <CAJygYd2by45xJs-RV_v0S8Hd8B1Dk9DP6B+L6MmX=_Va-5Qsvw@mail.gmail.com>
+ <CAJygYd1+cVGeRwZXq_WLZr89Q9GX_yPEDvFBuagSG4D9neyoqQ@mail.gmail.com> <20111208111009.6ca1ca19@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mvqUougFmUL4lSREJWlDZKC"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <79556383A0E1384DB3A3903742AAC04A055D88@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <20111208111009.6ca1ca19@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/mvqUougFmUL4lSREJWlDZKC
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+sadly the patch didn't help ,
 
-On Wed, 7 Dec 2011 11:10:06 +0000 "Kwolek, Adam" <adam.kwolek@intel.com>
-wrote:
-
->=20
->=20
-> > -----Original Message-----
-> > From: NeilBrown [mailto:neilb@suse.de]
-
-> > I cannot reproduce this.
-> > I didn't physically remove devices, but I used
-> >    echo 1 > /sys/block/sdc/device/delete
-> > which should be nearly identical from the perspective of md and mdadm.
->=20
-> I've checked that when I'm deleting device using sysfs  everything works =
-perfect.=20
-> When when device is pulled out, reshape stops in md/mdstat.
->=20
-> > If you could give me the exact set of steps that you follow to produce =
-the
-> > problem that would help - maybe a script?  Just a description is OK.
->=20
->=20
-> #used disks sdb, sdc, sdd, sde
-> export IMSM_NO_PLATFORM=3D1
-> #create container
-> mdadm -C /dev/md/imsm0 -amd -e imsm -n 3 /dev/sdb /dev/sdc /dev/sde -R
-> #create vol
-> mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 32 --size 104850 -n 3 /dev/=
-sdb /dev/sdc /dev/sde -R
-> #add spare
-> mdadm --add /dev/md/imsm0 /dev/sdd
-> #run OLCE
-> mdadm --grow /dev/md/imsm0 --raid-devices 4
-> #when reshape starts, I'm (physically) pulling device out
->=20
-> > Also you say it is blocking in md_do_sync.  Is that at the
-> >=20
-> > 	wait_event(mddev->recovery_wait, !atomic_read(&mddev-
-> > >recovery_active));
-> >=20
-> > call just after the "out:" label?
->=20
-> None of those 2 places.
-> It enters sync_request() function. Md_error() is called.=20
-> More is visible on thread stack information below (md_wait_for_blocked_rd=
-ev()).
->=20
->=20
-> >=20
-> > What is the raid thread doing at this point?
-> >    cat /proc/PID/stack
-> > might help.
->=20
-> [md126_raid5]
-> [<ffffffff8121d843>] md_wait_for_blocked_rdev+0xbc/0x10f
-> [<ffffffffa01d87ce>] handle_stripe+0x1c5c/0x2c99 [raid456]
-> [<ffffffffa01d9d0d>] raid5d+0x502/0x564 [raid456]
-> [<ffffffff8121eca5>] md_thread+0x101/0x11f
-> [<ffffffff81049e0e>] kthread+0x81/0x89
-> [<ffffffff812cc4f4>] kernel_thread_helper+0x4/0x10
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> [md126_reshape]
-> [<ffffffffa02455a2>] sync_request+0x90a/0xbfb [raid456]
-> [<ffffffff8121e151>] md_do_sync+0x7aa/0xc40
-> [<ffffffff8121ecb3>] md_thread+0x101/0x11f
-> [<ffffffff81049e0e>] kthread+0x81/0x89
-> [<ffffffff812cc4f4>] kernel_thread_helper+0x4/0x10
-> [<ffffffffffffffff>] 0xffffffffffffffff
->=20
-> >=20
-> > What are the contents of all the sysfs files?
-> >    grep . /sys/block/mdXXX/md/*
-> array_state		->active
-> degraded		->1
-> max_read_errors	->20
-> reshape_position	->12288
-> resync_start		->none
-> sync_completed	->4096 / 209664
->=20
->=20
-> >    grep . /sys/block/mdXXX/md/dev-*/*
->=20
-> When removed is sdd   /sys/block/mdXXX/md/dev-sdd/*
-> bad_blocks		->4096 512
-> 			->4608 128
-> 			->4736 384
-> block			->MISSING link is not valid
-> errors			->0
-> offset			->0
-> recovery_start		->4096
-> size			->104832
-> slot			->3
-> state			->faulty,write_error
-> unacknowledged_bad_blocks	->4096 512
-> 				->4608 128
-> 				->4736 384
->=20
-> I hope this helps.
-
-Yes it does, thanks.
-
-Can you try with this patch as well please.
-
-Thanks,
-NeilBrown
+sadly, the patch didn't help at all, see following
 
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index ea6dce9..6cf0f6a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3175,6 +3175,8 @@ static void analyse_stripe(struct stripe_head *sh, st=
-ruct stripe_head_state *s)
- 			rdev =3D rcu_dereference(conf->disks[i].rdev);
- 			clear_bit(R5_ReadRepl, &dev->flags);
- 		}
-+		if (rdev && test_bit(Faulty, &rdev->flags))
-+			rdev =3D NULL;
- 		if (rdev) {
- 			is_bad =3D is_badblock(rdev, sh->sector, STRIPE_SECTORS,
- 					     &first_bad, &bad_sectors);
+Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
+r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
+avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
+sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
+=A0 0.00
+0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
+sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A02042.00=
+ =C2=A0 =C2=A00.00 =C2=A0345.00 =C2=A0 =C2=A0 0.00 64112.00
+185.83 =C2=A0 =C2=A093.13 =C2=A0 93.36 =C2=A0 2.12 =C2=A073.00
+sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A01704.00=
+ =C2=A0 =C2=A07.00 =C2=A0156.00 =C2=A0 =C2=A056.00 12496.00
+77.01 =C2=A0 =C2=A095.71 =C2=A0146.20 =C2=A0 3.62 =C2=A059.00
+sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A01518.00=
+ =C2=A0 16.00 =C2=A0185.00 =C2=A0 128.00 =C2=A09936.00
+50.07 =C2=A0 =C2=A098.20 =C2=A0157.41 =C2=A0 3.13 =C2=A063.00
+sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 222.00 =C2=A01997.00 =C2=A0=
+194.00 =C2=A0189.00 51568.00 16488.00
+177.69 =C2=A0 =C2=A081.54 =C2=A0 99.09 =C2=A0 2.25 =C2=A086.00
+md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 37.00 4096.00 =C2=A0 296.00 32768.00
+8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
 
 
---Sig_/mvqUougFmUL4lSREJWlDZKC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
+r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
+avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
+sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
+=A0 0.00
+0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
+sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 150.00=
+ =C2=A0 =C2=A00.00 =C2=A0194.00 =C2=A0 =C2=A0 0.00 33336.00
+171.84 =C2=A0 =C2=A034.91 =C2=A0492.84 =C2=A0 4.59 =C2=A089.00
+sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A00.00 =C2=A0138.00 =C2=A0 =C2=A0 0.00 =C2=A03488.00
+25.28 =C2=A0 =C2=A032.68 =C2=A0757.75 =C2=A0 4.06 =C2=A056.00
+sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A03.00 =C2=A0127.00 =C2=A0 =C2=A024.00 =C2=A04704.00
+36.37 =C2=A0 =C2=A033.68 =C2=A0771.08 =C2=A0 4.54 =C2=A059.00
+sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 222.00 =C2=A0 =C2=A0 0.00=
+ =C2=A0 90.00 =C2=A0 84.00 39936.00 =C2=A01672.00
+239.13 =C2=A0 =C2=A023.73 =C2=A0386.90 =C2=A0 4.08 =C2=A071.00
+md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A02.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A016.00 =C2=A0 =C2=
+=A0 0.00
+8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
 
-iQIVAwUBTuA2zjnsnt1WYoG5AQJPKA/9FqHnGaJZZvHXQ8L54P6Gy4BIRzmWLuO5
-s3NtGcZ5UB06aO9U4gqankdXWnM32Syo+rIIMKT9tsH5P59BSiPqszm0qcXqPVJX
-nQ+vL7LFyKoF52zkaFK4IvXKXES+h9n8ASNDFFUAnAozWJ5ZW7eqALXGXJQpDZKX
-aYrEpD1r+6LfkqtQadhriY/T8knaswV5LEld2vV/4/BJ2nJyvtFwhm3M0Jokm/Er
-2uEbZ/05OffA2C3Q14zbNc6kjwWMK0ncOfrJBj0dCD40PafM/9oqU4ZbIHTSJ1qW
-Olq8fcVxmtjk8QcOSZPl3ZC4I2P8rtUson5kCIigQ7rN8NyjD+XQO1gHV7YwZjM8
-Q18HBFQToVEd3Uo5xi6WRRXJRuwI/NQD7UqEy7aaovrffapxIxUzErdos9I2LWls
-VHN4CPP7itk0Ksc+QqCyzLpBLP+hEcdHD5E4h6FKsNp9Fy2JizfRqScvrpzy5JyM
-GDdjgiJKiNLaRY7Bmiact+Q42OdSbb52WUDEQiVOsK0r78TsJw+1vFSkZoKdPKN1
-dox9sTAzIPOVen16Ttdib8e7Eo/MQ2qsS6wbJ/+KNzhsWFXz1aYYlKwkPBZsCLPS
-XQ4KSdZVDgRAUtWJC7ODPeDYryV7yxqZ/Ym/IsC9hK7R0GrI+DqdeA9O0rKu/CWX
-+yKB5ASllkE=
-=u9ik
------END PGP SIGNATURE-----
+Device: =C2=A0 =C2=A0 =C2=A0 =C2=A0 rrqm/s =C2=A0 wrqm/s =C2=A0 =C2=A0 =
+r/s =C2=A0 =C2=A0 w/s =C2=A0 rsec/s =C2=A0 wsec/s
+avgrq-sz avgqu-sz =C2=A0 await =C2=A0svctm =C2=A0%util
+sda =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A00.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=
+=A0 0.00
+0.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
+sdb =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 235.00=
+ =C2=A0 =C2=A00.00 =C2=A0188.00 =C2=A0 =C2=A0 0.00 54024.00
+287.36 =C2=A0 =C2=A0 0.49 =C2=A0 =C2=A03.78 =C2=A0 1.65 =C2=A031.00
+sdd =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 27.00 =C2=A0 =C2=A00.00 =C2=A0 216.00 =C2=A0 =C2=A0 0.00
+8.00 =C2=A0 =C2=A0 0.15 =C2=A0 =C2=A05.56 =C2=A0 5.56 =C2=A015.00
+sdc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0 46.00 =C2=A0 =C2=A00.00 =C2=A0 368.00 =C2=A0 =C2=A0 0.00
+8.00 =C2=A0 =C2=A0 0.32 =C2=A0 =C2=A06.52 =C2=A0 6.96 =C2=A032.00
+sde =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 165.00 =C2=A0 =C2=A0 0.00=
+ =C2=A0200.00 =C2=A0 =C2=A00.00 43480.00 =C2=A0 =C2=A0 0.00
+217.40 =C2=A0 =C2=A0=C2=A07.63 =C2=A0 38.15 =C2=A0 2.00=C2=A0=C2=A040.0=
+0
+md0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A0=
+ 0.00 =C2=A0101.00 =C2=A0 =C2=A00.00 =C2=A0 808.00 =C2=A0 =C2=A0 0.00
+8.00 =C2=A0 =C2=A0 0.00 =C2=A0 =C2=A00.00 =C2=A0 0.00 =C2=A0 0.00
 
---Sig_/mvqUougFmUL4lSREJWlDZKC--
+I poked around and found this,=C2=A0when big flush comes in ,
+
+Every 1.0s: cat /sys/block/sdb/stat /sys/block/sdc/stat
+/sys/block/sdd/stat /sys/block/sde/stat /sys/block/md0/stat
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0Wed Dec =C2=A07 22:26:14 2011
+
+=C2=A0 =C2=A0 =C2=A0 32 =C2=A0 =C2=A0 =C2=A0 10 =C2=A0 =C2=A0 =C2=A0336=
+ =C2=A0 =C2=A0 =C2=A0270 =C2=A02792623 =C2=A05501730 783168880
+254952160 =C2=A0 =C2=A0 =C2=A0284 =C2=A04815060 255014270
+=C2=A02993481 =C2=A02222268 499586400 94384090 =C2=A0 493165 =C2=A01842=
+192 18671608
+271311440 =C2=A0 =C2=A0 =C2=A0290 =C2=A09942910 365758660
+=C2=A0 691727 =C2=A0 =C2=A0 =C2=A0 19 =C2=A05533896 =C2=A01507300 =C2=A0=
+ 501261 =C2=A01838497 18706544
+276987570 =C2=A0 =C2=A0 =C2=A0262 =C2=A03254420 278552760
+=C2=A01458797 =C2=A01404948 281875858 49664210 =C2=A0 483386 =C2=A01841=
+832 18588928
+256627020 =C2=A0 =C2=A0 =C2=A0259 =C2=A04997270 306348180
+=C2=A02797538 =C2=A0 =C2=A0 =C2=A0 =C2=A00 22380058 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A00 =C2=A04652939 =C2=A0 =C2=A0 =C2=A0 =C2=A00 37223512
+0 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A00
+
+Every downstream disk have a Huge in-flight IO jump, where it is
+usually just 0 or 1 the whole time.  The kernel document says this is
+don't include queued IO, so I think the problem is because IO
+scheduler issued too many requests to the device , without throttling
+read/write,  that basically saturated the disk, so no other read can
+be scheduled, do you knwo why this would happen to me?
+
+Here's my relevenat scheduler tweak:
+
+for disk in /sys/block/sd[bcde]
+do
+        echo "changing $disk scheduler"
+        echo "deadline" > $disk/queue/scheduler
+
+        echo "changing $disk nr_reqests to 4096"
+        echo 4096 > $disk/queue/nr_requests
+
+        echo "setra to 0"
+        echo 0 > $disk/queue/read_ahead_kb
+
+        echo "tweaking deadline io"
+        echo 32 > $disk/queue/iosched/fifo_batch
+        echo 30 > $disk/queue/iosched/read_expire
+        echo 20000 > $disk/queue/iosched/write_expire
+        echo 256 > $disk/queue/iosched/writes_starved
+done
+
+echo 0 > /sys/block/md0/queue/read_ahead_kb
+
+My workload profile is 100% random 8K IO.
+
+Come to think of it, the problem is mostly IO scheduling issue, does
+nr_requests mean anything to MD? it's not possible to adjust it
+either, was that the reason that MD can't accept more reads?
+On Wed, Dec 7, 2011 at 4:10 PM, NeilBrown <neilb@suse.de> wrote:
+>
+> On Wed, 7 Dec 2011 15:37:30 -0800 Yucong Sun (=E5=8F=B6=E9=9B=A8=E9=A3=
+=9E) <sunyucong@gmail.com>
+> wrote:
+>
+> > Neil, I can't compile latest MD against 2.6.32, =C2=A0and that comm=
+it can't
+> > be patched into 2.6.32 directly either, can you help me on this?
+> >
+>
+> This should do it.
+>
+> NeilBrown
+>
+> commit ef54b7cf955dc3b7d33248e8591b1a00b4fa998c
+> Author: NeilBrown <neilb@suse.de>
+> Date: =C2=A0 Tue Oct 11 16:50:01 2011 +1100
+>
+> =C2=A0 =C2=A0md: add proper write-congestion reporting to RAID1 and R=
+AID10.
+>
+> =C2=A0 =C2=A0RAID1 and RAID10 handle write requests by queuing them f=
+or handling by
+> =C2=A0 =C2=A0a separate thread. =C2=A0This is because when a write-in=
+tent-bitmap is
+> =C2=A0 =C2=A0active we might need to update the bitmap first, so it i=
+s good to
+> =C2=A0 =C2=A0queue a lot of writes, then do one big bitmap update for=
+ them all.
+>
+> =C2=A0 =C2=A0However writeback request devices to appear to be conges=
+ted after a
+> =C2=A0 =C2=A0while so it can make some guesstimate of throughput. =C2=
+=A0The infinite
+> =C2=A0 =C2=A0queue defeats that (note that RAID5 has already has a fi=
+nite queue so
+> =C2=A0 =C2=A0it doesn't suffer from this problem).
+>
+> =C2=A0 =C2=A0So impose a limit on the number of pending write request=
+s. =C2=A0By default
+> =C2=A0 =C2=A0it is 1024 which seems to be generally suitable. =C2=A0M=
+ake it configurable
+> =C2=A0 =C2=A0via module option just in case someone finds a regressio=
+n.
+>
+> =C2=A0 =C2=A0Signed-off-by: NeilBrown <neilb@suse.de>
+>
+> diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> index e07ce2e..fe7ae3c 100644
+> --- a/drivers/md/raid1.c
+> +++ b/drivers/md/raid1.c
+> @@ -50,6 +50,11 @@
+> =C2=A0*/
+> =C2=A0#define =C2=A0 =C2=A0 =C2=A0 =C2=A0NR_RAID1_BIOS 256
+>
+> +/* When there are this many requests queue to be written by
+> + * the raid1 thread, we become 'congested' to provide back-pressure
+> + * for writeback.
+> + */
+> +static int max_queued_requests =3D 1024;
+>
+> =C2=A0static void unplug_slaves(mddev_t *mddev);
+>
+> @@ -576,7 +581,8 @@ static int raid1_congested(void *data, int bits)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0conf_t *conf =3D mddev->private;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, ret =3D 0;
+>
+> - =C2=A0 =C2=A0 =C2=A0 if (mddev_congested(mddev, bits))
+> + =C2=A0 =C2=A0 =C2=A0 if (mddev_congested(mddev, bits) &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_count >=3D max_que=
+ued_requests)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 1;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0rcu_read_lock();
+> @@ -613,10 +619,12 @@ static int flush_pending_writes(conf_t *conf)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bi=
+o;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio =3D bio_li=
+st_get(&conf->pending_bio_list);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_remove_plu=
+g(conf->mddev->queue);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_coun=
+t =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_ir=
+q(&conf->device_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* flush any p=
+ending bitmap writes to
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * disk before=
+ proceeding w/ I/O */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bitmap_unplug(=
+conf->mddev->bitmap);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wake_up(&conf->wai=
+t_barrier);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0while (bio) { =
+/* submit pending writes */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0struct bio *next =3D bio->bi_next;
+> @@ -789,6 +797,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int cpu;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bool do_barriers;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mdk_rdev_t *blocked_rdev;
+> + =C2=A0 =C2=A0 =C2=A0 int cnt =3D 0;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * Register the new request and wait if th=
+e reconstruction
+> @@ -864,6 +873,11 @@ static int make_request(struct request_queue *q,=
+ struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * WRITE:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> + =C2=A0 =C2=A0 =C2=A0 if (conf->pending_count >=3D max_queued_reques=
+ts) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 md_wakeup_thread(m=
+ddev->thread);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wait_event(conf->w=
+ait_barrier,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0conf->pending_count < max_queued_requests);
+> + =C2=A0 =C2=A0 =C2=A0 }
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* first select target devices under spinl=
+ock and
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * inc refcount on their rdev. =C2=A0Recor=
+d them by setting
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bios[x] to bio
+> @@ -970,6 +984,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_inc(&r1=
+_bio->remaining);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_add(&=
+bl, mbio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 cnt++;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0kfree(behind_pages); /* the behind pages a=
+re attached to the bios now */
+>
+> @@ -978,6 +993,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irqsave(&conf->device_lock, flag=
+s);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_merge(&conf->pending_bio_list, &b=
+l);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&bl);
+> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count +=3D cnt;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_plug_device(mddev->queue);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irqrestore(&conf->device_lock,=
+ flags);
+> @@ -2021,7 +2037,7 @@ static int run(mddev_t *mddev)
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&conf->pending_bio_list);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_init(&conf->flushing_bio_list);
+> -
+> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count =3D 0;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mddev->degraded =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0for (i =3D 0; i < conf->raid_disks; i++) {
+> @@ -2317,3 +2333,5 @@ MODULE_LICENSE("GPL");
+> =C2=A0MODULE_ALIAS("md-personality-3"); /* RAID1 */
+> =C2=A0MODULE_ALIAS("md-raid1");
+> =C2=A0MODULE_ALIAS("md-level-1");
+> +
+> +module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
+> diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+> index e87b84d..520288c 100644
+> --- a/drivers/md/raid1.h
+> +++ b/drivers/md/raid1.h
+> @@ -38,6 +38,7 @@ struct r1_private_data_s {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* queue of writes that have been unplugge=
+d */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ flushing_bio_list;
+>
+> + =C2=A0 =C2=A0 =C2=A0 int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 pending_count;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* for use when syncing mirrors: */
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spinlock_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0resync_lock;
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+> index c2cb7b8..4c7d9b5 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -59,6 +59,11 @@ static void unplug_slaves(mddev_t *mddev);
+>
+> =C2=A0static void allow_barrier(conf_t *conf);
+> =C2=A0static void lower_barrier(conf_t *conf);
+> +/* When there are this many requests queue to be written by
+> + * the raid10 thread, we become 'congested' to provide back-pressure
+> + * for writeback.
+> + */
+> +static int max_queued_requests =3D 1024;
+>
+> =C2=A0static void * r10bio_pool_alloc(gfp_t gfp_flags, void *data)
+> =C2=A0{
+> @@ -631,6 +636,10 @@ static int raid10_congested(void *data, int bits=
+)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0conf_t *conf =3D mddev->private;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int i, ret =3D 0;
+>
+> + =C2=A0 =C2=A0 =C2=A0 if ((bits & (1 << BDI_async_congested)) &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_count >=3D max_que=
+ued_requests)
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 1;
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (mddev_congested(mddev, bits))
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return 1;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0rcu_read_lock();
+> @@ -660,10 +669,12 @@ static int flush_pending_writes(conf_t *conf)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio *bi=
+o;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio =3D bio_li=
+st_get(&conf->pending_bio_list);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_remove_plu=
+g(conf->mddev->queue);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 conf->pending_coun=
+t =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_ir=
+q(&conf->device_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* flush any p=
+ending bitmap writes to disk
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * before proc=
+eeding w/ I/O */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bitmap_unplug(=
+conf->mddev->bitmap);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wake_up(&conf->wai=
+t_barrier);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0while (bio) { =
+/* submit pending writes */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0struct bio *next =3D bio->bi_next;
+> @@ -802,6 +813,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list bl;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long flags;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0mdk_rdev_t *blocked_rdev;
+> + =C2=A0 =C2=A0 =C2=A0 int cnt =3D 0;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(bio_rw_flagged(bio, BIO_RW_BA=
+RRIER))) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_endio(bio,=
+ -EOPNOTSUPP);
+> @@ -894,6 +906,11 @@ static int make_request(struct request_queue *q,=
+ struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/*
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * WRITE:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+> + =C2=A0 =C2=A0 =C2=A0 if (conf->pending_count >=3D max_queued_reques=
+ts) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 md_wakeup_thread(m=
+ddev->thread);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 wait_event(conf->w=
+ait_barrier,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0conf->pending_count < max_queued_requests);
+> + =C2=A0 =C2=A0 =C2=A0 }
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* first select target devices under rcu_l=
+ock and
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * inc refcount on their rdev. =C2=A0Recor=
+d them by setting
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 * bios[x] to bio
+> @@ -957,6 +974,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_inc(&r1=
+0_bio->remaining);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_add(&=
+bl, mbio);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 cnt++
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (unlikely(!atomic_read(&r10_bio->remain=
+ing))) {
+> @@ -970,6 +988,7 @@ static int make_request(struct request_queue *q, =
+struct bio * bio)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irqsave(&conf->device_lock, flag=
+s);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0bio_list_merge(&conf->pending_bio_list, &b=
+l);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0blk_plug_device(mddev->queue);
+> + =C2=A0 =C2=A0 =C2=A0 conf->pending_count +=3D cnt;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irqrestore(&conf->device_lock,=
+ flags);
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* In case raid10d snuck in to freeze_arra=
+y */
+> @@ -2318,3 +2337,5 @@ MODULE_LICENSE("GPL");
+> =C2=A0MODULE_ALIAS("md-personality-9"); /* RAID10 */
+> =C2=A0MODULE_ALIAS("md-raid10");
+> =C2=A0MODULE_ALIAS("md-level-10");
+> +
+> +module_param(max_queued_requests, int, S_IRUGO|S_IWUSR);
+> diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+> index 59cd1ef..e6e1613 100644
+> --- a/drivers/md/raid10.h
+> +++ b/drivers/md/raid10.h
+> @@ -39,7 +39,7 @@ struct r10_private_data_s {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct list_head =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+retry_list;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0/* queue pending writes and submit them on=
+ unplug */
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct bio_list =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ pending_bio_list;
+> -
+> + =C2=A0 =C2=A0 =C2=A0 int =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 pending_count;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spinlock_t =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0resync_lock;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int nr_pending;
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
