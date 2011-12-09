@@ -1,54 +1,58 @@
-From: Eli Morris <ermorris@ucsc.edu>
-Subject: Re: 4 out of 16 drives show up as 'removed'
-Date: Thu, 8 Dec 2011 22:58:37 -0800
-Message-ID: <109C0559-A65A-41D3-B132-4467B39A6207@ucsc.edu>
-References: <F0C8A2FE-8E5E-4683-BBF8-8E6B6A831635@ucsc.edu> <20111208075709.587ac227@notabene.brown> <654BF752-029F-444F-A4AB-68C3CEA7F8D5@ucsc.edu> <20111208091651.2a56dd5b@notabene.brown> <2866C99D-B573-4EF3-8FD0-0A40B0C20118@ucsc.edu> <20111209065140.107aa286@notabene.brown> <46200D05-2D7F-44F8-9323-DCFF720776D2@ucsc.edu> <20111209075931.29b26b5e@notabene.brown> <D1EB6C45-E127-4EC6-BFDD-BDFCC4607981@ucsc.edu> <20111209095033.06136f92@notabene.brown> <E88BF285-4224-45F8-952A-0248E7025BDD@ucsc.edu> <20111209142006.7ad399f9@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v1251.1)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Adam Kwolek <adam.kwolek@intel.com>
+Subject: [PATCH] imsm: FIX: Use first map only in migration record disk
+	operations
+Date: Fri, 09 Dec 2011 12:57:20 +0100
+Message-ID: <20111209115720.5396.83087.stgit@gklab-128-013.igk.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111209142006.7ad399f9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
+This patch is addition to patch:
+    "imsm: FIX: Limit migration record operation by disk slot not by index"
+Location of migration record (2 first slots) should be taken on up to date
+information. It is in first map.
+Change slot verification to use first map only.
 
-On Dec 8, 2011, at 7:20 PM, NeilBrown wrote:
+Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
+---
 
-> On Thu, 8 Dec 2011 15:03:54 -0800 Eli Morris <ermorris@ucsc.edu> wrote:
-> 
->> 
->> Hi Neil,
->> 
->> Thanks. I have:
->> 
->> mdadm - v3.1.3 - 6th August 2010, which is the default up to date version on Centos 6.0
->> 
->> One question: is the command:
->> 
->>> mdadm --create /dev/md5 -l5 --layout=left-symmetric --chunk=512 \
->>> --raid-disks=16  --assume-clean /dev/sd[a-p]
->> 
->> Or 
->> 
->> mdadm --create /dev/md5 -l5 --layout=left-symmetric --chunk=512 \
->> --raid-disks=16  --assume-clean /dev/sd[a-p]1
->> 
->> 
->> 
->> Note that partition number on the drives: /dev/sd[1-p]1 instead of /dev/sd[a-p]
-> 
-> Yes, you are correct, you need the '1' at the end.
-> Sorry, and thanks for being careful.
-> 
-> NeilBrown
-> 
+ super-intel.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Wow. Thanks so much. I haven't verified the entire array, but it looks fine. I'm still really wondering what you think might have happened. As I mentioned, everything was OK and then the four drives just showed up as "removed" when I went to write to the filesystem on the array. Do you think it has to do with the hardware or is there something I can correct in software so that this won't happen again? I suspect hardware, since after it happened, I ran lsscsi and the four drives failed to show up on the list. These are the Caviar Green drives that people seem to have problems with in RAID arrays. I was thinking about changing the timeout tolerance in the OS to something several minutes long. Maybe you've seen something like this before? I'm just not sure what happened, but, as you might ima
- gine, I'm keen for it to not happen every few months.
-
-Again, thank you. I'm grateful to have it working again.
-
-Eli
+diff --git a/super-intel.c b/super-intel.c
+index 879f4c4..92ff79c 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1185,7 +1185,7 @@ void examine_migr_rec_imsm(struct intel_super *super)
+ 		printf("\nMigration Record Information:");
+ 
+ 		/* map under migration */
+-		map = get_imsm_map(dev, MAP_1);
++		map = get_imsm_map(dev, MAP_0);
+ 		if (map)
+ 			slot = get_imsm_disk_slot(map, super->disks->index);
+ 		if ((map == NULL) || (slot > 1) || (slot < 0)) {
+@@ -2138,7 +2138,7 @@ static int load_imsm_migr_rec(struct intel_super *super, struct mdinfo *info)
+ 	*/
+ 	if (dev == NULL)
+ 		return 0;
+-	map = get_imsm_map(dev, MAP_1);
++	map = get_imsm_map(dev, MAP_0);
+ 
+ 	if (info) {
+ 		for (sd = info->devs ; sd ; sd = sd->next) {
+@@ -2269,7 +2269,7 @@ static int write_imsm_migr_rec(struct supertype *st)
+ 			vol = 0;
+ 		dev = get_imsm_dev(super, super->current_vol);
+ 	}
+-	map = get_imsm_map(dev, MAP_X);
++	map = get_imsm_map(dev, MAP_0);
+ 
+ 	for (sd = super->disks ; sd ; sd = sd->next) {
+ 		int slot = -1;
 
