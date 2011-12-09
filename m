@@ -1,67 +1,63 @@
-From: "John Stoffel" <john@stoffel.org>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: 4 out of 16 drives show up as 'removed'
-Date: Fri, 9 Dec 2011 10:31:39 -0500
-Message-ID: <20194.10715.190590.487856@quad.stoffel.home>
+Date: Fri, 09 Dec 2011 17:40:54 +0100
+Message-ID: <4EE23A16.6060102@shiftmail.org>
 References: <F0C8A2FE-8E5E-4683-BBF8-8E6B6A831635@ucsc.edu>
-	<20111208075709.587ac227@notabene.brown>
-	<654BF752-029F-444F-A4AB-68C3CEA7F8D5@ucsc.edu>
-	<20111208091651.2a56dd5b@notabene.brown>
-	<2866C99D-B573-4EF3-8FD0-0A40B0C20118@ucsc.edu>
-	<20111209065140.107aa286@notabene.brown>
-	<46200D05-2D7F-44F8-9323-DCFF720776D2@ucsc.edu>
-	<20111209075931.29b26b5e@notabene.brown>
-	<D1EB6C45-E127-4EC6-BFDD-BDFCC4607981@ucsc.edu>
-	<20111209095033.06136f92@notabene.brown>
-	<E88BF285-4224-45F8-952A-0248E7025BDD@ucsc.edu>
-	<20111209142006.7ad399f9@notabene.brown>
-	<109C0559-A65A-41D3-B132-4467B39A6207@ucsc.edu>
+ <20111208075709.587ac227@notabene.brown>
+ <654BF752-029F-444F-A4AB-68C3CEA7F8D5@ucsc.edu>
+ <20111208091651.2a56dd5b@notabene.brown>
+ <2866C99D-B573-4EF3-8FD0-0A40B0C20118@ucsc.edu>
+ <20111209065140.107aa286@notabene.brown>
+ <46200D05-2D7F-44F8-9323-DCFF720776D2@ucsc.edu>
+ <20111209075931.29b26b5e@notabene.brown>
+ <D1EB6C45-E127-4EC6-BFDD-BDFCC4607981@ucsc.edu>
+ <20111209095033.06136f92@notabene.brown>
+ <E88BF285-4224-45F8-952A-0248E7025BDD@ucsc.edu>
+ <20111209142006.7ad399f9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <109C0559-A65A-41D3-B132-4467B39A6207@ucsc.edu>
+In-reply-to: <20111209142006.7ad399f9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eli Morris <ermorris@ucsc.edu>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Eli" == Eli Morris <ermorris@ucsc.edu> writes:
+Dear Neil,
+this issue went OK for the OP (and thanks for your continuous support), 
+however, exactly this situation is my worst nightmare regarding MD RAID.
 
-Eli> Wow. Thanks so much. I haven't verified the entire array, but it
-Eli> looks fine. I'm still really wondering what you think might have
-Eli> happened. As I mentioned, everything was OK and then the four
-Eli> drives just showed up as "removed" when I went to write to the
-Eli> filesystem on the array. Do you think it has to do with the
-Eli> hardware or is there something I can correct in software so that
-Eli> this won't happen again? I suspect hardware, since after it
-Eli> happened, I ran lsscsi and the four drives failed to show up on
-Eli> the list. 
+It seems to me that MD has no mechanism to safeguard the situation of a 
+disconnecting cable (holding multiple drives) and I think this could 
+cause major puzzlement of the user potentially followed by major data loss.
 
-I personally suspect that you have hardware issues, possibly cables,
-possibly the enclosure you're using.  When you have four drives all on
-a single path drop out, it points strongly to the path or some other
-common issue.
+I think it should be possible in line of principle to implement a 
+mechanism that discriminates between cable disconnects (on multiple 
+drives) and a failed single drive:
 
-Have you checked your power supply as well?  Maybe you're running just
-slightly overloaded and something happened to work the system, so the
-voltage dropped just enough to cause the problem.
+The technique would be:
+BEFORE failing a drive with any symptom that *could* be caused by a 
+cable disconnect, (maybe wait a couple of seconds and then) perform a 
+read and/or a write (not cached, mandatorily from the platters, and sync 
+in case of write) from each of the drives of the array. If multiple 
+drives which were believed to be working, do not respond to such 
+read/write command, then assume a cable to be disconnected and either 
+block the array (is there a blocked state like for other linux 
+blockdevices? if not it should be implemented) or set it as read-only. 
+Or worst case, disassemble the array. But DO NOT proceed failing the 
+drive. OTOH if all other drives respond correctly, assume it's not a 
+cable problem and, go ahead failing the drive which was supposed to be 
+failed.
 
-If you feel ok, you could try to run the RAID check while at the same
-time stressing the system with something CPU intensive to load down
-the CPU(s) on the system.  
+The current behaviour is not good because MD will start declaring all 
+the failed drives onto the metadatas of the good drives, before 
+discovering that there are so many failed drives that the array cannot 
+be kept running at all.
 
-But in general, when things are stable again, bring down the system,
-and double check all your cables are seated properly, controllers are
-tight, etc.  
+So you end up with a down array, but which has also an inconsistent 
+state (I think writes could have been performed between the first 
+discovered failure and the last discovered failure so the array would 
+indeed be inconsistent) and also does not cleanly assemble anymore.
 
-Eli> These are the Caviar Green drives that people seem to have
-Eli> problems with in RAID arrays. I was thinking about changing the
-Eli> timeout tolerance in the OS to something several minutes
-Eli> long. Maybe you've seen something like this before? I'm just not
-Eli> sure what happened, but, as you might imagine, I'm keen for it to
-Eli> not happen every few months.
+Thank you
 
-I don't remember if you posted and logs from dmesg when this crapped
-out, but you might see something in there.
-
-John
