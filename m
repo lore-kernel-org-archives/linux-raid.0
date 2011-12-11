@@ -1,116 +1,576 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: 4 out of 16 drives show up as 'removed'
-Date: Sat, 10 Dec 2011 19:15:09 -0600
-Message-ID: <4EE4041D.5050103@hardwarefreak.com>
-References: <F0C8A2FE-8E5E-4683-BBF8-8E6B6A831635@ucsc.edu> <4EE263A5.3010107@hardwarefreak.com> <381720EC-8DCA-4862-9C62-22954CC7AA60@ucsc.edu> <4EE2C400.2000100@hardwarefreak.com> <BC02779D-6A54-41D3-9780-F712996AC8D6@ucsc.edu>
-Reply-To: stan@hardwarefreak.com
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Subject: raid6 rebuild not starting
+Date: Sun, 11 Dec 2011 09:03:14 +0200
+Message-ID: <4EE455B2.2040105@iki.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080803080003060706080208"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BC02779D-6A54-41D3-9780-F712996AC8D6@ucsc.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eli Morris <ermorris@ucsc.edu>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/9/2011 10:57 PM, Eli Morris wrote:
-> 
-> On Dec 9, 2011, at 6:29 PM, Stan Hoeppner wrote:
-> 
->> On 12/9/2011 4:07 PM, Eli Morris wrote:
->>
->>> So, that's not so great. As you mention in your last paragraph, the reason why we had Caviar Green drives to begin with is that our RAID vendor recommended them to us specifically for use in the RAID where they failed. I spoke with him after they failed and he insists that these drives were not the problem and that they are used without problem in similar RAIDs. He seems like a good guy, but ultimately, I have no way of knowing what to think of that. He thinks the four drives 'failed' because of a backplane issue, but, since the unit is older and out of warranty, and thus costly, that isn't really worth investigating.
->>
->> Sure it is, if your data has value.  The style of backplanbe you have,
->> 4x3 IIRC, is cheap.  If one board is flaky, replace it.  They normally
->> run only a couple hundred dollars, assuming your OEM still has some in
->> inventory.
->>
->> If not, and you have $1500 squirreled away somewhere in the budget, grab
->> one of these and move the drives over:
->> http://www.newegg.com/Product/Product.aspx?Item=N82E16816133047
->>
->> Sure, the Norco is definitely a low dollar 24 drive SAS/SATA JBOD unit.
->> But the Areca expander module is built around the LSI SAS 2x36 ASIC,
->> the gold standard SAS expander chip on the market.
->>
->> Do you have any dollars in your yearly budget for hardware
->> maintenance/replacement?
->>
->> -- 
->> Stan
-> 
-> Hi Stan,
-> 
-> It's funny you should mention getting a SAS/SATA JBOD unit. When I was told that the RAID unit we had might have a backplane issue, I decided to try put these drives in a JBOD expander module and use a software RAID configuration with the drives, since I have read in a few various places that this gets around the TLER problem with these particular drives and if we did have a backplane or controller problem, doing so would get around that as well. Thus I did buy a JBOD expander and I put the drives in them and here we are today with this latest failure- with the drives in the SAS/SATA JBOD expander using mdadm as the controller. So maybe our thinking isn't too far apart ;<)
+This is a multi-part message in MIME format.
+--------------080803080003060706080208
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-That depends.  Which JBOD/expander did you acquire?  Make/model?  There
-are a few hundred on the market, of vastly different quality.  Not all
-SAS expanders are equal.  Some will never work out of the box with some
-HBAs and RAID cards, some will have intermittent problems such as drive
-drops, some will just work.  Sticking with the LSI based stuff gives you
-the best odds of success.
+Hi!
 
-If a chassis backplane is defective, switching drives to a good chassis
-will solve that problem.  However, it won't solve any Green drive
-related problems.  BTW, an SAS expander doesn't have anything to do with
-TLER, ERC, CCTL, etc, and won't fix such problems.
+After I rebooted during a raid6 rebuild, the rebuild didn't start again.
+Instead, there is a flood of "RAID conf printout"s that seemingly happen
+on array activity.
 
-AFAIK mdraid isn't as picky about read/write timeouts as hardware RAID
-controllers are.  Others here are more qualified to speak to how mdraid
-handles this than I am.
+All the devices show up properly in --detail and two devices are marked
+as "spare rebuilding", and I can access the contents of the array just
+fine, but the rebuild doesn't actually start. Is this a bug or am I
+missing something? :)
 
-You didn't mention which SAS HBA you're using with this JBOD setup.  If
-it's a Marvell SAS chipset on the HBA that would be a big problem as
-well, and would yield similar drive dropout problems.  SuperMicro has a
-cheap dual SFF8088 card using this chipset, HighPoint as well.  If
-you're using either of those, or anything with a Marvell chip, swap it
-out with a recent PCIe LSI ASIC based HBA, such as the LSI 9200-8e:
+I was initially on 2.6.38.8, but also tried 3.1.4 which seems to have
+the same issue. mdadm is 3.1.5.
 
-http://www.lsi.com/products/storagecomponents/Pages/LSISAS9200-8e.aspx
+I'm not using start_ro and writing to the array doesn't trigger a
+rebuild either.
 
-> Now I could replace the backplane of the original RAID (if we can get one for a reasonable price) and put these silly drives back in it and hope the problem goes away, but I'm not convinced that the backplane is the issue. It might be the issue, but I'm not sure I want to bet money on it. I think it is more likely a problem with these drives and some sort of timing out issue related to TLER or a power saving spin down of the drives that mdadm has a problem with. I feel like the most likely fix is something related to that. One other thing, the four drives that originally 'failed' back when they were in the hardware RAID unit (and they weren't dead drives-they just showed up as removed - same as this time), all had quite a few bad blocks, so I sent those back and got replacements. 
-
-Replacing a backplane only helps if you indeed have a defective
-backplane.  I'd need to see the internal design of the RAID chassis to
-determine if the *simultaneous* dropping of 4 drives is very likely a
-backplane issue or not.  If enterprise drives were involved here, I'd
-say it's almost a certainty.  The fact these are WD Green drives makes
-such determinations far more difficult.
-
-> Since the symptoms were the same in the hardware and software RAIDs and the drives themselves seem to be OK, it leads me back to some sort of timeout issue where they are not responding to a command in a certain amount of time and thus show up as 'removed' - not failed, but 'removed'
-
-Recalling your thread on XFS, drives dropped sequentially over time in
-one RAID chassis of the 5 stitched together with an mdadm linear
-concat--four did not drop simultaneously.  Then you had drives drop from
-your D2D backup array, but again, I don't believe you stated multiple
-drives dropping simultaneously.
-
-Define these drives being "OK" in this context.  Surface scanning them
-and reading the SMART data can show no errors all day long, but they'll
-still often drop out of arrays.  There is no relationship between one
-and the other.
-
-TTBOMK, not a single reputable storage vendor integrates WD's Green
-drives in their packaged SAS/SATA or FC/iSCSI RAID array chassis.  That
-alone is instructive.
-
-> Regarding the hardware RAID, at some point when I have time, I'll put our original much lower capacity disks that shipped with the unit about six years ago in and see if they work OK in the unit with the suspect backplane. In that way, I hope to show if the unit really does have bad hardware or if it was the Caviar Green drives that were causing the problem. 
-
-Very good idea.  Assuming the original drives are still ok.  I'd
-thoroughly test each one individually on the bench first.
-
-> We don't have a yearly budget per se. We have about $6000 total for maintenance, hardware, and software for the next 2.5 years to support about $200,000 worth of hardware. Almost as bad as losing data would be something breaking that is needed to run that we then couldn't replace for lack of funds. I'm not sure what happens then. Now the lab is constantly applying for grants. So if one comes in, everything could change and we could have some money again. It's just hard to say if that will happen or not or when.
-
-That's just sad.  Your hardware arrays are out of warranty.  You have 5
-of them stitched together with mdraid linear and XFS atop.  Unsuitable
-drives and associated problems aside, what's your plan to overcome
-complete loss of one of those 5 units due to, say, controller failure?
-If you can't buy a replacement controller FRU, you're looking at
-purchasing another array with drives, with less than $6K to play with?
-
-I feel for ya.  You're in a pickle.
+Attached are --examine outputs before assembly, kernel log output on
+assembly, /proc/mdstat and --detail after assembly (on 3.1.4).
 
 -- 
-Stan
+Anssi Hannula
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="detail-md0.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="detail-md0.txt"
+
+/dev/md0:
+        Version : 1.2
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+     Array Size : 15628095488 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
+   Raid Devices : 10
+  Total Devices : 13
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sun Dec 11 08:12:18 2011
+          State : active, degraded
+ Active Devices : 8
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 5
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+           UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+         Events : 293646
+
+    Number   Major   Minor   RaidDevice State
+       5       8      225        0      active sync   /dev/sdo1
+       2      65        1        1      active sync   /dev/sdq1
+      11       8      161        2      active sync   /dev/sdk1
+      17       8      113        3      spare rebuilding   /dev/sdh1
+      10       8      145        4      active sync   /dev/sdj1
+       9       8      177        5      active sync   /dev/sdl1
+       8       8      241        6      active sync   /dev/sdp1
+      18       8       81        7      spare rebuilding   /dev/sdf1
+      12       8      193        8      active sync   /dev/sdm1
+      13       8      209        9      active sync   /dev/sdn1
+
+      14       8       97        -      spare   /dev/sdg1
+      15       8       65        -      spare   /dev/sde1
+      16       8      129        -      spare   /dev/sdi1
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="dmesg-assembled.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="dmesg-assembled.txt"
+
+[  763.062742] md: md0 stopped.
+[  763.070923] md: bind<sdq1>
+[  763.072029] md: bind<sdk1>
+[  763.072567] md: bind<sdh1>
+[  763.073404] md: bind<sdj1>
+[  763.074199] md: bind<sdl1>
+[  763.074752] md: bind<sdp1>
+[  763.075234] md: bind<sdf1>
+[  763.076543] md: bind<sdm1>
+[  763.077348] md: bind<sdn1>
+[  763.078020] md: bind<sdi1>
+[  763.078356] md: bind<sdg1>
+[  763.079611] md: bind<sde1>
+[  763.080159] md: bind<sdo1>
+[  763.082687] md/raid:md0: device sdo1 operational as raid disk 0
+[  763.082765] md/raid:md0: device sdn1 operational as raid disk 9
+[  763.082840] md/raid:md0: device sdm1 operational as raid disk 8
+[  763.082914] md/raid:md0: device sdp1 operational as raid disk 6
+[  763.082988] md/raid:md0: device sdl1 operational as raid disk 5
+[  763.083063] md/raid:md0: device sdj1 operational as raid disk 4
+[  763.083137] md/raid:md0: device sdk1 operational as raid disk 2
+[  763.083211] md/raid:md0: device sdq1 operational as raid disk 1
+[  763.084250] md/raid:md0: allocated 10592kB
+[  763.084522] md/raid:md0: raid level 6 active with 8 out of 10 devices, algorithm 2
+[  763.084617] RAID conf printout:
+[  763.084685]  --- level:6 rd:10 wd:8
+[  763.087189]  disk 0, o:1, dev:sdo1
+[  763.087259]  disk 1, o:1, dev:sdq1
+[  763.087328]  disk 2, o:1, dev:sdk1
+[  763.087397]  disk 3, o:1, dev:sdh1
+[  763.087465]  disk 4, o:1, dev:sdj1
+[  763.087534]  disk 5, o:1, dev:sdl1
+[  763.087603]  disk 6, o:1, dev:sdp1
+[  763.087672]  disk 7, o:1, dev:sdf1
+[  763.087741]  disk 8, o:1, dev:sdm1
+[  763.087810]  disk 9, o:1, dev:sdn1
+[  763.088062] created bitmap (15 pages) for device md0
+[  763.508492] md0: bitmap initialized from disk: read 1/1 pages, set 254 of 29809 bits
+[  763.953649] md0: detected capacity change from 0 to 16003169779712
+[  763.953810] RAID conf printout:
+[  763.953813]  --- level:6 rd:10 wd:8
+[  763.953816]  disk 0, o:1, dev:sdo1
+[  763.953818]  disk 1, o:1, dev:sdq1
+[  763.953820]  disk 2, o:1, dev:sdk1
+[  763.953822]  disk 3, o:1, dev:sdh1
+[  763.953824]  disk 4, o:1, dev:sdj1
+[  763.953826]  disk 5, o:1, dev:sdl1
+[  763.953828]  disk 6, o:1, dev:sdp1
+[  763.953830]  disk 7, o:1, dev:sdf1
+[  763.953832]  disk 8, o:1, dev:sdm1
+[  763.953834]  disk 9, o:1, dev:sdn1
+[  763.953835] RAID conf printout:
+[  763.953837]  --- level:6 rd:10 wd:8
+[  763.953838]  disk 0, o:1, dev:sdo1
+[  763.953840]  disk 1, o:1, dev:sdq1
+[  763.953843]  disk 2, o:1, dev:sdk1
+[  763.953844]  disk 3, o:1, dev:sdh1
+[  763.953846]  disk 4, o:1, dev:sdj1
+[  763.953848]  disk 5, o:1, dev:sdl1
+[  763.953849]  disk 6, o:1, dev:sdp1
+[  763.953851]  disk 7, o:1, dev:sdf1
+[  763.953853]  disk 8, o:1, dev:sdm1
+[  763.953854]  disk 9, o:1, dev:sdn1
+[  763.953856] RAID conf printout:
+[  763.953857]  --- level:6 rd:10 wd:8
+[  763.953859]  disk 0, o:1, dev:sdo1
+[  763.953861]  disk 1, o:1, dev:sdq1
+[  763.953862]  disk 2, o:1, dev:sdk1
+[  763.953864]  disk 3, o:1, dev:sdh1
+[  763.953866]  disk 4, o:1, dev:sdj1
+[  763.953867]  disk 5, o:1, dev:sdl1
+[  763.953869]  disk 6, o:1, dev:sdp1
+[  763.953871]  disk 7, o:1, dev:sdf1
+[  763.953872]  disk 8, o:1, dev:sdm1
+[  763.953874]  disk 9, o:1, dev:sdn1
+[  763.953875] RAID conf printout:
+[  763.953876]  --- level:6 rd:10 wd:8
+[  763.953878]  disk 0, o:1, dev:sdo1
+[  763.953880]  disk 1, o:1, dev:sdq1
+[  763.953882]  disk 2, o:1, dev:sdk1
+[  763.953883]  disk 3, o:1, dev:sdh1
+[  763.953885]  disk 4, o:1, dev:sdj1
+[  763.953887]  disk 5, o:1, dev:sdl1
+[  763.953888]  disk 6, o:1, dev:sdp1
+[  763.953890]  disk 7, o:1, dev:sdf1
+[  763.953892]  disk 8, o:1, dev:sdm1
+[  763.953893]  disk 9, o:1, dev:sdn1
+[  763.953895] RAID conf printout:
+[  763.953896]  --- level:6 rd:10 wd:8
+[  763.953898]  disk 0, o:1, dev:sdo1
+[  763.953900]  disk 1, o:1, dev:sdq1
+[  763.953901]  disk 2, o:1, dev:sdk1
+[  763.953903]  disk 3, o:1, dev:sdh1
+[  763.953905]  disk 4, o:1, dev:sdj1
+[  763.953906]  disk 5, o:1, dev:sdl1
+[  763.953908]  disk 6, o:1, dev:sdp1
+[  763.953910]  disk 7, o:1, dev:sdf1
+[  763.953911]  disk 8, o:1, dev:sdm1
+[  763.953913]  disk 9, o:1, dev:sdn1
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdf1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdf1.txt"
+
+/dev/sdf1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x3
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 289089800 sectors
+          State : clean
+    Device UUID : 775affd2:7cedaf16:d29518a2:9ebda6ab
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 397ee09a - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 7
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdh1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdh1.txt"
+
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x3
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+Recovery Offset : 289089800 sectors
+          State : clean
+    Device UUID : 01c10562:b17a29e4:f554a3bd:bf9ad501
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 7b8709c - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 3
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdj1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdj1.txt"
+
+/dev/sdj1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 46cf1470:7fba6892:5646483b:687df054
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 838b69a7 - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 4
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdk1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdk1.txt"
+
+/dev/sdk1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 8f58934b:e8c3b310:77280e93:c6dd7f1e
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : feaa3ed8 - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 2
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdl1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdl1.txt"
+
+/dev/sdl1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 7c742911:a4aa0b69:75767d03:d78f19aa
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 18a1418f - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 5
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdm1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdm1.txt"
+
+/dev/sdm1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 5da5f2c1:27900682:eed98123:d1dd7683
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : dbc70969 - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 8
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdn1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdn1.txt"
+
+/dev/sdn1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a3a9b4ad:cab2a5c4:fa4a83d2:6839a473
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : a956fd07 - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 9
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdo1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdo1.txt"
+
+/dev/sdo1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : f17591b8:8012317d:ded224ad:8054aee9
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : bd6acbef - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 0
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdp1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdp1.txt"
+
+/dev/sdp1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : a0a2c206:5ce49b5c:f5a735f1:62352734
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 79908075 - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 6
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="examine-sdq1.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="examine-sdq1.txt"
+
+/dev/sdq1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 35794893:8cbfdd41:36a60e33:2a6169dd
+           Name : delta.onse.fi:delta  (local to host delta.onse.fi)
+  Creation Time : Fri Sep  3 21:45:45 2010
+     Raid Level : raid6
+   Raid Devices : 10
+
+ Avail Dev Size : 3907025072 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256190976 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023872 (1863.01 GiB 2000.40 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 3cdd3e34:252a6077:8a1a5828:27528598
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Sun Dec 11 08:12:18 2011
+       Checksum : 5d51902e - correct
+         Events : 293646
+
+         Layout : left-symmetric
+     Chunk Size : 512K
+
+   Device Role : Active device 1
+   Array State : AAAAAAAAAA ('A' == active, '.' == missing)
+
+--------------080803080003060706080208
+Content-Type: text/plain;
+ name="proc_mdstat.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="proc_mdstat.txt"
+
+Personalities : [raid1] [raid6] [raid5] [raid4] 
+md0 : active raid6 sdo1[5] sde1[15](S) sdg1[14](S) sdi1[16](S) sdn1[13] sdm1[12] sdf1[18] sdp1[8] sdl1[9] sdj1[10] sdh1[17] sdk1[11] sdq1[2]
+      15628095488 blocks super 1.2 level 6, 512k chunk, algorithm 2 [10/8] [UUU_UUU_UU]
+      bitmap: 7/15 pages [28KB], 65536KB chunk
+
+md1 : active raid1 sda2[0] sdb2[1]
+      116170128 blocks super 1.2 [2/2] [UU]
+      
+unused devices: <none>
+
+--------------080803080003060706080208--
