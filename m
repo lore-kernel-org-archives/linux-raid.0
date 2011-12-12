@@ -1,68 +1,43 @@
-From: Vincent Pelletier <plr.vincent@gmail.com>
-Subject: Re: Split-Brain Protection for MD arrays
-Date: Mon, 12 Dec 2011 21:18:28 +0100
-Message-ID: <201112122118.28351.plr.vincent@gmail.com>
-References: <CAGRgLy6=-naSGJw_tgiD5=ab7gWxyeQ2ysu-yCKa064Jih+cfA@mail.gmail.com>
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: meta: should i chase this down?
+Date: Mon, 12 Dec 2011 13:13:34 -0800
+Message-ID: <uc7ir8xk6i.ln2@goaway.wombat.san-francisco.ca.us>
+References: <42n2r8xe3k.ln2@goaway.wombat.san-francisco.ca.us>
+ <20111207114726.2f3f3543@notabene.brown>
+ <5973r8xg7n.ln2@goaway.wombat.san-francisco.ca.us>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CAGRgLy6=-naSGJw_tgiD5=ab7gWxyeQ2ysu-yCKa064Jih+cfA@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Lyakas <alex.bolshoy@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Le lundi 12 d=E9cembre 2011 19:51:23, vous avez =E9crit :
-> split-brain
+Hi all,
 
-I'm participating on the NEO[1] project (object database server with=20
-redundancy - that last bit is the one relevant to this discussion), whi=
-ch=20
-faces the same kind of problem (storage nodes dying when cluster is fun=
-ctional=20
-or not, dead nodes comming back to life later, etc). So we had to desig=
-n some=20
-counter measures to handle split-brain.=20
+On 2011-12-07, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
+>
+> I do have some drive bays that I should be able to free up, and I think
+> that I have some free disks lying around I can use, which I think should
+> replicate a more real-life scenario.
 
-I'm happy to recognise some equivalent of the decisions we took on NEO,=
- and=20
-I'll be following this thread with attention (we didn't try to get a lo=
-t of=20
-reviewing on our design so far).
+Just a short followup: I've yet to be able to replicate the kernel
+crash.  I added some 400GB disks, split them into two 200GB partitions
+each, built a 4-part RAID6, added a fifth partition and started a
+reshape, then started some disk IO (both reads and writes).  So far,
+nothing bad has happened, even with a bad disk in the mix (though
+perhaps that's masking the issue in a bizarre way).
 
-I would suggest one thing:
-Use a fixed increment for "metadata version" number. Time representatio=
-n is
-not reliable IMHO, especially at times when you need to setup an array:
-faulty BIOS battery, old RTC drifting either way, no NTP to correct thi=
-s
-(either none available or no client to access one).
-If timestamp is affected by timezone (and especially DST) makes matters
-worse.
-Admitedly, fixed increment exposes user to problems if he decides to
-independently run two halves of a split brain, start making their data
-diverge, reach a point (controlable) where version number is at some
-convenient value and then let the array assemble itself and burst in fi=
-re.
-Though, user has to jump through hoops to reach this. Timestamp-based
-requires non-monotonous RTC.
+I may make another attempt using one partition on all the disks instead
+of two, but I'm not terribly optimistic that this will result in the
+crash.  So I am afraid that my likeliest next step is to watch the next
+time I need to grow the ''real'' RAID6 where this happened the first
+time.  At least this time I will have netconsole working if it does
+happen again, and will be able to make a more informed report.
 
-Side note: if anyone knows a time source available to userland which is=
- not
-affected by date/ntpd/ntpdate nor timezones nor DST (but can drift when=
-=20
-computer is powered down - but if possible not when suspended), please =
-tell=20
-me.
+--keith
 
-[1] http://pypi.python.org/pypi/neoppod
 
-Regards,
---=20
-Vincent Pelletier
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+kkeller@wombat.san-francisco.ca.us
+
