@@ -1,15 +1,15 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [PATCH] imsm: FIX: Limit migration record operation by disk
- slot not by index
-Date: Mon, 12 Dec 2011 08:14:19 +0000
-Message-ID: <79556383A0E1384DB3A3903742AAC04A0569F5@IRSMSX101.ger.corp.intel.com>
-References: <20111208084655.7455.66462.stgit@gklab-128-013.igk.intel.com>
- <20111212161705.1a13cdbc@notabene.brown>
+Subject: RE: [PATCH] imsm: FIX: Use first map only in migration record disk
+ operations
+Date: Mon, 12 Dec 2011 08:30:28 +0000
+Message-ID: <79556383A0E1384DB3A3903742AAC04A056A3F@IRSMSX101.ger.corp.intel.com>
+References: <20111209115720.5396.83087.stgit@gklab-128-013.igk.intel.com>
+ <20111212161907.0b35fc80@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20111212161705.1a13cdbc@notabene.brown>
+In-Reply-To: <20111212161907.0b35fc80@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
@@ -20,54 +20,88 @@ List-Id: linux-raid.ids
 
 > -----Original Message-----
 > From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Monday, December 12, 2011 6:17 AM
+> Sent: Monday, December 12, 2011 6:19 AM
 > To: Kwolek, Adam
 > Cc: linux-raid@vger.kernel.org; Ciechanowski, Ed; Labun, Marcin; Williams,
 > Dan J
-> Subject: Re: [PATCH] imsm: FIX: Limit migration record operation by disk slot
-> not by index
+> Subject: Re: [PATCH] imsm: FIX: Use first map only in migration record disk
+> operations
 > 
-> On Thu, 08 Dec 2011 09:46:56 +0100 Adam Kwolek
-> <adam.kwolek@intel.com> wrote:
+> On Fri, 09 Dec 2011 12:57:20 +0100 Adam Kwolek <adam.kwolek@intel.com>
+> wrote:
 > 
-> > imsm should store migration record in to 2 first disks in array.
-> > This should be evaluated based on disk slots, not on disks index.
-> > It is not guaranteed that indexes are equal to slots.
+> > This patch is addition to patch:
+> >     "imsm: FIX: Limit migration record operation by disk slot not by index"
+> > Location of migration record (2 first slots) should be taken on up to
+> > date information. It is in first map.
+> > Change slot verification to use first map only.
 > >
 > > Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 > > ---
-> ...
+> >
+> >  super-intel.c |    6 +++---
+> >  1 files changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/super-intel.c b/super-intel.c index 879f4c4..92ff79c
+> > 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -1185,7 +1185,7 @@ void examine_migr_rec_imsm(struct intel_super
+> *super)
+> >  		printf("\nMigration Record Information:");
+> >
+> >  		/* map under migration */
+> > -		map = get_imsm_map(dev, MAP_1);
+> > +		map = get_imsm_map(dev, MAP_0);
+> >  		if (map)
+> >  			slot = get_imsm_disk_slot(map, super->disks-
+> >index);
+> >  		if ((map == NULL) || (slot > 1) || (slot < 0)) { @@ -2138,7
+> +2138,7
+> > @@ static int load_imsm_migr_rec(struct intel_super *super, struct
+> mdinfo *info)
+> >  	*/
+> >  	if (dev == NULL)
+> >  		return 0;
+> > -	map = get_imsm_map(dev, MAP_1);
+> > +	map = get_imsm_map(dev, MAP_0);
+> >
+> >  	if (info) {
+> >  		for (sd = info->devs ; sd ; sd = sd->next) { @@ -2269,7
+> +2269,7 @@
+> > static int write_imsm_migr_rec(struct supertype *st)
+> >  			vol = 0;
+> >  		dev = get_imsm_dev(super, super->current_vol);
+> >  	}
+> > -	map = get_imsm_map(dev, MAP_X);
+> > +	map = get_imsm_map(dev, MAP_0);
+> >
+> >  	for (sd = super->disks ; sd ; sd = sd->next) {
+> >  		int slot = -1;
+>                 ^^^^^^^^^^^^^^^^
 > 
-> > @@ -2200,11 +2245,37 @@ static int write_imsm_migr_rec(struct
-> supertype *st)
-> >  	struct dl *sd;
-> >  	int len;
-> >  	struct imsm_update_general_migration_checkpoint *u;
-> > +	struct imsm_dev *dev;
-> > +	struct imsm_map *map = NULL;
-> > +
-> > +	/* find map under migration */
-> > +	dev = imsm_get_device_during_migration(super);
-> > +	/* if no migration, write buffer anyway to clear migr_record
-> > +	 * on disk based on first available device
-> > +	*/
-> > +	if (dev == NULL) {
-> > +		int vol;
-> > +
-> > +		if (super->current_vol >= 0)
-> > +			vol = super->current_vol;
-> > +		else
-> > +			vol = 0;
-> > +		dev = get_imsm_dev(super, super->current_vol);
-> > +	}
+> Patch doesn't apply (Without fuzz) as in my code this is just
+>                 int slot;
 > 
-> 'vol' is unused here.  Should it be:
->                 dev = get_imsm_dev(super, vol); ??
-> 
-> NeilBrown
-> 
-Yes you are right, I'll sent corrected one.
+> It doesn't need to be initialised from what I can see, so I've left it as it is.
+
+
+Without this initialization 'make everything' fails /warning: 'slot' may be used uninitialized/.
+
 BR
 Adam
 
+
+> 
+> Pending confirmation of the earlier patch (vol not used), I've applied these
+> last 3:
+> 
+> Subject: [PATCH] imsm: FIX: Limit migration record operation by disk slot not
+> by index
+> Subject: [PATCH] imsm: FIX: Use definitions for migration record disk
+> operations
+> Subject: [PATCH] imsm: FIX: Use first map only in migration record disk
+> operations
+> 
+> NeilBrown
 
